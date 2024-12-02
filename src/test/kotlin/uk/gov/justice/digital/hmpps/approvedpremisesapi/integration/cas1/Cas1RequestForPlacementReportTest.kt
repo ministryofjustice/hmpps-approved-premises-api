@@ -637,8 +637,8 @@ class Cas1RequestForPlacementReportTest : InitialiseDatabasePerClassTestBase() {
   ) {
     val assessmentId = getLatestAssessment(applicationId).id
 
-    val essentialCriteria = listOf(PlacementCriteria.isArsonSuitable, PlacementCriteria.isESAP)
-    val desirableCriteria = listOf(PlacementCriteria.isRecoveryFocussed, PlacementCriteria.acceptsSexOffenders)
+    val essentialCriteria = listOf(PlacementCriteria.IS_ARSON_SUITABLE, PlacementCriteria.IS_ESAP)
+    val desirableCriteria = listOf(PlacementCriteria.IS_RECOVERY_FOCUSSED, PlacementCriteria.ACCEPTS_SEX_OFFENDERS)
 
     val placementRequirements = PlacementRequirements(
       gender = Gender.MALE,

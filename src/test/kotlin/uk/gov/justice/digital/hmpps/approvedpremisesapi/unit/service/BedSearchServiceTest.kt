@@ -115,7 +115,7 @@ class BedSearchServiceTest {
       maxDistanceMiles = 20,
       startDate = LocalDate.parse("2023-03-22"),
       durationInDays = 7,
-      requiredCharacteristics = listOf(PlacementCriteria.isESAP, PlacementCriteria.isRecoveryFocussed),
+      requiredCharacteristics = listOf(PlacementCriteria.IS_ESAP, PlacementCriteria.IS_RECOVERY_FOCUSSED),
     )
 
     assertThat(authorisableResult is AuthorisableActionResult.Success).isTrue
@@ -168,7 +168,7 @@ class BedSearchServiceTest {
       maxDistanceMiles = 20,
       startDate = LocalDate.parse("2023-03-22"),
       durationInDays = 7,
-      requiredCharacteristics = listOf(PlacementCriteria.hasEnSuite, PlacementCriteria.isArsonSuitable),
+      requiredCharacteristics = listOf(PlacementCriteria.HAS_EN_SUITE, PlacementCriteria.IS_ARSON_SUITABLE),
     )
 
     assertThat(authorisableResult is AuthorisableActionResult.Success).isTrue
@@ -217,7 +217,7 @@ class BedSearchServiceTest {
       maxDistanceMiles = 20,
       startDate = LocalDate.parse("2023-03-22"),
       durationInDays = 7,
-      requiredCharacteristics = listOf(PlacementCriteria.hasEnSuite, PlacementCriteria.isArsonSuitable),
+      requiredCharacteristics = listOf(PlacementCriteria.HAS_EN_SUITE, PlacementCriteria.IS_ARSON_SUITABLE),
     )
 
     assertThat(authorisableResult is AuthorisableActionResult.Success).isTrue
@@ -270,7 +270,7 @@ class BedSearchServiceTest {
       maxDistanceMiles = 20,
       startDate = LocalDate.parse("2023-03-22"),
       durationInDays = 7,
-      requiredCharacteristics = listOf(PlacementCriteria.isArsonSuitable, PlacementCriteria.hasEnSuite),
+      requiredCharacteristics = listOf(PlacementCriteria.IS_ARSON_SUITABLE, PlacementCriteria.HAS_EN_SUITE),
     )
 
     assertThat(authorisableResult is AuthorisableActionResult.Success).isTrue
@@ -325,7 +325,7 @@ class BedSearchServiceTest {
       maxDistanceMiles = 20,
       startDate = LocalDate.parse("2023-03-22"),
       durationInDays = 7,
-      requiredCharacteristics = listOf(PlacementCriteria.isArsonSuitable, PlacementCriteria.hasEnSuite),
+      requiredCharacteristics = listOf(PlacementCriteria.IS_ARSON_SUITABLE, PlacementCriteria.HAS_EN_SUITE),
     )
 
     assertThat(authorisableResult is AuthorisableActionResult.Success).isTrue
@@ -378,7 +378,7 @@ class BedSearchServiceTest {
       maxDistanceMiles = 20,
       startDate = LocalDate.parse("2023-03-22"),
       durationInDays = 0,
-      requiredCharacteristics = listOf(PlacementCriteria.hasEnSuite, PlacementCriteria.isArsonSuitable),
+      requiredCharacteristics = listOf(PlacementCriteria.HAS_EN_SUITE, PlacementCriteria.IS_ARSON_SUITABLE),
     )
 
     assertThat(authorisableResult is AuthorisableActionResult.Success).isTrue
@@ -431,7 +431,7 @@ class BedSearchServiceTest {
       maxDistanceMiles = 0,
       startDate = LocalDate.parse("2023-03-22"),
       durationInDays = 7,
-      requiredCharacteristics = listOf(PlacementCriteria.hasEnSuite, PlacementCriteria.isArsonSuitable),
+      requiredCharacteristics = listOf(PlacementCriteria.HAS_EN_SUITE, PlacementCriteria.IS_ARSON_SUITABLE),
     )
 
     assertThat(authorisableResult is AuthorisableActionResult.Success).isTrue
@@ -524,7 +524,7 @@ class BedSearchServiceTest {
       maxDistanceMiles = 20,
       startDate = LocalDate.parse("2023-03-22"),
       durationInDays = 7,
-      requiredCharacteristics = listOf(PlacementCriteria.hasEnSuite, PlacementCriteria.isArsonSuitable),
+      requiredCharacteristics = listOf(PlacementCriteria.HAS_EN_SUITE, PlacementCriteria.IS_ARSON_SUITABLE),
     )
 
     assertThat(authorisableResult is AuthorisableActionResult.Success).isTrue
