@@ -178,7 +178,7 @@ class PlacementRequestsController(
       WithdrawPlacementRequestReason.DUPLICATE_PLACEMENT_REQUEST -> PlacementRequestWithdrawalReason.DUPLICATE_PLACEMENT_REQUEST
       WithdrawPlacementRequestReason.ALTERNATIVE_PROVISION_IDENTIFIED -> PlacementRequestWithdrawalReason.ALTERNATIVE_PROVISION_IDENTIFIED
       WithdrawPlacementRequestReason.CHANGE_IN_CIRCUMSTANCES -> PlacementRequestWithdrawalReason.CHANGE_IN_CIRCUMSTANCES
-      WithdrawPlacementRequestReason.CHANGE_IN_CIRCUMSTANCES -> PlacementRequestWithdrawalReason.CHANGE_IN_RELEASE_DECISION
+      WithdrawPlacementRequestReason.CHANGE_IN_RELEASE_DECISION -> PlacementRequestWithdrawalReason.CHANGE_IN_RELEASE_DECISION
       WithdrawPlacementRequestReason.NO_CAPACITY_DUE_TO_LOST_BED -> PlacementRequestWithdrawalReason.NO_CAPACITY_DUE_TO_LOST_BED
       WithdrawPlacementRequestReason.NO_CAPACITY_DUE_TO_PLACEMENT_PRIORITISATION -> PlacementRequestWithdrawalReason.NO_CAPACITY_DUE_TO_PLACEMENT_PRIORITISATION
       WithdrawPlacementRequestReason.NO_CAPACITY -> PlacementRequestWithdrawalReason.NO_CAPACITY
