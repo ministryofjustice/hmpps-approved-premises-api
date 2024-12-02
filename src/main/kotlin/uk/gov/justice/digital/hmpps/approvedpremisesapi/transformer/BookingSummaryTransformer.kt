@@ -13,6 +13,6 @@ class BookingSummaryTransformer {
     arrivalDate = jpa.arrivalDate,
     departureDate = jpa.departureDate,
     createdAt = jpa.createdAt.toInstant(),
-    type = BookingSummary.Type.legacy,
+    type = BookingSummary.Type.LEGACY,
   )
 }

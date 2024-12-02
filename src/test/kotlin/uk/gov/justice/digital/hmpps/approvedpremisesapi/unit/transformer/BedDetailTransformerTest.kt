@@ -28,7 +28,7 @@ class BedDetailTransformerTest {
     assertThat(result.id).isEqualTo(domainSummary.id)
     assertThat(result.name).isEqualTo(domainSummary.name)
     assertThat(result.roomName).isEqualTo(domainSummary.roomName)
-    assertThat(result.status).isEqualTo(BedStatus.available)
+    assertThat(result.status).isEqualTo(BedStatus.AVAILABLE)
 
     assertThat(result.characteristics.size).isEqualTo(2)
 

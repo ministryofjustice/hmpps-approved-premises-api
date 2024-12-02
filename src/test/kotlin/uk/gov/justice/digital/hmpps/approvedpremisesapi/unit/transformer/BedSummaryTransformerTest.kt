@@ -21,7 +21,7 @@ class BedSummaryTransformerTest {
     assertThat(summary.id).isEqualTo(domainSummary.id)
     assertThat(summary.name).isEqualTo(domainSummary.name)
     assertThat(summary.roomName).isEqualTo(domainSummary.roomName)
-    assertThat(summary.status).isEqualTo(BedStatus.available)
+    assertThat(summary.status).isEqualTo(BedStatus.AVAILABLE)
   }
 
   @Test
@@ -36,7 +36,7 @@ class BedSummaryTransformerTest {
     assertThat(summary.id).isEqualTo(domainSummary.id)
     assertThat(summary.name).isEqualTo(domainSummary.name)
     assertThat(summary.roomName).isEqualTo(domainSummary.roomName)
-    assertThat(summary.status).isEqualTo(BedStatus.occupied)
+    assertThat(summary.status).isEqualTo(BedStatus.OCCUPIED)
   }
 
   @Test
@@ -51,6 +51,6 @@ class BedSummaryTransformerTest {
     assertThat(summary.id).isEqualTo(domainSummary.id)
     assertThat(summary.name).isEqualTo(domainSummary.name)
     assertThat(summary.roomName).isEqualTo(domainSummary.roomName)
-    assertThat(summary.status).isEqualTo(BedStatus.outOfService)
+    assertThat(summary.status).isEqualTo(BedStatus.OUT_OF_SERVICE)
   }
 }

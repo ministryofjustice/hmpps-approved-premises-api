@@ -69,7 +69,7 @@ class CalendarTest : InitialiseDatabasePerClassTestBase() {
                       BedOccupancyBookingEntry(
                         bookingId = booking.id,
                         personName = "${offenderDetails.firstName} ${offenderDetails.surname}",
-                        type = BedOccupancyEntryType.booking,
+                        type = BedOccupancyEntryType.BOOKING,
                         length = 3,
                         startDate = LocalDate.of(2023, 6, 8),
                         endDate = LocalDate.of(2023, 6, 10),

@@ -22,14 +22,14 @@ class CalendarTransformer {
           is CalendarBookingInfo -> BedOccupancyBookingEntry(
             bookingId = it.bookingId,
             personName = it.personName!!,
-            type = BedOccupancyEntryType.booking,
+            type = BedOccupancyEntryType.BOOKING,
             length = it.startDate.getDaysUntilInclusive(it.endDate).size,
             startDate = it.startDate,
             endDate = it.endDate,
           )
           is CalendarLostBedInfo -> BedOccupancyLostBedEntry(
             lostBedId = it.lostBedId,
-            type = BedOccupancyEntryType.lostBed,
+            type = BedOccupancyEntryType.LOST_BED,
             length = it.startDate.getDaysUntilInclusive(it.endDate).size,
             startDate = it.startDate,
             endDate = it.endDate,
@@ -52,7 +52,7 @@ class CalendarTransformer {
 
         if ((!dateIsOpen || dateInRange == endDate) && endOfOpenPeriod != null) {
           transformedSchedule += BedOccupancyOpenEntry(
-            type = BedOccupancyEntryType.open,
+            type = BedOccupancyEntryType.OPEN,
             length = startOfOpenPeriod!!.getDaysUntilInclusive(endOfOpenPeriod!!).size,
             startDate = startOfOpenPeriod!!,
             endDate = endOfOpenPeriod!!,

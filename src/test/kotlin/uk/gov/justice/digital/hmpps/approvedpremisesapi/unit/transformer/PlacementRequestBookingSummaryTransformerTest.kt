@@ -91,7 +91,7 @@ class PlacementRequestBookingSummaryTransformerTest {
       booking.arrivalDate,
       booking.departureDate,
       booking.createdAt.toInstant(),
-      BookingSummary.Type.legacy,
+      BookingSummary.Type.LEGACY,
     )
 
     every { bookingSummaryTransformer.transformJpaToApi(booking) } returns bookingSummary

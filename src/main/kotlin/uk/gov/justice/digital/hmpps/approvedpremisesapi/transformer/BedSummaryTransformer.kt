@@ -16,11 +16,11 @@ class BedSummaryTransformer {
 
   private fun getStatus(summary: DomainBedSummary): BedStatus {
     if (summary.bedBooked) {
-      return BedStatus.occupied
+      return BedStatus.OCCUPIED
     } else if (summary.bedOutOfService) {
-      return BedStatus.outOfService
+      return BedStatus.OUT_OF_SERVICE
     } else {
-      return BedStatus.available
+      return BedStatus.AVAILABLE
     }
   }
 }

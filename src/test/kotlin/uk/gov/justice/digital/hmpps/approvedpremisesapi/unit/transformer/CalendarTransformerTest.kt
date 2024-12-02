@@ -37,7 +37,7 @@ class CalendarTransformerTest {
     assertThat(bedResult.schedule).usingRecursiveComparison().isEqualTo(
       listOf(
         BedOccupancyOpenEntry(
-          type = BedOccupancyEntryType.open,
+          type = BedOccupancyEntryType.OPEN,
           length = 5,
           startDate = LocalDate.of(2023, 6, 1),
           endDate = LocalDate.of(2023, 6, 5),
@@ -75,7 +75,7 @@ class CalendarTransformerTest {
     assertThat(bedResult.schedule).usingRecursiveComparison().isEqualTo(
       listOf(
         BedOccupancyBookingEntry(
-          type = BedOccupancyEntryType.booking,
+          type = BedOccupancyEntryType.BOOKING,
           length = 62,
           startDate = LocalDate.of(2023, 5, 15),
           endDate = LocalDate.of(2023, 7, 15),
@@ -113,7 +113,7 @@ class CalendarTransformerTest {
     assertThat(bedResult.schedule).usingRecursiveComparison().isEqualTo(
       listOf(
         BedOccupancyLostBedEntry(
-          type = BedOccupancyEntryType.lostBed,
+          type = BedOccupancyEntryType.LOST_BED,
           length = 62,
           startDate = LocalDate.of(2023, 5, 15),
           endDate = LocalDate.of(2023, 7, 15),
@@ -169,21 +169,21 @@ class CalendarTransformerTest {
     assertThat(bedResult.schedule).usingRecursiveComparison().isEqualTo(
       listOf(
         BedOccupancyLostBedEntry(
-          type = BedOccupancyEntryType.lostBed,
+          type = BedOccupancyEntryType.LOST_BED,
           length = 4,
           startDate = LocalDate.of(2023, 6, 1),
           endDate = LocalDate.of(2023, 6, 4),
           lostBedId = UUID.fromString("87548acc-5da0-478d-abd2-0b17e904b97e"),
         ),
         BedOccupancyLostBedEntry(
-          type = BedOccupancyEntryType.lostBed,
+          type = BedOccupancyEntryType.LOST_BED,
           length = 2,
           startDate = LocalDate.of(2023, 6, 14),
           endDate = LocalDate.of(2023, 6, 15),
           lostBedId = UUID.fromString("5fd97cbf-0006-473d-8265-a155d54c8f54"),
         ),
         BedOccupancyBookingEntry(
-          type = BedOccupancyEntryType.booking,
+          type = BedOccupancyEntryType.BOOKING,
           length = 4,
           startDate = LocalDate.of(2023, 6, 7),
           endDate = LocalDate.of(2023, 6, 10),
@@ -191,7 +191,7 @@ class CalendarTransformerTest {
           personName = "Person 1",
         ),
         BedOccupancyBookingEntry(
-          type = BedOccupancyEntryType.booking,
+          type = BedOccupancyEntryType.BOOKING,
           length = 3,
           startDate = LocalDate.of(2023, 6, 8),
           endDate = LocalDate.of(2023, 6, 10),
@@ -199,13 +199,13 @@ class CalendarTransformerTest {
           personName = "Person 2",
         ),
         BedOccupancyOpenEntry(
-          type = BedOccupancyEntryType.open,
+          type = BedOccupancyEntryType.OPEN,
           length = 2,
           startDate = LocalDate.of(2023, 6, 5),
           endDate = LocalDate.of(2023, 6, 6),
         ),
         BedOccupancyOpenEntry(
-          type = BedOccupancyEntryType.open,
+          type = BedOccupancyEntryType.OPEN,
           length = 3,
           startDate = LocalDate.of(2023, 6, 11),
           endDate = LocalDate.of(2023, 6, 13),
