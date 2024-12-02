@@ -26,6 +26,8 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ProfileRespons
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName.approvedPremises
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName.temporaryAccommodation
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.TemporaryAccommodationUser
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.TemporaryAccommodationUserRole.REFERRER
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.TemporaryAccommodationUserRole.REPORTER
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.UserWithWorkload
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApAreaEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ProbationRegionEntityFactory
@@ -49,9 +51,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.UserTransfor
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.unit.util.addRoleForUnitTest
 import java.time.OffsetDateTime
 import java.util.UUID.randomUUID
-import kotlin.jvm.internal.Ref
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.TemporaryAccommodationUserRole.REFERRER
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.TemporaryAccommodationUserRole.REPORTER
 
 class UserTransformerTest {
   private val probationRegionTransformer = mockk<ProbationRegionTransformer>()
@@ -375,7 +374,7 @@ class UserTransformerTest {
 
       assertThat(result.deliusUsername).isEqualTo("userName")
       assertThat(result.user).isEqualTo(null)
-      assertThat(result.loadError).isEqualTo(ProfileResponse.LoadError.staffRecordNotFound)
+      assertThat(result.loadError).isEqualTo(ProfileResponse.TaskStatus.IN_PROGRESS)
     }
 
     @Test

@@ -102,7 +102,7 @@ class UserTransformer(
 
   fun transformProfileResponseToApi(userName: String, userResponse: UserService.GetUserResponse, xServiceName: ServiceName): ProfileResponse {
     return when (userResponse) {
-      UserService.GetUserResponse.StaffRecordNotFound -> ProfileResponse(userName, ProfileResponse.LoadError.staffRecordNotFound)
+      UserService.GetUserResponse.StaffRecordNotFound -> ProfileResponse(userName, ProfileResponse.LoadError.STAFF_RECORD_NOT_FOUND)
       is UserService.GetUserResponse.Success -> ProfileResponse(userName, user = transformJpaToApi(userResponse.user, xServiceName))
     }
   }
@@ -133,35 +133,35 @@ class UserTransformer(
   private fun transformApprovedPremisesRoleToPermissionApi(userRole: UserRoleAssignmentEntity): List<ApiUserPermission> {
     return userRole.role.permissions.map {
       when (it) {
-        UserPermission.CAS1_ADHOC_BOOKING_CREATE -> ApiUserPermission.adhocBookingCreate
-        UserPermission.CAS1_ASSESS_APPEALED_APPLICATION -> ApiUserPermission.assessAppealedApplication
-        UserPermission.CAS1_ASSESS_APPLICATION -> ApiUserPermission.assessApplication
-        UserPermission.CAS1_ASSESS_PLACEMENT_APPLICATION -> ApiUserPermission.assessPlacementApplication
-        UserPermission.CAS1_ASSESS_PLACEMENT_REQUEST -> ApiUserPermission.assessPlacementRequest
-        UserPermission.CAS1_BOOKING_CREATE -> ApiUserPermission.bookingCreate
-        UserPermission.CAS1_BOOKING_CHANGE_DATES -> ApiUserPermission.bookingChangeDates
-        UserPermission.CAS1_BOOKING_WITHDRAW -> ApiUserPermission.bookingWithdraw
-        UserPermission.CAS1_OUT_OF_SERVICE_BED_CREATE -> ApiUserPermission.outOfServiceBedCreate
-        UserPermission.CAS1_PROCESS_AN_APPEAL -> ApiUserPermission.processAnAppeal
-        UserPermission.CAS1_USER_LIST -> ApiUserPermission.userList
-        UserPermission.CAS1_USER_MANAGEMENT -> ApiUserPermission.userManagement
-        UserPermission.CAS1_VIEW_ASSIGNED_ASSESSMENTS -> ApiUserPermission.viewAssignedAssessments
-        UserPermission.CAS1_VIEW_CRU_DASHBOARD -> ApiUserPermission.viewCruDashboard
-        UserPermission.CAS1_VIEW_MANAGE_TASKS -> ApiUserPermission.viewManageTasks
-        UserPermission.CAS1_VIEW_OUT_OF_SERVICE_BEDS -> ApiUserPermission.viewOutOfServiceBeds
-        UserPermission.CAS1_SPACE_BOOKING_CREATE -> ApiUserPermission.spaceBookingCreate
-        UserPermission.CAS1_SPACE_BOOKING_LIST -> ApiUserPermission.spaceBookingList
-        UserPermission.CAS1_SPACE_BOOKING_RECORD_ARRIVAL -> ApiUserPermission.spaceBookingRecordArrival
-        UserPermission.CAS1_SPACE_BOOKING_RECORD_DEPARTURE -> ApiUserPermission.spaceBookingRecordDeparture
-        UserPermission.CAS1_SPACE_BOOKING_RECORD_NON_ARRIVAL -> ApiUserPermission.spaceBookingRecordNonArrival
-        UserPermission.CAS1_SPACE_BOOKING_RECORD_KEYWORKER -> ApiUserPermission.spaceBookingRecordKeyworker
-        UserPermission.CAS1_SPACE_BOOKING_VIEW -> ApiUserPermission.spaceBookingView
-        UserPermission.CAS1_SPACE_BOOKING_WITHDRAW -> ApiUserPermission.spaceBookingWithdraw
-        UserPermission.CAS1_PREMISES_VIEW_CAPACITY -> ApiUserPermission.premisesViewCapacity
-        UserPermission.CAS1_PREMISES_VIEW_SUMMARY -> ApiUserPermission.premisesViewSummary
-        UserPermission.CAS1_APPLICATION_WITHDRAW_OTHERS -> ApiUserPermission.applicationWithdrawOthers
-        UserPermission.CAS1_REQUEST_FOR_PLACEMENT_WITHDRAW_OTHERS -> ApiUserPermission.requestForPlacementWithdrawOthers
-        UserPermission.CAS1_REPORTS_VIEW -> ApiUserPermission.reportsView
+        UserPermission.CAS1_ADHOC_BOOKING_CREATE -> ApiUserPermission.ADHOC_BOOKING_CREATE
+        UserPermission.CAS1_ASSESS_APPEALED_APPLICATION -> ApiUserPermission.ASSESS_APPEALED_APPLICATION
+        UserPermission.CAS1_ASSESS_APPLICATION -> ApiUserPermission.ASSESS_APPLICATION
+        UserPermission.CAS1_ASSESS_PLACEMENT_APPLICATION -> ApiUserPermission.ASSESS_PLACEMENT_APPLICATION
+        UserPermission.CAS1_ASSESS_PLACEMENT_REQUEST -> ApiUserPermission.ASSESS_PLACEMENT_REQUEST
+        UserPermission.CAS1_BOOKING_CREATE -> ApiUserPermission.BOOKING_CREATE
+        UserPermission.CAS1_BOOKING_CHANGE_DATES -> ApiUserPermission.BOOKING_CHANGE_DATES
+        UserPermission.CAS1_BOOKING_WITHDRAW -> ApiUserPermission.BOOKING_WITHDRAW
+        UserPermission.CAS1_OUT_OF_SERVICE_BED_CREATE -> ApiUserPermission.OUT_OF_SERVICE_BED_CREATE
+        UserPermission.CAS1_PROCESS_AN_APPEAL -> ApiUserPermission.PROCESS_AN_APPEAL
+        UserPermission.CAS1_USER_LIST -> ApiUserPermission.USER_LIST
+        UserPermission.CAS1_USER_MANAGEMENT -> ApiUserPermission.USER_MANAGEMENT
+        UserPermission.CAS1_VIEW_ASSIGNED_ASSESSMENTS -> ApiUserPermission.VIEW_ASSIGNED_ASSESSMENTS
+        UserPermission.CAS1_VIEW_CRU_DASHBOARD -> ApiUserPermission.VIEW_CRU_DASHBOARD
+        UserPermission.CAS1_VIEW_MANAGE_TASKS -> ApiUserPermission.VIEW_MANAGE_TASKS
+        UserPermission.CAS1_VIEW_OUT_OF_SERVICE_BEDS -> ApiUserPermission.VIEW_OUT_OF_SERVICE_BEDS
+        UserPermission.CAS1_SPACE_BOOKING_CREATE -> ApiUserPermission.SPACE_BOOKING_CREATE
+        UserPermission.CAS1_SPACE_BOOKING_LIST -> ApiUserPermission.SPACE_BOOKING_LIST
+        UserPermission.CAS1_SPACE_BOOKING_RECORD_ARRIVAL -> ApiUserPermission.SPACE_BOOKING_RECORD_ARRIVAL
+        UserPermission.CAS1_SPACE_BOOKING_RECORD_DEPARTURE -> ApiUserPermission.SPACE_BOOKING_RECORD_DEPARTURE
+        UserPermission.CAS1_SPACE_BOOKING_RECORD_NON_ARRIVAL -> ApiUserPermission.SPACE_BOOKING_RECORD_NON_ARRIVAL
+        UserPermission.CAS1_SPACE_BOOKING_RECORD_KEYWORKER -> ApiUserPermission.SPACE_BOOKING_RECORD_KEYWORKER
+        UserPermission.CAS1_SPACE_BOOKING_VIEW -> ApiUserPermission.SPACE_BOOKING_VIEW
+        UserPermission.CAS1_SPACE_BOOKING_WITHDRAW -> ApiUserPermission.SPACE_BOOKING_WITHDRAW
+        UserPermission.CAS1_PREMISES_VIEW_CAPACITY -> ApiUserPermission.PREMISES_VIEW_CAPACITY
+        UserPermission.CAS1_PREMISES_VIEW_SUMMARY -> ApiUserPermission.PREMISES_VIEW_SUMMARY
+        UserPermission.CAS1_APPLICATION_WITHDRAW_OTHERS -> ApiUserPermission.APPLICATION_WITHDRAW_OTHERS
+        UserPermission.CAS1_REQUEST_FOR_PLACEMENT_WITHDRAW_OTHERS -> ApiUserPermission.REQUEST_FOR_PLACEMENT_WITHDRAW_OTHERS
+        UserPermission.CAS1_REPORTS_VIEW -> ApiUserPermission.REPORTS_VIEW
       }
     }
   }

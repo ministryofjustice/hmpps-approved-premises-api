@@ -293,7 +293,7 @@ class ProfileTest : IntegrationTestBase() {
         .responseBody!!
 
       assertThat(response.deliusUsername).isEqualTo(deliusUsername)
-      assertThat(response.loadError).isEqualTo(ProfileResponse.LoadError.staffRecordNotFound)
+      assertThat(response.loadError).isEqualTo(ProfileResponse.TaskStatus.IN_PROGRESS)
     }
 
     @Test
@@ -548,7 +548,7 @@ class ProfileTest : IntegrationTestBase() {
           objectMapper.writeValueAsString(
             ProfileResponse(
               deliusUsername = "nonStaffUser",
-              loadError = ProfileResponse.LoadError.staffRecordNotFound,
+              loadError = ProfileResponse.TaskStatus.IN_PROGRESS,
               null,
             ),
           ),
