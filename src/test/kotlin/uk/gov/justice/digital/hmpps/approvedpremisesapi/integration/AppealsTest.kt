@@ -121,7 +121,7 @@ class AppealsTest : InitialiseDatabasePerClassTestBase() {
         NewAppeal(
           appealDate = LocalDate.parse("2024-01-01"),
           appealDetail = "Some details about the appeal.",
-          decision = AppealDecision.accepted,
+          decision = AppealDecision.ACCEPTED,
           decisionDetail = "Some details about the decision.",
         ),
       )
@@ -139,7 +139,7 @@ class AppealsTest : InitialiseDatabasePerClassTestBase() {
           NewAppeal(
             appealDate = LocalDate.parse("2024-01-01"),
             appealDetail = "Some details about the appeal.",
-            decision = AppealDecision.accepted,
+            decision = AppealDecision.ACCEPTED,
             decisionDetail = "Some details about the decision.",
           ),
         )
@@ -161,7 +161,7 @@ class AppealsTest : InitialiseDatabasePerClassTestBase() {
               NewAppeal(
                 appealDate = LocalDate.parse("2024-01-01"),
                 appealDetail = "Some details about the appeal.",
-                decision = AppealDecision.accepted,
+                decision = AppealDecision.ACCEPTED,
                 decisionDetail = "Some details about the decision.",
               ),
             )
@@ -184,7 +184,7 @@ class AppealsTest : InitialiseDatabasePerClassTestBase() {
             NewAppeal(
               appealDate = LocalDate.parse("2024-01-01"),
               appealDetail = "Some details about the appeal.",
-              decision = AppealDecision.accepted,
+              decision = AppealDecision.ACCEPTED,
               decisionDetail = "Some details about the decision.",
             ),
           )
@@ -206,7 +206,7 @@ class AppealsTest : InitialiseDatabasePerClassTestBase() {
             NewAppeal(
               appealDate = LocalDate.now().plusDays(1),
               appealDetail = "  ",
-              decision = AppealDecision.rejected,
+              decision = AppealDecision.REJECTED,
               decisionDetail = "\n",
             ),
           )
@@ -228,7 +228,7 @@ class AppealsTest : InitialiseDatabasePerClassTestBase() {
             NewAppeal(
               appealDate = LocalDate.parse("2024-01-01"),
               appealDetail = "Some details about the appeal.",
-              decision = AppealDecision.accepted,
+              decision = AppealDecision.ACCEPTED,
               decisionDetail = "Some details about the decision.",
             ),
           )
@@ -259,7 +259,7 @@ class AppealsTest : InitialiseDatabasePerClassTestBase() {
               NewAppeal(
                 appealDate = LocalDate.parse("2024-01-01"),
                 appealDetail = "Some details about the appeal.",
-                decision = AppealDecision.rejected,
+                decision = AppealDecision.REJECTED,
                 decisionDetail = "Some details about the decision.",
               ),
             )
@@ -274,7 +274,7 @@ class AppealsTest : InitialiseDatabasePerClassTestBase() {
             .jsonPath("$.appealDetail").isEqualTo("Some details about the appeal.")
             .jsonPath("$.createdAt").value(withinSeconds(5L), OffsetDateTime::class.java)
             .jsonPath("$.applicationId").isEqualTo(application.id.toString())
-            .jsonPath("$.decision").isEqualTo(AppealDecision.rejected.value)
+            .jsonPath("$.decision").isEqualTo(AppealDecision.REJECTED.value)
             .jsonPath("$.decisionDetail").isEqualTo("Some details about the decision.")
             .jsonPath("$.assessmentId").isEqualTo(assessment.id.toString())
             .jsonPath("$.createdByUser.id").isEqualTo(userEntity.id.toString())
@@ -301,7 +301,7 @@ class AppealsTest : InitialiseDatabasePerClassTestBase() {
               NewAppeal(
                 appealDate = LocalDate.parse("2024-01-01"),
                 appealDetail = "Some details about the appeal.",
-                decision = AppealDecision.rejected,
+                decision = AppealDecision.REJECTED,
                 decisionDetail = "Some details about the decision.",
               ),
             )
@@ -357,7 +357,7 @@ class AppealsTest : InitialiseDatabasePerClassTestBase() {
               NewAppeal(
                 appealDate = LocalDate.parse("2024-01-01"),
                 appealDetail = "Some details about the appeal.",
-                decision = AppealDecision.accepted,
+                decision = AppealDecision.ACCEPTED,
                 decisionDetail = "Some details about the decision.",
               ),
             )
@@ -420,7 +420,7 @@ class AppealsTest : InitialiseDatabasePerClassTestBase() {
               NewAppeal(
                 appealDate = LocalDate.parse("2024-01-01"),
                 appealDetail = "Some details about the appeal.",
-                decision = AppealDecision.accepted,
+                decision = AppealDecision.ACCEPTED,
                 decisionDetail = "Some details about the decision.",
               ),
             )
@@ -472,7 +472,7 @@ class AppealsTest : InitialiseDatabasePerClassTestBase() {
               NewAppeal(
                 appealDate = LocalDate.parse("2024-01-01"),
                 appealDetail = "Some details about the appeal.",
-                decision = AppealDecision.rejected,
+                decision = AppealDecision.REJECTED,
                 decisionDetail = "Some details about the decision.",
               ),
             )
@@ -487,7 +487,7 @@ class AppealsTest : InitialiseDatabasePerClassTestBase() {
               NewAppeal(
                 appealDate = LocalDate.parse("2024-01-01"),
                 appealDetail = "Some details about the appeal.",
-                decision = AppealDecision.rejected,
+                decision = AppealDecision.REJECTED,
                 decisionDetail = "Some details about the decision.",
               ),
             )

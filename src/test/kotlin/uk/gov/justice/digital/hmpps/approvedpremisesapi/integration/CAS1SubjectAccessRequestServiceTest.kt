@@ -922,7 +922,7 @@ class CAS1SubjectAccessRequestServiceTest : SubjectAccessRequestServiceTestBase(
     withCreatedBy(application.createdByUser)
     withAppealDate(LocalDate.parse(APPEAL_DATE_ONLY))
     withAppealDetail("I want to appeal this decision")
-    withDecision(AppealDecision.rejected)
+    withDecision(AppealDecision.REJECTED)
     withDecisionDetail("rejected as no good")
   }
 

@@ -272,13 +272,13 @@ class Cas1ApplicationReportTest : InitialiseDatabasePerClassTestBase() {
       )
       createAppeal(
         application = application,
-        decision = AppealDecision.rejected,
+        decision = AppealDecision.REJECTED,
         allocationDate = LocalDateTime.of(2020, 4, 5, 14, 15, 10),
         acceptanceDate = LocalDate.of(2020, 4, 6),
       )
       createAppeal(
         application = application,
-        decision = AppealDecision.accepted,
+        decision = AppealDecision.ACCEPTED,
         allocationDate = LocalDateTime.of(2020, 4, 7, 14, 15, 10),
         acceptanceDate = LocalDate.of(2020, 4, 8),
       )

@@ -837,7 +837,7 @@ class PlacementApplicationReportsTest : IntegrationTestBase() {
         NewAppeal(
           appealDate = LocalDate.now(),
           appealDetail = "Some details about the appeal",
-          decision = AppealDecision.accepted,
+          decision = AppealDecision.ACCEPTED,
           decisionDetail = "Some details about why the appeal was accepted",
         ),
       )
@@ -861,7 +861,7 @@ class PlacementApplicationReportsTest : IntegrationTestBase() {
         NewAppeal(
           appealDate = LocalDate.now(),
           appealDetail = "Some details about the appeal",
-          decision = AppealDecision.rejected,
+          decision = AppealDecision.REJECTED,
           decisionDetail = "Some details about why the appeal was rejected",
         ),
       )
