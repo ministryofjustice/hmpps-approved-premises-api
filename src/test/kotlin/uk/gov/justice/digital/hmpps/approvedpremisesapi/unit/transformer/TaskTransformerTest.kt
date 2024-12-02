@@ -426,7 +426,7 @@ class TaskTransformerTest {
     val application = placementRequest.application
     private val mockTier = mockk<RiskTierEnvelope>()
     private val releaseType = ReleaseTypeOption.LICENCE
-    private val placementRequestStatus = PlacementRequestStatus.notMatched
+    private val placementRequestStatus = PlacementRequestStatus.NOT_MATCHED
 
     @BeforeEach
     fun setup() {

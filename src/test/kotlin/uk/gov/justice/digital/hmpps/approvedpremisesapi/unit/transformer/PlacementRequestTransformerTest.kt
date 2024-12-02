@@ -176,7 +176,7 @@ class PlacementRequestTransformerTest {
         applicationId = application.id,
         assessmentId = assessment.id,
         releaseType = ReleaseTypeOption.LICENCE,
-        status = PlacementRequestStatus.notMatched,
+        status = PlacementRequestStatus.NOT_MATCHED,
         assessmentDecision = decision,
         assessmentDate = assessmentSubmittedAt.toInstant(),
         applicationDate = applicationSubmittedAt.toInstant(),
@@ -218,7 +218,7 @@ class PlacementRequestTransformerTest {
 
     val result = placementRequestTransformer.transformJpaToApi(placementRequestEntity, personInfo)
 
-    assertThat(result.status).isEqualTo(PlacementRequestStatus.matched)
+    assertThat(result.status).isEqualTo(PlacementRequestStatus.MATCHED)
     assertThat(result.booking).isEqualTo(mockBookingSummary)
   }
 
@@ -238,7 +238,7 @@ class PlacementRequestTransformerTest {
 
     val result = placementRequestTransformer.transformJpaToApi(placementRequestEntity, personInfo)
 
-    assertThat(result.status).isEqualTo(PlacementRequestStatus.unableToMatch)
+    assertThat(result.status).isEqualTo(PlacementRequestStatus.UNABLE_TO_MATCH)
   }
 
   @Test
@@ -300,7 +300,7 @@ class PlacementRequestTransformerTest {
 
     val result = placementRequestTransformer.transformJpaToApi(placementRequestEntity, PersonInfoResult.Success.Full(offenderDetailSummary.otherIds.crn, offenderDetailSummary, inmateDetail))
 
-    assertThat(result.status).isEqualTo(PlacementRequestStatus.notMatched)
+    assertThat(result.status).isEqualTo(PlacementRequestStatus.NOT_MATCHED)
     assertThat(result.booking).isNull()
   }
 

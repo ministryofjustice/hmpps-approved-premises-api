@@ -979,11 +979,11 @@ class PlacementRequestServiceTest {
 
     every { page.content } returns placementRequests
 
-    every { placementRequestRepository.allForDashboard(status = PlacementRequestStatus.matched.name) } returns page
+    every { placementRequestRepository.allForDashboard(status = PlacementRequestStatus.MATCHED.name) } returns page
 
     val (requests, metadata) = placementRequestService.getAllActive(
       PlacementRequestService.AllActiveSearchCriteria(
-        PlacementRequestStatus.matched,
+        PlacementRequestStatus.MATCHED,
       ),
       PageCriteria(page = null, sortBy = PlacementRequestSortField.createdAt, sortDirection = SortDirection.ASC),
     )
@@ -1005,11 +1005,11 @@ class PlacementRequestServiceTest {
     every { page.totalPages } returns 10
     every { page.totalElements } returns 100
 
-    every { placementRequestRepository.allForDashboard(status = PlacementRequestStatus.matched.name, pageable = pageRequest) } returns page
+    every { placementRequestRepository.allForDashboard(status = PlacementRequestStatus.MATCHED.name, pageable = pageRequest) } returns page
 
     val (requests, metadata) = placementRequestService.getAllActive(
       PlacementRequestService.AllActiveSearchCriteria(
-        PlacementRequestStatus.matched,
+        PlacementRequestStatus.MATCHED,
       ),
       PageCriteria(page = 1, sortBy = PlacementRequestSortField.createdAt, sortDirection = SortDirection.ASC),
     )
@@ -1034,11 +1034,11 @@ class PlacementRequestServiceTest {
     every { page.totalPages } returns 10
     every { page.totalElements } returns 100
 
-    every { placementRequestRepository.allForDashboard(status = PlacementRequestStatus.matched.name, pageable = pageRequest) } returns page
+    every { placementRequestRepository.allForDashboard(status = PlacementRequestStatus.MATCHED.name, pageable = pageRequest) } returns page
 
     val (requests, metadata) = placementRequestService.getAllActive(
       PlacementRequestService.AllActiveSearchCriteria(
-        PlacementRequestStatus.matched,
+        PlacementRequestStatus.MATCHED,
         null,
         null,
         null,
