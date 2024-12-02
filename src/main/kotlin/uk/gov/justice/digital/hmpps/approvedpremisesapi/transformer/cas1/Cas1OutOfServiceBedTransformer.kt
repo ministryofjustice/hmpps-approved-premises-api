@@ -48,7 +48,7 @@ class Cas1OutOfServiceBedTransformer(
     val now = LocalDate.now()
 
     return when {
-      now > this.endDate -> Temporality.past
+      now > this.endDate -> Temporality.PAST
       now < this.startDate -> Temporality.FUTURE
       else -> Temporality.CURRENT
     }

@@ -67,7 +67,7 @@ class Cas1OutOfServiceBedServiceTest {
         ),
         Arguments.of(
           listOf(
-            Temporality.past,
+            Temporality.PAST,
           ),
         ),
         Arguments.of(
@@ -82,13 +82,13 @@ class Cas1OutOfServiceBedServiceTest {
         ),
         Arguments.of(
           listOf(
-            Temporality.past,
+            Temporality.PAST,
             Temporality.CURRENT,
           ),
         ),
         Arguments.of(
           listOf(
-            Temporality.past,
+            Temporality.PAST,
             Temporality.FUTURE,
           ),
         ),
@@ -100,7 +100,7 @@ class Cas1OutOfServiceBedServiceTest {
         ),
         Arguments.of(
           listOf(
-            Temporality.past,
+            Temporality.PAST,
             Temporality.CURRENT,
             Temporality.FUTURE,
           ),
@@ -633,7 +633,7 @@ class Cas1OutOfServiceBedServiceTest {
         outOfServiceBedRepository.findOutOfServiceBedIds(
           premisesId = null,
           apAreaId = null,
-          excludePast = !temporality.contains(Temporality.past),
+          excludePast = !temporality.contains(Temporality.PAST),
           excludeCurrent = !temporality.contains(Temporality.CURRENT),
           excludeFuture = !temporality.contains(Temporality.FUTURE),
           pageable = any(),

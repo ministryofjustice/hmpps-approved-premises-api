@@ -54,7 +54,7 @@ class OutOfServiceBedTest : InitialiseDatabasePerClassTestBase() {
         ),
         Arguments.of(
           listOf(
-            Temporality.past,
+            Temporality.PAST,
           ),
         ),
         Arguments.of(
@@ -69,13 +69,13 @@ class OutOfServiceBedTest : InitialiseDatabasePerClassTestBase() {
         ),
         Arguments.of(
           listOf(
-            Temporality.past,
+            Temporality.PAST,
             Temporality.CURRENT,
           ),
         ),
         Arguments.of(
           listOf(
-            Temporality.past,
+            Temporality.PAST,
             Temporality.FUTURE,
           ),
         ),
@@ -87,7 +87,7 @@ class OutOfServiceBedTest : InitialiseDatabasePerClassTestBase() {
         ),
         Arguments.of(
           listOf(
-            Temporality.past,
+            Temporality.PAST,
             Temporality.CURRENT,
             Temporality.FUTURE,
           ),
@@ -469,7 +469,7 @@ class OutOfServiceBedTest : InitialiseDatabasePerClassTestBase() {
           initialiseOosBedsForAllTemporalities(user)
 
           val rawResponseBody = webTestClient.get()
-            .uri("/cas1/out-of-service-beds?temporality=${Temporality.past}")
+            .uri("/cas1/out-of-service-beds?temporality=${Temporality.PAST}")
             .header("Authorization", "Bearer $jwt")
             .exchange()
             .expectStatus()
@@ -1014,7 +1014,7 @@ class OutOfServiceBedTest : InitialiseDatabasePerClassTestBase() {
           .jsonPath("$.reason.name").isEqualTo(reason.name)
           .jsonPath("$.reason.isActive").isEqualTo(true)
           .jsonPath("$.daysLostCount").isEqualTo(2)
-          .jsonPath("$.temporality").isEqualTo(Temporality.past.value)
+          .jsonPath("$.temporality").isEqualTo(Temporality.PAST.value)
           .jsonPath("$.referenceNumber").isEqualTo("REF-123")
           .jsonPath("$.notes").isEqualTo("notes")
           .jsonPath("$.status").isEqualTo("active")
@@ -1098,7 +1098,7 @@ class OutOfServiceBedTest : InitialiseDatabasePerClassTestBase() {
           .jsonPath("$.reason.name").isEqualTo(reason.name)
           .jsonPath("$.reason.isActive").isEqualTo(true)
           .jsonPath("$.daysLostCount").isEqualTo(2)
-          .jsonPath("$.temporality").isEqualTo(Temporality.past.value)
+          .jsonPath("$.temporality").isEqualTo(Temporality.PAST.value)
           .jsonPath("$.referenceNumber").isEqualTo("REF-123")
           .jsonPath("$.notes").isEqualTo("notes")
           .jsonPath("$.status").isEqualTo("active")
@@ -1324,7 +1324,7 @@ class OutOfServiceBedTest : InitialiseDatabasePerClassTestBase() {
             .jsonPath("$.reason.name").isEqualTo(reason.name)
             .jsonPath("$.reason.isActive").isEqualTo(true)
             .jsonPath("$.daysLostCount").isEqualTo(30)
-            .jsonPath("$.temporality").isEqualTo(Temporality.past.value)
+            .jsonPath("$.temporality").isEqualTo(Temporality.PAST.value)
             .jsonPath("$.referenceNumber").isEqualTo("REF-123")
             .jsonPath("$.notes").isEqualTo("notes")
             .jsonPath("$.status").isEqualTo("active")
@@ -1523,7 +1523,7 @@ class OutOfServiceBedTest : InitialiseDatabasePerClassTestBase() {
           .jsonPath("$.reason.name").isEqualTo(reason.name)
           .jsonPath("$.reason.isActive").isEqualTo(true)
           .jsonPath("$.daysLostCount").isEqualTo(2)
-          .jsonPath("$.temporality").isEqualTo(Temporality.past.value)
+          .jsonPath("$.temporality").isEqualTo(Temporality.PAST.value)
           .jsonPath("$.referenceNumber").isEqualTo("REF-123")
           .jsonPath("$.notes").isEqualTo("notes")
           .jsonPath("$.status").isEqualTo("active")
@@ -1707,7 +1707,7 @@ class OutOfServiceBedTest : InitialiseDatabasePerClassTestBase() {
             .jsonPath("$.reason.name").isEqualTo(reason.name)
             .jsonPath("$.reason.isActive").isEqualTo(true)
             .jsonPath("$.daysLostCount").isEqualTo(15)
-            .jsonPath("$.temporality").isEqualTo(Temporality.past.value)
+            .jsonPath("$.temporality").isEqualTo(Temporality.PAST.value)
             .jsonPath("$.referenceNumber").isEqualTo("REF-123")
             .jsonPath("$.notes").isEqualTo("notes")
             .jsonPath("$.status").isEqualTo("active")
@@ -1931,7 +1931,7 @@ class OutOfServiceBedTest : InitialiseDatabasePerClassTestBase() {
             .jsonPath("$.reason.name").isEqualTo(reason.name)
             .jsonPath("$.reason.isActive").isEqualTo(true)
             .jsonPath("$.daysLostCount").isEqualTo(15)
-            .jsonPath("$.temporality").isEqualTo(Temporality.past.value)
+            .jsonPath("$.temporality").isEqualTo(Temporality.PAST.value)
             .jsonPath("$.referenceNumber").isEqualTo("REF-123")
             .jsonPath("$.notes").isEqualTo("notes")
             .jsonPath("$.status").isEqualTo("active")

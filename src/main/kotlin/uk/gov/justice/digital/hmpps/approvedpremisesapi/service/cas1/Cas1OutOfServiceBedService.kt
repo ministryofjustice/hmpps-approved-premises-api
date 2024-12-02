@@ -273,7 +273,7 @@ class Cas1OutOfServiceBedService(
       Cas1OutOfServiceBedSortField.DAYS_LOST -> "(d.end_date - d.start_date)"
     }
 
-    val excludePast = !temporality.contains(Temporality.past)
+    val excludePast = !temporality.contains(Temporality.PAST)
     val excludeCurrent = !temporality.contains(Temporality.CURRENT)
     val excludeFuture = !temporality.contains(Temporality.FUTURE)
 
