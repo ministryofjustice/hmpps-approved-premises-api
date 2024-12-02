@@ -22,16 +22,14 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas2BailAppli
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas2bail.*
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.prisonsapi.AssignedLivingUnit
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.AuthorisableActionResult
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.CasResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.ValidatableActionResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.EmailNotificationService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas2.*
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas2bail.Cas2BailApplicationService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas2bail.Cas2BailAssessmentService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas2bail.Cas2BailUserAccessService
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.PageCriteria
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.PaginationConfig
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.getPageableOrAllPages
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomStringMultiCaseWithNumbers
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.*
 import java.time.LocalDate
 import java.time.OffsetDateTime
 import java.util.*
@@ -777,7 +775,7 @@ class Cas2BailApplicationServiceTest {
 
       every { mockCas2BailApplicationRepository.findByIdOrNull(applicationId) } returns null
 
-      assertThat(cas2BailApplicationService.submitCas2BailApplication(submitCas2Application, user) is AuthorisableActionResult.NotFound).isTrue
+      assertThat(cas2BailApplicationService.submitCas2BailApplication(submitCas2Application, user) is CasResult.NotFound).isTrue
 
       assertEmailAndAssessmentsWereNotCreated()
     }
@@ -796,7 +794,7 @@ class Cas2BailApplicationServiceTest {
       every { mockJsonSchemaService.checkCas2BailSchemaOutdated(cas2BailApplication) } returns
         cas2BailApplication
 
-      assertThat(cas2BailApplicationService.submitCas2BailApplication(submitCas2Application, user) is AuthorisableActionResult.Unauthorised).isTrue
+      assertThat(cas2BailApplicationService.submitCas2BailApplication(submitCas2Application, user) is CasResult.Unauthorised).isTrue
 
       assertEmailAndAssessmentsWereNotCreated()
     }
@@ -819,11 +817,11 @@ class Cas2BailApplicationServiceTest {
 
       val result = cas2BailApplicationService.submitCas2BailApplication(submitCas2Application, user)
 
-      assertThat(result is AuthorisableActionResult.Success).isTrue
-      result as AuthorisableActionResult.Success
+      assertThat(result is CasResult.Success).isTrue
+      result as CasResult.Success
 
-      assertThat(result.entity is ValidatableActionResult.GeneralValidationError).isTrue
-      val validatableActionResult = result.entity as ValidatableActionResult.GeneralValidationError
+      assertThat(result is CasResult.GeneralValidationError).isTrue
+      val validatableActionResult = result as CasResult.GeneralValidationError
 
       assertThat(validatableActionResult.message).isEqualTo("The schema version is outdated")
 
@@ -851,11 +849,11 @@ class Cas2BailApplicationServiceTest {
 
       val result = cas2BailApplicationService.submitCas2BailApplication(submitCas2Application, user)
 
-      assertThat(result is AuthorisableActionResult.Success).isTrue
-      result as AuthorisableActionResult.Success
+      assertThat(result is CasResult.Success).isTrue
+      result as CasResult.Success
 
-      assertThat(result.entity is ValidatableActionResult.GeneralValidationError).isTrue
-      val validatableActionResult = result.entity as ValidatableActionResult.GeneralValidationError
+      assertThat(result is CasResult.GeneralValidationError).isTrue
+      val validatableActionResult = result as CasResult.GeneralValidationError
 
       assertThat(validatableActionResult.message).isEqualTo("This application has already been submitted")
 
@@ -880,11 +878,11 @@ class Cas2BailApplicationServiceTest {
 
       val result = cas2BailApplicationService.submitCas2BailApplication(submitCas2Application, user)
 
-      assertThat(result is AuthorisableActionResult.Success).isTrue
-      result as AuthorisableActionResult.Success
+      assertThat(result is CasResult.Success).isTrue
+      result as CasResult.Success
 
-      assertThat(result.entity is ValidatableActionResult.GeneralValidationError).isTrue
-      val validatableActionResult = result.entity as ValidatableActionResult.GeneralValidationError
+      assertThat(result is CasResult.GeneralValidationError).isTrue
+      val validatableActionResult = result as CasResult.GeneralValidationError
 
       assertThat(validatableActionResult.message).isEqualTo("This application has already been abandoned")
 
@@ -989,11 +987,11 @@ class Cas2BailApplicationServiceTest {
 
     private fun assertGeneralValidationError(message: String) {
       val result = cas2BailApplicationService.submitCas2BailApplication(submitCas2Application, user)
-      assertThat(result is AuthorisableActionResult.Success).isTrue
-      result as AuthorisableActionResult.Success
+      assertThat(result is CasResult.Success).isTrue
+      result as CasResult.Success
 
-      assertThat(result.entity is ValidatableActionResult.GeneralValidationError).isTrue
-      val error = result.entity as ValidatableActionResult.GeneralValidationError
+      assertThat(result is CasResult.GeneralValidationError).isTrue
+      val error = result as CasResult.GeneralValidationError
 
       assertThat(error.message).isEqualTo(message)
     }
@@ -1065,12 +1063,11 @@ class Cas2BailApplicationServiceTest {
 
       val result = cas2BailApplicationService.submitCas2BailApplication(submitCas2Application, user)
 
-      assertThat(result is AuthorisableActionResult.Success).isTrue
-      result as AuthorisableActionResult.Success
+      assertThat(result is CasResult.Success).isTrue
+      result as CasResult.Success
 
-      assertThat(result.entity is ValidatableActionResult.Success).isTrue
-      val validatableActionResult = result.entity as ValidatableActionResult.Success
-      val persistedApplication = validatableActionResult.entity
+      assertThat(true).isTrue
+      val persistedApplication = extractEntityFromCasResult(result)
 
       assertThat(persistedApplication.crn).isEqualTo(cas2BailApplication.crn)
       assertThat(persistedApplication.preferredAreas).isEqualTo("Leeds | Bradford")

@@ -13,6 +13,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.cas2bail.Cas2Bai
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas2bail.Cas2BailAssessmentEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas2bail.Cas2BailAssessmentRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.AuthorisableActionResult
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.CasResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.ValidatableActionResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas2bail.Cas2BailAssessmentService
 import java.time.OffsetDateTime
@@ -97,9 +98,9 @@ class Cas2BailAssessmentServiceTest {
         newAssessment = newAssessmentData,
       )
       Assertions.assertThat(result).isEqualTo(
-        AuthorisableActionResult.Success(
-          ValidatableActionResult.Success(assessEntity),
-        ),
+
+          CasResult.Success(assessEntity),
+
       )
 
       verify(exactly = 1) {
@@ -131,7 +132,7 @@ class Cas2BailAssessmentServiceTest {
         newAssessment = newAssessmentData,
       )
 
-      Assertions.assertThat(result is AuthorisableActionResult.NotFound).isTrue
+      Assertions.assertThat(result is CasResult.NotFound).isTrue
     }
   }
 

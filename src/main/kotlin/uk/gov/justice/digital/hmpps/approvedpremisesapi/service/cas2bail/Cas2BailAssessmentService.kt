@@ -9,6 +9,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas2bail.Cas2
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas2bail.Cas2BailAssessmentEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas2bail.Cas2BailAssessmentRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.AuthorisableActionResult
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.CasResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.ValidatableActionResult
 import java.time.OffsetDateTime
 import java.util.*
@@ -30,9 +31,9 @@ class Cas2BailAssessmentService (
       ),
     )
 
-  fun updateAssessment(assessmentId: UUID, newAssessment: UpdateCas2Assessment): AuthorisableActionResult<ValidatableActionResult<Cas2BailAssessmentEntity>> {
+  fun updateAssessment(assessmentId: UUID, newAssessment: UpdateCas2Assessment): CasResult<Cas2BailAssessmentEntity> {
     val assessmentEntity = assessmentRepository.findByIdOrNull(assessmentId)
-      ?: return AuthorisableActionResult.NotFound()
+      ?: return CasResult.NotFound()
 
     assessmentEntity.apply {
       this.nacroReferralId = newAssessment.nacroReferralId
@@ -41,15 +42,13 @@ class Cas2BailAssessmentService (
 
     val savedAssessment = assessmentRepository.save(assessmentEntity)
 
-    return AuthorisableActionResult.Success(
-      ValidatableActionResult.Success(savedAssessment),
-    )
+    return CasResult.Success(savedAssessment)
   }
 
-  fun getAssessment(assessmentId: UUID): AuthorisableActionResult<Cas2BailAssessmentEntity> {
+  fun getAssessment(assessmentId: UUID): CasResult<Cas2BailAssessmentEntity> {
     val assessmentEntity = assessmentRepository.findByIdOrNull(assessmentId)
-      ?: return AuthorisableActionResult.NotFound()
+      ?: return CasResult.NotFound()
 
-    return AuthorisableActionResult.Success(assessmentEntity)
+    return CasResult.Success(assessmentEntity)
   }
 }
