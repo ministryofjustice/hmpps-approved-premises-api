@@ -420,7 +420,7 @@ class Cas1SpaceBookingTransformerTest {
       )
 
       every { personTransformer.personSummaryInfoToPersonSummary(personSummaryInfo) } returns expectedPersonSummary
-      every { spaceBookingStatusTransformer.transformToSpaceBookingSummaryStatus(any()) } returns Cas1SpaceBookingSummaryStatus.departed
+      every { spaceBookingStatusTransformer.transformToSpaceBookingSummaryStatus(any()) } returns Cas1SpaceBookingSummaryStatus.DEPARTED
 
       val result = transformer.transformSearchResultToSummary(
         Cas1SpaceBookingSearchResultImpl(
@@ -451,7 +451,7 @@ class Cas1SpaceBookingTransformerTest {
       assertThat(result.keyWorkerAllocation!!.allocatedAt).isEqualTo(LocalDate.parse("2023-12-12"))
       assertThat(result.keyWorkerAllocation!!.keyWorker.name).isEqualTo("the keyworker name")
       assertThat(result.keyWorkerAllocation!!.keyWorker.code).isEqualTo("the staff code")
-      assertThat(result.status).isEqualTo(Cas1SpaceBookingSummaryStatus.departed)
+      assertThat(result.status).isEqualTo(Cas1SpaceBookingSummaryStatus.DEPARTED)
     }
 
     @Test
@@ -465,7 +465,7 @@ class Cas1SpaceBookingTransformerTest {
       )
 
       every { personTransformer.personSummaryInfoToPersonSummary(personSummaryInfo) } returns expectedPersonSummary
-      every { spaceBookingStatusTransformer.transformToSpaceBookingSummaryStatus(any()) } returns Cas1SpaceBookingSummaryStatus.departed
+      every { spaceBookingStatusTransformer.transformToSpaceBookingSummaryStatus(any()) } returns Cas1SpaceBookingSummaryStatus.DEPARTED
 
       val result = transformer.transformSearchResultToSummary(
         Cas1SpaceBookingSearchResultImpl(

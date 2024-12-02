@@ -42,7 +42,7 @@ class Cas1SpaceBookingSummaryStatusTestHelper {
         actualDepartureDate = null,
         nonArrivalConfirmedAtDateTime = null,
       ),
-      Cas1SpaceBookingSummaryStatus.arrived,
+      Cas1SpaceBookingSummaryStatus.ARRIVED,
     ),
   )
 
@@ -55,7 +55,7 @@ class Cas1SpaceBookingSummaryStatusTestHelper {
         actualDepartureDate = null,
         nonArrivalConfirmedAtDateTime = LocalDateTime.now(),
       ),
-      Cas1SpaceBookingSummaryStatus.notArrived,
+      Cas1SpaceBookingSummaryStatus.NOT_ARRIVED,
     ),
   )
 
@@ -68,7 +68,7 @@ class Cas1SpaceBookingSummaryStatusTestHelper {
         actualDepartureDate = null,
         nonArrivalConfirmedAtDateTime = null,
       ),
-      Cas1SpaceBookingSummaryStatus.arrivingToday,
+      Cas1SpaceBookingSummaryStatus.ARRIVING_TODAY,
     ),
   )
 
@@ -82,7 +82,7 @@ class Cas1SpaceBookingSummaryStatusTestHelper {
           actualDepartureDate = null,
           nonArrivalConfirmedAtDateTime = null,
         ),
-        Cas1SpaceBookingSummaryStatus.overdueArrival,
+        Cas1SpaceBookingSummaryStatus.OVERDUE_ARRIVAL,
       )
     }
 
@@ -96,7 +96,7 @@ class Cas1SpaceBookingSummaryStatusTestHelper {
           actualDepartureDate = null,
           nonArrivalConfirmedAtDateTime = null,
         ),
-        Cas1SpaceBookingSummaryStatus.arrivingWithin2Weeks,
+        Cas1SpaceBookingSummaryStatus.ARRIVING_WITHIN2_WEEKS,
       )
     }
 
@@ -110,7 +110,7 @@ class Cas1SpaceBookingSummaryStatusTestHelper {
           actualDepartureDate = null,
           nonArrivalConfirmedAtDateTime = null,
         ),
-        Cas1SpaceBookingSummaryStatus.arrivingWithin6Weeks,
+        Cas1SpaceBookingSummaryStatus.ARRIVING_WITHIN6_WEEKS,
       )
     }
 
@@ -125,7 +125,7 @@ class Cas1SpaceBookingSummaryStatusTestHelper {
           actualDepartureDate = null,
           nonArrivalConfirmedAtDateTime = null,
         ),
-        Cas1SpaceBookingSummaryStatus.departingToday,
+        Cas1SpaceBookingSummaryStatus.DEPARTING_TODAY,
       ),
     )
   }
@@ -141,7 +141,7 @@ class Cas1SpaceBookingSummaryStatusTestHelper {
           actualDepartureDate = nowDate,
           nonArrivalConfirmedAtDateTime = null,
         ),
-        Cas1SpaceBookingSummaryStatus.departed,
+        Cas1SpaceBookingSummaryStatus.DEPARTED,
       ),
     )
   }
@@ -156,7 +156,7 @@ class Cas1SpaceBookingSummaryStatusTestHelper {
           actualDepartureDate = null,
           nonArrivalConfirmedAtDateTime = null,
         ),
-        Cas1SpaceBookingSummaryStatus.overdueDeparture,
+        Cas1SpaceBookingSummaryStatus.OVERDUE_DEPARTURE,
       )
     }
 
@@ -170,7 +170,7 @@ class Cas1SpaceBookingSummaryStatusTestHelper {
           actualDepartureDate = null,
           nonArrivalConfirmedAtDateTime = null,
         ),
-        Cas1SpaceBookingSummaryStatus.departingWithin2Weeks,
+        Cas1SpaceBookingSummaryStatus.DEPARTING_WITHIN2_WEEKS,
       )
     }
 }
