@@ -4340,7 +4340,7 @@ class BookingServiceTest {
       .withSubmittedAt(OffsetDateTime.now())
       .withReleaseType(ReleaseTypeOption.LICENCE.toString())
       .withSentenceType(SentenceTypeOption.NON_STATUTORY.toString())
-      .withSituation(SituationOption.bailSentence.toString())
+      .withSituation(SituationOption.BAIL_SENTENCE.toString())
       .produce()
 
     val assessment = ApprovedPremisesAssessmentEntityFactory()

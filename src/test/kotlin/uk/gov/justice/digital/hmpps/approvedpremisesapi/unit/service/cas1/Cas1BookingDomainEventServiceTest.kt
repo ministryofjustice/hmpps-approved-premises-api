@@ -75,7 +75,7 @@ class Cas1BookingDomainEventServiceTest {
       .withSubmittedAt(OffsetDateTime.now())
       .withReleaseType(ReleaseTypeOption.LICENCE.toString())
       .withSentenceType(SentenceTypeOption.NON_STATUTORY.toString())
-      .withSituation(SituationOption.bailSentence.toString())
+      .withSituation(SituationOption.BAIL_SENTENCE.toString())
       .produce()
 
     val premises = ApprovedPremisesEntityFactory()
@@ -190,7 +190,7 @@ class Cas1BookingDomainEventServiceTest {
       .withSubmittedAt(OffsetDateTime.now())
       .withReleaseType(ReleaseTypeOption.LICENCE.toString())
       .withSentenceType(SentenceTypeOption.NON_STATUTORY.toString())
-      .withSituation(SituationOption.bailSentence.toString())
+      .withSituation(SituationOption.BAIL_SENTENCE.toString())
       .produce()
 
     val premises = ApprovedPremisesEntityFactory()
@@ -437,7 +437,7 @@ class Cas1BookingDomainEventServiceTest {
         .withSubmittedAt(OffsetDateTime.now())
         .withReleaseType(ReleaseTypeOption.LICENCE.toString())
         .withSentenceType(SentenceTypeOption.NON_STATUTORY.toString())
-        .withSituation(SituationOption.bailSentence.toString())
+        .withSituation(SituationOption.BAIL_SENTENCE.toString())
         .produce()
 
       val notMadeAt = OffsetDateTime.now()
