@@ -77,9 +77,9 @@ class Cas1PlacementApplicationDomainEventServiceTest {
 
     @ParameterizedTest
     @CsvSource(
-      "ROTL,rotl",
-      "RELEASE_FOLLOWING_DECISION,releaseFollowingDecisions",
-      "ADDITIONAL_PLACEMENT,additionalPlacement",
+      "ROTL,ROTL",
+      "RELEASE_FOLLOWING_DECISION,RELEASE_FOLLOWING_DECISION",
+      "ADDITIONAL_PLACEMENT,ADDITIONAL_PLACEMENT",
     )
     fun `it creates a domain event`(placementType: PlacementType, expectedRequestForPlacementType: RequestForPlacementType) {
       val placementApplication = PlacementApplicationEntityFactory()

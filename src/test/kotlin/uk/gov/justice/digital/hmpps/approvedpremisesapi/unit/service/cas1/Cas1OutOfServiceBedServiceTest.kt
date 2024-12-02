@@ -549,22 +549,22 @@ class Cas1OutOfServiceBedServiceTest {
   inner class GetOutOfServiceBeds {
     @CsvSource(
       // Ascending
-      "'premisesName','asc','p.name'",
-      "'roomName','asc','r.name'",
-      "'bedName','asc','b.name'",
-      "'startDate','asc','d.start_date'",
-      "'endDate','asc','d.end_date'",
-      "'reason','asc','oosr.name'",
-      "'daysLost','asc','(d.end_date - d.start_date)'",
+      "'PREMISES_NAME','ASC','p.name'",
+      "'ROOM_NAME','ASC','r.name'",
+      "'BED_NAME','ASC','b.name'",
+      "'START_DATE','ASC','d.start_date'",
+      "'END_DATE','ASC','d.end_date'",
+      "'REASON','ASC','oosr.name'",
+      "'DAYS_LOST','ASC','(d.end_date - d.start_date)'",
 
       // Descending
-      "'premisesName','desc','p.name'",
-      "'roomName','desc','r.name'",
-      "'bedName','desc','b.name'",
-      "'startDate','desc','d.start_date'",
-      "'endDate','desc','d.end_date'",
-      "'reason','desc','oosr.name'",
-      "'daysLost','desc','(d.end_date - d.start_date)'",
+      "'PREMISES_NAME','DESC','p.name'",
+      "'ROOM_NAME','DESC','r.name'",
+      "'BED_NAME','DESC','b.name'",
+      "'START_DATE','DESC','d.start_date'",
+      "'END_DATE','DESC','d.end_date'",
+      "'REASON','DESC','oosr.name'",
+      "'DAYS_LOST','DESC','(d.end_date - d.start_date)'",
     )
     @ParameterizedTest
     fun `Sorts correctly according to the sort field and direction`(
