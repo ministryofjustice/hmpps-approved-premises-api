@@ -21,6 +21,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.Cancellation
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.PersonTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.UserTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.toLocalDate
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.toLocalDateTime
 import java.time.format.DateTimeFormatter
 
 @Component
@@ -39,6 +40,15 @@ class Cas1SpaceBookingTransformer(
     val placementRequest = jpa.placementRequest
     val application = jpa.application
     val applicationId = jpa.applicationFacade.id
+    val status = Cas1SpaceBookingStatusTransformer().transformToSpaceBookingSummaryStatus(
+      SpaceBookingDates(
+        jpa.expectedArrivalDate,
+        jpa.expectedDepartureDate,
+        jpa.actualArrivalDate,
+        jpa.actualDepartureDate,
+        jpa.nonArrivalConfirmedAt?.toLocalDateTime(),
+      ),
+    )
     return Cas1SpaceBooking(
       id = jpa.id,
       applicationId = applicationId,
@@ -77,6 +87,7 @@ class Cas1SpaceBookingTransformer(
       nonArrival = jpa.extractNonArrival(),
       deliusEventNumber = jpa.deliusEventNumber,
       departure = jpa.extractDeparture(),
+      status = status,
     )
   }
 

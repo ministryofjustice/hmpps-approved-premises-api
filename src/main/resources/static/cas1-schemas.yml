@@ -351,6 +351,8 @@ components:
           $ref: '#/components/schemas/Cas1SpaceBookingNonArrival'
         deliusEventNumber:
           type: string
+        status:
+          $ref: '#/components/schemas/Cas1SpaceBookingSummaryStatus'
       required:
         - id
         - applicationId
