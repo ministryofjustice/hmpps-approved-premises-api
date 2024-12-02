@@ -42,13 +42,13 @@ class Cas1OutOfServiceBedTransformerTest {
 
   @CsvSource(
     value = [
-      "-10,-10,1,past",
-      "-10,-5,6,past",
-      "-5,5,11,current",
-      "-1,0,2,current",
-      "0,0,1,current",
-      "0,1,2,current",
-      "5,10,6,future",
+      "-10,-10,1,PAST",
+      "-10,-5,6,PAST",
+      "-5,5,11,CURRENT",
+      "-1,0,2,CURRENT",
+      "0,0,1,CURRENT",
+      "0,1,2,CURRENT",
+      "5,10,6,FUTURE",
     ],
   )
   @ParameterizedTest
