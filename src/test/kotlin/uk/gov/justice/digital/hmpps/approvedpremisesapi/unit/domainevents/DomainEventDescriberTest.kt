@@ -654,8 +654,8 @@ class DomainEventDescriberTest {
   }
 
   @ParameterizedTest
-  @CsvSource(value = ["accepted,Reason A", "rejected,Reason B"])
-  fun `Returns expected description for assessment appealed event`(decision: String, reason: String) {
+  @CsvSource(value = ["ACCEPTED,Reason A", "REJECTED,Reason B"])
+  fun `Returns expected description for assessment appealed event`(decision: AppealDecision, reason: String) {
     val domainEventSummary = DomainEventSummaryImpl.ofType(DomainEventType.APPROVED_PREMISES_ASSESSMENT_APPEALED)
 
     every { mockDomainEventService.getAssessmentAppealedEvent(any()) } returns buildDomainEvent {
@@ -664,7 +664,7 @@ class DomainEventDescriberTest {
         timestamp = Instant.now(),
         eventType = EventType.assessmentAppealed,
         eventDetails = AssessmentAppealedFactory()
-          .withDecision(AppealDecision.valueOf(decision))
+          .withDecision(decision)
           .withDecisionDetail(reason)
           .produce(),
       )
@@ -672,7 +672,7 @@ class DomainEventDescriberTest {
 
     val result = domainEventDescriber.getDescription(domainEventSummary)
 
-    assertThat(result).isEqualTo("The assessment was appealed and $decision. The reason was: $reason")
+    assertThat(result).isEqualTo("The assessment was appealed and ${decision.value}. The reason was: $reason")
   }
 
   @ParameterizedTest
@@ -797,9 +797,9 @@ class DomainEventDescriberTest {
 
   @ParameterizedTest
   @CsvSource(
-    "rotl,Release on Temporary Licence (ROTL)",
-    "releaseFollowingDecisions,Release directed following parole board or other hearing/decision",
-    "additionalPlacement,An additional placement on an existing application",
+    "ROTL,Release on Temporary Licence (ROTL)",
+    "RELEASE_FOLLOWING_DECISIONS,Release directed following parole board or other hearing/decision",
+    "ADDITIONAL_PLACEMENT,An additional placement on an existing application",
   )
   fun `Returns expected description for request for placement created event, for additional requests`(type: RequestForPlacementType, expectedTypeDescription: String) {
     val domainEventSummary = DomainEventSummaryImpl.ofType(DomainEventType.APPROVED_PREMISES_REQUEST_FOR_PLACEMENT_CREATED)
@@ -873,7 +873,7 @@ class DomainEventDescriberTest {
     val result = domainEventDescriber.getDescription(domainEventSummary)
 
     assertThat(result).isEqualTo(
-      "A request for placement assessment was $decision. The placement request $expectedTermUsed for Friday 3 May 2024 to Friday 10 May 2024 (1 week). The reason was: Request was $decision.",
+      "A request for placement assessment was ${decision.value}. The placement request $expectedTermUsed for Friday 3 May 2024 to Friday 10 May 2024 (1 week). The reason was: Request was $decision.",
     )
   }
 
@@ -900,7 +900,7 @@ class DomainEventDescriberTest {
     val result = domainEventDescriber.getDescription(domainEventSummary)
 
     assertThat(result).isEqualTo(
-      "A request for placement assessment was $decision. The placement request $expectedTermUsed for Friday 3 May 2024 to Friday 10 May 2024 (1 week).",
+      "A request for placement assessment was ${decision.value}. The placement request $expectedTermUsed for Friday 3 May 2024 to Friday 10 May 2024 (1 week).",
     )
   }
 
