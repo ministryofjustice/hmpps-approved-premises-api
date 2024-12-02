@@ -817,9 +817,6 @@ class Cas2BailApplicationServiceTest {
 
       val result = cas2BailApplicationService.submitCas2BailApplication(submitCas2Application, user)
 
-      assertThat(result is CasResult.Success).isTrue
-      result as CasResult.Success
-
       assertThat(result is CasResult.GeneralValidationError).isTrue
       val validatableActionResult = result as CasResult.GeneralValidationError
 
@@ -849,9 +846,6 @@ class Cas2BailApplicationServiceTest {
 
       val result = cas2BailApplicationService.submitCas2BailApplication(submitCas2Application, user)
 
-      assertThat(result is CasResult.Success).isTrue
-      result as CasResult.Success
-
       assertThat(result is CasResult.GeneralValidationError).isTrue
       val validatableActionResult = result as CasResult.GeneralValidationError
 
@@ -877,9 +871,6 @@ class Cas2BailApplicationServiceTest {
       every { mockJsonSchemaService.checkCas2BailSchemaOutdated(cas2BailApplication) } returns cas2BailApplication
 
       val result = cas2BailApplicationService.submitCas2BailApplication(submitCas2Application, user)
-
-      assertThat(result is CasResult.Success).isTrue
-      result as CasResult.Success
 
       assertThat(result is CasResult.GeneralValidationError).isTrue
       val validatableActionResult = result as CasResult.GeneralValidationError
@@ -987,9 +978,6 @@ class Cas2BailApplicationServiceTest {
 
     private fun assertGeneralValidationError(message: String) {
       val result = cas2BailApplicationService.submitCas2BailApplication(submitCas2Application, user)
-      assertThat(result is CasResult.Success).isTrue
-      result as CasResult.Success
-
       assertThat(result is CasResult.GeneralValidationError).isTrue
       val error = result as CasResult.GeneralValidationError
 

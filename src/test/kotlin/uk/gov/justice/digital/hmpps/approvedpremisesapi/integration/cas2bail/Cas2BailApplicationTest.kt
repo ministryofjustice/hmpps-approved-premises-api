@@ -194,7 +194,7 @@ class Cas2BailApplicationTest : IntegrationTestBase() {
         Pair("Awaiting arrival", UUID.fromString("89458555-3219-44a2-9584-c4f715d6b565")),
       )
 
-      val applicationSchema = cas2ApplicationJsonSchemaEntityFactory.produceAndPersist {
+      val applicationSchema = cas2BailApplicationJsonSchemaEntityFactory.produceAndPersist {
         withAddedAt(OffsetDateTime.now())
         withId(UUID.randomUUID())
       }
