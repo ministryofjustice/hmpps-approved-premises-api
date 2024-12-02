@@ -39,17 +39,17 @@ class Cas1OutOfServiceBedRevisionTransformer(
   }
 
   private fun shouldDisplayOutOfServiceFrom(revisionType: List<uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1OutOfServiceBedRevisionType>): Boolean =
-    revisionType.containsAny(ApiRevisionType.created, ApiRevisionType.updatedStartDate)
+    revisionType.containsAny(ApiRevisionType.created, ApiRevisionType.UPDATED_START_DATE)
 
   private fun shouldDisplayOutOfServiceTo(revisionType: List<uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1OutOfServiceBedRevisionType>): Boolean =
-    revisionType.containsAny(ApiRevisionType.created, ApiRevisionType.updatedEndDate)
+    revisionType.containsAny(ApiRevisionType.created, ApiRevisionType.UPDATED_END_DATE)
 
   private fun shouldDisplayReason(revisionType: List<uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1OutOfServiceBedRevisionType>): Boolean =
-    revisionType.containsAny(ApiRevisionType.created, ApiRevisionType.updatedReason)
+    revisionType.containsAny(ApiRevisionType.created, ApiRevisionType.UPDATED_REASON)
 
   private fun shouldDisplayReferenceNumber(revisionType: List<uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1OutOfServiceBedRevisionType>): Boolean =
-    revisionType.containsAny(ApiRevisionType.created, ApiRevisionType.updatedReferenceNumber)
+    revisionType.containsAny(ApiRevisionType.created, ApiRevisionType.UPDATED_REFERENCE_NUMBER)
 
   private fun shouldDisplayNotes(revisionType: List<uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1OutOfServiceBedRevisionType>): Boolean =
-    revisionType.containsAny(ApiRevisionType.created, ApiRevisionType.updatedNotes)
+    revisionType.containsAny(ApiRevisionType.created, ApiRevisionType.UPDATED_NOTES)
 }

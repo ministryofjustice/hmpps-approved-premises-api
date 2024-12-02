@@ -55,11 +55,11 @@ enum class Cas1OutOfServiceBedRevisionType {
 
 @Suppress("detekt:MagicNumber")
 enum class Cas1OutOfServiceBedRevisionChangeType(private val value: Long, val apiValue: ApiRevisionType) {
-  START_DATE(0b0000_0001, ApiRevisionType.updatedStartDate),
-  END_DATE(0b0000_0010, ApiRevisionType.updatedEndDate),
-  REFERENCE_NUMBER(0b0000_0100, ApiRevisionType.updatedReferenceNumber),
-  REASON(0b0000_1000, ApiRevisionType.updatedReason),
-  NOTES(0b0001_0000, ApiRevisionType.updatedNotes),
+  START_DATE(0b0000_0001, ApiRevisionType.UPDATED_START_DATE),
+  END_DATE(0b0000_0010, ApiRevisionType.UPDATED_END_DATE),
+  REFERENCE_NUMBER(0b0000_0100, ApiRevisionType.UPDATED_REFERENCE_NUMBER),
+  REASON(0b0000_1000, ApiRevisionType.UPDATED_REASON),
+  NOTES(0b0001_0000, ApiRevisionType.UPDATED_NOTES),
   ;
 
   companion object {

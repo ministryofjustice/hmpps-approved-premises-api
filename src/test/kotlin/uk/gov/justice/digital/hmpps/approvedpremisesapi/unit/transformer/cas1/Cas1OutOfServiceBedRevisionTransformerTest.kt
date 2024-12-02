@@ -85,7 +85,7 @@ class Cas1OutOfServiceBedRevisionTransformerTest {
     assertThat(result.id).isEqualTo(details.id)
     assertThat(result.updatedAt).isEqualTo(details.createdAt.toInstant())
     assertThat(result.updatedBy).isEqualTo(expectedUser)
-    assertThat(result.revisionType).isEqualTo(listOf(ApiRevisionType.updatedStartDate))
+    assertThat(result.revisionType).isEqualTo(listOf(ApiRevisionType.UPDATED_START_DATE))
     assertThat(result.startDate).isEqualTo(details.startDate)
     assertThat(result.endDate).isNull()
     assertThat(result.reason).isNull()
@@ -105,7 +105,7 @@ class Cas1OutOfServiceBedRevisionTransformerTest {
     assertThat(result.id).isEqualTo(details.id)
     assertThat(result.updatedAt).isEqualTo(details.createdAt.toInstant())
     assertThat(result.updatedBy).isEqualTo(expectedUser)
-    assertThat(result.revisionType).isEqualTo(listOf(ApiRevisionType.updatedEndDate))
+    assertThat(result.revisionType).isEqualTo(listOf(ApiRevisionType.UPDATED_END_DATE))
     assertThat(result.startDate).isNull()
     assertThat(result.endDate).isEqualTo(details.endDate)
     assertThat(result.reason).isNull()
@@ -125,7 +125,7 @@ class Cas1OutOfServiceBedRevisionTransformerTest {
     assertThat(result.id).isEqualTo(details.id)
     assertThat(result.updatedAt).isEqualTo(details.createdAt.toInstant())
     assertThat(result.updatedBy).isEqualTo(expectedUser)
-    assertThat(result.revisionType).isEqualTo(listOf(ApiRevisionType.updatedReferenceNumber))
+    assertThat(result.revisionType).isEqualTo(listOf(ApiRevisionType.UPDATED_REFERENCE_NUMBER))
     assertThat(result.startDate).isNull()
     assertThat(result.endDate).isNull()
     assertThat(result.reason).isNull()
@@ -145,7 +145,7 @@ class Cas1OutOfServiceBedRevisionTransformerTest {
     assertThat(result.id).isEqualTo(details.id)
     assertThat(result.updatedAt).isEqualTo(details.createdAt.toInstant())
     assertThat(result.updatedBy).isEqualTo(expectedUser)
-    assertThat(result.revisionType).isEqualTo(listOf(ApiRevisionType.updatedReason))
+    assertThat(result.revisionType).isEqualTo(listOf(ApiRevisionType.UPDATED_REASON))
     assertThat(result.startDate).isNull()
     assertThat(result.endDate).isNull()
     assertThat(result.reason).isEqualTo(expectedReason)
@@ -165,7 +165,7 @@ class Cas1OutOfServiceBedRevisionTransformerTest {
     assertThat(result.id).isEqualTo(details.id)
     assertThat(result.updatedAt).isEqualTo(details.createdAt.toInstant())
     assertThat(result.updatedBy).isEqualTo(expectedUser)
-    assertThat(result.revisionType).isEqualTo(listOf(ApiRevisionType.updatedNotes))
+    assertThat(result.revisionType).isEqualTo(listOf(ApiRevisionType.UPDATED_NOTES))
     assertThat(result.startDate).isNull()
     assertThat(result.endDate).isNull()
     assertThat(result.reason).isNull()
@@ -186,11 +186,11 @@ class Cas1OutOfServiceBedRevisionTransformerTest {
     assertThat(result.updatedAt).isEqualTo(details.createdAt.toInstant())
     assertThat(result.updatedBy).isEqualTo(expectedUser)
     assertThat(result.revisionType).containsExactlyInAnyOrder(
-      ApiRevisionType.updatedStartDate,
-      ApiRevisionType.updatedEndDate,
-      ApiRevisionType.updatedReferenceNumber,
-      ApiRevisionType.updatedReason,
-      ApiRevisionType.updatedNotes,
+      ApiRevisionType.UPDATED_START_DATE,
+      ApiRevisionType.UPDATED_END_DATE,
+      ApiRevisionType.UPDATED_REFERENCE_NUMBER,
+      ApiRevisionType.UPDATED_REASON,
+      ApiRevisionType.UPDATED_NOTES,
     )
     assertThat(result.startDate).isEqualTo(details.startDate)
     assertThat(result.endDate).isEqualTo(details.endDate)
