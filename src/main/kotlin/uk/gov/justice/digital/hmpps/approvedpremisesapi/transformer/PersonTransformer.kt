@@ -158,6 +158,6 @@ class PersonTransformer {
     InmateStatus.IN -> PersonStatus.IN_CUSTODY
     InmateStatus.OUT -> PersonStatus.IN_COMMUNITY
     InmateStatus.TRN -> PersonStatus.IN_CUSTODY
-    null -> PersonStatus.IN_CUSTODY
+    null -> PersonStatus.UNKNOWN
   }
 }
