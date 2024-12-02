@@ -406,7 +406,7 @@ class BookingTransformerTest {
         arrivalDate = LocalDate.parse("2022-08-10"),
         departureDate = LocalDate.parse("2022-08-30"),
         keyWorker = null,
-        status = BookingStatus.notMinusArrived,
+        status = BookingStatus.NOT_MINUS_ARRIVED,
         nonArrival = Nonarrival(
           id = UUID.fromString("77e66712-b0a0-4968-b284-77ac1babe09c"),
           bookingId = UUID.fromString("655f72ba-51eb-4965-b6ac-45bcc6271b19"),
@@ -1971,7 +1971,7 @@ class BookingTransformerTest {
     assertThat(result).isEqualTo(
       Withdrawable(
         id,
-        WithdrawableType.booking,
+        WithdrawableType.BOOKING,
         listOf(
           DatePeriod(
             LocalDate.of(2023, 12, 11),

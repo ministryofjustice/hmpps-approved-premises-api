@@ -784,7 +784,7 @@ class BookingSearchTest : IntegrationTestBase() {
               booking.cancellation != null -> BookingStatus.CANCELLED
               booking.departure != null -> BookingStatus.DEPARTED
               booking.arrival != null -> BookingStatus.ARRIVED
-              booking.nonArrival != null -> BookingStatus.notMinusArrived
+              booking.nonArrival != null -> BookingStatus.NOT_MINUS_ARRIVED
               booking.confirmation != null -> BookingStatus.CONFIRMED
               else -> BookingStatus.PROVISIONAL
             },
@@ -832,7 +832,7 @@ class BookingSearchTest : IntegrationTestBase() {
               booking.cancellation != null -> BookingStatus.CANCELLED
               booking.departure != null -> BookingStatus.DEPARTED
               booking.arrival != null -> BookingStatus.ARRIVED
-              booking.nonArrival != null -> BookingStatus.notMinusArrived
+              booking.nonArrival != null -> BookingStatus.NOT_MINUS_ARRIVED
               booking.confirmation != null -> BookingStatus.CONFIRMED
               else -> BookingStatus.PROVISIONAL
             },
@@ -879,7 +879,7 @@ class BookingSearchTest : IntegrationTestBase() {
               booking.cancellation != null -> BookingStatus.CANCELLED
               booking.departure != null -> BookingStatus.DEPARTED
               booking.arrival != null -> BookingStatus.ARRIVED
-              booking.nonArrival != null -> BookingStatus.notMinusArrived
+              booking.nonArrival != null -> BookingStatus.NOT_MINUS_ARRIVED
               booking.confirmation != null -> BookingStatus.CONFIRMED
               else -> BookingStatus.PROVISIONAL
             },

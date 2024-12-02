@@ -1889,7 +1889,7 @@ class WithdrawalTest : IntegrationTestBase() {
   fun toWithdrawable(booking: BookingEntity) =
     Withdrawable(
       booking.id,
-      WithdrawableType.booking,
+      WithdrawableType.BOOKING,
       listOf(DatePeriod(booking.arrivalDate, booking.departureDate)),
     )
 

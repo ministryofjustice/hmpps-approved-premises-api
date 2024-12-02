@@ -93,12 +93,12 @@ class BookingTransformer(
 
   fun transformToWithdrawable(jpa: BookingEntity) = Withdrawable(
     jpa.id,
-    WithdrawableType.booking,
+    WithdrawableType.BOOKING,
     listOf(DatePeriod(jpa.arrivalDate, jpa.departureDate)),
   )
 
   private fun determineApprovedPremisesStatus(jpa: BookingEntity) = when {
-    jpa.nonArrival != null -> BookingStatus.notMinusArrived
+    jpa.nonArrival != null -> BookingStatus.NOT_MINUS_ARRIVED
     jpa.arrival != null && jpa.departure == null -> BookingStatus.ARRIVED
     jpa.departure != null -> BookingStatus.DEPARTED
     jpa.cancellation != null -> BookingStatus.CANCELLED
@@ -120,7 +120,7 @@ class BookingTransformer(
       jpa.departure != null && hasNonZeroDayTurnaround && !turnaroundPeriodEnded -> BookingStatus.DEPARTED
       jpa.departure != null && (turnaroundPeriodEnded || hasZeroDayTurnaround) -> BookingStatus.closed
       jpa.arrival != null -> BookingStatus.ARRIVED
-      jpa.nonArrival != null -> BookingStatus.notMinusArrived
+      jpa.nonArrival != null -> BookingStatus.NOT_MINUS_ARRIVED
       jpa.confirmation != null -> BookingStatus.CONFIRMED
       else -> BookingStatus.PROVISIONAL
     }
