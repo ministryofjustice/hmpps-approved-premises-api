@@ -13,7 +13,6 @@ class Cas1PlanSpacePlanningDryRunSeedJob(
   private val spacePlanner: SpacePlanningService,
   private val cas1PremisesService: Cas1PremisesService,
 ) : SeedJob<Cas1SpacePlanningDryRunCsvRow>(
-  id = UUID.randomUUID(),
   requiredHeaders = setOf(
     "premises_id",
     "start_date",

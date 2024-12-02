@@ -8,7 +8,6 @@ import java.util.UUID
 class Cas1DomainEventReplaySeedJob(
   private val domainEventService: DomainEventService,
 ) : SeedJob<Cas1DomainEventReplaySeedCsvRow>(
-  id = UUID.randomUUID(),
   requiredHeaders = setOf(
     "domain_event_id",
   ),

@@ -6,7 +6,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.seed.SeedLogger
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.UserService
 import java.time.OffsetDateTime
 import java.time.temporal.ChronoUnit
-import java.util.UUID
 /**
  * Seeds users, without touching roles and qualifications.
  *
@@ -17,7 +16,6 @@ class ApStaffUsersSeedJob(
   private val userService: UserService,
   private val seedLogger: SeedLogger,
 ) : SeedJob<ApStaffUserSeedCsvRow>(
-  id = UUID.randomUUID(),
   requiredHeaders = setOf(
     "deliusUsername",
   ),

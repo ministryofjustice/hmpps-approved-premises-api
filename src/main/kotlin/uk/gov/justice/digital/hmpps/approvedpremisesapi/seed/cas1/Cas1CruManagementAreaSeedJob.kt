@@ -9,7 +9,6 @@ import java.util.UUID
 class Cas1CruManagementAreaSeedJob(
   private val cas1CruManagementAreaRepository: Cas1CruManagementAreaRepository,
 ) : SeedJob<CruManagementAreaSeedCsvRow>(
-  id = UUID.randomUUID(),
   requiredHeaders = setOf(
     "id",
     "current_name",

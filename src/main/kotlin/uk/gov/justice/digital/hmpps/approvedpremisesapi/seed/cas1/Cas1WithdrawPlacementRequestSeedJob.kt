@@ -17,7 +17,6 @@ class Cas1WithdrawPlacementRequestSeedJob(
   private val placementRequestService: PlacementRequestService,
   private val applicationService: ApplicationService,
 ) : SeedJob<Cas1WithdrawPlacementRequestSeedSeedCsvRow>(
-  id = UUID.randomUUID(),
   requiredHeaders = setOf(
     "placement_request_id",
     "withdrawal_reason",

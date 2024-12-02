@@ -37,7 +37,6 @@ class Cas1UpdateEventNumberSeedJob(
   private val domainEventRepository: DomainEventRepository,
   private val objectMapper: ObjectMapper,
 ) : SeedJob<Cas1UpdateEventNumberSeedJobCsvRow>(
-  id = UUID.randomUUID(),
   requiredHeaders = setOf(
     "application_id",
     "event_number",

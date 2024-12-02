@@ -5,7 +5,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserQualification
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRole
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.UserService
-import java.util.UUID
 /**
  * Seeds users, along with their roles and qualifications.
  *
@@ -20,7 +19,6 @@ abstract class AbstractUsersSeedJob(
   private val useRolesForServices: List<ServiceName>,
   private val userService: UserService,
 ) : SeedJob<UsersSeedCsvRow>(
-  id = UUID.randomUUID(),
   requiredHeaders = setOf(
     "deliusUsername",
     "roles",

@@ -53,7 +53,6 @@ class Cas1BookingToSpaceBookingSeedJob(
   private val environmentService: EnvironmentService,
   private val placementRequestRepository: PlacementRequestRepository,
 ) : SeedJob<Cas1BookingToSpaceBookingSeedCsvRow>(
-  id = UUID.randomUUID(),
   requiredHeaders = setOf(
     "premises_id",
   ),

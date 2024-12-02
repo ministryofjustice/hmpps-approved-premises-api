@@ -16,7 +16,6 @@ class Cas1ImportDeliusBookingDataSeedJob(
   private val jdbcTemplate: NamedParameterJdbcTemplate,
   private val cas1DeliusBookingImportRepository: Cas1DeliusBookingImportRepository,
 ) : SeedJob<Cas1DeliusBookingManagementDataRow>(
-  id = UUID.randomUUID(),
   requiredHeaders = setOf(
     "BOOKING_ID",
     "CRN",

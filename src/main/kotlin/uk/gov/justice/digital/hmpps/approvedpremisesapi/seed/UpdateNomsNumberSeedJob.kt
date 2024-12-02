@@ -11,7 +11,6 @@ class Cas1UpdateNomsNumberSeedJob(
   private val applicationTimelineNoteService: ApplicationTimelineNoteService,
   private val bookingRepository: BookingRepository,
 ) : SeedJob<UpdateNomsNumberSeedRow>(
-  id = UUID.randomUUID(),
   requiredHeaders = setOf(
     "crn",
     "oldNomsNumber",

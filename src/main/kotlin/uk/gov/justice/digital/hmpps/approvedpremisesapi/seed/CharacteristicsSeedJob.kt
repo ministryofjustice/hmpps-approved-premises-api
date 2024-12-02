@@ -9,7 +9,6 @@ import java.util.UUID
 class CharacteristicsSeedJob(
   private val characteristicRepository: CharacteristicRepository,
 ) : SeedJob<CharacteristicsSeedCsvRow>(
-  id = UUID.randomUUID(),
   requiredHeaders = setOf(
     "characteristic_name",
     "characteristic_property_name",

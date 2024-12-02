@@ -9,7 +9,6 @@ import java.util.UUID
 class ExternalUsersSeedJob(
   private val repository: ExternalUserRepository,
 ) : SeedJob<ExternalUserSeedCsvRow>(
-  id = UUID.randomUUID(),
   requiredHeaders = setOf("username", "name", "email"),
 ) {
   private val log = LoggerFactory.getLogger(this::class.java)

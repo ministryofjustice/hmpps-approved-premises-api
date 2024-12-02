@@ -34,7 +34,6 @@ class Cas2ApplicationsSeedJob(
   private val jsonSchemaService: JsonSchemaService,
   private val statusFinder: Cas2PersistedApplicationStatusFinder,
 ) : SeedJob<Cas2ApplicationSeedCsvRow>(
-  id = UUID.randomUUID(),
   requiredHeaders = setOf("id", "nomsNumber", "crn", "state", "createdBy", "createdAt", "submittedAt", "statusUpdates", "location"),
 ) {
   private val log = LoggerFactory.getLogger(this::class.java)

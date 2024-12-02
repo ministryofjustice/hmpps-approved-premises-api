@@ -33,7 +33,6 @@ class Cas1DuplicateApplicationSeedJob(
   private val applicationService: ApplicationService,
   private val offenderService: OffenderService,
 ) : SeedJob<Cas1DuplicateApplicationSeedCsvRow>(
-  id = UUID.randomUUID(),
   requiredHeaders = setOf(
     "application_id",
   ),
