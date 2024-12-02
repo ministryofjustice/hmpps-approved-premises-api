@@ -14,7 +14,6 @@ class Cas1RemoveAssessmentDetailsSeedJob(
   private val objectMapper: ObjectMapper,
   private val applicationService: ApplicationService,
 ) : SeedJob<Cas1RemoveAssessmentDetailsSeedCsvRow>(
-  id = UUID.randomUUID(),
   requiredHeaders = setOf(
     "assessment_id",
   ),

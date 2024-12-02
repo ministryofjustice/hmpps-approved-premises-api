@@ -9,7 +9,6 @@ import java.util.UUID
 class Cas1FurtherInfoBugFixSeedJob(
   private val assessmentRepository: AssessmentRepository,
 ) : SeedJob<Cas1FurtherInfoBugFixSeedCsvRow>(
-  id = UUID.randomUUID(),
   requiredHeaders = setOf(
     "assessment_id",
   ),

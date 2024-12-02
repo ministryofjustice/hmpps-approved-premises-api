@@ -15,7 +15,6 @@ class Cas1OutOfServiceBedSeedJob(
   private val cas1OutOfServiceBedService: Cas1OutOfServiceBedService,
   private val premisesService: PremisesService,
 ) : SeedJob<Cas1OutOfServiceBedSeedCsvRow>(
-  id = UUID.randomUUID(),
   requiredHeaders = setOf(
     "premisesId",
     "bedId",

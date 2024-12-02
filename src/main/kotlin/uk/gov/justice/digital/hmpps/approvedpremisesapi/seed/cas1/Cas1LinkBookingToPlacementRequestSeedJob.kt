@@ -14,7 +14,6 @@ class Cas1LinkedBookingToPlacementRequestSeedJob(
   private val bookingRepository: BookingRepository,
   private val applicationTimelineNoteService: ApplicationTimelineNoteService,
 ) : SeedJob<Cas1LinkBookingToPlacementRequestSeedJobCsvRow>(
-  id = UUID.randomUUID(),
   requiredHeaders = setOf(
     "booking_id",
     "placement_request_id",

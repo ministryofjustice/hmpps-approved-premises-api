@@ -11,15 +11,12 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.seed.trimToNull
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.CharacteristicService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.RoomService
 import java.lang.RuntimeException
-import java.util.UUID
 
 class TemporaryAccommodationBedspaceSeedJob(
   private val premisesRepository: PremisesRepository,
   private val characteristicService: CharacteristicService,
   private val roomService: RoomService,
-) : SeedJob<TemporaryAccommodationBedspaceSeedCsvRow>(
-  id = UUID.randomUUID(),
-) {
+) : SeedJob<TemporaryAccommodationBedspaceSeedCsvRow>() {
   private val log = LoggerFactory.getLogger(this::class.java)
 
   override fun deserializeRow(columns: Map<String, String>) = TemporaryAccommodationBedspaceSeedCsvRow(

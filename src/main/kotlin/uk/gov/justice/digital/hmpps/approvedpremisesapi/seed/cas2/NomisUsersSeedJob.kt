@@ -10,7 +10,6 @@ import kotlin.random.Random
 class NomisUsersSeedJob(
   private val repository: NomisUserRepository,
 ) : SeedJob<NomisUserSeedCsvRow>(
-  id = UUID.randomUUID(),
   requiredHeaders = setOf("nomisUsername", "name", "email"),
 ) {
   private val log = LoggerFactory.getLogger(this::class.java)

@@ -26,9 +26,7 @@ class TemporaryAccommodationPremisesSeedJob(
   private val localAuthorityAreaRepository: LocalAuthorityAreaRepository,
   private val probationDeliveryUnitRepository: ProbationDeliveryUnitRepository,
   private val characteristicService: CharacteristicService,
-) : SeedJob<TemporaryAccommodationPremisesSeedCsvRow>(
-  id = UUID.randomUUID(),
-) {
+) : SeedJob<TemporaryAccommodationPremisesSeedCsvRow>() {
   private val log = LoggerFactory.getLogger(this::class.java)
 
   override fun deserializeRow(columns: Map<String, String>) = TemporaryAccommodationPremisesSeedCsvRow(
