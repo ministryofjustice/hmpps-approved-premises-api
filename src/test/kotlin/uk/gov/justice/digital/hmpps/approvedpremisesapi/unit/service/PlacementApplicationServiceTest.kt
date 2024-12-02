@@ -414,8 +414,8 @@ class PlacementApplicationServiceTest {
       val expectedDecision = when (decision) {
         uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PlacementApplicationDecision.ACCEPTED -> PlacementApplicationDecision.ACCEPTED
         uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PlacementApplicationDecision.REJECTED -> PlacementApplicationDecision.REJECTED
-        uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PlacementApplicationDecision.withdraw -> PlacementApplicationDecision.WITHDRAW
-        uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PlacementApplicationDecision.withdrawnByPp -> PlacementApplicationDecision.WITHDRAWN_BY_PP
+        uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PlacementApplicationDecision.WITHDRAW -> PlacementApplicationDecision.WITHDRAW
+        uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PlacementApplicationDecision.WITHDRAWN_BY_PP -> PlacementApplicationDecision.WITHDRAWN_BY_PP
       }
 
       assertThat(updatedApplication.decision).isEqualTo(expectedDecision)

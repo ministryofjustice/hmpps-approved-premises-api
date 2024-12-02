@@ -411,8 +411,8 @@ class PlacementApplicationService(
     when (placementApplicationDecisionEnvelope.decision) {
       ApiPlacementApplicationDecision.ACCEPTED -> cas1PlacementApplicationEmailService.placementApplicationAccepted(placementApplicationEntity)
       ApiPlacementApplicationDecision.REJECTED -> cas1PlacementApplicationEmailService.placementApplicationRejected(placementApplicationEntity)
-      ApiPlacementApplicationDecision.withdraw -> cas1PlacementApplicationEmailService.placementApplicationRejected(placementApplicationEntity)
-      ApiPlacementApplicationDecision.withdrawnByPp -> cas1PlacementApplicationEmailService.placementApplicationRejected(placementApplicationEntity)
+      ApiPlacementApplicationDecision.WITHDRAW -> cas1PlacementApplicationEmailService.placementApplicationRejected(placementApplicationEntity)
+      ApiPlacementApplicationDecision.WITHDRAWN_BY_PP -> cas1PlacementApplicationEmailService.placementApplicationRejected(placementApplicationEntity)
     }
 
     cas1PlacementApplicationDomainEventService.placementApplicationAssessed(

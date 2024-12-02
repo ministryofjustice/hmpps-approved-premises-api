@@ -199,10 +199,10 @@ enum class PlacementApplicationDecision(val apiValue: ApiPlacementApplicationDec
    * is a helpful indicator that the decision_made_at date should not be trusted
    */
   @Deprecated("Explicit isWithdrawn property supersedes this value")
-  WITHDRAW(ApiPlacementApplicationDecision.withdraw),
+  WITHDRAW(ApiPlacementApplicationDecision.WITHDRAW),
 
   @Deprecated("Explicit isWithdrawn property supersedes this value")
-  WITHDRAWN_BY_PP(ApiPlacementApplicationDecision.withdrawnByPp),
+  WITHDRAWN_BY_PP(ApiPlacementApplicationDecision.WITHDRAWN_BY_PP),
   ;
 
   companion object {
