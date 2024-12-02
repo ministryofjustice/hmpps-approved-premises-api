@@ -6,12 +6,12 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementRequ
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApprovedPremisesApplicationStatus as ApiApprovedPremisesApplicationStatus
 
 enum class ApprovedPremisesApplicationStatus(val apiValue: ApiApprovedPremisesApplicationStatus) {
-  STARTED(ApiApprovedPremisesApplicationStatus.started),
-  SUBMITTED(ApiApprovedPremisesApplicationStatus.submitted),
-  REJECTED(ApiApprovedPremisesApplicationStatus.rejected),
-  AWAITING_ASSESSMENT(ApiApprovedPremisesApplicationStatus.awaitingAssesment),
-  UNALLOCATED_ASSESSMENT(ApiApprovedPremisesApplicationStatus.unallocatedAssesment),
-  ASSESSMENT_IN_PROGRESS(ApiApprovedPremisesApplicationStatus.assesmentInProgress),
+  STARTED(ApiApprovedPremisesApplicationStatus.STARTED),
+  SUBMITTED(ApiApprovedPremisesApplicationStatus.SUBMITTED),
+  REJECTED(ApiApprovedPremisesApplicationStatus.REJECTED),
+  AWAITING_ASSESSMENT(ApiApprovedPremisesApplicationStatus.AWAITING_ASSESMENT),
+  UNALLOCATED_ASSESSMENT(ApiApprovedPremisesApplicationStatus.UNALLOCATED_ASSESMENT),
+  ASSESSMENT_IN_PROGRESS(ApiApprovedPremisesApplicationStatus.ASSESMENT_IN_PROGRESS),
 
   /**
    * An application has been assessed and a [PlacementRequestEntity] has been created which requires a [BookingEntity].
@@ -19,23 +19,23 @@ enum class ApprovedPremisesApplicationStatus(val apiValue: ApiApprovedPremisesAp
    * Note - If a [PlacementApplicationEntity] is assessed the application _will not_ enter this state
    * (it will remain as PENDING_PLACEMENT_REQUEST)
    */
-  AWAITING_PLACEMENT(ApiApprovedPremisesApplicationStatus.awaitingPlacement),
+  AWAITING_PLACEMENT(ApiApprovedPremisesApplicationStatus.AWAITING_PLACEMENT),
 
   /**
    * A [BookingEntity] has been created for a [PlacementRequestEntity]
    */
-  PLACEMENT_ALLOCATED(ApiApprovedPremisesApplicationStatus.placementAllocated),
-  INAPPLICABLE(ApiApprovedPremisesApplicationStatus.inapplicable),
-  WITHDRAWN(ApiApprovedPremisesApplicationStatus.withdrawn),
-  REQUESTED_FURTHER_INFORMATION(ApiApprovedPremisesApplicationStatus.requestedFurtherInformation),
+  PLACEMENT_ALLOCATED(ApiApprovedPremisesApplicationStatus.PLACEMENT_ALLOCATED),
+  INAPPLICABLE(ApiApprovedPremisesApplicationStatus.INAPPLICABLE),
+  WITHDRAWN(ApiApprovedPremisesApplicationStatus.WITHDRAWN),
+  REQUESTED_FURTHER_INFORMATION(ApiApprovedPremisesApplicationStatus.REQUESTED_FURTHER_INFORMATION),
 
   /**
    * An application has been assessed. Because no arrival date was defined,
    * one or more [PlacementApplicationEntity]s are required
    */
-  PENDING_PLACEMENT_REQUEST(ApiApprovedPremisesApplicationStatus.pendingPlacementRequest),
+  PENDING_PLACEMENT_REQUEST(ApiApprovedPremisesApplicationStatus.PENDING_PLACEMENT_REQUEST),
 
-  EXPIRED(ApiApprovedPremisesApplicationStatus.expired),
+  EXPIRED(ApiApprovedPremisesApplicationStatus.EXPIRED),
   ;
 
   companion object {

@@ -441,7 +441,7 @@ class ApplicationTest : IntegrationTestBase() {
               listOf(
                 ApprovedPremisesApplicationSummary(
                   createdByUserId = userEntity.id,
-                  status = ApiApprovedPremisesApplicationStatus.started,
+                  status = ApiApprovedPremisesApplicationStatus.STARTED,
                   type = "CAS1",
                   id = application.id,
                   person = UnknownPerson(
@@ -3653,7 +3653,7 @@ class ApplicationTest : IntegrationTestBase() {
             .bodyAsListOfObjects<ApprovedPremisesApplicationSummary>()
 
           assertThat(responseBody.count()).isEqualTo(2)
-          assertThat(responseBody[0].status).isEqualTo(ApiApprovedPremisesApplicationStatus.assesmentInProgress)
+          assertThat(responseBody[0].status).isEqualTo(ApiApprovedPremisesApplicationStatus.ASSESMENT_IN_PROGRESS)
         }
       }
     }

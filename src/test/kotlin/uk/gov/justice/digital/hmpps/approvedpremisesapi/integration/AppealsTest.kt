@@ -321,7 +321,7 @@ class AppealsTest : InitialiseDatabasePerClassTestBase() {
 
           val applicationBody = applicationResult.responseBody.blockFirst()!!
 
-          assertThat(applicationBody.status).isEqualTo(ApprovedPremisesApplicationStatus.rejected)
+          assertThat(applicationBody.status).isEqualTo(ApprovedPremisesApplicationStatus.REJECTED)
 
           assertThat(applicationBody.assessmentId).isEqualTo(assessment.id)
           assertThat(applicationBody.assessmentDecision).isEqualTo(ApiAssessmentDecision.rejected)
@@ -377,7 +377,7 @@ class AppealsTest : InitialiseDatabasePerClassTestBase() {
 
           val applicationBody = applicationResult.responseBody.blockFirst()!!
 
-          assertThat(applicationBody.status).isEqualTo(ApprovedPremisesApplicationStatus.awaitingAssesment)
+          assertThat(applicationBody.status).isEqualTo(ApprovedPremisesApplicationStatus.AWAITING_ASSESMENT)
 
           assertThat(applicationBody.assessmentId).isNotNull()
           assertThat(applicationBody.assessmentId).isNotEqualTo(assessment.id)

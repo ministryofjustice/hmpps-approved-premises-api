@@ -476,18 +476,18 @@ class ApplicationsTransformerTest {
   private companion object {
     @JvmStatic
     fun applicationStatusArgs() = listOf(
-      ApiApprovedPremisesApplicationStatus.assesmentInProgress to ApprovedPremisesApplicationStatus.ASSESSMENT_IN_PROGRESS,
-      ApiApprovedPremisesApplicationStatus.started to ApprovedPremisesApplicationStatus.STARTED,
-      ApiApprovedPremisesApplicationStatus.submitted to ApprovedPremisesApplicationStatus.SUBMITTED,
-      ApiApprovedPremisesApplicationStatus.rejected to ApprovedPremisesApplicationStatus.REJECTED,
-      ApiApprovedPremisesApplicationStatus.awaitingAssesment to ApprovedPremisesApplicationStatus.AWAITING_ASSESSMENT,
-      ApiApprovedPremisesApplicationStatus.unallocatedAssesment to ApprovedPremisesApplicationStatus.UNALLOCATED_ASSESSMENT,
-      ApiApprovedPremisesApplicationStatus.awaitingPlacement to ApprovedPremisesApplicationStatus.AWAITING_PLACEMENT,
-      ApiApprovedPremisesApplicationStatus.placementAllocated to ApprovedPremisesApplicationStatus.PLACEMENT_ALLOCATED,
-      ApiApprovedPremisesApplicationStatus.inapplicable to ApprovedPremisesApplicationStatus.INAPPLICABLE,
-      ApiApprovedPremisesApplicationStatus.withdrawn to ApprovedPremisesApplicationStatus.WITHDRAWN,
-      ApiApprovedPremisesApplicationStatus.requestedFurtherInformation to ApprovedPremisesApplicationStatus.REQUESTED_FURTHER_INFORMATION,
-      ApiApprovedPremisesApplicationStatus.pendingPlacementRequest to ApprovedPremisesApplicationStatus.PENDING_PLACEMENT_REQUEST,
+      ApiApprovedPremisesApplicationStatus.ASSESMENT_IN_PROGRESS to ApprovedPremisesApplicationStatus.ASSESSMENT_IN_PROGRESS,
+      ApiApprovedPremisesApplicationStatus.STARTED to ApprovedPremisesApplicationStatus.STARTED,
+      ApiApprovedPremisesApplicationStatus.SUBMITTED to ApprovedPremisesApplicationStatus.SUBMITTED,
+      ApiApprovedPremisesApplicationStatus.REJECTED to ApprovedPremisesApplicationStatus.REJECTED,
+      ApiApprovedPremisesApplicationStatus.AWAITING_ASSESMENT to ApprovedPremisesApplicationStatus.AWAITING_ASSESSMENT,
+      ApiApprovedPremisesApplicationStatus.UNALLOCATED_ASSESMENT to ApprovedPremisesApplicationStatus.UNALLOCATED_ASSESSMENT,
+      ApiApprovedPremisesApplicationStatus.AWAITING_PLACEMENT to ApprovedPremisesApplicationStatus.AWAITING_PLACEMENT,
+      ApiApprovedPremisesApplicationStatus.PLACEMENT_ALLOCATED to ApprovedPremisesApplicationStatus.PLACEMENT_ALLOCATED,
+      ApiApprovedPremisesApplicationStatus.INAPPLICABLE to ApprovedPremisesApplicationStatus.INAPPLICABLE,
+      ApiApprovedPremisesApplicationStatus.WITHDRAWN to ApprovedPremisesApplicationStatus.WITHDRAWN,
+      ApiApprovedPremisesApplicationStatus.REQUESTED_FURTHER_INFORMATION to ApprovedPremisesApplicationStatus.REQUESTED_FURTHER_INFORMATION,
+      ApiApprovedPremisesApplicationStatus.PENDING_PLACEMENT_REQUEST to ApprovedPremisesApplicationStatus.PENDING_PLACEMENT_REQUEST,
     )
   }
 }

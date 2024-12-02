@@ -205,7 +205,7 @@ class ApplicationServiceTest {
         override fun getCreatedAt(): Instant = Instant.parse("2023-04-20T10:11:00+01:00")
         override fun getSubmittedAt(): Instant? = null
         override fun getTier(): String? = null
-        override fun getStatus(): String = ApprovedPremisesApplicationStatus.started.toString()
+        override fun getStatus(): String = ApprovedPremisesApplicationStatus.STARTED.toString()
         override fun getIsWithdrawn(): Boolean = false
         override fun getReleaseType(): String = ReleaseTypeOption.LICENCE.toString()
         override fun getHasRequestsForPlacement(): Boolean = false
