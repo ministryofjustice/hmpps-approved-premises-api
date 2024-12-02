@@ -148,7 +148,7 @@ class ApplicationsTransformerTest {
     assertThat(result.applicantUserDetails!!.name).isEqualTo("applicant")
     assertThat(result.caseManagerIsNotApplicant).isTrue()
     assertThat(result.caseManagerUserDetails!!.name).isEqualTo("caseManager")
-    assertThat(result.genderForAp).isEqualTo(GenderForAp.male)
+    assertThat(result.genderForAp).isEqualTo(GenderForAp.MALE)
   }
 
   @Test
@@ -218,7 +218,7 @@ class ApplicationsTransformerTest {
 
     assertThat(result.id).isEqualTo(application.id)
     assertThat(result.createdByUserId).isEqualTo(user.id)
-    assertThat(result.status).isEqualTo(ApplicationStatus.inProgress)
+    assertThat(result.status).isEqualTo(ApplicationStatus.IN_PROGRESS)
     assertThat(result.risks).isNotNull
     assertThat(result.arrivalDate).isNull()
     assertThat(result.offenceId).isEqualTo(application.offenceId)
@@ -239,7 +239,7 @@ class ApplicationsTransformerTest {
 
     val result = applicationsTransformer.transformJpaToApi(application, mockk()) as TemporaryAccommodationApplication
 
-    assertThat(result.status).isEqualTo(ApplicationStatus.submitted)
+    assertThat(result.status).isEqualTo(ApplicationStatus.SUBMITTED)
     assertThat(result.arrivalDate).isEqualTo(application.arrivalDate!!.toInstant())
     assertThat(result.offenceId).isEqualTo(application.offenceId)
   }
@@ -270,7 +270,7 @@ class ApplicationsTransformerTest {
 
     val result = applicationsTransformer.transformJpaToApi(application, mockk()) as TemporaryAccommodationApplication
 
-    assertThat(result.status).isEqualTo(ApplicationStatus.requestedFurtherInformation)
+    assertThat(result.status).isEqualTo(ApplicationStatus.REQUESTED_FURTHER_INFORMATION)
   }
 
   @Test
@@ -297,7 +297,7 @@ class ApplicationsTransformerTest {
 
     val result = applicationsTransformer.transformJpaToApi(application, mockk()) as TemporaryAccommodationApplication
 
-    assertThat(result.status).isEqualTo(ApplicationStatus.submitted)
+    assertThat(result.status).isEqualTo(ApplicationStatus.SUBMITTED)
   }
 
   @Test
@@ -335,7 +335,7 @@ class ApplicationsTransformerTest {
 
     val result = applicationsTransformer.transformJpaToApi(application, mockk()) as TemporaryAccommodationApplication
 
-    assertThat(result.status).isEqualTo(ApplicationStatus.submitted)
+    assertThat(result.status).isEqualTo(ApplicationStatus.SUBMITTED)
   }
 
   @ParameterizedTest
@@ -443,7 +443,7 @@ class ApplicationsTransformerTest {
 
     assertThat(result.id).isEqualTo(application.getId())
     assertThat(result.createdByUserId).isEqualTo(application.getCreatedByUserId())
-    assertThat(result.status).isEqualTo(ApplicationStatus.inProgress)
+    assertThat(result.status).isEqualTo(ApplicationStatus.IN_PROGRESS)
     assertThat(result.risks).isNotNull
   }
 
@@ -469,7 +469,7 @@ class ApplicationsTransformerTest {
 
     assertThat(result.id).isEqualTo(application.getId())
     assertThat(result.createdByUserId).isEqualTo(application.getCreatedByUserId())
-    assertThat(result.status).isEqualTo(ApplicationStatus.submitted)
+    assertThat(result.status).isEqualTo(ApplicationStatus.SUBMITTED)
     assertThat(result.risks).isNotNull
   }
 

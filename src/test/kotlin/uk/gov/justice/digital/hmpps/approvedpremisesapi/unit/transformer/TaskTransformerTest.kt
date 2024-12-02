@@ -203,7 +203,7 @@ class TaskTransformerTest {
         .withData("{\"test\": \"data\"}")
         .produce()
 
-      val apiDecision = uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.AssessmentDecision.accepted
+      val apiDecision = uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.AssessmentDecision.ACCEPTED
 
       every { mockAssessmentTransformer.transformJpaDecisionToApi(assessment.decision) } returns apiDecision
 

@@ -79,7 +79,7 @@ class ApplicationsTransformer(
         caseManagerIsNotApplicant = jpa.caseManagerIsNotApplicant,
         caseManagerUserDetails = jpa.caseManagerUserDetails?.let { cas1ApplicationUserDetailsTransformer.transformJpaToApi(it) },
         apType = jpa.apType.asApiType(),
-        genderForAp = GenderForAp.male,
+        genderForAp = GenderForAp.MALE,
       )
 
       is DomainTemporaryAccommodationApplicationEntity -> TemporaryAccommodationApplication(
@@ -165,17 +165,17 @@ class ApplicationsTransformer(
 
   private fun getStatus(entity: ApplicationEntity, latestAssessment: AssessmentEntity?): ApplicationStatus {
     return when {
-      latestAssessment?.clarificationNotes?.any { it.response == null } == true -> ApplicationStatus.requestedFurtherInformation
-      entity.submittedAt !== null -> ApplicationStatus.submitted
-      else -> ApplicationStatus.inProgress
+      latestAssessment?.clarificationNotes?.any { it.response == null } == true -> ApplicationStatus.REQUESTED_FURTHER_INFORMATION
+      entity.submittedAt !== null -> ApplicationStatus.SUBMITTED
+      else -> ApplicationStatus.IN_PROGRESS
     }
   }
 
   private fun getStatusFromSummary(entity: DomainTemporaryAccommodationApplicationSummary): ApplicationStatus {
     return when {
-      entity.getLatestAssessmentHasClarificationNotesWithoutResponse() -> ApplicationStatus.requestedFurtherInformation
-      entity.getSubmittedAt() !== null -> ApplicationStatus.submitted
-      else -> ApplicationStatus.inProgress
+      entity.getLatestAssessmentHasClarificationNotesWithoutResponse() -> ApplicationStatus.REQUESTED_FURTHER_INFORMATION
+      entity.getSubmittedAt() !== null -> ApplicationStatus.SUBMITTED
+      else -> ApplicationStatus.IN_PROGRESS
     }
   }
 
@@ -183,8 +183,8 @@ class ApplicationsTransformer(
     ApprovedPremisesApplicationStatus.valueOf(entity.getStatus()).apiValue
 
   fun transformJpaDecisionToApi(decision: AssessmentDecision?) = when (decision) {
-    AssessmentDecision.ACCEPTED -> uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.AssessmentDecision.accepted
-    AssessmentDecision.REJECTED -> uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.AssessmentDecision.rejected
+    AssessmentDecision.ACCEPTED -> uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.AssessmentDecision.ACCEPTED
+    AssessmentDecision.REJECTED -> uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.AssessmentDecision.REJECTED
     null -> null
   }
 }
