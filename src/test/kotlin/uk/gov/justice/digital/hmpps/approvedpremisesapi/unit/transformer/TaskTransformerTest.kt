@@ -233,7 +233,7 @@ class TaskTransformerTest {
         getOffenderSummariesWithDiscriminator(assessment.application.crn, PersonSummaryDiscriminator.FULL_PERSON_SUMMARY),
       )
 
-      assertThat(result.status).isEqualTo(TaskStatus.infoRequested)
+      assertThat(result.status).isEqualTo(TaskStatus.INFO_REQUESTED)
     }
 
     @Test

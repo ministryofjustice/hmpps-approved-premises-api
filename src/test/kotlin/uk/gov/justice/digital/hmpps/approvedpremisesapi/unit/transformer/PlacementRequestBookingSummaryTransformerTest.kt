@@ -116,7 +116,7 @@ class PlacementRequestBookingSummaryTransformerTest {
       spaceBooking.canonicalArrivalDate,
       spaceBooking.canonicalDepartureDate,
       spaceBooking.createdAt.toInstant(),
-      BookingSummary.Type.space,
+      BookingSummary.Type.SPACE,
     )
 
     var placementWithSpaceBooking = placementRequest.copy(
@@ -134,7 +134,7 @@ class PlacementRequestBookingSummaryTransformerTest {
     assertThat(result!!.arrivalDate).isEqualTo(spaceBooking.canonicalArrivalDate)
     assertThat(result!!.departureDate).isEqualTo(spaceBooking.canonicalDepartureDate)
     assertThat(result!!.createdAt).isEqualTo(spaceBooking.createdAt.toInstant())
-    assertThat(result!!.type).isEqualTo(BookingSummary.Type.space)
+    assertThat(result!!.type).isEqualTo(BookingSummary.Type.SPACE)
   }
 
   @Test

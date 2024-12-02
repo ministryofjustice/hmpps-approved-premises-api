@@ -144,7 +144,7 @@ class TaskTransformer(
   private fun getAssessmentStatus(entity: AssessmentEntity): TaskStatus = when {
     entity.data.isNullOrEmpty() -> TaskStatus.NOT_STARTED
     entity.decision !== null -> TaskStatus.COMPLETE
-    (entity.application as ApprovedPremisesApplicationEntity).status == ApprovedPremisesApplicationStatus.REQUESTED_FURTHER_INFORMATION -> TaskStatus.infoRequested
+    (entity.application as ApprovedPremisesApplicationEntity).status == ApprovedPremisesApplicationStatus.REQUESTED_FURTHER_INFORMATION -> TaskStatus.INFO_REQUESTED
     else -> TaskStatus.IN_PROGRESS
   }
 
