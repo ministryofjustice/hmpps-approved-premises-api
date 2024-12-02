@@ -23,7 +23,7 @@ class RequestForPlacementTransformer(
     createdByUserId = placementApplicationEntity.createdByUser.id,
     createdAt = placementApplicationEntity.createdAt.toInstant(),
     isWithdrawn = placementApplicationEntity.isWithdrawn,
-    type = RequestForPlacementType.manual,
+    type = RequestForPlacementType.MANUAL,
     placementDates = placementApplicationEntity.placementDates.map { it.toPlacementDates() },
     submittedAt = placementApplicationEntity.submittedAt?.toInstant(),
     requestReviewedAt = placementApplicationEntity.decisionMadeAt?.toInstant(),
@@ -54,7 +54,7 @@ class RequestForPlacementTransformer(
       createdByUserId = placementRequestEntity.application.createdByUser.id,
       createdAt = placementRequestEntity.createdAt.toInstant(),
       isWithdrawn = placementRequestEntity.isWithdrawn,
-      type = RequestForPlacementType.automatic,
+      type = RequestForPlacementType.AUTOMATIC,
       placementDates = listOf(
         PlacementDates(
           expectedArrival = placementRequestEntity.expectedArrival,

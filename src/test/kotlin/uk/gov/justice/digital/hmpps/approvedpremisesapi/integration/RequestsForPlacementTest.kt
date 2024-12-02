@@ -129,19 +129,19 @@ class RequestsForPlacementTest : IntegrationTestBase() {
 
           assertThat(requestForPlacements).hasSize(4)
           assertThat(requestForPlacements[0].id).isEqualTo(submittedPlacementApplication.id)
-          assertThat(requestForPlacements[0].type).isEqualTo(RequestForPlacementType.manual)
+          assertThat(requestForPlacements[0].type).isEqualTo(RequestForPlacementType.MANUAL)
           assertThat(requestForPlacements[0].status).isEqualTo(RequestForPlacementStatus.requestSubmitted)
 
           assertThat(requestForPlacements[1].id).isEqualTo(withdrawnPlacementApplication.id)
-          assertThat(requestForPlacements[1].type).isEqualTo(RequestForPlacementType.manual)
+          assertThat(requestForPlacements[1].type).isEqualTo(RequestForPlacementType.MANUAL)
           assertThat(requestForPlacements[1].status).isEqualTo(RequestForPlacementStatus.requestWithdrawn)
 
           assertThat(requestForPlacements[2].id).isEqualTo(placementRequest.id)
-          assertThat(requestForPlacements[2].type).isEqualTo(RequestForPlacementType.automatic)
+          assertThat(requestForPlacements[2].type).isEqualTo(RequestForPlacementType.AUTOMATIC)
           assertThat(requestForPlacements[2].status).isEqualTo(RequestForPlacementStatus.awaitingMatch)
 
           assertThat(requestForPlacements[3].id).isEqualTo(withdrawnPlacementRequest.id)
-          assertThat(requestForPlacements[3].type).isEqualTo(RequestForPlacementType.automatic)
+          assertThat(requestForPlacements[3].type).isEqualTo(RequestForPlacementType.AUTOMATIC)
           assertThat(requestForPlacements[3].isWithdrawn).isTrue()
         }
       }
