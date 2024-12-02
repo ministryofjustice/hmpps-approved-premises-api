@@ -4,13 +4,11 @@ import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
 import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.data.repository.findByIdOrNull
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.SeedFileType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenABooking
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenABookingForAnOfflineApplication
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenACas1Application
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenACas1SpaceBooking
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAPlacementRequest
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAUser
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAnApprovedPremises
@@ -188,20 +186,12 @@ class SeedCas1BookingToSpaceBookingTest : SeedTestBase() {
       departureDate = LocalDate.of(2024, 8, 5),
     )
 
-    val existingMigratedSpaceBooking1ToRemove = givenACas1SpaceBooking(
-      crn = "CRN1",
-      premises = premises,
-      migratedFromBooking = booking1DeliusManagementInfo,
-    )
-
     withCsv(
       "valid-csv",
       rowsToCsv(listOf(Cas1BookingToSpaceBookingSeedCsvRow(premises.id))),
     )
 
     seedService.seedData(SeedFileType.approvedPremisesBookingToSpaceBooking, "valid-csv.csv")
-
-    assertThat(cas1SpaceBookingRepository.findByIdOrNull(existingMigratedSpaceBooking1ToRemove.id)).isNull()
 
     val premiseSpaceBookings = cas1SpaceBookingTestRepository.findByPremisesId(premises.id)
     assertThat(premiseSpaceBookings).hasSize(4)
@@ -236,7 +226,6 @@ class SeedCas1BookingToSpaceBookingTest : SeedTestBase() {
     assertThat(migratedBooking1.nonArrivalConfirmedAt).isEqualTo(Instant.parse("2024-02-01T09:58:23.00Z"))
     assertThat(migratedBooking1.nonArrivalNotes).isEqualTo("the non arrival notes")
     assertThat(migratedBooking1.deliusEventNumber).isEqualTo("25")
-    assertThat(migratedBooking1.migratedFromBooking!!.id).isEqualTo(booking1DeliusManagementInfo.id)
     assertThat(migratedBooking1.migratedManagementInfoFrom).isEqualTo(ManagementInfoSource.DELIUS)
 
     val migratedBooking2 = premiseSpaceBookings[1]
@@ -270,7 +259,6 @@ class SeedCas1BookingToSpaceBookingTest : SeedTestBase() {
     assertThat(migratedBooking2.nonArrivalConfirmedAt).isEqualTo(Instant.parse("2024-05-01T02:03:04Z"))
     assertThat(migratedBooking2.nonArrivalNotes).isEqualTo("the legacy non arrival notes")
     assertThat(migratedBooking2.deliusEventNumber).isEqualTo("50")
-    assertThat(migratedBooking2.migratedFromBooking!!.id).isEqualTo(booking2LegacyCas1ManagementInfo.id)
     assertThat(migratedBooking2.migratedManagementInfoFrom).isEqualTo(ManagementInfoSource.LEGACY_CAS_1)
 
     val migratedBooking3 = premiseSpaceBookings[2]
@@ -303,7 +291,6 @@ class SeedCas1BookingToSpaceBookingTest : SeedTestBase() {
     assertThat(migratedBooking3.nonArrivalNotes).isNull()
     assertThat(migratedBooking3.criteria).isEmpty()
     assertThat(migratedBooking3.deliusEventNumber).isEqualTo("75")
-    assertThat(migratedBooking3.migratedFromBooking!!.id).isEqualTo(booking3OfflineApplication.id)
     assertThat(migratedBooking3.migratedManagementInfoFrom).isEqualTo(ManagementInfoSource.LEGACY_CAS_1)
 
     val migratedBooking4 = premiseSpaceBookings[3]
@@ -336,7 +323,6 @@ class SeedCas1BookingToSpaceBookingTest : SeedTestBase() {
     assertThat(migratedBooking4.nonArrivalNotes).isNull()
     assertThat(migratedBooking4.criteria).isEmpty()
     assertThat(migratedBooking4.deliusEventNumber).isNull()
-    assertThat(migratedBooking4.migratedFromBooking!!.id).isEqualTo(booking4OfflineNoDomainEvent.id)
     assertThat(migratedBooking4.migratedManagementInfoFrom).isEqualTo(ManagementInfoSource.LEGACY_CAS_1)
   }
 

@@ -83,10 +83,6 @@ class Cas1BookingToSpaceBookingSeedJob(
       error("premise ${premises.name} doesn't support space bookings, can't migrate bookings")
     }
 
-    log.info("Deleting all existing migrated space bookings for premises ${premises.name}")
-    val deletedCount = spaceBookingRepository.deleteByPremisesIdAndMigratedFromBookingIsNotNull(premisesId)
-    log.info("Have deleted $deletedCount existing migrated space bookings")
-
     val bookingIds = bookingRepository.findAllIdsByPremisesId(premisesId)
     val bookingsToMigrateSize = bookingIds.size
     log.info("Have found $bookingsToMigrateSize bookings for premise ${premises.name}")
@@ -153,7 +149,6 @@ class Cas1BookingToSpaceBookingSeedJob(
         nonArrivalReason = managementInfo.nonArrivalReason,
         nonArrivalConfirmedAt = managementInfo.nonArrivalConfirmedAt?.toInstant(),
         nonArrivalNotes = managementInfo.nonArrivalNotes,
-        migratedFromBooking = booking,
         deliusEventNumber = bookingMadeDomainEvent?.data?.eventDetails?.deliusEventNumber,
         migratedManagementInfoFrom = managementInfo.source,
       ),
