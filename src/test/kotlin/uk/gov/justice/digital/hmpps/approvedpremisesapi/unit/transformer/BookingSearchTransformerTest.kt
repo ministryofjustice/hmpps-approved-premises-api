@@ -48,7 +48,7 @@ class BookingSearchTransformerTest {
     val domainResults = listOf(
       TestBookingSearchResult()
         .withPersonName(randomStringMultiCaseWithNumbers(6))
-        .withBookingStatus(BookingStatus.provisional),
+        .withBookingStatus(BookingStatus.PROVISIONAL),
       TestBookingSearchResult()
         .withBookingStatus(BookingStatus.awaitingMinusArrival),
       TestBookingSearchResult()

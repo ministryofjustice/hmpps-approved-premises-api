@@ -203,7 +203,7 @@ class BookingSearchTest : IntegrationTestBase() {
                 withPremises(bed.room.premises)
                 withCrn(offenderDetails.otherIds.crn)
                 withBed(bed)
-                withStatus(BookingStatus.provisional)
+                withStatus(BookingStatus.PROVISIONAL)
                 withServiceName(ServiceName.temporaryAccommodation)
               }
               allBookings += booking
@@ -786,7 +786,7 @@ class BookingSearchTest : IntegrationTestBase() {
               booking.arrival != null -> BookingStatus.arrived
               booking.nonArrival != null -> BookingStatus.notMinusArrived
               booking.confirmation != null -> BookingStatus.CONFIRMED
-              else -> BookingStatus.provisional
+              else -> BookingStatus.PROVISIONAL
             },
             startDate = booking.arrivalDate,
             endDate = booking.departureDate,
@@ -834,7 +834,7 @@ class BookingSearchTest : IntegrationTestBase() {
               booking.arrival != null -> BookingStatus.arrived
               booking.nonArrival != null -> BookingStatus.notMinusArrived
               booking.confirmation != null -> BookingStatus.CONFIRMED
-              else -> BookingStatus.provisional
+              else -> BookingStatus.PROVISIONAL
             },
             startDate = booking.arrivalDate,
             endDate = booking.departureDate,
@@ -881,7 +881,7 @@ class BookingSearchTest : IntegrationTestBase() {
               booking.arrival != null -> BookingStatus.arrived
               booking.nonArrival != null -> BookingStatus.notMinusArrived
               booking.confirmation != null -> BookingStatus.CONFIRMED
-              else -> BookingStatus.provisional
+              else -> BookingStatus.PROVISIONAL
             },
             startDate = booking.arrivalDate,
             endDate = booking.departureDate,
@@ -1007,7 +1007,7 @@ class BookingSearchTest : IntegrationTestBase() {
       withPremises(bed.room.premises)
       withCrn(crn)
       withBed(bed)
-      withStatus(BookingStatus.provisional)
+      withStatus(BookingStatus.PROVISIONAL)
       withServiceName(ServiceName.temporaryAccommodation)
       withArrivalDate(arrivalDate)
       withDepartureDate(departureDate)

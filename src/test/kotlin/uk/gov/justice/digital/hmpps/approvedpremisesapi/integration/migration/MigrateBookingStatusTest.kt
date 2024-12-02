@@ -36,7 +36,7 @@ class MigrateBookingStatusTest : MigrationJobTestBase() {
   fun `Should not migrate CAS3 booking with existing status 'arrived' with existing departure entity and returns 202 response`() {
     givenAUser { userEntity, _ ->
       givenAnOffender { _, _ ->
-        val booking = createTemporaryAccommodationBooking(userEntity, BookingStatus.arrived)
+        val booking = createTemporaryAccommodationBooking(userEntity, BookingStatus.ARRIVED)
         booking.departures = departureEntityFactory.produceAndPersistMultiple(1) {
           withBooking(booking)
           withYieldedReason { departureReasonEntityFactory.produceAndPersist() }
@@ -115,8 +115,8 @@ class MigrateBookingStatusTest : MigrationJobTestBase() {
 
         migrationJobService.runMigrationJob(MigrationJobType.bookingStatus, 1)
 
-        assertBookingStatus(booking1, BookingStatus.provisional, ServiceName.temporaryAccommodation)
-        assertBookingStatus(booking2, BookingStatus.provisional, ServiceName.temporaryAccommodation)
+        assertBookingStatus(booking1, BookingStatus.PROVISIONAL, ServiceName.temporaryAccommodation)
+        assertBookingStatus(booking2, BookingStatus.PROVISIONAL, ServiceName.temporaryAccommodation)
       }
     }
   }
@@ -179,7 +179,7 @@ class MigrateBookingStatusTest : MigrationJobTestBase() {
         assertBookingStatus(departedBooking2, BookingStatus.departed, ServiceName.temporaryAccommodation)
         assertBookingStatus(arrivedBooking, BookingStatus.arrived, ServiceName.temporaryAccommodation)
         assertBookingStatus(confirmedBooking, BookingStatus.CONFIRMED, ServiceName.temporaryAccommodation)
-        assertBookingStatus(provisionalBooking, BookingStatus.provisional, ServiceName.temporaryAccommodation)
+        assertBookingStatus(provisionalBooking, BookingStatus.PROVISIONAL, ServiceName.temporaryAccommodation)
       }
     }
   }
@@ -196,7 +196,7 @@ class MigrateBookingStatusTest : MigrationJobTestBase() {
 
         migrationJobService.runMigrationJob(MigrationJobType.bookingStatus, 1)
 
-        assertBookingStatus(provisionalBooking, BookingStatus.provisional, ServiceName.temporaryAccommodation)
+        assertBookingStatus(provisionalBooking, BookingStatus.PROVISIONAL, ServiceName.temporaryAccommodation)
         assertBookingStatus(cancelledBooking, BookingStatus.cancelled, ServiceName.temporaryAccommodation)
       }
     }

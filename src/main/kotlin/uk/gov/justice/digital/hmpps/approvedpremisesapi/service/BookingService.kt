@@ -563,7 +563,7 @@ class BookingService(
           offlineApplication = null,
           turnarounds = mutableListOf(),
           placementRequest = null,
-          status = BookingStatus.provisional,
+          status = BookingStatus.PROVISIONAL,
         ),
       )
 

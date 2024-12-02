@@ -122,7 +122,7 @@ class BookingTransformer(
       jpa.arrival != null -> BookingStatus.arrived
       jpa.nonArrival != null -> BookingStatus.notMinusArrived
       jpa.confirmation != null -> BookingStatus.CONFIRMED
-      else -> BookingStatus.provisional
+      else -> BookingStatus.PROVISIONAL
     }
   }
 }

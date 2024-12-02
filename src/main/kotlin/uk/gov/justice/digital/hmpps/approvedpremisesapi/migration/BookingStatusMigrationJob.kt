@@ -42,7 +42,7 @@ class BookingStatusMigrationJob(
       booking.departures.isNotEmpty() -> BookingStatus.departed
       booking.arrivals.isNotEmpty() -> BookingStatus.arrived
       booking.confirmation != null -> BookingStatus.CONFIRMED
-      else -> BookingStatus.provisional
+      else -> BookingStatus.PROVISIONAL
     }
 
     log.info("Updating booking status ${booking.id} to ${booking.status}")

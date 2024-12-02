@@ -3493,7 +3493,7 @@ class BookingServiceTest {
               it.arrivalDate == arrivalDate &&
               it.departureDate == departureDate &&
               it.application == application &&
-              it.status == BookingStatus.provisional
+              it.status == BookingStatus.PROVISIONAL
           },
         )
       }
@@ -3580,7 +3580,7 @@ class BookingServiceTest {
               it.arrivalDate == arrivalDate &&
               it.departureDate == departureDate &&
               it.application == null &&
-              it.status == BookingStatus.provisional
+              it.status == BookingStatus.PROVISIONAL
           },
         )
       }
@@ -3668,7 +3668,7 @@ class BookingServiceTest {
               it.arrivalDate == arrivalDate &&
               it.departureDate == departureDate &&
               it.application == application &&
-              it.status == BookingStatus.provisional
+              it.status == BookingStatus.PROVISIONAL
           },
         )
       }
@@ -3761,7 +3761,7 @@ class BookingServiceTest {
               it.arrivalDate == arrivalDate &&
               it.departureDate == departureDate &&
               it.application == application &&
-              it.status == BookingStatus.provisional
+              it.status == BookingStatus.PROVISIONAL
           },
         )
       }
@@ -3855,7 +3855,7 @@ class BookingServiceTest {
               it.arrivalDate == arrivalDate &&
               it.departureDate == departureDate &&
               it.application == application &&
-              it.status == BookingStatus.provisional
+              it.status == BookingStatus.PROVISIONAL
           },
         )
       }
@@ -3950,7 +3950,7 @@ class BookingServiceTest {
               it.arrivalDate == arrivalDate &&
               it.departureDate == departureDate &&
               it.application == application &&
-              it.status == BookingStatus.provisional
+              it.status == BookingStatus.PROVISIONAL
           },
         )
       }
@@ -4045,7 +4045,7 @@ class BookingServiceTest {
               it.arrivalDate == arrivalDate &&
               it.departureDate == departureDate &&
               it.application == application &&
-              it.status == BookingStatus.provisional
+              it.status == BookingStatus.PROVISIONAL
           },
         )
       }
@@ -4201,7 +4201,7 @@ class BookingServiceTest {
               it.arrivalDate == arrivalDate &&
               it.departureDate == departureDate &&
               it.application == application &&
-              it.status == BookingStatus.provisional
+              it.status == BookingStatus.PROVISIONAL
           },
         )
       }
@@ -4301,7 +4301,7 @@ class BookingServiceTest {
               it.arrivalDate == arrivalDate &&
               it.departureDate == departureDate &&
               it.application == application &&
-              it.status == BookingStatus.provisional
+              it.status == BookingStatus.PROVISIONAL
           },
         )
       }
