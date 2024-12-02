@@ -104,7 +104,7 @@ class PlacementRequestsController(
         cruManagementAreaId = cruManagementAreaId,
       ),
       PageCriteria(
-        sortBy = sortBy ?: PlacementRequestSortField.createdAt,
+        sortBy = sortBy ?: PlacementRequestSortField.CREATED_AT,
         sortDirection = sortDirection ?: SortDirection.ASC,
         page = page,
       ),

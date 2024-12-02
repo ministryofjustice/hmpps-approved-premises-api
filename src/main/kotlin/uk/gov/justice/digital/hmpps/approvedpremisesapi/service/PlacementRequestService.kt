@@ -88,10 +88,10 @@ class PlacementRequestService(
   ): Pair<List<PlacementRequestEntity>, PaginationMetadata?> {
     val pageable = pageCriteria.toPageable(
       when (pageCriteria.sortBy) {
-        PlacementRequestSortField.applicationSubmittedAt -> "application.submitted_at"
-        PlacementRequestSortField.createdAt -> "created_at"
-        PlacementRequestSortField.expectedArrival -> "expected_arrival"
-        PlacementRequestSortField.duration -> "duration"
+        PlacementRequestSortField.APPLICATION_SUBMITTED_AT -> "application.submitted_at"
+        PlacementRequestSortField.CREATED_AT -> "created_at"
+        PlacementRequestSortField.EXPECTED_ARRIVAL -> "expected_arrival"
+        PlacementRequestSortField.DURATION -> "duration"
         PlacementRequestSortField.REQUEST_TYPE -> "request_type"
         PlacementRequestSortField.PERSON_NAME -> "person_name"
         PlacementRequestSortField.PERSON_RISKS_TIER -> "person_risks_tier"

@@ -985,7 +985,7 @@ class PlacementRequestServiceTest {
       PlacementRequestService.AllActiveSearchCriteria(
         PlacementRequestStatus.MATCHED,
       ),
-      PageCriteria(page = null, sortBy = PlacementRequestSortField.createdAt, sortDirection = SortDirection.ASC),
+      PageCriteria(page = null, sortBy = PlacementRequestSortField.CREATED_AT, sortDirection = SortDirection.ASC),
     )
 
     assertThat(requests).isEqualTo(placementRequests)
@@ -1011,7 +1011,7 @@ class PlacementRequestServiceTest {
       PlacementRequestService.AllActiveSearchCriteria(
         PlacementRequestStatus.MATCHED,
       ),
-      PageCriteria(page = 1, sortBy = PlacementRequestSortField.createdAt, sortDirection = SortDirection.ASC),
+      PageCriteria(page = 1, sortBy = PlacementRequestSortField.CREATED_AT, sortDirection = SortDirection.ASC),
     )
 
     assertThat(requests).isEqualTo(placementRequests)
@@ -1045,7 +1045,7 @@ class PlacementRequestServiceTest {
         null,
         null,
       ),
-      PageCriteria(page = 1, sortBy = PlacementRequestSortField.expectedArrival, sortDirection = SortDirection.DESC),
+      PageCriteria(page = 1, sortBy = PlacementRequestSortField.EXPECTED_ARRIVAL, sortDirection = SortDirection.DESC),
     )
 
     assertThat(requests).isEqualTo(placementRequests)
@@ -1075,7 +1075,7 @@ class PlacementRequestServiceTest {
       PlacementRequestService.AllActiveSearchCriteria(
         crn = crn,
       ),
-      PageCriteria(page = 1, sortBy = PlacementRequestSortField.expectedArrival, sortDirection = SortDirection.DESC),
+      PageCriteria(page = 1, sortBy = PlacementRequestSortField.EXPECTED_ARRIVAL, sortDirection = SortDirection.DESC),
     )
 
     assertThat(requests).isEqualTo(placementRequests)
@@ -1106,7 +1106,7 @@ class PlacementRequestServiceTest {
       PlacementRequestService.AllActiveSearchCriteria(
         tier = tier,
       ),
-      PageCriteria(page = 1, sortBy = PlacementRequestSortField.expectedArrival, sortDirection = SortDirection.DESC),
+      PageCriteria(page = 1, sortBy = PlacementRequestSortField.EXPECTED_ARRIVAL, sortDirection = SortDirection.DESC),
     )
 
     assertThat(requests).isEqualTo(placementRequests)
@@ -1137,7 +1137,7 @@ class PlacementRequestServiceTest {
       PlacementRequestService.AllActiveSearchCriteria(
         arrivalDateStart = startDate,
       ),
-      PageCriteria(page = 1, sortBy = PlacementRequestSortField.expectedArrival, sortDirection = SortDirection.DESC),
+      PageCriteria(page = 1, sortBy = PlacementRequestSortField.EXPECTED_ARRIVAL, sortDirection = SortDirection.DESC),
     )
 
     assertThat(requests).isEqualTo(placementRequests)
@@ -1168,7 +1168,7 @@ class PlacementRequestServiceTest {
       PlacementRequestService.AllActiveSearchCriteria(
         arrivalDateEnd = endDate,
       ),
-      PageCriteria(page = 1, sortBy = PlacementRequestSortField.expectedArrival, sortDirection = SortDirection.DESC),
+      PageCriteria(page = 1, sortBy = PlacementRequestSortField.EXPECTED_ARRIVAL, sortDirection = SortDirection.DESC),
     )
 
     assertThat(requests).isEqualTo(placementRequests)
