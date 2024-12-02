@@ -50,7 +50,7 @@ class Cas1PlacementApplicationDomainEventService(
     val dates = placementApplication.placementDates[0]
 
     val placementType = when (placementApplication.placementType!!) {
-      PlacementType.ROTL -> RequestForPlacementType.rotl
+      PlacementType.ROTL -> RequestForPlacementType.ROTL
       PlacementType.RELEASE_FOLLOWING_DECISION -> RequestForPlacementType.releaseFollowingDecisions
       PlacementType.ADDITIONAL_PLACEMENT -> RequestForPlacementType.additionalPlacement
     }

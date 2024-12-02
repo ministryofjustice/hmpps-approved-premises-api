@@ -229,7 +229,7 @@ class DomainEventDescriber(
 
       val description = when (details.requestForPlacementType) {
         RequestForPlacementType.INITIAL -> "A placement was automatically requested after the application was assessed"
-        RequestForPlacementType.rotl -> "A placement was requested with the reason 'Release on Temporary Licence (ROTL)'"
+        RequestForPlacementType.ROTL -> "A placement was requested with the reason 'Release on Temporary Licence (ROTL)'"
         RequestForPlacementType.releaseFollowingDecisions -> "A placement was requested with the reason 'Release directed following parole board or other hearing/decision'"
         RequestForPlacementType.additionalPlacement -> "A placement was requested with the reason 'An additional placement on an existing application'"
       }
