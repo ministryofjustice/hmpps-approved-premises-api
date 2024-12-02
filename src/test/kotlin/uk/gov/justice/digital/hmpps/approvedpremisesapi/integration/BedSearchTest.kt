@@ -119,7 +119,7 @@ class BedSearchTest : IntegrationTestBase() {
           withLocalAuthorityArea(localAuthorityArea)
           withLatitude(tenMilesFromPostcodeDistrict.latitude)
           withLongitude(tenMilesFromPostcodeDistrict.longitude)
-          withStatus(PropertyStatus.active)
+          withStatus(PropertyStatus.ACTIVE)
         }
 
         val room = roomEntityFactory.produceAndPersist {
@@ -204,7 +204,7 @@ class BedSearchTest : IntegrationTestBase() {
           withLocalAuthorityArea(localAuthorityArea)
           withProbationDeliveryUnit(searchPdu)
           withProbationRegion(probationRegion)
-          withStatus(PropertyStatus.active)
+          withStatus(PropertyStatus.ACTIVE)
           withNotes(randomStringMultiCaseWithNumbers(100))
         }
 
@@ -273,7 +273,7 @@ class BedSearchTest : IntegrationTestBase() {
           withLocalAuthorityArea(localAuthorityArea)
           withProbationDeliveryUnit(searchPdu)
           withProbationRegion(probationRegion)
-          withStatus(PropertyStatus.active)
+          withStatus(PropertyStatus.ACTIVE)
         }
 
         val room = roomEntityFactory.produceAndPersist {
@@ -327,7 +327,7 @@ class BedSearchTest : IntegrationTestBase() {
           withLocalAuthorityArea(localAuthorityArea)
           withProbationDeliveryUnit(searchPdu)
           withProbationRegion(probationRegion)
-          withStatus(PropertyStatus.active)
+          withStatus(PropertyStatus.ACTIVE)
         }
 
         val room = roomEntityFactory.produceAndPersist {
@@ -393,7 +393,7 @@ class BedSearchTest : IntegrationTestBase() {
             withLocalAuthorityArea(localAuthorityArea)
             withProbationDeliveryUnit(searchPdu)
             withProbationRegion(probationRegion)
-            withStatus(PropertyStatus.active)
+            withStatus(PropertyStatus.ACTIVE)
           }
 
           val roomOne = roomEntityFactory.produceAndPersist {
@@ -605,7 +605,7 @@ class BedSearchTest : IntegrationTestBase() {
             withLocalAuthorityArea(localAuthorityArea)
             withProbationDeliveryUnit(searchPdu)
             withProbationRegion(probationRegion)
-            withStatus(PropertyStatus.active)
+            withStatus(PropertyStatus.ACTIVE)
           }
 
           val premisesTwo = temporaryAccommodationPremisesEntityFactory.produceAndPersist {
@@ -614,7 +614,7 @@ class BedSearchTest : IntegrationTestBase() {
             withLocalAuthorityArea(localAuthorityArea)
             withProbationDeliveryUnit(searchPdu)
             withProbationRegion(probationRegion)
-            withStatus(PropertyStatus.active)
+            withStatus(PropertyStatus.ACTIVE)
           }
 
           val roomInPremisesOne = roomEntityFactory.produceAndPersist {
@@ -783,7 +783,7 @@ class BedSearchTest : IntegrationTestBase() {
           withLocalAuthorityArea(localAuthorityArea)
           withProbationDeliveryUnit(searchPdu)
           withProbationRegion(probationRegion)
-          withStatus(PropertyStatus.active)
+          withStatus(PropertyStatus.ACTIVE)
         }
 
         val roomOne = roomEntityFactory.produceAndPersist {
@@ -883,7 +883,7 @@ class BedSearchTest : IntegrationTestBase() {
             withLocalAuthorityArea(localAuthorityArea)
             withProbationDeliveryUnit(searchPdu)
             withProbationRegion(probationRegion)
-            withStatus(PropertyStatus.active)
+            withStatus(PropertyStatus.ACTIVE)
           }
 
           val roomOne = roomEntityFactory.produceAndPersist {
@@ -1363,7 +1363,7 @@ class BedSearchTest : IntegrationTestBase() {
           withLocalAuthorityArea(localAuthorityArea)
           withProbationDeliveryUnit(searchPdu)
           withProbationRegion(probationRegion)
-          withStatus(PropertyStatus.active)
+          withStatus(PropertyStatus.ACTIVE)
         }
 
         val room = roomEntityFactory.produceAndPersist {
@@ -1443,7 +1443,7 @@ class BedSearchTest : IntegrationTestBase() {
           withLocalAuthorityArea(localAuthorityArea)
           withProbationDeliveryUnit(searchPdu)
           withProbationRegion(probationRegion)
-          withStatus(PropertyStatus.active)
+          withStatus(PropertyStatus.ACTIVE)
         }
 
         val room = roomEntityFactory.produceAndPersist {
@@ -1533,7 +1533,7 @@ class BedSearchTest : IntegrationTestBase() {
           withLocalAuthorityArea(localAuthorityArea)
           withProbationDeliveryUnit(searchPdu)
           withProbationRegion(probationRegion)
-          withStatus(PropertyStatus.active)
+          withStatus(PropertyStatus.ACTIVE)
         }
 
         val roomOne = roomEntityFactory.produceAndPersist {
@@ -1563,7 +1563,7 @@ class BedSearchTest : IntegrationTestBase() {
           withLocalAuthorityArea(localAuthorityArea)
           withProbationDeliveryUnit(pduTwo)
           withProbationRegion(probationRegion)
-          withStatus(PropertyStatus.active)
+          withStatus(PropertyStatus.ACTIVE)
         }
 
         val roomThree = roomEntityFactory.produceAndPersist {
@@ -1667,7 +1667,7 @@ class BedSearchTest : IntegrationTestBase() {
           withLocalAuthorityArea(localAuthorityArea)
           withProbationDeliveryUnit(pduOne)
           withProbationRegion(probationRegion)
-          withStatus(PropertyStatus.active)
+          withStatus(PropertyStatus.ACTIVE)
         }
 
         val (roomOnePremisesOne, bedOnePremisesOne) = createBedspace(premisesOne, "Room One", listOf())
@@ -1679,7 +1679,7 @@ class BedSearchTest : IntegrationTestBase() {
           withLocalAuthorityArea(localAuthorityArea)
           withProbationDeliveryUnit(pduTwo)
           withProbationRegion(probationRegion)
-          withStatus(PropertyStatus.active)
+          withStatus(PropertyStatus.ACTIVE)
         }
 
         val (roomOnePremisesTwo, bedOnePremisesTwo) = createBedspace(premisesTwo, "Room One", listOf())
@@ -1690,7 +1690,7 @@ class BedSearchTest : IntegrationTestBase() {
           withLocalAuthorityArea(localAuthorityArea)
           withProbationDeliveryUnit(pduThree)
           withProbationRegion(probationRegion)
-          withStatus(PropertyStatus.active)
+          withStatus(PropertyStatus.ACTIVE)
         }
 
         val (roomOnePremisesThree, bedOnePremisesThree) = createBedspace(premisesThree, "Room One", listOf())
@@ -1803,7 +1803,7 @@ class BedSearchTest : IntegrationTestBase() {
         withProbationRegion(probationRegion)
         withLocalAuthorityArea(localAuthorityArea)
         withProbationDeliveryUnit(probationDeliveryUnit)
-        withStatus(PropertyStatus.active)
+        withStatus(PropertyStatus.ACTIVE)
         withCharacteristics(characteristics)
       }
     }
@@ -1847,7 +1847,7 @@ class BedSearchTest : IntegrationTestBase() {
         withLocalAuthorityArea(localAuthorityArea)
         withProbationDeliveryUnit(searchPdu)
         withProbationRegion(probationRegion)
-        withStatus(PropertyStatus.active)
+        withStatus(PropertyStatus.ACTIVE)
       }
 
       val room = roomEntityFactory.produceAndPersist {

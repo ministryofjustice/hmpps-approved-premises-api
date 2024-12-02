@@ -108,7 +108,7 @@ class TemporaryAccommodationPremisesSeedJob(
         rooms = mutableListOf(),
         characteristics = mutableListOf(),
         probationDeliveryUnit = probationDeliveryUnit,
-        status = PropertyStatus.active,
+        status = PropertyStatus.ACTIVE,
         turnaroundWorkingDayCount = 2,
       ),
     )

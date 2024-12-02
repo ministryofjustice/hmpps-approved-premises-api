@@ -63,7 +63,7 @@ class PremisesTransformerTest {
       .withProbationRegion(probationRegionEntity)
       .withLocalAuthorityArea(localAuthorityAreaEntity)
       .withCharacteristics(characteristics)
-      .withStatus(PropertyStatus.active)
+      .withStatus(PropertyStatus.ACTIVE)
       .produce()
 
     val probationRegion = ProbationRegion(UUID.randomUUID(), "probationRegion")
@@ -105,6 +105,6 @@ class PremisesTransformerTest {
     assertThat(result.apArea).isEqualTo(apArea)
     assertThat(result.localAuthorityArea).isEqualTo(localAuthorityArea)
     assertThat(result.characteristics!![0]).isEqualTo(characteristic)
-    assertThat(result.status).isEqualTo(PropertyStatus.active)
+    assertThat(result.status).isEqualTo(PropertyStatus.ACTIVE)
   }
 }

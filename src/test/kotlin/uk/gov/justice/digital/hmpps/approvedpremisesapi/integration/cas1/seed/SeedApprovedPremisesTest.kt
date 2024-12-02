@@ -451,7 +451,7 @@ class ApprovedPremisesSeedCsvRowFactory : Factory<ApprovedPremisesSeedCsvRow> {
   private var hasTactileFlooring: Yielded<String> = { "no" }
   private var hasBrailleSignage: Yielded<String> = { "no" }
   private var hasHearingLoop: Yielded<String> = { "no" }
-  private var status: Yielded<PropertyStatus> = { PropertyStatus.active }
+  private var status: Yielded<PropertyStatus> = { PropertyStatus.ACTIVE }
   private var apCode: Yielded<String> = { randomStringMultiCaseWithNumbers(6) }
   private var qCode: Yielded<String> = { randomStringMultiCaseWithNumbers(6) }
   private var gender: Yielded<ApprovedPremisesGender> = { ApprovedPremisesGender.MAN }

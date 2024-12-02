@@ -93,7 +93,7 @@ class BedSearchRepositoryTest : IntegrationTestBase() {
       )
       withLatitude(tenMilesFromPostcodeDistrict.latitude)
       withLongitude(tenMilesFromPostcodeDistrict.longitude)
-      withStatus(PropertyStatus.active)
+      withStatus(PropertyStatus.ACTIVE)
     }
 
     val roomWithAllMatchingCharacteristicsInPremisesWithoutAllCharacteristics = roomEntityFactory.produceAndPersist {
@@ -125,7 +125,7 @@ class BedSearchRepositoryTest : IntegrationTestBase() {
       withCharacteristicsList(requiredPremisesCharacteristics)
       withLatitude(tenMilesFromPostcodeDistrict.latitude)
       withLongitude(tenMilesFromPostcodeDistrict.longitude)
-      withStatus(PropertyStatus.active)
+      withStatus(PropertyStatus.ACTIVE)
     }
 
     val roomMatchingEverything = roomEntityFactory.produceAndPersist {
@@ -258,7 +258,7 @@ class BedSearchRepositoryTest : IntegrationTestBase() {
       withCharacteristicsList(requiredPremisesCharacteristics)
       withLatitude(fiftyOneMilesFromPostcodeDistrict.latitude)
       withLongitude(fiftyOneMilesFromPostcodeDistrict.longitude)
-      withStatus(PropertyStatus.active)
+      withStatus(PropertyStatus.ACTIVE)
     }
 
     val roomMatchingEverythingInPremisesTooFarAway = roomEntityFactory.produceAndPersist {
@@ -296,7 +296,7 @@ class BedSearchRepositoryTest : IntegrationTestBase() {
       withCharacteristicsList(requiredPremisesCharacteristics)
       withLatitude(tenMilesFromPostcodeDistrict.latitude)
       withLongitude(tenMilesFromPostcodeDistrict.longitude)
-      withStatus(PropertyStatus.active)
+      withStatus(PropertyStatus.ACTIVE)
     }
 
     val roomMatchingEverythingInPremisesTwo = roomEntityFactory.produceAndPersist {
@@ -320,7 +320,7 @@ class BedSearchRepositoryTest : IntegrationTestBase() {
       withCharacteristicsList(requiredPremisesCharacteristics)
       withLatitude(fiftyMilesFromPostcodeDistrict.latitude)
       withLongitude(fiftyMilesFromPostcodeDistrict.longitude)
-      withStatus(PropertyStatus.active)
+      withStatus(PropertyStatus.ACTIVE)
     }
 
     val roomMatchingEverythingInPremisesThree = roomEntityFactory.produceAndPersist {
@@ -396,7 +396,7 @@ class BedSearchRepositoryTest : IntegrationTestBase() {
       withCharacteristicsList(requiredPremisesCharacteristics)
       withLatitude(tenMilesFromPostcodeDistrict.latitude)
       withLongitude(tenMilesFromPostcodeDistrict.longitude)
-      withStatus(PropertyStatus.archived)
+      withStatus(PropertyStatus.ARCHIVED)
     }
 
     val roomMatchingEverythingInNonActivePremisesMatchingEverything = roomEntityFactory.produceAndPersist {
@@ -463,7 +463,7 @@ class BedSearchRepositoryTest : IntegrationTestBase() {
           withProbationRegion(probationRegion)
         }
       }
-      withStatus(PropertyStatus.active)
+      withStatus(PropertyStatus.ACTIVE)
     }
 
     val roomInPremisesNotInPdu = roomEntityFactory.produceAndPersist {
@@ -492,7 +492,7 @@ class BedSearchRepositoryTest : IntegrationTestBase() {
       withProbationRegion(probationRegion)
       withLocalAuthorityArea(localAuthorityArea)
       withProbationDeliveryUnit(searchPdu)
-      withStatus(PropertyStatus.active)
+      withStatus(PropertyStatus.ACTIVE)
     }
 
     val roomInPremisesOneInPdu = roomEntityFactory.produceAndPersist {
@@ -626,7 +626,7 @@ class BedSearchRepositoryTest : IntegrationTestBase() {
       withProbationRegion(probationRegion)
       withLocalAuthorityArea(localAuthorityArea)
       withProbationDeliveryUnit(searchPdu)
-      withStatus(PropertyStatus.active)
+      withStatus(PropertyStatus.ACTIVE)
     }
 
     val roomInPremisesTwoInPdu = roomEntityFactory.produceAndPersist {
@@ -647,7 +647,7 @@ class BedSearchRepositoryTest : IntegrationTestBase() {
       withProbationRegion(probationRegion)
       withLocalAuthorityArea(localAuthorityArea)
       withProbationDeliveryUnit(searchPdu)
-      withStatus(PropertyStatus.active)
+      withStatus(PropertyStatus.ACTIVE)
     }
 
     val roomInPremisesThreeInPdu = roomEntityFactory.produceAndPersist {
@@ -702,7 +702,7 @@ class BedSearchRepositoryTest : IntegrationTestBase() {
       withProbationRegion(probationRegion)
       withLocalAuthorityArea(localAuthorityArea)
       withProbationDeliveryUnit(searchPdu)
-      withStatus(PropertyStatus.archived)
+      withStatus(PropertyStatus.ARCHIVED)
     }
 
     val roomInNonActivePremises = roomEntityFactory.produceAndPersist {
@@ -720,7 +720,7 @@ class BedSearchRepositoryTest : IntegrationTestBase() {
       withProbationRegion(otherProbationRegion)
       withLocalAuthorityArea(localAuthorityArea)
       withProbationDeliveryUnit(searchPdu)
-      withStatus(PropertyStatus.active)
+      withStatus(PropertyStatus.ACTIVE)
     }
 
     val roomInPremisesInOtherProbationRegion = roomEntityFactory.produceAndPersist {
@@ -788,7 +788,7 @@ class BedSearchRepositoryTest : IntegrationTestBase() {
       withProbationRegion(probationRegion)
       withLocalAuthorityArea(localAuthorityArea)
       withProbationDeliveryUnit(searchPdu)
-      withStatus(PropertyStatus.active)
+      withStatus(PropertyStatus.ACTIVE)
       withCharacteristics(mutableListOf(premisesSingleOccupancyCharacteristic, premisesWomenOnlyCharacteristic))
     }
 
@@ -830,7 +830,7 @@ class BedSearchRepositoryTest : IntegrationTestBase() {
       withProbationRegion(probationRegion)
       withLocalAuthorityArea(localAuthorityArea)
       withProbationDeliveryUnit(searchPdu)
-      withStatus(PropertyStatus.active)
+      withStatus(PropertyStatus.ACTIVE)
       withCharacteristics(mutableListOf(premisesSharedPropertyCharacteristic, premisesWomenOnlyCharacteristic))
     }
 
@@ -862,7 +862,7 @@ class BedSearchRepositoryTest : IntegrationTestBase() {
       withProbationRegion(probationRegion)
       withLocalAuthorityArea(localAuthorityArea)
       withProbationDeliveryUnit(searchPdu)
-      withStatus(PropertyStatus.active)
+      withStatus(PropertyStatus.ACTIVE)
       withCharacteristics(mutableListOf(premisesSharedPropertyCharacteristic))
     }
 
@@ -918,7 +918,7 @@ class BedSearchRepositoryTest : IntegrationTestBase() {
       withProbationRegion(probationRegion)
       withLocalAuthorityArea(localAuthorityArea)
       withProbationDeliveryUnit(searchPdu)
-      withStatus(PropertyStatus.archived)
+      withStatus(PropertyStatus.ARCHIVED)
     }
 
     val roomInNonActivePremises = roomEntityFactory.produceAndPersist {
@@ -986,7 +986,7 @@ class BedSearchRepositoryTest : IntegrationTestBase() {
       withProbationRegion(probationRegion)
       withLocalAuthorityArea(localAuthorityArea)
       withProbationDeliveryUnit(searchPdu)
-      withStatus(PropertyStatus.active)
+      withStatus(PropertyStatus.ACTIVE)
       withCharacteristics(mutableListOf(premisesSingleOccupancyCharacteristic, premisesWomenOnlyCharacteristic))
     }
 
@@ -1028,7 +1028,7 @@ class BedSearchRepositoryTest : IntegrationTestBase() {
       withProbationRegion(probationRegion)
       withLocalAuthorityArea(localAuthorityArea)
       withProbationDeliveryUnit(searchPdu)
-      withStatus(PropertyStatus.active)
+      withStatus(PropertyStatus.ACTIVE)
       withCharacteristics(mutableListOf(premisesSharedPropertyCharacteristic, premisesWomenOnlyCharacteristic))
     }
 
@@ -1060,7 +1060,7 @@ class BedSearchRepositoryTest : IntegrationTestBase() {
       withProbationRegion(probationRegion)
       withLocalAuthorityArea(localAuthorityArea)
       withProbationDeliveryUnit(searchPdu)
-      withStatus(PropertyStatus.active)
+      withStatus(PropertyStatus.ACTIVE)
       withCharacteristics(mutableListOf(premisesSharedPropertyCharacteristic))
     }
 
@@ -1116,7 +1116,7 @@ class BedSearchRepositoryTest : IntegrationTestBase() {
       withProbationRegion(probationRegion)
       withLocalAuthorityArea(localAuthorityArea)
       withProbationDeliveryUnit(searchPdu)
-      withStatus(PropertyStatus.archived)
+      withStatus(PropertyStatus.ARCHIVED)
     }
 
     val roomInNonActivePremises = roomEntityFactory.produceAndPersist {
@@ -1181,7 +1181,7 @@ class BedSearchRepositoryTest : IntegrationTestBase() {
       withProbationRegion(probationRegion)
       withLocalAuthorityArea(localAuthorityArea)
       withProbationDeliveryUnit(searchPdu)
-      withStatus(PropertyStatus.active)
+      withStatus(PropertyStatus.ACTIVE)
       withCharacteristics(mutableListOf(premisesWheelchairAccessibleCharacteristic, premisesWomenOnlyCharacteristic))
     }
 
@@ -1223,7 +1223,7 @@ class BedSearchRepositoryTest : IntegrationTestBase() {
       withProbationRegion(probationRegion)
       withLocalAuthorityArea(localAuthorityArea)
       withProbationDeliveryUnit(searchPdu)
-      withStatus(PropertyStatus.active)
+      withStatus(PropertyStatus.ACTIVE)
       withCharacteristics(mutableListOf(premisesSharedPropertyCharacteristic, premisesWomenOnlyCharacteristic))
     }
 
@@ -1255,7 +1255,7 @@ class BedSearchRepositoryTest : IntegrationTestBase() {
       withProbationRegion(probationRegion)
       withLocalAuthorityArea(localAuthorityArea)
       withProbationDeliveryUnit(searchPdu)
-      withStatus(PropertyStatus.active)
+      withStatus(PropertyStatus.ACTIVE)
       withCharacteristics(mutableListOf(premisesSharedPropertyCharacteristic))
     }
 
@@ -1311,7 +1311,7 @@ class BedSearchRepositoryTest : IntegrationTestBase() {
       withProbationRegion(probationRegion)
       withLocalAuthorityArea(localAuthorityArea)
       withProbationDeliveryUnit(searchPdu)
-      withStatus(PropertyStatus.archived)
+      withStatus(PropertyStatus.ARCHIVED)
     }
 
     val roomInNonActivePremises = roomEntityFactory.produceAndPersist {

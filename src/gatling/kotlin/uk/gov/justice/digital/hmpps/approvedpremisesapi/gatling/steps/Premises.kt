@@ -29,7 +29,7 @@ fun createTemporaryAccommodationPremises(
           postcode = randomPostCode(),
           probationRegionId = probationRegionId(session),
           characteristicIds = listOf(),
-          status = PropertyStatus.active,
+          status = PropertyStatus.ACTIVE,
           probationDeliveryUnitId = probationDeliveryUnitId(session),
         )
       },

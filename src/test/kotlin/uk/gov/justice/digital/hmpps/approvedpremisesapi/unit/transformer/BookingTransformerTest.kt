@@ -123,7 +123,7 @@ class BookingTransformerTest {
     emailAddress = "some@email",
     rooms = mutableListOf(),
     characteristics = mutableListOf(),
-    status = PropertyStatus.active,
+    status = PropertyStatus.ACTIVE,
     probationDeliveryUnit = null,
     turnaroundWorkingDayCount = 2,
   )
