@@ -231,7 +231,7 @@ class DomainEventDescriber(
         RequestForPlacementType.INITIAL -> "A placement was automatically requested after the application was assessed"
         RequestForPlacementType.ROTL -> "A placement was requested with the reason 'Release on Temporary Licence (ROTL)'"
         RequestForPlacementType.releaseFollowingDecisions -> "A placement was requested with the reason 'Release directed following parole board or other hearing/decision'"
-        RequestForPlacementType.additionalPlacement -> "A placement was requested with the reason 'An additional placement on an existing application'"
+        RequestForPlacementType.ADDITIONAL_PLACEMENT -> "A placement was requested with the reason 'An additional placement on an existing application'"
       }
 
       "$description. ${buildRequestForPlacementDescription(details.expectedArrival, details.duration)}"
@@ -246,9 +246,9 @@ class DomainEventDescriber(
       val summary = details.decisionSummary?.let { " The reason was: $it." } ?: ""
 
       when (details.decision) {
-        RequestForPlacementAssessed.Decision.accepted ->
+        RequestForPlacementAssessed.Decision.ACCEPTED ->
           "A request for placement assessment was accepted. ${buildRequestForPlacementDescription(details.expectedArrival, details.duration)}.$summary"
-        RequestForPlacementAssessed.Decision.rejected ->
+        RequestForPlacementAssessed.Decision.REJECTED ->
           "A request for placement assessment was rejected. ${buildRequestForPlacementDescription(details.expectedArrival, details.duration, true)}.$summary"
       }
     }

@@ -51,8 +51,8 @@ class Cas1PlacementApplicationDomainEventService(
 
     val placementType = when (placementApplication.placementType!!) {
       PlacementType.ROTL -> RequestForPlacementType.ROTL
-      PlacementType.RELEASE_FOLLOWING_DECISION -> RequestForPlacementType.releaseFollowingDecisions
-      PlacementType.ADDITIONAL_PLACEMENT -> RequestForPlacementType.additionalPlacement
+      PlacementType.RELEASE_FOLLOWING_DECISION -> RequestForPlacementType.RELEASE_FOLLOWING_DECISIONS
+      PlacementType.ADDITIONAL_PLACEMENT -> RequestForPlacementType.ADDITIONAL_PLACEMENT
     }
 
     val staffDetails = when (val staffDetailsResult = apDeliusContextApiClient.getStaffDetail(username)) {
@@ -199,8 +199,8 @@ class Cas1PlacementApplicationDomainEventService(
     val assessor = assessedByUser.let { domainEventTransformer.toStaffMember(it) }
 
     val assessmentDecision = when (placementApplication.decision) {
-      PlacementApplicationDecision.ACCEPTED -> RequestForPlacementAssessed.Decision.accepted
-      PlacementApplicationDecision.REJECTED -> RequestForPlacementAssessed.Decision.rejected
+      PlacementApplicationDecision.ACCEPTED -> RequestForPlacementAssessed.Decision.ACCEPTED
+      PlacementApplicationDecision.REJECTED -> RequestForPlacementAssessed.Decision.REJECTED
       PlacementApplicationDecision.WITHDRAW,
       PlacementApplicationDecision.WITHDRAWN_BY_PP,
       -> throw IllegalArgumentException("PlacementApplicationDecision '${placementApplication.decision}' has been deprecated")

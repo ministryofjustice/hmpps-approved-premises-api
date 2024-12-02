@@ -854,7 +854,7 @@ class DomainEventDescriberTest {
   @EnumSource(value = RequestForPlacementAssessed.Decision::class)
   fun `Returns expected description for request for placement assessed event with summary`(decision: RequestForPlacementAssessed.Decision) {
     val domainEventSummary = DomainEventSummaryImpl.ofType(DomainEventType.APPROVED_PREMISES_REQUEST_FOR_PLACEMENT_ASSESSED)
-    val expectedTermUsed = if (decision == RequestForPlacementAssessed.Decision.rejected) "was" else "is"
+    val expectedTermUsed = if (decision == RequestForPlacementAssessed.Decision.REJECTED) "was" else "is"
 
     every { mockDomainEventService.getRequestForPlacementAssessedEvent(UUID.fromString(domainEventSummary.id)) } returns buildDomainEvent {
       RequestForPlacementAssessedEnvelope(
@@ -881,7 +881,7 @@ class DomainEventDescriberTest {
   @EnumSource(value = RequestForPlacementAssessed.Decision::class)
   fun `Returns expected description for request for placement assessed event without summary`(decision: RequestForPlacementAssessed.Decision) {
     val domainEventSummary = DomainEventSummaryImpl.ofType(DomainEventType.APPROVED_PREMISES_REQUEST_FOR_PLACEMENT_ASSESSED)
-    val expectedTermUsed = if (decision == RequestForPlacementAssessed.Decision.rejected) "was" else "is"
+    val expectedTermUsed = if (decision == RequestForPlacementAssessed.Decision.REJECTED) "was" else "is"
 
     every { mockDomainEventService.getRequestForPlacementAssessedEvent(UUID.fromString(domainEventSummary.id)) } returns buildDomainEvent {
       RequestForPlacementAssessedEnvelope(
