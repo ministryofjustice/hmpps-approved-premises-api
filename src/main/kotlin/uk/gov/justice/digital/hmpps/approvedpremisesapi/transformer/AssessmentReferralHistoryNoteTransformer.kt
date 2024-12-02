@@ -82,11 +82,11 @@ class AssessmentReferralHistoryNoteTransformer(
   }
 
   private fun transformSystemNoteTypeToCategory(type: ReferralHistorySystemNoteType): ReferralHistorySystemNote.Category = when (type) {
-    ReferralHistorySystemNoteType.SUBMITTED -> ReferralHistorySystemNote.Category.submitted
-    ReferralHistorySystemNoteType.UNALLOCATED -> ReferralHistorySystemNote.Category.unallocated
-    ReferralHistorySystemNoteType.IN_REVIEW -> ReferralHistorySystemNote.Category.inReview
-    ReferralHistorySystemNoteType.READY_TO_PLACE -> ReferralHistorySystemNote.Category.readyToPlace
-    ReferralHistorySystemNoteType.REJECTED -> ReferralHistorySystemNote.Category.rejected
-    ReferralHistorySystemNoteType.COMPLETED -> ReferralHistorySystemNote.Category.completed
+    ReferralHistorySystemNoteType.SUBMITTED -> ReferralHistorySystemNote.Category.SUBMITTED
+    ReferralHistorySystemNoteType.UNALLOCATED -> ReferralHistorySystemNote.Category.UNALLOCATED
+    ReferralHistorySystemNoteType.IN_REVIEW -> ReferralHistorySystemNote.Category.IN_REVIEW
+    ReferralHistorySystemNoteType.READY_TO_PLACE -> ReferralHistorySystemNote.Category.READY_TO_PLACE
+    ReferralHistorySystemNoteType.REJECTED -> ReferralHistorySystemNote.Category.REJECTED
+    ReferralHistorySystemNoteType.COMPLETED -> ReferralHistorySystemNote.Category.COMPLETED
   }
 }

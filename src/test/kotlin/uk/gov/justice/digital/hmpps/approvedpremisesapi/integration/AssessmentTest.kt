@@ -2113,25 +2113,25 @@ class AssessmentTest : IntegrationTestBase() {
             assertThat(notes).hasSize(8)
             assertThat(notes).allMatch { it.createdByUserName == userEntity.name }
             assertThat(notes).anyMatch { it is ReferralHistoryUserNote && it.message == "Some user note" }
-            assertThat(notes).anyMatch { it is ReferralHistorySystemNote && it.category == ReferralHistorySystemNote.Category.submitted }
-            assertThat(notes).anyMatch { it is ReferralHistorySystemNote && it.category == ReferralHistorySystemNote.Category.unallocated }
-            assertThat(notes).anyMatch { it is ReferralHistorySystemNote && it.category == ReferralHistorySystemNote.Category.inReview }
-            assertThat(notes).anyMatch { it is ReferralHistorySystemNote && it.category == ReferralHistorySystemNote.Category.readyToPlace }
+            assertThat(notes).anyMatch { it is ReferralHistorySystemNote && it.category == ReferralHistorySystemNote.Category.SUBMITTED }
+            assertThat(notes).anyMatch { it is ReferralHistorySystemNote && it.category == ReferralHistorySystemNote.Category.UNALLOCATED }
+            assertThat(notes).anyMatch { it is ReferralHistorySystemNote && it.category == ReferralHistorySystemNote.Category.IN_REVIEW }
+            assertThat(notes).anyMatch { it is ReferralHistorySystemNote && it.category == ReferralHistorySystemNote.Category.READY_TO_PLACE }
             assertThat(notes).anyMatch {
               it is ReferralHistorySystemNote &&
-                it.category == ReferralHistorySystemNote.Category.rejected &&
+                it.category == ReferralHistorySystemNote.Category.REJECTED &&
                 it.id == rejectedSystemNoteId1 &&
                 it.messageDetails == null
             }
             assertThat(notes).anyMatch {
               it is ReferralHistorySystemNote &&
-                it.category == ReferralHistorySystemNote.Category.rejected &&
+                it.category == ReferralHistorySystemNote.Category.REJECTED &&
                 it.id == rejectedSystemNoteId2 &&
                 it.messageDetails?.rejectionReason == referralRejectionReason.name &&
                 it.messageDetails?.rejectionReasonDetails == referralRejectionReasonDetail &&
                 it.messageDetails?.isWithdrawn == true
             }
-            assertThat(notes).anyMatch { it is ReferralHistorySystemNote && it.category == ReferralHistorySystemNote.Category.completed }
+            assertThat(notes).anyMatch { it is ReferralHistorySystemNote && it.category == ReferralHistorySystemNote.Category.COMPLETED }
           }
       }
     }
