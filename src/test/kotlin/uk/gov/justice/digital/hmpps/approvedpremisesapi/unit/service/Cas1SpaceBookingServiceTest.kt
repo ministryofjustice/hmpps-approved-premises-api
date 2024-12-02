@@ -503,7 +503,7 @@ class Cas1SpaceBookingServiceTest {
           crnOrName = null,
           keyWorkerStaffCode = null,
         ),
-        PageCriteriaFactory(Cas1SpaceBookingSummarySortField.canonicalArrivalDate)
+        PageCriteriaFactory(Cas1SpaceBookingSummarySortField.CANONICAL_ARRIVAL_DATE)
           .produce(),
       )
 
