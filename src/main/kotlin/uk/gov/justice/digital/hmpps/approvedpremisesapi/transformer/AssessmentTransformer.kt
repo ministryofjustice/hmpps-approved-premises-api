@@ -228,20 +228,20 @@ class AssessmentTransformer(
   }
 
   private fun getStatusForTemporaryAccommodationAssessment(entity: AssessmentEntity) = when {
-    entity.decision == AssessmentDecision.REJECTED -> TemporaryAccommodationAssessmentStatus.rejected
+    entity.decision == AssessmentDecision.REJECTED -> TemporaryAccommodationAssessmentStatus.REJECTED
     entity.decision == AssessmentDecision.ACCEPTED && (entity as TemporaryAccommodationAssessmentEntity).completedAt != null ->
-      TemporaryAccommodationAssessmentStatus.closed
+      TemporaryAccommodationAssessmentStatus.CLOSED
 
-    entity.decision == AssessmentDecision.ACCEPTED -> TemporaryAccommodationAssessmentStatus.readyToPlace
-    entity.allocatedToUser != null -> TemporaryAccommodationAssessmentStatus.inReview
-    else -> TemporaryAccommodationAssessmentStatus.unallocated
+    entity.decision == AssessmentDecision.ACCEPTED -> TemporaryAccommodationAssessmentStatus.READY_TO_PLACE
+    entity.allocatedToUser != null -> TemporaryAccommodationAssessmentStatus.IN_REVIEW
+    else -> TemporaryAccommodationAssessmentStatus.UNALLOCATED
   }
 
   private fun getStatusForTemporaryAccommodationAssessment(ase: DomainAssessmentSummary) = when {
-    ase.decision == "REJECTED" -> TemporaryAccommodationAssessmentStatus.rejected
-    ase.decision == "ACCEPTED" && ase.completed -> TemporaryAccommodationAssessmentStatus.closed
-    ase.decision == "ACCEPTED" -> TemporaryAccommodationAssessmentStatus.readyToPlace
-    ase.allocated -> TemporaryAccommodationAssessmentStatus.inReview
-    else -> TemporaryAccommodationAssessmentStatus.unallocated
+    ase.decision == "REJECTED" -> TemporaryAccommodationAssessmentStatus.REJECTED
+    ase.decision == "ACCEPTED" && ase.completed -> TemporaryAccommodationAssessmentStatus.CLOSED
+    ase.decision == "ACCEPTED" -> TemporaryAccommodationAssessmentStatus.READY_TO_PLACE
+    ase.allocated -> TemporaryAccommodationAssessmentStatus.IN_REVIEW
+    else -> TemporaryAccommodationAssessmentStatus.UNALLOCATED
   }
 }

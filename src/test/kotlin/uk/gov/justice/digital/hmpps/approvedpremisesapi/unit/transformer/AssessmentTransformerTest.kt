@@ -302,7 +302,7 @@ class AssessmentTransformerTest {
 
       assertThat(result).isInstanceOf(TemporaryAccommodationAssessment::class.java)
       result as TemporaryAccommodationAssessment
-      assertThat(result.status).isEqualTo(TemporaryAccommodationAssessmentStatus.unallocated)
+      assertThat(result.status).isEqualTo(TemporaryAccommodationAssessmentStatus.UNALLOCATED)
     }
 
     @Test
@@ -317,7 +317,7 @@ class AssessmentTransformerTest {
 
       assertThat(result).isInstanceOf(TemporaryAccommodationAssessment::class.java)
       result as TemporaryAccommodationAssessment
-      assertThat(result.status).isEqualTo(TemporaryAccommodationAssessmentStatus.inReview)
+      assertThat(result.status).isEqualTo(TemporaryAccommodationAssessmentStatus.IN_REVIEW)
     }
 
     @Test
@@ -332,7 +332,7 @@ class AssessmentTransformerTest {
 
       assertThat(result).isInstanceOf(TemporaryAccommodationAssessment::class.java)
       result as TemporaryAccommodationAssessment
-      assertThat(result.status).isEqualTo(TemporaryAccommodationAssessmentStatus.readyToPlace)
+      assertThat(result.status).isEqualTo(TemporaryAccommodationAssessmentStatus.READY_TO_PLACE)
     }
 
     @Test
@@ -348,7 +348,7 @@ class AssessmentTransformerTest {
 
       assertThat(result).isInstanceOf(TemporaryAccommodationAssessment::class.java)
       result as TemporaryAccommodationAssessment
-      assertThat(result.status).isEqualTo(TemporaryAccommodationAssessmentStatus.closed)
+      assertThat(result.status).isEqualTo(TemporaryAccommodationAssessmentStatus.CLOSED)
     }
 
     @Test
@@ -363,7 +363,7 @@ class AssessmentTransformerTest {
 
       assertThat(result).isInstanceOf(TemporaryAccommodationAssessment::class.java)
       result as TemporaryAccommodationAssessment
-      assertThat(result.status).isEqualTo(TemporaryAccommodationAssessmentStatus.rejected)
+      assertThat(result.status).isEqualTo(TemporaryAccommodationAssessmentStatus.REJECTED)
     }
 
     @Test
@@ -418,7 +418,7 @@ class AssessmentTransformerTest {
       assertThat(apiSummary.id).isEqualTo(domainSummary.id)
       assertThat(apiSummary.applicationId).isEqualTo(domainSummary.applicationId)
       assertThat(apiSummary.createdAt).isEqualTo(domainSummary.createdAt)
-      assertThat(apiSummary.status).isEqualTo(TemporaryAccommodationAssessmentStatus.inReview)
+      assertThat(apiSummary.status).isEqualTo(TemporaryAccommodationAssessmentStatus.IN_REVIEW)
       assertThat(apiSummary.decision).isNull()
       assertThat(apiSummary.risks).isNull()
       assertThat(apiSummary.person).isNotNull
