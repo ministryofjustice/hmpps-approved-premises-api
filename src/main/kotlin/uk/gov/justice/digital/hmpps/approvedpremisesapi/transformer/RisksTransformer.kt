@@ -63,8 +63,8 @@ class RisksTransformer {
   )
 
   private fun transformStatusDomainToApi(domain: RiskStatus) = when (domain) {
-    RiskStatus.Retrieved -> RiskEnvelopeStatus.retrieved
-    RiskStatus.NotFound -> RiskEnvelopeStatus.notFound
-    RiskStatus.Error -> RiskEnvelopeStatus.error
+    RiskStatus.Retrieved -> RiskEnvelopeStatus.RETRIEVED
+    RiskStatus.NotFound -> RiskEnvelopeStatus.NOT_FOUND
+    RiskStatus.Error -> RiskEnvelopeStatus.ERROR
   }
 }
