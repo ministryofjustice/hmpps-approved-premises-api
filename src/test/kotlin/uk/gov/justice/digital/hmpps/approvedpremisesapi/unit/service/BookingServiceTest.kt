@@ -4338,7 +4338,7 @@ class BookingServiceTest {
     val application = ApprovedPremisesApplicationEntityFactory()
       .withCreatedByUser(otherUser)
       .withSubmittedAt(OffsetDateTime.now())
-      .withReleaseType(ReleaseTypeOption.licence.toString())
+      .withReleaseType(ReleaseTypeOption.LICENCE.toString())
       .withSentenceType(SentenceTypeOption.nonStatutory.toString())
       .withSituation(SituationOption.bailSentence.toString())
       .produce()

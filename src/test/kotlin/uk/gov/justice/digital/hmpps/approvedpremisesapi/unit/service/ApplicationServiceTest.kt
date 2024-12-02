@@ -207,7 +207,7 @@ class ApplicationServiceTest {
         override fun getTier(): String? = null
         override fun getStatus(): String = ApprovedPremisesApplicationStatus.started.toString()
         override fun getIsWithdrawn(): Boolean = false
-        override fun getReleaseType(): String = ReleaseTypeOption.licence.toString()
+        override fun getReleaseType(): String = ReleaseTypeOption.LICENCE.toString()
         override fun getHasRequestsForPlacement(): Boolean = false
       },
     )
@@ -1474,7 +1474,7 @@ class ApplicationServiceTest {
       isEmergencyApplication = false,
       isEsapApplication = false,
       targetLocation = "SW1A 1AA",
-      releaseType = ReleaseTypeOption.licence,
+      releaseType = ReleaseTypeOption.LICENCE,
       type = "CAS1",
       sentenceType = SentenceTypeOption.nonStatutory,
       applicantUserDetails = Cas1ApplicationUserDetails("applicantName", "applicantEmail", "applicantPhone"),
@@ -1617,7 +1617,7 @@ class ApplicationServiceTest {
         isEmergencyApplication = false,
         isEsapApplication = false,
         targetLocation = "SW1A 1AA",
-        releaseType = ReleaseTypeOption.licence,
+        releaseType = ReleaseTypeOption.LICENCE,
         type = "CAS1",
         sentenceType = SentenceTypeOption.nonStatutory,
         applicantUserDetails = Cas1ApplicationUserDetails("applicantName", "applicantEmail", "applicantPhone"),
@@ -1667,7 +1667,7 @@ class ApplicationServiceTest {
         isEsapApplication = false,
         apType = ApType.NORMAL,
         targetLocation = "SW1A 1AA",
-        releaseType = ReleaseTypeOption.licence,
+        releaseType = ReleaseTypeOption.LICENCE,
         type = "CAS1",
         sentenceType = SentenceTypeOption.nonStatutory,
         applicantUserDetails = null,
@@ -1705,7 +1705,7 @@ class ApplicationServiceTest {
         isEmergencyApplication = false,
         isEsapApplication = false,
         targetLocation = "SW1A 1AA",
-        releaseType = ReleaseTypeOption.licence,
+        releaseType = ReleaseTypeOption.LICENCE,
         type = "CAS1",
         sentenceType = SentenceTypeOption.nonStatutory,
         situation = situation,
@@ -1799,7 +1799,7 @@ class ApplicationServiceTest {
         isEmergencyApplication = noticeType == Cas1ApplicationTimelinessCategory.EMERGENCY,
         isEsapApplication = false,
         targetLocation = "SW1A 1AA",
-        releaseType = ReleaseTypeOption.licence,
+        releaseType = ReleaseTypeOption.LICENCE,
         type = "CAS1",
         sentenceType = SentenceTypeOption.nonStatutory,
         applicantUserDetails = Cas1ApplicationUserDetails("applicantName", "applicantEmail", "applicantPhone"),
@@ -1892,7 +1892,7 @@ class ApplicationServiceTest {
         isEsapApplication = null,
         apType = apType,
         targetLocation = "SW1A 1AA",
-        releaseType = ReleaseTypeOption.licence,
+        releaseType = ReleaseTypeOption.LICENCE,
         type = "CAS1",
         sentenceType = SentenceTypeOption.nonStatutory,
         applicantUserDetails = Cas1ApplicationUserDetails("applicantName", "applicantEmail", "applicantPhone"),
@@ -1980,7 +1980,7 @@ class ApplicationServiceTest {
         isEmergencyApplication = false,
         isEsapApplication = false,
         targetLocation = "SW1A 1AA",
-        releaseType = ReleaseTypeOption.licence,
+        releaseType = ReleaseTypeOption.LICENCE,
         type = "CAS1",
         sentenceType = SentenceTypeOption.nonStatutory,
         situation = SituationOption.bailSentence,
@@ -2069,7 +2069,7 @@ class ApplicationServiceTest {
         isEmergencyApplication = false,
         isEsapApplication = false,
         targetLocation = "SW1A 1AA",
-        releaseType = ReleaseTypeOption.licence,
+        releaseType = ReleaseTypeOption.LICENCE,
         type = "CAS1",
         sentenceType = SentenceTypeOption.nonStatutory,
         situation = SituationOption.bailSentence,

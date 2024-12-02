@@ -579,7 +579,7 @@ class PlacementApplicationReportsTest : IntegrationTestBase() {
           isEmergencyApplication = false,
           isEsapApplication = apType == ApType.ESAP,
           targetLocation = "SW1A 1AA",
-          releaseType = ReleaseTypeOption.licence,
+          releaseType = ReleaseTypeOption.LICENCE,
           type = "CAS1",
           sentenceType = SentenceTypeOption.nonStatutory,
           applicantUserDetails = Cas1ApplicationUserDetails("applicantName", "applicantEmail", "applicationPhone"),

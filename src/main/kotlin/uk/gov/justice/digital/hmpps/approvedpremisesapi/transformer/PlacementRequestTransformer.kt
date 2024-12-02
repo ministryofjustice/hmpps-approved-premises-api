@@ -90,15 +90,15 @@ class PlacementRequestTransformer(
   }
 
   fun getReleaseType(releaseType: String?): ReleaseTypeOption = when (releaseType) {
-    "licence" -> ReleaseTypeOption.licence
-    "rotl" -> ReleaseTypeOption.rotl
-    "hdc" -> ReleaseTypeOption.hdc
-    "pss" -> ReleaseTypeOption.pss
-    "inCommunity" -> ReleaseTypeOption.inCommunity
-    "notApplicable" -> ReleaseTypeOption.notApplicable
-    "extendedDeterminateLicence" -> ReleaseTypeOption.extendedDeterminateLicence
-    "paroleDirectedLicence" -> ReleaseTypeOption.paroleDirectedLicence
-    "reReleasedPostRecall" -> ReleaseTypeOption.reReleasedPostRecall
+    "licence" -> ReleaseTypeOption.LICENCE
+    "rotl" -> ReleaseTypeOption.ROTL
+    "hdc" -> ReleaseTypeOption.HDC
+    "pss" -> ReleaseTypeOption.PSS
+    "inCommunity" -> ReleaseTypeOption.IN_COMMUNITY
+    "notApplicable" -> ReleaseTypeOption.NOT_APPLICABLE
+    "extendedDeterminateLicence" -> ReleaseTypeOption.EXTENDED_DETERMINATE_LICENCE
+    "paroleDirectedLicence" -> ReleaseTypeOption.PAROLE_DIRECTED_LICENCE
+    "reReleasedPostRecall" -> ReleaseTypeOption.RE_RELEASED_POST_RECALL
     else -> throw RuntimeException("Unrecognised releaseType: $releaseType")
   }
 

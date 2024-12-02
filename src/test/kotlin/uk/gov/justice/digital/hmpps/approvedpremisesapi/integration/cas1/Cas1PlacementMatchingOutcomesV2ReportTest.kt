@@ -524,7 +524,7 @@ class Cas1PlacementMatchingOutcomesV2ReportTest : InitialiseDatabasePerClassTest
         isWomensApplication = false,
         isEmergencyApplication = false,
         targetLocation = "targetLocation",
-        releaseType = ReleaseTypeOption.notApplicable,
+        releaseType = ReleaseTypeOption.NOT_APPLICABLE,
         type = "CAS1",
         sentenceType = SentenceTypeOption.bailPlacement,
         applicantUserDetails = Cas1ApplicationUserDetails("applicantName", "applicantEmail", "applicationPhone"),

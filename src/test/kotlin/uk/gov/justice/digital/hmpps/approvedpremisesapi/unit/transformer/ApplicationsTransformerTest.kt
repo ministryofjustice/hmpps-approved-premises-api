@@ -360,7 +360,7 @@ class ApplicationsTransformerTest {
       override fun getTier(): String? = null
       override fun getStatus(): String = jpaStatus.toString()
       override fun getIsWithdrawn(): Boolean = true
-      override fun getReleaseType(): String = ReleaseTypeOption.licence.toString()
+      override fun getReleaseType(): String = ReleaseTypeOption.LICENCE.toString()
       override fun getHasRequestsForPlacement(): Boolean = true
     }
     every { mockPersonTransformer.transformModelToPersonApi(mockPersonInfoResult) } returns mockPerson

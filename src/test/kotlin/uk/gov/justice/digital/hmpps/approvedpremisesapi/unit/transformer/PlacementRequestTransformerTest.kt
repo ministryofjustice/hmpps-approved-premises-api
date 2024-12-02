@@ -175,7 +175,7 @@ class PlacementRequestTransformerTest {
         risks = mockRisks,
         applicationId = application.id,
         assessmentId = assessment.id,
-        releaseType = ReleaseTypeOption.licence,
+        releaseType = ReleaseTypeOption.LICENCE,
         status = PlacementRequestStatus.notMatched,
         assessmentDecision = decision,
         assessmentDate = assessmentSubmittedAt.toInstant(),
