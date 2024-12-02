@@ -166,7 +166,7 @@ class TaskTransformerTest {
 
       assertThat(result.id).isEqualTo(assessment.id)
       assertThat(result.status).isEqualTo(TaskStatus.notStarted)
-      assertThat(result.taskType).isEqualTo(TaskType.assessment)
+      assertThat(result.taskType).isEqualTo(TaskType.ASSESSMENT)
       assertThat(result.applicationId).isEqualTo(application.id)
       assertThat(result.dueDate).isEqualTo(assessment.dueAt!!.toLocalDate())
       assertThat(result.dueAt).isEqualTo(assessment.dueAt!!.toInstant())

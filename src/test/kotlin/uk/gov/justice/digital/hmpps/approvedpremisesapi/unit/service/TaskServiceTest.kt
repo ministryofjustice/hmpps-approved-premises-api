@@ -106,7 +106,7 @@ class TaskServiceTest {
 
     every { userAccessServiceMock.userCanReallocateTask(any()) } returns false
 
-    val result = taskService.reallocateTask(requestUser, TaskType.assessment, UUID.randomUUID(), UUID.randomUUID())
+    val result = taskService.reallocateTask(requestUser, TaskType.ASSESSMENT, UUID.randomUUID(), UUID.randomUUID())
 
     Assertions.assertThat(result is AuthorisableActionResult.Unauthorised).isTrue
   }
@@ -118,7 +118,7 @@ class TaskServiceTest {
     val assigneeUserId = UUID.fromString("55aa66be-0819-494e-955b-90b9aaa4f0c6")
     every { userServiceMock.updateUserFromDelius(assigneeUserId, ServiceName.approvedPremises) } returns CasResult.NotFound()
 
-    val result = taskService.reallocateTask(requestUserWithPermission, TaskType.assessment, assigneeUserId, UUID.randomUUID())
+    val result = taskService.reallocateTask(requestUserWithPermission, TaskType.ASSESSMENT, assigneeUserId, UUID.randomUUID())
 
     Assertions.assertThat(result is AuthorisableActionResult.NotFound).isTrue
   }
@@ -146,11 +146,11 @@ class TaskServiceTest {
     every { userTransformerMock.transformJpaToApi(assigneeUser, ServiceName.approvedPremises) } returns transformedUser
 
     val reallocation = Reallocation(
-      taskType = TaskType.assessment,
+      taskType = TaskType.ASSESSMENT,
       user = transformedUser,
     )
 
-    val result = taskService.reallocateTask(requestUserWithPermission, TaskType.assessment, assigneeUser.id, assessment.id)
+    val result = taskService.reallocateTask(requestUserWithPermission, TaskType.ASSESSMENT, assigneeUser.id, assessment.id)
 
     Assertions.assertThat(result is AuthorisableActionResult.Success).isTrue
     val validationResult = (result as AuthorisableActionResult.Success).entity
@@ -195,11 +195,11 @@ class TaskServiceTest {
     every { userTransformerMock.transformJpaToApi(assigneeUser, ServiceName.approvedPremises) } returns transformedUser
 
     val reallocation = Reallocation(
-      taskType = TaskType.placementRequest,
+      taskType = TaskType.PLACEMENT_REQUEST,
       user = transformedUser,
     )
 
-    val result = taskService.reallocateTask(requestUserWithPermission, TaskType.placementRequest, assigneeUser.id, placementRequest.id)
+    val result = taskService.reallocateTask(requestUserWithPermission, TaskType.PLACEMENT_REQUEST, assigneeUser.id, placementRequest.id)
 
     Assertions.assertThat(result is AuthorisableActionResult.Success).isTrue
     val validationResult = (result as AuthorisableActionResult.Success).entity
@@ -242,11 +242,11 @@ class TaskServiceTest {
     every { userTransformerMock.transformJpaToApi(assigneeUser, ServiceName.approvedPremises) } returns transformedUser
 
     val reallocation = Reallocation(
-      taskType = TaskType.placementApplication,
+      taskType = TaskType.PLACEMENT_APPLICATION,
       user = transformedUser,
     )
 
-    val result = taskService.reallocateTask(requestUserWithPermission, TaskType.placementApplication, assigneeUser.id, placementApplication.id)
+    val result = taskService.reallocateTask(requestUserWithPermission, TaskType.PLACEMENT_APPLICATION, assigneeUser.id, placementApplication.id)
 
     Assertions.assertThat(result is AuthorisableActionResult.Success).isTrue
     val validationResult = (result as AuthorisableActionResult.Success).entity
@@ -269,7 +269,7 @@ class TaskServiceTest {
 
     every { userAccessServiceMock.userCanDeallocateTask(any()) } returns false
 
-    val result = taskService.deallocateTask(requestUser, TaskType.assessment, UUID.randomUUID())
+    val result = taskService.deallocateTask(requestUser, TaskType.ASSESSMENT, UUID.randomUUID())
 
     Assertions.assertThat(result is AuthorisableActionResult.Unauthorised).isTrue
   }
@@ -292,7 +292,7 @@ class TaskServiceTest {
       ),
     )
 
-    val result = taskService.deallocateTask(requestUserWithPermission, TaskType.assessment, assessment.id)
+    val result = taskService.deallocateTask(requestUserWithPermission, TaskType.ASSESSMENT, assessment.id)
 
     Assertions.assertThat(result is AuthorisableActionResult.Success).isTrue
     val validationResult = (result as AuthorisableActionResult.Success).entity
@@ -387,7 +387,7 @@ class TaskServiceTest {
 
     val result = taskService.getAll(
       TaskService.TaskFilterCriteria(
-        AllocatedFilter.allocated,
+        AllocatedFilter.ALLOCATED,
         apAreaId,
         cruManagementAreaId,
         taskEntityTypes,

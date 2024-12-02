@@ -130,9 +130,9 @@ class TasksController(
   }
 
   private fun toTaskEntityType(taskType: TaskType) = when (taskType) {
-    TaskType.assessment -> TaskEntityType.ASSESSMENT
-    TaskType.placementRequest -> TaskEntityType.PLACEMENT_REQUEST
-    TaskType.placementApplication -> TaskEntityType.PLACEMENT_APPLICATION
+    TaskType.ASSESSMENT -> TaskEntityType.ASSESSMENT
+    TaskType.PLACEMENT_REQUEST -> TaskEntityType.PLACEMENT_REQUEST
+    TaskType.PLACEMENT_APPLICATION -> TaskEntityType.PLACEMENT_APPLICATION
     TaskType.bookingAppeal -> throw BadRequestProblem()
   }
 
@@ -140,7 +140,7 @@ class TasksController(
     val user = userService.getUserForRequest()
 
     val taskInfo = when (toTaskType(taskType)) {
-      TaskType.assessment -> {
+      TaskType.ASSESSMENT -> {
         val assessment = extractEntityFromCasResult(
           assessmentService.getAssessmentAndValidate(user, id),
         ) as ApprovedPremisesAssessmentEntity
@@ -160,7 +160,7 @@ class TasksController(
         )
       }
 
-      TaskType.placementRequest -> {
+      TaskType.PLACEMENT_REQUEST -> {
         val (placementRequest) = extractEntityFromCasResult(
           placementRequestService.getPlacementRequestForUser(user, id),
         )
@@ -174,7 +174,7 @@ class TasksController(
         )
       }
 
-      TaskType.placementApplication -> {
+      TaskType.PLACEMENT_APPLICATION -> {
         val placementApplication = extractEntityFromAuthorisableActionResult(
           placementApplicationService.getApplication(id),
         )

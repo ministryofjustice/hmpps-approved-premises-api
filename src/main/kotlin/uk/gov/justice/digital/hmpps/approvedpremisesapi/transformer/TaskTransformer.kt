@@ -45,7 +45,7 @@ class TaskTransformer(
     dueAt = transformDueAtToInstant(assessment.dueAt),
     allocatedToStaffMember = transformUserOrNull(assessment.allocatedToUser),
     status = getAssessmentStatus(assessment),
-    taskType = TaskType.assessment,
+    taskType = TaskType.ASSESSMENT,
     apArea = getApArea(assessment.application),
     createdFromAppeal = when (assessment) {
       is ApprovedPremisesAssessmentEntity -> assessment.createdFromAppeal
@@ -70,7 +70,7 @@ class TaskTransformer(
       dueAt = transformDueAtToInstant(placementRequest.dueAt),
       allocatedToStaffMember = transformUserOrNull(placementRequest.allocatedToUser),
       status = getPlacementRequestStatus(placementRequest),
-      taskType = TaskType.placementRequest,
+      taskType = TaskType.PLACEMENT_REQUEST,
       tier = risksTransformer.transformTierDomainToApi(placementRequest.application.riskRatings!!.tier),
       expectedArrival = placementRequest.expectedArrival,
       duration = placementRequest.duration,
@@ -95,7 +95,7 @@ class TaskTransformer(
     dueAt = transformDueAtToInstant(placementApplication.dueAt),
     allocatedToStaffMember = transformUserOrNull(placementApplication.allocatedToUser),
     status = getPlacementApplicationStatus(placementApplication),
-    taskType = TaskType.placementApplication,
+    taskType = TaskType.PLACEMENT_APPLICATION,
     tier = risksTransformer.transformTierDomainToApi(placementApplication.application.riskRatings!!.tier),
     placementDates = placementApplication.placementDates.map {
       PlacementDates(

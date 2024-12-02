@@ -121,7 +121,7 @@ class TaskService(
 
     val allocatedFilter = filterCriteria.allocatedFilter
 
-    val isAllocated = allocatedFilter?.let { allocatedFilter == AllocatedFilter.allocated }
+    val isAllocated = allocatedFilter?.let { allocatedFilter == AllocatedFilter.ALLOCATED }
 
     val repoFunction = if (taskTypes.size == 1) {
       when (taskTypes[0]) {
@@ -167,13 +167,13 @@ class TaskService(
       }
 
     val result = when (taskType) {
-      TaskType.assessment -> {
+      TaskType.ASSESSMENT -> {
         assessmentService.reallocateAssessment(assigneeUser, taskId)
       }
-      TaskType.placementRequest -> {
+      TaskType.PLACEMENT_REQUEST -> {
         placementRequestService.reallocatePlacementRequest(assigneeUser, taskId)
       }
-      TaskType.placementApplication -> {
+      TaskType.PLACEMENT_APPLICATION -> {
         placementApplicationService.reallocateApplication(assigneeUser, taskId)
       }
       else -> {
@@ -209,7 +209,7 @@ class TaskService(
     }
 
     val result = when (taskType) {
-      TaskType.assessment -> assessmentService.deallocateAssessment(id)
+      TaskType.ASSESSMENT -> assessmentService.deallocateAssessment(id)
       else -> throw NotAllowedProblem(detail = "The Task Type $taskType is not currently supported")
     }
 

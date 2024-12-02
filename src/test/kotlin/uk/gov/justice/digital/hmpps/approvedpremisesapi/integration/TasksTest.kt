@@ -346,9 +346,9 @@ class TasksTest {
               )
 
               tasks = mapOf(
-                TaskType.assessment to assessments,
-                TaskType.placementApplication to placementApplications,
-                TaskType.placementRequest to placementRequests,
+                TaskType.ASSESSMENT to assessments,
+                TaskType.PLACEMENT_APPLICATION to placementApplications,
+                TaskType.PLACEMENT_REQUEST to placementRequests,
               )
             }
           }
@@ -402,9 +402,9 @@ class TasksTest {
       fun `Get all tasks returns all task types`() {
         val url = "/tasks?page=1&sortBy=createdAt&sortDirection=asc&types=Assessment&types=PlacementRequest&types=PlacementApplication"
         val expectedTasks = listOf(
-          tasks[TaskType.assessment]!!,
-          tasks[TaskType.placementRequest]!!,
-          tasks[TaskType.placementApplication]!!,
+          tasks[TaskType.ASSESSMENT]!!,
+          tasks[TaskType.PLACEMENT_REQUEST]!!,
+          tasks[TaskType.PLACEMENT_APPLICATION]!!,
         ).flatten().sortedBy { it.dueDate }
 
         webTestClient.get()
@@ -425,9 +425,9 @@ class TasksTest {
       fun `Get all tasks returns all task types by default`() {
         val url = "/tasks?page=1&sortBy=createdAt&sortDirection=asc"
         val expectedTasks = listOf(
-          tasks[TaskType.assessment]!!,
-          tasks[TaskType.placementRequest]!!,
-          tasks[TaskType.placementApplication]!!,
+          tasks[TaskType.ASSESSMENT]!!,
+          tasks[TaskType.PLACEMENT_REQUEST]!!,
+          tasks[TaskType.PLACEMENT_APPLICATION]!!,
         ).flatten().sortedBy { it.dueDate }
 
         webTestClient.get()
@@ -542,9 +542,9 @@ class TasksTest {
               )
 
               tasks = mapOf(
-                TaskType.assessment to assessments,
-                TaskType.placementApplication to placementApplications,
-                TaskType.placementRequest to placementRequests,
+                TaskType.ASSESSMENT to assessments,
+                TaskType.PLACEMENT_APPLICATION to placementApplications,
+                TaskType.PLACEMENT_REQUEST to placementRequests,
               )
             }
           }
@@ -574,9 +574,9 @@ class TasksTest {
       @Test
       fun `it filters by all areas with no task type`() {
         val expectedTasks = listOf(
-          tasks[TaskType.assessment]!!,
-          tasks[TaskType.placementRequest]!!,
-          tasks[TaskType.placementApplication]!!,
+          tasks[TaskType.ASSESSMENT]!!,
+          tasks[TaskType.PLACEMENT_REQUEST]!!,
+          tasks[TaskType.PLACEMENT_APPLICATION]!!,
         ).flatten().sortedBy { it.dueDate }
 
         webTestClient.get()
@@ -690,9 +690,9 @@ class TasksTest {
               )
 
               tasks = mapOf(
-                TaskType.assessment to assessments,
-                TaskType.placementApplication to placementApplications,
-                TaskType.placementRequest to placementRequests,
+                TaskType.ASSESSMENT to assessments,
+                TaskType.PLACEMENT_APPLICATION to placementApplications,
+                TaskType.PLACEMENT_REQUEST to placementRequests,
               )
             }
           }
@@ -722,9 +722,9 @@ class TasksTest {
       @Test
       fun `it filters by all areas with no task type`() {
         val expectedTasks = listOf(
-          tasks[TaskType.assessment]!!,
-          tasks[TaskType.placementRequest]!!,
-          tasks[TaskType.placementApplication]!!,
+          tasks[TaskType.ASSESSMENT]!!,
+          tasks[TaskType.PLACEMENT_REQUEST]!!,
+          tasks[TaskType.PLACEMENT_APPLICATION]!!,
         ).flatten().sortedBy { it.dueDate }
 
         webTestClient.get()
@@ -830,9 +830,9 @@ class TasksTest {
               )
 
               tasks = mapOf(
-                TaskType.assessment to assessments,
-                TaskType.placementApplication to placementApplications,
-                TaskType.placementRequest to placementRequests,
+                TaskType.ASSESSMENT to assessments,
+                TaskType.PLACEMENT_APPLICATION to placementApplications,
+                TaskType.PLACEMENT_REQUEST to placementRequests,
               )
             }
           }
@@ -862,9 +862,9 @@ class TasksTest {
       @Test
       fun `it filters by user with all tasks`() {
         val expectedTasks = listOf(
-          tasks[TaskType.assessment]!!,
-          tasks[TaskType.placementRequest]!!,
-          tasks[TaskType.placementApplication]!!,
+          tasks[TaskType.ASSESSMENT]!!,
+          tasks[TaskType.PLACEMENT_REQUEST]!!,
+          tasks[TaskType.PLACEMENT_APPLICATION]!!,
         ).flatten().sortedBy { it.dueDate }
 
         val url = "/tasks?allocatedToUserId=${user.id}"
@@ -899,16 +899,16 @@ class TasksTest {
               this.jwt = jwt
 
               counts = mapOf(
-                TaskType.assessment to mapOf(
+                TaskType.ASSESSMENT to mapOf(
                   "allocated" to 2,
                   "unallocated" to 3,
                   "withdrawn" to 1,
                 ),
-                TaskType.placementRequest to mapOf(
+                TaskType.PLACEMENT_REQUEST to mapOf(
                   "allocated" to 2,
                   "unallocated" to 4,
                 ),
-                TaskType.placementApplication to mapOf(
+                TaskType.PLACEMENT_APPLICATION to mapOf(
                   "allocated" to 3,
                   "unallocated" to 2,
                   "withdrawn" to 1,
@@ -920,7 +920,7 @@ class TasksTest {
                 allocatedToUser = null,
               )
 
-              repeat(counts[TaskType.assessment]!!["allocated"]!!) {
+              repeat(counts[TaskType.ASSESSMENT]!!["allocated"]!!) {
                 givenAnAssessmentForApprovedPremises(
                   allocatedToUser = otherUser,
                   createdByUser = otherUser,
@@ -928,7 +928,7 @@ class TasksTest {
                 )
               }
 
-              repeat(counts[TaskType.assessment]!!["unallocated"]!!) {
+              repeat(counts[TaskType.ASSESSMENT]!!["unallocated"]!!) {
                 givenAnAssessmentForApprovedPremises(
                   null,
                   createdByUser = otherUser,
@@ -936,7 +936,7 @@ class TasksTest {
                 )
               }
 
-              repeat(counts[TaskType.assessment]!!["withdrawn"]!!) {
+              repeat(counts[TaskType.ASSESSMENT]!!["withdrawn"]!!) {
                 givenAnAssessmentForApprovedPremises(
                   null,
                   createdByUser = otherUser,
@@ -945,7 +945,7 @@ class TasksTest {
                 )
               }
 
-              repeat(counts[TaskType.placementRequest]!!["allocated"]!!) {
+              repeat(counts[TaskType.PLACEMENT_REQUEST]!!["allocated"]!!) {
                 givenAPlacementRequest(
                   placementRequestAllocatedTo = otherUser,
                   assessmentAllocatedTo = otherUser,
@@ -954,7 +954,7 @@ class TasksTest {
                 )
               }
 
-              repeat(counts[TaskType.placementRequest]!!["unallocated"]!!) {
+              repeat(counts[TaskType.PLACEMENT_REQUEST]!!["unallocated"]!!) {
                 givenAPlacementRequest(
                   null,
                   assessmentAllocatedTo = otherUser,
@@ -963,7 +963,7 @@ class TasksTest {
                 )
               }
 
-              repeat(counts[TaskType.placementApplication]!!["allocated"]!!) {
+              repeat(counts[TaskType.PLACEMENT_APPLICATION]!!["allocated"]!!) {
                 givenAPlacementApplication(
                   createdByUser = user,
                   allocatedToUser = user,
@@ -975,7 +975,7 @@ class TasksTest {
                 )
               }
 
-              repeat(counts[TaskType.placementApplication]!!["unallocated"]!!) {
+              repeat(counts[TaskType.PLACEMENT_APPLICATION]!!["unallocated"]!!) {
                 givenAPlacementApplication(
                   createdByUser = user,
                   schema = approvedPremisesPlacementApplicationJsonSchemaEntityFactory.produceAndPersist {
@@ -986,7 +986,7 @@ class TasksTest {
                 )
               }
 
-              repeat(counts[TaskType.placementApplication]!!["withdrawn"]!!) {
+              repeat(counts[TaskType.PLACEMENT_APPLICATION]!!["withdrawn"]!!) {
                 givenAPlacementApplication(
                   createdByUser = user,
                   schema = approvedPremisesPlacementApplicationJsonSchemaEntityFactory.produceAndPersist {
@@ -1040,9 +1040,9 @@ class TasksTest {
         pageNumber: String,
       ) {
         val itemCount = listOf(
-          counts[TaskType.assessment]!![allocatedFilter]!!,
-          counts[TaskType.placementRequest]!![allocatedFilter]!!,
-          counts[TaskType.placementApplication]!![allocatedFilter]!!,
+          counts[TaskType.ASSESSMENT]!![allocatedFilter]!!,
+          counts[TaskType.PLACEMENT_REQUEST]!![allocatedFilter]!!,
+          counts[TaskType.PLACEMENT_APPLICATION]!![allocatedFilter]!!,
         ).sum()
 
         val url = "/tasks?&page=$pageNumber&perPage=$pageSize&allocatedFilter=$allocatedFilter"
@@ -1054,12 +1054,12 @@ class TasksTest {
       @ValueSource(ints = [1, 2])
       fun `get all tasks returns page count when no allocated filter is set`(pageNumber: Int) {
         val itemCount = listOf(
-          counts[TaskType.assessment]!!["allocated"]!!,
-          counts[TaskType.assessment]!!["unallocated"]!!,
-          counts[TaskType.placementRequest]!!["allocated"]!!,
-          counts[TaskType.placementRequest]!!["unallocated"]!!,
-          counts[TaskType.placementApplication]!!["allocated"]!!,
-          counts[TaskType.placementApplication]!!["unallocated"]!!,
+          counts[TaskType.ASSESSMENT]!!["allocated"]!!,
+          counts[TaskType.ASSESSMENT]!!["unallocated"]!!,
+          counts[TaskType.PLACEMENT_REQUEST]!!["allocated"]!!,
+          counts[TaskType.PLACEMENT_REQUEST]!!["unallocated"]!!,
+          counts[TaskType.PLACEMENT_APPLICATION]!!["allocated"]!!,
+          counts[TaskType.PLACEMENT_APPLICATION]!!["unallocated"]!!,
         ).sum()
 
         expectCountHeaders("/tasks?&page=$pageNumber&perPage=$pageSize", pageNumber, itemCount)
@@ -1192,9 +1192,9 @@ class TasksTest {
               )
 
               tasks = mapOf(
-                TaskType.assessment to assessmentTasks,
-                TaskType.placementRequest to placementRequestTasks,
-                TaskType.placementApplication to placementApplicationTasks,
+                TaskType.ASSESSMENT to assessmentTasks,
+                TaskType.PLACEMENT_REQUEST to placementRequestTasks,
+                TaskType.PLACEMENT_APPLICATION to placementApplicationTasks,
               )
             }
           }
@@ -1250,9 +1250,9 @@ class TasksTest {
       fun `Get all tasks required qualification`(qualification: UserQualification) {
         val url = "/tasks?requiredQualification=${qualification.name.lowercase()}"
         val expectedTasks = listOf(
-          tasks[TaskType.assessment]!![qualification]!!,
-          tasks[TaskType.placementRequest]!![qualification]!!,
-          tasks[TaskType.placementApplication]!![qualification]!!,
+          tasks[TaskType.ASSESSMENT]!![qualification]!!,
+          tasks[TaskType.PLACEMENT_REQUEST]!![qualification]!!,
+          tasks[TaskType.PLACEMENT_APPLICATION]!![qualification]!!,
         ).flatten()
 
         webTestClient.get()
@@ -1345,30 +1345,30 @@ class TasksTest {
                 )
 
                 nameMatchTasks = mapOf(
-                  TaskType.assessment to taskTransformer.transformAssessmentToTask(
+                  TaskType.ASSESSMENT to taskTransformer.transformAssessmentToTask(
                     assessment1,
                     offenderSummaries1,
                   ),
-                  TaskType.placementApplication to taskTransformer.transformPlacementApplicationToTask(
+                  TaskType.PLACEMENT_APPLICATION to taskTransformer.transformPlacementApplicationToTask(
                     placementApplication1,
                     offenderSummaries1,
                   ),
-                  TaskType.placementRequest to taskTransformer.transformPlacementRequestToTask(
+                  TaskType.PLACEMENT_REQUEST to taskTransformer.transformPlacementRequestToTask(
                     placementRequest1,
                     offenderSummaries1,
                   ),
                 )
 
                 crnMatchTasks = mapOf(
-                  TaskType.assessment to taskTransformer.transformAssessmentToTask(
+                  TaskType.ASSESSMENT to taskTransformer.transformAssessmentToTask(
                     assessment2,
                     offenderSummaries2,
                   ),
-                  TaskType.placementApplication to taskTransformer.transformPlacementApplicationToTask(
+                  TaskType.PLACEMENT_APPLICATION to taskTransformer.transformPlacementApplicationToTask(
                     placementApplication2,
                     offenderSummaries2,
                   ),
-                  TaskType.placementRequest to taskTransformer.transformPlacementRequestToTask(
+                  TaskType.PLACEMENT_REQUEST to taskTransformer.transformPlacementRequestToTask(
                     placementRequest2,
                     offenderSummaries2,
                   ),
@@ -1421,9 +1421,9 @@ class TasksTest {
       fun `Get all tasks filters by name without task type`() {
         val url = "/tasks?crnOrName=someone"
         val expectedTasks = listOf(
-          nameMatchTasks[TaskType.assessment],
-          nameMatchTasks[TaskType.placementRequest],
-          nameMatchTasks[TaskType.placementApplication],
+          nameMatchTasks[TaskType.ASSESSMENT],
+          nameMatchTasks[TaskType.PLACEMENT_REQUEST],
+          nameMatchTasks[TaskType.PLACEMENT_APPLICATION],
         )
 
         webTestClient.get()
@@ -1444,9 +1444,9 @@ class TasksTest {
       fun `Get all tasks filters by CRN without task type`() {
         val url = "/tasks?crnOrName=$crn"
         val expectedTasks = listOf(
-          crnMatchTasks[TaskType.assessment],
-          crnMatchTasks[TaskType.placementRequest],
-          crnMatchTasks[TaskType.placementApplication],
+          crnMatchTasks[TaskType.ASSESSMENT],
+          crnMatchTasks[TaskType.PLACEMENT_REQUEST],
+          crnMatchTasks[TaskType.PLACEMENT_APPLICATION],
         )
 
         webTestClient.get()
@@ -2856,7 +2856,7 @@ class TasksTest {
                           assigneeUser,
                           ServiceName.approvedPremises,
                         ) as ApprovedPremisesUser,
-                        taskType = TaskType.assessment,
+                        taskType = TaskType.ASSESSMENT,
                       ),
                     ),
                   )
@@ -2949,7 +2949,7 @@ class TasksTest {
                         assigneeUser,
                         ServiceName.approvedPremises,
                       ) as ApprovedPremisesUser,
-                      taskType = TaskType.placementRequest,
+                      taskType = TaskType.PLACEMENT_REQUEST,
                     ),
                   ),
                 )
@@ -3016,7 +3016,7 @@ class TasksTest {
                           assigneeUser,
                           ServiceName.approvedPremises,
                         ) as ApprovedPremisesUser,
-                        taskType = TaskType.placementApplication,
+                        taskType = TaskType.PLACEMENT_APPLICATION,
                       ),
                     ),
                   )
