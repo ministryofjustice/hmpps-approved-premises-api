@@ -438,10 +438,10 @@ class GetAllApprovedPremisesApplicationsTest : InitialiseDatabasePerClassTestBas
   private fun List<ApprovedPremisesApplicationEntity>.sort(sortDirection: SortDirection, sortField: ApplicationSortField): List<ApprovedPremisesApplicationEntity> {
     val comparator = Comparator<ApprovedPremisesApplicationEntity> { a, b ->
       val ascendingCompare = when (sortField) {
-        ApplicationSortField.createdAt -> compareValues(a.createdAt, b.createdAt)
-        ApplicationSortField.arrivalDate -> compareValues(a.arrivalDate, b.arrivalDate)
-        ApplicationSortField.tier -> compareValues(a.riskRatings?.tier?.status, b.riskRatings?.tier?.status)
-        ApplicationSortField.releaseType -> compareValues(a.releaseType, b.releaseType)
+        ApplicationSortField.CREATED_AT -> compareValues(a.createdAt, b.createdAt)
+        ApplicationSortField.ARRIVAL_DATE -> compareValues(a.arrivalDate, b.arrivalDate)
+        ApplicationSortField.TIER -> compareValues(a.riskRatings?.tier?.status, b.riskRatings?.tier?.status)
+        ApplicationSortField.RELEASE_TYPE -> compareValues(a.releaseType, b.releaseType)
       }
 
       when (sortDirection) {
