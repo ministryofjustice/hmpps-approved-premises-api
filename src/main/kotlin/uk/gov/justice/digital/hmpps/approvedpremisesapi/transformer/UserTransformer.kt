@@ -114,9 +114,9 @@ class UserTransformer(
     }
 
   private fun transformTemporaryAccommodationRoleToApi(userRole: UserRoleAssignmentEntity): TemporaryAccommodationUserRole? = when (userRole.role) {
-    UserRole.CAS3_ASSESSOR -> TemporaryAccommodationUserRole.assessor
-    UserRole.CAS3_REFERRER -> TemporaryAccommodationUserRole.referrer
-    UserRole.CAS3_REPORTER -> TemporaryAccommodationUserRole.reporter
+    UserRole.CAS3_ASSESSOR -> TemporaryAccommodationUserRole.ASSESSOR
+    UserRole.CAS3_REFERRER -> TemporaryAccommodationUserRole.REFERRER
+    UserRole.CAS3_REPORTER -> TemporaryAccommodationUserRole.REPORTER
     else -> null
   }
 
