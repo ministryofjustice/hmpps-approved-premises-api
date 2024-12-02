@@ -443,7 +443,7 @@ class AppealsTest : InitialiseDatabasePerClassTestBase() {
           val timeline = objectMapper.readValue<List<TimelineEvent>>(timelineResult.responseBody.blockFirst()!!)
 
           assertThat(timeline).anyMatch {
-            it.type == TimelineEventType.approvedPremisesAssessmentAppealed &&
+            it.type == TimelineEventType.APPROVED_PREMISES_ASSESSMENT_APPEALED &&
               it.associatedUrls?.contains(
                 TimelineEventAssociatedUrl(TimelineEventUrlType.assessmentAppeal, "http://frontend/applications/${application.id}/appeals/${appeal.id}"),
               ) == true

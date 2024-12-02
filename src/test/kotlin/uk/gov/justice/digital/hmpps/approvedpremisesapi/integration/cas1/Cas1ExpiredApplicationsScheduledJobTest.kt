@@ -146,7 +146,7 @@ class Cas1ExpiredApplicationsScheduledJobTest : IntegrationTestBase() {
 
         assertThat(responseBody.count()).isEqualTo(expectedItems.count())
         assertThat(responseBody).hasSameElementsAs(expectedItems)
-        assertThat(responseBody.last().type).isEqualTo(TimelineEventType.approvedPremisesApplicationExpired)
+        assertThat(responseBody.last().type).isEqualTo(TimelineEventType.APPROVED_PREMISES_APPLICATION_EXPIRED)
       }
     }
   }
