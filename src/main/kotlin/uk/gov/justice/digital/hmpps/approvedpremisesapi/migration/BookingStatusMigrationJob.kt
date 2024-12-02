@@ -41,7 +41,7 @@ class BookingStatusMigrationJob(
       booking.cancellations.isNotEmpty() -> BookingStatus.cancelled
       booking.departures.isNotEmpty() -> BookingStatus.departed
       booking.arrivals.isNotEmpty() -> BookingStatus.arrived
-      booking.confirmation != null -> BookingStatus.confirmed
+      booking.confirmation != null -> BookingStatus.CONFIRMED
       else -> BookingStatus.provisional
     }
 

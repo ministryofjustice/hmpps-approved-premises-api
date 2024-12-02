@@ -238,7 +238,7 @@ class BookingService(
           turnarounds = mutableListOf(),
           nomsNumber = placementRequest.application.nomsNumber,
           placementRequest = null,
-          status = BookingStatus.confirmed,
+          status = BookingStatus.CONFIRMED,
           adhoc = false,
         ),
       )
@@ -349,7 +349,7 @@ class BookingService(
         dateChanges = mutableListOf(),
         nomsNumber = nomsNumber,
         placementRequest = null,
-        status = BookingStatus.confirmed,
+        status = BookingStatus.CONFIRMED,
         adhoc = true,
       )
 
@@ -897,7 +897,7 @@ class BookingService(
         createdAt = OffsetDateTime.now(),
       ),
     )
-    booking.status = BookingStatus.confirmed
+    booking.status = BookingStatus.CONFIRMED
     updateBooking(booking)
     booking.confirmation = confirmationEntity
 

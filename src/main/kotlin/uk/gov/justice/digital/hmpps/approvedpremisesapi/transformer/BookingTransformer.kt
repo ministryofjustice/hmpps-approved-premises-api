@@ -121,7 +121,7 @@ class BookingTransformer(
       jpa.departure != null && (turnaroundPeriodEnded || hasZeroDayTurnaround) -> BookingStatus.closed
       jpa.arrival != null -> BookingStatus.arrived
       jpa.nonArrival != null -> BookingStatus.notMinusArrived
-      jpa.confirmation != null -> BookingStatus.confirmed
+      jpa.confirmation != null -> BookingStatus.CONFIRMED
       else -> BookingStatus.provisional
     }
   }

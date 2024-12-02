@@ -214,7 +214,7 @@ class BookingSearchTest : IntegrationTestBase() {
                 withPremises(bed.room.premises)
                 withCrn(offenderDetails.otherIds.crn)
                 withBed(bed)
-                withStatus(BookingStatus.confirmed)
+                withStatus(BookingStatus.CONFIRMED)
                 withServiceName(ServiceName.temporaryAccommodation)
               }
               val confirmation = confirmationEntityFactory.produceAndPersist {
@@ -785,7 +785,7 @@ class BookingSearchTest : IntegrationTestBase() {
               booking.departure != null -> BookingStatus.departed
               booking.arrival != null -> BookingStatus.arrived
               booking.nonArrival != null -> BookingStatus.notMinusArrived
-              booking.confirmation != null -> BookingStatus.confirmed
+              booking.confirmation != null -> BookingStatus.CONFIRMED
               else -> BookingStatus.provisional
             },
             startDate = booking.arrivalDate,
@@ -833,7 +833,7 @@ class BookingSearchTest : IntegrationTestBase() {
               booking.departure != null -> BookingStatus.departed
               booking.arrival != null -> BookingStatus.arrived
               booking.nonArrival != null -> BookingStatus.notMinusArrived
-              booking.confirmation != null -> BookingStatus.confirmed
+              booking.confirmation != null -> BookingStatus.CONFIRMED
               else -> BookingStatus.provisional
             },
             startDate = booking.arrivalDate,
@@ -880,7 +880,7 @@ class BookingSearchTest : IntegrationTestBase() {
               booking.departure != null -> BookingStatus.departed
               booking.arrival != null -> BookingStatus.arrived
               booking.nonArrival != null -> BookingStatus.notMinusArrived
-              booking.confirmation != null -> BookingStatus.confirmed
+              booking.confirmation != null -> BookingStatus.CONFIRMED
               else -> BookingStatus.provisional
             },
             startDate = booking.arrivalDate,

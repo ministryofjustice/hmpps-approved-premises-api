@@ -1816,7 +1816,7 @@ class BookingTransformerTest {
         arrivalDate = LocalDate.parse("2022-08-10"),
         departureDate = LocalDate.parse("2022-08-30"),
         keyWorker = null,
-        status = BookingStatus.confirmed,
+        status = BookingStatus.CONFIRMED,
         cancellation = null,
         confirmation = Confirmation(
           id = UUID.fromString("69fc6350-b2ec-4e99-9a2f-e829e83535e8"),

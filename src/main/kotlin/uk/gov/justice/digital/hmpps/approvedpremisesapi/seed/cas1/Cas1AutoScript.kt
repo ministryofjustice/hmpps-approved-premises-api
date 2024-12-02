@@ -320,7 +320,7 @@ class Cas1AutoScript(
         dateChanges = mutableListOf(),
         nomsNumber = personInfo.offenderDetailSummary.otherIds.nomsNumber,
         placementRequest = null,
-        status = BookingStatus.confirmed,
+        status = BookingStatus.CONFIRMED,
         adhoc = true,
       ),
     )
