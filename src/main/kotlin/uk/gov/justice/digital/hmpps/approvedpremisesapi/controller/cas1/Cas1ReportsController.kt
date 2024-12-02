@@ -53,56 +53,56 @@ class Cas1ReportsController(
     )
 
     return when (reportName) {
-      Cas1ReportName.applications -> generateStreamingResponse(
+      Cas1ReportName.APPLICATIONS -> generateStreamingResponse(
         contentType = ContentType.XLSX,
         fileName = createCas1ReportName("applications", year, month, ContentType.XLSX),
       ) { outputStream ->
         cas1ReportService.createApplicationReport(monthSpecificReportParams, outputStream)
       }
-      Cas1ReportName.applicationsV2 -> generateStreamingResponse(
+      Cas1ReportName.APPLICATIONS_V2 -> generateStreamingResponse(
         contentType = ContentType.CSV,
         fileName = createCas1ReportName("applications", year, month, ContentType.CSV),
       ) { outputStream ->
         cas1ReportService.createApplicationReportV2(monthSpecificReportParams, outputStream)
       }
-      Cas1ReportName.dailyMetrics -> generateStreamingResponse(
+      Cas1ReportName.DAILY_METRICS -> generateStreamingResponse(
         contentType = ContentType.XLSX,
         fileName = createCas1ReportName("daily-metrics", year, month, ContentType.XLSX),
       ) { outputStream ->
         cas1ReportService.createDailyMetricsReport(monthSpecificReportParams, outputStream)
       }
-      Cas1ReportName.lostBeds -> generateStreamingResponse(
+      Cas1ReportName.LOST_BEDS -> generateStreamingResponse(
         contentType = ContentType.XLSX,
         fileName = createCas1ReportName("lost-beds", year, month, ContentType.XLSX),
       ) { outputStream ->
         cas1ReportService.createLostBedReport(LostBedReportProperties(xServiceName, null, year, month), outputStream)
       }
-      Cas1ReportName.outOfServiceBeds -> return generateStreamingResponse(
+      Cas1ReportName.OUT_OF_SERVICE_BEDS -> return generateStreamingResponse(
         contentType = ContentType.XLSX,
         fileName = createCas1ReportName("out-of-service-beds", year, month, ContentType.XLSX),
       ) { outputStream ->
         cas1ReportService.createOutOfServiceBedReport(monthSpecificReportParams, outputStream)
       }
-      Cas1ReportName.placementApplications -> return generateStreamingResponse(
+      Cas1ReportName.PLACEMENT_APPLICATIONS -> return generateStreamingResponse(
         contentType = ContentType.XLSX,
         fileName = createCas1ReportName("placement-applications", year, month, ContentType.XLSX),
       ) { outputStream ->
         cas1ReportService.createPlacementApplicationReport(monthSpecificReportParams, outputStream)
       }
-      Cas1ReportName.placementMatchingOutcomes -> generateStreamingResponse(
+      Cas1ReportName.PLACEMENT_MATCHING_OUTCOMES -> generateStreamingResponse(
         contentType = ContentType.XLSX,
         fileName = createCas1ReportName("placement-matching-outcomes", year, month, ContentType.XLSX),
       ) { outputStream ->
         cas1ReportService.createPlacementMatchingOutcomesReport(monthSpecificReportParams, outputStream)
       }
-      Cas1ReportName.requestsForPlacement -> generateStreamingResponse(
+      Cas1ReportName.REQUESTS_FOR_PLACEMENT -> generateStreamingResponse(
         contentType = ContentType.CSV,
         fileName = createCas1ReportName("requests-for-placement", year, month, ContentType.CSV),
       ) { outputStream ->
         cas1ReportService.createRequestForPlacementReport(monthSpecificReportParams, outputStream)
       }
 
-      Cas1ReportName.placementMatchingOutcomesV2 -> generateStreamingResponse(
+      Cas1ReportName.PLACEMENT_MATCHING_OUTCOMES_V2 -> generateStreamingResponse(
         contentType = ContentType.CSV,
         fileName = createCas1ReportName("placement-matching-outcomes", year, month, ContentType.CSV),
       ) { outputStream ->

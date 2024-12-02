@@ -133,7 +133,7 @@ class TasksController(
     TaskType.ASSESSMENT -> TaskEntityType.ASSESSMENT
     TaskType.PLACEMENT_REQUEST -> TaskEntityType.PLACEMENT_REQUEST
     TaskType.PLACEMENT_APPLICATION -> TaskEntityType.PLACEMENT_APPLICATION
-    TaskType.bookingAppeal -> throw BadRequestProblem()
+    TaskType.BOOKING_APPEAL -> throw BadRequestProblem()
   }
 
   override fun tasksTaskTypeIdGet(id: UUID, taskType: String): ResponseEntity<TaskWrapper> {
