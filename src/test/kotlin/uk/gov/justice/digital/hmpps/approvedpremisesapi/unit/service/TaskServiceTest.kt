@@ -359,7 +359,7 @@ class TaskServiceTest {
     val metadata = mockk<PaginationMetadata>()
     val taskEntityTypes = TaskEntityType.entries
     val allocatedToUserId = UUID.randomUUID()
-    val requiredQualification = UserQualification.pipe
+    val requiredQualification = UserQualification.PIPE
     val crnOrName = "CRN123"
     val isCompleted = false
 

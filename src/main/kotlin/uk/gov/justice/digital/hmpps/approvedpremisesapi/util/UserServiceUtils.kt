@@ -4,10 +4,10 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserQualifica
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.UserQualification as ApiUserQualification
 
 fun transformQualifications(qualification: ApiUserQualification): UserQualification = when (qualification) {
-  ApiUserQualification.emergency -> UserQualification.EMERGENCY
-  ApiUserQualification.esap -> UserQualification.ESAP
-  ApiUserQualification.lao -> UserQualification.LAO
-  ApiUserQualification.pipe -> UserQualification.PIPE
-  ApiUserQualification.mentalHealthSpecialist -> UserQualification.MENTAL_HEALTH_SPECIALIST
-  ApiUserQualification.recoveryFocused -> UserQualification.RECOVERY_FOCUSED
+  ApiUserQualification.EMERGENCY -> UserQualification.EMERGENCY
+  ApiUserQualification.ESAP -> UserQualification.ESAP
+  ApiUserQualification.LAO -> UserQualification.LAO
+  ApiUserQualification.PIPE -> UserQualification.PIPE
+  ApiUserQualification.MENTAL_HEALTH_SPECIALIST -> UserQualification.MENTAL_HEALTH_SPECIALIST
+  ApiUserQualification.RECOVERY_FOCUSED -> UserQualification.RECOVERY_FOCUSED
 }

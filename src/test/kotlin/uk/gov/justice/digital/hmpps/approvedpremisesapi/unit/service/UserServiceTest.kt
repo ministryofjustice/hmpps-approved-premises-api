@@ -1005,7 +1005,7 @@ class UserServiceTest {
       val result = userService.updateUser(
         id = user.id,
         roles = listOf(ApprovedPremisesUserRole.assessor, ApprovedPremisesUserRole.roleAdmin),
-        qualifications = listOf(APIUserQualification.emergency, APIUserQualification.pipe),
+        qualifications = listOf(APIUserQualification.EMERGENCY, APIUserQualification.PIPE),
         cruManagementAreaOverrideId = null,
       )
 

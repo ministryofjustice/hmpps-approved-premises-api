@@ -1232,7 +1232,7 @@ class UsersTest : InitialiseDatabasePerClassTestBase() {
     @EnumSource(value = UserRole::class, names = ["CAS1_JANITOR", "CAS1_USER_MANAGER"])
     fun `Updating a user returns OK with correct body when user has an approved role`(role: UserRole) {
       val id = UUID.randomUUID()
-      val qualifications = listOf(APIUserQualification.emergency, APIUserQualification.pipe)
+      val qualifications = listOf(APIUserQualification.EMERGENCY, APIUserQualification.PIPE)
       val roles = listOf(
         ApprovedPremisesUserRole.assessor,
         ApprovedPremisesUserRole.reportViewer,

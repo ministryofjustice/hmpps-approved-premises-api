@@ -131,7 +131,7 @@ class ProfileTest : IntegrationTestBase() {
                   name = expectedName,
                   telephoneNumber = telephoneNumber,
                   roles = listOf(ApprovedPremisesUserRole.assessor),
-                  qualifications = listOf(uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.UserQualification.pipe),
+                  qualifications = listOf(uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.UserQualification.PIPE),
                   service = "CAS1",
                   isActive = true,
                   apArea = ApArea(userApArea.id, userApArea.identifier, userApArea.name),
