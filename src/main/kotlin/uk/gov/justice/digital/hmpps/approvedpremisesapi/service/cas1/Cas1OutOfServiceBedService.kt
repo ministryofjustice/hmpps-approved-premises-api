@@ -267,15 +267,15 @@ class Cas1OutOfServiceBedService(
       Cas1OutOfServiceBedSortField.premisesName -> "p.name"
       Cas1OutOfServiceBedSortField.roomName -> "r.name"
       Cas1OutOfServiceBedSortField.bedName -> "b.name"
-      Cas1OutOfServiceBedSortField.startDate -> "d.start_date"
+      Cas1OutOfServiceBedSortField.START_DATE -> "d.start_date"
       Cas1OutOfServiceBedSortField.endDate -> "d.end_date"
       Cas1OutOfServiceBedSortField.reason -> "oosr.name"
       Cas1OutOfServiceBedSortField.daysLost -> "(d.end_date - d.start_date)"
     }
 
     val excludePast = !temporality.contains(Temporality.past)
-    val excludeCurrent = !temporality.contains(Temporality.current)
-    val excludeFuture = !temporality.contains(Temporality.future)
+    val excludeCurrent = !temporality.contains(Temporality.CURRENT)
+    val excludeFuture = !temporality.contains(Temporality.FUTURE)
 
     val page = outOfServiceBedRepository.findOutOfServiceBedIds(
       premisesId,

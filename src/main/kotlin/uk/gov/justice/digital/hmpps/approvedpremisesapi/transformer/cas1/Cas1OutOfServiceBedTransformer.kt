@@ -49,8 +49,8 @@ class Cas1OutOfServiceBedTransformer(
 
     return when {
       now > this.endDate -> Temporality.past
-      now < this.startDate -> Temporality.future
-      else -> Temporality.current
+      now < this.startDate -> Temporality.FUTURE
+      else -> Temporality.CURRENT
     }
   }
 }

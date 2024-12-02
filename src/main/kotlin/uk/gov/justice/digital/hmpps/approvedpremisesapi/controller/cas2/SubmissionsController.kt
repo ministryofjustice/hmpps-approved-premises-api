@@ -44,7 +44,7 @@ class SubmissionsController(
       ensureNomisUserPersisted()
     }
 
-    val sortDirection = SortDirection.asc
+    val sortDirection = SortDirection.ASC
     val sortBy = "submittedAt"
 
     val (applications, metadata) = applicationService.getAllSubmittedApplicationsForAssessor(PageCriteria(sortBy, sortDirection, page))

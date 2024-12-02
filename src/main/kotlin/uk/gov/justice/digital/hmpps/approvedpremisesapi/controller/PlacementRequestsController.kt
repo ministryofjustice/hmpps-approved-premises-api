@@ -105,7 +105,7 @@ class PlacementRequestsController(
       ),
       PageCriteria(
         sortBy = sortBy ?: PlacementRequestSortField.createdAt,
-        sortDirection = sortDirection ?: SortDirection.asc,
+        sortDirection = sortDirection ?: SortDirection.ASC,
         page = page,
       ),
     )

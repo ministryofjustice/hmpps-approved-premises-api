@@ -59,37 +59,37 @@ class OutOfServiceBedTest : InitialiseDatabasePerClassTestBase() {
         ),
         Arguments.of(
           listOf(
-            Temporality.current,
+            Temporality.CURRENT,
           ),
         ),
         Arguments.of(
           listOf(
-            Temporality.future,
-          ),
-        ),
-        Arguments.of(
-          listOf(
-            Temporality.past,
-            Temporality.current,
+            Temporality.FUTURE,
           ),
         ),
         Arguments.of(
           listOf(
             Temporality.past,
-            Temporality.future,
-          ),
-        ),
-        Arguments.of(
-          listOf(
-            Temporality.current,
-            Temporality.future,
+            Temporality.CURRENT,
           ),
         ),
         Arguments.of(
           listOf(
             Temporality.past,
-            Temporality.current,
-            Temporality.future,
+            Temporality.FUTURE,
+          ),
+        ),
+        Arguments.of(
+          listOf(
+            Temporality.CURRENT,
+            Temporality.FUTURE,
+          ),
+        ),
+        Arguments.of(
+          listOf(
+            Temporality.past,
+            Temporality.CURRENT,
+            Temporality.FUTURE,
           ),
         ),
       )
@@ -491,7 +491,7 @@ class OutOfServiceBedTest : InitialiseDatabasePerClassTestBase() {
           initialiseOosBedsForAllTemporalities(user)
 
           val rawResponseBody = webTestClient.get()
-            .uri("/cas1/out-of-service-beds?temporality=${Temporality.current}")
+            .uri("/cas1/out-of-service-beds?temporality=${Temporality.CURRENT}")
             .header("Authorization", "Bearer $jwt")
             .exchange()
             .expectStatus()
@@ -513,7 +513,7 @@ class OutOfServiceBedTest : InitialiseDatabasePerClassTestBase() {
           initialiseOosBedsForAllTemporalities(user)
 
           val rawResponseBody = webTestClient.get()
-            .uri("/cas1/out-of-service-beds?temporality=${Temporality.future}")
+            .uri("/cas1/out-of-service-beds?temporality=${Temporality.FUTURE}")
             .header("Authorization", "Bearer $jwt")
             .exchange()
             .expectStatus()
@@ -601,11 +601,11 @@ class OutOfServiceBedTest : InitialiseDatabasePerClassTestBase() {
         }
 
         val sortedOutOfServiceBeds = when (sortDirection) {
-          SortDirection.asc -> when (sortField) {
+          SortDirection.ASC -> when (sortField) {
             Cas1OutOfServiceBedSortField.premisesName -> expectedOutOfServiceBeds.sortedBy { it.premises.name }
             Cas1OutOfServiceBedSortField.roomName -> expectedOutOfServiceBeds.sortedBy { it.bed.room.name }
             Cas1OutOfServiceBedSortField.bedName -> expectedOutOfServiceBeds.sortedBy { it.bed.name }
-            Cas1OutOfServiceBedSortField.startDate -> expectedOutOfServiceBeds.sortedBy { it.startDate }
+            Cas1OutOfServiceBedSortField.START_DATE -> expectedOutOfServiceBeds.sortedBy { it.startDate }
             Cas1OutOfServiceBedSortField.endDate -> expectedOutOfServiceBeds.sortedBy { it.endDate }
             Cas1OutOfServiceBedSortField.reason -> expectedOutOfServiceBeds.sortedBy { it.reason.name }
             Cas1OutOfServiceBedSortField.daysLost -> expectedOutOfServiceBeds.sortedBy { Duration.between(it.startDate.atStartOfDay(), it.endDate.plusDays(1).atStartOfDay()).toDays() }
@@ -614,7 +614,7 @@ class OutOfServiceBedTest : InitialiseDatabasePerClassTestBase() {
             Cas1OutOfServiceBedSortField.premisesName -> expectedOutOfServiceBeds.sortedByDescending { it.premises.name }
             Cas1OutOfServiceBedSortField.roomName -> expectedOutOfServiceBeds.sortedByDescending { it.bed.room.name }
             Cas1OutOfServiceBedSortField.bedName -> expectedOutOfServiceBeds.sortedByDescending { it.bed.name }
-            Cas1OutOfServiceBedSortField.startDate -> expectedOutOfServiceBeds.sortedByDescending { it.startDate }
+            Cas1OutOfServiceBedSortField.START_DATE -> expectedOutOfServiceBeds.sortedByDescending { it.startDate }
             Cas1OutOfServiceBedSortField.endDate -> expectedOutOfServiceBeds.sortedByDescending { it.endDate }
             Cas1OutOfServiceBedSortField.reason -> expectedOutOfServiceBeds.sortedByDescending { it.reason.name }
             Cas1OutOfServiceBedSortField.daysLost -> expectedOutOfServiceBeds.sortedByDescending { Duration.between(it.startDate.atStartOfDay(), it.endDate.plusDays(1).atStartOfDay()).toDays() }

@@ -380,14 +380,14 @@ class GetAllApprovedPremisesApplicationsTest : InitialiseDatabasePerClassTestBas
   @ParameterizedTest
   @EnumSource(ApplicationSortField::class)
   fun `findAllApprovedPremisesSummaries sorts by a given field in ascending order`(sortField: ApplicationSortField) {
-    allApplications.sort(SortDirection.asc, sortField)
+    allApplications.sort(SortDirection.ASC, sortField)
     val chunkedApplications = allApplications.chunked(10)
 
     chunkedApplications.forEachIndexed { page, chunk ->
       val (result, metadata) = applicationService.getAllApprovedPremisesApplications(
         page + 1,
         null,
-        SortDirection.asc,
+        SortDirection.ASC,
         emptyList(),
         sortField,
         null,
@@ -445,7 +445,7 @@ class GetAllApprovedPremisesApplicationsTest : InitialiseDatabasePerClassTestBas
       }
 
       when (sortDirection) {
-        SortDirection.asc, null -> ascendingCompare
+        SortDirection.ASC, null -> ascendingCompare
         SortDirection.desc -> -ascendingCompare
       }
     }

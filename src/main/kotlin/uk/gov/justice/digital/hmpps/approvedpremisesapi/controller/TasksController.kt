@@ -108,7 +108,7 @@ class TasksController(
       PageCriteria(
         sortBy = sortBy ?: TaskSortField.createdAt,
         perPage = perPage,
-        sortDirection = sortDirection ?: SortDirection.asc,
+        sortDirection = sortDirection ?: SortDirection.ASC,
         page = page,
       ),
     )

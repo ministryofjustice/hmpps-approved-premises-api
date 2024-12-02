@@ -381,7 +381,7 @@ class TaskServiceTest {
     every { placementApplicationRepositoryMock.findAllById(placementApplications.map { it.id }) } returns placementApplications
     every { placementRequestRepositoryMock.findAllById(placementRequests.map { it.id }) } returns placementRequests
 
-    val pageCriteria = PageCriteria(TaskSortField.createdAt, SortDirection.asc, 1)
+    val pageCriteria = PageCriteria(TaskSortField.createdAt, SortDirection.ASC, 1)
 
     every { getMetadata(page, pageCriteria) } returns metadata
 

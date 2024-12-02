@@ -108,7 +108,7 @@ class BookingSearchService(
     pageSize: Int,
   ): Pageable? {
     val sortDirection = when (sortOrder) {
-      SortOrder.ascending -> SortDirection.asc
+      SortOrder.ascending -> SortDirection.ASC
       else -> SortDirection.desc
     }
     val sortingField = convertSortFieldToDBField(sortField)

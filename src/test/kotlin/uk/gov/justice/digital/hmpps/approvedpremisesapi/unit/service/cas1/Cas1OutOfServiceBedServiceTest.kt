@@ -72,37 +72,37 @@ class Cas1OutOfServiceBedServiceTest {
         ),
         Arguments.of(
           listOf(
-            Temporality.current,
+            Temporality.CURRENT,
           ),
         ),
         Arguments.of(
           listOf(
-            Temporality.future,
-          ),
-        ),
-        Arguments.of(
-          listOf(
-            Temporality.past,
-            Temporality.current,
+            Temporality.FUTURE,
           ),
         ),
         Arguments.of(
           listOf(
             Temporality.past,
-            Temporality.future,
-          ),
-        ),
-        Arguments.of(
-          listOf(
-            Temporality.current,
-            Temporality.future,
+            Temporality.CURRENT,
           ),
         ),
         Arguments.of(
           listOf(
             Temporality.past,
-            Temporality.current,
-            Temporality.future,
+            Temporality.FUTURE,
+          ),
+        ),
+        Arguments.of(
+          listOf(
+            Temporality.CURRENT,
+            Temporality.FUTURE,
+          ),
+        ),
+        Arguments.of(
+          listOf(
+            Temporality.past,
+            Temporality.CURRENT,
+            Temporality.FUTURE,
           ),
         ),
       )
@@ -626,7 +626,7 @@ class Cas1OutOfServiceBedServiceTest {
         temporality.toSet(),
         premisesId = null,
         apAreaId = null,
-        pageCriteria = PageCriteria(Cas1OutOfServiceBedSortField.startDate, SortDirection.asc, page = null, perPage = null),
+        pageCriteria = PageCriteria(Cas1OutOfServiceBedSortField.START_DATE, SortDirection.ASC, page = null, perPage = null),
       )
 
       verify(exactly = 1) {
@@ -634,8 +634,8 @@ class Cas1OutOfServiceBedServiceTest {
           premisesId = null,
           apAreaId = null,
           excludePast = !temporality.contains(Temporality.past),
-          excludeCurrent = !temporality.contains(Temporality.current),
-          excludeFuture = !temporality.contains(Temporality.future),
+          excludeCurrent = !temporality.contains(Temporality.CURRENT),
+          excludeFuture = !temporality.contains(Temporality.FUTURE),
           pageable = any(),
         )
       }
@@ -662,7 +662,7 @@ class Cas1OutOfServiceBedServiceTest {
         Temporality.entries.toSet(),
         premisesId = expectedId,
         apAreaId = null,
-        pageCriteria = PageCriteria(Cas1OutOfServiceBedSortField.startDate, SortDirection.asc, page = null, perPage = null),
+        pageCriteria = PageCriteria(Cas1OutOfServiceBedSortField.START_DATE, SortDirection.ASC, page = null, perPage = null),
       )
 
       verify(exactly = 1) {
@@ -698,7 +698,7 @@ class Cas1OutOfServiceBedServiceTest {
         Temporality.entries.toSet(),
         premisesId = null,
         apAreaId = expectedId,
-        pageCriteria = PageCriteria(Cas1OutOfServiceBedSortField.startDate, SortDirection.asc, page = null, perPage = null),
+        pageCriteria = PageCriteria(Cas1OutOfServiceBedSortField.START_DATE, SortDirection.ASC, page = null, perPage = null),
       )
 
       verify(exactly = 1) {

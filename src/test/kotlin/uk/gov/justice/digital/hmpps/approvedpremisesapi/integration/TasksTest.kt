@@ -2088,7 +2088,7 @@ class TasksTest {
           )
       }
 
-      private fun tasksSortedByCreatedAt(sortDirection: SortDirection = SortDirection.asc) =
+      private fun tasksSortedByCreatedAt(sortDirection: SortDirection = SortDirection.ASC) =
         sortTasks(sortDirection) { id: UUID ->
           val createdAt = when (val task = tasks[id]!!) {
             is AssessmentTask -> assessments[id]!!.createdAt
@@ -2100,32 +2100,32 @@ class TasksTest {
           createdAt.toInstant()
         }
 
-      private fun tasksSortedByDueAt(sortDirection: SortDirection = SortDirection.asc) =
+      private fun tasksSortedByDueAt(sortDirection: SortDirection = SortDirection.ASC) =
         sortTasks(sortDirection) { id: UUID ->
           tasks[id]!!.dueAt
         }
 
-      private fun tasksSortedByPerson(sortDirection: SortDirection = SortDirection.asc) =
+      private fun tasksSortedByPerson(sortDirection: SortDirection = SortDirection.ASC) =
         sortTasks(sortDirection) { id: UUID ->
           tasks[id]!!.personName
         }
 
-      private fun tasksSortedByAllocatedTo(sortDirection: SortDirection = SortDirection.asc) =
+      private fun tasksSortedByAllocatedTo(sortDirection: SortDirection = SortDirection.ASC) =
         sortTasks(sortDirection) { id: UUID ->
           tasks[id]!!.allocatedToStaffMember!!.name
         }
 
-      private fun tasksSortedByCompletedAt(sortDirection: SortDirection = SortDirection.asc) =
+      private fun tasksSortedByCompletedAt(sortDirection: SortDirection = SortDirection.ASC) =
         sortTasks(sortDirection) { id: UUID ->
           tasks[id]!!.outcomeRecordedAt
         }
 
-      private fun tasksSortedByTaskType(sortDirection: SortDirection = SortDirection.asc) =
+      private fun tasksSortedByTaskType(sortDirection: SortDirection = SortDirection.ASC) =
         sortTasks(sortDirection) { id: UUID ->
           tasks[id]!!.taskType
         }
 
-      private fun tasksSortedByDecision(sortDirection: SortDirection = SortDirection.asc) =
+      private fun tasksSortedByDecision(sortDirection: SortDirection = SortDirection.ASC) =
         sortTasks(sortDirection) { id: UUID ->
           when (val task = tasks[id]!!) {
             is AssessmentTask -> task.outcome?.value
@@ -2140,7 +2140,7 @@ class TasksTest {
           .keys
           .apply {
             when (sortDirection) {
-              SortDirection.asc -> sortedBy(sortFunc)
+              SortDirection.ASC -> sortedBy(sortFunc)
               SortDirection.desc -> sortedByDescending(sortFunc)
             }
           }
