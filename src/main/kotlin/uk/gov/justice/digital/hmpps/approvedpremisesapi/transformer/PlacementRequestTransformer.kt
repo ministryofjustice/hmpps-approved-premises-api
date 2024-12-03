@@ -83,7 +83,7 @@ class PlacementRequestTransformer(
 
   private fun characteristicToCriteria(characteristic: CharacteristicEntity): PlacementCriteria? {
     return try {
-      PlacementCriteria.valueOf(characteristic.propertyName!!)
+      PlacementCriteria.entries.associateBy { it.value }[characteristic.propertyName!!]
     } catch (exception: Exception) {
       null
     }

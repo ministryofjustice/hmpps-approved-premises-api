@@ -423,7 +423,7 @@ class Cas1SpaceBookingService(
     if (cas1PremisesService.findPremiseById(premisesId) == null) return CasResult.NotFound("premises", premisesId.toString())
 
     val page = cas1SpaceBookingRepository.search(
-      filterCriteria.residency?.name,
+      filterCriteria.residency?.value,
       filterCriteria.crnOrName,
       filterCriteria.keyWorkerStaffCode,
       premisesId,

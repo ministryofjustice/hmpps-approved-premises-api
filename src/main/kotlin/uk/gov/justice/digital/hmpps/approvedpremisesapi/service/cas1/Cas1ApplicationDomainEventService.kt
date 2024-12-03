@@ -185,7 +185,7 @@ class Cas1ApplicationDomainEventService(
       deliusEventNumber = application.eventNumber,
       mappa = mappaLevel,
       offenceId = application.offenceId,
-      releaseType = submitApplication.releaseType.toString(),
+      releaseType = submitApplication.releaseType.value,
       age = Period.between(offenderDetails.dateOfBirth, LocalDate.now()).years,
       gender = when (offenderDetails.gender.lowercase()) {
         "male" -> ApplicationSubmitted.Gender.MALE
