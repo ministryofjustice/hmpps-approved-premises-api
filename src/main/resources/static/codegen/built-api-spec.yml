@@ -4915,6 +4915,19 @@ components:
           - RelatedApplicationWithdrawn
           - RelatedPlacementRequestWithdrawn
           - RelatedPlacementApplicationWithdrawn
+        x-enum-varnames:
+          - duplicatePlacementRequest
+          - alternativeProvisionIdentified
+          - changeInCircumstances
+          - changeInReleaseDecision
+          - noCapacityDueToLostBed
+          - noCapacityDueToPlacementPrioritisation
+          - noCapacity
+          - errorInPlacementRequest
+          - withdrawnByPP
+          - relatedApplicationWithdrawn
+          - relatedPlacementRequestWithdrawn
+          - relatedPlacementApplicationWithdrawn
     PlacementApplicationType:
       type: string
       description: |

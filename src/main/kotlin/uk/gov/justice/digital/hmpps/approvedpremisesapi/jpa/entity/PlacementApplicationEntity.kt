@@ -218,16 +218,16 @@ enum class PlacementApplicationDecision(val apiValue: ApiPlacementApplicationDec
 }
 
 enum class PlacementApplicationWithdrawalReason(val apiValue: WithdrawPlacementRequestReason) {
-  DUPLICATE_PLACEMENT_REQUEST(WithdrawPlacementRequestReason.DUPLICATE_PLACEMENT_REQUEST),
-  ALTERNATIVE_PROVISION_IDENTIFIED(WithdrawPlacementRequestReason.ALTERNATIVE_PROVISION_IDENTIFIED),
-  WITHDRAWN_BY_PP(WithdrawPlacementRequestReason.WITHDRAWN_BY_PP),
-  CHANGE_IN_CIRCUMSTANCES(WithdrawPlacementRequestReason.CHANGE_IN_CIRCUMSTANCES),
-  CHANGE_IN_RELEASE_DECISION(WithdrawPlacementRequestReason.CHANGE_IN_RELEASE_DECISION),
-  NO_CAPACITY_DUE_TO_LOST_BED(WithdrawPlacementRequestReason.NO_CAPACITY_DUE_TO_LOST_BED),
-  NO_CAPACITY_DUE_TO_PLACEMENT_PRIORITISATION(WithdrawPlacementRequestReason.NO_CAPACITY_DUE_TO_PLACEMENT_PRIORITISATION),
-  NO_CAPACITY(WithdrawPlacementRequestReason.NO_CAPACITY),
-  ERROR_IN_PLACEMENT_REQUEST(WithdrawPlacementRequestReason.ERROR_IN_PLACEMENT_REQUEST),
-  RELATED_APPLICATION_WITHDRAWN(WithdrawPlacementRequestReason.RELATED_APPLICATION_WITHDRAWN),
+  DUPLICATE_PLACEMENT_REQUEST(WithdrawPlacementRequestReason.duplicatePlacementRequest),
+  ALTERNATIVE_PROVISION_IDENTIFIED(WithdrawPlacementRequestReason.alternativeProvisionIdentified),
+  WITHDRAWN_BY_PP(WithdrawPlacementRequestReason.withdrawnByPP),
+  CHANGE_IN_CIRCUMSTANCES(WithdrawPlacementRequestReason.changeInCircumstances),
+  CHANGE_IN_RELEASE_DECISION(WithdrawPlacementRequestReason.changeInReleaseDecision),
+  NO_CAPACITY_DUE_TO_LOST_BED(WithdrawPlacementRequestReason.noCapacityDueToLostBed),
+  NO_CAPACITY_DUE_TO_PLACEMENT_PRIORITISATION(WithdrawPlacementRequestReason.noCapacityDueToPlacementPrioritisation),
+  NO_CAPACITY(WithdrawPlacementRequestReason.noCapacity),
+  ERROR_IN_PLACEMENT_REQUEST(WithdrawPlacementRequestReason.errorInPlacementRequest),
+  RELATED_APPLICATION_WITHDRAWN(WithdrawPlacementRequestReason.relatedApplicationWithdrawn),
   ;
 
   companion object {

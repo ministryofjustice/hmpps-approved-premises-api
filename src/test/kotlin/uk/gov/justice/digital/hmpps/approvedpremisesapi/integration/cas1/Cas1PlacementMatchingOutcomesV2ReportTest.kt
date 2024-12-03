@@ -659,7 +659,7 @@ class Cas1PlacementMatchingOutcomesV2ReportTest : InitialiseDatabasePerClassTest
       this,
       placementRequestId,
       WithdrawPlacementRequest(
-        WithdrawPlacementRequestReason.DUPLICATE_PLACEMENT_REQUEST,
+        WithdrawPlacementRequestReason.duplicatePlacementRequest,
       ),
     )
   }

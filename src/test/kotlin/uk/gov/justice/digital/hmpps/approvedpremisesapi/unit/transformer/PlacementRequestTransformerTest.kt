@@ -379,6 +379,6 @@ class PlacementRequestTransformerTest {
     val result = placementRequestTransformer.transformJpaToApi(placementRequestEntity, personInfo)
 
     assertThat(result.isWithdrawn).isEqualTo(true)
-    assertThat(result.withdrawalReason).isEqualTo(WithdrawPlacementRequestReason.DUPLICATE_PLACEMENT_REQUEST)
+    assertThat(result.withdrawalReason).isEqualTo(WithdrawPlacementRequestReason.duplicatePlacementRequest)
   }
 }

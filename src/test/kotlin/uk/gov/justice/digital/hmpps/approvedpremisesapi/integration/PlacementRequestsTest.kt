@@ -1827,7 +1827,7 @@ class PlacementRequestsTest : IntegrationTestBase() {
                   .header("Authorization", "Bearer $jwt")
                   .bodyValue(
                     WithdrawPlacementRequest(
-                      reason = WithdrawPlacementRequestReason.DUPLICATE_PLACEMENT_REQUEST,
+                      reason = WithdrawPlacementRequestReason.duplicatePlacementRequest,
                     ),
                   )
                   .exchange()
@@ -1858,7 +1858,7 @@ class PlacementRequestsTest : IntegrationTestBase() {
               .uri("/placement-requests/${placementRequest.id}/withdrawal")
               .bodyValue(
                 WithdrawPlacementRequest(
-                  reason = WithdrawPlacementRequestReason.DUPLICATE_PLACEMENT_REQUEST,
+                  reason = WithdrawPlacementRequestReason.duplicatePlacementRequest,
                 ),
               )
               .header("Authorization", "Bearer $jwt")

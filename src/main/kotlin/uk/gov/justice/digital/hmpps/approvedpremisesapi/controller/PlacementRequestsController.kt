@@ -175,18 +175,18 @@ class PlacementRequestsController(
     val user = userService.getUserForRequest()
 
     val reason = when (body?.reason) {
-      WithdrawPlacementRequestReason.DUPLICATE_PLACEMENT_REQUEST -> PlacementRequestWithdrawalReason.DUPLICATE_PLACEMENT_REQUEST
-      WithdrawPlacementRequestReason.ALTERNATIVE_PROVISION_IDENTIFIED -> PlacementRequestWithdrawalReason.ALTERNATIVE_PROVISION_IDENTIFIED
-      WithdrawPlacementRequestReason.CHANGE_IN_CIRCUMSTANCES -> PlacementRequestWithdrawalReason.CHANGE_IN_CIRCUMSTANCES
-      WithdrawPlacementRequestReason.CHANGE_IN_RELEASE_DECISION -> PlacementRequestWithdrawalReason.CHANGE_IN_RELEASE_DECISION
-      WithdrawPlacementRequestReason.NO_CAPACITY_DUE_TO_LOST_BED -> PlacementRequestWithdrawalReason.NO_CAPACITY_DUE_TO_LOST_BED
-      WithdrawPlacementRequestReason.NO_CAPACITY_DUE_TO_PLACEMENT_PRIORITISATION -> PlacementRequestWithdrawalReason.NO_CAPACITY_DUE_TO_PLACEMENT_PRIORITISATION
-      WithdrawPlacementRequestReason.NO_CAPACITY -> PlacementRequestWithdrawalReason.NO_CAPACITY
-      WithdrawPlacementRequestReason.ERROR_IN_PLACEMENT_REQUEST -> PlacementRequestWithdrawalReason.ERROR_IN_PLACEMENT_REQUEST
-      WithdrawPlacementRequestReason.WITHDRAWN_BY_PP -> throw NotAllowedProblem("Withdrawal reason is reserved for internal use")
-      WithdrawPlacementRequestReason.RELATED_APPLICATION_WITHDRAWN -> throw NotAllowedProblem("Withdrawal reason is reserved for internal use")
-      WithdrawPlacementRequestReason.RELATED_PLACEMENT_REQUEST_WITHDRAWN -> throw NotAllowedProblem("Withdrawal reason is reserved for internal use")
-      WithdrawPlacementRequestReason.RELATED_PLACEMENT_APPLICATION_WITHDRAWN -> throw NotAllowedProblem("Withdrawal reason is reserved for internal use")
+      WithdrawPlacementRequestReason.duplicatePlacementRequest -> PlacementRequestWithdrawalReason.DUPLICATE_PLACEMENT_REQUEST
+      WithdrawPlacementRequestReason.alternativeProvisionIdentified -> PlacementRequestWithdrawalReason.ALTERNATIVE_PROVISION_IDENTIFIED
+      WithdrawPlacementRequestReason.changeInCircumstances -> PlacementRequestWithdrawalReason.CHANGE_IN_CIRCUMSTANCES
+      WithdrawPlacementRequestReason.changeInReleaseDecision -> PlacementRequestWithdrawalReason.CHANGE_IN_RELEASE_DECISION
+      WithdrawPlacementRequestReason.noCapacityDueToLostBed -> PlacementRequestWithdrawalReason.NO_CAPACITY_DUE_TO_LOST_BED
+      WithdrawPlacementRequestReason.noCapacityDueToPlacementPrioritisation -> PlacementRequestWithdrawalReason.NO_CAPACITY_DUE_TO_PLACEMENT_PRIORITISATION
+      WithdrawPlacementRequestReason.noCapacity -> PlacementRequestWithdrawalReason.NO_CAPACITY
+      WithdrawPlacementRequestReason.errorInPlacementRequest -> PlacementRequestWithdrawalReason.ERROR_IN_PLACEMENT_REQUEST
+      WithdrawPlacementRequestReason.withdrawnByPP -> throw NotAllowedProblem("Withdrawal reason is reserved for internal use")
+      WithdrawPlacementRequestReason.relatedApplicationWithdrawn -> throw NotAllowedProblem("Withdrawal reason is reserved for internal use")
+      WithdrawPlacementRequestReason.relatedPlacementRequestWithdrawn -> throw NotAllowedProblem("Withdrawal reason is reserved for internal use")
+      WithdrawPlacementRequestReason.relatedPlacementApplicationWithdrawn -> throw NotAllowedProblem("Withdrawal reason is reserved for internal use")
       null -> null
     }
 
