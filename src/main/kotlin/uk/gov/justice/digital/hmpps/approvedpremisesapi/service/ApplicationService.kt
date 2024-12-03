@@ -338,6 +338,7 @@ class ApplicationService(
       caseManagerIsNotApplicant = null,
       caseManagerUserDetails = null,
       noticeType = null,
+      licenceExpiryDate = null,
     )
   }
 
@@ -798,6 +799,7 @@ class ApplicationService(
         },
       )
       this.noticeType = getNoticeType(submitApplication.noticeType, submitApplication.isEmergencyApplication, this)
+      this.licenceExpiryDate = submitApplication.licenseExpiryDate
     }
 
     cas1ApplicationDomainEventService.applicationSubmitted(application, submitApplication, username)

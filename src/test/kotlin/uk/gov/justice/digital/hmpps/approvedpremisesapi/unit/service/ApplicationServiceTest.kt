@@ -1773,6 +1773,7 @@ class ApplicationServiceTest {
       assertThat(persistedApplication.noticeType).isEqualTo(Cas1ApplicationTimelinessCategory.standard)
       assertThat(persistedApplication.apArea).isEqualTo(apArea)
       assertThat(persistedApplication.cruManagementArea).isEqualTo(apArea.defaultCruManagementArea)
+      assertThat(persistedApplication.licenceExpiryDate).isNull()
 
       verify { mockApplicationRepository.save(any()) }
       verify(exactly = 1) { mockAssessmentService.createApprovedPremisesAssessment(application) }

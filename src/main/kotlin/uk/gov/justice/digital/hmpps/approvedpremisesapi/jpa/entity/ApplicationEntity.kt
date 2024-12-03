@@ -427,6 +427,7 @@ class ApprovedPremisesApplicationEntity(
   var caseManagerUserDetails: Cas1ApplicationUserDetailsEntity?,
   @Enumerated(value = EnumType.STRING)
   var noticeType: Cas1ApplicationTimelinessCategory?,
+  var licenceExpiryDate: LocalDate?,
 ) : ApplicationEntity(
   id,
   crn,

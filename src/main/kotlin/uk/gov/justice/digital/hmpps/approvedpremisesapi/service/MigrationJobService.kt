@@ -32,6 +32,8 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.migration.UpdateUsersPdu
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.migration.cas1.Cas1BackfillUserApArea
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.migration.cas1.Cas1FixPlacementApplicationLinksJob
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.migration.cas1.Cas1TaskDueMigrationJob
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.migration.cas1.Cas1UpdateApplicationLicenceExpiryDateJob
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.migration.cas1.UpdateLicenceExpiryDateRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.migration.cas2.Cas2AssessmentMigrationJob
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.migration.cas2.Cas2NoteMigrationJob
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.migration.cas2.Cas2StatusUpdateMigrationJob
@@ -134,6 +136,11 @@ class MigrationJobService(
         MigrationJobType.cas3DomainEventTypeForPersonDepartedUpdated -> Cas3UpdateDomainEventTypeForPersonDepartureUpdatedJob(
           getBean(DomainEventRepository::class),
           getBean(ObjectMapper::class),
+          getBean(MigrationLogger::class),
+        )
+
+        MigrationJobType.cas1ApplicationsLicenceExpiryDate -> Cas1UpdateApplicationLicenceExpiryDateJob(
+          getBean(UpdateLicenceExpiryDateRepository::class),
           getBean(MigrationLogger::class),
         )
       }
