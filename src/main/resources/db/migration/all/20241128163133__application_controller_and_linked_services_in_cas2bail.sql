@@ -5,23 +5,6 @@ CREATE TABLE cas_2_bail_application_json_schemas
     CONSTRAINT pk_cas_2_bail_application_json_schemas PRIMARY KEY (json_schema_id)
 );
 
-CREATE TABLE cas_2_bail_application_live_summary
-(
-    id                    UUID NOT NULL,
-    crn                   VARCHAR(255),
-    noms_number           VARCHAR(255),
-    created_by_user_id    VARCHAR(255),
-    name                  VARCHAR(255),
-    created_at            TIMESTAMP WITHOUT TIME ZONE,
-    submitted_at          TIMESTAMP WITHOUT TIME ZONE,
-    abandoned_at          TIMESTAMP WITHOUT TIME ZONE,
-    hdc_eligibility_date  date,
-    label                 VARCHAR(255),
-    status_id             VARCHAR(255),
-    referring_prison_code VARCHAR(255),
-    CONSTRAINT pk_cas_2_bail_application_live_summary PRIMARY KEY (id)
-);
-
 CREATE TABLE cas_2_bail_application_notes
 (
     id                          UUID NOT NULL,
@@ -126,3 +109,49 @@ ALTER TABLE cas_2_bail_status_updates
 
 ALTER TABLE cas_2_bail_status_update_details
     ADD CONSTRAINT FK_CAS_2_BAIL_STATUS_UPDATE_DETAILS_ON_STATUS_UPDATE FOREIGN KEY (status_update_id) REFERENCES cas_2_bail_status_updates (id);
+
+CREATE OR REPLACE VIEW cas_2_bail_application_summary AS SELECT
+    a.id,
+    a.crn,
+    a.noms_number,
+    CAST(a.created_by_user_id AS TEXT),
+    nu.name,
+    a.created_at,
+    a.submitted_at,
+    a.hdc_eligibility_date,
+    asu.label,
+    CAST(asu.status_id AS TEXT),
+    a.referring_prison_code,
+    a.conditional_release_date,
+    asu.created_at AS status_created_at,
+    a.abandoned_at
+FROM cas_2_applications a
+LEFT JOIN (SELECT DISTINCT ON (application_id) su.application_id, su.label, su.status_id, su.created_at
+    FROM cas_2_bail_status_updates su
+    ORDER BY su.application_id, su.created_at DESC) as asu
+    ON a.id = asu.application_id
+JOIN nomis_users nu ON nu.id = a.created_by_user_id;
+
+CREATE OR REPLACE VIEW cas_2_bail_application_live_summary AS SELECT
+    a.id,
+    a.crn,
+    a.noms_number,
+    a.created_by_user_id,
+    a.name,
+    a.created_at,
+    a.submitted_at,
+    a.hdc_eligibility_date,
+    a.label,
+    a.status_id,
+    a.referring_prison_code,
+    a.abandoned_at
+FROM cas_2_bail_application_summary a
+WHERE (a.conditional_release_date IS NULL OR a.conditional_release_date >= current_date)
+AND a.abandoned_at IS NULL
+AND a.status_id IS NULL
+   OR (a.status_id = '004e2419-9614-4c1e-a207-a8418009f23d' AND a.status_created_at > (current_date - INTERVAL '32 DAY')) -- Referral withdrawn
+   OR (a.status_id = 'f13bbdd6-44f1-4362-b9d3-e6f1298b1bf9' AND a.status_created_at > (current_date - INTERVAL '32 DAY')) -- Referral cancelled
+   OR (a.status_id = '89458555-3219-44a2-9584-c4f715d6b565' AND a.status_created_at > (current_date - INTERVAL '32 DAY')) -- Awaiting arrival
+   OR (a.status_id NOT IN ('004e2419-9614-4c1e-a207-a8418009f23d',
+                           'f13bbdd6-44f1-4362-b9d3-e6f1298b1bf9',
+                           '89458555-3219-44a2-9584-c4f715d6b565'));
