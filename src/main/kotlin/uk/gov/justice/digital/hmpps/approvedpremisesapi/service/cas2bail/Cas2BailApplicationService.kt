@@ -29,8 +29,8 @@ import java.util.*
 @Service("Cas2BailApplicationService")
 class Cas2BailApplicationService(
   private val cas2BailApplicationRepository: Cas2BailApplicationRepository,
-  private val lockableApplicationRepository: Cas2BailLockableApplicationRepository,
-  private val applicationSummaryRepository: Cas2BailApplicationSummaryRepository,
+  private val cas2BailLockableApplicationRepository: Cas2BailLockableApplicationRepository,
+  private val cas2BailApplicationSummaryRepository: Cas2BailApplicationSummaryRepository,
   private val jsonSchemaService: JsonSchemaService,
   private val offenderService: OffenderService,
   private val cas2BailUserAccessService: Cas2BailUserAccessService,
@@ -44,15 +44,15 @@ class Cas2BailApplicationService(
 ) {
 
   val repositoryUserFunctionMap = mapOf(
-    null to applicationSummaryRepository::findByUserId,
-    true to applicationSummaryRepository::findByUserIdAndSubmittedAtIsNotNull,
-    false to applicationSummaryRepository::findByUserIdAndSubmittedAtIsNull,
+    null to cas2BailApplicationSummaryRepository::findByUserId,
+    true to cas2BailApplicationSummaryRepository::findByUserIdAndSubmittedAtIsNotNull,
+    false to cas2BailApplicationSummaryRepository::findByUserIdAndSubmittedAtIsNull,
   )
 
   val repositoryPrisonFunctionMap = mapOf(
-    null to applicationSummaryRepository::findByPrisonCode,
-    true to applicationSummaryRepository::findByPrisonCodeAndSubmittedAtIsNotNull,
-    false to applicationSummaryRepository::findByPrisonCodeAndSubmittedAtIsNull,
+    null to cas2BailApplicationSummaryRepository::findByPrisonCode,
+    true to cas2BailApplicationSummaryRepository::findByPrisonCodeAndSubmittedAtIsNotNull,
+    false to cas2BailApplicationSummaryRepository::findByPrisonCodeAndSubmittedAtIsNull,
   )
 
   fun getCas2BailApplications(
@@ -73,7 +73,7 @@ class Cas2BailApplicationService(
   fun getAllSubmittedCas2BailApplicationsForAssessor(pageCriteria: PageCriteria<String>): Pair<List<Cas2BailApplicationSummaryEntity>, PaginationMetadata?> {
     val pageable = getPageableOrAllPages(pageCriteria)
 
-    val response = applicationSummaryRepository.findBySubmittedAtIsNotNull(pageable)
+    val response = cas2BailApplicationSummaryRepository.findBySubmittedAtIsNotNull(pageable)
 
     val metadata = getMetadata(response, pageCriteria)
 
@@ -127,20 +127,24 @@ class Cas2BailApplicationService(
         return fieldValidationError
       }
 
+      val id = UUID.randomUUID()
+
+      val entityToSave = Cas2BailApplicationEntity(
+        id = id,
+        crn = crn,
+        createdByUser = user,
+        data = null,
+        document = null,
+        schemaVersion = jsonSchemaService.getNewestSchema(Cas2BailApplicationJsonSchemaEntity::class.java),
+        createdAt = OffsetDateTime.now(),
+        submittedAt = null,
+        schemaUpToDate = true,
+        nomsNumber = offenderDetails.otherIds.nomsNumber,
+        telephoneNumber = null,
+      )
+
       val createdApplication = cas2BailApplicationRepository.save(
-        Cas2BailApplicationEntity(
-          id = UUID.randomUUID(),
-          crn = crn,
-          createdByUser = user,
-          data = null,
-          document = null,
-          schemaVersion = jsonSchemaService.getNewestSchema(Cas2BailApplicationJsonSchemaEntity::class.java),
-          createdAt = OffsetDateTime.now(),
-          submittedAt = null,
-          schemaUpToDate = true,
-          nomsNumber = offenderDetails.otherIds.nomsNumber,
-          telephoneNumber = null,
-        ),
+        entityToSave,
       )
 
       return success(createdApplication.apply { schemaUpToDate = true })
@@ -225,7 +229,7 @@ class Cas2BailApplicationService(
   ): CasResult<Cas2BailApplicationEntity> {
     val applicationId = submitApplication.applicationId
 
-    lockableApplicationRepository.acquirePessimisticLock(applicationId)
+    cas2BailLockableApplicationRepository.acquirePessimisticLock(applicationId)
 
     var application = cas2BailApplicationRepository.findByIdOrNull(applicationId)
       ?.let(jsonSchemaService::checkCas2BailSchemaOutdated)

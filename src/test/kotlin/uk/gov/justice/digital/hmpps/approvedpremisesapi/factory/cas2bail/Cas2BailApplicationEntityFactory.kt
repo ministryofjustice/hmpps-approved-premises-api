@@ -130,25 +130,30 @@ class Cas2BailApplicationEntityFactory : Factory<Cas2BailApplicationEntity> {
     this.conditionalReleaseDate = { conditionalReleaseDate }
   }
 
-  override fun produce(): Cas2BailApplicationEntity = Cas2BailApplicationEntity(
-    id = this.id(),
-    crn = this.crn(),
-    createdByUser = this.createdByUser?.invoke() ?: throw RuntimeException("Must provide a createdByUser"),
-    data = this.data(),
-    document = this.document(),
-    schemaVersion = this.applicationSchema(),
-    createdAt = this.createdAt(),
-    submittedAt = this.submittedAt(),
-    abandonedAt = this.abandonedAt(),
-    statusUpdates = this.statusUpdates(),
-    schemaUpToDate = false,
-    nomsNumber = this.nomsNumber(),
-    telephoneNumber = this.telephoneNumber(),
-    notes = this.notes(),
-    assessment = this.assessment(),
-    referringPrisonCode = this.referringPrisonCode(),
-    hdcEligibilityDate = this.hdcEligibilityDate(),
-    conditionalReleaseDate = this.conditionalReleaseDate(),
-    preferredAreas = this.preferredAreas(),
-  )
+  override fun produce(): Cas2BailApplicationEntity {
+    val entity = Cas2BailApplicationEntity(
+      id = this.id(),
+      crn = this.crn(),
+      createdByUser = this.createdByUser?.invoke() ?: throw RuntimeException("Must provide a createdByUser"),
+      data = this.data(),
+      document = this.document(),
+      schemaVersion = this.applicationSchema(),
+      createdAt = this.createdAt(),
+      submittedAt = this.submittedAt(),
+      abandonedAt = this.abandonedAt(),
+      statusUpdates = this.statusUpdates(),
+      schemaUpToDate = false,
+      nomsNumber = this.nomsNumber(),
+      telephoneNumber = this.telephoneNumber(),
+      notes = this.notes(),
+      assessment = this.assessment(),
+      referringPrisonCode = this.referringPrisonCode(),
+      hdcEligibilityDate = this.hdcEligibilityDate(),
+      conditionalReleaseDate = this.conditionalReleaseDate(),
+      preferredAreas = this.preferredAreas(),
+    )
+
+    return entity
+
+  }
 }
