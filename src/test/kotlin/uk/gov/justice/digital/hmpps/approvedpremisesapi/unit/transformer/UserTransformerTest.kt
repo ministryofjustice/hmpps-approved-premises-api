@@ -208,7 +208,6 @@ class UserTransformerTest {
         "CAS1_CRU_MEMBER_FIND_AND_BOOK_BETA",
         "CAS1_FUTURE_MANAGER",
         "CAS1_WORKFLOW_MANAGER",
-        "CAS1_LEGACY_MANAGER",
         "CAS1_REPORT_VIEWER",
         "CAS1_USER_MANAGER",
       ],

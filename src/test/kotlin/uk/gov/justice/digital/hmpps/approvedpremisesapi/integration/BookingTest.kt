@@ -82,8 +82,8 @@ class BookingTest : IntegrationTestBase() {
     }
 
     @ParameterizedTest
-    @EnumSource(value = UserRole::class, names = ["CAS1_LEGACY_MANAGER", "CAS1_FUTURE_MANAGER", "CAS1_MATCHER"])
-    fun `Get a booking returns OK with the correct body when user has one of roles LEGACY_MANAGER, FUTURE_MANAGER, MATCHER`(
+    @EnumSource(value = UserRole::class, names = ["CAS1_FUTURE_MANAGER", "CAS1_MATCHER"])
+    fun `Get a booking returns OK with the correct body when user has one of roles FUTURE_MANAGER, MATCHER`(
       role: UserRole,
     ) {
       givenAUser(roles = listOf(role)) { _, jwt ->
@@ -166,8 +166,8 @@ class BookingTest : IntegrationTestBase() {
     }
 
     @ParameterizedTest
-    @EnumSource(value = UserRole::class, names = ["CAS1_LEGACY_MANAGER", "CAS1_FUTURE_MANAGER", "CAS1_MATCHER"])
-    fun `Get a booking for an Approved Premises returns OK with the correct body when user has one of roles LEGACY_MANAGER, FUTURE_MANAGER, MATCHER`(
+    @EnumSource(value = UserRole::class, names = ["CAS1_FUTURE_MANAGER", "CAS1_MATCHER"])
+    fun `Get a booking for an Approved Premises returns OK with the correct body when user has one of roles FUTURE_MANAGER, MATCHER`(
       role: UserRole,
     ) {
       givenAUser(roles = listOf(role)) { userEntity, jwt ->
