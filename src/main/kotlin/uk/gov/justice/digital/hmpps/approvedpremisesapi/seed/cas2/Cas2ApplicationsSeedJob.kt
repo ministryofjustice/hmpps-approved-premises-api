@@ -2,6 +2,7 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.seed.cas2
 
 import org.slf4j.LoggerFactory
 import org.springframework.core.io.DefaultResourceLoader
+import org.springframework.stereotype.Component
 import org.springframework.util.FileCopyUtils
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas2ApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas2ApplicationJsonSchemaEntity
@@ -24,6 +25,7 @@ import java.time.LocalDate
 import java.time.OffsetDateTime
 import java.util.UUID
 
+@Component
 @SuppressWarnings("LongParameterList")
 class Cas2ApplicationsSeedJob(
   private val repository: Cas2ApplicationRepository,

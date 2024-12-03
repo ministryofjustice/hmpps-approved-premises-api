@@ -1,5 +1,6 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.seed.cas1
 
+import org.springframework.stereotype.Component
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.seed.SeedJob
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.seed.SeedLogger
@@ -12,6 +13,7 @@ import java.time.temporal.ChronoUnit
  *  If you want to set roles and qualifications as part of
  *  the seeding then look at UsersSeedJob.
  */
+@Component
 class ApStaffUsersSeedJob(
   private val userService: UserService,
   private val seedLogger: SeedLogger,
