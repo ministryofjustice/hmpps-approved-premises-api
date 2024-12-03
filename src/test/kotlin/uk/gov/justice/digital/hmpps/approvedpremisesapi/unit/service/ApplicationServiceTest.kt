@@ -2510,9 +2510,9 @@ class ApplicationServiceTest {
   @ParameterizedTest
   @EnumSource(
     value = UserRole::class,
-    names = ["CAS1_WORKFLOW_MANAGER", "CAS1_ASSESSOR", "CAS1_MATCHER", "CAS1_MANAGER"],
+    names = ["CAS1_WORKFLOW_MANAGER", "CAS1_ASSESSOR", "CAS1_MATCHER", "CAS1_FUTURE_MANAGER"],
   )
-  fun `getOfflineApplicationForUsername where user has one of roles WORKFLOW_MANAGER, ASSESSOR, MATCHER, MANAGER but does not pass LAO check returns Unauthorised result`(
+  fun `getOfflineApplicationForUsername where user has one of roles WORKFLOW_MANAGER, ASSESSOR, MATCHER, FUTURE_MANAGER but does not pass LAO check returns Unauthorised result`(
     role: UserRole,
   ) {
     val distinguishedName = "SOMEPERSON"
@@ -2548,12 +2548,12 @@ class ApplicationServiceTest {
   }
 
   @Test
-  fun `getOfflineApplicationForUsername where user has any of roles WORKFLOW_MANAGER, ASSESSOR, MATCHER, MANAGER and passes LAO check returns Success result with entity from db`() {
+  fun `getOfflineApplicationForUsername where user has any of roles WORKFLOW_MANAGER, ASSESSOR, MATCHER, FUTURE_MANAGER and passes LAO check returns Success result with entity from db`() {
     listOf(
       UserRole.CAS1_WORKFLOW_MANAGER,
       UserRole.CAS1_ASSESSOR,
       UserRole.CAS1_MATCHER,
-      UserRole.CAS1_MANAGER,
+      UserRole.CAS1_FUTURE_MANAGER,
     ).forEach { role ->
       val distinguishedName = "SOMEPERSON"
       val userId = UUID.fromString("239b5e41-f83e-409e-8fc0-8f1e058d417e")

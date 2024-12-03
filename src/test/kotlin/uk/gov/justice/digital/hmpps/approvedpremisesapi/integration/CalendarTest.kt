@@ -23,7 +23,7 @@ class CalendarTest : InitialiseDatabasePerClassTestBase() {
   }
 
   @Test
-  fun `Requesting Calendar for CAS1 Premises without CAS1_MATCHER or CAS1_MANAGER role returns 403`() {
+  fun `Requesting Calendar for CAS1 Premises without CAS1_MATCHER or CAS1_FUTURE_MANAGER role returns 403`() {
     givenAUser { _, jwt ->
       givenAnApprovedPremisesBed { bed ->
         webTestClient.get()
@@ -37,8 +37,8 @@ class CalendarTest : InitialiseDatabasePerClassTestBase() {
   }
 
   @ParameterizedTest
-  @EnumSource(value = UserRole::class, names = [ "CAS1_MANAGER", "CAS1_MATCHER" ])
-  fun `Requesting Calendar for CAS1 Premises with CAS1_MATCHER or CAS1_MANAGER returns 200 with correct body`(role: UserRole) {
+  @EnumSource(value = UserRole::class, names = [ "CAS1_FUTURE_MANAGER", "CAS1_MATCHER" ])
+  fun `Requesting Calendar for CAS1 Premises with CAS1_FUTURE_MATCHER or CAS1_MATCHER returns 200 with correct body`(role: UserRole) {
     givenAUser(
       roles = listOf(role),
     ) { _, jwt ->

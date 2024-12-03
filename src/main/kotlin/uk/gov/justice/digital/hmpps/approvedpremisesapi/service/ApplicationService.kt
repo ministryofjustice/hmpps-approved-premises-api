@@ -211,7 +211,7 @@ class ApplicationService(
         UserRole.CAS1_WORKFLOW_MANAGER,
         UserRole.CAS1_ASSESSOR,
         UserRole.CAS1_MATCHER,
-        UserRole.CAS1_MANAGER,
+        UserRole.CAS1_FUTURE_MANAGER,
       ) &&
       offenderService.canAccessOffender(deliusUsername, applicationEntity.crn)
     ) {
