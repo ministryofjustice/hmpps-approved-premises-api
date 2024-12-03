@@ -59,7 +59,6 @@ class SeedUsersTest : SeedTestBase() {
     apDeliusContextAddStaffDetailResponse(
       StaffDetailFactory.staffDetail(
         deliusUsername = "UNKNOWN-USER",
-        staffIdentifier = 6789,
         probationArea = ProbationArea(
           code = probationRegionDeliusMapping.probationAreaDeliusCode,
           description = randomStringMultiCaseWithNumbers(10),

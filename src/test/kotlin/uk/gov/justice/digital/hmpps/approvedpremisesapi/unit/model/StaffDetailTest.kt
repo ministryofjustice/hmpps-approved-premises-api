@@ -2,7 +2,6 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.unit.model
 
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.StaffMember
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.StaffDetailFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.deliuscontext.PersonName
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomLong
@@ -20,25 +19,17 @@ class StaffDetailTest {
 
   @Test
   fun `toStaffMember converts to a StaffMember`() {
-    val staffDetail = StaffDetailFactory.staffDetail(
+    val staffMember = StaffDetailFactory.staffDetail(
       code = staffCode,
-      staffIdentifier = staffIdentifier,
       name = PersonName(forename = forename, surname = surname),
       deliusUsername = username,
     ).toStaffMember()
 
-    val staffMember = StaffMember(
-      staffCode = staffCode,
-      staffIdentifier = staffIdentifier,
-      forenames = forename,
-      surname = surname,
-      username = username,
-    )
-    assertThat(staffDetail.staffCode).isEqualTo(staffMember.staffCode)
-    assertThat(staffDetail.staffIdentifier).isEqualTo(staffMember.staffIdentifier)
-    assertThat(staffDetail.forenames).isEqualTo(staffMember.forenames)
-    assertThat(staffDetail.surname).isEqualTo(staffMember.surname)
-    assertThat(staffDetail.username).isEqualTo(staffMember.username)
+    assertThat(staffMember.staffCode).isEqualTo(staffCode)
+    assertThat(staffMember.staffIdentifier).isEqualTo(-1)
+    assertThat(staffMember.forenames).isEqualTo(forename)
+    assertThat(staffMember.surname).isEqualTo(surname)
+    assertThat(staffMember.username).isEqualTo(username)
   }
 
   @Test
