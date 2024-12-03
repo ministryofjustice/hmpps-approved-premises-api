@@ -358,7 +358,7 @@ class PlacementRequestTransformerTest {
       .withNotes("Some notes")
       .produce()
 
-    application.releaseType = releaseTypeOption.name
+    application.releaseType = releaseTypeOption.value
 
     val result = placementRequestTransformer.transformJpaToApi(
       placementRequestEntity,

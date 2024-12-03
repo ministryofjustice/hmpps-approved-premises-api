@@ -2586,8 +2586,8 @@ class AssessmentServiceTest {
     @ParameterizedTest
     @CsvSource(
       value = [
-        "emergency,true", "standard,true", "shortNotice,true",
-        "emergency,false", "standard,false", "shortNotice,false",
+        "EMERGENCY,true", "STANDARD,true", "SHORT_NOTICE,true",
+        "EMERGENCY,false", "STANDARD,false", "SHORT_NOTICE,false",
       ],
     )
     fun `create CAS1 Assessment creates an Assessment, sends allocation email and allocated domain event`(timelinessCategory: Cas1ApplicationTimelinessCategory, createdFromAppeal: Boolean) {
