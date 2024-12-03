@@ -25,6 +25,7 @@ class Cas1PremiseCapacitySummaryTransformer(
   )
 
   private fun SpacePlanningService.PremiseCapacityForDay.toApiType() = Cas1PremiseCapacityForDay(
+    date = day,
     totalBedCount = totalBedCount,
     availableBedCount = availableBedCount,
     bookingCount = bookingCount,
