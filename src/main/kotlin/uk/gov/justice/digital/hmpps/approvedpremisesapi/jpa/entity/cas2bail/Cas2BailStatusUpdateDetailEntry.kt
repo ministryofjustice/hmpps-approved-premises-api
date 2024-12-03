@@ -24,7 +24,7 @@ data class Cas2BailStatusUpdateDetailEntity(
 
   val label: String,
 
-  @ManyToOne(fetch = FetchType.LAZY)
+  @ManyToOne()
   @JoinColumn(name = "status_update_id")
   val statusUpdate: Cas2BailStatusUpdateEntity,
 

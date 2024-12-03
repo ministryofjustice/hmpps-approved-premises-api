@@ -22,7 +22,6 @@ data class Cas2BailAssessmentEntity(
   val id: UUID,
 
   @OneToOne
-  @Lazy
   val application: Cas2BailApplicationEntity,
 
   val createdAt: OffsetDateTime,

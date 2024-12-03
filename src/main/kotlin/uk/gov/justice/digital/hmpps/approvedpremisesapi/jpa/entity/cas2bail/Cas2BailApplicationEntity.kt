@@ -4,8 +4,16 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.*
 
 
 import io.hypersistence.utils.hibernate.type.json.JsonType
-import jakarta.persistence.*
+import jakarta.persistence.Entity
+import jakarta.persistence.Id
+import jakarta.persistence.JoinColumn
+import jakarta.persistence.LockModeType
+import jakarta.persistence.ManyToOne
+import jakarta.persistence.OneToMany
+import jakarta.persistence.OneToOne
+import jakarta.persistence.Table
 import org.hibernate.annotations.Immutable
+import org.hibernate.annotations.OrderBy
 import org.hibernate.annotations.Type
 import org.springframework.data.domain.Slice
 import org.springframework.data.jpa.repository.JpaRepository
@@ -76,7 +84,7 @@ data class Cas2BailApplicationEntity(
   @OrderBy("createdAt DESC")
   var notes: MutableList<Cas2BailApplicationNoteEntity>? = null,
 
-  @OneToOne(fetch = FetchType.LAZY)
+  @OneToOne(mappedBy = "application")
   var assessment: Cas2BailAssessmentEntity? = null,
 
   @Transient
