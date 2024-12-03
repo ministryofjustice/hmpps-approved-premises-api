@@ -155,7 +155,6 @@ class Cas1ReportService(
     }
   }
 
-  @Deprecated("This report is not currently in use and will be superseded by the space bookings placement report")
   fun createPlacementMatchingOutcomesReport(properties: MonthSpecificReportParams, outputStream: OutputStream) {
     ExcelJdbcResultSetConsumer().use { consumer ->
       cas1PlacementMatchingOutcomesReportRepository.generateReportRowsForExpectedArrivalMonth(
