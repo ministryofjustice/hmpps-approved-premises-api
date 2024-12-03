@@ -110,7 +110,7 @@ class PlacementApplicationReportsTest : IntegrationTestBase() {
   lateinit var referrerProbationArea: String
 
   lateinit var assessorDetails: Pair<UserEntity, String>
-  lateinit var managerDetails: Pair<UserEntity, String>
+  lateinit var futureManagerDetails: Pair<UserEntity, String>
   lateinit var workflowManagerDetails: Pair<UserEntity, String>
   lateinit var matcherDetails: Pair<UserEntity, String>
   lateinit var appealManagerDetails: Pair<UserEntity, String>
@@ -141,7 +141,7 @@ class PlacementApplicationReportsTest : IntegrationTestBase() {
         ),
       ),
     )
-    managerDetails = givenAUser(roles = listOf(UserRole.CAS1_MANAGER))
+    futureManagerDetails = givenAUser(roles = listOf(UserRole.CAS1_FUTURE_MANAGER))
     workflowManagerDetails = givenAUser(roles = listOf(UserRole.CAS1_WORKFLOW_MANAGER))
     matcherDetails = givenAUser(roles = listOf(UserRole.CAS1_MATCHER))
     appealManagerDetails = givenAUser(roles = listOf(UserRole.CAS1_APPEALS_MANAGER))

@@ -1208,7 +1208,7 @@ class UserServiceTest {
         .withDefaults()
         .produce()
 
-      userService.removeRoleFromUser(user, UserRole.CAS1_MANAGER)
+      userService.removeRoleFromUser(user, UserRole.CAS1_FUTURE_MANAGER)
 
       verify { mockUserRoleAssignmentRepository wasNot Called }
     }
@@ -1221,7 +1221,7 @@ class UserServiceTest {
 
       val managerRoleAssignment = UserRoleAssignmentEntityFactory()
         .withUser(user)
-        .withRole(UserRole.CAS1_MANAGER)
+        .withRole(UserRole.CAS1_FUTURE_MANAGER)
         .withId(UUID.randomUUID())
         .produce()
 
@@ -1236,7 +1236,7 @@ class UserServiceTest {
 
       every { mockUserRoleAssignmentRepository.delete(managerRoleAssignment) } returns Unit
 
-      userService.removeRoleFromUser(user, UserRole.CAS1_MANAGER)
+      userService.removeRoleFromUser(user, UserRole.CAS1_FUTURE_MANAGER)
 
       verify { mockUserRoleAssignmentRepository.delete(managerRoleAssignment) }
     }
@@ -1249,7 +1249,7 @@ class UserServiceTest {
 
       val managerRoleAssignment = UserRoleAssignmentEntityFactory()
         .withUser(user)
-        .withRole(UserRole.CAS1_MANAGER)
+        .withRole(UserRole.CAS1_FUTURE_MANAGER)
         .withId(UUID.randomUUID())
         .produce()
 

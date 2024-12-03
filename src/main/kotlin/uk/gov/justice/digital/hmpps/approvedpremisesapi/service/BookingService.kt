@@ -281,7 +281,7 @@ class BookingService(
     eventNumber: String?,
     bookingId: UUID = UUID.randomUUID(),
   ): AuthorisableActionResult<ValidatableActionResult<BookingEntity>> {
-    if (user != null && (!user.hasAnyRole(UserRole.CAS1_MANAGER, UserRole.CAS1_MATCHER))) {
+    if (user != null && (!user.hasAnyRole(UserRole.CAS1_FUTURE_MANAGER, UserRole.CAS1_MATCHER))) {
       return AuthorisableActionResult.Unauthorised()
     }
 

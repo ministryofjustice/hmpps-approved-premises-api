@@ -82,8 +82,8 @@ class BookingTest : IntegrationTestBase() {
     }
 
     @ParameterizedTest
-    @EnumSource(value = UserRole::class, names = ["CAS1_LEGACY_MANAGER", "CAS1_MANAGER", "CAS1_MATCHER"])
-    fun `Get a booking returns OK with the correct body when user has one of roles MANAGER, MATCHER`(
+    @EnumSource(value = UserRole::class, names = ["CAS1_LEGACY_MANAGER", "CAS1_FUTURE_MANAGER", "CAS1_MATCHER"])
+    fun `Get a booking returns OK with the correct body when user has one of roles LEGACY_MANAGER, FUTURE_MANAGER, MATCHER`(
       role: UserRole,
     ) {
       givenAUser(roles = listOf(role)) { _, jwt ->
@@ -133,7 +133,7 @@ class BookingTest : IntegrationTestBase() {
 
     @Test
     fun `Get a booking belonging to another premises returns not found`() {
-      givenAUser(roles = listOf(UserRole.CAS1_MANAGER)) { _, jwt ->
+      givenAUser(roles = listOf(UserRole.CAS1_FUTURE_MANAGER)) { _, jwt ->
         givenAnOffender(
           offenderDetailsConfigBlock = {
             withNomsNumber(null)
@@ -166,8 +166,8 @@ class BookingTest : IntegrationTestBase() {
     }
 
     @ParameterizedTest
-    @EnumSource(value = UserRole::class, names = ["CAS1_LEGACY_MANAGER", "CAS1_MANAGER", "CAS1_MATCHER"])
-    fun `Get a booking for an Approved Premises returns OK with the correct body when user has one of roles LEGACY_MANAGER, MANAGER, MATCHER`(
+    @EnumSource(value = UserRole::class, names = ["CAS1_LEGACY_MANAGER", "CAS1_FUTURE_MANAGER", "CAS1_MATCHER"])
+    fun `Get a booking for an Approved Premises returns OK with the correct body when user has one of roles LEGACY_MANAGER, FUTURE_MANAGER, MATCHER`(
       role: UserRole,
     ) {
       givenAUser(roles = listOf(role)) { userEntity, jwt ->
@@ -236,7 +236,7 @@ class BookingTest : IntegrationTestBase() {
 
     @Test
     fun `Get a booking for an Approved Premises returns OK with the correct body when the NOMS number is null`() {
-      givenAUser(roles = listOf(UserRole.CAS1_MANAGER)) { _, jwt ->
+      givenAUser(roles = listOf(UserRole.CAS1_FUTURE_MANAGER)) { _, jwt ->
         givenAnOffender(
           offenderDetailsConfigBlock = {
             withNomsNumber(null)
@@ -378,8 +378,8 @@ class BookingTest : IntegrationTestBase() {
   }
 
   @ParameterizedTest
-  @EnumSource(value = UserRole::class, names = ["CAS1_MANAGER", "CAS1_MATCHER"])
-  fun `Get all Bookings on Premises without any Bookings returns empty list when user has one of roles MANAGER, MATCHER`(
+  @EnumSource(value = UserRole::class, names = ["CAS1_FUTURE_MANAGER", "CAS1_MATCHER"])
+  fun `Get all Bookings on Premises without any Bookings returns empty list when user has one of roles FUTURE_MANAGER, MATCHER`(
     role: UserRole,
   ) {
     givenAUser(roles = listOf(role)) { _, jwt ->
@@ -400,8 +400,8 @@ class BookingTest : IntegrationTestBase() {
   }
 
   @ParameterizedTest
-  @EnumSource(value = UserRole::class, names = ["CAS1_MANAGER", "CAS1_MATCHER"])
-  fun `Get all Bookings returns OK with correct body when user has one of roles MANAGER, MATCHER`(role: UserRole) {
+  @EnumSource(value = UserRole::class, names = ["CAS1_FUTURE_MANAGER", "CAS1_MATCHER"])
+  fun `Get all Bookings returns OK with correct body when user has one of roles FUTURE_MANAGER, MATCHER`(role: UserRole) {
     givenAUser(roles = listOf(role)) { _, jwt ->
       givenAnOffender { offenderDetails, inmateDetails ->
         val premises = approvedPremisesEntityFactory.produceAndPersist {
@@ -3288,8 +3288,8 @@ class BookingTest : IntegrationTestBase() {
   }
 
   @ParameterizedTest
-  @EnumSource(value = UserRole::class, names = ["CAS1_MANAGER", "CAS1_MATCHER"])
-  fun `Create Extension on Approved Premises Booking returns OK with expected body, updates departureDate on Booking entity when user has one of roles MANAGER, MATCHER`(
+  @EnumSource(value = UserRole::class, names = ["CAS1_FUTURE_MANAGER", "CAS1_MATCHER"])
+  fun `Create Extension on Approved Premises Booking returns OK with expected body, updates departureDate on Booking entity when user has one of roles FUTURE_MANAGER, MATCHER`(
     role: UserRole,
   ) {
     givenAUser(roles = listOf(role)) { userEntity, jwt ->
@@ -3326,7 +3326,7 @@ class BookingTest : IntegrationTestBase() {
 
   @Test
   fun `Create Extension on Approved Premises Booking returns OK when a booking has no bed`() {
-    givenAUser(roles = listOf(UserRole.CAS1_MANAGER)) { userEntity, jwt ->
+    givenAUser(roles = listOf(UserRole.CAS1_FUTURE_MANAGER)) { userEntity, jwt ->
       val keyWorker = ContextStaffMemberFactory().produce()
       apDeliusContextMockSuccessfulStaffMembersCall(keyWorker, "QCODE")
 
@@ -3351,7 +3351,7 @@ class BookingTest : IntegrationTestBase() {
 
   @Test
   fun `Create Approved Premises Extension returns OK when another booking for the same bed overlaps with the new departure date`() {
-    givenAUser(roles = listOf(UserRole.CAS1_MANAGER)) { _, jwt ->
+    givenAUser(roles = listOf(UserRole.CAS1_FUTURE_MANAGER)) { _, jwt ->
       val keyWorker = ContextStaffMemberFactory().produce()
       apDeliusContextMockSuccessfulStaffMembersCall(keyWorker, "QCODE")
 
@@ -3394,7 +3394,7 @@ class BookingTest : IntegrationTestBase() {
 
   @Test
   fun `Create Approved Premises Extension returns OK when another booking for the same bed overlaps with the updated booking's turnaround time`() {
-    givenAUser(roles = listOf(UserRole.CAS1_MANAGER)) { _, jwt ->
+    givenAUser(roles = listOf(UserRole.CAS1_FUTURE_MANAGER)) { _, jwt ->
       val keyWorker = ContextStaffMemberFactory().produce()
       apDeliusContextMockSuccessfulStaffMembersCall(keyWorker, "QCODE")
 
@@ -3439,7 +3439,7 @@ class BookingTest : IntegrationTestBase() {
 
   @Test
   fun `Create Approved Premises Extension returns OK when a lost bed for the same bed overlaps with the new departure date`() {
-    givenAUser(roles = listOf(UserRole.CAS1_MANAGER)) { _, jwt ->
+    givenAUser(roles = listOf(UserRole.CAS1_FUTURE_MANAGER)) { _, jwt ->
       val keyWorker = ContextStaffMemberFactory().produce()
       apDeliusContextMockSuccessfulStaffMembersCall(keyWorker, "QCODE")
 
@@ -3566,8 +3566,8 @@ class BookingTest : IntegrationTestBase() {
   }
 
   @ParameterizedTest
-  @EnumSource(value = UserRole::class, names = ["CAS1_MANAGER", "CAS1_MATCHER"])
-  fun `Create AP Date Change with MANAGER or MATCHER role returns 200, persists date change`(role: UserRole) {
+  @EnumSource(value = UserRole::class, names = ["CAS1_FUTURE_MANAGER", "CAS1_MATCHER"])
+  fun `Create AP Date Change with FUTURE_MANAGER or MATCHER role returns 200, persists date change`(role: UserRole) {
     govUKBankHolidaysAPIMockSuccessfullCallWithEmptyResponse()
 
     givenAUser(roles = listOf(role)) { userEntity, jwt ->
@@ -3634,8 +3634,8 @@ class BookingTest : IntegrationTestBase() {
   }
 
   @ParameterizedTest
-  @EnumSource(value = UserRole::class, names = ["CAS1_MANAGER", "CAS1_MATCHER"])
-  fun `Create Confirmation on Approved Premises Booking returns OK with correct body when user has one of roles MANAGER, MATCHER`(
+  @EnumSource(value = UserRole::class, names = ["CAS1_FUTURE_MANAGER", "CAS1_MATCHER"])
+  fun `Create Confirmation on Approved Premises Booking returns OK with correct body when user has one of roles FUTURE_MANAGER, MATCHER`(
     role: UserRole,
   ) {
     givenAUser(roles = listOf(role)) { userEntity, jwt ->

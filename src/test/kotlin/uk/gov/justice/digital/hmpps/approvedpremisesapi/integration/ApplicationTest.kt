@@ -1271,7 +1271,7 @@ class ApplicationTest : IntegrationTestBase() {
 
   @Test
   fun `Get single offline application returns 200 with correct body`() {
-    givenAUser(roles = listOf(UserRole.CAS1_MANAGER)) { userEntity, jwt ->
+    givenAUser(roles = listOf(UserRole.CAS1_FUTURE_MANAGER)) { userEntity, jwt ->
       givenAnOffender { offenderDetails, _ ->
         val offlineApplicationEntity = offlineApplicationEntityFactory.produceAndPersist {
           withCrn(offenderDetails.otherIds.crn)

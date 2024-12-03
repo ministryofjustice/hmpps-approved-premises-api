@@ -2793,7 +2793,7 @@ class BookingServiceTest {
     }
 
     @ParameterizedTest
-    @EnumSource(value = UserRole::class, names = ["CAS1_MANAGER", "CAS1_MATCHER"])
+    @EnumSource(value = UserRole::class, names = ["CAS1_FUTURE_MANAGER", "CAS1_MATCHER"])
     fun `createApprovedPremisesAdHocBooking returns FieldValidationError if Departure Date is before Arrival Date`(role: UserRole) {
       user.addRoleForUnitTest(role)
 
@@ -2814,7 +2814,7 @@ class BookingServiceTest {
     }
 
     @ParameterizedTest
-    @EnumSource(value = UserRole::class, names = ["CAS1_MANAGER", "CAS1_MATCHER"])
+    @EnumSource(value = UserRole::class, names = ["CAS1_FUTURE_MANAGER", "CAS1_MATCHER"])
     fun `createApprovedPremisesAdHocBooking returns FieldValidationError if Bed does not exist`(role: UserRole) {
       user.addRoleForUnitTest(role)
 
@@ -2835,7 +2835,7 @@ class BookingServiceTest {
     }
 
     @ParameterizedTest
-    @EnumSource(value = UserRole::class, names = ["CAS1_MANAGER", "CAS1_MATCHER"])
+    @EnumSource(value = UserRole::class, names = ["CAS1_FUTURE_MANAGER", "CAS1_MATCHER"])
     fun `createApprovedPremisesAdHocBooking returns FieldValidationError if Bed does not belong to an Approved Premise`(role: UserRole) {
       user.addRoleForUnitTest(role)
 
@@ -2868,7 +2868,7 @@ class BookingServiceTest {
     }
 
     @ParameterizedTest
-    @EnumSource(value = UserRole::class, names = ["CAS1_MANAGER", "CAS1_MATCHER"])
+    @EnumSource(value = UserRole::class, names = ["CAS1_FUTURE_MANAGER", "CAS1_MATCHER"])
     fun `createApprovedPremisesAdHocBooking returns FieldValidationError if Bed does not belong to the provided Premise`(role: UserRole) {
       user.addRoleForUnitTest(role)
 
@@ -2892,7 +2892,7 @@ class BookingServiceTest {
     }
 
     @ParameterizedTest
-    @EnumSource(value = UserRole::class, names = ["CAS1_MANAGER", "CAS1_MATCHER"])
+    @EnumSource(value = UserRole::class, names = ["CAS1_FUTURE_MANAGER", "CAS1_MATCHER"])
     fun `createApprovedPremisesAdHocBooking returns FieldValidationError if eventNumber is null`(role: UserRole) {
       user.addRoleForUnitTest(role)
 
@@ -2909,7 +2909,7 @@ class BookingServiceTest {
 
     @Test
     fun `createApprovedPremisesAdHocBooking succeeds when creating a double Booking`() {
-      user.addRoleForUnitTest(UserRole.CAS1_MANAGER)
+      user.addRoleForUnitTest(UserRole.CAS1_FUTURE_MANAGER)
 
       every { mockCas1ApplicationStatusService.bookingMade(bookingEntity) } returns Unit
       every { mockBookingRepository.findByBedIdAndArrivingBeforeDate(bed.id, departureDate, null) } returns listOf(
@@ -2956,7 +2956,7 @@ class BookingServiceTest {
     }
 
     @ParameterizedTest
-    @EnumSource(value = UserRole::class, names = ["CAS1_MANAGER", "CAS1_MATCHER"])
+    @EnumSource(value = UserRole::class, names = ["CAS1_FUTURE_MANAGER", "CAS1_MATCHER"])
     fun `createApprovedPremisesAdHocBooking saves Booking and creates Domain Event when associated Application is an Online Application`(role: UserRole) {
       user.addRoleForUnitTest(role)
 
@@ -3004,7 +3004,7 @@ class BookingServiceTest {
 
     @Test
     fun `createApprovedPremisesAdHocBooking saves Booking and creates Domain Event when associated Application is an Online Application and no Bed ID is provided`() {
-      user.addRoleForUnitTest(UserRole.CAS1_MANAGER)
+      user.addRoleForUnitTest(UserRole.CAS1_FUTURE_MANAGER)
 
       val existingApplication = ApprovedPremisesApplicationEntityFactory()
         .withCrn(crn)
@@ -3050,9 +3050,9 @@ class BookingServiceTest {
     }
 
     @ParameterizedTest
-    @EnumSource(value = UserRole::class, names = ["CAS1_MANAGER", "CAS1_MATCHER"])
+    @EnumSource(value = UserRole::class, names = ["CAS1_FUTURE_MANAGER", "CAS1_MATCHER"])
     fun `createApprovedPremisesAdHocBooking saves Booking and creates Domain Event when associated Application is an Offline Application`(role: UserRole) {
-      user.addRoleForUnitTest(UserRole.CAS1_MANAGER)
+      user.addRoleForUnitTest(UserRole.CAS1_FUTURE_MANAGER)
 
       val existingOfflineApplication = OfflineApplicationEntityFactory()
         .withCrn(crn)
@@ -3093,9 +3093,9 @@ class BookingServiceTest {
     }
 
     @ParameterizedTest
-    @EnumSource(value = UserRole::class, names = ["CAS1_MANAGER", "CAS1_MATCHER"])
+    @EnumSource(value = UserRole::class, names = ["CAS1_FUTURE_MANAGER", "CAS1_MATCHER"])
     fun `createApprovedPremisesAdHocBooking saves Booking and creates Domain Event when associated Application is an Offline Application without an eventNumber`(role: UserRole) {
-      user.addRoleForUnitTest(UserRole.CAS1_MANAGER)
+      user.addRoleForUnitTest(UserRole.CAS1_FUTURE_MANAGER)
 
       val existingOfflineApplication = OfflineApplicationEntityFactory()
         .withCrn(crn)
@@ -3137,7 +3137,7 @@ class BookingServiceTest {
     }
 
     @ParameterizedTest
-    @EnumSource(value = UserRole::class, names = ["CAS1_MANAGER", "CAS1_MATCHER"])
+    @EnumSource(value = UserRole::class, names = ["CAS1_FUTURE_MANAGER", "CAS1_MATCHER"])
     fun `createApprovedPremisesAdHocBooking saves Booking and creates an Offline Application when neither an Offline Application or normal Application are present`(role: UserRole) {
       user.addRoleForUnitTest(role)
 

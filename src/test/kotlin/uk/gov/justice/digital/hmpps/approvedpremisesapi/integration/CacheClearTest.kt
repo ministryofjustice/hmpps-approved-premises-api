@@ -17,7 +17,7 @@ import java.util.UUID
 class CacheClearTest : IntegrationTestBase() {
   @Test
   fun `Clearing a regular cache results in upstream calls being made again`() {
-    givenAUser(roles = listOf(UserRole.CAS1_MANAGER)) { _, jwt ->
+    givenAUser(roles = listOf(UserRole.CAS1_FUTURE_MANAGER)) { _, jwt ->
       val premisesId = UUID.fromString("d687f947-ff80-431e-9c72-75f704730978")
       val qCode = "FOUND"
 

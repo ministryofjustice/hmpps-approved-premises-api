@@ -723,8 +723,8 @@ class OutOfServiceBedTest : InitialiseDatabasePerClassTestBase() {
     }
 
     @ParameterizedTest
-    @EnumSource(value = UserRole::class, names = [ "CAS1_FUTURE_MANAGER", "CAS1_MANAGER", "CAS1_MATCHER" ])
-    fun `Get All Out-Of-Service Beds On Premises returns OK with correct body when user has one of roles FUTURE_MANAGER, MANAGER, MATCHER`(role: UserRole) {
+    @EnumSource(value = UserRole::class, names = [ "CAS1_FUTURE_MANAGER", "CAS1_MATCHER" ])
+    fun `Get All Out-Of-Service Beds On Premises returns OK with correct body when user has one of roles FUTURE_MANAGER, MATCHER`(role: UserRole) {
       givenAUser(roles = listOf(role)) { user, jwt ->
         val premises = approvedPremisesEntityFactory.produceAndPersist {
           withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
@@ -836,7 +836,7 @@ class OutOfServiceBedTest : InitialiseDatabasePerClassTestBase() {
     }
 
     @ParameterizedTest
-    @EnumSource(value = UserRole::class, names = [ "CAS1_FUTURE_MANAGER", "CAS1_MANAGER", "CAS1_MATCHER" ])
+    @EnumSource(value = UserRole::class, names = [ "CAS1_FUTURE_MANAGER", "CAS1_MATCHER" ])
     fun `Get Out-Of-Service Bed for non-existent out-of-service bed returns 404`(role: UserRole) {
       givenAUser(roles = listOf(role)) { _, jwt ->
         val premises = approvedPremisesEntityFactory.produceAndPersist {
@@ -854,8 +854,8 @@ class OutOfServiceBedTest : InitialiseDatabasePerClassTestBase() {
     }
 
     @ParameterizedTest
-    @EnumSource(value = UserRole::class, names = [ "CAS1_FUTURE_MANAGER", "CAS1_MANAGER", "CAS1_MATCHER" ])
-    fun `Get Out-Of-Service Bed returns OK with correct body when user has one of roles FUTURE_MANAGER, MANAGER, MATCHER`(role: UserRole) {
+    @EnumSource(value = UserRole::class, names = [ "CAS1_FUTURE_MANAGER", "CAS1_MATCHER" ])
+    fun `Get Out-Of-Service Bed returns OK with correct body when user has one of roles FUTURE_MANAGER, MATCHER`(role: UserRole) {
       givenAUser(roles = listOf(role)) { user, jwt ->
         val premises = approvedPremisesEntityFactory.produceAndPersist {
           withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
@@ -930,7 +930,7 @@ class OutOfServiceBedTest : InitialiseDatabasePerClassTestBase() {
 
     @Test
     fun `Create Out-Of-Service Beds returns 400 Bad Request if the bed ID does not reference a bed on the premises`() {
-      givenAUser(roles = listOf(UserRole.CAS1_MANAGER)) { _, jwt ->
+      givenAUser(roles = listOf(UserRole.CAS1_FUTURE_MANAGER)) { _, jwt ->
         val premises = approvedPremisesEntityFactory.produceAndPersist {
           withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
           withYieldedProbationRegion { givenAProbationRegion() }
@@ -961,8 +961,8 @@ class OutOfServiceBedTest : InitialiseDatabasePerClassTestBase() {
     }
 
     @ParameterizedTest
-    @EnumSource(value = UserRole::class, names = [ "CAS1_FUTURE_MANAGER", "CAS1_MANAGER", "CAS1_MATCHER" ])
-    fun `Create Out-Of-Service Beds returns OK with correct body when user has one of roles FUTURE_MANAGER, MANAGER, MATCHER`(role: UserRole) {
+    @EnumSource(value = UserRole::class, names = [ "CAS1_FUTURE_MANAGER", "CAS1_MATCHER" ])
+    fun `Create Out-Of-Service Beds returns OK with correct body when user has one of roles FUTURE_MANAGER, MATCHER`(role: UserRole) {
       givenAUser(roles = listOf(role)) { user, jwt ->
         val premises = approvedPremisesEntityFactory.produceAndPersist {
           withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
@@ -1040,7 +1040,7 @@ class OutOfServiceBedTest : InitialiseDatabasePerClassTestBase() {
 
     @Test
     fun `Create Out-Of-Service Bed succeeds even if overlapping with Booking`() {
-      givenAUser(roles = listOf(UserRole.CAS1_MANAGER)) { user, jwt ->
+      givenAUser(roles = listOf(UserRole.CAS1_FUTURE_MANAGER)) { user, jwt ->
         val premises = approvedPremisesEntityFactory.produceAndPersist {
           withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
           withYieldedProbationRegion { givenAProbationRegion() }
@@ -1124,7 +1124,7 @@ class OutOfServiceBedTest : InitialiseDatabasePerClassTestBase() {
 
     @Test
     fun `Create Out-Of-Service Beds for current day does not break GET all Premises endpoint`() {
-      givenAUser(roles = listOf(UserRole.CAS1_MANAGER)) { user, jwt ->
+      givenAUser(roles = listOf(UserRole.CAS1_FUTURE_MANAGER)) { user, jwt ->
         val premises = approvedPremisesEntityFactory.produceAndPersist {
           withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
           withYieldedProbationRegion { givenAProbationRegion() }
@@ -1174,7 +1174,7 @@ class OutOfServiceBedTest : InitialiseDatabasePerClassTestBase() {
 
     @Test
     fun `Create Out-Of-Service Bed returns 409 Conflict when An out-of-service bed for the same bed overlaps`() {
-      givenAUser(roles = listOf(UserRole.CAS1_MANAGER)) { user, jwt ->
+      givenAUser(roles = listOf(UserRole.CAS1_FUTURE_MANAGER)) { user, jwt ->
         givenAnOffender { _, _ ->
           val premises = approvedPremisesEntityFactory.produceAndPersist {
             withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
@@ -1231,7 +1231,7 @@ class OutOfServiceBedTest : InitialiseDatabasePerClassTestBase() {
     @SuppressWarnings("UnusedPrivateProperty")
     @Test
     fun `Create Out-Of-Service Bed returns OK with correct body when only cancelled out-of-service beds for the same bed overlap`() {
-      givenAUser(roles = listOf(UserRole.CAS1_MANAGER)) { user, jwt ->
+      givenAUser(roles = listOf(UserRole.CAS1_FUTURE_MANAGER)) { user, jwt ->
         givenAnOffender { _, _ ->
           val premises = approvedPremisesEntityFactory.produceAndPersist {
             withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
@@ -1454,8 +1454,8 @@ class OutOfServiceBedTest : InitialiseDatabasePerClassTestBase() {
     }
 
     @ParameterizedTest
-    @EnumSource(value = UserRole::class, names = [ "CAS1_FUTURE_MANAGER", "CAS1_MANAGER", "CAS1_MATCHER" ])
-    fun `Update Out-Of-Service Beds returns OK with correct body when user has one of roles FUTURE_MANAGER, MANAGER, MATCHER`(role: UserRole) {
+    @EnumSource(value = UserRole::class, names = [ "CAS1_FUTURE_MANAGER", "CAS1_MATCHER" ])
+    fun `Update Out-Of-Service Beds returns OK with correct body when user has one of roles FUTURE_MANAGER, MATCHER`(role: UserRole) {
       givenAUser(roles = listOf(role)) { user, jwt ->
         val premises = approvedPremisesEntityFactory.produceAndPersist {
           withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
@@ -1568,7 +1568,7 @@ class OutOfServiceBedTest : InitialiseDatabasePerClassTestBase() {
 
     @Test
     fun `Update Out-Of-Service Beds succeeds even if overlapping with Booking`() {
-      givenAUser(roles = listOf(UserRole.CAS1_MANAGER)) { user, jwt ->
+      givenAUser(roles = listOf(UserRole.CAS1_FUTURE_MANAGER)) { user, jwt ->
         val premises = approvedPremisesEntityFactory.produceAndPersist {
           withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
           withYieldedProbationRegion { givenAProbationRegion() }
@@ -1628,7 +1628,7 @@ class OutOfServiceBedTest : InitialiseDatabasePerClassTestBase() {
 
     @Test
     fun `Update Out-Of-Service Beds returns OK with correct body when only cancelled bookings for the same bed overlap`() {
-      givenAUser(roles = listOf(UserRole.CAS1_MANAGER)) { user, jwt ->
+      givenAUser(roles = listOf(UserRole.CAS1_FUTURE_MANAGER)) { user, jwt ->
         givenAnOffender { offenderDetails, _ ->
           val premises = approvedPremisesEntityFactory.produceAndPersist {
             withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
@@ -1753,7 +1753,7 @@ class OutOfServiceBedTest : InitialiseDatabasePerClassTestBase() {
 
     @Test
     fun `Update Out-Of-Service Beds returns 409 Conflict when An out-of-service bed for the same bed overlaps`() {
-      givenAUser(roles = listOf(UserRole.CAS1_MANAGER)) { user, jwt ->
+      givenAUser(roles = listOf(UserRole.CAS1_FUTURE_MANAGER)) { user, jwt ->
         givenAnOffender { _, _ ->
           val premises = approvedPremisesEntityFactory.produceAndPersist {
             withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
@@ -1822,7 +1822,7 @@ class OutOfServiceBedTest : InitialiseDatabasePerClassTestBase() {
     @SuppressWarnings("UnusedPrivateProperty")
     @Test
     fun `Update Out-Of-Service Beds returns OK with correct body when only cancelled out-of-service beds for the same bed overlap`() {
-      givenAUser(roles = listOf(UserRole.CAS1_MANAGER)) { user, jwt ->
+      givenAUser(roles = listOf(UserRole.CAS1_FUTURE_MANAGER)) { user, jwt ->
         givenAnOffender { _, _ ->
           val premises = approvedPremisesEntityFactory.produceAndPersist {
             withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
