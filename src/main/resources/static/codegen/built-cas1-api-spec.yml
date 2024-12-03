@@ -2814,6 +2814,9 @@ components:
               $ref: '#/components/schemas/Cas1ApplicationUserDetails'
             genderForAp:
               $ref: '#/components/schemas/GenderForAp'
+            licenceExpiryDate:
+              type: string
+              format: date
           required:
             - createdByUserId
             - schemaVersion
@@ -3436,6 +3439,9 @@ components:
               type: string
             reasonForShortNoticeOther:
               type: string
+            licenseExpiryDate:
+              type: string
+              format: date
           required:
             - targetLocation
             - releaseType
@@ -4968,6 +4974,7 @@ components:
         - update_cas1_backfill_user_ap_area
         - update_cas3_application_offender_name
         - update_cas3_domain_event_type_for_person_departed_updated
+        - update_cas1_applications_licence_expiry_date
     PlacementDates:
       type: object
       properties:

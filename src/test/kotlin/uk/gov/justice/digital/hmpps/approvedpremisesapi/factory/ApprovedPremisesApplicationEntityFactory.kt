@@ -19,6 +19,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomDateTimeBefor
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomInt
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomStringMultiCaseWithNumbers
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomStringUpperCase
+import java.time.LocalDate
 import java.time.OffsetDateTime
 import java.util.UUID
 
@@ -69,6 +70,7 @@ class ApprovedPremisesApplicationEntityFactory : Factory<ApprovedPremisesApplica
   private var caseManagerIsNotApplicant: Yielded<Boolean?> = { null }
   private var caseManagerUserDetails: Yielded<Cas1ApplicationUserDetailsEntity?> = { null }
   private var noticeType: Yielded<Cas1ApplicationTimelinessCategory?> = { null }
+  private var licenseExpiryDate: Yielded<LocalDate?> = { null }
 
   fun withDefaults() = apply {
     withCreatedByUser(UserEntityFactory().withDefaults().produce())
@@ -230,6 +232,10 @@ class ApprovedPremisesApplicationEntityFactory : Factory<ApprovedPremisesApplica
     this.noticeType = { noticeType }
   }
 
+  fun withLicenseExpiredDate(licenseExpiredDate: LocalDate?) = apply {
+    this.licenseExpiryDate = { licenseExpiredDate }
+  }
+
   override fun produce(): ApprovedPremisesApplicationEntity = ApprovedPremisesApplicationEntity(
     id = this.id(),
     crn = this.crn(),
@@ -270,5 +276,6 @@ class ApprovedPremisesApplicationEntityFactory : Factory<ApprovedPremisesApplica
     caseManagerIsNotApplicant = this.caseManagerIsNotApplicant(),
     caseManagerUserDetails = this.caseManagerUserDetails(),
     noticeType = this.noticeType(),
+    licenceExpiryDate = this.licenseExpiryDate(),
   )
 }

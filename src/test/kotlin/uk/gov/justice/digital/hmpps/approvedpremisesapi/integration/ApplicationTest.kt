@@ -1920,6 +1920,7 @@ class ApplicationTest : IntegrationTestBase() {
             ),
             reasonForShortNotice = "reasonForShort",
             reasonForShortNoticeOther = "reasonForShortOther",
+            licenseExpiryDate = LocalDate.of(2026, 12, 1),
           ),
         )
         .exchange()
@@ -1934,6 +1935,7 @@ class ApplicationTest : IntegrationTestBase() {
       assertThat(persistedApplication.targetLocation).isEqualTo("SW1A 1AA")
       assertThat(persistedApplication.sentenceType).isEqualTo(SentenceTypeOption.nonStatutory.toString())
       assertThat(persistedApplication.apArea?.id).isEqualTo(submittingUser.apArea!!.id)
+      assertThat(persistedApplication.licenceExpiryDate).isEqualTo(LocalDate.of(2026, 12, 1))
 
       val createdAssessment =
         approvedPremisesAssessmentRepository.findAll().first { it.application.id == applicationId }
