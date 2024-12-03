@@ -35,6 +35,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.Cas1ApplicationU
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.PersonRisksFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ProbationRegionEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.TemporaryAccommodationApplicationEntityFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.TemporaryAccommodationAssessmentEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.UserEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.cas1.Cas1CruManagementAreaEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.ApprovedPremisesApplicationStatus
@@ -222,6 +223,17 @@ class ApplicationsTransformerTest {
     assertThat(result.risks).isNotNull
     assertThat(result.arrivalDate).isNull()
     assertThat(result.offenceId).isEqualTo(application.offenceId)
+    assertThat(result.assessmentId).isNull()
+  }
+
+  @Test
+  fun `transformJpaToApi populates assessmentId`() {
+    val application = temporaryAccommodationApplicationEntityFactory.withDefaults().produce()
+    val assessment = TemporaryAccommodationAssessmentEntityFactory().withApplication(application).produce()
+    application.assessments = mutableListOf(assessment)
+    val result = applicationsTransformer.transformJpaToApi(application, mockk()) as TemporaryAccommodationApplication
+
+    assertThat(result.assessmentId).isEqualTo(assessment.id)
   }
 
   @Test
