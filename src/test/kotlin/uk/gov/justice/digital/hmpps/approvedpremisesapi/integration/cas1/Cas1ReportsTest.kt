@@ -107,7 +107,7 @@ class Cas1ReportsTest : IntegrationTestBase() {
   fun `Get report returns OK response if user role is valid and parameters are valid `(reportName: Cas1ReportName) {
     givenAUser(roles = listOf(CAS1_REPORT_VIEWER)) { _, jwt ->
       webTestClient.get()
-        .uri("/cas1/reports/$reportName?year=2024&month=1")
+        .uri("/cas1/reports/${reportName.value}?year=2024&month=1")
         .header("Authorization", "Bearer $jwt")
         .header("X-Service-Name", approvedPremisesServiceName)
         .exchange()
