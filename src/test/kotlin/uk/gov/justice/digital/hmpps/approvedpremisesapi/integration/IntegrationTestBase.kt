@@ -33,6 +33,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.config.NotifyConfig
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.*
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.cas1.Cas1CruManagementAreaEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.cas2bail.Cas2BailApplicationEntityFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.cas2bail.Cas2BailAssessmentEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.cas2bail.Cas2BailStatusUpdateEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.asserter.DomainEventAsserter
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.asserter.EmailNotificationAsserter
@@ -43,6 +44,8 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.mocks.Mutabl
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.mocks.NoOpSentryService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.*
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas2bail.Cas2BailApplicationEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas2bail.Cas2BailAssessmentEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas2bail.Cas2BailAssessmentRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas2bail.Cas2BailStatusUpdateEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.community.OffenderDetailSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.community.UserOffenderAccess
@@ -177,7 +180,7 @@ abstract class IntegrationTestBase {
   lateinit var cas2BailApplicationRepository: Cas2BailApplicationTestRepository
 
   @Autowired
-  lateinit var cas2BailAssessmentRepository: Cas2BailAssessmentTestRepository
+  lateinit var cas2BailAssessmentRepository: Cas2BailAssessmentRepository
 
   @Autowired
   lateinit var cas2AssessmentRepository: Cas2AssessmentRepository
@@ -374,7 +377,9 @@ abstract class IntegrationTestBase {
   lateinit var approvedPremisesApplicationEntityFactory: PersistedFactory<ApprovedPremisesApplicationEntity, UUID, ApprovedPremisesApplicationEntityFactory>
   lateinit var cas2ApplicationEntityFactory: PersistedFactory<Cas2ApplicationEntity, UUID, Cas2ApplicationEntityFactory>
   lateinit var cas2BailApplicationEntityFactory: PersistedFactory<Cas2BailApplicationEntity, UUID, Cas2BailApplicationEntityFactory>
+  lateinit var cas2BailAssementEntityFactory: PersistedFactory<Cas2BailAssessmentEntity, UUID, Cas2BailAssessmentEntityFactory>
   lateinit var cas2AssessmentEntityFactory: PersistedFactory<Cas2AssessmentEntity, UUID, Cas2AssessmentEntityFactory>
+
   lateinit var cas2StatusUpdateEntityFactory: PersistedFactory<Cas2StatusUpdateEntity, UUID, Cas2StatusUpdateEntityFactory>
   lateinit var cas2BailStatusUpdateEntityFactory: PersistedFactory<Cas2BailStatusUpdateEntity, UUID, Cas2BailStatusUpdateEntityFactory>
   lateinit var cas2StatusUpdateDetailEntityFactory: PersistedFactory<Cas2StatusUpdateDetailEntity, UUID, Cas2StatusUpdateDetailEntityFactory>
@@ -489,7 +494,7 @@ abstract class IntegrationTestBase {
     cas2ApplicationEntityFactory = PersistedFactory({ Cas2ApplicationEntityFactory() }, cas2ApplicationRepository)
 
     cas2BailApplicationEntityFactory = PersistedFactory({ Cas2BailApplicationEntityFactory() }, cas2BailApplicationRepository)
-    cas2BailApplicationEntityFactory = PersistedFactory({ Cas2BailAssementEntityFactory() }, cas2BailAssessmentRepository)
+    cas2BailAssementEntityFactory = PersistedFactory({ Cas2BailAssessmentEntityFactory() }, cas2BailAssessmentRepository)
     cas2AssessmentEntityFactory = PersistedFactory({ Cas2AssessmentEntityFactory() }, cas2AssessmentRepository)
     cas2StatusUpdateEntityFactory = PersistedFactory({ Cas2StatusUpdateEntityFactory() }, cas2StatusUpdateRepository)
     cas2BailStatusUpdateEntityFactory = PersistedFactory({ Cas2BailStatusUpdateEntityFactory() }, cas2BailStatusUpdateRepository)

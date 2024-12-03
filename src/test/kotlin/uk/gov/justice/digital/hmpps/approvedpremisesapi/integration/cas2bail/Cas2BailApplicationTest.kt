@@ -258,8 +258,6 @@ class Cas2BailApplicationTest : IntegrationTestBase() {
           val aaa = cas2BailApplicationRepository.findAll()
           val bbb = cas2BailAssessmentRepository.findAll()
 
-          val xxx = cas2ApplicationRepository.findAll()
-          val yyy = cas2AssessmentRepository.findAll()
 
 
           val rawResponseBody = webTestClient.get()
