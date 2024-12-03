@@ -84,7 +84,6 @@ class ApStaffUsersSeedJobTest : SeedTestBase() {
     val persistedUser = userRepository.findByDeliusUsername("UNKNOWN-USER")
 
     assertThat(persistedUser).isNotNull
-    assertThat(persistedUser!!.deliusStaffIdentifier).isEqualTo(6789)
 
     assertThat(logEntries).anyMatch {
       it.level == "info" &&

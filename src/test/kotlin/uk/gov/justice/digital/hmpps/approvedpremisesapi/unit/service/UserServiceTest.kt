@@ -807,7 +807,6 @@ class UserServiceTest {
         .withDeliusUsername(username)
         .withName("$forename $surname")
         .withEmail(email)
-        .withDeliusStaffIdentifier(staffIdentifier.toLong())
         .withTelephoneNumber(telephoneNumber)
         .withDeliusStaffCode(staffCode)
         .withProbationRegion(probationRegion)

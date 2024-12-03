@@ -86,8 +86,7 @@ class SeedUsersTest : SeedTestBase() {
     val persistedUser = userRepository.findByDeliusUsername("UNKNOWN-USER")
 
     assertThat(persistedUser).isNotNull
-    assertThat(persistedUser!!.deliusStaffIdentifier).isEqualTo(6789)
-    assertThat(persistedUser.roles.map(UserRoleAssignmentEntity::role)).containsExactlyInAnyOrder(
+    assertThat(persistedUser!!.roles.map(UserRoleAssignmentEntity::role)).containsExactlyInAnyOrder(
       UserRole.CAS1_ASSESSOR,
       UserRole.CAS1_WORKFLOW_MANAGER,
     )
