@@ -177,6 +177,9 @@ abstract class IntegrationTestBase {
   lateinit var cas2BailApplicationRepository: Cas2BailApplicationTestRepository
 
   @Autowired
+  lateinit var cas2BailAssessmentRepository: Cas2BailAssessmentTestRepository
+
+  @Autowired
   lateinit var cas2AssessmentRepository: Cas2AssessmentRepository
 
   @Autowired
@@ -486,6 +489,7 @@ abstract class IntegrationTestBase {
     cas2ApplicationEntityFactory = PersistedFactory({ Cas2ApplicationEntityFactory() }, cas2ApplicationRepository)
 
     cas2BailApplicationEntityFactory = PersistedFactory({ Cas2BailApplicationEntityFactory() }, cas2BailApplicationRepository)
+    cas2BailApplicationEntityFactory = PersistedFactory({ Cas2BailAssementEntityFactory() }, cas2BailAssessmentRepository)
     cas2AssessmentEntityFactory = PersistedFactory({ Cas2AssessmentEntityFactory() }, cas2AssessmentRepository)
     cas2StatusUpdateEntityFactory = PersistedFactory({ Cas2StatusUpdateEntityFactory() }, cas2StatusUpdateRepository)
     cas2BailStatusUpdateEntityFactory = PersistedFactory({ Cas2BailStatusUpdateEntityFactory() }, cas2BailStatusUpdateRepository)

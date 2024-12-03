@@ -261,6 +261,9 @@ class Cas2ApplicationTest : IntegrationTestBase() {
             expiredApplicationIds.add(application.id)
           }
 
+          val xxx = cas2ApplicationRepository.findAll()
+          val yyy = cas2AssessmentRepository.findAll()
+
           val rawResponseBody = webTestClient.get()
             .uri("/cas2/applications")
             .header("Authorization", "Bearer $jwt")

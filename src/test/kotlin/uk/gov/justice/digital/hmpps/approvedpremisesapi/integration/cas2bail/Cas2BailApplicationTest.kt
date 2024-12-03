@@ -255,6 +255,13 @@ class Cas2BailApplicationTest : IntegrationTestBase() {
             expiredApplicationIds.add(application.id)
           }
 
+          val aaa = cas2BailApplicationRepository.findAll()
+          val bbb = cas2BailAssessmentRepository.findAll()
+
+          val xxx = cas2ApplicationRepository.findAll()
+          val yyy = cas2AssessmentRepository.findAll()
+
+
           val rawResponseBody = webTestClient.get()
             .uri("/cas2bail/applications")
             .header("Authorization", "Bearer $jwt")
