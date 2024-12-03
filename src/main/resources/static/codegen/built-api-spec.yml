@@ -6742,15 +6742,18 @@ components:
     ReleaseTypeOption:
       type: string
       enum:
+        - inCommunity
+        - notApplicable
         - licence
         - rotl
         - hdc
         - pss
-        - in_community
-        - not_applicable
         - extendedDeterminateLicence
         - paroleDirectedLicence
         - reReleasedPostRecall
+      x-enum-varnames:
+        - IN_COMMUNITY
+        - NOT_APPLICABLE
     SentenceTypeOption:
       type: string
       enum:
