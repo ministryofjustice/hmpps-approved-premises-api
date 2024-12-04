@@ -390,7 +390,7 @@ class Cas1AssessmentDomainEventServiceTest {
     else ->
       staffDetails != null &&
         staffMember.staffCode == staffDetails.code &&
-        staffMember.staffIdentifier == staffDetails.staffIdentifier &&
+        staffMember.staffIdentifier == -1L &&
         staffMember.forenames == staffDetails.name.forenames() &&
         staffMember.surname == staffDetails.name.surname &&
         staffMember.username == staffDetails.username

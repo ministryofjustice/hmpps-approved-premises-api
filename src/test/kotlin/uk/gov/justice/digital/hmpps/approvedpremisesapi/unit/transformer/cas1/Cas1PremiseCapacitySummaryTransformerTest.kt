@@ -80,6 +80,7 @@ class Cas1PremiseCapacitySummaryTransformerTest {
     assertThat(result.capacity).hasSize(1)
 
     val capacityForDay = result.capacity[0]
+    assertThat(capacityForDay.date).isEqualTo(LocalDate.of(2020, 1, 3))
     assertThat(capacityForDay.totalBedCount).isEqualTo(5)
     assertThat(capacityForDay.availableBedCount).isEqualTo(3)
     assertThat(capacityForDay.bookingCount).isEqualTo(4)

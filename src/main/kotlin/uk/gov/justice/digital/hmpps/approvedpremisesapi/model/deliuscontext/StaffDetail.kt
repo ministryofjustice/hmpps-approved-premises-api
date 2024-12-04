@@ -5,7 +5,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.St
 data class StaffDetail(
   val email: String?,
   val telephoneNumber: String?,
-  val staffIdentifier: Long,
   val teams: List<Team> = emptyList(),
   val probationArea: ProbationArea,
   val username: String?,
@@ -21,7 +20,7 @@ data class StaffDetail(
 
   fun toStaffMember() = StaffMember(
     staffCode = this.code,
-    staffIdentifier = this.staffIdentifier,
+    staffIdentifier = -1L,
     forenames = this.name.forenames(),
     surname = this.name.surname,
     username = this.username,

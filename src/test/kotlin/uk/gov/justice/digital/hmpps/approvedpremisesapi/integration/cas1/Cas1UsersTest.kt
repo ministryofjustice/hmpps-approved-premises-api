@@ -121,7 +121,6 @@ class Cas1UsersTest : InitialiseDatabasePerClassTestBase() {
         StaffDetail(
           email = email,
           telephoneNumber = telephoneNumber,
-          staffIdentifier = 5678L,
           teams = listOf(team()),
           probationArea = probationArea(),
           username = deliusUsername,

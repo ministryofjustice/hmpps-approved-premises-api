@@ -1478,7 +1478,7 @@ class AssessmentServiceTest {
       ApplicationAssessedAssessedBy(
         staffMember = StaffMember(
           staffCode = staffUserDetails.code,
-          staffIdentifier = staffUserDetails.staffIdentifier,
+          staffIdentifier = -1,
           forenames = staffUserDetails.name.forenames(),
           surname = staffUserDetails.name.surname,
           username = staffUserDetails.username,

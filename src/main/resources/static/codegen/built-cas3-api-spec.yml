@@ -1914,6 +1914,9 @@ components:
               format: date-time
             offenceId:
               type: string
+            assessmentId:
+              type: string
+              format: uuid
           required:
             - createdByUserId
             - schemaVersion

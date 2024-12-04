@@ -2927,6 +2927,9 @@ components:
               format: date-time
             offenceId:
               type: string
+            assessmentId:
+              type: string
+              format: uuid
           required:
             - createdByUserId
             - schemaVersion
@@ -6713,6 +6716,9 @@ components:
     Cas1PremiseCapacityForDay:
       type: object
       properties:
+        date:
+          type: string
+          format: date
         totalBedCount:
           description: total bed count including temporarily unavailable beds (e.g. out of service beds)
           type: integer
@@ -6726,6 +6732,7 @@ components:
           items:
             $ref: '#/components/schemas/Cas1PremiseCharacteristicAvailability'
       required:
+        - date
         - totalBedCount
         - availableBedCount
         - bookingCount

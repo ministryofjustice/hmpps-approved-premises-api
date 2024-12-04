@@ -189,8 +189,8 @@ class DailyMetricsReportGeneratorTest {
             eventDetails = ApplicationSubmittedFactory()
               .withSubmittedByStaffMember(
                 StaffMemberFactory()
-                  .withStaffIdentifier(
-                    user.deliusStaffIdentifier,
+                  .withStaffCode(
+                    user.deliusStaffCode,
                   )
                   .produce(),
               )
@@ -214,8 +214,8 @@ class DailyMetricsReportGeneratorTest {
                 ApplicationAssessedAssessedByFactory()
                   .withStaffMember(
                     StaffMemberFactory()
-                      .withStaffIdentifier(
-                        user.deliusStaffIdentifier,
+                      .withStaffCode(
+                        user.deliusStaffCode,
                       ).produce(),
                   ).produce(),
               )
@@ -239,8 +239,8 @@ class DailyMetricsReportGeneratorTest {
               BookingMadeBookedByFactory()
                 .withStaffMember(
                   StaffMemberFactory()
-                    .withStaffIdentifier(
-                      user.deliusStaffIdentifier,
+                    .withStaffCode(
+                      user.deliusStaffCode,
                     ).produce(),
                 ).produce(),
             )
