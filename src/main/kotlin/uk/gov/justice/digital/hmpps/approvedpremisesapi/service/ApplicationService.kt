@@ -181,9 +181,9 @@ class ApplicationService(
   fun getApplicationForUsername(
     applicationId: UUID,
     userDistinguishedName: String,
-  ): AuthorisableActionResult<ApplicationEntity> {
+  ): CasResult<ApplicationEntity> {
     val applicationEntity = applicationRepository.findByIdOrNull(applicationId)
-      ?: return AuthorisableActionResult.NotFound()
+      ?: return CasResult.NotFound("Application", applicationId.toString())
 
     val userEntity = userRepository.findByDeliusUsername(userDistinguishedName)
       ?: throw RuntimeException("Could not get user")
@@ -191,18 +191,18 @@ class ApplicationService(
     val canAccess = userAccessService.userCanViewApplication(userEntity, applicationEntity)
 
     return if (canAccess) {
-      AuthorisableActionResult.Success(jsonSchemaService.checkSchemaOutdated(applicationEntity))
+      CasResult.Success(jsonSchemaService.checkSchemaOutdated(applicationEntity))
     } else {
-      AuthorisableActionResult.Unauthorised()
+      CasResult.Unauthorised()
     }
   }
 
   fun getOfflineApplicationForUsername(
     applicationId: UUID,
     deliusUsername: String,
-  ): AuthorisableActionResult<OfflineApplicationEntity> {
+  ): CasResult<OfflineApplicationEntity> {
     val applicationEntity = offlineApplicationRepository.findByIdOrNull(applicationId)
-      ?: return AuthorisableActionResult.NotFound()
+      ?: return CasResult.NotFound("Application", applicationId.toString())
 
     val userEntity = userRepository.findByDeliusUsername(deliusUsername)
       ?: throw RuntimeException("Could not get user")
@@ -215,10 +215,10 @@ class ApplicationService(
       ) &&
       offenderService.canAccessOffender(deliusUsername, applicationEntity.crn)
     ) {
-      return AuthorisableActionResult.Success(applicationEntity)
+      return CasResult.Success(applicationEntity)
     }
 
-    return AuthorisableActionResult.Unauthorised()
+    return CasResult.Unauthorised()
   }
 
   fun createApprovedPremisesApplication(
@@ -496,38 +496,30 @@ class ApplicationService(
     applicationId: UUID,
     updateFields: Cas1ApplicationUpdateFields,
     userForRequest: UserEntity,
-  ): AuthorisableActionResult<ValidatableActionResult<ApplicationEntity>> {
+  ): CasResult<ApplicationEntity> {
     val application = applicationRepository.findByIdOrNull(applicationId)?.let(jsonSchemaService::checkSchemaOutdated)
-      ?: return AuthorisableActionResult.NotFound()
+      ?: return CasResult.NotFound("Application", applicationId.toString())
 
     if (application !is ApprovedPremisesApplicationEntity) {
-      return AuthorisableActionResult.Success(
-        ValidatableActionResult.GeneralValidationError("onlyCas1Supported"),
-      )
+      return CasResult.GeneralValidationError("onlyCas1Supported")
     }
 
     if (updateFields.isUsingLegacyApTypeFields && updateFields.isUsingNewApTypeField) {
-      return AuthorisableActionResult.Success(
-        ValidatableActionResult.GeneralValidationError(
-          "`isPipeApplication`/`isEsapApplication` should not be used in conjunction with `apType`",
-        ),
+      return CasResult.GeneralValidationError(
+        "`isPipeApplication`/`isEsapApplication` should not be used in conjunction with `apType`",
       )
     }
 
     if (application.createdByUser.id != userForRequest.id) {
-      return AuthorisableActionResult.Unauthorised()
+      return CasResult.Unauthorised()
     }
 
     if (!application.schemaUpToDate) {
-      return AuthorisableActionResult.Success(
-        ValidatableActionResult.GeneralValidationError("The schema version is outdated"),
-      )
+      return CasResult.GeneralValidationError("The schema version is outdated")
     }
 
     if (application.submittedAt != null) {
-      return AuthorisableActionResult.Success(
-        ValidatableActionResult.GeneralValidationError("This application has already been submitted"),
-      )
+      return CasResult.GeneralValidationError("This application has already been submitted")
     }
 
     application.apply {
@@ -548,9 +540,7 @@ class ApplicationService(
     applicationListener.preUpdate(application)
     val savedApplication = applicationRepository.save(application)
 
-    return AuthorisableActionResult.Success(
-      ValidatableActionResult.Success(savedApplication),
-    )
+    return CasResult.Success(savedApplication)
   }
 
   private fun upsertCas1ApplicationUserDetails(
@@ -638,32 +628,26 @@ class ApplicationService(
   fun updateTemporaryAccommodationApplication(
     applicationId: UUID,
     data: String,
-  ): AuthorisableActionResult<ValidatableActionResult<ApplicationEntity>> {
+  ): CasResult<ApplicationEntity> {
     val application = applicationRepository.findByIdOrNull(applicationId)?.let(jsonSchemaService::checkSchemaOutdated)
-      ?: return AuthorisableActionResult.NotFound()
+      ?: return CasResult.NotFound("Application", applicationId.toString())
 
     if (application !is TemporaryAccommodationApplicationEntity) {
-      return AuthorisableActionResult.Success(
-        ValidatableActionResult.GeneralValidationError("onlyCas3Supported"),
-      )
+      return CasResult.GeneralValidationError("onlyCas3Supported")
     }
 
     val user = userService.getUserForRequest()
 
     if (application.createdByUser != user) {
-      return AuthorisableActionResult.Unauthorised()
+      return CasResult.Unauthorised()
     }
 
     if (!application.schemaUpToDate) {
-      return AuthorisableActionResult.Success(
-        ValidatableActionResult.GeneralValidationError("The schema version is outdated"),
-      )
+      return CasResult.GeneralValidationError("The schema version is outdated")
     }
 
     if (application.submittedAt != null) {
-      return AuthorisableActionResult.Success(
-        ValidatableActionResult.GeneralValidationError("This application has already been submitted"),
-      )
+      return CasResult.GeneralValidationError("This application has already been submitted")
     }
 
     application.apply {
@@ -672,9 +656,7 @@ class ApplicationService(
 
     val savedApplication = applicationRepository.save(application)
 
-    return AuthorisableActionResult.Success(
-      ValidatableActionResult.Success(savedApplication),
-    )
+    return CasResult.Success(savedApplication)
   }
 
   @SuppressWarnings("CyclomaticComplexMethod")

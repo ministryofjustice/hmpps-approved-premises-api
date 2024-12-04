@@ -25,7 +25,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.OffenderService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.PremisesService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.UserService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.UserService.GetUserResponse
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.ensureEntityFromNestedAuthorisableValidatableActionResultIsSuccess
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.extractEntityFromCasResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.extractEntityFromValidatableActionResult
 import java.io.IOException
 import java.time.LocalDate
@@ -265,7 +265,7 @@ class Cas1AutoScript(
       userForRequest = createdByUser,
     )
 
-    ensureEntityFromNestedAuthorisableValidatableActionResultIsSuccess(updateResult)
+    extractEntityFromCasResult(updateResult)
 
     applicationService.addNoteToApplication(
       applicationId = newApplicationEntity.id,
