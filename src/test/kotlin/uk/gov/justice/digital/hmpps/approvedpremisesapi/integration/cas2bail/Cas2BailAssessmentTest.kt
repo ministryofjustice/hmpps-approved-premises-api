@@ -42,7 +42,7 @@ class Cas2BailAssessmentTest : IntegrationTestBase() {
     @Nested
     inner class MissingJwt {
       @Test
-      fun `updating an assessment without JWT returns 401`() {
+      fun `updating a cas2bail assessment without JWT returns 401`() {
         webTestClient.put()
           .uri("/cas2bail/assessments/de6512fc-a225-4109-bdcd-86c6307a5237")
           .exchange()
@@ -54,7 +54,7 @@ class Cas2BailAssessmentTest : IntegrationTestBase() {
     @Nested
     inner class ControlsOnExternalUsers {
       @Test
-      fun `updating an assessment is forbidden to external users who are not Assessors`() {
+      fun `updating a cas2bail assessment is forbidden to external users who are not Assessors`() {
         val jwt = jwtAuthHelper.createClientCredentialsJwt(
           username = "username",
           authSource = "auth",
@@ -73,7 +73,7 @@ class Cas2BailAssessmentTest : IntegrationTestBase() {
     @Nested
     inner class ControlsOnInternalUsers {
       @Test
-      fun `updating an assessment is forbidden to nomis users`() {
+      fun `updating a cas2bail assessment is forbidden to nomis users`() {
         val jwt = jwtAuthHelper.createClientCredentialsJwt(
           username = "username",
           authSource = "nomis",
@@ -90,7 +90,7 @@ class Cas2BailAssessmentTest : IntegrationTestBase() {
     }
 
     @Test
-    fun `assessors create note returns 201`() {
+    fun `assessors create cas2bail note returns 201`() {
       val applicationId = UUID.fromString("22ceda56-98b2-411d-91cc-ace0ab8be872")
 
       givenACas2PomUser { referrer, _ ->
@@ -151,7 +151,7 @@ class Cas2BailAssessmentTest : IntegrationTestBase() {
     @Nested
     inner class MissingJwt {
       @Test
-      fun `getting an assessment without JWT returns 401`() {
+      fun `getting a cas2bail assessment without JWT returns 401`() {
         webTestClient.get()
           .uri("/cas2bail/assessments/de6512fc-a225-4109-bdcd-86c6307a5237")
           .exchange()
@@ -163,7 +163,7 @@ class Cas2BailAssessmentTest : IntegrationTestBase() {
     @Nested
     inner class ControlsOnExternalUsers {
       @Test
-      fun `getting an assessment is forbidden to external users who are not Assessors or Admins`() {
+      fun `getting a cas2bail assessment is forbidden to external users who are not Assessors or Admins`() {
         val jwt = jwtAuthHelper.createClientCredentialsJwt(
           username = "username",
           authSource = "auth",
@@ -182,7 +182,7 @@ class Cas2BailAssessmentTest : IntegrationTestBase() {
     @Nested
     inner class ControlsOnInternalUsers {
       @Test
-      fun `getting an assessment is forbidden to nomis users`() {
+      fun `getting a cas2bail assessment is forbidden to nomis users`() {
         val jwt = jwtAuthHelper.createClientCredentialsJwt(
           username = "username",
           authSource = "nomis",
@@ -199,7 +199,7 @@ class Cas2BailAssessmentTest : IntegrationTestBase() {
     }
 
     @Test
-    fun `assessors update assessment returns 200`() {
+    fun `assessors update cas2bail assessment returns 200`() {
       val applicationId = UUID.fromString("22ceda56-98b2-411d-91cc-ace0ab8be872")
 
       givenACas2PomUser { referrer, _ ->
@@ -234,7 +234,7 @@ class Cas2BailAssessmentTest : IntegrationTestBase() {
     }
 
     @Test
-    fun `admins get assessment returns 200`() {
+    fun `admins get cas2bail assessment returns 200`() {
       val applicationId = UUID.fromString("22ceda56-98b2-411d-91cc-ace0ab8be872")
 
       givenACas2PomUser { referrer, _ ->
