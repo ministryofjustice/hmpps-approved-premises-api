@@ -16,10 +16,6 @@ import org.junit.jupiter.api.Test
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.ValueSource
 import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.data.jpa.repository.JpaRepository
-import org.springframework.data.jpa.repository.Query
-import org.springframework.data.repository.query.Param
-import org.springframework.stereotype.Repository
 import org.springframework.test.web.reactive.server.returnResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.*
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.IntegrationTestBase
@@ -31,7 +27,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.co
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.prisonAPIMockNotFoundInmateDetailsCall
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.*
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas2bail.Cas2BailApplicationEntity
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas2bail.Cas2BailApplicationSummaryEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas2bail.Cas2BailStatusUpdateEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.community.OffenderDetailSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomDateAfter
@@ -43,10 +38,6 @@ import java.util.*
 import kotlin.math.sign
 
 class Cas2BailApplicationTest : IntegrationTestBase() {
-
-  /* START HERE - TOBY DEBUG */
-  @Autowired
-  private lateinit var entityManager: EntityManager
 
   @SpykBean
   lateinit var realApplicationRepository: ApplicationRepository
@@ -87,7 +78,7 @@ class Cas2BailApplicationTest : IntegrationTestBase() {
   inner class ControlsOnExternalUsers {
     @ParameterizedTest
     @ValueSource(strings = ["ROLE_CAS2_ASSESSOR", "ROLE_CAS2_MI"])
-    fun `creating an application is forbidden to external users based on role`(role: String) {
+    fun `creating a cas2bail application is forbidden to external users based on role`(role: String) {
       val jwt = jwtAuthHelper.createClientCredentialsJwt(
         username = "username",
         authSource = "nomis",
@@ -104,7 +95,7 @@ class Cas2BailApplicationTest : IntegrationTestBase() {
 
     @ParameterizedTest
     @ValueSource(strings = ["ROLE_CAS2_ASSESSOR", "ROLE_CAS2_MI"])
-    fun `updating an application is forbidden to external users based on role`(role: String) {
+    fun `updating a cas2bail application is forbidden to external users based on role`(role: String) {
       val jwt = jwtAuthHelper.createClientCredentialsJwt(
         username = "username",
         authSource = "nomis",
@@ -120,7 +111,7 @@ class Cas2BailApplicationTest : IntegrationTestBase() {
     }
 
     @Test
-    fun `viewing list of applications is forbidden to external users based on role`() {
+    fun `viewing list of cas2bail applications is forbidden to external users based on role`() {
       val jwt = jwtAuthHelper.createClientCredentialsJwt(
         username = "username",
         authSource = "nomis",
@@ -136,7 +127,7 @@ class Cas2BailApplicationTest : IntegrationTestBase() {
     }
 
     @Test
-    fun `viewing an application is forbidden to external users based on role`() {
+    fun `viewing a cas2bail application is forbidden to external users based on role`() {
       val jwt = jwtAuthHelper.createClientCredentialsJwt(
         username = "username",
         authSource = "nomis",
@@ -156,7 +147,7 @@ class Cas2BailApplicationTest : IntegrationTestBase() {
   @Nested
   inner class MissingJwt {
     @Test
-    fun `Get all applications without JWT returns 401`() {
+    fun `Get all cas2bail applications without JWT returns 401`() {
       webTestClient.get()
         .uri("/cas2bail/applications")
         .exchange()
@@ -165,7 +156,7 @@ class Cas2BailApplicationTest : IntegrationTestBase() {
     }
 
     @Test
-    fun `Get single application without JWT returns 401`() {
+    fun `Get single cas2bail application without JWT returns 401`() {
       webTestClient.get()
         .uri("/cas2bail/applications/9b785e59-b85c-4be0-b271-d9ac287684b6")
         .exchange()
@@ -174,7 +165,7 @@ class Cas2BailApplicationTest : IntegrationTestBase() {
     }
 
     @Test
-    fun `Create new application without JWT returns 401`() {
+    fun `Create new cas2bail application without JWT returns 401`() {
       webTestClient.post()
         .uri("/cas2bail/applications")
         .exchange()
@@ -188,7 +179,7 @@ class Cas2BailApplicationTest : IntegrationTestBase() {
 
 
     @Test
-    fun `return unexpired applications when applications GET is requested`() {
+    fun `return unexpired cas2bail applications when applications GET is requested`() {
       val unexpiredSubset = setOf(
         Pair("More information requested", UUID.fromString("f5cd423b-08eb-4efb-96ff-5cc6bb073905")),
         Pair("Awaiting decision", UUID.fromString("ba4d8432-250b-4ab9-81ec-7eb4b16e5dd1")),
@@ -292,7 +283,7 @@ class Cas2BailApplicationTest : IntegrationTestBase() {
     }
 
     @Test
-    fun `Get all applications returns 200 with correct body`() {
+    fun `Get all cas2bail applications returns 200 with correct body`() {
       givenACas2PomUser { userEntity, jwt ->
         givenACas2PomUser { otherUser, _ ->
           givenAnOffender { offenderDetails, _ ->
@@ -369,34 +360,6 @@ class Cas2BailApplicationTest : IntegrationTestBase() {
               .responseBody
               .blockFirst()
 
-            /* START HERE - TOBY DEBUG */
-            val r1 = entityManager.createNativeQuery("SELECT * FROM cas_2_bail_applications").resultList
-            val r2 = entityManager.createNativeQuery("SELECT * FROM cas_2_bail_application_live_summary").resultList
-            val r3 = entityManager.createNativeQuery("SELECT * FROM cas_2_bail_status_updates").resultList
-            val r4 = entityManager.createNativeQuery("SELECT * FROM cas_2_bail_assessments").resultList
-            val r5 = entityManager.createNativeQuery("SELECT\n" +
-              "    a.id,\n" +
-              "    a.crn,\n" +
-              "    a.noms_number,\n" +
-              "    CAST(a.created_by_user_id AS TEXT),\n" +
-              "    nu.name,\n" +
-              "    a.created_at,\n" +
-              "    a.submitted_at,\n" +
-              "    a.hdc_eligibility_date,\n" +
-              "    asu.label,\n" +
-              "    CAST(asu.status_id AS TEXT),\n" +
-              "    a.referring_prison_code,\n" +
-              "    a.conditional_release_date,\n" +
-              "    asu.created_at AS status_created_at,\n" +
-              "    a.abandoned_at\n" +
-              "FROM cas_2_applications a\n" +
-              "LEFT JOIN (SELECT DISTINCT ON (application_id) su.application_id, su.label, su.status_id, su.created_at\n" +
-              "    FROM cas_2_bail_status_updates su\n" +
-              "    ORDER BY su.application_id, su.created_at DESC) as asu\n" +
-              "    ON a.id = asu.application_id\n" +
-              "JOIN nomis_users nu ON nu.id = a.created_by_user_id").resultList
-            /* END HERE - TOBY DEBUG */
-
             val responseBody =
               objectMapper.readValue(rawResponseBody, object : TypeReference<List<Cas2BailApplicationSummary>>() {})
 
@@ -439,19 +402,19 @@ class Cas2BailApplicationTest : IntegrationTestBase() {
     }
 
     @Test
-    fun `Get all applications with pagination returns 200 with correct body and header`() {
+    fun `Get all cas2bail applications with pagination returns 200 with correct body and header`() {
       givenACas2PomUser { userEntity, jwt ->
         givenACas2PomUser { otherUser, _ ->
           givenAnOffender { offenderDetails, _ ->
-            cas2ApplicationJsonSchemaRepository.deleteAll()
+            cas2BailApplicationJsonSchemaRepository.deleteAll()
 
-            val applicationSchema = cas2ApplicationJsonSchemaEntityFactory.produceAndPersist {
+            val applicationSchema = cas2BailApplicationJsonSchemaEntityFactory.produceAndPersist {
               withAddedAt(OffsetDateTime.now())
               withId(UUID.randomUUID())
             }
 
             repeat(12) {
-              cas2ApplicationEntityFactory.produceAndPersist {
+              cas2BailApplicationEntityFactory.produceAndPersist {
                 withApplicationSchema(applicationSchema)
                 withCreatedByUser(userEntity)
                 withCrn(offenderDetails.otherIds.crn)
@@ -461,7 +424,7 @@ class Cas2BailApplicationTest : IntegrationTestBase() {
             }
 
             val rawResponseBodyPage1 = webTestClient.get()
-              .uri("/cas2/applications?page=1")
+              .uri("/cas2bail/applications?page=1")
               .header("Authorization", "Bearer $jwt")
               .header("X-Service-Name", ServiceName.cas2.value)
               .exchange()
@@ -476,14 +439,14 @@ class Cas2BailApplicationTest : IntegrationTestBase() {
               .blockFirst()
 
             val responseBodyPage1 =
-              objectMapper.readValue(rawResponseBodyPage1, object : TypeReference<List<Cas2ApplicationSummary>>() {})
+              objectMapper.readValue(rawResponseBodyPage1, object : TypeReference<List<Cas2BailApplicationSummary>>() {})
 
             Assertions.assertThat(responseBodyPage1).size().isEqualTo(10)
 
             Assertions.assertThat(isOrderedByCreatedAtDescending(responseBodyPage1)).isTrue()
 
             val rawResponseBodyPage2 = webTestClient.get()
-              .uri("/cas2/applications?page=2")
+              .uri("/cas2bail/applications?page=2")
               .header("Authorization", "Bearer $jwt")
               .header("X-Service-Name", ServiceName.cas2.value)
               .exchange()
@@ -498,7 +461,7 @@ class Cas2BailApplicationTest : IntegrationTestBase() {
               .blockFirst()
 
             val responseBodyPage2 =
-              objectMapper.readValue(rawResponseBodyPage2, object : TypeReference<List<Cas2ApplicationSummary>>() {})
+              objectMapper.readValue(rawResponseBodyPage2, object : TypeReference<List<Cas2BailApplicationSummary>>() {})
 
             Assertions.assertThat(responseBodyPage2).size().isEqualTo(2)
           }
@@ -507,7 +470,7 @@ class Cas2BailApplicationTest : IntegrationTestBase() {
     }
 
     @Test
-    fun `When a person is not found, returns 200 with placeholder text`() {
+    fun `When a person is not found in cas2bail, returns 200 with placeholder text`() {
       givenACas2PomUser { userEntity, jwt ->
         val crn = "X1234"
 
@@ -515,7 +478,7 @@ class Cas2BailApplicationTest : IntegrationTestBase() {
         communityAPIMockNotFoundOffenderDetailsCall(crn)
 
         webTestClient.get()
-          .uri("/cas2/applications")
+          .uri("/cas2bail/applications")
           .header("Authorization", "Bearer $jwt")
           .exchange()
           .expectStatus()
@@ -540,7 +503,7 @@ class Cas2BailApplicationTest : IntegrationTestBase() {
      *
      * If all dates are ascending the multiple will also be 0 ( = 1 x 0 x 0 etc.).
      */
-    private fun isOrderedByCreatedAtDescending(responseBody: List<Cas2ApplicationSummary>): Boolean {
+    private fun isOrderedByCreatedAtDescending(responseBody: List<Cas2BailApplicationSummary>): Boolean {
       var allDescending = 1
       for (i in 1..(responseBody.size - 1)) {
         val isDescending = (responseBody[i - 1].createdAt.epochSecond - responseBody[i].createdAt.epochSecond).sign
@@ -556,9 +519,9 @@ class Cas2BailApplicationTest : IntegrationTestBase() {
         givenACas2Assessor { assessor, _ ->
           givenACas2PomUser { userAPrisonA, jwt ->
             givenAnOffender { offenderDetails, _ ->
-              cas2ApplicationJsonSchemaRepository.deleteAll()
+              cas2BailApplicationJsonSchemaRepository.deleteAll()
 
-              val applicationSchema = cas2ApplicationJsonSchemaEntityFactory.produceAndPersist {
+              val applicationSchema = cas2BailApplicationJsonSchemaEntityFactory.produceAndPersist {
                 withAddedAt(OffsetDateTime.now())
                 withId(UUID.randomUUID())
               }
@@ -567,7 +530,7 @@ class Cas2BailApplicationTest : IntegrationTestBase() {
 
               repeat(5) {
                 userAPrisonAApplicationIds.add(
-                  cas2ApplicationEntityFactory.produceAndPersist {
+                  cas2BailApplicationEntityFactory.produceAndPersist {
                     withApplicationSchema(applicationSchema)
                     withCreatedByUser(userAPrisonA)
                     withCrn(offenderDetails.otherIds.crn)
@@ -587,7 +550,7 @@ class Cas2BailApplicationTest : IntegrationTestBase() {
               // submitted applications with conditional release dates in the future
               repeat(6) {
                 userBPrisonAApplicationIds.add(
-                  cas2ApplicationEntityFactory.produceAndPersist {
+                  cas2BailApplicationEntityFactory.produceAndPersist {
                     withApplicationSchema(applicationSchema)
                     withCreatedByUser(userBPrisonA)
                     withCrn(offenderDetails.otherIds.crn)
@@ -603,7 +566,7 @@ class Cas2BailApplicationTest : IntegrationTestBase() {
               // submitted applications with conditional release dates today
               repeat(2) {
                 userBPrisonAApplicationIds.add(
-                  cas2ApplicationEntityFactory.produceAndPersist {
+                  cas2BailApplicationEntityFactory.produceAndPersist {
                     withApplicationSchema(applicationSchema)
                     withCreatedByUser(userBPrisonA)
                     withCrn(offenderDetails.otherIds.crn)
@@ -617,7 +580,7 @@ class Cas2BailApplicationTest : IntegrationTestBase() {
               }
 
               // submitted application with a conditional release date before today
-              val excludedApplicationId = cas2ApplicationEntityFactory.produceAndPersist {
+              val excludedApplicationId = cas2BailApplicationEntityFactory.produceAndPersist {
                 withApplicationSchema(applicationSchema)
                 withCreatedByUser(userBPrisonA)
                 withCrn(offenderDetails.otherIds.crn)
@@ -634,7 +597,7 @@ class Cas2BailApplicationTest : IntegrationTestBase() {
                 withActiveCaseloadId("another prison")
               }
 
-              val otherPrisonApplication = cas2ApplicationEntityFactory.produceAndPersist {
+              val otherPrisonApplication = cas2BailApplicationEntityFactory.produceAndPersist {
                 withApplicationSchema(applicationSchema)
                 withCreatedByUser(userCPrisonB)
                 withCrn(offenderDetails.otherIds.crn)
@@ -644,7 +607,7 @@ class Cas2BailApplicationTest : IntegrationTestBase() {
               }
 
               val rawResponseBody = webTestClient.get()
-                .uri("/cas2/applications?prisonCode=${userAPrisonA.activeCaseloadId}")
+                .uri("/cas2bail/applications?prisonCode=${userAPrisonA.activeCaseloadId}")
                 .header("Authorization", "Bearer $jwt")
                 .header("X-Service-Name", ServiceName.cas2.value)
                 .exchange()
@@ -655,7 +618,7 @@ class Cas2BailApplicationTest : IntegrationTestBase() {
                 .blockFirst()
 
               val responseBody =
-                objectMapper.readValue(rawResponseBody, object : TypeReference<List<Cas2ApplicationSummary>>() {})
+                objectMapper.readValue(rawResponseBody, object : TypeReference<List<Cas2BailApplicationSummary>>() {})
 
               Assertions.assertThat(responseBody).noneMatch {
                 excludedApplicationId == it.id
@@ -683,9 +646,9 @@ class Cas2BailApplicationTest : IntegrationTestBase() {
         givenACas2Assessor { assessor, _ ->
           givenACas2PomUser { userAPrisonA, jwt ->
             givenAnOffender { offenderDetails, _ ->
-              cas2ApplicationJsonSchemaRepository.deleteAll()
+              cas2BailApplicationJsonSchemaRepository.deleteAll()
 
-              val applicationSchema = cas2ApplicationJsonSchemaEntityFactory.produceAndPersist {
+              val applicationSchema = cas2BailApplicationJsonSchemaEntityFactory.produceAndPersist {
                 withAddedAt(OffsetDateTime.now())
                 withId(UUID.randomUUID())
               }
@@ -694,7 +657,7 @@ class Cas2BailApplicationTest : IntegrationTestBase() {
 
               repeat(5) {
                 userAPrisonAApplicationIds.add(
-                  cas2ApplicationEntityFactory.produceAndPersist {
+                  cas2BailApplicationEntityFactory.produceAndPersist {
                     withApplicationSchema(applicationSchema)
                     withCreatedByUser(userAPrisonA)
                     withCrn(offenderDetails.otherIds.crn)
@@ -713,7 +676,7 @@ class Cas2BailApplicationTest : IntegrationTestBase() {
 
               repeat(6) {
                 userBPrisonAApplicationIds.add(
-                  cas2ApplicationEntityFactory.produceAndPersist {
+                  cas2BailApplicationEntityFactory.produceAndPersist {
                     withApplicationSchema(applicationSchema)
                     withCreatedByUser(userBPrisonA)
                     withCrn(offenderDetails.otherIds.crn)
@@ -729,7 +692,7 @@ class Cas2BailApplicationTest : IntegrationTestBase() {
               // submitted applications with conditional release dates today
               repeat(2) {
                 userBPrisonAApplicationIds.add(
-                  cas2ApplicationEntityFactory.produceAndPersist {
+                  cas2BailApplicationEntityFactory.produceAndPersist {
                     withApplicationSchema(applicationSchema)
                     withCreatedByUser(userBPrisonA)
                     withCrn(offenderDetails.otherIds.crn)
@@ -743,7 +706,7 @@ class Cas2BailApplicationTest : IntegrationTestBase() {
               }
 
               // submitted application with a conditional release date before today
-              val excludedApplicationId = cas2ApplicationEntityFactory.produceAndPersist {
+              val excludedApplicationId = cas2BailApplicationEntityFactory.produceAndPersist {
                 withApplicationSchema(applicationSchema)
                 withCreatedByUser(userBPrisonA)
                 withCrn(offenderDetails.otherIds.crn)
@@ -757,7 +720,7 @@ class Cas2BailApplicationTest : IntegrationTestBase() {
               addStatusUpdates(userBPrisonAApplicationIds.first(), assessor)
 
               val rawResponseBody = webTestClient.get()
-                .uri("/cas2/applications?isSubmitted=true&prisonCode=${userAPrisonA.activeCaseloadId}")
+                .uri("/cas2bail/applications?isSubmitted=true&prisonCode=${userAPrisonA.activeCaseloadId}")
                 .header("Authorization", "Bearer $jwt")
                 .header("X-Service-Name", ServiceName.cas2.value)
                 .exchange()
@@ -768,7 +731,7 @@ class Cas2BailApplicationTest : IntegrationTestBase() {
                 .blockFirst()
 
               val responseBody =
-                objectMapper.readValue(rawResponseBody, object : TypeReference<List<Cas2ApplicationSummary>>() {})
+                objectMapper.readValue(rawResponseBody, object : TypeReference<List<Cas2BailApplicationSummary>>() {})
 
               Assertions.assertThat(responseBody).noneMatch {
                 excludedApplicationId == it.id
@@ -788,9 +751,9 @@ class Cas2BailApplicationTest : IntegrationTestBase() {
       fun `Get all unsubmitted applications using prisonCode returns 200 with correct body`() {
         givenACas2PomUser { userAPrisonA, jwt ->
           givenAnOffender { offenderDetails, _ ->
-            cas2ApplicationJsonSchemaRepository.deleteAll()
+            cas2BailApplicationJsonSchemaRepository.deleteAll()
 
-            val applicationSchema = cas2ApplicationJsonSchemaEntityFactory.produceAndPersist {
+            val applicationSchema = cas2BailApplicationJsonSchemaEntityFactory.produceAndPersist {
               withAddedAt(OffsetDateTime.now())
               withId(UUID.randomUUID())
             }
@@ -799,7 +762,7 @@ class Cas2BailApplicationTest : IntegrationTestBase() {
 
             repeat(5) {
               userAPrisonAApplicationIds.add(
-                cas2ApplicationEntityFactory.produceAndPersist {
+                cas2BailApplicationEntityFactory.produceAndPersist {
                   withApplicationSchema(applicationSchema)
                   withCreatedByUser(userAPrisonA)
                   withCrn(offenderDetails.otherIds.crn)
@@ -818,7 +781,7 @@ class Cas2BailApplicationTest : IntegrationTestBase() {
 
             repeat(6) {
               userBPrisonAApplicationIds.add(
-                cas2ApplicationEntityFactory.produceAndPersist {
+                cas2BailApplicationEntityFactory.produceAndPersist {
                   withApplicationSchema(applicationSchema)
                   withCreatedByUser(userBPrisonA)
                   withCrn(offenderDetails.otherIds.crn)
@@ -831,7 +794,7 @@ class Cas2BailApplicationTest : IntegrationTestBase() {
             }
 
             val rawResponseBody = webTestClient.get()
-              .uri("/cas2/applications?isSubmitted=false&prisonCode=${userAPrisonA.activeCaseloadId}")
+              .uri("/cas2bail/applications?isSubmitted=false&prisonCode=${userAPrisonA.activeCaseloadId}")
               .header("Authorization", "Bearer $jwt")
               .header("X-Service-Name", ServiceName.cas2.value)
               .exchange()
@@ -842,7 +805,7 @@ class Cas2BailApplicationTest : IntegrationTestBase() {
               .blockFirst()
 
             val responseBody =
-              objectMapper.readValue(rawResponseBody, object : TypeReference<List<Cas2ApplicationSummary>>() {})
+              objectMapper.readValue(rawResponseBody, object : TypeReference<List<Cas2BailApplicationSummary>>() {})
 
             val returnedApplicationIds = responseBody.map { it.id }.toSet()
 
@@ -855,7 +818,7 @@ class Cas2BailApplicationTest : IntegrationTestBase() {
       fun `Get applications using another prisonCode returns Forbidden 403`() {
         givenACas2PomUser { userAPrisonA, jwt ->
           val rawResponseBody = webTestClient.get()
-            .uri("/cas2/applications?prisonCode=${userAPrisonA.activeCaseloadId!!.reversed()}")
+            .uri("/cas2bail/applications?prisonCode=${userAPrisonA.activeCaseloadId!!.reversed()}")
             .header("Authorization", "Bearer $jwt")
             .header("X-Service-Name", ServiceName.cas2.value)
             .exchange()
@@ -868,13 +831,13 @@ class Cas2BailApplicationTest : IntegrationTestBase() {
     @Nested
     inner class AsLicenceCaseAdminUser {
       @Test
-      fun `Get all submitted applications using prisonCode returns 200 with correct body`() {
+      fun `Get all submitted cas2bail applications using prisonCode returns 200 with correct body`() {
         givenACas2Assessor { assessor, _ ->
           givenACas2LicenceCaseAdminUser { caseAdminPrisonA, jwt ->
             givenAnOffender { offenderDetails, _ ->
-              cas2ApplicationJsonSchemaRepository.deleteAll()
+              cas2BailApplicationJsonSchemaRepository.deleteAll()
 
-              val applicationSchema = cas2ApplicationJsonSchemaEntityFactory.produceAndPersist {
+              val applicationSchema = cas2BailApplicationJsonSchemaEntityFactory.produceAndPersist {
                 withAddedAt(OffsetDateTime.now())
                 withId(UUID.randomUUID())
               }
@@ -888,7 +851,7 @@ class Cas2BailApplicationTest : IntegrationTestBase() {
               // submitted applications with conditional release dates in the future
               repeat(6) {
                 userBPrisonAApplicationIds.add(
-                  cas2ApplicationEntityFactory.produceAndPersist {
+                  cas2BailApplicationEntityFactory.produceAndPersist {
                     withApplicationSchema(applicationSchema)
                     withCreatedByUser(pomUserPrisonA)
                     withCrn(offenderDetails.otherIds.crn)
@@ -904,7 +867,7 @@ class Cas2BailApplicationTest : IntegrationTestBase() {
               // submitted applications with conditional release date of today
               repeat(2) {
                 userBPrisonAApplicationIds.add(
-                  cas2ApplicationEntityFactory.produceAndPersist {
+                  cas2BailApplicationEntityFactory.produceAndPersist {
                     withApplicationSchema(applicationSchema)
                     withCreatedByUser(pomUserPrisonA)
                     withCrn(offenderDetails.otherIds.crn)
@@ -918,7 +881,7 @@ class Cas2BailApplicationTest : IntegrationTestBase() {
               }
 
               // submitted application with a conditional release date before today
-              val excludedApplicationId = cas2ApplicationEntityFactory.produceAndPersist {
+              val excludedApplicationId = cas2BailApplicationEntityFactory.produceAndPersist {
                 withApplicationSchema(applicationSchema)
                 withCreatedByUser(pomUserPrisonA)
                 withCrn(offenderDetails.otherIds.crn)
@@ -933,7 +896,7 @@ class Cas2BailApplicationTest : IntegrationTestBase() {
                 withActiveCaseloadId("other_prison")
               }
 
-              val otherPrisonApplication = cas2ApplicationEntityFactory.produceAndPersist {
+              val otherPrisonApplication = cas2BailApplicationEntityFactory.produceAndPersist {
                 withApplicationSchema(applicationSchema)
                 withCreatedByUser(pomUserPrisonB)
                 withCrn(offenderDetails.otherIds.crn)
@@ -944,7 +907,7 @@ class Cas2BailApplicationTest : IntegrationTestBase() {
               }
 
               val rawResponseBody = webTestClient.get()
-                .uri("/cas2/applications?isSubmitted=true&prisonCode=${caseAdminPrisonA.activeCaseloadId}")
+                .uri("/cas2bail/applications?isSubmitted=true&prisonCode=${caseAdminPrisonA.activeCaseloadId}")
                 .header("Authorization", "Bearer $jwt")
                 .header("X-Service-Name", ServiceName.cas2.value)
                 .exchange()
@@ -955,7 +918,7 @@ class Cas2BailApplicationTest : IntegrationTestBase() {
                 .blockFirst()
 
               val responseBody =
-                objectMapper.readValue(rawResponseBody, object : TypeReference<List<Cas2ApplicationSummary>>() {})
+                objectMapper.readValue(rawResponseBody, object : TypeReference<List<Cas2BailApplicationSummary>>() {})
 
               Assertions.assertThat(responseBody).noneMatch {
                 excludedApplicationId == it.id
@@ -974,16 +937,16 @@ class Cas2BailApplicationTest : IntegrationTestBase() {
   }
 
   private fun addStatusUpdates(applicationId: UUID, assessor: ExternalUserEntity) {
-    cas2StatusUpdateEntityFactory.produceAndPersist {
+    cas2BailStatusUpdateEntityFactory.produceAndPersist {
       withLabel("More information requested")
-      withApplication(cas2ApplicationRepository.findById(applicationId).get())
+      withApplication(cas2BailApplicationRepository.findById(applicationId).get())
       withAssessor(assessor)
     }
     // this is the one that should be returned as latestStatusUpdate
-    cas2StatusUpdateEntityFactory.produceAndPersist {
+    cas2BailStatusUpdateEntityFactory.produceAndPersist {
       withStatusId(UUID.fromString("c74c3e54-52d8-4aa2-86f6-05190985efee"))
       withLabel("Awaiting decision")
-      withApplication(cas2ApplicationRepository.findById(applicationId).get())
+      withApplication(cas2BailApplicationRepository.findById(applicationId).get())
       withAssessor(assessor)
     }
   }
@@ -1002,9 +965,9 @@ class Cas2BailApplicationTest : IntegrationTestBase() {
         givenACas2PomUser { userEntity, jwt ->
           givenACas2PomUser { otherUser, _ ->
             givenAnOffender { offenderDetails, _ ->
-              cas2ApplicationJsonSchemaRepository.deleteAll()
+              cas2BailApplicationJsonSchemaRepository.deleteAll()
 
-              val applicationSchema = cas2ApplicationJsonSchemaEntityFactory.produceAndPersist {
+              val applicationSchema = cas2BailApplicationJsonSchemaEntityFactory.produceAndPersist {
                 withAddedAt(OffsetDateTime.now())
                 withId(UUID.randomUUID())
               }
@@ -1013,7 +976,7 @@ class Cas2BailApplicationTest : IntegrationTestBase() {
               // with most recent first and conditional release dates in the future
               repeat(3) {
                 submittedIds.add(
-                  cas2ApplicationEntityFactory.produceAndPersist {
+                  cas2BailApplicationEntityFactory.produceAndPersist {
                     withCreatedAt(OffsetDateTime.now().minusDays(it.toLong()))
                     withApplicationSchema(applicationSchema)
                     withCreatedByUser(userEntity)
@@ -1029,7 +992,7 @@ class Cas2BailApplicationTest : IntegrationTestBase() {
               // with most recent first and conditional release dates of today
               repeat(2) {
                 submittedIds.add(
-                  cas2ApplicationEntityFactory.produceAndPersist {
+                  cas2BailApplicationEntityFactory.produceAndPersist {
                     withCreatedAt(OffsetDateTime.now().minusDays(it.toLong() + 3))
                     withApplicationSchema(applicationSchema)
                     withCreatedByUser(userEntity)
@@ -1042,7 +1005,7 @@ class Cas2BailApplicationTest : IntegrationTestBase() {
               }
 
               // submitted application with a conditional release date before today
-              excludedApplicationId = cas2ApplicationEntityFactory.produceAndPersist {
+              excludedApplicationId = cas2BailApplicationEntityFactory.produceAndPersist {
                 withCreatedAt(OffsetDateTime.now().minusDays(14))
                 withApplicationSchema(applicationSchema)
                 withCreatedByUser(userEntity)
@@ -1057,7 +1020,7 @@ class Cas2BailApplicationTest : IntegrationTestBase() {
               // create 4 x un-submitted in-progress applications for this user
               repeat(4) {
                 unSubmittedIds.add(
-                  cas2ApplicationEntityFactory.produceAndPersist {
+                  cas2BailApplicationEntityFactory.produceAndPersist {
                     withApplicationSchema(applicationSchema)
                     withCreatedByUser(userEntity)
                     withCrn(offenderDetails.otherIds.crn)
@@ -1067,7 +1030,7 @@ class Cas2BailApplicationTest : IntegrationTestBase() {
               }
 
               // create a submitted application by another user which should not be in results
-              cas2ApplicationEntityFactory.produceAndPersist {
+              cas2BailApplicationEntityFactory.produceAndPersist {
                 withApplicationSchema(applicationSchema)
                 withCreatedByUser(otherUser)
                 withCrn(offenderDetails.otherIds.crn)
@@ -1076,7 +1039,7 @@ class Cas2BailApplicationTest : IntegrationTestBase() {
               }
 
               // create an unsubmitted application by another user which should not be in results
-              cas2ApplicationEntityFactory.produceAndPersist {
+              cas2BailApplicationEntityFactory.produceAndPersist {
                 withApplicationSchema(applicationSchema)
                 withCreatedByUser(otherUser)
                 withCrn(offenderDetails.otherIds.crn)
@@ -1091,9 +1054,9 @@ class Cas2BailApplicationTest : IntegrationTestBase() {
     }
 
     @Test
-    fun `returns all applications for user when isSubmitted is null`() {
+    fun `returns all cas2bail applications for user when isSubmitted is null`() {
       val rawResponseBody = webTestClient.get()
-        .uri("/cas2/applications")
+        .uri("/cas2bail/applications")
         .header("Authorization", "Bearer $jwtForUser")
         .header("X-Service-Name", ServiceName.cas2.value)
         .exchange()
@@ -1104,7 +1067,7 @@ class Cas2BailApplicationTest : IntegrationTestBase() {
         .blockFirst()
 
       val responseBody =
-        objectMapper.readValue(rawResponseBody, object : TypeReference<List<Cas2ApplicationSummary>>() {})
+        objectMapper.readValue(rawResponseBody, object : TypeReference<List<Cas2BailApplicationSummary>>() {})
 
       Assertions.assertThat(responseBody).noneMatch {
         excludedApplicationId == it.id
@@ -1115,9 +1078,9 @@ class Cas2BailApplicationTest : IntegrationTestBase() {
     }
 
     @Test
-    fun `returns submitted applications for user when isSubmitted is true`() {
+    fun `returns submitted cas2bail applications for user when isSubmitted is true`() {
       val rawResponseBody = webTestClient.get()
-        .uri("/cas2/applications?isSubmitted=true")
+        .uri("/cas2bail/applications?isSubmitted=true")
         .header("Authorization", "Bearer $jwtForUser")
         .header("X-Service-Name", ServiceName.cas2.value)
         .exchange()
@@ -1128,7 +1091,7 @@ class Cas2BailApplicationTest : IntegrationTestBase() {
         .blockFirst()
 
       val responseBody =
-        objectMapper.readValue(rawResponseBody, object : TypeReference<List<Cas2ApplicationSummary>>() {})
+        objectMapper.readValue(rawResponseBody, object : TypeReference<List<Cas2BailApplicationSummary>>() {})
 
       Assertions.assertThat(responseBody).noneMatch {
         excludedApplicationId == it.id
@@ -1141,9 +1104,9 @@ class Cas2BailApplicationTest : IntegrationTestBase() {
     }
 
     @Test
-    fun `returns submitted applications for user when isSubmitted is true and page specified`() {
+    fun `returns submitted cas2bail applications for user when isSubmitted is true and page specified`() {
       val rawResponseBody = webTestClient.get()
-        .uri("/cas2/applications?isSubmitted=true&page=1")
+        .uri("/cas2bail/applications?isSubmitted=true&page=1")
         .header("Authorization", "Bearer $jwtForUser")
         .header("X-Service-Name", ServiceName.cas2.value)
         .exchange()
@@ -1154,7 +1117,7 @@ class Cas2BailApplicationTest : IntegrationTestBase() {
         .blockFirst()
 
       val responseBody =
-        objectMapper.readValue(rawResponseBody, object : TypeReference<List<Cas2ApplicationSummary>>() {})
+        objectMapper.readValue(rawResponseBody, object : TypeReference<List<Cas2BailApplicationSummary>>() {})
 
       val uuids = responseBody.map { it.id }.toSet()
       Assertions.assertThat(uuids).isEqualTo(submittedIds)
@@ -1163,9 +1126,9 @@ class Cas2BailApplicationTest : IntegrationTestBase() {
     }
 
     @Test
-    fun `returns unsubmitted applications for user when isSubmitted is false`() {
+    fun `returns unsubmitted cas2bail applications for user when isSubmitted is false`() {
       val rawResponseBody = webTestClient.get()
-        .uri("/cas2/applications?isSubmitted=false")
+        .uri("/cas2bail/applications?isSubmitted=false")
         .header("Authorization", "Bearer $jwtForUser")
         .header("X-Service-Name", ServiceName.cas2.value)
         .exchange()
@@ -1176,7 +1139,7 @@ class Cas2BailApplicationTest : IntegrationTestBase() {
         .blockFirst()
 
       val responseBody =
-        objectMapper.readValue(rawResponseBody, object : TypeReference<List<Cas2ApplicationSummary>>() {})
+        objectMapper.readValue(rawResponseBody, object : TypeReference<List<Cas2BailApplicationSummary>>() {})
 
       val uuids = responseBody.map { it.id }.toSet()
       Assertions.assertThat(uuids).isEqualTo(unSubmittedIds)
@@ -1190,12 +1153,12 @@ class Cas2BailApplicationTest : IntegrationTestBase() {
     inner class WhenCreatedBySameUser {
       // When the application requested was created by the logged-in user
       @Test
-      fun `Get single in progress application returns 200 with correct body`() {
+      fun `Get single in progress cas2bail application returns 200 with correct body`() {
         givenACas2PomUser { userEntity, jwt ->
           givenAnOffender { offenderDetails, inmateDetails ->
-            cas2ApplicationJsonSchemaRepository.deleteAll()
+            cas2BailApplicationJsonSchemaRepository.deleteAll()
 
-            val newestJsonSchema = cas2ApplicationJsonSchemaEntityFactory
+            val newestJsonSchema = cas2BailApplicationJsonSchemaEntityFactory
               .produceAndPersist {
                 withAddedAt(OffsetDateTime.parse("2022-09-21T12:45:00+01:00"))
                 withSchema(
@@ -1203,7 +1166,7 @@ class Cas2BailApplicationTest : IntegrationTestBase() {
                 )
               }
 
-            val applicationEntity = cas2ApplicationEntityFactory.produceAndPersist {
+            val applicationEntity = cas2BailApplicationEntityFactory.produceAndPersist {
               withApplicationSchema(newestJsonSchema)
               withCrn(offenderDetails.otherIds.crn)
               withCreatedByUser(userEntity)
@@ -1213,7 +1176,7 @@ class Cas2BailApplicationTest : IntegrationTestBase() {
             }
 
             val rawResponseBody = webTestClient.get()
-              .uri("/cas2/applications/${applicationEntity.id}")
+              .uri("/cas2bail/applications/${applicationEntity.id}")
               .header("Authorization", "Bearer $jwt")
               .exchange()
               .expectStatus()
@@ -1241,7 +1204,7 @@ class Cas2BailApplicationTest : IntegrationTestBase() {
       }
 
       @Test
-      fun `Get single application returns successfully when the offender cannot be fetched from the prisons API`() {
+      fun `Get single cas2bail application returns successfully when the offender cannot be fetched from the prisons API`() {
         givenACas2PomUser { userEntity, jwt ->
           val crn = "X1234"
 
@@ -1257,7 +1220,7 @@ class Cas2BailApplicationTest : IntegrationTestBase() {
             loadPreemptiveCacheForInmateDetails(offenderDetails.otherIds.nomsNumber!!)
 
             val rawResponseBody = webTestClient.get()
-              .uri("/cas2/applications/${application.id}")
+              .uri("/cas2bail/applications/${application.id}")
               .header("Authorization", "Bearer $jwt")
               .exchange()
               .expectStatus()
@@ -1287,12 +1250,12 @@ class Cas2BailApplicationTest : IntegrationTestBase() {
       }
 
       @Test
-      fun `Get single submitted application returns 200 with timeline events`() {
+      fun `Get single submitted cas2bail application returns 200 with timeline events`() {
         givenACas2PomUser { userEntity, jwt ->
           givenAnOffender { offenderDetails, inmateDetails ->
-            cas2ApplicationJsonSchemaRepository.deleteAll()
+            cas2BailApplicationJsonSchemaRepository.deleteAll()
 
-            val newestJsonSchema = cas2ApplicationJsonSchemaEntityFactory
+            val newestJsonSchema = cas2BailApplicationJsonSchemaEntityFactory
               .produceAndPersist {
                 withAddedAt(OffsetDateTime.parse("2022-09-21T12:45:00+01:00"))
                 withSchema(
@@ -1300,14 +1263,14 @@ class Cas2BailApplicationTest : IntegrationTestBase() {
                 )
               }
 
-            val applicationEntity = cas2ApplicationEntityFactory.produceAndPersist {
+            val applicationEntity = cas2BailApplicationEntityFactory.produceAndPersist {
               withApplicationSchema(newestJsonSchema)
               withCrn(offenderDetails.otherIds.crn)
               withCreatedByUser(userEntity)
               withSubmittedAt(OffsetDateTime.now().minusDays(1))
             }
 
-            cas2AssessmentEntityFactory.produceAndPersist {
+            cas2BailAssessmentEntityFactory.produceAndPersist {
               withApplication(applicationEntity)
             }
 
@@ -1341,16 +1304,16 @@ class Cas2BailApplicationTest : IntegrationTestBase() {
       @Nested
       inner class WhenDifferentPrison {
         @Test
-        fun `Get single submitted application is forbidden`() {
+        fun `Get single submitted cas2bail application is forbidden`() {
           givenACas2PomUser { userEntity, jwt ->
             givenAnOffender { offenderDetails, inmateDetails ->
-              cas2ApplicationJsonSchemaRepository.deleteAll()
+              cas2BailApplicationJsonSchemaRepository.deleteAll()
 
               val otherUser = nomisUserEntityFactory.produceAndPersist {
                 withActiveCaseloadId("other_caseload")
               }
 
-              val newestJsonSchema = cas2ApplicationJsonSchemaEntityFactory
+              val newestJsonSchema = cas2BailApplicationJsonSchemaEntityFactory
                 .produceAndPersist {
                   withAddedAt(OffsetDateTime.parse("2022-09-21T12:45:00+01:00"))
                   withSchema(
@@ -1358,7 +1321,7 @@ class Cas2BailApplicationTest : IntegrationTestBase() {
                   )
                 }
 
-              val applicationEntity = cas2ApplicationEntityFactory.produceAndPersist {
+              val applicationEntity = cas2BailApplicationEntityFactory.produceAndPersist {
                 withApplicationSchema(newestJsonSchema)
                 withCrn(offenderDetails.otherIds.crn)
                 withSubmittedAt(OffsetDateTime.now())
@@ -1369,7 +1332,7 @@ class Cas2BailApplicationTest : IntegrationTestBase() {
               }
 
               webTestClient.get()
-                .uri("/cas2/applications/${applicationEntity.id}")
+                .uri("/cas2bail/applications/${applicationEntity.id}")
                 .header("Authorization", "Bearer $jwt")
                 .exchange()
                 .expectStatus()
@@ -1382,12 +1345,12 @@ class Cas2BailApplicationTest : IntegrationTestBase() {
       @Nested
       inner class WhenSamePrison {
         @Test
-        fun `Get single submitted application returns 200 with timeline events`() {
+        fun `Get single submitted cas2bail application returns 200 with timeline events`() {
           givenACas2PomUser { userEntity, jwt ->
             givenAnOffender { offenderDetails, inmateDetails ->
-              cas2ApplicationJsonSchemaRepository.deleteAll()
+              cas2BailApplicationJsonSchemaRepository.deleteAll()
 
-              val newestJsonSchema = cas2ApplicationJsonSchemaEntityFactory
+              val newestJsonSchema = cas2BailApplicationJsonSchemaEntityFactory
                 .produceAndPersist {
                   withAddedAt(OffsetDateTime.parse("2022-09-21T12:45:00+01:00"))
                   withSchema(
@@ -1399,7 +1362,7 @@ class Cas2BailApplicationTest : IntegrationTestBase() {
                 withActiveCaseloadId(userEntity.activeCaseloadId!!)
               }
 
-              val applicationEntity = cas2ApplicationEntityFactory.produceAndPersist {
+              val applicationEntity = cas2BailApplicationEntityFactory.produceAndPersist {
                 withApplicationSchema(newestJsonSchema)
                 withCrn(offenderDetails.otherIds.crn)
                 withCreatedByUser(otherUser)
@@ -1407,12 +1370,12 @@ class Cas2BailApplicationTest : IntegrationTestBase() {
                 withReferringPrisonCode(userEntity.activeCaseloadId!!)
               }
 
-              cas2AssessmentEntityFactory.produceAndPersist {
+              cas2BailAssessmentEntityFactory.produceAndPersist {
                 withApplication(applicationEntity)
               }
 
               val rawResponseBody = webTestClient.get()
-                .uri("/cas2/applications/${applicationEntity.id}")
+                .uri("/cas2bail/applications/${applicationEntity.id}")
                 .header("Authorization", "Bearer $jwt")
                 .exchange()
                 .expectStatus()
@@ -1435,12 +1398,12 @@ class Cas2BailApplicationTest : IntegrationTestBase() {
         }
 
         @Test
-        fun `Get single unsubmitted application returns 403`() {
+        fun `Get single unsubmitted cas2bail application returns 403`() {
           givenACas2PomUser { userEntity, jwt ->
             givenAnOffender { offenderDetails, inmateDetails ->
-              cas2ApplicationJsonSchemaRepository.deleteAll()
+              cas2BailApplicationJsonSchemaRepository.deleteAll()
 
-              val newestJsonSchema = cas2ApplicationJsonSchemaEntityFactory
+              val newestJsonSchema = cas2BailApplicationJsonSchemaEntityFactory
                 .produceAndPersist {
                   withAddedAt(OffsetDateTime.parse("2022-09-21T12:45:00+01:00"))
                   withSchema(
@@ -1452,7 +1415,7 @@ class Cas2BailApplicationTest : IntegrationTestBase() {
                 withActiveCaseloadId(userEntity.activeCaseloadId!!)
               }
 
-              val applicationEntity = cas2ApplicationEntityFactory.produceAndPersist {
+              val applicationEntity = cas2BailApplicationEntityFactory.produceAndPersist {
                 withApplicationSchema(newestJsonSchema)
                 withCrn(offenderDetails.otherIds.crn)
                 withCreatedByUser(otherUser)
@@ -1460,7 +1423,7 @@ class Cas2BailApplicationTest : IntegrationTestBase() {
               }
 
               webTestClient.get()
-                .uri("/cas2/applications/${applicationEntity.id}")
+                .uri("/cas2bail/applications/${applicationEntity.id}")
                 .header("Authorization", "Bearer $jwt")
                 .exchange()
                 .expectStatus()
@@ -1478,17 +1441,17 @@ class Cas2BailApplicationTest : IntegrationTestBase() {
     @Nested
     inner class PomUsers {
       @Test
-      fun `Create new application for CAS-2 returns 201 with correct body and Location header`() {
+      fun `Create new application for cas2bail returns 201 with correct body and Location header`() {
         givenACas2PomUser { userEntity, jwt ->
           givenAnOffender { offenderDetails, _ ->
             val applicationSchema =
-              cas2ApplicationJsonSchemaEntityFactory.produceAndPersist {
+              cas2BailApplicationJsonSchemaEntityFactory.produceAndPersist {
                 withAddedAt(OffsetDateTime.now())
                 withId(UUID.randomUUID())
               }
 
             val result = webTestClient.post()
-              .uri("/cas2/applications")
+              .uri("/cas2bail/applications")
               .header("Authorization", "Bearer $jwt")
               .header("X-Service-Name", ServiceName.cas2.value)
               .bodyValue(
@@ -1502,7 +1465,7 @@ class Cas2BailApplicationTest : IntegrationTestBase() {
               .returnResult(Cas2Application::class.java)
 
             Assertions.assertThat(result.responseHeaders["Location"]).anyMatch {
-              it.matches(Regex("/cas2/applications/.+"))
+              it.matches(Regex("/cas2bail/applications/.+"))
             }
 
             Assertions.assertThat(result.responseBody.blockFirst()).matches {
@@ -1514,19 +1477,19 @@ class Cas2BailApplicationTest : IntegrationTestBase() {
       }
 
       @Test
-      fun `Create new application returns 404 when a person cannot be found`() {
+      fun `Create new cas2bail application returns 404 when a person cannot be found`() {
         givenACas2PomUser { userEntity, jwt ->
           val crn = "X1234"
 
           communityAPIMockNotFoundOffenderDetailsCall(crn)
 
-          cas2ApplicationJsonSchemaEntityFactory.produceAndPersist {
+          cas2BailApplicationJsonSchemaEntityFactory.produceAndPersist {
             withAddedAt(OffsetDateTime.now())
             withId(UUID.randomUUID())
           }
 
           webTestClient.post()
-            .uri("/cas2/applications")
+            .uri("/cas2bail/applications")
             .header("Authorization", "Bearer $jwt")
             .bodyValue(
               NewApplication(
@@ -1545,17 +1508,17 @@ class Cas2BailApplicationTest : IntegrationTestBase() {
     @Nested
     inner class LicenceCaseAdminUsers {
       @Test
-      fun `Create new application for CAS-2 returns 201 with correct body and Location header`() {
+      fun `Create new cas2bail application for CAS-2 returns 201 with correct body and Location header`() {
         givenACas2LicenceCaseAdminUser { _, jwt ->
           givenAnOffender { offenderDetails, _ ->
             val applicationSchema =
-              cas2ApplicationJsonSchemaEntityFactory.produceAndPersist {
+              cas2BailApplicationJsonSchemaEntityFactory.produceAndPersist {
                 withAddedAt(OffsetDateTime.now())
                 withId(UUID.randomUUID())
               }
 
             val result = webTestClient.post()
-              .uri("/cas2/applications")
+              .uri("/cas2bail/applications")
               .header("Authorization", "Bearer $jwt")
               .header("X-Service-Name", ServiceName.cas2.value)
               .bodyValue(
@@ -1581,19 +1544,19 @@ class Cas2BailApplicationTest : IntegrationTestBase() {
       }
 
       @Test
-      fun `Create new application returns 404 when a person cannot be found`() {
+      fun `Create new cas2bail application returns 404 when a person cannot be found`() {
         givenACas2LicenceCaseAdminUser { _, jwt ->
           val crn = "X1234"
 
           communityAPIMockNotFoundOffenderDetailsCall(crn)
 
-          cas2ApplicationJsonSchemaEntityFactory.produceAndPersist {
+          cas2BailApplicationJsonSchemaEntityFactory.produceAndPersist {
             withAddedAt(OffsetDateTime.now())
             withId(UUID.randomUUID())
           }
 
           webTestClient.post()
-            .uri("/cas2/applications")
+            .uri("/cas2bail/applications")
             .header("Authorization", "Bearer $jwt")
             .bodyValue(
               NewApplication(
@@ -1616,13 +1579,13 @@ class Cas2BailApplicationTest : IntegrationTestBase() {
     @Nested
     inner class PomUsers {
       @Test
-      fun `Update existing CAS2 application returns 200 with correct body`() {
+      fun `Update existing cas2bail application returns 200 with correct body`() {
         givenACas2PomUser { submittingUser, jwt ->
           givenAnOffender { offenderDetails, _ ->
             val applicationId = UUID.fromString("22ceda56-98b2-411d-91cc-ace0ab8be872")
 
             val applicationSchema =
-              cas2ApplicationJsonSchemaEntityFactory.produceAndPersist {
+              cas2BailApplicationJsonSchemaEntityFactory.produceAndPersist {
                 withAddedAt(OffsetDateTime.now())
                 withId(UUID.randomUUID())
                 withSchema(
@@ -1630,15 +1593,15 @@ class Cas2BailApplicationTest : IntegrationTestBase() {
                 )
               }
 
-            cas2ApplicationEntityFactory.produceAndPersist {
+            cas2BailApplicationEntityFactory.produceAndPersist {
               withCrn(offenderDetails.otherIds.crn)
               withId(applicationId)
               withApplicationSchema(applicationSchema)
               withCreatedByUser(submittingUser)
             }
-
+//TODO what is a UpdateCas2Application?
             val resultBody = webTestClient.put()
-              .uri("/cas2/applications/$applicationId")
+              .uri("/cas2bail/applications/$applicationId")
               .header("Authorization", "Bearer $jwt")
               .bodyValue(
                 UpdateCas2Application(
@@ -1664,13 +1627,13 @@ class Cas2BailApplicationTest : IntegrationTestBase() {
     @Nested
     inner class LicenceCaseAdminUsers {
       @Test
-      fun `Update existing CAS2 application returns 200 with correct body`() {
+      fun `Update existing cas2bail application returns 200 with correct body`() {
         givenACas2LicenceCaseAdminUser { submittingUser, jwt ->
           givenAnOffender { offenderDetails, _ ->
             val applicationId = UUID.fromString("22ceda56-98b2-411d-91cc-ace0ab8be872")
 
             val applicationSchema =
-              cas2ApplicationJsonSchemaEntityFactory.produceAndPersist {
+              cas2BailApplicationJsonSchemaEntityFactory.produceAndPersist {
                 withAddedAt(OffsetDateTime.now())
                 withId(UUID.randomUUID())
                 withSchema(
@@ -1678,7 +1641,7 @@ class Cas2BailApplicationTest : IntegrationTestBase() {
                 )
               }
 
-            cas2ApplicationEntityFactory.produceAndPersist {
+            cas2BailApplicationEntityFactory.produceAndPersist {
               withCrn(offenderDetails.otherIds.crn)
               withId(applicationId)
               withApplicationSchema(applicationSchema)
@@ -1686,7 +1649,7 @@ class Cas2BailApplicationTest : IntegrationTestBase() {
             }
 
             val resultBody = webTestClient.put()
-              .uri("/cas2/applications/$applicationId")
+              .uri("/cas2bail/applications/$applicationId")
               .header("Authorization", "Bearer $jwt")
               .bodyValue(
                 UpdateCas2Application(
@@ -1720,15 +1683,15 @@ class Cas2BailApplicationTest : IntegrationTestBase() {
   private fun produceAndPersistBasicApplication(
     crn: String,
     userEntity: NomisUserEntity,
-  ): Cas2ApplicationEntity {
-    val jsonSchema = cas2ApplicationJsonSchemaEntityFactory.produceAndPersist {
+  ): Cas2BailApplicationEntity {
+    val jsonSchema = cas2BailApplicationJsonSchemaEntityFactory.produceAndPersist {
       withAddedAt(OffsetDateTime.parse("2022-09-21T12:45:00+01:00"))
       withSchema(
         schema,
       )
     }
 
-    val application = cas2ApplicationEntityFactory.produceAndPersist {
+    val application = cas2BailApplicationEntityFactory.produceAndPersist {
       withApplicationSchema(jsonSchema)
       withCrn(crn)
       withCreatedByUser(userEntity)
