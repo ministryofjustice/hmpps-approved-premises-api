@@ -1307,6 +1307,64 @@ class ApplicationTest : IntegrationTestBase() {
     }
   }
 
+  @Test
+  fun `GET submitted CAS3 application includes assessmentId in the response`() {
+    givenAUser { submittingUser, jwt ->
+      givenAnOffender { offenderDetails, _ ->
+        val applicationId = UUID.fromString("22ceda56-98b2-411d-91cc-ace0ab8be872")
+        val offenderName = "${offenderDetails.firstName} ${offenderDetails.surname}"
+
+        val applicationSchema = temporaryAccommodationApplicationJsonSchemaEntityFactory.produceAndPersist {
+          withAddedAt(OffsetDateTime.now())
+          withId(UUID.randomUUID())
+          withSchema(schemaText())
+        }
+
+        temporaryAccommodationApplicationEntityFactory.produceAndPersist {
+          withCrn(offenderDetails.otherIds.crn)
+          withId(applicationId)
+          withApplicationSchema(applicationSchema)
+          withCreatedByUser(submittingUser)
+          withProbationRegion(submittingUser.probationRegion)
+          withName(offenderName)
+          withData("{}")
+        }
+
+        webTestClient.post()
+          .uri("/applications/$applicationId/submission")
+          .header("Authorization", "Bearer $jwt")
+          .header("X-Service-Name", ServiceName.temporaryAccommodation.value)
+          .bodyValue(
+            SubmitTemporaryAccommodationApplication(
+              translatedDocument = {},
+              type = "CAS3",
+              arrivalDate = LocalDate.now(),
+              summaryData = object {
+                val num = 50
+                val text = "Hello world!"
+              },
+            ),
+          )
+          .exchange()
+          .expectStatus()
+          .isOk
+
+        val result = webTestClient.get()
+          .uri("/applications/$applicationId")
+          .header("Authorization", "Bearer $jwt")
+          .header("X-Service-Name", ServiceName.temporaryAccommodation.value)
+          .exchange()
+          .expectStatus()
+          .isOk
+          .expectBody(TemporaryAccommodationApplication::class.java)
+          .returnResult()
+          .responseBody
+
+        assertThat(result!!.assessmentId).isNotNull()
+      }
+    }
+  }
+
   @Nested
   inner class Cas1CreateApplication {
 
