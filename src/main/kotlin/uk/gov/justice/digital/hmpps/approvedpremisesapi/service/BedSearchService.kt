@@ -111,7 +111,7 @@ class BedSearchService(
     }
   }
 
-  @Suppress("detekt:CyclomaticComplexMethod")
+  @Suppress("detekt:CyclomaticComplexMethod", "detekt:LongMethod")
   fun findTemporaryAccommodationBeds(
     user: UserEntity,
     probationDeliveryUnits: List<UUID>,
