@@ -125,7 +125,7 @@ CREATE OR REPLACE VIEW cas_2_bail_application_summary AS SELECT
     a.conditional_release_date,
     asu.created_at AS status_created_at,
     a.abandoned_at
-FROM cas_2_applications a
+FROM cas_2_bail_applications a
 LEFT JOIN (SELECT DISTINCT ON (application_id) su.application_id, su.label, su.status_id, su.created_at
     FROM cas_2_bail_status_updates su
     ORDER BY su.application_id, su.created_at DESC) as asu

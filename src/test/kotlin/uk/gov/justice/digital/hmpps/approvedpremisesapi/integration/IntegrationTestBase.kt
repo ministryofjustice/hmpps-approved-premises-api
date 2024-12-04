@@ -377,7 +377,7 @@ abstract class IntegrationTestBase {
   lateinit var approvedPremisesApplicationEntityFactory: PersistedFactory<ApprovedPremisesApplicationEntity, UUID, ApprovedPremisesApplicationEntityFactory>
   lateinit var cas2ApplicationEntityFactory: PersistedFactory<Cas2ApplicationEntity, UUID, Cas2ApplicationEntityFactory>
   lateinit var cas2BailApplicationEntityFactory: PersistedFactory<Cas2BailApplicationEntity, UUID, Cas2BailApplicationEntityFactory>
-  lateinit var cas2BailAssementEntityFactory: PersistedFactory<Cas2BailAssessmentEntity, UUID, Cas2BailAssessmentEntityFactory>
+  lateinit var cas2BailAssessmentEntityFactory: PersistedFactory<Cas2BailAssessmentEntity, UUID, Cas2BailAssessmentEntityFactory>
   lateinit var cas2AssessmentEntityFactory: PersistedFactory<Cas2AssessmentEntity, UUID, Cas2AssessmentEntityFactory>
 
   lateinit var cas2StatusUpdateEntityFactory: PersistedFactory<Cas2StatusUpdateEntity, UUID, Cas2StatusUpdateEntityFactory>
@@ -494,7 +494,7 @@ abstract class IntegrationTestBase {
     cas2ApplicationEntityFactory = PersistedFactory({ Cas2ApplicationEntityFactory() }, cas2ApplicationRepository)
 
     cas2BailApplicationEntityFactory = PersistedFactory({ Cas2BailApplicationEntityFactory() }, cas2BailApplicationRepository)
-    cas2BailAssementEntityFactory = PersistedFactory({ Cas2BailAssessmentEntityFactory() }, cas2BailAssessmentRepository)
+    cas2BailAssessmentEntityFactory = PersistedFactory({ Cas2BailAssessmentEntityFactory() }, cas2BailAssessmentRepository)
     cas2AssessmentEntityFactory = PersistedFactory({ Cas2AssessmentEntityFactory() }, cas2AssessmentRepository)
     cas2StatusUpdateEntityFactory = PersistedFactory({ Cas2StatusUpdateEntityFactory() }, cas2StatusUpdateRepository)
     cas2BailStatusUpdateEntityFactory = PersistedFactory({ Cas2BailStatusUpdateEntityFactory() }, cas2BailStatusUpdateRepository)
