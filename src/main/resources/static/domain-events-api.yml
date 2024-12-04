@@ -648,6 +648,8 @@ components:
           type: string
           example: N54A999
         staffIdentifier:
+          deprecated: true
+          description: This field is not used by consumers and will be removed once consumers have been updated to not expect it
           type: integer
           format: int64
           example: 1501234567

@@ -113,8 +113,8 @@ class DailyMetricsReportTest : IntegrationTestBase() {
                 eventDetails = ApplicationSubmittedFactory()
                   .withSubmittedByStaffMember(
                     StaffMemberFactory()
-                      .withStaffIdentifier(
-                        user.deliusStaffIdentifier,
+                      .withStaffCode(
+                        user.deliusStaffCode,
                       )
                       .produce(),
                   )
@@ -139,8 +139,8 @@ class DailyMetricsReportTest : IntegrationTestBase() {
                     ApplicationAssessedAssessedByFactory()
                       .withStaffMember(
                         StaffMemberFactory()
-                          .withStaffIdentifier(
-                            user.deliusStaffIdentifier,
+                          .withStaffCode(
+                            user.deliusStaffCode,
                           ).produce(),
                       ).produce(),
                   )
@@ -166,8 +166,8 @@ class DailyMetricsReportTest : IntegrationTestBase() {
                     BookingMadeBookedByFactory()
                       .withStaffMember(
                         StaffMemberFactory()
-                          .withStaffIdentifier(
-                            user.deliusStaffIdentifier,
+                          .withStaffCode(
+                            user.deliusStaffCode,
                           ).produce(),
                       ).produce(),
                   )

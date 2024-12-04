@@ -170,7 +170,6 @@ class UserServiceTest {
       val deliusUser = StaffDetailFactory.staffDetail(
         deliusUsername = username,
         name = PersonName("Jim", "Jimmerson"),
-        staffIdentifier = 5678,
         probationArea = ProbationArea(code = "AREACODE", description = "description"),
         teams = listOf(
           TeamFactoryDeliusContext.team(code = "TC1", borough = borough),
@@ -233,7 +232,6 @@ class UserServiceTest {
       val deliusUser = StaffDetailFactory.staffDetail(
         deliusUsername = username,
         name = PersonName("Jim", "Jimmerson"),
-        staffIdentifier = 5678,
         probationArea = ProbationArea(code = "AREACODE", description = "Description"),
         teams = listOf(
           TeamFactoryDeliusContext.team(code = "TC1", borough = borough),
@@ -297,7 +295,6 @@ class UserServiceTest {
       val deliusUser = StaffDetailFactory.staffDetail(
         deliusUsername = username,
         name = PersonName("Jim", "Jimmerson"),
-        staffIdentifier = 5678,
         probationArea = ProbationArea(code = "AREACODE", description = "AREADESCRIPTION"),
         teams = emptyList(),
       )
@@ -788,7 +785,6 @@ class UserServiceTest {
     private val username = "DeliusAPIUser"
     private val forename = "Jim"
     private val surname = "Jimmerson"
-    private val staffIdentifier = 5678
     private val staffCode = "STAFF1"
 
     private val staffDetail = StaffDetailFactory.staffDetail().copy(username = username)
@@ -807,7 +803,6 @@ class UserServiceTest {
         .withDeliusUsername(username)
         .withName("$forename $surname")
         .withEmail(email)
-        .withDeliusStaffIdentifier(staffIdentifier.toLong())
         .withTelephoneNumber(telephoneNumber)
         .withDeliusStaffCode(staffCode)
         .withProbationRegion(probationRegion)

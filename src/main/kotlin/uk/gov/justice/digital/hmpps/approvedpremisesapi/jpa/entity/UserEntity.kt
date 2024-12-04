@@ -276,7 +276,6 @@ data class UserEntity(
   var name: String,
   val deliusUsername: String,
   var deliusStaffCode: String,
-  var deliusStaffIdentifier: Long,
   var email: String?,
   var telephoneNumber: String?,
   var isActive: Boolean,
