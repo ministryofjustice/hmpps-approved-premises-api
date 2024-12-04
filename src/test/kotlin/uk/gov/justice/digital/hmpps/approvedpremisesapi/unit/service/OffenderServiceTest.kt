@@ -310,115 +310,145 @@ class OffenderServiceTest {
     assertThat(result.entity).isEqualTo(expectedRisks)
   }
 
-  @Test
-  fun `getUserAccessForOffenderCrns return empty result when crns list is empty`() {
-    val result = offenderService.canAccessOffenders("distinguished.name", emptyList())
-    assertThat(result.isEmpty()).isTrue()
-  }
+  @Nested
+  inner class CanAccessOffenders {
 
-  @Test
-  fun `getUserAccessForOffenderCrns return false when crn is user excluded from viewing`() {
-    val crn = randomNumberChars(8)
-    val caseAccess = CaseAccessFactory()
-      .withCrn(crn)
-      .withUserExcluded(true)
-      .produce()
+    @Test
+    fun `return empty result when crns list is empty`() {
+      val result = offenderService.canAccessOffenders("distinguished.name", emptyList())
+      assertThat(result.isEmpty()).isTrue()
+    }
 
-    every { mockApDeliusContextApiClient.getUserAccessForCrns("distinguished.name", listOf(crn)) } returns ClientResult.Success(HttpStatus.OK, UserAccess(listOf(caseAccess)))
+    @Test
+    fun `return false when crn is user excluded from viewing`() {
+      val crn = randomNumberChars(8)
+      val caseAccess = CaseAccessFactory()
+        .withCrn(crn)
+        .withUserExcluded(true)
+        .produce()
 
-    val result = offenderService.canAccessOffenders("distinguished.name", listOf(crn))
-    assertThat(result[crn]).isFalse()
-  }
+      every {
+        mockApDeliusContextApiClient.getUserAccessForCrns(
+          "distinguished.name",
+          listOf(crn)
+        )
+      } returns ClientResult.Success(HttpStatus.OK, UserAccess(listOf(caseAccess)))
 
-  @Test
-  fun `getUserAccessForOffenderCrns return false when crn is user restricted from viewing`() {
-    val crn = randomNumberChars(8)
-    val caseAccess = CaseAccessFactory()
-      .withCrn(crn)
-      .withUserRestricted(true)
-      .produce()
+      val result = offenderService.canAccessOffenders("distinguished.name", listOf(crn))
+      assertThat(result[crn]).isFalse()
+    }
 
-    every { mockApDeliusContextApiClient.getUserAccessForCrns("distinguished.name", listOf(crn)) } returns ClientResult.Success(HttpStatus.OK, UserAccess(listOf(caseAccess)))
+    @Test
+    fun `return false when crn is user restricted from viewing`() {
+      val crn = randomNumberChars(8)
+      val caseAccess = CaseAccessFactory()
+        .withCrn(crn)
+        .withUserRestricted(true)
+        .produce()
 
-    val result = offenderService.canAccessOffenders("distinguished.name", listOf(crn))
-    assertThat(result[crn]).isFalse()
-  }
+      every {
+        mockApDeliusContextApiClient.getUserAccessForCrns(
+          "distinguished.name",
+          listOf(crn)
+        )
+      } returns ClientResult.Success(HttpStatus.OK, UserAccess(listOf(caseAccess)))
 
-  @Test
-  fun `getUserAccessForOffenderCrns return false when crn not have access result`() {
-    val crn = randomNumberChars(8)
+      val result = offenderService.canAccessOffenders("distinguished.name", listOf(crn))
+      assertThat(result[crn]).isFalse()
+    }
 
-    every { mockApDeliusContextApiClient.getUserAccessForCrns("distinguished.name", listOf(crn)) } returns ClientResult.Success(HttpStatus.OK, UserAccess(emptyList()))
+    @Test
+    fun `return false when crn not have access result`() {
+      val crn = randomNumberChars(8)
 
-    val result = offenderService.canAccessOffenders("distinguished.name", listOf(crn))
-    assertThat(result[crn]).isFalse()
-  }
+      every {
+        mockApDeliusContextApiClient.getUserAccessForCrns(
+          "distinguished.name",
+          listOf(crn)
+        )
+      } returns ClientResult.Success(HttpStatus.OK, UserAccess(emptyList()))
 
-  @Test
-  fun `getUserAccessForOffenderCrns return true when crn is not user restricted or excluded from viewing`() {
-    val crn = randomNumberChars(8)
-    val caseAccess = CaseAccessFactory()
-      .withCrn(crn)
-      .withUserRestricted(false)
-      .withUserExcluded(false)
-      .produce()
+      val result = offenderService.canAccessOffenders("distinguished.name", listOf(crn))
+      assertThat(result[crn]).isFalse()
+    }
 
-    every { mockApDeliusContextApiClient.getUserAccessForCrns("distinguished.name", listOf(crn)) } returns ClientResult.Success(HttpStatus.OK, UserAccess(listOf(caseAccess)))
+    @Test
+    fun `return true when crn is not user restricted or excluded from viewing`() {
+      val crn = randomNumberChars(8)
+      val caseAccess = CaseAccessFactory()
+        .withCrn(crn)
+        .withUserRestricted(false)
+        .withUserExcluded(false)
+        .produce()
 
-    val result = offenderService.canAccessOffenders("distinguished.name", listOf(crn))
-    assertThat(result[crn]).isTrue()
-  }
+      every {
+        mockApDeliusContextApiClient.getUserAccessForCrns(
+          "distinguished.name",
+          listOf(crn)
+        )
+      } returns ClientResult.Success(HttpStatus.OK, UserAccess(listOf(caseAccess)))
 
-  @Test
-  fun `getUserAccessForOffenderCrns return expected results when multiple crns`() {
-    val crns = mutableListOf<String>()
-    repeat(5) { crns += randomStringMultiCaseWithNumbers(8) }
+      val result = offenderService.canAccessOffenders("distinguished.name", listOf(crn))
+      assertThat(result[crn]).isTrue()
+    }
 
-    val caseAccess1 = CaseAccessFactory()
-      .withCrn(crns[0])
-      .withUserRestricted(false)
-      .withUserExcluded(false)
-      .produce()
+    @Test
+    fun `return expected results when multiple crns`() {
+      val crns = mutableListOf<String>()
+      repeat(5) { crns += randomStringMultiCaseWithNumbers(8) }
 
-    val caseAccess2 = CaseAccessFactory()
-      .withCrn(crns[1])
-      .withUserRestricted(false)
-      .withUserExcluded(true)
-      .produce()
+      val caseAccess1 = CaseAccessFactory()
+        .withCrn(crns[0])
+        .withUserRestricted(false)
+        .withUserExcluded(false)
+        .produce()
 
-    val caseAccess3 = CaseAccessFactory()
-      .withCrn(crns[2])
-      .withUserRestricted(true)
-      .withUserExcluded(false)
-      .produce()
+      val caseAccess2 = CaseAccessFactory()
+        .withCrn(crns[1])
+        .withUserRestricted(false)
+        .withUserExcluded(true)
+        .produce()
 
-    val caseAccess4 = CaseAccessFactory()
-      .withCrn(crns[3])
-      .withUserRestricted(true)
-      .withUserExcluded(false)
-      .produce()
+      val caseAccess3 = CaseAccessFactory()
+        .withCrn(crns[2])
+        .withUserRestricted(true)
+        .withUserExcluded(false)
+        .produce()
 
-    val userAccess = UserAccess(listOf(caseAccess1, caseAccess2, caseAccess3, caseAccess4))
+      val caseAccess4 = CaseAccessFactory()
+        .withCrn(crns[3])
+        .withUserRestricted(true)
+        .withUserExcluded(false)
+        .produce()
 
-    every { mockApDeliusContextApiClient.getUserAccessForCrns("distinguished.name", crns) } returns ClientResult.Success(HttpStatus.OK, userAccess)
+      val userAccess = UserAccess(listOf(caseAccess1, caseAccess2, caseAccess3, caseAccess4))
 
-    val result = offenderService.canAccessOffenders("distinguished.name", crns)
+      every {
+        mockApDeliusContextApiClient.getUserAccessForCrns(
+          "distinguished.name",
+          crns
+        )
+      } returns ClientResult.Success(HttpStatus.OK, userAccess)
 
-    assertThat(result[crns[0]]).isTrue()
-    assertThat(result[crns[1]]).isFalse()
-    assertThat(result[crns[2]]).isFalse()
-    assertThat(result[crns[3]]).isFalse()
-    assertThat(result[crns[4]]).isFalse()
-  }
+      val result = offenderService.canAccessOffenders("distinguished.name", crns)
 
-  @ParameterizedTest
-  @ArgumentsSource(ClientResultFailureArgumentsProvider::class)
-  fun `getUserAccessForOffenderCrns throws exception when getUserAccessForCrns returns client result failure`(response: ClientResult.Failure<UserAccess>) {
-    val crn = randomNumberChars(8)
+      assertThat(result[crns[0]]).isTrue()
+      assertThat(result[crns[1]]).isFalse()
+      assertThat(result[crns[2]]).isFalse()
+      assertThat(result[crns[3]]).isFalse()
+      assertThat(result[crns[4]]).isFalse()
+    }
 
-    every { mockApDeliusContextApiClient.getUserAccessForCrns("distinguished.name", listOf(crn)) } returns response
+    @ParameterizedTest
+    @ArgumentsSource(ClientResultFailureArgumentsProvider::class)
+    fun `throws exception when getUserAccessForCrns returns client result failure`(response: ClientResult.Failure<UserAccess>) {
+      val crn = randomNumberChars(8)
 
-    assertThrows<Throwable> { offenderService.canAccessOffenders("distinguished.name", listOf(crn)) }
+      every { mockApDeliusContextApiClient.getUserAccessForCrns("distinguished.name", listOf(crn)) } returns response
+
+      assertThrows<Throwable> { offenderService.canAccessOffenders("distinguished.name", listOf(crn)) }
+    }
+
   }
 
   @Test
