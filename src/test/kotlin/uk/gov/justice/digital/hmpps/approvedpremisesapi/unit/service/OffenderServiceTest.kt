@@ -4,6 +4,7 @@ import io.mockk.every
 import io.mockk.mockk
 import io.mockk.verify
 import org.assertj.core.api.Assertions.assertThat
+import org.assertj.core.api.Assertions.assertThatThrownBy
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
@@ -43,6 +44,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.prisonsapi.Assigne
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.prisonsapi.CaseNotesPage
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.prisonsapi.InmateDetail
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.prisonsapi.InmateStatus
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.InternalServerErrorProblem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.AuthorisableActionResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.CasResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.OffenderService
@@ -320,6 +322,14 @@ class OffenderServiceTest {
     }
 
     @Test
+    fun `return error if greater than 500 crns are requested`() {
+      assertThatThrownBy {
+        offenderService.canAccessOffenders("distinguished.name", (0..500).map { "$it" })
+      }.isInstanceOf(InternalServerErrorProblem::class.java)
+        .hasMessage("Internal Server Error: Cannot bulk request access details for more than 500 CRNs. 501 have been provided.")
+    }
+
+    @Test
     fun `return false when crn is user excluded from viewing`() {
       val crn = randomNumberChars(8)
       val caseAccess = CaseAccessFactory()
@@ -330,7 +340,7 @@ class OffenderServiceTest {
       every {
         mockApDeliusContextApiClient.getUserAccessForCrns(
           "distinguished.name",
-          listOf(crn)
+          listOf(crn),
         )
       } returns ClientResult.Success(HttpStatus.OK, UserAccess(listOf(caseAccess)))
 
@@ -349,7 +359,7 @@ class OffenderServiceTest {
       every {
         mockApDeliusContextApiClient.getUserAccessForCrns(
           "distinguished.name",
-          listOf(crn)
+          listOf(crn),
         )
       } returns ClientResult.Success(HttpStatus.OK, UserAccess(listOf(caseAccess)))
 
@@ -358,13 +368,13 @@ class OffenderServiceTest {
     }
 
     @Test
-    fun `return false when crn not have access result`() {
+    fun `return false when no access result returned for crn`() {
       val crn = randomNumberChars(8)
 
       every {
         mockApDeliusContextApiClient.getUserAccessForCrns(
           "distinguished.name",
-          listOf(crn)
+          listOf(crn),
         )
       } returns ClientResult.Success(HttpStatus.OK, UserAccess(emptyList()))
 
@@ -384,7 +394,7 @@ class OffenderServiceTest {
       every {
         mockApDeliusContextApiClient.getUserAccessForCrns(
           "distinguished.name",
-          listOf(crn)
+          listOf(crn),
         )
       } returns ClientResult.Success(HttpStatus.OK, UserAccess(listOf(caseAccess)))
 
@@ -426,7 +436,7 @@ class OffenderServiceTest {
       every {
         mockApDeliusContextApiClient.getUserAccessForCrns(
           "distinguished.name",
-          crns
+          crns,
         )
       } returns ClientResult.Success(HttpStatus.OK, userAccess)
 
@@ -448,7 +458,6 @@ class OffenderServiceTest {
 
       assertThrows<Throwable> { offenderService.canAccessOffenders("distinguished.name", listOf(crn)) }
     }
-
   }
 
   @Test
