@@ -4,6 +4,7 @@ import com.fasterxml.jackson.databind.ObjectMapper
 import jakarta.transaction.Transactional
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.data.repository.findByIdOrNull
+import org.springframework.jdbc.core.JdbcTemplate
 import org.springframework.stereotype.Service
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas2.model.*
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.SubmitCas2Application
@@ -61,6 +62,8 @@ class Cas2BailApplicationService(
     user: NomisUserEntity,
     pageCriteria: PageCriteria<String>,
   ): Pair<MutableList<Cas2BailApplicationSummaryEntity>, PaginationMetadata?> {
+    val uid = user.id.toString()
+    val records = cas2BailApplicationSummaryRepository.findByUserId(uid, null)
     val response = if (prisonCode == null) {
       repositoryUserFunctionMap.get(isSubmitted)!!(user.id.toString(), getPageableOrAllPages(pageCriteria))
     } else {

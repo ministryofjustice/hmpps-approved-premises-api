@@ -7,6 +7,7 @@ import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.databind.node.NullNode
 import com.ninjasquad.springmockk.SpykBean
 import io.mockk.clearMocks
+import jakarta.persistence.EntityManager
 import org.assertj.core.api.Assertions
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.BeforeEach
@@ -14,6 +15,11 @@ import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.ValueSource
+import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.data.jpa.repository.JpaRepository
+import org.springframework.data.jpa.repository.Query
+import org.springframework.data.repository.query.Param
+import org.springframework.stereotype.Repository
 import org.springframework.test.web.reactive.server.returnResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.*
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.IntegrationTestBase
@@ -25,6 +31,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.co
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.prisonAPIMockNotFoundInmateDetailsCall
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.*
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas2bail.Cas2BailApplicationEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas2bail.Cas2BailApplicationSummaryEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas2bail.Cas2BailStatusUpdateEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.community.OffenderDetailSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomDateAfter
@@ -36,6 +43,10 @@ import java.util.*
 import kotlin.math.sign
 
 class Cas2BailApplicationTest : IntegrationTestBase() {
+
+  /* START HERE - TOBY DEBUG */
+  @Autowired
+  private lateinit var entityManager: EntityManager
 
   @SpykBean
   lateinit var realApplicationRepository: ApplicationRepository
@@ -175,6 +186,7 @@ class Cas2BailApplicationTest : IntegrationTestBase() {
   @Nested
   inner class GetToIndex {
 
+
     @Test
     fun `return unexpired applications when applications GET is requested`() {
       val unexpiredSubset = setOf(
@@ -258,8 +270,6 @@ class Cas2BailApplicationTest : IntegrationTestBase() {
           val aaa = cas2BailApplicationRepository.findAll()
           val bbb = cas2BailAssessmentRepository.findAll()
 
-
-
           val rawResponseBody = webTestClient.get()
             .uri("/cas2bail/applications")
             .header("Authorization", "Bearer $jwt")
@@ -286,15 +296,15 @@ class Cas2BailApplicationTest : IntegrationTestBase() {
       givenACas2PomUser { userEntity, jwt ->
         givenACas2PomUser { otherUser, _ ->
           givenAnOffender { offenderDetails, _ ->
-            cas2ApplicationJsonSchemaRepository.deleteAll()
+            cas2BailApplicationJsonSchemaRepository.deleteAll()
 
-            val applicationSchema = cas2ApplicationJsonSchemaEntityFactory.produceAndPersist {
+            val applicationSchema = cas2BailApplicationJsonSchemaEntityFactory.produceAndPersist {
               withAddedAt(OffsetDateTime.now())
               withId(UUID.randomUUID())
             }
 
             // abandoned application
-            val abandonedApplicationEntity = cas2ApplicationEntityFactory.produceAndPersist {
+            val abandonedApplicationEntity = cas2BailApplicationEntityFactory.produceAndPersist {
               withApplicationSchema(applicationSchema)
               withCreatedByUser(userEntity)
               withCrn(offenderDetails.otherIds.crn)
@@ -304,7 +314,7 @@ class Cas2BailApplicationTest : IntegrationTestBase() {
             }
 
             // unsubmitted application
-            val firstApplicationEntity = cas2ApplicationEntityFactory.produceAndPersist {
+            val firstApplicationEntity = cas2BailApplicationEntityFactory.produceAndPersist {
               withApplicationSchema(applicationSchema)
               withCreatedByUser(userEntity)
               withCrn(offenderDetails.otherIds.crn)
@@ -314,7 +324,7 @@ class Cas2BailApplicationTest : IntegrationTestBase() {
             }
 
             // submitted application, CRD >= today so should be returned
-            val secondApplicationEntity = cas2ApplicationEntityFactory.produceAndPersist {
+            val secondApplicationEntity = cas2BailApplicationEntityFactory.produceAndPersist {
               withApplicationSchema(applicationSchema)
               withCreatedByUser(userEntity)
               withCrn(offenderDetails.otherIds.crn)
@@ -325,7 +335,7 @@ class Cas2BailApplicationTest : IntegrationTestBase() {
             }
 
             // submitted application, CRD = yesterday, so should not be returned
-            val thirdApplicationEntity = cas2ApplicationEntityFactory.produceAndPersist {
+            val thirdApplicationEntity = cas2BailApplicationEntityFactory.produceAndPersist {
               withApplicationSchema(applicationSchema)
               withCreatedByUser(userEntity)
               withCrn(offenderDetails.otherIds.crn)
@@ -335,13 +345,13 @@ class Cas2BailApplicationTest : IntegrationTestBase() {
               withConditionalReleaseDate(LocalDate.now().minusDays(1))
             }
 
-            val statusUpdate = cas2StatusUpdateEntityFactory.produceAndPersist {
+            val statusUpdate = cas2BailStatusUpdateEntityFactory.produceAndPersist {
               withLabel("More information requested")
               withApplication(secondApplicationEntity)
               withAssessor(externalUserEntityFactory.produceAndPersist())
             }
 
-            val otherCas2ApplicationEntity = cas2ApplicationEntityFactory.produceAndPersist {
+            val othercas2BailApplicationEntity = cas2BailApplicationEntityFactory.produceAndPersist {
               withApplicationSchema(applicationSchema)
               withCreatedByUser(otherUser)
               withCrn(offenderDetails.otherIds.crn)
@@ -349,7 +359,7 @@ class Cas2BailApplicationTest : IntegrationTestBase() {
             }
 
             val rawResponseBody = webTestClient.get()
-              .uri("/cas2/applications")
+              .uri("/cas2bail/applications")
               .header("Authorization", "Bearer $jwt")
               .header("X-Service-Name", ServiceName.cas2.value)
               .exchange()
@@ -359,8 +369,36 @@ class Cas2BailApplicationTest : IntegrationTestBase() {
               .responseBody
               .blockFirst()
 
+            /* START HERE - TOBY DEBUG */
+            val r1 = entityManager.createNativeQuery("SELECT * FROM cas_2_bail_applications").resultList
+            val r2 = entityManager.createNativeQuery("SELECT * FROM cas_2_bail_application_live_summary").resultList
+            val r3 = entityManager.createNativeQuery("SELECT * FROM cas_2_bail_status_updates").resultList
+            val r4 = entityManager.createNativeQuery("SELECT * FROM cas_2_bail_assessments").resultList
+            val r5 = entityManager.createNativeQuery("SELECT\n" +
+              "    a.id,\n" +
+              "    a.crn,\n" +
+              "    a.noms_number,\n" +
+              "    CAST(a.created_by_user_id AS TEXT),\n" +
+              "    nu.name,\n" +
+              "    a.created_at,\n" +
+              "    a.submitted_at,\n" +
+              "    a.hdc_eligibility_date,\n" +
+              "    asu.label,\n" +
+              "    CAST(asu.status_id AS TEXT),\n" +
+              "    a.referring_prison_code,\n" +
+              "    a.conditional_release_date,\n" +
+              "    asu.created_at AS status_created_at,\n" +
+              "    a.abandoned_at\n" +
+              "FROM cas_2_applications a\n" +
+              "LEFT JOIN (SELECT DISTINCT ON (application_id) su.application_id, su.label, su.status_id, su.created_at\n" +
+              "    FROM cas_2_bail_status_updates su\n" +
+              "    ORDER BY su.application_id, su.created_at DESC) as asu\n" +
+              "    ON a.id = asu.application_id\n" +
+              "JOIN nomis_users nu ON nu.id = a.created_by_user_id").resultList
+            /* END HERE - TOBY DEBUG */
+
             val responseBody =
-              objectMapper.readValue(rawResponseBody, object : TypeReference<List<Cas2ApplicationSummary>>() {})
+              objectMapper.readValue(rawResponseBody, object : TypeReference<List<Cas2BailApplicationSummary>>() {})
 
             // check transformers were able to return all fields
             Assertions.assertThat(responseBody).anyMatch {
@@ -380,7 +418,7 @@ class Cas2BailApplicationTest : IntegrationTestBase() {
             }
 
             Assertions.assertThat(responseBody).noneMatch {
-              otherCas2ApplicationEntity.id == it.id
+              othercas2BailApplicationEntity.id == it.id
             }
 
             Assertions.assertThat(responseBody).noneMatch {
