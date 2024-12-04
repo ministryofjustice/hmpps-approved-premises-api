@@ -241,7 +241,7 @@ class OffenderService(
     }
 
     if (crns.size > 500) {
-      throw InternalServerErrorProblem("Cannot bulk request more than 500 CRNs. ${crns.size} has been provided.")
+      throw InternalServerErrorProblem("Cannot bulk request more than 500 CRNs. ${crns.size} have been provided.")
     }
 
     val offenders = when (val response = apDeliusContextApiClient.getSummariesForCrns(crns)) {
@@ -363,8 +363,13 @@ class OffenderService(
     return canAccessOffenders(username, listOf(crn)).get(crn) == true
   }
 
+  @SuppressWarnings("MagicNumber")
   fun canAccessOffenders(username: String, crns: List<String>): Map<String, Boolean> {
     if (crns.isEmpty()) return emptyMap()
+
+    if (crns.size > 500) {
+      throw InternalServerErrorProblem("Cannot bulk request access details for more than 500 CRNs. ${crns.size} have been provided.")
+    }
 
     return when (val clientResult = apDeliusContextApiClient.getUserAccessForCrns(username, crns)) {
       is ClientResult.Success -> {
