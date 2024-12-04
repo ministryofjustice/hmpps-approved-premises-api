@@ -4269,7 +4269,6 @@ components:
       enum:
         - assessor
         - matcher
-        - legacy_manager
         - future_manager
         - workflow_manager
         - cru_member
