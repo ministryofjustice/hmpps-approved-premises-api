@@ -2075,8 +2075,6 @@ class ApplicationTest : IntegrationTestBase() {
 
       govUKBankHolidaysAPIMockSuccessfullCallWithEmptyResponse()
 
-      mockFeatureFlagService.setFlag("cas1-womens-estate-enabled", true)
-
       webTestClient.post()
         .uri("/applications/$applicationId/submission")
         .header("Authorization", "Bearer $jwt")

@@ -105,7 +105,6 @@ class ApplicationService(
   private val lockableApplicationRepository: LockableApplicationRepository,
   private val probationDeliveryUnitRepository: ProbationDeliveryUnitRepository,
   private val cas1CruManagementAreaRepository: Cas1CruManagementAreaRepository,
-  private val featureFlagService: FeatureFlagService,
 ) {
   fun getApplication(applicationId: UUID) = applicationRepository.findByIdOrNull(applicationId)
 
@@ -762,9 +761,7 @@ class ApplicationService(
       situation = submitApplication.situation?.toString()
       inmateInOutStatusOnSubmission = inmateDetails?.custodyStatus?.name
       this.apArea = apArea
-      this.cruManagementArea = if (featureFlagService.getBooleanFlag("cas1-womens-estate-enabled") &&
-        submitApplication.isWomensApplication == true
-      ) {
+      this.cruManagementArea = if (submitApplication.isWomensApplication == true) {
         cas1CruManagementAreaRepository.findByIdOrNull(Cas1CruManagementAreaEntity.WOMENS_ESTATE_ID)
           ?: throw InternalServerErrorProblem("Could not find women's estate CRU Management Area Entity with ID ${Cas1CruManagementAreaEntity.WOMENS_ESTATE_ID}")
       } else {
