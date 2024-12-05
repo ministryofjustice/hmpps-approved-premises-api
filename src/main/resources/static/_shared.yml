@@ -1700,8 +1700,6 @@ components:
               type: boolean
             caseManagerUserDetails:
               $ref: '#/components/schemas/Cas1ApplicationUserDetails'
-            genderForAp:
-              $ref: '#/components/schemas/GenderForAp'
             licenceExpiryDate:
               type: string
               format: date
@@ -4989,11 +4987,6 @@ components:
         - past
         - current
         - future
-    GenderForAp:
-      type: string
-      enum:
-        - male
-        - female
     BedSearchAttributes:
       type: string
       enum:
