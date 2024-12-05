@@ -20,6 +20,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.ForbiddenProblem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.NotFoundProblem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.seed.SeedLogger
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.ApplicationService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.ApplicationTimelineNoteService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.EnvironmentService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.OffenderService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.PremisesService
@@ -43,6 +44,7 @@ class Cas1AutoScript(
   private val environmentService: EnvironmentService,
   private val premisesService: PremisesService,
   private val bookingRepository: BookingRepository,
+  private val applicationTimelineNoteService: ApplicationTimelineNoteService,
 ) {
 
   @Transactional
@@ -267,7 +269,7 @@ class Cas1AutoScript(
 
     extractEntityFromCasResult(updateResult)
 
-    applicationService.addNoteToApplication(
+    applicationTimelineNoteService.saveApplicationTimelineNote(
       applicationId = newApplicationEntity.id,
       note = "Application automatically created by Cas1 Auto Script",
       user = null,
