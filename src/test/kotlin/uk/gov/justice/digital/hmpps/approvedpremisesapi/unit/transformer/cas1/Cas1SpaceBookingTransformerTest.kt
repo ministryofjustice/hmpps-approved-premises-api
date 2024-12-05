@@ -143,7 +143,7 @@ class Cas1SpaceBookingTransformerTest {
         .withCancellationRecordedAt(Instant.parse("2023-12-29T11:25:10.00Z"))
         .withCancellationReason(cancellationReason)
         .withCancellationReasonNotes("some extra info on cancellation")
-        .withCriteria(criteria)
+        .withCriteria(criteria.toMutableList())
         .withNonArrivalConfirmedAt(Instant.parse("2024-01-20T10:10:10.00Z"))
         .withNonArrivalReason(nonArrivalReason)
         .withNonArrivalNotes("some information on the non arrival")
@@ -288,7 +288,7 @@ class Cas1SpaceBookingTransformerTest {
         .withCancellationOccurredAt(LocalDate.parse("2039-12-28"))
         .withCancellationRecordedAt(Instant.parse("2023-12-29T11:25:10.00Z"))
         .withCancellationReasonNotes("some extra info on cancellation")
-        .withCriteria(criteria)
+        .withCriteria(criteria.toMutableList())
         .produce()
 
       val expectedRequirements = Cas1SpaceBookingRequirements(

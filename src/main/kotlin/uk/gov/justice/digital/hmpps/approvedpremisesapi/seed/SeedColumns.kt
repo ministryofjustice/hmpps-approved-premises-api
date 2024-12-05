@@ -8,26 +8,42 @@ import java.util.UUID
 data class SeedColumns(
   val columns: Map<String, String>,
 ) {
-  fun stringOrNull(label: String?) = columns[label]?.trim()?.ifBlank { null }
+  fun stringOrNull(label: String) = columns[label]?.trim()?.ifBlank { null }
 
   fun uuidOrNull(label: String) = columns[label]?.let { UUID.fromString(it.trim()) }
 
-  fun dateTimeFromList(label: String?, formatter: DateTimeFormatter): LocalDateTime? {
-    val dateTimeList = stringOrNull(label)
-    if (dateTimeList.isNullOrBlank()) {
-      return null
-    }
+  fun lastDateTimeFromList(label: String, formatter: DateTimeFormatter): LocalDateTime? {
+    val rawValue = stringOrNull(label) ?: return null
 
-    val lastDateTime = dateTimeList.split(",").last()
+    val lastDateTime = rawValue.split(",").last()
     return LocalDateTime.parse(lastDateTime, formatter)
   }
 
-  fun dateFromUtcDateTime(label: String?): LocalDate? {
-    val dateTime = stringOrNull(label)
-    if (dateTime.isNullOrBlank()) {
-      return null
-    }
+  fun dateFromUtcDateTime(label: String): LocalDate? {
+    val rawValue = stringOrNull(label) ?: return null
 
-    return LocalDate.parse(dateTime.substring(startIndex = 0, endIndex = 10))
+    return LocalDate.parse(rawValue.substring(startIndex = 0, endIndex = 10))
+  }
+
+  fun stringsFromList(label: String): List<String> {
+    val rawValue = stringOrNull(label) ?: return emptyList()
+
+    return rawValue.split(",")
+  }
+
+  fun yesNoBoolean(label: String): Boolean? {
+    val rawValue = stringOrNull(label)?.uppercase() ?: return null
+
+    return when (rawValue) {
+      "YES" -> {
+        true
+      }
+      "NO" -> {
+        false
+      }
+      else -> {
+        error("'$rawValue' is not a recognised boolean for '$label' (use yes | no)")
+      }
+    }
   }
 }

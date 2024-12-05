@@ -192,7 +192,7 @@ data class Cas1SpaceBookingEntity(
   val application: ApprovedPremisesApplicationEntity?,
   @OneToOne(fetch = FetchType.LAZY)
   @JoinColumn(name = "offline_application_id")
-  var offlineApplication: OfflineApplicationEntity?,
+  val offlineApplication: OfflineApplicationEntity?,
   /**
    * Placement request will only be null for migrated [BookingEntity]s, where adhoc = true
    */
@@ -255,7 +255,7 @@ data class Cas1SpaceBookingEntity(
     joinColumns = [JoinColumn(name = "space_booking_id")],
     inverseJoinColumns = [JoinColumn(name = "characteristic_id")],
   )
-  val criteria: List<CharacteristicEntity>,
+  val criteria: MutableList<CharacteristicEntity>,
   var nonArrivalConfirmedAt: Instant?,
   @ManyToOne(fetch = FetchType.LAZY)
   @JoinColumn(name = "non_arrival_reason_id")
@@ -266,7 +266,7 @@ data class Cas1SpaceBookingEntity(
    * have a value for this (because we didn't initially capture event number for
    * offline applications)
    */
-  val deliusEventNumber: String?,
+  var deliusEventNumber: String?,
   /**
    * If a value is set, this space booking was migrated from a booking
    */

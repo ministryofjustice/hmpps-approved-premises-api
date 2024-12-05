@@ -72,7 +72,7 @@ class Cas1ImportDeliusBookingDataSeedJob(
       expectedDepartureDate = seedColumns.dateFromUtcDateTime("EXPECTED_DEPARTURE_DATE"),
       departureDate = seedColumns.dateFromUtcDateTime("DEPARTURE_DATE"),
       nonArrivalDate = seedColumns.dateFromUtcDateTime("NON_ARRIVAL_DATE"),
-      nonArrivalContactDateTime = seedColumns.dateTimeFromList("NON_ARRIVAL_CONTACT_DATETIME_LIST", DELIUS_IMPORT_DATE_TIME_FORMATTER),
+      nonArrivalContactDateTime = seedColumns.lastDateTimeFromList("NON_ARRIVAL_CONTACT_DATETIME_LIST", DELIUS_IMPORT_DATE_TIME_FORMATTER),
       nonArrivalReasonCode = seedColumns.stringOrNull("NON_ARRIVAL_REASON_CODE"),
       nonArrivalReasonDescription = seedColumns.stringOrNull("NON_ARRIVAL_REASON_DESCRIPTION"),
       nonArrivalNotes = seedColumns.stringOrNull("NON_ARRIVAL_NOTES"),

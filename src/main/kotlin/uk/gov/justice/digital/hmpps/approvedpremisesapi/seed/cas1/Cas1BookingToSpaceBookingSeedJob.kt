@@ -148,7 +148,7 @@ class Cas1BookingToSpaceBookingSeedJob(
         departureMoveOnCategory = managementInfo.departureMoveOnCategory,
         departureReason = managementInfo.departureReason,
         departureNotes = managementInfo.departureNotes,
-        criteria = booking.getEssentialRoomCriteria(),
+        criteria = booking.getEssentialRoomCriteria().toMutableList(),
         nonArrivalReason = managementInfo.nonArrivalReason,
         nonArrivalConfirmedAt = managementInfo.nonArrivalConfirmedAt?.toInstant(),
         nonArrivalNotes = managementInfo.nonArrivalNotes,

@@ -22,6 +22,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.seed.cas1.Cas1OutOfServi
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.seed.cas1.Cas1PlanSpacePlanningDryRunSeedJob
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.seed.cas1.Cas1RemoveAssessmentDetailsSeedJob
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.seed.cas1.Cas1UpdateEventNumberSeedJob
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.seed.cas1.Cas1UpdateSpaceBookingSeedJob
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.seed.cas1.Cas1UsersSeedJob
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.seed.cas1.Cas1WithdrawPlacementRequestSeedJob
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.seed.cas2.Cas2ApplicationsSeedJob
@@ -86,6 +87,7 @@ class SeedService(
         SeedFileType.approvedPremisesBookingToSpaceBooking -> getBean(Cas1BookingToSpaceBookingSeedJob::class)
         SeedFileType.approvedPremisesSpacePlanningDryRun -> getBean(Cas1PlanSpacePlanningDryRunSeedJob::class)
         SeedFileType.approvedPremisesImportDeliusBookingManagementData -> getBean(Cas1ImportDeliusBookingDataSeedJob::class)
+        SeedFileType.approvedPremisesUpdateSpaceBooking -> getBean(Cas1UpdateSpaceBookingSeedJob::class)
       }
 
       val seedStarted = LocalDateTime.now()
