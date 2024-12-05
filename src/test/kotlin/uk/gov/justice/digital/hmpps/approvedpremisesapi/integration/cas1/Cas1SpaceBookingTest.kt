@@ -809,6 +809,8 @@ class Cas1SpaceBookingTest {
         withCreatedBy(user)
         withCanonicalArrivalDate(LocalDate.parse("2029-05-29"))
         withCanonicalDepartureDate(LocalDate.parse("2029-06-29"))
+        withActualArrivalTime(LocalTime.parse("11:24:35"))
+        withActualDepartureTime(LocalTime.parse("10:24:35"))
       }
 
       otherSpaceBookingAtPremises = cas1SpaceBookingEntityFactory.produceAndPersist {
@@ -897,6 +899,8 @@ class Cas1SpaceBookingTest {
       assertThat(response.otherBookingsInPremisesForCrn[0].id).isEqualTo(otherSpaceBookingAtPremises.id)
       assertThat(response.requestForPlacementId).isEqualTo(spaceBooking.placementRequest!!.id)
       assertThat(response.status).isEqualTo(Cas1SpaceBookingSummaryStatus.arrivingToday)
+      assertThat(response.actualArrivalTime).isEqualTo("11:24")
+      assertThat(response.actualDepartureTime).isEqualTo("10:24")
     }
   }
 
