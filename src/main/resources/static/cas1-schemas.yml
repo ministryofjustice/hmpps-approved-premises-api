@@ -607,12 +607,13 @@ components:
           type: string
           format: date
         totalBedCount:
-          description: total bed count including temporarily unavailable beds (e.g. out of service beds)
+          description: total bed count including temporarily unavailable beds (e.g. out of service beds). this does not consider bookings.
           type: integer
         availableBedCount:
-          description: total bed count excluding temporarily unavailable beds (e.g. out of service beds)
+          description: total bed count excluding temporarily unavailable beds (e.g. out of service beds). this does not consider bookings.
           type: integer
         bookingCount:
+          description: total number of bookings in the premise on that day
           type: integer
         characteristicAvailability:
           type: array
