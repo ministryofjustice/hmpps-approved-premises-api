@@ -5089,6 +5089,14 @@ components:
     BedSearchAttributes:
       type: string
       enum:
+        - isSharedProperty
+        - isSingleOccupancy
+        - isWheelchairAccessible
+        - notSuitableForSexualRiskToChildren
+        - notSuitableForSexualRiskToAdults
+      x-enum-varnames:
         - sharedProperty
         - singleOccupancy
         - wheelchairAccessible
+        - NOT_SUITABLE_FOR_SEXUAL_RISK_TO_CHILDREN
+        - NOT_SUITABLE_FOR_SEXUAL_RISK_TO_ADULTS

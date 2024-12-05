@@ -1154,7 +1154,10 @@ class AssessmentServiceTest {
 
     assertThat(result is CasResult.GeneralValidationError).isTrue
     result as CasResult.GeneralValidationError
-    assertThat(result.message).isEqualTo("The schema version is outdated")
+//    assertThat(result.message).isEqualTo("The schema version is outdated")
+//    assertThat(result).isEqualTo(CasResult.GeneralValidationError("The schema version is outdated"))
+
+    assertThat(result).isInstanceOf(CasResult.GeneralValidationError::class.java).extracting("message").isEqualTo("The schema version is outdated")
   }
 
   @Test

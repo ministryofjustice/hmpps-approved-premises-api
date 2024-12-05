@@ -144,15 +144,18 @@ class BedSearchService(
       return fieldValidationError
     }
 
-    val premisesCharacteristicsPropertyNames = propertyBedAttributes?.map {
+    val premisesCharacteristicsPropertyNames = propertyBedAttributes.map {
       when (it) {
-        BedSearchAttributes.singleOccupancy -> "isSingleOccupancy"
-        BedSearchAttributes.sharedProperty -> "isSharedProperty"
-        BedSearchAttributes.wheelchairAccessible -> ""
+        BedSearchAttributes.singleOccupancy -> it.value
+        BedSearchAttributes.sharedProperty -> it.value
+          else -> {
+            ""
+          }
       }
     }
 
-    val premisesCharacteristicIds = getTemporaryAccommodationCharacteristicsIds(premisesCharacteristicsPropertyNames, "premises")
+    val premisesCharacteristicIds =
+        getTemporaryAccommodationCharacteristicsIds(premisesCharacteristicsPropertyNames, "premises")
 
     val roomCharacteristicsPropertyNames = when {
       propertyBedAttributes?.contains(BedSearchAttributes.wheelchairAccessible) == true -> listOf("isWheelchairAccessible")
@@ -163,14 +166,16 @@ class BedSearchService(
 
     val endDate = startDate.plusDays(durationInDays.toLong() - 1)
 
-    val candidateResults = bedSearchRepository.findTemporaryAccommodationBeds(
-      probationDeliveryUnits = probationDeliveryUnitIds,
-      startDate = startDate,
-      endDate = endDate,
-      probationRegionId = user.probationRegion.id,
-      premisesCharacteristicIds,
-      roomCharacteristicIds,
-    )
+      val candidateResults = bedSearchRepository.findTemporaryAccommodationBeds(
+        probationDeliveryUnits = probationDeliveryUnitIds,
+        startDate = startDate,
+        endDate = endDate,
+        probationRegionId = user.probationRegion.id,
+        premisesCharacteristicIds,
+        roomCharacteristicIds,
+        propertyBedAttributes.excludePropertiesNotSuitableForSexualRiskToAdults(),
+        propertyBedAttributes.excludePropertiesNotSuitableForSexualRiskToChildren(),
+      )
 
     val bedIds = candidateResults.map { it.bedId }
     val bedsWithABookingInTurnaround = bookingRepository.findClosestBookingBeforeDateForBeds(startDate, bedIds)
@@ -198,6 +203,12 @@ class BedSearchService(
 
     return success(results)
   }
+
+  private fun List<BedSearchAttributes>.excludePropertiesNotSuitableForSexualRiskToAdults() =
+    this.contains(BedSearchAttributes.NOT_SUITABLE_FOR_SEXUAL_RISK_TO_ADULTS)
+
+  private fun List<BedSearchAttributes>.excludePropertiesNotSuitableForSexualRiskToChildren() =
+    this.contains(BedSearchAttributes.NOT_SUITABLE_FOR_SEXUAL_RISK_TO_CHILDREN)
 
   fun transformBookingToOverlap(
     overlappedBooking: OverlapBookingsSearchResult,

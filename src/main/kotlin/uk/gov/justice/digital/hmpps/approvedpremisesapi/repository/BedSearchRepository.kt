@@ -4,6 +4,7 @@ import org.springframework.jdbc.core.ResultSetExtractor
 import org.springframework.jdbc.core.namedparam.MapSqlParameterSource
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate
 import org.springframework.stereotype.Repository
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.BedSearchAttributes
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PersonType
 import java.sql.ResultSet
 import java.time.LocalDate
@@ -244,6 +245,7 @@ ORDER BY distance_miles;
     Having count(rc2.room_id) = :room_characteristic_ids_count)
 """
 
+  @Suppress("LongParameterList")
   fun findTemporaryAccommodationBeds(
     probationDeliveryUnits: List<UUID>,
     startDate: LocalDate,
@@ -251,6 +253,8 @@ ORDER BY distance_miles;
     probationRegionId: UUID,
     premisesCharacteristicsIds: List<UUID>,
     roomCharacteristicsIds: List<UUID>,
+    excludePremisesSuitableForSexualRiskToAdults: Boolean = false,
+    excludePremisesSuitableForSexualRiskToChildren: Boolean = false,
   ): List<TemporaryAccommodationBedSearchResult> {
     val params = MapSqlParameterSource().apply {
       addValue("probation_region_id", probationRegionId)
@@ -271,6 +275,14 @@ ORDER BY distance_miles;
 
     if (roomCharacteristicsIds.any()) {
       optionalFilters += "$temporaryAccommodationRoomCharacteristicFilter AND\n"
+    }
+
+    if (excludePremisesSuitableForSexualRiskToAdults) {
+      optionalFilters += "c2.propertyName != '${BedSearchAttributes.NOT_SUITABLE_FOR_SEXUAL_RISK_TO_ADULTS.value}' AND\n"
+    }
+
+    if (excludePremisesSuitableForSexualRiskToChildren) {
+      optionalFilters += "c2.propertyName != '${BedSearchAttributes.NOT_SUITABLE_FOR_SEXUAL_RISK_TO_CHILDREN.value}' AND\n"
     }
 
     val query = temporaryAccommodationSearchQuery.replace("#OPTIONAL_FILTERS", optionalFilters)
