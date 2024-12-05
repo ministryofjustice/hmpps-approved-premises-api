@@ -33,6 +33,7 @@ class ApplicationTimelineNoteServiceTest {
       val applicationId = UUID.randomUUID()
       val note = "the note"
       val user = UserEntityFactory().withDefaults().produce()
+      val spaceBookingId = UUID.randomUUID()
 
       every { applicationTimelineNoteRepository.save(any()) } returns ApplicationTimelineNoteEntityFactory().produce()
 
@@ -40,6 +41,7 @@ class ApplicationTimelineNoteServiceTest {
         applicationId,
         note,
         user,
+        spaceBookingId,
       )
 
       val savedTimelineNoteCaptor = slot<ApplicationTimelineNoteEntity>()
@@ -51,6 +53,7 @@ class ApplicationTimelineNoteServiceTest {
       assertThat(savedTimelineNote.applicationId).isEqualTo(applicationId)
       assertThat(savedTimelineNote.body).isEqualTo("the note")
       assertThat(savedTimelineNote.createdBy).isEqualTo(user)
+      assertThat(savedTimelineNote.cas1SpaceBookingId).isEqualTo(spaceBookingId)
     }
   }
 }
