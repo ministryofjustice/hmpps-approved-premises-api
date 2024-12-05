@@ -6,7 +6,6 @@ import org.springframework.data.repository.findByIdOrNull
 import org.springframework.stereotype.Service
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApplicationSortField
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApplicationTimelineNote
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1ApplicationTimelinessCategory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1ApplicationUserDetails
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
@@ -941,15 +940,6 @@ class ApplicationService(
     return noteEntities.map {
       applicationTimelineNoteTransformer.transformToTimelineEvents(it)
     }
-  }
-
-  fun addNoteToApplication(
-    applicationId: UUID,
-    note: String,
-    user: UserEntity?,
-  ): ApplicationTimelineNote {
-    val savedNote = applicationTimelineNoteService.saveApplicationTimelineNote(applicationId, note, user)
-    return applicationTimelineNoteTransformer.transformJpaToApi(savedNote)
   }
 
   private fun getPrisonName(personInfo: PersonInfoResult.Success.Full): String? {
