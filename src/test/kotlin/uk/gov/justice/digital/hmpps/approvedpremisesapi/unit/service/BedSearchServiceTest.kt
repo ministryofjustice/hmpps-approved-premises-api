@@ -525,7 +525,7 @@ class BedSearchServiceTest {
       startDate = LocalDate.parse("2023-03-22"),
       durationInDays = 0,
       probationDeliveryUnits = listOf(probationDeliveryUnit.id),
-      propertyBedAttributes = null,
+      propertyBedAttributes = emptyList(),
     )
 
     assertThat(result).isFieldValidationError("$.durationDays", "mustBeAtLeast1")
@@ -550,7 +550,7 @@ class BedSearchServiceTest {
       startDate = LocalDate.parse("2024-08-22"),
       durationInDays = 30,
       probationDeliveryUnits = probationDeliveryUnitIds,
-      propertyBedAttributes = null,
+      propertyBedAttributes = emptyList(),
     )
     assertThat(result).isFieldValidationError("$.probationDeliveryUnits", "maxNumberProbationDeliveryUnits")
   }
@@ -585,7 +585,7 @@ class BedSearchServiceTest {
       startDate = LocalDate.parse("2024-08-28"),
       durationInDays = 84,
       probationDeliveryUnits = probationDeliveryUnitIds,
-      propertyBedAttributes = null,
+      propertyBedAttributes = emptyList(),
     )
     assertThat(result).isFieldValidationError("$.probationDeliveryUnits[3]", "doesNotExist")
   }
@@ -684,7 +684,7 @@ class BedSearchServiceTest {
       probationDeliveryUnits = listOf(probationDeliveryUnit.id),
       startDate = LocalDate.parse("2023-03-22"),
       durationInDays = 7,
-      propertyBedAttributes = null,
+      propertyBedAttributes = emptyList(),
     )
 
     assertThat(result).isSuccess().hasValueEqualTo(repositorySearchResults)
@@ -876,7 +876,7 @@ class BedSearchServiceTest {
       startDate = LocalDate.parse("2023-03-22"),
       durationInDays = 7,
       probationDeliveryUnits = listOf(probationDeliveryUnit.id),
-      propertyBedAttributes = null,
+      propertyBedAttributes = emptyList(),
     )
     assertThat(result).isSuccess().hasValueEqualTo(expectedResults)
   }
