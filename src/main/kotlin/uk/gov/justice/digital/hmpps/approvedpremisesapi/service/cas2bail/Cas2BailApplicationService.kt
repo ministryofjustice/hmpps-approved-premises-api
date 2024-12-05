@@ -73,8 +73,6 @@ class Cas2BailApplicationService(
     user: NomisUserEntity,
     pageCriteria: PageCriteria<String>,
   ): Pair<MutableList<Cas2BailApplicationSummaryEntity>, PaginationMetadata?> {
-    val uid = user.id.toString()
-    val records = cas2BailApplicationSummaryRepository.findByUserId(uid, null)
     val response = if (prisonCode == null) {
       repositoryUserFunctionMap.get(isSubmitted)!!(user.id.toString(), getPageableOrAllPages(pageCriteria))
     } else {
@@ -123,7 +121,8 @@ class Cas2BailApplicationService(
     }
   }
 
-  fun createCas2BailApplication(crn: String, user: NomisUserEntity, jwt: String) =
+  @SuppressWarnings("TooGenericExceptionThrown")
+  fun createCas2BailApplication(crn: String, user: NomisUserEntity) =
     validated<Cas2BailApplicationEntity> {
       val offenderDetailsResult = offenderService.getOffenderByCrn(crn)
 
@@ -235,7 +234,7 @@ class Cas2BailApplicationService(
     )
   }
 
-  @SuppressWarnings("ReturnCount")
+  @SuppressWarnings("ReturnCount", "TooGenericExceptionThrown")
   @Transactional
   fun submitCas2BailApplication(
     submitApplication: SubmitCas2Application,
@@ -257,17 +256,14 @@ class Cas2BailApplicationService(
 
     if (application.abandonedAt != null) {
       return CasResult.GeneralValidationError("This application has already been abandoned")
-
     }
 
     if (application.submittedAt != null) {
       return CasResult.GeneralValidationError("This application has already been submitted")
-
     }
 
     if (!application.schemaUpToDate) {
       return CasResult.GeneralValidationError("The schema version is outdated")
-
     }
 
     val validationErrors = ValidationErrors()
@@ -281,11 +277,10 @@ class Cas2BailApplicationService(
 
     if (validationErrors.any()) {
       return CasResult.FieldValidationError(validationErrors)
-
     }
 
-    val schema = application.schemaVersion as? Cas2BailApplicationJsonSchemaEntity
-      ?: throw RuntimeException("Incorrect type of JSON schema referenced by CAS2 Bail Application")
+//    val schema = application.schemaVersion as? Cas2BailApplicationJsonSchemaEntity
+//      ?: throw RuntimeException("Incorrect type of JSON schema referenced by CAS2 Bail Application")
 
     try {
       application.apply {
@@ -363,7 +358,7 @@ class Cas2BailApplicationService(
       crn = application.crn,
       nomsNumber = application.nomsNumber.toString(),
     )
-    //AuthorisableActionResult is deprecated but we don;t want to be touching offenderService while doing Cas2Bail work.
+    // AuthorisableActionResult is deprecated but we don;t want to be touching offenderService while doing Cas2Bail work.
     val inmateDetail = when (inmateDetailResult) {
       is AuthorisableActionResult.NotFound -> throw UpstreamApiException("Inmate Detail not found")
       is AuthorisableActionResult.Unauthorised -> throw UpstreamApiException("Inmate Detail unauthorised")

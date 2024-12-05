@@ -1,8 +1,5 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas2bail
 
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.*
-
-
 import io.hypersistence.utils.hibernate.type.json.JsonType
 import jakarta.persistence.Entity
 import jakarta.persistence.Id
@@ -23,7 +20,6 @@ import org.springframework.stereotype.Repository
 import java.time.LocalDate
 import java.time.OffsetDateTime
 import java.util.UUID
-import kotlin.jvm.Transient
 
 @Suppress("TooManyFunctions")
 @Repository

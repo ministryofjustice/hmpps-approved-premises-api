@@ -1,7 +1,5 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.cas2bail
 
-
-
 import com.fasterxml.jackson.core.type.TypeReference
 import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.databind.node.NullNode
@@ -82,7 +80,6 @@ class Cas2BailApplicationTest : IntegrationTestBase() {
     clearMocks(realApplicationRepository)
   }
 
-
   @Nested
   inner class ControlsOnExternalUsers {
     @ParameterizedTest
@@ -152,7 +149,6 @@ class Cas2BailApplicationTest : IntegrationTestBase() {
     }
   }
 
-
   @Nested
   inner class MissingJwt {
     @Test
@@ -185,7 +181,6 @@ class Cas2BailApplicationTest : IntegrationTestBase() {
 
   @Nested
   inner class GetToIndex {
-
 
     @Test
     fun `return unexpired cas2bail applications when applications GET is requested`() {
@@ -266,9 +261,6 @@ class Cas2BailApplicationTest : IntegrationTestBase() {
             cas2BailStatusUpdateRepository.save(statusUpdate)
             expiredApplicationIds.add(application.id)
           }
-
-          val aaa = cas2BailApplicationRepository.findAll()
-          val bbb = cas2BailAssessmentRepository.findAll()
 
           val rawResponseBody = webTestClient.get()
             .uri("/cas2bail/applications")
@@ -1608,7 +1600,7 @@ class Cas2BailApplicationTest : IntegrationTestBase() {
               withApplicationSchema(applicationSchema)
               withCreatedByUser(submittingUser)
             }
-//TODO what is a UpdateCas2Application?
+// TODO what is a UpdateCas2Application?
             val resultBody = webTestClient.put()
               .uri("/cas2bail/applications/$applicationId")
               .header("Authorization", "Bearer $jwt")

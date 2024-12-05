@@ -66,7 +66,7 @@ class Cas2BailApplicationNoteService(
 
     sendEmail(isExternalUser, application, savedNote)
 
-    return CasResult.Success( savedNote )
+    return CasResult.Success(savedNote)
   }
 
   private fun sendEmail(
@@ -83,7 +83,8 @@ class Cas2BailApplicationNoteService(
 
   private fun sendEmailToReferrer(
     application: Cas2BailApplicationEntity,
-    savedNote: Cas2BailApplicationNoteEntity) {
+    savedNote: Cas2BailApplicationNoteEntity,
+  ) {
     if (application.createdByUser.email != null) {
       emailNotificationService.sendCas2Email(
         recipientEmailAddress = application.createdByUser.email!!,

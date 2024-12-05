@@ -40,9 +40,8 @@ class Cas2BailApplicationJsonSchemaEntityFactory : Factory<Cas2BailApplicationJs
   }
 
   override fun produce(): Cas2BailApplicationJsonSchemaEntity = Cas2BailApplicationJsonSchemaEntity(
-      id = this.id(),
-      addedAt = this.addedAt(),
-      schema = this.schema(),
-    )
-
+    id = this.id(),
+    addedAt = this.addedAt(),
+    schema = this.schema(),
+  )
 }

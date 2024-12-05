@@ -19,8 +19,7 @@ class Cas2BailApplicationsTransformer(
   private val statusUpdateTransformer: Cas2BailStatusUpdateTransformer,
   private val timelineEventsTransformer: Cas2BailTimelineEventsTransformer,
   private val assessmentsTransformer: Cas2BailAssessmentsTransformer,
-)  {
-
+) {
 
   fun transformJpaToApi(jpa: Cas2BailApplicationEntity, personInfo: PersonInfoResult): Cas2Application {
     return Cas2Application(

@@ -18,7 +18,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.reference.Cas2Pers
 import java.time.OffsetDateTime
 import java.util.UUID
 
-
 @Repository
 interface Cas2BailStatusUpdateRepository : JpaRepository<Cas2BailStatusUpdateEntity, UUID> {
   fun findFirstByApplicationIdOrderByCreatedAtDesc(applicationId: UUID): Cas2BailStatusUpdateEntity?

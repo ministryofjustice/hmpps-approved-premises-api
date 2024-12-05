@@ -3,10 +3,6 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.cas2bail
 import io.github.bluegroundltd.kfactory.Factory
 import io.github.bluegroundltd.kfactory.Yielded
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApprovedPremisesApplicationJsonSchemaEntityFactory
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas2ApplicationEntity
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas2ApplicationNoteEntity
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas2AssessmentEntity
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas2StatusUpdateEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.JsonSchemaEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.NomisUserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas2bail.Cas2BailApplicationEntity
@@ -21,7 +17,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomStringUpperCa
 import java.time.LocalDate
 import java.time.OffsetDateTime
 import java.util.UUID
-
 
 class Cas2BailApplicationEntityFactory : Factory<Cas2BailApplicationEntity> {
   private var id: Yielded<UUID> = { UUID.randomUUID() }
@@ -130,6 +125,7 @@ class Cas2BailApplicationEntityFactory : Factory<Cas2BailApplicationEntity> {
     this.conditionalReleaseDate = { conditionalReleaseDate }
   }
 
+  @SuppressWarnings("TooGenericExceptionThrown")
   override fun produce(): Cas2BailApplicationEntity {
     val entity = Cas2BailApplicationEntity(
       id = this.id(),
@@ -154,6 +150,5 @@ class Cas2BailApplicationEntityFactory : Factory<Cas2BailApplicationEntity> {
     )
 
     return entity
-
   }
 }
