@@ -125,12 +125,12 @@ class PeopleController(
       is AuthorisableActionResult.Success -> adjudicationsResult.entity
     }
 
-    val getLast12MonthsOnly = (
-      xServiceName == ServiceName.approvedPremises &&
-        featureFlagService.getBooleanFlag("cas1-only-list-adjudications-up-to-12-months")
-      )
-
-    return ResponseEntity.ok(adjudicationTransformer.transformToApi(adjudications, getLast12MonthsOnly))
+    return ResponseEntity.ok(
+      adjudicationTransformer.transformToApi(
+        adjudications,
+        getLast12MonthsOnly = xServiceName == ServiceName.approvedPremises,
+      ),
+    )
   }
 
   override fun peopleCrnAcctAlertsGet(crn: String): ResponseEntity<List<PersonAcctAlert>> {
