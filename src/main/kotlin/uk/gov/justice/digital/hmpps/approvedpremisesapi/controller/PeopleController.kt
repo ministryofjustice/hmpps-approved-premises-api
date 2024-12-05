@@ -98,13 +98,12 @@ class PeopleController(
       throw NotFoundProblem(crn, "Case Notes")
     }
 
-    val getCas1SpecificNoteTypes = (
-      xServiceName == ServiceName.approvedPremises &&
-        featureFlagService.getBooleanFlag("cas1-only-list-specific-prison-note-types")
-      )
     val nomsNumber = offenderDetails.otherIds.nomsNumber
 
-    val prisonCaseNotesResult = offenderService.getFilteredPrisonCaseNotesByNomsNumber(nomsNumber, getCas1SpecificNoteTypes)
+    val prisonCaseNotesResult = offenderService.getFilteredPrisonCaseNotesByNomsNumber(
+      nomsNumber,
+      getCas1SpecificNoteTypes = xServiceName == ServiceName.approvedPremises,
+    )
 
     return ResponseEntity.ok(extractEntityFromCasResult(prisonCaseNotesResult).map(prisonCaseNoteTransformer::transformModelToApi))
   }
