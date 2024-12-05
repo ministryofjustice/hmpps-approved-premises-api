@@ -6312,6 +6312,10 @@ components:
     Cas1SpaceSearchParameters:
       type: object
       properties:
+        applicationId:
+          type: string
+          format: uuid
+          description: The id of the application the space search is for
         startDate:
           type: string
           format: date
