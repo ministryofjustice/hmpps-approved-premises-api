@@ -20,7 +20,6 @@ data class StaffDetail(
 
   fun toStaffMember() = StaffMember(
     staffCode = this.code,
-    staffIdentifier = -1L,
     forenames = this.name.forenames(),
     surname = this.name.surname,
     username = this.username,

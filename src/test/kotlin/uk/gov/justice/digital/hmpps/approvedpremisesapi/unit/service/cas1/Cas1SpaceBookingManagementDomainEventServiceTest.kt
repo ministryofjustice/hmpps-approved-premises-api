@@ -172,7 +172,6 @@ class Cas1SpaceBookingManagementDomainEventServiceTest {
       assertThat(data.keyWorker!!.staffCode).isEqualTo(keyWorker.code)
       assertThat(data.keyWorker!!.surname).isEqualTo(keyWorker.name.surname)
       assertThat(data.keyWorker!!.forenames).isEqualTo(keyWorker.name.forenames())
-      assertThat(data.keyWorker!!.staffIdentifier).isEqualTo(-1)
     }
 
     @Test
@@ -361,7 +360,6 @@ class Cas1SpaceBookingManagementDomainEventServiceTest {
       assertThat(domainEventKeyWorker.staffCode).isEqualTo(keyWorker.code)
       assertThat(domainEventKeyWorker.surname).isEqualTo(keyWorker.name.surname)
       assertThat(domainEventKeyWorker.forenames).isEqualTo(keyWorker.name.forenames())
-      assertThat(domainEventKeyWorker.staffIdentifier).isEqualTo(-1)
       val domainEventMoveOnCategory = domainEventEventDetails.destination.moveOnCategory
       assertThat(domainEventMoveOnCategory.id).isEqualTo(moveOnCategory.id)
       assertThat(domainEventMoveOnCategory.description).isEqualTo(moveOnCategory.name)

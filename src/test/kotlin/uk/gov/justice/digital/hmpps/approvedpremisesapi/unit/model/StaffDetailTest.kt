@@ -4,14 +4,12 @@ import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.StaffDetailFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.deliuscontext.PersonName
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomLong
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomStringLowerCase
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomStringMultiCaseWithNumbers
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomStringUpperCase
 
 class StaffDetailTest {
   private val staffCode = randomStringMultiCaseWithNumbers(10).uppercase()
-  private val staffIdentifier = randomLong()
   private val forename = randomStringLowerCase(10)
   private val middleName = randomStringLowerCase(10)
   private val surname = randomStringUpperCase(10)
@@ -26,7 +24,6 @@ class StaffDetailTest {
     ).toStaffMember()
 
     assertThat(staffMember.staffCode).isEqualTo(staffCode)
-    assertThat(staffMember.staffIdentifier).isEqualTo(-1)
     assertThat(staffMember.forenames).isEqualTo(forename)
     assertThat(staffMember.surname).isEqualTo(surname)
     assertThat(staffMember.username).isEqualTo(username)
