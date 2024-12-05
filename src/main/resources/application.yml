@@ -291,7 +291,6 @@ scheduling:
   enabled: true
 
 feature-flags:
-  cas1-womens-estate-enabled: false
   get-documents-from-ap-delius: false
   get-offences-from-ap-delius: false
 
