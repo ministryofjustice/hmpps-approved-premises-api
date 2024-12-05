@@ -1,6 +1,5 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas2bail
 
-
 import org.apache.poi.ss.usermodel.WorkbookFactory
 import org.jetbrains.kotlinx.dataframe.api.toDataFrame
 import org.jetbrains.kotlinx.dataframe.io.writeExcel
@@ -14,7 +13,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.model.cas2.Uns
 import java.io.OutputStream
 
 @Service
-class Cas2ReportsService(
+class Cas2BailReportsService(
   private val cas2BailSubmittedApplicationReportRepository: Cas2BailSubmittedApplicationReportRepository,
   private val cas2BailApplicationStatusUpdatesReportRepository: Cas2BailApplicationStatusUpdatesReportRepository,
   private val cas2BailUnsubmittedApplicationsReportRepository: Cas2BailUnsubmittedApplicationsReportRepository,

@@ -1,6 +1,5 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.cas2bail
 
-
 import org.assertj.core.api.Assertions
 import org.jetbrains.kotlinx.dataframe.DataFrame
 import org.jetbrains.kotlinx.dataframe.api.ExcessiveColumns
@@ -30,7 +29,7 @@ import java.time.OffsetDateTime
 import java.time.ZoneOffset
 import java.util.UUID
 
-class Cas2ReportsTest : IntegrationTestBase() {
+class Cas2BailReportsTest : IntegrationTestBase() {
 
   @Nested
   inner class ControlsOnExternalUsers {

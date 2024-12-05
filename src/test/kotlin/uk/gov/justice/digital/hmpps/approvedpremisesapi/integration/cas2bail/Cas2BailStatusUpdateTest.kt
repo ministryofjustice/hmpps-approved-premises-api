@@ -1,6 +1,5 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.cas2bail
 
-
 import com.ninjasquad.springmockk.SpykBean
 import io.mockk.clearMocks
 import io.mockk.every
