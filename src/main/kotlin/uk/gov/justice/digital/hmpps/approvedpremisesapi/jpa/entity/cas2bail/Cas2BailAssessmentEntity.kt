@@ -1,12 +1,13 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas2bail
 
-import jakarta.persistence.*
-import org.springframework.context.annotation.Lazy
-
+import jakarta.persistence.Entity
+import jakarta.persistence.Id
+import jakarta.persistence.OneToMany
+import jakarta.persistence.OneToOne
+import jakarta.persistence.OrderBy
+import jakarta.persistence.Table
 import org.springframework.data.jpa.repository.JpaRepository
 import org.springframework.stereotype.Repository
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas2ApplicationEntity
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas2StatusUpdateEntity
 import java.time.OffsetDateTime
 import java.util.UUID
 

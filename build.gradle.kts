@@ -165,7 +165,7 @@ tasks.withType<Test> {
     "--add-opens",
     "java.base/java.lang.reflect=ALL-UNNAMED",
     "--add-opens",
-    "java.base/java.time=ALL-UNNAMED"
+    "java.base/java.time=ALL-UNNAMED",
   )
 
   afterEvaluate {

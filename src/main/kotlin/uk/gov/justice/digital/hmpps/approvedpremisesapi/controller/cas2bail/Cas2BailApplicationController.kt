@@ -5,7 +5,10 @@ import jakarta.transaction.Transactional
 import org.springframework.http.ResponseEntity
 import org.springframework.stereotype.Service
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.cas2bail.ApplicationsCas2bailDelegate
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.*
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Application
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewApplication
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.SortDirection
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.UpdateApplication
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas2bail.Cas2BailApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas2bail.Cas2BailApplicationSummaryEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.BadRequestProblem
@@ -14,23 +17,19 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.ForbiddenProblem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.NotFoundProblem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.AuthorisableActionResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.ValidatableActionResult
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.HttpAuthService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.NomisUserService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas2.OffenderService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas2bail.Cas2BailApplicationService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.cas2bail.Cas2BailApplicationsTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.PageCriteria
 import java.net.URI
-import java.util.*
-
+import java.util.UUID
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas2ApplicationSummary as ModelCas2ApplicationSummary
 
 @Service(
-  "uk.gov.justice.digital.hmpps.approvedpremisesapi.controller.cas2bail" +
-    ".Cas2BailApplicationsController",
+  "Cas2BailApplicationsController",
 )
 class Cas2BailApplicationController(
-  private val httpAuthService: HttpAuthService,
   private val cas2BailApplicationService: Cas2BailApplicationService,
   private val cas2BailApplicationsTransformer: Cas2BailApplicationsTransformer,
   private val objectMapper: ObjectMapper,
@@ -63,7 +62,7 @@ class Cas2BailApplicationController(
       val applicationResult = cas2BailApplicationService
         .getCas2BailApplicationForUser(
           applicationId,
-          user
+          user,
         )
 
     ) {
@@ -80,7 +79,6 @@ class Cas2BailApplicationController(
 
   @Transactional
   override fun applicationsPost(body: NewApplication): ResponseEntity<Application> {
-    val nomisPrincipal = httpAuthService.getNomisPrincipalOrThrow()
     val user = userService.getUserForRequest()
 
     val personInfo = offenderService.getFullInfoForPersonOrThrow(body.crn)
@@ -88,7 +86,6 @@ class Cas2BailApplicationController(
     val applicationResult = cas2BailApplicationService.createCas2BailApplication(
       body.crn,
       user,
-      nomisPrincipal.token.tokenValue,
     )
 
     val application = when (applicationResult) {
@@ -114,7 +111,7 @@ class Cas2BailApplicationController(
 
     val applicationResult = cas2BailApplicationService.updateCas2BailApplication(
       applicationId =
-        applicationId,
+      applicationId,
       data = serializedData,
       user,
     )
@@ -155,7 +152,9 @@ class Cas2BailApplicationController(
     return ResponseEntity.ok(Unit)
   }
 
-  private fun getPersonNamesAndTransformToSummaries(applicationSummaries: List<Cas2BailApplicationSummaryEntity>): List<uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas2ApplicationSummary> {
+  private fun getPersonNamesAndTransformToSummaries(
+    applicationSummaries: List<Cas2BailApplicationSummaryEntity>,
+  ): List<ModelCas2ApplicationSummary> {
     val crns = applicationSummaries.map { it.crn }
 
     val personNamesMap = offenderService.getMapOfPersonNamesAndCrns(crns)

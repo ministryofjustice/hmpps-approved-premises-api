@@ -70,8 +70,6 @@ class ApplicationService(
     pageCriteria: PageCriteria<String>,
   ): Pair<MutableList<Cas2ApplicationSummaryEntity>, PaginationMetadata?> {
     val response = if (prisonCode == null) {
-    val uid = user.id.toString()
-    val records = applicationSummaryRepository.findByUserId(uid, null)
       repositoryUserFunctionMap.get(isSubmitted)!!(user.id.toString(), getPageableOrAllPages(pageCriteria))
     } else {
       repositoryPrisonFunctionMap.get(isSubmitted)!!(prisonCode, getPageableOrAllPages(pageCriteria))

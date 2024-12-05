@@ -1,15 +1,20 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas2bail
 
-import jakarta.persistence.*
+import jakarta.persistence.Entity
+import jakarta.persistence.Id
+import jakarta.persistence.JoinColumn
+import jakarta.persistence.ManyToOne
+import jakarta.persistence.Table
 import org.springframework.data.domain.PageRequest
 import org.springframework.data.domain.Slice
 import org.springframework.data.jpa.repository.JpaRepository
 import org.springframework.data.jpa.repository.Query
 import org.springframework.stereotype.Repository
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.*
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas2User
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ExternalUserEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.NomisUserEntity
 import java.time.OffsetDateTime
-import java.util.*
-import kotlin.jvm.Transient
+import java.util.UUID
 
 @Repository
 interface Cas2BailApplicationNoteRepository : JpaRepository<Cas2BailApplicationNoteEntity, UUID> {
@@ -17,7 +22,6 @@ interface Cas2BailApplicationNoteRepository : JpaRepository<Cas2BailApplicationN
     "SELECT n FROM Cas2BailApplicationNoteEntity n WHERE n.assessment IS NULL",
   )
   fun findAllNotesWithoutAssessment(of: PageRequest): Slice<Cas2BailApplicationNoteEntity>
-
 }
 
 @Entity

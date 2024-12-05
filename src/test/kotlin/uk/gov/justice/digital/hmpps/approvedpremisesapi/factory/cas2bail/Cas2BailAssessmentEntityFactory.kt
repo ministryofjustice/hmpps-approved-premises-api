@@ -1,15 +1,15 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.cas2bail
 
 import io.github.bluegroundltd.kfactory.Factory
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.NomisUserEntityFactory
-import java.time.OffsetDateTime
 import io.github.bluegroundltd.kfactory.Yielded
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.NomisUserEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas2bail.Cas2BailApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas2bail.Cas2BailAssessmentEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas2bail.Cas2BailStatusUpdateEntity
+import java.time.OffsetDateTime
 import java.util.UUID
 
-class Cas2BailAssessmentEntityFactory: Factory<Cas2BailAssessmentEntity> {
+class Cas2BailAssessmentEntityFactory : Factory<Cas2BailAssessmentEntity> {
   private var id: Yielded<UUID> = { UUID.randomUUID() }
   private var createdAt: Yielded<OffsetDateTime> = { OffsetDateTime.now() }
   private var application: Yielded<Cas2BailApplicationEntity> = {
