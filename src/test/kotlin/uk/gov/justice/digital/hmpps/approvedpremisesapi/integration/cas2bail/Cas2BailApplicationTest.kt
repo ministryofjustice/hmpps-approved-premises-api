@@ -1,13 +1,10 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.cas2bail
 
-
-
 import com.fasterxml.jackson.core.type.TypeReference
 import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.databind.node.NullNode
 import com.ninjasquad.springmockk.SpykBean
 import io.mockk.clearMocks
-import jakarta.persistence.EntityManager
 import org.assertj.core.api.Assertions
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.BeforeEach
@@ -15,9 +12,17 @@ import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.ValueSource
-import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.test.web.reactive.server.returnResult
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.*
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Application
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas2Application
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas2BailApplicationSummary
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas2StatusUpdate
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.FullPerson
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewApplication
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PersonStatus
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.UpdateApplicationType
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.UpdateCas2Application
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.IntegrationTestBase
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenACas2Assessor
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenACas2LicenceCaseAdminUser
@@ -25,7 +30,9 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.given
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAnOffender
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.communityAPIMockNotFoundOffenderDetailsCall
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.prisonAPIMockNotFoundInmateDetailsCall
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.*
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApplicationRepository
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ExternalUserEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.NomisUserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas2bail.Cas2BailApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas2bail.Cas2BailStatusUpdateEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.community.OffenderDetailSummary
@@ -34,7 +41,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomDateBefore
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomDateTimeBefore
 import java.time.LocalDate
 import java.time.OffsetDateTime
-import java.util.*
+import java.util.UUID
 import kotlin.math.sign
 
 class Cas2BailApplicationTest : IntegrationTestBase() {
@@ -72,7 +79,6 @@ class Cas2BailApplicationTest : IntegrationTestBase() {
     // Manually clearing after each test seems to fix this.
     clearMocks(realApplicationRepository)
   }
-
 
   @Nested
   inner class ControlsOnExternalUsers {
@@ -143,7 +149,6 @@ class Cas2BailApplicationTest : IntegrationTestBase() {
     }
   }
 
-
   @Nested
   inner class MissingJwt {
     @Test
@@ -176,7 +181,6 @@ class Cas2BailApplicationTest : IntegrationTestBase() {
 
   @Nested
   inner class GetToIndex {
-
 
     @Test
     fun `return unexpired cas2bail applications when applications GET is requested`() {
@@ -257,9 +261,6 @@ class Cas2BailApplicationTest : IntegrationTestBase() {
             cas2BailStatusUpdateRepository.save(statusUpdate)
             expiredApplicationIds.add(application.id)
           }
-
-          val aaa = cas2BailApplicationRepository.findAll()
-          val bbb = cas2BailAssessmentRepository.findAll()
 
           val rawResponseBody = webTestClient.get()
             .uri("/cas2bail/applications")
@@ -1599,7 +1600,7 @@ class Cas2BailApplicationTest : IntegrationTestBase() {
               withApplicationSchema(applicationSchema)
               withCreatedByUser(submittingUser)
             }
-//TODO what is a UpdateCas2Application?
+// TODO what is a UpdateCas2Application?
             val resultBody = webTestClient.put()
               .uri("/cas2bail/applications/$applicationId")
               .header("Authorization", "Bearer $jwt")

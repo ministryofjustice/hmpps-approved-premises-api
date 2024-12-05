@@ -1,6 +1,5 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.cas2bail
 
-
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.FullPerson

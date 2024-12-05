@@ -4,20 +4,17 @@ import jakarta.transaction.Transactional
 import org.springframework.data.repository.findByIdOrNull
 import org.springframework.stereotype.Service
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.UpdateCas2Assessment
-
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas2bail.Cas2BailApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas2bail.Cas2BailAssessmentEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas2bail.Cas2BailAssessmentRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.CasResult
 import java.time.OffsetDateTime
-import java.util.*
-
+import java.util.UUID
 
 @Service("Cas2BailAssessmentService")
-class Cas2BailAssessmentService (
+class Cas2BailAssessmentService(
   private val cas2AssessmentRepository: Cas2BailAssessmentRepository,
 ) {
-
 
   @Transactional
   fun createCas2BailAssessment(cas2BailApplicationEntity: Cas2BailApplicationEntity): Cas2BailAssessmentEntity =
@@ -31,8 +28,8 @@ class Cas2BailAssessmentService (
 
   fun updateAssessment(
     assessmentId: UUID,
-    newAssessment: UpdateCas2Assessment)
-  : CasResult<Cas2BailAssessmentEntity> {
+    newAssessment: UpdateCas2Assessment,
+  ): CasResult<Cas2BailAssessmentEntity> {
     val assessmentEntity = cas2AssessmentRepository.findByIdOrNull(assessmentId)
       ?: return CasResult.NotFound()
 

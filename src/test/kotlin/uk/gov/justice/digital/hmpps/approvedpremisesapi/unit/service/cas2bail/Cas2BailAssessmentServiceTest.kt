@@ -12,12 +12,10 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.NomisUserEntityF
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.cas2bail.Cas2BailApplicationEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas2bail.Cas2BailAssessmentEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas2bail.Cas2BailAssessmentRepository
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.AuthorisableActionResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.CasResult
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.ValidatableActionResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas2bail.Cas2BailAssessmentService
 import java.time.OffsetDateTime
-import java.util.*
+import java.util.UUID
 
 class Cas2BailAssessmentServiceTest {
 
@@ -99,7 +97,7 @@ class Cas2BailAssessmentServiceTest {
       )
       Assertions.assertThat(result).isEqualTo(
 
-          CasResult.Success(assessEntity),
+        CasResult.Success(assessEntity),
 
       )
 
@@ -135,5 +133,4 @@ class Cas2BailAssessmentServiceTest {
       Assertions.assertThat(result is CasResult.NotFound).isTrue
     }
   }
-
 }

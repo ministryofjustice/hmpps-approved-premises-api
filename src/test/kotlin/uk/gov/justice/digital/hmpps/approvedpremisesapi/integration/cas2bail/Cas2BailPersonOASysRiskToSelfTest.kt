@@ -1,6 +1,5 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.cas2bail
 
-
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.OffenceDetailsFactory

@@ -3,7 +3,6 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.cas2bail
 import org.springframework.stereotype.Component
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas2TimelineEvent
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.TimelineEventType
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas2ApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas2bail.Cas2BailApplicationEntity
 
 @Component("Cas2BailTimelineEventsTransformer")

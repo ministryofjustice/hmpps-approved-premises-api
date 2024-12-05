@@ -3,10 +3,8 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.controller.cas2bail
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
 import kotlinx.coroutines.runBlocking
-import org.slf4j.LoggerFactory
 import org.springframework.http.ResponseEntity
 import org.springframework.stereotype.Service
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.cas2.PeopleCas2Delegate
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.cas2bail.PeopleCas2bailDelegate
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.OASysRiskOfSeriousHarm
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.OASysRiskToSelf
@@ -33,7 +31,6 @@ class Cas2BailPeopleController(
   private val risksTransformer: RisksTransformer,
   private val nomisUserService: NomisUserService,
 ) : PeopleCas2bailDelegate {
-  private val log = LoggerFactory.getLogger(this::class.java)
 
   override fun peopleSearchGet(nomsNumber: String): ResponseEntity<Person> {
     val currentUser = nomisUserService.getUserForRequest()

@@ -1,23 +1,16 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.cas2bail
 
 import io.github.bluegroundltd.kfactory.Factory
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ExternalUserEntityFactory
-
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.reference.Cas2ApplicationStatusSeeding
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomDateTimeBefore
-import java.time.OffsetDateTime
-
 import io.github.bluegroundltd.kfactory.Yielded
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas2ApplicationEntity
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas2AssessmentEntity
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas2StatusUpdateDetailEntity
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas2StatusUpdateEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ExternalUserEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ExternalUserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas2bail.Cas2BailApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas2bail.Cas2BailAssessmentEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas2bail.Cas2BailStatusUpdateDetailEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas2bail.Cas2BailStatusUpdateEntity
-
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.reference.Cas2ApplicationStatusSeeding
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomDateTimeBefore
+import java.time.OffsetDateTime
 import java.util.UUID
 
 class Cas2BailStatusUpdateEntityFactory : Factory<Cas2BailStatusUpdateEntity> {
