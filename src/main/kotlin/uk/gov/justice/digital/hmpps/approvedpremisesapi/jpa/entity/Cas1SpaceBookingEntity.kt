@@ -17,6 +17,12 @@ import org.springframework.data.domain.Pageable
 import org.springframework.data.jpa.repository.JpaRepository
 import org.springframework.data.jpa.repository.Query
 import org.springframework.stereotype.Repository
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.CharacteristicRepository.Constants.CAS1_PROPERTY_NAME_ARSON_SUITABLE
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.CharacteristicRepository.Constants.CAS1_PROPERTY_NAME_ENSUITE
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.CharacteristicRepository.Constants.CAS1_PROPERTY_NAME_SINGLE_ROOM
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.CharacteristicRepository.Constants.CAS1_PROPERTY_NAME_STEP_FREE_DESIGNATED
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.CharacteristicRepository.Constants.CAS1_PROPERTY_NAME_SUITED_FOR_SEX_OFFENDERS
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.CharacteristicRepository.Constants.CAS1_PROPERTY_NAME_WHEELCHAIR_DESIGNATED
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas1.Cas1ApplicationFacade
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.toInstant
 import java.time.Instant
@@ -239,6 +245,10 @@ data class Cas1SpaceBookingEntity(
   @JoinColumn(name = "cancellation_reason_id")
   var cancellationReason: CancellationReasonEntity?,
   var cancellationReasonNotes: String?,
+  /**
+   * This is constrained to the characteristics with property names defined by
+   * [Constants.CRITERIA_CHARACTERISTIC_PROPERTY_NAMES_OF_INTEREST]
+   */
   @ManyToMany(fetch = FetchType.LAZY)
   @JoinTable(
     name = "cas1_space_bookings_criteria",
@@ -265,6 +275,18 @@ data class Cas1SpaceBookingEntity(
   @Version
   var version: Long = 1,
 ) {
+
+  object Constants {
+    val CRITERIA_CHARACTERISTIC_PROPERTY_NAMES_OF_INTEREST = listOf(
+      CAS1_PROPERTY_NAME_ARSON_SUITABLE,
+      CAS1_PROPERTY_NAME_ENSUITE,
+      CAS1_PROPERTY_NAME_SINGLE_ROOM,
+      CAS1_PROPERTY_NAME_STEP_FREE_DESIGNATED,
+      CAS1_PROPERTY_NAME_SUITED_FOR_SEX_OFFENDERS,
+      CAS1_PROPERTY_NAME_WHEELCHAIR_DESIGNATED,
+    )
+  }
+
   fun isActive() = !isCancelled()
   fun isCancelled() = cancellationOccurredAt != null
   fun hasDeparted() = actualDepartureDate != null

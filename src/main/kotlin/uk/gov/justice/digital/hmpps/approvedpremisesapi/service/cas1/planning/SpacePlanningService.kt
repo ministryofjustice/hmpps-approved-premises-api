@@ -4,6 +4,7 @@ import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas1SpaceBookingEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas1SpaceBookingRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PremisesEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1OutOfServiceBedService
@@ -73,7 +74,7 @@ class SpacePlanningService(
         totalBedCount = bedStates.count { it.isActive() || it.isTemporarilyInactive() },
         availableBedCount = availableBeds.size,
         bookingCount = bookings.size,
-        characteristicAvailability = spacePlanningModelsFactory.characteristicsPropertyNamesOfInterest().map {
+        characteristicAvailability = Cas1SpaceBookingEntity.Constants.CRITERIA_CHARACTERISTIC_PROPERTY_NAMES_OF_INTEREST.map {
           determineCharacteristicAvailability(
             characteristicPropertyName = it,
             availableBeds = availableBeds,
