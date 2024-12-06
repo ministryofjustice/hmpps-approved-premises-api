@@ -1,14 +1,18 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.seed
 
 import com.github.doyaaaaaken.kotlincsv.dsl.csvReader
+import org.jetbrains.kotlinx.dataframe.DataFrame
+import org.jetbrains.kotlinx.dataframe.io.readExcel
 import org.springframework.context.ApplicationContext
 import org.springframework.scheduling.annotation.Async
 import org.springframework.stereotype.Service
 import org.springframework.transaction.support.TransactionTemplate
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.SeedFileType
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.SeedFromExcelFileType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.config.SeedConfig
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.seed.cas1.ApStaffUsersSeedJob
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.seed.cas1.ApprovedPremisesBookingCancelSeedJob
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.seed.cas1.ApprovedPremisesRoomsSeedFromXLSXJob
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.seed.cas1.ApprovedPremisesRoomsSeedJob
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.seed.cas1.ApprovedPremisesSeedJob
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.seed.cas1.Cas1BookingToSpaceBookingSeedJob
@@ -24,6 +28,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.seed.cas1.Cas1RemoveAsse
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.seed.cas1.Cas1UpdateEventNumberSeedJob
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.seed.cas1.Cas1UsersSeedJob
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.seed.cas1.Cas1WithdrawPlacementRequestSeedJob
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.seed.cas1.SiteSurvey
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.seed.cas2.Cas2ApplicationsSeedJob
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.seed.cas2.ExternalUsersSeedJob
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.seed.cas2.NomisUsersSeedJob
@@ -34,6 +39,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.findRootCause
 import java.nio.file.Path
 import java.time.LocalDateTime
 import java.time.temporal.ChronoUnit
+import java.util.UUID
 import kotlin.io.path.absolutePathString
 import kotlin.reflect.KClass
 
@@ -48,6 +54,36 @@ class SeedService(
   fun seedDataAsync(seedFileType: SeedFileType, filename: String) = seedData(seedFileType, filename)
 
   fun seedData(seedFileType: SeedFileType, filename: String) = seedData(seedFileType, filename) { "${seedConfig.filePrefix}/$filename" }
+
+  fun seedExcelData(excelSeedFileType: SeedFromExcelFileType, premisesId: UUID, filename: String) =
+    seedExcelData(excelSeedFileType, premisesId, filename) { "${seedConfig.filePrefix}/${this.fileName}" }
+
+  fun seedExcelData(excelSeedFileType: SeedFromExcelFileType, premisesId: UUID, filename: String, resolveXlsxPath: ExcelSeedJob.() -> String) {
+    seedLogger.info("Starting seed request: $excelSeedFileType - $filename")
+
+    try {
+      val job: ExcelSeedJob = when (excelSeedFileType) {
+        SeedFromExcelFileType.approvedPremisesRoomFromExcel -> ApprovedPremisesRoomsSeedFromXLSXJob(
+          filename,
+          premisesId,
+          "Sheet3",
+          getBean(PremisesRepository::class),
+          getBean(RoomRepository::class),
+          getBean(BedRepository::class),
+          getBean(SiteSurvey::class),
+        )
+      }
+
+      val seedStarted = LocalDateTime.now()
+
+      transactionTemplate.executeWithoutResult { processExcelJob(job, resolveXlsxPath) }
+
+      val timeTaken = ChronoUnit.MILLIS.between(seedStarted, LocalDateTime.now())
+      seedLogger.info("Excel seed request complete. Took $timeTaken millis")
+    } catch (exception: Exception) {
+      seedLogger.error("Unable to complete Excel seed job", exception)
+    }
+  }
 
   @SuppressWarnings("CyclomaticComplexMethod", "TooGenericExceptionThrown")
   fun seedData(seedFileType: SeedFileType, filename: String, resolveCsvPath: SeedJob<*>.() -> String) {
@@ -118,6 +154,17 @@ class SeedService(
     job.postSeed()
 
     return rowsProcessed
+  }
+
+  @Suppress("TooGenericExceptionThrown")
+  private fun processExcelJob(job: ExcelSeedJob, resolveXlsxPath: ExcelSeedJob.() -> String) {
+    seedLogger.info("Processing XLSX file ${Path.of(job.resolveXlsxPath()).absolutePathString()}")
+    try {
+      val dataFrame = DataFrame.readExcel(job.resolveXlsxPath(), job.sheetName)
+      job.processDataFrame(dataFrame)
+    } catch (exception: Exception) {
+      throw RuntimeException("Unable to process XLSX file", exception)
+    }
   }
 
   private fun <T> processCsv(job: SeedJob<T>, resolveCsvPath: SeedJob<T>.() -> String): Int {

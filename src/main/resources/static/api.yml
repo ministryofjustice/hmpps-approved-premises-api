@@ -4126,6 +4126,24 @@ paths:
           $ref: '_shared.yml#/components/responses/403Response'
         500:
           $ref: '_shared.yml#/components/responses/500Response'
+  /seedFromExcel:
+    post:
+      summary: Starts the data seeding from Excel process, can only be called from a local connection
+      requestBody:
+        content:
+          'application/json':
+            schema:
+              $ref: '_shared.yml#/components/schemas/SeedFromExcelRequest'
+        required: true
+      responses:
+        202:
+          description: successfully requested task
+        401:
+          $ref: '_shared.yml#/components/responses/401Response'
+        403:
+          $ref: '_shared.yml#/components/responses/403Response'
+        500:
+          $ref: '_shared.yml#/components/responses/500Response'
   /cache/{cacheName}:
     delete:
       summary: Clears the given cache, can only be called from a local connection
