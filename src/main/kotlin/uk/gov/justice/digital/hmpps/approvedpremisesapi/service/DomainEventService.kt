@@ -145,11 +145,10 @@ class DomainEventService(
     )
 
   @Transactional
-  fun savePersonArrivedEvent(domainEvent: DomainEvent<PersonArrivedEnvelope>, emit: Boolean) =
+  fun savePersonArrivedEvent(domainEvent: DomainEvent<PersonArrivedEnvelope>) =
     saveAndEmit(
       domainEvent = domainEvent,
       eventType = DomainEventType.APPROVED_PREMISES_PERSON_ARRIVED,
-      emit = emit,
     )
 
   @Transactional
@@ -161,11 +160,10 @@ class DomainEventService(
     )
 
   @Transactional
-  fun savePersonDepartedEvent(domainEvent: DomainEvent<PersonDepartedEnvelope>, emit: Boolean) =
+  fun savePersonDepartedEvent(domainEvent: DomainEvent<PersonDepartedEnvelope>) =
     saveAndEmit(
       domainEvent = domainEvent,
       eventType = DomainEventType.APPROVED_PREMISES_PERSON_DEPARTED,
-      emit = emit,
     )
 
   @Transactional

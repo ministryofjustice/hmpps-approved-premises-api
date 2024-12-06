@@ -548,9 +548,8 @@ class DomainEventServiceTest {
       }
     }
 
-    @ParameterizedTest
-    @ValueSource(booleans = [true, false])
-    fun `savePersonArrivedEvent sends correct arguments to saveAndEmit`(emit: Boolean) {
+    @Test
+    fun `savePersonArrivedEvent sends correct arguments to saveAndEmit`() {
       val id = UUID.randomUUID()
 
       val eventDetails = PersonArrivedFactory().produce()
@@ -563,15 +562,14 @@ class DomainEventServiceTest {
 
       val domainEventServiceSpy = spyk(domainEventService)
 
-      every { domainEventServiceSpy.saveAndEmit(any(), any(), emit) } returns Unit
+      every { domainEventServiceSpy.saveAndEmit(any(), any()) } returns Unit
 
-      domainEventServiceSpy.savePersonArrivedEvent(domainEvent, emit)
+      domainEventServiceSpy.savePersonArrivedEvent(domainEvent)
 
       verify {
         domainEventServiceSpy.saveAndEmit(
           domainEvent = domainEvent,
           eventType = DomainEventType.APPROVED_PREMISES_PERSON_ARRIVED,
-          emit,
         )
       }
     }
@@ -604,9 +602,8 @@ class DomainEventServiceTest {
       }
     }
 
-    @ParameterizedTest
-    @ValueSource(booleans = [true, false])
-    fun `savePersonDepartedEvent sends correct arguments to saveAndEmit`(emit: Boolean) {
+    @Test
+    fun `savePersonDepartedEvent sends correct arguments to saveAndEmit`() {
       val id = UUID.randomUUID()
 
       val eventDetails = PersonDepartedFactory().produce()
@@ -619,15 +616,14 @@ class DomainEventServiceTest {
 
       val domainEventServiceSpy = spyk(domainEventService)
 
-      every { domainEventServiceSpy.saveAndEmit(any(), any(), emit) } returns Unit
+      every { domainEventServiceSpy.saveAndEmit(any(), any()) } returns Unit
 
-      domainEventServiceSpy.savePersonDepartedEvent(domainEvent, emit)
+      domainEventServiceSpy.savePersonDepartedEvent(domainEvent)
 
       verify {
         domainEventServiceSpy.saveAndEmit(
           domainEvent = domainEvent,
           eventType = DomainEventType.APPROVED_PREMISES_PERSON_DEPARTED,
-          emit,
         )
       }
     }
