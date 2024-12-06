@@ -48,7 +48,7 @@ class Cas1SpaceBookingEntityFactory : Factory<Cas1SpaceBookingEntity> {
   private var departureReason: Yielded<DepartureReasonEntity?> = { null }
   private var departureMoveOnCategory: Yielded<MoveOnCategoryEntity?> = { null }
   private var departureNotes: Yielded<String?> = { null }
-  private var criteria: Yielded<List<CharacteristicEntity>> = { emptyList() }
+  private var criteria: Yielded<MutableList<CharacteristicEntity>> = { emptyList<CharacteristicEntity>().toMutableList() }
   private var nonArrivalConfirmedAt: Yielded<Instant?> = { null }
   private var nonArrivalReason: Yielded<NonArrivalReasonEntity?> = { null }
   private var nonArrivalNotes: Yielded<String?> = { null }
@@ -171,7 +171,7 @@ class Cas1SpaceBookingEntityFactory : Factory<Cas1SpaceBookingEntity> {
     this.departureMoveOnCategory = { moveOnCategory }
   }
 
-  fun withCriteria(criteria: List<CharacteristicEntity>) = apply {
+  fun withCriteria(criteria: MutableList<CharacteristicEntity>) = apply {
     this.criteria = { criteria }
   }
 
@@ -192,7 +192,7 @@ class Cas1SpaceBookingEntityFactory : Factory<Cas1SpaceBookingEntity> {
   }
 
   fun withCriteria(vararg criteria: CharacteristicEntity) = apply {
-    this.criteria = { criteria.toList() }
+    this.criteria = { criteria.toMutableList() }
   }
 
   fun withDepartureNotes(departureNotes: String?) = apply {

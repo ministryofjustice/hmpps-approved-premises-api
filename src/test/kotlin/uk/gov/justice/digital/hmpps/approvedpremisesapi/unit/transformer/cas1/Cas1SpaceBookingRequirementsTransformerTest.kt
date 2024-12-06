@@ -36,7 +36,7 @@ class Cas1SpaceBookingRequirementsTransformerTest {
 
     val spaceBooking = Cas1SpaceBookingEntityFactory()
       .withPlacementRequest(placementRequest)
-      .withCriteria(cas1EssentialSpaceCharacteristics)
+      .withCriteria(cas1EssentialSpaceCharacteristics.toMutableList())
       .produce()
 
     val result = transformer.transformJpaToApi(spaceBooking)

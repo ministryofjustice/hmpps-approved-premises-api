@@ -134,7 +134,7 @@ class Cas1SpaceBookingService(
         departureMoveOnCategory = null,
         departureReason = null,
         departureNotes = null,
-        criteria = characteristics,
+        criteria = characteristics.toMutableList(),
         nonArrivalConfirmedAt = null,
         nonArrivalNotes = null,
         nonArrivalReason = null,

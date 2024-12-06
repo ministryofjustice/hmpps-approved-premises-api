@@ -7,7 +7,14 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomStringMultiCa
 fun IntegrationTestBase.givenAnOfflineApplication(
   crn: String,
   eventNumber: String? = randomStringMultiCaseWithNumbers(6),
+  eventNumberSet: Boolean = true,
 ) = offlineApplicationEntityFactory.produceAndPersist {
   withCrn(crn)
-  withEventNumber(eventNumber)
+  withEventNumber(
+    if (eventNumberSet) {
+      eventNumber
+    } else {
+      null
+    },
+  )
 }
