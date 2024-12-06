@@ -1,6 +1,7 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.seed.cas1
 
 import org.assertj.core.api.Assertions.assertThat
+import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
 import org.springframework.beans.factory.annotation.Autowired
@@ -15,8 +16,14 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.given
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAnApprovedPremises
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAnOfflineApplication
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.seed.SeedTestBase
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas1SpaceBookingEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.CharacteristicEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DepartureReasonEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ManagementInfoSource
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.MoveOnCategoryEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.NonArrivalReasonEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas1.Cas1DeliusBookingImportEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas1.Cas1DeliusBookingImportRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.repository.Cas1SpaceBookingTestRepository
@@ -43,29 +50,57 @@ class SeedCas1BookingToSpaceBookingTest : SeedTestBase() {
   @Autowired
   lateinit var deliusBookingImportRepository: Cas1DeliusBookingImportRepository
 
-  @SuppressWarnings("LongMethod")
-  @Test
-  fun `Migrate bookings, removing existing`() {
-    val premises = givenAnApprovedPremises(
+  lateinit var premises: ApprovedPremisesEntity
+  lateinit var otherPremise: ApprovedPremisesEntity
+  lateinit var otherUser: UserEntity
+  lateinit var roomCriteriaOfInterest: List<CharacteristicEntity>
+  lateinit var roomCriterionNotOfInstant: CharacteristicEntity
+  lateinit var premiseCriterion: CharacteristicEntity
+
+  lateinit var departureReasonActive: DepartureReasonEntity
+  lateinit var moveOnCategory: MoveOnCategoryEntity
+  lateinit var nonArrivalReasonCode: NonArrivalReasonEntity
+
+  @BeforeEach
+  fun setupReferenceData() {
+    premises = givenAnApprovedPremises(
       name = "Premises 1",
       supportsSpaceBookings = true,
     )
-    val otherPremise = givenAnApprovedPremises(
+    otherPremise = givenAnApprovedPremises(
       name = "Premises 2",
       supportsSpaceBookings = true,
     )
-    val otherUser = givenAUser().first
-    val roomCriteriaOfInterest = Cas1SpaceBookingEntity.Constants.CRITERIA_CHARACTERISTIC_PROPERTY_NAMES_OF_INTEREST.map {
+    otherUser = givenAUser().first
+    roomCriteriaOfInterest = Cas1SpaceBookingEntity.Constants.CRITERIA_CHARACTERISTIC_PROPERTY_NAMES_OF_INTEREST.map {
       characteristicRepository.findByPropertyName(it, ServiceName.approvedPremises.value)!!
     }
-    val roomCriteriaNotOfInterest = listOf(
-      characteristicEntityFactory.produceAndPersist {
-        withModelScope("room")
-        withPropertyName("not of interest")
-      },
-    )
-    val premisesCriteria = listOf(characteristicEntityFactory.produceAndPersist { withModelScope("premises") })
+    roomCriterionNotOfInstant = characteristicEntityFactory.produceAndPersist {
+      withModelScope("room")
+      withPropertyName("not of interest")
+    }
+    premiseCriterion = characteristicEntityFactory.produceAndPersist { withModelScope("premises") }
 
+    departureReasonEntityFactory.produceAndPersist {
+      withLegacyDeliusCategoryCode("dr1inactive")
+      withServiceScope(ServiceName.approvedPremises.value)
+    }
+    departureReasonActive = departureReasonEntityFactory.produceAndPersist {
+      withLegacyDeliusCategoryCode("dr1")
+      withServiceScope(ServiceName.approvedPremises.value)
+    }
+    moveOnCategory = moveOnCategoryEntityFactory.produceAndPersist {
+      withLegacyDeliusCategoryCode("moc1")
+      withServiceScope(ServiceName.approvedPremises.value)
+    }
+    nonArrivalReasonCode = nonArrivalReasonEntityFactory.produceAndPersist {
+      withLegacyDeliusReasonCode("narc1")
+    }
+  }
+
+  @SuppressWarnings("LongMethod")
+  @Test
+  fun `Migrate bookings, removing existing`() {
     val application1 = givenACas1Application(createdByUser = otherUser, eventNumber = "25")
     val booking1DeliusManagementInfo = givenABooking(
       crn = "CRN1",
@@ -80,7 +115,7 @@ class SeedCas1BookingToSpaceBookingTest : SeedTestBase() {
       assessmentAllocatedTo = otherUser,
       createdByUser = otherUser,
       booking = booking1DeliusManagementInfo,
-      essentialCriteria = roomCriteriaOfInterest + roomCriteriaNotOfInterest + premisesCriteria,
+      essentialCriteria = roomCriteriaOfInterest + listOf(roomCriterionNotOfInstant) + listOf(premiseCriterion),
     ).first
     val (booking1CreatedByUser) = givenAUser()
     cas1BookingDomainEventSet.bookingMade(
@@ -89,24 +124,6 @@ class SeedCas1BookingToSpaceBookingTest : SeedTestBase() {
       booking1CreatedByUser,
       placementRequest1,
     )
-
-    departureReasonEntityFactory.produceAndPersist {
-      withLegacyDeliusCategoryCode("dr1inactive")
-      withServiceScope(ServiceName.approvedPremises.value)
-    }
-    val departureReason1Active = departureReasonEntityFactory.produceAndPersist {
-      withLegacyDeliusCategoryCode("dr1")
-      withServiceScope(ServiceName.approvedPremises.value)
-    }
-
-    val moveOnCategory1 = moveOnCategoryEntityFactory.produceAndPersist {
-      withLegacyDeliusCategoryCode("moc1")
-      withServiceScope(ServiceName.approvedPremises.value)
-    }
-
-    val nonArrivalReasonCode1 = nonArrivalReasonEntityFactory.produceAndPersist {
-      withLegacyDeliusReasonCode("narc1")
-    }
 
     deliusBookingImportRepository.save(
       Cas1DeliusBookingImportEntity(
@@ -246,10 +263,10 @@ class SeedCas1BookingToSpaceBookingTest : SeedTestBase() {
     assertThat(migratedBooking1.cancellationOccurredAt).isNull()
     assertThat(migratedBooking1.cancellationRecordedAt).isNull()
     assertThat(migratedBooking1.cancellationReasonNotes).isNull()
-    assertThat(migratedBooking1.departureReason).isEqualTo(departureReason1Active)
-    assertThat(migratedBooking1.departureMoveOnCategory).isEqualTo(moveOnCategory1)
+    assertThat(migratedBooking1.departureReason).isEqualTo(departureReasonActive)
+    assertThat(migratedBooking1.departureMoveOnCategory).isEqualTo(moveOnCategory)
     assertThat(migratedBooking1.criteria).containsOnly(*roomCriteriaOfInterest.toTypedArray())
-    assertThat(migratedBooking1.nonArrivalReason).isEqualTo(nonArrivalReasonCode1)
+    assertThat(migratedBooking1.nonArrivalReason).isEqualTo(nonArrivalReasonCode)
     assertThat(migratedBooking1.nonArrivalConfirmedAt).isEqualTo(Instant.parse("2024-02-01T09:58:23.00Z"))
     assertThat(migratedBooking1.nonArrivalNotes).isEqualTo("the non arrival notes")
     assertThat(migratedBooking1.deliusEventNumber).isEqualTo("25")
