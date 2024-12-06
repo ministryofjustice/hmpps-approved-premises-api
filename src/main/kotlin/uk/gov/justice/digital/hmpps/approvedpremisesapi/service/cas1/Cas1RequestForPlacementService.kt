@@ -7,7 +7,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremi
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementRequestEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserEntity
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.AuthorisableActionResult
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.CasResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.ApplicationService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.PlacementApplicationService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.PlacementRequestService
@@ -22,9 +22,9 @@ class Cas1RequestForPlacementService(
   private val requestForPlacementTransformer: RequestForPlacementTransformer,
   private val cas1WithdrawableService: Cas1WithdrawableService,
 ) {
-  fun getRequestsForPlacementByApplication(applicationId: UUID, requestingUser: UserEntity): AuthorisableActionResult<List<RequestForPlacement>> {
+  fun getRequestsForPlacementByApplication(applicationId: UUID, requestingUser: UserEntity): CasResult<List<RequestForPlacement>> {
     val application = applicationService.getApplication(applicationId)
-      ?: return AuthorisableActionResult.NotFound("Application", applicationId.toString())
+      ?: return CasResult.NotFound("Application", applicationId.toString())
 
     check(application is ApprovedPremisesApplicationEntity) { "Unsupported Application type: ${application::class.qualifiedName}" }
 
@@ -35,10 +35,10 @@ class Cas1RequestForPlacementService(
       placementApplications.map { toRequestForPlacement(it, requestingUser) } +
         placementRequests.map { toRequestForPlacement(it, requestingUser) }
 
-    return AuthorisableActionResult.Success(result)
+    return CasResult.Success(result)
   }
 
-  fun getRequestForPlacement(application: ApplicationEntity, requestForPlacementId: UUID, requestingUser: UserEntity): AuthorisableActionResult<RequestForPlacement> {
+  fun getRequestForPlacement(application: ApplicationEntity, requestForPlacementId: UUID, requestingUser: UserEntity): CasResult<RequestForPlacement> {
     check(application is ApprovedPremisesApplicationEntity) { "Unsupported Application type: ${application::class.qualifiedName}" }
 
     val placementApplication = placementApplicationService.getApplicationOrNull(requestForPlacementId)
@@ -46,25 +46,25 @@ class Cas1RequestForPlacementService(
 
     return when {
       placementApplication == null && placementRequest == null ->
-        AuthorisableActionResult.NotFound("RequestForPlacement", requestForPlacementId.toString())
+        CasResult.NotFound("RequestForPlacement", requestForPlacementId.toString())
 
       placementApplication != null && placementRequest != null ->
         throw RequestForPlacementServiceException.AmbiguousRequestForPlacementId()
 
       placementApplication != null -> when (placementApplication.application) {
         application ->
-          AuthorisableActionResult.Success(toRequestForPlacement(placementApplication, requestingUser))
+          CasResult.Success(toRequestForPlacement(placementApplication, requestingUser))
 
         else ->
-          AuthorisableActionResult.NotFound("RequestForPlacement", requestForPlacementId.toString())
+          CasResult.NotFound("RequestForPlacement", requestForPlacementId.toString())
       }
 
       else -> when (placementRequest!!.application) {
         application ->
-          AuthorisableActionResult.Success(toRequestForPlacement(placementRequest, requestingUser))
+          CasResult.Success(toRequestForPlacement(placementRequest, requestingUser))
 
         else ->
-          AuthorisableActionResult.NotFound("RequestForPlacement", requestForPlacementId.toString())
+          CasResult.NotFound("RequestForPlacement", requestForPlacementId.toString())
       }
     }
   }

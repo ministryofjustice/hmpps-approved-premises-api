@@ -337,13 +337,9 @@ class ApplicationsController(
   }
 
   override fun applicationsApplicationIdRequestsForPlacementGet(applicationId: UUID): ResponseEntity<List<RequestForPlacement>> {
-    val requestsForPlacement = when (val result = cas1RequestForPlacementService.getRequestsForPlacementByApplication(applicationId, userService.getUserForRequest())) {
-      is AuthorisableActionResult.Success -> result.entity
-      is AuthorisableActionResult.NotFound -> throw NotFoundProblem(applicationId, "Application")
-      is AuthorisableActionResult.Unauthorised -> throw ForbiddenProblem()
-    }
-
-    return ResponseEntity.ok(requestsForPlacement)
+    return ResponseEntity.ok(
+      extractEntityFromCasResult(cas1RequestForPlacementService.getRequestsForPlacementByApplication(applicationId, userService.getUserForRequest())),
+    )
   }
 
   override fun applicationsApplicationIdRequestsForPlacementRequestForPlacementIdGet(
@@ -352,13 +348,9 @@ class ApplicationsController(
   ): ResponseEntity<RequestForPlacement> {
     val application = applicationService.getApplication(applicationId) ?: throw NotFoundProblem(applicationId, "Application")
 
-    val requestForPlacement = when (val result = cas1RequestForPlacementService.getRequestForPlacement(application, requestForPlacementId, userService.getUserForRequest())) {
-      is AuthorisableActionResult.Success -> result.entity
-      is AuthorisableActionResult.NotFound -> throw NotFoundProblem(applicationId, "RequestForPlacement")
-      is AuthorisableActionResult.Unauthorised -> throw ForbiddenProblem()
-    }
-
-    return ResponseEntity.ok(requestForPlacement)
+    return ResponseEntity.ok(
+      extractEntityFromCasResult(cas1RequestForPlacementService.getRequestForPlacement(application, requestForPlacementId, userService.getUserForRequest())),
+    )
   }
 
   override fun applicationsApplicationIdSubmissionPost(

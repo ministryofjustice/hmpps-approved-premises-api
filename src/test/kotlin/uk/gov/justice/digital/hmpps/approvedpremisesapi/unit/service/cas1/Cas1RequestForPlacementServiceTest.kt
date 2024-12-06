@@ -13,13 +13,13 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.PlacementApplica
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.PlacementRequestEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.PlacementRequirementsEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.UserEntityFactory
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.AuthorisableActionResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.ApplicationService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.PlacementApplicationService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.PlacementRequestService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1RequestForPlacementService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1WithdrawableService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.RequestForPlacementTransformer
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.unit.util.assertThat
 import java.time.OffsetDateTime
 import java.time.temporal.ChronoUnit
 import java.util.UUID
@@ -57,9 +57,10 @@ class Cas1RequestForPlacementServiceTest {
     fun `Returns NotFound result if no application with the specified ID was found`() {
       every { applicationService.getApplication(any()) } returns null
 
-      val result = cas1RequestForPlacementService.getRequestsForPlacementByApplication(UUID.randomUUID(), user)
+      val id = UUID.randomUUID()
+      val result = cas1RequestForPlacementService.getRequestsForPlacementByApplication(id, user)
 
-      assertThat(result).isInstanceOf(AuthorisableActionResult.NotFound::class.java)
+      assertThat(result).isNotFound("Application", id)
     }
 
     @Test
@@ -91,9 +92,10 @@ class Cas1RequestForPlacementServiceTest {
 
       val result = cas1RequestForPlacementService.getRequestsForPlacementByApplication(application.id, user)
 
-      assertThat(result).isInstanceOf(AuthorisableActionResult.Success::class.java)
-      result as AuthorisableActionResult.Success
-      assertThat(result.entity).hasSize(placementApplications.size)
+      assertThat(result).isSuccess().with {
+        assertThat(it).hasSize(placementApplications.size)
+      }
+
       placementApplications.forEach {
         verify(exactly = 1) { requestForPlacementTransformer.transformPlacementApplicationEntityToApi(it, true) }
       }
@@ -139,9 +141,10 @@ class Cas1RequestForPlacementServiceTest {
 
       val result = cas1RequestForPlacementService.getRequestsForPlacementByApplication(application.id, user)
 
-      assertThat(result).isInstanceOf(AuthorisableActionResult.Success::class.java)
-      result as AuthorisableActionResult.Success
-      assertThat(result.entity).hasSize(placementRequests.size)
+      assertThat(result).isSuccess().with {
+        assertThat(it).hasSize(placementRequests.size)
+      }
+
       placementRequests.forEach {
         verify(exactly = 1) { requestForPlacementTransformer.transformPlacementRequestEntityToApi(it, true) }
       }
@@ -160,9 +163,10 @@ class Cas1RequestForPlacementServiceTest {
       every { placementApplicationService.getApplicationOrNull(any()) } returns null
       every { placementRequestService.getPlacementRequestOrNull(any()) } returns null
 
-      val result = cas1RequestForPlacementService.getRequestForPlacement(application, UUID.randomUUID(), user)
+      val id = UUID.randomUUID()
+      val result = cas1RequestForPlacementService.getRequestForPlacement(application, id, user)
 
-      assertThat(result).isInstanceOf(AuthorisableActionResult.NotFound::class.java)
+      assertThat(result).isNotFound("RequestForPlacement", id)
     }
 
     @Test
@@ -182,7 +186,7 @@ class Cas1RequestForPlacementServiceTest {
 
       val result = cas1RequestForPlacementService.getRequestForPlacement(application, placementApplication.id, user)
 
-      assertThat(result).isInstanceOf(AuthorisableActionResult.Success::class.java)
+      assertThat(result).isSuccess()
 
       verify(exactly = 1) { requestForPlacementTransformer.transformPlacementApplicationEntityToApi(placementApplication, true) }
     }
@@ -215,7 +219,7 @@ class Cas1RequestForPlacementServiceTest {
 
       val result = cas1RequestForPlacementService.getRequestForPlacement(application, placementRequest.id, user)
 
-      assertThat(result).isInstanceOf(AuthorisableActionResult.Success::class.java)
+      assertThat(result).isSuccess()
 
       verify(exactly = 1) { requestForPlacementTransformer.transformPlacementRequestEntityToApi(placementRequest, true) }
     }
