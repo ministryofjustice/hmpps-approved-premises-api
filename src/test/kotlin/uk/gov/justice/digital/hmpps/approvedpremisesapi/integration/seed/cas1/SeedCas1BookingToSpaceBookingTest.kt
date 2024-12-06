@@ -102,7 +102,7 @@ class SeedCas1BookingToSpaceBookingTest : SeedTestBase() {
   @Test
   fun `Migrate bookings, removing existing`() {
     val application1 = givenACas1Application(createdByUser = otherUser, eventNumber = "25")
-    val booking1DeliusManagementInfo = givenABooking(
+    val booking1ManagementInfoFromDelius = givenABooking(
       crn = "CRN1",
       premises = premises,
       application = application1,
@@ -114,20 +114,20 @@ class SeedCas1BookingToSpaceBookingTest : SeedTestBase() {
       placementRequestAllocatedTo = otherUser,
       assessmentAllocatedTo = otherUser,
       createdByUser = otherUser,
-      booking = booking1DeliusManagementInfo,
+      booking = booking1ManagementInfoFromDelius,
       essentialCriteria = roomCriteriaOfInterest + listOf(roomCriterionNotOfInstant) + listOf(premiseCriterion),
     ).first
     val (booking1CreatedByUser) = givenAUser()
     cas1BookingDomainEventSet.bookingMade(
       application1,
-      booking1DeliusManagementInfo,
+      booking1ManagementInfoFromDelius,
       booking1CreatedByUser,
       placementRequest1,
     )
 
     deliusBookingImportRepository.save(
       Cas1DeliusBookingImportEntity(
-        bookingId = booking1DeliusManagementInfo.id,
+        bookingId = booking1ManagementInfoFromDelius.id,
         crn = "irrelevant",
         eventNumber = "irrelevant",
         keyWorkerStaffCode = "kw001",
@@ -150,7 +150,7 @@ class SeedCas1BookingToSpaceBookingTest : SeedTestBase() {
     )
 
     val application2 = givenACas1Application(createdByUser = otherUser, eventNumber = "50")
-    val booking2LegacyCas1ManagementInfo = givenABooking(
+    val booking2ManagementInfoFromLegacyBooking = givenABooking(
       crn = "CRN2",
       premises = premises,
       application = application2,
@@ -170,26 +170,26 @@ class SeedCas1BookingToSpaceBookingTest : SeedTestBase() {
       placementRequestAllocatedTo = otherUser,
       assessmentAllocatedTo = otherUser,
       createdByUser = otherUser,
-      booking = booking2LegacyCas1ManagementInfo,
+      booking = booking2ManagementInfoFromLegacyBooking,
       essentialCriteria = listOf(),
     ).first
     val (booking2CreatedByUser) = givenAUser()
     cas1BookingDomainEventSet.bookingMade(
       application2,
-      booking2LegacyCas1ManagementInfo,
+      booking2ManagementInfoFromLegacyBooking,
       booking2CreatedByUser,
       placementRequest2,
     )
     val cancellationReason = cancellationReasonEntityFactory.produceAndPersist()
     cancellationEntityFactory.produceAndPersist {
-      withBooking(booking2LegacyCas1ManagementInfo)
+      withBooking(booking2ManagementInfoFromLegacyBooking)
       withCreatedAt(OffsetDateTime.of(LocalDateTime.of(2025, 1, 2, 3, 4, 5), ZoneOffset.UTC))
       withDate(LocalDate.of(2024, 1, 1))
       withReason(cancellationReason)
       withOtherReason("cancellation other reason")
     }
     dateChangeEntityFactory.produceAndPersist {
-      withBooking(booking2LegacyCas1ManagementInfo)
+      withBooking(booking2ManagementInfoFromLegacyBooking)
       withChangedByUser(booking2CreatedByUser)
     }
 
@@ -197,7 +197,7 @@ class SeedCas1BookingToSpaceBookingTest : SeedTestBase() {
       crn = "CRN3",
       eventNumber = "75",
     )
-    val booking3OfflineApplication = givenABookingForAnOfflineApplication(
+    val booking3OfflineApplicationNoManagementInfo = givenABookingForAnOfflineApplication(
       crn = "CRN3",
       premises = premises,
       offlineApplication = offlineApplication,
@@ -209,11 +209,11 @@ class SeedCas1BookingToSpaceBookingTest : SeedTestBase() {
       onlineApplication = null,
       offlineApplication = offlineApplication,
       eventNumber = "75",
-      booking = booking3OfflineApplication,
+      booking = booking3OfflineApplicationNoManagementInfo,
       user = booking3CreatedByUser,
     )
 
-    val booking4OfflineNoDomainEvent = givenABookingForAnOfflineApplication(
+    val booking4OfflineNoDomainEventOrManagementInfo = givenABookingForAnOfflineApplication(
       crn = "CRN4",
       premises = premises,
       offlineApplication = offlineApplication,
@@ -221,7 +221,7 @@ class SeedCas1BookingToSpaceBookingTest : SeedTestBase() {
       departureDate = LocalDate.of(2024, 8, 5),
     )
 
-    val booking5DifferentPremiseNotDeleted = givenABookingForAnOfflineApplication(
+    val booking5DifferentPremise = givenABookingForAnOfflineApplication(
       crn = "CRN5",
       premises = otherPremise,
       offlineApplication = offlineApplication,
@@ -240,8 +240,8 @@ class SeedCas1BookingToSpaceBookingTest : SeedTestBase() {
     assertThat(premiseSpaceBookings).hasSize(4)
 
     val migratedBooking1 = premiseSpaceBookings[0]
-    assertBookingIsDeleted(booking1DeliusManagementInfo.id)
-    assertThat(migratedBooking1.id).isEqualTo(booking1DeliusManagementInfo.id)
+    assertBookingIsDeleted(booking1ManagementInfoFromDelius.id)
+    assertThat(migratedBooking1.id).isEqualTo(booking1ManagementInfoFromDelius.id)
     assertThat(migratedBooking1.premises.id).isEqualTo(premises.id)
     assertThat(migratedBooking1.placementRequest!!.id).isEqualTo(placementRequest1.id)
     assertThat(migratedBooking1.createdBy!!.id).isEqualTo(booking1CreatedByUser.id)
@@ -273,8 +273,8 @@ class SeedCas1BookingToSpaceBookingTest : SeedTestBase() {
     assertThat(migratedBooking1.migratedManagementInfoFrom).isEqualTo(ManagementInfoSource.DELIUS)
 
     val migratedBooking2 = premiseSpaceBookings[1]
-    assertBookingIsDeleted(booking2LegacyCas1ManagementInfo.id)
-    assertThat(migratedBooking2.id).isEqualTo(booking2LegacyCas1ManagementInfo.id)
+    assertBookingIsDeleted(booking2ManagementInfoFromLegacyBooking.id)
+    assertThat(migratedBooking2.id).isEqualTo(booking2ManagementInfoFromLegacyBooking.id)
     assertThat(migratedBooking2.premises.id).isEqualTo(premises.id)
     assertThat(migratedBooking2.placementRequest!!.id).isEqualTo(placementRequest2.id)
     assertThat(migratedBooking2.createdBy!!.id).isEqualTo(booking2CreatedByUser.id)
@@ -296,19 +296,19 @@ class SeedCas1BookingToSpaceBookingTest : SeedTestBase() {
     assertThat(migratedBooking2.cancellationOccurredAt).isEqualTo(LocalDate.of(2024, 1, 1))
     assertThat(migratedBooking2.cancellationRecordedAt).isEqualTo(LocalDateTime.of(2025, 1, 2, 3, 4, 5).toInstant(ZoneOffset.UTC))
     assertThat(migratedBooking2.cancellationReasonNotes).isEqualTo("cancellation other reason")
-    assertThat(migratedBooking2.departureReason).isEqualTo(booking2LegacyCas1ManagementInfo.departure!!.reason)
-    assertThat(migratedBooking2.departureMoveOnCategory).isEqualTo(booking2LegacyCas1ManagementInfo.departure!!.moveOnCategory)
+    assertThat(migratedBooking2.departureReason).isEqualTo(booking2ManagementInfoFromLegacyBooking.departure!!.reason)
+    assertThat(migratedBooking2.departureMoveOnCategory).isEqualTo(booking2ManagementInfoFromLegacyBooking.departure!!.moveOnCategory)
     assertThat(migratedBooking2.departureNotes).isEqualTo("the legacy departure notes")
     assertThat(migratedBooking2.criteria).isEmpty()
-    assertThat(migratedBooking2.nonArrivalReason).isEqualTo(booking2LegacyCas1ManagementInfo.nonArrival!!.reason)
+    assertThat(migratedBooking2.nonArrivalReason).isEqualTo(booking2ManagementInfoFromLegacyBooking.nonArrival!!.reason)
     assertThat(migratedBooking2.nonArrivalConfirmedAt).isEqualTo(Instant.parse("2024-05-01T02:03:04Z"))
     assertThat(migratedBooking2.nonArrivalNotes).isEqualTo("the legacy non arrival notes")
     assertThat(migratedBooking2.deliusEventNumber).isEqualTo("50")
     assertThat(migratedBooking2.migratedManagementInfoFrom).isEqualTo(ManagementInfoSource.LEGACY_CAS_1)
 
     val migratedBooking3 = premiseSpaceBookings[2]
-    assertBookingIsDeleted(booking3OfflineApplication.id)
-    assertThat(migratedBooking3.id).isEqualTo(booking3OfflineApplication.id)
+    assertBookingIsDeleted(booking3OfflineApplicationNoManagementInfo.id)
+    assertThat(migratedBooking3.id).isEqualTo(booking3OfflineApplicationNoManagementInfo.id)
     assertThat(migratedBooking3.premises.id).isEqualTo(premises.id)
     assertThat(migratedBooking3.placementRequest).isNull()
     assertThat(migratedBooking3.createdBy!!.id).isEqualTo(booking3CreatedByUser.id)
@@ -340,8 +340,8 @@ class SeedCas1BookingToSpaceBookingTest : SeedTestBase() {
     assertThat(migratedBooking3.migratedManagementInfoFrom).isEqualTo(ManagementInfoSource.LEGACY_CAS_1)
 
     val migratedBooking4 = premiseSpaceBookings[3]
-    assertBookingIsDeleted(booking4OfflineNoDomainEvent.id)
-    assertThat(migratedBooking4.id).isEqualTo(booking4OfflineNoDomainEvent.id)
+    assertBookingIsDeleted(booking4OfflineNoDomainEventOrManagementInfo.id)
+    assertThat(migratedBooking4.id).isEqualTo(booking4OfflineNoDomainEventOrManagementInfo.id)
     assertThat(migratedBooking4.premises.id).isEqualTo(premises.id)
     assertThat(migratedBooking4.placementRequest).isNull()
     assertThat(migratedBooking4.createdBy).isNull()
@@ -372,7 +372,7 @@ class SeedCas1BookingToSpaceBookingTest : SeedTestBase() {
     assertThat(migratedBooking4.deliusEventNumber).isNull()
     assertThat(migratedBooking4.migratedManagementInfoFrom).isEqualTo(ManagementInfoSource.LEGACY_CAS_1)
 
-    assertBookingIsNotDeleted(booking5DifferentPremiseNotDeleted.id)
+    assertBookingIsNotDeleted(booking5DifferentPremise.id)
   }
 
   @Test
