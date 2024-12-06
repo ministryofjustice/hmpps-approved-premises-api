@@ -148,7 +148,7 @@ class Cas1BookingToSpaceBookingSeedJob(
         departureMoveOnCategory = managementInfo.departureMoveOnCategory,
         departureReason = managementInfo.departureReason,
         departureNotes = managementInfo.departureNotes,
-        criteria = booking.getEssentialRoomCriteria().toMutableList(),
+        criteria = booking.getEssentialRoomCriteriaOfInterest().toMutableList(),
         nonArrivalReason = managementInfo.nonArrivalReason,
         nonArrivalConfirmedAt = managementInfo.nonArrivalConfirmedAt?.toInstant(),
         nonArrivalNotes = managementInfo.nonArrivalNotes,
@@ -244,8 +244,11 @@ class Cas1BookingToSpaceBookingSeedJob(
     val nonArrivalNotes: String?,
   )
 
-  private fun BookingEntity.getEssentialRoomCriteria() =
-    placementRequest?.placementRequirements?.essentialCriteria?.filter { it.isModelScopeRoom() }?.toList()
+  private fun BookingEntity.getEssentialRoomCriteriaOfInterest() =
+    placementRequest?.placementRequirements?.essentialCriteria
+      ?.filter { it.isModelScopeRoom() }
+      ?.filter { Cas1SpaceBookingEntity.Constants.CRITERIA_CHARACTERISTIC_PROPERTY_NAMES_OF_INTEREST.contains(it.propertyName) }
+      ?.toList()
       ?: emptyList()
 
   private fun DomainEvent<BookingMadeEnvelope>.getCreatedByUser(): UserEntity {

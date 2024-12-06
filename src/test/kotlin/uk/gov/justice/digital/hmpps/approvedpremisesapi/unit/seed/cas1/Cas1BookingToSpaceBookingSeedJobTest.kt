@@ -25,9 +25,9 @@ import java.util.UUID
 
 class Cas1BookingToSpaceBookingSeedJobTest {
 
-  val approvedPremisesRepository = mockk<ApprovedPremisesRepository>()
+  private val approvedPremisesRepository = mockk<ApprovedPremisesRepository>()
 
-  val seedJob = Cas1BookingToSpaceBookingSeedJob(
+  private val seedJob = Cas1BookingToSpaceBookingSeedJob(
     approvedPremisesRepository = approvedPremisesRepository,
     spaceBookingRepository = mockk<Cas1SpaceBookingRepository>(),
     bookingRepository = mockk<BookingRepository>(),

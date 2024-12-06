@@ -15,6 +15,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.given
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAnApprovedPremises
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAnOfflineApplication
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.seed.SeedTestBase
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas1SpaceBookingEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ManagementInfoSource
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas1.Cas1DeliusBookingImportEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas1.Cas1DeliusBookingImportRepository
@@ -54,9 +55,19 @@ class SeedCas1BookingToSpaceBookingTest : SeedTestBase() {
       supportsSpaceBookings = true,
     )
     val otherUser = givenAUser().first
-    val roomCriteria1 = characteristicEntityFactory.produceAndPersist { withModelScope("*") }
-    val roomCriteria2 = characteristicEntityFactory.produceAndPersist { withModelScope("room") }
-    val premisesCriteria = characteristicEntityFactory.produceAndPersist { withModelScope("premises") }
+    val roomCriteriaOfInterest = Cas1SpaceBookingEntity.Constants.CRITERIA_CHARACTERISTIC_PROPERTY_NAMES_OF_INTEREST.map {
+      characteristicEntityFactory.produceAndPersist {
+        withModelScope(listOf("*", "room").random())
+        withPropertyName(it)
+      }
+    }
+    val roomCriteriaNotOfInterest = listOf(
+      characteristicEntityFactory.produceAndPersist {
+        withModelScope("room")
+        withPropertyName("not of interest")
+      },
+    )
+    val premisesCriteria = listOf(characteristicEntityFactory.produceAndPersist { withModelScope("premises") })
 
     val application1 = givenACas1Application(createdByUser = otherUser, eventNumber = "25")
     val booking1DeliusManagementInfo = givenABooking(
@@ -72,7 +83,7 @@ class SeedCas1BookingToSpaceBookingTest : SeedTestBase() {
       assessmentAllocatedTo = otherUser,
       createdByUser = otherUser,
       booking = booking1DeliusManagementInfo,
-      essentialCriteria = listOf(premisesCriteria, roomCriteria1, roomCriteria2),
+      essentialCriteria = roomCriteriaOfInterest + roomCriteriaNotOfInterest + premisesCriteria,
     ).first
     val (booking1CreatedByUser) = givenAUser()
     cas1BookingDomainEventSet.bookingMade(
@@ -240,7 +251,7 @@ class SeedCas1BookingToSpaceBookingTest : SeedTestBase() {
     assertThat(migratedBooking1.cancellationReasonNotes).isNull()
     assertThat(migratedBooking1.departureReason).isEqualTo(departureReason1Active)
     assertThat(migratedBooking1.departureMoveOnCategory).isEqualTo(moveOnCategory1)
-    assertThat(migratedBooking1.criteria).containsOnly(roomCriteria1, roomCriteria2)
+    assertThat(migratedBooking1.criteria).containsOnly(*roomCriteriaOfInterest.toTypedArray())
     assertThat(migratedBooking1.nonArrivalReason).isEqualTo(nonArrivalReasonCode1)
     assertThat(migratedBooking1.nonArrivalConfirmedAt).isEqualTo(Instant.parse("2024-02-01T09:58:23.00Z"))
     assertThat(migratedBooking1.nonArrivalNotes).isEqualTo("the non arrival notes")
