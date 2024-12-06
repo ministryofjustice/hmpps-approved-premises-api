@@ -1145,7 +1145,7 @@ class Cas1SpaceBookingTest {
     }
 
     @Test
-    fun `Recording arrival returns OK and creates a domain event`() {
+    fun `Recording arrival returns OK, creates and emits a domain event`() {
       val (_, jwt) = givenAUser(roles = listOf(CAS1_FUTURE_MANAGER))
 
       val (user) = givenAUser()
@@ -1182,6 +1182,8 @@ class Cas1SpaceBookingTest {
         .exchange()
         .expectStatus()
         .isOk
+
+      domainEventAsserter.blockForEmittedDomainEvent(DomainEventType.APPROVED_PREMISES_PERSON_ARRIVED)
       domainEventAsserter.assertDomainEventOfTypeStored(spaceBooking.application!!.id, DomainEventType.APPROVED_PREMISES_PERSON_ARRIVED)
     }
 
@@ -1574,7 +1576,7 @@ class Cas1SpaceBookingTest {
     }
 
     @Test
-    fun `Recording departure returns OK and creates a domain event`() {
+    fun `Recording departure returns OK, creates and emits a domain event`() {
       val (_, jwt) = givenAUser(roles = listOf(CAS1_FUTURE_MANAGER))
 
       val (user) = givenAUser()
@@ -1616,7 +1618,8 @@ class Cas1SpaceBookingTest {
         .exchange()
         .expectStatus()
         .isOk
-      domainEventAsserter.assertDomainEventOfTypeStored(spaceBooking.application!!.id, DomainEventType.APPROVED_PREMISES_PERSON_DEPARTED)
+
+      domainEventAsserter.blockForEmittedDomainEvent(DomainEventType.APPROVED_PREMISES_PERSON_DEPARTED)
     }
 
     @Test
@@ -1665,7 +1668,7 @@ class Cas1SpaceBookingTest {
     }
 
     @Test
-    fun `Recording departure returns OK and creates a domain event with 'Not Applicable' move on category if no category is supplied `() {
+    fun `Recording departure returns OK, creates and emits a domain event with 'Not Applicable' move on category if no category is supplied `() {
       val (_, jwt) = givenAUser(roles = listOf(CAS1_FUTURE_MANAGER))
 
       val (user) = givenAUser()
@@ -1706,6 +1709,8 @@ class Cas1SpaceBookingTest {
         .exchange()
         .expectStatus()
         .isOk
+
+      domainEventAsserter.blockForEmittedDomainEvent(DomainEventType.APPROVED_PREMISES_PERSON_DEPARTED)
       val domainEvent = domainEventAsserter.assertDomainEventOfTypeStored(spaceBooking.application!!.id, DomainEventType.APPROVED_PREMISES_PERSON_DEPARTED)
       assertThat(domainEvent.data).contains("""moveOnCategory": {"id": "${NOT_APPLICABLE_MOVE_ON_CATEGORY_ID}""")
     }

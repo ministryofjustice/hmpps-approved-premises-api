@@ -74,7 +74,6 @@ class Cas1SpaceBookingManagementDomainEventService(
     val actualArrivalDateTime = arrivalInfo.actualArrivalDate.atTime(arrivalInfo.actualArrivalTime).toInstant()
 
     domainEventService.savePersonArrivedEvent(
-      emit = false,
       domainEvent = DomainEvent(
         id = domainEventId,
         applicationId = applicationId,
@@ -182,7 +181,6 @@ class Cas1SpaceBookingManagementDomainEventService(
     val actualDepartureDateTime = departureInfo.actualDepartureDate.atTime(departureInfo.actualDepartureTime).toInstant()
 
     domainEventService.savePersonDepartedEvent(
-      emit = false,
       domainEvent = DomainEvent(
         id = domainEventId,
         applicationId = applicationId,

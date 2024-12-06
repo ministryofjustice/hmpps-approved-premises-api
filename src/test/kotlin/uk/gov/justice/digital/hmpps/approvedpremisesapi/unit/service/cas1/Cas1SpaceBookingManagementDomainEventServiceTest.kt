@@ -115,7 +115,7 @@ class Cas1SpaceBookingManagementDomainEventServiceTest {
 
     @BeforeEach
     fun before() {
-      every { domainEventService.savePersonArrivedEvent(any(), any()) } just Runs
+      every { domainEventService.savePersonArrivedEvent(any()) } just Runs
 
       every { offenderService.getPersonSummaryInfoResults(any(), any()) } returns
         listOf(PersonSummaryInfoResult.Success.Full("THEBOOKINGCRN", caseSummary))
@@ -143,7 +143,6 @@ class Cas1SpaceBookingManagementDomainEventServiceTest {
       verify(exactly = 1) {
         domainEventService.savePersonArrivedEvent(
           capture(domainEventArgument),
-          emit = false,
         )
       }
 
@@ -193,7 +192,6 @@ class Cas1SpaceBookingManagementDomainEventServiceTest {
       verify(exactly = 1) {
         domainEventService.savePersonArrivedEvent(
           capture(domainEventArgument),
-          emit = false,
         )
       }
 
@@ -232,7 +230,6 @@ class Cas1SpaceBookingManagementDomainEventServiceTest {
       verify(exactly = 1) {
         domainEventService.savePersonArrivedEvent(
           capture(domainEventArgument),
-          emit = false,
         )
       }
 
@@ -296,7 +293,7 @@ class Cas1SpaceBookingManagementDomainEventServiceTest {
 
     @BeforeEach
     fun before() {
-      every { domainEventService.savePersonDepartedEvent(any(), any()) } just Runs
+      every { domainEventService.savePersonDepartedEvent(any()) } just Runs
 
       every { offenderService.getPersonSummaryInfoResults(any(), any()) } returns
         listOf(PersonSummaryInfoResult.Success.Full("THEBOOKINGCRN", caseSummary))
@@ -324,10 +321,7 @@ class Cas1SpaceBookingManagementDomainEventServiceTest {
       val domainEventArgument = slot<DomainEvent<PersonDepartedEnvelope>>()
 
       verify(exactly = 1) {
-        domainEventService.savePersonDepartedEvent(
-          capture(domainEventArgument),
-          emit = false,
-        )
+        domainEventService.savePersonDepartedEvent(capture(domainEventArgument))
       }
 
       val domainEvent = domainEventArgument.captured
@@ -385,10 +379,7 @@ class Cas1SpaceBookingManagementDomainEventServiceTest {
       val domainEventArgument = slot<DomainEvent<PersonDepartedEnvelope>>()
 
       verify(exactly = 1) {
-        domainEventService.savePersonDepartedEvent(
-          capture(domainEventArgument),
-          emit = false,
-        )
+        domainEventService.savePersonDepartedEvent(capture(domainEventArgument))
       }
 
       val domainEvent = domainEventArgument.captured
