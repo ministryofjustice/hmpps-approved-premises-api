@@ -66,7 +66,6 @@ class DomainEventTransformerTest {
     val result = domainEventTransformer.toStaffMember(user)
 
     assertThat(result.staffCode).isEqualTo("theStaffCode")
-    assertThat(result.staffIdentifier).isEqualTo(-1L)
     assertThat(result.forenames).isEqualTo("theForenames")
     assertThat(result.surname).isEqualTo("theSurname")
     assertThat(result.username).isEqualTo("theUsername")
@@ -110,7 +109,6 @@ class DomainEventTransformerTest {
 
     val staffMember = result.staffMember
     assertThat(staffMember.staffCode).isEqualTo("theStaffCode")
-    assertThat(staffMember.staffIdentifier).isEqualTo(-1L)
     assertThat(staffMember.forenames).isEqualTo("theForenames theMiddleName")
     assertThat(staffMember.surname).isEqualTo("theSurname")
     assertThat(staffMember.username).isEqualTo("theUsername")
@@ -139,7 +137,6 @@ class DomainEventTransformerTest {
 
     val staffMember = result.staffMember
     assertThat(staffMember.staffCode).isEqualTo("theStaffCode")
-    assertThat(staffMember.staffIdentifier).isEqualTo(-1L)
     assertThat(staffMember.forenames).isEqualTo("theForenames")
     assertThat(staffMember.surname).isEqualTo("theSurname")
     assertThat(staffMember.username).isEqualTo("theUsername")
