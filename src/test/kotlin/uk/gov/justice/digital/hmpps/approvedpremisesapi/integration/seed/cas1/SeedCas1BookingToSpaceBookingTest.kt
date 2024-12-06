@@ -56,10 +56,7 @@ class SeedCas1BookingToSpaceBookingTest : SeedTestBase() {
     )
     val otherUser = givenAUser().first
     val roomCriteriaOfInterest = Cas1SpaceBookingEntity.Constants.CRITERIA_CHARACTERISTIC_PROPERTY_NAMES_OF_INTEREST.map {
-      characteristicEntityFactory.produceAndPersist {
-        withModelScope(listOf("*", "room").random())
-        withPropertyName(it)
-      }
+      characteristicRepository.findByPropertyName(it, ServiceName.approvedPremises.value)!!
     }
     val roomCriteriaNotOfInterest = listOf(
       characteristicEntityFactory.produceAndPersist {
