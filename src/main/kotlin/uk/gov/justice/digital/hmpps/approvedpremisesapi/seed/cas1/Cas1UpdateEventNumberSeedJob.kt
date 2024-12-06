@@ -9,6 +9,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.Ap
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.BookingMadeEnvelope
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApplicationRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesApplicationEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas1SpaceBookingRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DomainEventRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DomainEventType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.seed.SeedColumns
@@ -39,6 +40,7 @@ class Cas1UpdateEventNumberSeedJob(
   private val applicationRepository: ApplicationRepository,
   private val domainEventRepository: DomainEventRepository,
   private val objectMapper: ObjectMapper,
+  private val spaceBookingRepository: Cas1SpaceBookingRepository,
 ) : SeedJob<Cas1UpdateEventNumberSeedJobCsvRow>(
   requiredHeaders = setOf(
     "application_id",
@@ -86,9 +88,11 @@ class Cas1UpdateEventNumberSeedJob(
 
     applicationTimelineNoteService.saveApplicationTimelineNote(
       applicationId = row.applicationId,
-      note = "Application Support have updated application to use event number '$updatedEventNumber'. Previous event number was '$previousEventNumber'",
+      note = "Application Support have updated the application to use event number '$updatedEventNumber'. Previous event number was '$previousEventNumber'",
       user = null,
     )
+
+    spaceBookingRepository.updateEventNumber(applicationId, updatedEventNumber.toString())
   }
 
   private fun updateDomainEvents(applicationId: UUID, updatedEventNumber: Int) {
@@ -97,7 +101,7 @@ class Cas1UpdateEventNumberSeedJob(
     domainEvents.filter {
       it.type == DomainEventType.APPROVED_PREMISES_APPLICATION_SUBMITTED
     }.forEach {
-      log.info("Updating domain event ${it.id} of type ${it.type}")
+      log.info("Updating domain event ${it.id} of type APPROVED_PREMISES_APPLICATION_SUBMITTED")
       val envelope = objectMapper.readValue(it.data, ApplicationSubmittedEnvelope::class.java)
       val updatedEnvelope = envelope.copy(
         eventDetails = envelope.eventDetails.copy(deliusEventNumber = updatedEventNumber.toString()),
@@ -108,7 +112,7 @@ class Cas1UpdateEventNumberSeedJob(
     domainEvents.filter {
       it.type == DomainEventType.APPROVED_PREMISES_APPLICATION_ASSESSED
     }.forEach {
-      log.info("Updating domain event ${it.id} of type ${it.type}")
+      log.info("Updating domain event ${it.id} of type APPROVED_PREMISES_APPLICATION_ASSESSED")
       val envelope = objectMapper.readValue(it.data, ApplicationAssessedEnvelope::class.java)
       val updatedEnvelope = envelope.copy(
         eventDetails = envelope.eventDetails.copy(deliusEventNumber = updatedEventNumber.toString()),
@@ -119,7 +123,7 @@ class Cas1UpdateEventNumberSeedJob(
     domainEvents.filter {
       it.type == DomainEventType.APPROVED_PREMISES_BOOKING_MADE
     }.forEach {
-      log.info("Updating domain event ${it.id} of type ${it.type}")
+      log.info("Updating domain event ${it.id} of type APPROVED_PREMISES_BOOKING_MADE")
       val envelope = objectMapper.readValue(it.data, BookingMadeEnvelope::class.java)
       val updatedEnvelope = envelope.copy(
         eventDetails = envelope.eventDetails.copy(deliusEventNumber = updatedEventNumber.toString()),

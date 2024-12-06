@@ -15,6 +15,7 @@ import jakarta.persistence.Version
 import org.springframework.data.domain.Page
 import org.springframework.data.domain.Pageable
 import org.springframework.data.jpa.repository.JpaRepository
+import org.springframework.data.jpa.repository.Modifying
 import org.springframework.data.jpa.repository.Query
 import org.springframework.stereotype.Repository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.CharacteristicRepository.Constants.CAS1_PROPERTY_NAME_ARSON_SUITABLE
@@ -148,6 +149,16 @@ interface Cas1SpaceBookingRepository : JpaRepository<Cas1SpaceBookingEntity, UUI
   ): List<Cas1SpaceBookingEntity>
 
   fun findAllByApplication(application: ApplicationEntity): List<Cas1SpaceBookingEntity>
+
+  @Modifying
+  @Query(
+    """
+    UPDATE Cas1SpaceBookingEntity sb set 
+    sb.deliusEventNumber = :eventNumber
+    where sb.application.id = :applicationId
+    """,
+  )
+  fun updateEventNumber(applicationId: UUID, eventNumber: String)
 }
 
 interface Cas1SpaceBookingSearchResult {

@@ -29,6 +29,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.cas1.seed.Se
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.cas1.seed.SeedCasUpdateEventNumberTest.CONSTANTS.OLD_CONVICTION_ID
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.cas1.seed.SeedCasUpdateEventNumberTest.CONSTANTS.OLD_EVENT_NUMBER
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.cas1.seed.SeedCasUpdateEventNumberTest.CONSTANTS.OLD_OFFENCE_ID
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenACas1SpaceBooking
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAUser
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAnApArea
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAnOffender
@@ -76,7 +77,7 @@ class SeedCasUpdateEventNumberTest : SeedTestBase() {
     assertThat(notes)
       .extracting("body")
       .contains(
-        "Application Support have updated application to use event number '999990000'. Previous event number was '1010101'",
+        "Application Support have updated the application to use event number '999990000'. Previous event number was '1010101'",
       )
   }
 
@@ -257,6 +258,22 @@ class SeedCasUpdateEventNumberTest : SeedTestBase() {
     assertThat(unmarshalledData.eventDetails.deliusEventNumber).isEqualTo(NEW_EVENT_NUMBER)
 
     assertThat(domainEventBeforeUpdate.data.replace(OLD_EVENT_NUMBER, NEW_EVENT_NUMBER)).isEqualTo(domainEventAfterUpdate.data)
+  }
+
+  @Test
+  fun `Update Space Booking event number`() {
+    val (application, _) = createApplication()
+
+    val spaceBooking = givenACas1SpaceBooking(
+      crn = application.crn,
+      application = application,
+      deliusEventNumber = OLD_EVENT_NUMBER,
+    )
+
+    callSeedJob(application = application)
+
+    val updatedSpaceBooking = cas1SpaceBookingRepository.findById(spaceBooking.id).get()
+    assertThat(updatedSpaceBooking.deliusEventNumber).isEqualTo(NEW_EVENT_NUMBER)
   }
 
   private fun callSeedJob(application: ApprovedPremisesApplicationEntity) {
