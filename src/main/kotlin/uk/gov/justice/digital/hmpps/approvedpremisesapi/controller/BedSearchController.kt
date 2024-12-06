@@ -34,7 +34,7 @@ class BedSearchController(
         probationDeliveryUnits = bedSearchParameters.probationDeliveryUnits,
         startDate = bedSearchParameters.startDate,
         durationInDays = bedSearchParameters.durationDays,
-        propertyBedAttributes = bedSearchParameters.attributes,
+        propertyBedAttributes = bedSearchParameters.attributes ?: emptyList(),
       )
       else -> throw RuntimeException("Unsupported BedSearchParameters type: ${bedSearchParameters::class.qualifiedName}")
     }
