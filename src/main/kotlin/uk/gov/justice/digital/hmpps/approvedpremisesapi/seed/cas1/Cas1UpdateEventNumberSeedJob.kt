@@ -54,10 +54,10 @@ class Cas1UpdateEventNumberSeedJob(
   override fun deserializeRow(columns: Map<String, String>): Cas1UpdateEventNumberSeedJobCsvRow {
     val seedColumns = SeedColumns(columns)
     return Cas1UpdateEventNumberSeedJobCsvRow(
-      applicationId = seedColumns.uuidOrNull("application_id")!!,
-      eventNumber = seedColumns.intOrNull("event_number")!!,
-      offenceId = seedColumns.stringOrNull("offence_id")!!,
-      convictionId = seedColumns.longOrNull("conviction_id")!!,
+      applicationId = seedColumns.getUuidOrNull("application_id")!!,
+      eventNumber = seedColumns.getIntOrNull("event_number")!!,
+      offenceId = seedColumns.getStringOrNull("offence_id")!!,
+      convictionId = seedColumns.getLongOrNull("conviction_id")!!,
     )
   }
 
