@@ -1,4 +1,4 @@
-package uk.gov.justice.digital.hmpps.approvedpremisesapi.unit.service
+package uk.gov.justice.digital.hmpps.approvedpremisesapi.unit.service.cas1
 
 import io.mockk.every
 import io.mockk.mockk
@@ -17,21 +17,21 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.AuthorisableActi
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.ApplicationService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.PlacementApplicationService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.PlacementRequestService
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.RequestForPlacementService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1RequestForPlacementService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1WithdrawableService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.RequestForPlacementTransformer
 import java.time.OffsetDateTime
 import java.time.temporal.ChronoUnit
 import java.util.UUID
 
-class RequestForPlacementServiceTest {
+class Cas1RequestForPlacementServiceTest {
   private val applicationService = mockk<ApplicationService>()
   private val placementApplicationService = mockk<PlacementApplicationService>()
   private val placementRequestService = mockk<PlacementRequestService>()
   private val requestForPlacementTransformer = mockk<RequestForPlacementTransformer>()
   private val cas1WithdrawableService = mockk<Cas1WithdrawableService>()
 
-  private val requestForPlacementService = RequestForPlacementService(
+  private val cas1RequestForPlacementService = Cas1RequestForPlacementService(
     applicationService,
     placementApplicationService,
     placementRequestService,
@@ -57,7 +57,7 @@ class RequestForPlacementServiceTest {
     fun `Returns NotFound result if no application with the specified ID was found`() {
       every { applicationService.getApplication(any()) } returns null
 
-      val result = requestForPlacementService.getRequestsForPlacementByApplication(UUID.randomUUID(), user)
+      val result = cas1RequestForPlacementService.getRequestsForPlacementByApplication(UUID.randomUUID(), user)
 
       assertThat(result).isInstanceOf(AuthorisableActionResult.NotFound::class.java)
     }
@@ -89,7 +89,7 @@ class RequestForPlacementServiceTest {
         placementRequestService.getPlacementRequestForInitialApplicationDates(application.id)
       } returns listOf()
 
-      val result = requestForPlacementService.getRequestsForPlacementByApplication(application.id, user)
+      val result = cas1RequestForPlacementService.getRequestsForPlacementByApplication(application.id, user)
 
       assertThat(result).isInstanceOf(AuthorisableActionResult.Success::class.java)
       result as AuthorisableActionResult.Success
@@ -137,7 +137,7 @@ class RequestForPlacementServiceTest {
         every { cas1WithdrawableService.isDirectlyWithdrawable(it, user) } returns true
       }
 
-      val result = requestForPlacementService.getRequestsForPlacementByApplication(application.id, user)
+      val result = cas1RequestForPlacementService.getRequestsForPlacementByApplication(application.id, user)
 
       assertThat(result).isInstanceOf(AuthorisableActionResult.Success::class.java)
       result as AuthorisableActionResult.Success
@@ -160,7 +160,7 @@ class RequestForPlacementServiceTest {
       every { placementApplicationService.getApplicationOrNull(any()) } returns null
       every { placementRequestService.getPlacementRequestOrNull(any()) } returns null
 
-      val result = requestForPlacementService.getRequestForPlacement(application, UUID.randomUUID(), user)
+      val result = cas1RequestForPlacementService.getRequestForPlacement(application, UUID.randomUUID(), user)
 
       assertThat(result).isInstanceOf(AuthorisableActionResult.NotFound::class.java)
     }
@@ -180,7 +180,7 @@ class RequestForPlacementServiceTest {
       every { placementRequestService.getPlacementRequestOrNull(any()) } returns null
       every { cas1WithdrawableService.isDirectlyWithdrawable(placementApplication, user) } returns true
 
-      val result = requestForPlacementService.getRequestForPlacement(application, placementApplication.id, user)
+      val result = cas1RequestForPlacementService.getRequestForPlacement(application, placementApplication.id, user)
 
       assertThat(result).isInstanceOf(AuthorisableActionResult.Success::class.java)
 
@@ -213,7 +213,7 @@ class RequestForPlacementServiceTest {
       every { placementRequestService.getPlacementRequestOrNull(placementRequest.id) } returns placementRequest
       every { cas1WithdrawableService.isDirectlyWithdrawable(placementRequest, user) } returns true
 
-      val result = requestForPlacementService.getRequestForPlacement(application, placementRequest.id, user)
+      val result = cas1RequestForPlacementService.getRequestForPlacement(application, placementRequest.id, user)
 
       assertThat(result).isInstanceOf(AuthorisableActionResult.Success::class.java)
 
