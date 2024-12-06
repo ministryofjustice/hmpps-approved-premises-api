@@ -149,8 +149,55 @@ class SeedCas1BookingToSpaceBookingTest : SeedTestBase() {
       ),
     )
 
+    val booking2MinimalManagementInfoFromDelius = givenABooking(
+      crn = "CRN1",
+      premises = premises,
+      application = application1,
+      arrivalDate = LocalDate.of(2025, 5, 1),
+      departureDate = LocalDate.of(2025, 5, 5),
+    )
+    val placementRequest2 = givenAPlacementRequest(
+      application = application1,
+      placementRequestAllocatedTo = otherUser,
+      assessmentAllocatedTo = otherUser,
+      createdByUser = otherUser,
+      booking = booking2MinimalManagementInfoFromDelius,
+      essentialCriteria = emptyList(),
+    ).first
+    val (booking2CreatedByUser) = givenAUser()
+    cas1BookingDomainEventSet.bookingMade(
+      application1,
+      booking2MinimalManagementInfoFromDelius,
+      booking2CreatedByUser,
+      placementRequest2,
+    )
+
+    deliusBookingImportRepository.save(
+      Cas1DeliusBookingImportEntity(
+        bookingId = booking2MinimalManagementInfoFromDelius.id,
+        crn = "irrelevant",
+        eventNumber = "irrelevant",
+        keyWorkerStaffCode = null,
+        keyWorkerForename = null,
+        keyWorkerMiddleName = null,
+        keyWorkerSurname = null,
+        departureReasonCode = null,
+        moveOnCategoryCode = null,
+        moveOnCategoryDescription = null,
+        expectedArrivalDate = LocalDate.of(3000, 1, 1),
+        arrivalDate = null,
+        expectedDepartureDate = LocalDate.of(3001, 2, 2),
+        departureDate = null,
+        nonArrivalDate = null,
+        nonArrivalContactDatetime = null,
+        nonArrivalReasonCode = null,
+        nonArrivalReasonDescription = null,
+        nonArrivalNotes = null,
+      ),
+    )
+
     val application2 = givenACas1Application(createdByUser = otherUser, eventNumber = "50")
-    val booking2ManagementInfoFromLegacyBooking = givenABooking(
+    val booking3ManagementInfoFromLegacyBooking = givenABooking(
       crn = "CRN2",
       premises = premises,
       application = application2,
@@ -165,55 +212,55 @@ class SeedCas1BookingToSpaceBookingTest : SeedTestBase() {
       actualArrivalDate = LocalDateTime.of(2024, 6, 3, 20, 0, 5),
       actualDepartureDate = LocalDateTime.of(2024, 6, 6, 9, 48, 0),
     )
-    val placementRequest2 = givenAPlacementRequest(
+    val placementRequest3 = givenAPlacementRequest(
       application = application2,
       placementRequestAllocatedTo = otherUser,
       assessmentAllocatedTo = otherUser,
       createdByUser = otherUser,
-      booking = booking2ManagementInfoFromLegacyBooking,
+      booking = booking3ManagementInfoFromLegacyBooking,
       essentialCriteria = listOf(),
     ).first
-    val (booking2CreatedByUser) = givenAUser()
+    val (booking3CreatedByUser) = givenAUser()
     cas1BookingDomainEventSet.bookingMade(
       application2,
-      booking2ManagementInfoFromLegacyBooking,
-      booking2CreatedByUser,
-      placementRequest2,
+      booking3ManagementInfoFromLegacyBooking,
+      booking3CreatedByUser,
+      placementRequest3,
     )
     val cancellationReason = cancellationReasonEntityFactory.produceAndPersist()
     cancellationEntityFactory.produceAndPersist {
-      withBooking(booking2ManagementInfoFromLegacyBooking)
+      withBooking(booking3ManagementInfoFromLegacyBooking)
       withCreatedAt(OffsetDateTime.of(LocalDateTime.of(2025, 1, 2, 3, 4, 5), ZoneOffset.UTC))
       withDate(LocalDate.of(2024, 1, 1))
       withReason(cancellationReason)
       withOtherReason("cancellation other reason")
     }
     dateChangeEntityFactory.produceAndPersist {
-      withBooking(booking2ManagementInfoFromLegacyBooking)
-      withChangedByUser(booking2CreatedByUser)
+      withBooking(booking3ManagementInfoFromLegacyBooking)
+      withChangedByUser(booking3CreatedByUser)
     }
 
     val offlineApplication = givenAnOfflineApplication(
       crn = "CRN3",
       eventNumber = "75",
     )
-    val booking3OfflineApplicationNoManagementInfo = givenABookingForAnOfflineApplication(
+    val booking4OfflineApplicationNoManagementInfo = givenABookingForAnOfflineApplication(
       crn = "CRN3",
       premises = premises,
       offlineApplication = offlineApplication,
       arrivalDate = LocalDate.of(2024, 7, 1),
       departureDate = LocalDate.of(2024, 7, 5),
     )
-    val (booking3CreatedByUser) = givenAUser()
+    val (booking4CreatedByUser) = givenAUser()
     cas1BookingDomainEventSet.adhocBookingMade(
       onlineApplication = null,
       offlineApplication = offlineApplication,
       eventNumber = "75",
-      booking = booking3OfflineApplicationNoManagementInfo,
-      user = booking3CreatedByUser,
+      booking = booking4OfflineApplicationNoManagementInfo,
+      user = booking4CreatedByUser,
     )
 
-    val booking4OfflineNoDomainEventOrManagementInfo = givenABookingForAnOfflineApplication(
+    val booking5OfflineNoDomainEventOrManagementInfo = givenABookingForAnOfflineApplication(
       crn = "CRN4",
       premises = premises,
       offlineApplication = offlineApplication,
@@ -221,7 +268,7 @@ class SeedCas1BookingToSpaceBookingTest : SeedTestBase() {
       departureDate = LocalDate.of(2024, 8, 5),
     )
 
-    val booking5DifferentPremise = givenABookingForAnOfflineApplication(
+    val booking6DifferentPremise = givenABookingForAnOfflineApplication(
       crn = "CRN5",
       premises = otherPremise,
       offlineApplication = offlineApplication,
@@ -237,7 +284,7 @@ class SeedCas1BookingToSpaceBookingTest : SeedTestBase() {
     seedService.seedData(SeedFileType.approvedPremisesBookingToSpaceBooking, "valid-csv.csv")
 
     val premiseSpaceBookings = cas1SpaceBookingTestRepository.findByPremisesId(premises.id)
-    assertThat(premiseSpaceBookings).hasSize(4)
+    assertThat(premiseSpaceBookings).hasSize(5)
 
     val migratedBooking1 = premiseSpaceBookings[0]
     assertBookingIsDeleted(booking1ManagementInfoFromDelius.id)
@@ -273,87 +320,87 @@ class SeedCas1BookingToSpaceBookingTest : SeedTestBase() {
     assertThat(migratedBooking1.migratedManagementInfoFrom).isEqualTo(ManagementInfoSource.DELIUS)
 
     val migratedBooking2 = premiseSpaceBookings[1]
-    assertBookingIsDeleted(booking2ManagementInfoFromLegacyBooking.id)
-    assertThat(migratedBooking2.id).isEqualTo(booking2ManagementInfoFromLegacyBooking.id)
+    assertBookingIsDeleted(booking1ManagementInfoFromDelius.id)
+    assertThat(migratedBooking2.id).isEqualTo(booking2MinimalManagementInfoFromDelius.id)
     assertThat(migratedBooking2.premises.id).isEqualTo(premises.id)
     assertThat(migratedBooking2.placementRequest!!.id).isEqualTo(placementRequest2.id)
     assertThat(migratedBooking2.createdBy!!.id).isEqualTo(booking2CreatedByUser.id)
-    assertThat(migratedBooking2.expectedArrivalDate).isEqualTo(LocalDate.of(2024, 6, 1))
-    assertThat(migratedBooking2.expectedDepartureDate).isEqualTo(LocalDate.of(2024, 6, 5))
-    assertThat(migratedBooking2.actualArrivalDate).isEqualTo(LocalDate.parse("2024-06-03"))
-    assertThat(migratedBooking2.actualArrivalTime).isEqualTo(LocalTime.parse("20:00:05"))
-    assertThat(migratedBooking2.actualDepartureDate).isEqualTo(LocalDate.parse("2024-06-06"))
-    assertThat(migratedBooking2.actualDepartureTime).isEqualTo(LocalTime.parse("09:48:00"))
-    assertThat(migratedBooking2.canonicalArrivalDate).isEqualTo(LocalDate.of(2024, 6, 3))
-    assertThat(migratedBooking2.canonicalDepartureDate).isEqualTo(LocalDate.of(2024, 6, 6))
-    assertThat(migratedBooking2.crn).isEqualTo("CRN2")
+    assertThat(migratedBooking2.expectedArrivalDate).isEqualTo(LocalDate.of(2025, 5, 1))
+    assertThat(migratedBooking2.expectedDepartureDate).isEqualTo(LocalDate.of(2025, 5, 5))
+    assertThat(migratedBooking2.actualArrivalDate).isNull()
+    assertThat(migratedBooking2.actualArrivalTime).isNull()
+    assertThat(migratedBooking2.actualDepartureDate).isNull()
+    assertThat(migratedBooking2.actualDepartureTime).isNull()
+    assertThat(migratedBooking2.canonicalArrivalDate).isEqualTo(LocalDate.of(2025, 5, 1))
+    assertThat(migratedBooking2.canonicalDepartureDate).isEqualTo(LocalDate.of(2025, 5, 5))
+    assertThat(migratedBooking2.crn).isEqualTo("CRN1")
     assertThat(migratedBooking2.keyWorkerName).isNull()
     assertThat(migratedBooking2.keyWorkerStaffCode).isNull()
     assertThat(migratedBooking2.keyWorkerAssignedAt).isNull()
-    assertThat(migratedBooking2.application!!.id).isEqualTo(application2.id)
+    assertThat(migratedBooking2.application!!.id).isEqualTo(application1.id)
     assertThat(migratedBooking2.offlineApplication).isNull()
-    assertThat(migratedBooking2.cancellationReason).isEqualTo(cancellationReason)
-    assertThat(migratedBooking2.cancellationOccurredAt).isEqualTo(LocalDate.of(2024, 1, 1))
-    assertThat(migratedBooking2.cancellationRecordedAt).isEqualTo(LocalDateTime.of(2025, 1, 2, 3, 4, 5).toInstant(ZoneOffset.UTC))
-    assertThat(migratedBooking2.cancellationReasonNotes).isEqualTo("cancellation other reason")
-    assertThat(migratedBooking2.departureReason).isEqualTo(booking2ManagementInfoFromLegacyBooking.departure!!.reason)
-    assertThat(migratedBooking2.departureMoveOnCategory).isEqualTo(booking2ManagementInfoFromLegacyBooking.departure!!.moveOnCategory)
-    assertThat(migratedBooking2.departureNotes).isEqualTo("the legacy departure notes")
+    assertThat(migratedBooking2.cancellationReason).isNull()
+    assertThat(migratedBooking2.cancellationOccurredAt).isNull()
+    assertThat(migratedBooking2.cancellationRecordedAt).isNull()
+    assertThat(migratedBooking2.cancellationReasonNotes).isNull()
+    assertThat(migratedBooking2.departureReason).isNull()
+    assertThat(migratedBooking2.departureMoveOnCategory).isNull()
     assertThat(migratedBooking2.criteria).isEmpty()
-    assertThat(migratedBooking2.nonArrivalReason).isEqualTo(booking2ManagementInfoFromLegacyBooking.nonArrival!!.reason)
-    assertThat(migratedBooking2.nonArrivalConfirmedAt).isEqualTo(Instant.parse("2024-05-01T02:03:04Z"))
-    assertThat(migratedBooking2.nonArrivalNotes).isEqualTo("the legacy non arrival notes")
-    assertThat(migratedBooking2.deliusEventNumber).isEqualTo("50")
-    assertThat(migratedBooking2.migratedManagementInfoFrom).isEqualTo(ManagementInfoSource.LEGACY_CAS_1)
+    assertThat(migratedBooking2.nonArrivalReason).isNull()
+    assertThat(migratedBooking2.nonArrivalConfirmedAt).isNull()
+    assertThat(migratedBooking2.nonArrivalNotes).isNull()
+    assertThat(migratedBooking1.deliusEventNumber).isEqualTo("25")
+    assertThat(migratedBooking2.migratedManagementInfoFrom).isEqualTo(ManagementInfoSource.DELIUS)
 
     val migratedBooking3 = premiseSpaceBookings[2]
-    assertBookingIsDeleted(booking3OfflineApplicationNoManagementInfo.id)
-    assertThat(migratedBooking3.id).isEqualTo(booking3OfflineApplicationNoManagementInfo.id)
+    assertBookingIsDeleted(booking3ManagementInfoFromLegacyBooking.id)
+    assertThat(migratedBooking3.id).isEqualTo(booking3ManagementInfoFromLegacyBooking.id)
     assertThat(migratedBooking3.premises.id).isEqualTo(premises.id)
-    assertThat(migratedBooking3.placementRequest).isNull()
+    assertThat(migratedBooking3.placementRequest!!.id).isEqualTo(placementRequest3.id)
     assertThat(migratedBooking3.createdBy!!.id).isEqualTo(booking3CreatedByUser.id)
-    assertThat(migratedBooking3.expectedArrivalDate).isEqualTo(LocalDate.of(2024, 7, 1))
-    assertThat(migratedBooking3.expectedDepartureDate).isEqualTo(LocalDate.of(2024, 7, 5))
-    assertThat(migratedBooking3.actualArrivalDate).isNull()
-    assertThat(migratedBooking3.actualArrivalTime).isNull()
-    assertThat(migratedBooking3.actualDepartureDate).isNull()
-    assertThat(migratedBooking3.actualDepartureTime).isNull()
-    assertThat(migratedBooking3.canonicalArrivalDate).isEqualTo(LocalDate.of(2024, 7, 1))
-    assertThat(migratedBooking3.canonicalDepartureDate).isEqualTo(LocalDate.of(2024, 7, 5))
-    assertThat(migratedBooking3.crn).isEqualTo("CRN3")
+    assertThat(migratedBooking3.expectedArrivalDate).isEqualTo(LocalDate.of(2024, 6, 1))
+    assertThat(migratedBooking3.expectedDepartureDate).isEqualTo(LocalDate.of(2024, 6, 5))
+    assertThat(migratedBooking3.actualArrivalDate).isEqualTo(LocalDate.parse("2024-06-03"))
+    assertThat(migratedBooking3.actualArrivalTime).isEqualTo(LocalTime.parse("20:00:05"))
+    assertThat(migratedBooking3.actualDepartureDate).isEqualTo(LocalDate.parse("2024-06-06"))
+    assertThat(migratedBooking3.actualDepartureTime).isEqualTo(LocalTime.parse("09:48:00"))
+    assertThat(migratedBooking3.canonicalArrivalDate).isEqualTo(LocalDate.of(2024, 6, 3))
+    assertThat(migratedBooking3.canonicalDepartureDate).isEqualTo(LocalDate.of(2024, 6, 6))
+    assertThat(migratedBooking3.crn).isEqualTo("CRN2")
     assertThat(migratedBooking3.keyWorkerName).isNull()
     assertThat(migratedBooking3.keyWorkerStaffCode).isNull()
     assertThat(migratedBooking3.keyWorkerAssignedAt).isNull()
-    assertThat(migratedBooking3.application).isNull()
-    assertThat(migratedBooking3.offlineApplication!!.id).isEqualTo(offlineApplication.id)
-    assertThat(migratedBooking3.cancellationReason).isNull()
-    assertThat(migratedBooking3.cancellationOccurredAt).isNull()
-    assertThat(migratedBooking3.cancellationRecordedAt).isNull()
-    assertThat(migratedBooking3.cancellationReasonNotes).isNull()
-    assertThat(migratedBooking3.departureReason).isNull()
-    assertThat(migratedBooking3.departureMoveOnCategory).isNull()
-    assertThat(migratedBooking3.nonArrivalReason).isNull()
-    assertThat(migratedBooking3.nonArrivalConfirmedAt).isNull()
-    assertThat(migratedBooking3.nonArrivalNotes).isNull()
+    assertThat(migratedBooking3.application!!.id).isEqualTo(application2.id)
+    assertThat(migratedBooking3.offlineApplication).isNull()
+    assertThat(migratedBooking3.cancellationReason).isEqualTo(cancellationReason)
+    assertThat(migratedBooking3.cancellationOccurredAt).isEqualTo(LocalDate.of(2024, 1, 1))
+    assertThat(migratedBooking3.cancellationRecordedAt).isEqualTo(LocalDateTime.of(2025, 1, 2, 3, 4, 5).toInstant(ZoneOffset.UTC))
+    assertThat(migratedBooking3.cancellationReasonNotes).isEqualTo("cancellation other reason")
+    assertThat(migratedBooking3.departureReason).isEqualTo(booking3ManagementInfoFromLegacyBooking.departure!!.reason)
+    assertThat(migratedBooking3.departureMoveOnCategory).isEqualTo(booking3ManagementInfoFromLegacyBooking.departure!!.moveOnCategory)
+    assertThat(migratedBooking3.departureNotes).isEqualTo("the legacy departure notes")
     assertThat(migratedBooking3.criteria).isEmpty()
-    assertThat(migratedBooking3.deliusEventNumber).isEqualTo("75")
+    assertThat(migratedBooking3.nonArrivalReason).isEqualTo(booking3ManagementInfoFromLegacyBooking.nonArrival!!.reason)
+    assertThat(migratedBooking3.nonArrivalConfirmedAt).isEqualTo(Instant.parse("2024-05-01T02:03:04Z"))
+    assertThat(migratedBooking3.nonArrivalNotes).isEqualTo("the legacy non arrival notes")
+    assertThat(migratedBooking3.deliusEventNumber).isEqualTo("50")
     assertThat(migratedBooking3.migratedManagementInfoFrom).isEqualTo(ManagementInfoSource.LEGACY_CAS_1)
 
     val migratedBooking4 = premiseSpaceBookings[3]
-    assertBookingIsDeleted(booking4OfflineNoDomainEventOrManagementInfo.id)
-    assertThat(migratedBooking4.id).isEqualTo(booking4OfflineNoDomainEventOrManagementInfo.id)
+    assertBookingIsDeleted(booking4OfflineApplicationNoManagementInfo.id)
+    assertThat(migratedBooking4.id).isEqualTo(booking4OfflineApplicationNoManagementInfo.id)
     assertThat(migratedBooking4.premises.id).isEqualTo(premises.id)
     assertThat(migratedBooking4.placementRequest).isNull()
-    assertThat(migratedBooking4.createdBy).isNull()
-    assertThat(migratedBooking4.expectedArrivalDate).isEqualTo(LocalDate.of(2024, 8, 1))
-    assertThat(migratedBooking4.expectedDepartureDate).isEqualTo(LocalDate.of(2024, 8, 5))
+    assertThat(migratedBooking4.createdBy!!.id).isEqualTo(booking4CreatedByUser.id)
+    assertThat(migratedBooking4.expectedArrivalDate).isEqualTo(LocalDate.of(2024, 7, 1))
+    assertThat(migratedBooking4.expectedDepartureDate).isEqualTo(LocalDate.of(2024, 7, 5))
     assertThat(migratedBooking4.actualArrivalDate).isNull()
     assertThat(migratedBooking4.actualArrivalTime).isNull()
     assertThat(migratedBooking4.actualDepartureDate).isNull()
     assertThat(migratedBooking4.actualDepartureTime).isNull()
-    assertThat(migratedBooking4.canonicalArrivalDate).isEqualTo(LocalDate.of(2024, 8, 1))
-    assertThat(migratedBooking4.canonicalDepartureDate).isEqualTo(LocalDate.of(2024, 8, 5))
-    assertThat(migratedBooking4.crn).isEqualTo("CRN4")
+    assertThat(migratedBooking4.canonicalArrivalDate).isEqualTo(LocalDate.of(2024, 7, 1))
+    assertThat(migratedBooking4.canonicalDepartureDate).isEqualTo(LocalDate.of(2024, 7, 5))
+    assertThat(migratedBooking4.crn).isEqualTo("CRN3")
     assertThat(migratedBooking4.keyWorkerName).isNull()
     assertThat(migratedBooking4.keyWorkerStaffCode).isNull()
     assertThat(migratedBooking4.keyWorkerAssignedAt).isNull()
@@ -369,10 +416,43 @@ class SeedCas1BookingToSpaceBookingTest : SeedTestBase() {
     assertThat(migratedBooking4.nonArrivalConfirmedAt).isNull()
     assertThat(migratedBooking4.nonArrivalNotes).isNull()
     assertThat(migratedBooking4.criteria).isEmpty()
-    assertThat(migratedBooking4.deliusEventNumber).isNull()
+    assertThat(migratedBooking4.deliusEventNumber).isEqualTo("75")
     assertThat(migratedBooking4.migratedManagementInfoFrom).isEqualTo(ManagementInfoSource.LEGACY_CAS_1)
 
-    assertBookingIsNotDeleted(booking5DifferentPremise.id)
+    val migratedBooking5 = premiseSpaceBookings[4]
+    assertBookingIsDeleted(booking5OfflineNoDomainEventOrManagementInfo.id)
+    assertThat(migratedBooking5.id).isEqualTo(booking5OfflineNoDomainEventOrManagementInfo.id)
+    assertThat(migratedBooking5.premises.id).isEqualTo(premises.id)
+    assertThat(migratedBooking5.placementRequest).isNull()
+    assertThat(migratedBooking5.createdBy).isNull()
+    assertThat(migratedBooking5.expectedArrivalDate).isEqualTo(LocalDate.of(2024, 8, 1))
+    assertThat(migratedBooking5.expectedDepartureDate).isEqualTo(LocalDate.of(2024, 8, 5))
+    assertThat(migratedBooking5.actualArrivalDate).isNull()
+    assertThat(migratedBooking5.actualArrivalTime).isNull()
+    assertThat(migratedBooking5.actualDepartureDate).isNull()
+    assertThat(migratedBooking5.actualDepartureTime).isNull()
+    assertThat(migratedBooking5.canonicalArrivalDate).isEqualTo(LocalDate.of(2024, 8, 1))
+    assertThat(migratedBooking5.canonicalDepartureDate).isEqualTo(LocalDate.of(2024, 8, 5))
+    assertThat(migratedBooking5.crn).isEqualTo("CRN4")
+    assertThat(migratedBooking5.keyWorkerName).isNull()
+    assertThat(migratedBooking5.keyWorkerStaffCode).isNull()
+    assertThat(migratedBooking5.keyWorkerAssignedAt).isNull()
+    assertThat(migratedBooking5.application).isNull()
+    assertThat(migratedBooking5.offlineApplication!!.id).isEqualTo(offlineApplication.id)
+    assertThat(migratedBooking5.cancellationReason).isNull()
+    assertThat(migratedBooking5.cancellationOccurredAt).isNull()
+    assertThat(migratedBooking5.cancellationRecordedAt).isNull()
+    assertThat(migratedBooking5.cancellationReasonNotes).isNull()
+    assertThat(migratedBooking5.departureReason).isNull()
+    assertThat(migratedBooking5.departureMoveOnCategory).isNull()
+    assertThat(migratedBooking5.nonArrivalReason).isNull()
+    assertThat(migratedBooking5.nonArrivalConfirmedAt).isNull()
+    assertThat(migratedBooking5.nonArrivalNotes).isNull()
+    assertThat(migratedBooking5.criteria).isEmpty()
+    assertThat(migratedBooking5.deliusEventNumber).isNull()
+    assertThat(migratedBooking5.migratedManagementInfoFrom).isEqualTo(ManagementInfoSource.LEGACY_CAS_1)
+
+    assertBookingIsNotDeleted(booking6DifferentPremise.id)
   }
 
   @Test
