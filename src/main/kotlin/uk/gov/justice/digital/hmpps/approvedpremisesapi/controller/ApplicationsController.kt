@@ -54,8 +54,8 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.AssessmentServic
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.FeatureFlagService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.HttpAuthService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.OffenderService
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.RequestForPlacementService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.UserService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1RequestForPlacementService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1WithdrawableService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.WithdrawableEntitiesWithNotes
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.AppealTransformer
@@ -85,7 +85,7 @@ class ApplicationsController(
   private val cas1WithdrawableService: Cas1WithdrawableService,
   private val appealService: AppealService,
   private val appealTransformer: AppealTransformer,
-  private val requestForPlacementService: RequestForPlacementService,
+  private val cas1RequestForPlacementService: Cas1RequestForPlacementService,
   private val withdrawableTransformer: WithdrawableTransformer,
   private val featureFlagService: FeatureFlagService,
   private val applicationTimelineNoteService: ApplicationTimelineNoteService,
@@ -337,13 +337,9 @@ class ApplicationsController(
   }
 
   override fun applicationsApplicationIdRequestsForPlacementGet(applicationId: UUID): ResponseEntity<List<RequestForPlacement>> {
-    val requestsForPlacement = when (val result = requestForPlacementService.getRequestsForPlacementByApplication(applicationId, userService.getUserForRequest())) {
-      is AuthorisableActionResult.Success -> result.entity
-      is AuthorisableActionResult.NotFound -> throw NotFoundProblem(applicationId, "Application")
-      is AuthorisableActionResult.Unauthorised -> throw ForbiddenProblem()
-    }
-
-    return ResponseEntity.ok(requestsForPlacement)
+    return ResponseEntity.ok(
+      extractEntityFromCasResult(cas1RequestForPlacementService.getRequestsForPlacementByApplication(applicationId, userService.getUserForRequest())),
+    )
   }
 
   override fun applicationsApplicationIdRequestsForPlacementRequestForPlacementIdGet(
@@ -352,13 +348,9 @@ class ApplicationsController(
   ): ResponseEntity<RequestForPlacement> {
     val application = applicationService.getApplication(applicationId) ?: throw NotFoundProblem(applicationId, "Application")
 
-    val requestForPlacement = when (val result = requestForPlacementService.getRequestForPlacement(application, requestForPlacementId, userService.getUserForRequest())) {
-      is AuthorisableActionResult.Success -> result.entity
-      is AuthorisableActionResult.NotFound -> throw NotFoundProblem(applicationId, "RequestForPlacement")
-      is AuthorisableActionResult.Unauthorised -> throw ForbiddenProblem()
-    }
-
-    return ResponseEntity.ok(requestForPlacement)
+    return ResponseEntity.ok(
+      extractEntityFromCasResult(cas1RequestForPlacementService.getRequestForPlacement(application, requestForPlacementId, userService.getUserForRequest())),
+    )
   }
 
   override fun applicationsApplicationIdSubmissionPost(

@@ -1,6 +1,7 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.unit.util
 
 import org.assertj.core.api.AbstractAssert
+import org.assertj.core.api.Assertions.assertThat
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.CasResult
 
 fun <T> assertThat(actual: CasResult<T>): CasResultAssertions<T> = CasResultAssertions(actual)
@@ -10,19 +11,11 @@ class CasResultAssertions<T>(actual: CasResult<T>) : AbstractAssert<CasResultAss
   CasResultAssertions::class.java,
 ) {
 
-  fun isSuccess(): CasResultAssertions<T> {
+  fun isSuccess(): CasSuccessResultAssertions<T> {
     if (actual !is CasResult.Success) {
       failWithMessage("Expected CasResult.Success but was <%s>", actual.javaClass.simpleName, actual)
     }
-    return this
-  }
-
-  fun hasValueEqualTo(expected: Any): CasResultAssertions<T> {
-    val value = (actual as CasResult.Success).value
-    if (value != expected) {
-      failWithMessage("Expected CasResult value to be <%s> but was:<%s>", expected, value)
-    }
-    return this
+    return CasSuccessResultAssertions(actual as CasResult.Success)
   }
 
   fun isFieldValidationError(field: String, expectedMessage: String): CasResultAssertions<T> {
@@ -64,5 +57,32 @@ class CasResultAssertions<T>(actual: CasResult<T>) : AbstractAssert<CasResultAss
       )
     }
     return this
+  }
+
+  fun isNotFound(expectedEntityType: String, expectedId: Any) {
+    if (actual !is CasResult.NotFound) {
+      failWithMessage("Expected CasResult.NotFound but was <%s>", actual.javaClass.simpleName, actual)
+    }
+    val notFound = actual as CasResult.NotFound
+
+    assertThat(notFound.id).isEqualTo(expectedId.toString())
+    assertThat(notFound.entityType).isEqualTo(expectedEntityType)
+  }
+}
+
+class CasSuccessResultAssertions<T>(actual: CasResult.Success<T>) : AbstractAssert<CasSuccessResultAssertions<T>, CasResult.Success<T>>(
+  actual,
+  CasSuccessResultAssertions::class.java,
+) {
+  fun hasValueEqualTo(expected: Any): CasSuccessResultAssertions<T> {
+    val value = actual.value
+    if (value != expected) {
+      failWithMessage("Expected CasResult value to be <%s> but was:<%s>", expected, value)
+    }
+    return this
+  }
+
+  fun with(check: (T) -> Unit) {
+    check.invoke(actual.value)
   }
 }
