@@ -11,6 +11,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApplicationRe
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DomainEventRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DomainEventType
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.seed.SeedColumns
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.seed.SeedJob
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.ApplicationTimelineNoteService
 import java.util.UUID
@@ -48,12 +49,15 @@ class Cas1UpdateEventNumberSeedJob(
 ) {
   private val log = LoggerFactory.getLogger(this::class.java)
 
-  override fun deserializeRow(columns: Map<String, String>) = Cas1UpdateEventNumberSeedJobCsvRow(
-    applicationId = UUID.fromString(columns["application_id"]!!.trim()),
-    eventNumber = columns["event_number"]!!.toInt(),
-    offenceId = columns["offence_id"]!!,
-    convictionId = columns["conviction_id"]!!.toLong(),
-  )
+  override fun deserializeRow(columns: Map<String, String>): Cas1UpdateEventNumberSeedJobCsvRow {
+    val seedColumns = SeedColumns(columns)
+    return Cas1UpdateEventNumberSeedJobCsvRow(
+      applicationId = seedColumns.uuidOrNull("application_id")!!,
+      eventNumber = seedColumns.intOrNull("event_number")!!,
+      offenceId = seedColumns.stringOrNull("offence_id")!!,
+      convictionId = seedColumns.longOrNull("conviction_id")!!,
+    )
+  }
 
   override fun processRow(row: Cas1UpdateEventNumberSeedJobCsvRow) {
     val applicationId = row.applicationId

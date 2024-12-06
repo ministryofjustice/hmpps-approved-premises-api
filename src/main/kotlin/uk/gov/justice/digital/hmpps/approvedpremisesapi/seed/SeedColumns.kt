@@ -12,6 +12,10 @@ data class SeedColumns(
 
   fun uuidOrNull(label: String) = columns[label]?.let { UUID.fromString(it.trim()) }
 
+  fun intOrNull(label: String) = columns[label]?.toIntOrNull()
+
+  fun longOrNull(label: String) = columns[label]?.toLongOrNull()
+
   fun lastDateTimeFromList(label: String, formatter: DateTimeFormatter): LocalDateTime? {
     val rawValue = stringOrNull(label) ?: return null
 
