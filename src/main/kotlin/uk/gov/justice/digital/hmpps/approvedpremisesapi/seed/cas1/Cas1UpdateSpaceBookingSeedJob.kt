@@ -10,7 +10,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Characteristi
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.seed.SeedColumns
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.seed.SeedJob
 import java.util.UUID
-import kotlin.math.log
 
 @Service
 class Cas1UpdateSpaceBookingSeedJob(
@@ -31,11 +30,11 @@ class Cas1UpdateSpaceBookingSeedJob(
     val seedColumns = SeedColumns(columns)
 
     return Cas1UpdateSpaceBookingSeedJobCsvRow(
-      spaceBookingId = seedColumns.uuidOrNull("space_booking_id")!!,
-      updateEventNumber = seedColumns.yesNoBoolean("update_event_number") ?: false,
-      eventNumber = seedColumns.stringOrNull("event_number"),
-      updateCriteria = seedColumns.yesNoBoolean("update_criteria") ?: false,
-      criteria = seedColumns.stringsFromList("criteria"),
+      spaceBookingId = seedColumns.getUuidOrNull("space_booking_id")!!,
+      updateEventNumber = seedColumns.getYesNoBooleanOrNull("update_event_number") ?: false,
+      eventNumber = seedColumns.getStringOrNull("event_number"),
+      updateCriteria = seedColumns.getYesNoBooleanOrNull("update_criteria") ?: false,
+      criteria = seedColumns.getStringsFromListOrNull("criteria"),
     )
   }
 
