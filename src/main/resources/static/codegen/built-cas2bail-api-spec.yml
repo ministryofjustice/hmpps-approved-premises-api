@@ -1,3 +1,594 @@
+# DO NOT EDIT.
+# This is a build artefact for use in code generation.
+openapi: 3.0.1
+info:
+  title: 'Community Accommodation Services: Tier 2 (CAS2 Bail)'
+  version: 1.0.0
+servers:
+  - url: /cas2bail
+paths:
+  /applications:
+    post:
+      tags:
+        - Operations on CAS2 Bail applications
+      summary: Creates a CAS2 Bail application
+      requestBody:
+        description: Information to create a blank application with
+        content:
+          'application/json':
+            schema:
+              $ref: '#/components/schemas/NewApplication'
+        required: true
+      responses:
+        201:
+          description: successful operation
+          content:
+            'application/json':
+              schema:
+                $ref: '#/components/schemas/Application'
+        400:
+          description: invalid params
+          content:
+            'application/problem+json':
+              schema:
+                $ref: '#/components/schemas/ValidationError'
+        401:
+          $ref: '#/components/responses/401Response'
+        403:
+          $ref: '#/components/responses/403Response'
+        404:
+          description: invalid CRN
+          content:
+            'application/json':
+              schema:
+                $ref: '#/components/schemas/Problem'
+        500:
+          $ref: '#/components/responses/500Response'
+      x-codegen-request-body-name: body
+    get:
+      tags:
+        - Operations on CAS2 Bail applications
+      summary: List summaries of all CAS2 Bail applications authorised for the logged in user
+      parameters:
+        - name: isSubmitted
+          in: query
+          description: Returns submitted applications if true, un submitted applications if false, and all applications if absent
+          schema:
+            type: boolean
+        - name: page
+          in: query
+          description: Page number of results to return.  If blank, returns all results
+          schema:
+            type: integer
+        - name: prisonCode
+          in: query
+          description: Prison code of applications to return.  If blank, returns all results.
+          schema:
+            type: string
+      responses:
+        200:
+          description: successful operation
+          content:
+            'application/json':
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Cas2ApplicationSummary'
+          headers:
+            X-Pagination-CurrentPage:
+              $ref: '#/components/headers/X-Pagination-CurrentPage'
+            X-Pagination-TotalPages:
+              $ref: '#/components/headers/X-Pagination-TotalPages'
+            X-Pagination-TotalResults:
+              $ref: '#/components/headers/X-Pagination-TotalResults'
+            X-Pagination-PageSize:
+              $ref: '#/components/headers/X-Pagination-TotalResults'
+        401:
+          $ref: '#/components/responses/401Response'
+        403:
+          $ref: '#/components/responses/403Response'
+        500:
+          $ref: '#/components/responses/500Response'
+
+  /applications/{applicationId}:
+    put:
+      tags:
+        - Operations on CAS2 Bail applications
+      summary: Updates a CAS2 Bail application
+      parameters:
+        - name: applicationId
+          in: path
+          description: ID of the application
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        description: Information to update the application with
+        content:
+          'application/json':
+            schema:
+              $ref: '#/components/schemas/UpdateApplication'
+        required: true
+      responses:
+        200:
+          description: successful operation
+          content:
+            'application/json':
+              schema:
+                $ref: '#/components/schemas/Application'
+        400:
+          description: invalid params
+          content:
+            'application/problem+json':
+              schema:
+                $ref: '#/components/schemas/ValidationError'
+        401:
+          $ref: '#/components/responses/401Response'
+        403:
+          $ref: '#/components/responses/403Response'
+        500:
+          $ref: '#/components/responses/500Response'
+      x-codegen-request-body-name: body
+    get:
+      tags:
+        - Operations on CAS2 Bail applications
+      summary: Gets a single CAS2 Bail application by its ID
+      parameters:
+        - name: applicationId
+          in: path
+          description: ID of the application
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        200:
+          description: successful operation
+          content:
+            'application/json':
+              schema:
+                $ref: '#/components/schemas/Application'
+        401:
+          $ref: '#/components/responses/401Response'
+        403:
+          $ref: '#/components/responses/403Response'
+        500:
+          $ref: '#/components/responses/500Response'
+  /applications/{applicationId}/abandon:
+    put:
+      tags:
+        - Operations on CAS2 Bail applications
+      summary: Abandons an in progress CAS2 Bail application
+      parameters:
+        - name: applicationId
+          in: path
+          description: ID of the application
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        200:
+          description: successful operation
+        401:
+          $ref: '#/components/responses/401Response'
+        409:
+          description: The application has been submitted
+          content:
+            'application/json':
+              schema:
+                $ref: '#/components/schemas/Problem'
+        500:
+          $ref: '#/components/responses/500Response'
+  /assessments/{assessmentId}:
+    put:
+      tags:
+        - Operations on submitted CAS2 Bail applications (Assessors)
+      summary: Updates a single CAS2 Bail assessment by its ID
+      parameters:
+        - name: assessmentId
+          in: path
+          description: ID of the assessment
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        description: Information to update the assessment with
+        content:
+          'application/json':
+            schema:
+              $ref: '#/components/schemas/UpdateCas2Assessment'
+        required: true
+      responses:
+        200:
+          description: successful operation
+          content:
+            'application/json':
+              schema:
+                $ref: '#/components/schemas/Cas2Assessment'
+        401:
+          $ref: '#/components/responses/401Response'
+        403:
+          $ref: '#/components/responses/403Response'
+        404:
+          description: invalid assessmentId
+          content:
+            'application/json':
+              schema:
+                $ref: '#/components/schemas/Problem'
+        500:
+          $ref: '#/components/responses/500Response'
+    get:
+      tags:
+        - Operations on submitted CAS2 Bail applications (Assessors)
+      summary: Gets a single CAS2 Bail assessment by its ID
+      parameters:
+        - name: assessmentId
+          in: path
+          description: ID of the assessment
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        200:
+          description: successful operation
+          content:
+            'application/json':
+              schema:
+                $ref: '#/components/schemas/Cas2Assessment'
+        401:
+          $ref: '#/components/responses/401Response'
+        403:
+          $ref: '#/components/responses/403Response'
+        404:
+          description: invalid assessmentId
+          content:
+            'application/json':
+              schema:
+                $ref: '#/components/schemas/Problem'
+        500:
+          $ref: '#/components/responses/500Response'
+  /assessments/{assessmentId}/status-updates:
+    post:
+      tags:
+        - Operations on submitted CAS2 Bail applications (Assessors)
+      summary: Creates a status update on an assessment
+      parameters:
+        - name: assessmentId
+          in: path
+          description: ID of the assessment whose status is to be updated
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        description: Information on the new status to be applied
+        content:
+          'application/json':
+            schema:
+              $ref: '#/components/schemas/Cas2AssessmentStatusUpdate'
+        required: true
+      responses:
+        200:
+          description: successfully created the status update
+        400:
+          description: status update has already been submitted
+          content:
+            'application/problem+json':
+              schema:
+                $ref: '#/components/schemas/ValidationError'
+        401:
+          $ref: '#/components/responses/401Response'
+        403:
+          $ref: '#/components/responses/403Response'
+        500:
+          $ref: '#/components/responses/500Response'
+  /assessments/{assessmentId}/notes:
+    post:
+      tags:
+        - Operations on CAS2 Bail assessments
+      summary: Add a note to an assessment
+      parameters:
+        - name: assessmentId
+          in: path
+          description: ID of the assessment
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        description: the note to add
+        content:
+          'application/json':
+            schema:
+              $ref: '#/components/schemas/NewCas2ApplicationNote'
+        required: true
+      responses:
+        200:
+          description: successful operation
+          content:
+            'application/json':
+              schema:
+                $ref: '#/components/schemas/Cas2ApplicationNote'
+        401:
+          $ref: '#/components/responses/401Response'
+        403:
+          $ref: '#/components/responses/403Response'
+        404:
+          description: invalid assessmentId
+          content:
+            'application/json':
+              schema:
+                $ref: '#/components/schemas/Problem'
+        500:
+          $ref: '#/components/responses/500Response'
+      x-codegen-request-body-name: body
+  /submissions:
+    get:
+      tags:
+        - Operations on submitted CAS2 Bail applications (Assessors)
+      summary: List summaries of all submitted CAS2 Bail applications
+      parameters:
+        - name: page
+          in: query
+          description: Page number of results to return. If blank, returns all results
+          schema:
+            type: integer
+      responses:
+        200:
+          description: successful operation
+          content:
+            'application/json':
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Cas2SubmittedApplicationSummary'
+          headers:
+            X-Pagination-CurrentPage:
+              $ref: '#/components/headers/X-Pagination-CurrentPage'
+            X-Pagination-TotalPages:
+              $ref: '#/components/headers/X-Pagination-TotalPages'
+            X-Pagination-TotalResults:
+              $ref: '#/components/headers/X-Pagination-TotalResults'
+            X-Pagination-PageSize:
+              $ref: '#/components/headers/X-Pagination-TotalResults'
+        401:
+          $ref: '#/components/responses/401Response'
+        403:
+          $ref: '#/components/responses/403Response'
+        500:
+          $ref: '#/components/responses/500Response'
+    post:
+      tags:
+        - Operations on CAS2 Bail applications
+      summary: Submits a CAS2 Bail Application (creates a SubmittedApplication)
+      requestBody:
+        description: Information needed to submit an application
+        content:
+          'application/json':
+            schema:
+              $ref: '#/components/schemas/SubmitCas2Application'
+        required: true
+      responses:
+        200:
+          description: successfully submitted the application
+        400:
+          description: application has already been submitted
+          content:
+            'application/problem+json':
+              schema:
+                $ref: '#/components/schemas/ValidationError'
+        401:
+          $ref: '#/components/responses/401Response'
+        403:
+          $ref: '#/components/responses/403Response'
+        500:
+          $ref: '#/components/responses/500Response'
+  /submissions/{applicationId}:
+    get:
+      tags:
+        - Operations on submitted CAS2 Bail applications (Assessors)
+      summary: Gets a single submitted CAS2 Bail application by its ID
+      parameters:
+        - name: applicationId
+          in: path
+          description: ID of the application
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        200:
+          description: successful operation
+          content:
+            'application/json':
+              schema:
+                $ref: '#/components/schemas/Cas2SubmittedApplication'
+        401:
+          $ref: '#/components/responses/401Response'
+        403:
+          $ref: '#/components/responses/403Response'
+        500:
+          $ref: '#/components/responses/500Response'
+  /people/search:
+    get:
+      tags:
+        - People operations
+      summary: Searches for a Person by their Prison Number (NOMIS ID)
+      parameters:
+        - name: nomsNumber
+          in: query
+          description: Prison Number to search for
+          required: true
+          schema:
+            type: string
+      responses:
+        200:
+          description: successful operation
+          content:
+            'application/json':
+              schema:
+                $ref: '#/components/schemas/Person'
+        400:
+          description: invalid params
+          content:
+            'application/problem+json':
+              schema:
+                $ref: '#/components/schemas/ValidationError'
+        404:
+          description: invalid CRN
+          content:
+            'application/json':
+              schema:
+                $ref: '#/components/schemas/Problem'
+        401:
+          $ref: '#/components/responses/401Response'
+        403:
+          $ref: '#/components/responses/403Response'
+        500:
+          $ref: '#/components/responses/500Response'
+  /people/{crn}/oasys/risk-to-self:
+    get:
+      tags:
+        - People operations
+      summary: Returns the Risk To Individual (known as Risk to Self on frontend) section of an OASys.
+      parameters:
+        - name: crn
+          in: path
+          description: CRN of the Person to fetch latest OASys
+          required: true
+          schema:
+            type: string
+      responses:
+        200:
+          description: successful operation
+          content:
+            'application/json':
+              schema:
+                $ref: '#/components/schemas/OASysRiskToSelf'
+        401:
+          $ref: '#/components/responses/401Response'
+        403:
+          $ref: '#/components/responses/403Response'
+        404:
+          description: invalid CRN
+          content:
+            'application/json':
+              schema:
+                $ref: '#/components/schemas/Problem'
+        500:
+          $ref: '#/components/responses/500Response'
+  /people/{crn}/oasys/rosh:
+    get:
+      tags:
+        - People operations
+      summary: Returns the Risk of Serious Harm section of an OASys.
+      parameters:
+        - name: crn
+          in: path
+          description: CRN of the Person to fetch latest OASys
+          required: true
+          schema:
+            type: string
+      responses:
+        200:
+          description: successful operation
+          content:
+            'application/json':
+              schema:
+                $ref: '#/components/schemas/OASysRiskOfSeriousHarm'
+        401:
+          $ref: '#/components/responses/401Response'
+        403:
+          $ref: '#/components/responses/403Response'
+        404:
+          description: invalid CRN
+          content:
+            'application/json':
+              schema:
+                $ref: '#/components/schemas/Problem'
+        500:
+          $ref: '#/components/responses/500Response'
+  /people/{crn}/risks:
+    get:
+      tags:
+        - People operations
+      summary: Returns the risks for a Person
+      parameters:
+        - name: crn
+          in: path
+          description: CRN of the Person to fetch risks for
+          required: true
+          schema:
+            type: string
+      responses:
+        200:
+          description: successful operation
+          content:
+            'application/json':
+              schema:
+                $ref: '#/components/schemas/PersonRisks'
+        400:
+          description: invalid params
+          content:
+            'application/problem+json':
+              schema:
+                $ref: '#/components/schemas/ValidationError'
+        401:
+          $ref: '#/components/responses/401Response'
+        403:
+          $ref: '#/components/responses/403Response'
+        404:
+          description: invalid CRN
+          content:
+            'application/json':
+              schema:
+                $ref: '#/components/schemas/Problem'
+        500:
+          $ref: '#/components/responses/500Response'
+  /reference-data/application-status:
+    get:
+      tags:
+        - Reference Data
+      summary: Lists all application status update choices
+      responses:
+        200:
+          description: successful operation
+          content:
+            'application/json':
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Cas2ApplicationStatus'
+        401:
+          $ref: '#/components/responses/401Response'
+        403:
+          $ref: '#/components/responses/403Response'
+        500:
+          $ref: '#/components/responses/500Response'
+  /reports/{reportName}:
+    get:
+      tags:
+        - Reports
+      summary: Returns a 'report' spreadsheet of metrics
+      parameters:
+        - name: reportName
+          in: path
+          description: name of the report to download
+          required: true
+          schema:
+            $ref: '#/components/schemas/Cas2ReportName'
+      responses:
+        200:
+          description: successful operation
+          content:
+            'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet':
+              schema:
+                type: string
+                format: binary
 components:
   responses:
     401Response:
@@ -1700,9 +2291,8 @@ components:
               type: boolean
             caseManagerUserDetails:
               $ref: '#/components/schemas/Cas1ApplicationUserDetails'
-            licenceExpiryDate:
-              type: string
-              format: date
+            genderForAp:
+              $ref: '#/components/schemas/GenderForAp'
           required:
             - createdByUserId
             - schemaVersion
@@ -1736,7 +2326,7 @@ components:
             timelineEvents:
               type: array
               items:
-                $ref: '_shared.yml#/components/schemas/Cas2TimelineEvent'
+                $ref: '#/components/schemas/Cas2TimelineEvent'
           required:
             - createdBy
             - schemaVersion
@@ -1770,10 +2360,10 @@ components:
         timelineEvents:
           type: array
           items:
-            $ref: '_shared.yml#/components/schemas/Cas2TimelineEvent'
+            $ref: '#/components/schemas/Cas2TimelineEvent'
         assessment:
           type: object
-          $ref: '_shared.yml#/components/schemas/Cas2Assessment'
+          $ref: '#/components/schemas/Cas2Assessment'
       required:
         - id
         - person
@@ -1813,9 +2403,6 @@ components:
               format: date-time
             offenceId:
               type: string
-            assessmentId:
-              type: string
-              format: uuid
           required:
             - createdByUserId
             - schemaVersion
@@ -2371,9 +2958,6 @@ components:
               type: string
             reasonForShortNoticeOther:
               type: string
-            licenseExpiryDate:
-              type: string
-              format: date
           required:
             - targetLocation
             - releaseType
@@ -2689,7 +3273,7 @@ components:
         statusUpdates:
           type: array
           items:
-            $ref: '_shared.yml#/components/schemas/Cas2StatusUpdate'
+            $ref: '#/components/schemas/Cas2StatusUpdate'
       required:
         - id
     UpdateCas2Assessment:
@@ -2956,7 +3540,7 @@ components:
     ReferralHistoryDomainEventNote:
       type: object
       allOf:
-        - $ref: '_shared.yml#/components/schemas/ReferralHistoryNote'
+        - $ref: '#/components/schemas/ReferralHistoryNote'
     ReferralHistoryUserNote:
       allOf:
         - $ref: '#/components/schemas/ReferralHistoryNote'
@@ -3198,6 +3782,8 @@ components:
       enum:
         - assessor
         - matcher
+        - manager
+        - legacy_manager
         - future_manager
         - workflow_manager
         - cru_member
@@ -3881,7 +4467,6 @@ components:
         - approved_premises_cru_management_areas
         - approved_premises_space_planning_dry_run
         - approved_premises_import_delius_booking_management_data
-        - approved_premises_update_space_booking
     MigrationJobRequest:
       type: object
       properties:
@@ -3905,7 +4490,6 @@ components:
         - update_cas1_backfill_user_ap_area
         - update_cas3_application_offender_name
         - update_cas3_domain_event_type_for_person_departed_updated
-        - update_cas1_applications_licence_expiry_date
     PlacementDates:
       type: object
       properties:
@@ -4321,7 +4905,7 @@ components:
               type: array
               description: Bedspace and property attributes to filter on
               items:
-                $ref: "_shared.yml#/components/schemas/BedSearchAttributes"
+                $ref: "#/components/schemas/BedSearchAttributes"
           required:
             - probationDeliveryUnits
     BedSearchResults:
@@ -4713,6 +5297,78 @@ components:
         - teamsManagingCase
         - ukBankHolidays
         - inmateDetails
+    BedOccupancyRange:
+      type: object
+      properties:
+        bedId:
+          type: string
+          format: uuid
+        bedName:
+          type: string
+        schedule:
+          type: array
+          items:
+            $ref: '#/components/schemas/BedOccupancyEntry'
+      required:
+        - bedId
+        - bedName
+        - schedule
+    BedOccupancyEntryType:
+      type: string
+      enum:
+        - booking
+        - lost_bed
+        - open
+    BedOccupancyEntry:
+      type: object
+      properties:
+        type:
+          $ref: '#/components/schemas/BedOccupancyEntryType'
+        length:
+          type: integer
+        startDate:
+          type: string
+          format: date
+        endDate:
+          type: string
+          format: date
+      required:
+        - type
+        - length
+        - startDate
+        - endDate
+      discriminator:
+        propertyName: type
+        mapping:
+          booking: '#/components/schemas/BedOccupancyBookingEntry'
+          lost_bed: '#/components/schemas/BedOccupancyLostBedEntry'
+          open: '#/components/schemas/BedOccupancyOpenEntry'
+    BedOccupancyBookingEntry:
+      allOf:
+        - $ref: '#/components/schemas/BedOccupancyEntry'
+        - type: object
+          properties:
+            bookingId:
+              type: string
+              format: uuid
+            personName:
+              type: string
+          required:
+            - bookingId
+            - personName
+    BedOccupancyLostBedEntry:
+      allOf:
+        - $ref: '#/components/schemas/BedOccupancyEntry'
+        - type: object
+          properties:
+            lostBedId:
+              type: string
+              format: uuid
+          required:
+            - lostBedId
+    BedOccupancyOpenEntry:
+      allOf:
+        - $ref: '#/components/schemas/BedOccupancyEntry'
     PersonType:
       type: string
       enum:
@@ -4750,7 +5406,7 @@ components:
         withdrawables:
           type: array
           items:
-            $ref: '_shared.yml#/components/schemas/Withdrawable'
+            $ref: '#/components/schemas/Withdrawable'
       required:
         - notes
         - withdrawables
@@ -4941,6 +5597,196 @@ components:
         - submitted-applications
         - application-status-updates
         - unsubmitted-applications
+    Cas1OutOfServiceBed:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        createdAt:
+          type: string
+          format: date-time
+        startDate:
+          type: string
+          format: date
+        endDate:
+          type: string
+          format: date
+        bed:
+          $ref: '#/components/schemas/NamedId'
+        room:
+          $ref: '#/components/schemas/NamedId'
+        premises:
+          $ref: '#/components/schemas/NamedId'
+        apArea:
+          $ref: '#/components/schemas/NamedId'
+        reason:
+          $ref: '#/components/schemas/Cas1OutOfServiceBedReason'
+        referenceNumber:
+          type: string
+        notes:
+          type: string
+        daysLostCount:
+          type: integer
+        temporality:
+          $ref: '#/components/schemas/Temporality'
+        status:
+          $ref: '#/components/schemas/Cas1OutOfServiceBedStatus'
+        cancellation:
+          nullable: true
+          allOf:
+            - $ref: '#/components/schemas/Cas1OutOfServiceBedCancellation'
+        revisionHistory:
+          type: array
+          items:
+            $ref: '#/components/schemas/Cas1OutOfServiceBedRevision'
+      required:
+        - id
+        - createdAt
+        - startDate
+        - endDate
+        - bed
+        - room
+        - premises
+        - apArea
+        - reason
+        - daysLostCount
+        - temporality
+        - status
+        - revisionHistory
+    NewCas1OutOfServiceBed:
+      type: object
+      properties:
+        startDate:
+          type: string
+          format: date
+        endDate:
+          type: string
+          format: date
+        reason:
+          type: string
+          format: uuid
+        referenceNumber:
+          type: string
+        notes:
+          type: string
+        bedId:
+          type: string
+          format: uuid
+      required:
+        - startDate
+        - endDate
+        - reason
+        - bedId
+    UpdateCas1OutOfServiceBed:
+      type: object
+      properties:
+        startDate:
+          type: string
+          format: date
+        endDate:
+          type: string
+          format: date
+        reason:
+          type: string
+          format: uuid
+        referenceNumber:
+          type: string
+        notes:
+          type: string
+      required:
+        - startDate
+        - endDate
+        - reason
+    Cas1OutOfServiceBedCancellation:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        createdAt:
+          type: string
+          format: date-time
+        notes:
+          type: string
+      required:
+        - id
+        - createdAt
+    NewCas1OutOfServiceBedCancellation:
+      type: object
+      properties:
+        notes:
+          type: string
+    Cas1OutOfServiceBedStatus:
+      type: string
+      enum:
+        - active
+        - cancelled
+    Cas1OutOfServiceBedReason:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        name:
+          type: string
+          example: Double Room with Single Occupancy - Other (Non-FM)
+        isActive:
+          type: boolean
+      required:
+        - id
+        - name
+        - isActive
+    Cas1OutOfServiceBedSortField:
+      type: string
+      enum:
+        - premisesName
+        - roomName
+        - bedName
+        - startDate
+        - endDate
+        - reason
+        - daysLost
+    Cas1OutOfServiceBedRevision:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        updatedAt:
+          type: string
+          format: date-time
+        updatedBy:
+          $ref: '#/components/schemas/User'
+        revisionType:
+          type: array
+          items:
+            $ref: '#/components/schemas/Cas1OutOfServiceBedRevisionType'
+        startDate:
+          type: string
+          format: date
+        endDate:
+          type: string
+          format: date
+        reason:
+          $ref: '#/components/schemas/Cas1OutOfServiceBedReason'
+        referenceNumber:
+          type: string
+        notes:
+          type: string
+      required:
+        - id
+        - updatedAt
+        - revisionType
+    Cas1OutOfServiceBedRevisionType:
+      type: string
+      enum:
+        - created
+        - updatedStartDate
+        - updatedEndDate
+        - updatedReferenceNumber
+        - updatedReason
+        - updatedNotes
     NamedId:
       type: object
       description: A generic stub for an object with a name and an ID.
@@ -4959,9 +5805,18 @@ components:
         - past
         - current
         - future
+    GenderForAp:
+      type: string
+      enum:
+        - male
+        - female
     BedSearchAttributes:
       type: string
       enum:
         - sharedProperty
         - singleOccupancy
         - wheelchairAccessible
+
+# GARETH above here
+
+# TOBY below here
