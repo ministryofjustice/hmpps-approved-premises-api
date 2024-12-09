@@ -111,13 +111,13 @@ class BedSearchService(
     }
   }
 
-  @Suppress("detekt:CyclomaticComplexMethod")
+  @Suppress("detekt:CyclomaticComplexMethod", "detekt:LongMethod")
   fun findTemporaryAccommodationBeds(
     user: UserEntity,
     probationDeliveryUnits: List<UUID>,
     startDate: LocalDate,
     durationInDays: Int,
-    propertyBedAttributes: List<BedSearchAttributes>?,
+    propertyBedAttributes: List<BedSearchAttributes> = emptyList(),
   ): CasResult<List<TemporaryAccommodationBedSearchResult>> = validatedCasResult {
     val probationDeliveryUnitIds = mutableListOf<UUID>()
 
@@ -144,20 +144,16 @@ class BedSearchService(
       return fieldValidationError
     }
 
-    val premisesCharacteristicsPropertyNames = propertyBedAttributes?.map {
-      when (it) {
-        BedSearchAttributes.singleOccupancy -> "isSingleOccupancy"
-        BedSearchAttributes.sharedProperty -> "isSharedProperty"
-        BedSearchAttributes.wheelchairAccessible -> ""
-      }
-    }
+    val premisesCharacteristicsPropertyNames = propertyBedAttributes.filter {
+      it == BedSearchAttributes.singleOccupancy || it == BedSearchAttributes.sharedProperty
+    }.map { it.value }
 
-    val premisesCharacteristicIds = getTemporaryAccommodationCharacteristicsIds(premisesCharacteristicsPropertyNames, "premises")
+    val premisesCharacteristicIds =
+      getTemporaryAccommodationCharacteristicsIds(premisesCharacteristicsPropertyNames, "premises")
 
-    val roomCharacteristicsPropertyNames = when {
-      propertyBedAttributes?.contains(BedSearchAttributes.wheelchairAccessible) == true -> listOf("isWheelchairAccessible")
-      else -> null
-    }
+    val roomCharacteristicsPropertyNames = propertyBedAttributes.filter {
+      it == BedSearchAttributes.wheelchairAccessible
+    }.map { it.value }
 
     val roomCharacteristicIds = getTemporaryAccommodationCharacteristicsIds(roomCharacteristicsPropertyNames, "room")
 
@@ -170,6 +166,8 @@ class BedSearchService(
       probationRegionId = user.probationRegion.id,
       premisesCharacteristicIds,
       roomCharacteristicIds,
+      propertyBedAttributes.excludePropertiesNotSuitableForSexualRiskToAdults(),
+      propertyBedAttributes.excludePropertiesNotSuitableForSexualRiskToChildren(),
     )
 
     val bedIds = candidateResults.map { it.bedId }
@@ -198,6 +196,12 @@ class BedSearchService(
 
     return success(results)
   }
+
+  private fun List<BedSearchAttributes>.excludePropertiesNotSuitableForSexualRiskToAdults() =
+    this.contains(BedSearchAttributes.NOT_SUITABLE_FOR_SEXUAL_RISK_TO_ADULTS)
+
+  private fun List<BedSearchAttributes>.excludePropertiesNotSuitableForSexualRiskToChildren() =
+    this.contains(BedSearchAttributes.NOT_SUITABLE_FOR_SEXUAL_RISK_TO_CHILDREN)
 
   fun transformBookingToOverlap(
     overlappedBooking: OverlapBookingsSearchResult,

@@ -45,6 +45,7 @@ import java.math.BigDecimal
 import java.time.LocalDate
 import java.time.OffsetDateTime
 import java.util.UUID
+
 @SuppressWarnings("LargeClass")
 class BedSearchTest : IntegrationTestBase() {
 
@@ -1923,7 +1924,24 @@ class BedSearchTest : IntegrationTestBase() {
       val premisesWomenOnlyCharacteristic = characteristicRepository.findByName("Women only")
       val premisesPubNearbyCharacteristic = characteristicRepository.findByName("Pub nearby")
       val wheelchairAccessibleCharacteristic = characteristicRepository.findByName("Wheelchair accessible")
-      var beds = listOf<BedEntity>()
+      val notSuitableForSexualRiskToAdults = characteristicRepository.findByPropertyName(
+        BedSearchAttributes.NOT_SUITABLE_FOR_SEXUAL_RISK_TO_ADULTS.value,
+        ServiceName.temporaryAccommodation.value,
+      )
+      val notSuitableForSexualRiskToChildren = characteristicRepository.findByPropertyName(
+        BedSearchAttributes.NOT_SUITABLE_FOR_SEXUAL_RISK_TO_CHILDREN.value,
+        ServiceName.temporaryAccommodation.value,
+      )
+
+      val notSuitablePremises = createTemporaryAccommodationPremisesWithCharacteristics(
+        "Not Suitable Premises",
+        probationRegion,
+        localAuthorityArea,
+        pdu,
+        mutableListOf(notSuitableForSexualRiskToAdults!!, notSuitableForSexualRiskToChildren!!),
+      )
+
+      val (_, notSuitableBedOne) = createBedspace(notSuitablePremises, "Not Suitable Bed One", emptyList())
 
       val premisesSingleOccupancy = createTemporaryAccommodationPremisesWithCharacteristics(
         "Premises Single Occupancy",
@@ -2013,10 +2031,12 @@ class BedSearchTest : IntegrationTestBase() {
         listOf(),
       )
 
-      when (bedSearchAttribute) {
-        BedSearchAttributes.singleOccupancy -> beds = listOf(singleOccupancyBedOne, premisesSingleOccupancyWomenOnlyBedOne, premisesSingleOccupancyWheelchairAccessibleBedOne)
-        BedSearchAttributes.sharedProperty -> beds = listOf(sharedPropertyBedOne, premisesSharedPropertyMenOnlyBedOne, premisesSharedPropertyWheelchairAccessibleBedOne)
-        BedSearchAttributes.wheelchairAccessible -> beds = listOf(premisesSharedPropertyWheelchairAccessibleBedOne, premisesSingleOccupancyWheelchairAccessibleBedOne)
+      val beds: List<BedEntity> = when (bedSearchAttribute) {
+        BedSearchAttributes.singleOccupancy -> listOf(singleOccupancyBedOne, premisesSingleOccupancyWomenOnlyBedOne, premisesSingleOccupancyWheelchairAccessibleBedOne)
+        BedSearchAttributes.sharedProperty -> listOf(sharedPropertyBedOne, premisesSharedPropertyMenOnlyBedOne, premisesSharedPropertyWheelchairAccessibleBedOne)
+        BedSearchAttributes.wheelchairAccessible -> listOf(premisesSharedPropertyWheelchairAccessibleBedOne, premisesSingleOccupancyWheelchairAccessibleBedOne)
+        BedSearchAttributes.NOT_SUITABLE_FOR_SEXUAL_RISK_TO_ADULTS -> listOf(notSuitableBedOne)
+        BedSearchAttributes.NOT_SUITABLE_FOR_SEXUAL_RISK_TO_CHILDREN -> listOf(notSuitableBedOne)
       }
       return beds
     }
