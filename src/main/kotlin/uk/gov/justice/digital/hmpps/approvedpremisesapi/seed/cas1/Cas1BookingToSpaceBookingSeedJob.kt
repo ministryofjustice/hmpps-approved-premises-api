@@ -191,7 +191,7 @@ class Cas1BookingToSpaceBookingSeedJob(
     departedAtDate = departureDate,
     departedAtTime = null,
     keyWorkerStaffCode = keyWorkerStaffCode,
-    keyWorkerName = "$keyWorkerForename $keyWorkerSurname",
+    keyWorkerName = keyWorkerStaffCode?.let { "$keyWorkerForename $keyWorkerSurname" },
     departureReason = departureReasonCode?.let { reasonCode ->
       departureReasonRepository
         .findAllByServiceScope(ServiceName.approvedPremises.value)
