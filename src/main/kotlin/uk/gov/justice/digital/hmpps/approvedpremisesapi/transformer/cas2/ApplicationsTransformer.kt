@@ -58,6 +58,7 @@ class ApplicationsTransformer(
         crn = jpaSummary.crn,
         nomsNumber = jpaSummary.nomsNumber,
         personName = personName,
+        applicationOrigin = jpaSummary.applicationOrigin,
       )
   }
 
