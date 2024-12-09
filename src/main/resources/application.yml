@@ -29,7 +29,7 @@ spring:
     repeatable-sql-migration-prefix: "R"
     sql-migration-prefix: ""
     outOfOrder: true
-    locations: classpath:db/migration/all,classpath:db/migration/all-except-integration
+    locations: classpath:db/migration/all
     placeholderReplacement: true
 
   cache:

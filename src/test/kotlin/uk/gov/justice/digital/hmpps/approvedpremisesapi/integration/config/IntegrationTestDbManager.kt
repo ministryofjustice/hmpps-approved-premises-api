@@ -83,7 +83,7 @@ object IntegrationTestDbManager {
 
     // this should match config in application config
     val flyway = Flyway.configure()
-      .locations(*arrayOf("/db/migration/all", "/db/migration/integration"))
+      .locations(*arrayOf("/db/migration/all"))
       .repeatableSqlMigrationPrefix("R")
       .sqlMigrationPrefix("")
       .outOfOrder(true)
