@@ -39,6 +39,8 @@ class Cas2ApplicationEntityFactory : Factory<Cas2ApplicationEntity> {
   private var preferredAreas: Yielded<String?> = { null }
   private var hdcEligibilityDate: Yielded<LocalDate?> = { null }
   private var conditionalReleaseDate: Yielded<LocalDate?> = { null }
+  private var applicationOrigin: Yielded<String?> = { null }
+
 
   fun withId(id: UUID) = apply {
     this.id = { id }
@@ -124,6 +126,10 @@ class Cas2ApplicationEntityFactory : Factory<Cas2ApplicationEntity> {
     this.conditionalReleaseDate = { conditionalReleaseDate }
   }
 
+  fun withApplicationOrigin(applicationOrigin: String) = apply {
+    this.applicationOrigin = { applicationOrigin }
+  }
+
   override fun produce(): Cas2ApplicationEntity = Cas2ApplicationEntity(
     id = this.id(),
     crn = this.crn(),
@@ -144,5 +150,6 @@ class Cas2ApplicationEntityFactory : Factory<Cas2ApplicationEntity> {
     hdcEligibilityDate = this.hdcEligibilityDate(),
     conditionalReleaseDate = this.conditionalReleaseDate(),
     preferredAreas = this.preferredAreas(),
+    applicationOrigin = this.applicationOrigin(),
   )
 }

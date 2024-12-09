@@ -1,6 +1,7 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity
 
 import io.hypersistence.utils.hibernate.type.json.JsonType
+import jakarta.persistence.Column
 import jakarta.persistence.Entity
 import jakarta.persistence.Id
 import jakarta.persistence.JoinColumn
@@ -93,6 +94,7 @@ data class Cas2ApplicationEntity(
   var hdcEligibilityDate: LocalDate? = null,
   var conditionalReleaseDate: LocalDate? = null,
   var telephoneNumber: String? = null,
+  var applicationOrigin: String? = null,
 ) {
   override fun toString() = "Cas2ApplicationEntity: $id"
 }

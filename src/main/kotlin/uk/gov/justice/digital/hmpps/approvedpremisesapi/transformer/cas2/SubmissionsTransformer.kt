@@ -37,6 +37,7 @@ class SubmissionsTransformer(
       telephoneNumber = jpa.telephoneNumber,
       timelineEvents = timelineEventsTransformer.transformApplicationToTimelineEvents(jpa),
       assessment = assessmentsTransformer.transformJpaToApiRepresentation(jpa.assessment!!),
+      applicationOrigin = jpa.applicationOrigin,
     )
   }
 
@@ -52,6 +53,7 @@ class SubmissionsTransformer(
       submittedAt = jpaSummary.submittedAt?.toInstant(),
       crn = jpaSummary.crn,
       nomsNumber = jpaSummary.nomsNumber,
+      applicationOrigin = jpaSummary.applicationOrigin
     )
   }
 }

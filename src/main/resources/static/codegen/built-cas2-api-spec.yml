@@ -2311,6 +2311,8 @@ components:
               format: uuid
             outdatedSchema:
               type: boolean
+            applicationOrigin:
+              type: string #this should be an enum later today
             data:
               $ref: '#/components/schemas/AnyValue'
             document:
@@ -2365,6 +2367,8 @@ components:
         assessment:
           type: object
           $ref: '#/components/schemas/Cas2Assessment'
+        applicationOrigin:
+          type: string
       required:
         - id
         - person
@@ -2529,6 +2533,8 @@ components:
           type: string
         nomsNumber:
           type: string
+        applicationOrigin:
+          type: string
       required:
         - type
         - id
@@ -2647,6 +2653,8 @@ components:
         submittedAt:
           type: string
           format: date-time
+        applicationOrigin:
+          type: string
       required:
         - createdByUserId
         - status
@@ -2949,6 +2957,8 @@ components:
           format: date
         telephoneNumber:
           type: string
+        applicationOrigin:
+          type: string #this should be an enum later today
       required:
         - translatedDocument
         - applicationId

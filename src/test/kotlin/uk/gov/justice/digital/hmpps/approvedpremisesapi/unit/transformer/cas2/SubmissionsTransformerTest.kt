@@ -111,6 +111,7 @@ class SubmissionsTransformerTest {
         "telephoneNumber",
         "timelineEvents",
         "assessment",
+        "applicationOrigin",
       )
     }
   }
@@ -131,6 +132,7 @@ class SubmissionsTransformerTest {
         latestStatusUpdateLabel = null,
         latestStatusUpdateStatusId = null,
         prisonCode = "BRI",
+        applicationOrigin = "court"
       )
 
       val expectedSubmittedApplicationSummary = Cas2SubmittedApplicationSummary(
@@ -141,6 +143,7 @@ class SubmissionsTransformerTest {
         createdAt = Instant.parse("2023-04-19T13:25:00+01:00"),
         submittedAt = Instant.parse("2023-04-19T13:25:30+01:00"),
         personName = "Example Offender",
+        applicationOrigin = "court"
       )
 
       val transformation = applicationTransformer.transformJpaSummaryToApiRepresentation(
