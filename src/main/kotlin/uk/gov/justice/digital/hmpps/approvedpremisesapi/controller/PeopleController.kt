@@ -27,7 +27,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.ForbiddenProblem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.NotFoundProblem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.AuthorisableActionResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.ApplicationService
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.FeatureFlagService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.HttpAuthService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.OffenderService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.UserService
@@ -59,7 +58,6 @@ class PeopleController(
   private val userService: UserService,
   private val applicationService: ApplicationService,
   private val personalTimelineTransformer: PersonalTimelineTransformer,
-  private val featureFlagService: FeatureFlagService,
 ) : PeopleApiDelegate {
 
   override fun peopleSearchGet(crn: String): ResponseEntity<Person> {
@@ -247,19 +245,10 @@ class PeopleController(
   override fun peopleCrnOffencesGet(crn: String): ResponseEntity<List<ActiveOffence>> {
     ensureUserCanAccessOffenderInfo(crn)
 
-    val isOffencesFromAPDelius = featureFlagService.getBooleanFlag("get-offences-from-ap-delius")
-    return if (isOffencesFromAPDelius) {
-      val caseDetail = offenderService.getCaseDetail(crn)
-      ResponseEntity.ok(
-        offenceTransformer.transformToApi(extractEntityFromCasResult(caseDetail)),
-      )
-    } else {
-      val convictionsResult = offenderService.getConvictions(crn)
-      val activeConvictions = getSuccessEntityOrThrow(crn, convictionsResult).filter { it.active }
-      ResponseEntity.ok(
-        activeConvictions.flatMap(offenceTransformer::transformToApi),
-      )
-    }
+    val caseDetail = offenderService.getCaseDetail(crn)
+    return ResponseEntity.ok(
+      offenceTransformer.transformToApi(extractEntityFromCasResult(caseDetail)),
+    )
   }
 
   override fun peopleCrnTimelineGet(crn: String): ResponseEntity<PersonalTimeline> {
