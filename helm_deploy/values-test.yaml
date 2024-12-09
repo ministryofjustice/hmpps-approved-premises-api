@@ -90,6 +90,8 @@ generic-service:
     FEATURE-FLAGS_GET-OFFENCES-FROM-AP-DELIUS: true
 
   namespace_secrets:
+    hmpps-domain-events-topic:
+      HMPPS_SQS_TOPICS_DOMAINEVENTS_ARN: "topic_arn"
     hmpps-approved-premises-api:
       NOTIFY_APIKEY: "NOTIFY_APIKEY"
       NOTIFY_GUESTLISTAPIKEY: "NOTIFY_GUESTLISTAPIKEY"
