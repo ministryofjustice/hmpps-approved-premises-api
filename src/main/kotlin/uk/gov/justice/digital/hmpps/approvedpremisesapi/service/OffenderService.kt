@@ -21,8 +21,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserQualifica
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PersonInfoResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PersonRisks
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PersonSummaryInfoResult
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.community.Conviction
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.community.GroupedDocuments
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.community.OffenderDetailSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.community.UserOffenderAccess
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.deliuscontext.APDeliusDocument
@@ -617,22 +615,6 @@ class OffenderService(
     return AuthorisableActionResult.Success(riskToTheIndividual)
   }
 
-  fun getConvictions(crn: String): AuthorisableActionResult<List<Conviction>> {
-    val convictionsResult = communityApiClient.getConvictions(crn)
-
-    val convictions = when (convictionsResult) {
-      is ClientResult.Success -> convictionsResult.body
-      is ClientResult.Failure.StatusCode -> when (convictionsResult.status) {
-        HttpStatus.NOT_FOUND -> return AuthorisableActionResult.NotFound()
-        HttpStatus.FORBIDDEN -> return AuthorisableActionResult.Unauthorised()
-        else -> convictionsResult.throwException()
-      }
-      is ClientResult.Failure -> convictionsResult.throwException()
-    }
-
-    return AuthorisableActionResult.Success(convictions)
-  }
-
   fun getCaseDetail(crn: String): CasResult<CaseDetail> {
     val caseDetail = when (val caseDetailResult = apDeliusContextApiClient.getCaseDetail(crn)) {
       is ClientResult.Success -> caseDetailResult.body
@@ -645,22 +627,6 @@ class OffenderService(
       is ClientResult.Failure -> caseDetailResult.throwException()
     }
     return CasResult.Success(caseDetail)
-  }
-
-  fun getDocumentsFromCommunityApi(crn: String): AuthorisableActionResult<GroupedDocuments> {
-    val documentsResult = communityApiClient.getDocuments(crn)
-
-    val documents = when (documentsResult) {
-      is ClientResult.Success -> documentsResult.body
-      is ClientResult.Failure.StatusCode -> when (documentsResult.status) {
-        HttpStatus.NOT_FOUND -> return AuthorisableActionResult.NotFound()
-        HttpStatus.FORBIDDEN -> return AuthorisableActionResult.Unauthorised()
-        else -> documentsResult.throwException()
-      }
-      is ClientResult.Failure -> documentsResult.throwException()
-    }
-
-    return AuthorisableActionResult.Success(documents)
   }
 
   fun getDocumentsFromApDeliusApi(crn: String): AuthorisableActionResult<List<APDeliusDocument>> {

@@ -291,5 +291,4 @@ scheduling:
   enabled: true
 
 feature-flags:
-  get-offences-from-ap-delius: false
 

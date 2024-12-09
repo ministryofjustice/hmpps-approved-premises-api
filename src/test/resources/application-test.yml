@@ -204,4 +204,3 @@ scheduling:
 logging.level.org.springframework.jdbc.core.JdbcTemplate: debug
 
 feature-flags:
-  get-offences-from-ap-delius: false

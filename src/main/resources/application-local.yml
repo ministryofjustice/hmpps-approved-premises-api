@@ -57,8 +57,6 @@ user-allocations:
       allocate-to-user: JIMSNOWLDAP
 
 feature-flags:
-  get-offences-from-ap-delius: true
-
 
 logging:
   level:
