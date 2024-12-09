@@ -429,6 +429,9 @@ class Cas1PremisesTest : IntegrationTestBase() {
       assertThat(result.premise.name).isEqualTo("the premises name")
       assertThat(result.capacity).hasSize(2)
       assertThat(result.premise.managerDetails).isEqualTo("manager details")
+
+      assertThat(result.capacity[0].date).isEqualTo(LocalDate.of(2020, 1, 1))
+      assertThat(result.capacity[1].date).isEqualTo(LocalDate.of(2020, 1, 2))
     }
   }
 }

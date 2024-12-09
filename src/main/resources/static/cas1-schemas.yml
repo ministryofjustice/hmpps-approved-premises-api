@@ -596,6 +596,7 @@ components:
           type: string
           format: date
         capacity:
+          description: Capacity for each day, returning chronologically (oldest first)
           type: array
           items:
             $ref: '#/components/schemas/Cas1PremiseCapacityForDay'
