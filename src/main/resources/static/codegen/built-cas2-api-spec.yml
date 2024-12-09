@@ -5520,3 +5520,6 @@ components:
         - SHARED_PROPERTY
         - SINGLE_OCCUPANCY
         - WHEELCHAIR_ACCESSIBLE
+        - sharedProperty
+        - singleOccupancy
+        - wheelchairAccessible
