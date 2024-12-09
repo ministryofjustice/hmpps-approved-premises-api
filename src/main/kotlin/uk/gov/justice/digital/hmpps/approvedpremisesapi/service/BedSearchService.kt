@@ -146,17 +146,19 @@ class BedSearchService(
 
     val premisesCharacteristicsPropertyNames = propertyBedAttributes?.map {
       when (it) {
-        BedSearchAttributes.singleOccupancy -> "isSingleOccupancy"
-        BedSearchAttributes.sharedProperty -> "isSharedProperty"
-        BedSearchAttributes.wheelchairAccessible -> ""
+        BedSearchAttributes.singleOccupancy, BedSearchAttributes.SINGLE_OCCUPANCY -> BedSearchAttributes.SINGLE_OCCUPANCY.value
+        BedSearchAttributes.sharedProperty, BedSearchAttributes.SHARED_PROPERTY -> BedSearchAttributes.SHARED_PROPERTY.value
+        else -> ""
       }
     }
 
     val premisesCharacteristicIds = getTemporaryAccommodationCharacteristicsIds(premisesCharacteristicsPropertyNames, "premises")
 
-    val roomCharacteristicsPropertyNames = when {
-      propertyBedAttributes?.contains(BedSearchAttributes.wheelchairAccessible) == true -> listOf("isWheelchairAccessible")
-      else -> null
+    val roomCharacteristicsPropertyNames = propertyBedAttributes?.map {
+      when (it) {
+        BedSearchAttributes.wheelchairAccessible, BedSearchAttributes.WHEELCHAIR_ACCESSIBLE -> BedSearchAttributes.WHEELCHAIR_ACCESSIBLE.value
+        else -> ""
+      }
     }
 
     val roomCharacteristicIds = getTemporaryAccommodationCharacteristicsIds(roomCharacteristicsPropertyNames, "room")
@@ -222,12 +224,13 @@ class BedSearchService(
   }
 
   private fun getTemporaryAccommodationCharacteristicsIds(characteristicsPropertyNames: List<String>?, modelScope: String): List<UUID> {
-    return characteristicsPropertyNames?.let {
+    if (characteristicsPropertyNames.isNullOrEmpty()) return emptyList()
+    return characteristicsPropertyNames.let {
       val characteristics = characteristicService.getCharacteristicsByPropertyNames(characteristicsPropertyNames, ServiceName.temporaryAccommodation)
       characteristics.filter {
         it.isActive && it.matches(ServiceName.temporaryAccommodation.value, modelScope)
       }.map { it.id }.toList()
-    } ?: emptyList()
+    }
   }
 
   private fun getPersonType(
