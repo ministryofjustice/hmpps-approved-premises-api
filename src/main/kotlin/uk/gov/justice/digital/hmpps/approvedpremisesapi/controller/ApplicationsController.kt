@@ -37,7 +37,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.OfflineApplic
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserQualification
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PersonInfoResult
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.community.GroupedDocuments
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.deliuscontext.APDeliusDocument
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.BadRequestProblem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.ConflictProblem
@@ -51,7 +50,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.AppealService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.ApplicationService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.ApplicationTimelineNoteService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.AssessmentService
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.FeatureFlagService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.HttpAuthService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.OffenderService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.UserService
@@ -87,7 +85,6 @@ class ApplicationsController(
   private val appealTransformer: AppealTransformer,
   private val cas1RequestForPlacementService: Cas1RequestForPlacementService,
   private val withdrawableTransformer: WithdrawableTransformer,
-  private val featureFlagService: FeatureFlagService,
   private val applicationTimelineNoteService: ApplicationTimelineNoteService,
   private val applicationTimelineNoteTransformer: ApplicationTimelineNoteTransformer,
 ) : ApplicationsApiDelegate {
@@ -407,31 +404,20 @@ class ApplicationsController(
   override fun applicationsApplicationIdDocumentsGet(applicationId: UUID): ResponseEntity<List<Document>> {
     val deliusPrincipal = httpAuthService.getDeliusPrincipalOrThrow()
     val username = deliusPrincipal.name
-
     val application = extractEntityFromCasResult(applicationService.getApplicationForUsername(applicationId, username))
 
-    val documentsFromApDeliusFlag = featureFlagService.getBooleanFlag("get-documents-from-ap-delius")
-    val documents = when (val documentsResult = getDocuments(isDocumentFromAPDelius = documentsFromApDeliusFlag, application.crn)) {
-      is AuthorisableActionResult.NotFound -> throw NotFoundProblem(application.crn, "Person")
-      is AuthorisableActionResult.Unauthorised -> throw ForbiddenProblem()
-      is AuthorisableActionResult.Success -> documentsResult.entity
-    }
+    val documentsResult = getDocuments(application.crn)
+    val apiDocuments = documentTransformer.transformToApi(documentsResult)
 
-    val transformedDocuments = when (documents) {
-      is GroupedDocuments -> documentTransformer.transformToApi(documents)
-      is List<*> -> documentTransformer.transformToApi(
-        documents.filterIsInstance<APDeliusDocument>(),
-      )
-      else -> emptyList()
-    }
-
-    return ResponseEntity(transformedDocuments, HttpStatus.OK)
+    return ResponseEntity(apiDocuments, HttpStatus.OK)
   }
 
-  private fun getDocuments(isDocumentFromAPDelius: Boolean, crn: String) = if (isDocumentFromAPDelius) {
-    offenderService.getDocumentsFromApDeliusApi(crn)
-  } else {
-    offenderService.getDocumentsFromCommunityApi(crn)
+  private fun getDocuments(crn: String): List<APDeliusDocument> {
+    return when (val result = offenderService.getDocumentsFromApDeliusApi(crn)) {
+      is AuthorisableActionResult.NotFound -> throw NotFoundProblem(crn, "Documents")
+      is AuthorisableActionResult.Unauthorised -> throw ForbiddenProblem()
+      is AuthorisableActionResult.Success -> result.entity
+    }
   }
 
   override fun applicationsApplicationIdAppealsAppealIdGet(
