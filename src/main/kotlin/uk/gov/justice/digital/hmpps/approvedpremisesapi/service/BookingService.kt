@@ -1212,7 +1212,6 @@ class BookingService(
       extractEntityFromCasResult(assessmentService.closeAssessment(user, assessmentId))
     } catch (exception: Exception) {
       log.error("Unable to close CAS3 assessment $assessmentId for booking ${booking.id} ", exception)
-      Sentry.captureException(RuntimeException("Unable to close CAS3 assessment $assessmentId for booking ${booking.id} ", exception))
     }
   }
 }
