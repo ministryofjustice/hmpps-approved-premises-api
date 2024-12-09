@@ -45,6 +45,7 @@ import java.math.BigDecimal
 import java.time.LocalDate
 import java.time.OffsetDateTime
 import java.util.UUID
+
 @SuppressWarnings("LargeClass")
 class BedSearchTest : IntegrationTestBase() {
 
@@ -2014,9 +2015,21 @@ class BedSearchTest : IntegrationTestBase() {
       )
 
       when (bedSearchAttribute) {
-        BedSearchAttributes.singleOccupancy -> beds = listOf(singleOccupancyBedOne, premisesSingleOccupancyWomenOnlyBedOne, premisesSingleOccupancyWheelchairAccessibleBedOne)
-        BedSearchAttributes.sharedProperty -> beds = listOf(sharedPropertyBedOne, premisesSharedPropertyMenOnlyBedOne, premisesSharedPropertyWheelchairAccessibleBedOne)
-        BedSearchAttributes.wheelchairAccessible -> beds = listOf(premisesSharedPropertyWheelchairAccessibleBedOne, premisesSingleOccupancyWheelchairAccessibleBedOne)
+        BedSearchAttributes.singleOccupancy, BedSearchAttributes.SINGLE_OCCUPANCY -> beds = listOf(
+          singleOccupancyBedOne,
+          premisesSingleOccupancyWomenOnlyBedOne,
+          premisesSingleOccupancyWheelchairAccessibleBedOne,
+        )
+
+        BedSearchAttributes.sharedProperty, BedSearchAttributes.SHARED_PROPERTY -> beds = listOf(
+          sharedPropertyBedOne,
+          premisesSharedPropertyMenOnlyBedOne,
+          premisesSharedPropertyWheelchairAccessibleBedOne,
+        )
+
+        BedSearchAttributes.wheelchairAccessible, BedSearchAttributes.WHEELCHAIR_ACCESSIBLE ->
+          beds =
+            listOf(premisesSharedPropertyWheelchairAccessibleBedOne, premisesSingleOccupancyWheelchairAccessibleBedOne)
       }
       return beds
     }
