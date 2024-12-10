@@ -21,7 +21,9 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1SpaceBooki
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1SpaceBookingSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1SpaceBookingSummaryStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1SpaceCharacteristic
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PersonSummaryDiscriminator
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.Cas1SpaceBookingEntityFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.CaseAccessFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ContextStaffMemberFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.StaffDetailFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.UserEntityFactory
@@ -32,6 +34,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.given
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAUser
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAnApArea
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAnOffender
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.apDeliusContextAddSingleResponseToUserAccessCall
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.apDeliusContextMockSuccessfulStaffMembersCall
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesEntity
@@ -308,6 +311,7 @@ class Cas1SpaceBookingTest {
   inner class SearchForSpaceBookings : SpaceBookingIntegrationTestBase() {
     lateinit var currentSpaceBooking2: Cas1SpaceBookingEntity
     lateinit var currentSpaceBooking3: Cas1SpaceBookingEntity
+    lateinit var currentSpaceBooking4Restricted: Cas1SpaceBookingEntity
     lateinit var upcomingSpaceBookingWithKeyWorker: Cas1SpaceBookingEntity
     lateinit var upcomingCancelledSpaceBooking: Cas1SpaceBookingEntity
     lateinit var departedSpaceBooking: Cas1SpaceBookingEntity
@@ -353,6 +357,25 @@ class Cas1SpaceBookingTest {
         withActualDepartureDate(null)
         withCanonicalArrivalDate(LocalDate.parse("2026-04-02"))
         withCanonicalDepartureDate(LocalDate.parse("2026-05-02"))
+        withKeyworkerName("Clive Keyworker")
+        withKeyworkerStaffCode("clivek")
+        withKeyworkerAssignedAt(Instant.now())
+      }
+
+      currentSpaceBooking4Restricted = createSpaceBooking(
+        crn = "CRN_CURRENT4",
+        firstName = "curt",
+        lastName = "rent 4",
+        tier = "B",
+        isRestricted = true,
+      ) {
+        withPremises(premisesWithBookings)
+        withExpectedArrivalDate(LocalDate.parse("2026-03-03"))
+        withExpectedDepartureDate(LocalDate.parse("2026-04-03"))
+        withActualArrivalDate(LocalDate.parse("2026-01-02"))
+        withActualDepartureDate(null)
+        withCanonicalArrivalDate(LocalDate.parse("2026-04-03"))
+        withCanonicalDepartureDate(LocalDate.parse("2026-05-03"))
         withKeyworkerName("Clive Keyworker")
         withKeyworkerStaffCode("clivek")
         withKeyworkerAssignedAt(Instant.now())
@@ -480,15 +503,16 @@ class Cas1SpaceBookingTest {
         .isOk
         .bodyAsListOfObjects<Cas1SpaceBookingSummary>()
 
-      assertThat(response).hasSize(8)
+      assertThat(response).hasSize(9)
       assertThat(response[0].person.crn).isEqualTo("CRN_LEGACY_NO_DEPARTURE")
       assertThat(response[1].person.crn).isEqualTo("CRN_LEGACY_NO_ARRIVAL")
       assertThat(response[2].person.crn).isEqualTo("CRN_DEPARTED")
       assertThat(response[3].person.crn).isEqualTo("CRN_CURRENT1")
       assertThat(response[4].person.crn).isEqualTo("CRN_CURRENT2")
       assertThat(response[5].person.crn).isEqualTo("CRN_CURRENT3")
-      assertThat(response[6].person.crn).isEqualTo("CRN_UPCOMING")
-      assertThat(response[7].person.crn).isEqualTo("CRN_NONARRIVAL")
+      assertThat(response[6].person.crn).isEqualTo("CRN_CURRENT4")
+      assertThat(response[7].person.crn).isEqualTo("CRN_UPCOMING")
+      assertThat(response[8].person.crn).isEqualTo("CRN_NONARRIVAL")
     }
 
     @Test
@@ -538,10 +562,11 @@ class Cas1SpaceBookingTest {
         .isOk
         .bodyAsListOfObjects<Cas1SpaceBookingSummary>()
 
-      assertThat(response).hasSize(3)
+      assertThat(response).hasSize(4)
       assertThat(response[0].person.crn).isEqualTo("CRN_CURRENT1")
       assertThat(response[1].person.crn).isEqualTo("CRN_CURRENT2")
       assertThat(response[2].person.crn).isEqualTo("CRN_CURRENT3")
+      assertThat(response[3].person.crn).isEqualTo("CRN_CURRENT4")
     }
 
     @Test
@@ -558,6 +583,32 @@ class Cas1SpaceBookingTest {
 
       assertThat(response).hasSize(1)
       assertThat(response[0].person.crn).isEqualTo("CRN_CURRENT2")
+      assertThat(response[0].person.personType).isEqualTo(PersonSummaryDiscriminator.fullPersonSummary)
+    }
+
+    @Test
+    fun `Filter on CRN, RestrictedPerson`() {
+      val (_, jwt) = givenAUser(roles = listOf(CAS1_FUTURE_MANAGER))
+
+      apDeliusContextAddSingleResponseToUserAccessCall(
+        caseAccess = CaseAccessFactory()
+          .withUserExcluded(true)
+          .withUserRestricted(true)
+          .withCrn("CRN_CURRENT2")
+          .produce(),
+      )
+
+      val response = webTestClient.get()
+        .uri("/cas1/premises/${premisesWithBookings.id}/space-bookings?crnOrName=CRN_CURRENT4&sortBy=canonicalArrivalDate&sortDirection=asc")
+        .header("Authorization", "Bearer $jwt")
+        .exchange()
+        .expectStatus()
+        .isOk
+        .bodyAsListOfObjects<Cas1SpaceBookingSummary>()
+
+      assertThat(response).hasSize(1)
+      assertThat(response[0].person.crn).isEqualTo("CRN_CURRENT4")
+      assertThat(response[0].person.personType).isEqualTo(PersonSummaryDiscriminator.restrictedPersonSummary)
     }
 
     @Test
@@ -609,10 +660,11 @@ class Cas1SpaceBookingTest {
         .isOk
         .bodyAsListOfObjects<Cas1SpaceBookingSummary>()
 
-      assertThat(response).hasSize(3)
-      assertThat(response[0].person.crn).isEqualTo("CRN_CURRENT3")
-      assertThat(response[1].person.crn).isEqualTo("CRN_CURRENT2")
-      assertThat(response[2].person.crn).isEqualTo("CRN_CURRENT1")
+      assertThat(response).hasSize(4)
+      assertThat(response[0].person.crn).isEqualTo("CRN_CURRENT4")
+      assertThat(response[1].person.crn).isEqualTo("CRN_CURRENT3")
+      assertThat(response[2].person.crn).isEqualTo("CRN_CURRENT2")
+      assertThat(response[3].person.crn).isEqualTo("CRN_CURRENT1")
     }
 
     @Test
@@ -627,15 +679,16 @@ class Cas1SpaceBookingTest {
         .isOk
         .bodyAsListOfObjects<Cas1SpaceBookingSummary>()
 
-      assertThat(response).hasSize(8)
+      assertThat(response).hasSize(9)
       assertThat(response[0].person.crn).isEqualTo("CRN_NONARRIVAL")
       assertThat(response[1].person.crn).isEqualTo("CRN_UPCOMING")
-      assertThat(response[2].person.crn).isEqualTo("CRN_CURRENT3")
-      assertThat(response[3].person.crn).isEqualTo("CRN_CURRENT2")
-      assertThat(response[4].person.crn).isEqualTo("CRN_CURRENT1")
-      assertThat(response[5].person.crn).isEqualTo("CRN_DEPARTED")
-      assertThat(response[6].person.crn).isEqualTo("CRN_LEGACY_NO_ARRIVAL")
-      assertThat(response[7].person.crn).isEqualTo("CRN_LEGACY_NO_DEPARTURE")
+      assertThat(response[2].person.crn).isEqualTo("CRN_CURRENT4")
+      assertThat(response[3].person.crn).isEqualTo("CRN_CURRENT3")
+      assertThat(response[4].person.crn).isEqualTo("CRN_CURRENT2")
+      assertThat(response[5].person.crn).isEqualTo("CRN_CURRENT1")
+      assertThat(response[6].person.crn).isEqualTo("CRN_DEPARTED")
+      assertThat(response[7].person.crn).isEqualTo("CRN_LEGACY_NO_ARRIVAL")
+      assertThat(response[8].person.crn).isEqualTo("CRN_LEGACY_NO_DEPARTURE")
     }
 
     @Test
@@ -650,15 +703,16 @@ class Cas1SpaceBookingTest {
         .isOk
         .bodyAsListOfObjects<Cas1SpaceBookingSummary>()
 
-      assertThat(response).hasSize(8)
+      assertThat(response).hasSize(9)
       assertThat(response[0].person.crn).isEqualTo("CRN_LEGACY_NO_DEPARTURE")
       assertThat(response[1].person.crn).isEqualTo("CRN_LEGACY_NO_ARRIVAL")
       assertThat(response[2].person.crn).isEqualTo("CRN_DEPARTED")
       assertThat(response[3].person.crn).isEqualTo("CRN_CURRENT1")
       assertThat(response[4].person.crn).isEqualTo("CRN_CURRENT2")
       assertThat(response[5].person.crn).isEqualTo("CRN_CURRENT3")
-      assertThat(response[6].person.crn).isEqualTo("CRN_UPCOMING")
-      assertThat(response[7].person.crn).isEqualTo("CRN_NONARRIVAL")
+      assertThat(response[6].person.crn).isEqualTo("CRN_CURRENT4")
+      assertThat(response[7].person.crn).isEqualTo("CRN_UPCOMING")
+      assertThat(response[8].person.crn).isEqualTo("CRN_NONARRIVAL")
     }
 
     @Test
@@ -673,10 +727,11 @@ class Cas1SpaceBookingTest {
         .isOk
         .bodyAsListOfObjects<Cas1SpaceBookingSummary>()
 
-      assertThat(response).hasSize(3)
+      assertThat(response).hasSize(4)
       assertThat(response[0].keyWorkerAllocation!!.keyWorker.name).isEqualTo("Clive Keyworker")
-      assertThat(response[1].keyWorkerAllocation!!.keyWorker.name).isEqualTo("Kathy Keyworker")
-      assertThat(response[2].keyWorkerAllocation).isNull()
+      assertThat(response[1].keyWorkerAllocation!!.keyWorker.name).isEqualTo("Clive Keyworker")
+      assertThat(response[2].keyWorkerAllocation!!.keyWorker.name).isEqualTo("Kathy Keyworker")
+      assertThat(response[3].keyWorkerAllocation).isNull()
     }
 
     @Test
@@ -691,7 +746,7 @@ class Cas1SpaceBookingTest {
         .isOk
         .bodyAsListOfObjects<Cas1SpaceBookingSummary>()
 
-      assertThat(response).hasSize(8)
+      assertThat(response).hasSize(9)
 
       assertThat(response[0].tier).isEqualTo("Z")
       assertThat(response[0].person.crn).isEqualTo("CRN_LEGACY_NO_DEPARTURE")
@@ -706,16 +761,19 @@ class Cas1SpaceBookingTest {
       assertThat(response[3].person.crn).isEqualTo("CRN_CURRENT2")
 
       assertThat(response[4].tier).isEqualTo("B")
-      assertThat(response[4].person.crn).isEqualTo("CRN_CURRENT3")
+      assertThat(response[4].person.crn).isEqualTo("CRN_CURRENT4")
 
-      assertThat(response[5].tier).isEqualTo("A")
-      assertThat(response[5].person.crn).isEqualTo("CRN_CURRENT1")
+      assertThat(response[5].tier).isEqualTo("B")
+      assertThat(response[5].person.crn).isEqualTo("CRN_CURRENT3")
 
       assertThat(response[6].tier).isEqualTo("A")
-      assertThat(response[6].person.crn).isEqualTo("CRN_NONARRIVAL")
+      assertThat(response[6].person.crn).isEqualTo("CRN_CURRENT1")
 
       assertThat(response[7].tier).isEqualTo("A")
-      assertThat(response[7].person.crn).isEqualTo("CRN_LEGACY_NO_ARRIVAL")
+      assertThat(response[7].person.crn).isEqualTo("CRN_NONARRIVAL")
+
+      assertThat(response[8].tier).isEqualTo("A")
+      assertThat(response[8].person.crn).isEqualTo("CRN_LEGACY_NO_ARRIVAL")
     }
   }
 
@@ -1891,11 +1949,13 @@ abstract class SpaceBookingIntegrationTestBase : InitialiseDatabasePerClassTestB
     }
   }
 
+  @SuppressWarnings("LongParameterList")
   protected fun createSpaceBooking(
     crn: String,
     firstName: String,
     lastName: String,
     tier: String,
+    isRestricted: Boolean = false,
     configuration: Cas1SpaceBookingEntityFactory.() -> Unit,
   ): Cas1SpaceBookingEntity {
     val (user) = givenAUser()
@@ -1903,6 +1963,7 @@ abstract class SpaceBookingIntegrationTestBase : InitialiseDatabasePerClassTestB
       withCrn(crn)
       withFirstName(firstName)
       withLastName(lastName)
+      withCurrentRestriction(isRestricted)
     })
     val (placementRequest) = givenAPlacementRequest(
       placementRequestAllocatedTo = user,
