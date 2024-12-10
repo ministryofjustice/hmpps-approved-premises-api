@@ -371,7 +371,7 @@ class Cas1SpaceBookingTest {
         withKeyworkerAssignedAt(null)
       }
 
-      upcomingSpaceBookingWithKeyWorker = createSpaceBooking(crn = "CRN_UPCOMING", firstName = "up", lastName = "coming", tier = "U") {
+      upcomingSpaceBookingWithKeyWorker = createSpaceBooking(crn = "CRN_UPCOMING", firstName = "up", lastName = "coming senior", tier = "U") {
         withPremises(premisesWithBookings)
         withExpectedArrivalDate(LocalDate.parse("2027-01-01"))
         withExpectedDepartureDate(LocalDate.parse("2027-02-01"))
@@ -565,7 +565,7 @@ class Cas1SpaceBookingTest {
       val (_, jwt) = givenAUser(roles = listOf(CAS1_FUTURE_MANAGER))
 
       val response = webTestClient.get()
-        .uri("/cas1/premises/${premisesWithBookings.id}/space-bookings?crnOrName=comING&sortBy=canonicalArrivalDate&sortDirection=asc")
+        .uri("/cas1/premises/${premisesWithBookings.id}/space-bookings?crnOrName=senior&sortBy=canonicalArrivalDate&sortDirection=asc")
         .header("Authorization", "Bearer $jwt")
         .exchange()
         .expectStatus()
