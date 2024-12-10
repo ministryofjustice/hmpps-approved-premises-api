@@ -21,6 +21,8 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1SpaceBooki
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1SpaceBookingSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1SpaceBookingSummaryStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1SpaceCharacteristic
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.FullPerson
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.FullPersonSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PersonSummaryDiscriminator
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.Cas1SpaceBookingEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.CaseAccessFactory
@@ -663,8 +665,11 @@ class Cas1SpaceBookingTest {
       assertThat(response).hasSize(4)
       assertThat(response[0].person.crn).isEqualTo("CRN_CURRENT4")
       assertThat(response[1].person.crn).isEqualTo("CRN_CURRENT3")
+      assertThat((response[1].person as FullPersonSummary).name).isEqualTo("blah")
       assertThat(response[2].person.crn).isEqualTo("CRN_CURRENT2")
+      assertThat((response[2].person as FullPersonSummary).name).isEqualTo("blah")
       assertThat(response[3].person.crn).isEqualTo("CRN_CURRENT1")
+      assertThat((response[3].person as FullPersonSummary).name).isEqualTo("blah")
     }
 
     @Test

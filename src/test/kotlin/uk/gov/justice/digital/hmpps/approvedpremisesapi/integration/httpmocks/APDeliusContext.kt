@@ -141,7 +141,7 @@ fun IntegrationTestBase.apDeliusContextMockCaseSummary(caseSummary: CaseSummary)
 
 fun IntegrationTestBase.apDeliusContextAddCaseSummaryToBulkResponse(caseSummary: CaseSummary) {
   val url = "/probation-cases/summaries"
-  val existingMock = wiremockServer.listAllStubMappings().mappings.find { it.request.url == url && it.metadata != null && it.metadata.containsKey("bulk") }
+  val existingMock = wiremockServer.stubMappings.find { it.metadata?.containsKey("probation-cases/summaries") ?: false }
 
   if (existingMock != null) {
     val mockId = existingMock.id
@@ -157,7 +157,7 @@ fun IntegrationTestBase.apDeliusContextAddCaseSummaryToBulkResponse(caseSummary:
       requestBody = WireMock.equalToJson(objectMapper.writeValueAsString(requestBody), true, true),
       responseBody = responseBody,
     ) {
-      withMetadata(mapOf("bulk" to Unit))
+      withMetadata(mapOf("probation-cases/summaries" to Unit))
     }
   } else {
     mockSuccessfulGetCallWithBodyAndJsonResponse(
@@ -173,7 +173,7 @@ fun IntegrationTestBase.apDeliusContextAddCaseSummaryToBulkResponse(caseSummary:
         cases = listOf(caseSummary),
       ),
     ) {
-      withMetadata(mapOf("bulk" to Unit))
+      withMetadata(mapOf("probation-cases/summaries" to Unit))
     }
   }
 }
