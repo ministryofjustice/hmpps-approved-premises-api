@@ -7,7 +7,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.ApDeliusContextAp
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.ApOASysContextApiClient
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.CaseNotesClient
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.ClientResult
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.CommunityApiClient
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.PrisonsApiClient
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.config.ExcludedCategory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.config.PrisonAdjudicationsConfig
@@ -22,11 +21,11 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PersonInfoResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PersonRisks
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PersonSummaryInfoResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.community.OffenderDetailSummary
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.community.UserOffenderAccess
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.deliuscontext.APDeliusDocument
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.deliuscontext.CaseAccess
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.deliuscontext.CaseDetail
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.deliuscontext.CaseSummary
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.deliuscontext.UserOffenderAccess
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.oasyscontext.NeedsDetails
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.oasyscontext.OffenceDetails
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.oasyscontext.RiskManagementPlan
@@ -51,7 +50,6 @@ import java.time.LocalDate
 
 @Service
 class OffenderService(
-  private val communityApiClient: CommunityApiClient,
   private val prisonsApiClient: PrisonsApiClient,
   private val caseNotesClient: CaseNotesClient,
   private val apOASysContextApiClient: ApOASysContextApiClient,
@@ -659,12 +657,6 @@ class OffenderService(
     documentId: String,
     outputStream: OutputStream,
   ) = apDeliusContextApiClient.getDocument(crn, documentId, outputStream)
-
-  fun getDocumentFromCommunityApi(
-    crn: String,
-    documentId: String,
-    outputStream: OutputStream,
-  ) = communityApiClient.getDocument(crn, documentId, outputStream)
 
   @SuppressWarnings("CyclomaticComplexMethod", "NestedBlockDepth", "ReturnCount")
   fun getPersonInfoResult(

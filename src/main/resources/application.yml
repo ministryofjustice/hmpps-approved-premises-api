@@ -143,8 +143,6 @@ management:
         time-to-live: 2000ms
 
 services:
-  community-api:
-    base-url: http://localhost:9590
   hmpps-tier:
     base-url: http://localhost:9004
   prisons-api:

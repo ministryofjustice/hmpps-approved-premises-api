@@ -26,7 +26,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.given
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAnApplication
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAnOffender
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.apDeliusContextAddResponseToUserAccessCall
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.communityAPIMockOffenderUserAccessCall
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApAreaEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AssessmentDecision
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas1CruManagementAreaEntity
@@ -1247,13 +1246,6 @@ class PlacementRequestsTest : IntegrationTestBase() {
               createdByUser = otherUser,
               crn = offenderDetails.otherIds.crn,
             ) { placementRequest, _ ->
-              communityAPIMockOffenderUserAccessCall(
-                username = user.deliusUsername,
-                crn = offenderDetails.otherIds.crn,
-                inclusion = false,
-                exclusion = true,
-              )
-
               webTestClient.get()
                 .uri("/placement-requests/${placementRequest.id}")
                 .header("Authorization", "Bearer $jwt")
@@ -1284,13 +1276,6 @@ class PlacementRequestsTest : IntegrationTestBase() {
               createdByUser = otherUser,
               crn = offenderDetails.otherIds.crn,
             ) { placementRequest, _ ->
-              communityAPIMockOffenderUserAccessCall(
-                username = user.deliusUsername,
-                crn = offenderDetails.otherIds.crn,
-                inclusion = false,
-                exclusion = false,
-              )
-
               apDeliusContextAddResponseToUserAccessCall(
                 listOf(
                   CaseAccessFactory()
@@ -1337,13 +1322,6 @@ class PlacementRequestsTest : IntegrationTestBase() {
               createdByUser = otherUser,
               crn = offenderDetails.otherIds.crn,
             ) { placementRequest, _ ->
-              communityAPIMockOffenderUserAccessCall(
-                username = user.deliusUsername,
-                crn = offenderDetails.otherIds.crn,
-                inclusion = false,
-                exclusion = true,
-              )
-
               webTestClient.get()
                 .uri("/placement-requests/${placementRequest.id}")
                 .header("Authorization", "Bearer $jwt")

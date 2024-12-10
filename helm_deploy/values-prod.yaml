@@ -20,7 +20,6 @@ generic-service:
     SPRING_PROFILES_ACTIVE: prod
     APPLICATIONINSIGHTS_CONFIGURATION_FILE: applicationinsights.json
     HMPPS_AUTH_URL: https://sign-in.hmpps.service.justice.gov.uk/auth
-    SERVICES_COMMUNITY-API_BASE-URL: https://community-api-secure.probation.service.justice.gov.uk
     SERVICES_AP-DELIUS-CONTEXT-API_BASE-URL: https://approved-premises-and-delius.hmpps.service.justice.gov.uk
     SERVICES_ASSESS-RISKS-AND-NEEDS-API_BASE-URL: https://assess-risks-and-needs.hmpps.service.justice.gov.uk
     SERVICES_HMPPS-TIER_BASE-URL: https://hmpps-tier.hmpps.service.justice.gov.uk

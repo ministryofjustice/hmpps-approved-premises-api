@@ -19,7 +19,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.ApOASysContextApi
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.CaseNotesClient
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.ClientResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.ClientResult.Failure.StatusCode
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.CommunityApiClient
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.PrisonsApiClient
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.config.ExcludedCategoryBindingModel
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.config.PrisonAdjudicationsConfigBindingModel
@@ -38,9 +37,9 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.PersonRisksFacto
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.UserEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PersonInfoResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PersonSummaryInfoResult
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.community.UserOffenderAccess
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.deliuscontext.CaseSummaries
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.deliuscontext.UserAccess
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.deliuscontext.UserOffenderAccess
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.prisonsapi.AssignedLivingUnit
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.prisonsapi.CaseNotesPage
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.prisonsapi.InmateDetail
@@ -60,7 +59,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomStringMultiCa
 import java.time.LocalDate
 
 class OffenderServiceTest {
-  private val mockCommunityApiClient = mockk<CommunityApiClient>()
   private val mockPrisonsApiClient = mockk<PrisonsApiClient>()
   private val mockCaseNotesClient = mockk<CaseNotesClient>()
   private val mockApOASysContextApiClient = mockk<ApOASysContextApiClient>()
@@ -90,7 +88,6 @@ class OffenderServiceTest {
   private val objectMapper = ObjectMapperFactory.createRuntimeLikeObjectMapper()
 
   private val offenderService = OffenderService(
-    mockCommunityApiClient,
     mockPrisonsApiClient,
     mockCaseNotesClient,
     mockApOASysContextApiClient,

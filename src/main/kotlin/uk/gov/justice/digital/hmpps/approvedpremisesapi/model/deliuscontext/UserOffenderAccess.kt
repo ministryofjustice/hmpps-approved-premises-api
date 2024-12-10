@@ -1,4 +1,4 @@
-package uk.gov.justice.digital.hmpps.approvedpremisesapi.model.community
+package uk.gov.justice.digital.hmpps.approvedpremisesapi.model.deliuscontext
 
 data class UserOffenderAccess(
   val userRestricted: Boolean,
