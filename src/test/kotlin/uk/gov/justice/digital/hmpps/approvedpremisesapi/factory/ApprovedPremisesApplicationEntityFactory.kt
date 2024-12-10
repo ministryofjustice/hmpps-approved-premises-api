@@ -116,7 +116,7 @@ class ApprovedPremisesApplicationEntityFactory : Factory<ApprovedPremisesApplica
     this.submittedAt = { submittedAt }
   }
 
-  fun withIsWomensApplication(isWomensApplication: Boolean) = apply {
+  fun withIsWomensApplication(isWomensApplication: Boolean?) = apply {
     this.isWomensApplication = { isWomensApplication }
   }
 

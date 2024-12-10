@@ -1,15 +1,18 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1
 
+import org.springframework.data.repository.findByIdOrNull
 import org.springframework.stereotype.Service
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1SpaceSearchParameters
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Gender
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremiseApplicationRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.CharacteristicEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas1.CandidatePremises
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas1.Cas1SpaceSearchRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas1.SpaceAvailability
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.ApprovedPremisesType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.asApprovedPremisesType
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.NotFoundProblem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.CharacteristicService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.zipBy
 import java.time.LocalDate
@@ -19,11 +22,20 @@ import java.util.UUID
 class Cas1SpaceSearchService(
   private val characteristicService: CharacteristicService,
   private val spaceSearchRepository: Cas1SpaceSearchRepository,
+  private val applicationRepository: ApprovedPremiseApplicationRepository,
 ) {
   fun findSpaces(searchParameters: Cas1SpaceSearchParameters): List<Cas1SpaceSearchResult> {
+    val applicationId = searchParameters.applicationId
+    val application = applicationRepository.findByIdOrNull(searchParameters.applicationId)
+      ?: throw NotFoundProblem(applicationId, "Application")
+
     val requiredCharacteristics = getRequiredCharacteristics(searchParameters)
 
-    val candidatePremises = getCandidatePremises(searchParameters.targetPostcodeDistrict, requiredCharacteristics)
+    val candidatePremises = getCandidatePremises(
+      searchParameters.targetPostcodeDistrict,
+      requiredCharacteristics,
+      isWomensPremises = application.isWomensApplication!!,
+    )
 
     if (candidatePremises.isEmpty()) {
       return emptyList()
@@ -77,11 +89,12 @@ class Cas1SpaceSearchService(
   private fun getCandidatePremises(
     targetPostcodeDistrict: String,
     requiredCharacteristics: RequiredCharacteristics,
+    isWomensPremises: Boolean,
   ): List<CandidatePremises> {
     return spaceSearchRepository.findAllPremisesWithCharacteristicsByDistance(
       targetPostcodeDistrict,
       requiredCharacteristics.apTypes,
-      requiredCharacteristics.genders,
+      isWomensPremises,
       requiredCharacteristics.space.premisesCharacteristics,
       requiredCharacteristics.space.roomCharacteristics,
     )

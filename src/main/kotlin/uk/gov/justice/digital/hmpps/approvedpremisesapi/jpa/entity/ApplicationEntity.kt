@@ -310,6 +310,9 @@ WHERE taa.probation_region_id = :probationRegionId AND a.submitted_at IS NOT NUL
 }
 
 @Repository
+interface ApprovedPremiseApplicationRepository : JpaRepository<ApprovedPremisesApplicationEntity, UUID>
+
+@Repository
 interface LockableApplicationRepository : JpaRepository<LockableApplicationEntity, UUID> {
   @Query("SELECT a FROM LockableApplicationEntity a WHERE a.id = :id")
   @Lock(LockModeType.PESSIMISTIC_WRITE)
