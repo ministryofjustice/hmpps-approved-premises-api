@@ -2,6 +2,7 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.factory
 
 import io.github.bluegroundltd.kfactory.Factory
 import io.github.bluegroundltd.kfactory.Yielded
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApplicationOrigin
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas2ApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas2ApplicationNoteEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas2AssessmentEntity
@@ -39,8 +40,7 @@ class Cas2ApplicationEntityFactory : Factory<Cas2ApplicationEntity> {
   private var preferredAreas: Yielded<String?> = { null }
   private var hdcEligibilityDate: Yielded<LocalDate?> = { null }
   private var conditionalReleaseDate: Yielded<LocalDate?> = { null }
-  private var applicationOrigin: Yielded<String?> = { null }
-
+  private var applicationOrigin: Yielded<ApplicationOrigin?> = { null }
 
   fun withId(id: UUID) = apply {
     this.id = { id }
@@ -126,7 +126,7 @@ class Cas2ApplicationEntityFactory : Factory<Cas2ApplicationEntity> {
     this.conditionalReleaseDate = { conditionalReleaseDate }
   }
 
-  fun withApplicationOrigin(applicationOrigin: String) = apply {
+  fun withApplicationOrigin(applicationOrigin: ApplicationOrigin) = apply {
     this.applicationOrigin = { applicationOrigin }
   }
 
@@ -150,6 +150,6 @@ class Cas2ApplicationEntityFactory : Factory<Cas2ApplicationEntity> {
     hdcEligibilityDate = this.hdcEligibilityDate(),
     conditionalReleaseDate = this.conditionalReleaseDate(),
     preferredAreas = this.preferredAreas(),
-    applicationOrigin = this.applicationOrigin(),
+    applicationOrigin = this.applicationOrigin().toString(),
   )
 }

@@ -165,7 +165,7 @@ class ApplicationsTransformerTest {
         latestStatusUpdateLabel = null,
         latestStatusUpdateStatusId = null,
         prisonCode = "BRI",
-        applicationOrigin = "court"
+        applicationOrigin = "court",
       )
 
       every { mockStatusUpdateTransformer.transformJpaSummaryToLatestStatusUpdateApi(any()) } returns null
@@ -200,7 +200,7 @@ class ApplicationsTransformerTest {
         latestStatusUpdateStatusId = "ae544aee-7170-4794-99fb-703090cbc7db",
         latestStatusUpdateLabel = "my latest status update",
         prisonCode = "BRI",
-        applicationOrigin = "court"
+        applicationOrigin = "court",
       )
 
       every { mockStatusUpdateTransformer.transformJpaSummaryToLatestStatusUpdateApi(any()) } returns LatestCas2StatusUpdate(

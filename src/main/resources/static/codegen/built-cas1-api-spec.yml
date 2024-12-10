@@ -2833,7 +2833,7 @@ components:
             outdatedSchema:
               type: boolean
             applicationOrigin:
-              type: string #this should be an enum later today
+              $ref: '#/components/schemas/ApplicationOrigin'
             data:
               $ref: '#/components/schemas/AnyValue'
             document:
@@ -2889,7 +2889,7 @@ components:
           type: object
           $ref: '#/components/schemas/Cas2Assessment'
         applicationOrigin:
-          type: string
+          $ref: '#/components/schemas/ApplicationOrigin'
       required:
         - id
         - person
@@ -3055,7 +3055,7 @@ components:
         nomsNumber:
           type: string
         applicationOrigin:
-          type: string
+          $ref: '#/components/schemas/ApplicationOrigin'
       required:
         - type
         - id
@@ -3175,7 +3175,7 @@ components:
           type: string
           format: date-time
         applicationOrigin:
-          type: string
+          $ref: '#/components/schemas/ApplicationOrigin'
       required:
         - createdByUserId
         - status
@@ -3479,7 +3479,7 @@ components:
         telephoneNumber:
           type: string
         applicationOrigin:
-          type: string #this should be an enum later today
+          $ref: '#/components/schemas/ApplicationOrigin'
       required:
         - translatedDocument
         - applicationId
@@ -6043,6 +6043,11 @@ components:
         - sharedProperty
         - singleOccupancy
         - wheelchairAccessible
+    ApplicationOrigin:
+      type: string
+      enum:
+        - bail
+        - court
     Cas1PremisesBasicSummary:
       type: object
       properties:
