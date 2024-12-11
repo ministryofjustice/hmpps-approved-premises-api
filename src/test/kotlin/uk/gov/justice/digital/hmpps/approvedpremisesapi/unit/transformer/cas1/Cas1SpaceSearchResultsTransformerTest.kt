@@ -23,6 +23,7 @@ class Cas1SpaceSearchResultsTransformerTest {
   @Test
   fun `transformDomainToApi transforms correctly`() {
     val searchParameters = Cas1SpaceSearchParameters(
+      applicationId = UUID.randomUUID(),
       startDate = LocalDate.now(),
       durationInDays = 14,
       targetPostcodeDistrict = "AB1",

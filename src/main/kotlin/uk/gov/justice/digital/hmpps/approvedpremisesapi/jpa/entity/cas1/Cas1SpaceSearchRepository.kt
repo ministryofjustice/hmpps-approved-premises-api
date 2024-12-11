@@ -11,16 +11,6 @@ private const val AP_TYPE_FILTER = """
   AND result.ap_type IN (:apTypes)
 """
 
-private const val GENDER_FILTER = """
-  AND EXISTS (
-    SELECT 1
-    FROM premises_characteristics pc
-    WHERE
-      pc.premises_id = result.premises_id
-      AND pc.characteristic_id IN (:genderCharacteristics)
-  )
-"""
-
 private const val PREMISES_CHARACTERISTICS_FILTER = """
   AND (
     SELECT COUNT(*)
@@ -116,11 +106,12 @@ FROM
   ON p.probation_region_id = pr.id
   JOIN ap_areas aa
   ON pr.ap_area_id = aa.id
-  WHERE ap.supports_space_bookings = true
+  WHERE 
+    ap.supports_space_bookings = true AND
+    ap.gender = #SPECIFIED_GENDER#
 ) AS result
 WHERE
   1 = 1
-#GENDER_FILTER#
 #AP_TYPE_FILTER#
 #PREMISES_CHARACTERISTICS_FILTER#
 #ROOM_CHARACTERISTICS_FILTER#
@@ -141,14 +132,14 @@ class Cas1SpaceSearchRepository(
   fun findAllPremisesWithCharacteristicsByDistance(
     targetPostcodeDistrict: String,
     apTypes: List<ApprovedPremisesType>,
-    genderCharacteristics: List<UUID>,
+    isWomensPremises: Boolean,
     premisesCharacteristics: List<UUID>,
     roomCharacteristics: List<UUID>,
   ): List<CandidatePremises> {
     val (query, parameters) = resolveCandidatePremisesQueryTemplate(
       targetPostcodeDistrict,
       apTypes,
-      genderCharacteristics,
+      isWomensPremises,
       premisesCharacteristics,
       roomCharacteristics,
     )
@@ -180,7 +171,7 @@ class Cas1SpaceSearchRepository(
   private fun resolveCandidatePremisesQueryTemplate(
     targetPostcodeDistrict: String,
     apTypes: List<ApprovedPremisesType>,
-    genderCharacteristics: List<UUID>,
+    isWomensPremises: Boolean,
     premisesCharacteristics: List<UUID>,
     roomCharacteristics: List<UUID>,
   ): Pair<String, Map<String, Any>> {
@@ -202,12 +193,11 @@ class Cas1SpaceSearchRepository(
     }
 
     when {
-      genderCharacteristics.isEmpty() -> {
-        query = query.replace("#GENDER_FILTER#", "")
+      isWomensPremises -> {
+        query = query.replace("#SPECIFIED_GENDER#", "'WOMAN'")
       }
       else -> {
-        query = query.replace("#GENDER_FILTER#", GENDER_FILTER)
-        params["genderCharacteristics"] = genderCharacteristics
+        query = query.replace("#SPECIFIED_GENDER#", "'MAN'")
       }
     }
 

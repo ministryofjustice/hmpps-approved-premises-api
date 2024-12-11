@@ -212,6 +212,8 @@ components:
           items:
             $ref: '#/components/schemas/Cas1SpaceCharacteristic'
         genders:
+          description: gender is obtained from application's associated gender
+          deprecated: true
           type: array
           items:
             $ref: '_shared.yml#/components/schemas/Gender'
@@ -240,6 +242,7 @@ components:
         requirements:
           $ref: '#/components/schemas/Cas1SpaceSearchRequirements'
       required:
+        - applicationId
         - startDate
         - durationInDays
         - targetPostcodeDistrict
