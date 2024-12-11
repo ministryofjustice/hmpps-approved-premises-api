@@ -357,9 +357,18 @@ class OffenderService(
     return offender.currentExclusion || offender.currentRestriction
   }
 
-  fun canAccessOffender(username: String, crn: String): Boolean {
-    return canAccessOffenders(username, listOf(crn)).get(crn) == true
+  fun canAccessOffender(
+    crn: String,
+    limitedAccessStrategy: LimitedAccessStrategy,
+  ) = when (limitedAccessStrategy) {
+    is LimitedAccessStrategy.IgnoreLimitedAccess -> true
+    is LimitedAccessStrategy.ReturnRestrictedIfLimitedAccess -> canAccessOffender(
+      username = limitedAccessStrategy.deliusUsername,
+      crn = crn,
+    )
   }
+
+  fun canAccessOffender(username: String, crn: String) = canAccessOffenders(username, listOf(crn))[crn] == true
 
   @SuppressWarnings("MagicNumber")
   fun canAccessOffenders(username: String, crns: List<String>): Map<String, Boolean> {

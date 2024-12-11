@@ -1,5 +1,6 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.unit.service
 
+import io.mockk.Called
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.verify
@@ -49,7 +50,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.AuthorisableActi
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.CasResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.OffenderService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.OffenderService.LimitedAccessStrategy
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.OffenderService.LimitedAccessStrategy.IgnoreLimitedAccess
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.OffenderService.LimitedAccessStrategy.ReturnRestrictedIfLimitedAccess
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.PersonTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.unit.util.ObjectMapperFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.ClientResultFailureArgumentsProvider
@@ -310,6 +311,103 @@ class OffenderServiceTest {
     assertThat(result is AuthorisableActionResult.Success).isTrue
     result as AuthorisableActionResult.Success
     assertThat(result.entity).isEqualTo(expectedRisks)
+  }
+
+  @Nested
+  inner class CanAccessOffender {
+
+    @Test
+    fun `return true and dont make any external calls if IgnoreLimitedAccess strategy`() {
+      val crn = randomNumberChars(8)
+
+      val result = offenderService.canAccessOffender(crn, LimitedAccessStrategy.IgnoreLimitedAccess)
+      assertThat(result).isTrue()
+
+      verify { mockApDeliusContextApiClient wasNot Called }
+    }
+
+    @Test
+    fun `return false when crn is user excluded from viewing, ReturnRestrictedIfLimitedAccess strategy`() {
+      val crn = randomNumberChars(8)
+      val caseAccess = CaseAccessFactory()
+        .withCrn(crn)
+        .withUserExcluded(true)
+        .produce()
+
+      every {
+        mockApDeliusContextApiClient.getUserAccessForCrns(
+          "distinguished.name",
+          listOf(crn),
+        )
+      } returns ClientResult.Success(HttpStatus.OK, UserAccess(listOf(caseAccess)))
+
+      val result = offenderService.canAccessOffender(crn, ReturnRestrictedIfLimitedAccess("distinguished.name"))
+      assertThat(result).isFalse()
+    }
+
+    @Test
+    fun `return false when crn is user restricted from viewing, ReturnRestrictedIfLimitedAccess strategy`() {
+      val crn = randomNumberChars(8)
+      val caseAccess = CaseAccessFactory()
+        .withCrn(crn)
+        .withUserRestricted(true)
+        .produce()
+
+      every {
+        mockApDeliusContextApiClient.getUserAccessForCrns(
+          "distinguished.name",
+          listOf(crn),
+        )
+      } returns ClientResult.Success(HttpStatus.OK, UserAccess(listOf(caseAccess)))
+
+      val result = offenderService.canAccessOffender(crn, ReturnRestrictedIfLimitedAccess("distinguished.name"))
+      assertThat(result).isFalse()
+    }
+
+    @Test
+    fun `return false when no access result returned for crn, ReturnRestrictedIfLimitedAccess strategy`() {
+      val crn = randomNumberChars(8)
+
+      every {
+        mockApDeliusContextApiClient.getUserAccessForCrns(
+          "distinguished.name",
+          listOf(crn),
+        )
+      } returns ClientResult.Success(HttpStatus.OK, UserAccess(emptyList()))
+
+      val result = offenderService.canAccessOffender(crn, ReturnRestrictedIfLimitedAccess("distinguished.name"))
+      assertThat(result).isFalse()
+    }
+
+    @Test
+    fun `return true when crn is not user restricted or excluded from viewing, ReturnRestrictedIfLimitedAccess strategy`() {
+      val crn = randomNumberChars(8)
+      val caseAccess = CaseAccessFactory()
+        .withCrn(crn)
+        .withUserRestricted(false)
+        .withUserExcluded(false)
+        .produce()
+
+      every {
+        mockApDeliusContextApiClient.getUserAccessForCrns(
+          "distinguished.name",
+          listOf(crn),
+        )
+      } returns ClientResult.Success(HttpStatus.OK, UserAccess(listOf(caseAccess)))
+
+      val result = offenderService.canAccessOffender(crn, ReturnRestrictedIfLimitedAccess("distinguished.name"))
+      assertThat(result).isTrue()
+    }
+
+    @ParameterizedTest
+    @ArgumentsSource(ClientResultFailureArgumentsProvider::class)
+    fun `throws exception when getUserAccessForCrns returns client result failure`(response: ClientResult.Failure<UserAccess>) {
+      val crn = randomNumberChars(8)
+
+      every { mockApDeliusContextApiClient.getUserAccessForCrns("distinguished.name", listOf(crn)) } returns response
+
+      assertThrows<Throwable> { offenderService.canAccessOffender(crn, ReturnRestrictedIfLimitedAccess("distinguished.name")) }
+    }
   }
 
   @Nested
@@ -1331,7 +1429,7 @@ class OffenderServiceTest {
     fun `if no crns provided immediately return empty list`() {
       val result = offenderService.getPersonSummaryInfoResults(
         crns = emptySet(),
-        limitedAccessStrategy = LimitedAccessStrategy.ReturnRestrictedIfLimitedAccess(USERNAME),
+        limitedAccessStrategy = ReturnRestrictedIfLimitedAccess(USERNAME),
       )
 
       assertThat(result).isEmpty()
@@ -1347,7 +1445,7 @@ class OffenderServiceTest {
       assertThrows<Throwable> {
         offenderService.getPersonSummaryInfoResults(
           crns = setOf(OFFENDER_1_CRN),
-          limitedAccessStrategy = LimitedAccessStrategy.ReturnRestrictedIfLimitedAccess(USERNAME),
+          limitedAccessStrategy = ReturnRestrictedIfLimitedAccess(USERNAME),
         )
       }
     }
@@ -1366,7 +1464,7 @@ class OffenderServiceTest {
       assertThrows<Throwable> {
         offenderService.getPersonSummaryInfoResults(
           crns = setOf(OFFENDER_1_CRN),
-          limitedAccessStrategy = LimitedAccessStrategy.ReturnRestrictedIfLimitedAccess(USERNAME),
+          limitedAccessStrategy = ReturnRestrictedIfLimitedAccess(USERNAME),
         )
       }
     }
@@ -1383,7 +1481,7 @@ class OffenderServiceTest {
 
       val results = offenderService.getPersonSummaryInfoResults(
         crns = setOf(OFFENDER_1_CRN),
-        limitedAccessStrategy = LimitedAccessStrategy.ReturnRestrictedIfLimitedAccess(USERNAME),
+        limitedAccessStrategy = ReturnRestrictedIfLimitedAccess(USERNAME),
       )
 
       assertThat(results).hasSize(1)
@@ -1411,7 +1509,7 @@ class OffenderServiceTest {
 
       val results = offenderService.getPersonSummaryInfoResults(
         crns = setOf(OFFENDER_1_CRN),
-        limitedAccessStrategy = LimitedAccessStrategy.ReturnRestrictedIfLimitedAccess(USERNAME),
+        limitedAccessStrategy = ReturnRestrictedIfLimitedAccess(USERNAME),
       )
 
       assertThat(results).hasSize(1)
@@ -1447,7 +1545,7 @@ class OffenderServiceTest {
 
       val results = offenderService.getPersonSummaryInfoResults(
         crns = setOf(OFFENDER_1_CRN),
-        limitedAccessStrategy = LimitedAccessStrategy.ReturnRestrictedIfLimitedAccess(USERNAME),
+        limitedAccessStrategy = ReturnRestrictedIfLimitedAccess(USERNAME),
       )
 
       assertThat(results).hasSize(1)
@@ -1494,7 +1592,7 @@ class OffenderServiceTest {
 
       val results = offenderService.getPersonSummaryInfoResults(
         crns = setOf(OFFENDER_1_CRN),
-        limitedAccessStrategy = LimitedAccessStrategy.ReturnRestrictedIfLimitedAccess(USERNAME),
+        limitedAccessStrategy = ReturnRestrictedIfLimitedAccess(USERNAME),
       )
 
       assertThat(results).hasSize(1)
@@ -1542,7 +1640,7 @@ class OffenderServiceTest {
 
       val results = offenderService.getPersonSummaryInfoResults(
         crns = setOf(OFFENDER_1_CRN),
-        limitedAccessStrategy = LimitedAccessStrategy.ReturnRestrictedIfLimitedAccess(USERNAME),
+        limitedAccessStrategy = ReturnRestrictedIfLimitedAccess(USERNAME),
       )
 
       assertThat(results).hasSize(1)
@@ -1575,7 +1673,7 @@ class OffenderServiceTest {
 
       val results = offenderService.getPersonSummaryInfoResults(
         crns = setOf(OFFENDER_1_CRN),
-        limitedAccessStrategy = IgnoreLimitedAccess,
+        limitedAccessStrategy = LimitedAccessStrategy.IgnoreLimitedAccess,
       )
 
       verify(exactly = 0) { mockApDeliusContextApiClient.getUserAccessForCrns(any(), any()) }
@@ -1641,7 +1739,7 @@ class OffenderServiceTest {
 
       val results = offenderService.getPersonSummaryInfoResults(
         crns = setOf(OFFENDER_1_CRN, OFFENDER_2_CRN, OFFENDER_3_CRN),
-        limitedAccessStrategy = LimitedAccessStrategy.ReturnRestrictedIfLimitedAccess(USERNAME),
+        limitedAccessStrategy = ReturnRestrictedIfLimitedAccess(USERNAME),
       )
 
       assertThat(results).hasSize(3)
