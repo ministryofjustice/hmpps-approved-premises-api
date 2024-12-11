@@ -102,7 +102,6 @@ tasks {
       jvmTarget = "21"
     }
 
-    kotlin.sourceSets["main"].kotlin.srcDir("$buildDir/generated/src/main")
     dependsOn("openApiGenerate")
     getByName("check") {
       dependsOn(":ktlintCheck", "detekt")
@@ -111,6 +110,15 @@ tasks {
 
   compileJava { enabled = false }
   compileTestJava { enabled = false }
+}
+
+// set the generated set globally
+sourceSets {
+  main {
+    kotlin {
+      srcDirs("src/main/kotlin", "$buildDir/generated/src/main/kotlin")
+    }
+  }
 }
 
 // this is deprecated in favour of bootRunDebug, which does not set an active profile
