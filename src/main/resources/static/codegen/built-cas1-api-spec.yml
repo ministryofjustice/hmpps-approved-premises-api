@@ -6141,6 +6141,11 @@ components:
           type: boolean
         managerDetails:
           type: string
+        overbookingSummary:
+          description: over-bookings for the next 12 weeks
+          type: array
+          items:
+            $ref: '#/components/schemas/Cas1OverbookingRange'
       required:
         - id
         - name
@@ -6151,6 +6156,22 @@ components:
         - availableBeds
         - outOfServiceBeds
         - supportsSpaceBookings
+        - overbookingSummary
+    Cas1OverbookingRange:
+      type: object
+      properties:
+        startInclusive:
+          type: string
+          format: date
+          example: 2022-07-28
+        endInclusive:
+          description: This can be the same as the start date if overbooked for one night
+          type: string
+          format: date
+          example: 2022-07-29
+      required:
+        - startInclusive
+        - endInclusive
     Cas1SpaceCharacteristic:
       type: string
       description: All of the characteristics of both premises and rooms

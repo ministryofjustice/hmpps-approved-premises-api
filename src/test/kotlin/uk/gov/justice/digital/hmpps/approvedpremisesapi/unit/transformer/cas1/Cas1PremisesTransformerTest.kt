@@ -77,6 +77,7 @@ class Cas1PremisesTransformerTest {
       assertThat(result.apArea).isEqualTo(expectedApArea)
       assertThat(result.supportsSpaceBookings).isTrue()
       assertThat(result.managerDetails).isEqualTo("manager details")
+      assertThat(result.overbookingSummary).isEmpty()
     }
   }
 
