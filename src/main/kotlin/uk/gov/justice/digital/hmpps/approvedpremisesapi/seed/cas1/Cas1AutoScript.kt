@@ -155,7 +155,7 @@ class Cas1AutoScript(
           UserRole.CAS1_FUTURE_MANAGER,
           UserRole.CAS1_CRU_MEMBER,
         ),
-        qualifications = UserQualification.entries.toList(),
+        qualifications = emptyList(),
         documentation = "For local use in development and testing. This user has an exclusion (whitelisted) for LAO CRN X400000",
       ),
       SeedUser(
@@ -171,7 +171,7 @@ class Cas1AutoScript(
           UserRole.CAS1_APPEALS_MANAGER,
           UserRole.CAS1_FUTURE_MANAGER,
         ),
-        qualifications = UserQualification.entries.toList(),
+        qualifications = emptyList(),
         documentation = "For local use in development and testing. This user has a restriction (blacklisted) for LAO CRN X400001",
       ),
       SeedUser(
