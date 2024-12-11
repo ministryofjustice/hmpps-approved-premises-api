@@ -51,7 +51,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.CaseAccessFactor
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.CaseDetailFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.NeedsDetailsFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.PersonRisksFactory
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.RegistrationClientResponseFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.StaffDetailFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.TeamFactoryDeliusContext
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenACas1CruManagementArea
@@ -64,7 +63,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.ap
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.apDeliusContextMockSuccessfulTeamsManagingCaseCall
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.apDeliusContextMockUserAccess
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.apOASysContextMockSuccessfulNeedsDetailsCall
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.communityAPIMockSuccessfulRegistrationsCall
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.govUKBankHolidaysAPIMockSuccessfullCallWithEmptyResponse
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApplicationRepository
@@ -86,8 +84,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PersonInfoResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.RiskTier
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.RiskWithStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.community.OffenderDetailSummary
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.community.RegistrationKeyValue
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.community.Registrations
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.deliuscontext.ManagingTeamsResponse
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.domainevent.SnsEventPersonReference
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.prisonsapi.AssignedLivingUnit
@@ -1931,20 +1927,6 @@ class ApplicationTest : IntegrationTestBase() {
         withCreatedByUser(submittingUser)
       }.id
 
-      communityAPIMockSuccessfulRegistrationsCall(
-        offenderDetails.otherIds.crn,
-        Registrations(
-          registrations = listOf(
-            RegistrationClientResponseFactory()
-              .withType(RegistrationKeyValue(code = "MAPP", description = "MAPPA"))
-              .withRegisterCategory(RegistrationKeyValue(code = "M2", description = "M2"))
-              .withRegisterLevel(RegistrationKeyValue(code = "M2", description = "M2"))
-              .withStartDate(LocalDate.parse("2022-09-06"))
-              .produce(),
-          ),
-        ),
-      )
-
       apDeliusContextMockSuccessfulCaseDetailCall(
         offenderDetails.otherIds.crn,
         CaseDetailFactory().produce(),
@@ -2054,20 +2036,6 @@ class ApplicationTest : IntegrationTestBase() {
         withCreatedByUser(submittingUser)
       }.id
 
-      communityAPIMockSuccessfulRegistrationsCall(
-        offenderDetails.otherIds.crn,
-        Registrations(
-          registrations = listOf(
-            RegistrationClientResponseFactory()
-              .withType(RegistrationKeyValue(code = "MAPP", description = "MAPPA"))
-              .withRegisterCategory(RegistrationKeyValue(code = "M2", description = "M2"))
-              .withRegisterLevel(RegistrationKeyValue(code = "M2", description = "M2"))
-              .withStartDate(LocalDate.parse("2022-09-06"))
-              .produce(),
-          ),
-        ),
-      )
-
       apDeliusContextMockSuccessfulCaseDetailCall(
         offenderDetails.otherIds.crn,
         CaseDetailFactory().produce(),
@@ -2176,20 +2144,6 @@ class ApplicationTest : IntegrationTestBase() {
         withCreatedByUser(submittingUser)
       }.id
 
-      communityAPIMockSuccessfulRegistrationsCall(
-        offenderDetails.otherIds.crn,
-        Registrations(
-          registrations = listOf(
-            RegistrationClientResponseFactory()
-              .withType(RegistrationKeyValue(code = "MAPP", description = "MAPPA"))
-              .withRegisterCategory(RegistrationKeyValue(code = "M2", description = "M2"))
-              .withRegisterLevel(RegistrationKeyValue(code = "M2", description = "M2"))
-              .withStartDate(LocalDate.parse("2022-09-06"))
-              .produce(),
-          ),
-        ),
-      )
-
       apDeliusContextMockSuccessfulCaseDetailCall(
         offenderDetails.otherIds.crn,
         CaseDetailFactory().produce(),
@@ -2290,20 +2244,6 @@ class ApplicationTest : IntegrationTestBase() {
         withCreatedByUser(submittingUser)
       }.id
 
-      communityAPIMockSuccessfulRegistrationsCall(
-        offenderDetails.otherIds.crn,
-        Registrations(
-          registrations = listOf(
-            RegistrationClientResponseFactory()
-              .withType(RegistrationKeyValue(code = "MAPP", description = "MAPPA"))
-              .withRegisterCategory(RegistrationKeyValue(code = "M2", description = "M2"))
-              .withRegisterLevel(RegistrationKeyValue(code = "M2", description = "M2"))
-              .withStartDate(LocalDate.parse("2022-09-06"))
-              .produce(),
-          ),
-        ),
-      )
-
       apDeliusContextMockSuccessfulCaseDetailCall(
         offenderDetails.otherIds.crn,
         CaseDetailFactory().produce(),
@@ -2395,20 +2335,6 @@ class ApplicationTest : IntegrationTestBase() {
         withCreatedByUser(submittingUser)
       }.id
 
-      communityAPIMockSuccessfulRegistrationsCall(
-        offenderDetails.otherIds.crn,
-        Registrations(
-          registrations = listOf(
-            RegistrationClientResponseFactory()
-              .withType(RegistrationKeyValue(code = "MAPP", description = "MAPPA"))
-              .withRegisterCategory(RegistrationKeyValue(code = "M2", description = "M2"))
-              .withRegisterLevel(RegistrationKeyValue(code = "M2", description = "M2"))
-              .withStartDate(LocalDate.parse("2022-09-06"))
-              .produce(),
-          ),
-        ),
-      )
-
       apDeliusContextMockSuccessfulCaseDetailCall(
         offenderDetails.otherIds.crn,
         CaseDetailFactory().produce(),
@@ -2496,34 +2422,6 @@ class ApplicationTest : IntegrationTestBase() {
             """,
               )
             }.id
-
-            communityAPIMockSuccessfulRegistrationsCall(
-              offenderDetails.otherIds.crn,
-              Registrations(
-                registrations = listOf(
-                  RegistrationClientResponseFactory()
-                    .withType(
-                      RegistrationKeyValue(
-                        code = "MAPP",
-                        description = "MAPPA",
-                      ),
-                    )
-                    .withRegisterCategory(
-                      RegistrationKeyValue(
-                        code = "A",
-                        description = "A",
-                      ),
-                    )
-                    .withRegisterLevel(
-                      RegistrationKeyValue(
-                        code = "1",
-                        description = "1",
-                      ),
-                    )
-                    .produce(),
-                ),
-              ),
-            )
 
             every { realApplicationRepository.save(any()) } answers {
               Thread.sleep(1000)

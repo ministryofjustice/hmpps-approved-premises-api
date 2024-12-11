@@ -59,7 +59,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.given
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenSomeOffenders
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.apDeliusContextAddListCaseSummaryToBulkResponse
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.apDeliusContextMockUserAccess
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.communityAPIMockOffenderUserAccessCall
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.govUKBankHolidaysAPIMockSuccessfullCallWithEmptyResponse
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesApplicationEntity
@@ -1640,7 +1639,6 @@ class AssessmentTest : IntegrationTestBase() {
 
           otherAssessment.schemaUpToDate = true
 
-          mockOffenderUserAccessCommunityApiCall(user.deliusUsername, otherOffender.first.otherIds.crn, true, true)
           apDeliusContextAddListCaseSummaryToBulkResponse(listOf(offender.first.asCaseSummary(), otherOffender.first.asCaseSummary()))
 
           assertResponseForUrl(
@@ -1689,8 +1687,6 @@ class AssessmentTest : IntegrationTestBase() {
           }
 
           assessment.schemaUpToDate = true
-
-          mockOffenderUserAccessCommunityApiCall(user.deliusUsername, offenderDetails.otherIds.crn, true, true)
 
           assertResponseForUrl(
             jwt,
@@ -1849,12 +1845,6 @@ class AssessmentTest : IntegrationTestBase() {
           withCurrentExclusion(true)
         },
       ) { offenderDetails, inmateDetails ->
-        communityAPIMockOffenderUserAccessCall(
-          username = userEntity.deliusUsername,
-          crn = offenderDetails.otherIds.crn,
-          inclusion = false,
-          exclusion = true,
-        )
 
         val applicationSchema = approvedPremisesApplicationJsonSchemaEntityFactory.produceAndPersist {
           withPermissiveSchema()
@@ -1897,12 +1887,6 @@ class AssessmentTest : IntegrationTestBase() {
           withCurrentExclusion(true)
         },
       ) { offenderDetails, inmateDetails ->
-        communityAPIMockOffenderUserAccessCall(
-          username = userEntity.deliusUsername,
-          crn = offenderDetails.otherIds.crn,
-          inclusion = false,
-          exclusion = false,
-        )
 
         apDeliusContextMockUserAccess(
           CaseAccessFactory()
@@ -1963,12 +1947,6 @@ class AssessmentTest : IntegrationTestBase() {
           withCurrentRestriction(true)
         },
       ) { offenderDetails, inmateDetails ->
-        communityAPIMockOffenderUserAccessCall(
-          username = userEntity.deliusUsername,
-          crn = offenderDetails.otherIds.crn,
-          inclusion = true,
-          exclusion = false,
-        )
 
         val applicationSchema = approvedPremisesApplicationJsonSchemaEntityFactory.produceAndPersist {
           withPermissiveSchema()
