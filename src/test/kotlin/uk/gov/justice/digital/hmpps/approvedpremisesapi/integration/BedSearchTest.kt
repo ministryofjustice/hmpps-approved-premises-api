@@ -996,7 +996,7 @@ class BedSearchTest : IntegrationTestBase() {
         val beds = createPremisesAndBedsWithCharacteristics(
           localAuthorityArea,
           searchPdu,
-          BedSearchAttributes.sharedProperty,
+          BedSearchAttributes.SHARED_PROPERTY,
         )
 
         val expextedPremisesOneBedOne = beds.first()
@@ -1015,7 +1015,7 @@ class BedSearchTest : IntegrationTestBase() {
               durationDays = 84,
               serviceName = "temporary-accommodation",
               probationDeliveryUnits = listOf(searchPdu.id),
-              attributes = listOf(BedSearchAttributes.sharedProperty),
+              attributes = listOf(BedSearchAttributes.SHARED_PROPERTY),
             ),
           )
           .exchange()
@@ -1107,7 +1107,7 @@ class BedSearchTest : IntegrationTestBase() {
         val beds = createPremisesAndBedsWithCharacteristics(
           localAuthorityArea,
           searchPdu,
-          BedSearchAttributes.singleOccupancy,
+          BedSearchAttributes.SINGLE_OCCUPANCY,
         )
 
         val expextedPremisesOneBedOne = beds.first()
@@ -1126,7 +1126,7 @@ class BedSearchTest : IntegrationTestBase() {
               durationDays = 84,
               serviceName = "temporary-accommodation",
               probationDeliveryUnits = listOf(searchPdu.id),
-              attributes = listOf(BedSearchAttributes.singleOccupancy),
+              attributes = listOf(BedSearchAttributes.SINGLE_OCCUPANCY),
             ),
           )
           .exchange()
@@ -1218,7 +1218,7 @@ class BedSearchTest : IntegrationTestBase() {
         val beds = createPremisesAndBedsWithCharacteristics(
           localAuthorityArea,
           searchPdu,
-          BedSearchAttributes.wheelchairAccessible,
+          BedSearchAttributes.WHEELCHAIR_ACCESSIBLE,
         )
 
         val expextedPremisesOneBedOne = beds.first()
@@ -1235,7 +1235,7 @@ class BedSearchTest : IntegrationTestBase() {
               durationDays = 84,
               serviceName = "temporary-accommodation",
               probationDeliveryUnits = listOf(searchPdu.id),
-              attributes = listOf(BedSearchAttributes.wheelchairAccessible),
+              attributes = listOf(BedSearchAttributes.WHEELCHAIR_ACCESSIBLE),
             ),
           )
           .exchange()
@@ -2015,19 +2015,19 @@ class BedSearchTest : IntegrationTestBase() {
       )
 
       when (bedSearchAttribute) {
-        BedSearchAttributes.singleOccupancy, BedSearchAttributes.SINGLE_OCCUPANCY -> beds = listOf(
+        BedSearchAttributes.SINGLE_OCCUPANCY -> beds = listOf(
           singleOccupancyBedOne,
           premisesSingleOccupancyWomenOnlyBedOne,
           premisesSingleOccupancyWheelchairAccessibleBedOne,
         )
 
-        BedSearchAttributes.sharedProperty, BedSearchAttributes.SHARED_PROPERTY -> beds = listOf(
+        BedSearchAttributes.SHARED_PROPERTY -> beds = listOf(
           sharedPropertyBedOne,
           premisesSharedPropertyMenOnlyBedOne,
           premisesSharedPropertyWheelchairAccessibleBedOne,
         )
 
-        BedSearchAttributes.wheelchairAccessible, BedSearchAttributes.WHEELCHAIR_ACCESSIBLE ->
+        BedSearchAttributes.WHEELCHAIR_ACCESSIBLE ->
           beds =
             listOf(premisesSharedPropertyWheelchairAccessibleBedOne, premisesSingleOccupancyWheelchairAccessibleBedOne)
       }
