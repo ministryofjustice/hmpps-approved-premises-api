@@ -5795,8 +5795,11 @@ components:
           properties:
             name:
               type: string
+            isRestricted:
+              type: boolean
           required:
             - name
+            - isRestricted
     RestrictedPersonSummary:
       allOf:
         - $ref: '#/components/schemas/PersonSummary'
