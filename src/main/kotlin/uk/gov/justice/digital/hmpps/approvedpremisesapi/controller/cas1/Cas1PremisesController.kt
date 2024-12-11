@@ -5,8 +5,12 @@ import org.springframework.stereotype.Service
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.cas1.PremisesCas1Delegate
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1ApprovedPremisesGender
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1PremiseCapacity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1PremiseDaySummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1PremisesBasicSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1PremisesSummary
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1SpaceBookingCharacteristic
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1SpaceBookingDaySummarySortField
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.SortDirection
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesGender
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserPermission
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.UserAccessService
@@ -73,5 +77,15 @@ class Cas1PremisesController(
         premiseCapacity = extractEntityFromCasResult(premiseCapacity),
       ),
     )
+  }
+
+  override fun getDaySummary(
+    premisesId: UUID,
+    date: LocalDate,
+    bookingsCriteriaFilter: List<Cas1SpaceBookingCharacteristic>?,
+    bookingsSortDirection: SortDirection?,
+    bookingsSortBy: Cas1SpaceBookingDaySummarySortField?,
+  ): ResponseEntity<Cas1PremiseDaySummary> {
+    return super.getDaySummary(premisesId, date, bookingsCriteriaFilter, bookingsSortDirection, bookingsSortBy)
   }
 }

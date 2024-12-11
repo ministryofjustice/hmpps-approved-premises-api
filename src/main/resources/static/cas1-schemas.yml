@@ -168,6 +168,23 @@ components:
         - isTopFloorVulnerable
         - isWheelchairAccessible
         - isWheelchairDesignated
+    Cas1SpaceBookingCharacteristic:
+      type: string
+      description: All of the characteristics applicable to a space booking
+      enum:
+        - hasEnSuite
+        - isArsonSuitable
+        - isSingle
+        - isStepFreeDesignated
+        - isSuitedForSexOffenders
+        - isWheelchairDesignated
+      x-enum-varnames:
+        - HAS_EN_SUITE
+        - IS_ARSON_SUITABLE
+        - IS_SINGLE
+        - IS_STEP_FREE_DESIGNATED
+        - IS_SUITED_FOR_SEX_OFFENDERS
+        - IS_WHEELCHAIR_DESIGNATED
     Cas1NewSpaceBooking:
       type: object
       properties:
@@ -448,6 +465,85 @@ components:
         - canonicalDepartureDate
         - keyWorkerName
         - tier
+    Cas1SpaceBookingDaySummarySortField:
+      type: string
+      enum:
+        - personName
+        - tier
+        - canonicalArrivalDate
+        - canonicalDepartureDate
+        - releaseType
+        - spaceType
+      x-enum-varnames:
+        - PERSON_NAME
+        - TIER
+        - CANONICAL_ARRIVAL_DATE
+        - CANONICAL_DEPARTURE_DATE
+        - RELEASE_TYPE
+        - SPACE_TYPE
+    Cas1PremiseDaySummary:
+      type: object
+      properties:
+        forDate:
+          type: string
+          format: date
+        previousDate:
+          type: string
+          format: date
+        nextDate:
+          type: string
+          format: date
+        capacity:
+          $ref: '#/components/schemas/Cas1PremiseCapacityForDay'
+        spaceBookings:
+          type: array
+          items:
+            $ref: '#/components/schemas/Cas1SpaceBookingDaySummary'
+        outOfServiceBeds:
+          type: array
+          items:
+            $ref: '#/components/schemas/Cas1OutOfServiceBedSummary'
+      required:
+        - forDate
+        - previousDate
+        - nextDate
+        - capacity
+        - spaceBookings
+        - outOfServiceBeds
+    Cas1SpaceBookingDaySummary:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        person:
+          $ref: "_shared.yml#/components/schemas/PersonSummary"
+        canonicalArrivalDate:
+          description: actual arrival date or, if not known, the expected arrival date
+          type: string
+          format: date
+        canonicalDepartureDate:
+          description: actual departure date or, if not known, the expected departure date
+          type: string
+          format: date
+        tier:
+          description: Risk rating tier level of corresponding application
+          type: string
+        releaseType:
+          type: string
+        essentialCharacteristics:
+          type: array
+          items:
+            $ref: '#/components/schemas/Cas1SpaceBookingCharacteristic'
+      required:
+        - id
+        - person
+        - canonicalArrivalDate
+        - canonicalDepartureDate
+        - tier
+        - spaceType
+        - releaseType
+        - essentialCharacteristics
     Cas1SpaceBookingSummaryStatus:
       type: string
       enum:
@@ -682,6 +778,30 @@ components:
         - placementMatchingOutcomes
         - placementMatchingOutcomesV2
         - requestsForPlacement
+    Cas1OutOfServiceBedSummary:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        startDate:
+          type: string
+          format: date
+        endDate:
+          type: string
+          format: date
+        reason:
+          $ref: '#/components/schemas/Cas1OutOfServiceBedReason'
+        characteristics:
+          type: array
+          items:
+            $ref: '#/components/schemas/Cas1SpaceCharacteristic'
+      required:
+        - id
+        - startDate
+        - endDate
+        - reason
+        - characteristics
     Cas1OutOfServiceBed:
       type: object
       properties:
