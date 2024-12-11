@@ -170,6 +170,7 @@ class Cas1AutoScript(
           UserRole.CAS1_REPORT_VIEWER,
           UserRole.CAS1_APPEALS_MANAGER,
           UserRole.CAS1_FUTURE_MANAGER,
+          UserRole.CAS3_ASSESSOR,
         ),
         qualifications = emptyList(),
         documentation = "For local use in development and testing. This user has a restriction (blacklisted) for LAO CRN X400001",
