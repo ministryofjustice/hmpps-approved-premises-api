@@ -14,6 +14,7 @@ import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.ValueSource
 import org.springframework.test.web.reactive.server.returnResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Application
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApplicationOrigin
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas2Application
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas2ApplicationSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas2StatusUpdate
@@ -396,6 +397,82 @@ class Cas2ApplicationTest : IntegrationTestBase() {
 
             Assertions.assertThat(responseBody[1].createdAt)
               .isEqualTo(firstApplicationEntity.createdAt.toInstant())
+          }
+        }
+      }
+    }
+
+    @Test
+    fun `Get all applications returns 200 with correct body including applicationOrigin`() {
+      givenACas2PomUser { userEntity, jwt ->
+        givenACas2PomUser { otherUser, _ ->
+          givenAnOffender { offenderDetails, _ ->
+            cas2ApplicationJsonSchemaRepository.deleteAll()
+
+            val applicationSchema = cas2ApplicationJsonSchemaEntityFactory.produceAndPersist {
+              withAddedAt(OffsetDateTime.now())
+              withId(UUID.randomUUID())
+            }
+
+            // court bail application
+            val courtBailApplicationEntity = cas2ApplicationEntityFactory.produceAndPersist {
+              withApplicationSchema(applicationSchema)
+              withCreatedByUser(userEntity)
+              withCrn(offenderDetails.otherIds.crn)
+              withData("{}")
+              withCreatedAt(OffsetDateTime.parse("2024-01-03T16:10:00+01:00"))
+              withApplicationOrigin(ApplicationOrigin.courtBail)
+            }
+
+            // prison bail application
+            val prisonBailApplicationEntity = cas2ApplicationEntityFactory.produceAndPersist {
+              withApplicationSchema(applicationSchema)
+              withCreatedByUser(userEntity)
+              withCrn(offenderDetails.otherIds.crn)
+              withData("{}")
+              withCreatedAt(OffsetDateTime.parse("2024-01-03T16:10:00+01:00"))
+              withApplicationOrigin(ApplicationOrigin.prisonBail)
+            }
+
+            // hdc application
+            val hdcApplicationEntity = cas2ApplicationEntityFactory.produceAndPersist {
+              withApplicationSchema(applicationSchema)
+              withCreatedByUser(userEntity)
+              withCrn(offenderDetails.otherIds.crn)
+              withData("{}")
+              withCreatedAt(OffsetDateTime.parse("2024-02-29T09:00:00+01:00"))
+              withSubmittedAt(OffsetDateTime.now())
+              withApplicationOrigin(ApplicationOrigin.homeDetentionCurfew)
+            }
+
+            val rawResponseBody = webTestClient.get()
+              .uri("/cas2/applications")
+              .header("Authorization", "Bearer $jwt")
+              .header("X-Service-Name", ServiceName.cas2.value)
+              .exchange()
+              .expectStatus()
+              .isOk
+              .returnResult<String>()
+              .responseBody
+              .blockFirst()
+
+            val responseBody =
+              objectMapper.readValue(rawResponseBody, object : TypeReference<List<Cas2ApplicationSummary>>() {})
+
+            // check application origin is persisted and returned correctly
+            Assertions.assertThat(responseBody).anyMatch {
+              courtBailApplicationEntity.applicationOrigin == it.applicationOrigin.toString()
+            }
+
+            Assertions.assertThat(responseBody).anyMatch {
+              hdcApplicationEntity.applicationOrigin == it.applicationOrigin.toString()
+            }
+
+            Assertions.assertThat(responseBody).anyMatch {
+              prisonBailApplicationEntity.applicationOrigin == it.applicationOrigin.toString()
+            }
+
+
           }
         }
       }

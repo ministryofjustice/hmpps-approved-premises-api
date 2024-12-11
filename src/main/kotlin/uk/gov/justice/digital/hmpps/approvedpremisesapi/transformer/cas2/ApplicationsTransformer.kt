@@ -2,8 +2,10 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.cas2
 
 import com.fasterxml.jackson.databind.ObjectMapper
 import org.springframework.stereotype.Component
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApplicationOrigin
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApplicationStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas2Application
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas2ApplicationSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas2ApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas2ApplicationSummaryEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PersonInfoResult
@@ -21,7 +23,10 @@ class ApplicationsTransformer(
   private val assessmentsTransformer: AssessmentsTransformer,
 ) {
 
-  fun transformJpaToApi(jpa: Cas2ApplicationEntity, personInfo: PersonInfoResult): Cas2Application {
+  fun transformJpaToApi(
+    jpa: Cas2ApplicationEntity,
+    personInfo: PersonInfoResult
+  ): Cas2Application {
     return Cas2Application(
       id = jpa.id,
       person = personTransformer.transformModelToPersonApi(personInfo),
@@ -37,15 +42,15 @@ class ApplicationsTransformer(
       telephoneNumber = jpa.telephoneNumber,
       assessment = if (jpa.assessment != null) assessmentsTransformer.transformJpaToApiRepresentation(jpa.assessment!!) else null,
       timelineEvents = timelineEventsTransformer.transformApplicationToTimelineEvents(jpa),
+      applicationOrigin = getApplicationOrigin(jpa.applicationOrigin)
     )
   }
 
   fun transformJpaSummaryToSummary(
     jpaSummary: Cas2ApplicationSummaryEntity,
     personName: String,
-  ): uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas2ApplicationSummary {
-    return uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model
-      .Cas2ApplicationSummary(
+  ): Cas2ApplicationSummary {
+    return Cas2ApplicationSummary(
         id = jpaSummary.id,
         createdByUserId = UUID.fromString(jpaSummary.userId),
         createdByUserName = jpaSummary.userName,
@@ -58,6 +63,7 @@ class ApplicationsTransformer(
         crn = jpaSummary.crn,
         nomsNumber = jpaSummary.nomsNumber,
         personName = personName,
+        applicationOrigin = getApplicationOrigin(jpaSummary.applicationOrigin),
       )
   }
 

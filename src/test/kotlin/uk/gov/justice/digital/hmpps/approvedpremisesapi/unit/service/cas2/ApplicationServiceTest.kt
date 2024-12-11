@@ -18,6 +18,7 @@ import org.springframework.data.domain.Page
 import org.springframework.data.domain.PageRequest
 import org.springframework.data.domain.Sort
 import org.springframework.data.repository.findByIdOrNull
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApplicationOrigin
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.SortDirection
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.SubmitCas2Application
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.config.NotifyConfig
@@ -417,6 +418,48 @@ class ApplicationServiceTest {
       result as ValidatableActionResult.Success
       assertThat(result.entity.crn).isEqualTo(crn)
       assertThat(result.entity.createdByUser).isEqualTo(user)
+    }
+
+    @Test
+    fun `returns Success with created Application with correct application origin`() {
+      val crn = "CRN345"
+      val username = "SOMEPERSON"
+
+      val schema = Cas2ApplicationJsonSchemaEntityFactory().produce()
+
+      val user = userWithUsername(username)
+
+      every { mockOffenderService.getOffenderByCrn(crn) } returns AuthorisableActionResult.Success(
+        OffenderDetailsSummaryFactory().produce(),
+      )
+
+      every { mockJsonSchemaService.getNewestSchema(Cas2ApplicationJsonSchemaEntity::class.java) } returns schema
+      every { mockApplicationRepository.save(any()) } answers {
+        it.invocation.args[0] as
+          Cas2ApplicationEntity
+      }
+
+      val resultCourtBail = applicationService.createApplication(crn, user, "jwt", ApplicationOrigin.courtBail)
+      val resultPrisonBail = applicationService.createApplication(crn, user, "jwt", ApplicationOrigin.prisonBail)
+      val resultHDC = applicationService.createApplication(crn, user, "jwt", ApplicationOrigin.homeDetentionCurfew)
+      val resultNull = applicationService.createApplication(crn, user, "jwt")
+
+      assertThat(resultCourtBail is ValidatableActionResult.Success).isTrue
+      resultCourtBail as ValidatableActionResult.Success
+
+      assertThat(resultPrisonBail is ValidatableActionResult.Success).isTrue
+      resultPrisonBail as ValidatableActionResult.Success
+
+      assertThat(resultHDC is ValidatableActionResult.Success).isTrue
+      resultHDC as ValidatableActionResult.Success
+
+      assertThat(resultNull is ValidatableActionResult.Success).isTrue
+      resultNull as ValidatableActionResult.Success
+
+      assertThat(resultCourtBail.entity.applicationOrigin).isEqualTo(ApplicationOrigin.courtBail.toString())
+      assertThat(resultPrisonBail.entity.applicationOrigin).isEqualTo(ApplicationOrigin.prisonBail.toString())
+      assertThat(resultHDC.entity.applicationOrigin).isEqualTo(ApplicationOrigin.homeDetentionCurfew.toString())
+      assertThat(resultNull.entity.applicationOrigin).isNull()
     }
   }
 
@@ -1197,6 +1240,94 @@ class ApplicationServiceTest {
       }
 
       verify(exactly = 1) { mockAssessmentService.createCas2Assessment(persistedApplication) }
+    }
+
+    @Test
+    fun `returns Success and correct application origin`() {
+      val newestSchema = Cas2ApplicationJsonSchemaEntityFactory().produce()
+
+      val application = Cas2ApplicationEntityFactory()
+        .withApplicationSchema(newestSchema)
+        .withId(applicationId)
+        .withCreatedByUser(user)
+        .withSubmittedAt(null)
+        .withApplicationOrigin(ApplicationOrigin.courtBail)
+        .produce()
+        .apply {
+          schemaUpToDate = true
+        }
+
+      val submitCas2BailApplication = SubmitCas2Application(
+        translatedDocument = {},
+        applicationId = applicationId,
+        preferredAreas = "Leeds | Bradford",
+        hdcEligibilityDate = hdcEligibilityDate,
+        conditionalReleaseDate = conditionalReleaseDate,
+        telephoneNumber = "123",
+        applicationOrigin = ApplicationOrigin.courtBail,
+      )
+
+      every {
+        mockApplicationRepository.findByIdOrNull(applicationId)
+      } returns application
+      every { mockJsonSchemaService.checkSchemaOutdated(application) } returns
+        application
+      every { mockJsonSchemaService.validate(newestSchema, application.data!!) } returns true
+
+      val inmateDetail = InmateDetailFactory()
+        .withAssignedLivingUnit(
+          AssignedLivingUnit(
+            agencyId = "BRI",
+            locationId = 1234,
+            description = "description",
+            agencyName = "HMP Bristol",
+          ),
+        )
+        .produce()
+
+      every {
+        mockOffenderService.getInmateDetailByNomsNumber(
+          application.crn,
+          application.nomsNumber.toString(),
+        )
+      } returns AuthorisableActionResult.Success(inmateDetail)
+
+      every { mockNotifyConfig.templates.cas2ApplicationSubmitted } returns "abc123"
+      every { mockNotifyConfig.emailAddresses.cas2Assessors } returns "exampleAssessorInbox@example.com"
+      every { mockNotifyConfig.emailAddresses.cas2ReplyToId } returns "def456"
+      every { mockEmailNotificationService.sendEmail(any(), any(), any(), any()) } just Runs
+
+      every { mockApplicationRepository.save(any()) } answers {
+        it.invocation.args[0]
+          as Cas2ApplicationEntity
+      }
+
+      val offenderDetails = OffenderDetailsSummaryFactory()
+        .withGender("male")
+        .withCrn(application.crn)
+        .produce()
+
+      every { mockOffenderService.getOffenderByCrn(application.crn) } returns AuthorisableActionResult.Success(
+        offenderDetails,
+      )
+
+      every { mockAssessmentService.createCas2Assessment(any()) } returns any()
+
+      every { mockObjectMapper.writeValueAsString(any()) } returns any()
+
+      val result = applicationService.submitApplication(submitCas2BailApplication, user)
+
+      assertThat(result is AuthorisableActionResult.Success).isTrue
+      result as AuthorisableActionResult.Success
+
+      assertThat(result.entity is ValidatableActionResult.Success).isTrue
+      val validatableActionResult = result.entity as ValidatableActionResult.Success
+      val persistedApplication = validatableActionResult.entity
+
+
+      assertThat(persistedApplication.applicationOrigin).isEqualTo(ApplicationOrigin.courtBail.toString())
+      //TODO when we implement application origin into domain events
+      // and send email we'll need similar verify functions to the method above.
     }
   }
 
