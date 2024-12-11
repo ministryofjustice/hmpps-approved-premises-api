@@ -1427,7 +1427,7 @@ class OffenderServiceTest {
       "false,true",
       "true,true",
     )
-    fun `single crn with limited access, no limited access record returned, return NotFound`(
+    fun `single crn with limited access, ReturnRestrictedIfLimitedAccess strategy, no limited access record returned, return NotFound`(
       currentExclusion: Boolean,
       currentRestriction: Boolean,
     ) {
@@ -1462,7 +1462,7 @@ class OffenderServiceTest {
       "false,true",
       "true,true",
     )
-    fun `single crn with limited access, user is not limited, return Success`(
+    fun `single crn with limited access, ReturnRestrictedIfLimitedAccess strategy, user is not limited, return Success`(
       currentExclusion: Boolean,
       currentRestriction: Boolean,
     ) {
@@ -1510,7 +1510,7 @@ class OffenderServiceTest {
       "false,true",
       "true,true",
     )
-    fun `single crn with limited access, user is limited, return Restricted`(
+    fun `single crn with limited access, ReturnRestrictedIfLimitedAccess strategy, user is limited, return Restricted`(
       currentExclusion: Boolean,
       currentRestriction: Boolean,
     ) {
@@ -1558,7 +1558,7 @@ class OffenderServiceTest {
       "false,true",
       "true,true",
     )
-    fun `single crn with limited access, ignore lao restrictions, return Success`(
+    fun `single crn with limited access, IgnoreLimitedAccess strategy, user is limited, return Success`(
       currentExclusion: Boolean,
       currentRestriction: Boolean,
     ) {

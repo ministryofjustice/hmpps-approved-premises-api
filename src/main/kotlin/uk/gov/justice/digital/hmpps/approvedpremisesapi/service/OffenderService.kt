@@ -162,22 +162,22 @@ class OffenderService(
       return PersonSummaryInfoResult.NotFound(crn)
     }
 
-    return if (!caseSummary.hasLimitedAccess() || limitedAccessStrategy is LimitedAccessStrategy.IgnoreLimitedAccess) {
+    if (!caseSummary.hasLimitedAccess() || limitedAccessStrategy is LimitedAccessStrategy.IgnoreLimitedAccess) {
       log.debug("No restrictions apply, or the caller has indicated to ignore restrictions for '$crn'. Returning full details")
-      PersonSummaryInfoResult.Success.Full(crn, caseSummary)
+      return PersonSummaryInfoResult.Success.Full(crn, caseSummary)
+    }
+
+    return if (caseAccess == null) {
+      // This shouldn't happen
+      log.warn("Could not find case access details for LAO '$crn'. Returning 'Not Found'")
+      PersonSummaryInfoResult.NotFound(crn)
     } else {
-      if (caseAccess == null) {
-        // This shouldn't happen
-        log.warn("Could not find case access details for LAO '$crn'. Returning 'Not Found'")
-        PersonSummaryInfoResult.NotFound(crn)
+      if (caseAccess.hasLimitedAccess()) {
+        log.debug("Caller cannot access LAO '$crn'. Returning restricted")
+        PersonSummaryInfoResult.Success.Restricted(crn, caseSummary.nomsId)
       } else {
-        if (caseAccess.hasLimitedAccess()) {
-          log.debug("Caller cannot access LAO '$crn'. Returning restricted")
-          PersonSummaryInfoResult.Success.Restricted(crn, caseSummary.nomsId)
-        } else {
-          log.debug("Caller can access LAO '$crn'. Returning full details")
-          PersonSummaryInfoResult.Success.Full(crn, caseSummary)
-        }
+        log.debug("Caller can access LAO '$crn'. Returning full details")
+        PersonSummaryInfoResult.Success.Full(crn, caseSummary)
       }
     }
   }
