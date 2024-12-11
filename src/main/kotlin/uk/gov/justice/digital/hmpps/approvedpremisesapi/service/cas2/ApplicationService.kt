@@ -11,6 +11,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas2.model.Ca
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas2.model.Cas2StaffMember
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas2.model.EventType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas2.model.PersonReference
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApplicationOrigin
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.SubmitCas2Application
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.config.NotifyConfig
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApplicationSummaryRepository
@@ -117,7 +118,7 @@ class ApplicationService(
     }
   }
 
-  fun createApplication(crn: String, user: NomisUserEntity, jwt: String) =
+  fun createApplication(crn: String, user: NomisUserEntity, jwt: String, applicationOrigin: ApplicationOrigin? = null) =
     validated<Cas2ApplicationEntity> {
       val offenderDetailsResult = offenderService.getOffenderByCrn(crn)
 
@@ -148,6 +149,7 @@ class ApplicationService(
           schemaUpToDate = true,
           nomsNumber = offenderDetails.otherIds.nomsNumber,
           telephoneNumber = null,
+          applicationOrigin = applicationOrigin?.toString(),
         ),
       )
 
@@ -290,6 +292,7 @@ class ApplicationService(
         hdcEligibilityDate = submitApplication.hdcEligibilityDate
         conditionalReleaseDate = submitApplication.conditionalReleaseDate
         telephoneNumber = submitApplication.telephoneNumber
+        applicationOrigin = submitApplication.applicationOrigin?.toString()
       }
     } catch (error: UpstreamApiException) {
       return AuthorisableActionResult.Success(
@@ -345,6 +348,7 @@ class ApplicationService(
                 username = application.createdByUser.nomisUsername,
               ),
             ),
+            applicationOrigin = application.applicationOrigin
           ),
         ),
       ),
