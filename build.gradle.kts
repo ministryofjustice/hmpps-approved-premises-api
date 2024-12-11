@@ -37,7 +37,7 @@ dependencies {
   implementation("com.google.guava:guava:33.3.1-jre")
   implementation("org.postgresql:postgresql:42.7.4")
 
-  implementation("org.springdoc:springdoc-openapi-starter-webmvc-ui:2.6.0")
+  implementation("org.springdoc:springdoc-openapi-starter-webmvc-ui:2.7.0")
 
   implementation("org.zalando:problem-spring-web-starter:0.29.1")
 
@@ -102,7 +102,6 @@ tasks {
       jvmTarget = "21"
     }
 
-    kotlin.sourceSets["main"].kotlin.srcDir("$buildDir/generated/src/main")
     dependsOn("openApiGenerate")
     getByName("check") {
       dependsOn(":ktlintCheck", "detekt")
@@ -111,6 +110,15 @@ tasks {
 
   compileJava { enabled = false }
   compileTestJava { enabled = false }
+}
+
+// set the generated set globally
+sourceSets {
+  main {
+    kotlin {
+      srcDirs("src/main/kotlin", "$buildDir/generated/src/main/kotlin")
+    }
+  }
 }
 
 // this is deprecated in favour of bootRunDebug, which does not set an active profile
@@ -230,6 +238,9 @@ openApiGenerate {
   typeMappings.put("DateTime", "Instant")
   importMappings.put("Instant", "java.time.Instant")
   templateDir.set("$rootDir/openapi")
+//  configOptions.set( mapOf(
+//    "useJsonTypeInfo" to "true"
+//  ))
 }
 
 registerAdditionalOpenApiGenerateTask(
@@ -396,6 +407,9 @@ tasks.get("openApiGenerate").doLast {
       if (it.isFile && it.extension == "kt") {
         val replacedFileContents = FileUtils.readFileToString(it, "UTF-8")
           .replace("include = JsonTypeInfo.As.PROPERTY", "include = JsonTypeInfo.As.EXISTING_PROPERTY")
+//          .replace("interface ", "@Schema interface ")
+//          .replace("data class ", "@Schema data class ")
+//          .replace("enum class ", "@Schema enum class ")
         FileUtils.writeStringToFile(it, replacedFileContents, "UTF-8")
       }
     }
