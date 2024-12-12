@@ -30,7 +30,7 @@ class Cas1PremisesController(
 ) : PremisesCas1Delegate {
 
   override fun getPremisesById(premisesId: UUID): ResponseEntity<Cas1PremisesSummary> {
-    userAccessService.ensureCurrentUserHasPermission(UserPermission.CAS1_PREMISES_VIEW_SUMMARY)
+    userAccessService.ensureCurrentUserHasPermission(UserPermission.CAS1_PREMISES_VIEW)
 
     return ResponseEntity
       .ok()
@@ -66,7 +66,7 @@ class Cas1PremisesController(
     startDate: LocalDate,
     endDate: LocalDate,
   ): ResponseEntity<Cas1PremiseCapacity> {
-    userAccessService.ensureCurrentUserHasPermission(UserPermission.CAS1_PREMISES_VIEW_CAPACITY)
+    userAccessService.ensureCurrentUserHasPermission(UserPermission.CAS1_PREMISES_VIEW)
 
     val premiseSummaryInfo = cas1PremisesService.getPremisesSummary(premisesId)
     val premiseCapacity = cas1PremisesService.getPremiseCapacity(premisesId, startDate, endDate)
