@@ -5,24 +5,21 @@
 */
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.api.cas1
 
+
+import io.swagger.v3.oas.annotations.Operation
+import io.swagger.v3.oas.annotations.Parameter
+import io.swagger.v3.oas.annotations.enums.ParameterIn
+import io.swagger.v3.oas.annotations.media.Content
+import io.swagger.v3.oas.annotations.media.Schema
+import io.swagger.v3.oas.annotations.responses.ApiResponse
+import org.springframework.http.ResponseEntity
+import org.springframework.web.bind.annotation.PathVariable
+import org.springframework.web.bind.annotation.RequestHeader
+import org.springframework.web.bind.annotation.RequestMapping
+import org.springframework.web.bind.annotation.RequestMethod
+import org.springframework.web.bind.annotation.RequestParam
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1ReportName
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
-import io.swagger.v3.oas.annotations.*
-import io.swagger.v3.oas.annotations.enums.*
-import io.swagger.v3.oas.annotations.media.*
-import io.swagger.v3.oas.annotations.responses.*
-import io.swagger.v3.oas.annotations.security.*
-import org.springframework.http.HttpStatus
-import org.springframework.http.MediaType
-import org.springframework.http.ResponseEntity
-
-import org.springframework.web.bind.annotation.*
-import org.springframework.web.context.request.NativeWebRequest
-import org.springframework.beans.factory.annotation.Autowired
-
-
-import kotlin.collections.List
-import kotlin.collections.Map
 
 interface ReportsCas1 {
 
@@ -42,7 +39,7 @@ interface ReportsCas1 {
             value = ["/reports/{reportName}"],
             produces = ["application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"]
     )
-    fun reportsReportNameGet(@Parameter(description = "Validates user for this service has access to the report", `in` = ParameterIn.HEADER, required = true, schema = Schema(allowableValues = ["approved-premises", "cas2", "temporary-accommodation"])) @RequestHeader(value = "X-Service-Name", required = true) xServiceName: ServiceName,@Parameter(description = "Name of the report to download", required = true, schema = Schema(allowableValues = ["\"applications\"", "\"applicationsV2\"", "\"dailyMetrics\"", "\"lostBeds\"", "\"outOfServiceBeds\"", "\"placementApplications\"", "\"placementMatchingOutcomes\"", "\"placementMatchingOutcomesV2\"", "\"requestsForPlacement\""])) @PathVariable("reportName") reportName: Cas1ReportName,@Parameter(description = "The report content will reflect that specified by the given year.", required = true) @RequestParam(value = "year", required = true) year: kotlin.Int,@Parameter(description = "The report content will reflect that specified by the given month.", required = true) @RequestParam(value = "month", required = true) month: kotlin.Int,@Parameter(description = "If Personally Identifiable Information (PII) should be included in the report. Defaults to `false`") @RequestParam(value = "includePii", required = false) includePii: kotlin.Boolean?): ResponseEntity<org.springframework.web.servlet.mvc.method.annotation.StreamingResponseBody> {
+    fun reportsReportNameGet(@Parameter(description = "Validates user for this service has access to the report", `in` = ParameterIn.HEADER, required = true, schema = Schema(allowableValues = ["approved-premises", "cas2", "temporary-accommodation"])) @RequestHeader(value = "X-Service-Name", required = true) xServiceName: ServiceName,@Parameter(description = "Name of the report to download", required = true, schema = Schema(allowableValues = ["applications", "applicationsV2", "dailyMetrics", "lostBeds", "outOfServiceBeds", "placementApplications", "placementMatchingOutcomes", "placementMatchingOutcomesV2", "requestsForPlacement"])) @PathVariable("reportName") reportName: Cas1ReportName,@Parameter(description = "The report content will reflect that specified by the given year.", required = true) @RequestParam(value = "year", required = true) year: kotlin.Int,@Parameter(description = "The report content will reflect that specified by the given month.", required = true) @RequestParam(value = "month", required = true) month: kotlin.Int,@Parameter(description = "If Personally Identifiable Information (PII) should be included in the report. Defaults to `false`") @RequestParam(value = "includePii", required = false) includePii: kotlin.Boolean?): ResponseEntity<org.springframework.web.servlet.mvc.method.annotation.StreamingResponseBody> {
         return getDelegate().reportsReportNameGet(xServiceName, reportName, year, month, includePii)
     }
 }

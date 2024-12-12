@@ -5,23 +5,18 @@
 */
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.api.cas3
 
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas3ReportType
-import io.swagger.v3.oas.annotations.*
-import io.swagger.v3.oas.annotations.enums.*
-import io.swagger.v3.oas.annotations.media.*
-import io.swagger.v3.oas.annotations.responses.*
-import io.swagger.v3.oas.annotations.security.*
-import org.springframework.http.HttpStatus
-import org.springframework.http.MediaType
+
+import io.swagger.v3.oas.annotations.Operation
+import io.swagger.v3.oas.annotations.Parameter
+import io.swagger.v3.oas.annotations.media.Content
+import io.swagger.v3.oas.annotations.media.Schema
+import io.swagger.v3.oas.annotations.responses.ApiResponse
 import org.springframework.http.ResponseEntity
-
-import org.springframework.web.bind.annotation.*
-import org.springframework.web.context.request.NativeWebRequest
-import org.springframework.beans.factory.annotation.Autowired
-
-
-import kotlin.collections.List
-import kotlin.collections.Map
+import org.springframework.web.bind.annotation.PathVariable
+import org.springframework.web.bind.annotation.RequestMapping
+import org.springframework.web.bind.annotation.RequestMethod
+import org.springframework.web.bind.annotation.RequestParam
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas3ReportType
 
 interface ReportsCas3 {
 
@@ -41,7 +36,7 @@ interface ReportsCas3 {
             value = ["/reports/{reportName}"],
             produces = ["application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"]
     )
-    fun reportsReportNameGet(@Parameter(description = "Name of the report to download", required = true, schema = Schema(allowableValues = ["\"referral\"", "\"booking\"", "\"bedUsage\"", "\"bedOccupancy\"", "\"futureBookings\"", "\"futureBookingsCsv\"", "\"bookingGap\""])) @PathVariable("reportName") reportName: Cas3ReportType,@Parameter(description = "Start of date range to return", required = true) @RequestParam(value = "startDate", required = true) @org.springframework.format.annotation.DateTimeFormat(iso = org.springframework.format.annotation.DateTimeFormat.ISO.DATE) startDate: java.time.LocalDate,@Parameter(description = "End of date range to return", required = true) @RequestParam(value = "endDate", required = true) @org.springframework.format.annotation.DateTimeFormat(iso = org.springframework.format.annotation.DateTimeFormat.ISO.DATE) endDate: java.time.LocalDate,@Parameter(description = "If provided, only this region will be returned") @RequestParam(value = "probationRegionId", required = false) probationRegionId: java.util.UUID?): ResponseEntity<org.springframework.web.servlet.mvc.method.annotation.StreamingResponseBody> {
+    fun reportsReportNameGet(@Parameter(description = "Name of the report to download", required = true, schema = Schema(allowableValues = ["referral", "booking", "bedUsage", "bedOccupancy", "futureBookings", "futureBookingsCsv", "bookingGap"])) @PathVariable("reportName") reportName: Cas3ReportType,@Parameter(description = "Start of date range to return", required = true) @RequestParam(value = "startDate", required = true) @org.springframework.format.annotation.DateTimeFormat(iso = org.springframework.format.annotation.DateTimeFormat.ISO.DATE) startDate: java.time.LocalDate,@Parameter(description = "End of date range to return", required = true) @RequestParam(value = "endDate", required = true) @org.springframework.format.annotation.DateTimeFormat(iso = org.springframework.format.annotation.DateTimeFormat.ISO.DATE) endDate: java.time.LocalDate,@Parameter(description = "If provided, only this region will be returned") @RequestParam(value = "probationRegionId", required = false) probationRegionId: java.util.UUID?): ResponseEntity<org.springframework.web.servlet.mvc.method.annotation.StreamingResponseBody> {
         return getDelegate().reportsReportNameGet(reportName, startDate, endDate, probationRegionId)
     }
 }

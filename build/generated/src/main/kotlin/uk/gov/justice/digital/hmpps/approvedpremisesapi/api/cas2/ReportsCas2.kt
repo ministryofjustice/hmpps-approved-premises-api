@@ -5,23 +5,17 @@
 */
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.api.cas2
 
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas2ReportName
-import io.swagger.v3.oas.annotations.*
-import io.swagger.v3.oas.annotations.enums.*
-import io.swagger.v3.oas.annotations.media.*
-import io.swagger.v3.oas.annotations.responses.*
-import io.swagger.v3.oas.annotations.security.*
-import org.springframework.http.HttpStatus
-import org.springframework.http.MediaType
+
+import io.swagger.v3.oas.annotations.Operation
+import io.swagger.v3.oas.annotations.Parameter
+import io.swagger.v3.oas.annotations.media.Content
+import io.swagger.v3.oas.annotations.media.Schema
+import io.swagger.v3.oas.annotations.responses.ApiResponse
 import org.springframework.http.ResponseEntity
-
-import org.springframework.web.bind.annotation.*
-import org.springframework.web.context.request.NativeWebRequest
-import org.springframework.beans.factory.annotation.Autowired
-
-
-import kotlin.collections.List
-import kotlin.collections.Map
+import org.springframework.web.bind.annotation.PathVariable
+import org.springframework.web.bind.annotation.RequestMapping
+import org.springframework.web.bind.annotation.RequestMethod
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas2ReportName
 
 interface ReportsCas2 {
 
@@ -41,7 +35,7 @@ interface ReportsCas2 {
             value = ["/reports/{reportName}"],
             produces = ["application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"]
     )
-    fun reportsReportNameGet(@Parameter(description = "name of the report to download", required = true, schema = Schema(allowableValues = ["\"submitted-applications\"", "\"application-status-updates\"", "\"unsubmitted-applications\""])) @PathVariable("reportName") reportName: Cas2ReportName): ResponseEntity<org.springframework.web.servlet.mvc.method.annotation.StreamingResponseBody> {
+    fun reportsReportNameGet(@Parameter(description = "name of the report to download", required = true, schema = Schema(allowableValues = ["submitted-applications", "application-status-updates", "unsubmitted-applications"])) @PathVariable("reportName") reportName: Cas2ReportName): ResponseEntity<org.springframework.web.servlet.mvc.method.annotation.StreamingResponseBody> {
         return getDelegate().reportsReportNameGet(reportName)
     }
 }
