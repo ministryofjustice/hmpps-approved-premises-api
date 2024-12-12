@@ -9208,13 +9208,7 @@ components:
         - isSharedProperty
         - isSingleOccupancy
         - isWheelchairAccessible
-        - sharedProperty
-        - singleOccupancy
-        - wheelchairAccessible
       x-enum-varnames:
         - SHARED_PROPERTY
         - SINGLE_OCCUPANCY
         - WHEELCHAIR_ACCESSIBLE
-        - sharedProperty
-        - singleOccupancy
-        - wheelchairAccessible
