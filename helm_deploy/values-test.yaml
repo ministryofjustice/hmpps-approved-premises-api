@@ -87,6 +87,8 @@ generic-service:
     CAS3-REPORT_END-DATE-OVERRIDE: 3
 
   namespace_secrets:
+    hmpps-domain-events-topic:
+      HMPPS_SQS_TOPICS_DOMAINEVENTS_ARN: "topic_arn"
     hmpps-approved-premises-api:
       NOTIFY_APIKEY: "NOTIFY_APIKEY"
       NOTIFY_GUESTLISTAPIKEY: "NOTIFY_GUESTLISTAPIKEY"
