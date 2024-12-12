@@ -57,6 +57,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.AuthorisableActi
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.CasResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.ValidatableActionResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.ApplicationService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.OffenderService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.PlacementRequestService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.PlacementRequestSource
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.TaskDeadlineService
@@ -69,6 +70,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.WithdrawalC
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.WithdrawalTriggeredBySeedJob
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.WithdrawalTriggeredByUser
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.allocations.UserAllocator
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1LimitedAccessStrategy
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.PageCriteria
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.PaginationConfig
 import java.time.LocalDate
@@ -88,6 +90,7 @@ class PlacementRequestServiceTest {
   private val cas1PlacementRequestDomainEventService = mockk<Cas1PlacementRequestDomainEventService>()
   private val taskDeadlineServiceMock = mockk<TaskDeadlineService>()
   private val cas1BookingDomainEventService = mockk<Cas1BookingDomainEventService>()
+  private val offenderService = mockk<OffenderService>()
 
   private val placementRequestService = PlacementRequestService(
     placementRequestRepository,
@@ -102,6 +105,7 @@ class PlacementRequestServiceTest {
     cas1PlacementRequestDomainEventService,
     taskDeadlineServiceMock,
     cas1BookingDomainEventService,
+    offenderService,
   )
 
   private val previousUser = UserEntityFactory()
@@ -330,7 +334,7 @@ class PlacementRequestServiceTest {
     }
 
     @Test
-    fun `returns Unauthorised when PlacementRequest not allocated to User and User does not have WORKFLOW_MANAGER role`() {
+    fun `returns Unauthorised when user can access offender and PlacementRequest not allocated to User and User does not have WORKFLOW_MANAGER role`() {
       val requestingUser = UserEntityFactory()
         .withUnitTestControlProbationRegion()
         .produce()
@@ -356,6 +360,9 @@ class PlacementRequestServiceTest {
         .withAllocatedToUser(assigneeUser)
         .produce()
 
+      every {
+        offenderService.canAccessOffender(application.crn, requestingUser.cas1LimitedAccessStrategy())
+      } returns true
       every { placementRequestRepository.findByIdOrNull(placementRequest.id) } returns placementRequest
 
       val result = placementRequestService.getPlacementRequestForUser(requestingUser, placementRequest.id)
@@ -364,7 +371,54 @@ class PlacementRequestServiceTest {
     }
 
     @Test
-    fun `returns Success when PlacementRequest is allocated to User`() {
+    fun `returns Unauthorised when user cannot access offender and User has the WORKFLOW_MANAGER role`() {
+      val requestingUser = UserEntityFactory()
+        .withUnitTestControlProbationRegion()
+        .produce()
+        .apply {
+          roles += UserRoleAssignmentEntityFactory()
+            .withUser(this)
+            .withRole(UserRole.CAS1_WORKFLOW_MANAGER)
+            .produce()
+        }
+
+      val otherUser = UserEntityFactory()
+        .withUnitTestControlProbationRegion()
+        .produce()
+
+      val application = ApprovedPremisesApplicationEntityFactory()
+        .withCreatedByUser(assigneeUser)
+        .produce()
+
+      val assessment = ApprovedPremisesAssessmentEntityFactory()
+        .withApplication(application)
+        .withAllocatedToUser(assigneeUser)
+        .produce()
+
+      val placementRequest = PlacementRequestEntityFactory()
+        .withPlacementRequirements(
+          PlacementRequirementsEntityFactory()
+            .withApplication(application)
+            .withAssessment(assessment)
+            .produce(),
+        )
+        .withApplication(application)
+        .withAssessment(assessment)
+        .withAllocatedToUser(otherUser)
+        .produce()
+
+      every {
+        offenderService.canAccessOffender(application.crn, requestingUser.cas1LimitedAccessStrategy())
+      } returns false
+      every { placementRequestRepository.findByIdOrNull(placementRequest.id) } returns placementRequest
+
+      val result = placementRequestService.getPlacementRequestForUser(requestingUser, placementRequest.id)
+
+      assertThat(result is CasResult.Unauthorised).isTrue()
+    }
+
+    @Test
+    fun `returns Success when user can access offender and PlacementRequest is allocated to User`() {
       val requestingUser = UserEntityFactory()
         .withUnitTestControlProbationRegion()
         .produce()
@@ -392,6 +446,9 @@ class PlacementRequestServiceTest {
 
       val mockCancellations = mockk<List<CancellationEntity>>()
 
+      every {
+        offenderService.canAccessOffender(application.crn, requestingUser.cas1LimitedAccessStrategy())
+      } returns true
       every { placementRequestRepository.findByIdOrNull(placementRequest.id) } returns placementRequest
       every { cancellationRepository.getCancellationsForApplicationId(application.id) } returns mockCancellations
 
@@ -406,7 +463,7 @@ class PlacementRequestServiceTest {
     }
 
     @Test
-    fun `returns Success when User has the WORKFLOW_MANAGER role`() {
+    fun `returns Success when user can access offender and User has the WORKFLOW_MANAGER role`() {
       val requestingUser = UserEntityFactory()
         .withUnitTestControlProbationRegion()
         .produce()
@@ -444,6 +501,9 @@ class PlacementRequestServiceTest {
 
       val mockCancellations = mockk<List<CancellationEntity>>()
 
+      every {
+        offenderService.canAccessOffender(application.crn, requestingUser.cas1LimitedAccessStrategy())
+      } returns true
       every { placementRequestRepository.findByIdOrNull(placementRequest.id) } returns placementRequest
       every { cancellationRepository.getCancellationsForApplicationId(application.id) } returns mockCancellations
 
@@ -456,7 +516,6 @@ class PlacementRequestServiceTest {
       assertThat(expectedPlacementRequest).isEqualTo(placementRequest)
       assertThat(expectedCancellations).isEqualTo(mockCancellations)
     }
-
   }
 
   @Test

@@ -1232,14 +1232,14 @@ class PlacementRequestsTest : IntegrationTestBase() {
     }
 
     @Test
-    fun `Allocated to calling User, offender is LAO, user doesn't have LAO access or LAO qualification, returns 200 with restricted person info`() {
+    fun `Allocated to calling User, offender is LAO, user doesn't have LAO access or LAO qualification, returns 403`() {
       givenAUser { user, jwt ->
         givenAUser { otherUser, _ ->
           givenAnOffender(
             offenderDetailsConfigBlock = {
               withCurrentExclusion(true)
             },
-          ) { offenderDetails, inmateDetails ->
+          ) { offenderDetails, _ ->
             givenAPlacementRequest(
               placementRequestAllocatedTo = user,
               assessmentAllocatedTo = otherUser,
@@ -1251,10 +1251,7 @@ class PlacementRequestsTest : IntegrationTestBase() {
                 .header("Authorization", "Bearer $jwt")
                 .exchange()
                 .expectStatus()
-                .isOk
-                .expectBody()
-                .jsonPath("$.person.type").isEqualTo("RestrictedPerson")
-                .jsonPath("$.person.crn").isEqualTo(placementRequest.application.crn)
+                .isForbidden
             }
           }
         }
