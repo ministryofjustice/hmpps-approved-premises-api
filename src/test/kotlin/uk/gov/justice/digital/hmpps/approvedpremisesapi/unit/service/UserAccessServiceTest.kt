@@ -17,7 +17,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApprovedPremises
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApprovedPremisesEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.BookingEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.LocalAuthorityEntityFactory
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.OffenderDetailsSummaryFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.PlacementApplicationEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.PlacementRequestEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.PlacementRequirementsEntityFactory
@@ -35,8 +34,8 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRole.CAS1
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRole.CAS1_WORKFLOW_MANAGER
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRole.CAS3_REFERRER
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRole.CAS3_REPORTER
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.AuthorisableActionResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.OffenderService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.OffenderService.LimitedAccessStrategy
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.RequestContextService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.TemporaryAccommodationApplicationAccessLevel
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.UserAccessService
@@ -1004,9 +1003,7 @@ class UserAccessServiceTest {
         .produce(),
     )
 
-    every { offenderService.getOffenderByCrn(application.crn, user.deliusUsername) } returns AuthorisableActionResult.Success(
-      OffenderDetailsSummaryFactory().produce(),
-    )
+    every { offenderService.canAccessOffender(application.crn, LimitedAccessStrategy.ReturnRestrictedIfLimitedAccess(user.deliusUsername)) } returns true
 
     assertThat(userAccessService.userCanViewApplication(user, application)).isTrue
   }
@@ -1030,7 +1027,7 @@ class UserAccessServiceTest {
         .produce(),
     )
 
-    every { offenderService.getOffenderByCrn(application.crn, user.deliusUsername) } returns AuthorisableActionResult.Unauthorised()
+    every { offenderService.canAccessOffender(application.crn, LimitedAccessStrategy.ReturnRestrictedIfLimitedAccess(user.deliusUsername)) } returns false
 
     assertThat(userAccessService.userCanViewApplication(user, application)).isFalse
   }

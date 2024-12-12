@@ -89,10 +89,18 @@ class PlacementApplicationsTest : IntegrationTestBase() {
     }
 
     @Test
-    fun `creating a placement application when the application does not belong to the user returns 401`() {
+    fun `creating a placement application when the application cannot be viewed by the user returns 401`() {
       givenAUser { _, jwt ->
         givenAUser { otherUser, _ ->
-          givenASubmittedApplication(createdByUser = otherUser) { application ->
+          val offender = givenAnOffender(
+            offenderDetailsConfigBlock = {
+              withCurrentRestriction(true)
+            },
+          ).first
+          givenASubmittedApplication(
+            createdByUser = otherUser,
+            crn = offender.otherIds.crn,
+          ) { application ->
             webTestClient.post()
               .uri("/placement-applications")
               .header("Authorization", "Bearer $jwt")

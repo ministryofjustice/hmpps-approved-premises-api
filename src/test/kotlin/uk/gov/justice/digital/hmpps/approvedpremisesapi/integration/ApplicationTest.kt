@@ -557,7 +557,7 @@ class ApplicationTest : IntegrationTestBase() {
   inner class Cas1GetApplication {
 
     @Test
-    fun `Get single application returns 200 with correct body`() {
+    fun `Get single non LAO application returns 200 with correct body`() {
       givenAUser { userEntity, jwt ->
         givenAnOffender { offenderDetails, _ ->
           val newestJsonSchema = approvedPremisesApplicationJsonSchemaEntityFactory.produceAndPersist {
@@ -595,7 +595,7 @@ class ApplicationTest : IntegrationTestBase() {
     }
 
     @Test
-    fun `Get single LAO application for application creator with LAO access returns 200`() {
+    fun `Get single LAO application for creator, LAO Access, no LAO Qualification returns 200`() {
       givenAUser { applicationCreator, jwt ->
         givenAnOffender(
           offenderDetailsConfigBlock = {
@@ -646,7 +646,49 @@ class ApplicationTest : IntegrationTestBase() {
     }
 
     @Test
-    fun `Get single LAO application for user who is not creator returns 403`() {
+    fun `Get single LAO application for creator, no LAO Access, has LAO Qualification returns 200`() {
+      givenAUser(qualifications = listOf(UserQualification.LAO)) { applicationCreator, jwt ->
+        givenAnOffender(
+          offenderDetailsConfigBlock = {
+            withCurrentRestriction(true)
+          },
+        ) { offenderDetails, _ ->
+          val applicationEntity = approvedPremisesApplicationEntityFactory.produceAndPersist {
+            withApplicationSchema(
+              approvedPremisesApplicationJsonSchemaEntityFactory.produceAndPersist {
+                withPermissiveSchema()
+              },
+            )
+            withCrn(offenderDetails.otherIds.crn)
+            withCreatedByUser(applicationCreator)
+            withData(
+              """
+          {
+             "thingId": 123
+          }
+          """,
+            )
+          }
+
+          val rawResponseBody = webTestClient.get()
+            .uri("/applications/${applicationEntity.id}")
+            .header("Authorization", "Bearer $jwt")
+            .exchange()
+            .expectStatus()
+            .isOk
+            .returnResult<String>()
+            .responseBody
+            .blockFirst()
+
+          val responseBody = objectMapper.readValue(rawResponseBody, ApprovedPremisesApplication::class.java)
+
+          assertThat(responseBody.person).isInstanceOf(FullPerson::class.java)
+        }
+      }
+    }
+
+    @Test
+    fun `Get single LAO application for non creator, no LAO Access, no LAO Qualification returns 403`() {
       givenAUser { applicationCreator, _ ->
         givenAUser { _, otherUserJwt ->
           givenAnOffender(
@@ -683,7 +725,7 @@ class ApplicationTest : IntegrationTestBase() {
     }
 
     @Test
-    fun `Get single LAO application for user who is not creator but has LAO Qualification returns FullPerson`() {
+    fun `Get single LAO application for non creator, no LAO Access, has LAO Qualification returns 200`() {
       givenAUser { applicationCreator, _ ->
         givenAUser(qualifications = listOf(UserQualification.LAO)) { _, otherUserJwt ->
           givenAnOffender(
@@ -727,38 +769,35 @@ class ApplicationTest : IntegrationTestBase() {
     }
 
     @Test
-    fun `Get single application returns 403 when caller not in a managing team and user is not one of roles WORKFLOW_MANAGER, ASSESSOR, MATCHER, MANAGER`() {
+    fun `Get single non LAO application for non creator returns 200`() {
       givenAUser(
         staffDetail = StaffDetailFactory.staffDetail(teams = listOf(TeamFactoryDeliusContext.team(code = "TEAM2"))),
-      ) { userEntity, jwt ->
+      ) { _, jwt ->
         givenAUser { otherUser, _ ->
-          givenAnOffender { offenderDetails, _ ->
-            val crn = "X1234"
-
+          val crn = "X1234"
+          givenAnOffender(offenderDetailsConfigBlock = { withCrn(crn) }) { offenderDetails, _ ->
             val application = produceAndPersistBasicApplication(crn, otherUser, "TEAM1")
 
-            apDeliusContextAddResponseToUserAccessCall(
-              listOf(
-                CaseAccessFactory()
-                  .withCrn(offenderDetails.otherIds.crn)
-                  .produce(),
-              ),
-              userEntity.deliusUsername,
-            )
-
-            webTestClient.get()
+            val rawResponseBody = webTestClient.get()
               .uri("/applications/${application.id}")
               .header("Authorization", "Bearer $jwt")
               .exchange()
               .expectStatus()
-              .isForbidden
+              .isOk
+              .returnResult<String>()
+              .responseBody
+              .blockFirst()
+
+            val responseBody = objectMapper.readValue(rawResponseBody, ApprovedPremisesApplication::class.java)
+
+            assertThat(responseBody.person).isInstanceOf(FullPerson::class.java)
           }
         }
       }
     }
 
     @Test
-    fun `Get single application returns 200 when a person has no NOMS number`() {
+    fun `Get single non LAO application returns 200 when a person has no NOMS number`() {
       givenAUser(
         staffDetail = StaffDetailFactory.staffDetail(teams = listOf(TeamFactoryDeliusContext.team(code = "TEAM1"))),
       ) { userEntity, jwt ->
@@ -803,7 +842,7 @@ class ApplicationTest : IntegrationTestBase() {
     }
 
     @Test
-    fun `Get single application returns 200 when the person cannot be fetched from the prisons API`() {
+    fun `Get single non LAO application returns 200 when the person cannot be fetched from the prisons API`() {
       givenAUser(
         staffDetail = StaffDetailFactory.staffDetail(teams = listOf(TeamFactoryDeliusContext.team(code = "TEAM1"))),
 
