@@ -111,6 +111,7 @@ class SubmissionsTransformerTest {
         "telephoneNumber",
         "timelineEvents",
         "assessment",
+        "applicationOrigin",
       )
     }
   }
