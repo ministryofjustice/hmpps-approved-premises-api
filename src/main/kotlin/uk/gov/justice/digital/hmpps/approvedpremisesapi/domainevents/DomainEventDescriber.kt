@@ -16,10 +16,12 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.DomainEventSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.DomainEventService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1PlacementRequestDomainEventService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.javaConstantNameToSentence
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.toUiDateTimeFormat
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.toUiFormat
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.toWeekAndDayDurationString
 import java.time.LocalDate
-import java.time.ZoneOffset
+import java.time.LocalDateTime
+import java.time.ZoneId
 import java.time.temporal.ChronoUnit
 import java.util.UUID
 
@@ -125,7 +127,7 @@ class DomainEventDescriber(
 
   private fun buildPersonArrivedDescription(domainEventSummary: DomainEventSummary): String? {
     val event = domainEventService.getPersonArrivedEvent(domainEventSummary.id())
-    return event.describe { "The person moved into the premises on ${LocalDate.ofInstant(it.eventDetails.arrivedAt, ZoneOffset.UTC).toUiFormat()}" }
+    return event.describe { "The person moved into the premises on ${LocalDateTime.ofInstant(it.eventDetails.arrivedAt, ZoneId.systemDefault()).toUiDateTimeFormat()}" }
   }
 
   private fun buildPersonNotArrivedDescription(domainEventSummary: DomainEventSummary): String? {
@@ -135,7 +137,7 @@ class DomainEventDescriber(
 
   private fun buildPersonDepartedDescription(domainEventSummary: DomainEventSummary): String? {
     val event = domainEventService.getPersonDepartedEvent(domainEventSummary.id())
-    return event.describe { "The person moved out of the premises on ${LocalDate.ofInstant(it.eventDetails.departedAt, ZoneOffset.UTC).toUiFormat()}" }
+    return event.describe { "The person moved out of the premises on ${LocalDateTime.ofInstant(it.eventDetails.departedAt, ZoneId.systemDefault()).toUiDateTimeFormat()}" }
   }
 
   private fun buildBookingNotMadeDescription(domainEventSummary: DomainEventSummary): String? {
