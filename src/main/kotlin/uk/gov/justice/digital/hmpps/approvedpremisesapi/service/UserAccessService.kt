@@ -16,11 +16,9 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TemporaryAcco
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TemporaryAccommodationPremisesEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserPermission
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserQualification
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRole
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRole.CAS3_REPORTER
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.ForbiddenProblem
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.AuthorisableActionResult
 import java.util.UUID
 
 @Service
@@ -167,7 +165,7 @@ class UserAccessService(
   private fun userCanViewApprovedPremisesApplicationCreatedBySomeoneElse(
     user: UserEntity,
     application: ApprovedPremisesApplicationEntity,
-  ) = offenderService.getOffenderByCrn(application.crn, user.deliusUsername, user.hasQualification(UserQualification.LAO)) is AuthorisableActionResult.Success
+  ) = offenderService.canAccessOffender(application.crn, user.cas1LimitedAccessStrategy())
 
   private fun userCanViewTemporaryAccommodationApplicationCreatedBySomeoneElse(
     user: UserEntity,
