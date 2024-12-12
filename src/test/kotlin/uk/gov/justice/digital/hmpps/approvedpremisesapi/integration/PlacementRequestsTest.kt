@@ -1159,13 +1159,13 @@ class PlacementRequestsTest : IntegrationTestBase() {
   }
 
   @Nested
-  inner class SinglePlacementRequest {
+  inner class GetPlacementRequest {
 
     @Autowired
     lateinit var placementRequestDetailTransformer: PlacementRequestDetailTransformer
 
     @Test
-    fun `Get single Placement Request without a JWT returns 401`() {
+    fun `Without a JWT returns 401`() {
       webTestClient.get()
         .uri("/placement-requests/62faf6f4-1dac-4139-9a18-09c1b2852a0f")
         .exchange()
@@ -1174,10 +1174,10 @@ class PlacementRequestsTest : IntegrationTestBase() {
     }
 
     @Test
-    fun `Get single Placement Request that is not allocated to calling User and without WORKFLOW_MANAGER role returns 403`() {
-      givenAUser { user, jwt ->
+    fun `Not allocated to calling User without WORKFLOW_MANAGER role returns 403`() {
+      givenAUser { _, jwt ->
         givenAUser { otherUser, _ ->
-          givenAnOffender { offenderDetails, inmateDetails ->
+          givenAnOffender { offenderDetails, _ ->
             givenAnApplication(createdByUser = otherUser) {
               givenAPlacementRequest(
                 placementRequestAllocatedTo = otherUser,
@@ -1199,7 +1199,7 @@ class PlacementRequestsTest : IntegrationTestBase() {
     }
 
     @Test
-    fun `Get single Placement Request that is allocated to calling User returns 200`() {
+    fun `Allocated to calling User, offender not LAO, returns 200`() {
       givenAUser { user, jwt ->
         givenAUser { otherUser, _ ->
           givenAnOffender { offenderDetails, inmateDetails ->
@@ -1232,14 +1232,14 @@ class PlacementRequestsTest : IntegrationTestBase() {
     }
 
     @Test
-    fun `Get single Placement Request that is allocated to calling User where Offender is LAO but user does not pass LAO check, does not have LAO qualification returns 200 with restricted person info`() {
+    fun `Allocated to calling User, offender is LAO, user doesn't have LAO access or LAO qualification, returns 403`() {
       givenAUser { user, jwt ->
         givenAUser { otherUser, _ ->
           givenAnOffender(
             offenderDetailsConfigBlock = {
               withCurrentExclusion(true)
             },
-          ) { offenderDetails, inmateDetails ->
+          ) { offenderDetails, _ ->
             givenAPlacementRequest(
               placementRequestAllocatedTo = user,
               assessmentAllocatedTo = otherUser,
@@ -1251,10 +1251,7 @@ class PlacementRequestsTest : IntegrationTestBase() {
                 .header("Authorization", "Bearer $jwt")
                 .exchange()
                 .expectStatus()
-                .isOk
-                .expectBody()
-                .jsonPath("$.person.type").isEqualTo("RestrictedPerson")
-                .jsonPath("$.person.crn").isEqualTo(placementRequest.application.crn)
+                .isForbidden
             }
           }
         }
@@ -1262,7 +1259,7 @@ class PlacementRequestsTest : IntegrationTestBase() {
     }
 
     @Test
-    fun `Get single Placement Request that is allocated to calling User where Offender is LAO, user does not have LAO qualification but does pass LAO check returns 200`() {
+    fun `Allocated to calling User, offender is LAO, user has LAO access, returns 200`() {
       givenAUser { user, jwt ->
         givenAUser { otherUser, _ ->
           givenAnOffender(
@@ -1308,7 +1305,7 @@ class PlacementRequestsTest : IntegrationTestBase() {
     }
 
     @Test
-    fun `Get single Placement Request that is allocated to calling User where Offender is LAO, user does not pass LAO check but does have LAO qualification returns 200`() {
+    fun `Allocated to calling User, offender is LAO, user doesn't have LAO access but has LAO qualification, returns 200`() {
       givenAUser(qualifications = listOf(UserQualification.LAO)) { user, jwt ->
         givenAUser { otherUser, _ ->
           givenAnOffender(
@@ -1348,7 +1345,7 @@ class PlacementRequestsTest : IntegrationTestBase() {
     }
 
     @Test
-    fun `Get single Placement Request that is allocated to calling User returns 200 with cancellations when they exist`() {
+    fun `Allocated to calling User, offender not LAO, returns 200 with cancellations when they exist`() {
       givenAUser { user, jwt ->
         givenAUser { otherUser, _ ->
           givenAnOffender { offenderDetails, inmateDetails ->
