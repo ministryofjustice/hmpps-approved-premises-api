@@ -6305,7 +6305,6 @@ components:
           format: uuid
           example: 290fa58c-77b2-47e2-b729-4cd6b2ed1a78
         requirements:
-          type: object
           $ref: '#/components/schemas/Cas1SpaceBookingRequirements'
       required:
         - arrivalDate
@@ -6318,7 +6317,7 @@ components:
         essentialCharacteristics:
           type: array
           items:
-            $ref: '#/components/schemas/Cas1SpaceCharacteristic'
+            $ref: '#/components/schemas/Cas1SpaceBookingCharacteristic'
       required:
         - essentialCharacteristics
     Cas1SpaceSearchRequirements:
