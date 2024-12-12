@@ -41,7 +41,7 @@ import java.util.UUID
 import java.util.stream.Stream
 
 @Suppress("NULLABILITY_MISMATCH_BASED_ON_JAVA_ANNOTATIONS")
-class OutOfServiceBedTest : InitialiseDatabasePerClassTestBase() {
+class Cas1OutOfServiceBedTest : InitialiseDatabasePerClassTestBase() {
   @Autowired
   lateinit var outOfServiceBedTransformer: Cas1OutOfServiceBedTransformer
 
@@ -108,8 +108,21 @@ class OutOfServiceBedTest : InitialiseDatabasePerClassTestBase() {
     }
 
     @ParameterizedTest
-    @EnumSource(value = UserRole::class, names = [ "CAS1_WORKFLOW_MANAGER", "CAS1_FUTURE_MANAGER", "CAS1_CRU_MEMBER" ])
-    fun `Get All Out-Of-Service Beds returns OK with correct body when user has the role WORKFLOW_MANAGER`(role: UserRole) {
+    @EnumSource(value = UserRole::class, names = [ "CAS1_FUTURE_MANAGER", "CAS1_CRU_MEMBER", "CAS1_CRU_MEMBER_FIND_AND_BOOK_BETA", "CAS1_JANITOR" ], mode = EnumSource.Mode.EXCLUDE)
+    fun `Get All Out-Of-Service Beds returns 403 for invalid roles`(role: UserRole) {
+      givenAUser(roles = listOf(role)) { _, jwt ->
+        webTestClient.get()
+          .uri("/cas1/out-of-service-beds")
+          .header("Authorization", "Bearer $jwt")
+          .exchange()
+          .expectStatus()
+          .isForbidden
+      }
+    }
+
+    @ParameterizedTest
+    @EnumSource(value = UserRole::class, names = [ "CAS1_FUTURE_MANAGER", "CAS1_CRU_MEMBER", "CAS1_CRU_MEMBER_FIND_AND_BOOK_BETA", "CAS1_JANITOR" ])
+    fun `Get All Out-Of-Service Beds returns OK with correct body when user has the correct role`(role: UserRole) {
       givenAUser(roles = listOf(role)) { user, jwt ->
         val premises = approvedPremisesEntityFactory.produceAndPersist {
           withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
@@ -155,10 +168,9 @@ class OutOfServiceBedTest : InitialiseDatabasePerClassTestBase() {
       }
     }
 
-    @ParameterizedTest
-    @EnumSource(value = UserRole::class, names = [ "CAS1_WORKFLOW_MANAGER", "CAS1_FUTURE_MANAGER", "CAS1_CRU_MEMBER" ])
-    fun `Get All Out-Of-Service Beds ignores cancelled out-of-service-bed records`(role: UserRole) {
-      givenAUser(roles = listOf(role)) { user, jwt ->
+    @Test
+    fun `Get All Out-Of-Service Beds ignores cancelled out-of-service-bed records`() {
+      givenAUser(roles = listOf(UserRole.CAS1_FUTURE_MANAGER)) { user, jwt ->
         val premises = approvedPremisesEntityFactory.produceAndPersist {
           withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
           withYieldedProbationRegion { givenAProbationRegion() }
@@ -226,7 +238,7 @@ class OutOfServiceBedTest : InitialiseDatabasePerClassTestBase() {
 
     @Test
     fun `Get All Out-Of-Service Beds filters by premises ID correctly`() {
-      givenAUser(roles = listOf(UserRole.CAS1_WORKFLOW_MANAGER)) { user, jwt ->
+      givenAUser(roles = listOf(UserRole.CAS1_FUTURE_MANAGER)) { user, jwt ->
         val premises = approvedPremisesEntityFactory.produceAndPersist {
           withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
           withYieldedProbationRegion { givenAProbationRegion() }
@@ -301,7 +313,7 @@ class OutOfServiceBedTest : InitialiseDatabasePerClassTestBase() {
 
     @Test
     fun `Get All Out-Of-Service Beds filters by AP area ID correctly`() {
-      givenAUser(roles = listOf(UserRole.CAS1_WORKFLOW_MANAGER)) { user, jwt ->
+      givenAUser(roles = listOf(UserRole.CAS1_FUTURE_MANAGER)) { user, jwt ->
         val premises = approvedPremisesEntityFactory.produceAndPersist {
           withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
           withYieldedProbationRegion { givenAProbationRegion() }
@@ -553,7 +565,7 @@ class OutOfServiceBedTest : InitialiseDatabasePerClassTestBase() {
     @ParameterizedTest
     @Suppress("detekt:CyclomaticComplexMethod")
     fun `Get All Out-Of-Service Beds sorts correctly`(sortField: Cas1OutOfServiceBedSortField, sortDirection: SortDirection) {
-      givenAUser(roles = listOf(UserRole.CAS1_WORKFLOW_MANAGER)) { user, jwt ->
+      givenAUser(roles = listOf(UserRole.CAS1_FUTURE_MANAGER)) { user, jwt ->
         val premises = approvedPremisesEntityFactory.produceAndPersist {
           withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
           withYieldedProbationRegion { givenAProbationRegion() }
@@ -638,7 +650,7 @@ class OutOfServiceBedTest : InitialiseDatabasePerClassTestBase() {
 
     @Test
     fun `Get All Out-Of-Service Beds paginates correctly`() {
-      givenAUser(roles = listOf(UserRole.CAS1_WORKFLOW_MANAGER)) { user, jwt ->
+      givenAUser(roles = listOf(UserRole.CAS1_FUTURE_MANAGER)) { user, jwt ->
         val premises = approvedPremisesEntityFactory.produceAndPersist {
           withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
           withYieldedProbationRegion { givenAProbationRegion() }
@@ -695,7 +707,7 @@ class OutOfServiceBedTest : InitialiseDatabasePerClassTestBase() {
   }
 
   @Nested
-  inner class GetAllOutOfServiceBedsOnPremises {
+  inner class GetAllPremisesOutOfServiceBeds {
     @Test
     fun `Get All Out-Of-Service Beds On Premises without JWT returns 401`() {
       val premises = approvedPremisesEntityFactory.produceAndPersist {
@@ -712,19 +724,33 @@ class OutOfServiceBedTest : InitialiseDatabasePerClassTestBase() {
 
     @Test
     fun `Get All Out-Of-Service Beds on non existent Premises returns 404`() {
-      val jwt = jwtAuthHelper.createValidAuthorizationCodeJwt()
-
-      webTestClient.get()
-        .uri("/cas1/premises/9054b6a8-65ad-4d55-91ee-26ba65e05488/out-of-service-beds")
-        .header("Authorization", "Bearer $jwt")
-        .exchange()
-        .expectStatus()
-        .isNotFound
+      givenAUser(roles = listOf(UserRole.CAS1_FUTURE_MANAGER)) { user, jwt ->
+        webTestClient.get()
+          .uri("/cas1/premises/9054b6a8-65ad-4d55-91ee-26ba65e05488/out-of-service-beds")
+          .header("Authorization", "Bearer $jwt")
+          .exchange()
+          .expectStatus()
+          .isNotFound
+      }
     }
 
     @ParameterizedTest
-    @EnumSource(value = UserRole::class, names = [ "CAS1_FUTURE_MANAGER", "CAS1_MATCHER" ])
-    fun `Get All Out-Of-Service Beds On Premises returns OK with correct body when user has one of roles FUTURE_MANAGER, MATCHER`(role: UserRole) {
+    @EnumSource(value = UserRole::class, names = [ "CAS1_FUTURE_MANAGER", "CAS1_CRU_MEMBER", "CAS1_CRU_MEMBER_FIND_AND_BOOK_BETA", "CAS1_JANITOR" ], mode = EnumSource.Mode.EXCLUDE)
+    fun `Get All Out-Of-Service Bed in Premises returns 403 for invalid roles`(role: UserRole) {
+      givenAUser(roles = listOf(role)) { _, jwt ->
+
+        webTestClient.get()
+          .uri("/cas1/premises/${UUID.randomUUID()}/out-of-service-beds")
+          .header("Authorization", "Bearer $jwt")
+          .exchange()
+          .expectStatus()
+          .isForbidden
+      }
+    }
+
+    @ParameterizedTest
+    @EnumSource(value = UserRole::class, names = [ "CAS1_FUTURE_MANAGER", "CAS1_CRU_MEMBER", "CAS1_CRU_MEMBER_FIND_AND_BOOK_BETA", "CAS1_JANITOR" ])
+    fun `Get All Out-Of-Service Beds On Premises returns OK with correct body when user has correct role`(role: UserRole) {
       givenAUser(roles = listOf(role)) { user, jwt ->
         val premises = approvedPremisesEntityFactory.produceAndPersist {
           withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
@@ -825,18 +851,18 @@ class OutOfServiceBedTest : InitialiseDatabasePerClassTestBase() {
 
     @Test
     fun `Get Out-Of-Service Bed for non-existent premises returns 404`() {
-      val jwt = jwtAuthHelper.createValidAuthorizationCodeJwt()
-
-      webTestClient.get()
-        .uri("/cas1/premises/9054b6a8-65ad-4d55-91ee-26ba65e05488/out-of-service-beds")
-        .header("Authorization", "Bearer $jwt")
-        .exchange()
-        .expectStatus()
-        .isNotFound
+      givenAUser(roles = listOf(UserRole.CAS1_CRU_MEMBER)) { _, jwt ->
+        webTestClient.get()
+          .uri("/cas1/premises/9054b6a8-65ad-4d55-91ee-26ba65e05488/out-of-service-beds")
+          .header("Authorization", "Bearer $jwt")
+          .exchange()
+          .expectStatus()
+          .isNotFound
+      }
     }
 
     @ParameterizedTest
-    @EnumSource(value = UserRole::class, names = [ "CAS1_FUTURE_MANAGER", "CAS1_MATCHER" ])
+    @EnumSource(value = UserRole::class, names = [ "CAS1_FUTURE_MANAGER" ])
     fun `Get Out-Of-Service Bed for non-existent out-of-service bed returns 404`(role: UserRole) {
       givenAUser(roles = listOf(role)) { _, jwt ->
         val premises = approvedPremisesEntityFactory.produceAndPersist {
@@ -854,8 +880,8 @@ class OutOfServiceBedTest : InitialiseDatabasePerClassTestBase() {
     }
 
     @ParameterizedTest
-    @EnumSource(value = UserRole::class, names = [ "CAS1_FUTURE_MANAGER", "CAS1_MATCHER" ])
-    fun `Get Out-Of-Service Bed returns OK with correct body when user has one of roles FUTURE_MANAGER, MATCHER`(role: UserRole) {
+    @EnumSource(value = UserRole::class, names = [ "CAS1_FUTURE_MANAGER", "CAS1_CRU_MEMBER", "CAS1_CRU_MEMBER_FIND_AND_BOOK_BETA", "CAS1_JANITOR" ])
+    fun `Get Out-Of-Service Bed returns OK with correct body when user has the correct role`(role: UserRole) {
       givenAUser(roles = listOf(role)) { user, jwt ->
         val premises = approvedPremisesEntityFactory.produceAndPersist {
           withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
@@ -894,6 +920,20 @@ class OutOfServiceBedTest : InitialiseDatabasePerClassTestBase() {
           .isOk
           .expectBody()
           .json(expectedJson)
+      }
+    }
+
+    @ParameterizedTest
+    @EnumSource(value = UserRole::class, names = [ "CAS1_FUTURE_MANAGER", "CAS1_CRU_MEMBER", "CAS1_CRU_MEMBER_FIND_AND_BOOK_BETA", "CAS1_JANITOR" ], mode = EnumSource.Mode.EXCLUDE)
+    fun `Get Out-Of-Service Bed returns 403 for invalid roles`(role: UserRole) {
+      givenAUser(roles = listOf(role)) { _, jwt ->
+
+        webTestClient.get()
+          .uri("/cas1/premises/${UUID.randomUUID()}/out-of-service-beds/${UUID.randomUUID()}")
+          .header("Authorization", "Bearer $jwt")
+          .exchange()
+          .expectStatus()
+          .isForbidden
       }
     }
   }
@@ -961,8 +1001,31 @@ class OutOfServiceBedTest : InitialiseDatabasePerClassTestBase() {
     }
 
     @ParameterizedTest
-    @EnumSource(value = UserRole::class, names = [ "CAS1_FUTURE_MANAGER", "CAS1_MATCHER" ])
-    fun `Create Out-Of-Service Beds returns OK with correct body when user has one of roles FUTURE_MANAGER, MATCHER`(role: UserRole) {
+    @EnumSource(value = UserRole::class, names = [ "CAS1_FUTURE_MANAGER", "CAS1_CRU_MEMBER", "CAS1_CRU_MEMBER_FIND_AND_BOOK_BETA", "CAS1_JANITOR" ], mode = EnumSource.Mode.EXCLUDE)
+    fun `Create Out-Of-Service Bed returns 403 for invalid roles`(role: UserRole) {
+      givenAUser(roles = listOf(role)) { _, jwt ->
+        webTestClient.post()
+          .uri("/cas1/premises/${UUID.randomUUID()}/out-of-service-beds")
+          .header("Authorization", "Bearer $jwt")
+          .bodyValue(
+            Cas1NewOutOfServiceBed(
+              startDate = LocalDate.parse("2022-08-17"),
+              endDate = LocalDate.parse("2022-08-18"),
+              bedId = UUID.randomUUID(),
+              reason = UUID.randomUUID(),
+              referenceNumber = "REF-123",
+              notes = "notes",
+            ),
+          )
+          .exchange()
+          .expectStatus()
+          .isForbidden
+      }
+    }
+
+    @ParameterizedTest
+    @EnumSource(value = UserRole::class, names = [ "CAS1_FUTURE_MANAGER", "CAS1_CRU_MEMBER", "CAS1_CRU_MEMBER_FIND_AND_BOOK_BETA", "CAS1_JANITOR" ])
+    fun `Create Out-Of-Service Beds returns OK with correct body when user has correct roles`(role: UserRole) {
       givenAUser(roles = listOf(role)) { user, jwt ->
         val premises = approvedPremisesEntityFactory.produceAndPersist {
           withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
@@ -1408,23 +1471,23 @@ class OutOfServiceBedTest : InitialiseDatabasePerClassTestBase() {
 
     @Test
     fun `Update Out-Of-Service Bed for non-existent premises returns 404`() {
-      val jwt = jwtAuthHelper.createValidAuthorizationCodeJwt()
-
-      webTestClient.put()
-        .uri("/cas1/premises/9054b6a8-65ad-4d55-91ee-26ba65e05488/out-of-service-beds/9054b6a8-65ad-4d55-91ee-26ba65e05488")
-        .header("Authorization", "Bearer $jwt")
-        .bodyValue(
-          UpdateCas1OutOfServiceBed(
-            startDate = LocalDate.parse("2022-08-15"),
-            endDate = LocalDate.parse("2022-08-18"),
-            reason = UUID.randomUUID(),
-            referenceNumber = "REF-123",
-            notes = null,
-          ),
-        )
-        .exchange()
-        .expectStatus()
-        .isNotFound
+      givenAUser(roles = listOf(UserRole.CAS1_FUTURE_MANAGER)) { _, jwt ->
+        webTestClient.put()
+          .uri("/cas1/premises/9054b6a8-65ad-4d55-91ee-26ba65e05488/out-of-service-beds/9054b6a8-65ad-4d55-91ee-26ba65e05488")
+          .header("Authorization", "Bearer $jwt")
+          .bodyValue(
+            UpdateCas1OutOfServiceBed(
+              startDate = LocalDate.parse("2022-08-15"),
+              endDate = LocalDate.parse("2022-08-18"),
+              reason = UUID.randomUUID(),
+              referenceNumber = "REF-123",
+              notes = null,
+            ),
+          )
+          .exchange()
+          .expectStatus()
+          .isNotFound
+      }
     }
 
     @Test
@@ -1434,28 +1497,51 @@ class OutOfServiceBedTest : InitialiseDatabasePerClassTestBase() {
         withYieldedProbationRegion { givenAProbationRegion() }
       }
 
-      val jwt = jwtAuthHelper.createValidAuthorizationCodeJwt()
-
-      webTestClient.put()
-        .uri("/cas1/premises/${premises.id}/out-of-service-beds/9054b6a8-65ad-4d55-91ee-26ba65e05488")
-        .header("Authorization", "Bearer $jwt")
-        .bodyValue(
-          UpdateCas1OutOfServiceBed(
-            startDate = LocalDate.parse("2022-08-15"),
-            endDate = LocalDate.parse("2022-08-18"),
-            reason = UUID.randomUUID(),
-            referenceNumber = "REF-123",
-            notes = null,
-          ),
-        )
-        .exchange()
-        .expectStatus()
-        .isNotFound
+      givenAUser(roles = listOf(UserRole.CAS1_FUTURE_MANAGER)) { _, jwt ->
+        webTestClient.put()
+          .uri("/cas1/premises/${premises.id}/out-of-service-beds/9054b6a8-65ad-4d55-91ee-26ba65e05488")
+          .header("Authorization", "Bearer $jwt")
+          .bodyValue(
+            UpdateCas1OutOfServiceBed(
+              startDate = LocalDate.parse("2022-08-15"),
+              endDate = LocalDate.parse("2022-08-18"),
+              reason = UUID.randomUUID(),
+              referenceNumber = "REF-123",
+              notes = null,
+            ),
+          )
+          .exchange()
+          .expectStatus()
+          .isNotFound
+      }
     }
 
     @ParameterizedTest
-    @EnumSource(value = UserRole::class, names = [ "CAS1_FUTURE_MANAGER", "CAS1_MATCHER" ])
-    fun `Update Out-Of-Service Beds returns OK with correct body when user has one of roles FUTURE_MANAGER, MATCHER`(role: UserRole) {
+    @EnumSource(value = UserRole::class, names = [ "CAS1_FUTURE_MANAGER", "CAS1_CRU_MEMBER", "CAS1_CRU_MEMBER_FIND_AND_BOOK_BETA", "CAS1_JANITOR" ], mode = EnumSource.Mode.EXCLUDE)
+    fun `Update Out-Of-Service Bed returns 403 for invalid roles`(role: UserRole) {
+      givenAUser(roles = listOf(role)) { _, jwt ->
+
+        webTestClient.put()
+          .uri("/cas1/premises/${UUID.randomUUID()}/out-of-service-beds/${UUID.randomUUID()}")
+          .header("Authorization", "Bearer $jwt")
+          .bodyValue(
+            UpdateCas1OutOfServiceBed(
+              startDate = LocalDate.parse("2022-08-17"),
+              endDate = LocalDate.parse("2022-08-18"),
+              reason = UUID.randomUUID(),
+              referenceNumber = "REF-123",
+              notes = "notes",
+            ),
+          )
+          .exchange()
+          .expectStatus()
+          .isForbidden
+      }
+    }
+
+    @ParameterizedTest
+    @EnumSource(value = UserRole::class, names = [ "CAS1_FUTURE_MANAGER", "CAS1_CRU_MEMBER", "CAS1_CRU_MEMBER_FIND_AND_BOOK_BETA", "CAS1_JANITOR" ])
+    fun `Update Out-Of-Service Beds returns OK with correct body when user the correct role`(role: UserRole) {
       givenAUser(roles = listOf(role)) { user, jwt ->
         val premises = approvedPremisesEntityFactory.produceAndPersist {
           withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
@@ -2022,19 +2108,19 @@ class OutOfServiceBedTest : InitialiseDatabasePerClassTestBase() {
 
     @Test
     fun `Cancel Out-Of-Service Bed for non-existent premises returns 404`() {
-      val jwt = jwtAuthHelper.createValidAuthorizationCodeJwt()
-
-      webTestClient.post()
-        .uri("/cas1/premises/9054b6a8-65ad-4d55-91ee-26ba65e05488/out-of-service-beds/9054b6a8-65ad-4d55-91ee-26ba65e05488/cancellations")
-        .header("Authorization", "Bearer $jwt")
-        .bodyValue(
-          Cas1NewOutOfServiceBedCancellation(
-            notes = "Non-existent premises",
-          ),
-        )
-        .exchange()
-        .expectStatus()
-        .isNotFound
+      givenAUser(roles = listOf(UserRole.CAS1_FUTURE_MANAGER)) { _, jwt ->
+        webTestClient.post()
+          .uri("/cas1/premises/9054b6a8-65ad-4d55-91ee-26ba65e05488/out-of-service-beds/9054b6a8-65ad-4d55-91ee-26ba65e05488/cancellations")
+          .header("Authorization", "Bearer $jwt")
+          .bodyValue(
+            Cas1NewOutOfServiceBedCancellation(
+              notes = "Non-existent premises",
+            ),
+          )
+          .exchange()
+          .expectStatus()
+          .isNotFound
+      }
     }
 
     @Test
@@ -2044,24 +2130,43 @@ class OutOfServiceBedTest : InitialiseDatabasePerClassTestBase() {
         withYieldedProbationRegion { givenAProbationRegion() }
       }
 
-      val jwt = jwtAuthHelper.createValidAuthorizationCodeJwt()
-
-      webTestClient.post()
-        .uri("/cas1/premises/${premises.id}/out-of-service-beds/9054b6a8-65ad-4d55-91ee-26ba65e05488/cancellations")
-        .header("Authorization", "Bearer $jwt")
-        .bodyValue(
-          Cas1NewOutOfServiceBedCancellation(
-            notes = "Non-existent out-of-service bed",
-          ),
-        )
-        .exchange()
-        .expectStatus()
-        .isNotFound
+      givenAUser(roles = listOf(UserRole.CAS1_FUTURE_MANAGER)) { _, jwt ->
+        webTestClient.post()
+          .uri("/cas1/premises/${premises.id}/out-of-service-beds/9054b6a8-65ad-4d55-91ee-26ba65e05488/cancellations")
+          .header("Authorization", "Bearer $jwt")
+          .bodyValue(
+            Cas1NewOutOfServiceBedCancellation(
+              notes = "Non-existent out-of-service bed",
+            ),
+          )
+          .exchange()
+          .expectStatus()
+          .isNotFound
+      }
     }
 
     @ParameterizedTest
-    @EnumSource(value = UserRole::class, names = [ "CAS1_JANITOR" ])
-    fun `Cancel Out-Of-Service Bed returns OK with correct body when user has the JANITOR role`(role: UserRole) {
+    @EnumSource(value = UserRole::class, names = [ "CAS1_FUTURE_MANAGER", "CAS1_CRU_MEMBER", "CAS1_CRU_MEMBER_FIND_AND_BOOK_BETA", "CAS1_JANITOR" ], mode = EnumSource.Mode.EXCLUDE)
+    fun `Cancel Out-Of-Service Bed returns 403 for invalid roles`(role: UserRole) {
+      givenAUser(roles = listOf(role)) { _, jwt ->
+
+        webTestClient.post()
+          .uri("/cas1/premises/${UUID.randomUUID()}/out-of-service-beds/${UUID.randomUUID()}/cancellations")
+          .header("Authorization", "Bearer $jwt")
+          .bodyValue(
+            Cas1NewOutOfServiceBedCancellation(
+              notes = "Some cancellation notes",
+            ),
+          )
+          .exchange()
+          .expectStatus()
+          .isForbidden
+      }
+    }
+
+    @ParameterizedTest
+    @EnumSource(value = UserRole::class, names = [ "CAS1_FUTURE_MANAGER", "CAS1_CRU_MEMBER", "CAS1_CRU_MEMBER_FIND_AND_BOOK_BETA", "CAS1_JANITOR" ])
+    fun `Cancel Out-Of-Service Bed returns OK with correct body when user has the correct roles`(role: UserRole) {
       givenAUser(roles = listOf(role)) { user, jwt ->
         val premises = approvedPremisesEntityFactory.produceAndPersist {
           withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }

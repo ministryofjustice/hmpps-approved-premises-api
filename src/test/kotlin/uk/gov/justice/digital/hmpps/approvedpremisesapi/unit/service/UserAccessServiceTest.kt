@@ -627,23 +627,6 @@ class UserAccessServiceTest {
     assertThat(userAccessService.currentUserCanManagePremisesBookings(temporaryAccommodationPremisesNotInUserRegion)).isFalse
   }
 
-  @ParameterizedTest
-  @EnumSource(value = UserRole::class, names = [ "CAS1_FUTURE_MANAGER", "CAS1_MATCHER" ])
-  fun `userCanManagePremisesLostBeds returns true if the given premises is an Approved Premises and the user has either the FUTURE_MANAGER or MATCHER user role`(role: UserRole) {
-    currentRequestIsFor(ServiceName.approvedPremises)
-
-    user.addRoleForUnitTest(role)
-
-    assertThat(userAccessService.userCanManagePremisesLostBeds(user, approvedPremises)).isTrue
-  }
-
-  @Test
-  fun `userCanManagePremisesLostBeds returns false if the given premises is an Approved Premises and the user has no suitable role`() {
-    currentRequestIsFor(ServiceName.approvedPremises)
-
-    assertThat(userAccessService.userCanManagePremisesLostBeds(user, approvedPremises)).isFalse
-  }
-
   @Test
   fun `userCanManagePremisesLostBeds returns true if the given premises is a Temporary Accommodation premises and the user has the CAS3_ASSESSOR role and can access the premises's probation region`() {
     currentRequestIsFor(ServiceName.temporaryAccommodation)
@@ -668,16 +651,6 @@ class UserAccessServiceTest {
 
     assertThat(userAccessService.userCanManagePremisesLostBeds(user, temporaryAccommodationPremisesInUserRegion)).isFalse
     assertThat(userAccessService.userCanManagePremisesLostBeds(user, temporaryAccommodationPremisesNotInUserRegion)).isFalse
-  }
-
-  @ParameterizedTest
-  @EnumSource(value = UserRole::class, names = [ "CAS1_FUTURE_MANAGER", "CAS1_MATCHER" ])
-  fun `currentUserCanManagePremisesLostBeds returns true if the given premises is an Approved Premises and the current user has either the FUTURE_MANAGER or MATCHER user role`(role: UserRole) {
-    currentRequestIsFor(ServiceName.approvedPremises)
-
-    user.addRoleForUnitTest(role)
-
-    assertThat(userAccessService.currentUserCanManagePremisesLostBeds(approvedPremises)).isTrue
   }
 
   @Test
@@ -711,158 +684,6 @@ class UserAccessServiceTest {
 
     assertThat(userAccessService.currentUserCanManagePremisesLostBeds(temporaryAccommodationPremisesInUserRegion)).isFalse
     assertThat(userAccessService.currentUserCanManagePremisesLostBeds(temporaryAccommodationPremisesNotInUserRegion)).isFalse
-  }
-
-  @ParameterizedTest
-  @EnumSource(value = UserRole::class, names = [ "CAS1_FUTURE_MANAGER", "CAS1_MATCHER" ])
-  fun `userCanManagePremisesOutOfServiceBed returns true if the given premises is an Approved Premises and the user has one of the FUTURE_MANAGER or MATCHER user roles`(role: UserRole) {
-    currentRequestIsFor(ServiceName.approvedPremises)
-
-    user.addRoleForUnitTest(role)
-
-    assertThat(userAccessService.userCanManagePremisesOutOfServiceBed(user, approvedPremises)).isTrue
-  }
-
-  @Test
-  fun `userCanManagePremisesOutOfServiceBed returns false if the given premises is an Approved Premises and the user has no suitable role`() {
-    currentRequestIsFor(ServiceName.approvedPremises)
-
-    assertThat(userAccessService.userCanManagePremisesOutOfServiceBed(user, approvedPremises)).isFalse
-  }
-
-  @Test
-  fun `userCanManagePremisesOutOfServiceBed returns true if the given premises is a Temporary Accommodation premises and the user has the CAS3_ASSESSOR role and can access the premises's probation region`() {
-    currentRequestIsFor(ServiceName.temporaryAccommodation)
-
-    user.addRoleForUnitTest(UserRole.CAS3_ASSESSOR)
-
-    assertThat(userAccessService.userCanManagePremisesOutOfServiceBed(user, temporaryAccommodationPremisesInUserRegion)).isTrue
-  }
-
-  @Test
-  fun `userCanManagePremisesOutOfServiceBed returns false if the given premises is a Temporary Accommodation premises and the user has the CAS3_ASSESSOR role and cannot access the premises's probation region`() {
-    currentRequestIsFor(ServiceName.temporaryAccommodation)
-
-    user.addRoleForUnitTest(UserRole.CAS3_ASSESSOR)
-
-    assertThat(userAccessService.userCanManagePremisesOutOfServiceBed(user, temporaryAccommodationPremisesNotInUserRegion)).isFalse
-  }
-
-  @Test
-  fun `userCanManagePremisesOutOfServiceBed returns false if the given premises is a Temporary Accommodation premises and the user does not have a suitable role`() {
-    currentRequestIsFor(ServiceName.temporaryAccommodation)
-
-    assertThat(userAccessService.userCanManagePremisesOutOfServiceBed(user, temporaryAccommodationPremisesInUserRegion)).isFalse
-    assertThat(userAccessService.userCanManagePremisesOutOfServiceBed(user, temporaryAccommodationPremisesNotInUserRegion)).isFalse
-  }
-
-  @ParameterizedTest
-  @EnumSource(value = UserRole::class, names = [ "CAS1_FUTURE_MANAGER", "CAS1_MATCHER" ])
-  fun `currentUserCanManagePremisesOutOfServiceBed returns true if the given premises is an Approved Premises and the current user has one of the FUTURE_MANAGER or MATCHER user roles`(role: UserRole) {
-    currentRequestIsFor(ServiceName.approvedPremises)
-
-    user.addRoleForUnitTest(role)
-
-    assertThat(userAccessService.currentUserCanManagePremisesOutOfServiceBed(approvedPremises)).isTrue
-  }
-
-  @Test
-  fun `currentUserCanManagePremisesOutOfServiceBed returns false if the given premises is an Approved Premises and the current user has no suitable role`() {
-    currentRequestIsFor(ServiceName.approvedPremises)
-
-    assertThat(userAccessService.currentUserCanManagePremisesOutOfServiceBed(approvedPremises)).isFalse
-  }
-
-  @Test
-  fun `currentUserCanManagePremisesOutOfServiceBed returns true if the given premises is a Temporary Accommodation premises and the current user has the CAS3_ASSESSOR role and can access the premises's probation region`() {
-    currentRequestIsFor(ServiceName.temporaryAccommodation)
-
-    user.addRoleForUnitTest(UserRole.CAS3_ASSESSOR)
-
-    assertThat(userAccessService.currentUserCanManagePremisesOutOfServiceBed(temporaryAccommodationPremisesInUserRegion)).isTrue
-  }
-
-  @Test
-  fun `currentUserCanManagePremisesOutOfServiceBed returns false if the given premises is a Temporary Accommodation premises and the current user has the CAS3_ASSESSOR role and cannot access the premises's probation region`() {
-    currentRequestIsFor(ServiceName.temporaryAccommodation)
-
-    user.addRoleForUnitTest(UserRole.CAS3_ASSESSOR)
-
-    assertThat(userAccessService.currentUserCanManagePremisesOutOfServiceBed(temporaryAccommodationPremisesNotInUserRegion)).isFalse
-  }
-
-  @Test
-  fun `currentUserCanManagePremisesOutOfServiceBed returns false if the given premises is a Temporary Accommodation premises and the user does not have a suitable role`() {
-    currentRequestIsFor(ServiceName.temporaryAccommodation)
-
-    assertThat(userAccessService.currentUserCanManagePremisesOutOfServiceBed(temporaryAccommodationPremisesInUserRegion)).isFalse
-    assertThat(userAccessService.currentUserCanManagePremisesOutOfServiceBed(temporaryAccommodationPremisesNotInUserRegion)).isFalse
-  }
-
-  @Test
-  fun `userCanCancelOutOfServiceBed returns true if the user has the JANITOR user role`() {
-    currentRequestIsFor(ServiceName.approvedPremises)
-
-    user.addRoleForUnitTest(UserRole.CAS1_JANITOR)
-
-    assertThat(userAccessService.userCanCancelOutOfServiceBed(user)).isTrue
-  }
-
-  @Test
-  fun `userCanCancelOutOfServiceBed returns false if the user has no suitable role`() {
-    currentRequestIsFor(ServiceName.approvedPremises)
-
-    assertThat(userAccessService.userCanCancelOutOfServiceBed(user)).isFalse
-  }
-
-  @Test
-  fun `currentUserCanCancelOutOfServiceBed returns true if the current user has the JANITOR user role`() {
-    currentRequestIsFor(ServiceName.approvedPremises)
-
-    user.addRoleForUnitTest(UserRole.CAS1_JANITOR)
-
-    assertThat(userAccessService.currentUserCanCancelOutOfServiceBed()).isTrue
-  }
-
-  @Test
-  fun `currentUserCanCancelOutOfServiceBed returns false if the current user has no suitable role`() {
-    currentRequestIsFor(ServiceName.approvedPremises)
-
-    assertThat(userAccessService.currentUserCanCancelOutOfServiceBed()).isFalse
-  }
-
-  @ParameterizedTest
-  @EnumSource(value = UserRole::class, names = [ "CAS1_WORKFLOW_MANAGER", "CAS1_FUTURE_MANAGER", "CAS1_CRU_MEMBER" ])
-  fun `userCanViewOutOfServiceBeds returns true if the user has the WORKFLOW_MANAGER user role`(role: UserRole) {
-    currentRequestIsFor(ServiceName.approvedPremises)
-
-    user.addRoleForUnitTest(role)
-
-    assertThat(userAccessService.userCanViewOutOfServiceBeds(user)).isTrue
-  }
-
-  @Test
-  fun `userCanViewOutOfServiceBeds returns false if the user has no suitable role`() {
-    currentRequestIsFor(ServiceName.approvedPremises)
-
-    assertThat(userAccessService.userCanViewOutOfServiceBeds(user)).isFalse
-  }
-
-  @ParameterizedTest
-  @EnumSource(value = UserRole::class, names = [ "CAS1_WORKFLOW_MANAGER", "CAS1_FUTURE_MANAGER", "CAS1_CRU_MEMBER" ])
-  fun `currentUserCanViewOutOfServiceBeds returns true if the current user has the WORKFLOW_MANAGER user role`(role: UserRole) {
-    currentRequestIsFor(ServiceName.approvedPremises)
-
-    user.addRoleForUnitTest(role)
-
-    assertThat(userAccessService.currentUserCanViewOutOfServiceBeds()).isTrue
-  }
-
-  @Test
-  fun `currentUserCanViewOutOfServiceBeds returns false if the current user has no suitable role`() {
-    currentRequestIsFor(ServiceName.approvedPremises)
-
-    assertThat(userAccessService.currentUserCanViewOutOfServiceBeds()).isFalse
   }
 
   @ParameterizedTest

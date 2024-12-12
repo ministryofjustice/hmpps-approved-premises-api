@@ -130,6 +130,7 @@ paths:
       tags:
         - out-of-service beds
       summary: Posts an out-of-service bed to a specified approved premises
+      operationId: createOutOfServiceBed
       parameters:
         - name: premisesId
           in: path
@@ -175,6 +176,7 @@ paths:
       tags:
         - out-of-service beds
       summary: Lists all Out-Of-Service Beds entries for the Premises
+      operationId: getOutOfServiceBedsForPremises
       parameters:
         - name: premisesId
           in: path
@@ -203,6 +205,7 @@ paths:
       tags:
         - out-of-service beds
       summary: Returns a specific out-of-service bed for a premises
+      operationId: getOutOfServiceBed
       parameters:
         - name: premisesId
           in: path
@@ -241,6 +244,7 @@ paths:
       tags:
         - out-of-service beds
       summary: Updates an out-of-service bed for a premises
+      operationId: updateOutOfServiceBed
       parameters:
         - name: premisesId
           in: path
@@ -294,6 +298,7 @@ paths:
       tags:
         - out-of-service beds
       summary: Posts a cancellation to a specified out-of-service bed
+      operationId: cancelOutOfServiceBed
       parameters:
         - name: premisesId
           in: path
@@ -1019,6 +1024,7 @@ paths:
       tags:
         - out-of-service beds
       summary: Lists all Out-Of-Service Beds entries
+      operationId: getOutOfServiceBeds
       parameters:
         - name: temporality
           in: query

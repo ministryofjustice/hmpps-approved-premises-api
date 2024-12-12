@@ -93,35 +93,10 @@ class UserAccessService(
     else -> false
   }
 
-  /**
-   * Currently delegates to the lost bed logic. May depend on different roles in the future.
-   */
-  fun currentUserCanManagePremisesOutOfServiceBed(premises: PremisesEntity) =
-    userCanManagePremisesOutOfServiceBed(userService.getUserForRequest(), premises)
-
-  /**
-   * Currently delegates to the lost bed logic. May depend on different roles in the future.
-   */
-  fun userCanManagePremisesOutOfServiceBed(user: UserEntity, premises: PremisesEntity) =
-    userCanManagePremisesLostBeds(user, premises)
-
-  fun currentUserCanCancelOutOfServiceBed() =
-    userCanCancelOutOfServiceBed(userService.getUserForRequest())
-
-  fun userCanCancelOutOfServiceBed(user: UserEntity) =
-    user.hasRole(UserRole.CAS1_JANITOR)
-
-  fun currentUserCanViewOutOfServiceBeds() =
-    userCanViewOutOfServiceBeds(userService.getUserForRequest())
-
-  fun userCanViewOutOfServiceBeds(user: UserEntity) =
-    user.hasAnyRole(UserRole.CAS1_WORKFLOW_MANAGER, UserRole.CAS1_FUTURE_MANAGER, UserRole.CAS1_CRU_MEMBER)
-
   fun currentUserCanManagePremisesLostBeds(premises: PremisesEntity) =
     userCanManagePremisesLostBeds(userService.getUserForRequest(), premises)
 
   fun userCanManagePremisesLostBeds(user: UserEntity, premises: PremisesEntity) = when (premises) {
-    is ApprovedPremisesEntity -> user.hasAnyRole(UserRole.CAS1_FUTURE_MANAGER, UserRole.CAS1_MATCHER)
     is TemporaryAccommodationPremisesEntity -> userCanAccessRegion(user, premises.probationRegion.id) && user.hasRole(UserRole.CAS3_ASSESSOR)
     else -> false
   }
