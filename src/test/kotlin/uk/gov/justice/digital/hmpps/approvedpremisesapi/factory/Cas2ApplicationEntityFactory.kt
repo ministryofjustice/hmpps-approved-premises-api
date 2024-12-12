@@ -150,6 +150,6 @@ class Cas2ApplicationEntityFactory : Factory<Cas2ApplicationEntity> {
     hdcEligibilityDate = this.hdcEligibilityDate(),
     conditionalReleaseDate = this.conditionalReleaseDate(),
     preferredAreas = this.preferredAreas(),
-    applicationOrigin = this.applicationOrigin().toString()
+    applicationOrigin = this.applicationOrigin().toString(),
   )
 }

@@ -471,8 +471,6 @@ class Cas2ApplicationTest : IntegrationTestBase() {
             Assertions.assertThat(responseBody).anyMatch {
               prisonBailApplicationEntity.applicationOrigin == it.applicationOrigin.toString()
             }
-
-
           }
         }
       }

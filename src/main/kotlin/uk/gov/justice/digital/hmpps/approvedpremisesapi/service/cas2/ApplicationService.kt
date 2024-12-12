@@ -348,7 +348,7 @@ class ApplicationService(
                 username = application.createdByUser.nomisUsername,
               ),
             ),
-            applicationOrigin = application.applicationOrigin
+            applicationOrigin = application.applicationOrigin,
           ),
         ),
       ),

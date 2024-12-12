@@ -57,11 +57,9 @@ class SubmissionsTransformer(
       applicationOrigin = getApplicationOrigin(jpaSummary.applicationOrigin),
     )
   }
-
-
 }
 
-//shared function between SubmissionsTransformer and ApplicationsTransformer
+// shared function between SubmissionsTransformer and ApplicationsTransformer
 fun getApplicationOrigin(origin: String?): ApplicationOrigin? {
   return when (origin) {
     "courtBail" -> ApplicationOrigin.courtBail
