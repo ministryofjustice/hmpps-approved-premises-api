@@ -595,7 +595,7 @@ class ApplicationTest : IntegrationTestBase() {
     }
 
     @Test
-    fun `Get single LAO application for application creator with LAO access returns 200`() {
+    fun `Get single LAO application for creator, LAO Access, no LAO Qualification returns 200`() {
       givenAUser { applicationCreator, jwt ->
         givenAnOffender(
           offenderDetailsConfigBlock = {
@@ -646,7 +646,49 @@ class ApplicationTest : IntegrationTestBase() {
     }
 
     @Test
-    fun `Get single LAO application for user who is not creator returns 403`() {
+    fun `Get single LAO application for creator, no LAO Access, has LAO Qualification returns 200`() {
+      givenAUser(qualifications = listOf(UserQualification.LAO)) { applicationCreator, jwt ->
+        givenAnOffender(
+          offenderDetailsConfigBlock = {
+            withCurrentRestriction(true)
+          },
+        ) { offenderDetails, _ ->
+          val applicationEntity = approvedPremisesApplicationEntityFactory.produceAndPersist {
+            withApplicationSchema(
+              approvedPremisesApplicationJsonSchemaEntityFactory.produceAndPersist {
+                withPermissiveSchema()
+              },
+            )
+            withCrn(offenderDetails.otherIds.crn)
+            withCreatedByUser(applicationCreator)
+            withData(
+              """
+          {
+             "thingId": 123
+          }
+          """,
+            )
+          }
+
+          val rawResponseBody = webTestClient.get()
+            .uri("/applications/${applicationEntity.id}")
+            .header("Authorization", "Bearer $jwt")
+            .exchange()
+            .expectStatus()
+            .isOk
+            .returnResult<String>()
+            .responseBody
+            .blockFirst()
+
+          val responseBody = objectMapper.readValue(rawResponseBody, ApprovedPremisesApplication::class.java)
+
+          assertThat(responseBody.person).isInstanceOf(FullPerson::class.java)
+        }
+      }
+    }
+
+    @Test
+    fun `Get single LAO application for non creator, no LAO Access, no LAO Qualification returns 403`() {
       givenAUser { applicationCreator, _ ->
         givenAUser { _, otherUserJwt ->
           givenAnOffender(
@@ -683,7 +725,7 @@ class ApplicationTest : IntegrationTestBase() {
     }
 
     @Test
-    fun `Get single LAO application for user who is not creator but has LAO Qualification returns FullPerson`() {
+    fun `Get single LAO application for non creator, no LAO Access, has LAO Qualification returns 200`() {
       givenAUser { applicationCreator, _ ->
         givenAUser(qualifications = listOf(UserQualification.LAO)) { _, otherUserJwt ->
           givenAnOffender(

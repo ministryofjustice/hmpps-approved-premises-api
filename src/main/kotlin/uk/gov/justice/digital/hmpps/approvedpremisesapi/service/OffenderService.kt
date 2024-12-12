@@ -125,7 +125,8 @@ class OffenderService(
 
    /*
     * this could be more efficient by only retrieving access information for CRNs where
-    * the corresponding [CaseSummary.hasLimitedAccess()] is true
+    * the corresponding [CaseSummary.hasLimitedAccess()] is true. A similar short-circuit
+    * was implemented in the new deprecated [getOffender()] function
     */
     val caseAccessByCrn = when (limitedAccessStrategy) {
       is LimitedAccessStrategy.IgnoreLimitedAccess -> emptyMap()
