@@ -5,7 +5,7 @@ import io.mockk.junit5.MockKExtension
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.extension.ExtendWith
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1SpaceBookingCharacteristic
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1SpaceCharacteristic
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.Cas1SpaceBookingEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.CharacteristicEntityFactory
@@ -18,7 +18,7 @@ class Cas1SpaceBookingRequirementsTransformerTest {
 
   @Test
   fun `Placement requirements are transformed correctly`() {
-    val cas1EssentialSpaceCharacteristics = Cas1SpaceBookingCharacteristic.entries.map { it.toCharacteristicEntity() }
+    val cas1EssentialSpaceCharacteristics = Cas1SpaceCharacteristic.entries.map { it.toCharacteristicEntity() }
 
     val spaceBooking = Cas1SpaceBookingEntityFactory()
       .withCriteria(cas1EssentialSpaceCharacteristics.toMutableList())
@@ -26,10 +26,10 @@ class Cas1SpaceBookingRequirementsTransformerTest {
 
     val result = transformer.transformJpaToApi(spaceBooking)
 
-    assertThat(result.essentialCharacteristics).isEqualTo(Cas1SpaceBookingCharacteristic.entries)
+    assertThat(result.essentialCharacteristics).isEqualTo(Cas1SpaceCharacteristic.entries)
   }
 
-  private fun Cas1SpaceBookingCharacteristic.toCharacteristicEntity() = CharacteristicEntityFactory()
+  private fun Cas1SpaceCharacteristic.toCharacteristicEntity() = CharacteristicEntityFactory()
     .withName(this.value)
     .withPropertyName(this.value)
     .withServiceScope(ServiceName.approvedPremises.value)

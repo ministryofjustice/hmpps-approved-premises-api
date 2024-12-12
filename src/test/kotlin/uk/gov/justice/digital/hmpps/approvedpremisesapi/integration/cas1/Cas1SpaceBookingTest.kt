@@ -17,10 +17,10 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1NewSpaceBo
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1NewSpaceBookingCancellation
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1NonArrival
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1SpaceBooking
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1SpaceBookingCharacteristic
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1SpaceBookingRequirements
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1SpaceBookingSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1SpaceBookingSummaryStatus
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1SpaceCharacteristic
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PersonSummaryDiscriminator
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.Cas1SpaceBookingEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.CaseAccessFactory
@@ -232,8 +232,8 @@ class Cas1SpaceBookingTest {
           createdByUser = applicant,
         ) { placementRequest, application ->
           val essentialCharacteristics = listOf(
-            Cas1SpaceBookingCharacteristic.HAS_EN_SUITE,
-            Cas1SpaceBookingCharacteristic.IS_ARSON_SUITABLE,
+            Cas1SpaceCharacteristic.hasEnSuite,
+            Cas1SpaceCharacteristic.isArsonSuitable,
           )
 
           placementRequest.placementRequirements = placementRequirementsFactory.produceAndPersist {

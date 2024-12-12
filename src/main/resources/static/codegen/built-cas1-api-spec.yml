@@ -6317,7 +6317,7 @@ components:
         essentialCharacteristics:
           type: array
           items:
-            $ref: '#/components/schemas/Cas1SpaceBookingCharacteristic'
+            $ref: '#/components/schemas/Cas1SpaceCharacteristic'
       required:
         - essentialCharacteristics
     Cas1SpaceSearchRequirements:
