@@ -414,7 +414,7 @@ class Cas1SpaceBookingManagementDomainEventServiceTest {
       .withDefaults()
       .produce()
 
-    val keyWorker = StaffDetailFactory.staffDetail(deliusUsername = null)
+    private val keyWorker = StaffDetailFactory.staffDetail(deliusUsername = null)
 
     private val keyWorkerName = keyWorker.name.deliusName()
     private val previousKeyWorkerName = "Previous $keyWorkerName"
@@ -460,6 +460,7 @@ class Cas1SpaceBookingManagementDomainEventServiceTest {
 
       service.keyWorkerAssigned(
         spaceBookingWithoutKeyWorker,
+        assignedKeyWorker = keyWorker.toStaffMember(),
         assignedKeyWorkerName = keyWorkerName,
         previousKeyWorkerName = null,
       )
@@ -479,6 +480,10 @@ class Cas1SpaceBookingManagementDomainEventServiceTest {
       val domainEventEventDetails = domainEvent.data.eventDetails
       assertThat(domainEventEventDetails.previousKeyWorkerName).isEqualTo(null)
       assertThat(domainEventEventDetails.assignedKeyWorkerName).isEqualTo(keyWorkerName)
+      val domainEventKeyWorker = domainEventEventDetails.keyWorker
+      assertThat(domainEventKeyWorker.staffCode).isEqualTo(keyWorker.code)
+      assertThat(domainEventKeyWorker.surname).isEqualTo(keyWorker.name.surname)
+      assertThat(domainEventKeyWorker.forenames).isEqualTo(keyWorker.name.forenames())
     }
 
     @Test
@@ -487,6 +492,7 @@ class Cas1SpaceBookingManagementDomainEventServiceTest {
 
       service.keyWorkerAssigned(
         spaceBookingWithKeyWorker,
+        assignedKeyWorker = keyWorker.toStaffMember(),
         assignedKeyWorkerName = keyWorkerName,
         previousKeyWorkerName = previousKeyWorkerName,
       )
@@ -516,6 +522,7 @@ class Cas1SpaceBookingManagementDomainEventServiceTest {
 
       service.keyWorkerAssigned(
         spaceBookingWithKeyWorker,
+        assignedKeyWorker = keyWorker.toStaffMember(),
         assignedKeyWorkerName = keyWorkerName,
         previousKeyWorkerName = previousKeyWorkerName,
       )

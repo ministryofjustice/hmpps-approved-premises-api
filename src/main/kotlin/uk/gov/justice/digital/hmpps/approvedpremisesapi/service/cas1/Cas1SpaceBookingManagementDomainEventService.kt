@@ -229,6 +229,7 @@ class Cas1SpaceBookingManagementDomainEventService(
 
   fun keyWorkerAssigned(
     updatedCas1SpaceBooking: Cas1SpaceBookingEntity,
+    assignedKeyWorker: StaffMember,
     assignedKeyWorkerName: String,
     previousKeyWorkerName: String?,
   ) {
@@ -258,6 +259,7 @@ class Cas1SpaceBookingManagementDomainEventService(
             applicationId = applicationId,
             applicationUrl = cas1SpaceBookingManagementConfig.applicationUrlTemplate.resolve("id", applicationId.toString()),
             bookingId = updatedCas1SpaceBooking.id,
+            keyWorker = assignedKeyWorker,
             personReference = PersonReference(
               crn = updatedCas1SpaceBooking.crn,
               noms = offenderDetails?.nomsId ?: "Unknown NOMS Id",

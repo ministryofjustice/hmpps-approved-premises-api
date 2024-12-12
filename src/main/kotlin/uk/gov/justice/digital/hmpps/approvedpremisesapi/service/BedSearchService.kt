@@ -146,8 +146,8 @@ class BedSearchService(
 
     val premisesCharacteristicsPropertyNames = propertyBedAttributes?.map {
       when (it) {
-        BedSearchAttributes.singleOccupancy, BedSearchAttributes.SINGLE_OCCUPANCY -> BedSearchAttributes.SINGLE_OCCUPANCY.value
-        BedSearchAttributes.sharedProperty, BedSearchAttributes.SHARED_PROPERTY -> BedSearchAttributes.SHARED_PROPERTY.value
+        BedSearchAttributes.SINGLE_OCCUPANCY -> BedSearchAttributes.SINGLE_OCCUPANCY.value
+        BedSearchAttributes.SHARED_PROPERTY -> BedSearchAttributes.SHARED_PROPERTY.value
         else -> ""
       }
     }
@@ -156,7 +156,7 @@ class BedSearchService(
 
     val roomCharacteristicsPropertyNames = propertyBedAttributes?.map {
       when (it) {
-        BedSearchAttributes.wheelchairAccessible, BedSearchAttributes.WHEELCHAIR_ACCESSIBLE -> BedSearchAttributes.WHEELCHAIR_ACCESSIBLE.value
+        BedSearchAttributes.WHEELCHAIR_ACCESSIBLE -> BedSearchAttributes.WHEELCHAIR_ACCESSIBLE.value
         else -> ""
       }
     }

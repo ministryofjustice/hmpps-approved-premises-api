@@ -19,8 +19,8 @@ data class CaseSummary(
   val gender: String?,
   val profile: Profile?,
   val manager: Manager,
-  val currentExclusion: Boolean?,
-  val currentRestriction: Boolean?,
+  val currentExclusion: Boolean,
+  val currentRestriction: Boolean,
 )
 
 data class Name(

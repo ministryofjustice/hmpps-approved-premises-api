@@ -5284,8 +5284,11 @@ components:
           properties:
             name:
               type: string
+            isRestricted:
+              type: boolean
           required:
             - name
+            - isRestricted
     RestrictedPersonSummary:
       allOf:
         - $ref: '#/components/schemas/PersonSummary'
@@ -5523,9 +5526,6 @@ components:
         - isSharedProperty
         - isSingleOccupancy
         - isWheelchairAccessible
-        - sharedProperty
-        - singleOccupancy
-        - wheelchairAccessible
       x-enum-varnames:
         - SHARED_PROPERTY
         - SINGLE_OCCUPANCY

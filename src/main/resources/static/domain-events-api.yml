@@ -1279,6 +1279,8 @@ components:
           $ref: '#/components/schemas/ApplicationUrl'
         bookingId:
           $ref: '#/components/schemas/BookingId'
+        keyWorker:
+          $ref: '#/components/schemas/StaffMember'
         personReference:
           $ref: '#/components/schemas/PersonReference'
         deliusEventNumber:
@@ -1301,6 +1303,7 @@ components:
         - applicationId
         - applicationUrl
         - bookingId
+        - keyWorker
         - personReference
         - deliusEventNumber
         - premises

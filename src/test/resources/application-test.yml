@@ -81,8 +81,6 @@ hmpps:
     client-secret: secret
 
 services:
-  community-api:
-    base-url: http://localhost:#WIREMOCK_PORT
   hmpps-tier:
     base-url: http://localhost:#WIREMOCK_PORT
   prisons-api:

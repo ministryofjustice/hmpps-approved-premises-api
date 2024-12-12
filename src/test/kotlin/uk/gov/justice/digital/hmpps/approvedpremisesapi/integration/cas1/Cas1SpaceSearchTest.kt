@@ -2,7 +2,6 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.cas1
 
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.BeforeEach
-import org.junit.jupiter.api.Disabled
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.EnumSource
@@ -13,12 +12,13 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1SpaceSearc
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1SpaceSearchRequirements
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1SpaceSearchResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1SpaceSearchResults
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Gender
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.InitialiseDatabasePerClassTestBase
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAProbationRegion
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAUser
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAnApplication
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesGender
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.cas1.Cas1SpaceSearchResultsTransformer
 import java.time.LocalDate
 
@@ -50,7 +50,9 @@ class Cas1SpaceSearchTest : InitialiseDatabasePerClassTestBase() {
       withLongitude(51.48)
     }
 
-    givenAUser { _, jwt ->
+    givenAUser { user, jwt ->
+      val application = givenAnApplication(createdByUser = user, isWomensApplication = false)
+
       val premises = approvedPremisesEntityFactory.produceAndPersistMultipleIndexed(5) {
         withYieldedProbationRegion { givenAProbationRegion() }
         withYieldedLocalAuthorityArea {
@@ -73,13 +75,13 @@ class Cas1SpaceSearchTest : InitialiseDatabasePerClassTestBase() {
       }
 
       val searchParameters = Cas1SpaceSearchParameters(
+        applicationId = application.id,
         startDate = LocalDate.now(),
         durationInDays = 14,
         targetPostcodeDistrict = "SE1",
         requirements = Cas1SpaceSearchRequirements(
           apTypes = null,
           spaceCharacteristics = null,
-          genders = null,
         ),
       )
 
@@ -105,17 +107,18 @@ class Cas1SpaceSearchTest : InitialiseDatabasePerClassTestBase() {
     }
   }
 
-  @Disabled("Only male APs are currently supported in the CAS1 service")
   @ParameterizedTest
   @EnumSource
-  fun `Filtering APs by gender only returns APs supporting that gender`(gender: Gender) {
+  fun `Filtering APs by gender only returns APs matching associated gender in application`(gender: ApprovedPremisesGender) {
     postCodeDistrictFactory.produceAndPersist {
       withOutcode("SE1")
       withLatitude(-0.07)
       withLongitude(51.48)
     }
 
-    givenAUser { _, jwt ->
+    givenAUser { user, jwt ->
+      val application = givenAnApplication(createdByUser = user, isWomensApplication = gender == ApprovedPremisesGender.WOMAN)
+
       val expectedPremises = approvedPremisesEntityFactory.produceAndPersistMultipleIndexed(5) {
         withYieldedProbationRegion { givenAProbationRegion() }
         withYieldedLocalAuthorityArea {
@@ -124,7 +127,7 @@ class Cas1SpaceSearchTest : InitialiseDatabasePerClassTestBase() {
         withLatitude((it * -0.01) - 0.08)
         withLongitude((it * 0.01) + 51.49)
         withSupportsSpaceBookings(true)
-        // withGender(gender)
+        withGender(gender)
       }
 
       val unexpectedPremises = approvedPremisesEntityFactory.produceAndPersistMultipleIndexed(5) {
@@ -135,17 +138,17 @@ class Cas1SpaceSearchTest : InitialiseDatabasePerClassTestBase() {
         withLatitude((it * -0.01) - 0.08)
         withLongitude((it * 0.01) + 51.49)
         withSupportsSpaceBookings(true)
-        // withGender(Gender.entries.first { it != gender })
+        withGender(ApprovedPremisesGender.entries.first { it != gender })
       }
 
       val searchParameters = Cas1SpaceSearchParameters(
+        applicationId = application.id,
         startDate = LocalDate.now(),
         durationInDays = 14,
         targetPostcodeDistrict = "SE1",
         requirements = Cas1SpaceSearchRequirements(
           apTypes = null,
           spaceCharacteristics = null,
-          genders = listOf(gender),
         ),
       )
 
@@ -180,7 +183,9 @@ class Cas1SpaceSearchTest : InitialiseDatabasePerClassTestBase() {
       withLongitude(51.48)
     }
 
-    givenAUser { _, jwt ->
+    givenAUser { user, jwt ->
+      val application = givenAnApplication(createdByUser = user, isWomensApplication = false)
+
       val expectedPremises = approvedPremisesEntityFactory.produceAndPersistMultipleIndexed(5) {
         withYieldedProbationRegion { givenAProbationRegion() }
         withYieldedLocalAuthorityArea {
@@ -204,13 +209,13 @@ class Cas1SpaceSearchTest : InitialiseDatabasePerClassTestBase() {
       }
 
       val searchParameters = Cas1SpaceSearchParameters(
+        applicationId = application.id,
         startDate = LocalDate.now(),
         durationInDays = 14,
         targetPostcodeDistrict = "SE1",
         requirements = Cas1SpaceSearchRequirements(
           apTypes = listOf(apType),
           spaceCharacteristics = null,
-          genders = null,
         ),
       )
 
@@ -250,7 +255,8 @@ class Cas1SpaceSearchTest : InitialiseDatabasePerClassTestBase() {
       withLongitude(51.48)
     }
 
-    givenAUser { _, jwt ->
+    givenAUser { user, jwt ->
+      val application = givenAnApplication(createdByUser = user, isWomensApplication = false)
       val expectedPremises = approvedPremisesEntityFactory.produceAndPersistMultipleIndexed(4) {
         withYieldedProbationRegion { givenAProbationRegion() }
         withYieldedLocalAuthorityArea {
@@ -274,13 +280,13 @@ class Cas1SpaceSearchTest : InitialiseDatabasePerClassTestBase() {
       }
 
       val searchParameters = Cas1SpaceSearchParameters(
+        applicationId = application.id,
         startDate = LocalDate.now(),
         durationInDays = 14,
         targetPostcodeDistrict = "SE1",
         requirements = Cas1SpaceSearchRequirements(
           apTypes = ApType.entries.slice(0..3),
           spaceCharacteristics = null,
-          genders = null,
         ),
       )
 
@@ -338,7 +344,9 @@ class Cas1SpaceSearchTest : InitialiseDatabasePerClassTestBase() {
       withLongitude(51.48)
     }
 
-    givenAUser { _, jwt ->
+    givenAUser { user, jwt ->
+      val application = givenAnApplication(createdByUser = user, isWomensApplication = false)
+
       val expectedPremises = approvedPremisesEntityFactory.produceAndPersistMultipleIndexed(5) {
         withYieldedProbationRegion { givenAProbationRegion() }
         withYieldedLocalAuthorityArea {
@@ -384,13 +392,13 @@ class Cas1SpaceSearchTest : InitialiseDatabasePerClassTestBase() {
       }
 
       val searchParameters = Cas1SpaceSearchParameters(
+        applicationId = application.id,
         startDate = LocalDate.now(),
         durationInDays = 14,
         targetPostcodeDistrict = "SE1",
         requirements = Cas1SpaceSearchRequirements(
           apTypes = null,
           spaceCharacteristics = listOf(characteristic),
-          genders = null,
         ),
       )
 
@@ -424,7 +432,9 @@ class Cas1SpaceSearchTest : InitialiseDatabasePerClassTestBase() {
       withLongitude(51.48)
     }
 
-    givenAUser { _, jwt ->
+    givenAUser { user, jwt ->
+      val application = givenAnApplication(createdByUser = user, isWomensApplication = false)
+
       val expectedPremises = approvedPremisesEntityFactory.produceAndPersistMultipleIndexed(5) {
         withYieldedProbationRegion { givenAProbationRegion() }
         withYieldedLocalAuthorityArea {
@@ -468,13 +478,13 @@ class Cas1SpaceSearchTest : InitialiseDatabasePerClassTestBase() {
       }
 
       val searchParameters = Cas1SpaceSearchParameters(
+        applicationId = application.id,
         startDate = LocalDate.now(),
         durationInDays = 14,
         targetPostcodeDistrict = "SE1",
         requirements = Cas1SpaceSearchRequirements(
           apTypes = null,
           spaceCharacteristics = Cas1SpaceCharacteristic.entries.slice(1..3),
-          genders = null,
         ),
       )
 

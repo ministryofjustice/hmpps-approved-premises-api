@@ -832,6 +832,69 @@ paths:
         500:
           $ref: '_shared.yml#/components/responses/500Response'
 
+  /premises/{premisesId}/day-summary/{date}:
+    get:
+      tags:
+        - premises
+      summary: Provides a summary of capacity, space bookings and out of service beds for a premise on a given day
+      operationId: getDaySummary
+      parameters:
+        - name: premisesId
+          in: path
+          description: ID of the premises
+          required: true
+          schema:
+            type: string
+            format: uuid
+        - name: date
+          in: path
+          description: date the summary is required for
+          required: true
+          schema:
+            type: string
+            format: date
+        - name: bookingsCriteriaFilter
+          in: query
+          required: false
+          description: If provided, will only show bookings with matching criteria
+          schema:
+            type: array
+            items:
+              $ref: 'cas1-schemas.yml#/components/schemas/Cas1SpaceBookingCharacteristic'
+        - name: bookingsSortDirection
+          in: query
+          required: false
+          description: The direction to sort the bookings by. If not defined, will sort in descending order
+          schema:
+            $ref: '_shared.yml#/components/schemas/SortDirection'
+        - name: bookingsSortBy
+          in: query
+          required: false
+          description: The field to sort the booking by. If not defined, will sort on person name
+          schema:
+            $ref: 'cas1-schemas.yml#/components/schemas/Cas1SpaceBookingDaySummarySortField'
+      responses:
+        200:
+          description: successful operation
+          content:
+            'application/json':
+              schema:
+                $ref: 'cas1-schemas.yml#/components/schemas/Cas1PremiseDaySummary'
+          headers:
+            X-Pagination-CurrentPage:
+              $ref: '_shared.yml#/components/headers/X-Pagination-CurrentPage'
+            X-Pagination-TotalPages:
+              $ref: '_shared.yml#/components/headers/X-Pagination-TotalPages'
+            X-Pagination-TotalResults:
+              $ref: '_shared.yml#/components/headers/X-Pagination-TotalResults'
+            X-Pagination-PageSize:
+              $ref: '_shared.yml#/components/headers/X-Pagination-PageSize'
+        401:
+          $ref: '_shared.yml#/components/responses/401Response'
+        403:
+          $ref: '_shared.yml#/components/responses/403Response'
+        500:
+          $ref: '_shared.yml#/components/responses/500Response'
 
   /reference-data/out-of-service-bed-reasons:
     get:
