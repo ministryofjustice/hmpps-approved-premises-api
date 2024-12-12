@@ -78,11 +78,13 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.DomainEvent
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.DomainEventSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.DomainEventService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.toInstant
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.toUiDateTimeFormat
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.toUiFormat
 import java.time.Instant
 import java.time.LocalDate
+import java.time.LocalDateTime
 import java.time.OffsetDateTime
-import java.time.ZoneOffset
 import java.util.UUID
 
 class DomainEventDescriberTest {
@@ -158,8 +160,8 @@ class DomainEventDescriberTest {
   }
 
   @ParameterizedTest
-  @CsvSource(value = ["2024-01-01", "2024-01-02"])
-  fun `Returns expected description for person arrived event`(arrivalDate: LocalDate) {
+  @CsvSource(value = ["2024-01-01T12:34:00", "2024-05-02T13:44:00", "2024-12-02T00:00:00"])
+  fun `Returns expected description for person arrived event`(arrivalDate: LocalDateTime) {
     val domainEventSummary = DomainEventSummaryImpl.ofType(DomainEventType.APPROVED_PREMISES_PERSON_ARRIVED)
 
     every { mockDomainEventService.getPersonArrivedEvent(any()) } returns buildDomainEvent {
@@ -168,14 +170,14 @@ class DomainEventDescriberTest {
         timestamp = Instant.now(),
         eventType = EventType.personArrived,
         eventDetails = PersonArrivedFactory()
-          .withArrivedAt(arrivalDate.atTime(12, 34, 56).toInstant(ZoneOffset.UTC))
+          .withArrivedAt(arrivalDate.toInstant())
           .produce(),
       )
     }
 
     val result = domainEventDescriber.getDescription(domainEventSummary)
 
-    assertThat(result).isEqualTo("The person moved into the premises on ${arrivalDate.toUiFormat()}")
+    assertThat(result).isEqualTo("The person moved into the premises on ${arrivalDate.toUiDateTimeFormat()}")
   }
 
   @ParameterizedTest
@@ -200,8 +202,8 @@ class DomainEventDescriberTest {
   }
 
   @ParameterizedTest
-  @CsvSource(value = ["2024-04-01", "2024-04-02"])
-  fun `Returns expected description for person departed event`(departureDate: LocalDate) {
+  @CsvSource(value = ["2024-04-01T09:32:00", "2024-04-02T15:33:00", "2024-12-02T00:00:00"])
+  fun `Returns expected description for person departed event`(departureDate: LocalDateTime) {
     val domainEventSummary = DomainEventSummaryImpl.ofType(DomainEventType.APPROVED_PREMISES_PERSON_DEPARTED)
 
     every { mockDomainEventService.getPersonDepartedEvent(any()) } returns buildDomainEvent {
@@ -210,14 +212,14 @@ class DomainEventDescriberTest {
         timestamp = Instant.now(),
         eventType = EventType.personDeparted,
         eventDetails = PersonDepartedFactory()
-          .withDepartedAt(departureDate.atTime(12, 34, 56).toInstant(ZoneOffset.UTC))
+          .withDepartedAt(departureDate.toInstant())
           .produce(),
       )
     }
 
     val result = domainEventDescriber.getDescription(domainEventSummary)
 
-    assertThat(result).isEqualTo("The person moved out of the premises on ${departureDate.toUiFormat()}")
+    assertThat(result).isEqualTo("The person moved out of the premises on ${departureDate.toUiDateTimeFormat()}")
   }
 
   @ParameterizedTest

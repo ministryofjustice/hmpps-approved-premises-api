@@ -79,7 +79,7 @@ class Cas1SpaceBookingManagementDomainEventService(
         applicationId = applicationId,
         crn = updatedCas1SpaceBooking.crn,
         nomsNumber = offenderDetails?.nomsId,
-        occurredAt = actualArrivalDateTime,
+        occurredAt = OffsetDateTime.now().toInstant(),
         cas1SpaceBookingId = updatedCas1SpaceBooking.id,
         bookingId = null,
         data = PersonArrivedEnvelope(
@@ -186,7 +186,7 @@ class Cas1SpaceBookingManagementDomainEventService(
         applicationId = applicationId,
         crn = departedCas1SpaceBooking.crn,
         nomsNumber = offenderDetails?.nomsId,
-        occurredAt = actualDepartureDateTime,
+        occurredAt = OffsetDateTime.now().toInstant(),
         cas1SpaceBookingId = departedCas1SpaceBooking.id,
         bookingId = null,
         data = PersonDepartedEnvelope(

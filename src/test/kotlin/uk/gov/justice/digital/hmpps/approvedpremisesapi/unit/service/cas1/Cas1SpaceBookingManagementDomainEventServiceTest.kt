@@ -155,7 +155,7 @@ class Cas1SpaceBookingManagementDomainEventServiceTest {
       assertThat(domainEvent.cas1SpaceBookingId).isEqualTo(spaceBooking.id)
       assertThat(domainEvent.crn).isEqualTo(spaceBooking.crn)
       assertThat(domainEvent.nomsNumber).isEqualTo(caseSummary.nomsId)
-      assertThat(domainEvent.occurredAt).isEqualTo(Instant.parse("2023-03-12T11:30:00Z"))
+      assertThat(domainEvent.occurredAt).isWithinTheLastMinute()
       val data = domainEvent.data.eventDetails
       assertThat(data.previousExpectedDepartureOn).isNull()
       assertThat(data.applicationId).isEqualTo(application.id)
@@ -333,7 +333,7 @@ class Cas1SpaceBookingManagementDomainEventServiceTest {
       assertThat(domainEvent.cas1SpaceBookingId).isEqualTo(departedSpaceBooking.id)
       assertThat(domainEvent.crn).isEqualTo(departedSpaceBooking.crn)
       assertThat(domainEvent.nomsNumber).isEqualTo(caseSummary.nomsId)
-      assertThat(domainEvent.occurredAt).isEqualTo(Instant.parse("2023-11-06T01:30:30Z"))
+      assertThat(domainEvent.occurredAt).isWithinTheLastMinute()
       val domainEventEventDetails = domainEvent.data.eventDetails
       assertThat(domainEventEventDetails.applicationId).isEqualTo(application.id)
       assertThat(domainEventEventDetails.applicationUrl).isEqualTo("http://frontend/applications/${application.id}")
