@@ -41,7 +41,7 @@ import java.util.UUID
 import java.util.stream.Stream
 
 @Suppress("NULLABILITY_MISMATCH_BASED_ON_JAVA_ANNOTATIONS")
-class OutOfServiceBedTest : InitialiseDatabasePerClassTestBase() {
+class Cas1OutOfServiceBedTest : InitialiseDatabasePerClassTestBase() {
   @Autowired
   lateinit var outOfServiceBedTransformer: Cas1OutOfServiceBedTransformer
 

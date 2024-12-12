@@ -34,7 +34,7 @@ class Cas1OutOfServiceBedsController(
   private val outOfServiceBedTransformer: Cas1OutOfServiceBedTransformer,
   private val outOfServiceBedCancellationTransformer: Cas1OutOfServiceBedCancellationTransformer,
 ) : OutOfServiceBedsCas1Delegate {
-  override fun outOfServiceBedsGet(
+  override fun getOutOfServiceBeds(
     temporality: List<Temporality>?,
     premisesId: UUID?,
     apAreaId: UUID?,
@@ -65,7 +65,7 @@ class Cas1OutOfServiceBedsController(
       .body(outOfServiceBeds.map(outOfServiceBedTransformer::transformJpaToApi))
   }
 
-  override fun premisesPremisesIdOutOfServiceBedsGet(premisesId: UUID): ResponseEntity<List<Cas1OutOfServiceBed>> {
+  override fun getOutOfServiceBedsForPremises(premisesId: UUID): ResponseEntity<List<Cas1OutOfServiceBed>> {
     val premises = tryGetApprovedPremises(premisesId)
 
     val outOfServiceBeds = outOfServiceBedService.getActiveOutOfServiceBedsForPremisesId(premisesId)
@@ -77,7 +77,7 @@ class Cas1OutOfServiceBedsController(
     return ResponseEntity.ok(outOfServiceBeds.map(outOfServiceBedTransformer::transformJpaToApi))
   }
 
-  override fun premisesPremisesIdOutOfServiceBedsOutOfServiceBedIdCancellationsPost(
+  override fun cancelOutOfServiceBed(
     premisesId: UUID,
     outOfServiceBedId: UUID,
     body: Cas1NewOutOfServiceBedCancellation,
@@ -105,7 +105,7 @@ class Cas1OutOfServiceBedsController(
     )
   }
 
-  override fun premisesPremisesIdOutOfServiceBedsOutOfServiceBedIdGet(
+  override fun getOutOfServiceBed(
     premisesId: UUID,
     outOfServiceBedId: UUID,
   ): ResponseEntity<Cas1OutOfServiceBed> {
@@ -121,7 +121,7 @@ class Cas1OutOfServiceBedsController(
     return ResponseEntity.ok(outOfServiceBedTransformer.transformJpaToApi(outOfServiceBed))
   }
 
-  override fun premisesPremisesIdOutOfServiceBedsOutOfServiceBedIdPut(
+  override fun updateOutOfServiceBed(
     premisesId: UUID,
     outOfServiceBedId: UUID,
     body: UpdateCas1OutOfServiceBed,
@@ -151,7 +151,7 @@ class Cas1OutOfServiceBedsController(
     )
   }
 
-  override fun premisesPremisesIdOutOfServiceBedsPost(
+  override fun createOutOfServiceBed(
     premisesId: UUID,
     body: Cas1NewOutOfServiceBed,
   ): ResponseEntity<Cas1OutOfServiceBed> {
