@@ -253,41 +253,44 @@ class PeopleController(
 
   override fun peopleCrnTimelineGet(crn: String): ResponseEntity<PersonalTimeline> {
     val user = userService.getUserForRequest()
-
     val personInfo = offenderService.getPersonInfoResult(crn, user.deliusUsername, user.hasQualification(UserQualification.LAO))
+    return ResponseEntity.ok(transformPersonInfo(personInfo, crn))
+  }
 
-    val personalTimeline = when (personInfo) {
-      is PersonInfoResult.NotFound -> throw NotFoundProblem(crn, "Offender")
-      is PersonInfoResult.Unknown -> throw personInfo.throwable ?: RuntimeException("Could not retrieve person info for CRN: $crn")
-      is PersonInfoResult.Success -> {
-        val regularApplications = applicationService
-          .getApplicationsForCrn(crn, ServiceName.approvedPremises)
-          .map { BoxedApplication.of(it as ApprovedPremisesApplicationEntity) }
+  private fun transformPersonInfo(personInfoResult: PersonInfoResult, crn: String): PersonalTimeline = when (personInfoResult) {
+    is PersonInfoResult.NotFound -> throw NotFoundProblem(crn, "Offender")
+    is PersonInfoResult.Unknown -> throw personInfoResult.throwable ?: RuntimeException("Could not retrieve person info for CRN: $crn")
+    is PersonInfoResult.Success.Full -> buildPersonInfoWithTimeline(personInfoResult, crn)
+    is PersonInfoResult.Success.Restricted -> buildPersonInfoWithoutTimeline(personInfoResult)
+  }
 
-        val offlineApplications = applicationService
-          .getOfflineApplicationsForCrn(crn, ServiceName.approvedPremises)
-          .map { BoxedApplication.of(it) }
+  private fun buildPersonInfoWithoutTimeline(personInfo: PersonInfoResult.Success.Restricted): PersonalTimeline =
+    personalTimelineTransformer.transformApplicationTimelineModels(personInfo, emptyList())
 
-        val allApplications = regularApplications + offlineApplications
+  private fun buildPersonInfoWithTimeline(personInfo: PersonInfoResult.Success.Full, crn: String): PersonalTimeline {
+    val regularApplications = getRegularApplications(crn)
+    val offlineApplications = getOfflineApplications(crn)
+    val combinedApplications = regularApplications + offlineApplications
 
-        val applicationTimelineModels = allApplications
-          .map { application ->
-            val applicationId = application.map(
-              ApprovedPremisesApplicationEntity::id,
-              OfflineApplicationEntity::id,
-            )
-
-            val timelineEvents = applicationService.getApplicationTimeline(applicationId)
-
-            ApplicationTimelineModel(application, timelineEvents)
-          }
-
-        personalTimelineTransformer.transformApplicationTimelineModels(personInfo, applicationTimelineModels)
-      }
+    val applicationTimelineModels = combinedApplications.map { application ->
+      val applicationId = application.map(
+        ApprovedPremisesApplicationEntity::id,
+        OfflineApplicationEntity::id,
+      )
+      val timelineEvents = applicationService.getApplicationTimeline(applicationId)
+      ApplicationTimelineModel(application, timelineEvents)
     }
 
-    return ResponseEntity.ok(personalTimeline)
+    return personalTimelineTransformer.transformApplicationTimelineModels(personInfo, applicationTimelineModels)
   }
+
+  private fun getRegularApplications(crn: String) = applicationService
+    .getApplicationsForCrn(crn, ServiceName.approvedPremises)
+    .map { BoxedApplication.of(it as ApprovedPremisesApplicationEntity) }
+
+  private fun getOfflineApplications(crn: String) = applicationService
+    .getOfflineApplicationsForCrn(crn, ServiceName.approvedPremises)
+    .map { BoxedApplication.of(it) }
 
   private fun <T> getSuccessEntityOrThrow(crn: String, authorisableActionResult: AuthorisableActionResult<T>): T = when (authorisableActionResult) {
     is AuthorisableActionResult.NotFound -> throw NotFoundProblem(crn, "Person")
