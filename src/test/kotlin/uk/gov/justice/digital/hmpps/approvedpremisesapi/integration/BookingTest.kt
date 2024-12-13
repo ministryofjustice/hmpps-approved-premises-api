@@ -3354,49 +3354,13 @@ class BookingTest : IntegrationTestBase() {
     }
   }
 
-  @Test
-  fun `Create Date Change without JWT returns 401`() {
-    webTestClient.post()
-      .uri("/premises/e0f03aa2-1468-441c-aa98-0b98d86b67f9/bookings/1617e729-13f3-4158-bd88-c59affdb8a45/date-changes")
-      .bodyValue(
-        NewDateChange(
-          newArrivalDate = null,
-          newDepartureDate = null,
-        ),
-      )
-      .exchange()
-      .expectStatus()
-      .isUnauthorized
-  }
+  @Nested
+  inner class Cas1DateChange {
 
-  @Test
-  fun `Create AP Date Change without MANAGER or MATCHER role returns 403`() {
-    givenAUser(roles = emptyList()) { userEntity, jwt ->
-      val premises = approvedPremisesEntityFactory.produceAndPersist {
-        withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
-        withYieldedProbationRegion {
-          probationRegion
-        }
-      }
-
-      val room = roomEntityFactory.produceAndPersist {
-        withPremises(premises)
-      }
-
-      val bed = bedEntityFactory.produceAndPersist {
-        withRoom(room)
-      }
-
-      val booking = bookingEntityFactory.produceAndPersist {
-        withArrivalDate(LocalDate.parse("2022-08-18"))
-        withDepartureDate(LocalDate.parse("2022-08-20"))
-        withPremises(premises)
-        withBed(bed)
-      }
-
+    @Test
+    fun `CAS1 Date Change without JWT returns 401`() {
       webTestClient.post()
-        .uri("/premises/${premises.id}/bookings/${booking.id}/date-changes")
-        .header("Authorization", "Bearer $jwt")
+        .uri("/premises/e0f03aa2-1468-441c-aa98-0b98d86b67f9/bookings/1617e729-13f3-4158-bd88-c59affdb8a45/date-changes")
         .bodyValue(
           NewDateChange(
             newArrivalDate = null,
@@ -3405,61 +3369,101 @@ class BookingTest : IntegrationTestBase() {
         )
         .exchange()
         .expectStatus()
-        .isForbidden
+        .isUnauthorized
     }
-  }
 
-  @ParameterizedTest
-  @EnumSource(value = UserRole::class, names = ["CAS1_FUTURE_MANAGER", "CAS1_MATCHER"])
-  fun `Create AP Date Change with FUTURE_MANAGER or MATCHER role returns 200, persists date change`(role: UserRole) {
-    govUKBankHolidaysAPIMockSuccessfullCallWithEmptyResponse()
-
-    givenAUser(roles = listOf(role)) { userEntity, jwt ->
-      val premises = approvedPremisesEntityFactory.produceAndPersist {
-        withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
-        withYieldedProbationRegion {
-          probationRegion
+    @Test
+    fun `CAS1 Date Change without correct role returns 403`() {
+      givenAUser(roles = emptyList()) { _, jwt ->
+        val premises = approvedPremisesEntityFactory.produceAndPersist {
+          withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
+          withYieldedProbationRegion {
+            probationRegion
+          }
         }
+
+        val room = roomEntityFactory.produceAndPersist {
+          withPremises(premises)
+        }
+
+        val bed = bedEntityFactory.produceAndPersist {
+          withRoom(room)
+        }
+
+        val booking = bookingEntityFactory.produceAndPersist {
+          withArrivalDate(LocalDate.parse("2022-08-18"))
+          withDepartureDate(LocalDate.parse("2022-08-20"))
+          withPremises(premises)
+          withBed(bed)
+        }
+
+        webTestClient.post()
+          .uri("/premises/${premises.id}/bookings/${booking.id}/date-changes")
+          .header("Authorization", "Bearer $jwt")
+          .bodyValue(
+            NewDateChange(
+              newArrivalDate = null,
+              newDepartureDate = null,
+            ),
+          )
+          .exchange()
+          .expectStatus()
+          .isForbidden
       }
+    }
 
-      val room = roomEntityFactory.produceAndPersist {
-        withPremises(premises)
+    @ParameterizedTest
+    @EnumSource(value = UserRole::class, names = ["CAS1_FUTURE_MANAGER", "CAS1_MATCHER"])
+    fun `CAS1 Date Change with correct role returns 200, persists date change`(role: UserRole) {
+      govUKBankHolidaysAPIMockSuccessfullCallWithEmptyResponse()
+
+      givenAUser(roles = listOf(role)) { _, jwt ->
+        val premises = approvedPremisesEntityFactory.produceAndPersist {
+          withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
+          withYieldedProbationRegion {
+            probationRegion
+          }
+        }
+
+        val room = roomEntityFactory.produceAndPersist {
+          withPremises(premises)
+        }
+
+        val bed = bedEntityFactory.produceAndPersist {
+          withRoom(room)
+        }
+
+        val booking = bookingEntityFactory.produceAndPersist {
+          withArrivalDate(LocalDate.parse("2022-08-18"))
+          withDepartureDate(LocalDate.parse("2022-08-20"))
+          withPremises(premises)
+          withBed(bed)
+        }
+
+        webTestClient.post()
+          .uri("/premises/${premises.id}/bookings/${booking.id}/date-changes")
+          .header("Authorization", "Bearer $jwt")
+          .bodyValue(
+            NewDateChange(
+              newArrivalDate = LocalDate.parse("2023-07-13"),
+              newDepartureDate = LocalDate.parse("2023-07-15"),
+            ),
+          )
+          .exchange()
+          .expectStatus()
+          .isOk
+
+        val persistedBooking = bookingRepository.findByIdOrNull(booking.id)!!
+
+        assertThat(persistedBooking.arrivalDate).isEqualTo(LocalDate.parse("2023-07-13"))
+        assertThat(persistedBooking.departureDate).isEqualTo(LocalDate.parse("2023-07-15"))
+        assertThat(persistedBooking.dateChanges).singleElement()
+        val persistedDateChange = persistedBooking.dateChanges.first()
+        assertThat(persistedDateChange.previousArrivalDate).isEqualTo(LocalDate.parse("2022-08-18"))
+        assertThat(persistedDateChange.previousDepartureDate).isEqualTo(LocalDate.parse("2022-08-20"))
+        assertThat(persistedDateChange.newArrivalDate).isEqualTo(LocalDate.parse("2023-07-13"))
+        assertThat(persistedDateChange.newDepartureDate).isEqualTo(LocalDate.parse("2023-07-15"))
       }
-
-      val bed = bedEntityFactory.produceAndPersist {
-        withRoom(room)
-      }
-
-      val booking = bookingEntityFactory.produceAndPersist {
-        withArrivalDate(LocalDate.parse("2022-08-18"))
-        withDepartureDate(LocalDate.parse("2022-08-20"))
-        withPremises(premises)
-        withBed(bed)
-      }
-
-      webTestClient.post()
-        .uri("/premises/${premises.id}/bookings/${booking.id}/date-changes")
-        .header("Authorization", "Bearer $jwt")
-        .bodyValue(
-          NewDateChange(
-            newArrivalDate = LocalDate.parse("2023-07-13"),
-            newDepartureDate = LocalDate.parse("2023-07-15"),
-          ),
-        )
-        .exchange()
-        .expectStatus()
-        .isOk
-
-      val persistedBooking = bookingRepository.findByIdOrNull(booking.id)!!
-
-      assertThat(persistedBooking.arrivalDate).isEqualTo(LocalDate.parse("2023-07-13"))
-      assertThat(persistedBooking.departureDate).isEqualTo(LocalDate.parse("2023-07-15"))
-      assertThat(persistedBooking.dateChanges).singleElement()
-      val persistedDateChange = persistedBooking.dateChanges.first()
-      assertThat(persistedDateChange.previousArrivalDate).isEqualTo(LocalDate.parse("2022-08-18"))
-      assertThat(persistedDateChange.previousDepartureDate).isEqualTo(LocalDate.parse("2022-08-20"))
-      assertThat(persistedDateChange.newArrivalDate).isEqualTo(LocalDate.parse("2023-07-13"))
-      assertThat(persistedDateChange.newDepartureDate).isEqualTo(LocalDate.parse("2023-07-15"))
     }
   }
 
