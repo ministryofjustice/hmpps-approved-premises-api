@@ -4,10 +4,12 @@ import org.slf4j.LoggerFactory
 import org.springframework.data.jpa.repository.JpaRepository
 import org.springframework.data.jpa.repository.Modifying
 import org.springframework.data.jpa.repository.Query
+import org.springframework.stereotype.Component
 import org.springframework.stereotype.Repository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApplicationEntity
 import java.util.UUID
 
+@Component
 class UpdateSentenceTypeAndSituationJob(
   private val applicationRepository: UpdateSentenceTypeAndSituationRepository,
 ) : MigrationJob() {

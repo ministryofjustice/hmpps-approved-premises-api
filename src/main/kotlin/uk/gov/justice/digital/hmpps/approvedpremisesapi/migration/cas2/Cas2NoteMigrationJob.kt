@@ -3,11 +3,13 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.migration.cas2
 import org.slf4j.LoggerFactory
 import org.springframework.data.domain.PageRequest
 import org.springframework.data.domain.Slice
+import org.springframework.stereotype.Component
 import org.springframework.transaction.support.TransactionTemplate
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas2ApplicationNoteEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas2ApplicationNoteRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.migration.MigrationJob
 
+@Component
 class Cas2NoteMigrationJob(
   private val noteRepository: Cas2ApplicationNoteRepository,
   private val transactionTemplate: TransactionTemplate,

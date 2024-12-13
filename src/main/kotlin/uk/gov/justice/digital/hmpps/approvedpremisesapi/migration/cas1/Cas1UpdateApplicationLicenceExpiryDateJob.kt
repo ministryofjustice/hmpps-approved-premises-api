@@ -3,12 +3,14 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.migration.cas1
 import org.springframework.data.jpa.repository.JpaRepository
 import org.springframework.data.jpa.repository.Modifying
 import org.springframework.data.jpa.repository.Query
+import org.springframework.stereotype.Component
 import org.springframework.stereotype.Repository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.migration.MigrationJob
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.migration.MigrationLogger
 import java.util.UUID
 
+@Component
 class Cas1UpdateApplicationLicenceExpiryDateJob(
   private val updateLicenceExpiryDateRepository: UpdateLicenceExpiryDateRepository,
   private val migrationLogger: MigrationLogger,

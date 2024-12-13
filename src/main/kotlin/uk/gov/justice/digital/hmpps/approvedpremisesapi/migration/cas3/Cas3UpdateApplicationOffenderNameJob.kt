@@ -4,6 +4,7 @@ import jakarta.persistence.EntityManager
 import org.apache.commons.collections4.ListUtils
 import org.springframework.data.domain.PageRequest
 import org.springframework.data.domain.Slice
+import org.springframework.stereotype.Component
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApplicationRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TemporaryAccommodationApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.migration.MigrationJob
@@ -12,6 +13,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PersonSummaryInfoR
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.OffenderService
 import java.util.stream.Collectors
 
+@Component
 class Cas3UpdateApplicationOffenderNameJob(
   private val applicationRepository: ApplicationRepository,
   private val offenderService: OffenderService,

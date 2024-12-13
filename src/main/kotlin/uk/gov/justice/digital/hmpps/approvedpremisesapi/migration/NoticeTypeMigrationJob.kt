@@ -8,6 +8,7 @@ import org.springframework.data.domain.Slice
 import org.springframework.data.jpa.repository.JpaRepository
 import org.springframework.data.jpa.repository.Modifying
 import org.springframework.data.jpa.repository.Query
+import org.springframework.stereotype.Component
 import org.springframework.stereotype.Repository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1ApplicationTimelinessCategory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApplicationEntity
@@ -35,6 +36,7 @@ interface NoticeTypeMigrationJobApplicationRepository : JpaRepository<Applicatio
   fun getApplicationsThatRequireNoticeTypeUpdating(pageable: Pageable): Slice<ApprovedPremisesApplicationEntity>
 }
 
+@Component
 class NoticeTypeMigrationJob(
   private val applicationRepository: NoticeTypeMigrationJobApplicationRepository,
   private val entityManager: EntityManager,
