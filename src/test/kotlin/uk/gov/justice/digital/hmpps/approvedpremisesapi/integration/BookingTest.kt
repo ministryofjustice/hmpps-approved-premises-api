@@ -18,8 +18,10 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewDeparture
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewExtension
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ContextStaffMemberFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenABooking
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenACas1CruManagementArea
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAProbationRegion
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenASubmittedApplication
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAUser
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAnApArea
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAnOffender
@@ -3386,15 +3388,10 @@ class BookingTest : IntegrationTestBase() {
           withPremises(premises)
         }
 
-        val bed = bedEntityFactory.produceAndPersist {
-          withRoom(room)
-        }
-
         val booking = bookingEntityFactory.produceAndPersist {
           withArrivalDate(LocalDate.parse("2022-08-18"))
           withDepartureDate(LocalDate.parse("2022-08-20"))
           withPremises(premises)
-          withBed(bed)
         }
 
         webTestClient.post()
@@ -3414,10 +3411,10 @@ class BookingTest : IntegrationTestBase() {
 
     @ParameterizedTest
     @EnumSource(value = UserRole::class, names = ["CAS1_FUTURE_MANAGER", "CAS1_MATCHER"])
-    fun `CAS1 Date Change with correct role returns 200, persists date change`(role: UserRole) {
+    fun `CAS1 Date Change with correct role returns 200, persists date change and raises domain event`(role: UserRole) {
       govUKBankHolidaysAPIMockSuccessfullCallWithEmptyResponse()
 
-      givenAUser(roles = listOf(role)) { _, jwt ->
+      givenAUser(roles = listOf(role)) { user, jwt ->
         val premises = approvedPremisesEntityFactory.produceAndPersist {
           withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
           withYieldedProbationRegion {
@@ -3425,20 +3422,17 @@ class BookingTest : IntegrationTestBase() {
           }
         }
 
-        val room = roomEntityFactory.produceAndPersist {
-          withPremises(premises)
-        }
+        val application = givenASubmittedApplication(
+          createdByUser = user,
+        )
 
-        val bed = bedEntityFactory.produceAndPersist {
-          withRoom(room)
-        }
-
-        val booking = bookingEntityFactory.produceAndPersist {
-          withArrivalDate(LocalDate.parse("2022-08-18"))
-          withDepartureDate(LocalDate.parse("2022-08-20"))
-          withPremises(premises)
-          withBed(bed)
-        }
+        val booking = givenABooking(
+          crn = application.crn,
+          application = application,
+          premises = premises,
+          arrivalDate = LocalDate.parse("2022-08-18"),
+          departureDate = LocalDate.parse("2022-08-20"),
+        )
 
         webTestClient.post()
           .uri("/premises/${premises.id}/bookings/${booking.id}/date-changes")
@@ -3463,6 +3457,13 @@ class BookingTest : IntegrationTestBase() {
         assertThat(persistedDateChange.previousDepartureDate).isEqualTo(LocalDate.parse("2022-08-20"))
         assertThat(persistedDateChange.newArrivalDate).isEqualTo(LocalDate.parse("2023-07-13"))
         assertThat(persistedDateChange.newDepartureDate).isEqualTo(LocalDate.parse("2023-07-15"))
+
+        domainEventAsserter.blockForEmittedDomainEvent(DomainEventType.APPROVED_PREMISES_BOOKING_CHANGED)
+        val savedEvent = domainEventAsserter.assertDomainEventOfTypeStored(
+          application.id,
+          DomainEventType.APPROVED_PREMISES_BOOKING_CHANGED,
+        )
+        assertThat(savedEvent.bookingId).isEqualTo(booking.id)
       }
     }
   }
