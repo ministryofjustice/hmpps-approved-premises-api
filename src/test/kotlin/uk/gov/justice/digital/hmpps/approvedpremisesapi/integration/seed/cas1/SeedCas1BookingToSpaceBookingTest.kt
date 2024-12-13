@@ -6,6 +6,14 @@ import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.data.repository.findByIdOrNull
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.BookingMade
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.BookingMadeBookedBy
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.BookingMadeEnvelope
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.Cru
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.EventType
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.PersonReference
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.Premises
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.StaffMember
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.SeedFileType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenABooking
@@ -17,18 +25,22 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.given
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAnOfflineApplication
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.seed.SeedTestBase
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.BookingEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas1SpaceBookingEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.CharacteristicEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DepartureReasonEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ManagementInfoSource
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.MoveOnCategoryEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.NonArrivalReasonEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.OfflineApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas1.Cas1DeliusBookingImportEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas1.Cas1DeliusBookingImportRepository
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.DomainEvent
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.repository.Cas1SpaceBookingTestRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.seed.CsvBuilder
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.seed.cas1.Cas1BookingToSpaceBookingSeedCsvRow
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.DomainEventService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1BookingDomainEventService
 import java.time.Instant
 import java.time.LocalDate
@@ -46,6 +58,9 @@ class SeedCas1BookingToSpaceBookingTest : SeedTestBase() {
 
   @Autowired
   lateinit var cas1BookingDomainEventSet: Cas1BookingDomainEventService
+
+  @Autowired
+  lateinit var cas1DomainEventService: DomainEventService
 
   @Autowired
   lateinit var deliusBookingImportRepository: Cas1DeliusBookingImportRepository
@@ -252,12 +267,10 @@ class SeedCas1BookingToSpaceBookingTest : SeedTestBase() {
       departureDate = LocalDate.of(2024, 7, 5),
     )
     val (booking4CreatedByUser) = givenAUser()
-    cas1BookingDomainEventSet.adhocBookingMade(
-      onlineApplication = null,
+    createBookingMadeDomainEventForAdhocBooking(
       offlineApplication = offlineApplication,
-      eventNumber = "75",
       booking = booking4OfflineApplicationNoManagementInfo,
-      user = booking4CreatedByUser,
+      createdByUser = booking4CreatedByUser,
     )
 
     val booking5OfflineNoDomainEventOrManagementInfo = givenABookingForAnOfflineApplication(
@@ -453,6 +466,69 @@ class SeedCas1BookingToSpaceBookingTest : SeedTestBase() {
     assertThat(migratedBooking5.migratedManagementInfoFrom).isEqualTo(ManagementInfoSource.LEGACY_CAS_1)
 
     assertBookingIsNotDeleted(booking6DifferentPremise.id)
+  }
+
+  private fun createBookingMadeDomainEventForAdhocBooking(
+    offlineApplication: OfflineApplicationEntity,
+    booking: BookingEntity,
+    createdByUser: UserEntity,
+  ) {
+    val applicationId = offlineApplication.id
+    val eventNumber = offlineApplication.eventNumber!!
+    val domainEventId = UUID.randomUUID()
+    val bookingId = booking.id
+
+    cas1DomainEventService.saveBookingMadeDomainEvent(
+      DomainEvent(
+        id = domainEventId,
+        applicationId = applicationId,
+        crn = "irrelevant",
+        nomsNumber = "irrelevant",
+        occurredAt = Instant.now(),
+        bookingId = bookingId,
+        cas1SpaceBookingId = null,
+        data = BookingMadeEnvelope(
+          id = domainEventId,
+          timestamp = Instant.now(),
+          eventType = EventType.bookingMade,
+          eventDetails = BookingMade(
+            applicationId = applicationId,
+            applicationUrl = "doesnt matter",
+            bookingId = bookingId,
+            personReference = PersonReference(
+              crn = "irrelevant",
+              noms = "irrelevant",
+            ),
+            deliusEventNumber = eventNumber,
+            createdAt = Instant.now(),
+            bookedBy = BookingMadeBookedBy(
+              staffMember = StaffMember(
+                staffCode = "doesnt matter",
+                forenames = "doesnt matter",
+                surname = "doesnt matter",
+                username = createdByUser.deliusUsername,
+              ),
+              cru = Cru(
+                name = "irrelevant",
+              ),
+            ),
+            premises = Premises(
+              id = UUID.randomUUID(),
+              name = "irrelevant",
+              apCode = "irrelevant",
+              legacyApCode = "irrelevant",
+              localAuthorityAreaName = "irrelevant",
+            ),
+            arrivalOn = LocalDate.now(),
+            departureOn = LocalDate.now(),
+            applicationSubmittedOn = Instant.now(),
+            releaseType = "irrelevant",
+            sentenceType = "irrelevant",
+            situation = "irrelevant",
+          ),
+        ),
+      ),
+    )
   }
 
   @Test
