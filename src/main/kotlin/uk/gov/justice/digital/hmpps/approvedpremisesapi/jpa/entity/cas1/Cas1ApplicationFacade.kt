@@ -20,4 +20,7 @@ class Cas1ApplicationFacade(
 
   val submittedAt: OffsetDateTime
     get() = application?.submittedAt ?: offlineApplication!!.createdAt
+
+  val eventNumber: String?
+    get() = application?.eventNumber ?: offlineApplication!!.eventNumber
 }
