@@ -18,7 +18,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.AssessmentReje
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1ApplicationUserDetails
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Gender
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewAppeal
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewBooking
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewPlacementApplication
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewReallocation
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PlacementApplication
@@ -59,8 +58,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremi
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AssessmentDecision
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AssessmentEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AssessmentRepository
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.BookingEntity
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.BookingRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRole
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.Mappa
@@ -90,9 +87,6 @@ class ApplicationReportsTest : InitialiseDatabasePerClassTestBase() {
   lateinit var realAssessmentRepository: AssessmentRepository
 
   @Autowired
-  lateinit var realBookingRepository: BookingRepository
-
-  @Autowired
   lateinit var realAppealRepository: AppealRepository
 
   @Autowired
@@ -119,7 +113,7 @@ class ApplicationReportsTest : InitialiseDatabasePerClassTestBase() {
   lateinit var placementApplicationSchema: ApprovedPremisesPlacementApplicationJsonSchemaEntity
 
   lateinit var applicationWithoutAssessment: ApprovedPremisesApplicationEntity
-  lateinit var applicationWithBooking: ApprovedPremisesApplicationEntity
+  lateinit var applicationWithAssessment: ApprovedPremisesApplicationEntity
   lateinit var applicationWithPlacementApplication: ApprovedPremisesApplicationEntity
   lateinit var applicationWithReallocatedCompleteAssessments: ApprovedPremisesApplicationEntity
   lateinit var applicationShortNotice: ApprovedPremisesApplicationEntity
@@ -176,12 +170,10 @@ class ApplicationReportsTest : InitialiseDatabasePerClassTestBase() {
 
     applicationWithoutAssessment = createApplication("applicationWithoutAssessment")
 
-    val applicationWithBookingArgs = createApplicationWithBooking("applicationWithBooking")
-    applicationWithBooking = applicationWithBookingArgs.first
+    applicationWithAssessment = createApplicationWithCompletedAssessment("application")
 
     applicationWithPlacementApplication = createApplicationWithCompletedAssessment("applicationWithPlacementApplication")
     createAndAcceptPlacementApplication(applicationWithPlacementApplication)
-    createBookingForApplication(applicationWithPlacementApplication)
 
     applicationWithMultipleAssessments = createApplication("applicationWithMultipleAssessments")
     reallocateAssessment(applicationWithMultipleAssessments)
@@ -264,7 +256,7 @@ class ApplicationReportsTest : InitialiseDatabasePerClassTestBase() {
           assertThat(actual.size).isEqualTo(9)
 
           assertApplicationRowHasCorrectData(actual, applicationWithoutAssessment.id, userEntity, ApplicationFacets(isAssessed = false, isAccepted = false))
-          assertApplicationRowHasCorrectData(actual, applicationWithBooking.id, userEntity)
+          assertApplicationRowHasCorrectData(actual, applicationWithAssessment.id, userEntity)
           assertApplicationRowHasCorrectData(actual, applicationWithPlacementApplication.id, userEntity, ApplicationFacets(hasPlacementApplication = true))
           assertApplicationRowHasCorrectData(actual, applicationWithReallocatedCompleteAssessments.id, userEntity)
           assertApplicationRowHasCorrectData(actual, applicationWithMultipleAssessments.id, userEntity)
@@ -399,13 +391,6 @@ class ApplicationReportsTest : InitialiseDatabasePerClassTestBase() {
     val application = createAndSubmitApplication(ApType.normal, crn, withArrivalDate)
     acceptAssessmentForApplication(application)
     return application
-  }
-
-  private fun createApplicationWithBooking(crn: String): Pair<ApprovedPremisesApplicationEntity, BookingEntity> {
-    val application = createApplicationWithCompletedAssessment(crn)
-    val booking = createBookingForApplication(application)
-
-    return Pair(application, booking)
   }
 
   private fun createAndSubmitApplication(apType: ApType, crn: String, withArrivalDate: Boolean = true, shortNotice: Boolean = false): ApprovedPremisesApplicationEntity {
@@ -584,48 +569,6 @@ class ApplicationReportsTest : InitialiseDatabasePerClassTestBase() {
       .isOk
 
     return realAssessmentRepository.findByIdOrNull(assessment.id) as ApprovedPremisesAssessmentEntity
-  }
-
-  private fun createBookingForApplication(application: ApprovedPremisesApplicationEntity): BookingEntity {
-    val (_, jwt) = matcherDetails
-
-    val premises = approvedPremisesEntityFactory.produceAndPersist {
-      withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
-      withYieldedProbationRegion {
-        probationRegionEntityFactory.produceAndPersist {
-          withYieldedApArea {
-            givenAnApArea()
-          }
-        }
-      }
-    }
-
-    val room = roomEntityFactory.produceAndPersist {
-      withPremises(premises)
-    }
-
-    val bed = bedEntityFactory.produceAndPersist {
-      withRoom(room)
-    }
-
-    webTestClient.post()
-      .uri("/premises/${premises.id}/bookings")
-      .header("Authorization", "Bearer $jwt")
-      .bodyValue(
-        NewBooking(
-          crn = application.crn,
-          arrivalDate = LocalDate.parse("2022-08-12"),
-          departureDate = LocalDate.parse("2022-08-30"),
-          serviceName = ServiceName.approvedPremises,
-          bedId = bed.id,
-          eventNumber = "eventNumber",
-        ),
-      )
-      .exchange()
-      .expectStatus()
-      .isOk
-
-    return realBookingRepository.findAllByCrn(application.crn).maxByOrNull { it.createdAt }!!
   }
 
   private fun reallocateAssessment(application: ApprovedPremisesApplicationEntity) {
