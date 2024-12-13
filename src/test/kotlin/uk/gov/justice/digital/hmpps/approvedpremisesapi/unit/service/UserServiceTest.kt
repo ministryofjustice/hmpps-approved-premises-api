@@ -999,7 +999,7 @@ class UserServiceTest {
 
       val result = userService.updateUser(
         id = user.id,
-        roles = listOf(ApprovedPremisesUserRole.assessor, ApprovedPremisesUserRole.roleAdmin),
+        roles = listOf(ApprovedPremisesUserRole.assessor, ApprovedPremisesUserRole.cruMember),
         qualifications = listOf(APIUserQualification.emergency, APIUserQualification.pipe),
         cruManagementAreaOverrideId = null,
       )
@@ -1008,7 +1008,7 @@ class UserServiceTest {
       val updatedUser = (result as CasResult.Success).value
 
       assertThat(updatedUser.id).isEqualTo(user.id)
-      assertThat(updatedUser.roles.map { it.role }).containsExactlyInAnyOrder(UserRole.CAS1_ASSESSOR, UserRole.CAS1_ADMIN)
+      assertThat(updatedUser.roles.map { it.role }).containsExactlyInAnyOrder(UserRole.CAS1_ASSESSOR, UserRole.CAS1_CRU_MEMBER)
       assertThat(updatedUser.qualifications.map { it.qualification }).containsExactlyInAnyOrder(UserQualification.EMERGENCY, UserQualification.PIPE)
       assertThat(updatedUser.cruManagementAreaOverride).isNull()
     }

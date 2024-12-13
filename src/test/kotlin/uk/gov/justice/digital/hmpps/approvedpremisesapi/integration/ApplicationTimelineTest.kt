@@ -17,7 +17,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DomainEventCa
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DomainEventEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DomainEventType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserEntity
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRole
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.ApplicationTimelineNoteTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.ApplicationTimelineTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.unit.domainevents.DomainEventSummaryImpl
@@ -92,7 +91,7 @@ class ApplicationTimelineTest : InitialiseDatabasePerClassTestBase() {
 
   @Test
   fun `Get application timeline returns 501 not implemented when not approved premises service`() {
-    givenAUser(roles = listOf(UserRole.CAS1_ADMIN)) { _, jwt ->
+    givenAUser { _, jwt ->
       webTestClient.get()
         .uri("/applications/${application.id}/timeline")
         .header("Authorization", "Bearer $jwt")
