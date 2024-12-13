@@ -103,17 +103,6 @@ interface BookingRepository : JpaRepository<BookingEntity, UUID> {
   @Query("SELECT MAX(b.departureDate) FROM BookingEntity b WHERE b.premises.id = :premisesId")
   fun getHighestBookingDate(premisesId: UUID): LocalDate?
 
-  @Query("SELECT b FROM BookingEntity b WHERE b.bed.id = :bedId AND b.arrivalDate <= :endDate AND b.departureDate >= :startDate AND SIZE(b.cancellations) = 0 AND (CAST(:thisEntityId as org.hibernate.type.UUIDCharType) IS NULL OR b.id != :thisEntityId)")
-  fun findByBedIdAndOverlappingDate(
-    bedId: UUID,
-    startDate: LocalDate,
-    endDate: LocalDate,
-    thisEntityId: UUID?,
-  ): List<BookingEntity>
-
-  @Query("SELECT DISTINCT(b.crn) FROM BookingEntity b")
-  fun getDistinctCrns(): List<String>
-
   @Modifying
   @Query(
     """
@@ -187,45 +176,6 @@ interface BookingRepository : JpaRepository<BookingEntity, UUID> {
   fun findAllAdhocOrUnknownByApplication(application: ApplicationEntity): List<BookingEntity>
 
   fun findAllByApplication(application: ApplicationEntity): List<BookingEntity>
-
-  @Query(
-    """
-      SELECT
-        b.crn AS personCrn,
-        Cast(b.id as varchar) bookingId,
-        CASE 
-              WHEN :serviceName='approved-premises' THEN COALESCE(b.status, 'awaiting-arrival')
-              ELSE COALESCE(b.status, 'provisional')
-        END as bookingStatus,
-        b.arrival_date AS bookingStartDate,
-        b.departure_date AS bookingEndDate,
-        b.created_at AS bookingCreatedAt,
-        Cast(p.id as varchar) premisesId,
-        p.name AS premisesName,
-        p.address_line1 AS premisesAddressLine1,
-        p.address_line2 AS premisesAddressLine2,
-        p.town AS premisesTown,
-        p.postcode AS premisesPostcode,
-        Cast(r.id as varchar) roomId,
-        r.name AS roomName,
-        Cast(b2.id as varchar) bedId,
-        b2.name AS bedName
-      FROM bookings b
-      LEFT JOIN beds b2 ON b.bed_id = b2.id
-      LEFT JOIN rooms r ON b2.room_id = r.id
-      LEFT JOIN premises p ON r.premises_id = p.id
-      WHERE b.service = :serviceName
-      AND (:status is null or b.status = :status)
-      AND (:crn is null OR b.crn = :crn)
-    """,
-    nativeQuery = true,
-  )
-  fun findBookings(
-    serviceName: String,
-    status: String?,
-    crn: String?,
-    pageable: Pageable?,
-  ): Page<BookingSearchResult>
 
   companion object {
     private const val OFFENDERS_QUERY = """
@@ -310,10 +260,6 @@ interface BookingRepository : JpaRepository<BookingEntity, UUID> {
       "AND SIZE(b.cancellations) = 0 ",
   )
   fun findActiveOverlappingBookingByBed(bedId: UUID, date: LocalDate): List<BookingEntity>
-
-  @Modifying
-  @Query("UPDATE BookingEntity b set b.adhoc = :adhoc where b.id = :bookingId")
-  fun updateBookingAdhocStatus(bookingId: UUID, adhoc: Boolean): Int
 
   @Query(
     """

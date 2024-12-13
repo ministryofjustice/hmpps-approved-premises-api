@@ -132,7 +132,7 @@ class ClientResultRedisSerializer(
     return objectMapper.writeValueAsBytes(toSerialize)
   }
 
-  override fun deserialize(bytes: ByteArray?): ClientResult<Any>? {
+  override fun deserialize(bytes: ByteArray?): ClientResult<Any> {
     val deserializedWrapper = objectMapper.readValue(bytes, SerializableClientResult::class.java)
 
     if (deserializedWrapper.discriminator == ClientResultDiscriminator.SUCCESS) {

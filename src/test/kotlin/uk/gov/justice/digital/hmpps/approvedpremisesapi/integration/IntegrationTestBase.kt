@@ -762,7 +762,7 @@ abstract class IntegrationTestBase {
   fun mockStaffMembersContextApiCall(staffMember: StaffMember, qCode: String) = wiremockServer.stubFor(
     WireMock.get(urlEqualTo("/approved-premises/$qCode/staff"))
       .willReturn(
-        WireMock.aResponse()
+        aResponse()
           .withHeader("Content-Type", "application/json")
           .withStatus(200)
           .withBody(
@@ -778,7 +778,7 @@ abstract class IntegrationTestBase {
   fun mockInmateDetailPrisonsApiCall(inmateDetail: InmateDetail) = wiremockServer.stubFor(
     WireMock.get(urlEqualTo("/api/offenders/${inmateDetail.offenderNo}"))
       .willReturn(
-        WireMock.aResponse()
+        aResponse()
           .withHeader("Content-Type", "application/json")
           .withStatus(200)
           .withBody(
@@ -848,10 +848,10 @@ abstract class IntegrationTestBase {
     responseBody: Any,
     additionalConfig: MappingBuilder.() -> Unit = { },
   ) = wiremockServer.editStub(
-    WireMock.get(WireMock.urlPathEqualTo(url)).withId(uuid)
+    WireMock.get(urlPathEqualTo(url)).withId(uuid)
       .withRequestBody(requestBody)
       .willReturn(
-        WireMock.aResponse()
+        aResponse()
           .withHeader("Content-Type", "application/json")
           .withStatus(200)
           .withBody(
@@ -875,7 +875,7 @@ abstract class IntegrationTestBase {
   fun mockUnsuccessfulPostCall(url: String, responseStatus: Int) =
     mockOAuth2ClientCredentialsCallIfRequired {
       wiremockServer.stubFor(
-        WireMock.post(urlEqualTo(url))
+        post(urlEqualTo(url))
           .willReturn(
             aResponse()
               .withStatus(responseStatus),

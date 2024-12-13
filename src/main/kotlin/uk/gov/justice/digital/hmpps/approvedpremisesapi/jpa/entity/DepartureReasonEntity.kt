@@ -42,12 +42,6 @@ data class DepartureReasonEntity(
 ) {
   override fun toString() = "DepartureReasonEntity:$id"
 
-  fun generateParentChildName(): Pair<UUID, String> {
-    return parentReasonId?.let { parentReason ->
-      return Pair(id, "${parentReason.name} - $name")
-    } ?: return Pair(id, name)
-  }
-
   companion object {
     fun valueOf(apiValue: WithdrawPlacementRequestReason): PlacementRequestWithdrawalReason? =
       PlacementRequestWithdrawalReason.entries.firstOrNull { it.apiValue == apiValue }

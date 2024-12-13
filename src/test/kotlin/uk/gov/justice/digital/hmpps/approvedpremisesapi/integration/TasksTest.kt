@@ -1,7 +1,6 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.integration
 
 import com.fasterxml.jackson.core.type.TypeReference
-import org.assertj.core.api.Assertions
 import org.assertj.core.api.Assertions.assertThat
 import org.assertj.core.api.Assertions.fail
 import org.assertj.core.api.recursive.comparison.RecursiveComparisonConfiguration
@@ -2780,9 +2779,6 @@ class TasksTest {
   @Nested
   inner class ReallocateTaskTest : IntegrationTestBase() {
     @Autowired
-    lateinit var taskTransformer: TaskTransformer
-
-    @Autowired
     lateinit var userTransformer: UserTransformer
 
     @BeforeEach
@@ -2957,17 +2953,17 @@ class TasksTest {
               val placementRequests = placementRequestRepository.findAll()
               val allocatedPlacementRequest = placementRequests.find { it.allocatedToUser!!.id == assigneeUser.id }
 
-              Assertions.assertThat(placementRequests.first { it.id == existingPlacementRequest.id }.reallocatedAt).isNotNull
-              Assertions.assertThat(allocatedPlacementRequest).isNotNull
+              assertThat(placementRequests.first { it.id == existingPlacementRequest.id }.reallocatedAt).isNotNull
+              assertThat(allocatedPlacementRequest).isNotNull
 
               val desirableCriteria =
                 allocatedPlacementRequest!!.placementRequirements.desirableCriteria.map { it.propertyName }
               val essentialCriteria =
-                allocatedPlacementRequest!!.placementRequirements.essentialCriteria.map { it.propertyName }
+                allocatedPlacementRequest.placementRequirements.essentialCriteria.map { it.propertyName }
 
-              Assertions.assertThat(desirableCriteria)
+              assertThat(desirableCriteria)
                 .isEqualTo(existingPlacementRequest.placementRequirements.desirableCriteria.map { it.propertyName })
-              Assertions.assertThat(essentialCriteria)
+              assertThat(essentialCriteria)
                 .isEqualTo(existingPlacementRequest.placementRequirements.essentialCriteria.map { it.propertyName })
             }
           }
@@ -3025,14 +3021,14 @@ class TasksTest {
                 val allocatedPlacementApplication =
                   placementApplications.find { it.allocatedToUser!!.id == assigneeUser.id }
 
-                Assertions.assertThat(placementApplications.first { it.id == placementApplication.id }.reallocatedAt).isNotNull
-                Assertions.assertThat(allocatedPlacementApplication).isNotNull
+                assertThat(placementApplications.first { it.id == placementApplication.id }.reallocatedAt).isNotNull
+                assertThat(allocatedPlacementApplication).isNotNull
 
                 val placementDates = allocatedPlacementApplication!!.placementDates
 
-                Assertions.assertThat(placementDates.size).isEqualTo(1)
-                Assertions.assertThat(placementDates[0].expectedArrival).isEqualTo(placementDate.expectedArrival)
-                Assertions.assertThat(placementDates[0].duration).isEqualTo(placementDate.duration)
+                assertThat(placementDates.size).isEqualTo(1)
+                assertThat(placementDates[0].expectedArrival).isEqualTo(placementDate.expectedArrival)
+                assertThat(placementDates[0].duration).isEqualTo(placementDate.duration)
               }
             }
           }
@@ -3082,8 +3078,8 @@ class TasksTest {
                 .isCreated
 
               val result = temporaryAccommodationAssessmentRepository.findAll().first { it.id == assessment.id }
-              Assertions.assertThat(result.allocatedToUser).isNotNull()
-              Assertions.assertThat(result.allocatedToUser!!.id).isEqualTo(expectedUser.id)
+              assertThat(result.allocatedToUser).isNotNull()
+              assertThat(result.allocatedToUser!!.id).isEqualTo(expectedUser.id)
             }
           }
         }

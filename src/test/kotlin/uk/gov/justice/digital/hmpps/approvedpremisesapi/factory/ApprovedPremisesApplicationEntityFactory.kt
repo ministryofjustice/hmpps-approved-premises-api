@@ -48,7 +48,7 @@ class ApprovedPremisesApplicationEntityFactory : Factory<ApprovedPremisesApplica
   private var eventNumber: Yielded<String> = { randomInt(1, 9).toString() }
   private var offenceId: Yielded<String> = { randomStringMultiCaseWithNumbers(5) }
   private var riskRatings: Yielded<PersonRisks> = { PersonRisksFactory().produce() }
-  private var assessments: Yielded<MutableList<AssessmentEntity>> = { mutableListOf<AssessmentEntity>() }
+  private var assessments: Yielded<MutableList<AssessmentEntity>> = { mutableListOf() }
   private var teamCodes: Yielded<MutableList<ApplicationTeamCodeEntity>> = { mutableListOf() }
   private var placementRequests: Yielded<MutableList<PlacementRequestEntity>> = { mutableListOf() }
   private var releaseType: Yielded<String?> = { null }

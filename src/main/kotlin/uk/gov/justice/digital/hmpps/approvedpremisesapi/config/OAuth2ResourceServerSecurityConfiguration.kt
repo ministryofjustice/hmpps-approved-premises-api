@@ -111,7 +111,7 @@ class OAuth2ResourceServerSecurityConfiguration {
   }
 }
 
-class AuthAwareTokenConverter() : Converter<Jwt, AbstractAuthenticationToken> {
+class AuthAwareTokenConverter : Converter<Jwt, AbstractAuthenticationToken> {
   private val jwtGrantedAuthoritiesConverter: Converter<Jwt, Collection<GrantedAuthority>> =
     JwtGrantedAuthoritiesConverter()
 

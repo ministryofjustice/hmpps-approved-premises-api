@@ -1815,7 +1815,7 @@ class PremisesTest {
         )
 
         wiremockServer.stubFor(
-          WireMock.get(WireMock.urlEqualTo("/approved-premises/$qCode/staff"))
+          WireMock.get(urlEqualTo("/approved-premises/$qCode/staff"))
             .willReturn(
               WireMock.aResponse()
                 .withHeader("Content-Type", "application/json")
@@ -1867,7 +1867,7 @@ class PremisesTest {
         )
 
         wiremockServer.stubFor(
-          WireMock.get(WireMock.urlEqualTo("/approved-premises/$qCode/staff"))
+          WireMock.get(urlEqualTo("/approved-premises/$qCode/staff"))
             .willReturn(
               WireMock.aResponse()
                 .withHeader("Content-Type", "application/json")
