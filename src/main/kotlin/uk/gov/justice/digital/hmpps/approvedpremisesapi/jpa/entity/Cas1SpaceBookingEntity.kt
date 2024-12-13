@@ -55,9 +55,13 @@ interface Cas1SpaceBookingRepository : JpaRepository<Cas1SpaceBookingEntity, UUI
       b.key_worker_staff_code as keyWorkerStaffCode,
       b.key_worker_assigned_at as keyWorkerAssignedAt,
       b.key_worker_name as keyWorkerName,
-      apa.name as personName
+      CASE 
+        WHEN apa.id IS NOT NULL THEN apa.name
+        ELSE offline_app.name
+      END as personName
       FROM cas1_space_bookings b
-      INNER JOIN approved_premises_applications apa ON b.approved_premises_application_id = apa.id
+      LEFT OUTER JOIN approved_premises_applications apa ON b.approved_premises_application_id = apa.id
+      LEFT OUTER JOIN offline_applications offline_app ON b.offline_application_id = offline_app.id
       WHERE 
       b.premises_id = :premisesId AND 
       b.cancellation_occurred_at IS NULL AND 
@@ -92,7 +96,8 @@ interface Cas1SpaceBookingRepository : JpaRepository<Cas1SpaceBookingEntity, UUI
         cast(:crnOrName as text) IS NULL OR 
         (
             (b.crn ILIKE :crnOrName) OR
-            (apa.name ILIKE '%' || :crnOrName || '%')
+            ((apa.id IS NOT NULL) AND (apa.name ILIKE '%' || :crnOrName || '%')) OR 
+            ((offline_app.id IS NOT NULL) AND (offline_app.name ILIKE '%' || :crnOrName || '%'))
         ) 
       ) AND
       (

@@ -34,6 +34,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.given
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAUser
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAnApArea
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAnOffender
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAnOfflineApplication
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.apDeliusContextAddSingleResponseToUserAccessCall
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.apDeliusContextMockSuccessfulStaffMembersCall
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesApplicationEntity
@@ -309,7 +310,7 @@ class Cas1SpaceBookingTest {
 
   @Nested
   inner class SearchForSpaceBookings : SpaceBookingIntegrationTestBase() {
-    lateinit var currentSpaceBooking2: Cas1SpaceBookingEntity
+    lateinit var currentSpaceBooking2OfflineApplication: Cas1SpaceBookingEntity
     lateinit var currentSpaceBooking3: Cas1SpaceBookingEntity
     lateinit var currentSpaceBooking4Restricted: Cas1SpaceBookingEntity
     lateinit var upcomingSpaceBookingWithKeyWorker: Cas1SpaceBookingEntity
@@ -336,7 +337,7 @@ class Cas1SpaceBookingTest {
         withKeyworkerAssignedAt(Instant.now())
       }
 
-      currentSpaceBooking2 = createSpaceBooking(crn = "CRN_CURRENT2", firstName = "curt", lastName = "rent 2", tier = "C") {
+      currentSpaceBooking2OfflineApplication = createSpaceBookingWithOfflineApplication(crn = "CRN_CURRENT2_OFFLINE", firstName = "curt", lastName = "rent 2") {
         withPremises(premisesWithBookings)
         withExpectedArrivalDate(LocalDate.parse("2026-02-02"))
         withExpectedDepartureDate(LocalDate.parse("2026-09-02"))
@@ -508,7 +509,7 @@ class Cas1SpaceBookingTest {
       assertThat(response[1].person.crn).isEqualTo("CRN_LEGACY_NO_ARRIVAL")
       assertThat(response[2].person.crn).isEqualTo("CRN_DEPARTED")
       assertThat(response[3].person.crn).isEqualTo("CRN_CURRENT1")
-      assertThat(response[4].person.crn).isEqualTo("CRN_CURRENT2")
+      assertThat(response[4].person.crn).isEqualTo("CRN_CURRENT2_OFFLINE")
       assertThat(response[5].person.crn).isEqualTo("CRN_CURRENT3")
       assertThat(response[6].person.crn).isEqualTo("CRN_CURRENT4")
       assertThat(response[7].person.crn).isEqualTo("CRN_UPCOMING")
@@ -564,7 +565,7 @@ class Cas1SpaceBookingTest {
 
       assertThat(response).hasSize(4)
       assertThat(response[0].person.crn).isEqualTo("CRN_CURRENT1")
-      assertThat(response[1].person.crn).isEqualTo("CRN_CURRENT2")
+      assertThat(response[1].person.crn).isEqualTo("CRN_CURRENT2_OFFLINE")
       assertThat(response[2].person.crn).isEqualTo("CRN_CURRENT3")
       assertThat(response[3].person.crn).isEqualTo("CRN_CURRENT4")
     }
@@ -574,7 +575,7 @@ class Cas1SpaceBookingTest {
       val (_, jwt) = givenAUser(roles = listOf(CAS1_FUTURE_MANAGER))
 
       val response = webTestClient.get()
-        .uri("/cas1/premises/${premisesWithBookings.id}/space-bookings?crnOrName=CRN_CURRENT2&sortBy=canonicalArrivalDate&sortDirection=asc")
+        .uri("/cas1/premises/${premisesWithBookings.id}/space-bookings?crnOrName=CRN_CURRENT2_OFFLINE&sortBy=canonicalArrivalDate&sortDirection=asc")
         .header("Authorization", "Bearer $jwt")
         .exchange()
         .expectStatus()
@@ -582,7 +583,7 @@ class Cas1SpaceBookingTest {
         .bodyAsListOfObjects<Cas1SpaceBookingSummary>()
 
       assertThat(response).hasSize(1)
-      assertThat(response[0].person.crn).isEqualTo("CRN_CURRENT2")
+      assertThat(response[0].person.crn).isEqualTo("CRN_CURRENT2_OFFLINE")
       assertThat(response[0].person.personType).isEqualTo(PersonSummaryDiscriminator.fullPersonSummary)
     }
 
@@ -594,7 +595,7 @@ class Cas1SpaceBookingTest {
         caseAccess = CaseAccessFactory()
           .withUserExcluded(true)
           .withUserRestricted(true)
-          .withCrn("CRN_CURRENT2")
+          .withCrn("CRN_CURRENT2_OFFLINE")
           .produce(),
       )
 
@@ -663,7 +664,7 @@ class Cas1SpaceBookingTest {
       assertThat(response).hasSize(4)
       assertThat(response[0].person.crn).isEqualTo("CRN_CURRENT4")
       assertThat(response[1].person.crn).isEqualTo("CRN_CURRENT3")
-      assertThat(response[2].person.crn).isEqualTo("CRN_CURRENT2")
+      assertThat(response[2].person.crn).isEqualTo("CRN_CURRENT2_OFFLINE")
       assertThat(response[3].person.crn).isEqualTo("CRN_CURRENT1")
     }
 
@@ -684,7 +685,7 @@ class Cas1SpaceBookingTest {
       assertThat(response[1].person.crn).isEqualTo("CRN_UPCOMING")
       assertThat(response[2].person.crn).isEqualTo("CRN_CURRENT4")
       assertThat(response[3].person.crn).isEqualTo("CRN_CURRENT3")
-      assertThat(response[4].person.crn).isEqualTo("CRN_CURRENT2")
+      assertThat(response[4].person.crn).isEqualTo("CRN_CURRENT2_OFFLINE")
       assertThat(response[5].person.crn).isEqualTo("CRN_CURRENT1")
       assertThat(response[6].person.crn).isEqualTo("CRN_DEPARTED")
       assertThat(response[7].person.crn).isEqualTo("CRN_LEGACY_NO_ARRIVAL")
@@ -708,7 +709,7 @@ class Cas1SpaceBookingTest {
       assertThat(response[1].person.crn).isEqualTo("CRN_LEGACY_NO_ARRIVAL")
       assertThat(response[2].person.crn).isEqualTo("CRN_DEPARTED")
       assertThat(response[3].person.crn).isEqualTo("CRN_CURRENT1")
-      assertThat(response[4].person.crn).isEqualTo("CRN_CURRENT2")
+      assertThat(response[4].person.crn).isEqualTo("CRN_CURRENT2_OFFLINE")
       assertThat(response[5].person.crn).isEqualTo("CRN_CURRENT3")
       assertThat(response[6].person.crn).isEqualTo("CRN_CURRENT4")
       assertThat(response[7].person.crn).isEqualTo("CRN_UPCOMING")
@@ -748,17 +749,17 @@ class Cas1SpaceBookingTest {
 
       assertThat(response).hasSize(9)
 
-      assertThat(response[0].tier).isEqualTo("Z")
-      assertThat(response[0].person.crn).isEqualTo("CRN_LEGACY_NO_DEPARTURE")
+      assertThat(response[0].tier).isNull()
+      assertThat(response[0].person.crn).isEqualTo("CRN_CURRENT2_OFFLINE")
 
-      assertThat(response[1].tier).isEqualTo("U")
-      assertThat(response[1].person.crn).isEqualTo("CRN_UPCOMING")
+      assertThat(response[1].tier).isEqualTo("Z")
+      assertThat(response[1].person.crn).isEqualTo("CRN_LEGACY_NO_DEPARTURE")
 
-      assertThat(response[2].tier).isEqualTo("D")
-      assertThat(response[2].person.crn).isEqualTo("CRN_DEPARTED")
+      assertThat(response[2].tier).isEqualTo("U")
+      assertThat(response[2].person.crn).isEqualTo("CRN_UPCOMING")
 
-      assertThat(response[3].tier).isEqualTo("C")
-      assertThat(response[3].person.crn).isEqualTo("CRN_CURRENT2")
+      assertThat(response[3].tier).isEqualTo("D")
+      assertThat(response[3].person.crn).isEqualTo("CRN_DEPARTED")
 
       assertThat(response[4].tier).isEqualTo("B")
       assertThat(response[4].person.crn).isEqualTo("CRN_CURRENT4")
@@ -1979,6 +1980,34 @@ abstract class SpaceBookingIntegrationTestBase : InitialiseDatabasePerClassTestB
       withPremises(premisesWithBookings)
       withPlacementRequest(placementRequest)
       withApplication(placementRequest.application)
+      withCreatedBy(user)
+
+      configuration.invoke(this)
+    }
+  }
+
+  protected fun createSpaceBookingWithOfflineApplication(
+    crn: String,
+    firstName: String,
+    lastName: String,
+    configuration: Cas1SpaceBookingEntityFactory.() -> Unit,
+  ): Cas1SpaceBookingEntity {
+    val (user) = givenAUser()
+    val (offender) = givenAnOffender(offenderDetailsConfigBlock = {
+      withCrn(crn)
+      withFirstName(firstName)
+      withLastName(lastName)
+    })
+    val offlineApplication = givenAnOfflineApplication(
+      crn = crn,
+      name = "$firstName $lastName",
+    )
+    return cas1SpaceBookingEntityFactory.produceAndPersist {
+      withCrn(offender.otherIds.crn)
+      withPremises(premisesWithBookings)
+      withPlacementRequest(null)
+      withApplication(null)
+      withOfflineApplication(offlineApplication)
       withCreatedBy(user)
 
       configuration.invoke(this)

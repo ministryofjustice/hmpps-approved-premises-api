@@ -36,6 +36,10 @@ class OfflineApplicationEntityFactory : Factory<OfflineApplicationEntity> {
     this.eventNumber = { eventNumber }
   }
 
+  fun withName(name: String?) = apply {
+    this.name = { name }
+  }
+
   override fun produce() = OfflineApplicationEntity(
     id = this.id(),
     crn = this.crn(),
