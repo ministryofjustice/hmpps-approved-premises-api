@@ -925,28 +925,24 @@ class OffenderServiceTest {
 
       every { mockOffenderDetailsDataSource.getOffenderDetailSummaries(listOf(crn)) } returns mapOf(
         crn to
-          ClientResult
-            .Failure
-            .StatusCode(
-              HttpMethod.GET,
-              "/secure/offenders/crn/ABC123",
-              HttpStatus.NOT_FOUND,
-              null,
-              true,
-            ),
+          StatusCode(
+            HttpMethod.GET,
+            "/secure/offenders/crn/ABC123",
+            HttpStatus.NOT_FOUND,
+            null,
+            true,
+          ),
       )
 
       every { mockOffenderDetailsDataSource.getUserAccessForOffenderCrns(deliusUsername, listOf(crn)) } returns mapOf(
         crn to
-          ClientResult
-            .Failure
-            .StatusCode(
-              HttpMethod.GET,
-              "/secure/offenders/crn/$crn/user/$deliusUsername/userAccess",
-              HttpStatus.NOT_FOUND,
-              null,
-              true,
-            ),
+          StatusCode(
+            HttpMethod.GET,
+            "/secure/offenders/crn/$crn/user/$deliusUsername/userAccess",
+            HttpStatus.NOT_FOUND,
+            null,
+            true,
+          ),
       )
 
       every { mockPersonTransformer.transformPersonSummaryInfoToPersonInfo(PersonSummaryInfoResult.NotFound(crn), null) } returns PersonInfoResult.NotFound(crn)
@@ -962,22 +958,20 @@ class OffenderServiceTest {
 
       every { mockOffenderDetailsDataSource.getOffenderDetailSummaries(listOf(crn)) } returns mapOf(
         crn to
-          ClientResult
-            .Failure
-            .StatusCode(
-              HttpMethod.GET,
-              "/secure/offenders/crn/ABC123",
-              HttpStatus.INTERNAL_SERVER_ERROR,
-              null,
-              true,
-            ),
+          StatusCode(
+            HttpMethod.GET,
+            "/secure/offenders/crn/ABC123",
+            HttpStatus.INTERNAL_SERVER_ERROR,
+            null,
+            true,
+          ),
       )
 
       every {
         mockOffenderDetailsDataSource.getUserAccessForOffenderCrns(deliusUsername, listOf(crn))
       } returns mapOf(
         crn to
-          ClientResult.Failure.StatusCode(
+          StatusCode(
             HttpMethod.GET,
             "/secure/offenders/crn/$crn/user/$deliusUsername/userAccess",
             HttpStatus.NOT_FOUND,
@@ -1067,20 +1061,18 @@ class OffenderServiceTest {
 
       every { mockOffenderDetailsDataSource.getUserAccessForOffenderCrns(deliusUsername, listOf(crn)) } returns mapOf(
         crn to
-          ClientResult
-            .Failure
-            .StatusCode(
-              status = HttpStatus.FORBIDDEN,
-              method = HttpMethod.GET,
-              path = "/secure/offenders/crn/$crn/user/$deliusUsername/userAccess",
-              body = objectMapper.writeValueAsString(
-                UserOffenderAccess(
-                  userRestricted = true,
-                  userExcluded = false,
-                  restrictionMessage = null,
-                ),
+          StatusCode(
+            status = HttpStatus.FORBIDDEN,
+            method = HttpMethod.GET,
+            path = "/secure/offenders/crn/$crn/user/$deliusUsername/userAccess",
+            body = objectMapper.writeValueAsString(
+              UserOffenderAccess(
+                userRestricted = true,
+                userExcluded = false,
+                restrictionMessage = null,
               ),
             ),
+          ),
       )
 
       every {
@@ -1160,21 +1152,19 @@ class OffenderServiceTest {
 
       every { mockOffenderDetailsDataSource.getUserAccessForOffenderCrns(deliusUsername, listOf(crn)) } returns mapOf(
         crn to
-          ClientResult
-            .Failure
-            .StatusCode(
-              HttpMethod.GET,
-              "/secure/offenders/crn/$crn/user/$deliusUsername/userAccess",
-              HttpStatus.FORBIDDEN,
-              objectMapper.writeValueAsString(
-                UserOffenderAccess(
-                  userRestricted = true,
-                  userExcluded = false,
-                  restrictionMessage = null,
-                ),
+          StatusCode(
+            HttpMethod.GET,
+            "/secure/offenders/crn/$crn/user/$deliusUsername/userAccess",
+            HttpStatus.FORBIDDEN,
+            objectMapper.writeValueAsString(
+              UserOffenderAccess(
+                userRestricted = true,
+                userExcluded = false,
+                restrictionMessage = null,
               ),
-              true,
             ),
+            true,
+          ),
       )
 
       every {
@@ -1292,7 +1282,7 @@ class OffenderServiceTest {
           false,
         ),
       crns[3] to
-        ClientResult.Failure.StatusCode(
+        StatusCode(
           HttpMethod.GET,
           "/",
           HttpStatus.NOT_FOUND,
@@ -1392,7 +1382,7 @@ class OffenderServiceTest {
         crns[1] to clientResultSuccess(true, false),
         crns[2] to clientResultSuccess(false, false),
         crns[3] to
-          ClientResult.Failure.StatusCode(
+          StatusCode(
             HttpMethod.GET,
             "/",
             HttpStatus.NOT_FOUND,

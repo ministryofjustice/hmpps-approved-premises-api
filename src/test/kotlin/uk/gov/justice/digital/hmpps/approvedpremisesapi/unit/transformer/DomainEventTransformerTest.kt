@@ -80,7 +80,7 @@ class DomainEventTransformerTest {
       .withDeliusUsername("theUsername")
       .produce()
 
-    val response = ClientResult.Failure.StatusCode<StaffDetail>(
+    val response = Failure.StatusCode<StaffDetail>(
       HttpMethod.GET,
       "/",
       HttpStatus.BAD_REQUEST,
