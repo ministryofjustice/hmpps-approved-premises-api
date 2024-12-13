@@ -284,6 +284,7 @@ class Cas1AutoScript(
     }
 
     val personInfo = getPersonInfo(crn)
+    val offenderDetail = personInfo.offenderDetailSummary
 
     val offlineApplication = applicationService.createOfflineApplication(
       OfflineApplicationEntity(
@@ -292,6 +293,7 @@ class Cas1AutoScript(
         service = ServiceName.approvedPremises.value,
         createdAt = OffsetDateTime.now(),
         eventNumber = "2",
+        name = "${offenderDetail.firstName.uppercase()} ${offenderDetail.surname.uppercase()}",
       ),
     )
 

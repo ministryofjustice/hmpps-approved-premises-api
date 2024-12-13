@@ -32,4 +32,10 @@ data class OfflineApplicationEntity(
   val service: String,
   val createdAt: OffsetDateTime,
   val eventNumber: String?,
+  /**
+   * The offender name. This should only be used for search purposes (i.e. SQL)
+   * If returning the offender name to the user, use the [OffenderService], which
+   * will consider any LAO restrictions
+   */
+  var name: String?,
 )
