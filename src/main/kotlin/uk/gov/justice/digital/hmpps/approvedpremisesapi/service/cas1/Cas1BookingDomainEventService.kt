@@ -22,10 +22,10 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.CancellationE
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.CancellationReasonEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas1SpaceBookingEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.MetaDataName
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.OfflineApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementRequestEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserQualification
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas1.Cas1ApplicationFacade
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.DomainEvent
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.AuthorisableActionResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.DomainEventService
@@ -275,8 +275,7 @@ class Cas1BookingDomainEventService(
   ) = bookingCancelled(
     CancellationInfo(
       bookingId = booking.id,
-      application = booking.application as ApprovedPremisesApplicationEntity?,
-      offlineApplication = booking.offlineApplication,
+      applicationFacade = booking.cas1ApplicationFacade,
       cancellationId = cancellation.id,
       crn = booking.crn,
       cancelledAt = cancellation.date,
@@ -295,8 +294,7 @@ class Cas1BookingDomainEventService(
     bookingCancelled(
       CancellationInfo(
         bookingId = spaceBooking.id,
-        application = spaceBooking.application,
-        offlineApplication = spaceBooking.offlineApplication,
+        applicationFacade = spaceBooking.applicationFacade,
         cancellationId = null,
         crn = spaceBooking.crn,
         cancelledAt = spaceBooking.cancellationOccurredAt!!,
@@ -327,11 +325,8 @@ class Cas1BookingDomainEventService(
 
     val staffDetails = getStaffDetails(user.deliusUsername)
 
-    val application = cancellationInfo.application
-    val offlineApplication = cancellationInfo.offlineApplication
-
-    val applicationId = application?.id ?: offlineApplication?.id as UUID
-    val eventNumber = application?.eventNumber ?: offlineApplication?.eventNumber as String
+    val applicationId = cancellationInfo.applicationFacade.id
+    val eventNumber = cancellationInfo.applicationFacade.eventNumber!!
 
     domainEventService.saveBookingCancelledEvent(
       DomainEvent(
@@ -387,8 +382,7 @@ class Cas1BookingDomainEventService(
 
   private data class CancellationInfo(
     val bookingId: UUID,
-    val application: ApprovedPremisesApplicationEntity?,
-    val offlineApplication: OfflineApplicationEntity?,
+    val applicationFacade: Cas1ApplicationFacade,
     val crn: String,
     val premises: ApprovedPremisesEntity,
     val cancellationId: UUID?,

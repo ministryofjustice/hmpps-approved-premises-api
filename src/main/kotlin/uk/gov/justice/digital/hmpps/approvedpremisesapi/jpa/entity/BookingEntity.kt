@@ -20,6 +20,7 @@ import org.springframework.data.jpa.repository.Modifying
 import org.springframework.data.jpa.repository.Query
 import org.springframework.stereotype.Repository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.BookingStatus
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas1.Cas1ApplicationFacade
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.BookingSummaryForAvailability
 import java.time.Instant
 import java.time.LocalDate
@@ -335,6 +336,14 @@ data class BookingEntity(
 
   val arrival: ArrivalEntity?
     get() = arrivals.maxByOrNull { it.createdAt }
+
+  val cas1ApplicationFacade: Cas1ApplicationFacade
+    get() {
+      if (offlineApplication == null && application !is ApprovedPremisesApplicationEntity) {
+        error("Can only return CAS1 application facade for bookings linked to CAS1 applications")
+      }
+      return Cas1ApplicationFacade(application as ApprovedPremisesApplicationEntity?, offlineApplication)
+    }
 
   fun isInCancellableStateCas1() = !isCancelled && !hasArrivals()
 
