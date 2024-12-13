@@ -3159,6 +3159,7 @@ components:
         - workflow_manager
         - cru_member
         - cru_member_find_and_book_beta
+        - cru_member_enable_out_of_service_beds
         - applicant
         - role_admin
         - report_viewer

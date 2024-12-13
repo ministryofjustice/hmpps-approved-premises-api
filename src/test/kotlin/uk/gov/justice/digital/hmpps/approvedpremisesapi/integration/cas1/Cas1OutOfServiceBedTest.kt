@@ -108,7 +108,11 @@ class Cas1OutOfServiceBedTest : InitialiseDatabasePerClassTestBase() {
     }
 
     @ParameterizedTest
-    @EnumSource(value = UserRole::class, names = [ "CAS1_FUTURE_MANAGER", "CAS1_CRU_MEMBER", "CAS1_CRU_MEMBER_FIND_AND_BOOK_BETA", "CAS1_JANITOR" ], mode = EnumSource.Mode.EXCLUDE)
+    @EnumSource(
+      value = UserRole::class,
+      names = [ "CAS1_FUTURE_MANAGER", "CAS1_CRU_MEMBER", "CAS1_CRU_MEMBER_FIND_AND_BOOK_BETA", "CAS1_CRU_MEMBER_ENABLE_OUT_OF_SERVICE_BEDS", "CAS1_JANITOR" ],
+      mode = EnumSource.Mode.EXCLUDE,
+    )
     fun `Get All Out-Of-Service Beds returns 403 for invalid roles`(role: UserRole) {
       givenAUser(roles = listOf(role)) { _, jwt ->
         webTestClient.get()
@@ -121,7 +125,10 @@ class Cas1OutOfServiceBedTest : InitialiseDatabasePerClassTestBase() {
     }
 
     @ParameterizedTest
-    @EnumSource(value = UserRole::class, names = [ "CAS1_FUTURE_MANAGER", "CAS1_CRU_MEMBER", "CAS1_CRU_MEMBER_FIND_AND_BOOK_BETA", "CAS1_JANITOR" ])
+    @EnumSource(
+      value = UserRole::class,
+      names = [ "CAS1_FUTURE_MANAGER", "CAS1_CRU_MEMBER", "CAS1_CRU_MEMBER_FIND_AND_BOOK_BETA", "CAS1_CRU_MEMBER_ENABLE_OUT_OF_SERVICE_BEDS", "CAS1_JANITOR" ],
+    )
     fun `Get All Out-Of-Service Beds returns OK with correct body when user has the correct role`(role: UserRole) {
       givenAUser(roles = listOf(role)) { user, jwt ->
         val premises = approvedPremisesEntityFactory.produceAndPersist {
@@ -735,7 +742,11 @@ class Cas1OutOfServiceBedTest : InitialiseDatabasePerClassTestBase() {
     }
 
     @ParameterizedTest
-    @EnumSource(value = UserRole::class, names = [ "CAS1_FUTURE_MANAGER", "CAS1_CRU_MEMBER", "CAS1_CRU_MEMBER_FIND_AND_BOOK_BETA", "CAS1_JANITOR" ], mode = EnumSource.Mode.EXCLUDE)
+    @EnumSource(
+      value = UserRole::class,
+      names = [ "CAS1_FUTURE_MANAGER", "CAS1_CRU_MEMBER", "CAS1_CRU_MEMBER_FIND_AND_BOOK_BETA", "CAS1_CRU_MEMBER_ENABLE_OUT_OF_SERVICE_BEDS", "CAS1_JANITOR" ],
+      mode = EnumSource.Mode.EXCLUDE,
+    )
     fun `Get All Out-Of-Service Bed in Premises returns 403 for invalid roles`(role: UserRole) {
       givenAUser(roles = listOf(role)) { _, jwt ->
 
@@ -749,7 +760,10 @@ class Cas1OutOfServiceBedTest : InitialiseDatabasePerClassTestBase() {
     }
 
     @ParameterizedTest
-    @EnumSource(value = UserRole::class, names = [ "CAS1_FUTURE_MANAGER", "CAS1_CRU_MEMBER", "CAS1_CRU_MEMBER_FIND_AND_BOOK_BETA", "CAS1_JANITOR" ])
+    @EnumSource(
+      value = UserRole::class,
+      names = [ "CAS1_FUTURE_MANAGER", "CAS1_CRU_MEMBER", "CAS1_CRU_MEMBER_FIND_AND_BOOK_BETA", "CAS1_CRU_MEMBER_ENABLE_OUT_OF_SERVICE_BEDS", "CAS1_JANITOR" ],
+    )
     fun `Get All Out-Of-Service Beds On Premises returns OK with correct body when user has correct role`(role: UserRole) {
       givenAUser(roles = listOf(role)) { user, jwt ->
         val premises = approvedPremisesEntityFactory.produceAndPersist {
@@ -880,7 +894,10 @@ class Cas1OutOfServiceBedTest : InitialiseDatabasePerClassTestBase() {
     }
 
     @ParameterizedTest
-    @EnumSource(value = UserRole::class, names = [ "CAS1_FUTURE_MANAGER", "CAS1_CRU_MEMBER", "CAS1_CRU_MEMBER_FIND_AND_BOOK_BETA", "CAS1_JANITOR" ])
+    @EnumSource(
+      value = UserRole::class,
+      names = [ "CAS1_FUTURE_MANAGER", "CAS1_CRU_MEMBER", "CAS1_CRU_MEMBER_FIND_AND_BOOK_BETA", "CAS1_CRU_MEMBER_ENABLE_OUT_OF_SERVICE_BEDS", "CAS1_JANITOR" ],
+    )
     fun `Get Out-Of-Service Bed returns OK with correct body when user has the correct role`(role: UserRole) {
       givenAUser(roles = listOf(role)) { user, jwt ->
         val premises = approvedPremisesEntityFactory.produceAndPersist {
@@ -924,7 +941,11 @@ class Cas1OutOfServiceBedTest : InitialiseDatabasePerClassTestBase() {
     }
 
     @ParameterizedTest
-    @EnumSource(value = UserRole::class, names = [ "CAS1_FUTURE_MANAGER", "CAS1_CRU_MEMBER", "CAS1_CRU_MEMBER_FIND_AND_BOOK_BETA", "CAS1_JANITOR" ], mode = EnumSource.Mode.EXCLUDE)
+    @EnumSource(
+      value = UserRole::class,
+      names = [ "CAS1_FUTURE_MANAGER", "CAS1_CRU_MEMBER", "CAS1_CRU_MEMBER_FIND_AND_BOOK_BETA", "CAS1_CRU_MEMBER_ENABLE_OUT_OF_SERVICE_BEDS", "CAS1_JANITOR" ],
+      mode = EnumSource.Mode.EXCLUDE,
+    )
     fun `Get Out-Of-Service Bed returns 403 for invalid roles`(role: UserRole) {
       givenAUser(roles = listOf(role)) { _, jwt ->
 
@@ -1001,7 +1022,11 @@ class Cas1OutOfServiceBedTest : InitialiseDatabasePerClassTestBase() {
     }
 
     @ParameterizedTest
-    @EnumSource(value = UserRole::class, names = [ "CAS1_FUTURE_MANAGER", "CAS1_CRU_MEMBER", "CAS1_CRU_MEMBER_FIND_AND_BOOK_BETA", "CAS1_JANITOR" ], mode = EnumSource.Mode.EXCLUDE)
+    @EnumSource(
+      value = UserRole::class,
+      names = [ "CAS1_FUTURE_MANAGER", "CAS1_CRU_MEMBER", "CAS1_CRU_MEMBER_FIND_AND_BOOK_BETA", "CAS1_CRU_MEMBER_ENABLE_OUT_OF_SERVICE_BEDS", "CAS1_JANITOR" ],
+      mode = EnumSource.Mode.EXCLUDE,
+    )
     fun `Create Out-Of-Service Bed returns 403 for invalid roles`(role: UserRole) {
       givenAUser(roles = listOf(role)) { _, jwt ->
         webTestClient.post()
@@ -1024,7 +1049,10 @@ class Cas1OutOfServiceBedTest : InitialiseDatabasePerClassTestBase() {
     }
 
     @ParameterizedTest
-    @EnumSource(value = UserRole::class, names = [ "CAS1_FUTURE_MANAGER", "CAS1_CRU_MEMBER", "CAS1_CRU_MEMBER_FIND_AND_BOOK_BETA", "CAS1_JANITOR" ])
+    @EnumSource(
+      value = UserRole::class,
+      names = [ "CAS1_FUTURE_MANAGER", "CAS1_CRU_MEMBER", "CAS1_CRU_MEMBER_FIND_AND_BOOK_BETA", "CAS1_CRU_MEMBER_ENABLE_OUT_OF_SERVICE_BEDS", "CAS1_JANITOR" ],
+    )
     fun `Create Out-Of-Service Beds returns OK with correct body when user has correct roles`(role: UserRole) {
       givenAUser(roles = listOf(role)) { user, jwt ->
         val premises = approvedPremisesEntityFactory.produceAndPersist {
@@ -1517,7 +1545,11 @@ class Cas1OutOfServiceBedTest : InitialiseDatabasePerClassTestBase() {
     }
 
     @ParameterizedTest
-    @EnumSource(value = UserRole::class, names = [ "CAS1_FUTURE_MANAGER", "CAS1_CRU_MEMBER", "CAS1_CRU_MEMBER_FIND_AND_BOOK_BETA", "CAS1_JANITOR" ], mode = EnumSource.Mode.EXCLUDE)
+    @EnumSource(
+      value = UserRole::class,
+      names = [ "CAS1_FUTURE_MANAGER", "CAS1_CRU_MEMBER", "CAS1_CRU_MEMBER_FIND_AND_BOOK_BETA", "CAS1_CRU_MEMBER_ENABLE_OUT_OF_SERVICE_BEDS", "CAS1_JANITOR" ],
+      mode = EnumSource.Mode.EXCLUDE,
+    )
     fun `Update Out-Of-Service Bed returns 403 for invalid roles`(role: UserRole) {
       givenAUser(roles = listOf(role)) { _, jwt ->
 
@@ -1540,7 +1572,10 @@ class Cas1OutOfServiceBedTest : InitialiseDatabasePerClassTestBase() {
     }
 
     @ParameterizedTest
-    @EnumSource(value = UserRole::class, names = [ "CAS1_FUTURE_MANAGER", "CAS1_CRU_MEMBER", "CAS1_CRU_MEMBER_FIND_AND_BOOK_BETA", "CAS1_JANITOR" ])
+    @EnumSource(
+      value = UserRole::class,
+      names = [ "CAS1_FUTURE_MANAGER", "CAS1_CRU_MEMBER", "CAS1_CRU_MEMBER_FIND_AND_BOOK_BETA", "CAS1_CRU_MEMBER_ENABLE_OUT_OF_SERVICE_BEDS", "CAS1_JANITOR" ],
+    )
     fun `Update Out-Of-Service Beds returns OK with correct body when user the correct role`(role: UserRole) {
       givenAUser(roles = listOf(role)) { user, jwt ->
         val premises = approvedPremisesEntityFactory.produceAndPersist {
@@ -2146,7 +2181,11 @@ class Cas1OutOfServiceBedTest : InitialiseDatabasePerClassTestBase() {
     }
 
     @ParameterizedTest
-    @EnumSource(value = UserRole::class, names = [ "CAS1_FUTURE_MANAGER", "CAS1_CRU_MEMBER", "CAS1_CRU_MEMBER_FIND_AND_BOOK_BETA", "CAS1_JANITOR" ], mode = EnumSource.Mode.EXCLUDE)
+    @EnumSource(
+      value = UserRole::class,
+      names = [ "CAS1_FUTURE_MANAGER", "CAS1_CRU_MEMBER", "CAS1_CRU_MEMBER_FIND_AND_BOOK_BETA", "CAS1_CRU_MEMBER_ENABLE_OUT_OF_SERVICE_BEDS", "CAS1_JANITOR" ],
+      mode = EnumSource.Mode.EXCLUDE,
+    )
     fun `Cancel Out-Of-Service Bed returns 403 for invalid roles`(role: UserRole) {
       givenAUser(roles = listOf(role)) { _, jwt ->
 
@@ -2165,7 +2204,10 @@ class Cas1OutOfServiceBedTest : InitialiseDatabasePerClassTestBase() {
     }
 
     @ParameterizedTest
-    @EnumSource(value = UserRole::class, names = [ "CAS1_FUTURE_MANAGER", "CAS1_CRU_MEMBER", "CAS1_CRU_MEMBER_FIND_AND_BOOK_BETA", "CAS1_JANITOR" ])
+    @EnumSource(
+      value = UserRole::class,
+      names = [ "CAS1_FUTURE_MANAGER", "CAS1_CRU_MEMBER", "CAS1_CRU_MEMBER_FIND_AND_BOOK_BETA", "CAS1_CRU_MEMBER_ENABLE_OUT_OF_SERVICE_BEDS", "CAS1_JANITOR" ],
+    )
     fun `Cancel Out-Of-Service Bed returns OK with correct body when user has the correct roles`(role: UserRole) {
       givenAUser(roles = listOf(role)) { user, jwt ->
         val premises = approvedPremisesEntityFactory.produceAndPersist {
