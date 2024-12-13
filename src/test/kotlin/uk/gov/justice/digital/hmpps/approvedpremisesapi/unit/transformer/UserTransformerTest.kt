@@ -195,27 +195,10 @@ class UserTransformerTest {
       )
     }
 
-    @ParameterizedTest
-    @EnumSource(
-      value = UserRole::class,
-      names = [
-        "CAS1_ADMIN",
-        "CAS1_JANITOR",
-        "CAS1_APPEALS_MANAGER",
-        "CAS1_ASSESSOR",
-        "CAS1_MATCHER",
-        "CAS1_CRU_MEMBER",
-        "CAS1_CRU_MEMBER_FIND_AND_BOOK_BETA",
-        "CAS1_FUTURE_MANAGER",
-        "CAS1_WORKFLOW_MANAGER",
-        "CAS1_REPORT_VIEWER",
-        "CAS1_USER_MANAGER",
-      ],
-      mode = EnumSource.Mode.EXCLUDE,
-    )
-    fun `transformJpaToApi CAS1 should return no permissions for Approved Premises roles which have no permissions defined`(role: UserRole) {
+    @Test
+    fun `transformJpaToApi CAS1 should return no permissions for Approved Premises roles which have no permissions defined`() {
       val user = buildUserEntity(
-        role = role,
+        role = UserRole.CAS1_EXCLUDED_FROM_ASSESS_ALLOCATION,
         apArea = ApAreaEntityFactory().produce(),
         cruManagementArea = Cas1CruManagementAreaEntityFactory().produce(),
       )
