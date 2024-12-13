@@ -40,7 +40,7 @@ class Cas1FixPlacementApplicationLinksJob(
   override val shouldRunInTransaction = false
   var log: Logger = LoggerFactory.getLogger(this::class.java)
 
-  override fun process() {
+  override fun process(pageSize: Int) {
     applyManualFixes()
     applyAutomatedFixes()
 

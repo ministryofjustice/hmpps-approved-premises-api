@@ -11,7 +11,7 @@ class UpdateUsersPduJob(
   override val shouldRunInTransaction = false
 
   @SuppressWarnings("MagicNumber", "TooGenericExceptionCaught")
-  override fun process() {
+  override fun process(pageSize: Int) {
     val activeUsers = userRepository.findActiveUsers()
     migrationLogger.info("Have ${activeUsers.size} users to update")
     activeUsers.forEach {

@@ -17,7 +17,7 @@ class Cas3UpdateDomainEventTypeForPersonDepartureUpdatedJob(
   override val shouldRunInTransaction = true
 
   @SuppressWarnings("MagicNumber", "TooGenericExceptionCaught", "NestedBlockDepth")
-  override fun process() {
+  override fun process(pageSize: Int) {
     val domainEvents = domainEventRepository.findByType(DomainEventType.CAS3_PERSON_DEPARTURE_UPDATED)
     domainEvents.forEach {
       migrationLogger.info("Updating person departure updated domain event. Event id ${it.id}")

@@ -16,13 +16,12 @@ class Cas3UpdateApplicationOffenderNameJob(
   private val applicationRepository: ApplicationRepository,
   private val offenderService: OffenderService,
   private val entityManager: EntityManager,
-  private val pageSize: Int,
   private val migrationLogger: MigrationLogger,
 ) : MigrationJob() {
   override val shouldRunInTransaction = false
 
   @SuppressWarnings("MagicNumber", "TooGenericExceptionCaught")
-  override fun process() {
+  override fun process(pageSize: Int) {
     var page = 1
     var hasNext = true
     var slice: Slice<TemporaryAccommodationApplicationEntity>
@@ -37,7 +36,7 @@ class Cas3UpdateApplicationOffenderNameJob(
 
         migrationLogger.info("Updating offenders name with crn ${offendersCrn.map { it }}")
 
-        val personInfos = splitAndRetrievePersonInfo(offendersCrn, "")
+        val personInfos = splitAndRetrievePersonInfo(pageSize, offendersCrn, "")
 
         slice.content.forEach {
           val personInfo = personInfos[it.crn] ?: PersonSummaryInfoResult.Unknown(it.crn)
@@ -69,7 +68,7 @@ class Cas3UpdateApplicationOffenderNameJob(
     }
   }
 
-  private fun splitAndRetrievePersonInfo(crns: Set<String>, deliusUsername: String): Map<String, PersonSummaryInfoResult> {
+  private fun splitAndRetrievePersonInfo(pageSize: Int, crns: Set<String>, deliusUsername: String): Map<String, PersonSummaryInfoResult> {
     val crnMap = ListUtils.partition(crns.toList(), pageSize)
       .stream().map { crns ->
         offenderService.getOffenderSummariesByCrns(crns.toSet(), deliusUsername, ignoreLaoRestrictions = true).associateBy { it.crn }

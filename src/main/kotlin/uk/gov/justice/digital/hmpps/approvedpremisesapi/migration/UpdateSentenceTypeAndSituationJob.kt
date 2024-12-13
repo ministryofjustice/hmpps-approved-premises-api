@@ -14,7 +14,7 @@ class UpdateSentenceTypeAndSituationJob(
   private val log = LoggerFactory.getLogger(this::class.java)
   override val shouldRunInTransaction = true
 
-  override fun process() {
+  override fun process(pageSize: Int) {
     val items = applicationRepository.getIdSentenceTypeAndSituationFromAllApplicationData()
 
     items.forEach { item ->

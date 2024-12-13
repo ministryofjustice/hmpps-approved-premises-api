@@ -22,7 +22,7 @@ class Cas1BackfillUserApArea(
   override val shouldRunInTransaction = false
 
   @SuppressWarnings("MagicNumber")
-  override fun process() {
+  override fun process(pageSize: Int) {
     userRepository.findAll().forEach { user ->
       transactionTemplate.executeWithoutResult {
         updateUser(user)

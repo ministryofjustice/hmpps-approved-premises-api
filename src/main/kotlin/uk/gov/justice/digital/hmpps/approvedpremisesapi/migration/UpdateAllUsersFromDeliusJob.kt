@@ -13,7 +13,7 @@ class UpdateAllUsersFromDeliusJob(
   override val shouldRunInTransaction = false
 
   @SuppressWarnings("TooGenericExceptionCaught", "MagicNumber")
-  override fun process() {
+  override fun process(pageSize: Int) {
     userRepository.findAll().forEach {
       log.info("Updating user ${it.id}")
       try {

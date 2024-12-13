@@ -11,12 +11,11 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.migration.MigrationJob
 class Cas2NoteMigrationJob(
   private val noteRepository: Cas2ApplicationNoteRepository,
   private val transactionTemplate: TransactionTemplate,
-  private val pageSize: Int,
 ) : MigrationJob() {
   private val log = LoggerFactory.getLogger(this::class.java)
   override val shouldRunInTransaction = true
 
-  override fun process() {
+  override fun process(pageSize: Int) {
     log.info("Starting CAS2 note migration process...")
 
     var hasNext = true

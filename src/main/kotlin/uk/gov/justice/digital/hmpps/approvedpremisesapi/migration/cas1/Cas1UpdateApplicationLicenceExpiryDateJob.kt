@@ -15,7 +15,7 @@ class Cas1UpdateApplicationLicenceExpiryDateJob(
   override val shouldRunInTransaction: Boolean = true,
 ) : MigrationJob() {
 
-  override fun process() = runLicenceExpiryDateUpdateProcess()
+  override fun process(pageSize: Int) = runLicenceExpiryDateUpdateProcess()
 
   @SuppressWarnings("TooGenericExceptionCaught")
   private fun runLicenceExpiryDateUpdateProcess() {

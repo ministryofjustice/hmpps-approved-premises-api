@@ -11,12 +11,11 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.BookingReposi
 class BookingStatusMigrationJob(
   private val bookingRepository: BookingRepository,
   private val entityManager: EntityManager,
-  private val pageSize: Int,
 ) : MigrationJob() {
   private val log = LoggerFactory.getLogger(this::class.java)
   override val shouldRunInTransaction = true
 
-  override fun process() {
+  override fun process(pageSize: Int) {
     log.info("Starting Booking Migration process...")
 
     var page = 1

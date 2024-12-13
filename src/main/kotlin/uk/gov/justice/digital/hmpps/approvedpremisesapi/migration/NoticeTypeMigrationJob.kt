@@ -38,12 +38,11 @@ interface NoticeTypeMigrationJobApplicationRepository : JpaRepository<Applicatio
 class NoticeTypeMigrationJob(
   private val applicationRepository: NoticeTypeMigrationJobApplicationRepository,
   private val entityManager: EntityManager,
-  private val pageSize: Int,
 ) : MigrationJob() {
   private val log = LoggerFactory.getLogger(this::class.java)
   override val shouldRunInTransaction = true
 
-  override fun process() {
+  override fun process(pageSize: Int) {
     log.info("Updating emergency applications")
     applicationRepository.updateEmergencyApplicationNoticeType()
 

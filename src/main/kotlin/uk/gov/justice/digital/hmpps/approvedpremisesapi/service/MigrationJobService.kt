@@ -68,7 +68,6 @@ class MigrationJobService(
         MigrationJobType.bookingStatus -> BookingStatusMigrationJob(
           getBean(BookingRepository::class),
           getBean(EntityManager::class),
-          pageSize,
         )
 
         MigrationJobType.taskDueDates -> Cas1TaskDueMigrationJob(
@@ -77,7 +76,6 @@ class MigrationJobService(
           getBean(PlacementRequestRepository::class),
           getBean(EntityManager::class),
           getBean(TaskDeadlineService::class),
-          pageSize,
         )
 
         MigrationJobType.usersPduByApi -> UpdateUsersPduJob(
@@ -95,13 +93,11 @@ class MigrationJobService(
         MigrationJobType.cas2StatusUpdatesWithAssessments -> Cas2StatusUpdateMigrationJob(
           getBean(Cas2StatusUpdateRepository::class),
           transactionTemplate,
-          pageSize,
         )
 
         MigrationJobType.cas2NotesWithAssessments -> Cas2NoteMigrationJob(
           getBean(Cas2ApplicationNoteRepository::class),
           transactionTemplate,
-          pageSize,
         )
 
         MigrationJobType.cas1FixPlacementAppLinks -> Cas1FixPlacementApplicationLinksJob(
@@ -115,7 +111,6 @@ class MigrationJobService(
         MigrationJobType.cas1NoticeTypes -> NoticeTypeMigrationJob(
           getBean(NoticeTypeMigrationJobApplicationRepository::class),
           getBean(EntityManager::class),
-          pageSize,
         )
 
         MigrationJobType.cas1BackfillUserApArea -> Cas1BackfillUserApArea(
@@ -129,7 +124,6 @@ class MigrationJobService(
           getBean(ApplicationRepository::class),
           getBean(OffenderService::class),
           getBean(EntityManager::class),
-          pageSize,
           getBean(MigrationLogger::class),
         )
 
@@ -146,9 +140,9 @@ class MigrationJobService(
       }
 
       if (job.shouldRunInTransaction) {
-        transactionTemplate.executeWithoutResult { job.process() }
+        transactionTemplate.executeWithoutResult { job.process(pageSize) }
       } else {
-        job.process()
+        job.process(pageSize)
       }
 
       migrationLogger.info("Finished migration job: $migrationJobType")

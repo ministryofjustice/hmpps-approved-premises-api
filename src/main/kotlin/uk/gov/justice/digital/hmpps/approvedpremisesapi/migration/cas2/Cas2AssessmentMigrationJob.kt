@@ -19,7 +19,7 @@ class Cas2AssessmentMigrationJob(
   private val log = LoggerFactory.getLogger(this::class.java)
   override val shouldRunInTransaction = true
 
-  override fun process() {
+  override fun process(pageSize: Int) {
     log.info("Starting Cas2 Assessment Migration process...")
 
     var hasNext = true
