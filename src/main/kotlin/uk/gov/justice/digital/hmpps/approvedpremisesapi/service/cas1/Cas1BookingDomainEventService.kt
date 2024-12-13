@@ -4,6 +4,8 @@ import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.BookingCancelled
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.BookingCancelledEnvelope
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.BookingChanged
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.BookingChangedEnvelope
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.BookingMade
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.BookingMadeBookedBy
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.BookingMadeEnvelope
@@ -262,6 +264,67 @@ class Cas1BookingDomainEventService(
         ),
         metadata = mapOfNonNullValues(
           MetaDataName.CAS1_PLACEMENT_REQUEST_ID to placementRequestId?.toString(),
+        ),
+      ),
+    )
+  }
+
+  fun bookingChanged(
+    booking: BookingEntity,
+    changedBy: UserEntity,
+    bookingChangedAt: OffsetDateTime,
+  ) {
+    val domainEventId = UUID.randomUUID()
+    val applicationFacade = booking.cas1ApplicationFacade
+    val applicationId = applicationFacade.id
+    val eventNumber = applicationFacade.eventNumber!!
+
+    val offenderDetails = getOffenderDetails(
+      booking.crn,
+      changedBy.deliusUsername,
+      ignoreLaoRestrictions = true,
+    )
+
+    val staffDetails = when (val staffDetailsResult = apDeliusContextApiClient.getStaffDetail(changedBy.deliusUsername)) {
+      is ClientResult.Success -> staffDetailsResult.body
+      is ClientResult.Failure -> staffDetailsResult.throwException()
+    }
+
+    val approvedPremises = booking.premises as ApprovedPremisesEntity
+
+    domainEventService.saveBookingChangedEvent(
+      DomainEvent(
+        id = domainEventId,
+        applicationId = applicationId,
+        crn = booking.crn,
+        nomsNumber = offenderDetails?.otherIds?.nomsNumber,
+        occurredAt = bookingChangedAt.toInstant(),
+        bookingId = booking.id,
+        data = BookingChangedEnvelope(
+          id = domainEventId,
+          timestamp = bookingChangedAt.toInstant(),
+          eventType = EventType.bookingChanged,
+          eventDetails = BookingChanged(
+            applicationId = applicationId,
+            applicationUrl = applicationUrlTemplate.resolve("id", applicationId.toString()),
+            bookingId = booking.id,
+            personReference = PersonReference(
+              crn = booking.crn,
+              noms = offenderDetails?.otherIds?.nomsNumber ?: "Unknown NOMS Number",
+            ),
+            deliusEventNumber = eventNumber,
+            changedAt = bookingChangedAt.toInstant(),
+            changedBy = staffDetails.toStaffMember(),
+            premises = Premises(
+              id = approvedPremises.id,
+              name = approvedPremises.name,
+              apCode = approvedPremises.apCode,
+              legacyApCode = approvedPremises.qCode,
+              localAuthorityAreaName = approvedPremises.localAuthorityArea!!.name,
+            ),
+            arrivalOn = booking.arrivalDate,
+            departureOn = booking.departureDate,
+          ),
         ),
       ),
     )

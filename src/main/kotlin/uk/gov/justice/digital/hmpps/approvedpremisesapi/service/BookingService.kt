@@ -3,18 +3,10 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.service
 import io.sentry.Sentry
 import jakarta.transaction.Transactional
 import org.slf4j.LoggerFactory
-import org.springframework.beans.factory.annotation.Value
 import org.springframework.data.repository.findByIdOrNull
 import org.springframework.stereotype.Service
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.BookingChanged
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.BookingChangedEnvelope
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.EventType
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.PersonReference
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.Premises
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.BookingStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.ApDeliusContextApiClient
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.ClientResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesEntity
@@ -53,7 +45,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserPermission
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserQualification
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.serviceScopeMatches
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.DomainEvent
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PersonInfoResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.validated
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.InternalServerErrorProblem
@@ -80,10 +71,8 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas3.DomainEvent
 class BookingService(
   private val premisesService: PremisesService,
   private val offenderService: OffenderService,
-  private val domainEventService: DomainEventService,
   private val cas3DomainEventService: Cas3DomainEventService,
   private val workingDayService: WorkingDayService,
-  private val apDeliusContextApiClient: ApDeliusContextApiClient,
   private val bookingRepository: BookingRepository,
   private val arrivalRepository: ArrivalRepository,
   private val cancellationRepository: CancellationRepository,
@@ -100,7 +89,6 @@ class BookingService(
   private val turnaroundRepository: TurnaroundRepository,
   private val premisesRepository: PremisesRepository,
   private val assessmentRepository: AssessmentRepository,
-  @Value("\${url-templates.frontend.application}") private val applicationUrlTemplate: String,
   private val userService: UserService,
   private val userAccessService: UserAccessService,
   private val assessmentService: AssessmentService,
@@ -262,65 +250,6 @@ class BookingService(
     }
 
     return AuthorisableActionResult.Success(validationResult)
-  }
-
-  private fun saveBookingChangedDomainEvent(
-    booking: BookingEntity,
-    user: UserEntity,
-    bookingChangedAt: OffsetDateTime,
-  ) {
-    val domainEventId = UUID.randomUUID()
-    val (applicationId, eventNumber) = getApplicationDetailsForBooking(booking)
-
-    val offenderDetails =
-      when (val offenderDetailsResult = offenderService.getOffenderByCrn(booking.crn, user.deliusUsername, true)) {
-        is AuthorisableActionResult.Success -> offenderDetailsResult.entity
-        else -> null
-      }
-
-    val staffDetails = when (val staffDetailsResult = apDeliusContextApiClient.getStaffDetail(user.deliusUsername)) {
-      is ClientResult.Success -> staffDetailsResult.body
-      is ClientResult.Failure -> staffDetailsResult.throwException()
-    }
-
-    val approvedPremises = booking.premises as ApprovedPremisesEntity
-
-    domainEventService.saveBookingChangedEvent(
-      DomainEvent(
-        id = domainEventId,
-        applicationId = applicationId,
-        crn = booking.crn,
-        nomsNumber = offenderDetails?.otherIds?.nomsNumber,
-        occurredAt = bookingChangedAt.toInstant(),
-        bookingId = booking.id,
-        data = BookingChangedEnvelope(
-          id = domainEventId,
-          timestamp = bookingChangedAt.toInstant(),
-          eventType = EventType.bookingChanged,
-          eventDetails = BookingChanged(
-            applicationId = applicationId,
-            applicationUrl = applicationUrlTemplate.replace("#id", applicationId.toString()),
-            bookingId = booking.id,
-            personReference = PersonReference(
-              crn = booking.application?.crn ?: booking.offlineApplication!!.crn,
-              noms = offenderDetails?.otherIds?.nomsNumber ?: "Unknown NOMS Number",
-            ),
-            deliusEventNumber = eventNumber,
-            changedAt = bookingChangedAt.toInstant(),
-            changedBy = staffDetails.toStaffMember(),
-            premises = Premises(
-              id = approvedPremises.id,
-              name = approvedPremises.name,
-              apCode = approvedPremises.apCode,
-              legacyApCode = approvedPremises.qCode,
-              localAuthorityAreaName = approvedPremises.localAuthorityArea!!.name,
-            ),
-            arrivalOn = booking.arrivalDate,
-            departureOn = booking.departureDate,
-          ),
-        ),
-      ),
-    )
   }
 
   @Transactional
@@ -873,9 +802,9 @@ class BookingService(
     updateBooking(booking)
 
     if (shouldCreateDomainEventForBooking(booking, user)) {
-      saveBookingChangedDomainEvent(
+      cas1BookingDomainEventService.bookingChanged(
         booking = booking,
-        user = user!!,
+        changedBy = user!!,
         bookingChangedAt = OffsetDateTime.now(),
       )
     }
@@ -948,9 +877,9 @@ class BookingService(
     )
 
     if (shouldCreateDomainEventForBooking(booking, user)) {
-      saveBookingChangedDomainEvent(
+      cas1BookingDomainEventService.bookingChanged(
         booking = booking,
-        user = user,
+        changedBy = user,
         bookingChangedAt = OffsetDateTime.now(),
       )
     }
@@ -997,17 +926,6 @@ class BookingService(
 
   val BookingEntity.lastUnavailableDate: LocalDate
     get() = workingDayService.addWorkingDays(this.departureDate, this.turnaround?.workingDayCount ?: 0)
-
-  fun getApplicationDetailsForBooking(booking: BookingEntity): Triple<UUID, String, OffsetDateTime> {
-    val application = (booking.application as ApprovedPremisesApplicationEntity?)
-    val offlineApplication = booking.offlineApplication
-
-    val applicationId = application?.id ?: offlineApplication?.id as UUID
-    val eventNumber = application?.eventNumber ?: offlineApplication?.eventNumber as String
-    val submittedAt = application?.submittedAt ?: offlineApplication?.createdAt as OffsetDateTime
-
-    return Triple(applicationId, eventNumber, submittedAt)
-  }
 
   private fun findAndCloseCAS3Assessment(booking: BookingEntity, user: UserEntity) {
     booking.application?.let {

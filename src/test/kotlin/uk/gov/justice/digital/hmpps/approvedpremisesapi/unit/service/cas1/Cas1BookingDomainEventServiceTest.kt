@@ -12,6 +12,7 @@ import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 import org.springframework.http.HttpStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.BookingCancelledEnvelope
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.BookingChangedEnvelope
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.BookingMadeEnvelope
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.BookingNotMadeEnvelope
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.EventType
@@ -285,6 +286,183 @@ class Cas1BookingDomainEventServiceTest {
       assertThat(data.situation).isEqualTo(application.situation)
 
       assertThat(domainEvent.metadata).isEqualTo(mapOf(MetaDataName.CAS1_PLACEMENT_REQUEST_ID to placementRequest.id.toString()))
+    }
+  }
+
+  @Nested
+  inner class BookingAmended {
+
+    private val changedBy = UserEntityFactory()
+      .withDefaults()
+      .withDeliusUsername("thedeliususername")
+      .produce()
+
+    private val premises = ApprovedPremisesEntityFactory()
+      .withDefaults()
+      .withName("the premises name")
+      .withApCode("the premises ap code")
+      .withQCode("the premises qcode")
+      .withLocalAuthorityArea(LocalAuthorityAreaEntityFactory().withName("authority name").produce())
+      .produce()
+
+    @Test
+    fun `success for application`() {
+      val application = ApprovedPremisesApplicationEntityFactory()
+        .withCreatedByUser(changedBy)
+        .withSubmittedAt(OffsetDateTime.now())
+        .withEventNumber("online app event number")
+        .produce()
+
+      val booking = BookingEntityFactory()
+        .withPremises(premises)
+        .withApplication(application)
+        .withOfflineApplication(null)
+        .withCrn("THEBOOKINGCRN")
+        .withArrivalDate(LocalDate.of(2012, 12, 12))
+        .withDepartureDate(LocalDate.of(2099, 11, 11))
+        .produce()
+
+      every { domainEventService.saveBookingChangedEvent(any()) } just Runs
+
+      val offenderDetails = OffenderDetailsSummaryFactory()
+        .withCrn("THEBOOKINGCRN")
+        .withNomsNumber("THENOMS")
+        .produce()
+
+      every { offenderService.getOffenderByCrn(booking.crn, changedBy.deliusUsername, true) } returns AuthorisableActionResult.Success(offenderDetails)
+
+      val staffUserDetails = StaffDetailFactory.staffDetail()
+      every { apDeliusContextApiClient.getStaffDetail(changedBy.deliusUsername) } returns ClientResult.Success(
+        HttpStatus.OK,
+        staffUserDetails,
+      )
+
+      val createdAt = OffsetDateTime.now()
+
+      service.bookingChanged(
+        booking,
+        changedBy,
+        bookingChangedAt = createdAt,
+      )
+
+      val domainEventArgument = slot<DomainEvent<BookingChangedEnvelope>>()
+      verify(exactly = 1) {
+        domainEventService.saveBookingChangedEvent(
+          capture(domainEventArgument),
+        )
+      }
+
+      val domainEvent = domainEventArgument.captured
+
+      assertThat(domainEvent.applicationId).isEqualTo(application.id)
+      assertThat(domainEvent.crn).isEqualTo("THEBOOKINGCRN")
+      assertThat(domainEvent.bookingId).isEqualTo(booking.id)
+      assertThat(domainEvent.cas1SpaceBookingId).isNull()
+      assertThat(domainEvent.occurredAt).isEqualTo(createdAt.toInstant())
+      assertThat(domainEvent.data.eventType).isEqualTo(EventType.bookingChanged)
+      assertThat(domainEvent.data.timestamp).isEqualTo(createdAt.toInstant())
+
+      val data = domainEvent.data.eventDetails
+      assertThat(data.applicationId).isEqualTo(application.id)
+      assertThat(data.applicationUrl).isEqualTo("http://frontend/applications/${application.id}")
+      assertThat(data.bookingId).isEqualTo(booking.id)
+      assertThat(data.personReference.crn).isEqualTo("THEBOOKINGCRN")
+      assertThat(data.personReference.noms).isEqualTo("THENOMS")
+      assertThat(data.deliusEventNumber).isEqualTo("online app event number")
+      assertThat(data.changedAt).isEqualTo(createdAt.toInstant())
+
+      assertThat(data.changedBy.staffCode).isEqualTo(staffUserDetails.code)
+      assertThat(data.changedBy.username).isEqualTo(staffUserDetails.username)
+      assertThat(data.changedBy.forenames).isEqualTo(staffUserDetails.name.forenames())
+      assertThat(data.changedBy.surname).isEqualTo(staffUserDetails.name.surname)
+
+      assertThat(data.premises.id).isEqualTo(premises.id)
+      assertThat(data.premises.name).isEqualTo("the premises name")
+      assertThat(data.premises.apCode).isEqualTo("the premises ap code")
+      assertThat(data.premises.legacyApCode).isEqualTo("the premises qcode")
+      assertThat(data.premises.localAuthorityAreaName).isEqualTo("authority name")
+
+      assertThat(data.arrivalOn).isEqualTo(LocalDate.of(2012, 12, 12))
+      assertThat(data.departureOn).isEqualTo(LocalDate.of(2099, 11, 11))
+    }
+
+    @Test
+    fun `success for offline application`() {
+      val offlineApplication = OfflineApplicationEntityFactory()
+        .withEventNumber("offline app event number")
+        .produce()
+
+      val booking = BookingEntityFactory()
+        .withPremises(premises)
+        .withApplication(null)
+        .withOfflineApplication(offlineApplication)
+        .withCrn("THEBOOKINGCRN")
+        .withArrivalDate(LocalDate.of(2012, 12, 12))
+        .withDepartureDate(LocalDate.of(2099, 11, 11))
+        .produce()
+
+      every { domainEventService.saveBookingChangedEvent(any()) } just Runs
+
+      val offenderDetails = OffenderDetailsSummaryFactory()
+        .withCrn("THEBOOKINGCRN")
+        .withNomsNumber("THENOMS")
+        .produce()
+
+      every { offenderService.getOffenderByCrn(booking.crn, changedBy.deliusUsername, true) } returns AuthorisableActionResult.Success(offenderDetails)
+
+      val staffUserDetails = StaffDetailFactory.staffDetail()
+      every { apDeliusContextApiClient.getStaffDetail(changedBy.deliusUsername) } returns ClientResult.Success(
+        HttpStatus.OK,
+        staffUserDetails,
+      )
+
+      val createdAt = OffsetDateTime.now()
+
+      service.bookingChanged(
+        booking,
+        changedBy,
+        bookingChangedAt = createdAt,
+      )
+
+      val domainEventArgument = slot<DomainEvent<BookingChangedEnvelope>>()
+      verify(exactly = 1) {
+        domainEventService.saveBookingChangedEvent(
+          capture(domainEventArgument),
+        )
+      }
+
+      val domainEvent = domainEventArgument.captured
+
+      assertThat(domainEvent.applicationId).isEqualTo(offlineApplication.id)
+      assertThat(domainEvent.crn).isEqualTo("THEBOOKINGCRN")
+      assertThat(domainEvent.bookingId).isEqualTo(booking.id)
+      assertThat(domainEvent.cas1SpaceBookingId).isNull()
+      assertThat(domainEvent.occurredAt).isEqualTo(createdAt.toInstant())
+      assertThat(domainEvent.data.eventType).isEqualTo(EventType.bookingChanged)
+      assertThat(domainEvent.data.timestamp).isEqualTo(createdAt.toInstant())
+
+      val data = domainEvent.data.eventDetails
+      assertThat(data.applicationId).isEqualTo(offlineApplication.id)
+      assertThat(data.applicationUrl).isEqualTo("http://frontend/applications/${offlineApplication.id}")
+      assertThat(data.bookingId).isEqualTo(booking.id)
+      assertThat(data.personReference.crn).isEqualTo("THEBOOKINGCRN")
+      assertThat(data.personReference.noms).isEqualTo("THENOMS")
+      assertThat(data.deliusEventNumber).isEqualTo("offline app event number")
+      assertThat(data.changedAt).isEqualTo(createdAt.toInstant())
+
+      assertThat(data.changedBy.staffCode).isEqualTo(staffUserDetails.code)
+      assertThat(data.changedBy.username).isEqualTo(staffUserDetails.username)
+      assertThat(data.changedBy.forenames).isEqualTo(staffUserDetails.name.forenames())
+      assertThat(data.changedBy.surname).isEqualTo(staffUserDetails.name.surname)
+
+      assertThat(data.premises.id).isEqualTo(premises.id)
+      assertThat(data.premises.name).isEqualTo("the premises name")
+      assertThat(data.premises.apCode).isEqualTo("the premises ap code")
+      assertThat(data.premises.legacyApCode).isEqualTo("the premises qcode")
+      assertThat(data.premises.localAuthorityAreaName).isEqualTo("authority name")
+
+      assertThat(data.arrivalOn).isEqualTo(LocalDate.of(2012, 12, 12))
+      assertThat(data.departureOn).isEqualTo(LocalDate.of(2099, 11, 11))
     }
   }
 
