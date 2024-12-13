@@ -357,22 +357,6 @@ class PremisesController(
     if (personInfo !is PersonInfoResult.Success) throw InternalServerErrorProblem("Unable to get Person Info for CRN: ${body.crn}")
 
     val authorisableResult = when (premises) {
-      is ApprovedPremisesEntity -> {
-        bookingService.createApprovedPremisesAdHocBooking(
-          user = user,
-          crn = body.crn,
-          nomsNumber = when (personInfo) {
-            is PersonInfoResult.Success.Restricted -> personInfo.nomsNumber
-            is PersonInfoResult.Success.Full -> personInfo.inmateDetail?.offenderNo
-          },
-          arrivalDate = body.arrivalDate,
-          departureDate = body.departureDate,
-          premises = premises,
-          bedId = body.bedId,
-          eventNumber = body.eventNumber,
-        )
-      }
-
       is TemporaryAccommodationPremisesEntity -> {
         bookingService.createTemporaryAccommodationBooking(
           user = user,
@@ -390,7 +374,7 @@ class PremisesController(
         )
       }
 
-      else -> throw RuntimeException("Unsupported New Booking type: ${body::class.qualifiedName}")
+      else -> error("This endpoint does not support creating bookings for premise type: ${premises::class.qualifiedName}")
     }
 
     val validatableResult = when (authorisableResult) {

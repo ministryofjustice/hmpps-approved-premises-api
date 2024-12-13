@@ -83,30 +83,6 @@ class Cas1BookingDomainEventService(
     )
   }
 
-  fun adhocBookingMade(
-    onlineApplication: ApprovedPremisesApplicationEntity?,
-    offlineApplication: OfflineApplicationEntity?,
-    eventNumber: String?,
-    booking: BookingEntity,
-    user: UserEntity,
-  ) {
-    val applicationId = (onlineApplication?.id ?: offlineApplication?.id)
-    val eventNumberForDomainEvent =
-      (onlineApplication?.eventNumber ?: offlineApplication?.eventNumber ?: eventNumber)
-
-    bookingMade(
-      applicationId = applicationId!!,
-      eventNumber = eventNumberForDomainEvent!!,
-      bookingInfo = booking.toBookingInfo(),
-      user = user,
-      applicationSubmittedOn = onlineApplication?.submittedAt,
-      releaseType = onlineApplication?.releaseType,
-      sentenceType = onlineApplication?.sentenceType,
-      situation = onlineApplication?.situation,
-      placementRequestId = null,
-    )
-  }
-
   private fun BookingEntity.toBookingInfo() = BookingInfo(
     id = id,
     createdAt = createdAt,

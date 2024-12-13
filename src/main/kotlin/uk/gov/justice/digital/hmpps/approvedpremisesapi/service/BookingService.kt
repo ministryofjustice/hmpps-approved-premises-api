@@ -1,6 +1,5 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.service
 
-import arrow.core.Either
 import io.sentry.Sentry
 import jakarta.transaction.Transactional
 import org.slf4j.LoggerFactory
@@ -44,7 +43,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ExtensionEnti
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ExtensionRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.LostBedsRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.MoveOnCategoryRepository
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.OfflineApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementRequestRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PremisesEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PremisesRepository
@@ -54,7 +52,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TurnaroundRep
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserPermission
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserQualification
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRole
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.serviceScopeMatches
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.DomainEvent
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PersonInfoResult
@@ -85,7 +82,6 @@ class BookingService(
   private val offenderService: OffenderService,
   private val domainEventService: DomainEventService,
   private val cas3DomainEventService: Cas3DomainEventService,
-  private val applicationService: ApplicationService,
   private val workingDayService: WorkingDayService,
   private val apDeliusContextApiClient: ApDeliusContextApiClient,
   private val bookingRepository: BookingRepository,
@@ -266,156 +262,6 @@ class BookingService(
     }
 
     return AuthorisableActionResult.Success(validationResult)
-  }
-
-  @Suppress("CyclomaticComplexMethod")
-  @Transactional
-  fun createApprovedPremisesAdHocBooking(
-    user: UserEntity? = null,
-    crn: String,
-    nomsNumber: String?,
-    arrivalDate: LocalDate,
-    departureDate: LocalDate,
-    premises: PremisesEntity,
-    bedId: UUID?,
-    eventNumber: String?,
-    bookingId: UUID = UUID.randomUUID(),
-  ): AuthorisableActionResult<ValidatableActionResult<BookingEntity>> {
-    if (user != null && (!user.hasAnyRole(UserRole.CAS1_FUTURE_MANAGER, UserRole.CAS1_MATCHER))) {
-      return AuthorisableActionResult.Unauthorised()
-    }
-
-    val isCalledFromSeeder = user == null
-
-    val validationResult = validated {
-      if (departureDate.isBefore(arrivalDate)) {
-        "$.departureDate" hasValidationError "beforeBookingArrivalDate"
-      }
-
-      val bed = bedId?.let {
-        getLostBedWithConflictingDates(arrivalDate, departureDate, null, bedId)?.let {
-          return@validated it.id hasConflictError "A Lost Bed already exists for dates from ${it.startDate} to ${it.endDate} which overlaps with the desired dates"
-        }
-
-        val bed = bedRepository.findByIdOrNull(bedId)
-
-        if (bed == null) {
-          "$.bedId" hasValidationError "doesNotExist"
-        } else if (bed.room.premises !is ApprovedPremisesEntity) {
-          "$.bedId" hasValidationError "mustBelongToApprovedPremises"
-        } else if (bed.room.premises != premises) {
-          "$.bedId" hasValidationError "mustBelongToProvidedPremise"
-        }
-
-        bed
-      }
-
-      if (!isCalledFromSeeder && eventNumber == null) {
-        "$.eventNumber" hasValidationError "empty"
-      }
-
-      if (validationErrors.any()) {
-        return@validated fieldValidationError
-      }
-
-      val application = fetchApplication(crn, eventNumber)
-      val onlineApplication =
-        if (application is Either.Left<ApprovedPremisesApplicationEntity>) application.value else null
-      val offlineApplication = if (application is Either.Right<OfflineApplicationEntity>) application.value else null
-
-      val bookingCreatedAt = OffsetDateTime.now()
-
-      val bookingPrePersist = BookingEntity(
-        id = bookingId,
-        crn = crn,
-        arrivalDate = arrivalDate,
-        departureDate = departureDate,
-        keyWorkerStaffCode = null,
-        arrivals = mutableListOf(),
-        departures = mutableListOf(),
-        nonArrival = null,
-        cancellations = mutableListOf(),
-        confirmation = null,
-        extensions = mutableListOf(),
-        premises = premises,
-        bed = bed,
-        service = ServiceName.approvedPremises.value,
-        originalArrivalDate = arrivalDate,
-        originalDepartureDate = departureDate,
-        createdAt = bookingCreatedAt,
-        application = onlineApplication,
-        offlineApplication = offlineApplication,
-        turnarounds = mutableListOf(),
-        dateChanges = mutableListOf(),
-        nomsNumber = nomsNumber,
-        placementRequest = null,
-        status = BookingStatus.confirmed,
-        adhoc = true,
-      )
-
-      cas1ApplicationStatusService.bookingMade(bookingPrePersist)
-      val booking = bookingRepository.save(bookingPrePersist)
-
-      if (!isCalledFromSeeder) {
-        cas1BookingDomainEventService.adhocBookingMade(
-          onlineApplication,
-          offlineApplication,
-          eventNumber,
-          booking,
-          user!!,
-        )
-
-        if (onlineApplication != null) {
-          cas1BookingEmailService.bookingMade(
-            application = onlineApplication,
-            booking = booking,
-            placementApplication = null,
-          )
-        }
-      }
-
-      success(booking)
-    }
-
-    return AuthorisableActionResult.Success(validationResult)
-  }
-
-  private fun fetchApplication(
-    crn: String,
-    eventNumber: String?,
-  ): Either<ApprovedPremisesApplicationEntity, OfflineApplicationEntity> {
-    val newestSubmittedOnlineApplication = applicationService.getApplicationsForCrn(crn, ServiceName.approvedPremises)
-      .filter { it.submittedAt != null }
-      .maxByOrNull { it.submittedAt!! } as ApprovedPremisesApplicationEntity?
-    var newestOfflineApplication = applicationService.getOfflineApplicationsForCrn(crn, ServiceName.approvedPremises)
-      .maxByOrNull { it.createdAt }
-
-    if (newestSubmittedOnlineApplication == null && newestOfflineApplication == null) {
-      log.info("No online or offline application, so we create a new offline application")
-      newestOfflineApplication = applicationService.createOfflineApplication(
-        OfflineApplicationEntity(
-          id = UUID.randomUUID(),
-          crn = crn,
-          service = ServiceName.approvedPremises.value,
-          createdAt = OffsetDateTime.now(),
-          eventNumber = eventNumber,
-        ),
-      )
-    }
-
-    return if (newestOfflineApplication != null && newestSubmittedOnlineApplication != null && newestOfflineApplication.createdAt.isBefore(
-        newestSubmittedOnlineApplication.submittedAt,
-      )
-    ) {
-      log.info("Offline application is created before the online application, so returning the offline application with id ${newestOfflineApplication.id}")
-      Either.Right(newestOfflineApplication)
-    } else if (newestSubmittedOnlineApplication != null) {
-      log.info("Returning online application with id ${newestSubmittedOnlineApplication.id}")
-      Either.Left(newestSubmittedOnlineApplication)
-    } else {
-      log.info("Returning offline application with id ${newestOfflineApplication!!.id}")
-      Either.Right(newestOfflineApplication)
-    }
   }
 
   private fun saveBookingChangedDomainEvent(
