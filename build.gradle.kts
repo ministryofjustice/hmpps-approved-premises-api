@@ -37,7 +37,7 @@ dependencies {
   implementation("com.google.guava:guava:33.3.1-jre")
   implementation("org.postgresql:postgresql:42.7.4")
 
-  implementation("org.springdoc:springdoc-openapi-starter-webmvc-ui:2.6.0")
+  implementation("org.springdoc:springdoc-openapi-starter-webmvc-ui:2.7.0")
 
   implementation("org.zalando:problem-spring-web-starter:0.29.1")
 
@@ -45,7 +45,6 @@ dependencies {
   implementation("org.springframework.boot:spring-boot-starter-oauth2-resource-server")
   implementation("org.springframework.boot:spring-boot-starter-oauth2-client")
   implementation("io.sentry:sentry-spring-boot-starter-jakarta:7.11.0")
-  implementation("org.springframework.boot:spring-boot-starter-cache")
 
   runtimeOnly("org.ehcache:ehcache")
   runtimeOnly("org.flywaydb:flyway-database-postgresql")
