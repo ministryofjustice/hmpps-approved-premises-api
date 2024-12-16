@@ -5,8 +5,8 @@ import org.springframework.stereotype.Service
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.cas1.PremisesCas1Delegate
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1ApprovedPremisesGender
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1PremiseCapacity
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1PremiseDaySummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1PremisesBasicSummary
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1PremisesDaySummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1PremisesSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1SpaceBookingCharacteristic
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1SpaceBookingDaySummarySortField
@@ -16,6 +16,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserPermissio
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.UserAccessService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1PremisesService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.cas1.Cas1PremiseCapacitySummaryTransformer
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.cas1.Cas1PremisesDayTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.cas1.Cas1PremisesTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.extractEntityFromCasResult
 import java.time.LocalDate
@@ -27,6 +28,7 @@ class Cas1PremisesController(
   val cas1PremisesService: Cas1PremisesService,
   val cas1PremisesTransformer: Cas1PremisesTransformer,
   val cas1PremiseCapacityTransformer: Cas1PremiseCapacitySummaryTransformer,
+  private val cas1PremisesDayTransformer: Cas1PremisesDayTransformer,
 ) : PremisesCas1Delegate {
 
   override fun getPremisesById(premisesId: UUID): ResponseEntity<Cas1PremisesSummary> {
@@ -91,7 +93,18 @@ class Cas1PremisesController(
     bookingsCriteriaFilter: List<Cas1SpaceBookingCharacteristic>?,
     bookingsSortDirection: SortDirection?,
     bookingsSortBy: Cas1SpaceBookingDaySummarySortField?,
-  ): ResponseEntity<Cas1PremiseDaySummary> {
-    return super.getDaySummary(premisesId, date, bookingsCriteriaFilter, bookingsSortDirection, bookingsSortBy)
+  ): ResponseEntity<Cas1PremisesDaySummary> {
+    userAccessService.ensureCurrentUserHasPermission(UserPermission.CAS1_SPACE_BOOKING_VIEW)
+
+    val premiseSummaryInfo = cas1PremisesService.getPremisesSummary(premisesId)
+    val premiseCapacity = cas1PremisesService.getPremiseCapacity(premisesId, date, date)
+    val premisesCapacitySummary = cas1PremiseCapacityTransformer.toCas1PremiseCapacitySummary(
+      premiseSummaryInfo = extractEntityFromCasResult(premiseSummaryInfo),
+      premiseCapacity = extractEntityFromCasResult(premiseCapacity),
+    )
+
+    return ResponseEntity.ok().body(
+      cas1PremisesDayTransformer.toCas1PremisesDaySummary(date, premisesCapacitySummary),
+    )
   }
 }

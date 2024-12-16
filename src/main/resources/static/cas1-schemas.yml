@@ -538,7 +538,7 @@ components:
         - CANONICAL_DEPARTURE_DATE
         - RELEASE_TYPE
         - SPACE_TYPE
-    Cas1PremiseDaySummary:
+    Cas1PremisesDaySummary:
       type: object
       properties:
         forDate:
