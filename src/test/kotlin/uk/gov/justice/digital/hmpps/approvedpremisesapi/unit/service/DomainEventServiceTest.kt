@@ -70,7 +70,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.DomainEventServi
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.UserService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1DomainEventMigrationService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.unit.util.ObjectMapperFactory
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.createCas1DomainEventEnvelopeForSchemaVersion
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.Cas1DomainEventsFactory
 import java.time.Instant
 import java.time.OffsetDateTime
 import java.util.UUID
@@ -149,7 +149,7 @@ class DomainEventServiceTest {
       val nomsNumber = "theNomsNumber"
 
       val method = fetchGetterForType(type)
-      val domainEventAndJson = createCas1DomainEventEnvelopeForSchemaVersion(
+      val domainEventAndJson = Cas1DomainEventsFactory.createEnvelopeForSchemaVersion(
         type = type,
         objectMapper = objectMapper,
         schemaVersion = version,
@@ -222,7 +222,7 @@ class DomainEventServiceTest {
       val crn = "CRN"
       val nomsNumber = "theNomsNumber"
       val occurredAt = Instant.now()
-      val domainEventAndJson = createCas1DomainEventEnvelopeForSchemaVersion(type, objectMapper, version)
+      val domainEventAndJson = Cas1DomainEventsFactory.createEnvelopeForSchemaVersion(type, objectMapper, version)
       val metadata = mapOf(MetaDataName.CAS1_APP_REASON_FOR_SHORT_NOTICE_OTHER to "value1")
 
       every { domainEventRepositoryMock.save(any()) } answers { it.invocation.args[0] as DomainEventEntity }
@@ -292,7 +292,7 @@ class DomainEventServiceTest {
       val crn = "CRN"
       val nomsNumber = "123"
       val occurredAt = Instant.now()
-      val domainEventAndJson = createCas1DomainEventEnvelopeForSchemaVersion(type, objectMapper, version)
+      val domainEventAndJson = Cas1DomainEventsFactory.createEnvelopeForSchemaVersion(type, objectMapper, version)
 
       every { domainEventRepositoryMock.save(any()) } answers { it.invocation.args[0] as DomainEventEntity }
 
@@ -341,7 +341,7 @@ class DomainEventServiceTest {
       val crn = "CRN"
       val nomsNumber = "123"
       val occurredAt = Instant.now()
-      val domainEventAndJson = createCas1DomainEventEnvelopeForSchemaVersion(domainEventType, objectMapper, version)
+      val domainEventAndJson = Cas1DomainEventsFactory.createEnvelopeForSchemaVersion(domainEventType, objectMapper, version)
 
       every { domainEventRepositoryMock.save(any()) } throws RuntimeException("A database exception")
 

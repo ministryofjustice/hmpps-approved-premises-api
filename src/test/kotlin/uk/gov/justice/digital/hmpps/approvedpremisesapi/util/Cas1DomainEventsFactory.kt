@@ -49,184 +49,187 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DomainEventTy
 import java.time.Instant
 import java.util.UUID
 
-fun createCas1DomainEventEnvelopeForSchemaVersion(
-  type: DomainEventType,
-  objectMapper: ObjectMapper,
-  schemaVersion: DomainEventSchemaVersion,
-  requestId: UUID = UUID.randomUUID(),
-  occurredAt: Instant = Instant.now(),
-): DomainEventEnvelopeAndPersistedJson {
-  val envelope = createCas1DomainEventEnvelopeWithLatestJson(
-    type,
-    requestId,
-    occurredAt = occurredAt,
-  )
+object Cas1DomainEventsFactory {
 
-  val persistedJson = if (type == DomainEventType.APPROVED_PREMISES_BOOKING_CANCELLED && schemaVersion.versionNo == null) {
-    removeEventDetails(
-      objectMapper,
-      objectMapper.writeValueAsString(envelope),
-      listOf("cancelledAtDate", "cancellationRecordedAt"),
+  fun createEnvelopeForSchemaVersion(
+    type: DomainEventType,
+    objectMapper: ObjectMapper,
+    schemaVersion: DomainEventSchemaVersion,
+    requestId: UUID = UUID.randomUUID(),
+    occurredAt: Instant = Instant.now(),
+  ): DomainEventEnvelopeAndPersistedJson {
+    val envelope = createEnvelopeForLatestSchemaVersion(
+      type,
+      requestId,
+      occurredAt = occurredAt,
     )
-  } else {
-    objectMapper.writeValueAsString(envelope)
+
+    val persistedJson = if (type == DomainEventType.APPROVED_PREMISES_BOOKING_CANCELLED && schemaVersion.versionNo == null) {
+      removeEventDetails(
+        objectMapper,
+        objectMapper.writeValueAsString(envelope),
+        listOf("cancelledAtDate", "cancellationRecordedAt"),
+      )
+    } else {
+      objectMapper.writeValueAsString(envelope)
+    }
+
+    return DomainEventEnvelopeAndPersistedJson(
+      envelope = envelope,
+      persistedJson = persistedJson,
+    )
   }
 
-  return DomainEventEnvelopeAndPersistedJson(
-    envelope = envelope,
-    persistedJson = persistedJson,
-  )
+  @SuppressWarnings("CyclomaticComplexMethod", "TooGenericExceptionThrown")
+  fun createEnvelopeForLatestSchemaVersion(
+    type: DomainEventType,
+    requestId: UUID = UUID.randomUUID(),
+    occurredAt: Instant = Instant.now(),
+  ): Any {
+    val id = UUID.randomUUID()
+    val eventType = EventType.entries.find { it.value == type.typeName } ?: throw RuntimeException("Cannot find EventType for $type")
+
+    return when (type) {
+      DomainEventType.APPROVED_PREMISES_APPLICATION_SUBMITTED -> ApplicationSubmittedEnvelope(
+        id = id,
+        timestamp = occurredAt,
+        eventType = eventType,
+        eventDetails = ApplicationSubmittedFactory().produce(),
+      )
+      DomainEventType.APPROVED_PREMISES_APPLICATION_ASSESSED -> ApplicationAssessedEnvelope(
+        id = id,
+        timestamp = occurredAt,
+        eventType = eventType,
+        eventDetails = ApplicationAssessedFactory().produce(),
+      )
+      DomainEventType.APPROVED_PREMISES_BOOKING_MADE -> BookingMadeEnvelope(
+        id = id,
+        timestamp = occurredAt,
+        eventType = eventType,
+        eventDetails = BookingMadeFactory().produce(),
+      )
+      DomainEventType.APPROVED_PREMISES_PERSON_ARRIVED -> PersonArrivedEnvelope(
+        id = id,
+        timestamp = occurredAt,
+        eventType = eventType,
+        eventDetails = PersonArrivedFactory().produce(),
+      )
+      DomainEventType.APPROVED_PREMISES_PERSON_NOT_ARRIVED -> PersonNotArrivedEnvelope(
+        id = id,
+        timestamp = occurredAt,
+        eventType = eventType,
+        eventDetails = PersonNotArrivedFactory().produce(),
+      )
+      DomainEventType.APPROVED_PREMISES_PERSON_DEPARTED -> PersonDepartedEnvelope(
+        id = id,
+        timestamp = occurredAt,
+        eventType = eventType,
+        eventDetails = PersonDepartedFactory().produce(),
+      )
+      DomainEventType.APPROVED_PREMISES_BOOKING_NOT_MADE -> BookingNotMadeEnvelope(
+        id = id,
+        timestamp = occurredAt,
+        eventType = eventType,
+        eventDetails = BookingNotMadeFactory().produce(),
+      )
+      DomainEventType.APPROVED_PREMISES_BOOKING_CANCELLED -> {
+        return BookingCancelledEnvelope(
+          id = id,
+          timestamp = occurredAt,
+          eventType = eventType,
+          eventDetails = BookingCancelledFactory()
+            .withCancellationRecordedAt(occurredAt)
+            .produce(),
+        )
+      }
+      DomainEventType.APPROVED_PREMISES_BOOKING_CHANGED -> BookingChangedEnvelope(
+        id = id,
+        timestamp = occurredAt,
+        eventType = eventType,
+        eventDetails = BookingChangedFactory().produce(),
+      )
+      DomainEventType.APPROVED_PREMISES_BOOKING_KEYWORKER_ASSIGNED -> BookingKeyWorkerAssignedEnvelope(
+        id = id,
+        timestamp = occurredAt,
+        eventType = eventType,
+        eventDetails = BookingKeyWorkerAssignedFactory().produce(),
+      )
+      DomainEventType.APPROVED_PREMISES_APPLICATION_WITHDRAWN -> ApplicationWithdrawnEnvelope(
+        id = id,
+        timestamp = occurredAt,
+        eventType = eventType,
+        eventDetails = ApplicationWithdrawnFactory().produce(),
+      )
+      DomainEventType.APPROVED_PREMISES_ASSESSMENT_APPEALED -> AssessmentAppealedEnvelope(
+        id = id,
+        timestamp = occurredAt,
+        eventType = eventType,
+        eventDetails = AssessmentAppealedFactory().produce(),
+      )
+      DomainEventType.APPROVED_PREMISES_ASSESSMENT_ALLOCATED -> AssessmentAllocatedEnvelope(
+        id = id,
+        timestamp = occurredAt,
+        eventType = eventType,
+        eventDetails = AssessmentAllocatedFactory().produce(),
+      )
+      DomainEventType.APPROVED_PREMISES_PLACEMENT_APPLICATION_WITHDRAWN -> PlacementApplicationWithdrawnEnvelope(
+        id = id,
+        timestamp = occurredAt,
+        eventType = eventType,
+        eventDetails = PlacementApplicationWithdrawnFactory().produce(),
+      )
+      DomainEventType.APPROVED_PREMISES_PLACEMENT_APPLICATION_ALLOCATED -> PlacementApplicationAllocatedEnvelope(
+        id = id,
+        timestamp = occurredAt,
+        eventType = eventType,
+        eventDetails = PlacementApplicationAllocatedFactory().produce(),
+      )
+      DomainEventType.APPROVED_PREMISES_MATCH_REQUEST_WITHDRAWN -> MatchRequestWithdrawnEnvelope(
+        id = id,
+        timestamp = occurredAt,
+        eventType = eventType,
+        eventDetails = MatchRequestWithdrawnFactory().produce(),
+      )
+      DomainEventType.APPROVED_PREMISES_REQUEST_FOR_PLACEMENT_CREATED -> RequestForPlacementCreatedEnvelope(
+        id = id,
+        timestamp = occurredAt,
+        eventType = eventType,
+        eventDetails = RequestForPlacementCreatedFactory().produce(),
+      )
+      DomainEventType.APPROVED_PREMISES_REQUEST_FOR_PLACEMENT_ASSESSED -> RequestForPlacementAssessedEnvelope(
+        id = id,
+        timestamp = occurredAt,
+        eventType = eventType,
+        eventDetails = RequestForPlacementAssessedFactory().produce(),
+      )
+      DomainEventType.APPROVED_PREMISES_ASSESSMENT_INFO_REQUESTED -> FurtherInformationRequestedEnvelope(
+        id = id,
+        timestamp = occurredAt,
+        eventType = eventType,
+        eventDetails = FurtherInformationRequestedFactory()
+          .withRequestId(requestId)
+          .produce(),
+      )
+      DomainEventType.APPROVED_PREMISES_APPLICATION_EXPIRED -> ApplicationExpiredEnvelope(
+        id = id,
+        timestamp = occurredAt,
+        eventType = eventType,
+        eventDetails = ApplicationExpiredFactory().produce(),
+      )
+      else -> throw RuntimeException("Domain event type $type not supported")
+    }
+  }
+
+  fun removeEventDetails(objectMapper: ObjectMapper, json: String, fields: List<String>): String {
+    val dataModel: JsonNode = objectMapper.readTree(json)
+    fields.forEach {
+      (dataModel["eventDetails"] as ObjectNode).remove(it)
+    }
+    return objectMapper.writeValueAsString(dataModel)
+  }
 }
 
 data class DomainEventEnvelopeAndPersistedJson(
   val envelope: Any,
   val persistedJson: String,
 )
-
-private fun removeEventDetails(objectMapper: ObjectMapper, json: String, fields: List<String>): String {
-  val dataModel: JsonNode = objectMapper.readTree(json)
-  fields.forEach {
-    (dataModel["eventDetails"] as ObjectNode).remove(it)
-  }
-  return objectMapper.writeValueAsString(dataModel)
-}
-
-@SuppressWarnings("CyclomaticComplexMethod", "TooGenericExceptionThrown")
-fun createCas1DomainEventEnvelopeWithLatestJson(
-  type: DomainEventType,
-  requestId: UUID = UUID.randomUUID(),
-  occurredAt: Instant = Instant.now(),
-): Any {
-  val id = UUID.randomUUID()
-  val eventType = EventType.entries.find { it.value == type.typeName } ?: throw RuntimeException("Cannot find EventType for $type")
-
-  return when (type) {
-    DomainEventType.APPROVED_PREMISES_APPLICATION_SUBMITTED -> ApplicationSubmittedEnvelope(
-      id = id,
-      timestamp = occurredAt,
-      eventType = eventType,
-      eventDetails = ApplicationSubmittedFactory().produce(),
-    )
-    DomainEventType.APPROVED_PREMISES_APPLICATION_ASSESSED -> ApplicationAssessedEnvelope(
-      id = id,
-      timestamp = occurredAt,
-      eventType = eventType,
-      eventDetails = ApplicationAssessedFactory().produce(),
-    )
-    DomainEventType.APPROVED_PREMISES_BOOKING_MADE -> BookingMadeEnvelope(
-      id = id,
-      timestamp = occurredAt,
-      eventType = eventType,
-      eventDetails = BookingMadeFactory().produce(),
-    )
-    DomainEventType.APPROVED_PREMISES_PERSON_ARRIVED -> PersonArrivedEnvelope(
-      id = id,
-      timestamp = occurredAt,
-      eventType = eventType,
-      eventDetails = PersonArrivedFactory().produce(),
-    )
-    DomainEventType.APPROVED_PREMISES_PERSON_NOT_ARRIVED -> PersonNotArrivedEnvelope(
-      id = id,
-      timestamp = occurredAt,
-      eventType = eventType,
-      eventDetails = PersonNotArrivedFactory().produce(),
-    )
-    DomainEventType.APPROVED_PREMISES_PERSON_DEPARTED -> PersonDepartedEnvelope(
-      id = id,
-      timestamp = occurredAt,
-      eventType = eventType,
-      eventDetails = PersonDepartedFactory().produce(),
-    )
-    DomainEventType.APPROVED_PREMISES_BOOKING_NOT_MADE -> BookingNotMadeEnvelope(
-      id = id,
-      timestamp = occurredAt,
-      eventType = eventType,
-      eventDetails = BookingNotMadeFactory().produce(),
-    )
-    DomainEventType.APPROVED_PREMISES_BOOKING_CANCELLED -> {
-      return BookingCancelledEnvelope(
-        id = id,
-        timestamp = occurredAt,
-        eventType = eventType,
-        eventDetails = BookingCancelledFactory()
-          .withCancellationRecordedAt(occurredAt)
-          .produce(),
-      )
-    }
-    DomainEventType.APPROVED_PREMISES_BOOKING_CHANGED -> BookingChangedEnvelope(
-      id = id,
-      timestamp = occurredAt,
-      eventType = eventType,
-      eventDetails = BookingChangedFactory().produce(),
-    )
-    DomainEventType.APPROVED_PREMISES_BOOKING_KEYWORKER_ASSIGNED -> BookingKeyWorkerAssignedEnvelope(
-      id = id,
-      timestamp = occurredAt,
-      eventType = eventType,
-      eventDetails = BookingKeyWorkerAssignedFactory().produce(),
-    )
-    DomainEventType.APPROVED_PREMISES_APPLICATION_WITHDRAWN -> ApplicationWithdrawnEnvelope(
-      id = id,
-      timestamp = occurredAt,
-      eventType = eventType,
-      eventDetails = ApplicationWithdrawnFactory().produce(),
-    )
-    DomainEventType.APPROVED_PREMISES_ASSESSMENT_APPEALED -> AssessmentAppealedEnvelope(
-      id = id,
-      timestamp = occurredAt,
-      eventType = eventType,
-      eventDetails = AssessmentAppealedFactory().produce(),
-    )
-    DomainEventType.APPROVED_PREMISES_ASSESSMENT_ALLOCATED -> AssessmentAllocatedEnvelope(
-      id = id,
-      timestamp = occurredAt,
-      eventType = eventType,
-      eventDetails = AssessmentAllocatedFactory().produce(),
-    )
-    DomainEventType.APPROVED_PREMISES_PLACEMENT_APPLICATION_WITHDRAWN -> PlacementApplicationWithdrawnEnvelope(
-      id = id,
-      timestamp = occurredAt,
-      eventType = eventType,
-      eventDetails = PlacementApplicationWithdrawnFactory().produce(),
-    )
-    DomainEventType.APPROVED_PREMISES_PLACEMENT_APPLICATION_ALLOCATED -> PlacementApplicationAllocatedEnvelope(
-      id = id,
-      timestamp = occurredAt,
-      eventType = eventType,
-      eventDetails = PlacementApplicationAllocatedFactory().produce(),
-    )
-    DomainEventType.APPROVED_PREMISES_MATCH_REQUEST_WITHDRAWN -> MatchRequestWithdrawnEnvelope(
-      id = id,
-      timestamp = occurredAt,
-      eventType = eventType,
-      eventDetails = MatchRequestWithdrawnFactory().produce(),
-    )
-    DomainEventType.APPROVED_PREMISES_REQUEST_FOR_PLACEMENT_CREATED -> RequestForPlacementCreatedEnvelope(
-      id = id,
-      timestamp = occurredAt,
-      eventType = eventType,
-      eventDetails = RequestForPlacementCreatedFactory().produce(),
-    )
-    DomainEventType.APPROVED_PREMISES_REQUEST_FOR_PLACEMENT_ASSESSED -> RequestForPlacementAssessedEnvelope(
-      id = id,
-      timestamp = occurredAt,
-      eventType = eventType,
-      eventDetails = RequestForPlacementAssessedFactory().produce(),
-    )
-    DomainEventType.APPROVED_PREMISES_ASSESSMENT_INFO_REQUESTED -> FurtherInformationRequestedEnvelope(
-      id = id,
-      timestamp = occurredAt,
-      eventType = eventType,
-      eventDetails = FurtherInformationRequestedFactory()
-        .withRequestId(requestId)
-        .produce(),
-    )
-    DomainEventType.APPROVED_PREMISES_APPLICATION_EXPIRED -> ApplicationExpiredEnvelope(
-      id = id,
-      timestamp = occurredAt,
-      eventType = eventType,
-      eventDetails = ApplicationExpiredFactory().produce(),
-    )
-    else -> throw RuntimeException("Domain event type $type not supported")
-  }
-}

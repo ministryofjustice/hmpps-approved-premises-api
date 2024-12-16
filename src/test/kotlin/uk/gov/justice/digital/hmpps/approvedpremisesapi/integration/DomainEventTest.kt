@@ -9,7 +9,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.config.DomainEventUrlCon
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DomainEventCas
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DomainEventSchemaVersion
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DomainEventType
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.createCas1DomainEventEnvelopeForSchemaVersion
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.Cas1DomainEventsFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.roundNanosToMillisToAccountForLossOfPrecisionInPostgres
 import java.time.LocalDateTime
 import java.time.ZoneOffset
@@ -77,7 +77,7 @@ class DomainEventTest : InitialiseDatabasePerClassTestBase() {
     val now = LocalDateTime.now()
     clock.setNow(now.roundNanosToMillisToAccountForLossOfPrecisionInPostgres())
 
-    val domainEventAndJson = createCas1DomainEventEnvelopeForSchemaVersion(
+    val domainEventAndJson = Cas1DomainEventsFactory.createEnvelopeForSchemaVersion(
       type = domainEventType,
       objectMapper = objectMapper,
       occurredAt = clock.instant(),

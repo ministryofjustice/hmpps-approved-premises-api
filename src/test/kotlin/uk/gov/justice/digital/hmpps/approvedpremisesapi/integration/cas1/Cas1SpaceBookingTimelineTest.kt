@@ -23,7 +23,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DomainEventTy
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.ApplicationTimelineTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.unit.domainevents.DomainEventSummaryImpl
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.createCas1DomainEventEnvelopeWithLatestJson
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.Cas1DomainEventsFactory
 import java.time.LocalDate
 
 class Cas1SpaceBookingTimelineTest : InitialiseDatabasePerClassTestBase() {
@@ -191,9 +191,9 @@ class Cas1SpaceBookingTimelineTest : InitialiseDatabasePerClassTestBase() {
         withAssessment(assessmentEntity)
         withCreatedBy(userEntity)
       }
-      createCas1DomainEventEnvelopeWithLatestJson(type, clarificationNote.id)
+      Cas1DomainEventsFactory.createEnvelopeForLatestSchemaVersion(type, clarificationNote.id)
     } else {
-      createCas1DomainEventEnvelopeWithLatestJson(type)
+      Cas1DomainEventsFactory.createEnvelopeForLatestSchemaVersion(type)
     }
 
     return domainEventFactory.produceAndPersist {
