@@ -8,6 +8,7 @@ fun IntegrationTestBase.givenAnOfflineApplication(
   crn: String,
   eventNumber: String? = randomStringMultiCaseWithNumbers(6),
   eventNumberSet: Boolean = true,
+  name: String? = null,
 ) = offlineApplicationEntityFactory.produceAndPersist {
   withCrn(crn)
   withEventNumber(
@@ -17,4 +18,5 @@ fun IntegrationTestBase.givenAnOfflineApplication(
       null
     },
   )
+  withName(name)
 }

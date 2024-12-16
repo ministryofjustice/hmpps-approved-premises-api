@@ -8,10 +8,14 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.BookingStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1ApplicationTimelinessCategory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.BookingEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.BookingRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas1CruManagementAreaEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas1CruManagementAreaRepository
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas1SpaceBookingEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas1SpaceBookingRepository
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.CharacteristicEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.OfflineApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserQualification
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRole
@@ -23,7 +27,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.ApplicationServi
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.ApplicationTimelineNoteService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.EnvironmentService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.OffenderService
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.PremisesService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.UserService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.UserService.GetUserResponse
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.extractEntityFromCasResult
@@ -42,9 +45,10 @@ class Cas1AutoScript(
   private val offenderService: OffenderService,
   private val cruManagementAreaRepository: Cas1CruManagementAreaRepository,
   private val environmentService: EnvironmentService,
-  private val premisesService: PremisesService,
+  private val approvedPremisesRepository: ApprovedPremisesRepository,
   private val bookingRepository: BookingRepository,
   private val applicationTimelineNoteService: ApplicationTimelineNoteService,
+  private val spaceBookingRepository: Cas1SpaceBookingRepository,
 ) {
 
   @Transactional
@@ -65,7 +69,7 @@ class Cas1AutoScript(
     createApplication(deliusUserName = "JIMSNOWLDAP", crn = "X320741")
     createApplication(deliusUserName = "LAOFULLACCESS", crn = "X400000")
     createApplication(deliusUserName = "LAOFULLACCESS", crn = "X400001")
-    createOfflineApplicationWithBooking(crn = "X320741")
+    createOfflineApplicationWithBooking(deliusUserName = "JIMSNOWLDAP", crn = "X320741")
   }
 
   fun scriptDev() {
@@ -83,10 +87,10 @@ class Cas1AutoScript(
     }
   }
 
-  private fun createOfflineApplicationWithBooking(crn: String) {
+  private fun createOfflineApplicationWithBooking(deliusUserName: String, crn: String) {
     seedLogger.info("Auto-scripting offline for CRN $crn")
     try {
-      createOfflineApplicationInternal(crn = crn)
+      createOfflineApplicationInternal(deliusUserName, crn)
     } catch (e: Exception) {
       seedLogger.error("Creating offline application with crn $crn failed", e)
     }
@@ -277,13 +281,14 @@ class Cas1AutoScript(
     )
   }
 
-  private fun createOfflineApplicationInternal(crn: String) {
+  private fun createOfflineApplicationInternal(deliusUserName: String, crn: String) {
     if (applicationService.getOfflineApplicationsForCrn(crn, ServiceName.approvedPremises).isNotEmpty()) {
       seedLogger.info("Already have an offline CAS1 application for $crn, not seeding a new application")
       return
     }
 
     val personInfo = getPersonInfo(crn)
+    val offenderDetail = personInfo.offenderDetailSummary
 
     val offlineApplication = applicationService.createOfflineApplication(
       OfflineApplicationEntity(
@@ -292,18 +297,19 @@ class Cas1AutoScript(
         service = ServiceName.approvedPremises.value,
         createdAt = OffsetDateTime.now(),
         eventNumber = "2",
+        name = "${offenderDetail.firstName.uppercase()} ${offenderDetail.surname.uppercase()}",
       ),
     )
 
-    val arrivalDate = LocalDate.of(2027, 1, 2)
-    val departureDate = LocalDate.of(2027, 1, 6)
+    val bookingArrivalDate = LocalDate.of(2027, 1, 2)
+    val bookingDepartureDate = LocalDate.of(2027, 1, 6)
 
     bookingRepository.save(
       BookingEntity(
         id = UUID.randomUUID(),
         crn = crn,
-        arrivalDate = arrivalDate,
-        departureDate = departureDate,
+        arrivalDate = bookingArrivalDate,
+        departureDate = bookingDepartureDate,
         keyWorkerStaffCode = null,
         arrivals = mutableListOf(),
         departures = mutableListOf(),
@@ -311,11 +317,11 @@ class Cas1AutoScript(
         cancellations = mutableListOf(),
         confirmation = null,
         extensions = mutableListOf(),
-        premises = premisesService.getAllPremisesForService(ServiceName.approvedPremises).first().getPremises(),
+        premises = approvedPremisesRepository.findAll().first(),
         bed = null,
         service = ServiceName.approvedPremises.value,
-        originalArrivalDate = arrivalDate,
-        originalDepartureDate = departureDate,
+        originalArrivalDate = bookingArrivalDate,
+        originalDepartureDate = bookingDepartureDate,
         createdAt = OffsetDateTime.now(),
         application = null,
         offlineApplication = offlineApplication,
@@ -325,6 +331,47 @@ class Cas1AutoScript(
         placementRequest = null,
         status = BookingStatus.confirmed,
         adhoc = true,
+      ),
+    )
+
+    val spaceBookingArrivalDate = LocalDate.of(2028, 5, 12)
+    val spaceBookingDepartureDate = LocalDate.of(2028, 7, 6)
+    val createdByUser = (userService.getExistingUserOrCreate(deliusUserName) as GetUserResponse.Success).user
+
+    spaceBookingRepository.save(
+      Cas1SpaceBookingEntity(
+        id = UUID.randomUUID(),
+        premises = approvedPremisesRepository.findAll().first { it.supportsSpaceBookings },
+        application = null,
+        offlineApplication = offlineApplication,
+        placementRequest = null,
+        createdBy = createdByUser,
+        createdAt = OffsetDateTime.now(),
+        expectedArrivalDate = spaceBookingArrivalDate,
+        expectedDepartureDate = spaceBookingDepartureDate,
+        actualArrivalDate = null,
+        actualArrivalTime = null,
+        actualDepartureDate = null,
+        actualDepartureTime = null,
+        canonicalArrivalDate = spaceBookingArrivalDate,
+        canonicalDepartureDate = spaceBookingDepartureDate,
+        crn = crn,
+        keyWorkerStaffCode = null,
+        keyWorkerName = null,
+        keyWorkerAssignedAt = null,
+        cancellationOccurredAt = null,
+        cancellationRecordedAt = null,
+        cancellationReason = null,
+        cancellationReasonNotes = null,
+        departureMoveOnCategory = null,
+        departureReason = null,
+        departureNotes = null,
+        criteria = emptyList<CharacteristicEntity>().toMutableList(),
+        nonArrivalConfirmedAt = null,
+        nonArrivalNotes = null,
+        nonArrivalReason = null,
+        deliusEventNumber = "2",
+        migratedManagementInfoFrom = null,
       ),
     )
   }

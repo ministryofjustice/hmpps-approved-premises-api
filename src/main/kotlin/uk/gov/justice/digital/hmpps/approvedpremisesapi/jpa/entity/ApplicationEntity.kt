@@ -386,6 +386,11 @@ class ApprovedPremisesApplicationEntity(
   var sentenceType: String?,
   var situation: String?,
   var arrivalDate: OffsetDateTime?,
+  /**
+   * The offender name. This should only be used for search purposes (i.e. SQL)
+   * If returning the offender name to the user, use the [OffenderService], which
+   * will consider any LAO restrictions
+   */
   var name: String,
   var targetLocation: String?,
   @Enumerated(value = EnumType.STRING)
