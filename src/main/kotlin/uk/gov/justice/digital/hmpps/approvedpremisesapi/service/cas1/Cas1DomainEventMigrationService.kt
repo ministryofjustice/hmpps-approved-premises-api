@@ -10,7 +10,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DomainEventEn
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.toLocalDate
 
 /**
-This is tested by unit tests for [uk.gov.justice.digital.hmpps.approvedpremisesapi.service.DomainEventService]
+This is tested by the [DomainEventTest] integration test
  */
 @Service
 class Cas1DomainEventMigrationService(val objectMapper: ObjectMapper) {

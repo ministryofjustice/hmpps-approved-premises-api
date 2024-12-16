@@ -21,7 +21,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRole
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.ApplicationTimelineNoteTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.ApplicationTimelineTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.unit.domainevents.DomainEventSummaryImpl
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.createCas1DomainEventEnvelopeWithLatestJson
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.Cas1DomainEventsFactory
 
 class ApplicationTimelineTest : InitialiseDatabasePerClassTestBase() {
   @Autowired
@@ -157,15 +157,17 @@ class ApplicationTimelineTest : InitialiseDatabasePerClassTestBase() {
     assessmentEntity: ApprovedPremisesAssessmentEntity,
     userEntity: UserEntity,
   ): DomainEventEntity {
+    val domainEventsFactory = Cas1DomainEventsFactory(objectMapper)
+
     val data = if (type == DomainEventType.APPROVED_PREMISES_ASSESSMENT_INFO_REQUESTED) {
       val clarificationNote = assessmentClarificationNoteEntityFactory.produceAndPersist {
         withAssessment(assessmentEntity)
         withCreatedBy(userEntity)
       }
 
-      createCas1DomainEventEnvelopeWithLatestJson(type, clarificationNote.id)
+      domainEventsFactory.createEnvelopeForLatestSchemaVersion(type, clarificationNote.id)
     } else {
-      createCas1DomainEventEnvelopeWithLatestJson(type)
+      domainEventsFactory.createEnvelopeForLatestSchemaVersion(type)
     }
 
     return domainEventFactory.produceAndPersist {
