@@ -751,10 +751,9 @@ components:
         - characteristicAvailability
     Cas1PremiseCharacteristicAvailability:
       type: object
-      description:  "Will only ever be returned for the following characteristics: 'isArsonSuitable', 'hasEnSuite', 'isSingle', 'isStepFreeDesignated', 'isSuitedForSexOffenders' or 'isWheelchairDesignated'"
       properties:
         characteristic:
-          $ref: '#/components/schemas/Cas1SpaceCharacteristic'
+          $ref: '#/components/schemas/Cas1SpaceBookingCharacteristic'
         availableBedsCount:
           description: the number of available beds with this characteristic
           type: integer
