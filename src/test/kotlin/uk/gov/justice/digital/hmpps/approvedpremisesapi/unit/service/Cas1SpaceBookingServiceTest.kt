@@ -59,6 +59,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas1.SpaceAva
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.CasResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.PlacementRequestService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.StaffMemberService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.UserService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.BlockingReason
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1ApplicationStatusService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1BookingDomainEventService
@@ -121,7 +122,10 @@ class Cas1SpaceBookingServiceTest {
   private lateinit var nonArrivalReasonRepository: NonArrivalReasonRepository
 
   @MockK
-  private val lockablePlacementRequestRepository = mockk<LockablePlacementRequestRepository>()
+  private lateinit var lockablePlacementRequestRepository: LockablePlacementRequestRepository
+
+  @MockK
+  private lateinit var userService: UserService
 
   @InjectMockKs
   private lateinit var service: Cas1SpaceBookingService
@@ -738,12 +742,17 @@ class Cas1SpaceBookingServiceTest {
 
     @Test
     fun `Updates space booking with arrival information and raises domain event`() {
-      val updatedSpaceBookingCaptor = slot<Cas1SpaceBookingEntity>()
+      val user = UserEntityFactory().withDefaults().produce()
 
       every { cas1PremisesService.findPremiseById(any()) } returns premises
       every { spaceBookingRepository.findByIdOrNull(any()) } returns existingSpaceBooking
+
+      val updatedSpaceBookingCaptor = slot<Cas1SpaceBookingEntity>()
       every { spaceBookingRepository.save(capture(updatedSpaceBookingCaptor)) } returnsArgument 0
-      every { cas1SpaceBookingManagementDomainEventService.arrivalRecorded(any()) } returns Unit
+
+      val arrivalInfoCaptor = slot<Cas1SpaceBookingManagementDomainEventService.ArrivalInfo>()
+      every { cas1SpaceBookingManagementDomainEventService.arrivalRecorded(capture(arrivalInfoCaptor)) } returns Unit
+      every { userService.getUserForRequest() } returns user
 
       val result = service.recordArrivalForBooking(
         premisesId = UUID.randomUUID(),
@@ -760,6 +769,12 @@ class Cas1SpaceBookingServiceTest {
       assertThat(updatedSpaceBooking.actualArrivalDate).isEqualTo(LocalDate.of(2024, 1, 2))
       assertThat(updatedSpaceBooking.actualArrivalTime).isEqualTo(LocalTime.of(3, 4, 5))
       assertThat(updatedSpaceBooking.canonicalArrivalDate).isEqualTo(LocalDate.of(2024, 1, 2))
+
+      val arrivalInfo = arrivalInfoCaptor.captured
+      assertThat(arrivalInfo.updatedCas1SpaceBooking).isEqualTo(updatedSpaceBooking)
+      assertThat(arrivalInfo.actualArrivalDate).isEqualTo(LocalDate.of(2024, 1, 2))
+      assertThat(arrivalInfo.actualArrivalTime).isEqualTo(LocalTime.of(3, 4, 5))
+      assertThat(arrivalInfo.recordedBy).isEqualTo(user)
     }
   }
 

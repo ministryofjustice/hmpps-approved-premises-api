@@ -33,6 +33,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.InternalServerEr
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.CasResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.PlacementRequestService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.StaffMemberService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.UserService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.PageCriteria
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.extractEntityFromCasResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.getMetadata
@@ -58,6 +59,7 @@ class Cas1SpaceBookingService(
   private val cancellationReasonRepository: CancellationReasonRepository,
   private val nonArrivalReasonRepository: NonArrivalReasonRepository,
   private val lockablePlacementRequestRepository: LockablePlacementRequestRepository,
+  private val userService: UserService,
 ) {
   @Transactional
   fun createNewBooking(
@@ -199,6 +201,7 @@ class Cas1SpaceBookingService(
         existingCas1SpaceBooking,
         actualArrivalDate = arrivalDate,
         actualArrivalTime = arrivalTime,
+        recordedBy = userService.getUserForRequest(),
       ),
     )
 
