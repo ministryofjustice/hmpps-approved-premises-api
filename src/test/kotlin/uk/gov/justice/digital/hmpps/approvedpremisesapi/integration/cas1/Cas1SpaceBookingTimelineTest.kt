@@ -186,14 +186,16 @@ class Cas1SpaceBookingTimelineTest : InitialiseDatabasePerClassTestBase() {
     assessmentEntity: ApprovedPremisesAssessmentEntity,
     userEntity: UserEntity,
   ): DomainEventEntity {
+    val domainEventsFactory = Cas1DomainEventsFactory(objectMapper)
+
     val data = if (type == DomainEventType.APPROVED_PREMISES_ASSESSMENT_INFO_REQUESTED) {
       val clarificationNote = assessmentClarificationNoteEntityFactory.produceAndPersist {
         withAssessment(assessmentEntity)
         withCreatedBy(userEntity)
       }
-      Cas1DomainEventsFactory.createEnvelopeForLatestSchemaVersion(type, clarificationNote.id)
+      domainEventsFactory.createEnvelopeForLatestSchemaVersion(type, clarificationNote.id)
     } else {
-      Cas1DomainEventsFactory.createEnvelopeForLatestSchemaVersion(type)
+      domainEventsFactory.createEnvelopeForLatestSchemaVersion(type)
     }
 
     return domainEventFactory.produceAndPersist {

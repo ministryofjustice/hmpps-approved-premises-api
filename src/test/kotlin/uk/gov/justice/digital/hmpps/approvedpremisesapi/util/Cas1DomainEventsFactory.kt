@@ -49,12 +49,10 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DomainEventTy
 import java.time.Instant
 import java.util.UUID
 
-object Cas1DomainEventsFactory {
+class Cas1DomainEventsFactory(val objectMapper: ObjectMapper) {
 
-  fun createEnvelopeForSchemaVersion(
+  fun createEnvelopeLatestVersion(
     type: DomainEventType,
-    objectMapper: ObjectMapper,
-    schemaVersion: DomainEventSchemaVersion,
     requestId: UUID = UUID.randomUUID(),
     occurredAt: Instant = Instant.now(),
   ): DomainEventEnvelopeAndPersistedJson {
@@ -64,19 +62,10 @@ object Cas1DomainEventsFactory {
       occurredAt = occurredAt,
     )
 
-    val persistedJson = if (type == DomainEventType.APPROVED_PREMISES_BOOKING_CANCELLED && schemaVersion.versionNo == null) {
-      removeEventDetails(
-        objectMapper,
-        objectMapper.writeValueAsString(envelope),
-        listOf("cancelledAtDate", "cancellationRecordedAt"),
-      )
-    } else {
-      objectMapper.writeValueAsString(envelope)
-    }
-
     return DomainEventEnvelopeAndPersistedJson(
       envelope = envelope,
-      persistedJson = persistedJson,
+      persistedJson = objectMapper.writeValueAsString(envelope),
+      schemaVersion = type.schemaVersions.last(),
     )
   }
 
@@ -220,7 +209,7 @@ object Cas1DomainEventsFactory {
     }
   }
 
-  fun removeEventDetails(objectMapper: ObjectMapper, json: String, fields: List<String>): String {
+  fun removeEventDetails(json: String, fields: List<String>): String {
     val dataModel: JsonNode = objectMapper.readTree(json)
     fields.forEach {
       (dataModel["eventDetails"] as ObjectNode).remove(it)
@@ -232,4 +221,5 @@ object Cas1DomainEventsFactory {
 data class DomainEventEnvelopeAndPersistedJson(
   val envelope: Any,
   val persistedJson: String,
+  val schemaVersion: DomainEventSchemaVersion,
 )
