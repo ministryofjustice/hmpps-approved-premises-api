@@ -49,6 +49,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.cas1.Cas1App
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.cas1.Cas1CruManagementAreaTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomStringMultiCaseWithNumbers
 import java.time.Instant
+import java.time.LocalDate
 import java.time.OffsetDateTime
 import java.util.UUID
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApprovedPremisesApplicationStatus as ApiApprovedPremisesApplicationStatus
@@ -134,6 +135,7 @@ class ApplicationsTransformerTest {
       .withApplicantUserDetails(applicantUserDetails)
       .withCaseManagerIsNotApplicant(true)
       .withCaseManagerUserDetails(caseManagerUserDetails)
+      .withLicenseExpiredDate(LocalDate.of(2026, 5, 5))
       .produce()
 
     every { mockCas1ApplicationUserDetailsTransformer.transformJpaToApi(applicantUserDetails) } returns Cas1ApplicationUserDetails("applicant", "", "")
@@ -148,6 +150,7 @@ class ApplicationsTransformerTest {
     assertThat(result.applicantUserDetails!!.name).isEqualTo("applicant")
     assertThat(result.caseManagerIsNotApplicant).isTrue()
     assertThat(result.caseManagerUserDetails!!.name).isEqualTo("caseManager")
+    assertThat(result.licenceExpiryDate).isEqualTo(LocalDate.of(2026, 5, 5))
   }
 
   @Test
