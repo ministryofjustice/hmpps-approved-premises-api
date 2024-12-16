@@ -79,6 +79,7 @@ class ApplicationsTransformer(
         caseManagerIsNotApplicant = applicationEntity.caseManagerIsNotApplicant,
         caseManagerUserDetails = applicationEntity.caseManagerUserDetails?.let { cas1ApplicationUserDetailsTransformer.transformJpaToApi(it) },
         apType = applicationEntity.apType.asApiType(),
+        licenceExpiryDate = applicationEntity.licenceExpiryDate,
       )
 
       is DomainTemporaryAccommodationApplicationEntity -> TemporaryAccommodationApplication(
