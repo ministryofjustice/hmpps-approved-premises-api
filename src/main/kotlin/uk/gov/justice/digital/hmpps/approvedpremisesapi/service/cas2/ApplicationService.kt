@@ -118,7 +118,7 @@ class ApplicationService(
     }
   }
 
-  fun createApplication(crn: String, user: NomisUserEntity, jwt: String, applicationOrigin: ApplicationOrigin? = null) =
+  fun createApplication(crn: String, user: NomisUserEntity, jwt: String, applicationOrigin: ApplicationOrigin? = ApplicationOrigin.homeDetentionCurfew) =
     validated<Cas2ApplicationEntity> {
       val offenderDetailsResult = offenderService.getOffenderByCrn(crn)
 
