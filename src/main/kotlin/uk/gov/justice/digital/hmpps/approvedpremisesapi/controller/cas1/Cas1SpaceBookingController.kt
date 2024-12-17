@@ -14,6 +14,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1SpaceBooki
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1SpaceBookingResidency
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1SpaceBookingSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1SpaceBookingSummarySortField
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1UpdateSpaceBooking
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.SortDirection
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.TimelineEvent
@@ -154,6 +155,14 @@ class Cas1SpaceBookingController(
     return ResponseEntity
       .ok()
       .body(toCas1SpaceBooking(booking))
+  }
+
+  override fun updateSpaceBooking(
+    premisesId: UUID,
+    bookingId: UUID,
+    cas1UpdateSpaceBooking: Cas1UpdateSpaceBooking,
+  ): ResponseEntity<Unit> {
+    return super.updateSpaceBooking(premisesId, bookingId, cas1UpdateSpaceBooking)
   }
 
   override fun recordArrival(
