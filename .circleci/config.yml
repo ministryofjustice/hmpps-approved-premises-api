@@ -16,6 +16,9 @@ parameters:
   run-security-workflow-on-branch:
     type: boolean
     default: false
+  node-version:
+    type: string
+    default: 20.18-browsers
 
 executors:
   integration-test-gradle:
@@ -282,18 +285,16 @@ jobs:
           channel: << pipeline.parameters.alerts-slack-channel >>
           template: basic_fail_1
   cas2_e2e_tests:
-    docker:
-      - image: mcr.microsoft.com/playwright:v1.40.0-focal
+    executor:
+      name: hmpps/node
+      tag: << pipeline.parameters.node-version >>
     circleci_ip_ranges: true # opt-in to jobs running on a restricted set of IPs
     steps:
-      - run:
-          name: Clone E2E repo
-          command: |
-            git clone https://github.com/ministryofjustice/hmpps-community-accommodation-tier-2-ui.git .
-      - run:
-          name: Update npm
-          command: 'npm install -g npm@latest'
-      - node/install-packages
+      - checkout
+      - attach_workspace:
+          at: ~/app
+      - restore_cache:
+          key: dependency-cache-{{ checksum "package-lock.json" }}
       - run:
           name: Install Playwright
           command: npx playwright install
@@ -310,6 +311,7 @@ jobs:
           event: fail
           channel: << pipeline.parameters.alerts-slack-channel >>
           template: basic_fail_1
+
   cas3_e2e_tests:
     parallelism: 5
     circleci_ip_ranges: true # opt-in to jobs running on a restricted set of IPs
