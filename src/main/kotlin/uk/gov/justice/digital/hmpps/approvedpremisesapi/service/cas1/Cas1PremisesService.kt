@@ -44,6 +44,7 @@ class Cas1PremisesService(
     premisesId: UUID,
     startDate: LocalDate,
     endDate: LocalDate,
+    excludeSpaceBookingId: UUID?,
   ): CasResult<SpacePlanningService.PremiseCapacitySummary> {
     val premises = premisesRepository.findByIdOrNull(premisesId)
       ?: return CasResult.NotFound("premises", premisesId.toString())
@@ -56,6 +57,7 @@ class Cas1PremisesService(
       spacePlanningService.capacity(
         premises = premises,
         range = DateRange(startDate, endDate),
+        excludeSpaceBookingId = excludeSpaceBookingId,
       ),
     )
   }

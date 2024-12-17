@@ -10,6 +10,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PremisesEntit
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1OutOfServiceBedService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.DateRange
 import java.time.LocalDate
+import java.util.UUID
 
 @Service
 class SpacePlanningService(
@@ -61,9 +62,10 @@ class SpacePlanningService(
   fun capacity(
     premises: ApprovedPremisesEntity,
     range: DateRange,
+    excludeSpaceBookingId: UUID?,
   ): PremiseCapacitySummary {
     val bedStatesForEachDay = bedStatesForEachDay(premises, range)
-    val bookingsForEachDay = spaceBookingsForEachDay(premises, range)
+    val bookingsForEachDay = spaceBookingsForEachDay(premises, range, excludeSpaceBookingId)
 
     val capacityForEachDay = range.orderedDatesInRange().map { day ->
       val bedStates = bedStatesForEachDay[day]!!
@@ -126,12 +128,13 @@ class SpacePlanningService(
   private fun spaceBookingsForEachDay(
     premises: ApprovedPremisesEntity,
     range: DateRange,
+    excludeSpaceBookingId: UUID? = null,
   ): Map<LocalDate, List<SpaceBooking>> {
     val spaceBookingsToConsider = spaceBookingRepository.findAllBookingsActiveWithinAGivenRangeWithCriteria(
       premisesId = premises.id,
       rangeStartInclusive = range.fromInclusive,
       rangeEndInclusive = range.toInclusive,
-    )
+    ).filter { it.id != excludeSpaceBookingId }
 
     return range.orderedDatesInRange()
       .toList()

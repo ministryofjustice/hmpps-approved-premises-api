@@ -65,11 +65,17 @@ class Cas1PremisesController(
     premisesId: UUID,
     startDate: LocalDate,
     endDate: LocalDate,
+    excludeSpaceBookingId: UUID?,
   ): ResponseEntity<Cas1PremiseCapacity> {
     userAccessService.ensureCurrentUserHasPermission(UserPermission.CAS1_PREMISES_VIEW)
 
     val premiseSummaryInfo = cas1PremisesService.getPremisesSummary(premisesId)
-    val premiseCapacity = cas1PremisesService.getPremiseCapacity(premisesId, startDate, endDate)
+    val premiseCapacity = cas1PremisesService.getPremiseCapacity(
+      premisesId = premisesId,
+      startDate = startDate,
+      endDate = endDate,
+      excludeSpaceBookingId = excludeSpaceBookingId,
+    )
 
     return ResponseEntity.ok().body(
       cas1PremiseCapacityTransformer.toCas1PremiseCapacitySummary(
