@@ -1643,6 +1643,8 @@ components:
           $ref: '#/components/schemas/BookingId'
         keyWorker:
           $ref: '#/components/schemas/StaffMember'
+        recordedBy:
+          $ref: '#/components/schemas/StaffMember'
         premises:
           $ref: '#/components/schemas/Premises'
         departedAt:
@@ -1673,6 +1675,7 @@ components:
         - applicationUrl
         - bookingId
         - keyWorker
+        - recordedBy
         - premises
         - departedAt
         - reason

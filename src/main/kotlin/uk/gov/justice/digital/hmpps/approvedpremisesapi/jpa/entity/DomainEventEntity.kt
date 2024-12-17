@@ -229,6 +229,10 @@ enum class DomainEventType(
     Cas1EventType.personDeparted.value,
     "Someone has left an Approved Premises",
     TimelineEventType.approvedPremisesPersonDeparted,
+    schemaVersions = listOf(
+      DEFAULT_DOMAIN_EVENT_SCHEMA_VERSION,
+      DomainEventSchemaVersion(2, "Added recordedBy field"),
+    ),
   ),
   APPROVED_PREMISES_BOOKING_NOT_MADE(
     DomainEventCas.CAS1,

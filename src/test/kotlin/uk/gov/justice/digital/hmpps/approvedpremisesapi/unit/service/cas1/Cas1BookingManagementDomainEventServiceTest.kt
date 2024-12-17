@@ -49,7 +49,7 @@ import java.time.ZoneOffset
 import java.util.UUID
 
 @ExtendWith(MockKExtension::class)
-class Cas1SpaceBookingManagementCas1DomainEventServiceTest {
+class Cas1BookingManagementDomainEventServiceTest {
 
   @MockK
   lateinit var apDeliusContextApiClient: ApDeliusContextApiClient
@@ -101,10 +101,9 @@ class Cas1SpaceBookingManagementCas1DomainEventServiceTest {
       .withDefaults()
       .produce()
 
-    val recordedByUser = UserEntityFactory().withDefaults().produce()
-    val recordedByStaffDetails = StaffDetailFactory.staffDetail(deliusUsername = recordedByUser.deliusUsername)
-
-    val keyWorker = StaffDetailFactory.staffDetail(deliusUsername = null)
+    private val recordedByUser = UserEntityFactory().withDefaults().produce()
+    private val recordedByStaffDetails = StaffDetailFactory.staffDetail(deliusUsername = recordedByUser.deliusUsername)
+    private val keyWorker = StaffDetailFactory.staffDetail(deliusUsername = null)
 
     private val spaceBookingFactory = Cas1SpaceBookingEntityFactory()
       .withApplication(null)
@@ -279,7 +278,9 @@ class Cas1SpaceBookingManagementCas1DomainEventServiceTest {
       .withDefaults()
       .produce()
 
-    val keyWorker = StaffDetailFactory.staffDetail(deliusUsername = null)
+    private val recordedByUser = UserEntityFactory().withDefaults().produce()
+    private val recordedByStaffDetails = StaffDetailFactory.staffDetail(deliusUsername = recordedByUser.deliusUsername)
+    private val keyWorker = StaffDetailFactory.staffDetail(deliusUsername = null)
 
     private val departedSpaceBookingFactory = Cas1SpaceBookingEntityFactory()
       .withApplication(null)
@@ -314,9 +315,14 @@ class Cas1SpaceBookingManagementCas1DomainEventServiceTest {
       every { offenderService.getPersonSummaryInfoResults(any(), any()) } returns
         listOf(PersonSummaryInfoResult.Success.Full("THEBOOKINGCRN", caseSummary))
 
-      every { apDeliusContextApiClient.getStaffDetailByStaffCode(any()) } returns ClientResult.Success(
+      every { apDeliusContextApiClient.getStaffDetailByStaffCode(keyWorker.code) } returns ClientResult.Success(
         HttpStatus.OK,
         keyWorker,
+      )
+
+      every { apDeliusContextApiClient.getStaffDetail(recordedByUser.deliusUsername) } returns ClientResult.Success(
+        HttpStatus.OK,
+        recordedByStaffDetails,
       )
     }
 
@@ -331,6 +337,7 @@ class Cas1SpaceBookingManagementCas1DomainEventServiceTest {
           moveOnCategory,
           departedDate,
           departureTime,
+          recordedByUser,
         ),
       )
 
@@ -346,6 +353,7 @@ class Cas1SpaceBookingManagementCas1DomainEventServiceTest {
       assertThat(domainEvent.data.timestamp).isWithinTheLastMinute()
       assertThat(domainEvent.applicationId).isEqualTo(application.id)
       assertThat(domainEvent.bookingId).isNull()
+      assertThat(domainEvent.schemaVersion).isEqualTo(2)
       assertThat(domainEvent.cas1SpaceBookingId).isEqualTo(departedSpaceBooking.id)
       assertThat(domainEvent.crn).isEqualTo(departedSpaceBooking.crn)
       assertThat(domainEvent.nomsNumber).isEqualTo(caseSummary.nomsId)
@@ -374,6 +382,10 @@ class Cas1SpaceBookingManagementCas1DomainEventServiceTest {
       assertThat(domainEventMoveOnCategory.id).isEqualTo(moveOnCategory.id)
       assertThat(domainEventMoveOnCategory.description).isEqualTo(moveOnCategory.name)
       assertThat(domainEventMoveOnCategory.legacyMoveOnCategoryCode).isEqualTo(moveOnCategory.legacyDeliusCategoryCode)
+      assertThat(domainEventEventDetails.recordedBy.staffCode).isEqualTo(recordedByStaffDetails.code)
+      assertThat(domainEventEventDetails.recordedBy.username).isEqualTo(recordedByStaffDetails.username)
+      assertThat(domainEventEventDetails.recordedBy.forenames).isEqualTo(recordedByStaffDetails.name.forenames())
+      assertThat(domainEventEventDetails.recordedBy.surname).isEqualTo(recordedByStaffDetails.name.surname)
     }
 
     @Test
@@ -389,6 +401,7 @@ class Cas1SpaceBookingManagementCas1DomainEventServiceTest {
           moveOnCategory,
           departedDate,
           departureTime,
+          recordedByUser,
         ),
       )
 

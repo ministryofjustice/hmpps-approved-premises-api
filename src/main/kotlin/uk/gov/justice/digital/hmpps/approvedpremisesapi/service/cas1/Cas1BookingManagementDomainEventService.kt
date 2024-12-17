@@ -161,15 +161,16 @@ class Cas1SpaceBookingManagementDomainEventService(
   }
 
   data class DepartureInfo(
-    val departedCas1SpaceBooking: Cas1SpaceBookingEntity,
+    val spaceBooking: Cas1SpaceBookingEntity,
     val departureReason: DepartureReasonEntity,
     val moveOnCategory: MoveOnCategoryEntity,
     val actualDepartureDate: LocalDate,
     val actualDepartureTime: LocalTime,
+    val recordedBy: UserEntity,
   )
 
   fun departureRecorded(departureInfo: DepartureInfo) {
-    val departedCas1SpaceBooking = departureInfo.departedCas1SpaceBooking
+    val departedCas1SpaceBooking = departureInfo.spaceBooking
     val departureReason = departureInfo.departureReason
     val moveOnCategory = departureInfo.moveOnCategory
 
@@ -178,6 +179,7 @@ class Cas1SpaceBookingManagementDomainEventService(
     val applicationId = departedCas1SpaceBooking.applicationFacade.id
     val premises = mapApprovedPremisesEntityToPremises(departedCas1SpaceBooking.premises)
     val offenderDetails = getOffenderForCrn(departedCas1SpaceBooking.crn)
+    val recordedByStaffDetails = getStaffDetailsByUsername(departureInfo.recordedBy.deliusUsername)
     val keyWorker = getStaffDetailsByStaffCode(departedCas1SpaceBooking.keyWorkerStaffCode)
     val eventNumber = departedCas1SpaceBooking.deliusEventNumber!!
 
@@ -192,6 +194,7 @@ class Cas1SpaceBookingManagementDomainEventService(
         occurredAt = OffsetDateTime.now().toInstant(),
         cas1SpaceBookingId = departedCas1SpaceBooking.id,
         bookingId = null,
+        schemaVersion = 2,
         data = PersonDepartedEnvelope(
           id = domainEventId,
           timestamp = OffsetDateTime.now().toInstant(),
@@ -207,6 +210,7 @@ class Cas1SpaceBookingManagementDomainEventService(
             deliusEventNumber = eventNumber,
             premises = premises,
             keyWorker = keyWorker!!,
+            recordedBy = recordedByStaffDetails.toStaffMember(),
             departedAt = actualDepartureDateTime,
             reason = departureReason.name,
             legacyReasonCode = departureReason.legacyDeliusReasonCode!!,
