@@ -21,16 +21,16 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ProbationRegionE
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.StaffDetailFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.UserEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.DomainEvent
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.DomainEventService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1AppealDomainEventService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1DomainEventService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.unit.util.withinSeconds
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.UrlTemplate
 import java.time.LocalDate
 import java.util.UUID
 
-class Cas1AppealDomainEventServiceTest {
+class Cas1AppealCas1DomainEventServiceTest {
 
-  private val domainEventService = mockk<DomainEventService>()
+  private val domainEventService = mockk<Cas1DomainEventService>()
   private val apDeliusContextApiClient = mockk<ApDeliusContextApiClient>()
   private val applicationUrlTemplate = mockk<UrlTemplate>()
   private val applicationAppealUrlTemplate = mockk<UrlTemplate>()

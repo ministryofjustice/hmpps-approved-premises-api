@@ -19,7 +19,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.bodyAsObject
 import java.time.ZoneOffset
 import java.util.UUID
 
-class DomainEventTest : InitialiseDatabasePerClassTestBase() {
+class Cas1DomainEventTest : InitialiseDatabasePerClassTestBase() {
   @Autowired
   lateinit var domainEventUrlConfig: DomainEventUrlConfig
 

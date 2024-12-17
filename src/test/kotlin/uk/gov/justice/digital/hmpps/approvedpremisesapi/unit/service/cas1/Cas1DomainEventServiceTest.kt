@@ -1,4 +1,4 @@
-package uk.gov.justice.digital.hmpps.approvedpremisesapi.unit.service
+package uk.gov.justice.digital.hmpps.approvedpremisesapi.unit.service.cas1
 
 import io.mockk.Called
 import io.mockk.every
@@ -65,17 +65,17 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.MetaDataName
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TriggerSourceType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.DomainEvent
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.ConfiguredDomainEventWorker
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.DomainEventService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.UserService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1DomainEventMigrationService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1DomainEventService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.unit.util.ObjectMapperFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.Cas1DomainEventsFactory
 import java.time.Instant
 import java.time.OffsetDateTime
 import java.util.UUID
 
-@SuppressWarnings("CyclomaticComplexMethod")
-class DomainEventServiceTest {
+@SuppressWarnings("CyclomaticComplexMethod", "LargeClass")
+class Cas1DomainEventServiceTest {
   private val domainEventRepositoryMock = mockk<DomainEventRepository>()
   private val domainEventWorkerMock = mockk<ConfiguredDomainEventWorker>()
   private val objectMapper = ObjectMapperFactory.createRuntimeLikeObjectMapper()
@@ -87,7 +87,7 @@ class DomainEventServiceTest {
   private val domainEventService = buildService(emitDomainEventsEnabled = true)
   private val domainEventServiceEmitDisabled = buildService(emitDomainEventsEnabled = false)
 
-  private fun buildService(emitDomainEventsEnabled: Boolean) = DomainEventService(
+  private fun buildService(emitDomainEventsEnabled: Boolean) = Cas1DomainEventService(
     objectMapper = objectMapper,
     domainEventRepository = domainEventRepositoryMock,
     domainEventWorker = domainEventWorkerMock,
@@ -116,7 +116,7 @@ class DomainEventServiceTest {
   inner class GetDomainEvents {
 
     @ParameterizedTest
-    @MethodSource("uk.gov.justice.digital.hmpps.approvedpremisesapi.unit.service.DomainEventServiceTest#allCas1DomainEventTypes")
+    @MethodSource("uk.gov.justice.digital.hmpps.approvedpremisesapi.unit.service.cas1.Cas1DomainEventServiceTest#allCas1DomainEventTypes")
     fun `getDomainEvent returns null when event not found`(type: DomainEventType) {
       val id = UUID.randomUUID()
       val method = fetchGetterForType(type)
@@ -127,7 +127,7 @@ class DomainEventServiceTest {
     }
 
     @ParameterizedTest
-    @MethodSource("uk.gov.justice.digital.hmpps.approvedpremisesapi.unit.service.DomainEventServiceTest#allCas1DomainEventTypes")
+    @MethodSource("uk.gov.justice.digital.hmpps.approvedpremisesapi.unit.service.cas1.Cas1DomainEventServiceTest#allCas1DomainEventTypes")
     fun `getDomainEvent returns event with deserialized json`(type: DomainEventType) {
       val id = UUID.randomUUID()
       val applicationId = UUID.randomUUID()
@@ -196,7 +196,7 @@ class DomainEventServiceTest {
   inner class SaveAndEmit {
 
     @ParameterizedTest
-    @MethodSource("uk.gov.justice.digital.hmpps.approvedpremisesapi.unit.service.DomainEventServiceTest#allCas1DomainEventTypes")
+    @MethodSource("uk.gov.justice.digital.hmpps.approvedpremisesapi.unit.service.cas1.Cas1DomainEventServiceTest#allCas1DomainEventTypes")
     fun `saveAndEmit persists event and emits event to SNS`(type: DomainEventType) {
       val id = UUID.randomUUID()
       val applicationId = UUID.randomUUID()
@@ -263,7 +263,7 @@ class DomainEventServiceTest {
     }
 
     @ParameterizedTest
-    @MethodSource("uk.gov.justice.digital.hmpps.approvedpremisesapi.unit.service.DomainEventServiceTest#allCas1DomainEventTypes")
+    @MethodSource("uk.gov.justice.digital.hmpps.approvedpremisesapi.unit.service.cas1.Cas1DomainEventServiceTest#allCas1DomainEventTypes")
     fun `saveAndEmit persists event and does not emit event if emit is false`(type: DomainEventType) {
       val id = UUID.randomUUID()
       val applicationId = UUID.randomUUID()
@@ -309,7 +309,7 @@ class DomainEventServiceTest {
     }
 
     @ParameterizedTest
-    @MethodSource("uk.gov.justice.digital.hmpps.approvedpremisesapi.unit.service.DomainEventServiceTest#allCas1DomainEventTypes")
+    @MethodSource("uk.gov.justice.digital.hmpps.approvedpremisesapi.unit.service.cas1.Cas1DomainEventServiceTest#allCas1DomainEventTypes")
     fun `saveAndEmit does not emit event to SNS if event fails to persist to database`(type: DomainEventType) {
       val id = UUID.randomUUID()
       val applicationId = UUID.randomUUID()
