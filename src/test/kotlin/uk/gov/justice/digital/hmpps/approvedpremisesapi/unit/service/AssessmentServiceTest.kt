@@ -79,7 +79,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.AuthorisableActi
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.CasResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.ValidatableActionResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.AssessmentService
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.DomainEventService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.JsonSchemaService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.OffenderService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.PlacementRequestService
@@ -89,6 +88,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.UserAccessServic
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.UserService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1AssessmentDomainEventService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1AssessmentEmailService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1DomainEventService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1PlacementRequestEmailService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.allocations.UserAllocator
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.unit.util.assertAssessmentHasSystemNote
@@ -107,7 +107,7 @@ class AssessmentServiceTest {
   private val assessmentReferralHistoryNoteRepositoryMock = mockk<AssessmentReferralHistoryNoteRepository>()
   private val referralRejectionReasonRepositoryMock = mockk<ReferralRejectionReasonRepository>()
   private val jsonSchemaServiceMock = mockk<JsonSchemaService>()
-  private val domainEventServiceMock = mockk<DomainEventService>()
+  private val domainEventServiceMock = mockk<Cas1DomainEventService>()
   private val offenderServiceMock = mockk<OffenderService>()
   private val apDeliusContextApiClient = mockk<ApDeliusContextApiClient>()
   private val placementRequestServiceMock = mockk<PlacementRequestService>()
@@ -2333,7 +2333,7 @@ class AssessmentServiceTest {
     private val assessmentClarificationNoteRepositoryMock = mockk<AssessmentClarificationNoteRepository>()
     private val assessmentReferralHistoryNoteRepositoryMock = mockk<AssessmentReferralHistoryNoteRepository>()
     private val jsonSchemaServiceMock = mockk<JsonSchemaService>()
-    private val domainEventServiceMock = mockk<DomainEventService>()
+    private val domainEventServiceMock = mockk<Cas1DomainEventService>()
     private val offenderServiceMock = mockk<OffenderService>()
     private val apDeliusContextApiClient = mockk<ApDeliusContextApiClient>()
     private val placementRequestServiceMock = mockk<PlacementRequestService>()

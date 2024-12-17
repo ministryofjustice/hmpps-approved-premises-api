@@ -12,13 +12,12 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.ClientResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AppealEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.DomainEvent
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.DomainEventService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.UrlTemplate
 import java.util.UUID
 
 @Service
 class Cas1AppealDomainEventService(
-  private val domainEventService: DomainEventService,
+  private val domainEventService: Cas1DomainEventService,
   private val apDeliusContextApiClient: ApDeliusContextApiClient,
   @Value("\${url-templates.frontend.application}") private val applicationUrlTemplate: UrlTemplate,
   @Value("\${url-templates.frontend.application-appeal}") private val applicationAppealUrlTemplate: UrlTemplate,

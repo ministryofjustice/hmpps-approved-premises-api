@@ -13,7 +13,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas1SpaceBook
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DomainEventType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.DomainEvent
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.DomainEventSummary
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.DomainEventService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1DomainEventService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1PlacementRequestDomainEventService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.javaConstantNameToSentence
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.toUiDateTimeFormat
@@ -28,7 +28,7 @@ import java.util.UUID
 @SuppressWarnings("TooManyFunctions")
 @Component
 class DomainEventDescriber(
-  private val domainEventService: DomainEventService,
+  private val domainEventService: Cas1DomainEventService,
   private val assessmentClarificationNoteRepository: AssessmentClarificationNoteRepository,
   private val bookingRepository: BookingRepository,
   private val cas1SpaceBookingRepository: Cas1SpaceBookingRepository,

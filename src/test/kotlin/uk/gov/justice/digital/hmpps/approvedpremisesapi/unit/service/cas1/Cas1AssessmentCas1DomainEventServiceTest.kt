@@ -43,16 +43,16 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserQualification
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRole
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.deliuscontext.StaffDetail
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.DomainEventService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1AssessmentDomainEventService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1DomainEventService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.UrlTemplate
 import java.time.LocalDate
 import java.time.OffsetDateTime
 import java.util.UUID
 
-class Cas1AssessmentDomainEventServiceTest {
+class Cas1AssessmentCas1DomainEventServiceTest {
 
-  private val domainEventService = mockk<DomainEventService>()
+  private val domainEventService = mockk<Cas1DomainEventService>()
   private val apDeliusContextApiClient = mockk<ApDeliusContextApiClient>()
 
   val service = Cas1AssessmentDomainEventService(

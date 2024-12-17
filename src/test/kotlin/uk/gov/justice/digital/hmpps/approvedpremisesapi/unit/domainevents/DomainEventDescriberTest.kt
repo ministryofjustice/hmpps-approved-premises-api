@@ -77,7 +77,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TriggerSource
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.DomainEvent
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.DomainEventSummary
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.DomainEventService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1DomainEventService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.toInstant
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.toUiDateTimeFormat
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.toUiFormat
@@ -88,7 +88,7 @@ import java.time.OffsetDateTime
 import java.util.UUID
 
 class DomainEventDescriberTest {
-  private val mockDomainEventService = mockk<DomainEventService>()
+  private val mockDomainEventService = mockk<Cas1DomainEventService>()
   private val mockAssessmentClarificationNoteRepository = mockk<AssessmentClarificationNoteRepository>()
   private val mockBookingRepository = mockk<BookingRepository>()
   private val mockSpaceBookingRepository = mockk<Cas1SpaceBookingRepository>()

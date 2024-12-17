@@ -42,9 +42,9 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.RiskStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.RiskWithStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.asApiType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.AuthorisableActionResult
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.DomainEventService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.OffenderService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1ApplicationDomainEventService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1DomainEventService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.DomainEventTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.UrlTemplate
 import java.time.Clock
@@ -53,9 +53,9 @@ import java.time.OffsetDateTime
 import java.time.Period
 import java.util.UUID
 
-class Cas1ApplicationDomainEventServiceTest {
+class Cas1ApplicationCas1DomainEventServiceTest {
   private val mockOffenderService = mockk<OffenderService>()
-  private val mockDomainEventService = mockk<DomainEventService>()
+  private val mockDomainEventService = mockk<Cas1DomainEventService>()
   private val mockApDeliusContextApiClient = mockk<ApDeliusContextApiClient>()
   private val mockDomainEventTransformer = mockk<DomainEventTransformer>()
 

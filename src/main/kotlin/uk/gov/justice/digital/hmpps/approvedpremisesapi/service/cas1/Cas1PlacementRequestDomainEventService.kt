@@ -12,7 +12,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.Re
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.RequestForPlacementType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementRequestEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.DomainEvent
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.DomainEventService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.PlacementRequestSource
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.DomainEventTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.UrlTemplate
@@ -22,7 +21,7 @@ import java.util.UUID
 
 @Service
 class Cas1PlacementRequestDomainEventService(
-  private val domainEventService: DomainEventService,
+  private val domainEventService: Cas1DomainEventService,
   private val domainEventTransformer: DomainEventTransformer,
   @Value("\${url-templates.frontend.application}") private val applicationUrlTemplate: UrlTemplate,
   val clock: Clock,

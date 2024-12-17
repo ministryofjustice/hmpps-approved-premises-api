@@ -54,6 +54,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.CasResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.ValidatableActionResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1AssessmentDomainEventService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1AssessmentEmailService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1DomainEventService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1PlacementRequestEmailService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.allocations.UserAllocator
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.PageCriteria
@@ -75,7 +76,7 @@ class AssessmentService(
   private val assessmentReferralHistoryNoteRepository: AssessmentReferralHistoryNoteRepository,
   private val referralRejectionReasonRepository: ReferralRejectionReasonRepository,
   private val jsonSchemaService: JsonSchemaService,
-  private val domainEventService: DomainEventService,
+  private val domainEventService: Cas1DomainEventService,
   private val offenderService: OffenderService,
   private val apDeliusContextApiClient: ApDeliusContextApiClient,
   private val placementRequestService: PlacementRequestService,

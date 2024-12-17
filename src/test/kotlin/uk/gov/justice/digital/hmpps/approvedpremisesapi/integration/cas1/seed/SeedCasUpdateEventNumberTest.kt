@@ -39,7 +39,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.DomainEvent
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.community.OffenderDetailSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.seed.CsvBuilder
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.seed.cas1.Cas1UpdateEventNumberSeedJobCsvRow
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.DomainEventService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1DomainEventService
 import java.time.Instant
 import java.time.LocalDate
 import java.time.OffsetDateTime
@@ -50,7 +50,7 @@ import java.util.UUID
 class SeedCasUpdateEventNumberTest : SeedTestBase() {
 
   @Autowired
-  lateinit var domainEventService: DomainEventService
+  lateinit var domainEventService: Cas1DomainEventService
 
   private object CONSTANTS {
     const val OLD_EVENT_NUMBER = "1010101"

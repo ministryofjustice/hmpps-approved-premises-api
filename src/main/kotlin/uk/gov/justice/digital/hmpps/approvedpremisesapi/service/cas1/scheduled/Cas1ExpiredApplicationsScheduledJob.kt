@@ -14,13 +14,13 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremi
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TriggerSourceType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.ApprovedPremisesApplicationStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.DomainEvent
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.DomainEventService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1DomainEventService
 import java.time.Instant
 import java.util.UUID
 
 @Service
 class Cas1ExpiredApplicationsScheduledJob(
-  private val domainEventService: DomainEventService,
+  private val domainEventService: Cas1DomainEventService,
   private val applicationRepository: ApplicationRepository,
   private val transactionTemplate: TransactionTemplate,
 ) {

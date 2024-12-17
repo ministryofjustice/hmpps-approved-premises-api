@@ -40,8 +40,8 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.DomainEvent
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.repository.Cas1SpaceBookingTestRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.seed.CsvBuilder
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.seed.cas1.Cas1BookingToSpaceBookingSeedCsvRow
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.DomainEventService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1BookingDomainEventService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1DomainEventService
 import java.time.Instant
 import java.time.LocalDate
 import java.time.LocalDateTime
@@ -60,7 +60,7 @@ class SeedCas1BookingToSpaceBookingTest : SeedTestBase() {
   lateinit var cas1BookingDomainEventSet: Cas1BookingDomainEventService
 
   @Autowired
-  lateinit var cas1DomainEventService: DomainEventService
+  lateinit var cas1DomainEventService: Cas1DomainEventService
 
   @Autowired
   lateinit var deliusBookingImportRepository: Cas1DeliusBookingImportRepository
