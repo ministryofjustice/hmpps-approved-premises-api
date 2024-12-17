@@ -213,6 +213,10 @@ enum class DomainEventType(
     Cas1EventType.personArrived.value,
     "Someone has arrived at an Approved Premises for their Booking",
     TimelineEventType.approvedPremisesPersonArrived,
+    schemaVersions = listOf(
+      DEFAULT_DOMAIN_EVENT_SCHEMA_VERSION,
+      DomainEventSchemaVersion(2, "Added recordedBy field"),
+    ),
   ),
   APPROVED_PREMISES_PERSON_NOT_ARRIVED(
     DomainEventCas.CAS1,

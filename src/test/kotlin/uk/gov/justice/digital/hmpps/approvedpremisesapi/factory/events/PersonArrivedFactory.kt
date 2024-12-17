@@ -24,6 +24,7 @@ class PersonArrivedFactory : Factory<PersonArrived> {
   private var arrivedAt: Yielded<Instant> = { Instant.now().randomDateTimeBefore(5) }
   private var expectedDepartureOn: Yielded<LocalDate> = { LocalDate.now().minusDays(5) }
   private var notes: Yielded<String?> = { null }
+  private var recordedBy: Yielded<StaffMember> = { StaffMemberFactory().produce() }
 
   fun withApplicationId(applicationId: UUID) = apply {
     this.applicationId = { applicationId }
@@ -81,5 +82,6 @@ class PersonArrivedFactory : Factory<PersonArrived> {
     arrivedAt = this.arrivedAt(),
     expectedDepartureOn = this.expectedDepartureOn(),
     notes = this.notes(),
+    recordedBy = this.recordedBy(),
   )
 }

@@ -101,6 +101,9 @@ class Cas1SpaceBookingManagementDomainEventServiceTest {
       .withDefaults()
       .produce()
 
+    val recordedByUser = UserEntityFactory().withDefaults().produce()
+    val recordedByStaffDetails = StaffDetailFactory.staffDetail(deliusUsername = recordedByUser.deliusUsername)
+
     val keyWorker = StaffDetailFactory.staffDetail(deliusUsername = null)
 
     private val spaceBookingFactory = Cas1SpaceBookingEntityFactory()
@@ -120,9 +123,14 @@ class Cas1SpaceBookingManagementDomainEventServiceTest {
       every { offenderService.getPersonSummaryInfoResults(any(), any()) } returns
         listOf(PersonSummaryInfoResult.Success.Full("THEBOOKINGCRN", caseSummary))
 
-      every { apDeliusContextApiClient.getStaffDetailByStaffCode(any()) } returns ClientResult.Success(
+      every { apDeliusContextApiClient.getStaffDetailByStaffCode(keyWorker.code) } returns ClientResult.Success(
         HttpStatus.OK,
         keyWorker,
+      )
+
+      every { apDeliusContextApiClient.getStaffDetail(recordedByUser.deliusUsername) } returns ClientResult.Success(
+        HttpStatus.OK,
+        recordedByStaffDetails,
       )
     }
 
@@ -135,6 +143,7 @@ class Cas1SpaceBookingManagementDomainEventServiceTest {
           spaceBooking,
           arrivalDate,
           arrivalTime,
+          recordedByUser,
         ),
       )
 
@@ -153,6 +162,7 @@ class Cas1SpaceBookingManagementDomainEventServiceTest {
       assertThat(domainEvent.applicationId).isEqualTo(application.id)
       assertThat(domainEvent.bookingId).isNull()
       assertThat(domainEvent.cas1SpaceBookingId).isEqualTo(spaceBooking.id)
+      assertThat(domainEvent.schemaVersion).isEqualTo(2)
       assertThat(domainEvent.crn).isEqualTo(spaceBooking.crn)
       assertThat(domainEvent.nomsNumber).isEqualTo(caseSummary.nomsId)
       assertThat(domainEvent.occurredAt).isWithinTheLastMinute()
@@ -171,6 +181,10 @@ class Cas1SpaceBookingManagementDomainEventServiceTest {
       assertThat(data.keyWorker!!.staffCode).isEqualTo(keyWorker.code)
       assertThat(data.keyWorker!!.surname).isEqualTo(keyWorker.name.surname)
       assertThat(data.keyWorker!!.forenames).isEqualTo(keyWorker.name.forenames())
+      assertThat(data.recordedBy.staffCode).isEqualTo(recordedByStaffDetails.code)
+      assertThat(data.recordedBy.username).isEqualTo(recordedByStaffDetails.username)
+      assertThat(data.recordedBy.forenames).isEqualTo(recordedByStaffDetails.name.forenames())
+      assertThat(data.recordedBy.surname).isEqualTo(recordedByStaffDetails.name.surname)
     }
 
     @Test
@@ -184,6 +198,7 @@ class Cas1SpaceBookingManagementDomainEventServiceTest {
           spaceBooking,
           arrivalDate,
           arrivalTime,
+          recordedByUser,
         ),
       )
 
@@ -222,6 +237,7 @@ class Cas1SpaceBookingManagementDomainEventServiceTest {
           existingSpaceBooking,
           arrivalDate,
           arrivalTime,
+          recordedByUser,
         ),
       )
 

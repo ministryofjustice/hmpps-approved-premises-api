@@ -94,7 +94,7 @@ class DomainEventServiceTest {
     userService = userService,
     emitDomainEventsEnabled = emitDomainEventsEnabled,
     mockDomainEventUrlConfig,
-    Cas1DomainEventMigrationService(objectMapper),
+    Cas1DomainEventMigrationService(objectMapper, userService),
   )
 
   private val detailUrl = "http://example.com/1234"

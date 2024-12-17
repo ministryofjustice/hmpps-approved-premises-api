@@ -1523,6 +1523,8 @@ components:
           $ref: '#/components/schemas/Premises'
         keyWorker:
           $ref: '#/components/schemas/StaffMember'
+        recordedBy:
+          $ref: '#/components/schemas/StaffMember'
         arrivedAt:
           type: string
           example: '2022-11-30T14:51:30'
@@ -1548,6 +1550,7 @@ components:
         - premises
         - arrivedAt
         - expectedDepartureOn
+        - recordedBy
     PersonNotArrivedEnvelope:
       type: object
       properties:

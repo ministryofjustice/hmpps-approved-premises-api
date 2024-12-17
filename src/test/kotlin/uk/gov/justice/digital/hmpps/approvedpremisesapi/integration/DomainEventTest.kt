@@ -7,11 +7,15 @@ import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.EnumSource
 import org.junit.jupiter.params.provider.MethodSource
 import org.springframework.beans.factory.annotation.Autowired
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.BookingCancelledEnvelope
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.PersonArrivedEnvelope
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.config.DomainEventUrlConfig
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAUser
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DomainEventCas
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DomainEventSchemaVersion
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DomainEventType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.Cas1DomainEventsFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.bodyAsObject
 import java.time.ZoneOffset
 import java.util.UUID
 
@@ -132,9 +136,54 @@ class DomainEventTest : InitialiseDatabasePerClassTestBase() {
       .exchange()
       .expectStatus()
       .isOk
-      .expectBody(domainEventAndJson.envelope::class.java)
-      .returnResult()
+      .bodyAsObject<BookingCancelledEnvelope>()
 
-    assertThat(response.responseBody).isEqualTo(domainEventAndJson.envelope)
+    val expectedEnvelope = (domainEventAndJson.envelope as BookingCancelledEnvelope)
+    assertThat(response.eventDetails.cancelledAtDate).isEqualTo(expectedEnvelope.eventDetails.cancelledAtDate)
+    assertThat(response.eventDetails.cancellationRecordedAt).isEqualTo(expectedEnvelope.eventDetails.cancellationRecordedAt)
+  }
+
+  @Test
+  fun `Get APPROVED_PREMISES_PERSON_ARRIVED v1 is correctly migrated to v2 by populating recordedBy from triggered by user`() {
+    val (user, _) = givenAUser()
+
+    val jwt = jwtAuthHelper.createClientCredentialsJwt(
+      username = "username",
+      roles = listOf("ROLE_APPROVED_PREMISES_EVENTS"),
+    )
+
+    val domainEventAndJson = domainEventsFactory.createEnvelopeLatestVersion(
+      type = DomainEventType.APPROVED_PREMISES_PERSON_ARRIVED,
+      occurredAt = clock.instant(),
+    )
+
+    val persistedJson = domainEventsFactory.removeEventDetails(
+      objectMapper.writeValueAsString(domainEventAndJson.envelope),
+      listOf("recordedBy"),
+    )
+
+    val event = domainEventFactory.produceAndPersist {
+      withType(DomainEventType.APPROVED_PREMISES_PERSON_ARRIVED)
+      withData(persistedJson)
+      withOccurredAt(clock.instant().atOffset(ZoneOffset.UTC))
+      withSchemaVersion(1)
+      withTriggeredByUserId(user.id)
+    }
+
+    val url = generateUrlForDomainEventType(DomainEventType.APPROVED_PREMISES_PERSON_ARRIVED, event.id)
+
+    val response = webTestClient.get()
+      .uri(url)
+      .header("Authorization", "Bearer $jwt")
+      .exchange()
+      .expectStatus()
+      .isOk
+      .bodyAsObject<PersonArrivedEnvelope>()
+
+    val recordedBy = response.eventDetails.recordedBy
+    assertThat(recordedBy.username).isEqualTo(user.deliusUsername)
+    assertThat(recordedBy.staffCode).isEqualTo(user.deliusStaffCode)
+    assertThat(recordedBy.forenames).isEqualTo(user.name)
+    assertThat(recordedBy.surname).isEqualTo("unknown")
   }
 }

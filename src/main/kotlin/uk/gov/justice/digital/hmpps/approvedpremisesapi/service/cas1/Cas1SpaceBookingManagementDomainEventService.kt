@@ -57,6 +57,7 @@ class Cas1SpaceBookingManagementDomainEventService(
     val updatedCas1SpaceBooking: Cas1SpaceBookingEntity,
     val actualArrivalDate: LocalDate,
     val actualArrivalTime: LocalTime,
+    val recordedBy: UserEntity,
   )
 
   fun arrivalRecorded(arrivalInfo: ArrivalInfo) {
@@ -66,7 +67,8 @@ class Cas1SpaceBookingManagementDomainEventService(
 
     val premises = mapApprovedPremisesEntityToPremises(updatedCas1SpaceBooking.premises)
     val offenderDetails = getOffenderForCrn(updatedCas1SpaceBooking.crn)
-    val keyWorker = getStaffMemberDetails(updatedCas1SpaceBooking.keyWorkerStaffCode)
+    val recordedByStaffDetails = getStaffDetailsByUsername(arrivalInfo.recordedBy.deliusUsername)
+    val keyWorker = getStaffDetailsByStaffCode(updatedCas1SpaceBooking.keyWorkerStaffCode)
     val eventNumber = updatedCas1SpaceBooking.deliusEventNumber!!
     val applicationId = updatedCas1SpaceBooking.applicationFacade.id
     val applicationSubmittedAt = updatedCas1SpaceBooking.applicationFacade.submittedAt
@@ -82,6 +84,7 @@ class Cas1SpaceBookingManagementDomainEventService(
         occurredAt = OffsetDateTime.now().toInstant(),
         cas1SpaceBookingId = updatedCas1SpaceBooking.id,
         bookingId = null,
+        schemaVersion = 2,
         data = PersonArrivedEnvelope(
           id = domainEventId,
           timestamp = OffsetDateTime.now().toInstant(),
@@ -101,6 +104,7 @@ class Cas1SpaceBookingManagementDomainEventService(
             arrivedAt = actualArrivalDateTime,
             expectedDepartureOn = updatedCas1SpaceBooking.expectedDepartureDate,
             notes = null,
+            recordedBy = recordedByStaffDetails.toStaffMember(),
           ),
         ),
       ),
@@ -119,7 +123,7 @@ class Cas1SpaceBookingManagementDomainEventService(
     val applicationId = updatedCas1SpaceBooking.applicationFacade.id
     val premises = mapApprovedPremisesEntityToPremises(updatedCas1SpaceBooking.premises)
     val offenderDetails = getOffenderForCrn(updatedCas1SpaceBooking.crn)
-    val staffUser = getStaffMemberDetails(user.deliusStaffCode)
+    val staffUser = getStaffDetailsByStaffCode(user.deliusStaffCode)
     val eventNumber = updatedCas1SpaceBooking.deliusEventNumber!!
 
     domainEventService.savePersonNotArrivedEvent(
@@ -175,7 +179,7 @@ class Cas1SpaceBookingManagementDomainEventService(
     val applicationId = departedCas1SpaceBooking.applicationFacade.id
     val premises = mapApprovedPremisesEntityToPremises(departedCas1SpaceBooking.premises)
     val offenderDetails = getOffenderForCrn(departedCas1SpaceBooking.crn)
-    val keyWorker = getStaffMemberDetails(departedCas1SpaceBooking.keyWorkerStaffCode)
+    val keyWorker = getStaffDetailsByStaffCode(departedCas1SpaceBooking.keyWorkerStaffCode)
     val eventNumber = departedCas1SpaceBooking.deliusEventNumber!!
 
     val actualDepartureDateTime = departureInfo.actualDepartureDate.atTime(departureInfo.actualDepartureTime).toInstant()
@@ -276,7 +280,13 @@ class Cas1SpaceBookingManagementDomainEventService(
     )
   }
 
-  private fun getStaffMemberDetails(staffCode: String?): StaffMember? {
+  private fun getStaffDetailsByUsername(deliusUsername: String) =
+    when (val staffDetailsResult = apDeliusContextApiClient.getStaffDetail(deliusUsername)) {
+      is ClientResult.Success -> staffDetailsResult.body
+      is ClientResult.Failure -> staffDetailsResult.throwException()
+    }
+
+  private fun getStaffDetailsByStaffCode(staffCode: String?): StaffMember? {
     return staffCode?.let {
       when (val staffDetailResponse = apDeliusContextApiClient.getStaffDetailByStaffCode(staffCode)) {
         is ClientResult.Success -> staffDetailResponse.body.toStaffMember()
