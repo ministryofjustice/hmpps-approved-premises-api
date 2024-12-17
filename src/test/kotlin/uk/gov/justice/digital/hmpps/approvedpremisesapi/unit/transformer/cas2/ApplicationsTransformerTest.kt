@@ -100,6 +100,7 @@ class ApplicationsTransformerTest {
         "telephoneNumber",
         "assessment",
         "timelineEvents",
+        "applicationOrigin",
       )
 
       assertThat(result.id).isEqualTo(application.id)

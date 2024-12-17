@@ -1737,6 +1737,8 @@ components:
               type: array
               items:
                 $ref: '_shared.yml#/components/schemas/Cas2TimelineEvent'
+            applicationOrigin:
+              $ref: '_shared.yml#/components/schemas/ApplicationOrigin'
           required:
             - createdBy
             - schemaVersion
@@ -1774,6 +1776,8 @@ components:
         assessment:
           type: object
           $ref: '_shared.yml#/components/schemas/Cas2Assessment'
+        applicationOrigin:
+          $ref: '_shared.yml#/components/schemas/ApplicationOrigin'
       required:
         - id
         - person
@@ -1938,6 +1942,8 @@ components:
           type: string
         nomsNumber:
           type: string
+        applicationOrigin:
+          $ref: '_shared.yml#/components/schemas/ApplicationOrigin'
       required:
         - type
         - id
@@ -2056,6 +2062,8 @@ components:
         submittedAt:
           type: string
           format: date-time
+        applicationOrigin:
+          $ref: '_shared.yml#/components/schemas/ApplicationOrigin'
       required:
         - createdByUserId
         - status
@@ -2358,6 +2366,8 @@ components:
           format: date
         telephoneNumber:
           type: string
+        applicationOrigin:
+          $ref: '_shared.yml#/components/schemas/ApplicationOrigin'
       required:
         - translatedDocument
         - applicationId
@@ -4932,3 +4942,9 @@ components:
         - sharedProperty
         - singleOccupancy
         - wheelchairAccessible
+    ApplicationOrigin:
+      type: string
+      enum:
+        - courtBail
+        - prisonBail
+        - homeDetentionCurfew
