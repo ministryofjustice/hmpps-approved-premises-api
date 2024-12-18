@@ -87,6 +87,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1Booking
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.WithdrawableEntityType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.WithdrawalContext
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.WithdrawalTriggeredByUser
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.unit.util.assertThat
 import java.time.LocalDate
 import java.time.OffsetDateTime
 import java.util.UUID
@@ -2020,9 +2021,9 @@ class BookingServiceTest {
         newDepartureDate = LocalDate.parse("2023-07-14"),
       )
 
-      assertThat(result is ValidatableActionResult.ConflictError).isTrue
-      result as ValidatableActionResult.ConflictError
-      assertThat(result.message).contains("A Booking already exists")
+      assertThat(result)
+        .isConflictError()
+        .hasMessageContaining("A Booking already exists")
     }
 
     @Test
@@ -2052,9 +2053,9 @@ class BookingServiceTest {
         newDepartureDate = LocalDate.parse("2023-07-14"),
       )
 
-      assertThat(result is ValidatableActionResult.ConflictError).isTrue
-      result as ValidatableActionResult.ConflictError
-      assertThat(result.message).contains("A Lost Bed already exists")
+      assertThat(result)
+        .isConflictError()
+        .hasMessageContaining("A Lost Bed already exists")
     }
 
     @Test
@@ -2076,9 +2077,9 @@ class BookingServiceTest {
         newDepartureDate = LocalDate.parse("2023-07-14"),
       )
 
-      assertThat(result is ValidatableActionResult.FieldValidationError).isTrue
-      result as ValidatableActionResult.FieldValidationError
-      assertThat(result.validationMessages).containsEntry("$.newDepartureDate", "beforeBookingArrivalDate")
+      assertThat(result)
+        .isFieldValidationError()
+        .hasMessage("$.newDepartureDate", "beforeBookingArrivalDate")
     }
 
     @Test
@@ -2105,9 +2106,9 @@ class BookingServiceTest {
         newDepartureDate = LocalDate.parse("2023-07-16"),
       )
 
-      assertThat(result is ValidatableActionResult.FieldValidationError).isTrue
-      result as ValidatableActionResult.FieldValidationError
-      assertThat(result.validationMessages).containsEntry("$.newArrivalDate", "arrivalDateCannotBeChangedOnArrivedBooking")
+      assertThat(result)
+        .isFieldValidationError()
+        .hasMessage("$.newArrivalDate", "arrivalDateCannotBeChangedOnArrivedBooking")
     }
 
     @Test
@@ -2137,9 +2138,7 @@ class BookingServiceTest {
         newDepartureDate = LocalDate.parse("2023-07-16"),
       )
 
-      assertThat(result is ValidatableActionResult.GeneralValidationError).isTrue
-      result as ValidatableActionResult.GeneralValidationError
-      assertThat(result.message).isEqualTo("This Booking is cancelled and as such cannot be modified")
+      assertThat(result).isGeneralValidationError("This Booking is cancelled and as such cannot be modified")
     }
 
     @Test
@@ -2168,8 +2167,8 @@ class BookingServiceTest {
         newDepartureDate = LocalDate.parse("2023-07-15"),
       )
 
-      assertThat(result is ValidatableActionResult.Success).isTrue
-      result as ValidatableActionResult.Success
+      assertThat(result).isSuccess()
+      result as CasResult.Success
 
       verify {
         mockDateChangeRepository.save(
@@ -2216,8 +2215,8 @@ class BookingServiceTest {
         newDepartureDate = LocalDate.parse("2023-07-22"),
       )
 
-      assertThat(result is ValidatableActionResult.Success).isTrue
-      result as ValidatableActionResult.Success
+      assertThat(result).isSuccess()
+      result as CasResult.Success
 
       verify {
         mockDateChangeRepository.save(
@@ -2276,8 +2275,8 @@ class BookingServiceTest {
         newDepartureDate = newDepartureDate,
       )
 
-      assertThat(result is ValidatableActionResult.Success).isTrue
-      result as ValidatableActionResult.Success
+      assertThat(result).isSuccess()
+      result as CasResult.Success
 
       verify {
         mockDateChangeRepository.save(
@@ -2345,8 +2344,8 @@ class BookingServiceTest {
         newDepartureDate = newDepartureDate,
       )
 
-      assertThat(result is ValidatableActionResult.Success).isTrue
-      result as ValidatableActionResult.Success
+      assertThat(result).isSuccess()
+      result as CasResult.Success
 
       verify(exactly = 1) {
         mockCas1BookingDomainEventService.bookingChanged(
@@ -2391,8 +2390,8 @@ class BookingServiceTest {
         newDepartureDate = newDepartureDate,
       )
 
-      assertThat(result is ValidatableActionResult.Success).isTrue
-      result as ValidatableActionResult.Success
+      assertThat(result).isSuccess()
+      result as CasResult.Success
 
       verify {
         mockDateChangeRepository.save(
