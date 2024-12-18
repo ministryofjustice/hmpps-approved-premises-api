@@ -97,6 +97,7 @@ class Cas1SpaceSearchServiceTest {
       UUID.randomUUID(),
       "Some AP Area",
       3,
+      emptyList(),
     )
 
     val candidatePremises2 = CandidatePremises(
@@ -113,6 +114,7 @@ class Cas1SpaceSearchServiceTest {
       UUID.randomUUID(),
       "Some AP Area",
       6,
+      emptyList(),
     )
 
     val candidatePremises3 = CandidatePremises(
@@ -129,6 +131,7 @@ class Cas1SpaceSearchServiceTest {
       UUID.randomUUID(),
       "Some AP Area",
       9,
+      emptyList(),
     )
 
     val spaceCharacteristics = Cas1SpaceCharacteristic.entries.map { characteristicWithRandomModelScopeCalled(it.value) }
@@ -231,6 +234,7 @@ class Cas1SpaceSearchServiceTest {
       UUID.randomUUID(),
       "Some AP Area",
       3,
+      emptyList(),
     )
 
     val candidatePremises2 = CandidatePremises(
@@ -247,6 +251,7 @@ class Cas1SpaceSearchServiceTest {
       UUID.randomUUID(),
       "Some AP Area",
       6,
+      emptyList(),
     )
 
     val candidatePremises3 = CandidatePremises(
@@ -263,6 +268,7 @@ class Cas1SpaceSearchServiceTest {
       UUID.randomUUID(),
       "Some AP Area",
       9,
+      emptyList(),
     )
 
     val spaceCharacteristics = Cas1SpaceCharacteristic.entries.map { characteristicWithRandomModelScopeCalled(it.value) }
@@ -357,6 +363,7 @@ class Cas1SpaceSearchServiceTest {
       UUID.randomUUID(),
       "Some AP Area",
       3,
+      emptyList(),
     )
 
     val candidatePremises2 = CandidatePremises(
@@ -373,6 +380,7 @@ class Cas1SpaceSearchServiceTest {
       UUID.randomUUID(),
       "Some AP Area",
       6,
+      emptyList(),
     )
 
     val candidatePremises3 = CandidatePremises(
@@ -389,6 +397,7 @@ class Cas1SpaceSearchServiceTest {
       UUID.randomUUID(),
       "Some AP Area",
       9,
+      emptyList(),
     )
 
     val spaceCharacteristics = Cas1SpaceCharacteristic.entries.map { characteristicWithRandomModelScopeCalled(it.value) }
@@ -482,6 +491,7 @@ class Cas1SpaceSearchServiceTest {
       UUID.randomUUID(),
       "Some AP Area",
       3,
+      emptyList(),
     )
 
     val candidatePremises2 = CandidatePremises(
@@ -498,6 +508,7 @@ class Cas1SpaceSearchServiceTest {
       UUID.randomUUID(),
       "Some AP Area",
       6,
+      emptyList(),
     )
 
     val candidatePremises3 = CandidatePremises(
@@ -514,6 +525,7 @@ class Cas1SpaceSearchServiceTest {
       UUID.randomUUID(),
       "Some AP Area",
       9,
+      emptyList(),
     )
 
     val spaceCharacteristicEntities = spaceCharacteristics.map { characteristicWithRandomModelScopeCalled(it.value) }

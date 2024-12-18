@@ -32,7 +32,7 @@ class Cas1SpaceSearchResultsTransformer {
               name = it.candidatePremises.apAreaName,
             ),
             totalSpaceCount = it.candidatePremises.totalSpaceCount,
-            premisesCharacteristics = listOf(),
+            premisesCharacteristics = it.candidatePremises.characteristicsPropertyNames.map {  },
           ),
           distanceInMiles = it.candidatePremises.distanceInMiles.toBigDecimal(),
           spacesAvailable = listOf(),
