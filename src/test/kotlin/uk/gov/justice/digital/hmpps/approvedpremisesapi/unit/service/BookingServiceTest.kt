@@ -1960,30 +1960,28 @@ class BookingServiceTest {
     }
 
     @Test
-    fun `createExtension returns Success with correct result when an Approved Premises booking has a new departure date before the existing departure date`() {
+    fun `Error if CAS1 booking provided`() {
       val bookingEntity = BookingEntityFactory()
         .withArrivalDate(LocalDate.parse("2022-08-10"))
         .withDepartureDate(LocalDate.parse("2022-08-26"))
-        .withPremises(approvedPremises)
-        .withBed(approvedPremisesBed)
+        .withPremises(temporaryAccommodationPremises)
+        .withBed(temporaryAccommodationBed)
+        .withServiceName(ServiceName.approvedPremises)
         .produce()
 
       val result = bookingService.createExtension(
         booking = bookingEntity,
         newDepartureDate = LocalDate.parse("2022-08-25"),
         notes = "notes",
-        user = user,
       )
 
-      assertThat(result).isInstanceOf(ValidatableActionResult.Success::class.java)
-      result as ValidatableActionResult.Success
-      assertThat(result.entity.newDepartureDate).isEqualTo(LocalDate.parse("2022-08-25"))
-      assertThat(result.entity.previousDepartureDate).isEqualTo(LocalDate.parse("2022-08-26"))
-      assertThat(result.entity.notes).isEqualTo("notes")
+      assertThat(result).isInstanceOf(ValidatableActionResult.GeneralValidationError::class.java)
+      result as ValidatableActionResult.GeneralValidationError
+      assertThat(result.message).isEqualTo("Extensions are only supported by CAS3")
     }
 
     @Test
-    fun `createExtension returns Success with correct result when a Temporary Accommodation booking has a new departure date before the existing departure date`() {
+    fun `Success with correct result when a CAS3 booking has a new departure date before the existing departure date`() {
       val bookingEntity = BookingEntityFactory()
         .withArrivalDate(LocalDate.parse("2022-08-10"))
         .withDepartureDate(LocalDate.parse("2022-08-26"))
@@ -1996,7 +1994,6 @@ class BookingServiceTest {
         booking = bookingEntity,
         newDepartureDate = LocalDate.parse("2022-08-25"),
         notes = "notes",
-        user = user,
       )
 
       assertThat(result).isInstanceOf(ValidatableActionResult.Success::class.java)
@@ -2007,7 +2004,30 @@ class BookingServiceTest {
     }
 
     @Test
-    fun `createExtension returns FieldValidationError with correct param to message map when a Temporary Accommodation booking has a new departure date before the arrival date`() {
+    fun `Success with correct result when a CAS3 booking has a new departure date after the existing departure date`() {
+      val bookingEntity = BookingEntityFactory()
+        .withArrivalDate(LocalDate.parse("2022-08-10"))
+        .withDepartureDate(LocalDate.parse("2022-08-26"))
+        .withPremises(temporaryAccommodationPremises)
+        .withBed(temporaryAccommodationBed)
+        .withServiceName(ServiceName.temporaryAccommodation)
+        .produce()
+
+      val result = bookingService.createExtension(
+        booking = bookingEntity,
+        newDepartureDate = LocalDate.parse("2022-08-27"),
+        notes = "notes",
+      )
+
+      assertThat(result).isInstanceOf(ValidatableActionResult.Success::class.java)
+      result as ValidatableActionResult.Success
+      assertThat(result.entity.newDepartureDate).isEqualTo(LocalDate.parse("2022-08-27"))
+      assertThat(result.entity.previousDepartureDate).isEqualTo(LocalDate.parse("2022-08-26"))
+      assertThat(result.entity.notes).isEqualTo("notes")
+    }
+
+    @Test
+    fun `FieldValidationError when a CAS3 booking has a new departure date before the arrival date`() {
       val bookingEntity = BookingEntityFactory()
         .withArrivalDate(LocalDate.parse("2022-08-26"))
         .withPremises(temporaryAccommodationPremises)
@@ -2019,159 +2039,12 @@ class BookingServiceTest {
         booking = bookingEntity,
         newDepartureDate = LocalDate.parse("2022-08-25"),
         notes = "notes",
-        user = user,
       )
 
       assertThat(result).isInstanceOf(ValidatableActionResult.FieldValidationError::class.java)
       assertThat((result as ValidatableActionResult.FieldValidationError).validationMessages).contains(
         entry("$.newDepartureDate", "beforeBookingArrivalDate"),
       )
-    }
-
-    @Test
-    fun `createExtension returns Success with correct result when validation passed`() {
-      val bookingEntity = BookingEntityFactory()
-        .withArrivalDate(LocalDate.parse("2022-08-20"))
-        .withDepartureDate(LocalDate.parse("2022-08-24"))
-        .withPremises(approvedPremises)
-        .withBed(approvedPremisesBed)
-        .produce()
-
-      val result = bookingService.createExtension(
-        booking = bookingEntity,
-        newDepartureDate = LocalDate.parse("2022-08-25"),
-        notes = "notes",
-        user = user,
-      )
-
-      assertThat(result).isInstanceOf(ValidatableActionResult.Success::class.java)
-      result as ValidatableActionResult.Success
-      assertThat(result.entity.newDepartureDate).isEqualTo(LocalDate.parse("2022-08-25"))
-      assertThat(result.entity.previousDepartureDate).isEqualTo(LocalDate.parse("2022-08-24"))
-      assertThat(result.entity.notes).isEqualTo("notes")
-    }
-
-    @Test
-    fun `createExtension emits domain event when Booking has associated Application`() {
-      val application = ApprovedPremisesApplicationEntityFactory()
-        .withCreatedByUser(user)
-        .withSubmittedAt(OffsetDateTime.now())
-        .produce()
-
-      val bookingEntity = BookingEntityFactory()
-        .withArrivalDate(LocalDate.parse("2022-08-20"))
-        .withDepartureDate(LocalDate.parse("2022-08-24"))
-        .withPremises(approvedPremises)
-        .withBed(approvedPremisesBed)
-        .withApplication(application)
-        .withCrn(application.crn)
-        .produce()
-
-      every { mockCas1BookingDomainEventService.bookingChanged(any(), any(), any()) } just Runs
-
-      val newDepartureDate = LocalDate.parse("2022-08-25")
-
-      val result = bookingService.createExtension(
-        booking = bookingEntity,
-        newDepartureDate = newDepartureDate,
-        notes = "notes",
-        user = user,
-      )
-
-      assertThat(result).isInstanceOf(ValidatableActionResult.Success::class.java)
-      result as ValidatableActionResult.Success
-      assertThat(result.entity.newDepartureDate).isEqualTo(LocalDate.parse("2022-08-25"))
-      assertThat(result.entity.previousDepartureDate).isEqualTo(LocalDate.parse("2022-08-24"))
-      assertThat(result.entity.notes).isEqualTo("notes")
-
-      verify(exactly = 1) {
-        mockCas1BookingDomainEventService.bookingChanged(
-          booking = bookingEntity,
-          changedBy = user,
-          bookingChangedAt = any(),
-        )
-      }
-    }
-
-    @Test
-    fun `createExtension emits domain event when Booking has associated offline Application`() {
-      val application = OfflineApplicationEntityFactory()
-        .withEventNumber("123")
-        .produce()
-
-      val bookingEntity = BookingEntityFactory()
-        .withArrivalDate(LocalDate.parse("2022-08-20"))
-        .withDepartureDate(LocalDate.parse("2022-08-24"))
-        .withPremises(approvedPremises)
-        .withBed(approvedPremisesBed)
-        .withOfflineApplication(application)
-        .withCrn(application.crn)
-        .produce()
-
-      every { mockCas1BookingDomainEventService.bookingChanged(any(), any(), any()) } just Runs
-
-      val newDepartureDate = LocalDate.parse("2022-08-25")
-
-      val result = bookingService.createExtension(
-        booking = bookingEntity,
-        newDepartureDate = newDepartureDate,
-        notes = "notes",
-        user = user,
-      )
-
-      assertThat(result).isInstanceOf(ValidatableActionResult.Success::class.java)
-      result as ValidatableActionResult.Success
-      assertThat(result.entity.newDepartureDate).isEqualTo(LocalDate.parse("2022-08-25"))
-      assertThat(result.entity.previousDepartureDate).isEqualTo(LocalDate.parse("2022-08-24"))
-      assertThat(result.entity.notes).isEqualTo("notes")
-
-      verify(exactly = 1) {
-        mockCas1BookingDomainEventService.bookingChanged(
-          booking = bookingEntity,
-          changedBy = user,
-          bookingChangedAt = any(),
-        )
-      }
-    }
-
-    @Test
-    fun `createExtension does not emit domain event when Booking has associated Offline Application without an eventNumber`() {
-      val application = OfflineApplicationEntityFactory()
-        .withEventNumber(null)
-        .produce()
-
-      val bookingEntity = BookingEntityFactory()
-        .withArrivalDate(LocalDate.parse("2022-08-20"))
-        .withDepartureDate(LocalDate.parse("2022-08-24"))
-        .withPremises(approvedPremises)
-        .withBed(approvedPremisesBed)
-        .withOfflineApplication(application)
-        .withCrn(application.crn)
-        .produce()
-
-      every { mockBookingRepository.save(any()) } answers { it.invocation.args[0] as BookingEntity }
-      every { mockExtensionRepository.save(any()) } answers { it.invocation.args[0] as ExtensionEntity }
-
-      every { mockWorkingDayService.addWorkingDays(any(), any()) } answers { it.invocation.args[0] as LocalDate }
-      every { mockBookingRepository.findByBedIdAndArrivingBeforeDate(any(), any(), any()) } returns listOf()
-      every { mockLostBedsRepository.findByBedIdAndOverlappingDate(any(), any(), any(), any()) } returns listOf()
-
-      val newDepartureDate = LocalDate.parse("2022-08-25")
-
-      val result = bookingService.createExtension(
-        booking = bookingEntity,
-        newDepartureDate = newDepartureDate,
-        notes = "notes",
-        user = user,
-      )
-
-      assertThat(result).isInstanceOf(ValidatableActionResult.Success::class.java)
-      result as ValidatableActionResult.Success
-      assertThat(result.entity.newDepartureDate).isEqualTo(LocalDate.parse("2022-08-25"))
-      assertThat(result.entity.previousDepartureDate).isEqualTo(LocalDate.parse("2022-08-24"))
-      assertThat(result.entity.notes).isEqualTo("notes")
-
-      verify(exactly = 0) { mockCas1BookingDomainEventService wasNot Called }
     }
   }
 

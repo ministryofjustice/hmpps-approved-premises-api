@@ -762,25 +762,26 @@ class BookingService(
 
   @Transactional
   fun createExtension(
-    user: UserEntity?,
     booking: BookingEntity,
     newDepartureDate: LocalDate,
     notes: String?,
   ) = validated {
+    if (booking.service != ServiceName.temporaryAccommodation.value) {
+      return generalError("Extensions are only supported by CAS3")
+    }
+
     val expectedLastUnavailableDate =
       workingDayService.addWorkingDays(newDepartureDate, booking.turnaround?.workingDayCount ?: 0)
 
-    if (booking.service != ServiceName.approvedPremises.value) {
-      val bedId = booking.bed?.id
-        ?: throw InternalServerErrorProblem("No bed ID present on Booking: ${booking.id}")
+    val bedId = booking.bed?.id
+      ?: throw InternalServerErrorProblem("No bed ID present on Booking: ${booking.id}")
 
-      getBookingWithConflictingDates(booking.arrivalDate, expectedLastUnavailableDate, booking.id, bedId)?.let {
-        return@validated it.id hasConflictError "A Booking already exists for dates from ${it.arrivalDate} to ${it.lastUnavailableDate} which overlaps with the desired dates"
-      }
+    getBookingWithConflictingDates(booking.arrivalDate, expectedLastUnavailableDate, booking.id, bedId)?.let {
+      return@validated it.id hasConflictError "A Booking already exists for dates from ${it.arrivalDate} to ${it.lastUnavailableDate} which overlaps with the desired dates"
+    }
 
-      getLostBedWithConflictingDates(booking.arrivalDate, expectedLastUnavailableDate, null, bedId)?.let {
-        return@validated it.id hasConflictError "A Lost Bed already exists for dates from ${it.startDate} to ${it.endDate} which overlaps with the desired dates"
-      }
+    getLostBedWithConflictingDates(booking.arrivalDate, expectedLastUnavailableDate, null, bedId)?.let {
+      return@validated it.id hasConflictError "A Lost Bed already exists for dates from ${it.startDate} to ${it.endDate} which overlaps with the desired dates"
     }
 
     if (booking.arrivalDate.isAfter(newDepartureDate)) {
@@ -800,14 +801,6 @@ class BookingService(
     booking.departureDate = extensionEntity.newDepartureDate
     booking.extensions.add(extension)
     updateBooking(booking)
-
-    if (shouldCreateDomainEventForBooking(booking, user)) {
-      cas1BookingDomainEventService.bookingChanged(
-        booking = booking,
-        changedBy = user!!,
-        bookingChangedAt = OffsetDateTime.now(),
-      )
-    }
 
     return success(extensionEntity)
   }

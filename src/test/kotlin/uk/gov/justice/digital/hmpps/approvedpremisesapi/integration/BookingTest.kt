@@ -2856,6 +2856,7 @@ class BookingTest : IntegrationTestBase() {
     }
   }
 
+  @Nested
   inner class CreateExtensionCAS3Only {
 
     @Test
@@ -2875,8 +2876,8 @@ class BookingTest : IntegrationTestBase() {
 
     @Test
     fun `Create CAS3 Extension returns 409 Conflict when another booking for the same bed overlaps with the new departure date`() {
-      givenAUser(roles = listOf(UserRole.CAS3_ASSESSOR)) { userEntity, jwt ->
-        givenAnOffender { offenderDetails, inmateDetails ->
+      givenAUser(roles = listOf(UserRole.CAS3_ASSESSOR)) { _, jwt ->
+        givenAnOffender { offenderDetails, _ ->
           val premises = temporaryAccommodationPremisesEntityFactory.produceAndPersist {
             withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
             withYieldedProbationRegion {
@@ -2937,8 +2938,8 @@ class BookingTest : IntegrationTestBase() {
 
     @Test
     fun `Create CAS3 Extension returns 409 Conflict when another booking for the same bed overlaps with the updated booking's turnaround time`() {
-      givenAUser(roles = listOf(UserRole.CAS3_ASSESSOR)) { userEntity, jwt ->
-        givenAnOffender { offenderDetails, inmateDetails ->
+      givenAUser(roles = listOf(UserRole.CAS3_ASSESSOR)) { _, jwt ->
+        givenAnOffender { offenderDetails, _ ->
           val premises = temporaryAccommodationPremisesEntityFactory.produceAndPersist {
             withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
             withYieldedProbationRegion {
@@ -3007,8 +3008,8 @@ class BookingTest : IntegrationTestBase() {
 
     @Test
     fun `Create CAS3 Extension returns 409 Conflict when a lost bed for the same bed overlaps with the new departure date`() {
-      givenAUser(roles = listOf(UserRole.CAS3_ASSESSOR)) { userEntity, jwt ->
-        givenAnOffender { offenderDetails, inmateDetails ->
+      givenAUser(roles = listOf(UserRole.CAS3_ASSESSOR)) { _, jwt ->
+        givenAnOffender { offenderDetails, _ ->
           val premises = temporaryAccommodationPremisesEntityFactory.produceAndPersist {
             withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
             withYieldedProbationRegion {
@@ -3068,8 +3069,8 @@ class BookingTest : IntegrationTestBase() {
 
     @Test
     fun `Create CAS3 Extension returns 409 Conflict when a lost bed for the same bed overlaps with the updated booking's turnaround time`() {
-      givenAUser(roles = listOf(UserRole.CAS3_ASSESSOR)) { userEntity, jwt ->
-        givenAnOffender { offenderDetails, inmateDetails ->
+      givenAUser(roles = listOf(UserRole.CAS3_ASSESSOR)) { _, jwt ->
+        givenAnOffender { offenderDetails, _ ->
           val premises = temporaryAccommodationPremisesEntityFactory.produceAndPersist {
             withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
             withYieldedProbationRegion {
@@ -3135,17 +3136,10 @@ class BookingTest : IntegrationTestBase() {
       }
     }
 
-    @ParameterizedTest
-    @EnumSource(value = UserRole::class, names = ["CAS1_FUTURE_MANAGER", "CAS1_MATCHER"])
-    fun `Create CAS1 Extension returns OK with expected body, updates departureDate on Booking entity when user has one of roles FUTURE_MANAGER, MATCHER`(
-      role: UserRole,
-    ) {
-      givenAUser(roles = listOf(role)) { userEntity, jwt ->
-        val keyWorker = ContextStaffMemberFactory().produce()
-        apDeliusContextMockSuccessfulStaffMembersCall(keyWorker, "QCODE")
-
-        val premises = approvedPremisesEntityFactory.produceAndPersist {
-          withQCode("QCODE")
+    @Test
+    fun `Create CAS3 Extension returns OK with expected body, updates departureDate on Booking entity when user has one of roles CAS3_ASSESSOR`() {
+      givenAUser(roles = listOf(UserRole.CAS3_ASSESSOR)) { _, jwt ->
+        val premises = temporaryAccommodationPremisesEntityFactory.produceAndPersist {
           withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
           withYieldedProbationRegion {
             probationRegion
@@ -3161,177 +3155,20 @@ class BookingTest : IntegrationTestBase() {
         }
 
         val booking = bookingEntityFactory.produceAndPersist {
+          withServiceName(ServiceName.temporaryAccommodation)
           withArrivalDate(LocalDate.parse("2022-08-18"))
           withDepartureDate(LocalDate.parse("2022-08-20"))
-          withStaffKeyWorkerCode(keyWorker.code)
           withPremises(premises)
           withBed(bed)
         }
 
         creatingNewExtensionReturnsCorrectly(booking, jwt, "2022-08-22")
-      }
-    }
-
-    @Test
-    fun `Create CAS1 Extension returns OK when a booking has no bed`() {
-      givenAUser(roles = listOf(UserRole.CAS1_FUTURE_MANAGER)) { userEntity, jwt ->
-        val keyWorker = ContextStaffMemberFactory().produce()
-        apDeliusContextMockSuccessfulStaffMembersCall(keyWorker, "QCODE")
-
-        val premises = approvedPremisesEntityFactory.produceAndPersist {
-          withQCode("QCODE")
-          withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
-          withYieldedProbationRegion {
-            probationRegion
-          }
-        }
-
-        val booking = bookingEntityFactory.produceAndPersist {
-          withArrivalDate(LocalDate.parse("2022-08-18"))
-          withDepartureDate(LocalDate.parse("2022-08-20"))
-          withStaffKeyWorkerCode(keyWorker.code)
-          withPremises(premises)
-        }
-
-        creatingNewExtensionReturnsCorrectly(booking, jwt, "2022-08-22")
-      }
-    }
-
-    @Test
-    fun `Create CAS1 Extension returns OK when another booking for the same bed overlaps with the new departure date`() {
-      givenAUser(roles = listOf(UserRole.CAS1_FUTURE_MANAGER)) { _, jwt ->
-        val keyWorker = ContextStaffMemberFactory().produce()
-        apDeliusContextMockSuccessfulStaffMembersCall(keyWorker, "QCODE")
-
-        val premises = approvedPremisesEntityFactory.produceAndPersist {
-          withQCode("QCODE")
-          withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
-          withYieldedProbationRegion {
-            probationRegion
-          }
-        }
-
-        val room = roomEntityFactory.produceAndPersist {
-          withPremises(premises)
-        }
-
-        val bed = bedEntityFactory.produceAndPersist {
-          withRoom(room)
-        }
-
-        val booking = bookingEntityFactory.produceAndPersist {
-          withArrivalDate(LocalDate.parse("2022-08-18"))
-          withDepartureDate(LocalDate.parse("2022-08-20"))
-          withStaffKeyWorkerCode(keyWorker.code)
-          withPremises(premises)
-          withBed(bed)
-        }
-
-        val conflictingBooking = bookingEntityFactory.produceAndPersist {
-          withServiceName(ServiceName.temporaryAccommodation)
-          withCrn("CRN123")
-          withYieldedPremises { premises }
-          withYieldedBed { bed }
-          withArrivalDate(LocalDate.parse("2022-07-15"))
-          withDepartureDate(LocalDate.parse("2022-08-15"))
-        }
-
-        creatingNewExtensionReturnsCorrectly(booking, jwt, "2022-09-20")
-      }
-    }
-
-    @Test
-    fun `Create CAS1 Extension returns OK when another booking for the same bed overlaps with the updated booking's turnaround time`() {
-      givenAUser(roles = listOf(UserRole.CAS1_FUTURE_MANAGER)) { _, jwt ->
-        val keyWorker = ContextStaffMemberFactory().produce()
-        apDeliusContextMockSuccessfulStaffMembersCall(keyWorker, "QCODE")
-
-        val premises = approvedPremisesEntityFactory.produceAndPersist {
-          withQCode("QCODE")
-          withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
-          withYieldedProbationRegion {
-            probationRegion
-          }
-        }
-
-        val bed = bedEntityFactory.produceAndPersist {
-          withName("test-bed")
-          withYieldedRoom {
-            roomEntityFactory.produceAndPersist {
-              withName("test-room")
-              withYieldedPremises { premises }
-            }
-          }
-        }
-
-        val conflictingBooking = bookingEntityFactory.produceAndPersist {
-          withServiceName(ServiceName.temporaryAccommodation)
-          withCrn("CRN123")
-          withYieldedPremises { premises }
-          withYieldedBed { bed }
-          withArrivalDate(LocalDate.parse("2022-08-21"))
-          withDepartureDate(LocalDate.parse("2022-08-29"))
-        }
-
-        val booking = bookingEntityFactory.produceAndPersist {
-          withArrivalDate(LocalDate.parse("2022-08-18"))
-          withDepartureDate(LocalDate.parse("2022-08-20"))
-          withStaffKeyWorkerCode(keyWorker.code)
-          withPremises(premises)
-          withBed(bed)
-        }
-
-        creatingNewExtensionReturnsCorrectly(booking, jwt, "2022-08-23")
-      }
-    }
-
-    @Test
-    fun `Create CAS1 Extension returns OK when a lost bed for the same bed overlaps with the new departure date`() {
-      givenAUser(roles = listOf(UserRole.CAS1_FUTURE_MANAGER)) { _, jwt ->
-        val keyWorker = ContextStaffMemberFactory().produce()
-        apDeliusContextMockSuccessfulStaffMembersCall(keyWorker, "QCODE")
-
-        val premises = approvedPremisesEntityFactory.produceAndPersist {
-          withQCode("QCODE")
-          withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
-          withYieldedProbationRegion {
-            probationRegion
-          }
-        }
-
-        val bed = bedEntityFactory.produceAndPersist {
-          withName("test-bed")
-          withYieldedRoom {
-            roomEntityFactory.produceAndPersist {
-              withName("test-room")
-              withYieldedPremises { premises }
-            }
-          }
-        }
-
-        val conflictingLostBed = lostBedsEntityFactory.produceAndPersist {
-          withBed(bed)
-          withPremises(premises)
-          withStartDate(LocalDate.parse("2022-07-15"))
-          withEndDate(LocalDate.parse("2022-08-22"))
-          withYieldedReason { lostBedReasonEntityFactory.produceAndPersist() }
-        }
-
-        val booking = bookingEntityFactory.produceAndPersist {
-          withArrivalDate(LocalDate.parse("2022-08-18"))
-          withDepartureDate(LocalDate.parse("2022-08-20"))
-          withStaffKeyWorkerCode(keyWorker.code)
-          withPremises(premises)
-          withBed(bed)
-        }
-
-        creatingNewExtensionReturnsCorrectly(booking, jwt, "2022-08-29")
       }
     }
 
     @Test
     fun `Create CAS3 Extension returns 403 Forbidden for a premises that's not in the user's region`() {
-      givenAUser { userEntity, jwt ->
+      givenAUser { _, jwt ->
         val booking = bookingEntityFactory.produceAndPersist {
           withDepartureDate(LocalDate.parse("2022-08-20"))
           withYieldedPremises {
