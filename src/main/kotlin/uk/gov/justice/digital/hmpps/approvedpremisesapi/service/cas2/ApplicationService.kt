@@ -20,6 +20,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas2Applicati
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas2ApplicationRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas2ApplicationSummaryEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas2LockableApplicationRepository
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.MetaDataName
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.NomisUserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.DomainEvent
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PaginationMetadata
@@ -324,7 +325,7 @@ class ApplicationService(
         crn = application.crn,
         nomsNumber = application.nomsNumber,
         occurredAt = eventOccurredAt.toInstant(),
-        applicationOrigin = application.applicationOrigin,
+        metadata = mapOf(Pair(MetaDataName.CAS2_BAIL_ORIGIN, application.applicationOrigin)),
         data = Cas2ApplicationSubmittedEvent(
           id = domainEventId,
           timestamp = eventOccurredAt.toInstant(),
@@ -349,7 +350,6 @@ class ApplicationService(
                 username = application.createdByUser.nomisUsername,
               ),
             ),
-            applicationOrigin = application.applicationOrigin,
           ),
         ),
       ),
