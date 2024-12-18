@@ -96,7 +96,14 @@ FROM
       FROM beds b
       INNER JOIN rooms r ON b.room_id = r.id
       WHERE r.premises_id = p.id
-    ) AS total_spaces_count
+    ) AS total_spaces_count,
+    ( 
+    	SELECT ARRAY_AGG (characteristics.property_name)
+    	FROM premises_characteristics pc
+      LEFT OUTER JOIN characteristics ON characteristics.id = pc.characteristic_id
+      WHERE pc.premises_id = p.id 
+      GROUP by pc.premises_id
+    ) AS premise_characteristics
   FROM approved_premises ap
   INNER JOIN premises p ON ap.premises_id = p.id
   INNER JOIN probation_regions pr ON p.probation_region_id = pr.id
@@ -159,8 +166,17 @@ class Cas1SpaceSearchRepository(
         rs.getUUID("ap_area_id"),
         rs.getString("ap_area_name"),
         rs.getInt("total_spaces_count"),
+        toStringList(rs.getArray("premise_characteristics")),
       )
     }
+  }
+
+  private fun toStringList(array: java.sql.Array?): List<String> {
+    if (array == null) {
+      return emptyList()
+    }
+
+    return (array.array as Array<String>).toList()
   }
 
   private fun resolveCandidatePremisesQueryTemplate(
@@ -262,6 +278,7 @@ data class CandidatePremises(
   val apAreaId: UUID,
   val apAreaName: String,
   val totalSpaceCount: Int,
+  val characteristicsPropertyNames: List<String>,
 )
 
 data class SpaceAvailability(

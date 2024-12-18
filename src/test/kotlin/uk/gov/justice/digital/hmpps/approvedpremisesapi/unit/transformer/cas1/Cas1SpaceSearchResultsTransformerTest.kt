@@ -48,6 +48,7 @@ class Cas1SpaceSearchResultsTransformerTest {
       UUID.randomUUID(),
       "Some AP Area",
       3,
+      emptyList(),
     )
 
     val candidatePremises2 = CandidatePremises(
@@ -64,6 +65,7 @@ class Cas1SpaceSearchResultsTransformerTest {
       UUID.randomUUID(),
       "Some AP Area",
       6,
+      emptyList(),
     )
 
     val candidatePremises3 = CandidatePremises(
@@ -80,6 +82,7 @@ class Cas1SpaceSearchResultsTransformerTest {
       UUID.randomUUID(),
       "Some AP Area",
       9,
+      emptyList(),
     )
 
     val spaceAvailability1 = SpaceAvailability(candidatePremises1.premisesId)
