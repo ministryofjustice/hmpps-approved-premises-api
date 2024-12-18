@@ -2,9 +2,9 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.cas1.seed
 
 import org.assertj.core.api.Assertions.assertThat
 import org.jetbrains.kotlinx.dataframe.api.dataFrameOf
+import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
-import org.springframework.beans.factory.annotation.Autowired
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.SeedFromExcelFileType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.seed.SeedTestBase
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.seed.cas1.QuestionCriteriaMapping
@@ -14,8 +14,12 @@ import java.util.UUID
 @TestInstance(TestInstance.Lifecycle.PER_METHOD)
 class SeedFromXLSXApprovedPremisesRoomsTest : SeedTestBase() {
 
-  @Autowired
-  lateinit var questionCriteriaMapping: QuestionCriteriaMapping
+  private lateinit var questionCriteriaMapping: QuestionCriteriaMapping
+
+  @BeforeEach
+  fun setup() {
+    questionCriteriaMapping = QuestionCriteriaMapping(characteristicRepository)
+  }
 
   fun MutableList<String>.addCharacteristics(numberOfRooms: Int = 1, activeCharacteristics: Map<String, List<Int>> = emptyMap()) {
     questionCriteriaMapping.questionToCharacterEntityMapping.keys.forEach { question ->
