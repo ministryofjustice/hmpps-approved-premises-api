@@ -84,26 +84,6 @@ class Cas1BookingDomainEventService(
     )
   }
 
-  private fun BookingEntity.toBookingInfo() = BookingInfo(
-    id = id,
-    createdAt = createdAt,
-    crn = crn,
-    premises = premises as ApprovedPremisesEntity,
-    arrivalDate = arrivalDate,
-    departureDate = departureDate,
-    isSpaceBooking = false,
-  )
-
-  private fun Cas1SpaceBookingEntity.toBookingInfo() = BookingInfo(
-    id = id,
-    createdAt = createdAt,
-    crn = crn,
-    premises = premises,
-    arrivalDate = canonicalArrivalDate,
-    departureDate = canonicalDepartureDate,
-    isSpaceBooking = true,
-  )
-
   fun bookingNotMade(
     user: UserEntity,
     placementRequest: PlacementRequestEntity,
@@ -153,116 +133,6 @@ class Cas1BookingDomainEventService(
         ),
         metadata = mapOfNonNullValues(
           MetaDataName.CAS1_PLACEMENT_REQUEST_ID to placementRequest.id.toString(),
-        ),
-      ),
-    )
-  }
-
-  private fun getOffenderDetails(
-    crn: String,
-    deliusUsername: String,
-    ignoreLaoRestrictions: Boolean,
-  ) = when (val offenderDetailsResult = offenderService.getOffenderByCrn(crn, deliusUsername, ignoreLaoRestrictions)) {
-    is AuthorisableActionResult.Success -> offenderDetailsResult.entity
-    else -> null
-  }
-
-  private fun getStaffDetails(deliusUsername: String) =
-    when (val staffDetailsResult = apDeliusContextApiClient.getStaffDetail(deliusUsername)) {
-      is ClientResult.Success -> staffDetailsResult.body
-      is ClientResult.Failure -> staffDetailsResult.throwException()
-    }
-
-  data class BookingInfo(
-    val id: UUID,
-    val createdAt: OffsetDateTime,
-    val crn: String,
-    val premises: ApprovedPremisesEntity,
-    val arrivalDate: LocalDate,
-    val departureDate: LocalDate,
-    val isSpaceBooking: Boolean,
-  )
-
-  private fun bookingMade(
-    applicationId: UUID,
-    eventNumber: String,
-    bookingInfo: BookingInfo,
-    user: UserEntity,
-    applicationSubmittedOn: OffsetDateTime?,
-    sentenceType: String?,
-    releaseType: String?,
-    situation: String?,
-    placementRequestId: UUID?,
-  ) {
-    val domainEventId = UUID.randomUUID()
-    val crn = bookingInfo.crn
-
-    val offenderDetails =
-      when (val offenderDetailsResult = offenderService.getOffenderByCrn(crn, user.deliusUsername, true)) {
-        is AuthorisableActionResult.Success -> offenderDetailsResult.entity
-        else -> null
-      }
-
-    val staffDetails = getStaffDetails(user.deliusUsername)
-
-    val approvedPremises = bookingInfo.premises
-    val bookingCreatedAt = bookingInfo.createdAt
-    val isSpaceBooking = bookingInfo.isSpaceBooking
-
-    domainEventService.saveBookingMadeDomainEvent(
-      DomainEvent(
-        id = domainEventId,
-        applicationId = applicationId,
-        crn = crn,
-        nomsNumber = offenderDetails?.otherIds?.nomsNumber,
-        occurredAt = bookingCreatedAt.toInstant(),
-        bookingId = if (isSpaceBooking) {
-          null
-        } else {
-          bookingInfo.id
-        },
-        cas1SpaceBookingId = if (isSpaceBooking) {
-          bookingInfo.id
-        } else {
-          null
-        },
-        data = BookingMadeEnvelope(
-          id = domainEventId,
-          timestamp = bookingCreatedAt.toInstant(),
-          eventType = EventType.bookingMade,
-          eventDetails = BookingMade(
-            applicationId = applicationId,
-            applicationUrl = applicationUrlTemplate.resolve("id", applicationId.toString()),
-            bookingId = bookingInfo.id,
-            personReference = PersonReference(
-              crn = crn,
-              noms = offenderDetails?.otherIds?.nomsNumber ?: "Unknown NOMS Number",
-            ),
-            deliusEventNumber = eventNumber,
-            createdAt = bookingCreatedAt.toInstant(),
-            bookedBy = BookingMadeBookedBy(
-              staffMember = staffDetails.toStaffMember(),
-              cru = Cru(
-                name = user.apArea?.name ?: "Unknown CRU",
-              ),
-            ),
-            premises = Premises(
-              id = approvedPremises.id,
-              name = approvedPremises.name,
-              apCode = approvedPremises.apCode,
-              legacyApCode = approvedPremises.qCode,
-              localAuthorityAreaName = approvedPremises.localAuthorityArea!!.name,
-            ),
-            arrivalOn = bookingInfo.arrivalDate,
-            departureOn = bookingInfo.departureDate,
-            applicationSubmittedOn = applicationSubmittedOn?.toInstant(),
-            releaseType = releaseType,
-            sentenceType = sentenceType,
-            situation = situation,
-          ),
-        ),
-        metadata = mapOfNonNullValues(
-          MetaDataName.CAS1_PLACEMENT_REQUEST_ID to placementRequestId?.toString(),
         ),
       ),
     )
@@ -367,6 +237,91 @@ class Cas1BookingDomainEventService(
       ),
     )
 
+  private fun bookingMade(
+    applicationId: UUID,
+    eventNumber: String,
+    bookingInfo: BookingInfo,
+    user: UserEntity,
+    applicationSubmittedOn: OffsetDateTime?,
+    sentenceType: String?,
+    releaseType: String?,
+    situation: String?,
+    placementRequestId: UUID?,
+  ) {
+    val domainEventId = UUID.randomUUID()
+    val crn = bookingInfo.crn
+
+    val offenderDetails =
+      when (val offenderDetailsResult = offenderService.getOffenderByCrn(crn, user.deliusUsername, true)) {
+        is AuthorisableActionResult.Success -> offenderDetailsResult.entity
+        else -> null
+      }
+
+    val staffDetails = getStaffDetails(user.deliusUsername)
+
+    val approvedPremises = bookingInfo.premises
+    val bookingCreatedAt = bookingInfo.createdAt
+    val isSpaceBooking = bookingInfo.isSpaceBooking
+
+    domainEventService.saveBookingMadeDomainEvent(
+      DomainEvent(
+        id = domainEventId,
+        applicationId = applicationId,
+        crn = crn,
+        nomsNumber = offenderDetails?.otherIds?.nomsNumber,
+        occurredAt = bookingCreatedAt.toInstant(),
+        bookingId = if (isSpaceBooking) {
+          null
+        } else {
+          bookingInfo.id
+        },
+        cas1SpaceBookingId = if (isSpaceBooking) {
+          bookingInfo.id
+        } else {
+          null
+        },
+        data = BookingMadeEnvelope(
+          id = domainEventId,
+          timestamp = bookingCreatedAt.toInstant(),
+          eventType = EventType.bookingMade,
+          eventDetails = BookingMade(
+            applicationId = applicationId,
+            applicationUrl = applicationUrlTemplate.resolve("id", applicationId.toString()),
+            bookingId = bookingInfo.id,
+            personReference = PersonReference(
+              crn = crn,
+              noms = offenderDetails?.otherIds?.nomsNumber ?: "Unknown NOMS Number",
+            ),
+            deliusEventNumber = eventNumber,
+            createdAt = bookingCreatedAt.toInstant(),
+            bookedBy = BookingMadeBookedBy(
+              staffMember = staffDetails.toStaffMember(),
+              cru = Cru(
+                name = user.apArea?.name ?: "Unknown CRU",
+              ),
+            ),
+            premises = Premises(
+              id = approvedPremises.id,
+              name = approvedPremises.name,
+              apCode = approvedPremises.apCode,
+              legacyApCode = approvedPremises.qCode,
+              localAuthorityAreaName = approvedPremises.localAuthorityArea!!.name,
+            ),
+            arrivalOn = bookingInfo.arrivalDate,
+            departureOn = bookingInfo.departureDate,
+            applicationSubmittedOn = applicationSubmittedOn?.toInstant(),
+            releaseType = releaseType,
+            sentenceType = sentenceType,
+            situation = situation,
+          ),
+        ),
+        metadata = mapOfNonNullValues(
+          MetaDataName.CAS1_PLACEMENT_REQUEST_ID to placementRequestId?.toString(),
+        ),
+      ),
+    )
+  }
+
   private fun bookingCancelled(
     cancellationInfo: CancellationInfo,
   ) {
@@ -441,6 +396,51 @@ class Cas1BookingDomainEventService(
       ),
     )
   }
+
+  private fun getOffenderDetails(
+    crn: String,
+    deliusUsername: String,
+    ignoreLaoRestrictions: Boolean,
+  ) = when (val offenderDetailsResult = offenderService.getOffenderByCrn(crn, deliusUsername, ignoreLaoRestrictions)) {
+    is AuthorisableActionResult.Success -> offenderDetailsResult.entity
+    else -> null
+  }
+
+  private fun getStaffDetails(deliusUsername: String) =
+    when (val staffDetailsResult = apDeliusContextApiClient.getStaffDetail(deliusUsername)) {
+      is ClientResult.Success -> staffDetailsResult.body
+      is ClientResult.Failure -> staffDetailsResult.throwException()
+    }
+
+  private data class BookingInfo(
+    val id: UUID,
+    val createdAt: OffsetDateTime,
+    val crn: String,
+    val premises: ApprovedPremisesEntity,
+    val arrivalDate: LocalDate,
+    val departureDate: LocalDate,
+    val isSpaceBooking: Boolean,
+  )
+
+  private fun BookingEntity.toBookingInfo() = BookingInfo(
+    id = id,
+    createdAt = createdAt,
+    crn = crn,
+    premises = premises as ApprovedPremisesEntity,
+    arrivalDate = arrivalDate,
+    departureDate = departureDate,
+    isSpaceBooking = false,
+  )
+
+  private fun Cas1SpaceBookingEntity.toBookingInfo() = BookingInfo(
+    id = id,
+    createdAt = createdAt,
+    crn = crn,
+    premises = premises,
+    arrivalDate = canonicalArrivalDate,
+    departureDate = canonicalDepartureDate,
+    isSpaceBooking = true,
+  )
 
   private data class CancellationInfo(
     val bookingId: UUID,
