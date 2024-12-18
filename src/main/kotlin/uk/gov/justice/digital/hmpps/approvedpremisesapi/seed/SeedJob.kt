@@ -1,5 +1,8 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.seed
 
+import org.jetbrains.kotlinx.dataframe.DataFrame
+import java.util.UUID
+
 abstract class SeedJob<RowType>(
   val requiredHeaders: Set<String>? = null,
   val runInTransaction: Boolean = true,
@@ -22,6 +25,11 @@ abstract class SeedJob<RowType>(
   }
   abstract fun deserializeRow(columns: Map<String, String>): RowType
   abstract fun processRow(row: RowType)
+}
+
+@Suppress("TooGenericExceptionThrown")
+abstract class ExcelSeedJob {
+  abstract fun processDataFrame(dataFrame: DataFrame<*>, premisesId: UUID)
 }
 
 class SeedException(message: String) : RuntimeException(message)
