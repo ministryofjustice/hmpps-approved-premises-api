@@ -3,7 +3,6 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1
 import org.springframework.data.repository.findByIdOrNull
 import org.springframework.stereotype.Service
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1SpaceSearchParameters
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Gender
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremiseApplicationRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.CharacteristicEntity
@@ -54,33 +53,14 @@ class Cas1SpaceSearchService(
 
   private fun getRequiredCharacteristics(searchParameters: Cas1SpaceSearchParameters) = RequiredCharacteristics(
     searchParameters.requirements.apTypes?.map { it.asApprovedPremisesType() } ?: listOf(),
-    getGenderCharacteristics(searchParameters),
     getSpaceCharacteristics(searchParameters),
   )
 
-  private fun getGenderCharacteristics(searchParameters: Cas1SpaceSearchParameters): List<UUID> {
-    val characteristicNames = mutableListOf<String?>()
+  private fun getSpaceCharacteristics(searchParameters: Cas1SpaceSearchParameters): GroupedCharacteristics {
+    val propertyNames = searchParameters.requirements.spaceCharacteristics?.map { it.value } ?: listOf()
+    val characteristics = characteristicService.getCharacteristicsByPropertyNames(propertyNames, ServiceName.approvedPremises)
 
-    searchParameters.requirements.genders?.forEach {
-      characteristicNames += when (it) {
-        Gender.male -> null
-        Gender.female -> null
-      }
-    }
-
-    return getCharacteristicGroup(characteristicNames).premisesCharacteristics
-  }
-
-  private fun getSpaceCharacteristics(searchParameters: Cas1SpaceSearchParameters): CharacteristicGroup {
-    val characteristicNames = searchParameters.requirements.spaceCharacteristics?.map { it.value } ?: listOf()
-
-    return getCharacteristicGroup(characteristicNames)
-  }
-
-  private fun getCharacteristicGroup(characteristicNames: List<String?>): CharacteristicGroup {
-    val characteristics = characteristicService.getCharacteristicsByPropertyNames(characteristicNames.filterNotNull(), ServiceName.approvedPremises)
-
-    return CharacteristicGroup(
+    return GroupedCharacteristics(
       characteristics.filter { it.isPremisesCharacteristic() }.map { it.id },
       characteristics.filter { it.isRoomCharacteristic() }.map { it.id },
     )
@@ -121,11 +101,10 @@ class Cas1SpaceSearchService(
 
 data class RequiredCharacteristics(
   val apTypes: List<ApprovedPremisesType>,
-  val genders: List<UUID>,
-  val space: CharacteristicGroup,
+  val space: GroupedCharacteristics,
 )
 
-data class CharacteristicGroup(
+data class GroupedCharacteristics(
   val premisesCharacteristics: List<UUID>,
   val roomCharacteristics: List<UUID>,
 )

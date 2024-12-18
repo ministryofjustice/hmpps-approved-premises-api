@@ -13,7 +13,7 @@ private const val AP_TYPE_FILTER = """
 
 private const val PREMISES_CHARACTERISTICS_FILTER = """
   AND (
-    SELECT COUNT(*)
+    SELECT COUNT(distinct pc.characteristic_id)
     FROM premises_characteristics pc
     WHERE
       pc.premises_id = result.premises_id
@@ -23,10 +23,9 @@ private const val PREMISES_CHARACTERISTICS_FILTER = """
 
 private const val ROOM_CHARACTERISTICS_FILTER = """
   AND (
-    SELECT COUNT(*)
+    SELECT COUNT(distinct rc.characteristic_id)
     FROM room_characteristics rc
-    JOIN rooms r
-    ON rc.room_id = r.id
+    JOIN rooms r ON rc.room_id = r.id
     WHERE
       r.premises_id = result.premises_id
       AND rc.characteristic_id IN (:roomCharacteristics)
