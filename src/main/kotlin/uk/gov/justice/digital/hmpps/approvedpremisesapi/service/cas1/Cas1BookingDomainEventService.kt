@@ -142,6 +142,8 @@ class Cas1BookingDomainEventService(
     booking: BookingEntity,
     changedBy: UserEntity,
     bookingChangedAt: OffsetDateTime,
+    previousArrivalDateIfChanged: LocalDate?,
+    previousDepartureDateIfChanged: LocalDate?,
   ) {
     val domainEventId = UUID.randomUUID()
     val applicationFacade = booking.cas1ApplicationFacade
@@ -169,6 +171,7 @@ class Cas1BookingDomainEventService(
         nomsNumber = offenderDetails?.otherIds?.nomsNumber,
         occurredAt = bookingChangedAt.toInstant(),
         bookingId = booking.id,
+        schemaVersion = 2,
         data = BookingChangedEnvelope(
           id = domainEventId,
           timestamp = bookingChangedAt.toInstant(),
@@ -193,6 +196,8 @@ class Cas1BookingDomainEventService(
             ),
             arrivalOn = booking.arrivalDate,
             departureOn = booking.departureDate,
+            previousArrivalOn = previousArrivalDateIfChanged,
+            previousDepartureOn = previousDepartureDateIfChanged,
           ),
         ),
       ),
