@@ -589,7 +589,7 @@ class PremisesController(
       newDepartureDate = body.newDepartureDate,
     )
 
-    val dateChange = extractResultEntityOrThrow(result)
+    val dateChange = extractEntityFromCasResult(result)
 
     return ResponseEntity.ok(dateChangeTransformer.transformJpaToApi(dateChange))
   }
