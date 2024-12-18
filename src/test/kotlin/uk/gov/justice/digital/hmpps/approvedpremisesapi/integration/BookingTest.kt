@@ -2856,7 +2856,7 @@ class BookingTest : IntegrationTestBase() {
     }
   }
 
-  inner class CreateExtension {
+  inner class CreateExtensionCAS3Only {
 
     @Test
     fun `Create Extension without JWT returns 401`() {
@@ -2874,7 +2874,7 @@ class BookingTest : IntegrationTestBase() {
     }
 
     @Test
-    fun `Create Temporary Accommodation Extension returns 409 Conflict when another booking for the same bed overlaps with the new departure date`() {
+    fun `Create CAS3 Extension returns 409 Conflict when another booking for the same bed overlaps with the new departure date`() {
       givenAUser(roles = listOf(UserRole.CAS3_ASSESSOR)) { userEntity, jwt ->
         givenAnOffender { offenderDetails, inmateDetails ->
           val premises = temporaryAccommodationPremisesEntityFactory.produceAndPersist {
@@ -2936,7 +2936,7 @@ class BookingTest : IntegrationTestBase() {
     }
 
     @Test
-    fun `Create Temporary Accommodation Extension returns 409 Conflict when another booking for the same bed overlaps with the updated booking's turnaround time`() {
+    fun `Create CAS3 Extension returns 409 Conflict when another booking for the same bed overlaps with the updated booking's turnaround time`() {
       givenAUser(roles = listOf(UserRole.CAS3_ASSESSOR)) { userEntity, jwt ->
         givenAnOffender { offenderDetails, inmateDetails ->
           val premises = temporaryAccommodationPremisesEntityFactory.produceAndPersist {
@@ -3006,7 +3006,7 @@ class BookingTest : IntegrationTestBase() {
     }
 
     @Test
-    fun `Create Temporary Accommodation Extension returns 409 Conflict when a lost bed for the same bed overlaps with the new departure date`() {
+    fun `Create CAS3 Extension returns 409 Conflict when a lost bed for the same bed overlaps with the new departure date`() {
       givenAUser(roles = listOf(UserRole.CAS3_ASSESSOR)) { userEntity, jwt ->
         givenAnOffender { offenderDetails, inmateDetails ->
           val premises = temporaryAccommodationPremisesEntityFactory.produceAndPersist {
@@ -3067,7 +3067,7 @@ class BookingTest : IntegrationTestBase() {
     }
 
     @Test
-    fun `Create Temporary Accommodation Extension returns 409 Conflict when a lost bed for the same bed overlaps with the updated booking's turnaround time`() {
+    fun `Create CAS3 Extension returns 409 Conflict when a lost bed for the same bed overlaps with the updated booking's turnaround time`() {
       givenAUser(roles = listOf(UserRole.CAS3_ASSESSOR)) { userEntity, jwt ->
         givenAnOffender { offenderDetails, inmateDetails ->
           val premises = temporaryAccommodationPremisesEntityFactory.produceAndPersist {
@@ -3137,7 +3137,7 @@ class BookingTest : IntegrationTestBase() {
 
     @ParameterizedTest
     @EnumSource(value = UserRole::class, names = ["CAS1_FUTURE_MANAGER", "CAS1_MATCHER"])
-    fun `Create Extension on Approved Premises Booking returns OK with expected body, updates departureDate on Booking entity when user has one of roles FUTURE_MANAGER, MATCHER`(
+    fun `Create CAS1 Extension returns OK with expected body, updates departureDate on Booking entity when user has one of roles FUTURE_MANAGER, MATCHER`(
       role: UserRole,
     ) {
       givenAUser(roles = listOf(role)) { userEntity, jwt ->
@@ -3173,7 +3173,7 @@ class BookingTest : IntegrationTestBase() {
     }
 
     @Test
-    fun `Create Extension on Approved Premises Booking returns OK when a booking has no bed`() {
+    fun `Create CAS1 Extension returns OK when a booking has no bed`() {
       givenAUser(roles = listOf(UserRole.CAS1_FUTURE_MANAGER)) { userEntity, jwt ->
         val keyWorker = ContextStaffMemberFactory().produce()
         apDeliusContextMockSuccessfulStaffMembersCall(keyWorker, "QCODE")
@@ -3198,7 +3198,7 @@ class BookingTest : IntegrationTestBase() {
     }
 
     @Test
-    fun `Create Approved Premises Extension returns OK when another booking for the same bed overlaps with the new departure date`() {
+    fun `Create CAS1 Extension returns OK when another booking for the same bed overlaps with the new departure date`() {
       givenAUser(roles = listOf(UserRole.CAS1_FUTURE_MANAGER)) { _, jwt ->
         val keyWorker = ContextStaffMemberFactory().produce()
         apDeliusContextMockSuccessfulStaffMembersCall(keyWorker, "QCODE")
@@ -3241,7 +3241,7 @@ class BookingTest : IntegrationTestBase() {
     }
 
     @Test
-    fun `Create Approved Premises Extension returns OK when another booking for the same bed overlaps with the updated booking's turnaround time`() {
+    fun `Create CAS1 Extension returns OK when another booking for the same bed overlaps with the updated booking's turnaround time`() {
       givenAUser(roles = listOf(UserRole.CAS1_FUTURE_MANAGER)) { _, jwt ->
         val keyWorker = ContextStaffMemberFactory().produce()
         apDeliusContextMockSuccessfulStaffMembersCall(keyWorker, "QCODE")
@@ -3286,7 +3286,7 @@ class BookingTest : IntegrationTestBase() {
     }
 
     @Test
-    fun `Create Approved Premises Extension returns OK when a lost bed for the same bed overlaps with the new departure date`() {
+    fun `Create CAS1 Extension returns OK when a lost bed for the same bed overlaps with the new departure date`() {
       givenAUser(roles = listOf(UserRole.CAS1_FUTURE_MANAGER)) { _, jwt ->
         val keyWorker = ContextStaffMemberFactory().produce()
         apDeliusContextMockSuccessfulStaffMembersCall(keyWorker, "QCODE")
@@ -3330,7 +3330,7 @@ class BookingTest : IntegrationTestBase() {
     }
 
     @Test
-    fun `Create Extension on Temporary Accommodation Booking for a premises that's not in the user's region returns 403 Forbidden`() {
+    fun `Create CAS3 Extension returns 403 Forbidden for a premises that's not in the user's region`() {
       givenAUser { userEntity, jwt ->
         val booking = bookingEntityFactory.produceAndPersist {
           withDepartureDate(LocalDate.parse("2022-08-20"))
