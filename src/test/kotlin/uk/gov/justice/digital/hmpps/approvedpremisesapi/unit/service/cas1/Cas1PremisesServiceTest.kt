@@ -96,6 +96,7 @@ class Cas1PremisesServiceTest {
         premisesId = PREMISES_ID,
         startDate = LocalDate.of(2020, 1, 2),
         endDate = LocalDate.of(2020, 1, 3),
+        excludeSpaceBookingId = null,
       )
 
       assertThat(result).isInstanceOf(CasResult.NotFound::class.java)
@@ -111,6 +112,7 @@ class Cas1PremisesServiceTest {
         premisesId = PREMISES_ID,
         startDate = LocalDate.of(2020, 1, 4),
         endDate = LocalDate.of(2020, 1, 3),
+        excludeSpaceBookingId = null,
       )
 
       assertThat(result).isInstanceOf(CasResult.GeneralValidationError::class.java)
@@ -118,8 +120,9 @@ class Cas1PremisesServiceTest {
     }
 
     @Test
-    fun `success`() {
+    fun success() {
       val premise = ApprovedPremisesEntityFactory().withDefaults().withId(PREMISES_ID).produce()
+      val excludeSpaceBookingId = UUID.randomUUID()
 
       every { approvedPremisesRepository.findByIdOrNull(PREMISES_ID) } returns premise
 
@@ -132,6 +135,7 @@ class Cas1PremisesServiceTest {
             LocalDate.of(2020, 1, 2),
             LocalDate.of(2020, 1, 3),
           ),
+          excludeSpaceBookingId = excludeSpaceBookingId,
         )
       } returns capacityResponse
 
@@ -139,6 +143,7 @@ class Cas1PremisesServiceTest {
         premisesId = PREMISES_ID,
         startDate = LocalDate.of(2020, 1, 2),
         endDate = LocalDate.of(2020, 1, 3),
+        excludeSpaceBookingId = excludeSpaceBookingId,
       )
 
       assertThat(result).isInstanceOf(CasResult.Success::class.java)

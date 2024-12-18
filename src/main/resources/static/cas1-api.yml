@@ -409,6 +409,13 @@ paths:
           schema:
             type: string
             format: date
+        - name: excludeSpaceBookingId
+          in: query
+          description: ID of a booking to exclude from capacity calculations
+          required: false
+          schema:
+            type: string
+            format: uuid
       responses:
         200:
           description: successful operation
