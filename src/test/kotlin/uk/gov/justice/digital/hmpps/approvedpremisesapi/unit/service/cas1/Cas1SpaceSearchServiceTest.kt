@@ -27,11 +27,9 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.CharacteristicEn
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremiseApplicationRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas1.CandidatePremises
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas1.Cas1SpaceSearchRepository
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas1.SpaceAvailability
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.ApprovedPremisesType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.asApprovedPremisesType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.CharacteristicService
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1SpaceSearchResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1SpaceSearchService
 import java.time.LocalDate
 import java.util.UUID
@@ -151,18 +149,6 @@ class Cas1SpaceSearchServiceTest {
 
     every { applicationRepository.findByIdOrNull(application.id) } returns application
 
-    val spaceAvailability1 = SpaceAvailability(candidatePremises1.premisesId)
-    val spaceAvailability2 = SpaceAvailability(candidatePremises2.premisesId)
-    val spaceAvailability3 = SpaceAvailability(candidatePremises3.premisesId)
-
-    every {
-      spaceSearchRepository.getSpaceAvailabilityForCandidatePremises(
-        any(),
-        any(),
-        any(),
-      )
-    } returns listOf(spaceAvailability3, spaceAvailability1, spaceAvailability2)
-
     val result = service.findSpaces(
       Cas1SpaceSearchParameters(
         applicationId = application.id,
@@ -178,9 +164,9 @@ class Cas1SpaceSearchServiceTest {
 
     assertThat(result).hasSize(3)
     assertThat(result).containsExactly(
-      Cas1SpaceSearchResult(candidatePremises1, spaceAvailability1),
-      Cas1SpaceSearchResult(candidatePremises2, spaceAvailability2),
-      Cas1SpaceSearchResult(candidatePremises3, spaceAvailability3),
+      candidatePremises1,
+      candidatePremises2,
+      candidatePremises3,
     )
 
     verify(exactly = 1) {
@@ -197,12 +183,6 @@ class Cas1SpaceSearchServiceTest {
         isWomensPremises = false,
         spaceCharacteristics.filter { it.modelMatches("premises") }.map { it.id },
         spaceCharacteristics.filter { it.modelMatches("room") }.map { it.id },
-      )
-
-      spaceSearchRepository.getSpaceAvailabilityForCandidatePremises(
-        listOf(candidatePremises1.premisesId, candidatePremises2.premisesId, candidatePremises3.premisesId),
-        LocalDate.parse("2024-08-01"),
-        14,
       )
     }
 
@@ -285,18 +265,6 @@ class Cas1SpaceSearchServiceTest {
       )
     } returns listOf(candidatePremises1, candidatePremises2, candidatePremises3)
 
-    val spaceAvailability1 = SpaceAvailability(candidatePremises1.premisesId)
-    val spaceAvailability2 = SpaceAvailability(candidatePremises2.premisesId)
-    val spaceAvailability3 = SpaceAvailability(candidatePremises3.premisesId)
-
-    every {
-      spaceSearchRepository.getSpaceAvailabilityForCandidatePremises(
-        any(),
-        any(),
-        any(),
-      )
-    } returns listOf(spaceAvailability3, spaceAvailability1, spaceAvailability2)
-
     service.findSpaces(
       Cas1SpaceSearchParameters(
         applicationId = application.id,
@@ -324,12 +292,6 @@ class Cas1SpaceSearchServiceTest {
 
     verify {
       characteristicService.getCharacteristicsByPropertyNames(any(), ServiceName.approvedPremises)
-
-      spaceSearchRepository.getSpaceAvailabilityForCandidatePremises(
-        any(),
-        any(),
-        any(),
-      )
     }
 
     confirmVerified()
@@ -411,18 +373,6 @@ class Cas1SpaceSearchServiceTest {
       )
     } returns listOf(candidatePremises1, candidatePremises2, candidatePremises3)
 
-    val spaceAvailability1 = SpaceAvailability(candidatePremises1.premisesId)
-    val spaceAvailability2 = SpaceAvailability(candidatePremises2.premisesId)
-    val spaceAvailability3 = SpaceAvailability(candidatePremises3.premisesId)
-
-    every {
-      spaceSearchRepository.getSpaceAvailabilityForCandidatePremises(
-        any(),
-        any(),
-        any(),
-      )
-    } returns listOf(spaceAvailability3, spaceAvailability1, spaceAvailability2)
-
     service.findSpaces(
       Cas1SpaceSearchParameters(
         applicationId = application.id,
@@ -450,12 +400,6 @@ class Cas1SpaceSearchServiceTest {
 
     verify {
       characteristicService.getCharacteristicsByPropertyNames(any(), ServiceName.approvedPremises)
-
-      spaceSearchRepository.getSpaceAvailabilityForCandidatePremises(
-        any(),
-        any(),
-        any(),
-      )
     }
     confirmVerified()
   }
@@ -536,18 +480,6 @@ class Cas1SpaceSearchServiceTest {
       )
     } returns listOf(candidatePremises1, candidatePremises2, candidatePremises3)
 
-    val spaceAvailability1 = SpaceAvailability(candidatePremises1.premisesId)
-    val spaceAvailability2 = SpaceAvailability(candidatePremises2.premisesId)
-    val spaceAvailability3 = SpaceAvailability(candidatePremises3.premisesId)
-
-    every {
-      spaceSearchRepository.getSpaceAvailabilityForCandidatePremises(
-        any(),
-        any(),
-        any(),
-      )
-    } returns listOf(spaceAvailability3, spaceAvailability1, spaceAvailability2)
-
     service.findSpaces(
       Cas1SpaceSearchParameters(
         applicationId = application.id,
@@ -580,12 +512,6 @@ class Cas1SpaceSearchServiceTest {
 
     verify {
       characteristicService.getCharacteristicsByPropertyNames(any(), ServiceName.approvedPremises)
-
-      spaceSearchRepository.getSpaceAvailabilityForCandidatePremises(
-        any(),
-        any(),
-        any(),
-      )
     }
 
     confirmVerified()

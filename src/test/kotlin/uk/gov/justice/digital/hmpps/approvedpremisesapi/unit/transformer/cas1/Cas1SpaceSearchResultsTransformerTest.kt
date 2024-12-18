@@ -8,14 +8,12 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1SpaceSearc
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1SpaceSearchRequirements
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Gender
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas1.CandidatePremises
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas1.SpaceAvailability
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.ApprovedPremisesType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.asApiType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.cas1.Cas1SpaceSearchResultsTransformer
 import java.time.LocalDate
 import java.util.UUID
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1SpaceSearchResult as ApiSpaceSearchResult
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1SpaceSearchResult as DomainSpaceSearchResult
 
 class Cas1SpaceSearchResultsTransformerTest {
   private val transformer = Cas1SpaceSearchResultsTransformer()
@@ -82,23 +80,10 @@ class Cas1SpaceSearchResultsTransformerTest {
       9,
     )
 
-    val spaceAvailability1 = SpaceAvailability(candidatePremises1.premisesId)
-    val spaceAvailability2 = SpaceAvailability(candidatePremises2.premisesId)
-    val spaceAvailability3 = SpaceAvailability(candidatePremises3.premisesId)
-
     val searchResults = listOf(
-      DomainSpaceSearchResult(
-        candidatePremises = candidatePremises1,
-        spaceAvailability = spaceAvailability1,
-      ),
-      DomainSpaceSearchResult(
-        candidatePremises = candidatePremises2,
-        spaceAvailability = spaceAvailability2,
-      ),
-      DomainSpaceSearchResult(
-        candidatePremises = candidatePremises3,
-        spaceAvailability = spaceAvailability3,
-      ),
+      candidatePremises1,
+      candidatePremises2,
+      candidatePremises3,
     )
 
     val actual = transformer.transformDomainToApi(searchParameters, searchResults)

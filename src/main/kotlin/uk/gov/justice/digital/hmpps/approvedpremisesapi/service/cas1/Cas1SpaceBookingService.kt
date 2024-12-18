@@ -1,6 +1,5 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1
 
-import kotlinx.datetime.toKotlinDatePeriod
 import org.springframework.data.repository.findByIdOrNull
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
@@ -25,7 +24,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.MoveOnCategor
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.NonArrivalReasonRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserPermission
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas1.Cas1SpaceSearchRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.serviceScopeMatches
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PaginationMetadata
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.validatedCasResult
@@ -48,7 +46,6 @@ class Cas1SpaceBookingService(
   private val cas1PremisesService: Cas1PremisesService,
   private val placementRequestService: PlacementRequestService,
   private val cas1SpaceBookingRepository: Cas1SpaceBookingRepository,
-  private val cas1SpaceSearchRepository: Cas1SpaceSearchRepository,
   private val cas1BookingDomainEventService: Cas1BookingDomainEventService,
   private val cas1BookingEmailService: Cas1BookingEmailService,
   private val cas1SpaceBookingManagementDomainEventService: Cas1SpaceBookingManagementDomainEventService,
@@ -103,9 +100,6 @@ class Cas1SpaceBookingService(
     if (cas1SpaceBookingRepository.findByPlacementRequestId(placementRequestId).any { it.isActive() }) {
       return placementRequestId hasConflictError "A Space Booking already exists for this placement request"
     }
-
-    val durationInDays = arrivalDate.until(departureDate).toKotlinDatePeriod().days
-    cas1SpaceSearchRepository.getSpaceAvailabilityForCandidatePremises(listOf(premisesId), arrivalDate, durationInDays)
 
     val application = placementRequest.application
 
