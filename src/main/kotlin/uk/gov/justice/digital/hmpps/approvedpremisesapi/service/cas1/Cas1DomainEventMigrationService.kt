@@ -30,7 +30,13 @@ class Cas1DomainEventMigrationService(
   fun personArrivedJson(entity: DomainEventEntity) =
     when (entity.schemaVersion) {
       2 -> entity.data
-      else -> personArrivedV1JsonToV2Json(entity)
+      else -> personArrivedDepartedV1JsonToV2Json(entity)
+    }
+
+  fun personDepartedJson(entity: DomainEventEntity) =
+    when (entity.schemaVersion) {
+      2 -> entity.data
+      else -> personArrivedDepartedV1JsonToV2Json(entity)
     }
 
   private fun bookingCancelledV1JsonToV2Json(domainEventEntity: DomainEventEntity): String {
@@ -45,29 +51,27 @@ class Cas1DomainEventMigrationService(
     }
   }
 
-  private fun personArrivedV1JsonToV2Json(domainEventEntity: DomainEventEntity): String {
-    return modifyEventDetails(domainEventEntity) { eventDetailsNode ->
-      val triggeredByUser = domainEventEntity.triggeredByUserId?.let {
-        userService.findByIdOrNull(it)
-      }
+  private fun personArrivedDepartedV1JsonToV2Json(domainEventEntity: DomainEventEntity) = modifyEventDetails(domainEventEntity) { eventDetailsNode ->
+    val triggeredByUser = domainEventEntity.triggeredByUserId?.let {
+      userService.findByIdOrNull(it)
+    }
 
       /*
       The primary purpose of this migration is to make v1 domain events schema valid.
       `recordedBy` is not used to render the timeline, and these old domain events
-      will not be consumed externally, so the imperfect nature of the back fill is acceptable
+      will not be consumed externally, so the imperfect nature of the back-fill is acceptable
        */
-      eventDetailsNode.set<ObjectNode>(
-        "recordedBy",
-        objectMapper.convertValue(
-          StaffMember(
-            staffCode = triggeredByUser?.deliusStaffCode ?: "unknown",
-            forenames = triggeredByUser?.name ?: "unknown",
-            surname = "unknown",
-            username = triggeredByUser?.deliusUsername ?: "unknown",
-          ),
+    eventDetailsNode.set<ObjectNode>(
+      "recordedBy",
+      objectMapper.convertValue(
+        StaffMember(
+          staffCode = triggeredByUser?.deliusStaffCode ?: "unknown",
+          forenames = triggeredByUser?.name ?: "unknown",
+          surname = "unknown",
+          username = triggeredByUser?.deliusUsername ?: "unknown",
         ),
-      )
-    }
+      ),
+    )
   }
 
   private fun modifyEventDetails(

@@ -9,6 +9,7 @@ import org.junit.jupiter.params.provider.MethodSource
 import org.springframework.beans.factory.annotation.Autowired
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.BookingCancelledEnvelope
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.PersonArrivedEnvelope
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.PersonDepartedEnvelope
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.config.DomainEventUrlConfig
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAUser
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DomainEventCas
@@ -179,6 +180,50 @@ class Cas1DomainEventTest : InitialiseDatabasePerClassTestBase() {
       .expectStatus()
       .isOk
       .bodyAsObject<PersonArrivedEnvelope>()
+
+    val recordedBy = response.eventDetails.recordedBy
+    assertThat(recordedBy.username).isEqualTo(user.deliusUsername)
+    assertThat(recordedBy.staffCode).isEqualTo(user.deliusStaffCode)
+    assertThat(recordedBy.forenames).isEqualTo(user.name)
+    assertThat(recordedBy.surname).isEqualTo("unknown")
+  }
+
+  @Test
+  fun `Get APPROVED_PREMISES_PERSON_DEPARTED v1 is correctly migrated to v2 by populating recordedBy from triggered by user`() {
+    val (user, _) = givenAUser()
+
+    val jwt = jwtAuthHelper.createClientCredentialsJwt(
+      username = "username",
+      roles = listOf("ROLE_APPROVED_PREMISES_EVENTS"),
+    )
+
+    val domainEventAndJson = domainEventsFactory.createEnvelopeLatestVersion(
+      type = DomainEventType.APPROVED_PREMISES_PERSON_DEPARTED,
+      occurredAt = clock.instant(),
+    )
+
+    val persistedJson = domainEventsFactory.removeEventDetails(
+      objectMapper.writeValueAsString(domainEventAndJson.envelope),
+      listOf("recordedBy"),
+    )
+
+    val event = domainEventFactory.produceAndPersist {
+      withType(DomainEventType.APPROVED_PREMISES_PERSON_DEPARTED)
+      withData(persistedJson)
+      withOccurredAt(clock.instant().atOffset(ZoneOffset.UTC))
+      withSchemaVersion(1)
+      withTriggeredByUserId(user.id)
+    }
+
+    val url = generateUrlForDomainEventType(DomainEventType.APPROVED_PREMISES_PERSON_DEPARTED, event.id)
+
+    val response = webTestClient.get()
+      .uri(url)
+      .header("Authorization", "Bearer $jwt")
+      .exchange()
+      .expectStatus()
+      .isOk
+      .bodyAsObject<PersonDepartedEnvelope>()
 
     val recordedBy = response.eventDetails.recordedBy
     assertThat(recordedBy.username).isEqualTo(user.deliusUsername)

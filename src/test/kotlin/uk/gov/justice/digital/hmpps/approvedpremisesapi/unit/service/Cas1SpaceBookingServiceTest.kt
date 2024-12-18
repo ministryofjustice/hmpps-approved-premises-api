@@ -1285,10 +1285,14 @@ class Cas1SpaceBookingServiceTest {
 
     @Test
     fun `Updates existing space booking with departure information and raises domain event`() {
-      val updatedSpaceBookingCaptor = slot<Cas1SpaceBookingEntity>()
+      val user = UserEntityFactory().withDefaults().produce()
 
+      val updatedSpaceBookingCaptor = slot<Cas1SpaceBookingEntity>()
       every { spaceBookingRepository.save(capture(updatedSpaceBookingCaptor)) } returnsArgument 0
-      every { cas1SpaceBookingManagementDomainEventService.departureRecorded(any()) } returns Unit
+
+      val departureInfoCaptor = slot<Cas1SpaceBookingManagementDomainEventService.DepartureInfo>()
+      every { cas1SpaceBookingManagementDomainEventService.departureRecorded(capture(departureInfoCaptor)) } returns Unit
+      every { userService.getUserForRequest() } returns user
 
       val result = service.recordDepartureForBooking(
         premisesId = UUID.randomUUID(),
@@ -1312,6 +1316,14 @@ class Cas1SpaceBookingServiceTest {
       assertThat(updatedSpaceBooking.departureReason).isEqualTo(departureReason)
       assertThat(updatedSpaceBooking.departureMoveOnCategory).isEqualTo(departureMoveOnCategory)
       assertThat(updatedSpaceBooking.departureNotes).isEqualTo(departureNotes)
+
+      val departureInfo = departureInfoCaptor.captured
+      assertThat(departureInfo.spaceBooking).isEqualTo(updatedSpaceBooking)
+      assertThat(departureInfo.departureReason).isEqualTo(departureReason)
+      assertThat(departureInfo.moveOnCategory).isEqualTo(departureMoveOnCategory)
+      assertThat(departureInfo.actualDepartureDate).isEqualTo(LocalDate.of(2023, 2, 1))
+      assertThat(departureInfo.actualDepartureTime).isEqualTo(LocalTime.of(12, 45, 0))
+      assertThat(departureInfo.recordedBy).isEqualTo(user)
     }
 
     @Test

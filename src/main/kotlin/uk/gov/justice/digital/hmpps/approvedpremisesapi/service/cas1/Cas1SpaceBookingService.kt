@@ -395,6 +395,7 @@ class Cas1SpaceBookingService(
         moveOnCategory!!,
         departureInfo.departureDate,
         departureInfo.departureTime,
+        recordedBy = userService.getUserForRequest(),
       ),
     )
 
