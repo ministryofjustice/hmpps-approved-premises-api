@@ -416,6 +416,7 @@ class BookingService(
   private fun shouldCreateDomainEventForBooking(booking: BookingEntity, user: UserEntity?) =
     booking.service == ServiceName.approvedPremises.value && user != null && (booking.application != null || booking.offlineApplication?.eventNumber != null)
 
+  @SuppressWarnings("CyclomaticComplexMethod")
   @Transactional
   fun createDateChange(
     booking: BookingEntity,
@@ -456,11 +457,14 @@ class BookingService(
       }
     }
 
+    val previousArrivalDate = booking.arrivalDate
+    val previousDepartureDate = booking.departureDate
+
     val dateChangeEntity = dateChangeRepository.save(
       DateChangeEntity(
         id = UUID.randomUUID(),
-        previousDepartureDate = booking.departureDate,
-        previousArrivalDate = booking.arrivalDate,
+        previousArrivalDate = previousArrivalDate,
+        previousDepartureDate = previousDepartureDate,
         newArrivalDate = effectiveNewArrivalDate,
         newDepartureDate = effectiveNewDepartureDate,
         changedAt = OffsetDateTime.now(),
@@ -471,8 +475,8 @@ class BookingService(
 
     updateBooking(
       booking.apply {
-        arrivalDate = dateChangeEntity.newArrivalDate
-        departureDate = dateChangeEntity.newDepartureDate
+        arrivalDate = effectiveNewArrivalDate
+        departureDate = effectiveNewDepartureDate
         dateChanges.add(dateChangeEntity)
       },
     )
@@ -482,6 +486,16 @@ class BookingService(
         booking = booking,
         changedBy = user,
         bookingChangedAt = OffsetDateTime.now(),
+        previousArrivalDateIfChanged = if (previousArrivalDate != effectiveNewArrivalDate) {
+          previousArrivalDate
+        } else {
+          null
+        },
+        previousDepartureDateIfChanged = if (previousDepartureDate != effectiveNewDepartureDate) {
+          previousDepartureDate
+        } else {
+          null
+        },
       )
     }
 
