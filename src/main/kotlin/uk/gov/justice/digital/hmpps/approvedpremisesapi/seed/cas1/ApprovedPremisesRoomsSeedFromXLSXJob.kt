@@ -7,12 +7,12 @@ import org.slf4j.LoggerFactory
 import org.springframework.data.repository.findByIdOrNull
 import org.springframework.stereotype.Component
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.BedEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.BedRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.CharacteristicEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.CharacteristicRepository
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PremisesEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.RoomEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.RoomRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.seed.ExcelSeedJob
@@ -30,9 +30,11 @@ class ApprovedPremisesRoomsSeedFromXLSXJob(
 ) : ExcelSeedJob {
   private val log = LoggerFactory.getLogger(this::class.java)
   private val questionCriteriaMapping = QuestionCriteriaMapping(characteristicRepository)
+  private lateinit var qCode: String
 
   override fun processDataFrame(roomsWorksheet: DataFrame<*>, premisesId: UUID) {
-    findExistingPremisesOrThrow(premisesId)
+    var premises = findExistingPremisesOrThrow(premisesId)
+    qCode = premises.qCode
 
     var rooms = buildRooms(roomsWorksheet, premisesId)
     val characteristics = buildCharacteristics(roomsWorksheet)
@@ -52,7 +54,7 @@ class ApprovedPremisesRoomsSeedFromXLSXJob(
 
     for (i in 1..<dataFrame.columnsCount()) {
       val roomAnswers = dataFrame.getColumn(i)
-      val room = buildRoom(premisesId, roomCode = roomAnswers.name, roomName = roomAnswers[0].toString())
+      val room = buildRoom(premisesId, roomCode = "$qCode - ${roomAnswers[0]}", roomName = roomAnswers[0].toString())
 
       rooms.add(room)
     }
@@ -68,7 +70,7 @@ class ApprovedPremisesRoomsSeedFromXLSXJob(
       if (rowId == -1) throw SiteSurveyImportException("Characteristic question '$question' not found on sheet Sheet3.")
 
       for (colId in 1..<dataFrame.columnsCount()) {
-        val roomCode = dataFrame.getColumn(colId).name
+        val roomCode = "$qCode - ${dataFrame.getColumn(colId)[0]}"
         val answer = dataFrame[rowId][colId].toString().trim()
 
         if (answer.equals("yes", ignoreCase = true)) {
@@ -85,13 +87,13 @@ class ApprovedPremisesRoomsSeedFromXLSXJob(
     val beds = mutableListOf<BedEntity>()
     for (i in 1..<dataFrame.columnsCount()) {
       val roomAnswers = dataFrame.getColumn(i)
-      val bedNumber = roomAnswers[1].toString()
+      val roomCode = "$qCode - ${roomAnswers[0]}"
       beds.add(
         buildBed(
-          bedName = "${roomAnswers.name}",
-          bedCode = "${roomAnswers.name} - $bedNumber",
-          room = rooms.firstOrNull { it.code == roomAnswers.name }
-            ?: throw IllegalArgumentException("Room not found with id ${roomAnswers.name} and code ${roomAnswers.name}."),
+          bedName = roomAnswers[1].toString(),
+          bedCode = roomAnswers.name,
+          room = rooms.firstOrNull { it.code == roomCode }
+            ?: throw IllegalArgumentException("Room not found with code $roomCode"),
         ),
       )
     }
@@ -148,7 +150,7 @@ class ApprovedPremisesRoomsSeedFromXLSXJob(
     createdAt = null,
   )
 
-  private fun findExistingPremisesOrThrow(premisesId: UUID): PremisesEntity {
+  private fun findExistingPremisesOrThrow(premisesId: UUID): ApprovedPremisesEntity {
     return approvedPremisesRepository.findByIdOrNull(premisesId) ?: throw SiteSurveyImportException(
       "No premises with id '$premisesId' found.",
     )

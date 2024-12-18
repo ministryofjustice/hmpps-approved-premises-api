@@ -36,9 +36,11 @@ class SeedFromXLSXApprovedPremisesRoomsTest : SeedTestBase() {
   fun `Creating a new room and a new bed with a characteristic succeeds`() {
     val localAuthorityArea = localAuthorityEntityFactory.produceAndPersist()
     val probationRegion = probationRegionEntityFactory.produceAndPersist()
+    val qCode = "Q999"
     val premises = approvedPremisesEntityFactory.produceAndPersist {
       withLocalAuthorityArea(localAuthorityArea)
       withProbationRegion(probationRegion)
+      withQCode(qCode)
     }
     val premisesId = premises.id
 
@@ -61,17 +63,17 @@ class SeedFromXLSXApprovedPremisesRoomsTest : SeedTestBase() {
       "example.xlsx",
     )
 
-    val newRoom = roomRepository.findByCode("SWABI01NEW")
+    val newRoom = roomRepository.findByCode("Q999 - 1")
     assertThat(newRoom!!.characteristics).anyMatch {
       it.name == "Is this room located on the ground floor?" &&
         it.propertyName == "isGroundFloor"
     }
 
-    val newBed = bedRepository.findByCodeAndRoomId("SWABI01NEW - 1", newRoom.id)
-    assertThat(newBed!!.name).isEqualTo("SWABI01NEW")
+    val newBed = bedRepository.findByCodeAndRoomId("SWABI01NEW", newRoom.id)
+    assertThat(newBed!!.name).isEqualTo("1")
     assertThat(
       newBed.room.id == newRoom.id &&
-        newBed.room.code == "SWABI01NEW",
+        newBed.room.code == "Q999 - 1",
     )
   }
 
@@ -79,9 +81,11 @@ class SeedFromXLSXApprovedPremisesRoomsTest : SeedTestBase() {
   fun `Creating three new rooms and new beds with a characteristic succeeds`() {
     val localAuthorityArea = localAuthorityEntityFactory.produceAndPersist()
     val probationRegion = probationRegionEntityFactory.produceAndPersist()
+    val qCode = "Q999"
     val premises = approvedPremisesEntityFactory.produceAndPersist {
       withLocalAuthorityArea(localAuthorityArea)
       withProbationRegion(probationRegion)
+      withQCode(qCode)
     }
     val premisesId = premises.id
 
@@ -108,37 +112,37 @@ class SeedFromXLSXApprovedPremisesRoomsTest : SeedTestBase() {
       "example.xlsx",
     )
 
-    val room1 = roomRepository.findByCode("SWABI01NEW")
+    val room1 = roomRepository.findByCode("Q999 - 1")
     assertThat(room1!!.characteristics).isEmpty()
 
-    val bed1 = bedRepository.findByCodeAndRoomId("SWABI01NEW - 1", room1.id)
-    assertThat(bed1!!.name).isEqualTo("SWABI01NEW")
+    val bed1 = bedRepository.findByCodeAndRoomId("SWABI01NEW", room1.id)
+    assertThat(bed1!!.name).isEqualTo("1")
     assertThat(
       bed1.room.id == room1.id &&
-        bed1.room.code == "SWABI01NEW",
+        bed1.room.code == "Q999 - 1",
     )
 
-    val room2 = roomRepository.findByCode("SWABI02NEW")
+    val room2 = roomRepository.findByCode("Q999 - 2")
     assertThat(room2!!.characteristics).anyMatch {
       it.name == "Is this room located on the ground floor?" &&
         it.propertyName == "isGroundFloor"
     }
 
-    val bed2 = bedRepository.findByCodeAndRoomId("SWABI02NEW - 1", room2.id)
-    assertThat(bed2!!.name).isEqualTo("SWABI02NEW")
+    val bed2 = bedRepository.findByCodeAndRoomId("SWABI02NEW", room2.id)
+    assertThat(bed2!!.name).isEqualTo("1")
     assertThat(
       bed2.room.id == room2.id &&
-        bed2.room.code == "SWABI02NEW",
+        bed2.room.code == "Q999 - 2",
     )
 
-    val room3 = roomRepository.findByCode("SWABI03NEW")
+    val room3 = roomRepository.findByCode("Q999 - 3")
     assertThat(room3!!.characteristics).isEmpty()
 
-    val bed3 = bedRepository.findByCodeAndRoomId("SWABI03NEW - 1", room3.id)
-    assertThat(bed3!!.name).isEqualTo("SWABI03NEW")
+    val bed3 = bedRepository.findByCodeAndRoomId("SWABI03NEW", room3.id)
+    assertThat(bed3!!.name).isEqualTo("1")
     assertThat(
       bed3.room.id == room3.id &&
-        bed3.room.code == "SWABI03NEW",
+        bed3.room.code == "Q999 - 1",
     )
   }
 
@@ -146,9 +150,11 @@ class SeedFromXLSXApprovedPremisesRoomsTest : SeedTestBase() {
   fun `Creating a new room and a new bed without a characteristic succeeds`() {
     val localAuthorityArea = localAuthorityEntityFactory.produceAndPersist()
     val probationRegion = probationRegionEntityFactory.produceAndPersist()
+    val qCode = "Q999"
     val premises = approvedPremisesEntityFactory.produceAndPersist {
       withLocalAuthorityArea(localAuthorityArea)
       withProbationRegion(probationRegion)
+      withQCode(qCode)
     }
     val premisesId = premises.id
 
@@ -171,14 +177,14 @@ class SeedFromXLSXApprovedPremisesRoomsTest : SeedTestBase() {
       "example.xlsx",
     )
 
-    val newRoom = roomRepository.findByCode("SWABI01NEW")
+    val newRoom = roomRepository.findByCode("Q999 - 1")
     assertThat(newRoom!!.characteristics).isEmpty()
 
-    val newBed = bedRepository.findByCodeAndRoomId("SWABI01NEW - 1", newRoom.id)
-    assertThat(newBed!!.name).isEqualTo("SWABI01NEW")
+    val newBed = bedRepository.findByCodeAndRoomId("SWABI01NEW", newRoom.id)
+    assertThat(newBed!!.name).isEqualTo("1")
     assertThat(
       newBed.room.id == newRoom.id &&
-        newBed.room.code == "SWABI01NEW",
+        newBed.room.code == "Q999 - 1",
     )
   }
 
@@ -186,18 +192,20 @@ class SeedFromXLSXApprovedPremisesRoomsTest : SeedTestBase() {
   fun `Updating an existing room with a new bed and a characteristic succeeds`() {
     val localAuthorityArea = localAuthorityEntityFactory.produceAndPersist()
     val probationRegion = probationRegionEntityFactory.produceAndPersist()
+    val qCode = "Q999"
     val premises = approvedPremisesEntityFactory.produceAndPersist {
       withLocalAuthorityArea(localAuthorityArea)
       withProbationRegion(probationRegion)
+      withQCode(qCode)
     }
     val premisesId = premises.id
-    val roomCode = "SWABI01"
+    val roomCode = "$qCode - 1"
     roomEntityFactory.produceAndPersist {
       withPremises(premises)
       withCode(roomCode)
     }
 
-    val header = listOf("Unique Reference Number for Bed", roomCode)
+    val header = listOf("Unique Reference Number for Bed", "SWABI01")
     val rows = mutableListOf(
       "Room Number / Name",
       "1",
@@ -222,11 +230,11 @@ class SeedFromXLSXApprovedPremisesRoomsTest : SeedTestBase() {
         it.propertyName == "isGroundFloor"
     }
 
-    val newBed = bedRepository.findByCodeAndRoomId("SWABI01 - 1", updatedRoom.id)
-    assertThat(newBed!!.name).isEqualTo("SWABI01")
+    val newBed = bedRepository.findByCodeAndRoomId("SWABI01", updatedRoom.id)
+    assertThat(newBed!!.name).isEqualTo("1")
     assertThat(
       newBed.room.id == updatedRoom.id &&
-        newBed.room.code == "SWABI01",
+        newBed.room.code == "Q999 - 1",
     )
   }
 
@@ -234,23 +242,25 @@ class SeedFromXLSXApprovedPremisesRoomsTest : SeedTestBase() {
   fun `Updating an existing room with an existing bed and a characteristic succeeds`() {
     val localAuthorityArea = localAuthorityEntityFactory.produceAndPersist()
     val probationRegion = probationRegionEntityFactory.produceAndPersist()
+    val qCode = "Q999"
     val premises = approvedPremisesEntityFactory.produceAndPersist {
       withLocalAuthorityArea(localAuthorityArea)
       withProbationRegion(probationRegion)
+      withQCode(qCode)
     }
     val premisesId = premises.id
-    val roomCode = "SWABI01"
+    val roomCode = "$qCode - 1"
     val room = roomEntityFactory.produceAndPersist {
       withPremises(premises)
       withCode(roomCode)
     }
     bedEntityFactory.produceAndPersist {
       withRoom(room)
-      withCode("1")
-      withName("SWABI01")
+      withCode("SWABI01")
+      withName("1")
     }
 
-    val header = listOf("Unique Reference Number for Bed", roomCode)
+    val header = listOf("Unique Reference Number for Bed", "SWABI01")
     val rows = mutableListOf(
       "Room Number / Name",
       "1",
@@ -275,11 +285,11 @@ class SeedFromXLSXApprovedPremisesRoomsTest : SeedTestBase() {
         it.propertyName == "isGroundFloor"
     }
 
-    val existingBed = bedRepository.findByCode("1")
-    assertThat(existingBed!!.name).isEqualTo("SWABI01")
+    val existingBed = bedRepository.findByCode("SWABI01")
+    assertThat(existingBed!!.name).isEqualTo("1")
     assertThat(
       existingBed.room.id == updatedRoom.id &&
-        existingBed.room.code == "SWABI01",
+        existingBed.room.code == "Q999 - 1",
     )
   }
 
@@ -287,26 +297,28 @@ class SeedFromXLSXApprovedPremisesRoomsTest : SeedTestBase() {
   fun `Creating a new room and a new bed using an existing bed code fails`() {
     val localAuthorityArea = localAuthorityEntityFactory.produceAndPersist()
     val probationRegion = probationRegionEntityFactory.produceAndPersist()
+    val qCode = "Q999"
     val premises = approvedPremisesEntityFactory.produceAndPersist {
       withLocalAuthorityArea(localAuthorityArea)
       withProbationRegion(probationRegion)
+      withQCode(qCode)
     }
     val premisesId = premises.id
-    val roomCode = "SWABI01"
+    val roomCode = "$qCode - 1"
     val room = roomEntityFactory.produceAndPersist {
       withPremises(premises)
       withCode(roomCode)
     }
     bedEntityFactory.produceAndPersist {
       withRoom(room)
-      withCode("SWABI02 - 1")
-      withName("SWABI02")
+      withCode("SWABI02")
+      withName("1")
     }
 
     val header = listOf("Unique Reference Number for Bed", "SWABI02")
     val rows = mutableListOf(
       "Room Number / Name",
-      "1",
+      "2",
       "Bed Number (in this room i.e if this is a single room insert 1.  If this is a shared room separate entries will need to be made for bed 1 and bed 2)",
       "1",
     )
@@ -327,7 +339,7 @@ class SeedFromXLSXApprovedPremisesRoomsTest : SeedTestBase() {
         it.level == "error" &&
           it.message == "Unable to complete Excel seed job" &&
           it.throwable != null &&
-          it.throwable.message!!.contains("Detail: Key (code)=(SWABI02 - 1) already exists.")
+          it.throwable.message!!.contains("Detail: Key (code)=(SWABI02) already exists.")
       }
   }
 
