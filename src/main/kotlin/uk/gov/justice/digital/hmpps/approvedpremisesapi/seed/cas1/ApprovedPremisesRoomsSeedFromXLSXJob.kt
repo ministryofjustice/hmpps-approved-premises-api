@@ -26,9 +26,11 @@ class ApprovedPremisesRoomsSeedFromXLSXJob(
   private val approvedPremisesRepository: ApprovedPremisesRepository,
   private val roomRepository: RoomRepository,
   private val bedRepository: BedRepository,
-  private val questionCriteriaMapping: QuestionCriteriaMapping,
+  private val characteristicRepository: CharacteristicRepository,
 ) : ExcelSeedJob {
   private val log = LoggerFactory.getLogger(this::class.java)
+  private val questionCriteriaMapping = QuestionCriteriaMapping(characteristicRepository)
+
   override fun processDataFrame(roomsWorksheet: DataFrame<*>, premisesId: UUID) {
     findExistingPremisesOrThrow(premisesId)
 
@@ -153,7 +155,6 @@ class ApprovedPremisesRoomsSeedFromXLSXJob(
   }
 }
 
-@Component
 class QuestionCriteriaMapping(characteristicRepository: CharacteristicRepository) {
   private val questionToPropertyNameMapping = mapOf(
     "Is this bed in a single room?" to "isSingle",
