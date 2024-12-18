@@ -56,16 +56,11 @@ class Cas1SpaceSearchService(
     getSpaceCharacteristics(searchParameters),
   )
 
-  private fun getSpaceCharacteristics(searchParameters: Cas1SpaceSearchParameters): CharacteristicGroup {
-    val characteristicNames = searchParameters.requirements.spaceCharacteristics?.map { it.value } ?: listOf()
+  private fun getSpaceCharacteristics(searchParameters: Cas1SpaceSearchParameters): GroupedCharacteristics {
+    val propertyNames = searchParameters.requirements.spaceCharacteristics?.map { it.value } ?: listOf()
+    val characteristics = characteristicService.getCharacteristicsByPropertyNames(propertyNames, ServiceName.approvedPremises)
 
-    return getCharacteristicGroup(characteristicNames)
-  }
-
-  private fun getCharacteristicGroup(characteristicNames: List<String?>): CharacteristicGroup {
-    val characteristics = characteristicService.getCharacteristicsByPropertyNames(characteristicNames.filterNotNull(), ServiceName.approvedPremises)
-
-    return CharacteristicGroup(
+    return GroupedCharacteristics(
       characteristics.filter { it.isPremisesCharacteristic() }.map { it.id },
       characteristics.filter { it.isRoomCharacteristic() }.map { it.id },
     )
@@ -106,10 +101,10 @@ class Cas1SpaceSearchService(
 
 data class RequiredCharacteristics(
   val apTypes: List<ApprovedPremisesType>,
-  val space: CharacteristicGroup,
+  val space: GroupedCharacteristics,
 )
 
-data class CharacteristicGroup(
+data class GroupedCharacteristics(
   val premisesCharacteristics: List<UUID>,
   val roomCharacteristics: List<UUID>,
 )
