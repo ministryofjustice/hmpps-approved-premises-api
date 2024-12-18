@@ -109,7 +109,7 @@ class Cas1SpaceSearchTest : InitialiseDatabasePerClassTestBase() {
 
   @ParameterizedTest
   @EnumSource
-  fun `Filtering APs by gender only returns APs matching associated gender in application`(gender: ApprovedPremisesGender) {
+  fun `Only returns APs matching associated gender in application`(gender: ApprovedPremisesGender) {
     postCodeDistrictFactory.produceAndPersist {
       withOutcode("SE1")
       withLatitude(-0.07)

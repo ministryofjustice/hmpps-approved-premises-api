@@ -187,11 +187,6 @@ class Cas1SpaceSearchServiceTest {
       applicationRepository.findByIdOrNull(application.id)
 
       characteristicService.getCharacteristicsByPropertyNames(
-        emptyList(),
-        ServiceName.approvedPremises,
-      )
-
-      characteristicService.getCharacteristicsByPropertyNames(
         Cas1SpaceCharacteristic.entries.map { it.value },
         ServiceName.approvedPremises,
       )
@@ -443,11 +438,6 @@ class Cas1SpaceSearchServiceTest {
 
     verify(exactly = 1) {
       applicationRepository.findByIdOrNull(application.id)
-
-      characteristicService.getCharacteristicsByPropertyNames(
-        emptyList(),
-        ServiceName.approvedPremises,
-      )
 
       spaceSearchRepository.findAllPremisesWithCharacteristicsByDistance(
         any(),
