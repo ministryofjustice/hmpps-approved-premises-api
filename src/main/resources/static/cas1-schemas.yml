@@ -216,6 +216,22 @@ components:
             $ref: '#/components/schemas/Cas1SpaceCharacteristic'
       required:
         - essentialCharacteristics
+    Cas1UpdateSpaceBooking:
+      type: object
+      description: Only provide values when a change is required
+      properties:
+        arrivalDate:
+          type: string
+          format: date
+          example: 2022-07-28
+        departureDate:
+          type: string
+          format: date
+          example: 2022-09-30
+        characteristics:
+          type: array
+          items:
+            $ref: '#/components/schemas/Cas1SpaceBookingCharacteristic'
     Cas1SpaceSearchRequirements:
       type: object
       properties:
