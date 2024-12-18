@@ -81,10 +81,10 @@ class StatusUpdateService(
     } else {
       val newStatusDetails = statusUpdate.newStatusDetails
       val map = newStatusDetails?.map { detail ->
-          status.findStatusDetailOnStatus(detail)
-            ?: return AuthorisableActionResult.Success(
-              ValidatableActionResult.GeneralValidationError("The status detail $detail is not valid"),
-            )
+        status.findStatusDetailOnStatus(detail)
+          ?: return AuthorisableActionResult.Success(
+            ValidatableActionResult.GeneralValidationError("The status detail $detail is not valid"),
+          )
       }
       map
     }
