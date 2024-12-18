@@ -7,7 +7,7 @@ import org.junit.jupiter.api.TestInstance
 import org.springframework.beans.factory.annotation.Autowired
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.SeedFromExcelFileType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.seed.SeedTestBase
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.seed.cas1.SiteSurvey
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.seed.cas1.QuestionCriteriaMapping
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.seed.cas1.SiteSurveyImportException
 import java.util.UUID
 
@@ -15,10 +15,10 @@ import java.util.UUID
 class SeedFromXLSXApprovedPremisesRoomsTest : SeedTestBase() {
 
   @Autowired
-  lateinit var siteSurvey: SiteSurvey
+  lateinit var questionCriteriaMapping: QuestionCriteriaMapping
 
   fun MutableList<String>.addCharacteristics(numberOfRooms: Int = 1, activeCharacteristics: Map<String, List<Int>> = emptyMap()) {
-    siteSurvey.questionToCharacterEntityMapping.keys.forEach { question ->
+    questionCriteriaMapping.questionToCharacterEntityMapping.keys.forEach { question ->
       this.add(question)
       val answers = MutableList(numberOfRooms) { "No" }
       activeCharacteristics[question]?.forEach {
