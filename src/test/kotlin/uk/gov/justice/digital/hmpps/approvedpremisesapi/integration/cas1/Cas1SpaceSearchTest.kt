@@ -20,6 +20,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.given
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesGender
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.cas1.Cas1SpaceSearchResultsTransformer
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomInt
 import java.time.LocalDate
 
 class Cas1SpaceSearchTest : InitialiseDatabasePerClassTestBase() {
@@ -359,7 +360,7 @@ class Cas1SpaceSearchTest : InitialiseDatabasePerClassTestBase() {
       }
 
       expectedPremises.forEach {
-        roomEntityFactory.produceAndPersist {
+        roomEntityFactory.produceAndPersistMultiple(amount = 5) {
           withPremises(it)
           withCharacteristicsList(listOf(characteristic.asCharacteristicEntity()))
         }
@@ -447,7 +448,7 @@ class Cas1SpaceSearchTest : InitialiseDatabasePerClassTestBase() {
       }
 
       expectedPremises.forEach {
-        roomEntityFactory.produceAndPersist {
+        roomEntityFactory.produceAndPersistMultiple(randomInt(1, 10)) {
           withPremises(it)
           withCharacteristicsList(Cas1SpaceCharacteristic.entries.slice(1..3).map { it.asCharacteristicEntity() })
         }
