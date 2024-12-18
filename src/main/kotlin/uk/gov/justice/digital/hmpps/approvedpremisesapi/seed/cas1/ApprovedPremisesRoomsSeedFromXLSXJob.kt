@@ -26,7 +26,7 @@ class ApprovedPremisesRoomsSeedFromXLSXJob(
   private val approvedPremisesRepository: ApprovedPremisesRepository,
   private val roomRepository: RoomRepository,
   private val bedRepository: BedRepository,
-  private val siteSurvey: SiteSurvey,
+  private val questionCriteriaMapping: QuestionCriteriaMapping,
 ) : ExcelSeedJob {
   private val log = LoggerFactory.getLogger(this::class.java)
   override fun processDataFrame(roomsWorksheet: DataFrame<*>, premisesId: UUID) {
@@ -60,7 +60,7 @@ class ApprovedPremisesRoomsSeedFromXLSXJob(
   private fun buildCharacteristics(dataFrame: DataFrame<*>): MutableMap<String, MutableList<CharacteristicEntity>> {
     var premisesCharacteristics = mutableMapOf<String, MutableList<CharacteristicEntity>>()
 
-    siteSurvey.questionToCharacterEntityMapping.forEach { (question, characteristic) ->
+    questionCriteriaMapping.questionToCharacterEntityMapping.forEach { (question, characteristic) ->
       val rowId = dataFrame.getColumn(0).values().indexOf(question)
 
       if (rowId == -1) throw SiteSurveyImportException("Characteristic question '$question' not found on sheet Sheet3.")
@@ -154,7 +154,7 @@ class ApprovedPremisesRoomsSeedFromXLSXJob(
 }
 
 @Component
-class SiteSurvey(characteristicRepository: CharacteristicRepository) {
+class QuestionCriteriaMapping(characteristicRepository: CharacteristicRepository) {
   private val questionToPropertyNameMapping = mapOf(
     "Is this bed in a single room?" to "isSingle",
     "Is this room located on the ground floor?" to "isGroundFloor",
