@@ -94,17 +94,13 @@ FROM
     (
       SELECT COUNT(*)
       FROM beds b
-      JOIN rooms r
-      ON b.room_id = r.id
+      INNER JOIN rooms r ON b.room_id = r.id
       WHERE r.premises_id = p.id
     ) AS total_spaces_count
   FROM approved_premises ap
-  JOIN premises p
-  ON ap.premises_id = p.id
-  JOIN probation_regions pr
-  ON p.probation_region_id = pr.id
-  JOIN ap_areas aa
-  ON pr.ap_area_id = aa.id
+  INNER JOIN premises p ON ap.premises_id = p.id
+  INNER JOIN probation_regions pr ON p.probation_region_id = pr.id
+  INNER JOIN ap_areas aa ON pr.ap_area_id = aa.id
   WHERE 
     ap.supports_space_bookings = true AND
     ap.gender = #SPECIFIED_GENDER#
