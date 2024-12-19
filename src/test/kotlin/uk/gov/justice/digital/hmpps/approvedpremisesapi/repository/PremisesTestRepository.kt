@@ -9,6 +9,7 @@ import java.util.UUID
 @Repository
 interface ApprovedPremisesTestRepository : JpaRepository<ApprovedPremisesEntity, UUID> {
   fun findByApCode(name: String): ApprovedPremisesEntity?
+  fun findByQCode(name: String): ApprovedPremisesEntity?
 }
 
 @Repository
