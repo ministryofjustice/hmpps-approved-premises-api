@@ -2,12 +2,14 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1
 
 import org.springframework.data.repository.findByIdOrNull
 import org.springframework.stereotype.Service
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1OverbookingRange
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesGender
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.CasResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.PremisesService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.planning.SpacePlanningService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.planning.SpacePlanningService.PremiseCapacityForDay
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.DateRange
 import java.time.LocalDate
 import java.util.UUID
@@ -19,12 +21,16 @@ class Cas1PremisesService(
   val outOfServiceBedService: Cas1OutOfServiceBedService,
   val spacePlanningService: SpacePlanningService,
 ) {
+  companion object {
+    private const val OVERBOOKING_RANGE_DURATION = 12L
+  }
   fun getPremisesSummary(premisesId: UUID): CasResult<Cas1PremisesSummaryInfo> {
     val premise = premisesRepository.findByIdOrNull(premisesId)
       ?: return CasResult.NotFound("premises", premisesId.toString())
 
     val bedCount = premisesService.getBedCount(premise)
     val outOfServiceBedsCount = outOfServiceBedService.getCurrentOutOfServiceBedsCountForPremisesId(premisesId)
+    val overbookingSummary = premise.takeIf { it.supportsSpaceBookings }?.let { buildOverBookingSummary(it) } ?: emptyList()
 
     return CasResult.Success(
       Cas1PremisesSummaryInfo(
@@ -32,8 +38,44 @@ class Cas1PremisesService(
         bedCount = bedCount,
         availableBeds = bedCount - outOfServiceBedsCount,
         outOfServiceBeds = outOfServiceBedsCount,
+        overbookingSummary = overbookingSummary,
       ),
     )
+  }
+
+  private fun buildOverBookingSummary(premises: ApprovedPremisesEntity): List<Cas1OverbookingRange> {
+    val premisesCapacitySummary = spacePlanningService.capacity(
+      premises,
+      range = DateRange(LocalDate.now(), LocalDate.now().plusWeeks(OVERBOOKING_RANGE_DURATION)),
+      excludeSpaceBookingId = null,
+    )
+    val overbookedDays = premisesCapacitySummary
+      .byDay
+      .filter { it.isPremiseOverbooked() }
+
+    return calculateOverbookingRanges(overbookedDays)
+  }
+
+  private fun calculateOverbookingRanges(overbookedDays: List<PremiseCapacityForDay>): List<Cas1OverbookingRange> {
+    if (overbookedDays.isEmpty()) return emptyList()
+
+    val sortedOverBookedDays = overbookedDays.distinctBy { it.day }.sortedBy { it.day }
+
+    val overbookingRanges = mutableListOf<Cas1OverbookingRange>()
+    var rangeStart = overbookedDays.first().day
+    var previousDay = rangeStart
+
+    // Calculate ConsecutiveOverbookingRanges
+    for (current in sortedOverBookedDays.drop(1)) {
+      if (current.day != previousDay.plusDays(1)) {
+        overbookingRanges.add(Cas1OverbookingRange(startInclusive = rangeStart, endInclusive = previousDay))
+        rangeStart = current.day
+      }
+      previousDay = current.day
+    }
+    // last remaining range
+    overbookingRanges.add(Cas1OverbookingRange(startInclusive = rangeStart, endInclusive = previousDay))
+    return overbookingRanges
   }
 
   fun getPremises(gender: ApprovedPremisesGender?, apAreaId: UUID?) = premisesRepository.findForSummaries(gender, apAreaId)
@@ -67,5 +109,6 @@ class Cas1PremisesService(
     val bedCount: Int,
     val availableBeds: Int,
     val outOfServiceBeds: Int,
+    val overbookingSummary: List<Cas1OverbookingRange>,
   )
 }
