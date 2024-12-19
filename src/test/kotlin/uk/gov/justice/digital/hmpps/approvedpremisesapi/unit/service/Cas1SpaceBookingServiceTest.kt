@@ -54,8 +54,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.MoveOnCategor
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.MoveOnCategoryRepository.Constants.NOT_APPLICABLE_MOVE_ON_CATEGORY_ID
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.NonArrivalReasonRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserPermission
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas1.Cas1SpaceSearchRepository
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas1.SpaceAvailability
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.CasResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.PlacementRequestService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.StaffMemberService
@@ -90,9 +88,6 @@ class Cas1SpaceBookingServiceTest {
 
   @MockK
   private lateinit var spaceBookingRepository: Cas1SpaceBookingRepository
-
-  @MockK
-  private lateinit var spaceSearchRepository: Cas1SpaceSearchRepository
 
   @MockK
   private lateinit var cas1BookingDomainEventService: Cas1BookingDomainEventService
@@ -334,19 +329,11 @@ class Cas1SpaceBookingServiceTest {
       val durationInDays = 1
       val departureDate = arrivalDate.plusDays(durationInDays.toLong())
 
-      val spaceAvailability = SpaceAvailability(
-        premisesId = premises.id,
-      )
-
       every { cas1PremisesService.findPremiseById(premises.id) } returns premises
       every { placementRequestService.getPlacementRequestOrNull(placementRequest.id) } returns placementRequest
       every { spaceBookingRepository.findByPlacementRequestId(placementRequest.id) } returns emptyList()
       every { lockablePlacementRequestRepository.acquirePessimisticLock(placementRequest.id) } returns
         LockablePlacementRequestEntity(placementRequest.id)
-
-      every {
-        spaceSearchRepository.getSpaceAvailabilityForCandidatePremises(listOf(premises.id), arrivalDate, durationInDays)
-      } returns listOf(spaceAvailability)
 
       every { cas1ApplicationStatusService.spaceBookingMade(any()) } returns Unit
 
@@ -443,19 +430,11 @@ class Cas1SpaceBookingServiceTest {
       val durationInDays = 1
       val departureDate = arrivalDate.plusDays(durationInDays.toLong())
 
-      val spaceAvailability = SpaceAvailability(
-        premisesId = premises.id,
-      )
-
       every { cas1PremisesService.findPremiseById(premises.id) } returns premises
       every { placementRequestService.getPlacementRequestOrNull(placementRequest.id) } returns placementRequest
       every { spaceBookingRepository.findByPlacementRequestId(placementRequest.id) } returns emptyList()
       every { lockablePlacementRequestRepository.acquirePessimisticLock(placementRequest.id) } returns
         LockablePlacementRequestEntity(placementRequest.id)
-
-      every {
-        spaceSearchRepository.getSpaceAvailabilityForCandidatePremises(listOf(premises.id), arrivalDate, durationInDays)
-      } returns listOf(spaceAvailability)
 
       every { cas1ApplicationStatusService.spaceBookingMade(any()) } returns Unit
 

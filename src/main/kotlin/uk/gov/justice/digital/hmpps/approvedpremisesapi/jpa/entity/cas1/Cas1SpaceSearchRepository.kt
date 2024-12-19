@@ -4,7 +4,6 @@ import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate
 import org.springframework.stereotype.Repository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.ApprovedPremisesType
 import java.sql.ResultSet
-import java.time.LocalDate
 import java.util.UUID
 
 private const val AP_TYPE_FILTER = """
@@ -117,13 +116,6 @@ WHERE
 ORDER BY result.distance_in_miles
 """
 
-private const val SPACE_AVAILABILITY_QUERY = """
-SELECT
-  p.id AS premises_id
-FROM premises p
-WHERE id IN (:premisesIds)
-"""
-
 @Repository
 class Cas1SpaceSearchRepository(
   private val jdbcTemplate: NamedParameterJdbcTemplate,
@@ -223,23 +215,6 @@ class Cas1SpaceSearchRepository(
     }
 
     return query to params
-  }
-
-  fun getSpaceAvailabilityForCandidatePremises(
-    premisesIds: List<UUID>,
-    startDate: LocalDate,
-    durationInDays: Int,
-  ): List<SpaceAvailability> = jdbcTemplate.query(
-    SPACE_AVAILABILITY_QUERY,
-    mapOf<String, Any>(
-      "premisesIds" to premisesIds,
-      "startDate" to startDate,
-      "duration" to durationInDays,
-    ),
-  ) { rs, _ ->
-    SpaceAvailability(
-      rs.getUUID("premises_id"),
-    )
   }
 
   private fun ResultSet.getUUID(columnLabel: String) = UUID.fromString(this.getString(columnLabel))
