@@ -25,6 +25,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.seed.cas1.Cas1OutOfServi
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.seed.cas1.Cas1PlanSpacePlanningDryRunSeedJob
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.seed.cas1.Cas1RemoveAssessmentDetailsSeedJob
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.seed.cas1.Cas1SeedPremisesFromCsvJob
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.seed.cas1.Cas1SeedPremisesFromSiteSurveyXlsxJob
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.seed.cas1.Cas1UpdateEventNumberSeedJob
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.seed.cas1.Cas1UpdateSpaceBookingSeedJob
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.seed.cas1.Cas1UsersSeedJob
@@ -68,13 +69,20 @@ class SeedService(
         throw RuntimeException("Filename must be just the filename of a .xlsx file in the /seed directory, e.g. for /seed/upload.xlsx, just `upload` should be supplied")
       }
 
-      val job: ExcelSeedJob = when (excelSeedFileType) {
-        SeedFromExcelFileType.approvedPremisesRoom -> getBean(ApprovedPremisesRoomsSeedFromXLSXJob::class)
+      val jobAndSeed = when (excelSeedFileType) {
+        SeedFromExcelFileType.approvedPremisesRoom -> Pair(
+          getBean(ApprovedPremisesRoomsSeedFromXLSXJob::class),
+          "Sheet3",
+        )
+        SeedFromExcelFileType.cas1ImportSiteSurveyPremise -> Pair(
+          getBean(Cas1SeedPremisesFromSiteSurveyXlsxJob::class),
+          "Sheet2",
+        )
       }
 
       val seedStarted = LocalDateTime.now()
 
-      transactionTemplate.executeWithoutResult { processExcelJob(job, premisesId, "Sheet3", resolveXlsxPath) }
+      transactionTemplate.executeWithoutResult { processExcelJob(jobAndSeed.first, premisesId, jobAndSeed.second, resolveXlsxPath) }
 
       val timeTaken = ChronoUnit.MILLIS.between(seedStarted, LocalDateTime.now())
       seedLogger.info("Excel seed request complete. Took $timeTaken millis")
