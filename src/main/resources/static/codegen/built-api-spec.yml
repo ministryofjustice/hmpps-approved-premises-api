@@ -8033,6 +8033,7 @@ components:
         - approved_premises_space_planning_dry_run
         - approved_premises_import_delius_booking_management_data
         - approved_premises_update_space_booking
+        - temporary_accommodation_referral_rejection
     SeedFromExcelFileType:
       type: string
       enum:
