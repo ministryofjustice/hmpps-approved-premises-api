@@ -255,6 +255,10 @@ enum class DomainEventType(
     Cas1EventType.bookingChanged.value,
     "An Approved Premises Booking has been changed",
     TimelineEventType.approvedPremisesBookingChanged,
+    schemaVersions = listOf(
+      DEFAULT_DOMAIN_EVENT_SCHEMA_VERSION,
+      DomainEventSchemaVersion(2, "Captures previous set values, if changed. Also added characteristics."),
+    ),
   ),
   APPROVED_PREMISES_BOOKING_KEYWORKER_ASSIGNED(
     DomainEventCas.CAS1,
