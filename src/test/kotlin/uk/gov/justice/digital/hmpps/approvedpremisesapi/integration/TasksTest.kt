@@ -2283,13 +2283,11 @@ class TasksTest {
     @Test
     fun `Get a Placement Application Task for an application returns 200`() {
       givenAUser(roles = listOf(UserRole.CAS1_WORKFLOW_MANAGER)) { _, jwt ->
-        givenAUser(
-          roles = listOf(UserRole.CAS1_ADMIN),
-        ) { user, _ ->
+        givenAUser { user, _ ->
           givenAUser(
             roles = listOf(UserRole.CAS1_MATCHER),
           ) { allocatableUser, _ ->
-            givenAnOffender { offenderDetails, inmateDetails ->
+            givenAnOffender { offenderDetails, _ ->
               givenAPlacementApplication(
                 createdByUser = user,
                 allocatedToUser = user,

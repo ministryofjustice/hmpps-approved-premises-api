@@ -199,7 +199,7 @@ class SeedUsersTest : SeedTestBase() {
         listOf(
           UserRoleAssignmentsSeedCsvRowFactory()
             .withDeliusUsername("KNOWN-USER")
-            .withUntypedRoles(listOf("CAS1_APPLICANT", "CAS1_ASSESSOR", "CAS1_FUTURE_MANAGER", "CAS1_MATCHER", "CAS1_ADMIN", "CAS1_WORKFLOW_MANAGER"))
+            .withUntypedRoles(listOf("CAS1_APPLICANT", "CAS1_ASSESSOR", "CAS1_FUTURE_MANAGER", "CAS1_MATCHER", "CAS1_WORKFLOW_MANAGER"))
             .withTypedQualifications(listOf(UserQualification.PIPE))
             .produce(),
         ),
@@ -216,7 +216,6 @@ class SeedUsersTest : SeedTestBase() {
       UserRole.CAS1_ASSESSOR,
       UserRole.CAS1_FUTURE_MANAGER,
       UserRole.CAS1_MATCHER,
-      UserRole.CAS1_ADMIN,
       UserRole.CAS1_WORKFLOW_MANAGER,
     )
     assertThat(persistedUser.qualifications.map(UserQualificationAssignmentEntity::qualification)).containsExactlyInAnyOrder(
@@ -286,7 +285,7 @@ class SeedUsersTest : SeedTestBase() {
             description = randomStringMultiCaseWithNumbers(10),
           ),
         ),
-        expectedRoles = listOf(UserRole.CAS1_ADMIN, UserRole.CAS1_FUTURE_MANAGER, UserRole.CAS1_WORKFLOW_MANAGER, UserRole.CAS1_ASSESSOR, UserRole.CAS3_ASSESSOR, UserRole.CAS3_REFERRER),
+        expectedRoles = listOf(UserRole.CAS1_FUTURE_MANAGER, UserRole.CAS1_WORKFLOW_MANAGER, UserRole.CAS1_ASSESSOR, UserRole.CAS3_ASSESSOR, UserRole.CAS3_REFERRER),
         expectedQualifications = listOf(UserQualification.EMERGENCY, UserQualification.LAO),
       ),
       SeedInfo(
@@ -374,7 +373,7 @@ class SeedUsersTest : SeedTestBase() {
             description = randomStringMultiCaseWithNumbers(10),
           ),
         ),
-        expectedRoles = listOf(UserRole.CAS1_ADMIN, UserRole.CAS1_FUTURE_MANAGER, UserRole.CAS1_WORKFLOW_MANAGER, UserRole.CAS1_ASSESSOR),
+        expectedRoles = listOf(UserRole.CAS1_FUTURE_MANAGER, UserRole.CAS1_WORKFLOW_MANAGER, UserRole.CAS1_ASSESSOR),
         expectedQualifications = listOf(UserQualification.EMERGENCY, UserQualification.LAO),
       ),
       SeedInfo(

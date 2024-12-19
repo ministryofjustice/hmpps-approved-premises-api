@@ -113,14 +113,6 @@ enum class UserRole(val service: ServiceName, val cas1ApiValue: ApprovedPremises
 
   CAS1_APPLICANT(ServiceName.approvedPremises, ApprovedPremisesUserRole.applicant),
 
-  @Deprecated("This role will be removed in the future")
-  CAS1_ADMIN(
-    ServiceName.approvedPremises,
-    ApprovedPremisesUserRole.roleAdmin,
-    listOf(
-      UserPermission.CAS1_USER_LIST,
-    ),
-  ),
   CAS1_REPORT_VIEWER(
     ServiceName.approvedPremises,
     ApprovedPremisesUserRole.reportViewer,
