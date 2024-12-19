@@ -49,13 +49,13 @@ class Cas1PremiseCapacitySummaryTransformerTest {
           characteristicAvailability = listOf(
             PremiseCharacteristicAvailability(
               characteristicPropertyName = "isSingle",
-              availableBedsCount = 10,
-              bookingsCount = 4,
+              availableBedCount = 10,
+              bookingCount = 4,
             ),
             PremiseCharacteristicAvailability(
               characteristicPropertyName = "isWheelchairDesignated",
-              availableBedsCount = 20,
-              bookingsCount = 8,
+              availableBedCount = 20,
+              bookingCount = 8,
             ),
           ),
         ),
