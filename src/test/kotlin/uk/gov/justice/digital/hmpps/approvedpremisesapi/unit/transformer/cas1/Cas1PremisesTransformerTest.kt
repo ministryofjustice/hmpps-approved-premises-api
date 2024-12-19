@@ -64,6 +64,7 @@ class Cas1PremisesTransformerTest {
           bedCount = 10,
           outOfServiceBeds = 2,
           availableBeds = 8,
+          overbookingSummary = emptyList(),
         ),
       )
 
