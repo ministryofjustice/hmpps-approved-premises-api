@@ -19,7 +19,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.seed.SeedJob
 import java.util.UUID
 
 @Component
-class ApprovedPremisesSeedJob(
+class Cas1SeedPremisesFromCsvJob(
   private val premisesRepository: PremisesRepository,
   private val probationRegionRepository: ProbationRegionRepository,
   private val localAuthorityAreaRepository: LocalAuthorityAreaRepository,
@@ -65,7 +65,12 @@ class ApprovedPremisesSeedJob(
   ),
 ) {
   private val log = LoggerFactory.getLogger(this::class.java)
-  private val geometryFactory = GeometryFactory(PrecisionModel(PrecisionModel.FLOATING), 4326)
+
+  companion object Constants {
+    private const val LAT_LON_SRID = 4326
+  }
+
+  private val geometryFactory = GeometryFactory(PrecisionModel(PrecisionModel.FLOATING), LAT_LON_SRID)
 
   override fun deserializeRow(columns: Map<String, String>) = ApprovedPremisesSeedCsvRow(
     name = columns["name"]!!,
@@ -106,6 +111,7 @@ class ApprovedPremisesSeedJob(
     managerDetails = columns["managerDetails"]!!,
   )
 
+  @SuppressWarnings("TooGenericExceptionThrown")
   override fun processRow(row: ApprovedPremisesSeedCsvRow) {
     val existingPremises = premisesRepository.findByApCode(row.apCode)
 
@@ -124,6 +130,7 @@ class ApprovedPremisesSeedJob(
     }
   }
 
+  @SuppressWarnings("TooGenericExceptionThrown")
   private fun characteristicsFromRow(row: ApprovedPremisesSeedCsvRow): List<CharacteristicEntity> {
     return listOf(
       CharacteristicValue("isIAP", castBooleanString(row.isIAP)),
@@ -193,6 +200,7 @@ class ApprovedPremisesSeedJob(
     premisesRepository.save(approvedPremises)
   }
 
+  @SuppressWarnings("TooGenericExceptionThrown")
   private fun parseBooleanStringOrThrow(value: String, fieldName: String): String {
     val booleanString = listOf("YES", "NO").find { it == value.trim().uppercase() }
       ?: throw RuntimeException("'$value' is not a recognised boolean for '$fieldName' (use yes | no)")

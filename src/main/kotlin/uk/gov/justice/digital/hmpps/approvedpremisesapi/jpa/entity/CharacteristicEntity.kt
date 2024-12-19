@@ -38,6 +38,12 @@ interface CharacteristicRepository : JpaRepository<CharacteristicEntity, UUID> {
 
   @Query(
     "SELECT c FROM CharacteristicEntity c " +
+      "WHERE c.propertyName = :propertyName AND c.serviceScope = 'approved-premises'",
+  )
+  fun findCas1ByPropertyName(propertyName: String): CharacteristicEntity?
+
+  @Query(
+    "SELECT c FROM CharacteristicEntity c " +
       "WHERE c.serviceScope = :serviceName AND c.modelScope = :modelName " +
       "AND c.propertyName = :propertyName",
   )

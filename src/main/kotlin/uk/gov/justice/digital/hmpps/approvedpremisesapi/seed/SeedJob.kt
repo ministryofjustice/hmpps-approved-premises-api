@@ -28,8 +28,8 @@ abstract class SeedJob<RowType>(
 }
 
 @Suppress("TooGenericExceptionThrown")
-abstract class ExcelSeedJob {
-  abstract fun processDataFrame(dataFrame: DataFrame<*>, premisesId: UUID)
+interface ExcelSeedJob {
+  fun processDataFrame(dataFrame: DataFrame<*>, premisesId: UUID)
 }
 
 class SeedException(message: String) : RuntimeException(message)

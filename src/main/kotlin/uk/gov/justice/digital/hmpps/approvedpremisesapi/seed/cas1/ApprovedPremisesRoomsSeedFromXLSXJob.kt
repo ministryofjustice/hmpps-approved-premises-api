@@ -27,7 +27,7 @@ class ApprovedPremisesRoomsSeedFromXLSXJob(
   private val roomRepository: RoomRepository,
   private val bedRepository: BedRepository,
   private val siteSurvey: SiteSurvey,
-) : ExcelSeedJob() {
+) : ExcelSeedJob {
   private val log = LoggerFactory.getLogger(this::class.java)
   override fun processDataFrame(roomsWorksheet: DataFrame<*>, premisesId: UUID) {
     findExistingPremisesOrThrow(premisesId)
