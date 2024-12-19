@@ -21,7 +21,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomStringMultiCa
 import java.util.UUID
 
 @TestInstance(TestInstance.Lifecycle.PER_METHOD)
-class SeedApprovedPremisesTest : SeedTestBase() {
+class Cas1SeedPremisesFromCsvTest : SeedTestBase() {
 
   @BeforeEach
   fun removeDefaultCharacteristicsFromDatabaseMigrations() {
