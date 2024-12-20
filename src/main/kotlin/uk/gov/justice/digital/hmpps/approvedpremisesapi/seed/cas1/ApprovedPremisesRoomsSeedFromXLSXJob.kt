@@ -39,9 +39,11 @@ class ApprovedPremisesRoomsSeedFromXLSXJob(
     var rooms = buildRooms(roomsWorksheet, premisesId)
     val characteristics = buildCharacteristics(roomsWorksheet)
 
-    rooms.forEach {
-      characteristics[it.code]?.let { roomCharacteristics -> it.characteristics.addAll(roomCharacteristics.toList()) }
-    }
+    assignCharacteristics(rooms, characteristics)
+
+    // checkRoomCharacteristics(rooms)
+
+    rooms = removeDuplicateRooms(rooms)
 
     rooms = createOrUpdateRooms(rooms)
 
@@ -56,7 +58,7 @@ class ApprovedPremisesRoomsSeedFromXLSXJob(
       val roomAnswers = dataFrame.getColumn(i)
       val room = buildRoom(premisesId, roomCode = "$qCode - ${roomAnswers[0]}", roomName = roomAnswers[0].toString())
 
-      if (rooms.none { it.code == room.code }) rooms.add(room)
+      rooms.add(room)
     }
     return rooms
   }
@@ -82,6 +84,27 @@ class ApprovedPremisesRoomsSeedFromXLSXJob(
     }
     return premisesCharacteristics
   }
+
+  private fun assignCharacteristics(rooms: MutableList<RoomEntity>, characteristics: MutableMap<String, MutableSet<CharacteristicEntity>>) {
+    rooms.forEach {
+      characteristics[it.code]?.let { roomCharacteristics ->
+        if (it.characteristics.isNotEmpty() && it.characteristics != roomCharacteristics) {
+          throw SiteSurveyImportException("Characteristics are different for the same room with code ${it.code} and name ${it.name}.")
+        }
+        it.characteristics.addAll(roomCharacteristics.toList())
+      }
+    }
+  }
+
+  private fun checkRoomCharacteristics(rooms: MutableList<RoomEntity>) {
+    rooms.groupBy { it.code }.forEach { (_, sameRooms) ->
+      if (!sameRooms.all { it.characteristics == sameRooms[0].characteristics }) {
+        throw SiteSurveyImportException("Characteristics are different for the same room with code ${sameRooms[0].code} and name ${sameRooms[0].name}.")
+      }
+    }
+  }
+
+  private fun removeDuplicateRooms(rooms: MutableList<RoomEntity>) = rooms.groupBy { it.code }.values.map { it[0] }.toMutableList()
 
   private fun buildBeds(dataFrame: DataFrame<*>, rooms: MutableList<RoomEntity>): List<BedEntity> {
     val beds = mutableListOf<BedEntity>()
