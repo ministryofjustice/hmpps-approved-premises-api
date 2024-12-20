@@ -6102,8 +6102,20 @@ components:
           $ref: '#/components/schemas/NamedId'
         premisesCharacteristics:
           type: array
+          deprecated: true
+          description: "This is not populated. Instead, use 'characteristics'"
           items:
             $ref: '#/components/schemas/CharacteristicPair'
+        characteristics:
+          type: array
+          items:
+            $ref: '#/components/schemas/Cas1PremiseCharacteristic'
+      required:
+        - id
+        - apType
+        - name
+        - apArea
+        - characteristics
     Cas1PremisesSummary:
       type: object
       properties:
@@ -6168,6 +6180,30 @@ components:
       required:
         - startInclusive
         - endInclusive
+    Cas1PremiseCharacteristic:
+      type: string
+      description: All premise characteristics
+      enum:
+        - acceptsChildSexOffenders
+        - acceptsHateCrimeOffenders
+        - acceptsNonSexualChildOffenders
+        - acceptsSexOffenders
+        - additionalRestrictions
+        - hasBrailleSignage
+        - hasHearingLoop
+        - hasLift
+        - hasStepFreeAccessToCommunalAreas
+        - hasTactileFlooring
+        - hasWheelChairAccessibleBathrooms
+        - hasWideAccessToCommunalAreas
+        - hasWideStepFreeAccess
+        - isCatered
+        - isESAP
+        - isIAP
+        - isPIPE
+        - isRecoveryFocussed
+        - isSuitableForVulnerable
+        - isSemiSpecialistMentalHealth
     Cas1SpaceCharacteristic:
       type: string
       description: All of the characteristics of both premises and rooms
@@ -6277,7 +6313,7 @@ components:
       properties:
         apTypes:
           deprecated: true
-          description: "Searching on multiple types is not supported, instead use specialistApType. if this is used, the first type wll be matched, and type 'normal' will be ignored"
+          description: "Searching on multiple types is not supported, instead use apType. If this is used, the first type wll be matched, and type 'normal' will be ignored"
           type: array
           items:
             $ref: '#/components/schemas/ApType'

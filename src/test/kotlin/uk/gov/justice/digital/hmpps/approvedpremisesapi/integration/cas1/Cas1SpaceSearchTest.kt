@@ -7,6 +7,7 @@ import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.EnumSource
 import org.springframework.beans.factory.annotation.Autowired
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApType
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1PremiseCharacteristic
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1SpaceCharacteristic
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1SpaceSearchParameters
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1SpaceSearchRequirements
@@ -62,6 +63,13 @@ class Cas1SpaceSearchTest : InitialiseDatabasePerClassTestBase() {
         withLatitude((it * -0.01) - 0.08)
         withLongitude((it * 0.01) + 51.49)
         withSupportsSpaceBookings(true)
+        withCharacteristicsList(
+          listOf(
+            characteristicRepository.findCas1ByPropertyName("hasWideAccessToCommunalAreas")!!,
+            characteristicRepository.findCas1ByPropertyName("hasWideStepFreeAccess")!!,
+            characteristicRepository.findCas1ByPropertyName("hasLift")!!,
+          ),
+        )
       }
 
       // premise that doesn't support space bookings
@@ -100,11 +108,17 @@ class Cas1SpaceSearchTest : InitialiseDatabasePerClassTestBase() {
       assertThat(results.resultsCount).isEqualTo(5)
       assertThat(results.searchCriteria).isEqualTo(searchParameters)
 
-      assertThatResultMatches(results.results[0], premises[0])
-      assertThatResultMatches(results.results[1], premises[1])
-      assertThatResultMatches(results.results[2], premises[2])
-      assertThatResultMatches(results.results[3], premises[3])
-      assertThatResultMatches(results.results[4], premises[4])
+      val expectedCharacteristics = listOf(
+        Cas1PremiseCharacteristic.hasWideAccessToCommunalAreas,
+        Cas1PremiseCharacteristic.hasWideStepFreeAccess,
+        Cas1PremiseCharacteristic.hasLift,
+      )
+
+      assertThatResultMatches(results.results[0], premises[0], expectedCharacteristics = expectedCharacteristics)
+      assertThatResultMatches(results.results[1], premises[1], expectedCharacteristics = expectedCharacteristics)
+      assertThatResultMatches(results.results[2], premises[2], expectedCharacteristics = expectedCharacteristics)
+      assertThatResultMatches(results.results[3], premises[3], expectedCharacteristics = expectedCharacteristics)
+      assertThatResultMatches(results.results[4], premises[4], expectedCharacteristics = expectedCharacteristics)
     }
   }
 
@@ -327,18 +341,24 @@ class Cas1SpaceSearchTest : InitialiseDatabasePerClassTestBase() {
     actual: Cas1SpaceSearchResult,
     expected: ApprovedPremisesEntity,
     expectedApType: ApType = ApType.normal,
+    expectedCharacteristics: List<Cas1PremiseCharacteristic>? = null,
   ) {
     assertThat(actual.spacesAvailable).isEmpty()
     assertThat(actual.distanceInMiles).isGreaterThan(0f.toBigDecimal())
     assertThat(actual.premises).isNotNull
-    assertThat(actual.premises!!.id).isEqualTo(expected.id)
-    assertThat(actual.premises!!.apType).isEqualTo(expectedApType)
-    assertThat(actual.premises!!.name).isEqualTo(expected.name)
-    assertThat(actual.premises!!.addressLine1).isEqualTo(expected.addressLine1)
-    assertThat(actual.premises!!.addressLine2).isEqualTo(expected.addressLine2)
-    assertThat(actual.premises!!.town).isEqualTo(expected.town)
-    assertThat(actual.premises!!.postcode).isEqualTo(expected.postcode)
-    assertThat(actual.premises!!.premisesCharacteristics).isEmpty()
+    val premises = actual.premises!!
+    assertThat(premises.id).isEqualTo(expected.id)
+    assertThat(premises.apType).isEqualTo(expectedApType)
+    assertThat(premises.name).isEqualTo(expected.name)
+    assertThat(premises.addressLine1).isEqualTo(expected.addressLine1)
+    assertThat(premises.addressLine2).isEqualTo(expected.addressLine2)
+    assertThat(premises.town).isEqualTo(expected.town)
+    assertThat(premises.postcode).isEqualTo(expected.postcode)
+    assertThat(premises.premisesCharacteristics).isEmpty()
+
+    if (expectedCharacteristics != null) {
+      assertThat(premises.characteristics).containsExactlyInAnyOrder(*expectedCharacteristics.toTypedArray())
+    }
   }
 
   @ParameterizedTest
@@ -516,21 +536,17 @@ class Cas1SpaceSearchTest : InitialiseDatabasePerClassTestBase() {
     }
   }
 
-  private fun ApType.asCharacteristicEntity() = when (this) {
+  private fun ApType.asCharacteristicProperty() = when (this) {
     ApType.normal -> null
     ApType.pipe -> "isPIPE"
     ApType.esap -> "isESAP"
     ApType.rfap -> "isRecoveryFocussed"
     ApType.mhapStJosephs, ApType.mhapElliottHouse -> "isSemiSpecialistMentalHealth"
-  }?.let {
+  }
+
+  private fun ApType.asCharacteristicEntity() = this.asCharacteristicProperty()?.let {
     characteristicRepository.findByPropertyName(it, ServiceName.approvedPremises.value)
   }
 
-  private fun Cas1SpaceCharacteristic.asCharacteristicEntity() = characteristicRepository.findByPropertyName(this.value, ServiceName.approvedPremises.value)
-    ?: characteristicEntityFactory.produceAndPersist {
-      withName(this@asCharacteristicEntity.value)
-      withPropertyName(this@asCharacteristicEntity.value)
-      withServiceScope(ServiceName.approvedPremises.value)
-      withModelScope("*")
-    }
+  private fun Cas1SpaceCharacteristic.asCharacteristicEntity() = characteristicRepository.findByPropertyName(this.value, ServiceName.approvedPremises.value)!!
 }
