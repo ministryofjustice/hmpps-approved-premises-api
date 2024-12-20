@@ -177,7 +177,7 @@ class Cas1SpaceSearchTest : InitialiseDatabasePerClassTestBase() {
 
   @ParameterizedTest
   @EnumSource
-  fun `Filtering APs by AP type returns only APs of that type`(apType: ApType) {
+  fun `Filtering APs by AP type returns only APs of that type - using single ap type option`(apType: ApType) {
     postCodeDistrictFactory.produceAndPersist {
       withOutcode("SE1")
       withLatitude(-0.07)
@@ -198,7 +198,7 @@ class Cas1SpaceSearchTest : InitialiseDatabasePerClassTestBase() {
         withSupportsSpaceBookings(true)
       }
 
-      val unexpectedPremises = approvedPremisesEntityFactory.produceAndPersistMultipleIndexed(5) {
+      val unexpectedPremises = approvedPremisesEntityFactory.produceAndPersistMultipleIndexed(4) {
         withYieldedProbationRegion { givenAProbationRegion() }
         withYieldedLocalAuthorityArea {
           localAuthorityEntityFactory.produceAndPersist()
@@ -215,7 +215,8 @@ class Cas1SpaceSearchTest : InitialiseDatabasePerClassTestBase() {
         durationInDays = 14,
         targetPostcodeDistrict = "SE1",
         requirements = Cas1SpaceSearchRequirements(
-          apTypes = listOf(apType),
+          apTypes = emptyList(),
+          apType = apType,
           spaceCharacteristics = null,
         ),
       )
@@ -248,8 +249,9 @@ class Cas1SpaceSearchTest : InitialiseDatabasePerClassTestBase() {
     }
   }
 
-  @Test
-  fun `Filtering APs by multiple AP types returns APs of any specified type`() {
+  @ParameterizedTest
+  @EnumSource
+  fun `Filtering APs by AP type returns only APs of that type - using multiple ap types option`(apType: ApType) {
     postCodeDistrictFactory.produceAndPersist {
       withOutcode("SE1")
       withLatitude(-0.07)
@@ -258,25 +260,26 @@ class Cas1SpaceSearchTest : InitialiseDatabasePerClassTestBase() {
 
     givenAUser { user, jwt ->
       val application = givenAnApplication(createdByUser = user, isWomensApplication = false)
-      val expectedPremises = approvedPremisesEntityFactory.produceAndPersistMultipleIndexed(4) {
+
+      val expectedPremises = approvedPremisesEntityFactory.produceAndPersistMultipleIndexed(5) {
         withYieldedProbationRegion { givenAProbationRegion() }
         withYieldedLocalAuthorityArea {
           localAuthorityEntityFactory.produceAndPersist()
         }
         withLatitude((it * -0.01) - 0.08)
         withLongitude((it * 0.01) + 51.49)
-        withCharacteristicsList(listOfNotNull(ApType.entries[it - 1].asCharacteristicEntity()))
+        withCharacteristicsList(listOfNotNull(apType.asCharacteristicEntity()))
         withSupportsSpaceBookings(true)
       }
 
-      val unexpectedPremises = approvedPremisesEntityFactory.produceAndPersistMultipleIndexed(5) {
+      val unexpectedPremises = approvedPremisesEntityFactory.produceAndPersistMultipleIndexed(4) {
         withYieldedProbationRegion { givenAProbationRegion() }
         withYieldedLocalAuthorityArea {
           localAuthorityEntityFactory.produceAndPersist()
         }
         withLatitude((it * -0.01) - 0.08)
         withLongitude((it * 0.01) + 51.49)
-        withCharacteristicsList(listOfNotNull(ApType.entries[5].asCharacteristicEntity()))
+        withCharacteristicsList(listOfNotNull(ApType.entries.first { it != apType }.asCharacteristicEntity()))
         withSupportsSpaceBookings(true)
       }
 
@@ -286,7 +289,8 @@ class Cas1SpaceSearchTest : InitialiseDatabasePerClassTestBase() {
         durationInDays = 14,
         targetPostcodeDistrict = "SE1",
         requirements = Cas1SpaceSearchRequirements(
-          apTypes = ApType.entries.slice(0..3),
+          apTypes = listOf(apType),
+          apType = null,
           spaceCharacteristics = null,
         ),
       )
@@ -302,13 +306,20 @@ class Cas1SpaceSearchTest : InitialiseDatabasePerClassTestBase() {
 
       val results = response.responseBody.blockFirst()!!
 
-      assertThat(results.resultsCount).isEqualTo(4)
+      assertThat(results.resultsCount).isEqualTo(5)
       assertThat(results.searchCriteria).isEqualTo(searchParameters)
 
-      assertThatResultMatches(results.results[0], expectedPremises[0], ApType.normal)
-      assertThatResultMatches(results.results[1], expectedPremises[1], ApType.pipe)
-      assertThatResultMatches(results.results[2], expectedPremises[2], ApType.esap)
-      assertThatResultMatches(results.results[3], expectedPremises[3], ApType.rfap)
+      val expectedApType = if (apType == ApType.mhapElliottHouse) {
+        ApType.mhapStJosephs
+      } else {
+        apType
+      }
+
+      assertThatResultMatches(results.results[0], expectedPremises[0], expectedApType)
+      assertThatResultMatches(results.results[1], expectedPremises[1], expectedApType)
+      assertThatResultMatches(results.results[2], expectedPremises[2], expectedApType)
+      assertThatResultMatches(results.results[3], expectedPremises[3], expectedApType)
+      assertThatResultMatches(results.results[4], expectedPremises[4], expectedApType)
     }
   }
 

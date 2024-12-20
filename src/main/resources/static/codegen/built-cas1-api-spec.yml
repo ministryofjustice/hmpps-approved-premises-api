@@ -6276,9 +6276,13 @@ components:
       type: object
       properties:
         apTypes:
+          deprecated: true
+          description: "Searching on multiple types is not supported, instead use specialistApType. if this is used, the first type wll be matched, and type 'normal' will be ignored"
           type: array
           items:
             $ref: '#/components/schemas/ApType'
+        apType:
+          $ref: '#/components/schemas/ApType'
         spaceCharacteristics:
           type: array
           items:
@@ -6290,7 +6294,6 @@ components:
           items:
             $ref: '#/components/schemas/Gender'
       required:
-        - apType
         - gender
     Cas1SpaceSearchParameters:
       type: object

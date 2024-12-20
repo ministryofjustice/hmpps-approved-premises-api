@@ -226,9 +226,13 @@ components:
       type: object
       properties:
         apTypes:
+          deprecated: true
+          description: "Searching on multiple types is not supported, instead use apType. If this is used, the first type wll be matched, and type 'normal' will be ignored"
           type: array
           items:
             $ref: '_shared.yml#/components/schemas/ApType'
+        apType:
+          $ref: '_shared.yml#/components/schemas/ApType'
         spaceCharacteristics:
           type: array
           items:
@@ -240,7 +244,6 @@ components:
           items:
             $ref: '_shared.yml#/components/schemas/Gender'
       required:
-        - apType
         - gender
     Cas1SpaceSearchParameters:
       type: object

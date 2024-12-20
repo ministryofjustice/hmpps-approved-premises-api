@@ -170,7 +170,7 @@ class Cas1SpaceSearchServiceTest {
 
       spaceSearchRepository.findAllPremisesWithCharacteristicsByDistance(
         "TB1",
-        ApType.entries.map { it.asApprovedPremisesType() },
+        ApType.entries.map { it.asApprovedPremisesType() }.firstOrNull(),
         isWomensPremises = false,
         spaceCharacteristics.filter { it.modelMatches("premises") }.map { it.id },
         spaceCharacteristics.filter { it.modelMatches("room") }.map { it.id },
@@ -265,7 +265,7 @@ class Cas1SpaceSearchServiceTest {
 
       spaceSearchRepository.findAllPremisesWithCharacteristicsByDistance(
         "TB1",
-        apTypes.map { it.asApprovedPremisesType() },
+        apTypes.map { it.asApprovedPremisesType() }.firstOrNull(),
         any(),
         any(),
         any(),
