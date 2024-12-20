@@ -31,12 +31,6 @@ components:
         id:
           type: string
           format: uuid
-        apCode:
-          type: string
-          example: NEHOPE1
-        deliusQCode:
-          type: string
-          example: Q005
         apType:
           $ref: '_shared.yml#/components/schemas/ApType'
         name:
@@ -56,10 +50,6 @@ components:
           example: LS1 3AD
         apArea:
           $ref: '_shared.yml#/components/schemas/NamedId'
-        totalSpaceCount:
-          type: integer
-          description: The total number of spaces in this premises
-          example: 22
         premisesCharacteristics:
           type: array
           items:

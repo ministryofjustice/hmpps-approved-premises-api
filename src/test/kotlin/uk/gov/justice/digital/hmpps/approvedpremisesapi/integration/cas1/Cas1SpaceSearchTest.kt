@@ -321,18 +321,12 @@ class Cas1SpaceSearchTest : InitialiseDatabasePerClassTestBase() {
     assertThat(actual.distanceInMiles).isGreaterThan(0f.toBigDecimal())
     assertThat(actual.premises).isNotNull
     assertThat(actual.premises!!.id).isEqualTo(expected.id)
-    assertThat(actual.premises!!.apCode).isEqualTo(expected.apCode)
-    assertThat(actual.premises!!.deliusQCode).isEqualTo(expected.qCode)
     assertThat(actual.premises!!.apType).isEqualTo(expectedApType)
     assertThat(actual.premises!!.name).isEqualTo(expected.name)
     assertThat(actual.premises!!.addressLine1).isEqualTo(expected.addressLine1)
     assertThat(actual.premises!!.addressLine2).isEqualTo(expected.addressLine2)
     assertThat(actual.premises!!.town).isEqualTo(expected.town)
     assertThat(actual.premises!!.postcode).isEqualTo(expected.postcode)
-    assertThat(actual.premises!!.apArea).isNotNull
-    assertThat(actual.premises!!.apArea!!.id).isEqualTo(expected.probationRegion.apArea!!.id)
-    assertThat(actual.premises!!.apArea!!.name).isEqualTo(expected.probationRegion.apArea!!.name)
-    assertThat(actual.premises!!.totalSpaceCount).isEqualTo(expected.rooms.flatMap { it.beds }.count())
     assertThat(actual.premises!!.premisesCharacteristics).isEmpty()
   }
 

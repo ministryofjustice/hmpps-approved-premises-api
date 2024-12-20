@@ -192,7 +192,7 @@ class Cas1SeedPremisesFromSiteSurveyXlsxJob(
 
     val diff = javers.compare(beforeChange, afterChange)
     if (diff.hasChanges()) {
-      log.info("Changes are ${diff.prettyPrint()}")
+      log.info("Changes for import of ${siteSurvey.name} are ${diff.prettyPrint()}")
       premisesRepository.save(existingPremise)
     } else {
       entityManager.clear()
