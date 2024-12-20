@@ -472,7 +472,6 @@ components:
         - canonicalArrivalDate
         - canonicalDepartureDate
         - releaseType
-        - spaceType
       x-enum-varnames:
         - PERSON_NAME
         - TIER

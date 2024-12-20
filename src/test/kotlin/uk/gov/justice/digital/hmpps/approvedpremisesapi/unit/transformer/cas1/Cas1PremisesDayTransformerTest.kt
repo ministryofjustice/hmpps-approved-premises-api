@@ -10,7 +10,11 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1PremiseCap
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1PremiseCapacityForDay
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1PremiseCharacteristicAvailability
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1PremisesSummary
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1SpaceBookingCharacteristic
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1SpaceBookingDaySummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1SpaceCharacteristic
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PersonSummaryDiscriminator
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.RestrictedPersonSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApprovedPremisesEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.cas1.Cas1PremisesDayTransformer
 import java.time.LocalDate
@@ -54,6 +58,21 @@ class Cas1PremisesDayTransformerTest {
       ),
     )
 
+    val spaceBookings = listOf(
+      Cas1SpaceBookingDaySummary(
+        id = UUID.randomUUID(),
+        person = RestrictedPersonSummary(
+          crn = "crn",
+          personType = PersonSummaryDiscriminator.restrictedPersonSummary,
+        ),
+        canonicalArrivalDate = currentSearchDay.minusDays(1),
+        canonicalDepartureDate = currentSearchDay.plusDays(1),
+        tier = "Tier 1",
+        releaseType = "rotl",
+        essentialCharacteristics = listOf(Cas1SpaceBookingCharacteristic.IS_SINGLE, Cas1SpaceBookingCharacteristic.HAS_EN_SUITE),
+      ),
+    )
+
     val premiseCapacity = Cas1PremiseCapacity(
       premise = cas1PremisesSummary,
       startDate = currentSearchDay,
@@ -64,13 +83,14 @@ class Cas1PremisesDayTransformerTest {
     val result = transformer.toCas1PremisesDaySummary(
       currentSearchDay,
       premiseCapacity,
+      spaceBookings,
     )
 
     assertThat(result.forDate).isEqualTo(currentSearchDay)
     assertThat(result.previousDate).isEqualTo(currentSearchDay.minusDays(1))
     assertThat(result.nextDate).isEqualTo(currentSearchDay.plusDays(1))
     assertThat(result.capacity).isEqualTo(capacity[0])
-    assertThat(result.spaceBookings).isEmpty()
+    assertThat(result.spaceBookings).isEqualTo(spaceBookings)
     assertThat(result.outOfServiceBeds).isEmpty()
   }
 }
