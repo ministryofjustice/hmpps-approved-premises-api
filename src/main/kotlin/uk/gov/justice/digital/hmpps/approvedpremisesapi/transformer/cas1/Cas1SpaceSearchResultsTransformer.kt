@@ -19,8 +19,6 @@ class Cas1SpaceSearchResultsTransformer {
         ApiSpaceSearchResult(
           premises = Cas1PremisesSearchResultSummary(
             id = candidatePremises.premisesId,
-            apCode = candidatePremises.apCode,
-            deliusQCode = candidatePremises.deliusQCode,
             apType = candidatePremises.apType.asApiType(),
             name = candidatePremises.name,
             addressLine1 = candidatePremises.addressLine1,
@@ -31,7 +29,6 @@ class Cas1SpaceSearchResultsTransformer {
               id = candidatePremises.apAreaId,
               name = candidatePremises.apAreaName,
             ),
-            totalSpaceCount = candidatePremises.totalSpaceCount,
             premisesCharacteristics = listOf(),
           ),
           distanceInMiles = candidatePremises.distanceInMiles.toBigDecimal(),

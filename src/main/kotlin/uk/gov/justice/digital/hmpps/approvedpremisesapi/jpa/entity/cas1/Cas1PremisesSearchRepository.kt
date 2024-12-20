@@ -42,8 +42,6 @@ FROM
       (SELECT point FROM postcode_districts pd WHERE pd.outcode = :outcode)::geography,
       ap.point::geography
     ) * 0.000621371 AS distance_in_miles,
-    ap.ap_code AS ap_code,
-    ap.q_code AS delius_q_code,
     CASE
       WHEN EXISTS (
         SELECT 1
@@ -89,21 +87,11 @@ FROM
     p.town AS town,
     p.postcode AS postcode,
     aa.id AS ap_area_id,
-    aa.name AS ap_area_name,
-    (
-      SELECT COUNT(*)
-      FROM beds b
-      JOIN rooms r
-      ON b.room_id = r.id
-      WHERE r.premises_id = p.id
-    ) AS total_spaces_count
+    aa.name AS ap_area_name
   FROM approved_premises ap
-  JOIN premises p
-  ON ap.premises_id = p.id
-  JOIN probation_regions pr
-  ON p.probation_region_id = pr.id
-  JOIN ap_areas aa
-  ON pr.ap_area_id = aa.id
+  INNER JOIN premises p ON ap.premises_id = p.id
+  INNER JOIN probation_regions pr ON p.probation_region_id = pr.id
+  INNER JOIN ap_areas aa ON pr.ap_area_id = aa.id
   WHERE 
     ap.supports_space_bookings = true AND
     ap.gender = #SPECIFIED_GENDER#
@@ -144,8 +132,6 @@ class Cas1SpaceSearchRepository(
       CandidatePremises(
         rs.getUUID("premises_id"),
         rs.getFloat("distance_in_miles"),
-        rs.getString("ap_code"),
-        rs.getString("delius_q_code"),
         apType,
         rs.getString("name"),
         rs.getString("address_line1"),
@@ -154,7 +140,6 @@ class Cas1SpaceSearchRepository(
         rs.getString("postcode"),
         rs.getUUID("ap_area_id"),
         rs.getString("ap_area_name"),
-        rs.getInt("total_spaces_count"),
       )
     }
   }
@@ -230,8 +215,6 @@ class Cas1SpaceSearchRepository(
 data class CandidatePremises(
   val premisesId: UUID,
   val distanceInMiles: Float,
-  val apCode: String,
-  val deliusQCode: String,
   val apType: ApprovedPremisesType,
   val name: String,
   val addressLine1: String,
@@ -240,9 +223,4 @@ data class CandidatePremises(
   val postcode: String,
   val apAreaId: UUID,
   val apAreaName: String,
-  val totalSpaceCount: Int,
-)
-
-data class SpaceAvailability(
-  val premisesId: UUID,
 )

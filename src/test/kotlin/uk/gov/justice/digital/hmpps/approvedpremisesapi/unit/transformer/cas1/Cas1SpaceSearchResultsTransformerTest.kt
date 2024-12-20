@@ -35,8 +35,6 @@ class Cas1SpaceSearchResultsTransformerTest {
     val candidatePremises1 = CandidatePremises(
       UUID.randomUUID(),
       1.0f,
-      "AP1234",
-      "QCODE1",
       ApprovedPremisesType.NORMAL,
       "Some AP",
       "1 The Street",
@@ -45,14 +43,11 @@ class Cas1SpaceSearchResultsTransformerTest {
       "TB1 2AB",
       UUID.randomUUID(),
       "Some AP Area",
-      3,
     )
 
     val candidatePremises2 = CandidatePremises(
       UUID.randomUUID(),
       2.0f,
-      "AP2345",
-      "QCODE2",
       ApprovedPremisesType.NORMAL,
       "Some Other AP",
       "2 The Street",
@@ -61,14 +56,11 @@ class Cas1SpaceSearchResultsTransformerTest {
       "TB1 2AB",
       UUID.randomUUID(),
       "Some AP Area",
-      6,
     )
 
     val candidatePremises3 = CandidatePremises(
       UUID.randomUUID(),
       3.0f,
-      "AP3456",
-      "QCODE3",
       ApprovedPremisesType.NORMAL,
       "Some AP",
       "3 The Street",
@@ -77,7 +69,6 @@ class Cas1SpaceSearchResultsTransformerTest {
       "TB1 2AB",
       UUID.randomUUID(),
       "Some AP Area",
-      9,
     )
 
     val searchResults = listOf(
@@ -98,8 +89,6 @@ class Cas1SpaceSearchResultsTransformerTest {
   private fun assertThatTransformedResultMatches(actual: ApiSpaceSearchResult, expected: CandidatePremises) {
     assertThat(actual.premises).isNotNull
     assertThat(actual.premises!!.id).isEqualTo(expected.premisesId)
-    assertThat(actual.premises!!.apCode).isEqualTo(expected.apCode)
-    assertThat(actual.premises!!.deliusQCode).isEqualTo(expected.deliusQCode)
     assertThat(actual.premises!!.apType).isEqualTo(expected.apType.asApiType())
     assertThat(actual.premises!!.name).isEqualTo(expected.name)
     assertThat(actual.premises!!.addressLine1).isEqualTo(expected.addressLine1)
@@ -109,7 +98,6 @@ class Cas1SpaceSearchResultsTransformerTest {
     assertThat(actual.premises!!.apArea).isNotNull
     assertThat(actual.premises!!.apArea!!.id).isEqualTo(expected.apAreaId)
     assertThat(actual.premises!!.apArea!!.name).isEqualTo(expected.apAreaName)
-    assertThat(actual.premises!!.totalSpaceCount).isEqualTo(expected.totalSpaceCount)
     assertThat(actual.premises!!.premisesCharacteristics).isEmpty()
     assertThat(actual.distanceInMiles).isEqualTo(expected.distanceInMiles.toBigDecimal())
     assertThat(actual.spacesAvailable).isEmpty()
