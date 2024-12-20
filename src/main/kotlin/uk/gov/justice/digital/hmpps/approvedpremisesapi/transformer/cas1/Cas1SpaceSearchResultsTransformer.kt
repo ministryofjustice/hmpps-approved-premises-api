@@ -1,6 +1,8 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.cas1
 
+import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Component
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1PremiseCharacteristic
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1PremisesSearchResultSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1SpaceSearchParameters
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1SpaceSearchResults
@@ -11,6 +13,10 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1SpaceSearc
 
 @Component
 class Cas1SpaceSearchResultsTransformer {
+
+  private val log = LoggerFactory.getLogger(this::class.java)
+
+  @SuppressWarnings("SwallowedException")
   fun transformDomainToApi(searchParameters: Cas1SpaceSearchParameters, results: List<CandidatePremises>) =
     Cas1SpaceSearchResults(
       resultsCount = results.size,
@@ -29,7 +35,15 @@ class Cas1SpaceSearchResultsTransformer {
               id = candidatePremises.apAreaId,
               name = candidatePremises.apAreaName,
             ),
-            premisesCharacteristics = listOf(),
+            premisesCharacteristics = emptyList(),
+            characteristics = candidatePremises.characteristics.mapNotNull {
+              try {
+                Cas1PremiseCharacteristic.valueOf(it)
+              } catch (e: IllegalArgumentException) {
+                log.warn("Couldn't find an enum entry for propertyName $it")
+                null
+              }
+            },
           ),
           distanceInMiles = candidatePremises.distanceInMiles.toBigDecimal(),
           spacesAvailable = listOf(),
