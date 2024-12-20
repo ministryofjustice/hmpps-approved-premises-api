@@ -147,6 +147,48 @@ class SeedFromXLSXApprovedPremisesRoomsTest : SeedTestBase() {
   }
 
   @Test
+  fun `Creating one new room with two beds but different characteristics fails`() {
+    val localAuthorityArea = localAuthorityEntityFactory.produceAndPersist()
+    val probationRegion = probationRegionEntityFactory.produceAndPersist()
+    val qCode = "Q999"
+    val premises = approvedPremisesEntityFactory.produceAndPersist {
+      withLocalAuthorityArea(localAuthorityArea)
+      withProbationRegion(probationRegion)
+      withQCode(qCode)
+    }
+    val premisesId = premises.id
+
+    val header = listOf("Unique Reference Number for Bed", "SWABI01NEW", "SWABI02NEW")
+    val rows = mutableListOf(
+      "Room Number / Name",
+      "1",
+      "1",
+      "Bed Number (in this room i.e if this is a single room insert 1.  If this is a shared room separate entries will need to be made for bed 1 and bed 2)",
+      "1",
+      "2",
+    )
+    rows.addCharacteristics(2, mapOf("Is this room located on the ground floor?" to listOf(1)))
+
+    val dataFrame = dataFrameOf(header, rows)
+
+    withXlsx("example", "Sheet3", dataFrame)
+
+    seedService.seedExcelData(
+      SeedFromExcelFileType.approvedPremisesRoom,
+      premisesId,
+      "example.xlsx",
+    )
+
+    assertThat(logEntries)
+      .anyMatch {
+        it.level == "error" &&
+          it.message == "Unable to complete Excel seed job" &&
+          it.throwable != null &&
+          it.throwable.message!!.contains("Detail: Key (code)=(SWABI02) already exists.")
+      }
+  }
+
+  @Test
   fun `Creating two new rooms and three new beds with a characteristic succeeds`() {
     val localAuthorityArea = localAuthorityEntityFactory.produceAndPersist()
     val probationRegion = probationRegionEntityFactory.produceAndPersist()
