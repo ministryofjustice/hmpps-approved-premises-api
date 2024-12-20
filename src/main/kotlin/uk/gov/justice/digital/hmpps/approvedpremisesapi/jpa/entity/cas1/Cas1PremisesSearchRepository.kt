@@ -59,7 +59,8 @@ FROM
     p.town AS town,
     p.postcode AS postcode,
     aa.id AS ap_area_id,
-    aa.name AS ap_area_name
+    aa.name AS ap_area_name,
+    ARRAY_AGG (characteristics.property_name) as characteristics
   FROM approved_premises ap
   INNER JOIN premises p ON ap.premises_id = p.id
   INNER JOIN probation_regions pr ON p.probation_region_id = pr.id
@@ -115,7 +116,22 @@ class Cas1SpaceSearchRepository(
         rs.getString("postcode"),
         rs.getUUID("ap_area_id"),
         rs.getString("ap_area_name"),
+        toStringList(rs.getArray("characteristics")),
       )
+    }
+  }
+
+  private fun toStringList(array: java.sql.Array?): List<String> {
+    if (array == null) {
+      return emptyList()
+    }
+
+    val result = (array.array as Array<String>).toList()
+
+    return if (result.size == 1 && result[0] == null) {
+      emptyList()
+    } else {
+      result
     }
   }
 
@@ -194,4 +210,5 @@ data class CandidatePremises(
   val postcode: String,
   val apAreaId: UUID,
   val apAreaName: String,
+  val characteristics: List<String>,
 )
