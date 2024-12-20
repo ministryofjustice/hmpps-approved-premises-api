@@ -56,13 +56,13 @@ class ApprovedPremisesRoomsSeedFromXLSXJob(
       val roomAnswers = dataFrame.getColumn(i)
       val room = buildRoom(premisesId, roomCode = "$qCode - ${roomAnswers[0]}", roomName = roomAnswers[0].toString())
 
-      rooms.add(room)
+      if (rooms.none { it.code == room.code }) rooms.add(room)
     }
     return rooms
   }
 
-  private fun buildCharacteristics(dataFrame: DataFrame<*>): MutableMap<String, MutableList<CharacteristicEntity>> {
-    var premisesCharacteristics = mutableMapOf<String, MutableList<CharacteristicEntity>>()
+  private fun buildCharacteristics(dataFrame: DataFrame<*>): MutableMap<String, MutableSet<CharacteristicEntity>> {
+    var premisesCharacteristics = mutableMapOf<String, MutableSet<CharacteristicEntity>>()
 
     questionCriteriaMapping.questionToCharacterEntityMapping.forEach { (question, characteristic) ->
       val rowId = dataFrame.getColumn(0).values().indexOf(question)
@@ -74,7 +74,7 @@ class ApprovedPremisesRoomsSeedFromXLSXJob(
         val answer = dataFrame[rowId][colId].toString().trim()
 
         if (answer.equals("yes", ignoreCase = true)) {
-          premisesCharacteristics.computeIfAbsent(roomCode) { mutableListOf() }.add(characteristic!!)
+          premisesCharacteristics.computeIfAbsent(roomCode) { mutableSetOf() }.add(characteristic!!)
         } else if (!answer.equals("no", ignoreCase = true) && !answer.equals("N/A", ignoreCase = true)) {
           throw SiteSurveyImportException("Expecting 'yes' or 'no' for question '$question' but is '$answer' on sheet Sheet3 (row = ${rowId + 1}, col = $colId).")
         }

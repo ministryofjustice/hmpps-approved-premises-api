@@ -78,7 +78,7 @@ class SeedFromXLSXApprovedPremisesRoomsTest : SeedTestBase() {
   }
 
   @Test
-  fun `Creating three new rooms and new beds with a characteristic succeeds`() {
+  fun `Creating three new rooms and three new beds with a characteristic succeeds`() {
     val localAuthorityArea = localAuthorityEntityFactory.produceAndPersist()
     val probationRegion = probationRegionEntityFactory.produceAndPersist()
     val qCode = "Q999"
@@ -143,6 +143,72 @@ class SeedFromXLSXApprovedPremisesRoomsTest : SeedTestBase() {
     assertThat(
       bed3.room.id == room3.id &&
         bed3.room.code == "Q999 - 1",
+    )
+  }
+
+  @Test
+  fun `Creating two new rooms and three new beds with a characteristic succeeds`() {
+    val localAuthorityArea = localAuthorityEntityFactory.produceAndPersist()
+    val probationRegion = probationRegionEntityFactory.produceAndPersist()
+    val qCode = "Q999"
+    val premises = approvedPremisesEntityFactory.produceAndPersist {
+      withLocalAuthorityArea(localAuthorityArea)
+      withProbationRegion(probationRegion)
+      withQCode(qCode)
+    }
+    val premisesId = premises.id
+
+    val header = listOf("Unique Reference Number for Bed", "SWABI01NEW", "SWABI02NEW", "SWABI03NEW")
+    val rows = mutableListOf(
+      "Room Number / Name",
+      "1",
+      "2",
+      "2",
+      "Bed Number (in this room i.e if this is a single room insert 1.  If this is a shared room separate entries will need to be made for bed 1 and bed 2)",
+      "1",
+      "1",
+      "2",
+    )
+    rows.addCharacteristics(3, mapOf("Is this room located on the ground floor?" to listOf(1, 2)))
+
+    val dataFrame = dataFrameOf(header, rows)
+
+    withXlsx("example", "Sheet3", dataFrame)
+
+    seedService.seedExcelData(
+      SeedFromExcelFileType.approvedPremisesRoom,
+      premisesId,
+      "example.xlsx",
+    )
+
+    val room1 = roomRepository.findByCode("Q999 - 1")
+    assertThat(room1!!.characteristics).isEmpty()
+
+    val bed1 = bedRepository.findByCodeAndRoomId("SWABI01NEW", room1.id)
+    assertThat(bed1!!.name).isEqualTo("1")
+    assertThat(
+      bed1.room.id == room1.id &&
+        bed1.room.code == "Q999 - 1",
+    )
+
+    val room2 = roomRepository.findByCode("Q999 - 2")
+    assertThat(room2!!.characteristics).anyMatch {
+      it.name == "Is this room located on the ground floor?" &&
+        it.propertyName == "isGroundFloor"
+    }
+
+    val bed2 = bedRepository.findByCodeAndRoomId("SWABI02NEW", room2.id)
+    assertThat(bed2!!.name).isEqualTo("1")
+    assertThat(
+      bed2.room.id == room2.id &&
+        bed2.room.code == "Q999 - 2",
+    )
+
+    val bed3 = bedRepository.findByCodeAndRoomId("SWABI03NEW", room2.id)
+    assertThat(bed3!!.name).isEqualTo("2")
+    assertThat(
+      bed3.room.id == room2.id &&
+        bed3.room.code == "Q999 - 2",
     )
   }
 
