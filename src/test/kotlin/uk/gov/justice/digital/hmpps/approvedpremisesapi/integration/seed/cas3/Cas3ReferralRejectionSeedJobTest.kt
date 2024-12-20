@@ -43,7 +43,7 @@ class Cas3ReferralRejectionSeedJobTest : SeedTestBase() {
 
     withCsv(
       "cas3-referral-rejection-csv",
-      rowsToCsv(listOf(Cas3ReferralRejectionSeedCsvRow(assessment.id, rejectedReason, rejectedReasonDetail, false))),
+      rowsToCsv(listOf(Cas3ReferralRejectionSeedCsvRow(assessment.id, rejectedReason, rejectedReasonDetail, false, user.deliusUsername))),
     )
 
     seedService.seedData(SeedFileType.temporaryAccommodationReferralRejection, "cas3-referral-rejection-csv.csv")
@@ -64,12 +64,13 @@ class Cas3ReferralRejectionSeedJobTest : SeedTestBase() {
         "rejection_reason",
         "rejection_reason_detail",
         "is_withdrawn",
+        "delius_username",
       )
       .newRow()
 
     rows.forEach {
       builder
-        .withQuotedFields(it.assessmentId, it.rejectionReason, it.rejectionReasonDetail!!, it.isWithdrawn)
+        .withQuotedFields(it.assessmentId, it.rejectionReason, it.rejectionReasonDetail!!, it.isWithdrawn, it.deliusUsername)
         .newRow()
     }
 
