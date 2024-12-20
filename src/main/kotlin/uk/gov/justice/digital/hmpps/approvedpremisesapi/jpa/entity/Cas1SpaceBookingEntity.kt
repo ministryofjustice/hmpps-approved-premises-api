@@ -14,10 +14,12 @@ import jakarta.persistence.Table
 import jakarta.persistence.Version
 import org.springframework.data.domain.Page
 import org.springframework.data.domain.Pageable
+import org.springframework.data.domain.Sort
 import org.springframework.data.jpa.repository.JpaRepository
 import org.springframework.data.jpa.repository.Modifying
 import org.springframework.data.jpa.repository.Query
 import org.springframework.stereotype.Repository
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas1SpaceBookingEntity.Constants
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.CharacteristicRepository.Constants.CAS1_PROPERTY_NAME_ARSON_SUITABLE
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.CharacteristicRepository.Constants.CAS1_PROPERTY_NAME_ENSUITE
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.CharacteristicRepository.Constants.CAS1_PROPERTY_NAME_SINGLE_ROOM
@@ -121,6 +123,64 @@ interface Cas1SpaceBookingRepository : JpaRepository<Cas1SpaceBookingEntity, UUI
     value = """
       SELECT 
       Cast(b.id as varchar),
+      b.crn as crn,
+      b.canonical_arrival_date as canonicalArrivalDate,
+      b.canonical_departure_date as canonicalDepartureDate,
+      apa.risk_ratings -> 'tier' -> 'value' ->> 'level' as tier,
+      CASE
+        WHEN 
+            apa.id IS NOT NULL THEN apa.name
+        ELSE
+            oa.name
+      END as personName,
+      CASE
+        WHEN 
+            apa.id IS NOT NULL THEN apa.release_type
+        ELSE
+            null
+      END as releaseType, 
+      ( 
+        SELECT STRING_AGG (characteristics.property_name, ',')
+        FROM cas1_space_bookings_criteria sbc
+        LEFT OUTER JOIN characteristics ON characteristics.id = sbc.characteristic_id
+        WHERE sbc.space_booking_id = b.id 
+        GROUP by sbc.space_booking_id
+      ) AS characteristicsPropertyNames
+      FROM cas1_space_bookings b
+      LEFT JOIN approved_premises_applications apa 
+      ON 
+        b.approved_premises_application_id = apa.id
+      LEFT JOIN offline_applications oa
+      ON 
+        b.offline_application_id = oa.id
+      WHERE 
+      b.canonical_arrival_date <= :daySummaryDate AND 
+      b.canonical_departure_date >= :daySummaryDate AND
+      b.premises_id = :premisesId AND 
+      b.cancellation_occurred_at IS NULL AND (
+        :bookingsCriteriaCount = 0  OR (
+            SELECT COUNT(*) 
+            FROM 
+                CAS1_SPACE_BOOKINGS_CRITERIA sbc
+            WHERE b.id = sbc.space_booking_id AND
+            sbc.characteristic_id IN (:bookingsCriteriaFilter)
+        ) = :bookingsCriteriaCount
+      )
+    """,
+    nativeQuery = true,
+  )
+  fun findAllPremisesBookingsForDate(
+    premisesId: UUID,
+    daySummaryDate: LocalDate,
+    bookingsCriteriaFilter: List<UUID>?,
+    sort: Sort,
+    bookingsCriteriaCount: Int = bookingsCriteriaFilter?.size ?: 0,
+  ): List<Cas1SpaceBookingDaySummarySearchResult>
+
+  @Query(
+    value = """
+      SELECT 
+      Cast(b.id as varchar),
       b.canonical_arrival_date as canonicalArrivalDate,
       b.canonical_departure_date as canonicalDepartureDate
       FROM cas1_space_bookings b
@@ -164,6 +224,16 @@ interface Cas1SpaceBookingRepository : JpaRepository<Cas1SpaceBookingEntity, UUI
     """,
   )
   fun updateEventNumber(applicationId: UUID, eventNumber: String)
+}
+
+interface Cas1SpaceBookingDaySummarySearchResult {
+  val id: UUID
+  val crn: String
+  val canonicalArrivalDate: LocalDate
+  val canonicalDepartureDate: LocalDate
+  val tier: String
+  val releaseType: String
+  val characteristicsPropertyNames: String
 }
 
 interface Cas1SpaceBookingSearchResult {

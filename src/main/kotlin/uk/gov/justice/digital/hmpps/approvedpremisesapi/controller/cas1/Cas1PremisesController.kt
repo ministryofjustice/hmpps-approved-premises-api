@@ -15,6 +15,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremi
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserPermission
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.UserAccessService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1PremisesService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1SpaceBookingDaySummaryService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.cas1.Cas1PremiseCapacitySummaryTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.cas1.Cas1PremisesDayTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.cas1.Cas1PremisesTransformer
@@ -29,6 +30,7 @@ class Cas1PremisesController(
   val cas1PremisesTransformer: Cas1PremisesTransformer,
   val cas1PremiseCapacityTransformer: Cas1PremiseCapacitySummaryTransformer,
   private val cas1PremisesDayTransformer: Cas1PremisesDayTransformer,
+  private val cas1SpaceBookingDaySummaryService: Cas1SpaceBookingDaySummaryService,
 ) : PremisesCas1Delegate {
 
   override fun getPremisesById(premisesId: UUID): ResponseEntity<Cas1PremisesSummary> {
@@ -97,14 +99,28 @@ class Cas1PremisesController(
     userAccessService.ensureCurrentUserHasPermission(UserPermission.CAS1_SPACE_BOOKING_VIEW)
 
     val premiseSummaryInfo = cas1PremisesService.getPremisesSummary(premisesId)
-    val premiseCapacity = cas1PremisesService.getPremiseCapacity(premisesId, date, date)
+    val premiseCapacity = cas1PremisesService.getPremiseCapacity(premisesId, date, date, null)
     val premisesCapacitySummary = cas1PremiseCapacityTransformer.toCas1PremiseCapacitySummary(
       premiseSummaryInfo = extractEntityFromCasResult(premiseSummaryInfo),
       premiseCapacity = extractEntityFromCasResult(premiseCapacity),
     )
 
+    val spaceBookingDaySummaries = extractEntityFromCasResult(
+      cas1SpaceBookingDaySummaryService.getBookingDaySummaries(
+        premisesId = premisesId,
+        date = date,
+        bookingsCriteriaFilter = bookingsCriteriaFilter,
+        bookingsSortBy = bookingsSortBy ?: Cas1SpaceBookingDaySummarySortField.PERSON_NAME,
+        bookingsSortDirection = bookingsSortDirection ?: SortDirection.desc,
+      ),
+    )
+
     return ResponseEntity.ok().body(
-      cas1PremisesDayTransformer.toCas1PremisesDaySummary(date, premisesCapacitySummary),
+      cas1PremisesDayTransformer.toCas1PremisesDaySummary(
+        date,
+        premisesCapacitySummary,
+        spaceBookingDaySummaries,
+      ),
     )
   }
 }

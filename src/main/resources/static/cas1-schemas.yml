@@ -530,7 +530,6 @@ components:
         - canonicalArrivalDate
         - canonicalDepartureDate
         - releaseType
-        - spaceType
       x-enum-varnames:
         - PERSON_NAME
         - TIER
@@ -597,9 +596,7 @@ components:
         - person
         - canonicalArrivalDate
         - canonicalDepartureDate
-        - tier
         - spaceType
-        - releaseType
         - essentialCharacteristics
     Cas1SpaceBookingSummaryStatus:
       type: string
