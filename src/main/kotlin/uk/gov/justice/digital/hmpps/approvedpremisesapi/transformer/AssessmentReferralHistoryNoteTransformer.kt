@@ -35,7 +35,7 @@ class AssessmentReferralHistoryNoteTransformer(
     else -> throw RuntimeException("Unsupported ReferralHistoryNote type: ${jpa::class.qualifiedName}")
   }
 
-  fun transformJpaToApi(jpa: AssessmentReferralHistoryNoteEntity, assessmentEntity: TemporaryAccommodationAssessmentEntity): ReferralHistoryNote = when (jpa) {
+  fun transformJpaToApi(jpa: AssessmentReferralHistoryNoteEntity, assessmentEntity: TemporaryAccommodationAssessmentEntity, includeUserNotes: Boolean): ReferralHistoryNote = when (jpa) {
     is AssessmentReferralHistoryUserNoteEntity -> {
       transformJpaToReferralHistoryUserNote(jpa)
     }
@@ -43,7 +43,7 @@ class AssessmentReferralHistoryNoteTransformer(
       id = jpa.id,
       createdAt = jpa.createdAt.toInstant(),
       message = jpa.message,
-      messageDetails = getMessageDetails(jpa.type, assessmentEntity),
+      messageDetails = getMessageDetails(jpa.type, assessmentEntity, includeUserNotes),
       createdByUserName = jpa.createdByUser.name,
       type = "system",
       category = transformSystemNoteTypeToCategory(jpa.type),
@@ -70,11 +70,15 @@ class AssessmentReferralHistoryNoteTransformer(
     )
   }
 
-  private fun getMessageDetails(systemNoteType: ReferralHistorySystemNoteType, assessmentEntity: TemporaryAccommodationAssessmentEntity): ReferralHistoryNoteMessageDetails? {
+  private fun getMessageDetails(
+    systemNoteType: ReferralHistorySystemNoteType,
+    assessmentEntity: TemporaryAccommodationAssessmentEntity,
+    includeUserNotes: Boolean,
+  ): ReferralHistoryNoteMessageDetails? {
     if (systemNoteType == ReferralHistorySystemNoteType.REJECTED && assessmentEntity.referralRejectionReason != null) {
       return ReferralHistoryNoteMessageDetails(
         assessmentEntity.referralRejectionReason?.name,
-        assessmentEntity.referralRejectionReasonDetail,
+        if (includeUserNotes) assessmentEntity.referralRejectionReasonDetail else null,
         assessmentEntity.isWithdrawn,
       )
     }

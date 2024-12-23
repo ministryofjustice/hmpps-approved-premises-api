@@ -121,7 +121,7 @@ class AssessmentTransformer(
 
     val notes = assessment.referralHistoryNotes.map {
       if (it.id == lastReferralRejectedHistoryNote?.id) {
-        assessmentReferralHistoryNoteTransformer.transformJpaToApi(it, assessment)
+        assessmentReferralHistoryNoteTransformer.transformJpaToApi(it, assessment, includeUserNotes)
       } else {
         assessmentReferralHistoryNoteTransformer.transformJpaToApi(it)
       }
