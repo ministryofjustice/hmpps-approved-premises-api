@@ -16,6 +16,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TemporaryAcco
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TemporaryAccommodationAssessmentEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRole
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomStringMultiCaseWithNumbers
 import java.time.Instant
 import java.time.LocalDate
 import java.time.OffsetDateTime
@@ -100,6 +101,35 @@ class Cas3TimelineTest : IntegrationTestBase() {
     }
   }
 
+  @Test
+  fun `getTimelineEvents does not return referral rejection detail notes when the user has CAS3_REFERRER ROLE`() {
+    givenAUser(roles = listOf(UserRole.CAS3_REFERRER)) { userEntity, jwt ->
+      givenAnOffender { offenderDetails, _ ->
+
+        val application = persistApplication(crn = offenderDetails.otherIds.crn, user = userEntity)
+        val assessment = persistRejectedAssessment(application)
+
+        addReferralHistoryNotes(assessment)
+        addDomainEventTimelineEvents(assessment)
+
+        assessment.schemaUpToDate = true
+
+        val result = webTestClient.get()
+          .uri("/cas3/timeline/${assessment.id}")
+          .header("Authorization", "Bearer $jwt")
+          .exchange()
+          .expectBodyList(ReferralHistoryNote::class.java)
+          .returnResult()
+          .responseBody!!
+
+        assertThat(result.size).isEqualTo(7)
+        assertThat(result.map { it.type }).doesNotContain("user")
+        assertThat(result.map { it.type }).containsOnly("system", "domainEvent")
+        assertThat(result.map { it.messageDetails?.rejectionReasonDetails }).containsOnlyNulls()
+      }
+    }
+  }
+
   private fun persistAssessment(application: TemporaryAccommodationApplicationEntity) =
     temporaryAccommodationAssessmentEntityFactory.produceAndPersist {
       withAllocatedToUser(application.createdByUser)
@@ -108,6 +138,24 @@ class Cas3TimelineTest : IntegrationTestBase() {
       withReleaseDate(null)
       withAccommodationRequiredFromDate(null)
     }
+
+  private fun persistRejectedAssessment(application: TemporaryAccommodationApplicationEntity): TemporaryAccommodationAssessmentEntity {
+    val referralRejectionReason = referralRejectionReasonEntityFactory.produceAndPersist()
+    val referralRejectionReasonDetail = randomStringMultiCaseWithNumbers(15)
+
+    return temporaryAccommodationAssessmentEntityFactory.produceAndPersist {
+      withAllocatedToUser(application.createdByUser)
+      withApplication(application)
+      withAssessmentSchema(persistAssessmentSchema())
+      withSubmittedAt(OffsetDateTime.now().minusDays(21))
+      withAllocatedAt(OffsetDateTime.now().minusDays(5))
+      withReleaseDate(null)
+      withAccommodationRequiredFromDate(null)
+      withReferralRejectionReason(referralRejectionReason)
+      withReferralRejectionReasonDetail(referralRejectionReasonDetail)
+      withIsWithdrawn(false)
+    }
+  }
 
   private fun persistApplication(crn: String, user: UserEntity) =
     temporaryAccommodationApplicationEntityFactory.produceAndPersist {

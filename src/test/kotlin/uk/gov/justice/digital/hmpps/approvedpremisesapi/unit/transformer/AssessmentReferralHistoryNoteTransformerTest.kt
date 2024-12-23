@@ -144,7 +144,7 @@ class AssessmentReferralHistoryNoteTransformerTest {
       .withType(ReferralHistorySystemNoteType.REJECTED)
       .produce()
 
-    val result = AssessmentReferralHistoryNoteTransformer(objectMapper).transformJpaToApi(note, assessment)
+    val result = AssessmentReferralHistoryNoteTransformer(objectMapper).transformJpaToApi(note, assessment, true)
 
     assertThat(result is ReferralHistorySystemNote).isTrue
     result as ReferralHistorySystemNote
@@ -194,7 +194,7 @@ class AssessmentReferralHistoryNoteTransformerTest {
       .withType(noteType)
       .produce()
 
-    val result = AssessmentReferralHistoryNoteTransformer(objectMapper).transformJpaToApi(note, assessment)
+    val result = AssessmentReferralHistoryNoteTransformer(objectMapper).transformJpaToApi(note, assessment, true)
 
     assertThat(result is ReferralHistorySystemNote).isTrue
     result as ReferralHistorySystemNote
