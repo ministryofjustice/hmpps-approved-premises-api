@@ -43,6 +43,7 @@ class Cas1SpaceSearchResultsTransformerTest {
       "TB1 2AB",
       UUID.randomUUID(),
       "Some AP Area",
+      characteristics = emptyList(),
     )
 
     val candidatePremises2 = CandidatePremises(
@@ -56,6 +57,7 @@ class Cas1SpaceSearchResultsTransformerTest {
       "TB1 2AB",
       UUID.randomUUID(),
       "Some AP Area",
+      characteristics = emptyList(),
     )
 
     val candidatePremises3 = CandidatePremises(
@@ -69,6 +71,7 @@ class Cas1SpaceSearchResultsTransformerTest {
       "TB1 2AB",
       UUID.randomUUID(),
       "Some AP Area",
+      characteristics = emptyList(),
     )
 
     val searchResults = listOf(
