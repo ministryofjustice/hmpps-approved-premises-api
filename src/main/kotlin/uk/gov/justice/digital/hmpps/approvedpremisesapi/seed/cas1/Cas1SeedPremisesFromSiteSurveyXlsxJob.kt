@@ -5,6 +5,7 @@ import org.javers.core.Javers
 import org.javers.core.JaversBuilder
 import org.javers.core.diff.ListCompareAlgorithm
 import org.jetbrains.kotlinx.dataframe.DataFrame
+import org.jetbrains.kotlinx.dataframe.io.readExcel
 import org.locationtech.jts.geom.Point
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Component
@@ -21,6 +22,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PostcodeDistr
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ProbationRegionEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ProbationRegionRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.seed.ExcelSeedJob
+import java.io.File
 import java.util.UUID
 
 @Component
@@ -39,7 +41,8 @@ class Cas1SeedPremisesFromSiteSurveyXlsxJob(
 
   private val log = LoggerFactory.getLogger(this::class.java)
 
-  override fun processDataFrame(dataFrame: DataFrame<*>, premisesId: UUID) {
+  override fun processXlsx(file: File, premisesId: UUID) {
+    val dataFrame = DataFrame.readExcel(file, "Sheet2")
     val siteSurveyPremise = Cas1SiteSurveyPremiseFactory().load(dataFrame)
     val premiseInfo = resolvePremiseInfo(siteSurveyPremise)
     val existingPremises = premisesRepository.findByQCode(siteSurveyPremise.qCode)

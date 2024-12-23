@@ -12,6 +12,7 @@ import org.springframework.beans.factory.annotation.Value
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.IntegrationTestBase
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.seed.SeedLogger
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.seed.SeedService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.seed.SeedXlsxService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.LogEntry
 import java.nio.file.Files
 import java.nio.file.StandardOpenOption
@@ -21,6 +22,9 @@ import kotlin.io.path.Path
 abstract class SeedTestBase : IntegrationTestBase() {
   @Autowired
   lateinit var seedService: SeedService
+
+  @Autowired
+  lateinit var seedXlsxService: SeedXlsxService
 
   @Value("\${seed.file-prefix}")
   lateinit var seedFilePrefix: String

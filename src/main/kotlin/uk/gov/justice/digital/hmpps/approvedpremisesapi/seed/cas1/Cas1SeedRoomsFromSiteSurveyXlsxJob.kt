@@ -2,6 +2,7 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.seed.cas1
 
 import org.jetbrains.kotlinx.dataframe.DataFrame
 import org.jetbrains.kotlinx.dataframe.api.getColumn
+import org.jetbrains.kotlinx.dataframe.io.readExcel
 import org.jetbrains.kotlinx.dataframe.name
 import org.slf4j.LoggerFactory
 import org.springframework.data.repository.findByIdOrNull
@@ -16,13 +17,14 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Characteristi
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.RoomEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.RoomRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.seed.ExcelSeedJob
+import java.io.File
 import java.util.UUID
 
 class SiteSurveyImportException(message: String) : Exception(message)
 
 @Component
 @Suppress("LongParameterList")
-class ApprovedPremisesRoomsSeedFromXLSXJob(
+class Cas1SeedRoomsFromSiteSurveyXlsxJob(
   private val approvedPremisesRepository: ApprovedPremisesRepository,
   private val roomRepository: RoomRepository,
   private val bedRepository: BedRepository,
@@ -32,7 +34,8 @@ class ApprovedPremisesRoomsSeedFromXLSXJob(
   private val questionCriteriaMapping = QuestionCriteriaMapping(characteristicRepository)
   private lateinit var qCode: String
 
-  override fun processDataFrame(roomsWorksheet: DataFrame<*>, premisesId: UUID) {
+  override fun processXlsx(file: File, premisesId: UUID) {
+    val roomsWorksheet = DataFrame.readExcel(file, "Sheet3")
     var premises = findExistingPremisesOrThrow(premisesId)
     qCode = premises.qCode
 
