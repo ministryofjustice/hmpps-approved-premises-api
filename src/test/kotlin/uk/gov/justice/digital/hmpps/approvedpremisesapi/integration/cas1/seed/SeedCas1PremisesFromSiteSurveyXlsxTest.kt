@@ -66,7 +66,7 @@ class SeedCas1PremisesFromSiteSurveyXlsxTest : SeedTestBase() {
 
     withXlsx("example", "Sheet2", dataFrame)
 
-    seedService.seedExcelData(
+    seedXlsxService.seedExcelData(
       SeedFromExcelFileType.CAS1_IMPORT_SITE_SURVEY_PREMISES,
       UUID.randomUUID(),
       "example.xlsx",
@@ -161,7 +161,7 @@ class SeedCas1PremisesFromSiteSurveyXlsxTest : SeedTestBase() {
 
     withXlsx("example", "Sheet2", dataFrame)
 
-    seedService.seedExcelData(
+    seedXlsxService.seedExcelData(
       SeedFromExcelFileType.CAS1_IMPORT_SITE_SURVEY_PREMISES,
       UUID.randomUUID(),
       "example.xlsx",
@@ -271,7 +271,7 @@ class SeedCas1PremisesFromSiteSurveyXlsxTest : SeedTestBase() {
 
     withXlsx("example", "Sheet2", dataFrame)
 
-    seedService.seedExcelData(
+    seedXlsxService.seedExcelData(
       SeedFromExcelFileType.CAS1_IMPORT_SITE_SURVEY_PREMISES,
       UUID.randomUUID(),
       "example.xlsx",
