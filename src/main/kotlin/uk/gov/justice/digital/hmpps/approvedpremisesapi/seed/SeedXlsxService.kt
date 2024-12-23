@@ -1,7 +1,5 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.seed
 
-import org.jetbrains.kotlinx.dataframe.DataFrame
-import org.jetbrains.kotlinx.dataframe.io.readExcel
 import org.springframework.context.ApplicationContext
 import org.springframework.stereotype.Service
 import org.springframework.transaction.support.TransactionTemplate
@@ -10,11 +8,9 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.config.SeedConfig
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.seed.cas1.Cas1SeedPremisesFromSiteSurveyXlsxJob
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.seed.cas1.Cas1SeedRoomsFromSiteSurveyXlsxJob
 import java.io.File
-import java.nio.file.Path
 import java.time.LocalDateTime
 import java.time.temporal.ChronoUnit
 import java.util.UUID
-import kotlin.io.path.absolutePathString
 import kotlin.reflect.KClass
 
 @Service
@@ -35,20 +31,14 @@ class SeedXlsxService(
 
       val file = File("${seedConfig.filePrefix}/$filename")
 
-      val jobAndSeed = when (excelSeedFileType) {
-        SeedFromExcelFileType.CAS1_IMPORT_SITE_SURVEY_ROOMS -> Pair(
-          getBean(Cas1SeedRoomsFromSiteSurveyXlsxJob::class),
-          "Sheet3",
-        )
-        SeedFromExcelFileType.CAS1_IMPORT_SITE_SURVEY_PREMISES -> Pair(
-          getBean(Cas1SeedPremisesFromSiteSurveyXlsxJob::class),
-          "Sheet2",
-        )
+      val job = when (excelSeedFileType) {
+        SeedFromExcelFileType.CAS1_IMPORT_SITE_SURVEY_ROOMS -> getBean(Cas1SeedRoomsFromSiteSurveyXlsxJob::class)
+        SeedFromExcelFileType.CAS1_IMPORT_SITE_SURVEY_PREMISES -> getBean(Cas1SeedPremisesFromSiteSurveyXlsxJob::class)
       }
 
       val seedStarted = LocalDateTime.now()
 
-      transactionTemplate.executeWithoutResult { processExcelJob(jobAndSeed.first, premisesId, jobAndSeed.second, file) }
+      transactionTemplate.executeWithoutResult { processExcelJob(job, premisesId, file) }
 
       val timeTaken = ChronoUnit.MILLIS.between(seedStarted, LocalDateTime.now())
       seedLogger.info("Excel seed request complete. Took $timeTaken millis")
@@ -60,11 +50,10 @@ class SeedXlsxService(
   private fun <T : Any> getBean(clazz: KClass<T>) = applicationContext.getBean(clazz.java)
 
   @Suppress("TooGenericExceptionThrown", "TooGenericExceptionCaught")
-  private fun processExcelJob(job: ExcelSeedJob, premisesId: UUID, sheetName: String, file: File) {
+  private fun processExcelJob(job: ExcelSeedJob, premisesId: UUID, file: File) {
     seedLogger.info("Processing XLSX file ${file.absolutePath}")
     try {
-      val dataFrame = DataFrame.readExcel(file, sheetName)
-      job.processDataFrame(dataFrame, premisesId)
+      job.processXlsx(file, premisesId)
     } catch (exception: Exception) {
       throw RuntimeException("Unable to process XLSX file", exception)
     }
