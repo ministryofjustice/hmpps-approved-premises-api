@@ -1,6 +1,6 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.seed
 
-import org.jetbrains.kotlinx.dataframe.DataFrame
+import java.io.File
 import java.util.UUID
 
 abstract class SeedJob<RowType>(
@@ -29,7 +29,7 @@ abstract class SeedJob<RowType>(
 
 @Suppress("TooGenericExceptionThrown")
 interface ExcelSeedJob {
-  fun processDataFrame(dataFrame: DataFrame<*>, premisesId: UUID)
+  fun processXlsx(file: File, premisesId: UUID)
 }
 
 class SeedException(message: String) : RuntimeException(message)
