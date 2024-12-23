@@ -22,7 +22,7 @@ class SiteSurveyImportException(message: String) : Exception(message)
 
 @Component
 @Suppress("LongParameterList")
-class ApprovedPremisesRoomsSeedFromXLSXJob(
+class Cas1SeedRoomsFromSiteSurveyXlsxJob(
   private val approvedPremisesRepository: ApprovedPremisesRepository,
   private val roomRepository: RoomRepository,
   private val bedRepository: BedRepository,

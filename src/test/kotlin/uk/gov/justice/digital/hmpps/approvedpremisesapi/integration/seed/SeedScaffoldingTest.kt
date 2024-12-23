@@ -33,7 +33,7 @@ class SeedScaffoldingTest : SeedTestBase() {
       .uri("/seedFromExcel")
       .bodyValue(
         SeedFromExcelRequest(
-          seedType = SeedFromExcelFileType.approvedPremisesRoom,
+          seedType = SeedFromExcelFileType.CAS1_IMPORT_SITE_SURVEY_ROOMS,
           premisesId = UUID.randomUUID(),
           fileName = "file.xlsx",
         ),
@@ -59,7 +59,7 @@ class SeedScaffoldingTest : SeedTestBase() {
 
   @Test
   fun `Attempting to process an xlsx file containing forward slashes logs an error`() {
-    seedService.seedExcelData(SeedFromExcelFileType.approvedPremisesRoom, UUID.randomUUID(), "/afile")
+    seedService.seedExcelData(SeedFromExcelFileType.CAS1_IMPORT_SITE_SURVEY_ROOMS, UUID.randomUUID(), "/afile")
 
     assertThat(logEntries).anyMatch {
       it.level == "error" &&
@@ -87,7 +87,7 @@ class SeedScaffoldingTest : SeedTestBase() {
 
   @Test
   fun `Attempting to process an xlsx file containing backward slashes logs an error`() {
-    seedService.seedExcelData(SeedFromExcelFileType.approvedPremisesRoom, UUID.randomUUID(), "\\afile")
+    seedService.seedExcelData(SeedFromExcelFileType.CAS1_IMPORT_SITE_SURVEY_ROOMS, UUID.randomUUID(), "\\afile")
 
     assertThat(logEntries).anyMatch {
       it.level == "error" &&
@@ -115,7 +115,7 @@ class SeedScaffoldingTest : SeedTestBase() {
 
   @Test
   fun `Attempting to process a non-existent xlsx file logs an error`() {
-    seedService.seedExcelData(SeedFromExcelFileType.approvedPremisesRoom, UUID.randomUUID(), "non-existent")
+    seedService.seedExcelData(SeedFromExcelFileType.CAS1_IMPORT_SITE_SURVEY_ROOMS, UUID.randomUUID(), "non-existent")
 
     assertThat(logEntries).anyMatch {
       it.level == "error" &&
@@ -156,7 +156,7 @@ RogerSmith,CAS1_FUTURE_MANAGER,
       emptyDataFrame<Any>(),
     )
 
-    seedService.seedExcelData(SeedFromExcelFileType.approvedPremisesRoom, UUID.randomUUID(), "wrongSheetName.xlsx")
+    seedService.seedExcelData(SeedFromExcelFileType.CAS1_IMPORT_SITE_SURVEY_ROOMS, UUID.randomUUID(), "wrongSheetName.xlsx")
 
     assertThat(logEntries).anyMatch {
       it.level == "error" &&

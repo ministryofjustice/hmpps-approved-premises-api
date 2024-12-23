@@ -15,7 +15,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremi
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PostCodeDistrictEntity
 import java.util.UUID
 
-class SeedCas1PremiseFromSiteSurveyXlsxTest : SeedTestBase() {
+class SeedCas1PremisesFromSiteSurveyXlsxTest : SeedTestBase() {
 
   lateinit var postCodeDistrict: PostCodeDistrictEntity
 
@@ -67,7 +67,7 @@ class SeedCas1PremiseFromSiteSurveyXlsxTest : SeedTestBase() {
     withXlsx("example", "Sheet2", dataFrame)
 
     seedService.seedExcelData(
-      SeedFromExcelFileType.cas1ImportSiteSurveyPremise,
+      SeedFromExcelFileType.CAS1_IMPORT_SITE_SURVEY_PREMISES,
       UUID.randomUUID(),
       "example.xlsx",
     )
@@ -162,7 +162,7 @@ class SeedCas1PremiseFromSiteSurveyXlsxTest : SeedTestBase() {
     withXlsx("example", "Sheet2", dataFrame)
 
     seedService.seedExcelData(
-      SeedFromExcelFileType.cas1ImportSiteSurveyPremise,
+      SeedFromExcelFileType.CAS1_IMPORT_SITE_SURVEY_PREMISES,
       UUID.randomUUID(),
       "example.xlsx",
     )
@@ -272,7 +272,7 @@ class SeedCas1PremiseFromSiteSurveyXlsxTest : SeedTestBase() {
     withXlsx("example", "Sheet2", dataFrame)
 
     seedService.seedExcelData(
-      SeedFromExcelFileType.cas1ImportSiteSurveyPremise,
+      SeedFromExcelFileType.CAS1_IMPORT_SITE_SURVEY_PREMISES,
       UUID.randomUUID(),
       "example.xlsx",
     )

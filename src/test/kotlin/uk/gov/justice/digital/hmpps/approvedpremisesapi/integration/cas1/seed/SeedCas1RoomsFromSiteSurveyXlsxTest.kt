@@ -12,7 +12,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.seed.cas1.SiteSurveyImpo
 import java.util.UUID
 
 @TestInstance(TestInstance.Lifecycle.PER_METHOD)
-class SeedFromXLSXApprovedPremisesRoomsTest : SeedTestBase() {
+class SeedCas1RoomsFromSiteSurveyXlsxTest : SeedTestBase() {
 
   private lateinit var questionCriteriaMapping: QuestionCriteriaMapping
 
@@ -58,7 +58,7 @@ class SeedFromXLSXApprovedPremisesRoomsTest : SeedTestBase() {
     withXlsx("example", "Sheet3", dataFrame)
 
     seedService.seedExcelData(
-      SeedFromExcelFileType.approvedPremisesRoom,
+      SeedFromExcelFileType.CAS1_IMPORT_SITE_SURVEY_ROOMS,
       premisesId,
       "example.xlsx",
     )
@@ -107,7 +107,7 @@ class SeedFromXLSXApprovedPremisesRoomsTest : SeedTestBase() {
     withXlsx("example", "Sheet3", dataFrame)
 
     seedService.seedExcelData(
-      SeedFromExcelFileType.approvedPremisesRoom,
+      SeedFromExcelFileType.CAS1_IMPORT_SITE_SURVEY_ROOMS,
       premisesId,
       "example.xlsx",
     )
@@ -176,7 +176,7 @@ class SeedFromXLSXApprovedPremisesRoomsTest : SeedTestBase() {
     withXlsx("example", "Sheet3", dataFrame)
 
     seedService.seedExcelData(
-      SeedFromExcelFileType.approvedPremisesRoom,
+      SeedFromExcelFileType.CAS1_IMPORT_SITE_SURVEY_ROOMS,
       premisesId,
       "example.xlsx",
     )
@@ -238,7 +238,7 @@ class SeedFromXLSXApprovedPremisesRoomsTest : SeedTestBase() {
     withXlsx("example", "Sheet3", dataFrame)
 
     seedService.seedExcelData(
-      SeedFromExcelFileType.approvedPremisesRoom,
+      SeedFromExcelFileType.CAS1_IMPORT_SITE_SURVEY_ROOMS,
       premisesId,
       "example.xlsx",
     )
@@ -285,7 +285,7 @@ class SeedFromXLSXApprovedPremisesRoomsTest : SeedTestBase() {
     withXlsx("example", "Sheet3", dataFrame)
 
     seedService.seedExcelData(
-      SeedFromExcelFileType.approvedPremisesRoom,
+      SeedFromExcelFileType.CAS1_IMPORT_SITE_SURVEY_ROOMS,
       premisesId,
       "example.xlsx",
     )
@@ -340,7 +340,7 @@ class SeedFromXLSXApprovedPremisesRoomsTest : SeedTestBase() {
     withXlsx("example", "Sheet3", dataFrame)
 
     seedService.seedExcelData(
-      SeedFromExcelFileType.approvedPremisesRoom,
+      SeedFromExcelFileType.CAS1_IMPORT_SITE_SURVEY_ROOMS,
       premisesId,
       "example.xlsx",
     )
@@ -395,7 +395,7 @@ class SeedFromXLSXApprovedPremisesRoomsTest : SeedTestBase() {
     withXlsx("example", "Sheet3", dataFrame)
 
     seedService.seedExcelData(
-      SeedFromExcelFileType.approvedPremisesRoom,
+      SeedFromExcelFileType.CAS1_IMPORT_SITE_SURVEY_ROOMS,
       premisesId,
       "example.xlsx",
     )
@@ -434,7 +434,7 @@ class SeedFromXLSXApprovedPremisesRoomsTest : SeedTestBase() {
     withXlsx("example", "Sheet3", dataFrame)
 
     seedService.seedExcelData(
-      SeedFromExcelFileType.approvedPremisesRoom,
+      SeedFromExcelFileType.CAS1_IMPORT_SITE_SURVEY_ROOMS,
       premisesId,
       "example.xlsx",
     )
@@ -475,7 +475,7 @@ class SeedFromXLSXApprovedPremisesRoomsTest : SeedTestBase() {
     withXlsx("example", "Sheet3", dataFrame)
 
     seedService.seedExcelData(
-      SeedFromExcelFileType.approvedPremisesRoom,
+      SeedFromExcelFileType.CAS1_IMPORT_SITE_SURVEY_ROOMS,
       premisesId,
       "example.xlsx",
     )
@@ -500,7 +500,7 @@ class SeedFromXLSXApprovedPremisesRoomsTest : SeedTestBase() {
     withXlsx("example", "Sheet3", dataFrame)
 
     seedService.seedExcelData(
-      SeedFromExcelFileType.approvedPremisesRoom,
+      SeedFromExcelFileType.CAS1_IMPORT_SITE_SURVEY_ROOMS,
       UUID.fromString("97d6b3f1-3121-4afb-a4a6-e4a84b533c18"),
       "example.xlsx",
     )
