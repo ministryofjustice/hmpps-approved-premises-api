@@ -9,6 +9,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.SeedFromExcelF
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.config.SeedConfig
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.seed.cas1.Cas1SeedPremisesFromSiteSurveyXlsxJob
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.seed.cas1.Cas1SeedRoomsFromSiteSurveyXlsxJob
+import java.io.File
 import java.nio.file.Path
 import java.time.LocalDateTime
 import java.time.temporal.ChronoUnit
@@ -23,17 +24,16 @@ class SeedXlsxService(
   private val transactionTemplate: TransactionTemplate,
   private val seedLogger: SeedLogger,
 ) {
-  fun seedExcelData(excelSeedFileType: SeedFromExcelFileType, premisesId: UUID, filename: String) =
-    seedExcelData(excelSeedFileType, premisesId, filename) { "${seedConfig.filePrefix}/$filename" }
-
   @SuppressWarnings("TooGenericExceptionThrown", "TooGenericExceptionCaught")
-  fun seedExcelData(excelSeedFileType: SeedFromExcelFileType, premisesId: UUID, filename: String, resolveXlsxPath: ExcelSeedJob.() -> String) {
+  fun seedExcelData(excelSeedFileType: SeedFromExcelFileType, premisesId: UUID, filename: String) {
     seedLogger.info("Starting seed request: $excelSeedFileType - $filename")
 
     try {
       if (filename.contains("/") || filename.contains("\\")) {
         throw RuntimeException("Filename must be just the filename of a .xlsx file in the /seed directory, e.g. for /seed/upload.xlsx, just `upload` should be supplied")
       }
+
+      val file = File("${seedConfig.filePrefix}/$filename")
 
       val jobAndSeed = when (excelSeedFileType) {
         SeedFromExcelFileType.CAS1_IMPORT_SITE_SURVEY_ROOMS -> Pair(
@@ -48,7 +48,7 @@ class SeedXlsxService(
 
       val seedStarted = LocalDateTime.now()
 
-      transactionTemplate.executeWithoutResult { processExcelJob(jobAndSeed.first, premisesId, jobAndSeed.second, resolveXlsxPath) }
+      transactionTemplate.executeWithoutResult { processExcelJob(jobAndSeed.first, premisesId, jobAndSeed.second, file) }
 
       val timeTaken = ChronoUnit.MILLIS.between(seedStarted, LocalDateTime.now())
       seedLogger.info("Excel seed request complete. Took $timeTaken millis")
@@ -60,10 +60,10 @@ class SeedXlsxService(
   private fun <T : Any> getBean(clazz: KClass<T>) = applicationContext.getBean(clazz.java)
 
   @Suppress("TooGenericExceptionThrown", "TooGenericExceptionCaught")
-  private fun processExcelJob(job: ExcelSeedJob, premisesId: UUID, sheetName: String, resolveXlsxPath: ExcelSeedJob.() -> String) {
-    seedLogger.info("Processing XLSX file ${Path.of(job.resolveXlsxPath()).absolutePathString()}")
+  private fun processExcelJob(job: ExcelSeedJob, premisesId: UUID, sheetName: String, file: File) {
+    seedLogger.info("Processing XLSX file ${file.absolutePath}")
     try {
-      val dataFrame = DataFrame.readExcel(job.resolveXlsxPath(), sheetName)
+      val dataFrame = DataFrame.readExcel(file, sheetName)
       job.processDataFrame(dataFrame, premisesId)
     } catch (exception: Exception) {
       throw RuntimeException("Unable to process XLSX file", exception)
