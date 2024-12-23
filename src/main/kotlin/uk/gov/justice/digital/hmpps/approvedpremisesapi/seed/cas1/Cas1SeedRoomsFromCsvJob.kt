@@ -163,6 +163,7 @@ class ApprovedPremisesRoomsSeedJob(
     return bedRepository.save(bed)
   }
 
+  @SuppressWarnings("TooGenericExceptionThrown")
   private fun findExistingPremisesOrThrow(row: ApprovedPremisesRoomsSeedCsvRow): PremisesEntity {
     return premisesRepository.findByApCode(row.apCode)
       ?: throw RuntimeException(
@@ -171,6 +172,7 @@ class ApprovedPremisesRoomsSeedJob(
       )
   }
 
+  @SuppressWarnings("TooGenericExceptionThrown")
   private fun characteristicsFromRow(row: ApprovedPremisesRoomsSeedCsvRow): List<CharacteristicEntity> {
     return listOf(
       CharacteristicValue("isSingle", castBooleanString(row.isSingle)),
@@ -201,6 +203,7 @@ class ApprovedPremisesRoomsSeedJob(
       }
   }
 
+  @SuppressWarnings("TooGenericExceptionThrown")
   private fun parseBooleanStringOrThrow(value: String, fieldName: String): String {
     val booleanString = listOf("YES", "NO").find { it == value.trim().uppercase() }
       ?: throw RuntimeException("'$value' is not a recognised boolean for '$fieldName' (use yes | no)")
