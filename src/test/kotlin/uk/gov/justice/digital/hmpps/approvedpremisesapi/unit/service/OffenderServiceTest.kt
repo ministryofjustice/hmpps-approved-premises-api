@@ -917,9 +917,9 @@ class OffenderServiceTest {
   }
 
   @Nested
-  inner class GetInfoForPerson {
+  inner class GetPersonInfoResult {
     @Test
-    fun `returns NotFound if Community API responds with a 404`() {
+    fun `returns NotFound if ap-and-delius API responds with a 404`() {
       val crn = "ABC123"
       val deliusUsername = "USER"
 
@@ -952,7 +952,7 @@ class OffenderServiceTest {
     }
 
     @Test
-    fun `getInfoForPerson throws runtime exception when Community API responds with a 500`() {
+    fun `throws Exception when ap-and-delius API responds with a 500`() {
       val crn = "ABC123"
       val deliusUsername = "USER"
 
@@ -985,7 +985,7 @@ class OffenderServiceTest {
     }
 
     @Test
-    fun `getInfoForPerson throws runtime exception when LAO respond is Forbidden`() {
+    fun `throws Exception when LAO respond is Forbidden`() {
       val crn = "ABC123"
       val deliusUsername = "USER"
 
@@ -1017,7 +1017,7 @@ class OffenderServiceTest {
     }
 
     @Test
-    fun `throws runtime exception when LAO calls fail with BadRequest exception`() {
+    fun `throws Exception when LAO calls fail with BadRequest exception`() {
       val crn = "ABC123"
       val deliusUsername = "USER"
 
@@ -1043,7 +1043,7 @@ class OffenderServiceTest {
     }
 
     @Test
-    fun `returns Restricted for LAO Offender where user does not pass check and ignoreLaoRestrictions is false`() {
+    fun `returns Restricted for LAO Offender where user does not have access and ignoreLaoRestrictions is false`() {
       val crn = "ABC123"
       val deliusUsername = "USER"
       val nomsNumber = randomStringMultiCaseWithNumbers(10)
@@ -1090,7 +1090,7 @@ class OffenderServiceTest {
     }
 
     @Test
-    fun `returns Full for LAO Offender where user does pass check and ignoreLaoRestrictions is false`() {
+    fun `returns Full for LAO Offender where user has access and ignoreLaoRestrictions is false`() {
       val crn = "ABC123"
       val deliusUsername = "USER"
 
@@ -1133,7 +1133,7 @@ class OffenderServiceTest {
     }
 
     @Test
-    fun `returns Full for LAO Offender where user does not pass check but ignoreLaoRestrictions is true`() {
+    fun `returns Full for LAO Offender where user does not have acess and ignoreLaoRestrictions is true`() {
       val crn = "ABC123"
       val deliusUsername = "USER"
 
@@ -1187,7 +1187,7 @@ class OffenderServiceTest {
     }
 
     @Test
-    fun `returns Full for CRN with both Community API and Prison API data where Community API links to Prison API`() {
+    fun `returns Full for Non LAO Offender`() {
       val crn = "ABC123"
       val nomsNumber = "NOMSABC"
       val deliusUsername = "USER"
