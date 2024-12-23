@@ -52,9 +52,9 @@ interface Cas1OutOfServiceBedRepository : JpaRepository<Cas1OutOfServiceBedEntit
     WHERE
       (CAST(:premisesId AS UUID) IS NULL OR oosb.premises_id = :premisesId) AND
       (CAST(:apAreaId AS UUID) IS NULL OR apa.id = :apAreaId) AND 
-      (FALSE = :excludePast OR dd.end_date >= CURRENT_DATE) AND
-      (FALSE = :excludeCurrent OR CURRENT_DATE NOT BETWEEN dd.start_date AND dd.end_date) AND
-      (FALSE = :excludeFuture OR dd.start_date <= CURRENT_DATE) AND 
+      (FALSE = :excludePast OR dd.end_date >= :date) AND
+      (FALSE = :excludeCurrent OR :date NOT BETWEEN dd.start_date AND dd.end_date) AND
+      (FALSE = :excludeFuture OR dd.start_date <= :date) AND 
       (oosb_cancellations IS NULL)
     """
   }
@@ -70,12 +70,13 @@ interface Cas1OutOfServiceBedRepository : JpaRepository<Cas1OutOfServiceBedEntit
     """,
     nativeQuery = true,
   )
-  fun findOutOfServiceBedIds(
+  fun findOutOfServiceBedIdsForDate(
     premisesId: UUID?,
     apAreaId: UUID?,
     excludePast: Boolean,
     excludeCurrent: Boolean,
     excludeFuture: Boolean,
+    date: LocalDate? = LocalDate.now(),
     pageable: Pageable?,
   ): Page<String>
 

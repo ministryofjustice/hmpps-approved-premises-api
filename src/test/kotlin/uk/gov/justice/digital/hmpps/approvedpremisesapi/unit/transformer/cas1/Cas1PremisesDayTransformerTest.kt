@@ -6,6 +6,8 @@ import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.extension.ExtendWith
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApArea
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1OutOfServiceBedReason
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1OutOfServiceBedSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1PremiseCapacity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1PremiseCapacityForDay
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1PremiseCharacteristicAvailability
@@ -73,6 +75,16 @@ class Cas1PremisesDayTransformerTest {
       ),
     )
 
+    val outOfServiceBeds = listOf(
+      Cas1OutOfServiceBedSummary(
+        id = UUID.randomUUID(),
+        startDate = LocalDate.now().minusDays(5),
+        endDate = LocalDate.now().plusDays(5),
+        reason = Cas1OutOfServiceBedReason(UUID.randomUUID(), "reason", true),
+        characteristics = listOf(Cas1SpaceCharacteristic.isSingle),
+      ),
+    )
+
     val premiseCapacity = Cas1PremiseCapacity(
       premise = cas1PremisesSummary,
       startDate = currentSearchDay,
@@ -84,6 +96,7 @@ class Cas1PremisesDayTransformerTest {
       currentSearchDay,
       premiseCapacity,
       spaceBookings,
+      outOfServiceBeds,
     )
 
     assertThat(result.forDate).isEqualTo(currentSearchDay)
@@ -91,6 +104,6 @@ class Cas1PremisesDayTransformerTest {
     assertThat(result.nextDate).isEqualTo(currentSearchDay.plusDays(1))
     assertThat(result.capacity).isEqualTo(capacity[0])
     assertThat(result.spaceBookings).isEqualTo(spaceBookings)
-    assertThat(result.outOfServiceBeds).isEmpty()
+    assertThat(result.outOfServiceBeds).isEqualTo(outOfServiceBeds)
   }
 }
