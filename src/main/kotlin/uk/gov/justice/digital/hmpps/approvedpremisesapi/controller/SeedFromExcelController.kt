@@ -5,14 +5,14 @@ import org.springframework.http.ResponseEntity
 import org.springframework.stereotype.Service
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.SeedFromExcelApiDelegate
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.SeedFromExcelRequest
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.seed.SeedService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.seed.SeedXlsxService
 
 @Service
-class SeedFromExcelController(private val seedService: SeedService) : SeedFromExcelApiDelegate {
+class SeedFromExcelController(private val seedXslxService: SeedXlsxService) : SeedFromExcelApiDelegate {
   override fun seedFromExcelPost(seedFromExcelRequest: SeedFromExcelRequest): ResponseEntity<Unit> {
     throwIfNotLoopbackRequest()
 
-    seedService.seedExcelData(seedFromExcelRequest.seedType, seedFromExcelRequest.premisesId, seedFromExcelRequest.fileName)
+    seedXslxService.seedExcelData(seedFromExcelRequest.seedType, seedFromExcelRequest.premisesId, seedFromExcelRequest.fileName)
 
     return ResponseEntity(HttpStatus.ACCEPTED)
   }
