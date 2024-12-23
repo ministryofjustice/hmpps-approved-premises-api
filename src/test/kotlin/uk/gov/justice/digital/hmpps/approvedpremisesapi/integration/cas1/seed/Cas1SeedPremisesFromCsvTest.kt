@@ -202,7 +202,7 @@ class Cas1SeedPremisesFromCsvTest : SeedTestBase() {
       "acceptsNonSexualChildOffenders, acceptsHateCrimeOffenders, isCatered, hasWideStepFreeAccess, " +
       "hasWideAccessToCommunalAreas, hasStepFreeAccessToCommunalAreas, hasWheelChairAccessibleBathrooms, " +
       "hasLift, hasTactileFlooring, hasBrailleSignage, hasHearingLoop, status, latitude, longitude, gender, " +
-      "supportsSpaceBookings, managerDetails]"
+      "supportsSpaceBookings, managerDetails, fullAddress]"
 
     assertThat(logEntries)
       .withFailMessage("-> logEntries actually contains: $logEntries")
@@ -235,6 +235,7 @@ class Cas1SeedPremisesFromCsvTest : SeedTestBase() {
     }
 
     val csvRow = ApprovedPremisesSeedCsvRowFactory()
+      .withFullAddress("The full address")
       .withProbationRegion(probationRegion.name)
       .withLocalAuthorityArea(localAuthorityArea.name)
       .withIsCatered("yes")
@@ -260,6 +261,7 @@ class Cas1SeedPremisesFromCsvTest : SeedTestBase() {
     assertThat(persistedApprovedPremises).isNotNull
     assertThat(persistedApprovedPremises!!.apCode).isEqualTo(csvRow.apCode)
     assertThat(persistedApprovedPremises.name).isEqualTo(csvRow.name)
+    assertThat(persistedApprovedPremises.fullAddress).isEqualTo("The full address")
     assertThat(persistedApprovedPremises.addressLine1).isEqualTo(csvRow.addressLine1)
     assertThat(persistedApprovedPremises.addressLine2).isEqualTo(csvRow.addressLine2)
     assertThat(persistedApprovedPremises.town).isEqualTo(csvRow.town)
@@ -372,6 +374,7 @@ class Cas1SeedPremisesFromCsvTest : SeedTestBase() {
         "gender",
         "supportsSpaceBookings",
         "managerDetails",
+        "fullAddress",
       )
       .newRow()
 
@@ -413,6 +416,7 @@ class Cas1SeedPremisesFromCsvTest : SeedTestBase() {
         .withQuotedField(it.gender)
         .withQuotedField(it.supportsSpaceBookings)
         .withQuotedField(it.managerDetails)
+        .withQuotedField(it.fullAddress ?: "")
         .newRow()
     }
 
@@ -422,6 +426,7 @@ class Cas1SeedPremisesFromCsvTest : SeedTestBase() {
 
 class ApprovedPremisesSeedCsvRowFactory : Factory<ApprovedPremisesSeedCsvRow> {
   private var name: Yielded<String> = { randomStringMultiCaseWithNumbers(10) }
+  private var fullAddress: Yielded<String?> = { null }
   private var addressLine1: Yielded<String> = { randomStringMultiCaseWithNumbers(10) }
   private var addressLine2: Yielded<String?> = { randomStringMultiCaseWithNumbers(10) }
   private var town: Yielded<String> = { randomStringMultiCaseWithNumbers(10) }
@@ -460,6 +465,10 @@ class ApprovedPremisesSeedCsvRowFactory : Factory<ApprovedPremisesSeedCsvRow> {
 
   fun withName(name: String) = apply {
     this.name = { name }
+  }
+
+  fun withFullAddress(fullAddress: String?) = apply {
+    this.fullAddress = { fullAddress }
   }
 
   fun withAddressLine1(addressLine1: String) = apply {
@@ -523,6 +532,7 @@ class ApprovedPremisesSeedCsvRowFactory : Factory<ApprovedPremisesSeedCsvRow> {
 
   override fun produce() = ApprovedPremisesSeedCsvRow(
     name = this.name(),
+    fullAddress = this.fullAddress(),
     addressLine1 = this.addressLine1(),
     addressLine2 = this.addressLine2(),
     town = this.town(),

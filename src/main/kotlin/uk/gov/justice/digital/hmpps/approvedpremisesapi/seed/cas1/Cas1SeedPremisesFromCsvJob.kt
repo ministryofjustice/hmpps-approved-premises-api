@@ -62,6 +62,7 @@ class Cas1SeedPremisesFromCsvJob(
     "gender",
     "supportsSpaceBookings",
     "managerDetails",
+    "fullAddress",
   ),
 ) {
   private val log = LoggerFactory.getLogger(this::class.java)
@@ -109,6 +110,7 @@ class Cas1SeedPremisesFromCsvJob(
     gender = ApprovedPremisesGender.valueOf(columns["gender"]!!),
     supportsSpaceBookings = parseBooleanStringOrThrow(columns["supportsSpaceBookings"]!!, "supportsSpaceBookings"),
     managerDetails = columns["managerDetails"]!!,
+    fullAddress = columns["fullAddress"],
   )
 
   @SuppressWarnings("TooGenericExceptionThrown")
@@ -192,6 +194,7 @@ class Cas1SeedPremisesFromCsvJob(
         gender = row.gender,
         supportsSpaceBookings = castBooleanString(row.supportsSpaceBookings),
         managerDetails = row.managerDetails,
+        fullAddress = row.fullAddress,
       ),
     )
 
@@ -225,6 +228,7 @@ class Cas1SeedPremisesFromCsvJob(
       this.name = row.name
       this.apCode = row.apCode
       this.qCode = row.qCode
+      this.fullAddress = row.fullAddress
       this.addressLine1 = row.addressLine1
       this.addressLine2 = row.addressLine2
       this.town = row.town
@@ -294,4 +298,5 @@ data class ApprovedPremisesSeedCsvRow(
   val gender: ApprovedPremisesGender,
   val supportsSpaceBookings: String,
   val managerDetails: String,
+  val fullAddress: String?,
 )

@@ -36,13 +36,22 @@ components:
         name:
           type: string
           example: Hope House
+        fullAddress:
+          description: Full address, excluding postcode
+          type: string
         addressLine1:
+          description: Deprecated, use fullAddress
+          deprecated: true
           type: string
           example: 1 The Street
         addressLine2:
+          description: Deprecated, use fullAddress
+          deprecated: true
           type: string
           example: Blackmore End
         town:
+          description: Deprecated, use fullAddress
+          deprecated: true
           type: string
           example: Braintree
         postcode:
@@ -66,6 +75,7 @@ components:
         - name
         - apArea
         - characteristics
+        - fullAddress
     Cas1PremisesSummary:
       type: object
       properties:

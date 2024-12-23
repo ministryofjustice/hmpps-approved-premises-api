@@ -131,6 +131,9 @@ class Cas1SeedPremisesFromSiteSurveyXlsxJob(
       ApprovedPremisesEntity(
         id = UUID.randomUUID(),
         name = siteSurvey.name,
+        fullAddress = premisesInfo.siteSurveyPremise.address,
+        // note that the site survey provides a full address in this field
+        // so callers should retrieve fullAddress instead
         addressLine1 = siteSurvey.address,
         addressLine2 = null,
         town = siteSurvey.townCity,
@@ -173,6 +176,7 @@ class Cas1SeedPremisesFromSiteSurveyXlsxJob(
     val siteSurvey = premisesInfo.siteSurveyPremise
     existingPremise.apply {
       name = siteSurvey.name
+      fullAddress = premisesInfo.siteSurveyPremise.address
       addressLine1 = siteSurvey.address
       addressLine2 = null
       town = siteSurvey.townCity

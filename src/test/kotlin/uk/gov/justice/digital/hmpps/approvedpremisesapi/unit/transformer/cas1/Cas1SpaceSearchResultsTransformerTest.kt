@@ -42,6 +42,7 @@ class Cas1SpaceSearchResultsTransformerTest {
         premisesId = candidatePremise1Id,
         distanceInMiles = 1.0f,
         apType = ApprovedPremisesType.NORMAL,
+        fullAddress = null,
         name = "Some AP 1",
         addressLine1 = "1 The Street",
         addressLine2 = null,
@@ -55,6 +56,7 @@ class Cas1SpaceSearchResultsTransformerTest {
         premisesId = candidatePremise2Id,
         distanceInMiles = 2.0f,
         apType = ApprovedPremisesType.ESAP,
+        fullAddress = "The full address, not quite the same, somewhere",
         name = "Some Other AP",
         addressLine1 = "2 The Street",
         addressLine2 = "Additional Bit",
@@ -77,6 +79,7 @@ class Cas1SpaceSearchResultsTransformerTest {
     assertThat(premises1.id).isEqualTo(candidatePremise1Id)
     assertThat(premises1.apType).isEqualTo(ApType.normal)
     assertThat(premises1.name).isEqualTo("Some AP 1")
+    assertThat(premises1.fullAddress).isEqualTo("1 The Street, Townsbury")
     assertThat(premises1.addressLine1).isEqualTo("1 The Street")
     assertThat(premises1.addressLine2).isNull()
     assertThat(premises1.town).isEqualTo("Townsbury")
@@ -94,6 +97,7 @@ class Cas1SpaceSearchResultsTransformerTest {
     assertThat(premises2.id).isEqualTo(candidatePremise2Id)
     assertThat(premises2.apType).isEqualTo(ApType.esap)
     assertThat(premises2.name).isEqualTo("Some Other AP")
+    assertThat(premises2.fullAddress).isEqualTo("The full address, not quite the same, somewhere")
     assertThat(premises2.addressLine1).isEqualTo("2 The Street")
     assertThat(premises2.addressLine2).isEqualTo("Additional Bit")
     assertThat(premises2.town).isEqualTo("Townton")

@@ -25,6 +25,7 @@ class ApprovedPremisesEntityFactory : Factory<ApprovedPremisesEntity> {
   private var localAuthorityArea: Yielded<LocalAuthorityAreaEntity>? = null
   private var id: Yielded<UUID> = { UUID.randomUUID() }
   private var name: Yielded<String> = { randomStringMultiCaseWithNumbers(8) }
+  private var fullAddress: Yielded<String?> = { randomStringUpperCase(10) }
   private var apCode: Yielded<String> = { randomStringUpperCase(10) }
   private var postcode: Yielded<String> = { randomPostCode() }
   private var latitude: Yielded<Double> = { randomDouble(53.50, 54.99) }
@@ -55,6 +56,10 @@ class ApprovedPremisesEntityFactory : Factory<ApprovedPremisesEntity> {
 
   fun withName(name: String) = apply {
     this.name = { name }
+  }
+
+  fun withFullAddress(fullAddress: String?) = apply {
+    this.fullAddress = { fullAddress }
   }
 
   fun withApCode(apCode: String) = apply {
@@ -202,5 +207,6 @@ class ApprovedPremisesEntityFactory : Factory<ApprovedPremisesEntity> {
     gender = this.gender(),
     supportsSpaceBookings = this.supportsSpaceBookings(),
     managerDetails = this.managerDetails(),
+    fullAddress = this.fullAddress(),
   )
 }
