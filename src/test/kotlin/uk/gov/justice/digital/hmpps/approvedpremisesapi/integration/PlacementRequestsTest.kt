@@ -1259,7 +1259,7 @@ class PlacementRequestsTest : IntegrationTestBase() {
     }
 
     @Test
-    fun `Allocated to calling User, offender is LAO, user has LAO access, returns 200`() {
+    fun `Allocated to calling User, offender is LAO, user has LAO access, returns 200 and FullPerson`() {
       givenAUser { user, jwt ->
         givenAUser { otherUser, _ ->
           givenAnOffender(
@@ -1305,7 +1305,7 @@ class PlacementRequestsTest : IntegrationTestBase() {
     }
 
     @Test
-    fun `Allocated to calling User, offender is LAO, user doesn't have LAO access but has LAO qualification, returns 200`() {
+    fun `Allocated to calling User, offender is LAO, user doesn't have LAO access but has LAO qualification, returns 200 and FullPerson`() {
       givenAUser(qualifications = listOf(UserQualification.LAO)) { user, jwt ->
         givenAUser { otherUser, _ ->
           givenAnOffender(
@@ -1330,10 +1330,7 @@ class PlacementRequestsTest : IntegrationTestBase() {
                   objectMapper.writeValueAsString(
                     placementRequestDetailTransformer.transformJpaToApi(
                       placementRequest,
-                      PersonInfoResult.Success.Restricted(
-                        offenderDetails.otherIds.crn,
-                        offenderDetails.otherIds.nomsNumber,
-                      ),
+                      PersonInfoResult.Success.Full(offenderDetails.otherIds.crn, offenderDetails, inmateDetails),
                       listOf(),
                     ),
                   ),

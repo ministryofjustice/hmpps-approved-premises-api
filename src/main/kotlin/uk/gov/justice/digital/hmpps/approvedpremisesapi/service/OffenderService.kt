@@ -150,7 +150,7 @@ class OffenderService(
     }
   }
 
-  fun toPersonSummaryInfo(
+  private fun toPersonSummaryInfo(
     crn: String,
     caseSummary: CaseSummary?,
     caseAccess: CaseAccess?,
@@ -659,7 +659,25 @@ class OffenderService(
     outputStream: OutputStream,
   ) = apDeliusContextApiClient.getDocument(crn, documentId, outputStream)
 
-  @SuppressWarnings("CyclomaticComplexMethod", "NestedBlockDepth", "ReturnCount")
+  fun getPersonInfoResult(
+    crn: String,
+    limitedAccessStrategy: LimitedAccessStrategy,
+  ) = getPersonInfoResults(
+    crns = setOf(crn),
+    deliusUsername = when (limitedAccessStrategy) {
+      is LimitedAccessStrategy.IgnoreLimitedAccess -> null
+      is LimitedAccessStrategy.ReturnRestrictedIfLimitedAccess -> limitedAccessStrategy.deliusUsername
+    },
+    ignoreLaoRestrictions = when (limitedAccessStrategy) {
+      is LimitedAccessStrategy.IgnoreLimitedAccess -> true
+      is LimitedAccessStrategy.ReturnRestrictedIfLimitedAccess -> false
+    },
+  ).first()
+
+  @Deprecated(
+    """Use version that takes limitedAccessStrategy, derive from [UserEntity.cas1LimitedAccessStrategy()] 
+    |or [UserEntity.cas3LimitedAccessStrategy()]""",
+  )
   fun getPersonInfoResult(
     crn: String,
     deliusUsername: String?,
