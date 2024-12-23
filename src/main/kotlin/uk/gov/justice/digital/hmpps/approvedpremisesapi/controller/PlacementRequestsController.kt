@@ -35,6 +35,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.PlacementRequest
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.PlacementRequestService.PlacementRequestAndCancellations
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.UserService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1WithdrawableService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1LimitedAccessStrategy
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.BookingNotMadeTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.NewPlacementRequestBookingConfirmationTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.PlacementRequestDetailTransformer
@@ -207,8 +208,7 @@ class PlacementRequestsController(
   ): PlacementRequestDetail {
     val personInfo = offenderService.getPersonInfoResult(
       placementRequestAndCancellations.placementRequest.application.crn,
-      forUser.deliusUsername,
-      ignoreLaoRestrictions = false,
+      forUser.cas1LimitedAccessStrategy(),
     )
 
     return placementRequestDetailTransformer.transformJpaToApi(
