@@ -27,6 +27,7 @@ class Cas1SpaceSearchResultsTransformer {
             id = candidatePremises.premisesId,
             apType = candidatePremises.apType.asApiType(),
             name = candidatePremises.name,
+            fullAddress = candidatePremises.resolveFullAddress(),
             addressLine1 = candidatePremises.addressLine1,
             addressLine2 = candidatePremises.addressLine2,
             town = candidatePremises.town,
@@ -50,4 +51,11 @@ class Cas1SpaceSearchResultsTransformer {
         )
       },
     )
+
+  fun CandidatePremises.resolveFullAddress(): String {
+    return fullAddress
+      ?: listOf(addressLine1, addressLine2, town)
+        .filter { !it.isNullOrBlank() }
+        .joinToString(separator = ", ")
+  }
 }

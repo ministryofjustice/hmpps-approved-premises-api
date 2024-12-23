@@ -203,6 +203,7 @@ interface ApprovedPremisesRepository : JpaRepository<ApprovedPremisesEntity, UUI
   fun findByQCode(qcode: String): ApprovedPremisesEntity?
 }
 
+@SuppressWarnings("LongParameterList")
 @Entity
 @Table(name = "premises")
 @DiscriminatorColumn(name = "service")
@@ -211,8 +212,17 @@ abstract class PremisesEntity(
   @Id
   val id: UUID,
   var name: String,
+  /**
+   * For CAS1 fullAddress should be used instead, where defined
+   */
   var addressLine1: String,
+  /**
+   * For CAS1 fullAddress should be used instead, where defined
+   */
   var addressLine2: String?,
+  /**
+   * For CAS1 fullAddress should be used instead, where defined
+   */
   var town: String?,
   var postcode: String,
   var longitude: Double?,
@@ -273,6 +283,12 @@ class ApprovedPremisesEntity(
   var gender: ApprovedPremisesGender,
   var supportsSpaceBookings: Boolean,
   var managerDetails: String?,
+  /**
+   * Full Address, excluding postcode. When defined this should be used instead of [addressLine1], [addressLine2] and [town]
+   *
+   * Whilst currently nullable, once all site surveys have been imported this can be made non-null
+   */
+  var fullAddress: String?,
 ) : PremisesEntity(
   id,
   name,

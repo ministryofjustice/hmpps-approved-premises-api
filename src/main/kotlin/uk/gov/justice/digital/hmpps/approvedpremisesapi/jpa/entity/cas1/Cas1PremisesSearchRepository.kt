@@ -54,6 +54,7 @@ FROM
       ELSE 'NORMAL'
     END AS ap_type,
     p.name AS name,
+    ap.full_address AS full_address,
     p.address_line1 AS address_line1,
     p.address_line2 AS address_line2,
     p.town AS town,
@@ -70,7 +71,7 @@ FROM
   WHERE 
     ap.supports_space_bookings = true AND
     ap.gender = #SPECIFIED_GENDER#
-  GROUP BY p.id, ap.point, p.name, p.address_line1, p.address_line2, p.town, p.postcode, aa.id, aa.name  
+  GROUP BY p.id, ap.point, p.name, ap.full_address, p.address_line1, p.address_line2, p.town, p.postcode, aa.id, aa.name  
 ) AS result
 WHERE
   1 = 1
@@ -110,6 +111,7 @@ class Cas1SpaceSearchRepository(
         rs.getFloat("distance_in_miles"),
         apType,
         rs.getString("name"),
+        rs.getString("full_address"),
         rs.getString("address_line1"),
         rs.getString("address_line2"),
         rs.getString("town"),
@@ -204,6 +206,7 @@ data class CandidatePremises(
   val distanceInMiles: Float,
   val apType: ApprovedPremisesType,
   val name: String,
+  val fullAddress: String?,
   val addressLine1: String,
   val addressLine2: String?,
   val town: String?,

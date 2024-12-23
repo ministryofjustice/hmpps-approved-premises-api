@@ -36,7 +36,7 @@ class SeedCas1PremiseFromSiteSurveyXlsxTest : SeedTestBase() {
       "Probation Region", "Yorks & The Humber",
       "Local Authority Area", "Bournemouth",
       "Town / City", "Narnia",
-      "Address", "123 Made Up Town",
+      "Address", "123 Made Up Town, Narnia",
       "Postcode", "LE12 ABC",
       "Male / Female AP?", "Male",
       "Total number of beds (including any beds out of service)", "22",
@@ -74,7 +74,8 @@ class SeedCas1PremiseFromSiteSurveyXlsxTest : SeedTestBase() {
 
     val createdPremise = approvedPremisesRepository.findByQCode("Q123")!!
     assertThat(createdPremise.name).isEqualTo("The Premise Name")
-    assertThat(createdPremise.addressLine1).isEqualTo("123 Made Up Town")
+    assertThat(createdPremise.addressLine1).isEqualTo("123 Made Up Town, Narnia")
+    assertThat(createdPremise.addressLine1).isEqualTo("123 Made Up Town, Narnia")
     assertThat(createdPremise.addressLine2).isNull()
     assertThat(createdPremise.town).isEqualTo("Narnia")
     assertThat(createdPremise.postcode).isEqualTo("LE12 ABC")
@@ -194,6 +195,7 @@ class SeedCas1PremiseFromSiteSurveyXlsxTest : SeedTestBase() {
     val existingPremises = approvedPremisesEntityFactory.produceAndPersist {
       withQCode("QExisting")
       withName("Old Name")
+      withFullAddress("Old Full Address")
       withAddressLine1("Old Address Line 1")
       withAddressLine2("Old Address Line 2")
       withTown("Old Town")
@@ -239,7 +241,7 @@ class SeedCas1PremiseFromSiteSurveyXlsxTest : SeedTestBase() {
       "Probation Region", "Yorks & The Humber",
       "Local Authority Area", "Windsor and Maidenhead",
       "Town / City", "Narnia",
-      "Address", "123 Made Up Town",
+      "Address", "123 Made Up Town, Narnia",
       "Postcode", "LE12 ABC",
       "Male / Female AP?", "Male",
       "Total number of beds (including any beds out of service)", "22",
@@ -277,7 +279,8 @@ class SeedCas1PremiseFromSiteSurveyXlsxTest : SeedTestBase() {
 
     val createdPremise = approvedPremisesRepository.findByQCode("QExisting")!!
     assertThat(createdPremise.name).isEqualTo("The Premise Name")
-    assertThat(createdPremise.addressLine1).isEqualTo("123 Made Up Town")
+    assertThat(createdPremise.fullAddress).isEqualTo("123 Made Up Town, Narnia")
+    assertThat(createdPremise.addressLine1).isEqualTo("123 Made Up Town, Narnia")
     assertThat(createdPremise.addressLine2).isNull()
     assertThat(createdPremise.town).isEqualTo("Narnia")
     assertThat(createdPremise.postcode).isEqualTo("LE12 ABC")

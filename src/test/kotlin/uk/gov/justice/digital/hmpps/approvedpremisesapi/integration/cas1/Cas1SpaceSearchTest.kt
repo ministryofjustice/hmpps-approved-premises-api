@@ -350,6 +350,7 @@ class Cas1SpaceSearchTest : InitialiseDatabasePerClassTestBase() {
     assertThat(premises.id).isEqualTo(expected.id)
     assertThat(premises.apType).isEqualTo(expectedApType)
     assertThat(premises.name).isEqualTo(expected.name)
+    assertThat(premises.fullAddress).isEqualTo(expected.fullAddress)
     assertThat(premises.addressLine1).isEqualTo(expected.addressLine1)
     assertThat(premises.addressLine2).isEqualTo(expected.addressLine2)
     assertThat(premises.town).isEqualTo(expected.town)
