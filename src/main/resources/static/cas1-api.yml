@@ -925,7 +925,7 @@ paths:
           content:
             'application/json':
               schema:
-                $ref: 'cas1-schemas.yml#/components/schemas/Cas1PremiseDaySummary'
+                $ref: 'cas1-schemas.yml#/components/schemas/Cas1PremisesDaySummary'
           headers:
             X-Pagination-CurrentPage:
               $ref: '_shared.yml#/components/headers/X-Pagination-CurrentPage'
