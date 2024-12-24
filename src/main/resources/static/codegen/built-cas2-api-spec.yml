@@ -2262,9 +2262,9 @@ components:
             outdatedSchema:
               type: boolean
             data:
-              $ref: '#/components/schemas/AnyValue'
+              $ref: '#/components/schemas/Unit'
             document:
-              $ref: '#/components/schemas/AnyValue'
+              $ref: '#/components/schemas/Unit'
             status:
               $ref: '#/components/schemas/ApprovedPremisesApplicationStatus'
             assessmentId:
@@ -2312,9 +2312,9 @@ components:
             outdatedSchema:
               type: boolean
             data:
-              $ref: '#/components/schemas/AnyValue'
+              $ref: '#/components/schemas/Unit'
             document:
-              $ref: '#/components/schemas/AnyValue'
+              $ref: '#/components/schemas/Unit'
             status:
               $ref: '#/components/schemas/ApplicationStatus'
             submittedAt:
@@ -2352,7 +2352,7 @@ components:
         outdatedSchema:
           type: boolean
         document:
-          $ref: '#/components/schemas/AnyValue'
+          $ref: '#/components/schemas/Unit'
         submittedAt:
           type: string
           format: date-time
@@ -2389,9 +2389,9 @@ components:
             outdatedSchema:
               type: boolean
             data:
-              $ref: '#/components/schemas/AnyValue'
+              $ref: '#/components/schemas/Unit'
             document:
-              $ref: '#/components/schemas/AnyValue'
+              $ref: '#/components/schemas/Unit'
             status:
               $ref: '#/components/schemas/ApplicationStatus'
             risks:
@@ -2741,9 +2741,6 @@ components:
         - requestedFurtherInformation
         - pendingPlacementRequest
         - expired
-    AnyValue:
-      description: Any object that conforms to the current JSON schema for an application
-      type: object
     Unit:
       description: Any object
       type: object
@@ -2807,7 +2804,7 @@ components:
         data:
           type: object
           additionalProperties:
-            $ref: '#/components/schemas/AnyValue'
+            $ref: '#/components/schemas/Unit'
       discriminator:
         propertyName: type
         mapping:
@@ -2861,7 +2858,7 @@ components:
         type:
           type: string
         translatedDocument:
-          $ref: '#/components/schemas/AnyValue'
+          $ref: '#/components/schemas/Unit'
       discriminator:
         propertyName: type
         mapping:
@@ -2933,7 +2930,7 @@ components:
       type: object
       properties:
         translatedDocument:
-          $ref: '#/components/schemas/AnyValue'
+          $ref: '#/components/schemas/Unit'
         applicationId:
           type: string
           format: uuid
@@ -3005,7 +3002,7 @@ components:
                 type: string
                 example: 'PSS'
             summaryData:
-              $ref: '#/components/schemas/AnyValue'
+              $ref: '#/components/schemas/Unit'
           required:
             - arrivalDate
             - summaryData
@@ -3126,7 +3123,7 @@ components:
         rejectionRationale:
           type: string
         data:
-          $ref: '#/components/schemas/AnyValue'
+          $ref: '#/components/schemas/Unit'
         clarificationNotes:
           type: array
           items:
@@ -3216,7 +3213,7 @@ components:
             status:
               $ref: '#/components/schemas/TemporaryAccommodationAssessmentStatus'
             summaryData:
-              $ref: '#/components/schemas/AnyValue'
+              $ref: '#/components/schemas/Unit'
             releaseDate:
               type: string
               format: date
@@ -3381,7 +3378,7 @@ components:
         data:
           type: object
           additionalProperties:
-            $ref: '#/components/schemas/AnyValue'
+            $ref: '#/components/schemas/Unit'
         releaseDate:
           type: string
           format: date
@@ -3394,7 +3391,7 @@ components:
       type: object
       properties:
         document:
-          $ref: '#/components/schemas/AnyValue'
+          $ref: '#/components/schemas/Unit'
         requirements:
           $ref: '#/components/schemas/PlacementRequirements'
         placementDates:
@@ -3409,7 +3406,7 @@ components:
       type: object
       properties:
         document:
-          $ref: '#/components/schemas/AnyValue'
+          $ref: '#/components/schemas/Unit'
         rejectionRationale:
           type: string
         referralRejectionReasonId:
@@ -3503,7 +3500,7 @@ components:
         isWithdrawn:
           type: boolean
         domainEvent:
-          $ref: '#/components/schemas/AnyValue'
+          $ref: '#/components/schemas/Unit'
     ReferralHistoryDomainEventNote:
       type: object
       allOf:
@@ -4425,9 +4422,9 @@ components:
               type: string
               format: date-time
             data:
-              $ref: '#/components/schemas/AnyValue'
+              $ref: '#/components/schemas/Unit'
             document:
-              $ref: '#/components/schemas/AnyValue'
+              $ref: '#/components/schemas/Unit'
             canBeWithdrawn:
               type: boolean
             isWithdrawn:
@@ -4467,14 +4464,14 @@ components:
         data:
           type: object
           additionalProperties:
-            $ref: '#/components/schemas/AnyValue'
+            $ref: '#/components/schemas/Unit'
       required:
         - data
     SubmitPlacementApplication:
       type: object
       properties:
         translatedDocument:
-          $ref: '#/components/schemas/AnyValue'
+          $ref: '#/components/schemas/Unit'
         placementType:
           $ref: '#/components/schemas/PlacementType'
         placementDates:
@@ -4543,7 +4540,7 @@ components:
             If `type` is `"automatic"` this field provides the value of `PlacementRequest.assessmentCompletedAt`.
           format: date-time
         document:
-          $ref: '#/components/schemas/AnyValue'
+          $ref: '#/components/schemas/Unit'
         canBeDirectlyWithdrawn:
           description: |
             If true, the user making this request can withdraw this request for placement. 
