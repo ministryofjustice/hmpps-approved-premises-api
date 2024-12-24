@@ -13,10 +13,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.BedRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.BookingRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.BookingSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.LocalAuthorityAreaRepository
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.LostBedCancellationEntity
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.LostBedCancellationRepository
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.LostBedReasonRepository
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.LostBedsEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.LostBedsRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PremisesEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PremisesRepository
@@ -26,7 +22,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ProbationDeli
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ProbationRegionRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.RoomRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TemporaryAccommodationPremisesEntity
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TemporaryAccommodationPremisesSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.Availability
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.ValidationErrors
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.validated
@@ -34,7 +29,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.AuthorisableActi
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.ValidatableActionResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.getDaysUntilExclusiveEnd
 import java.time.LocalDate
-import java.time.OffsetDateTime
 import java.util.UUID
 
 @Service
@@ -42,10 +36,8 @@ class PremisesService(
   private val premisesRepository: PremisesRepository,
   private val lostBedsRepository: LostBedsRepository,
   private val bookingRepository: BookingRepository,
-  private val lostBedReasonRepository: LostBedReasonRepository,
   private val localAuthorityAreaRepository: LocalAuthorityAreaRepository,
   private val probationRegionRepository: ProbationRegionRepository,
-  private val lostBedCancellationRepository: LostBedCancellationRepository,
   private val probationDeliveryUnitRepository: ProbationDeliveryUnitRepository,
   private val characteristicService: CharacteristicService,
   private val roomRepository: RoomRepository,
@@ -58,10 +50,6 @@ class PremisesService(
   )
 
   fun getAllPremises(): List<PremisesWithBedCount> = premisesRepository.findAllWithBedCount()
-
-  fun getAllTemporaryAccommodationPremisesSummaries(regionId: UUID): List<TemporaryAccommodationPremisesSummary> {
-    return premisesRepository.findAllTemporaryAccommodationSummary(regionId)
-  }
 
   fun getAllApprovedPremisesSummaries(probationRegionId: UUID?, apAreaId: UUID?): List<ApprovedPremisesSummary> {
     return premisesRepository.findAllApprovedPremisesSummary(probationRegionId, apAreaId)
@@ -110,116 +98,6 @@ class PremisesService(
         lostBeds = lostBedsOnDay.size,
       )
     }.associateBy { it.date }
-  }
-
-  fun createLostBeds(
-    premises: PremisesEntity,
-    startDate: LocalDate,
-    endDate: LocalDate,
-    reasonId: UUID,
-    referenceNumber: String?,
-    notes: String?,
-    bedId: UUID,
-  ): ValidatableActionResult<LostBedsEntity> =
-    validated {
-      if (endDate.isBefore(startDate)) {
-        "$.endDate" hasValidationError "beforeStartDate"
-      }
-
-      val bed = premises.rooms.flatMap { it.beds }.firstOrNull { it.id == bedId }
-      if (bed == null) {
-        "$.bedId" hasValidationError "doesNotExist"
-      }
-
-      val reason = lostBedReasonRepository.findByIdOrNull(reasonId)
-      if (reason == null) {
-        "$.reason" hasValidationError "doesNotExist"
-      } else if (!serviceScopeMatches(reason.serviceScope, premises)) {
-        "$.reason" hasValidationError "incorrectLostBedReasonServiceScope"
-      }
-
-      if (validationErrors.any()) {
-        return fieldValidationError
-      }
-
-      val lostBedsEntity = lostBedsRepository.save(
-        LostBedsEntity(
-          id = UUID.randomUUID(),
-          premises = premises,
-          startDate = startDate,
-          endDate = endDate,
-          bed = bed!!,
-          reason = reason!!,
-          referenceNumber = referenceNumber,
-          notes = notes,
-          cancellation = null,
-        ),
-      )
-
-      return success(lostBedsEntity)
-    }
-
-  fun updateLostBeds(
-    lostBedId: UUID,
-    startDate: LocalDate,
-    endDate: LocalDate,
-    reasonId: UUID,
-    referenceNumber: String?,
-    notes: String?,
-  ): AuthorisableActionResult<ValidatableActionResult<LostBedsEntity>> {
-    val lostBed = lostBedsRepository.findByIdOrNull(lostBedId)
-      ?: return AuthorisableActionResult.NotFound()
-
-    return AuthorisableActionResult.Success(
-      validated {
-        if (endDate.isBefore(startDate)) {
-          "$.endDate" hasValidationError "beforeStartDate"
-        }
-
-        val reason = lostBedReasonRepository.findByIdOrNull(reasonId)
-        if (reason == null) {
-          "$.reason" hasValidationError "doesNotExist"
-        } else if (!serviceScopeMatches(reason.serviceScope, lostBed.premises)) {
-          "$.reason" hasValidationError "incorrectLostBedReasonServiceScope"
-        }
-
-        if (validationErrors.any()) {
-          return@validated fieldValidationError
-        }
-
-        val updatedLostBedsEntity = lostBedsRepository.save(
-          lostBed.apply {
-            this.startDate = startDate
-            this.endDate = endDate
-            this.reason = reason!!
-            this.referenceNumber = referenceNumber
-            this.notes = notes
-          },
-        )
-
-        success(updatedLostBedsEntity)
-      },
-    )
-  }
-
-  fun cancelLostBed(
-    lostBed: LostBedsEntity,
-    notes: String?,
-  ) = validated<LostBedCancellationEntity> {
-    if (lostBed.cancellation != null) {
-      return generalError("This Lost Bed already has a cancellation set")
-    }
-
-    val cancellationEntity = lostBedCancellationRepository.save(
-      LostBedCancellationEntity(
-        id = UUID.randomUUID(),
-        lostBed = lostBed,
-        notes = notes,
-        createdAt = OffsetDateTime.now(),
-      ),
-    )
-
-    return success(cancellationEntity)
   }
 
   fun createNewPremises(
@@ -352,8 +230,6 @@ class PremisesService(
     characteristicIds: List<UUID>,
     notes: String?,
     status: PropertyStatus,
-    probationDeliveryUnitIdentifier: Either<String, UUID>?,
-    turnaroundWorkingDayCount: Int?,
   ): AuthorisableActionResult<ValidatableActionResult<PremisesEntity>> {
     val premises = premisesRepository.findByIdOrNull(premisesId)
       ?: return AuthorisableActionResult.NotFound()
@@ -379,15 +255,6 @@ class PremisesService(
       validationErrors["$.probationRegionId"] = "doesNotExist"
     }
 
-    val probationDeliveryUnit = when (premises) {
-      is TemporaryAccommodationPremisesEntity -> {
-        tryGetProbationDeliveryUnit(probationDeliveryUnitIdentifier, probationRegionId) { property, err ->
-          validationErrors[property] = err
-        }
-      }
-      else -> null
-    }
-
     val characteristicEntities = characteristicIds.mapIndexed { index, uuid ->
       val entity = characteristicService.getCharacteristic(uuid)
 
@@ -403,18 +270,6 @@ class PremisesService(
       }
 
       entity
-    }
-
-    if (turnaroundWorkingDayCount != null) {
-      when (premises) {
-        is TemporaryAccommodationPremisesEntity -> {
-          if (turnaroundWorkingDayCount < 0) {
-            validationErrors["$.turnaroundWorkingDayCount"] = "isNotAPositiveInteger"
-          }
-        }
-
-        else -> validationErrors["$.turnaroundWorkingDayCount"] = "onlyAppliesToTemporaryAccommodationPremises"
-      }
     }
 
     if (validationErrors.any()) {
@@ -433,49 +288,12 @@ class PremisesService(
       it.characteristics = characteristicEntities.map { it!! }.toMutableList()
       it.notes = if (notes.isNullOrEmpty()) "" else notes
       it.status = status
-      if (it is TemporaryAccommodationPremisesEntity) {
-        it.probationDeliveryUnit = probationDeliveryUnit!!
-        if (turnaroundWorkingDayCount != null) {
-          it.turnaroundWorkingDayCount = turnaroundWorkingDayCount!!
-        }
-      }
-    }
-
-    if (premises is TemporaryAccommodationPremisesEntity && status == PropertyStatus.archived) {
-      premises.rooms.forEach { room ->
-        room.beds.forEach { bed ->
-          bed.endDate = LocalDate.now()
-        }
-      }
     }
 
     val savedPremises = premisesRepository.save(premises)
 
     return AuthorisableActionResult.Success(
       ValidatableActionResult.Success(savedPremises),
-    )
-  }
-
-  fun renamePremises(
-    premisesId: UUID,
-    name: String,
-  ): AuthorisableActionResult<ValidatableActionResult<PremisesEntity>> {
-    val premises = premisesRepository.findByIdOrNull(premisesId) ?: return AuthorisableActionResult.NotFound()
-
-    return AuthorisableActionResult.Success(
-      validated {
-        if (!premisesRepository.nameIsUniqueForType(name, premises::class.java)) {
-          "$.name" hasValidationError "notUnique"
-        }
-
-        if (validationErrors.any()) {
-          return@validated fieldValidationError
-        }
-
-        premises.name = name
-
-        return@validated success(premisesRepository.save(premises))
-      },
     )
   }
 
@@ -500,13 +318,6 @@ class PremisesService(
     premisesRepository.delete(premises)
 
     success(Unit)
-  }
-
-  private fun serviceScopeMatches(scope: String, premises: PremisesEntity) = when (scope) {
-    "*" -> true
-    ServiceName.approvedPremises.value -> premises is ApprovedPremisesEntity
-    ServiceName.temporaryAccommodation.value -> premises is TemporaryAccommodationPremisesEntity
-    else -> false
   }
 
   private fun tryGetProbationDeliveryUnit(
