@@ -44,6 +44,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.UpdateLostBed
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.UpdatePremises
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.UpdateRoom
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PremisesEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TemporaryAccommodationPremisesEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserQualification
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PersonInfoResult
@@ -67,6 +68,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.StaffMemberServi
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.UserAccessService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.UserService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1WithdrawableService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas3.Cas3PremisesService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.ArrivalTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.BedDetailTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.BedSummaryTransformer
@@ -95,6 +97,7 @@ class PremisesController(
   private val usersService: UserService,
   private val userAccessService: UserAccessService,
   private val premisesService: PremisesService,
+  private val cas3PremisesService: Cas3PremisesService,
   private val offenderService: OffenderService,
   private val bookingService: BookingService,
   private val lostBedsService: LostBedService,
@@ -135,7 +138,7 @@ class PremisesController(
       ServiceName.cas2 -> throw RuntimeException("CAS2 not supported")
       ServiceName.temporaryAccommodation -> {
         val user = usersService.getUserForRequest()
-        val summaries = premisesService.getAllTemporaryAccommodationPremisesSummaries(user.probationRegion.id)
+        val summaries = cas3PremisesService.getAllPremisesSummaries(user.probationRegion.id)
 
         summaries.map(premisesSummaryTransformer::transformDomainToApi)
       }
@@ -153,21 +156,39 @@ class PremisesController(
       throw ForbiddenProblem()
     }
 
-    val updatePremisesResult = premisesService
-      .updatePremises(
-        premisesId,
-        body.addressLine1,
-        body.addressLine2,
-        body.town,
-        body.postcode,
-        body.localAuthorityAreaId,
-        body.probationRegionId,
-        body.characteristicIds,
-        body.notes,
-        body.status,
-        Ior.fromNullables(body.pdu, body.probationDeliveryUnitId)?.toEither(),
-        body.turnaroundWorkingDayCount,
-      )
+    val updatePremisesResult = when (premises) {
+      is TemporaryAccommodationPremisesEntity ->
+        cas3PremisesService
+          .updatePremises(
+            premisesId,
+            body.addressLine1,
+            body.addressLine2,
+            body.town,
+            body.postcode,
+            body.localAuthorityAreaId,
+            body.probationRegionId,
+            body.characteristicIds,
+            body.notes,
+            body.status,
+            Ior.fromNullables(body.pdu, body.probationDeliveryUnitId)?.toEither(),
+            body.turnaroundWorkingDayCount,
+          )
+
+      else ->
+        premisesService
+          .updatePremises(
+            premisesId,
+            body.addressLine1,
+            body.addressLine2,
+            body.town,
+            body.postcode,
+            body.localAuthorityAreaId,
+            body.probationRegionId,
+            body.characteristicIds,
+            body.notes,
+            body.status,
+          )
+    }
 
     var validationResult = when (updatePremisesResult) {
       is AuthorisableActionResult.NotFound -> throw NotFoundProblem(premisesId, "Premises")
@@ -177,7 +198,7 @@ class PremisesController(
 
     val bodyName = body.name
     if (bodyName != null && premises is TemporaryAccommodationPremisesEntity) {
-      validationResult = when (val renamePremisesResult = premisesService.renamePremises(premisesId, bodyName)) {
+      validationResult = when (val renamePremisesResult = cas3PremisesService.renamePremises(premisesId, bodyName)) {
         is AuthorisableActionResult.NotFound -> throw NotFoundProblem(premisesId, "Premises")
         is AuthorisableActionResult.Success -> renamePremisesResult.entity
         is AuthorisableActionResult.Unauthorised -> throw ForbiddenProblem()
@@ -195,7 +216,11 @@ class PremisesController(
       is ValidatableActionResult.Success -> validationResult.entity
     }
 
-    val totalBeds = premisesService.getBedCount(premises)
+    val totalBeds = when (premises) {
+      is TemporaryAccommodationPremisesEntity -> cas3PremisesService.getBedspaceCount(updatedPremises)
+      else -> premisesService.getBedCount(updatedPremises)
+    }
+
     return ResponseEntity.ok(
       premisesTransformer.transformJpaToApi(
         updatedPremises,
@@ -244,27 +269,55 @@ class PremisesController(
       false -> xServiceName.value
     }
 
-    val premises = extractResultEntityOrThrow(
-      premisesService.createNewPremises(
-        addressLine1 = body.addressLine1,
-        addressLine2 = body.addressLine2,
-        town = body.town,
-        postcode = body.postcode,
-        latitude = null,
-        longitude = null,
-        service = serviceName,
-        localAuthorityAreaId = body.localAuthorityAreaId,
-        probationRegionId = body.probationRegionId,
-        name = body.name,
-        notes = body.notes,
-        characteristicIds = body.characteristicIds,
-        status = body.status,
-        probationDeliveryUnitIdentifier = Ior.fromNullables(body.pdu, body.probationDeliveryUnitId)?.toEither(),
-        turnaroundWorkingDayCount = body.turnaroundWorkingDayCount,
-      ),
-    )
+    val premises: PremisesEntity
+    val totalBeds: Int
 
-    val totalBeds = premisesService.getBedCount(premises)
+    when (xServiceName) {
+      ServiceName.temporaryAccommodation -> {
+        premises = extractResultEntityOrThrow(
+          cas3PremisesService.createNewPremises(
+            addressLine1 = body.addressLine1,
+            addressLine2 = body.addressLine2,
+            town = body.town,
+            postcode = body.postcode,
+            localAuthorityAreaId = body.localAuthorityAreaId,
+            probationRegionId = body.probationRegionId,
+            name = body.name,
+            notes = body.notes,
+            characteristicIds = body.characteristicIds,
+            status = body.status,
+            probationDeliveryUnitIdentifier = Ior.fromNullables(body.pdu, body.probationDeliveryUnitId)?.toEither(),
+            turnaroundWorkingDayCount = body.turnaroundWorkingDayCount,
+          ),
+        )
+
+        totalBeds = cas3PremisesService.getBedspaceCount(premises)
+      }
+      else -> {
+        premises = extractResultEntityOrThrow(
+          premisesService.createNewPremises(
+            addressLine1 = body.addressLine1,
+            addressLine2 = body.addressLine2,
+            town = body.town,
+            postcode = body.postcode,
+            latitude = null,
+            longitude = null,
+            service = serviceName,
+            localAuthorityAreaId = body.localAuthorityAreaId,
+            probationRegionId = body.probationRegionId,
+            name = body.name,
+            notes = body.notes,
+            characteristicIds = body.characteristicIds,
+            status = body.status,
+            probationDeliveryUnitIdentifier = Ior.fromNullables(body.pdu, body.probationDeliveryUnitId)?.toEither(),
+            turnaroundWorkingDayCount = body.turnaroundWorkingDayCount,
+          ),
+        )
+
+        totalBeds = premisesService.getBedCount(premises)
+      }
+    }
+
     return ResponseEntity(
       premisesTransformer.transformJpaToApi(
         premises,
@@ -283,10 +336,23 @@ class PremisesController(
       throw ForbiddenProblem()
     }
 
-    val totalBeds = premisesService.getBedCount(premises)
-    val availableBedsForToday =
-      premisesService.getAvailabilityForRange(premises, LocalDate.now(), LocalDate.now().plusDays(1))
-        .values.first().getFreeCapacity(totalBeds)
+    val totalBeds: Int
+    val availableBedsForToday: Int
+
+    when (premises) {
+      is TemporaryAccommodationPremisesEntity -> {
+        totalBeds = cas3PremisesService.getBedspaceCount(premises)
+        availableBedsForToday =
+          cas3PremisesService.getAvailabilityForRange(premises, LocalDate.now(), LocalDate.now().plusDays(1))
+            .values.first().getFreeCapacity(totalBeds)
+      }
+      else -> {
+        totalBeds = premisesService.getBedCount(premises)
+        availableBedsForToday =
+          premisesService.getAvailabilityForRange(premises, LocalDate.now(), LocalDate.now().plusDays(1))
+            .values.first().getFreeCapacity(totalBeds)
+      }
+    }
 
     return ResponseEntity.ok(premisesTransformer.transformJpaToApi(premises, totalBeds, availableBedsForToday))
   }
@@ -416,7 +482,7 @@ class PremisesController(
           ?: throw InternalServerErrorProblem("No bed ID present on Booking: $bookingId")
 
         throwIfBookingDatesConflict(body.arrivalDate, body.expectedDepartureDate, bookingId, bedId)
-        throwIfLostBedDatesConflict(body.arrivalDate, body.expectedDepartureDate, null, bedId)
+        throwIfVoidBedspaceDatesConflict(body.arrivalDate, body.expectedDepartureDate, null, bedId)
 
         bookingService.createArrival(
           booking = booking,
@@ -433,7 +499,7 @@ class PremisesController(
           ?: throw InternalServerErrorProblem("No bed ID present on Booking: $bookingId")
 
         throwIfBookingDatesConflict(body.arrivalDate, body.expectedDepartureDate, bookingId, bedId)
-        throwIfLostBedDatesConflict(body.arrivalDate, body.expectedDepartureDate, null, bedId)
+        throwIfVoidBedspaceDatesConflict(body.arrivalDate, body.expectedDepartureDate, null, bedId)
 
         bookingService.createCas3Arrival(
           booking = booking,
@@ -605,9 +671,9 @@ class PremisesController(
     }
 
     throwIfBookingDatesConflict(body.startDate, body.endDate, null, body.bedId)
-    throwIfLostBedDatesConflict(body.startDate, body.endDate, null, body.bedId)
+    throwIfVoidBedspaceDatesConflict(body.startDate, body.endDate, null, body.bedId)
 
-    val result = premisesService.createLostBeds(
+    val result = cas3PremisesService.createVoidBedspaces(
       premises = premises,
       startDate = body.startDate,
       endDate = body.endDate,
@@ -625,7 +691,7 @@ class PremisesController(
   override fun premisesPremisesIdLostBedsGet(premisesId: UUID): ResponseEntity<List<LostBed>> {
     throwIfRequestIsForApprovedPremises("GET /cas1/premises/$premisesId/lost-beds")
 
-    val premises = premisesService.getPremises(premisesId)
+    val premises = cas3PremisesService.getPremises(premisesId)
       ?: throw NotFoundProblem(premisesId, "Premises")
 
     val lostBeds = lostBedsService.getActiveLostBedsForPremisesId(premisesId)
@@ -640,7 +706,7 @@ class PremisesController(
   override fun premisesPremisesIdLostBedsLostBedIdGet(premisesId: UUID, lostBedId: UUID): ResponseEntity<LostBed> {
     throwIfRequestIsForApprovedPremises("GET /cas1/premises/$premisesId/lost-beds/$lostBedId")
 
-    val premises = premisesService.getPremises(premisesId)
+    val premises = cas3PremisesService.getPremises(premisesId)
       ?: throw NotFoundProblem(premisesId, "Premises")
 
     if (!userAccessService.currentUserCanManagePremisesLostBeds(premises)) {
@@ -660,7 +726,7 @@ class PremisesController(
   ): ResponseEntity<LostBed> {
     throwIfRequestIsForApprovedPremises("PUT /cas1/premises/$premisesId/lost-beds/$lostBedId")
 
-    val premises = premisesService.getPremises(premisesId) ?: throw NotFoundProblem(premisesId, "Premises")
+    val premises = cas3PremisesService.getPremises(premisesId) ?: throw NotFoundProblem(premisesId, "Premises")
     val lostBed = premises.lostBeds.firstOrNull { it.id == lostBedId } ?: throw NotFoundProblem(lostBedId, "LostBed")
 
     if (!userAccessService.currentUserCanManagePremisesLostBeds(premises)) {
@@ -668,10 +734,10 @@ class PremisesController(
     }
 
     throwIfBookingDatesConflict(body.startDate, body.endDate, null, lostBed.bed.id)
-    throwIfLostBedDatesConflict(body.startDate, body.endDate, lostBedId, lostBed.bed.id)
+    throwIfVoidBedspaceDatesConflict(body.startDate, body.endDate, lostBedId, lostBed.bed.id)
 
-    val updateLostBedResult = premisesService
-      .updateLostBeds(
+    val updateLostBedResult = cas3PremisesService
+      .updateVoidBedspaces(
         lostBedId,
         body.startDate,
         body.endDate,
@@ -707,27 +773,27 @@ class PremisesController(
   ): ResponseEntity<LostBedCancellation> {
     throwIfRequestIsForApprovedPremises("POST /cas1/premises/$premisesId/lost-beds/$lostBedId/cancellations")
 
-    val premises = premisesService.getPremises(premisesId) ?: throw NotFoundProblem(premisesId, "Premises")
-    val lostBed = premises.lostBeds.firstOrNull { it.id == lostBedId } ?: throw NotFoundProblem(lostBedId, "LostBed")
+    val premises = cas3PremisesService.getPremises(premisesId) ?: throw NotFoundProblem(premisesId, "Premises")
+    val voidBedspace = premises.lostBeds.firstOrNull { it.id == lostBedId } ?: throw NotFoundProblem(lostBedId, "LostBed")
 
     if (!userAccessService.currentUserCanManagePremisesLostBeds(premises)) {
       throw ForbiddenProblem()
     }
 
-    val cancelLostBedResult = premisesService.cancelLostBed(
-      lostBed = lostBed,
+    val cancelVoidBedspaceResult = cas3PremisesService.cancelVoidBedspace(
+      voidBedspace = voidBedspace,
       notes = body.notes,
     )
 
-    val cancellation = when (cancelLostBedResult) {
-      is ValidatableActionResult.GeneralValidationError -> throw BadRequestProblem(errorDetail = cancelLostBedResult.message)
-      is ValidatableActionResult.FieldValidationError -> throw BadRequestProblem(invalidParams = cancelLostBedResult.validationMessages)
+    val cancellation = when (cancelVoidBedspaceResult) {
+      is ValidatableActionResult.GeneralValidationError -> throw BadRequestProblem(errorDetail = cancelVoidBedspaceResult.message)
+      is ValidatableActionResult.FieldValidationError -> throw BadRequestProblem(invalidParams = cancelVoidBedspaceResult.validationMessages)
       is ValidatableActionResult.ConflictError -> throw ConflictProblem(
-        id = cancelLostBedResult.conflictingEntityId,
-        conflictReason = cancelLostBedResult.message,
+        id = cancelVoidBedspaceResult.conflictingEntityId,
+        conflictReason = cancelVoidBedspaceResult.message,
       )
 
-      is ValidatableActionResult.Success -> cancelLostBedResult.entity
+      is ValidatableActionResult.Success -> cancelVoidBedspaceResult.entity
     }
 
     return ResponseEntity.ok(lostBedCancellationTransformer.transformJpaToApi(cancellation))
@@ -957,7 +1023,7 @@ class PremisesController(
     }
   }
 
-  private fun throwIfLostBedDatesConflict(
+  private fun throwIfVoidBedspaceDatesConflict(
     startDate: LocalDate,
     endDate: LocalDate,
     thisEntityId: UUID?,
