@@ -575,7 +575,7 @@ class Cas1OutOfServiceBedServiceTest {
       val expectedPageable = getPageableOrAllPages(expectedSortFieldString, sortDirection, page = null, pageSize = null, unsafe = true)
 
       every {
-        outOfServiceBedRepository.findOutOfServiceBedIds(
+        outOfServiceBedRepository.findOutOfServiceBedIdsForDate(
           premisesId = any(),
           apAreaId = any(),
           excludePast = any(),
@@ -595,7 +595,7 @@ class Cas1OutOfServiceBedServiceTest {
       )
 
       verify(exactly = 1) {
-        outOfServiceBedRepository.findOutOfServiceBedIds(
+        outOfServiceBedRepository.findOutOfServiceBedIdsForDate(
           premisesId = null,
           apAreaId = null,
           excludePast = false,
@@ -610,7 +610,7 @@ class Cas1OutOfServiceBedServiceTest {
     @ParameterizedTest
     fun `Filters correctly according to the temporality`(temporality: List<Temporality>) {
       every {
-        outOfServiceBedRepository.findOutOfServiceBedIds(
+        outOfServiceBedRepository.findOutOfServiceBedIdsForDate(
           premisesId = any(),
           apAreaId = any(),
           excludePast = any(),
@@ -630,7 +630,7 @@ class Cas1OutOfServiceBedServiceTest {
       )
 
       verify(exactly = 1) {
-        outOfServiceBedRepository.findOutOfServiceBedIds(
+        outOfServiceBedRepository.findOutOfServiceBedIdsForDate(
           premisesId = null,
           apAreaId = null,
           excludePast = !temporality.contains(Temporality.past),
@@ -644,7 +644,7 @@ class Cas1OutOfServiceBedServiceTest {
     @Test
     fun `Filters correctly according to the premises ID`() {
       every {
-        outOfServiceBedRepository.findOutOfServiceBedIds(
+        outOfServiceBedRepository.findOutOfServiceBedIdsForDate(
           premisesId = any(),
           apAreaId = any(),
           excludePast = any(),
@@ -666,7 +666,7 @@ class Cas1OutOfServiceBedServiceTest {
       )
 
       verify(exactly = 1) {
-        outOfServiceBedRepository.findOutOfServiceBedIds(
+        outOfServiceBedRepository.findOutOfServiceBedIdsForDate(
           premisesId = expectedId,
           apAreaId = null,
           excludePast = false,
@@ -680,7 +680,7 @@ class Cas1OutOfServiceBedServiceTest {
     @Test
     fun `Filters correctly according to the AP area ID`() {
       every {
-        outOfServiceBedRepository.findOutOfServiceBedIds(
+        outOfServiceBedRepository.findOutOfServiceBedIdsForDate(
           premisesId = any(),
           apAreaId = any(),
           excludePast = any(),
@@ -702,7 +702,7 @@ class Cas1OutOfServiceBedServiceTest {
       )
 
       verify(exactly = 1) {
-        outOfServiceBedRepository.findOutOfServiceBedIds(
+        outOfServiceBedRepository.findOutOfServiceBedIdsForDate(
           premisesId = null,
           apAreaId = expectedId,
           excludePast = false,

@@ -14,8 +14,10 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.SortDirection
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesGender
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserPermission
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.UserAccessService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1OutOfServiceBedSummaryService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1PremisesService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1SpaceBookingDaySummaryService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.cas1.Cas1OutOfServiceBedSummaryTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.cas1.Cas1PremiseCapacitySummaryTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.cas1.Cas1PremisesDayTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.cas1.Cas1PremisesTransformer
@@ -31,6 +33,8 @@ class Cas1PremisesController(
   val cas1PremiseCapacityTransformer: Cas1PremiseCapacitySummaryTransformer,
   private val cas1PremisesDayTransformer: Cas1PremisesDayTransformer,
   private val cas1SpaceBookingDaySummaryService: Cas1SpaceBookingDaySummaryService,
+  private val cas1OutOfServiceBedSummaryService: Cas1OutOfServiceBedSummaryService,
+  private val cas1OutOfServiceBedSummaryTransformer: Cas1OutOfServiceBedSummaryTransformer,
 ) : PremisesCas1Delegate {
 
   override fun getPremisesById(premisesId: UUID): ResponseEntity<Cas1PremisesSummary> {
@@ -96,30 +100,42 @@ class Cas1PremisesController(
     bookingsSortDirection: SortDirection?,
     bookingsSortBy: Cas1SpaceBookingDaySummarySortField?,
   ): ResponseEntity<Cas1PremisesDaySummary> {
-    userAccessService.ensureCurrentUserHasPermission(UserPermission.CAS1_SPACE_BOOKING_VIEW)
+    userAccessService.ensureCurrentUserHasPermission(UserPermission.CAS1_PREMISES_VIEW)
 
-    val premiseSummaryInfo = cas1PremisesService.getPremisesSummary(premisesId)
-    val premiseCapacity = cas1PremisesService.getPremiseCapacity(premisesId, date, date, null)
-    val premisesCapacitySummary = cas1PremiseCapacityTransformer.toCas1PremiseCapacitySummary(
-      premiseSummaryInfo = extractEntityFromCasResult(premiseSummaryInfo),
-      premiseCapacity = extractEntityFromCasResult(premiseCapacity),
-    )
-
-    val spaceBookingDaySummaries = extractEntityFromCasResult(
-      cas1SpaceBookingDaySummaryService.getBookingDaySummaries(
-        premisesId = premisesId,
-        date = date,
-        bookingsCriteriaFilter = bookingsCriteriaFilter,
-        bookingsSortBy = bookingsSortBy ?: Cas1SpaceBookingDaySummarySortField.PERSON_NAME,
-        bookingsSortDirection = bookingsSortDirection ?: SortDirection.desc,
-      ),
+    val premiseSummaryInfo = extractEntityFromCasResult(
+      cas1PremisesService.getPremisesSummary(premisesId),
     )
 
     return ResponseEntity.ok().body(
       cas1PremisesDayTransformer.toCas1PremisesDaySummary(
-        date,
-        premisesCapacitySummary,
-        spaceBookingDaySummaries,
+        date = date,
+        premisesCapacity = cas1PremiseCapacityTransformer.toCas1PremiseCapacitySummary(
+          premiseSummaryInfo = premiseSummaryInfo,
+          premiseCapacity = extractEntityFromCasResult(
+            cas1PremisesService.getPremiseCapacity(
+              premisesId = premisesId,
+              startDate = date,
+              endDate = date,
+              null,
+            ),
+          ),
+        ).capacity.first(),
+        spaceBookings = extractEntityFromCasResult(
+          cas1SpaceBookingDaySummaryService.getBookingDaySummaries(
+            premisesId = premisesId,
+            date = date,
+            bookingsCriteriaFilter = bookingsCriteriaFilter,
+            bookingsSortBy = bookingsSortBy ?: Cas1SpaceBookingDaySummarySortField.PERSON_NAME,
+            bookingsSortDirection = bookingsSortDirection ?: SortDirection.desc,
+          ),
+        ),
+        outOfServiceBeds = extractEntityFromCasResult(
+          cas1OutOfServiceBedSummaryService.getOutOfServiceBedSummaries(
+            premisesId = premisesId,
+            apAreaId = premiseSummaryInfo.entity.probationRegion.apArea!!.id,
+            date = date,
+          ),
+        ).map(cas1OutOfServiceBedSummaryTransformer::toCas1OutOfServiceBedSummary),
       ),
     )
   }

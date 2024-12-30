@@ -1,7 +1,8 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.cas1
 
 import org.springframework.stereotype.Component
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1PremiseCapacity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1OutOfServiceBedSummary
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1PremiseCapacityForDay
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1PremisesDaySummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1SpaceBookingDaySummary
 import java.time.LocalDate
@@ -11,15 +12,16 @@ class Cas1PremisesDayTransformer {
 
   fun toCas1PremisesDaySummary(
     date: LocalDate,
-    premisesCapacity: Cas1PremiseCapacity,
+    premisesCapacity: Cas1PremiseCapacityForDay,
     spaceBookings: List<Cas1SpaceBookingDaySummary>,
+    outOfServiceBeds: List<Cas1OutOfServiceBedSummary>,
   ) =
     Cas1PremisesDaySummary(
       forDate = date,
       previousDate = date.minusDays(1),
       nextDate = date.plusDays(1),
-      capacity = premisesCapacity.capacity.first(),
+      capacity = premisesCapacity,
       spaceBookings = spaceBookings,
-      outOfServiceBeds = emptyList(),
+      outOfServiceBeds = outOfServiceBeds,
     )
 }

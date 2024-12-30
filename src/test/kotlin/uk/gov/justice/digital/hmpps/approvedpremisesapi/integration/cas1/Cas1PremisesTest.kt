@@ -26,7 +26,9 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApAreaEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesGender
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas1OutOfServiceBedEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas1SpaceBookingEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.CharacteristicEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.CharacteristicRepository.Constants.CAS1_PROPERTY_NAME_ARSON_SUITABLE
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.CharacteristicRepository.Constants.CAS1_PROPERTY_NAME_ENSUITE
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.CharacteristicRepository.Constants.CAS1_PROPERTY_NAME_SINGLE_ROOM
@@ -37,7 +39,9 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRole.CAS1
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.deliuscontext.CaseSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.asCaseSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.bodyAsListOfObjects
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.roundNanosToMillisToAccountForLossOfPrecisionInPostgres
 import java.time.LocalDate
+import java.time.OffsetDateTime
 import java.util.UUID
 
 class Cas1PremisesTest : IntegrationTestBase() {
@@ -467,13 +471,19 @@ class Cas1PremisesTest : IntegrationTestBase() {
     lateinit var offenderA: CaseSummary
     lateinit var offenderB: CaseSummary
     lateinit var offenderOffline: CaseSummary
+    lateinit var outOfServiceBed: Cas1OutOfServiceBedEntity
+    lateinit var outOfServiceBedEndingToday: Cas1OutOfServiceBedEntity
+    lateinit var outOfServiceBedTodayOnly: Cas1OutOfServiceBedEntity
+    lateinit var isGroundFloorCharacteristic: CharacteristicEntity
+    lateinit var isArsonSuitableCharacteristic: CharacteristicEntity
+    lateinit var hasEnSuiteCharacteristic: CharacteristicEntity
 
     val summaryDate = LocalDate.now()
     val tierA = "A2"
     val tierB = "B3"
     val releaseTypeToBeDetermined = "TBD"
 
-    @SuppressWarnings("UnusedPrivateProperty")
+    @SuppressWarnings("UnusedPrivateProperty", "LongMethod")
     @BeforeAll
     fun setupTestData() {
       val region = givenAProbationRegion(
@@ -611,6 +621,137 @@ class Cas1PremisesTest : IntegrationTestBase() {
       }
 
       apDeliusContextAddListCaseSummaryToBulkResponse(listOf(offenderA, offenderB, offenderOffline))
+
+      hasEnSuiteCharacteristic = characteristicEntityFactory.produceAndPersist {
+        withId(UUID.fromString("138f63aa-7e51-4581-8d71-dfdf9b85bbd9"))
+        withPropertyName("hasEnSuite")
+        withName("hasEnSuite")
+        withModelScope("room")
+        withServiceScope("approved-premises")
+      }
+
+      isArsonSuitableCharacteristic = characteristicEntityFactory.produceAndPersist {
+        withId(UUID.fromString("a4ba038b-f762-4f19-ae94-2e308637a5ed"))
+        withPropertyName("isArsonSuitable")
+        withName("isArsonSuitable")
+        withModelScope("room")
+        withServiceScope("approved-premises")
+      }
+
+      isGroundFloorCharacteristic = characteristicEntityFactory.produceAndPersist {
+        withId(UUID.fromString("83377a71-6cda-4f83-90ca-32513f401500"))
+        withPropertyName("isGroundFloor")
+        withName("isGroundFloor")
+        withModelScope("room")
+        withServiceScope("approved-premises")
+      }
+
+      val bed1 = bedEntityFactory.produceAndPersist {
+        withRoom(
+          roomEntityFactory.produceAndPersist {
+            withCharacteristics(mutableListOf(hasEnSuiteCharacteristic))
+            withPremises(premises)
+          },
+        )
+      }
+
+      val bed2 = bedEntityFactory.produceAndPersist {
+        withRoom(
+          roomEntityFactory.produceAndPersist {
+            withCharacteristics(mutableListOf(hasEnSuiteCharacteristic, isArsonSuitableCharacteristic))
+            withPremises(premises)
+          },
+        )
+      }
+
+      val bed3 = bedEntityFactory.produceAndPersist {
+        withRoom(
+          roomEntityFactory.produceAndPersist {
+            withCharacteristics(mutableListOf(hasEnSuiteCharacteristic, isArsonSuitableCharacteristic, isGroundFloorCharacteristic))
+            withPremises(premises)
+          },
+        )
+      }
+
+      outOfServiceBed = cas1OutOfServiceBedEntityFactory.produceAndPersist {
+        withCreatedAt(OffsetDateTime.now().roundNanosToMillisToAccountForLossOfPrecisionInPostgres())
+        withBed(bed1)
+      }.apply {
+        this.revisionHistory += cas1OutOfServiceBedRevisionEntityFactory.produceAndPersist {
+          withCreatedAt(OffsetDateTime.now().roundNanosToMillisToAccountForLossOfPrecisionInPostgres())
+          withCreatedBy(user)
+          withOutOfServiceBed(this@apply)
+          withStartDate(LocalDate.now().minusDays(20))
+          withEndDate(LocalDate.now().plusDays(20))
+          withYieldedReason {
+            cas1OutOfServiceBedReasonEntityFactory.produceAndPersist()
+          }
+        }
+      }
+
+      outOfServiceBedEndingToday = cas1OutOfServiceBedEntityFactory.produceAndPersist {
+        withCreatedAt(OffsetDateTime.now().roundNanosToMillisToAccountForLossOfPrecisionInPostgres())
+        withBed(bed2)
+      }.apply {
+        this.revisionHistory += cas1OutOfServiceBedRevisionEntityFactory.produceAndPersist {
+          withCreatedAt(OffsetDateTime.now().roundNanosToMillisToAccountForLossOfPrecisionInPostgres())
+          withCreatedBy(user)
+          withOutOfServiceBed(this@apply)
+          withStartDate(LocalDate.now().minusDays(10))
+          withEndDate(LocalDate.now())
+          withYieldedReason {
+            cas1OutOfServiceBedReasonEntityFactory.produceAndPersist()
+          }
+        }
+      }
+
+      outOfServiceBedTodayOnly = cas1OutOfServiceBedEntityFactory.produceAndPersist {
+        withCreatedAt(OffsetDateTime.now().roundNanosToMillisToAccountForLossOfPrecisionInPostgres())
+        withBed(bed3)
+      }.apply {
+        this.revisionHistory += cas1OutOfServiceBedRevisionEntityFactory.produceAndPersist {
+          withCreatedAt(OffsetDateTime.now().roundNanosToMillisToAccountForLossOfPrecisionInPostgres())
+          withCreatedBy(user)
+          withOutOfServiceBed(this@apply)
+          withStartDate(LocalDate.now())
+          withEndDate(LocalDate.now())
+          withYieldedReason {
+            cas1OutOfServiceBedReasonEntityFactory.produceAndPersist()
+          }
+        }
+      }
+
+      val expiredOutOfServiceBed = cas1OutOfServiceBedEntityFactory.produceAndPersist {
+        withCreatedAt(OffsetDateTime.now().roundNanosToMillisToAccountForLossOfPrecisionInPostgres())
+        withBed(bed1)
+      }.apply {
+        this.revisionHistory += cas1OutOfServiceBedRevisionEntityFactory.produceAndPersist {
+          withCreatedAt(OffsetDateTime.now().roundNanosToMillisToAccountForLossOfPrecisionInPostgres())
+          withCreatedBy(user)
+          withOutOfServiceBed(this@apply)
+          withStartDate(LocalDate.now().minusDays(20))
+          withEndDate(LocalDate.now().minusDays(1))
+          withYieldedReason {
+            cas1OutOfServiceBedReasonEntityFactory.produceAndPersist()
+          }
+        }
+      }
+
+      val upcomingOutOfServiceBed = cas1OutOfServiceBedEntityFactory.produceAndPersist {
+        withCreatedAt(OffsetDateTime.now().roundNanosToMillisToAccountForLossOfPrecisionInPostgres())
+        withBed(bed1)
+      }.apply {
+        this.revisionHistory += cas1OutOfServiceBedRevisionEntityFactory.produceAndPersist {
+          withCreatedAt(OffsetDateTime.now().roundNanosToMillisToAccountForLossOfPrecisionInPostgres())
+          withCreatedBy(user)
+          withOutOfServiceBed(this@apply)
+          withStartDate(LocalDate.now().plusDays(1))
+          withEndDate(LocalDate.now().plusDays(10))
+          withYieldedReason {
+            cas1OutOfServiceBedReasonEntityFactory.produceAndPersist()
+          }
+        }
+      }
     }
 
     @Test
@@ -653,7 +794,8 @@ class Cas1PremisesTest : IntegrationTestBase() {
       assertThat(summaries.nextDate).isEqualTo(summaryDate.plusDays(1))
       assertThat(summaries.previousDate).isEqualTo(summaryDate.minusDays(1))
       assertThat(summaries.spaceBookings.size).isEqualTo(3)
-      assertThat(summaries.outOfServiceBeds).isEmpty()
+      assertThat(summaries.spaceBookings.size).isEqualTo(3)
+      assertThat(summaries.outOfServiceBeds.size).isEqualTo(3)
 
       val summaryBookingOffline = summaries.spaceBookings[0]
       assertThat(summaryBookingOffline.id).isEqualTo(spaceBookingOfflineApplication.id)
@@ -670,9 +812,10 @@ class Cas1PremisesTest : IntegrationTestBase() {
       assertThat(summaryBooking1.canonicalArrivalDate).isEqualTo(spaceBookingLate.canonicalArrivalDate)
       assertThat(summaryBooking1.canonicalDepartureDate).isEqualTo(spaceBookingLate.canonicalDepartureDate)
       assertThat(summaryBooking1.essentialCharacteristics.size).isEqualTo(3)
-      assertThat(summaryBooking1.essentialCharacteristics[0].value).isEqualTo(CAS1_PROPERTY_NAME_ARSON_SUITABLE)
-      assertThat(summaryBooking1.essentialCharacteristics[1].value).isEqualTo(CAS1_PROPERTY_NAME_ENSUITE)
-      assertThat(summaryBooking1.essentialCharacteristics[2].value).isEqualTo(CAS1_PROPERTY_NAME_SINGLE_ROOM)
+      val bookingCharacteristics = summaryBooking1.essentialCharacteristics.map { it.value }
+      assertThat(bookingCharacteristics).contains(CAS1_PROPERTY_NAME_SINGLE_ROOM)
+      assertThat(bookingCharacteristics).contains(CAS1_PROPERTY_NAME_ENSUITE)
+      assertThat(bookingCharacteristics).contains(CAS1_PROPERTY_NAME_ARSON_SUITABLE)
       assertThat(summaryBooking1.releaseType).isEqualTo(releaseTypeToBeDetermined)
 
       val summaryBooking2 = summaries.spaceBookings[2]
@@ -704,10 +847,43 @@ class Cas1PremisesTest : IntegrationTestBase() {
 
       val capacity = summaries.capacity
       assertThat(capacity.date).isEqualTo(summaryDate)
-      assertThat(capacity.totalBedCount).isEqualTo(5)
+      assertThat(capacity.totalBedCount).isEqualTo(8)
       assertThat(capacity.availableBedCount).isEqualTo(5)
       assertThat(capacity.bookingCount).isEqualTo(3)
       assertThat(capacity.characteristicAvailability.count()).isEqualTo(6)
+
+      val oosBedSummary = summaries.outOfServiceBeds[0]
+      assertThat(oosBedSummary.id).isEqualTo(outOfServiceBed.id)
+      assertThat(oosBedSummary.startDate).isEqualTo(outOfServiceBed.startDate)
+      assertThat(oosBedSummary.endDate).isEqualTo(outOfServiceBed.endDate)
+      assertThat(oosBedSummary.roomName).isEqualTo(outOfServiceBed.bed.room.name)
+      assertThat(oosBedSummary.reason.id).isEqualTo(outOfServiceBed.reason.id)
+      assertThat(oosBedSummary.reason.name).isEqualTo(outOfServiceBed.reason.name)
+      assertThat(oosBedSummary.characteristics.size).isEqualTo(1)
+      assertThat(oosBedSummary.characteristics[0].name).isEqualTo(hasEnSuiteCharacteristic.name)
+
+      val oosBedEndingToday = summaries.outOfServiceBeds[1]
+      assertThat(oosBedEndingToday.id).isEqualTo(outOfServiceBedEndingToday.id)
+      assertThat(oosBedEndingToday.startDate).isEqualTo(outOfServiceBedEndingToday.startDate)
+      assertThat(oosBedEndingToday.endDate).isEqualTo(outOfServiceBedEndingToday.endDate)
+      assertThat(oosBedEndingToday.roomName).isEqualTo(outOfServiceBedEndingToday.bed.room.name)
+      assertThat(oosBedEndingToday.reason.id).isEqualTo(outOfServiceBedEndingToday.reason.id)
+      assertThat(oosBedEndingToday.reason.name).isEqualTo(outOfServiceBedEndingToday.reason.name)
+      assertThat(oosBedEndingToday.characteristics.size).isEqualTo(2)
+      assertThat(oosBedEndingToday.characteristics[0].name).isEqualTo(hasEnSuiteCharacteristic.name)
+      assertThat(oosBedEndingToday.characteristics[1].name).isEqualTo(isArsonSuitableCharacteristic.name)
+
+      val oosBedTodayOnly = summaries.outOfServiceBeds[2]
+      assertThat(oosBedTodayOnly.id).isEqualTo(outOfServiceBedTodayOnly.id)
+      assertThat(oosBedTodayOnly.startDate).isEqualTo(outOfServiceBedTodayOnly.startDate)
+      assertThat(oosBedTodayOnly.endDate).isEqualTo(outOfServiceBedTodayOnly.endDate)
+      assertThat(oosBedTodayOnly.roomName).isEqualTo(outOfServiceBedTodayOnly.bed.room.name)
+      assertThat(oosBedTodayOnly.reason.id).isEqualTo(outOfServiceBedTodayOnly.reason.id)
+      assertThat(oosBedTodayOnly.reason.name).isEqualTo(outOfServiceBedTodayOnly.reason.name)
+      assertThat(oosBedTodayOnly.characteristics.size).isEqualTo(3)
+      assertThat(oosBedTodayOnly.characteristics[0].name).isEqualTo(hasEnSuiteCharacteristic.name)
+      assertThat(oosBedTodayOnly.characteristics[1].name).isEqualTo(isArsonSuitableCharacteristic.name)
+      assertThat(oosBedTodayOnly.characteristics[2].name).isEqualTo(isGroundFloorCharacteristic.name)
     }
 
     @Test
@@ -727,7 +903,11 @@ class Cas1PremisesTest : IntegrationTestBase() {
       assertThat(summary.previousDate).isEqualTo(summaryDate.minusDays(1))
       assertThat(summary.spaceBookings.size).isEqualTo(1)
       val summaryBooking = summary.spaceBookings[0]
-      assertThat(summaryBooking.essentialCharacteristics[1].value).isEqualTo(CAS1_PROPERTY_NAME_ENSUITE)
+      assertThat(summaryBooking.essentialCharacteristics.size).isEqualTo(3)
+      assertThat(summaryBooking.essentialCharacteristics[0].value).isEqualTo(CAS1_PROPERTY_NAME_ENSUITE)
+      assertThat(summaryBooking.essentialCharacteristics[1].value).isEqualTo(CAS1_PROPERTY_NAME_ARSON_SUITABLE)
+      assertThat(summaryBooking.essentialCharacteristics[2].value).isEqualTo(CAS1_PROPERTY_NAME_SINGLE_ROOM)
+      assertThat(summary.outOfServiceBeds.size).isEqualTo(3)
     }
 
     @Test
@@ -746,7 +926,7 @@ class Cas1PremisesTest : IntegrationTestBase() {
       assertThat(summary.nextDate).isEqualTo(summaryDate.plusDays(1))
       assertThat(summary.previousDate).isEqualTo(summaryDate.minusDays(1))
       assertThat(summary.spaceBookings).isEmpty()
-      assertThat(summary.outOfServiceBeds).isEmpty()
+      assertThat(summary.outOfServiceBeds.size).isEqualTo(3)
     }
 
     @Test

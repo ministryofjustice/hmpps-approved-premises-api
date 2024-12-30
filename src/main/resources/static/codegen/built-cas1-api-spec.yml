@@ -6887,6 +6887,8 @@ components:
         id:
           type: string
           format: uuid
+        roomName:
+          type: string
         startDate:
           type: string
           format: date
