@@ -42,6 +42,8 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.ensureEntityFromCas
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.extractEntityFromCasResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.toLocalDate
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.toLocalDateTime
+import java.time.LocalDate
+import java.time.LocalDateTime
 import java.time.LocalTime
 import java.util.UUID
 
@@ -178,14 +180,7 @@ class Cas1SpaceBookingController(
         cas1NewArrival.arrivalDateTime!!.toLocalDateTime().toLocalTime(),
       )
     } else {
-      val arrivalDate = cas1NewArrival.arrivalDate
-        ?: throw BadRequestProblem(invalidParams = mapOf("arrivalDate" to "is required"))
-      val arrivalTime = cas1NewArrival.arrivalTime
-        ?: throw BadRequestProblem(invalidParams = mapOf("arrivalTime" to "is required"))
-      Pair(
-        arrivalDate,
-        LocalTime.parse(arrivalTime),
-      )
+      getArrivalDateAndTime(cas1NewArrival.arrivalDate, cas1NewArrival.arrivalTime)
     }
 
     ensureEntityFromCasResultIsSuccess(
@@ -316,5 +311,17 @@ class Cas1SpaceBookingController(
     ).filter { it.id != booking.id }
 
     return spaceBookingTransformer.transformJpaToApi(person, booking, otherBookingsInPremiseForCrn)
+  }
+
+  @SuppressWarnings("ThrowsCount")
+  private fun getArrivalDateAndTime(arrivalDate: LocalDate?, arrivalTime: String?): Pair<LocalDate, LocalTime> {
+    if (arrivalDate == null) throw BadRequestProblem(invalidParams = mapOf("arrivalDate" to "is required"))
+    if (arrivalTime == null) throw BadRequestProblem(invalidParams = mapOf("arrivalTime" to "is required"))
+
+    if (arrivalDate > LocalDate.now()) throw BadRequestProblem(invalidParams = mapOf("arrivalDate" to "must be in the past"))
+    if (LocalDateTime.of(arrivalDate, LocalTime.parse(arrivalTime)) > LocalDateTime.now()) {
+      throw BadRequestProblem(invalidParams = mapOf("arrivalTime" to "must be in the past"))
+    }
+    return Pair(arrivalDate, LocalTime.parse(arrivalTime))
   }
 }
