@@ -20,6 +20,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.BedMoveEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.BookingEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.BookingNotMadeEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas1ApplicationUserDetailsEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas1SpaceBookingEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementApplicationDecision
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementApplicationWithdrawalReason
@@ -36,6 +37,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomStringMultiCa
 import java.time.LocalDate
 import java.time.OffsetDateTime
 
+@SuppressWarnings("LargeClass")
 class CAS1SubjectAccessRequestServiceTest : SubjectAccessRequestServiceTestBase() {
 
   @Test
@@ -51,6 +53,7 @@ class CAS1SubjectAccessRequestServiceTest : SubjectAccessRequestServiceTestBase(
           "Assessments": [ ],
           "AssessmentClarificationNotes": [ ],
           "Bookings": [ ],
+          "SpaceBookings": [ ],
           "OfflineApplications":  [ ],
           "BookingExtensions": [ ],
           "Cancellations": [ ],
@@ -82,6 +85,7 @@ class CAS1SubjectAccessRequestServiceTest : SubjectAccessRequestServiceTestBase(
           "Assessments": [ ],
           "AssessmentClarificationNotes": [ ],
           "Bookings": [ ],
+          "SpaceBookings": [ ],
           "OfflineApplications":  [ ],
           "BookingExtensions": [ ],
           "Cancellations": [ ],
@@ -116,6 +120,7 @@ class CAS1SubjectAccessRequestServiceTest : SubjectAccessRequestServiceTestBase(
         "Assessments": [ ],
         "AssessmentClarificationNotes": [ ],
         "Bookings": [ ],
+        "SpaceBookings": [ ],
         "OfflineApplications":  [ ],
         "BookingExtensions": [ ],
         "Cancellations": [ ],
@@ -153,6 +158,7 @@ class CAS1SubjectAccessRequestServiceTest : SubjectAccessRequestServiceTestBase(
         "Assessments": [ ],
         "AssessmentClarificationNotes": [ ],
         "Bookings": [ ],
+        "SpaceBookings": [ ],
         "OfflineApplications":  [ ],
         "BookingExtensions": [ ],
         "Cancellations": [ ],
@@ -191,6 +197,7 @@ class CAS1SubjectAccessRequestServiceTest : SubjectAccessRequestServiceTestBase(
         "Assessments": [${approvedPremisesAssessmentJson(application, offenderDetails, assessment)}],
         "AssessmentClarificationNotes": [ ],
         "Bookings": [ ],
+        "SpaceBookings": [ ],
         "OfflineApplications":  [ ],
         "BookingExtensions": [ ],
         "Cancellations": [ ],
@@ -229,6 +236,7 @@ class CAS1SubjectAccessRequestServiceTest : SubjectAccessRequestServiceTestBase(
       clarificationNote,
     )}],
        "Bookings": [ ],
+       "SpaceBookings": [ ],
        "OfflineApplications":  [ ],
        "BookingExtensions": [ ],
        "Cancellations": [ ],
@@ -241,6 +249,100 @@ class CAS1SubjectAccessRequestServiceTest : SubjectAccessRequestServiceTestBase(
        "BookingNotMades" : [ ],
        "DomainEvents": [ ],
        "DomainEventsMetadata": [ ]
+    }
+    """.trimIndent()
+
+    assertJsonEquals(expectedJson, result)
+  }
+
+  @Test
+  fun `Get CAS1 information - have a space booking`() {
+    val (offenderDetails, _) = givenAnOffender()
+    val application = approvedPremisesApplicationEntity(offenderDetails)
+    val nonArrivalReason = nonArrivalReasonEntityFactory.produceAndPersist()
+    val departureReason = departureReasonEntityFactory.produceAndPersist()
+    val moveOnCategory = moveOnCategoryEntityFactory.produceAndPersist()
+    val cancellationReason = cancellationReasonEntityFactory.produceAndPersist()
+    val booking = spaceBookingEntity(
+      offenderDetails = offenderDetails,
+      application = application,
+      nonArrivalReason = nonArrivalReason,
+      departureReason = departureReason,
+      moveOnCategory = moveOnCategory,
+      cancellationReason = cancellationReason,
+    )
+
+    val result =
+      sarService.getCAS1Result(
+        offenderDetails.otherIds.crn,
+        offenderDetails.otherIds.nomsNumber,
+        START_DATE,
+        END_DATE,
+      )
+
+    val expectedJson = """
+    {        
+      "Applications":[${approvedPremisesApplicationsJson(application, offenderDetails)}],
+      "ApplicationTimeline" :[ ],
+      "Assessments": [ ],
+      "AssessmentClarificationNotes": [ ],
+      "Bookings": [],
+      "SpaceBookings":  [ ${spaceBookingsJson(booking)} ],
+      "OfflineApplications":  [ ],
+      "BookingExtensions": [ ],
+      "Cancellations": [ ],
+      "BedMoves": [ ],
+      "Appeals": [ ],
+      "PlacementApplications": [ ],
+      "PlacementRequests": [ ],
+      "PlacementRequirements": [ ],
+      "PlacementRequirementCriteria" : [ ],
+      "BookingNotMades" : [ ],
+      "DomainEvents": [ ],
+      "DomainEventsMetadata": [ ]
+    }
+    """.trimIndent()
+
+    assertJsonEquals(expectedJson, result)
+  }
+
+  @Test
+  fun `Get CAS1 information - have a space booking with offline application`() {
+    val (offenderDetails, _) = givenAnOffender()
+    val offlineApplication = offlineApplicationEntity(offenderDetails)
+    val booking = spaceBookingEntity(
+      offenderDetails = offenderDetails,
+      offlineApplication = offlineApplication,
+    )
+
+    val result =
+      sarService.getCAS1Result(
+        offenderDetails.otherIds.crn,
+        offenderDetails.otherIds.nomsNumber,
+        START_DATE,
+        END_DATE,
+      )
+
+    val expectedJson = """
+    {        
+      "Applications":[ ],
+      "ApplicationTimeline" :[ ],
+      "Assessments": [ ],
+      "AssessmentClarificationNotes": [ ],
+      "Bookings": [],
+      "SpaceBookings":  [ ${spaceBookingsJson(booking)} ],
+      "OfflineApplications": [${offlineApplicationForSpaceBookingJson(booking)}],
+      "BookingExtensions": [ ],
+      "Cancellations": [ ],
+      "BedMoves": [ ],
+      "Appeals": [ ],
+      "PlacementApplications": [ ],
+      "PlacementRequests": [ ],
+      "PlacementRequirements": [ ],
+      "PlacementRequirementCriteria" : [ ],
+      "BookingNotMades" : [ ],
+      "DomainEvents": [ ],
+      "DomainEventsMetadata": [ ]
     }
     """.trimIndent()
 
@@ -264,6 +366,7 @@ class CAS1SubjectAccessRequestServiceTest : SubjectAccessRequestServiceTestBase(
       "Assessments": [ ],
       "AssessmentClarificationNotes": [ ],
       "Bookings": [${bookingsJson(booking)}],
+      "SpaceBookings":  [ ],
       "OfflineApplications":  [ ],
       "BookingExtensions": [ ],
       "Cancellations": [ ],
@@ -299,6 +402,7 @@ class CAS1SubjectAccessRequestServiceTest : SubjectAccessRequestServiceTestBase(
         "Assessments": [ ],
         "AssessmentClarificationNotes": [ ],
         "Bookings":[${bookingsJson(booking)}],
+        "SpaceBookings": [ ],
         "OfflineApplications": [${offlineApplicationJson(booking)}],
         "BookingExtensions": [ ],
         "Cancellations": [ ],
@@ -335,6 +439,7 @@ class CAS1SubjectAccessRequestServiceTest : SubjectAccessRequestServiceTestBase(
         "Assessments": [ ],
         "AssessmentClarificationNotes": [ ],
         "Bookings": [${bookingsJson(booking)}],
+        "SpaceBookings":  [ ],
         "OfflineApplications":  [ ],
         "BookingExtensions":[${bookingExtensionJson(bookingExtension)}],
         "Cancellations": [ ],
@@ -371,6 +476,7 @@ class CAS1SubjectAccessRequestServiceTest : SubjectAccessRequestServiceTestBase(
         "Assessments": [ ],
         "AssessmentClarificationNotes": [ ],
         "Bookings": [${bookingsJson(booking)}],
+        "SpaceBookings":  [ ],
         "OfflineApplications":  [ ],
         "BookingExtensions": [ ],
         "Cancellations": [${cancellationJson(cancellation)}],
@@ -407,6 +513,7 @@ class CAS1SubjectAccessRequestServiceTest : SubjectAccessRequestServiceTestBase(
         "Assessments": [ ],
         "AssessmentClarificationNotes": [ ],
         "Bookings": [${bookingsJson(booking)}],
+        "SpaceBookings":  [ ],
         "OfflineApplications":  [ ],
         "BookingExtensions": [ ],
         "Cancellations": [ ],
@@ -441,6 +548,7 @@ class CAS1SubjectAccessRequestServiceTest : SubjectAccessRequestServiceTestBase(
         "Assessments": [${approvedPremisesAssessmentJson(application, offender, assessment)}],
         "AssessmentClarificationNotes": [ ],
         "Bookings": [ ],
+        "SpaceBookings": [ ],
         "OfflineApplications":  [ ],
         "BookingExtensions": [ ],
         "Cancellations": [ ],
@@ -474,6 +582,7 @@ class CAS1SubjectAccessRequestServiceTest : SubjectAccessRequestServiceTestBase(
       "Assessments": [ ],
       "AssessmentClarificationNotes": [ ],
       "Bookings": [ ],
+      "SpaceBookings": [ ],
       "OfflineApplications":  [ ],
       "BookingExtensions": [ ],
       "Cancellations": [ ],
@@ -512,6 +621,7 @@ class CAS1SubjectAccessRequestServiceTest : SubjectAccessRequestServiceTestBase(
         "AssessmentClarificationNotes": [ ],
         "Bookings": [${bookingsJson(booking)}],
         "OfflineApplications":  [ ],    
+        "SpaceBookings":  [ ],    
         "BookingExtensions": [ ],
         "Cancellations": [ ],
         "BedMoves": [ ],
@@ -549,6 +659,7 @@ class CAS1SubjectAccessRequestServiceTest : SubjectAccessRequestServiceTestBase(
       "Assessments": [${approvedPremisesAssessmentJson(application, offender, assessment)}],
       "AssessmentClarificationNotes": [ ],
       "Bookings":[${bookingsJson(booking)}],
+      "SpaceBookings":  [ ],    
       "OfflineApplications":  [ ],    
       "BookingExtensions": [ ],
       "Cancellations": [ ],
@@ -584,6 +695,7 @@ class CAS1SubjectAccessRequestServiceTest : SubjectAccessRequestServiceTestBase(
         "Assessments": [${approvedPremisesAssessmentJson(application, offender, assessment)}],
         "AssessmentClarificationNotes": [ ],
         "Bookings": [ ],
+        "SpaceBookings": [ ],
         "OfflineApplications":  [ ],    
         "BookingExtensions": [ ],
         "Cancellations": [ ],
@@ -813,6 +925,17 @@ class CAS1SubjectAccessRequestServiceTest : SubjectAccessRequestServiceTestBase(
         "placement_request_id": "${bookingNotMade.placementRequest.id}",
         "created_at": "$CREATED_AT_NO_TZ",
         "notes": "${bookingNotMade.notes}"
+      }
+    """.trimIndent()
+
+  private fun offlineApplicationForSpaceBookingJson(booking: Cas1SpaceBookingEntity) =
+    """
+      {
+        "crn": "${booking.crn}",
+        "noms_number": ${if (booking.application?.nomsNumber != null) "\"${booking.application?.nomsNumber}\"" else null},
+        "offline_application_id":"${booking.offlineApplication!!.id}",
+        "booking_id":"${booking.id}",
+        "created_at":"$CREATED_AT"
       }
     """.trimIndent()
 

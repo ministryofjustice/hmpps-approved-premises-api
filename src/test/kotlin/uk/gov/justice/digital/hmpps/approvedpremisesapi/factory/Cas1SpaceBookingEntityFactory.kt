@@ -167,7 +167,7 @@ class Cas1SpaceBookingEntityFactory : Factory<Cas1SpaceBookingEntity> {
     this.departureReason = { departureReason }
   }
 
-  fun withMoveOnCategory(moveOnCategory: MoveOnCategoryEntity) = apply {
+  fun withMoveOnCategory(moveOnCategory: MoveOnCategoryEntity?) = apply {
     this.departureMoveOnCategory = { moveOnCategory }
   }
 

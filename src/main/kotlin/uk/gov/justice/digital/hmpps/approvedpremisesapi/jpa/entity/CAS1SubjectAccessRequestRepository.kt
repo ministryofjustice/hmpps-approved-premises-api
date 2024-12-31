@@ -441,21 +441,39 @@ from
         select json_agg(offline_applications) as json
         from ( 
             select 
-                B.CRN,
-                B.noms_number ,
+                CASE
+                    WHEN B.id is NOT NULL THEN B.CRN
+                    ELSE sb.crn
+                END AS crn,
+                CASE
+                    WHEN B.id is NOT NULL THEN B.noms_number
+                    ELSE null
+                END AS noms_number,
                 oa.id as offline_application_id, 
-                b.id as booking_id,
+                CASE
+                    WHEN B.id is NOT NULL THEN b.id
+                    ELSE sb.id
+                END AS booking_id,                
                 oa.created_at 
             from offline_applications oa 
-            inner join bookings b on b.offline_application_id = oa.id 
+            left join bookings b on b.offline_application_id = oa.id 
+            left join cas1_space_bookings sb on sb.offline_application_id = oa.id 
             where 
                 (b.crn = :crn
                     or 
-                b.noms_number = :noms_number)
-            and 
-                (:start_date::date is null or b.created_at >= :start_date)
-            and 
-                (:end_date::date is null or b.created_at <= :end_date)
+                b.noms_number = :noms_number) 
+                OR 
+                (sb.crn = :crn)
+            and (
+                  (:start_date::date is null or b.created_at >= :start_date)
+              and 
+                  (:end_date::date is null or b.created_at <= :end_date)
+                ) 
+                OR (
+                  (:start_date::date is null or sb.created_at >= :start_date)
+              and 
+                  (:end_date::date is null or sb.created_at <= :end_date)
+                )
             ) offline_applications
       """.trimIndent(),
       MapSqlParameterSource()
