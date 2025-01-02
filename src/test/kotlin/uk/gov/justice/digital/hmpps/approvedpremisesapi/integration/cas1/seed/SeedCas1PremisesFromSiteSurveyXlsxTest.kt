@@ -1,7 +1,6 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.cas1.seed
 
 import org.assertj.core.api.Assertions.assertThat
-import org.jetbrains.kotlinx.dataframe.api.dataFrameOf
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PropertyStatus
@@ -13,6 +12,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.seed.SeedTes
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesGender
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PostCodeDistrictEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.DataFrameUtils.createNameValueDataFrame
 import java.util.UUID
 
 class SeedCas1PremisesFromSiteSurveyXlsxTest : SeedTestBase() {
@@ -28,8 +28,8 @@ class SeedCas1PremisesFromSiteSurveyXlsxTest : SeedTestBase() {
 
   @Test
   fun `create new premise - all characteristics`() {
-    val header = listOf("Name of AP", "The Premise Name")
-    val rows = mutableListOf(
+    val dataFrame = createNameValueDataFrame(
+      "Name of AP", "The Premise Name",
       "AP Identifier (Q No.)", "Q123",
       "AP Area", "Irrelevant",
       "Probation Delivery Unit", "Irrelevant",
@@ -61,8 +61,6 @@ class SeedCas1PremisesFromSiteSurveyXlsxTest : SeedTestBase() {
       "Does this AP have or has access to a hearing loop?", "Yes",
       "Are there any additional restrictions on people that this AP can accommodate?", "Some useful notes here",
     )
-
-    val dataFrame = dataFrameOf(header, rows)
 
     createXlsxForSeeding(
       fileName = "site_survey.xlsx",
@@ -126,8 +124,8 @@ class SeedCas1PremisesFromSiteSurveyXlsxTest : SeedTestBase() {
 
   @Test
   fun `create new premise - no characteristics`() {
-    val header = listOf("Name of AP", "The Premise Name 2")
-    val rows = mutableListOf(
+    val dataFrame = createNameValueDataFrame(
+      "Name of AP", "The Premise Name 2",
       "AP Identifier (Q No.)", "Q123",
       "AP Area", "Irrelevant",
       "Probation Delivery Unit", "Irrelevant",
@@ -159,8 +157,6 @@ class SeedCas1PremisesFromSiteSurveyXlsxTest : SeedTestBase() {
       "Does this AP have or has access to a hearing loop?", "No",
       "Are there any additional restrictions on people that this AP can accommodate?", "Some useful notes here",
     )
-
-    val dataFrame = dataFrameOf(header, rows)
 
     createXlsxForSeeding(
       fileName = "site_survey.xlsx",
@@ -239,8 +235,8 @@ class SeedCas1PremisesFromSiteSurveyXlsxTest : SeedTestBase() {
       ),
     )
 
-    val header = listOf("Name of AP", "The Premise Name")
-    val rows = mutableListOf(
+    val dataFrame = createNameValueDataFrame(
+      "Name of AP", "The Premise Name",
       "AP Identifier (Q No.)", "QExisting",
       "AP Area", "Irrelevant",
       "Probation Delivery Unit", "Irrelevant",
@@ -272,8 +268,6 @@ class SeedCas1PremisesFromSiteSurveyXlsxTest : SeedTestBase() {
       "Does this AP have or has access to a hearing loop?", "No",
       "Are there any additional restrictions on people that this AP can accommodate?", "Some useful notes here",
     )
-
-    val dataFrame = dataFrameOf(header, rows)
 
     createXlsxForSeeding(
       fileName = "site_survey.xlsx",
