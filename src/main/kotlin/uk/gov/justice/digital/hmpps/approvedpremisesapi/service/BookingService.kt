@@ -239,7 +239,7 @@ class BookingService(
     keyWorkerStaffCode: String?,
   ) = validated<ArrivalEntity> {
     if (booking.premises is TemporaryAccommodationPremisesEntity) {
-      return generalError("CAS3 booking arrival not supported here, preferred method is createCas3Arrival")
+      return generalError("CAS3 booking arrival not supported here, preferred method is createArrival in Cas3BookingService")
     }
 
     if (booking.arrival != null) {
