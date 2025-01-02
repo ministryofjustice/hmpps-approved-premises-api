@@ -32,15 +32,16 @@ class Cas1SeedRoomsFromSiteSurveyXlsxJob(
 ) : ExcelSeedJob {
   private val log = LoggerFactory.getLogger(this::class.java)
   private val questionCriteriaMapping = QuestionCriteriaMapping(characteristicRepository)
-  private lateinit var qCode: String
 
-  override fun processXlsx(file: File, premisesId: UUID) {
+  override fun processXlsx(file: File) {
+    val qCode = Cas1SiteSurveyPremiseFactory().getQCode(file)
+    val premises = findExistingPremisesByQCodeOrThrow(qCode)
+    log.info("Seeding Rooms for premise '${premises.name}' with QCode '$qCode'")
+
     val roomsWorksheet = DataFrame.readExcel(file, "Sheet3")
-    var premises = findExistingPremisesOrThrow(premisesId)
-    qCode = premises.qCode
 
-    var rooms = buildRooms(roomsWorksheet, premisesId)
-    val characteristics = buildCharacteristics(roomsWorksheet)
+    var rooms = buildRooms(roomsWorksheet, qCode, premises.id)
+    val characteristics = buildCharacteristics(roomsWorksheet, qCode)
 
     rooms.forEach {
       characteristics[it.code]?.let { roomCharacteristics -> it.characteristics.addAll(roomCharacteristics.toList()) }
@@ -48,11 +49,11 @@ class Cas1SeedRoomsFromSiteSurveyXlsxJob(
 
     rooms = createOrUpdateRooms(rooms)
 
-    val beds = buildBeds(roomsWorksheet, rooms)
+    val beds = buildBeds(roomsWorksheet, qCode, rooms)
     createBedsIfNotExist(beds)
   }
 
-  private fun buildRooms(dataFrame: DataFrame<*>, premisesId: UUID): MutableList<RoomEntity> {
+  private fun buildRooms(dataFrame: DataFrame<*>, qCode: String, premisesId: UUID): MutableList<RoomEntity> {
     val rooms = mutableListOf<RoomEntity>()
 
     for (i in 1..<dataFrame.columnsCount()) {
@@ -64,7 +65,7 @@ class Cas1SeedRoomsFromSiteSurveyXlsxJob(
     return rooms
   }
 
-  private fun buildCharacteristics(dataFrame: DataFrame<*>): MutableMap<String, MutableSet<CharacteristicEntity>> {
+  private fun buildCharacteristics(dataFrame: DataFrame<*>, qCode: String): MutableMap<String, MutableSet<CharacteristicEntity>> {
     var premisesCharacteristics = mutableMapOf<String, MutableSet<CharacteristicEntity>>()
 
     questionCriteriaMapping.questionToCharacterEntityMapping.forEach { (question, characteristic) ->
@@ -86,7 +87,7 @@ class Cas1SeedRoomsFromSiteSurveyXlsxJob(
     return premisesCharacteristics
   }
 
-  private fun buildBeds(dataFrame: DataFrame<*>, rooms: MutableList<RoomEntity>): List<BedEntity> {
+  private fun buildBeds(dataFrame: DataFrame<*>, qCode: String, rooms: MutableList<RoomEntity>): List<BedEntity> {
     val beds = mutableListOf<BedEntity>()
     for (i in 1..<dataFrame.columnsCount()) {
       val roomAnswers = dataFrame.getColumn(i)
@@ -153,10 +154,9 @@ class Cas1SeedRoomsFromSiteSurveyXlsxJob(
     createdAt = null,
   )
 
-  private fun findExistingPremisesOrThrow(premisesId: UUID): ApprovedPremisesEntity {
-    return approvedPremisesRepository.findByIdOrNull(premisesId) ?: throw SiteSurveyImportException(
-      "No premises with id '$premisesId' found.",
-    )
+  private fun findExistingPremisesByQCodeOrThrow(qCode: String): ApprovedPremisesEntity {
+    return approvedPremisesRepository.findByQCode(qCode)
+      ?: throw SiteSurveyImportException("No premises with qcode '$qCode' found.")
   }
 }
 

@@ -13,7 +13,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremi
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesGender
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PostCodeDistrictEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.DataFrameUtils.createNameValueDataFrame
-import java.util.UUID
 
 class SeedCas1PremisesFromSiteSurveyXlsxTest : SeedTestBase() {
 
@@ -69,7 +68,6 @@ class SeedCas1PremisesFromSiteSurveyXlsxTest : SeedTestBase() {
 
     seedXlsxService.seedExcelData(
       SeedFromExcelFileType.CAS1_IMPORT_SITE_SURVEY_PREMISES,
-      UUID.randomUUID(),
       "site_survey.xlsx",
     )
 
@@ -165,7 +163,6 @@ class SeedCas1PremisesFromSiteSurveyXlsxTest : SeedTestBase() {
 
     seedXlsxService.seedExcelData(
       SeedFromExcelFileType.CAS1_IMPORT_SITE_SURVEY_PREMISES,
-      UUID.randomUUID(),
       "site_survey.xlsx",
     )
 
@@ -276,7 +273,6 @@ class SeedCas1PremisesFromSiteSurveyXlsxTest : SeedTestBase() {
 
     seedXlsxService.seedExcelData(
       SeedFromExcelFileType.CAS1_IMPORT_SITE_SURVEY_PREMISES,
-      UUID.randomUUID(),
       "site_survey.xlsx",
     )
 

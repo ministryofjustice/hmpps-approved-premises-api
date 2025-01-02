@@ -6,12 +6,20 @@
 
 set -e
 
+SEED_JOB_ID=$1
+FILE_NAME=$2
+
+if [ -z "$SEED_JOB_ID" ] || [ -z "$FILE_NAME" ]
+then
+  echo "Usage: run_seed_from_excel_job seed_job_id file_name"
+  exit 1
+fi
+
 curl --location --request POST 'http://127.0.0.1:8080/seedFromExcel' \
 --header 'Content-Type: application/json' \
 --data-raw '{
-    "seedType": "'$1'",
-    "premisesId": "'$2'",
-    "fileName": "'"$3"'"
+    "seedType": "'"$SEED_JOB_ID"'",
+    "fileName": "'"$FILE_NAME"'"
 }'
 
 echo "Requested job - check the application logs for processing status"

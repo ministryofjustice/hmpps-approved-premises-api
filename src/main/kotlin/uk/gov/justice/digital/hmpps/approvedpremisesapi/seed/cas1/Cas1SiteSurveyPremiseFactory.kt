@@ -3,17 +3,26 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.seed.cas1
 import org.jetbrains.kotlinx.dataframe.AnyCol
 import org.jetbrains.kotlinx.dataframe.DataFrame
 import org.jetbrains.kotlinx.dataframe.api.getColumn
+import org.jetbrains.kotlinx.dataframe.io.readExcel
 import org.jetbrains.kotlinx.dataframe.name
+import java.io.File
 
 class Cas1SiteSurveyPremiseFactory {
 
-  fun load(dataFrame: DataFrame<*>) = dataFrame.toInternalModel()
+  fun load(file: File) = toDataFame(file).toInternalModel()
+
+  fun getQCode(file: File) = toDataFame(file).getQCode()
+
+  private fun toDataFame(file: File) = DataFrame.readExcel(file, "Sheet2")
+
+  private fun DataFrame<*>.getQCode(): String {
+    ensureCorrectColumnCount()
+
+    return resolveAnswer("AP Identifier (Q No.)")
+  }
 
   private fun DataFrame<*>.toInternalModel(): Cas1SiteSurveyPremise {
-    val columnsCount = columnsCount()
-    if (columnsCount < 2) {
-      error("Inadequate number of columns. Expected at least 2 columns, got $columnsCount")
-    }
+    ensureCorrectColumnCount()
 
     return Cas1SiteSurveyPremise(
       name = resolveAnswer("Name of AP"),
@@ -51,6 +60,13 @@ class Cas1SiteSurveyPremiseFactory {
       hasAHearingLoop = resolveAnswer("Does this AP have or has access to a hearing loop?").dropDownYesNoToBoolean(),
       additionalRestrictions = resolveAnswer("Are there any additional restrictions on people that this AP can accommodate?"),
     )
+  }
+
+  private fun DataFrame<*>.ensureCorrectColumnCount() {
+    val columnsCount = columnsCount()
+    if (columnsCount < 2) {
+      error("Inadequate number of columns. Expected at least 2 columns, got $columnsCount")
+    }
   }
 
   /**

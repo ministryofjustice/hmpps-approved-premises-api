@@ -14,6 +14,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.seed.SeedLogger
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.seed.SeedService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.seed.SeedXlsxService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.LogEntry
+import java.io.File
 import java.nio.file.Files
 import java.nio.file.StandardOpenOption
 import kotlin.io.path.Path
@@ -84,6 +85,26 @@ abstract class SeedTestBase : IntegrationTestBase() {
     sheets.forEach { (name, dataFrame) ->
       dataFrame.writeExcel(
         path = file.pathString,
+        sheetName = name,
+        keepFile = fileExists,
+      )
+      fileExists = true
+    }
+  }
+
+  protected fun withXlsx(xlsxName: String, sheets: Map<String, DataFrame<*>>) {
+    if (!Files.isDirectory(Path(seedFilePrefix))) {
+      Files.createDirectory(Path(seedFilePrefix))
+    }
+    val path = "$seedFilePrefix/$xlsxName.xlsx"
+    if (File(path).exists()) {
+      File(path).delete()
+    }
+
+    var fileExists = false
+    sheets.forEach { (name, dataFrame) ->
+      dataFrame.writeExcel(
+        "$seedFilePrefix/$xlsxName.xlsx",
         sheetName = name,
         keepFile = fileExists,
       )

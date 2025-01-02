@@ -12,7 +12,7 @@ class SeedFromExcelController(private val seedXslxService: SeedXlsxService) : Se
   override fun seedFromExcelPost(seedFromExcelRequest: SeedFromExcelRequest): ResponseEntity<Unit> {
     throwIfNotLoopbackRequest()
 
-    seedXslxService.seedExcelData(seedFromExcelRequest.seedType, seedFromExcelRequest.premisesId, seedFromExcelRequest.fileName)
+    seedXslxService.seedExcelData(seedFromExcelRequest.seedType, seedFromExcelRequest.fileName)
 
     return ResponseEntity(HttpStatus.ACCEPTED)
   }

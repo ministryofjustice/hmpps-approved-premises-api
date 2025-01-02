@@ -9,7 +9,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.SeedFromExcelF
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.seed.SeedTestBase
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.seed.cas1.QuestionCriteriaMapping
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.seed.cas1.SiteSurveyImportException
-import java.util.UUID
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.DataFrameUtils.createNameValueDataFrame
 
 @TestInstance(TestInstance.Lifecycle.PER_METHOD)
 class SeedCas1RoomsFromSiteSurveyXlsxTest : SeedTestBase() {
@@ -37,12 +37,11 @@ class SeedCas1RoomsFromSiteSurveyXlsxTest : SeedTestBase() {
     val localAuthorityArea = localAuthorityEntityFactory.produceAndPersist()
     val probationRegion = probationRegionEntityFactory.produceAndPersist()
     val qCode = "Q999"
-    val premises = approvedPremisesEntityFactory.produceAndPersist {
+    approvedPremisesEntityFactory.produceAndPersist {
       withLocalAuthorityArea(localAuthorityArea)
       withProbationRegion(probationRegion)
       withQCode(qCode)
     }
-    val premisesId = premises.id
 
     val header = listOf("Unique Reference Number for Bed", "SWABI01NEW")
     val rows = mutableListOf(
@@ -53,20 +52,23 @@ class SeedCas1RoomsFromSiteSurveyXlsxTest : SeedTestBase() {
     )
     rows.addCharacteristics(1, mapOf("Is this room located on the ground floor?" to listOf(0)))
 
-    val dataFrame = dataFrameOf(header, rows)
+    val roomsSheet = dataFrameOf(header, rows)
 
-    createXlsxForSeeding(
-      fileName = "example.xlsx",
-      sheets = mapOf("Sheet3" to dataFrame),
+    withXlsx(
+      xlsxName = "example",
+      sheets = mapOf(
+        "Sheet2" to createNameValueDataFrame("AP Identifier (Q No.)", qCode),
+        "Sheet3" to roomsSheet,
+      ),
     )
 
     seedXlsxService.seedExcelData(
       SeedFromExcelFileType.CAS1_IMPORT_SITE_SURVEY_ROOMS,
-      premisesId,
       "example.xlsx",
     )
 
     val newRoom = roomRepository.findByCode("Q999 - 1")
+    assertThat(newRoom).isNotNull
     assertThat(newRoom!!.characteristics).anyMatch {
       it.name == "Is this room located on the ground floor?" &&
         it.propertyName == "isGroundFloor"
@@ -85,12 +87,11 @@ class SeedCas1RoomsFromSiteSurveyXlsxTest : SeedTestBase() {
     val localAuthorityArea = localAuthorityEntityFactory.produceAndPersist()
     val probationRegion = probationRegionEntityFactory.produceAndPersist()
     val qCode = "Q999"
-    val premises = approvedPremisesEntityFactory.produceAndPersist {
+    approvedPremisesEntityFactory.produceAndPersist {
       withLocalAuthorityArea(localAuthorityArea)
       withProbationRegion(probationRegion)
       withQCode(qCode)
     }
-    val premisesId = premises.id
 
     val header = listOf("Unique Reference Number for Bed", "SWABI01NEW", "SWABI02NEW", "SWABI03NEW")
     val rows = mutableListOf(
@@ -105,16 +106,18 @@ class SeedCas1RoomsFromSiteSurveyXlsxTest : SeedTestBase() {
     )
     rows.addCharacteristics(3, mapOf("Is this room located on the ground floor?" to listOf(1)))
 
-    val dataFrame = dataFrameOf(header, rows)
+    val roomsSheet = dataFrameOf(header, rows)
 
     createXlsxForSeeding(
       fileName = "example.xlsx",
-      sheets = mapOf("Sheet3" to dataFrame),
+      sheets = mapOf(
+        "Sheet2" to createNameValueDataFrame("AP Identifier (Q No.)", qCode),
+        "Sheet3" to roomsSheet,
+      ),
     )
 
     seedXlsxService.seedExcelData(
       SeedFromExcelFileType.CAS1_IMPORT_SITE_SURVEY_ROOMS,
-      premisesId,
       "example.xlsx",
     )
 
@@ -157,13 +160,11 @@ class SeedCas1RoomsFromSiteSurveyXlsxTest : SeedTestBase() {
     val localAuthorityArea = localAuthorityEntityFactory.produceAndPersist()
     val probationRegion = probationRegionEntityFactory.produceAndPersist()
     val qCode = "Q999"
-    val premises = approvedPremisesEntityFactory.produceAndPersist {
+    approvedPremisesEntityFactory.produceAndPersist {
       withLocalAuthorityArea(localAuthorityArea)
       withProbationRegion(probationRegion)
       withQCode(qCode)
     }
-    val premisesId = premises.id
-
     val header = listOf("Unique Reference Number for Bed", "SWABI01NEW", "SWABI02NEW", "SWABI03NEW")
     val rows = mutableListOf(
       "Room Number / Name",
@@ -177,16 +178,18 @@ class SeedCas1RoomsFromSiteSurveyXlsxTest : SeedTestBase() {
     )
     rows.addCharacteristics(3, mapOf("Is this room located on the ground floor?" to listOf(1, 2)))
 
-    val dataFrame = dataFrameOf(header, rows)
+    val roomsSheet = dataFrameOf(header, rows)
 
     createXlsxForSeeding(
       fileName = "example.xlsx",
-      sheets = mapOf("Sheet3" to dataFrame),
+      sheets = mapOf(
+        "Sheet2" to createNameValueDataFrame("AP Identifier (Q No.)", qCode),
+        "Sheet3" to roomsSheet,
+      ),
     )
 
     seedXlsxService.seedExcelData(
       SeedFromExcelFileType.CAS1_IMPORT_SITE_SURVEY_ROOMS,
-      premisesId,
       "example.xlsx",
     )
 
@@ -226,12 +229,11 @@ class SeedCas1RoomsFromSiteSurveyXlsxTest : SeedTestBase() {
     val localAuthorityArea = localAuthorityEntityFactory.produceAndPersist()
     val probationRegion = probationRegionEntityFactory.produceAndPersist()
     val qCode = "Q999"
-    val premises = approvedPremisesEntityFactory.produceAndPersist {
+    approvedPremisesEntityFactory.produceAndPersist {
       withLocalAuthorityArea(localAuthorityArea)
       withProbationRegion(probationRegion)
       withQCode(qCode)
     }
-    val premisesId = premises.id
 
     val header = listOf("Unique Reference Number for Bed", "SWABI01NEW")
     val rows = mutableListOf(
@@ -242,16 +244,18 @@ class SeedCas1RoomsFromSiteSurveyXlsxTest : SeedTestBase() {
     )
     rows.addCharacteristics(1)
 
-    val dataFrame = dataFrameOf(header, rows)
+    val roomsSheet = dataFrameOf(header, rows)
 
     createXlsxForSeeding(
       fileName = "example.xlsx",
-      sheets = mapOf("Sheet3" to dataFrame),
+      sheets = mapOf(
+        "Sheet2" to createNameValueDataFrame("AP Identifier (Q No.)", qCode),
+        "Sheet3" to roomsSheet,
+      ),
     )
 
     seedXlsxService.seedExcelData(
       SeedFromExcelFileType.CAS1_IMPORT_SITE_SURVEY_ROOMS,
-      premisesId,
       "example.xlsx",
     )
 
@@ -276,7 +280,6 @@ class SeedCas1RoomsFromSiteSurveyXlsxTest : SeedTestBase() {
       withProbationRegion(probationRegion)
       withQCode(qCode)
     }
-    val premisesId = premises.id
     val roomCode = "$qCode - 1"
     roomEntityFactory.produceAndPersist {
       withPremises(premises)
@@ -292,16 +295,18 @@ class SeedCas1RoomsFromSiteSurveyXlsxTest : SeedTestBase() {
     )
     rows.addCharacteristics(1, mapOf("Is this room located on the ground floor?" to listOf(0)))
 
-    val dataFrame = dataFrameOf(header, rows)
+    val roomsSheet = dataFrameOf(header, rows)
 
     createXlsxForSeeding(
       fileName = "example.xlsx",
-      sheets = mapOf("Sheet3" to dataFrame),
+      sheets = mapOf(
+        "Sheet2" to createNameValueDataFrame("AP Identifier (Q No.)", qCode),
+        "Sheet3" to roomsSheet,
+      ),
     )
 
     seedXlsxService.seedExcelData(
       SeedFromExcelFileType.CAS1_IMPORT_SITE_SURVEY_ROOMS,
-      premisesId,
       "example.xlsx",
     )
 
@@ -329,7 +334,6 @@ class SeedCas1RoomsFromSiteSurveyXlsxTest : SeedTestBase() {
       withProbationRegion(probationRegion)
       withQCode(qCode)
     }
-    val premisesId = premises.id
     val roomCode = "$qCode - 1"
     val room = roomEntityFactory.produceAndPersist {
       withPremises(premises)
@@ -350,16 +354,18 @@ class SeedCas1RoomsFromSiteSurveyXlsxTest : SeedTestBase() {
     )
     rows.addCharacteristics(1, mapOf("Is this room located on the ground floor?" to listOf(0)))
 
-    val dataFrame = dataFrameOf(header, rows)
+    val roomsSheet = dataFrameOf(header, rows)
 
     createXlsxForSeeding(
       fileName = "example.xlsx",
-      sheets = mapOf("Sheet3" to dataFrame),
+      sheets = mapOf(
+        "Sheet2" to createNameValueDataFrame("AP Identifier (Q No.)", qCode),
+        "Sheet3" to roomsSheet,
+      ),
     )
 
     seedXlsxService.seedExcelData(
       SeedFromExcelFileType.CAS1_IMPORT_SITE_SURVEY_ROOMS,
-      premisesId,
       "example.xlsx",
     )
 
@@ -387,7 +393,6 @@ class SeedCas1RoomsFromSiteSurveyXlsxTest : SeedTestBase() {
       withProbationRegion(probationRegion)
       withQCode(qCode)
     }
-    val premisesId = premises.id
     val roomCode = "$qCode - 1"
     val room = roomEntityFactory.produceAndPersist {
       withPremises(premises)
@@ -408,16 +413,18 @@ class SeedCas1RoomsFromSiteSurveyXlsxTest : SeedTestBase() {
     )
     rows.addCharacteristics(1)
 
-    val dataFrame = dataFrameOf(header, rows)
+    val roomsSheet = dataFrameOf(header, rows)
 
     createXlsxForSeeding(
       fileName = "example.xlsx",
-      sheets = mapOf("Sheet3" to dataFrame),
+      sheets = mapOf(
+        "Sheet2" to createNameValueDataFrame("AP Identifier (Q No.)", qCode),
+        "Sheet3" to roomsSheet,
+      ),
     )
 
     seedXlsxService.seedExcelData(
       SeedFromExcelFileType.CAS1_IMPORT_SITE_SURVEY_ROOMS,
-      premisesId,
       "example.xlsx",
     )
 
@@ -434,11 +441,12 @@ class SeedCas1RoomsFromSiteSurveyXlsxTest : SeedTestBase() {
   fun `Invalid questions throws exception, fails to process xlsx, rolls back transaction and logs an error`() {
     val localAuthorityArea = localAuthorityEntityFactory.produceAndPersist()
     val probationRegion = probationRegionEntityFactory.produceAndPersist()
-    val premises = approvedPremisesEntityFactory.produceAndPersist {
+    val qCode = "Q999"
+    approvedPremisesEntityFactory.produceAndPersist {
       withLocalAuthorityArea(localAuthorityArea)
       withProbationRegion(probationRegion)
+      withQCode("Q999")
     }
-    val premisesId = premises.id
 
     val header = listOf("Unique Reference Number for Bed", "SWABI01NEW")
     val rows = mutableListOf(
@@ -450,16 +458,18 @@ class SeedCas1RoomsFromSiteSurveyXlsxTest : SeedTestBase() {
     rows.addCharacteristics(1)
     rows.replaceAll { if (it == "Is this room located on the ground floor?") "Bad question" else it }
 
-    val dataFrame = dataFrameOf(header, rows)
+    val roomsSheet = dataFrameOf(header, rows)
 
     createXlsxForSeeding(
       fileName = "example.xlsx",
-      sheets = mapOf("Sheet3" to dataFrame),
+      sheets = mapOf(
+        "Sheet2" to createNameValueDataFrame("AP Identifier (Q No.)", qCode),
+        "Sheet3" to roomsSheet,
+      ),
     )
 
     seedXlsxService.seedExcelData(
       SeedFromExcelFileType.CAS1_IMPORT_SITE_SURVEY_ROOMS,
-      premisesId,
       "example.xlsx",
     )
 
@@ -478,11 +488,12 @@ class SeedCas1RoomsFromSiteSurveyXlsxTest : SeedTestBase() {
   fun `Invalid answer throws exception, fails to process xlsx, rolls back transaction and logs an error`() {
     val localAuthorityArea = localAuthorityEntityFactory.produceAndPersist()
     val probationRegion = probationRegionEntityFactory.produceAndPersist()
-    val premises = approvedPremisesEntityFactory.produceAndPersist {
+    val qCode = "Q999"
+    approvedPremisesEntityFactory.produceAndPersist {
       withLocalAuthorityArea(localAuthorityArea)
       withProbationRegion(probationRegion)
+      withQCode("Q999")
     }
-    val premisesId = premises.id
 
     val header = listOf("Unique Reference Number for Bed", "SWABI01NEW")
     val rows = mutableListOf(
@@ -494,16 +505,18 @@ class SeedCas1RoomsFromSiteSurveyXlsxTest : SeedTestBase() {
     rows.addCharacteristics(1, mapOf("Is this room located on the ground floor?" to listOf(0)))
     rows.replaceAll { if (it == "Yes") "Bad answer" else it }
 
-    val dataFrame = dataFrameOf(header, rows)
+    val roomsSheet = dataFrameOf(header, rows)
 
     createXlsxForSeeding(
       fileName = "example.xlsx",
-      sheets = mapOf("Sheet3" to dataFrame),
+      sheets = mapOf(
+        "Sheet2" to createNameValueDataFrame("AP Identifier (Q No.)", qCode),
+        "Sheet3" to roomsSheet,
+      ),
     )
 
     seedXlsxService.seedExcelData(
       SeedFromExcelFileType.CAS1_IMPORT_SITE_SURVEY_ROOMS,
-      premisesId,
       "example.xlsx",
     )
 
@@ -522,16 +535,18 @@ class SeedCas1RoomsFromSiteSurveyXlsxTest : SeedTestBase() {
   fun `Creating a new room for a premise that doesn't exist throws error`() {
     val header = listOf("Unique Reference Number for Bed", "SWABI01NEW")
     val rows = listOf("", "")
-    val dataFrame = dataFrameOf(header, rows)
+    val roomsSheet = dataFrameOf(header, rows)
 
     createXlsxForSeeding(
       fileName = "example.xlsx",
-      sheets = mapOf("Sheet3" to dataFrame),
+      sheets = mapOf(
+        "Sheet2" to createNameValueDataFrame("AP Identifier (Q No.)", "INVALIDQCODE"),
+        "Sheet3" to roomsSheet,
+      ),
     )
 
     seedXlsxService.seedExcelData(
       SeedFromExcelFileType.CAS1_IMPORT_SITE_SURVEY_ROOMS,
-      UUID.fromString("97d6b3f1-3121-4afb-a4a6-e4a84b533c18"),
       "example.xlsx",
     )
 
@@ -542,7 +557,7 @@ class SeedCas1RoomsFromSiteSurveyXlsxTest : SeedTestBase() {
           it.throwable != null &&
           it.throwable.message == "Unable to process XLSX file" &&
           it.throwable.cause is SiteSurveyImportException &&
-          it.throwable.cause!!.message == "No premises with id '97d6b3f1-3121-4afb-a4a6-e4a84b533c18' found."
+          it.throwable.cause!!.message == "No premises with qcode 'INVALIDQCODE' found."
       }
   }
 }
