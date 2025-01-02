@@ -1521,8 +1521,6 @@ components:
           $ref: '#/components/schemas/BookingId'
         premises:
           $ref: '#/components/schemas/Premises'
-        keyWorker:
-          $ref: '#/components/schemas/StaffMember'
         recordedBy:
           $ref: '#/components/schemas/StaffMember'
         arrivedAt:
@@ -1641,8 +1639,6 @@ components:
           $ref: '#/components/schemas/ApplicationUrl'
         bookingId:
           $ref: '#/components/schemas/BookingId'
-        keyWorker:
-          $ref: '#/components/schemas/StaffMember'
         recordedBy:
           $ref: '#/components/schemas/StaffMember'
         premises:
