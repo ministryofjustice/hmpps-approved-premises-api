@@ -405,7 +405,7 @@ class BookingServiceTest {
       )
 
       assertThat(result).isInstanceOf(ValidatableActionResult.GeneralValidationError::class.java)
-      assertThat((result as ValidatableActionResult.GeneralValidationError).message).isEqualTo("CAS3 booking arrival not supported here, preferred method is createCas3Arrival")
+      assertThat((result as ValidatableActionResult.GeneralValidationError).message).isEqualTo("CAS3 booking arrival not supported here, preferred method is createArrival in Cas3BookingService")
       verify(exactly = 0) {
         mockCas3DomainEventService.savePersonArrivedEvent(bookingEntity, user)
       }
