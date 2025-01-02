@@ -142,6 +142,7 @@ class SeedCas1BookingToSpaceBookingTest : SeedTestBase() {
 
     deliusBookingImportRepository.save(
       Cas1DeliusBookingImportEntity(
+        id = UUID.randomUUID(),
         bookingId = booking1ManagementInfoFromDelius.id,
         crn = "irrelevant",
         eventNumber = "irrelevant",
@@ -161,6 +162,7 @@ class SeedCas1BookingToSpaceBookingTest : SeedTestBase() {
         nonArrivalReasonCode = "narc1",
         nonArrivalReasonDescription = null,
         nonArrivalNotes = "the non arrival notes",
+        premisesQcode = "hostel code",
       ),
     )
 
@@ -189,6 +191,7 @@ class SeedCas1BookingToSpaceBookingTest : SeedTestBase() {
 
     deliusBookingImportRepository.save(
       Cas1DeliusBookingImportEntity(
+        id = UUID.randomUUID(),
         bookingId = booking2MinimalManagementInfoFromDelius.id,
         crn = "irrelevant",
         eventNumber = "irrelevant",
@@ -208,6 +211,7 @@ class SeedCas1BookingToSpaceBookingTest : SeedTestBase() {
         nonArrivalReasonCode = null,
         nonArrivalReasonDescription = null,
         nonArrivalNotes = null,
+        premisesQcode = "hostel code",
       ),
     )
 

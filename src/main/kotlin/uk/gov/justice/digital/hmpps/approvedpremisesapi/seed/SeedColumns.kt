@@ -10,7 +10,7 @@ data class SeedColumns(
 ) {
   fun getStringOrNull(label: String) = columns[label]?.trim()?.ifBlank { null }
 
-  fun getUuidOrNull(label: String) = columns[label]?.let { UUID.fromString(it.trim()) }
+  fun getUuidOrNull(label: String): UUID? = getStringOrNull(label)?.let { UUID.fromString(it) }
 
   fun getIntOrNull(label: String) = columns[label]?.toIntOrNull()
 
@@ -25,7 +25,6 @@ data class SeedColumns(
 
   fun getDateFromUtcDateTimeOrNull(label: String): LocalDate? {
     val rawValue = getStringOrNull(label) ?: return null
-
     return LocalDate.parse(rawValue.substring(startIndex = 0, endIndex = 10))
   }
 
