@@ -62,6 +62,17 @@ class Cas1SpaceSearchTest : InitialiseDatabasePerClassTestBase() {
         withLatitude((it * -0.01) - 0.08)
         withLongitude((it * 0.01) + 51.49)
         withSupportsSpaceBookings(true)
+        withCharacteristicsList(emptyList())
+      }
+
+      val premiseWithCharacteristics = approvedPremisesEntityFactory.produceAndPersist {
+        withYieldedProbationRegion { givenAProbationRegion() }
+        withYieldedLocalAuthorityArea {
+          localAuthorityEntityFactory.produceAndPersist()
+        }
+        withLatitude(1.0)
+        withLongitude(2.0)
+        withSupportsSpaceBookings(true)
         withCharacteristicsList(
           listOf(
             characteristicRepository.findCas1ByPropertyName("hasWideAccessToCommunalAreas")!!,
@@ -69,6 +80,13 @@ class Cas1SpaceSearchTest : InitialiseDatabasePerClassTestBase() {
             characteristicRepository.findCas1ByPropertyName("hasLift")!!,
           ),
         )
+      }.also {
+        roomEntityFactory.produceAndPersist {
+          withPremises(it)
+          withCharacteristics(
+            characteristicRepository.findCas1ByPropertyName("hasEnSuite")!!,
+          )
+        }
       }
 
       // premise that doesn't support space bookings
@@ -104,20 +122,24 @@ class Cas1SpaceSearchTest : InitialiseDatabasePerClassTestBase() {
 
       val results = response.responseBody.blockFirst()!!
 
-      assertThat(results.resultsCount).isEqualTo(5)
+      assertThat(results.resultsCount).isEqualTo(6)
       assertThat(results.searchCriteria).isEqualTo(searchParameters)
 
-      val expectedCharacteristics = listOf(
-        Cas1SpaceCharacteristic.hasWideAccessToCommunalAreas,
-        Cas1SpaceCharacteristic.hasWideStepFreeAccess,
-        Cas1SpaceCharacteristic.hasLift,
+      assertThatResultMatches(results.results[0], premises[0], expectedCharacteristics = emptyList())
+      assertThatResultMatches(results.results[1], premises[1], expectedCharacteristics = emptyList())
+      assertThatResultMatches(results.results[2], premises[2], expectedCharacteristics = emptyList())
+      assertThatResultMatches(results.results[3], premises[3], expectedCharacteristics = emptyList())
+      assertThatResultMatches(results.results[4], premises[4], expectedCharacteristics = emptyList())
+      assertThatResultMatches(
+        results.results[5],
+        premiseWithCharacteristics,
+        expectedCharacteristics = listOf(
+          Cas1SpaceCharacteristic.hasWideAccessToCommunalAreas,
+          Cas1SpaceCharacteristic.hasWideStepFreeAccess,
+          Cas1SpaceCharacteristic.hasLift,
+          Cas1SpaceCharacteristic.hasEnSuite,
+        ),
       )
-
-      assertThatResultMatches(results.results[0], premises[0], expectedCharacteristics = expectedCharacteristics)
-      assertThatResultMatches(results.results[1], premises[1], expectedCharacteristics = expectedCharacteristics)
-      assertThatResultMatches(results.results[2], premises[2], expectedCharacteristics = expectedCharacteristics)
-      assertThatResultMatches(results.results[3], premises[3], expectedCharacteristics = expectedCharacteristics)
-      assertThatResultMatches(results.results[4], premises[4], expectedCharacteristics = expectedCharacteristics)
     }
   }
 

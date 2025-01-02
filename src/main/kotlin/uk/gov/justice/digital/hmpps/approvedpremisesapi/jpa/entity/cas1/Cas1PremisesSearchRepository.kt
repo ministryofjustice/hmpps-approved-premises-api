@@ -61,13 +61,15 @@ FROM
     p.postcode AS postcode,
     aa.id AS ap_area_id,
     aa.name AS ap_area_name,
-    ARRAY_AGG (characteristics.property_name) as characteristics
+    ARRAY_AGG (DISTINCT characteristics.property_name) as characteristics
   FROM approved_premises ap
   INNER JOIN premises p ON ap.premises_id = p.id
   INNER JOIN probation_regions pr ON p.probation_region_id = pr.id
   INNER JOIN ap_areas aa ON pr.ap_area_id = aa.id
+  LEFT OUTER JOIN rooms ON rooms.premises_id = p.id
   LEFT OUTER JOIN premises_characteristics premises_chars ON premises_chars.premises_id = p.id
-  LEFT OUTER JOIN characteristics ON characteristics.id = premises_chars.characteristic_id
+  LEFT OUTER JOIN room_characteristics room_chars ON room_chars.room_id = rooms.id
+  LEFT OUTER JOIN characteristics ON (characteristics.id IN (premises_chars.characteristic_id,room_chars.characteristic_id))
   WHERE 
     ap.supports_space_bookings = true AND
     ap.gender = #SPECIFIED_GENDER#
