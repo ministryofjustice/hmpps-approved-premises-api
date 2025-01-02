@@ -67,7 +67,6 @@ class Cas1SpaceBookingManagementDomainEventService(
     val premises = mapApprovedPremisesEntityToPremises(updatedCas1SpaceBooking.premises)
     val offenderDetails = getOffenderForCrn(updatedCas1SpaceBooking.crn)
     val recordedByStaffDetails = getStaffDetailsByUsername(arrivalInfo.recordedBy.deliusUsername)
-    val keyWorker = getStaffDetailsByStaffCode(updatedCas1SpaceBooking.keyWorkerStaffCode)
     val eventNumber = updatedCas1SpaceBooking.deliusEventNumber!!
     val applicationId = updatedCas1SpaceBooking.applicationFacade.id
     val applicationSubmittedAt = updatedCas1SpaceBooking.applicationFacade.submittedAt
@@ -99,7 +98,6 @@ class Cas1SpaceBookingManagementDomainEventService(
             deliusEventNumber = eventNumber,
             premises = premises,
             applicationSubmittedOn = applicationSubmittedAt.toLocalDate(),
-            keyWorker = keyWorker,
             arrivedAt = actualArrivalDateTime,
             expectedDepartureOn = updatedCas1SpaceBooking.expectedDepartureDate,
             notes = null,
@@ -180,7 +178,6 @@ class Cas1SpaceBookingManagementDomainEventService(
     val premises = mapApprovedPremisesEntityToPremises(departedCas1SpaceBooking.premises)
     val offenderDetails = getOffenderForCrn(departedCas1SpaceBooking.crn)
     val recordedByStaffDetails = getStaffDetailsByUsername(departureInfo.recordedBy.deliusUsername)
-    val keyWorker = getStaffDetailsByStaffCode(departedCas1SpaceBooking.keyWorkerStaffCode)
     val eventNumber = departedCas1SpaceBooking.deliusEventNumber!!
 
     val actualDepartureDateTime = departureInfo.actualDepartureDate.atTime(departureInfo.actualDepartureTime).toInstant()
@@ -209,7 +206,6 @@ class Cas1SpaceBookingManagementDomainEventService(
             ),
             deliusEventNumber = eventNumber,
             premises = premises,
-            keyWorker = keyWorker!!,
             recordedBy = recordedByStaffDetails.toStaffMember(),
             departedAt = actualDepartureDateTime,
             reason = departureReason.name,

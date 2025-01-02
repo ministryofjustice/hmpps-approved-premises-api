@@ -20,7 +20,6 @@ class PersonArrivedFactory : Factory<PersonArrived> {
   private var bookingId: Yielded<UUID> = { UUID.randomUUID() }
   private var premises: Yielded<Premises> = { EventPremisesFactory().produce() }
   private var applicationSubmittedOn: Yielded<LocalDate> = { LocalDate.now() }
-  private var keyWorker: Yielded<StaffMember> = { StaffMemberFactory().produce() }
   private var arrivedAt: Yielded<Instant> = { Instant.now().randomDateTimeBefore(5) }
   private var expectedDepartureOn: Yielded<LocalDate> = { LocalDate.now().minusDays(5) }
   private var notes: Yielded<String?> = { null }
@@ -54,10 +53,6 @@ class PersonArrivedFactory : Factory<PersonArrived> {
     this.applicationSubmittedOn = { applicationSubmittedOn }
   }
 
-  fun withKeyWorker(keyWorker: StaffMember) = apply {
-    this.keyWorker = { keyWorker }
-  }
-
   fun withArrivedAt(arrivedAt: Instant) = apply {
     this.arrivedAt = { arrivedAt }
   }
@@ -78,7 +73,6 @@ class PersonArrivedFactory : Factory<PersonArrived> {
     bookingId = this.bookingId(),
     premises = this.premises(),
     applicationSubmittedOn = this.applicationSubmittedOn(),
-    keyWorker = this.keyWorker(),
     arrivedAt = this.arrivedAt(),
     expectedDepartureOn = this.expectedDepartureOn(),
     notes = this.notes(),

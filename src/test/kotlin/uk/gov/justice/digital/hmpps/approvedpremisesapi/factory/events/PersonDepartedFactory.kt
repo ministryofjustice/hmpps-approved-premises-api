@@ -20,7 +20,6 @@ class PersonDepartedFactory : Factory<PersonDeparted> {
   private var deliusEventNumber: Yielded<String> = { randomStringMultiCaseWithNumbers(6) }
   private var bookingId: Yielded<UUID> = { UUID.randomUUID() }
   private var premises: Yielded<Premises> = { EventPremisesFactory().produce() }
-  private var keyWorker: Yielded<StaffMember> = { StaffMemberFactory().produce() }
   private var recordedBy: Yielded<StaffMember> = { StaffMemberFactory().produce() }
   private var departedAt: Yielded<Instant> = { Instant.now().randomDateTimeBefore(5) }
   private var reason: Yielded<String> = { randomOf(listOf("Bed Withdrawn", "Died", "Other", "Planned move-on")) }
@@ -71,7 +70,6 @@ class PersonDepartedFactory : Factory<PersonDeparted> {
     deliusEventNumber = this.deliusEventNumber(),
     bookingId = this.bookingId(),
     premises = this.premises(),
-    keyWorker = this.keyWorker(),
     recordedBy = this.recordedBy(),
     departedAt = this.departedAt(),
     reason = this.reason(),

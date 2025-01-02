@@ -177,9 +177,6 @@ class Cas1BookingManagementDomainEventServiceTest {
       assertThat(data.premises.apCode).isEqualTo(premises.apCode)
       assertThat(data.premises.legacyApCode).isEqualTo(premises.qCode)
       assertThat(data.premises.localAuthorityAreaName).isEqualTo(premises.localAuthorityArea!!.name)
-      assertThat(data.keyWorker!!.staffCode).isEqualTo(keyWorker.code)
-      assertThat(data.keyWorker!!.surname).isEqualTo(keyWorker.name.surname)
-      assertThat(data.keyWorker!!.forenames).isEqualTo(keyWorker.name.forenames())
       assertThat(data.recordedBy.staffCode).isEqualTo(recordedByStaffDetails.code)
       assertThat(data.recordedBy.username).isEqualTo(recordedByStaffDetails.username)
       assertThat(data.recordedBy.forenames).isEqualTo(recordedByStaffDetails.name.forenames())
@@ -217,41 +214,6 @@ class Cas1BookingManagementDomainEventServiceTest {
       assertThat(data.applicationId).isEqualTo(offlineApplication.id)
       assertThat(data.applicationSubmittedOn).isEqualTo(offlineApplication.createdAt.toLocalDate())
       assertThat(data.applicationUrl).isEqualTo("http://frontend/applications/${offlineApplication.id}")
-    }
-
-    @Test
-    fun `record arrival and emits domain event with no keyWorker information if keyWorker is not present in original booking`() {
-      val existingSpaceBooking = Cas1SpaceBookingEntityFactory()
-        .withApplication(application)
-        .withDeliusEventNumber(DELIUS_EVENT_NUMBER)
-        .withPremises(premises)
-        .withCanonicalArrivalDate(arrivalDate)
-        .withExpectedDepartureDate(departureDate)
-        .withCanonicalDepartureDate(departureDate)
-        .withKeyworkerStaffCode(null)
-        .produce()
-
-      service.arrivalRecorded(
-        Cas1SpaceBookingManagementDomainEventService.ArrivalInfo(
-          existingSpaceBooking,
-          arrivalDate,
-          arrivalTime,
-          recordedByUser,
-        ),
-      )
-
-      val domainEventArgument = slot<DomainEvent<PersonArrivedEnvelope>>()
-
-      verify(exactly = 1) {
-        domainEventService.savePersonArrivedEvent(
-          capture(domainEventArgument),
-        )
-      }
-
-      val domainEvent = domainEventArgument.captured
-
-      val data = domainEvent.data.eventDetails
-      assertThat(data.keyWorker).isNull()
     }
   }
 
@@ -374,10 +336,6 @@ class Cas1BookingManagementDomainEventServiceTest {
       assertThat(domainEventPremises.apCode).isEqualTo(premises.apCode)
       assertThat(domainEventPremises.legacyApCode).isEqualTo(premises.qCode)
       assertThat(domainEventPremises.localAuthorityAreaName).isEqualTo(premises.localAuthorityArea!!.name)
-      val domainEventKeyWorker = domainEventEventDetails.keyWorker
-      assertThat(domainEventKeyWorker.staffCode).isEqualTo(keyWorker.code)
-      assertThat(domainEventKeyWorker.surname).isEqualTo(keyWorker.name.surname)
-      assertThat(domainEventKeyWorker.forenames).isEqualTo(keyWorker.name.forenames())
       val domainEventMoveOnCategory = domainEventEventDetails.destination.moveOnCategory
       assertThat(domainEventMoveOnCategory.id).isEqualTo(moveOnCategory.id)
       assertThat(domainEventMoveOnCategory.description).isEqualTo(moveOnCategory.name)
