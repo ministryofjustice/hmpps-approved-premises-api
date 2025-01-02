@@ -68,6 +68,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.StaffMemberServi
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.UserAccessService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.UserService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1WithdrawableService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas3.Cas3BookingService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas3.Cas3PremisesService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.ArrivalTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.BedDetailTransformer
@@ -100,6 +101,7 @@ class PremisesController(
   private val cas3PremisesService: Cas3PremisesService,
   private val offenderService: OffenderService,
   private val bookingService: BookingService,
+  private val cas3BookingService: Cas3BookingService,
   private val lostBedsService: LostBedService,
   private val bedService: BedService,
   private val premisesTransformer: PremisesTransformer,
@@ -424,7 +426,7 @@ class PremisesController(
 
     val authorisableResult = when (premises) {
       is TemporaryAccommodationPremisesEntity -> {
-        bookingService.createTemporaryAccommodationBooking(
+        cas3BookingService.createBooking(
           user = user,
           premises = premises,
           crn = body.crn,
@@ -501,12 +503,11 @@ class PremisesController(
         throwIfBookingDatesConflict(body.arrivalDate, body.expectedDepartureDate, bookingId, bedId)
         throwIfVoidBedspaceDatesConflict(body.arrivalDate, body.expectedDepartureDate, null, bedId)
 
-        bookingService.createCas3Arrival(
+        cas3BookingService.createArrival(
           booking = booking,
           arrivalDate = body.arrivalDate,
           expectedDepartureDate = body.expectedDepartureDate,
           notes = body.notes,
-          keyWorkerStaffCode = body.keyWorkerStaffCode,
           user = user,
         )
       }
@@ -547,7 +548,7 @@ class PremisesController(
       }
 
       is TemporaryAccommodationPremisesEntity -> {
-        val result = bookingService.createCas3Cancellation(
+        val result = cas3BookingService.createCancellation(
           booking = booking,
           cancelledAt = body.date,
           reasonId = body.reason,
@@ -574,13 +575,24 @@ class PremisesController(
       throw ForbiddenProblem()
     }
 
-    val result = bookingService.createConfirmation(
-      booking = booking,
-      dateTime = OffsetDateTime.now(),
-      notes = body.notes,
-      user,
-    )
-
+    val result =
+      when (booking.premises) {
+        is TemporaryAccommodationPremisesEntity -> {
+          cas3BookingService.createConfirmation(
+            user = user,
+            booking = booking,
+            dateTime = OffsetDateTime.now(),
+            notes = body.notes,
+          )
+        }
+        else -> {
+          bookingService.createConfirmation(
+            booking = booking,
+            dateTime = OffsetDateTime.now(),
+            notes = body.notes,
+          )
+        }
+      }
     val confirmation = extractResultEntityOrThrow(result)
 
     return ResponseEntity.ok(confirmationTransformer.transformJpaToApi(confirmation))
@@ -599,18 +611,24 @@ class PremisesController(
       throw ForbiddenProblem()
     }
 
-    val result = bookingService.createDeparture(
-      user = user,
-      booking = booking,
-      dateTime = body.dateTime.atOffset(ZoneOffset.UTC),
-      reasonId = body.reasonId,
-      moveOnCategoryId = body.moveOnCategoryId,
-      notes = body.notes,
-    )
+    when (booking.premises) {
+      is TemporaryAccommodationPremisesEntity -> {
+        val result = cas3BookingService.createDeparture(
+          user = user,
+          booking = booking,
+          dateTime = body.dateTime.atOffset(ZoneOffset.UTC),
+          reasonId = body.reasonId,
+          moveOnCategoryId = body.moveOnCategoryId,
+          notes = body.notes,
+        )
 
-    val departure = extractResultEntityOrThrow(result)
+        val departure = extractResultEntityOrThrow(result)
 
-    return ResponseEntity.ok(departureTransformer.transformJpaToApi(departure))
+        return ResponseEntity.ok(departureTransformer.transformJpaToApi(departure))
+      }
+
+      else -> error("This endpoint does not support recording departures for bookings with premise type: ${booking.premises::class.qualifiedName}")
+    }
   }
 
   override fun premisesPremisesIdBookingsBookingIdExtensionsPost(
@@ -620,19 +638,25 @@ class PremisesController(
   ): ResponseEntity<Extension> {
     val booking = getBookingForPremisesOrThrow(premisesId, bookingId)
 
-    if (!userAccessService.currentUserCanManagePremisesBookings(booking.premises)) {
-      throw ForbiddenProblem()
+    when (booking.premises) {
+      is TemporaryAccommodationPremisesEntity -> {
+        if (!userAccessService.currentUserCanManagePremisesBookings(booking.premises)) {
+          throw ForbiddenProblem()
+        }
+
+        val result = cas3BookingService.createExtension(
+          booking = booking,
+          newDepartureDate = body.newDepartureDate,
+          notes = body.notes,
+        )
+
+        val extension = extractResultEntityOrThrow(result)
+
+        return ResponseEntity.ok(extensionTransformer.transformJpaToApi(extension))
+      }
+
+      else -> error("This endpoint does not support create booking extension with premise type: ${booking.premises::class.qualifiedName}")
     }
-
-    val result = bookingService.createExtension(
-      booking = booking,
-      newDepartureDate = body.newDepartureDate,
-      notes = body.notes,
-    )
-
-    val extension = extractResultEntityOrThrow(result)
-
-    return ResponseEntity.ok(extensionTransformer.transformJpaToApi(extension))
   }
 
   @Transactional
@@ -904,14 +928,20 @@ class PremisesController(
   ): ResponseEntity<Turnaround> {
     val booking = getBookingForPremisesOrThrow(premisesId, bookingId)
 
-    if (!userAccessService.currentUserCanManagePremisesBookings(booking.premises)) {
-      throw ForbiddenProblem()
+    when (booking.premises) {
+      is TemporaryAccommodationPremisesEntity -> {
+        if (!userAccessService.currentUserCanManagePremisesBookings(booking.premises)) {
+          throw ForbiddenProblem()
+        }
+
+        val result = cas3BookingService.createTurnaround(booking, body.workingDays)
+        val turnaround = extractResultEntityOrThrow(result)
+
+        return ResponseEntity.ok(turnaroundTransformer.transformJpaToApi(turnaround))
+      }
+
+      else -> error("This endpoint does not support create turnarounds for bookings with premise type: ${booking.premises::class.qualifiedName}")
     }
-
-    val result = bookingService.createTurnaround(booking, body.workingDays)
-    val turnaround = extractResultEntityOrThrow(result)
-
-    return ResponseEntity.ok(turnaroundTransformer.transformJpaToApi(turnaround))
   }
 
   override fun premisesPremisesIdBedsGet(premisesId: UUID): ResponseEntity<List<BedSummary>> {
