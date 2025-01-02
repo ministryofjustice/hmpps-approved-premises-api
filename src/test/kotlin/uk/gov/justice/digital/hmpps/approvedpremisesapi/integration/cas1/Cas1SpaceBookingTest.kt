@@ -1234,7 +1234,7 @@ class Cas1SpaceBookingTest {
         .header("Authorization", "Bearer $jwt")
         .bodyValue(
           Cas1NewArrival(
-            arrivalDate = LocalDate.now(),
+            arrivalDate = LocalDate.now().minusDays(1),
             arrivalTime = "12:00:00",
           ),
         )
@@ -1284,6 +1284,86 @@ class Cas1SpaceBookingTest {
         .expectStatus()
         .isOk
       domainEventAsserter.assertDomainEventOfTypeStored(spaceBooking.application!!.id, DomainEventType.APPROVED_PREMISES_PERSON_ARRIVED)
+    }
+
+    @Test
+    fun `Returns error if arrivaldate is null`() {
+      val (_, jwt) = givenAUser(roles = listOf(CAS1_FUTURE_MANAGER))
+
+      webTestClient.post()
+        .uri("/cas1/premises/${premises.id}/space-bookings/${spaceBooking.id}/arrival")
+        .header("Authorization", "Bearer $jwt")
+        .bodyValue(
+          Cas1NewArrival(),
+        )
+        .exchange()
+        .expectStatus()
+        .isBadRequest
+        .expectBody()
+        .jsonPath("invalid-params[0].propertyName").isEqualTo("arrivalDate")
+        .jsonPath("invalid-params[0].errorType").isEqualTo("is required")
+    }
+
+    @Test
+    fun `Returns error if the arrivaltime is null`() {
+      val (_, jwt) = givenAUser(roles = listOf(CAS1_FUTURE_MANAGER))
+
+      webTestClient.post()
+        .uri("/cas1/premises/${premises.id}/space-bookings/${spaceBooking.id}/arrival")
+        .header("Authorization", "Bearer $jwt")
+        .bodyValue(
+          Cas1NewArrival(
+            arrivalDate = LocalDate.now().minusDays(1),
+          ),
+        )
+        .exchange()
+        .expectStatus()
+        .isBadRequest
+        .expectBody()
+        .jsonPath("invalid-params[0].propertyName").isEqualTo("arrivalTime")
+        .jsonPath("invalid-params[0].errorType").isEqualTo("is required")
+    }
+
+    @Test
+    fun `Returns error if the arrivaldate is in the future`() {
+      val (_, jwt) = givenAUser(roles = listOf(CAS1_FUTURE_MANAGER))
+
+      webTestClient.post()
+        .uri("/cas1/premises/${premises.id}/space-bookings/${spaceBooking.id}/arrival")
+        .header("Authorization", "Bearer $jwt")
+        .bodyValue(
+          Cas1NewArrival(
+            arrivalDate = LocalDate.now().plusDays(1),
+            arrivalTime = LocalTime.now().minusMinutes(1).toString(),
+          ),
+        )
+        .exchange()
+        .expectStatus()
+        .isBadRequest
+        .expectBody()
+        .jsonPath("invalid-params[0].propertyName").isEqualTo("arrivalDate")
+        .jsonPath("invalid-params[0].errorType").isEqualTo("must be in the past")
+    }
+
+    @Test
+    fun `Returns error if the arrivaltime is in the future`() {
+      val (_, jwt) = givenAUser(roles = listOf(CAS1_FUTURE_MANAGER))
+
+      webTestClient.post()
+        .uri("/cas1/premises/${premises.id}/space-bookings/${spaceBooking.id}/arrival")
+        .header("Authorization", "Bearer $jwt")
+        .bodyValue(
+          Cas1NewArrival(
+            arrivalDate = LocalDate.now(),
+            arrivalTime = LocalTime.now().plusMinutes(1).toString(),
+          ),
+        )
+        .exchange()
+        .expectStatus()
+        .isBadRequest
+        .expectBody()
+        .jsonPath("invalid-params[0].propertyName").isEqualTo("arrivalTime")
+        .jsonPath("invalid-params[0].errorType").isEqualTo("must be in the past")
     }
   }
 
