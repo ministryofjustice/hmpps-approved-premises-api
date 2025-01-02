@@ -28,10 +28,12 @@ class Cas1SpaceSearchService(
 
     val requiredCharacteristics = getRequiredCharacteristics(searchParameters.requirements)
 
-    return getCandidatePremises(
-      searchParameters.targetPostcodeDistrict,
-      requiredCharacteristics,
+    return spaceSearchRepository.findAllPremisesWithCharacteristicsByDistance(
+      targetPostcodeDistrict = searchParameters.targetPostcodeDistrict,
+      approvedPremisesType = requiredCharacteristics.apType,
       isWomensPremises = application.isWomensApplication!!,
+      premisesCharacteristics = requiredCharacteristics.groupedCharacteristics.premisesCharacteristics,
+      roomCharacteristics = requiredCharacteristics.groupedCharacteristics.roomCharacteristics,
     )
   }
 
@@ -51,20 +53,6 @@ class Cas1SpaceSearchService(
     return GroupedCharacteristics(
       characteristics.filter { it.isPremisesCharacteristic() }.map { it.id },
       characteristics.filter { it.isRoomCharacteristic() }.map { it.id },
-    )
-  }
-
-  private fun getCandidatePremises(
-    targetPostcodeDistrict: String,
-    requiredCharacteristics: RequiredCharacteristics,
-    isWomensPremises: Boolean,
-  ): List<CandidatePremises> {
-    return spaceSearchRepository.findAllPremisesWithCharacteristicsByDistance(
-      targetPostcodeDistrict,
-      requiredCharacteristics.apType,
-      isWomensPremises,
-      requiredCharacteristics.groupedCharacteristics.premisesCharacteristics,
-      requiredCharacteristics.groupedCharacteristics.roomCharacteristics,
     )
   }
 
