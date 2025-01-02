@@ -2,8 +2,8 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.cas1
 
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Component
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1PremiseCharacteristic
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1PremisesSearchResultSummary
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1SpaceCharacteristic
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1SpaceSearchParameters
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1SpaceSearchResults
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NamedId
@@ -39,9 +39,9 @@ class Cas1SpaceSearchResultsTransformer {
             premisesCharacteristics = emptyList(),
             characteristics = candidatePremises.characteristics.mapNotNull {
               try {
-                Cas1PremiseCharacteristic.valueOf(it)
+                Cas1SpaceCharacteristic.valueOf(it)
               } catch (e: IllegalArgumentException) {
-                log.warn("Couldn't find an enum entry for propertyName $it")
+                log.warn("Couldn't find a Cas1SpaceCharacteristic enum entry for propertyName $it")
                 null
               }
             },

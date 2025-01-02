@@ -6117,8 +6117,9 @@ components:
             $ref: '#/components/schemas/CharacteristicPair'
         characteristics:
           type: array
+          description: "Room and premise characteristics"
           items:
-            $ref: '#/components/schemas/Cas1PremiseCharacteristic'
+            $ref: '#/components/schemas/Cas1SpaceCharacteristic'
       required:
         - id
         - apType
@@ -6190,30 +6191,6 @@ components:
       required:
         - startInclusive
         - endInclusive
-    Cas1PremiseCharacteristic:
-      type: string
-      description: All premise characteristics
-      enum:
-        - acceptsChildSexOffenders
-        - acceptsHateCrimeOffenders
-        - acceptsNonSexualChildOffenders
-        - acceptsSexOffenders
-        - additionalRestrictions
-        - hasBrailleSignage
-        - hasHearingLoop
-        - hasLift
-        - hasStepFreeAccessToCommunalAreas
-        - hasTactileFlooring
-        - hasWheelChairAccessibleBathrooms
-        - hasWideAccessToCommunalAreas
-        - hasWideStepFreeAccess
-        - isCatered
-        - isESAP
-        - isIAP
-        - isPIPE
-        - isRecoveryFocussed
-        - isSuitableForVulnerable
-        - isSemiSpecialistMentalHealth
     Cas1SpaceCharacteristic:
       type: string
       description: All of the characteristics of both premises and rooms

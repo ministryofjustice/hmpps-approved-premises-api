@@ -7,7 +7,6 @@ import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.EnumSource
 import org.springframework.beans.factory.annotation.Autowired
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApType
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1PremiseCharacteristic
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1SpaceCharacteristic
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1SpaceSearchParameters
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1SpaceSearchRequirements
@@ -109,9 +108,9 @@ class Cas1SpaceSearchTest : InitialiseDatabasePerClassTestBase() {
       assertThat(results.searchCriteria).isEqualTo(searchParameters)
 
       val expectedCharacteristics = listOf(
-        Cas1PremiseCharacteristic.hasWideAccessToCommunalAreas,
-        Cas1PremiseCharacteristic.hasWideStepFreeAccess,
-        Cas1PremiseCharacteristic.hasLift,
+        Cas1SpaceCharacteristic.hasWideAccessToCommunalAreas,
+        Cas1SpaceCharacteristic.hasWideStepFreeAccess,
+        Cas1SpaceCharacteristic.hasLift,
       )
 
       assertThatResultMatches(results.results[0], premises[0], expectedCharacteristics = expectedCharacteristics)
@@ -341,7 +340,7 @@ class Cas1SpaceSearchTest : InitialiseDatabasePerClassTestBase() {
     actual: Cas1SpaceSearchResult,
     expected: ApprovedPremisesEntity,
     expectedApType: ApType = ApType.normal,
-    expectedCharacteristics: List<Cas1PremiseCharacteristic>? = null,
+    expectedCharacteristics: List<Cas1SpaceCharacteristic>? = null,
   ) {
     assertThat(actual.spacesAvailable).isEmpty()
     assertThat(actual.distanceInMiles).isGreaterThan(0f.toBigDecimal())
