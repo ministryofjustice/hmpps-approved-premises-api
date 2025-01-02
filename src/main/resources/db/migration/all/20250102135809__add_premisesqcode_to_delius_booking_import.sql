@@ -1,0 +1,1 @@
+ALTER TABLE cas1_delius_booking_import ADD COLUMN premises_qcode TEXT NOT NULL;

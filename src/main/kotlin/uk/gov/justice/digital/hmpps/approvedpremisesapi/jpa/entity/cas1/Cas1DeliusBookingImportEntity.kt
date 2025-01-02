@@ -18,7 +18,8 @@ interface Cas1DeliusBookingImportRepository : JpaRepository<Cas1DeliusBookingImp
 @Table(name = "cas1_delius_booking_import")
 data class Cas1DeliusBookingImportEntity(
   @Id
-  val bookingId: UUID,
+  val id: UUID,
+  val bookingId: UUID?,
   val crn: String,
   val eventNumber: String,
   val keyWorkerStaffCode: String?,
@@ -37,4 +38,5 @@ data class Cas1DeliusBookingImportEntity(
   val nonArrivalReasonCode: String?,
   val nonArrivalReasonDescription: String?,
   val nonArrivalNotes: String?,
+  val premisesQcode: String,
 )
