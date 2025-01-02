@@ -55,7 +55,10 @@ class SeedCas1RoomsFromSiteSurveyXlsxTest : SeedTestBase() {
 
     val dataFrame = dataFrameOf(header, rows)
 
-    withXlsx("example", "Sheet3", dataFrame)
+    createXlsxForSeeding(
+      fileName = "example.xlsx",
+      sheets = mapOf("Sheet3" to dataFrame),
+    )
 
     seedXlsxService.seedExcelData(
       SeedFromExcelFileType.CAS1_IMPORT_SITE_SURVEY_ROOMS,
@@ -104,7 +107,10 @@ class SeedCas1RoomsFromSiteSurveyXlsxTest : SeedTestBase() {
 
     val dataFrame = dataFrameOf(header, rows)
 
-    withXlsx("example", "Sheet3", dataFrame)
+    createXlsxForSeeding(
+      fileName = "example.xlsx",
+      sheets = mapOf("Sheet3" to dataFrame),
+    )
 
     seedXlsxService.seedExcelData(
       SeedFromExcelFileType.CAS1_IMPORT_SITE_SURVEY_ROOMS,
@@ -173,7 +179,10 @@ class SeedCas1RoomsFromSiteSurveyXlsxTest : SeedTestBase() {
 
     val dataFrame = dataFrameOf(header, rows)
 
-    withXlsx("example", "Sheet3", dataFrame)
+    createXlsxForSeeding(
+      fileName = "example.xlsx",
+      sheets = mapOf("Sheet3" to dataFrame),
+    )
 
     seedXlsxService.seedExcelData(
       SeedFromExcelFileType.CAS1_IMPORT_SITE_SURVEY_ROOMS,
@@ -235,7 +244,10 @@ class SeedCas1RoomsFromSiteSurveyXlsxTest : SeedTestBase() {
 
     val dataFrame = dataFrameOf(header, rows)
 
-    withXlsx("example", "Sheet3", dataFrame)
+    createXlsxForSeeding(
+      fileName = "example.xlsx",
+      sheets = mapOf("Sheet3" to dataFrame),
+    )
 
     seedXlsxService.seedExcelData(
       SeedFromExcelFileType.CAS1_IMPORT_SITE_SURVEY_ROOMS,
@@ -282,7 +294,10 @@ class SeedCas1RoomsFromSiteSurveyXlsxTest : SeedTestBase() {
 
     val dataFrame = dataFrameOf(header, rows)
 
-    withXlsx("example", "Sheet3", dataFrame)
+    createXlsxForSeeding(
+      fileName = "example.xlsx",
+      sheets = mapOf("Sheet3" to dataFrame),
+    )
 
     seedXlsxService.seedExcelData(
       SeedFromExcelFileType.CAS1_IMPORT_SITE_SURVEY_ROOMS,
@@ -337,7 +352,10 @@ class SeedCas1RoomsFromSiteSurveyXlsxTest : SeedTestBase() {
 
     val dataFrame = dataFrameOf(header, rows)
 
-    withXlsx("example", "Sheet3", dataFrame)
+    createXlsxForSeeding(
+      fileName = "example.xlsx",
+      sheets = mapOf("Sheet3" to dataFrame),
+    )
 
     seedXlsxService.seedExcelData(
       SeedFromExcelFileType.CAS1_IMPORT_SITE_SURVEY_ROOMS,
@@ -392,7 +410,10 @@ class SeedCas1RoomsFromSiteSurveyXlsxTest : SeedTestBase() {
 
     val dataFrame = dataFrameOf(header, rows)
 
-    withXlsx("example", "Sheet3", dataFrame)
+    createXlsxForSeeding(
+      fileName = "example.xlsx",
+      sheets = mapOf("Sheet3" to dataFrame),
+    )
 
     seedXlsxService.seedExcelData(
       SeedFromExcelFileType.CAS1_IMPORT_SITE_SURVEY_ROOMS,
@@ -431,7 +452,10 @@ class SeedCas1RoomsFromSiteSurveyXlsxTest : SeedTestBase() {
 
     val dataFrame = dataFrameOf(header, rows)
 
-    withXlsx("example", "Sheet3", dataFrame)
+    createXlsxForSeeding(
+      fileName = "example.xlsx",
+      sheets = mapOf("Sheet3" to dataFrame),
+    )
 
     seedXlsxService.seedExcelData(
       SeedFromExcelFileType.CAS1_IMPORT_SITE_SURVEY_ROOMS,
@@ -472,7 +496,10 @@ class SeedCas1RoomsFromSiteSurveyXlsxTest : SeedTestBase() {
 
     val dataFrame = dataFrameOf(header, rows)
 
-    withXlsx("example", "Sheet3", dataFrame)
+    createXlsxForSeeding(
+      fileName = "example.xlsx",
+      sheets = mapOf("Sheet3" to dataFrame),
+    )
 
     seedXlsxService.seedExcelData(
       SeedFromExcelFileType.CAS1_IMPORT_SITE_SURVEY_ROOMS,
@@ -497,7 +524,10 @@ class SeedCas1RoomsFromSiteSurveyXlsxTest : SeedTestBase() {
     val rows = listOf("", "")
     val dataFrame = dataFrameOf(header, rows)
 
-    withXlsx("example", "Sheet3", dataFrame)
+    createXlsxForSeeding(
+      fileName = "example.xlsx",
+      sheets = mapOf("Sheet3" to dataFrame),
+    )
 
     seedXlsxService.seedExcelData(
       SeedFromExcelFileType.CAS1_IMPORT_SITE_SURVEY_ROOMS,

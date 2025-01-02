@@ -69,10 +69,9 @@ class SeedXlsxScaffoldingTest : SeedTestBase() {
 
   @Test
   fun `Attempting to process an xlsx file without Sheet3 logs an error`() {
-    withXlsx(
-      "wrongSheetName",
-      "wrongSheetName",
-      emptyDataFrame<Any>(),
+    createXlsxForSeeding(
+      fileName = "wrongSheetName.xlsx",
+      sheets = mapOf("wrongSheetName" to emptyDataFrame<Any>()),
     )
 
     seedXlsxService.seedExcelData(SeedFromExcelFileType.CAS1_IMPORT_SITE_SURVEY_ROOMS, UUID.randomUUID(), "wrongSheetName.xlsx")

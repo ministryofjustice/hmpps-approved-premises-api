@@ -64,12 +64,15 @@ class SeedCas1PremisesFromSiteSurveyXlsxTest : SeedTestBase() {
 
     val dataFrame = dataFrameOf(header, rows)
 
-    withXlsx("example", "Sheet2", dataFrame)
+    createXlsxForSeeding(
+      fileName = "site_survey.xlsx",
+      sheets = mapOf("Sheet2" to dataFrame),
+    )
 
     seedXlsxService.seedExcelData(
       SeedFromExcelFileType.CAS1_IMPORT_SITE_SURVEY_PREMISES,
       UUID.randomUUID(),
-      "example.xlsx",
+      "site_survey.xlsx",
     )
 
     val createdPremise = approvedPremisesRepository.findByQCode("Q123")!!
@@ -159,12 +162,15 @@ class SeedCas1PremisesFromSiteSurveyXlsxTest : SeedTestBase() {
 
     val dataFrame = dataFrameOf(header, rows)
 
-    withXlsx("example", "Sheet2", dataFrame)
+    createXlsxForSeeding(
+      fileName = "site_survey.xlsx",
+      sheets = mapOf("Sheet2" to dataFrame),
+    )
 
     seedXlsxService.seedExcelData(
       SeedFromExcelFileType.CAS1_IMPORT_SITE_SURVEY_PREMISES,
       UUID.randomUUID(),
-      "example.xlsx",
+      "site_survey.xlsx",
     )
 
     val createdPremise = approvedPremisesRepository.findByQCode("Q123")!!
@@ -269,12 +275,15 @@ class SeedCas1PremisesFromSiteSurveyXlsxTest : SeedTestBase() {
 
     val dataFrame = dataFrameOf(header, rows)
 
-    withXlsx("example", "Sheet2", dataFrame)
+    createXlsxForSeeding(
+      fileName = "site_survey.xlsx",
+      sheets = mapOf("Sheet2" to dataFrame),
+    )
 
     seedXlsxService.seedExcelData(
       SeedFromExcelFileType.CAS1_IMPORT_SITE_SURVEY_PREMISES,
       UUID.randomUUID(),
-      "example.xlsx",
+      "site_survey.xlsx",
     )
 
     val createdPremise = approvedPremisesRepository.findByQCode("QExisting")!!
