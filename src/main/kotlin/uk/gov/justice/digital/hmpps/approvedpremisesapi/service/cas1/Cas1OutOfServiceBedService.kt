@@ -257,10 +257,11 @@ class Cas1OutOfServiceBedService(
     return success(cancellationEntity)
   }
 
-  fun getOutOfServiceBeds(
+  fun getOutOfServiceBedsForDate(
     temporality: Set<Temporality>,
     premisesId: UUID?,
     apAreaId: UUID?,
+    date: LocalDate,
     pageCriteria: PageCriteria<Cas1OutOfServiceBedSortField>,
   ): Pair<List<Cas1OutOfServiceBedEntity>, PaginationMetadata?> {
     val sortFieldString = when (pageCriteria.sortBy) {
@@ -277,13 +278,14 @@ class Cas1OutOfServiceBedService(
     val excludeCurrent = !temporality.contains(Temporality.current)
     val excludeFuture = !temporality.contains(Temporality.future)
 
-    val page = outOfServiceBedRepository.findOutOfServiceBedIds(
-      premisesId,
-      apAreaId,
-      excludePast,
-      excludeCurrent,
-      excludeFuture,
-      getPageableOrAllPages(pageCriteria.withSortBy(sortFieldString), unsafe = true),
+    val page = outOfServiceBedRepository.findOutOfServiceBedIdsForDate(
+      premisesId = premisesId,
+      apAreaId = apAreaId,
+      excludePast = excludePast,
+      excludeCurrent = excludeCurrent,
+      excludeFuture = excludeFuture,
+      date = date,
+      pageable = getPageableOrAllPages(pageCriteria.withSortBy(sortFieldString), unsafe = true),
     )
 
     val outOfServiceBeds = outOfServiceBedRepository.findAllByIdOrdered(page.content.map(UUID::fromString))
@@ -291,15 +293,30 @@ class Cas1OutOfServiceBedService(
     return Pair(outOfServiceBeds, getMetadata(page, pageCriteria))
   }
 
+  fun getOutOfServiceBeds(
+    temporality: Set<Temporality>,
+    premisesId: UUID?,
+    apAreaId: UUID?,
+    pageCriteria: PageCriteria<Cas1OutOfServiceBedSortField>,
+  ): Pair<List<Cas1OutOfServiceBedEntity>, PaginationMetadata?> =
+    getOutOfServiceBedsForDate(
+      temporality = temporality,
+      premisesId = premisesId,
+      apAreaId = apAreaId,
+      date = LocalDate.now(),
+      pageCriteria = pageCriteria,
+    )
+
   fun getActiveOutOfServiceBedsForPremisesId(premisesId: UUID) = outOfServiceBedRepository.findAllActiveForPremisesId(premisesId)
 
   fun getCurrentOutOfServiceBedsCountForPremisesId(premisesId: UUID): Int {
-    return outOfServiceBedRepository.findOutOfServiceBedIds(
+    return outOfServiceBedRepository.findOutOfServiceBedIdsForDate(
       premisesId = premisesId,
       apAreaId = null,
       excludePast = true,
       excludeCurrent = false,
       excludeFuture = true,
+      date = LocalDate.now(),
       pageable = Pageable.unpaged(),
     ).size
   }
