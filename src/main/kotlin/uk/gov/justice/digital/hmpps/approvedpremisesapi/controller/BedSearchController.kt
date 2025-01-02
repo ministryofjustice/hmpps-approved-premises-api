@@ -8,6 +8,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.BedSearchResul
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.TemporaryAccommodationBedSearchParameters
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.BedSearchService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.UserService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas3.Cas3BedspaceSearchService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.BedSearchResultTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.extractEntityFromCasResult
 
@@ -15,6 +16,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.extractEntityFromCa
 class BedSearchController(
   private val userService: UserService,
   private val bedSearchService: BedSearchService,
+  private val cas3BedspaceSearchService: Cas3BedspaceSearchService,
   private val bedSearchResultTransformer: BedSearchResultTransformer,
 ) : BedsApiDelegate {
   override fun bedsSearchPost(bedSearchParameters: BedSearchParameters): ResponseEntity<BedSearchResults> {
@@ -29,7 +31,7 @@ class BedSearchController(
         requiredCharacteristics = bedSearchParameters.requiredCharacteristics,
         postcodeDistrictOutcode = bedSearchParameters.postcodeDistrict,
       )
-      is TemporaryAccommodationBedSearchParameters -> bedSearchService.findTemporaryAccommodationBeds(
+      is TemporaryAccommodationBedSearchParameters -> cas3BedspaceSearchService.findBedspaces(
         user = user,
         probationDeliveryUnits = bedSearchParameters.probationDeliveryUnits,
         startDate = bedSearchParameters.startDate,
