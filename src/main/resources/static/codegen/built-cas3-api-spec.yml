@@ -3832,8 +3832,11 @@ components:
     SeedFromExcelFileType:
       type: string
       enum:
-        - approved_premises_room
-        - cas1_import_site_survey_premise
+        - cas1_import_site_survey_rooms
+        - cas1_import_site_survey_premises
+      x-enum-varnames:
+        - CAS1_IMPORT_SITE_SURVEY_ROOMS
+        - CAS1_IMPORT_SITE_SURVEY_PREMISES
     MigrationJobRequest:
       type: object
       properties:
