@@ -177,6 +177,9 @@ data class PlacementRequestEntity(
 
   val createdAt: OffsetDateTime,
 
+  /**
+   * Notes from the assessor for the CRU Manager
+   */
   val notes: String?,
 
   /**
