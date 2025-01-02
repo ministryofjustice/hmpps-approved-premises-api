@@ -60,6 +60,89 @@ open class SubjectAccessRequestRepositoryBase(val jdbcTemplate: NamedParameterJd
     return toJsonString(result)
   }
 
+  fun spaceBookings(
+    crn: String?,
+    nomsNumber: String?,
+    startDate: LocalDateTime?,
+    endDate: LocalDateTime?,
+  ): String {
+    val result = jdbcTemplate.queryForMap(
+      """
+    select json_agg(spaceBooking) as json 
+    from (
+          select
+            b.crn,
+            a.noms_number,            
+            b.canonical_arrival_date,
+            b.canonical_departure_date,
+            b.expected_arrival_date,
+            b.expected_departure_date,
+            b.actual_arrival_date,
+            b.actual_arrival_time,
+            b.actual_departure_date,
+            b.actual_departure_time,
+            b.non_arrival_confirmed_at,
+            b.non_arrival_notes,
+            b.non_arrival_reason_id,
+            apa.risk_ratings -> 'tier' -> 'value' ->> 'level' as tier,
+            b.created_at,
+            b.key_worker_staff_code,
+            b.key_worker_assigned_at,
+            b.key_worker_name,
+            b.approved_premises_application_id,
+            b.offline_application_id,
+            p."name" as premises_name,
+            b.delius_event_number,
+            b.placement_request_id,
+            b.created_by_user_id,
+            b.departure_reason_id, 
+            b.departure_notes,
+            b.departure_move_on_category_id,
+            b.cancellation_reason_notes,
+            b.cancellation_reason_id,
+            b.cancellation_occurred_at, 
+            b.cancellation_recorded_at,
+            b.migrated_management_info_from, 
+            b.version,
+            ( 
+              SELECT STRING_AGG (characteristics.property_name, ',')
+              FROM cas1_space_bookings_criteria sbc
+              LEFT OUTER JOIN characteristics ON characteristics.id = sbc.characteristic_id
+              WHERE sbc.space_booking_id = b.id 
+              GROUP by sbc.space_booking_id
+            ) AS characteristics_property_names,    
+            CASE 
+              WHEN apa.id IS NOT NULL THEN apa.name
+              ELSE offline_app.name
+            END as person_name
+            FROM 
+              cas1_space_bookings b
+            LEFT JOIN premises p ON
+              b.premises_id = p.id            
+            LEFT OUTER JOIN approved_premises_applications apa ON 
+              b.approved_premises_application_id = apa.id
+            LEFT OUTER JOIN offline_applications offline_app ON 
+            b.offline_application_id = offline_app.id              
+            LEFT OUTER JOIN   
+              applications a on 
+              a.id = apa.id
+          where
+              (b.crn = :crn
+              or a.noms_number = :noms_number )
+          and (:start_date::date is null or b.created_at >= :start_date) 
+          and (:end_date::date is null or b.created_at <= :end_date)         
+  ) spaceBooking
+      """.trimIndent(),
+      MapSqlParameterSource().addSarParameters(
+        crn,
+        nomsNumber,
+        startDate,
+        endDate,
+      ),
+    )
+    return toJsonString(result)
+  }
+
   fun bookingExtensions(
     crn: String?,
     nomsNumber: String?,

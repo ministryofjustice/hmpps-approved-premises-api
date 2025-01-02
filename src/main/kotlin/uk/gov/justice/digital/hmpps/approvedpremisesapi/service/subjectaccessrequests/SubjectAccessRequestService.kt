@@ -32,6 +32,7 @@ class SubjectAccessRequestService(
     val apAssessmentClarificationNotesJson = cas1SubjectAccessRequestRepository.getApprovedPremisesAssessmentClarificationNotes(crn, nomsNumber, startDate, endDate)
 
     val apBookingsJson = cas1SubjectAccessRequestRepository.bookings(crn, nomsNumber, startDate, endDate)
+    val apSpaceBookingsJson = cas1SubjectAccessRequestRepository.spaceBookings(crn, nomsNumber, startDate, endDate)
     val apBookingExtensionsJson = cas1SubjectAccessRequestRepository.bookingExtensions(crn, nomsNumber, startDate, endDate)
     val apCancellationsJson = cas1SubjectAccessRequestRepository.cancellations(crn, nomsNumber, startDate, endDate)
     val apBedMovesJson = cas1SubjectAccessRequestRepository.bedMoves(crn, nomsNumber, startDate, endDate)
@@ -53,6 +54,7 @@ class SubjectAccessRequestService(
          "Assessments": $apAssessmentsJson,
          "AssessmentClarificationNotes" : $apAssessmentClarificationNotesJson,
          "Bookings": $apBookingsJson,
+         "SpaceBookings": $apSpaceBookingsJson,
          "OfflineApplications": $offlineApplicationsJson,
          "BookingExtensions": $apBookingExtensionsJson,
          "Cancellations": $apCancellationsJson,
