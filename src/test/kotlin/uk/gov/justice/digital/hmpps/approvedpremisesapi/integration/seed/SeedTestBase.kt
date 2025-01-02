@@ -14,9 +14,11 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.seed.SeedLogger
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.seed.SeedService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.seed.SeedXlsxService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.LogEntry
+import java.io.File
 import java.nio.file.Files
 import java.nio.file.StandardOpenOption
 import kotlin.io.path.Path
+import kotlin.io.path.pathString
 
 @TestInstance(TestInstance.Lifecycle.PER_METHOD)
 abstract class SeedTestBase : IntegrationTestBase() {
@@ -67,13 +69,46 @@ abstract class SeedTestBase : IntegrationTestBase() {
     )
   }
 
-  protected fun withXlsx(xlsxName: String, sheetName: String, dataFrame: DataFrame<*>) {
+  protected fun createXlsxForSeeding(fileName: String, sheets: Map<String, DataFrame<*>>) {
+    val dir = Path(seedFilePrefix)
+
+    if (!Files.isDirectory(dir)) {
+      Files.createDirectory(dir)
+    }
+
+    val file = dir.resolve(fileName)
+    if (Files.exists(file)) {
+      Files.delete(file)
+    }
+
+    var fileExists = false
+    sheets.forEach { (name, dataFrame) ->
+      dataFrame.writeExcel(
+        path = file.pathString,
+        sheetName = name,
+        keepFile = fileExists,
+      )
+      fileExists = true
+    }
+  }
+
+  protected fun withXlsx(xlsxName: String, sheets: Map<String, DataFrame<*>>) {
     if (!Files.isDirectory(Path(seedFilePrefix))) {
       Files.createDirectory(Path(seedFilePrefix))
     }
-    dataFrame.writeExcel(
-      "$seedFilePrefix/$xlsxName.xlsx",
-      sheetName = sheetName,
-    )
+    val path = "$seedFilePrefix/$xlsxName.xlsx"
+    if (File(path).exists()) {
+      File(path).delete()
+    }
+
+    var fileExists = false
+    sheets.forEach { (name, dataFrame) ->
+      dataFrame.writeExcel(
+        "$seedFilePrefix/$xlsxName.xlsx",
+        sheetName = name,
+        keepFile = fileExists,
+      )
+      fileExists = true
+    }
   }
 }

@@ -1,7 +1,6 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.seed
 
 import java.io.File
-import java.util.UUID
 
 abstract class SeedJob<RowType>(
   val requiredHeaders: Set<String>? = null,
@@ -29,7 +28,7 @@ abstract class SeedJob<RowType>(
 
 @Suppress("TooGenericExceptionThrown")
 interface ExcelSeedJob {
-  fun processXlsx(file: File, premisesId: UUID)
+  fun processXlsx(file: File)
 }
 
 class SeedException(message: String) : RuntimeException(message)

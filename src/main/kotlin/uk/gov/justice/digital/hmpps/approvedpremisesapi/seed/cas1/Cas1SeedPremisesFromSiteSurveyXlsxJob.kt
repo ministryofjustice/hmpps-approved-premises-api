@@ -4,8 +4,6 @@ import jakarta.persistence.EntityManager
 import org.javers.core.Javers
 import org.javers.core.JaversBuilder
 import org.javers.core.diff.ListCompareAlgorithm
-import org.jetbrains.kotlinx.dataframe.DataFrame
-import org.jetbrains.kotlinx.dataframe.io.readExcel
 import org.locationtech.jts.geom.Point
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Component
@@ -41,9 +39,8 @@ class Cas1SeedPremisesFromSiteSurveyXlsxJob(
 
   private val log = LoggerFactory.getLogger(this::class.java)
 
-  override fun processXlsx(file: File, premisesId: UUID) {
-    val dataFrame = DataFrame.readExcel(file, "Sheet2")
-    val siteSurveyPremise = Cas1SiteSurveyPremiseFactory().load(dataFrame)
+  override fun processXlsx(file: File) {
+    val siteSurveyPremise = Cas1SiteSurveyPremiseFactory().load(file)
     val premiseInfo = resolvePremiseInfo(siteSurveyPremise)
     val existingPremises = premisesRepository.findByQCode(siteSurveyPremise.qCode)
     if (existingPremises == null) {

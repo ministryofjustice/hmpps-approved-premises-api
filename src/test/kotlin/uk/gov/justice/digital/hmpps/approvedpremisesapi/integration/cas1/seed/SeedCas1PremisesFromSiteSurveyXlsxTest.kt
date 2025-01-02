@@ -1,7 +1,6 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.cas1.seed
 
 import org.assertj.core.api.Assertions.assertThat
-import org.jetbrains.kotlinx.dataframe.api.dataFrameOf
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PropertyStatus
@@ -13,7 +12,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.seed.SeedTes
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesGender
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PostCodeDistrictEntity
-import java.util.UUID
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.DataFrameUtils.createNameValueDataFrame
 
 class SeedCas1PremisesFromSiteSurveyXlsxTest : SeedTestBase() {
 
@@ -28,8 +27,8 @@ class SeedCas1PremisesFromSiteSurveyXlsxTest : SeedTestBase() {
 
   @Test
   fun `create new premise - all characteristics`() {
-    val header = listOf("Name of AP", "The Premise Name")
-    val rows = mutableListOf(
+    val dataFrame = createNameValueDataFrame(
+      "Name of AP", "The Premise Name",
       "AP Identifier (Q No.)", "Q123",
       "AP Area", "Irrelevant",
       "Probation Delivery Unit", "Irrelevant",
@@ -62,14 +61,14 @@ class SeedCas1PremisesFromSiteSurveyXlsxTest : SeedTestBase() {
       "Are there any additional restrictions on people that this AP can accommodate?", "Some useful notes here",
     )
 
-    val dataFrame = dataFrameOf(header, rows)
-
-    withXlsx("example", "Sheet2", dataFrame)
+    createXlsxForSeeding(
+      fileName = "site_survey.xlsx",
+      sheets = mapOf("Sheet2" to dataFrame),
+    )
 
     seedXlsxService.seedExcelData(
       SeedFromExcelFileType.CAS1_IMPORT_SITE_SURVEY_PREMISES,
-      UUID.randomUUID(),
-      "example.xlsx",
+      "site_survey.xlsx",
     )
 
     val createdPremise = approvedPremisesRepository.findByQCode("Q123")!!
@@ -123,8 +122,8 @@ class SeedCas1PremisesFromSiteSurveyXlsxTest : SeedTestBase() {
 
   @Test
   fun `create new premise - no characteristics`() {
-    val header = listOf("Name of AP", "The Premise Name 2")
-    val rows = mutableListOf(
+    val dataFrame = createNameValueDataFrame(
+      "Name of AP", "The Premise Name 2",
       "AP Identifier (Q No.)", "Q123",
       "AP Area", "Irrelevant",
       "Probation Delivery Unit", "Irrelevant",
@@ -157,14 +156,14 @@ class SeedCas1PremisesFromSiteSurveyXlsxTest : SeedTestBase() {
       "Are there any additional restrictions on people that this AP can accommodate?", "Some useful notes here",
     )
 
-    val dataFrame = dataFrameOf(header, rows)
-
-    withXlsx("example", "Sheet2", dataFrame)
+    createXlsxForSeeding(
+      fileName = "site_survey.xlsx",
+      sheets = mapOf("Sheet2" to dataFrame),
+    )
 
     seedXlsxService.seedExcelData(
       SeedFromExcelFileType.CAS1_IMPORT_SITE_SURVEY_PREMISES,
-      UUID.randomUUID(),
-      "example.xlsx",
+      "site_survey.xlsx",
     )
 
     val createdPremise = approvedPremisesRepository.findByQCode("Q123")!!
@@ -233,8 +232,8 @@ class SeedCas1PremisesFromSiteSurveyXlsxTest : SeedTestBase() {
       ),
     )
 
-    val header = listOf("Name of AP", "The Premise Name")
-    val rows = mutableListOf(
+    val dataFrame = createNameValueDataFrame(
+      "Name of AP", "The Premise Name",
       "AP Identifier (Q No.)", "QExisting",
       "AP Area", "Irrelevant",
       "Probation Delivery Unit", "Irrelevant",
@@ -267,14 +266,14 @@ class SeedCas1PremisesFromSiteSurveyXlsxTest : SeedTestBase() {
       "Are there any additional restrictions on people that this AP can accommodate?", "Some useful notes here",
     )
 
-    val dataFrame = dataFrameOf(header, rows)
-
-    withXlsx("example", "Sheet2", dataFrame)
+    createXlsxForSeeding(
+      fileName = "site_survey.xlsx",
+      sheets = mapOf("Sheet2" to dataFrame),
+    )
 
     seedXlsxService.seedExcelData(
       SeedFromExcelFileType.CAS1_IMPORT_SITE_SURVEY_PREMISES,
-      UUID.randomUUID(),
-      "example.xlsx",
+      "site_survey.xlsx",
     )
 
     val createdPremise = approvedPremisesRepository.findByQCode("QExisting")!!

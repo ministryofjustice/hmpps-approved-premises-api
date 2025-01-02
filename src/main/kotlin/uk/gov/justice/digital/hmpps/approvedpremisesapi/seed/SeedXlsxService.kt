@@ -10,7 +10,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.seed.cas1.Cas1SeedRoomsF
 import java.io.File
 import java.time.LocalDateTime
 import java.time.temporal.ChronoUnit
-import java.util.UUID
 import kotlin.reflect.KClass
 
 @Service
@@ -21,7 +20,7 @@ class SeedXlsxService(
   private val seedLogger: SeedLogger,
 ) {
   @SuppressWarnings("TooGenericExceptionThrown", "TooGenericExceptionCaught")
-  fun seedExcelData(excelSeedFileType: SeedFromExcelFileType, premisesId: UUID, filename: String) {
+  fun seedExcelData(excelSeedFileType: SeedFromExcelFileType, filename: String) {
     seedLogger.info("Starting seed request: $excelSeedFileType - $filename")
 
     try {
@@ -38,7 +37,7 @@ class SeedXlsxService(
 
       val seedStarted = LocalDateTime.now()
 
-      transactionTemplate.executeWithoutResult { processExcelJob(job, premisesId, file) }
+      transactionTemplate.executeWithoutResult { processExcelJob(job, file) }
 
       val timeTaken = ChronoUnit.MILLIS.between(seedStarted, LocalDateTime.now())
       seedLogger.info("Excel seed request complete. Took $timeTaken millis")
@@ -50,10 +49,10 @@ class SeedXlsxService(
   private fun <T : Any> getBean(clazz: KClass<T>) = applicationContext.getBean(clazz.java)
 
   @Suppress("TooGenericExceptionThrown", "TooGenericExceptionCaught")
-  private fun processExcelJob(job: ExcelSeedJob, premisesId: UUID, file: File) {
+  private fun processExcelJob(job: ExcelSeedJob, file: File) {
     seedLogger.info("Processing XLSX file ${file.absolutePath}")
     try {
-      job.processXlsx(file, premisesId)
+      job.processXlsx(file)
     } catch (exception: Exception) {
       throw RuntimeException("Unable to process XLSX file", exception)
     }
