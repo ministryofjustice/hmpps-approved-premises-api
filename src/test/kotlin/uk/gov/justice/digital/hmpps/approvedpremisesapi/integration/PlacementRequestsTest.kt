@@ -193,39 +193,7 @@ class PlacementRequestsTest : IntegrationTestBase() {
     }
 
     @Test
-    fun `It returns the unmatched placement requests by default when the user is a manager`() {
-      givenAUser(roles = listOf(UserRole.CAS1_WORKFLOW_MANAGER)) { user, jwt ->
-        givenAnOffender { unmatchedOffender, unmatchedInmate ->
-          givenAPlacementRequest(
-            placementRequestAllocatedTo = user,
-            assessmentAllocatedTo = user,
-            createdByUser = user,
-            crn = unmatchedOffender.otherIds.crn,
-          ) { unmatchedPlacementRequest, _ ->
-            webTestClient.get()
-              .uri("/placement-requests/dashboard")
-              .header("Authorization", "Bearer $jwt")
-              .exchange()
-              .expectStatus()
-              .isOk
-              .expectBody()
-              .json(
-                objectMapper.writeValueAsString(
-                  listOf(
-                    placementRequestTransformer.transformJpaToApi(
-                      unmatchedPlacementRequest,
-                      PersonInfoResult.Success.Full(unmatchedOffender.otherIds.crn, unmatchedOffender, unmatchedInmate),
-                    ),
-                  ),
-                ),
-              )
-          }
-        }
-      }
-    }
-
-    @Test
-    fun `It returns the unmatched placement requests and withdrawn placement requests when the user is a manager and status is not defined`() {
+    fun `If status filter is not defined, returns the unmatched placement requests and withdrawn placement requests`() {
       givenAUser(roles = listOf(UserRole.CAS1_WORKFLOW_MANAGER)) { user, jwt ->
         givenAnOffender { unmatchedOffender, unmatchedInmate ->
           givenAPlacementRequest(
@@ -263,7 +231,7 @@ class PlacementRequestsTest : IntegrationTestBase() {
     }
 
     @Test
-    fun `It returns the unmatched placement requests and ignores the withdrawn placement requests when the user is a manager and status is notMatched`() {
+    fun `If status filter is 'notMatched', returns the unmatched placement requests, ignoring withdrawn`() {
       givenAUser(roles = listOf(UserRole.CAS1_WORKFLOW_MANAGER)) { user, jwt ->
         givenAnOffender { unmatchedOffender, unmatchedInmate ->
           givenAPlacementRequest(
@@ -297,7 +265,7 @@ class PlacementRequestsTest : IntegrationTestBase() {
     }
 
     @Test
-    fun `It returns the matched placement requests and ignores the withdrawn placement requests when the user is a manager and status is matched`() {
+    fun `If status filter is 'matched', returns the matched placement requests, ignoring withdrawn`() {
       givenAUser(roles = listOf(UserRole.CAS1_WORKFLOW_MANAGER)) { user, jwt ->
         givenAnOffender { matchedOffender, matchedInmate ->
 
@@ -366,7 +334,7 @@ class PlacementRequestsTest : IntegrationTestBase() {
     }
 
     @Test
-    fun `It returns the unable to match placement requests and ignores the withdrawn placement requests when the user is a manager and status is unableToMatch`() {
+    fun `If status filter is 'unableToMatch', returns the unable to match placement requests, ignoring withdrawn`() {
       givenAUser(roles = listOf(UserRole.CAS1_WORKFLOW_MANAGER)) { user, jwt ->
         givenAnOffender { unableToMatchOffender, unableToMatchInmate ->
 
@@ -423,7 +391,7 @@ class PlacementRequestsTest : IntegrationTestBase() {
     }
 
     @Test
-    fun `It returns paginated placement requests when the user is a manager`() {
+    fun `Returns paginated placement requests`() {
       givenAUser(roles = listOf(UserRole.CAS1_WORKFLOW_MANAGER)) { user, jwt ->
         givenAnOffender { offenderDetails, inmateDetails ->
           val placementRequest = createPlacementRequest(offenderDetails, user)
