@@ -347,6 +347,19 @@ jobs:
       - store_artifacts:
           path: e2e/videos
           destination: videos
+  trigger_ui_github_action:
+    machine:
+      image: ubuntu-2204:current
+      resource_class: arm.medium
+    steps:
+      - run:
+          name: Trigger UI GitHub Actions workflow
+          command: |
+            curl -X POST \
+              -H "Authorization: token $GITHUB_TOKEN" \
+              -H "Accept: application/vnd.github.v3+json" \
+              https://api.github.com/repos/ministryofjustice/hmpps-temporary-accommodation-ui/actions/workflows/generate-types.yml/dispatches \
+              -d '{"ref":"main"}'        
 
 workflows:
   version: 2
@@ -393,6 +406,9 @@ workflows:
           requires:
             - build_docker
             - helm_lint
+      - trigger_ui_github_action:
+          requires:
+            - deploy_dev
       - request-test-approval:
           type: approval
           requires:
