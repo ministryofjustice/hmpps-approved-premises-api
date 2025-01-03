@@ -16,6 +16,11 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementRequ
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementRequestRepository
 import java.time.LocalDate
 
+/**
+Some of these tests are duplicated in [PlacementRequestsTest]
+
+Ideally all tests should be via the API, where possible
+ */
 class PlacementRequestRepositoryTest : IntegrationTestBase() {
   @Autowired
   lateinit var realPlacementRequestRepository: PlacementRequestRepository

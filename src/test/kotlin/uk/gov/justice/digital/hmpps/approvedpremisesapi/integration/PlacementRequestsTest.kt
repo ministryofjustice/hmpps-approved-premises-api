@@ -10,6 +10,7 @@ import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.data.repository.findByIdOrNull
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewBookingNotMade
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewPlacementRequestBooking
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PlacementRequest
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PlacementRequestRequestType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.RiskTierLevel
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
@@ -17,8 +18,8 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.WithdrawPlacem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.WithdrawPlacementRequestReason
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.CaseAccessFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.PersonRisksFactory
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenABooking
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenACas1CruManagementArea
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenACas1SpaceBooking
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAPlacementApplication
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAPlacementRequest
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAProbationRegion
@@ -30,6 +31,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.ap
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApAreaEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AssessmentDecision
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas1CruManagementAreaEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas1SpaceBookingEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DomainEventType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementRequestEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementRequestRepository
@@ -44,6 +46,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.RiskWithStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.community.OffenderDetailSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.PlacementRequestDetailTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.PlacementRequestTransformer
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.bodyAsListOfObjects
 import java.time.LocalDate
 import java.time.OffsetDateTime
 import java.util.UUID
@@ -169,8 +172,45 @@ class PlacementRequestsTest : IntegrationTestBase() {
     }
   }
 
+  /**
+   Some of these tests are duplicated in [PlacementRequestRepositoryTest]
+
+   Ideally all tests should be via the API, where possible
+   */
   @Nested
   inner class Dashboard {
+
+    private fun createBooking(placementRequest: PlacementRequestEntity) {
+      val premises = approvedPremisesEntityFactory.produceAndPersist {
+        withProbationRegion(probationRegion)
+        withLocalAuthorityArea(
+          localAuthorityEntityFactory.produceAndPersist(),
+        )
+      }
+
+      placementRequest.booking = bookingEntityFactory.produceAndPersist {
+        withPremises(premises)
+      }
+      realPlacementRequestRepository.save(placementRequest)
+    }
+
+    private fun createSpaceBooking(placementRequest: PlacementRequestEntity): Cas1SpaceBookingEntity {
+      val spaceBooking = givenACas1SpaceBooking(
+        crn = placementRequest.application.crn,
+        placementRequest = placementRequest,
+      )
+      placementRequest.spaceBookings.add(spaceBooking)
+      return spaceBooking
+    }
+
+    private fun createBookingNotMadeRecord(placementRequest: PlacementRequestEntity) {
+      placementRequest.bookingNotMades = mutableListOf(
+        bookingNotMadeFactory.produceAndPersist {
+          withPlacementRequest(placementRequest)
+        },
+      )
+    }
+
     @Test
     fun `Get dashboard without JWT returns 401`() {
       webTestClient.get()
@@ -232,7 +272,7 @@ class PlacementRequestsTest : IntegrationTestBase() {
     }
 
     @Test
-    fun `If status filter is 'notMatched', returns the unmatched placement requests, ignoring withdrawn and those subsequently matched`() {
+    fun `If status filter is 'notMatched', returns the unmatched placement requests, ignoring withdrawn`() {
       givenAUser(roles = listOf(UserRole.CAS1_WORKFLOW_MANAGER)) { user, jwt ->
         givenAnOffender { unmatchedOffender, unmatchedInmate ->
           val (unmatchedPlacementRequest) = givenAPlacementRequest(
@@ -245,23 +285,17 @@ class PlacementRequestsTest : IntegrationTestBase() {
           // withdrawn, ignored
           createPlacementRequest(unmatchedOffender, user, isWithdrawn = true)
 
-          webTestClient.get()
+          val result = webTestClient.get()
             .uri("/placement-requests/dashboard?status=notMatched")
             .header("Authorization", "Bearer $jwt")
             .exchange()
             .expectStatus()
             .isOk
-            .expectBody()
-            .json(
-              objectMapper.writeValueAsString(
-                listOf(
-                  placementRequestTransformer.transformJpaToApi(
-                    unmatchedPlacementRequest,
-                    PersonInfoResult.Success.Full(unmatchedOffender.otherIds.crn, unmatchedOffender, unmatchedInmate),
-                  ),
-                ),
-              ),
-            )
+            .bodyAsListOfObjects<PlacementRequest>()
+
+          assertThat(result.map { it.id }).containsExactlyInAnyOrder(
+            unmatchedPlacementRequest.id,
+          )
         }
       }
     }
@@ -271,21 +305,7 @@ class PlacementRequestsTest : IntegrationTestBase() {
       givenAUser(roles = listOf(UserRole.CAS1_WORKFLOW_MANAGER)) { user, jwt ->
         givenAnOffender { matchedOffender, matchedInmate ->
 
-          val premises = approvedPremisesEntityFactory.produceAndPersist {
-            withProbationRegion(probationRegion)
-            withLocalAuthorityArea(
-              localAuthorityEntityFactory.produceAndPersist(),
-            )
-          }
-
-          fun matchPlacementRequest(placementRequest: PlacementRequestEntity) {
-            placementRequest.booking = bookingEntityFactory.produceAndPersist {
-              withPremises(premises)
-            }
-            realPlacementRequestRepository.save(placementRequest)
-          }
-
-          // matched and withdrawn placement request, ignored
+          // withdrawn placement request with booking, ignored
           givenAPlacementRequest(
             placementRequestAllocatedTo = user,
             assessmentAllocatedTo = user,
@@ -293,44 +313,82 @@ class PlacementRequestsTest : IntegrationTestBase() {
             crn = matchedOffender.otherIds.crn,
             isWithdrawn = true,
           ) { placementRequest, _ ->
-            matchPlacementRequest(placementRequest)
+            createBooking(placementRequest)
           }
 
-          val (matchedPlacementRequest) = givenAPlacementRequest(
+          val (placementRequestWithBooking) = givenAPlacementRequest(
             placementRequestAllocatedTo = user,
             assessmentAllocatedTo = user,
             createdByUser = user,
             crn = matchedOffender.otherIds.crn,
           ) { placementRequest, _ ->
-            matchPlacementRequest(placementRequest)
+            createBooking(placementRequest)
           }
 
-          webTestClient.get()
+          val (placementRequestPreviouslyUnableToMatchNowHasBooking) = givenAPlacementRequest(
+            placementRequestAllocatedTo = user,
+            assessmentAllocatedTo = user,
+            createdByUser = user,
+            crn = matchedOffender.otherIds.crn,
+          ) { placementRequest, _ ->
+            createBookingNotMadeRecord(placementRequest)
+            createBooking(placementRequest)
+          }
+
+          // withdrawn placement request with space booking, ignored
+          givenAPlacementRequest(
+            placementRequestAllocatedTo = user,
+            assessmentAllocatedTo = user,
+            createdByUser = user,
+            crn = matchedOffender.otherIds.crn,
+            isWithdrawn = true,
+          ) { placementRequest, _ ->
+            createSpaceBooking(placementRequest)
+          }
+
+          val (placementRequestWithSpaceBooking) = givenAPlacementRequest(
+            placementRequestAllocatedTo = user,
+            assessmentAllocatedTo = user,
+            createdByUser = user,
+            crn = matchedOffender.otherIds.crn,
+          ) { placementRequest, _ ->
+            createSpaceBooking(placementRequest)
+          }
+
+          val (placementRequestPreviouslyUnableToMatchNowHasSpaceBooking) = givenAPlacementRequest(
+            placementRequestAllocatedTo = user,
+            assessmentAllocatedTo = user,
+            createdByUser = user,
+            crn = matchedOffender.otherIds.crn,
+          ) { placementRequest, _ ->
+            createBookingNotMadeRecord(placementRequest)
+            createSpaceBooking(placementRequest)
+          }
+
+          val result = webTestClient.get()
             .uri("/placement-requests/dashboard?status=matched")
             .header("Authorization", "Bearer $jwt")
             .exchange()
             .expectStatus()
             .isOk
-            .expectBody()
-            .json(
-              objectMapper.writeValueAsString(
-                listOf(
-                  placementRequestTransformer.transformJpaToApi(
-                    matchedPlacementRequest,
-                    PersonInfoResult.Success.Full(matchedOffender.otherIds.crn, matchedOffender, matchedInmate),
-                  ),
-                ),
-              ),
-            )
+            .bodyAsListOfObjects<PlacementRequest>()
+
+          assertThat(result.map { it.id }).containsExactlyInAnyOrder(
+            placementRequestWithBooking.id,
+            placementRequestPreviouslyUnableToMatchNowHasBooking.id,
+            placementRequestWithSpaceBooking.id,
+            placementRequestPreviouslyUnableToMatchNowHasSpaceBooking.id,
+          )
         }
       }
     }
 
     @Test
-    fun `If status filter is 'unableToMatch', returns the unable to match placement requests, ignoring withdrawn`() {
+    fun `If status filter is 'unableToMatch', returns the unable to match placement requests, ignoring withdrawn and those subsequently matched`() {
       givenAUser(roles = listOf(UserRole.CAS1_WORKFLOW_MANAGER)) { user, jwt ->
         givenAnOffender { unableToMatchOffender, unableToMatchInmate ->
 
+          // withdrawn, ignore
           givenAPlacementRequest(
             placementRequestAllocatedTo = user,
             assessmentAllocatedTo = user,
@@ -338,47 +396,80 @@ class PlacementRequestsTest : IntegrationTestBase() {
             crn = unableToMatchOffender.otherIds.crn,
             isWithdrawn = true,
           ) { unableToMatchPlacementRequest, _ ->
-            unableToMatchPlacementRequest.bookingNotMades = mutableListOf(
-              bookingNotMadeFactory.produceAndPersist {
-                withPlacementRequest(unableToMatchPlacementRequest)
-              },
-            )
+            createBookingNotMadeRecord(unableToMatchPlacementRequest)
           }
 
+          val (unableToMatchPlacementRequest) = givenAPlacementRequest(
+            placementRequestAllocatedTo = user,
+            assessmentAllocatedTo = user,
+            createdByUser = user,
+            crn = unableToMatchOffender.otherIds.crn,
+          ) { placementRequest, _ ->
+            createBookingNotMadeRecord(placementRequest)
+          }
+
+          // previously unable to match, now has booking, ignored
           givenAPlacementRequest(
             placementRequestAllocatedTo = user,
             assessmentAllocatedTo = user,
             createdByUser = user,
             crn = unableToMatchOffender.otherIds.crn,
-          ) { unableToMatchPlacementRequest, _ ->
-            unableToMatchPlacementRequest.bookingNotMades = mutableListOf(
-              bookingNotMadeFactory.produceAndPersist {
-                withPlacementRequest(unableToMatchPlacementRequest)
-              },
-            )
-
-            webTestClient.get()
-              .uri("/placement-requests/dashboard?status=unableToMatch")
-              .header("Authorization", "Bearer $jwt")
-              .exchange()
-              .expectStatus()
-              .isOk
-              .expectBody()
-              .json(
-                objectMapper.writeValueAsString(
-                  listOf(
-                    placementRequestTransformer.transformJpaToApi(
-                      unableToMatchPlacementRequest,
-                      PersonInfoResult.Success.Full(
-                        unableToMatchOffender.otherIds.crn,
-                        unableToMatchOffender,
-                        unableToMatchInmate,
-                      ),
-                    ),
-                  ),
-                ),
-              )
+          ) { placementRequest, _ ->
+            createBookingNotMadeRecord(placementRequest)
+            createBooking(placementRequest)
           }
+
+          val (hasCancelledBookingPlacementRequest) = givenAPlacementRequest(
+            placementRequestAllocatedTo = user,
+            assessmentAllocatedTo = user,
+            createdByUser = user,
+            crn = unableToMatchOffender.otherIds.crn,
+          ) { placementRequest, _ ->
+            createBookingNotMadeRecord(placementRequest)
+            createBooking(placementRequest)
+            val cancellation = cancellationEntityFactory.produceAndPersist {
+              withBooking(placementRequest.booking!!)
+              withReason(cancellationReasonEntityFactory.produceAndPersist())
+            }
+            placementRequest.booking!!.cancellations.add(cancellation)
+          }
+
+          // previously unable to match, now has space booking, ignored
+          givenAPlacementRequest(
+            placementRequestAllocatedTo = user,
+            assessmentAllocatedTo = user,
+            createdByUser = user,
+            crn = unableToMatchOffender.otherIds.crn,
+          ) { placementRequest, _ ->
+            createBookingNotMadeRecord(placementRequest)
+            createSpaceBooking(placementRequest)
+          }
+
+          val (hasCancelledSpaceBookingPlacementRequest) = givenAPlacementRequest(
+            placementRequestAllocatedTo = user,
+            assessmentAllocatedTo = user,
+            createdByUser = user,
+            crn = unableToMatchOffender.otherIds.crn,
+          ) { placementRequest, _ ->
+            createBookingNotMadeRecord(placementRequest)
+            val spaceBooking = createSpaceBooking(placementRequest)
+            spaceBooking.cancellationOccurredAt = LocalDate.now()
+            cas1SpaceBookingRepository.save(spaceBooking)
+          }
+
+          val result = webTestClient.get()
+            .uri("/placement-requests/dashboard?status=unableToMatch")
+            .header("Authorization", "Bearer $jwt")
+            .exchange()
+            .expectStatus()
+            .isOk
+            .bodyAsListOfObjects<PlacementRequest>()
+
+          assertThat(result.map { it.id }).containsExactlyInAnyOrder(
+            unableToMatchPlacementRequest.id,
+            hasCancelledBookingPlacementRequest.id,
+            hasCancelledSpaceBookingPlacementRequest.id,
+          )
         }
       }
     }
