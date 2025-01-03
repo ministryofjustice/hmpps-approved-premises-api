@@ -154,7 +154,7 @@ class PlacementRequestRepositoryTest : IntegrationTestBase() {
     }
 
     @Test
-    fun `allForDashboard returns all results when no page is provided`() {
+    fun `Returns all results when no page is provided`() {
       val matchedPlacementRequests = realPlacementRequestRepository.allForDashboard(PlacementRequestStatus.matched.name)
       val notMatchedPlacementRequests = realPlacementRequestRepository.allForDashboard(PlacementRequestStatus.notMatched.name)
       val unableToMatchPlacementRequests = realPlacementRequestRepository.allForDashboard(PlacementRequestStatus.unableToMatch.name)
@@ -167,7 +167,7 @@ class PlacementRequestRepositoryTest : IntegrationTestBase() {
     }
 
     @Test
-    fun `allForDashboard returns paginated results when a page is provided`() {
+    fun `Returns paginated results when a page is provided`() {
       val pageable = PageRequest.of(1, 2, Sort.by("created_at"))
       val matchedPlacementRequests = realPlacementRequestRepository.allForDashboard(PlacementRequestStatus.matched.name, pageable = pageable)
       val notMatchedPlacementRequests = realPlacementRequestRepository.allForDashboard(PlacementRequestStatus.notMatched.name, pageable = pageable)
@@ -179,7 +179,7 @@ class PlacementRequestRepositoryTest : IntegrationTestBase() {
     }
 
     @Test
-    fun `allForDashboard returns all results when no criteria is provided`() {
+    fun `Returns all results when no criteria is provided`() {
       val pageable = PageRequest.of(0, 20, Sort.by("created_at"))
       val allPlacementRequests = realPlacementRequestRepository.allForDashboard(pageable = pageable)
 
@@ -197,7 +197,7 @@ class PlacementRequestRepositoryTest : IntegrationTestBase() {
     }
 
     @Test
-    fun `allForDashboard only returns results for CRN when specified `() {
+    fun `Only returns results for CRN when specified `() {
       val crn = "CRN456"
       val requestsForCrn = createPlacementRequests(2, isWithdrawn = false, isReallocated = false, isParole = true, crn = crn)
 
@@ -208,7 +208,7 @@ class PlacementRequestRepositoryTest : IntegrationTestBase() {
     }
 
     @Test
-    fun `allForDashboard only returns results for CRN when specified (case insensitive) `() {
+    fun `Only returns results for CRN when specified (case insensitive) `() {
       val crn = "CRN456"
       val requestsForCrn = createPlacementRequests(2, isWithdrawn = false, isReallocated = false, isParole = true, crn = crn)
 
@@ -219,7 +219,7 @@ class PlacementRequestRepositoryTest : IntegrationTestBase() {
     }
 
     @Test
-    fun `allForDashboard only returns results when name is specified in crnOrName`() {
+    fun `Only returns results when name is specified in crnOrName`() {
       val name = "John Smith".uppercase()
       val requestsForCrn = createPlacementRequests(2, isWithdrawn = false, isReallocated = false, isParole = true, name = name)
 
@@ -230,7 +230,7 @@ class PlacementRequestRepositoryTest : IntegrationTestBase() {
     }
 
     @Test
-    fun `allForDashboard only returns results for tier when specified`() {
+    fun `Only returns results for tier when specified`() {
       val tier = "A2"
       val requestsForCrn = createPlacementRequests(2, isWithdrawn = false, isReallocated = false, isParole = true, tier = tier)
 
@@ -241,7 +241,7 @@ class PlacementRequestRepositoryTest : IntegrationTestBase() {
     }
 
     @Test
-    fun `allForDashboard allows sorting by an application's created_at date`() {
+    fun `Allows sorting by an application's created_at date`() {
       val pageable = PageRequest.of(0, 20, Sort.by("application_date"))
       val allPlacementRequests = realPlacementRequestRepository.allForDashboard(pageable = pageable)
 
@@ -259,7 +259,7 @@ class PlacementRequestRepositoryTest : IntegrationTestBase() {
     }
 
     @Test
-    fun `allForDashboard only returns results where start date after arrivalDateFrom when specified`() {
+    fun `Only returns results where start date after arrivalDateFrom when specified`() {
       val expectedArrival = LocalDate.parse("2030-08-08")
       val requestsForDate = createPlacementRequests(2, isWithdrawn = false, isReallocated = false, isParole = true, expectedArrival = expectedArrival)
 
@@ -270,7 +270,7 @@ class PlacementRequestRepositoryTest : IntegrationTestBase() {
     }
 
     @Test
-    fun `allForDashboard only returns results where start date is before arrivalDateTo when specified`() {
+    fun `Only returns results where start date is before arrivalDateTo when specified`() {
       val expectedArrival = LocalDate.parse("2023-08-08")
       val requestsForDate = createPlacementRequests(2, isWithdrawn = false, isReallocated = false, isParole = true, expectedArrival = expectedArrival)
 
@@ -281,7 +281,7 @@ class PlacementRequestRepositoryTest : IntegrationTestBase() {
     }
 
     @Test
-    fun `allForDashboard only returns parole results where requestType of 'parole' is specified`() {
+    fun `Only returns parole results where requestType of 'parole' is specified`() {
       createPlacementRequests(1, isWithdrawn = false, isReallocated = false, isParole = false)
       val requestsWithTypeParole = createPlacementRequests(1, isWithdrawn = false, isReallocated = false, isParole = true)
 
@@ -292,7 +292,7 @@ class PlacementRequestRepositoryTest : IntegrationTestBase() {
     }
 
     @Test
-    fun `allForDashboard only returns non parole results where requestType of 'standardRelease' is specified`() {
+    fun `Only returns non parole results where requestType of 'standardRelease' is specified`() {
       createPlacementRequests(1, isWithdrawn = false, isReallocated = false, isParole = true)
       val requestsWithTypeStandardRelease = createPlacementRequests(1, isWithdrawn = false, isReallocated = false, isParole = false)
 
