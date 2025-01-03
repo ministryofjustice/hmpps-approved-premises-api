@@ -1241,6 +1241,16 @@ components:
           type: string
           example: '2023-04-30'
           format: date
+        previousArrivalOn:
+          type: string
+          description: Only set if the expected arrival on has changed
+          example: '2023-01-30'
+          format: date
+        previousDepartureOn:
+          type: string
+          description: Only set if the expected departure on has changed
+          example: '2023-01-30'
+          format: date
       required:
         - applicationId
         - applicationUrl
@@ -1252,6 +1262,23 @@ components:
         - premises
         - arrivalOn
         - departureOn
+    Cas1BookingChangedCharacteristic:
+      type: string
+      description: All of the characteristics applicable to a booking
+      enum:
+        - hasEnSuite
+        - isArsonSuitable
+        - isSingle
+        - isStepFreeDesignated
+        - isSuitedForSexOffenders
+        - isWheelchairDesignated
+      x-enum-varnames:
+        - HAS_EN_SUITE
+        - IS_ARSON_SUITABLE
+        - IS_SINGLE
+        - IS_STEP_FREE_DESIGNATED
+        - IS_SUITED_FOR_SEX_OFFENDERS
+        - IS_WHEELCHAIR_DESIGNATED
     BookingKeyWorkerAssignedEnvelope:
       type: object
       properties:

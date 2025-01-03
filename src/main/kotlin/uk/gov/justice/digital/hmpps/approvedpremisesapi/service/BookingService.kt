@@ -35,6 +35,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserQualifica
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.serviceScopeMatches
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PersonInfoResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.validated
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.validatedCasResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.InternalServerErrorProblem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.AuthorisableActionResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.CasResult
@@ -416,13 +417,14 @@ class BookingService(
   private fun shouldCreateDomainEventForBooking(booking: BookingEntity, user: UserEntity?) =
     booking.service == ServiceName.approvedPremises.value && user != null && (booking.application != null || booking.offlineApplication?.eventNumber != null)
 
+  @SuppressWarnings("CyclomaticComplexMethod")
   @Transactional
   fun createDateChange(
     booking: BookingEntity,
     user: UserEntity,
     newArrivalDate: LocalDate?,
     newDepartureDate: LocalDate?,
-  ) = validated {
+  ) = validatedCasResult {
     val effectiveNewArrivalDate = newArrivalDate ?: booking.arrivalDate
     val effectiveNewDepartureDate = newDepartureDate ?: booking.departureDate
 
@@ -438,11 +440,11 @@ class BookingService(
         ?: throw InternalServerErrorProblem("No bed ID present on Booking: ${booking.id}")
 
       getBookingWithConflictingDates(effectiveNewArrivalDate, expectedLastUnavailableDate, booking.id, bedId)?.let {
-        return@validated it.id hasConflictError "A Booking already exists for dates from ${it.arrivalDate} to ${it.lastUnavailableDate} which overlaps with the desired dates"
+        return@validatedCasResult it.id hasConflictError "A Booking already exists for dates from ${it.arrivalDate} to ${it.lastUnavailableDate} which overlaps with the desired dates"
       }
 
       getLostBedWithConflictingDates(effectiveNewArrivalDate, expectedLastUnavailableDate, null, bedId)?.let {
-        return@validated it.id hasConflictError "A Lost Bed already exists for dates from ${it.startDate} to ${it.endDate} which overlaps with the desired dates"
+        return@validatedCasResult it.id hasConflictError "A Lost Bed already exists for dates from ${it.startDate} to ${it.endDate} which overlaps with the desired dates"
       }
     }
 
@@ -456,11 +458,14 @@ class BookingService(
       }
     }
 
+    val previousArrivalDate = booking.arrivalDate
+    val previousDepartureDate = booking.departureDate
+
     val dateChangeEntity = dateChangeRepository.save(
       DateChangeEntity(
         id = UUID.randomUUID(),
-        previousDepartureDate = booking.departureDate,
-        previousArrivalDate = booking.arrivalDate,
+        previousArrivalDate = previousArrivalDate,
+        previousDepartureDate = previousDepartureDate,
         newArrivalDate = effectiveNewArrivalDate,
         newDepartureDate = effectiveNewDepartureDate,
         changedAt = OffsetDateTime.now(),
@@ -471,8 +476,8 @@ class BookingService(
 
     updateBooking(
       booking.apply {
-        arrivalDate = dateChangeEntity.newArrivalDate
-        departureDate = dateChangeEntity.newDepartureDate
+        arrivalDate = effectiveNewArrivalDate
+        departureDate = effectiveNewDepartureDate
         dateChanges.add(dateChangeEntity)
       },
     )
@@ -482,6 +487,16 @@ class BookingService(
         booking = booking,
         changedBy = user,
         bookingChangedAt = OffsetDateTime.now(),
+        previousArrivalDateIfChanged = if (previousArrivalDate != effectiveNewArrivalDate) {
+          previousArrivalDate
+        } else {
+          null
+        },
+        previousDepartureDateIfChanged = if (previousDepartureDate != effectiveNewDepartureDate) {
+          previousDepartureDate
+        } else {
+          null
+        },
       )
     }
 
