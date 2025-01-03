@@ -350,16 +350,13 @@ jobs:
   trigger_ui_github_action:
     machine:
       image: ubuntu-2204:current
-      resource_class: arm.medium
+      resource_class: arm.small
     steps:
+      - checkout
       - run:
           name: Trigger UI GitHub Actions workflow
           command: |
-            curl -X POST \
-              -H "Authorization: token $GITHUB_TOKEN" \
-              -H "Accept: application/vnd.github.v3+json" \
-              https://api.github.com/repos/ministryofjustice/hmpps-temporary-accommodation-ui/actions/workflows/generate-types.yml/dispatches \
-              -d '{"ref":"main"}'        
+            ./script/trigger_ui_generate_types_action
 
 workflows:
   version: 2
@@ -378,6 +375,8 @@ workflows:
               ignore: /.*/
           requires:
             - build
+      - trigger_ui_github_action:
+          name: trigger_on_pull
       - integration_test:
           filters:
             tags:

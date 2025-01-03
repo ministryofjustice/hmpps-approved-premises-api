@@ -1,0 +1,78 @@
+#!/bin/bash
+
+# Array of repository names to loop through
+REPO_NAMES=(
+  "hmpps-temporary-accommodation-ui"
+  "hmpps-community-accommodation-tier-2-ui"
+  "hmpps-approved-premises-ui"
+)
+
+# Replace with your GitHub App's private key and App ID
+PRIVATE_KEY=$GITHUB_APP_PRIVATE_KEY
+APP_ID=$GITHUB_APP_ID
+
+# Get the current timestamp (issued at time)
+IAT=$(date +%s)
+
+# Set the expiration time (10 minutes from now)
+EXP=$(($IAT + 600))
+
+# Create the JWT payload in JSON format
+PAYLOAD=$(jq -n \
+  --arg iat "$IAT" \
+  --arg exp "$EXP" \
+  --arg iss "$APP_ID" \
+  '{
+    iat: ($iat | tonumber),
+    exp: ($exp | tonumber),
+    iss: $iss
+  }')
+
+# Create the JWT header (base64url encoded)
+HEADER='{
+  "alg": "RS256",
+  "typ": "JWT"
+}'
+
+# Encode the header and payload using base64url encoding
+ENCODED_HEADER=$(echo -n "$HEADER" | openssl base64 -e | tr '+/' '-_' | tr -d '=')
+ENCODED_PAYLOAD=$(echo -n "$PAYLOAD" | openssl base64 -e | tr '+/' '-_' | tr -d '=')
+
+# Concatenate the encoded header and payload
+BASE64_ENCODED="$ENCODED_HEADER.$ENCODED_PAYLOAD"
+
+# Sign the JWT using the private key
+SIGNATURE=$(echo -n "$BASE64_ENCODED" | openssl dgst -sha256 -sign <(echo "$PRIVATE_KEY") | openssl base64 -e | tr '+/' '-_' | tr -d '=')
+
+# Generate the final JWT
+JWT="$BASE64_ENCODED.$SIGNATURE"
+
+# Loop through each repository
+for REPO in "${REPO_NAMES[@]}"
+do
+
+# Define the GitHub API URL and the JWT token (you need to have this from the earlier step)
+  GITHUB_API_URL="https://api.github.com/repos"
+  WORKFLOW_PATH="actions/workflows/generate-types.yml/dispatches"
+
+  # Construct the full API URL for the current repository
+    API_URL="${GITHUB_API_URL}/${REPO}/${WORKFLOW_PATH}"
+
+  # Trigger the GitHub Actions workflow using curl
+  curl -X POST \
+    -H "Authorization: token $JWT" \
+    -H "Accept: application/vnd.github.v3+json" \
+    $API_URL \
+    -d '{"ref":"main"}'
+
+  # Capture the exit code of curl
+  CURL_EXIT_CODE=$?
+
+  # Check if curl was successful
+  if [ $? -ne 0 ]; then
+    echo "Failed to trigger workflow for repository: $REPO"
+    exit 1
+  else
+    echo "Successfully triggered workflow for repository: $REPO"
+  fi
+done
