@@ -56,14 +56,14 @@ class Cas1BookingToSpaceBookingSeedJob(
   private val placementRequestRepository: PlacementRequestRepository,
 ) : SeedJob<Cas1BookingToSpaceBookingSeedCsvRow>(
   requiredHeaders = setOf(
-    "premises_id",
+    "q_code",
   ),
   runInTransaction = false,
 ) {
   private val log = LoggerFactory.getLogger(this::class.java)
 
   override fun deserializeRow(columns: Map<String, String>) = Cas1BookingToSpaceBookingSeedCsvRow(
-    premisesId = UUID.fromString(columns["premises_id"]!!.trim()),
+    qCode = columns["q_code"]!!.trim(),
   )
 
   override fun preSeed() {
@@ -74,19 +74,19 @@ class Cas1BookingToSpaceBookingSeedJob(
 
   override fun processRow(row: Cas1BookingToSpaceBookingSeedCsvRow) {
     transactionTemplate.executeWithoutResult {
-      migratePremise(row.premisesId)
+      migratePremise(row.qCode)
     }
   }
 
   @SuppressWarnings("TooGenericExceptionCaught")
-  private fun migratePremise(premisesId: UUID) {
-    val premises = approvedPremisesRepository.findByIdOrNull(premisesId) ?: error("Premises with id $premisesId not found")
+  private fun migratePremise(qCode: String) {
+    val premises = approvedPremisesRepository.findByQCode(qCode) ?: error("Premises with qcode $qCode not found")
 
     if (!premises.supportsSpaceBookings) {
       error("premise ${premises.name} doesn't support space bookings, can't migrate bookings")
     }
 
-    val bookingIds = bookingRepository.findAllIdsByPremisesId(premisesId)
+    val bookingIds = bookingRepository.findAllIdsByPremisesId(premises.id)
     val bookingsToMigrateSize = bookingIds.size
     log.info("Have found $bookingsToMigrateSize bookings for premise ${premises.name}")
 
@@ -267,5 +267,5 @@ class Cas1BookingToSpaceBookingSeedJob(
 }
 
 data class Cas1BookingToSpaceBookingSeedCsvRow(
-  val premisesId: UUID,
+  val qCode: String,
 )

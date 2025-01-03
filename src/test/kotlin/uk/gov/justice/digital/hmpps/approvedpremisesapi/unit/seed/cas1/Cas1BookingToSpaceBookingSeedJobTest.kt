@@ -4,7 +4,6 @@ import io.mockk.every
 import io.mockk.mockk
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
-import org.springframework.data.repository.findByIdOrNull
 import org.springframework.transaction.support.TransactionTemplate
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApprovedPremisesEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesRepository
@@ -21,7 +20,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.seed.cas1.Cas1BookingToS
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.seed.cas1.Cas1BookingToSpaceBookingSeedJob
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.EnvironmentService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1DomainEventService
-import java.util.UUID
 
 class Cas1BookingToSpaceBookingSeedJobTest {
 
@@ -45,16 +43,14 @@ class Cas1BookingToSpaceBookingSeedJobTest {
 
   @Test
   fun `fails if premise doesn't support space booking`() {
-    val premiseId = UUID.randomUUID()
-
-    every { approvedPremisesRepository.findByIdOrNull(premiseId) } returns
+    every { approvedPremisesRepository.findByQCode("Q123") } returns
       ApprovedPremisesEntityFactory()
         .withSupportsSpaceBookings(false)
         .withDefaults()
         .produce()
 
     assertThrows<RuntimeException> {
-      seedJob.processRow(Cas1BookingToSpaceBookingSeedCsvRow(premiseId))
+      seedJob.processRow(Cas1BookingToSpaceBookingSeedCsvRow("Q123"))
     }
   }
 }

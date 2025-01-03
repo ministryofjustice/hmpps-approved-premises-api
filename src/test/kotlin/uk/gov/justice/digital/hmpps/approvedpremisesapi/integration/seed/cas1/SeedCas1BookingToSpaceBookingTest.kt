@@ -295,7 +295,7 @@ class SeedCas1BookingToSpaceBookingTest : SeedTestBase() {
 
     withCsv(
       "valid-csv",
-      rowsToCsv(listOf(Cas1BookingToSpaceBookingSeedCsvRow(premises.id))),
+      rowsToCsv(listOf(Cas1BookingToSpaceBookingSeedCsvRow(premises.qCode))),
     )
 
     seedService.seedData(SeedFileType.approvedPremisesBookingToSpaceBooking, "valid-csv.csv")
@@ -586,7 +586,7 @@ class SeedCas1BookingToSpaceBookingTest : SeedTestBase() {
 
     withCsv(
       "valid-csv",
-      rowsToCsv(listOf(Cas1BookingToSpaceBookingSeedCsvRow(premises.id))),
+      rowsToCsv(listOf(Cas1BookingToSpaceBookingSeedCsvRow(premises.qCode))),
     )
 
     seedService.seedData(SeedFileType.approvedPremisesBookingToSpaceBooking, "valid-csv.csv")
@@ -614,13 +614,13 @@ class SeedCas1BookingToSpaceBookingTest : SeedTestBase() {
   private fun rowsToCsv(rows: List<Cas1BookingToSpaceBookingSeedCsvRow>): String {
     val builder = CsvBuilder()
       .withUnquotedFields(
-        "premises_id",
+        "q_code",
       )
       .newRow()
 
     rows.forEach {
       builder
-        .withQuotedField(it.premisesId)
+        .withQuotedField(premises.qCode)
         .newRow()
     }
 
