@@ -15,7 +15,7 @@ import java.time.format.DateTimeFormatter
 import java.util.UUID
 
 @Component
-class Cas1ImportDeliusBookingDataSeedJob(
+class Cas1ImportDeliusReferralsSeedJob(
   private val jdbcTemplate: NamedParameterJdbcTemplate,
   private val cas1DeliusBookingImportRepository: Cas1DeliusBookingImportRepository,
 ) : SeedJob<Cas1DeliusBookingManagementDataRow>(
@@ -39,6 +39,7 @@ class Cas1ImportDeliusBookingDataSeedJob(
     "NON_ARRIVAL_REASON_CODE",
     "NON_ARRIVAL_REASON_DESCRIPTION",
     "NON_ARRIVAL_NOTES",
+    "HOSTEL_CODE",
   ),
   runInTransaction = false,
 ) {
@@ -57,31 +58,51 @@ class Cas1ImportDeliusBookingDataSeedJob(
     val seedColumns = SeedColumns(columns)
 
     return Cas1DeliusBookingManagementDataRow(
-      bookingId = seedColumns.getUuidOrNull("BOOKING_ID")!!,
+      bookingId = seedColumns.getUuidOrNull("BOOKING_ID"),
       crn = seedColumns.getStringOrNull("CRN")!!,
       eventNumber = seedColumns.getStringOrNull("EVENT_NUMBER")!!,
-      keyWorkerStaffCode = seedColumns.getStringOrNull("KEY_WORKER_STAFF_CODE"),
+      keyWorkerStaffCode = seedColumns.getStringOrNullMinus1IsNull("KEY_WORKER_STAFF_CODE"),
       keyWorkerForename = seedColumns.getStringOrNull("KEY_WORKER_FORENAME"),
       keyWorkerMiddleName = seedColumns.getStringOrNull("KEY_WORKER_MIDDLE_NAME"),
       keyWorkerSurname = seedColumns.getStringOrNull("KEY_WORKER_SURNAME"),
       departureReasonCode = seedColumns.getStringOrNull("DEPARTURE_REASON_CODE"),
-      moveOnCategoryCode = seedColumns.getStringOrNull("MOVE_ON_CATEGORY_CODE"),
+      moveOnCategoryCode = seedColumns.getStringOrNullMinus1IsNull("MOVE_ON_CATEGORY_CODE"),
       moveOnCategoryDescription = seedColumns.getStringOrNull("MOVE_ON_CATEGORY_DESCRIPTION"),
-      expectedArrivalDate = seedColumns.getDateFromUtcDateTimeOrNull("EXPECTED_ARRIVAL_DATE")!!,
-      arrivalDate = seedColumns.getDateFromUtcDateTimeOrNull("ARRIVAL_DATE"),
-      expectedDepartureDate = seedColumns.getDateFromUtcDateTimeOrNull("EXPECTED_DEPARTURE_DATE"),
-      departureDate = seedColumns.getDateFromUtcDateTimeOrNull("DEPARTURE_DATE"),
-      nonArrivalDate = seedColumns.getDateFromUtcDateTimeOrNull("NON_ARRIVAL_DATE"),
+      expectedArrivalDate = seedColumns.getDateFromUtcDateTimeOrNull1900IsNull("EXPECTED_ARRIVAL_DATE"),
+      arrivalDate = seedColumns.getDateFromUtcDateTimeOrNull1900IsNull("ARRIVAL_DATE"),
+      expectedDepartureDate = seedColumns.getDateFromUtcDateTimeOrNull1900IsNull("EXPECTED_DEPARTURE_DATE"),
+      departureDate = seedColumns.getDateFromUtcDateTimeOrNull1900IsNull("DEPARTURE_DATE"),
+      nonArrivalDate = seedColumns.getDateFromUtcDateTimeOrNull1900IsNull("NON_ARRIVAL_DATE"),
       nonArrivalContactDateTime = seedColumns.getLastDateTimeFromListOrNull("NON_ARRIVAL_CONTACT_DATETIME_LIST", DELIUS_IMPORT_DATE_TIME_FORMATTER),
-      nonArrivalReasonCode = seedColumns.getStringOrNull("NON_ARRIVAL_REASON_CODE"),
+      nonArrivalReasonCode = seedColumns.getStringOrNullMinus1IsNull("NON_ARRIVAL_REASON_CODE"),
       nonArrivalReasonDescription = seedColumns.getStringOrNull("NON_ARRIVAL_REASON_DESCRIPTION"),
       nonArrivalNotes = seedColumns.getStringOrNull("NON_ARRIVAL_NOTES"),
+      premisesQCode = seedColumns.getStringOrNull("HOSTEL_CODE")!!,
     )
   }
 
+  @SuppressWarnings("MagicNumber")
+  private fun SeedColumns.getDateFromUtcDateTimeOrNull1900IsNull(label: String): LocalDate? {
+    val date = getDateFromUtcDateTimeOrNull(label)
+    if (date?.year == 1900) {
+      return null
+    }
+    return date
+  }
+
+  private fun SeedColumns.getStringOrNullMinus1IsNull(label: String): String? {
+    val value = getStringOrNull(label)
+    return if (value == "-1") null else value
+  }
+
   override fun processRow(row: Cas1DeliusBookingManagementDataRow) {
+    if (row.expectedArrivalDate == null) {
+      return
+    }
+
     cas1DeliusBookingImportRepository.save(
       Cas1DeliusBookingImportEntity(
+        id = UUID.randomUUID(),
         row.bookingId,
         row.crn,
         row.eventNumber,
@@ -103,6 +124,7 @@ class Cas1ImportDeliusBookingDataSeedJob(
         row.nonArrivalReasonCode,
         row.nonArrivalReasonDescription,
         row.nonArrivalNotes,
+        row.premisesQCode,
       ),
     )
   }
@@ -118,7 +140,7 @@ class Cas1ImportDeliusBookingDataSeedJob(
 }
 
 data class Cas1DeliusBookingManagementDataRow(
-  val bookingId: UUID,
+  val bookingId: UUID?,
   val crn: String,
   val eventNumber: String,
   val keyWorkerStaffCode: String?,
@@ -128,7 +150,7 @@ data class Cas1DeliusBookingManagementDataRow(
   val departureReasonCode: String?,
   val moveOnCategoryCode: String?,
   val moveOnCategoryDescription: String?,
-  val expectedArrivalDate: LocalDate,
+  val expectedArrivalDate: LocalDate?,
   val arrivalDate: LocalDate?,
   val expectedDepartureDate: LocalDate?,
   val departureDate: LocalDate?,
@@ -137,4 +159,5 @@ data class Cas1DeliusBookingManagementDataRow(
   val nonArrivalReasonCode: String?,
   val nonArrivalReasonDescription: String?,
   val nonArrivalNotes: String?,
+  val premisesQCode: String,
 )

@@ -13,32 +13,48 @@ import java.time.OffsetDateTime
 import java.util.UUID
 
 @TestInstance(TestInstance.Lifecycle.PER_METHOD)
-class SeedCas1ImportDeliusBookingDataSeedJobTest : SeedTestBase() {
+class SeedCas1ImportDeliusReferralsSeedJobTest : SeedTestBase() {
 
   @Autowired
   lateinit var cas1DeliusBookingImportRepository: Cas1DeliusBookingImportRepository
 
   @Test
-  fun `Row with only mandatory fields can be processed`() {
-    val bookingId = UUID.randomUUID()
-
+  fun `Row with no expected arrival date is ignored`() {
     withCsv(
       csvName = "valid-csv",
       contents = listOf(
         Cas1DeliusBookingManagementDataRowRaw(
-          bookingId = bookingId.toString(),
           crn = "CRN1",
           eventNumber = "1",
-          expectedArrivalDate = "2024-06-15 00:00:00",
+          hostelCode = "hostel code",
         ),
       ).toCsv(),
     )
 
-    seedService.seedData(SeedFileType.approvedPremisesImportDeliusBookingManagementData, "valid-csv.csv")
+    seedService.seedData(SeedFileType.approvedPremisesImportDeliusReferrals, "valid-csv.csv")
+
+    assertThat(cas1DeliusBookingImportRepository.findAll()).isEmpty()
+  }
+
+  @Test
+  fun `Row with only mandatory fields can be processed`() {
+    withCsv(
+      csvName = "valid-csv",
+      contents = listOf(
+        Cas1DeliusBookingManagementDataRowRaw(
+          crn = "CRN1",
+          eventNumber = "1",
+          expectedArrivalDate = "2024-06-15 00:00:00",
+          hostelCode = "hostel code",
+        ),
+      ).toCsv(),
+    )
+
+    seedService.seedData(SeedFileType.approvedPremisesImportDeliusReferrals, "valid-csv.csv")
 
     val bookingImport = cas1DeliusBookingImportRepository.findAll()[0]
 
-    assertThat(bookingImport.bookingId).isEqualTo(bookingId)
+    assertThat(bookingImport.bookingId).isNull()
     assertThat(bookingImport.crn).isEqualTo("CRN1")
     assertThat(bookingImport.eventNumber).isEqualTo("1")
     assertThat(bookingImport.keyWorkerStaffCode).isNull()
@@ -57,6 +73,7 @@ class SeedCas1ImportDeliusBookingDataSeedJobTest : SeedTestBase() {
     assertThat(bookingImport.nonArrivalReasonCode).isNull()
     assertThat(bookingImport.nonArrivalReasonDescription).isNull()
     assertThat(bookingImport.nonArrivalNotes).isNull()
+    assertThat(bookingImport.premisesQcode).isEqualTo("hostel code")
   }
 
   @Test
@@ -86,11 +103,12 @@ class SeedCas1ImportDeliusBookingDataSeedJobTest : SeedTestBase() {
           nonArrivalReasonCode = "non arrival reason code",
           nonArrivalReasonDescription = "non arrival reason description",
           nonArrivalNotes = "non arrival notes",
+          hostelCode = "hostel code",
         ),
       ).toCsv(),
     )
 
-    seedService.seedData(SeedFileType.approvedPremisesImportDeliusBookingManagementData, "valid-csv.csv")
+    seedService.seedData(SeedFileType.approvedPremisesImportDeliusReferrals, "valid-csv.csv")
 
     val bookingImport = cas1DeliusBookingImportRepository.findAll()[0]
 
@@ -113,6 +131,44 @@ class SeedCas1ImportDeliusBookingDataSeedJobTest : SeedTestBase() {
     assertThat(bookingImport.nonArrivalReasonCode).isEqualTo("non arrival reason code")
     assertThat(bookingImport.nonArrivalReasonDescription).isEqualTo("non arrival reason description")
     assertThat(bookingImport.nonArrivalNotes).isEqualTo("non arrival notes")
+    assertThat(bookingImport.premisesQcode).isEqualTo("hostel code")
+  }
+
+  @Test
+  fun `Fields containing invalid data are set to null`() {
+    val bookingId = UUID.randomUUID()
+
+    withCsv(
+      csvName = "valid-csv",
+      contents = listOf(
+        Cas1DeliusBookingManagementDataRowRaw(
+          bookingId = bookingId.toString(),
+          crn = "CRN1",
+          eventNumber = "1",
+          expectedArrivalDate = "2024-06-15 00:00:00",
+          hostelCode = "hostel code",
+          keyWorkerStaffCode = "-1",
+          moveOnCategoryCode = "-1",
+          nonArrivalReasonCode = "-1",
+          arrivalDate = "1900-01-01 00:00:00",
+          expectedDepartureDate = "1900-01-01 00:00:00",
+          departureDate = "1900-01-01 00:00:00",
+          nonArrivalDate = "1900-01-01 00:00:00",
+        ),
+      ).toCsv(),
+    )
+
+    seedService.seedData(SeedFileType.approvedPremisesImportDeliusReferrals, "valid-csv.csv")
+
+    val bookingImport = cas1DeliusBookingImportRepository.findAll()[0]
+
+    assertThat(bookingImport.keyWorkerStaffCode).isNull()
+    assertThat(bookingImport.moveOnCategoryCode).isNull()
+    assertThat(bookingImport.nonArrivalReasonCode).isNull()
+    assertThat(bookingImport.arrivalDate).isNull()
+    assertThat(bookingImport.expectedDepartureDate).isNull()
+    assertThat(bookingImport.departureDate).isNull()
+    assertThat(bookingImport.nonArrivalDate).isNull()
   }
 
   private fun List<Cas1DeliusBookingManagementDataRowRaw>.toCsv(): String {
@@ -137,6 +193,7 @@ class SeedCas1ImportDeliusBookingDataSeedJobTest : SeedTestBase() {
         "NON_ARRIVAL_REASON_CODE",
         "NON_ARRIVAL_REASON_DESCRIPTION",
         "NON_ARRIVAL_NOTES",
+        "HOSTEL_CODE",
       )
       .newRow()
 
@@ -161,6 +218,7 @@ class SeedCas1ImportDeliusBookingDataSeedJobTest : SeedTestBase() {
         .withQuotedField(it.nonArrivalReasonCode)
         .withQuotedField(it.nonArrivalReasonDescription)
         .withQuotedField(it.nonArrivalNotes)
+        .withQuotedField(it.hostelCode)
         .newRow()
     }
 
@@ -187,5 +245,6 @@ class SeedCas1ImportDeliusBookingDataSeedJobTest : SeedTestBase() {
     val nonArrivalReasonCode: String = "",
     val nonArrivalReasonDescription: String = "",
     val nonArrivalNotes: String = "",
+    val hostelCode: String = "",
   )
 }
