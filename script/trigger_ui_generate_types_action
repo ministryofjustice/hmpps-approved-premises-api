@@ -34,18 +34,21 @@ HEADER='{
   "typ": "JWT"
 }'
 
-# Encode the header and payload using base64url encoding
-ENCODED_HEADER=$(echo -n "$HEADER" | openssl base64 -e | tr '+/' '-_' | tr -d '=')
-ENCODED_PAYLOAD=$(echo -n "$PAYLOAD" | openssl base64 -e | tr '+/' '-_' | tr -d '=')
+# Generate the JWT using jwt-cli (assuming the private key is in PEM format)
+JWT=$(echo "$PAYLOAD" | jwt encode --secret "$PRIVATE_KEY" --alg RS256)
 
-# Concatenate the encoded header and payload
-BASE64_ENCODED="$ENCODED_HEADER.$ENCODED_PAYLOAD"
 
-# Sign the JWT using the private key
-SIGNATURE=$(echo -n "$BASE64_ENCODED" | openssl dgst -sha256 -sign <(echo "$PRIVATE_KEY") | openssl base64 -e | tr '+/' '-_' | tr -d '=')
+# Use curl to request the access token from the GitHub API
+GITHUB_ACCESS_TOKEN=$(curl -s -X POST \
+  -H "Authorization: Bearer $JWT" \
+  -H "Accept: application/vnd.github.v3+json" \
+  "https://api.github.com/app/installations/$INSTALLATION_ID/access_tokens" | jq -r .token)
 
-# Generate the final JWT
-JWT="$BASE64_ENCODED.$SIGNATURE"
+# Check if the token was obtained successfully
+if [ -z "$GITHUB_ACCESS_TOKEN" ]; then
+  echo "Failed to obtain GitHub access token."
+  exit 1
+fi
 
 # Loop through each repository
 for REPO in "${REPO_NAMES[@]}"
@@ -60,7 +63,7 @@ do
 
   # Trigger the GitHub Actions workflow using curl
   curl -X POST \
-    -H "Authorization: token $JWT" \
+    -H "Authorization: token $GITHUB_ACCESS_TOKEN" \
     -H "Accept: application/vnd.github.v3+json" \
     $API_URL \
     -d '{"ref":"main"}'

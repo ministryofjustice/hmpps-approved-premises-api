@@ -350,9 +350,12 @@ jobs:
   trigger_ui_github_action:
     machine:
       image: ubuntu-2204:current
-      resource_class: arm.small
+      resource_class: arm.medium
     steps:
       - checkout
+      - run:
+          command: |
+            ls -la
       - run:
           name: Trigger UI GitHub Actions workflow
           command: |
