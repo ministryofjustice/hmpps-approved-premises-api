@@ -86,14 +86,6 @@ interface PlacementRequestRepository : JpaRepository<PlacementRequestEntity, UUI
               AND c.id IS NULL
           ) THEN 'matched'
           WHEN EXISTS (
-            SELECT
-              1
-            from
-              booking_not_mades bnm
-            WHERE
-              bnm.placement_request_id = pq.id
-          ) THEN 'unableToMatch'
-          WHEN EXISTS (
             SELECT 
                 1 
             FROM 
@@ -101,7 +93,15 @@ interface PlacementRequestRepository : JpaRepository<PlacementRequestEntity, UUI
             WHERE
                 sb.placement_request_id = pq.id AND
                 sb.cancellation_occurred_at IS NULL
-          ) THEN 'matched'    
+          ) THEN 'matched'   
+          WHEN EXISTS (
+            SELECT
+              1
+            from
+              booking_not_mades bnm
+            WHERE
+              bnm.placement_request_id = pq.id
+          ) THEN 'unableToMatch' 
           ELSE 'notMatched'
         END
       ) = :status)

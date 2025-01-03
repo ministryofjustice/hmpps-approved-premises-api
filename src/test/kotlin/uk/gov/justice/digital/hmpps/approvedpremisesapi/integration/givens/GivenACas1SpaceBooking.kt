@@ -6,6 +6,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremi
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas1SpaceBookingEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.CharacteristicEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.OfflineApplicationEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementRequestEntity
 
 @SuppressWarnings("LongParameterList")
 fun IntegrationTestBase.givenACas1SpaceBooking(
@@ -15,9 +16,10 @@ fun IntegrationTestBase.givenACas1SpaceBooking(
   deliusEventNumber: String? = null,
   offlineApplication: OfflineApplicationEntity? = null,
   criteria: List<CharacteristicEntity>? = null,
+  placementRequest: PlacementRequestEntity? = null,
 ): Cas1SpaceBookingEntity {
   val (user) = givenAUser()
-  val placementRequest = if (offlineApplication == null) {
+  val placementRequestToUse = placementRequest ?: if (offlineApplication == null) {
     givenAPlacementRequest(
       placementRequestAllocatedTo = user,
       assessmentAllocatedTo = user,
@@ -30,8 +32,8 @@ fun IntegrationTestBase.givenACas1SpaceBooking(
 
   return cas1SpaceBookingEntityFactory.produceAndPersist {
     withCrn(crn)
-    withPlacementRequest(placementRequest)
-    withApplication(placementRequest?.application)
+    withPlacementRequest(placementRequestToUse)
+    withApplication(placementRequestToUse?.application)
     withOfflineApplication(offlineApplication)
     withCreatedBy(user)
     withDeliusEventNumber(deliusEventNumber)
