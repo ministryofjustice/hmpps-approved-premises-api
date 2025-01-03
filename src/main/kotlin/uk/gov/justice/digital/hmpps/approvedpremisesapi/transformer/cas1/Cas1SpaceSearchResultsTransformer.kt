@@ -47,7 +47,6 @@ class Cas1SpaceSearchResultsTransformer {
             },
           ),
           distanceInMiles = candidatePremises.distanceInMiles.toBigDecimal(),
-          spacesAvailable = listOf(),
         )
       },
     )
