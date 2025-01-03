@@ -1,0 +1,146 @@
+---
+# Per environment values which override defaults in approved-premises-api/values.yaml
+
+generic-service:
+  serviceAccountName: hmpps-community-accommodation-api-service-account
+  replicaCount: 2
+
+  ingress:
+    host: approved-premises-api-dev.hmpps.service.justice.gov.uk
+    tlsSecretName: hmpps-approved-premises-api-dev-cert
+
+  resources:
+    limits:
+      memory: 1.5Gi
+    requests:
+      memory: 1Gi
+
+  env:
+    JAVA_OPTS: "-Xmx1000m"
+    SPRING_PROFILES_ACTIVE: dev
+    APPLICATIONINSIGHTS_CONFIGURATION_FILE: applicationinsights.nonprod.json
+    HMPPS_AUTH_URL: https://sign-in-dev.hmpps.service.justice.gov.uk/auth
+    SERVICES_COMMUNITY-API_BASE-URL: https://community-api-secure.test.delius.probation.hmpps.dsd.io
+    SERVICES_AP-DELIUS-CONTEXT-API_BASE-URL: https://approved-premises-and-delius-dev.hmpps.service.justice.gov.uk
+    SERVICES_HMPPS-TIER_BASE-URL: https://hmpps-tier-dev.hmpps.service.justice.gov.uk
+    SERVICES_PRISONS-API_BASE-URL: https://prison-api-dev.prison.service.justice.gov.uk
+    SERVICES_NOMIS-USER-ROLES-API_BASE-URL: https://nomis-user-roles-api-dev.prison.service.justice.gov.uk
+    SERVICES_MANAGE-USERS-API_BASE-URL: https://manage-users-api-dev.hmpps.service.justice.gov.uk
+    SERVICES_PROBATION-OFFENDER-SEARCH-API_BASE-URL: https://probation-offender-search-dev.hmpps.service.justice.gov.uk
+    SERVICES_CASE-NOTES_BASE-URL: https://dev.offender-case-notes.service.justice.gov.uk
+    SERVICES_AP-OASYS-CONTEXT-API_BASE-URL: https://approved-premises-and-oasys-dev.hmpps.service.justice.gov.uk
+    SERVICES_GOV-UK-BANK-HOLIDAYS-API_BASE-URL: https://www.gov.uk
+    SPRING_FLYWAY_LOCATIONS: classpath:db/migration/all,classpath:db/migration/local+dev+test+demo,classpath:db/migration/dev+test+demo,classpath:db/migration/all-except-integration
+    LOG-CLIENT-CREDENTIALS-JWT-INFO: true
+    ASSIGN-DEFAULT-REGION-TO-USERS-WITH-UNKNOWN-REGION: true
+    SENTRY_ENVIRONMENT: demo
+    SENTRY_TRACES-SAMPLE-RATE: 0.01
+    CACHES_STAFFMEMBERS_EXPIRY-SECONDS: 20
+    DOMAIN-EVENTS_CAS1_EMIT-ENABLED: true
+    DOMAIN-EVENTS_CAS2_EMIT-ENABLED: true
+    DOMAIN-EVENTS_CAS3_EMIT-ENABLED: referralSubmitted,bookingProvisionallyMade,bookingConfirmed,bookingCancelled,bookingCancelledUpdated,personArrived,personArrivedUpdated,personDeparted,personDepartureUpdated
+    DOMAIN-EVENTS_CAS1_ASYNC-SAVE-ENABLED: false
+    DOMAIN-EVENTS_CAS2_ASYNC-SAVE-ENABLED: false
+    DOMAIN-EVENTS_CAS3_ASYNC-SAVE-ENABLED: false
+    PREEMPTIVE-CACHE-LOGGING-ENABLED: true
+    PREEMPTIVE-CACHE-DELAY-MS: 60000
+    SEED_AUTO_ENABLED: true
+    SEED_AUTO_FILE-PREFIXES: classpath:db/seed/local+dev+test+demo,classpath:db/seed/dev+test+demo
+    SEED_AUTO-SCRIPT_CAS1-ENABLED: true
+    SEED_AUTO-SCRIPT_CAS2-ENABLED: true
+    SEED_AUTO-SCRIPT_NOMS: A5276DZ
+    SEED_AUTO-SCRIPT_PRISON-CODE: MDI
+    NOTIFY_MODE: TEST_AND_GUEST_LIST
+    HMPPS_SQS_USE_WEB_TOKEN: true
+
+    URL-TEMPLATES_FRONTEND_APPLICATION: https://approved-premises-demo.hmpps.service.justice.gov.uk/applications/#id
+    URL-TEMPLATES_FRONTEND_APPLICATION-APPEAL: https://approved-premises-demo.hmpps.service.justice.gov.uk/applications/#applicationId/appeals/#appealId
+    URL-TEMPLATES_FRONTEND_APPLICATION-TIMELINE: https://approved-premises-demo.hmpps.service.justice.gov.uk/applications/#applicationId?tab=timeline
+    URL-TEMPLATES_FRONTEND_ASSESSMENT: https://approved-premises-demo.hmpps.service.justice.gov.uk/assessments/#id
+    URL-TEMPLATES_FRONTEND_BOOKING: https://approved-premises-demo.hmpps.service.justice.gov.uk/premises/#premisesId/bookings/#bookingId
+    URL-TEMPLATES_FRONTEND_CAS1_APPLICATION: https://approved-premises-demo.hmpps.service.justice.gov.uk/manage/premises/#premisesId/bookings/#bookingId
+    URL-TEMPLATES_FRONTEND_CAS2_APPLICATION: https://community-accommodation-tier-2-demo.hmpps.service.justice.gov.uk/applications/#id
+    URL-TEMPLATES_FRONTEND_CAS2_APPLICATION-OVERVIEW: https://community-accommodation-tier-2-demo.hmpps.service.justice.gov.uk/applications/#id/overview
+    URL-TEMPLATES_FRONTEND_CAS2_SUBMITTED-APPLICATION-OVERVIEW: https://community-accommodation-tier-2-demo.hmpps.service.justice.gov.uk/assess/applications/#applicationId/overview
+    URL-TEMPLATES_API_CAS1_APPLICATION-SUBMITTED-EVENT-DETAIL: https://approved-premises-api-demo.hmpps.service.justice.gov.uk/events/application-submitted/#eventId
+    URL-TEMPLATES_API_CAS1_APPLICATION-ASSESSED-EVENT-DETAIL: https://approved-premises-api-demo.hmpps.service.justice.gov.uk/events/application-assessed/#eventId
+    URL-TEMPLATES_API_CAS1_BOOKING-MADE-EVENT-DETAIL: https://approved-premises-api-demo.hmpps.service.justice.gov.uk/events/booking-made/#eventId
+    URL-TEMPLATES_API_CAS1_PERSON-ARRIVED-EVENT-DETAIL: https://approved-premises-api-demo.hmpps.service.justice.gov.uk/events/person-arrived/#eventId
+    URL-TEMPLATES_API_CAS1_PERSON-NOT-ARRIVED-EVENT-DETAIL: https://approved-premises-api-demo.hmpps.service.justice.gov.uk/events/person-not-arrived/#eventId
+    URL-TEMPLATES_API_CAS1_PERSON-DEPARTED-EVENT-DETAIL: https://approved-premises-api-demo.hmpps.service.justice.gov.uk/events/person-departed/#eventId
+    URL-TEMPLATES_API_CAS1_BOOKING-NOT-MADE-EVENT-DETAIL: https://approved-premises-api-demo.hmpps.service.justice.gov.uk/events/booking-not-made/#eventId
+    URL-TEMPLATES_API_CAS1_BOOKING-CANCELLED-EVENT-DETAIL: https://approved-premises-api-demo.hmpps.service.justice.gov.uk/events/booking-cancelled/#eventId
+    URL-TEMPLATES_API_CAS1_BOOKING-CHANGED-EVENT-DETAIL: https://approved-premises-api-demo.hmpps.service.justice.gov.uk/events/booking-changed/#eventId
+    URL-TEMPLATES_API_CAS1_APPLICATION-WITHDRAWN-EVENT-DETAIL: https://approved-premises-api-demo.hmpps.service.justice.gov.uk/events/application-withdrawn/#eventId
+    URL-TEMPLATES_API_CAS1_APPLICATION-EXPIRED-EVENT-DETAIL: https://approved-premises-api-demo.hmpps.service.justice.gov.uk/events/application-expired/#eventId
+    URL-TEMPLATES_API_CAS1_ASSESSMENT-APPEALED-EVENT-DETAIL: https://approved-premises-api-demo.hmpps.service.justice.gov.uk/events/assessment-appealed/#eventId
+    URL-TEMPLATES_API_CAS1_ASSESSMENT-ALLOCATED-EVENT-DETAIL: https://approved-premises-api-demo.hmpps.service.justice.gov.uk/events/assessment-allocated/#eventId
+    URL-TEMPLATES_API_CAS1_PLACEMENT-APPLICATION-WITHDRAWN-EVENT-DETAIL: https://approved-premises-api-demo.hmpps.service.justice.gov.uk/events/placement-application-withdrawn/#eventId
+    URL-TEMPLATES_API_CAS1_PLACEMENT-APPLICATION-ALLOCATED-EVENT-DETAIL: https://approved-premises-api-demo.hmpps.service.justice.gov.uk/events/placement-application-allocated/#eventId
+    URL-TEMPLATES_API_CAS1_MATCH-REQUEST-WITHDRAWN-EVENT-DETAIL: https://approved-premises-api-demo.hmpps.service.justice.gov.uk/events/match-request-withdrawn/#eventId
+    URL-TEMPLATES_API_CAS1_REQUEST-FOR-PLACEMENT-CREATED-EVENT-DETAIL: https://approved-premises-api-demo.hmpps.service.justice.gov.uk/events/request-for-placement-created/#eventId
+    URL-TEMPLATES_API_CAS1_REQUEST-FOR-PLACEMENT-ASSESSED-EVENT-DETAIL: https://approved-premises-api-demo.hmpps.service.justice.gov.uk/events/request-for-placement-assessed/#eventId
+    URL-TEMPLATES_API_CAS1_ASSESSMENT-INFO-REQUESTED-DETAIL: https://approved-premises-api-demo.hmpps.service.justice.gov.uk/events/further-information-requested/#eventId
+    URL-TEMPLATES_API_CAS2_APPLICATION-SUBMITTED-EVENT-DETAIL: https://approved-premises-api-demo.hmpps.service.justice.gov.uk/events/cas2/application-submitted/#eventId
+    URL-TEMPLATES_API_CAS2_APPLICATION-STATUS-UPDATED-EVENT-DETAIL: https://approved-premises-api-demo.hmpps.service.justice.gov.uk/events/cas2/application-status-updated/#eventId
+    URL-TEMPLATES_API_CAS3_APPLICATION: https://approved-premises-api-demo.hmpps.service.justice.gov.uk/applications/#applicationId
+    URL-TEMPLATES_API_CAS3_BOOKING: https://approved-premises-api-demo.hmpps.service.justice.gov.uk/premises/#premisesId/bookings/#bookingId
+    URL-TEMPLATES_API_CAS3_BOOKING-CANCELLED-EVENT-DETAIL: https://approved-premises-api-demo.hmpps.service.justice.gov.uk/events/cas3/booking-cancelled/#eventId
+    URL-TEMPLATES_API_CAS3_BOOKING-CONFIRMED-EVENT-DETAIL: https://approved-premises-api-demo.hmpps.service.justice.gov.uk/events/cas3/booking-confirmed/#eventId
+    URL-TEMPLATES_API_CAS3_BOOKING-PROVISIONALLY-MADE-EVENT-DETAIL: https://approved-premises-api-demo.hmpps.service.justice.gov.uk/events/cas3/booking-provisionally-made/#eventId
+    URL-TEMPLATES_API_CAS3_PERSON-ARRIVED-EVENT-DETAIL: https://approved-premises-api-demo.hmpps.service.justice.gov.uk/events/cas3/person-arrived/#eventId
+    URL-TEMPLATES_API_CAS3_PERSON-ARRIVED-UPDATED-EVENT-DETAIL: https://approved-premises-api-demo.hmpps.service.justice.gov.uk/events/cas3/person-arrived-updated/#eventId
+    URL-TEMPLATES_API_CAS3_PERSON-DEPARTED-EVENT-DETAIL: https://approved-premises-api-demo.hmpps.service.justice.gov.uk/events/cas3/person-departed/#eventId
+    URL-TEMPLATES_API_CAS3_REFERRAL-SUBMITTED-EVENT-DETAIL: https://approved-premises-api-demo.hmpps.service.justice.gov.uk/events/cas3/referral-submitted/#eventId
+    URL-TEMPLATES_API_CAS3_PERSON-DEPARTURE-UPDATED-EVENT-DETAIL: https://approved-premises-api-demo.hmpps.service.justice.gov.uk/events/cas3/person-departure-updated/#eventId
+    URL-TEMPLATES_API_CAS3_BOOKING-CANCELLED-UPDATED-EVENT-DETAIL: https://approved-premises-api-demo.hmpps.service.justice.gov.uk/events/cas3/booking-cancelled-updated/#eventId
+
+    USER-ALLOCATIONS_RULES_ESAP-ASSESSMENTS_ALLOCATE-TO-USER: AP_USER_TEST_2
+
+    FEATURE-FLAGS_CAS1-APPEAL-MANAGER-CAN-ASSESS-APPLICATIONS: true
+    FEATURE-FLAGS_CAS1-ONLY-LIST-ADJUDICATIONS-UP-TO-12-MONTHS: true
+    FEATURE-FLAGS_CAS1-ONLY-LIST-SPECIFIC-PRISON-NOTE-TYPES: true
+    FEATURE-FLAGS_CAS1-WOMENS-ESTATE-ENABLED: true
+    FEATURE-FLAGS_CAS1-EXPIRED-APPLICATIONS-ENABLED: true
+    FEATURE-FLAGS_INCLUDE-ASSESSMENT-UPDATED-DOMAIN-EVENTS: false
+    FEATURE-FLAGS_GET-DOCUMENTS-FROM-AP-DELIUS: true
+
+  namespace_secrets:
+    hmpps-domain-events-topic:
+      HMPPS_SQS_TOPICS_DOMAINEVENTS_ARN: "topic_arn"
+    hmpps-approved-premises-api:
+      NOTIFY_APIKEY: "NOTIFY_APIKEY"
+      NOTIFY_GUESTLISTAPIKEY: "NOTIFY_GUESTLISTAPIKEY"
+      NOTIFY_EMAILADDRESSES_CAS2ASSESSORS: "NOTIFY_EMAILADDRESSES_CAS2ASSESSORS"
+
+  allowlist:
+    unilink-aovpn1: "194.75.210.216/29"
+    unilink-aovpn2: "83.98.63.176/29"
+    unilink-aovpn3: "78.33.10.50/31"
+    unilink-aovpn4: "78.33.10.52/30"
+    unilink-aovpn5: "78.33.10.56/30"
+    unilink-aovpn6: "78.33.10.60/32"
+    unilink-aovpn7: "78.33.32.99/32"
+    unilink-aovpn8: "78.33.32.100/30"
+    unilink-aovpn9: "78.33.32.104/30"
+    unilink-aovpn10: "78.33.32.108/32"
+    unilink-aovpn11: "217.138.45.109/32"
+    unilink-aovpn12: "217.138.45.110/32"
+    ncc-tsc-team-1: "5.148.32.192/26"
+    ncc-tsc-team-2: "5.148.69.16/28"
+    ncc-tsc-team-3: "31.221.110.80/29"
+    ncc-tsc-team-4: "154.51.64.64/27"
+    ncc-tsc-team-5: "154.51.128.224/27"
+    ncc-tsc-team-6: "167.98.1.160/28"
+    ncc-tsc-team-7: "167.98.25.176/28"
+    ncc-tsc-team-8: "167.98.200.192/27"
+    ncc-tsc-team-9: "195.95.131.0/24"
+    ncc-mvss-team-1: "5.148.8.192/26"
+
+# CloudPlatform AlertManager receiver to route prometheus alerts to slack
+# See https://user-guide.cloud-platform.service.justice.gov.uk/documentation/monitoring-an-app/how-to-create-alarms.html#creating-your-own-custom-alerts
+generic-prometheus-alerts:
+  alertSeverity: hmpps-approved-premises
+
+env_details:
+  production_env: false
