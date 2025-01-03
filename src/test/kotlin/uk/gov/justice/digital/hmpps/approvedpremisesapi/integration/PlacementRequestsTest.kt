@@ -17,6 +17,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.WithdrawPlacem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.WithdrawPlacementRequestReason
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.CaseAccessFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.PersonRisksFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenABooking
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenACas1CruManagementArea
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAPlacementApplication
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAPlacementRequest
@@ -231,35 +232,36 @@ class PlacementRequestsTest : IntegrationTestBase() {
     }
 
     @Test
-    fun `If status filter is 'notMatched', returns the unmatched placement requests, ignoring withdrawn`() {
+    fun `If status filter is 'notMatched', returns the unmatched placement requests, ignoring withdrawn and those subsequently matched`() {
       givenAUser(roles = listOf(UserRole.CAS1_WORKFLOW_MANAGER)) { user, jwt ->
         givenAnOffender { unmatchedOffender, unmatchedInmate ->
-          givenAPlacementRequest(
+          val (unmatchedPlacementRequest) = givenAPlacementRequest(
             placementRequestAllocatedTo = user,
             assessmentAllocatedTo = user,
             createdByUser = user,
             crn = unmatchedOffender.otherIds.crn,
-          ) { unmatchedPlacementRequest, _ ->
-            createPlacementRequest(unmatchedOffender, user, isWithdrawn = true)
+          )
 
-            webTestClient.get()
-              .uri("/placement-requests/dashboard?status=notMatched")
-              .header("Authorization", "Bearer $jwt")
-              .exchange()
-              .expectStatus()
-              .isOk
-              .expectBody()
-              .json(
-                objectMapper.writeValueAsString(
-                  listOf(
-                    placementRequestTransformer.transformJpaToApi(
-                      unmatchedPlacementRequest,
-                      PersonInfoResult.Success.Full(unmatchedOffender.otherIds.crn, unmatchedOffender, unmatchedInmate),
-                    ),
+          // withdrawn, ignored
+          createPlacementRequest(unmatchedOffender, user, isWithdrawn = true)
+
+          webTestClient.get()
+            .uri("/placement-requests/dashboard?status=notMatched")
+            .header("Authorization", "Bearer $jwt")
+            .exchange()
+            .expectStatus()
+            .isOk
+            .expectBody()
+            .json(
+              objectMapper.writeValueAsString(
+                listOf(
+                  placementRequestTransformer.transformJpaToApi(
+                    unmatchedPlacementRequest,
+                    PersonInfoResult.Success.Full(unmatchedOffender.otherIds.crn, unmatchedOffender, unmatchedInmate),
                   ),
                 ),
-              )
-          }
+              ),
+            )
         }
       }
     }
@@ -269,30 +271,21 @@ class PlacementRequestsTest : IntegrationTestBase() {
       givenAUser(roles = listOf(UserRole.CAS1_WORKFLOW_MANAGER)) { user, jwt ->
         givenAnOffender { matchedOffender, matchedInmate ->
 
+          val premises = approvedPremisesEntityFactory.produceAndPersist {
+            withProbationRegion(probationRegion)
+            withLocalAuthorityArea(
+              localAuthorityEntityFactory.produceAndPersist(),
+            )
+          }
+
           fun matchPlacementRequest(placementRequest: PlacementRequestEntity) {
-            val premises = approvedPremisesEntityFactory.produceAndPersist {
-              withProbationRegion(probationRegion)
-              withLocalAuthorityArea(
-                localAuthorityEntityFactory.produceAndPersist(),
-              )
-            }
-
-            val room = roomEntityFactory.produceAndPersist {
-              withPremises(premises)
-            }
-
-            val bed = bedEntityFactory.produceAndPersist {
-              withRoom(room)
-            }
-
             placementRequest.booking = bookingEntityFactory.produceAndPersist {
               withPremises(premises)
-              withBed(bed)
             }
-
             realPlacementRequestRepository.save(placementRequest)
           }
 
+          // matched and withdrawn placement request, ignored
           givenAPlacementRequest(
             placementRequestAllocatedTo = user,
             assessmentAllocatedTo = user,
@@ -303,32 +296,32 @@ class PlacementRequestsTest : IntegrationTestBase() {
             matchPlacementRequest(placementRequest)
           }
 
-          givenAPlacementRequest(
+          val (matchedPlacementRequest) = givenAPlacementRequest(
             placementRequestAllocatedTo = user,
             assessmentAllocatedTo = user,
             createdByUser = user,
             crn = matchedOffender.otherIds.crn,
-          ) { matchedPlacementRequest, _ ->
-            matchPlacementRequest(matchedPlacementRequest)
+          ) { placementRequest, _ ->
+            matchPlacementRequest(placementRequest)
+          }
 
-            webTestClient.get()
-              .uri("/placement-requests/dashboard?status=matched")
-              .header("Authorization", "Bearer $jwt")
-              .exchange()
-              .expectStatus()
-              .isOk
-              .expectBody()
-              .json(
-                objectMapper.writeValueAsString(
-                  listOf(
-                    placementRequestTransformer.transformJpaToApi(
-                      matchedPlacementRequest,
-                      PersonInfoResult.Success.Full(matchedOffender.otherIds.crn, matchedOffender, matchedInmate),
-                    ),
+          webTestClient.get()
+            .uri("/placement-requests/dashboard?status=matched")
+            .header("Authorization", "Bearer $jwt")
+            .exchange()
+            .expectStatus()
+            .isOk
+            .expectBody()
+            .json(
+              objectMapper.writeValueAsString(
+                listOf(
+                  placementRequestTransformer.transformJpaToApi(
+                    matchedPlacementRequest,
+                    PersonInfoResult.Success.Full(matchedOffender.otherIds.crn, matchedOffender, matchedInmate),
                   ),
                 ),
-              )
-          }
+              ),
+            )
         }
       }
     }

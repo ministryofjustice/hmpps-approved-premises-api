@@ -185,7 +185,7 @@ fun IntegrationTestBase.givenAPlacementRequest(
   assessmentSubmittedAt: OffsetDateTime = OffsetDateTime.now(),
   placementApplication: PlacementApplicationEntity? = null,
   block: (placementRequest: PlacementRequestEntity, application: ApplicationEntity) -> Unit,
-) {
+): Pair<PlacementRequestEntity, ApprovedPremisesApplicationEntity> {
   val result = givenAPlacementRequest(
     placementRequestAllocatedTo,
     assessmentAllocatedTo,
@@ -206,4 +206,6 @@ fun IntegrationTestBase.givenAPlacementRequest(
   )
 
   block(result.first, result.second)
+
+  return result
 }
