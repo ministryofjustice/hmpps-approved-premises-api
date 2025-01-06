@@ -406,7 +406,7 @@ jobs:
            echo "$GITHUB_APP_PRIVATE_KEY" > private_key.pem
            
            # Generate the JWT using jwt-cli with the private key
-           JWT=$(echo "$PAYLOAD" | jwt sign --key private_key.pem --alg RS256)
+           JWT=$(jwt sign -sign $PAYLOAD --secret $GITHUB_APP_PRIVATE_KEY --alg RS256 -compact)
            
            # Clean up the private key file (for security reasons)
            rm private_key.pem
