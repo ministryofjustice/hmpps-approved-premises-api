@@ -36,7 +36,7 @@ HEADER='{
 
 # Create a temporary file for the private key
 echo "$PRIVATE_KEY" > private_key.pem
-
+echo "$PRIVATE_KEY"
 # Generate the JWT using jwt-cli with the private key
 JWT=$(echo "$PAYLOAD" | jwt sign --key private_key.pem --alg RS256)
 
@@ -52,7 +52,7 @@ GITHUB_ACCESS_TOKEN=$(curl -s -X POST \
 echo $GITHUB_ACCESS_TOKEN
 
 # Check if the token was obtained successfully
-if [ -z "$GITHUB_ACCESS_TOKEN" ]; then
+if [ -z "$GITHUB_ACCESS_TOKEN" ] || [ "$GITHUB_ACCESS_TOKEN" == "Bad credentials" ]; then
   echo "Failed to obtain GitHub access token."
   exit 1
 fi
