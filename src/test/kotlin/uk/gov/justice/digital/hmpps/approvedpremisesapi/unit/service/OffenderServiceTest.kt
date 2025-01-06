@@ -2098,6 +2098,58 @@ class OffenderServiceTest {
     }
   }
 
+  @Nested
+  inner class GetPersonSummaryInfoResultsInBatches {
+
+    @Test
+    fun `error if batch size greater than 500`() {
+      assertThatThrownBy {
+        offenderService.getPersonSummaryInfoResultsInBatches(
+          crns = emptySet(),
+          batchSize = 501,
+          limitedAccessStrategy = LimitedAccessStrategy.IgnoreLimitedAccess,
+        )
+      }.isInstanceOf(InternalServerErrorProblem::class.java)
+        .hasMessage("Internal Server Error: Cannot request more than 500 CRNs. A batch size of 501 has been requested.")
+    }
+
+    @Test
+    fun `request offender info in batches of 400`() {
+      val crns = (1..750).map { "CRN$it" }
+      val offenderSummaries = crns.map { CaseSummaryFactory().withCrn(it).produce() }
+      val caseAccesses = crns.map { CaseAccessFactory().withCrn(it).produce() }
+
+      every {
+        mockApDeliusContextApiClient.getSummariesForCrns((1..400).map { "CRN$it" })
+      } returns ClientResult.Success(HttpStatus.OK, CaseSummaries(offenderSummaries.subList(0, 400)))
+
+      every {
+        mockApDeliusContextApiClient.getSummariesForCrns((401..750).map { "CRN$it" })
+      } returns ClientResult.Success(HttpStatus.OK, CaseSummaries(offenderSummaries.subList(400, 750)))
+
+      every {
+        mockApDeliusContextApiClient.getUserAccessForCrns(USERNAME, (1..400).map { "CRN$it" })
+      } returns ClientResult.Success(HttpStatus.OK, UserAccess(caseAccesses.subList(0, 400)))
+
+      every {
+        mockApDeliusContextApiClient.getUserAccessForCrns(USERNAME, (401..750).map { "CRN$it" })
+      } returns ClientResult.Success(HttpStatus.OK, UserAccess(caseAccesses.subList(401, 750)))
+
+      val results = offenderService.getPersonSummaryInfoResultsInBatches(
+        crns = crns.toSet(),
+        limitedAccessStrategy = ReturnRestrictedIfLimitedAccess(USERNAME),
+        batchSize = 400,
+      )
+
+      assertThat(results).hasSize(750)
+      (0..749).forEach {
+        val result = results[it]
+        assertThat(result).isInstanceOf(PersonSummaryInfoResult.Success.Full::class.java)
+        assertThat((result as PersonSummaryInfoResult.Success.Full).summary).isEqualTo(offenderSummaries[it])
+      }
+    }
+  }
+
   private fun clientResultSuccess(
     userRestricted: Boolean,
     userExcluded: Boolean,

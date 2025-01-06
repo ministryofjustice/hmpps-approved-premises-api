@@ -1,5 +1,6 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.service
 
+import org.apache.commons.collections4.ListUtils
 import org.slf4j.LoggerFactory
 import org.springframework.http.HttpStatus
 import org.springframework.stereotype.Service
@@ -47,6 +48,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.PersonTransf
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.asCaseSummary
 import java.io.OutputStream
 import java.time.LocalDate
+import java.util.stream.Collectors
 
 @Service
 class OffenderService(
@@ -109,12 +111,42 @@ class OffenderService(
     data class ReturnRestrictedIfLimitedAccess(val deliusUsername: String) : LimitedAccessStrategy
   }
 
+  /**
+   * The [getPersonSummaryInfoResults] function is limited to providing information for up to 500 CRNs
+   *
+   * If information is required about more than 500 CRNs, this function should be used instead
+   *
+   * Note - this should be used with care and only used for infrequently ran operations (monthly
+   * reports, seed jobs etc.) as fetching this number of offenders should not be a typical operation
+   */
+  fun getPersonSummaryInfoResultsInBatches(
+    crns: Set<String>,
+    limitedAccessStrategy: LimitedAccessStrategy,
+    batchSize: Int = 500,
+  ): List<PersonSummaryInfoResult> {
+    if (batchSize > MAX_OFFENDER_REQUEST_COUNT) {
+      throw InternalServerErrorProblem("Cannot request more than $MAX_OFFENDER_REQUEST_COUNT CRNs. A batch size of $batchSize has been requested.")
+    }
+
+    return ListUtils.partition(crns.toList(), batchSize)
+      .stream()
+      .map { crnSubset ->
+        getPersonSummaryInfoResults(crnSubset.toSet(), limitedAccessStrategy)
+      }
+      .flatMap { it.stream() }
+      .collect(Collectors.toList())
+  }
+
   fun getPersonSummaryInfoResults(
     crns: Set<String>,
     limitedAccessStrategy: LimitedAccessStrategy,
   ): List<PersonSummaryInfoResult> {
     if (crns.isEmpty()) {
       return emptyList()
+    }
+
+    if (crns.size > MAX_OFFENDER_REQUEST_COUNT) {
+      throw InternalServerErrorProblem("Cannot request more than $MAX_OFFENDER_REQUEST_COUNT CRNs. ${crns.size} have been provided.")
     }
 
     val crnsList = crns.toList()
