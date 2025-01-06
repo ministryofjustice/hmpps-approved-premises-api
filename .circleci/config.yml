@@ -403,6 +403,9 @@ jobs:
              "typ": "JWT"
            }'
            
+           # Create a temporary file for the private key
+           echo "$PRIVATE_KEY" > private_key.pem
+           
            # Generate the JWT using jwt-cli with the private key
            JWT=$(echo "$PAYLOAD" | jwt sign --key private_key.pem --alg RS256)
            
