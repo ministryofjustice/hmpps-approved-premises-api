@@ -353,7 +353,7 @@ jobs:
       resource_class: arm.medium
     steps:
       - checkout
-      - run: sudo apt-get update && sudo apt-get install -y jwt jq curl
+      - run: sudo apt-get update && sudo apt-get install -y jwt
         # Set up environment variables in CircleCI (you can set these in your CircleCI project settings for security)
       - run:
          name: Set up environment variables
@@ -398,7 +398,7 @@ jobs:
            }'
            
            # Generate the JWT using jwt-cli with the private key
-           JWT=jwt --header $HEADER --key=$GITHUB_APP_PRIVATE_KEY iss=$GITHUB_APP_ID exp=$EXP iat=$IAT
+           JWT=jwt --alg="RS256" --key=$GITHUB_APP_PRIVATE_KEY iss=$GITHUB_APP_ID exp=$EXP iat=$IAT 
 
            # Use curl to request the access token from the GitHub API
            GITHUB_ACCESS_TOKEN=$(curl -s -X POST \
