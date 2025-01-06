@@ -366,9 +366,6 @@ jobs:
       - run:
          name: Run GitHub Actions Workflow Trigger Script
          command: |
-           # Your script goes here
-           # Ensure you have your private key set as a file if using the jwt sign method
-           echo "$GITHUB_APP_PRIVATE_KEY" > private_key.pem
            # Execute the script here
            REPO_NAMES=(
              "hmpps-temporary-accommodation-ui"
@@ -400,25 +397,16 @@ jobs:
              "typ": "JWT"
            }'
            
-           # Create a temporary file for the private key
-           echo "$GITHUB_APP_PRIVATE_KEY" > private_key.pem
-           
-           echo jwt --header $HEADER --key=$GITHUB_APP_PRIVATE_KEY iss=$GITHUB_APP_ID exp=$EXP iat=$IAT
-           
            # Generate the JWT using jwt-cli with the private key
-           JWT=$(echo "$PAYLOAD" | jwt sign -sign --key private_key.pem --alg RS256)
-           
+           JWT=jwt --header $HEADER --key=$GITHUB_APP_PRIVATE_KEY iss=$GITHUB_APP_ID exp=$EXP iat=$IAT
 
-#           # Clean up the private key file (for security reasons)
-#           rm private_key.pem
-#           echo $JWT
-#           # Use curl to request the access token from the GitHub API
-#           GITHUB_ACCESS_TOKEN=$(curl -s -X POST \
-#             -H "Authorization: Bearer $JWT" \
-#             -H "Accept: application/vnd.github.v3+json" \
-#             "https://api.github.com/app/installations/$INSTALLATION_ID/access_tokens" | jq -r .token)
-#
-#           echo $GITHUB_ACCESS_TOKEN
+           # Use curl to request the access token from the GitHub API
+           GITHUB_ACCESS_TOKEN=$(curl -s -X POST \
+             -H "Authorization: Bearer $JWT" \
+             -H "Accept: application/vnd.github.v3+json" \
+             "https://api.github.com/app/installations/$INSTALLATION_ID/access_tokens" | jq -r .token)
+
+           echo $GITHUB_ACCESS_TOKEN
 #
 #           # Check if the token was obtained successfully
 #           if [ -z "$GITHUB_ACCESS_TOKEN" ] || [ "$GITHUB_ACCESS_TOKEN" == "Bad credentials" ]; then
