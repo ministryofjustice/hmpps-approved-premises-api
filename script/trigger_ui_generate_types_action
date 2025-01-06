@@ -34,9 +34,14 @@ HEADER='{
   "typ": "JWT"
 }'
 
-# Generate the JWT using jwt-cli (assuming the private key is in PEM format)
-JWT=$(echo "$PAYLOAD" | jwt encode --secret "$PRIVATE_KEY" --alg RS256)
+# Create a temporary file for the private key
+echo "$PRIVATE_KEY" > private_key.pem
 
+# Generate the JWT using jwt-cli with the private key
+JWT=$(echo "$PAYLOAD" | jwt sign --key private_key.pem --alg RS256)
+
+# Clean up the private key file (for security reasons)
+rm private_key.pem
 
 # Use curl to request the access token from the GitHub API
 GITHUB_ACCESS_TOKEN=$(curl -s -X POST \
