@@ -2,27 +2,42 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.cas1.seed
 
 import org.assertj.core.api.Assertions.assertThat
 import org.jetbrains.kotlinx.dataframe.api.dataFrameOf
-import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.SeedFromExcelFileType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.seed.SeedTestBase
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.seed.cas1.QuestionCriteriaMapping
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.seed.cas1.SiteSurveyImportException
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.DataFrameUtils.createNameValueDataFrame
 
 @TestInstance(TestInstance.Lifecycle.PER_METHOD)
 class SeedCas1RoomsFromSiteSurveyXlsxTest : SeedTestBase() {
 
-  private lateinit var questionCriteriaMapping: QuestionCriteriaMapping
-
-  @BeforeEach
-  fun setup() {
-    questionCriteriaMapping = QuestionCriteriaMapping(characteristicRepository)
-  }
+  val questions = listOf(
+    "Is this bed in a single room?",
+    "Is this room located on the ground floor?",
+    "Is the room using only furnishings and bedding supplied by FM?",
+    "Does this room have Crib7 rated bedding?",
+    "Is there a smoke/heat detector in the room?",
+    "Is this room on the top floor with at least one external wall and not located directly next to a fire exit or a protected stairway?",
+    "Is the room close to the admin/staff office on the ground floor with at least one external wall and not located directly next to a fire exit or a protected stairway?",
+    "is there a water mist extinguisher in close proximity to this room?",
+    "Is this room suitable for people who pose an arson risk? (Must answer yes to Q; 6 & 7, and 9 or  10)",
+    "Is this room currently a designated arson room?",
+    "If IAP - Is there any insurance conditions that prevent a person with arson convictions being placed?",
+    "Is this room suitable for people convicted of sexual offences?",
+    "Does this room have en-suite bathroom facilities?",
+    "Are corridors leading to this room of sufficient width to accommodate a wheelchair? (at least 1.2m wide)",
+    "Is the door to this room at least 900mm wide?",
+    "Is there step free access to this room and in corridors leading to this room?",
+    "Are there fixed mobility aids in this room?",
+    "Does this room have at least a 1500mmx1500mm turning space?",
+    "Is there provision for people to call for assistance from this room?",
+    "Can this room be designated as suitable for wheelchair users?   Must answer yes to Q23-26 on previous sheet and Q17-19 & 21 on this sheet)",
+    "Can this room be designated as suitable for people requiring step free access? (Must answer yes to Q23 and 25 on previous sheet and Q19 on this sheet)",
+  )
 
   fun MutableList<String>.addCharacteristics(numberOfRooms: Int = 1, activeCharacteristics: Map<String, List<String>> = emptyMap()) {
-    questionCriteriaMapping.questionToCharacterEntityMapping.keys.forEach { question ->
+    questions.forEach { question ->
       this.add(question)
       this.addAll(activeCharacteristics.getOrDefault(question, MutableList(numberOfRooms) { "No" }))
     }
