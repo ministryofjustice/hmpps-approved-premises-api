@@ -377,7 +377,6 @@ jobs:
            )
            
            # Replace with your GitHub App's private key and App ID
-           PRIVATE_KEY=$GITHUB_APP_PRIVATE_KEY
            APP_ID=$GITHUB_APP_ID
            
            # Get the current timestamp (issued at time)
@@ -404,7 +403,7 @@ jobs:
            }'
            
            # Create a temporary file for the private key
-           echo "$PRIVATE_KEY" > private_key.pem
+           echo "$GITHUB_APP_PRIVATE_KEY" > private_key.pem
            
            # Generate the JWT using jwt-cli with the private key
            JWT=$(echo "$PAYLOAD" | jwt sign --key private_key.pem --alg RS256)
