@@ -31,7 +31,6 @@ class Cas1SeedRoomsFromSiteSurveyXlsxJob(
   private val characteristicRepository: CharacteristicRepository,
 ) : ExcelSeedJob {
   private val log = LoggerFactory.getLogger(this::class.java)
-  private val questionCriteriaMapping = QuestionCriteriaMapping(characteristicRepository)
 
   override fun processXlsx(file: File) {
     val qCode = Cas1SiteSurveyPremiseFactory().getQCode(file)
@@ -66,9 +65,9 @@ class Cas1SeedRoomsFromSiteSurveyXlsxJob(
   }
 
   private fun buildCharacteristics(dataFrame: DataFrame<*>, qCode: String): MutableMap<String, MutableSet<CharacteristicEntity>> {
-    var premisesCharacteristics = mutableMapOf<String, MutableSet<CharacteristicEntity>>()
+    val premisesCharacteristics = mutableMapOf<String, MutableSet<CharacteristicEntity>>()
 
-    questionCriteriaMapping.questionToCharacterEntityMapping.forEach { (question, characteristic) ->
+    QuestionCriteriaMapping(characteristicRepository).questionToCharacterEntityMapping.forEach { (question, characteristic) ->
       val rowId = dataFrame.getColumn(0).values().indexOf(question)
 
       if (rowId == -1) throw SiteSurveyImportException("Characteristic question '$question' not found on sheet Sheet3.")
@@ -78,7 +77,7 @@ class Cas1SeedRoomsFromSiteSurveyXlsxJob(
         val answer = dataFrame[rowId][colId].toString().trim()
 
         if (answer.equals("yes", ignoreCase = true)) {
-          premisesCharacteristics.computeIfAbsent(roomCode) { mutableSetOf() }.add(characteristic!!)
+          premisesCharacteristics.computeIfAbsent(roomCode) { mutableSetOf() }.add(characteristic)
         } else if (!answer.equals("no", ignoreCase = true) && !answer.equals("N/A", ignoreCase = true)) {
           throw SiteSurveyImportException("Expecting 'yes' or 'no' for question '$question' but is '$answer' on sheet Sheet3 (row = ${rowId + 1}, col = $colId).")
         }
@@ -106,7 +105,7 @@ class Cas1SeedRoomsFromSiteSurveyXlsxJob(
 
   private fun createOrUpdateRooms(rooms: MutableList<RoomEntity>): MutableList<RoomEntity> {
     rooms.forEachIndexed { index, room ->
-      var persistedRoom = roomRepository.findByCodeAndPremisesId(room.code!!, room.premises.id)
+      val persistedRoom = roomRepository.findByCodeAndPremisesId(room.code!!, room.premises.id)
 
       if (persistedRoom == null) {
         roomRepository.save(room)
@@ -187,6 +186,8 @@ class QuestionCriteriaMapping(characteristicRepository: CharacteristicRepository
   )
 
   val questionToCharacterEntityMapping = questionToPropertyNameMapping.map { (key, value) ->
-    Pair(key, characteristicRepository.findByPropertyName(value, ServiceName.approvedPremises.value))
+    val characteristic = characteristicRepository.findByPropertyName(value, ServiceName.approvedPremises.value)
+    characteristic ?: throw NullPointerException("Characteristic with property name '$value' not found for service ${ServiceName.approvedPremises.value}.")
+    Pair(key, characteristic)
   }.toMap()
 }
