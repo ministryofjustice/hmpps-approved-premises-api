@@ -5,7 +5,6 @@ import org.springframework.data.repository.findByIdOrNull
 import org.springframework.stereotype.Component
 import org.springframework.transaction.support.TransactionTemplate
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.BookingMadeEnvelope
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesRepository
@@ -13,29 +12,16 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.BookingEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.BookingRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas1SpaceBookingEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas1SpaceBookingRepository
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DepartureReasonEntity
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DepartureReasonRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DomainEventRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DomainEventType
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ManagementInfoSource
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.MoveOnCategoryEntity
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.MoveOnCategoryRepository
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.NonArrivalReasonEntity
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.NonArrivalReasonRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementRequestRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRepository
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas1.Cas1DeliusBookingImportEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas1.Cas1DeliusBookingImportRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.DomainEvent
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.seed.SeedJob
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.EnvironmentService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1DomainEventService
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.toLocalDate
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.toLocalDateTime
-import java.time.LocalDate
-import java.time.LocalTime
-import java.time.OffsetDateTime
 import java.util.UUID
 
 @Component
@@ -49,9 +35,7 @@ class Cas1BookingToSpaceBookingSeedJob(
   private val userRepository: UserRepository,
   private val transactionTemplate: TransactionTemplate,
   private val cas1DeliusBookingImportRepository: Cas1DeliusBookingImportRepository,
-  private val departureReasonRepository: DepartureReasonRepository,
-  private val moveOnCategoryRepository: MoveOnCategoryRepository,
-  private val nonArrivalReasonReasonEntity: NonArrivalReasonRepository,
+  private val cas1BookingManagementInfoService: Cas1BookingManagementInfoService,
   private val environmentService: EnvironmentService,
   private val placementRequestRepository: PlacementRequestRepository,
 ) : SeedJob<Cas1BookingToSpaceBookingSeedCsvRow>(
@@ -181,68 +165,12 @@ class Cas1BookingToSpaceBookingSeedJob(
       log.warn("Could not retrieve referral details from delius import for booking ${booking.id}")
     }
 
-    return deliusImport?.toManagementInfo() ?: booking.toManagementInfo()
+    return if (deliusImport != null) {
+      cas1BookingManagementInfoService.fromDeliusBookingImport(deliusImport)
+    } else {
+      cas1BookingManagementInfoService.fromBooking(booking)
+    }
   }
-
-  private fun Cas1DeliusBookingImportEntity.toManagementInfo() = ManagementInfo(
-    source = ManagementInfoSource.DELIUS,
-    arrivedAtDate = arrivalDate,
-    arrivedAtTime = null,
-    departedAtDate = departureDate,
-    departedAtTime = null,
-    keyWorkerStaffCode = keyWorkerStaffCode,
-    keyWorkerName = keyWorkerStaffCode?.let { "$keyWorkerForename $keyWorkerSurname" },
-    departureReason = departureReasonCode?.let { reasonCode ->
-      departureReasonRepository
-        .findAllByServiceScope(ServiceName.approvedPremises.value)
-        .filter { it.legacyDeliusReasonCode == reasonCode }
-        .maxByOrNull { it.isActive }
-        ?: error("Could not resolve DepartureReason for code $reasonCode")
-    },
-    departureMoveOnCategory = moveOnCategoryCode?.let { reasonCode ->
-      moveOnCategoryRepository
-        .findAllByServiceScope(ServiceName.approvedPremises.value)
-        .firstOrNull { it.legacyDeliusCategoryCode == reasonCode } ?: error("Could not resolve MoveOnCategory for code $reasonCode")
-    },
-    departureNotes = null,
-    nonArrivalConfirmedAt = nonArrivalContactDatetime,
-    nonArrivalReason = nonArrivalReasonCode?.let {
-      nonArrivalReasonReasonEntity.findByLegacyDeliusReasonCode(it) ?: error("Could not resolve NonArrivalReason for code $it")
-    },
-    nonArrivalNotes = nonArrivalNotes,
-  )
-
-  private fun BookingEntity.toManagementInfo() = ManagementInfo(
-    source = ManagementInfoSource.LEGACY_CAS_1,
-    arrivedAtDate = arrival?.arrivalDateTime?.toLocalDate(),
-    arrivedAtTime = arrival?.arrivalDateTime?.toLocalDateTime()?.toLocalTime(),
-    departedAtDate = departure?.dateTime?.toLocalDate(),
-    departedAtTime = departure?.dateTime?.toLocalDateTime()?.toLocalTime(),
-    keyWorkerStaffCode = null,
-    keyWorkerName = null,
-    departureReason = departure?.reason,
-    departureMoveOnCategory = departure?.moveOnCategory,
-    departureNotes = departure?.notes,
-    nonArrivalConfirmedAt = nonArrival?.createdAt,
-    nonArrivalReason = nonArrival?.reason,
-    nonArrivalNotes = nonArrival?.notes,
-  )
-
-  private data class ManagementInfo(
-    val source: ManagementInfoSource,
-    val arrivedAtDate: LocalDate?,
-    val arrivedAtTime: LocalTime?,
-    val departedAtDate: LocalDate?,
-    val departedAtTime: LocalTime?,
-    val keyWorkerStaffCode: String?,
-    val keyWorkerName: String?,
-    val departureReason: DepartureReasonEntity?,
-    val departureMoveOnCategory: MoveOnCategoryEntity?,
-    val departureNotes: String?,
-    val nonArrivalConfirmedAt: OffsetDateTime?,
-    val nonArrivalReason: NonArrivalReasonEntity?,
-    val nonArrivalNotes: String?,
-  )
 
   private fun BookingEntity.getEssentialRoomCriteriaOfInterest() =
     placementRequest?.placementRequirements?.essentialCriteria

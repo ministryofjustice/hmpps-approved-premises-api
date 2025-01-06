@@ -9,13 +9,11 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApprovedPremises
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.BookingRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas1SpaceBookingRepository
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DepartureReasonRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DomainEventRepository
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.MoveOnCategoryRepository
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.NonArrivalReasonRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementRequestRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas1.Cas1DeliusBookingImportRepository
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.seed.cas1.Cas1BookingManagementInfoService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.seed.cas1.Cas1BookingToSpaceBookingSeedCsvRow
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.seed.cas1.Cas1BookingToSpaceBookingSeedJob
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.EnvironmentService
@@ -34,9 +32,7 @@ class Cas1BookingToSpaceBookingSeedJobTest {
     userRepository = mockk<UserRepository>(),
     transactionTemplate = mockk<TransactionTemplate>(),
     cas1DeliusBookingImportRepository = mockk<Cas1DeliusBookingImportRepository>(),
-    departureReasonRepository = mockk<DepartureReasonRepository>(),
-    moveOnCategoryRepository = mockk<MoveOnCategoryRepository>(),
-    nonArrivalReasonReasonEntity = mockk<NonArrivalReasonRepository>(),
+    cas1BookingManagementInfoService = mockk<Cas1BookingManagementInfoService>(),
     environmentService = mockk<EnvironmentService>(),
     placementRequestRepository = mockk<PlacementRequestRepository>(),
   )
