@@ -421,7 +421,7 @@ class OffenderServiceTest {
       assertThatThrownBy {
         offenderService.canAccessOffenders("distinguished.name", (0..500).map { "$it" })
       }.isInstanceOf(InternalServerErrorProblem::class.java)
-        .hasMessage("Internal Server Error: Cannot bulk request access details for more than 500 CRNs. 501 have been provided.")
+        .hasMessage("Internal Server Error: Cannot request access details for more than 500 CRNs. 501 have been provided.")
     }
 
     @Test

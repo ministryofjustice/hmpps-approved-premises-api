@@ -60,6 +60,10 @@ class OffenderService(
   prisonCaseNotesConfigBindingModel: PrisonCaseNotesConfigBindingModel,
   adjudicationsConfigBindingModel: PrisonAdjudicationsConfigBindingModel,
 ) {
+  companion object {
+    const val MAX_OFFENDER_REQUEST_COUNT = 500
+  }
+
   private val log = LoggerFactory.getLogger(this::class.java)
 
   private val prisonCaseNotesConfig: PrisonCaseNotesConfig
@@ -231,14 +235,14 @@ class OffenderService(
     """,
     ReplaceWith("getPersonSummaryInfoResults(crns, limitedAccessStrategy)"),
   )
-  @SuppressWarnings("CyclomaticComplexMethod", "MagicNumber")
+  @SuppressWarnings("CyclomaticComplexMethod")
   fun getOffenderSummariesByCrns(crns: List<String>, userDistinguishedName: String, ignoreLaoRestrictions: Boolean = false): List<PersonSummaryInfoResult> {
     if (crns.isEmpty()) {
       return emptyList()
     }
 
-    if (crns.size > 500) {
-      throw InternalServerErrorProblem("Cannot bulk request more than 500 CRNs. ${crns.size} have been provided.")
+    if (crns.size > MAX_OFFENDER_REQUEST_COUNT) {
+      throw InternalServerErrorProblem("Cannot request more than $MAX_OFFENDER_REQUEST_COUNT CRNs. ${crns.size} have been provided.")
     }
 
     val offenders = when (val response = apDeliusContextApiClient.getSummariesForCrns(crns)) {
@@ -369,12 +373,11 @@ class OffenderService(
 
   fun canAccessOffender(username: String, crn: String) = canAccessOffenders(username, listOf(crn))[crn] == true
 
-  @SuppressWarnings("MagicNumber")
   fun canAccessOffenders(username: String, crns: List<String>): Map<String, Boolean> {
     if (crns.isEmpty()) return emptyMap()
 
-    if (crns.size > 500) {
-      throw InternalServerErrorProblem("Cannot bulk request access details for more than 500 CRNs. ${crns.size} have been provided.")
+    if (crns.size > MAX_OFFENDER_REQUEST_COUNT) {
+      throw InternalServerErrorProblem("Cannot request access details for more than $MAX_OFFENDER_REQUEST_COUNT CRNs. ${crns.size} have been provided.")
     }
 
     return when (val clientResult = apDeliusContextApiClient.getUserAccessForCrns(username, crns)) {
