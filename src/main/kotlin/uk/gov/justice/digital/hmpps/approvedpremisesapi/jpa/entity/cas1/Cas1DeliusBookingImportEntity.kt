@@ -12,6 +12,7 @@ import java.util.UUID
 @Repository
 interface Cas1DeliusBookingImportRepository : JpaRepository<Cas1DeliusBookingImportEntity, UUID> {
   fun findByBookingId(id: UUID): Cas1DeliusBookingImportEntity?
+  fun findByBookingIdIsNullAndPremisesQcode(qCode: String): List<Cas1DeliusBookingImportEntity>
 }
 
 @Entity
