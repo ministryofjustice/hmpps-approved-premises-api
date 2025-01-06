@@ -410,7 +410,7 @@ jobs:
            
            # Clean up the private key file (for security reasons)
            rm private_key.pem
-           
+           echo $JWT
            # Use curl to request the access token from the GitHub API
            GITHUB_ACCESS_TOKEN=$(curl -s -X POST \
              -H "Authorization: Bearer $JWT" \
