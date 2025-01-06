@@ -353,7 +353,7 @@ jobs:
       resource_class: arm.medium
     steps:
       - checkout
-      - run: sudo apt-get update && sudo apt-get install -y jwt
+      - run: sudo apt-get update && sudo apt-get install -y jwt jq curl
         # Set up environment variables in CircleCI (you can set these in your CircleCI project settings for security)
       - run:
          name: Set up environment variables
@@ -376,8 +376,6 @@ jobs:
              "hmpps-approved-premises-ui"
            )
            
-           # Replace with your GitHub App's private key and App ID
-           APP_ID=$GITHUB_APP_ID
            
            # Get the current timestamp (issued at time)
            IAT=$(date +%s)
@@ -405,55 +403,58 @@ jobs:
            # Create a temporary file for the private key
            echo "$GITHUB_APP_PRIVATE_KEY" > private_key.pem
            
+           echo jwt --header $HEADER --key=$GITHUB_APP_PRIVATE_KEY iss=$GITHUB_APP_ID exp=$EXP iat=$IAT
+           
            # Generate the JWT using jwt-cli with the private key
-           JWT=$(jwt sign -sign $PAYLOAD --secret $GITHUB_APP_PRIVATE_KEY --alg RS256 -compact)
+           JWT=$(echo "$PAYLOAD" | jwt sign -sign --key private_key.pem --alg RS256)
            
-           # Clean up the private key file (for security reasons)
-           rm private_key.pem
-           echo $JWT
-           # Use curl to request the access token from the GitHub API
-           GITHUB_ACCESS_TOKEN=$(curl -s -X POST \
-             -H "Authorization: Bearer $JWT" \
-             -H "Accept: application/vnd.github.v3+json" \
-             "https://api.github.com/app/installations/$INSTALLATION_ID/access_tokens" | jq -r .token)
-           
-           echo $GITHUB_ACCESS_TOKEN
-           
-           # Check if the token was obtained successfully
-           if [ -z "$GITHUB_ACCESS_TOKEN" ] || [ "$GITHUB_ACCESS_TOKEN" == "Bad credentials" ]; then
-             echo "Failed to obtain GitHub access token."
-             exit 1
-           fi
-           
-           # Loop through each repository
-           for REPO in "${REPO_NAMES[@]}"
-           do
-             # Define the GitHub API URL and the JWT token (you need to have this from the earlier step)
-             GITHUB_API_URL="https://api.github.com/repos"
-             WORKFLOW_PATH="actions/workflows/generate-types.yml/dispatches"
-           
-             # Construct the full API URL for the current repository
-             API_URL="${GITHUB_API_URL}/${REPO}/${WORKFLOW_PATH}"
-           
-             # Trigger the GitHub Actions workflow using curl
-             curl -X POST \
-               -H "Authorization: token $GITHUB_ACCESS_TOKEN" \
-               -H "Accept: application/vnd.github.v3+json" \
-               $API_URL \
-               -d '{"ref":"main"}'
-           
-             # Capture the exit code of curl
-             CURL_EXIT_CODE=$?
-           
-             # Check if curl was successful
-             if [ $CURL_EXIT_CODE -ne 0 ]; then
-               echo "Failed to trigger workflow for repository: $REPO"
-               exit 1
-             else
-               echo "Successfully triggered workflow for repository: $REPO"
-             fi
-           done
-           # End of the script block
+
+#           # Clean up the private key file (for security reasons)
+#           rm private_key.pem
+#           echo $JWT
+#           # Use curl to request the access token from the GitHub API
+#           GITHUB_ACCESS_TOKEN=$(curl -s -X POST \
+#             -H "Authorization: Bearer $JWT" \
+#             -H "Accept: application/vnd.github.v3+json" \
+#             "https://api.github.com/app/installations/$INSTALLATION_ID/access_tokens" | jq -r .token)
+#
+#           echo $GITHUB_ACCESS_TOKEN
+#
+#           # Check if the token was obtained successfully
+#           if [ -z "$GITHUB_ACCESS_TOKEN" ] || [ "$GITHUB_ACCESS_TOKEN" == "Bad credentials" ]; then
+#             echo "Failed to obtain GitHub access token."
+#             exit 1
+#           fi
+#
+#           # Loop through each repository
+#           for REPO in "${REPO_NAMES[@]}"
+#           do
+#             # Define the GitHub API URL and the JWT token (you need to have this from the earlier step)
+#             GITHUB_API_URL="https://api.github.com/repos"
+#             WORKFLOW_PATH="actions/workflows/generate-types.yml/dispatches"
+#
+#             # Construct the full API URL for the current repository
+#             API_URL="${GITHUB_API_URL}/${REPO}/${WORKFLOW_PATH}"
+#
+#             # Trigger the GitHub Actions workflow using curl
+#             curl -X POST \
+#               -H "Authorization: token $GITHUB_ACCESS_TOKEN" \
+#               -H "Accept: application/vnd.github.v3+json" \
+#               $API_URL \
+#               -d '{"ref":"main"}'
+#
+#             # Capture the exit code of curl
+#             CURL_EXIT_CODE=$?
+#
+#             # Check if curl was successful
+#             if [ $CURL_EXIT_CODE -ne 0 ]; then
+#               echo "Failed to trigger workflow for repository: $REPO"
+#               exit 1
+#             else
+#               echo "Successfully triggered workflow for repository: $REPO"
+#             fi
+#           done
+#           # End of the script block
 workflows:
   version: 2
   build-test-and-deploy:
