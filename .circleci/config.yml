@@ -398,8 +398,12 @@ jobs:
            }'
            
            # Generate the JWT using jwt-cli with the private key
-           JWT=jwt --alg="RS256" --key=$GITHUB_APP_PRIVATE_KEY iss=$GITHUB_APP_ID exp=$EXP iat=$IAT 
-
+           JWT=$(jwt --alg=RS256 --key=$GITHUB_APP_PRIVATE_KEY iss=$GITHUB_APP_ID exp=$EXP iat=$IAT) 
+           
+           JWT2=$(echo '{"iss":"'$GITHUB_APP_ID'", "exp":'$EXP', "iat":'$IAT'}' | jwt sign --key="$GITHUB_APP_PRIVATE_KEY" --alg RS256)
+           
+           echo $JWT2
+           
            # Use curl to request the access token from the GitHub API
            GITHUB_ACCESS_TOKEN=$(curl -s -X POST \
              -H "Authorization: Bearer $JWT" \
