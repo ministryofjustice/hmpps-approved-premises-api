@@ -52,12 +52,14 @@ class Cas1SeedRoomsFromSiteSurveyXlsxJob(
     createBedsIfNotExist(beds)
   }
 
+  private fun buildRoomCode(qCode: String, roomNumber: String) = "$qCode - $roomNumber"
+
   private fun buildRooms(dataFrame: DataFrame<*>, qCode: String, premisesId: UUID): MutableList<RoomEntity> {
     val rooms = mutableListOf<RoomEntity>()
 
     for (i in 1..<dataFrame.columnsCount()) {
       val roomAnswers = dataFrame.getColumn(i)
-      val room = buildRoom(premisesId, roomCode = "$qCode - ${roomAnswers[0]}", roomName = roomAnswers[0].toString())
+      val room = buildRoom(premisesId, roomCode = buildRoomCode(qCode, roomAnswers[0].toString()), roomName = roomAnswers[0].toString())
 
       if (rooms.none { it.code == room.code }) rooms.add(room)
     }
@@ -73,7 +75,7 @@ class Cas1SeedRoomsFromSiteSurveyXlsxJob(
       if (rowId == -1) throw SiteSurveyImportException("Characteristic question '$question' not found on sheet Sheet3.")
 
       for (colId in 1..<dataFrame.columnsCount()) {
-        val roomCode = "$qCode - ${dataFrame.getColumn(colId)[0]}"
+        val roomCode = buildRoomCode(qCode, dataFrame.getColumn(colId)[0].toString())
         val answer = dataFrame[rowId][colId].toString().trim()
 
         if (answer.equals("yes", ignoreCase = true)) {
@@ -90,7 +92,7 @@ class Cas1SeedRoomsFromSiteSurveyXlsxJob(
     val beds = mutableListOf<BedEntity>()
     for (i in 1..<dataFrame.columnsCount()) {
       val roomAnswers = dataFrame.getColumn(i)
-      val roomCode = "$qCode - ${roomAnswers[0]}"
+      val roomCode = buildRoomCode(qCode, roomAnswers[0].toString())
       beds.add(
         buildBed(
           bedName = roomAnswers[1].toString(),
