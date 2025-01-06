@@ -4128,6 +4128,7 @@ components:
             isParole:
               type: boolean
             notes:
+              description: Notes from the assessor for the CRU Manager
               type: string
             booking:
               $ref: '#/components/schemas/BookingSummary'
