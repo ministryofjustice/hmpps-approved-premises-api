@@ -869,9 +869,10 @@ class Cas1PremisesTest : IntegrationTestBase() {
       assertThat(oosBedEndingToday.roomName).isEqualTo(outOfServiceBedEndingToday.bed.room.name)
       assertThat(oosBedEndingToday.reason.id).isEqualTo(outOfServiceBedEndingToday.reason.id)
       assertThat(oosBedEndingToday.reason.name).isEqualTo(outOfServiceBedEndingToday.reason.name)
-      assertThat(oosBedEndingToday.characteristics.size).isEqualTo(2)
-      assertThat(oosBedEndingToday.characteristics[0].name).isEqualTo(hasEnSuiteCharacteristic.name)
-      assertThat(oosBedEndingToday.characteristics[1].name).isEqualTo(isArsonSuitableCharacteristic.name)
+      assertThat(oosBedEndingToday.characteristics.map { it.name }).containsExactlyInAnyOrder(
+        hasEnSuiteCharacteristic.name,
+        isArsonSuitableCharacteristic.name,
+      )
 
       val oosBedTodayOnly = summaries.outOfServiceBeds[2]
       assertThat(oosBedTodayOnly.id).isEqualTo(outOfServiceBedTodayOnly.id)
@@ -880,10 +881,11 @@ class Cas1PremisesTest : IntegrationTestBase() {
       assertThat(oosBedTodayOnly.roomName).isEqualTo(outOfServiceBedTodayOnly.bed.room.name)
       assertThat(oosBedTodayOnly.reason.id).isEqualTo(outOfServiceBedTodayOnly.reason.id)
       assertThat(oosBedTodayOnly.reason.name).isEqualTo(outOfServiceBedTodayOnly.reason.name)
-      assertThat(oosBedTodayOnly.characteristics.size).isEqualTo(3)
-      assertThat(oosBedTodayOnly.characteristics[0].name).isEqualTo(hasEnSuiteCharacteristic.name)
-      assertThat(oosBedTodayOnly.characteristics[1].name).isEqualTo(isArsonSuitableCharacteristic.name)
-      assertThat(oosBedTodayOnly.characteristics[2].name).isEqualTo(isGroundFloorCharacteristic.name)
+      assertThat(oosBedTodayOnly.characteristics.map { it.name }).containsExactlyInAnyOrder(
+        hasEnSuiteCharacteristic.name,
+        isArsonSuitableCharacteristic.name,
+        isGroundFloorCharacteristic.name,
+      )
     }
 
     @Test
@@ -903,10 +905,11 @@ class Cas1PremisesTest : IntegrationTestBase() {
       assertThat(summary.previousDate).isEqualTo(summaryDate.minusDays(1))
       assertThat(summary.spaceBookings.size).isEqualTo(1)
       val summaryBooking = summary.spaceBookings[0]
-      assertThat(summaryBooking.essentialCharacteristics.size).isEqualTo(3)
-      assertThat(summaryBooking.essentialCharacteristics[0].value).isEqualTo(CAS1_PROPERTY_NAME_ENSUITE)
-      assertThat(summaryBooking.essentialCharacteristics[1].value).isEqualTo(CAS1_PROPERTY_NAME_ARSON_SUITABLE)
-      assertThat(summaryBooking.essentialCharacteristics[2].value).isEqualTo(CAS1_PROPERTY_NAME_SINGLE_ROOM)
+      assertThat(summaryBooking.essentialCharacteristics.map { it.value }).containsExactlyInAnyOrder(
+        CAS1_PROPERTY_NAME_ENSUITE,
+        CAS1_PROPERTY_NAME_ARSON_SUITABLE,
+        CAS1_PROPERTY_NAME_SINGLE_ROOM,
+      )
       assertThat(summary.outOfServiceBeds.size).isEqualTo(3)
     }
 
