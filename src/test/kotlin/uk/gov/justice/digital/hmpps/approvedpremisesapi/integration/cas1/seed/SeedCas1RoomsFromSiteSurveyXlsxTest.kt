@@ -21,14 +21,10 @@ class SeedCas1RoomsFromSiteSurveyXlsxTest : SeedTestBase() {
     questionCriteriaMapping = QuestionCriteriaMapping(characteristicRepository)
   }
 
-  fun MutableList<String>.addCharacteristics(numberOfRooms: Int = 1, activeCharacteristics: Map<String, List<Int>> = emptyMap()) {
+  fun MutableList<String>.addCharacteristics(numberOfRooms: Int = 1, activeCharacteristics: Map<String, List<String>> = emptyMap()) {
     questionCriteriaMapping.questionToCharacterEntityMapping.keys.forEach { question ->
       this.add(question)
-      val answers = MutableList(numberOfRooms) { "No" }
-      activeCharacteristics[question]?.forEach {
-        answers[it] = "Yes"
-      }
-      this.addAll(answers)
+      this.addAll(activeCharacteristics.getOrDefault(question, MutableList(numberOfRooms) { "No" }))
     }
   }
 
@@ -50,7 +46,7 @@ class SeedCas1RoomsFromSiteSurveyXlsxTest : SeedTestBase() {
       "Bed Number (in this room i.e if this is a single room insert 1.  If this is a shared room separate entries will need to be made for bed 1 and bed 2)",
       "1",
     )
-    rows.addCharacteristics(1, mapOf("Is this room located on the ground floor?" to listOf(0)))
+    rows.addCharacteristics(1, mapOf("Is this room located on the ground floor?" to listOf("Yes")))
 
     val roomsSheet = dataFrameOf(header, rows)
 
@@ -104,7 +100,7 @@ class SeedCas1RoomsFromSiteSurveyXlsxTest : SeedTestBase() {
       "1",
       "1",
     )
-    rows.addCharacteristics(3, mapOf("Is this room located on the ground floor?" to listOf(1)))
+    rows.addCharacteristics(3, mapOf("Is this room located on the ground floor?" to listOf("No", "Yes", "No")))
 
     val roomsSheet = dataFrameOf(header, rows)
 
@@ -176,7 +172,7 @@ class SeedCas1RoomsFromSiteSurveyXlsxTest : SeedTestBase() {
       "1",
       "2",
     )
-    rows.addCharacteristics(3, mapOf("Is this room located on the ground floor?" to listOf(1, 2)))
+    rows.addCharacteristics(3, mapOf("Is this room located on the ground floor?" to listOf("No", "Yes", "Yes")))
 
     val roomsSheet = dataFrameOf(header, rows)
 
@@ -293,7 +289,7 @@ class SeedCas1RoomsFromSiteSurveyXlsxTest : SeedTestBase() {
       "Bed Number (in this room i.e if this is a single room insert 1.  If this is a shared room separate entries will need to be made for bed 1 and bed 2)",
       "1",
     )
-    rows.addCharacteristics(1, mapOf("Is this room located on the ground floor?" to listOf(0)))
+    rows.addCharacteristics(1, mapOf("Is this room located on the ground floor?" to listOf("Yes", "No", "No")))
 
     val roomsSheet = dataFrameOf(header, rows)
 
@@ -352,7 +348,7 @@ class SeedCas1RoomsFromSiteSurveyXlsxTest : SeedTestBase() {
       "Bed Number (in this room i.e if this is a single room insert 1.  If this is a shared room separate entries will need to be made for bed 1 and bed 2)",
       "1",
     )
-    rows.addCharacteristics(1, mapOf("Is this room located on the ground floor?" to listOf(0)))
+    rows.addCharacteristics(1, mapOf("Is this room located on the ground floor?" to listOf("Yes", "No", "No")))
 
     val roomsSheet = dataFrameOf(header, rows)
 
@@ -502,7 +498,7 @@ class SeedCas1RoomsFromSiteSurveyXlsxTest : SeedTestBase() {
       "Bed Number (in this room i.e if this is a single room insert 1.  If this is a shared room separate entries will need to be made for bed 1 and bed 2)",
       "1",
     )
-    rows.addCharacteristics(1, mapOf("Is this room located on the ground floor?" to listOf(0)))
+    rows.addCharacteristics(1, mapOf("Is this room located on the ground floor?" to listOf("Yes", "No", "No")))
     rows.replaceAll { if (it == "Yes") "Bad answer" else it }
 
     val roomsSheet = dataFrameOf(header, rows)
