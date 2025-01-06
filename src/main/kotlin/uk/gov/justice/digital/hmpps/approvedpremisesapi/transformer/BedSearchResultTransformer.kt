@@ -7,10 +7,8 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.BedSearchResul
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.BedSearchResults
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.CharacteristicPair
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApprovedPremisesBedSearchResult as ApiApprovedPremisesBedSearchResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.TemporaryAccommodationBedSearchResult as ApiTemporaryAccommodationBedSearchResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.TemporaryAccommodationBedSearchResultOverlap as ApiTemporaryAccommodationBedSearchResultOverlap
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.repository.ApprovedPremisesBedSearchResult as DomainApprovedPremisesBedSearchResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.repository.BedSearchResult as DomainBedSearchResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.repository.TemporaryAccommodationBedSearchResult as DomainTemporaryAccommodationBedSearchResult
 
@@ -24,39 +22,6 @@ class BedSearchResultTransformer {
   )
 
   private fun transformResult(result: DomainBedSearchResult) = when (result) {
-    is DomainApprovedPremisesBedSearchResult -> ApiApprovedPremisesBedSearchResult(
-      distanceMiles = result.distance.toBigDecimal(),
-      premises = BedSearchResultPremisesSummary(
-        id = result.premisesId,
-        name = result.premisesName,
-        addressLine1 = result.premisesAddressLine1,
-        postcode = result.premisesPostcode,
-        characteristics = result.premisesCharacteristics.map {
-          CharacteristicPair(
-            name = it.name,
-            propertyName = it.propertyName,
-          )
-        },
-        addressLine2 = result.premisesAddressLine2,
-        town = result.premisesTown,
-        bedCount = result.premisesBedCount,
-      ),
-      room = BedSearchResultRoomSummary(
-        id = result.roomId,
-        name = result.roomName,
-        characteristics = result.roomCharacteristics.map {
-          CharacteristicPair(
-            name = it.name,
-            propertyName = it.propertyName,
-          )
-        },
-      ),
-      bed = BedSearchResultBedSummary(
-        id = result.bedId,
-        name = result.bedName,
-      ),
-      serviceName = ServiceName.approvedPremises,
-    )
     is DomainTemporaryAccommodationBedSearchResult -> ApiTemporaryAccommodationBedSearchResult(
       premises = BedSearchResultPremisesSummary(
         id = result.premisesId,
