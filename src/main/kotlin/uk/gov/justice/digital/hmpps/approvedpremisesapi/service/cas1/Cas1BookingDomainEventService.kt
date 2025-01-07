@@ -84,26 +84,6 @@ class Cas1BookingDomainEventService(
     )
   }
 
-  private fun BookingEntity.toBookingInfo() = BookingInfo(
-    id = id,
-    createdAt = createdAt,
-    crn = crn,
-    premises = premises as ApprovedPremisesEntity,
-    arrivalDate = arrivalDate,
-    departureDate = departureDate,
-    isSpaceBooking = false,
-  )
-
-  private fun Cas1SpaceBookingEntity.toBookingInfo() = BookingInfo(
-    id = id,
-    createdAt = createdAt,
-    crn = crn,
-    premises = premises,
-    arrivalDate = canonicalArrivalDate,
-    departureDate = canonicalDepartureDate,
-    isSpaceBooking = true,
-  )
-
   fun bookingNotMade(
     user: UserEntity,
     placementRequest: PlacementRequestEntity,
@@ -158,30 +138,109 @@ class Cas1BookingDomainEventService(
     )
   }
 
-  private fun getOffenderDetails(
-    crn: String,
-    deliusUsername: String,
-    ignoreLaoRestrictions: Boolean,
-  ) = when (val offenderDetailsResult = offenderService.getOffenderByCrn(crn, deliusUsername, ignoreLaoRestrictions)) {
-    is AuthorisableActionResult.Success -> offenderDetailsResult.entity
-    else -> null
-  }
+  fun bookingChanged(
+    booking: BookingEntity,
+    changedBy: UserEntity,
+    bookingChangedAt: OffsetDateTime,
+    previousArrivalDateIfChanged: LocalDate?,
+    previousDepartureDateIfChanged: LocalDate?,
+  ) {
+    val domainEventId = UUID.randomUUID()
+    val applicationFacade = booking.cas1ApplicationFacade
+    val applicationId = applicationFacade.id
+    val eventNumber = applicationFacade.eventNumber!!
 
-  private fun getStaffDetails(deliusUsername: String) =
-    when (val staffDetailsResult = apDeliusContextApiClient.getStaffDetail(deliusUsername)) {
+    val offenderDetails = getOffenderDetails(
+      booking.crn,
+      changedBy.deliusUsername,
+      ignoreLaoRestrictions = true,
+    )
+
+    val staffDetails = when (val staffDetailsResult = apDeliusContextApiClient.getStaffDetail(changedBy.deliusUsername)) {
       is ClientResult.Success -> staffDetailsResult.body
       is ClientResult.Failure -> staffDetailsResult.throwException()
     }
 
-  data class BookingInfo(
-    val id: UUID,
-    val createdAt: OffsetDateTime,
-    val crn: String,
-    val premises: ApprovedPremisesEntity,
-    val arrivalDate: LocalDate,
-    val departureDate: LocalDate,
-    val isSpaceBooking: Boolean,
+    val approvedPremises = booking.premises as ApprovedPremisesEntity
+
+    domainEventService.saveBookingChangedEvent(
+      DomainEvent(
+        id = domainEventId,
+        applicationId = applicationId,
+        crn = booking.crn,
+        nomsNumber = offenderDetails?.otherIds?.nomsNumber,
+        occurredAt = bookingChangedAt.toInstant(),
+        bookingId = booking.id,
+        schemaVersion = 2,
+        data = BookingChangedEnvelope(
+          id = domainEventId,
+          timestamp = bookingChangedAt.toInstant(),
+          eventType = EventType.bookingChanged,
+          eventDetails = BookingChanged(
+            applicationId = applicationId,
+            applicationUrl = applicationUrlTemplate.resolve("id", applicationId.toString()),
+            bookingId = booking.id,
+            personReference = PersonReference(
+              crn = booking.crn,
+              noms = offenderDetails?.otherIds?.nomsNumber ?: "Unknown NOMS Number",
+            ),
+            deliusEventNumber = eventNumber,
+            changedAt = bookingChangedAt.toInstant(),
+            changedBy = staffDetails.toStaffMember(),
+            premises = Premises(
+              id = approvedPremises.id,
+              name = approvedPremises.name,
+              apCode = approvedPremises.apCode,
+              legacyApCode = approvedPremises.qCode,
+              localAuthorityAreaName = approvedPremises.localAuthorityArea!!.name,
+            ),
+            arrivalOn = booking.arrivalDate,
+            departureOn = booking.departureDate,
+            previousArrivalOn = previousArrivalDateIfChanged,
+            previousDepartureOn = previousDepartureDateIfChanged,
+          ),
+        ),
+      ),
+    )
+  }
+
+  fun bookingCancelled(
+    booking: BookingEntity,
+    user: UserEntity,
+    cancellation: CancellationEntity,
+    reason: CancellationReasonEntity,
+  ) = bookingCancelled(
+    CancellationInfo(
+      bookingId = booking.id,
+      applicationFacade = booking.cas1ApplicationFacade,
+      cancellationId = cancellation.id,
+      crn = booking.crn,
+      cancelledAt = cancellation.date,
+      reason = reason,
+      cancelledBy = user,
+      premises = booking.premises as ApprovedPremisesEntity,
+      isSpaceBooking = false,
+    ),
   )
+
+  fun spaceBookingCancelled(
+    spaceBooking: Cas1SpaceBookingEntity,
+    user: UserEntity,
+    reason: CancellationReasonEntity,
+  ) =
+    bookingCancelled(
+      CancellationInfo(
+        bookingId = spaceBooking.id,
+        applicationFacade = spaceBooking.applicationFacade,
+        cancellationId = null,
+        crn = spaceBooking.crn,
+        cancelledAt = spaceBooking.cancellationOccurredAt!!,
+        reason = reason,
+        cancelledBy = user,
+        premises = spaceBooking.premises,
+        isSpaceBooking = true,
+      ),
+    )
 
   private fun bookingMade(
     applicationId: UUID,
@@ -268,105 +327,6 @@ class Cas1BookingDomainEventService(
     )
   }
 
-  fun bookingChanged(
-    booking: BookingEntity,
-    changedBy: UserEntity,
-    bookingChangedAt: OffsetDateTime,
-  ) {
-    val domainEventId = UUID.randomUUID()
-    val applicationFacade = booking.cas1ApplicationFacade
-    val applicationId = applicationFacade.id
-    val eventNumber = applicationFacade.eventNumber!!
-
-    val offenderDetails = getOffenderDetails(
-      booking.crn,
-      changedBy.deliusUsername,
-      ignoreLaoRestrictions = true,
-    )
-
-    val staffDetails = when (val staffDetailsResult = apDeliusContextApiClient.getStaffDetail(changedBy.deliusUsername)) {
-      is ClientResult.Success -> staffDetailsResult.body
-      is ClientResult.Failure -> staffDetailsResult.throwException()
-    }
-
-    val approvedPremises = booking.premises as ApprovedPremisesEntity
-
-    domainEventService.saveBookingChangedEvent(
-      DomainEvent(
-        id = domainEventId,
-        applicationId = applicationId,
-        crn = booking.crn,
-        nomsNumber = offenderDetails?.otherIds?.nomsNumber,
-        occurredAt = bookingChangedAt.toInstant(),
-        bookingId = booking.id,
-        data = BookingChangedEnvelope(
-          id = domainEventId,
-          timestamp = bookingChangedAt.toInstant(),
-          eventType = EventType.bookingChanged,
-          eventDetails = BookingChanged(
-            applicationId = applicationId,
-            applicationUrl = applicationUrlTemplate.resolve("id", applicationId.toString()),
-            bookingId = booking.id,
-            personReference = PersonReference(
-              crn = booking.crn,
-              noms = offenderDetails?.otherIds?.nomsNumber ?: "Unknown NOMS Number",
-            ),
-            deliusEventNumber = eventNumber,
-            changedAt = bookingChangedAt.toInstant(),
-            changedBy = staffDetails.toStaffMember(),
-            premises = Premises(
-              id = approvedPremises.id,
-              name = approvedPremises.name,
-              apCode = approvedPremises.apCode,
-              legacyApCode = approvedPremises.qCode,
-              localAuthorityAreaName = approvedPremises.localAuthorityArea!!.name,
-            ),
-            arrivalOn = booking.arrivalDate,
-            departureOn = booking.departureDate,
-          ),
-        ),
-      ),
-    )
-  }
-
-  fun bookingCancelled(
-    booking: BookingEntity,
-    user: UserEntity,
-    cancellation: CancellationEntity,
-    reason: CancellationReasonEntity,
-  ) = bookingCancelled(
-    CancellationInfo(
-      bookingId = booking.id,
-      applicationFacade = booking.cas1ApplicationFacade,
-      cancellationId = cancellation.id,
-      crn = booking.crn,
-      cancelledAt = cancellation.date,
-      reason = reason,
-      cancelledBy = user,
-      premises = booking.premises as ApprovedPremisesEntity,
-      isSpaceBooking = false,
-    ),
-  )
-
-  fun spaceBookingCancelled(
-    spaceBooking: Cas1SpaceBookingEntity,
-    user: UserEntity,
-    reason: CancellationReasonEntity,
-  ) =
-    bookingCancelled(
-      CancellationInfo(
-        bookingId = spaceBooking.id,
-        applicationFacade = spaceBooking.applicationFacade,
-        cancellationId = null,
-        crn = spaceBooking.crn,
-        cancelledAt = spaceBooking.cancellationOccurredAt!!,
-        reason = reason,
-        cancelledBy = user,
-        premises = spaceBooking.premises,
-        isSpaceBooking = true,
-      ),
-    )
-
   private fun bookingCancelled(
     cancellationInfo: CancellationInfo,
   ) {
@@ -441,6 +401,51 @@ class Cas1BookingDomainEventService(
       ),
     )
   }
+
+  private fun getOffenderDetails(
+    crn: String,
+    deliusUsername: String,
+    ignoreLaoRestrictions: Boolean,
+  ) = when (val offenderDetailsResult = offenderService.getOffenderByCrn(crn, deliusUsername, ignoreLaoRestrictions)) {
+    is AuthorisableActionResult.Success -> offenderDetailsResult.entity
+    else -> null
+  }
+
+  private fun getStaffDetails(deliusUsername: String) =
+    when (val staffDetailsResult = apDeliusContextApiClient.getStaffDetail(deliusUsername)) {
+      is ClientResult.Success -> staffDetailsResult.body
+      is ClientResult.Failure -> staffDetailsResult.throwException()
+    }
+
+  private data class BookingInfo(
+    val id: UUID,
+    val createdAt: OffsetDateTime,
+    val crn: String,
+    val premises: ApprovedPremisesEntity,
+    val arrivalDate: LocalDate,
+    val departureDate: LocalDate,
+    val isSpaceBooking: Boolean,
+  )
+
+  private fun BookingEntity.toBookingInfo() = BookingInfo(
+    id = id,
+    createdAt = createdAt,
+    crn = crn,
+    premises = premises as ApprovedPremisesEntity,
+    arrivalDate = arrivalDate,
+    departureDate = departureDate,
+    isSpaceBooking = false,
+  )
+
+  private fun Cas1SpaceBookingEntity.toBookingInfo() = BookingInfo(
+    id = id,
+    createdAt = createdAt,
+    crn = crn,
+    premises = premises,
+    arrivalDate = canonicalArrivalDate,
+    departureDate = canonicalDepartureDate,
+    isSpaceBooking = true,
+  )
 
   private data class CancellationInfo(
     val bookingId: UUID,

@@ -87,6 +87,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1Booking
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.WithdrawableEntityType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.WithdrawalContext
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.WithdrawalTriggeredByUser
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.unit.util.assertThat
 import java.time.LocalDate
 import java.time.OffsetDateTime
 import java.util.UUID
@@ -2020,9 +2021,9 @@ class BookingServiceTest {
         newDepartureDate = LocalDate.parse("2023-07-14"),
       )
 
-      assertThat(result is ValidatableActionResult.ConflictError).isTrue
-      result as ValidatableActionResult.ConflictError
-      assertThat(result.message).contains("A Booking already exists")
+      assertThat(result)
+        .isConflictError()
+        .hasMessageContaining("A Booking already exists")
     }
 
     @Test
@@ -2052,9 +2053,9 @@ class BookingServiceTest {
         newDepartureDate = LocalDate.parse("2023-07-14"),
       )
 
-      assertThat(result is ValidatableActionResult.ConflictError).isTrue
-      result as ValidatableActionResult.ConflictError
-      assertThat(result.message).contains("A Lost Bed already exists")
+      assertThat(result)
+        .isConflictError()
+        .hasMessageContaining("A Lost Bed already exists")
     }
 
     @Test
@@ -2076,9 +2077,9 @@ class BookingServiceTest {
         newDepartureDate = LocalDate.parse("2023-07-14"),
       )
 
-      assertThat(result is ValidatableActionResult.FieldValidationError).isTrue
-      result as ValidatableActionResult.FieldValidationError
-      assertThat(result.validationMessages).containsEntry("$.newDepartureDate", "beforeBookingArrivalDate")
+      assertThat(result)
+        .isFieldValidationError()
+        .hasMessage("$.newDepartureDate", "beforeBookingArrivalDate")
     }
 
     @Test
@@ -2105,9 +2106,9 @@ class BookingServiceTest {
         newDepartureDate = LocalDate.parse("2023-07-16"),
       )
 
-      assertThat(result is ValidatableActionResult.FieldValidationError).isTrue
-      result as ValidatableActionResult.FieldValidationError
-      assertThat(result.validationMessages).containsEntry("$.newArrivalDate", "arrivalDateCannotBeChangedOnArrivedBooking")
+      assertThat(result)
+        .isFieldValidationError()
+        .hasMessage("$.newArrivalDate", "arrivalDateCannotBeChangedOnArrivedBooking")
     }
 
     @Test
@@ -2137,9 +2138,7 @@ class BookingServiceTest {
         newDepartureDate = LocalDate.parse("2023-07-16"),
       )
 
-      assertThat(result is ValidatableActionResult.GeneralValidationError).isTrue
-      result as ValidatableActionResult.GeneralValidationError
-      assertThat(result.message).isEqualTo("This Booking is cancelled and as such cannot be modified")
+      assertThat(result).isGeneralValidationError("This Booking is cancelled and as such cannot be modified")
     }
 
     @Test
@@ -2168,8 +2167,8 @@ class BookingServiceTest {
         newDepartureDate = LocalDate.parse("2023-07-15"),
       )
 
-      assertThat(result is ValidatableActionResult.Success).isTrue
-      result as ValidatableActionResult.Success
+      assertThat(result).isSuccess()
+      result as CasResult.Success
 
       verify {
         mockDateChangeRepository.save(
@@ -2216,8 +2215,8 @@ class BookingServiceTest {
         newDepartureDate = LocalDate.parse("2023-07-22"),
       )
 
-      assertThat(result is ValidatableActionResult.Success).isTrue
-      result as ValidatableActionResult.Success
+      assertThat(result).isSuccess()
+      result as CasResult.Success
 
       verify {
         mockDateChangeRepository.save(
@@ -2244,7 +2243,7 @@ class BookingServiceTest {
     }
 
     @Test
-    fun `emits domain event when booking has associated application`() {
+    fun `emits domain event when booking has associated application, only arrival date changed`() {
       val application = ApprovedPremisesApplicationEntityFactory()
         .withCreatedByUser(user)
         .withSubmittedAt(OffsetDateTime.now())
@@ -2264,10 +2263,10 @@ class BookingServiceTest {
       every { mockDateChangeRepository.save(any()) } answers { it.invocation.args[0] as DateChangeEntity }
       every { mockBookingRepository.save(any()) } answers { it.invocation.args[0] as BookingEntity }
 
-      every { mockCas1BookingDomainEventService.bookingChanged(any(), any(), any()) } just Runs
+      every { mockCas1BookingDomainEventService.bookingChanged(any(), any(), any(), any(), any()) } just Runs
 
-      val newArrivalDate = LocalDate.parse("2023-07-18")
-      val newDepartureDate = LocalDate.parse("2023-07-22")
+      val newArrivalDate = LocalDate.parse("2023-07-15")
+      val newDepartureDate = LocalDate.parse("2023-07-16")
 
       val result = bookingService.createDateChange(
         booking = booking,
@@ -2276,16 +2275,16 @@ class BookingServiceTest {
         newDepartureDate = newDepartureDate,
       )
 
-      assertThat(result is ValidatableActionResult.Success).isTrue
-      result as ValidatableActionResult.Success
+      assertThat(result).isSuccess()
+      result as CasResult.Success
 
       verify {
         mockDateChangeRepository.save(
           match {
             it.booking.id == booking.id &&
               it.changedByUser == user &&
-              it.newArrivalDate == LocalDate.parse("2023-07-18") &&
-              it.newDepartureDate == LocalDate.parse("2023-07-22") &&
+              it.newArrivalDate == LocalDate.parse("2023-07-15") &&
+              it.newDepartureDate == LocalDate.parse("2023-07-16") &&
               it.previousArrivalDate == LocalDate.parse("2023-07-14") &&
               it.previousDepartureDate == LocalDate.parse("2023-07-16")
           },
@@ -2296,8 +2295,8 @@ class BookingServiceTest {
         mockBookingRepository.save(
           match {
             it.id == booking.id &&
-              it.arrivalDate == LocalDate.parse("2023-07-18") &&
-              it.departureDate == LocalDate.parse("2023-07-22")
+              it.arrivalDate == LocalDate.parse("2023-07-15") &&
+              it.departureDate == LocalDate.parse("2023-07-16")
           },
         )
       }
@@ -2307,12 +2306,14 @@ class BookingServiceTest {
           booking = booking,
           changedBy = user,
           bookingChangedAt = any(),
+          previousArrivalDateIfChanged = LocalDate.of(2023, 7, 14),
+          previousDepartureDateIfChanged = null,
         )
       }
     }
 
     @Test
-    fun `emits domain event when booking has associated offline application with an event number`() {
+    fun `emits domain event when booking has associated offline application with an event number, only departure date changed`() {
       val application = OfflineApplicationEntityFactory()
         .withEventNumber("123")
         .produce()
@@ -2331,9 +2332,9 @@ class BookingServiceTest {
       every { mockDateChangeRepository.save(any()) } answers { it.invocation.args[0] as DateChangeEntity }
       every { mockBookingRepository.save(any()) } answers { it.invocation.args[0] as BookingEntity }
 
-      every { mockCas1BookingDomainEventService.bookingChanged(any(), any(), any()) } just Runs
+      every { mockCas1BookingDomainEventService.bookingChanged(any(), any(), any(), any(), any()) } just Runs
 
-      val newArrivalDate = LocalDate.parse("2023-07-18")
+      val newArrivalDate = LocalDate.parse("2023-07-14")
       val newDepartureDate = LocalDate.parse("2023-07-22")
 
       val result = bookingService.createDateChange(
@@ -2343,14 +2344,16 @@ class BookingServiceTest {
         newDepartureDate = newDepartureDate,
       )
 
-      assertThat(result is ValidatableActionResult.Success).isTrue
-      result as ValidatableActionResult.Success
+      assertThat(result).isSuccess()
+      result as CasResult.Success
 
       verify(exactly = 1) {
         mockCas1BookingDomainEventService.bookingChanged(
           booking = booking,
           changedBy = user,
           bookingChangedAt = any(),
+          previousArrivalDateIfChanged = null,
+          previousDepartureDateIfChanged = LocalDate.of(2023, 7, 16),
         )
       }
     }
@@ -2375,7 +2378,7 @@ class BookingServiceTest {
       every { mockDateChangeRepository.save(any()) } answers { it.invocation.args[0] as DateChangeEntity }
       every { mockBookingRepository.save(any()) } answers { it.invocation.args[0] as BookingEntity }
 
-      every { mockCas1BookingDomainEventService.bookingChanged(any(), any(), any()) } just Runs
+      every { mockCas1BookingDomainEventService.bookingChanged(any(), any(), any(), any(), any()) } just Runs
 
       val newArrivalDate = LocalDate.parse("2023-07-18")
       val newDepartureDate = LocalDate.parse("2023-07-22")
@@ -2387,8 +2390,8 @@ class BookingServiceTest {
         newDepartureDate = newDepartureDate,
       )
 
-      assertThat(result is ValidatableActionResult.Success).isTrue
-      result as ValidatableActionResult.Success
+      assertThat(result).isSuccess()
+      result as CasResult.Success
 
       verify {
         mockDateChangeRepository.save(

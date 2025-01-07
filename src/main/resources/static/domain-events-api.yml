@@ -1241,6 +1241,16 @@ components:
           type: string
           example: '2023-04-30'
           format: date
+        previousArrivalOn:
+          type: string
+          description: Only set if the expected arrival on has changed
+          example: '2023-01-30'
+          format: date
+        previousDepartureOn:
+          type: string
+          description: Only set if the expected departure on has changed
+          example: '2023-01-30'
+          format: date
       required:
         - applicationId
         - applicationUrl

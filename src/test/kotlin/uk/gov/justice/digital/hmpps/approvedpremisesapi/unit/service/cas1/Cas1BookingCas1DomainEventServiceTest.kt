@@ -290,7 +290,7 @@ class Cas1BookingCas1DomainEventServiceTest {
   }
 
   @Nested
-  inner class BookingAmended {
+  inner class BookingChanged {
 
     private val changedBy = UserEntityFactory()
       .withDefaults()
@@ -306,7 +306,7 @@ class Cas1BookingCas1DomainEventServiceTest {
       .produce()
 
     @Test
-    fun `success for application`() {
+    fun `success for application, no date changes`() {
       val application = ApprovedPremisesApplicationEntityFactory()
         .withCreatedByUser(changedBy)
         .withSubmittedAt(OffsetDateTime.now())
@@ -343,6 +343,8 @@ class Cas1BookingCas1DomainEventServiceTest {
         booking,
         changedBy,
         bookingChangedAt = createdAt,
+        previousArrivalDateIfChanged = null,
+        previousDepartureDateIfChanged = null,
       )
 
       val domainEventArgument = slot<DomainEvent<BookingChangedEnvelope>>()
@@ -384,10 +386,12 @@ class Cas1BookingCas1DomainEventServiceTest {
 
       assertThat(data.arrivalOn).isEqualTo(LocalDate.of(2012, 12, 12))
       assertThat(data.departureOn).isEqualTo(LocalDate.of(2099, 11, 11))
+      assertThat(data.previousArrivalOn).isNull()
+      assertThat(data.previousDepartureOn).isNull()
     }
 
     @Test
-    fun `success for offline application`() {
+    fun `success for offline application, date changes`() {
       val offlineApplication = OfflineApplicationEntityFactory()
         .withEventNumber("offline app event number")
         .produce()
@@ -422,6 +426,8 @@ class Cas1BookingCas1DomainEventServiceTest {
         booking,
         changedBy,
         bookingChangedAt = createdAt,
+        previousArrivalDateIfChanged = LocalDate.of(2012, 12, 11),
+        previousDepartureDateIfChanged = LocalDate.of(2099, 11, 10),
       )
 
       val domainEventArgument = slot<DomainEvent<BookingChangedEnvelope>>()
@@ -463,6 +469,8 @@ class Cas1BookingCas1DomainEventServiceTest {
 
       assertThat(data.arrivalOn).isEqualTo(LocalDate.of(2012, 12, 12))
       assertThat(data.departureOn).isEqualTo(LocalDate.of(2099, 11, 11))
+      assertThat(data.previousArrivalOn).isEqualTo(LocalDate.of(2012, 12, 11))
+      assertThat(data.previousDepartureOn).isEqualTo(LocalDate.of(2099, 11, 10))
     }
   }
 

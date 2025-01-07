@@ -18,6 +18,21 @@ class CasResultAssertions<T>(actual: CasResult<T>) : AbstractAssert<CasResultAss
     return CasSuccessResultAssertions(actual as CasResult.Success)
   }
 
+  fun isConflictError(): CasResultConflictErrorAssertions<T> {
+    if (actual !is CasResult.ConflictError) {
+      failWithMessage("Expected CasResult.ConflictError but was <%s>", actual.javaClass.simpleName, actual)
+    }
+    return CasResultConflictErrorAssertions(actual as CasResult.ConflictError)
+  }
+
+  fun isFieldValidationError(): CasResultFieldValidationErrorAssertions<T> {
+    if (actual !is CasResult.FieldValidationError) {
+      failWithMessage("Expected CasResult.FieldValidationError but was <%s>", actual.javaClass.simpleName, actual)
+    }
+    return CasResultFieldValidationErrorAssertions(actual as CasResult.FieldValidationError)
+  }
+
+  @Deprecated("Use the chained version isFieldValidationError()")
   fun isFieldValidationError(field: String, expectedMessage: String): CasResultAssertions<T> {
     if (actual !is CasResult.FieldValidationError) {
       failWithMessage("Expected CasResult.FieldValidationError but was <%s>", actual.javaClass.simpleName, actual)
@@ -84,5 +99,55 @@ class CasSuccessResultAssertions<T>(actual: CasResult.Success<T>) : AbstractAsse
 
   fun with(check: (T) -> Unit) {
     check.invoke(actual.value)
+  }
+}
+
+class CasResultConflictErrorAssertions<T>(actual: CasResult.ConflictError<T>) :
+  AbstractAssert<CasResultConflictErrorAssertions<T>, CasResult.ConflictError<T>>(
+    actual,
+    CasResultConflictErrorAssertions::class.java,
+  ) {
+  fun hasEntityId(expected: Any): CasResultConflictErrorAssertions<T> {
+    val value = actual.conflictingEntityId
+    if (value != expected) {
+      failWithMessage("Expected ConflictError Entity Id value to be <%s> but was:<%s>", expected, value)
+    }
+    return this
+  }
+
+  fun hasMessage(expected: Any): CasResultConflictErrorAssertions<T> {
+    val value = actual.message
+    if (value != expected) {
+      failWithMessage("Expected ConflictError Message value to be <%s> but was:<%s>", expected, value)
+    }
+    return this
+  }
+
+  fun hasMessageContaining(expected: String): CasResultConflictErrorAssertions<T> {
+    val value = actual.message
+    assertThat(value).contains(expected)
+    return this
+  }
+}
+
+class CasResultFieldValidationErrorAssertions<T>(actual: CasResult.FieldValidationError<T>) :
+  AbstractAssert<CasResultFieldValidationErrorAssertions<T>, CasResult.FieldValidationError<T>>(
+    actual,
+    CasResultFieldValidationErrorAssertions::class.java,
+  ) {
+  fun hasMessage(field: String, expectedMessage: String): CasResultFieldValidationErrorAssertions<T> {
+    val validationMessages = actual.validationMessages
+
+    if (!validationMessages.containsKey(field)) {
+      failWithMessage("Expected field <%s> not found in validation messages", field)
+    } else if (validationMessages[field] != expectedMessage) {
+      failWithMessage(
+        "Expected field <%s> to have message <%s> but was <%s>",
+        field,
+        expectedMessage,
+        validationMessages[field],
+      )
+    }
+    return this
   }
 }
