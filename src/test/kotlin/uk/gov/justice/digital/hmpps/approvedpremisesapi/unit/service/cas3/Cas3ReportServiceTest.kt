@@ -9,9 +9,9 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.CaseSummaryFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.UserEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.BookingRepository
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.LostBedsRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas3.Cas3BookingGapReportRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas3.Cas3FutureBookingsReportRepository
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas3.Cas3LostBedsRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PersonSummaryInfoResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.properties.BookingsReportProperties
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.properties.TransitionalAccommodationReferralReportProperties
@@ -37,7 +37,7 @@ class Cas3ReportServiceTest {
   private val mockTransitionalAccommodationReferralReportRowRepository =
     mockk<TransitionalAccommodationReferralReportRepository>()
   private val mockBookingsReportRepository = mockk<BookingsReportRepository>()
-  private val mockLostBedsRepository = mockk<LostBedsRepository>()
+  private val mockLostBedsRepository = mockk<Cas3LostBedsRepository>()
   private val mockBookingTransformer = mockk<BookingTransformer>()
   private val mockWorkingDayService = mockk<WorkingDayService>()
   private val mockBookingRepository = mockk<BookingRepository>()

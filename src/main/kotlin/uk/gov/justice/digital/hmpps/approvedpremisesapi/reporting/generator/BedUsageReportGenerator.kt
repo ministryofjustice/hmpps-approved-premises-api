@@ -2,8 +2,8 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.generator
 
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.BedEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.BookingRepository
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.LostBedsRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TemporaryAccommodationPremisesEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas3.Cas3LostBedsRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.model.BedUsageReportRow
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.model.BedUsageType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.properties.BedUsageReportProperties
@@ -15,7 +15,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.getDaysUntilExclusi
 class BedUsageReportGenerator(
   private val bookingTransformer: BookingTransformer,
   private val bookingRepository: BookingRepository,
-  private val lostBedsRepository: LostBedsRepository,
+  private val lostBedsRepository: Cas3LostBedsRepository,
   private val workingDayService: WorkingDayService,
 ) : ReportGenerator<BedEntity, BedUsageReportRow, BedUsageReportProperties>(BedUsageReportRow::class) {
   override fun filter(properties: BedUsageReportProperties): (BedEntity) -> Boolean = {

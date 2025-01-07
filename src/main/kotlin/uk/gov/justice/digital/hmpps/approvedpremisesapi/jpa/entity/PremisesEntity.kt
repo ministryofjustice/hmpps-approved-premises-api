@@ -21,6 +21,7 @@ import org.springframework.data.jpa.repository.Query
 import org.springframework.stereotype.Repository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.BookingStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PropertyStatus
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas3.Cas3LostBedsEntity
 import java.time.LocalDate
 import java.util.UUID
 
@@ -241,7 +242,7 @@ abstract class PremisesEntity(
   @OneToMany(mappedBy = "premises")
   val bookings: MutableList<BookingEntity>,
   @OneToMany(mappedBy = "premises")
-  val lostBeds: MutableList<LostBedsEntity>,
+  val lostBeds: MutableList<Cas3LostBedsEntity>,
   @OneToMany(mappedBy = "premises")
   val rooms: MutableList<RoomEntity>,
   @ManyToMany
@@ -274,7 +275,7 @@ class ApprovedPremisesEntity(
   probationRegion: ProbationRegionEntity,
   localAuthorityArea: LocalAuthorityAreaEntity,
   bookings: MutableList<BookingEntity>,
-  lostBeds: MutableList<LostBedsEntity>,
+  lostBeds: MutableList<Cas3LostBedsEntity>,
   var apCode: String,
   var qCode: String,
   rooms: MutableList<RoomEntity>,
@@ -317,6 +318,7 @@ enum class ApprovedPremisesGender {
   WOMAN,
 }
 
+@SuppressWarnings("LongParameterList")
 @Entity
 @DiscriminatorValue("temporary-accommodation")
 @Table(name = "temporary_accommodation_premises")
@@ -335,7 +337,7 @@ class TemporaryAccommodationPremisesEntity(
   probationRegion: ProbationRegionEntity,
   localAuthorityArea: LocalAuthorityAreaEntity?,
   bookings: MutableList<BookingEntity>,
-  lostBeds: MutableList<LostBedsEntity>,
+  lostBeds: MutableList<Cas3LostBedsEntity>,
   rooms: MutableList<RoomEntity>,
   characteristics: MutableList<CharacteristicEntity>,
   status: PropertyStatus,

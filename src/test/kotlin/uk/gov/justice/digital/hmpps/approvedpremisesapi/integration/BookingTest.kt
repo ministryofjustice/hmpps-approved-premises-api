@@ -1624,12 +1624,12 @@ class BookingTest : IntegrationTestBase() {
           }
         }
 
-        val existingLostBed = lostBedsEntityFactory.produceAndPersist {
+        val existingLostBed = cas3LostBedsEntityFactory.produceAndPersist {
           withBed(bed)
           withPremises(premises)
           withStartDate(LocalDate.parse("2022-07-15"))
           withEndDate(LocalDate.parse("2022-08-15"))
-          withYieldedReason { lostBedReasonEntityFactory.produceAndPersist() }
+          withYieldedReason { cas3LostBedReasonEntityFactory.produceAndPersist() }
         }
 
         govUKBankHolidaysAPIMockSuccessfullCallWithEmptyResponse()
@@ -1680,12 +1680,12 @@ class BookingTest : IntegrationTestBase() {
           }
         }
 
-        val existingLostBed = lostBedsEntityFactory.produceAndPersist {
+        val existingLostBed = cas3LostBedsEntityFactory.produceAndPersist {
           withBed(bed)
           withPremises(premises)
           withStartDate(LocalDate.parse("2022-07-15"))
           withEndDate(LocalDate.parse("2022-08-15"))
-          withYieldedReason { lostBedReasonEntityFactory.produceAndPersist() }
+          withYieldedReason { cas3LostBedReasonEntityFactory.produceAndPersist() }
         }
 
         govUKBankHolidaysAPIMockSuccessfullCallWithEmptyResponse()
@@ -1736,17 +1736,17 @@ class BookingTest : IntegrationTestBase() {
           }
         }
 
-        val existingLostBed = lostBedsEntityFactory.produceAndPersist {
+        val existingLostBed = cas3LostBedsEntityFactory.produceAndPersist {
           withBed(bed)
           withPremises(premises)
           withStartDate(LocalDate.parse("2022-07-15"))
           withEndDate(LocalDate.parse("2022-08-15"))
           withYieldedReason {
-            lostBedReasonEntityFactory.produceAndPersist()
+            cas3LostBedReasonEntityFactory.produceAndPersist()
           }
         }
 
-        existingLostBed.cancellation = lostBedCancellationEntityFactory.produceAndPersist {
+        existingLostBed.cancellation = cas3LostBedCancellationEntityFactory.produceAndPersist {
           withLostBed(existingLostBed)
           withCreatedAt(OffsetDateTime.parse("2022-07-01T12:34:56.789Z"))
         }
@@ -1933,12 +1933,12 @@ class BookingTest : IntegrationTestBase() {
           }
         }
 
-        val conflictingLostBed = lostBedsEntityFactory.produceAndPersist {
+        val conflictingLostBed = cas3LostBedsEntityFactory.produceAndPersist {
           withBed(bed)
           withPremises(premises)
           withStartDate(LocalDate.parse("2022-07-15"))
           withEndDate(LocalDate.parse("2022-08-15"))
-          withYieldedReason { lostBedReasonEntityFactory.produceAndPersist() }
+          withYieldedReason { cas3LostBedReasonEntityFactory.produceAndPersist() }
         }
 
         val booking = bookingEntityFactory.produceAndPersist {
@@ -3027,12 +3027,12 @@ class BookingTest : IntegrationTestBase() {
             }
           }
 
-          val conflictingLostBed = lostBedsEntityFactory.produceAndPersist {
+          val conflictingLostBed = cas3LostBedsEntityFactory.produceAndPersist {
             withBed(bed)
             withPremises(premises)
             withStartDate(LocalDate.parse("2022-07-15"))
             withEndDate(LocalDate.parse("2022-08-15"))
-            withYieldedReason { lostBedReasonEntityFactory.produceAndPersist() }
+            withYieldedReason { cas3LostBedReasonEntityFactory.produceAndPersist() }
           }
 
           val booking = bookingEntityFactory.produceAndPersist {
@@ -3088,12 +3088,12 @@ class BookingTest : IntegrationTestBase() {
             }
           }
 
-          val conflictingLostBed = lostBedsEntityFactory.produceAndPersist {
+          val conflictingLostBed = cas3LostBedsEntityFactory.produceAndPersist {
             withBed(bed)
             withPremises(premises)
             withStartDate(LocalDate.parse("2022-07-15"))
             withEndDate(LocalDate.parse("2022-08-15"))
-            withYieldedReason { lostBedReasonEntityFactory.produceAndPersist() }
+            withYieldedReason { cas3LostBedReasonEntityFactory.produceAndPersist() }
           }
 
           val booking = bookingEntityFactory.produceAndPersist {

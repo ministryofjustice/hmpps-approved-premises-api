@@ -194,10 +194,10 @@ class BedSearchRepositoryTest : IntegrationTestBase() {
       withRoom(roomMatchingEverything)
     }
 
-    lostBedsEntityFactory.produceAndPersist {
+    cas3LostBedsEntityFactory.produceAndPersist {
       withPremises(premisesOneMatchingEverything)
       withBed(bedFiveInRoomOneInPremisesOneMatchingEverything)
-      withYieldedReason { lostBedReasonEntityFactory.produceAndPersist() }
+      withYieldedReason { cas3LostBedReasonEntityFactory.produceAndPersist() }
       withStartDate(LocalDate.parse("2023-03-08"))
       withEndDate(LocalDate.parse("2023-03-10"))
     }
@@ -209,10 +209,10 @@ class BedSearchRepositoryTest : IntegrationTestBase() {
       withRoom(roomMatchingEverything)
     }
 
-    lostBedsEntityFactory.produceAndPersist {
+    cas3LostBedsEntityFactory.produceAndPersist {
       withPremises(premisesOneMatchingEverything)
       withBed(bedSixInRoomOneInPremisesOneMatchingEverything)
-      withYieldedReason { lostBedReasonEntityFactory.produceAndPersist() }
+      withYieldedReason { cas3LostBedReasonEntityFactory.produceAndPersist() }
       withStartDate(LocalDate.parse("2023-03-14"))
       withEndDate(LocalDate.parse("2023-03-16"))
     }
@@ -224,10 +224,10 @@ class BedSearchRepositoryTest : IntegrationTestBase() {
       withRoom(roomMatchingEverything)
     }
 
-    lostBedsEntityFactory.produceAndPersist {
+    cas3LostBedsEntityFactory.produceAndPersist {
       withPremises(premisesOneMatchingEverything)
       withBed(bedSevenInRoomOneInPremisesOneMatchingEverything)
-      withYieldedReason { lostBedReasonEntityFactory.produceAndPersist() }
+      withYieldedReason { cas3LostBedReasonEntityFactory.produceAndPersist() }
       withStartDate(LocalDate.parse("2023-03-10"))
       withEndDate(LocalDate.parse("2023-03-12"))
     }
@@ -239,10 +239,10 @@ class BedSearchRepositoryTest : IntegrationTestBase() {
       withRoom(roomMatchingEverything)
     }
 
-    lostBedsEntityFactory.produceAndPersist {
+    cas3LostBedsEntityFactory.produceAndPersist {
       withPremises(premisesOneMatchingEverything)
       withBed(bedEightInRoomOneInPremisesOneMatchingEverything)
-      withYieldedReason { lostBedReasonEntityFactory.produceAndPersist() }
+      withYieldedReason { cas3LostBedReasonEntityFactory.produceAndPersist() }
       withStartDate(LocalDate.parse("2023-03-08"))
       withEndDate(LocalDate.parse("2023-03-16"))
     }
@@ -338,15 +338,15 @@ class BedSearchRepositoryTest : IntegrationTestBase() {
       withRoom(roomMatchingEverythingInPremisesThree)
     }
 
-    val cancelledLostBed = lostBedsEntityFactory.produceAndPersist {
+    val cancelledLostBed = cas3LostBedsEntityFactory.produceAndPersist {
       withPremises(premisesThreeMatchingEverything)
       withBed(bedWithCancelledLostBed)
-      withYieldedReason { lostBedReasonEntityFactory.produceAndPersist() }
+      withYieldedReason { cas3LostBedReasonEntityFactory.produceAndPersist() }
       withStartDate(LocalDate.parse("2023-03-08"))
       withEndDate(LocalDate.parse("2023-03-10"))
     }
 
-    lostBedCancellationEntityFactory.produceAndPersist {
+    cas3LostBedCancellationEntityFactory.produceAndPersist {
       withLostBed(cancelledLostBed)
     }
 
@@ -564,10 +564,10 @@ class BedSearchRepositoryTest : IntegrationTestBase() {
       withRoom(roomInPremisesOneInPdu)
     }
 
-    lostBedsEntityFactory.produceAndPersist {
+    cas3LostBedsEntityFactory.produceAndPersist {
       withPremises(premisesOneInPdu)
       withBed(bedFiveInRoomInPremisesOneInPdu)
-      withYieldedReason { lostBedReasonEntityFactory.produceAndPersist() }
+      withYieldedReason { cas3LostBedReasonEntityFactory.produceAndPersist() }
       withStartDate(LocalDate.parse("2023-03-08"))
       withEndDate(LocalDate.parse("2023-03-10"))
     }
@@ -579,10 +579,10 @@ class BedSearchRepositoryTest : IntegrationTestBase() {
       withRoom(roomInPremisesOneInPdu)
     }
 
-    lostBedsEntityFactory.produceAndPersist {
+    cas3LostBedsEntityFactory.produceAndPersist {
       withPremises(premisesOneInPdu)
       withBed(bedSixInRoomInPremisesOneInPdu)
-      withYieldedReason { lostBedReasonEntityFactory.produceAndPersist() }
+      withYieldedReason { cas3LostBedReasonEntityFactory.produceAndPersist() }
       withStartDate(LocalDate.parse("2023-03-14"))
       withEndDate(LocalDate.parse("2023-03-16"))
     }
@@ -594,10 +594,10 @@ class BedSearchRepositoryTest : IntegrationTestBase() {
       withRoom(roomInPremisesOneInPdu)
     }
 
-    lostBedsEntityFactory.produceAndPersist {
+    cas3LostBedsEntityFactory.produceAndPersist {
       withPremises(premisesOneInPdu)
       withBed(bedSevenInRoomInPremisesOneInPdu)
-      withYieldedReason { lostBedReasonEntityFactory.produceAndPersist() }
+      withYieldedReason { cas3LostBedReasonEntityFactory.produceAndPersist() }
       withStartDate(LocalDate.parse("2023-03-10"))
       withEndDate(LocalDate.parse("2023-03-12"))
     }
@@ -609,10 +609,10 @@ class BedSearchRepositoryTest : IntegrationTestBase() {
       withRoom(roomInPremisesOneInPdu)
     }
 
-    lostBedsEntityFactory.produceAndPersist {
+    cas3LostBedsEntityFactory.produceAndPersist {
       withPremises(premisesOneInPdu)
       withBed(bedEightInRoomInPremisesOneInPdu)
-      withYieldedReason { lostBedReasonEntityFactory.produceAndPersist() }
+      withYieldedReason { cas3LostBedReasonEntityFactory.produceAndPersist() }
       withStartDate(LocalDate.parse("2023-03-08"))
       withEndDate(LocalDate.parse("2023-03-16"))
     }
@@ -664,15 +664,15 @@ class BedSearchRepositoryTest : IntegrationTestBase() {
       withRoom(roomInPremisesThreeInPdu)
     }
 
-    val cancelledLostBed = lostBedsEntityFactory.produceAndPersist {
+    val cancelledLostBed = cas3LostBedsEntityFactory.produceAndPersist {
       withPremises(premisesThreeInPdu)
       withBed(bedWithCancelledLostBed)
-      withYieldedReason { lostBedReasonEntityFactory.produceAndPersist() }
+      withYieldedReason { cas3LostBedReasonEntityFactory.produceAndPersist() }
       withStartDate(LocalDate.parse("2023-03-08"))
       withEndDate(LocalDate.parse("2023-03-10"))
     }
 
-    lostBedCancellationEntityFactory.produceAndPersist {
+    cas3LostBedCancellationEntityFactory.produceAndPersist {
       withLostBed(cancelledLostBed)
     }
 
@@ -880,15 +880,15 @@ class BedSearchRepositoryTest : IntegrationTestBase() {
       withRoom(roomInPremisesThreeInPdu)
     }
 
-    val cancelledLostBed = lostBedsEntityFactory.produceAndPersist {
+    val cancelledLostBed = cas3LostBedsEntityFactory.produceAndPersist {
       withPremises(premisesThreeInPdu)
       withBed(bedWithCancelledLostBed)
-      withYieldedReason { lostBedReasonEntityFactory.produceAndPersist() }
+      withYieldedReason { cas3LostBedReasonEntityFactory.produceAndPersist() }
       withStartDate(LocalDate.parse("2024-08-08"))
       withEndDate(LocalDate.parse("2024-09-10"))
     }
 
-    lostBedCancellationEntityFactory.produceAndPersist {
+    cas3LostBedCancellationEntityFactory.produceAndPersist {
       withLostBed(cancelledLostBed)
     }
 
@@ -1078,15 +1078,15 @@ class BedSearchRepositoryTest : IntegrationTestBase() {
       withRoom(roomInPremisesThreeInPdu)
     }
 
-    val cancelledLostBed = lostBedsEntityFactory.produceAndPersist {
+    val cancelledLostBed = cas3LostBedsEntityFactory.produceAndPersist {
       withPremises(premisesThreeInPdu)
       withBed(bedWithCancelledLostBed)
-      withYieldedReason { lostBedReasonEntityFactory.produceAndPersist() }
+      withYieldedReason { cas3LostBedReasonEntityFactory.produceAndPersist() }
       withStartDate(LocalDate.parse("2024-08-08"))
       withEndDate(LocalDate.parse("2024-09-10"))
     }
 
-    lostBedCancellationEntityFactory.produceAndPersist {
+    cas3LostBedCancellationEntityFactory.produceAndPersist {
       withLostBed(cancelledLostBed)
     }
 
@@ -1273,15 +1273,15 @@ class BedSearchRepositoryTest : IntegrationTestBase() {
       withRoom(roomInPremisesThreeInPdu)
     }
 
-    val cancelledLostBed = lostBedsEntityFactory.produceAndPersist {
+    val cancelledLostBed = cas3LostBedsEntityFactory.produceAndPersist {
       withPremises(premisesThreeInPdu)
       withBed(bedWithCancelledLostBed)
-      withYieldedReason { lostBedReasonEntityFactory.produceAndPersist() }
+      withYieldedReason { cas3LostBedReasonEntityFactory.produceAndPersist() }
       withStartDate(LocalDate.parse("2024-08-08"))
       withEndDate(LocalDate.parse("2024-09-10"))
     }
 
-    lostBedCancellationEntityFactory.produceAndPersist {
+    cas3LostBedCancellationEntityFactory.produceAndPersist {
       withLostBed(cancelledLostBed)
     }
 

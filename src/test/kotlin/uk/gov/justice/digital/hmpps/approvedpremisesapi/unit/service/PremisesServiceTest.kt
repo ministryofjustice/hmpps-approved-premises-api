@@ -9,19 +9,19 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApprovedPremises
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.BedEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.BookingSummaryForAvailabilityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.LocalAuthorityEntityFactory
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.LostBedCancellationEntityFactory
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.LostBedReasonEntityFactory
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.LostBedsEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ProbationRegionEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.RoomEntityFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.cas3.Cas3LostBedCancellationEntityFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.cas3.Cas3LostBedReasonEntityFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.cas3.Cas3LostBedsEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.BedRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.BookingRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.LocalAuthorityAreaRepository
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.LostBedsRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PremisesRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ProbationDeliveryUnitRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ProbationRegionRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.RoomRepository
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas3.Cas3LostBedsRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.Availability
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.CharacteristicService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.PremisesService
@@ -31,7 +31,7 @@ import java.time.LocalDate
 
 class PremisesServiceTest {
   private val premisesRepositoryMock = mockk<PremisesRepository>()
-  private val lostBedsRepositoryMock = mockk<LostBedsRepository>()
+  private val lostBedsRepositoryMock = mockk<Cas3LostBedsRepository>()
   private val bookingRepositoryMock = mockk<BookingRepository>()
   private val localAuthorityAreaRepositoryMock = mockk<LocalAuthorityAreaRepository>()
   private val probationRegionRepositoryMock = mockk<ProbationRegionRepository>()
@@ -88,11 +88,11 @@ class PremisesServiceTest {
 
     val premises = approvedPremisesFactory.produce()
 
-    val lostBedEntityOne = LostBedsEntityFactory()
+    val lostBedEntityOne = Cas3LostBedsEntityFactory()
       .withPremises(premises)
       .withStartDate(startDate.plusDays(1))
       .withEndDate(startDate.plusDays(2))
-      .withYieldedReason { LostBedReasonEntityFactory().produce() }
+      .withYieldedReason { Cas3LostBedReasonEntityFactory().produce() }
       .withBed(
         BedEntityFactory().apply {
           withYieldedRoom {
@@ -104,11 +104,11 @@ class PremisesServiceTest {
       )
       .produce()
 
-    val lostBedEntityTwo = LostBedsEntityFactory()
+    val lostBedEntityTwo = Cas3LostBedsEntityFactory()
       .withPremises(premises)
       .withStartDate(startDate.plusDays(1))
       .withEndDate(startDate.plusDays(2))
-      .withYieldedReason { LostBedReasonEntityFactory().produce() }
+      .withYieldedReason { Cas3LostBedReasonEntityFactory().produce() }
       .withBed(
         BedEntityFactory().apply {
           withYieldedRoom {
@@ -182,11 +182,11 @@ class PremisesServiceTest {
 
     val premises = approvedPremisesFactory.produce()
 
-    val lostBedEntity = LostBedsEntityFactory()
+    val lostBedEntity = Cas3LostBedsEntityFactory()
       .withPremises(premises)
       .withStartDate(startDate.plusDays(1))
       .withEndDate(startDate.plusDays(2))
-      .withYieldedReason { LostBedReasonEntityFactory().produce() }
+      .withYieldedReason { Cas3LostBedReasonEntityFactory().produce() }
       .withBed(
         BedEntityFactory().apply {
           withYieldedRoom {
@@ -198,7 +198,7 @@ class PremisesServiceTest {
       )
       .produce()
 
-    val lostBedCancellation = LostBedCancellationEntityFactory()
+    val lostBedCancellation = Cas3LostBedCancellationEntityFactory()
       .withYieldedLostBed { lostBedEntity }
       .produce()
 

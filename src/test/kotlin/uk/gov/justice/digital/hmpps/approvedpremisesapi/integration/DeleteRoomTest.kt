@@ -109,11 +109,11 @@ class DeleteRoomTest : IntegrationTestBase() {
     }
   }
 
-  private fun createLostBed(premises: PremisesEntity, bed: BedEntity) = lostBedsEntityFactory.produceAndPersist {
+  private fun createLostBed(premises: PremisesEntity, bed: BedEntity) = cas3LostBedsEntityFactory.produceAndPersist {
     withPremises(premises)
     withBed(bed)
     withYieldedReason {
-      lostBedReasonEntityFactory.produceAndPersist {
+      cas3LostBedReasonEntityFactory.produceAndPersist {
         withServiceScope(ServiceName.temporaryAccommodation.value)
       }
     }

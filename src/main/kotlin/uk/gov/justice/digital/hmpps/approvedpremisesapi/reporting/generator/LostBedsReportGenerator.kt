@@ -1,7 +1,7 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.generator
 
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.BedEntity
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.LostBedsRepository
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas3.Cas3LostBedsRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.model.LostBedReportRow
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.properties.LostBedReportProperties
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.earliestDateOf
@@ -10,7 +10,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.latestDateOf
 import java.time.LocalDate
 
 class LostBedsReportGenerator(
-  private val lostBedsRepository: LostBedsRepository,
+  private val lostBedsRepository: Cas3LostBedsRepository,
 ) : ReportGenerator<BedEntity, LostBedReportRow, LostBedReportProperties>(LostBedReportRow::class) {
   override fun filter(properties: LostBedReportProperties): (BedEntity) -> Boolean = {
     checkServiceType(properties.serviceName, it.room.premises) &&

@@ -7,9 +7,9 @@ import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.BookingRepository
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.LostBedsRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas3.Cas3BookingGapReportRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas3.Cas3FutureBookingsReportRepository
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas3.Cas3LostBedsRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PersonSummaryInfoResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.generator.BedUsageReportGenerator
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.generator.BedUtilisationReportGenerator
@@ -48,7 +48,7 @@ class Cas3ReportService(
   private val userService: UserService,
   private val transitionalAccommodationReferralReportRowRepository: TransitionalAccommodationReferralReportRepository,
   private val bookingsReportRepository: BookingsReportRepository,
-  private val lostBedsRepository: LostBedsRepository,
+  private val cas3LostBedsRepository: Cas3LostBedsRepository,
   private val bookingTransformer: BookingTransformer,
   private val workingDayService: WorkingDayService,
   private val bookingRepository: BookingRepository,
@@ -121,7 +121,7 @@ class Cas3ReportService(
       probationRegionId = properties.probationRegionId,
     )
 
-    BedUsageReportGenerator(bookingTransformer, bookingRepository, lostBedsRepository, workingDayService)
+    BedUsageReportGenerator(bookingTransformer, bookingRepository, cas3LostBedsRepository, workingDayService)
       .createReport(bedspacesInScope, properties)
       .writeExcel(
         outputStream = outputStream,

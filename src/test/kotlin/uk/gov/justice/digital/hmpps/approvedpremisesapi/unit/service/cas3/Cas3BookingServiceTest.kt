@@ -57,7 +57,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DepartureRepo
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DestinationProviderRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ExtensionEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ExtensionRepository
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.LostBedsRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.MoveOnCategoryRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ProbationRegionEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TemporaryAccommodationApplicationEntity
@@ -65,6 +64,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TurnaroundEnt
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TurnaroundRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserQualification
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas3.Cas3LostBedsRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PersonInfoResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.AuthorisableActionResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.CasResult
@@ -101,7 +101,7 @@ class Cas3BookingServiceTest {
   private val mockDestinationProviderRepository = mockk<DestinationProviderRepository>()
   private val mockCancellationReasonRepository = mockk<CancellationReasonRepository>()
   private val mockBedRepository = mockk<BedRepository>()
-  private val mockLostBedsRepository = mockk<LostBedsRepository>()
+  private val mockLostBedsRepository = mockk<Cas3LostBedsRepository>()
   private val mockTurnaroundRepository = mockk<TurnaroundRepository>()
   private val mockAssessmentRepository = mockk<AssessmentRepository>()
   private val mockUserService = mockk<UserService>()
@@ -120,7 +120,7 @@ class Cas3BookingServiceTest {
       moveOnCategoryRepository = mockMoveOnCategoryRepository,
       cancellationRepository = mockCancellationRepository,
       cancellationReasonRepository = mockCancellationReasonRepository,
-      lostBedsRepository = mockLostBedsRepository,
+      cas3LostBedsRepository = mockLostBedsRepository,
       turnaroundRepository = mockTurnaroundRepository,
       extensionRepository = mockExtensionRepository,
       cas3PremisesService = mockCas3PremisesService,

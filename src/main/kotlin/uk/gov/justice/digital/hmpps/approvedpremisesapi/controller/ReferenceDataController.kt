@@ -22,12 +22,12 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Characteristi
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DepartureReasonRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DestinationProviderRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.LocalAuthorityAreaRepository
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.LostBedReasonRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.MoveOnCategoryRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.NonArrivalReasonRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ProbationDeliveryUnitRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ProbationRegionRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ReferralRejectionReasonRepository
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas3.Cas3LostBedReasonRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.ForbiddenProblem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.ApAreaTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.CancellationReasonTransformer
@@ -35,12 +35,12 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.Characterist
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.DepartureReasonTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.DestinationProviderTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.LocalAuthorityAreaTransformer
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.LostBedReasonTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.MoveOnCategoryTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.NonArrivalReasonTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.ProbationDeliveryUnitTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.ProbationRegionTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.ReferralRejectionReasonTransformer
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.cas3.Cas3LostBedReasonTransformer
 import java.util.UUID
 
 @Service
@@ -49,7 +49,7 @@ class ReferenceDataController(
   private val moveOnCategoryRepository: MoveOnCategoryRepository,
   private val destinationProviderRepository: DestinationProviderRepository,
   private val cancellationReasonRepository: CancellationReasonRepository,
-  private val lostBedReasonRepository: LostBedReasonRepository,
+  private val cas3LostBedReasonRepository: Cas3LostBedReasonRepository,
   private val localAuthorityAreaRepository: LocalAuthorityAreaRepository,
   private val characteristicRepository: CharacteristicRepository,
   private val probationRegionRepository: ProbationRegionRepository,
@@ -60,7 +60,7 @@ class ReferenceDataController(
   private val moveOnCategoryTransformer: MoveOnCategoryTransformer,
   private val destinationProviderTransformer: DestinationProviderTransformer,
   private val cancellationReasonTransformer: CancellationReasonTransformer,
-  private val lostBedReasonTransformer: LostBedReasonTransformer,
+  private val cas3LostBedReasonTransformer: Cas3LostBedReasonTransformer,
   private val localAuthorityAreaTransformer: LocalAuthorityAreaTransformer,
   private val characteristicTransformer: CharacteristicTransformer,
   private val probationRegionTransformer: ProbationRegionTransformer,
@@ -144,12 +144,12 @@ class ReferenceDataController(
   }
 
   override fun referenceDataLostBedReasonsGet(xServiceName: ServiceName?): ResponseEntity<List<LostBedReason>> {
-    val lostBedReasons = when (xServiceName != null) {
-      true -> lostBedReasonRepository.findAllByServiceScope(xServiceName.value)
-      false -> lostBedReasonRepository.findAll()
+    val lostBedReasons = when (xServiceName == ServiceName.temporaryAccommodation) {
+      true -> cas3LostBedReasonRepository.findAllByServiceScope(xServiceName.value)
+      false -> throw ForbiddenProblem()
     }
 
-    return ResponseEntity.ok(lostBedReasons.map(lostBedReasonTransformer::transformJpaToApi))
+    return ResponseEntity.ok(lostBedReasons.map(cas3LostBedReasonTransformer::transformJpaToApi))
   }
 
   override fun referenceDataProbationRegionsGet(): ResponseEntity<List<ProbationRegion>> {

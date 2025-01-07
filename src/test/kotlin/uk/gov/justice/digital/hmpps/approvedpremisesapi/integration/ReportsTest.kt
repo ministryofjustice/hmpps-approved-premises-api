@@ -21,10 +21,10 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.given
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.apDeliusContextAddResponseToUserAccessCall
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.govUKBankHolidaysAPIMockSuccessfullCallWithEmptyResponse
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.BookingEntity
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.LostBedsRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TemporaryAccommodationApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRole
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas3.Cas3LostBedsRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.community.OffenderDetailSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.generator.BookingsReportGenerator
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.generator.LostBedsReportGenerator
@@ -50,7 +50,7 @@ class ReportsTest : IntegrationTestBase() {
   lateinit var bookingTransformer: BookingTransformer
 
   @Autowired
-  lateinit var realLostBedsRepository: LostBedsRepository
+  lateinit var realLostBedsRepository: Cas3LostBedsRepository
 
   @Nested
   inner class GetBookingReport {
@@ -1311,37 +1311,37 @@ class ReportsTest : IntegrationTestBase() {
             )
           }
 
-          lostBedsEntityFactory.produceAndPersist {
+          cas3LostBedsEntityFactory.produceAndPersist {
             withPremises(premises)
             withBed(bed1)
             withStartDate(LocalDate.of(2023, 4, 5))
             withEndDate(LocalDate.of(2023, 7, 8))
             withYieldedReason {
-              lostBedReasonEntityFactory.produceAndPersist()
+              cas3LostBedReasonEntityFactory.produceAndPersist()
             }
           }
 
-          lostBedsEntityFactory.produceAndPersist {
+          cas3LostBedsEntityFactory.produceAndPersist {
             withPremises(premises)
             withBed(bed2)
             withStartDate(LocalDate.of(2023, 4, 12))
             withEndDate(LocalDate.of(2023, 7, 5))
             withYieldedReason {
-              lostBedReasonEntityFactory.produceAndPersist()
+              cas3LostBedReasonEntityFactory.produceAndPersist()
             }
           }
 
-          val lostBed3 = lostBedsEntityFactory.produceAndPersist {
+          val lostBed3 = cas3LostBedsEntityFactory.produceAndPersist {
             withPremises(premises)
             withBed(bed3)
             withStartDate(LocalDate.of(2023, 4, 1))
             withEndDate(LocalDate.of(2023, 7, 5))
             withYieldedReason {
-              lostBedReasonEntityFactory.produceAndPersist()
+              cas3LostBedReasonEntityFactory.produceAndPersist()
             }
           }
 
-          lostBedCancellationEntityFactory.produceAndPersist {
+          cas3LostBedCancellationEntityFactory.produceAndPersist {
             withLostBed(lostBed3)
           }
 

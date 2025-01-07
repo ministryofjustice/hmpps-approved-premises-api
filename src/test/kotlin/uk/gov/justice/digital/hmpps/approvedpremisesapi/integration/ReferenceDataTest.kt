@@ -16,13 +16,13 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.Characterist
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.DepartureReasonTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.DestinationProviderTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.LocalAuthorityAreaTransformer
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.LostBedReasonTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.MoveOnCategoryTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.NonArrivalReasonTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.ProbationDeliveryUnitTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.ProbationRegionTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.ReferralRejectionReasonTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.StaffMemberTransformer
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.cas3.Cas3LostBedReasonTransformer
 import java.util.UUID
 
 class ReferenceDataTest : IntegrationTestBase() {
@@ -30,7 +30,7 @@ class ReferenceDataTest : IntegrationTestBase() {
   lateinit var departureReasonTransformer: DepartureReasonTransformer
 
   @Autowired
-  lateinit var lostBedReasonTransformer: LostBedReasonTransformer
+  lateinit var cas3LostBedReasonTransformer: Cas3LostBedReasonTransformer
 
   @Autowired
   lateinit var moveOnCategoryTransformer: MoveOnCategoryTransformer
@@ -688,63 +688,16 @@ class ReferenceDataTest : IntegrationTestBase() {
   }
 
   @Test
-  fun `Get Lost Bed Reasons returns 200 with correct body`() {
-    lostBedReasonRepository.deleteAll()
-
-    val lostBedReasons = lostBedReasonEntityFactory.produceAndPersistMultiple(10)
-    val expectedJson = objectMapper.writeValueAsString(
-      lostBedReasons.map(lostBedReasonTransformer::transformJpaToApi),
-    )
-
-    val jwt = jwtAuthHelper.createValidAuthorizationCodeJwt()
-
-    webTestClient.get()
-      .uri("/reference-data/lost-bed-reasons")
-      .header("Authorization", "Bearer $jwt")
-      .exchange()
-      .expectStatus()
-      .isOk
-      .expectBody()
-      .json(expectedJson)
-  }
-
-  @Test
-  fun `Get Lost Bed Reasons for only Approved Premises returns 200 with correct body`() {
-    lostBedReasonRepository.deleteAll()
-
-    lostBedReasonEntityFactory.produceAndPersistMultiple(10)
-
-    val expectedLostBedReasons = lostBedReasonEntityFactory.produceAndPersistMultiple(10) {
-      withServiceScope(ServiceName.approvedPremises.value)
-    }
-    val expectedJson = objectMapper.writeValueAsString(
-      expectedLostBedReasons.map(lostBedReasonTransformer::transformJpaToApi),
-    )
-
-    val jwt = jwtAuthHelper.createValidAuthorizationCodeJwt()
-
-    webTestClient.get()
-      .uri("/reference-data/lost-bed-reasons")
-      .header("Authorization", "Bearer $jwt")
-      .header("X-Service-Name", "approved-premises")
-      .exchange()
-      .expectStatus()
-      .isOk
-      .expectBody()
-      .json(expectedJson)
-  }
-
-  @Test
   fun `Get Lost Bed Reasons for only Temporary Accommodation returns 200 with correct body`() {
     lostBedReasonRepository.deleteAll()
 
-    lostBedReasonEntityFactory.produceAndPersistMultiple(10)
+    cas3LostBedReasonEntityFactory.produceAndPersistMultiple(10)
 
-    val expectedLostBedReasons = lostBedReasonEntityFactory.produceAndPersistMultiple(10) {
+    val expectedLostBedReasons = cas3LostBedReasonEntityFactory.produceAndPersistMultiple(10) {
       withServiceScope(ServiceName.temporaryAccommodation.value)
     }
     val expectedJson = objectMapper.writeValueAsString(
-      expectedLostBedReasons.map(lostBedReasonTransformer::transformJpaToApi),
+      expectedLostBedReasons.map(cas3LostBedReasonTransformer::transformJpaToApi),
     )
 
     val jwt = jwtAuthHelper.createValidAuthorizationCodeJwt()
