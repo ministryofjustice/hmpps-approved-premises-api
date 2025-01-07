@@ -2,7 +2,7 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.model
 
 import java.time.LocalDate
 
-data class LostBedReportRow(
+data class VoidBedspaceReportRow(
   val roomName: String,
   val bedName: String,
   val id: String,

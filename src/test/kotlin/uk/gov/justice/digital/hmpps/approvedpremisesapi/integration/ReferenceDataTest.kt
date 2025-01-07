@@ -22,7 +22,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.ProbationDel
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.ProbationRegionTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.ReferralRejectionReasonTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.StaffMemberTransformer
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.cas3.Cas3LostBedReasonTransformer
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.cas3.Cas3VoidBedspaceReasonTransformer
 import java.util.UUID
 
 class ReferenceDataTest : IntegrationTestBase() {
@@ -30,7 +30,7 @@ class ReferenceDataTest : IntegrationTestBase() {
   lateinit var departureReasonTransformer: DepartureReasonTransformer
 
   @Autowired
-  lateinit var cas3LostBedReasonTransformer: Cas3LostBedReasonTransformer
+  lateinit var cas3VoidBedspaceReasonTransformer: Cas3VoidBedspaceReasonTransformer
 
   @Autowired
   lateinit var moveOnCategoryTransformer: MoveOnCategoryTransformer
@@ -688,16 +688,16 @@ class ReferenceDataTest : IntegrationTestBase() {
   }
 
   @Test
-  fun `Get Lost Bed Reasons for only Temporary Accommodation returns 200 with correct body`() {
-    lostBedReasonRepository.deleteAll()
+  fun `Get Void Bedspace Reasons for only Temporary Accommodation returns 200 with correct body`() {
+    cas3VoidBedspaceReasonTestRepository.deleteAll()
 
-    cas3LostBedReasonEntityFactory.produceAndPersistMultiple(10)
+    cas3VoidBedspaceReasonEntityFactory.produceAndPersistMultiple(10)
 
-    val expectedLostBedReasons = cas3LostBedReasonEntityFactory.produceAndPersistMultiple(10) {
+    val expectedLostBedReasons = cas3VoidBedspaceReasonEntityFactory.produceAndPersistMultiple(10) {
       withServiceScope(ServiceName.temporaryAccommodation.value)
     }
     val expectedJson = objectMapper.writeValueAsString(
-      expectedLostBedReasons.map(cas3LostBedReasonTransformer::transformJpaToApi),
+      expectedLostBedReasons.map(cas3VoidBedspaceReasonTransformer::transformJpaToApi),
     )
 
     val jwt = jwtAuthHelper.createValidAuthorizationCodeJwt()

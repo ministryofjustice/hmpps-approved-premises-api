@@ -2280,12 +2280,12 @@ class Cas3ReportsTest : IntegrationTestBase() {
           bed.apply { createdAt = OffsetDateTime.parse("2023-02-16T14:03:00+00:00") }
           bedRepository.save(bed)
 
-          cas3LostBedsEntityFactory.produceAndPersist {
+          cas3VoidBedspacesEntityFactory.produceAndPersist {
             withBed(bed)
             withPremises(premises)
             withStartDate(LocalDate.parse("2023-04-28"))
             withEndDate(LocalDate.parse("2023-05-04"))
-            withYieldedReason { cas3LostBedReasonEntityFactory.produceAndPersist() }
+            withYieldedReason { cas3VoidBedspaceReasonEntityFactory.produceAndPersist() }
           }
 
           govUKBankHolidaysAPIMockSuccessfullCallWithEmptyResponse()
@@ -2913,20 +2913,20 @@ class Cas3ReportsTest : IntegrationTestBase() {
 
           govUKBankHolidaysAPIMockSuccessfullCallWithEmptyResponse()
 
-          cas3LostBedsEntityFactory.produceAndPersist {
+          cas3VoidBedspacesEntityFactory.produceAndPersist {
             withBed(bed)
             withPremises(premises)
             withStartDate(LocalDate.parse("2023-03-28"))
             withEndDate(LocalDate.parse("2023-04-04"))
-            withYieldedReason { cas3LostBedReasonEntityFactory.produceAndPersist() }
+            withYieldedReason { cas3VoidBedspaceReasonEntityFactory.produceAndPersist() }
           }
 
-          cas3LostBedsEntityFactory.produceAndPersist {
+          cas3VoidBedspacesEntityFactory.produceAndPersist {
             withBed(bed)
             withPremises(premises)
             withStartDate(LocalDate.parse("2023-04-25"))
             withEndDate(LocalDate.parse("2023-05-03"))
-            withYieldedReason { cas3LostBedReasonEntityFactory.produceAndPersist() }
+            withYieldedReason { cas3VoidBedspaceReasonEntityFactory.produceAndPersist() }
           }
 
           val expectedReportRows = listOf(

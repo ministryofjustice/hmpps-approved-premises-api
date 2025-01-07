@@ -12,22 +12,22 @@ import java.util.Objects
 import java.util.UUID
 
 @Repository
-interface Cas3LostBedCancellationRepository : JpaRepository<Cas3LostBedCancellationEntity, UUID>
+interface Cas3VoidBedspaceCancellationRepository : JpaRepository<Cas3VoidBedspaceCancellationEntity, UUID>
 
 @Entity
 @Table(name = "lost_bed_cancellations")
-data class Cas3LostBedCancellationEntity(
+data class Cas3VoidBedspaceCancellationEntity(
   @Id
   val id: UUID,
   val createdAt: OffsetDateTime,
   val notes: String?,
   @OneToOne
   @JoinColumn(name = "lost_bed_id")
-  val lostBed: Cas3LostBedsEntity,
+  val voidBedspace: Cas3VoidBedspacesEntity,
 ) {
   override fun equals(other: Any?): Boolean {
     if (this === other) return true
-    if (other !is Cas3LostBedCancellationEntity) return false
+    if (other !is Cas3VoidBedspaceCancellationEntity) return false
 
     if (id != other.id) return false
     if (notes != other.notes) return false
@@ -38,5 +38,5 @@ data class Cas3LostBedCancellationEntity(
 
   override fun hashCode() = Objects.hash(notes, createdAt)
 
-  override fun toString() = "Cas3LostBedCancellationEntity:$id"
+  override fun toString() = "Cas3VoidBedspaceCancellationEntity:$id"
 }

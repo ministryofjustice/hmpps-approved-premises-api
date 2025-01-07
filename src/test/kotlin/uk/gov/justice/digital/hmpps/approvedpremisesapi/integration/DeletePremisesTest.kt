@@ -41,7 +41,7 @@ class DeletePremisesTest : IntegrationTestBase() {
     val premisesFromDatabase = temporaryAccommodationPremisesRepository.findByIdOrNull(premises.id)
     val roomsFromDatabase = rooms.map { roomRepository.findByIdOrNull(it.id) }
     val bedsFromDatabase = beds.map { bedRepository.findByIdOrNull(it.id) }
-    val lostBedFromDatabase = lostBedsRepository.findByIdOrNull(lostBed.id)
+    val lostBedFromDatabase = cas3VoidBedspacesTestRepository.findByIdOrNull(lostBed.id)
 
     assertThat(premisesFromDatabase).isNull()
     roomsFromDatabase.forEach { assertThat(it).isNull() }
@@ -76,7 +76,7 @@ class DeletePremisesTest : IntegrationTestBase() {
     val premisesFromDatabase = temporaryAccommodationPremisesRepository.findByIdOrNull(premises.id)
     val roomsFromDatabase = rooms.map { roomRepository.findByIdOrNull(it.id) }
     val bedsFromDatabase = beds.map { bedRepository.findByIdOrNull(it.id) }
-    val lostBedFromDatabase = lostBedsRepository.findByIdOrNull(lostBed.id)
+    val lostBedFromDatabase = cas3VoidBedspacesTestRepository.findByIdOrNull(lostBed.id)
 
     assertThat(premisesFromDatabase).isNotNull
     roomsFromDatabase.forEach { assertThat(it).isNotNull }
@@ -115,7 +115,7 @@ class DeletePremisesTest : IntegrationTestBase() {
     val roomsFromDatabase = rooms.map { roomRepository.findByIdOrNull(it.id) }
     val bedsFromDatabase = beds.map { bedRepository.findByIdOrNull(it.id) }
     val bookingFromDatabase = bookingRepository.findByIdOrNull(booking.id)
-    val lostBedFromDatabase = lostBedsRepository.findByIdOrNull(lostBed.id)
+    val lostBedFromDatabase = cas3VoidBedspacesTestRepository.findByIdOrNull(lostBed.id)
 
     assertThat(premisesFromDatabase).isNotNull
     roomsFromDatabase.forEach { assertThat(it).isNotNull }
@@ -130,11 +130,11 @@ class DeletePremisesTest : IntegrationTestBase() {
     withLocalAuthorityArea(localAuthorityEntityFactory.produceAndPersist())
   }
 
-  private fun createLostBed(premises: PremisesEntity, bed: BedEntity) = cas3LostBedsEntityFactory.produceAndPersist {
+  private fun createLostBed(premises: PremisesEntity, bed: BedEntity) = cas3VoidBedspacesEntityFactory.produceAndPersist {
     withPremises(premises)
     withBed(bed)
     withYieldedReason {
-      cas3LostBedReasonEntityFactory.produceAndPersist {
+      cas3VoidBedspaceReasonEntityFactory.produceAndPersist {
         withServiceScope(ServiceName.temporaryAccommodation.value)
       }
     }

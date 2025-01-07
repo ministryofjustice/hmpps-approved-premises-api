@@ -93,10 +93,10 @@ class UserAccessService(
     else -> false
   }
 
-  fun currentUserCanManagePremisesLostBeds(premises: PremisesEntity) =
-    userCanManagePremisesLostBeds(userService.getUserForRequest(), premises)
+  fun currentUserCanManagePremisesVoidBedspaces(premises: PremisesEntity) =
+    userCanManagePremisesVoidBedspaces(userService.getUserForRequest(), premises)
 
-  fun userCanManagePremisesLostBeds(user: UserEntity, premises: PremisesEntity) = when (premises) {
+  fun userCanManagePremisesVoidBedspaces(user: UserEntity, premises: PremisesEntity) = when (premises) {
     is TemporaryAccommodationPremisesEntity -> userCanAccessRegion(user, premises.probationRegion.id) && user.hasRole(UserRole.CAS3_ASSESSOR)
     else -> false
   }

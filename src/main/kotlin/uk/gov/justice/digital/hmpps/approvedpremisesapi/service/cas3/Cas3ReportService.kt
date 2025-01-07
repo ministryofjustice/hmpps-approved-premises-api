@@ -8,7 +8,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.BookingRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas3.Cas3BookingGapReportRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas3.Cas3FutureBookingsReportRepository
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas3.Cas3LostBedsRepository
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas3.Cas3VoidBedspacesRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PersonSummaryInfoResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.generator.BedUsageReportGenerator
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.generator.BedUtilisationReportGenerator
@@ -46,7 +46,7 @@ class Cas3ReportService(
   private val userService: UserService,
   private val transitionalAccommodationReferralReportRowRepository: TransitionalAccommodationReferralReportRepository,
   private val bookingsReportRepository: BookingsReportRepository,
-  private val cas3LostBedsRepository: Cas3LostBedsRepository,
+  private val cas3VoidBedspacesRepository: Cas3VoidBedspacesRepository,
   private val bookingTransformer: BookingTransformer,
   private val workingDayService: WorkingDayService,
   private val bookingRepository: BookingRepository,
@@ -119,7 +119,7 @@ class Cas3ReportService(
       probationRegionId = properties.probationRegionId,
     )
 
-    BedUsageReportGenerator(bookingTransformer, bookingRepository, cas3LostBedsRepository, workingDayService)
+    BedUsageReportGenerator(bookingTransformer, bookingRepository, cas3VoidBedspacesRepository, workingDayService)
       .createReport(bedspacesInScope, properties)
       .writeExcel(
         outputStream = outputStream,
@@ -151,7 +151,7 @@ class Cas3ReportService(
       properties.endDate,
     )
 
-    val lostBedspaceInScope = bedUtilisationReportRepository.findAllLostBedByOverlappingDate(
+    val voidBedspaceInScope = bedUtilisationReportRepository.findAllVoidBedspaceByOverlappingDate(
       probationRegionId = properties.probationRegionId,
       properties.startDate,
       properties.endDate,
@@ -162,13 +162,13 @@ class Cas3ReportService(
       val bedspaceBookings = bedspaceBookingsInScope.filter { it.bedId == bedId }
       val bedspaceBookingsCancellation = bedspaceBookingsCancellationInScope.filter { it.bedId == bedId }
       val bedspaceBookingsTurnaround = bedspaceBookingsTurnaroundInScope.filter { it.bedId == bedId }
-      val lostBedspace = lostBedspaceInScope.filter { it.bedId == bedId }
+      val voidBedspace = voidBedspaceInScope.filter { it.bedId == bedId }
       BedUtilisationReportData(
         it,
         bedspaceBookings,
         bedspaceBookingsCancellation,
         bedspaceBookingsTurnaround,
-        lostBedspace,
+        voidBedspace,
       )
     }
 

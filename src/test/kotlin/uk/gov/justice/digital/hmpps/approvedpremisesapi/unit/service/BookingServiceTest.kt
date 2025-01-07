@@ -44,8 +44,8 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.RoomEntityFactor
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.TemporaryAccommodationPremisesEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.UserEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.UserRoleAssignmentEntityFactory
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.cas3.Cas3LostBedReasonEntityFactory
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.cas3.Cas3LostBedsEntityFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.cas3.Cas3VoidBedspaceReasonEntityFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.cas3.Cas3VoidBedspacesEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ArrivalEntity
@@ -66,7 +66,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementRequ
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PremisesRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserQualification
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRole
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas3.Cas3LostBedsRepository
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas3.Cas3VoidBedspacesRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PersonInfoResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.AuthorisableActionResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.CasResult
@@ -107,7 +107,7 @@ class BookingServiceTest {
   private val mockCancellationReasonRepository = mockk<CancellationReasonRepository>()
   private val mockBedRepository = mockk<BedRepository>()
   private val mockPlacementRequestRepository = mockk<PlacementRequestRepository>()
-  private val mockCas3LostBedsRepository = mockk<Cas3LostBedsRepository>()
+  private val mockCas3LostBedsRepository = mockk<Cas3VoidBedspacesRepository>()
   private val mockPremisesRepository = mockk<PremisesRepository>()
   private val mockAssessmentRepository = mockk<AssessmentRepository>()
   private val mockUserService = mockk<UserService>()
@@ -131,7 +131,7 @@ class BookingServiceTest {
       cancellationReasonRepository = mockCancellationReasonRepository,
       bedRepository = mockBedRepository,
       placementRequestRepository = mockPlacementRequestRepository,
-      lostBedsRepository = mockCas3LostBedsRepository,
+      cas3VoidBedspacesRepository = mockCas3LostBedsRepository,
       premisesRepository = mockPremisesRepository,
       userService = mockUserService,
       userAccessService = mockUserAccessService,
@@ -1469,7 +1469,7 @@ class BookingServiceTest {
     }
 
     @Test
-    fun `returns ConflictError if Bed has a conflicting Lost Bed`() {
+    fun `returns ConflictError if Bed has a conflicting Void Bedspace`() {
       val arrivalDate = LocalDate.parse("2023-03-28")
       val departureDate = LocalDate.parse("2023-03-30")
 
@@ -1502,12 +1502,12 @@ class BookingServiceTest {
 
       every { mockBookingRepository.findByBedIdAndArrivingBeforeDate(bed.id, departureDate, null) } returns listOf()
       every { mockCas3LostBedsRepository.findByBedIdAndOverlappingDate(bed.id, arrivalDate, departureDate, null) } returns listOf(
-        Cas3LostBedsEntityFactory()
+        Cas3VoidBedspacesEntityFactory()
           .withStartDate(arrivalDate)
           .withEndDate(departureDate)
           .withPremises(premises)
           .withBed(bed)
-          .withYieldedReason { Cas3LostBedReasonEntityFactory().produce() }
+          .withYieldedReason { Cas3VoidBedspaceReasonEntityFactory().produce() }
           .produce(),
       )
 
@@ -2027,19 +2027,19 @@ class BookingServiceTest {
     }
 
     @Test
-    fun `for non-AP Bookings, returns conflict error for conflicting Lost Bed`() {
+    fun `for non-AP Bookings, returns conflict error for conflicting Void Bedspace`() {
       val booking = BookingEntityFactory()
         .withPremises(temporaryAccommodationPremises)
         .withBed(temporaryAccommodationBed)
         .withServiceName(ServiceName.temporaryAccommodation)
         .produce()
 
-      val conflictingLostBed = Cas3LostBedsEntityFactory()
+      val conflictingLostBed = Cas3VoidBedspacesEntityFactory()
         .withPremises(temporaryAccommodationPremises)
         .withBed(temporaryAccommodationBed)
         .withStartDate(LocalDate.parse("2023-07-10"))
         .withEndDate(LocalDate.parse("2023-07-12"))
-        .withYieldedReason { Cas3LostBedReasonEntityFactory().produce() }
+        .withYieldedReason { Cas3VoidBedspaceReasonEntityFactory().produce() }
         .produce()
 
       every { mockWorkingDayService.addWorkingDays(any(), any()) } answers { it.invocation.args[0] as LocalDate }

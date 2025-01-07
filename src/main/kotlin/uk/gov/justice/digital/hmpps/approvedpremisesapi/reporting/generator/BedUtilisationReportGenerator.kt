@@ -36,7 +36,7 @@ class BedUtilisationReportGenerator(
           .groupBy { it.bookingId }
           .mapValues { it.value.sortedByDescending { it.arrivalCreatedAt }.take(1) }
           .map { it.value.first() }
-      val nonCancelledVoids = this.lostBedReportData.filter { it.cancellationId == null }
+      val nonCancelledVoids = this.voidBedspaceReportData.filter { it.cancellationId == null }
 
       nonCancelledBookings
         .forEach { booking ->

@@ -131,7 +131,7 @@ interface BedUtilisationReportRepository : JpaRepository<BedEntity, UUID> {
     """,
     nativeQuery = true,
   )
-  fun findAllLostBedByOverlappingDate(probationRegionId: UUID?, startDate: LocalDate, endDate: LocalDate): List<BedUtilisationLostBedReportData>
+  fun findAllVoidBedspaceByOverlappingDate(probationRegionId: UUID?, startDate: LocalDate, endDate: LocalDate): List<BedUtilisationVoidBedspaceReportData>
 }
 interface BedUtilisationBedspaceReportData {
   val bedId: String
@@ -174,7 +174,7 @@ interface BedUtilisationBookingTurnaroundReportData {
   val createdAt: Instant
 }
 
-interface BedUtilisationLostBedReportData {
+interface BedUtilisationVoidBedspaceReportData {
   val bedId: String
   val startDate: LocalDate
   val endDate: LocalDate

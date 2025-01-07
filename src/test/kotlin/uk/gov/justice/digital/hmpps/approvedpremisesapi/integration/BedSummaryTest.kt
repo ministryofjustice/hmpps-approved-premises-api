@@ -81,10 +81,10 @@ class BedSummaryTest : InitialiseDatabasePerClassTestBase() {
         withDepartureDate(LocalDate.now().plusDays((20).toLong()))
       }
 
-      cas3LostBedsEntityFactory.produceAndPersist {
+      cas3VoidBedspacesEntityFactory.produceAndPersist {
         withPremises(premises)
         withBed(bedWithLostBed)
-        withYieldedReason { cas3LostBedReasonEntityFactory.produceAndPersist() }
+        withYieldedReason { cas3VoidBedspaceReasonEntityFactory.produceAndPersist() }
         withStartDate(LocalDate.now().minusDays((7).toLong()))
         withEndDate(LocalDate.now().plusDays((20).toLong()))
       }

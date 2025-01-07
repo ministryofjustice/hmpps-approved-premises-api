@@ -21,7 +21,7 @@ import org.springframework.data.jpa.repository.Query
 import org.springframework.stereotype.Repository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.BookingStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PropertyStatus
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas3.Cas3LostBedsEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas3.Cas3VoidBedspacesEntity
 import java.time.LocalDate
 import java.util.UUID
 
@@ -242,7 +242,7 @@ abstract class PremisesEntity(
   @OneToMany(mappedBy = "premises")
   val bookings: MutableList<BookingEntity>,
   @OneToMany(mappedBy = "premises")
-  val lostBeds: MutableList<Cas3LostBedsEntity>,
+  val voidBedspaces: MutableList<Cas3VoidBedspacesEntity>,
   @OneToMany(mappedBy = "premises")
   val rooms: MutableList<RoomEntity>,
   @ManyToMany
@@ -275,7 +275,7 @@ class ApprovedPremisesEntity(
   probationRegion: ProbationRegionEntity,
   localAuthorityArea: LocalAuthorityAreaEntity,
   bookings: MutableList<BookingEntity>,
-  lostBeds: MutableList<Cas3LostBedsEntity>,
+  lostBeds: MutableList<Cas3VoidBedspacesEntity>,
   var apCode: String,
   var qCode: String,
   rooms: MutableList<RoomEntity>,
@@ -337,7 +337,7 @@ class TemporaryAccommodationPremisesEntity(
   probationRegion: ProbationRegionEntity,
   localAuthorityArea: LocalAuthorityAreaEntity?,
   bookings: MutableList<BookingEntity>,
-  lostBeds: MutableList<Cas3LostBedsEntity>,
+  lostBeds: MutableList<Cas3VoidBedspacesEntity>,
   rooms: MutableList<RoomEntity>,
   characteristics: MutableList<CharacteristicEntity>,
   status: PropertyStatus,

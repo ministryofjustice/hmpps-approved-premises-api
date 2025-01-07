@@ -21,7 +21,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.BedRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.BookingRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.RoomEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.RoomRepository
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas3.Cas3LostBedsRepository
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas3.Cas3VoidBedspacesRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.AuthorisableActionResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.ValidatableActionResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.CharacteristicService
@@ -34,10 +34,10 @@ class RoomServiceTest {
   private val roomRepository = mockk<RoomRepository>()
   private val bedRepository = mockk<BedRepository>()
   private val bookingRepository = mockk<BookingRepository>()
-  private val lostBedsRepository = mockk<Cas3LostBedsRepository>()
+  private val cas3VoidBedspacesRepository = mockk<Cas3VoidBedspacesRepository>()
   private val characteristicService = mockk<CharacteristicService>()
 
-  private val roomService = RoomService(roomRepository, bedRepository, bookingRepository, lostBedsRepository, characteristicService)
+  private val roomService = RoomService(roomRepository, bedRepository, bookingRepository, cas3VoidBedspacesRepository, characteristicService)
 
   @Test
   fun `An empty room name results in a validation error`() {

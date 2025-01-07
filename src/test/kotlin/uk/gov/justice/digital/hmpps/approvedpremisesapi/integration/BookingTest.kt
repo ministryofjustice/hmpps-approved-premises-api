@@ -1604,7 +1604,7 @@ class BookingTest : IntegrationTestBase() {
   }
 
   @Test
-  fun `Create Temporary Accommodation Booking returns 409 Conflict when a lost bed for the same bed overlaps`() {
+  fun `Create Temporary Accommodation Booking returns 409 Conflict when a void bedspace for the same bed overlaps`() {
     givenAUser(roles = listOf(UserRole.CAS3_ASSESSOR)) { userEntity, jwt ->
       givenAnOffender { offenderDetails, inmateDetails ->
         val premises = temporaryAccommodationPremisesEntityFactory.produceAndPersist {
@@ -1624,12 +1624,12 @@ class BookingTest : IntegrationTestBase() {
           }
         }
 
-        val existingLostBed = cas3LostBedsEntityFactory.produceAndPersist {
+        val existingLostBed = cas3VoidBedspacesEntityFactory.produceAndPersist {
           withBed(bed)
           withPremises(premises)
           withStartDate(LocalDate.parse("2022-07-15"))
           withEndDate(LocalDate.parse("2022-08-15"))
-          withYieldedReason { cas3LostBedReasonEntityFactory.produceAndPersist() }
+          withYieldedReason { cas3VoidBedspaceReasonEntityFactory.produceAndPersist() }
         }
 
         govUKBankHolidaysAPIMockSuccessfullCallWithEmptyResponse()
@@ -1659,7 +1659,7 @@ class BookingTest : IntegrationTestBase() {
   }
 
   @Test
-  fun `Create Temporary Accommodation Booking returns 409 Conflict when a lost bed for the same bed overlaps with the turnaround time`() {
+  fun `Create Temporary Accommodation Booking returns 409 Conflict when a void bedspace for the same bed overlaps with the turnaround time`() {
     givenAUser(roles = listOf(UserRole.CAS3_ASSESSOR)) { userEntity, jwt ->
       givenAnOffender { offenderDetails, inmateDetails ->
         val premises = temporaryAccommodationPremisesEntityFactory.produceAndPersist {
@@ -1680,12 +1680,12 @@ class BookingTest : IntegrationTestBase() {
           }
         }
 
-        val existingLostBed = cas3LostBedsEntityFactory.produceAndPersist {
+        val existingLostBed = cas3VoidBedspacesEntityFactory.produceAndPersist {
           withBed(bed)
           withPremises(premises)
           withStartDate(LocalDate.parse("2022-07-15"))
           withEndDate(LocalDate.parse("2022-08-15"))
-          withYieldedReason { cas3LostBedReasonEntityFactory.produceAndPersist() }
+          withYieldedReason { cas3VoidBedspaceReasonEntityFactory.produceAndPersist() }
         }
 
         govUKBankHolidaysAPIMockSuccessfullCallWithEmptyResponse()
@@ -1716,7 +1716,7 @@ class BookingTest : IntegrationTestBase() {
   }
 
   @Test
-  fun `Create Temporary Accommodation Booking returns OK with correct body when only cancelled lost beds for the same bed overlap`() {
+  fun `Create Temporary Accommodation Booking returns OK with correct body when only cancelled void bedspaces for the same bed overlap`() {
     givenAUser(roles = listOf(UserRole.CAS3_ASSESSOR)) { userEntity, jwt ->
       givenAnOffender { offenderDetails, inmateDetails ->
         val premises = temporaryAccommodationPremisesEntityFactory.produceAndPersist {
@@ -1736,18 +1736,18 @@ class BookingTest : IntegrationTestBase() {
           }
         }
 
-        val existingLostBed = cas3LostBedsEntityFactory.produceAndPersist {
+        val existingLostBed = cas3VoidBedspacesEntityFactory.produceAndPersist {
           withBed(bed)
           withPremises(premises)
           withStartDate(LocalDate.parse("2022-07-15"))
           withEndDate(LocalDate.parse("2022-08-15"))
           withYieldedReason {
-            cas3LostBedReasonEntityFactory.produceAndPersist()
+            cas3VoidBedspaceReasonEntityFactory.produceAndPersist()
           }
         }
 
-        existingLostBed.cancellation = cas3LostBedCancellationEntityFactory.produceAndPersist {
-          withLostBed(existingLostBed)
+        existingLostBed.cancellation = cas3VoidBedspaceCancellationEntityFactory.produceAndPersist {
+          withVoidBedspace(existingLostBed)
           withCreatedAt(OffsetDateTime.parse("2022-07-01T12:34:56.789Z"))
         }
 
@@ -1913,7 +1913,7 @@ class BookingTest : IntegrationTestBase() {
   }
 
   @Test
-  fun `Create Temporary Accommodation Arrival returns 409 Conflict when a lost bed for the same bed overlaps with the arrival and expected departure dates`() {
+  fun `Create Temporary Accommodation Arrival returns 409 Conflict when a void bedspace for the same bed overlaps with the arrival and expected departure dates`() {
     givenAUser(roles = listOf(UserRole.CAS3_ASSESSOR)) { userEntity, jwt ->
       givenAnOffender { offenderDetails, inmateDetails ->
         val premises = temporaryAccommodationPremisesEntityFactory.produceAndPersist {
@@ -1933,12 +1933,12 @@ class BookingTest : IntegrationTestBase() {
           }
         }
 
-        val conflictingLostBed = cas3LostBedsEntityFactory.produceAndPersist {
+        val conflictingLostBed = cas3VoidBedspacesEntityFactory.produceAndPersist {
           withBed(bed)
           withPremises(premises)
           withStartDate(LocalDate.parse("2022-07-15"))
           withEndDate(LocalDate.parse("2022-08-15"))
-          withYieldedReason { cas3LostBedReasonEntityFactory.produceAndPersist() }
+          withYieldedReason { cas3VoidBedspaceReasonEntityFactory.produceAndPersist() }
         }
 
         val booking = bookingEntityFactory.produceAndPersist {
@@ -3007,7 +3007,7 @@ class BookingTest : IntegrationTestBase() {
     }
 
     @Test
-    fun `Create CAS3 Extension returns 409 Conflict when a lost bed for the same bed overlaps with the new departure date`() {
+    fun `Create CAS3 Extension returns 409 Conflict when a void bedspace for the same bed overlaps with the new departure date`() {
       givenAUser(roles = listOf(UserRole.CAS3_ASSESSOR)) { _, jwt ->
         givenAnOffender { offenderDetails, _ ->
           val premises = temporaryAccommodationPremisesEntityFactory.produceAndPersist {
@@ -3027,12 +3027,12 @@ class BookingTest : IntegrationTestBase() {
             }
           }
 
-          val conflictingLostBed = cas3LostBedsEntityFactory.produceAndPersist {
+          val conflictingLostBed = cas3VoidBedspacesEntityFactory.produceAndPersist {
             withBed(bed)
             withPremises(premises)
             withStartDate(LocalDate.parse("2022-07-15"))
             withEndDate(LocalDate.parse("2022-08-15"))
-            withYieldedReason { cas3LostBedReasonEntityFactory.produceAndPersist() }
+            withYieldedReason { cas3VoidBedspaceReasonEntityFactory.produceAndPersist() }
           }
 
           val booking = bookingEntityFactory.produceAndPersist {
@@ -3068,7 +3068,7 @@ class BookingTest : IntegrationTestBase() {
     }
 
     @Test
-    fun `Create CAS3 Extension returns 409 Conflict when a lost bed for the same bed overlaps with the updated booking's turnaround time`() {
+    fun `Create CAS3 Extension returns 409 Conflict when a void bedspace for the same bed overlaps with the updated booking's turnaround time`() {
       givenAUser(roles = listOf(UserRole.CAS3_ASSESSOR)) { _, jwt ->
         givenAnOffender { offenderDetails, _ ->
           val premises = temporaryAccommodationPremisesEntityFactory.produceAndPersist {
@@ -3088,12 +3088,12 @@ class BookingTest : IntegrationTestBase() {
             }
           }
 
-          val conflictingLostBed = cas3LostBedsEntityFactory.produceAndPersist {
+          val conflictingLostBed = cas3VoidBedspacesEntityFactory.produceAndPersist {
             withBed(bed)
             withPremises(premises)
             withStartDate(LocalDate.parse("2022-07-15"))
             withEndDate(LocalDate.parse("2022-08-15"))
-            withYieldedReason { cas3LostBedReasonEntityFactory.produceAndPersist() }
+            withYieldedReason { cas3VoidBedspaceReasonEntityFactory.produceAndPersist() }
           }
 
           val booking = bookingEntityFactory.produceAndPersist {

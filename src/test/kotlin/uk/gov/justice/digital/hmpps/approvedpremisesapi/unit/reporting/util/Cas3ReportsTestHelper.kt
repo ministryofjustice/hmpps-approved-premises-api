@@ -3,12 +3,12 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.unit.reporting.util
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.BedEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.BookingEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TemporaryAccommodationPremisesEntity
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas3.Cas3LostBedsEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas3.Cas3VoidBedspacesEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.repository.BedUtilisationBedspaceReportData
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.repository.BedUtilisationBookingCancellationReportData
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.repository.BedUtilisationBookingReportData
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.repository.BedUtilisationBookingTurnaroundReportData
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.repository.BedUtilisationLostBedReportData
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.repository.BedUtilisationVoidBedspaceReportData
 import java.time.Instant
 import java.time.LocalDate
 
@@ -69,12 +69,12 @@ fun convertToCas3BedUtilisationBookingTurnaroundReportData(booking: BookingEntit
   )
 }
 
-fun convertToCas3BedUtilisationLostBedReportData(lostBed: Cas3LostBedsEntity): Cas3BedUtilisationLostBedReportData {
-  return Cas3BedUtilisationLostBedReportData(
-    bedId = lostBed.bed.id.toString(),
-    startDate = lostBed.startDate,
-    endDate = lostBed.endDate,
-    cancellationId = lostBed.cancellation?.id?.toString(),
+fun convertToCas3BedUtilisationLostBedReportData(voidBedspace: Cas3VoidBedspacesEntity): Cas3BedUtilisationVoidBedspaceUtilisationVoidBedspaceReportData {
+  return Cas3BedUtilisationVoidBedspaceUtilisationVoidBedspaceReportData(
+    bedId = voidBedspace.bed.id.toString(),
+    startDate = voidBedspace.startDate,
+    endDate = voidBedspace.endDate,
+    cancellationId = voidBedspace.cancellation?.id?.toString(),
   )
 }
 
@@ -121,9 +121,9 @@ class Cas3BedUtilisationBookingTurnaroundReportData(
   override val workingDayCount: Int,
 ) : BedUtilisationBookingTurnaroundReportData
 
-class Cas3BedUtilisationLostBedReportData(
+class Cas3BedUtilisationVoidBedspaceUtilisationVoidBedspaceReportData(
   override val bedId: String,
   override val startDate: LocalDate,
   override val endDate: LocalDate,
   override val cancellationId: String?,
-) : BedUtilisationLostBedReportData
+) : BedUtilisationVoidBedspaceReportData

@@ -633,7 +633,7 @@ class UserAccessServiceTest {
 
     user.addRoleForUnitTest(UserRole.CAS3_ASSESSOR)
 
-    assertThat(userAccessService.userCanManagePremisesLostBeds(user, temporaryAccommodationPremisesInUserRegion)).isTrue
+    assertThat(userAccessService.userCanManagePremisesVoidBedspaces(user, temporaryAccommodationPremisesInUserRegion)).isTrue
   }
 
   @Test
@@ -642,22 +642,22 @@ class UserAccessServiceTest {
 
     user.addRoleForUnitTest(UserRole.CAS3_ASSESSOR)
 
-    assertThat(userAccessService.userCanManagePremisesLostBeds(user, temporaryAccommodationPremisesNotInUserRegion)).isFalse
+    assertThat(userAccessService.userCanManagePremisesVoidBedspaces(user, temporaryAccommodationPremisesNotInUserRegion)).isFalse
   }
 
   @Test
   fun `userCanManagePremisesLostBeds returns false if the given premises is a Temporary Accommodation premises and the user does not have a suitable role`() {
     currentRequestIsFor(ServiceName.temporaryAccommodation)
 
-    assertThat(userAccessService.userCanManagePremisesLostBeds(user, temporaryAccommodationPremisesInUserRegion)).isFalse
-    assertThat(userAccessService.userCanManagePremisesLostBeds(user, temporaryAccommodationPremisesNotInUserRegion)).isFalse
+    assertThat(userAccessService.userCanManagePremisesVoidBedspaces(user, temporaryAccommodationPremisesInUserRegion)).isFalse
+    assertThat(userAccessService.userCanManagePremisesVoidBedspaces(user, temporaryAccommodationPremisesNotInUserRegion)).isFalse
   }
 
   @Test
   fun `currentUserCanManagePremisesLostBeds returns false if the given premises is an Approved Premises and the current user has no suitable role`() {
     currentRequestIsFor(ServiceName.approvedPremises)
 
-    assertThat(userAccessService.currentUserCanManagePremisesLostBeds(approvedPremises)).isFalse
+    assertThat(userAccessService.currentUserCanManagePremisesVoidBedspaces(approvedPremises)).isFalse
   }
 
   @Test
@@ -666,7 +666,7 @@ class UserAccessServiceTest {
 
     user.addRoleForUnitTest(UserRole.CAS3_ASSESSOR)
 
-    assertThat(userAccessService.currentUserCanManagePremisesLostBeds(temporaryAccommodationPremisesInUserRegion)).isTrue
+    assertThat(userAccessService.currentUserCanManagePremisesVoidBedspaces(temporaryAccommodationPremisesInUserRegion)).isTrue
   }
 
   @Test
@@ -675,15 +675,15 @@ class UserAccessServiceTest {
 
     user.addRoleForUnitTest(UserRole.CAS3_ASSESSOR)
 
-    assertThat(userAccessService.currentUserCanManagePremisesLostBeds(temporaryAccommodationPremisesNotInUserRegion)).isFalse
+    assertThat(userAccessService.currentUserCanManagePremisesVoidBedspaces(temporaryAccommodationPremisesNotInUserRegion)).isFalse
   }
 
   @Test
   fun `currentUserCanManagePremisesLostBeds returns false if the given premises is a Temporary Accommodation premises and the user does not have a suitable role`() {
     currentRequestIsFor(ServiceName.temporaryAccommodation)
 
-    assertThat(userAccessService.currentUserCanManagePremisesLostBeds(temporaryAccommodationPremisesInUserRegion)).isFalse
-    assertThat(userAccessService.currentUserCanManagePremisesLostBeds(temporaryAccommodationPremisesNotInUserRegion)).isFalse
+    assertThat(userAccessService.currentUserCanManagePremisesVoidBedspaces(temporaryAccommodationPremisesInUserRegion)).isFalse
+    assertThat(userAccessService.currentUserCanManagePremisesVoidBedspaces(temporaryAccommodationPremisesNotInUserRegion)).isFalse
   }
 
   @ParameterizedTest
