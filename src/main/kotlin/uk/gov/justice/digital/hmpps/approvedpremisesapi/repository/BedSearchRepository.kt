@@ -56,11 +56,11 @@ class BedSearchRepository(private val namedParameterJdbcTemplate: NamedParameter
         NOT EXISTS (SELECT bb.bed_id FROM BookedBedspaces bb
          WHERE bb.bed_id = b.id
         ) AND
-        NOT EXISTS (SELECT lostbeds.bed_id FROM lost_beds lostbeds
-             LEFT JOIN lost_bed_cancellations lostbeds_cancel ON lostbeds_cancel.lost_bed_id = lostbeds.id
+        NOT EXISTS (SELECT void_bedspace.bed_id FROM cas3_void_bedspaces void_bedspace
+             LEFT JOIN lost_bed_cancellations lostbeds_cancel ON lostbeds_cancel.lost_bed_id = void_bedspace.id
          WHERE
-             lostbeds.bed_id = b.id AND
-             (lostbeds.start_date, lostbeds.end_date) OVERLAPS (:start_date, :end_date) AND
+             void_bedspace.bed_id = b.id AND
+             (void_bedspace.start_date, void_bedspace.end_date) OVERLAPS (:start_date, :end_date) AND
              lostbeds_cancel.id IS NULL
         ) AND 
         #OPTIONAL_FILTERS

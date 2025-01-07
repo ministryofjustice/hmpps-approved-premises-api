@@ -1,0 +1,1 @@
+ALTER TABLE lost_beds RENAME TO cas3_void_bedspaces;

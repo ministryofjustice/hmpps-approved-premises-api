@@ -49,7 +49,7 @@ interface Cas3VoidBedspacesRepository : JpaRepository<Cas3VoidBedspacesEntity, U
 
 @SuppressWarnings("LongParameterList")
 @Entity
-@Table(name = "lost_beds")
+@Table(name = "cas3_void_bedspaces")
 class Cas3VoidBedspacesEntity(
   @Id
   val id: UUID,
