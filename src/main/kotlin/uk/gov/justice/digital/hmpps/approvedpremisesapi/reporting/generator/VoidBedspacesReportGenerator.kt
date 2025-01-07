@@ -1,34 +1,34 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.generator
 
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.BedEntity
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas3.Cas3LostBedsRepository
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.model.LostBedReportRow
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.properties.LostBedReportProperties
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas3.Cas3VoidBedspacesRepository
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.model.VoidBedspaceReportRow
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.properties.VoidBedspaceReportProperties
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.earliestDateOf
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.getDaysUntilInclusive
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.latestDateOf
 import java.time.LocalDate
 
-class LostBedsReportGenerator(
-  private val lostBedsRepository: Cas3LostBedsRepository,
-) : ReportGenerator<BedEntity, LostBedReportRow, LostBedReportProperties>(LostBedReportRow::class) {
-  override fun filter(properties: LostBedReportProperties): (BedEntity) -> Boolean = {
+class VoidBedspacesReportGenerator(
+  private val cas3VoidBedspacesRepository: Cas3VoidBedspacesRepository,
+) : ReportGenerator<BedEntity, VoidBedspaceReportRow, VoidBedspaceReportProperties>(VoidBedspaceReportRow::class) {
+  override fun filter(properties: VoidBedspaceReportProperties): (BedEntity) -> Boolean = {
     checkServiceType(properties.serviceName, it.room.premises) &&
       (properties.probationRegionId == null || it.room.premises.probationRegion.id == properties.probationRegionId)
   }
 
-  override val convert: BedEntity.(properties: LostBedReportProperties) -> List<LostBedReportRow> = { properties ->
+  override val convert: BedEntity.(properties: VoidBedspaceReportProperties) -> List<VoidBedspaceReportRow> = { properties ->
     val startOfMonth = LocalDate.of(properties.year, properties.month, 1)
     val endOfMonth = LocalDate.of(properties.year, properties.month, startOfMonth.month.length(startOfMonth.isLeapYear))
 
-    val lostBeds = lostBedsRepository.findAllByOverlappingDateForBed(startOfMonth, endOfMonth, this)
+    val voidBedspaces = cas3VoidBedspacesRepository.findAllByOverlappingDateForBed(startOfMonth, endOfMonth, this)
 
-    lostBeds.map {
+    voidBedspaces.map {
       val bed = it.bed
       val room = bed.room
       val premises = room.premises
 
-      LostBedReportRow(
+      VoidBedspaceReportRow(
         roomName = room.name,
         bedName = bed.name,
         id = it.id.toString(),

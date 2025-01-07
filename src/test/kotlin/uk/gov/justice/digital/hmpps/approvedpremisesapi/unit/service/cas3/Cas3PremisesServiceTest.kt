@@ -15,19 +15,19 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.LocalAuthorityEn
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ProbationRegionEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.RoomEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.TemporaryAccommodationPremisesEntityFactory
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.cas3.Cas3LostBedCancellationEntityFactory
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.cas3.Cas3LostBedReasonEntityFactory
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.cas3.Cas3LostBedsEntityFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.cas3.Cas3VoidBedspaceCancellationEntityFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.cas3.Cas3VoidBedspaceReasonEntityFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.cas3.Cas3VoidBedspacesEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.BookingRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.LocalAuthorityAreaRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PremisesRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ProbationDeliveryUnitRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ProbationRegionRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TemporaryAccommodationPremisesEntity
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas3.Cas3LostBedCancellationRepository
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas3.Cas3LostBedReasonRepository
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas3.Cas3LostBedsEntity
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas3.Cas3LostBedsRepository
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas3.Cas3VoidBedspaceCancellationRepository
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas3.Cas3VoidBedspaceReasonRepository
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas3.Cas3VoidBedspacesEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas3.Cas3VoidBedspacesRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.Availability
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.AuthorisableActionResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.ValidatableActionResult
@@ -38,9 +38,9 @@ import java.util.UUID
 
 class Cas3PremisesServiceTest {
   private val premisesRepositoryMock = mockk<PremisesRepository>()
-  private val cas3LostBedsRepositoryMock = mockk<Cas3LostBedsRepository>()
-  private val cas3LostBedReasonRepositoryMock = mockk<Cas3LostBedReasonRepository>()
-  private val cas3LostBedCancellationRepositoryMock = mockk<Cas3LostBedCancellationRepository>()
+  private val cas3VoidBedspacesRepositoryMock = mockk<Cas3VoidBedspacesRepository>()
+  private val cas3VoidBedspaceReasonRepositoryMock = mockk<Cas3VoidBedspaceReasonRepository>()
+  private val cas3VoidBedspaceCancellationRepositoryMock = mockk<Cas3VoidBedspaceCancellationRepository>()
   private val bookingRepositoryMock = mockk<BookingRepository>()
   private val localAuthorityAreaRepositoryMock = mockk<LocalAuthorityAreaRepository>()
   private val probationRegionRepositoryMock = mockk<ProbationRegionRepository>()
@@ -55,9 +55,9 @@ class Cas3PremisesServiceTest {
 
   private val premisesService = Cas3PremisesService(
     premisesRepositoryMock,
-    cas3LostBedsRepositoryMock,
-    cas3LostBedReasonRepositoryMock,
-    cas3LostBedCancellationRepositoryMock,
+    cas3VoidBedspacesRepositoryMock,
+    cas3VoidBedspaceReasonRepositoryMock,
+    cas3VoidBedspaceCancellationRepositoryMock,
     bookingRepositoryMock,
     localAuthorityAreaRepositoryMock,
     probationRegionRepositoryMock,
@@ -80,11 +80,11 @@ class Cas3PremisesServiceTest {
       .withYieldedRoom { room }
       .produce()
 
-    val voidBedspaceEntity = Cas3LostBedsEntityFactory()
+    val voidBedspaceEntity = Cas3VoidBedspacesEntityFactory()
       .withPremises(premises)
       .withStartDate(startDate.plusDays(1))
       .withEndDate(startDate.plusDays(2))
-      .withYieldedReason { Cas3LostBedReasonEntityFactory().produce() }
+      .withYieldedReason { Cas3VoidBedspaceReasonEntityFactory().produce() }
       .withYieldedBed { bed }
       .produce()
 
@@ -126,19 +126,19 @@ class Cas3PremisesServiceTest {
       nonArrivedBookingEntity,
       cancelledBookingEntity,
     )
-    every { cas3LostBedsRepositoryMock.findAllByPremisesIdAndOverlappingDate(premises.id, startDate, endDate) } returns mutableListOf(
+    every { cas3VoidBedspacesRepositoryMock.findAllByPremisesIdAndOverlappingDate(premises.id, startDate, endDate) } returns mutableListOf(
       voidBedspaceEntity,
     )
 
     val result = premisesService.getAvailabilityForRange(premises, startDate, endDate)
 
     assertThat(result).containsValues(
-      Availability(date = startDate, pendingBookings = 0, arrivedBookings = 1, nonArrivedBookings = 0, cancelledBookings = 0, lostBeds = 0),
-      Availability(date = startDate.plusDays(1), pendingBookings = 1, arrivedBookings = 1, nonArrivedBookings = 0, cancelledBookings = 0, lostBeds = 1),
-      Availability(date = startDate.plusDays(2), pendingBookings = 1, arrivedBookings = 0, nonArrivedBookings = 0, cancelledBookings = 0, lostBeds = 0),
-      Availability(date = startDate.plusDays(3), pendingBookings = 0, arrivedBookings = 0, nonArrivedBookings = 1, cancelledBookings = 0, lostBeds = 0),
-      Availability(date = startDate.plusDays(4), pendingBookings = 0, arrivedBookings = 0, nonArrivedBookings = 1, cancelledBookings = 1, lostBeds = 0),
-      Availability(date = startDate.plusDays(5), pendingBookings = 0, arrivedBookings = 0, nonArrivedBookings = 0, cancelledBookings = 1, lostBeds = 0),
+      Availability(date = startDate, pendingBookings = 0, arrivedBookings = 1, nonArrivedBookings = 0, cancelledBookings = 0, voidBedspaces = 0),
+      Availability(date = startDate.plusDays(1), pendingBookings = 1, arrivedBookings = 1, nonArrivedBookings = 0, cancelledBookings = 0, voidBedspaces = 1),
+      Availability(date = startDate.plusDays(2), pendingBookings = 1, arrivedBookings = 0, nonArrivedBookings = 0, cancelledBookings = 0, voidBedspaces = 0),
+      Availability(date = startDate.plusDays(3), pendingBookings = 0, arrivedBookings = 0, nonArrivedBookings = 1, cancelledBookings = 0, voidBedspaces = 0),
+      Availability(date = startDate.plusDays(4), pendingBookings = 0, arrivedBookings = 0, nonArrivedBookings = 1, cancelledBookings = 1, voidBedspaces = 0),
+      Availability(date = startDate.plusDays(5), pendingBookings = 0, arrivedBookings = 0, nonArrivedBookings = 0, cancelledBookings = 1, voidBedspaces = 0),
     )
   }
 
@@ -150,7 +150,7 @@ class Cas3PremisesServiceTest {
     val premises = temporaryAccommodationPremisesFactory.produce()
 
     every { bookingRepositoryMock.findAllByPremisesIdAndOverlappingDate(premises.id, startDate, endDate) } returns mutableListOf()
-    every { cas3LostBedsRepositoryMock.findAllByPremisesIdAndOverlappingDate(premises.id, startDate, endDate) } returns mutableListOf()
+    every { cas3VoidBedspacesRepositoryMock.findAllByPremisesIdAndOverlappingDate(premises.id, startDate, endDate) } returns mutableListOf()
 
     val result = premisesService.getAvailabilityForRange(premises, startDate, endDate)
 
@@ -168,11 +168,11 @@ class Cas3PremisesServiceTest {
 
     val premises = temporaryAccommodationPremisesFactory.produce()
 
-    val voidBedspaceEntityOne = Cas3LostBedsEntityFactory()
+    val voidBedspaceEntityOne = Cas3VoidBedspacesEntityFactory()
       .withPremises(premises)
       .withStartDate(startDate.plusDays(1))
       .withEndDate(startDate.plusDays(2))
-      .withYieldedReason { Cas3LostBedReasonEntityFactory().produce() }
+      .withYieldedReason { Cas3VoidBedspaceReasonEntityFactory().produce() }
       .withBed(
         BedEntityFactory().apply {
           withYieldedRoom {
@@ -184,11 +184,11 @@ class Cas3PremisesServiceTest {
       )
       .produce()
 
-    val voidBedspaceEntityTwo = Cas3LostBedsEntityFactory()
+    val voidBedspaceEntityTwo = Cas3VoidBedspacesEntityFactory()
       .withPremises(premises)
       .withStartDate(startDate.plusDays(1))
       .withEndDate(startDate.plusDays(2))
-      .withYieldedReason { Cas3LostBedReasonEntityFactory().produce() }
+      .withYieldedReason { Cas3VoidBedspaceReasonEntityFactory().produce() }
       .withBed(
         BedEntityFactory().apply {
           withYieldedRoom {
@@ -238,7 +238,7 @@ class Cas3PremisesServiceTest {
       nonArrivedBookingEntity,
       cancelledBookingEntity,
     )
-    every { cas3LostBedsRepositoryMock.findAllByPremisesIdAndOverlappingDate(premises.id, startDate, endDate) } returns mutableListOf(
+    every { cas3VoidBedspacesRepositoryMock.findAllByPremisesIdAndOverlappingDate(premises.id, startDate, endDate) } returns mutableListOf(
       voidBedspaceEntityOne,
       voidBedspaceEntityTwo,
     )
@@ -246,12 +246,12 @@ class Cas3PremisesServiceTest {
     val result = premisesService.getAvailabilityForRange(premises, startDate, endDate)
 
     assertThat(result).containsValues(
-      Availability(date = startDate, pendingBookings = 0, arrivedBookings = 1, nonArrivedBookings = 0, cancelledBookings = 0, lostBeds = 0),
-      Availability(date = startDate.plusDays(1), pendingBookings = 1, arrivedBookings = 1, nonArrivedBookings = 0, cancelledBookings = 0, lostBeds = 2),
-      Availability(date = startDate.plusDays(2), pendingBookings = 1, arrivedBookings = 0, nonArrivedBookings = 0, cancelledBookings = 0, lostBeds = 0),
-      Availability(date = startDate.plusDays(3), pendingBookings = 0, arrivedBookings = 0, nonArrivedBookings = 1, cancelledBookings = 0, lostBeds = 0),
-      Availability(date = startDate.plusDays(4), pendingBookings = 0, arrivedBookings = 0, nonArrivedBookings = 1, cancelledBookings = 1, lostBeds = 0),
-      Availability(date = startDate.plusDays(5), pendingBookings = 0, arrivedBookings = 0, nonArrivedBookings = 0, cancelledBookings = 1, lostBeds = 0),
+      Availability(date = startDate, pendingBookings = 0, arrivedBookings = 1, nonArrivedBookings = 0, cancelledBookings = 0, voidBedspaces = 0),
+      Availability(date = startDate.plusDays(1), pendingBookings = 1, arrivedBookings = 1, nonArrivedBookings = 0, cancelledBookings = 0, voidBedspaces = 2),
+      Availability(date = startDate.plusDays(2), pendingBookings = 1, arrivedBookings = 0, nonArrivedBookings = 0, cancelledBookings = 0, voidBedspaces = 0),
+      Availability(date = startDate.plusDays(3), pendingBookings = 0, arrivedBookings = 0, nonArrivedBookings = 1, cancelledBookings = 0, voidBedspaces = 0),
+      Availability(date = startDate.plusDays(4), pendingBookings = 0, arrivedBookings = 0, nonArrivedBookings = 1, cancelledBookings = 1, voidBedspaces = 0),
+      Availability(date = startDate.plusDays(5), pendingBookings = 0, arrivedBookings = 0, nonArrivedBookings = 0, cancelledBookings = 1, voidBedspaces = 0),
     )
   }
 
@@ -262,11 +262,11 @@ class Cas3PremisesServiceTest {
 
     val premises = temporaryAccommodationPremisesFactory.produce()
 
-    val voidBedspaceEntity = Cas3LostBedsEntityFactory()
+    val voidBedspaceEntity = Cas3VoidBedspacesEntityFactory()
       .withPremises(premises)
       .withStartDate(startDate.plusDays(1))
       .withEndDate(startDate.plusDays(2))
-      .withYieldedReason { Cas3LostBedReasonEntityFactory().produce() }
+      .withYieldedReason { Cas3VoidBedspaceReasonEntityFactory().produce() }
       .withBed(
         BedEntityFactory().apply {
           withYieldedRoom {
@@ -278,26 +278,26 @@ class Cas3PremisesServiceTest {
       )
       .produce()
 
-    val voidBedspaceCancellation = Cas3LostBedCancellationEntityFactory()
-      .withYieldedLostBed { voidBedspaceEntity }
+    val voidBedspaceCancellation = Cas3VoidBedspaceCancellationEntityFactory()
+      .withYieldedVoidBedspace { voidBedspaceEntity }
       .produce()
 
     voidBedspaceEntity.cancellation = voidBedspaceCancellation
 
     every { bookingRepositoryMock.findAllByPremisesIdAndOverlappingDate(premises.id, startDate, endDate) } returns mutableListOf()
-    every { cas3LostBedsRepositoryMock.findAllByPremisesIdAndOverlappingDate(premises.id, startDate, endDate) } returns mutableListOf(
+    every { cas3VoidBedspacesRepositoryMock.findAllByPremisesIdAndOverlappingDate(premises.id, startDate, endDate) } returns mutableListOf(
       voidBedspaceEntity,
     )
 
     val result = premisesService.getAvailabilityForRange(premises, startDate, endDate)
 
     assertThat(result).containsValues(
-      Availability(date = startDate, pendingBookings = 0, arrivedBookings = 0, nonArrivedBookings = 0, cancelledBookings = 0, lostBeds = 0),
-      Availability(date = startDate.plusDays(1), pendingBookings = 0, arrivedBookings = 0, nonArrivedBookings = 0, cancelledBookings = 0, lostBeds = 0),
-      Availability(date = startDate.plusDays(2), pendingBookings = 0, arrivedBookings = 0, nonArrivedBookings = 0, cancelledBookings = 0, lostBeds = 0),
-      Availability(date = startDate.plusDays(3), pendingBookings = 0, arrivedBookings = 0, nonArrivedBookings = 0, cancelledBookings = 0, lostBeds = 0),
-      Availability(date = startDate.plusDays(4), pendingBookings = 0, arrivedBookings = 0, nonArrivedBookings = 0, cancelledBookings = 0, lostBeds = 0),
-      Availability(date = startDate.plusDays(5), pendingBookings = 0, arrivedBookings = 0, nonArrivedBookings = 0, cancelledBookings = 0, lostBeds = 0),
+      Availability(date = startDate, pendingBookings = 0, arrivedBookings = 0, nonArrivedBookings = 0, cancelledBookings = 0, voidBedspaces = 0),
+      Availability(date = startDate.plusDays(1), pendingBookings = 0, arrivedBookings = 0, nonArrivedBookings = 0, cancelledBookings = 0, voidBedspaces = 0),
+      Availability(date = startDate.plusDays(2), pendingBookings = 0, arrivedBookings = 0, nonArrivedBookings = 0, cancelledBookings = 0, voidBedspaces = 0),
+      Availability(date = startDate.plusDays(3), pendingBookings = 0, arrivedBookings = 0, nonArrivedBookings = 0, cancelledBookings = 0, voidBedspaces = 0),
+      Availability(date = startDate.plusDays(4), pendingBookings = 0, arrivedBookings = 0, nonArrivedBookings = 0, cancelledBookings = 0, voidBedspaces = 0),
+      Availability(date = startDate.plusDays(5), pendingBookings = 0, arrivedBookings = 0, nonArrivedBookings = 0, cancelledBookings = 0, voidBedspaces = 0),
     )
   }
 
@@ -307,7 +307,7 @@ class Cas3PremisesServiceTest {
 
     val reasonId = UUID.randomUUID()
 
-    every { cas3LostBedReasonRepositoryMock.findByIdOrNull(reasonId) } returns null
+    every { cas3VoidBedspaceReasonRepositoryMock.findByIdOrNull(reasonId) } returns null
 
     val result = premisesService.createVoidBedspaces(
       premises = premisesEntity,
@@ -332,7 +332,7 @@ class Cas3PremisesServiceTest {
 
     val reasonId = UUID.randomUUID()
 
-    every { cas3LostBedReasonRepositoryMock.findByIdOrNull(reasonId) } returns Cas3LostBedReasonEntityFactory()
+    every { cas3VoidBedspaceReasonRepositoryMock.findByIdOrNull(reasonId) } returns Cas3VoidBedspaceReasonEntityFactory()
       .withServiceScope(ServiceName.approvedPremises.value)
       .produce()
 
@@ -367,13 +367,13 @@ class Cas3PremisesServiceTest {
     premisesEntity.rooms += room
     room.beds += bed
 
-    val voidBedspaceReason = Cas3LostBedReasonEntityFactory()
+    val voidBedspaceReason = Cas3VoidBedspaceReasonEntityFactory()
       .withServiceScope(ServiceName.temporaryAccommodation.value)
       .produce()
 
-    every { cas3LostBedReasonRepositoryMock.findByIdOrNull(voidBedspaceReason.id) } returns voidBedspaceReason
+    every { cas3VoidBedspaceReasonRepositoryMock.findByIdOrNull(voidBedspaceReason.id) } returns voidBedspaceReason
 
-    every { cas3LostBedsRepositoryMock.save(any()) } answers { it.invocation.args[0] as Cas3LostBedsEntity }
+    every { cas3VoidBedspacesRepositoryMock.save(any()) } answers { it.invocation.args[0] as Cas3VoidBedspacesEntity }
 
     val result = premisesService.createVoidBedspaces(
       premises = premisesEntity,
@@ -401,10 +401,10 @@ class Cas3PremisesServiceTest {
 
     val reasonId = UUID.randomUUID()
 
-    val voidBedspaceEntity = Cas3LostBedsEntityFactory()
+    val voidBedspaceEntity = Cas3VoidBedspacesEntityFactory()
       .withYieldedPremises { premisesEntity }
       .withYieldedReason {
-        Cas3LostBedReasonEntityFactory()
+        Cas3VoidBedspaceReasonEntityFactory()
           .withServiceScope(ServiceName.temporaryAccommodation.value)
           .produce()
       }
@@ -419,8 +419,8 @@ class Cas3PremisesServiceTest {
       )
       .produce()
 
-    every { cas3LostBedsRepositoryMock.findByIdOrNull(voidBedspaceEntity.id) } returns voidBedspaceEntity
-    every { cas3LostBedReasonRepositoryMock.findByIdOrNull(reasonId) } returns null
+    every { cas3VoidBedspacesRepositoryMock.findByIdOrNull(voidBedspaceEntity.id) } returns voidBedspaceEntity
+    every { cas3VoidBedspaceReasonRepositoryMock.findByIdOrNull(reasonId) } returns null
 
     val result = premisesService.updateVoidBedspaces(
       voidBedspaceId = voidBedspaceEntity.id,
@@ -446,10 +446,10 @@ class Cas3PremisesServiceTest {
 
     val reasonId = UUID.randomUUID()
 
-    val voidBedspaceEntity = Cas3LostBedsEntityFactory()
+    val voidBedspaceEntity = Cas3VoidBedspacesEntityFactory()
       .withYieldedPremises { premisesEntity }
       .withYieldedReason {
-        Cas3LostBedReasonEntityFactory()
+        Cas3VoidBedspaceReasonEntityFactory()
           .withServiceScope(ServiceName.temporaryAccommodation.value)
           .produce()
       }
@@ -464,8 +464,8 @@ class Cas3PremisesServiceTest {
       )
       .produce()
 
-    every { cas3LostBedsRepositoryMock.findByIdOrNull(voidBedspaceEntity.id) } returns voidBedspaceEntity
-    every { cas3LostBedReasonRepositoryMock.findByIdOrNull(reasonId) } returns Cas3LostBedReasonEntityFactory()
+    every { cas3VoidBedspacesRepositoryMock.findByIdOrNull(voidBedspaceEntity.id) } returns voidBedspaceEntity
+    every { cas3VoidBedspaceReasonRepositoryMock.findByIdOrNull(reasonId) } returns Cas3VoidBedspaceReasonEntityFactory()
       .withServiceScope(ServiceName.approvedPremises.value)
       .produce()
 
@@ -490,14 +490,14 @@ class Cas3PremisesServiceTest {
   fun `updateVoidBedspaces returns Success with correct result when validation passed`() {
     val premisesEntity = temporaryAccommodationPremisesFactory.produce()
 
-    val voidBedspaceReason = Cas3LostBedReasonEntityFactory()
+    val voidBedspaceReason = Cas3VoidBedspaceReasonEntityFactory()
       .withServiceScope(ServiceName.temporaryAccommodation.value)
       .produce()
 
-    val voidBedspacesEntity = Cas3LostBedsEntityFactory()
+    val voidBedspacesEntity = Cas3VoidBedspacesEntityFactory()
       .withYieldedPremises { premisesEntity }
       .withYieldedReason {
-        Cas3LostBedReasonEntityFactory()
+        Cas3VoidBedspaceReasonEntityFactory()
           .withServiceScope(ServiceName.temporaryAccommodation.value)
           .produce()
       }
@@ -512,10 +512,10 @@ class Cas3PremisesServiceTest {
       )
       .produce()
 
-    every { cas3LostBedsRepositoryMock.findByIdOrNull(voidBedspacesEntity.id) } returns voidBedspacesEntity
-    every { cas3LostBedReasonRepositoryMock.findByIdOrNull(voidBedspaceReason.id) } returns voidBedspaceReason
+    every { cas3VoidBedspacesRepositoryMock.findByIdOrNull(voidBedspacesEntity.id) } returns voidBedspacesEntity
+    every { cas3VoidBedspaceReasonRepositoryMock.findByIdOrNull(voidBedspaceReason.id) } returns voidBedspaceReason
 
-    every { cas3LostBedsRepositoryMock.save(any()) } answers { it.invocation.args[0] as Cas3LostBedsEntity }
+    every { cas3VoidBedspacesRepositoryMock.save(any()) } answers { it.invocation.args[0] as Cas3VoidBedspacesEntity }
 
     val result = premisesService.updateVoidBedspaces(
       voidBedspaceId = voidBedspacesEntity.id,

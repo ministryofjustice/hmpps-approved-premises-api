@@ -4,12 +4,12 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.repository.BedUtilisatio
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.repository.BedUtilisationBookingCancellationReportData
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.repository.BedUtilisationBookingReportData
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.repository.BedUtilisationBookingTurnaroundReportData
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.repository.BedUtilisationLostBedReportData
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.repository.BedUtilisationVoidBedspaceReportData
 
 data class BedUtilisationReportData(
   val bedspaceReportData: BedUtilisationBedspaceReportData,
   val bookingsReportData: List<BedUtilisationBookingReportData>,
   val bookingCancellationReportData: List<BedUtilisationBookingCancellationReportData>,
   val bookingTurnaroundReportData: List<BedUtilisationBookingTurnaroundReportData>,
-  val lostBedReportData: List<BedUtilisationLostBedReportData>,
+  val voidBedspaceReportData: List<BedUtilisationVoidBedspaceReportData>,
 )

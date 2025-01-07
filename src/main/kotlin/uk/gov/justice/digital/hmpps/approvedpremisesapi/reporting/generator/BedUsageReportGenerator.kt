@@ -3,7 +3,7 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.generator
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.BedEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.BookingRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TemporaryAccommodationPremisesEntity
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas3.Cas3LostBedsRepository
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas3.Cas3VoidBedspacesRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.model.BedUsageReportRow
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.model.BedUsageType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.properties.BedUsageReportProperties
@@ -15,7 +15,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.getDaysUntilExclusi
 class BedUsageReportGenerator(
   private val bookingTransformer: BookingTransformer,
   private val bookingRepository: BookingRepository,
-  private val lostBedsRepository: Cas3LostBedsRepository,
+  private val cas3VoidBedspacesRepository: Cas3VoidBedspacesRepository,
   private val workingDayService: WorkingDayService,
 ) : ReportGenerator<BedEntity, BedUsageReportRow, BedUsageReportProperties>(BedUsageReportRow::class) {
   override fun filter(properties: BedUsageReportProperties): (BedEntity) -> Boolean = {
@@ -25,7 +25,7 @@ class BedUsageReportGenerator(
 
   override val convert: BedEntity.(properties: BedUsageReportProperties) -> List<BedUsageReportRow> = { properties ->
     val bookings = bookingRepository.findAllByOverlappingDateForBed(properties.startDate, properties.endDate, this)
-    val voids = lostBedsRepository.findAllByOverlappingDateForBed(properties.startDate, properties.endDate, this)
+    val voids = cas3VoidBedspacesRepository.findAllByOverlappingDateForBed(properties.startDate, properties.endDate, this)
 
     val premises = this.room.premises
     val temporaryAccommodationPremisesEntity = premises as? TemporaryAccommodationPremisesEntity

@@ -21,7 +21,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ProbationDeli
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ProbationRegionRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.RoomRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TemporaryAccommodationPremisesEntity
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas3.Cas3LostBedsRepository
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas3.Cas3VoidBedspacesRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.Availability
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.ValidationErrors
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.validated
@@ -34,7 +34,7 @@ import java.util.UUID
 @Service
 class PremisesService(
   private val premisesRepository: PremisesRepository,
-  private val lostBedsRepository: Cas3LostBedsRepository,
+  private val cas3VoidBedspacesRepository: Cas3VoidBedspacesRepository,
   private val bookingRepository: BookingRepository,
   private val localAuthorityAreaRepository: LocalAuthorityAreaRepository,
   private val probationRegionRepository: ProbationRegionRepository,
@@ -73,7 +73,7 @@ class PremisesService(
   fun getPremisesSummary(premisesId: UUID): List<BookingSummary> = premisesRepository.getBookingSummariesForPremisesId(premisesId)
 
   fun getLastBookingDate(premises: PremisesEntity) = bookingRepository.getHighestBookingDate(premises.id)
-  fun getLastLostBedsDate(premises: PremisesEntity) = lostBedsRepository.getHighestBookingDate(premises.id)
+  fun getLastLostBedsDate(premises: PremisesEntity) = cas3VoidBedspacesRepository.getHighestBookingDate(premises.id)
 
   fun getAvailabilityForRange(
     premises: PremisesEntity,
@@ -83,7 +83,7 @@ class PremisesService(
     if (endDate.isBefore(startDate)) throw RuntimeException("startDate must be before endDate when calculating availability for range")
 
     val bookings = bookingRepository.findAllByPremisesIdAndOverlappingDate(premises.id, startDate, endDate)
-    val lostBeds = lostBedsRepository.findAllByPremisesIdAndOverlappingDate(premises.id, startDate, endDate)
+    val lostBeds = cas3VoidBedspacesRepository.findAllByPremisesIdAndOverlappingDate(premises.id, startDate, endDate)
 
     return startDate.getDaysUntilExclusiveEnd(endDate).map { date ->
       val bookingsOnDay = bookings.filter { booking -> booking.getArrivalDate() <= date && booking.getDepartureDate() > date }
@@ -95,7 +95,7 @@ class PremisesService(
         arrivedBookings = bookingsOnDay.count { it.getArrived() },
         nonArrivedBookings = bookingsOnDay.count { it.getIsNotArrived() },
         cancelledBookings = bookingsOnDay.count { it.getCancelled() },
-        lostBeds = lostBedsOnDay.size,
+        voidBedspaces = lostBedsOnDay.size,
       )
     }.associateBy { it.date }
   }
@@ -305,8 +305,8 @@ class PremisesService(
       return premises.id hasConflictError "A premises cannot be hard-deleted if it has any bookings associated with it"
     }
 
-    premises.lostBeds.forEach { lostBed ->
-      lostBedsRepository.delete(lostBed)
+    premises.voidBedspaces.forEach { lostBed ->
+      cas3VoidBedspacesRepository.delete(lostBed)
     }
 
     premises.rooms.forEach { room ->

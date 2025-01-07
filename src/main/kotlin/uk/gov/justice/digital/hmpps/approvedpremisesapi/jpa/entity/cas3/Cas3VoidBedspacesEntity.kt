@@ -16,20 +16,20 @@ import java.util.Objects
 import java.util.UUID
 
 @Repository
-interface Cas3LostBedsRepository : JpaRepository<Cas3LostBedsEntity, UUID> {
-  @Query("SELECT lb FROM Cas3LostBedsEntity lb WHERE lb.premises.id = :premisesId AND lb.startDate <= :endDate AND lb.endDate >= :startDate")
-  fun findAllByPremisesIdAndOverlappingDate(premisesId: UUID, startDate: LocalDate, endDate: LocalDate): List<Cas3LostBedsEntity>
+interface Cas3VoidBedspacesRepository : JpaRepository<Cas3VoidBedspacesEntity, UUID> {
+  @Query("SELECT lb FROM Cas3VoidBedspacesEntity lb WHERE lb.premises.id = :premisesId AND lb.startDate <= :endDate AND lb.endDate >= :startDate")
+  fun findAllByPremisesIdAndOverlappingDate(premisesId: UUID, startDate: LocalDate, endDate: LocalDate): List<Cas3VoidBedspacesEntity>
 
-  @Query("SELECT MAX(lb.endDate) FROM Cas3LostBedsEntity lb WHERE lb.premises.id = :premisesId")
+  @Query("SELECT MAX(lb.endDate) FROM Cas3VoidBedspacesEntity lb WHERE lb.premises.id = :premisesId")
   fun getHighestBookingDate(premisesId: UUID): LocalDate?
 
-  @Query("SELECT lb FROM Cas3LostBedsEntity lb WHERE lb.bed.id IN :lostBedIds")
-  fun findByBedIds(lostBedIds: List<UUID>): List<Cas3LostBedsEntity>
+  @Query("SELECT lb FROM Cas3VoidBedspacesEntity lb WHERE lb.bed.id IN :voidBedspaceIds")
+  fun findByBedIds(voidBedspaceIds: List<UUID>): List<Cas3VoidBedspacesEntity>
 
   @Query(
     """
     SELECT lb 
-    FROM Cas3LostBedsEntity lb 
+    FROM Cas3VoidBedspacesEntity lb 
     LEFT JOIN lb.cancellation c 
     WHERE lb.bed.id = :bedId AND 
           lb.startDate <= :endDate AND 
@@ -38,40 +38,40 @@ interface Cas3LostBedsRepository : JpaRepository<Cas3LostBedsEntity, UUID> {
           c is NULL
   """,
   )
-  fun findByBedIdAndOverlappingDate(bedId: UUID, startDate: LocalDate, endDate: LocalDate, thisEntityId: UUID?): List<Cas3LostBedsEntity>
+  fun findByBedIdAndOverlappingDate(bedId: UUID, startDate: LocalDate, endDate: LocalDate, thisEntityId: UUID?): List<Cas3VoidBedspacesEntity>
 
-  @Query("SELECT lb FROM Cas3LostBedsEntity lb LEFT JOIN lb.cancellation c WHERE lb.startDate <= :endDate AND lb.endDate >= :startDate AND lb.bed = :bed AND c is NULL")
-  fun findAllByOverlappingDateForBed(startDate: LocalDate, endDate: LocalDate, bed: BedEntity): List<Cas3LostBedsEntity>
+  @Query("SELECT lb FROM Cas3VoidBedspacesEntity lb LEFT JOIN lb.cancellation c WHERE lb.startDate <= :endDate AND lb.endDate >= :startDate AND lb.bed = :bed AND c is NULL")
+  fun findAllByOverlappingDateForBed(startDate: LocalDate, endDate: LocalDate, bed: BedEntity): List<Cas3VoidBedspacesEntity>
 
-  @Query("SELECT lb FROM Cas3LostBedsEntity lb LEFT JOIN lb.cancellation c WHERE lb.premises.id = :premisesId AND c is NULL")
-  fun findAllActiveForPremisesId(premisesId: UUID): List<Cas3LostBedsEntity>
+  @Query("SELECT lb FROM Cas3VoidBedspacesEntity lb LEFT JOIN lb.cancellation c WHERE lb.premises.id = :premisesId AND c is NULL")
+  fun findAllActiveForPremisesId(premisesId: UUID): List<Cas3VoidBedspacesEntity>
 }
 
 @SuppressWarnings("LongParameterList")
 @Entity
 @Table(name = "lost_beds")
-class Cas3LostBedsEntity(
+class Cas3VoidBedspacesEntity(
   @Id
   val id: UUID,
   var startDate: LocalDate,
   var endDate: LocalDate,
   @ManyToOne
   @JoinColumn(name = "lost_bed_reason_id")
-  var reason: Cas3LostBedReasonEntity,
+  var reason: Cas3VoidBedspaceReasonEntity,
   var referenceNumber: String?,
   var notes: String?,
   @ManyToOne
   @JoinColumn(name = "premises_id")
   var premises: PremisesEntity,
-  @OneToOne(mappedBy = "lostBed")
-  var cancellation: Cas3LostBedCancellationEntity?,
+  @OneToOne(mappedBy = "voidBedspace")
+  var cancellation: Cas3VoidBedspaceCancellationEntity?,
   @ManyToOne
   @JoinColumn(name = "bed_id")
   var bed: BedEntity,
 ) {
   override fun equals(other: Any?): Boolean {
     if (this === other) return true
-    if (other !is Cas3LostBedsEntity) return false
+    if (other !is Cas3VoidBedspacesEntity) return false
 
     if (id != other.id) return false
     if (startDate != other.startDate) return false
@@ -85,5 +85,5 @@ class Cas3LostBedsEntity(
 
   override fun hashCode() = Objects.hash(id, startDate, endDate, reason, referenceNumber, notes)
 
-  override fun toString() = "Cas3LostBedsEntity:$id"
+  override fun toString() = "Cas3VoidBedspacesEntity:$id"
 }

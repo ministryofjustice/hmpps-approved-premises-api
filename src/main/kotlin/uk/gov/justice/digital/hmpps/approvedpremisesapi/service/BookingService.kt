@@ -31,7 +31,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TemporaryAcco
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserPermission
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserQualification
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas3.Cas3LostBedsRepository
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas3.Cas3VoidBedspacesRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.serviceScopeMatches
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PersonInfoResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.validated
@@ -67,7 +67,7 @@ class BookingService(
   private val cancellationReasonRepository: CancellationReasonRepository,
   private val bedRepository: BedRepository,
   private val placementRequestRepository: PlacementRequestRepository,
-  private val lostBedsRepository: Cas3LostBedsRepository,
+  private val cas3VoidBedspacesRepository: Cas3VoidBedspacesRepository,
   private val premisesRepository: PremisesRepository,
   private val userService: UserService,
   private val userAccessService: UserAccessService,
@@ -142,7 +142,7 @@ class BookingService(
           return@validated it.id hasConflictError "A Booking already exists for dates from ${it.arrivalDate} to ${it.departureDate} which overlaps with the desired dates"
         }
 
-        getLostBedWithConflictingDates(arrivalDate, departureDate, null, bedId)?.let {
+        getVoidBedspaceWithConflictingDates(arrivalDate, departureDate, null, bedId)?.let {
           return@validated it.id hasConflictError "A Lost Bed already exists for dates from ${it.startDate} to ${it.endDate} which overlaps with the desired dates"
         }
 
@@ -443,7 +443,7 @@ class BookingService(
         return@validatedCasResult it.id hasConflictError "A Booking already exists for dates from ${it.arrivalDate} to ${it.lastUnavailableDate} which overlaps with the desired dates"
       }
 
-      getLostBedWithConflictingDates(effectiveNewArrivalDate, expectedLastUnavailableDate, null, bedId)?.let {
+      getVoidBedspaceWithConflictingDates(effectiveNewArrivalDate, expectedLastUnavailableDate, null, bedId)?.let {
         return@validatedCasResult it.id hasConflictError "A Lost Bed already exists for dates from ${it.startDate} to ${it.endDate} which overlaps with the desired dates"
       }
     }
@@ -528,12 +528,12 @@ class BookingService(
     return candidateBookings.firstOrNull { it.lastUnavailableDate >= arrivalDate }
   }
 
-  fun getLostBedWithConflictingDates(
+  fun getVoidBedspaceWithConflictingDates(
     startDate: LocalDate,
     endDate: LocalDate,
     thisEntityId: UUID?,
     bedId: UUID,
-  ) = lostBedsRepository.findByBedIdAndOverlappingDate(
+  ) = cas3VoidBedspacesRepository.findByBedIdAndOverlappingDate(
     bedId,
     startDate,
     endDate,

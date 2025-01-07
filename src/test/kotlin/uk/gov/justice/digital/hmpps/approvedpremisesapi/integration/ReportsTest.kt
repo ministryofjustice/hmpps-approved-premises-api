@@ -24,18 +24,18 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.BookingEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TemporaryAccommodationApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRole
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas3.Cas3LostBedsRepository
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas3.Cas3VoidBedspacesRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.community.OffenderDetailSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.generator.BookingsReportGenerator
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.generator.LostBedsReportGenerator
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.generator.VoidBedspacesReportGenerator
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.model.BedUsageReportRow
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.model.BedUsageType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.model.BedUtilisationReportRow
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.model.BookingsReportRow
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.model.LostBedReportRow
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.model.PersonInformationReportData
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.model.VoidBedspaceReportRow
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.properties.BookingsReportProperties
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.properties.LostBedReportProperties
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.properties.VoidBedspaceReportProperties
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.util.toShortBase58
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.BookingTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomDateBefore
@@ -50,7 +50,7 @@ class ReportsTest : IntegrationTestBase() {
   lateinit var bookingTransformer: BookingTransformer
 
   @Autowired
-  lateinit var realLostBedsRepository: Cas3LostBedsRepository
+  lateinit var realLostBedsRepository: Cas3VoidBedspacesRepository
 
   @Nested
   inner class GetBookingReport {
@@ -1275,11 +1275,11 @@ class ReportsTest : IntegrationTestBase() {
   }
 
   @Nested
-  inner class GetLostBedsReport {
-    private val lostBedsEndpoint = "/cas1/reports/${Cas1ReportName.lostBeds.value}"
+  inner class GetVoidBedspacesReport {
+    private val voidBedspacesEndpoint = "/cas1/reports/${Cas1ReportName.lostBeds.value}"
 
     @Test
-    fun `Get lost beds report returns OK with correct body`() {
+    fun `Get void bedspaces report returns OK with correct body`() {
       givenAUser(roles = listOf(UserRole.CAS1_REPORT_VIEWER)) { userEntity, jwt ->
         givenAnOffender { offenderDetails, inmateDetails ->
           val premises = approvedPremisesEntityFactory.produceAndPersist {
@@ -1311,48 +1311,48 @@ class ReportsTest : IntegrationTestBase() {
             )
           }
 
-          cas3LostBedsEntityFactory.produceAndPersist {
+          cas3VoidBedspacesEntityFactory.produceAndPersist {
             withPremises(premises)
             withBed(bed1)
             withStartDate(LocalDate.of(2023, 4, 5))
             withEndDate(LocalDate.of(2023, 7, 8))
             withYieldedReason {
-              cas3LostBedReasonEntityFactory.produceAndPersist()
+              cas3VoidBedspaceReasonEntityFactory.produceAndPersist()
             }
           }
 
-          cas3LostBedsEntityFactory.produceAndPersist {
+          cas3VoidBedspacesEntityFactory.produceAndPersist {
             withPremises(premises)
             withBed(bed2)
             withStartDate(LocalDate.of(2023, 4, 12))
             withEndDate(LocalDate.of(2023, 7, 5))
             withYieldedReason {
-              cas3LostBedReasonEntityFactory.produceAndPersist()
+              cas3VoidBedspaceReasonEntityFactory.produceAndPersist()
             }
           }
 
-          val lostBed3 = cas3LostBedsEntityFactory.produceAndPersist {
+          val voidBedspace3 = cas3VoidBedspacesEntityFactory.produceAndPersist {
             withPremises(premises)
             withBed(bed3)
             withStartDate(LocalDate.of(2023, 4, 1))
             withEndDate(LocalDate.of(2023, 7, 5))
             withYieldedReason {
-              cas3LostBedReasonEntityFactory.produceAndPersist()
+              cas3VoidBedspaceReasonEntityFactory.produceAndPersist()
             }
           }
 
-          cas3LostBedCancellationEntityFactory.produceAndPersist {
-            withLostBed(lostBed3)
+          cas3VoidBedspaceCancellationEntityFactory.produceAndPersist {
+            withVoidBedspace(voidBedspace3)
           }
 
-          val expectedDataFrame = LostBedsReportGenerator(realLostBedsRepository)
+          val expectedDataFrame = VoidBedspacesReportGenerator(realLostBedsRepository)
             .createReport(
               listOf(bed1, bed2),
-              LostBedReportProperties(ServiceName.approvedPremises, null, 2023, 4),
+              VoidBedspaceReportProperties(ServiceName.approvedPremises, null, 2023, 4),
             )
 
           webTestClient.get()
-            .uri("$lostBedsEndpoint?year=2023&month=4")
+            .uri("$voidBedspacesEndpoint?year=2023&month=4")
             .header("Authorization", "Bearer $jwt")
             .header("X-Service-Name", ServiceName.approvedPremises.value)
             .exchange()
@@ -1362,7 +1362,7 @@ class ReportsTest : IntegrationTestBase() {
             .consumeWith {
               val actual = DataFrame
                 .readExcel(it.responseBody!!.inputStream())
-                .convertTo<LostBedReportRow>(ExcessiveColumns.Remove)
+                .convertTo<VoidBedspaceReportRow>(ExcessiveColumns.Remove)
               Assertions.assertThat(actual).isEqualTo(expectedDataFrame)
             }
         }

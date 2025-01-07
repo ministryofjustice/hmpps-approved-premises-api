@@ -13,15 +13,16 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.given
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.govUKBankHolidaysAPIMockSuccessfullCallWithEmptyResponse
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ProbationRegionEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRole
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.cas3.Cas3LostBedsTransformer
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.cas3.Cas3VoidBedspacesTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.unit.util.withinSeconds
 import java.time.LocalDate
 import java.time.OffsetDateTime
 import java.util.UUID
 
-class LostBedsTest : IntegrationTestBase() {
+@SuppressWarnings("LargeClass")
+class VoidBedspacesTest : IntegrationTestBase() {
   @Autowired
-  lateinit var cas3LostBedsTransformer: Cas3LostBedsTransformer
+  lateinit var cas3VoidBedspacesTransformer: Cas3VoidBedspacesTransformer
 
   lateinit var probationRegion: ProbationRegionEntity
 
@@ -31,7 +32,7 @@ class LostBedsTest : IntegrationTestBase() {
   }
 
   @Test
-  fun `List Lost Beds without JWT returns 401`() {
+  fun `List Void Bedspaces without JWT returns 401`() {
     val premises = temporaryAccommodationPremisesEntityFactory.produceAndPersist {
       withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
       withYieldedProbationRegion { probationRegion }
@@ -45,7 +46,7 @@ class LostBedsTest : IntegrationTestBase() {
   }
 
   @Test
-  fun `List Lost Beds on non existent Premises returns 404`() {
+  fun `List Void Bedspaces on non existent Premises returns 404`() {
     val jwt = jwtAuthHelper.createValidAuthorizationCodeJwt()
 
     webTestClient.get()
@@ -57,17 +58,17 @@ class LostBedsTest : IntegrationTestBase() {
   }
 
   @Test
-  fun `List Lost Beds on Temporary Accommodation premises returns OK with correct body`() {
+  fun `List Void Bedspaces on Temporary Accommodation premises returns OK with correct body`() {
     givenAUser(roles = listOf(UserRole.CAS3_ASSESSOR)) { userEntity, jwt ->
       val premises = temporaryAccommodationPremisesEntityFactory.produceAndPersist {
         withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
         withYieldedProbationRegion { probationRegion }
       }
 
-      val lostBeds = cas3LostBedsEntityFactory.produceAndPersist {
+      val voidBedspaces = cas3VoidBedspacesEntityFactory.produceAndPersist {
         withStartDate(LocalDate.now().plusDays(2))
         withEndDate(LocalDate.now().plusDays(4))
-        withYieldedReason { cas3LostBedReasonEntityFactory.produceAndPersist() }
+        withYieldedReason { cas3VoidBedspaceReasonEntityFactory.produceAndPersist() }
         withBed(
           bedEntityFactory.produceAndPersist {
             withYieldedRoom {
@@ -80,7 +81,7 @@ class LostBedsTest : IntegrationTestBase() {
         withPremises(premises)
       }
 
-      val expectedJson = objectMapper.writeValueAsString(listOf(cas3LostBedsTransformer.transformJpaToApi(lostBeds)))
+      val expectedJson = objectMapper.writeValueAsString(listOf(cas3VoidBedspacesTransformer.transformJpaToApi(voidBedspaces)))
 
       webTestClient.get()
         .uri("/premises/${premises.id}/lost-beds")
@@ -94,7 +95,7 @@ class LostBedsTest : IntegrationTestBase() {
   }
 
   @Test
-  fun `List Lost Beds on Temporary Accommodation premises that's not in the user's region returns 403 Forbidden`() {
+  fun `List Void Bedspaces on Temporary Accommodation premises that's not in the user's region returns 403 Forbidden`() {
     givenAUser { userEntity, jwt ->
       val premises = temporaryAccommodationPremisesEntityFactory.produceAndPersist {
         withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
@@ -109,10 +110,10 @@ class LostBedsTest : IntegrationTestBase() {
         }
       }
 
-      cas3LostBedsEntityFactory.produceAndPersist {
+      cas3VoidBedspacesEntityFactory.produceAndPersist {
         withStartDate(LocalDate.now().plusDays(2))
         withEndDate(LocalDate.now().plusDays(4))
-        withYieldedReason { cas3LostBedReasonEntityFactory.produceAndPersist() }
+        withYieldedReason { cas3VoidBedspaceReasonEntityFactory.produceAndPersist() }
         withYieldedBed { bed }
         withPremises(premises)
       }
@@ -128,16 +129,16 @@ class LostBedsTest : IntegrationTestBase() {
   }
 
   @Test
-  fun `Get Lost Bed without JWT returns 401`() {
+  fun `Get Void Bedspace without JWT returns 401`() {
     val premises = temporaryAccommodationPremisesEntityFactory.produceAndPersist {
       withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
       withYieldedProbationRegion { probationRegion }
     }
 
-    val lostBeds = cas3LostBedsEntityFactory.produceAndPersist {
+    val voidBedspaces = cas3VoidBedspacesEntityFactory.produceAndPersist {
       withStartDate(LocalDate.now().plusDays(2))
       withEndDate(LocalDate.now().plusDays(4))
-      withYieldedReason { cas3LostBedReasonEntityFactory.produceAndPersist() }
+      withYieldedReason { cas3VoidBedspaceReasonEntityFactory.produceAndPersist() }
       withBed(
         bedEntityFactory.produceAndPersist {
           withYieldedRoom {
@@ -151,14 +152,14 @@ class LostBedsTest : IntegrationTestBase() {
     }
 
     webTestClient.get()
-      .uri("/premises/${premises.id}/lost-beds/${lostBeds.id}")
+      .uri("/premises/${premises.id}/lost-beds/${voidBedspaces.id}")
       .exchange()
       .expectStatus()
       .isUnauthorized
   }
 
   @Test
-  fun `Get Lost Bed for non-existent premises returns 404`() {
+  fun `Get Void Bedspace for non-existent premises returns 404`() {
     val jwt = jwtAuthHelper.createValidAuthorizationCodeJwt()
 
     webTestClient.get()
@@ -170,7 +171,7 @@ class LostBedsTest : IntegrationTestBase() {
   }
 
   @Test
-  fun `Get Lost Bed for non-existent lost bed returns 404`() {
+  fun `Get Void Bedspace for non-existent void bedspace returns 404`() {
     givenAUser(roles = listOf(UserRole.CAS3_ASSESSOR)) { userEntity, jwt ->
       val premises = temporaryAccommodationPremisesEntityFactory.produceAndPersist {
         withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
@@ -187,7 +188,7 @@ class LostBedsTest : IntegrationTestBase() {
   }
 
   @Test
-  fun `Get Lost Bed on Temporary Accommodation premises returns OK with correct body`() {
+  fun `Get Void Bedspace on Temporary Accommodation premises returns OK with correct body`() {
     givenAUser(roles = listOf(UserRole.CAS3_ASSESSOR)) { userEntity, jwt ->
       val premises = temporaryAccommodationPremisesEntityFactory.produceAndPersist {
         withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
@@ -202,18 +203,18 @@ class LostBedsTest : IntegrationTestBase() {
         }
       }
 
-      val lostBeds = cas3LostBedsEntityFactory.produceAndPersist {
+      val voidBedspaces = cas3VoidBedspacesEntityFactory.produceAndPersist {
         withStartDate(LocalDate.now().plusDays(2))
         withEndDate(LocalDate.now().plusDays(4))
-        withYieldedReason { cas3LostBedReasonEntityFactory.produceAndPersist() }
+        withYieldedReason { cas3VoidBedspaceReasonEntityFactory.produceAndPersist() }
         withYieldedBed { bed }
         withPremises(premises)
       }
 
-      val expectedJson = objectMapper.writeValueAsString(cas3LostBedsTransformer.transformJpaToApi(lostBeds))
+      val expectedJson = objectMapper.writeValueAsString(cas3VoidBedspacesTransformer.transformJpaToApi(voidBedspaces))
 
       webTestClient.get()
-        .uri("/premises/${premises.id}/lost-beds/${lostBeds.id}")
+        .uri("/premises/${premises.id}/lost-beds/${voidBedspaces.id}")
         .header("Authorization", "Bearer $jwt")
         .exchange()
         .expectStatus()
@@ -224,7 +225,7 @@ class LostBedsTest : IntegrationTestBase() {
   }
 
   @Test
-  fun `Get Lost Bed on Temporary Accommodation premises that's not in the user's region returns 403 Forbidden`() {
+  fun `Get Void Bedspace on Temporary Accommodation premises that's not in the user's region returns 403 Forbidden`() {
     givenAUser { userEntity, jwt ->
       val premises = temporaryAccommodationPremisesEntityFactory.produceAndPersist {
         withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
@@ -239,18 +240,18 @@ class LostBedsTest : IntegrationTestBase() {
         }
       }
 
-      val lostBeds = cas3LostBedsEntityFactory.produceAndPersist {
+      val voidBedspaces = cas3VoidBedspacesEntityFactory.produceAndPersist {
         withStartDate(LocalDate.now().plusDays(2))
         withEndDate(LocalDate.now().plusDays(4))
-        withYieldedReason { cas3LostBedReasonEntityFactory.produceAndPersist() }
+        withYieldedReason { cas3VoidBedspaceReasonEntityFactory.produceAndPersist() }
         withYieldedBed { bed }
         withPremises(premises)
       }
 
-      val expectedJson = objectMapper.writeValueAsString(cas3LostBedsTransformer.transformJpaToApi(lostBeds))
+      val expectedJson = objectMapper.writeValueAsString(cas3VoidBedspacesTransformer.transformJpaToApi(voidBedspaces))
 
       webTestClient.get()
-        .uri("/premises/${premises.id}/lost-beds/${lostBeds.id}")
+        .uri("/premises/${premises.id}/lost-beds/${voidBedspaces.id}")
         .header("Authorization", "Bearer $jwt")
         .header("X-Service-Name", ServiceName.temporaryAccommodation.value)
         .exchange()
@@ -260,7 +261,7 @@ class LostBedsTest : IntegrationTestBase() {
   }
 
   @Test
-  fun `Create Lost Beds without JWT returns 401`() {
+  fun `Create Void Bedspaces without JWT returns 401`() {
     val premises = temporaryAccommodationPremisesEntityFactory.produceAndPersist {
       withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
       withYieldedProbationRegion { probationRegion }
@@ -288,14 +289,14 @@ class LostBedsTest : IntegrationTestBase() {
   }
 
   @Test
-  fun `Create Lost Beds on Temporary Accommodation premises returns 400 Bad Request if the bed ID does not reference a bed on the premises`() {
+  fun `Create Void Bedspaces on Temporary Accommodation premises returns 400 Bad Request if the bed ID does not reference a bed on the premises`() {
     givenAUser(roles = listOf(UserRole.CAS3_ASSESSOR)) { userEntity, jwt ->
       val premises = temporaryAccommodationPremisesEntityFactory.produceAndPersist {
         withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
         withYieldedProbationRegion { probationRegion }
       }
 
-      val reason = cas3LostBedReasonEntityFactory.produceAndPersist {
+      val reason = cas3VoidBedspaceReasonEntityFactory.produceAndPersist {
         withServiceScope(ServiceName.temporaryAccommodation.value)
       }
 
@@ -322,7 +323,7 @@ class LostBedsTest : IntegrationTestBase() {
   }
 
   @Test
-  fun `Create Lost Beds on Temporary Accommodation premises returns OK with correct body when correct data is provided`() {
+  fun `Create Void Bedspaces on Temporary Accommodation premises returns OK with correct body when correct data is provided`() {
     givenAUser(roles = listOf(UserRole.CAS3_ASSESSOR)) { userEntity, jwt ->
       val premises = temporaryAccommodationPremisesEntityFactory.produceAndPersist {
         withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
@@ -339,7 +340,7 @@ class LostBedsTest : IntegrationTestBase() {
         }
       }
 
-      val reason = cas3LostBedReasonEntityFactory.produceAndPersist {
+      val reason = cas3VoidBedspaceReasonEntityFactory.produceAndPersist {
         withServiceScope(ServiceName.temporaryAccommodation.value)
       }
 
@@ -374,7 +375,7 @@ class LostBedsTest : IntegrationTestBase() {
   }
 
   @Test
-  fun `Create Lost Beds on Temporary Accommodation premises that's not in the user's region returns 403 Forbidden`() {
+  fun `Create Void Bedspaces on Temporary Accommodation premises that's not in the user's region returns 403 Forbidden`() {
     givenAUser { userEntity, jwt ->
       val premises = temporaryAccommodationPremisesEntityFactory.produceAndPersist {
         withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
@@ -391,7 +392,7 @@ class LostBedsTest : IntegrationTestBase() {
         }
       }
 
-      val reason = cas3LostBedReasonEntityFactory.produceAndPersist {
+      val reason = cas3VoidBedspaceReasonEntityFactory.produceAndPersist {
         withServiceScope(ServiceName.temporaryAccommodation.value)
       }
 
@@ -416,16 +417,16 @@ class LostBedsTest : IntegrationTestBase() {
   }
 
   @Test
-  fun `Update Lost Bed without JWT returns 401`() {
+  fun `Update Void Bedspace without JWT returns 401`() {
     val premises = temporaryAccommodationPremisesEntityFactory.produceAndPersist {
       withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
       withYieldedProbationRegion { probationRegion }
     }
 
-    val lostBeds = cas3LostBedsEntityFactory.produceAndPersist {
+    val voidBedspaces = cas3VoidBedspacesEntityFactory.produceAndPersist {
       withStartDate(LocalDate.now().plusDays(2))
       withEndDate(LocalDate.now().plusDays(4))
-      withYieldedReason { cas3LostBedReasonEntityFactory.produceAndPersist() }
+      withYieldedReason { cas3VoidBedspaceReasonEntityFactory.produceAndPersist() }
       withBed(
         bedEntityFactory.produceAndPersist {
           withYieldedRoom {
@@ -447,7 +448,7 @@ class LostBedsTest : IntegrationTestBase() {
     }
 
     webTestClient.put()
-      .uri("/premises/${premises.id}/lost-beds/${lostBeds.id}")
+      .uri("/premises/${premises.id}/lost-beds/${voidBedspaces.id}")
       .bodyValue(
         UpdateLostBed(
           startDate = LocalDate.parse("2022-08-15"),
@@ -463,7 +464,7 @@ class LostBedsTest : IntegrationTestBase() {
   }
 
   @Test
-  fun `Update Lost Bed for non-existent premises returns 404`() {
+  fun `Update Void Bedspace for non-existent premises returns 404`() {
     val jwt = jwtAuthHelper.createValidAuthorizationCodeJwt()
 
     webTestClient.put()
@@ -484,7 +485,7 @@ class LostBedsTest : IntegrationTestBase() {
   }
 
   @Test
-  fun `Update Lost Bed for non-existent lost bed returns 404`() {
+  fun `Update Void Bedspace for non-existent void bedspace returns 404`() {
     val premises = temporaryAccommodationPremisesEntityFactory.produceAndPersist {
       withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
       withYieldedProbationRegion { probationRegion }
@@ -510,7 +511,7 @@ class LostBedsTest : IntegrationTestBase() {
   }
 
   @Test
-  fun `Update Lost Beds on Temporary Accommodation premises returns OK with correct body when correct data is provided`() {
+  fun `Update Void Bedspaces on Temporary Accommodation premises returns OK with correct body when correct data is provided`() {
     givenAUser(roles = listOf(UserRole.CAS3_ASSESSOR)) { userEntity, jwt ->
       val premises = temporaryAccommodationPremisesEntityFactory.produceAndPersist {
         withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
@@ -525,20 +526,20 @@ class LostBedsTest : IntegrationTestBase() {
         }
       }
 
-      val lostBeds = cas3LostBedsEntityFactory.produceAndPersist {
+      val voidBedspaces = cas3VoidBedspacesEntityFactory.produceAndPersist {
         withStartDate(LocalDate.now().plusDays(2))
         withEndDate(LocalDate.now().plusDays(4))
-        withYieldedReason { cas3LostBedReasonEntityFactory.produceAndPersist() }
+        withYieldedReason { cas3VoidBedspaceReasonEntityFactory.produceAndPersist() }
         withYieldedBed { bed }
         withPremises(premises)
       }
 
-      val reason = cas3LostBedReasonEntityFactory.produceAndPersist {
+      val reason = cas3VoidBedspaceReasonEntityFactory.produceAndPersist {
         withServiceScope(ServiceName.temporaryAccommodation.value)
       }
 
       webTestClient.put()
-        .uri("/premises/${premises.id}/lost-beds/${lostBeds.id}")
+        .uri("/premises/${premises.id}/lost-beds/${voidBedspaces.id}")
         .header("Authorization", "Bearer $jwt")
         .bodyValue(
           UpdateLostBed(
@@ -567,7 +568,7 @@ class LostBedsTest : IntegrationTestBase() {
   }
 
   @Test
-  fun `Update Lost Beds on Temporary Accommodation premises that's not in the user's region returns 403 Forbidden`() {
+  fun `Update Void Bedspaces on Temporary Accommodation premises that's not in the user's region returns 403 Forbidden`() {
     givenAUser { userEntity, jwt ->
       val premises = temporaryAccommodationPremisesEntityFactory.produceAndPersist {
         withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
@@ -582,20 +583,20 @@ class LostBedsTest : IntegrationTestBase() {
         }
       }
 
-      val lostBeds = cas3LostBedsEntityFactory.produceAndPersist {
+      val voidBedspaces = cas3VoidBedspacesEntityFactory.produceAndPersist {
         withStartDate(LocalDate.now().plusDays(2))
         withEndDate(LocalDate.now().plusDays(4))
-        withYieldedReason { cas3LostBedReasonEntityFactory.produceAndPersist() }
+        withYieldedReason { cas3VoidBedspaceReasonEntityFactory.produceAndPersist() }
         withYieldedBed { bed }
         withPremises(premises)
       }
 
-      val reason = cas3LostBedReasonEntityFactory.produceAndPersist {
+      val reason = cas3VoidBedspaceReasonEntityFactory.produceAndPersist {
         withServiceScope(ServiceName.temporaryAccommodation.value)
       }
 
       webTestClient.put()
-        .uri("/premises/${premises.id}/lost-beds/${lostBeds.id}")
+        .uri("/premises/${premises.id}/lost-beds/${voidBedspaces.id}")
         .header("Authorization", "Bearer $jwt")
         .header("X-Service-Name", ServiceName.temporaryAccommodation.value)
         .bodyValue(
@@ -614,16 +615,16 @@ class LostBedsTest : IntegrationTestBase() {
   }
 
   @Test
-  fun `Cancel Lost Bed without JWT returns 401`() {
+  fun `Cancel Void Bedspace without JWT returns 401`() {
     val premises = temporaryAccommodationPremisesEntityFactory.produceAndPersist {
       withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
       withYieldedProbationRegion { probationRegion }
     }
 
-    val lostBeds = cas3LostBedsEntityFactory.produceAndPersist {
+    val voidBedspaces = cas3VoidBedspacesEntityFactory.produceAndPersist {
       withStartDate(LocalDate.now().plusDays(2))
       withEndDate(LocalDate.now().plusDays(4))
-      withYieldedReason { cas3LostBedReasonEntityFactory.produceAndPersist() }
+      withYieldedReason { cas3VoidBedspaceReasonEntityFactory.produceAndPersist() }
       withBed(
         bedEntityFactory.produceAndPersist {
           withYieldedRoom {
@@ -637,7 +638,7 @@ class LostBedsTest : IntegrationTestBase() {
     }
 
     webTestClient.post()
-      .uri("/premises/${premises.id}/lost-beds/${lostBeds.id}/cancellations")
+      .uri("/premises/${premises.id}/lost-beds/${voidBedspaces.id}/cancellations")
       .bodyValue(
         NewLostBedCancellation(
           notes = "Unauthorized",
@@ -649,7 +650,7 @@ class LostBedsTest : IntegrationTestBase() {
   }
 
   @Test
-  fun `Cancel Lost Bed for non-existent premises returns 404`() {
+  fun `Cancel Void Bedspace for non-existent premises returns 404`() {
     val jwt = jwtAuthHelper.createValidAuthorizationCodeJwt()
 
     webTestClient.post()
@@ -666,7 +667,7 @@ class LostBedsTest : IntegrationTestBase() {
   }
 
   @Test
-  fun `Cancel Lost Bed for non-existent lost bed returns 404`() {
+  fun `Cancel Void Bedspace for non-existent void bedspace returns 404`() {
     val premises = temporaryAccommodationPremisesEntityFactory.produceAndPersist {
       withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
       withYieldedProbationRegion { probationRegion }
@@ -688,7 +689,7 @@ class LostBedsTest : IntegrationTestBase() {
   }
 
   @Test
-  fun `Cancel Lost Bed on Temporary Accommodation premises returns OK with correct body when correct data is provided`() {
+  fun `Cancel Void Bedspace on Temporary Accommodation premises returns OK with correct body when correct data is provided`() {
     givenAUser(roles = listOf(UserRole.CAS3_ASSESSOR)) { userEntity, jwt ->
       val premises = temporaryAccommodationPremisesEntityFactory.produceAndPersist {
         withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
@@ -703,20 +704,20 @@ class LostBedsTest : IntegrationTestBase() {
         }
       }
 
-      val lostBeds = cas3LostBedsEntityFactory.produceAndPersist {
+      val voidBedspaces = cas3VoidBedspacesEntityFactory.produceAndPersist {
         withStartDate(LocalDate.now().plusDays(2))
         withEndDate(LocalDate.now().plusDays(4))
-        withYieldedReason { cas3LostBedReasonEntityFactory.produceAndPersist() }
+        withYieldedReason { cas3VoidBedspaceReasonEntityFactory.produceAndPersist() }
         withYieldedBed { bed }
         withPremises(premises)
       }
 
-      val reason = cas3LostBedReasonEntityFactory.produceAndPersist {
+      val reason = cas3VoidBedspaceReasonEntityFactory.produceAndPersist {
         withServiceScope(ServiceName.temporaryAccommodation.value)
       }
 
       webTestClient.post()
-        .uri("/premises/${premises.id}/lost-beds/${lostBeds.id}/cancellations")
+        .uri("/premises/${premises.id}/lost-beds/${voidBedspaces.id}/cancellations")
         .header("Authorization", "Bearer $jwt")
         .bodyValue(
           NewLostBedCancellation(
@@ -733,7 +734,7 @@ class LostBedsTest : IntegrationTestBase() {
   }
 
   @Test
-  fun `Cancel Lost Bed on Temporary Accommodation premises that's not in the user's region returns 403 Forbidden`() {
+  fun `Cancel Void Bedspace on Temporary Accommodation premises that's not in the user's region returns 403 Forbidden`() {
     givenAUser { userEntity, jwt ->
       val premises = temporaryAccommodationPremisesEntityFactory.produceAndPersist {
         withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
@@ -748,20 +749,20 @@ class LostBedsTest : IntegrationTestBase() {
         }
       }
 
-      val lostBeds = cas3LostBedsEntityFactory.produceAndPersist {
+      val voidBedspaces = cas3VoidBedspacesEntityFactory.produceAndPersist {
         withStartDate(LocalDate.now().plusDays(2))
         withEndDate(LocalDate.now().plusDays(4))
-        withYieldedReason { cas3LostBedReasonEntityFactory.produceAndPersist() }
+        withYieldedReason { cas3VoidBedspaceReasonEntityFactory.produceAndPersist() }
         withYieldedBed { bed }
         withPremises(premises)
       }
 
-      val reason = cas3LostBedReasonEntityFactory.produceAndPersist {
+      val reason = cas3VoidBedspaceReasonEntityFactory.produceAndPersist {
         withServiceScope(ServiceName.temporaryAccommodation.value)
       }
 
       webTestClient.post()
-        .uri("/premises/${premises.id}/lost-beds/${lostBeds.id}/cancellations")
+        .uri("/premises/${premises.id}/lost-beds/${voidBedspaces.id}/cancellations")
         .header("Authorization", "Bearer $jwt")
         .header("X-Service-Name", ServiceName.temporaryAccommodation.value)
         .bodyValue(
@@ -776,7 +777,7 @@ class LostBedsTest : IntegrationTestBase() {
   }
 
   @Test
-  fun `Create Lost Bed on a Temporary Accommodation premises returns 409 Conflict when a booking for the same bed overlaps`() {
+  fun `Create Void Bedspace on a Temporary Accommodation premises returns 409 Conflict when a booking for the same bed overlaps`() {
     givenAUser(roles = listOf(UserRole.CAS3_ASSESSOR)) { userEntity, jwt ->
       givenAnOffender { offenderDetails, inmateDetails ->
         val premises = temporaryAccommodationPremisesEntityFactory.produceAndPersist {
@@ -792,7 +793,7 @@ class LostBedsTest : IntegrationTestBase() {
           }
         }
 
-        val reason = cas3LostBedReasonEntityFactory.produceAndPersist {
+        val reason = cas3VoidBedspaceReasonEntityFactory.produceAndPersist {
           withServiceScope(ServiceName.temporaryAccommodation.value)
         }
 
@@ -832,7 +833,7 @@ class LostBedsTest : IntegrationTestBase() {
   }
 
   @Test
-  fun `Create Lost Bed on a Temporary Accommodation premises returns OK with correct body when only cancelled bookings for the same bed overlap`() {
+  fun `Create Void Bedspace on a Temporary Accommodation premises returns OK with correct body when only cancelled bookings for the same bed overlap`() {
     givenAUser(roles = listOf(UserRole.CAS3_ASSESSOR)) { userEntity, jwt ->
       givenAnOffender { offenderDetails, inmateDetails ->
         val premises = temporaryAccommodationPremisesEntityFactory.produceAndPersist {
@@ -848,7 +849,7 @@ class LostBedsTest : IntegrationTestBase() {
           }
         }
 
-        val reason = cas3LostBedReasonEntityFactory.produceAndPersist {
+        val reason = cas3VoidBedspaceReasonEntityFactory.produceAndPersist {
           withServiceScope(ServiceName.temporaryAccommodation.value)
         }
 
@@ -899,7 +900,7 @@ class LostBedsTest : IntegrationTestBase() {
   }
 
   @Test
-  fun `Create Lost Bed on a Temporary Accommodation premises returns 409 Conflict when a lost bed for the same bed overlaps`() {
+  fun `Create Void Bedspace on a Temporary Accommodation premises returns 409 Conflict when a void bedspace for the same bed overlaps`() {
     givenAUser(roles = listOf(UserRole.CAS3_ASSESSOR)) { userEntity, jwt ->
       givenAnOffender { offenderDetails, inmateDetails ->
         val premises = temporaryAccommodationPremisesEntityFactory.produceAndPersist {
@@ -915,16 +916,16 @@ class LostBedsTest : IntegrationTestBase() {
           }
         }
 
-        val reason = cas3LostBedReasonEntityFactory.produceAndPersist {
+        val reason = cas3VoidBedspaceReasonEntityFactory.produceAndPersist {
           withServiceScope(ServiceName.temporaryAccommodation.value)
         }
 
-        val existingLostBed = cas3LostBedsEntityFactory.produceAndPersist {
+        val existingLostBed = cas3VoidBedspacesEntityFactory.produceAndPersist {
           withBed(bed)
           withPremises(premises)
           withStartDate(LocalDate.parse("2022-07-15"))
           withEndDate(LocalDate.parse("2022-08-15"))
-          withYieldedReason { cas3LostBedReasonEntityFactory.produceAndPersist() }
+          withYieldedReason { cas3VoidBedspaceReasonEntityFactory.produceAndPersist() }
         }
 
         webTestClient.post()
@@ -952,7 +953,7 @@ class LostBedsTest : IntegrationTestBase() {
   }
 
   @Test
-  fun `Create Lost Bed on a Temporary Accommodation premises returns OK with correct body when only cancelled lost beds for the same bed overlap`() {
+  fun `Create Void Bedspace on a Temporary Accommodation premises returns OK with correct body when only cancelled void bedspaces for the same bed overlap`() {
     givenAUser(roles = listOf(UserRole.CAS3_ASSESSOR)) { userEntity, jwt ->
       givenAnOffender { offenderDetails, inmateDetails ->
         val premises = temporaryAccommodationPremisesEntityFactory.produceAndPersist {
@@ -968,22 +969,22 @@ class LostBedsTest : IntegrationTestBase() {
           }
         }
 
-        val reason = cas3LostBedReasonEntityFactory.produceAndPersist {
+        val reason = cas3VoidBedspaceReasonEntityFactory.produceAndPersist {
           withServiceScope(ServiceName.temporaryAccommodation.value)
         }
 
-        val existingLostBed = cas3LostBedsEntityFactory.produceAndPersist {
+        val existingLostBed = cas3VoidBedspacesEntityFactory.produceAndPersist {
           withBed(bed)
           withPremises(premises)
           withStartDate(LocalDate.parse("2022-07-15"))
           withEndDate(LocalDate.parse("2022-08-15"))
           withYieldedReason {
-            cas3LostBedReasonEntityFactory.produceAndPersist()
+            cas3VoidBedspaceReasonEntityFactory.produceAndPersist()
           }
         }
 
-        existingLostBed.cancellation = cas3LostBedCancellationEntityFactory.produceAndPersist {
-          withLostBed(existingLostBed)
+        existingLostBed.cancellation = cas3VoidBedspaceCancellationEntityFactory.produceAndPersist {
+          withVoidBedspace(existingLostBed)
           withCreatedAt(OffsetDateTime.parse("2022-07-01T12:34:56.789Z"))
         }
 
@@ -1019,7 +1020,7 @@ class LostBedsTest : IntegrationTestBase() {
   }
 
   @Test
-  fun `Update Lost Beds on Temporary Accommodation premises returns 409 Conflict when a booking for the same bed overlaps`() {
+  fun `Update Void Bedspaces on Temporary Accommodation premises returns 409 Conflict when a booking for the same bed overlaps`() {
     givenAUser(roles = listOf(UserRole.CAS3_ASSESSOR)) { userEntity, jwt ->
       val premises = temporaryAccommodationPremisesEntityFactory.produceAndPersist {
         withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
@@ -1034,15 +1035,15 @@ class LostBedsTest : IntegrationTestBase() {
         }
       }
 
-      val lostBeds = cas3LostBedsEntityFactory.produceAndPersist {
+      val voidBedspaces = cas3VoidBedspacesEntityFactory.produceAndPersist {
         withStartDate(LocalDate.parse("2022-08-16"))
         withEndDate(LocalDate.parse("2022-08-30"))
-        withYieldedReason { cas3LostBedReasonEntityFactory.produceAndPersist() }
+        withYieldedReason { cas3VoidBedspaceReasonEntityFactory.produceAndPersist() }
         withYieldedBed { bed }
         withPremises(premises)
       }
 
-      val reason = cas3LostBedReasonEntityFactory.produceAndPersist {
+      val reason = cas3VoidBedspaceReasonEntityFactory.produceAndPersist {
         withServiceScope(ServiceName.temporaryAccommodation.value)
       }
 
@@ -1058,7 +1059,7 @@ class LostBedsTest : IntegrationTestBase() {
       govUKBankHolidaysAPIMockSuccessfullCallWithEmptyResponse()
 
       webTestClient.put()
-        .uri("/premises/${premises.id}/lost-beds/${lostBeds.id}")
+        .uri("/premises/${premises.id}/lost-beds/${voidBedspaces.id}")
         .header("Authorization", "Bearer $jwt")
         .bodyValue(
           UpdateLostBed(
@@ -1080,7 +1081,7 @@ class LostBedsTest : IntegrationTestBase() {
   }
 
   @Test
-  fun `Update Lost Beds on Temporary Accommodation premises returns OK with correct body when only cancelled bookings for the same bed overlap`() {
+  fun `Update Void Bedspaces on Temporary Accommodation premises returns OK with correct body when only cancelled bookings for the same bed overlap`() {
     givenAUser(roles = listOf(UserRole.CAS3_ASSESSOR)) { userEntity, jwt ->
       givenAnOffender { offenderDetails, inmateDetails ->
         val premises = temporaryAccommodationPremisesEntityFactory.produceAndPersist {
@@ -1096,15 +1097,15 @@ class LostBedsTest : IntegrationTestBase() {
           }
         }
 
-        val lostBeds = cas3LostBedsEntityFactory.produceAndPersist {
+        val voidBedspaces = cas3VoidBedspacesEntityFactory.produceAndPersist {
           withStartDate(LocalDate.parse("2022-08-16"))
           withEndDate(LocalDate.parse("2022-08-30"))
-          withYieldedReason { cas3LostBedReasonEntityFactory.produceAndPersist() }
+          withYieldedReason { cas3VoidBedspaceReasonEntityFactory.produceAndPersist() }
           withYieldedBed { bed }
           withPremises(premises)
         }
 
-        val reason = cas3LostBedReasonEntityFactory.produceAndPersist {
+        val reason = cas3VoidBedspaceReasonEntityFactory.produceAndPersist {
           withServiceScope(ServiceName.temporaryAccommodation.value)
         }
 
@@ -1124,7 +1125,7 @@ class LostBedsTest : IntegrationTestBase() {
         }.toMutableList()
 
         webTestClient.put()
-          .uri("/premises/${premises.id}/lost-beds/${lostBeds.id}")
+          .uri("/premises/${premises.id}/lost-beds/${voidBedspaces.id}")
           .header("Authorization", "Bearer $jwt")
           .bodyValue(
             UpdateLostBed(
@@ -1154,7 +1155,7 @@ class LostBedsTest : IntegrationTestBase() {
   }
 
   @Test
-  fun `Update Lost Beds on Temporary Accommodation premises returns 409 Conflict when a lost bed for the same bed overlaps`() {
+  fun `Update Void Bedspaces on Temporary Accommodation premises returns 409 Conflict when a void bedspace for the same bed overlaps`() {
     givenAUser(roles = listOf(UserRole.CAS3_ASSESSOR)) { userEntity, jwt ->
       givenAnOffender { offenderDetails, inmateDetails ->
         val premises = temporaryAccommodationPremisesEntityFactory.produceAndPersist {
@@ -1170,28 +1171,28 @@ class LostBedsTest : IntegrationTestBase() {
           }
         }
 
-        val reason = cas3LostBedReasonEntityFactory.produceAndPersist {
+        val reason = cas3VoidBedspaceReasonEntityFactory.produceAndPersist {
           withServiceScope(ServiceName.temporaryAccommodation.value)
         }
 
-        val lostBeds = cas3LostBedsEntityFactory.produceAndPersist {
+        val voidBedspaces = cas3VoidBedspacesEntityFactory.produceAndPersist {
           withStartDate(LocalDate.parse("2022-08-16"))
           withEndDate(LocalDate.parse("2022-08-30"))
-          withYieldedReason { cas3LostBedReasonEntityFactory.produceAndPersist() }
+          withYieldedReason { cas3VoidBedspaceReasonEntityFactory.produceAndPersist() }
           withYieldedBed { bed }
           withPremises(premises)
         }
 
-        val existingLostBed = cas3LostBedsEntityFactory.produceAndPersist {
+        val existingLostBed = cas3VoidBedspacesEntityFactory.produceAndPersist {
           withBed(bed)
           withPremises(premises)
           withStartDate(LocalDate.parse("2022-07-15"))
           withEndDate(LocalDate.parse("2022-08-15"))
-          withYieldedReason { cas3LostBedReasonEntityFactory.produceAndPersist() }
+          withYieldedReason { cas3VoidBedspaceReasonEntityFactory.produceAndPersist() }
         }
 
         webTestClient.put()
-          .uri("/premises/${premises.id}/lost-beds/${lostBeds.id}")
+          .uri("/premises/${premises.id}/lost-beds/${voidBedspaces.id}")
           .header("Authorization", "Bearer $jwt")
           .bodyValue(
             UpdateLostBed(
@@ -1214,7 +1215,7 @@ class LostBedsTest : IntegrationTestBase() {
   }
 
   @Test
-  fun `Update Lost Beds on Temporary Accommodation premises returns OK with correct body when only cancelled lost beds for the same bed overlap`() {
+  fun `Update Void Bedspaces on Temporary Accommodation premises returns OK with correct body when only cancelled void bedspaces for the same bed overlap`() {
     givenAUser(roles = listOf(UserRole.CAS3_ASSESSOR)) { userEntity, jwt ->
       givenAnOffender { offenderDetails, inmateDetails ->
         val premises = temporaryAccommodationPremisesEntityFactory.produceAndPersist {
@@ -1230,35 +1231,35 @@ class LostBedsTest : IntegrationTestBase() {
           }
         }
 
-        val reason = cas3LostBedReasonEntityFactory.produceAndPersist {
+        val reason = cas3VoidBedspaceReasonEntityFactory.produceAndPersist {
           withServiceScope(ServiceName.temporaryAccommodation.value)
         }
 
-        val lostBeds = cas3LostBedsEntityFactory.produceAndPersist {
+        val voidBedspaces = cas3VoidBedspacesEntityFactory.produceAndPersist {
           withStartDate(LocalDate.parse("2022-08-16"))
           withEndDate(LocalDate.parse("2022-08-30"))
-          withYieldedReason { cas3LostBedReasonEntityFactory.produceAndPersist() }
+          withYieldedReason { cas3VoidBedspaceReasonEntityFactory.produceAndPersist() }
           withYieldedBed { bed }
           withPremises(premises)
         }
 
-        val existingLostBed = cas3LostBedsEntityFactory.produceAndPersist {
+        val existingLostBed = cas3VoidBedspacesEntityFactory.produceAndPersist {
           withBed(bed)
           withPremises(premises)
           withStartDate(LocalDate.parse("2022-07-15"))
           withEndDate(LocalDate.parse("2022-08-15"))
           withYieldedReason {
-            cas3LostBedReasonEntityFactory.produceAndPersist()
+            cas3VoidBedspaceReasonEntityFactory.produceAndPersist()
           }
         }
 
-        existingLostBed.cancellation = cas3LostBedCancellationEntityFactory.produceAndPersist {
-          withLostBed(existingLostBed)
+        existingLostBed.cancellation = cas3VoidBedspaceCancellationEntityFactory.produceAndPersist {
+          withVoidBedspace(existingLostBed)
           withCreatedAt(OffsetDateTime.parse("2022-07-01T12:34:56.789Z"))
         }
 
         webTestClient.put()
-          .uri("/premises/${premises.id}/lost-beds/${lostBeds.id}")
+          .uri("/premises/${premises.id}/lost-beds/${voidBedspaces.id}")
           .header("Authorization", "Bearer $jwt")
           .bodyValue(
             UpdateLostBed(

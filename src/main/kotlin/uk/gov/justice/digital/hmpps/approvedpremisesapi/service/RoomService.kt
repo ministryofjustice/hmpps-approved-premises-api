@@ -10,7 +10,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PremisesEntit
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.RoomEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.RoomRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TemporaryAccommodationPremisesEntity
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas3.Cas3LostBedsRepository
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas3.Cas3VoidBedspacesRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.ValidationErrors
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.validated
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.AuthorisableActionResult
@@ -24,7 +24,7 @@ class RoomService(
   private val roomRepository: RoomRepository,
   private val bedRepository: BedRepository,
   private val bookingRepository: BookingRepository,
-  private val lostBedsRepository: Cas3LostBedsRepository,
+  private val cas3VoidBedspacesRepository: Cas3VoidBedspacesRepository,
   private val characteristicService: CharacteristicService,
 ) {
   fun getRoom(roomId: UUID) = roomRepository.findByIdOrNull(roomId)
@@ -201,8 +201,8 @@ class RoomService(
       return room.id hasConflictError "A room cannot be hard-deleted if it has any bookings associated with it"
     }
 
-    lostBedsRepository.findByBedIds(bedIds).forEach { lostBed ->
-      lostBedsRepository.delete(lostBed)
+    cas3VoidBedspacesRepository.findByBedIds(bedIds).forEach { voidBedspace ->
+      cas3VoidBedspacesRepository.delete(voidBedspace)
     }
 
     room.beds.forEach { bed ->

@@ -8,7 +8,7 @@ data class Availability(
   val arrivedBookings: Int,
   val nonArrivedBookings: Int,
   val cancelledBookings: Int,
-  val lostBeds: Int,
+  val voidBedspaces: Int,
 ) {
-  fun getFreeCapacity(totalBeds: Int) = ((totalBeds - pendingBookings) - arrivedBookings) - lostBeds
+  fun getFreeCapacity(totalBeds: Int) = ((totalBeds - pendingBookings) - arrivedBookings) - voidBedspaces
 }

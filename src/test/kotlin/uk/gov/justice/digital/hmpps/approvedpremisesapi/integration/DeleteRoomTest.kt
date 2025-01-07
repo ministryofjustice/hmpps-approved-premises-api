@@ -34,7 +34,7 @@ class DeleteRoomTest : IntegrationTestBase() {
 
     val roomFromDatabase = roomRepository.findByIdOrNull(room.id)
     val bedsFromDatabase = beds.map { bedRepository.findByIdOrNull(it.id) }
-    val lostBedFromDatabase = lostBedsRepository.findByIdOrNull(lostBed.id)
+    val lostBedFromDatabase = cas3VoidBedspacesTestRepository.findByIdOrNull(lostBed.id)
 
     assertThat(roomFromDatabase).isNull()
     bedsFromDatabase.forEach { assertThat(it).isNull() }
@@ -61,7 +61,7 @@ class DeleteRoomTest : IntegrationTestBase() {
 
     val roomFromDatabase = roomRepository.findByIdOrNull(room.id)
     val bedsFromDatabase = beds.map { bedRepository.findByIdOrNull(it.id) }
-    val lostBedFromDatabase = lostBedsRepository.findByIdOrNull(lostBed.id)
+    val lostBedFromDatabase = cas3VoidBedspacesTestRepository.findByIdOrNull(lostBed.id)
 
     assertThat(roomFromDatabase).isNotNull
     bedsFromDatabase.forEach { assertThat(it).isNotNull }
@@ -92,7 +92,7 @@ class DeleteRoomTest : IntegrationTestBase() {
     val roomFromDatabase = roomRepository.findByIdOrNull(room.id)
     val bedsFromDatabase = beds.map { bedRepository.findByIdOrNull(it.id) }
     val bookingFromDatabase = bookingRepository.findByIdOrNull(booking.id)
-    val lostBedFromDatabase = lostBedsRepository.findByIdOrNull(lostBed.id)
+    val lostBedFromDatabase = cas3VoidBedspacesTestRepository.findByIdOrNull(lostBed.id)
 
     assertThat(roomFromDatabase).isNotNull
     bedsFromDatabase.forEach { assertThat(it).isNotNull }
@@ -109,11 +109,11 @@ class DeleteRoomTest : IntegrationTestBase() {
     }
   }
 
-  private fun createLostBed(premises: PremisesEntity, bed: BedEntity) = cas3LostBedsEntityFactory.produceAndPersist {
+  private fun createLostBed(premises: PremisesEntity, bed: BedEntity) = cas3VoidBedspacesEntityFactory.produceAndPersist {
     withPremises(premises)
     withBed(bed)
     withYieldedReason {
-      cas3LostBedReasonEntityFactory.produceAndPersist {
+      cas3VoidBedspaceReasonEntityFactory.produceAndPersist {
         withServiceScope(ServiceName.temporaryAccommodation.value)
       }
     }

@@ -43,7 +43,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.RoomEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TemporaryAccommodationPremisesEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRole
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas3.Cas3LostBedsEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas3.Cas3VoidBedspacesEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.deliuscontext.StaffMembersPage
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.BookingTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.PremisesTransformer
@@ -1908,7 +1908,7 @@ class PremisesTest {
     lateinit var bookingTransformer: BookingTransformer
 
     private lateinit var premises: ApprovedPremisesEntity
-    private lateinit var lostBeds: List<Cas3LostBedsEntity>
+    private lateinit var voidBedspaces: List<Cas3VoidBedspacesEntity>
     private lateinit var rooms: List<RoomEntity>
     private lateinit var bookings: List<BookingEntity>
 
@@ -1932,36 +1932,36 @@ class PremisesTest {
         withStaffKeyWorkerCode(null)
       }
 
-      lostBeds = mutableListOf(
-        cas3LostBedsEntityFactory.produceAndPersist {
+      voidBedspaces = mutableListOf(
+        cas3VoidBedspacesEntityFactory.produceAndPersist {
           withPremises(premises)
           withStartDate(startDate.plusDays(1))
           withEndDate(startDate.plusDays(2))
-          withYieldedReason { cas3LostBedReasonEntityFactory.produceAndPersist() }
+          withYieldedReason { cas3VoidBedspaceReasonEntityFactory.produceAndPersist() }
           withBed(rooms[0].beds[0])
         },
-        cas3LostBedsEntityFactory.produceAndPersist {
+        cas3VoidBedspacesEntityFactory.produceAndPersist {
           withPremises(premises)
           withStartDate(startDate.plusDays(1))
           withEndDate(startDate.plusDays(2))
-          withYieldedReason { cas3LostBedReasonEntityFactory.produceAndPersist() }
+          withYieldedReason { cas3VoidBedspaceReasonEntityFactory.produceAndPersist() }
           withBed(rooms[1].beds[0])
         },
       )
 
-      val cancelledLostBed = cas3LostBedsEntityFactory.produceAndPersist {
+      val cancelledLostBed = cas3VoidBedspacesEntityFactory.produceAndPersist {
         withPremises(premises)
         withStartDate(startDate.plusDays(1))
         withEndDate(startDate.plusDays(2))
-        withYieldedReason { cas3LostBedReasonEntityFactory.produceAndPersist() }
+        withYieldedReason { cas3VoidBedspaceReasonEntityFactory.produceAndPersist() }
         withBed(rooms[2].beds[0])
       }
 
-      cancelledLostBed.cancellation = cas3LostBedCancellationEntityFactory.produceAndPersist {
-        withLostBed(cancelledLostBed)
+      cancelledLostBed.cancellation = cas3VoidBedspaceCancellationEntityFactory.produceAndPersist {
+        withVoidBedspace(cancelledLostBed)
       }
 
-      lostBeds += cancelledLostBed
+      voidBedspaces += cancelledLostBed
 
       val arrivedBookingEntity = bookingEntityFactory.produceAndPersist {
         withPremises(premises)
@@ -2135,11 +2135,11 @@ class PremisesTest {
           )
 
         val getTotalBedsForDate = { date: LocalDate ->
-          val lostBedsForToday = lostBeds.filter { it.startDate <= date && it.endDate > date && it.cancellation == null }
+          val voidBedspacesForToday = voidBedspaces.filter { it.startDate <= date && it.endDate > date && it.cancellation == null }
           val bookingsForToday = bookings
             .filter { it.cancellation == null && it.nonArrival == null }
             .filter { it.arrivalDate <= date && it.departureDate > date }
-          (totalBeds - bookingsForToday.count()) - lostBedsForToday.count()
+          (totalBeds - bookingsForToday.count()) - voidBedspacesForToday.count()
         }
 
         assertThat(responseBody.dateCapacities?.get(0)).isEqualTo(

@@ -30,7 +30,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TurnaroundEnt
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TurnaroundRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserQualification
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas3.Cas3LostBedsRepository
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas3.Cas3VoidBedspacesRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.serviceScopeMatches
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PersonInfoResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.validated
@@ -60,7 +60,7 @@ class Cas3BookingService(
   private val moveOnCategoryRepository: MoveOnCategoryRepository,
   private val cancellationRepository: CancellationRepository,
   private val cancellationReasonRepository: CancellationReasonRepository,
-  private val cas3LostBedsRepository: Cas3LostBedsRepository,
+  private val cas3VoidBedspacesRepository: Cas3VoidBedspacesRepository,
   private val turnaroundRepository: TurnaroundRepository,
   private val extensionRepository: ExtensionRepository,
   private val cas3PremisesService: Cas3PremisesService,
@@ -545,7 +545,7 @@ class Cas3BookingService(
     endDate: LocalDate,
     thisEntityId: UUID?,
     bedId: UUID,
-  ) = cas3LostBedsRepository.findByBedIdAndOverlappingDate(
+  ) = cas3VoidBedspacesRepository.findByBedIdAndOverlappingDate(
     bedId,
     startDate,
     endDate,

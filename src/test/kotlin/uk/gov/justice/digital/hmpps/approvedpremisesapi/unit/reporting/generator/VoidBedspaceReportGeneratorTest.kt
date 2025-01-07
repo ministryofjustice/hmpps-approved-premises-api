@@ -14,19 +14,19 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ProbationDeliver
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ProbationRegionEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.RoomEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.TemporaryAccommodationPremisesEntityFactory
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.cas3.Cas3LostBedReasonEntityFactory
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.cas3.Cas3LostBedsEntityFactory
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas3.Cas3LostBedsRepository
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.generator.LostBedsReportGenerator
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.model.LostBedReportRow
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.properties.LostBedReportProperties
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.cas3.Cas3VoidBedspaceReasonEntityFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.cas3.Cas3VoidBedspacesEntityFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas3.Cas3VoidBedspacesRepository
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.generator.VoidBedspacesReportGenerator
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.model.VoidBedspaceReportRow
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.properties.VoidBedspaceReportProperties
 import java.time.LocalDate
 
-class LostBedReportGeneratorTest {
-  private val mockCas3LostBedsRepository = mockk<Cas3LostBedsRepository>()
+class VoidBedspaceReportGeneratorTest {
+  private val mockCas3VoidBedspacesRepository = mockk<Cas3VoidBedspacesRepository>()
 
-  private val lostBedReportGenerator = LostBedsReportGenerator(
-    mockCas3LostBedsRepository,
+  private val voidBedspacesReportGenerator = VoidBedspacesReportGenerator(
+    mockCas3VoidBedspacesRepository,
   )
 
   @Test
@@ -43,11 +43,11 @@ class LostBedReportGeneratorTest {
       .withRoom(temporaryAccommodationRoom)
       .produce()
 
-    val temporaryAccommodationLostBed = Cas3LostBedsEntityFactory()
+    val temporaryAccommodationVoidBedspace = Cas3VoidBedspacesEntityFactory()
       .withBed(temporaryAccommodationBed)
       .withStartDate(LocalDate.parse("2023-04-05"))
       .withEndDate(LocalDate.parse("2023-04-07"))
-      .withYieldedReason { Cas3LostBedReasonEntityFactory().produce() }
+      .withYieldedReason { Cas3VoidBedspaceReasonEntityFactory().produce() }
       .withPremises(temporaryAccommodationPremises)
       .produce()
 
@@ -63,36 +63,36 @@ class LostBedReportGeneratorTest {
       .withRoom(approvedPremisesRoom)
       .produce()
 
-    val approvedPremisesLostBed = Cas3LostBedsEntityFactory()
+    val approvedPremisesLostBed = Cas3VoidBedspacesEntityFactory()
       .withBed(approvedPremisesBed)
       .withStartDate(LocalDate.parse("2023-04-05"))
       .withEndDate(LocalDate.parse("2023-04-07"))
-      .withYieldedReason { Cas3LostBedReasonEntityFactory().produce() }
+      .withYieldedReason { Cas3VoidBedspaceReasonEntityFactory().produce() }
       .withPremises(approvedPremises)
       .produce()
 
     every {
-      mockCas3LostBedsRepository.findAllByOverlappingDateForBed(
+      mockCas3VoidBedspacesRepository.findAllByOverlappingDateForBed(
         LocalDate.parse("2023-04-01"),
         LocalDate.parse("2023-04-30"),
         temporaryAccommodationBed,
       )
-    } returns listOf(temporaryAccommodationLostBed)
+    } returns listOf(temporaryAccommodationVoidBedspace)
     every {
-      mockCas3LostBedsRepository.findAllByOverlappingDateForBed(
+      mockCas3VoidBedspacesRepository.findAllByOverlappingDateForBed(
         LocalDate.parse("2023-04-01"),
         LocalDate.parse("2023-04-30"),
         approvedPremisesBed,
       )
     } returns listOf(approvedPremisesLostBed)
 
-    val result = lostBedReportGenerator.createReport(
+    val result = voidBedspacesReportGenerator.createReport(
       listOf(approvedPremisesBed, temporaryAccommodationBed),
-      LostBedReportProperties(ServiceName.temporaryAccommodation, null, 2023, 4),
+      VoidBedspaceReportProperties(ServiceName.temporaryAccommodation, null, 2023, 4),
     )
 
     assertThat(result.count()).isEqualTo(1)
-    assertThat(result[0][LostBedReportRow::ap]).isEqualTo(temporaryAccommodationPremises.name)
+    assertThat(result[0][VoidBedspaceReportRow::ap]).isEqualTo(temporaryAccommodationPremises.name)
   }
 
   @Test
@@ -125,11 +125,11 @@ class LostBedReportGeneratorTest {
       .withRoom(temporaryAccommodationRoomInProbationRegion)
       .produce()
 
-    val temporaryAccommodationLostBedInProbationArea = Cas3LostBedsEntityFactory()
+    val temporaryAccommodationVoidBedspaceInProbationArea = Cas3VoidBedspacesEntityFactory()
       .withBed(temporaryAccommodationBedInProbationRegion)
       .withStartDate(LocalDate.parse("2023-04-05"))
       .withEndDate(LocalDate.parse("2023-04-07"))
-      .withYieldedReason { Cas3LostBedReasonEntityFactory().produce() }
+      .withYieldedReason { Cas3VoidBedspaceReasonEntityFactory().produce() }
       .withPremises(temporaryAccommodationPremisesInProbationRegion)
       .produce()
 
@@ -146,36 +146,36 @@ class LostBedReportGeneratorTest {
       .withRoom(temporaryAccommodationRoomOutsideProbationRegion)
       .produce()
 
-    val temporaryAccommodationLostBedOutsideProbationArea = Cas3LostBedsEntityFactory()
+    val temporaryAccommodationVoidBedspaceOutsideProbationArea = Cas3VoidBedspacesEntityFactory()
       .withBed(temporaryAccommodationBedOutsideProbationRegion)
       .withStartDate(LocalDate.parse("2023-04-05"))
       .withEndDate(LocalDate.parse("2023-04-07"))
-      .withYieldedReason { Cas3LostBedReasonEntityFactory().produce() }
+      .withYieldedReason { Cas3VoidBedspaceReasonEntityFactory().produce() }
       .withPremises(temporaryAccommodationPremisesOutsideProbationRegion)
       .produce()
 
     every {
-      mockCas3LostBedsRepository.findAllByOverlappingDateForBed(
+      mockCas3VoidBedspacesRepository.findAllByOverlappingDateForBed(
         LocalDate.parse("2023-04-01"),
         LocalDate.parse("2023-04-30"),
         temporaryAccommodationBedInProbationRegion,
       )
-    } returns listOf(temporaryAccommodationLostBedInProbationArea)
+    } returns listOf(temporaryAccommodationVoidBedspaceInProbationArea)
     every {
-      mockCas3LostBedsRepository.findAllByOverlappingDateForBed(
+      mockCas3VoidBedspacesRepository.findAllByOverlappingDateForBed(
         LocalDate.parse("2023-04-01"),
         LocalDate.parse("2023-04-30"),
         temporaryAccommodationBedOutsideProbationRegion,
       )
-    } returns listOf(temporaryAccommodationLostBedOutsideProbationArea)
+    } returns listOf(temporaryAccommodationVoidBedspaceOutsideProbationArea)
 
-    val result = lostBedReportGenerator.createReport(
+    val result = voidBedspacesReportGenerator.createReport(
       listOf(temporaryAccommodationBedInProbationRegion, temporaryAccommodationBedOutsideProbationRegion),
-      LostBedReportProperties(ServiceName.temporaryAccommodation, probationRegion1.id, 2023, 4),
+      VoidBedspaceReportProperties(ServiceName.temporaryAccommodation, probationRegion1.id, 2023, 4),
     )
 
     assertThat(result.count()).isEqualTo(1)
-    assertThat(result[0][LostBedReportRow::ap]).isEqualTo(temporaryAccommodationPremisesInProbationRegion.name)
+    assertThat(result[0][VoidBedspaceReportRow::ap]).isEqualTo(temporaryAccommodationPremisesInProbationRegion.name)
   }
 
   @Test
@@ -208,11 +208,11 @@ class LostBedReportGeneratorTest {
       .withRoom(temporaryAccommodationRoomInProbationRegion)
       .produce()
 
-    val temporaryAccommodationLostBedInProbationArea = Cas3LostBedsEntityFactory()
+    val temporaryAccommodationVoidBedspaceInProbationArea = Cas3VoidBedspacesEntityFactory()
       .withBed(temporaryAccommodationBedInProbationRegion)
       .withStartDate(LocalDate.parse("2023-04-05"))
       .withEndDate(LocalDate.parse("2023-04-07"))
-      .withYieldedReason { Cas3LostBedReasonEntityFactory().produce() }
+      .withYieldedReason { Cas3VoidBedspaceReasonEntityFactory().produce() }
       .withPremises(temporaryAccommodationPremisesInProbationRegion)
       .produce()
 
@@ -229,41 +229,41 @@ class LostBedReportGeneratorTest {
       .withRoom(temporaryAccommodationRoomOutsideProbationRegion)
       .produce()
 
-    val temporaryAccommodationLostBedOutsideProbationArea = Cas3LostBedsEntityFactory()
+    val temporaryAccommodationVoidBedspaceOutsideProbationArea = Cas3VoidBedspacesEntityFactory()
       .withBed(temporaryAccommodationBedOutsideProbationRegion)
       .withStartDate(LocalDate.parse("2023-04-05"))
       .withEndDate(LocalDate.parse("2023-04-07"))
-      .withYieldedReason { Cas3LostBedReasonEntityFactory().produce() }
+      .withYieldedReason { Cas3VoidBedspaceReasonEntityFactory().produce() }
       .withPremises(temporaryAccommodationPremisesOutsideProbationRegion)
       .produce()
 
     every {
-      mockCas3LostBedsRepository.findAllByOverlappingDateForBed(
+      mockCas3VoidBedspacesRepository.findAllByOverlappingDateForBed(
         LocalDate.parse("2023-04-01"),
         LocalDate.parse("2023-04-30"),
         temporaryAccommodationBedInProbationRegion,
       )
-    } returns listOf(temporaryAccommodationLostBedInProbationArea)
+    } returns listOf(temporaryAccommodationVoidBedspaceInProbationArea)
     every {
-      mockCas3LostBedsRepository.findAllByOverlappingDateForBed(
+      mockCas3VoidBedspacesRepository.findAllByOverlappingDateForBed(
         LocalDate.parse("2023-04-01"),
         LocalDate.parse("2023-04-30"),
         temporaryAccommodationBedOutsideProbationRegion,
       )
-    } returns listOf(temporaryAccommodationLostBedOutsideProbationArea)
+    } returns listOf(temporaryAccommodationVoidBedspaceOutsideProbationArea)
 
-    val result = lostBedReportGenerator.createReport(
+    val result = voidBedspacesReportGenerator.createReport(
       listOf(temporaryAccommodationBedInProbationRegion, temporaryAccommodationBedOutsideProbationRegion),
-      LostBedReportProperties(ServiceName.temporaryAccommodation, null, 2023, 4),
+      VoidBedspaceReportProperties(ServiceName.temporaryAccommodation, null, 2023, 4),
     )
 
     assertThat(result.count()).isEqualTo(2)
-    assertThat(result[0][LostBedReportRow::ap]).isEqualTo(temporaryAccommodationPremisesInProbationRegion.name)
-    assertThat(result[1][LostBedReportRow::ap]).isEqualTo(temporaryAccommodationPremisesOutsideProbationRegion.name)
+    assertThat(result[0][VoidBedspaceReportRow::ap]).isEqualTo(temporaryAccommodationPremisesInProbationRegion.name)
+    assertThat(result[1][VoidBedspaceReportRow::ap]).isEqualTo(temporaryAccommodationPremisesOutsideProbationRegion.name)
   }
 
   @Test
-  fun `Lost Bed rows are correctly generated`() {
+  fun `Void Bedspace rows are correctly generated`() {
     val probationRegion = ProbationRegionEntityFactory()
       .withApArea(ApAreaEntityFactory().produce())
       .produce()
@@ -289,38 +289,38 @@ class LostBedReportGeneratorTest {
       .withRoom(temporaryAccommodationRoom)
       .produce()
 
-    val temporaryAccommodationLostBed = Cas3LostBedsEntityFactory()
+    val temporaryAccommodationVoidBedspace = Cas3VoidBedspacesEntityFactory()
       .withBed(temporaryAccommodationBed)
       .withStartDate(LocalDate.parse("2023-04-05"))
       .withEndDate(LocalDate.parse("2023-04-07"))
-      .withYieldedReason { Cas3LostBedReasonEntityFactory().produce() }
+      .withYieldedReason { Cas3VoidBedspaceReasonEntityFactory().produce() }
       .withPremises(temporaryAccommodationPremises)
       .produce()
 
     every {
-      mockCas3LostBedsRepository.findAllByOverlappingDateForBed(
+      mockCas3VoidBedspacesRepository.findAllByOverlappingDateForBed(
         LocalDate.parse("2023-04-01"),
         LocalDate.parse("2023-04-30"),
         temporaryAccommodationBed,
       )
-    } returns listOf(temporaryAccommodationLostBed)
+    } returns listOf(temporaryAccommodationVoidBedspace)
 
-    val result = lostBedReportGenerator.createReport(
+    val result = voidBedspacesReportGenerator.createReport(
       listOf(temporaryAccommodationBed),
-      LostBedReportProperties(ServiceName.temporaryAccommodation, null, 2023, 4),
+      VoidBedspaceReportProperties(ServiceName.temporaryAccommodation, null, 2023, 4),
     )
 
     assertThat(result.count()).isEqualTo(1)
-    assertThat(result[0][LostBedReportRow::roomName]).isEqualTo(temporaryAccommodationRoom.name)
-    assertThat(result[0][LostBedReportRow::bedName]).isEqualTo(temporaryAccommodationBed.name)
-    assertThat(result[0][LostBedReportRow::id]).isEqualTo(temporaryAccommodationLostBed.id.toString())
-    assertThat(result[0][LostBedReportRow::workOrderId]).isEqualTo(temporaryAccommodationLostBed.referenceNumber)
-    assertThat(result[0][LostBedReportRow::region]).isEqualTo(temporaryAccommodationPremises.probationRegion.name)
-    assertThat(result[0][LostBedReportRow::ap]).isEqualTo(temporaryAccommodationPremises.name)
-    assertThat(result[0][LostBedReportRow::reason]).isEqualTo(temporaryAccommodationLostBed.reason.name)
-    assertThat(result[0][LostBedReportRow::startDate]).isEqualTo(temporaryAccommodationLostBed.startDate)
-    assertThat(result[0][LostBedReportRow::endDate]).isEqualTo(temporaryAccommodationLostBed.endDate)
-    assertThat(result[0][LostBedReportRow::lengthDays]).isEqualTo(3)
+    assertThat(result[0][VoidBedspaceReportRow::roomName]).isEqualTo(temporaryAccommodationRoom.name)
+    assertThat(result[0][VoidBedspaceReportRow::bedName]).isEqualTo(temporaryAccommodationBed.name)
+    assertThat(result[0][VoidBedspaceReportRow::id]).isEqualTo(temporaryAccommodationVoidBedspace.id.toString())
+    assertThat(result[0][VoidBedspaceReportRow::workOrderId]).isEqualTo(temporaryAccommodationVoidBedspace.referenceNumber)
+    assertThat(result[0][VoidBedspaceReportRow::region]).isEqualTo(temporaryAccommodationPremises.probationRegion.name)
+    assertThat(result[0][VoidBedspaceReportRow::ap]).isEqualTo(temporaryAccommodationPremises.name)
+    assertThat(result[0][VoidBedspaceReportRow::reason]).isEqualTo(temporaryAccommodationVoidBedspace.reason.name)
+    assertThat(result[0][VoidBedspaceReportRow::startDate]).isEqualTo(temporaryAccommodationVoidBedspace.startDate)
+    assertThat(result[0][VoidBedspaceReportRow::endDate]).isEqualTo(temporaryAccommodationVoidBedspace.endDate)
+    assertThat(result[0][VoidBedspaceReportRow::lengthDays]).isEqualTo(3)
   }
 
   @Test
@@ -350,37 +350,37 @@ class LostBedReportGeneratorTest {
       .withRoom(temporaryAccommodationRoom)
       .produce()
 
-    val temporaryAccommodationLostBed = Cas3LostBedsEntityFactory()
+    val temporaryAccommodationVoidBedspace = Cas3VoidBedspacesEntityFactory()
       .withBed(temporaryAccommodationBed)
       .withStartDate(LocalDate.parse("2023-03-28"))
       .withEndDate(LocalDate.parse("2023-04-07"))
-      .withYieldedReason { Cas3LostBedReasonEntityFactory().produce() }
+      .withYieldedReason { Cas3VoidBedspaceReasonEntityFactory().produce() }
       .withPremises(temporaryAccommodationPremises)
       .produce()
 
     every {
-      mockCas3LostBedsRepository.findAllByOverlappingDateForBed(
+      mockCas3VoidBedspacesRepository.findAllByOverlappingDateForBed(
         LocalDate.parse("2023-04-01"),
         LocalDate.parse("2023-04-30"),
         temporaryAccommodationBed,
       )
-    } returns listOf(temporaryAccommodationLostBed)
+    } returns listOf(temporaryAccommodationVoidBedspace)
 
-    val result = lostBedReportGenerator.createReport(
+    val result = voidBedspacesReportGenerator.createReport(
       listOf(temporaryAccommodationBed),
-      LostBedReportProperties(ServiceName.temporaryAccommodation, null, 2023, 4),
+      VoidBedspaceReportProperties(ServiceName.temporaryAccommodation, null, 2023, 4),
     )
 
     assertThat(result.count()).isEqualTo(1)
-    assertThat(result[0][LostBedReportRow::roomName]).isEqualTo(temporaryAccommodationRoom.name)
-    assertThat(result[0][LostBedReportRow::bedName]).isEqualTo(temporaryAccommodationBed.name)
-    assertThat(result[0][LostBedReportRow::id]).isEqualTo(temporaryAccommodationLostBed.id.toString())
-    assertThat(result[0][LostBedReportRow::workOrderId]).isEqualTo(temporaryAccommodationLostBed.referenceNumber)
-    assertThat(result[0][LostBedReportRow::region]).isEqualTo(temporaryAccommodationPremises.probationRegion.name)
-    assertThat(result[0][LostBedReportRow::ap]).isEqualTo(temporaryAccommodationPremises.name)
-    assertThat(result[0][LostBedReportRow::reason]).isEqualTo(temporaryAccommodationLostBed.reason.name)
-    assertThat(result[0][LostBedReportRow::startDate]).isEqualTo(temporaryAccommodationLostBed.startDate)
-    assertThat(result[0][LostBedReportRow::endDate]).isEqualTo(temporaryAccommodationLostBed.endDate)
-    assertThat(result[0][LostBedReportRow::lengthDays]).isEqualTo(7)
+    assertThat(result[0][VoidBedspaceReportRow::roomName]).isEqualTo(temporaryAccommodationRoom.name)
+    assertThat(result[0][VoidBedspaceReportRow::bedName]).isEqualTo(temporaryAccommodationBed.name)
+    assertThat(result[0][VoidBedspaceReportRow::id]).isEqualTo(temporaryAccommodationVoidBedspace.id.toString())
+    assertThat(result[0][VoidBedspaceReportRow::workOrderId]).isEqualTo(temporaryAccommodationVoidBedspace.referenceNumber)
+    assertThat(result[0][VoidBedspaceReportRow::region]).isEqualTo(temporaryAccommodationPremises.probationRegion.name)
+    assertThat(result[0][VoidBedspaceReportRow::ap]).isEqualTo(temporaryAccommodationPremises.name)
+    assertThat(result[0][VoidBedspaceReportRow::reason]).isEqualTo(temporaryAccommodationVoidBedspace.reason.name)
+    assertThat(result[0][VoidBedspaceReportRow::startDate]).isEqualTo(temporaryAccommodationVoidBedspace.startDate)
+    assertThat(result[0][VoidBedspaceReportRow::endDate]).isEqualTo(temporaryAccommodationVoidBedspace.endDate)
+    assertThat(result[0][VoidBedspaceReportRow::lengthDays]).isEqualTo(7)
   }
 }
