@@ -15,7 +15,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.repository.BedSearchRepo
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.repository.TemporaryAccommodationBedSearchResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.repository.TemporaryAccommodationBedSearchResultOverlap
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.CasResult
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.BedSearchService.Constants.MAX_NUMBER_PDUS
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.CharacteristicService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.OffenderService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.WorkingDayService
@@ -35,6 +34,10 @@ class Cas3BedspaceSearchService(
   private val workingDayService: WorkingDayService,
   private val offenderService: OffenderService,
 ) {
+  companion object {
+    const val MAX_NUMBER_PDUS = 5
+  }
+
   @Suppress("detekt:CyclomaticComplexMethod")
   fun findBedspaces(
     user: UserEntity,
