@@ -1,5 +1,6 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.service
 
+import org.apache.commons.collections4.ListUtils
 import org.slf4j.LoggerFactory
 import org.springframework.http.HttpStatus
 import org.springframework.stereotype.Service
@@ -47,6 +48,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.PersonTransf
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.asCaseSummary
 import java.io.OutputStream
 import java.time.LocalDate
+import java.util.stream.Collectors
 
 @Service
 class OffenderService(
@@ -60,6 +62,10 @@ class OffenderService(
   prisonCaseNotesConfigBindingModel: PrisonCaseNotesConfigBindingModel,
   adjudicationsConfigBindingModel: PrisonAdjudicationsConfigBindingModel,
 ) {
+  companion object {
+    const val MAX_OFFENDER_REQUEST_COUNT = 500
+  }
+
   private val log = LoggerFactory.getLogger(this::class.java)
 
   private val prisonCaseNotesConfig: PrisonCaseNotesConfig
@@ -105,12 +111,42 @@ class OffenderService(
     data class ReturnRestrictedIfLimitedAccess(val deliusUsername: String) : LimitedAccessStrategy
   }
 
+  /**
+   * The [getPersonSummaryInfoResults] function is limited to providing information for up to 500 CRNs
+   *
+   * If information is required about more than 500 CRNs, this function should be used instead
+   *
+   * Note - this should be used with care and only used for infrequently ran operations (monthly
+   * reports, seed jobs etc.) as fetching this number of offenders should not be a typical operation
+   */
+  fun getPersonSummaryInfoResultsInBatches(
+    crns: Set<String>,
+    limitedAccessStrategy: LimitedAccessStrategy,
+    batchSize: Int = 500,
+  ): List<PersonSummaryInfoResult> {
+    if (batchSize > MAX_OFFENDER_REQUEST_COUNT) {
+      throw InternalServerErrorProblem("Cannot request more than $MAX_OFFENDER_REQUEST_COUNT CRNs. A batch size of $batchSize has been requested.")
+    }
+
+    return ListUtils.partition(crns.toList(), batchSize)
+      .stream()
+      .map { crnSubset ->
+        getPersonSummaryInfoResults(crnSubset.toSet(), limitedAccessStrategy)
+      }
+      .flatMap { it.stream() }
+      .collect(Collectors.toList())
+  }
+
   fun getPersonSummaryInfoResults(
     crns: Set<String>,
     limitedAccessStrategy: LimitedAccessStrategy,
   ): List<PersonSummaryInfoResult> {
     if (crns.isEmpty()) {
       return emptyList()
+    }
+
+    if (crns.size > MAX_OFFENDER_REQUEST_COUNT) {
+      throw InternalServerErrorProblem("Cannot request more than $MAX_OFFENDER_REQUEST_COUNT CRNs. ${crns.size} have been provided.")
     }
 
     val crnsList = crns.toList()
@@ -231,14 +267,14 @@ class OffenderService(
     """,
     ReplaceWith("getPersonSummaryInfoResults(crns, limitedAccessStrategy)"),
   )
-  @SuppressWarnings("CyclomaticComplexMethod", "MagicNumber")
+  @SuppressWarnings("CyclomaticComplexMethod")
   fun getOffenderSummariesByCrns(crns: List<String>, userDistinguishedName: String, ignoreLaoRestrictions: Boolean = false): List<PersonSummaryInfoResult> {
     if (crns.isEmpty()) {
       return emptyList()
     }
 
-    if (crns.size > 500) {
-      throw InternalServerErrorProblem("Cannot bulk request more than 500 CRNs. ${crns.size} have been provided.")
+    if (crns.size > MAX_OFFENDER_REQUEST_COUNT) {
+      throw InternalServerErrorProblem("Cannot request more than $MAX_OFFENDER_REQUEST_COUNT CRNs. ${crns.size} have been provided.")
     }
 
     val offenders = when (val response = apDeliusContextApiClient.getSummariesForCrns(crns)) {
@@ -369,12 +405,11 @@ class OffenderService(
 
   fun canAccessOffender(username: String, crn: String) = canAccessOffenders(username, listOf(crn))[crn] == true
 
-  @SuppressWarnings("MagicNumber")
   fun canAccessOffenders(username: String, crns: List<String>): Map<String, Boolean> {
     if (crns.isEmpty()) return emptyMap()
 
-    if (crns.size > 500) {
-      throw InternalServerErrorProblem("Cannot bulk request access details for more than 500 CRNs. ${crns.size} have been provided.")
+    if (crns.size > MAX_OFFENDER_REQUEST_COUNT) {
+      throw InternalServerErrorProblem("Cannot request access details for more than $MAX_OFFENDER_REQUEST_COUNT CRNs. ${crns.size} have been provided.")
     }
 
     return when (val clientResult = apDeliusContextApiClient.getUserAccessForCrns(username, crns)) {

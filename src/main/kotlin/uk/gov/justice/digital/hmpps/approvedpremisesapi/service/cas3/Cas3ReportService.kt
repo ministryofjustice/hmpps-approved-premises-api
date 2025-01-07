@@ -1,6 +1,5 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas3
 
-import org.apache.commons.collections4.ListUtils
 import org.apache.poi.ss.usermodel.WorkbookFactory
 import org.jetbrains.kotlinx.dataframe.io.writeExcel
 import org.springframework.beans.factory.annotation.Value
@@ -40,7 +39,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.WorkingDayServic
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas3LimitedAccessStrategy
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.BookingTransformer
 import java.io.OutputStream
-import java.util.stream.Collectors
 
 @Service
 class Cas3ReportService(
@@ -238,40 +236,38 @@ class Cas3ReportService(
   private fun splitAndRetrievePersonInfoReportData(crns: Set<String>): Map<String, PersonInformationReportData> {
     val user = userService.getUserForRequest()
 
-    val crnMap = ListUtils.partition(crns.toList(), numberOfCrn)
-      .stream().map { crns ->
-        val offenderSummaries = offenderService.getPersonSummaryInfoResults(crns.toSet(), user.cas3LimitedAccessStrategy())
-        offenderSummaries.map {
-          when (it) {
-            is PersonSummaryInfoResult.Success.Full -> {
-              val personInfo = PersonInformationReportData(
-                it.summary.pnc,
-                it.summary.name,
-                it.summary.dateOfBirth,
-                it.summary.gender,
-                it.summary.profile?.ethnicity,
-              )
-              (it.crn to personInfo)
-            }
-            else -> {
-              val personInfo = PersonInformationReportData(null, null, null, null, null)
-              (it.crn to personInfo)
-            }
-          }
+    return offenderService.getPersonSummaryInfoResultsInBatches(
+      crns = crns,
+      limitedAccessStrategy = user.cas3LimitedAccessStrategy(),
+      batchSize = numberOfCrn,
+    ).associate {
+      when (it) {
+        is PersonSummaryInfoResult.Success.Full -> {
+          val personInfo = PersonInformationReportData(
+            it.summary.pnc,
+            it.summary.name,
+            it.summary.dateOfBirth,
+            it.summary.gender,
+            it.summary.profile?.ethnicity,
+          )
+          (it.crn to personInfo)
         }
-      }.collect(Collectors.toList())
 
-    return crnMap.flatMap { it.toList() }.toMap()
+        else -> {
+          val personInfo = PersonInformationReportData(null, null, null, null, null)
+          (it.crn to personInfo)
+        }
+      }
+    }
   }
 
   private fun splitAndRetrievePersonInfo(crns: Set<String>): Map<String, PersonSummaryInfoResult> {
     val user = userService.getUserForRequest()
 
-    val crnMap = ListUtils.partition(crns.toList(), numberOfCrn)
-      .stream().map { crns ->
-        offenderService.getPersonSummaryInfoResults(crns.toSet(), user.cas3LimitedAccessStrategy()).associateBy { it.crn }
-      }.toList()
-
-    return crnMap.flatMap { it.toList() }.toMap()
+    return offenderService.getPersonSummaryInfoResultsInBatches(
+      crns = crns.toSet(),
+      limitedAccessStrategy = user.cas3LimitedAccessStrategy(),
+      batchSize = numberOfCrn,
+    ).associateBy { it.crn }
   }
 }
