@@ -10,22 +10,22 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.LostBedStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApAreaEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.BedEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.LocalAuthorityEntityFactory
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.LostBedCancellationEntityFactory
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.LostBedReasonEntityFactory
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.LostBedsEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ProbationRegionEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.RoomEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.TemporaryAccommodationPremisesEntityFactory
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.LostBedCancellationTransformer
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.LostBedReasonTransformer
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.LostBedsTransformer
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.cas3.Cas3LostBedCancellationEntityFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.cas3.Cas3LostBedReasonEntityFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.cas3.Cas3LostBedsEntityFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.cas3.Cas3LostBedCancellationTransformer
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.cas3.Cas3LostBedReasonTransformer
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.cas3.Cas3LostBedsTransformer
 import java.time.Instant
 
-class LostBedsTransformerTest {
-  private val lostBedReasonTransformer = mockk<LostBedReasonTransformer>()
-  private val lostBedCancellationTransformer = mockk<LostBedCancellationTransformer>()
+class Cas3LostBedsTransformerTest {
+  private val cas3LostBedReasonTransformer = mockk<Cas3LostBedReasonTransformer>()
+  private val cas3LostBedCancellationTransformer = mockk<Cas3LostBedCancellationTransformer>()
 
-  private val lostBedsTransformer = LostBedsTransformer(lostBedReasonTransformer, lostBedCancellationTransformer)
+  private val cas3LostBedsTransformer = Cas3LostBedsTransformer(cas3LostBedReasonTransformer, cas3LostBedCancellationTransformer)
 
   val premises = TemporaryAccommodationPremisesEntityFactory()
     .withYieldedProbationRegion {
@@ -50,9 +50,9 @@ class LostBedsTransformerTest {
     .withYieldedRoom { room }
     .produce()
 
-  private val lostBed = LostBedsEntityFactory()
+  private val lostBed = Cas3LostBedsEntityFactory()
     .withYieldedReason {
-      LostBedReasonEntityFactory()
+      Cas3LostBedReasonEntityFactory()
         .produce()
     }
     .withYieldedPremises { premises }
@@ -61,14 +61,14 @@ class LostBedsTransformerTest {
 
   @Test
   fun `Lost Bed entity is correctly transformed`() {
-    every { lostBedReasonTransformer.transformJpaToApi(lostBed.reason) } returns LostBedReason(
+    every { cas3LostBedReasonTransformer.transformJpaToApi(lostBed.reason) } returns LostBedReason(
       id = lostBed.reason.id,
       name = lostBed.reason.name,
       isActive = true,
       serviceScope = "approved-premises",
     )
 
-    val result = lostBedsTransformer.transformJpaToApi(lostBed)
+    val result = cas3LostBedsTransformer.transformJpaToApi(lostBed)
 
     assertThat(result.id).isEqualTo(lostBed.id)
     assertThat(result.startDate).isEqualTo(lostBed.startDate)
@@ -85,13 +85,13 @@ class LostBedsTransformerTest {
 
   @Test
   fun `A cancelled lost bed entity is correctly transformed`() {
-    val lostBedCancellation = LostBedCancellationEntityFactory()
+    val lostBedCancellation = Cas3LostBedCancellationEntityFactory()
       .withYieldedLostBed { lostBed }
       .produce()
 
     lostBed.cancellation = lostBedCancellation
 
-    every { lostBedReasonTransformer.transformJpaToApi(lostBed.reason) } returns LostBedReason(
+    every { cas3LostBedReasonTransformer.transformJpaToApi(lostBed.reason) } returns LostBedReason(
       id = lostBed.reason.id,
       name = lostBed.reason.name,
       isActive = true,
@@ -99,13 +99,13 @@ class LostBedsTransformerTest {
     )
 
     val now = Instant.now()
-    every { lostBedCancellationTransformer.transformJpaToApi(lostBed.cancellation!!) } returns LostBedCancellation(
+    every { cas3LostBedCancellationTransformer.transformJpaToApi(lostBed.cancellation!!) } returns LostBedCancellation(
       id = lostBed.cancellation!!.id,
       createdAt = now,
       notes = "Some notes",
     )
 
-    val result = lostBedsTransformer.transformJpaToApi(lostBed)
+    val result = cas3LostBedsTransformer.transformJpaToApi(lostBed)
 
     assertThat(result.id).isEqualTo(lostBed.id)
     assertThat(result.startDate).isEqualTo(lostBed.startDate)

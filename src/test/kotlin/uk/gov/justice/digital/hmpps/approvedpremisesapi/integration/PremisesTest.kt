@@ -36,7 +36,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.ap
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.apDeliusContextMockSuccessfulStaffMembersCall
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.BookingEntity
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.LostBedsEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PremisesEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ProbationDeliveryUnitEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ProbationRegionEntity
@@ -44,6 +43,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.RoomEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TemporaryAccommodationPremisesEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRole
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas3.Cas3LostBedsEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.deliuscontext.StaffMembersPage
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.BookingTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.PremisesTransformer
@@ -1908,7 +1908,7 @@ class PremisesTest {
     lateinit var bookingTransformer: BookingTransformer
 
     private lateinit var premises: ApprovedPremisesEntity
-    private lateinit var lostBeds: List<LostBedsEntity>
+    private lateinit var lostBeds: List<Cas3LostBedsEntity>
     private lateinit var rooms: List<RoomEntity>
     private lateinit var bookings: List<BookingEntity>
 
@@ -1933,31 +1933,31 @@ class PremisesTest {
       }
 
       lostBeds = mutableListOf(
-        lostBedsEntityFactory.produceAndPersist {
+        cas3LostBedsEntityFactory.produceAndPersist {
           withPremises(premises)
           withStartDate(startDate.plusDays(1))
           withEndDate(startDate.plusDays(2))
-          withYieldedReason { lostBedReasonEntityFactory.produceAndPersist() }
+          withYieldedReason { cas3LostBedReasonEntityFactory.produceAndPersist() }
           withBed(rooms[0].beds[0])
         },
-        lostBedsEntityFactory.produceAndPersist {
+        cas3LostBedsEntityFactory.produceAndPersist {
           withPremises(premises)
           withStartDate(startDate.plusDays(1))
           withEndDate(startDate.plusDays(2))
-          withYieldedReason { lostBedReasonEntityFactory.produceAndPersist() }
+          withYieldedReason { cas3LostBedReasonEntityFactory.produceAndPersist() }
           withBed(rooms[1].beds[0])
         },
       )
 
-      val cancelledLostBed = lostBedsEntityFactory.produceAndPersist {
+      val cancelledLostBed = cas3LostBedsEntityFactory.produceAndPersist {
         withPremises(premises)
         withStartDate(startDate.plusDays(1))
         withEndDate(startDate.plusDays(2))
-        withYieldedReason { lostBedReasonEntityFactory.produceAndPersist() }
+        withYieldedReason { cas3LostBedReasonEntityFactory.produceAndPersist() }
         withBed(rooms[2].beds[0])
       }
 
-      cancelledLostBed.cancellation = lostBedCancellationEntityFactory.produceAndPersist {
+      cancelledLostBed.cancellation = cas3LostBedCancellationEntityFactory.produceAndPersist {
         withLostBed(cancelledLostBed)
       }
 

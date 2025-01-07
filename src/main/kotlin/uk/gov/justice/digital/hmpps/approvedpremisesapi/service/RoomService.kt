@@ -6,11 +6,11 @@ import org.springframework.stereotype.Service
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.BedEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.BedRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.BookingRepository
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.LostBedsRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PremisesEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.RoomEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.RoomRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TemporaryAccommodationPremisesEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas3.Cas3LostBedsRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.ValidationErrors
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.validated
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.AuthorisableActionResult
@@ -24,7 +24,7 @@ class RoomService(
   private val roomRepository: RoomRepository,
   private val bedRepository: BedRepository,
   private val bookingRepository: BookingRepository,
-  private val lostBedsRepository: LostBedsRepository,
+  private val lostBedsRepository: Cas3LostBedsRepository,
   private val characteristicService: CharacteristicService,
 ) {
   fun getRoom(roomId: UUID) = roomRepository.findByIdOrNull(roomId)

@@ -1,4 +1,4 @@
-package uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity
+package uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas3
 
 import jakarta.persistence.Entity
 import jakarta.persistence.Id
@@ -12,22 +12,22 @@ import java.util.Objects
 import java.util.UUID
 
 @Repository
-interface LostBedCancellationRepository : JpaRepository<LostBedCancellationEntity, UUID>
+interface Cas3LostBedCancellationRepository : JpaRepository<Cas3LostBedCancellationEntity, UUID>
 
 @Entity
 @Table(name = "lost_bed_cancellations")
-data class LostBedCancellationEntity(
+data class Cas3LostBedCancellationEntity(
   @Id
   val id: UUID,
   val createdAt: OffsetDateTime,
   val notes: String?,
   @OneToOne
   @JoinColumn(name = "lost_bed_id")
-  val lostBed: LostBedsEntity,
+  val lostBed: Cas3LostBedsEntity,
 ) {
   override fun equals(other: Any?): Boolean {
     if (this === other) return true
-    if (other !is LostBedCancellationEntity) return false
+    if (other !is Cas3LostBedCancellationEntity) return false
 
     if (id != other.id) return false
     if (notes != other.notes) return false
@@ -38,5 +38,5 @@ data class LostBedCancellationEntity(
 
   override fun hashCode() = Objects.hash(notes, createdAt)
 
-  override fun toString() = "LostBedCancellationEntity:$id"
+  override fun toString() = "Cas3LostBedCancellationEntity:$id"
 }

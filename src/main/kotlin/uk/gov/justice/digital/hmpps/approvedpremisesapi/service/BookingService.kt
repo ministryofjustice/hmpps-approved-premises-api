@@ -24,7 +24,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ConfirmationE
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ConfirmationRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DateChangeEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DateChangeRepository
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.LostBedsRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementRequestRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PremisesEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PremisesRepository
@@ -32,6 +31,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TemporaryAcco
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserPermission
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserQualification
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas3.Cas3LostBedsRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.serviceScopeMatches
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PersonInfoResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.validated
@@ -67,7 +67,7 @@ class BookingService(
   private val cancellationReasonRepository: CancellationReasonRepository,
   private val bedRepository: BedRepository,
   private val placementRequestRepository: PlacementRequestRepository,
-  private val lostBedsRepository: LostBedsRepository,
+  private val lostBedsRepository: Cas3LostBedsRepository,
   private val premisesRepository: PremisesRepository,
   private val userService: UserService,
   private val userAccessService: UserAccessService,

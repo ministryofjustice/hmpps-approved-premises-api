@@ -2,8 +2,8 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.unit.reporting.util
 
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.BedEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.BookingEntity
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.LostBedsEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TemporaryAccommodationPremisesEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas3.Cas3LostBedsEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.repository.BedUtilisationBedspaceReportData
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.repository.BedUtilisationBookingCancellationReportData
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.repository.BedUtilisationBookingReportData
@@ -69,7 +69,7 @@ fun convertToCas3BedUtilisationBookingTurnaroundReportData(booking: BookingEntit
   )
 }
 
-fun convertToCas3BedUtilisationLostBedReportData(lostBed: LostBedsEntity): Cas3BedUtilisationLostBedReportData {
+fun convertToCas3BedUtilisationLostBedReportData(lostBed: Cas3LostBedsEntity): Cas3BedUtilisationLostBedReportData {
   return Cas3BedUtilisationLostBedReportData(
     bedId = lostBed.bed.id.toString(),
     startDate = lostBed.startDate,

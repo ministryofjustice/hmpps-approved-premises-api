@@ -10,23 +10,23 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApAreaEntityFact
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApprovedPremisesEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.BedEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.LocalAuthorityEntityFactory
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.LostBedReasonEntityFactory
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.LostBedsEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ProbationDeliveryUnitEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ProbationRegionEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.RoomEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.TemporaryAccommodationPremisesEntityFactory
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.LostBedsRepository
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.cas3.Cas3LostBedReasonEntityFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.cas3.Cas3LostBedsEntityFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas3.Cas3LostBedsRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.generator.LostBedsReportGenerator
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.model.LostBedReportRow
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.properties.LostBedReportProperties
 import java.time.LocalDate
 
 class LostBedReportGeneratorTest {
-  private val mockLostBedsRepository = mockk<LostBedsRepository>()
+  private val mockCas3LostBedsRepository = mockk<Cas3LostBedsRepository>()
 
   private val lostBedReportGenerator = LostBedsReportGenerator(
-    mockLostBedsRepository,
+    mockCas3LostBedsRepository,
   )
 
   @Test
@@ -43,11 +43,11 @@ class LostBedReportGeneratorTest {
       .withRoom(temporaryAccommodationRoom)
       .produce()
 
-    val temporaryAccommodationLostBed = LostBedsEntityFactory()
+    val temporaryAccommodationLostBed = Cas3LostBedsEntityFactory()
       .withBed(temporaryAccommodationBed)
       .withStartDate(LocalDate.parse("2023-04-05"))
       .withEndDate(LocalDate.parse("2023-04-07"))
-      .withYieldedReason { LostBedReasonEntityFactory().produce() }
+      .withYieldedReason { Cas3LostBedReasonEntityFactory().produce() }
       .withPremises(temporaryAccommodationPremises)
       .produce()
 
@@ -63,16 +63,28 @@ class LostBedReportGeneratorTest {
       .withRoom(approvedPremisesRoom)
       .produce()
 
-    val approvedPremisesLostBed = LostBedsEntityFactory()
+    val approvedPremisesLostBed = Cas3LostBedsEntityFactory()
       .withBed(approvedPremisesBed)
       .withStartDate(LocalDate.parse("2023-04-05"))
       .withEndDate(LocalDate.parse("2023-04-07"))
-      .withYieldedReason { LostBedReasonEntityFactory().produce() }
+      .withYieldedReason { Cas3LostBedReasonEntityFactory().produce() }
       .withPremises(approvedPremises)
       .produce()
 
-    every { mockLostBedsRepository.findAllByOverlappingDateForBed(LocalDate.parse("2023-04-01"), LocalDate.parse("2023-04-30"), temporaryAccommodationBed) } returns listOf(temporaryAccommodationLostBed)
-    every { mockLostBedsRepository.findAllByOverlappingDateForBed(LocalDate.parse("2023-04-01"), LocalDate.parse("2023-04-30"), approvedPremisesBed) } returns listOf(approvedPremisesLostBed)
+    every {
+      mockCas3LostBedsRepository.findAllByOverlappingDateForBed(
+        LocalDate.parse("2023-04-01"),
+        LocalDate.parse("2023-04-30"),
+        temporaryAccommodationBed,
+      )
+    } returns listOf(temporaryAccommodationLostBed)
+    every {
+      mockCas3LostBedsRepository.findAllByOverlappingDateForBed(
+        LocalDate.parse("2023-04-01"),
+        LocalDate.parse("2023-04-30"),
+        approvedPremisesBed,
+      )
+    } returns listOf(approvedPremisesLostBed)
 
     val result = lostBedReportGenerator.createReport(
       listOf(approvedPremisesBed, temporaryAccommodationBed),
@@ -113,11 +125,11 @@ class LostBedReportGeneratorTest {
       .withRoom(temporaryAccommodationRoomInProbationRegion)
       .produce()
 
-    val temporaryAccommodationLostBedInProbationArea = LostBedsEntityFactory()
+    val temporaryAccommodationLostBedInProbationArea = Cas3LostBedsEntityFactory()
       .withBed(temporaryAccommodationBedInProbationRegion)
       .withStartDate(LocalDate.parse("2023-04-05"))
       .withEndDate(LocalDate.parse("2023-04-07"))
-      .withYieldedReason { LostBedReasonEntityFactory().produce() }
+      .withYieldedReason { Cas3LostBedReasonEntityFactory().produce() }
       .withPremises(temporaryAccommodationPremisesInProbationRegion)
       .produce()
 
@@ -134,16 +146,28 @@ class LostBedReportGeneratorTest {
       .withRoom(temporaryAccommodationRoomOutsideProbationRegion)
       .produce()
 
-    val temporaryAccommodationLostBedOutsideProbationArea = LostBedsEntityFactory()
+    val temporaryAccommodationLostBedOutsideProbationArea = Cas3LostBedsEntityFactory()
       .withBed(temporaryAccommodationBedOutsideProbationRegion)
       .withStartDate(LocalDate.parse("2023-04-05"))
       .withEndDate(LocalDate.parse("2023-04-07"))
-      .withYieldedReason { LostBedReasonEntityFactory().produce() }
+      .withYieldedReason { Cas3LostBedReasonEntityFactory().produce() }
       .withPremises(temporaryAccommodationPremisesOutsideProbationRegion)
       .produce()
 
-    every { mockLostBedsRepository.findAllByOverlappingDateForBed(LocalDate.parse("2023-04-01"), LocalDate.parse("2023-04-30"), temporaryAccommodationBedInProbationRegion) } returns listOf(temporaryAccommodationLostBedInProbationArea)
-    every { mockLostBedsRepository.findAllByOverlappingDateForBed(LocalDate.parse("2023-04-01"), LocalDate.parse("2023-04-30"), temporaryAccommodationBedOutsideProbationRegion) } returns listOf(temporaryAccommodationLostBedOutsideProbationArea)
+    every {
+      mockCas3LostBedsRepository.findAllByOverlappingDateForBed(
+        LocalDate.parse("2023-04-01"),
+        LocalDate.parse("2023-04-30"),
+        temporaryAccommodationBedInProbationRegion,
+      )
+    } returns listOf(temporaryAccommodationLostBedInProbationArea)
+    every {
+      mockCas3LostBedsRepository.findAllByOverlappingDateForBed(
+        LocalDate.parse("2023-04-01"),
+        LocalDate.parse("2023-04-30"),
+        temporaryAccommodationBedOutsideProbationRegion,
+      )
+    } returns listOf(temporaryAccommodationLostBedOutsideProbationArea)
 
     val result = lostBedReportGenerator.createReport(
       listOf(temporaryAccommodationBedInProbationRegion, temporaryAccommodationBedOutsideProbationRegion),
@@ -184,11 +208,11 @@ class LostBedReportGeneratorTest {
       .withRoom(temporaryAccommodationRoomInProbationRegion)
       .produce()
 
-    val temporaryAccommodationLostBedInProbationArea = LostBedsEntityFactory()
+    val temporaryAccommodationLostBedInProbationArea = Cas3LostBedsEntityFactory()
       .withBed(temporaryAccommodationBedInProbationRegion)
       .withStartDate(LocalDate.parse("2023-04-05"))
       .withEndDate(LocalDate.parse("2023-04-07"))
-      .withYieldedReason { LostBedReasonEntityFactory().produce() }
+      .withYieldedReason { Cas3LostBedReasonEntityFactory().produce() }
       .withPremises(temporaryAccommodationPremisesInProbationRegion)
       .produce()
 
@@ -205,16 +229,28 @@ class LostBedReportGeneratorTest {
       .withRoom(temporaryAccommodationRoomOutsideProbationRegion)
       .produce()
 
-    val temporaryAccommodationLostBedOutsideProbationArea = LostBedsEntityFactory()
+    val temporaryAccommodationLostBedOutsideProbationArea = Cas3LostBedsEntityFactory()
       .withBed(temporaryAccommodationBedOutsideProbationRegion)
       .withStartDate(LocalDate.parse("2023-04-05"))
       .withEndDate(LocalDate.parse("2023-04-07"))
-      .withYieldedReason { LostBedReasonEntityFactory().produce() }
+      .withYieldedReason { Cas3LostBedReasonEntityFactory().produce() }
       .withPremises(temporaryAccommodationPremisesOutsideProbationRegion)
       .produce()
 
-    every { mockLostBedsRepository.findAllByOverlappingDateForBed(LocalDate.parse("2023-04-01"), LocalDate.parse("2023-04-30"), temporaryAccommodationBedInProbationRegion) } returns listOf(temporaryAccommodationLostBedInProbationArea)
-    every { mockLostBedsRepository.findAllByOverlappingDateForBed(LocalDate.parse("2023-04-01"), LocalDate.parse("2023-04-30"), temporaryAccommodationBedOutsideProbationRegion) } returns listOf(temporaryAccommodationLostBedOutsideProbationArea)
+    every {
+      mockCas3LostBedsRepository.findAllByOverlappingDateForBed(
+        LocalDate.parse("2023-04-01"),
+        LocalDate.parse("2023-04-30"),
+        temporaryAccommodationBedInProbationRegion,
+      )
+    } returns listOf(temporaryAccommodationLostBedInProbationArea)
+    every {
+      mockCas3LostBedsRepository.findAllByOverlappingDateForBed(
+        LocalDate.parse("2023-04-01"),
+        LocalDate.parse("2023-04-30"),
+        temporaryAccommodationBedOutsideProbationRegion,
+      )
+    } returns listOf(temporaryAccommodationLostBedOutsideProbationArea)
 
     val result = lostBedReportGenerator.createReport(
       listOf(temporaryAccommodationBedInProbationRegion, temporaryAccommodationBedOutsideProbationRegion),
@@ -253,15 +289,21 @@ class LostBedReportGeneratorTest {
       .withRoom(temporaryAccommodationRoom)
       .produce()
 
-    val temporaryAccommodationLostBed = LostBedsEntityFactory()
+    val temporaryAccommodationLostBed = Cas3LostBedsEntityFactory()
       .withBed(temporaryAccommodationBed)
       .withStartDate(LocalDate.parse("2023-04-05"))
       .withEndDate(LocalDate.parse("2023-04-07"))
-      .withYieldedReason { LostBedReasonEntityFactory().produce() }
+      .withYieldedReason { Cas3LostBedReasonEntityFactory().produce() }
       .withPremises(temporaryAccommodationPremises)
       .produce()
 
-    every { mockLostBedsRepository.findAllByOverlappingDateForBed(LocalDate.parse("2023-04-01"), LocalDate.parse("2023-04-30"), temporaryAccommodationBed) } returns listOf(temporaryAccommodationLostBed)
+    every {
+      mockCas3LostBedsRepository.findAllByOverlappingDateForBed(
+        LocalDate.parse("2023-04-01"),
+        LocalDate.parse("2023-04-30"),
+        temporaryAccommodationBed,
+      )
+    } returns listOf(temporaryAccommodationLostBed)
 
     val result = lostBedReportGenerator.createReport(
       listOf(temporaryAccommodationBed),
@@ -308,15 +350,21 @@ class LostBedReportGeneratorTest {
       .withRoom(temporaryAccommodationRoom)
       .produce()
 
-    val temporaryAccommodationLostBed = LostBedsEntityFactory()
+    val temporaryAccommodationLostBed = Cas3LostBedsEntityFactory()
       .withBed(temporaryAccommodationBed)
       .withStartDate(LocalDate.parse("2023-03-28"))
       .withEndDate(LocalDate.parse("2023-04-07"))
-      .withYieldedReason { LostBedReasonEntityFactory().produce() }
+      .withYieldedReason { Cas3LostBedReasonEntityFactory().produce() }
       .withPremises(temporaryAccommodationPremises)
       .produce()
 
-    every { mockLostBedsRepository.findAllByOverlappingDateForBed(LocalDate.parse("2023-04-01"), LocalDate.parse("2023-04-30"), temporaryAccommodationBed) } returns listOf(temporaryAccommodationLostBed)
+    every {
+      mockCas3LostBedsRepository.findAllByOverlappingDateForBed(
+        LocalDate.parse("2023-04-01"),
+        LocalDate.parse("2023-04-30"),
+        temporaryAccommodationBed,
+      )
+    } returns listOf(temporaryAccommodationLostBed)
 
     val result = lostBedReportGenerator.createReport(
       listOf(temporaryAccommodationBed),

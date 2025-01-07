@@ -13,7 +13,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.BedRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.BookingRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.BookingSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.LocalAuthorityAreaRepository
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.LostBedsRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PremisesEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PremisesRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PremisesWithBedCount
@@ -22,6 +21,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ProbationDeli
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ProbationRegionRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.RoomRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TemporaryAccommodationPremisesEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas3.Cas3LostBedsRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.Availability
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.ValidationErrors
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.validated
@@ -34,7 +34,7 @@ import java.util.UUID
 @Service
 class PremisesService(
   private val premisesRepository: PremisesRepository,
-  private val lostBedsRepository: LostBedsRepository,
+  private val lostBedsRepository: Cas3LostBedsRepository,
   private val bookingRepository: BookingRepository,
   private val localAuthorityAreaRepository: LocalAuthorityAreaRepository,
   private val probationRegionRepository: ProbationRegionRepository,

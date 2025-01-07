@@ -13,7 +13,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.given
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.govUKBankHolidaysAPIMockSuccessfullCallWithEmptyResponse
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ProbationRegionEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRole
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.LostBedsTransformer
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.cas3.Cas3LostBedsTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.unit.util.withinSeconds
 import java.time.LocalDate
 import java.time.OffsetDateTime
@@ -21,7 +21,7 @@ import java.util.UUID
 
 class LostBedsTest : IntegrationTestBase() {
   @Autowired
-  lateinit var lostBedsTransformer: LostBedsTransformer
+  lateinit var cas3LostBedsTransformer: Cas3LostBedsTransformer
 
   lateinit var probationRegion: ProbationRegionEntity
 
@@ -64,10 +64,10 @@ class LostBedsTest : IntegrationTestBase() {
         withYieldedProbationRegion { probationRegion }
       }
 
-      val lostBeds = lostBedsEntityFactory.produceAndPersist {
+      val lostBeds = cas3LostBedsEntityFactory.produceAndPersist {
         withStartDate(LocalDate.now().plusDays(2))
         withEndDate(LocalDate.now().plusDays(4))
-        withYieldedReason { lostBedReasonEntityFactory.produceAndPersist() }
+        withYieldedReason { cas3LostBedReasonEntityFactory.produceAndPersist() }
         withBed(
           bedEntityFactory.produceAndPersist {
             withYieldedRoom {
@@ -80,7 +80,7 @@ class LostBedsTest : IntegrationTestBase() {
         withPremises(premises)
       }
 
-      val expectedJson = objectMapper.writeValueAsString(listOf(lostBedsTransformer.transformJpaToApi(lostBeds)))
+      val expectedJson = objectMapper.writeValueAsString(listOf(cas3LostBedsTransformer.transformJpaToApi(lostBeds)))
 
       webTestClient.get()
         .uri("/premises/${premises.id}/lost-beds")
@@ -109,10 +109,10 @@ class LostBedsTest : IntegrationTestBase() {
         }
       }
 
-      lostBedsEntityFactory.produceAndPersist {
+      cas3LostBedsEntityFactory.produceAndPersist {
         withStartDate(LocalDate.now().plusDays(2))
         withEndDate(LocalDate.now().plusDays(4))
-        withYieldedReason { lostBedReasonEntityFactory.produceAndPersist() }
+        withYieldedReason { cas3LostBedReasonEntityFactory.produceAndPersist() }
         withYieldedBed { bed }
         withPremises(premises)
       }
@@ -134,10 +134,10 @@ class LostBedsTest : IntegrationTestBase() {
       withYieldedProbationRegion { probationRegion }
     }
 
-    val lostBeds = lostBedsEntityFactory.produceAndPersist {
+    val lostBeds = cas3LostBedsEntityFactory.produceAndPersist {
       withStartDate(LocalDate.now().plusDays(2))
       withEndDate(LocalDate.now().plusDays(4))
-      withYieldedReason { lostBedReasonEntityFactory.produceAndPersist() }
+      withYieldedReason { cas3LostBedReasonEntityFactory.produceAndPersist() }
       withBed(
         bedEntityFactory.produceAndPersist {
           withYieldedRoom {
@@ -202,15 +202,15 @@ class LostBedsTest : IntegrationTestBase() {
         }
       }
 
-      val lostBeds = lostBedsEntityFactory.produceAndPersist {
+      val lostBeds = cas3LostBedsEntityFactory.produceAndPersist {
         withStartDate(LocalDate.now().plusDays(2))
         withEndDate(LocalDate.now().plusDays(4))
-        withYieldedReason { lostBedReasonEntityFactory.produceAndPersist() }
+        withYieldedReason { cas3LostBedReasonEntityFactory.produceAndPersist() }
         withYieldedBed { bed }
         withPremises(premises)
       }
 
-      val expectedJson = objectMapper.writeValueAsString(lostBedsTransformer.transformJpaToApi(lostBeds))
+      val expectedJson = objectMapper.writeValueAsString(cas3LostBedsTransformer.transformJpaToApi(lostBeds))
 
       webTestClient.get()
         .uri("/premises/${premises.id}/lost-beds/${lostBeds.id}")
@@ -239,15 +239,15 @@ class LostBedsTest : IntegrationTestBase() {
         }
       }
 
-      val lostBeds = lostBedsEntityFactory.produceAndPersist {
+      val lostBeds = cas3LostBedsEntityFactory.produceAndPersist {
         withStartDate(LocalDate.now().plusDays(2))
         withEndDate(LocalDate.now().plusDays(4))
-        withYieldedReason { lostBedReasonEntityFactory.produceAndPersist() }
+        withYieldedReason { cas3LostBedReasonEntityFactory.produceAndPersist() }
         withYieldedBed { bed }
         withPremises(premises)
       }
 
-      val expectedJson = objectMapper.writeValueAsString(lostBedsTransformer.transformJpaToApi(lostBeds))
+      val expectedJson = objectMapper.writeValueAsString(cas3LostBedsTransformer.transformJpaToApi(lostBeds))
 
       webTestClient.get()
         .uri("/premises/${premises.id}/lost-beds/${lostBeds.id}")
@@ -295,7 +295,7 @@ class LostBedsTest : IntegrationTestBase() {
         withYieldedProbationRegion { probationRegion }
       }
 
-      val reason = lostBedReasonEntityFactory.produceAndPersist {
+      val reason = cas3LostBedReasonEntityFactory.produceAndPersist {
         withServiceScope(ServiceName.temporaryAccommodation.value)
       }
 
@@ -339,7 +339,7 @@ class LostBedsTest : IntegrationTestBase() {
         }
       }
 
-      val reason = lostBedReasonEntityFactory.produceAndPersist {
+      val reason = cas3LostBedReasonEntityFactory.produceAndPersist {
         withServiceScope(ServiceName.temporaryAccommodation.value)
       }
 
@@ -391,7 +391,7 @@ class LostBedsTest : IntegrationTestBase() {
         }
       }
 
-      val reason = lostBedReasonEntityFactory.produceAndPersist {
+      val reason = cas3LostBedReasonEntityFactory.produceAndPersist {
         withServiceScope(ServiceName.temporaryAccommodation.value)
       }
 
@@ -422,10 +422,10 @@ class LostBedsTest : IntegrationTestBase() {
       withYieldedProbationRegion { probationRegion }
     }
 
-    val lostBeds = lostBedsEntityFactory.produceAndPersist {
+    val lostBeds = cas3LostBedsEntityFactory.produceAndPersist {
       withStartDate(LocalDate.now().plusDays(2))
       withEndDate(LocalDate.now().plusDays(4))
-      withYieldedReason { lostBedReasonEntityFactory.produceAndPersist() }
+      withYieldedReason { cas3LostBedReasonEntityFactory.produceAndPersist() }
       withBed(
         bedEntityFactory.produceAndPersist {
           withYieldedRoom {
@@ -525,15 +525,15 @@ class LostBedsTest : IntegrationTestBase() {
         }
       }
 
-      val lostBeds = lostBedsEntityFactory.produceAndPersist {
+      val lostBeds = cas3LostBedsEntityFactory.produceAndPersist {
         withStartDate(LocalDate.now().plusDays(2))
         withEndDate(LocalDate.now().plusDays(4))
-        withYieldedReason { lostBedReasonEntityFactory.produceAndPersist() }
+        withYieldedReason { cas3LostBedReasonEntityFactory.produceAndPersist() }
         withYieldedBed { bed }
         withPremises(premises)
       }
 
-      val reason = lostBedReasonEntityFactory.produceAndPersist {
+      val reason = cas3LostBedReasonEntityFactory.produceAndPersist {
         withServiceScope(ServiceName.temporaryAccommodation.value)
       }
 
@@ -582,15 +582,15 @@ class LostBedsTest : IntegrationTestBase() {
         }
       }
 
-      val lostBeds = lostBedsEntityFactory.produceAndPersist {
+      val lostBeds = cas3LostBedsEntityFactory.produceAndPersist {
         withStartDate(LocalDate.now().plusDays(2))
         withEndDate(LocalDate.now().plusDays(4))
-        withYieldedReason { lostBedReasonEntityFactory.produceAndPersist() }
+        withYieldedReason { cas3LostBedReasonEntityFactory.produceAndPersist() }
         withYieldedBed { bed }
         withPremises(premises)
       }
 
-      val reason = lostBedReasonEntityFactory.produceAndPersist {
+      val reason = cas3LostBedReasonEntityFactory.produceAndPersist {
         withServiceScope(ServiceName.temporaryAccommodation.value)
       }
 
@@ -620,10 +620,10 @@ class LostBedsTest : IntegrationTestBase() {
       withYieldedProbationRegion { probationRegion }
     }
 
-    val lostBeds = lostBedsEntityFactory.produceAndPersist {
+    val lostBeds = cas3LostBedsEntityFactory.produceAndPersist {
       withStartDate(LocalDate.now().plusDays(2))
       withEndDate(LocalDate.now().plusDays(4))
-      withYieldedReason { lostBedReasonEntityFactory.produceAndPersist() }
+      withYieldedReason { cas3LostBedReasonEntityFactory.produceAndPersist() }
       withBed(
         bedEntityFactory.produceAndPersist {
           withYieldedRoom {
@@ -703,15 +703,15 @@ class LostBedsTest : IntegrationTestBase() {
         }
       }
 
-      val lostBeds = lostBedsEntityFactory.produceAndPersist {
+      val lostBeds = cas3LostBedsEntityFactory.produceAndPersist {
         withStartDate(LocalDate.now().plusDays(2))
         withEndDate(LocalDate.now().plusDays(4))
-        withYieldedReason { lostBedReasonEntityFactory.produceAndPersist() }
+        withYieldedReason { cas3LostBedReasonEntityFactory.produceAndPersist() }
         withYieldedBed { bed }
         withPremises(premises)
       }
 
-      val reason = lostBedReasonEntityFactory.produceAndPersist {
+      val reason = cas3LostBedReasonEntityFactory.produceAndPersist {
         withServiceScope(ServiceName.temporaryAccommodation.value)
       }
 
@@ -748,15 +748,15 @@ class LostBedsTest : IntegrationTestBase() {
         }
       }
 
-      val lostBeds = lostBedsEntityFactory.produceAndPersist {
+      val lostBeds = cas3LostBedsEntityFactory.produceAndPersist {
         withStartDate(LocalDate.now().plusDays(2))
         withEndDate(LocalDate.now().plusDays(4))
-        withYieldedReason { lostBedReasonEntityFactory.produceAndPersist() }
+        withYieldedReason { cas3LostBedReasonEntityFactory.produceAndPersist() }
         withYieldedBed { bed }
         withPremises(premises)
       }
 
-      val reason = lostBedReasonEntityFactory.produceAndPersist {
+      val reason = cas3LostBedReasonEntityFactory.produceAndPersist {
         withServiceScope(ServiceName.temporaryAccommodation.value)
       }
 
@@ -792,7 +792,7 @@ class LostBedsTest : IntegrationTestBase() {
           }
         }
 
-        val reason = lostBedReasonEntityFactory.produceAndPersist {
+        val reason = cas3LostBedReasonEntityFactory.produceAndPersist {
           withServiceScope(ServiceName.temporaryAccommodation.value)
         }
 
@@ -848,7 +848,7 @@ class LostBedsTest : IntegrationTestBase() {
           }
         }
 
-        val reason = lostBedReasonEntityFactory.produceAndPersist {
+        val reason = cas3LostBedReasonEntityFactory.produceAndPersist {
           withServiceScope(ServiceName.temporaryAccommodation.value)
         }
 
@@ -915,16 +915,16 @@ class LostBedsTest : IntegrationTestBase() {
           }
         }
 
-        val reason = lostBedReasonEntityFactory.produceAndPersist {
+        val reason = cas3LostBedReasonEntityFactory.produceAndPersist {
           withServiceScope(ServiceName.temporaryAccommodation.value)
         }
 
-        val existingLostBed = lostBedsEntityFactory.produceAndPersist {
+        val existingLostBed = cas3LostBedsEntityFactory.produceAndPersist {
           withBed(bed)
           withPremises(premises)
           withStartDate(LocalDate.parse("2022-07-15"))
           withEndDate(LocalDate.parse("2022-08-15"))
-          withYieldedReason { lostBedReasonEntityFactory.produceAndPersist() }
+          withYieldedReason { cas3LostBedReasonEntityFactory.produceAndPersist() }
         }
 
         webTestClient.post()
@@ -968,21 +968,21 @@ class LostBedsTest : IntegrationTestBase() {
           }
         }
 
-        val reason = lostBedReasonEntityFactory.produceAndPersist {
+        val reason = cas3LostBedReasonEntityFactory.produceAndPersist {
           withServiceScope(ServiceName.temporaryAccommodation.value)
         }
 
-        val existingLostBed = lostBedsEntityFactory.produceAndPersist {
+        val existingLostBed = cas3LostBedsEntityFactory.produceAndPersist {
           withBed(bed)
           withPremises(premises)
           withStartDate(LocalDate.parse("2022-07-15"))
           withEndDate(LocalDate.parse("2022-08-15"))
           withYieldedReason {
-            lostBedReasonEntityFactory.produceAndPersist()
+            cas3LostBedReasonEntityFactory.produceAndPersist()
           }
         }
 
-        existingLostBed.cancellation = lostBedCancellationEntityFactory.produceAndPersist {
+        existingLostBed.cancellation = cas3LostBedCancellationEntityFactory.produceAndPersist {
           withLostBed(existingLostBed)
           withCreatedAt(OffsetDateTime.parse("2022-07-01T12:34:56.789Z"))
         }
@@ -1034,15 +1034,15 @@ class LostBedsTest : IntegrationTestBase() {
         }
       }
 
-      val lostBeds = lostBedsEntityFactory.produceAndPersist {
+      val lostBeds = cas3LostBedsEntityFactory.produceAndPersist {
         withStartDate(LocalDate.parse("2022-08-16"))
         withEndDate(LocalDate.parse("2022-08-30"))
-        withYieldedReason { lostBedReasonEntityFactory.produceAndPersist() }
+        withYieldedReason { cas3LostBedReasonEntityFactory.produceAndPersist() }
         withYieldedBed { bed }
         withPremises(premises)
       }
 
-      val reason = lostBedReasonEntityFactory.produceAndPersist {
+      val reason = cas3LostBedReasonEntityFactory.produceAndPersist {
         withServiceScope(ServiceName.temporaryAccommodation.value)
       }
 
@@ -1096,15 +1096,15 @@ class LostBedsTest : IntegrationTestBase() {
           }
         }
 
-        val lostBeds = lostBedsEntityFactory.produceAndPersist {
+        val lostBeds = cas3LostBedsEntityFactory.produceAndPersist {
           withStartDate(LocalDate.parse("2022-08-16"))
           withEndDate(LocalDate.parse("2022-08-30"))
-          withYieldedReason { lostBedReasonEntityFactory.produceAndPersist() }
+          withYieldedReason { cas3LostBedReasonEntityFactory.produceAndPersist() }
           withYieldedBed { bed }
           withPremises(premises)
         }
 
-        val reason = lostBedReasonEntityFactory.produceAndPersist {
+        val reason = cas3LostBedReasonEntityFactory.produceAndPersist {
           withServiceScope(ServiceName.temporaryAccommodation.value)
         }
 
@@ -1170,24 +1170,24 @@ class LostBedsTest : IntegrationTestBase() {
           }
         }
 
-        val reason = lostBedReasonEntityFactory.produceAndPersist {
+        val reason = cas3LostBedReasonEntityFactory.produceAndPersist {
           withServiceScope(ServiceName.temporaryAccommodation.value)
         }
 
-        val lostBeds = lostBedsEntityFactory.produceAndPersist {
+        val lostBeds = cas3LostBedsEntityFactory.produceAndPersist {
           withStartDate(LocalDate.parse("2022-08-16"))
           withEndDate(LocalDate.parse("2022-08-30"))
-          withYieldedReason { lostBedReasonEntityFactory.produceAndPersist() }
+          withYieldedReason { cas3LostBedReasonEntityFactory.produceAndPersist() }
           withYieldedBed { bed }
           withPremises(premises)
         }
 
-        val existingLostBed = lostBedsEntityFactory.produceAndPersist {
+        val existingLostBed = cas3LostBedsEntityFactory.produceAndPersist {
           withBed(bed)
           withPremises(premises)
           withStartDate(LocalDate.parse("2022-07-15"))
           withEndDate(LocalDate.parse("2022-08-15"))
-          withYieldedReason { lostBedReasonEntityFactory.produceAndPersist() }
+          withYieldedReason { cas3LostBedReasonEntityFactory.produceAndPersist() }
         }
 
         webTestClient.put()
@@ -1230,29 +1230,29 @@ class LostBedsTest : IntegrationTestBase() {
           }
         }
 
-        val reason = lostBedReasonEntityFactory.produceAndPersist {
+        val reason = cas3LostBedReasonEntityFactory.produceAndPersist {
           withServiceScope(ServiceName.temporaryAccommodation.value)
         }
 
-        val lostBeds = lostBedsEntityFactory.produceAndPersist {
+        val lostBeds = cas3LostBedsEntityFactory.produceAndPersist {
           withStartDate(LocalDate.parse("2022-08-16"))
           withEndDate(LocalDate.parse("2022-08-30"))
-          withYieldedReason { lostBedReasonEntityFactory.produceAndPersist() }
+          withYieldedReason { cas3LostBedReasonEntityFactory.produceAndPersist() }
           withYieldedBed { bed }
           withPremises(premises)
         }
 
-        val existingLostBed = lostBedsEntityFactory.produceAndPersist {
+        val existingLostBed = cas3LostBedsEntityFactory.produceAndPersist {
           withBed(bed)
           withPremises(premises)
           withStartDate(LocalDate.parse("2022-07-15"))
           withEndDate(LocalDate.parse("2022-08-15"))
           withYieldedReason {
-            lostBedReasonEntityFactory.produceAndPersist()
+            cas3LostBedReasonEntityFactory.produceAndPersist()
           }
         }
 
-        existingLostBed.cancellation = lostBedCancellationEntityFactory.produceAndPersist {
+        existingLostBed.cancellation = cas3LostBedCancellationEntityFactory.produceAndPersist {
           withLostBed(existingLostBed)
           withCreatedAt(OffsetDateTime.parse("2022-07-01T12:34:56.789Z"))
         }

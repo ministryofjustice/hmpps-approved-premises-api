@@ -7,11 +7,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PropertyStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.BookingRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.LocalAuthorityAreaRepository
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.LostBedCancellationEntity
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.LostBedCancellationRepository
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.LostBedReasonRepository
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.LostBedsEntity
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.LostBedsRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PremisesEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PremisesRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ProbationDeliveryUnitEntity
@@ -19,6 +14,11 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ProbationDeli
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ProbationRegionRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TemporaryAccommodationPremisesEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TemporaryAccommodationPremisesSummary
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas3.Cas3LostBedCancellationEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas3.Cas3LostBedCancellationRepository
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas3.Cas3LostBedReasonRepository
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas3.Cas3LostBedsEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas3.Cas3LostBedsRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.Availability
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.ValidationErrors
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.validated
@@ -33,9 +33,9 @@ import java.util.UUID
 @Service
 class Cas3PremisesService(
   private val premisesRepository: PremisesRepository,
-  private val lostBedsRepository: LostBedsRepository,
-  private val lostBedReasonRepository: LostBedReasonRepository,
-  private val lostBedCancellationRepository: LostBedCancellationRepository,
+  private val cas3LostBedsRepository: Cas3LostBedsRepository,
+  private val cas3LostBedReasonRepository: Cas3LostBedReasonRepository,
+  private val cas3LostBedCancellationRepository: Cas3LostBedCancellationRepository,
   private val bookingRepository: BookingRepository,
   private val localAuthorityAreaRepository: LocalAuthorityAreaRepository,
   private val probationRegionRepository: ProbationRegionRepository,
@@ -292,7 +292,7 @@ class Cas3PremisesService(
     if (endDate.isBefore(startDate)) throw RuntimeException("startDate must be before endDate when calculating availability for range")
 
     val bookings = bookingRepository.findAllByPremisesIdAndOverlappingDate(premises.id, startDate, endDate)
-    val voidBedspaces = lostBedsRepository.findAllByPremisesIdAndOverlappingDate(premises.id, startDate, endDate)
+    val voidBedspaces = cas3LostBedsRepository.findAllByPremisesIdAndOverlappingDate(premises.id, startDate, endDate)
 
     return startDate.getDaysUntilExclusiveEnd(endDate).map { date ->
       val bookingsOnDay = bookings.filter { booking -> booking.getArrivalDate() <= date && booking.getDepartureDate() > date }
@@ -317,7 +317,7 @@ class Cas3PremisesService(
     referenceNumber: String?,
     notes: String?,
     bedId: UUID,
-  ): ValidatableActionResult<LostBedsEntity> =
+  ): ValidatableActionResult<Cas3LostBedsEntity> =
     validated {
       if (endDate.isBefore(startDate)) {
         "$.endDate" hasValidationError "beforeStartDate"
@@ -328,7 +328,7 @@ class Cas3PremisesService(
         "$.bedId" hasValidationError "doesNotExist"
       }
 
-      val reason = lostBedReasonRepository.findByIdOrNull(reasonId)
+      val reason = cas3LostBedReasonRepository.findByIdOrNull(reasonId)
       if (reason == null) {
         "$.reason" hasValidationError "doesNotExist"
       } else if (!serviceScopeMatches(reason.serviceScope)) {
@@ -339,8 +339,8 @@ class Cas3PremisesService(
         return fieldValidationError
       }
 
-      val voidBedspacesEntity = lostBedsRepository.save(
-        LostBedsEntity(
+      val voidBedspacesEntity = cas3LostBedsRepository.save(
+        Cas3LostBedsEntity(
           id = UUID.randomUUID(),
           premises = premises,
           startDate = startDate,
@@ -363,8 +363,8 @@ class Cas3PremisesService(
     reasonId: UUID,
     referenceNumber: String?,
     notes: String?,
-  ): AuthorisableActionResult<ValidatableActionResult<LostBedsEntity>> {
-    val voidBedspace = lostBedsRepository.findByIdOrNull(voidBedspaceId)
+  ): AuthorisableActionResult<ValidatableActionResult<Cas3LostBedsEntity>> {
+    val voidBedspace = cas3LostBedsRepository.findByIdOrNull(voidBedspaceId)
       ?: return AuthorisableActionResult.NotFound()
 
     return AuthorisableActionResult.Success(
@@ -373,7 +373,7 @@ class Cas3PremisesService(
           "$.endDate" hasValidationError "beforeStartDate"
         }
 
-        val reason = lostBedReasonRepository.findByIdOrNull(reasonId)
+        val reason = cas3LostBedReasonRepository.findByIdOrNull(reasonId)
         if (reason == null) {
           "$.reason" hasValidationError "doesNotExist"
         } else if (!serviceScopeMatches(reason.serviceScope)) {
@@ -384,7 +384,7 @@ class Cas3PremisesService(
           return@validated fieldValidationError
         }
 
-        val updatedVoidBedspacesEntity = lostBedsRepository.save(
+        val updatedVoidBedspacesEntity = cas3LostBedsRepository.save(
           voidBedspace.apply {
             this.startDate = startDate
             this.endDate = endDate
@@ -400,15 +400,15 @@ class Cas3PremisesService(
   }
 
   fun cancelVoidBedspace(
-    voidBedspace: LostBedsEntity,
+    voidBedspace: Cas3LostBedsEntity,
     notes: String?,
-  ) = validated<LostBedCancellationEntity> {
+  ) = validated<Cas3LostBedCancellationEntity> {
     if (voidBedspace.cancellation != null) {
       return generalError("This Void Bedspace already has a cancellation set")
     }
 
-    val cancellationEntity = lostBedCancellationRepository.save(
-      LostBedCancellationEntity(
+    val cancellationEntity = cas3LostBedCancellationRepository.save(
+      Cas3LostBedCancellationEntity(
         id = UUID.randomUUID(),
         lostBed = voidBedspace,
         notes = notes,

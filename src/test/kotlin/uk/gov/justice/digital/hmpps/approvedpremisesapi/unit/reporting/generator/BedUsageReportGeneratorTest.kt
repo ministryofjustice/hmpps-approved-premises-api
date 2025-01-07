@@ -13,16 +13,16 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApprovedPremises
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.BedEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.BookingEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.LocalAuthorityEntityFactory
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.LostBedReasonEntityFactory
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.LostBedsEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ProbationDeliveryUnitEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ProbationRegionEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.RoomEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.TemporaryAccommodationPremisesEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.TurnaroundEntityFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.cas3.Cas3LostBedReasonEntityFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.cas3.Cas3LostBedsEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.BedEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.BookingRepository
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.LostBedsRepository
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas3.Cas3LostBedsRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.generator.BedUsageReportGenerator
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.model.BedUsageReportRow
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.model.BedUsageType
@@ -35,7 +35,7 @@ import java.time.LocalDate
 class BedUsageReportGeneratorTest {
   private val mockBookingTransformer = mockk<BookingTransformer>()
   private val mockBookingRepository = mockk<BookingRepository>()
-  private val mockLostBedsRepository = mockk<LostBedsRepository>()
+  private val mockLostBedsRepository = mockk<Cas3LostBedsRepository>()
   private val mockWorkingDayService = mockk<WorkingDayService>()
 
   private val bedUsageReportGenerator = BedUsageReportGenerator(
@@ -61,11 +61,11 @@ class BedUsageReportGeneratorTest {
       .withRoom(temporaryAccommodationRoom)
       .produce()
 
-    val temporaryAccommodationLostBed = LostBedsEntityFactory()
+    val temporaryAccommodationLostBed = Cas3LostBedsEntityFactory()
       .withBed(temporaryAccommodationBed)
       .withStartDate(LocalDate.parse("2023-04-05"))
       .withEndDate(LocalDate.parse("2023-04-07"))
-      .withYieldedReason { LostBedReasonEntityFactory().produce() }
+      .withYieldedReason { Cas3LostBedReasonEntityFactory().produce() }
       .withPremises(temporaryAccommodationPremises)
       .produce()
 
@@ -81,11 +81,11 @@ class BedUsageReportGeneratorTest {
       .withRoom(approvedPremisesRoom)
       .produce()
 
-    val approvedPremisesLostBed = LostBedsEntityFactory()
+    val approvedPremisesLostBed = Cas3LostBedsEntityFactory()
       .withBed(approvedPremisesBed)
       .withStartDate(LocalDate.parse("2023-04-05"))
       .withEndDate(LocalDate.parse("2023-04-07"))
-      .withYieldedReason { LostBedReasonEntityFactory().produce() }
+      .withYieldedReason { Cas3LostBedReasonEntityFactory().produce() }
       .withPremises(approvedPremises)
       .produce()
 
@@ -120,11 +120,11 @@ class BedUsageReportGeneratorTest {
       .withRoom(temporaryAccommodationRoom)
       .produce()
 
-    val temporaryAccommodationLostBed = LostBedsEntityFactory()
+    val temporaryAccommodationLostBed = Cas3LostBedsEntityFactory()
       .withBed(temporaryAccommodationBed)
       .withStartDate(LocalDate.parse("2023-04-05"))
       .withEndDate(LocalDate.parse("2023-04-07"))
-      .withYieldedReason { LostBedReasonEntityFactory().produce() }
+      .withYieldedReason { Cas3LostBedReasonEntityFactory().produce() }
       .withPremises(temporaryAccommodationPremises)
       .produce()
 
@@ -140,11 +140,11 @@ class BedUsageReportGeneratorTest {
       .withRoom(approvedPremisesRoom)
       .produce()
 
-    val approvedPremisesLostBed = LostBedsEntityFactory()
+    val approvedPremisesLostBed = Cas3LostBedsEntityFactory()
       .withBed(approvedPremisesBed)
       .withStartDate(LocalDate.parse("2023-04-05"))
       .withEndDate(LocalDate.parse("2023-04-07"))
-      .withYieldedReason { LostBedReasonEntityFactory().produce() }
+      .withYieldedReason { Cas3LostBedReasonEntityFactory().produce() }
       .withPremises(approvedPremises)
       .produce()
 
@@ -214,11 +214,11 @@ class BedUsageReportGeneratorTest {
       .withRoom(temporaryAccommodationRoom)
       .produce()
 
-    val temporaryAccommodationLostBed = LostBedsEntityFactory()
+    val temporaryAccommodationLostBed = Cas3LostBedsEntityFactory()
       .withBed(temporaryAccommodationBed)
       .withStartDate(LocalDate.parse("2023-04-05"))
       .withEndDate(LocalDate.parse("2023-04-07"))
-      .withYieldedReason { LostBedReasonEntityFactory().produce() }
+      .withYieldedReason { Cas3LostBedReasonEntityFactory().produce() }
       .withPremises(temporaryAccommodationPremises)
       .produce()
 
@@ -234,11 +234,11 @@ class BedUsageReportGeneratorTest {
       .withRoom(approvedPremisesRoom)
       .produce()
 
-    val approvedPremisesLostBed = LostBedsEntityFactory()
+    val approvedPremisesLostBed = Cas3LostBedsEntityFactory()
       .withBed(approvedPremisesBed)
       .withStartDate(LocalDate.parse("2023-04-05"))
       .withEndDate(LocalDate.parse("2023-04-07"))
-      .withYieldedReason { LostBedReasonEntityFactory().produce() }
+      .withYieldedReason { Cas3LostBedReasonEntityFactory().produce() }
       .withPremises(approvedPremises)
       .produce()
 
@@ -300,11 +300,11 @@ class BedUsageReportGeneratorTest {
       .withRoom(temporaryAccommodationRoomInProbationRegion)
       .produce()
 
-    val temporaryAccommodationLostBedInProbationArea = LostBedsEntityFactory()
+    val temporaryAccommodationLostBedInProbationArea = Cas3LostBedsEntityFactory()
       .withBed(temporaryAccommodationBedInProbationRegion)
       .withStartDate(LocalDate.parse("2023-04-05"))
       .withEndDate(LocalDate.parse("2023-04-07"))
-      .withYieldedReason { LostBedReasonEntityFactory().produce() }
+      .withYieldedReason { Cas3LostBedReasonEntityFactory().produce() }
       .withPremises(temporaryAccommodationPremisesInProbationRegion)
       .produce()
 
@@ -321,11 +321,11 @@ class BedUsageReportGeneratorTest {
       .withRoom(temporaryAccommodationRoomOutsideProbationRegion)
       .produce()
 
-    val temporaryAccommodationLostBedOutsideProbationArea = LostBedsEntityFactory()
+    val temporaryAccommodationLostBedOutsideProbationArea = Cas3LostBedsEntityFactory()
       .withBed(temporaryAccommodationBedOutsideProbationRegion)
       .withStartDate(LocalDate.parse("2023-04-05"))
       .withEndDate(LocalDate.parse("2023-04-07"))
-      .withYieldedReason { LostBedReasonEntityFactory().produce() }
+      .withYieldedReason { Cas3LostBedReasonEntityFactory().produce() }
       .withPremises(temporaryAccommodationPremisesOutsideProbationRegion)
       .produce()
 
@@ -376,11 +376,11 @@ class BedUsageReportGeneratorTest {
       .withRoom(temporaryAccommodationRoomInProbationRegion)
       .produce()
 
-    val temporaryAccommodationLostBedInProbationArea = LostBedsEntityFactory()
+    val temporaryAccommodationLostBedInProbationArea = Cas3LostBedsEntityFactory()
       .withBed(temporaryAccommodationBedInProbationRegion)
       .withStartDate(LocalDate.parse("2023-04-05"))
       .withEndDate(LocalDate.parse("2023-04-07"))
-      .withYieldedReason { LostBedReasonEntityFactory().produce() }
+      .withYieldedReason { Cas3LostBedReasonEntityFactory().produce() }
       .withPremises(temporaryAccommodationPremisesInProbationRegion)
       .produce()
 
@@ -397,11 +397,11 @@ class BedUsageReportGeneratorTest {
       .withRoom(temporaryAccommodationRoomOutsideProbationRegion)
       .produce()
 
-    val temporaryAccommodationLostBedOutsideProbationArea = LostBedsEntityFactory()
+    val temporaryAccommodationLostBedOutsideProbationArea = Cas3LostBedsEntityFactory()
       .withBed(temporaryAccommodationBedOutsideProbationRegion)
       .withStartDate(LocalDate.parse("2023-04-05"))
       .withEndDate(LocalDate.parse("2023-04-07"))
-      .withYieldedReason { LostBedReasonEntityFactory().produce() }
+      .withYieldedReason { Cas3LostBedReasonEntityFactory().produce() }
       .withPremises(temporaryAccommodationPremisesOutsideProbationRegion)
       .produce()
 
@@ -588,11 +588,11 @@ class BedUsageReportGeneratorTest {
       .withRoom(temporaryAccommodationRoom)
       .produce()
 
-    val temporaryAccommodationLostBed = LostBedsEntityFactory()
+    val temporaryAccommodationLostBed = Cas3LostBedsEntityFactory()
       .withBed(temporaryAccommodationBed)
       .withStartDate(LocalDate.parse("2023-04-05"))
       .withEndDate(LocalDate.parse("2023-04-07"))
-      .withYieldedReason { LostBedReasonEntityFactory().produce() }
+      .withYieldedReason { Cas3LostBedReasonEntityFactory().produce() }
       .withPremises(temporaryAccommodationPremises)
       .produce()
 

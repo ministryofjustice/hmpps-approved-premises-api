@@ -1,27 +1,27 @@
-package uk.gov.justice.digital.hmpps.approvedpremisesapi.factory
+package uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.cas3
 
 import io.github.bluegroundltd.kfactory.Factory
 import io.github.bluegroundltd.kfactory.Yielded
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.BedEntity
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.LostBedCancellationEntity
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.LostBedReasonEntity
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.LostBedsEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PremisesEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas3.Cas3LostBedCancellationEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas3.Cas3LostBedReasonEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas3.Cas3LostBedsEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomDateAfter
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomDateBefore
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomStringMultiCaseWithNumbers
 import java.time.LocalDate
 import java.util.UUID
 
-class LostBedsEntityFactory : Factory<LostBedsEntity> {
+class Cas3LostBedsEntityFactory : Factory<Cas3LostBedsEntity> {
   private var id: Yielded<UUID> = { UUID.randomUUID() }
   private var startDate: Yielded<LocalDate> = { LocalDate.now().randomDateBefore(6) }
   private var endDate: Yielded<LocalDate> = { LocalDate.now().randomDateAfter(6) }
-  private var reason: Yielded<LostBedReasonEntity>? = null
+  private var reason: Yielded<Cas3LostBedReasonEntity>? = null
   private var referenceNumber: Yielded<String?> = { UUID.randomUUID().toString() }
   private var notes: Yielded<String?> = { randomStringMultiCaseWithNumbers(20) }
   private var premises: Yielded<PremisesEntity>? = null
-  private var lostBedCancellation: Yielded<LostBedCancellationEntity>? = null
+  private var lostBedCancellation: Yielded<Cas3LostBedCancellationEntity>? = null
   private var bed: Yielded<BedEntity>? = null
 
   fun withId(id: UUID) = apply {
@@ -36,7 +36,7 @@ class LostBedsEntityFactory : Factory<LostBedsEntity> {
     this.endDate = { endDate }
   }
 
-  fun withYieldedReason(reason: Yielded<LostBedReasonEntity>) = apply {
+  fun withYieldedReason(reason: Yielded<Cas3LostBedReasonEntity>) = apply {
     this.reason = reason
   }
 
@@ -56,11 +56,11 @@ class LostBedsEntityFactory : Factory<LostBedsEntity> {
     this.premises = { premises }
   }
 
-  fun withYieldedLostBedCancellation(lostBedCancellation: Yielded<LostBedCancellationEntity>) = apply {
+  fun withYieldedLostBedCancellation(lostBedCancellation: Yielded<Cas3LostBedCancellationEntity>) = apply {
     this.lostBedCancellation = lostBedCancellation
   }
 
-  fun withLostBedCancellation(lostBedCancellation: LostBedCancellationEntity) = apply {
+  fun withLostBedCancellation(lostBedCancellation: Cas3LostBedCancellationEntity) = apply {
     this.lostBedCancellation = { lostBedCancellation }
   }
 
@@ -72,7 +72,8 @@ class LostBedsEntityFactory : Factory<LostBedsEntity> {
     this.bed = bed
   }
 
-  override fun produce() = LostBedsEntity(
+  @SuppressWarnings("TooGenericExceptionThrown")
+  override fun produce() = Cas3LostBedsEntity(
     id = this.id(),
     startDate = this.startDate(),
     endDate = this.endDate(),

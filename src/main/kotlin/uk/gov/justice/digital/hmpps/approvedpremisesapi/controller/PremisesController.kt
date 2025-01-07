@@ -60,7 +60,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.ValidatableActio
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.BedService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.BookingService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.GetBookingForPremisesResult
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.LostBedService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.OffenderService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.PremisesService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.RoomService
@@ -69,6 +68,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.UserAccessServic
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.UserService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1WithdrawableService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas3.Cas3BookingService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas3.Cas3LostBedService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas3.Cas3PremisesService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.ArrivalTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.BedDetailTransformer
@@ -79,13 +79,13 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.Confirmation
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.DateChangeTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.DepartureTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.ExtensionTransformer
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.LostBedCancellationTransformer
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.LostBedsTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.PremisesSummaryTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.PremisesTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.RoomTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.StaffMemberTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.TurnaroundTransformer
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.cas3.Cas3LostBedCancellationTransformer
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.cas3.Cas3LostBedsTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.extractEntityFromAuthorisableActionResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.extractEntityFromCasResult
 import java.time.LocalDate
@@ -102,12 +102,12 @@ class PremisesController(
   private val offenderService: OffenderService,
   private val bookingService: BookingService,
   private val cas3BookingService: Cas3BookingService,
-  private val lostBedsService: LostBedService,
+  private val lostBedsService: Cas3LostBedService,
   private val bedService: BedService,
   private val premisesTransformer: PremisesTransformer,
   private val premisesSummaryTransformer: PremisesSummaryTransformer,
   private val bookingTransformer: BookingTransformer,
-  private val lostBedsTransformer: LostBedsTransformer,
+  private val cas3LostBedsTransformer: Cas3LostBedsTransformer,
   private val arrivalTransformer: ArrivalTransformer,
   private val cancellationTransformer: CancellationTransformer,
   private val confirmationTransformer: ConfirmationTransformer,
@@ -117,7 +117,7 @@ class PremisesController(
   private val staffMemberService: StaffMemberService,
   private val roomService: RoomService,
   private val roomTransformer: RoomTransformer,
-  private val lostBedCancellationTransformer: LostBedCancellationTransformer,
+  private val cas3LostBedCancellationTransformer: Cas3LostBedCancellationTransformer,
   private val turnaroundTransformer: TurnaroundTransformer,
   private val bedSummaryTransformer: BedSummaryTransformer,
   private val bedDetailTransformer: BedDetailTransformer,
@@ -709,7 +709,7 @@ class PremisesController(
 
     val lostBeds = extractResultEntityOrThrow(result)
 
-    return ResponseEntity.ok(lostBedsTransformer.transformJpaToApi(lostBeds))
+    return ResponseEntity.ok(cas3LostBedsTransformer.transformJpaToApi(lostBeds))
   }
 
   override fun premisesPremisesIdLostBedsGet(premisesId: UUID): ResponseEntity<List<LostBed>> {
@@ -724,7 +724,7 @@ class PremisesController(
       throw ForbiddenProblem()
     }
 
-    return ResponseEntity.ok(lostBeds.map(lostBedsTransformer::transformJpaToApi))
+    return ResponseEntity.ok(lostBeds.map(cas3LostBedsTransformer::transformJpaToApi))
   }
 
   override fun premisesPremisesIdLostBedsLostBedIdGet(premisesId: UUID, lostBedId: UUID): ResponseEntity<LostBed> {
@@ -740,7 +740,7 @@ class PremisesController(
     val lostBed = premises.lostBeds.firstOrNull { it.id == lostBedId }
       ?: throw NotFoundProblem(lostBedId, "LostBed")
 
-    return ResponseEntity.ok(lostBedsTransformer.transformJpaToApi(lostBed))
+    return ResponseEntity.ok(cas3LostBedsTransformer.transformJpaToApi(lostBed))
   }
 
   override fun premisesPremisesIdLostBedsLostBedIdPut(
@@ -787,7 +787,7 @@ class PremisesController(
       is ValidatableActionResult.Success -> validationResult.entity
     }
 
-    return ResponseEntity.ok(lostBedsTransformer.transformJpaToApi(updatedLostBed))
+    return ResponseEntity.ok(cas3LostBedsTransformer.transformJpaToApi(updatedLostBed))
   }
 
   override fun premisesPremisesIdLostBedsLostBedIdCancellationsPost(
@@ -820,7 +820,7 @@ class PremisesController(
       is ValidatableActionResult.Success -> cancelVoidBedspaceResult.entity
     }
 
-    return ResponseEntity.ok(lostBedCancellationTransformer.transformJpaToApi(cancellation))
+    return ResponseEntity.ok(cas3LostBedCancellationTransformer.transformJpaToApi(cancellation))
   }
 
   override fun premisesPremisesIdStaffGet(premisesId: UUID): ResponseEntity<List<StaffMember>> {
