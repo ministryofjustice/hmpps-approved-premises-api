@@ -13,7 +13,7 @@ import java.time.OffsetDateTime
 import java.util.UUID
 
 @TestInstance(TestInstance.Lifecycle.PER_METHOD)
-class SeedCas1ImportDeliusReferralsSeedJobTest : SeedTestBase() {
+class SeedCas1ImportDeliusReferralsTest : SeedTestBase() {
 
   @Autowired
   lateinit var cas1DeliusBookingImportRepository: Cas1DeliusBookingImportRepository
@@ -44,6 +44,8 @@ class SeedCas1ImportDeliusReferralsSeedJobTest : SeedTestBase() {
         Cas1DeliusBookingManagementDataRowRaw(
           crn = "CRN1",
           eventNumber = "1",
+          decisionCode = "DC1",
+          decisionDescription = "Decision Code 1",
           expectedArrivalDate = "2024-06-15 00:00:00",
           hostelCode = "hostel code",
         ),
@@ -91,6 +93,8 @@ class SeedCas1ImportDeliusReferralsSeedJobTest : SeedTestBase() {
           keyWorkerForename = "kwForename",
           keyWorkerMiddleName = "kwMiddle",
           keyWorkerSurname = "kwSurname",
+          decisionCode = "DC1",
+          decisionDescription = "Decision Code 1",
           departureReasonCode = "drc",
           moveOnCategoryCode = "mocc",
           moveOnCategoryDescription = "moccDescription",
@@ -148,6 +152,8 @@ class SeedCas1ImportDeliusReferralsSeedJobTest : SeedTestBase() {
           expectedArrivalDate = "2024-06-15 00:00:00",
           hostelCode = "hostel code",
           keyWorkerStaffCode = "-1",
+          decisionCode = "DC1",
+          decisionDescription = "Decision Code 1",
           moveOnCategoryCode = "-1",
           nonArrivalReasonCode = "-1",
           arrivalDate = "1900-01-01 00:00:00",
@@ -181,6 +187,8 @@ class SeedCas1ImportDeliusReferralsSeedJobTest : SeedTestBase() {
         "KEY_WORKER_FORENAME",
         "KEY_WORKER_MIDDLE_NAME",
         "KEY_WORKER_SURNAME",
+        "DECISION_CODE",
+        "DECISION_DESCRIPTION",
         "DEPARTURE_REASON_CODE",
         "MOVE_ON_CATEGORY_CODE",
         "MOVE_ON_CATEGORY_DESCRIPTION",
@@ -206,6 +214,8 @@ class SeedCas1ImportDeliusReferralsSeedJobTest : SeedTestBase() {
         .withQuotedField(it.keyWorkerForename)
         .withQuotedField(it.keyWorkerMiddleName)
         .withQuotedField(it.keyWorkerSurname)
+        .withQuotedField(it.decisionCode)
+        .withQuotedField(it.decisionDescription)
         .withQuotedField(it.departureReasonCode)
         .withQuotedField(it.moveOnCategoryCode)
         .withQuotedField(it.moveOnCategoryDescription)
@@ -233,6 +243,8 @@ class SeedCas1ImportDeliusReferralsSeedJobTest : SeedTestBase() {
     val keyWorkerForename: String = "",
     val keyWorkerMiddleName: String = "",
     val keyWorkerSurname: String = "",
+    val decisionCode: String = "",
+    val decisionDescription: String = "",
     val departureReasonCode: String = "",
     val moveOnCategoryCode: String = "",
     val moveOnCategoryDescription: String = "",
