@@ -4,8 +4,6 @@ import org.hamcrest.Matchers
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApprovedPremisesBedSearchParameters
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApprovedPremisesBedSearchResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.BedSearchAttributes
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.BedSearchResultBedSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.BedSearchResultPremisesSummary
@@ -38,10 +36,8 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.RoomEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TemporaryAccommodationApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TemporaryAccommodationPremisesEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserEntity
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRole
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomStringLowerCase
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomStringMultiCaseWithNumbers
-import java.math.BigDecimal
 import java.time.LocalDate
 import java.time.OffsetDateTime
 import java.util.UUID
@@ -57,19 +53,17 @@ class BedSearchTest : IntegrationTestBase() {
   }
 
   @Nested
-  inner class BedSearchForApprovedPremises {
+  inner class BedSearchForTemporaryAccommodationPremises {
     @Test
     fun `Searching for a Bed without JWT returns 401`() {
       webTestClient.post()
         .uri("/beds/search")
         .bodyValue(
-          ApprovedPremisesBedSearchParameters(
-            postcodeDistrict = "AA11",
-            maxDistanceMiles = 20,
-            requiredCharacteristics = listOf(),
+          TemporaryAccommodationBedSearchParameters(
             startDate = LocalDate.parse("2023-03-23"),
             durationDays = 7,
-            serviceName = "approved-premises",
+            serviceName = "temporary-accommodation",
+            probationDeliveryUnits = listOf(UUID.randomUUID()),
           ),
         )
         .exchange()
@@ -77,118 +71,6 @@ class BedSearchTest : IntegrationTestBase() {
         .isUnauthorized
     }
 
-    @Test
-    fun `Searching for an Approved Premises Bed without MATCHER role returns 403`() {
-      givenAUser { _, jwt ->
-        webTestClient.post()
-          .uri("/beds/search")
-          .header("Authorization", "Bearer $jwt")
-          .bodyValue(
-            ApprovedPremisesBedSearchParameters(
-              postcodeDistrict = "AA11",
-              maxDistanceMiles = 20,
-              requiredCharacteristics = listOf(),
-              startDate = LocalDate.parse("2023-03-23"),
-              durationDays = 7,
-              serviceName = "approved-premises",
-            ),
-          )
-          .exchange()
-          .expectStatus()
-          .isForbidden
-      }
-    }
-
-    @Test
-    fun `Searching for an Approved Premises Bed returns 200 with correct body`() {
-      givenAUser(
-        roles = listOf(UserRole.CAS1_MATCHER),
-      ) { _, jwt ->
-        val postCodeDistrictLatLong = LatLong(50.1044, -2.3992)
-        val tenMilesFromPostcodeDistrict = postCodeDistrictLatLong.plusLatitudeMiles(10)
-
-        val postcodeDistrict = postCodeDistrictFactory.produceAndPersist {
-          withOutcode("AA11")
-          withLatitude(postCodeDistrictLatLong.latitude)
-          withLongitude(postCodeDistrictLatLong.longitude)
-        }
-
-        val localAuthorityArea = localAuthorityEntityFactory.produceAndPersist()
-
-        val premises = approvedPremisesEntityFactory.produceAndPersist {
-          withProbationRegion(probationRegion)
-          withLocalAuthorityArea(localAuthorityArea)
-          withLatitude(tenMilesFromPostcodeDistrict.latitude)
-          withLongitude(tenMilesFromPostcodeDistrict.longitude)
-          withStatus(PropertyStatus.active)
-        }
-
-        val room = roomEntityFactory.produceAndPersist {
-          withPremises(premises)
-        }
-
-        val bed = bedEntityFactory.produceAndPersist {
-          withName("Matching Bed")
-          withRoom(room)
-        }
-
-        webTestClient.post()
-          .uri("/beds/search")
-          .header("Authorization", "Bearer $jwt")
-          .bodyValue(
-            ApprovedPremisesBedSearchParameters(
-              postcodeDistrict = postcodeDistrict.outcode,
-              maxDistanceMiles = 20,
-              requiredCharacteristics = listOf(),
-              startDate = LocalDate.parse("2023-03-23"),
-              durationDays = 7,
-              serviceName = "approved-premises",
-            ),
-          )
-          .exchange()
-          .expectStatus()
-          .isOk
-          .expectBody()
-          .json(
-            objectMapper.writeValueAsString(
-              BedSearchResults(
-                resultsRoomCount = 1,
-                resultsPremisesCount = 1,
-                resultsBedCount = 1,
-                results = listOf(
-                  ApprovedPremisesBedSearchResult(
-                    distanceMiles = BigDecimal("10.016010816899744"),
-                    premises = BedSearchResultPremisesSummary(
-                      id = premises.id,
-                      name = premises.name,
-                      addressLine1 = premises.addressLine1,
-                      postcode = premises.postcode,
-                      characteristics = listOf(),
-                      addressLine2 = premises.addressLine2,
-                      town = premises.town,
-                      bedCount = 1,
-                    ),
-                    room = BedSearchResultRoomSummary(
-                      id = room.id,
-                      name = room.name,
-                      characteristics = listOf(),
-                    ),
-                    bed = BedSearchResultBedSummary(
-                      id = bed.id,
-                      name = bed.name,
-                    ),
-                    serviceName = ServiceName.approvedPremises,
-                  ),
-                ),
-              ),
-            ),
-          )
-      }
-    }
-  }
-
-  @Nested
-  inner class BedSearchForTemporaryAccommodationPremises {
     @Test
     fun `Searching for a Temporary Accommodation Bed returns 200 with correct body`() {
       val searchPdu = probationDeliveryUnitFactory.produceAndPersist {

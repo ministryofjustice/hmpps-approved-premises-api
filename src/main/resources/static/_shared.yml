@@ -4139,27 +4139,7 @@ components:
       discriminator:
         propertyName: serviceName
         mapping:
-          approved-premises: '#/components/schemas/ApprovedPremisesBedSearchParameters'
           temporary-accommodation: '#/components/schemas/TemporaryAccommodationBedSearchParameters'
-    ApprovedPremisesBedSearchParameters:
-      allOf:
-        - $ref: '#/components/schemas/BedSearchParameters'
-        - type: object
-          properties:
-            postcodeDistrict:
-              type: string
-              description: The postcode district to search outwards from
-            maxDistanceMiles:
-              type: integer
-              description: Maximum number of miles from the postcode district to search, only required if more than 50 miles which is the default
-            requiredCharacteristics:
-              type: array
-              items:
-                $ref: '#/components/schemas/PlacementCriteria'
-          required:
-            - postcodeDistrict
-            - maxDistanceMiles
-            - requiredCharacteristics
     TemporaryAccommodationBedSearchParameters:
       allOf:
         - $ref: '#/components/schemas/BedSearchParameters'
@@ -4218,18 +4198,7 @@ components:
       discriminator:
         propertyName: serviceName
         mapping:
-          approved-premises: '#/components/schemas/ApprovedPremisesBedSearchResult'
           temporary-accommodation: '#/components/schemas/TemporaryAccommodationBedSearchResult'
-    ApprovedPremisesBedSearchResult:
-      allOf:
-        - $ref: '#/components/schemas/BedSearchResult'
-        - type: object
-          properties:
-            distanceMiles:
-              type: number
-              description: how many miles away from the postcode district the Premises this Bed belongs to is
-          required:
-            - distanceMiles
     TemporaryAccommodationBedSearchResult:
       allOf:
         - $ref: '#/components/schemas/BedSearchResult'

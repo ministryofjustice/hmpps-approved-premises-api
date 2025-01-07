@@ -2,11 +2,9 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.controller
 import org.springframework.http.ResponseEntity
 import org.springframework.stereotype.Service
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.BedsApiDelegate
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApprovedPremisesBedSearchParameters
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.BedSearchParameters
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.BedSearchResults
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.TemporaryAccommodationBedSearchParameters
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.BedSearchService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.UserService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas3.Cas3BedspaceSearchService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.BedSearchResultTransformer
@@ -15,7 +13,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.extractEntityFromCa
 @Service
 class BedSearchController(
   private val userService: UserService,
-  private val bedSearchService: BedSearchService,
   private val cas3BedspaceSearchService: Cas3BedspaceSearchService,
   private val bedSearchResultTransformer: BedSearchResultTransformer,
 ) : BedsApiDelegate {
@@ -23,14 +20,6 @@ class BedSearchController(
     val user = userService.getUserForRequest()
 
     val searchResult = when (bedSearchParameters) {
-      is ApprovedPremisesBedSearchParameters -> bedSearchService.findApprovedPremisesBeds(
-        user = user,
-        maxDistanceMiles = bedSearchParameters.maxDistanceMiles,
-        startDate = bedSearchParameters.startDate,
-        durationInDays = bedSearchParameters.durationDays,
-        requiredCharacteristics = bedSearchParameters.requiredCharacteristics,
-        postcodeDistrictOutcode = bedSearchParameters.postcodeDistrict,
-      )
       is TemporaryAccommodationBedSearchParameters -> cas3BedspaceSearchService.findBedspaces(
         user = user,
         probationDeliveryUnits = bedSearchParameters.probationDeliveryUnits,
