@@ -36,10 +36,9 @@ class StaffMemberServiceTest {
 
       val result = staffMemberService.getStaffMemberByCodeForPremise(staffMembers[2].code, qCode)
 
-      assertThat(result is CasResult.Success).isTrue
-      result as CasResult.Success
-
-      assertThat(result.value).isEqualTo(staffMembers[2])
+      assertThatCasResult(result).isSuccess().with {
+        assertThat(it).isEqualTo(staffMembers[2])
+      }
     }
 
     @Test
@@ -53,7 +52,7 @@ class StaffMemberServiceTest {
 
       val result = staffMemberService.getStaffMemberByCodeForPremise("code", qCode)
 
-      assertThat(result is CasResult.Unauthorised).isTrue
+      assertThatCasResult(result).isUnauthorised()
     }
 
     @Test
@@ -67,11 +66,7 @@ class StaffMemberServiceTest {
 
       val result = staffMemberService.getStaffMemberByCodeForPremise("code", qCode)
 
-      assertThat(result is CasResult.NotFound).isTrue
-      result as CasResult.NotFound
-
-      assertThat(result.id).isEqualTo(qCode)
-      assertThat(result.entityType).isEqualTo("Team")
+      assertThatCasResult(result).isNotFound("Team", qCode)
     }
 
     @Test
@@ -87,11 +82,7 @@ class StaffMemberServiceTest {
 
       val result = staffMemberService.getStaffMemberByCodeForPremise("code", qCode)
 
-      assertThat(result is CasResult.NotFound).isTrue
-      result as CasResult.NotFound
-
-      assertThat(result.id).isEqualTo("code")
-      assertThat(result.entityType).isEqualTo("Staff Code")
+      assertThatCasResult(result).isNotFound("Staff Code", "code")
     }
   }
 
