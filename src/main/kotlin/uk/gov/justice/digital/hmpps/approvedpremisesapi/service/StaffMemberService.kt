@@ -9,7 +9,10 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.deliuscontext.Staf
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.CasResult
 
 @Service
-class StaffMemberService(private val apDeliusContextApiClient: ApDeliusContextApiClient) {
+class StaffMemberService(
+  private val apDeliusContextApiClient: ApDeliusContextApiClient,
+  private val sentryService: SentryService,
+) {
 
   private val log = LoggerFactory.getLogger(this::class.java)
 
@@ -33,7 +36,10 @@ class StaffMemberService(private val apDeliusContextApiClient: ApDeliusContextAp
   fun getStaffMembersForQCode(qCode: String) = when (val staffMembersResponse = apDeliusContextApiClient.getStaffMembers(qCode)) {
     is ClientResult.Success -> CasResult.Success(staffMembersResponse.body)
     is ClientResult.Failure.StatusCode -> when (staffMembersResponse.status) {
-      HttpStatus.NOT_FOUND -> CasResult.NotFound("Team", qCode)
+      HttpStatus.NOT_FOUND -> {
+        sentryService.captureErrorMessage("404 returned when finding staff members for qcode '$qCode'")
+        CasResult.NotFound("Team", qCode)
+      }
       HttpStatus.UNAUTHORIZED -> CasResult.Unauthorised()
       else -> staffMembersResponse.throwException()
     }

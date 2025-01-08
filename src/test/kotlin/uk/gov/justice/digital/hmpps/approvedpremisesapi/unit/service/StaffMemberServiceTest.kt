@@ -2,6 +2,7 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.unit.service
 
 import io.mockk.every
 import io.mockk.mockk
+import io.mockk.verify
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
@@ -11,15 +12,16 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.ApDeliusContextAp
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.ClientResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ContextStaffMemberFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.deliuscontext.StaffMembersPage
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.CasResult
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.SentryService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.StaffMemberService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.unit.util.assertThatCasResult
 
 class StaffMemberServiceTest {
   private val mockApDeliusContextApiClient = mockk<ApDeliusContextApiClient>()
-  private val staffMemberService = StaffMemberService(mockApDeliusContextApiClient)
+  private val mockSentryService = mockk<SentryService>()
+  private val staffMemberService = StaffMemberService(mockApDeliusContextApiClient, mockSentryService)
 
-  private val qCode = "Qcode"
+  private val qCode = "Q123"
 
   @Nested
   inner class GetStaffMemberByCode {
@@ -64,9 +66,13 @@ class StaffMemberServiceTest {
         body = null,
       )
 
+      every { mockSentryService.captureErrorMessage(any()) } returns Unit
+
       val result = staffMemberService.getStaffMemberByCodeForPremise("code", qCode)
 
       assertThatCasResult(result).isNotFound("Team", qCode)
+
+      verify { mockSentryService.captureErrorMessage("404 returned when finding staff members for qcode 'Q123'") }
     }
 
     @Test
@@ -116,9 +122,13 @@ class StaffMemberServiceTest {
         body = null,
       )
 
+      every { mockSentryService.captureErrorMessage(any()) } returns Unit
+
       val result = staffMemberService.getStaffMembersForQCode(qCode)
 
       assertThatCasResult(result).isNotFound("Team", qCode)
+
+      verify { mockSentryService.captureErrorMessage("404 returned when finding staff members for qcode 'Q123'") }
     }
   }
 }
