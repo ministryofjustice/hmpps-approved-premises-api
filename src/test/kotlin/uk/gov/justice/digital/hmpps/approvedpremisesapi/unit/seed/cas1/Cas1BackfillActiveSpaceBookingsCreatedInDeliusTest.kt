@@ -10,17 +10,17 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremi
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas1SpaceBookingRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.OfflineApplicationRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas1.Cas1DeliusBookingImportRepository
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.seed.cas1.Cas1BackfillSpaceBookingsCreatedInDelius
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.seed.cas1.Cas1BackfillActiveSpaceBookingsCreatedInDelius
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.seed.cas1.Cas1BookingManagementInfoService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.seed.cas1.Cas1CreateMissingReferralsSeedCsvRow
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.EnvironmentService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.OffenderService
 
-class Cas1BackfillSpaceBookingsCreatedInDeliusTest {
+class Cas1BackfillActiveSpaceBookingsCreatedInDeliusTest {
 
   private val approvedPremisesRepository = mockk<ApprovedPremisesRepository>()
 
-  private val seedJob = Cas1BackfillSpaceBookingsCreatedInDelius(
+  private val seedJob = Cas1BackfillActiveSpaceBookingsCreatedInDelius(
     approvedPremisesRepository = approvedPremisesRepository,
     cas1DeliusBookingImportRepository = mockk<Cas1DeliusBookingImportRepository>(),
     cas1BookingManagementInfoService = mockk<Cas1BookingManagementInfoService>(),

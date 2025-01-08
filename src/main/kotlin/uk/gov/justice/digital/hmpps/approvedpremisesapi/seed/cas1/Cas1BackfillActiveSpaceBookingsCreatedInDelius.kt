@@ -17,6 +17,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PersonSummaryInfoR
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.seed.SeedJob
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.EnvironmentService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.OffenderService
+import java.time.LocalDate
 import java.time.OffsetDateTime
 import java.util.UUID
 
@@ -25,7 +26,7 @@ import java.util.UUID
  * 'cas1_delius_booking_import' table using the [Cas1ImportDeliusReferralsSeedJob] job
  */
 @Service
-class Cas1BackfillSpaceBookingsCreatedInDelius(
+class Cas1BackfillActiveSpaceBookingsCreatedInDelius(
   private val approvedPremisesRepository: ApprovedPremisesRepository,
   private val cas1DeliusBookingImportRepository: Cas1DeliusBookingImportRepository,
   private val cas1BookingManagementInfoService: Cas1BookingManagementInfoService,
@@ -58,7 +59,7 @@ class Cas1BackfillSpaceBookingsCreatedInDelius(
     }
   }
 
-  @SuppressWarnings("TooGenericExceptionCaught")
+  @SuppressWarnings("TooGenericExceptionCaught", "MagicNumber")
   private fun migratePremise(qCode: String) {
     val premises = approvedPremisesRepository.findByQCode(qCode) ?: error("Premises with qcode $qCode not found")
 
@@ -66,7 +67,11 @@ class Cas1BackfillSpaceBookingsCreatedInDelius(
       error("premise ${premises.name} doesn't support space bookings, can't migrate bookings")
     }
 
-    val referrals = cas1DeliusBookingImportRepository.findByBookingIdIsNullAndPremisesQcode(qCode)
+    val referrals = cas1DeliusBookingImportRepository.findActiveBookingsCreatedInDelius(
+      qCode = qCode,
+      minExpectedDepartureDate = LocalDate.of(2025, 1, 1),
+      maxExpectedDepartureDate = LocalDate.of(2035, 1, 1),
+    )
 
     log.info("Will create ${referrals.size} space bookings for premise ${premises.name} ($qCode)")
 
@@ -74,9 +79,7 @@ class Cas1BackfillSpaceBookingsCreatedInDelius(
       return
     }
 
-    // TODO: we need a version of this that will segment calls to the backend
-    // can use for CAS3 report that does that?
-    val crnToName = offenderService.getPersonSummaryInfoResults(
+    val crnToName = offenderService.getPersonSummaryInfoResultsInBatches(
       crns = referrals.map { it.crn }.toSet(),
       limitedAccessStrategy = OffenderService.LimitedAccessStrategy.IgnoreLimitedAccess,
     ).associate { personSummaryInfoResult ->
@@ -106,6 +109,8 @@ class Cas1BackfillSpaceBookingsCreatedInDelius(
         crnToName = crnToName,
       )
     }
+
+    log.info("Have crated ${referrals.size} space bookings for premise ${premises.name} ($qCode)")
   }
 
   private fun createSpaceBooking(
@@ -146,10 +151,10 @@ class Cas1BackfillSpaceBookingsCreatedInDelius(
         expectedDepartureDate = deliusReferral.expectedDepartureDate!!,
         actualArrivalDate = managementInfo.arrivedAtDate,
         actualArrivalTime = managementInfo.arrivedAtTime,
-        actualDepartureDate = managementInfo.departedAtDate,
-        actualDepartureTime = managementInfo.departedAtTime,
+        actualDepartureDate = null,
+        actualDepartureTime = null,
         canonicalArrivalDate = managementInfo.arrivedAtDate ?: deliusReferral.expectedArrivalDate,
-        canonicalDepartureDate = managementInfo.departedAtDate ?: deliusReferral.expectedDepartureDate!!,
+        canonicalDepartureDate = deliusReferral.expectedDepartureDate!!,
         crn = deliusReferral.crn,
         keyWorkerStaffCode = managementInfo.keyWorkerStaffCode,
         keyWorkerName = managementInfo.keyWorkerName,
@@ -158,13 +163,13 @@ class Cas1BackfillSpaceBookingsCreatedInDelius(
         cancellationRecordedAt = null,
         cancellationReason = null,
         cancellationReasonNotes = null,
-        departureMoveOnCategory = managementInfo.departureMoveOnCategory,
-        departureReason = managementInfo.departureReason,
-        departureNotes = managementInfo.departureNotes,
+        departureMoveOnCategory = null,
+        departureReason = null,
+        departureNotes = null,
         criteria = emptyList<CharacteristicEntity>().toMutableList(),
-        nonArrivalReason = managementInfo.nonArrivalReason,
-        nonArrivalConfirmedAt = managementInfo.nonArrivalConfirmedAt?.toInstant(),
-        nonArrivalNotes = managementInfo.nonArrivalNotes,
+        nonArrivalReason = null,
+        nonArrivalConfirmedAt = null,
+        nonArrivalNotes = null,
         deliusEventNumber = deliusReferral.eventNumber,
         migratedManagementInfoFrom = managementInfo.source,
       ),

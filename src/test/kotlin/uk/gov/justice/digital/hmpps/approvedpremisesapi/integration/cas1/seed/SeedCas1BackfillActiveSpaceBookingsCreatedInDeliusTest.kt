@@ -24,14 +24,13 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.repository.Cas1SpaceBook
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.seed.CsvBuilder
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.seed.cas1.Cas1CreateMissingReferralsSeedCsvRow
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.isWithinTheLastMinute
-import java.time.Instant
 import java.time.LocalDate
 import java.time.LocalDateTime
 import java.time.OffsetDateTime
 import java.time.ZoneOffset
 import java.util.UUID
 
-class SeedCas1BackfillSpaceBookingsCreatedInDeliusTest : SeedTestBase() {
+class SeedCas1BackfillActiveSpaceBookingsCreatedInDeliusTest : SeedTestBase() {
 
   @Autowired
   lateinit var cas1SpaceBookingTestRepository: Cas1SpaceBookingTestRepository
@@ -107,11 +106,11 @@ class SeedCas1BackfillSpaceBookingsCreatedInDeliusTest : SeedTestBase() {
       moveOnCategoryDescription = null,
       expectedArrivalDate = LocalDate.of(2024, 5, 9),
       arrivalDate = LocalDate.of(2024, 5, 2),
-      expectedDepartureDate = LocalDate.of(2024, 6, 2),
-      departureDate = LocalDate.of(2024, 5, 4),
+      expectedDepartureDate = LocalDate.of(2025, 6, 2),
+      departureDate = null,
       nonArrivalDate = LocalDate.of(3000, 1, 1),
       nonArrivalContactDatetime = OffsetDateTime.of(LocalDateTime.of(2024, 2, 1, 9, 58, 23), ZoneOffset.UTC),
-      nonArrivalReasonCode = "narc1",
+      nonArrivalReasonCode = null,
       nonArrivalReasonDescription = null,
       nonArrivalNotes = "the non arrival notes",
       premisesQcode = premises.qCode,
@@ -139,12 +138,44 @@ class SeedCas1BackfillSpaceBookingsCreatedInDeliusTest : SeedTestBase() {
       ),
     )
 
+    // booking with non arrival recorded is ignored
+    deliusBookingImportRepository.save(
+      deliusBooking.copy(
+        id = UUID.randomUUID(),
+        nonArrivalReasonCode = "narc1",
+      ),
+    )
+
+    // booking with departure recorded is ignore
+    deliusBookingImportRepository.save(
+      deliusBooking.copy(
+        id = UUID.randomUUID(),
+        departureDate = LocalDate.of(2025, 5, 4),
+      ),
+    )
+
+    // booking with departure before 2025-1-1 is ignored
+    deliusBookingImportRepository.save(
+      deliusBooking.copy(
+        id = UUID.randomUUID(),
+        departureDate = LocalDate.of(2025, 1, 1).minusDays(1),
+      ),
+    )
+
+    // booking with departure after 2035-1-1 is ignored
+    deliusBookingImportRepository.save(
+      deliusBooking.copy(
+        id = UUID.randomUUID(),
+        departureDate = LocalDate.of(2035, 1, 1).plusDays(1),
+      ),
+    )
+
     withCsv(
       "valid-csv",
       rowsToCsv(listOf(Cas1CreateMissingReferralsSeedCsvRow(premises.qCode))),
     )
 
-    seedService.seedData(SeedFileType.approvedPremisesBackfillSpaceBookingsCreatedInDelius, "valid-csv.csv")
+    seedService.seedData(SeedFileType.approvedPremisesBackfillActiveSpaceBookingsCreatedInDelius, "valid-csv.csv")
 
     val premiseSpaceBookings = cas1SpaceBookingTestRepository.findByPremisesId(premises.id)
     assertThat(premiseSpaceBookings).hasSize(1)
@@ -157,13 +188,13 @@ class SeedCas1BackfillSpaceBookingsCreatedInDeliusTest : SeedTestBase() {
     assertThat(migratedBooking1.placementRequest).isNull()
     assertThat(migratedBooking1.createdBy).isNull()
     assertThat(migratedBooking1.expectedArrivalDate).isEqualTo(LocalDate.of(2024, 5, 9))
-    assertThat(migratedBooking1.expectedDepartureDate).isEqualTo(LocalDate.of(2024, 6, 2))
+    assertThat(migratedBooking1.expectedDepartureDate).isEqualTo(LocalDate.of(2025, 6, 2))
     assertThat(migratedBooking1.actualArrivalDate).isEqualTo(LocalDate.parse("2024-05-02"))
     assertThat(migratedBooking1.actualArrivalTime).isNull()
-    assertThat(migratedBooking1.actualDepartureDate).isEqualTo(LocalDate.parse("2024-05-04"))
+    assertThat(migratedBooking1.actualDepartureDate).isNull()
     assertThat(migratedBooking1.actualDepartureTime).isNull()
     assertThat(migratedBooking1.canonicalArrivalDate).isEqualTo(LocalDate.of(2024, 5, 2))
-    assertThat(migratedBooking1.canonicalDepartureDate).isEqualTo(LocalDate.of(2024, 5, 4))
+    assertThat(migratedBooking1.canonicalDepartureDate).isEqualTo(LocalDate.of(2025, 6, 2))
     assertThat(migratedBooking1.keyWorkerName).isEqualTo("kay werker")
     assertThat(migratedBooking1.keyWorkerStaffCode).isEqualTo("kw001")
     assertThat(migratedBooking1.keyWorkerAssignedAt).isNull()
@@ -172,12 +203,13 @@ class SeedCas1BackfillSpaceBookingsCreatedInDeliusTest : SeedTestBase() {
     assertThat(migratedBooking1.cancellationOccurredAt).isNull()
     assertThat(migratedBooking1.cancellationRecordedAt).isNull()
     assertThat(migratedBooking1.cancellationReasonNotes).isNull()
-    assertThat(migratedBooking1.departureReason).isEqualTo(departureReasonActive)
-    assertThat(migratedBooking1.departureMoveOnCategory).isEqualTo(moveOnCategory)
+    assertThat(migratedBooking1.departureReason).isNull()
+    assertThat(migratedBooking1.departureMoveOnCategory).isNull()
+    assertThat(migratedBooking1.departureNotes).isNull()
     assertThat(migratedBooking1.criteria).isEmpty()
-    assertThat(migratedBooking1.nonArrivalReason).isEqualTo(nonArrivalReasonCode)
-    assertThat(migratedBooking1.nonArrivalConfirmedAt).isEqualTo(Instant.parse("2024-02-01T09:58:23.00Z"))
-    assertThat(migratedBooking1.nonArrivalNotes).isEqualTo("the non arrival notes")
+    assertThat(migratedBooking1.nonArrivalReason).isNull()
+    assertThat(migratedBooking1.nonArrivalConfirmedAt).isNull()
+    assertThat(migratedBooking1.nonArrivalNotes).isNull()
     assertThat(migratedBooking1.migratedManagementInfoFrom).isEqualTo(ManagementInfoSource.DELIUS)
 
     val offlineApplication1 = migratedBooking1.offlineApplication!!
