@@ -444,7 +444,9 @@ class SeedCas1RoomsFromSiteSurveyXlsxTest : SeedTestBase() {
         it.level == "error" &&
           it.message == "Unable to complete Excel seed job" &&
           it.throwable != null &&
-          it.throwable.message!!.contains("Detail: Key (code)=(SWABI02) already exists.")
+          it.throwable.message == "Unable to process XLSX file" &&
+          it.throwable.cause is IllegalStateException &&
+          it.throwable.cause!!.message == "Bed SWABI02 already exists in room Q999 - 1 but is being added to room Q999 - 2."
       }
   }
 
@@ -490,8 +492,8 @@ class SeedCas1RoomsFromSiteSurveyXlsxTest : SeedTestBase() {
           it.message == "Unable to complete Excel seed job" &&
           it.throwable != null &&
           it.throwable.message == "Unable to process XLSX file" &&
-          it.throwable.cause is SiteSurveyImportException &&
-          it.throwable.cause!!.message == "Characteristic question 'Is this room located on the ground floor?' not found on sheet Sheet3."
+          it.throwable.cause is RuntimeException &&
+          it.throwable.cause!!.message == "Question 'Is this room located on the ground floor?' not found on sheet Sheet3."
       }
   }
 
@@ -537,8 +539,8 @@ class SeedCas1RoomsFromSiteSurveyXlsxTest : SeedTestBase() {
           it.message == "Unable to complete Excel seed job" &&
           it.throwable != null &&
           it.throwable.message == "Unable to process XLSX file" &&
-          it.throwable.cause is SiteSurveyImportException &&
-          it.throwable.cause!!.message == "Expecting 'yes' or 'no' for question 'Is this room located on the ground floor?' but is 'Bad answer' on sheet Sheet3 (row = 4, col = 1)."
+          it.throwable.cause is RuntimeException &&
+          it.throwable.cause!!.message == "Invalid value for Yes/No dropdown: Bad answer"
       }
   }
 
