@@ -8,7 +8,7 @@ import io.mockk.mockk
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.extension.ExtendWith
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1PremisesSummary
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1Premises
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1SpaceBookingCharacteristic
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApprovedPremisesEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1PremisesService
@@ -33,7 +33,7 @@ class Cas1PremiseCapacitySummaryTransformerTest {
   fun toCas1PremiseCapacitySummary() {
     val premise = ApprovedPremisesEntityFactory().withDefaults().produce()
 
-    val inputPremiseSummaryInfo = mockk<Cas1PremisesService.Cas1PremisesSummaryInfo>()
+    val inputPremiseSummaryInfo = mockk<Cas1PremisesService.Cas1PremisesInfo>()
     val inputCapacitySummary = PremiseCapacitySummary(
       premise = premise,
       range = DateRange(
@@ -63,9 +63,9 @@ class Cas1PremiseCapacitySummaryTransformerTest {
       ),
     )
 
-    val transformedPremiseSummaryInfo = mockk<Cas1PremisesSummary>()
+    val transformedPremiseSummaryInfo = mockk<Cas1Premises>()
     every {
-      cas1PremisesTransformer.toPremiseSummary(any())
+      cas1PremisesTransformer.toPremises(any())
     } returns transformedPremiseSummaryInfo
 
     val result = transformer.toCas1PremiseCapacitySummary(

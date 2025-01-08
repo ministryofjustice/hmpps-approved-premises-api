@@ -367,7 +367,7 @@ paths:
           content:
             'application/json':
               schema:
-                $ref: 'cas1-schemas.yml#/components/schemas/Cas1PremisesSummary'
+                $ref: 'cas1-schemas.yml#/components/schemas/Cas1Premises'
         401:
           $ref: '_shared.yml#/components/responses/401Response'
         403:

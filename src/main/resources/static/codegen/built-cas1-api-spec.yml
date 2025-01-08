@@ -369,7 +369,7 @@ paths:
           content:
             'application/json':
               schema:
-                $ref: '#/components/schemas/Cas1PremisesSummary'
+                $ref: '#/components/schemas/Cas1Premises'
         401:
           $ref: '#/components/responses/401Response'
         403:
@@ -6094,7 +6094,7 @@ components:
         - apArea
         - characteristics
         - fullAddress
-    Cas1PremisesSummary:
+    Cas1Premises:
       type: object
       properties:
         id:
@@ -6756,7 +6756,7 @@ components:
       type: object
       properties:
         premise:
-          $ref: '#/components/schemas/Cas1PremisesSummary'
+          $ref: '#/components/schemas/Cas1Premises'
         startDate:
           type: string
           format: date

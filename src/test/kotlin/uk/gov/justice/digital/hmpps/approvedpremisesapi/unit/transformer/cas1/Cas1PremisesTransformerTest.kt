@@ -58,8 +58,8 @@ class Cas1PremisesTransformerTest {
       val expectedApArea = ApArea(UUID.randomUUID(), "id", "name")
       every { apAreaTransformer.transformJpaToApi(apArea) } returns expectedApArea
 
-      val result = transformer.toPremiseSummary(
-        Cas1PremisesService.Cas1PremisesSummaryInfo(
+      val result = transformer.toPremises(
+        Cas1PremisesService.Cas1PremisesInfo(
           entity = premises,
           bedCount = 10,
           outOfServiceBeds = 2,

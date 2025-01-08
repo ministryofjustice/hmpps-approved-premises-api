@@ -24,7 +24,7 @@ class Cas1PremisesService(
   companion object {
     private const val OVERBOOKING_RANGE_DURATION_WEEKS = 12L
   }
-  fun getPremisesSummary(premisesId: UUID): CasResult<Cas1PremisesSummaryInfo> {
+  fun getPremisesInfo(premisesId: UUID): CasResult<Cas1PremisesInfo> {
     val premise = premisesRepository.findByIdOrNull(premisesId)
       ?: return CasResult.NotFound("premises", premisesId.toString())
 
@@ -33,7 +33,7 @@ class Cas1PremisesService(
     val overbookingSummary = premise.takeIf { it.supportsSpaceBookings }?.let { buildOverBookingSummary(it) } ?: emptyList()
 
     return CasResult.Success(
-      Cas1PremisesSummaryInfo(
+      Cas1PremisesInfo(
         entity = premise,
         bedCount = bedCount,
         availableBeds = bedCount - outOfServiceBedsCount,
@@ -83,7 +83,7 @@ class Cas1PremisesService(
     )
   }
 
-  data class Cas1PremisesSummaryInfo(
+  data class Cas1PremisesInfo(
     val entity: ApprovedPremisesEntity,
     val bedCount: Int,
     val availableBeds: Int,
