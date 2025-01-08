@@ -57,7 +57,7 @@ class BedSearchRepository(private val namedParameterJdbcTemplate: NamedParameter
          WHERE bb.bed_id = b.id
         ) AND
         NOT EXISTS (SELECT void_bedspace.bed_id FROM cas3_void_bedspaces void_bedspace
-             LEFT JOIN cas3_void_bedspace_cancellations void_bedspace_cancellation ON void_bedspace_cancellation.lost_bed_id = void_bedspace.id
+             LEFT JOIN cas3_void_bedspace_cancellations void_bedspace_cancellation ON void_bedspace_cancellation.cas3_void_bedspace_id = void_bedspace.id
          WHERE
              void_bedspace.bed_id = b.id AND
              (void_bedspace.start_date, void_bedspace.end_date) OVERLAPS (:start_date, :end_date) AND

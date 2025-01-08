@@ -121,7 +121,7 @@ interface BedUtilisationReportRepository : JpaRepository<BedEntity, UUID> {
     LEFT JOIN beds b ON vb.bed_id = b.id
     LEFT JOIN rooms r ON b.room_id = r.id
     LEFT JOIN premises p ON r.premises_id = p.id
-    LEFT JOIN cas3_void_bedspace_cancellations vbc ON vb.id = vbc.lost_bed_id
+    LEFT JOIN cas3_void_bedspace_cancellations vbc ON vb.id = vbc.cas3_void_bedspace_id
     WHERE
         p.service = 'temporary-accommodation'
       AND (CAST(:probationRegionId AS UUID) IS NULL OR p.probation_region_id = :probationRegionId)

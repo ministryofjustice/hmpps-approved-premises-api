@@ -56,7 +56,7 @@ class Cas3VoidBedspacesEntity(
   var startDate: LocalDate,
   var endDate: LocalDate,
   @ManyToOne
-  @JoinColumn(name = "lost_bed_reason_id")
+  @JoinColumn(name = "cas3_void_bedspace_reason_id")
   var reason: Cas3VoidBedspaceReasonEntity,
   var referenceNumber: String?,
   var notes: String?,
