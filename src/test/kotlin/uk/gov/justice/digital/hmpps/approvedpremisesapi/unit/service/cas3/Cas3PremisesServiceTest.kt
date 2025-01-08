@@ -7,7 +7,6 @@ import org.assertj.core.api.Assertions.assertThat
 import org.assertj.core.api.Assertions.entry
 import org.junit.jupiter.api.Test
 import org.springframework.data.repository.findByIdOrNull
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApAreaEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.BedEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.BookingSummaryForAvailabilityFactory
@@ -327,32 +326,6 @@ class Cas3PremisesServiceTest {
   }
 
   @Test
-  fun `createVoidBedspaces returns FieldValidationError with correct param to message map when a void bedspace reason with the incorrect service scope is supplied`() {
-    val premisesEntity = temporaryAccommodationPremisesFactory.produce()
-
-    val reasonId = UUID.randomUUID()
-
-    every { cas3VoidBedspaceReasonRepositoryMock.findByIdOrNull(reasonId) } returns Cas3VoidBedspaceReasonEntityFactory()
-      .withServiceScope(ServiceName.approvedPremises.value)
-      .produce()
-
-    val result = premisesService.createVoidBedspaces(
-      premises = premisesEntity,
-      startDate = LocalDate.parse("2022-08-25"),
-      endDate = LocalDate.parse("2022-08-28"),
-      reasonId = reasonId,
-      referenceNumber = "12345",
-      notes = "notes",
-      bedId = UUID.randomUUID(),
-    )
-
-    assertThat(result).isInstanceOf(ValidatableActionResult.FieldValidationError::class.java)
-    assertThat((result as ValidatableActionResult.FieldValidationError).validationMessages).contains(
-      entry("$.reason", "incorrectLostBedReasonServiceScope"),
-    )
-  }
-
-  @Test
   fun `createVoidBedspaces returns Success with correct result when validation passed`() {
     val premisesEntity = temporaryAccommodationPremisesFactory.produce()
 
@@ -368,7 +341,6 @@ class Cas3PremisesServiceTest {
     room.beds += bed
 
     val voidBedspaceReason = Cas3VoidBedspaceReasonEntityFactory()
-      .withServiceScope(ServiceName.temporaryAccommodation.value)
       .produce()
 
     every { cas3VoidBedspaceReasonRepositoryMock.findByIdOrNull(voidBedspaceReason.id) } returns voidBedspaceReason
@@ -405,7 +377,6 @@ class Cas3PremisesServiceTest {
       .withYieldedPremises { premisesEntity }
       .withYieldedReason {
         Cas3VoidBedspaceReasonEntityFactory()
-          .withServiceScope(ServiceName.temporaryAccommodation.value)
           .produce()
       }
       .withBed(
@@ -441,64 +412,16 @@ class Cas3PremisesServiceTest {
   }
 
   @Test
-  fun `updateVoidBedspaces returns FieldValidationError with correct param to message map when a void bedspace reason with the incorrect service scope is supplied`() {
-    val premisesEntity = temporaryAccommodationPremisesFactory.produce()
-
-    val reasonId = UUID.randomUUID()
-
-    val voidBedspaceEntity = Cas3VoidBedspacesEntityFactory()
-      .withYieldedPremises { premisesEntity }
-      .withYieldedReason {
-        Cas3VoidBedspaceReasonEntityFactory()
-          .withServiceScope(ServiceName.temporaryAccommodation.value)
-          .produce()
-      }
-      .withBed(
-        BedEntityFactory().apply {
-          withYieldedRoom {
-            RoomEntityFactory().apply {
-              withPremises(premisesEntity)
-            }.produce()
-          }
-        }.produce(),
-      )
-      .produce()
-
-    every { cas3VoidBedspacesRepositoryMock.findByIdOrNull(voidBedspaceEntity.id) } returns voidBedspaceEntity
-    every { cas3VoidBedspaceReasonRepositoryMock.findByIdOrNull(reasonId) } returns Cas3VoidBedspaceReasonEntityFactory()
-      .withServiceScope(ServiceName.approvedPremises.value)
-      .produce()
-
-    val result = premisesService.updateVoidBedspaces(
-      voidBedspaceId = voidBedspaceEntity.id,
-      startDate = LocalDate.parse("2022-08-25"),
-      endDate = LocalDate.parse("2022-08-28"),
-      reasonId = reasonId,
-      referenceNumber = "12345",
-      notes = "notes",
-    )
-
-    assertThat(result).isInstanceOf(AuthorisableActionResult.Success::class.java)
-    val resultEntity = (result as AuthorisableActionResult.Success).entity
-    assertThat(resultEntity).isInstanceOf(ValidatableActionResult.FieldValidationError::class.java)
-    assertThat((resultEntity as ValidatableActionResult.FieldValidationError).validationMessages).contains(
-      entry("$.reason", "incorrectLostBedReasonServiceScope"),
-    )
-  }
-
-  @Test
   fun `updateVoidBedspaces returns Success with correct result when validation passed`() {
     val premisesEntity = temporaryAccommodationPremisesFactory.produce()
 
     val voidBedspaceReason = Cas3VoidBedspaceReasonEntityFactory()
-      .withServiceScope(ServiceName.temporaryAccommodation.value)
       .produce()
 
     val voidBedspacesEntity = Cas3VoidBedspacesEntityFactory()
       .withYieldedPremises { premisesEntity }
       .withYieldedReason {
         Cas3VoidBedspaceReasonEntityFactory()
-          .withServiceScope(ServiceName.temporaryAccommodation.value)
           .produce()
       }
       .withBed(

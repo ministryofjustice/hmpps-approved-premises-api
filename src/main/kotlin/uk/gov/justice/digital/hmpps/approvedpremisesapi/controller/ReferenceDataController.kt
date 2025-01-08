@@ -145,7 +145,7 @@ class ReferenceDataController(
 
   override fun referenceDataLostBedReasonsGet(xServiceName: ServiceName?): ResponseEntity<List<LostBedReason>> {
     val voidBedspaceReasons = when (xServiceName == ServiceName.temporaryAccommodation) {
-      true -> cas3VoidBedspaceReasonRepository.findAllByServiceScope(xServiceName.value)
+      true -> cas3VoidBedspaceReasonRepository.findAll()
       false -> throw ForbiddenProblem()
     }
 

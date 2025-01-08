@@ -15,14 +15,14 @@ import java.util.UUID
 interface Cas3VoidBedspaceCancellationRepository : JpaRepository<Cas3VoidBedspaceCancellationEntity, UUID>
 
 @Entity
-@Table(name = "lost_bed_cancellations")
+@Table(name = "cas3_void_bedspace_cancellations")
 data class Cas3VoidBedspaceCancellationEntity(
   @Id
   val id: UUID,
   val createdAt: OffsetDateTime,
   val notes: String?,
   @OneToOne
-  @JoinColumn(name = "lost_bed_id")
+  @JoinColumn(name = "cas3_void_bedspace_id")
   val voidBedspace: Cas3VoidBedspacesEntity,
 ) {
   override fun equals(other: Any?): Boolean {

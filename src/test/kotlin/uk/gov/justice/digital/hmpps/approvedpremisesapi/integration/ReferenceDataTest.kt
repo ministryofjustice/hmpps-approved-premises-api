@@ -691,11 +691,7 @@ class ReferenceDataTest : IntegrationTestBase() {
   fun `Get Void Bedspace Reasons for only Temporary Accommodation returns 200 with correct body`() {
     cas3VoidBedspaceReasonTestRepository.deleteAll()
 
-    cas3VoidBedspaceReasonEntityFactory.produceAndPersistMultiple(10)
-
-    val expectedLostBedReasons = cas3VoidBedspaceReasonEntityFactory.produceAndPersistMultiple(10) {
-      withServiceScope(ServiceName.temporaryAccommodation.value)
-    }
+    val expectedLostBedReasons = cas3VoidBedspaceReasonEntityFactory.produceAndPersistMultiple(10)
     val expectedJson = objectMapper.writeValueAsString(
       expectedLostBedReasons.map(cas3VoidBedspaceReasonTransformer::transformJpaToApi),
     )

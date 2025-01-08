@@ -42,7 +42,7 @@ interface BedRepository : JpaRepository<BedEntity, UUID> {
 
 const val BED_SUMMARY_QUERY =
   """
-    select b.id as id,
+      select b.id as id,
       cast(b.name as text) as name,
       cast(r.name as text) as roomName,
       r.id as roomId,
@@ -60,17 +60,17 @@ const val BED_SUMMARY_QUERY =
           and non_arrival IS NULL
       ) > 0 as bedBooked,
       (
-        select count(lost_bed.id)
-        from lost_beds lost_bed
-          left join lost_bed_cancellations cancellation
-            on lost_bed.id = cancellation.lost_bed_id
-        where lost_bed.bed_id = b.id
-          and lost_bed.start_date <= CURRENT_DATE
-          and lost_bed.end_date >= CURRENT_DATE
+        select count(void_bedspace.id)
+        from cas3_void_bedspaces void_bedspace
+          left join cas3_void_bedspace_cancellations cancellation
+            on void_bedspace.id = cancellation.cas3_void_bedspace_id
+        where void_bedspace.bed_id = b.id
+          and void_bedspace.start_date <= CURRENT_DATE
+          and void_bedspace.end_date >= CURRENT_DATE
           and cancellation IS NULL
       ) > 0 as bedOutOfService
       from beds b
-           join rooms r on b.room_id = r.id 
+           join rooms r on b.room_id = r.id
   """
 
 @NamedNativeQuery(
