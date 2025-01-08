@@ -2,6 +2,7 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.unit.service
 
 import io.mockk.every
 import io.mockk.mockk
+import io.mockk.verify
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
@@ -11,14 +12,16 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.ApDeliusContextAp
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.ClientResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ContextStaffMemberFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.deliuscontext.StaffMembersPage
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.CasResult
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.SentryService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.StaffMemberService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.unit.util.assertThatCasResult
 
 class StaffMemberServiceTest {
   private val mockApDeliusContextApiClient = mockk<ApDeliusContextApiClient>()
-  private val staffMemberService = StaffMemberService(mockApDeliusContextApiClient)
+  private val mockSentryService = mockk<SentryService>()
+  private val staffMemberService = StaffMemberService(mockApDeliusContextApiClient, mockSentryService)
 
-  private val qCode = "Qcode"
+  private val qCode = "Q123"
 
   @Nested
   inner class GetStaffMemberByCode {
@@ -35,62 +38,97 @@ class StaffMemberServiceTest {
 
       val result = staffMemberService.getStaffMemberByCodeForPremise(staffMembers[2].code, qCode)
 
-      assertThat(result is CasResult.Success).isTrue
-      result as CasResult.Success
+      assertThatCasResult(result).isSuccess().with {
+        assertThat(it).isEqualTo(staffMembers[2])
+      }
+    }
 
-      assertThat(result.value).isEqualTo(staffMembers[2])
+    @Test
+    fun `it returns Unauthorised when Delius returns Unauthorised`() {
+      every { mockApDeliusContextApiClient.getStaffMembers(qCode) } returns ClientResult.Failure.StatusCode(
+        HttpMethod.GET,
+        "/staff-members/code",
+        HttpStatus.UNAUTHORIZED,
+        body = null,
+      )
+
+      val result = staffMemberService.getStaffMemberByCodeForPremise("code", qCode)
+
+      assertThatCasResult(result).isUnauthorised()
+    }
+
+    @Test
+    fun `it returns NotFound when Delius returns NotFound`() {
+      every { mockApDeliusContextApiClient.getStaffMembers(qCode) } returns ClientResult.Failure.StatusCode(
+        HttpMethod.GET,
+        "/staff-members/code",
+        HttpStatus.NOT_FOUND,
+        body = null,
+      )
+
+      every { mockSentryService.captureErrorMessage(any()) } returns Unit
+
+      val result = staffMemberService.getStaffMemberByCodeForPremise("code", qCode)
+
+      assertThatCasResult(result).isNotFound("Team", qCode)
+
+      verify { mockSentryService.captureErrorMessage("404 returned when finding staff members for qcode 'Q123'") }
+    }
+
+    @Test
+    fun `it returns NotFound when a staff member for the QCode cannot be found in the results`() {
+      val staffMembers = ContextStaffMemberFactory().produceMany().take(5).toList()
+
+      every { mockApDeliusContextApiClient.getStaffMembers(qCode) } returns ClientResult.Success(
+        status = HttpStatus.OK,
+        body = StaffMembersPage(
+          content = staffMembers,
+        ),
+      )
+
+      val result = staffMemberService.getStaffMemberByCodeForPremise("code", qCode)
+
+      assertThatCasResult(result).isNotFound("Staff Code", "code")
     }
   }
 
-  @Test
-  fun `it returns Unauthorised when Delius returns Unauthorised`() {
-    every { mockApDeliusContextApiClient.getStaffMembers(qCode) } returns ClientResult.Failure.StatusCode(
-      HttpMethod.GET,
-      "/staff-members/code",
-      HttpStatus.UNAUTHORIZED,
-      body = null,
-    )
+  @Nested
+  inner class GetStaffMembersForQCode {
 
-    val result = staffMemberService.getStaffMemberByCodeForPremise("code", qCode)
+    @Test
+    fun success() {
+      val staffMembers = ContextStaffMemberFactory().produceMany().take(5).toList()
 
-    assertThat(result is CasResult.Unauthorised).isTrue
-  }
+      every { mockApDeliusContextApiClient.getStaffMembers(qCode) } returns ClientResult.Success(
+        status = HttpStatus.OK,
+        body = StaffMembersPage(
+          content = staffMembers,
+        ),
+      )
 
-  @Test
-  fun `it returns NotFound when Delius returns NotFound`() {
-    every { mockApDeliusContextApiClient.getStaffMembers(qCode) } returns ClientResult.Failure.StatusCode(
-      HttpMethod.GET,
-      "/staff-members/code",
-      HttpStatus.NOT_FOUND,
-      body = null,
-    )
+      val result = staffMemberService.getStaffMembersForQCode(qCode)
 
-    val result = staffMemberService.getStaffMemberByCodeForPremise("code", qCode)
+      assertThatCasResult(result).isSuccess().with {
+        assertThat(it.content).hasSize(5)
+      }
+    }
 
-    assertThat(result is CasResult.NotFound).isTrue
-    result as CasResult.NotFound
+    @Test
+    fun notFound() {
+      every { mockApDeliusContextApiClient.getStaffMembers(qCode) } returns ClientResult.Failure.StatusCode(
+        HttpMethod.GET,
+        "/staff-members/code",
+        HttpStatus.NOT_FOUND,
+        body = null,
+      )
 
-    assertThat(result.id).isEqualTo(qCode)
-    assertThat(result.entityType).isEqualTo("Team")
-  }
+      every { mockSentryService.captureErrorMessage(any()) } returns Unit
 
-  @Test
-  fun `it returns a NotFound when a staff member for the QCode cannot me found`() {
-    val staffMembers = ContextStaffMemberFactory().produceMany().take(5).toList()
+      val result = staffMemberService.getStaffMembersForQCode(qCode)
 
-    every { mockApDeliusContextApiClient.getStaffMembers(qCode) } returns ClientResult.Success(
-      status = HttpStatus.OK,
-      body = StaffMembersPage(
-        content = staffMembers,
-      ),
-    )
+      assertThatCasResult(result).isNotFound("Team", qCode)
 
-    val result = staffMemberService.getStaffMemberByCodeForPremise("code", qCode)
-
-    assertThat(result is CasResult.NotFound).isTrue
-    result as CasResult.NotFound
-
-    assertThat(result.id).isEqualTo("code")
-    assertThat(result.entityType).isEqualTo("Staff Code")
+      verify { mockSentryService.captureErrorMessage("404 returned when finding staff members for qcode 'Q123'") }
+    }
   }
 }

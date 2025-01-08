@@ -6,6 +6,8 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.CasResult
 
 fun <T> assertThat(actual: CasResult<T>): CasResultAssertions<T> = CasResultAssertions(actual)
 
+fun <T> assertThatCasResult(actual: CasResult<T>): CasResultAssertions<T> = CasResultAssertions(actual)
+
 class CasResultAssertions<T>(actual: CasResult<T>) : AbstractAssert<CasResultAssertions<T>, CasResult<T>>(
   actual,
   CasResultAssertions::class.java,
