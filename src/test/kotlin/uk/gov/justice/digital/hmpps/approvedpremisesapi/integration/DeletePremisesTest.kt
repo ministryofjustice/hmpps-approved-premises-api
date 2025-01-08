@@ -29,7 +29,7 @@ class DeletePremisesTest : IntegrationTestBase() {
       }
     }
 
-    val lostBed = createLostBed(premises, beds.first())
+    val lostBed = createVoidBedspace(premises, beds.first())
 
     webTestClient.delete()
       .uri("/internal/premises/${premises.id}")
@@ -62,7 +62,7 @@ class DeletePremisesTest : IntegrationTestBase() {
       }
     }
 
-    val lostBed = createLostBed(premises, beds.first())
+    val lostBed = createVoidBedspace(premises, beds.first())
 
     every { realBedRepository.delete(match { it.id == beds.last().id }) } throws RuntimeException("Database Exception")
 
@@ -97,7 +97,7 @@ class DeletePremisesTest : IntegrationTestBase() {
       }
     }
 
-    val lostBed = createLostBed(premises, beds.first())
+    val lostBed = createVoidBedspace(premises, beds.first())
 
     val booking = bookingEntityFactory.produceAndPersist {
       withPremises(premises)
@@ -129,7 +129,7 @@ class DeletePremisesTest : IntegrationTestBase() {
     withLocalAuthorityArea(localAuthorityEntityFactory.produceAndPersist())
   }
 
-  private fun createLostBed(premises: PremisesEntity, bed: BedEntity) = cas3VoidBedspacesEntityFactory.produceAndPersist {
+  private fun createVoidBedspace(premises: PremisesEntity, bed: BedEntity) = cas3VoidBedspacesEntityFactory.produceAndPersist {
     withPremises(premises)
     withBed(bed)
     withYieldedReason {
