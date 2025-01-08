@@ -296,9 +296,7 @@ class VoidBedspacesTest : IntegrationTestBase() {
         withYieldedProbationRegion { probationRegion }
       }
 
-      val reason = cas3VoidBedspaceReasonEntityFactory.produceAndPersist {
-        withServiceScope(ServiceName.temporaryAccommodation.value)
-      }
+      val reason = cas3VoidBedspaceReasonEntityFactory.produceAndPersist()
 
       webTestClient.post()
         .uri("/premises/${premises.id}/lost-beds")
@@ -340,9 +338,7 @@ class VoidBedspacesTest : IntegrationTestBase() {
         }
       }
 
-      val reason = cas3VoidBedspaceReasonEntityFactory.produceAndPersist {
-        withServiceScope(ServiceName.temporaryAccommodation.value)
-      }
+      val reason = cas3VoidBedspaceReasonEntityFactory.produceAndPersist()
 
       webTestClient.post()
         .uri("/premises/${premises.id}/lost-beds")
@@ -392,9 +388,7 @@ class VoidBedspacesTest : IntegrationTestBase() {
         }
       }
 
-      val reason = cas3VoidBedspaceReasonEntityFactory.produceAndPersist {
-        withServiceScope(ServiceName.temporaryAccommodation.value)
-      }
+      val reason = cas3VoidBedspaceReasonEntityFactory.produceAndPersist()
 
       webTestClient.post()
         .uri("/premises/${premises.id}/lost-beds")
@@ -534,9 +528,7 @@ class VoidBedspacesTest : IntegrationTestBase() {
         withPremises(premises)
       }
 
-      val reason = cas3VoidBedspaceReasonEntityFactory.produceAndPersist {
-        withServiceScope(ServiceName.temporaryAccommodation.value)
-      }
+      val reason = cas3VoidBedspaceReasonEntityFactory.produceAndPersist()
 
       webTestClient.put()
         .uri("/premises/${premises.id}/lost-beds/${voidBedspaces.id}")
@@ -591,9 +583,7 @@ class VoidBedspacesTest : IntegrationTestBase() {
         withPremises(premises)
       }
 
-      val reason = cas3VoidBedspaceReasonEntityFactory.produceAndPersist {
-        withServiceScope(ServiceName.temporaryAccommodation.value)
-      }
+      val reason = cas3VoidBedspaceReasonEntityFactory.produceAndPersist()
 
       webTestClient.put()
         .uri("/premises/${premises.id}/lost-beds/${voidBedspaces.id}")
@@ -712,9 +702,7 @@ class VoidBedspacesTest : IntegrationTestBase() {
         withPremises(premises)
       }
 
-      val reason = cas3VoidBedspaceReasonEntityFactory.produceAndPersist {
-        withServiceScope(ServiceName.temporaryAccommodation.value)
-      }
+      val reason = cas3VoidBedspaceReasonEntityFactory.produceAndPersist()
 
       webTestClient.post()
         .uri("/premises/${premises.id}/lost-beds/${voidBedspaces.id}/cancellations")
@@ -757,9 +745,7 @@ class VoidBedspacesTest : IntegrationTestBase() {
         withPremises(premises)
       }
 
-      val reason = cas3VoidBedspaceReasonEntityFactory.produceAndPersist {
-        withServiceScope(ServiceName.temporaryAccommodation.value)
-      }
+      val reason = cas3VoidBedspaceReasonEntityFactory.produceAndPersist()
 
       webTestClient.post()
         .uri("/premises/${premises.id}/lost-beds/${voidBedspaces.id}/cancellations")
@@ -793,9 +779,7 @@ class VoidBedspacesTest : IntegrationTestBase() {
           }
         }
 
-        val reason = cas3VoidBedspaceReasonEntityFactory.produceAndPersist {
-          withServiceScope(ServiceName.temporaryAccommodation.value)
-        }
+        val reason = cas3VoidBedspaceReasonEntityFactory.produceAndPersist()
 
         val existingBooking = bookingEntityFactory.produceAndPersist {
           withServiceName(ServiceName.temporaryAccommodation)
@@ -849,9 +833,7 @@ class VoidBedspacesTest : IntegrationTestBase() {
           }
         }
 
-        val reason = cas3VoidBedspaceReasonEntityFactory.produceAndPersist {
-          withServiceScope(ServiceName.temporaryAccommodation.value)
-        }
+        val reason = cas3VoidBedspaceReasonEntityFactory.produceAndPersist()
 
         val existingBooking = bookingEntityFactory.produceAndPersist {
           withServiceName(ServiceName.temporaryAccommodation)
@@ -916,9 +898,7 @@ class VoidBedspacesTest : IntegrationTestBase() {
           }
         }
 
-        val reason = cas3VoidBedspaceReasonEntityFactory.produceAndPersist {
-          withServiceScope(ServiceName.temporaryAccommodation.value)
-        }
+        val reason = cas3VoidBedspaceReasonEntityFactory.produceAndPersist()
 
         val existingLostBed = cas3VoidBedspacesEntityFactory.produceAndPersist {
           withBed(bed)
@@ -969,9 +949,7 @@ class VoidBedspacesTest : IntegrationTestBase() {
           }
         }
 
-        val reason = cas3VoidBedspaceReasonEntityFactory.produceAndPersist {
-          withServiceScope(ServiceName.temporaryAccommodation.value)
-        }
+        val reason = cas3VoidBedspaceReasonEntityFactory.produceAndPersist()
 
         val existingLostBed = cas3VoidBedspacesEntityFactory.produceAndPersist {
           withBed(bed)
@@ -1043,9 +1021,7 @@ class VoidBedspacesTest : IntegrationTestBase() {
         withPremises(premises)
       }
 
-      val reason = cas3VoidBedspaceReasonEntityFactory.produceAndPersist {
-        withServiceScope(ServiceName.temporaryAccommodation.value)
-      }
+      val reason = cas3VoidBedspaceReasonEntityFactory.produceAndPersist()
 
       val existingBooking = bookingEntityFactory.produceAndPersist {
         withServiceName(ServiceName.temporaryAccommodation)
@@ -1105,9 +1081,7 @@ class VoidBedspacesTest : IntegrationTestBase() {
           withPremises(premises)
         }
 
-        val reason = cas3VoidBedspaceReasonEntityFactory.produceAndPersist {
-          withServiceScope(ServiceName.temporaryAccommodation.value)
-        }
+        val reason = cas3VoidBedspaceReasonEntityFactory.produceAndPersist()
 
         val existingBooking = bookingEntityFactory.produceAndPersist {
           withServiceName(ServiceName.temporaryAccommodation)
@@ -1171,9 +1145,7 @@ class VoidBedspacesTest : IntegrationTestBase() {
           }
         }
 
-        val reason = cas3VoidBedspaceReasonEntityFactory.produceAndPersist {
-          withServiceScope(ServiceName.temporaryAccommodation.value)
-        }
+        val reason = cas3VoidBedspaceReasonEntityFactory.produceAndPersist()
 
         val voidBedspaces = cas3VoidBedspacesEntityFactory.produceAndPersist {
           withStartDate(LocalDate.parse("2022-08-16"))
@@ -1231,9 +1203,7 @@ class VoidBedspacesTest : IntegrationTestBase() {
           }
         }
 
-        val reason = cas3VoidBedspaceReasonEntityFactory.produceAndPersist {
-          withServiceScope(ServiceName.temporaryAccommodation.value)
-        }
+        val reason = cas3VoidBedspaceReasonEntityFactory.produceAndPersist()
 
         val voidBedspaces = cas3VoidBedspacesEntityFactory.produceAndPersist {
           withStartDate(LocalDate.parse("2022-08-16"))

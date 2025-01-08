@@ -6,7 +6,6 @@ import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
 import org.springframework.data.repository.findByIdOrNull
 import org.springframework.http.HttpStatus
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAProbationRegion
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.BedEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.BedRepository
@@ -134,9 +133,7 @@ class DeletePremisesTest : IntegrationTestBase() {
     withPremises(premises)
     withBed(bed)
     withYieldedReason {
-      cas3VoidBedspaceReasonEntityFactory.produceAndPersist {
-        withServiceScope(ServiceName.temporaryAccommodation.value)
-      }
+      cas3VoidBedspaceReasonEntityFactory.produceAndPersist()
     }
   }
 }

@@ -331,8 +331,6 @@ class Cas3PremisesService(
       val reason = cas3VoidBedspaceReasonRepository.findByIdOrNull(reasonId)
       if (reason == null) {
         "$.reason" hasValidationError "doesNotExist"
-      } else if (!serviceScopeMatches(reason.serviceScope)) {
-        "$.reason" hasValidationError "incorrectLostBedReasonServiceScope"
       }
 
       if (validationErrors.any()) {
@@ -376,8 +374,6 @@ class Cas3PremisesService(
         val reason = cas3VoidBedspaceReasonRepository.findByIdOrNull(reasonId)
         if (reason == null) {
           "$.reason" hasValidationError "doesNotExist"
-        } else if (!serviceScopeMatches(reason.serviceScope)) {
-          "$.reason" hasValidationError "incorrectLostBedReasonServiceScope"
         }
 
         if (validationErrors.any()) {
