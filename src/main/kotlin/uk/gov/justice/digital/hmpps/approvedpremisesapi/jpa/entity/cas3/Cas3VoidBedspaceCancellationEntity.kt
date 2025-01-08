@@ -15,7 +15,7 @@ import java.util.UUID
 interface Cas3VoidBedspaceCancellationRepository : JpaRepository<Cas3VoidBedspaceCancellationEntity, UUID>
 
 @Entity
-@Table(name = "lost_bed_cancellations")
+@Table(name = "cas3_void_bedspace_cancellations")
 data class Cas3VoidBedspaceCancellationEntity(
   @Id
   val id: UUID,

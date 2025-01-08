@@ -42,7 +42,7 @@ interface BedRepository : JpaRepository<BedEntity, UUID> {
 
 const val BED_SUMMARY_QUERY =
   """
-    select b.id as id,
+      select b.id as id,
       cast(b.name as text) as name,
       cast(r.name as text) as roomName,
       r.id as roomId,
@@ -62,7 +62,7 @@ const val BED_SUMMARY_QUERY =
       (
         select count(void_bedspace.id)
         from cas3_void_bedspaces void_bedspace
-          left join lost_bed_cancellations cancellation
+          left join cas3_void_bedspace_cancellations cancellation
             on void_bedspace.id = cancellation.lost_bed_id
         where void_bedspace.bed_id = b.id
           and void_bedspace.start_date <= CURRENT_DATE

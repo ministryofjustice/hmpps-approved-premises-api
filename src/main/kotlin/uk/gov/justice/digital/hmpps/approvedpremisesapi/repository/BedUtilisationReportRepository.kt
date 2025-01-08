@@ -116,17 +116,17 @@ interface BedUtilisationReportRepository : JpaRepository<BedEntity, UUID> {
         CAST(b.id AS VARCHAR) AS bedId,
         vb.start_date AS startDate,
         vb.end_date AS endDate,
-        CAST(lbc.id AS VARCHAR) AS cancellationId
+        CAST(vbc.id AS VARCHAR) AS cancellationId
     From cas3_void_bedspaces vb
     LEFT JOIN beds b ON vb.bed_id = b.id
     LEFT JOIN rooms r ON b.room_id = r.id
     LEFT JOIN premises p ON r.premises_id = p.id
-    LEFT JOIN lost_bed_cancellations lbc ON vb.id = lbc.lost_bed_id
+    LEFT JOIN cas3_void_bedspace_cancellations vbc ON vb.id = vbc.lost_bed_id
     WHERE
         p.service = 'temporary-accommodation'
       AND (CAST(:probationRegionId AS UUID) IS NULL OR p.probation_region_id = :probationRegionId)
       AND vb.start_date <= :endDate AND vb.end_date >= :startDate
-      AND lbc.id is NULL
+      AND vbc.id is NULL
     ORDER BY vb.id     
     """,
     nativeQuery = true,
