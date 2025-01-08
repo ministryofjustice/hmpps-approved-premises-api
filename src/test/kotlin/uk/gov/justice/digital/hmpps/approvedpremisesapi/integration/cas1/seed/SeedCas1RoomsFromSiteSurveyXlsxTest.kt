@@ -167,6 +167,54 @@ class SeedCas1RoomsFromSiteSurveyXlsxTest : SeedTestBase() {
   }
 
   @Test
+  fun `Creating one new room with two beds but different characteristics fails`() {
+    val localAuthorityArea = localAuthorityEntityFactory.produceAndPersist()
+    val probationRegion = probationRegionEntityFactory.produceAndPersist()
+    val qCode = "Q999"
+    approvedPremisesEntityFactory.produceAndPersist {
+      withLocalAuthorityArea(localAuthorityArea)
+      withProbationRegion(probationRegion)
+      withQCode(qCode)
+    }
+
+    val header = listOf("Unique Reference Number for Bed", "SWABI01NEW", "SWABI02NEW")
+    val rows = mutableListOf(
+      "Room Number / Name",
+      "1",
+      "1",
+      "Bed Number (in this room i.e if this is a single room insert 1.  If this is a shared room separate entries will need to be made for bed 1 and bed 2)",
+      "1",
+      "2",
+    )
+    rows.addCharacteristics(2, mapOf("Is this room located on the ground floor?" to listOf("No", "Yes")))
+
+    val roomsSheet = dataFrameOf(header, rows)
+
+    createXlsxForSeeding(
+      fileName = "example.xlsx",
+      sheets = mapOf(
+        "Sheet2" to createNameValueDataFrame("AP Identifier (Q No.)", qCode),
+        "Sheet3" to roomsSheet,
+      ),
+    )
+
+    seedXlsxService.seedExcelData(
+      SeedFromExcelFileType.CAS1_IMPORT_SITE_SURVEY_ROOMS,
+      "example.xlsx",
+    )
+
+    assertThat(logEntries)
+      .anyMatch {
+        it.level == "error" &&
+          it.message == "Unable to complete Excel seed job" &&
+          it.throwable != null &&
+          it.throwable.message == "Unable to process XLSX file" &&
+          it.throwable.cause is IllegalStateException &&
+          it.throwable.cause!!.message == "Room Q999 - 1 has different characteristics."
+      }
+  }
+
+  @Test
   fun `Creating two new rooms and three new beds with a characteristic succeeds`() {
     val localAuthorityArea = localAuthorityEntityFactory.produceAndPersist()
     val probationRegion = probationRegionEntityFactory.produceAndPersist()

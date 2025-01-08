@@ -36,6 +36,7 @@ class Cas1SeedRoomsFromSiteSurveyXlsxJob(
     val siteSurveyBedsInfo = Cas1SiteSurveyBedFactory().load(file)
 
     val rooms = resolveRooms(qCode, siteSurveyBedsInfo)
+    checkRoomCharacteristics(rooms)
 
     val beds = resolveBeds(qCode, siteSurveyBedsInfo)
 
@@ -75,6 +76,12 @@ class Cas1SeedRoomsFromSiteSurveyXlsxJob(
         roomName = it.roomNumber,
         characteristics = resolveCharacteristics(it),
       )
+    }
+  }
+
+  private fun checkRoomCharacteristics(rooms: List<RoomInfo>) {
+    rooms.groupBy { room -> room.roomCode }.forEach { (roomCode, rooms) ->
+      rooms.all { it.characteristics == rooms.first().characteristics } || error("Room $roomCode has different characteristics.")
     }
   }
 
