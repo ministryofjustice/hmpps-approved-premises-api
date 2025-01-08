@@ -13,6 +13,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ContextStaffMemb
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.deliuscontext.StaffMembersPage
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.CasResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.StaffMemberService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.unit.util.assertThatCasResult
 
 class StaffMemberServiceTest {
   private val mockApDeliusContextApiClient = mockk<ApDeliusContextApiClient>()
@@ -91,6 +92,42 @@ class StaffMemberServiceTest {
 
       assertThat(result.id).isEqualTo("code")
       assertThat(result.entityType).isEqualTo("Staff Code")
+    }
+  }
+
+  @Nested
+  inner class GetStaffMembersForQCode {
+
+    @Test
+    fun success() {
+      val staffMembers = ContextStaffMemberFactory().produceMany().take(5).toList()
+
+      every { mockApDeliusContextApiClient.getStaffMembers(qCode) } returns ClientResult.Success(
+        status = HttpStatus.OK,
+        body = StaffMembersPage(
+          content = staffMembers,
+        ),
+      )
+
+      val result = staffMemberService.getStaffMembersForQCode(qCode)
+
+      assertThatCasResult(result).isSuccess().with {
+        assertThat(it.content).hasSize(5)
+      }
+    }
+
+    @Test
+    fun notFound() {
+      every { mockApDeliusContextApiClient.getStaffMembers(qCode) } returns ClientResult.Failure.StatusCode(
+        HttpMethod.GET,
+        "/staff-members/code",
+        HttpStatus.NOT_FOUND,
+        body = null,
+      )
+
+      val result = staffMemberService.getStaffMembersForQCode(qCode)
+
+      assertThatCasResult(result).isNotFound("Team", qCode)
     }
   }
 }
