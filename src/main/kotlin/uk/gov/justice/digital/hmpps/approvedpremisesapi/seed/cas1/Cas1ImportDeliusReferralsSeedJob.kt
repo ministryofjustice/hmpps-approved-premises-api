@@ -104,6 +104,10 @@ class Cas1ImportDeliusReferralsSeedJob(
       return
     }
 
+    if (!isAccepted(row)) {
+      return
+    }
+
     cas1DeliusBookingImportRepository.save(
       Cas1DeliusBookingImportEntity(
         id = UUID.randomUUID(),
@@ -132,6 +136,8 @@ class Cas1ImportDeliusReferralsSeedJob(
       ),
     )
   }
+
+  private fun isAccepted(row: Cas1DeliusBookingManagementDataRow) = row.decisionCode.startsWith("A")
 
   override fun postSeed() {
     log.info(

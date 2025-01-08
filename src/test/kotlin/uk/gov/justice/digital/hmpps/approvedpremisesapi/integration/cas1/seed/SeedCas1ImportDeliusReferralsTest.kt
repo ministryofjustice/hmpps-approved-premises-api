@@ -44,8 +44,8 @@ class SeedCas1ImportDeliusReferralsTest : SeedTestBase() {
         Cas1DeliusBookingManagementDataRowRaw(
           crn = "CRN1",
           eventNumber = "1",
-          decisionCode = "DC1",
-          decisionDescription = "Decision Code 1",
+          decisionCode = "A1",
+          decisionDescription = "Accepted Code 1",
           expectedArrivalDate = "2024-06-15 00:00:00",
           hostelCode = "hostel code",
         ),
@@ -93,8 +93,8 @@ class SeedCas1ImportDeliusReferralsTest : SeedTestBase() {
           keyWorkerForename = "kwForename",
           keyWorkerMiddleName = "kwMiddle",
           keyWorkerSurname = "kwSurname",
-          decisionCode = "DC1",
-          decisionDescription = "Decision Code 1",
+          decisionCode = "A1",
+          decisionDescription = "Accepted Code 1",
           departureReasonCode = "drc",
           moveOnCategoryCode = "mocc",
           moveOnCategoryDescription = "moccDescription",
@@ -139,6 +139,35 @@ class SeedCas1ImportDeliusReferralsTest : SeedTestBase() {
   }
 
   @Test
+  fun `Only include accepted referrals`() {
+    val allDecisionCodes = listOf(
+      "AD", "ADA1", "ASA2", "ADA3", "AI", "A10", "AR", "DPAA", "-1",
+      "DP", "DR", "IR", "2", "3", "1", "8", "RJ", "9", "4", "6", "7", "5",
+    )
+
+    withCsv(
+      csvName = "valid-csv",
+      contents =
+      allDecisionCodes.map { decisionCode ->
+        Cas1DeliusBookingManagementDataRowRaw(
+          crn = decisionCode,
+          eventNumber = "1",
+          decisionCode = decisionCode,
+          decisionDescription = decisionCode,
+          expectedArrivalDate = "2024-06-15 00:00:00",
+          hostelCode = "hostel code",
+        )
+      }.toCsv(),
+    )
+
+    seedService.seedData(SeedFileType.approvedPremisesImportDeliusReferrals, "valid-csv.csv")
+
+    val bookingImport = cas1DeliusBookingImportRepository.findAll()
+
+    assertThat(bookingImport.map { it.crn }).containsExactlyInAnyOrder("AD", "ADA1", "ASA2", "ADA3", "AI", "A10", "AR")
+  }
+
+  @Test
   fun `Fields containing invalid data are set to null`() {
     val bookingId = UUID.randomUUID()
 
@@ -152,8 +181,8 @@ class SeedCas1ImportDeliusReferralsTest : SeedTestBase() {
           expectedArrivalDate = "2024-06-15 00:00:00",
           hostelCode = "hostel code",
           keyWorkerStaffCode = "-1",
-          decisionCode = "DC1",
-          decisionDescription = "Decision Code 1",
+          decisionCode = "A1",
+          decisionDescription = "Accepted Code 1",
           moveOnCategoryCode = "-1",
           nonArrivalReasonCode = "-1",
           arrivalDate = "1900-01-01 00:00:00",
