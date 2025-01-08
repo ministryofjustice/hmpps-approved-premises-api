@@ -40,57 +40,57 @@ class StaffMemberServiceTest {
 
       assertThat(result.value).isEqualTo(staffMembers[2])
     }
-  }
 
-  @Test
-  fun `it returns Unauthorised when Delius returns Unauthorised`() {
-    every { mockApDeliusContextApiClient.getStaffMembers(qCode) } returns ClientResult.Failure.StatusCode(
-      HttpMethod.GET,
-      "/staff-members/code",
-      HttpStatus.UNAUTHORIZED,
-      body = null,
-    )
+    @Test
+    fun `it returns Unauthorised when Delius returns Unauthorised`() {
+      every { mockApDeliusContextApiClient.getStaffMembers(qCode) } returns ClientResult.Failure.StatusCode(
+        HttpMethod.GET,
+        "/staff-members/code",
+        HttpStatus.UNAUTHORIZED,
+        body = null,
+      )
 
-    val result = staffMemberService.getStaffMemberByCodeForPremise("code", qCode)
+      val result = staffMemberService.getStaffMemberByCodeForPremise("code", qCode)
 
-    assertThat(result is CasResult.Unauthorised).isTrue
-  }
+      assertThat(result is CasResult.Unauthorised).isTrue
+    }
 
-  @Test
-  fun `it returns NotFound when Delius returns NotFound`() {
-    every { mockApDeliusContextApiClient.getStaffMembers(qCode) } returns ClientResult.Failure.StatusCode(
-      HttpMethod.GET,
-      "/staff-members/code",
-      HttpStatus.NOT_FOUND,
-      body = null,
-    )
+    @Test
+    fun `it returns NotFound when Delius returns NotFound`() {
+      every { mockApDeliusContextApiClient.getStaffMembers(qCode) } returns ClientResult.Failure.StatusCode(
+        HttpMethod.GET,
+        "/staff-members/code",
+        HttpStatus.NOT_FOUND,
+        body = null,
+      )
 
-    val result = staffMemberService.getStaffMemberByCodeForPremise("code", qCode)
+      val result = staffMemberService.getStaffMemberByCodeForPremise("code", qCode)
 
-    assertThat(result is CasResult.NotFound).isTrue
-    result as CasResult.NotFound
+      assertThat(result is CasResult.NotFound).isTrue
+      result as CasResult.NotFound
 
-    assertThat(result.id).isEqualTo(qCode)
-    assertThat(result.entityType).isEqualTo("Team")
-  }
+      assertThat(result.id).isEqualTo(qCode)
+      assertThat(result.entityType).isEqualTo("Team")
+    }
 
-  @Test
-  fun `it returns a NotFound when a staff member for the QCode cannot me found`() {
-    val staffMembers = ContextStaffMemberFactory().produceMany().take(5).toList()
+    @Test
+    fun `it returns NotFound when a staff member for the QCode cannot be found in the results`() {
+      val staffMembers = ContextStaffMemberFactory().produceMany().take(5).toList()
 
-    every { mockApDeliusContextApiClient.getStaffMembers(qCode) } returns ClientResult.Success(
-      status = HttpStatus.OK,
-      body = StaffMembersPage(
-        content = staffMembers,
-      ),
-    )
+      every { mockApDeliusContextApiClient.getStaffMembers(qCode) } returns ClientResult.Success(
+        status = HttpStatus.OK,
+        body = StaffMembersPage(
+          content = staffMembers,
+        ),
+      )
 
-    val result = staffMemberService.getStaffMemberByCodeForPremise("code", qCode)
+      val result = staffMemberService.getStaffMemberByCodeForPremise("code", qCode)
 
-    assertThat(result is CasResult.NotFound).isTrue
-    result as CasResult.NotFound
+      assertThat(result is CasResult.NotFound).isTrue
+      result as CasResult.NotFound
 
-    assertThat(result.id).isEqualTo("code")
-    assertThat(result.entityType).isEqualTo("Staff Code")
+      assertThat(result.id).isEqualTo("code")
+      assertThat(result.entityType).isEqualTo("Staff Code")
+    }
   }
 }
