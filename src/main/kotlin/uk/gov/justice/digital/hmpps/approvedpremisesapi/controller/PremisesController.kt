@@ -56,6 +56,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.InternalServerEr
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.NotFoundProblem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.NotImplementedProblem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.AuthorisableActionResult
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.CasResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.ValidatableActionResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.BedService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.BookingService
@@ -836,6 +837,10 @@ class PremisesController(
     }
 
     val staffMembersResult = staffMemberService.getStaffMembersForQCode(premises.qCode)
+
+    if (staffMembersResult is CasResult.NotFound) {
+      return ResponseEntity.ok(emptyList())
+    }
 
     val staffMembers = extractEntityFromCasResult(staffMembersResult)
 

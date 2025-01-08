@@ -24,6 +24,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewPremises
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewRoom
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PropertyStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.StaffMember
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.UpdatePremises
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.UpdateRoom
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.CaseAccessFactory
@@ -49,6 +50,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.BookingTrans
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.PremisesTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.RoomTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.StaffMemberTransformer
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.bodyAsListOfObjects
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.toLocalDateTime
 import java.time.LocalDate
 import java.util.UUID
@@ -1729,7 +1731,7 @@ class PremisesTest {
 
     @ParameterizedTest
     @EnumSource(value = UserRole::class, names = [ "CAS1_FUTURE_MANAGER", "CAS1_MATCHER" ])
-    fun `Get premises staff where delius team cannot be found returns 404`(role: UserRole) {
+    fun `Get premises staff where delius team cannot be found returns an empty list and raises an alert`(role: UserRole) {
       givenAUser(roles = listOf(role)) { _, jwt ->
         val qCode = "NON_EXISTENT_TEAM_QCODE"
 
@@ -1748,14 +1750,17 @@ class PremisesTest {
             ),
         )
 
-        webTestClient.get()
+        val result = webTestClient.get()
           .uri("/premises/${premises.id}/staff")
           .header("Authorization", "Bearer $jwt")
           .exchange()
           .expectStatus()
-          .is4xxClientError
-          .expectBody()
-          .jsonPath("$.detail").isEqualTo("No Team with an ID of NON_EXISTENT_TEAM_QCODE could be found")
+          .isOk
+          .bodyAsListOfObjects<StaffMember>()
+
+        assertThat(result).isEmpty()
+
+        mockSentryService.assertErrorMessageRaised("404 returned when finding staff members for qcode 'NON_EXISTENT_TEAM_QCODE'")
       }
     }
 

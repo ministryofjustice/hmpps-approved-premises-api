@@ -1,5 +1,6 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.mocks
 
+import org.assertj.core.api.Assertions.assertThat
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import org.springframework.context.annotation.Primary
@@ -27,6 +28,10 @@ class NoOpSentryService : SentryService {
   }
 
   fun getRaisedExceptions() = capturedExceptions
+
+  fun assertErrorMessageRaised(message: String) {
+    assertThat(capturedErrors).contains(message)
+  }
 
   @BeforeTestMethod
   fun beforeTestMethod() {
