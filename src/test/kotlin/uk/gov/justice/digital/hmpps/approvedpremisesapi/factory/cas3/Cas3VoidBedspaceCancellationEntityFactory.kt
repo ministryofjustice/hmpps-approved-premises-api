@@ -3,7 +3,7 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.cas3
 import io.github.bluegroundltd.kfactory.Factory
 import io.github.bluegroundltd.kfactory.Yielded
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas3.Cas3VoidBedspaceCancellationEntity
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas3.Cas3VoidBedspacesEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas3.Cas3VoidBedspaceEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomDateTimeBefore
 import java.time.OffsetDateTime
 import java.util.UUID
@@ -12,7 +12,7 @@ class Cas3VoidBedspaceCancellationEntityFactory : Factory<Cas3VoidBedspaceCancel
   private var id: Yielded<UUID> = { UUID.randomUUID() }
   private var createdAt: Yielded<OffsetDateTime> = { OffsetDateTime.now().randomDateTimeBefore(14) }
   private var notes: Yielded<String>? = null
-  private var voidBedspace: Yielded<Cas3VoidBedspacesEntity>? = null
+  private var voidBedspace: Yielded<Cas3VoidBedspaceEntity>? = null
 
   fun withId(id: UUID) = apply {
     this.id = { id }
@@ -26,11 +26,11 @@ class Cas3VoidBedspaceCancellationEntityFactory : Factory<Cas3VoidBedspaceCancel
     this.notes = { notes }
   }
 
-  fun withYieldedVoidBedspace(voidBedspace: Yielded<Cas3VoidBedspacesEntity>) = apply {
+  fun withYieldedVoidBedspace(voidBedspace: Yielded<Cas3VoidBedspaceEntity>) = apply {
     this.voidBedspace = voidBedspace
   }
 
-  fun withVoidBedspace(voidBedspace: Cas3VoidBedspacesEntity) = apply {
+  fun withVoidBedspace(voidBedspace: Cas3VoidBedspaceEntity) = apply {
     this.voidBedspace = { voidBedspace }
   }
 

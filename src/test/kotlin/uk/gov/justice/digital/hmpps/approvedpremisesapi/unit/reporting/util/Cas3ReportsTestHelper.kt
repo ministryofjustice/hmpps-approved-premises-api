@@ -3,7 +3,7 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.unit.reporting.util
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.BedEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.BookingEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TemporaryAccommodationPremisesEntity
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas3.Cas3VoidBedspacesEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas3.Cas3VoidBedspaceEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.repository.BedUtilisationBedspaceReportData
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.repository.BedUtilisationBookingCancellationReportData
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.repository.BedUtilisationBookingReportData
@@ -69,7 +69,7 @@ fun convertToCas3BedUtilisationBookingTurnaroundReportData(booking: BookingEntit
   )
 }
 
-fun convertToCas3BedUtilisationLostBedReportData(voidBedspace: Cas3VoidBedspacesEntity): Cas3BedUtilisationVoidBedspaceUtilisationVoidBedspaceReportData {
+fun convertToCas3BedUtilisationLostBedReportData(voidBedspace: Cas3VoidBedspaceEntity): Cas3BedUtilisationVoidBedspaceUtilisationVoidBedspaceReportData {
   return Cas3BedUtilisationVoidBedspaceUtilisationVoidBedspaceReportData(
     bedId = voidBedspace.bed.id.toString(),
     startDate = voidBedspace.startDate,

@@ -15,8 +15,8 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ProbationRegionE
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.RoomEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.TemporaryAccommodationPremisesEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.cas3.Cas3VoidBedspaceCancellationEntityFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.cas3.Cas3VoidBedspaceEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.cas3.Cas3VoidBedspaceReasonEntityFactory
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.cas3.Cas3VoidBedspacesEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.BookingRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.LocalAuthorityAreaRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PremisesRepository
@@ -24,8 +24,8 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ProbationDeli
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ProbationRegionRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TemporaryAccommodationPremisesEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas3.Cas3VoidBedspaceCancellationRepository
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas3.Cas3VoidBedspaceEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas3.Cas3VoidBedspaceReasonRepository
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas3.Cas3VoidBedspacesEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas3.Cas3VoidBedspacesRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.Availability
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.AuthorisableActionResult
@@ -79,7 +79,7 @@ class Cas3PremisesServiceTest {
       .withYieldedRoom { room }
       .produce()
 
-    val voidBedspaceEntity = Cas3VoidBedspacesEntityFactory()
+    val voidBedspaceEntity = Cas3VoidBedspaceEntityFactory()
       .withPremises(premises)
       .withStartDate(startDate.plusDays(1))
       .withEndDate(startDate.plusDays(2))
@@ -167,7 +167,7 @@ class Cas3PremisesServiceTest {
 
     val premises = temporaryAccommodationPremisesFactory.produce()
 
-    val voidBedspaceEntityOne = Cas3VoidBedspacesEntityFactory()
+    val voidBedspaceEntityOne = Cas3VoidBedspaceEntityFactory()
       .withPremises(premises)
       .withStartDate(startDate.plusDays(1))
       .withEndDate(startDate.plusDays(2))
@@ -183,7 +183,7 @@ class Cas3PremisesServiceTest {
       )
       .produce()
 
-    val voidBedspaceEntityTwo = Cas3VoidBedspacesEntityFactory()
+    val voidBedspaceEntityTwo = Cas3VoidBedspaceEntityFactory()
       .withPremises(premises)
       .withStartDate(startDate.plusDays(1))
       .withEndDate(startDate.plusDays(2))
@@ -261,7 +261,7 @@ class Cas3PremisesServiceTest {
 
     val premises = temporaryAccommodationPremisesFactory.produce()
 
-    val voidBedspaceEntity = Cas3VoidBedspacesEntityFactory()
+    val voidBedspaceEntity = Cas3VoidBedspaceEntityFactory()
       .withPremises(premises)
       .withStartDate(startDate.plusDays(1))
       .withEndDate(startDate.plusDays(2))
@@ -345,7 +345,7 @@ class Cas3PremisesServiceTest {
 
     every { cas3VoidBedspaceReasonRepositoryMock.findByIdOrNull(voidBedspaceReason.id) } returns voidBedspaceReason
 
-    every { cas3VoidBedspacesRepositoryMock.save(any()) } answers { it.invocation.args[0] as Cas3VoidBedspacesEntity }
+    every { cas3VoidBedspacesRepositoryMock.save(any()) } answers { it.invocation.args[0] as Cas3VoidBedspaceEntity }
 
     val result = premisesService.createVoidBedspaces(
       premises = premisesEntity,
@@ -373,7 +373,7 @@ class Cas3PremisesServiceTest {
 
     val reasonId = UUID.randomUUID()
 
-    val voidBedspaceEntity = Cas3VoidBedspacesEntityFactory()
+    val voidBedspaceEntity = Cas3VoidBedspaceEntityFactory()
       .withYieldedPremises { premisesEntity }
       .withYieldedReason {
         Cas3VoidBedspaceReasonEntityFactory()
@@ -418,7 +418,7 @@ class Cas3PremisesServiceTest {
     val voidBedspaceReason = Cas3VoidBedspaceReasonEntityFactory()
       .produce()
 
-    val voidBedspacesEntity = Cas3VoidBedspacesEntityFactory()
+    val voidBedspacesEntity = Cas3VoidBedspaceEntityFactory()
       .withYieldedPremises { premisesEntity }
       .withYieldedReason {
         Cas3VoidBedspaceReasonEntityFactory()
@@ -438,7 +438,7 @@ class Cas3PremisesServiceTest {
     every { cas3VoidBedspacesRepositoryMock.findByIdOrNull(voidBedspacesEntity.id) } returns voidBedspacesEntity
     every { cas3VoidBedspaceReasonRepositoryMock.findByIdOrNull(voidBedspaceReason.id) } returns voidBedspaceReason
 
-    every { cas3VoidBedspacesRepositoryMock.save(any()) } answers { it.invocation.args[0] as Cas3VoidBedspacesEntity }
+    every { cas3VoidBedspacesRepositoryMock.save(any()) } answers { it.invocation.args[0] as Cas3VoidBedspaceEntity }
 
     val result = premisesService.updateVoidBedspaces(
       voidBedspaceId = voidBedspacesEntity.id,

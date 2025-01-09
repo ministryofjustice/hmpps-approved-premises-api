@@ -12,8 +12,8 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.LocalAuthorityEn
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ProbationRegionEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.RoomEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.cas3.Cas3VoidBedspaceCancellationEntityFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.cas3.Cas3VoidBedspaceEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.cas3.Cas3VoidBedspaceReasonEntityFactory
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.cas3.Cas3VoidBedspacesEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.BedRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.BookingRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.LocalAuthorityAreaRepository
@@ -88,7 +88,7 @@ class PremisesServiceTest {
 
     val premises = approvedPremisesFactory.produce()
 
-    val voidBedspaceEntityOne = Cas3VoidBedspacesEntityFactory()
+    val voidBedspaceEntityOne = Cas3VoidBedspaceEntityFactory()
       .withPremises(premises)
       .withStartDate(startDate.plusDays(1))
       .withEndDate(startDate.plusDays(2))
@@ -104,7 +104,7 @@ class PremisesServiceTest {
       )
       .produce()
 
-    val voidBedspaceEntityTwo = Cas3VoidBedspacesEntityFactory()
+    val voidBedspaceEntityTwo = Cas3VoidBedspaceEntityFactory()
       .withPremises(premises)
       .withStartDate(startDate.plusDays(1))
       .withEndDate(startDate.plusDays(2))
@@ -182,7 +182,7 @@ class PremisesServiceTest {
 
     val premises = approvedPremisesFactory.produce()
 
-    val voidBedspaceEntity = Cas3VoidBedspacesEntityFactory()
+    val voidBedspaceEntity = Cas3VoidBedspaceEntityFactory()
       .withPremises(premises)
       .withStartDate(startDate.plusDays(1))
       .withEndDate(startDate.plusDays(2))

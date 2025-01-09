@@ -96,7 +96,7 @@ class BedSummaryQueryTest : IntegrationTestBase() {
       withDepartureDate(LocalDate.now().plusDays((20).toLong()))
     }
 
-    cas3VoidBedspacesEntityFactory.produceAndPersist {
+    cas3VoidBedspaceEntityFactory.produceAndPersist {
       withPremises(premises)
       withBed(bedWithLostBed)
       withYieldedReason { cas3VoidBedspaceReasonEntityFactory.produceAndPersist() }
@@ -130,7 +130,7 @@ class BedSummaryQueryTest : IntegrationTestBase() {
       }
     }
 
-    val cancelledLostBed = cas3VoidBedspacesEntityFactory.produceAndPersist {
+    val cancelledLostBed = cas3VoidBedspaceEntityFactory.produceAndPersist {
       withPremises(premises)
       withBed(bedWithCancelledLostBed)
       withYieldedReason { cas3VoidBedspaceReasonEntityFactory.produceAndPersist() }

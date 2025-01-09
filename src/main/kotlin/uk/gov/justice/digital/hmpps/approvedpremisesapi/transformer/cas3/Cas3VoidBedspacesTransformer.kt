@@ -3,14 +3,14 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.cas3
 import org.springframework.stereotype.Component
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.LostBed
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.LostBedStatus
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas3.Cas3VoidBedspacesEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas3.Cas3VoidBedspaceEntity
 
 @Component
 class Cas3VoidBedspacesTransformer(
   private val cas3VoidBedspaceReasonTransformer: Cas3VoidBedspaceReasonTransformer,
   private val cas3VoidBedspaceCancellationTransformer: Cas3VoidBedspaceCancellationTransformer,
 ) {
-  fun transformJpaToApi(jpa: Cas3VoidBedspacesEntity) = LostBed(
+  fun transformJpaToApi(jpa: Cas3VoidBedspaceEntity) = LostBed(
     id = jpa.id,
     startDate = jpa.startDate,
     endDate = jpa.endDate,
@@ -24,7 +24,7 @@ class Cas3VoidBedspacesTransformer(
     roomName = jpa.bed.room.name,
   )
 
-  private fun determineStatus(jpa: Cas3VoidBedspacesEntity) = when {
+  private fun determineStatus(jpa: Cas3VoidBedspaceEntity) = when {
     jpa.cancellation != null -> LostBedStatus.cancelled
     else -> LostBedStatus.active
   }

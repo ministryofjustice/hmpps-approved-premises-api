@@ -65,7 +65,7 @@ class VoidBedspacesTest : IntegrationTestBase() {
         withYieldedProbationRegion { probationRegion }
       }
 
-      val voidBedspaces = cas3VoidBedspacesEntityFactory.produceAndPersist {
+      val voidBedspaces = cas3VoidBedspaceEntityFactory.produceAndPersist {
         withStartDate(LocalDate.now().plusDays(2))
         withEndDate(LocalDate.now().plusDays(4))
         withYieldedReason { cas3VoidBedspaceReasonEntityFactory.produceAndPersist() }
@@ -110,7 +110,7 @@ class VoidBedspacesTest : IntegrationTestBase() {
         }
       }
 
-      cas3VoidBedspacesEntityFactory.produceAndPersist {
+      cas3VoidBedspaceEntityFactory.produceAndPersist {
         withStartDate(LocalDate.now().plusDays(2))
         withEndDate(LocalDate.now().plusDays(4))
         withYieldedReason { cas3VoidBedspaceReasonEntityFactory.produceAndPersist() }
@@ -135,7 +135,7 @@ class VoidBedspacesTest : IntegrationTestBase() {
       withYieldedProbationRegion { probationRegion }
     }
 
-    val voidBedspaces = cas3VoidBedspacesEntityFactory.produceAndPersist {
+    val voidBedspaces = cas3VoidBedspaceEntityFactory.produceAndPersist {
       withStartDate(LocalDate.now().plusDays(2))
       withEndDate(LocalDate.now().plusDays(4))
       withYieldedReason { cas3VoidBedspaceReasonEntityFactory.produceAndPersist() }
@@ -203,7 +203,7 @@ class VoidBedspacesTest : IntegrationTestBase() {
         }
       }
 
-      val voidBedspaces = cas3VoidBedspacesEntityFactory.produceAndPersist {
+      val voidBedspaces = cas3VoidBedspaceEntityFactory.produceAndPersist {
         withStartDate(LocalDate.now().plusDays(2))
         withEndDate(LocalDate.now().plusDays(4))
         withYieldedReason { cas3VoidBedspaceReasonEntityFactory.produceAndPersist() }
@@ -240,7 +240,7 @@ class VoidBedspacesTest : IntegrationTestBase() {
         }
       }
 
-      val voidBedspaces = cas3VoidBedspacesEntityFactory.produceAndPersist {
+      val voidBedspaces = cas3VoidBedspaceEntityFactory.produceAndPersist {
         withStartDate(LocalDate.now().plusDays(2))
         withEndDate(LocalDate.now().plusDays(4))
         withYieldedReason { cas3VoidBedspaceReasonEntityFactory.produceAndPersist() }
@@ -417,7 +417,7 @@ class VoidBedspacesTest : IntegrationTestBase() {
       withYieldedProbationRegion { probationRegion }
     }
 
-    val voidBedspaces = cas3VoidBedspacesEntityFactory.produceAndPersist {
+    val voidBedspaces = cas3VoidBedspaceEntityFactory.produceAndPersist {
       withStartDate(LocalDate.now().plusDays(2))
       withEndDate(LocalDate.now().plusDays(4))
       withYieldedReason { cas3VoidBedspaceReasonEntityFactory.produceAndPersist() }
@@ -520,7 +520,7 @@ class VoidBedspacesTest : IntegrationTestBase() {
         }
       }
 
-      val voidBedspaces = cas3VoidBedspacesEntityFactory.produceAndPersist {
+      val voidBedspaces = cas3VoidBedspaceEntityFactory.produceAndPersist {
         withStartDate(LocalDate.now().plusDays(2))
         withEndDate(LocalDate.now().plusDays(4))
         withYieldedReason { cas3VoidBedspaceReasonEntityFactory.produceAndPersist() }
@@ -575,7 +575,7 @@ class VoidBedspacesTest : IntegrationTestBase() {
         }
       }
 
-      val voidBedspaces = cas3VoidBedspacesEntityFactory.produceAndPersist {
+      val voidBedspaces = cas3VoidBedspaceEntityFactory.produceAndPersist {
         withStartDate(LocalDate.now().plusDays(2))
         withEndDate(LocalDate.now().plusDays(4))
         withYieldedReason { cas3VoidBedspaceReasonEntityFactory.produceAndPersist() }
@@ -611,7 +611,7 @@ class VoidBedspacesTest : IntegrationTestBase() {
       withYieldedProbationRegion { probationRegion }
     }
 
-    val voidBedspaces = cas3VoidBedspacesEntityFactory.produceAndPersist {
+    val voidBedspaces = cas3VoidBedspaceEntityFactory.produceAndPersist {
       withStartDate(LocalDate.now().plusDays(2))
       withEndDate(LocalDate.now().plusDays(4))
       withYieldedReason { cas3VoidBedspaceReasonEntityFactory.produceAndPersist() }
@@ -694,7 +694,7 @@ class VoidBedspacesTest : IntegrationTestBase() {
         }
       }
 
-      val voidBedspaces = cas3VoidBedspacesEntityFactory.produceAndPersist {
+      val voidBedspaces = cas3VoidBedspaceEntityFactory.produceAndPersist {
         withStartDate(LocalDate.now().plusDays(2))
         withEndDate(LocalDate.now().plusDays(4))
         withYieldedReason { cas3VoidBedspaceReasonEntityFactory.produceAndPersist() }
@@ -737,7 +737,7 @@ class VoidBedspacesTest : IntegrationTestBase() {
         }
       }
 
-      val voidBedspaces = cas3VoidBedspacesEntityFactory.produceAndPersist {
+      val voidBedspaces = cas3VoidBedspaceEntityFactory.produceAndPersist {
         withStartDate(LocalDate.now().plusDays(2))
         withEndDate(LocalDate.now().plusDays(4))
         withYieldedReason { cas3VoidBedspaceReasonEntityFactory.produceAndPersist() }
@@ -900,7 +900,7 @@ class VoidBedspacesTest : IntegrationTestBase() {
 
         val reason = cas3VoidBedspaceReasonEntityFactory.produceAndPersist()
 
-        val existingLostBed = cas3VoidBedspacesEntityFactory.produceAndPersist {
+        val existingLostBed = cas3VoidBedspaceEntityFactory.produceAndPersist {
           withBed(bed)
           withPremises(premises)
           withStartDate(LocalDate.parse("2022-07-15"))
@@ -951,7 +951,7 @@ class VoidBedspacesTest : IntegrationTestBase() {
 
         val reason = cas3VoidBedspaceReasonEntityFactory.produceAndPersist()
 
-        val existingLostBed = cas3VoidBedspacesEntityFactory.produceAndPersist {
+        val existingLostBed = cas3VoidBedspaceEntityFactory.produceAndPersist {
           withBed(bed)
           withPremises(premises)
           withStartDate(LocalDate.parse("2022-07-15"))
@@ -1013,7 +1013,7 @@ class VoidBedspacesTest : IntegrationTestBase() {
         }
       }
 
-      val voidBedspaces = cas3VoidBedspacesEntityFactory.produceAndPersist {
+      val voidBedspaces = cas3VoidBedspaceEntityFactory.produceAndPersist {
         withStartDate(LocalDate.parse("2022-08-16"))
         withEndDate(LocalDate.parse("2022-08-30"))
         withYieldedReason { cas3VoidBedspaceReasonEntityFactory.produceAndPersist() }
@@ -1073,7 +1073,7 @@ class VoidBedspacesTest : IntegrationTestBase() {
           }
         }
 
-        val voidBedspaces = cas3VoidBedspacesEntityFactory.produceAndPersist {
+        val voidBedspaces = cas3VoidBedspaceEntityFactory.produceAndPersist {
           withStartDate(LocalDate.parse("2022-08-16"))
           withEndDate(LocalDate.parse("2022-08-30"))
           withYieldedReason { cas3VoidBedspaceReasonEntityFactory.produceAndPersist() }
@@ -1147,7 +1147,7 @@ class VoidBedspacesTest : IntegrationTestBase() {
 
         val reason = cas3VoidBedspaceReasonEntityFactory.produceAndPersist()
 
-        val voidBedspaces = cas3VoidBedspacesEntityFactory.produceAndPersist {
+        val voidBedspaces = cas3VoidBedspaceEntityFactory.produceAndPersist {
           withStartDate(LocalDate.parse("2022-08-16"))
           withEndDate(LocalDate.parse("2022-08-30"))
           withYieldedReason { cas3VoidBedspaceReasonEntityFactory.produceAndPersist() }
@@ -1155,7 +1155,7 @@ class VoidBedspacesTest : IntegrationTestBase() {
           withPremises(premises)
         }
 
-        val existingLostBed = cas3VoidBedspacesEntityFactory.produceAndPersist {
+        val existingLostBed = cas3VoidBedspaceEntityFactory.produceAndPersist {
           withBed(bed)
           withPremises(premises)
           withStartDate(LocalDate.parse("2022-07-15"))
@@ -1205,7 +1205,7 @@ class VoidBedspacesTest : IntegrationTestBase() {
 
         val reason = cas3VoidBedspaceReasonEntityFactory.produceAndPersist()
 
-        val voidBedspaces = cas3VoidBedspacesEntityFactory.produceAndPersist {
+        val voidBedspaces = cas3VoidBedspaceEntityFactory.produceAndPersist {
           withStartDate(LocalDate.parse("2022-08-16"))
           withEndDate(LocalDate.parse("2022-08-30"))
           withYieldedReason { cas3VoidBedspaceReasonEntityFactory.produceAndPersist() }
@@ -1213,7 +1213,7 @@ class VoidBedspacesTest : IntegrationTestBase() {
           withPremises(premises)
         }
 
-        val existingLostBed = cas3VoidBedspacesEntityFactory.produceAndPersist {
+        val existingLostBed = cas3VoidBedspaceEntityFactory.produceAndPersist {
           withBed(bed)
           withPremises(premises)
           withStartDate(LocalDate.parse("2022-07-15"))
