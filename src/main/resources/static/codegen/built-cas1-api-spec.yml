@@ -369,7 +369,7 @@ paths:
           content:
             'application/json':
               schema:
-                $ref: '#/components/schemas/Cas1PremisesSummary'
+                $ref: '#/components/schemas/Cas1Premises'
         401:
           $ref: '#/components/responses/401Response'
         403:
@@ -6036,12 +6036,19 @@ components:
           example: 22
         supportsSpaceBookings:
           type: boolean
+        fullAddress:
+          description: Full address, excluding postcode
+          type: string
+        postcode:
+          type: string
       required:
         - id
         - name
         - apArea
         - bedCount
         - supportsSpaceBookings
+        - fullAddress
+        - postcode
     Cas1PremisesSearchResultSummary:
       type: object
       properties:
@@ -6094,7 +6101,7 @@ components:
         - apArea
         - characteristics
         - fullAddress
-    Cas1PremisesSummary:
+    Cas1Premises:
       type: object
       properties:
         id:
@@ -6106,6 +6113,9 @@ components:
         apCode:
           type: string
           example: NEHOPE1
+        fullAddress:
+          description: Full address, excluding postcode
+          type: string
         postcode:
           type: string
           example: LS1 3AD
@@ -6136,6 +6146,7 @@ components:
         - id
         - name
         - apCode
+        - fullAddress
         - postcode
         - apArea
         - bedCount
@@ -6756,7 +6767,7 @@ components:
       type: object
       properties:
         premise:
-          $ref: '#/components/schemas/Cas1PremisesSummary'
+          $ref: '#/components/schemas/Cas1Premises'
         startDate:
           type: string
           format: date

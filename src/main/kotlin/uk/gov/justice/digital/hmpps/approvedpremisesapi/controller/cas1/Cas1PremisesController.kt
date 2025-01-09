@@ -5,9 +5,9 @@ import org.springframework.stereotype.Service
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.cas1.PremisesCas1Delegate
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1ApprovedPremisesGender
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1PremiseCapacity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1Premises
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1PremisesBasicSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1PremisesDaySummary
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1PremisesSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1SpaceBookingCharacteristic
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1SpaceBookingDaySummarySortField
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.SortDirection
@@ -37,14 +37,14 @@ class Cas1PremisesController(
   private val cas1OutOfServiceBedSummaryTransformer: Cas1OutOfServiceBedSummaryTransformer,
 ) : PremisesCas1Delegate {
 
-  override fun getPremisesById(premisesId: UUID): ResponseEntity<Cas1PremisesSummary> {
+  override fun getPremisesById(premisesId: UUID): ResponseEntity<Cas1Premises> {
     userAccessService.ensureCurrentUserHasPermission(UserPermission.CAS1_PREMISES_VIEW)
 
     return ResponseEntity
       .ok()
       .body(
-        cas1PremisesTransformer.toPremiseSummary(
-          extractEntityFromCasResult(cas1PremisesService.getPremisesSummary(premisesId)),
+        cas1PremisesTransformer.toPremises(
+          extractEntityFromCasResult(cas1PremisesService.getPremisesInfo(premisesId)),
         ),
       )
   }
@@ -77,7 +77,7 @@ class Cas1PremisesController(
   ): ResponseEntity<Cas1PremiseCapacity> {
     userAccessService.ensureCurrentUserHasPermission(UserPermission.CAS1_PREMISES_VIEW)
 
-    val premiseSummaryInfo = cas1PremisesService.getPremisesSummary(premisesId)
+    val premiseSummaryInfo = cas1PremisesService.getPremisesInfo(premisesId)
     val premiseCapacity = cas1PremisesService.getPremiseCapacity(
       premisesId = premisesId,
       startDate = startDate,
@@ -103,7 +103,7 @@ class Cas1PremisesController(
     userAccessService.ensureCurrentUserHasPermission(UserPermission.CAS1_PREMISES_VIEW)
 
     val premiseSummaryInfo = extractEntityFromCasResult(
-      cas1PremisesService.getPremisesSummary(premisesId),
+      cas1PremisesService.getPremisesInfo(premisesId),
     )
 
     return ResponseEntity.ok().body(

@@ -188,7 +188,12 @@ interface ApprovedPremisesRepository : JpaRepository<ApprovedPremisesEntity, UUI
               apArea.id,
               apArea.name,
               CAST(COUNT(b) as int),
-              p.supportsSpaceBookings
+              p.supportsSpaceBookings,
+              p.fullAddress,
+              p.addressLine1,
+              p.addressLine2,
+              p.town,
+              p.postcode
               )
         FROM 
           ApprovedPremisesEntity p
@@ -199,7 +204,7 @@ interface ApprovedPremisesRepository : JpaRepository<ApprovedPremisesEntity, UUI
         WHERE 
           (:gender IS NULL OR p.gender = :gender)
           AND(cast(:apAreaId as text) IS NULL OR apArea.id = :apAreaId) 
-          GROUP BY p.id, p.name, p.apCode, apArea.id, apArea.name 
+          GROUP BY p.id, p.name, p.apCode, apArea.id, apArea.name, p.fullAddress, p.addressLine1, p.addressLine2, p.town, p.postcode
       """,
   )
   fun findForSummaries(gender: ApprovedPremisesGender?, apAreaId: UUID?): List<ApprovedPremisesBasicSummary>
@@ -291,6 +296,8 @@ class ApprovedPremisesEntity(
    * Full Address, excluding postcode. When defined this should be used instead of [addressLine1], [addressLine2] and [town]
    *
    * Whilst currently nullable, once all site surveys have been imported this can be made non-null
+   *
+   * It's recommended that [resolveFullAddress] is used in the meantime when address is required
    */
   var fullAddress: String?,
 ) : PremisesEntity(
@@ -311,7 +318,27 @@ class ApprovedPremisesEntity(
   rooms,
   characteristics,
   status,
-)
+) {
+
+  fun resolveFullAddress() = resolveFullAddress(
+    fullAddress = fullAddress,
+    addressLine1 = addressLine1,
+    addressLine2 = addressLine2,
+    town = town,
+  )
+
+  companion object {
+    fun resolveFullAddress(
+      fullAddress: String?,
+      addressLine1: String,
+      addressLine2: String?,
+      town: String?,
+    ) = fullAddress
+      ?: listOf(addressLine1, addressLine2, town)
+        .filter { !it.isNullOrBlank() }
+        .joinToString(separator = ", ")
+  }
+}
 
 enum class ApprovedPremisesGender {
   MAN,
@@ -398,6 +425,11 @@ data class ApprovedPremisesBasicSummary(
   val apAreaName: String,
   val bedCount: Int,
   val supportsSpaceBookings: Boolean,
+  val fullAddress: String?,
+  val addressLine1: String,
+  val addressLine2: String?,
+  val town: String?,
+  val postcode: String,
 )
 
 interface BookingSummary {

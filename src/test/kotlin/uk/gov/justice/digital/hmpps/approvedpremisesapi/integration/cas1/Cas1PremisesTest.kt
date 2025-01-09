@@ -5,9 +5,9 @@ import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1PremiseCapacity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1Premises
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1PremisesBasicSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1PremisesDaySummary
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1PremisesSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.FullPersonSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PersonSummaryDiscriminator
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
@@ -39,6 +39,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRole.CAS1
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.deliuscontext.CaseSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.asCaseSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.bodyAsListOfObjects
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.bodyAsObject
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.roundNanosToMillisToAccountForLossOfPrecisionInPostgres
 import java.time.LocalDate
 import java.time.OffsetDateTime
@@ -129,7 +130,7 @@ class Cas1PremisesTest : IntegrationTestBase() {
         .exchange()
         .expectStatus()
         .isOk
-        .returnResult(Cas1PremisesSummary::class.java).responseBody.blockFirst()!!
+        .bodyAsObject<Cas1Premises>()
 
       assertThat(summary.id).isEqualTo(premises.id)
       assertThat(summary.name).isEqualTo("the premises name")

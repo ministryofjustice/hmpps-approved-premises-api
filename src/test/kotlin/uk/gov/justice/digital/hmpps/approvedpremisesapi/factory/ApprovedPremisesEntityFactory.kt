@@ -31,8 +31,8 @@ class ApprovedPremisesEntityFactory : Factory<ApprovedPremisesEntity> {
   private var latitude: Yielded<Double> = { randomDouble(53.50, 54.99) }
   private var longitude: Yielded<Double> = { randomDouble(-1.56, 1.10) }
   private var addressLine1: Yielded<String> = { randomStringUpperCase(10) }
-  private var addressLine2: Yielded<String> = { randomStringUpperCase(10) }
-  private var town: Yielded<String> = { randomStringUpperCase(10) }
+  private var addressLine2: Yielded<String?> = { randomStringUpperCase(10) }
+  private var town: Yielded<String?> = { randomStringUpperCase(10) }
   private var notes: Yielded<String> = { randomStringUpperCase(15) }
   private var emailAddress: Yielded<String?> = { randomStringUpperCase(10) }
   private var service: Yielded<String> = { "CAS1" }
@@ -70,11 +70,11 @@ class ApprovedPremisesEntityFactory : Factory<ApprovedPremisesEntity> {
     this.addressLine1 = { addressLine1 }
   }
 
-  fun withAddressLine2(addressLine2: String) = apply {
+  fun withAddressLine2(addressLine2: String?) = apply {
     this.addressLine2 = { addressLine2 }
   }
 
-  fun withTown(town: String) = apply {
+  fun withTown(town: String?) = apply {
     this.town = { town }
   }
 

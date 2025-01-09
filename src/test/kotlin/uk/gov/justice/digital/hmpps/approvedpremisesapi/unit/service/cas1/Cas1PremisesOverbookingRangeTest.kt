@@ -80,7 +80,7 @@ class Cas1PremisesOverbookingRangeTest {
 
     every { spacePlanningService.capacity(premises, any(), null) } returns premisesCapacitySummary
 
-    val result = service.getPremisesSummary(Cas1PremisesServiceTest.CONSTANTS.PREMISES_ID) as CasResult.Success
+    val result = service.getPremisesInfo(Cas1PremisesServiceTest.CONSTANTS.PREMISES_ID) as CasResult.Success
 
     assertThat(result).isInstanceOf(CasResult.Success::class.java)
     val premisesSummaryInfo = result.value
@@ -115,7 +115,7 @@ class Cas1PremisesOverbookingRangeTest {
 
     every { spacePlanningService.capacity(premises, any(), null) } returns premisesCapacitySummary
 
-    val result = service.getPremisesSummary(Cas1PremisesServiceTest.CONSTANTS.PREMISES_ID) as CasResult.Success
+    val result = service.getPremisesInfo(Cas1PremisesServiceTest.CONSTANTS.PREMISES_ID) as CasResult.Success
 
     assertThat(result).isInstanceOf(CasResult.Success::class.java)
 
@@ -158,7 +158,7 @@ class Cas1PremisesOverbookingRangeTest {
 
     every { spacePlanningService.capacity(premises, any(), null) } returns premisesCapacitySummary
 
-    val result = service.getPremisesSummary(Cas1PremisesServiceTest.CONSTANTS.PREMISES_ID) as CasResult.Success
+    val result = service.getPremisesInfo(Cas1PremisesServiceTest.CONSTANTS.PREMISES_ID) as CasResult.Success
 
     assertThat(result).isInstanceOf(CasResult.Success::class.java)
 
@@ -205,7 +205,7 @@ class Cas1PremisesOverbookingRangeTest {
 
     every { spacePlanningService.capacity(premises, any(), null) } returns premisesCapacitySummary
 
-    val result = service.getPremisesSummary(Cas1PremisesServiceTest.CONSTANTS.PREMISES_ID) as CasResult.Success
+    val result = service.getPremisesInfo(Cas1PremisesServiceTest.CONSTANTS.PREMISES_ID) as CasResult.Success
 
     assertThat(result).isInstanceOf(CasResult.Success::class.java)
 
@@ -243,7 +243,7 @@ class Cas1PremisesOverbookingRangeTest {
 
     every { spacePlanningService.capacity(premises, any(), null) } returns premisesCapacitySummary
 
-    val result = service.getPremisesSummary(Cas1PremisesServiceTest.CONSTANTS.PREMISES_ID) as CasResult.Success
+    val result = service.getPremisesInfo(Cas1PremisesServiceTest.CONSTANTS.PREMISES_ID) as CasResult.Success
 
     assertThat(result).isInstanceOf(CasResult.Success::class.java)
     val premisesSummaryInfo = result.value
