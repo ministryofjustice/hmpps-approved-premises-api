@@ -1,6 +1,15 @@
 ALTER TABLE lost_beds DROP CONSTRAINT lost_bed_reason_id_fk;
 ALTER TABLE lost_bed_cancellations DROP CONSTRAINT lost_bed_cancellations_lost_bed_id_fkey;
 
+DELETE FROM lost_bed_cancellations
+WHERE lost_bed_id in(
+    SELECT  id
+    FROM  lost_beds
+    where premises_id in (select id from premises where service='approved-premises'));
+
+DELETE FROM lost_beds
+where premises_id in (select id from premises where service='approved-premises');
+
 ALTER TABLE lost_beds RENAME TO cas3_void_bedspaces;
 
 ALTER TABLE lost_bed_cancellations RENAME TO cas3_void_bedspace_cancellations;
