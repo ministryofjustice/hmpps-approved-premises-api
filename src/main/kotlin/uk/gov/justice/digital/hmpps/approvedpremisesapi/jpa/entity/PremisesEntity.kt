@@ -21,6 +21,7 @@ import org.springframework.data.jpa.repository.Query
 import org.springframework.stereotype.Repository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.BookingStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PropertyStatus
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas1.CandidatePremises
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas3.Cas3VoidBedspacesEntity
 import java.time.LocalDate
 import java.util.UUID
@@ -291,6 +292,8 @@ class ApprovedPremisesEntity(
    * Full Address, excluding postcode. When defined this should be used instead of [addressLine1], [addressLine2] and [town]
    *
    * Whilst currently nullable, once all site surveys have been imported this can be made non-null
+   *
+   * It's recommended that [resolveFullAddress] is used in the meantime when address is required
    */
   var fullAddress: String?,
 ) : PremisesEntity(
@@ -311,7 +314,27 @@ class ApprovedPremisesEntity(
   rooms,
   characteristics,
   status,
-)
+) {
+
+  fun resolveFullAddress() = resolveFullAddress(
+    fullAddress = fullAddress,
+    addressLine1 = addressLine1,
+    addressLine2 = addressLine2,
+    town = town,
+  )
+
+  companion object {
+    fun resolveFullAddress(
+      fullAddress: String?,
+      addressLine1: String,
+      addressLine2: String?,
+      town: String?,
+    ) = fullAddress
+      ?: listOf(addressLine1, addressLine2, town)
+        .filter { !it.isNullOrBlank() }
+        .joinToString(separator = ", ")
+  }
+}
 
 enum class ApprovedPremisesGender {
   MAN,

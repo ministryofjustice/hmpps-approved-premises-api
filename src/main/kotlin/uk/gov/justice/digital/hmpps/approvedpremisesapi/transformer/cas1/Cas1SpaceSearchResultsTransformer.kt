@@ -7,6 +7,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1SpaceChara
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1SpaceSearchParameters
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1SpaceSearchResults
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NamedId
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas1.CandidatePremises
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.asApiType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1SpaceSearchResult as ApiSpaceSearchResult
@@ -52,10 +53,10 @@ class Cas1SpaceSearchResultsTransformer {
       },
     )
 
-  fun CandidatePremises.resolveFullAddress(): String {
-    return fullAddress
-      ?: listOf(addressLine1, addressLine2, town)
-        .filter { !it.isNullOrBlank() }
-        .joinToString(separator = ", ")
-  }
+  fun CandidatePremises.resolveFullAddress() = ApprovedPremisesEntity.resolveFullAddress(
+      fullAddress = fullAddress,
+      addressLine1 = addressLine1,
+      addressLine2 = addressLine2,
+      town = town,
+    )
 }
