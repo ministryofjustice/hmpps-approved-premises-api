@@ -2,33 +2,44 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.cas1.seed
 
 import org.assertj.core.api.Assertions.assertThat
 import org.jetbrains.kotlinx.dataframe.api.dataFrameOf
-import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.SeedFromExcelFileType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.seed.SeedTestBase
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.seed.cas1.QuestionCriteriaMapping
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.seed.cas1.SiteSurveyImportException
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.DataFrameUtils.createNameValueDataFrame
 
 @TestInstance(TestInstance.Lifecycle.PER_METHOD)
 class SeedCas1RoomsFromSiteSurveyXlsxTest : SeedTestBase() {
 
-  private lateinit var questionCriteriaMapping: QuestionCriteriaMapping
+  val questions = listOf(
+    "Is this bed in a single room?",
+    "Is this room located on the ground floor?",
+    "Is the room using only furnishings and bedding supplied by FM?",
+    "Does this room have Crib7 rated bedding?",
+    "Is there a smoke/heat detector in the room?",
+    "Is this room on the top floor with at least one external wall and not located directly next to a fire exit or a protected stairway?",
+    "Is the room close to the admin/staff office on the ground floor with at least one external wall and not located directly next to a fire exit or a protected stairway?",
+    "is there a water mist extinguisher in close proximity to this room?",
+    "Is this room suitable for people who pose an arson risk? (Must answer yes to Q; 6 & 7, and 9 or  10)",
+    "Is this room currently a designated arson room?",
+    "If IAP - Is there any insurance conditions that prevent a person with arson convictions being placed?",
+    "Is this room suitable for people convicted of sexual offences?",
+    "Does this room have en-suite bathroom facilities?",
+    "Are corridors leading to this room of sufficient width to accommodate a wheelchair? (at least 1.2m wide)",
+    "Is the door to this room at least 900mm wide?",
+    "Is there step free access to this room and in corridors leading to this room?",
+    "Are there fixed mobility aids in this room?",
+    "Does this room have at least a 1500mmx1500mm turning space?",
+    "Is there provision for people to call for assistance from this room?",
+    "Can this room be designated as suitable for wheelchair users?   Must answer yes to Q23-26 on previous sheet and Q17-19 & 21 on this sheet)",
+    "Can this room be designated as suitable for people requiring step free access? (Must answer yes to Q23 and 25 on previous sheet and Q19 on this sheet)",
+  )
 
-  @BeforeEach
-  fun setup() {
-    questionCriteriaMapping = QuestionCriteriaMapping(characteristicRepository)
-  }
-
-  fun MutableList<String>.addCharacteristics(numberOfRooms: Int = 1, activeCharacteristics: Map<String, List<Int>> = emptyMap()) {
-    questionCriteriaMapping.questionToCharacterEntityMapping.keys.forEach { question ->
+  fun MutableList<String>.addCharacteristics(numberOfRooms: Int = 1, activeCharacteristics: Map<String, List<String>> = emptyMap()) {
+    questions.forEach { question ->
       this.add(question)
-      val answers = MutableList(numberOfRooms) { "No" }
-      activeCharacteristics[question]?.forEach {
-        answers[it] = "Yes"
-      }
-      this.addAll(answers)
+      this.addAll(activeCharacteristics.getOrDefault(question, MutableList(numberOfRooms) { "No" }))
     }
   }
 
@@ -50,7 +61,7 @@ class SeedCas1RoomsFromSiteSurveyXlsxTest : SeedTestBase() {
       "Bed Number (in this room i.e if this is a single room insert 1.  If this is a shared room separate entries will need to be made for bed 1 and bed 2)",
       "1",
     )
-    rows.addCharacteristics(1, mapOf("Is this room located on the ground floor?" to listOf(0)))
+    rows.addCharacteristics(1, mapOf("Is this room located on the ground floor?" to listOf("Yes")))
 
     val roomsSheet = dataFrameOf(header, rows)
 
@@ -104,7 +115,7 @@ class SeedCas1RoomsFromSiteSurveyXlsxTest : SeedTestBase() {
       "1",
       "1",
     )
-    rows.addCharacteristics(3, mapOf("Is this room located on the ground floor?" to listOf(1)))
+    rows.addCharacteristics(3, mapOf("Is this room located on the ground floor?" to listOf("No", "Yes", "No")))
 
     val roomsSheet = dataFrameOf(header, rows)
 
@@ -156,6 +167,54 @@ class SeedCas1RoomsFromSiteSurveyXlsxTest : SeedTestBase() {
   }
 
   @Test
+  fun `Creating one new room with two beds but different characteristics fails`() {
+    val localAuthorityArea = localAuthorityEntityFactory.produceAndPersist()
+    val probationRegion = probationRegionEntityFactory.produceAndPersist()
+    val qCode = "Q999"
+    approvedPremisesEntityFactory.produceAndPersist {
+      withLocalAuthorityArea(localAuthorityArea)
+      withProbationRegion(probationRegion)
+      withQCode(qCode)
+    }
+
+    val header = listOf("Unique Reference Number for Bed", "SWABI01NEW", "SWABI02NEW")
+    val rows = mutableListOf(
+      "Room Number / Name",
+      "1",
+      "1",
+      "Bed Number (in this room i.e if this is a single room insert 1.  If this is a shared room separate entries will need to be made for bed 1 and bed 2)",
+      "1",
+      "2",
+    )
+    rows.addCharacteristics(2, mapOf("Is this room located on the ground floor?" to listOf("No", "Yes")))
+
+    val roomsSheet = dataFrameOf(header, rows)
+
+    createXlsxForSeeding(
+      fileName = "example.xlsx",
+      sheets = mapOf(
+        "Sheet2" to createNameValueDataFrame("AP Identifier (Q No.)", qCode),
+        "Sheet3" to roomsSheet,
+      ),
+    )
+
+    seedXlsxService.seedExcelData(
+      SeedFromExcelFileType.CAS1_IMPORT_SITE_SURVEY_ROOMS,
+      "example.xlsx",
+    )
+
+    assertThat(logEntries)
+      .anyMatch {
+        it.level == "error" &&
+          it.message == "Unable to complete Excel seed job" &&
+          it.throwable != null &&
+          it.throwable.message == "Unable to process XLSX file" &&
+          it.throwable.cause is IllegalStateException &&
+          it.throwable.cause!!.message == "Room Q999 - 1 has different characteristics."
+      }
+  }
+
+  @Test
   fun `Creating two new rooms and three new beds with a characteristic succeeds`() {
     val localAuthorityArea = localAuthorityEntityFactory.produceAndPersist()
     val probationRegion = probationRegionEntityFactory.produceAndPersist()
@@ -176,7 +235,7 @@ class SeedCas1RoomsFromSiteSurveyXlsxTest : SeedTestBase() {
       "1",
       "2",
     )
-    rows.addCharacteristics(3, mapOf("Is this room located on the ground floor?" to listOf(1, 2)))
+    rows.addCharacteristics(3, mapOf("Is this room located on the ground floor?" to listOf("No", "Yes", "Yes")))
 
     val roomsSheet = dataFrameOf(header, rows)
 
@@ -293,7 +352,7 @@ class SeedCas1RoomsFromSiteSurveyXlsxTest : SeedTestBase() {
       "Bed Number (in this room i.e if this is a single room insert 1.  If this is a shared room separate entries will need to be made for bed 1 and bed 2)",
       "1",
     )
-    rows.addCharacteristics(1, mapOf("Is this room located on the ground floor?" to listOf(0)))
+    rows.addCharacteristics(1, mapOf("Is this room located on the ground floor?" to listOf("Yes", "No", "No")))
 
     val roomsSheet = dataFrameOf(header, rows)
 
@@ -352,7 +411,7 @@ class SeedCas1RoomsFromSiteSurveyXlsxTest : SeedTestBase() {
       "Bed Number (in this room i.e if this is a single room insert 1.  If this is a shared room separate entries will need to be made for bed 1 and bed 2)",
       "1",
     )
-    rows.addCharacteristics(1, mapOf("Is this room located on the ground floor?" to listOf(0)))
+    rows.addCharacteristics(1, mapOf("Is this room located on the ground floor?" to listOf("Yes", "No", "No")))
 
     val roomsSheet = dataFrameOf(header, rows)
 
@@ -433,7 +492,9 @@ class SeedCas1RoomsFromSiteSurveyXlsxTest : SeedTestBase() {
         it.level == "error" &&
           it.message == "Unable to complete Excel seed job" &&
           it.throwable != null &&
-          it.throwable.message!!.contains("Detail: Key (code)=(SWABI02) already exists.")
+          it.throwable.message == "Unable to process XLSX file" &&
+          it.throwable.cause is IllegalStateException &&
+          it.throwable.cause!!.message == "Bed SWABI02 already exists in room Q999 - 1 but is being added to room Q999 - 2."
       }
   }
 
@@ -479,8 +540,8 @@ class SeedCas1RoomsFromSiteSurveyXlsxTest : SeedTestBase() {
           it.message == "Unable to complete Excel seed job" &&
           it.throwable != null &&
           it.throwable.message == "Unable to process XLSX file" &&
-          it.throwable.cause is SiteSurveyImportException &&
-          it.throwable.cause!!.message == "Characteristic question 'Is this room located on the ground floor?' not found on sheet Sheet3."
+          it.throwable.cause is RuntimeException &&
+          it.throwable.cause!!.message == "Question 'Is this room located on the ground floor?' not found on sheet Sheet3."
       }
   }
 
@@ -502,7 +563,7 @@ class SeedCas1RoomsFromSiteSurveyXlsxTest : SeedTestBase() {
       "Bed Number (in this room i.e if this is a single room insert 1.  If this is a shared room separate entries will need to be made for bed 1 and bed 2)",
       "1",
     )
-    rows.addCharacteristics(1, mapOf("Is this room located on the ground floor?" to listOf(0)))
+    rows.addCharacteristics(1, mapOf("Is this room located on the ground floor?" to listOf("Yes", "No", "No")))
     rows.replaceAll { if (it == "Yes") "Bad answer" else it }
 
     val roomsSheet = dataFrameOf(header, rows)
@@ -526,8 +587,8 @@ class SeedCas1RoomsFromSiteSurveyXlsxTest : SeedTestBase() {
           it.message == "Unable to complete Excel seed job" &&
           it.throwable != null &&
           it.throwable.message == "Unable to process XLSX file" &&
-          it.throwable.cause is SiteSurveyImportException &&
-          it.throwable.cause!!.message == "Expecting 'yes' or 'no' for question 'Is this room located on the ground floor?' but is 'Bad answer' on sheet Sheet3 (row = 4, col = 1)."
+          it.throwable.cause is RuntimeException &&
+          it.throwable.cause!!.message == "Invalid value for Yes/No dropdown: Bad answer"
       }
   }
 

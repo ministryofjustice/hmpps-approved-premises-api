@@ -1,13 +1,7 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.seed.cas1
 
-import org.jetbrains.kotlinx.dataframe.DataFrame
-import org.jetbrains.kotlinx.dataframe.api.getColumn
-import org.jetbrains.kotlinx.dataframe.io.readExcel
-import org.jetbrains.kotlinx.dataframe.name
 import org.slf4j.LoggerFactory
-import org.springframework.data.repository.findByIdOrNull
 import org.springframework.stereotype.Component
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.BedEntity
@@ -17,8 +11,10 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Characteristi
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.RoomEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.RoomRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.seed.ExcelSeedJob
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.seed.cas1.Cas1SiteSurveyBedFactory.Cas1SiteSurveyBed
 import java.io.File
 import java.util.UUID
+import kotlin.Boolean
 
 class SiteSurveyImportException(message: String) : Exception(message)
 
@@ -31,162 +27,156 @@ class Cas1SeedRoomsFromSiteSurveyXlsxJob(
   private val characteristicRepository: CharacteristicRepository,
 ) : ExcelSeedJob {
   private val log = LoggerFactory.getLogger(this::class.java)
-  private val questionCriteriaMapping = QuestionCriteriaMapping(characteristicRepository)
 
   override fun processXlsx(file: File) {
     val qCode = Cas1SiteSurveyPremiseFactory().getQCode(file)
     val premises = findExistingPremisesByQCodeOrThrow(qCode)
     log.info("Seeding Rooms for premise '${premises.name}' with QCode '$qCode'")
 
-    val roomsWorksheet = DataFrame.readExcel(file, "Sheet3")
+    val siteSurveyBedsInfo = Cas1SiteSurveyBedFactory().load(file)
 
-    var rooms = buildRooms(roomsWorksheet, qCode, premises.id)
-    val characteristics = buildCharacteristics(roomsWorksheet, qCode)
+    val rooms = resolveRooms(qCode, siteSurveyBedsInfo)
+    checkRoomCharacteristics(rooms)
+
+    val beds = resolveBeds(qCode, siteSurveyBedsInfo)
 
     rooms.forEach {
-      characteristics[it.code]?.let { roomCharacteristics -> it.characteristics.addAll(roomCharacteristics.toList()) }
+      val existingRoom = roomRepository.findByCode(it.roomCode)
+      if (existingRoom == null) {
+        createRoom(premises, it)
+      } else {
+        updateRoom(existingRoom, it)
+      }
     }
 
-    rooms = createOrUpdateRooms(rooms)
-
-    val beds = buildBeds(roomsWorksheet, qCode, rooms)
-    createBedsIfNotExist(beds)
-  }
-
-  private fun buildRooms(dataFrame: DataFrame<*>, qCode: String, premisesId: UUID): MutableList<RoomEntity> {
-    val rooms = mutableListOf<RoomEntity>()
-
-    for (i in 1..<dataFrame.columnsCount()) {
-      val roomAnswers = dataFrame.getColumn(i)
-      val room = buildRoom(premisesId, roomCode = "$qCode - ${roomAnswers[0]}", roomName = roomAnswers[0].toString())
-
-      if (rooms.none { it.code == room.code }) rooms.add(room)
-    }
-    return rooms
-  }
-
-  private fun buildCharacteristics(dataFrame: DataFrame<*>, qCode: String): MutableMap<String, MutableSet<CharacteristicEntity>> {
-    var premisesCharacteristics = mutableMapOf<String, MutableSet<CharacteristicEntity>>()
-
-    questionCriteriaMapping.questionToCharacterEntityMapping.forEach { (question, characteristic) ->
-      val rowId = dataFrame.getColumn(0).values().indexOf(question)
-
-      if (rowId == -1) throw SiteSurveyImportException("Characteristic question '$question' not found on sheet Sheet3.")
-
-      for (colId in 1..<dataFrame.columnsCount()) {
-        val roomCode = "$qCode - ${dataFrame.getColumn(colId)[0]}"
-        val answer = dataFrame[rowId][colId].toString().trim()
-
-        if (answer.equals("yes", ignoreCase = true)) {
-          premisesCharacteristics.computeIfAbsent(roomCode) { mutableSetOf() }.add(characteristic!!)
-        } else if (!answer.equals("no", ignoreCase = true) && !answer.equals("N/A", ignoreCase = true)) {
-          throw SiteSurveyImportException("Expecting 'yes' or 'no' for question '$question' but is '$answer' on sheet Sheet3 (row = ${rowId + 1}, col = $colId).")
+    beds.forEach {
+      val existingBed = bedRepository.findByCode(it.bedCode)
+      if (existingBed == null) {
+        createBed(it)
+      } else {
+        if (existingBed.room.code != it.roomCode) {
+          error("Bed ${it.bedCode} already exists in room ${existingBed.room.code} but is being added to room ${it.roomCode}.")
         }
       }
     }
-    return premisesCharacteristics
   }
 
-  private fun buildBeds(dataFrame: DataFrame<*>, qCode: String, rooms: MutableList<RoomEntity>): List<BedEntity> {
-    val beds = mutableListOf<BedEntity>()
-    for (i in 1..<dataFrame.columnsCount()) {
-      val roomAnswers = dataFrame.getColumn(i)
-      val roomCode = "$qCode - ${roomAnswers[0]}"
-      beds.add(
-        buildBed(
-          bedName = roomAnswers[1].toString(),
-          bedCode = roomAnswers.name,
-          room = rooms.firstOrNull { it.code == roomCode }
-            ?: throw IllegalArgumentException("Room not found with code $roomCode"),
-        ),
+  private fun buildRoomCode(qCode: String, roomNumber: String) = "$qCode - $roomNumber"
+
+  private data class RoomInfo(
+    val roomCode: String,
+    val roomName: String,
+    val characteristics: List<CharacteristicEntity>,
+  )
+
+  private fun resolveRooms(qCode: String, siteSurveyBeds: List<Cas1SiteSurveyBed>): List<RoomInfo> {
+    return siteSurveyBeds.map {
+      RoomInfo(
+        roomCode = buildRoomCode(qCode, it.roomNumber),
+        roomName = it.roomNumber,
+        characteristics = resolveCharacteristics(it),
       )
     }
-    return beds
   }
 
-  private fun createOrUpdateRooms(rooms: MutableList<RoomEntity>): MutableList<RoomEntity> {
-    rooms.forEachIndexed { index, room ->
-      var persistedRoom = roomRepository.findByCodeAndPremisesId(room.code!!, room.premises.id)
-
-      if (persistedRoom == null) {
-        roomRepository.save(room)
-        log.info("Created new room ${room.id} with code ${room.code} and name ${room.name} in premise ${room.premises.name}.")
-        log.info("Added characteristic(s) ${room.characteristics.joinToString()} to room code ${room.code}.")
-      } else {
-        rooms[index] = persistedRoom
-        persistedRoom.characteristics.clear()
-        persistedRoom.characteristics.addAll(room.characteristics)
-        roomRepository.save(persistedRoom)
-        log.info("Added characteristic(s) ${persistedRoom.characteristics.joinToString()} to room code ${persistedRoom.code}.")
-      }
-    }
-    return rooms
-  }
-
-  private fun createBedsIfNotExist(beds: List<BedEntity>) {
-    beds.forEach {
-      val existingBed = bedRepository.findByCodeAndRoomId(it.code!!, it.room.id)
-      if (existingBed != null) {
-        log.info("Bed ${it.id} with code ${it.code} already exists in room code ${it.room.code}.")
-      } else {
-        bedRepository.save(it)
-        log.info("Created new bed ${it.id} with code ${it.code} and name ${it.name} in room code ${it.room.code}.")
-      }
+  private fun checkRoomCharacteristics(rooms: List<RoomInfo>) {
+    rooms.groupBy { room -> room.roomCode }.forEach { (roomCode, rooms) ->
+      rooms.all { it.characteristics == rooms.first().characteristics } || error("Room $roomCode has different characteristics.")
     }
   }
 
-  private fun buildRoom(premisesId: UUID, roomCode: String, roomName: String): RoomEntity = RoomEntity(
-    id = UUID.randomUUID(),
-    name = roomName,
-    code = roomCode,
-    notes = null,
-    premises = approvedPremisesRepository.findByIdOrNull(premisesId)!!,
-    beds = mutableListOf(),
-    characteristics = mutableListOf(),
+  private data class CharacteristicRequired(
+    val propertyName: String,
+    val value: Boolean,
   )
 
-  fun buildBed(bedName: String, bedCode: String, room: RoomEntity): BedEntity = BedEntity(
-    id = UUID.randomUUID(),
-    name = bedName,
-    code = bedCode,
-    room = room,
-    endDate = null,
-    createdAt = null,
+  @Suppress("TooGenericExceptionThrown")
+  private fun resolveCharacteristics(bed: Cas1SiteSurveyBed): List<CharacteristicEntity> {
+    return listOf(
+      CharacteristicRequired("isSingle", bed.isSingle),
+      CharacteristicRequired("isGroundFloor", bed.isGroundFloor),
+      CharacteristicRequired("isFullyFm", bed.isFullyFm),
+      CharacteristicRequired("hasCrib7Bedding", bed.hasCrib7Bedding),
+      CharacteristicRequired("hasSmokeDetector", bed.hasSmokeDetector),
+      CharacteristicRequired("isTopFloorVulnerable", bed.isTopFloorVulnerable),
+      CharacteristicRequired("isGroundFloorNrOffice", bed.isGroundFloorNrOffice),
+      CharacteristicRequired("hasNearbySprinkler", bed.hasNearbySprinkler),
+      CharacteristicRequired("isArsonSuitable", bed.isArsonSuitable),
+      CharacteristicRequired("isArsonDesignated", bed.isArsonDesignated),
+      CharacteristicRequired("hasArsonInsuranceConditions", bed.hasArsonInsuranceConditions),
+      CharacteristicRequired("isSuitedForSexOffenders", bed.isSuitedForSexOffenders),
+      CharacteristicRequired("hasEnSuite", bed.hasEnSuite),
+      CharacteristicRequired("isWheelchairAccessible", bed.isWheelchairAccessible),
+      CharacteristicRequired("hasWideDoor", bed.hasWideDoor),
+      CharacteristicRequired("hasStepFreeAccess", bed.hasStepFreeAccess),
+      CharacteristicRequired("hasFixedMobilityAids", bed.hasFixedMobilityAids),
+      CharacteristicRequired("hasTurningSpace", bed.hasTurningSpace),
+      CharacteristicRequired("hasCallForAssistance", bed.hasCallForAssistance),
+      CharacteristicRequired("isWheelchairDesignated", bed.isWheelchairDesignated),
+      CharacteristicRequired("isStepFreeDesignated", bed.isStepFreeDesignated),
+    ).filter { it.value }
+      .map {
+        characteristicRepository.findByPropertyNameAndScopes(propertyName = it.propertyName, serviceName = "approved-premises", modelName = "room")
+          ?: throw RuntimeException("Characteristic '${it.propertyName}' does not exist for AP room")
+      }
+  }
+
+  private data class BedInfo(
+    val bedName: String,
+    val bedCode: String,
+    val roomCode: String,
   )
+
+  private fun resolveBeds(qCode: String, siteSurveyBeds: List<Cas1SiteSurveyBed>): List<BedInfo> {
+    return siteSurveyBeds.map {
+      BedInfo(
+        bedName = it.bedNumber,
+        bedCode = it.uniqueBedRef,
+        roomCode = buildRoomCode(qCode, it.roomNumber),
+      )
+    }
+  }
+
+  private fun createRoom(premises: ApprovedPremisesEntity, room: RoomInfo) {
+    roomRepository.save(
+      RoomEntity(
+        id = UUID.randomUUID(),
+        name = room.roomName,
+        code = room.roomCode,
+        premises = premises,
+        characteristics = room.characteristics.toMutableList(),
+        notes = null,
+        beds = mutableListOf<BedEntity>(),
+      ),
+    )
+    log.info("Created new room with code ${room.roomCode} and name ${room.roomName} in premise ${premises.name}.")
+  }
+
+  private fun updateRoom(existingRoom: RoomEntity, newRoom: RoomInfo) {
+    existingRoom.characteristics.clear()
+    existingRoom.characteristics.addAll(newRoom.characteristics)
+    roomRepository.save(existingRoom)
+    log.info("Updated existing room with code ${existingRoom.code} and name ${existingRoom.name}.")
+  }
+
+  private fun createBed(bed: BedInfo) {
+    val room = roomRepository.findByCode(bed.roomCode)
+      ?: error("Room with code '${bed.roomCode}' not found.")
+    bedRepository.save(
+      BedEntity(
+        id = UUID.randomUUID(),
+        name = bed.bedName,
+        code = bed.bedCode,
+        room = room,
+        endDate = null,
+        createdAt = null,
+      ),
+    )
+    log.info("Created new bed with code ${bed.bedCode} and name ${bed.bedName} in room code ${bed.roomCode}.")
+  }
 
   private fun findExistingPremisesByQCodeOrThrow(qCode: String): ApprovedPremisesEntity {
     return approvedPremisesRepository.findByQCode(qCode)
       ?: throw SiteSurveyImportException("No premises with qcode '$qCode' found.")
   }
-}
-
-class QuestionCriteriaMapping(characteristicRepository: CharacteristicRepository) {
-  private val questionToPropertyNameMapping = mapOf(
-    "Is this bed in a single room?" to "isSingle",
-    "Is this room located on the ground floor?" to "isGroundFloor",
-    "Is the room using only furnishings and bedding supplied by FM?" to "isFullyFm",
-    "Does this room have Crib7 rated bedding?" to "hasCrib7Bedding",
-    "Is there a smoke/heat detector in the room?" to "hasSmokeDetector",
-    "Is this room on the top floor with at least one external wall and not located directly next to a fire exit or a protected stairway?" to "isTopFloorVulnerable",
-    "Is the room close to the admin/staff office on the ground floor with at least one external wall and not located directly next to a fire exit or a protected stairway?"
-      to "isGroundFloorNrOffice",
-    "is there a water mist extinguisher in close proximity to this room?" to "hasNearbySprinkler",
-    "Is this room suitable for people who pose an arson risk? (Must answer yes to Q; 6 & 7, and 9 or  10)" to "isArsonSuitable",
-    "Is this room currently a designated arson room?" to "isArsonDesignated",
-    "If IAP - Is there any insurance conditions that prevent a person with arson convictions being placed?" to "hasArsonInsuranceConditions",
-    "Is this room suitable for people convicted of sexual offences?" to "isSuitedForSexOffenders",
-    "Does this room have en-suite bathroom facilities?" to "hasEnSuite",
-    "Are corridors leading to this room of sufficient width to accommodate a wheelchair? (at least 1.2m wide)" to "isWheelchairAccessible",
-    "Is the door to this room at least 900mm wide?" to "hasWideDoor",
-    "Is there step free access to this room and in corridors leading to this room?" to "hasStepFreeAccess",
-    "Are there fixed mobility aids in this room?" to "hasFixedMobilityAids",
-    "Does this room have at least a 1500mmx1500mm turning space?" to "hasTurningSpace",
-    "Is there provision for people to call for assistance from this room?" to "hasCallForAssistance",
-    "Can this room be designated as suitable for wheelchair users?   Must answer yes to Q23-26 on previous sheet and Q17-19 & 21 on this sheet)" to "isWheelchairDesignated",
-    "Can this room be designated as suitable for people requiring step free access? (Must answer yes to Q23 and 25 on previous sheet and Q19 on this sheet)" to "isStepFreeDesignated",
-  )
-
-  val questionToCharacterEntityMapping = questionToPropertyNameMapping.map { (key, value) ->
-    Pair(key, characteristicRepository.findByPropertyName(value, ServiceName.approvedPremises.value))
-  }.toMap()
 }

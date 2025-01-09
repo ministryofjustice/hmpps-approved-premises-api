@@ -69,30 +69,6 @@ class Cas1SiteSurveyPremiseFactory {
     }
   }
 
-  /**
-   Data frame assumes the first row is a header, and assigns it to name
-   In our case we don't have a header, so this function produces a list
-   which includes the header followed by all other column values
-   **/
-  private fun AnyCol.toListIncludingHeader() = listOf(this.name) + this.values().toList()
-
-  private fun DataFrame<*>.resolveAnswer(question: String): String {
-    val questions = getColumn(0).toListIncludingHeader()
-    val answers = getColumn(1).toListIncludingHeader()
-
-    val questionIndex = questions.indexOf(question)
-
-    if (questionIndex == -1) error("Question '$question' not found on sheet Sheet3.")
-
-    val answer = answers[questionIndex].toString().trim()
-
-    if (answer.isBlank()) {
-      error("Answer for question '$question' cannot be blank")
-    }
-
-    return answer
-  }
-
   private fun String.dropDownToMaleFemale() = if (this == "Male") {
     MaleFemale.MALE
   } else {
@@ -116,6 +92,30 @@ class Cas1SiteSurveyPremiseFactory {
     "Wales" -> SiteSurveyProbationRegion.WALES
     else -> error("Could not resolve site survey probation region for '$this'")
   }
+}
+
+/**
+Data frame assumes the first row is a header, and assigns it to name
+In our case we don't have a header, so this function produces a list
+which includes the header followed by all other column values
+ **/
+private fun AnyCol.toListIncludingHeader() = listOf(this.name) + this.values().toList()
+
+fun DataFrame<*>.resolveAnswer(question: String, answerCol: Int = 1): String {
+  val questions = getColumn(0).toListIncludingHeader()
+  val answers = getColumn(answerCol).toListIncludingHeader()
+
+  val questionIndex = questions.indexOf(question)
+
+  if (questionIndex == -1) error("Question '$question' not found on sheet Sheet3.")
+
+  val answer = answers[questionIndex].toString().trim()
+
+  if (answer.isBlank()) {
+    error("Answer for question '$question' cannot be blank")
+  }
+
+  return answer
 }
 
 data class Cas1SiteSurveyPremise(
