@@ -49,6 +49,7 @@ class Cas1PremisesTransformerTest {
         .withId(PREMISES_ID)
         .withName("the name")
         .withApCode("the ap code")
+        .withFullAddress("the full address")
         .withPostcode("LE11 1PO")
         .withProbationRegion(probationRegion)
         .withSupportsSpaceBookings(true)
@@ -71,6 +72,7 @@ class Cas1PremisesTransformerTest {
       assertThat(result.id).isEqualTo(premises.id)
       assertThat(result.name).isEqualTo("the name")
       assertThat(result.apCode).isEqualTo("the ap code")
+      assertThat(result.fullAddress).isEqualTo("the full address")
       assertThat(result.postcode).isEqualTo("LE11 1PO")
       assertThat(result.bedCount).isEqualTo(10)
       assertThat(result.availableBeds).isEqualTo(8)
@@ -95,6 +97,11 @@ class Cas1PremisesTransformerTest {
         "the ap area name",
         12,
         supportsSpaceBookings = false,
+        fullAddress = "the full address",
+        addressLine1 = "line 1",
+        addressLine2 = null,
+        town = null,
+        postcode = "the postcode",
       )
 
       val result = transformer.toPremiseBasicSummary(premisesSummary)
@@ -106,6 +113,8 @@ class Cas1PremisesTransformerTest {
       assertThat(result.apArea.name).isEqualTo("the ap area name")
       assertThat(result.bedCount).isEqualTo(12)
       assertThat(result.supportsSpaceBookings).isEqualTo(false)
+      assertThat(result.fullAddress).isEqualTo("the full address")
+      assertThat(result.postcode).isEqualTo("the postcode")
     }
   }
 }

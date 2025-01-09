@@ -21,7 +21,6 @@ import org.springframework.data.jpa.repository.Query
 import org.springframework.stereotype.Repository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.BookingStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PropertyStatus
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas1.CandidatePremises
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas3.Cas3VoidBedspacesEntity
 import java.time.LocalDate
 import java.util.UUID
@@ -189,7 +188,12 @@ interface ApprovedPremisesRepository : JpaRepository<ApprovedPremisesEntity, UUI
               apArea.id,
               apArea.name,
               CAST(COUNT(b) as int),
-              p.supportsSpaceBookings
+              p.supportsSpaceBookings,
+              p.fullAddress,
+              p.addressLine1,
+              p.addressLine2,
+              p.town,
+              p.postcode
               )
         FROM 
           ApprovedPremisesEntity p
@@ -200,7 +204,7 @@ interface ApprovedPremisesRepository : JpaRepository<ApprovedPremisesEntity, UUI
         WHERE 
           (:gender IS NULL OR p.gender = :gender)
           AND(cast(:apAreaId as text) IS NULL OR apArea.id = :apAreaId) 
-          GROUP BY p.id, p.name, p.apCode, apArea.id, apArea.name 
+          GROUP BY p.id, p.name, p.apCode, apArea.id, apArea.name, p.fullAddress, p.addressLine1, p.addressLine2, p.town, p.postcode
       """,
   )
   fun findForSummaries(gender: ApprovedPremisesGender?, apAreaId: UUID?): List<ApprovedPremisesBasicSummary>
@@ -421,6 +425,11 @@ data class ApprovedPremisesBasicSummary(
   val apAreaName: String,
   val bedCount: Int,
   val supportsSpaceBookings: Boolean,
+  val fullAddress: String?,
+  val addressLine1: String,
+  val addressLine2: String?,
+  val town: String?,
+  val postcode: String,
 )
 
 interface BookingSummary {

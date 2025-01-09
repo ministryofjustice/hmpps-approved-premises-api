@@ -54,9 +54,9 @@ class Cas1SpaceSearchResultsTransformer {
     )
 
   fun CandidatePremises.resolveFullAddress() = ApprovedPremisesEntity.resolveFullAddress(
-      fullAddress = fullAddress,
-      addressLine1 = addressLine1,
-      addressLine2 = addressLine2,
-      town = town,
-    )
+    fullAddress = fullAddress,
+    addressLine1 = addressLine1,
+    addressLine2 = addressLine2,
+    town = town,
+  )
 }
