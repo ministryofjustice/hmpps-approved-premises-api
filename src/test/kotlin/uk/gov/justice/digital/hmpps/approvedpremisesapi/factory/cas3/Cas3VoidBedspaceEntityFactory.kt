@@ -5,15 +5,15 @@ import io.github.bluegroundltd.kfactory.Yielded
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.BedEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PremisesEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas3.Cas3VoidBedspaceCancellationEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas3.Cas3VoidBedspaceEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas3.Cas3VoidBedspaceReasonEntity
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas3.Cas3VoidBedspacesEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomDateAfter
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomDateBefore
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomStringMultiCaseWithNumbers
 import java.time.LocalDate
 import java.util.UUID
 
-class Cas3VoidBedspacesEntityFactory : Factory<Cas3VoidBedspacesEntity> {
+class Cas3VoidBedspaceEntityFactory : Factory<Cas3VoidBedspaceEntity> {
   private var id: Yielded<UUID> = { UUID.randomUUID() }
   private var startDate: Yielded<LocalDate> = { LocalDate.now().randomDateBefore(6) }
   private var endDate: Yielded<LocalDate> = { LocalDate.now().randomDateAfter(6) }
@@ -73,7 +73,7 @@ class Cas3VoidBedspacesEntityFactory : Factory<Cas3VoidBedspacesEntity> {
   }
 
   @SuppressWarnings("TooGenericExceptionThrown")
-  override fun produce() = Cas3VoidBedspacesEntity(
+  override fun produce() = Cas3VoidBedspaceEntity(
     id = this.id(),
     startDate = this.startDate(),
     endDate = this.endDate(),

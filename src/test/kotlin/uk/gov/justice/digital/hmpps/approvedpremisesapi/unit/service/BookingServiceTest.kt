@@ -44,8 +44,8 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.RoomEntityFactor
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.TemporaryAccommodationPremisesEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.UserEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.UserRoleAssignmentEntityFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.cas3.Cas3VoidBedspaceEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.cas3.Cas3VoidBedspaceReasonEntityFactory
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.cas3.Cas3VoidBedspacesEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ArrivalEntity
@@ -1091,7 +1091,7 @@ class BookingServiceTest {
       every { mockBedRepository.findByIdOrNull(bed.id) } returns bed
 
       every { mockBookingRepository.findByBedIdAndArrivingBeforeDate(bed.id, departureDate, null) } returns listOf()
-      every { mockCas3LostBedsRepository.findByBedIdAndOverlappingDate(bed.id, arrivalDate, departureDate, null) } returns listOf()
+      every { mockCas3LostBedsRepository.findByBedspaceIdAndOverlappingDate(bed.id, arrivalDate, departureDate, null) } returns listOf()
 
       val result = bookingService.createApprovedPremisesBookingFromPlacementRequest(
         user = user,
@@ -1271,7 +1271,7 @@ class BookingServiceTest {
       every { mockBedRepository.findByIdOrNull(bed.id) } returns bed
 
       every { mockBookingRepository.findByBedIdAndArrivingBeforeDate(bed.id, departureDate, null) } returns listOf()
-      every { mockCas3LostBedsRepository.findByBedIdAndOverlappingDate(bed.id, arrivalDate, departureDate, null) } returns listOf()
+      every { mockCas3LostBedsRepository.findByBedspaceIdAndOverlappingDate(bed.id, arrivalDate, departureDate, null) } returns listOf()
 
       val result = bookingService.createApprovedPremisesBookingFromPlacementRequest(
         user = user,
@@ -1329,7 +1329,7 @@ class BookingServiceTest {
       every { mockBedRepository.findByIdOrNull(bed.id) } returns bed
 
       every { mockBookingRepository.findByBedIdAndArrivingBeforeDate(bed.id, departureDate, null) } returns listOf()
-      every { mockCas3LostBedsRepository.findByBedIdAndOverlappingDate(bed.id, arrivalDate, departureDate, null) } returns listOf()
+      every { mockCas3LostBedsRepository.findByBedspaceIdAndOverlappingDate(bed.id, arrivalDate, departureDate, null) } returns listOf()
 
       val result = bookingService.createApprovedPremisesBookingFromPlacementRequest(
         user = user,
@@ -1388,7 +1388,7 @@ class BookingServiceTest {
       every { mockBedRepository.findByIdOrNull(bed.id) } returns bed
 
       every { mockBookingRepository.findByBedIdAndArrivingBeforeDate(bed.id, departureDate, null) } returns listOf()
-      every { mockCas3LostBedsRepository.findByBedIdAndOverlappingDate(bed.id, arrivalDate, departureDate, null) } returns listOf()
+      every { mockCas3LostBedsRepository.findByBedspaceIdAndOverlappingDate(bed.id, arrivalDate, departureDate, null) } returns listOf()
 
       val result = bookingService.createApprovedPremisesBookingFromPlacementRequest(
         user = user,
@@ -1447,7 +1447,7 @@ class BookingServiceTest {
           .withBed(bed)
           .produce(),
       )
-      every { mockCas3LostBedsRepository.findByBedIdAndOverlappingDate(bed.id, arrivalDate, departureDate, null) } returns listOf()
+      every { mockCas3LostBedsRepository.findByBedspaceIdAndOverlappingDate(bed.id, arrivalDate, departureDate, null) } returns listOf()
 
       every { mockWorkingDayService.addWorkingDays(any(), any()) } answers { it.invocation.args[0] as LocalDate }
 
@@ -1501,8 +1501,8 @@ class BookingServiceTest {
       every { mockBedRepository.findByIdOrNull(bed.id) } returns bed
 
       every { mockBookingRepository.findByBedIdAndArrivingBeforeDate(bed.id, departureDate, null) } returns listOf()
-      every { mockCas3LostBedsRepository.findByBedIdAndOverlappingDate(bed.id, arrivalDate, departureDate, null) } returns listOf(
-        Cas3VoidBedspacesEntityFactory()
+      every { mockCas3LostBedsRepository.findByBedspaceIdAndOverlappingDate(bed.id, arrivalDate, departureDate, null) } returns listOf(
+        Cas3VoidBedspaceEntityFactory()
           .withStartDate(arrivalDate)
           .withEndDate(departureDate)
           .withPremises(premises)
@@ -1560,7 +1560,7 @@ class BookingServiceTest {
         .produce()
 
       every { mockBookingRepository.findByBedIdAndArrivingBeforeDate(bed.id, departureDate, null) } returns listOf()
-      every { mockCas3LostBedsRepository.findByBedIdAndOverlappingDate(bed.id, arrivalDate, departureDate, null) } returns listOf()
+      every { mockCas3LostBedsRepository.findByBedspaceIdAndOverlappingDate(bed.id, arrivalDate, departureDate, null) } returns listOf()
 
       every { mockBedRepository.findByIdOrNull(bed.id) } returns bed
 
@@ -2034,7 +2034,7 @@ class BookingServiceTest {
         .withServiceName(ServiceName.temporaryAccommodation)
         .produce()
 
-      val conflictingLostBed = Cas3VoidBedspacesEntityFactory()
+      val conflictingLostBed = Cas3VoidBedspaceEntityFactory()
         .withPremises(temporaryAccommodationPremises)
         .withBed(temporaryAccommodationBed)
         .withStartDate(LocalDate.parse("2023-07-10"))
@@ -2045,7 +2045,7 @@ class BookingServiceTest {
       every { mockWorkingDayService.addWorkingDays(any(), any()) } answers { it.invocation.args[0] as LocalDate }
       every { mockBookingRepository.findByBedIdAndArrivingBeforeDate(temporaryAccommodationBed.id, LocalDate.parse("2023-07-14"), booking.id) } returns emptyList()
       every {
-        mockCas3LostBedsRepository.findByBedIdAndOverlappingDate(
+        mockCas3LostBedsRepository.findByBedspaceIdAndOverlappingDate(
           temporaryAccommodationBed.id, LocalDate.parse("2023-07-12"),
           LocalDate.parse("2023-07-14"),
           null,
@@ -2074,7 +2074,7 @@ class BookingServiceTest {
 
       every { mockWorkingDayService.addWorkingDays(any(), any()) } answers { it.invocation.args[0] as LocalDate }
       every { mockBookingRepository.findByBedIdAndArrivingBeforeDate(temporaryAccommodationBed.id, LocalDate.parse("2023-07-14"), booking.id) } returns emptyList()
-      every { mockCas3LostBedsRepository.findByBedIdAndOverlappingDate(temporaryAccommodationBed.id, LocalDate.parse("2023-07-16"), LocalDate.parse("2023-07-14"), null) } returns emptyList()
+      every { mockCas3LostBedsRepository.findByBedspaceIdAndOverlappingDate(temporaryAccommodationBed.id, LocalDate.parse("2023-07-16"), LocalDate.parse("2023-07-14"), null) } returns emptyList()
 
       val result = bookingService.createDateChange(
         booking = booking,

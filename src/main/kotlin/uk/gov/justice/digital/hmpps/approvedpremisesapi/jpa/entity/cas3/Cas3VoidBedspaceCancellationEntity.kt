@@ -23,7 +23,7 @@ data class Cas3VoidBedspaceCancellationEntity(
   val notes: String?,
   @OneToOne
   @JoinColumn(name = "cas3_void_bedspace_id")
-  val voidBedspace: Cas3VoidBedspacesEntity,
+  val voidBedspace: Cas3VoidBedspaceEntity,
 ) {
   override fun equals(other: Any?): Boolean {
     if (this === other) return true

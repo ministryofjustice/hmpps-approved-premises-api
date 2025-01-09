@@ -174,7 +174,7 @@ class TurnaroundTest : InitialiseDatabasePerClassTestBase() {
         withDepartureDate(LocalDate.of(2023, 5, 3))
       }
 
-      val conflictingLostBed = cas3VoidBedspacesEntityFactory.produceAndPersist {
+      val conflictingLostBed = cas3VoidBedspaceEntityFactory.produceAndPersist {
         withPremises(premises)
         withBed(bed)
         withStartDate(LocalDate.of(2023, 5, 5))

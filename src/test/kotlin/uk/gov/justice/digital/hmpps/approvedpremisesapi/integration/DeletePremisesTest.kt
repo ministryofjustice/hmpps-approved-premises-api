@@ -129,7 +129,7 @@ class DeletePremisesTest : IntegrationTestBase() {
     withLocalAuthorityArea(localAuthorityEntityFactory.produceAndPersist())
   }
 
-  private fun createVoidBedspace(premises: PremisesEntity, bed: BedEntity) = cas3VoidBedspacesEntityFactory.produceAndPersist {
+  private fun createVoidBedspace(premises: PremisesEntity, bed: BedEntity) = cas3VoidBedspaceEntityFactory.produceAndPersist {
     withPremises(premises)
     withBed(bed)
     withYieldedReason {

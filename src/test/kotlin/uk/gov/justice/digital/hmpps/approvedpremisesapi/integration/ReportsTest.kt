@@ -1311,7 +1311,7 @@ class ReportsTest : IntegrationTestBase() {
             )
           }
 
-          cas3VoidBedspacesEntityFactory.produceAndPersist {
+          cas3VoidBedspaceEntityFactory.produceAndPersist {
             withPremises(premises)
             withBed(bed1)
             withStartDate(LocalDate.of(2023, 4, 5))
@@ -1321,7 +1321,7 @@ class ReportsTest : IntegrationTestBase() {
             }
           }
 
-          cas3VoidBedspacesEntityFactory.produceAndPersist {
+          cas3VoidBedspaceEntityFactory.produceAndPersist {
             withPremises(premises)
             withBed(bed2)
             withStartDate(LocalDate.of(2023, 4, 12))
@@ -1331,7 +1331,7 @@ class ReportsTest : IntegrationTestBase() {
             }
           }
 
-          val voidBedspace3 = cas3VoidBedspacesEntityFactory.produceAndPersist {
+          val voidBedspace3 = cas3VoidBedspaceEntityFactory.produceAndPersist {
             withPremises(premises)
             withBed(bed3)
             withStartDate(LocalDate.of(2023, 4, 1))
