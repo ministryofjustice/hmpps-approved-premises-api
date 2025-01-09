@@ -18,6 +18,15 @@ import kotlin.Boolean
 
 class SiteSurveyImportException(message: String) : Exception(message)
 
+/**
+ * This job seeds rooms and beds from a site survey xlsx Excel file.
+ * The xlsx file should have two sheets:
+ *  Sheet2: Premises details
+ *  Sheet3: Room and bed characteristic details
+ *
+ * The job can be run by calling the run_seed_from_excel_job script with the following arguments:
+ *  ./script/run_seed_from_excel_job cas1_import_site_survey_rooms 'site_survey_file.xlsx'
+ */
 @Component
 @Suppress("LongParameterList")
 class Cas1SeedRoomsFromSiteSurveyXlsxJob(

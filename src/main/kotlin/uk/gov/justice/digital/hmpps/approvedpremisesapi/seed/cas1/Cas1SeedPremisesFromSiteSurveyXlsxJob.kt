@@ -23,6 +23,15 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.seed.ExcelSeedJob
 import java.io.File
 import java.util.UUID
 
+/**
+ * This job seeds premises information from a site survey xlsx Excel file.
+ * The xlsx file should have two sheets:
+ *  Sheet2: Premises details
+ *  Sheet3: Room and bed characteristic details
+ *
+ * The job can be run by calling the run_seed_from_excel_job script with the following arguments:
+ *  ./script/run_seed_from_excel_job cas1_import_site_survey_premises 'site_survey_file.xlsx'
+ */
 @Component
 class Cas1SeedPremisesFromSiteSurveyXlsxJob(
   private val premisesRepository: ApprovedPremisesRepository,
