@@ -124,6 +124,7 @@ class SeedService(
     return rowsProcessed
   }
 
+  @SuppressWarnings("TooGenericExceptionThrown")
   private fun <T> processCsv(job: SeedJob<T>, resolveCsvPath: SeedJob<T>.() -> String): Int {
     var rowNumber = 1
     val errors = mutableListOf<String>()
@@ -147,7 +148,7 @@ class SeedService(
       throw RuntimeException("Unable to process CSV at row $rowNumber", exception)
     }
     if (errors.isNotEmpty()) {
-      seedLogger.error("The following row-level errors were raised: ${errors.joinToString("\n")}")
+      throw RuntimeException("The following row-level errors were raised: ${errors.joinToString("\n")}")
     }
 
     return rowNumber - 1
