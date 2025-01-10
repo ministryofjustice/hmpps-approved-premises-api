@@ -203,18 +203,7 @@ class ApplicationsController(
       createWithRisks,
     )
 
-    val application = when (applicationResult) {
-      is ValidatableActionResult.GeneralValidationError ->
-        throw BadRequestProblem(errorDetail = applicationResult.message)
-
-      is ValidatableActionResult.FieldValidationError ->
-        throw BadRequestProblem(invalidParams = applicationResult.validationMessages)
-
-      is ValidatableActionResult.ConflictError ->
-        throw ConflictProblem(id = applicationResult.conflictingEntityId, conflictReason = applicationResult.message)
-
-      is ValidatableActionResult.Success -> applicationResult.entity
-    }
+    val application = extractEntityFromCasResult(applicationResult)
 
     return ResponseEntity
       .created(URI.create("/applications/${application.id}"))
@@ -227,7 +216,7 @@ class ApplicationsController(
     user: UserEntity,
     body: NewApplication,
     createWithRisks: Boolean?,
-  ): ValidatableActionResult<ApplicationEntity> = when (serviceName) {
+  ): CasResult<out ApplicationEntity> = when (serviceName) {
     ServiceName.approvedPremises ->
       applicationService.createApprovedPremisesApplication(
         personInfo.offenderDetailSummary,
@@ -239,28 +228,18 @@ class ApplicationsController(
       )
 
     ServiceName.temporaryAccommodation -> {
-      when (
-        val actionResult =
-          applicationService.createTemporaryAccommodationApplication(
-            body.crn,
-            user,
-            body.convictionId,
-            body.deliusEventNumber,
-            body.offenceId,
-            createWithRisks,
-            personInfo,
-          )
-      ) {
-        is AuthorisableActionResult.NotFound -> throw NotFoundProblem(actionResult.id!!, actionResult.entityType!!)
-        is AuthorisableActionResult.Unauthorised -> throw ForbiddenProblem()
-        is AuthorisableActionResult.Success -> actionResult.entity
-      }
+      applicationService.createTemporaryAccommodationApplication(
+        body.crn,
+        user,
+        body.convictionId,
+        body.deliusEventNumber,
+        body.offenceId,
+        createWithRisks,
+        personInfo,
+      )
     }
 
-    ServiceName.cas2 -> throw RuntimeException(
-      "CAS2 now has its own " +
-        "Cas2ApplicationsController",
-    )
+    ServiceName.cas2 -> error("CAS2 now has its own Cas2ApplicationsController")
   }
 
   @Transactional

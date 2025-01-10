@@ -30,7 +30,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.OffenderService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.UserService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.UserService.GetUserResponse
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.extractEntityFromCasResult
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.extractEntityFromValidatableActionResult
 import java.io.IOException
 import java.time.LocalDate
 import java.time.OffsetDateTime
@@ -238,7 +237,7 @@ class Cas1AutoScript(
     val personInfo = getPersonInfo(crn)
     val createdByUser = (userService.getExistingUserOrCreate(deliusUserName) as GetUserResponse.Success).user
 
-    val newApplicationEntity = extractEntityFromValidatableActionResult(
+    val newApplicationEntity = extractEntityFromCasResult(
       applicationService.createApprovedPremisesApplication(
         offenderDetails = personInfo.offenderDetailSummary,
         user = createdByUser,
