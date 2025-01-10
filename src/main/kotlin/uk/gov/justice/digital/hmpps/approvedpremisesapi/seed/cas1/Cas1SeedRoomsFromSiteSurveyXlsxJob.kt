@@ -1,5 +1,8 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.seed.cas1
 
+import org.javers.core.Javers
+import org.javers.core.JaversBuilder
+import org.javers.core.diff.ListCompareAlgorithm
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Component
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesEntity
@@ -35,6 +38,11 @@ class Cas1SeedRoomsFromSiteSurveyXlsxJob(
   private val bedRepository: BedRepository,
   private val characteristicRepository: CharacteristicRepository,
 ) : ExcelSeedJob {
+
+  companion object {
+    val javers: Javers = JaversBuilder.javers().withListCompareAlgorithm(ListCompareAlgorithm.AS_SET).build()
+  }
+
   private val log = LoggerFactory.getLogger(this::class.java)
 
   override fun processXlsx(file: File) {
@@ -161,11 +169,39 @@ class Cas1SeedRoomsFromSiteSurveyXlsxJob(
     log.info("Created new room with code ${room.roomCode} and name ${room.roomName} in premise ${premises.name}.")
   }
 
+  private data class ApprovedPremisesRoomForComparison(
+    val id: UUID,
+    val name: String,
+    val code: String?,
+    val characteristicNames: List<String>,
+  ) {
+    companion object {
+      fun fromEntity(entity: RoomEntity): ApprovedPremisesRoomForComparison {
+        return ApprovedPremisesRoomForComparison(
+          id = entity.id,
+          name = entity.name,
+          code = entity.code,
+          characteristicNames = entity.characteristics.map { it.name }.sorted(),
+        )
+      }
+    }
+  }
+
   private fun updateRoom(existingRoom: RoomEntity, newRoom: RoomInfo) {
+    log.info("Updating room ${existingRoom.name} with room code ${existingRoom.code}.")
+
+    val beforeChange = ApprovedPremisesRoomForComparison.fromEntity(existingRoom)
+
     existingRoom.characteristics.clear()
     existingRoom.characteristics.addAll(newRoom.characteristics)
     roomRepository.save(existingRoom)
-    log.info("Updated existing room with code ${existingRoom.code} and name ${existingRoom.name}.")
+
+    val afterChange = ApprovedPremisesRoomForComparison.fromEntity(existingRoom)
+
+    val diff = javers.compare(beforeChange, afterChange)
+    if (diff.hasChanges()) {
+      log.info("Changes for import of room with code ${existingRoom.code} are ${diff.prettyPrint()}")
+    }
   }
 
   private fun createBed(bed: BedInfo) {
