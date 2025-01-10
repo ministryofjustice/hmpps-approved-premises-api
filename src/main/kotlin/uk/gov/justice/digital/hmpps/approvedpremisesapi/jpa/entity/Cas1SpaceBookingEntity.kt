@@ -293,7 +293,7 @@ data class Cas1SpaceBookingEntity(
   @JoinColumn(name = "created_by_user_id")
   val createdBy: UserEntity?,
   val createdAt: OffsetDateTime,
-  val expectedArrivalDate: LocalDate,
+  var expectedArrivalDate: LocalDate,
   var expectedDepartureDate: LocalDate,
   var actualArrivalDate: LocalDate?,
   /**
