@@ -7052,24 +7052,15 @@ components:
         - updatedReferenceNumber
         - updatedReason
         - updatedNotes
-    ApprovedPremisesBedSearchParameters:
+    ApprovedPremisesBedSearchResult:
       deprecated: true
       description: This is no longer returned by any APIs so should be removed once removed from UI Code
       allOf:
-        - $ref: '#/components/schemas/BedSearchParameters'
+        - $ref: '#/components/schemas/BedSearchResult'
         - type: object
           properties:
-            postcodeDistrict:
-              type: string
-              description: The postcode district to search outwards from
-            maxDistanceMiles:
-              type: integer
-              description: Maximum number of miles from the postcode district to search, only required if more than 50 miles which is the default
-            requiredCharacteristics:
-              type: array
-              items:
-                $ref: '#/components/schemas/PlacementCriteria'
+            distanceMiles:
+              type: number
+              description: how many miles away from the postcode district the Premises this Bed belongs to is
           required:
-            - postcodeDistrict
-            - maxDistanceMiles
-            - requiredCharacteristics
+            - distanceMiles
