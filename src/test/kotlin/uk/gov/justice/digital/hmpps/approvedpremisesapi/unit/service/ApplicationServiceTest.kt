@@ -1445,7 +1445,7 @@ class ApplicationServiceTest {
         applicationService.submitApprovedPremisesApplication(
           applicationId,
           defaultSubmitApprovedPremisesApplication,
-          username,
+          user,
           apAreaId = UUID.randomUUID(),
         ) is AuthorisableActionResult.NotFound,
       ).isTrue
@@ -1458,10 +1458,6 @@ class ApplicationServiceTest {
         .withYieldedCreatedByUser { UserEntityFactory().withDefaultProbationRegion().produce() }
         .produce()
 
-      every { mockUserService.getUserForRequest() } returns UserEntityFactory()
-        .withDeliusUsername(username)
-        .withDefaultProbationRegion()
-        .produce()
       every { mockApplicationRepository.findByIdOrNull(applicationId) } returns application
       every { mockJsonSchemaService.checkSchemaOutdated(application) } returns application
 
@@ -1469,7 +1465,7 @@ class ApplicationServiceTest {
         applicationService.submitApprovedPremisesApplication(
           applicationId,
           defaultSubmitApprovedPremisesApplication,
-          username,
+          user,
           apAreaId = UUID.randomUUID(),
         ) is AuthorisableActionResult.Unauthorised,
       ).isTrue
@@ -1486,14 +1482,13 @@ class ApplicationServiceTest {
           schemaUpToDate = false
         }
 
-      every { mockUserService.getUserForRequest() } returns user
       every { mockApplicationRepository.findByIdOrNull(applicationId) } returns application
       every { mockJsonSchemaService.checkSchemaOutdated(application) } returns application
 
       val result = applicationService.submitApprovedPremisesApplication(
         applicationId,
         defaultSubmitApprovedPremisesApplication,
-        username,
+        user,
         apAreaId = UUID.randomUUID(),
       )
 
@@ -1520,14 +1515,13 @@ class ApplicationServiceTest {
           schemaUpToDate = true
         }
 
-      every { mockUserService.getUserForRequest() } returns user
       every { mockApplicationRepository.findByIdOrNull(applicationId) } returns application
       every { mockJsonSchemaService.checkSchemaOutdated(application) } returns application
 
       val result = applicationService.submitApprovedPremisesApplication(
         applicationId,
         defaultSubmitApprovedPremisesApplication,
-        username,
+        user,
         apAreaId = UUID.randomUUID(),
       )
 
@@ -1554,7 +1548,6 @@ class ApplicationServiceTest {
           schemaUpToDate = true
         }
 
-      every { mockUserService.getUserForRequest() } returns user
       every { mockApplicationRepository.findByIdOrNull(applicationId) } returns application
       every { mockJsonSchemaService.checkSchemaOutdated(application) } returns application
 
@@ -1577,7 +1570,7 @@ class ApplicationServiceTest {
       val result = applicationService.submitApprovedPremisesApplication(
         applicationId,
         defaultSubmitApprovedPremisesApplication,
-        username,
+        user,
         apAreaId = UUID.randomUUID(),
       )
 
@@ -1603,7 +1596,6 @@ class ApplicationServiceTest {
           schemaUpToDate = true
         }
 
-      every { mockUserService.getUserForRequest() } returns user
       every { mockApplicationRepository.findByIdOrNull(applicationId) } returns application
       every { mockJsonSchemaService.checkSchemaOutdated(application) } returns application
 
@@ -1627,7 +1619,7 @@ class ApplicationServiceTest {
       val result = applicationService.submitApprovedPremisesApplication(
         applicationId,
         defaultSubmitApprovedPremisesApplication,
-        username,
+        user,
         apAreaId = UUID.randomUUID(),
       )
 
@@ -1693,7 +1685,7 @@ class ApplicationServiceTest {
         applicationService.submitApprovedPremisesApplication(
           applicationId,
           defaultSubmitApprovedPremisesApplication,
-          username,
+          user,
           apAreaId = apArea.id,
         )
 
@@ -1791,7 +1783,7 @@ class ApplicationServiceTest {
         applicationService.submitApprovedPremisesApplication(
           applicationId,
           defaultSubmitApprovedPremisesApplication,
-          username,
+          user,
           apAreaId = apArea.id,
         )
 
@@ -1878,7 +1870,7 @@ class ApplicationServiceTest {
         applicationService.submitApprovedPremisesApplication(
           applicationId,
           defaultSubmitApprovedPremisesApplication,
-          username,
+          user,
           apAreaId = apArea.id,
         )
 
@@ -1988,7 +1980,7 @@ class ApplicationServiceTest {
         applicationService.submitApprovedPremisesApplication(
           applicationId,
           defaultSubmitApprovedPremisesApplication,
-          username,
+          user,
           apAreaId = apArea.id,
         )
 
@@ -2045,7 +2037,7 @@ class ApplicationServiceTest {
       val result = applicationService.submitApprovedPremisesApplication(
         applicationId,
         defaultSubmitApprovedPremisesApplication,
-        username,
+        user,
         apAreaId = apArea.id,
       )
 
@@ -2056,7 +2048,6 @@ class ApplicationServiceTest {
 
     private fun setupMocksForSuccess(application: ApprovedPremisesApplicationEntity) {
       every { mockObjectMapper.writeValueAsString(defaultSubmitApprovedPremisesApplication.translatedDocument) } returns "{}"
-      every { mockUserService.getUserForRequest() } returns user
       every { mockApplicationRepository.findByIdOrNull(applicationId) } returns application
       every { mockJsonSchemaService.checkSchemaOutdated(application) } returns application
       every { mockJsonSchemaService.validate(newestSchema, application.data!!) } returns true

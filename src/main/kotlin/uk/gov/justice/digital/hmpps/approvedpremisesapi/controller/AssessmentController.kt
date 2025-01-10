@@ -165,7 +165,7 @@ class AssessmentController(
     val serializedData = objectMapper.writeValueAsString(assessmentAcceptance.document)
 
     val assessmentAuthResult = assessmentService.acceptAssessment(
-      user = user,
+      acceptingUser = user,
       assessmentId = assessmentId,
       document = serializedData,
       placementRequirements = assessmentAcceptance.requirements,

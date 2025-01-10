@@ -168,7 +168,11 @@ class TaskService(
 
     val result = when (taskType) {
       TaskType.assessment -> {
-        assessmentService.reallocateAssessment(assigneeUser, taskId)
+        assessmentService.reallocateAssessment(
+          allocatingUser = requestUser,
+          assigneeUser = assigneeUser,
+          id = taskId,
+        )
       }
       TaskType.placementRequest -> {
         placementRequestService.reallocatePlacementRequest(assigneeUser, taskId)

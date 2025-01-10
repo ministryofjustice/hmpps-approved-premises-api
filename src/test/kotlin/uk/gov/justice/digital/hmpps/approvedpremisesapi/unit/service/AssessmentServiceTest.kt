@@ -1817,6 +1817,14 @@ class AssessmentServiceTest {
       }
       .produce()
 
+    val actingUser = UserEntityFactory()
+      .withDeliusUsername("Acting User")
+      .withYieldedProbationRegion {
+        ProbationRegionEntityFactory()
+          .withYieldedApArea { ApAreaEntityFactory().produce() }
+          .produce()
+      }.produce()
+
     @Test
     fun `reallocateAssessment for Approved Premises returns General Validation Error when application already has a submitted assessment`() {
       previousAssessment.apply {
@@ -1826,7 +1834,11 @@ class AssessmentServiceTest {
       every { lockableAssessmentRepository.acquirePessimisticLock(previousAssessment.id) } returns LockableAssessmentEntity(previousAssessment.id)
       every { assessmentRepositoryMock.findByIdOrNull(previousAssessment.id) } returns previousAssessment
 
-      val result = assessmentService.reallocateAssessment(assigneeUser, previousAssessment.id)
+      val result = assessmentService.reallocateAssessment(
+        allocatingUser = actingUser,
+        assigneeUser = assigneeUser,
+        id = previousAssessment.id,
+      )
 
       assertThat(result is AuthorisableActionResult.Success).isTrue
       val validationResult = (result as AuthorisableActionResult.Success).entity
@@ -1845,7 +1857,11 @@ class AssessmentServiceTest {
       every { lockableAssessmentRepository.acquirePessimisticLock(previousAssessment.id) } returns LockableAssessmentEntity(previousAssessment.id)
       every { assessmentRepositoryMock.findByIdOrNull(previousAssessment.id) } returns previousAssessment
 
-      val result = assessmentService.reallocateAssessment(assigneeUser, previousAssessment.id)
+      val result = assessmentService.reallocateAssessment(
+        allocatingUser = actingUser,
+        assigneeUser = assigneeUser,
+        id = previousAssessment.id,
+      )
 
       assertThat(result is AuthorisableActionResult.Success).isTrue
       val validationResult = (result as AuthorisableActionResult.Success).entity
@@ -1868,7 +1884,11 @@ class AssessmentServiceTest {
       every { lockableAssessmentRepository.acquirePessimisticLock(previousAssessment.id) } returns LockableAssessmentEntity(previousAssessment.id)
       every { assessmentRepositoryMock.findByIdOrNull(previousAssessment.id) } returns previousAssessment
 
-      val result = assessmentService.reallocateAssessment(assigneeUser, previousAssessment.id)
+      val result = assessmentService.reallocateAssessment(
+        allocatingUser = actingUser,
+        assigneeUser = assigneeUser,
+        id = previousAssessment.id,
+      )
 
       assertThat(result is AuthorisableActionResult.Success).isTrue
       val validationResult = (result as AuthorisableActionResult.Success).entity
@@ -1908,7 +1928,11 @@ class AssessmentServiceTest {
       every { lockableAssessmentRepository.acquirePessimisticLock(previousAssessment.id) } returns LockableAssessmentEntity(previousAssessment.id)
       every { assessmentRepositoryMock.findByIdOrNull(previousAssessment.id) } returns previousAssessment
 
-      val result = assessmentService.reallocateAssessment(assigneeUser, previousAssessment.id)
+      val result = assessmentService.reallocateAssessment(
+        allocatingUser = actingUser,
+        assigneeUser = assigneeUser,
+        id = previousAssessment.id,
+      )
 
       assertThat(result is AuthorisableActionResult.Success).isTrue
       val validationResult = (result as AuthorisableActionResult.Success).entity
@@ -1927,7 +1951,11 @@ class AssessmentServiceTest {
       every { lockableAssessmentRepository.acquirePessimisticLock(previousAssessment.id) } returns LockableAssessmentEntity(previousAssessment.id)
       every { assessmentRepositoryMock.findByIdOrNull(previousAssessment.id) } returns previousAssessment
 
-      val result = assessmentService.reallocateAssessment(assigneeUser, previousAssessment.id)
+      val result = assessmentService.reallocateAssessment(
+        allocatingUser = actingUser,
+        assigneeUser = assigneeUser,
+        id = previousAssessment.id,
+      )
 
       assertThat(result is AuthorisableActionResult.Success).isTrue
       val validationResult = (result as AuthorisableActionResult.Success).entity
@@ -1959,14 +1987,6 @@ class AssessmentServiceTest {
 
       val dueAt = OffsetDateTime.now()
 
-      val actingUser = UserEntityFactory()
-        .withDeliusUsername("Acting User")
-        .withYieldedProbationRegion {
-          ProbationRegionEntityFactory()
-            .withYieldedApArea { ApAreaEntityFactory().produce() }
-            .produce()
-        }.produce()
-
       every { lockableAssessmentRepository.acquirePessimisticLock(previousAssessment.id) } returns LockableAssessmentEntity(previousAssessment.id)
       every { assessmentRepositoryMock.findByIdOrNull(previousAssessment.id) } returns previousAssessment
 
@@ -1986,11 +2006,13 @@ class AssessmentServiceTest {
 
       every { taskDeadlineServiceMock.getDeadline(any<ApprovedPremisesAssessmentEntity>()) } returns dueAt
 
-      every { userServiceMock.getUserForRequest() } returns actingUser
-
       every { cas1AssessmentDomainEventService.assessmentAllocated(any(), any(), any()) } just Runs
 
-      val result = assessmentService.reallocateAssessment(assigneeUser, previousAssessment.id)
+      val result = assessmentService.reallocateAssessment(
+        allocatingUser = actingUser,
+        assigneeUser = assigneeUser,
+        id = previousAssessment.id,
+      )
 
       assertThat(result is AuthorisableActionResult.Success).isTrue
       val validationResult = (result as AuthorisableActionResult.Success).entity
@@ -2048,14 +2070,6 @@ class AssessmentServiceTest {
 
       val dueAt = OffsetDateTime.now()
 
-      val actingUser = UserEntityFactory()
-        .withDeliusUsername("Acting User")
-        .withYieldedProbationRegion {
-          ProbationRegionEntityFactory()
-            .withYieldedApArea { ApAreaEntityFactory().produce() }
-            .produce()
-        }.produce()
-
       every { lockableAssessmentRepository.acquirePessimisticLock(previousAssessment.id) } returns LockableAssessmentEntity(previousAssessment.id)
       every { assessmentRepositoryMock.findByIdOrNull(previousAssessment.id) } returns previousAssessment
 
@@ -2075,11 +2089,13 @@ class AssessmentServiceTest {
 
       every { taskDeadlineServiceMock.getDeadline(any<ApprovedPremisesAssessmentEntity>()) } returns dueAt
 
-      every { userServiceMock.getUserForRequest() } returns actingUser
-
       every { cas1AssessmentDomainEventService.assessmentAllocated(any(), any(), any()) } just Runs
 
-      val result = assessmentService.reallocateAssessment(assigneeUser, previousAssessment.id)
+      val result = assessmentService.reallocateAssessment(
+        allocatingUser = actingUser,
+        assigneeUser = assigneeUser,
+        id = previousAssessment.id,
+      )
 
       assertThat(result is AuthorisableActionResult.Success).isTrue
       val validationResult = (result as AuthorisableActionResult.Success).entity
@@ -2127,6 +2143,10 @@ class AssessmentServiceTest {
       .withProbationRegion(probationRegion)
       .produce()
 
+    val actingUser = UserEntityFactory()
+      .withProbationRegion(probationRegion)
+      .produce()
+
     val application = TemporaryAccommodationApplicationEntityFactory()
       .withCreatedByUser(
         UserEntityFactory()
@@ -2149,7 +2169,11 @@ class AssessmentServiceTest {
 
     every { assessmentRepositoryMock.findByIdOrNull(previousAssessment.id) } returns previousAssessment
 
-    val result = assessmentService.reallocateAssessment(assigneeUser, previousAssessment.id)
+    val result = assessmentService.reallocateAssessment(
+      allocatingUser = actingUser,
+      assigneeUser = assigneeUser,
+      id = previousAssessment.id,
+    )
 
     assertThat(result is AuthorisableActionResult.Success).isTrue
     val validationResult = (result as AuthorisableActionResult.Success).entity
@@ -2174,6 +2198,10 @@ class AssessmentServiceTest {
           .withRole(UserRole.CAS3_ASSESSOR)
           .produce()
       }
+
+    val actingUser = UserEntityFactory()
+      .withProbationRegion(probationRegion)
+      .produce()
 
     val application = TemporaryAccommodationApplicationEntityFactory()
       .withCreatedByUser(
@@ -2207,7 +2235,11 @@ class AssessmentServiceTest {
     every { userServiceMock.getUserForRequest() } returns assigneeUser
     every { assessmentReferralHistoryNoteRepositoryMock.save(any()) } returnsArgument 0
 
-    val result = assessmentService.reallocateAssessment(assigneeUser, previousAssessment.id)
+    val result = assessmentService.reallocateAssessment(
+      allocatingUser = actingUser,
+      assigneeUser = assigneeUser,
+      id = previousAssessment.id,
+    )
 
     assertThat(result is AuthorisableActionResult.Success).isTrue
     val validationResult = (result as AuthorisableActionResult.Success).entity

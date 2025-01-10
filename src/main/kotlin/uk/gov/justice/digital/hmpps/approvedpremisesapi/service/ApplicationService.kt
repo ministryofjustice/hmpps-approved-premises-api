@@ -661,7 +661,7 @@ class ApplicationService(
   fun submitApprovedPremisesApplication(
     applicationId: UUID,
     submitApplication: SubmitApprovedPremisesApplication,
-    username: String,
+    user: UserEntity,
     apAreaId: UUID,
   ): AuthorisableActionResult<ValidatableActionResult<ApplicationEntity>> {
     lockableApplicationRepository.acquirePessimisticLock(applicationId)
@@ -672,8 +672,6 @@ class ApplicationService(
       ?: return AuthorisableActionResult.NotFound()
 
     val serializedTranslatedDocument = objectMapper.writeValueAsString(submitApplication.translatedDocument)
-
-    val user = userService.getUserForRequest()
 
     if (application.createdByUser != user) {
       return AuthorisableActionResult.Unauthorised()
@@ -779,7 +777,7 @@ class ApplicationService(
       this.licenceExpiryDate = submitApplication.licenseExpiryDate
     }
 
-    cas1ApplicationDomainEventService.applicationSubmitted(application, submitApplication, username)
+    cas1ApplicationDomainEventService.applicationSubmitted(application, submitApplication, user.deliusUsername)
     assessmentService.createApprovedPremisesAssessment(application)
 
     applicationListener.preUpdate(application)
