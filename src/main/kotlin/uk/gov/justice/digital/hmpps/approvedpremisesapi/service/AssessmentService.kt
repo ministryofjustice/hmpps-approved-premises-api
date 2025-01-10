@@ -296,11 +296,11 @@ class AssessmentService(
   }
 
   fun updateAssessment(
-    user: UserEntity,
+    updatingUser: UserEntity,
     assessmentId: UUID,
     data: String?,
   ): CasResult<AssessmentEntity> {
-    val assessmentResult = getAssessmentAndValidate(user, assessmentId)
+    val assessmentResult = getAssessmentAndValidate(updatingUser, assessmentId)
 
     val assessment = when (assessmentResult) {
       is CasResult.Success -> assessmentResult.value
@@ -332,7 +332,7 @@ class AssessmentService(
   }
 
   fun acceptAssessment(
-    user: UserEntity,
+    acceptingUser: UserEntity,
     assessmentId: UUID,
     document: String?,
     placementRequirements: PlacementRequirements?,
@@ -343,7 +343,7 @@ class AssessmentService(
     val acceptedAt = OffsetDateTime.now(clock)
     val createPlacementRequest = placementDates != null
 
-    val assessment = when (val assessmentResult = getAssessmentAndValidate(user, assessmentId)) {
+    val assessment = when (val assessmentResult = getAssessmentAndValidate(acceptingUser, assessmentId)) {
       is CasResult.Success -> assessmentResult.value
       is CasResult.Error -> return assessmentResult
     }
@@ -419,14 +419,21 @@ class AssessmentService(
     val application = savedAssessment.application
 
     val offenderDetails =
-      when (val offenderDetailsResult = offenderService.getOffenderByCrn(application.crn, user.deliusUsername, true)) {
+      when (val offenderDetailsResult = offenderService.getOffenderByCrn(application.crn, acceptingUser.deliusUsername, true)) {
         is AuthorisableActionResult.Success -> offenderDetailsResult.entity
         is AuthorisableActionResult.Unauthorised -> throw RuntimeException("Unable to get Offender Details when creating Application Assessed Domain Event: Unauthorised")
         is AuthorisableActionResult.NotFound -> throw RuntimeException("Unable to get Offender Details when creating Application Assessed Domain Event: Not Found")
       }
 
     if (application is ApprovedPremisesApplicationEntity) {
-      cas1AssessmentDomainEventService.assessmentAccepted(application, assessment, offenderDetails, placementDates, apType, userService.getUserForRequest())
+      cas1AssessmentDomainEventService.assessmentAccepted(
+        application = application,
+        assessment = assessment,
+        offenderDetails = offenderDetails,
+        placementDates = placementDates,
+        apType = apType,
+        acceptingUser = acceptingUser,
+      )
       cas1AssessmentEmailService.assessmentAccepted(application)
 
       if (createPlacementRequest) {
@@ -595,6 +602,7 @@ class AssessmentService(
   }
 
   fun reallocateAssessment(
+    allocatingUser: UserEntity,
     assigneeUser: UserEntity,
     id: UUID,
   ): AuthorisableActionResult<ValidatableActionResult<AssessmentEntity>> {
@@ -613,7 +621,11 @@ class AssessmentService(
     }
 
     return when (currentAssessment) {
-      is ApprovedPremisesAssessmentEntity -> reallocateApprovedPremisesAssessment(assigneeUser, currentAssessment)
+      is ApprovedPremisesAssessmentEntity -> reallocateApprovedPremisesAssessment(
+        allocatingUser = allocatingUser,
+        assigneeUser = assigneeUser,
+        currentAssessment = currentAssessment,
+      )
       is TemporaryAccommodationAssessmentEntity -> reallocateTemporaryAccommodationAssessment(
         assigneeUser,
         currentAssessment,
@@ -624,6 +636,7 @@ class AssessmentService(
   }
 
   private fun reallocateApprovedPremisesAssessment(
+    allocatingUser: UserEntity,
     assigneeUser: UserEntity,
     currentAssessment: ApprovedPremisesAssessmentEntity,
   ): AuthorisableActionResult<ValidatableActionResult<AssessmentEntity>> {
@@ -695,7 +708,7 @@ class AssessmentService(
       if (allocatedToUser != null) {
         cas1AssessmentEmailService.assessmentDeallocated(allocatedToUser, newAssessment.id, application)
       }
-      cas1AssessmentDomainEventService.assessmentAllocated(newAssessment, assigneeUser, userService.getUserForRequest())
+      cas1AssessmentDomainEventService.assessmentAllocated(newAssessment, assigneeUser, allocatingUser)
     }
 
     return AuthorisableActionResult.Success(

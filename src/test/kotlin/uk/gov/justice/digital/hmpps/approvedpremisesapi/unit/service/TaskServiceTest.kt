@@ -135,7 +135,13 @@ class TaskServiceTest {
       .withAllocatedToUser(assigneeUser)
       .produce()
 
-    every { assessmentServiceMock.reallocateAssessment(assigneeUser, assessment.id) } returns AuthorisableActionResult.Success(
+    every {
+      assessmentServiceMock.reallocateAssessment(
+        allocatingUser = requestUserWithPermission,
+        assigneeUser = assigneeUser,
+        id = assessment.id,
+      )
+    } returns AuthorisableActionResult.Success(
       ValidatableActionResult.Success(
         assessment,
       ),
