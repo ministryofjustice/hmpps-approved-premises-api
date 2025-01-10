@@ -11,7 +11,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.seed.SeedJob
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.ApplicationService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.ApplicationTimelineNoteService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.OffenderService
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.extractEntityFromValidatableActionResult
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.extractEntityFromCasResult
 import java.util.UUID
 
 /**
@@ -78,7 +78,7 @@ class Cas1DuplicateApplicationSeedJob(
 
     val createdByUser = sourceApplication.createdByUser
 
-    val newApplicationEntity = extractEntityFromValidatableActionResult(
+    val newApplicationEntity = extractEntityFromCasResult(
       applicationService.createApprovedPremisesApplication(
         offenderDetails = personInfo.offenderDetailSummary,
         user = createdByUser,

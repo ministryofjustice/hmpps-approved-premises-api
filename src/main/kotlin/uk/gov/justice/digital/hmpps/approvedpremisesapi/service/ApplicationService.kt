@@ -50,7 +50,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.ValidationErrors
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.asApprovedPremisesType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.community.OffenderDetailSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.prisonsapi.InmateStatus
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.validated
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.validatedCasResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.InternalServerErrorProblem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.AuthorisableActionResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.CasResult
@@ -227,7 +227,7 @@ class ApplicationService(
     deliusEventNumber: String?,
     offenceId: String?,
     createWithRisks: Boolean? = true,
-  ) = validated<ApplicationEntity> {
+  ) = validatedCasResult<ApplicationEntity> {
     val crn = offenderDetails.otherIds.crn
 
     val managingTeamCodes = when (val managingTeamsResult = apDeliusContextApiClient.getTeamsManagingCase(crn)) {
@@ -352,74 +352,72 @@ class ApplicationService(
     offenceId: String?,
     createWithRisks: Boolean? = true,
     personInfo: PersonInfoResult.Success.Full,
-  ): AuthorisableActionResult<ValidatableActionResult<ApplicationEntity>> {
+  ): CasResult<ApplicationEntity> {
     if (!user.hasRole(UserRole.CAS3_REFERRER)) {
-      return AuthorisableActionResult.Unauthorised()
+      return CasResult.Unauthorised()
     }
 
-    return AuthorisableActionResult.Success(
-      validated {
-        val offenderDetails =
-          when (
-            val offenderDetailsResult = offenderService.getOffenderByCrn(crn, user.deliusUsername)
-          ) {
-            is AuthorisableActionResult.NotFound -> return@validated "$.crn" hasSingleValidationError "doesNotExist"
-            is AuthorisableActionResult.Unauthorised ->
-              return@validated "$.crn" hasSingleValidationError "userPermission"
+    return validatedCasResult {
+      val offenderDetails =
+        when (
+          val offenderDetailsResult = offenderService.getOffenderByCrn(crn, user.deliusUsername)
+        ) {
+          is AuthorisableActionResult.NotFound -> return@validatedCasResult "$.crn" hasSingleValidationError "doesNotExist"
+          is AuthorisableActionResult.Unauthorised ->
+            return@validatedCasResult "$.crn" hasSingleValidationError "userPermission"
 
-            is AuthorisableActionResult.Success -> offenderDetailsResult.entity
-          }
-
-        if (convictionId == null) {
-          "$.convictionId" hasValidationError "empty"
+          is AuthorisableActionResult.Success -> offenderDetailsResult.entity
         }
 
-        if (deliusEventNumber == null) {
-          "$.deliusEventNumber" hasValidationError "empty"
+      if (convictionId == null) {
+        "$.convictionId" hasValidationError "empty"
+      }
+
+      if (deliusEventNumber == null) {
+        "$.deliusEventNumber" hasValidationError "empty"
+      }
+
+      if (offenceId == null) {
+        "$.offenceId" hasValidationError "empty"
+      }
+
+      if (validationErrors.any()) {
+        return@validatedCasResult fieldValidationError
+      }
+
+      var riskRatings: PersonRisks? = null
+
+      if (createWithRisks == true) {
+        val riskRatingsResult = offenderService.getRiskByCrn(crn, user.deliusUsername)
+
+        riskRatings = when (riskRatingsResult) {
+          is AuthorisableActionResult.NotFound ->
+            return@validatedCasResult "$.crn" hasSingleValidationError "doesNotExist"
+
+          is AuthorisableActionResult.Unauthorised ->
+            return@validatedCasResult "$.crn" hasSingleValidationError "userPermission"
+
+          is AuthorisableActionResult.Success -> riskRatingsResult.entity
         }
+      }
 
-        if (offenceId == null) {
-          "$.offenceId" hasValidationError "empty"
-        }
+      val prisonName = getPrisonName(personInfo)
 
-        if (validationErrors.any()) {
-          return@validated fieldValidationError
-        }
+      val createdApplication = applicationRepository.save(
+        createTemporaryAccommodationApplicationEntity(
+          crn,
+          user,
+          convictionId,
+          deliusEventNumber,
+          offenceId,
+          riskRatings,
+          offenderDetails,
+          prisonName,
+        ),
+      )
 
-        var riskRatings: PersonRisks? = null
-
-        if (createWithRisks == true) {
-          val riskRatingsResult = offenderService.getRiskByCrn(crn, user.deliusUsername)
-
-          riskRatings = when (riskRatingsResult) {
-            is AuthorisableActionResult.NotFound ->
-              return@validated "$.crn" hasSingleValidationError "doesNotExist"
-
-            is AuthorisableActionResult.Unauthorised ->
-              return@validated "$.crn" hasSingleValidationError "userPermission"
-
-            is AuthorisableActionResult.Success -> riskRatingsResult.entity
-          }
-        }
-
-        val prisonName = getPrisonName(personInfo)
-
-        val createdApplication = applicationRepository.save(
-          createTemporaryAccommodationApplicationEntity(
-            crn,
-            user,
-            convictionId,
-            deliusEventNumber,
-            offenceId,
-            riskRatings,
-            offenderDetails,
-            prisonName,
-          ),
-        )
-
-        success(createdApplication.apply { schemaUpToDate = true })
-      },
-    )
+      success(createdApplication.apply { schemaUpToDate = true })
+    }
   }
 
   private fun createTemporaryAccommodationApplicationEntity(

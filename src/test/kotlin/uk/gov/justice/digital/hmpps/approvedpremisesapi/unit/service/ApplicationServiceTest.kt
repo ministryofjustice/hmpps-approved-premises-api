@@ -96,6 +96,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1Applica
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1DomainEventService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.ApplicationTimelineNoteTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.ApplicationTimelineTransformer
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.unit.util.assertThatCasResult
 import java.time.Clock
 import java.time.Instant
 import java.time.LocalDate
@@ -333,11 +334,10 @@ class ApplicationServiceTest {
 
     val result = applicationService.createApprovedPremisesApplication(offenderDetails, user, null, null, null)
 
-    assertThat(result is ValidatableActionResult.FieldValidationError).isTrue
-    result as ValidatableActionResult.FieldValidationError
-    assertThat(result.validationMessages).containsEntry("$.convictionId", "empty")
-    assertThat(result.validationMessages).containsEntry("$.deliusEventNumber", "empty")
-    assertThat(result.validationMessages).containsEntry("$.offenceId", "empty")
+    assertThatCasResult(result).isFieldValidationError()
+      .hasMessage("$.convictionId", "empty")
+      .hasMessage("$.deliusEventNumber", "empty")
+      .hasMessage("$.offenceId", "empty")
   }
 
   @Test
@@ -406,13 +406,11 @@ class ApplicationServiceTest {
 
     val result = applicationService.createApprovedPremisesApplication(offenderDetails, user, 123, "1", "A12HI")
 
-    assertThat(result is ValidatableActionResult.Success).isTrue
-    result as ValidatableActionResult.Success
-    assertThat(result.entity.crn).isEqualTo(crn)
-    assertThat(result.entity.createdByUser).isEqualTo(user)
-    val approvedPremisesApplication = result.entity as ApprovedPremisesApplicationEntity
-    assertThat(approvedPremisesApplication.riskRatings).isEqualTo(riskRatings)
-    assertThat(approvedPremisesApplication.name).isEqualTo("${offenderDetails.firstName.uppercase()} ${offenderDetails.surname.uppercase()}")
+    assertThatCasResult(result).isSuccess().with {
+      val approvedPremisesApplication = it as ApprovedPremisesApplicationEntity
+      assertThat(approvedPremisesApplication.riskRatings).isEqualTo(riskRatings)
+      assertThat(approvedPremisesApplication.name).isEqualTo("${offenderDetails.firstName.uppercase()} ${offenderDetails.surname.uppercase()}")
+    }
   }
 
   @Test
@@ -435,7 +433,7 @@ class ApplicationServiceTest {
       )
     }
 
-    val actionResult = applicationService.createTemporaryAccommodationApplication(
+    val result = applicationService.createTemporaryAccommodationApplication(
       crn,
       user,
       123,
@@ -444,7 +442,7 @@ class ApplicationServiceTest {
       personInfo = personInfo,
     )
 
-    assertThat(actionResult is AuthorisableActionResult.Unauthorised<*>).isTrue
+    assertThatCasResult(result).isUnauthorised()
   }
 
   @Test
@@ -469,7 +467,7 @@ class ApplicationServiceTest {
       )
     }
 
-    val actionResult = applicationService.createTemporaryAccommodationApplication(
+    val result = applicationService.createTemporaryAccommodationApplication(
       crn,
       user,
       123,
@@ -478,11 +476,8 @@ class ApplicationServiceTest {
       personInfo = personInfo,
     )
 
-    assertThat(actionResult is AuthorisableActionResult.Success).isTrue()
-    actionResult as AuthorisableActionResult.Success
-    assertThat(actionResult.entity is ValidatableActionResult.FieldValidationError).isTrue
-    val validationResult = actionResult.entity as ValidatableActionResult.FieldValidationError
-    assertThat(validationResult.validationMessages).containsEntry("$.crn", "doesNotExist")
+    assertThatCasResult(result).isFieldValidationError()
+      .hasMessage("$.crn", "doesNotExist")
   }
 
   @Test
@@ -507,7 +502,7 @@ class ApplicationServiceTest {
       )
     }
 
-    val actionResult = applicationService.createTemporaryAccommodationApplication(
+    val result = applicationService.createTemporaryAccommodationApplication(
       crn,
       user,
       123,
@@ -516,11 +511,8 @@ class ApplicationServiceTest {
       personInfo = personInfo,
     )
 
-    assertThat(actionResult is AuthorisableActionResult.Success).isTrue()
-    actionResult as AuthorisableActionResult.Success
-    assertThat(actionResult.entity is ValidatableActionResult.FieldValidationError).isTrue
-    val validationResult = actionResult.entity as ValidatableActionResult.FieldValidationError
-    assertThat(validationResult.validationMessages).containsEntry("$.crn", "userPermission")
+    assertThatCasResult(result).isFieldValidationError()
+      .hasMessage("$.crn", "userPermission")
   }
 
   @Test
@@ -548,7 +540,7 @@ class ApplicationServiceTest {
       )
     }
 
-    val actionResult = applicationService.createTemporaryAccommodationApplication(
+    val result = applicationService.createTemporaryAccommodationApplication(
       crn,
       user,
       null,
@@ -557,13 +549,10 @@ class ApplicationServiceTest {
       personInfo = personInfo,
     )
 
-    assertThat(actionResult is AuthorisableActionResult.Success).isTrue()
-    actionResult as AuthorisableActionResult.Success
-    assertThat(actionResult.entity is ValidatableActionResult.FieldValidationError).isTrue
-    val validationResult = actionResult.entity as ValidatableActionResult.FieldValidationError
-    assertThat(validationResult.validationMessages).containsEntry("$.convictionId", "empty")
-    assertThat(validationResult.validationMessages).containsEntry("$.deliusEventNumber", "empty")
-    assertThat(validationResult.validationMessages).containsEntry("$.offenceId", "empty")
+    assertThatCasResult(result).isFieldValidationError()
+      .hasMessage("$.convictionId", "empty")
+      .hasMessage("$.deliusEventNumber", "empty")
+      .hasMessage("$.offenceId", "empty")
   }
 
   @Test
@@ -631,7 +620,7 @@ class ApplicationServiceTest {
       riskRatings,
     )
 
-    val actionResult = applicationService.createTemporaryAccommodationApplication(
+    val result = applicationService.createTemporaryAccommodationApplication(
       crn,
       user,
       123,
@@ -640,13 +629,11 @@ class ApplicationServiceTest {
       personInfo = personInfo,
     )
 
-    assertThat(actionResult is AuthorisableActionResult.Success).isTrue()
-    actionResult as AuthorisableActionResult.Success
-    assertThat(actionResult.entity is ValidatableActionResult.Success).isTrue
-    val validationResult = actionResult.entity as ValidatableActionResult.Success
-    val temporaryAccommodationApplication = validationResult.entity as TemporaryAccommodationApplicationEntity
-    assertThat(temporaryAccommodationApplication.riskRatings).isEqualTo(riskRatings)
-    assertThat(temporaryAccommodationApplication.prisonNameOnCreation).isEqualTo(agencyName)
+    assertThatCasResult(result).isSuccess().with {
+      val temporaryAccommodationApplication = it as TemporaryAccommodationApplicationEntity
+      assertThat(temporaryAccommodationApplication.riskRatings).isEqualTo(riskRatings)
+      assertThat(temporaryAccommodationApplication.prisonNameOnCreation).isEqualTo(agencyName)
+    }
   }
 
   @Test
@@ -714,7 +701,7 @@ class ApplicationServiceTest {
       riskRatings,
     )
 
-    val actionResult = applicationService.createTemporaryAccommodationApplication(
+    val result = applicationService.createTemporaryAccommodationApplication(
       crn,
       user,
       123,
@@ -723,13 +710,11 @@ class ApplicationServiceTest {
       personInfo = personInfo,
     )
 
-    assertThat(actionResult is AuthorisableActionResult.Success).isTrue()
-    actionResult as AuthorisableActionResult.Success
-    assertThat(actionResult.entity is ValidatableActionResult.Success).isTrue
-    val validationResult = actionResult.entity as ValidatableActionResult.Success
-    val temporaryAccommodationApplication = validationResult.entity as TemporaryAccommodationApplicationEntity
-    assertThat(temporaryAccommodationApplication.riskRatings).isEqualTo(riskRatings)
-    assertThat(temporaryAccommodationApplication.prisonNameOnCreation).isEqualTo(agencyName)
+    assertThatCasResult(result).isSuccess().with {
+      val temporaryAccommodationApplication = it as TemporaryAccommodationApplicationEntity
+      assertThat(temporaryAccommodationApplication.riskRatings).isEqualTo(riskRatings)
+      assertThat(temporaryAccommodationApplication.prisonNameOnCreation).isEqualTo(agencyName)
+    }
   }
 
   @Test
@@ -796,7 +781,7 @@ class ApplicationServiceTest {
       riskRatings,
     )
 
-    val actionResult = applicationService.createTemporaryAccommodationApplication(
+    val result = applicationService.createTemporaryAccommodationApplication(
       crn,
       user,
       123,
@@ -805,13 +790,11 @@ class ApplicationServiceTest {
       personInfo = personInfo,
     )
 
-    assertThat(actionResult is AuthorisableActionResult.Success).isTrue()
-    actionResult as AuthorisableActionResult.Success
-    assertThat(actionResult.entity is ValidatableActionResult.Success).isTrue
-    val validationResult = actionResult.entity as ValidatableActionResult.Success
-    val temporaryAccommodationApplication = validationResult.entity as TemporaryAccommodationApplicationEntity
-    assertThat(temporaryAccommodationApplication.riskRatings).isEqualTo(riskRatings)
-    assertThat(temporaryAccommodationApplication.prisonNameOnCreation).isNull()
+    assertThatCasResult(result).isSuccess().with {
+      val temporaryAccommodationApplication = it as TemporaryAccommodationApplicationEntity
+      assertThat(temporaryAccommodationApplication.riskRatings).isEqualTo(riskRatings)
+      assertThat(temporaryAccommodationApplication.prisonNameOnCreation).isNull()
+    }
   }
 
   @Test
@@ -878,7 +861,7 @@ class ApplicationServiceTest {
       riskRatings,
     )
 
-    val actionResult = applicationService.createTemporaryAccommodationApplication(
+    val result = applicationService.createTemporaryAccommodationApplication(
       crn,
       user,
       123,
@@ -887,13 +870,11 @@ class ApplicationServiceTest {
       personInfo = personInfo,
     )
 
-    assertThat(actionResult is AuthorisableActionResult.Success).isTrue()
-    actionResult as AuthorisableActionResult.Success
-    assertThat(actionResult.entity is ValidatableActionResult.Success).isTrue
-    val validationResult = actionResult.entity as ValidatableActionResult.Success
-    val temporaryAccommodationApplication = validationResult.entity as TemporaryAccommodationApplicationEntity
-    assertThat(temporaryAccommodationApplication.riskRatings).isEqualTo(riskRatings)
-    assertThat(temporaryAccommodationApplication.prisonNameOnCreation).isNull()
+    assertThatCasResult(result).isSuccess().with {
+      val temporaryAccommodationApplication = it as TemporaryAccommodationApplicationEntity
+      assertThat(temporaryAccommodationApplication.riskRatings).isEqualTo(riskRatings)
+      assertThat(temporaryAccommodationApplication.prisonNameOnCreation).isNull()
+    }
   }
 
   @Nested
