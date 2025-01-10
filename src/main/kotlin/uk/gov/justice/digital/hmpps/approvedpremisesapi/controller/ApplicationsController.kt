@@ -347,7 +347,7 @@ class ApplicationsController(
         applicationService.submitApprovedPremisesApplication(
           applicationId,
           submitApplication,
-          username,
+          userService.getUserForRequest(),
           apAreaId,
         )
       }
