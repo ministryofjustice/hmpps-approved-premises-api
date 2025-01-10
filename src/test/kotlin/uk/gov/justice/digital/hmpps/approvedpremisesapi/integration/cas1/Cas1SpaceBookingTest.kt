@@ -21,6 +21,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1SpaceBooki
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1SpaceBookingSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1SpaceBookingSummaryStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1SpaceCharacteristic
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1UpdateSpaceBooking
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PersonSummaryDiscriminator
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.Cas1SpaceBookingEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.CaseAccessFactory
@@ -1996,6 +1997,83 @@ class Cas1SpaceBookingTest {
 
       assertThat(approvedPremisesApplicationRepository.findByIdOrNull(spaceBooking.application!!.id)!!.status)
         .isEqualTo(ApprovedPremisesApplicationStatus.AWAITING_PLACEMENT)
+    }
+  }
+
+  @Nested
+  inner class UpdateSpaceBooking : InitialiseDatabasePerClassTestBase() {
+    lateinit var region: ProbationRegionEntity
+    lateinit var premises: ApprovedPremisesEntity
+    lateinit var spaceBooking: Cas1SpaceBookingEntity
+
+    @BeforeAll
+    fun setupTestData() {
+      region = givenAProbationRegion()
+
+      premises = approvedPremisesEntityFactory.produceAndPersist {
+        withSupportsSpaceBookings(true)
+        withYieldedProbationRegion { region }
+        withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
+      }
+
+      val (user) = givenAUser()
+      val (offender) = givenAnOffender()
+      val (placementRequest) = givenAPlacementRequest(
+        placementRequestAllocatedTo = user,
+        assessmentAllocatedTo = user,
+        createdByUser = user,
+      )
+
+      spaceBooking = cas1SpaceBookingEntityFactory.produceAndPersist {
+        withCrn(offender.otherIds.crn)
+        withPremises(premises)
+        withPlacementRequest(placementRequest)
+        withApplication(placementRequest.application)
+        withCreatedBy(user)
+        withExpectedArrivalDate(LocalDate.parse("2025-02-05"))
+        withExpectedDepartureDate(LocalDate.parse("2025-06-29"))
+      }
+    }
+
+    @Test
+    fun `Returns 403 Forbidden if user does not have correct permission`() {
+      val (_, jwt) = givenAUser(roles = listOf(CAS1_ASSESSOR))
+
+      webTestClient.patch()
+        .uri("/cas1/premises/${premises.id}/space-bookings/${spaceBooking.id}")
+        .header("Authorization", "Bearer $jwt")
+        .bodyValue(
+          Cas1UpdateSpaceBooking(
+            arrivalDate = LocalDate.now(),
+            departureDate = LocalDate.now().plusMonths(1),
+          ),
+        )
+        .exchange()
+        .expectStatus()
+        .isForbidden
+    }
+
+    @Test
+    fun `Update space booking returns OK, and correctly update booking dates`() {
+      val (_, jwt) = givenAUser(roles = listOf(UserRole.CAS1_CRU_MEMBER_FIND_AND_BOOK_BETA))
+
+      webTestClient.patch()
+        .uri("/cas1/premises/${premises.id}/space-bookings/${spaceBooking.id}")
+        .header("Authorization", "Bearer $jwt")
+        .bodyValue(
+          Cas1UpdateSpaceBooking(
+            arrivalDate = LocalDate.parse("2025-03-15"),
+            departureDate = LocalDate.parse("2025-04-05"),
+          ),
+        )
+        .exchange()
+        .expectStatus()
+        .isOk
+
+      val updatedSpaceBooking = cas1SpaceBookingRepository.findByIdOrNull(spaceBooking.id)!!
+
+      assertThat(updatedSpaceBooking.expectedArrivalDate).isEqualTo(LocalDate.parse("2025-03-15"))
+      assertThat(updatedSpaceBooking.expectedDepartureDate).isEqualTo(LocalDate.parse("2025-04-05"))
     }
   }
 }

@@ -34,6 +34,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1SpaceBo
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1SpaceBookingService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1SpaceBookingService.DepartureInfo
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1SpaceBookingService.SpaceBookingFilterCriteria
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1SpaceBookingService.UpdateSpaceBookingDetails
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1WithdrawableService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1LimitedAccessStrategy
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.cas1.Cas1SpaceBookingTransformer
@@ -164,7 +165,23 @@ class Cas1SpaceBookingController(
     bookingId: UUID,
     cas1UpdateSpaceBooking: Cas1UpdateSpaceBooking,
   ): ResponseEntity<Unit> {
-    return super.updateSpaceBooking(premisesId, bookingId, cas1UpdateSpaceBooking)
+    userAccessService.ensureCurrentUserHasPermission(UserPermission.CAS1_SPACE_BOOKING_CREATE)
+
+    val user = userService.getUserForRequest()
+
+    ensureEntityFromCasResultIsSuccess(
+      cas1SpaceBookingService.updateSpaceBooking(
+        UpdateSpaceBookingDetails(
+          bookingId = bookingId,
+          premisesId = premisesId,
+          arrivalDate = cas1UpdateSpaceBooking.arrivalDate,
+          departureDate = cas1UpdateSpaceBooking.departureDate,
+          updatedBy = user,
+        ),
+      ),
+    )
+
+    return ResponseEntity(HttpStatus.OK)
   }
 
   override fun recordArrival(
