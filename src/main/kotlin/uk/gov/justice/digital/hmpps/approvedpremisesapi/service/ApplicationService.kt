@@ -227,7 +227,7 @@ class ApplicationService(
     deliusEventNumber: String?,
     offenceId: String?,
     createWithRisks: Boolean? = true,
-  ) = validatedCasResult<ApplicationEntity> {
+  ) = validatedCasResult<ApprovedPremisesApplicationEntity> {
     val crn = offenderDetails.otherIds.crn
 
     val managingTeamCodes = when (val managingTeamsResult = apDeliusContextApiClient.getTeamsManagingCase(crn)) {
@@ -352,7 +352,7 @@ class ApplicationService(
     offenceId: String?,
     createWithRisks: Boolean? = true,
     personInfo: PersonInfoResult.Success.Full,
-  ): CasResult<ApplicationEntity> {
+  ): CasResult<TemporaryAccommodationApplicationEntity> {
     if (!user.hasRole(UserRole.CAS3_REFERRER)) {
       return CasResult.Unauthorised()
     }
@@ -493,7 +493,7 @@ class ApplicationService(
     applicationId: UUID,
     updateFields: Cas1ApplicationUpdateFields,
     userForRequest: UserEntity,
-  ): CasResult<ApplicationEntity> {
+  ): CasResult<ApprovedPremisesApplicationEntity> {
     val application = applicationRepository.findByIdOrNull(applicationId)?.let(jsonSchemaService::checkSchemaOutdated)
       ?: return CasResult.NotFound("Application", applicationId.toString())
 

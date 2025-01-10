@@ -216,7 +216,7 @@ class ApplicationsController(
     user: UserEntity,
     body: NewApplication,
     createWithRisks: Boolean?,
-  ): CasResult<ApplicationEntity> = when (serviceName) {
+  ): CasResult<out ApplicationEntity> = when (serviceName) {
     ServiceName.approvedPremises ->
       applicationService.createApprovedPremisesApplication(
         personInfo.offenderDetailSummary,
