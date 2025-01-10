@@ -7,34 +7,28 @@ import org.junit.jupiter.api.assertThrows
 import org.springframework.transaction.support.TransactionTemplate
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApprovedPremisesEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesRepository
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.BookingRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas1SpaceBookingRepository
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DomainEventRepository
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementRequestRepository
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRepository
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.OfflineApplicationRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas1.Cas1DeliusBookingImportRepository
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.seed.cas1.Cas1BackfillActiveSpaceBookingsCreatedInDelius
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.seed.cas1.Cas1BookingManagementInfoService
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.seed.cas1.Cas1BookingToSpaceBookingSeedCsvRow
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.seed.cas1.Cas1BookingToSpaceBookingSeedJob
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.seed.cas1.Cas1CreateMissingReferralsSeedCsvRow
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.EnvironmentService
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1DomainEventService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.OffenderService
 
-class Cas1BookingToSpaceBookingSeedJobTest {
+class Cas1BackfillActiveSpaceBookingsCreatedInDeliusTest {
 
   private val approvedPremisesRepository = mockk<ApprovedPremisesRepository>()
 
-  private val seedJob = Cas1BookingToSpaceBookingSeedJob(
+  private val seedJob = Cas1BackfillActiveSpaceBookingsCreatedInDelius(
     approvedPremisesRepository = approvedPremisesRepository,
-    spaceBookingRepository = mockk<Cas1SpaceBookingRepository>(),
-    bookingRepository = mockk<BookingRepository>(),
-    domainEventRepository = mockk<DomainEventRepository>(),
-    domainEventService = mockk<Cas1DomainEventService>(),
-    userRepository = mockk<UserRepository>(),
-    transactionTemplate = mockk<TransactionTemplate>(),
     cas1DeliusBookingImportRepository = mockk<Cas1DeliusBookingImportRepository>(),
     cas1BookingManagementInfoService = mockk<Cas1BookingManagementInfoService>(),
     environmentService = mockk<EnvironmentService>(),
-    placementRequestRepository = mockk<PlacementRequestRepository>(),
+    offenderService = mockk<OffenderService>(),
+    offlineApplicationRepository = mockk<OfflineApplicationRepository>(),
+    spaceBookingRepository = mockk<Cas1SpaceBookingRepository>(),
+    transactionTemplate = mockk<TransactionTemplate>(),
   )
 
   @Test
@@ -46,7 +40,7 @@ class Cas1BookingToSpaceBookingSeedJobTest {
         .produce()
 
     assertThrows<RuntimeException> {
-      seedJob.processRow(Cas1BookingToSpaceBookingSeedCsvRow("Q123"))
+      seedJob.processRow(Cas1CreateMissingReferralsSeedCsvRow("Q123"))
     }
   }
 }
