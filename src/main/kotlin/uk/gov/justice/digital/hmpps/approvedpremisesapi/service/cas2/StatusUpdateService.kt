@@ -76,17 +76,18 @@ class StatusUpdateService(
         ValidatableActionResult.GeneralValidationError("The status ${statusUpdate.newStatus} is not valid"),
       )
 
-    val statusDetails = if (statusUpdate.newStatusDetails.isNullOrEmpty()) {
+    val newStatusDetails = statusUpdate.newStatusDetails
+
+    val statusDetails = if (newStatusDetails.isNullOrEmpty()) {
       emptyList()
     } else {
-      val newStatusDetails = statusUpdate.newStatusDetails
-      val map = newStatusDetails?.map { detail ->
-        status.findStatusDetailOnStatus(detail)
+
+      newStatusDetails.map { detail ->
+      status.findStatusDetailOnStatus(detail)
           ?: return AuthorisableActionResult.Success(
             ValidatableActionResult.GeneralValidationError("The status detail $detail is not valid"),
           )
       }
-      map
     }
 
     if (ValidationErrors().any()) {
@@ -108,7 +109,7 @@ class StatusUpdateService(
       ),
     )
 
-    statusDetails?.forEach { detail ->
+    statusDetails.forEach { detail ->
       statusUpdateDetailRepository.save(
         Cas2StatusUpdateDetailEntity(
           id = UUID.randomUUID(),
@@ -121,7 +122,7 @@ class StatusUpdateService(
 
     sendEmailStatusUpdated(assessment.application.createdByUser, assessment.application, createdStatusUpdate)
 
-    createStatusUpdatedDomainEvent(createdStatusUpdate, statusDetails!!)
+    createStatusUpdatedDomainEvent(createdStatusUpdate, statusDetails)
 
     return AuthorisableActionResult.Success(
       ValidatableActionResult.Success(createdStatusUpdate),
