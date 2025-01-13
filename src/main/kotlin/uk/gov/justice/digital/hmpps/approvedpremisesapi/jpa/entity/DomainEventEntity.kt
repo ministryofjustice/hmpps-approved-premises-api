@@ -392,4 +392,10 @@ enum class DomainEventType(
     "A field has been updated on an assessment",
     null,
   ),
+  CAS3_DRAFT_REFERRAL_DELETED(
+    DomainEventCas.CAS3,
+    Cas3EventType.draftReferralDeleted.value,
+    "A draft referral has been deleted",
+    null,
+  ),
 }

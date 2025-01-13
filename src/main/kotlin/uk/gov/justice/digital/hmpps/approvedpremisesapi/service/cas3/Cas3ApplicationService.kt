@@ -17,6 +17,7 @@ class Cas3ApplicationService(
   private val applicationRepository: ApplicationRepository,
   private val userService: UserService,
   private val userAccessService: UserAccessService,
+  private val cas3DomainEventService: uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas3.DomainEventService,
 ) {
   @Transactional
   fun markApplicationAsDeleted(applicationId: UUID): CasResult<Unit> {
@@ -29,7 +30,7 @@ class Cas3ApplicationService(
     }
 
     return if (application.submittedAt == null) {
-      markAsDeleted(application)
+      markAsDeleted(application, user)
     } else {
       CasResult.GeneralValidationError("Cannot mark as deleted: temporary accommodation application already submitted.")
     }
@@ -39,9 +40,10 @@ class Cas3ApplicationService(
     return userAccessService.userCanAccessTemporaryAccommodationApplication(user, application)
   }
 
-  private fun markAsDeleted(application: ApplicationEntity): CasResult<Unit> {
+  private fun markAsDeleted(application: ApplicationEntity, user: UserEntity): CasResult<Unit> {
     application.deletedAt = OffsetDateTime.now()
     applicationRepository.saveAndFlush(application)
+    cas3DomainEventService.saveDraftReferralDeletedEvent(application, user)
     return CasResult.Success(Unit)
   }
 }

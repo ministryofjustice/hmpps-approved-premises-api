@@ -1,11 +1,13 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.cas3
 
 import org.assertj.core.api.Assertions
+import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.InitialiseDatabasePerClassTestBase
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAUser
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAnOffender
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DomainEventType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRole
 import java.time.LocalDate
@@ -41,6 +43,14 @@ class Cas3ApplicationTest : InitialiseDatabasePerClassTestBase() {
 
           Assertions.assertThat(temporaryAccommodationApplicationRepository.findById(application.id).get().deletedAt)
             .isNotNull()
+
+          val domainEvents =
+            domainEventRepository.findByApplicationIdAndType(
+              applicationId = application.id,
+              type = DomainEventType.CAS3_DRAFT_REFERRAL_DELETED,
+            )
+
+          assertThat(domainEvents.size).isEqualTo(1)
         }
       }
     }

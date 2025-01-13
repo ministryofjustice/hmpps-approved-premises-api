@@ -11,6 +11,8 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas3.model.CA
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas3.model.CAS3BookingConfirmedEventDetails
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas3.model.CAS3BookingProvisionallyMadeEvent
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas3.model.CAS3BookingProvisionallyMadeEventDetails
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas3.model.CAS3DraftReferralDeletedEvent
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas3.model.CAS3DraftReferralDeletedEventDetails
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas3.model.CAS3PersonArrivedEvent
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas3.model.CAS3PersonArrivedEventDetails
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas3.model.CAS3PersonArrivedUpdatedEvent
@@ -23,6 +25,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas3.model.Ev
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas3.model.PersonReference
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas3.model.Premises
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas3.model.StaffMember
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ArrivalEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.BookingEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.CancellationEntity
@@ -303,6 +306,32 @@ class DomainEventBuilder(
         timestamp = Instant.now(),
         eventType = EventType.personArrivedUpdated,
         eventDetails = createCas3PersonArrivedEventDetails(application, booking, arrival, user),
+      ),
+    )
+  }
+
+  fun getDraftReferralDeletedEvent(
+    application: ApplicationEntity,
+    user: UserEntity,
+  ): DomainEvent<CAS3DraftReferralDeletedEvent> {
+    val domainEventId = UUID.randomUUID()
+
+    return DomainEvent(
+      id = domainEventId,
+      applicationId = application.id,
+      bookingId = null,
+      crn = application.crn,
+      nomsNumber = null,
+      occurredAt = Instant.now(),
+      data = CAS3DraftReferralDeletedEvent(
+        id = domainEventId,
+        timestamp = Instant.now(),
+        eventType = EventType.draftReferralDeleted,
+        eventDetails = CAS3DraftReferralDeletedEventDetails(
+          applicationId = application.id,
+          crn = application.crn,
+          deletedBy = user.id,
+        ),
       ),
     )
   }

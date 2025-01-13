@@ -284,6 +284,7 @@ components:
           accommodation.cas3.referral.submitted: '#/components/schemas/CAS3ReferralSubmittedEvent'
           accommodation.cas3.person.departed.updated: '#/components/schemas/CAS3PersonDepartureUpdatedEvent'
           accommodation.cas3.assessment.updated: '#/components/schemas/CAS3AssessmentUpdatedEvent'
+          accommodation.cas3.draft.referral.deleted: '#/components/schemas/CAS3DraftReferralDeletedEvent'
     CAS3BookingCancelledEvent:
       allOf:
         - $ref: '#/components/schemas/CAS3Event'
@@ -625,6 +626,7 @@ components:
         - accommodation.cas3.referral.submitted
         - accommodation.cas3.person.departed.updated
         - accommodation.cas3.assessment.updated
+        - accommodation.cas3.draft.referral.deleted
       x-enum-varnames:
         - bookingCancelled
         - bookingCancelledUpdated
@@ -636,6 +638,7 @@ components:
         - referralSubmitted
         - personDepartureUpdated
         - assessmentUpdated
+        - draftReferralDeleted
     Problem:
       type: object
       properties:
@@ -671,3 +674,27 @@ components:
         - staffCode
         - username
         - probationRegionCode
+    CAS3DraftReferralDeletedEvent:
+      allOf:
+        - $ref: '#/components/schemas/CAS3Event'
+        - type: object
+          properties:
+            eventDetails:
+              $ref: '#/components/schemas/CAS3DraftReferralDeletedEventDetails'
+          required:
+            - eventDetails
+    CAS3DraftReferralDeletedEventDetails:
+      type: object
+      properties:
+        applicationId:
+          type: string
+          format: uuid
+        crn:
+          type: string
+        deletedBy:
+            type: string
+            format: uuid
+      required:
+        - applicationId
+        - crn
+        - deletedBy

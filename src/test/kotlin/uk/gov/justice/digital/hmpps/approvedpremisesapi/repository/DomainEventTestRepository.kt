@@ -11,4 +11,5 @@ interface DomainEventTestRepository : JpaRepository<DomainEventEntity, UUID> {
   fun findFirstByOrderByCreatedAtDesc(): DomainEventEntity?
   fun findByApplicationId(applicationId: UUID): List<DomainEventEntity>
   fun findByAssessmentIdAndType(assessmentId: UUID, type: DomainEventType): List<DomainEventEntity>
+  fun findByApplicationIdAndType(applicationId: UUID, type: DomainEventType): List<DomainEventEntity>
 }
