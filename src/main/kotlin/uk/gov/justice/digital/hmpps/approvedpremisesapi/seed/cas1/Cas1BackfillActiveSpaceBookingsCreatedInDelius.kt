@@ -110,7 +110,7 @@ class Cas1BackfillActiveSpaceBookingsCreatedInDelius(
       )
     }
 
-    log.info("Have crated ${referrals.size} space bookings for premise ${premises.name} ($qCode)")
+    log.info("Have created ${referrals.size} space bookings for premise ${premises.name} ($qCode)")
   }
 
   private fun createSpaceBooking(
