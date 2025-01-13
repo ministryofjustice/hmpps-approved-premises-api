@@ -16,12 +16,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas2Assessment
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.config.NotifyConfig
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ExternalUserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.NomisUserEntity
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas2v2.Cas2v2ApplicationEntity
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas2v2.Cas2v2AssessmentRepository
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas2v2.Cas2v2StatusUpdateDetailEntity
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas2v2.Cas2v2StatusUpdateDetailRepository
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas2v2.Cas2v2StatusUpdateEntity
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas2v2.Cas2v2StatusUpdateRepository
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas2v2.*
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.DomainEvent
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.ValidationErrors
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.reference.Cas2PersistedApplicationStatus
@@ -167,7 +162,7 @@ class Cas2v2StatusUpdateService(
     )
   }
 
-  private fun sendEmailStatusUpdated(user: NomisUserEntity, application: Cas2v2ApplicationEntity, status: Cas2v2StatusUpdateEntity) {
+  private fun sendEmailStatusUpdated(user: Cas2v2UserEntity, application: Cas2v2ApplicationEntity, status: Cas2v2StatusUpdateEntity) {
     if (application.createdByUser.email != null) {
       emailNotificationService.sendCas2Email(
         recipientEmailAddress = user.email!!,
