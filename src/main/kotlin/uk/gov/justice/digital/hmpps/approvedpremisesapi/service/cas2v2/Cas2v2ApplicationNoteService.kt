@@ -55,7 +55,7 @@ class Cas2v2ApplicationNoteService(
       return CasResult.GeneralValidationError("This application has not been submitted")
     }
 
-    val isExternalUser = httpAuthService.getCas2AuthenticatedPrincipalOrThrow().isExternalUser()
+    val isExternalUser = httpAuthService.getCas2v2AuthenticatedPrincipalOrThrow().isExternalUser()
     val user = getCas2User(isExternalUser)
 
     if (!isExternalUser && !nomisUserCanAddNote(application, user as NomisUserEntity)) {

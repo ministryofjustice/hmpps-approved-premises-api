@@ -279,6 +279,9 @@ class Cas2v2ApplicationService(
       return CasResult.FieldValidationError(validationErrors)
     }
 
+    application.schemaVersion as? Cas2v2ApplicationJsonSchemaEntity
+      ?: throw RuntimeException("Incorrect type of JSON schema referenced by CAS2 v2 Application")
+
     try {
       application.apply {
         submittedAt = OffsetDateTime.now()

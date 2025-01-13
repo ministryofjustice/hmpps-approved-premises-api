@@ -10,6 +10,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas2v2Assessme
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewCas2ApplicationNote
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.UpdateCas2Assessment
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas2ApplicationNoteEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas2v2.Cas2v2ApplicationNoteEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.ConflictProblem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.ForbiddenProblem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.NotFoundProblem
@@ -29,24 +30,14 @@ class Cas2v2AssessmentsController(
   private val cas2v2AssessmentService: Cas2v2AssessmentService,
   private val cas2v2ApplicationNoteService: Cas2v2ApplicationNoteService,
   private val cas2v2AssessmentsTransformer: Cas2v2AssessmentsTransformer,
-  private val applicationNotesTransformer: ApplicationNotesTransformer,
+  private val applicationNotesTransformer: ApplicationNotesTransformer, ///TODO: create a ca2v2 version
   private val cas2v2StatusUpdateService: Cas2v2StatusUpdateService,
   private val externalUserService: ExternalUserService,
 ) : AssessmentsCas2v2Delegate {
 
   override fun assessmentsAssessmentIdGet(assessmentId: UUID): ResponseEntity<Cas2v2Assessment> {
-    val assessment = when (
-      val assessmentResult = cas2v2AssessmentService.getAssessment(assessmentId)
-    ) {
-      is CasResult.NotFound -> throw NotFoundProblem(assessmentId, "Cas2v2Assessment")
-      is CasResult.Unauthorised -> throw ForbiddenProblem()
-      is CasResult.Success -> assessmentResult
-      is CasResult.ConflictError<*> -> throw ConflictProblem(assessmentId, "Cas2v2Assessment conflict by assessmentId")
-      is CasResult.FieldValidationError<*> -> CasResult.FieldValidationError(mapOf("$.reason" to "doesNotExist"))
-      is CasResult.GeneralValidationError<*> -> CasResult.GeneralValidationError("General Validation Error")
-    }
-
-    val cas2v2AssessmentEntity = extractEntityFromCasResult(assessment)
+    val assessmentResult = cas2v2AssessmentService.getAssessment(assessmentId)
+    val cas2v2AssessmentEntity = extractEntityFromCasResult(assessmentResult)
     return ResponseEntity.ok(cas2v2AssessmentsTransformer.transformJpaToApiRepresentation(cas2v2AssessmentEntity))
   }
 
@@ -55,14 +46,6 @@ class Cas2v2AssessmentsController(
     updateCas2Assessment: UpdateCas2Assessment,
   ): ResponseEntity<Cas2v2Assessment> {
     val assessmentResult = cas2v2AssessmentService.updateAssessment(assessmentId, updateCas2Assessment)
-    when (assessmentResult) {
-      is CasResult.NotFound -> throw NotFoundProblem(assessmentId, "Assessment")
-      is CasResult.Unauthorised -> throw ForbiddenProblem()
-      is CasResult.Success -> assessmentResult
-      is CasResult.ConflictError<*> -> throw ConflictProblem(assessmentId, "Cas2v2Assessment conflict by assessmentId")
-      is CasResult.FieldValidationError<*> -> CasResult.FieldValidationError(mapOf("$.reason" to "doesNotExist"))
-      is CasResult.GeneralValidationError<*> -> CasResult.GeneralValidationError("General Validation Error")
-    }
 
     val cas2v2AssessmentEntity = extractEntityFromCasResult(assessmentResult)
     return ResponseEntity.ok(
@@ -92,10 +75,11 @@ class Cas2v2AssessmentsController(
   ): ResponseEntity<Cas2ApplicationNote> {
     val noteResult = cas2v2ApplicationNoteService.createAssessmentNote(assessmentId, body)
 
-    val validationResult = processAuthorisationFor(noteResult) as CasResult<Cas2ApplicationNote>
+//    val validationResult = processAuthorisationFor(noteResult) as CasResult<Cas2v2ApplicationNoteEntity>
+//
+//    val note = processValidation(validationResult) as Cas2ApplicationNoteEntity
 
-    val note = processValidation(validationResult) as Cas2ApplicationNoteEntity
-
+    val note = extractEntityFromCasResult(noteResult)
     return ResponseEntity
       .created(URI.create("/cas2v2/assessments/$assessmentId/notes/${note.id}"))
       .body(

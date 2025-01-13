@@ -31,7 +31,7 @@ class Cas2v2AssessmentService(
     newAssessment: UpdateCas2Assessment,
   ): CasResult<Cas2v2AssessmentEntity> {
     val assessmentEntity = cas2AssessmentRepository.findByIdOrNull(assessmentId)
-      ?: return CasResult.NotFound()
+      ?: return CasResult.NotFound("Cas2v2AssessmentEntity", assessmentId.toString())
 
     assessmentEntity.apply {
       this.nacroReferralId = newAssessment.nacroReferralId
@@ -45,7 +45,7 @@ class Cas2v2AssessmentService(
 
   fun getAssessment(assessmentId: UUID): CasResult<Cas2v2AssessmentEntity> {
     val assessmentEntity = cas2AssessmentRepository.findByIdOrNull(assessmentId)
-      ?: return CasResult.NotFound()
+      ?: return CasResult.NotFound("Cas2v2AssessmentEntity", assessmentId.toString())
 
     return CasResult.Success(assessmentEntity)
   }
