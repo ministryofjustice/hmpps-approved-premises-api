@@ -15,7 +15,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas2.model.Ca
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas2AssessmentStatusUpdate
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.Cas2v2IntegrationTestBase
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenACas2Assessor
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenACas2PomUser
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenACas2v2PomUser
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas2v2.Cas2v2StatusUpdateDetailRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas2v2.Cas2v2StatusUpdateRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.reference.Cas2ApplicationStatusSeeding
@@ -82,7 +82,7 @@ class Cas2v2StatusUpdateTest(
       val assessmentId = UUID.fromString("22ceda56-98b2-411d-91cc-ace0ab8be872")
 
       givenACas2Assessor { _, jwt ->
-        givenACas2PomUser { applicant, _ ->
+        givenACas2v2PomUser { applicant, _ ->
           val jsonSchema = approvedPremisesApplicationJsonSchemaEntityFactory.produceAndPersist()
           val application = cas2v2ApplicationEntityFactory.produceAndPersist {
             withCreatedByUser(applicant)
@@ -151,7 +151,7 @@ class Cas2v2StatusUpdateTest(
     @Test
     fun `Create cas2v2 status update returns 400 when new status NOT valid`() {
       givenACas2Assessor { _, jwt ->
-        givenACas2PomUser { applicant, _ ->
+        givenACas2v2PomUser { applicant, _ ->
           val jsonSchema = approvedPremisesApplicationJsonSchemaEntityFactory.produceAndPersist()
           val application = cas2v2ApplicationEntityFactory.produceAndPersist {
             withCreatedByUser(applicant)
@@ -187,7 +187,7 @@ class Cas2v2StatusUpdateTest(
 
         try {
           givenACas2Assessor { _, jwt ->
-            givenACas2PomUser { applicant, _ ->
+            givenACas2v2PomUser { applicant, _ ->
               val jsonSchema = approvedPremisesApplicationJsonSchemaEntityFactory.produceAndPersist()
               val application = cas2v2ApplicationEntityFactory.produceAndPersist {
                 withCreatedByUser(applicant)

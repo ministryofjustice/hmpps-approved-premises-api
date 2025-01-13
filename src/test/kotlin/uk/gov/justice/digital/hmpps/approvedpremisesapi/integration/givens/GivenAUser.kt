@@ -12,6 +12,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ProbationRegi
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserQualification
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRole
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas2v2.Cas2v2UserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.deliuscontext.StaffDetail
 import java.util.UUID
 
@@ -115,6 +116,62 @@ fun IntegrationTestBase.givenACas2PomUser(
   }
 
   val jwt = jwtAuthHelper.createValidNomisAuthorisationCodeJwt(nomisUserDetails.username)
+
+  nomisUserRolesMockSuccessfulGetUserDetailsCall(jwt, nomisUserDetails)
+
+  block(user, jwt)
+}
+
+fun IntegrationTestBase.givenACas2v2PomUser(
+  id: UUID = UUID.randomUUID(),
+  nomisUserDetailsConfigBlock: (NomisUserDetailFactory.() -> Unit)? = null,
+  block: (userEntity: Cas2v2UserEntity, jwt: String) -> Unit,
+) {
+  val nomisUserDetailsFactory = NomisUserDetailFactory()
+
+  if (nomisUserDetailsConfigBlock != null) {
+    nomisUserDetailsConfigBlock(nomisUserDetailsFactory)
+  }
+
+  val nomisUserDetails = nomisUserDetailsFactory.produce()
+
+  val user = cas2v2UserEntityFactory.produceAndPersist {
+    withId(id)
+    withUsername(nomisUserDetails.username)
+    withEmail(nomisUserDetails.primaryEmail)
+    withName("${nomisUserDetails.firstName} ${nomisUserDetails.lastName}")
+    withActiveNomisCaseloadId(nomisUserDetails.activeCaseloadId!!)
+  }
+
+  val jwt = jwtAuthHelper.createValidNomisAuthorisationCodeJwt(nomisUserDetails.username)
+
+  nomisUserRolesMockSuccessfulGetUserDetailsCall(jwt, nomisUserDetails)
+
+  block(user, jwt)
+}
+
+fun IntegrationTestBase.givenACas2v2LicenceCaseAdminUser(
+  id: UUID = UUID.randomUUID(),
+  nomisUserDetailsConfigBlock: (NomisUserDetailFactory.() -> Unit)? = null,
+  block: (userEntity: Cas2v2UserEntity, jwt: String) -> Unit,
+) {
+  val nomisUserDetailsFactory = NomisUserDetailFactory()
+
+  if (nomisUserDetailsConfigBlock != null) {
+    nomisUserDetailsConfigBlock(nomisUserDetailsFactory)
+  }
+
+  val nomisUserDetails = nomisUserDetailsFactory.produce()
+
+  val user = cas2v2UserEntityFactory.produceAndPersist {
+    withId(id)
+    withUsername(nomisUserDetails.username)
+    withEmail(nomisUserDetails.primaryEmail)
+    withName("${nomisUserDetails.firstName} ${nomisUserDetails.lastName}")
+    withActiveNomisCaseloadId(nomisUserDetails.activeCaseloadId!!)
+  }
+
+  val jwt = jwtAuthHelper.createValidNomisAuthorisationCodeJwt(nomisUserDetails.username, listOf("ROLE_LICENCE_CA"))
 
   nomisUserRolesMockSuccessfulGetUserDetailsCall(jwt, nomisUserDetails)
 

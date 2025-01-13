@@ -2,6 +2,7 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.cas2v2
 
 import com.ninjasquad.springmockk.SpykBean
 import io.mockk.clearMocks
+import java.time.OffsetDateTime
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.Assertions
 import org.junit.jupiter.api.Nested
@@ -9,19 +10,16 @@ import org.junit.jupiter.api.Test
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.ValueSource
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.Cas2v2IntegrationTestBase
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenACas2LicenceCaseAdminUser
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenACas2PomUser
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAnOffender
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.NomisUserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas2v2.Cas2v2ApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas2v2.Cas2v2ApplicationRepository
-import java.time.OffsetDateTime
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas2v2.Cas2v2UserEntity
 
 class Cas2v2ApplicationAbandonTest : Cas2v2IntegrationTestBase() {
-  @SpykBean
-  lateinit var realApplicationRepository: Cas2v2ApplicationRepository
+  @SpykBean lateinit var realApplicationRepository: Cas2v2ApplicationRepository
 
-  val schema = """
+  val schema =
+          """
         {
           "${"\$schema"}": "https://json-schema.org/draft/2020-12/schema",
           "${"\$id"}": "https://example.com/product.schema.json",
@@ -46,7 +44,8 @@ class Cas2v2ApplicationAbandonTest : Cas2v2IntegrationTestBase() {
 
   @AfterEach
   fun afterEach() {
-    // SpringMockK does not correctly clear mocks for @SpyKBeans that are also a @Repository, causing mocked behaviour
+    // SpringMockK does not correctly clear mocks for @SpyKBeans that are also a @Repository,
+    // causing mocked behaviour
     // in one test to show up in another (see https://github.com/Ninja-Squad/springmockk/issues/85)
     // Manually clearing after each test seems to fix this.
     clearMocks(realApplicationRepository)
@@ -57,19 +56,23 @@ class Cas2v2ApplicationAbandonTest : Cas2v2IntegrationTestBase() {
 
     @ParameterizedTest
     @ValueSource(strings = ["ROLE_CAS2_ASSESSOR", "ROLE_CAS2_MI"])
-    fun `abandoning a cas2v2 application is forbidden to external users based on role`(role: String) {
-      val jwt = jwtAuthHelper.createClientCredentialsJwt(
-        username = "username",
-        authSource = "nomis",
-        roles = listOf(role),
-      )
+    fun `abandoning a cas2v2 application is forbidden to external users based on role`(
+            role: String
+    ) {
+      val jwt =
+              jwtAuthHelper.createClientCredentialsJwt(
+                      username = "username",
+                      authSource = "nomis",
+                      roles = listOf(role),
+              )
 
-      webTestClient.put()
-        .uri("/cas2v2/applications/66911cf0-75b1-4361-84bd-501b176fd4fd/abandon")
-        .header("Authorization", "Bearer $jwt")
-        .exchange()
-        .expectStatus()
-        .isForbidden
+      webTestClient
+              .put()
+              .uri("/cas2v2/applications/66911cf0-75b1-4361-84bd-501b176fd4fd/abandon")
+              .header("Authorization", "Bearer $jwt")
+              .exchange()
+              .expectStatus()
+              .isForbidden
     }
   }
 
@@ -77,11 +80,12 @@ class Cas2v2ApplicationAbandonTest : Cas2v2IntegrationTestBase() {
   inner class MissingJwt {
     @Test
     fun `Abandon a cas2v2 application without JWT returns 401`() {
-      webTestClient.put()
-        .uri("/cas2v2/applications/9b785e59-b85c-4be0-b271-d9ac287684b6/abandon")
-        .exchange()
-        .expectStatus()
-        .isUnauthorized
+      webTestClient
+              .put()
+              .uri("/cas2v2/applications/9b785e59-b85c-4be0-b271-d9ac287684b6/abandon")
+              .exchange()
+              .expectStatus()
+              .isUnauthorized
     }
   }
 
@@ -92,18 +96,22 @@ class Cas2v2ApplicationAbandonTest : Cas2v2IntegrationTestBase() {
     inner class PomUsers {
       @Test
       fun `Abandon existing cas2v2 application returns 200 with correct body`() {
-        givenACas2PomUser { submittingUser, jwt ->
+        givenACas2v2PomUser { submittingUser, jwt ->
           givenAnOffender { offenderDetails, _ ->
-            val application = produceAndPersistBasicApplication(offenderDetails.otherIds.crn, submittingUser)
+            val application =
+                    produceAndPersistBasicApplication(offenderDetails.otherIds.crn, submittingUser)
 
-            webTestClient.put()
-              .uri("/cas2v2/applications/${application.id}/abandon")
-              .header("Authorization", "Bearer $jwt")
-              .exchange()
-              .expectStatus()
-              .isOk
+            webTestClient
+                    .put()
+                    .uri("/cas2v2/applications/${application.id}/abandon")
+                    .header("Authorization", "Bearer $jwt")
+                    .exchange()
+                    .expectStatus()
+                    .isOk
 
-            Assertions.assertNotNull(realApplicationRepository.findById(application.id).get().abandonedAt)
+            Assertions.assertNotNull(
+                    realApplicationRepository.findById(application.id).get().abandonedAt
+            )
           }
         }
       }
@@ -113,18 +121,22 @@ class Cas2v2ApplicationAbandonTest : Cas2v2IntegrationTestBase() {
     inner class LicenceCaseAdminUsers {
       @Test
       fun `Abandon existing cas2v2 application returns 200 with correct body`() {
-        givenACas2LicenceCaseAdminUser { submittingUser, jwt ->
+        givenACas2v2LicenceCaseAdminUser { submittingUser, jwt ->
           givenAnOffender { offenderDetails, _ ->
-            val application = produceAndPersistBasicApplication(offenderDetails.otherIds.crn, submittingUser)
+            val application =
+                    produceAndPersistBasicApplication(offenderDetails.otherIds.crn, submittingUser)
 
-            webTestClient.put()
-              .uri("/cas2v2/applications/${application.id}/abandon")
-              .header("Authorization", "Bearer $jwt")
-              .exchange()
-              .expectStatus()
-              .isOk
+            webTestClient
+                    .put()
+                    .uri("/cas2v2/applications/${application.id}/abandon")
+                    .header("Authorization", "Bearer $jwt")
+                    .exchange()
+                    .expectStatus()
+                    .isOk
 
-            Assertions.assertNotNull(realApplicationRepository.findById(application.id).get().abandonedAt)
+            Assertions.assertNotNull(
+                    realApplicationRepository.findById(application.id).get().abandonedAt
+            )
           }
         }
       }
@@ -132,24 +144,26 @@ class Cas2v2ApplicationAbandonTest : Cas2v2IntegrationTestBase() {
   }
 
   private fun produceAndPersistBasicApplication(
-    crn: String,
-    userEntity: NomisUserEntity,
+          crn: String,
+          userEntity: Cas2v2UserEntity,
   ): Cas2v2ApplicationEntity {
-    val jsonSchema = cas2v2ApplicationJsonSchemaEntityFactory.produceAndPersist {
-      withAddedAt(OffsetDateTime.parse("2022-09-21T12:45:00+01:00"))
-      withSchema(
-        schema,
-      )
-    }
+    val jsonSchema =
+            cas2v2ApplicationJsonSchemaEntityFactory.produceAndPersist {
+              withAddedAt(OffsetDateTime.parse("2022-09-21T12:45:00+01:00"))
+              withSchema(
+                      schema,
+              )
+            }
 
-    val application = cas2v2ApplicationEntityFactory.produceAndPersist {
-      withApplicationSchema(jsonSchema)
-      withCrn(crn)
-      withCreatedByUser(userEntity)
-      withData(
-        data,
-      )
-    }
+    val application =
+            cas2v2ApplicationEntityFactory.produceAndPersist {
+              withApplicationSchema(jsonSchema)
+              withCrn(crn)
+              withCreatedByUser(userEntity)
+              withData(
+                      data,
+              )
+            }
 
     return application
   }
