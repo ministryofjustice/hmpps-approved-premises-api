@@ -221,6 +221,7 @@ class ApplicationsController(
       .body(applicationsTransformer.transformJpaToApi(application, personInfo))
   }
 
+  @Suppress("TooGenericExceptionThrown")
   private fun createApplication(
     serviceName: ServiceName,
     personInfo: PersonInfoResult.Success.Full,
@@ -260,6 +261,11 @@ class ApplicationsController(
     ServiceName.cas2 -> throw RuntimeException(
       "CAS2 now has its own " +
         "Cas2ApplicationsController",
+    )
+
+    ServiceName.cas2v2 -> throw RuntimeException(
+      "CAS2v2 now has its own " +
+        "Cas2v2ApplicationsController",
     )
   }
 
@@ -467,6 +473,7 @@ class ApplicationsController(
       is ValidatableActionResult.GeneralValidationError -> throw BadRequestProblem(errorDetail = validationResult.message)
       is ValidatableActionResult.FieldValidationError -> throw BadRequestProblem(invalidParams = validationResult.validationMessages)
       is ValidatableActionResult.ConflictError -> throw ConflictProblem(id = validationResult.conflictingEntityId, conflictReason = validationResult.message)
+
       is ValidatableActionResult.Success -> validationResult.entity
     }
 

@@ -245,6 +245,11 @@ components:
         username:
           type: string
           example: SMITHJ_GEN
+        usertype:
+          type: string
+          enum:
+            - nomis
+            - delius
       required:
         - staffIdentifier
         - name

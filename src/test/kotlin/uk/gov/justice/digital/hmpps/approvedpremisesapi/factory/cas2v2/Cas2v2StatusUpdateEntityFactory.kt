@@ -2,12 +2,11 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.cas2v2
 
 import io.github.bluegroundltd.kfactory.Factory
 import io.github.bluegroundltd.kfactory.Yielded
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ExternalUserEntityFactory
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ExternalUserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas2v2.Cas2v2ApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas2v2.Cas2v2AssessmentEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas2v2.Cas2v2StatusUpdateDetailEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas2v2.Cas2v2StatusUpdateEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas2v2.Cas2v2UserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.reference.Cas2ApplicationStatusSeeding
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomDateTimeBefore
 import java.time.OffsetDateTime
@@ -15,7 +14,7 @@ import java.util.UUID
 
 class Cas2v2StatusUpdateEntityFactory : Factory<Cas2v2StatusUpdateEntity> {
   private var id: Yielded<UUID> = { UUID.randomUUID() }
-  private var assessor: Yielded<ExternalUserEntity> = { ExternalUserEntityFactory().produce() }
+  private var assessor: Yielded<Cas2v2UserEntity> = { Cas2v2UserEntityFactory().produce() }
   private var assessment: Yielded<Cas2v2AssessmentEntity?> = { null }
   private var application: Yielded<Cas2v2ApplicationEntity>? = null
   private var statusId: Yielded<UUID> = { Cas2ApplicationStatusSeeding.statusList().random().id }
@@ -28,7 +27,7 @@ class Cas2v2StatusUpdateEntityFactory : Factory<Cas2v2StatusUpdateEntity> {
     this.id = { id }
   }
 
-  fun withAssessor(assessor: ExternalUserEntity) = apply {
+  fun withAssessor(assessor: Cas2v2UserEntity) = apply {
     this.assessor = { assessor }
   }
 

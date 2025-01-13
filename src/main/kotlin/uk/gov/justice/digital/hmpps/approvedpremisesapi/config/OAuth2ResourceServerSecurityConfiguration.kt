@@ -185,6 +185,8 @@ class AuthAwareAuthenticationToken(
     return aPrincipal
   }
 
+  fun authenticationSource(): String = jwt.claims["auth_source"] as String
+
   fun isExternalUser(): Boolean {
     return jwt.claims["auth_source"] == "auth"
   }

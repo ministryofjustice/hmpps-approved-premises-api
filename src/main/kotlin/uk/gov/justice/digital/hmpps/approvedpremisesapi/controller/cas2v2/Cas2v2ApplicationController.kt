@@ -16,9 +16,9 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.BadRequestProble
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.ConflictProblem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.ForbiddenProblem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.ValidatableActionResult
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.NomisUserService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas2.OffenderService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas2v2.Cas2v2ApplicationService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas2v2.Cas2v2UserService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.cas2v2.Cas2v2ApplicationsTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.PageCriteria
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.ensureEntityFromCasResultIsSuccess
@@ -35,7 +35,7 @@ class Cas2v2ApplicationController(
   private val cas2v2ApplicationsTransformer: Cas2v2ApplicationsTransformer,
   private val objectMapper: ObjectMapper,
   private val cas2OffenderService: OffenderService,
-  private val nomisUserService: NomisUserService,
+  private val userService: Cas2v2UserService,
 ) : ApplicationsCas2v2Delegate {
 
   override fun applicationsGet(
@@ -43,9 +43,9 @@ class Cas2v2ApplicationController(
     page: Int?,
     prisonCode: String?,
   ): ResponseEntity<List<ModelCas2v2ApplicationSummary>> {
-    val user = nomisUserService.getUserForRequest()
+    val user = userService.getUserForRequest()
 
-    prisonCode?.let { if (prisonCode != user.activeCaseloadId) throw ForbiddenProblem() }
+    prisonCode?.let { if (prisonCode != user.activeNomisCaseloadId) throw ForbiddenProblem() }
 
     val pageCriteria = PageCriteria("createdAt", SortDirection.desc, page)
 
@@ -57,7 +57,7 @@ class Cas2v2ApplicationController(
   }
 
   override fun applicationsApplicationIdGet(applicationId: UUID): ResponseEntity<Application> {
-    val user = nomisUserService.getUserForRequest()
+    val user = userService.getUserForRequest()
 
     val applicationResult = cas2v2ApplicationService
       .getCas2v2ApplicationForUser(
@@ -71,7 +71,7 @@ class Cas2v2ApplicationController(
 
   @Transactional
   override fun applicationsPost(body: NewCas2v2Application): ResponseEntity<Application> {
-    val user = nomisUserService.getUserForRequest()
+    val user = userService.getUserForRequest()
 
     val personInfo = cas2OffenderService.getFullInfoForPersonOrThrow(body.crn)
 
@@ -86,6 +86,7 @@ class Cas2v2ApplicationController(
       is ValidatableActionResult.GeneralValidationError -> throw BadRequestProblem(errorDetail = applicationResult.message)
       is ValidatableActionResult.FieldValidationError -> throw BadRequestProblem(invalidParams = applicationResult.validationMessages)
       is ValidatableActionResult.ConflictError -> throw ConflictProblem(id = applicationResult.conflictingEntityId, conflictReason = applicationResult.message)
+
       is ValidatableActionResult.Success -> applicationResult.entity
     }
 
@@ -100,7 +101,7 @@ class Cas2v2ApplicationController(
     applicationId: UUID,
     body: UpdateApplication,
   ): ResponseEntity<Application> {
-    val user = nomisUserService.getUserForRequest()
+    val user = userService.getUserForRequest()
 
     val serializedData = objectMapper.writeValueAsString(body.data)
 
@@ -121,7 +122,7 @@ class Cas2v2ApplicationController(
 
   @Transactional
   override fun applicationsApplicationIdAbandonPut(applicationId: UUID): ResponseEntity<Unit> {
-    val user = nomisUserService.getUserForRequest()
+    val user = userService.getUserForRequest()
 
     val applicationResult = cas2v2ApplicationService.abandonCas2v2Application(applicationId, user)
     ensureEntityFromCasResultIsSuccess(applicationResult)

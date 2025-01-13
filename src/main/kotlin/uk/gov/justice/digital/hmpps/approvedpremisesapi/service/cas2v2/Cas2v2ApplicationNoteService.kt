@@ -7,20 +7,15 @@ import org.springframework.data.repository.findByIdOrNull
 import org.springframework.stereotype.Service
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewCas2ApplicationNote
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.config.NotifyConfig
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas2User
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.NomisUserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas2v2.Cas2v2ApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas2v2.Cas2v2ApplicationNoteEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas2v2.Cas2v2ApplicationNoteRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas2v2.Cas2v2ApplicationRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas2v2.Cas2v2AssessmentEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas2v2.Cas2v2AssessmentRepository
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas2v2.Cas2v2UserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.CasResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.EmailNotificationService
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.ExternalUserService
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.HttpAuthService
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.NomisUserService
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas2.UserAccessService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.toCas2UiFormat
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.toCas2UiFormattedHourOfDay
 import java.time.OffsetDateTime
@@ -31,11 +26,9 @@ class Cas2v2ApplicationNoteService(
   private val cas2v2ApplicationRepository: Cas2v2ApplicationRepository,
   private val cas2v2AssessmentRepository: Cas2v2AssessmentRepository,
   private val cas2v2ApplicationNoteRepository: Cas2v2ApplicationNoteRepository,
-  private val userService: NomisUserService,
-  private val externalUserService: ExternalUserService,
-  private val httpAuthService: HttpAuthService,
+  private val userService: Cas2v2UserService,
+  private val userAccessService: Cas2v2UserAccessService,
   private val emailNotificationService: EmailNotificationService,
-  private val userAccessService: UserAccessService,
   private val notifyConfig: NotifyConfig,
   @Value("\${url-templates.frontend.cas2v2.application-overview}") private val applicationUrlTemplate: String,
   @Value("\${url-templates.frontend.cas2v2.submitted-application-overview}") private val assessmentUrlTemplate: String,
@@ -55,16 +48,14 @@ class Cas2v2ApplicationNoteService(
       return CasResult.GeneralValidationError("This application has not been submitted")
     }
 
-    val isExternalUser = httpAuthService.getCas2v2AuthenticatedPrincipalOrThrow().isExternalUser()
-    val user = getCas2User(isExternalUser)
+    val user = userService.getUserForRequest()
 
-    if (!isExternalUser && !nomisUserCanAddNote(application, user as NomisUserEntity)) {
+    if (!userAccessService.userCanAddNote(user, application)) {
       return CasResult.Unauthorised()
     }
 
     val savedNote = saveNote(application, assessment, note.note, user)
-
-    sendEmail(isExternalUser, application, savedNote)
+    sendEmail(user.isExternal(), application, savedNote)
 
     return CasResult.Success(savedNote)
   }
@@ -141,27 +132,10 @@ class Cas2v2ApplicationNoteService(
     if (assessment.assessorName != null) {
       return assessment.assessorName!!
     }
-    return "Unknown. " +
-      "The assessor has not added their name to the application yet."
+    return "Unknown. " + "The assessor has not added their name to the application yet."
   }
 
-  private fun getCas2User(isExternalUser: Boolean): Cas2User {
-    return if (isExternalUser) {
-      externalUserService.getUserForRequest()
-    } else {
-      userService.getUserForRequest()
-    }
-  }
-
-  private fun nomisUserCanAddNote(application: Cas2v2ApplicationEntity, user: NomisUserEntity): Boolean {
-    return if (user.id == application.createdByUser.id) {
-      true
-    } else {
-      userAccessService.offenderIsFromSamePrisonAsUser(application.referringPrisonCode, user.activeCaseloadId)
-    }
-  }
-
-  private fun saveNote(application: Cas2v2ApplicationEntity, assessment: Cas2v2AssessmentEntity, body: String, user: Cas2User): Cas2v2ApplicationNoteEntity {
+  private fun saveNote(application: Cas2v2ApplicationEntity, assessment: Cas2v2AssessmentEntity, body: String, user: Cas2v2UserEntity): Cas2v2ApplicationNoteEntity {
     val newNote = Cas2v2ApplicationNoteEntity(
       id = UUID.randomUUID(),
       application = application,

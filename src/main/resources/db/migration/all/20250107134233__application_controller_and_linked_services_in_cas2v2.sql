@@ -138,11 +138,11 @@ SELECT a.id,
        asu.created_at AS status_created_at,
        a.abandoned_at
 FROM cas_2_v2_applications a
-         LEFT JOIN (SELECT DISTINCT ON (application_id) su.application_id, su.label, su.status_id, su.created_at
-                    FROM cas_2_v2_status_updates su
-                    ORDER BY su.application_id, su.created_at DESC) as asu
-                   ON a.id = asu.application_id
-         JOIN nomis_users nu ON nu.id = a.created_by_user_id;
+     LEFT JOIN (SELECT DISTINCT ON (application_id) su.application_id, su.label, su.status_id, su.created_at
+                FROM cas_2_v2_status_updates su
+                ORDER BY su.application_id, su.created_at DESC) as asu
+               ON a.id = asu.application_id
+     JOIN nomis_users nu ON nu.id = a.created_by_user_id;
 
 CREATE OR REPLACE VIEW cas_2_v2_application_live_summary AS
 SELECT a.id,

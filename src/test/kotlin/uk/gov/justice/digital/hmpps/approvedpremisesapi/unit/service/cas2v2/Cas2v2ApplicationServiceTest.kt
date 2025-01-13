@@ -24,9 +24,9 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.SubmitCas2v2Ap
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.config.NotifyConfig
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.Cas2v2ApplicationJsonSchemaEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.InmateDetailFactory
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.NomisUserEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.OffenderDetailsSummaryFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.cas2v2.Cas2v2ApplicationEntityFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.cas2v2.Cas2v2UserEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas2v2ApplicationJsonSchemaEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas2v2.Cas2v2ApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas2v2.Cas2v2ApplicationRepository
@@ -151,7 +151,7 @@ class Cas2v2ApplicationServiceTest {
     )
     val page = mockk<Page<Cas2v2ApplicationSummaryEntity>>()
     val pageCriteria = PageCriteria(sortBy = "submitted_at", sortDirection = SortDirection.asc, page = 3)
-    val user = NomisUserEntityFactory().produce()
+    val user = Cas2v2UserEntityFactory().produce()
     val prisonCode = "BRI"
 
     private fun testPrisonCodeWithIsSubmitted(isSubmitted: Boolean?) {
@@ -211,7 +211,7 @@ class Cas2v2ApplicationServiceTest {
   inner class GetCas2v2ApplicationForUser {
     @Test
     fun `where cas2v2 application does not exist returns NotFound result`() {
-      val user = NomisUserEntityFactory().produce()
+      val user = Cas2v2UserEntityFactory().produce()
       val applicationId = UUID.fromString("c1750938-19fc-48a1-9ae9-f2e119ffc1f4")
 
       every { mockCas2v2ApplicationRepository.findByIdOrNull(applicationId) } returns null
@@ -221,13 +221,13 @@ class Cas2v2ApplicationServiceTest {
 
     @Test
     fun `where cas2v2 application is abandoned returns NotFound result`() {
-      val user = NomisUserEntityFactory().produce()
+      val user = Cas2v2UserEntityFactory().produce()
       val applicationId = UUID.fromString("c1750938-19fc-48a1-9ae9-f2e119ffc1f4")
 
       every { mockCas2v2ApplicationRepository.findByIdOrNull(any()) } returns
         Cas2v2ApplicationEntityFactory()
           .withCreatedByUser(
-            NomisUserEntityFactory()
+            Cas2v2UserEntityFactory()
               .produce(),
           )
           .withAbandonedAt(OffsetDateTime.now())
@@ -238,14 +238,14 @@ class Cas2v2ApplicationServiceTest {
 
     @Test
     fun `where user cannot access the cas2v2 application returns Unauthorised result`() {
-      val user = NomisUserEntityFactory()
+      val user = Cas2v2UserEntityFactory()
         .produce()
       val applicationId = UUID.fromString("c1750938-19fc-48a1-9ae9-f2e119ffc1f4")
 
       every { mockCas2v2ApplicationRepository.findByIdOrNull(any()) } returns
         Cas2v2ApplicationEntityFactory()
           .withCreatedByUser(
-            NomisUserEntityFactory()
+            Cas2v2UserEntityFactory()
               .produce(),
           )
           .produce()
@@ -265,9 +265,9 @@ class Cas2v2ApplicationServiceTest {
         .withSchema("{}")
         .produce()
 
-      val userEntity = NomisUserEntityFactory()
+      val userEntity = Cas2v2UserEntityFactory()
         .withId(userId)
-        .withNomisUsername(distinguishedName)
+        .withUsername(distinguishedName)
         .produce()
 
       val cas2v2ApplicationEntity = Cas2v2ApplicationEntityFactory()
@@ -358,7 +358,7 @@ class Cas2v2ApplicationServiceTest {
 
   @Nested
   inner class UpdateApplication {
-    val user = NomisUserEntityFactory().produce()
+    val user = Cas2v2UserEntityFactory().produce()
 
     @Test
     fun `returns NotFound when cas2v2 application doesn't exist`() {
@@ -383,7 +383,7 @@ class Cas2v2ApplicationServiceTest {
       val cas2v2Application = Cas2v2ApplicationEntityFactory()
         .withId(applicationId)
         .withYieldedCreatedByUser {
-          NomisUserEntityFactory()
+          Cas2v2UserEntityFactory()
             .produce()
         }
         .produce()
@@ -611,7 +611,7 @@ class Cas2v2ApplicationServiceTest {
 
   @Nested
   inner class AbandonApplication {
-    val user = NomisUserEntityFactory().produce()
+    val user = Cas2v2UserEntityFactory().produce()
 
     @Test
     fun `returns NotFound when application doesn't exist`() {
@@ -634,7 +634,7 @@ class Cas2v2ApplicationServiceTest {
       val application = Cas2v2ApplicationEntityFactory()
         .withId(applicationId)
         .withYieldedCreatedByUser {
-          NomisUserEntityFactory()
+          Cas2v2UserEntityFactory()
             .produce()
         }
         .produce()
@@ -752,8 +752,8 @@ class Cas2v2ApplicationServiceTest {
   inner class SubmitApplication {
     val applicationId: UUID = UUID.fromString("fa6e97ce-7b9e-473c-883c-83b1c2af773d")
     val username = "SOMEPERSON"
-    val user = NomisUserEntityFactory()
-      .withNomisUsername(this.username)
+    val user = Cas2v2UserEntityFactory()
+      .withUsername(this.username)
       .produce()
     val hdcEligibilityDate = LocalDate.parse("2023-03-30")
     val conditionalReleaseDate = LocalDate.parse("2023-04-29")
@@ -787,7 +787,7 @@ class Cas2v2ApplicationServiceTest {
 
     @Test
     fun `returns Unauthorised when application doesn't belong to request user`() {
-      val differentUser = NomisUserEntityFactory()
+      val differentUser = Cas2v2UserEntityFactory()
         .produce()
 
       val cas2v2Application = Cas2v2ApplicationEntityFactory()
@@ -1106,7 +1106,7 @@ class Cas2v2ApplicationServiceTest {
     }
   }
 
-  private fun userWithUsername(username: String) = NomisUserEntityFactory()
-    .withNomisUsername(username)
+  private fun userWithUsername(username: String) = Cas2v2UserEntityFactory()
+    .withUsername(username)
     .produce()
 }

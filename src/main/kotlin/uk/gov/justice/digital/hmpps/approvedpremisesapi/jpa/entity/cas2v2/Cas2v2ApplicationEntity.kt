@@ -21,7 +21,6 @@ import org.springframework.data.jpa.repository.Query
 import org.springframework.stereotype.Repository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApplicationOrigin
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.JsonSchemaEntity
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.NomisUserEntity
 import java.time.LocalDate
 import java.time.OffsetDateTime
 import java.util.UUID
@@ -62,7 +61,7 @@ data class Cas2v2ApplicationEntity(
 
   @ManyToOne
   @JoinColumn(name = "created_by_user_id")
-  val createdByUser: NomisUserEntity,
+  val createdByUser: Cas2v2UserEntity,
 
   @Type(JsonType::class)
   var data: String?,

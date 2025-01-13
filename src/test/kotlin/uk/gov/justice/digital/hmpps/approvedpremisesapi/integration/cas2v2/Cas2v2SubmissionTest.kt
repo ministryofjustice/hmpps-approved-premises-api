@@ -16,7 +16,6 @@ import org.springframework.http.HttpStatus
 import org.springframework.test.web.reactive.server.returnResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas2.model.Cas2ApplicationSubmittedEvent
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApplicationOrigin
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas2SubmittedApplication
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas2v2SubmittedApplication
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas2v2SubmittedApplicationSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
@@ -25,21 +24,21 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.toHttpStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ExternalUserDetailsFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.Cas2v2IntegrationTestBase
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenACas2Admin
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenACas2Assessor
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenACas2PomUser
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenACas2v2Assessor
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenACas2v2PomUser
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAnOffender
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.manageUsersMockSuccessfulExternalUsersCall
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas2v2ApplicationJsonSchemaEntity
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.NomisUserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas2v2.Cas2v2ApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas2v2.Cas2v2ApplicationRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas2v2.Cas2v2AssessmentRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas2v2.Cas2v2StatusUpdateDetailEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas2v2.Cas2v2StatusUpdateDetailRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas2v2.Cas2v2StatusUpdateRepository
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas2v2.Cas2v2UserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.community.OffenderDetailSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.prisonsapi.AssignedLivingUnit
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.NomisUserTransformer
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.cas2v2.Cas2v2UserTransformer
 import java.time.LocalDate
 import java.time.OffsetDateTime
 import java.util.UUID
@@ -61,7 +60,7 @@ class Cas2v2SubmissionTest(
   lateinit var cas2v2RealStatusUpdateDetailRepository: Cas2v2StatusUpdateDetailRepository
 
   @Autowired
-  lateinit var nomisUserTransformer: NomisUserTransformer
+  lateinit var userTransformer: Cas2v2UserTransformer
 
   val schema = """
        {
@@ -167,7 +166,7 @@ class Cas2v2SubmissionTest(
   inner class GetToIndex {
     @Test
     fun `Previously unknown Assessor has an ExternalUser record created from details retrieved from Manage-Users API `() {
-      externalUserRepository.deleteAll()
+      cas2v2UserRepository.deleteAll()
 
       val username = "PREVIOUSLY_UNKNOWN_ASSESSOR"
       val externalUserDetails = ExternalUserDetailsFactory()
@@ -189,14 +188,14 @@ class Cas2v2SubmissionTest(
         .isOk
 
       Assertions.assertThat(
-        externalUserRepository.findByUsername(username),
+        cas2v2UserRepository.findByUsername(username),
       ).isNotNull
     }
 
     @Test
     fun `Assessor can view ALL submitted cas2v2 applications`() {
-      givenACas2Assessor { _externalUserEntity, jwt ->
-        givenACas2PomUser { user, _ ->
+      givenACas2v2Assessor { _externalUserEntity, jwt ->
+        givenACas2v2PomUser { user, _ ->
           givenAnOffender { offenderDetails, _ ->
             cas2v2ApplicationJsonSchemaRepository.deleteAll()
 
@@ -318,7 +317,7 @@ class Cas2v2SubmissionTest(
     private fun createInProgressApplication(
       newestJsonSchema: Cas2v2ApplicationJsonSchemaEntity,
       crn: String,
-      user: NomisUserEntity,
+      user: Cas2v2UserEntity,
     ): Cas2v2ApplicationEntity {
       val applicationEntity = cas2v2ApplicationEntityFactory.produceAndPersist {
         withApplicationSchema(newestJsonSchema)
@@ -338,8 +337,8 @@ class Cas2v2SubmissionTest(
     }
 
     @Test
-    fun `Previously unknown Assessor has an ExternalUser record created from details retrieved from Manage-Users API`() {
-      externalUserRepository.deleteAll()
+    fun `Previously unknown Assessor has an Cas2v2User record created from details retrieved from Manage-Users API`() {
+      cas2v2UserRepository.deleteAll()
 
       val username = "PREVIOUSLY_UNKNOWN_ASSESSOR"
       val externalUserDetails = ExternalUserDetailsFactory()
@@ -361,14 +360,14 @@ class Cas2v2SubmissionTest(
         .isNotFound
 
       Assertions.assertThat(
-        externalUserRepository.findByUsername("PREVIOUSLY_UNKNOWN_ASSESSOR"),
+        cas2v2UserRepository.findByUsername("PREVIOUSLY_UNKNOWN_ASSESSOR"),
       ).isNotNull
     }
 
     @Test
     fun `Assessor can view single submitted application`() {
-      givenACas2Assessor { assessor, jwt ->
-        givenACas2PomUser { user, _ ->
+      givenACas2v2Assessor { assessor, jwt ->
+        givenACas2v2PomUser { user, _ ->
           givenAnOffender { offenderDetails, _ ->
             cas2v2ApplicationJsonSchemaRepository.deleteAll()
 
@@ -453,10 +452,10 @@ class Cas2v2SubmissionTest(
 
             val responseBody = objectMapper.readValue(
               rawResponseBody,
-              Cas2SubmittedApplication::class.java,
+              Cas2v2SubmittedApplication::class.java,
             )
 
-            val applicant = nomisUserTransformer.transformJpaToApi(
+            val applicant = userTransformer.transformJpaToApi(
               applicationEntity
                 .createdByUser,
             )
@@ -494,8 +493,8 @@ class Cas2v2SubmissionTest(
 
     @Test
     fun `Assessor can NOT view single in-progress application`() {
-      givenACas2Assessor { _, jwt ->
-        givenACas2PomUser { user, _ ->
+      givenACas2v2Assessor { _, jwt ->
+        givenACas2v2PomUser { user, _ ->
           givenAnOffender { offenderDetails, _ ->
             cas2v2ApplicationJsonSchemaRepository.deleteAll()
 
@@ -528,9 +527,9 @@ class Cas2v2SubmissionTest(
     inner class ControlsOnCas2v2Admin {
       @Test
       fun `Admin can view single submitted application`() {
-        givenACas2Assessor { assessor, _ ->
+        givenACas2v2Assessor { assessor, _ ->
           givenACas2Admin { admin, jwt ->
-            givenACas2PomUser { user, _ ->
+            givenACas2v2PomUser { user, _ ->
               givenAnOffender { offenderDetails, _ ->
                 cas2v2ApplicationJsonSchemaRepository.deleteAll()
 
@@ -608,7 +607,7 @@ class Cas2v2SubmissionTest(
                   Cas2v2SubmittedApplication::class.java,
                 )
 
-                val applicant = nomisUserTransformer.transformJpaToApi(
+                val applicant = userTransformer.transformJpaToApi(
                   applicationEntity
                     .createdByUser,
                 )
@@ -637,7 +636,7 @@ class Cas2v2SubmissionTest(
       @Test
       fun `Admin can NOT view single in-progress application`() {
         givenACas2Admin { _, jwt ->
-          givenACas2PomUser { user, _ ->
+          givenACas2v2PomUser { user, _ ->
             givenAnOffender { offenderDetails, _ ->
               cas2v2ApplicationJsonSchemaRepository.deleteAll()
 
@@ -676,7 +675,7 @@ class Cas2v2SubmissionTest(
       val applicationId = UUID.fromString("22ceda56-98b2-411d-91cc-ace0ab8be872")
       val telephoneNumber = "123 456 7891"
 
-      givenACas2PomUser { submittingUser, jwt ->
+      givenACas2v2PomUser { submittingUser, jwt ->
         givenAnOffender(
           inmateDetailsConfigBlock = {
             withAssignedLivingUnit(
@@ -768,7 +767,7 @@ class Cas2v2SubmissionTest(
 
     @Test
     fun `When several concurrent submit application requests occur, only one is successful, all others return 400`() {
-      givenACas2PomUser { submittingUser, jwt ->
+      givenACas2v2PomUser { submittingUser, jwt ->
         givenAnOffender(
           inmateDetailsConfigBlock = {
             withAssignedLivingUnit(
@@ -849,7 +848,7 @@ class Cas2v2SubmissionTest(
 
     @Test
     fun `When there's an error fetching the referred person's prison code, the application is not saved`() {
-      givenACas2PomUser { submittingUser, jwt ->
+      givenACas2v2PomUser { submittingUser, jwt ->
         givenAnOffender(mockNotFoundErrorForPrisonApi = true) { offenderDetails, _ ->
           val applicationId = UUID.fromString("22ceda56-98b2-411d-91cc-ace0ab8be872")
 

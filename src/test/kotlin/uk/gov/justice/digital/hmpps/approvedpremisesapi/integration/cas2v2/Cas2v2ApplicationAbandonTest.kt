@@ -9,17 +9,16 @@ import org.junit.jupiter.api.Test
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.ValueSource
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.Cas2v2IntegrationTestBase
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenACas2LicenceCaseAdminUser
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenACas2PomUser
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenACas2v2LicenceCaseAdminUser
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenACas2v2PomUser
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAnOffender
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.NomisUserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas2v2.Cas2v2ApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas2v2.Cas2v2ApplicationRepository
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas2v2.Cas2v2UserEntity
 import java.time.OffsetDateTime
 
 class Cas2v2ApplicationAbandonTest : Cas2v2IntegrationTestBase() {
-  @SpykBean
-  lateinit var realApplicationRepository: Cas2v2ApplicationRepository
+  @SpykBean lateinit var realApplicationRepository: Cas2v2ApplicationRepository
 
   val schema = """
         {
@@ -92,7 +91,7 @@ class Cas2v2ApplicationAbandonTest : Cas2v2IntegrationTestBase() {
     inner class PomUsers {
       @Test
       fun `Abandon existing cas2v2 application returns 200 with correct body`() {
-        givenACas2PomUser { submittingUser, jwt ->
+        givenACas2v2PomUser { submittingUser, jwt ->
           givenAnOffender { offenderDetails, _ ->
             val application = produceAndPersistBasicApplication(offenderDetails.otherIds.crn, submittingUser)
 
@@ -113,7 +112,7 @@ class Cas2v2ApplicationAbandonTest : Cas2v2IntegrationTestBase() {
     inner class LicenceCaseAdminUsers {
       @Test
       fun `Abandon existing cas2v2 application returns 200 with correct body`() {
-        givenACas2LicenceCaseAdminUser { submittingUser, jwt ->
+        givenACas2v2LicenceCaseAdminUser { submittingUser, jwt ->
           givenAnOffender { offenderDetails, _ ->
             val application = produceAndPersistBasicApplication(offenderDetails.otherIds.crn, submittingUser)
 
@@ -133,7 +132,7 @@ class Cas2v2ApplicationAbandonTest : Cas2v2IntegrationTestBase() {
 
   private fun produceAndPersistBasicApplication(
     crn: String,
-    userEntity: NomisUserEntity,
+    userEntity: Cas2v2UserEntity,
   ): Cas2v2ApplicationEntity {
     val jsonSchema = cas2v2ApplicationJsonSchemaEntityFactory.produceAndPersist {
       withAddedAt(OffsetDateTime.parse("2022-09-21T12:45:00+01:00"))

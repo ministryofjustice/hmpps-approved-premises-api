@@ -7,7 +7,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas2v2Submitte
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas2v2.Cas2v2ApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas2v2.Cas2v2ApplicationSummaryEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PersonInfoResult
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.NomisUserTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.PersonTransformer
 import java.util.UUID
 
@@ -15,7 +14,7 @@ import java.util.UUID
 class Cas2v2SubmissionsTransformer(
   private val objectMapper: ObjectMapper,
   private val personTransformer: PersonTransformer,
-  private val nomisUserTransformer: NomisUserTransformer,
+  private val cas2v2UserTransformer: Cas2v2UserTransformer,
   private val cas2v2TimelineEventsTransformer: Cas2v2TimelineEventsTransformer,
   private val cas2v2AssessmentsTransformer: Cas2v2AssessmentsTransformer,
 ) {
@@ -28,7 +27,7 @@ class Cas2v2SubmissionsTransformer(
     return Cas2v2SubmittedApplication(
       id = jpa.id,
       person = personTransformer.transformModelToPersonApi(personInfo),
-      submittedBy = nomisUserTransformer.transformJpaToApi(jpa.createdByUser),
+      submittedBy = cas2v2UserTransformer.transformJpaToApi(jpa.createdByUser),
       schemaVersion = jpa.schemaVersion.id,
       outdatedSchema = !jpa.schemaUpToDate,
       createdAt = jpa.createdAt.toInstant(),
