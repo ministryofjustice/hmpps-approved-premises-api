@@ -279,9 +279,6 @@ class Cas2v2ApplicationService(
       return CasResult.FieldValidationError(validationErrors)
     }
 
-//    val schema = application.schemaVersion as? Cas2v2ApplicationJsonSchemaEntity
-//      ?: throw RuntimeException("Incorrect type of JSON schema referenced by CAS2 v2 Application")
-
     try {
       application.apply {
         submittedAt = OffsetDateTime.now()
@@ -358,7 +355,6 @@ class Cas2v2ApplicationService(
       crn = application.crn,
       nomsNumber = application.nomsNumber.toString(),
     )
-    // AuthorisableActionResult is deprecated but we don;t want to be touching offenderService while doing cas2v2 work.
     val inmateDetail = when (inmateDetailResult) {
       is AuthorisableActionResult.NotFound -> throw UpstreamApiException("Inmate Detail not found")
       is AuthorisableActionResult.Unauthorised -> throw UpstreamApiException("Inmate Detail unauthorised")
