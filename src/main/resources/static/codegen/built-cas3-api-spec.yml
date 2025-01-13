@@ -3860,6 +3860,7 @@ components:
         - update_cas3_application_offender_name
         - update_cas3_domain_event_type_for_person_departed_updated
         - update_cas1_applications_licence_expiry_date
+        - update_cas1_backfill_offline_application_name
     PlacementDates:
       type: object
       properties:
