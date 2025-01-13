@@ -20,12 +20,12 @@ CREATE TABLE cas_2_v2_application_notes
 CREATE TABLE cas_2_v2_applications
 (
     id                       UUID NOT NULL,
-    crn                      TEXT,
-    created_by_user_id       UUID,
-    data                     TEXT,
-    document                 TEXT,
-    schema_version           UUID,
-    created_at               TIMESTAMPTZ,
+    crn                      TEXT NOT NULL,
+    created_by_user_id       UUID NOT NULL,
+    data                     JSON,
+    document                 JSON,
+    schema_version           UUID NOT NULL,
+    created_at               TIMESTAMPTZ NOT NULL,
     submitted_at             TIMESTAMPTZ,
     abandoned_at             TIMESTAMPTZ,
     assessment_id            UUID,
@@ -51,23 +51,23 @@ CREATE TABLE cas_2_v2_assessments
 CREATE TABLE cas_2_v2_status_update_details
 (
     id               UUID NOT NULL,
-    status_detail_id UUID,
-    label            TEXT,
-    status_update_id UUID,
-    created_at       TIMESTAMPTZ,
+    status_detail_id UUID NOT NULL,
+    label            TEXT NOT NULL,
+    status_update_id UUID NOT NULL,
+    created_at       TIMESTAMPTZ NOT NULL,
     CONSTRAINT pk_cas_2_v2_status_update_details PRIMARY KEY (id)
 );
 
 CREATE TABLE cas_2_v2_status_updates
 (
     id             UUID NOT NULL,
-    status_id      UUID,
-    description    TEXT,
-    label          TEXT,
-    assessor_id    UUID,
+    status_id      UUID NOT NULL,
+    description    TEXT NOT NULL,
+    label          TEXT NOT NULL,
+    assessor_id    UUID NOT NULL,
     application_id UUID NOT NULL,
     assessment_id  UUID,
-    created_at     TIMESTAMPTZ,
+    created_at     TIMESTAMPTZ NOT NULL,
     CONSTRAINT pk_cas_2_v2_status_updates PRIMARY KEY (id)
 );
 
