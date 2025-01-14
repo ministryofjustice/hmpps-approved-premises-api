@@ -53,6 +53,7 @@ class MigrationJobService(
         MigrationJobType.cas3ApplicationOffenderName -> getBean(Cas3UpdateApplicationOffenderNameJob::class)
         MigrationJobType.cas3DomainEventTypeForPersonDepartedUpdated -> getBean(Cas3UpdateDomainEventTypeForPersonDepartureUpdatedJob::class)
         MigrationJobType.cas1ApplicationsLicenceExpiryDate -> getBean(Cas1UpdateApplicationLicenceExpiryDateJob::class)
+        MigrationJobType.cas1BackfillOfflineApplicationName -> TODO()
       }
 
       if (job.shouldRunInTransaction) {
