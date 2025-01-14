@@ -206,7 +206,7 @@ SELECT
 FROM temporary_accommodation_applications taa 
 LEFT JOIN applications a ON a.id = taa.id 
 LEFT JOIN assessments ass ON ass.application_id = taa.id AND ass.reallocated_at IS NULL 
-WHERE a.created_by_user_id = :userId
+WHERE a.created_by_user_id = :userId and a.deleted_at IS NULL
 """,
     nativeQuery = true,
   )

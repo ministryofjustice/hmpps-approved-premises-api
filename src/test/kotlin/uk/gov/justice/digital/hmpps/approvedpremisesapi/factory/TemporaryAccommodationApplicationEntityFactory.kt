@@ -97,6 +97,10 @@ class TemporaryAccommodationApplicationEntityFactory : Factory<TemporaryAccommod
     this.submittedAt = { submittedAt }
   }
 
+  fun withDeletedAt(deletedAt: OffsetDateTime?) = apply {
+    this.deletedAt = { deletedAt }
+  }
+
   fun withAssessments(assessments: MutableList<AssessmentEntity>) = apply {
     this.assessments = { assessments }
   }
