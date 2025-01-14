@@ -10,7 +10,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas2v2.Cas2v2
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.ExternalUserTransformer
 import java.util.UUID
 
-@Component("Cas2v2StatusUpdateTransformer")
+@Component
 class Cas2v2StatusUpdateTransformer(
   private val externalUserTransformer: ExternalUserTransformer,
 ) {

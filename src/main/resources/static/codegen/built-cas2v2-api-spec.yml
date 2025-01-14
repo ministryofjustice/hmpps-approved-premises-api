@@ -312,7 +312,7 @@ paths:
           content:
             'application/json':
               schema:
-                $ref: '#/components/schemas/Cas2ApplicationNote'
+                $ref: '#/components/schemas/Cas2v2ApplicationNote'
         401:
           $ref: '#/components/responses/401Response'
         403:
@@ -5579,3 +5579,27 @@ components:
         - personName
         - crn
         - nomsNumber
+    Cas2v2ApplicationNote:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        email:
+          type: string
+          example: 'roger@example.com'
+        name:
+          type: string
+          example: 'Roger Smith'
+        body:
+          type: string
+        createdAt:
+          type: string
+          format: date-time
+      required:
+        - username
+        - email
+        - name
+        - body
+        - createdAt
+      description: Notes added to a  Cas2v2Application

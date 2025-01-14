@@ -4,7 +4,7 @@ import org.springframework.stereotype.Component
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas2v2Assessment
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas2v2.Cas2v2AssessmentEntity
 
-@Component("Cas2v2AssessmentsTransformer")
+@Component
 class Cas2v2AssessmentsTransformer(
   private val statusUpdateTransformer: Cas2v2StatusUpdateTransformer,
 ) {
