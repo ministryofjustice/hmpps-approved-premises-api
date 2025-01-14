@@ -581,7 +581,7 @@ class ApplicationService(
     otherReason: String?,
   ): CasResult<Unit> {
     val application = applicationRepository.findByIdOrNull(applicationId)
-      ?: return CasResult.NotFound()
+      ?: return CasResult.NotFound(entityType = "application", applicationId.toString())
 
     if (application !is ApprovedPremisesApplicationEntity) {
       return CasResult.GeneralValidationError("onlyCas1Supported")

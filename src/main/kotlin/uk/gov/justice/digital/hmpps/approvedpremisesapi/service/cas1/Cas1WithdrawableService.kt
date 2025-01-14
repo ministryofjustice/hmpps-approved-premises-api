@@ -78,7 +78,7 @@ class Cas1WithdrawableService(
     withdrawalReason: String,
     otherReason: String?,
   ): CasResult<Unit> {
-    val application = applicationService.getApplication(applicationId) ?: return CasResult.NotFound()
+    val application = applicationService.getApplication(applicationId) ?: return CasResult.NotFound(entityType = "Application", applicationId.toString())
     if (application !is ApprovedPremisesApplicationEntity) {
       return CasResult.GeneralValidationError("Only CAS1 Apps are supported")
     }
@@ -104,7 +104,7 @@ class Cas1WithdrawableService(
     userProvidedReason: PlacementRequestWithdrawalReason?,
   ): CasResult<PlacementRequestService.PlacementRequestAndCancellations> {
     val placementRequest = placementRequestService.getPlacementRequestOrNull(placementRequestId)
-      ?: return CasResult.NotFound()
+      ?: return CasResult.NotFound(entityType = "PlacementRequest", id = placementRequestId.toString())
 
     val withdrawalContext = WithdrawalContext(
       withdrawalTriggeredBy = WithdrawalTriggeredByUser(user),
@@ -127,7 +127,7 @@ class Cas1WithdrawableService(
     userProvidedReason: PlacementApplicationWithdrawalReason?,
   ): CasResult<PlacementApplicationEntity> {
     val placementApplication = placementApplicationService.getApplicationOrNull(placementApplicationId)
-      ?: return CasResult.NotFound()
+      ?: return CasResult.NotFound(entityType = "PlacementApplication", id = placementApplicationId.toString())
 
     val withdrawalContext = WithdrawalContext(
       withdrawalTriggeredBy = WithdrawalTriggeredByUser(user),

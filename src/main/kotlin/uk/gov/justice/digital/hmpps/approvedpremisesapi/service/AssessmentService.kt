@@ -159,7 +159,7 @@ class AssessmentService(
     forTimeline: Boolean = false,
   ): CasResult<AssessmentEntity> {
     val assessment = assessmentRepository.findByIdOrNull(assessmentId)
-      ?: return CasResult.NotFound(AssessmentEntity::class.simpleName, assessmentId.toString())
+      ?: return CasResult.NotFound("AssessmentEntity", assessmentId.toString())
 
     val latestSchema = when (assessment) {
       is ApprovedPremisesAssessmentEntity -> jsonSchemaService.getNewestSchema(
@@ -820,7 +820,7 @@ class AssessmentService(
     val clarificationNoteEntity = assessmentClarificationNoteRepository.findByAssessmentIdAndId(assessment.id, id)
 
     if (clarificationNoteEntity === null) {
-      return CasResult.NotFound()
+      return CasResult.NotFound(entityType = "ClarificationNote", id = id.toString())
     }
 
     if (clarificationNoteEntity.createdByUser.id !== user.id) {
