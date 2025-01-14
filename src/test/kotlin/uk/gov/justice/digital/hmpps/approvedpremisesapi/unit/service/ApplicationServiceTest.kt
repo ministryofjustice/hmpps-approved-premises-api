@@ -230,6 +230,35 @@ class ApplicationServiceTest {
     val distinguishedName = "SOMEPERSON"
     val applicationId = UUID.fromString("c1750938-19fc-48a1-9ae9-f2e119ffc1f4")
 
+    val probationRegion = ProbationRegionEntityFactory()
+      .withYieldedApArea { ApAreaEntityFactory().produce() }
+      .produce()
+    val deletedApplication = TemporaryAccommodationApplicationEntityFactory()
+      .withId(applicationId)
+      .withYieldedCreatedByUser {
+        UserEntityFactory()
+          .withProbationRegion(probationRegion)
+          .produce()
+      }
+      .withProbationRegion(probationRegion)
+      .withDeletedAt(OffsetDateTime.now().minusDays(10))
+      .produce()
+
+    every { mockApplicationRepository.findByIdOrNull(applicationId) } returns deletedApplication
+
+    assertThat(
+      applicationService.getApplicationForUsername(
+        applicationId,
+        distinguishedName,
+      ) is CasResult.NotFound,
+    ).isTrue
+  }
+
+  @Test
+  fun `getApplicationForUsername where temporary accommodation application was deleted returns NotFound result`() {
+    val distinguishedName = "SOMEPERSON"
+    val applicationId = UUID.fromString("c1750938-19fc-48a1-9ae9-f2e119ffc1f4")
+
     every { mockApplicationRepository.findByIdOrNull(applicationId) } returns null
 
     assertThat(
