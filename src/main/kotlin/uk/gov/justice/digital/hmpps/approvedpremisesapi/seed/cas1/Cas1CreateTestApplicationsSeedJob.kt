@@ -61,6 +61,8 @@ class Cas1CreateTestApplicationsSeedJob(
         }
       }
     }
+
+    log.info("Have created $count applications for CRN $crn in state $state using creator username $deliusUsername")
   }
 }
 

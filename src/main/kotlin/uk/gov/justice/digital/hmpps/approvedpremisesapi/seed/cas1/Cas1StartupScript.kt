@@ -15,7 +15,7 @@ import java.util.UUID
 
 @SuppressWarnings("MagicNumber", "MaxLineLength", "TooGenericExceptionCaught")
 @Component
-class Cas1AutoScript(
+class Cas1StartupScript(
   private val seedLogger: SeedLogger,
   private val userService: UserService,
   private val cruManagementAreaRepository: Cas1CruManagementAreaRepository,
@@ -25,7 +25,7 @@ class Cas1AutoScript(
 
   @Transactional
   fun script() {
-    seedLogger.info("Auto-Scripting for CAS1")
+    seedLogger.info("Running Startup Script for CAS1")
 
     if (environmentService.isLocal()) {
       scriptLocal()
@@ -35,7 +35,7 @@ class Cas1AutoScript(
   }
 
   fun scriptLocal() {
-    seedLogger.info("Auto-Scripting for CAS1 local")
+    seedLogger.info("Run Startup Script for CAS1 local")
     seedUsers(usersToSeedLocal())
 
     createApplicationPendingSubmission(
@@ -83,7 +83,7 @@ class Cas1AutoScript(
   }
 
   fun scriptDev() {
-    seedLogger.info("Auto-Scripting for CAS1 dev")
+    seedLogger.info("Running Startup Script for CAS1 dev")
     seedUsers(usersToSeedDev())
   }
 
