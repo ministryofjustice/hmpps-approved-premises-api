@@ -45,6 +45,7 @@ class TemporaryAccommodationPremisesSeedJob(
     emailAddress = columns["Email Address"].trimToEmpty(),
   )
 
+  @SuppressWarnings("TooGenericExceptionThrown")
   override fun processRow(row: TemporaryAccommodationPremisesSeedCsvRow) {
     val existingPremises = premisesRepository.findByName(row.name, TemporaryAccommodationPremisesEntity::class.java) as TemporaryAccommodationPremisesEntity?
 
@@ -73,7 +74,7 @@ class TemporaryAccommodationPremisesSeedJob(
     }
 
     val probationDeliveryUnit = probationDeliveryUnitRepository.findByNameAndProbationRegionId(row.pdu, probationRegion.id)
-      ?: throw RuntimeException("Probation Delivery Unit ${row.pdu} does not exist")
+      ?: throw RuntimeException("Probation Delivery Unit '${row.pdu}' does not exist for region '${probationRegion.name}'")
 
     if (existingPremises != null) {
       updateExistingPremises(row, existingPremises, probationRegion, localAuthorityArea, probationDeliveryUnit, characteristics)
