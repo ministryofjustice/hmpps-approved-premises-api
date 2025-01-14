@@ -13,6 +13,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserQualification
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRole
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas2v2.Cas2v2UserEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas2v2.Cas2v2UserType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.deliuscontext.StaffDetail
 import java.util.UUID
 
@@ -213,6 +214,21 @@ fun IntegrationTestBase.givenACas2Assessor(
   val user = externalUserEntityFactory.produceAndPersist {
     withId(id)
     withUsername("CAS2_ASSESSOR_USER")
+  }
+
+  val jwt = jwtAuthHelper.createValidExternalAuthorisationCodeJwt("CAS2_ASSESSOR_USER")
+
+  block(user, jwt)
+}
+
+fun IntegrationTestBase.givenACas2v2Assessor(
+  id: UUID = UUID.randomUUID(),
+  block: (userEntity: Cas2v2UserEntity, jwt: String) -> Unit,
+) {
+  val user = cas2v2UserEntityFactory.produceAndPersist {
+    withId(id)
+    withUsername("CAS2_ASSESSOR_USER")
+    withUserType(Cas2v2UserType.EXTERNAL)
   }
 
   val jwt = jwtAuthHelper.createValidExternalAuthorisationCodeJwt("CAS2_ASSESSOR_USER")

@@ -13,7 +13,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.UpdateCas2Assessment
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.Cas2v2IntegrationTestBase
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenACas2Admin
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenACas2Assessor
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenACas2v2Assessor
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenACas2v2PomUser
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas2v2.Cas2v2UserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas2v2.Cas2v2ApplicationEntity
@@ -91,7 +91,7 @@ class Cas2v2AssessmentTest : Cas2v2IntegrationTestBase() {
       val applicationId = UUID.fromString("22ceda56-98b2-411d-91cc-ace0ab8be872")
 
       givenACas2v2PomUser { referrer, _ ->
-        givenACas2Assessor { assessor, jwt ->
+        givenACas2v2Assessor { assessor, jwt ->
           val submittedApplication = createSubmittedApplication(applicationId, referrer)
 
           // with an assessment
@@ -200,7 +200,7 @@ class Cas2v2AssessmentTest : Cas2v2IntegrationTestBase() {
       val applicationId = UUID.fromString("22ceda56-98b2-411d-91cc-ace0ab8be872")
 
       givenACas2v2PomUser { referrer, _ ->
-        givenACas2Assessor { assessor, jwt ->
+        givenACas2v2Assessor { assessor, jwt ->
           val submittedApplication = createSubmittedApplication(applicationId, referrer)
 
           // with an assessment

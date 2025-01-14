@@ -60,6 +60,10 @@ class Cas2v2UserEntityFactory : Factory<Cas2v2UserEntity> {
     this.email = { email }
   }
 
+  fun withUserType(t: Cas2v2UserType) = apply {
+    this.userType = { t }
+  }
+
   override fun produce(): Cas2v2UserEntity = Cas2v2UserEntity(
     id = this.id(),
     username = this.username(),

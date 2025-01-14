@@ -28,7 +28,7 @@ class HttpAuthService {
 
   fun getCas2v2AuthenticatedPrincipalOrThrow(): AuthAwareAuthenticationToken {
     val principal = SecurityContextHolder.getContext().authentication as AuthAwareAuthenticationToken
-    if (!listOf("nomis", "auth").contains(principal.token.claims["auth_source"])) {
+    if (!listOf("auth", "delius", "nomis").contains(principal.token.claims["auth_source"])) {
       throw ForbiddenProblem()
     }
 

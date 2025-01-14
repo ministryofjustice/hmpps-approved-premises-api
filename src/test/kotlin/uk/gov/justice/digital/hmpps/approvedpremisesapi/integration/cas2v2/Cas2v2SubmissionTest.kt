@@ -23,7 +23,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.toHttpStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ExternalUserDetailsFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.Cas2v2IntegrationTestBase
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenACas2Admin
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenACas2Assessor
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenACas2v2Assessor
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenACas2v2PomUser
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAnOffender
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.manageUsersMockSuccessfulExternalUsersCall
@@ -193,7 +193,7 @@ class Cas2v2SubmissionTest(
 
     @Test
     fun `Assessor can view ALL submitted cas2v2 applications`() {
-      givenACas2Assessor { _externalUserEntity, jwt ->
+      givenACas2v2Assessor { _externalUserEntity, jwt ->
         givenACas2v2PomUser { user, _ ->
           givenAnOffender { offenderDetails, _ ->
             cas2v2ApplicationJsonSchemaRepository.deleteAll()
@@ -365,7 +365,7 @@ class Cas2v2SubmissionTest(
 
     @Test
     fun `Assessor can view single submitted application`() {
-      givenACas2Assessor { assessor, jwt ->
+      givenACas2v2Assessor { assessor, jwt ->
         givenACas2v2PomUser { user, _ ->
           givenAnOffender { offenderDetails, _ ->
             cas2v2ApplicationJsonSchemaRepository.deleteAll()
@@ -492,7 +492,7 @@ class Cas2v2SubmissionTest(
 
     @Test
     fun `Assessor can NOT view single in-progress application`() {
-      givenACas2Assessor { _, jwt ->
+      givenACas2v2Assessor { _, jwt ->
         givenACas2v2PomUser { user, _ ->
           givenAnOffender { offenderDetails, _ ->
             cas2v2ApplicationJsonSchemaRepository.deleteAll()
@@ -526,7 +526,7 @@ class Cas2v2SubmissionTest(
     inner class ControlsOnCas2Admin {
       @Test
       fun `Admin can view single submitted application`() {
-        givenACas2Assessor { assessor, _ ->
+        givenACas2v2Assessor { assessor, _ ->
           givenACas2Admin { admin, jwt ->
             givenACas2v2PomUser { user, _ ->
               givenAnOffender { offenderDetails, _ ->

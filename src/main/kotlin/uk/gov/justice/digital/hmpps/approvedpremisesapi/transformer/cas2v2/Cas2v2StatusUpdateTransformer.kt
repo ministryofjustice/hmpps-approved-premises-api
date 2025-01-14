@@ -23,8 +23,9 @@ class Cas2v2StatusUpdateTransformer(
       name = jpa.status().name,
       label = jpa.label,
       description = jpa.description,
-      updatedBy = externalUserTransformer.transformJpaToApi(jpa.assessor),
-      updatedAt = jpa.createdAt?.toInstant(),
+      // FIXME(ross): This needs to be a Cas2v2UserEntity which means bringing Cas2StatusUpdate into the cas2v2 namespace
+      updatedBy = null, // externalUserTransformer.transformJpaToApi(jpa.assessor),
+      updatedAt = jpa.createdAt.toInstant(),
       statusUpdateDetails = jpa.statusUpdateDetails?.map { detail -> transformStatusUpdateDetailsJpaToApi(detail) },
     )
   }

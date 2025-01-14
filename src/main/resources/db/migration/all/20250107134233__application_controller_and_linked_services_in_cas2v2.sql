@@ -12,8 +12,7 @@ CREATE TABLE cas_2_v2_application_notes
     created_at                  TIMESTAMPTZ,
     body                        TEXT,
     assessment_id               UUID,
-    created_by_nomis_user_id    UUID,
-    created_by_external_user_id UUID,
+    created_by_user_id    UUID,
     CONSTRAINT pk_cas_2_v2_application_notes PRIMARY KEY (id)
 );
 
@@ -106,9 +105,6 @@ ALTER TABLE cas_2_v2_application_notes
 
 ALTER TABLE cas_2_v2_application_notes
     ADD CONSTRAINT FK_CAS_2_V2_APPLICATION_NOTES_ON_ASSESSMENT FOREIGN KEY (assessment_id) REFERENCES cas_2_v2_assessments (id);
-
-ALTER TABLE cas_2_v2_application_notes
-    ADD CONSTRAINT FK_CAS_2_V2_APPLICATION_NOTES_ON_CREATED_BY_EXTERNAL_USER FOREIGN KEY (created_by_external_user_id) REFERENCES external_users (id);
 
 ALTER TABLE cas_2_v2_application_notes
     ADD CONSTRAINT FK_CAS_2_V2_APPLICATION_NOTES_ON_CREATED_BY_USER FOREIGN KEY (created_by_user_id) REFERENCES cas_2_v2_users (id);

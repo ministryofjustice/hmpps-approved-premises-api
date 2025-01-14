@@ -15,6 +15,7 @@ import java.util.UUID
 enum class Cas2v2UserType(val authSource: String) {
   DELIUS("delius"),
   NOMIS("nomis"),
+  EXTERNAL("auth"),
 }
 
 sealed interface User
@@ -70,6 +71,9 @@ data class Cas2v2UserEntity(
   fun staffIdentifier() = when (userType) {
     Cas2v2UserType.NOMIS -> nomisStaffId.toString()
     Cas2v2UserType.DELIUS -> deliusStaffCode
+    Cas2v2UserType.EXTERNAL -> ""
   }
+
+  fun isExternal() = userType == Cas2v2UserType.EXTERNAL
 }
 

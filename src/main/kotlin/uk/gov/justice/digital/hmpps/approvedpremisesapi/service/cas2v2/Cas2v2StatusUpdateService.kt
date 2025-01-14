@@ -15,7 +15,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas2.model.Pe
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas2AssessmentStatusUpdate
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.config.NotifyConfig
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ExternalUserEntity
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.NomisUserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas2v2.*
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.DomainEvent
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.ValidationErrors
@@ -57,7 +56,7 @@ class Cas2v2StatusUpdateService(
   fun createForAssessment(
     assessmentId: UUID,
     statusUpdate: Cas2AssessmentStatusUpdate,
-    assessor: ExternalUserEntity,
+    assessor: Cas2v2UserEntity,
   ): CasResult<Cas2v2StatusUpdateEntity> {
     val assessment = cas2v2AssessmentRepository.findByIdOrNull(assessmentId)
       ?: return CasResult.NotFound()
@@ -152,8 +151,10 @@ class Cas2v2StatusUpdateService(
             updatedBy = ExternalUser(
               username = assessor.username,
               name = assessor.name,
-              email = assessor.email,
-              origin = assessor.origin,
+              email = assessor.email!!,
+              // FIXME(ross): Requires an updated Cas2ApplicationStatusUpdatedEvent->Cas2v2ApplicationStatusUpdatedEvent
+              // where the user is a Cas2v2User instead of an ExternalUser
+              origin = "assessor.origin",
             ),
             updatedAt = eventOccurredAt.toInstant(),
           ),
