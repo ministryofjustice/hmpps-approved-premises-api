@@ -347,10 +347,11 @@ class ApplicationTest : IntegrationTestBase() {
       withProbationRegion(probationRegion)
     }
 
-    private fun createApplicationSchema(): TemporaryAccommodationApplicationJsonSchemaEntity = temporaryAccommodationApplicationJsonSchemaEntityFactory.produceAndPersist {
-      withAddedAt(OffsetDateTime.now())
-      withId(UUID.randomUUID())
-    }
+    private fun createApplicationSchema(): TemporaryAccommodationApplicationJsonSchemaEntity =
+      temporaryAccommodationApplicationJsonSchemaEntityFactory.produceAndPersist {
+        withAddedAt(OffsetDateTime.now())
+        withId(UUID.randomUUID())
+      }
 
     @Test
     fun `Get all applications returns 200 for TA - when user is CAS3_REFERRER then returns all applications for user`() {
@@ -845,7 +846,6 @@ class ApplicationTest : IntegrationTestBase() {
     fun `Get single non LAO application returns 200 when the person cannot be fetched from the prisons API`() {
       givenAUser(
         staffDetail = StaffDetailFactory.staffDetail(teams = listOf(TeamFactoryDeliusContext.team(code = "TEAM1"))),
-
       ) { userEntity, jwt ->
         val crn = "X1234"
 
@@ -1299,6 +1299,52 @@ class ApplicationTest : IntegrationTestBase() {
               .expectStatus()
               .isForbidden
           }
+        }
+      }
+    }
+
+    @Test
+    fun `Get single CAS3 application returns 404 Not Found when the application was deleted`() {
+      givenAUser { userEntity, jwt ->
+        givenAnOffender { offenderDetails, _ ->
+          temporaryAccommodationApplicationJsonSchemaRepository.deleteAll()
+
+          val newestJsonSchema = temporaryAccommodationApplicationJsonSchemaEntityFactory.produceAndPersist {
+            withAddedAt(OffsetDateTime.parse("2024-12-11T13:21:00+01:00"))
+            withSchema("{}")
+          }
+
+          val applicationEntity = temporaryAccommodationApplicationEntityFactory.produceAndPersist {
+            withApplicationSchema(newestJsonSchema)
+            withCrn(offenderDetails.otherIds.crn)
+            withCreatedByUser(userEntity)
+            withProbationRegion(userEntity.probationRegion)
+            withDeletedAt(OffsetDateTime.now().minusDays(15))
+            withData(
+              """
+            {
+               "thingId": 123
+            }
+            """,
+            )
+          }
+
+          apDeliusContextAddResponseToUserAccessCall(
+            listOf(
+              CaseAccessFactory()
+                .withCrn(offenderDetails.otherIds.crn)
+                .produce(),
+            ),
+            userEntity.deliusUsername,
+          )
+
+          webTestClient.get()
+            .uri("/applications/${applicationEntity.id}")
+            .header("Authorization", "Bearer $jwt")
+            .header("X-Service-Name", ServiceName.temporaryAccommodation.value)
+            .exchange()
+            .expectStatus()
+            .isNotFound
         }
       }
     }
