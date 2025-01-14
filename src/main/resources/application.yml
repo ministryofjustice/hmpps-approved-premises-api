@@ -258,6 +258,10 @@ url-templates:
       application: http://localhost:3000/applications/#id
       application-overview: http://localhost:3000/applications/#id/overview
       submitted-application-overview: http://localhost:3000/assess/applications/#applicationId/overview
+    cas2v2:
+      application: http://localhost:3000/applications/#id
+      application-overview: http://localhost:3000/applications/#id/overview
+      submitted-application-overview: http://localhost:3000/assess/applications/#applicationId/overview
 
 preemptive-cache-enabled: true
 preemptive-cache-key-prefix: ""

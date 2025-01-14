@@ -1,4 +1,4 @@
-package uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas2
+package uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas2v2
 
 import io.sentry.Sentry
 import jakarta.transaction.Transactional
@@ -14,45 +14,41 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas2.model.Ex
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas2.model.PersonReference
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas2AssessmentStatusUpdate
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.config.NotifyConfig
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas2ApplicationEntity
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas2AssessmentRepository
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas2StatusUpdateDetailEntity
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas2StatusUpdateDetailRepository
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas2StatusUpdateEntity
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas2StatusUpdateRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ExternalUserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.NomisUserEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas2v2.Cas2v2ApplicationEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas2v2.Cas2v2AssessmentRepository
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas2v2.Cas2v2StatusUpdateDetailEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas2v2.Cas2v2StatusUpdateDetailRepository
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas2v2.Cas2v2StatusUpdateEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas2v2.Cas2v2StatusUpdateRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.DomainEvent
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.ValidationErrors
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.reference.Cas2PersistedApplicationStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.reference.Cas2PersistedApplicationStatusDetail
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.reference.Cas2PersistedApplicationStatusFinder
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.AuthorisableActionResult
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.ValidatableActionResult
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.CasResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.EmailNotificationService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas2.Constants.HDC_APPLICATION_TYPE
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas2.DomainEventService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.cas2.ApplicationStatusTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.toCas2UiFormat
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.toCas2UiFormattedHourOfDay
 import java.time.OffsetDateTime
 import java.util.UUID
 
-object Constants {
-  const val HDC_APPLICATION_TYPE = "Home Detention Curfew (HDC)"
-}
-
-@Service("Cas2StatusUpdateService")
-class StatusUpdateService(
-  private val assessmentRepository: Cas2AssessmentRepository,
-  private val statusUpdateRepository: Cas2StatusUpdateRepository,
-  private val statusUpdateDetailRepository: Cas2StatusUpdateDetailRepository,
+@Service("Cas2v2StatusUpdateService")
+class Cas2v2StatusUpdateService(
+  private val cas2v2AssessmentRepository: Cas2v2AssessmentRepository,
+  private val cas2v2StatusUpdateRepository: Cas2v2StatusUpdateRepository,
+  private val cas2v2StatusUpdateDetailRepository: Cas2v2StatusUpdateDetailRepository,
   private val domainEventService: DomainEventService,
   private val emailNotificationService: EmailNotificationService,
   private val notifyConfig: NotifyConfig,
   private val statusFinder: Cas2PersistedApplicationStatusFinder,
   private val statusTransformer: ApplicationStatusTransformer,
-  @Value("\${url-templates.frontend.cas2.application}") private val applicationUrlTemplate: String,
-  @Value("\${url-templates.frontend.cas2.application-overview}") private val applicationOverviewUrlTemplate: String,
+  @Value("\${url-templates.frontend.cas2v2.application}") private val applicationUrlTemplate: String,
+  @Value("\${url-templates.frontend.cas2v2.application-overview}") private val applicationOverviewUrlTemplate: String,
 ) {
 
   private val log = LoggerFactory.getLogger(this::class.java)
@@ -67,36 +63,29 @@ class StatusUpdateService(
     assessmentId: UUID,
     statusUpdate: Cas2AssessmentStatusUpdate,
     assessor: ExternalUserEntity,
-  ): AuthorisableActionResult<ValidatableActionResult<Cas2StatusUpdateEntity>> {
-    val assessment = assessmentRepository.findByIdOrNull(assessmentId)
-      ?: return AuthorisableActionResult.NotFound()
+  ): CasResult<Cas2v2StatusUpdateEntity> {
+    val assessment = cas2v2AssessmentRepository.findByIdOrNull(assessmentId)
+      ?: return CasResult.NotFound()
 
     val status = findActiveStatusByName(statusUpdate.newStatus)
-      ?: return AuthorisableActionResult.Success(
-        ValidatableActionResult.GeneralValidationError("The status ${statusUpdate.newStatus} is not valid"),
-      )
+      ?: return CasResult.GeneralValidationError("The status ${statusUpdate.newStatus} is not valid")
 
-    val newStatusDetails = statusUpdate.newStatusDetails
-
-    val statusDetails = if (newStatusDetails.isNullOrEmpty()) {
+    val newDetails = statusUpdate.newStatusDetails.isNullOrEmpty()
+    val statusDetails = if (newDetails) {
       emptyList()
     } else {
-      newStatusDetails.map { detail ->
+      statusUpdate.newStatusDetails?.map { detail ->
         status.findStatusDetailOnStatus(detail)
-          ?: return AuthorisableActionResult.Success(
-            ValidatableActionResult.GeneralValidationError("The status detail $detail is not valid"),
-          )
+          ?: return CasResult.GeneralValidationError("The status detail $detail is not valid")
       }
     }
 
     if (ValidationErrors().any()) {
-      return AuthorisableActionResult.Success(
-        ValidatableActionResult.FieldValidationError(ValidationErrors()),
-      )
+      return CasResult.FieldValidationError(ValidationErrors())
     }
 
-    val createdStatusUpdate = statusUpdateRepository.save(
-      Cas2StatusUpdateEntity(
+    val createdStatusUpdate = cas2v2StatusUpdateRepository.save(
+      Cas2v2StatusUpdateEntity(
         id = UUID.randomUUID(),
         assessment = assessment,
         application = assessment.application,
@@ -108,9 +97,9 @@ class StatusUpdateService(
       ),
     )
 
-    statusDetails.forEach { detail ->
-      statusUpdateDetailRepository.save(
-        Cas2StatusUpdateDetailEntity(
+    statusDetails?.forEach { detail ->
+      cas2v2StatusUpdateDetailRepository.save(
+        Cas2v2StatusUpdateDetailEntity(
           id = UUID.randomUUID(),
           statusDetailId = detail.id,
           statusUpdate = createdStatusUpdate,
@@ -123,9 +112,7 @@ class StatusUpdateService(
 
     createStatusUpdatedDomainEvent(createdStatusUpdate, statusDetails)
 
-    return AuthorisableActionResult.Success(
-      ValidatableActionResult.Success(createdStatusUpdate),
-    )
+    return CasResult.Success(createdStatusUpdate)
   }
 
   private fun findActiveStatusByName(statusName: String): Cas2PersistedApplicationStatus? {
@@ -133,7 +120,10 @@ class StatusUpdateService(
       .find { status -> status.name == statusName }
   }
 
-  fun createStatusUpdatedDomainEvent(statusUpdate: Cas2StatusUpdateEntity, statusDetails: List<Cas2PersistedApplicationStatusDetail> = emptyList()) {
+  fun createStatusUpdatedDomainEvent(
+    statusUpdate: Cas2v2StatusUpdateEntity,
+    statusDetails: List<Cas2PersistedApplicationStatusDetail>? = emptyList(),
+  ) {
     val domainEventId = UUID.randomUUID()
     val eventOccurredAt = statusUpdate.createdAt
     val application = statusUpdate.application
@@ -162,7 +152,7 @@ class StatusUpdateService(
               name = newStatus.name,
               description = newStatus.description,
               label = newStatus.label,
-              statusDetails = statusTransformer.transformStatusDetailListToDetailItemList(statusDetails),
+              statusDetails = statusDetails?.let { statusTransformer.transformStatusDetailListToDetailItemList(it) },
             ),
             updatedBy = ExternalUser(
               username = assessor.username,
@@ -177,7 +167,7 @@ class StatusUpdateService(
     )
   }
 
-  private fun sendEmailStatusUpdated(user: NomisUserEntity, application: Cas2ApplicationEntity, status: Cas2StatusUpdateEntity) {
+  private fun sendEmailStatusUpdated(user: NomisUserEntity, application: Cas2v2ApplicationEntity, status: Cas2v2StatusUpdateEntity) {
     if (application.createdByUser.email != null) {
       emailNotificationService.sendCas2Email(
         recipientEmailAddress = user.email!!,
