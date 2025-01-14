@@ -11,7 +11,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas2v2.Cas2v2
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.deliuscontext.StaffDetail
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.nomisuserroles.NomisUserDetail
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.HttpAuthService
-
 import java.util.UUID
 
 @Service
@@ -21,7 +20,7 @@ class Cas2v2UserService(
   private val apDeliusContextApiClient: ApDeliusContextApiClient,
   private val nomisUserRolesApiClient: NomisUserRolesApiClient,
   private val manageUsersApiClient: ManageUsersApiClient,
-  ) {
+) {
   fun getUserForRequest(): Cas2v2UserEntity {
     val authenticatedPrincipal = httpAuthService.getCas2v2AuthenticatedPrincipalOrThrow()
     val jwt = authenticatedPrincipal.token.tokenValue
@@ -43,11 +42,11 @@ class Cas2v2UserService(
     return userEntity
   }
 
-  private fun getExistingUser(username: String, userType: Cas2v2UserType) : Cas2v2UserEntity? =
+  private fun getExistingUser(username: String, userType: Cas2v2UserType): Cas2v2UserEntity? =
     userRepository.findByUsernameAndUserType(username, userType)
 
   private fun getEntityForNomisUser(username: String, jwt: String): Cas2v2UserEntity {
-    val nomisUserDetails : NomisUserDetail = when (
+    val nomisUserDetails: NomisUserDetail = when (
       val nomisUserDetailResponse = nomisUserRolesApiClient.getUserDetails(jwt)
     ) {
       is ClientResult.Success -> nomisUserDetailResponse.body
@@ -56,7 +55,7 @@ class Cas2v2UserService(
 
     val existingUser = getExistingUser(username, Cas2v2UserType.NOMIS)
     if (existingUser != null) {
-      if ( existingUser.email != nomisUserDetails.primaryEmail || existingUser.activeNomisCaseloadId != nomisUserDetails.activeCaseloadId ) {
+      if (existingUser.email != nomisUserDetails.primaryEmail || existingUser.activeNomisCaseloadId != nomisUserDetails.activeCaseloadId) {
         existingUser.email = nomisUserDetails.primaryEmail
         existingUser.activeNomisCaseloadId = nomisUserDetails.activeCaseloadId
 
@@ -66,23 +65,25 @@ class Cas2v2UserService(
       return existingUser
     }
 
-    return userRepository.save(Cas2v2UserEntity(
-      id = UUID.randomUUID(),
-      name = "${nomisUserDetails.firstName} ${nomisUserDetails.lastName}",
-      username = username,
-      nomisStaffId =  nomisUserDetails.staffId,
-      activeNomisCaseloadId = nomisUserDetails.activeCaseloadId,
-      userType = Cas2v2UserType.NOMIS,
-      email = nomisUserDetails.primaryEmail,
-      isEnabled = nomisUserDetails.enabled,
-      isActive = nomisUserDetails.active,
-      deliusTeamCodes =  null,
-      deliusStaffCode = null,
-    ))
+    return userRepository.save(
+      Cas2v2UserEntity(
+        id = UUID.randomUUID(),
+        name = "${nomisUserDetails.firstName} ${nomisUserDetails.lastName}",
+        username = username,
+        nomisStaffId = nomisUserDetails.staffId,
+        activeNomisCaseloadId = nomisUserDetails.activeCaseloadId,
+        userType = Cas2v2UserType.NOMIS,
+        email = nomisUserDetails.primaryEmail,
+        isEnabled = nomisUserDetails.enabled,
+        isActive = nomisUserDetails.active,
+        deliusTeamCodes = null,
+        deliusStaffCode = null,
+      ),
+    )
   }
 
   private fun getEntityForDeliusUser(username: String): Cas2v2UserEntity {
-    val deliusUser : StaffDetail = when (val staffUserDetailsResponse = apDeliusContextApiClient.getStaffDetail(username)) {
+    val deliusUser: StaffDetail = when (val staffUserDetailsResponse = apDeliusContextApiClient.getStaffDetail(username)) {
       is ClientResult.Success<*> -> staffUserDetailsResponse.body as StaffDetail
       is ClientResult.Failure<*> -> staffUserDetailsResponse.throwException()
     }
@@ -90,7 +91,7 @@ class Cas2v2UserService(
     val existingUser = getExistingUser(username, Cas2v2UserType.DELIUS)
     if (existingUser != null) {
       val teamsDiffer = deliusUser.teamCodes() != existingUser.deliusTeamCodes
-      if ( deliusUser.email != existingUser.email || teamsDiffer) {
+      if (deliusUser.email != existingUser.email || teamsDiffer) {
         existingUser.email = deliusUser.email
         existingUser.deliusTeamCodes = deliusUser.teamCodes()
         return userRepository.save(existingUser)
@@ -99,19 +100,21 @@ class Cas2v2UserService(
       return existingUser
     }
 
-    return userRepository.save(Cas2v2UserEntity(
-      id = UUID.randomUUID(),
-      name = "${deliusUser.name.forename} ${deliusUser.name.surname}",
-      username = username,
-      nomisStaffId =  null,
-      activeNomisCaseloadId = null,
-      userType = Cas2v2UserType.DELIUS,
-      email = deliusUser.email,
-      isEnabled = deliusUser.active,
-      isActive = deliusUser.active,
-      deliusTeamCodes =  deliusUser.teamCodes(),
-      deliusStaffCode = deliusUser.code
-    ))
+    return userRepository.save(
+      Cas2v2UserEntity(
+        id = UUID.randomUUID(),
+        name = "${deliusUser.name.forename} ${deliusUser.name.surname}",
+        username = username,
+        nomisStaffId = null,
+        activeNomisCaseloadId = null,
+        userType = Cas2v2UserType.DELIUS,
+        email = deliusUser.email,
+        isEnabled = deliusUser.active,
+        isActive = deliusUser.active,
+        deliusTeamCodes = deliusUser.teamCodes(),
+        deliusStaffCode = deliusUser.code,
+      ),
+    )
   }
 
   private fun getEntityForExternalUser(username: String, jwt: String): Cas2v2UserEntity {
@@ -125,19 +128,20 @@ class Cas2v2UserService(
       is ClientResult.Failure -> externalUserDetailsResponse.throwException()
     }
 
-    return userRepository.save(Cas2v2UserEntity(
-      id = UUID.randomUUID(),
-      name = "${externalUserDetails.firstName} ${externalUserDetails.lastName}",
-      username = externalUserDetails.username,
-      deliusTeamCodes =  null,
-      deliusStaffCode = null,
-      nomisStaffId =  null,
-      activeNomisCaseloadId = null,
-      userType = Cas2v2UserType.EXTERNAL,
-      email = externalUserDetails.email,
-      isEnabled = externalUserDetails.enabled,
-      isActive = true,
-    ))
+    return userRepository.save(
+      Cas2v2UserEntity(
+        id = UUID.randomUUID(),
+        name = "${externalUserDetails.firstName} ${externalUserDetails.lastName}",
+        username = externalUserDetails.username,
+        deliusTeamCodes = null,
+        deliusStaffCode = null,
+        nomisStaffId = null,
+        activeNomisCaseloadId = null,
+        userType = Cas2v2UserType.EXTERNAL,
+        email = externalUserDetails.email,
+        isEnabled = externalUserDetails.enabled,
+        isActive = true,
+      ),
+    )
   }
-
 }

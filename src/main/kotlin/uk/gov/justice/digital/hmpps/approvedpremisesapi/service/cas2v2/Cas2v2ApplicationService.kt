@@ -101,7 +101,10 @@ class Cas2v2ApplicationService(
     )
   }
 
-  fun getCas2v2ApplicationForUser(applicationId: UUID, user: Cas2v2UserEntity): AuthorisableActionResult<Cas2v2ApplicationEntity> {
+  fun getCas2v2ApplicationForUser(
+    applicationId: UUID,
+    user: Cas2v2UserEntity,
+  ): AuthorisableActionResult<Cas2v2ApplicationEntity> {
     val applicationEntity = cas2v2ApplicationRepository.findByIdOrNull(applicationId)
       ?: return AuthorisableActionResult.NotFound()
 
@@ -164,9 +167,14 @@ class Cas2v2ApplicationService(
     }
 
   @SuppressWarnings("ReturnCount")
-  fun updateCas2v2Application(applicationId: UUID, data: String?, user: Cas2v2UserEntity): AuthorisableActionResult<ValidatableActionResult<Cas2v2ApplicationEntity>> {
-    val application = cas2v2ApplicationRepository.findByIdOrNull(applicationId)?.let(jsonSchemaService::checkCas2v2SchemaOutdated)
-      ?: return AuthorisableActionResult.NotFound()
+  fun updateCas2v2Application(
+    applicationId: UUID,
+    data: String?,
+    user: Cas2v2UserEntity,
+  ): AuthorisableActionResult<ValidatableActionResult<Cas2v2ApplicationEntity>> {
+    val application =
+      cas2v2ApplicationRepository.findByIdOrNull(applicationId)?.let(jsonSchemaService::checkCas2v2SchemaOutdated)
+        ?: return AuthorisableActionResult.NotFound()
 
     if (application.createdByUser != user) {
       return AuthorisableActionResult.Unauthorised()
@@ -202,7 +210,10 @@ class Cas2v2ApplicationService(
   }
 
   @SuppressWarnings("ReturnCount")
-  fun abandonCas2v2Application(applicationId: UUID, user: Cas2v2UserEntity): AuthorisableActionResult<ValidatableActionResult<Cas2v2ApplicationEntity>> {
+  fun abandonCas2v2Application(
+    applicationId: UUID,
+    user: Cas2v2UserEntity,
+  ): AuthorisableActionResult<ValidatableActionResult<Cas2v2ApplicationEntity>> {
     val application = cas2v2ApplicationRepository.findByIdOrNull(applicationId)
       ?: return AuthorisableActionResult.NotFound()
 
@@ -338,7 +349,8 @@ class Cas2v2ApplicationService(
             submittedBy = Cas2ApplicationSubmittedEventDetailsSubmittedBy(
               // FIXME(ross): Cas2StaffMember can't have a long staffIdentifier because delius users have a string identifier
               staffMember = Cas2StaffMember(
-                staffIdentifier = 0, //application.createdByUser.staffIdentifier(),
+                // staffIdentifier = application.createdByUser.staffIdentifier(),
+                staffIdentifier = 0,
                 name = application.createdByUser.name,
                 username = application.createdByUser.username,
               ),

@@ -10,9 +10,6 @@ import org.springframework.data.domain.Slice
 import org.springframework.data.jpa.repository.JpaRepository
 import org.springframework.data.jpa.repository.Query
 import org.springframework.stereotype.Repository
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas2User
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ExternalUserEntity
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.NomisUserEntity
 import java.time.OffsetDateTime
 import java.util.UUID
 
@@ -46,7 +43,6 @@ data class Cas2v2ApplicationNoteEntity(
 ) {
 
   fun getUser(): Cas2v2User = this.createdByUser
-
 
   override fun toString() = "Cas2v2ApplicationNoteEntity: $id"
 }

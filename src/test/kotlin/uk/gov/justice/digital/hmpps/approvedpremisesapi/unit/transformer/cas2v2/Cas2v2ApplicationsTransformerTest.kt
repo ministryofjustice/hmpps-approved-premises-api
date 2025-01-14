@@ -13,9 +13,9 @@ import org.junit.jupiter.api.Test
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApplicationStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas2TimelineEvent
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas2v2Assessment
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.LatestCas2v2StatusUpdate
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas2v2StatusUpdate
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas2v2User
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.LatestCas2v2StatusUpdate
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Person
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.cas2v2.Cas2v2ApplicationEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.cas2v2.Cas2v2AssessmentEntityFactory
@@ -63,7 +63,7 @@ class Cas2v2ApplicationsTransformerTest {
   @BeforeEach
   fun setup() {
     every { mockPersonTransformer.transformModelToPersonApi(any()) } returns mockk<Person>()
-    every { mockCas2v2UserTransformer.transformJpaToApi(any()) } returns Cas2v2User (
+    every { mockCas2v2UserTransformer.transformJpaToApi(any()) } returns Cas2v2User(
       id = user.id,
       name = user.name,
       username = user.username,

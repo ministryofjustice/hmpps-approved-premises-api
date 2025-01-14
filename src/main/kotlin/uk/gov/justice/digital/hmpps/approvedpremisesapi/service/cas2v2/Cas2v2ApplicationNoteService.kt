@@ -1,8 +1,6 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas2v2
 
 import io.sentry.Sentry
-import java.time.OffsetDateTime
-import java.util.UUID
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.data.repository.findByIdOrNull
@@ -22,6 +20,8 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.ExternalUserServ
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.HttpAuthService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.toCas2UiFormat
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.toCas2UiFormattedHourOfDay
+import java.time.OffsetDateTime
+import java.util.UUID
 
 @Service
 class Cas2v2ApplicationNoteService(
@@ -91,17 +91,17 @@ class Cas2v2ApplicationNoteService(
         recipientEmailAddress = application.createdByUser.email!!,
         templateId = notifyConfig.templates.cas2NoteAddedForReferrer,
         personalisation =
-          mapOf(
-            "dateNoteAdded" to savedNote.createdAt.toLocalDate().toCas2UiFormat(),
-            "timeNoteAdded" to savedNote.createdAt.toCas2UiFormattedHourOfDay(),
-            "nomsNumber" to application.nomsNumber,
-            "applicationType" to "Home Detention Curfew (HDC)",
-            "applicationUrl" to
-              applicationUrlTemplate.replace(
-                "#id",
-                application.id.toString(),
-              ),
-          ),
+        mapOf(
+          "dateNoteAdded" to savedNote.createdAt.toLocalDate().toCas2UiFormat(),
+          "timeNoteAdded" to savedNote.createdAt.toCas2UiFormattedHourOfDay(),
+          "nomsNumber" to application.nomsNumber,
+          "applicationType" to "Home Detention Curfew (HDC)",
+          "applicationUrl" to
+            applicationUrlTemplate.replace(
+              "#id",
+              application.id.toString(),
+            ),
+        ),
       )
     } else {
       log.error(
@@ -121,24 +121,24 @@ class Cas2v2ApplicationNoteService(
       recipientEmailAddress = notifyConfig.emailAddresses.cas2Assessors,
       templateId = notifyConfig.templates.cas2NoteAddedForAssessor,
       personalisation =
-        mapOf(
-          "nacroReferenceId" to
-            getNacroReferenceIdOrPlaceholder(application.assessment!!),
-          "nacroReferenceIdInSubject" to
-            getSubjectLineReferenceIdOrPlaceholder(
-              application.assessment!!,
-            ),
-          "dateNoteAdded" to savedNote.createdAt.toLocalDate().toCas2UiFormat(),
-          "timeNoteAdded" to savedNote.createdAt.toCas2UiFormattedHourOfDay(),
-          "assessorName" to
-            getAssessorNameOrPlaceholder(application.assessment!!),
-          "applicationType" to "Home Detention Curfew (HDC)",
-          "applicationUrl" to
-            assessmentUrlTemplate.replace(
-              "#applicationId",
-              application.id.toString(),
-            ),
-        ),
+      mapOf(
+        "nacroReferenceId" to
+          getNacroReferenceIdOrPlaceholder(application.assessment!!),
+        "nacroReferenceIdInSubject" to
+          getSubjectLineReferenceIdOrPlaceholder(
+            application.assessment!!,
+          ),
+        "dateNoteAdded" to savedNote.createdAt.toLocalDate().toCas2UiFormat(),
+        "timeNoteAdded" to savedNote.createdAt.toCas2UiFormattedHourOfDay(),
+        "assessorName" to
+          getAssessorNameOrPlaceholder(application.assessment!!),
+        "applicationType" to "Home Detention Curfew (HDC)",
+        "applicationUrl" to
+          assessmentUrlTemplate.replace(
+            "#applicationId",
+            application.id.toString(),
+          ),
+      ),
     )
   }
 

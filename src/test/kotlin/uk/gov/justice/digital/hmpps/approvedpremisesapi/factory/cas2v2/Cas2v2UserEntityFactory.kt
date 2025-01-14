@@ -17,7 +17,7 @@ class Cas2v2UserEntityFactory : Factory<Cas2v2UserEntity> {
   private var email: Yielded<String?> = { randomEmailAddress() }
   private var nomisStaffId: Yielded<Long?> = { randomInt(100000, 900000).toLong() }
   private var activeNomisCaseloadId: Yielded<String?> = { null }
-  private var userType: Yielded<Cas2v2UserType> = {  Cas2v2UserType.NOMIS }
+  private var userType: Yielded<Cas2v2UserType> = { Cas2v2UserType.NOMIS }
   private var deliusStaffCode: Yielded<String?> = { null }
   private var deliusTeamCodes: Yielded<List<String>?> = { null }
   private var isEnabled: Yielded<Boolean> = { true }
@@ -72,7 +72,7 @@ class Cas2v2UserEntityFactory : Factory<Cas2v2UserEntity> {
     nomisStaffId = this.nomisStaffId(),
     activeNomisCaseloadId = this.activeNomisCaseloadId(),
     deliusStaffCode = this.deliusStaffCode(),
-    deliusTeamCodes =  this.deliusTeamCodes(),
+    deliusTeamCodes = this.deliusTeamCodes(),
     userType = this.userType(),
     isEnabled = this.isEnabled(),
     isActive = this.isActive(),

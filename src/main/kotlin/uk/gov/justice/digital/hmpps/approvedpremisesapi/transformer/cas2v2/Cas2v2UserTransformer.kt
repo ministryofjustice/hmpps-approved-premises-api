@@ -14,7 +14,7 @@ class Cas2v2UserTransformer {
       name = userEntity.name,
       email = userEntity.email,
       isActive = userEntity.isActive,
-      authSource = userEntity.userType.toString()
+      authSource = userEntity.userType.toString(),
     )
   }
 }
