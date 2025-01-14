@@ -11,7 +11,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.NomisUserTra
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.PersonTransformer
 import java.util.UUID
 
-@Component("Cas2v2SubmissionsTransformer")
+@Component
 class Cas2v2SubmissionsTransformer(
   private val objectMapper: ObjectMapper,
   private val personTransformer: PersonTransformer,

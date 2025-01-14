@@ -310,7 +310,7 @@ paths:
           content:
             'application/json':
               schema:
-                $ref: '_shared.yml#/components/schemas/Cas2ApplicationNote'
+                $ref: 'cas2v2-schemas.yml#/components/schemas/Cas2v2ApplicationNote'
         401:
           $ref: '_shared.yml#/components/responses/401Response'
         403:
