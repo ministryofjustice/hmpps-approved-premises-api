@@ -300,7 +300,7 @@ class Cas2v2ApplicationServiceTest {
 
       val user = userWithUsername(username)
 
-      val result = cas2v2ApplicationService.createCas2v2Application(crn, user)
+      val result = cas2v2ApplicationService.createCas2v2Application(crn, user, null)
 
       assertThat(result is ValidatableActionResult.FieldValidationError).isTrue
       result as ValidatableActionResult.FieldValidationError
@@ -316,7 +316,7 @@ class Cas2v2ApplicationServiceTest {
 
       val user = userWithUsername(username)
 
-      val result = cas2v2ApplicationService.createCas2v2Application(crn, user)
+      val result = cas2v2ApplicationService.createCas2v2Application(crn, user, null)
 
       assertThat(result is ValidatableActionResult.FieldValidationError).isTrue
       result as ValidatableActionResult.FieldValidationError
@@ -342,7 +342,7 @@ class Cas2v2ApplicationServiceTest {
           Cas2v2ApplicationEntity
       }
 
-      val result = cas2v2ApplicationService.createCas2v2Application(crn, user)
+      val result = cas2v2ApplicationService.createCas2v2Application(crn, user, null)
 
       assertThat(result is ValidatableActionResult.Success).isTrue
       result as ValidatableActionResult.Success

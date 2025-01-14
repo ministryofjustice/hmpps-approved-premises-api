@@ -36,6 +36,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas2.OffenderSer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.PageCriteria
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.getMetadata
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.getPageableOrAllPages
+import java.time.LocalDate
 import java.time.OffsetDateTime
 import java.util.UUID
 
@@ -123,7 +124,12 @@ class Cas2v2ApplicationService(
   }
 
   @SuppressWarnings("TooGenericExceptionThrown")
-  fun createCas2v2Application(crn: String, user: NomisUserEntity, applicationOrigin: ApplicationOrigin? = ApplicationOrigin.homeDetentionCurfew) =
+  fun createCas2v2Application(
+    crn: String,
+    user: NomisUserEntity,
+    bailHearingDate: LocalDate?,
+    applicationOrigin: ApplicationOrigin? = ApplicationOrigin.homeDetentionCurfew,
+  ) =
     // This needs migrating to CasResult rather than ValidateResult
     validated<Cas2v2ApplicationEntity> {
       val offenderDetailsResult = cas2OffenderService.getOffenderByCrn(crn)
@@ -157,6 +163,7 @@ class Cas2v2ApplicationService(
         nomsNumber = offenderDetails.otherIds.nomsNumber,
         telephoneNumber = null,
         applicationOrigin = applicationOrigin?.toString(),
+        bailHearingDate = bailHearingDate,
       )
 
       val createdApplication = cas2v2ApplicationRepository.save(
@@ -295,6 +302,7 @@ class Cas2v2ApplicationService(
         conditionalReleaseDate = submitCas2v2Application.conditionalReleaseDate
         telephoneNumber = submitCas2v2Application.telephoneNumber
         applicationOrigin = submitCas2v2Application.applicationOrigin?.toString()
+        bailHearingDate = submitCas2v2Application.bailHearingDate
       }
     } catch (error: UpstreamApiException) {
       return CasResult.GeneralValidationError(error.message.toString())
@@ -331,6 +339,7 @@ class Cas2v2ApplicationService(
             applicationUrl = applicationUrlTemplate
               .replace("#id", application.id.toString()),
             applicationOrigin = application.applicationOrigin,
+            bailHearingDate = application.bailHearingDate,
             submittedAt = eventOccurredAt.toInstant(),
             personReference = PersonReference(
               noms = application.nomsNumber ?: "Unknown NOMS Number",

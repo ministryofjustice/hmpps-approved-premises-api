@@ -2793,6 +2793,9 @@ components:
           example: "M1502750438"
         applicationOrigin:
           $ref: "#/components/schemas/ApplicationOrigin"
+        bailHearingDate:
+          type: string
+          format: date
       required:
         - crn
     UpdateApplicationType:
@@ -2801,10 +2804,12 @@ components:
         - CAS1
         - CAS2
         - CAS3
+        - CAS2V2
       x-enum-varnames:
         - CAS1
         - CAS2
         - CAS3
+        - CAS2V2
     UpdateApplication:
       type: object
       properties:
@@ -2820,12 +2825,23 @@ components:
           CAS1: '#/components/schemas/UpdateApprovedPremisesApplication'
           CAS2: '#/components/schemas/UpdateCas2Application'
           CAS3: '#/components/schemas/UpdateTemporaryAccommodationApplication'
+          CAS2V2: '#/components/schemas/UpdateCas2v2Application'
       required:
         - type
         - data
     UpdateCas2Application:
       allOf:
         - $ref: '#/components/schemas/UpdateApplication'
+    UpdateCas2v2Application:
+      allOf:
+        - $ref: '#/components/schemas/UpdateApplication'
+        - type: object
+          properties:
+            bailHearingDate:
+              type: string
+              format: date
+            applicationOrigin:
+              $ref: "#/components/schemas/ApplicationOrigin"
     UpdateApprovedPremisesApplication:
       allOf:
         - $ref: '#/components/schemas/UpdateApplication'

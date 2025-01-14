@@ -25,6 +25,9 @@ components:
           type: string
         applicationOrigin:
           $ref: "_shared.yml#/components/schemas/ApplicationOrigin"
+        bailHearingDate:
+          type: string
+          format: date
       required:
         - translatedDocument
         - applicationId
@@ -76,6 +79,9 @@ components:
                 $ref: '_shared.yml#/components/schemas/Cas2TimelineEvent'
             applicationOrigin:
               $ref: "_shared.yml#/components/schemas/ApplicationOrigin"
+            bailHearingDate:
+              type: string
+              format: date
           required:
             - createdBy
             - schemaVersion
@@ -115,6 +121,9 @@ components:
           $ref: '_shared.yml#/components/schemas/Cas2v2Assessment'
         applicationOrigin:
             $ref: "_shared.yml#/components/schemas/ApplicationOrigin"
+        bailHearingDate:
+          type: string
+          format: date
       required:
         - id
         - person
@@ -161,6 +170,9 @@ components:
           type: string
         applicationOrigin:
           $ref: "_shared.yml#/components/schemas/ApplicationOrigin"
+        bailHearingDate:
+          type: string
+          format: date
       required:
         - type
         - id
@@ -193,6 +205,9 @@ components:
           format: date-time
         applicationOrigin:
           $ref: "_shared.yml#/components/schemas/ApplicationOrigin"
+        bailHearingDate:
+          type: string
+          format: date
       required:
         - createdByUserId
         - status

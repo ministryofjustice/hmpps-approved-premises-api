@@ -8,6 +8,7 @@ import jakarta.persistence.OrderBy
 import jakarta.persistence.Table
 import org.springframework.data.jpa.repository.JpaRepository
 import org.springframework.stereotype.Repository
+import java.time.LocalDate
 import java.time.OffsetDateTime
 import java.util.UUID
 
@@ -30,6 +31,7 @@ data class Cas2v2AssessmentEntity(
   var nacroReferralId: String? = null,
 
   var assessorName: String? = null,
+  var bailHearingDate: LocalDate? = null,
 
   @OneToMany(mappedBy = "assessment")
   @OrderBy("createdAt DESC")

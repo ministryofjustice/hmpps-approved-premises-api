@@ -36,6 +36,7 @@ CREATE TABLE cas_2_v2_applications
     conditional_release_date date,
     telephone_number         TEXT,
     application_origin       TEXT,
+    bail_hearing_date        date,
     CONSTRAINT pk_cas_2_v2_applications PRIMARY KEY (id)
 );
 
@@ -47,6 +48,7 @@ CREATE TABLE cas_2_v2_assessments
     nacro_referral_id TEXT,
     assessor_name     TEXT,
     applicationOrigin TEXT,
+    bail_hearing_date date,
     CONSTRAINT pk_cas_2_v2_assessments PRIMARY KEY (id)
 );
 
@@ -127,7 +129,8 @@ CREATE OR REPLACE VIEW cas_2_v2_application_summary AS SELECT
     a.conditional_release_date,
     asu.created_at AS status_created_at,
     a.abandoned_at,
-    a.application_origin
+    a.application_origin,
+    a.bail_hearing_date
 FROM cas_2_v2_applications a
 LEFT JOIN (SELECT DISTINCT ON (application_id) su.application_id, su.label, su.status_id, su.created_at
     FROM cas_2_v2_status_updates su
@@ -148,7 +151,8 @@ CREATE OR REPLACE VIEW cas_2_v2_application_live_summary AS SELECT
     a.status_id,
     a.referring_prison_code,
     a.abandoned_at,
-    a.application_origin
+    a.application_origin,
+    a.bail_hearing_date
 FROM cas_2_v2_application_summary a
 WHERE (a.conditional_release_date IS NULL OR a.conditional_release_date >= current_date)
 AND a.abandoned_at IS NULL
