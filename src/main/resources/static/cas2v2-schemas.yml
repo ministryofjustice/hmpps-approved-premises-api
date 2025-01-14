@@ -141,7 +141,7 @@ components:
         status:
           $ref: '#/components/schemas/ApplicationStatus'
         latestStatusUpdate:
-          $ref: '#/components/schemas/LatestCas2StatusUpdate'
+          $ref: '#/components/schemas/LatestCas2v2StatusUpdate'
         risks:
           $ref: '#/components/schemas/PersonRisks'
         hdcEligibilityDate:
