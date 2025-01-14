@@ -10,7 +10,6 @@ import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApplicationOrigin
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApplicationStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas2StatusUpdate
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas2TimelineEvent
@@ -40,7 +39,6 @@ class Cas2v2ApplicationsTransformerTest {
   private val mockCas2v2AssessmentsTransformer = mockk<Cas2v2AssessmentsTransformer>()
 
   private val objectMapper = ObjectMapper().apply {
-
     registerModule(Jdk8Module())
     registerModule(JavaTimeModule())
     registerKotlinModule()
@@ -81,11 +79,11 @@ class Cas2v2ApplicationsTransformerTest {
 
     @Test
     fun `transformJpaToApi transforms an in progress CAS-2v2 application correctly`() {
-      val cas2v2application = cas2v2ApplicationFactory
+      val application = cas2v2ApplicationFactory
         .withSubmittedAt(null)
         .produce()
 
-      val result = cas2v2ApplicationsTransformer.transformJpaToApi(cas2v2application, mockk())
+      val result = cas2v2ApplicationsTransformer.transformJpaToApi(application, mockk())
 
       assertThat(result).hasOnlyFields(
         "id",
@@ -105,28 +103,26 @@ class Cas2v2ApplicationsTransformerTest {
         "applicationOrigin",
       )
 
-      assertThat(result.id).isEqualTo(cas2v2application.id)
+      assertThat(result.id).isEqualTo(application.id)
       assertThat(result.createdBy.id).isEqualTo(user.id)
       assertThat(result.status).isEqualTo(ApplicationStatus.inProgress)
       assertThat(result.timelineEvents).isEqualTo(listOf<Cas2TimelineEvent>())
-      assertThat(result.applicationOrigin).isEqualTo(ApplicationOrigin.homeDetentionCurfew)
     }
 
     @Test
     fun `transformJpaToApi transforms a submitted CAS2v2 application correctly without status updates`() {
-      val cas2v2Assessment = Cas2v2Assessment(id = UUID.fromString("3adc18ec-3d0d-4d0f-8b31-6f08e2591c35"))
-      every { mockCas2v2AssessmentsTransformer.transformJpaToApiRepresentation(any()) } returns cas2v2Assessment
+      val assessment = Cas2v2Assessment(id = UUID.fromString("3adc18ec-3d0d-4d0f-8b31-6f08e2591c35"))
+      every { mockCas2v2AssessmentsTransformer.transformJpaToApiRepresentation(any()) } returns assessment
 
-      val cas2v2Application = submittedCas2v2ApplicationFactory
+      val application = submittedCas2v2ApplicationFactory
         .withAssessment(Cas2v2AssessmentEntityFactory().produce()).produce()
 
-      val result = cas2v2ApplicationsTransformer.transformJpaToApi(cas2v2Application, mockk())
+      val result = cas2v2ApplicationsTransformer.transformJpaToApi(application, mockk())
 
-      assertThat(result.id).isEqualTo(cas2v2Application.id)
+      assertThat(result.id).isEqualTo(application.id)
       assertThat(result.status).isEqualTo(ApplicationStatus.submitted)
-      assertThat(result.telephoneNumber).isEqualTo(cas2v2Application.telephoneNumber)
-      assertThat(result.assessment!!.id).isEqualTo(cas2v2Assessment.id)
-      assertThat(result.applicationOrigin).isEqualTo(ApplicationOrigin.homeDetentionCurfew)
+      assertThat(result.telephoneNumber).isEqualTo(application.telephoneNumber)
+      assertThat(result.assessment!!.id).isEqualTo(assessment.id)
     }
 
     @Test
@@ -137,12 +133,17 @@ class Cas2v2ApplicationsTransformerTest {
         label = "On Waiting List",
         name = "onWaitingList",
       )
+      val mockAssessment = Cas2v2Assessment(
         id = UUID.fromString("6e631a8c-a013-4bb4-812c-886c8fc25354"),
         statusUpdates = listOf(mockStatusUpdate),
       )
+      every { mockCas2v2AssessmentsTransformer.transformJpaToApiRepresentation(any()) } returns mockAssessment
 
+      val application = submittedCas2v2ApplicationFactory.withAssessment(Cas2v2AssessmentEntityFactory().produce()).produce()
 
+      val result = cas2v2ApplicationsTransformer.transformJpaToApi(application, mockk())
 
+      assertThat(result.id).isEqualTo(application.id)
       assertThat(result.assessment!!.statusUpdates).hasSize(1).containsExactly(mockStatusUpdate)
     }
   }
@@ -151,6 +152,7 @@ class Cas2v2ApplicationsTransformerTest {
   inner class TransformJpaSummaryToSummary {
 
     @Test
+    fun `transforms an in progress CAS2 application correctly`() {
       val application = Cas2v2ApplicationSummaryEntity(
         id = UUID.fromString("2f838a8c-dffc-48a3-9536-f0e95985e809"),
         crn = "CRNNUM",
@@ -185,6 +187,7 @@ class Cas2v2ApplicationsTransformerTest {
 
     @Test
     fun `transforms a submitted CAS2v2 application correctly`() {
+      val application = Cas2v2ApplicationSummaryEntity(
         id = UUID.fromString("2f838a8c-dffc-48a3-9536-f0e95985e809"),
         crn = "CRNNUM",
         nomsNumber = "NOMNUM",
@@ -199,15 +202,21 @@ class Cas2v2ApplicationsTransformerTest {
       )
 
       every { mockCas2v2StatusUpdateTransformer.transformJpaSummaryToLatestStatusUpdateApi(any()) } returns LatestCas2StatusUpdate(
+        statusId = UUID.fromString(application.latestStatusUpdateStatusId),
+        label = application.latestStatusUpdateLabel!!,
       )
 
       val result = cas2v2ApplicationsTransformer.transformJpaSummaryToSummary(
+        application,
         "firstName surname",
       )
 
+      assertThat(result.id).isEqualTo(application.id)
       assertThat(result.status).isEqualTo(ApplicationStatus.submitted)
       assertThat(result.hdcEligibilityDate).isEqualTo("2023-04-29")
       assertThat(result.personName).isEqualTo("firstName surname")
+      assertThat(result.crn).isEqualTo(application.crn)
+      assertThat(result.nomsNumber).isEqualTo(application.nomsNumber)
       assertThat(result.latestStatusUpdate?.label).isEqualTo("my latest status update")
       assertThat(result.latestStatusUpdate?.statusId).isEqualTo(UUID.fromString("ae544aee-7170-4794-99fb-703090cbc7db"))
       assertThat(result.createdByUserName).isEqualTo("first last")

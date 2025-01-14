@@ -1,11 +1,10 @@
-
 components:
   schemas:
     SubmitCas2v2Application:
       type: object
       properties:
         translatedDocument:
-          $ref: '#/components/schemas/Unit'
+          $ref: '_shared.yml#/components/schemas/Unit'
         applicationId:
           type: string
           format: uuid
@@ -24,6 +23,8 @@ components:
           format: date
         telephoneNumber:
           type: string
+        applicationOrigin:
+          $ref: "_shared.yml#/components/schemas/ApplicationOrigin"
       required:
         - translatedDocument
         - applicationId
@@ -46,22 +47,22 @@ components:
         - id
     Cas2v2Application:
       allOf:
-        - $ref: '#/components/schemas/Application'
+        - $ref: '_shared.yml#/components/schemas/Application'
         - type: object
           properties:
             createdBy:
-              $ref: '#/components/schemas/NomisUser'
+              $ref: '_shared.yml#/components/schemas/NomisUser'
             schemaVersion:
               type: string
               format: uuid
             outdatedSchema:
               type: boolean
             data:
-              $ref: '#/components/schemas/Unit'
+              $ref: '_shared.yml#/components/schemas/Unit'
             document:
-              $ref: '#/components/schemas/Unit'
+              $ref: '_shared.yml#/components/schemas/Unit'
             status:
-              $ref: '#/components/schemas/ApplicationStatus'
+              $ref: '_shared.yml#/components/schemas/ApplicationStatus'
             submittedAt:
               type: string
               format: date-time
@@ -73,6 +74,8 @@ components:
               type: array
               items:
                 $ref: '_shared.yml#/components/schemas/Cas2TimelineEvent'
+            applicationOrigin:
+              $ref: "_shared.yml#/components/schemas/ApplicationOrigin"
           required:
             - createdBy
             - schemaVersion
@@ -85,19 +88,19 @@ components:
           type: string
           format: uuid
         person:
-          $ref: '#/components/schemas/Person'
+          $ref: '_shared.yml#/components/schemas/Person'
         createdAt:
           type: string
           format: date-time
         submittedBy:
-          $ref: '#/components/schemas/NomisUser'
+          $ref: '_shared.yml#/components/schemas/NomisUser'
         schemaVersion:
           type: string
           format: uuid
         outdatedSchema:
           type: boolean
         document:
-          $ref: '#/components/schemas/Unit'
+          $ref: '_shared.yml#/components/schemas/Unit'
         submittedAt:
           type: string
           format: date-time
@@ -110,6 +113,8 @@ components:
         assessment:
           type: object
           $ref: '_shared.yml#/components/schemas/Cas2v2Assessment'
+        applicationOrigin:
+            $ref: "_shared.yml#/components/schemas/ApplicationOrigin"
       required:
         - id
         - person
@@ -140,11 +145,11 @@ components:
         createdByUserName:
           type: string
         status:
-          $ref: '#/components/schemas/ApplicationStatus'
+          $ref: '_shared.yml#/components/schemas/ApplicationStatus'
         latestStatusUpdate:
-          $ref: '#/components/schemas/LatestCas2StatusUpdate'
+          $ref: '_shared.yml#/components/schemas/LatestCas2StatusUpdate'
         risks:
-          $ref: '#/components/schemas/PersonRisks'
+          $ref: '_shared.yml#/components/schemas/PersonRisks'
         hdcEligibilityDate:
           type: string
           format: date
@@ -154,6 +159,8 @@ components:
           type: string
         nomsNumber:
           type: string
+        applicationOrigin:
+          $ref: "_shared.yml#/components/schemas/ApplicationOrigin"
       required:
         - type
         - id
@@ -184,6 +191,8 @@ components:
         submittedAt:
           type: string
           format: date-time
+        applicationOrigin:
+          $ref: "_shared.yml#/components/schemas/ApplicationOrigin"
       required:
         - createdByUserId
         - status
