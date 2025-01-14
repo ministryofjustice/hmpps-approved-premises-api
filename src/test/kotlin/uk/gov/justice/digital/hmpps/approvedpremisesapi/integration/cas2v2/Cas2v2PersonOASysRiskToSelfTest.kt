@@ -4,7 +4,7 @@ import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.OffenceDetailsFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.RiskToTheIndividualFactory
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.IntegrationTestBase
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.Cas2v2IntegrationTestBase
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenACas2PomUser
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAnOffender
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.apDeliusContextEmptyCaseSummaryToBulkResponse
@@ -13,7 +13,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.ap
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.apOASysContextMockUnsuccessfulRisksToTheIndividualCallWithDelay
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.OASysSectionsTransformer
 
-class Cas2v2PersonOASysRiskToSelfTest : IntegrationTestBase() {
+class Cas2v2PersonOASysRiskToSelfTest : Cas2v2IntegrationTestBase() {
   @Autowired
   lateinit var oaSysSectionsTransformer: OASysSectionsTransformer
 

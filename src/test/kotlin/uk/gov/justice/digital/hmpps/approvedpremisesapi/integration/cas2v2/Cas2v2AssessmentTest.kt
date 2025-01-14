@@ -11,7 +11,7 @@ import org.springframework.test.web.reactive.server.returnResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas2Assessment
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.UpdateCas2Assessment
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.IntegrationTestBase
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.Cas2v2IntegrationTestBase
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenACas2Admin
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenACas2Assessor
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenACas2PomUser
@@ -21,7 +21,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas2v2.Cas2v2
 import java.time.OffsetDateTime
 import java.util.UUID
 
-class Cas2v2AssessmentTest : IntegrationTestBase() {
+class Cas2v2AssessmentTest : Cas2v2IntegrationTestBase() {
 
   @SpykBean
   lateinit var realAssessmentRepository: Cas2v2AssessmentRepository

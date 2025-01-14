@@ -31,10 +31,11 @@ import java.time.OffsetDateTime
 import java.util.UUID
 
 class Cas2v2SubmissionsTransformerTest {
+
   private val mockPersonTransformer = mockk<PersonTransformer>()
   private val mockNomisUserTransformer = mockk<NomisUserTransformer>()
   private val mockCas2v2TimelineEventsTransformer = mockk<Cas2v2TimelineEventsTransformer>()
-  private val mockcas2v2AssessmentsTransformer = mockk<Cas2v2AssessmentsTransformer>()
+  private val mockCas2v2AssessmentsTransformer = mockk<Cas2v2AssessmentsTransformer>()
 
   private val objectMapper = ObjectMapper().apply {
     registerModule(Jdk8Module())
@@ -42,19 +43,19 @@ class Cas2v2SubmissionsTransformerTest {
     registerKotlinModule()
   }
 
-  private val cas2v2ApplicationTransformer = Cas2v2SubmissionsTransformer(
+  private val applicationTransformer = Cas2v2SubmissionsTransformer(
     objectMapper,
     mockPersonTransformer,
     mockNomisUserTransformer,
     mockCas2v2TimelineEventsTransformer,
-    mockcas2v2AssessmentsTransformer,
+    mockCas2v2AssessmentsTransformer,
   )
 
   private val user = NomisUserEntityFactory().produce()
 
   private val cas2v2ApplicationFactory = Cas2v2ApplicationEntityFactory().withCreatedByUser(user)
 
-  private val submittedCas2ApplicationFactory = cas2v2ApplicationFactory
+  private val submittedCas2v2ApplicationFactory = cas2v2ApplicationFactory
     .withSubmittedAt(OffsetDateTime.now())
   private val mockStatusUpdate = Cas2StatusUpdate(
     id = UUID.fromString("c426c63a-be35-421f-a1a0-fc286b60da41"),
@@ -74,7 +75,7 @@ class Cas2v2SubmissionsTransformerTest {
     every { mockPersonTransformer.transformModelToPersonApi(any()) } returns mockk<Person>()
     every { mockNomisUserTransformer.transformJpaToApi(any()) } returns mockNomisUser
     every { mockCas2v2TimelineEventsTransformer.transformApplicationToTimelineEvents(any()) } returns listOf(mockk<Cas2TimelineEvent>())
-    every { mockcas2v2AssessmentsTransformer.transformJpaToApiRepresentation(any()) } returns mockAssessment
+    every { mockCas2v2AssessmentsTransformer.transformJpaToApiRepresentation(any()) } returns mockAssessment
   }
 
   @Nested
@@ -82,16 +83,16 @@ class Cas2v2SubmissionsTransformerTest {
     @Test
     fun `transforms to API representation with NomisUser, no data, status updates and assessment`() {
       val assessmentEntity = Cas2v2AssessmentEntityFactory()
-        .withApplication(submittedCas2ApplicationFactory.produce())
+        .withApplication(submittedCas2v2ApplicationFactory.produce())
         .withNacroReferralId("OH123")
         .withAssessorName("Assessor name")
         .produce()
 
-      val jpaEntity = submittedCas2ApplicationFactory.withAssessment(assessmentEntity).produce()
+      val jpaEntity = submittedCas2v2ApplicationFactory.withAssessment(assessmentEntity).produce()
 
-      every { mockcas2v2AssessmentsTransformer.transformJpaToApiRepresentation(assessmentEntity) } returns mockAssessment
+      every { mockCas2v2AssessmentsTransformer.transformJpaToApiRepresentation(assessmentEntity) } returns mockAssessment
 
-      val transformation = cas2v2ApplicationTransformer.transformJpaToApiRepresentation(jpaEntity, mockk())
+      val transformation = applicationTransformer.transformJpaToApiRepresentation(jpaEntity, mockk())
 
       assertThat(transformation.submittedBy).isEqualTo(mockNomisUser)
 
@@ -111,13 +112,12 @@ class Cas2v2SubmissionsTransformerTest {
         "telephoneNumber",
         "timelineEvents",
         "assessment",
-        "applicationOrigin",
       )
     }
   }
 
   @Nested
-  inner class TransformJpaSummaryToCas2SubmittedSummary {
+  inner class TransformJpaSummaryToCas2v2SubmittedSummary {
     @Test
     fun `transforms submitted summary application to API summary representation `() {
       val applicationSummary = Cas2v2ApplicationSummaryEntity(
@@ -144,7 +144,7 @@ class Cas2v2SubmissionsTransformerTest {
         personName = "Example Offender",
       )
 
-      val transformation = cas2v2ApplicationTransformer.transformJpaSummaryToApiRepresentation(
+      val transformation = applicationTransformer.transformJpaSummaryToApiRepresentation(
         applicationSummary,
         "Example Offender",
       )

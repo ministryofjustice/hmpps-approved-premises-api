@@ -21,7 +21,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.SubmitCas2Application
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.toHttpStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ExternalUserDetailsFactory
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.IntegrationTestBase
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.Cas2v2IntegrationTestBase
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenACas2Admin
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenACas2Assessor
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenACas2PomUser
@@ -43,9 +43,9 @@ import java.time.OffsetDateTime
 import java.util.UUID
 
 class Cas2v2SubmissionTest(
-  @Value("\${url-templates.frontend.cas2.application}") private val applicationUrlTemplate: String,
-  @Value("\${url-templates.frontend.cas2.submitted-application-overview}") private val submittedApplicationUrlTemplate: String,
-) : IntegrationTestBase() {
+  @Value("\${url-templates.frontend.cas2v2.application}") private val applicationUrlTemplate: String,
+  @Value("\${url-templates.frontend.cas2v2.submitted-application-overview}") private val submittedApplicationUrlTemplate: String,
+) : Cas2v2IntegrationTestBase() {
   @SpykBean
   lateinit var cas2v2RealApplicationRepository: Cas2v2ApplicationRepository
 

@@ -5,7 +5,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas2TimelineEv
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.TimelineEventType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas2v2.Cas2v2ApplicationEntity
 
-@Component("Cas2v2TimelineEventsTransformer")
+@Component
 class Cas2v2TimelineEventsTransformer {
 
   fun transformApplicationToTimelineEvents(jpa: Cas2v2ApplicationEntity): List<Cas2TimelineEvent> {

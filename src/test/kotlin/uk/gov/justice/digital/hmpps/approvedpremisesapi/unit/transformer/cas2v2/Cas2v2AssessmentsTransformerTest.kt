@@ -23,7 +23,7 @@ class Cas2v2AssessmentsTransformerTest {
   private val cas2v2AssessmentsTransformer = Cas2v2AssessmentsTransformer(mockCas2v2StatusUpdateTransformer)
 
   @Test
-  fun `transforms a cas2v2 assessment entity`() {
+  fun `transforms a cas2v2Assessment entity`() {
     every { mockCas2v2StatusUpdateTransformer.transformJpaToApi(mockCas2v2StatusUpdateEntity) } returns mockStatusUpdateApi
     val transformation = cas2v2AssessmentsTransformer.transformJpaToApiRepresentation(cas2v2AssessmentEntity)
 

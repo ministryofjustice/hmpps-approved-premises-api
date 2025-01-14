@@ -52,8 +52,8 @@ class Cas2v2ApplicationService(
   private val cas2v2AssessmentService: Cas2v2AssessmentService,
   private val notifyConfig: NotifyConfig,
   private val objectMapper: ObjectMapper,
-  @Value("\${url-templates.frontend.cas2.application}") private val applicationUrlTemplate: String,
-  @Value("\${url-templates.frontend.cas2.submitted-application-overview}") private val submittedApplicationUrlTemplate: String,
+  @Value("\${url-templates.frontend.cas2v2.application}") private val applicationUrlTemplate: String,
+  @Value("\${url-templates.frontend.cas2v2.submitted-application-overview}") private val submittedApplicationUrlTemplate: String,
 ) {
 
   val repositoryUserFunctionMap = mapOf(
@@ -282,8 +282,8 @@ class Cas2v2ApplicationService(
       return CasResult.FieldValidationError(validationErrors)
     }
 
-//    val schema = application.schemaVersion as? Cas2v2ApplicationJsonSchemaEntity
-//      ?: throw RuntimeException("Incorrect type of JSON schema referenced by CAS2 v2 Application")
+    application.schemaVersion as? Cas2v2ApplicationJsonSchemaEntity
+      ?: throw RuntimeException("Incorrect type of JSON schema referenced by CAS2 v2 Application")
 
     try {
       application.apply {
@@ -363,7 +363,6 @@ class Cas2v2ApplicationService(
       crn = application.crn,
       nomsNumber = application.nomsNumber.toString(),
     )
-    // AuthorisableActionResult is deprecated but we don;t want to be touching offenderService while doing cas2v2 work.
     val inmateDetail = when (inmateDetailResult) {
       is AuthorisableActionResult.NotFound -> throw UpstreamApiException("Inmate Detail not found")
       is AuthorisableActionResult.Unauthorised -> throw UpstreamApiException("Inmate Detail unauthorised")

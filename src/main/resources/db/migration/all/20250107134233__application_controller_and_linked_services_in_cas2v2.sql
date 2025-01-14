@@ -8,9 +8,9 @@ CREATE TABLE cas_2_v2_application_json_schemas
 CREATE TABLE cas_2_v2_application_notes
 (
     id                          UUID NOT NULL,
-    application_id              UUID,
-    created_at                  TIMESTAMP WITHOUT TIME ZONE,
-    body                        VARCHAR(255),
+    application_id              UUID NOT NULL,
+    created_at                  TIMESTAMPTZ,
+    body                        TEXT,
     assessment_id               UUID,
     created_by_nomis_user_id    UUID,
     created_by_external_user_id UUID,
@@ -20,56 +20,56 @@ CREATE TABLE cas_2_v2_application_notes
 CREATE TABLE cas_2_v2_applications
 (
     id                       UUID NOT NULL,
-    crn                      VARCHAR(255),
-    created_by_user_id       UUID,
-    data                     VARCHAR(255),
-    document                 VARCHAR(255),
-    schema_version           UUID,
-    created_at               TIMESTAMP WITHOUT TIME ZONE,
-    submitted_at             TIMESTAMP WITHOUT TIME ZONE,
-    abandoned_at             TIMESTAMP WITHOUT TIME ZONE,
+    crn                      TEXT NOT NULL,
+    created_by_user_id       UUID NOT NULL,
+    data                     JSON,
+    document                 JSON,
+    schema_version           UUID NOT NULL,
+    created_at               TIMESTAMPTZ NOT NULL,
+    submitted_at             TIMESTAMPTZ,
+    abandoned_at             TIMESTAMPTZ,
     assessment_id            UUID,
-    noms_number              VARCHAR(255),
-    referring_prison_code    VARCHAR(255),
-    preferred_areas          VARCHAR(255),
+    noms_number              TEXT,
+    referring_prison_code    TEXT,
+    preferred_areas          TEXT,
     hdc_eligibility_date     date,
     conditional_release_date date,
-    telephone_number         VARCHAR(255),
-    application_origin       VARCHAR(255),
+    telephone_number         TEXT,
+    application_origin       TEXT,
     CONSTRAINT pk_cas_2_v2_applications PRIMARY KEY (id)
 );
 
 CREATE TABLE cas_2_v2_assessments
 (
-    id                 UUID NOT NULL,
-    application_id     UUID,
-    created_at         TIMESTAMP WITHOUT TIME ZONE,
-    nacro_referral_id  VARCHAR(255),
-    assessor_name      VARCHAR(255),
-    application_origin VARCHAR(255),
+    id                UUID NOT NULL,
+    application_id    UUID NOT NULL,
+    created_at        TIMESTAMPTZ,
+    nacro_referral_id TEXT,
+    assessor_name     TEXT,
+    applicationOrigin TEXT,
     CONSTRAINT pk_cas_2_v2_assessments PRIMARY KEY (id)
 );
 
 CREATE TABLE cas_2_v2_status_update_details
 (
     id               UUID NOT NULL,
-    status_detail_id UUID,
-    label            VARCHAR(255),
-    status_update_id UUID,
-    created_at       TIMESTAMP WITHOUT TIME ZONE,
+    status_detail_id UUID NOT NULL,
+    label            TEXT NOT NULL,
+    status_update_id UUID NOT NULL,
+    created_at       TIMESTAMPTZ NOT NULL,
     CONSTRAINT pk_cas_2_v2_status_update_details PRIMARY KEY (id)
 );
 
 CREATE TABLE cas_2_v2_status_updates
 (
     id             UUID NOT NULL,
-    status_id      UUID,
-    description    VARCHAR(255),
-    label          VARCHAR(255),
-    assessor_id    UUID,
-    application_id UUID,
+    status_id      UUID NOT NULL,
+    description    TEXT NOT NULL,
+    label          TEXT NOT NULL,
+    assessor_id    UUID NOT NULL,
+    application_id UUID NOT NULL,
     assessment_id  UUID,
-    created_at     TIMESTAMP WITHOUT TIME ZONE,
+    created_at     TIMESTAMPTZ NOT NULL,
     CONSTRAINT pk_cas_2_v2_status_updates PRIMARY KEY (id)
 );
 

@@ -19,7 +19,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas2ReportName
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.events.cas2.Cas2ApplicationStatusUpdatedEventDetailsFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.events.cas2.Cas2ApplicationSubmittedEventDetailsFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.events.cas2.Cas2StatusFactory
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.IntegrationTestBase
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.Cas2v2IntegrationTestBase
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DomainEventType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.model.cas2.ApplicationStatusUpdatesReportRow
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.model.cas2.SubmittedApplicationReportRow
@@ -29,7 +29,7 @@ import java.time.OffsetDateTime
 import java.time.ZoneOffset
 import java.util.UUID
 
-class Cas2v2ReportsTest : IntegrationTestBase() {
+class Cas2v2ReportsTest : Cas2v2IntegrationTestBase() {
 
   @Nested
   inner class ControlsOnExternalUsers {

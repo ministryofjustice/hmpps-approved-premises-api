@@ -17,20 +17,20 @@ import java.time.OffsetDateTime
 import java.util.UUID
 
 class Cas2v2TimelineEventsTransformerTest {
-  private val nomisUser = NomisUserEntityFactory().produce()
+  private val user = NomisUserEntityFactory().produce()
 
-  private val cas2v2ApplicationFactory = Cas2v2ApplicationEntityFactory().withCreatedByUser(nomisUser)
+  private val cas2v2ApplicationFactory = Cas2v2ApplicationEntityFactory().withCreatedByUser(user)
 
   private val submittedCas2v2ApplicationFactory = Cas2v2ApplicationEntityFactory()
-    .withCreatedByUser(nomisUser)
+    .withCreatedByUser(user)
     .withSubmittedAt(OffsetDateTime.now())
 
-  private val cas2v2TimelineEventTransformer = Cas2v2TimelineEventsTransformer()
+  private val timelineEventTransformer = Cas2v2TimelineEventsTransformer()
 
   @Nested
   inner class WhenThereAreTimelineEvents {
     @Test
-    fun `transforms the timeline events from a submitted cas2v2application`() {
+    fun `transforms the timeline events from a submitted application`() {
       val statusCreatedAt = OffsetDateTime.now().minusDays(2)
       val statusUpdateEntity = Cas2v2StatusUpdateEntityFactory()
         .withCreatedAt(statusCreatedAt)
@@ -49,17 +49,13 @@ class Cas2v2TimelineEventsTransformerTest {
               id = UUID.randomUUID(),
               statusDetailId = UUID.fromString("fc38f750-e9d2-4270-b542-d38286b9855c"),
               label = "first detail",
-              statusUpdate = Cas2v2StatusUpdateEntityFactory().withApplication(
-                submittedCas2v2ApplicationFactory.produce(),
-              ).produce(),
+              statusUpdate = Cas2v2StatusUpdateEntityFactory().withApplication(submittedCas2v2ApplicationFactory.produce()).produce(),
             ),
             Cas2v2StatusUpdateDetailEntity(
               id = UUID.randomUUID(),
               statusDetailId = UUID.fromString("fc38f750-e9d2-4270-b542-d38286b9855c"),
               label = "second detail",
-              statusUpdate = Cas2v2StatusUpdateEntityFactory().withApplication(
-                submittedCas2v2ApplicationFactory.produce(),
-              ).produce(),
+              statusUpdate = Cas2v2StatusUpdateEntityFactory().withApplication(submittedCas2v2ApplicationFactory.produce()).produce(),
             ),
           ),
         )
@@ -93,7 +89,7 @@ class Cas2v2TimelineEventsTransformerTest {
         .withNotes(mutableListOf(note))
         .produce()
 
-      val transformation = cas2v2TimelineEventTransformer.transformApplicationToTimelineEvents(jpaEntity)
+      val transformation = timelineEventTransformer.transformApplicationToTimelineEvents(jpaEntity)
 
       Assertions.assertThat(transformation).isEqualTo(
         listOf(
@@ -136,7 +132,7 @@ class Cas2v2TimelineEventsTransformerTest {
       val jpaEntity = cas2v2ApplicationFactory
         .produce()
 
-      val transformation = cas2v2TimelineEventTransformer.transformApplicationToTimelineEvents(jpaEntity)
+      val transformation = timelineEventTransformer.transformApplicationToTimelineEvents(jpaEntity)
 
       Assertions.assertThat(transformation).isEqualTo(
         emptyList<Cas2TimelineEvent>(),

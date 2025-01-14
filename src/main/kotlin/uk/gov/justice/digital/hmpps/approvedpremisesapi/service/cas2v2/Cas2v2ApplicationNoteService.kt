@@ -26,7 +26,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.toCas2UiFormattedHo
 import java.time.OffsetDateTime
 import java.util.UUID
 
-@Service("Cas2v2ApplicationNoteService")
+@Service
 class Cas2v2ApplicationNoteService(
   private val cas2v2ApplicationRepository: Cas2v2ApplicationRepository,
   private val cas2v2AssessmentRepository: Cas2v2AssessmentRepository,
@@ -37,8 +37,8 @@ class Cas2v2ApplicationNoteService(
   private val emailNotificationService: EmailNotificationService,
   private val userAccessService: UserAccessService,
   private val notifyConfig: NotifyConfig,
-  @Value("\${url-templates.frontend.cas2.application-overview}") private val applicationUrlTemplate: String,
-  @Value("\${url-templates.frontend.cas2.submitted-application-overview}") private val assessmentUrlTemplate: String,
+  @Value("\${url-templates.frontend.cas2v2.application-overview}") private val applicationUrlTemplate: String,
+  @Value("\${url-templates.frontend.cas2v2.submitted-application-overview}") private val assessmentUrlTemplate: String,
 ) {
 
   private val log = LoggerFactory.getLogger(this::class.java)
@@ -55,7 +55,7 @@ class Cas2v2ApplicationNoteService(
       return CasResult.GeneralValidationError("This application has not been submitted")
     }
 
-    val isExternalUser = httpAuthService.getCas2AuthenticatedPrincipalOrThrow().isExternalUser()
+    val isExternalUser = httpAuthService.getCas2v2AuthenticatedPrincipalOrThrow().isExternalUser()
     val user = getCas2User(isExternalUser)
 
     if (!isExternalUser && !nomisUserCanAddNote(application, user as NomisUserEntity)) {

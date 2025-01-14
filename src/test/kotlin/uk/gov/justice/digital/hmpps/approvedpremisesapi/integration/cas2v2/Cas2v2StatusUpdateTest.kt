@@ -13,7 +13,7 @@ import org.springframework.beans.factory.annotation.Value
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas2.model.Cas2ApplicationStatusUpdatedEvent
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas2.model.Cas2StatusDetail
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas2AssessmentStatusUpdate
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.IntegrationTestBase
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.Cas2v2IntegrationTestBase
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenACas2Assessor
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenACas2PomUser
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas2v2.Cas2v2StatusUpdateDetailRepository
@@ -25,9 +25,9 @@ import java.time.OffsetDateTime
 import java.util.UUID
 
 class Cas2v2StatusUpdateTest(
-  @Value("\${url-templates.frontend.cas2.application}") private val applicationUrlTemplate: String,
-  @Value("\${url-templates.frontend.cas2.application-overview}") private val applicationOverviewUrlTemplate: String,
-) : IntegrationTestBase() {
+  @Value("\${url-templates.frontend.cas2v2.application}") private val applicationUrlTemplate: String,
+  @Value("\${url-templates.frontend.cas2v2.application-overview}") private val applicationOverviewUrlTemplate: String,
+) : Cas2v2IntegrationTestBase() {
 
   @SpykBean
   lateinit var realCas2v2StatusUpdateRepository: Cas2v2StatusUpdateRepository
