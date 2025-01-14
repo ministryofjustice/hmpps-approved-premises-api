@@ -1161,20 +1161,20 @@ components:
       required:
         - reason
     WithdrawPlacementRequestReason:
-        type: string
-        enum:
-          - DuplicatePlacementRequest
-          - AlternativeProvisionIdentified
-          - ChangeInCircumstances
-          - ChangeInReleaseDecision
-          - NoCapacityDueToLostBed
-          - NoCapacityDueToPlacementPrioritisation
-          - NoCapacity
-          - ErrorInPlacementRequest
-          - WithdrawnByPP
-          - RelatedApplicationWithdrawn
-          - RelatedPlacementRequestWithdrawn
-          - RelatedPlacementApplicationWithdrawn
+      type: string
+      enum:
+        - DuplicatePlacementRequest
+        - AlternativeProvisionIdentified
+        - ChangeInCircumstances
+        - ChangeInReleaseDecision
+        - NoCapacityDueToLostBed
+        - NoCapacityDueToPlacementPrioritisation
+        - NoCapacity
+        - ErrorInPlacementRequest
+        - WithdrawnByPP
+        - RelatedApplicationWithdrawn
+        - RelatedPlacementRequestWithdrawn
+        - RelatedPlacementApplicationWithdrawn
     PlacementApplicationType:
       type: string
       description: |
@@ -4317,6 +4317,8 @@ components:
         - approved_premises_space_planning_dry_run
         - approved_premises_import_delius_referrals
         - approved_premises_update_space_booking
+        - approved_premises_backfill_active_space_bookings_created_in_delius
+        - approved_premises_create_test_applications
         - temporary_accommodation_referral_rejection
     SeedFromExcelFileType:
       type: string
@@ -4350,6 +4352,7 @@ components:
         - update_cas3_application_offender_name
         - update_cas3_domain_event_type_for_person_departed_updated
         - update_cas1_applications_licence_expiry_date
+        - update_cas1_backfill_offline_application_name
     PlacementDates:
       type: object
       properties:
@@ -4370,6 +4373,7 @@ components:
           $ref: '#/components/schemas/ApType'
         location:
           type: string
+          description: Postcode outcode
           example: B74
         radius:
           type: integer
@@ -5386,7 +5390,6 @@ components:
         - SHARED_PROPERTY
         - SINGLE_OCCUPANCY
         - WHEELCHAIR_ACCESSIBLE
-
     SubmitCas2v2Application:
       type: object
       properties:
@@ -5411,9 +5414,9 @@ components:
         telephoneNumber:
           type: string
       required:
-        - translatedDocument
-        - applicationId
-        - telephoneNumber
+      - translatedDocument
+      - applicationId
+      - telephoneNumber
     Cas2v2Assessment:
       type: object
       properties:
@@ -5427,43 +5430,43 @@ components:
         statusUpdates:
           type: array
           items:
-            $ref: '#/components/schemas/Cas2StatusUpdate'
+            $ref: '#/components/schemas/Cas2v2StatusUpdate'
       required:
-        - id
+      - id
     Cas2v2Application:
       allOf:
-        - $ref: '#/components/schemas/Application'
-        - type: object
-          properties:
-            createdBy:
-              $ref: '#/components/schemas/Cas2v2User'
-            schemaVersion:
-              type: string
-              format: uuid
-            outdatedSchema:
-              type: boolean
-            data:
-              $ref: '#/components/schemas/Unit'
-            document:
-              $ref: '#/components/schemas/Unit'
-            status:
-              $ref: '#/components/schemas/ApplicationStatus'
-            submittedAt:
-              type: string
-              format: date-time
-            telephoneNumber:
-              type: string
-            assessment:
-              $ref: '#/components/schemas/Cas2v2Assessment'
-            timelineEvents:
-              type: array
-              items:
-                $ref: '#/components/schemas/Cas2TimelineEvent'
-          required:
-            - createdBy
-            - schemaVersion
-            - outdatedSchema
-            - status
+      - $ref: '#/components/schemas/Application'
+      - type: object
+        properties:
+          createdBy:
+            $ref: '#/components/schemas/Cas2v2User'
+          schemaVersion:
+            type: string
+            format: uuid
+          outdatedSchema:
+            type: boolean
+          data:
+            $ref: '#/components/schemas/Unit'
+          document:
+            $ref: '#/components/schemas/Unit'
+          status:
+            $ref: '#/components/schemas/ApplicationStatus'
+          submittedAt:
+            type: string
+            format: date-time
+          telephoneNumber:
+            type: string
+          assessment:
+            $ref: '#/components/schemas/Cas2v2Assessment'
+          timelineEvents:
+            type: array
+            items:
+              $ref: '#/components/schemas/Cas2TimelineEvent'
+        required:
+        - createdBy
+        - schemaVersion
+        - outdatedSchema
+        - status
     Cas2v2SubmittedApplication:
       type: object
       properties:
@@ -5497,15 +5500,15 @@ components:
           type: object
           $ref: '#/components/schemas/Cas2v2Assessment'
       required:
-        - id
-        - person
-        - createdAt
-        - createdBy
-        - schemaVersion
-        - outdatedSchema
-        - status
-        - timelineEvents
-        - assessment
+      - id
+      - person
+      - createdAt
+      - createdBy
+      - schemaVersion
+      - outdatedSchema
+      - status
+      - timelineEvents
+      - assessment
     Cas2v2ApplicationSummary:
       type: object
       properties:
@@ -5541,14 +5544,14 @@ components:
         nomsNumber:
           type: string
       required:
-        - type
-        - id
-        - createdAt
-        - createdByUserId
-        - status
-        - personName
-        - crn
-        - nomsNumber
+      - type
+      - id
+      - createdAt
+      - createdByUserId
+      - status
+      - personName
+      - crn
+      - nomsNumber
     Cas2v2SubmittedApplicationSummary:
       type: object
       properties:
@@ -5571,14 +5574,14 @@ components:
           type: string
           format: date-time
       required:
-        - createdByUserId
-        - status
-        - id
-        - person
-        - createdAt
-        - personName
-        - crn
-        - nomsNumber
+      - createdByUserId
+      - status
+      - id
+      - person
+      - createdAt
+      - personName
+      - crn
+      - nomsNumber
     Cas2v2ApplicationNote:
       type: object
       properties:
@@ -5597,11 +5600,11 @@ components:
           type: string
           format: date-time
       required:
-        - username
-        - email
-        - name
-        - body
-        - createdAt
+      - username
+      - email
+      - name
+      - body
+      - createdAt
       description: Notes added to a  Cas2v2Application
     Cas2v2User:
       type: object
@@ -5625,8 +5628,65 @@ components:
           type: boolean
           example: true
       required:
-        - id
-        - name
-        - username
-        - authSource
-        - isActive
+      - id
+      - name
+      - username
+      - authSource
+      - isActive
+    Cas2v2StatusUpdate:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        name:
+          type: string
+          example: 'moreInfoRequested'
+        label:
+          type: string
+          example: 'More information requested'
+        description:
+          type: string
+          example: 'More information about the application has been requested from the HMPPS user.'
+        updatedBy:
+          $ref: '#/components/schemas/Cas2v2User'
+        updatedAt:
+          type: string
+          format: date-time
+        statusUpdateDetails:
+          type: array
+          items:
+            $ref: '#/components/schemas/Cas2v2StatusUpdateDetail'
+      required:
+      - id
+      - name
+      - label
+      - description
+    Cas2v2StatusUpdateDetail:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        name:
+          type: string
+          example: 'moreInfoRequested'
+        label:
+          type: string
+          example: 'More information requested'
+      required:
+      - id
+      - name
+      - label
+    LatestCas2v2StatusUpdate:
+      type: object
+      properties:
+        statusId:
+          type: string
+          format: uuid
+        label:
+          type: string
+          example: 'More information requested'
+      required:
+      - statusId
+      - label
