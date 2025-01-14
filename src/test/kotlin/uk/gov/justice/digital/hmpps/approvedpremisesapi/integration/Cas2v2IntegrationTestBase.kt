@@ -22,7 +22,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas2v2.Cas2v2
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.repository.Cas2v2ApplicationJsonSchemaTestRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.repository.Cas2v2ApplicationTestRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.repository.Cas2v2StatusUpdateTestRepository
-import java.util.*
+import java.util.UUID
 
 @ExtendWith(IntegrationTestDbManager.IntegrationTestListener::class)
 @SpringBootTest(webEnvironment = RANDOM_PORT)

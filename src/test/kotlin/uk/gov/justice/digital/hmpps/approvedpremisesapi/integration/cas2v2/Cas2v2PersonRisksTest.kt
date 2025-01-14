@@ -9,7 +9,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.RiskTierEnvelo
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.RoshRisks
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.RoshRisksEnvelope
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.RoshRatingsFactory
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.IntegrationTestBase
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.Cas2v2IntegrationTestBase
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenACas2PomUser
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAnOffender
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.apDeliusContextEmptyCaseSummaryToBulkResponse
@@ -18,7 +18,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.oasyscontext.RiskL
 import java.time.LocalDate
 import java.time.OffsetDateTime
 
-class Cas2v2PersonRisksTest : IntegrationTestBase() {
+class Cas2v2PersonRisksTest : Cas2v2IntegrationTestBase() {
   @Test
   fun `Getting cas2v2 risks by CRN without a JWT returns 401`() {
     webTestClient.get()

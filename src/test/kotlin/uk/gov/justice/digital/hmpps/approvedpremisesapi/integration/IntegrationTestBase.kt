@@ -258,7 +258,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.repository.UserRoleAssig
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.repository.UserTestRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.JwtAuthHelper
 import java.time.Duration
-import java.util.*
+import java.util.UUID
 
 @ExtendWith(IntegrationTestDbManager.IntegrationTestListener::class)
 @SpringBootTest(webEnvironment = RANDOM_PORT)
