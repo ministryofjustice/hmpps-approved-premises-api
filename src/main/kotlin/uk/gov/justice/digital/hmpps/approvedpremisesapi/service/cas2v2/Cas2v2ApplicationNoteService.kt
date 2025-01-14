@@ -30,8 +30,6 @@ class Cas2v2ApplicationNoteService(
   private val cas2v2ApplicationNoteRepository: Cas2v2ApplicationNoteRepository,
   private val userService: Cas2v2UserService,
   private val userAccessService: Cas2v2UserAccessService,
-  private val externalUserService: ExternalUserService,
-  private val httpAuthService: HttpAuthService,
   private val emailNotificationService: EmailNotificationService,
   private val notifyConfig: NotifyConfig,
   @Value("\${url-templates.frontend.cas2v2.application-overview}")
@@ -91,17 +89,17 @@ class Cas2v2ApplicationNoteService(
         recipientEmailAddress = application.createdByUser.email!!,
         templateId = notifyConfig.templates.cas2NoteAddedForReferrer,
         personalisation =
-        mapOf(
-          "dateNoteAdded" to savedNote.createdAt.toLocalDate().toCas2UiFormat(),
-          "timeNoteAdded" to savedNote.createdAt.toCas2UiFormattedHourOfDay(),
-          "nomsNumber" to application.nomsNumber,
-          "applicationType" to "Home Detention Curfew (HDC)",
-          "applicationUrl" to
-            applicationUrlTemplate.replace(
-              "#id",
-              application.id.toString(),
-            ),
-        ),
+          mapOf(
+            "dateNoteAdded" to savedNote.createdAt.toLocalDate().toCas2UiFormat(),
+            "timeNoteAdded" to savedNote.createdAt.toCas2UiFormattedHourOfDay(),
+            "nomsNumber" to application.nomsNumber,
+            "applicationType" to "Home Detention Curfew (HDC)",
+            "applicationUrl" to
+              applicationUrlTemplate.replace(
+                "#id",
+                application.id.toString(),
+              ),
+          ),
       )
     } else {
       log.error(
@@ -121,24 +119,24 @@ class Cas2v2ApplicationNoteService(
       recipientEmailAddress = notifyConfig.emailAddresses.cas2Assessors,
       templateId = notifyConfig.templates.cas2NoteAddedForAssessor,
       personalisation =
-      mapOf(
-        "nacroReferenceId" to
-          getNacroReferenceIdOrPlaceholder(application.assessment!!),
-        "nacroReferenceIdInSubject" to
-          getSubjectLineReferenceIdOrPlaceholder(
-            application.assessment!!,
-          ),
-        "dateNoteAdded" to savedNote.createdAt.toLocalDate().toCas2UiFormat(),
-        "timeNoteAdded" to savedNote.createdAt.toCas2UiFormattedHourOfDay(),
-        "assessorName" to
-          getAssessorNameOrPlaceholder(application.assessment!!),
-        "applicationType" to "Home Detention Curfew (HDC)",
-        "applicationUrl" to
-          assessmentUrlTemplate.replace(
-            "#applicationId",
-            application.id.toString(),
-          ),
-      ),
+        mapOf(
+          "nacroReferenceId" to
+            getNacroReferenceIdOrPlaceholder(application.assessment!!),
+          "nacroReferenceIdInSubject" to
+            getSubjectLineReferenceIdOrPlaceholder(
+              application.assessment!!,
+            ),
+          "dateNoteAdded" to savedNote.createdAt.toLocalDate().toCas2UiFormat(),
+          "timeNoteAdded" to savedNote.createdAt.toCas2UiFormattedHourOfDay(),
+          "assessorName" to
+            getAssessorNameOrPlaceholder(application.assessment!!),
+          "applicationType" to "Home Detention Curfew (HDC)",
+          "applicationUrl" to
+            assessmentUrlTemplate.replace(
+              "#applicationId",
+              application.id.toString(),
+            ),
+        ),
     )
   }
 
