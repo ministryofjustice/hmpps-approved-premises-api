@@ -6,12 +6,12 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.IntegrationT
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAnOffender
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.apDeliusContextMockSuccessfulTeamsManagingCaseCall
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.deliuscontext.ManagingTeamsResponse
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.seed.cas1.Cas1AutoScript
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.seed.cas1.Cas1StartupScript
 
-class Cas1AutoScriptTest : IntegrationTestBase() {
+class Cas1StartupScriptConfigTest : IntegrationTestBase() {
 
   @Autowired
-  lateinit var cas1AutoScript: Cas1AutoScript
+  lateinit var cas1StartupScript: Cas1StartupScript
 
   @Test
   fun `ensure local auto script runs`() {
@@ -24,12 +24,12 @@ class Cas1AutoScriptTest : IntegrationTestBase() {
         ),
       )
 
-      cas1AutoScript.scriptLocal()
+      cas1StartupScript.scriptLocal()
     }
   }
 
   @Test
   fun `ensure dev auto script runs`() {
-    cas1AutoScript.scriptDev()
+    cas1StartupScript.scriptDev()
   }
 }

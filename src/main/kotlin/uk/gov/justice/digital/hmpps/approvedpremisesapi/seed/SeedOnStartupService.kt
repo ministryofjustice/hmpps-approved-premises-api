@@ -7,8 +7,8 @@ import org.springframework.core.io.support.PathMatchingResourcePatternResolver
 import org.springframework.stereotype.Service
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.SeedFileType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.config.SeedConfig
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.seed.cas1.Cas1AutoScript
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.seed.cas2.Cas2AutoScript
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.seed.cas1.Cas1StartupScript
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.seed.cas2.Cas2StartupScript
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.EnvironmentService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.SentryService
 import java.io.File
@@ -17,8 +17,8 @@ import java.io.IOException
 @Service
 class SeedOnStartupService(
   private val seedConfig: SeedConfig,
-  private val cas1AutoScript: Cas1AutoScript,
-  private val cas2AutoScript: Cas2AutoScript,
+  private val cas1StartupScript: Cas1StartupScript,
+  private val cas2StartupScript: Cas2StartupScript,
   private val seedService: SeedService,
   private val seedLogger: SeedLogger,
   private val environmentService: EnvironmentService,
@@ -27,17 +27,19 @@ class SeedOnStartupService(
   @SuppressWarnings("NestedBlockDepth")
   @PostConstruct
   fun seedOnStartup() {
-    if (!seedConfig.auto.enabled) {
+    val startupConfig = seedConfig.onStartup
+
+    if (!startupConfig.enabled) {
       return
     }
 
     if (environmentService.isNotATestEnvironment()) {
-      sentryService.captureErrorMessage("Auto seeding should not be enabled outside of local and dev environments")
+      sentryService.captureErrorMessage("Seed on startup should not be enabled outside of local and dev environments")
       return
     }
 
-    seedLogger.info("Auto-seeding from locations: ${seedConfig.auto.filePrefixes}")
-    for (filePrefix in seedConfig.auto.filePrefixes) {
+    seedLogger.info("Seeding on startup from locations: ${startupConfig.filePrefixes}")
+    for (filePrefix in startupConfig.filePrefixes) {
       val csvFiles = try {
         PathMatchingResourcePatternResolver().getResources("$filePrefix/*.csv")
       } catch (e: IOException) {
@@ -73,22 +75,12 @@ class SeedOnStartupService(
       }
     }
 
-    if (seedConfig.autoScript.cas1Enabled) {
-      autoScriptCas1()
+    if (startupConfig.script.cas1Enabled) {
+      cas1StartupScript.script()
     }
 
-    if (seedConfig.autoScript.cas2Enabled) {
-      autoScriptCas2()
+    if (startupConfig.script.cas2Enabled) {
+      cas2StartupScript.script()
     }
-  }
-
-  fun autoScriptCas1() {
-    seedLogger.info("**Auto-scripting CAS1**")
-    cas1AutoScript.script()
-  }
-
-  fun autoScriptCas2() {
-    seedLogger.info("**Auto-scripting CAS2**")
-    cas2AutoScript.script()
   }
 }

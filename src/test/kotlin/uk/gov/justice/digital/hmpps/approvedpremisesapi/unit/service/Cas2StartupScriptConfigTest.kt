@@ -21,7 +21,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.NomisUserEnti
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.NomisUserRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.reference.Cas2PersistedApplicationStatusFinder
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.seed.SeedLogger
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.seed.cas2.Cas2AutoScript
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.seed.cas2.Cas2StartupScript
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.seed.insertHdcDates
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas2.ApplicationService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas2.JsonSchemaService
@@ -30,11 +30,9 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.LogEntry
 import java.time.OffsetDateTime
 import java.util.UUID
 
-class Cas2AutoScriptTest {
+class Cas2StartupScriptConfigTest {
   private val mockSeedLogger = mockk<SeedLogger>()
   private val logEntries = mutableListOf<LogEntry>()
-
-  private val mockSeedConfig = mockk<SeedConfig>()
 
   private val mockNomisUserRepository = mockk<NomisUserRepository>()
   private val mockNomisUserEntity = mockk<NomisUserEntity>()
@@ -58,9 +56,11 @@ class Cas2AutoScriptTest {
   private val mockStatusUpdateService = mockk<StatusUpdateService>()
   private val statusFinder = Cas2PersistedApplicationStatusFinder()
 
-  private val autoScript = Cas2AutoScript(
+  private val seedConfig = SeedConfig()
+
+  private val autoScript = Cas2StartupScript(
     mockSeedLogger,
-    mockSeedConfig,
+    seedConfig,
     mockNomisUserRepository,
     mockApplicationRepository,
     mockExternalUserRepository,
@@ -78,8 +78,9 @@ class Cas2AutoScriptTest {
       logEntries += LogEntry(it.invocation.args[0] as String, "info", null)
     }
 
-    every { mockSeedConfig.autoScript.noms } answers { "NOMS123" }
-    every { mockSeedConfig.autoScript.prisonCode } answers { "PRI" }
+    seedConfig.onStartup.script.noms = "NOMS123"
+    seedConfig.onStartup.script.prisonCode = "PRI"
+
     every { mockNomisUserRepository.findAll() } answers { listOf(mockNomisUserEntity) }
     every { mockNomisUserEntity.nomisUsername } answers { "SMITHJ_GEN" }
 
@@ -114,13 +115,6 @@ class Cas2AutoScriptTest {
 
     verify(exactly = 3) { mockApplicationRepository.save(any()) }
     verify(exactly = 3) { insertHdcDates(any()) }
-  }
-
-  @Test
-  fun `uses the NOMS number and Prison Code supplied in AutoScriptConfig`() {
-    autoScript.script()
-
-    verify(exactly = 5) { mockSeedConfig.autoScript }
   }
 
   @Test

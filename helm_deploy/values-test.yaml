@@ -32,11 +32,12 @@ generic-service:
     DOMAIN-EVENTS_CAS1_ASYNC-SAVE-ENABLED: false
     DOMAIN-EVENTS_CAS2_ASYNC-SAVE-ENABLED: false
     DOMAIN-EVENTS_CAS3_ASYNC-SAVE-ENABLED: false
-    SEED_AUTO_ENABLED: false
-    SEED_AUTO_FILE-PREFIXES: classpath:db/seed/local+dev+test,classpath:db/seed/dev+test
-    SEED_AUTO-SCRIPT_CAS2-ENABLED: true
-    SEED_AUTO-SCRIPT_NOMS: A5276DZ
-    SEED_AUTO-SCRIPT_PRISON-CODE: MDI
+
+    SEED_ON-STARTUP_ENABLED: false
+    SEED_ON-STARTUP_FILE-PREFIXES: classpath:db/seed/local+dev+test
+    SEED_ON-STARTUP_SCRIPT_CAS2-ENABLED: true
+    SEED_ON-STARTUP_SCRIPT_NOMS: A5276DZ
+    SEED_ON-STARTUP_SCRIPT_PRISON-CODE: MDI
 
     URL-TEMPLATES_FRONTEND_APPLICATION: https://approved-premises-test.hmpps.service.justice.gov.uk/applications/#id
     URL-TEMPLATES_FRONTEND_APPLICATION-APPEAL: https://approved-premises-test.hmpps.service.justice.gov.uk/applications/#applicationId/appeals/#appealId

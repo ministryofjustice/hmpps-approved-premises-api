@@ -7,16 +7,16 @@ import org.springframework.context.annotation.Configuration
 @ConfigurationProperties(prefix = "seed")
 class SeedConfig {
   lateinit var filePrefix: String
-  var auto: AutoSeedConfig = AutoSeedConfig()
-  var autoScript: AutoScriptConfig = AutoScriptConfig()
+  var onStartup: SeedOnStartupConfig = SeedOnStartupConfig()
 }
 
-class AutoSeedConfig {
+class SeedOnStartupConfig {
   var enabled: Boolean = false
   var filePrefixes: List<String> = listOf()
+  var script: StartupScriptConfig = StartupScriptConfig()
 }
 
-class AutoScriptConfig {
+class StartupScriptConfig {
   var cas1Enabled: Boolean = false
   var cas2Enabled: Boolean = false
   var noms: String = "A1234AI"

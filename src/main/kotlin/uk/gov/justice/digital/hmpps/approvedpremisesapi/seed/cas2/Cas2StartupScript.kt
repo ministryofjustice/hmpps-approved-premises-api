@@ -38,7 +38,7 @@ const val MOST_UPDATES = 6
 const val MINUTES_PER_DAY = 60 * 24
 
 @Component
-class Cas2AutoScript(
+class Cas2StartupScript(
   private val seedLogger: SeedLogger,
   private val seedConfig: SeedConfig,
   private val nomisUserRepository: NomisUserRepository,
@@ -52,7 +52,7 @@ class Cas2AutoScript(
   private val statusFinder: Cas2PersistedApplicationStatusFinder,
 ) {
   fun script() {
-    seedLogger.info("Auto-Scripting for CAS2")
+    seedLogger.info("Running Start up Script for CAS2")
     scriptApplications()
   }
 
@@ -73,7 +73,7 @@ class Cas2AutoScript(
       Cas2ApplicationEntity(
         id = UUID.randomUUID(),
         crn = "X320741",
-        nomsNumber = seedConfig.autoScript.noms,
+        nomsNumber = seedConfig.onStartup.script.noms,
         createdAt = createdAt,
         createdByUser = applicant,
         data = dataFor(state = state, nomsNumber = "A1234AI"),
@@ -100,7 +100,7 @@ class Cas2AutoScript(
   private fun applyFirstClassProperties(application: Cas2ApplicationEntity): Cas2ApplicationEntity {
     return applicationRepository.saveAndFlush(
       application.apply {
-        referringPrisonCode = seedConfig.autoScript.prisonCode
+        referringPrisonCode = seedConfig.onStartup.script.prisonCode
         preferredAreas = "Luton | Hertford"
         hdcEligibilityDate = LocalDate.now()
         conditionalReleaseDate = LocalDate.now().plusMonths(2)
