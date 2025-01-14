@@ -51,8 +51,8 @@ class Cas2v2ApplicationService(
   private val assessmentService: Cas2v2AssessmentService,
   private val notifyConfig: NotifyConfig,
   private val objectMapper: ObjectMapper,
-  @Value("\${url-templates.frontend.cas2.application}") private val applicationUrlTemplate: String,
-  @Value("\${url-templates.frontend.cas2.submitted-application-overview}") private val submittedApplicationUrlTemplate: String,
+  @Value("\${url-templates.frontend.cas2v2.application}") private val applicationUrlTemplate: String,
+  @Value("\${url-templates.frontend.cas2v2.submitted-application-overview}") private val submittedApplicationUrlTemplate: String,
 ) {
 
   val repositoryUserFunctionMap = mapOf(

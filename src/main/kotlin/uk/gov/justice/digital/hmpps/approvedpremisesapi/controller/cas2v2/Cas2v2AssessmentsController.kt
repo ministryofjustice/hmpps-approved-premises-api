@@ -9,11 +9,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas2Assessment
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas2v2Assessment
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewCas2ApplicationNote
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.UpdateCas2Assessment
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas2ApplicationNoteEntity
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas2v2.Cas2v2ApplicationNoteEntity
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.ConflictProblem
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.ForbiddenProblem
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.NotFoundProblem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.CasResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.ExternalUserService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas2v2.Cas2v2ApplicationNoteService
@@ -30,7 +25,7 @@ class Cas2v2AssessmentsController(
   private val cas2v2AssessmentService: Cas2v2AssessmentService,
   private val cas2v2ApplicationNoteService: Cas2v2ApplicationNoteService,
   private val cas2v2AssessmentsTransformer: Cas2v2AssessmentsTransformer,
-  private val applicationNotesTransformer: ApplicationNotesTransformer, ///TODO: create a ca2v2 version
+  private val applicationNotesTransformer: ApplicationNotesTransformer,
   private val cas2v2StatusUpdateService: Cas2v2StatusUpdateService,
   private val externalUserService: ExternalUserService,
 ) : AssessmentsCas2v2Delegate {
