@@ -21,6 +21,7 @@ class ApplicationTimelineNoteEntityFactory : Factory<ApplicationTimelineNoteEnti
   private var createdAt: Yielded<OffsetDateTime> = { OffsetDateTime.now().randomDateTimeBefore(30) }
   private var body: Yielded<String> = { randomStringUpperCase(12) }
   private var cas1SpaceBookingId: Yielded<UUID?> = { null }
+  private var deletedAt: Yielded<OffsetDateTime?> = { null }
 
   fun withDefaults() = apply {
   }
@@ -45,6 +46,10 @@ class ApplicationTimelineNoteEntityFactory : Factory<ApplicationTimelineNoteEnti
     this.body = { body }
   }
 
+  fun withDeletedAt(deletedAt: OffsetDateTime) = apply {
+    this.deletedAt = { deletedAt }
+  }
+
   override fun produce(): ApplicationTimelineNoteEntity = ApplicationTimelineNoteEntity(
     id = this.id(),
     applicationId = this.applicationId(),
@@ -52,5 +57,6 @@ class ApplicationTimelineNoteEntityFactory : Factory<ApplicationTimelineNoteEnti
     createdAt = this.createdAt(),
     body = this.body(),
     cas1SpaceBookingId = this.cas1SpaceBookingId(),
+    deletedAt = this.deletedAt(),
   )
 }

@@ -112,7 +112,7 @@ class SeedCas1WithdrawPlacementRequestsTest : SeedTestBase() {
         assertMatchRequestWithdrawnEmail(cruEmail, placementRequest1)
         assertMatchRequestWithdrawnEmail(cruEmail, placementRequest3)
 
-        val notes = applicationTimelineNoteRepository.findApplicationTimelineNoteEntitiesByApplicationId(application.id)
+        val notes = applicationTimelineNoteRepository.findApplicationTimelineNoteEntitiesByApplicationIdAndDeletedAtIsNull(application.id)
         assertThat(notes).hasSize(2)
         assertThat(notes)
           .extracting("body")

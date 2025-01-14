@@ -2901,7 +2901,7 @@ class ApplicationTest : IntegrationTestBase() {
           .isOk
 
         val savedNote =
-          applicationTimelineNoteRepository.findApplicationTimelineNoteEntitiesByApplicationId(applicationId)
+          applicationTimelineNoteRepository.findApplicationTimelineNoteEntitiesByApplicationIdAndDeletedAtIsNull(applicationId)
         savedNote.map {
           assertThat(it.body).isEqualTo("some note")
           assertThat(it.applicationId).isEqualTo(applicationId)

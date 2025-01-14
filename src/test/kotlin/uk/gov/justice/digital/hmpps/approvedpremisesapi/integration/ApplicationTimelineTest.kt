@@ -21,6 +21,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.ApplicationT
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.ApplicationTimelineTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.unit.domainevents.DomainEventSummaryImpl
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.Cas1DomainEventsFactory
+import java.time.OffsetDateTime
 
 class ApplicationTimelineTest : InitialiseDatabasePerClassTestBase() {
   @Autowired
@@ -77,6 +78,7 @@ class ApplicationTimelineTest : InitialiseDatabasePerClassTestBase() {
     }
 
     notes = createTimelineNotes(application, 5)
+    createTimelineNotes(application, 2, isDeleted = true)
     createTimelineNotes(otherApplication, 3)
   }
 
@@ -177,7 +179,12 @@ class ApplicationTimelineTest : InitialiseDatabasePerClassTestBase() {
     }
   }
 
-  private fun createTimelineNotes(applicationEntity: ApprovedPremisesApplicationEntity, count: Int) = applicationTimelineNoteEntityFactory.produceAndPersistMultiple(count) {
+  private fun createTimelineNotes(
+    applicationEntity: ApprovedPremisesApplicationEntity,
+    count: Int,
+    isDeleted: Boolean = false,
+  ) = applicationTimelineNoteEntityFactory.produceAndPersistMultiple(count) {
     withApplicationId(applicationEntity.id)
+    if (isDeleted) withDeletedAt(OffsetDateTime.now())
   }.toMutableList()
 }
