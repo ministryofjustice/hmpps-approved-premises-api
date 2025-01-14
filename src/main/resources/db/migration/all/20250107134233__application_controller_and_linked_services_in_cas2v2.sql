@@ -35,7 +35,6 @@ CREATE TABLE cas_2_v2_applications
     hdc_eligibility_date     date,
     conditional_release_date date,
     telephone_number         TEXT,
-    application_origin       TEXT,
     CONSTRAINT pk_cas_2_v2_applications PRIMARY KEY (id)
 );
 
@@ -46,7 +45,6 @@ CREATE TABLE cas_2_v2_assessments
     created_at        TIMESTAMPTZ,
     nacro_referral_id TEXT,
     assessor_name     TEXT,
-    applicationOrigin TEXT,
     CONSTRAINT pk_cas_2_v2_assessments PRIMARY KEY (id)
 );
 
@@ -72,6 +70,21 @@ CREATE TABLE cas_2_v2_status_updates
     created_at     TIMESTAMPTZ NOT NULL,
     CONSTRAINT pk_cas_2_v2_status_updates PRIMARY KEY (id)
 );
+
+INSERT INTO json_schemas (id, added_at, schema, type)
+VALUES (
+           'be976928-d7d3-44d5-ac3e-1463698afff5',
+           '2025-01-15 15:19:37.363233 +00:00',
+           '{
+               "$schema": "https://json-schema.org/draft/2020-12/schema",
+               "title": "Application Placeholder Schema",
+               "description": "An application schema that requires no properties",
+               "type": "object",
+               "properties": {},
+               "required": []
+           }',
+           'CAS_2_V2_APPLICATION'
+       );
 
 ALTER TABLE cas_2_v2_applications
     ADD CONSTRAINT FK_CAS_2_V2_APPLICATIONS_ON_ASSESSMENT FOREIGN KEY (assessment_id) REFERENCES cas_2_v2_assessments (id);
@@ -126,8 +139,7 @@ CREATE OR REPLACE VIEW cas_2_v2_application_summary AS SELECT
     a.referring_prison_code,
     a.conditional_release_date,
     asu.created_at AS status_created_at,
-    a.abandoned_at,
-    a.application_origin
+    a.abandoned_at
 FROM cas_2_v2_applications a
 LEFT JOIN (SELECT DISTINCT ON (application_id) su.application_id, su.label, su.status_id, su.created_at
     FROM cas_2_v2_status_updates su
@@ -147,8 +159,7 @@ CREATE OR REPLACE VIEW cas_2_v2_application_live_summary AS SELECT
     a.label,
     a.status_id,
     a.referring_prison_code,
-    a.abandoned_at,
-    a.application_origin
+    a.abandoned_at
 FROM cas_2_v2_application_summary a
 WHERE (a.conditional_release_date IS NULL OR a.conditional_release_date >= current_date)
 AND a.abandoned_at IS NULL

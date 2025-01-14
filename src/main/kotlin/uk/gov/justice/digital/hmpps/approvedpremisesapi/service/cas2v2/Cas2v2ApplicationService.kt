@@ -31,7 +31,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.ValidatableActio
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.EmailNotificationService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.UpstreamApiException
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas2.DomainEventService
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas2.JsonSchemaService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas2.OffenderService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.PageCriteria
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.getMetadata
@@ -44,7 +43,7 @@ class Cas2v2ApplicationService(
   private val cas2v2ApplicationRepository: Cas2v2ApplicationRepository,
   private val cas2v2LockableApplicationRepository: Cas2v2LockableApplicationRepository,
   private val cas2v2ApplicationSummaryRepository: Cas2v2ApplicationSummaryRepository,
-  private val jsonSchemaService: JsonSchemaService,
+  private val cas2v2JsonSchemaService: Cas2v2JsonSchemaService,
   private val cas2OffenderService: OffenderService,
   private val cas2v2UserAccessService: Cas2v2UserAccessService,
   private val cas2DomainEventService: DomainEventService,
@@ -98,7 +97,7 @@ class Cas2v2ApplicationService(
       ?: return AuthorisableActionResult.NotFound()
 
     return AuthorisableActionResult.Success(
-      jsonSchemaService.checkCas2v2SchemaOutdated(applicationEntity),
+      cas2v2JsonSchemaService.checkCas2v2SchemaOutdated(applicationEntity),
     )
   }
 
@@ -114,7 +113,7 @@ class Cas2v2ApplicationService(
 
     return if (canAccess) {
       AuthorisableActionResult.Success(
-        jsonSchemaService.checkCas2v2SchemaOutdated
+        cas2v2JsonSchemaService.checkCas2v2SchemaOutdated
           (applicationEntity),
       )
     } else {
@@ -123,8 +122,7 @@ class Cas2v2ApplicationService(
   }
 
   @SuppressWarnings("TooGenericExceptionThrown")
-  fun createCas2v2Application(crn: String, user: NomisUserEntity, applicationOrigin: ApplicationOrigin? = ApplicationOrigin.homeDetentionCurfew) =
-    // This needs migrating to CasResult rather than ValidateResult
+  fun createCas2v2Application(crn: String, user: NomisUserEntity, applicationOrigin: ApplicationOrigin = ApplicationOrigin.homeDetentionCurfew) =
     validated<Cas2v2ApplicationEntity> {
       val offenderDetailsResult = cas2OffenderService.getOffenderByCrn(crn)
 
@@ -150,13 +148,13 @@ class Cas2v2ApplicationService(
         createdByUser = user,
         data = null,
         document = null,
-        schemaVersion = jsonSchemaService.getNewestSchema(Cas2v2ApplicationJsonSchemaEntity::class.java),
+        schemaVersion = cas2v2JsonSchemaService.getNewestSchema(Cas2v2ApplicationJsonSchemaEntity::class.java),
         createdAt = OffsetDateTime.now(),
         submittedAt = null,
         schemaUpToDate = true,
         nomsNumber = offenderDetails.otherIds.nomsNumber,
         telephoneNumber = null,
-        applicationOrigin = applicationOrigin?.toString(),
+        applicationOrigin = applicationOrigin,
       )
 
       val createdApplication = cas2v2ApplicationRepository.save(
@@ -168,7 +166,7 @@ class Cas2v2ApplicationService(
 
   @SuppressWarnings("ReturnCount")
   fun updateCas2v2Application(applicationId: UUID, data: String?, user: NomisUserEntity): AuthorisableActionResult<ValidatableActionResult<Cas2v2ApplicationEntity>> {
-    val application = cas2v2ApplicationRepository.findByIdOrNull(applicationId)?.let(jsonSchemaService::checkCas2v2SchemaOutdated)
+    val application = cas2v2ApplicationRepository.findByIdOrNull(applicationId)?.let(cas2v2JsonSchemaService::checkCas2v2SchemaOutdated)
       ?: return AuthorisableActionResult.NotFound()
 
     if (application.createdByUser != user) {
@@ -248,7 +246,7 @@ class Cas2v2ApplicationService(
     cas2v2LockableApplicationRepository.acquirePessimisticLock(applicationId)
 
     var application = cas2v2ApplicationRepository.findByIdOrNull(applicationId)
-      ?.let(jsonSchemaService::checkCas2v2SchemaOutdated)
+      ?.let(cas2v2JsonSchemaService::checkCas2v2SchemaOutdated)
       ?: return CasResult.NotFound()
 
     val serializedTranslatedDocument = objectMapper.writeValueAsString(submitCas2v2Application.translatedDocument)
@@ -274,7 +272,7 @@ class Cas2v2ApplicationService(
 
     if (applicationData == null) {
       validationErrors["$.data"] = "empty"
-    } else if (!jsonSchemaService.validate(application.schemaVersion, applicationData)) {
+    } else if (!cas2v2JsonSchemaService.validate(application.schemaVersion, applicationData)) {
       validationErrors["$.data"] = "invalid"
     }
 
@@ -294,7 +292,7 @@ class Cas2v2ApplicationService(
         hdcEligibilityDate = submitCas2v2Application.hdcEligibilityDate
         conditionalReleaseDate = submitCas2v2Application.conditionalReleaseDate
         telephoneNumber = submitCas2v2Application.telephoneNumber
-        applicationOrigin = submitCas2v2Application.applicationOrigin?.toString()
+        applicationOrigin = submitCas2v2Application.applicationOrigin
       }
     } catch (error: UpstreamApiException) {
       return CasResult.GeneralValidationError(error.message.toString())
@@ -330,7 +328,6 @@ class Cas2v2ApplicationService(
             applicationId = application.id,
             applicationUrl = applicationUrlTemplate
               .replace("#id", application.id.toString()),
-            applicationOrigin = application.applicationOrigin,
             submittedAt = eventOccurredAt.toInstant(),
             personReference = PersonReference(
               noms = application.nomsNumber ?: "Unknown NOMS Number",

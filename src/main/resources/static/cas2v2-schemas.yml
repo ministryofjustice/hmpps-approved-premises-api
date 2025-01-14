@@ -1,11 +1,30 @@
-
 components:
   schemas:
+    NewCas2v2Application:
+      type: object
+      properties:
+        crn:
+          type: string
+        convictionId:
+          type: integer
+          format: int64
+          example: 1502724704
+        deliusEventNumber:
+          type: string
+          example: "7"
+        offenceId:
+          type: string
+          example: "M1502750438"
+        applicationOrigin:
+          $ref: "#/components/schemas/ApplicationOrigin"
+      required:
+        - crn
+        - applicationOrigin
     SubmitCas2v2Application:
       type: object
       properties:
         translatedDocument:
-          $ref: '#/components/schemas/Unit'
+          $ref: '_shared.yml#/components/schemas/Unit'
         applicationId:
           type: string
           format: uuid
@@ -24,10 +43,13 @@ components:
           format: date
         telephoneNumber:
           type: string
+        applicationOrigin:
+          $ref: "#/components/schemas/ApplicationOrigin"
       required:
         - translatedDocument
         - applicationId
         - telephoneNumber
+        - applicationOrigin
     Cas2v2Assessment:
       type: object
       properties:
@@ -46,22 +68,22 @@ components:
         - id
     Cas2v2Application:
       allOf:
-        - $ref: '#/components/schemas/Application'
+        - $ref: '_shared.yml#/components/schemas/Application'
         - type: object
           properties:
             createdBy:
-              $ref: '#/components/schemas/NomisUser'
+              $ref: '_shared.yml#/components/schemas/NomisUser'
             schemaVersion:
               type: string
               format: uuid
             outdatedSchema:
               type: boolean
             data:
-              $ref: '#/components/schemas/Unit'
+              $ref: '_shared.yml#/components/schemas/Unit'
             document:
-              $ref: '#/components/schemas/Unit'
+              $ref: '_shared.yml#/components/schemas/Unit'
             status:
-              $ref: '#/components/schemas/ApplicationStatus'
+              $ref: '_shared.yml#/components/schemas/ApplicationStatus'
             submittedAt:
               type: string
               format: date-time
@@ -73,11 +95,14 @@ components:
               type: array
               items:
                 $ref: '_shared.yml#/components/schemas/Cas2TimelineEvent'
+            applicationOrigin:
+              $ref: "#/components/schemas/ApplicationOrigin"
           required:
             - createdBy
             - schemaVersion
             - outdatedSchema
             - status
+            - applicationOrigin
     Cas2v2SubmittedApplication:
       type: object
       properties:
@@ -85,19 +110,19 @@ components:
           type: string
           format: uuid
         person:
-          $ref: '#/components/schemas/Person'
+          $ref: '_shared.yml#/components/schemas/Person'
         createdAt:
           type: string
           format: date-time
         submittedBy:
-          $ref: '#/components/schemas/NomisUser'
+          $ref: '_shared.yml#/components/schemas/NomisUser'
         schemaVersion:
           type: string
           format: uuid
         outdatedSchema:
           type: boolean
         document:
-          $ref: '#/components/schemas/Unit'
+          $ref: '_shared.yml#/components/schemas/Unit'
         submittedAt:
           type: string
           format: date-time
@@ -140,11 +165,11 @@ components:
         createdByUserName:
           type: string
         status:
-          $ref: '#/components/schemas/ApplicationStatus'
+          $ref: '_shared.yml#/components/schemas/ApplicationStatus'
         latestStatusUpdate:
-          $ref: '#/components/schemas/LatestCas2StatusUpdate'
+          $ref: '_shared.yml#/components/schemas/LatestCas2StatusUpdate'
         risks:
-          $ref: '#/components/schemas/PersonRisks'
+          $ref: '_shared.yml#/components/schemas/PersonRisks'
         hdcEligibilityDate:
           type: string
           format: date
@@ -154,6 +179,8 @@ components:
           type: string
         nomsNumber:
           type: string
+        applicationOrigin:
+          $ref: "#/components/schemas/ApplicationOrigin"
       required:
         - type
         - id
@@ -163,6 +190,7 @@ components:
         - personName
         - crn
         - nomsNumber
+        - applicationOrigin
     Cas2v2SubmittedApplicationSummary:
       type: object
       properties:
@@ -216,4 +244,11 @@ components:
         - name
         - body
         - createdAt
-      description: Notes added to a  Cas2v2Application
+      description: Notes added to a Cas2v2Application
+    ApplicationOrigin:
+      type: string
+      default: homeDetentionCurfew
+      enum:
+        - courtBail
+        - prisonBail
+        - homeDetentionCurfew
