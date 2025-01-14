@@ -3,6 +3,7 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.NomisUserDetailFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.StaffDetailFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.IntegrationTestBase
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.Cas2v2IntegrationTestBase
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.apDeliusContextAddStaffDetailResponse
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.nomisUserRolesMockSuccessfulGetUserDetailsCall
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas1CruManagementAreaEntity
@@ -123,7 +124,7 @@ fun IntegrationTestBase.givenACas2PomUser(
   block(user, jwt)
 }
 
-fun IntegrationTestBase.givenACas2v2PomUser(
+fun Cas2v2IntegrationTestBase.givenACas2v2PomUser(
   id: UUID = UUID.randomUUID(),
   nomisUserDetailsConfigBlock: (NomisUserDetailFactory.() -> Unit)? = null,
   block: (userEntity: Cas2v2UserEntity, jwt: String) -> Unit,
@@ -151,7 +152,7 @@ fun IntegrationTestBase.givenACas2v2PomUser(
   block(user, jwt)
 }
 
-fun IntegrationTestBase.givenACas2v2LicenceCaseAdminUser(
+fun Cas2v2IntegrationTestBase.givenACas2v2LicenceCaseAdminUser(
   id: UUID = UUID.randomUUID(),
   nomisUserDetailsConfigBlock: (NomisUserDetailFactory.() -> Unit)? = null,
   block: (userEntity: Cas2v2UserEntity, jwt: String) -> Unit,
@@ -221,7 +222,7 @@ fun IntegrationTestBase.givenACas2Assessor(
   block(user, jwt)
 }
 
-fun IntegrationTestBase.givenACas2v2Assessor(
+fun Cas2v2IntegrationTestBase.givenACas2v2Assessor(
   id: UUID = UUID.randomUUID(),
   block: (userEntity: Cas2v2UserEntity, jwt: String) -> Unit,
 ) {

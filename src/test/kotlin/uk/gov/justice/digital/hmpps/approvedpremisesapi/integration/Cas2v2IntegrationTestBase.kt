@@ -12,6 +12,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.PersistedFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.cas2v2.Cas2v2ApplicationEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.cas2v2.Cas2v2AssessmentEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.cas2v2.Cas2v2StatusUpdateEntityFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.cas2v2.Cas2v2UserEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.config.IntegrationTestDbManager
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.config.TestPropertiesInitializer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas2v2ApplicationJsonSchemaEntity
@@ -19,6 +20,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas2v2.Cas2v2
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas2v2.Cas2v2AssessmentEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas2v2.Cas2v2AssessmentRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas2v2.Cas2v2StatusUpdateEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas2v2.Cas2v2UserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.repository.Cas2v2ApplicationJsonSchemaTestRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.repository.Cas2v2ApplicationTestRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.repository.Cas2v2StatusUpdateTestRepository
@@ -46,6 +48,7 @@ abstract class Cas2v2IntegrationTestBase : IntegrationTestBase() {
   lateinit var cas2v2ApplicationEntityFactory: PersistedFactory<Cas2v2ApplicationEntity, UUID, Cas2v2ApplicationEntityFactory>
   lateinit var cas2v2AssessmentEntityFactory: PersistedFactory<Cas2v2AssessmentEntity, UUID, Cas2v2AssessmentEntityFactory>
   lateinit var cas2v2StatusUpdateEntityFactory: PersistedFactory<Cas2v2StatusUpdateEntity, UUID, Cas2v2StatusUpdateEntityFactory>
+  lateinit var cas2v2UserEntityFactory: PersistedFactory<Cas2v2UserEntity, UUID, Cas2v2UserEntityFactory>
   lateinit var cas2v2ApplicationJsonSchemaEntityFactory: PersistedFactory<Cas2v2ApplicationJsonSchemaEntity, UUID, Cas2v2ApplicationJsonSchemaEntityFactory>
 
   override fun setupFactories() {
