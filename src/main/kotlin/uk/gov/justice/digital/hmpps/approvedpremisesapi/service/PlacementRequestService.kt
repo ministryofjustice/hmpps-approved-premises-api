@@ -35,6 +35,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.ValidatableActio
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1BookingDomainEventService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1PlacementRequestDomainEventService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1PlacementRequestEmailService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1WithdrawableService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.WithdrawableEntityType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.WithdrawableState
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.WithdrawalContext
@@ -135,6 +136,8 @@ class PlacementRequestService(
     return CasResult.Success(toPlacementRequestAndCancellations(placementRequest))
   }
 
+  @SuppressWarnings("ReturnCount")
+  @Deprecated("Placement requests are no longer allocated. Can consider removing this and corresponding database fields")
   fun reallocatePlacementRequest(
     assigneeUser: UserEntity,
     id: UUID,
@@ -368,7 +371,7 @@ class PlacementRequestService(
    * Note: this is only an issue when the placement applications are withdrawn, so any incorrect
    * placement requests returned here will appear as withdrawn to the user
    *
-   * See [uk.gov.justice.digital.hmpps.approvedpremisesapi.migration.Cas1FixPlacementApplicationLinksJob] for more information.
+   * See [uk.gov.justice.digital.hmpps.approvedpremisesapi.migration.cas1.Cas1FixPlacementApplicationLinksJob] for more information.
    */
   fun getPlacementRequestForInitialApplicationDates(applicationId: UUID) =
     placementRequestRepository.findByApplicationId(applicationId)
