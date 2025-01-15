@@ -29,7 +29,7 @@ import java.util.UUID
 import kotlin.reflect.KClass
 
 @Service(
-  "uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas2.DomainEventService",
+  "uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas2v2.Cas2v2DomainEventService",
 )
 class Cas2v2DomainEventService(
   private val objectMapper: ObjectMapper,
@@ -49,6 +49,7 @@ class Cas2v2DomainEventService(
 
   fun getCas2ApplicationStatusUpdatedDomainEvent(id: UUID) = get<Cas2v2ApplicationStatusUpdatedEvent>(id)
 
+  @Suppress("TooGenericExceptionThrown")
   private inline fun <reified T : Cas2v2Event> get(id: UUID): DomainEvent<T>? {
     val domainEventEntity = domainEventRepository.findByIdOrNull(id) ?: return null
 
@@ -149,6 +150,7 @@ class Cas2v2DomainEventService(
     }
   }
 
+  @Suppress("TooGenericExceptionThrown")
   private fun <T : Cas2v2Event> enumTypeFromDataType(type: KClass<T>): DomainEventType = when (type) {
     Cas2v2ApplicationSubmittedEvent::class -> DomainEventType.CAS2_APPLICATION_SUBMITTED
     Cas2v2ApplicationStatusUpdatedEvent::class -> DomainEventType.CAS2_APPLICATION_STATUS_UPDATED
