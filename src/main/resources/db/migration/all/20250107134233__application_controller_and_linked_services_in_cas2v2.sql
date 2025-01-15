@@ -30,7 +30,7 @@ CREATE TABLE cas_2_v2_users
     delius_team_codes        TEXT,
     is_enabled               BOOLEAN NOT NULL,
     is_active                BOOLEAN NOT NULL,
-    created_at               TIMESTAMP WITH TIME ZONE NOT NULL,
+    created_at               TIMESTAMPTZ NOT NULL,
     CONSTRAINT pk_cas_2_v2_users PRIMARY KEY (id)
 );
 
