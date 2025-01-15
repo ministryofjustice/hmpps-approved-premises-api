@@ -5,7 +5,7 @@ spring:
     driverClassName: org.postgresql.Driver
     url: jdbc:postgresql://localhost:5431/approved_premises_localdev
   flyway:
-    locations: classpath:db/migration/all,classpath:db/migration/local+dev+test,classpath:db/migration/local,classpath:db/migration/all-except-integration
+    locations: classpath:db/migration/all,classpath:db/migration/local+dev,classpath:db/migration/local,classpath:db/migration/all-except-integration
   jpa:
     database: postgresql
   data:
