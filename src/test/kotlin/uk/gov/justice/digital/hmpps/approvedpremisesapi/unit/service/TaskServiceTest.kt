@@ -393,7 +393,7 @@ class TaskServiceTest {
 
     val result = taskService.getAll(
       TaskService.TaskFilterCriteria(
-        AllocatedFilter.allocated,
+        AllocatedFilter.ALLOCATED,
         apAreaId,
         cruManagementAreaId,
         taskEntityTypes,
