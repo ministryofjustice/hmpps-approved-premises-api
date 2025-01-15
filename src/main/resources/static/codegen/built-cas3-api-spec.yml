@@ -4220,7 +4220,7 @@ components:
         - rfap
         - mhapStJosephs
         - mhapElliottHouse
-    BedSearchParameters:
+    TemporaryAccommodationBedSearchParameters:
       type: object
       properties:
         serviceName:
@@ -4228,36 +4228,54 @@ components:
         startDate:
           type: string
           format: date
-          description: The date the Bed will need to be free from
         durationDays:
-          type: integer
+          type: long
           description: The number of days the Bed will need to be free from the start_date until
+        probationDeliveryUnits:
+          type: array
+          description: The list of pdus Ids to search within
+          items:
+            type: string
+            format: uuid
+        premisesFilters:
+          $ref: '#/components/schemas/PremisesFilters'
+        bedspaceFilters:
+          $ref: '#/components/schemas/BedspaceFilters'
+        attributes:
+          type: array
+          description: Bedspace and property attributes to filter on
+          items:
+            $ref: "#/components/schemas/BedSearchAttributes"
       required:
-        - serviceName
+        - probationDeliveryUnits
         - startDate
         - durationDays
-      discriminator:
-        propertyName: serviceName
-        mapping:
-          temporary-accommodation: '#/components/schemas/TemporaryAccommodationBedSearchParameters'
-    TemporaryAccommodationBedSearchParameters:
-      allOf:
-        - $ref: '#/components/schemas/BedSearchParameters'
-        - type: object
-          properties:
-            probationDeliveryUnits:
-              type: array
-              description: The list of pdus Ids to search within
-              items:
-                type: string
-                format: uuid
-            attributes:
-              type: array
-              description: Bedspace and property attributes to filter on
-              items:
-                $ref: "#/components/schemas/BedSearchAttributes"
-          required:
-            - probationDeliveryUnits
+    PremisesFilters:
+      type: object
+      properties:
+        includedCharacteristicIds:
+          type: array
+          items:
+            type: string
+            format: uuid
+        excludedCharacteristicIds:
+          type: array
+          items:
+            type: string
+            format: uuid
+    BedspaceFilters:
+      type: object
+      properties:
+        includedCharacteristicIds:
+          type: array
+          items:
+            type: string
+            format: uuid
+        excludedCharacteristicIds:
+          type: array
+          items:
+            type: string
+            format: uuid
     BedSearchResults:
       type: object
       properties:

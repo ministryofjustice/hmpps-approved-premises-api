@@ -4,6 +4,7 @@ import io.mockk.every
 import io.mockk.mockk
 import org.junit.jupiter.api.Test
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PersonType
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.TemporaryAccommodationBedSearchParameters
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.BedEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.BookingEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.CaseSummaryFactory
@@ -64,10 +65,12 @@ class Cas3BedSearchServiceTest {
 
     val result = bedSearchService.findBedspaces(
       user = user,
-      startDate = LocalDate.parse("2023-03-22"),
-      durationInDays = 0,
-      probationDeliveryUnits = listOf(probationDeliveryUnit.id),
-      propertyBedAttributes = null,
+      TemporaryAccommodationBedSearchParameters(
+        startDate = LocalDate.parse("2023-03-22"),
+        durationDays = 0,
+        probationDeliveryUnits = listOf(probationDeliveryUnit.id),
+        attributes = null,
+      ),
     )
 
     assertThat(result).isFieldValidationError("$.durationDays", "mustBeAtLeast1")
@@ -89,10 +92,12 @@ class Cas3BedSearchServiceTest {
 
     val result = bedSearchService.findBedspaces(
       user = user,
-      startDate = LocalDate.parse("2024-08-22"),
-      durationInDays = 30,
-      probationDeliveryUnits = probationDeliveryUnitIds,
-      propertyBedAttributes = null,
+      TemporaryAccommodationBedSearchParameters(
+        startDate = LocalDate.parse("2024-08-22"),
+        durationDays = 30,
+        probationDeliveryUnits = probationDeliveryUnitIds,
+        attributes = null,
+      ),
     )
     assertThat(result).isFieldValidationError("$.probationDeliveryUnits", "maxNumberProbationDeliveryUnits")
   }
@@ -124,10 +129,12 @@ class Cas3BedSearchServiceTest {
 
     val result = bedSearchService.findBedspaces(
       user = user,
-      startDate = LocalDate.parse("2024-08-28"),
-      durationInDays = 84,
-      probationDeliveryUnits = probationDeliveryUnitIds,
-      propertyBedAttributes = null,
+      TemporaryAccommodationBedSearchParameters(
+        startDate = LocalDate.parse("2024-08-28"),
+        durationDays = 84,
+        probationDeliveryUnits = probationDeliveryUnitIds,
+        attributes = null,
+      ),
     )
     assertThat(result).isFieldValidationError("$.probationDeliveryUnits[3]", "doesNotExist")
   }
@@ -223,10 +230,12 @@ class Cas3BedSearchServiceTest {
 
     val result = bedSearchService.findBedspaces(
       user = user,
-      probationDeliveryUnits = listOf(probationDeliveryUnit.id),
-      startDate = LocalDate.parse("2023-03-22"),
-      durationInDays = 7,
-      propertyBedAttributes = null,
+      TemporaryAccommodationBedSearchParameters(
+        probationDeliveryUnits = listOf(probationDeliveryUnit.id),
+        startDate = LocalDate.parse("2023-03-22"),
+        durationDays = 7,
+        attributes = null,
+      ),
     )
 
     assertThat(result).isSuccess().hasValueEqualTo(repositorySearchResults)
@@ -415,10 +424,12 @@ class Cas3BedSearchServiceTest {
 
     val result = bedSearchService.findBedspaces(
       user = user,
-      startDate = LocalDate.parse("2023-03-22"),
-      durationInDays = 7,
-      probationDeliveryUnits = listOf(probationDeliveryUnit.id),
-      propertyBedAttributes = null,
+      TemporaryAccommodationBedSearchParameters(
+        startDate = LocalDate.parse("2023-03-22"),
+        durationDays = 7,
+        probationDeliveryUnits = listOf(probationDeliveryUnit.id),
+        attributes = null,
+      ),
     )
     assertThat(result).isSuccess().hasValueEqualTo(expectedResults)
   }
