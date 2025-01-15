@@ -11,6 +11,7 @@ import org.springframework.data.domain.Sort
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1SpaceBookingCharacteristic
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1SpaceBookingDaySummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1SpaceBookingDaySummarySortField
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1SpaceCharacteristic
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.SortDirection
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApprovedPremisesEntityFactory
@@ -121,7 +122,7 @@ class Cas1SpaceBookingDaySummaryServiceTest {
       canonicalDepartureDate = LocalDate.now().plusDays(6),
       tier = "A2",
       releaseType = "rotl",
-      essentialCharacteristics = listOf(Cas1SpaceBookingCharacteristic.IS_SINGLE, Cas1SpaceBookingCharacteristic.HAS_EN_SUITE),
+      essentialCharacteristics = listOf(Cas1SpaceCharacteristic.isSingle, Cas1SpaceCharacteristic.hasEnSuite),
     )
 
     val booking2DaySummary = Cas1SpaceBookingDaySummary(
@@ -131,7 +132,7 @@ class Cas1SpaceBookingDaySummaryServiceTest {
       canonicalDepartureDate = LocalDate.now().plusDays(36),
       tier = "B3",
       releaseType = "licence",
-      essentialCharacteristics = listOf(Cas1SpaceBookingCharacteristic.IS_SINGLE),
+      essentialCharacteristics = listOf(Cas1SpaceCharacteristic.isSingle),
     )
 
     val roomCharacteristic = CharacteristicEntityFactory()
