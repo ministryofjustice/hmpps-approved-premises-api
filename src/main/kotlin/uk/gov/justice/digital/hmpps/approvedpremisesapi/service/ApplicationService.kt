@@ -833,6 +833,12 @@ class ApplicationService(
       )?.let(jsonSchemaService::checkSchemaOutdated)
         ?: return AuthorisableActionResult.NotFound()
 
+    if (application.deletedAt != null) {
+      return AuthorisableActionResult.Success(
+        ValidatableActionResult.GeneralValidationError("This application has already been deleted"),
+      )
+    }
+
     val serializedTranslatedDocument = objectMapper.writeValueAsString(submitApplication.translatedDocument)
 
     val user = userService.getUserForRequest()
