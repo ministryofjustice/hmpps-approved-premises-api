@@ -71,6 +71,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.WithdrawalT
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.WithdrawalTriggeredByUser
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.allocations.UserAllocator
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1LimitedAccessStrategy
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.unit.util.assertThatCasResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.PageCriteria
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.PaginationConfig
 import java.time.LocalDate
@@ -518,73 +519,77 @@ class PlacementRequestServiceTest {
     }
   }
 
-  @Test
-  fun `createBookingNotMade returns Not Found when Placement Request doesn't exist`() {
-    val requestingUser = UserEntityFactory()
-      .withUnitTestControlProbationRegion()
-      .produce()
+  @Nested
+  inner class CreateBookingNotMade {
 
-    val placementRequestId = UUID.fromString("25dd65b1-38b5-47bc-a00b-f2df228ed06b")
+    @Test
+    fun `createBookingNotMade returns Not Found when Placement Request doesn't exist`() {
+      val requestingUser = UserEntityFactory()
+        .withUnitTestControlProbationRegion()
+        .produce()
 
-    every { placementRequestRepository.findByIdOrNull(placementRequestId) } returns null
+      val placementRequestId = UUID.fromString("25dd65b1-38b5-47bc-a00b-f2df228ed06b")
 
-    val result = placementRequestService.createBookingNotMade(requestingUser, placementRequestId, null)
-    assertThat(result is AuthorisableActionResult.NotFound).isTrue
-  }
+      every { placementRequestRepository.findByIdOrNull(placementRequestId) } returns null
 
-  @Test
-  fun `createBookingNotMade returns Success, saves Booking Not Made and saves domain event`() {
-    val requestingUser = UserEntityFactory()
-      .withUnitTestControlProbationRegion()
-      .produce()
-
-    val otherUser = UserEntityFactory()
-      .withUnitTestControlProbationRegion()
-      .produce()
-
-    val application = ApprovedPremisesApplicationEntityFactory()
-      .withCreatedByUser(otherUser)
-      .produce()
-
-    val assessment = ApprovedPremisesAssessmentEntityFactory()
-      .withApplication(application)
-      .withAllocatedToUser(otherUser)
-      .produce()
-
-    val placementRequest = PlacementRequestEntityFactory()
-      .withPlacementRequirements(
-        PlacementRequirementsEntityFactory()
-          .withApplication(application)
-          .withAssessment(assessment)
-          .produce(),
-      )
-      .withAllocatedToUser(requestingUser)
-      .withApplication(application)
-      .withAssessment(assessment)
-      .produce()
-
-    every { cas1BookingDomainEventService.bookingNotMade(any(), any(), any(), any()) } just Runs
-
-    every { placementRequestRepository.findByIdOrNull(placementRequest.id) } returns placementRequest
-    every { bookingNotMadeRepository.save(any()) } answers { it.invocation.args[0] as BookingNotMadeEntity }
-
-    val result = placementRequestService.createBookingNotMade(requestingUser, placementRequest.id, "some notes")
-    assertThat(result is AuthorisableActionResult.Success).isTrue
-    val bookingNotMade = (result as AuthorisableActionResult.Success).entity
-
-    assertThat(bookingNotMade.placementRequest).isEqualTo(placementRequest)
-    assertThat(bookingNotMade.notes).isEqualTo("some notes")
-
-    verify(exactly = 1) { bookingNotMadeRepository.save(match { it.notes == "some notes" && it.placementRequest == placementRequest }) }
-
-    verify(exactly = 1) {
-      cas1BookingDomainEventService.bookingNotMade(
-        user = requestingUser,
-        placementRequest = placementRequest,
-        bookingNotCreatedAt = any(),
-        notes = "some notes",
-      )
+      val result = placementRequestService.createBookingNotMade(requestingUser, placementRequestId, null)
+      assertThatCasResult(result).isNotFound("PlacementRequest","25dd65b1-38b5-47bc-a00b-f2df228ed06b")
     }
+
+    @Test
+    fun `createBookingNotMade returns Success, saves Booking Not Made and saves domain event`() {
+      val requestingUser = UserEntityFactory()
+        .withUnitTestControlProbationRegion()
+        .produce()
+
+      val otherUser = UserEntityFactory()
+        .withUnitTestControlProbationRegion()
+        .produce()
+
+      val application = ApprovedPremisesApplicationEntityFactory()
+        .withCreatedByUser(otherUser)
+        .produce()
+
+      val assessment = ApprovedPremisesAssessmentEntityFactory()
+        .withApplication(application)
+        .withAllocatedToUser(otherUser)
+        .produce()
+
+      val placementRequest = PlacementRequestEntityFactory()
+        .withPlacementRequirements(
+          PlacementRequirementsEntityFactory()
+            .withApplication(application)
+            .withAssessment(assessment)
+            .produce(),
+        )
+        .withAllocatedToUser(requestingUser)
+        .withApplication(application)
+        .withAssessment(assessment)
+        .produce()
+
+      every { cas1BookingDomainEventService.bookingNotMade(any(), any(), any(), any()) } just Runs
+
+      every { placementRequestRepository.findByIdOrNull(placementRequest.id) } returns placementRequest
+      every { bookingNotMadeRepository.save(any()) } answers { it.invocation.args[0] as BookingNotMadeEntity }
+
+      val result = placementRequestService.createBookingNotMade(requestingUser, placementRequest.id, "some notes")
+      assertThatCasResult(result).isSuccess().with { bookingNotMade ->
+        assertThat(bookingNotMade.placementRequest).isEqualTo(placementRequest)
+        assertThat(bookingNotMade.notes).isEqualTo("some notes")
+
+        verify(exactly = 1) { bookingNotMadeRepository.save(match { it.notes == "some notes" && it.placementRequest == placementRequest }) }
+
+        verify(exactly = 1) {
+          cas1BookingDomainEventService.bookingNotMade(
+            user = requestingUser,
+            placementRequest = placementRequest,
+            bookingNotCreatedAt = any(),
+            notes = "some notes",
+          )
+        }
+      }
+    }
+
   }
 
   @Nested

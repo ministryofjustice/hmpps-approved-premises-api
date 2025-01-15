@@ -287,11 +287,11 @@ class PlacementRequestService(
     user: UserEntity,
     placementRequestId: UUID,
     notes: String?,
-  ): AuthorisableActionResult<BookingNotMadeEntity> {
+  ): CasResult<BookingNotMadeEntity> {
     val bookingNotCreatedAt = OffsetDateTime.now()
 
     val placementRequest = placementRequestRepository.findByIdOrNull(placementRequestId)
-      ?: return AuthorisableActionResult.NotFound()
+      ?: return CasResult.NotFound("PlacementRequest", placementRequestId.toString())
 
     val bookingNotMade = BookingNotMadeEntity(
       id = UUID.randomUUID(),
@@ -302,9 +302,7 @@ class PlacementRequestService(
 
     cas1BookingDomainEventService.bookingNotMade(user, placementRequest, bookingNotCreatedAt, notes)
 
-    return AuthorisableActionResult.Success(
-      bookingNotMadeRepository.save(bookingNotMade),
-    )
+    return CasResult.Success(bookingNotMadeRepository.save(bookingNotMade))
   }
 
   fun getWithdrawableState(placementRequest: PlacementRequestEntity, user: UserEntity): WithdrawableState {

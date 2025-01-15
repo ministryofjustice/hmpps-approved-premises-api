@@ -157,17 +157,13 @@ class PlacementRequestsController(
   override fun placementRequestsIdBookingNotMadePost(id: UUID, newBookingNotMade: NewBookingNotMade): ResponseEntity<BookingNotMade> {
     val user = userService.getUserForRequest()
 
-    val authorisableResult = placementRequestService.createBookingNotMade(
+    val result = placementRequestService.createBookingNotMade(
       user = user,
       placementRequestId = id,
       notes = newBookingNotMade.notes,
     )
 
-    val bookingNotMade = when (authorisableResult) {
-      is AuthorisableActionResult.Unauthorised -> throw ForbiddenProblem()
-      is AuthorisableActionResult.NotFound -> throw NotFoundProblem(authorisableResult.id!!, authorisableResult.entityType!!)
-      is AuthorisableActionResult.Success -> authorisableResult.entity
-    }
+    val bookingNotMade = extractEntityFromCasResult(result)
 
     return ResponseEntity(bookingNotMadeTransformer.transformJpaToApi(bookingNotMade), HttpStatus.OK)
   }
