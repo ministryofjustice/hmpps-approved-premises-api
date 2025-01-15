@@ -16,8 +16,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas2v2.Cas2v2
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas2v2.Cas2v2UserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.CasResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.EmailNotificationService
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.ExternalUserService
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.HttpAuthService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.toCas2UiFormat
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.toCas2UiFormattedHourOfDay
 import java.time.OffsetDateTime
@@ -89,17 +87,17 @@ class Cas2v2ApplicationNoteService(
         recipientEmailAddress = application.createdByUser.email!!,
         templateId = notifyConfig.templates.cas2NoteAddedForReferrer,
         personalisation =
-          mapOf(
-            "dateNoteAdded" to savedNote.createdAt.toLocalDate().toCas2UiFormat(),
-            "timeNoteAdded" to savedNote.createdAt.toCas2UiFormattedHourOfDay(),
-            "nomsNumber" to application.nomsNumber,
-            "applicationType" to "Home Detention Curfew (HDC)",
-            "applicationUrl" to
-              applicationUrlTemplate.replace(
-                "#id",
-                application.id.toString(),
-              ),
-          ),
+        mapOf(
+          "dateNoteAdded" to savedNote.createdAt.toLocalDate().toCas2UiFormat(),
+          "timeNoteAdded" to savedNote.createdAt.toCas2UiFormattedHourOfDay(),
+          "nomsNumber" to application.nomsNumber,
+          "applicationType" to "Home Detention Curfew (HDC)",
+          "applicationUrl" to
+            applicationUrlTemplate.replace(
+              "#id",
+              application.id.toString(),
+            ),
+        ),
       )
     } else {
       log.error(
@@ -119,24 +117,24 @@ class Cas2v2ApplicationNoteService(
       recipientEmailAddress = notifyConfig.emailAddresses.cas2Assessors,
       templateId = notifyConfig.templates.cas2NoteAddedForAssessor,
       personalisation =
-        mapOf(
-          "nacroReferenceId" to
-            getNacroReferenceIdOrPlaceholder(application.assessment!!),
-          "nacroReferenceIdInSubject" to
-            getSubjectLineReferenceIdOrPlaceholder(
-              application.assessment!!,
-            ),
-          "dateNoteAdded" to savedNote.createdAt.toLocalDate().toCas2UiFormat(),
-          "timeNoteAdded" to savedNote.createdAt.toCas2UiFormattedHourOfDay(),
-          "assessorName" to
-            getAssessorNameOrPlaceholder(application.assessment!!),
-          "applicationType" to "Home Detention Curfew (HDC)",
-          "applicationUrl" to
-            assessmentUrlTemplate.replace(
-              "#applicationId",
-              application.id.toString(),
-            ),
-        ),
+      mapOf(
+        "nacroReferenceId" to
+          getNacroReferenceIdOrPlaceholder(application.assessment!!),
+        "nacroReferenceIdInSubject" to
+          getSubjectLineReferenceIdOrPlaceholder(
+            application.assessment!!,
+          ),
+        "dateNoteAdded" to savedNote.createdAt.toLocalDate().toCas2UiFormat(),
+        "timeNoteAdded" to savedNote.createdAt.toCas2UiFormattedHourOfDay(),
+        "assessorName" to
+          getAssessorNameOrPlaceholder(application.assessment!!),
+        "applicationType" to "Home Detention Curfew (HDC)",
+        "applicationUrl" to
+          assessmentUrlTemplate.replace(
+            "#applicationId",
+            application.id.toString(),
+          ),
+      ),
     )
   }
 
