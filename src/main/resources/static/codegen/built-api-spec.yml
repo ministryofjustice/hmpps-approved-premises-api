@@ -8029,6 +8029,7 @@ components:
         - approved_premises_update_space_booking
         - approved_premises_backfill_active_space_bookings_created_in_delius
         - approved_premises_create_test_applications
+        - approved_premises_delete_application_timeline_notes
         - temporary_accommodation_referral_rejection
     SeedFromExcelFileType:
       type: string

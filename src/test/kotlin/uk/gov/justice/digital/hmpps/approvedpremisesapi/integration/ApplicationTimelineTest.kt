@@ -77,9 +77,9 @@ class ApplicationTimelineTest : InitialiseDatabasePerClassTestBase() {
       return@map createDomainEvent(it, application, assessment, user)
     }
 
-    notes = createTimelineNotes(application, 5)
+    notes = createTimelineNotes(application, 5, isDeleted = false)
     createTimelineNotes(application, 2, isDeleted = true)
-    createTimelineNotes(otherApplication, 3)
+    createTimelineNotes(otherApplication, 3, isDeleted = false)
   }
 
   @Test
@@ -182,7 +182,7 @@ class ApplicationTimelineTest : InitialiseDatabasePerClassTestBase() {
   private fun createTimelineNotes(
     applicationEntity: ApprovedPremisesApplicationEntity,
     count: Int,
-    isDeleted: Boolean = false,
+    isDeleted: Boolean,
   ) = applicationTimelineNoteEntityFactory.produceAndPersistMultiple(count) {
     withApplicationId(applicationEntity.id)
     if (isDeleted) withDeletedAt(OffsetDateTime.now())
