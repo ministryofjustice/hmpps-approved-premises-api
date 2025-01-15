@@ -5,12 +5,12 @@ import jakarta.transaction.Transactional
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.data.repository.findByIdOrNull
 import org.springframework.stereotype.Service
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas2.model.Cas2ApplicationSubmittedEvent
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas2.model.Cas2ApplicationSubmittedEventDetails
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas2.model.Cas2ApplicationSubmittedEventDetailsSubmittedBy
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas2.model.Cas2StaffMember
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas2.model.EventType
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas2.model.PersonReference
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas2v2.model.Cas2v2ApplicationSubmittedEvent
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas2v2.model.Cas2v2ApplicationSubmittedEventDetails
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas2v2.model.Cas2v2ApplicationSubmittedEventDetailsSubmittedBy
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas2v2.model.Cas2v2StaffMember
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas2v2.model.EventType
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas2v2.model.PersonReference
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.SubmitCas2v2Application
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.config.NotifyConfig
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas2v2ApplicationJsonSchemaEntity
@@ -29,9 +29,9 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.CasResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.ValidatableActionResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.EmailNotificationService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.UpstreamApiException
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas2.DomainEventService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas2.JsonSchemaService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas2.OffenderService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas2v2.Cas2v2DomainEventService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.PageCriteria
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.getMetadata
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.getPageableOrAllPages
@@ -46,7 +46,7 @@ class Cas2v2ApplicationService(
   private val jsonSchemaService: JsonSchemaService,
   private val offenderService: OffenderService,
   private val cas2v2UserAccessService: Cas2v2UserAccessService,
-  private val domainEventService: DomainEventService,
+  private val domainEventService: Cas2v2DomainEventService,
   private val emailNotificationService: EmailNotificationService,
   private val assessmentService: Cas2v2AssessmentService,
   private val notifyConfig: NotifyConfig,
@@ -329,11 +329,11 @@ class Cas2v2ApplicationService(
         crn = application.crn,
         nomsNumber = application.nomsNumber,
         occurredAt = eventOccurredAt.toInstant(),
-        data = Cas2ApplicationSubmittedEvent(
+        data = Cas2v2ApplicationSubmittedEvent(
           id = domainEventId,
           timestamp = eventOccurredAt.toInstant(),
           eventType = EventType.applicationSubmitted,
-          eventDetails = Cas2ApplicationSubmittedEventDetails(
+          eventDetails = Cas2v2ApplicationSubmittedEventDetails(
             applicationId = application.id,
             applicationUrl = applicationUrlTemplate
               .replace("#id", application.id.toString()),
@@ -346,11 +346,9 @@ class Cas2v2ApplicationService(
             preferredAreas = application.preferredAreas,
             hdcEligibilityDate = application.hdcEligibilityDate,
             conditionalReleaseDate = application.conditionalReleaseDate,
-            submittedBy = Cas2ApplicationSubmittedEventDetailsSubmittedBy(
-              // FIXME(ross): Cas2StaffMember can't have a long staffIdentifier because delius users have a string identifier
-              staffMember = Cas2StaffMember(
-                // staffIdentifier = application.createdByUser.staffIdentifier(),
-                staffIdentifier = 0,
+            submittedBy = Cas2v2ApplicationSubmittedEventDetailsSubmittedBy(
+              staffMember = Cas2v2StaffMember(
+                staffIdentifier = application.createdByUser.staffIdentifier(),
                 name = application.createdByUser.name,
                 username = application.createdByUser.username,
               ),

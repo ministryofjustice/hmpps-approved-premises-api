@@ -71,8 +71,8 @@ data class Cas2v2UserEntity(
   override fun toString() = "CAS2 $userType bail user $id"
 
   fun staffIdentifier() = when (userType) {
-    Cas2v2UserType.NOMIS -> nomisStaffId.toString()
-    Cas2v2UserType.DELIUS -> deliusStaffCode
+    Cas2v2UserType.NOMIS -> nomisStaffId?.toString() ?: ""
+    Cas2v2UserType.DELIUS -> deliusStaffCode ?: ""
     Cas2v2UserType.EXTERNAL -> ""
   }
 

@@ -11,6 +11,7 @@ import java.util.UUID
 class DomainEventUrlConfig {
   lateinit var cas1: Map<String, UrlTemplate>
   lateinit var cas2: Map<String, UrlTemplate>
+  lateinit var cas2v2: Map<String, UrlTemplate>
   lateinit var cas3: Map<String, UrlTemplate>
 
   fun getUrlForDomainEventId(domainEventType: DomainEventType, eventId: UUID): String {
@@ -37,6 +38,8 @@ class DomainEventUrlConfig {
       DomainEventType.APPROVED_PREMISES_ASSESSMENT_INFO_REQUESTED -> cas1["assessment-info-requested-detail"]
       DomainEventType.CAS2_APPLICATION_SUBMITTED -> cas2["application-submitted-event-detail"]
       DomainEventType.CAS2_APPLICATION_STATUS_UPDATED -> cas2["application-status-updated-event-detail"]
+      DomainEventType.CAS2V2_APPLICATION_SUBMITTED -> cas2v2["application-submitted-event-detail"]
+      DomainEventType.CAS2V2_APPLICATION_STATUS_UPDATED -> cas2v2["application-status-updated-event-detail"]
       DomainEventType.CAS3_BOOKING_CANCELLED -> cas3["booking-cancelled-event-detail"]
       DomainEventType.CAS3_BOOKING_CONFIRMED -> cas3["booking-confirmed-event-detail"]
       DomainEventType.CAS3_BOOKING_PROVISIONALLY_MADE -> cas3["booking-provisionally-made-event-detail"]

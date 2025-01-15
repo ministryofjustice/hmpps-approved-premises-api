@@ -161,7 +161,14 @@ tasks.bootRun {
 }
 
 tasks.withType<Test> {
-  jvmArgs("--add-opens", "java.base/java.lang=ALL-UNNAMED", "--add-opens", "java.base/java.lang.reflect=ALL-UNNAMED", "--add-opens", "java.base/java.time=ALL-UNNAMED")
+  jvmArgs(
+    "--add-opens",
+    "java.base/java.lang=ALL-UNNAMED",
+    "--add-opens",
+    "java.base/java.lang.reflect=ALL-UNNAMED",
+    "--add-opens",
+    "java.base/java.time=ALL-UNNAMED"
+  )
 
   afterEvaluate {
     if (environment["CI"] != null) {
@@ -290,6 +297,14 @@ registerAdditionalOpenApiGenerateTask(
 )
 
 registerAdditionalOpenApiGenerateTask(
+  name = "openApiGenerateCas2v2DomainEvents",
+  ymlPath = "$rootDir/src/main/resources/static/cas2v2-domain-events-api.yml",
+  apiPackageName = "uk.gov.justice.digital.hmpps.approvedpremisesapi.api",
+  modelPackageName = "uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas2v2.model",
+  useTags = true,
+)
+
+registerAdditionalOpenApiGenerateTask(
   name = "openApiGenerateCas3DomainEvents",
   ymlPath = "$rootDir/src/main/resources/static/cas3-domain-events-api.yml",
   apiPackageName = "uk.gov.justice.digital.hmpps.approvedpremisesapi.api",
@@ -405,6 +420,7 @@ tasks.get("openApiGenerate").dependsOn(
   "openApiGenerateDomainEvents",
   "openApiGenerateCas3DomainEvents",
   "openApiGenerateCas2DomainEvents",
+  "openApiGenerateCas2v2DomainEvents",
   "openApiPreCompilation",
   "openApiGenerateCas1Namespace",
   "openApiGenerateCas2Namespace",

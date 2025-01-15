@@ -38,11 +38,11 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.AuthorisableActi
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.CasResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.ValidatableActionResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.EmailNotificationService
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas2.DomainEventService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas2.JsonSchemaService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas2.OffenderService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas2v2.Cas2v2ApplicationService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas2v2.Cas2v2AssessmentService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas2v2.Cas2v2DomainEventService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas2v2.Cas2v2UserAccessService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.PageCriteria
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.PaginationConfig
@@ -60,7 +60,7 @@ class Cas2v2ApplicationServiceTest {
   private val mockJsonSchemaService = mockk<JsonSchemaService>()
   private val mockOffenderService = mockk<OffenderService>()
   private val mockCas2v2UserAccessService = mockk<Cas2v2UserAccessService>()
-  private val mockDomainEventService = mockk<DomainEventService>()
+  private val mockDomainEventService = mockk<Cas2v2DomainEventService>()
   private val mockEmailNotificationService = mockk<EmailNotificationService>()
   private val mockCas2v2AssessmentService = mockk<Cas2v2AssessmentService>()
   private val mockObjectMapper = mockk<ObjectMapper>()
@@ -122,7 +122,9 @@ class Cas2v2ApplicationServiceTest {
         )
       } returns page
 
-      val (applicationSummaries, metadata) = cas2v2ApplicationService.getAllSubmittedCas2v2ApplicationsForAssessor(pageCriteria)
+      val (applicationSummaries, metadata) = cas2v2ApplicationService.getAllSubmittedCas2v2ApplicationsForAssessor(
+        pageCriteria,
+      )
 
       assertThat(applicationSummaries).isEqualTo(listOf(cas2v2ApplicationSummary))
       assertThat(metadata?.currentPage).isEqualTo(3)
@@ -157,7 +159,12 @@ class Cas2v2ApplicationServiceTest {
       every { page.totalPages } returns 10
       every { page.totalElements } returns 100
 
-      val (applicationSummaries, _) = cas2v2ApplicationService.getCas2v2Applications(prisonCode, isSubmitted, user, pageCriteria)
+      val (applicationSummaries, _) = cas2v2ApplicationService.getCas2v2Applications(
+        prisonCode,
+        isSubmitted,
+        user,
+        pageCriteria,
+      )
 
       assertThat(applicationSummaries).isEqualTo(listOf(cas2v2ApplicationSummary))
     }
@@ -214,7 +221,12 @@ class Cas2v2ApplicationServiceTest {
 
       every { mockCas2v2ApplicationRepository.findByIdOrNull(applicationId) } returns null
 
-      assertThat(cas2v2ApplicationService.getCas2v2ApplicationForUser(applicationId, user) is AuthorisableActionResult.NotFound).isTrue
+      assertThat(
+        cas2v2ApplicationService.getCas2v2ApplicationForUser(
+          applicationId,
+          user,
+        ) is AuthorisableActionResult.NotFound,
+      ).isTrue
     }
 
     @Test
@@ -231,7 +243,12 @@ class Cas2v2ApplicationServiceTest {
           .withAbandonedAt(OffsetDateTime.now())
           .produce()
 
-      assertThat(cas2v2ApplicationService.getCas2v2ApplicationForUser(applicationId, user) is AuthorisableActionResult.NotFound).isTrue
+      assertThat(
+        cas2v2ApplicationService.getCas2v2ApplicationForUser(
+          applicationId,
+          user,
+        ) is AuthorisableActionResult.NotFound,
+      ).isTrue
     }
 
     @Test
@@ -250,7 +267,12 @@ class Cas2v2ApplicationServiceTest {
 
       every { mockCas2v2UserAccessService.userCanViewCas2v2Application(any(), any()) } returns false
 
-      assertThat(cas2v2ApplicationService.getCas2v2ApplicationForUser(applicationId, user) is AuthorisableActionResult.Unauthorised).isTrue
+      assertThat(
+        cas2v2ApplicationService.getCas2v2ApplicationForUser(
+          applicationId,
+          user,
+        ) is AuthorisableActionResult.Unauthorised,
+      ).isTrue
     }
 
     @Test
@@ -781,7 +803,9 @@ class Cas2v2ApplicationServiceTest {
 
     @BeforeEach
     fun setup() {
-      every { mockCas2v2LockableApplicationRepository.acquirePessimisticLock(any()) } returns Cas2v2LockableApplicationEntity(UUID.randomUUID())
+      every { mockCas2v2LockableApplicationRepository.acquirePessimisticLock(any()) } returns Cas2v2LockableApplicationEntity(
+        UUID.randomUUID(),
+      )
       every { mockObjectMapper.writeValueAsString(submitCas2v2Application.translatedDocument) } returns "{}"
       every { mockDomainEventService.saveCas2ApplicationSubmittedDomainEvent(any()) } just Runs
     }
@@ -792,7 +816,12 @@ class Cas2v2ApplicationServiceTest {
 
       every { mockCas2v2ApplicationRepository.findByIdOrNull(applicationId) } returns null
 
-      assertThat(cas2v2ApplicationService.submitCas2v2Application(submitCas2v2Application, user) is CasResult.NotFound).isTrue
+      assertThat(
+        cas2v2ApplicationService.submitCas2v2Application(
+          submitCas2v2Application,
+          user,
+        ) is CasResult.NotFound,
+      ).isTrue
 
       assertEmailAndAssessmentsWereNotCreated()
     }
@@ -811,7 +840,12 @@ class Cas2v2ApplicationServiceTest {
       every { mockJsonSchemaService.checkCas2v2SchemaOutdated(cas2v2Application) } returns
         cas2v2Application
 
-      assertThat(cas2v2ApplicationService.submitCas2v2Application(submitCas2v2Application, user) is CasResult.Unauthorised).isTrue
+      assertThat(
+        cas2v2ApplicationService.submitCas2v2Application(
+          submitCas2v2Application,
+          user,
+        ) is CasResult.Unauthorised,
+      ).isTrue
 
       assertEmailAndAssessmentsWereNotCreated()
     }
