@@ -119,7 +119,7 @@ ALTER TABLE cas_2_v2_status_updates
     ADD CONSTRAINT FK_CAS_2_V2_STATUS_UPDATES_ON_ASSESSMENT FOREIGN KEY (assessment_id) REFERENCES cas_2_v2_assessments (id);
 
 ALTER TABLE cas_2_v2_status_updates
-    ADD CONSTRAINT FK_CAS_2_V2_STATUS_UPDATES_ON_ASSESSOR FOREIGN KEY (assessor_id) REFERENCES external_users (id);
+    ADD CONSTRAINT FK_CAS_2_V2_STATUS_UPDATES_ON_ASSESSOR FOREIGN KEY (assessor_id) REFERENCES cas_2_v2_users (id);
 
 ALTER TABLE cas_2_v2_status_update_details
     ADD CONSTRAINT FK_CAS_2_V2_STATUS_UPDATE_DETAILS_ON_STATUS_UPDATE FOREIGN KEY (status_update_id) REFERENCES cas_2_v2_status_updates (id);

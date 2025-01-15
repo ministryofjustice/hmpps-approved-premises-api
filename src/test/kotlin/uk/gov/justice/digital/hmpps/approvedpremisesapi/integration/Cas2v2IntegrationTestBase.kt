@@ -21,6 +21,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas2v2.Cas2v2
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas2v2.Cas2v2AssessmentRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas2v2.Cas2v2StatusUpdateEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas2v2.Cas2v2UserEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas2v2.Cas2v2UserRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.repository.Cas2v2ApplicationJsonSchemaTestRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.repository.Cas2v2ApplicationTestRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.repository.Cas2v2StatusUpdateTestRepository
@@ -43,6 +44,9 @@ abstract class Cas2v2IntegrationTestBase : IntegrationTestBase() {
   lateinit var cas2v2StatusUpdateRepository: Cas2v2StatusUpdateTestRepository
 
   @Autowired
+  lateinit var cas2v2UserRepository: Cas2v2UserRepository
+
+  @Autowired
   lateinit var cas2v2ApplicationJsonSchemaRepository: Cas2v2ApplicationJsonSchemaTestRepository
 
   lateinit var cas2v2ApplicationEntityFactory: PersistedFactory<Cas2v2ApplicationEntity, UUID, Cas2v2ApplicationEntityFactory>
@@ -57,6 +61,7 @@ abstract class Cas2v2IntegrationTestBase : IntegrationTestBase() {
     cas2v2AssessmentEntityFactory = PersistedFactory({ Cas2v2AssessmentEntityFactory() }, cas2v2AssessmentRepository)
     cas2v2StatusUpdateEntityFactory =
       PersistedFactory({ Cas2v2StatusUpdateEntityFactory() }, cas2v2StatusUpdateRepository)
+    cas2v2UserEntityFactory = PersistedFactory({ Cas2v2UserEntityFactory() }, cas2v2UserRepository)
     cas2v2ApplicationJsonSchemaEntityFactory =
       PersistedFactory({ Cas2v2ApplicationJsonSchemaEntityFactory() }, cas2v2ApplicationJsonSchemaRepository)
   }

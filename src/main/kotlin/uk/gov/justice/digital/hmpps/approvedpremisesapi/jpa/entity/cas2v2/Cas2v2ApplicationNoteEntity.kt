@@ -27,7 +27,9 @@ data class Cas2v2ApplicationNoteEntity(
   @Id
   val id: UUID,
 
-  val createdByUser: Cas2v2User,
+  @ManyToOne
+  @JoinColumn(name = "created_by_user_id")
+  val createdByUser: Cas2v2UserEntity,
 
   @ManyToOne
   @JoinColumn(name = "application_id")
@@ -42,7 +44,7 @@ data class Cas2v2ApplicationNoteEntity(
   var assessment: Cas2v2AssessmentEntity?,
 ) {
 
-  fun getUser(): Cas2v2User = this.createdByUser
+  fun getUser(): Cas2v2UserEntity = this.createdByUser
 
   override fun toString() = "Cas2v2ApplicationNoteEntity: $id"
 }
