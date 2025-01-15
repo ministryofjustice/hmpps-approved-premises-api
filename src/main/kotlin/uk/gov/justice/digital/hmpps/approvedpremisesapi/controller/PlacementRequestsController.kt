@@ -21,7 +21,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementRequ
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementRequestWithdrawalReason
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserPermission
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserQualification
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.BadRequestProblem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.ConflictProblem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.ForbiddenProblem
