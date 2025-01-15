@@ -31,7 +31,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.EmailNotificatio
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.UpstreamApiException
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas2.JsonSchemaService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas2.OffenderService
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas2v2.Cas2v2DomainEventService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.PageCriteria
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.getMetadata
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.getPageableOrAllPages
