@@ -173,7 +173,12 @@ class Cas2v2ApplicationService(
     }
 
   @SuppressWarnings("ReturnCount")
-  fun updateCas2v2Application(applicationId: UUID, data: String?, user: NomisUserEntity): CasResult<Cas2v2ApplicationEntity> {
+  fun updateCas2v2Application(
+    applicationId: UUID,
+    data: String?,
+    user: NomisUserEntity,
+    bailHearingDate: LocalDate?,
+  ): CasResult<Cas2v2ApplicationEntity> {
     val application = cas2v2ApplicationRepository.findByIdOrNull(applicationId)?.let(jsonSchemaService::checkCas2v2SchemaOutdated)
       ?: return CasResult.NotFound()
 
@@ -192,6 +197,8 @@ class Cas2v2ApplicationService(
     if (!application.schemaUpToDate) {
       return CasResult.GeneralValidationError("The schema version is outdated")
     }
+
+    application.bailHearingDate = bailHearingDate
 
     application.apply {
       this.data = removeXssCharacters(data)

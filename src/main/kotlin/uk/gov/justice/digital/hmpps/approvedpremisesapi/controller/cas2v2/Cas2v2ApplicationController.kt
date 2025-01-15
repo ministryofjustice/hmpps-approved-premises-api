@@ -9,6 +9,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Application
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewApplication
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.SortDirection
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.UpdateApplication
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.UpdateCas2v2Application
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas2v2.Cas2v2ApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas2v2.Cas2v2ApplicationSummaryEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.BadRequestProblem
@@ -103,6 +104,7 @@ class Cas2v2ApplicationController(
       .body(cas2v2ApplicationsTransformer.transformJpaToApi(application, personInfo))
   }
 
+  @Suppress("TooGenericExceptionThrown")
   @Transactional
   override fun applicationsApplicationIdPut(
     applicationId: UUID,
@@ -112,12 +114,16 @@ class Cas2v2ApplicationController(
 
     val serializedData = objectMapper.writeValueAsString(body.data)
 
-    val applicationResult = cas2v2ApplicationService.updateCas2v2Application(
-      applicationId =
-      applicationId,
-      data = serializedData,
-      user,
-    )
+    val applicationResult = when (body) {
+      is UpdateCas2v2Application -> cas2v2ApplicationService.updateCas2v2Application(
+        applicationId = applicationId,
+        data = serializedData,
+        user,
+        body.bailHearingDate,
+      )
+
+      else -> throw RuntimeException("Unsupported UpdateApplication type: ${body::class.qualifiedName}")
+    }
 
     val entity = extractEntityFromCasResult(applicationResult)
     return ResponseEntity.ok(getPersonDetailAndTransform(entity))
