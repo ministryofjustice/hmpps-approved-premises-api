@@ -65,7 +65,7 @@ class PlacementRequestsController(
 
     return ResponseEntity.ok(
       requests.first.map {
-        val personInfo = offenderService.getPersonInfoResult(it.application.crn, user.deliusUsername, false)
+        val personInfo = offenderService.getPersonInfoResult(it.application.crn, user.cas1LimitedAccessStrategy())
 
         placementRequestTransformer.transformJpaToApi(it, personInfo)
       },
@@ -220,7 +220,7 @@ class PlacementRequestsController(
 
   private fun mapPersonDetailOntoPlacementRequests(placementRequests: List<PlacementRequestEntity>, user: UserEntity): List<PlacementRequest> {
     return placementRequests.map {
-      val personInfo = offenderService.getPersonInfoResult(it.application.crn, user.deliusUsername, user.hasQualification(UserQualification.LAO))
+      val personInfo = offenderService.getPersonInfoResult(it.application.crn, user.cas1LimitedAccessStrategy())
 
       placementRequestTransformer.transformJpaToApi(it, personInfo)
     }
