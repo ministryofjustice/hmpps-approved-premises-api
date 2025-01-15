@@ -48,7 +48,7 @@ class Cas1RedactAssessmentDetailsTest : SeedTestBase() {
     assertThat(approvedPremisesAssessmentRepository.findByIdOrNull(assessment1NoJson.id)!!.data).isNull()
     assertThat(approvedPremisesAssessmentRepository.findByIdOrNull(assessment1NoJson.id)!!.document).isNull()
     assertThat(
-      applicationTimelineNoteRepository.findApplicationTimelineNoteEntitiesByApplicationId(assessment1NoJson.id).none {
+      applicationTimelineNoteRepository.findApplicationTimelineNoteEntitiesByApplicationIdAndDeletedAtIsNull(assessment1NoJson.id).none {
         it.body == "Assessment details redacted"
       },
     )
@@ -56,7 +56,7 @@ class Cas1RedactAssessmentDetailsTest : SeedTestBase() {
     assertThat(approvedPremisesAssessmentRepository.findByIdOrNull(assessment2HasJson.id)!!.data).isEqualTo(expectedJson)
     assertThat(approvedPremisesAssessmentRepository.findByIdOrNull(assessment2HasJson.id)!!.document).isEqualTo(expectedJson)
     assertThat(
-      applicationTimelineNoteRepository.findApplicationTimelineNoteEntitiesByApplicationId(assessment2HasJson.id).any {
+      applicationTimelineNoteRepository.findApplicationTimelineNoteEntitiesByApplicationIdAndDeletedAtIsNull(assessment2HasJson.id).any {
         it.body == "Assessment details redacted"
       },
     )
@@ -64,7 +64,7 @@ class Cas1RedactAssessmentDetailsTest : SeedTestBase() {
     assertThat(approvedPremisesAssessmentRepository.findByIdOrNull(assessment3Unmodified.id)!!.data).isEqualTo(sampleJson)
     assertThat(approvedPremisesAssessmentRepository.findByIdOrNull(assessment3Unmodified.id)!!.document).isEqualTo(sampleJson)
     assertThat(
-      applicationTimelineNoteRepository.findApplicationTimelineNoteEntitiesByApplicationId(assessment3Unmodified.id).none {
+      applicationTimelineNoteRepository.findApplicationTimelineNoteEntitiesByApplicationIdAndDeletedAtIsNull(assessment3Unmodified.id).none {
         it.body == "Assessment details redacted"
       },
     )

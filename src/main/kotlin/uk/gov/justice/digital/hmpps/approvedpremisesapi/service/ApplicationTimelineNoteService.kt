@@ -13,7 +13,7 @@ class ApplicationTimelineNoteService(
 ) {
 
   fun getApplicationTimelineNotesByApplicationId(applicationId: UUID): List<ApplicationTimelineNoteEntity> =
-    applicationTimelineNoteRepository.findApplicationTimelineNoteEntitiesByApplicationId(applicationId)
+    applicationTimelineNoteRepository.findApplicationTimelineNoteEntitiesByApplicationIdAndDeletedAtIsNull(applicationId)
 
   fun saveApplicationTimelineNote(
     applicationId: UUID,
@@ -29,6 +29,7 @@ class ApplicationTimelineNoteService(
         createdAt = OffsetDateTime.now(),
         body = note,
         cas1SpaceBookingId = cas1SpaceBookingId,
+        deletedAt = null,
       ),
     )
   }

@@ -12,7 +12,7 @@ import java.util.UUID
 
 interface ApplicationTimelineNoteRepository : JpaRepository<ApplicationTimelineNoteEntity, UUID> {
 
-  fun findApplicationTimelineNoteEntitiesByApplicationId(applicationId: UUID): List<ApplicationTimelineNoteEntity>
+  fun findApplicationTimelineNoteEntitiesByApplicationIdAndDeletedAtIsNull(applicationId: UUID): List<ApplicationTimelineNoteEntity>
 }
 
 @Entity
@@ -28,4 +28,5 @@ data class ApplicationTimelineNoteEntity(
   val body: String,
   @Column(name = "cas1_space_booking_id")
   val cas1SpaceBookingId: UUID?,
+  var deletedAt: OffsetDateTime?,
 )

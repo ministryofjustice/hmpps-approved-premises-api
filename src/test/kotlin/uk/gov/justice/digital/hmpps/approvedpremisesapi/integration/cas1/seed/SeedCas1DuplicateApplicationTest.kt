@@ -111,7 +111,7 @@ class SeedCas1DuplicateApplicationTest : SeedTestBase() {
         assertThat(newApplication.isEsapApplication).isEqualTo(sourceApplication.isEsapApplication)
         assertThat(newApplication.isPipeApplication).isEqualTo(sourceApplication.isPipeApplication)
 
-        val notes = applicationTimelineNoteRepository.findApplicationTimelineNoteEntitiesByApplicationId(newApplication.id)
+        val notes = applicationTimelineNoteRepository.findApplicationTimelineNoteEntitiesByApplicationIdAndDeletedAtIsNull(newApplication.id)
         assertThat(notes).hasSize(1)
         assertThat(notes)
           .extracting("body")
