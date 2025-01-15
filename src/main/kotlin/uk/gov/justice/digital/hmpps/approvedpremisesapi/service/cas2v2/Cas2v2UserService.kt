@@ -25,7 +25,7 @@ class Cas2v2UserService(
     val authenticatedPrincipal = httpAuthService.getCas2v2AuthenticatedPrincipalOrThrow()
     val jwt = authenticatedPrincipal.token.tokenValue
     val username = authenticatedPrincipal.name
-    val userType = Cas2v2UserType.valueOf(authenticatedPrincipal.authenticationSource())
+    val userType = Cas2v2UserType.fromString(authenticatedPrincipal.authenticationSource())
 
     return getUserForUsername(username, jwt, userType)
   }
@@ -83,10 +83,11 @@ class Cas2v2UserService(
   }
 
   private fun getEntityForDeliusUser(username: String): Cas2v2UserEntity {
-    val deliusUser: StaffDetail = when (val staffUserDetailsResponse = apDeliusContextApiClient.getStaffDetail(username)) {
-      is ClientResult.Success<*> -> staffUserDetailsResponse.body as StaffDetail
-      is ClientResult.Failure<*> -> staffUserDetailsResponse.throwException()
-    }
+    val deliusUser: StaffDetail =
+      when (val staffUserDetailsResponse = apDeliusContextApiClient.getStaffDetail(username)) {
+        is ClientResult.Success<*> -> staffUserDetailsResponse.body as StaffDetail
+        is ClientResult.Failure<*> -> staffUserDetailsResponse.throwException()
+      }
 
     val existingUser = getExistingUser(username, Cas2v2UserType.DELIUS)
     if (existingUser != null) {

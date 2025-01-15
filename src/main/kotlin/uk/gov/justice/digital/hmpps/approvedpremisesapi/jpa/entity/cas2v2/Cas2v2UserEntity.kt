@@ -18,6 +18,13 @@ enum class Cas2v2UserType(val authSource: String) {
   DELIUS("delius"),
   NOMIS("nomis"),
   EXTERNAL("auth"),
+  ;
+
+  companion object {
+    fun fromString(authSource: String): Cas2v2UserType {
+      return entries.first { it.authSource == authSource }
+    }
+  }
 }
 
 sealed interface User
