@@ -108,7 +108,7 @@ paths:
         content:
           'application/json':
             schema:
-              $ref: '#/components/schemas/UpdateApplication'
+              $ref: '#/components/schemas/UpdateCas2v2Application'
         required: true
       responses:
         200:
@@ -2840,8 +2840,6 @@ components:
             bailHearingDate:
               type: string
               format: date
-            applicationOrigin:
-              $ref: "#/components/schemas/ApplicationOrigin"
     UpdateApprovedPremisesApplication:
       allOf:
         - $ref: '#/components/schemas/UpdateApplication'

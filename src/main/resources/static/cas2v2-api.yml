@@ -106,7 +106,7 @@ paths:
         content:
           'application/json':
             schema:
-              $ref: '_shared.yml#/components/schemas/UpdateApplication'
+              $ref: '_shared.yml#/components/schemas/UpdateCas2v2Application'
         required: true
       responses:
         200:

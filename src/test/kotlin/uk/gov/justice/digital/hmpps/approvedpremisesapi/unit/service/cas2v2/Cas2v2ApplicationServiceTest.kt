@@ -51,6 +51,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.getPageableOrAllPag
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomStringMultiCaseWithNumbers
 import java.time.LocalDate
 import java.time.OffsetDateTime
+import java.time.format.DateTimeFormatter
 import java.util.UUID
 
 class Cas2v2ApplicationServiceTest {
@@ -327,6 +328,7 @@ class Cas2v2ApplicationServiceTest {
     fun `returns Success with created Application`() {
       val crn = "CRN345"
       val username = "SOMEPERSON"
+      val bailHearingDate = LocalDate.of(2024, 12, 18)
 
       val cas2v2ApplicationSchema = Cas2v2ApplicationJsonSchemaEntityFactory().produce()
 
@@ -342,11 +344,12 @@ class Cas2v2ApplicationServiceTest {
           Cas2v2ApplicationEntity
       }
 
-      val result = cas2v2ApplicationService.createCas2v2Application(crn, user, null)
+      val result = cas2v2ApplicationService.createCas2v2Application(crn, user, bailHearingDate)
 
       assertThat(result is ValidatableActionResult.Success).isTrue
       result as ValidatableActionResult.Success
       assertThat(result.entity.crn).isEqualTo(crn)
+      assertThat(result.entity.bailHearingDate).isEqualTo(bailHearingDate)
 //      assertThat(result.entity.createdByUser).isEqualTo(user)
     }
   }
@@ -366,6 +369,7 @@ class Cas2v2ApplicationServiceTest {
           applicationId = applicationId,
           data = "{}",
           user = user,
+          null,
         ) is AuthorisableActionResult.NotFound,
       ).isTrue
     }
@@ -392,6 +396,7 @@ class Cas2v2ApplicationServiceTest {
           applicationId = applicationId,
           data = "{}",
           user = user,
+          null,
         ) is AuthorisableActionResult.Unauthorised,
       ).isTrue
     }
@@ -421,6 +426,7 @@ class Cas2v2ApplicationServiceTest {
         applicationId = applicationId,
         data = "{}",
         user = user,
+        null,
       )
 
       assertThat(result is AuthorisableActionResult.Success).isTrue
@@ -455,6 +461,7 @@ class Cas2v2ApplicationServiceTest {
         applicationId = applicationId,
         data = "{}",
         user = user,
+        null,
       )
 
       assertThat(result is AuthorisableActionResult.Success).isTrue
@@ -486,6 +493,7 @@ class Cas2v2ApplicationServiceTest {
         applicationId = applicationId,
         data = "{}",
         user = user,
+        null,
       )
 
       assertThat(result is AuthorisableActionResult.Success).isTrue
@@ -538,6 +546,7 @@ class Cas2v2ApplicationServiceTest {
         applicationId = applicationId,
         data = updatedData,
         user = user,
+        null,
       )
 
       assertThat(result is AuthorisableActionResult.Success).isTrue
@@ -561,10 +570,14 @@ class Cas2v2ApplicationServiceTest {
     fun `returns Success with updated Application`() {
       val applicationId = UUID.fromString("fa6e97ce-7b9e-473c-883c-83b1c2af773d")
 
+      val bailHearingDate = LocalDate.of(2030, 12, 18)
+      var formatter = DateTimeFormatter.ofPattern("dd-MM-yyyy")
+
       val newestSchema = Cas2v2ApplicationJsonSchemaEntityFactory().produce()
       val updatedData = """
       {
         "aProperty": "value"
+        "bailHearingDate": "${bailHearingDate.format(formatter)}"
       }
     """
 
@@ -597,6 +610,7 @@ class Cas2v2ApplicationServiceTest {
         applicationId = applicationId,
         data = updatedData,
         user = user,
+        bailHearingDate,
       )
 
       assertThat(result is AuthorisableActionResult.Success).isTrue
@@ -607,7 +621,10 @@ class Cas2v2ApplicationServiceTest {
 
       val cas2v2Application = validatableActionResult.entity
 
+      verify { mockCas2v2ApplicationRepository.save(application) }
+
       assertThat(cas2v2Application.data).isEqualTo(updatedData)
+      assertThat(cas2v2Application.bailHearingDate).isEqualTo(bailHearingDate)
     }
   }
 

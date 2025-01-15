@@ -2249,8 +2249,6 @@ components:
             bailHearingDate:
               type: string
               format: date
-            applicationOrigin:
-              $ref: "#/components/schemas/ApplicationOrigin"
     UpdateApprovedPremisesApplication:
       allOf:
         - $ref: '#/components/schemas/UpdateApplication'

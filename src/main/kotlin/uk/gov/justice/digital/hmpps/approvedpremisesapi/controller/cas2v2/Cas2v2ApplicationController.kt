@@ -8,7 +8,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.cas2v2.ApplicationsC
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Application
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewApplication
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.SortDirection
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.UpdateApplication
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.UpdateCas2v2Application
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas2v2.Cas2v2ApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas2v2.Cas2v2ApplicationSummaryEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.BadRequestProblem
@@ -105,17 +105,17 @@ class Cas2v2ApplicationController(
   @Transactional
   override fun applicationsApplicationIdPut(
     applicationId: UUID,
-    body: UpdateApplication,
+    body: UpdateCas2v2Application,
   ): ResponseEntity<Application> {
     val user = nomisUserService.getUserForRequest()
 
     val serializedData = objectMapper.writeValueAsString(body.data)
 
     val applicationResult = cas2v2ApplicationService.updateCas2v2Application(
-      applicationId =
-      applicationId,
+      applicationId = applicationId,
       data = serializedData,
       user,
+      body.bailHearingDate,
     )
 
     val validationResult = when (applicationResult) {
