@@ -20,8 +20,12 @@ class Cas2v2UserAccessService {
   }
 
   fun userCanAddNote(user: Cas2v2UserEntity, application: Cas2v2ApplicationEntity): Boolean = when (user.userType) {
-    Cas2v2UserType.DELIUS -> user.id == application.createdByUser.id || offenderIsFromSamePrisonAsUser(application.referringPrisonCode, user.activeNomisCaseloadId)
-    Cas2v2UserType.NOMIS -> user.id == application.createdByUser.id
+    Cas2v2UserType.NOMIS -> user.id == application.createdByUser.id || offenderIsFromSamePrisonAsUser(
+      application.referringPrisonCode,
+      user.activeNomisCaseloadId,
+    )
+
+    Cas2v2UserType.DELIUS -> user.id == application.createdByUser.id
     Cas2v2UserType.EXTERNAL -> true
   }
 
