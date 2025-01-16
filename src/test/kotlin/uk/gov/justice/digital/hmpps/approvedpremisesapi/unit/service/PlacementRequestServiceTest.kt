@@ -71,6 +71,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.WithdrawalT
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.WithdrawalTriggeredByUser
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.allocations.UserAllocator
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1LimitedAccessStrategy
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.unit.util.assertThatCasResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.PageCriteria
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.PaginationConfig
 import java.time.LocalDate
@@ -129,54 +130,58 @@ class PlacementRequestServiceTest {
     PaginationConfig(defaultPageSize = 10).postInit()
   }
 
-  @ParameterizedTest
-  @EnumSource(PlacementRequestSource::class)
-  fun `createPlacementRequest creates a placement request with the correct deadline`(source: PlacementRequestSource) {
-    val dueAt = OffsetDateTime.now()
+  @Nested
+  inner class CreatePlacementRequest {
 
-    every { taskDeadlineServiceMock.getDeadline(any<PlacementRequestEntity>()) } returns dueAt
-    every { userAllocator.getUserForPlacementRequestAllocation(any()) } returns assigneeUser
-    every { placementRequestRepository.save(any()) } answers { it.invocation.args[0] as PlacementRequestEntity }
-    every { cas1PlacementRequestDomainEventService.placementRequestCreated(any(), any()) } returns Unit
+    @ParameterizedTest
+    @EnumSource(PlacementRequestSource::class)
+    fun `createPlacementRequest creates a placement request with the correct deadline`(source: PlacementRequestSource) {
+      val dueAt = OffsetDateTime.now()
 
-    val application = ApprovedPremisesApplicationEntityFactory()
-      .withCreatedByUser(assigneeUser)
-      .produce()
+      every { taskDeadlineServiceMock.getDeadline(any<PlacementRequestEntity>()) } returns dueAt
+      every { userAllocator.getUserForPlacementRequestAllocation(any()) } returns assigneeUser
+      every { placementRequestRepository.save(any()) } answers { it.invocation.args[0] as PlacementRequestEntity }
+      every { cas1PlacementRequestDomainEventService.placementRequestCreated(any(), any()) } returns Unit
 
-    val assessment = ApprovedPremisesAssessmentEntityFactory()
-      .withApplication(application)
-      .withAllocatedToUser(assigneeUser)
-      .produce()
+      val application = ApprovedPremisesApplicationEntityFactory()
+        .withCreatedByUser(assigneeUser)
+        .produce()
 
-    val placementRequirements = PlacementRequirementsEntityFactory()
-      .withApplication(application)
-      .withAssessment(assessment)
-      .produce()
+      val assessment = ApprovedPremisesAssessmentEntityFactory()
+        .withApplication(application)
+        .withAllocatedToUser(assigneeUser)
+        .produce()
 
-    val placementDates = PlacementDates(
-      expectedArrival = LocalDate.now(),
-      duration = 12,
-    )
+      val placementRequirements = PlacementRequirementsEntityFactory()
+        .withApplication(application)
+        .withAssessment(assessment)
+        .produce()
 
-    val placementRequest = placementRequestService.createPlacementRequest(
-      source,
-      placementRequirements,
-      placementDates,
-      "Some notes",
-      false,
-      null,
-    )
+      val placementDates = PlacementDates(
+        expectedArrival = LocalDate.now(),
+        duration = 12,
+      )
 
-    assertThat(placementRequest.duration).isEqualTo(placementDates.duration)
-    assertThat(placementRequest.expectedArrival).isEqualTo(placementDates.expectedArrival)
-    assertThat(placementRequest.placementRequirements).isEqualTo(placementRequirements)
-    assertThat(placementRequest.assessment.id).isEqualTo(assessment.id)
-    assertThat(placementRequest.application.id).isEqualTo(application.id)
-    assertThat(placementRequest.isParole).isFalse()
-    assertThat(placementRequest.dueAt).isEqualTo(dueAt)
-    assertThat(placementRequest.allocatedToUser!!.id).isEqualTo(assigneeUser.id)
+      val placementRequest = placementRequestService.createPlacementRequest(
+        source,
+        placementRequirements,
+        placementDates,
+        "Some notes",
+        false,
+        null,
+      )
 
-    verify { cas1PlacementRequestDomainEventService.placementRequestCreated(placementRequest, source) }
+      assertThat(placementRequest.duration).isEqualTo(placementDates.duration)
+      assertThat(placementRequest.expectedArrival).isEqualTo(placementDates.expectedArrival)
+      assertThat(placementRequest.placementRequirements).isEqualTo(placementRequirements)
+      assertThat(placementRequest.assessment.id).isEqualTo(assessment.id)
+      assertThat(placementRequest.application.id).isEqualTo(application.id)
+      assertThat(placementRequest.isParole).isFalse()
+      assertThat(placementRequest.dueAt).isEqualTo(dueAt)
+      assertThat(placementRequest.allocatedToUser!!.id).isEqualTo(assigneeUser.id)
+
+      verify { cas1PlacementRequestDomainEventService.placementRequestCreated(placementRequest, source) }
+    }
   }
 
   @Nested
@@ -518,72 +523,75 @@ class PlacementRequestServiceTest {
     }
   }
 
-  @Test
-  fun `createBookingNotMade returns Not Found when Placement Request doesn't exist`() {
-    val requestingUser = UserEntityFactory()
-      .withUnitTestControlProbationRegion()
-      .produce()
+  @Nested
+  inner class CreateBookingNotMade {
 
-    val placementRequestId = UUID.fromString("25dd65b1-38b5-47bc-a00b-f2df228ed06b")
+    @Test
+    fun `createBookingNotMade returns Not Found when Placement Request doesn't exist`() {
+      val requestingUser = UserEntityFactory()
+        .withUnitTestControlProbationRegion()
+        .produce()
 
-    every { placementRequestRepository.findByIdOrNull(placementRequestId) } returns null
+      val placementRequestId = UUID.fromString("25dd65b1-38b5-47bc-a00b-f2df228ed06b")
 
-    val result = placementRequestService.createBookingNotMade(requestingUser, placementRequestId, null)
-    assertThat(result is AuthorisableActionResult.NotFound).isTrue
-  }
+      every { placementRequestRepository.findByIdOrNull(placementRequestId) } returns null
 
-  @Test
-  fun `createBookingNotMade returns Success, saves Booking Not Made and saves domain event`() {
-    val requestingUser = UserEntityFactory()
-      .withUnitTestControlProbationRegion()
-      .produce()
+      val result = placementRequestService.createBookingNotMade(requestingUser, placementRequestId, null)
+      assertThatCasResult(result).isNotFound("PlacementRequest", "25dd65b1-38b5-47bc-a00b-f2df228ed06b")
+    }
 
-    val otherUser = UserEntityFactory()
-      .withUnitTestControlProbationRegion()
-      .produce()
+    @Test
+    fun `createBookingNotMade returns Success, saves Booking Not Made and saves domain event`() {
+      val requestingUser = UserEntityFactory()
+        .withUnitTestControlProbationRegion()
+        .produce()
 
-    val application = ApprovedPremisesApplicationEntityFactory()
-      .withCreatedByUser(otherUser)
-      .produce()
+      val otherUser = UserEntityFactory()
+        .withUnitTestControlProbationRegion()
+        .produce()
 
-    val assessment = ApprovedPremisesAssessmentEntityFactory()
-      .withApplication(application)
-      .withAllocatedToUser(otherUser)
-      .produce()
+      val application = ApprovedPremisesApplicationEntityFactory()
+        .withCreatedByUser(otherUser)
+        .produce()
 
-    val placementRequest = PlacementRequestEntityFactory()
-      .withPlacementRequirements(
-        PlacementRequirementsEntityFactory()
-          .withApplication(application)
-          .withAssessment(assessment)
-          .produce(),
-      )
-      .withAllocatedToUser(requestingUser)
-      .withApplication(application)
-      .withAssessment(assessment)
-      .produce()
+      val assessment = ApprovedPremisesAssessmentEntityFactory()
+        .withApplication(application)
+        .withAllocatedToUser(otherUser)
+        .produce()
 
-    every { cas1BookingDomainEventService.bookingNotMade(any(), any(), any(), any()) } just Runs
+      val placementRequest = PlacementRequestEntityFactory()
+        .withPlacementRequirements(
+          PlacementRequirementsEntityFactory()
+            .withApplication(application)
+            .withAssessment(assessment)
+            .produce(),
+        )
+        .withAllocatedToUser(requestingUser)
+        .withApplication(application)
+        .withAssessment(assessment)
+        .produce()
 
-    every { placementRequestRepository.findByIdOrNull(placementRequest.id) } returns placementRequest
-    every { bookingNotMadeRepository.save(any()) } answers { it.invocation.args[0] as BookingNotMadeEntity }
+      every { cas1BookingDomainEventService.bookingNotMade(any(), any(), any(), any()) } just Runs
 
-    val result = placementRequestService.createBookingNotMade(requestingUser, placementRequest.id, "some notes")
-    assertThat(result is AuthorisableActionResult.Success).isTrue
-    val bookingNotMade = (result as AuthorisableActionResult.Success).entity
+      every { placementRequestRepository.findByIdOrNull(placementRequest.id) } returns placementRequest
+      every { bookingNotMadeRepository.save(any()) } answers { it.invocation.args[0] as BookingNotMadeEntity }
 
-    assertThat(bookingNotMade.placementRequest).isEqualTo(placementRequest)
-    assertThat(bookingNotMade.notes).isEqualTo("some notes")
+      val result = placementRequestService.createBookingNotMade(requestingUser, placementRequest.id, "some notes")
+      assertThatCasResult(result).isSuccess().with { bookingNotMade ->
+        assertThat(bookingNotMade.placementRequest).isEqualTo(placementRequest)
+        assertThat(bookingNotMade.notes).isEqualTo("some notes")
 
-    verify(exactly = 1) { bookingNotMadeRepository.save(match { it.notes == "some notes" && it.placementRequest == placementRequest }) }
+        verify(exactly = 1) { bookingNotMadeRepository.save(match { it.notes == "some notes" && it.placementRequest == placementRequest }) }
 
-    verify(exactly = 1) {
-      cas1BookingDomainEventService.bookingNotMade(
-        user = requestingUser,
-        placementRequest = placementRequest,
-        bookingNotCreatedAt = any(),
-        notes = "some notes",
-      )
+        verify(exactly = 1) {
+          cas1BookingDomainEventService.bookingNotMade(
+            user = requestingUser,
+            placementRequest = placementRequest,
+            bookingNotCreatedAt = any(),
+            notes = "some notes",
+          )
+        }
+      }
     }
   }
 
@@ -1036,210 +1044,229 @@ class PlacementRequestServiceTest {
     }
   }
 
-  @Test
-  fun `getAllActive returns results and no metadata when a page number is not provided`() {
-    val placementRequests = createPlacementRequests(2)
-    val page = mockk<Page<PlacementRequestEntity>>()
+  @Nested
+  inner class GetAllActive {
 
-    every { page.content } returns placementRequests
+    @Test
+    fun `getAllActive returns results and no metadata when a page number is not provided`() {
+      val placementRequests = createPlacementRequests(2)
+      val page = mockk<Page<PlacementRequestEntity>>()
 
-    every { placementRequestRepository.allForDashboard(status = PlacementRequestStatus.matched.name) } returns page
+      every { page.content } returns placementRequests
 
-    val (requests, metadata) = placementRequestService.getAllActive(
-      PlacementRequestService.AllActiveSearchCriteria(
-        PlacementRequestStatus.matched,
-      ),
-      PageCriteria(page = null, sortBy = PlacementRequestSortField.createdAt, sortDirection = SortDirection.asc),
-    )
+      every { placementRequestRepository.allForDashboard(status = PlacementRequestStatus.matched.name) } returns page
 
-    assertThat(requests).isEqualTo(placementRequests)
-    assertThat(metadata).isNull()
-  }
+      val (requests, metadata) = placementRequestService.getAllActive(
+        PlacementRequestService.AllActiveSearchCriteria(
+          PlacementRequestStatus.matched,
+        ),
+        PageCriteria(page = null, sortBy = PlacementRequestSortField.createdAt, sortDirection = SortDirection.asc),
+      )
 
-  @Test
-  fun `getAllActive returns a page and metadata when a page number is provided`() {
-    val placementRequests = createPlacementRequests(2)
-    val page = mockk<Page<PlacementRequestEntity>>()
-    val pageRequest = mockk<PageRequest>()
+      assertThat(requests).isEqualTo(placementRequests)
+      assertThat(metadata).isNull()
+    }
 
-    mockkStatic(PageRequest::class)
+    @Test
+    fun `getAllActive returns a page and metadata when a page number is provided`() {
+      val placementRequests = createPlacementRequests(2)
+      val page = mockk<Page<PlacementRequestEntity>>()
+      val pageRequest = mockk<PageRequest>()
 
-    every { PageRequest.of(0, 10, Sort.by("created_at").ascending()) } returns pageRequest
-    every { page.content } returns placementRequests
-    every { page.totalPages } returns 10
-    every { page.totalElements } returns 100
+      mockkStatic(PageRequest::class)
 
-    every { placementRequestRepository.allForDashboard(status = PlacementRequestStatus.matched.name, pageable = pageRequest) } returns page
+      every { PageRequest.of(0, 10, Sort.by("created_at").ascending()) } returns pageRequest
+      every { page.content } returns placementRequests
+      every { page.totalPages } returns 10
+      every { page.totalElements } returns 100
 
-    val (requests, metadata) = placementRequestService.getAllActive(
-      PlacementRequestService.AllActiveSearchCriteria(
-        PlacementRequestStatus.matched,
-      ),
-      PageCriteria(page = 1, sortBy = PlacementRequestSortField.createdAt, sortDirection = SortDirection.asc),
-    )
+      every {
+        placementRequestRepository.allForDashboard(
+          status = PlacementRequestStatus.matched.name,
+          pageable = pageRequest,
+        )
+      } returns page
 
-    assertThat(requests).isEqualTo(placementRequests)
-    assertThat(metadata?.currentPage).isEqualTo(1)
-    assertThat(metadata?.pageSize).isEqualTo(10)
-    assertThat(metadata?.totalPages).isEqualTo(10)
-    assertThat(metadata?.totalResults).isEqualTo(100)
-  }
+      val (requests, metadata) = placementRequestService.getAllActive(
+        PlacementRequestService.AllActiveSearchCriteria(
+          PlacementRequestStatus.matched,
+        ),
+        PageCriteria(page = 1, sortBy = PlacementRequestSortField.createdAt, sortDirection = SortDirection.asc),
+      )
 
-  @Test
-  fun `getAllActive returns a page and metadata when a page number, sort field and direction is provided`() {
-    val placementRequests = createPlacementRequests(2)
-    val page = mockk<Page<PlacementRequestEntity>>()
-    val pageRequest = mockk<PageRequest>()
+      assertThat(requests).isEqualTo(placementRequests)
+      assertThat(metadata?.currentPage).isEqualTo(1)
+      assertThat(metadata?.pageSize).isEqualTo(10)
+      assertThat(metadata?.totalPages).isEqualTo(10)
+      assertThat(metadata?.totalResults).isEqualTo(100)
+    }
 
-    mockkStatic(PageRequest::class)
+    @Test
+    fun `getAllActive returns a page and metadata when a page number, sort field and direction is provided`() {
+      val placementRequests = createPlacementRequests(2)
+      val page = mockk<Page<PlacementRequestEntity>>()
+      val pageRequest = mockk<PageRequest>()
 
-    every { PageRequest.of(0, 10, Sort.by("expected_arrival").descending()) } returns pageRequest
-    every { page.content } returns placementRequests
-    every { page.totalPages } returns 10
-    every { page.totalElements } returns 100
+      mockkStatic(PageRequest::class)
 
-    every { placementRequestRepository.allForDashboard(status = PlacementRequestStatus.matched.name, pageable = pageRequest) } returns page
+      every { PageRequest.of(0, 10, Sort.by("expected_arrival").descending()) } returns pageRequest
+      every { page.content } returns placementRequests
+      every { page.totalPages } returns 10
+      every { page.totalElements } returns 100
 
-    val (requests, metadata) = placementRequestService.getAllActive(
-      PlacementRequestService.AllActiveSearchCriteria(
-        PlacementRequestStatus.matched,
-        null,
-        null,
-        null,
-        null,
-        null,
-      ),
-      PageCriteria(page = 1, sortBy = PlacementRequestSortField.expectedArrival, sortDirection = SortDirection.desc),
-    )
+      every {
+        placementRequestRepository.allForDashboard(
+          status = PlacementRequestStatus.matched.name,
+          pageable = pageRequest,
+        )
+      } returns page
 
-    assertThat(requests).isEqualTo(placementRequests)
-    assertThat(metadata?.currentPage).isEqualTo(1)
-    assertThat(metadata?.pageSize).isEqualTo(10)
-    assertThat(metadata?.totalPages).isEqualTo(10)
-    assertThat(metadata?.totalResults).isEqualTo(100)
-  }
+      val (requests, metadata) = placementRequestService.getAllActive(
+        PlacementRequestService.AllActiveSearchCriteria(
+          PlacementRequestStatus.matched,
+          null,
+          null,
+          null,
+          null,
+          null,
+        ),
+        PageCriteria(page = 1, sortBy = PlacementRequestSortField.expectedArrival, sortDirection = SortDirection.desc),
+      )
 
-  @Test
-  fun `getAllActive returns only results for CRN when provided`() {
-    val crn = "CRN456"
-    val placementRequests = createPlacementRequests(2, crn)
-    val page = mockk<Page<PlacementRequestEntity>>()
-    val pageRequest = mockk<PageRequest>()
+      assertThat(requests).isEqualTo(placementRequests)
+      assertThat(metadata?.currentPage).isEqualTo(1)
+      assertThat(metadata?.pageSize).isEqualTo(10)
+      assertThat(metadata?.totalPages).isEqualTo(10)
+      assertThat(metadata?.totalResults).isEqualTo(100)
+    }
 
-    mockkStatic(PageRequest::class)
+    @Test
+    fun `getAllActive returns only results for CRN when provided`() {
+      val crn = "CRN456"
+      val placementRequests = createPlacementRequests(2, crn)
+      val page = mockk<Page<PlacementRequestEntity>>()
+      val pageRequest = mockk<PageRequest>()
 
-    every { PageRequest.of(0, 10, Sort.by("expected_arrival").descending()) } returns pageRequest
-    every { page.content } returns placementRequests
-    every { page.totalPages } returns 10
-    every { page.totalElements } returns 100
+      mockkStatic(PageRequest::class)
 
-    every { placementRequestRepository.allForDashboard(crn = crn, pageable = pageRequest) } returns page
+      every { PageRequest.of(0, 10, Sort.by("expected_arrival").descending()) } returns pageRequest
+      every { page.content } returns placementRequests
+      every { page.totalPages } returns 10
+      every { page.totalElements } returns 100
 
-    val (requests, metadata) = placementRequestService.getAllActive(
-      PlacementRequestService.AllActiveSearchCriteria(
-        crn = crn,
-      ),
-      PageCriteria(page = 1, sortBy = PlacementRequestSortField.expectedArrival, sortDirection = SortDirection.desc),
-    )
+      every { placementRequestRepository.allForDashboard(crn = crn, pageable = pageRequest) } returns page
 
-    assertThat(requests).isEqualTo(placementRequests)
-    assertThat(metadata?.currentPage).isEqualTo(1)
-    assertThat(metadata?.pageSize).isEqualTo(10)
-    assertThat(metadata?.totalPages).isEqualTo(10)
-    assertThat(metadata?.totalResults).isEqualTo(100)
-  }
+      val (requests, metadata) = placementRequestService.getAllActive(
+        PlacementRequestService.AllActiveSearchCriteria(
+          crn = crn,
+        ),
+        PageCriteria(page = 1, sortBy = PlacementRequestSortField.expectedArrival, sortDirection = SortDirection.desc),
+      )
 
-  @Test
-  fun `getAllActive returns only results for tier when provided`() {
-    val tier = "A2"
+      assertThat(requests).isEqualTo(placementRequests)
+      assertThat(metadata?.currentPage).isEqualTo(1)
+      assertThat(metadata?.pageSize).isEqualTo(10)
+      assertThat(metadata?.totalPages).isEqualTo(10)
+      assertThat(metadata?.totalResults).isEqualTo(100)
+    }
 
-    val placementRequests = createPlacementRequests(2, tier = tier)
-    val page = mockk<Page<PlacementRequestEntity>>()
-    val pageRequest = mockk<PageRequest>()
+    @Test
+    fun `getAllActive returns only results for tier when provided`() {
+      val tier = "A2"
 
-    mockkStatic(PageRequest::class)
+      val placementRequests = createPlacementRequests(2, tier = tier)
+      val page = mockk<Page<PlacementRequestEntity>>()
+      val pageRequest = mockk<PageRequest>()
 
-    every { PageRequest.of(0, 10, Sort.by("expected_arrival").descending()) } returns pageRequest
-    every { page.content } returns placementRequests
-    every { page.totalPages } returns 10
-    every { page.totalElements } returns 100
+      mockkStatic(PageRequest::class)
 
-    every { placementRequestRepository.allForDashboard(tier = tier, pageable = pageRequest) } returns page
+      every { PageRequest.of(0, 10, Sort.by("expected_arrival").descending()) } returns pageRequest
+      every { page.content } returns placementRequests
+      every { page.totalPages } returns 10
+      every { page.totalElements } returns 100
 
-    val (requests, metadata) = placementRequestService.getAllActive(
-      PlacementRequestService.AllActiveSearchCriteria(
-        tier = tier,
-      ),
-      PageCriteria(page = 1, sortBy = PlacementRequestSortField.expectedArrival, sortDirection = SortDirection.desc),
-    )
+      every { placementRequestRepository.allForDashboard(tier = tier, pageable = pageRequest) } returns page
 
-    assertThat(requests).isEqualTo(placementRequests)
-    assertThat(metadata?.currentPage).isEqualTo(1)
-    assertThat(metadata?.pageSize).isEqualTo(10)
-    assertThat(metadata?.totalPages).isEqualTo(10)
-    assertThat(metadata?.totalResults).isEqualTo(100)
-  }
+      val (requests, metadata) = placementRequestService.getAllActive(
+        PlacementRequestService.AllActiveSearchCriteria(
+          tier = tier,
+        ),
+        PageCriteria(page = 1, sortBy = PlacementRequestSortField.expectedArrival, sortDirection = SortDirection.desc),
+      )
 
-  @Test
-  fun `getAllActive returns only results with arrival date after or equal to start when provided`() {
-    val startDate = LocalDate.parse("2023-08-08")
+      assertThat(requests).isEqualTo(placementRequests)
+      assertThat(metadata?.currentPage).isEqualTo(1)
+      assertThat(metadata?.pageSize).isEqualTo(10)
+      assertThat(metadata?.totalPages).isEqualTo(10)
+      assertThat(metadata?.totalResults).isEqualTo(100)
+    }
 
-    val placementRequests = createPlacementRequests(2, arrivalDate = startDate)
-    val page = mockk<Page<PlacementRequestEntity>>()
-    val pageRequest = mockk<PageRequest>()
+    @Test
+    fun `getAllActive returns only results with arrival date after or equal to start when provided`() {
+      val startDate = LocalDate.parse("2023-08-08")
 
-    mockkStatic(PageRequest::class)
+      val placementRequests = createPlacementRequests(2, arrivalDate = startDate)
+      val page = mockk<Page<PlacementRequestEntity>>()
+      val pageRequest = mockk<PageRequest>()
 
-    every { PageRequest.of(0, 10, Sort.by("expected_arrival").descending()) } returns pageRequest
-    every { page.content } returns placementRequests
-    every { page.totalPages } returns 10
-    every { page.totalElements } returns 100
+      mockkStatic(PageRequest::class)
 
-    every { placementRequestRepository.allForDashboard(arrivalDateFrom = startDate, pageable = pageRequest) } returns page
+      every { PageRequest.of(0, 10, Sort.by("expected_arrival").descending()) } returns pageRequest
+      every { page.content } returns placementRequests
+      every { page.totalPages } returns 10
+      every { page.totalElements } returns 100
 
-    val (requests, metadata) = placementRequestService.getAllActive(
-      PlacementRequestService.AllActiveSearchCriteria(
-        arrivalDateStart = startDate,
-      ),
-      PageCriteria(page = 1, sortBy = PlacementRequestSortField.expectedArrival, sortDirection = SortDirection.desc),
-    )
+      every {
+        placementRequestRepository.allForDashboard(
+          arrivalDateFrom = startDate,
+          pageable = pageRequest,
+        )
+      } returns page
 
-    assertThat(requests).isEqualTo(placementRequests)
-    assertThat(metadata?.currentPage).isEqualTo(1)
-    assertThat(metadata?.pageSize).isEqualTo(10)
-    assertThat(metadata?.totalPages).isEqualTo(10)
-    assertThat(metadata?.totalResults).isEqualTo(100)
-  }
+      val (requests, metadata) = placementRequestService.getAllActive(
+        PlacementRequestService.AllActiveSearchCriteria(
+          arrivalDateStart = startDate,
+        ),
+        PageCriteria(page = 1, sortBy = PlacementRequestSortField.expectedArrival, sortDirection = SortDirection.desc),
+      )
 
-  @Test
-  fun `getAllActive returns only results with arrival date before or equal to end when provided`() {
-    val endDate = LocalDate.parse("2023-08-08")
+      assertThat(requests).isEqualTo(placementRequests)
+      assertThat(metadata?.currentPage).isEqualTo(1)
+      assertThat(metadata?.pageSize).isEqualTo(10)
+      assertThat(metadata?.totalPages).isEqualTo(10)
+      assertThat(metadata?.totalResults).isEqualTo(100)
+    }
 
-    val placementRequests = createPlacementRequests(2, arrivalDate = endDate)
-    val page = mockk<Page<PlacementRequestEntity>>()
-    val pageRequest = mockk<PageRequest>()
+    @Test
+    fun `getAllActive returns only results with arrival date before or equal to end when provided`() {
+      val endDate = LocalDate.parse("2023-08-08")
 
-    mockkStatic(PageRequest::class)
+      val placementRequests = createPlacementRequests(2, arrivalDate = endDate)
+      val page = mockk<Page<PlacementRequestEntity>>()
+      val pageRequest = mockk<PageRequest>()
 
-    every { PageRequest.of(0, 10, Sort.by("expected_arrival").descending()) } returns pageRequest
-    every { page.content } returns placementRequests
-    every { page.totalPages } returns 10
-    every { page.totalElements } returns 100
+      mockkStatic(PageRequest::class)
 
-    every { placementRequestRepository.allForDashboard(arrivalDateTo = endDate, pageable = pageRequest) } returns page
+      every { PageRequest.of(0, 10, Sort.by("expected_arrival").descending()) } returns pageRequest
+      every { page.content } returns placementRequests
+      every { page.totalPages } returns 10
+      every { page.totalElements } returns 100
 
-    val (requests, metadata) = placementRequestService.getAllActive(
-      PlacementRequestService.AllActiveSearchCriteria(
-        arrivalDateEnd = endDate,
-      ),
-      PageCriteria(page = 1, sortBy = PlacementRequestSortField.expectedArrival, sortDirection = SortDirection.desc),
-    )
+      every { placementRequestRepository.allForDashboard(arrivalDateTo = endDate, pageable = pageRequest) } returns page
 
-    assertThat(requests).isEqualTo(placementRequests)
-    assertThat(metadata?.currentPage).isEqualTo(1)
-    assertThat(metadata?.pageSize).isEqualTo(10)
-    assertThat(metadata?.totalPages).isEqualTo(10)
-    assertThat(metadata?.totalResults).isEqualTo(100)
+      val (requests, metadata) = placementRequestService.getAllActive(
+        PlacementRequestService.AllActiveSearchCriteria(
+          arrivalDateEnd = endDate,
+        ),
+        PageCriteria(page = 1, sortBy = PlacementRequestSortField.expectedArrival, sortDirection = SortDirection.desc),
+      )
+
+      assertThat(requests).isEqualTo(placementRequests)
+      assertThat(metadata?.currentPage).isEqualTo(1)
+      assertThat(metadata?.pageSize).isEqualTo(10)
+      assertThat(metadata?.totalPages).isEqualTo(10)
+      assertThat(metadata?.totalResults).isEqualTo(100)
+    }
   }
 
   private fun createPlacementRequests(num: Int, crn: String? = null, tier: String? = null, arrivalDate: LocalDate? = null): List<PlacementRequestEntity> {

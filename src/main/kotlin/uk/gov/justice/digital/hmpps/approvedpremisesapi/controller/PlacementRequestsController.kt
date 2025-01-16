@@ -21,7 +21,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementRequ
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementRequestWithdrawalReason
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserPermission
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserQualification
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.BadRequestProblem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.ConflictProblem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.ForbiddenProblem
@@ -65,7 +64,7 @@ class PlacementRequestsController(
 
     return ResponseEntity.ok(
       requests.first.map {
-        val personInfo = offenderService.getPersonInfoResult(it.application.crn, user.deliusUsername, false)
+        val personInfo = offenderService.getPersonInfoResult(it.application.crn, user.cas1LimitedAccessStrategy())
 
         placementRequestTransformer.transformJpaToApi(it, personInfo)
       },
@@ -157,17 +156,13 @@ class PlacementRequestsController(
   override fun placementRequestsIdBookingNotMadePost(id: UUID, newBookingNotMade: NewBookingNotMade): ResponseEntity<BookingNotMade> {
     val user = userService.getUserForRequest()
 
-    val authorisableResult = placementRequestService.createBookingNotMade(
+    val result = placementRequestService.createBookingNotMade(
       user = user,
       placementRequestId = id,
       notes = newBookingNotMade.notes,
     )
 
-    val bookingNotMade = when (authorisableResult) {
-      is AuthorisableActionResult.Unauthorised -> throw ForbiddenProblem()
-      is AuthorisableActionResult.NotFound -> throw NotFoundProblem(authorisableResult.id!!, authorisableResult.entityType!!)
-      is AuthorisableActionResult.Success -> authorisableResult.entity
-    }
+    val bookingNotMade = extractEntityFromCasResult(result)
 
     return ResponseEntity(bookingNotMadeTransformer.transformJpaToApi(bookingNotMade), HttpStatus.OK)
   }
@@ -220,7 +215,7 @@ class PlacementRequestsController(
 
   private fun mapPersonDetailOntoPlacementRequests(placementRequests: List<PlacementRequestEntity>, user: UserEntity): List<PlacementRequest> {
     return placementRequests.map {
-      val personInfo = offenderService.getPersonInfoResult(it.application.crn, user.deliusUsername, user.hasQualification(UserQualification.LAO))
+      val personInfo = offenderService.getPersonInfoResult(it.application.crn, user.cas1LimitedAccessStrategy())
 
       placementRequestTransformer.transformJpaToApi(it, personInfo)
     }
