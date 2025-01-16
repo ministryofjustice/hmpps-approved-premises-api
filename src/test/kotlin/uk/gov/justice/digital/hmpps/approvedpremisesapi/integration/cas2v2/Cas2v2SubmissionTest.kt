@@ -19,6 +19,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas2SubmittedA
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas2v2SubmittedApplicationSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.SubmitCas2Application
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.SubmitCas2v2Application
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.toHttpStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ExternalUserDetailsFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.Cas2v2IntegrationTestBase
@@ -718,13 +719,14 @@ class Cas2v2SubmissionTest(
             .header("Authorization", "Bearer $jwt")
             .header("X-Service-Name", ServiceName.cas2.value)
             .bodyValue(
-              SubmitCas2Application(
+              SubmitCas2v2Application(
                 applicationId = applicationId,
                 translatedDocument = {},
                 preferredAreas = "Leeds | Bradford",
                 hdcEligibilityDate = LocalDate.parse("2023-03-30"),
                 conditionalReleaseDate = LocalDate.parse("2023-04-29"),
                 telephoneNumber = telephoneNumber,
+                bailHearingDate = LocalDate.parse("2025-01-14"),
               ),
             )
             .exchange()
@@ -816,10 +818,11 @@ class Cas2v2SubmissionTest(
                 .uri("/cas2v2/submissions")
                 .header("Authorization", "Bearer $jwt")
                 .bodyValue(
-                  SubmitCas2Application(
+                  SubmitCas2v2Application(
                     applicationId = applicationId,
                     translatedDocument = {},
                     telephoneNumber = "123 456 7891",
+                    bailHearingDate = LocalDate.parse("2025-01-14"),
                   ),
                 )
                 .exchange()
@@ -880,13 +883,14 @@ class Cas2v2SubmissionTest(
             .header("Authorization", "Bearer $jwt")
             .header("X-Service-Name", ServiceName.cas2.value)
             .bodyValue(
-              SubmitCas2Application(
+              SubmitCas2v2Application(
                 applicationId = applicationId,
                 translatedDocument = {},
                 preferredAreas = "Leeds | Bradford",
                 hdcEligibilityDate = LocalDate.parse("2023-03-30"),
                 conditionalReleaseDate = LocalDate.parse("2023-04-29"),
                 telephoneNumber = "123 456 789",
+                bailHearingDate = LocalDate.parse("2025-01-14"),
               ),
             )
             .exchange()

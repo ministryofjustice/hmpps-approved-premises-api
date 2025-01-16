@@ -15,7 +15,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.BadRequestProble
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.ConflictProblem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.ForbiddenProblem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.NotFoundProblem
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.AuthorisableActionResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.CasResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.ExternalUserService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.HttpAuthService
@@ -24,6 +23,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas2.OffenderSer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas2v2.Cas2v2ApplicationService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.cas2v2.Cas2v2SubmissionsTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.PageCriteria
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.extractEntityFromCasResult
 import java.util.UUID
 
 @Service("Cas2v2SubmissionsController")
@@ -62,18 +62,10 @@ class Cas2v2SubmissionsController(
       ensureNomisUserPersisted()
     }
 
-    val application = when (
-      val applicationResult = cas2v2ApplicationService.getSubmittedCas2v2ApplicationForAssessor(applicationId)
-    ) {
-      is AuthorisableActionResult.NotFound -> null
-      is AuthorisableActionResult.Unauthorised -> throw ForbiddenProblem()
-      is AuthorisableActionResult.Success -> applicationResult.entity
-    }
+    val applicationResult = cas2v2ApplicationService.getSubmittedCas2v2ApplicationForAssessor(applicationId)
+    val application = extractEntityFromCasResult(applicationResult)
 
-    if (application != null) {
-      return ResponseEntity.ok(getPersonDetailAndTransform(application))
-    }
-    throw NotFoundProblem(applicationId, "Application")
+    return ResponseEntity.ok(getPersonDetailAndTransform(application))
   }
 
   @Transactional
@@ -82,15 +74,10 @@ class Cas2v2SubmissionsController(
   ): ResponseEntity<Unit> {
     val user = nomisUserService.getUserForRequest()
     val submitResult = cas2v2ApplicationService.submitCas2v2Application(submitCas2v2Application, user)
+    extractEntityFromCasResult(submitResult)
 
-    when (submitResult) {
-      is CasResult.NotFound -> throw NotFoundProblem(submitCas2v2Application.applicationId, "Application")
-      is CasResult.Unauthorised -> throw ForbiddenProblem()
-      is CasResult.ConflictError -> throw ConflictProblem(id = submitResult.conflictingEntityId, conflictReason = submitResult.message)
-      is CasResult.FieldValidationError -> throw BadRequestProblem(invalidParams = submitResult.validationMessages)
-      is CasResult.GeneralValidationError -> throw BadRequestProblem(errorDetail = submitResult.message)
-      is CasResult.Success -> return ResponseEntity(HttpStatus.OK)
-    }
+    return ResponseEntity(HttpStatus.OK)
+
   }
 
   private fun ensureExternalUserPersisted() {
