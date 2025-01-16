@@ -162,6 +162,7 @@ class Cas1DomainEventServiceTest {
           nomsNumber = nomsNumber,
           occurredAt = occurredAt.toInstant(),
           data = domainEventAndJson.envelope,
+          schemaVersion = domainEventAndJson.schemaVersion.versionNo,
         ),
       )
     }

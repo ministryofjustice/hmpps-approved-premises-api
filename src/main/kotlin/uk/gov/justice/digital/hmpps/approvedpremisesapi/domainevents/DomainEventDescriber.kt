@@ -108,11 +108,45 @@ class DomainEventDescriber(
   }
 
   private fun buildBookingChangedDescription(domainEventSummary: DomainEventSummary): String? {
-    val event = domainEventService.getBookingChangedEvent(domainEventSummary.id())
-    return event.describe {
-      "A placement at ${it.eventDetails.premises.name} had its arrival and/or departure date changed to " +
-        "${it.eventDetails.arrivalOn.toUiFormat()} to ${it.eventDetails.departureOn.toUiFormat()}"
+    val domainEvent = domainEventService.getBookingChangedEvent(domainEventSummary.id()) ?: return null
+
+    if (domainEvent.schemaVersion == null) {
+      return domainEvent.describe {
+        "A placement at ${it.eventDetails.premises.name} had its arrival and/or departure date changed to " +
+          "${it.eventDetails.arrivalOn.toUiFormat()} to ${it.eventDetails.departureOn.toUiFormat()}"
+      }
     }
+
+    if (domainEvent.schemaVersion == 2) {
+      val eventDetails = domainEvent.data.eventDetails
+      val previousArrival = eventDetails.previousArrivalOn
+      val previousDeparture = eventDetails.previousDepartureOn
+      val changes = mutableListOf<String>()
+
+      fun addDateChangeMessage(previousDate: LocalDate, newDate: LocalDate, changeType: String) {
+        changes.add(
+          "its $changeType date changed from ${previousDate.toUiFormat()} to ${newDate.toUiFormat()}",
+        )
+      }
+
+      if (previousArrival != null) {
+        addDateChangeMessage(previousArrival, eventDetails.arrivalOn, "arrival")
+      }
+
+      if (previousDeparture != null) {
+        addDateChangeMessage(previousDeparture, eventDetails.departureOn, "departure")
+      }
+
+      return if (changes.isNotEmpty()) {
+        domainEvent.describe {
+          "A placement at ${it.eventDetails.premises.name} had ${changes.joinToString(", ")}"
+        }
+      } else {
+        null
+      }
+    }
+
+    return null
   }
 
   private fun buildBookingKeyWorkerAssignedDescription(domainEventSummary: DomainEventSummary): String? {
