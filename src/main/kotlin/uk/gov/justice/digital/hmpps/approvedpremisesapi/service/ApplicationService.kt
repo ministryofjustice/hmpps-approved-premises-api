@@ -119,6 +119,11 @@ class ApplicationService(
           "NomisUser",
       )
 
+      ServiceName.cas2v2 -> throw RuntimeException(
+        "CAS2v2 applications now require " +
+          "Cas2v2User",
+      )
+
       ServiceName.temporaryAccommodation -> getAllTemporaryAccommodationApplicationsForUser(userEntity)
     }
 
@@ -701,6 +706,7 @@ class ApplicationService(
         submitApplication.isEsapApplication == true -> ApprovedPremisesType.ESAP
         else -> ApprovedPremisesType.NORMAL
       }
+
       submitApplication.isUsingNewApTypeField -> submitApplication.apType!!.asApprovedPremisesType()
       else -> ApprovedPremisesType.NORMAL
     }
@@ -767,7 +773,8 @@ class ApplicationService(
       } else {
         apArea.defaultCruManagementArea
       }
-      this.applicantUserDetails = upsertCas1ApplicationUserDetails(this.applicantUserDetails, submitApplication.applicantUserDetails)
+      this.applicantUserDetails =
+        upsertCas1ApplicationUserDetails(this.applicantUserDetails, submitApplication.applicantUserDetails)
       this.caseManagerIsNotApplicant = submitApplication.caseManagerIsNotApplicant
       this.caseManagerUserDetails = upsertCas1ApplicationUserDetails(
         existingEntry = this.caseManagerUserDetails,
@@ -805,7 +812,11 @@ class ApplicationService(
     )
   }
 
-  private fun getNoticeType(noticeType: Cas1ApplicationTimelinessCategory?, isEmergencyApplication: Boolean?, application: ApprovedPremisesApplicationEntity) = noticeType
+  private fun getNoticeType(
+    noticeType: Cas1ApplicationTimelinessCategory?,
+    isEmergencyApplication: Boolean?,
+    application: ApprovedPremisesApplicationEntity,
+  ) = noticeType
     ?: if (isEmergencyApplication == true) {
       Cas1ApplicationTimelinessCategory.emergency
     } else if (application.isShortNoticeApplication() == true) {
@@ -947,9 +958,10 @@ class ApplicationService(
     val prisonName = when (personInfo.inmateDetail?.custodyStatus) {
       InmateStatus.IN,
       InmateStatus.TRN,
-      -> {
+        -> {
         personInfo.inmateDetail?.assignedLivingUnit?.agencyName ?: personInfo.inmateDetail?.assignedLivingUnit?.agencyId
       }
+
       else -> null
     }
     return prisonName
@@ -967,6 +979,7 @@ class ApplicationService(
       this.isEsapApplication == true -> ApprovedPremisesType.ESAP
       else -> ApprovedPremisesType.NORMAL
     }
+
     this.isUsingNewApTypeField -> this.apType!!.asApprovedPremisesType()
     else -> ApprovedPremisesType.NORMAL
   }

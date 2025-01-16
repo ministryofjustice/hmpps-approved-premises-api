@@ -81,6 +81,7 @@ class DomainEventEntityFactory : Factory<DomainEventEntity> {
       when (service) {
         ServiceName.approvedPremises -> "CAS1"
         ServiceName.cas2 -> "CAS2"
+        ServiceName.cas2v2 -> "CAS2V2"
         ServiceName.temporaryAccommodation -> "CAS3"
       }
     }

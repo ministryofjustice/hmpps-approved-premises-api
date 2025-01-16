@@ -60,11 +60,13 @@ class UserTransformer(
     ServiceName.approvedPremises -> transformCas1JpaToApi(jpa)
     ServiceName.temporaryAccommodation -> transformCas3JpatoApi(jpa)
     ServiceName.cas2 -> throw RuntimeException("CAS2 not supported")
+    ServiceName.cas2v2 -> throw RuntimeException("CAS2v2 not supported")
   }
 
   fun transformCas1JpaToApi(jpa: UserEntity): ApprovedPremisesUser {
     val apArea = jpa.apArea ?: throw InternalServerErrorProblem("CAS1 user ${jpa.id} should have AP Area Set")
-    val cruManagementArea = jpa.cruManagementArea ?: throw InternalServerErrorProblem("CAS1 user ${jpa.id} should have CRU Management Area Set")
+    val cruManagementArea = jpa.cruManagementArea
+      ?: throw InternalServerErrorProblem("CAS1 user ${jpa.id} should have CRU Management Area Set")
     return ApprovedPremisesUser(
       id = jpa.id,
       deliusUsername = jpa.deliusUsername,
@@ -74,7 +76,8 @@ class UserTransformer(
       telephoneNumber = jpa.telephoneNumber,
       isActive = jpa.isActive,
       qualifications = jpa.qualifications.map(::transformQualificationToApi),
-      permissions = jpa.roles.distinctBy { it.role }.map(::transformApprovedPremisesRoleToPermissionApi).flatten().distinct(),
+      permissions = jpa.roles.distinctBy { it.role }.map(::transformApprovedPremisesRoleToPermissionApi).flatten()
+        .distinct(),
       region = probationRegionTransformer.transformJpaToApi(jpa.probationRegion),
       service = "CAS1",
       apArea = apArea.let { apAreaTransformer.transformJpaToApi(it) },
@@ -100,10 +103,21 @@ class UserTransformer(
 
   fun Cas1CruManagementAreaEntity.toNamedId() = NamedId(id, name)
 
-  fun transformProfileResponseToApi(userName: String, userResponse: UserService.GetUserResponse, xServiceName: ServiceName): ProfileResponse {
+  fun transformProfileResponseToApi(
+    userName: String,
+    userResponse: UserService.GetUserResponse,
+    xServiceName: ServiceName,
+  ): ProfileResponse {
     return when (userResponse) {
-      UserService.GetUserResponse.StaffRecordNotFound -> ProfileResponse(userName, ProfileResponse.LoadError.staffRecordNotFound)
-      is UserService.GetUserResponse.Success -> ProfileResponse(userName, user = transformJpaToApi(userResponse.user, xServiceName))
+      UserService.GetUserResponse.StaffRecordNotFound -> ProfileResponse(
+        userName,
+        ProfileResponse.LoadError.staffRecordNotFound,
+      )
+
+      is UserService.GetUserResponse.Success -> ProfileResponse(
+        userName,
+        user = transformJpaToApi(userResponse.user, xServiceName),
+      )
     }
   }
 
@@ -113,21 +127,23 @@ class UserTransformer(
       else -> null
     }
 
-  private fun transformTemporaryAccommodationRoleToApi(userRole: UserRoleAssignmentEntity): TemporaryAccommodationUserRole? = when (userRole.role) {
-    UserRole.CAS3_ASSESSOR -> TemporaryAccommodationUserRole.assessor
-    UserRole.CAS3_REFERRER -> TemporaryAccommodationUserRole.referrer
-    UserRole.CAS3_REPORTER -> TemporaryAccommodationUserRole.reporter
-    else -> null
-  }
+  private fun transformTemporaryAccommodationRoleToApi(userRole: UserRoleAssignmentEntity): TemporaryAccommodationUserRole? =
+    when (userRole.role) {
+      UserRole.CAS3_ASSESSOR -> TemporaryAccommodationUserRole.assessor
+      UserRole.CAS3_REFERRER -> TemporaryAccommodationUserRole.referrer
+      UserRole.CAS3_REPORTER -> TemporaryAccommodationUserRole.reporter
+      else -> null
+    }
 
-  private fun transformQualificationToApi(userQualification: UserQualificationAssignmentEntity): ApiUserQualification = when (userQualification.qualification) {
-    UserQualification.PIPE -> ApiUserQualification.pipe
-    UserQualification.LAO -> ApiUserQualification.lao
-    UserQualification.ESAP -> ApiUserQualification.esap
-    UserQualification.EMERGENCY -> ApiUserQualification.emergency
-    UserQualification.MENTAL_HEALTH_SPECIALIST -> ApiUserQualification.mentalHealthSpecialist
-    UserQualification.RECOVERY_FOCUSED -> ApiUserQualification.recoveryFocused
-  }
+  private fun transformQualificationToApi(userQualification: UserQualificationAssignmentEntity): ApiUserQualification =
+    when (userQualification.qualification) {
+      UserQualification.PIPE -> ApiUserQualification.pipe
+      UserQualification.LAO -> ApiUserQualification.lao
+      UserQualification.ESAP -> ApiUserQualification.esap
+      UserQualification.EMERGENCY -> ApiUserQualification.emergency
+      UserQualification.MENTAL_HEALTH_SPECIALIST -> ApiUserQualification.mentalHealthSpecialist
+      UserQualification.RECOVERY_FOCUSED -> ApiUserQualification.recoveryFocused
+    }
 
   @SuppressWarnings("CyclomaticComplexMethod")
   private fun transformApprovedPremisesRoleToPermissionApi(userRole: UserRoleAssignmentEntity): List<ApiUserPermission> {

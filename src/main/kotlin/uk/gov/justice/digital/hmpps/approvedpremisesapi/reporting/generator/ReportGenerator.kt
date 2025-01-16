@@ -42,6 +42,7 @@ abstract class ReportGenerator<Input : Any, Output : Any, Properties>(private va
     when (serviceName) {
       ServiceName.approvedPremises -> premisesEntity is ApprovedPremisesEntity
       ServiceName.cas2 -> throw RuntimeException("CAS2 not supported")
+      ServiceName.cas2v2 -> throw RuntimeException("CAS2v2 not supported")
       ServiceName.temporaryAccommodation -> premisesEntity is TemporaryAccommodationPremisesEntity
     }
 }

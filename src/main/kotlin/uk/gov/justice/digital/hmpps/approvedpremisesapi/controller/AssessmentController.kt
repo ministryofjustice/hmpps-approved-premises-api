@@ -64,9 +64,11 @@ class AssessmentController(
     val user = userService.getUserForRequest()
     val resolvedSortDirection = sortDirection ?: SortDirection.asc
     val resolvedSortBy = sortBy ?: AssessmentSortField.assessmentArrivalDate
-    val domainSummaryStatuses = statuses?.map { assessmentTransformer.transformApiStatusToDomainSummaryState(it) } ?: emptyList()
+    val domainSummaryStatuses =
+      statuses?.map { assessmentTransformer.transformApiStatusToDomainSummaryState(it) } ?: emptyList()
 
     val (summaries, metadata) = when (xServiceName) {
+      ServiceName.cas2v2 -> throw UnsupportedOperationException("CAS2v2 not supported")
       ServiceName.cas2 -> throw UnsupportedOperationException("CAS2 not supported")
       ServiceName.temporaryAccommodation -> {
         val (summaries, metadata) = assessmentService.getAssessmentSummariesForUserCAS3(
@@ -78,13 +80,23 @@ class AssessmentController(
         )
         val transformSummaries = when (sortBy) {
           AssessmentSortField.assessmentDueAt -> throw BadRequestProblem(errorDetail = "Sorting by due date is not supported for CAS3")
-          AssessmentSortField.personName -> transformDomainToApi(user, summaries, user.hasQualification(UserQualification.LAO)).sortByName(resolvedSortDirection)
+          AssessmentSortField.personName -> transformDomainToApi(
+            user,
+            summaries,
+            user.hasQualification(UserQualification.LAO),
+          ).sortByName(resolvedSortDirection)
+
           else -> transformDomainToApi(user, summaries)
         }
         Pair(transformSummaries, metadata)
       }
+
       else -> {
-        val (summaries, metadata) = assessmentService.getVisibleAssessmentSummariesForUserCAS1(user, domainSummaryStatuses, PageCriteria(resolvedSortBy, resolvedSortDirection, page, perPage))
+        val (summaries, metadata) = assessmentService.getVisibleAssessmentSummariesForUserCAS1(
+          user,
+          domainSummaryStatuses,
+          PageCriteria(resolvedSortBy, resolvedSortDirection, page, perPage),
+        )
         Pair(transformDomainToApi(user, summaries, user.hasQualification(UserQualification.LAO)), metadata)
       }
     }
@@ -94,9 +106,14 @@ class AssessmentController(
       .body(summaries)
   }
 
-  private fun transformDomainToApi(user: UserEntity, summaries: List<DomainAssessmentSummary>, ignoreLaoRestrictions: Boolean = false): List<AssessmentSummary> {
+  private fun transformDomainToApi(
+    user: UserEntity,
+    summaries: List<DomainAssessmentSummary>,
+    ignoreLaoRestrictions: Boolean = false,
+  ): List<AssessmentSummary> {
     val crns = summaries.map { it.crn }
-    val personInfoResults = offenderService.getPersonInfoResults(crns.toSet(), user.deliusUsername, ignoreLaoRestrictions)
+    val personInfoResults =
+      offenderService.getPersonInfoResults(crns.toSet(), user.deliusUsername, ignoreLaoRestrictions)
 
     return summaries.map {
       val crn = it.crn
@@ -112,13 +129,16 @@ class AssessmentController(
 
     val assessment = extractEntityFromCasResult(assessmentService.getAssessmentAndValidate(user, assessmentId))
 
-    val ignoreLaoRestrictions = (assessment.application is ApprovedPremisesApplicationEntity) && user.hasQualification(UserQualification.LAO)
+    val ignoreLaoRestrictions =
+      (assessment.application is ApprovedPremisesApplicationEntity) && user.hasQualification(UserQualification.LAO)
 
-    val personInfo = offenderService.getPersonInfoResult(assessment.application.crn, user.deliusUsername, ignoreLaoRestrictions)
+    val personInfo =
+      offenderService.getPersonInfoResult(assessment.application.crn, user.deliusUsername, ignoreLaoRestrictions)
 
     val assessmentUpdatedDomainEvents = domainEventService.getAssessmentUpdatedEvents(assessmentId = assessment.id)
 
-    val transformedResponse = assessmentTransformer.transformJpaToApi(assessment, personInfo, assessmentUpdatedDomainEvents)
+    val transformedResponse =
+      assessmentTransformer.transformJpaToApi(assessment, personInfo, assessmentUpdatedDomainEvents)
 
     return ResponseEntity.ok(transformedResponse)
   }
@@ -159,7 +179,10 @@ class AssessmentController(
   }
 
   @Transactional
-  override fun assessmentsAssessmentIdAcceptancePost(assessmentId: UUID, assessmentAcceptance: AssessmentAcceptance): ResponseEntity<Unit> {
+  override fun assessmentsAssessmentIdAcceptancePost(
+    assessmentId: UUID,
+    assessmentAcceptance: AssessmentAcceptance,
+  ): ResponseEntity<Unit> {
     val user = userService.getUserForRequest()
 
     val serializedData = objectMapper.writeValueAsString(assessmentAcceptance.document)
@@ -180,7 +203,10 @@ class AssessmentController(
   }
 
   @Transactional
-  override fun assessmentsAssessmentIdRejectionPost(assessmentId: UUID, assessmentRejection: AssessmentRejection): ResponseEntity<Unit> {
+  override fun assessmentsAssessmentIdRejectionPost(
+    assessmentId: UUID,
+    assessmentRejection: AssessmentRejection,
+  ): ResponseEntity<Unit> {
     val user = userService.getUserForRequest()
 
     val serializedData = objectMapper.writeValueAsString(assessmentRejection.document)
@@ -214,7 +240,8 @@ class AssessmentController(
   ): ResponseEntity<ClarificationNote> {
     val user = userService.getUserForRequest()
 
-    val clarificationNoteResult = assessmentService.addAssessmentClarificationNote(user, assessmentId, newClarificationNote.query)
+    val clarificationNoteResult =
+      assessmentService.addAssessmentClarificationNote(user, assessmentId, newClarificationNote.query)
 
     return ResponseEntity.ok(
       assessmentClarificationNoteTransformer.transformJpaToApi(extractEntityFromCasResult(clarificationNoteResult)),

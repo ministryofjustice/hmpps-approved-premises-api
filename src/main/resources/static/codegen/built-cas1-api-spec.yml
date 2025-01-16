@@ -2851,6 +2851,7 @@ components:
           Offline: '#/components/schemas/OfflineApplication'
           CAS1: '#/components/schemas/ApprovedPremisesApplication'
           CAS2: '#/components/schemas/Cas2Application'
+          CAS2V2: '#/components/schemas/Cas2v2Application'
           CAS3: '#/components/schemas/TemporaryAccommodationApplication'
       required:
         - type
@@ -4442,10 +4443,12 @@ components:
       enum:
         - approved-premises
         - cas2
+        - cas2v2
         - temporary-accommodation
       x-enum-varnames:
         - approvedPremises
         - cas2
+        - cas2v2
         - temporaryAccommodation
     NewRoom:
       type: object
@@ -5771,7 +5774,7 @@ components:
     FullPersonSummary:
       allOf:
         - $ref: '#/components/schemas/PersonSummary'
-        - type : object
+        - type: object
           properties:
             name:
               type: string

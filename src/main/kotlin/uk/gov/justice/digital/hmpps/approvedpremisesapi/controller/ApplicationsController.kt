@@ -96,18 +96,18 @@ class ApplicationsController(
 
     val applications = applicationService.getAllApplicationsForUsername(user.deliusUsername, serviceName)
 
-      /*
-      This code is inefficient:
+    /*
+    This code is inefficient:
 
-      getPersonDetailAndTransformToSummary will retrieve/check user access (via the call to offenderService),
-      but the prior call to getAllApplicationsForUsername has already retrieved this information
-      and filtered out applications that the user cannot access. This leads to duplicate calls being made.
+    getPersonDetailAndTransformToSummary will retrieve/check user access (via the call to offenderService),
+    but the prior call to getAllApplicationsForUsername has already retrieved this information
+    and filtered out applications that the user cannot access. This leads to duplicate calls being made.
 
-      This check should be moved into getPersonDetailAndTransformToSummary (or a custom version of it to
-      avoid breaking behaviour for other callers), where we filter out any response from
-      offenderService.getInfoForPerson of type PersonInfoResult.Restricted. This will most likely have
-      to be optional as to not 'break' other functions using getPersonDetailAndTransformToSummary
-       */
+    This check should be moved into getPersonDetailAndTransformToSummary (or a custom version of it to
+    avoid breaking behaviour for other callers), where we filter out any response from
+    offenderService.getInfoForPerson of type PersonInfoResult.Restricted. This will most likely have
+    to be optional as to not 'break' other functions using getPersonDetailAndTransformToSummary
+     */
     return ResponseEntity.ok(getPersonDetailAndTransformToSummary(applications, user))
   }
 
@@ -181,7 +181,11 @@ class ApplicationsController(
   }
 
   @Transactional
-  override fun applicationsPost(body: NewApplication, xServiceName: ServiceName?, createWithRisks: Boolean?): ResponseEntity<Application> {
+  override fun applicationsPost(
+    body: NewApplication,
+    xServiceName: ServiceName?,
+    createWithRisks: Boolean?,
+  ): ResponseEntity<Application> {
     val user = userService.getUserForRequest()
 
     val personInfo =
@@ -261,6 +265,11 @@ class ApplicationsController(
       "CAS2 now has its own " +
         "Cas2ApplicationsController",
     )
+
+    ServiceName.cas2v2 -> throw RuntimeException(
+      "CAS2v2 now has its own " +
+        "Cas2v2ApplicationsController",
+    )
   }
 
   @Transactional
@@ -325,7 +334,10 @@ class ApplicationsController(
     )
   }
 
-  override fun applicationsApplicationIdTimelineGet(applicationId: UUID, xServiceName: ServiceName): ResponseEntity<List<TimelineEvent>> {
+  override fun applicationsApplicationIdTimelineGet(
+    applicationId: UUID,
+    xServiceName: ServiceName,
+  ): ResponseEntity<List<TimelineEvent>> {
     if (xServiceName != ServiceName.approvedPremises) {
       throw NotImplementedProblem("Timeline is only supported for Approved Premises applications")
     }
@@ -335,7 +347,12 @@ class ApplicationsController(
 
   override fun applicationsApplicationIdRequestsForPlacementGet(applicationId: UUID): ResponseEntity<List<RequestForPlacement>> {
     return ResponseEntity.ok(
-      extractEntityFromCasResult(cas1RequestForPlacementService.getRequestsForPlacementByApplication(applicationId, userService.getUserForRequest())),
+      extractEntityFromCasResult(
+        cas1RequestForPlacementService.getRequestsForPlacementByApplication(
+          applicationId,
+          userService.getUserForRequest(),
+        ),
+      ),
     )
   }
 
@@ -343,10 +360,17 @@ class ApplicationsController(
     applicationId: UUID,
     requestForPlacementId: UUID,
   ): ResponseEntity<RequestForPlacement> {
-    val application = applicationService.getApplication(applicationId) ?: throw NotFoundProblem(applicationId, "Application")
+    val application =
+      applicationService.getApplication(applicationId) ?: throw NotFoundProblem(applicationId, "Application")
 
     return ResponseEntity.ok(
-      extractEntityFromCasResult(cas1RequestForPlacementService.getRequestForPlacement(application, requestForPlacementId, userService.getUserForRequest())),
+      extractEntityFromCasResult(
+        cas1RequestForPlacementService.getRequestForPlacement(
+          application,
+          requestForPlacementId,
+          userService.getUserForRequest(),
+        ),
+      ),
     )
   }
 
@@ -466,7 +490,11 @@ class ApplicationsController(
     val appeal = when (validationResult) {
       is ValidatableActionResult.GeneralValidationError -> throw BadRequestProblem(errorDetail = validationResult.message)
       is ValidatableActionResult.FieldValidationError -> throw BadRequestProblem(invalidParams = validationResult.validationMessages)
-      is ValidatableActionResult.ConflictError -> throw ConflictProblem(id = validationResult.conflictingEntityId, conflictReason = validationResult.message)
+      is ValidatableActionResult.ConflictError -> throw ConflictProblem(
+        id = validationResult.conflictingEntityId,
+        conflictReason = validationResult.message,
+      )
+
       is ValidatableActionResult.Success -> validationResult.entity
     }
 
@@ -551,7 +579,8 @@ class ApplicationsController(
     ignoreLaoRestrictions: Boolean = false,
   ): List<ApplicationSummary> {
     val crns = applications.map { it.getCrn() }
-    val personInfoResults = offenderService.getPersonInfoResults(crns.toSet(), user.deliusUsername, ignoreLaoRestrictions)
+    val personInfoResults =
+      offenderService.getPersonInfoResults(crns.toSet(), user.deliusUsername, ignoreLaoRestrictions)
 
     return applications.map {
       val crn = it.getCrn()
@@ -567,7 +596,8 @@ class ApplicationsController(
     user: UserEntity,
     ignoreLaoRestrictions: Boolean = false,
   ): Application {
-    val personInfo = offenderService.getPersonInfoResult(offlineApplication.crn, user.deliusUsername, ignoreLaoRestrictions)
+    val personInfo =
+      offenderService.getPersonInfoResult(offlineApplication.crn, user.deliusUsername, ignoreLaoRestrictions)
 
     return applicationsTransformer.transformJpaToApi(offlineApplication, personInfo)
   }

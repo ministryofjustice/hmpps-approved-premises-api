@@ -312,7 +312,7 @@ class Cas2v2ApplicationTest : Cas2v2IntegrationTestBase() {
               .get()
               .uri("/cas2v2/applications")
               .header("Authorization", "Bearer $jwt")
-              .header("X-Service-Name", ServiceName.cas2.value)
+              .header("X-Service-Name", ServiceName.cas2v2.value)
               .exchange()
               .expectStatus()
               .isOk
@@ -416,7 +416,7 @@ class Cas2v2ApplicationTest : Cas2v2IntegrationTestBase() {
                 .get()
                 .uri("/cas2v2/applications")
                 .header("Authorization", "Bearer $jwt")
-                .header("X-Service-Name", ServiceName.cas2.value)
+                .header("X-Service-Name", ServiceName.cas2v2.value)
                 .exchange()
                 .expectStatus()
                 .isOk
@@ -492,7 +492,7 @@ class Cas2v2ApplicationTest : Cas2v2IntegrationTestBase() {
                 .get()
                 .uri("/cas2v2/applications?page=1")
                 .header("Authorization", "Bearer $jwt")
-                .header("X-Service-Name", ServiceName.cas2.value)
+                .header("X-Service-Name", ServiceName.cas2v2.value)
                 .exchange()
                 .expectStatus()
                 .isOk
@@ -523,7 +523,7 @@ class Cas2v2ApplicationTest : Cas2v2IntegrationTestBase() {
                 .get()
                 .uri("/cas2v2/applications?page=2")
                 .header("Authorization", "Bearer $jwt")
-                .header("X-Service-Name", ServiceName.cas2.value)
+                .header("X-Service-Name", ServiceName.cas2v2.value)
                 .exchange()
                 .expectStatus()
                 .isOk
@@ -715,7 +715,7 @@ class Cas2v2ApplicationTest : Cas2v2IntegrationTestBase() {
                     "/cas2v2/applications?prisonCode=${userAPrisonA.activeNomisCaseloadId}",
                   )
                   .header("Authorization", "Bearer $jwt")
-                  .header("X-Service-Name", ServiceName.cas2.value)
+                  .header("X-Service-Name", ServiceName.cas2v2.value)
                   .exchange()
                   .expectStatus()
                   .isOk
@@ -847,7 +847,7 @@ class Cas2v2ApplicationTest : Cas2v2IntegrationTestBase() {
                     "/cas2v2/applications?isSubmitted=true&prisonCode=${userAPrisonA.activeNomisCaseloadId}",
                   )
                   .header("Authorization", "Bearer $jwt")
-                  .header("X-Service-Name", ServiceName.cas2.value)
+                  .header("X-Service-Name", ServiceName.cas2v2.value)
                   .exchange()
                   .expectStatus()
                   .isOk
@@ -935,7 +935,7 @@ class Cas2v2ApplicationTest : Cas2v2IntegrationTestBase() {
                   "/cas2v2/applications?isSubmitted=false&prisonCode=${userAPrisonA.activeNomisCaseloadId}",
                 )
                 .header("Authorization", "Bearer $jwt")
-                .header("X-Service-Name", ServiceName.cas2.value)
+                .header("X-Service-Name", ServiceName.cas2v2.value)
                 .exchange()
                 .expectStatus()
                 .isOk
@@ -967,7 +967,7 @@ class Cas2v2ApplicationTest : Cas2v2IntegrationTestBase() {
                 "/cas2v2/applications?prisonCode=${userAPrisonA.activeNomisCaseloadId!!.reversed()}",
               )
               .header("Authorization", "Bearer $jwt")
-              .header("X-Service-Name", ServiceName.cas2.value)
+              .header("X-Service-Name", ServiceName.cas2v2.value)
               .exchange()
               .expectStatus()
               .isForbidden()
@@ -1071,7 +1071,7 @@ class Cas2v2ApplicationTest : Cas2v2IntegrationTestBase() {
                     "/cas2v2/applications?isSubmitted=true&prisonCode=${caseAdminPrisonA.activeCaseloadId}",
                   )
                   .header("Authorization", "Bearer $jwt")
-                  .header("X-Service-Name", ServiceName.cas2.value)
+                  .header("X-Service-Name", ServiceName.cas2v2.value)
                   .exchange()
                   .expectStatus()
                   .isOk
@@ -1236,7 +1236,7 @@ class Cas2v2ApplicationTest : Cas2v2IntegrationTestBase() {
           .get()
           .uri("/cas2v2/applications")
           .header("Authorization", "Bearer $jwtForUser")
-          .header("X-Service-Name", ServiceName.cas2.value)
+          .header("X-Service-Name", ServiceName.cas2v2.value)
           .exchange()
           .expectStatus()
           .isOk
@@ -1673,7 +1673,7 @@ class Cas2v2ApplicationTest : Cas2v2IntegrationTestBase() {
                 .post()
                 .uri("/cas2v2/applications")
                 .header("Authorization", "Bearer $jwt")
-                .header("X-Service-Name", ServiceName.cas2.value)
+                .header("X-Service-Name", ServiceName.cas2v2.value)
                 .bodyValue(
                   NewApplication(
                     crn = offenderDetails.otherIds.crn,
@@ -1742,7 +1742,7 @@ class Cas2v2ApplicationTest : Cas2v2IntegrationTestBase() {
                 .post()
                 .uri("/cas2v2/applications")
                 .header("Authorization", "Bearer $jwt")
-                .header("X-Service-Name", ServiceName.cas2.value)
+                .header("X-Service-Name", ServiceName.cas2v2.value)
                 .bodyValue(
                   NewApplication(
                     crn = offenderDetails.otherIds.crn,

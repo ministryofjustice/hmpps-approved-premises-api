@@ -139,6 +139,8 @@ class PremisesController(
       }
 
       ServiceName.cas2 -> throw RuntimeException("CAS2 not supported")
+      ServiceName.cas2v2 -> throw RuntimeException("CAS2v2 not supported")
+
       ServiceName.temporaryAccommodation -> {
         val user = usersService.getUserForRequest()
         val summaries = cas3PremisesService.getAllPremisesSummaries(user.probationRegion.id)
@@ -296,6 +298,7 @@ class PremisesController(
 
         totalBeds = cas3PremisesService.getBedspaceCount(premises)
       }
+
       else -> {
         premises = extractResultEntityOrThrow(
           premisesService.createNewPremises(
@@ -349,6 +352,7 @@ class PremisesController(
           cas3PremisesService.getAvailabilityForRange(premises, LocalDate.now(), LocalDate.now().plusDays(1))
             .values.first().getFreeCapacity(totalBeds)
       }
+
       else -> {
         totalBeds = premisesService.getBedCount(premises)
         availableBedsForToday =
@@ -586,6 +590,7 @@ class PremisesController(
             notes = body.notes,
           )
         }
+
         else -> {
           bookingService.createConfirmation(
             booking = booking,
@@ -752,7 +757,8 @@ class PremisesController(
     throwIfRequestIsForApprovedPremises("PUT /cas1/premises/$premisesId/lost-beds/$lostBedId")
 
     val premises = cas3PremisesService.getPremises(premisesId) ?: throw NotFoundProblem(premisesId, "Premises")
-    val voidBedspace = premises.voidBedspaces.firstOrNull { it.id == lostBedId } ?: throw NotFoundProblem(lostBedId, "VoidBedspace")
+    val voidBedspace =
+      premises.voidBedspaces.firstOrNull { it.id == lostBedId } ?: throw NotFoundProblem(lostBedId, "VoidBedspace")
 
     if (!userAccessService.currentUserCanManagePremisesVoidBedspaces(premises)) {
       throw ForbiddenProblem()
@@ -799,7 +805,8 @@ class PremisesController(
     throwIfRequestIsForApprovedPremises("POST /cas1/premises/$premisesId/lost-beds/$lostBedId/cancellations")
 
     val premises = cas3PremisesService.getPremises(premisesId) ?: throw NotFoundProblem(premisesId, "Premises")
-    val voidBedspace = premises.voidBedspaces.firstOrNull { it.id == lostBedId } ?: throw NotFoundProblem(lostBedId, "VoidBedspace")
+    val voidBedspace =
+      premises.voidBedspaces.firstOrNull { it.id == lostBedId } ?: throw NotFoundProblem(lostBedId, "VoidBedspace")
 
     if (!userAccessService.currentUserCanManagePremisesVoidBedspaces(premises)) {
       throw ForbiddenProblem()
