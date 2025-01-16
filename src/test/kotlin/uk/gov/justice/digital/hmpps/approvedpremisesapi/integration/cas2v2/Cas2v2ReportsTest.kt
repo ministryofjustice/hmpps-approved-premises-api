@@ -11,14 +11,14 @@ import org.junit.jupiter.api.Test
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.EnumSource
 import org.junit.jupiter.params.provider.ValueSource
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas2.model.Cas2ApplicationStatusUpdatedEvent
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas2.model.Cas2ApplicationSubmittedEvent
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas2.model.Cas2StatusDetail
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas2.model.EventType
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas2v2.model.Cas2v2ApplicationStatusUpdatedEvent
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas2v2.model.Cas2v2ApplicationSubmittedEvent
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas2v2.model.Cas2v2StatusDetail
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas2v2.model.EventType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas2ReportName
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.events.cas2.Cas2ApplicationStatusUpdatedEventDetailsFactory
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.events.cas2.Cas2ApplicationSubmittedEventDetailsFactory
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.events.cas2.Cas2StatusFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.events.cas2v2.Cas2v2ApplicationStatusUpdatedEventDetailsFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.events.cas2v2.Cas2v2ApplicationSubmittedEventDetailsFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.events.cas2v2.Cas2v2StatusFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.Cas2v2IntegrationTestBase
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DomainEventType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.model.cas2.ApplicationStatusUpdatesReportRow
@@ -156,31 +156,31 @@ class Cas2v2ReportsTest : Cas2v2IntegrationTestBase() {
         withSubmittedAt(tooOldSubmitted)
       }
 
-      val event1Details = Cas2ApplicationSubmittedEventDetailsFactory()
+      val event1Details = Cas2v2ApplicationSubmittedEventDetailsFactory()
         .withSubmittedAt(oldSubmitted.toInstant())
         .produce()
-      val event2Details = Cas2ApplicationSubmittedEventDetailsFactory()
+      val event2Details = Cas2v2ApplicationSubmittedEventDetailsFactory()
         .withSubmittedAt(newerSubmitted.toInstant())
         .produce()
-      val event3Details = Cas2ApplicationSubmittedEventDetailsFactory()
+      val event3Details = Cas2v2ApplicationSubmittedEventDetailsFactory()
         .withSubmittedAt(tooOldSubmitted.toInstant())
         .produce()
 
-      val event1ToSave = Cas2ApplicationSubmittedEvent(
+      val event1ToSave = Cas2v2ApplicationSubmittedEvent(
         id = event1Id,
         timestamp = Instant.now(),
         eventType = EventType.applicationSubmitted,
         eventDetails = event1Details,
       )
 
-      val event2ToSave = Cas2ApplicationSubmittedEvent(
+      val event2ToSave = Cas2v2ApplicationSubmittedEvent(
         id = event2Id,
         timestamp = Instant.now(),
         eventType = EventType.applicationSubmitted,
         eventDetails = event2Details,
       )
 
-      val event3ToSave = Cas2ApplicationSubmittedEvent(
+      val event3ToSave = Cas2v2ApplicationSubmittedEvent(
         id = event3Id,
         timestamp = Instant.now(),
         eventType = EventType.applicationSubmitted,
@@ -279,49 +279,49 @@ class Cas2v2ReportsTest : Cas2v2IntegrationTestBase() {
       val tooOld = Instant.now().minusSeconds(daysInSeconds(366))
 
       val event1StatusDetails = listOf(
-        Cas2StatusDetail("personalInformation", "Personal information"),
-        Cas2StatusDetail("riskOfSeriousHarm", "Risk of serious harm"),
-        Cas2StatusDetail("hdcAndCpp", "HDC licence and CPP details"),
+        Cas2v2StatusDetail("personalInformation", "Personal information"),
+        Cas2v2StatusDetail("riskOfSeriousHarm", "Risk of serious harm"),
+        Cas2v2StatusDetail("hdcAndCpp", "HDC licence and CPP details"),
       )
 
-      val event1Status = Cas2StatusFactory()
+      val event1Status = Cas2v2StatusFactory()
         .withStatusDetails(event1StatusDetails)
         .produce()
 
-      val event1Details = Cas2ApplicationStatusUpdatedEventDetailsFactory()
+      val event1Details = Cas2v2ApplicationStatusUpdatedEventDetailsFactory()
         .withStatus(event1Status)
         .withUpdatedAt(old)
         .produce()
 
-      val event2StatusDetails = emptyList<Cas2StatusDetail>()
+      val event2StatusDetails = emptyList<Cas2v2StatusDetail>()
 
-      val event2Status = Cas2StatusFactory()
+      val event2Status = Cas2v2StatusFactory()
         .withStatusDetails(event2StatusDetails)
         .produce()
 
-      val event2Details = Cas2ApplicationStatusUpdatedEventDetailsFactory()
+      val event2Details = Cas2v2ApplicationStatusUpdatedEventDetailsFactory()
         .withStatus(event2Status)
         .withUpdatedAt(newer)
         .produce()
-      val event3Details = Cas2ApplicationStatusUpdatedEventDetailsFactory()
+      val event3Details = Cas2v2ApplicationStatusUpdatedEventDetailsFactory()
         .withUpdatedAt(tooOld)
         .produce()
 
-      val event1ToSave = Cas2ApplicationStatusUpdatedEvent(
+      val event1ToSave = Cas2v2ApplicationStatusUpdatedEvent(
         id = event1Id,
         timestamp = Instant.now(),
         eventType = EventType.applicationStatusUpdated,
         eventDetails = event1Details,
       )
 
-      val event2ToSave = Cas2ApplicationStatusUpdatedEvent(
+      val event2ToSave = Cas2v2ApplicationStatusUpdatedEvent(
         id = event2Id,
         timestamp = Instant.now(),
         eventType = EventType.applicationStatusUpdated,
         eventDetails = event2Details,
       )
 
-      val event3ToSave = Cas2ApplicationStatusUpdatedEvent(
+      val event3ToSave = Cas2v2ApplicationStatusUpdatedEvent(
         id = event3Id,
         timestamp = Instant.now(),
         eventType = EventType.applicationStatusUpdated,

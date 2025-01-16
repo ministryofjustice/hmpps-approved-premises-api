@@ -157,8 +157,6 @@ class Cas2v2StatusUpdateService(
               username = assessor.username,
               name = assessor.name,
               email = assessor.email!!,
-              // FIXME(ross): Requires an updated Cas2ApplicationStatusUpdatedEvent->Cas2v2ApplicationStatusUpdatedEvent
-              // where the user is a Cas2v2User instead of an ExternalUser
               origin = "assessor.origin",
             ),
             updatedAt = eventOccurredAt.toInstant(),
@@ -168,7 +166,11 @@ class Cas2v2StatusUpdateService(
     )
   }
 
-  private fun sendEmailStatusUpdated(user: Cas2v2UserEntity, application: Cas2v2ApplicationEntity, status: Cas2v2StatusUpdateEntity) {
+  private fun sendEmailStatusUpdated(
+    user: Cas2v2UserEntity,
+    application: Cas2v2ApplicationEntity,
+    status: Cas2v2StatusUpdateEntity,
+  ) {
     if (application.createdByUser.email != null) {
       emailNotificationService.sendCas2Email(
         recipientEmailAddress = user.email!!,
