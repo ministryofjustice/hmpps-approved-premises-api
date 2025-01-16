@@ -57,8 +57,6 @@ hmpps.sqs:
   topics:
     domainevents:
       arn: "dynamically set per test"
-    inboundtopic:
-      arn: arn:aws:sns:eu-west-2:000000000000:${random.uuid}
   queues:
     domaineventsqueue:
       dlqName: ${random.uuid}
@@ -67,7 +65,7 @@ hmpps.sqs:
     inboundqueue:
       dlqName: ${random.uuid}
       queueName: ${random.uuid}
-      subscribeTopicId: inboundtopic
+      subscribeTopicId: domainevents
       subscribeFilter: '{"eventType":[ "OFFENDER_MOVEMENT-RECEPTION", "OFFENDER_MOVEMENT-DISCHARGE", "OFFENDER_AUDIT-OBJECT", "test.type"] }'
       dlqMaxReceiveCount: 1
       errorVisibilityTimeout: 0
