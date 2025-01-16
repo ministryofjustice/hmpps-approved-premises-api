@@ -30,7 +30,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.AssessmentServic
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.OffenderService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.UserService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas3.Cas3AssessmentService
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas3.DomainEventService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.AssessmentClarificationNoteTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.AssessmentReferralHistoryNoteTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.AssessmentTransformer
@@ -49,7 +48,6 @@ class AssessmentController(
   private val assessmentClarificationNoteTransformer: AssessmentClarificationNoteTransformer,
   private val assessmentReferralHistoryNoteTransformer: AssessmentReferralHistoryNoteTransformer,
   private val cas3AssessmentService: Cas3AssessmentService,
-  private val domainEventService: DomainEventService,
 ) : AssessmentsApiDelegate {
 
   override fun assessmentsGet(
@@ -116,9 +114,7 @@ class AssessmentController(
 
     val personInfo = offenderService.getPersonInfoResult(assessment.application.crn, user.deliusUsername, ignoreLaoRestrictions)
 
-    val assessmentUpdatedDomainEvents = domainEventService.getAssessmentUpdatedEvents(assessmentId = assessment.id)
-
-    val transformedResponse = assessmentTransformer.transformJpaToApi(assessment, personInfo, assessmentUpdatedDomainEvents)
+    val transformedResponse = assessmentTransformer.transformJpaToApi(assessment, personInfo)
 
     return ResponseEntity.ok(transformedResponse)
   }

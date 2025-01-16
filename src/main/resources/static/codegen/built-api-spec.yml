@@ -6838,10 +6838,6 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/ClarificationNote'
-        referralHistoryNotes:
-          type: array
-          items:
-            $ref: '#/components/schemas/ReferralHistoryNote'
       discriminator:
         propertyName: service
         mapping:

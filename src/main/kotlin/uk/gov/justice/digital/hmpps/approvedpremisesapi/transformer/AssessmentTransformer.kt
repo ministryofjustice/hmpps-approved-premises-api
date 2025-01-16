@@ -48,7 +48,6 @@ class AssessmentTransformer(
   fun transformJpaToApi(
     jpa: AssessmentEntity,
     personInfo: PersonInfoResult,
-    cas3Events: List<DomainEventEntity> = emptyList(),
   ) = when (jpa) {
     is ApprovedPremisesAssessmentEntity -> ApprovedPremisesAssessment(
       id = jpa.id,
@@ -62,7 +61,6 @@ class AssessmentTransformer(
       allocatedAt = jpa.allocatedAt?.toInstant(),
       data = if (jpa.data != null) objectMapper.readTree(jpa.data) else null,
       clarificationNotes = jpa.clarificationNotes.map(assessmentClarificationNoteTransformer::transformJpaToApi),
-      referralHistoryNotes = jpa.referralHistoryNotes.map(assessmentReferralHistoryNoteTransformer::transformJpaToApi),
       allocatedToStaffMember = jpa.allocatedToUser?.let {
         userTransformer.transformJpaToApi(it, ServiceName.approvedPremises) as ApprovedPremisesUser
       },
@@ -89,7 +87,6 @@ class AssessmentTransformer(
         allocatedAt = jpa.allocatedAt?.toInstant(),
         data = if (jpa.data != null) objectMapper.readTree(jpa.data) else null,
         clarificationNotes = jpa.clarificationNotes.map(assessmentClarificationNoteTransformer::transformJpaToApi),
-        referralHistoryNotes = getSortedReferralHistoryNotes(jpa, cas3Events),
         allocatedToStaffMember = jpa.allocatedToUser?.let {
           userTransformer.transformJpaToApi(
             it,
