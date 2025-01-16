@@ -647,6 +647,10 @@ class ApplicationService(
       return CasResult.GeneralValidationError("The schema version is outdated")
     }
 
+    if (application.deletedAt != null) {
+      return CasResult.GeneralValidationError("This application has already been deleted")
+    }
+
     if (application.submittedAt != null) {
       return CasResult.GeneralValidationError("This application has already been submitted")
     }

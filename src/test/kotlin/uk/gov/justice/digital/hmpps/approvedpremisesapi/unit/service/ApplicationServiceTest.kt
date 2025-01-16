@@ -1384,6 +1384,48 @@ class ApplicationServiceTest {
   }
 
   @Test
+  fun `updateTemporaryAccommodationApplication returns GeneralValidationError when application has already been deleted`() {
+    val applicationId = UUID.fromString("fa6e97ce-7b9e-473c-883c-83b1c2af773d")
+    val username = "SOMEPERSON"
+
+    val newestSchema = TemporaryAccommodationApplicationJsonSchemaEntityFactory().produce()
+
+    val user = UserEntityFactory()
+      .withDeliusUsername(username)
+      .withYieldedProbationRegion {
+        ProbationRegionEntityFactory()
+          .withYieldedApArea { ApAreaEntityFactory().produce() }
+          .produce()
+      }
+      .produce()
+
+    val application = TemporaryAccommodationApplicationEntityFactory()
+      .withApplicationSchema(newestSchema)
+      .withId(applicationId)
+      .withCreatedByUser(user)
+      .withDeletedAt(OffsetDateTime.now().minusDays(7))
+      .withProbationRegion(user.probationRegion)
+      .produce()
+      .apply {
+        schemaUpToDate = true
+      }
+
+    every { mockUserService.getUserForRequest() } returns user
+    every { mockApplicationRepository.findByIdOrNull(applicationId) } returns application
+    every { mockJsonSchemaService.checkSchemaOutdated(application) } returns application
+
+    val result = applicationService.updateTemporaryAccommodationApplication(
+      applicationId = applicationId,
+      data = "{}",
+    )
+
+    assertThat(result is CasResult.GeneralValidationError).isTrue
+    result as CasResult.GeneralValidationError
+
+    assertThat(result.message).isEqualTo("This application has already been deleted")
+  }
+
+  @Test
   fun `updateTemporaryAccommodationApplication returns Success with updated Application`() {
     val applicationId = UUID.fromString("fa6e97ce-7b9e-473c-883c-83b1c2af773d")
     val username = "SOMEPERSON"
