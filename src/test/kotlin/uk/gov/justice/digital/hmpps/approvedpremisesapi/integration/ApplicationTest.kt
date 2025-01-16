@@ -45,6 +45,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.TemporaryAccom
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.UnknownPerson
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.UpdateApplicationType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.UpdateApprovedPremisesApplication
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.UpdateTemporaryAccommodationApplication
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.WithdrawalReason
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.toHttpStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.CaseAccessFactory
@@ -1976,6 +1977,57 @@ class ApplicationTest : IntegrationTestBase() {
             val result = objectMapper.readValue(resultBody, Application::class.java)
 
             assertThat(result.person.crn).isEqualTo(offenderDetails.otherIds.crn)
+          }
+        }
+      }
+    }
+  }
+
+  @Nested
+  inner class Cas3UpdateApplicationCas {
+    @Test
+    fun `Update existing temporary accommodation application which was deleted returns 400`() {
+      givenAUser { userEntity, jwt ->
+        givenAUser(
+          roles = listOf(UserRole.CAS3_REFERRER),
+        ) { _, _ ->
+          givenAnOffender { offenderDetails, _ ->
+            temporaryAccommodationApplicationJsonSchemaRepository.deleteAll()
+
+            val newestJsonSchema = temporaryAccommodationApplicationJsonSchemaEntityFactory.produceAndPersist {
+              withAddedAt(OffsetDateTime.parse("2024-12-11T13:21:00+01:00"))
+              withSchema("{}")
+            }
+
+            val applicationEntity = temporaryAccommodationApplicationEntityFactory.produceAndPersist {
+              withApplicationSchema(newestJsonSchema)
+              withCrn(offenderDetails.otherIds.crn)
+              withCreatedByUser(userEntity)
+              withProbationRegion(userEntity.probationRegion)
+              withDeletedAt(OffsetDateTime.now().minusDays(26))
+              withData(
+                """
+            {
+               "thingId": 123
+            }
+            """,
+              )
+            }
+            val resultBody = webTestClient.put()
+              .uri("/applications/${applicationEntity.id}")
+              .header("Authorization", "Bearer $jwt")
+              .bodyValue(
+                UpdateTemporaryAccommodationApplication(
+                  data = mapOf("thingId" to 345),
+                  type = UpdateApplicationType.CAS3,
+                ),
+              )
+              .exchange()
+              .expectStatus()
+              .isBadRequest
+              .expectBody()
+              .jsonPath("$.status").isEqualTo("400")
+              .jsonPath("$.detail").isEqualTo("This application has already been deleted")
           }
         }
       }
