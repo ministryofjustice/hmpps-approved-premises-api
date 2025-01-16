@@ -9,6 +9,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1CruManagem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.InitialiseDatabasePerClassTestBase
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.IntegrationTestBase
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas1CruManagementAreaEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.DepartureReasonTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.cas1.Cas1OutOfServiceBedReasonTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.bodyAsListOfObjects
 import java.util.UUID
@@ -16,6 +17,9 @@ import java.util.UUID
 class Cas1ReferenceDataTest : IntegrationTestBase() {
   @Autowired
   lateinit var reasonTransformer: Cas1OutOfServiceBedReasonTransformer
+
+  @Autowired
+  lateinit var departureReasonTransformer: DepartureReasonTransformer
 
   @Nested
   inner class GetOutOfServiceBedReasons {
@@ -82,7 +86,7 @@ class Cas1ReferenceDataTest : IntegrationTestBase() {
     }
 
     @Test
-    fun `success`() {
+    fun success() {
       val jwt = jwtAuthHelper.createValidAuthorizationCodeJwt()
 
       val result = webTestClient.get()
@@ -96,6 +100,42 @@ class Cas1ReferenceDataTest : IntegrationTestBase() {
       assertThat(result.any { it.id == area1.id && it.name == area1.name }).isTrue()
       assertThat(result.any { it.id == area2.id && it.name == area2.name }).isTrue()
       assertThat(result.any { it.id == womensEstateArea.id && it.name == womensEstateArea.name }).isTrue()
+    }
+  }
+
+  @Nested
+  inner class DepartureReasons {
+
+    @Test
+    fun success() {
+      departureReasonRepository.deleteAll()
+
+      val sharedReasons = departureReasonEntityFactory.produceAndPersistMultiple(2) {
+        withServiceScope("*")
+      }
+      val cas1Reasons = departureReasonEntityFactory.produceAndPersistMultiple(3) {
+        withServiceScope("approved-premises")
+      }
+
+      // cas3 reasons
+      departureReasonEntityFactory.produceAndPersistMultiple(5) {
+        withServiceScope("temporary-accommodation")
+      }
+
+      val expectedJson = objectMapper.writeValueAsString(
+        (sharedReasons + cas1Reasons).map(departureReasonTransformer::transformJpaToApi),
+      )
+
+      val jwt = jwtAuthHelper.createValidAuthorizationCodeJwt()
+
+      webTestClient.get()
+        .uri("/cas1/reference-data/departure-reasons")
+        .header("Authorization", "Bearer $jwt")
+        .exchange()
+        .expectStatus()
+        .isOk
+        .expectBody()
+        .json(expectedJson)
     }
   }
 }
