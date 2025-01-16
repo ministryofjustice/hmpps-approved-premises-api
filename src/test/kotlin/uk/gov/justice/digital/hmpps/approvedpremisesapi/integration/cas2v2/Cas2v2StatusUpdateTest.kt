@@ -31,9 +31,11 @@ class Cas2v2StatusUpdateTest(
   private val applicationOverviewUrlTemplate: String,
 ) : Cas2v2IntegrationTestBase() {
 
-  @SpykBean lateinit var realCas2v2StatusUpdateRepository: Cas2v2StatusUpdateRepository
+  @SpykBean
+  lateinit var realCas2v2StatusUpdateRepository: Cas2v2StatusUpdateRepository
 
-  @SpykBean lateinit var realCas2v2StatusUpdateDetailRepository: Cas2v2StatusUpdateDetailRepository
+  @SpykBean
+  lateinit var realCas2v2StatusUpdateDetailRepository: Cas2v2StatusUpdateDetailRepository
 
   @AfterEach
   fun afterEach() {
@@ -270,20 +272,20 @@ class Cas2v2StatusUpdateTest(
                   toEmailAddress = applicant.email!!,
                   templateId = "ef4dc5e3-b1f1-4448-a545-7a936c50fc3a",
                   personalisation =
-                  mapOf(
-                    "applicationStatus" to "Offer declined or withdrawn",
-                    "dateStatusChanged" to
-                      now.toLocalDate().toCas2UiFormat(),
-                    "timeStatusChanged" to
-                      now.toCas2UiFormattedHourOfDay(),
-                    "nomsNumber" to "123NOMS",
-                    "applicationType" to "Home Detention Curfew (HDC)",
-                    "applicationUrl" to
-                      applicationOverviewUrlTemplate.replace(
-                        "#id",
-                        application.id.toString(),
-                      ),
-                  ),
+                    mapOf(
+                      "applicationStatus" to "Offer declined or withdrawn",
+                      "dateStatusChanged" to
+                        now.toLocalDate().toCas2UiFormat(),
+                      "timeStatusChanged" to
+                        now.toCas2UiFormattedHourOfDay(),
+                      "nomsNumber" to "123NOMS",
+                      "applicationType" to "Home Detention Curfew (HDC)",
+                      "applicationUrl" to
+                        applicationOverviewUrlTemplate.replace(
+                          "#id",
+                          application.id.toString(),
+                        ),
+                    ),
                   replyToEmailId = notifyConfig.emailAddresses.cas2ReplyToId,
                 )
 

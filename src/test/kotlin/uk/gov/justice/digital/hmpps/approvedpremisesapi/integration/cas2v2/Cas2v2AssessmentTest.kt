@@ -8,7 +8,7 @@ import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 import org.springframework.test.web.reactive.server.returnResult
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas2Assessment
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas2v2Assessment
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.UpdateCas2Assessment
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.Cas2v2IntegrationTestBase
@@ -122,7 +122,7 @@ class Cas2v2AssessmentTest : Cas2v2IntegrationTestBase() {
             .blockFirst()
 
           val responseBody =
-            objectMapper.readValue(rawResponseBody, object : TypeReference<Cas2Assessment>() {})
+            objectMapper.readValue(rawResponseBody, object : TypeReference<Cas2v2Assessment>() {})
 
           Assertions.assertThat(responseBody.nacroReferralId).isEqualTo(updatedNacroReferralId)
           Assertions.assertThat(responseBody.assessorName).isEqualTo(updatedAssessorName)
@@ -222,7 +222,7 @@ class Cas2v2AssessmentTest : Cas2v2IntegrationTestBase() {
             .blockFirst()
 
           val responseBody =
-            objectMapper.readValue(rawResponseBody, object : TypeReference<Cas2Assessment>() {})
+            objectMapper.readValue(rawResponseBody, object : TypeReference<Cas2v2Assessment>() {})
 
           Assertions.assertThat(responseBody.nacroReferralId).isEqualTo(assessment.nacroReferralId)
           Assertions.assertThat(responseBody.assessorName).isEqualTo(assessment.assessorName)
@@ -257,7 +257,7 @@ class Cas2v2AssessmentTest : Cas2v2IntegrationTestBase() {
             .blockFirst()
 
           val responseBody =
-            objectMapper.readValue(rawResponseBody, object : TypeReference<Cas2Assessment>() {})
+            objectMapper.readValue(rawResponseBody, object : TypeReference<Cas2v2Assessment>() {})
 
           Assertions.assertThat(responseBody.nacroReferralId).isEqualTo(assessment.nacroReferralId)
           Assertions.assertThat(responseBody.assessorName).isEqualTo(assessment.assessorName)

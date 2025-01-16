@@ -14,8 +14,8 @@ import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.ValueSource
 import org.springframework.test.web.reactive.server.returnResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Application
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas2Application
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas2StatusUpdate
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas2v2Application
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas2v2StatusUpdate
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas2v2ApplicationSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.FullPerson
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewApplication
@@ -47,7 +47,8 @@ import kotlin.math.sign
 
 class Cas2v2ApplicationTest : Cas2v2IntegrationTestBase() {
 
-  @SpykBean lateinit var realApplicationRepository: ApplicationRepository
+  @SpykBean
+  lateinit var realApplicationRepository: ApplicationRepository
 
   val schema =
     """
@@ -1387,7 +1388,7 @@ class Cas2v2ApplicationTest : Cas2v2IntegrationTestBase() {
             val responseBody =
               objectMapper.readValue(
                 rawResponseBody,
-                Cas2Application::class.java,
+                Cas2v2Application::class.java,
               )
 
             Assertions.assertThat(responseBody).matches {
@@ -1436,7 +1437,7 @@ class Cas2v2ApplicationTest : Cas2v2IntegrationTestBase() {
             val responseBody =
               objectMapper.readValue(
                 rawResponseBody,
-                Cas2Application::class.java,
+                Cas2v2Application::class.java,
               )
 
             Assertions.assertThat(responseBody.person is FullPerson).isTrue
@@ -1493,11 +1494,11 @@ class Cas2v2ApplicationTest : Cas2v2IntegrationTestBase() {
             val responseBody =
               objectMapper.readValue(
                 rawResponseBody,
-                Cas2Application::class.java,
+                Cas2v2Application::class.java,
               )
 
             Assertions.assertThat(responseBody.assessment!!.statusUpdates)
-              .isEqualTo(emptyList<Cas2StatusUpdate>())
+              .isEqualTo(emptyList<Cas2v2StatusUpdate>())
 
             Assertions.assertThat(responseBody.timelineEvents!!.map { event -> event.label })
               .isEqualTo(listOf("Application submitted"))
@@ -1600,11 +1601,11 @@ class Cas2v2ApplicationTest : Cas2v2IntegrationTestBase() {
               val responseBody =
                 objectMapper.readValue(
                   rawResponseBody,
-                  Cas2Application::class.java,
+                  Cas2v2Application::class.java,
                 )
 
               Assertions.assertThat(responseBody.assessment!!.statusUpdates)
-                .isEqualTo(emptyList<Cas2StatusUpdate>())
+                .isEqualTo(emptyList<Cas2v2StatusUpdate>())
 
               Assertions.assertThat(responseBody.timelineEvents!!.map { event -> event.label })
                 .isEqualTo(listOf("Application submitted"))
@@ -1682,7 +1683,7 @@ class Cas2v2ApplicationTest : Cas2v2IntegrationTestBase() {
                 .exchange()
                 .expectStatus()
                 .isCreated
-                .returnResult(Cas2Application::class.java)
+                .returnResult(Cas2v2Application::class.java)
 
             Assertions.assertThat(result.responseHeaders["Location"]).anyMatch {
               it.matches(Regex("/cas2v2/applications/.+"))
@@ -1751,7 +1752,7 @@ class Cas2v2ApplicationTest : Cas2v2IntegrationTestBase() {
                 .exchange()
                 .expectStatus()
                 .isCreated
-                .returnResult(Cas2Application::class.java)
+                .returnResult(Cas2v2Application::class.java)
 
             Assertions.assertThat(result.responseHeaders["Location"]).anyMatch {
               it.matches(Regex("/cas2v2/applications/.+"))
@@ -1840,7 +1841,7 @@ class Cas2v2ApplicationTest : Cas2v2IntegrationTestBase() {
                 .responseBody
                 .blockFirst()
 
-            val result = objectMapper.readValue(resultBody, Application::class.java)
+            val result = objectMapper.readValue(resultBody, Cas2v2Application::class.java)
 
             Assertions.assertThat(result.person.crn).isEqualTo(offenderDetails.otherIds.crn)
           }
@@ -1890,7 +1891,7 @@ class Cas2v2ApplicationTest : Cas2v2IntegrationTestBase() {
                 .responseBody
                 .blockFirst()
 
-            val result = objectMapper.readValue(resultBody, Application::class.java)
+            val result = objectMapper.readValue(resultBody, Cas2v2Application::class.java)
 
             Assertions.assertThat(result.person.crn).isEqualTo(offenderDetails.otherIds.crn)
           }
