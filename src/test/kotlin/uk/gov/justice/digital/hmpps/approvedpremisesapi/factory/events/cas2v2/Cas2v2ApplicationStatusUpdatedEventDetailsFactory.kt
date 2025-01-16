@@ -6,7 +6,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas2v2.model.
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas2v2.model.Cas2v2Status
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas2v2.model.Cas2v2User
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas2v2.model.PersonReference
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.events.cas2v2.Cas2v2PersonReferenceFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomDateTimeBefore
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomStringMultiCaseWithNumbers
 import java.time.Instant
