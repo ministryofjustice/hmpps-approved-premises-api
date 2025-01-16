@@ -15,8 +15,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas2v2.Cas2v2
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.BadRequestProblem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.ConflictProblem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.ForbiddenProblem
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.NotFoundProblem
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.AuthorisableActionResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.ValidatableActionResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.NomisUserService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas2.OffenderService
@@ -60,23 +58,14 @@ class Cas2v2ApplicationController(
   override fun applicationsApplicationIdGet(applicationId: UUID): ResponseEntity<Application> {
     val user = nomisUserService.getUserForRequest()
 
-    val application = when (
-      val applicationResult = cas2v2ApplicationService
-        .getCas2v2ApplicationForUser(
-          applicationId,
-          user,
-        )
+    val applicationResult = cas2v2ApplicationService
+      .getCas2v2ApplicationForUser(
+        applicationId,
+        user,
+      )
 
-    ) {
-      is AuthorisableActionResult.NotFound -> null
-      is AuthorisableActionResult.Unauthorised -> throw ForbiddenProblem()
-      is AuthorisableActionResult.Success -> applicationResult.entity
-    }
-
-    if (application != null) {
-      return ResponseEntity.ok(getPersonDetailAndTransform(application))
-    }
-    throw NotFoundProblem(applicationId, "Application")
+    val application = extractEntityFromCasResult(applicationResult)
+    return ResponseEntity.ok(getPersonDetailAndTransform(application))
   }
 
   @Transactional

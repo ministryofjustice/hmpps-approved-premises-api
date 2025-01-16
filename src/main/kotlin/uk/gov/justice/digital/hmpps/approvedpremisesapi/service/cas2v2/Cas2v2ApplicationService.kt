@@ -102,23 +102,20 @@ class Cas2v2ApplicationService(
     )
   }
 
-  fun getCas2v2ApplicationForUser(applicationId: UUID, user: NomisUserEntity): AuthorisableActionResult<Cas2v2ApplicationEntity> {
+  fun getCas2v2ApplicationForUser(applicationId: UUID, user: NomisUserEntity): CasResult<Cas2v2ApplicationEntity> {
     val applicationEntity = cas2v2ApplicationRepository.findByIdOrNull(applicationId)
-      ?: return AuthorisableActionResult.NotFound()
+      ?: return CasResult.NotFound()
 
     if (applicationEntity.abandonedAt != null) {
-      return AuthorisableActionResult.NotFound()
+      return CasResult.NotFound()
     }
 
     val canAccess = cas2v2UserAccessService.userCanViewCas2v2Application(user, applicationEntity)
 
     return if (canAccess) {
-      AuthorisableActionResult.Success(
-        jsonSchemaService.checkCas2v2SchemaOutdated
-          (applicationEntity),
-      )
+      CasResult.Success(jsonSchemaService.checkCas2v2SchemaOutdated(applicationEntity))
     } else {
-      AuthorisableActionResult.Unauthorised()
+      CasResult.Unauthorised()
     }
   }
 

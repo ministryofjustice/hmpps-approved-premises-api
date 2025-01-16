@@ -215,7 +215,7 @@ class Cas2v2ApplicationServiceTest {
 
       every { mockCas2v2ApplicationRepository.findByIdOrNull(applicationId) } returns null
 
-      assertThat(cas2v2ApplicationService.getCas2v2ApplicationForUser(applicationId, user) is AuthorisableActionResult.NotFound).isTrue
+      assertThat(cas2v2ApplicationService.getCas2v2ApplicationForUser(applicationId, user) is CasResult.NotFound).isTrue
     }
 
     @Test
@@ -232,7 +232,7 @@ class Cas2v2ApplicationServiceTest {
           .withAbandonedAt(OffsetDateTime.now())
           .produce()
 
-      assertThat(cas2v2ApplicationService.getCas2v2ApplicationForUser(applicationId, user) is AuthorisableActionResult.NotFound).isTrue
+      assertThat(cas2v2ApplicationService.getCas2v2ApplicationForUser(applicationId, user) is CasResult.NotFound).isTrue
     }
 
     @Test
@@ -251,7 +251,7 @@ class Cas2v2ApplicationServiceTest {
 
       every { mockCas2v2UserAccessService.userCanViewCas2v2Application(any(), any()) } returns false
 
-      assertThat(cas2v2ApplicationService.getCas2v2ApplicationForUser(applicationId, user) is AuthorisableActionResult.Unauthorised).isTrue
+      assertThat(cas2v2ApplicationService.getCas2v2ApplicationForUser(applicationId, user) is CasResult.Unauthorised).isTrue
     }
 
     @Test
@@ -283,10 +283,10 @@ class Cas2v2ApplicationServiceTest {
 
       val result = cas2v2ApplicationService.getCas2v2ApplicationForUser(applicationId, userEntity)
 
-      assertThat(result is AuthorisableActionResult.Success).isTrue
-      result as AuthorisableActionResult.Success
+      assertThat(result is CasResult.Success).isTrue
+      val entity = extractEntityFromCasResult(result)
 
-      assertThat(result.entity).isEqualTo(cas2v2ApplicationEntity)
+      assertThat(entity).isEqualTo(cas2v2ApplicationEntity)
     }
   }
 
