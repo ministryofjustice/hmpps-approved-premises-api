@@ -74,4 +74,5 @@ data class Cas1DeliusBookingImportEntity(
   val nonArrivalReasonDescription: String?,
   val nonArrivalNotes: String?,
   val premisesQcode: String,
+  val createdAt: OffsetDateTime?,
 )
