@@ -114,6 +114,7 @@ class SeedCas1BackfillActiveSpaceBookingsCreatedInDeliusTest : SeedTestBase() {
       nonArrivalReasonDescription = null,
       nonArrivalNotes = "the non arrival notes",
       premisesQcode = premises.qCode,
+      createdAt = OffsetDateTime.now(),
     )
 
     deliusBookingImportRepository.save(

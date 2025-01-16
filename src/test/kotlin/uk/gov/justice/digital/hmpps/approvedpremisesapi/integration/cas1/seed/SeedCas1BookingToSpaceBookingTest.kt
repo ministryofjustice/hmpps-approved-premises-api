@@ -163,6 +163,7 @@ class SeedCas1BookingToSpaceBookingTest : SeedTestBase() {
         nonArrivalReasonDescription = null,
         nonArrivalNotes = "the non arrival notes",
         premisesQcode = "hostel code",
+        createdAt = OffsetDateTime.now(),
       ),
     )
 
@@ -212,6 +213,7 @@ class SeedCas1BookingToSpaceBookingTest : SeedTestBase() {
         nonArrivalReasonDescription = null,
         nonArrivalNotes = null,
         premisesQcode = "hostel code",
+        createdAt = OffsetDateTime.now(),
       ),
     )
 
