@@ -64,6 +64,12 @@ generic-service:
     elasticache-redis:
       SPRING_DATA_REDIS_HOST: "primary_endpoint_address"
       SPRING_DATA_REDIS_PASSWORD: "auth_token"
+    inbound-queue-sqs-instance-output:
+      HMPPS_SQS_QUEUES_INBOUNDQUEUE_QUEUE_NAME: "inboundqueue"
+    inbound-queue-sqs-dl-instance-output:
+      HMPPS_SQS_QUEUES_INBOUNDQUEUE_DLQ_NAME: "mainDlq"
+    inbound-topic:
+      HMPPS_SQS_TOPICS_INBOUNDTOPIC_TOPIC_ARN: "topic_arn_sqs"
 
   allowlist:
     office: "217.33.148.210/32"
