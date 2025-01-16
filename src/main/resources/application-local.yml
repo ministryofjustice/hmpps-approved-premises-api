@@ -19,9 +19,17 @@ spring:
 
 hmpps.sqs:
   provider: localstack
+  queues:
+    inboundqueue:
+      queueName: inbound-queue
+      dlqName: inbound-dlq
+      subscribeTopicId: inboundtopic
+      subscribeFilter: '{"eventType":[ "OFFENDER_MOVEMENT-RECEPTION", "OFFENDER_MOVEMENT-DISCHARGE", "OFFENDER_AUDIT-OBJECT", "test.type"] }'
   topics:
     domainevents:
       arn: arn:aws:sns:eu-west-2:000000000000:domainevents
+    inboundtopic:
+      arn: arn:aws:sns:eu-west-2:000000000000:inbound-topic
 
 domain-events:
   cas1:
