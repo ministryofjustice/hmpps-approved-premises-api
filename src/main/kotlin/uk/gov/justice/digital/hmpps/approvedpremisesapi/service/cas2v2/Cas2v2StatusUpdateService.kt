@@ -14,14 +14,13 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas2.model.Ex
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas2.model.PersonReference
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas2AssessmentStatusUpdate
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.config.NotifyConfig
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ExternalUserEntity
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.NomisUserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas2v2.Cas2v2ApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas2v2.Cas2v2AssessmentRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas2v2.Cas2v2StatusUpdateDetailEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas2v2.Cas2v2StatusUpdateDetailRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas2v2.Cas2v2StatusUpdateEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas2v2.Cas2v2StatusUpdateRepository
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas2v2.Cas2v2UserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.DomainEvent
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.ValidationErrors
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.reference.Cas2PersistedApplicationStatus
@@ -62,7 +61,7 @@ class Cas2v2StatusUpdateService(
   fun createForAssessment(
     assessmentId: UUID,
     statusUpdate: Cas2AssessmentStatusUpdate,
-    assessor: ExternalUserEntity,
+    assessor: Cas2v2UserEntity,
   ): CasResult<Cas2v2StatusUpdateEntity> {
     val assessment = cas2v2AssessmentRepository.findByIdOrNull(assessmentId)
       ?: return CasResult.NotFound()
@@ -157,8 +156,10 @@ class Cas2v2StatusUpdateService(
             updatedBy = ExternalUser(
               username = assessor.username,
               name = assessor.name,
-              email = assessor.email,
-              origin = assessor.origin,
+              email = assessor.email!!,
+              // FIXME(ross): Requires an updated Cas2ApplicationStatusUpdatedEvent->Cas2v2ApplicationStatusUpdatedEvent
+              // where the user is a Cas2v2User instead of an ExternalUser
+              origin = "assessor.origin",
             ),
             updatedAt = eventOccurredAt.toInstant(),
           ),
@@ -167,7 +168,7 @@ class Cas2v2StatusUpdateService(
     )
   }
 
-  private fun sendEmailStatusUpdated(user: NomisUserEntity, application: Cas2v2ApplicationEntity, status: Cas2v2StatusUpdateEntity) {
+  private fun sendEmailStatusUpdated(user: Cas2v2UserEntity, application: Cas2v2ApplicationEntity, status: Cas2v2StatusUpdateEntity) {
     if (application.createdByUser.email != null) {
       emailNotificationService.sendCas2Email(
         recipientEmailAddress = user.email!!,

@@ -13,11 +13,11 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.UpdateCas2Assessment
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.Cas2v2IntegrationTestBase
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenACas2Admin
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenACas2Assessor
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenACas2PomUser
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.NomisUserEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenACas2v2Assessor
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenACas2v2PomUser
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas2v2.Cas2v2ApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas2v2.Cas2v2AssessmentRepository
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas2v2.Cas2v2UserEntity
 import java.time.OffsetDateTime
 import java.util.UUID
 
@@ -90,8 +90,8 @@ class Cas2v2AssessmentTest : Cas2v2IntegrationTestBase() {
     fun `assessors create cas2v2 note returns 201`() {
       val applicationId = UUID.fromString("22ceda56-98b2-411d-91cc-ace0ab8be872")
 
-      givenACas2PomUser { referrer, _ ->
-        givenACas2Assessor { assessor, jwt ->
+      givenACas2v2PomUser { referrer, _ ->
+        givenACas2v2Assessor { assessor, jwt ->
           val submittedApplication = createSubmittedApplication(applicationId, referrer)
 
           // with an assessment
@@ -130,7 +130,7 @@ class Cas2v2AssessmentTest : Cas2v2IntegrationTestBase() {
       }
     }
 
-    private fun createSubmittedApplication(applicationId: UUID, referrer: NomisUserEntity): Cas2v2ApplicationEntity {
+    private fun createSubmittedApplication(applicationId: UUID, referrer: Cas2v2UserEntity): Cas2v2ApplicationEntity {
       val applicationSchema =
         cas2v2ApplicationJsonSchemaEntityFactory.produceAndPersist()
 
@@ -199,8 +199,8 @@ class Cas2v2AssessmentTest : Cas2v2IntegrationTestBase() {
     fun `assessors update cas2v2 assessment returns 200`() {
       val applicationId = UUID.fromString("22ceda56-98b2-411d-91cc-ace0ab8be872")
 
-      givenACas2PomUser { referrer, _ ->
-        givenACas2Assessor { assessor, jwt ->
+      givenACas2v2PomUser { referrer, _ ->
+        givenACas2v2Assessor { assessor, jwt ->
           val submittedApplication = createSubmittedApplication(applicationId, referrer)
 
           // with an assessment
@@ -234,7 +234,7 @@ class Cas2v2AssessmentTest : Cas2v2IntegrationTestBase() {
     fun `admins get cas2 version 2 assessment returns 200`() {
       val applicationId = UUID.fromString("22ceda56-98b2-411d-91cc-ace0ab8be872")
 
-      givenACas2PomUser { referrer, _ ->
+      givenACas2v2PomUser { referrer, _ ->
         givenACas2Admin { admin, jwt ->
           val submittedApplication = createSubmittedApplication(applicationId, referrer)
 
@@ -265,7 +265,7 @@ class Cas2v2AssessmentTest : Cas2v2IntegrationTestBase() {
       }
     }
 
-    private fun createSubmittedApplication(applicationId: UUID, referrer: NomisUserEntity): Cas2v2ApplicationEntity {
+    private fun createSubmittedApplication(applicationId: UUID, referrer: Cas2v2UserEntity): Cas2v2ApplicationEntity {
       val applicationSchema =
         cas2v2ApplicationJsonSchemaEntityFactory.produceAndPersist()
 

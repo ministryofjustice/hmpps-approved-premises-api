@@ -7,6 +7,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas2Applicati
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TemporaryAccommodationApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas2v2.Cas2v2ApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas2v2.Cas2v2AssessmentEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas2v2.Cas2v2UserEntity
 import java.util.UUID
 
 @Repository
@@ -17,6 +18,9 @@ interface Cas2ApplicationTestRepository : JpaRepository<Cas2ApplicationEntity, U
 
 @Repository
 interface Cas2v2ApplicationTestRepository : JpaRepository<Cas2v2ApplicationEntity, UUID>
+
+@Repository
+interface Cas2v2UserTestRepository : JpaRepository<Cas2v2UserEntity, UUID>
 
 @Repository
 interface Cas2v2AssessmentTestRepository : JpaRepository<Cas2v2AssessmentEntity, UUID>

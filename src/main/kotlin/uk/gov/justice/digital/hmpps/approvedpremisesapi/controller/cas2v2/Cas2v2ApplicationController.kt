@@ -17,9 +17,9 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.ForbiddenProblem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.NotFoundProblem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.AuthorisableActionResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.ValidatableActionResult
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.NomisUserService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas2.OffenderService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas2v2.Cas2v2ApplicationService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas2v2.Cas2v2UserService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.cas2v2.Cas2v2ApplicationsTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.PageCriteria
 import java.net.URI
@@ -34,7 +34,7 @@ class Cas2v2ApplicationController(
   private val cas2v2ApplicationsTransformer: Cas2v2ApplicationsTransformer,
   private val objectMapper: ObjectMapper,
   private val offenderService: OffenderService,
-  private val userService: NomisUserService,
+  private val userService: Cas2v2UserService,
 ) : ApplicationsCas2v2Delegate {
 
   override fun applicationsGet(
@@ -44,7 +44,7 @@ class Cas2v2ApplicationController(
   ): ResponseEntity<List<ModelCas2v2ApplicationSummary>> {
     val user = userService.getUserForRequest()
 
-    prisonCode?.let { if (prisonCode != user.activeCaseloadId) throw ForbiddenProblem() }
+    prisonCode?.let { if (prisonCode != user.activeNomisCaseloadId) throw ForbiddenProblem() }
 
     val pageCriteria = PageCriteria("createdAt", SortDirection.desc, page)
 

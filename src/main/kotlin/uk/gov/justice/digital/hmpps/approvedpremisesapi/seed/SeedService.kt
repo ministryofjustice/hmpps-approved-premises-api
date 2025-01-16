@@ -90,6 +90,8 @@ class SeedService(
         SeedFileType.approvedPremisesImportDeliusReferrals -> getBean(Cas1ImportDeliusReferralsSeedJob::class)
         SeedFileType.approvedPremisesUpdateSpaceBooking -> getBean(Cas1UpdateSpaceBookingSeedJob::class)
         SeedFileType.temporaryAccommodationReferralRejection -> getBean(Cas3ReferralRejectionSeedJob::class)
+        SeedFileType.approvedPremisesBackfillActiveSpaceBookingsCreatedInDelius -> TODO()
+        SeedFileType.approvedPremisesCreateTestApplications -> TODO()
       }
 
       val seedStarted = LocalDateTime.now()

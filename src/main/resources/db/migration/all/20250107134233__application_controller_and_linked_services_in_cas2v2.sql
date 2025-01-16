@@ -12,9 +12,26 @@ CREATE TABLE cas_2_v2_application_notes
     created_at                  TIMESTAMPTZ,
     body                        TEXT,
     assessment_id               UUID,
-    created_by_nomis_user_id    UUID,
-    created_by_external_user_id UUID,
+    created_by_user_id    UUID,
     CONSTRAINT pk_cas_2_v2_application_notes PRIMARY KEY (id)
+);
+
+
+CREATE TABLE cas_2_v2_users
+(
+    id                       UUID    NOT NULL,
+    name                     TEXT    NOT NULL,
+    username                 TEXT    NOT NULL,
+    email                    TEXT    DEFAULT 'unknown@justice.gov.uk',
+    user_type                TEXT    NOT NULL,
+    nomis_staff_id           BIGINT,
+    active_nomis_caseload_id TEXT,
+    delius_staff_code        TEXT,
+    delius_team_codes        TEXT,
+    is_enabled               BOOLEAN NOT NULL,
+    is_active                BOOLEAN NOT NULL,
+    created_at               TIMESTAMPTZ NOT NULL,
+    CONSTRAINT pk_cas_2_v2_users PRIMARY KEY (id)
 );
 
 CREATE TABLE cas_2_v2_applications
@@ -75,7 +92,7 @@ ALTER TABLE cas_2_v2_applications
     ADD CONSTRAINT FK_CAS_2_V2_APPLICATIONS_ON_ASSESSMENT FOREIGN KEY (assessment_id) REFERENCES cas_2_v2_assessments (id);
 
 ALTER TABLE cas_2_v2_applications
-    ADD CONSTRAINT FK_CAS_2_V2_APPLICATIONS_ON_CREATED_BY_USER FOREIGN KEY (created_by_user_id) REFERENCES nomis_users (id);
+    ADD CONSTRAINT FK_CAS_2_V2_APPLICATIONS_ON_CREATED_BY_USER FOREIGN KEY (created_by_user_id) REFERENCES cas_2_v2_users (id);
 
 ALTER TABLE cas_2_v2_applications
     ADD CONSTRAINT FK_CAS_2_V2_APPLICATIONS_ON_SCHEMA_VERSION FOREIGN KEY (schema_version) REFERENCES json_schemas (id);
@@ -90,10 +107,7 @@ ALTER TABLE cas_2_v2_application_notes
     ADD CONSTRAINT FK_CAS_2_V2_APPLICATION_NOTES_ON_ASSESSMENT FOREIGN KEY (assessment_id) REFERENCES cas_2_v2_assessments (id);
 
 ALTER TABLE cas_2_v2_application_notes
-    ADD CONSTRAINT FK_CAS_2_V2_APPLICATION_NOTES_ON_CREATED_BY_EXTERNAL_USER FOREIGN KEY (created_by_external_user_id) REFERENCES external_users (id);
-
-ALTER TABLE cas_2_v2_application_notes
-    ADD CONSTRAINT FK_CAS_2_V2_APPLICATION_NOTES_ON_CREATED_BY_NOMIS_USER FOREIGN KEY (created_by_nomis_user_id) REFERENCES nomis_users (id);
+    ADD CONSTRAINT FK_CAS_2_V2_APPLICATION_NOTES_ON_CREATED_BY_USER FOREIGN KEY (created_by_user_id) REFERENCES cas_2_v2_users (id);
 
 ALTER TABLE cas_2_v2_assessments
     ADD CONSTRAINT FK_CAS_2_V2_ASSESSMENTS_ON_APPLICATION FOREIGN KEY (application_id) REFERENCES cas_2_v2_applications (id);
@@ -105,7 +119,7 @@ ALTER TABLE cas_2_v2_status_updates
     ADD CONSTRAINT FK_CAS_2_V2_STATUS_UPDATES_ON_ASSESSMENT FOREIGN KEY (assessment_id) REFERENCES cas_2_v2_assessments (id);
 
 ALTER TABLE cas_2_v2_status_updates
-    ADD CONSTRAINT FK_CAS_2_V2_STATUS_UPDATES_ON_ASSESSOR FOREIGN KEY (assessor_id) REFERENCES external_users (id);
+    ADD CONSTRAINT FK_CAS_2_V2_STATUS_UPDATES_ON_ASSESSOR FOREIGN KEY (assessor_id) REFERENCES cas_2_v2_users (id);
 
 ALTER TABLE cas_2_v2_status_update_details
     ADD CONSTRAINT FK_CAS_2_V2_STATUS_UPDATE_DETAILS_ON_STATUS_UPDATE FOREIGN KEY (status_update_id) REFERENCES cas_2_v2_status_updates (id);
@@ -130,7 +144,7 @@ LEFT JOIN (SELECT DISTINCT ON (application_id) su.application_id, su.label, su.s
     FROM cas_2_v2_status_updates su
     ORDER BY su.application_id, su.created_at DESC) as asu
     ON a.id = asu.application_id
-JOIN nomis_users nu ON nu.id = a.created_by_user_id;
+JOIN cas_2_v2_users nu ON nu.id = a.created_by_user_id;
 
 CREATE OR REPLACE VIEW cas_2_v2_application_live_summary AS SELECT
     a.id,

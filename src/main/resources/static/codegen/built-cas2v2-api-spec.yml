@@ -1161,20 +1161,20 @@ components:
       required:
         - reason
     WithdrawPlacementRequestReason:
-        type: string
-        enum:
-          - DuplicatePlacementRequest
-          - AlternativeProvisionIdentified
-          - ChangeInCircumstances
-          - ChangeInReleaseDecision
-          - NoCapacityDueToLostBed
-          - NoCapacityDueToPlacementPrioritisation
-          - NoCapacity
-          - ErrorInPlacementRequest
-          - WithdrawnByPP
-          - RelatedApplicationWithdrawn
-          - RelatedPlacementRequestWithdrawn
-          - RelatedPlacementApplicationWithdrawn
+      type: string
+      enum:
+        - DuplicatePlacementRequest
+        - AlternativeProvisionIdentified
+        - ChangeInCircumstances
+        - ChangeInReleaseDecision
+        - NoCapacityDueToLostBed
+        - NoCapacityDueToPlacementPrioritisation
+        - NoCapacity
+        - ErrorInPlacementRequest
+        - WithdrawnByPP
+        - RelatedApplicationWithdrawn
+        - RelatedPlacementRequestWithdrawn
+        - RelatedPlacementApplicationWithdrawn
     PlacementApplicationType:
       type: string
       description: |
@@ -4317,6 +4317,8 @@ components:
         - approved_premises_space_planning_dry_run
         - approved_premises_import_delius_referrals
         - approved_premises_update_space_booking
+        - approved_premises_backfill_active_space_bookings_created_in_delius
+        - approved_premises_create_test_applications
         - temporary_accommodation_referral_rejection
     SeedFromExcelFileType:
       type: string
@@ -4350,6 +4352,7 @@ components:
         - update_cas3_application_offender_name
         - update_cas3_domain_event_type_for_person_departed_updated
         - update_cas1_applications_licence_expiry_date
+        - update_cas1_backfill_offline_application_name
     PlacementDates:
       type: object
       properties:
@@ -4370,6 +4373,7 @@ components:
           $ref: '#/components/schemas/ApType'
         location:
           type: string
+          description: Postcode outcode
           example: B74
         radius:
           type: integer
@@ -5386,7 +5390,6 @@ components:
         - SHARED_PROPERTY
         - SINGLE_OCCUPANCY
         - WHEELCHAIR_ACCESSIBLE
-
     SubmitCas2v2Application:
       type: object
       properties:
@@ -5427,7 +5430,7 @@ components:
         statusUpdates:
           type: array
           items:
-            $ref: '#/components/schemas/Cas2StatusUpdate'
+            $ref: '#/components/schemas/Cas2v2StatusUpdate'
       required:
         - id
     Cas2v2Application:
@@ -5436,7 +5439,7 @@ components:
         - type: object
           properties:
             createdBy:
-              $ref: '#/components/schemas/NomisUser'
+              $ref: '#/components/schemas/Cas2v2User'
             schemaVersion:
               type: string
               format: uuid
@@ -5476,7 +5479,7 @@ components:
           type: string
           format: date-time
         submittedBy:
-          $ref: '#/components/schemas/NomisUser'
+          $ref: '#/components/schemas/Cas2v2User'
         schemaVersion:
           type: string
           format: uuid
@@ -5528,7 +5531,7 @@ components:
         status:
           $ref: '#/components/schemas/ApplicationStatus'
         latestStatusUpdate:
-          $ref: '#/components/schemas/LatestCas2StatusUpdate'
+          $ref: '#/components/schemas/LatestCas2v2StatusUpdate'
         risks:
           $ref: '#/components/schemas/PersonRisks'
         hdcEligibilityDate:
@@ -5603,3 +5606,87 @@ components:
         - body
         - createdAt
       description: Notes added to a  Cas2v2Application
+    Cas2v2User:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        name:
+          type: string
+          example: 'Roger Smith'
+        username:
+          type: string
+          example: 'SMITHR_GEN'
+        authSource:
+          type: string
+          example: 'NOMIS'
+        email:
+          type: string
+          example: 'Roger.Smith@justice.gov.uk'
+        isActive:
+          type: boolean
+          example: true
+      required:
+        - id
+        - name
+        - username
+        - authSource
+        - isActive
+    Cas2v2StatusUpdate:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        name:
+          type: string
+          example: 'moreInfoRequested'
+        label:
+          type: string
+          example: 'More information requested'
+        description:
+          type: string
+          example: 'More information about the application has been requested from the HMPPS user.'
+        updatedBy:
+          $ref: '#/components/schemas/Cas2v2User'
+        updatedAt:
+          type: string
+          format: date-time
+        statusUpdateDetails:
+          type: array
+          items:
+            $ref: '#/components/schemas/Cas2v2StatusUpdateDetail'
+      required:
+        - id
+        - name
+        - label
+        - description
+    Cas2v2StatusUpdateDetail:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        name:
+          type: string
+          example: 'moreInfoRequested'
+        label:
+          type: string
+          example: 'More information requested'
+      required:
+        - id
+        - name
+        - label
+    LatestCas2v2StatusUpdate:
+      type: object
+      properties:
+        statusId:
+          type: string
+          format: uuid
+        label:
+          type: string
+          example: 'More information requested'
+      required:
+        - statusId
+        - label

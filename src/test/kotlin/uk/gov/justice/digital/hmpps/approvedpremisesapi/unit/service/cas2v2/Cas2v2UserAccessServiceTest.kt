@@ -5,8 +5,8 @@ import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.Cas2ApplicationJsonSchemaEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.Cas2v2ApplicationJsonSchemaEntityFactory
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.NomisUserEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.cas2v2.Cas2v2ApplicationEntityFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.cas2v2.Cas2v2UserEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas2v2.Cas2v2UserAccessService
 import java.time.OffsetDateTime
 
@@ -22,7 +22,7 @@ class Cas2v2UserAccessServiceTest {
 
     @Nested
     inner class WhenApplicationCreatedByUser {
-      private val user = NomisUserEntityFactory()
+      private val user = Cas2v2UserEntityFactory()
         .produce()
 
       @Test
@@ -41,9 +41,9 @@ class Cas2v2UserAccessServiceTest {
 
       @Nested
       inner class WhenApplicationNotSubmitted {
-        private val user = NomisUserEntityFactory()
+        private val user = Cas2v2UserEntityFactory()
           .produce()
-        private val anotherUser = NomisUserEntityFactory()
+        private val anotherUser = Cas2v2UserEntityFactory()
           .produce()
 
         @Test
@@ -59,11 +59,11 @@ class Cas2v2UserAccessServiceTest {
 
       @Nested
       inner class WhenApplicationMadeForDifferentPrison {
-        private val user = NomisUserEntityFactory()
-          .withActiveCaseloadId("my-prison")
+        private val user = Cas2v2UserEntityFactory()
+          .withActiveNomisCaseloadId("my-prison")
           .produce()
-        private val anotherUser = NomisUserEntityFactory()
-          .withActiveCaseloadId("different-prison").produce()
+        private val anotherUser = Cas2v2UserEntityFactory()
+          .withActiveNomisCaseloadId("different-prison").produce()
 
         @Test
         fun `returns false`() {
@@ -79,11 +79,11 @@ class Cas2v2UserAccessServiceTest {
 
         @Nested
         inner class WhenNoPrisonData {
-          private val userWithNoPrison = NomisUserEntityFactory()
-            .withActiveCaseloadId("my-prison")
+          private val userWithNoPrison = Cas2v2UserEntityFactory()
+            .withActiveNomisCaseloadId("my-prison")
             .produce()
-          private val anotherUserWithNoPrison = NomisUserEntityFactory()
-            .withActiveCaseloadId("different-prison").produce()
+          private val anotherUserWithNoPrison = Cas2v2UserEntityFactory()
+            .withActiveNomisCaseloadId("different-prison").produce()
 
           @Test
           fun `returns false`() {
@@ -100,11 +100,11 @@ class Cas2v2UserAccessServiceTest {
 
       @Nested
       inner class WhenCas2v2ApplicationMadeForSamePrison {
-        private val user = NomisUserEntityFactory()
-          .withActiveCaseloadId("my-prison")
+        private val user = Cas2v2UserEntityFactory()
+          .withActiveNomisCaseloadId("my-prison")
           .produce()
-        private val anotherUser = NomisUserEntityFactory()
-          .withActiveCaseloadId("my-prison")
+        private val anotherUser = Cas2v2UserEntityFactory()
+          .withActiveNomisCaseloadId("my-prison")
           .produce()
 
         @Test

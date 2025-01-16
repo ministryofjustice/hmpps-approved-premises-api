@@ -5,21 +5,21 @@ import jakarta.transaction.Transactional
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.data.repository.findByIdOrNull
 import org.springframework.stereotype.Service
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas2.model.Cas2ApplicationSubmittedEvent
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas2.model.Cas2ApplicationSubmittedEventDetails
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas2.model.Cas2ApplicationSubmittedEventDetailsSubmittedBy
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas2.model.Cas2StaffMember
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas2.model.EventType
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas2.model.PersonReference
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas2v2.model.Cas2v2ApplicationSubmittedEvent
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas2v2.model.Cas2v2ApplicationSubmittedEventDetails
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas2v2.model.Cas2v2ApplicationSubmittedEventDetailsSubmittedBy
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas2v2.model.Cas2v2StaffMember
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas2v2.model.EventType
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas2v2.model.PersonReference
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.SubmitCas2v2Application
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.config.NotifyConfig
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas2v2ApplicationJsonSchemaEntity
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.NomisUserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas2v2.Cas2v2ApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas2v2.Cas2v2ApplicationRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas2v2.Cas2v2ApplicationSummaryEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas2v2.Cas2v2ApplicationSummaryRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas2v2.Cas2v2LockableApplicationRepository
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas2v2.Cas2v2UserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.DomainEvent
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PaginationMetadata
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.ValidationErrors
@@ -29,7 +29,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.CasResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.ValidatableActionResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.EmailNotificationService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.UpstreamApiException
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas2.DomainEventService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas2.JsonSchemaService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas2.OffenderService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.PageCriteria
@@ -46,7 +45,7 @@ class Cas2v2ApplicationService(
   private val jsonSchemaService: JsonSchemaService,
   private val offenderService: OffenderService,
   private val cas2v2UserAccessService: Cas2v2UserAccessService,
-  private val domainEventService: DomainEventService,
+  private val domainEventService: Cas2v2DomainEventService,
   private val emailNotificationService: EmailNotificationService,
   private val assessmentService: Cas2v2AssessmentService,
   private val notifyConfig: NotifyConfig,
@@ -70,7 +69,7 @@ class Cas2v2ApplicationService(
   fun getCas2v2Applications(
     prisonCode: String?,
     isSubmitted: Boolean?,
-    user: NomisUserEntity,
+    user: Cas2v2UserEntity,
     pageCriteria: PageCriteria<String>,
   ): Pair<MutableList<Cas2v2ApplicationSummaryEntity>, PaginationMetadata?> {
     val response = if (prisonCode == null) {
@@ -101,7 +100,10 @@ class Cas2v2ApplicationService(
     )
   }
 
-  fun getCas2v2ApplicationForUser(applicationId: UUID, user: NomisUserEntity): AuthorisableActionResult<Cas2v2ApplicationEntity> {
+  fun getCas2v2ApplicationForUser(
+    applicationId: UUID,
+    user: Cas2v2UserEntity,
+  ): AuthorisableActionResult<Cas2v2ApplicationEntity> {
     val applicationEntity = cas2v2ApplicationRepository.findByIdOrNull(applicationId)
       ?: return AuthorisableActionResult.NotFound()
 
@@ -122,7 +124,7 @@ class Cas2v2ApplicationService(
   }
 
   @SuppressWarnings("TooGenericExceptionThrown")
-  fun createCas2v2Application(crn: String, user: NomisUserEntity) =
+  fun createCas2v2Application(crn: String, user: Cas2v2UserEntity) =
     validated<Cas2v2ApplicationEntity> {
       val offenderDetailsResult = offenderService.getOffenderByCrn(crn)
 
@@ -164,9 +166,14 @@ class Cas2v2ApplicationService(
     }
 
   @SuppressWarnings("ReturnCount")
-  fun updateCas2v2Application(applicationId: UUID, data: String?, user: NomisUserEntity): AuthorisableActionResult<ValidatableActionResult<Cas2v2ApplicationEntity>> {
-    val application = cas2v2ApplicationRepository.findByIdOrNull(applicationId)?.let(jsonSchemaService::checkCas2v2SchemaOutdated)
-      ?: return AuthorisableActionResult.NotFound()
+  fun updateCas2v2Application(
+    applicationId: UUID,
+    data: String?,
+    user: Cas2v2UserEntity,
+  ): AuthorisableActionResult<ValidatableActionResult<Cas2v2ApplicationEntity>> {
+    val application =
+      cas2v2ApplicationRepository.findByIdOrNull(applicationId)?.let(jsonSchemaService::checkCas2v2SchemaOutdated)
+        ?: return AuthorisableActionResult.NotFound()
 
     if (application.createdByUser != user) {
       return AuthorisableActionResult.Unauthorised()
@@ -202,7 +209,10 @@ class Cas2v2ApplicationService(
   }
 
   @SuppressWarnings("ReturnCount")
-  fun abandonCas2v2Application(applicationId: UUID, user: NomisUserEntity): AuthorisableActionResult<ValidatableActionResult<Cas2v2ApplicationEntity>> {
+  fun abandonCas2v2Application(
+    applicationId: UUID,
+    user: Cas2v2UserEntity,
+  ): AuthorisableActionResult<ValidatableActionResult<Cas2v2ApplicationEntity>> {
     val application = cas2v2ApplicationRepository.findByIdOrNull(applicationId)
       ?: return AuthorisableActionResult.NotFound()
 
@@ -238,7 +248,7 @@ class Cas2v2ApplicationService(
   @Transactional
   fun submitCas2v2Application(
     submitCas2v2Application: SubmitCas2v2Application,
-    user: NomisUserEntity,
+    user: Cas2v2UserEntity,
   ): CasResult<Cas2v2ApplicationEntity> {
     val applicationId = submitCas2v2Application.applicationId
 
@@ -318,11 +328,11 @@ class Cas2v2ApplicationService(
         crn = application.crn,
         nomsNumber = application.nomsNumber,
         occurredAt = eventOccurredAt.toInstant(),
-        data = Cas2ApplicationSubmittedEvent(
+        data = Cas2v2ApplicationSubmittedEvent(
           id = domainEventId,
           timestamp = eventOccurredAt.toInstant(),
           eventType = EventType.applicationSubmitted,
-          eventDetails = Cas2ApplicationSubmittedEventDetails(
+          eventDetails = Cas2v2ApplicationSubmittedEventDetails(
             applicationId = application.id,
             applicationUrl = applicationUrlTemplate
               .replace("#id", application.id.toString()),
@@ -335,11 +345,11 @@ class Cas2v2ApplicationService(
             preferredAreas = application.preferredAreas,
             hdcEligibilityDate = application.hdcEligibilityDate,
             conditionalReleaseDate = application.conditionalReleaseDate,
-            submittedBy = Cas2ApplicationSubmittedEventDetailsSubmittedBy(
-              staffMember = Cas2StaffMember(
-                staffIdentifier = application.createdByUser.nomisStaffId,
+            submittedBy = Cas2v2ApplicationSubmittedEventDetailsSubmittedBy(
+              staffMember = Cas2v2StaffMember(
+                staffIdentifier = application.createdByUser.staffIdentifier(),
                 name = application.createdByUser.name,
-                username = application.createdByUser.nomisUsername,
+                username = application.createdByUser.username,
               ),
             ),
           ),
@@ -367,7 +377,7 @@ class Cas2v2ApplicationService(
     return inmateDetail?.assignedLivingUnit?.agencyId ?: throw UpstreamApiException("No prison code available")
   }
 
-  private fun sendEmailApplicationSubmitted(user: NomisUserEntity, application: Cas2v2ApplicationEntity) {
+  private fun sendEmailApplicationSubmitted(user: Cas2v2UserEntity, application: Cas2v2ApplicationEntity) {
     emailNotificationService.sendEmail(
       recipientEmailAddress = notifyConfig.emailAddresses.cas2Assessors,
       templateId = notifyConfig.templates.cas2ApplicationSubmitted,

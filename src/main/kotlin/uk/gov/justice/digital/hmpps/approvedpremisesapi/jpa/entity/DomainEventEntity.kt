@@ -23,6 +23,7 @@ import java.time.OffsetDateTime
 import java.util.UUID
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.EventType as Cas1EventType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas2.model.EventType as Cas2EventType
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas2v2.model.EventType as Cas2v2EventType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas3.model.EventType as Cas3EventType
 
 @Repository
@@ -136,7 +137,7 @@ data class DomainEventEntity(
   @MapKeyColumn(name = "name")
   @MapKeyEnumerated(EnumType.STRING)
   @Column(name = "value")
-  @CollectionTable(name = "domain_events_metadata", joinColumns = [ JoinColumn(name = "domain_event_id") ])
+  @CollectionTable(name = "domain_events_metadata", joinColumns = [JoinColumn(name = "domain_event_id")])
   val metadata: Map<MetaDataName, String?> = emptyMap(),
   /**
    * Use to track the schema version used for the [data] property. The schema version
@@ -167,6 +168,7 @@ enum class MetaDataName {
 enum class DomainEventCas {
   CAS1,
   CAS2,
+  CAS2v2,
   CAS3,
 }
 
@@ -329,6 +331,18 @@ enum class DomainEventType(
   CAS2_APPLICATION_STATUS_UPDATED(
     DomainEventCas.CAS2,
     Cas2EventType.applicationStatusUpdated.value,
+    "An assessor has updated the status of a CAS2 application",
+    null,
+  ),
+  CAS2V2_APPLICATION_SUBMITTED(
+    DomainEventCas.CAS2v2,
+    Cas2v2EventType.applicationSubmitted.value,
+    "An application has been submitted for a CAS2 placement",
+    null,
+  ),
+  CAS2V2_APPLICATION_STATUS_UPDATED(
+    DomainEventCas.CAS2v2,
+    Cas2v2EventType.applicationStatusUpdated.value,
     "An assessor has updated the status of a CAS2 application",
     null,
   ),

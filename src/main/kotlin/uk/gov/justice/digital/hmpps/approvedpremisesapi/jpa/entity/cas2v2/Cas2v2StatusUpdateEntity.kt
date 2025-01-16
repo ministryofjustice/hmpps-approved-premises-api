@@ -12,7 +12,6 @@ import org.springframework.data.domain.Slice
 import org.springframework.data.jpa.repository.JpaRepository
 import org.springframework.data.jpa.repository.Query
 import org.springframework.stereotype.Repository
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ExternalUserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.reference.Cas2PersistedApplicationStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.reference.Cas2PersistedApplicationStatusFinder
 import java.time.OffsetDateTime
@@ -41,7 +40,7 @@ data class Cas2v2StatusUpdateEntity(
 
   @ManyToOne
   @JoinColumn(name = "assessor_id")
-  val assessor: ExternalUserEntity,
+  val assessor: Cas2v2UserEntity,
 
   @ManyToOne
   @JoinColumn(name = "application_id")

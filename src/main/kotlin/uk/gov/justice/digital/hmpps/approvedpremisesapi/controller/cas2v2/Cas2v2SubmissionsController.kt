@@ -19,9 +19,9 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.AuthorisableActi
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.CasResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.ExternalUserService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.HttpAuthService
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.NomisUserService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas2.OffenderService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas2v2.Cas2v2ApplicationService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas2v2.Cas2v2UserService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.cas2v2.Cas2v2SubmissionsTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.PageCriteria
 import java.util.UUID
@@ -33,7 +33,7 @@ class Cas2v2SubmissionsController(
   private val cas2v2SubmissionsTransformer: Cas2v2SubmissionsTransformer,
   private val offenderService: OffenderService,
   private val externalUserService: ExternalUserService,
-  private val nomisUserService: NomisUserService,
+  private val userService: Cas2v2UserService,
 ) : SubmissionsCas2v2Delegate {
 
   override fun submissionsGet(page: Int?): ResponseEntity<List<Cas2v2SubmittedApplicationSummary>> {
@@ -80,7 +80,7 @@ class Cas2v2SubmissionsController(
   override fun submissionsPost(
     submitCas2v2Application: SubmitCas2v2Application,
   ): ResponseEntity<Unit> {
-    val user = nomisUserService.getUserForRequest()
+    val user = userService.getUserForRequest()
     val submitResult = cas2v2ApplicationService.submitCas2v2Application(submitCas2v2Application, user)
 
     when (submitResult) {
@@ -98,7 +98,7 @@ class Cas2v2SubmissionsController(
   }
 
   private fun ensureNomisUserPersisted() {
-    nomisUserService.getUserForRequest()
+    userService.getUserForRequest()
   }
 
   private fun getPersonNamesAndTransformToSummaries(

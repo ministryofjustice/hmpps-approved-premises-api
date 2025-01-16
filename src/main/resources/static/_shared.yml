@@ -570,20 +570,20 @@ components:
       required:
         - reason
     WithdrawPlacementRequestReason:
-        type: string
-        enum:
-          - DuplicatePlacementRequest
-          - AlternativeProvisionIdentified
-          - ChangeInCircumstances
-          - ChangeInReleaseDecision
-          - NoCapacityDueToLostBed
-          - NoCapacityDueToPlacementPrioritisation
-          - NoCapacity
-          - ErrorInPlacementRequest
-          - WithdrawnByPP
-          - RelatedApplicationWithdrawn
-          - RelatedPlacementRequestWithdrawn
-          - RelatedPlacementApplicationWithdrawn
+      type: string
+      enum:
+        - DuplicatePlacementRequest
+        - AlternativeProvisionIdentified
+        - ChangeInCircumstances
+        - ChangeInReleaseDecision
+        - NoCapacityDueToLostBed
+        - NoCapacityDueToPlacementPrioritisation
+        - NoCapacity
+        - ErrorInPlacementRequest
+        - WithdrawnByPP
+        - RelatedApplicationWithdrawn
+        - RelatedPlacementRequestWithdrawn
+        - RelatedPlacementApplicationWithdrawn
     PlacementApplicationType:
       type: string
       description: |
@@ -3726,6 +3726,8 @@ components:
         - approved_premises_space_planning_dry_run
         - approved_premises_import_delius_referrals
         - approved_premises_update_space_booking
+        - approved_premises_backfill_active_space_bookings_created_in_delius
+        - approved_premises_create_test_applications
         - temporary_accommodation_referral_rejection
     SeedFromExcelFileType:
       type: string
@@ -3759,6 +3761,7 @@ components:
         - update_cas3_application_offender_name
         - update_cas3_domain_event_type_for_person_departed_updated
         - update_cas1_applications_licence_expiry_date
+        - update_cas1_backfill_offline_application_name
     PlacementDates:
       type: object
       properties:
@@ -3779,6 +3782,7 @@ components:
           $ref: '#/components/schemas/ApType'
         location:
           type: string
+          description: Postcode outcode
           example: B74
         radius:
           type: integer

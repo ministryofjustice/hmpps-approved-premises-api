@@ -10,10 +10,10 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas2v2Assessme
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewCas2ApplicationNote
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.UpdateCas2Assessment
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.CasResult
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.ExternalUserService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas2v2.Cas2v2ApplicationNoteService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas2v2.Cas2v2AssessmentService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas2v2.Cas2v2StatusUpdateService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas2v2.Cas2v2UserService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.cas2v2.Cas2v2ApplicationNotesTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.cas2v2.Cas2v2AssessmentsTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.extractEntityFromCasResult
@@ -27,20 +27,23 @@ class Cas2v2AssessmentsController(
   private val cas2v2AssessmentsTransformer: Cas2v2AssessmentsTransformer,
   private val cas2v2ApplicationNotesTransformer: Cas2v2ApplicationNotesTransformer,
   private val cas2v2StatusUpdateService: Cas2v2StatusUpdateService,
-  private val externalUserService: ExternalUserService,
+  private val cas2v2UserService: Cas2v2UserService,
 ) : AssessmentsCas2v2Delegate {
 
   override fun assessmentsAssessmentIdGet(assessmentId: UUID): ResponseEntity<Cas2v2Assessment> {
     val assessmentResult = cas2v2AssessmentService.getAssessment(assessmentId)
     val cas2v2AssessmentEntity = extractEntityFromCasResult(assessmentResult)
-    return ResponseEntity.ok(cas2v2AssessmentsTransformer.transformJpaToApiRepresentation(cas2v2AssessmentEntity))
+    return ResponseEntity.ok(
+      cas2v2AssessmentsTransformer.transformJpaToApiRepresentation(cas2v2AssessmentEntity),
+    )
   }
 
   override fun assessmentsAssessmentIdPut(
     assessmentId: UUID,
     updateCas2Assessment: UpdateCas2Assessment,
   ): ResponseEntity<Cas2v2Assessment> {
-    val assessmentResult = cas2v2AssessmentService.updateAssessment(assessmentId, updateCas2Assessment)
+    val assessmentResult =
+      cas2v2AssessmentService.updateAssessment(assessmentId, updateCas2Assessment)
 
     val cas2v2AssessmentEntity = extractEntityFromCasResult(assessmentResult)
     return ResponseEntity.ok(
@@ -52,14 +55,14 @@ class Cas2v2AssessmentsController(
     assessmentId: UUID,
     cas2AssessmentStatusUpdate: Cas2AssessmentStatusUpdate,
   ): ResponseEntity<Unit> {
-    val result = cas2v2StatusUpdateService.createForAssessment(
-      assessmentId = assessmentId,
-      statusUpdate = cas2AssessmentStatusUpdate,
-      assessor = externalUserService.getUserForRequest(),
-    )
+    val result =
+      cas2v2StatusUpdateService.createForAssessment(
+        assessmentId = assessmentId,
+        statusUpdate = cas2AssessmentStatusUpdate,
+        assessor = cas2v2UserService.getUserForRequest(),
+      )
 
-    processAuthorisationFor(result)
-      .run { processValidation(result) }
+    processAuthorisationFor(result).run { processValidation(result) }
 
     return ResponseEntity(HttpStatus.CREATED)
   }
@@ -71,8 +74,7 @@ class Cas2v2AssessmentsController(
     val noteResult = cas2v2ApplicationNoteService.createAssessmentNote(assessmentId, body)
 
     val note = extractEntityFromCasResult(noteResult)
-    return ResponseEntity
-      .created(URI.create("/cas2v2/assessments/$assessmentId/notes/${note.id}"))
+    return ResponseEntity.created(URI.create("/cas2v2/assessments/$assessmentId/notes/${note.id}"))
       .body(
         cas2v2ApplicationNotesTransformer.transformJpaToApi(note),
       )
