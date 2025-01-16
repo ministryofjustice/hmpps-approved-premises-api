@@ -1597,6 +1597,10 @@ class Cas2v2ApplicationTest : Cas2v2IntegrationTestBase() {
                   .responseBody
                   .blockFirst()
 
+              println("************************************************************")
+              println(rawResponseBody)
+              println("************************************************************")
+
               val responseBody =
                 objectMapper.readValue(
                   rawResponseBody,

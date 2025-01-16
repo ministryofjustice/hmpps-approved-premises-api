@@ -106,7 +106,7 @@ class Cas2v2DomainEventService(
         occurredAt = domainEvent.occurredAt.atOffset(ZoneOffset.UTC),
         createdAt = OffsetDateTime.now(),
         data = objectMapper.writeValueAsString(domainEvent.data),
-        service = "CAS2",
+        service = "CAS2V2",
         triggerSource = null,
         triggeredByUserId = null,
         schemaVersion = domainEvent.schemaVersion,
