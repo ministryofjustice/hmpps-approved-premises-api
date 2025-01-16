@@ -1,9 +1,11 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.unit.service
 
+import io.mockk.Runs
 import io.mockk.every
 import io.mockk.impl.annotations.InjectMockKs
 import io.mockk.impl.annotations.MockK
 import io.mockk.junit5.MockKExtension
+import io.mockk.just
 import io.mockk.mockk
 import io.mockk.slot
 import io.mockk.verify
@@ -1892,6 +1894,8 @@ class Cas1SpaceBookingServiceTest {
 
     @Test
     fun `should update only departure dates when booking status is hasArrival`() {
+      existingSpaceBooking.actualArrivalDate = LocalDate.now()
+      existingSpaceBooking.expectedDepartureDate = LocalDate.of(2025, 1, 10)
       val updateSpaceBookingDetails = UpdateSpaceBookingDetails(
         bookingId = UUID.randomUUID(),
         premisesId = PREMISES_ID,
@@ -1906,6 +1910,8 @@ class Cas1SpaceBookingServiceTest {
       every { spaceBookingRepository.findByIdOrNull(any()) } returns existingSpaceBooking
       every { spaceBookingRepository.save(capture(updatedSpaceBookingCaptor)) } returnsArgument 0
 
+      every { cas1BookingDomainEventService.spaceBookingChanged(any(), any(), any(), any(), any()) } just Runs
+
       val result = service.updateSpaceBooking(updateSpaceBookingDetails)
 
       assertThat(result).isInstanceOf(CasResult.Success::class.java)
@@ -1915,10 +1921,22 @@ class Cas1SpaceBookingServiceTest {
       assertThat(updatedSpaceBooking.canonicalArrivalDate).isEqualTo(existingSpaceBooking.canonicalArrivalDate)
       assertThat(updatedSpaceBooking.expectedDepartureDate).isEqualTo(updateSpaceBookingDetails.departureDate)
       assertThat(updatedSpaceBooking.canonicalDepartureDate).isEqualTo(updateSpaceBookingDetails.departureDate)
+
+      verify(exactly = 1) {
+        cas1BookingDomainEventService.spaceBookingChanged(
+          booking = updatedSpaceBookingCaptor.captured,
+          changedBy = user,
+          bookingChangedAt = any(),
+          previousArrivalDateIfChanged = null,
+          previousDepartureDateIfChanged = LocalDate.of(2025, 1, 10),
+        )
+      }
     }
 
     @Test
     fun `should correctly update booking dates`() {
+      existingSpaceBooking.expectedArrivalDate = LocalDate.of(2025, 1, 10)
+      existingSpaceBooking.expectedDepartureDate = LocalDate.of(2025, 3, 15)
       val updateSpaceBookingDetails = UpdateSpaceBookingDetails(
         bookingId = UUID.randomUUID(),
         premisesId = PREMISES_ID,
@@ -1934,6 +1952,7 @@ class Cas1SpaceBookingServiceTest {
       every { cas1PremisesService.findPremiseById(any()) } returns premises
       every { spaceBookingRepository.findByIdOrNull(any()) } returns existingSpaceBooking
       every { spaceBookingRepository.save(capture(updatedSpaceBookingCaptor)) } returnsArgument 0
+      every { cas1BookingDomainEventService.spaceBookingChanged(any(), any(), any(), any(), any()) } just Runs
 
       val result = service.updateSpaceBooking(updateSpaceBookingDetails)
 
@@ -1944,6 +1963,16 @@ class Cas1SpaceBookingServiceTest {
       assertThat(updatedSpaceBooking.canonicalArrivalDate).isEqualTo(updateSpaceBookingDetails.arrivalDate)
       assertThat(updatedSpaceBooking.expectedDepartureDate).isEqualTo(updateSpaceBookingDetails.departureDate)
       assertThat(updatedSpaceBooking.canonicalDepartureDate).isEqualTo(updateSpaceBookingDetails.departureDate)
+
+      verify(exactly = 1) {
+        cas1BookingDomainEventService.spaceBookingChanged(
+          booking = updatedSpaceBookingCaptor.captured,
+          changedBy = user,
+          bookingChangedAt = any(),
+          previousArrivalDateIfChanged = LocalDate.of(2025, 1, 10),
+          previousDepartureDateIfChanged = LocalDate.of(2025, 3, 15),
+        )
+      }
     }
   }
 

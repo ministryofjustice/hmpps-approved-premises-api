@@ -2074,6 +2074,8 @@ class Cas1SpaceBookingTest {
 
       assertThat(updatedSpaceBooking.expectedArrivalDate).isEqualTo(LocalDate.parse("2025-03-15"))
       assertThat(updatedSpaceBooking.expectedDepartureDate).isEqualTo(LocalDate.parse("2025-04-05"))
+
+      domainEventAsserter.assertDomainEventOfTypeStored(updatedSpaceBooking.application?.id!!, DomainEventType.APPROVED_PREMISES_BOOKING_CHANGED)
     }
   }
 }

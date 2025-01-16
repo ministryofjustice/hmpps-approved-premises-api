@@ -557,8 +557,20 @@ class Cas1SpaceBookingService(
 
     val bookingToUpdate = cas1SpaceBookingRepository.findByIdOrNull(updateSpaceBookingDetails.bookingId)!!
 
-    val result = updateExistingSpaceBooking(bookingToUpdate, updateSpaceBookingDetails)
-    success(result)
+    val previousArrivalDate = bookingToUpdate.expectedArrivalDate
+    val previousDepartureDate = bookingToUpdate.expectedDepartureDate
+
+    val updatedBooking = updateExistingSpaceBooking(bookingToUpdate, updateSpaceBookingDetails)
+
+    cas1BookingDomainEventService.spaceBookingChanged(
+      booking = updatedBooking,
+      changedBy = updateSpaceBookingDetails.updatedBy,
+      bookingChangedAt = OffsetDateTime.now(),
+      previousArrivalDateIfChanged = if (previousArrivalDate != updatedBooking.expectedArrivalDate) previousArrivalDate else null,
+      previousDepartureDateIfChanged = if (previousDepartureDate != updatedBooking.expectedDepartureDate) previousDepartureDate else null,
+    )
+
+    success(updatedBooking)
   }
 
   private fun CasResultValidatedScope<Cas1SpaceBookingEntity>.validateUpdateSpaceBooking(
