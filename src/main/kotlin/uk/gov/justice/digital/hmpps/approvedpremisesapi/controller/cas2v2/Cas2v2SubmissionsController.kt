@@ -37,17 +37,18 @@ class Cas2v2SubmissionsController(
 ) : SubmissionsCas2v2Delegate {
 
   override fun submissionsGet(page: Int?): ResponseEntity<List<Cas2v2SubmittedApplicationSummary>> {
-    val principal = httpAuthService.getCas2v2AuthenticatedPrincipalOrThrow()
-    if (principal.isExternalUser()) {
-      ensureExternalUserPersisted()
-    } else {
-      ensureNomisUserPersisted()
-    }
+    ensureUserPersisted()
 
     val sortDirection = SortDirection.asc
     val sortBy = "submittedAt"
 
-    val (applications, metadata) = cas2v2ApplicationService.getAllSubmittedCas2v2ApplicationsForAssessor(PageCriteria(sortBy, sortDirection, page))
+    val (applications, metadata) = cas2v2ApplicationService.getAllSubmittedCas2v2ApplicationsForAssessor(
+      PageCriteria(
+        sortBy,
+        sortDirection,
+        page,
+      ),
+    )
 
     return ResponseEntity.ok().headers(
       metadata?.toHeaders(),
@@ -55,12 +56,7 @@ class Cas2v2SubmissionsController(
   }
 
   override fun submissionsApplicationIdGet(applicationId: UUID): ResponseEntity<Cas2v2SubmittedApplication> {
-    val principal = httpAuthService.getCas2v2AuthenticatedPrincipalOrThrow()
-    if (principal.isExternalUser()) {
-      ensureExternalUserPersisted()
-    } else {
-      ensureNomisUserPersisted()
-    }
+    ensureUserPersisted()
 
     val application = when (
       val applicationResult = cas2v2ApplicationService.getSubmittedCas2v2ApplicationForAssessor(applicationId)
@@ -86,18 +82,18 @@ class Cas2v2SubmissionsController(
     when (submitResult) {
       is CasResult.NotFound -> throw NotFoundProblem(submitCas2v2Application.applicationId, "Application")
       is CasResult.Unauthorised -> throw ForbiddenProblem()
-      is CasResult.ConflictError -> throw ConflictProblem(id = submitResult.conflictingEntityId, conflictReason = submitResult.message)
+      is CasResult.ConflictError -> throw ConflictProblem(
+        id = submitResult.conflictingEntityId,
+        conflictReason = submitResult.message,
+      )
+
       is CasResult.FieldValidationError -> throw BadRequestProblem(invalidParams = submitResult.validationMessages)
       is CasResult.GeneralValidationError -> throw BadRequestProblem(errorDetail = submitResult.message)
       is CasResult.Success -> return ResponseEntity(HttpStatus.OK)
     }
   }
 
-  private fun ensureExternalUserPersisted() {
-    externalUserService.getUserForRequest()
-  }
-
-  private fun ensureNomisUserPersisted() {
+  private fun ensureUserPersisted() {
     userService.getUserForRequest()
   }
 
@@ -109,7 +105,10 @@ class Cas2v2SubmissionsController(
     val personNamesMap = offenderService.getMapOfPersonNamesAndCrns(crns)
 
     return applicationSummaries.map { application ->
-      cas2v2SubmissionsTransformer.transformJpaSummaryToApiRepresentation(application, personNamesMap[application.crn]!!)
+      cas2v2SubmissionsTransformer.transformJpaSummaryToApiRepresentation(
+        application,
+        personNamesMap[application.crn]!!,
+      )
     }
   }
 

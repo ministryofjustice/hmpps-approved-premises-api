@@ -10,8 +10,8 @@ import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Value
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas2.model.Cas2ApplicationStatusUpdatedEvent
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas2.model.Cas2StatusDetail
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas2v2.model.Cas2v2ApplicationStatusUpdatedEvent
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas2v2.model.Cas2v2StatusDetail
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas2AssessmentStatusUpdate
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.Cas2v2IntegrationTestBase
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenACas2v2Assessor
@@ -137,7 +137,7 @@ class Cas2v2StatusUpdateTest(
           val domainEventFromJson =
             objectMapper.readValue(
               persistedDomainEvent!!.data,
-              Cas2ApplicationStatusUpdatedEvent::class.java,
+              Cas2v2ApplicationStatusUpdatedEvent::class.java,
             )
           assertThat(domainEventFromJson.eventDetails.applicationUrl).isEqualTo(expectedFrontEndUrl)
         }
@@ -272,20 +272,20 @@ class Cas2v2StatusUpdateTest(
                   toEmailAddress = applicant.email!!,
                   templateId = "ef4dc5e3-b1f1-4448-a545-7a936c50fc3a",
                   personalisation =
-                  mapOf(
-                    "applicationStatus" to "Offer declined or withdrawn",
-                    "dateStatusChanged" to
-                      now.toLocalDate().toCas2UiFormat(),
-                    "timeStatusChanged" to
-                      now.toCas2UiFormattedHourOfDay(),
-                    "nomsNumber" to "123NOMS",
-                    "applicationType" to "Home Detention Curfew (HDC)",
-                    "applicationUrl" to
-                      applicationOverviewUrlTemplate.replace(
-                        "#id",
-                        application.id.toString(),
-                      ),
-                  ),
+                    mapOf(
+                      "applicationStatus" to "Offer declined or withdrawn",
+                      "dateStatusChanged" to
+                        now.toLocalDate().toCas2UiFormat(),
+                      "timeStatusChanged" to
+                        now.toCas2UiFormattedHourOfDay(),
+                      "nomsNumber" to "123NOMS",
+                      "applicationType" to "Home Detention Curfew (HDC)",
+                      "applicationUrl" to
+                        applicationOverviewUrlTemplate.replace(
+                          "#id",
+                          application.id.toString(),
+                        ),
+                    ),
                   replyToEmailId = notifyConfig.emailAddresses.cas2ReplyToId,
                 )
 
@@ -297,14 +297,14 @@ class Cas2v2StatusUpdateTest(
               val domainEventFromJson =
                 objectMapper.readValue(
                   persistedDomainEvent!!.data,
-                  Cas2ApplicationStatusUpdatedEvent::class.java,
+                  Cas2v2ApplicationStatusUpdatedEvent::class.java,
                 )
               assertThat(domainEventFromJson.eventDetails.applicationUrl)
                 .isEqualTo(expectedFrontEndUrl)
 
               // verify that the persisted domain event contains the expected status details
               val expected =
-                listOf(Cas2StatusDetail("changeOfCircumstances", "Change of circumstances"))
+                listOf(Cas2v2StatusDetail("changeOfCircumstances", "Change of circumstances"))
               assertThat(domainEventFromJson.eventDetails.newStatus.statusDetails)
                 .isEqualTo(expected)
             }

@@ -14,8 +14,8 @@ import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.http.HttpStatus
 import org.springframework.test.web.reactive.server.returnResult
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas2.model.Cas2ApplicationSubmittedEvent
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas2SubmittedApplication
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas2v2.model.Cas2v2ApplicationSubmittedEvent
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas2v2SubmittedApplication
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas2v2SubmittedApplicationSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.SubmitCas2Application
@@ -165,7 +165,7 @@ class Cas2v2SubmissionTest(
   inner class GetToIndex {
     @Test
     fun `Previously unknown Assessor has an ExternalUser record created from details retrieved from Manage-Users API `() {
-      externalUserRepository.deleteAll()
+      cas2v2UserRepository.deleteAll()
 
       val username = "PREVIOUSLY_UNKNOWN_ASSESSOR"
       val externalUserDetails = ExternalUserDetailsFactory()
@@ -187,7 +187,7 @@ class Cas2v2SubmissionTest(
         .isOk
 
       Assertions.assertThat(
-        externalUserRepository.findByUsername(username),
+        cas2v2UserRepository.findByUsername(username),
       ).isNotNull
     }
 
@@ -336,8 +336,8 @@ class Cas2v2SubmissionTest(
     }
 
     @Test
-    fun `Previously unknown Assessor has an ExternalUser record created from details retrieved from Manage-Users API`() {
-      externalUserRepository.deleteAll()
+    fun `Previously unknown Assessor has an Cas2v2User record created from details retrieved from Manage-Users API`() {
+      cas2v2UserRepository.deleteAll()
 
       val username = "PREVIOUSLY_UNKNOWN_ASSESSOR"
       val externalUserDetails = ExternalUserDetailsFactory()
@@ -359,7 +359,7 @@ class Cas2v2SubmissionTest(
         .isNotFound
 
       Assertions.assertThat(
-        externalUserRepository.findByUsername("PREVIOUSLY_UNKNOWN_ASSESSOR"),
+        cas2v2UserRepository.findByUsername("PREVIOUSLY_UNKNOWN_ASSESSOR"),
       ).isNotNull
     }
 
@@ -451,7 +451,7 @@ class Cas2v2SubmissionTest(
 
             val responseBody = objectMapper.readValue(
               rawResponseBody,
-              Cas2SubmittedApplication::class.java,
+              Cas2v2SubmittedApplication::class.java,
             )
 
             val applicant = userTransformer.transformJpaToApi(
@@ -602,7 +602,7 @@ class Cas2v2SubmissionTest(
 
                 val responseBody = objectMapper.readValue(
                   rawResponseBody,
-                  Cas2SubmittedApplication::class.java,
+                  Cas2v2SubmittedApplication::class.java,
                 )
 
                 val applicant = userTransformer.transformJpaToApi(
@@ -737,7 +737,7 @@ class Cas2v2SubmissionTest(
         val persistedDomainEvent = domainEventRepository.findFirstByOrderByCreatedAtDesc()
         val domainEventFromJson = objectMapper.readValue(
           persistedDomainEvent!!.data,
-          Cas2ApplicationSubmittedEvent::class.java,
+          Cas2v2ApplicationSubmittedEvent::class.java,
         )
         Assertions.assertThat(domainEventFromJson.eventDetails.applicationUrl)
           .isEqualTo(expectedFrontEndUrl)

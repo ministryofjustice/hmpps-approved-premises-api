@@ -107,7 +107,7 @@ class Cas2v2AssessmentTest : Cas2v2IntegrationTestBase() {
           val rawResponseBody = webTestClient.put()
             .uri("/cas2v2/assessments/${assessment.id}")
             .header("Authorization", "Bearer $jwt")
-            .header("X-Service-Name", ServiceName.cas2.value)
+            .header("X-Service-Name", ServiceName.cas2v2.value)
             .bodyValue(
               UpdateCas2Assessment(
                 nacroReferralId = updatedNacroReferralId,
@@ -213,7 +213,7 @@ class Cas2v2AssessmentTest : Cas2v2IntegrationTestBase() {
           val rawResponseBody = webTestClient.get()
             .uri("/cas2v2/assessments/${assessment.id}")
             .header("Authorization", "Bearer $jwt")
-            .header("X-Service-Name", ServiceName.cas2.value)
+            .header("X-Service-Name", ServiceName.cas2v2.value)
             .exchange()
             .expectStatus()
             .isOk
@@ -248,7 +248,7 @@ class Cas2v2AssessmentTest : Cas2v2IntegrationTestBase() {
           val rawResponseBody = webTestClient.get()
             .uri("/cas2v2/assessments/${assessment.id}")
             .header("Authorization", "Bearer $jwt")
-            .header("X-Service-Name", ServiceName.cas2.value)
+            .header("X-Service-Name", ServiceName.cas2v2.value)
             .exchange()
             .expectStatus()
             .isOk
