@@ -18,7 +18,7 @@ insert into
 values
   (
     '959c59d1-fb85-4795-9703-4d7d23412c6b',
-    'b5825da0-1553-4398-90ac-6a8e0c8a4cae',
+    (SELECT id from users where delius_username = 'TESTER.TESTY'),
     'X371199',
     '{}',
     'temporary-accommodation',
@@ -107,7 +107,7 @@ insert into
 values
   (
     'd045bd6a-0829-4cbb-9360-12c8cb522069',
-    'b5825da0-1553-4398-90ac-6a8e0c8a4cae',
+    (SELECT id from users where delius_username = 'TESTER.TESTY'),
     'X371199',
     '{}',
     'temporary-accommodation',
@@ -196,7 +196,7 @@ insert into
 values
   (
     'dbfd396f-1334-4dd3-b228-eb17710b40f5',
-    'b5825da0-1553-4398-90ac-6a8e0c8a4cae',
+    (SELECT id from users where delius_username = 'TESTER.TESTY'),
     'X371199',
     '{}',
     'temporary-accommodation',
