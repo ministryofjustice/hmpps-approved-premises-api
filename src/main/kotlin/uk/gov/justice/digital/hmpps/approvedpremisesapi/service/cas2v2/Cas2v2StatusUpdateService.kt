@@ -12,7 +12,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas2.model.Ca
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas2.model.EventType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas2.model.ExternalUser
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas2.model.PersonReference
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas2AssessmentStatusUpdate
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas2v2AssessmentStatusUpdate
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.config.NotifyConfig
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas2v2.Cas2v2ApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas2v2.Cas2v2AssessmentRepository
@@ -52,7 +52,7 @@ class Cas2v2StatusUpdateService(
 
   private val log = LoggerFactory.getLogger(this::class.java)
 
-  fun isValidStatus(statusUpdate: Cas2AssessmentStatusUpdate): Boolean {
+  fun isValidStatus(statusUpdate: Cas2v2AssessmentStatusUpdate): Boolean {
     return findActiveStatusByName(statusUpdate.newStatus) != null
   }
 
@@ -60,7 +60,7 @@ class Cas2v2StatusUpdateService(
   @SuppressWarnings("ReturnCount")
   fun createForAssessment(
     assessmentId: UUID,
-    statusUpdate: Cas2AssessmentStatusUpdate,
+    statusUpdate: Cas2v2AssessmentStatusUpdate,
     assessor: Cas2v2UserEntity,
   ): CasResult<Cas2v2StatusUpdateEntity> {
     val assessment = cas2v2AssessmentRepository.findByIdOrNull(assessmentId)

@@ -12,7 +12,7 @@ import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Value
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas2v2.model.Cas2v2ApplicationStatusUpdatedEvent
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas2v2.model.Cas2v2StatusDetail
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas2AssessmentStatusUpdate
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas2v2AssessmentStatusUpdate
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.Cas2v2IntegrationTestBase
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenACas2v2Assessor
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenACas2v2PomUser
@@ -89,7 +89,7 @@ class Cas2v2StatusUpdateTest(
 
       givenACas2v2Assessor { _, jwt ->
         givenACas2v2PomUser { applicant, _ ->
-          val jsonSchema = approvedPremisesApplicationJsonSchemaEntityFactory.produceAndPersist()
+          val jsonSchema = cas2v2ApplicationJsonSchemaEntityFactory.produceAndPersist()
           val application =
             cas2v2ApplicationEntityFactory.produceAndPersist {
               withCreatedByUser(applicant)
@@ -110,7 +110,7 @@ class Cas2v2StatusUpdateTest(
             .uri("/cas2v2/assessments/$assessmentId/status-updates")
             .header("Authorization", "Bearer $jwt")
             .bodyValue(
-              Cas2AssessmentStatusUpdate(newStatus = "moreInfoRequested"),
+              Cas2v2AssessmentStatusUpdate(newStatus = "moreInfoRequested"),
             )
             .exchange()
             .expectStatus()
@@ -152,7 +152,7 @@ class Cas2v2StatusUpdateTest(
           .uri("/cas2v2/assessments/66f7127a-fe03-4b66-8378-5c0b048490f8/status-updates")
           .header("Authorization", "Bearer $jwt")
           .bodyValue(
-            Cas2AssessmentStatusUpdate(newStatus = "moreInfoRequested"),
+            Cas2v2AssessmentStatusUpdate(newStatus = "moreInfoRequested"),
           )
           .exchange()
           .expectStatus()
@@ -180,7 +180,7 @@ class Cas2v2StatusUpdateTest(
             .uri("/cas2v2/assessments/${assessmemt.id}/status-updates")
             .header("Authorization", "Bearer $jwt")
             .bodyValue(
-              Cas2AssessmentStatusUpdate(newStatus = "invalidStatus"),
+              Cas2v2AssessmentStatusUpdate(newStatus = "invalidStatus"),
             )
             .exchange()
             .expectStatus()
@@ -203,7 +203,7 @@ class Cas2v2StatusUpdateTest(
           givenACas2v2Assessor { _, jwt ->
             givenACas2v2PomUser { applicant, _ ->
               val jsonSchema =
-                approvedPremisesApplicationJsonSchemaEntityFactory.produceAndPersist()
+                cas2v2ApplicationJsonSchemaEntityFactory.produceAndPersist()
               val application =
                 cas2v2ApplicationEntityFactory.produceAndPersist {
                   withCreatedByUser(applicant)
@@ -228,7 +228,7 @@ class Cas2v2StatusUpdateTest(
                 .uri("/cas2v2/assessments/$assessmentId/status-updates")
                 .header("Authorization", "Bearer $jwt")
                 .bodyValue(
-                  Cas2AssessmentStatusUpdate(
+                  Cas2v2AssessmentStatusUpdate(
                     newStatus = "offerDeclined",
                     newStatusDetails = listOf("changeOfCircumstances"),
                   ),
@@ -272,20 +272,20 @@ class Cas2v2StatusUpdateTest(
                   toEmailAddress = applicant.email!!,
                   templateId = "ef4dc5e3-b1f1-4448-a545-7a936c50fc3a",
                   personalisation =
-                    mapOf(
-                      "applicationStatus" to "Offer declined or withdrawn",
-                      "dateStatusChanged" to
-                        now.toLocalDate().toCas2UiFormat(),
-                      "timeStatusChanged" to
-                        now.toCas2UiFormattedHourOfDay(),
-                      "nomsNumber" to "123NOMS",
-                      "applicationType" to "Home Detention Curfew (HDC)",
-                      "applicationUrl" to
-                        applicationOverviewUrlTemplate.replace(
-                          "#id",
-                          application.id.toString(),
-                        ),
-                    ),
+                  mapOf(
+                    "applicationStatus" to "Offer declined or withdrawn",
+                    "dateStatusChanged" to
+                      now.toLocalDate().toCas2UiFormat(),
+                    "timeStatusChanged" to
+                      now.toCas2UiFormattedHourOfDay(),
+                    "nomsNumber" to "123NOMS",
+                    "applicationType" to "Home Detention Curfew (HDC)",
+                    "applicationUrl" to
+                      applicationOverviewUrlTemplate.replace(
+                        "#id",
+                        application.id.toString(),
+                      ),
+                  ),
                   replyToEmailId = notifyConfig.emailAddresses.cas2ReplyToId,
                 )
 

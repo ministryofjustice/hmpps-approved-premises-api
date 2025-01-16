@@ -120,7 +120,7 @@ class Cas2v2ApplicationController(
 
     val applicationResult = cas2v2ApplicationService.updateCas2v2Application(
       applicationId =
-        applicationId,
+      applicationId,
       data = serializedData,
       user,
     )

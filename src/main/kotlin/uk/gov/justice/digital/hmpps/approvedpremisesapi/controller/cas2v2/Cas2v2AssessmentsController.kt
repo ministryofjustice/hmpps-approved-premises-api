@@ -4,9 +4,9 @@ import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
 import org.springframework.stereotype.Service
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.cas2v2.AssessmentsCas2v2Delegate
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas2AssessmentStatusUpdate
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas2v2ApplicationNote
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas2v2Assessment
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas2v2AssessmentStatusUpdate
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewCas2ApplicationNote
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.UpdateCas2Assessment
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.CasResult
@@ -53,12 +53,12 @@ class Cas2v2AssessmentsController(
 
   override fun assessmentsAssessmentIdStatusUpdatesPost(
     assessmentId: UUID,
-    cas2AssessmentStatusUpdate: Cas2AssessmentStatusUpdate,
+    cas2v2AssessmentStatusUpdate: Cas2v2AssessmentStatusUpdate,
   ): ResponseEntity<Unit> {
     val result =
       cas2v2StatusUpdateService.createForAssessment(
         assessmentId = assessmentId,
-        statusUpdate = cas2AssessmentStatusUpdate,
+        statusUpdate = cas2v2AssessmentStatusUpdate,
         assessor = cas2v2UserService.getUserForRequest(),
       )
 

@@ -269,7 +269,7 @@ paths:
         content:
           'application/json':
             schema:
-              $ref: '#/components/schemas/Cas2AssessmentStatusUpdate'
+              $ref: '#/components/schemas/Cas2v2AssessmentStatusUpdate'
         required: true
       responses:
         200:
@@ -5636,6 +5636,21 @@ components:
         - username
         - authSource
         - isActive
+    Cas2v2AssessmentStatusUpdate:
+      type: object
+      properties:
+        newStatus:
+          type: string
+          example: 'moreInfoRequired'
+          description: 'The "name" of the new status to be applied'
+        newStatusDetails:
+          type: array
+          items:
+            type: string
+            example: 'changeOfCircumstances'
+            description: 'The "name" of the new detail belonging to the new status'
+      required:
+        - newStatus
     Cas2v2StatusUpdate:
       type: object
       properties:

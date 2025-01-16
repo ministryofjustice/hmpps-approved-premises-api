@@ -4,7 +4,7 @@ import io.github.bluegroundltd.kfactory.Factory
 import io.github.bluegroundltd.kfactory.Yielded
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas2v2.model.Cas2v2User
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomStringUpperCase
-import java.util.*
+import java.util.UUID
 
 class Cas2v2UserFactory : Factory<Cas2v2User> {
   private var name: Yielded<String> = { randomStringUpperCase(6) }

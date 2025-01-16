@@ -958,7 +958,7 @@ class ApplicationService(
     val prisonName = when (personInfo.inmateDetail?.custodyStatus) {
       InmateStatus.IN,
       InmateStatus.TRN,
-        -> {
+      -> {
         personInfo.inmateDetail?.assignedLivingUnit?.agencyName ?: personInfo.inmateDetail?.assignedLivingUnit?.agencyId
       }
 
