@@ -22,6 +22,7 @@ import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.boot.test.context.SpringBootTest.WebEnvironment.RANDOM_PORT
+import org.springframework.boot.test.mock.mockito.SpyBean
 import org.springframework.cache.CacheManager
 import org.springframework.data.redis.core.RedisTemplate
 import org.springframework.jdbc.core.JdbcTemplate
@@ -257,6 +258,8 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.repository.UserQualifica
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.repository.UserRoleAssignmentTestRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.repository.UserTestRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.JwtAuthHelper
+import uk.gov.justice.hmpps.sqs.HmppsSqsProperties
+import uk.gov.justice.hmpps.sqs.MissingQueueException
 import java.time.Duration
 import java.util.TimeZone
 import java.util.UUID
@@ -267,6 +270,10 @@ import java.util.UUID
 @ActiveProfiles("test")
 @Tag("integration")
 abstract class IntegrationTestBase {
+
+  @SpyBean
+  protected lateinit var hmppsSqsPropertiesSpy: HmppsSqsProperties
+
   @Autowired
   lateinit var cas1SpaceBookingRepository: Cas1SpaceBookingRepository
 
@@ -624,6 +631,9 @@ abstract class IntegrationTestBase {
       this.setupTests()
     }
   }
+
+  fun HmppsSqsProperties.inboundQueueConfig() =
+    queues["inboundqueue"] ?: throw MissingQueueException("inboundqueue has not been loaded from configuration properties")
 
   @AfterEach
   fun afterEach(info: TestInfo) {
