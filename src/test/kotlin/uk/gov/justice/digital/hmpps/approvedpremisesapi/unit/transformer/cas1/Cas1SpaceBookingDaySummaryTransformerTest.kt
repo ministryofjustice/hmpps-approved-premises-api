@@ -6,7 +6,7 @@ import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.extension.ExtendWith
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.EnumSource
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1SpaceBookingCharacteristic
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1SpaceCharacteristic
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.FullPersonSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.CaseSummaryFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas1SpaceBookingDaySummarySearchResult
@@ -23,8 +23,8 @@ class Cas1SpaceBookingDaySummaryTransformerTest {
   private val transformer = Cas1SpaceBookingDaySummaryTransformer()
 
   @ParameterizedTest
-  @EnumSource(value = Cas1SpaceBookingCharacteristic::class)
-  fun `toCas1SpaceBookingDaySummary`(characteristic: Cas1SpaceBookingCharacteristic) {
+  @EnumSource(value = Cas1SpaceCharacteristic::class)
+  fun `toCas1SpaceBookingDaySummary`(characteristic: Cas1SpaceCharacteristic) {
     val spaceBookingSummary =
       Cas1SpaceBookingDaySummarySearchResultImpl(
         UUID.randomUUID(),
@@ -67,7 +67,7 @@ class Cas1SpaceBookingDaySummaryTransformerTest {
         LocalDate.now().plusDays(3),
         tier = "A1",
         releaseType = "rotl",
-        characteristicsPropertyNames = "isArsonSuitable,hasEnSuite,isSingle,isStepFreeDesignated,isSuitedForSexOffenders,isWheelchairDesignated",
+        characteristicsPropertyNames = "isArsonSuitable,hasEnSuite,isSingle,isStepFreeDesignated,isSuitedForSexOffenders,isWheelchairDesignated,isCatered",
       )
     val personSummary = PersonTransformer()
       .personSummaryInfoToPersonSummary(
@@ -79,13 +79,14 @@ class Cas1SpaceBookingDaySummaryTransformerTest {
       personSummary,
     )
 
-    assertThat(result.essentialCharacteristics.size).isEqualTo(6)
-    assertThat(result.essentialCharacteristics[0]).isEqualTo(Cas1SpaceBookingCharacteristic.IS_ARSON_SUITABLE)
-    assertThat(result.essentialCharacteristics[1]).isEqualTo(Cas1SpaceBookingCharacteristic.HAS_EN_SUITE)
-    assertThat(result.essentialCharacteristics[2]).isEqualTo(Cas1SpaceBookingCharacteristic.IS_SINGLE)
-    assertThat(result.essentialCharacteristics[3]).isEqualTo(Cas1SpaceBookingCharacteristic.IS_STEP_FREE_DESIGNATED)
-    assertThat(result.essentialCharacteristics[4]).isEqualTo(Cas1SpaceBookingCharacteristic.IS_SUITED_FOR_SEX_OFFENDERS)
-    assertThat(result.essentialCharacteristics[5]).isEqualTo(Cas1SpaceBookingCharacteristic.IS_WHEELCHAIR_DESIGNATED)
+    assertThat(result.essentialCharacteristics.size).isEqualTo(7)
+    assertThat(result.essentialCharacteristics[0]).isEqualTo(Cas1SpaceCharacteristic.isArsonSuitable)
+    assertThat(result.essentialCharacteristics[1]).isEqualTo(Cas1SpaceCharacteristic.hasEnSuite)
+    assertThat(result.essentialCharacteristics[2]).isEqualTo(Cas1SpaceCharacteristic.isSingle)
+    assertThat(result.essentialCharacteristics[3]).isEqualTo(Cas1SpaceCharacteristic.isStepFreeDesignated)
+    assertThat(result.essentialCharacteristics[4]).isEqualTo(Cas1SpaceCharacteristic.isSuitedForSexOffenders)
+    assertThat(result.essentialCharacteristics[5]).isEqualTo(Cas1SpaceCharacteristic.isWheelchairDesignated)
+    assertThat(result.essentialCharacteristics[6]).isEqualTo(Cas1SpaceCharacteristic.isCatered)
   }
 }
 

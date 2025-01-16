@@ -1439,7 +1439,7 @@ class Cas1SpaceBookingServiceTest {
 
     @Test
     fun `Returns validation error if no staff record exists with the given staff code`() {
-      every { staffMemberService.getStaffMemberByCodeForPremise(keyWorker.code, premises.qCode) } returns CasResult.NotFound()
+      every { staffMemberService.getStaffMemberByCodeForPremise(keyWorker.code, premises.qCode) } returns CasResult.NotFound("staff", "qcode")
 
       val result = service.recordKeyWorkerAssignedForBooking(
         premisesId = UUID.randomUUID(),

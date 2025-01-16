@@ -230,6 +230,35 @@ class ApplicationServiceTest {
     val distinguishedName = "SOMEPERSON"
     val applicationId = UUID.fromString("c1750938-19fc-48a1-9ae9-f2e119ffc1f4")
 
+    val probationRegion = ProbationRegionEntityFactory()
+      .withYieldedApArea { ApAreaEntityFactory().produce() }
+      .produce()
+    val deletedApplication = TemporaryAccommodationApplicationEntityFactory()
+      .withId(applicationId)
+      .withYieldedCreatedByUser {
+        UserEntityFactory()
+          .withProbationRegion(probationRegion)
+          .produce()
+      }
+      .withProbationRegion(probationRegion)
+      .withDeletedAt(OffsetDateTime.now().minusDays(10))
+      .produce()
+
+    every { mockApplicationRepository.findByIdOrNull(applicationId) } returns deletedApplication
+
+    assertThat(
+      applicationService.getApplicationForUsername(
+        applicationId,
+        distinguishedName,
+      ) is CasResult.NotFound,
+    ).isTrue
+  }
+
+  @Test
+  fun `getApplicationForUsername where temporary accommodation application was deleted returns NotFound result`() {
+    val distinguishedName = "SOMEPERSON"
+    val applicationId = UUID.fromString("c1750938-19fc-48a1-9ae9-f2e119ffc1f4")
+
     every { mockApplicationRepository.findByIdOrNull(applicationId) } returns null
 
     assertThat(
@@ -2250,6 +2279,39 @@ class ApplicationServiceTest {
       val validatableActionResult = result.entity as ValidatableActionResult.GeneralValidationError
 
       assertThat(validatableActionResult.message).isEqualTo("This application has already been submitted")
+    }
+
+    @Test
+    fun `submitTemporaryAccommodationApplication returns GeneralValidationError when application has already been deleted`() {
+      val newestSchema = TemporaryAccommodationApplicationJsonSchemaEntityFactory().produce()
+
+      val application = TemporaryAccommodationApplicationEntityFactory()
+        .withApplicationSchema(newestSchema)
+        .withId(applicationId)
+        .withCreatedByUser(user)
+        .withDeletedAt(OffsetDateTime.now().minusDays(22))
+        .withProbationRegion(user.probationRegion)
+        .produce()
+        .apply {
+          schemaUpToDate = true
+        }
+
+      every { mockUserService.getUserForRequest() } returns user
+      every { mockApplicationRepository.findByIdOrNull(applicationId) } returns application
+      every { mockJsonSchemaService.checkSchemaOutdated(application) } returns application
+
+      val result = applicationService.submitTemporaryAccommodationApplication(
+        applicationId,
+        submitTemporaryAccommodationApplication,
+      )
+
+      assertThat(result is AuthorisableActionResult.Success).isTrue
+      result as AuthorisableActionResult.Success
+
+      assertThat(result.entity is ValidatableActionResult.GeneralValidationError).isTrue
+      val validatableActionResult = result.entity as ValidatableActionResult.GeneralValidationError
+
+      assertThat(validatableActionResult.message).isEqualTo("This application has already been deleted")
     }
 
     @Test

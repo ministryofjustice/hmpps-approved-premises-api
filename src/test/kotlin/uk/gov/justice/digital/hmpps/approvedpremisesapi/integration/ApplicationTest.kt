@@ -347,10 +347,11 @@ class ApplicationTest : IntegrationTestBase() {
       withProbationRegion(probationRegion)
     }
 
-    private fun createApplicationSchema(): TemporaryAccommodationApplicationJsonSchemaEntity = temporaryAccommodationApplicationJsonSchemaEntityFactory.produceAndPersist {
-      withAddedAt(OffsetDateTime.now())
-      withId(UUID.randomUUID())
-    }
+    private fun createApplicationSchema(): TemporaryAccommodationApplicationJsonSchemaEntity =
+      temporaryAccommodationApplicationJsonSchemaEntityFactory.produceAndPersist {
+        withAddedAt(OffsetDateTime.now())
+        withId(UUID.randomUUID())
+      }
 
     @Test
     fun `Get all applications returns 200 for TA - when user is CAS3_REFERRER then returns all applications for user`() {
@@ -845,7 +846,6 @@ class ApplicationTest : IntegrationTestBase() {
     fun `Get single non LAO application returns 200 when the person cannot be fetched from the prisons API`() {
       givenAUser(
         staffDetail = StaffDetailFactory.staffDetail(teams = listOf(TeamFactoryDeliusContext.team(code = "TEAM1"))),
-
       ) { userEntity, jwt ->
         val crn = "X1234"
 
@@ -1299,6 +1299,52 @@ class ApplicationTest : IntegrationTestBase() {
               .expectStatus()
               .isForbidden
           }
+        }
+      }
+    }
+
+    @Test
+    fun `Get single CAS3 application returns 404 Not Found when the application was deleted`() {
+      givenAUser { userEntity, jwt ->
+        givenAnOffender { offenderDetails, _ ->
+          temporaryAccommodationApplicationJsonSchemaRepository.deleteAll()
+
+          val newestJsonSchema = temporaryAccommodationApplicationJsonSchemaEntityFactory.produceAndPersist {
+            withAddedAt(OffsetDateTime.parse("2024-12-11T13:21:00+01:00"))
+            withSchema("{}")
+          }
+
+          val applicationEntity = temporaryAccommodationApplicationEntityFactory.produceAndPersist {
+            withApplicationSchema(newestJsonSchema)
+            withCrn(offenderDetails.otherIds.crn)
+            withCreatedByUser(userEntity)
+            withProbationRegion(userEntity.probationRegion)
+            withDeletedAt(OffsetDateTime.now().minusDays(15))
+            withData(
+              """
+            {
+               "thingId": 123
+            }
+            """,
+            )
+          }
+
+          apDeliusContextAddResponseToUserAccessCall(
+            listOf(
+              CaseAccessFactory()
+                .withCrn(offenderDetails.otherIds.crn)
+                .produce(),
+            ),
+            userEntity.deliusUsername,
+          )
+
+          webTestClient.get()
+            .uri("/applications/${applicationEntity.id}")
+            .header("Authorization", "Bearer $jwt")
+            .header("X-Service-Name", ServiceName.temporaryAccommodation.value)
+            .exchange()
+            .expectStatus()
+            .isNotFound
         }
       }
     }
@@ -2665,6 +2711,61 @@ class ApplicationTest : IntegrationTestBase() {
         }
       }
     }
+
+    @Test
+    fun `Submit Temporary Accommodation application returns 400 when the application was deleted`() {
+      givenAUser { submittingUser, jwt ->
+        givenAUser { _, _ ->
+          givenAnOffender { offenderDetails, _ ->
+            val applicationId = UUID.fromString("22ceda56-98b2-411d-91cc-ace0ab8be872")
+            val offenderName = "${offenderDetails.firstName} ${offenderDetails.surname}"
+
+            val applicationSchema = temporaryAccommodationApplicationJsonSchemaEntityFactory.produceAndPersist {
+              withAddedAt(OffsetDateTime.now())
+              withId(UUID.randomUUID())
+              withSchema(schemaText())
+            }
+
+            temporaryAccommodationApplicationEntityFactory.produceAndPersist {
+              withCrn(offenderDetails.otherIds.crn)
+              withId(applicationId)
+              withApplicationSchema(applicationSchema)
+              withCreatedByUser(submittingUser)
+              withProbationRegion(submittingUser.probationRegion)
+              withName(offenderName)
+              withDeletedAt(OffsetDateTime.now().minusDays(32))
+              withData(
+                """
+                {}
+              """,
+              )
+            }
+
+            webTestClient.post()
+              .uri("/applications/$applicationId/submission")
+              .header("Authorization", "Bearer $jwt")
+              .header("X-Service-Name", ServiceName.temporaryAccommodation.value)
+              .bodyValue(
+                SubmitTemporaryAccommodationApplication(
+                  translatedDocument = {},
+                  type = "CAS3",
+                  arrivalDate = LocalDate.now(),
+                  summaryData = object {
+                    val num = 50
+                    val text = "Hello world!"
+                  },
+                ),
+              )
+              .exchange()
+              .expectStatus()
+              .isBadRequest
+              .expectBody()
+              .jsonPath("$.status").isEqualTo("400")
+              .jsonPath("$.detail").isEqualTo("This application has already been deleted")
+          }
+        }
+      }
+    }
   }
 
   private fun schemaText(): String = """
@@ -2800,7 +2901,7 @@ class ApplicationTest : IntegrationTestBase() {
           .isOk
 
         val savedNote =
-          applicationTimelineNoteRepository.findApplicationTimelineNoteEntitiesByApplicationId(applicationId)
+          applicationTimelineNoteRepository.findApplicationTimelineNoteEntitiesByApplicationIdAndDeletedAtIsNull(applicationId)
         savedNote.map {
           assertThat(it.body).isEqualTo("some note")
           assertThat(it.applicationId).isEqualTo(applicationId)

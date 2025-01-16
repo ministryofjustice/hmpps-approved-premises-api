@@ -184,6 +184,10 @@ class ApplicationService(
     val applicationEntity = applicationRepository.findByIdOrNull(applicationId)
       ?: return CasResult.NotFound("Application", applicationId.toString())
 
+    if (applicationEntity is TemporaryAccommodationApplicationEntity && applicationEntity.deletedAt != null) {
+      return CasResult.NotFound("Application", applicationId.toString())
+    }
+
     val userEntity = userRepository.findByDeliusUsername(userDistinguishedName)
       ?: throw RuntimeException("Could not get user")
 
@@ -581,7 +585,7 @@ class ApplicationService(
     otherReason: String?,
   ): CasResult<Unit> {
     val application = applicationRepository.findByIdOrNull(applicationId)
-      ?: return CasResult.NotFound()
+      ?: return CasResult.NotFound(entityType = "application", applicationId.toString())
 
     if (application !is ApprovedPremisesApplicationEntity) {
       return CasResult.GeneralValidationError("onlyCas1Supported")
@@ -828,6 +832,12 @@ class ApplicationService(
         applicationId,
       )?.let(jsonSchemaService::checkSchemaOutdated)
         ?: return AuthorisableActionResult.NotFound()
+
+    if (application.deletedAt != null) {
+      return AuthorisableActionResult.Success(
+        ValidatableActionResult.GeneralValidationError("This application has already been deleted"),
+      )
+    }
 
     val serializedTranslatedDocument = objectMapper.writeValueAsString(submitApplication.translatedDocument)
 

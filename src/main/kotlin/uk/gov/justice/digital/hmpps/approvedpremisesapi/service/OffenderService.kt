@@ -496,7 +496,7 @@ class OffenderService(
       currentPage = when (caseNotesPageResponse) {
         is ClientResult.Success -> caseNotesPageResponse.body
         is ClientResult.Failure.StatusCode -> when (caseNotesPageResponse.status) {
-          HttpStatus.NOT_FOUND -> return CasResult.NotFound()
+          HttpStatus.NOT_FOUND -> return CasResult.NotFound(entityType = "CaseNotes", id = "nomsNumber")
           HttpStatus.FORBIDDEN -> return CasResult.Unauthorised()
           else -> caseNotesPageResponse.throwException()
         }
@@ -662,7 +662,7 @@ class OffenderService(
     val caseDetail = when (val caseDetailResult = apDeliusContextApiClient.getCaseDetail(crn)) {
       is ClientResult.Success -> caseDetailResult.body
       is ClientResult.Failure.StatusCode -> when (caseDetailResult.status) {
-        HttpStatus.NOT_FOUND -> return CasResult.NotFound()
+        HttpStatus.NOT_FOUND -> return CasResult.NotFound("CaseDetail", crn)
         HttpStatus.FORBIDDEN -> return CasResult.Unauthorised()
         else -> caseDetailResult.throwException()
       }
