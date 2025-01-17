@@ -55,6 +55,7 @@ class DomainEventService(
     val data = when {
       enumTypeFromDataType(T::class) == domainEventEntity.type ->
         objectMapper.readValue(domainEventEntity.data, T::class.java)
+
       else -> throw RuntimeException("Unsupported DomainEventData type ${T::class.qualifiedName}/${domainEventEntity.type.name}")
     }
     return DomainEvent(

@@ -71,14 +71,14 @@ class Cas2v2DomainEventService(
   }
 
   @Transactional
-  fun saveCas2ApplicationSubmittedDomainEvent(domainEvent: DomainEvent<Cas2v2ApplicationSubmittedEvent>) =
+  fun saveCas2v2ApplicationSubmittedDomainEvent(domainEvent: DomainEvent<Cas2v2ApplicationSubmittedEvent>) =
     saveAndEmit(
       domainEvent = domainEvent,
       personReference = domainEvent.data.eventDetails.personReference,
     )
 
   @Transactional
-  fun saveCas2ApplicationStatusUpdatedDomainEvent(domainEvent: DomainEvent<Cas2v2ApplicationStatusUpdatedEvent>) =
+  fun saveCas2v2ApplicationStatusUpdatedDomainEvent(domainEvent: DomainEvent<Cas2v2ApplicationStatusUpdatedEvent>) =
     saveAndEmit(
       domainEvent = domainEvent,
       personReference = domainEvent.data.eventDetails.personReference,

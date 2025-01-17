@@ -5708,3 +5708,44 @@ components:
       required:
         - statusId
         - label
+    Cas2v2ApplicationStatus:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        name:
+          type: string
+          example: 'moreInfoRequested'
+        label:
+          type: string
+          example: 'More information requested'
+        description:
+          type: string
+          example: 'More information about the application has been requested from the POM (Prison Offender Manager).'
+        statusDetails:
+          type: array
+          items:
+            $ref: '#/components/schemas/Cas2v2ApplicationStatusDetail'
+      required:
+        - id
+        - name
+        - label
+        - description
+        - statusDetails
+    Cas2v2ApplicationStatusDetail:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        name:
+          type: string
+          example: 'changeOfCircumstances'
+        label:
+          type: string
+          example: 'Change of Circumstances'
+      required:
+        - id
+        - name
+        - label

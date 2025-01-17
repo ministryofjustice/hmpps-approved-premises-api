@@ -294,6 +294,7 @@ class Cas2v2StatusUpdateTest(
               val expectedFrontEndUrl =
                 applicationUrlTemplate.replace("#id", application.id.toString())
               val persistedDomainEvent = domainEventRepository.findFirstByOrderByCreatedAtDesc()
+
               val domainEventFromJson =
                 objectMapper.readValue(
                   persistedDomainEvent!!.data,

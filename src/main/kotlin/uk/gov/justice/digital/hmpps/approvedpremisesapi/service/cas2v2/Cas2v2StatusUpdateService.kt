@@ -6,12 +6,12 @@ import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.data.repository.findByIdOrNull
 import org.springframework.stereotype.Service
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas2.model.Cas2ApplicationStatusUpdatedEvent
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas2.model.Cas2ApplicationStatusUpdatedEventDetails
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas2.model.Cas2Status
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas2.model.EventType
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas2.model.ExternalUser
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas2.model.PersonReference
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas2v2.model.Cas2v2ApplicationStatusUpdatedEvent
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas2v2.model.Cas2v2ApplicationStatusUpdatedEventDetails
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas2v2.model.Cas2v2Status
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas2v2.model.Cas2v2User
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas2v2.model.EventType
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas2v2.model.PersonReference
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas2v2AssessmentStatusUpdate
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.config.NotifyConfig
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas2v2.Cas2v2ApplicationEntity
@@ -23,14 +23,13 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas2v2.Cas2v2
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas2v2.Cas2v2UserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.DomainEvent
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.ValidationErrors
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.reference.Cas2PersistedApplicationStatus
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.reference.Cas2PersistedApplicationStatusDetail
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.reference.Cas2PersistedApplicationStatusFinder
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.reference.Cas2v2PersistedApplicationStatus
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.reference.Cas2v2PersistedApplicationStatusDetail
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.reference.Cas2v2PersistedApplicationStatusFinder
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.CasResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.EmailNotificationService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas2.Constants.HDC_APPLICATION_TYPE
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas2.DomainEventService
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.cas2.ApplicationStatusTransformer
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.cas2v2.Cas2v2ApplicationStatusTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.toCas2UiFormat
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.toCas2UiFormattedHourOfDay
 import java.time.OffsetDateTime
@@ -41,11 +40,11 @@ class Cas2v2StatusUpdateService(
   private val cas2v2AssessmentRepository: Cas2v2AssessmentRepository,
   private val cas2v2StatusUpdateRepository: Cas2v2StatusUpdateRepository,
   private val cas2v2StatusUpdateDetailRepository: Cas2v2StatusUpdateDetailRepository,
-  private val domainEventService: DomainEventService,
+  private val domainEventService: Cas2v2DomainEventService,
   private val emailNotificationService: EmailNotificationService,
   private val notifyConfig: NotifyConfig,
-  private val statusFinder: Cas2PersistedApplicationStatusFinder,
-  private val statusTransformer: ApplicationStatusTransformer,
+  private val statusFinder: Cas2v2PersistedApplicationStatusFinder,
+  private val statusTransformer: Cas2v2ApplicationStatusTransformer,
   @Value("\${url-templates.frontend.cas2v2.application}") private val applicationUrlTemplate: String,
   @Value("\${url-templates.frontend.cas2v2.application-overview}") private val applicationOverviewUrlTemplate: String,
 ) {
@@ -114,14 +113,14 @@ class Cas2v2StatusUpdateService(
     return CasResult.Success(createdStatusUpdate)
   }
 
-  private fun findActiveStatusByName(statusName: String): Cas2PersistedApplicationStatus? {
+  private fun findActiveStatusByName(statusName: String): Cas2v2PersistedApplicationStatus? {
     return statusFinder.active()
       .find { status -> status.name == statusName }
   }
 
   fun createStatusUpdatedDomainEvent(
     statusUpdate: Cas2v2StatusUpdateEntity,
-    statusDetails: List<Cas2PersistedApplicationStatusDetail>? = emptyList(),
+    statusDetails: List<Cas2v2PersistedApplicationStatusDetail>? = emptyList(),
   ) {
     val domainEventId = UUID.randomUUID()
     val eventOccurredAt = statusUpdate.createdAt
@@ -129,35 +128,38 @@ class Cas2v2StatusUpdateService(
     val newStatus = statusUpdate.status()
     val assessor = statusUpdate.assessor
 
-    domainEventService.saveCas2ApplicationStatusUpdatedDomainEvent(
+    domainEventService.saveCas2v2ApplicationStatusUpdatedDomainEvent(
       DomainEvent(
         id = domainEventId,
         applicationId = application.id,
         crn = application.crn,
         nomsNumber = application.nomsNumber,
         occurredAt = eventOccurredAt.toInstant(),
-        data = Cas2ApplicationStatusUpdatedEvent(
+        data = Cas2v2ApplicationStatusUpdatedEvent(
           id = domainEventId,
           timestamp = eventOccurredAt.toInstant(),
           eventType = EventType.applicationStatusUpdated,
-          eventDetails = Cas2ApplicationStatusUpdatedEventDetails(
+          eventDetails = Cas2v2ApplicationStatusUpdatedEventDetails(
             applicationId = application.id,
             applicationUrl = applicationUrlTemplate.replace("#id", application.id.toString()),
             personReference = PersonReference(
               crn = application.crn,
               noms = application.nomsNumber.toString(),
             ),
-            newStatus = Cas2Status(
+            newStatus = Cas2v2Status(
               name = newStatus.name,
               description = newStatus.description,
               label = newStatus.label,
               statusDetails = statusDetails?.let { statusTransformer.transformStatusDetailListToDetailItemList(it) },
             ),
-            updatedBy = ExternalUser(
+            updatedBy = Cas2v2User(
+              id = assessor.id,
+              authSource = assessor.userType.authSource,
               username = assessor.username,
               name = assessor.name,
               email = assessor.email!!,
-              origin = "assessor.origin",
+              isActive = true,
+              // origin = "assessor.origin",
             ),
             updatedAt = eventOccurredAt.toInstant(),
           ),

@@ -321,7 +321,7 @@ class Cas2v2ApplicationService(
     val domainEventId = UUID.randomUUID()
     val eventOccurredAt = application.submittedAt ?: OffsetDateTime.now()
 
-    domainEventService.saveCas2ApplicationSubmittedDomainEvent(
+    domainEventService.saveCas2v2ApplicationSubmittedDomainEvent(
       DomainEvent(
         id = domainEventId,
         applicationId = application.id,
@@ -386,7 +386,10 @@ class Cas2v2ApplicationService(
         "email" to user.email,
         "prisonNumber" to application.nomsNumber,
         "telephoneNumber" to application.telephoneNumber,
-        "applicationUrl" to submittedApplicationUrlTemplate.replace("#applicationId", application.id.toString()),
+        "applicationUrl" to submittedApplicationUrlTemplate.replace(
+          "#applicationId",
+          application.id.toString(),
+        ),
       ),
       replyToEmailId = notifyConfig.emailAddresses.cas2ReplyToId,
     )
