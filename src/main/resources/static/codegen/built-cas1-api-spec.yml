@@ -5416,7 +5416,8 @@ components:
           type: string
           format: date
         durationDays:
-          type: long
+          type: integer
+          format: int64
           description: The number of days the Bed will need to be free from the start_date until
         probationDeliveryUnits:
           type: array
