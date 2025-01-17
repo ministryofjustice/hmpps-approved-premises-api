@@ -7406,3 +7406,44 @@ components:
       required:
         - expectedArrival
         - expectedDeparture
+    Cas1PlacementRequestSummary:
+      type: object
+      properties:
+        requestedPlacementDuration:
+          type: integer
+        requestedPlacementArrivalDate:
+          type: string
+          format: date
+        id:
+          type: string
+          format: uuid
+        person:
+          $ref: '#/components/schemas/Person'
+        personTier:
+          type: string
+        applicationId:
+          type: string
+          format: uuid
+        placementRequestStatus:
+          type: string
+          enum:
+            - matched
+            - unableToMatch
+            - notMatched
+        applicationSubmittedDate:
+          type: string
+          format: date
+        isParole:
+          type: boolean
+        firstBookingPremisesName:
+          type: string
+        firstBookingArrivalDate:
+          type: string
+          format: date
+      required:
+        - placementDatesDuration
+        - placementDatesExpectedArrivalDate
+        - placementRequestStatus
+        - person
+        - isParole
+        - id
