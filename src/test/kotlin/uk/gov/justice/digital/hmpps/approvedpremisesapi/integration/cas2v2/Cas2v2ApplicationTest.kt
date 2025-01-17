@@ -404,7 +404,7 @@ class Cas2v2ApplicationTest : Cas2v2IntegrationTestBase() {
     }
 
     @Test
-    fun `Get all applications returns 200 with correct body including applicationOrigin`() {
+    fun `Get all applications returns 200 with applicationOrigin`() {
       givenACas2PomUser { userEntity, jwt ->
         givenACas2PomUser { otherUser, _ ->
           givenAnOffender { offenderDetails, _ ->
@@ -415,7 +415,6 @@ class Cas2v2ApplicationTest : Cas2v2IntegrationTestBase() {
               withId(UUID.randomUUID())
             }
 
-            // court bail application
             val courtBailApplicationEntity = cas2v2ApplicationEntityFactory.produceAndPersist {
               withApplicationSchema(applicationSchema)
               withCreatedByUser(userEntity)
@@ -425,7 +424,6 @@ class Cas2v2ApplicationTest : Cas2v2IntegrationTestBase() {
               withApplicationOrigin(ApplicationOrigin.courtBail)
             }
 
-            // prison bail application
             val prisonBailApplicationEntity = cas2v2ApplicationEntityFactory.produceAndPersist {
               withApplicationSchema(applicationSchema)
               withCreatedByUser(userEntity)
@@ -435,7 +433,6 @@ class Cas2v2ApplicationTest : Cas2v2IntegrationTestBase() {
               withApplicationOrigin(ApplicationOrigin.prisonBail)
             }
 
-            // hdc application
             val hdcApplicationEntity = cas2v2ApplicationEntityFactory.produceAndPersist {
               withApplicationSchema(applicationSchema)
               withCreatedByUser(userEntity)
@@ -460,7 +457,6 @@ class Cas2v2ApplicationTest : Cas2v2IntegrationTestBase() {
             val responseBody =
               objectMapper.readValue(rawResponseBody, object : TypeReference<List<Cas2v2ApplicationSummary>>() {})
 
-            // check application origin is persisted and returned correctly
             Assertions.assertThat(responseBody).anyMatch {
               courtBailApplicationEntity.applicationOrigin == it.applicationOrigin.toString()
             }

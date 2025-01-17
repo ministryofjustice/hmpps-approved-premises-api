@@ -10,6 +10,7 @@ import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApplicationOrigin
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApplicationStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas2StatusUpdate
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas2TimelineEvent
@@ -83,6 +84,8 @@ class Cas2v2ApplicationsTransformerTest {
         .withSubmittedAt(null)
         .produce()
 
+      application.applicationOrigin = "prisonBail"
+
       val result = cas2v2ApplicationsTransformer.transformJpaToApi(application, mockk())
 
       assertThat(result).hasOnlyFields(
@@ -107,6 +110,7 @@ class Cas2v2ApplicationsTransformerTest {
       assertThat(result.createdBy.id).isEqualTo(user.id)
       assertThat(result.status).isEqualTo(ApplicationStatus.inProgress)
       assertThat(result.timelineEvents).isEqualTo(listOf<Cas2TimelineEvent>())
+      assertThat(result.applicationOrigin).isEqualTo(ApplicationOrigin.prisonBail)
     }
 
     @Test
