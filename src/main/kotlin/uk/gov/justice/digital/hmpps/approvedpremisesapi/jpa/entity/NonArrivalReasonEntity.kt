@@ -5,12 +5,14 @@ import jakarta.persistence.Id
 import jakarta.persistence.Table
 import org.hibernate.annotations.CacheConcurrencyStrategy
 import org.springframework.data.jpa.repository.JpaRepository
+import org.springframework.data.jpa.repository.Query
 import org.springframework.stereotype.Repository
 import java.util.UUID
 
 @Repository
 interface NonArrivalReasonRepository : JpaRepository<NonArrivalReasonEntity, UUID> {
-  fun findByName(name: String): NonArrivalReasonEntity?
+  @Query("SELECT r FROM NonArrivalReasonEntity r WHERE r.isActive = true")
+  fun findAllActiveReasons(): List<NonArrivalReasonEntity>
   fun findByLegacyDeliusReasonCode(it: String): NonArrivalReasonEntity?
 }
 

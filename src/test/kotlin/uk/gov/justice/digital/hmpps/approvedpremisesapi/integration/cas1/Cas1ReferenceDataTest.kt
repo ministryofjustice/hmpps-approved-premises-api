@@ -10,6 +10,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.InitialiseDa
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.IntegrationTestBase
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas1CruManagementAreaEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.DepartureReasonTransformer
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.NonArrivalReasonTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.cas1.Cas1OutOfServiceBedReasonTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.bodyAsListOfObjects
 import java.util.UUID
@@ -20,6 +21,9 @@ class Cas1ReferenceDataTest : IntegrationTestBase() {
 
   @Autowired
   lateinit var departureReasonTransformer: DepartureReasonTransformer
+
+  @Autowired
+  lateinit var nonArrivalReasonTransformer: NonArrivalReasonTransformer
 
   @Nested
   inner class GetOutOfServiceBedReasons {
@@ -139,6 +143,39 @@ class Cas1ReferenceDataTest : IntegrationTestBase() {
 
       webTestClient.get()
         .uri("/cas1/reference-data/departure-reasons")
+        .header("Authorization", "Bearer $jwt")
+        .exchange()
+        .expectStatus()
+        .isOk
+        .expectBody()
+        .json(expectedJson)
+    }
+  }
+
+  @Nested
+  inner class NonArrivalReasons {
+
+    @Test
+    fun success() {
+      nonArrivalReasonRepository.deleteAll()
+
+      val activeReason = nonArrivalReasonEntityFactory.produceAndPersistMultiple(3) {
+        withIsActive(true)
+      }
+
+      // inactive reasons (ignored)
+      departureReasonEntityFactory.produceAndPersistMultiple(2) {
+        withIsActive(false)
+      }
+
+      val expectedJson = objectMapper.writeValueAsString(
+        activeReason.map(nonArrivalReasonTransformer::transformJpaToApi),
+      )
+
+      val jwt = jwtAuthHelper.createValidAuthorizationCodeJwt()
+
+      webTestClient.get()
+        .uri("/cas1/reference-data/non-arrival-reasons")
         .header("Authorization", "Bearer $jwt")
         .exchange()
         .expectStatus()

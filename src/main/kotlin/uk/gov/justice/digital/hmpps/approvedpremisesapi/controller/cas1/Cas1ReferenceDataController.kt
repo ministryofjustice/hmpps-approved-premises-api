@@ -6,10 +6,13 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.cas1.ReferenceDataCa
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1CruManagementArea
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1OutOfServiceBedReason
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.DepartureReason
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NonArrivalReason
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas1CruManagementAreaRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas1OutOfServiceBedReasonRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DepartureReasonRepository
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.NonArrivalReasonRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.DepartureReasonTransformer
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.NonArrivalReasonTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.cas1.Cas1CruManagementAreaTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.cas1.Cas1OutOfServiceBedReasonTransformer
 
@@ -21,6 +24,8 @@ class Cas1ReferenceDataController(
   private val cas1CruManagementAreaRepository: Cas1CruManagementAreaRepository,
   private val departureReasonRepository: DepartureReasonRepository,
   private val departureReasonTransformer: DepartureReasonTransformer,
+  private val nonArrivalReasonRepository: NonArrivalReasonRepository,
+  private val nonArrivalReasonTransformer: NonArrivalReasonTransformer,
 ) : ReferenceDataCas1Delegate {
 
   override fun getOutOfServiceBedReasons(): ResponseEntity<List<Cas1OutOfServiceBedReason>> {
@@ -43,6 +48,13 @@ class Cas1ReferenceDataController(
     return ResponseEntity.ok(
       departureReasonRepository.findActiveForCas1()
         .map { departureReasonTransformer.transformJpaToApi(it) },
+    )
+  }
+
+  override fun getNonArrivalReasons(): ResponseEntity<List<NonArrivalReason>> {
+    return ResponseEntity.ok(
+      nonArrivalReasonRepository.findAllActiveReasons()
+        .map(nonArrivalReasonTransformer::transformJpaToApi),
     )
   }
 }

@@ -2480,6 +2480,8 @@ paths:
           $ref: '_shared.yml#/components/responses/500Response'
   /reference-data/non-arrival-reasons:
     get:
+      description: deprecated, use /cas1/reference-data/non-arrival-reasons
+      deprecated: true
       tags:
         - Reference Data
       summary: Lists reasons for non-arrivals
