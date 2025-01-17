@@ -6,12 +6,15 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.cas1.ReferenceDataCa
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1CruManagementArea
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1OutOfServiceBedReason
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.DepartureReason
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.MoveOnCategory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NonArrivalReason
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas1CruManagementAreaRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas1OutOfServiceBedReasonRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DepartureReasonRepository
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.MoveOnCategoryRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.NonArrivalReasonRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.DepartureReasonTransformer
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.MoveOnCategoryTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.NonArrivalReasonTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.cas1.Cas1CruManagementAreaTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.cas1.Cas1OutOfServiceBedReasonTransformer
@@ -26,6 +29,8 @@ class Cas1ReferenceDataController(
   private val departureReasonTransformer: DepartureReasonTransformer,
   private val nonArrivalReasonRepository: NonArrivalReasonRepository,
   private val nonArrivalReasonTransformer: NonArrivalReasonTransformer,
+  private val moveOnCategoryRepository: MoveOnCategoryRepository,
+  private val moveOnCategoryTransformer: MoveOnCategoryTransformer,
 ) : ReferenceDataCas1Delegate {
 
   override fun getOutOfServiceBedReasons(): ResponseEntity<List<Cas1OutOfServiceBedReason>> {
@@ -48,6 +53,13 @@ class Cas1ReferenceDataController(
     return ResponseEntity.ok(
       departureReasonRepository.findActiveForCas1()
         .map { departureReasonTransformer.transformJpaToApi(it) },
+    )
+  }
+
+  override fun getMoveOnCategories(): ResponseEntity<List<MoveOnCategory>> {
+    return ResponseEntity.ok(
+      moveOnCategoryRepository.findActiveForCas1()
+        .map(moveOnCategoryTransformer::transformJpaToApi),
     )
   }
 

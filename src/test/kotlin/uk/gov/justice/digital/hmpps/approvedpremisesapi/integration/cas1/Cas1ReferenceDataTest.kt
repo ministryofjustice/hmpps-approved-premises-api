@@ -10,6 +10,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.InitialiseDa
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.IntegrationTestBase
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas1CruManagementAreaEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.DepartureReasonTransformer
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.MoveOnCategoryTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.NonArrivalReasonTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.cas1.Cas1OutOfServiceBedReasonTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.bodyAsListOfObjects
@@ -24,6 +25,9 @@ class Cas1ReferenceDataTest : IntegrationTestBase() {
 
   @Autowired
   lateinit var nonArrivalReasonTransformer: NonArrivalReasonTransformer
+
+  @Autowired
+  lateinit var moveOnCategoryTransformer: MoveOnCategoryTransformer
 
   @Nested
   inner class GetOutOfServiceBedReasons {
@@ -143,6 +147,51 @@ class Cas1ReferenceDataTest : IntegrationTestBase() {
 
       webTestClient.get()
         .uri("/cas1/reference-data/departure-reasons")
+        .header("Authorization", "Bearer $jwt")
+        .exchange()
+        .expectStatus()
+        .isOk
+        .expectBody()
+        .json(expectedJson)
+    }
+  }
+
+  @Nested
+  inner class MoveOnCategory {
+
+    @Test
+    fun success() {
+      moveOnCategoryRepository.deleteAll()
+
+      val cas1Reasons = moveOnCategoryEntityFactory.produceAndPersistMultiple(3) {
+        withServiceScope("approved-premises")
+        withIsActive(true)
+      }
+
+      // inactive reasons (ignored)
+      moveOnCategoryEntityFactory.produceAndPersistMultiple(1) {
+        withServiceScope("*")
+        withIsActive(false)
+      }
+
+      // wildcard reasons (ignored)
+      moveOnCategoryEntityFactory.produceAndPersistMultiple(2) {
+        withServiceScope("*")
+      }
+
+      // cas3 reasons
+      moveOnCategoryEntityFactory.produceAndPersistMultiple(5) {
+        withServiceScope("temporary-accommodation")
+      }
+
+      val expectedJson = objectMapper.writeValueAsString(
+        cas1Reasons.map(moveOnCategoryTransformer::transformJpaToApi),
+      )
+
+      val jwt = jwtAuthHelper.createValidAuthorizationCodeJwt()
+
+      webTestClient.get()
+        .uri("/cas1/reference-data/move-on-categories")
         .header("Authorization", "Bearer $jwt")
         .exchange()
         .expectStatus()

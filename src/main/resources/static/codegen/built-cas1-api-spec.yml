@@ -943,7 +943,27 @@ paths:
           $ref: '#/components/responses/403Response'
         500:
           $ref: '#/components/responses/500Response'
-
+  /reference-data/move-on-categories:
+    get:
+      tags:
+        - Reference Data
+      operationId: getMoveOnCategories
+      summary: Lists all active move-on categories
+      responses:
+        200:
+          description: successful operation
+          content:
+            'application/json':
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/MoveOnCategory'
+        401:
+          $ref: '#/components/responses/401Response'
+        403:
+          $ref: '#/components/responses/403Response'
+        500:
+          $ref: '#/components/responses/500Response'
   /reference-data/non-arrival-reasons:
     get:
       tags:
