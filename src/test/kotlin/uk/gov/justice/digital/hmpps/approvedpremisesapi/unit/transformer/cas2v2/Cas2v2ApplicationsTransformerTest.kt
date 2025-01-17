@@ -84,7 +84,7 @@ class Cas2v2ApplicationsTransformerTest {
         .withSubmittedAt(null)
         .produce()
 
-      application.applicationOrigin = "prisonBail"
+      application.applicationOrigin = ApplicationOrigin.prisonBail
 
       val result = cas2v2ApplicationsTransformer.transformJpaToApi(application, mockk())
 

@@ -2,6 +2,7 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.cas2v2
 
 import com.fasterxml.jackson.databind.ObjectMapper
 import org.springframework.stereotype.Component
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApplicationOrigin
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApplicationStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas2v2Application
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas2v2ApplicationSummary
@@ -11,7 +12,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PersonInfoResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.NomisUserTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.PersonTransformer
 import java.util.UUID
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApplicationOrigin
 
 @Component
 class Cas2v2ApplicationsTransformer(
@@ -60,6 +60,11 @@ class Cas2v2ApplicationsTransformer(
       crn = jpaSummary.crn,
       nomsNumber = jpaSummary.nomsNumber,
       personName = personName,
+      applicationOrigin = when (jpaSummary.applicationOrigin) {
+        ApplicationOrigin.courtBail.ordinal.toString() -> ApplicationOrigin.courtBail
+        ApplicationOrigin.prisonBail.ordinal.toString() -> ApplicationOrigin.prisonBail
+        else -> ApplicationOrigin.homeDetentionCurfew
+      },
     )
   }
 

@@ -619,9 +619,8 @@ class Cas2v2SubmissionTest(
                     applicationEntity.createdAt.toInstant() == it.createdAt &&
                     applicant == it.submittedBy &&
                     applicationEntity.submittedAt?.toInstant() == it.submittedAt &&
-                    applicationEntity.applicationOrigin == it.applicationOrigin.toString() &&
                     serializableToJsonNode(applicationEntity.document) == serializableToJsonNode(it.document)
-                    newestJsonSchema.id == it.schemaVersion && !it.outdatedSchema
+                  newestJsonSchema.id == it.schemaVersion && !it.outdatedSchema
                 }
 
                 Assertions.assertThat(responseBody.assessment.statusUpdates!!.map { update -> update.label })

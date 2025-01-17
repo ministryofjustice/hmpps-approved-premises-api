@@ -457,16 +457,17 @@ class Cas2v2ApplicationTest : Cas2v2IntegrationTestBase() {
             val responseBody =
               objectMapper.readValue(rawResponseBody, object : TypeReference<List<Cas2v2ApplicationSummary>>() {})
 
+            Assertions.assertThat(responseBody.count()).isEqualTo(3)
             Assertions.assertThat(responseBody).anyMatch {
-              courtBailApplicationEntity.applicationOrigin == it.applicationOrigin.toString()
+              courtBailApplicationEntity.applicationOrigin == it.applicationOrigin
             }
 
             Assertions.assertThat(responseBody).anyMatch {
-              hdcApplicationEntity.applicationOrigin == it.applicationOrigin.toString()
+              hdcApplicationEntity.applicationOrigin == it.applicationOrigin
             }
 
             Assertions.assertThat(responseBody).anyMatch {
-              prisonBailApplicationEntity.applicationOrigin == it.applicationOrigin.toString()
+              prisonBailApplicationEntity.applicationOrigin == it.applicationOrigin
             }
           }
         }

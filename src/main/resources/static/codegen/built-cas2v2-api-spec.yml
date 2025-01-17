@@ -5565,6 +5565,8 @@ components:
           type: string
         nomsNumber:
           type: string
+        applicationOrigin:
+          $ref: "#/components/schemas/ApplicationOrigin"
       required:
         - type
         - id
@@ -5574,6 +5576,7 @@ components:
         - personName
         - crn
         - nomsNumber
+        - applicationOrigin
     Cas2v2SubmittedApplicationSummary:
       type: object
       properties:
