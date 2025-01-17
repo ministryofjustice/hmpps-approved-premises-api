@@ -14,6 +14,7 @@ import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.ValueSource
 import org.springframework.test.web.reactive.server.returnResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Application
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApplicationOrigin
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas2Application
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas2StatusUpdate
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas2v2ApplicationSummary
@@ -397,6 +398,77 @@ class Cas2v2ApplicationTest : Cas2v2IntegrationTestBase() {
 
             Assertions.assertThat(responseBody[1].createdAt)
               .isEqualTo(firstApplicationEntity.createdAt.toInstant())
+          }
+        }
+      }
+    }
+
+    @Test
+    fun `Get all applications returns 200 with applicationOrigin`() {
+      givenACas2PomUser { userEntity, jwt ->
+        givenACas2PomUser { otherUser, _ ->
+          givenAnOffender { offenderDetails, _ ->
+            cas2v2ApplicationJsonSchemaRepository.deleteAll()
+
+            val applicationSchema = cas2v2ApplicationJsonSchemaEntityFactory.produceAndPersist {
+              withAddedAt(OffsetDateTime.now())
+              withId(UUID.randomUUID())
+            }
+
+            val courtBailApplicationEntity = cas2v2ApplicationEntityFactory.produceAndPersist {
+              withApplicationSchema(applicationSchema)
+              withCreatedByUser(userEntity)
+              withCrn(offenderDetails.otherIds.crn)
+              withData("{}")
+              withCreatedAt(OffsetDateTime.parse("2024-01-03T16:10:00+01:00"))
+              withApplicationOrigin(ApplicationOrigin.courtBail)
+            }
+
+            val prisonBailApplicationEntity = cas2v2ApplicationEntityFactory.produceAndPersist {
+              withApplicationSchema(applicationSchema)
+              withCreatedByUser(userEntity)
+              withCrn(offenderDetails.otherIds.crn)
+              withData("{}")
+              withCreatedAt(OffsetDateTime.parse("2024-01-03T16:10:00+01:00"))
+              withApplicationOrigin(ApplicationOrigin.prisonBail)
+            }
+
+            val hdcApplicationEntity = cas2v2ApplicationEntityFactory.produceAndPersist {
+              withApplicationSchema(applicationSchema)
+              withCreatedByUser(userEntity)
+              withCrn(offenderDetails.otherIds.crn)
+              withData("{}")
+              withCreatedAt(OffsetDateTime.parse("2024-02-29T09:00:00+01:00"))
+              withSubmittedAt(OffsetDateTime.now())
+              withApplicationOrigin(ApplicationOrigin.homeDetentionCurfew)
+            }
+
+            val rawResponseBody = webTestClient.get()
+              .uri("/cas2v2/applications")
+              .header("Authorization", "Bearer $jwt")
+              .header("X-Service-Name", ServiceName.cas2.value)
+              .exchange()
+              .expectStatus()
+              .isOk
+              .returnResult<String>()
+              .responseBody
+              .blockFirst()
+
+            val responseBody =
+              objectMapper.readValue(rawResponseBody, object : TypeReference<List<Cas2v2ApplicationSummary>>() {})
+
+            Assertions.assertThat(responseBody.count()).isEqualTo(3)
+            Assertions.assertThat(responseBody).anyMatch {
+              courtBailApplicationEntity.applicationOrigin == it.applicationOrigin
+            }
+
+            Assertions.assertThat(responseBody).anyMatch {
+              hdcApplicationEntity.applicationOrigin == it.applicationOrigin
+            }
+
+            Assertions.assertThat(responseBody).anyMatch {
+              prisonBailApplicationEntity.applicationOrigin == it.applicationOrigin
+            }
           }
         }
       }
@@ -1162,7 +1234,7 @@ class Cas2v2ApplicationTest : Cas2v2IntegrationTestBase() {
 
             val newestJsonSchema = cas2v2ApplicationJsonSchemaEntityFactory
               .produceAndPersist {
-                withAddedAt(OffsetDateTime.parse("2022-09-21T12:45:00+01:00"))
+                withAddedAt(OffsetDateTime.parse("2025-01-17T12:45:00+01:00"))
                 withSchema(
                   schema,
                 )
