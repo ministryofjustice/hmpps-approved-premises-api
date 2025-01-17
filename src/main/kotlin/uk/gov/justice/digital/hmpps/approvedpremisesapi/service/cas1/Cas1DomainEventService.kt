@@ -123,6 +123,7 @@ class Cas1DomainEventService(
       crn = entity.crn,
       nomsNumber = entity.nomsNumber,
       occurredAt = entity.occurredAt.toInstant(),
+      schemaVersion = entity.schemaVersion,
       data = data,
     )
   }

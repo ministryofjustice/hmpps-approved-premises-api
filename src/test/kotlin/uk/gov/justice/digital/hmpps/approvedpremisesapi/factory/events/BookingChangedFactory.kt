@@ -22,6 +22,8 @@ class BookingChangedFactory : Factory<BookingChanged> {
   private var premises: Yielded<Premises> = { EventPremisesFactory().produce() }
   private var arrivalOn: Yielded<LocalDate> = { LocalDate.now() }
   private var departureOn: Yielded<LocalDate> = { LocalDate.now() }
+  private var previousArrivalOn: Yielded<LocalDate?> = { null }
+  private var previousDepartureOn: Yielded<LocalDate?> = { null }
 
   fun withApplicationId(applicationId: UUID) = apply {
     this.applicationId = { applicationId }
@@ -63,6 +65,14 @@ class BookingChangedFactory : Factory<BookingChanged> {
     this.departureOn = { departureOn }
   }
 
+  fun withPreviousArrivalOn(previousArrivalOn: LocalDate) = apply {
+    this.previousArrivalOn = { previousArrivalOn }
+  }
+
+  fun withPreviousDepartureOn(previousDepartureOn: LocalDate?) = apply {
+    this.previousDepartureOn = { previousDepartureOn }
+  }
+
   override fun produce() = BookingChanged(
     applicationId = this.applicationId(),
     applicationUrl = this.applicationUrl(),
@@ -74,5 +84,7 @@ class BookingChangedFactory : Factory<BookingChanged> {
     premises = this.premises(),
     arrivalOn = this.arrivalOn(),
     departureOn = this.departureOn(),
+    previousArrivalOn = this.previousArrivalOn(),
+    previousDepartureOn = this.previousDepartureOn(),
   )
 }
