@@ -8,9 +8,9 @@ import jakarta.persistence.LockModeType
 import jakarta.persistence.ManyToOne
 import jakarta.persistence.OneToMany
 import jakarta.persistence.OneToOne
+import jakarta.persistence.OrderBy
 import jakarta.persistence.Table
 import org.hibernate.annotations.Immutable
-import org.hibernate.annotations.OrderBy
 import org.hibernate.annotations.Type
 import org.springframework.data.domain.Slice
 import org.springframework.data.jpa.repository.JpaRepository
