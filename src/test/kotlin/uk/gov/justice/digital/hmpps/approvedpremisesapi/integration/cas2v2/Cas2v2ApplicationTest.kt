@@ -1233,7 +1233,7 @@ class Cas2v2ApplicationTest : Cas2v2IntegrationTestBase() {
 
             val newestJsonSchema = cas2v2ApplicationJsonSchemaEntityFactory
               .produceAndPersist {
-                withAddedAt(OffsetDateTime.parse("2022-09-21T12:45:00+01:00"))
+                withAddedAt(OffsetDateTime.parse("2025-01-17T12:45:00+01:00"))
                 withSchema(
                   schema,
                 )
