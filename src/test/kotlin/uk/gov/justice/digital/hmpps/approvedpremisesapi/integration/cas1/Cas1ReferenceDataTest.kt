@@ -9,6 +9,9 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1CruManagem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.InitialiseDatabasePerClassTestBase
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.IntegrationTestBase
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas1CruManagementAreaEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.DepartureReasonTransformer
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.MoveOnCategoryTransformer
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.NonArrivalReasonTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.cas1.Cas1OutOfServiceBedReasonTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.bodyAsListOfObjects
 import java.util.UUID
@@ -16,6 +19,15 @@ import java.util.UUID
 class Cas1ReferenceDataTest : IntegrationTestBase() {
   @Autowired
   lateinit var reasonTransformer: Cas1OutOfServiceBedReasonTransformer
+
+  @Autowired
+  lateinit var departureReasonTransformer: DepartureReasonTransformer
+
+  @Autowired
+  lateinit var nonArrivalReasonTransformer: NonArrivalReasonTransformer
+
+  @Autowired
+  lateinit var moveOnCategoryTransformer: MoveOnCategoryTransformer
 
   @Nested
   inner class GetOutOfServiceBedReasons {
@@ -82,7 +94,7 @@ class Cas1ReferenceDataTest : IntegrationTestBase() {
     }
 
     @Test
-    fun `success`() {
+    fun success() {
       val jwt = jwtAuthHelper.createValidAuthorizationCodeJwt()
 
       val result = webTestClient.get()
@@ -96,6 +108,129 @@ class Cas1ReferenceDataTest : IntegrationTestBase() {
       assertThat(result.any { it.id == area1.id && it.name == area1.name }).isTrue()
       assertThat(result.any { it.id == area2.id && it.name == area2.name }).isTrue()
       assertThat(result.any { it.id == womensEstateArea.id && it.name == womensEstateArea.name }).isTrue()
+    }
+  }
+
+  @Nested
+  inner class DepartureReasons {
+
+    @Test
+    fun success() {
+      departureReasonRepository.deleteAll()
+
+      val cas1Reasons = departureReasonEntityFactory.produceAndPersistMultiple(3) {
+        withServiceScope("approved-premises")
+        withIsActive(true)
+      }
+
+      // inactive reasons (ignored)
+      departureReasonEntityFactory.produceAndPersistMultiple(1) {
+        withServiceScope("*")
+        withIsActive(false)
+      }
+
+      // wildcard reasons (ignored)
+      departureReasonEntityFactory.produceAndPersistMultiple(2) {
+        withServiceScope("*")
+      }
+
+      // cas3 reasons
+      departureReasonEntityFactory.produceAndPersistMultiple(5) {
+        withServiceScope("temporary-accommodation")
+      }
+
+      val expectedJson = objectMapper.writeValueAsString(
+        cas1Reasons.map(departureReasonTransformer::transformJpaToApi),
+      )
+
+      val jwt = jwtAuthHelper.createValidAuthorizationCodeJwt()
+
+      webTestClient.get()
+        .uri("/cas1/reference-data/departure-reasons")
+        .header("Authorization", "Bearer $jwt")
+        .exchange()
+        .expectStatus()
+        .isOk
+        .expectBody()
+        .json(expectedJson)
+    }
+  }
+
+  @Nested
+  inner class MoveOnCategory {
+
+    @Test
+    fun success() {
+      moveOnCategoryRepository.deleteAll()
+
+      val cas1Reasons = moveOnCategoryEntityFactory.produceAndPersistMultiple(3) {
+        withServiceScope("approved-premises")
+        withIsActive(true)
+      }
+
+      // inactive reasons (ignored)
+      moveOnCategoryEntityFactory.produceAndPersistMultiple(1) {
+        withServiceScope("*")
+        withIsActive(false)
+      }
+
+      // wildcard reasons (ignored)
+      moveOnCategoryEntityFactory.produceAndPersistMultiple(2) {
+        withServiceScope("*")
+      }
+
+      // cas3 reasons
+      moveOnCategoryEntityFactory.produceAndPersistMultiple(5) {
+        withServiceScope("temporary-accommodation")
+      }
+
+      val expectedJson = objectMapper.writeValueAsString(
+        cas1Reasons.map(moveOnCategoryTransformer::transformJpaToApi),
+      )
+
+      val jwt = jwtAuthHelper.createValidAuthorizationCodeJwt()
+
+      webTestClient.get()
+        .uri("/cas1/reference-data/move-on-categories")
+        .header("Authorization", "Bearer $jwt")
+        .exchange()
+        .expectStatus()
+        .isOk
+        .expectBody()
+        .json(expectedJson)
+    }
+  }
+
+  @Nested
+  inner class NonArrivalReasons {
+
+    @Test
+    fun success() {
+      nonArrivalReasonRepository.deleteAll()
+
+      val activeReason = nonArrivalReasonEntityFactory.produceAndPersistMultiple(3) {
+        withIsActive(true)
+      }
+
+      // inactive reasons (ignored)
+      departureReasonEntityFactory.produceAndPersistMultiple(2) {
+        withIsActive(false)
+      }
+
+      val expectedJson = objectMapper.writeValueAsString(
+        activeReason.map(nonArrivalReasonTransformer::transformJpaToApi),
+      )
+
+      val jwt = jwtAuthHelper.createValidAuthorizationCodeJwt()
+
+      webTestClient.get()
+        .uri("/cas1/reference-data/non-arrival-reasons")
+        .header("Authorization", "Bearer $jwt")
+        .exchange()
+        .expectStatus()
+        .isOk
+        .expectBody()
+        .json(expectedJson)
     }
   }
 }

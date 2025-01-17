@@ -941,6 +941,48 @@ paths:
           $ref: '_shared.yml#/components/responses/403Response'
         500:
           $ref: '_shared.yml#/components/responses/500Response'
+  /reference-data/move-on-categories:
+    get:
+      tags:
+        - Reference Data
+      operationId: getMoveOnCategories
+      summary: Lists all active move-on categories
+      responses:
+        200:
+          description: successful operation
+          content:
+            'application/json':
+              schema:
+                type: array
+                items:
+                  $ref: '_shared.yml#/components/schemas/MoveOnCategory'
+        401:
+          $ref: '_shared.yml#/components/responses/401Response'
+        403:
+          $ref: '_shared.yml#/components/responses/403Response'
+        500:
+          $ref: '_shared.yml#/components/responses/500Response'
+  /reference-data/non-arrival-reasons:
+    get:
+      tags:
+        - Reference Data
+      operationId: getNonArrivalReasons
+      summary: Lists all active non-arrivals reasons
+      responses:
+        200:
+          description: successful operation
+          content:
+            'application/json':
+              schema:
+                type: array
+                items:
+                  $ref: '_shared.yml#/components/schemas/NonArrivalReason'
+        401:
+          $ref: '_shared.yml#/components/responses/401Response'
+        403:
+          $ref: '_shared.yml#/components/responses/403Response'
+        500:
+          $ref: '_shared.yml#/components/responses/500Response'
 
   /reference-data/out-of-service-bed-reasons:
     get:
@@ -979,6 +1021,28 @@ paths:
                 type: array
                 items:
                   $ref: '_shared.yml#/components/schemas/Cas1CruManagementArea'
+        401:
+          $ref: '_shared.yml#/components/responses/401Response'
+        403:
+          $ref: '_shared.yml#/components/responses/403Response'
+        500:
+          $ref: '_shared.yml#/components/responses/500Response'
+
+  /reference-data/departure-reasons:
+    get:
+      tags:
+        - Reference Data
+      operationId: getDepartureReasons
+      summary: Lists all active departure reasons
+      responses:
+        200:
+          description: successful operation
+          content:
+            'application/json':
+              schema:
+                type: array
+                items:
+                  $ref: '_shared.yml#/components/schemas/DepartureReason'
         401:
           $ref: '_shared.yml#/components/responses/401Response'
         403:
