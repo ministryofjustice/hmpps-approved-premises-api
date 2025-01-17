@@ -152,7 +152,7 @@ class Cas1SpaceSearchRepository(
     )
 
     when {
-      apType == null -> {
+      (apType == null || apType == ApprovedPremisesType.NORMAL) -> {
         query = query.replace("#AP_TYPE_FILTER#", "")
       }
       else -> {

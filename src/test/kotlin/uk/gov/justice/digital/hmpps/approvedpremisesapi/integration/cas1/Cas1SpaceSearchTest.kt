@@ -211,7 +211,7 @@ class Cas1SpaceSearchTest : InitialiseDatabasePerClassTestBase() {
   }
 
   @ParameterizedTest
-  @EnumSource
+  @EnumSource(mode = EnumSource.Mode.EXCLUDE, names = ["normal"])
   fun `Filtering APs by AP type returns only APs of that type - using single ap type option`(apType: ApType) {
     postCodeDistrictFactory.produceAndPersist {
       withOutcode("SE1")
@@ -284,8 +284,61 @@ class Cas1SpaceSearchTest : InitialiseDatabasePerClassTestBase() {
     }
   }
 
+  @Test
+  fun `Filtering AP type 'normal' returns all APs regardless of type returns only APs of that type - using single ap type option`() {
+    postCodeDistrictFactory.produceAndPersist {
+      withOutcode("SE1")
+      withLatitude(-0.07)
+      withLongitude(51.48)
+    }
+
+    givenAUser { user, jwt ->
+      val application = givenAnApplication(createdByUser = user, isWomensApplication = false)
+
+      val onePremiseOfEachType = ApType.entries.map { apType ->
+        approvedPremisesEntityFactory.produceAndPersist {
+          withYieldedProbationRegion { givenAProbationRegion() }
+          withYieldedLocalAuthorityArea {
+            localAuthorityEntityFactory.produceAndPersist()
+          }
+          withCharacteristicsList(listOfNotNull(apType.asCharacteristicEntity()))
+          withSupportsSpaceBookings(true)
+        }
+      }
+
+      val searchParameters = Cas1SpaceSearchParameters(
+        applicationId = application.id,
+        startDate = LocalDate.now(),
+        durationInDays = 14,
+        targetPostcodeDistrict = "SE1",
+        requirements = Cas1SpaceSearchRequirements(
+          apTypes = emptyList(),
+          apType = ApType.normal,
+          spaceCharacteristics = null,
+        ),
+      )
+
+      val response = webTestClient.post()
+        .uri("/cas1/spaces/search")
+        .header("Authorization", "Bearer $jwt")
+        .bodyValue(searchParameters)
+        .exchange()
+        .expectStatus()
+        .isOk
+        .returnResult(Cas1SpaceSearchResults::class.java)
+
+      val results = response.responseBody.blockFirst()!!
+
+      assertThat(results.resultsCount).isEqualTo(onePremiseOfEachType.size)
+      assertThat(results.searchCriteria).isEqualTo(searchParameters)
+
+      assertThat(results.results.map { it.premises.id })
+        .containsExactlyInAnyOrder(*onePremiseOfEachType.map { it.id }.toTypedArray())
+    }
+  }
+
   @ParameterizedTest
-  @EnumSource
+  @EnumSource(mode = EnumSource.Mode.EXCLUDE, names = ["normal"])
   fun `Filtering APs by AP type returns only APs of that type - using multiple ap types option`(apType: ApType) {
     postCodeDistrictFactory.produceAndPersist {
       withOutcode("SE1")
