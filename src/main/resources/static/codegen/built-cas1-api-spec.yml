@@ -988,6 +988,28 @@ paths:
         500:
           $ref: '#/components/responses/500Response'
 
+  /reference-data/departure-reasons:
+    get:
+      tags:
+        - Reference Data
+      operationId: getDepartureReasons
+      summary: Lists all active departure reasons
+      responses:
+        200:
+          description: successful operation
+          content:
+            'application/json':
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/DepartureReason'
+        401:
+          $ref: '#/components/responses/401Response'
+        403:
+          $ref: '#/components/responses/403Response'
+        500:
+          $ref: '#/components/responses/500Response'
+
   /reports/{reportName}:
     get:
       tags:

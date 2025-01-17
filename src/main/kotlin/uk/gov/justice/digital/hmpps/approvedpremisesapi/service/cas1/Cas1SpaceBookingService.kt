@@ -339,7 +339,7 @@ class Cas1SpaceBookingService(
     }
 
     val departureReason = departureReasonRepository.findByIdOrNull(departureInfo.reasonId)
-    if (departureReason == null || !departureReason.serviceScopeMatches("approved-premises")) {
+    if (departureReason == null || !departureReason.isCas1()) {
       "$.cas1NewDeparture.reasonId" hasValidationError "doesNotExist"
     }
 
