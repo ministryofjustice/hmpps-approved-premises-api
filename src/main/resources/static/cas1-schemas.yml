@@ -1004,3 +1004,43 @@ components:
         - updatedReferenceNumber
         - updatedReason
         - updatedNotes
+    Cas1PlacementRequestSummary:
+      type: object
+      properties:
+        placementDatesDuration:
+          type: integer
+        placementDatesExpectedArrivalDate:
+          type: string
+          format: date
+        id:
+          type: string
+          format: uuid
+        personCrn:
+          type: string
+        personIsFullPerson:
+          type: boolean
+        personRiskTierEnvelopeValueLevel:
+          type: string
+        applicationId:
+          type: string
+          format: uuid
+        placementRequestStatus:
+          type: string
+        applicationDate:
+          type: string
+          format: date
+        isParole:
+          type: boolean
+        bookingPremisesName:
+          type: string
+        bookingArrivalDate:
+          type: string
+          format: date
+      required:
+        - placementDatesDuration
+        - placementDatesExpectedArrivalDate
+        - placementRequestStatus
+        - personIsFullPerson
+        - personCrn
+        - isParole
+        - id
