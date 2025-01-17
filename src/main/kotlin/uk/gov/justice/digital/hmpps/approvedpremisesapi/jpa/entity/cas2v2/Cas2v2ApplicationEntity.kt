@@ -22,6 +22,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.NomisUserEnti
 import java.time.LocalDate
 import java.time.OffsetDateTime
 import java.util.UUID
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApplicationOrigin
 
 @Suppress("TooManyFunctions")
 @Repository
@@ -95,7 +96,7 @@ data class Cas2v2ApplicationEntity(
   var hdcEligibilityDate: LocalDate? = null,
   var conditionalReleaseDate: LocalDate? = null,
   var telephoneNumber: String? = null,
-  var applicationOrigin: String,
+  var applicationOrigin: ApplicationOrigin,
 ) {
   override fun toString() = "Cas2v2ApplicationEntity: $id"
 }

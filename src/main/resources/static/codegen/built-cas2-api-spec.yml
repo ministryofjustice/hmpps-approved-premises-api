@@ -2769,13 +2769,6 @@ components:
       required:
         - note
       description: A note to add to an application
-    ApplicationOrigin:
-        type: string
-        default: homeDetentionCurfew
-        enum:
-          - courtBail
-          - prisonBail
-          - homeDetentionCurfew
     NewApplication:
       type: object
       properties:
@@ -2791,8 +2784,6 @@ components:
         offenceId:
           type: string
           example: "M1502750438"
-        applicationOrigin:
-          $ref: "#/components/schemas/ApplicationOrigin"
       required:
         - crn
     UpdateApplicationType:

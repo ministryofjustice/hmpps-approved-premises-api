@@ -17,7 +17,7 @@ paths:
         content:
           'application/json':
             schema:
-              $ref: '#/components/schemas/NewApplication'
+              $ref: '#/components/schemas/NewCas2v2Application'
         required: true
       responses:
         201:
@@ -2769,13 +2769,6 @@ components:
       required:
         - note
       description: A note to add to an application
-    ApplicationOrigin:
-        type: string
-        default: homeDetentionCurfew
-        enum:
-          - courtBail
-          - prisonBail
-          - homeDetentionCurfew
     NewApplication:
       type: object
       properties:
@@ -2791,8 +2784,6 @@ components:
         offenceId:
           type: string
           example: "M1502750438"
-        applicationOrigin:
-          $ref: "#/components/schemas/ApplicationOrigin"
       required:
         - crn
     UpdateApplicationType:
@@ -5395,6 +5386,26 @@ components:
         - SHARED_PROPERTY
         - SINGLE_OCCUPANCY
         - WHEELCHAIR_ACCESSIBLE
+    NewCas2v2Application:
+      type: object
+      properties:
+        crn:
+          type: string
+        convictionId:
+          type: integer
+          format: int64
+          example: 1502724704
+        deliusEventNumber:
+          type: string
+          example: "7"
+        offenceId:
+          type: string
+          example: "M1502750438"
+        applicationOrigin:
+          $ref: "#/components/schemas/ApplicationOrigin"
+      required:
+        - crn
+        - applicationOrigin
     SubmitCas2v2Application:
       type: object
       properties:
@@ -5477,6 +5488,7 @@ components:
             - schemaVersion
             - outdatedSchema
             - status
+            - applicationOrigin
     Cas2v2SubmittedApplication:
       type: object
       properties:
@@ -5509,8 +5521,6 @@ components:
         assessment:
           type: object
           $ref: '#/components/schemas/Cas2v2Assessment'
-        applicationOrigin:
-            $ref: "#/components/schemas/ApplicationOrigin"
       required:
         - id
         - person
@@ -5555,8 +5565,6 @@ components:
           type: string
         nomsNumber:
           type: string
-        applicationOrigin:
-          $ref: "#/components/schemas/ApplicationOrigin"
       required:
         - type
         - id
@@ -5587,8 +5595,6 @@ components:
         submittedAt:
           type: string
           format: date-time
-        applicationOrigin:
-          $ref: "#/components/schemas/ApplicationOrigin"
       required:
         - createdByUserId
         - status
@@ -5621,4 +5627,11 @@ components:
         - name
         - body
         - createdAt
-      description: Notes added to a  Cas2v2Application
+      description: Notes added to a Cas2v2Application
+    ApplicationOrigin:
+      type: string
+      default: homeDetentionCurfew
+      enum:
+        - courtBail
+        - prisonBail
+        - homeDetentionCurfew

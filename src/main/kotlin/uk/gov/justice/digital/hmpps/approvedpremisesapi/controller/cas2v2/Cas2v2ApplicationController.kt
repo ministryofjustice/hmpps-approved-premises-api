@@ -24,6 +24,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.cas2v2.Cas2v
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.PageCriteria
 import java.net.URI
 import java.util.UUID
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewCas2v2Application
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas2v2ApplicationSummary as ModelCas2v2ApplicationSummary
 
 @Service(
@@ -78,7 +79,7 @@ class Cas2v2ApplicationController(
   }
 
   @Transactional
-  override fun applicationsPost(body: NewApplication): ResponseEntity<Application> {
+  override fun applicationsPost(body: NewCas2v2Application): ResponseEntity<Application> {
     val user = nomisUserService.getUserForRequest()
 
     val personInfo = cas2OffenderService.getFullInfoForPersonOrThrow(body.crn)

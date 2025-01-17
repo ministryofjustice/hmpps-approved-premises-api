@@ -15,7 +15,7 @@ paths:
         content:
           'application/json':
             schema:
-              $ref: '_shared.yml#/components/schemas/NewApplication'
+              $ref: 'cas2v2-schemas.yml#/components/schemas/NewCas2v2Application'
         required: true
       responses:
         201:

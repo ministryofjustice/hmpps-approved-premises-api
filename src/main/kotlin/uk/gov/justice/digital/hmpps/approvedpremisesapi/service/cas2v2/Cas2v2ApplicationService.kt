@@ -122,7 +122,7 @@ class Cas2v2ApplicationService(
   }
 
   @SuppressWarnings("TooGenericExceptionThrown")
-  fun createCas2v2Application(crn: String, user: NomisUserEntity, applicationOrigin: ApplicationOrigin? = ApplicationOrigin.homeDetentionCurfew) =
+  fun createCas2v2Application(crn: String, user: NomisUserEntity, applicationOrigin: ApplicationOrigin = ApplicationOrigin.homeDetentionCurfew) =
     validated<Cas2v2ApplicationEntity> {
       val offenderDetailsResult = cas2OffenderService.getOffenderByCrn(crn)
 
@@ -154,7 +154,7 @@ class Cas2v2ApplicationService(
         schemaUpToDate = true,
         nomsNumber = offenderDetails.otherIds.nomsNumber,
         telephoneNumber = null,
-        applicationOrigin = applicationOrigin.toString(),
+        applicationOrigin = applicationOrigin,
       )
 
       val createdApplication = cas2v2ApplicationRepository.save(
@@ -292,7 +292,7 @@ class Cas2v2ApplicationService(
         hdcEligibilityDate = submitCas2v2Application.hdcEligibilityDate
         conditionalReleaseDate = submitCas2v2Application.conditionalReleaseDate
         telephoneNumber = submitCas2v2Application.telephoneNumber
-        applicationOrigin = submitCas2v2Application.applicationOrigin.toString()
+        applicationOrigin = submitCas2v2Application.applicationOrigin
       }
     } catch (error: UpstreamApiException) {
       return CasResult.GeneralValidationError(error.message.toString())
@@ -328,7 +328,6 @@ class Cas2v2ApplicationService(
             applicationId = application.id,
             applicationUrl = applicationUrlTemplate
               .replace("#id", application.id.toString()),
-            applicationOrigin = application.applicationOrigin,
             submittedAt = eventOccurredAt.toInstant(),
             personReference = PersonReference(
               noms = application.nomsNumber ?: "Unknown NOMS Number",

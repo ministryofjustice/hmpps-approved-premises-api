@@ -1,5 +1,25 @@
 components:
   schemas:
+    NewCas2v2Application:
+      type: object
+      properties:
+        crn:
+          type: string
+        convictionId:
+          type: integer
+          format: int64
+          example: 1502724704
+        deliusEventNumber:
+          type: string
+          example: "7"
+        offenceId:
+          type: string
+          example: "M1502750438"
+        applicationOrigin:
+          $ref: "#/components/schemas/ApplicationOrigin"
+      required:
+        - crn
+        - applicationOrigin
     SubmitCas2v2Application:
       type: object
       properties:
@@ -24,7 +44,7 @@ components:
         telephoneNumber:
           type: string
         applicationOrigin:
-          $ref: "_shared.yml#/components/schemas/ApplicationOrigin"
+          $ref: "#/components/schemas/ApplicationOrigin"
       required:
         - translatedDocument
         - applicationId
@@ -76,12 +96,13 @@ components:
               items:
                 $ref: '_shared.yml#/components/schemas/Cas2TimelineEvent'
             applicationOrigin:
-              $ref: "_shared.yml#/components/schemas/ApplicationOrigin"
+              $ref: "#/components/schemas/ApplicationOrigin"
           required:
             - createdBy
             - schemaVersion
             - outdatedSchema
             - status
+            - applicationOrigin
     Cas2v2SubmittedApplication:
       type: object
       properties:
@@ -114,8 +135,6 @@ components:
         assessment:
           type: object
           $ref: '_shared.yml#/components/schemas/Cas2v2Assessment'
-        applicationOrigin:
-            $ref: "_shared.yml#/components/schemas/ApplicationOrigin"
       required:
         - id
         - person
@@ -160,8 +179,6 @@ components:
           type: string
         nomsNumber:
           type: string
-        applicationOrigin:
-          $ref: "_shared.yml#/components/schemas/ApplicationOrigin"
       required:
         - type
         - id
@@ -192,8 +209,6 @@ components:
         submittedAt:
           type: string
           format: date-time
-        applicationOrigin:
-          $ref: "_shared.yml#/components/schemas/ApplicationOrigin"
       required:
         - createdByUserId
         - status
@@ -226,4 +241,11 @@ components:
         - name
         - body
         - createdAt
-      description: Notes added to a  Cas2v2Application
+      description: Notes added to a Cas2v2Application
+    ApplicationOrigin:
+      type: string
+      default: homeDetentionCurfew
+      enum:
+        - courtBail
+        - prisonBail
+        - homeDetentionCurfew
