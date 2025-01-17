@@ -2246,7 +2246,7 @@ paths:
         content:
           'application/json':
             schema:
-              $ref: '_shared.yml#/components/schemas/BedSearchParameters'
+              $ref: '_shared.yml#/components/schemas/TemporaryAccommodationBedSearchParameters'
         required: true
       responses:
         200:
