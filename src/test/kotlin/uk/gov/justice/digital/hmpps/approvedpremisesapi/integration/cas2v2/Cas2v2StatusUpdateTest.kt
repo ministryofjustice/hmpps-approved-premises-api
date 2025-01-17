@@ -249,7 +249,7 @@ class Cas2v2StatusUpdateTest(
               val persistedStatusDetailUpdate =
                 realCas2v2StatusUpdateDetailRepository
                   .findFirstByStatusUpdateIdOrderByCreatedAtDesc(
-                    persistedStatusUpdate!!.id,
+                    persistedStatusUpdate.id,
                   )
               assertThat(persistedStatusDetailUpdate).isNotNull
 
@@ -263,10 +263,10 @@ class Cas2v2StatusUpdateTest(
                 appliedStatus.statusDetails?.find { detail ->
                   detail.id == persistedStatusDetailUpdate?.statusDetailId
                 },
-              )
-                .isNotNull()
+              ).isNotNull()
 
               emailAsserter.assertEmailsRequestedCount(1)
+
               val email =
                 emailAsserter.assertEmailRequested(
                   toEmailAddress = applicant.email!!,
