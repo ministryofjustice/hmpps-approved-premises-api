@@ -44,7 +44,7 @@ class Cas2v2ApplicationService(
   private val cas2v2LockableApplicationRepository: Cas2v2LockableApplicationRepository,
   private val cas2v2ApplicationSummaryRepository: Cas2v2ApplicationSummaryRepository,
   private val cas2v2JsonSchemaService: Cas2v2JsonSchemaService,
-  private val offenderService: OffenderService,
+  private val cas2OffenderService: OffenderService,
   private val cas2v2UserAccessService: Cas2v2UserAccessService,
   private val cas2DomainEventService: DomainEventService,
   private val emailNotificationService: EmailNotificationService,
