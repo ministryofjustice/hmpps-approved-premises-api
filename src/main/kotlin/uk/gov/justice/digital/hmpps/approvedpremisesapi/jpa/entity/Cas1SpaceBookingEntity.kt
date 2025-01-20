@@ -21,6 +21,15 @@ import org.springframework.data.jpa.repository.Query
 import org.springframework.stereotype.Repository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.CharacteristicRepository.Constants.CAS1_PROPERTY_NAME_ARSON_SUITABLE
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.CharacteristicRepository.Constants.CAS1_PROPERTY_NAME_ENSUITE
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.CharacteristicRepository.Constants.CAS1_PROPERTY_NAME_PREMISES_ACCEPTS_CHILD_SEX_OFFENDERS
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.CharacteristicRepository.Constants.CAS1_PROPERTY_NAME_PREMISES_ACCEPTS_NON_SEXUAL_CHILD_OFFENDERS
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.CharacteristicRepository.Constants.CAS1_PROPERTY_NAME_PREMISES_ACCEPTS_SEX_OFFENDERS
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.CharacteristicRepository.Constants.CAS1_PROPERTY_NAME_PREMISES_CATERED
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.CharacteristicRepository.Constants.CAS1_PROPERTY_NAME_PREMISES_ESAP
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.CharacteristicRepository.Constants.CAS1_PROPERTY_NAME_PREMISES_PIPE
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.CharacteristicRepository.Constants.CAS1_PROPERTY_NAME_PREMISES_RECOVERY_FOCUSSED
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.CharacteristicRepository.Constants.CAS1_PROPERTY_NAME_PREMISES_SEMI_SPECIALIST_MENTAL_HEALTH
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.CharacteristicRepository.Constants.CAS1_PROPERTY_NAME_PREMISES_SUITABLE_FOR_VULNERABLE
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.CharacteristicRepository.Constants.CAS1_PROPERTY_NAME_SINGLE_ROOM
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.CharacteristicRepository.Constants.CAS1_PROPERTY_NAME_STEP_FREE_DESIGNATED
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.CharacteristicRepository.Constants.CAS1_PROPERTY_NAME_SUITED_FOR_SEX_OFFENDERS
@@ -331,8 +340,8 @@ data class Cas1SpaceBookingEntity(
   var cancellationReason: CancellationReasonEntity?,
   var cancellationReasonNotes: String?,
   /**
-   * This is constrained to the characteristics with property names defined by
-   * [ROOM_CHARACTERISTICS_OF_INTEREST]
+   * This should be limited to the characteristics with property names defined by
+   * [CHARACTERISTICS_OF_INTEREST]
    */
   @ManyToMany(fetch = FetchType.LAZY)
   @JoinTable(
@@ -362,6 +371,18 @@ data class Cas1SpaceBookingEntity(
 ) {
 
   companion object {
+    private val PREMISE_CHARACTERISTICS_OF_INTEREST = listOf(
+      CAS1_PROPERTY_NAME_PREMISES_PIPE,
+      CAS1_PROPERTY_NAME_PREMISES_ESAP,
+      CAS1_PROPERTY_NAME_PREMISES_RECOVERY_FOCUSSED,
+      CAS1_PROPERTY_NAME_PREMISES_SEMI_SPECIALIST_MENTAL_HEALTH,
+      CAS1_PROPERTY_NAME_PREMISES_ACCEPTS_CHILD_SEX_OFFENDERS,
+      CAS1_PROPERTY_NAME_PREMISES_ACCEPTS_NON_SEXUAL_CHILD_OFFENDERS,
+      CAS1_PROPERTY_NAME_PREMISES_ACCEPTS_SEX_OFFENDERS,
+      CAS1_PROPERTY_NAME_PREMISES_CATERED,
+      CAS1_PROPERTY_NAME_PREMISES_SUITABLE_FOR_VULNERABLE,
+    )
+
     val ROOM_CHARACTERISTICS_OF_INTEREST = listOf(
       CAS1_PROPERTY_NAME_ARSON_SUITABLE,
       CAS1_PROPERTY_NAME_ENSUITE,
@@ -370,6 +391,8 @@ data class Cas1SpaceBookingEntity(
       CAS1_PROPERTY_NAME_SUITED_FOR_SEX_OFFENDERS,
       CAS1_PROPERTY_NAME_WHEELCHAIR_DESIGNATED,
     )
+
+    val CHARACTERISTICS_OF_INTEREST = PREMISE_CHARACTERISTICS_OF_INTEREST + ROOM_CHARACTERISTICS_OF_INTEREST
   }
 
   fun isActive() = !isCancelled()
