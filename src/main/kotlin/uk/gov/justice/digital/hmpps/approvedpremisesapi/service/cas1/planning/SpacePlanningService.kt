@@ -76,7 +76,7 @@ class SpacePlanningService(
         totalBedCount = bedStates.count { it.isActive() || it.isTemporarilyInactive() },
         availableBedCount = availableBeds.size,
         bookingCount = bookings.size,
-        characteristicAvailability = Cas1SpaceBookingEntity.CRITERIA_CHARACTERISTIC_PROPERTY_NAMES_OF_INTEREST.map {
+        characteristicAvailability = Cas1SpaceBookingEntity.ROOM_CHARACTERISTICS_OF_INTEREST.map {
           determineCharacteristicAvailability(
             characteristicPropertyName = it,
             availableBeds = availableBeds,

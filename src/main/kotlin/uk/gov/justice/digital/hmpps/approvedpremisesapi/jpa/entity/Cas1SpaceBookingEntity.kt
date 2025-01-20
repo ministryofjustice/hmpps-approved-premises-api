@@ -332,7 +332,7 @@ data class Cas1SpaceBookingEntity(
   var cancellationReasonNotes: String?,
   /**
    * This is constrained to the characteristics with property names defined by
-   * [CRITERIA_CHARACTERISTIC_PROPERTY_NAMES_OF_INTEREST]
+   * [ROOM_CHARACTERISTICS_OF_INTEREST]
    */
   @ManyToMany(fetch = FetchType.LAZY)
   @JoinTable(
@@ -362,7 +362,7 @@ data class Cas1SpaceBookingEntity(
 ) {
 
   companion object {
-    val CRITERIA_CHARACTERISTIC_PROPERTY_NAMES_OF_INTEREST = listOf(
+    val ROOM_CHARACTERISTICS_OF_INTEREST = listOf(
       CAS1_PROPERTY_NAME_ARSON_SUITABLE,
       CAS1_PROPERTY_NAME_ENSUITE,
       CAS1_PROPERTY_NAME_SINGLE_ROOM,
