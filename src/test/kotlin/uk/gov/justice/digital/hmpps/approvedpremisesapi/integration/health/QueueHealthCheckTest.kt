@@ -9,7 +9,7 @@ import uk.gov.justice.hmpps.sqs.MissingQueueException
 class QueueHealthCheckTest : IntegrationTestBase() {
 
   @MockitoSpyBean
-  protected lateinit var hmppsSqsPropertiesSpy: HmppsSqsProperties
+  private lateinit var hmppsSqsPropertiesSpy: HmppsSqsProperties
 
   fun HmppsSqsProperties.inboundQueueConfig() =
     queues["inboundqueue"]
