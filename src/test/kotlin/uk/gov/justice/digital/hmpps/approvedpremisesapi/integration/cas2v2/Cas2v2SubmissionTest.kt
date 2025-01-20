@@ -18,7 +18,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas2.model.Ca
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas2SubmittedApplication
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas2v2SubmittedApplicationSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.SubmitCas2Application
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.SubmitCas2v2Application
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.toHttpStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ExternalUserDetailsFactory

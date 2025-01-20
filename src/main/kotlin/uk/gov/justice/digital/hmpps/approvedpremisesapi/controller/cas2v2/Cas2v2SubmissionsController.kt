@@ -11,11 +11,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.SortDirection
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.SubmitCas2v2Application
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas2v2.Cas2v2ApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas2v2.Cas2v2ApplicationSummaryEntity
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.BadRequestProblem
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.ConflictProblem
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.ForbiddenProblem
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.NotFoundProblem
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.CasResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.ExternalUserService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.HttpAuthService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.NomisUserService
@@ -77,7 +72,6 @@ class Cas2v2SubmissionsController(
     extractEntityFromCasResult(submitResult)
 
     return ResponseEntity(HttpStatus.OK)
-
   }
 
   private fun ensureExternalUserPersisted() {
