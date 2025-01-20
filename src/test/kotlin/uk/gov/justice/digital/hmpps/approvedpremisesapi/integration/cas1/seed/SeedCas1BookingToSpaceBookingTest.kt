@@ -87,7 +87,7 @@ class SeedCas1BookingToSpaceBookingTest : SeedTestBase() {
       supportsSpaceBookings = true,
     )
     otherUser = givenAUser().first
-    roomCriteriaOfInterest = Cas1SpaceBookingEntity.Constants.CRITERIA_CHARACTERISTIC_PROPERTY_NAMES_OF_INTEREST.map {
+    roomCriteriaOfInterest = Cas1SpaceBookingEntity.CRITERIA_CHARACTERISTIC_PROPERTY_NAMES_OF_INTEREST.map {
       characteristicRepository.findByPropertyName(it, ServiceName.approvedPremises.value)!!
     }
     roomCriterionNotOfInstant = characteristicEntityFactory.produceAndPersist {

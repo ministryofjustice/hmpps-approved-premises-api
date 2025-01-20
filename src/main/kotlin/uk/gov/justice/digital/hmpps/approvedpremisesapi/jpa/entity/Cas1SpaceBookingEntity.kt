@@ -19,7 +19,6 @@ import org.springframework.data.jpa.repository.JpaRepository
 import org.springframework.data.jpa.repository.Modifying
 import org.springframework.data.jpa.repository.Query
 import org.springframework.stereotype.Repository
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas1SpaceBookingEntity.Constants
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.CharacteristicRepository.Constants.CAS1_PROPERTY_NAME_ARSON_SUITABLE
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.CharacteristicRepository.Constants.CAS1_PROPERTY_NAME_ENSUITE
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.CharacteristicRepository.Constants.CAS1_PROPERTY_NAME_SINGLE_ROOM
@@ -333,7 +332,7 @@ data class Cas1SpaceBookingEntity(
   var cancellationReasonNotes: String?,
   /**
    * This is constrained to the characteristics with property names defined by
-   * [Constants.CRITERIA_CHARACTERISTIC_PROPERTY_NAMES_OF_INTEREST]
+   * [CRITERIA_CHARACTERISTIC_PROPERTY_NAMES_OF_INTEREST]
    */
   @ManyToMany(fetch = FetchType.LAZY)
   @JoinTable(
@@ -362,7 +361,7 @@ data class Cas1SpaceBookingEntity(
   var version: Long = 1,
 ) {
 
-  object Constants {
+  companion object {
     val CRITERIA_CHARACTERISTIC_PROPERTY_NAMES_OF_INTEREST = listOf(
       CAS1_PROPERTY_NAME_ARSON_SUITABLE,
       CAS1_PROPERTY_NAME_ENSUITE,

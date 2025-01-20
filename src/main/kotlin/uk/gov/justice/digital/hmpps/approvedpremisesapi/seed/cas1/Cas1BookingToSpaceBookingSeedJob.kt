@@ -175,7 +175,7 @@ class Cas1BookingToSpaceBookingSeedJob(
   private fun BookingEntity.getEssentialRoomCriteriaOfInterest() =
     placementRequest?.placementRequirements?.essentialCriteria
       ?.filter { it.isModelScopeRoom() }
-      ?.filter { Cas1SpaceBookingEntity.Constants.CRITERIA_CHARACTERISTIC_PROPERTY_NAMES_OF_INTEREST.contains(it.propertyName) }
+      ?.filter { Cas1SpaceBookingEntity.CRITERIA_CHARACTERISTIC_PROPERTY_NAMES_OF_INTEREST.contains(it.propertyName) }
       ?.toList()
       ?: emptyList()
 

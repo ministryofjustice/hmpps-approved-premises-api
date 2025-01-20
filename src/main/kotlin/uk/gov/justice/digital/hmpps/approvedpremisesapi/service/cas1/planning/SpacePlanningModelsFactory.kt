@@ -77,7 +77,7 @@ class SpacePlanningModelsFactory {
     .asSequence()
     .filter { it.isActive }
     .filter { it.isModelScopeRoom() }
-    .filter { Cas1SpaceBookingEntity.Constants.CRITERIA_CHARACTERISTIC_PROPERTY_NAMES_OF_INTEREST.contains(it.propertyName) }
+    .filter { Cas1SpaceBookingEntity.CRITERIA_CHARACTERISTIC_PROPERTY_NAMES_OF_INTEREST.contains(it.propertyName) }
     .map { toCharacteristic(it) }
     .toSet()
 
