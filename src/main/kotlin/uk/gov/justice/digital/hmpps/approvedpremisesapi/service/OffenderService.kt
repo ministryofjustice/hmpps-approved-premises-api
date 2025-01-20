@@ -719,7 +719,7 @@ class OffenderService(
     ignoreLaoRestrictions: Boolean,
   ): PersonInfoResult {
     check(ignoreLaoRestrictions || deliusUsername != null) { "If ignoreLao is false, delius username must be provided " }
-    return getPersonInfoResults(setOf(crn), deliusUsername, ignoreLaoRestrictions).first()
+    return getPersonInfoResults(setOf(crn.trim().uppercase()), deliusUsername, ignoreLaoRestrictions).first()
   }
 
   fun getPersonInfoResults(
