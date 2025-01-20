@@ -10,9 +10,9 @@ class MessageService {
     private val log: Logger = LoggerFactory.getLogger(this::class.java)
   }
 
-  fun handleMessage(hmppsEvent: HmppsEvent) {
-    log.info("received event: {}", hmppsEvent)
+  fun handleMessage(message: Message) {
+    log.info("received event: {}", message)
 
-    print(hmppsEvent)
+    print(message)
   }
 }

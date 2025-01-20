@@ -1,25 +1,22 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.service.subscription
 
-import com.fasterxml.jackson.databind.ObjectMapper
 import io.awspring.cloud.sqs.annotation.SqsListener
 import org.springframework.stereotype.Service
 
 @Service
-class MessageListener(private val messageService: MessageService, private val objectMapper: ObjectMapper) {
+class MessageListener(private val messageService: MessageService) {
 
   @SqsListener("inboundqueue", factory = "hmppsQueueContainerFactoryProxy")
   fun processMessage(message: Message) {
-    val event = objectMapper.readValue(message.Message, HmppsEvent::class.java)
-    messageService.handleMessage(event)
+    messageService.handleMessage(message)
   }
 }
 
-data class HmppsEvent(val id: String, val type: String, val contents: String)
-data class MessageAttribute(val value: String, val type: String)
+data class MessageAttribute(val Value: String, val Type: String)
 typealias EventType = MessageAttribute
 class MessageAttributes() : HashMap<String, MessageAttribute>() {
   constructor(attribute: EventType) : this() {
-    put(attribute.value, attribute)
+    put(attribute.Value, attribute)
   }
 }
 data class Message(
