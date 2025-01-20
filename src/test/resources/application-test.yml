@@ -173,6 +173,7 @@ arrived-departed-domain-events-disabled: false
 manual-bookings-domain-events-disabled: false
 
 upstream-timeout-ms: 500
+nomis-user-roles-api-upstream-timeout-ms: 500
 
 pagination:
   default-page-size: 10

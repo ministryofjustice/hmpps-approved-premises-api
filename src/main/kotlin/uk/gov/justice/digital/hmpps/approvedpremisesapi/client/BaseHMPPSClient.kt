@@ -152,8 +152,15 @@ abstract class BaseHMPPSClient(
   }
 
   private fun isApplicableForRetry(throwable: Throwable): Boolean {
-    return !isTimeoutException(throwable) &&
-      (throwable !is WebClientResponseException || RETRY_ERROR_CODES.contains(throwable.statusCode.value()))
+    return when {
+      isTimeoutException(throwable) && webClientConfig.retryOnReadTimeout -> true
+      !isTimeoutException(throwable) && hasRetryableException(throwable) -> true
+      else -> false
+    }
+  }
+
+  private fun hasRetryableException(throwable: Throwable): Boolean {
+    return (throwable !is WebClientResponseException || RETRY_ERROR_CODES.contains(throwable.statusCode.value()))
   }
 
   // Timeout for NO_RESPONSE is wrapped in a WebClientRequestException

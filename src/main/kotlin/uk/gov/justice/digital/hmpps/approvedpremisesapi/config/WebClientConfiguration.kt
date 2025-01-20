@@ -22,11 +22,13 @@ import java.time.Duration
 data class WebClientConfig(
   val webClient: WebClient,
   val maxRetryAttempts: Long = 1,
+  val retryOnReadTimeout: Boolean = false,
 )
 
 @Configuration
 class WebClientConfiguration(
   @Value("\${upstream-timeout-ms}") private val upstreamTimeoutMs: Long,
+  @Value("\${nomis-user-roles-api-upstream-timeout-ms}") private val nomisUserRolesUpstreamTimeoutMs: Long,
   @Value("\${case-notes-service-upstream-timeout-ms}") private val caseNotesServiceUpstreamTimeoutMs: Long,
   @Value("\${web-clients.max-response-in-memory-size-bytes}") private val defaultMaxResponseInMemorySizeBytes: Int,
   @Value("\${web-clients.prison-api-max-response-in-memory-size-bytes}") private val prisonApiMaxResponseInMemorySizeBytes: Int,
@@ -221,11 +223,12 @@ class WebClientConfiguration(
           ReactorClientHttpConnector(
             HttpClient
               .create()
-              .responseTimeout(Duration.ofMillis(upstreamTimeoutMs))
-              .option(ChannelOption.CONNECT_TIMEOUT_MILLIS, Duration.ofMillis(upstreamTimeoutMs).toMillis().toInt()),
+              .responseTimeout(Duration.ofMillis(nomisUserRolesUpstreamTimeoutMs))
+              .option(ChannelOption.CONNECT_TIMEOUT_MILLIS, Duration.ofMillis(nomisUserRolesUpstreamTimeoutMs).toMillis().toInt()),
           ),
         )
         .build(),
+      retryOnReadTimeout = true,
     )
   }
 
