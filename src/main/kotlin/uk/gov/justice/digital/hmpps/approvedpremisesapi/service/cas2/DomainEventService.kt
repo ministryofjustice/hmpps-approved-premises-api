@@ -100,6 +100,7 @@ class DomainEventService(
         cas1SpaceBookingId = domainEvent.cas1SpaceBookingId,
         crn = domainEvent.crn,
         nomsNumber = domainEvent.nomsNumber,
+        cas2v2ApplicationOrigin = domainEvent.cas2v2ApplicationOrigin.toString(),
         type = enumTypeFromDataType(domainEvent.data::class),
         occurredAt = domainEvent.occurredAt.atOffset(ZoneOffset.UTC),
         createdAt = OffsetDateTime.now(),
