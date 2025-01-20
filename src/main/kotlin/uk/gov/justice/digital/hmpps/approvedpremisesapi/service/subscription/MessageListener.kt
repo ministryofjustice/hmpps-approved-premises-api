@@ -9,7 +9,7 @@ class MessageListener(private val messageService: MessageService, private val ob
 
   @SqsListener("inboundqueue", factory = "hmppsQueueContainerFactoryProxy")
   fun processMessage(message: Message) {
-    val event = objectMapper.readValue(message.message, HmppsEvent::class.java)
+    val event = objectMapper.readValue(message.Message, HmppsEvent::class.java)
     messageService.handleMessage(event)
   }
 }
@@ -23,7 +23,7 @@ class MessageAttributes() : HashMap<String, MessageAttribute>() {
   }
 }
 data class Message(
-  val message: String,
-  val messageId: String,
-  val messageAttributes: MessageAttributes,
+  val Message: String,
+  val MessageId: String,
+  val MessageAttributes: MessageAttributes,
 )
