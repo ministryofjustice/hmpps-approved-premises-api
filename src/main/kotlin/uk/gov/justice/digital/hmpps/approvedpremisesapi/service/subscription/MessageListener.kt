@@ -12,6 +12,7 @@ class MessageListener(private val messageService: MessageService) {
   }
 }
 
+@SuppressWarnings("ConstructorParameterNaming")
 data class MessageAttribute(val Value: String, val Type: String)
 typealias EventType = MessageAttribute
 class MessageAttributes() : HashMap<String, MessageAttribute>() {
@@ -19,6 +20,8 @@ class MessageAttributes() : HashMap<String, MessageAttribute>() {
     put(attribute.Value, attribute)
   }
 }
+
+@SuppressWarnings("ConstructorParameterNaming")
 data class Message(
   val Message: String,
   val MessageId: String,
