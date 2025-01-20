@@ -1,9 +1,19 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.health
 
 import org.junit.jupiter.api.Test
+import org.springframework.test.context.bean.override.mockito.MockitoSpyBean
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.IntegrationTestBase
+import uk.gov.justice.hmpps.sqs.HmppsSqsProperties
+import uk.gov.justice.hmpps.sqs.MissingQueueException
 
 class QueueHealthCheckTest : IntegrationTestBase() {
+
+  @MockitoSpyBean
+  protected lateinit var hmppsSqsPropertiesSpy: HmppsSqsProperties
+
+  fun HmppsSqsProperties.inboundQueueConfig() =
+    queues["inboundqueue"]
+      ?: throw MissingQueueException("inboundqueue has not been loaded from configuration properties")
 
   @Test
   fun `Inbound queue health ok`() {
