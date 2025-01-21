@@ -19,14 +19,18 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.SituationOption
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.SubmitApprovedPremisesApplication
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesApplicationEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AssessmentRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.BookingEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.BookingRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas1SpaceBookingEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas1SpaceBookingEntity.Companion.CHARACTERISTICS_OF_INTEREST
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas1SpaceBookingRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.CharacteristicEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.CharacteristicRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.OfflineApplicationEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementRequestRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PostcodeDistrictRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PersonInfoResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.ForbiddenProblem
@@ -38,6 +42,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.EnvironmentServi
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.OffenderService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.UserService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.UserService.GetUserResponse
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1SpaceBookingService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.ensureEntityFromCasResultIsSuccess
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.extractEntityFromCasResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.extractEntityFromNestedAuthorisableValidatableActionResult
@@ -46,6 +51,7 @@ import java.time.LocalDate
 import java.time.OffsetDateTime
 import java.util.UUID
 import java.util.concurrent.TimeUnit
+import kotlin.random.Random
 
 @SuppressWarnings("MagicNumber", "TooGenericExceptionCaught")
 @Service
@@ -61,6 +67,10 @@ class Cas1ApplicationSeedService(
   private val assessmentRepository: AssessmentRepository,
   private val postcodeDistrictRepository: PostcodeDistrictRepository,
   private val cache: Cas1ApplicationSeedServiceCaches,
+  private val spaceBookingService: Cas1SpaceBookingService,
+  private val placementRequestRepository: PlacementRequestRepository,
+  private val premisesRepository: ApprovedPremisesRepository,
+  private val characteristicsRepository: CharacteristicRepository,
 ) {
   companion object {
     private val log = LoggerFactory.getLogger(this::class.java)
@@ -85,6 +95,7 @@ class Cas1ApplicationSeedService(
   enum class ApplicationState {
     PENDING_SUBMISSION,
     AUTHORISED,
+    BOOKED,
   }
 
   @SuppressWarnings("TooGenericExceptionCaught")
@@ -93,12 +104,13 @@ class Cas1ApplicationSeedService(
     crn: String,
     createIfExistingApplicationForCrn: Boolean = false,
     state: ApplicationState,
+    premisesQCode: String? = null,
   ) {
     if (environmentService.isNotATestEnvironment()) {
       error("Cannot create test applications as not in a test environment")
     }
 
-    createApplicationInternal(deliusUserName, crn, createIfExistingApplicationForCrn, state)
+    createApplicationInternal(deliusUserName, crn, createIfExistingApplicationForCrn, state, premisesQCode)
   }
 
   fun createOfflineApplicationWithBooking(deliusUserName: String, crn: String) {
@@ -114,6 +126,7 @@ class Cas1ApplicationSeedService(
     crn: String,
     createIfExistingApplicationForCrn: Boolean,
     state: ApplicationState,
+    premisesQCode: String?,
   ) {
     if (!createIfExistingApplicationForCrn && applicationService.getApplicationsForCrn(crn, ServiceName.approvedPremises).isNotEmpty()) {
       log.info("Already have CAS1 application for $crn, not seeding a new application")
@@ -130,6 +143,16 @@ class Cas1ApplicationSeedService(
         val application = createApplicationPendingSubmission(deliusUserName, crn)
         submitApplication(application)
         assessAndAcceptApplication(application)
+      }
+      ApplicationState.BOOKED -> {
+        val application = createApplicationPendingSubmission(deliusUserName, crn)
+        submitApplication(application)
+        assessAndAcceptApplication(application)
+        val premises = premisesRepository.findByQCode(premisesQCode!!)!!
+        createSpaceBooking(
+          application,
+          premises,
+        )
       }
     }
   }
@@ -249,6 +272,27 @@ class Cas1ApplicationSeedService(
         ),
         apType = ApType.normal,
         notes = null,
+      ),
+    )
+  }
+
+  @SuppressWarnings("MagicNumber")
+  private fun createSpaceBooking(
+    application: ApprovedPremisesApplicationEntity,
+    premises: ApprovedPremisesEntity,
+  ) {
+    val arrivalDate = LocalDate.now().minusDays(Random.nextLong(0, 7))
+    val departureDate = arrivalDate.plusDays(Random.nextLong(1, 365))
+    val characteristics = CHARACTERISTICS_OF_INTEREST.shuffled().take(Random.nextInt(0, CHARACTERISTICS_OF_INTEREST.size - 1))
+
+    ensureEntityFromCasResultIsSuccess(
+      spaceBookingService.createNewBooking(
+        premisesId = premises.id,
+        placementRequestId = placementRequestRepository.findByApplication(application).first().id,
+        arrivalDate = arrivalDate,
+        departureDate = departureDate,
+        createdBy = application.createdByUser,
+        characteristics = characteristicsRepository.findAllWherePropertyNameIn(characteristics, "approved-premises"),
       ),
     )
   }
