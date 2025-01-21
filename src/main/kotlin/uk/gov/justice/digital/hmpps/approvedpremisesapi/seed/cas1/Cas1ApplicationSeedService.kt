@@ -1,5 +1,8 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.seed.cas1
 
+import com.google.common.cache.CacheBuilder
+import com.google.common.cache.CacheLoader
+import com.google.common.cache.LoadingCache
 import org.json.JSONObject
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
@@ -42,6 +45,7 @@ import java.io.IOException
 import java.time.LocalDate
 import java.time.OffsetDateTime
 import java.util.UUID
+import java.util.concurrent.TimeUnit
 
 @SuppressWarnings("MagicNumber", "TooGenericExceptionCaught")
 @Service
@@ -50,15 +54,33 @@ class Cas1ApplicationSeedService(
   private val bookingRepository: BookingRepository,
   private val applicationTimelineNoteService: ApplicationTimelineNoteService,
   private val spaceBookingRepository: Cas1SpaceBookingRepository,
-  private val offenderService: OffenderService,
   private val applicationService: ApplicationService,
   private val userService: UserService,
   private val environmentService: EnvironmentService,
   private val assessmentService: AssessmentService,
   private val assessmentRepository: AssessmentRepository,
   private val postcodeDistrictRepository: PostcodeDistrictRepository,
+  private val cache: Cas1ApplicationSeedServiceCaches,
 ) {
-  private val log = LoggerFactory.getLogger(this::class.java)
+  companion object {
+    private val log = LoggerFactory.getLogger(this::class.java)
+
+    val ASSESSMENT_DATA_JSON = loadFixtureAsResource("assessment_data.json")
+    val ASSESSMENT_DOCUMENT_JSON = loadFixtureAsResource("assessment_document.json")
+    val APPLICATION_DATA_JSON = loadFixtureAsResource("application_data.json")
+    val APPLICATION_DOCUMENT_JSON: MutableMap<String, Any> = JSONObject(loadFixtureAsResource("application_document.json")).toMap()
+
+    private fun loadFixtureAsResource(filename: String): String {
+      val path = "db/seed/local+dev+test/cas1_application_data/$filename"
+
+      try {
+        return this::class.java.classLoader.getResource(path)?.readText() ?: ""
+      } catch (e: IOException) {
+        log.warn("Failed to load seed fixture $path: " + e.message!!)
+        return "{}"
+      }
+    }
+  }
 
   enum class ApplicationState {
     PENDING_SUBMISSION,
@@ -116,7 +138,7 @@ class Cas1ApplicationSeedService(
     deliusUserName: String,
     crn: String,
   ): ApprovedPremisesApplicationEntity {
-    val personInfo = getPersonInfo(crn)
+    val personInfo = cache.getPersonInfo(crn)
     val createdByUser = (userService.getExistingUserOrCreate(deliusUserName) as GetUserResponse.Success).user
 
     val newApplicationEntity = extractEntityFromCasResult(
@@ -141,7 +163,7 @@ class Cas1ApplicationSeedService(
           apType = ApType.normal,
           releaseType = "licence",
           arrivalDate = LocalDate.of(2025, 12, 12),
-          data = loadFixtureAsResource("application_data.json"),
+          data = APPLICATION_DATA_JSON,
           isInapplicable = false,
           noticeType = Cas1ApplicationTimelinessCategory.standard,
         ),
@@ -167,7 +189,7 @@ class Cas1ApplicationSeedService(
       applicationId = application.id,
       submitApplication = SubmitApprovedPremisesApplication(
         apType = ApType.normal,
-        translatedDocument = JSONObject(loadFixtureAsResource("application_document.json")).toMap(),
+        translatedDocument = APPLICATION_DOCUMENT_JSON,
         caseManagerIsNotApplicant = false,
         isWomensApplication = false,
         releaseType = ReleaseTypeOption.licence,
@@ -204,7 +226,7 @@ class Cas1ApplicationSeedService(
       assessmentService.updateAssessment(
         assessmentId = getAssessmentId(application),
         updatingUser = assessor,
-        data = loadFixtureAsResource("assessment_data.json"),
+        data = ASSESSMENT_DATA_JSON,
       ),
     )
 
@@ -212,7 +234,7 @@ class Cas1ApplicationSeedService(
       assessmentService.acceptAssessment(
         acceptingUser = assessor,
         assessmentId = getAssessmentId(application),
-        document = loadFixtureAsResource("assessment_document.json"),
+        document = ASSESSMENT_DOCUMENT_JSON,
         placementRequirements = PlacementRequirements(
           gender = Gender.male,
           type = ApType.normal,
@@ -239,7 +261,7 @@ class Cas1ApplicationSeedService(
       return
     }
 
-    val personInfo = getPersonInfo(crn)
+    val personInfo = cache.getPersonInfo(crn)
     val offenderDetail = personInfo.offenderDetailSummary
 
     val offlineApplication = applicationService.createOfflineApplication(
@@ -327,32 +349,37 @@ class Cas1ApplicationSeedService(
       ),
     )
   }
+}
 
-  private fun getPersonInfo(crn: String) =
-    when (
-      val personInfoResult = offenderService.getPersonInfoResult(
-        crn = crn,
-        deliusUsername = null,
-        ignoreLaoRestrictions = true,
-      )
-    ) {
-      is PersonInfoResult.NotFound, is PersonInfoResult.Unknown -> throw NotFoundProblem(
-        personInfoResult.crn,
-        "Offender",
-      )
+@SuppressWarnings("MagicNumber")
+@Service
+class Cas1ApplicationSeedServiceCaches(
+  private val offenderService: OffenderService,
+) {
 
-      is PersonInfoResult.Success.Restricted -> throw ForbiddenProblem()
-      is PersonInfoResult.Success.Full -> personInfoResult
-    }
+  var personInfoCache: LoadingCache<String, PersonInfoResult.Success.Full> = CacheBuilder.newBuilder()
+    .maximumSize(10000)
+    .expireAfterWrite(1, TimeUnit.MINUTES)
+    .build(object : CacheLoader<String, PersonInfoResult.Success.Full>() {
+      override fun load(crn: String): PersonInfoResult.Success.Full {
+        return when (
+          val personInfoResult = offenderService.getPersonInfoResult(
+            crn = crn,
+            deliusUsername = null,
+            ignoreLaoRestrictions = true,
+          )
+        ) {
+          is PersonInfoResult.NotFound, is PersonInfoResult.Unknown -> throw NotFoundProblem(
+            personInfoResult.crn,
+            "Offender",
+          )
 
-  private fun loadFixtureAsResource(filename: String): String {
-    val path = "db/seed/local+dev+test/cas1_application_data/$filename"
+          is PersonInfoResult.Success.Restricted -> throw ForbiddenProblem()
+          is PersonInfoResult.Success.Full -> personInfoResult
+        }
+      }
+    })
 
-    try {
-      return this::class.java.classLoader.getResource(path)?.readText() ?: ""
-    } catch (e: IOException) {
-      log.warn("Failed to load seed fixture $path: " + e.message!!)
-      return "{}"
-    }
-  }
+  fun getPersonInfo(crn: String): PersonInfoResult.Success.Full =
+    personInfoCache.get(crn)
 }
