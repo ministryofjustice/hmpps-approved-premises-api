@@ -132,7 +132,7 @@ class Cas1BookingToSpaceBookingSeedJob(
         departureMoveOnCategory = managementInfo.departureMoveOnCategory,
         departureReason = managementInfo.departureReason,
         departureNotes = managementInfo.departureNotes,
-        criteria = booking.getEssentialRoomCriteriaOfInterest().toMutableList(),
+        criteria = booking.getEssentialCharacteristicsOfInterest().toMutableList(),
         nonArrivalReason = managementInfo.nonArrivalReason,
         nonArrivalConfirmedAt = managementInfo.nonArrivalConfirmedAt?.toInstant(),
         nonArrivalNotes = managementInfo.nonArrivalNotes,
@@ -172,10 +172,9 @@ class Cas1BookingToSpaceBookingSeedJob(
     }
   }
 
-  private fun BookingEntity.getEssentialRoomCriteriaOfInterest() =
+  private fun BookingEntity.getEssentialCharacteristicsOfInterest() =
     placementRequest?.placementRequirements?.essentialCriteria
-      ?.filter { it.isModelScopeRoom() }
-      ?.filter { Cas1SpaceBookingEntity.Constants.CRITERIA_CHARACTERISTIC_PROPERTY_NAMES_OF_INTEREST.contains(it.propertyName) }
+      ?.filter { Cas1SpaceBookingEntity.CHARACTERISTICS_OF_INTEREST.contains(it.propertyName) }
       ?.toList()
       ?: emptyList()
 

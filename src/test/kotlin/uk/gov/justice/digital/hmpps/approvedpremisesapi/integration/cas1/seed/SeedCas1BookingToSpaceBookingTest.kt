@@ -26,7 +26,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.given
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.seed.SeedTestBase
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.BookingEntity
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas1SpaceBookingEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.CharacteristicEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DepartureReasonEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ManagementInfoSource
@@ -68,9 +67,9 @@ class SeedCas1BookingToSpaceBookingTest : SeedTestBase() {
   lateinit var premises: ApprovedPremisesEntity
   lateinit var otherPremise: ApprovedPremisesEntity
   lateinit var otherUser: UserEntity
-  lateinit var roomCriteriaOfInterest: List<CharacteristicEntity>
+  lateinit var criteriaOfInterest: List<CharacteristicEntity>
   lateinit var roomCriterionNotOfInstant: CharacteristicEntity
-  lateinit var premiseCriterion: CharacteristicEntity
+  lateinit var premisesCriterionNotOfInterest: CharacteristicEntity
 
   lateinit var departureReasonActive: DepartureReasonEntity
   lateinit var moveOnCategory: MoveOnCategoryEntity
@@ -87,14 +86,34 @@ class SeedCas1BookingToSpaceBookingTest : SeedTestBase() {
       supportsSpaceBookings = true,
     )
     otherUser = givenAUser().first
-    roomCriteriaOfInterest = Cas1SpaceBookingEntity.Constants.CRITERIA_CHARACTERISTIC_PROPERTY_NAMES_OF_INTEREST.map {
+
+    criteriaOfInterest = listOf(
+      "acceptsChildSexOffenders",
+      "acceptsNonSexualChildOffenders",
+      "acceptsSexOffenders",
+      "isCatered",
+      "isSuitableForVulnerable",
+      "isESAP",
+      "isPIPE",
+      "isRecoveryFocussed",
+      "isSemiSpecialistMentalHealth",
+      "isArsonSuitable",
+      "hasEnSuite",
+      "isSingle",
+      "isStepFreeDesignated",
+      "isSuitedForSexOffenders",
+      "isWheelchairDesignated",
+    ).map {
       characteristicRepository.findByPropertyName(it, ServiceName.approvedPremises.value)!!
     }
     roomCriterionNotOfInstant = characteristicEntityFactory.produceAndPersist {
       withModelScope("room")
-      withPropertyName("not of interest")
+      withPropertyName("room not of interest")
     }
-    premiseCriterion = characteristicEntityFactory.produceAndPersist { withModelScope("premises") }
+    premisesCriterionNotOfInterest = characteristicEntityFactory.produceAndPersist {
+      withModelScope("premises")
+      withPropertyName("premises not of interest")
+    }
 
     departureReasonEntityFactory.produceAndPersist {
       withLegacyDeliusCategoryCode("dr1inactive")
@@ -130,7 +149,7 @@ class SeedCas1BookingToSpaceBookingTest : SeedTestBase() {
       assessmentAllocatedTo = otherUser,
       createdByUser = otherUser,
       booking = booking1ManagementInfoFromDelius,
-      essentialCriteria = roomCriteriaOfInterest + listOf(roomCriterionNotOfInstant) + listOf(premiseCriterion),
+      essentialCriteria = criteriaOfInterest + listOf(roomCriterionNotOfInstant) + listOf(premisesCriterionNotOfInterest),
     ).first
     val (booking1CreatedByUser) = givenAUser()
     cas1BookingDomainEventSet.bookingMade(
@@ -331,7 +350,7 @@ class SeedCas1BookingToSpaceBookingTest : SeedTestBase() {
     assertThat(migratedBooking1.cancellationReasonNotes).isNull()
     assertThat(migratedBooking1.departureReason).isEqualTo(departureReasonActive)
     assertThat(migratedBooking1.departureMoveOnCategory).isEqualTo(moveOnCategory)
-    assertThat(migratedBooking1.criteria).containsOnly(*roomCriteriaOfInterest.toTypedArray())
+    assertThat(migratedBooking1.criteria).containsOnly(*criteriaOfInterest.toTypedArray())
     assertThat(migratedBooking1.nonArrivalReason).isEqualTo(nonArrivalReasonCode)
     assertThat(migratedBooking1.nonArrivalConfirmedAt).isEqualTo(Instant.parse("2024-02-01T09:58:23.00Z"))
     assertThat(migratedBooking1.nonArrivalNotes).isEqualTo("the non arrival notes")

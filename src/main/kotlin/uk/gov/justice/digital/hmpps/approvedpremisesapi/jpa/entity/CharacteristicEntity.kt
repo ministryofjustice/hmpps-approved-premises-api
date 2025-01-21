@@ -15,6 +15,11 @@ interface CharacteristicRepository : JpaRepository<CharacteristicEntity, UUID> {
     const val CAS1_PROPERTY_NAME_PREMISES_ESAP = "isESAP"
     const val CAS1_PROPERTY_NAME_PREMISES_RECOVERY_FOCUSSED = "isRecoveryFocussed"
     const val CAS1_PROPERTY_NAME_PREMISES_SEMI_SPECIALIST_MENTAL_HEALTH = "isSemiSpecialistMentalHealth"
+    const val CAS1_PROPERTY_NAME_PREMISES_ACCEPTS_CHILD_SEX_OFFENDERS = "acceptsChildSexOffenders"
+    const val CAS1_PROPERTY_NAME_PREMISES_ACCEPTS_NON_SEXUAL_CHILD_OFFENDERS = "acceptsNonSexualChildOffenders"
+    const val CAS1_PROPERTY_NAME_PREMISES_ACCEPTS_SEX_OFFENDERS = "acceptsSexOffenders"
+    const val CAS1_PROPERTY_NAME_PREMISES_CATERED = "isCatered"
+    const val CAS1_PROPERTY_NAME_PREMISES_SUITABLE_FOR_VULNERABLE = "isSuitableForVulnerable"
 
     const val CAS1_PROPERTY_NAME_ARSON_SUITABLE = "isArsonSuitable"
     const val CAS1_PROPERTY_NAME_ENSUITE = "hasEnSuite"
