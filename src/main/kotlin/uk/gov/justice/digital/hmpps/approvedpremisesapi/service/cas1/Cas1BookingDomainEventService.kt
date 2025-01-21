@@ -11,6 +11,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.Bo
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.BookingMadeEnvelope
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.BookingNotMade
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.BookingNotMadeEnvelope
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.Cas1SpaceCharacteristic
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.Cru
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.EventType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.PersonReference
@@ -23,6 +24,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.BookingEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.CancellationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.CancellationReasonEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas1SpaceBookingEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.CharacteristicEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.MetaDataName
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementRequestEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserEntity
@@ -144,6 +146,7 @@ class Cas1BookingDomainEventService(
     bookingChangedAt: OffsetDateTime,
     previousArrivalDateIfChanged: LocalDate?,
     previousDepartureDateIfChanged: LocalDate?,
+    previousCharacteristicsIfChanged: List<CharacteristicEntity>?,
   ) = bookingChanged(
     BookingChangedInfo(
       bookingId = booking.id,
@@ -157,6 +160,8 @@ class Cas1BookingDomainEventService(
       previousArrivalDateIfChanged = previousArrivalDateIfChanged,
       previousDepartureDateIfChanged = previousDepartureDateIfChanged,
       isSpaceBooking = true,
+      characteristics = booking.criteria.toCas1SpaceCharacteristics(),
+      previousCharacteristics = previousCharacteristicsIfChanged?.toCas1SpaceCharacteristics(),
     ),
   )
 
@@ -249,8 +254,10 @@ class Cas1BookingDomainEventService(
             ),
             arrivalOn = bookingChangedInfo.arrivalDate,
             departureOn = bookingChangedInfo.departureDate,
+            characteristics = bookingChangedInfo.characteristics,
             previousArrivalOn = bookingChangedInfo.previousArrivalDateIfChanged,
             previousDepartureOn = bookingChangedInfo.previousDepartureDateIfChanged,
+            previousCharacteristics = bookingChangedInfo.previousCharacteristics,
           ),
         ),
       ),
@@ -524,5 +531,13 @@ class Cas1BookingDomainEventService(
     val previousArrivalDateIfChanged: LocalDate?,
     val previousDepartureDateIfChanged: LocalDate?,
     val isSpaceBooking: Boolean,
+    val characteristics: List<Cas1SpaceCharacteristic>? = null,
+    val previousCharacteristics: List<Cas1SpaceCharacteristic>? = null,
   )
+
+  private fun List<CharacteristicEntity>.toCas1SpaceCharacteristics(): List<Cas1SpaceCharacteristic> =
+    this.map { it.asCas1SpaceCharacteristic() }
+
+  private fun CharacteristicEntity.asCas1SpaceCharacteristic() =
+    Cas1SpaceCharacteristic.entries.first { it.value == this.propertyName }
 }

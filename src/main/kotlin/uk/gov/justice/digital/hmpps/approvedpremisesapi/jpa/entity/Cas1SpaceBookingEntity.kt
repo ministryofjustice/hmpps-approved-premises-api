@@ -349,7 +349,7 @@ data class Cas1SpaceBookingEntity(
     joinColumns = [JoinColumn(name = "space_booking_id")],
     inverseJoinColumns = [JoinColumn(name = "characteristic_id")],
   )
-  val criteria: MutableList<CharacteristicEntity>,
+  var criteria: MutableList<CharacteristicEntity>,
   var nonArrivalConfirmedAt: Instant?,
   @ManyToOne(fetch = FetchType.LAZY)
   @JoinColumn(name = "non_arrival_reason_id")

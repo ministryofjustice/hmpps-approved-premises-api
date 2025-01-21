@@ -1728,6 +1728,7 @@ class Cas1SpaceBookingServiceTest {
           arrivalDate = newArrivalDate,
           departureDate = newDepartureDate,
           updatedBy = user,
+          characteristics = null,
         ),
       )
 
@@ -1751,6 +1752,7 @@ class Cas1SpaceBookingServiceTest {
           arrivalDate = newArrivalDate,
           departureDate = newDepartureDate,
           updatedBy = user,
+          characteristics = null,
         ),
       )
 
@@ -1779,6 +1781,7 @@ class Cas1SpaceBookingServiceTest {
           arrivalDate = newArrivalDate,
           departureDate = newDepartureDate,
           updatedBy = user,
+          characteristics = null,
         ),
       )
 
@@ -1807,6 +1810,7 @@ class Cas1SpaceBookingServiceTest {
           arrivalDate = newArrivalDate,
           departureDate = newDepartureDate,
           updatedBy = user,
+          characteristics = null,
         ),
       )
 
@@ -1835,6 +1839,7 @@ class Cas1SpaceBookingServiceTest {
           arrivalDate = newArrivalDate,
           departureDate = newDepartureDate,
           updatedBy = user,
+          characteristics = null,
         ),
       )
 
@@ -1858,6 +1863,7 @@ class Cas1SpaceBookingServiceTest {
           arrivalDate = newArrivalDate,
           departureDate = newDepartureDate,
           updatedBy = user,
+          characteristics = null,
         ),
       )
 
@@ -1881,6 +1887,7 @@ class Cas1SpaceBookingServiceTest {
           arrivalDate = LocalDate.now(),
           departureDate = LocalDate.now().minusWeeks(1),
           updatedBy = user,
+          characteristics = null,
         ),
       )
 
@@ -1902,6 +1909,7 @@ class Cas1SpaceBookingServiceTest {
         arrivalDate = newArrivalDate,
         departureDate = newDepartureDate,
         updatedBy = user,
+        characteristics = null,
       )
 
       val updatedSpaceBookingCaptor = slot<Cas1SpaceBookingEntity>()
@@ -1910,7 +1918,7 @@ class Cas1SpaceBookingServiceTest {
       every { spaceBookingRepository.findByIdOrNull(any()) } returns existingSpaceBooking
       every { spaceBookingRepository.save(capture(updatedSpaceBookingCaptor)) } returnsArgument 0
 
-      every { cas1BookingDomainEventService.spaceBookingChanged(any(), any(), any(), any(), any()) } just Runs
+      every { cas1BookingDomainEventService.spaceBookingChanged(any(), any(), any(), any(), any(), any()) } just Runs
 
       val result = service.updateSpaceBooking(updateSpaceBookingDetails)
 
@@ -1929,20 +1937,30 @@ class Cas1SpaceBookingServiceTest {
           bookingChangedAt = any(),
           previousArrivalDateIfChanged = null,
           previousDepartureDateIfChanged = LocalDate.of(2025, 1, 10),
+          previousCharacteristicsIfChanged = null,
         )
       }
     }
 
     @Test
-    fun `should correctly update booking dates`() {
+    fun `should correctly update booking dates and characteristics`() {
       existingSpaceBooking.expectedArrivalDate = LocalDate.of(2025, 1, 10)
       existingSpaceBooking.expectedDepartureDate = LocalDate.of(2025, 3, 15)
+      val originalRoomCharacteristic = CharacteristicEntityFactory().withModelScope("room").withPropertyName("IsArsenCapable").produce()
+      existingSpaceBooking.criteria = mutableListOf(originalRoomCharacteristic)
+
       val updateSpaceBookingDetails = UpdateSpaceBookingDetails(
         bookingId = UUID.randomUUID(),
         premisesId = PREMISES_ID,
         arrivalDate = newArrivalDate,
         departureDate = newDepartureDate,
         updatedBy = user,
+        characteristics = listOf(
+          CharacteristicEntityFactory()
+            .withPropertyName("hasEnSuite")
+            .withModelScope("room")
+            .produce(),
+        ),
       )
 
       existingSpaceBooking.actualArrivalDate = null
@@ -1952,7 +1970,7 @@ class Cas1SpaceBookingServiceTest {
       every { cas1PremisesService.findPremiseById(any()) } returns premises
       every { spaceBookingRepository.findByIdOrNull(any()) } returns existingSpaceBooking
       every { spaceBookingRepository.save(capture(updatedSpaceBookingCaptor)) } returnsArgument 0
-      every { cas1BookingDomainEventService.spaceBookingChanged(any(), any(), any(), any(), any()) } just Runs
+      every { cas1BookingDomainEventService.spaceBookingChanged(any(), any(), any(), any(), any(), any()) } just Runs
 
       val result = service.updateSpaceBooking(updateSpaceBookingDetails)
 
@@ -1971,6 +1989,7 @@ class Cas1SpaceBookingServiceTest {
           bookingChangedAt = any(),
           previousArrivalDateIfChanged = LocalDate.of(2025, 1, 10),
           previousDepartureDateIfChanged = LocalDate.of(2025, 3, 15),
+          previousCharacteristicsIfChanged = listOf(originalRoomCharacteristic),
         )
       }
     }

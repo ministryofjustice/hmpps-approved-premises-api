@@ -15,6 +15,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.Bo
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.BookingChangedEnvelope
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.BookingMadeEnvelope
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.BookingNotMadeEnvelope
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.Cas1SpaceCharacteristic
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.EventType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ReleaseTypeOption
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.SentenceTypeOption
@@ -27,6 +28,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.BookingEntityFac
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.CancellationEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.CancellationReasonEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.Cas1SpaceBookingEntityFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.CharacteristicEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.LocalAuthorityAreaEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.OffenderDetailsSummaryFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.OfflineApplicationEntityFactory
@@ -389,6 +391,7 @@ class Cas1BookingCas1DomainEventServiceTest {
       assertThat(data.departureOn).isEqualTo(LocalDate.of(2099, 11, 11))
       assertThat(data.previousArrivalOn).isNull()
       assertThat(data.previousDepartureOn).isNull()
+      assertThat(data.previousCharacteristics).isNull()
     }
 
     @Test
@@ -473,6 +476,7 @@ class Cas1BookingCas1DomainEventServiceTest {
       assertThat(data.departureOn).isEqualTo(LocalDate.of(2099, 11, 11))
       assertThat(data.previousArrivalOn).isEqualTo(LocalDate.of(2012, 12, 11))
       assertThat(data.previousDepartureOn).isEqualTo(LocalDate.of(2099, 11, 10))
+      assertThat(data.previousCharacteristics).isNull()
     }
   }
 
@@ -992,6 +996,7 @@ class Cas1BookingCas1DomainEventServiceTest {
         bookingChangedAt = createdAt,
         previousArrivalDateIfChanged = LocalDate.of(2025, 2, 12),
         previousDepartureDateIfChanged = null,
+        previousCharacteristicsIfChanged = null,
       )
 
       verify(exactly = 1) {
@@ -1035,15 +1040,20 @@ class Cas1BookingCas1DomainEventServiceTest {
       assertThat(data.departureOn).isEqualTo(LocalDate.of(2025, 4, 11))
       assertThat(data.previousArrivalOn).isEqualTo(LocalDate.of(2025, 2, 12))
       assertThat(data.previousDepartureOn).isNull()
+      assertThat(data.previousCharacteristics).isNull()
     }
 
     @Test
-    fun `should successfully emit domain event for expected arrival and departure date changes`() {
+    fun `should successfully emit domain event for expected arrival departure date changes and characteristic`() {
+      val roomCharacteristic = CharacteristicEntityFactory().withModelScope("room").withPropertyName("isArsonSuitable").produce()
+      val previousRoomCharacteristic = CharacteristicEntityFactory().withModelScope("room").withPropertyName("hasEnSuite").produce()
+
       val booking = Cas1SpaceBookingEntityFactory()
         .withPremises(premises)
         .withApplication(application)
         .withOfflineApplication(null)
         .withCrn("THEBOOKINGCRN")
+        .withCriteria(mutableListOf(roomCharacteristic))
         .withExpectedArrivalDate(LocalDate.of(2025, 3, 12))
         .withExpectedDepartureDate(LocalDate.of(2025, 5, 11))
         .produce()
@@ -1062,6 +1072,7 @@ class Cas1BookingCas1DomainEventServiceTest {
         bookingChangedAt = createdAt,
         previousArrivalDateIfChanged = LocalDate.of(2025, 2, 12),
         previousDepartureDateIfChanged = LocalDate.of(2025, 4, 11),
+        previousCharacteristicsIfChanged = listOf(previousRoomCharacteristic),
       )
 
       verify(exactly = 1) {
@@ -1105,6 +1116,8 @@ class Cas1BookingCas1DomainEventServiceTest {
       assertThat(data.departureOn).isEqualTo(LocalDate.of(2025, 5, 11))
       assertThat(data.previousArrivalOn).isEqualTo(LocalDate.of(2025, 2, 12))
       assertThat(data.previousDepartureOn).isEqualTo(LocalDate.of(2025, 4, 11))
+      assertThat(data.characteristics).isEqualTo(listOf(Cas1SpaceCharacteristic.isArsonSuitable))
+      assertThat(data.previousCharacteristics).isEqualTo(listOf(Cas1SpaceCharacteristic.hasEnSuite))
     }
   }
 }

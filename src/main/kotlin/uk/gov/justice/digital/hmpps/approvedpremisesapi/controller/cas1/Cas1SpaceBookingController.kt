@@ -168,6 +168,13 @@ class Cas1SpaceBookingController(
 
     val user = userService.getUserForRequest()
 
+    val characteristics = (cas1UpdateSpaceBooking.characteristics ?: emptyList())
+      .map { it.value }
+      .let { values ->
+        characteristicService.getCharacteristicsByPropertyNames(values, ServiceName.approvedPremises)
+      }
+      .filter { it.isModelScopeRoom() }
+
     ensureEntityFromCasResultIsSuccess(
       cas1SpaceBookingService.updateSpaceBooking(
         UpdateSpaceBookingDetails(
@@ -175,6 +182,7 @@ class Cas1SpaceBookingController(
           premisesId = premisesId,
           arrivalDate = cas1UpdateSpaceBooking.arrivalDate,
           departureDate = cas1UpdateSpaceBooking.departureDate,
+          characteristics = characteristics,
           updatedBy = user,
         ),
       ),
