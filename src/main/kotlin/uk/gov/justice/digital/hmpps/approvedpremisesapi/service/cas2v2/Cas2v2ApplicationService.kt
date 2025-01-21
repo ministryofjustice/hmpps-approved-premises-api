@@ -320,7 +320,6 @@ class Cas2v2ApplicationService(
         crn = application.crn,
         nomsNumber = application.nomsNumber,
         occurredAt = eventOccurredAt.toInstant(),
-        cas2v2ApplicationOrigin = application.applicationOrigin,
         data = Cas2ApplicationSubmittedEvent(
           id = domainEventId,
           timestamp = eventOccurredAt.toInstant(),
@@ -345,6 +344,7 @@ class Cas2v2ApplicationService(
                 username = application.createdByUser.nomisUsername,
               ),
             ),
+            cas2v2ApplicationOrigin = application.applicationOrigin.toString(),
           ),
         ),
       ),

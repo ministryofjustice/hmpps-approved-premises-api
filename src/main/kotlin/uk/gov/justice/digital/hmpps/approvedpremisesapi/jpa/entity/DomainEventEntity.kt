@@ -132,8 +132,6 @@ data class DomainEventEntity(
   val triggerSource: TriggerSourceType? = null,
   val triggeredByUserId: UUID?,
   val nomsNumber: String?,
-  @Enumerated(value = EnumType.STRING)
-  val cas2v2ApplicationOrigin: String? = "homeDetentionCurfew",
   @ElementCollection
   @MapKeyColumn(name = "name")
   @MapKeyEnumerated(EnumType.STRING)

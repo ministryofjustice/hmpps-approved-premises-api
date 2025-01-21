@@ -10,7 +10,6 @@ import software.amazon.awssdk.services.sns.model.PublishRequest
 import software.amazon.awssdk.services.sns.model.PublishResponse
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas2.model.Cas2ApplicationSubmittedEvent
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas2.model.EventType
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApplicationOrigin
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.config.DomainEventUrlConfig
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.events.cas2.Cas2ApplicationSubmittedEventDetailsFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DomainEventEntity
@@ -59,7 +58,6 @@ class Cas2v2DomainEventServiceTest {
       val occurredAt = OffsetDateTime.parse("2023-02-01T14:03:00+00:00")
       val crn = "CRN"
       val nomsNumber = "theNomsNumber"
-      val cas2v2ApplicationOrigin = ApplicationOrigin.courtBail
 
       every { domainEventRepositoryMock.save(any()) } answers { it.invocation.args[0] as DomainEventEntity }
 
@@ -72,7 +70,6 @@ class Cas2v2DomainEventServiceTest {
         applicationId = applicationId,
         crn = crn,
         nomsNumber = nomsNumber,
-        cas2v2ApplicationOrigin = cas2v2ApplicationOrigin,
         occurredAt = occurredAt.toInstant(),
         data = Cas2ApplicationSubmittedEvent(
           id = id,
@@ -96,7 +93,6 @@ class Cas2v2DomainEventServiceTest {
               it.type == DomainEventType.CAS2_APPLICATION_SUBMITTED &&
               it.crn == domainEventToSave.crn &&
               it.nomsNumber == domainEventToSave.nomsNumber &&
-              it.cas2v2ApplicationOrigin == domainEventToSave.cas2v2ApplicationOrigin.toString() &&
               it.occurredAt.toInstant() == domainEventToSave.occurredAt &&
               it.data == objectMapper.writeValueAsString(domainEventToSave.data) &&
               it.triggeredByUserId == null
