@@ -7,6 +7,7 @@ import org.springframework.beans.factory.annotation.Autowired
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.IntegrationTestBase
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.setup.putMessageOnQueue
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas2.MessageListener
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas2.MessageService
 import uk.gov.justice.hmpps.sqs.HmppsQueueService
 import uk.gov.justice.hmpps.sqs.MissingQueueException
 import java.util.concurrent.TimeUnit
@@ -15,6 +16,9 @@ class InboundQueueTest : IntegrationTestBase() {
 
   @Autowired
   private lateinit var hmppsQueueService: HmppsQueueService
+
+  @SpykBean
+  private lateinit var mockMessageService: MessageService
 
   @SpykBean
   private lateinit var mockMessageListener: MessageListener
@@ -35,5 +39,6 @@ class InboundQueueTest : IntegrationTestBase() {
     putMessageOnInboundQueue()
     TimeUnit.MILLISECONDS.sleep(10000)
     verify(exactly = 1) { mockMessageListener.processMessage(any()) }
+    verify(exactly = 1) { mockMessageService.handleMessage(any()) }
   }
 }
