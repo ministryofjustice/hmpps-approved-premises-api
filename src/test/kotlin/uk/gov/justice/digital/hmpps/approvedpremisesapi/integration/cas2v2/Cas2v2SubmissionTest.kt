@@ -15,7 +15,9 @@ import org.springframework.beans.factory.annotation.Value
 import org.springframework.http.HttpStatus
 import org.springframework.test.web.reactive.server.returnResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas2.model.Cas2ApplicationSubmittedEvent
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApplicationOrigin
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas2SubmittedApplication
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas2v2SubmittedApplication
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas2v2SubmittedApplicationSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.SubmitCas2Application
@@ -372,7 +374,7 @@ class Cas2v2SubmissionTest(
 
             val newestJsonSchema = cas2v2ApplicationJsonSchemaEntityFactory
               .produceAndPersist {
-                withAddedAt(OffsetDateTime.parse("2022-09-21T12:45:00+01:00"))
+                withAddedAt(OffsetDateTime.parse("2025-01-17T12:45:00+01:00"))
                 withSchema(
                   schema,
                 )
@@ -523,7 +525,7 @@ class Cas2v2SubmissionTest(
     }
 
     @Nested
-    inner class ControlsOnCas2Admin {
+    inner class ControlsOnCas2v2Admin {
       @Test
       fun `Admin can view single submitted application`() {
         givenACas2Assessor { assessor, _ ->
@@ -534,7 +536,7 @@ class Cas2v2SubmissionTest(
 
                 val newestJsonSchema = cas2v2ApplicationJsonSchemaEntityFactory
                   .produceAndPersist {
-                    withAddedAt(OffsetDateTime.parse("2022-09-21T12:45:00+01:00"))
+                    withAddedAt(OffsetDateTime.parse("2025-01-17T12:45:00+01:00"))
                     withSchema(
                       schema,
                     )
@@ -545,6 +547,7 @@ class Cas2v2SubmissionTest(
                   withCrn(offenderDetails.otherIds.crn)
                   withCreatedByUser(user)
                   withSubmittedAt(OffsetDateTime.parse("2022-09-21T12:45:00+01:00"))
+                  withApplicationOrigin(ApplicationOrigin.homeDetentionCurfew)
                   withData(
                     """
                     {
@@ -602,7 +605,7 @@ class Cas2v2SubmissionTest(
 
                 val responseBody = objectMapper.readValue(
                   rawResponseBody,
-                  Cas2SubmittedApplication::class.java,
+                  Cas2v2SubmittedApplication::class.java,
                 )
 
                 val applicant = nomisUserTransformer.transformJpaToApi(
@@ -616,8 +619,8 @@ class Cas2v2SubmissionTest(
                     applicationEntity.createdAt.toInstant() == it.createdAt &&
                     applicant == it.submittedBy &&
                     applicationEntity.submittedAt?.toInstant() == it.submittedAt &&
-                    serializableToJsonNode(applicationEntity.document) == serializableToJsonNode(it.document) &&
-                    newestJsonSchema.id == it.schemaVersion && !it.outdatedSchema
+                    serializableToJsonNode(applicationEntity.document) == serializableToJsonNode(it.document)
+                  newestJsonSchema.id == it.schemaVersion && !it.outdatedSchema
                 }
 
                 Assertions.assertThat(responseBody.assessment.statusUpdates!!.map { update -> update.label })
