@@ -6,7 +6,7 @@
 
 set -e
 
-curl --location --request POST 'http://127.0.0.1:8080/seed' \
+curl --fail --show-error --location --request POST 'http://127.0.0.1:8080/seed' \
 --header 'Content-Type: application/json' \
 --data-raw '{
     "seedType": "'$1'",

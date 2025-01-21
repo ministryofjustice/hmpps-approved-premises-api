@@ -54,11 +54,11 @@ class SeedService(
 
   fun seedData(seedFileType: SeedFileType, filename: String) = seedData(seedFileType, filename) { "${seedConfig.filePrefix}/$filename" }
 
-  @SuppressWarnings("CyclomaticComplexMethod", "TooGenericExceptionThrown")
+  @SuppressWarnings("CyclomaticComplexMethod", "TooGenericExceptionThrown", "TooGenericExceptionCaught")
   fun seedData(seedFileType: SeedFileType, filename: String, resolveCsvPath: SeedJob<*>.() -> String) {
-    seedLogger.info("Starting seed request: $seedFileType - $filename")
-
     try {
+      seedLogger.info("Starting seed request: $seedFileType - $filename")
+
       if (filename.contains("/") || filename.contains("\\")) {
         throw RuntimeException("Filename must be just the filename of a .csv file in the /seed directory, e.g. for /seed/upload.csv, just `upload` should be supplied")
       }
@@ -108,7 +108,7 @@ class SeedService(
 
       val timeTaken = ChronoUnit.MILLIS.between(seedStarted, LocalDateTime.now())
       seedLogger.info("Seed request complete. Took $timeTaken millis and processed $rowsProcessed rows")
-    } catch (exception: Exception) {
+    } catch (exception: Throwable) {
       seedLogger.error("Unable to complete Seed Job", exception)
     }
   }
