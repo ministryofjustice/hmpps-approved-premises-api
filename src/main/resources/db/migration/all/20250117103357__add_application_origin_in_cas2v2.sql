@@ -1,6 +1,9 @@
 ALTER TABLE cas_2_v2_applications
     ADD application_origin text NOT NULL DEFAULT 'homeDetentionCurfew';
 
+ALTER TABLE domain_events
+    ADD cas2v2ApplicationOrigin text;
+
 
 CREATE OR REPLACE VIEW cas_2_v2_application_summary AS
 SELECT a.id,
