@@ -422,7 +422,11 @@ paths:
         - name: nomsNumber
           in: query
           description: Prison Number to search for
-          required: true
+          schema:
+            type: string
+        - name: crn
+          in: query
+          description: CRN to search for
           schema:
             type: string
       responses:
