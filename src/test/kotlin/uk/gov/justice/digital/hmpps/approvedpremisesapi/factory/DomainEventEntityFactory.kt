@@ -3,6 +3,7 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.factory
 import com.fasterxml.jackson.databind.ObjectMapper
 import io.github.bluegroundltd.kfactory.Factory
 import io.github.bluegroundltd.kfactory.Yielded
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApplicationOrigin
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DomainEventEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DomainEventType
@@ -31,6 +32,7 @@ class DomainEventEntityFactory : Factory<DomainEventEntity> {
   private var nomsNumber: Yielded<String?> = { randomStringMultiCaseWithNumbers(8) }
   private var metadata: Yielded<Map<MetaDataName, String?>> = { emptyMap() }
   private var schemaVersion: Yielded<Int?> = { null }
+  private var applicationOrigin: Yielded<ApplicationOrigin?> = { null }
 
   fun withId(id: UUID) = apply {
     this.id = { id }
@@ -104,6 +106,10 @@ class DomainEventEntityFactory : Factory<DomainEventEntity> {
 
   fun withSchemaVersion(schemaVersion: Int?) = apply {
     this.schemaVersion = { schemaVersion }
+  }
+
+  fun withApplicationOrigin(applicationOrigin: ApplicationOrigin?) = apply {
+    this.applicationOrigin = { applicationOrigin }
   }
 
   override fun produce(): DomainEventEntity = DomainEventEntity(

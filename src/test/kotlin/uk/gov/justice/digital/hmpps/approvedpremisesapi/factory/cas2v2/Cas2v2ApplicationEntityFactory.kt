@@ -41,7 +41,7 @@ class Cas2v2ApplicationEntityFactory : Factory<Cas2v2ApplicationEntity> {
   private var preferredAreas: Yielded<String?> = { null }
   private var hdcEligibilityDate: Yielded<LocalDate?> = { null }
   private var conditionalReleaseDate: Yielded<LocalDate?> = { null }
-  private var applicationOrigin: Yielded<ApplicationOrigin?> = { null }
+  private var applicationOrigin: Yielded<ApplicationOrigin> = { ApplicationOrigin.prisonBail }
 
   fun withId(id: UUID) = apply {
     this.id = { id }
@@ -153,7 +153,7 @@ class Cas2v2ApplicationEntityFactory : Factory<Cas2v2ApplicationEntity> {
       hdcEligibilityDate = this.hdcEligibilityDate(),
       conditionalReleaseDate = this.conditionalReleaseDate(),
       preferredAreas = this.preferredAreas(),
-      applicationOrigin = this.applicationOrigin().toString(),
+      applicationOrigin = this.applicationOrigin(),
     )
 
     return entity

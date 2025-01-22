@@ -39,10 +39,10 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.CasResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.ValidatableActionResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.EmailNotificationService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas2.DomainEventService
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas2.JsonSchemaService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas2.OffenderService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas2v2.Cas2v2ApplicationService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas2v2.Cas2v2AssessmentService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas2v2.Cas2v2JsonSchemaService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas2v2.Cas2v2UserAccessService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.PageCriteria
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.PaginationConfig
@@ -58,7 +58,7 @@ class Cas2v2ApplicationServiceTest {
   private val mockCas2v2ApplicationRepository = mockk<Cas2v2ApplicationRepository>()
   private val mockCas2v2LockableApplicationRepository = mockk<Cas2v2LockableApplicationRepository>()
   private val mockCas2v2ApplicationSummaryRepository = mockk<Cas2v2ApplicationSummaryRepository>()
-  private val mockJsonSchemaService = mockk<JsonSchemaService>()
+  private val mockCas2v2JsonSchemaService = mockk<Cas2v2JsonSchemaService>()
   private val mockOffenderService = mockk<OffenderService>()
   private val mockCas2v2UserAccessService = mockk<Cas2v2UserAccessService>()
   private val mockDomainEventService = mockk<DomainEventService>()
@@ -71,7 +71,7 @@ class Cas2v2ApplicationServiceTest {
     mockCas2v2ApplicationRepository,
     mockCas2v2LockableApplicationRepository,
     mockCas2v2ApplicationSummaryRepository,
-    mockJsonSchemaService,
+    mockCas2v2JsonSchemaService,
     mockOffenderService,
     mockCas2v2UserAccessService,
     mockDomainEventService,
@@ -274,7 +274,7 @@ class Cas2v2ApplicationServiceTest {
         .withApplicationSchema(newestJsonSchema)
         .produce()
 
-      every { mockJsonSchemaService.checkCas2v2SchemaOutdated(any()) } answers {
+      every { mockCas2v2JsonSchemaService.checkCas2v2SchemaOutdated(any()) } answers {
         it.invocation
           .args[0] as Cas2v2ApplicationEntity
       }
@@ -338,7 +338,7 @@ class Cas2v2ApplicationServiceTest {
         OffenderDetailsSummaryFactory().produce(),
       )
 
-      every { mockJsonSchemaService.getNewestSchema(Cas2v2ApplicationJsonSchemaEntity::class.java) } returns cas2v2ApplicationSchema
+      every { mockCas2v2JsonSchemaService.getNewestSchema(Cas2v2ApplicationJsonSchemaEntity::class.java) } returns cas2v2ApplicationSchema
       every { mockCas2v2ApplicationRepository.save(any()) } answers {
         it.invocation.args[0] as
           Cas2v2ApplicationEntity
@@ -388,7 +388,7 @@ class Cas2v2ApplicationServiceTest {
 
       every { mockCas2v2ApplicationRepository.findByIdOrNull(applicationId) } returns
         cas2v2Application
-      every { mockJsonSchemaService.checkCas2v2SchemaOutdated(cas2v2Application) } returns
+      every { mockCas2v2JsonSchemaService.checkCas2v2SchemaOutdated(cas2v2Application) } returns
         cas2v2Application
 
       assertThat(
@@ -419,7 +419,7 @@ class Cas2v2ApplicationServiceTest {
 
       every { mockCas2v2ApplicationRepository.findByIdOrNull(applicationId) } returns
         cas2v2Application
-      every { mockJsonSchemaService.checkCas2v2SchemaOutdated(cas2v2Application) } returns
+      every { mockCas2v2JsonSchemaService.checkCas2v2SchemaOutdated(cas2v2Application) } returns
         cas2v2Application
 
       val result = cas2v2ApplicationService.updateCas2v2Application(
@@ -451,7 +451,7 @@ class Cas2v2ApplicationServiceTest {
         }
 
       every { mockCas2v2ApplicationRepository.findByIdOrNull(applicationId) } returns cas2v2Application
-      every { mockJsonSchemaService.checkCas2v2SchemaOutdated(cas2v2Application) } returns cas2v2Application
+      every { mockCas2v2JsonSchemaService.checkCas2v2SchemaOutdated(cas2v2Application) } returns cas2v2Application
 
       val result = cas2v2ApplicationService.updateCas2v2Application(
         applicationId = applicationId,
@@ -479,7 +479,7 @@ class Cas2v2ApplicationServiceTest {
         }
 
       every { mockCas2v2ApplicationRepository.findByIdOrNull(applicationId) } returns cas2v2Application
-      every { mockJsonSchemaService.checkCas2v2SchemaOutdated(cas2v2Application) } returns cas2v2Application
+      every { mockCas2v2JsonSchemaService.checkCas2v2SchemaOutdated(cas2v2Application) } returns cas2v2Application
 
       val result = cas2v2ApplicationService.updateCas2v2Application(
         applicationId = applicationId,
@@ -515,15 +515,15 @@ class Cas2v2ApplicationServiceTest {
 
       every { mockCas2v2ApplicationRepository.findByIdOrNull(applicationId) } returns
         application
-      every { mockJsonSchemaService.checkCas2v2SchemaOutdated(application) } returns
+      every { mockCas2v2JsonSchemaService.checkCas2v2SchemaOutdated(application) } returns
         application
       every {
-        mockJsonSchemaService.getNewestSchema(
+        mockCas2v2JsonSchemaService.getNewestSchema(
           Cas2v2ApplicationJsonSchemaEntity::class
             .java,
         )
       } returns newestSchema
-      every { mockJsonSchemaService.validate(newestSchema, updatedData) } returns true
+      every { mockCas2v2JsonSchemaService.validate(newestSchema, updatedData) } returns true
       every { mockCas2v2ApplicationRepository.save(any()) } answers {
         it.invocation.args[0]
           as Cas2v2ApplicationEntity
@@ -575,15 +575,15 @@ class Cas2v2ApplicationServiceTest {
 
       every { mockCas2v2ApplicationRepository.findByIdOrNull(applicationId) } returns
         application
-      every { mockJsonSchemaService.checkCas2v2SchemaOutdated(application) } returns
+      every { mockCas2v2JsonSchemaService.checkCas2v2SchemaOutdated(application) } returns
         application
       every {
-        mockJsonSchemaService.getNewestSchema(
+        mockCas2v2JsonSchemaService.getNewestSchema(
           Cas2v2ApplicationJsonSchemaEntity::class
             .java,
         )
       } returns newestSchema
-      every { mockJsonSchemaService.validate(newestSchema, updatedData) } returns true
+      every { mockCas2v2JsonSchemaService.validate(newestSchema, updatedData) } returns true
       every { mockCas2v2ApplicationRepository.save(any()) } answers {
         it.invocation.args[0]
           as Cas2v2ApplicationEntity
@@ -794,7 +794,7 @@ class Cas2v2ApplicationServiceTest {
         .produce()
 
       every { mockCas2v2ApplicationRepository.findByIdOrNull(applicationId) } returns cas2v2Application
-      every { mockJsonSchemaService.checkCas2v2SchemaOutdated(cas2v2Application) } returns
+      every { mockCas2v2JsonSchemaService.checkCas2v2SchemaOutdated(cas2v2Application) } returns
         cas2v2Application
 
       assertThat(cas2v2ApplicationService.submitCas2v2Application(submitCas2v2Application, user) is CasResult.Unauthorised).isTrue
@@ -816,7 +816,7 @@ class Cas2v2ApplicationServiceTest {
       every {
         mockCas2v2ApplicationRepository.findByIdOrNull(applicationId)
       } returns cas2v2Application
-      every { mockJsonSchemaService.checkCas2v2SchemaOutdated(cas2v2Application) } returns cas2v2Application
+      every { mockCas2v2JsonSchemaService.checkCas2v2SchemaOutdated(cas2v2Application) } returns cas2v2Application
 
       val result = cas2v2ApplicationService.submitCas2v2Application(submitCas2v2Application, user)
 
@@ -845,7 +845,7 @@ class Cas2v2ApplicationServiceTest {
       every {
         mockCas2v2ApplicationRepository.findByIdOrNull(applicationId)
       } returns cas2v2Application
-      every { mockJsonSchemaService.checkCas2v2SchemaOutdated(cas2v2Application) } returns cas2v2Application
+      every { mockCas2v2JsonSchemaService.checkCas2v2SchemaOutdated(cas2v2Application) } returns cas2v2Application
 
       val result = cas2v2ApplicationService.submitCas2v2Application(submitCas2v2Application, user)
 
@@ -871,7 +871,7 @@ class Cas2v2ApplicationServiceTest {
       every {
         mockCas2v2ApplicationRepository.findByIdOrNull(applicationId)
       } returns cas2v2Application
-      every { mockJsonSchemaService.checkCas2v2SchemaOutdated(cas2v2Application) } returns cas2v2Application
+      every { mockCas2v2JsonSchemaService.checkCas2v2SchemaOutdated(cas2v2Application) } returns cas2v2Application
 
       val result = cas2v2ApplicationService.submitCas2v2Application(submitCas2v2Application, user)
 
@@ -900,9 +900,9 @@ class Cas2v2ApplicationServiceTest {
       every {
         mockCas2v2ApplicationRepository.findByIdOrNull(any())
       } returns cas2v2Application
-      every { mockJsonSchemaService.checkCas2v2SchemaOutdated(any()) } returns
+      every { mockCas2v2JsonSchemaService.checkCas2v2SchemaOutdated(any()) } returns
         cas2v2Application
-      every { mockJsonSchemaService.validate(any(), any()) } returns true
+      every { mockCas2v2JsonSchemaService.validate(any(), any()) } returns true
 
       every { mockCas2v2ApplicationRepository.save(any()) } answers {
         it.invocation.args[0]
@@ -948,9 +948,9 @@ class Cas2v2ApplicationServiceTest {
       every {
         mockCas2v2ApplicationRepository.findByIdOrNull(any())
       } returns cas2v2Application
-      every { mockJsonSchemaService.checkCas2v2SchemaOutdated(any()) } returns
+      every { mockCas2v2JsonSchemaService.checkCas2v2SchemaOutdated(any()) } returns
         cas2v2Application
-      every { mockJsonSchemaService.validate(any(), any()) } returns true
+      every { mockCas2v2JsonSchemaService.validate(any(), any()) } returns true
 
       every { mockCas2v2ApplicationRepository.save(any()) } answers {
         it.invocation.args[0]
@@ -1009,9 +1009,9 @@ class Cas2v2ApplicationServiceTest {
       every {
         mockCas2v2ApplicationRepository.findByIdOrNull(applicationId)
       } returns cas2v2Application
-      every { mockJsonSchemaService.checkCas2v2SchemaOutdated(cas2v2Application) } returns
+      every { mockCas2v2JsonSchemaService.checkCas2v2SchemaOutdated(cas2v2Application) } returns
         cas2v2Application
-      every { mockJsonSchemaService.validate(newestSchema, cas2v2Application.data!!) } returns true
+      every { mockCas2v2JsonSchemaService.validate(newestSchema, cas2v2Application.data!!) } returns true
 
       val inmateDetail = InmateDetailFactory()
         .withAssignedLivingUnit(

@@ -119,13 +119,7 @@ class Cas2v2ApplicationService(
   }
 
   @SuppressWarnings("TooGenericExceptionThrown")
-  fun createCas2v2Application(
-    crn: String,
-    user: NomisUserEntity,
-    bailHearingDate: LocalDate?,
-    applicationOrigin: ApplicationOrigin? = ApplicationOrigin.homeDetentionCurfew,
-  ) =
-    // This needs migrating to CasResult rather than ValidateResult
+  fun createCas2v2Application(crn: String, user: NomisUserEntity, applicationOrigin: ApplicationOrigin = ApplicationOrigin.homeDetentionCurfew) =
     validated<Cas2v2ApplicationEntity> {
       val offenderDetailsResult = cas2v2OffenderService.getOffenderByCrn(crn)
 
@@ -157,7 +151,7 @@ class Cas2v2ApplicationService(
         schemaUpToDate = true,
         nomsNumber = offenderDetails.otherIds.nomsNumber,
         telephoneNumber = null,
-        applicationOrigin = applicationOrigin?.toString(),
+        applicationOrigin = applicationOrigin,
         bailHearingDate = bailHearingDate,
       )
 
@@ -289,8 +283,8 @@ class Cas2v2ApplicationService(
         hdcEligibilityDate = submitCas2v2Application.hdcEligibilityDate
         conditionalReleaseDate = submitCas2v2Application.conditionalReleaseDate
         telephoneNumber = submitCas2v2Application.telephoneNumber
-        applicationOrigin = submitCas2v2Application.applicationOrigin?.toString()
         bailHearingDate = submitCas2v2Application.bailHearingDate
+        applicationOrigin = submitCas2v2Application.applicationOrigin
       }
     } catch (error: UpstreamApiException) {
       return CasResult.GeneralValidationError(error.message.toString())
@@ -344,6 +338,7 @@ class Cas2v2ApplicationService(
                 username = application.createdByUser.nomisUsername,
               ),
             ),
+            cas2v2ApplicationOrigin = application.applicationOrigin.toString(),
           ),
         ),
       ),

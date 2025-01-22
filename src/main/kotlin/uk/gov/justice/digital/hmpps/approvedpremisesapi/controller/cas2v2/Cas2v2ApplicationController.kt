@@ -6,7 +6,7 @@ import org.springframework.http.ResponseEntity
 import org.springframework.stereotype.Service
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.cas2v2.ApplicationsCas2v2Delegate
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Application
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewApplication
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewCas2v2Application
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.SortDirection
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.UpdateApplication
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.UpdateCas2v2Application
@@ -69,7 +69,7 @@ class Cas2v2ApplicationController(
   }
 
   @Transactional
-  override fun applicationsPost(body: NewApplication): ResponseEntity<Application> {
+  override fun applicationsPost(body: NewCas2v2Application): ResponseEntity<Application> {
     val user = nomisUserService.getUserForRequest()
 
     val personInfo = cas2OffenderService.getFullInfoForPersonOrThrow(body.crn)
