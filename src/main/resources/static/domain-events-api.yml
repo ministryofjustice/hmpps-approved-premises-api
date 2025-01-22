@@ -729,6 +729,51 @@ components:
       required:
         - crn
         - noms
+    Cas1SpaceCharacteristic:
+      type: string
+      description: All of the characteristics of both premises and rooms
+      enum:
+        - acceptsChildSexOffenders
+        - acceptsHateCrimeOffenders
+        - acceptsNonSexualChildOffenders
+        - acceptsSexOffenders
+        - additionalRestrictions
+        - hasArsonInsuranceConditions
+        - hasBrailleSignage
+        - hasCallForAssistance
+        - hasCrib7Bedding
+        - hasEnSuite
+        - hasFixedMobilityAids
+        - hasHearingLoop
+        - hasLift
+        - hasNearbySprinkler
+        - hasSmokeDetector
+        - hasStepFreeAccess
+        - hasStepFreeAccessToCommunalAreas
+        - hasTactileFlooring
+        - hasTurningSpace
+        - hasWheelChairAccessibleBathrooms
+        - hasWideAccessToCommunalAreas
+        - hasWideDoor
+        - hasWideStepFreeAccess
+        - isArsonDesignated
+        - isArsonSuitable
+        - isCatered
+        - isESAP
+        - isFullyFm
+        - isGroundFloor
+        - isGroundFloorNrOffice
+        - isIAP
+        - isPIPE
+        - isRecoveryFocussed
+        - isSemiSpecialistMentalHealth
+        - isSingle
+        - isStepFreeDesignated
+        - isSuitableForVulnerable
+        - isSuitedForSexOffenders
+        - isTopFloorVulnerable
+        - isWheelchairAccessible
+        - isWheelchairDesignated
     ApplicationSubmittedEnvelope:
       type: object
       properties:
@@ -1251,6 +1296,14 @@ components:
           description: Only set if the expected departure on has changed
           example: '2023-01-30'
           format: date
+        characteristics:
+          type: array
+          items:
+            $ref: '#/components/schemas/Cas1SpaceCharacteristic'
+        previousCharacteristics:
+          type: array
+          items:
+            $ref: '#/components/schemas/Cas1SpaceCharacteristic'
       required:
         - applicationId
         - applicationUrl

@@ -558,6 +558,7 @@ class Cas1SpaceBookingService(
 
     val previousArrivalDate = bookingToUpdate.expectedArrivalDate
     val previousDepartureDate = bookingToUpdate.expectedDepartureDate
+    val previousCharacteristics = bookingToUpdate.criteria.toList()
 
     val updatedBooking = updateExistingSpaceBooking(bookingToUpdate, updateSpaceBookingDetails)
 
@@ -567,6 +568,7 @@ class Cas1SpaceBookingService(
       bookingChangedAt = OffsetDateTime.now(),
       previousArrivalDateIfChanged = if (previousArrivalDate != updatedBooking.expectedArrivalDate) previousArrivalDate else null,
       previousDepartureDateIfChanged = if (previousDepartureDate != updatedBooking.expectedDepartureDate) previousDepartureDate else null,
+      previousCharacteristicsIfChanged = if (previousCharacteristics.sortedBy { it.id } != updatedBooking.criteria.sortedBy { it.id }) previousCharacteristics else null,
     )
 
     success(updatedBooking)
@@ -615,7 +617,21 @@ class Cas1SpaceBookingService(
       updateFullBookingDates(bookingToUpdate, newArrivalDate, newDepartureDate)
     }
 
+    if (updateSpaceBookingDetails.characteristics?.isNotEmpty() == true) {
+      updateRoomCharacteristics(bookingToUpdate, updateSpaceBookingDetails.characteristics)
+    }
+
     return cas1SpaceBookingRepository.save(bookingToUpdate)
+  }
+
+  private fun updateRoomCharacteristics(
+    booking: Cas1SpaceBookingEntity,
+    newRoomCharacteristics: List<CharacteristicEntity>,
+  ) {
+    booking.criteria.apply {
+      retainAll { it.isModelScopePremises() }
+      addAll(newRoomCharacteristics)
+    }
   }
 
   private fun updateDepartureDates(booking: Cas1SpaceBookingEntity, newDepartureDate: LocalDate) {
@@ -642,6 +658,7 @@ class Cas1SpaceBookingService(
     val premisesId: UUID,
     val arrivalDate: LocalDate?,
     val departureDate: LocalDate?,
+    val characteristics: List<CharacteristicEntity>?,
     val updatedBy: UserEntity,
   )
 

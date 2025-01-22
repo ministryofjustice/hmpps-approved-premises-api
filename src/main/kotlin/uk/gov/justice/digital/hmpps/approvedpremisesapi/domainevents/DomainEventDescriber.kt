@@ -121,6 +121,7 @@ class DomainEventDescriber(
       val eventDetails = domainEvent.data.eventDetails
       val previousArrival = eventDetails.previousArrivalOn
       val previousDeparture = eventDetails.previousDepartureOn
+      val previousCharacteristics = eventDetails.previousCharacteristics
       val changes = mutableListOf<String>()
 
       fun addDateChangeMessage(previousDate: LocalDate, newDate: LocalDate, changeType: String) {
