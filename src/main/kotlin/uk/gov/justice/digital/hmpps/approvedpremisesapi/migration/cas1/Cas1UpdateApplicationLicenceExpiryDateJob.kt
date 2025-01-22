@@ -39,7 +39,7 @@ interface UpdateLicenceExpiryDateRepository : JpaRepository<ApplicationEntity, U
       FROM (
        SELECT
         application.id AS id,
-        application.data -> 'basic-information' -> 'relevant-dates' -> 'selectedDates' ->> 'licenceExpiryDate' AS licenceExpiryDate
+        application.data -> 'basic-information' -> 'relevant-dates' ->> 'licenceExpiryDate' AS licenceExpiryDate
       FROM approved_premises_applications AS apa
       LEFT JOIN applications AS application ON application.id = apa.id
       ) AS source

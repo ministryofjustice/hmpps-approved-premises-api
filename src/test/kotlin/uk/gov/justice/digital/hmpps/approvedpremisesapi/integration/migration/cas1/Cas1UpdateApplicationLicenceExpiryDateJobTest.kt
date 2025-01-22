@@ -47,6 +47,7 @@ class Cas1UpdateApplicationLicenceExpiryDateJobTest : IntegrationTestBase() {
                   "selectedDates" to mapOf(
                     "licenceExpiryDate" to LocalDate.now().randomDateAfter(10).toString(),
                   ),
+                  "licenceExpiryDate" to LocalDate.now().randomDateAfter(10).toString(),
                 ),
               ),
             ),
@@ -68,7 +69,6 @@ class Cas1UpdateApplicationLicenceExpiryDateJobTest : IntegrationTestBase() {
     val formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd")
 
     return (data["basic-information"] as? Map<*, *>)?.let { it["relevant-dates"] as? Map<*, *> }
-      ?.let { it["selectedDates"] as? Map<*, *> }
       ?.let {
         val dateStr = it["licenceExpiryDate"] as? String
         dateStr?.let {
