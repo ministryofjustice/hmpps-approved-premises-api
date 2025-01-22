@@ -18,6 +18,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PersonRisks
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PersonalTimeline
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PrisonCaseNote
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.controller.cas1.Cas1TimelineService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.OfflineApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserQualification
@@ -58,6 +59,7 @@ class PeopleController(
   private val userService: UserService,
   private val applicationService: ApplicationService,
   private val personalTimelineTransformer: PersonalTimelineTransformer,
+  private val cas1TimelineService: Cas1TimelineService,
 ) : PeopleApiDelegate {
 
   override fun peopleSearchGet(crn: String): ResponseEntity<Person> {
@@ -277,7 +279,7 @@ class PeopleController(
         ApprovedPremisesApplicationEntity::id,
         OfflineApplicationEntity::id,
       )
-      val timelineEvents = applicationService.getApplicationTimeline(applicationId)
+      val timelineEvents = cas1TimelineService.getApplicationTimeline(applicationId)
       ApplicationTimelineModel(application, timelineEvents)
     }
 

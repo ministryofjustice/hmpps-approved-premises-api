@@ -12,7 +12,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.SortDirection
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.SubmitApprovedPremisesApplication
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.SubmitTemporaryAccommodationApplication
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.TimelineEvent
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.WithdrawalReason
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.ApDeliusContextApiClient
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.ClientResult
@@ -57,10 +56,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.CasResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.ValidatableActionResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1ApplicationDomainEventService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1ApplicationEmailService
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1DomainEventService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.WithdrawableState
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.ApplicationTimelineNoteTransformer
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.ApplicationTimelineTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.getMetadata
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.getPageable
 import java.time.Clock
@@ -86,16 +82,12 @@ class ApplicationService(
   private val userService: UserService,
   private val assessmentService: AssessmentService,
   private val offlineApplicationRepository: OfflineApplicationRepository,
-  private val applicationTimelineNoteService: ApplicationTimelineNoteService,
-  private val applicationTimelineNoteTransformer: ApplicationTimelineNoteTransformer,
-  private val domainEventService: Cas1DomainEventService,
   private val cas3DomainEventService: uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas3.DomainEventService,
   private val apDeliusContextApiClient: ApDeliusContextApiClient,
   private val applicationTeamCodeRepository: ApplicationTeamCodeRepository,
   private val userAccessService: UserAccessService,
   private val objectMapper: ObjectMapper,
   private val apAreaRepository: ApAreaRepository,
-  private val applicationTimelineTransformer: ApplicationTimelineTransformer,
   private val cas1ApplicationDomainEventService: Cas1ApplicationDomainEventService,
   private val cas1ApplicationUserDetailsRepository: Cas1ApplicationUserDetailsRepository,
   private val cas1ApplicationEmailService: Cas1ApplicationEmailService,
@@ -931,27 +923,6 @@ class ApplicationService(
 
   fun getOfflineApplicationsForCrn(crn: String, serviceName: ServiceName) =
     offlineApplicationRepository.findAllByServiceAndCrn(serviceName.value, crn)
-
-  fun getApplicationTimeline(applicationId: UUID): List<TimelineEvent> {
-    val timelineEvents = mutableListOf<TimelineEvent>()
-    timelineEvents += getAllDomainEventTimelineEventsForApplication(applicationId)
-    timelineEvents += getAllNoteTimelineEventsForApplication(applicationId)
-    return timelineEvents
-  }
-
-  private fun getAllDomainEventTimelineEventsForApplication(applicationId: UUID): List<TimelineEvent> {
-    val domainEvents = domainEventService.getAllDomainEventsForApplication(applicationId)
-    return domainEvents.map {
-      applicationTimelineTransformer.transformDomainEventSummaryToTimelineEvent(it)
-    }
-  }
-
-  private fun getAllNoteTimelineEventsForApplication(applicationId: UUID): List<TimelineEvent> {
-    val noteEntities = applicationTimelineNoteService.getApplicationTimelineNotesByApplicationId(applicationId)
-    return noteEntities.map {
-      applicationTimelineNoteTransformer.transformToTimelineEvents(it)
-    }
-  }
 
   private fun getPrisonName(personInfo: PersonInfoResult.Success.Full): String? {
     val prisonName = when (personInfo.inmateDetail?.custodyStatus) {
