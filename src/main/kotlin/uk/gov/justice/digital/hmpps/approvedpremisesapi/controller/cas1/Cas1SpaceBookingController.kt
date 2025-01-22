@@ -29,7 +29,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.CharacteristicSe
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.OffenderService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.UserAccessService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.UserService
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1SpaceBookingManagementDomainEventService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1SpaceBookingService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1SpaceBookingService.DepartureInfo
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1SpaceBookingService.SpaceBookingFilterCriteria
@@ -56,12 +55,12 @@ class Cas1SpaceBookingController(
   private val spaceBookingTransformer: Cas1SpaceBookingTransformer,
   private val cas1SpaceBookingService: Cas1SpaceBookingService,
   private val cas1WithdrawableService: Cas1WithdrawableService,
-  private val cas1SpaceBookingManagementDomainEventService: Cas1SpaceBookingManagementDomainEventService,
   private val characteristicService: CharacteristicService,
+  private val cas1TimelineService: Cas1TimelineService,
 ) : SpaceBookingsCas1Delegate {
 
   override fun getSpaceBookingTimeline(premisesId: UUID, bookingId: UUID): ResponseEntity<List<TimelineEvent>> {
-    val events = cas1SpaceBookingManagementDomainEventService.getTimeline(bookingId)
+    val events = cas1TimelineService.getSpaceBookingTimeline(bookingId)
     return ResponseEntity(events, HttpStatus.OK)
   }
 
