@@ -5548,8 +5548,6 @@ components:
         assessment:
           type: object
           $ref: '#/components/schemas/Cas2v2Assessment'
-        applicationOrigin:
-            $ref: "#/components/schemas/ApplicationOrigin"
         bailHearingDate:
           type: string
           format: date

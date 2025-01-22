@@ -144,8 +144,6 @@ components:
         assessment:
           type: object
           $ref: '_shared.yml#/components/schemas/Cas2v2Assessment'
-        applicationOrigin:
-            $ref: "_shared.yml#/components/schemas/ApplicationOrigin"
         bailHearingDate:
           type: string
           format: date

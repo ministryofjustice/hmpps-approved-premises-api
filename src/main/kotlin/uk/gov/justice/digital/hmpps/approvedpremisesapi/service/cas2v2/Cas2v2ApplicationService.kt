@@ -94,7 +94,7 @@ class Cas2v2ApplicationService(
 
   fun getSubmittedCas2v2ApplicationForAssessor(applicationId: UUID): CasResult<Cas2v2ApplicationEntity> {
     val applicationEntity = cas2v2ApplicationRepository.findSubmittedApplicationById(applicationId)
-      ?: return CasResult.NotFound()
+      ?: return CasResult.NotFound("Cas2v2ApplicationEntity", applicationId.toString())
 
     return CasResult.Success(
       cas2v2JsonSchemaService.checkCas2v2SchemaOutdated(applicationEntity),
@@ -103,7 +103,7 @@ class Cas2v2ApplicationService(
 
   fun getCas2v2ApplicationForUser(applicationId: UUID, user: NomisUserEntity): CasResult<Cas2v2ApplicationEntity> {
     val applicationEntity = cas2v2ApplicationRepository.findByIdOrNull(applicationId)
-      ?: return CasResult.NotFound()
+      ?: return CasResult.NotFound("Cas2v2ApplicationEntity", applicationId.toString())
 
     if (applicationEntity.abandonedAt != null) {
       return CasResult.NotFound()
@@ -174,7 +174,7 @@ class Cas2v2ApplicationService(
     bailHearingDate: LocalDate?,
   ): CasResult<Cas2v2ApplicationEntity> {
     val application = cas2v2ApplicationRepository.findByIdOrNull(applicationId)?.let(cas2v2JsonSchemaService::checkCas2v2SchemaOutdated)
-      ?: return CasResult.NotFound()
+      ?: return CasResult.NotFound("Cas2v2ApplicationEntity", applicationId.toString())
 
     if (application.createdByUser != user) {
       return CasResult.Unauthorised()
@@ -206,7 +206,7 @@ class Cas2v2ApplicationService(
   @SuppressWarnings("ReturnCount")
   fun abandonCas2v2Application(applicationId: UUID, user: NomisUserEntity): CasResult<Cas2v2ApplicationEntity> {
     val application = cas2v2ApplicationRepository.findByIdOrNull(applicationId)
-      ?: return CasResult.NotFound()
+      ?: return CasResult.NotFound("Cas2v2ApplicationEntity", applicationId.toString())
 
     if (application.createdByUser != user) {
       return CasResult.Unauthorised()
@@ -242,7 +242,7 @@ class Cas2v2ApplicationService(
 
     var application = cas2v2ApplicationRepository.findByIdOrNull(applicationId)
       ?.let(cas2v2JsonSchemaService::checkCas2v2SchemaOutdated)
-      ?: return CasResult.NotFound()
+      ?: return CasResult.NotFound("Cas2v2ApplicationEntity", applicationId.toString())
 
     val serializedTranslatedDocument = objectMapper.writeValueAsString(submitCas2v2Application.translatedDocument)
 

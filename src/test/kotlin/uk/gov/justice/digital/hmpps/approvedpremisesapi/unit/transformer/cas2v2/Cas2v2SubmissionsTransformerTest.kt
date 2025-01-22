@@ -112,7 +112,6 @@ class Cas2v2SubmissionsTransformerTest {
         "telephoneNumber",
         "timelineEvents",
         "assessment",
-        "applicationOrigin",
         "bailHearingDate",
       )
     }

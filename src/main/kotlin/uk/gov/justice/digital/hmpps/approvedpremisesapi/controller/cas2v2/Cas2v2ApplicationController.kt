@@ -21,6 +21,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas2.OffenderSer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas2v2.Cas2v2ApplicationService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.cas2v2.Cas2v2ApplicationsTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.PageCriteria
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.ensureEntityFromCasResultIsSuccess
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.extractEntityFromCasResult
 import java.net.URI
 import java.util.UUID
@@ -123,7 +124,7 @@ class Cas2v2ApplicationController(
     val user = nomisUserService.getUserForRequest()
 
     val applicationResult = cas2v2ApplicationService.abandonCas2v2Application(applicationId, user)
-    extractEntityFromCasResult(applicationResult)
+    ensureEntityFromCasResultIsSuccess(applicationResult)
     return ResponseEntity.ok(Unit)
   }
 
