@@ -77,8 +77,8 @@ class Cas2v2ApplicationController(
     val applicationResult = cas2v2ApplicationService.createCas2v2Application(
       body.crn,
       user,
-      body.bailHearingDate,
       body.applicationOrigin,
+      body.bailHearingDate,
     )
 
     val application = when (applicationResult) {

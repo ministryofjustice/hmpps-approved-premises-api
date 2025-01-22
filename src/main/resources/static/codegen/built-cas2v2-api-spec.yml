@@ -2791,11 +2791,6 @@ components:
         offenceId:
           type: string
           example: "M1502750438"
-        applicationOrigin:
-          $ref: "#/components/schemas/ApplicationOrigin"
-        bailHearingDate:
-          type: string
-          format: date
       required:
         - crn
     UpdateApplicationType:
@@ -5426,6 +5421,9 @@ components:
           example: "M1502750438"
         applicationOrigin:
           $ref: "#/components/schemas/ApplicationOrigin"
+        bailHearingDate:
+          type: string
+          format: date
       required:
         - crn
         - applicationOrigin
@@ -5673,10 +5671,3 @@ components:
         - body
         - createdAt
       description: Notes added to a Cas2v2Application
-    ApplicationOrigin:
-      type: string
-      default: homeDetentionCurfew
-      enum:
-        - courtBail
-        - prisonBail
-        - homeDetentionCurfew

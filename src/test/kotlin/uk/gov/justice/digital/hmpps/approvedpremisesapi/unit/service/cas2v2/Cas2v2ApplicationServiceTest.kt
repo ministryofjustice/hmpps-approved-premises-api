@@ -18,6 +18,7 @@ import org.springframework.data.domain.Page
 import org.springframework.data.domain.PageRequest
 import org.springframework.data.domain.Sort
 import org.springframework.data.repository.findByIdOrNull
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApplicationOrigin
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.SortDirection
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.SubmitCas2v2Application
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.config.NotifyConfig
@@ -301,7 +302,7 @@ class Cas2v2ApplicationServiceTest {
 
       val user = userWithUsername(username)
 
-      val result = cas2v2ApplicationService.createCas2v2Application(crn, user, null)
+      val result = cas2v2ApplicationService.createCas2v2Application(crn, user)
 
       assertThat(result is ValidatableActionResult.FieldValidationError).isTrue
       result as ValidatableActionResult.FieldValidationError
@@ -317,7 +318,7 @@ class Cas2v2ApplicationServiceTest {
 
       val user = userWithUsername(username)
 
-      val result = cas2v2ApplicationService.createCas2v2Application(crn, user, null)
+      val result = cas2v2ApplicationService.createCas2v2Application(crn, user)
 
       assertThat(result is ValidatableActionResult.FieldValidationError).isTrue
       result as ValidatableActionResult.FieldValidationError
@@ -344,13 +345,14 @@ class Cas2v2ApplicationServiceTest {
           Cas2v2ApplicationEntity
       }
 
-      val result = cas2v2ApplicationService.createCas2v2Application(crn, user, bailHearingDate)
+      val result = cas2v2ApplicationService.createCas2v2Application(crn, user, ApplicationOrigin.prisonBail, bailHearingDate)
 
       assertThat(result is ValidatableActionResult.Success).isTrue
       result as ValidatableActionResult.Success
       assertThat(result.entity.crn).isEqualTo(crn)
       assertThat(result.entity.bailHearingDate).isEqualTo(bailHearingDate)
-//      assertThat(result.entity.createdByUser).isEqualTo(user)
+      assertThat(result.entity.applicationOrigin).isEqualTo(ApplicationOrigin.prisonBail)
+      assertThat(result.entity.createdByUser).isEqualTo(user)
     }
   }
 

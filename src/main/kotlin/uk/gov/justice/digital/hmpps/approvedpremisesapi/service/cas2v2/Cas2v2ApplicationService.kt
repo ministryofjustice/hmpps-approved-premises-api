@@ -119,48 +119,52 @@ class Cas2v2ApplicationService(
   }
 
   @SuppressWarnings("TooGenericExceptionThrown")
-  fun createCas2v2Application(crn: String, user: NomisUserEntity, applicationOrigin: ApplicationOrigin = ApplicationOrigin.homeDetentionCurfew) =
-    validated<Cas2v2ApplicationEntity> {
-      val offenderDetailsResult = cas2v2OffenderService.getOffenderByCrn(crn)
+  fun createCas2v2Application(
+    crn: String,
+    user: NomisUserEntity,
+    applicationOrigin: ApplicationOrigin = ApplicationOrigin.homeDetentionCurfew,
+    bailHearingDate: LocalDate? = null,
+  ) = validated<Cas2v2ApplicationEntity> {
+    val offenderDetailsResult = cas2v2OffenderService.getOffenderByCrn(crn)
 
-      val offenderDetails = when (offenderDetailsResult) {
-        is AuthorisableActionResult.NotFound -> return "$.crn" hasSingleValidationError "doesNotExist"
-        is AuthorisableActionResult.Unauthorised -> return "$.crn" hasSingleValidationError "userPermission"
-        is AuthorisableActionResult.Success -> offenderDetailsResult.entity
-      }
-
-      if (offenderDetails.otherIds.nomsNumber == null) {
-        throw RuntimeException("Cannot create an Application for an Offender without a NOMS number")
-      }
-
-      if (validationErrors.any()) {
-        return fieldValidationError
-      }
-
-      val id = UUID.randomUUID()
-
-      val entityToSave = Cas2v2ApplicationEntity(
-        id = id,
-        crn = crn,
-        createdByUser = user,
-        data = null,
-        document = null,
-        schemaVersion = cas2v2JsonSchemaService.getNewestSchema(Cas2v2ApplicationJsonSchemaEntity::class.java),
-        createdAt = OffsetDateTime.now(),
-        submittedAt = null,
-        schemaUpToDate = true,
-        nomsNumber = offenderDetails.otherIds.nomsNumber,
-        telephoneNumber = null,
-        applicationOrigin = applicationOrigin,
-        bailHearingDate = bailHearingDate,
-      )
-
-      val createdApplication = cas2v2ApplicationRepository.save(
-        entityToSave,
-      )
-
-      return success(createdApplication.apply { schemaUpToDate = true })
+    val offenderDetails = when (offenderDetailsResult) {
+      is AuthorisableActionResult.NotFound -> return "$.crn" hasSingleValidationError "doesNotExist"
+      is AuthorisableActionResult.Unauthorised -> return "$.crn" hasSingleValidationError "userPermission"
+      is AuthorisableActionResult.Success -> offenderDetailsResult.entity
     }
+
+    if (offenderDetails.otherIds.nomsNumber == null) {
+      throw RuntimeException("Cannot create an Application for an Offender without a NOMS number")
+    }
+
+    if (validationErrors.any()) {
+      return fieldValidationError
+    }
+
+    val id = UUID.randomUUID()
+
+    val entityToSave = Cas2v2ApplicationEntity(
+      id = id,
+      crn = crn,
+      createdByUser = user,
+      data = null,
+      document = null,
+      schemaVersion = cas2v2JsonSchemaService.getNewestSchema(Cas2v2ApplicationJsonSchemaEntity::class.java),
+      createdAt = OffsetDateTime.now(),
+      submittedAt = null,
+      schemaUpToDate = true,
+      nomsNumber = offenderDetails.otherIds.nomsNumber,
+      telephoneNumber = null,
+      applicationOrigin = applicationOrigin,
+      bailHearingDate = bailHearingDate,
+    )
+
+    val createdApplication = cas2v2ApplicationRepository.save(
+      entityToSave,
+    )
+
+    return success(createdApplication.apply { schemaUpToDate = true })
+  }
 
   @SuppressWarnings("ReturnCount")
   fun updateCas2v2Application(
@@ -320,7 +324,6 @@ class Cas2v2ApplicationService(
             applicationId = application.id,
             applicationUrl = applicationUrlTemplate
               .replace("#id", application.id.toString()),
-            applicationOrigin = application.applicationOrigin,
             bailHearingDate = application.bailHearingDate,
             submittedAt = eventOccurredAt.toInstant(),
             personReference = PersonReference(
