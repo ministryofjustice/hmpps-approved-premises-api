@@ -6923,6 +6923,9 @@ components:
         id:
           type: string
           format: uuid
+        bedId:
+          type: string
+          format: uuid
         roomName:
           type: string
         startDate:
@@ -6939,6 +6942,7 @@ components:
             $ref: '#/components/schemas/Cas1SpaceCharacteristic'
       required:
         - id
+        - bedId
         - startDate
         - endDate
         - reason

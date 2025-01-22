@@ -141,12 +141,7 @@ interface Cas1SpaceBookingRepository : JpaRepository<Cas1SpaceBookingEntity, UUI
         ELSE
             oa.name
       END as personName,
-      CASE
-        WHEN 
-            apa.id IS NOT NULL THEN apa.release_type
-        ELSE
-            null
-      END as releaseType, 
+      apa.release_type as releaseType, 
       ( 
         SELECT STRING_AGG (characteristics.property_name, ',')
         FROM cas1_space_bookings_criteria sbc
