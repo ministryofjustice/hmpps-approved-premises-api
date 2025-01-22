@@ -2277,6 +2277,13 @@ components:
       required:
         - note
       description: A note to add to an application
+    ApplicationOrigin:
+        type: string
+        default: homeDetentionCurfew
+        enum:
+          - courtBail
+          - prisonBail
+          - homeDetentionCurfew
     NewApplication:
       type: object
       properties:
@@ -2300,10 +2307,12 @@ components:
         - CAS1
         - CAS2
         - CAS3
+        - CAS2V2
       x-enum-varnames:
         - CAS1
         - CAS2
         - CAS3
+        - CAS2V2
     UpdateApplication:
       type: object
       properties:
@@ -2319,12 +2328,21 @@ components:
           CAS1: '#/components/schemas/UpdateApprovedPremisesApplication'
           CAS2: '#/components/schemas/UpdateCas2Application'
           CAS3: '#/components/schemas/UpdateTemporaryAccommodationApplication'
+          CAS2V2: '#/components/schemas/UpdateCas2v2Application'
       required:
         - type
         - data
     UpdateCas2Application:
       allOf:
         - $ref: '#/components/schemas/UpdateApplication'
+    UpdateCas2v2Application:
+      allOf:
+        - $ref: '#/components/schemas/UpdateApplication'
+        - type: object
+          properties:
+            bailHearingDate:
+              type: string
+              format: date
     UpdateApprovedPremisesApplication:
       allOf:
         - $ref: '#/components/schemas/UpdateApplication'

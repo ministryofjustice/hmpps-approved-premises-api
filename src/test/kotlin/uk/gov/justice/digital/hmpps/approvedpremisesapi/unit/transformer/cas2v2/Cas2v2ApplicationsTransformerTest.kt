@@ -104,6 +104,7 @@ class Cas2v2ApplicationsTransformerTest {
         "assessment",
         "timelineEvents",
         "applicationOrigin",
+        "bailHearingDate",
       )
 
       assertThat(result.id).isEqualTo(application.id)

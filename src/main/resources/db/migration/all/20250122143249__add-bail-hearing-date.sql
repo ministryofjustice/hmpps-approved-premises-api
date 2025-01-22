@@ -1,8 +1,5 @@
 ALTER TABLE cas_2_v2_applications
-    ADD application_origin text NOT NULL DEFAULT 'homeDetentionCurfew';
-
-ALTER TABLE domain_events
-    ADD cas2v2ApplicationOrigin text;
+    ADD bail_hearing_date TIMESTAMPTZ;
 
 CREATE OR REPLACE VIEW cas_2_v2_application_summary AS
 SELECT a.id,
@@ -19,7 +16,8 @@ SELECT a.id,
        a.conditional_release_date,
        asu.created_at AS status_created_at,
        a.abandoned_at,
-       a.application_origin
+       a.application_origin,
+       a.bail_hearing_date
 FROM cas_2_v2_applications a
          LEFT JOIN (SELECT DISTINCT ON (application_id) su.application_id, su.label, su.status_id, su.created_at
                     FROM cas_2_v2_status_updates su
@@ -40,7 +38,8 @@ SELECT a.id,
        a.status_id,
        a.referring_prison_code,
        a.abandoned_at,
-       a.application_origin
+       a.application_origin,
+       a.bail_hearing_date
 FROM cas_2_v2_application_summary a
 WHERE (a.conditional_release_date IS NULL OR a.conditional_release_date >= current_date)
     AND a.abandoned_at IS NULL

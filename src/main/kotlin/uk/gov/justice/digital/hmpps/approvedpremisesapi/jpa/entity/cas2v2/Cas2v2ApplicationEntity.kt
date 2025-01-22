@@ -98,6 +98,7 @@ data class Cas2v2ApplicationEntity(
   var hdcEligibilityDate: LocalDate? = null,
   var conditionalReleaseDate: LocalDate? = null,
   var telephoneNumber: String? = null,
+  var bailHearingDate: LocalDate? = null,
   @Enumerated(EnumType.STRING)
   var applicationOrigin: ApplicationOrigin,
 ) {

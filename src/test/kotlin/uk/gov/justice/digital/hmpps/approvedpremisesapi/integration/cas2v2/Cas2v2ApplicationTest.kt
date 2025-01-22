@@ -23,7 +23,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewApplication
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PersonStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.UpdateApplicationType
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.UpdateCas2Application
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.UpdateCas2v2Application
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.Cas2v2IntegrationTestBase
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenACas2Assessor
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenACas2LicenceCaseAdminUser
@@ -1674,9 +1674,9 @@ class Cas2v2ApplicationTest : Cas2v2IntegrationTestBase() {
               .uri("/cas2v2/applications/$applicationId")
               .header("Authorization", "Bearer $jwt")
               .bodyValue(
-                UpdateCas2Application(
+                UpdateCas2v2Application(
                   data = mapOf("thingId" to 123),
-                  type = UpdateApplicationType.CAS2,
+                  type = UpdateApplicationType.CAS2V2,
                 ),
               )
               .exchange()
@@ -1722,9 +1722,9 @@ class Cas2v2ApplicationTest : Cas2v2IntegrationTestBase() {
               .uri("/cas2v2/applications/$applicationId")
               .header("Authorization", "Bearer $jwt")
               .bodyValue(
-                UpdateCas2Application(
+                UpdateCas2v2Application(
                   data = mapOf("thingId" to 123),
-                  type = UpdateApplicationType.CAS2,
+                  type = UpdateApplicationType.CAS2V2,
                 ),
               )
               .exchange()
