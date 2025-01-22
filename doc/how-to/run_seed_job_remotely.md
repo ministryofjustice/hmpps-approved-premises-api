@@ -50,7 +50,11 @@ For XLSX files:
   /app/run_seed_from_excel_job cas1_import_site_survey_rooms ap_seed_file
   ```
 
-- Check the logs using [Azure Application Insights](https://dsdmoj.atlassian.net/wiki/spaces/AP/pages/4154196024/Viewing+and+Tailing+Kubernetes+logs) to see how processing is progressing. The following query will provide seed traces and exceptions only:
+- Whilst App Insights can be used to view seed logs, we've found that if we're running multiple seed jobs concurrently, some logs are lost in app insights. Checking the container logs directly avoids this issue, although they're not retained for as long. E.g.
+
+```./pod_logs preprod {container_name} | grep -i 'seed'```
+
+- Alternatively, you can check the logs using [Azure Application Insights](https://dsdmoj.atlassian.net/wiki/spaces/AP/pages/4154196024/Viewing+and+Tailing+Kubernetes+logs) with the following query:
   ```
   union traces, exceptions
   | where cloud_RoleName == 'approved-premises-api' and customDimensions contains ("uk.gov.justice.digital.hmpps.approvedpremisesapi.seed")
