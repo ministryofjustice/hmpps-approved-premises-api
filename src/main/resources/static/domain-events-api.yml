@@ -1228,6 +1228,10 @@ components:
           type: string
         situation:
           type: string
+        characteristics:
+          type: array
+          items:
+            $ref: '#/components/schemas/Cas1SpaceCharacteristic'
       required:
         - applicationId
         - applicationUrl
