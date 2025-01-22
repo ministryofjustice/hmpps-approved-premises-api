@@ -16,6 +16,7 @@ paths:
       tags:
         - "CAS2 events"
       summary: An 'application-submitted' event
+      operationId: eventsCas2ApplicationSubmittedEventIdGet
       responses:
         '200':
           description: The application-submitted corresponding to the provided `eventId`
@@ -43,6 +44,7 @@ paths:
       tags:
         - "CAS2 events"
       summary: An 'application-status-updated' event
+      operationId: eventsCas2ApplicationStatusUpdatedEventIdGet
       responses:
         '200':
           description: The application-status-updated corresponding to the provided `eventId`
