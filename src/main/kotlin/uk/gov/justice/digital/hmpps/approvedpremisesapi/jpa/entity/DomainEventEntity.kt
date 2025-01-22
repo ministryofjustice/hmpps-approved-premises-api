@@ -207,6 +207,10 @@ enum class DomainEventType(
     Cas1EventType.bookingMade.value,
     "An Approved Premises booking has been made",
     TimelineEventType.approvedPremisesBookingMade,
+    schemaVersions = listOf(
+      DEFAULT_DOMAIN_EVENT_SCHEMA_VERSION,
+      DomainEventSchemaVersion(2, "Added characteristics field"),
+    ),
   ),
   APPROVED_PREMISES_PERSON_ARRIVED(
     DomainEventCas.CAS1,

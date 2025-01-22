@@ -97,6 +97,7 @@ class Cas1BookingCas1DomainEventServiceTest {
       .withCanonicalDepartureDate(LocalDate.of(2025, 12, 12))
       .withPremises(premises)
       .withCreatedAt(createdAt)
+      .withCriteria(CharacteristicEntityFactory().withModelScope("room").withPropertyName("hasEnSuite").produce())
       .produce()
 
     val placementRequest = PlacementRequestEntityFactory()
@@ -150,6 +151,7 @@ class Cas1BookingCas1DomainEventServiceTest {
       assertThat(domainEvent.occurredAt).isEqualTo(createdAt.toInstant())
       assertThat(domainEvent.data.eventType).isEqualTo(EventType.bookingMade)
       assertThat(domainEvent.data.timestamp).isEqualTo(createdAt.toInstant())
+      assertThat(domainEvent.schemaVersion).isEqualTo(2)
 
       val data = domainEvent.data.eventDetails
       assertThat(data.createdAt).isEqualTo(createdAt.toInstant())
@@ -170,6 +172,7 @@ class Cas1BookingCas1DomainEventServiceTest {
       assertThat(data.releaseType).isEqualTo(application.releaseType)
       assertThat(data.sentenceType).isEqualTo(application.sentenceType)
       assertThat(data.situation).isEqualTo(application.situation)
+      assertThat(data.characteristics).isEqualTo(listOf(Cas1SpaceCharacteristic.hasEnSuite))
 
       assertThat(domainEvent.metadata).isEqualTo(mapOf(MetaDataName.CAS1_PLACEMENT_REQUEST_ID to placementRequest.id.toString()))
     }
@@ -286,6 +289,7 @@ class Cas1BookingCas1DomainEventServiceTest {
       assertThat(data.releaseType).isEqualTo(application.releaseType)
       assertThat(data.sentenceType).isEqualTo(application.sentenceType)
       assertThat(data.situation).isEqualTo(application.situation)
+      assertThat(data.characteristics).isNull()
 
       assertThat(domainEvent.metadata).isEqualTo(mapOf(MetaDataName.CAS1_PLACEMENT_REQUEST_ID to placementRequest.id.toString()))
     }

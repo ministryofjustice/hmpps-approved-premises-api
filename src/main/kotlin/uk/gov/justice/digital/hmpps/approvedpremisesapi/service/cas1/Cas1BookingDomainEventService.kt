@@ -345,6 +345,7 @@ class Cas1BookingDomainEventService(
         } else {
           null
         },
+        schemaVersion = 2,
         data = BookingMadeEnvelope(
           id = domainEventId,
           timestamp = bookingCreatedAt.toInstant(),
@@ -378,6 +379,7 @@ class Cas1BookingDomainEventService(
             releaseType = releaseType,
             sentenceType = sentenceType,
             situation = situation,
+            characteristics = bookingInfo.characteristics,
           ),
         ),
         metadata = mapOfNonNullValues(
@@ -485,6 +487,7 @@ class Cas1BookingDomainEventService(
     val arrivalDate: LocalDate,
     val departureDate: LocalDate,
     val isSpaceBooking: Boolean,
+    val characteristics: List<Cas1SpaceCharacteristic>? = null,
   )
 
   private fun BookingEntity.toBookingInfo() = BookingInfo(
@@ -505,6 +508,7 @@ class Cas1BookingDomainEventService(
     arrivalDate = canonicalArrivalDate,
     departureDate = canonicalDepartureDate,
     isSpaceBooking = true,
+    characteristics = criteria.toCas1SpaceCharacteristics(),
   )
 
   private data class CancellationInfo(
