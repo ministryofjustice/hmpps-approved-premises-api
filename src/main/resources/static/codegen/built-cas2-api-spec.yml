@@ -2217,7 +2217,6 @@ components:
       required:
         - alertId
         - dateCreated
-        - alertTypeDescription
     Application:
       type: object
       properties:
