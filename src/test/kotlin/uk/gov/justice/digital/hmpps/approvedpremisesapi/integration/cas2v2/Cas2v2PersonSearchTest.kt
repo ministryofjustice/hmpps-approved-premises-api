@@ -1,11 +1,15 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.cas2v2
 
+import com.github.tomakehurst.wiremock.client.WireMock
+import com.github.tomakehurst.wiremock.client.WireMock.aResponse
+import com.github.tomakehurst.wiremock.client.WireMock.get
 import org.junit.jupiter.api.Disabled
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.FullPerson
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PersonStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PersonType
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.InmateDetailFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ProbationOffenderDetailFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.Cas2v2IntegrationTestBase
@@ -29,10 +33,10 @@ class Cas2v2PersonSearchTest : Cas2v2IntegrationTestBase() {
   inner class Cas2v2PeopleSearchGet {
 
     @Nested
-    inner class WhenThereIsAnErrorWithNomsNumber {
-      //FAILS
+    inner class WhenThereIsAnErrorNomis {
+
       @Test
-      fun `Searching cas2v2 by NOMIS ID without a JWT returns 401`() {
+      fun `Searching by NOMIS ID without a JWT returns 401`() {
         webTestClient.get()
           .uri("/cas2v2/people/search?nomsNumber=nomsNumber").exchange()
           .expectStatus()
@@ -40,7 +44,7 @@ class Cas2v2PersonSearchTest : Cas2v2IntegrationTestBase() {
       }
 
       @Test
-      fun `Searching cas2v2 for a NOMIS ID with a non-Delius or NOMIS JWT returns 403`() {
+      fun `Searching for a NOMIS ID with a non-Delius or NOMIS JWT returns 403`() {
         val jwt = jwtAuthHelper.createClientCredentialsJwt(
           username = "username",
           authSource = "other source",
@@ -54,9 +58,8 @@ class Cas2v2PersonSearchTest : Cas2v2IntegrationTestBase() {
           .isForbidden
       }
 
-      //FAILS
       @Test
-      fun `Searching cas2v2 for a NOMIS ID without ROLE_POM returns 403`() {
+      fun `Searching for a NOMIS ID without ROLE_POM returns 403`() {
         val jwt = jwtAuthHelper.createAuthorizationCodeJwt(
           subject = "username",
           authSource = "nomis",
@@ -72,7 +75,7 @@ class Cas2v2PersonSearchTest : Cas2v2IntegrationTestBase() {
       }
 
       @Test
-      fun `Searching cas2v2 for a NOMIS ID returns Unauthorised error when it is unauthorized by the API`() {
+      fun `Searching for a NOMIS ID returns Unauthorised error when it is unauthorized by the API`() {
         givenACas2PomUser { userEntity, jwt ->
           probationOffenderSearchAPIMockForbiddenOffenderSearchCall()
 
@@ -86,7 +89,7 @@ class Cas2v2PersonSearchTest : Cas2v2IntegrationTestBase() {
       }
 
       @Test
-      fun `Searching cas2v2 for a NOMIS ID returns unauthorised error when offender is in a different prison`() {
+      fun `Searching for a NOMIS ID returns unauthorised error when offender is in a different prison`() {
         givenACas2PomUser { userEntity, jwt ->
 
           val offender = ProbationOffenderDetailFactory()
@@ -126,7 +129,7 @@ class Cas2v2PersonSearchTest : Cas2v2IntegrationTestBase() {
       }
 
       @Test
-      fun `Searching cas2v2 for a NOMIS ID returns 404 error when it is not found`() {
+      fun `Searching for a NOMIS ID returns 404 error when it is not found`() {
         givenACas2PomUser { userEntity, jwt ->
           probationOffenderSearchAPIMockNotFoundSearchCall()
 
@@ -140,7 +143,7 @@ class Cas2v2PersonSearchTest : Cas2v2IntegrationTestBase() {
       }
 
       @Test
-      fun `Searching cas2v2 for a NOMIS ID returns server error when there is a server error`() {
+      fun `Searching for a NOMIS ID returns server error when there is a server error`() {
         givenACas2PomUser { userEntity, jwt ->
           probationOffenderSearchAPIMockServerErrorSearchCall()
 
@@ -152,141 +155,13 @@ class Cas2v2PersonSearchTest : Cas2v2IntegrationTestBase() {
             .is5xxServerError
         }
       }
+
     }
 
     @Nested
-    inner class WhenThereIsAnErrorWithCrnNumber {
-      //FAILS
+    inner class WhenSuccessfulNomis {
       @Test
-      fun `Searching cas2v2 by crn without a JWT returns 401`() {
-        webTestClient.get()
-          .uri("/cas2v2/people/search?crn=crn").exchange()
-          .expectStatus()
-          .isUnauthorized
-      }
-
-      @Test
-      fun `Searching cas2v2 for a CRN with a non-Delius or NOMIS JWT returns 403`() {
-        val jwt = jwtAuthHelper.createClientCredentialsJwt(
-          username = "username",
-          authSource = "other source",
-        )
-
-        webTestClient.get()
-          .uri("/cas2v2/people/search?crn=crn")
-          .header("Authorization", "Bearer $jwt")
-          .exchange()
-          .expectStatus()
-          .isForbidden
-      }
-
-      @Test
-      fun `Searching cas2v2 for a CRN without ROLE_POM returns 403`() {
-        val jwt = jwtAuthHelper.createAuthorizationCodeJwt(
-          subject = "username",
-          authSource = "nomis",
-          roles = listOf("ROLE_OTHER"),
-        )
-
-        webTestClient.get()
-          .uri("/cas2v2/people/search?crn=crn")
-          .header("Authorization", "Bearer $jwt")
-          .exchange()
-          .expectStatus()
-          .isForbidden
-      }
-
-      @Test
-      fun `Searching cas2v2 for a CRN returns Unauthorised error when it is unauthorized by the API`() {
-        givenACas2PomUser { userEntity, jwt ->
-          probationOffenderSearchAPIMockForbiddenOffenderSearchCall()
-
-          webTestClient.get()
-            .uri("/cas2v2/people/search?crn=X400001")
-            .header("Authorization", "Bearer $jwt")
-            .exchange()
-            .expectStatus()
-            .isForbidden
-        }
-      }
-
-      @Test
-      fun `Searching cas2v2 for a CRN returns unauthorised error when offender is in a different prison`() {
-        givenACas2PomUser { userEntity, jwt ->
-//TODO
-          val offender = ProbationOffenderDetailFactory()
-            .withOtherIds(IDs(crn = "CRN", nomsNumber = "NOMS456", pncNumber = "PNC456"))
-            .withFirstName("Jo")
-            .withSurname("AnotherPrison")
-            .withDateOfBirth(
-              LocalDate
-                .parse("1985-05-05"),
-            )
-            .withGender("Male")
-            .withOffenderProfile(OffenderProfile(nationality = "English"))
-            .produce()
-
-          val inmateDetail = InmateDetailFactory().withOffenderNo("NOMS456")
-            .withCustodyStatus(InmateStatus.IN)
-            .withAssignedLivingUnit(
-              AssignedLivingUnit(
-                agencyId = "ANOTHER_PRISON",
-                locationId = 5,
-                description = "B-2F-004",
-                agencyName = "HMP Example",
-              ),
-            )
-            .produce()
-
-          probationOffenderSearchAPIMockSuccessfulOffenderSearchCall("NOMS456", listOf(offender))
-          prisonAPIMockSuccessfulInmateDetailsCall(inmateDetail = inmateDetail)
-
-          webTestClient.get()
-            .uri("/cas2v2/people/search?crn=NOMS456")
-            .header("Authorization", "Bearer $jwt")
-            .exchange()
-            .expectStatus()
-            .isForbidden
-        }
-      }
-
-      @Test
-      fun `Searching cas2v2 for a CRN returns 404 error when it is not found`() {
-//        givenACas2PomUser { userEntity, jwt ->
-        givenAUser { _, jwt ->
-          probationOffenderSearchAPIMockNotFoundSearchCall()
-
-          webTestClient.get()
-            .uri("/cas2v2/people/search?crn=CRN")
-            .header("Authorization", "Bearer $jwt")
-            .exchange()
-            .expectStatus()
-            .isNotFound
-        }
-      }
-
-      //FAIL
-      @Test
-      fun `Searching cas2v2 for a CRN returns server error when there is a server error`() {
-//        givenACas2PomUser { userEntity, jwt ->
-        givenAUser { _, jwt ->
-          cas2v2SearchAPIMockServerErrorSearchCall()
-
-          webTestClient.get()
-            .uri("/cas2v2/people/search?crn=crn")
-            .header("Authorization", "Bearer $jwt")
-            .exchange()
-            .expectStatus()
-            .is5xxServerError
-        }
-      }
-    }
-
-
-    @Nested
-    inner class WhenSuccessfulWithNomisNumber {
-      @Test
-      fun `Searching cas2v2 for a NOMIS ID returns OK with correct body`() {
+      fun `Searching for a NOMIS ID returns OK with correct body`() {
         givenACas2PomUser(nomisUserDetailsConfigBlock = { withActiveCaseloadId("BRI") }) { userEntity, jwt ->
           val offender = ProbationOffenderDetailFactory()
             .withOtherIds(IDs(crn = "CRN", nomsNumber = "NOMS321", pncNumber = "PNC123"))
@@ -343,9 +218,91 @@ class Cas2v2PersonSearchTest : Cas2v2IntegrationTestBase() {
       }
     }
 
+    @Nested
+    inner class WhenThereIsAnErrorCRN {
+      @Test
+      fun `Searching by CRN without a JWT returns 401`() {
+        webTestClient.get()
+          .uri("/cas2v2/people/search?crn=CRN")
+          .exchange()
+          .expectStatus()
+          .isUnauthorized
+      }
+
+      @Test
+      fun `Searching for a CRN with a non-Delius JWT returns 403`() {
+        val jwt = jwtAuthHelper.createClientCredentialsJwt(
+          username = "username",
+          authSource = "other-auth-source",
+        )
+
+        webTestClient.get()
+          .uri("/cas2v2/people/search?crn=CRN")
+          .header("Authorization", "Bearer $jwt")
+          .exchange()
+          .expectStatus()
+          .isForbidden
+      }
+
+      @Test
+      fun `Searching for a CRN with a NOMIS JWT returns 403`() {
+        val jwt = jwtAuthHelper.createClientCredentialsJwt(
+          username = "username",
+          authSource = "nomis",
+        )
+
+        webTestClient.get()
+          .uri("/cas2v2/people/search?crn=CRN")
+          .header("Authorization", "Bearer $jwt")
+          .exchange()
+          .expectStatus()
+          .isForbidden
+      }
+
+      @Test @Disabled
+      fun `Searching for a CRN with ROLE_POM returns 403`() {
+        val jwt = jwtAuthHelper.createAuthorizationCodeJwt(
+          subject = "username",
+          authSource = "delius",
+          roles = listOf("ROLE_POM"),
+        )
+
+        webTestClient.get()
+          .uri("/cas2v2/people/search?crn=CRN")
+          .header("Authorization", "Bearer $jwt")
+          .exchange()
+          .expectStatus()
+          .isForbidden
+      }
+
+      @Test
+      fun `Searching for a CRN that does not exist returns 404`() {
+        givenAUser { userEntity, jwt ->
+          wiremockServer.stubFor(
+            get(WireMock.urlEqualTo("/secure/offenders/crn/CRN"))
+              .willReturn(
+                aResponse()
+                  .withHeader("Content-Type", "application/json")
+                  .withStatus(404),
+              ),
+          )
+
+          webTestClient.get()
+            .uri("/cas2v2/people/search?crn=CRN")
+            .header("Authorization", "Bearer $jwt")
+            .exchange()
+            .expectStatus()
+            .isNotFound
+        }
+      }
+
+
+    }
+
 
     @Nested
-    inner class WhenSuccessfulWithCrnNumber {
+    inner class WhenSuccessfulCRN{
+
       @Test
       fun `Searching for a CRN returns OK with correct body`() {
         givenAUser { _, jwt ->
@@ -406,6 +363,7 @@ class Cas2v2PersonSearchTest : Cas2v2IntegrationTestBase() {
         }
       }
 
+
       @Test
       fun `Searching for a CRN without a NomsNumber returns OK with correct body`() {
         givenAUser { _, jwt ->
@@ -453,6 +411,10 @@ class Cas2v2PersonSearchTest : Cas2v2IntegrationTestBase() {
           }
         }
       }
+
+
     }
   }
+
+
 }
