@@ -92,6 +92,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1Placeme
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.PlacementRequestService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.allocations.UserAllocator
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.unit.util.assertAssessmentHasSystemNote
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.unit.util.assertThatCasResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.PageCriteria
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.UrlTemplate
 import java.time.Clock
@@ -760,7 +761,7 @@ class AssessmentServiceTest {
 
       val result = assessmentService.updateAssessment(user, assessmentId, "{}")
 
-      assertThat(result is CasResult.Unauthorised).isTrue
+      assertThatCasResult(result).isUnauthorised()
     }
 
     @Test
@@ -809,9 +810,7 @@ class AssessmentServiceTest {
 
       val result = assessmentService.updateAssessment(user, assessment.id, "{}")
 
-      assertThat(result is CasResult.GeneralValidationError).isTrue
-      val message = (result as CasResult.GeneralValidationError).message
-      assertThat(message).isEqualTo("The schema version is outdated")
+      assertThatCasResult(result).isGeneralValidationError("The schema version is outdated")
     }
 
     @Test
@@ -862,9 +861,7 @@ class AssessmentServiceTest {
 
       val result = assessmentService.updateAssessment(user, assessment.id, "{}")
 
-      assertThat(result is CasResult.GeneralValidationError).isTrue
-      val message = (result as CasResult.GeneralValidationError).message
-      assertThat(message).isEqualTo("The application has been withdrawn.")
+      assertThatCasResult(result).isGeneralValidationError("The application has been withdrawn.")
     }
 
     @Test
@@ -920,9 +917,7 @@ class AssessmentServiceTest {
 
       val result = assessmentService.updateAssessment(user, assessment.id, "{}")
 
-      assertThat(result is CasResult.GeneralValidationError).isTrue
-      val message = (result as CasResult.GeneralValidationError).message
-      assertThat(message).isEqualTo("A decision has already been taken on this assessment")
+      assertThatCasResult(result).isGeneralValidationError("A decision has already been taken on this assessment")
     }
 
     @Test
@@ -979,9 +974,7 @@ class AssessmentServiceTest {
 
       val result = assessmentService.updateAssessment(user, assessment.id, "{}")
 
-      assertThat(result is CasResult.GeneralValidationError).isTrue
-      val message = (result as CasResult.GeneralValidationError).message
-      assertThat(message).isEqualTo("The assessment has been reallocated, this assessment is read only")
+      assertThatCasResult(result).isGeneralValidationError("The assessment has been reallocated, this assessment is read only")
     }
 
     @Test
@@ -1035,7 +1028,7 @@ class AssessmentServiceTest {
 
       val result = assessmentService.updateAssessment(user, assessment.id, "{\"test\": \"data\"}")
 
-      assertThat(result is CasResult.Unauthorised).isTrue
+      assertThatCasResult(result).isUnauthorised()
     }
 
     @Test
@@ -1092,9 +1085,10 @@ class AssessmentServiceTest {
 
       val result = assessmentService.updateAssessment(user, assessment.id, "{\"test\": \"data\"}")
 
-      assertThat(result is CasResult.Success).isTrue
-      val updatedAssessment = (result as CasResult.Success).value
-      assertThat(updatedAssessment.data).isEqualTo("{\"test\": \"data\"}")
+      assertThatCasResult(result).isSuccess().with {
+        assertThat(it.data).isEqualTo("{\"test\": \"data\"}")
+      }
+
     }
   }
 
