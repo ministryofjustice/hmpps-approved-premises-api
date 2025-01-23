@@ -3056,6 +3056,8 @@ paths:
           $ref: '_shared.yml#/components/responses/500Response'
   /placement-requests/dashboard:
     get:
+      description: Deprecated, use cas1/placement-requests instead.
+      deprecated: true
       tags:
         - Placement requests
       summary: Gets all placement requests
