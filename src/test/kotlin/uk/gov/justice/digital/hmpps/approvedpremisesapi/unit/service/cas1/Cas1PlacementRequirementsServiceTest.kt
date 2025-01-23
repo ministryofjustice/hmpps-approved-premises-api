@@ -6,6 +6,7 @@ import io.mockk.impl.annotations.MockK
 import io.mockk.junit5.MockKExtension
 import io.mockk.slot
 import org.assertj.core.api.Assertions.assertThat
+import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.extension.ExtendWith
@@ -42,29 +43,30 @@ class Cas1PlacementRequirementsServiceTest {
   @Nested
   inner class CreatePlacementRequirements {
 
-    @Test
-    fun success() {
-      val assessment = ApprovedPremisesAssessmentEntityFactory()
-        .withDefaults()
-        .produce()
+    private val assessment = ApprovedPremisesAssessmentEntityFactory()
+      .withDefaults()
+      .produce()
 
-      fun createCas1Characteristic(propertyName: String) = CharacteristicEntityFactory()
-        .withServiceScope("approved-premises")
-        .withPropertyName(propertyName)
-        .produce()
+    private val savedRequirementsCaptor = slot<PlacementRequirementsEntity>()
 
-      val characteristicIsSingle = createCas1Characteristic("isSingle")
-      val characteristicIsPipe = createCas1Characteristic("isPIPE")
-      val characteristicIsEsap = createCas1Characteristic("isESAP")
-      val characteristicIsCatered = createCas1Characteristic("isCatered")
+    private val characteristicIsArsonDesignated = createCas1Characteristic("isArsonDesignated")
+    private val characteristicIsArsonSuitable = createCas1Characteristic("isArsonSuitable")
+    private val characteristicIsSingle = createCas1Characteristic("isSingle")
+    private val characteristicIsPipe = createCas1Characteristic("isPIPE")
+    private val characteristicIsEsap = createCas1Characteristic("isESAP")
+    private val characteristicIsCatered = createCas1Characteristic("isCatered")
 
+    @BeforeEach
+    fun setup() {
       every { postcodeDistrictRepository.findByOutcode("location") } returns PostCodeDistrictEntityFactory().produce()
 
-      val savedRequirementsCaptor = slot<PlacementRequirementsEntity>()
       every {
         placementRequirementsRepository.save(capture(savedRequirementsCaptor))
       } returns PlacementRequirementsEntityFactory().withDefaults().produce()
+    }
 
+    @Test
+    fun success() {
       every {
         characteristicRepository.findAllWherePropertyNameIn(
           listOf(
@@ -103,5 +105,92 @@ class Cas1PlacementRequirementsServiceTest {
       assertThat(savedRequirements.desirableCriteria)
         .containsExactlyInAnyOrder(characteristicIsEsap, characteristicIsCatered)
     }
+
+    @Test
+    fun `add isArsonSuitable if isArsonDesignated is specified`() {
+      every {
+        characteristicRepository.findAllWherePropertyNameIn(
+          listOf(
+            "isSingle", "isArsonDesignated", "isArsonSuitable",
+          ),
+          "approved-premises",
+        )
+      } returns listOf(characteristicIsSingle, characteristicIsArsonDesignated, characteristicIsArsonSuitable)
+
+      every {
+        characteristicRepository.findAllWherePropertyNameIn(
+          listOf(
+            "isArsonDesignated", "isCatered", "isArsonSuitable",
+          ),
+          "approved-premises",
+        )
+      } returns listOf(characteristicIsArsonDesignated, characteristicIsArsonSuitable, characteristicIsCatered)
+
+      service.createPlacementRequirements(
+        assessment = assessment,
+        requirements = PlacementRequirements(
+          gender = Gender.male,
+          type = ApType.normal,
+          location = "location",
+          radius = 5,
+          essentialCriteria = listOf(PlacementCriteria.isSingle, PlacementCriteria.isArsonDesignated),
+          desirableCriteria = listOf(PlacementCriteria.isArsonDesignated, PlacementCriteria.isCatered),
+        ),
+      )
+
+      val savedRequirements = savedRequirementsCaptor.captured
+
+      assertThat(savedRequirements.essentialCriteria)
+        .containsExactlyInAnyOrder(characteristicIsSingle, characteristicIsArsonSuitable, characteristicIsArsonDesignated)
+
+      assertThat(savedRequirements.desirableCriteria)
+        .containsExactlyInAnyOrder(characteristicIsArsonSuitable, characteristicIsArsonDesignated, characteristicIsCatered)
+    }
+
+    @Test
+    fun `dont add isArsonSuitable if isArsonDesignated is specified and isArsonSuitable is already specified`() {
+      every {
+        characteristicRepository.findAllWherePropertyNameIn(
+          listOf(
+            "isSingle", "isArsonDesignated", "isArsonSuitable",
+          ),
+          "approved-premises",
+        )
+      } returns listOf(characteristicIsSingle, characteristicIsArsonDesignated, characteristicIsArsonSuitable)
+
+      every {
+        characteristicRepository.findAllWherePropertyNameIn(
+          listOf(
+            "isArsonSuitable", "isArsonDesignated", "isCatered",
+          ),
+          "approved-premises",
+        )
+      } returns listOf(characteristicIsArsonDesignated, characteristicIsArsonSuitable, characteristicIsCatered)
+
+      service.createPlacementRequirements(
+        assessment = assessment,
+        requirements = PlacementRequirements(
+          gender = Gender.male,
+          type = ApType.normal,
+          location = "location",
+          radius = 5,
+          essentialCriteria = listOf(PlacementCriteria.isSingle, PlacementCriteria.isArsonDesignated, PlacementCriteria.isArsonSuitable),
+          desirableCriteria = listOf(PlacementCriteria.isArsonSuitable, PlacementCriteria.isArsonDesignated, PlacementCriteria.isCatered),
+        ),
+      )
+
+      val savedRequirements = savedRequirementsCaptor.captured
+
+      assertThat(savedRequirements.essentialCriteria)
+        .containsExactlyInAnyOrder(characteristicIsSingle, characteristicIsArsonSuitable, characteristicIsArsonDesignated)
+
+      assertThat(savedRequirements.desirableCriteria)
+        .containsExactlyInAnyOrder(characteristicIsArsonSuitable, characteristicIsArsonDesignated, characteristicIsCatered)
+    }
+
+    private fun createCas1Characteristic(propertyName: String) = CharacteristicEntityFactory()
+      .withServiceScope("approved-premises")
+      .withPropertyName(propertyName)
+      .produce()
   }
 }

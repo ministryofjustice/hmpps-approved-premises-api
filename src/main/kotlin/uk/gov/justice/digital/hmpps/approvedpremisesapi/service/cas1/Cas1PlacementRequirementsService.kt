@@ -34,8 +34,17 @@ class Cas1PlacementRequirementsService(
         },
       )
 
-    val desirableCriteria = toCharacteristics(requirements.desirableCriteria)
-    val essentialCriteria = toCharacteristics(requirements.essentialCriteria)
+    val desirableCriteria = toCharacteristics(
+      addIsArsonSuitableIfIsArsonDesignated(
+        requirements.desirableCriteria,
+      ),
+    )
+
+    val essentialCriteria = toCharacteristics(
+      addIsArsonSuitableIfIsArsonDesignated(
+        requirements.essentialCriteria,
+      ),
+    )
 
     val placementRequirementsEntity = placementRequirementsRepository.save(
       PlacementRequirementsEntity(
@@ -53,6 +62,14 @@ class Cas1PlacementRequirementsService(
     )
 
     return success(placementRequirementsEntity)
+  }
+
+  private fun addIsArsonSuitableIfIsArsonDesignated(criteria: List<PlacementCriteria>): List<PlacementCriteria> {
+    return if (criteria.contains(PlacementCriteria.isArsonDesignated) && !criteria.contains(PlacementCriteria.isArsonSuitable)) {
+      criteria + listOf(PlacementCriteria.isArsonSuitable)
+    } else {
+      criteria
+    }
   }
 
   private fun toCharacteristics(criteria: List<PlacementCriteria>) = characteristicRepository.findAllWherePropertyNameIn(
