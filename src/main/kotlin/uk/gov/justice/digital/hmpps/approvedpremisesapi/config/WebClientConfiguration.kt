@@ -25,6 +25,7 @@ data class WebClientConfig(
   val retryOnReadTimeout: Boolean = false,
 )
 
+@SuppressWarnings("LongParameterList")
 @Configuration
 class WebClientConfiguration(
   @Value("\${upstream-timeout-ms}") private val upstreamTimeoutMs: Long,
@@ -32,6 +33,7 @@ class WebClientConfiguration(
   @Value("\${case-notes-service-upstream-timeout-ms}") private val caseNotesServiceUpstreamTimeoutMs: Long,
   @Value("\${web-clients.max-response-in-memory-size-bytes}") private val defaultMaxResponseInMemorySizeBytes: Int,
   @Value("\${web-clients.prison-api-max-response-in-memory-size-bytes}") private val prisonApiMaxResponseInMemorySizeBytes: Int,
+  @Value("\${web-clients.prisoner-alerts-api-max-response-in-memory-size-bytes}") private val prisonerAlertsApiMaxResponseInMemorySizeBytes: Int,
   @Value("\${web-clients.probation-offender-search-api-max-response-in-memory-size-bytes}") private val probationOffenderSearchApiMaxResponseInMemorySizeBytes: Int,
 ) {
 
@@ -133,6 +135,40 @@ class WebClientConfiguration(
         .exchangeStrategies(
           ExchangeStrategies.builder().codecs {
             it.defaultCodecs().maxInMemorySize(prisonApiMaxResponseInMemorySizeBytes)
+          }.build(),
+        )
+        .filter(oauth2Client)
+        .build(),
+    )
+  }
+
+  @Bean(name = ["prisonerAlertsApiWebClient"])
+  fun prisonerAlertsApiWebClient(
+    clientRegistrations: ClientRegistrationRepository,
+    authorizedClients: OAuth2AuthorizedClientRepository,
+    authorizedClientManager: OAuth2AuthorizedClientManager,
+    @Value("\${services.prisoner-alerts-api.base-url}") prisonerAlertsApiBaseUrl: String,
+  ): WebClientConfig {
+    val oauth2Client = ServletOAuth2AuthorizedClientExchangeFilterFunction(authorizedClientManager)
+
+    oauth2Client.setDefaultClientRegistrationId("prisoner-alerts-api")
+
+    log.info("Using maxInMemorySize of $prisonerAlertsApiMaxResponseInMemorySizeBytes bytes for Prisoner Alerts API Web Client")
+
+    return WebClientConfig(
+      WebClient.builder()
+        .baseUrl(prisonerAlertsApiBaseUrl)
+        .clientConnector(
+          ReactorClientHttpConnector(
+            HttpClient
+              .create()
+              .responseTimeout(Duration.ofMillis(upstreamTimeoutMs))
+              .option(ChannelOption.CONNECT_TIMEOUT_MILLIS, Duration.ofMillis(upstreamTimeoutMs).toMillis().toInt()),
+          ),
+        )
+        .exchangeStrategies(
+          ExchangeStrategies.builder().codecs {
+            it.defaultCodecs().maxInMemorySize(prisonerAlertsApiMaxResponseInMemorySizeBytes)
           }.build(),
         )
         .filter(oauth2Client)
