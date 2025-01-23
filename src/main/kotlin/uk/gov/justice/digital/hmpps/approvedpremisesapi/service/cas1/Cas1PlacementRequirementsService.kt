@@ -1,6 +1,7 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1
 
 import org.springframework.stereotype.Service
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PlacementCriteria
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PlacementRequirements
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesApplicationEntity
@@ -33,10 +34,8 @@ class Cas1PlacementRequirementsService(
         },
       )
 
-    val desirableCriteria =
-      characteristicRepository.findAllWherePropertyNameIn(requirements.desirableCriteria.map { it.toString() }, ServiceName.approvedPremises.value)
-    val essentialCriteria =
-      characteristicRepository.findAllWherePropertyNameIn(requirements.essentialCriteria.map { it.toString() }, ServiceName.approvedPremises.value)
+    val desirableCriteria = toCharacteristics(requirements.desirableCriteria)
+    val essentialCriteria = toCharacteristics(requirements.essentialCriteria)
 
     val placementRequirementsEntity = placementRequirementsRepository.save(
       PlacementRequirementsEntity(
@@ -55,4 +54,9 @@ class Cas1PlacementRequirementsService(
 
     return success(placementRequirementsEntity)
   }
+
+  private fun toCharacteristics(criteria: List<PlacementCriteria>) = characteristicRepository.findAllWherePropertyNameIn(
+    names = criteria.map { it.toString() },
+    serviceName = ServiceName.approvedPremises.value,
+  )
 }
