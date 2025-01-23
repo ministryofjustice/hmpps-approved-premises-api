@@ -5,7 +5,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PlacementRequi
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesAssessmentEntity
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AssessmentEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.CharacteristicRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementRequirementsEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementRequirementsRepository
@@ -24,7 +23,7 @@ class Cas1PlacementRequirementsService(
 ) {
   @SuppressWarnings("TooGenericExceptionThrown")
   fun createPlacementRequirements(
-    assessment: AssessmentEntity,
+    assessment: ApprovedPremisesAssessmentEntity,
     requirements: PlacementRequirements,
   ): CasResult<PlacementRequirementsEntity> = validatedCasResult {
     val postcodeDistrict = postcodeDistrictRepository.findByOutcode(requirements.location)
@@ -33,29 +32,23 @@ class Cas1PlacementRequirementsService(
           this["$.postcodeDistrict"] = "doesNotExist"
         },
       )
+
     val desirableCriteria =
       characteristicRepository.findAllWherePropertyNameIn(requirements.desirableCriteria.map { it.toString() }, ServiceName.approvedPremises.value)
     val essentialCriteria =
       characteristicRepository.findAllWherePropertyNameIn(requirements.essentialCriteria.map { it.toString() }, ServiceName.approvedPremises.value)
-
-    if (assessment !is ApprovedPremisesAssessmentEntity) {
-      throw RuntimeException("Only Approved Premises Assessments are currently supported for Placement Requests")
-    }
-
-    val application = (assessment.application as? ApprovedPremisesApplicationEntity)
-      ?: throw RuntimeException("Only Approved Premises Assessments are currently supported for Placement Requests")
 
     val placementRequirementsEntity = placementRequirementsRepository.save(
       PlacementRequirementsEntity(
         id = UUID.randomUUID(),
         apType = requirements.type,
         gender = requirements.gender,
-        postcodeDistrict = postcodeDistrict!!,
+        postcodeDistrict = postcodeDistrict,
         radius = requirements.radius,
         desirableCriteria = desirableCriteria,
         essentialCriteria = essentialCriteria,
         createdAt = OffsetDateTime.now(),
-        application = application,
+        application = assessment.application as ApprovedPremisesApplicationEntity,
         assessment = assessment,
       ),
     )
