@@ -1055,6 +1055,7 @@ paths:
       tags:
         - Reports
       summary: Returns a spreadsheet of all data metrics for the 'reportName'.
+      operationId: reportsReportNameGet
       parameters:
         - name: X-Service-Name
           in: header

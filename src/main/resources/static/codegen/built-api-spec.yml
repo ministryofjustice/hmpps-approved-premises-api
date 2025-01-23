@@ -12,6 +12,7 @@ paths:
       tags:
         - Premises
       summary: Lists all approved premises, optionally for the given service
+      operationId: premisesGet
       parameters:
         - name: X-Service-Name
           in: header
@@ -45,6 +46,7 @@ paths:
       tags:
         - Premises
       summary: Add a new premises
+      operationId: premisesPost
       parameters:
         - name: X-Service-Name
           in: header
@@ -83,6 +85,7 @@ paths:
       tags:
         - Premises
       summary: Returns a list of premises
+      operationId: premisesSummaryGet
       parameters:
         - name: X-Service-Name
           in: header
@@ -122,6 +125,7 @@ paths:
       tags:
         - Premises
       summary: Returns an approved premises
+      operationId: premisesPremisesIdGet
       parameters:
         - name: premisesId
           in: path
@@ -153,6 +157,7 @@ paths:
       tags:
         - Operations on premises
       summary: Updates a premises
+      operationId: premisesPremisesIdPut
       parameters:
         - name: premisesId
           in: path
@@ -193,6 +198,7 @@ paths:
       tags:
         - Premises
       summary: Returns the staff that work at an approved premises
+      operationId: premisesPremisesIdStaffGet
       parameters:
         - name: premisesId
           in: path
@@ -227,6 +233,7 @@ paths:
       tags:
         - Operations on premises
       summary: Returns all bookings for an approved premises
+      operationId: premisesPremisesIdBookingsGet
       parameters:
         - name: premisesId
           in: path
@@ -260,6 +267,7 @@ paths:
       tags:
         - Operations on premises
       summary: Adds a new booking for an approved premises
+      operationId: premisesPremisesIdBookingsPost
       parameters:
         - name: premisesId
           in: path
@@ -311,6 +319,7 @@ paths:
       tags:
         - Operations on premises
       summary: Returns a summary of bookings for an approved premises
+      operationId: premisesPremisesIdSummaryGet
       parameters:
         - name: premisesId
           in: path
@@ -343,6 +352,7 @@ paths:
       tags:
         - Operations on premises
       summary: Returns a specific booking for an approved premises
+      operationId: premisesPremisesIdBookingsBookingIdGet
       parameters:
         - name: premisesId
           in: path
@@ -382,6 +392,7 @@ paths:
       tags:
         - Operations on bookings
       summary: Posts an arrival to a specified booking
+      operationId: premisesPremisesIdBookingsBookingIdArrivalsPost
       parameters:
         - name: premisesId
           in: path
@@ -435,6 +446,7 @@ paths:
       tags:
         - Operations on bookings
       summary: Posts an extension to a specified approved premises booking
+      operationId: premisesPremisesIdBookingsBookingIdExtensionsPost
       parameters:
         - name: premisesId
           in: path
@@ -488,6 +500,7 @@ paths:
       tags:
         - Operations on bookings
       summary: Posts a change to the dates for a specified approved premises booking
+      operationId: premisesPremisesIdBookingsBookingIdDateChangesPost
       parameters:
         - name: premisesId
           in: path
@@ -541,6 +554,7 @@ paths:
       tags:
         - Operations on bookings
       summary: Posts a departure to a specified booking
+      operationId: premisesPremisesIdBookingsBookingIdDeparturesPost
       parameters:
         - name: premisesId
           in: path
@@ -594,6 +608,7 @@ paths:
       tags:
         - Operations on bookings
       summary: Posts a cancellation to a specified approved premises booking
+      operationId: premisesPremisesIdBookingsBookingIdCancellationsPost
       parameters:
         - name: premisesId
           in: path
@@ -647,6 +662,7 @@ paths:
       tags:
         - Operations on bookings
       summary: Posts a confirmation to a specified Temporary Accommodation booking
+      operationId: premisesPremisesIdBookingsBookingIdConfirmationsPost
       parameters:
         - name: premisesId
           in: path
@@ -700,6 +716,7 @@ paths:
       tags:
         - Operations on bookings
       summary: Posts a turnaround to a specified Temporary Accommodation booking
+      operationId: premisesPremisesIdBookingsBookingIdTurnaroundsPost
       parameters:
         - name: premisesId
           in: path
@@ -759,6 +776,7 @@ paths:
       tags:
         - Rooms
       summary: Lists all beds for the given premises
+      operationId: premisesPremisesIdBedsGet
       parameters:
         - name: premisesId
           in: path
@@ -787,6 +805,7 @@ paths:
       tags:
         - Rooms
       summary: Gets a given bed for a given premises
+      operationId: premisesPremisesIdBedsBedIdGet
       parameters:
         - name: premisesId
           in: path
@@ -820,6 +839,7 @@ paths:
       tags:
         - Rooms
       summary: Lists all rooms for the given premises
+      operationId: premisesPremisesIdRoomsGet
       parameters:
         - name: premisesId
           in: path
@@ -847,6 +867,7 @@ paths:
       tags:
         - Rooms
       summary: Adds a new room for an approved premises
+      operationId: premisesPremisesIdRoomsPost
       parameters:
         - name: premisesId
           in: path
@@ -890,6 +911,7 @@ paths:
   /premises/{premisesId}/rooms/{roomId}:
     get:
       summary: Returns a specific room for a premises
+      operationId: premisesPremisesIdRoomsRoomIdGet
       parameters:
         - name: premisesId
           in: path
@@ -926,6 +948,7 @@ paths:
           $ref: '#/components/responses/500Response'
     put:
       summary: Updates a room
+      operationId: premisesPremisesIdRoomsRoomIdPut
       parameters:
         - name: premisesId
           in: path
@@ -976,6 +999,7 @@ paths:
   /people/search:
     get:
       summary: Searches for a Person by their CRN
+      operationId: peopleSearchGet
       parameters:
         - name: crn
           in: query
@@ -1011,6 +1035,7 @@ paths:
   /people/{crn}/risks:
     get:
       summary: Returns the risks for a Person
+      operationId: peopleCrnRisksGet
       parameters:
         - name: crn
           in: path
@@ -1046,6 +1071,7 @@ paths:
   /people/{crn}/prison-case-notes:
     get:
       summary: Returns the prison case notes for a Person
+      operationId: peopleCrnPrisonCaseNotesGet
       parameters:
         - name: crn
           in: path
@@ -1083,6 +1109,7 @@ paths:
   /people/{crn}/adjudications:
     get:
       summary: Returns the adjudications for a Person
+      operationId: peopleCrnAdjudicationsGet
       parameters:
         - name: crn
           in: path
@@ -1120,6 +1147,7 @@ paths:
   /people/{crn}/acct-alerts:
     get:
       summary: Returns the ACCT alerts for a Person
+      operationId: peopleCrnAcctAlertsGet
       parameters:
         - name: crn
           in: path
@@ -1153,6 +1181,7 @@ paths:
       tags:
         - OASys
       summary: Returns the importable sections of OASys including details of links to harm and reoffending
+      operationId: peopleCrnOasysSelectionGet
       parameters:
         - name: crn
           in: path
@@ -1186,6 +1215,7 @@ paths:
       tags:
         - OASys
       summary: Returns OASys sections to support an Application.  The Supporting Information sections are returned if linked to harm and optionally if their section number appears in the selected-sections query parameter.
+      operationId: peopleCrnOasysSectionsGet
       parameters:
         - name: crn
           in: path
@@ -1225,6 +1255,7 @@ paths:
       tags:
         - OASys
       summary: Returns the Risk To Individual (known as Risk to Self on frontend) section of an OASys.
+      operationId: peopleCrnOasysRiskToSelfGet
       parameters:
         - name: crn
           in: path
@@ -1256,6 +1287,7 @@ paths:
       tags:
         - OASys
       summary: Returns the Risk of Serious Harm section of an OASys.
+      operationId: peopleCrnOasysRoshGet
       parameters:
         - name: crn
           in: path
@@ -1285,6 +1317,7 @@ paths:
   /people/{crn}/offences:
     get:
       summary: Returns all active offences for a Person.
+      operationId: peopleCrnOffencesGet
       parameters:
         - name: crn
           in: path
@@ -1316,6 +1349,7 @@ paths:
   /people/{crn}/timeline:
     get:
       summary: Returns a timeline of all applications for a Person.
+      operationId: peopleCrnTimelineGet
       parameters:
         - name: crn
           in: path
@@ -1347,6 +1381,7 @@ paths:
       tags:
         - Operations on premises
       summary: Posts a lost bed to a specified approved premises
+      operationId: premisesPremisesIdLostBedsPost
       parameters:
         - name: premisesId
           in: path
@@ -1392,6 +1427,7 @@ paths:
       tags:
         - Operations on premises
       summary: Lists all Lost Beds entries for the Premises
+      operationId: premisesPremisesIdLostBedsGet
       parameters:
         - name: premisesId
           in: path
@@ -1420,6 +1456,7 @@ paths:
       tags:
         - Operations on premises
       summary: Returns a specific lost bed for a premises
+      operationId: premisesPremisesIdLostBedsLostBedIdGet
       parameters:
         - name: premisesId
           in: path
@@ -1458,6 +1495,7 @@ paths:
       tags:
         - Operations on premises
       summary: Updates a lost bed for a premises
+      operationId: premisesPremisesIdLostBedsLostBedIdPut
       parameters:
         - name: premisesId
           in: path
@@ -1511,6 +1549,7 @@ paths:
       tags:
         - Operations on bookings
       summary: Posts a cancellation to a specified lost bed
+      operationId: premisesPremisesIdLostBedsLostBedIdCancellationsPost
       parameters:
         - name: premisesId
           in: path
@@ -1564,6 +1603,7 @@ paths:
       tags:
         - Operations on all applications
       summary: Lists all applications that any user has created
+      operationId: applicationsAllGet
       parameters:
         - name: X-Service-Name
           in: header
@@ -1640,6 +1680,7 @@ paths:
       tags:
         - Operations on applications
       summary: Creates an application
+      operationId: applicationsPost
       parameters:
         - name: X-Service-Name
           in: header
@@ -1690,6 +1731,7 @@ paths:
       tags:
         - Operations on all applications
       summary: Lists all applications that the user has created
+      operationId: applicationsGet
       parameters:
         - name: X-Service-Name
           in: header
@@ -1717,6 +1759,7 @@ paths:
       tags:
         - Operations on applications
       summary: Updates an application
+      operationId: applicationsApplicationIdPut
       parameters:
         - name: applicationId
           in: path
@@ -1756,6 +1799,7 @@ paths:
       tags:
         - Operations on applications
       summary: Gets a single application by its ID
+      operationId: applicationsApplicationIdGet
       parameters:
         - name: applicationId
           in: path
@@ -1782,6 +1826,7 @@ paths:
       tags:
         - Operations on applications
       summary: Withdraws an application with a reason
+      operationId: applicationsApplicationIdWithdrawalPost
       parameters:
         - name: applicationId
           in: path
@@ -1818,6 +1863,7 @@ paths:
       tags:
         - Add a note on applications
       summary: Add a note on applications
+      operationId: applicationsApplicationIdNotesPost
       parameters:
         - name: applicationId
           in: path
@@ -1858,6 +1904,7 @@ paths:
       tags:
         - Application data timeline
       summary: Returns domain event summary
+      operationId: applicationsApplicationIdTimelineGet
       parameters:
         - name: applicationId
           in: path
@@ -1898,6 +1945,7 @@ paths:
       tags:
         - Application data
       summary: Returns meta info on documents at the person level or at the Conviction level for the index Offence of this application.
+      operationId: applicationsApplicationIdDocumentsGet
       parameters:
         - name: applicationId
           in: path
@@ -1932,6 +1980,7 @@ paths:
       tags:
         - Application data
       summary: Add an appeal to an application
+      operationId: applicationsApplicationIdAppealsPost
       parameters:
         - name: applicationId
           in: path
@@ -1972,6 +2021,7 @@ paths:
       tags:
         - Application data
       summary: Get an appeal on an application
+      operationId: applicationsApplicationIdAppealsAppealIdGet
       parameters:
         - name: applicationId
           in: path
@@ -2011,6 +2061,7 @@ paths:
       tags:
         - Application data
       summary: Downloads a document
+      operationId: documentsCrnDocumentIdGet
       parameters:
         - name: crn
           in: path
@@ -2050,6 +2101,7 @@ paths:
       tags:
         - Application data
       summary: Submits an Application
+      operationId: applicationsApplicationIdSubmissionPost
       parameters:
         - in: path
           name: applicationId
@@ -2085,6 +2137,7 @@ paths:
       tags:
         - Operations on applications
       summary: Get the assessment for an application
+      operationId: applicationsApplicationIdAssessmentGet
       parameters:
         - name: applicationId
           in: path
@@ -2111,6 +2164,7 @@ paths:
       tags:
         - Operations on applications
       summary: Returns a list of withdrawable items associated with this application, including the application itself, if withdrawable
+      operationId: applicationsApplicationIdWithdrawablesGet
       parameters:
         - name: applicationId
           in: path
@@ -2145,6 +2199,7 @@ paths:
       tags:
         - Operations on applications
       summary: Returns a list of withdrawable items associated with this application, including the application itself, if withdrawable
+      operationId: applicationsApplicationIdWithdrawablesWithNotesGet
       parameters:
         - name: applicationId
           in: path
@@ -2175,6 +2230,7 @@ paths:
   /applications/{applicationId}/requests-for-placement:
     get:
       summary: Returns a list of Requests for Placement for the given application.
+      operationId: applicationsApplicationIdRequestsForPlacementGet
       parameters:
         - name: applicationId
           in: path
@@ -2207,6 +2263,7 @@ paths:
   /applications/{applicationId}/requests-for-placement/{requestForPlacementId}:
     get:
       summary: Returns the specified Request for Placement.
+      operationId: applicationsApplicationIdRequestsForPlacementRequestForPlacementIdGet
       parameters:
         - name: applicationId
           in: path
@@ -2244,6 +2301,7 @@ paths:
   /beds/search:
     post:
       summary: Searches for available Beds within the given parameters
+      operationId: bedsSearchPost
       requestBody:
         content:
           'application/json':
@@ -2272,6 +2330,7 @@ paths:
   /bookings/{bookingId}:
     get:
       summary: Gets a booking
+      operationId: bookingsBookingIdGet
       parameters:
         - in: path
           name: bookingId
@@ -2296,6 +2355,7 @@ paths:
   /bookings/search:
     get:
       summary: Searches for bookings with the given parameters
+      operationId: bookingsSearchGet
       parameters:
         - name: status
           in: query
@@ -2359,6 +2419,7 @@ paths:
       tags:
         - Reference Data
       summary: Lists all departure reasons
+      operationId: reference_dataDepartureReasonsGet
       parameters:
         - name: X-Service-Name
           in: header
@@ -2392,6 +2453,7 @@ paths:
       tags:
         - Reference Data
       summary: Lists all move-on categories for departures
+      operationId: reference_dataMoveOnCategoriesGet
       parameters:
         - name: X-Service-Name
           in: header
@@ -2425,6 +2487,7 @@ paths:
       tags:
         - Reference Data
       summary: Lists all destination providers for departures
+      operationId: reference_dataDestinationProvidersGet
       responses:
         200:
           description: successful operation
@@ -2445,6 +2508,7 @@ paths:
       tags:
         - Reference Data
       summary: Lists all supervising providers for arrivals
+      operationId: reference_dataSupervisingProvidersGet
       responses:
         200:
           description: successful operation
@@ -2465,6 +2529,7 @@ paths:
       tags:
         - Reference Data
       summary: Lists all supervising teams for arrivals
+      operationId: reference_dataSupervisingTeamsGet
       responses:
         200:
           description: successful operation
@@ -2487,6 +2552,7 @@ paths:
       tags:
         - Reference Data
       summary: Lists reasons for non-arrivals
+      operationId: reference_dataNonArrivalReasonsGet
       responses:
         200:
           description: successful operation
@@ -2507,6 +2573,7 @@ paths:
       tags:
         - Reference Data
       summary: Lists all supervising officers for arrivals
+      operationId: reference_dataSupervisingOfficersGet
       responses:
         200:
           description: successful operation
@@ -2527,6 +2594,7 @@ paths:
       tags:
         - Reference Data
       summary: Lists all reasons for losing beds
+      operationId: reference_dataLostBedReasonsGet
       parameters:
         - name: X-Service-Name
           in: header
@@ -2554,6 +2622,7 @@ paths:
       tags:
         - Reference Data
       summary: Lists all cancellation reasons
+      operationId: reference_dataCancellationReasonsGet
       parameters:
         - name: X-Service-Name
           in: header
@@ -2581,6 +2650,7 @@ paths:
       tags:
         - Local Authorities
       summary: Lists all local authorities
+      operationId: reference_dataLocalAuthorityAreasGet
       responses:
         200:
           description: successful operation
@@ -2601,6 +2671,7 @@ paths:
       tags:
         - Reference Data
       summary: Lists all probation regions
+      operationId: reference_dataProbationRegionsGet
       responses:
         200:
           description: successful operation
@@ -2621,6 +2692,7 @@ paths:
       tags:
         - Reference Data
       summary: Lists all probation regions
+      operationId: reference_dataApAreasGet
       responses:
         200:
           description: successful operation
@@ -2641,6 +2713,7 @@ paths:
       tags:
         - Characteristics
       summary: Lists all available characteristics
+      operationId: reference_dataCharacteristicsGet
       parameters:
         - name: X-Service-Name
           in: header
@@ -2674,6 +2747,7 @@ paths:
       tags:
         - Reference Data
       summary: Lists probation delivery units, optionally filtered by region
+      operationId: reference_dataProbationDeliveryUnitsGet
       parameters:
         - name: probationRegionId
           in: query
@@ -2702,6 +2776,7 @@ paths:
       tags:
         - Reference Data
       summary: Lists all referral rejection reasons
+      operationId: reference_dataReferralRejectionReasonsGet
       parameters:
         - name: X-Service-Name
           in: header
@@ -2729,6 +2804,7 @@ paths:
       tags:
         - Task data
       summary: List all tasks
+      operationId: tasksGet
       parameters:
         - name: type
           in: query
@@ -2841,6 +2917,7 @@ paths:
       tags:
         - Application data
       summary: Gets a task for an application
+      operationId: tasksTaskTypeIdGet
       parameters:
         - in: path
           name: id
@@ -2873,6 +2950,7 @@ paths:
       tags:
         - Operations on applications
       summary: Reallocates a task for an application
+      operationId: tasksTaskTypeIdAllocationsPost
       parameters:
         - name: id
           in: path
@@ -2923,6 +3001,7 @@ paths:
       tags:
         - Operations on applications
       summary: Unallocates a task for an application
+      operationId: tasksTaskTypeIdAllocationsDelete
       parameters:
         - name: id
           in: path
@@ -2957,6 +3036,7 @@ paths:
       tags:
         - Placement requests
       summary: Gets placement requests for a given user
+      operationId: placement_requestsGet
       responses:
         200:
           description: successfully retrieved placement requests
@@ -2977,6 +3057,7 @@ paths:
       tags:
         - Placement requests
       summary: Gets all placement requests
+      operationId: placement_requestsDashboardGet
       parameters:
         - name: status
           in: query
@@ -3074,6 +3155,7 @@ paths:
       tags:
         - Placement requests
       summary: Gets placement requests for a given user
+      operationId: placement_requestsIdGet
       parameters:
         - name: id
           in: path
@@ -3100,6 +3182,7 @@ paths:
       tags:
         - Placement requests
       summary: Withdraws a placement request
+      operationId: placement_requestsIdWithdrawalPost
       parameters:
         - name: id
           in: path
@@ -3139,6 +3222,7 @@ paths:
       tags:
         - Placement requests
       summary: Creates a Booking for a placement request
+      operationId: placement_requestsIdBookingPost
       parameters:
         - name: id
           in: path
@@ -3172,6 +3256,7 @@ paths:
       tags:
         - Placement requests
       summary: Records that an attempt to match was made but no suitable Beds could be found
+      operationId: placement_requestsIdBookingNotMadePost
       parameters:
         - name: id
           in: path
@@ -3205,6 +3290,7 @@ paths:
       tags:
         - Placement applications
       summary: Creates an application for a placement
+      operationId: placement_applicationsPost
       requestBody:
         description: Details about the application
         content:
@@ -3230,6 +3316,7 @@ paths:
       tags:
         - Placement applications
       summary: Retrieves an application for a placement request
+      operationId: placement_applicationsIdGet
       parameters:
         - in: path
           name: id
@@ -3255,6 +3342,7 @@ paths:
       tags:
         - Placement applications
       summary: Updates an application for a placement request
+      operationId: placement_applicationsIdPut
       parameters:
         - in: path
           name: id
@@ -3288,6 +3376,7 @@ paths:
       tags:
         - Placement applications
       summary: Submits an application for a placement request
+      operationId: placement_applicationsIdSubmissionPost
       parameters:
         - in: path
           name: id
@@ -3329,6 +3418,7 @@ paths:
       tags:
         - Placement applications
       summary: Submits a decision for a placement application
+      operationId: placement_applicationsIdDecisionPost
       parameters:
         - in: path
           name: id
@@ -3368,6 +3458,7 @@ paths:
       tags:
         - Placement applications
       summary: Withdraw a placement application
+      operationId: placement_applicationsIdWithdrawPost
       parameters:
         - in: path
           name: id
@@ -3406,6 +3497,7 @@ paths:
       tags:
         - Assessment data
       summary: Gets assessments the user is authorised to view
+      operationId: assessmentsGet
       parameters:
         - name: X-Service-Name
           in: header
@@ -3486,6 +3578,7 @@ paths:
       tags:
         - Assessment data
       summary: Gets a single assessment by its id
+      operationId: assessmentsAssessmentIdGet
       parameters:
         - in: path
           name: assessmentId
@@ -3511,6 +3604,7 @@ paths:
       tags:
         - Assessment data
       summary: Updates an assessment
+      operationId: assessmentsAssessmentIdPut
       parameters:
         - name: X-Service-Name
           in: header
@@ -3550,6 +3644,7 @@ paths:
       tags:
         - Assessment data
       summary: Adds a clarification note to an assessment
+      operationId: assessmentsAssessmentIdNotesPost
       parameters:
         - in: path
           name: assessmentId
@@ -3583,6 +3678,7 @@ paths:
       tags:
         - Assessment data
       summary: Updates an assessment's clarification note
+      operationId: assessmentsAssessmentIdNotesNoteIdPut
       parameters:
         - in: path
           name: assessmentId
@@ -3623,6 +3719,7 @@ paths:
       tags:
         - Assessment data
       summary: Adds a user-written note to an assessment
+      operationId: assessmentsAssessmentIdReferralHistoryNotesPost
       parameters:
         - in: path
           name: assessmentId
@@ -3656,6 +3753,7 @@ paths:
       tags:
         - Assessment data
       summary: Accepts an Assessment
+      operationId: assessmentsAssessmentIdAcceptancePost
       parameters:
         - in: path
           name: assessmentId
@@ -3685,6 +3783,7 @@ paths:
       tags:
         - Assessment data
       summary: Rejects an Assessment
+      operationId: assessmentsAssessmentIdRejectionPost
       parameters:
         - in: path
           name: assessmentId
@@ -3714,6 +3813,7 @@ paths:
       tags:
         - Assessment data
       summary: Closes an Assessment
+      operationId: assessmentsAssessmentIdClosurePost
       parameters:
         - in: path
           name: assessmentId
@@ -3736,6 +3836,7 @@ paths:
       tags:
         - Auth
       summary: Returns information on the logged in user
+      operationId: profileV2Get
       parameters:
         - name: X-Service-Name
           in: header
@@ -3767,6 +3868,7 @@ paths:
       tags:
         - Auth
       summary: Returns a list of users. If only the user's ID and Name are required, use /users/summary
+      operationId: usersGet
       parameters:
         - in: query
           name: roles
@@ -3860,6 +3962,7 @@ paths:
   /users/{id}:
     get:
       summary: Get information about a specific user
+      operationId: usersIdGet
       parameters:
         - in: path
           name: id
@@ -3889,6 +3992,7 @@ paths:
           $ref: '#/components/responses/500Response'
     put:
       summary: Update information about a specific user's roles and qualifications. Deprecated. Instead use PUT /cas1/user/{userid}
+      operationId: usersIdPut
       deprecated: true
       parameters:
         - name: X-Service-Name
@@ -3925,6 +4029,7 @@ paths:
           $ref: '#/components/responses/500Response'
     delete:
       summary: Deletes the user. Deprecated. Instead use DELETE /cas1/user/{userid}
+      operationId: usersIdDelete
       deprecated: true
       parameters:
         - name: id
@@ -3960,6 +4065,7 @@ paths:
       tags:
         - Auth
       summary: Returns a list of user summaries (i.e. id and name only)
+      operationId: usersSummaryGet
       parameters:
         - in: query
           name: roles
@@ -4047,6 +4153,7 @@ paths:
       tags:
         - Auth
       summary: Returns a list of users with partial match on name
+      operationId: usersSearchGet
       parameters:
         - in: query
           name: name
@@ -4080,6 +4187,7 @@ paths:
       tags:
         - Auth
       summary: Returns a user with match on name
+      operationId: usersDeliusGet
       parameters:
         - in: query
           name: name
@@ -4115,6 +4223,7 @@ paths:
   /seed:
     post:
       summary: Starts the data seeding process, can only be called from a local connection
+      operationId: seedPost
       requestBody:
         content:
           'application/json':
@@ -4133,6 +4242,7 @@ paths:
   /seedFromExcel:
     post:
       summary: Starts the data seeding from Excel process, can only be called from a local connection
+      operationId: seedFromExcelPost
       requestBody:
         content:
           'application/json':
@@ -4151,6 +4261,7 @@ paths:
   /cache/{cacheName}:
     delete:
       summary: Clears the given cache, can only be called from a local connection
+      operationId: cacheCacheNameDelete
       parameters:
         - in: path
           name: cacheName
@@ -4169,6 +4280,7 @@ paths:
   /migration-job:
     post:
       summary: Starts a migration job (process for data migrations that can't be achieved solely via SQL migrations), can only be called from a local connection
+      operationId: migration_jobPost
       requestBody:
         content:
           'application/json':
@@ -4189,6 +4301,7 @@ paths:
       tags:
         - Reports
       summary: Returns a spreadsheet of all bookings for the specified service and (optional) region.
+      operationId: reportsBookingsGet
       parameters:
         - name: X-Service-Name
           in: header
@@ -4228,6 +4341,7 @@ paths:
       tags:
         - Reports
       summary: Returns a spreadsheet of the bookings, voids and turnarounds all beds for the specified service and (optional) region.
+      operationId: reportsBedUsageGet
       parameters:
         - name: X-Service-Name
           in: header
@@ -4267,6 +4381,7 @@ paths:
       tags:
         - Reports
       summary: Returns a spreadsheet showing how many days per month each bedspace spent in which state and the overall occupancy rate.
+      operationId: reportsBedUtilisationGet
       parameters:
         - name: X-Service-Name
           in: header
@@ -6075,7 +6190,6 @@ components:
           items:
             $ref: '#/components/schemas/Cas2TimelineEvent'
         assessment:
-          type: object
           $ref: '#/components/schemas/Cas2Assessment'
       required:
         - id
@@ -7632,7 +7746,6 @@ components:
             characteristics:
               type: array
               items:
-                type: object
                 $ref: '#/components/schemas/CharacteristicPair'
           required:
             - characteristics
