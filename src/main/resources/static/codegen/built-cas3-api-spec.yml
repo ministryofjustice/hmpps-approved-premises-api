@@ -12,6 +12,7 @@ paths:
       tags:
         - CAS3 Reports
       summary: Returns a spreadsheet of all data metrics for the 'reportName'.
+      operationId: reportsReportNameGet
       parameters:
         - name: reportName
           in: path
@@ -1870,7 +1871,6 @@ components:
           items:
             $ref: '#/components/schemas/Cas2TimelineEvent'
         assessment:
-          type: object
           $ref: '#/components/schemas/Cas2Assessment'
       required:
         - id
@@ -3427,7 +3427,6 @@ components:
             characteristics:
               type: array
               items:
-                type: object
                 $ref: '#/components/schemas/CharacteristicPair'
           required:
             - characteristics

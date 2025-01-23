@@ -56,6 +56,9 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1Assessm
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1AssessmentEmailService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1DomainEventService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1PlacementRequestEmailService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1PlacementRequirementsService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.PlacementRequestService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.PlacementRequestSource
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.allocations.UserAllocator
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.PageCriteria
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.UrlTemplate
@@ -80,7 +83,7 @@ class AssessmentService(
   private val offenderService: OffenderService,
   private val apDeliusContextApiClient: ApDeliusContextApiClient,
   private val placementRequestService: PlacementRequestService,
-  private val placementRequirementsService: PlacementRequirementsService,
+  private val cas1PlacementRequirementsService: Cas1PlacementRequirementsService,
   private val userAllocator: UserAllocator,
   private val objectMapper: ObjectMapper,
   @Value("\${url-templates.frontend.application}") private val applicationUrlTemplate: UrlTemplate,
@@ -398,7 +401,7 @@ class AssessmentService(
       val placementRequirementsResult =
         when (
           val result =
-            placementRequirementsService.createPlacementRequirements(assessment, placementRequirements!!)
+            cas1PlacementRequirementsService.createPlacementRequirements(assessment, placementRequirements!!)
         ) {
           is CasResult.Success -> result.value
           is CasResult.Error -> return result.reviseType()

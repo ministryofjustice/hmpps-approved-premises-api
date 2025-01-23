@@ -16,6 +16,7 @@ paths:
       tags:
         - "CAS3 events"
       summary: A 'booking-cancelled' event
+      operationId: eventsCas3BookingCancelledEventIdGet
       responses:
         200:
           description: The 'booking-cancelled' event corresponding to the provided `eventId`
@@ -43,6 +44,7 @@ paths:
       tags:
         - "CAS3 events"
       summary: A 'booking-cancelled-updated' event
+      operationId: eventsCas3BookingCancelledUpdatedEventIdGet
       responses:
         200:
           description: The 'booking-cancelled-updated' event corresponding to the provided `eventId`
@@ -70,6 +72,7 @@ paths:
       tags:
         - "CAS3 events"
       summary: A 'booking-confirmed' event
+      operationId: eventsCas3BookingConfirmedEventIdGet
       responses:
         200:
           description: The 'booking-confirmed' event corresponding to the provided `eventId`
@@ -97,6 +100,7 @@ paths:
       tags:
         - "CAS3 events"
       summary: A 'booking-provisionally-made' event
+      operationId: eventsCas3BookingProvisionallyMadeEventIdGet
       responses:
         200:
           description: The 'booking-provisionally-made' event corresponding to the provided `eventId`
@@ -124,6 +128,7 @@ paths:
       tags:
         - "CAS3 events"
       summary: A 'person-arrived' event
+      operationId: eventsCas3PersonArrivedEventIdGet
       responses:
         200:
           description: The 'person-arrived' event corresponding to the provided `eventId`
@@ -151,6 +156,7 @@ paths:
       tags:
         - "CAS3 events"
       summary: A 'person-arrived-updated' event
+      operationId: eventsCas3PersonArrivedUpdatedEventIdGet
       responses:
         200:
           description: The 'person-arrived-updated' event corresponding to the provided `eventId`
@@ -178,6 +184,7 @@ paths:
       tags:
         - "CAS3 events"
       summary: A 'person-departed' event
+      operationId: eventsCas3PersonDepartedEventIdGet
       responses:
         200:
           description: The 'person-departed' event corresponding to the provided `eventId`
@@ -205,6 +212,7 @@ paths:
       tags:
         - "CAS3 events"
       summary: A 'referral-submitted' event
+      operationId: eventsCas3ReferralSubmittedEventIdGet
       responses:
         200:
           description: The 'referral-submitted' event corresponding to the provided `eventId`
@@ -232,6 +240,7 @@ paths:
       tags:
         - "CAS3 events"
       summary: A 'person-departure-updated' event
+      operationId: eventsCas3PersonDepartureUpdatedEventIdGet
       responses:
         200:
           description: The 'person-departure-updated' event corresponding to the provided `eventId`

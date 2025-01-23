@@ -1057,6 +1057,7 @@ paths:
       tags:
         - Reports
       summary: Returns a spreadsheet of all data metrics for the 'reportName'.
+      operationId: reportsReportNameGet
       parameters:
         - name: X-Service-Name
           in: header
@@ -3057,7 +3058,6 @@ components:
           items:
             $ref: '#/components/schemas/Cas2TimelineEvent'
         assessment:
-          type: object
           $ref: '#/components/schemas/Cas2Assessment'
       required:
         - id
@@ -4614,7 +4614,6 @@ components:
             characteristics:
               type: array
               items:
-                type: object
                 $ref: '#/components/schemas/CharacteristicPair'
           required:
             - characteristics
