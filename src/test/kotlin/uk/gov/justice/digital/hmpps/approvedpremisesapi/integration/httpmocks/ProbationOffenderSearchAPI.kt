@@ -30,6 +30,12 @@ fun IntegrationTestBase.probationOffenderSearchAPIMockServerErrorSearchCall() =
     responseStatus = 500,
   )
 
+fun IntegrationTestBase.cas2v2SearchAPIMockServerErrorSearchCall() =
+  mockUnsuccessfulPostCall(
+    url = "/people/search",
+    responseStatus = 500,
+  )
+
 fun IntegrationTestBase.probationOffenderSearchAPIMockNotFoundSearchCall() =
   mockUnsuccessfulPostCall(
     url = "/search",

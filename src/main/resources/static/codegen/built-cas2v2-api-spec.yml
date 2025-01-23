@@ -417,7 +417,7 @@ paths:
     get:
       tags:
         - People operations
-      summary: Searches for a Person by their Prison Number (NOMIS ID)
+      summary: Searches for a Person by their Prison Number (NOMIS ID) or CRN
       parameters:
         - name: nomsNumber
           in: query
