@@ -24,6 +24,7 @@ generic-service:
     SERVICES_ASSESS-RISKS-AND-NEEDS-API_BASE-URL: https://assess-risks-and-needs-preprod.hmpps.service.justice.gov.uk
     SERVICES_HMPPS-TIER_BASE-URL: https://hmpps-tier-preprod.hmpps.service.justice.gov.uk
     SERVICES_PRISONS-API_BASE-URL: https://prison-api-preprod.prison.service.justice.gov.uk
+    SERVICES_PRISONER-ALERTS-API_BASE-URL: https://alerts-api-preprod.hmpps.service.justice.gov.uk
     SERVICES_NOMIS-USER-ROLES-API_BASE-URL: https://nomis-user-roles-api-preprod.prison.service.justice.gov.uk
     SERVICES_MANAGE-USERS-API_BASE-URL: https://manage-users-api-preprod.hmpps.service.justice.gov.uk
     SERVICES_PROBATION-OFFENDER-SEARCH-API_BASE-URL: https://probation-offender-search-preprod.hmpps.service.justice.gov.uk
@@ -87,6 +88,8 @@ generic-service:
     URL-TEMPLATES_API_CAS3_BOOKING-CANCELLED-UPDATED-EVENT-DETAIL: https://approved-premises-api-preprod.hmpps.service.justice.gov.uk/events/cas3/booking-cancelled-updated/#eventId
 
     USER-ALLOCATIONS_RULES_ESAP-ASSESSMENTS_ALLOCATE-TO-USER: KATHRYNHALL1NPS
+
+    FEATURE-FLAGS_GET-ALERTS-FROM-PRISONER-ALERTS-API: true
 
   namespace_secrets:
     hmpps-domain-events-topic:

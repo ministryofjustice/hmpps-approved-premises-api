@@ -1694,21 +1694,20 @@ components:
           format: int64
         comment:
           type: string
+        description:
+          type: string
         dateCreated:
           type: string
           format: date
         dateExpires:
           type: string
           format: date
-        expired:
-          type: boolean
-        active:
-          type: boolean
+        alertTypeDescription:
+            type: string
       required:
         - alertId
         - dateCreated
-        - expired
-        - active
+        - alertTypeDescription
     Application:
       type: object
       properties:
