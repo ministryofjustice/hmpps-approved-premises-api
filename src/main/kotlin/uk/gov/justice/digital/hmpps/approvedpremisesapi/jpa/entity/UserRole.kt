@@ -10,7 +10,6 @@ private object Constants {
     UserPermission.CAS1_APPLICATION_WITHDRAW_OTHERS,
     UserPermission.CAS1_BOOKING_CHANGE_DATES,
     UserPermission.CAS1_BOOKING_WITHDRAW,
-    UserPermission.CAS1_OUT_OF_SERVICE_BED_CREATE,
     UserPermission.CAS1_PREMISES_VIEW,
     UserPermission.CAS1_REQUEST_FOR_PLACEMENT_WITHDRAW_OTHERS,
     UserPermission.CAS1_SPACE_BOOKING_LIST,
@@ -22,7 +21,6 @@ private object Constants {
     UserPermission.CAS1_USER_LIST,
     UserPermission.CAS1_VIEW_CRU_DASHBOARD,
     UserPermission.CAS1_VIEW_MANAGE_TASKS,
-    UserPermission.CAS1_VIEW_OUT_OF_SERVICE_BEDS,
   )
 }
 
