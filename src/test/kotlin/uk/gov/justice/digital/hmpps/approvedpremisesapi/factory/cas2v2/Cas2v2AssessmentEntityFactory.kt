@@ -2,7 +2,6 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.cas2v2
 
 import io.github.bluegroundltd.kfactory.Factory
 import io.github.bluegroundltd.kfactory.Yielded
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.NomisUserEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas2v2.Cas2v2ApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas2v2.Cas2v2AssessmentEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas2v2.Cas2v2StatusUpdateEntity
@@ -14,7 +13,7 @@ class Cas2v2AssessmentEntityFactory : Factory<Cas2v2AssessmentEntity> {
   private var createdAt: Yielded<OffsetDateTime> = { OffsetDateTime.now() }
   private var application: Yielded<Cas2v2ApplicationEntity> = {
     Cas2v2ApplicationEntityFactory()
-      .withCreatedByUser(NomisUserEntityFactory().produce())
+      .withCreatedByUser(Cas2v2UserEntityFactory().produce())
       .produce()
   }
   private var nacroReferralId: String? = null

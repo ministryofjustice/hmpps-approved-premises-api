@@ -49,6 +49,8 @@ data class Cas2v2ApplicationSummaryEntity(
   var abandonedAt: OffsetDateTime? = null,
   @Column(name = "hdc_eligibility_date")
   var hdcEligibilityDate: LocalDate? = null,
+  @Column(name = "bail_hearing_date")
+  var bailHearingDate: LocalDate? = null,
   @Column(name = "label")
   var latestStatusUpdateLabel: String? = null,
   @Column(name = "status_id")

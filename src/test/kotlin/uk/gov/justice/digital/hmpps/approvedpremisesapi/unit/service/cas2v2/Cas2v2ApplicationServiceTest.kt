@@ -18,14 +18,15 @@ import org.springframework.data.domain.Page
 import org.springframework.data.domain.PageRequest
 import org.springframework.data.domain.Sort
 import org.springframework.data.repository.findByIdOrNull
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApplicationOrigin
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.SortDirection
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.SubmitCas2v2Application
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.config.NotifyConfig
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.Cas2v2ApplicationJsonSchemaEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.InmateDetailFactory
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.NomisUserEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.OffenderDetailsSummaryFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.cas2v2.Cas2v2ApplicationEntityFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.cas2v2.Cas2v2UserEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas2v2ApplicationJsonSchemaEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas2v2.Cas2v2ApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas2v2.Cas2v2ApplicationRepository
@@ -51,6 +52,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.getPageableOrAllPag
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomStringMultiCaseWithNumbers
 import java.time.LocalDate
 import java.time.OffsetDateTime
+import java.time.format.DateTimeFormatter
 import java.util.UUID
 
 class Cas2v2ApplicationServiceTest {
@@ -149,7 +151,7 @@ class Cas2v2ApplicationServiceTest {
     )
     val page = mockk<Page<Cas2v2ApplicationSummaryEntity>>()
     val pageCriteria = PageCriteria(sortBy = "submitted_at", sortDirection = SortDirection.asc, page = 3)
-    val user = NomisUserEntityFactory().produce()
+    val user = Cas2v2UserEntityFactory().produce()
     val prisonCode = "BRI"
 
     private fun testPrisonCodeWithIsSubmitted(isSubmitted: Boolean?) {
@@ -209,48 +211,48 @@ class Cas2v2ApplicationServiceTest {
   inner class GetCas2v2ApplicationForUser {
     @Test
     fun `where cas2v2 application does not exist returns NotFound result`() {
-      val user = NomisUserEntityFactory().produce()
+      val user = Cas2v2UserEntityFactory().produce()
       val applicationId = UUID.fromString("c1750938-19fc-48a1-9ae9-f2e119ffc1f4")
 
       every { mockCas2v2ApplicationRepository.findByIdOrNull(applicationId) } returns null
 
-      assertThat(cas2v2ApplicationService.getCas2v2ApplicationForUser(applicationId, user) is AuthorisableActionResult.NotFound).isTrue
+      assertThat(cas2v2ApplicationService.getCas2v2ApplicationForUser(applicationId, user) is CasResult.NotFound).isTrue
     }
 
     @Test
     fun `where cas2v2 application is abandoned returns NotFound result`() {
-      val user = NomisUserEntityFactory().produce()
+      val user = Cas2v2UserEntityFactory().produce()
       val applicationId = UUID.fromString("c1750938-19fc-48a1-9ae9-f2e119ffc1f4")
 
       every { mockCas2v2ApplicationRepository.findByIdOrNull(any()) } returns
         Cas2v2ApplicationEntityFactory()
           .withCreatedByUser(
-            NomisUserEntityFactory()
+            Cas2v2UserEntityFactory()
               .produce(),
           )
           .withAbandonedAt(OffsetDateTime.now())
           .produce()
 
-      assertThat(cas2v2ApplicationService.getCas2v2ApplicationForUser(applicationId, user) is AuthorisableActionResult.NotFound).isTrue
+      assertThat(cas2v2ApplicationService.getCas2v2ApplicationForUser(applicationId, user) is CasResult.NotFound).isTrue
     }
 
     @Test
     fun `where user cannot access the cas2v2 application returns Unauthorised result`() {
-      val user = NomisUserEntityFactory()
+      val user = Cas2v2UserEntityFactory()
         .produce()
       val applicationId = UUID.fromString("c1750938-19fc-48a1-9ae9-f2e119ffc1f4")
 
       every { mockCas2v2ApplicationRepository.findByIdOrNull(any()) } returns
         Cas2v2ApplicationEntityFactory()
           .withCreatedByUser(
-            NomisUserEntityFactory()
+            Cas2v2UserEntityFactory()
               .produce(),
           )
           .produce()
 
       every { mockCas2v2UserAccessService.userCanViewCas2v2Application(any(), any()) } returns false
 
-      assertThat(cas2v2ApplicationService.getCas2v2ApplicationForUser(applicationId, user) is AuthorisableActionResult.Unauthorised).isTrue
+      assertThat(cas2v2ApplicationService.getCas2v2ApplicationForUser(applicationId, user) is CasResult.Unauthorised).isTrue
     }
 
     @Test
@@ -263,9 +265,9 @@ class Cas2v2ApplicationServiceTest {
         .withSchema("{}")
         .produce()
 
-      val userEntity = NomisUserEntityFactory()
+      val userEntity = Cas2v2UserEntityFactory()
         .withId(userId)
-        .withNomisUsername(distinguishedName)
+        .withUsername(distinguishedName)
         .produce()
 
       val cas2v2ApplicationEntity = Cas2v2ApplicationEntityFactory()
@@ -282,10 +284,10 @@ class Cas2v2ApplicationServiceTest {
 
       val result = cas2v2ApplicationService.getCas2v2ApplicationForUser(applicationId, userEntity)
 
-      assertThat(result is AuthorisableActionResult.Success).isTrue
-      result as AuthorisableActionResult.Success
+      assertThat(result is CasResult.Success).isTrue
+      val entity = extractEntityFromCasResult(result)
 
-      assertThat(result.entity).isEqualTo(cas2v2ApplicationEntity)
+      assertThat(entity).isEqualTo(cas2v2ApplicationEntity)
     }
   }
 
@@ -327,6 +329,7 @@ class Cas2v2ApplicationServiceTest {
     fun `returns Success with created Application`() {
       val crn = "CRN345"
       val username = "SOMEPERSON"
+      val bailHearingDate = LocalDate.of(2024, 12, 18)
 
       val cas2v2ApplicationSchema = Cas2v2ApplicationJsonSchemaEntityFactory().produce()
 
@@ -342,18 +345,20 @@ class Cas2v2ApplicationServiceTest {
           Cas2v2ApplicationEntity
       }
 
-      val result = cas2v2ApplicationService.createCas2v2Application(crn, user)
+      val result = cas2v2ApplicationService.createCas2v2Application(crn, user, ApplicationOrigin.prisonBail, bailHearingDate)
 
       assertThat(result is ValidatableActionResult.Success).isTrue
       result as ValidatableActionResult.Success
       assertThat(result.entity.crn).isEqualTo(crn)
-//      assertThat(result.entity.createdByUser).isEqualTo(user)
+      assertThat(result.entity.bailHearingDate).isEqualTo(bailHearingDate)
+      assertThat(result.entity.applicationOrigin).isEqualTo(ApplicationOrigin.prisonBail)
+      assertThat(result.entity.createdByUser).isEqualTo(user)
     }
   }
 
   @Nested
   inner class UpdateApplication {
-    val user = NomisUserEntityFactory().produce()
+    val user = Cas2v2UserEntityFactory().produce()
 
     @Test
     fun `returns NotFound when cas2v2 application doesn't exist`() {
@@ -366,7 +371,8 @@ class Cas2v2ApplicationServiceTest {
           applicationId = applicationId,
           data = "{}",
           user = user,
-        ) is AuthorisableActionResult.NotFound,
+          null,
+        ) is CasResult.NotFound,
       ).isTrue
     }
 
@@ -377,7 +383,7 @@ class Cas2v2ApplicationServiceTest {
       val cas2v2Application = Cas2v2ApplicationEntityFactory()
         .withId(applicationId)
         .withYieldedCreatedByUser {
-          NomisUserEntityFactory()
+          Cas2v2UserEntityFactory()
             .produce()
         }
         .produce()
@@ -392,7 +398,8 @@ class Cas2v2ApplicationServiceTest {
           applicationId = applicationId,
           data = "{}",
           user = user,
-        ) is AuthorisableActionResult.Unauthorised,
+          null,
+        ) is CasResult.Unauthorised,
       ).isTrue
     }
 
@@ -421,15 +428,12 @@ class Cas2v2ApplicationServiceTest {
         applicationId = applicationId,
         data = "{}",
         user = user,
+        null,
       )
 
-      assertThat(result is AuthorisableActionResult.Success).isTrue
-      result as AuthorisableActionResult.Success
+      result as CasResult.GeneralValidationError
 
-      assertThat(result.entity is ValidatableActionResult.GeneralValidationError).isTrue
-      val validatableActionResult = result.entity as ValidatableActionResult.GeneralValidationError
-
-      assertThat(validatableActionResult.message).isEqualTo("This application has already been submitted")
+      assertThat(result.message).isEqualTo("This application has already been submitted")
     }
 
     @Test
@@ -455,15 +459,12 @@ class Cas2v2ApplicationServiceTest {
         applicationId = applicationId,
         data = "{}",
         user = user,
+        null,
       )
 
-      assertThat(result is AuthorisableActionResult.Success).isTrue
-      result as AuthorisableActionResult.Success
+      result as CasResult.GeneralValidationError
 
-      assertThat(result.entity is ValidatableActionResult.GeneralValidationError).isTrue
-      val validatableActionResult = result.entity as ValidatableActionResult.GeneralValidationError
-
-      assertThat(validatableActionResult.message).isEqualTo("This application has been abandoned")
+      assertThat(result.message).isEqualTo("This application has been abandoned")
     }
 
     @Test
@@ -486,15 +487,11 @@ class Cas2v2ApplicationServiceTest {
         applicationId = applicationId,
         data = "{}",
         user = user,
+        null,
       )
 
-      assertThat(result is AuthorisableActionResult.Success).isTrue
-      result as AuthorisableActionResult.Success
-
-      assertThat(result.entity is ValidatableActionResult.GeneralValidationError).isTrue
-      val validatableActionResult = result.entity as ValidatableActionResult.GeneralValidationError
-
-      assertThat(validatableActionResult.message).isEqualTo("The schema version is outdated")
+      result as CasResult.GeneralValidationError
+      assertThat(result.message).isEqualTo("The schema version is outdated")
     }
 
     @ParameterizedTest
@@ -538,15 +535,12 @@ class Cas2v2ApplicationServiceTest {
         applicationId = applicationId,
         data = updatedData,
         user = user,
+        null,
       )
 
-      assertThat(result is AuthorisableActionResult.Success).isTrue
-      result as AuthorisableActionResult.Success
+      result as CasResult.Success
 
-      assertThat(result.entity is ValidatableActionResult.Success).isTrue
-      val validatableActionResult = result.entity as ValidatableActionResult.Success
-
-      val cas2v2Application = validatableActionResult.entity
+      val cas2v2Application = extractEntityFromCasResult(result)
 
       assertThat(cas2v2Application.data).isEqualTo(
         """
@@ -561,10 +555,14 @@ class Cas2v2ApplicationServiceTest {
     fun `returns Success with updated Application`() {
       val applicationId = UUID.fromString("fa6e97ce-7b9e-473c-883c-83b1c2af773d")
 
+      val bailHearingDate = LocalDate.of(2030, 12, 18)
+      var formatter = DateTimeFormatter.ofPattern("dd-MM-yyyy")
+
       val newestSchema = Cas2v2ApplicationJsonSchemaEntityFactory().produce()
       val updatedData = """
       {
         "aProperty": "value"
+        "bailHearingDate": "${bailHearingDate.format(formatter)}"
       }
     """
 
@@ -597,23 +595,23 @@ class Cas2v2ApplicationServiceTest {
         applicationId = applicationId,
         data = updatedData,
         user = user,
+        bailHearingDate,
       )
 
-      assertThat(result is AuthorisableActionResult.Success).isTrue
-      result as AuthorisableActionResult.Success
+      result as CasResult.Success
 
-      assertThat(result.entity is ValidatableActionResult.Success).isTrue
-      val validatableActionResult = result.entity as ValidatableActionResult.Success
+      val cas2v2Application = extractEntityFromCasResult(result)
 
-      val cas2v2Application = validatableActionResult.entity
+      verify { mockCas2v2ApplicationRepository.save(application) }
 
       assertThat(cas2v2Application.data).isEqualTo(updatedData)
+      assertThat(cas2v2Application.bailHearingDate).isEqualTo(bailHearingDate)
     }
   }
 
   @Nested
   inner class AbandonApplication {
-    val user = NomisUserEntityFactory().produce()
+    val user = Cas2v2UserEntityFactory().produce()
 
     @Test
     fun `returns NotFound when application doesn't exist`() {
@@ -625,7 +623,7 @@ class Cas2v2ApplicationServiceTest {
         cas2v2ApplicationService.abandonCas2v2Application(
           applicationId = applicationId,
           user = user,
-        ) is AuthorisableActionResult.NotFound,
+        ) is CasResult.NotFound,
       ).isTrue
     }
 
@@ -636,7 +634,7 @@ class Cas2v2ApplicationServiceTest {
       val application = Cas2v2ApplicationEntityFactory()
         .withId(applicationId)
         .withYieldedCreatedByUser {
-          NomisUserEntityFactory()
+          Cas2v2UserEntityFactory()
             .produce()
         }
         .produce()
@@ -648,7 +646,7 @@ class Cas2v2ApplicationServiceTest {
         cas2v2ApplicationService.abandonCas2v2Application(
           applicationId = applicationId,
           user = user,
-        ) is AuthorisableActionResult.Unauthorised,
+        ) is CasResult.Unauthorised,
       ).isTrue
     }
 
@@ -676,13 +674,9 @@ class Cas2v2ApplicationServiceTest {
         user = user,
       )
 
-      assertThat(result is AuthorisableActionResult.Success).isTrue
-      result as AuthorisableActionResult.Success
+      result as CasResult.ConflictError
 
-      assertThat(result.entity is ValidatableActionResult.ConflictError).isTrue
-      val validatableActionResult = result.entity as ValidatableActionResult.ConflictError
-
-      assertThat(validatableActionResult.message).isEqualTo("This application has already been submitted")
+      assertThat(result.message).isEqualTo("This application has already been submitted")
     }
 
     @Test
@@ -709,10 +703,8 @@ class Cas2v2ApplicationServiceTest {
         user = user,
       )
 
-      assertThat(result is AuthorisableActionResult.Success).isTrue
-      result as AuthorisableActionResult.Success
-
-      assertThat(result.entity is ValidatableActionResult.Success).isTrue
+      result as CasResult.Success
+      assertThat(result).isNotNull
     }
 
     @Test
@@ -748,13 +740,9 @@ class Cas2v2ApplicationServiceTest {
         user = user,
       )
 
-      assertThat(result is AuthorisableActionResult.Success).isTrue
-      result as AuthorisableActionResult.Success
+      result as CasResult.Success
 
-      assertThat(result.entity is ValidatableActionResult.Success).isTrue
-      val validatableActionResult = result.entity as ValidatableActionResult.Success
-
-      val cas2v2Application = validatableActionResult.entity
+      val cas2v2Application = extractEntityFromCasResult(result)
 
       assertThat(cas2v2Application.data).isNull()
     }
@@ -764,8 +752,8 @@ class Cas2v2ApplicationServiceTest {
   inner class SubmitApplication {
     val applicationId: UUID = UUID.fromString("fa6e97ce-7b9e-473c-883c-83b1c2af773d")
     val username = "SOMEPERSON"
-    val user = NomisUserEntityFactory()
-      .withNomisUsername(this.username)
+    val user = Cas2v2UserEntityFactory()
+      .withUsername(this.username)
       .produce()
     val hdcEligibilityDate = LocalDate.parse("2023-03-30")
     val conditionalReleaseDate = LocalDate.parse("2023-04-29")
@@ -799,7 +787,7 @@ class Cas2v2ApplicationServiceTest {
 
     @Test
     fun `returns Unauthorised when application doesn't belong to request user`() {
-      val differentUser = NomisUserEntityFactory()
+      val differentUser = Cas2v2UserEntityFactory()
         .produce()
 
       val cas2v2Application = Cas2v2ApplicationEntityFactory()
@@ -1118,7 +1106,7 @@ class Cas2v2ApplicationServiceTest {
     }
   }
 
-  private fun userWithUsername(username: String) = NomisUserEntityFactory()
-    .withNomisUsername(username)
+  private fun userWithUsername(username: String) = Cas2v2UserEntityFactory()
+    .withUsername(username)
     .produce()
 }

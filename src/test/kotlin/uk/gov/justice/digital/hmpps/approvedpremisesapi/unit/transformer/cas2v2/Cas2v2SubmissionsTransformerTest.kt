@@ -10,21 +10,21 @@ import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas2StatusUpdate
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas2TimelineEvent
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas2v2Assessment
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas2v2StatusUpdate
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas2v2SubmittedApplicationSummary
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NomisUser
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas2v2User
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Person
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.NomisUserEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.cas2v2.Cas2v2ApplicationEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.cas2v2.Cas2v2AssessmentEntityFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.cas2v2.Cas2v2UserEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas2v2.Cas2v2ApplicationSummaryEntity
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.NomisUserTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.PersonTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.cas2v2.Cas2v2AssessmentsTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.cas2v2.Cas2v2SubmissionsTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.cas2v2.Cas2v2TimelineEventsTransformer
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.cas2v2.Cas2v2UserTransformer
 import java.time.Instant
 import java.time.LocalDate
 import java.time.OffsetDateTime
@@ -33,7 +33,7 @@ import java.util.UUID
 class Cas2v2SubmissionsTransformerTest {
 
   private val mockPersonTransformer = mockk<PersonTransformer>()
-  private val mockNomisUserTransformer = mockk<NomisUserTransformer>()
+  private val mockCas2v2UserTransformer = mockk<Cas2v2UserTransformer>()
   private val mockCas2v2TimelineEventsTransformer = mockk<Cas2v2TimelineEventsTransformer>()
   private val mockCas2v2AssessmentsTransformer = mockk<Cas2v2AssessmentsTransformer>()
 
@@ -46,18 +46,18 @@ class Cas2v2SubmissionsTransformerTest {
   private val applicationTransformer = Cas2v2SubmissionsTransformer(
     objectMapper,
     mockPersonTransformer,
-    mockNomisUserTransformer,
+    mockCas2v2UserTransformer,
     mockCas2v2TimelineEventsTransformer,
     mockCas2v2AssessmentsTransformer,
   )
 
-  private val user = NomisUserEntityFactory().produce()
+  private val user = Cas2v2UserEntityFactory().produce()
 
   private val cas2v2ApplicationFactory = Cas2v2ApplicationEntityFactory().withCreatedByUser(user)
 
   private val submittedCas2v2ApplicationFactory = cas2v2ApplicationFactory
     .withSubmittedAt(OffsetDateTime.now())
-  private val mockStatusUpdate = Cas2StatusUpdate(
+  private val mockStatusUpdate = Cas2v2StatusUpdate(
     id = UUID.fromString("c426c63a-be35-421f-a1a0-fc286b60da41"),
     description = "On Waiting List",
     label = "On Waiting List",
@@ -68,12 +68,12 @@ class Cas2v2SubmissionsTransformerTest {
     statusUpdates = listOf(mockStatusUpdate),
   )
 
-  private val mockNomisUser = mockk<NomisUser>()
+  private val mockCas2v2User = mockk<Cas2v2User>()
 
   @BeforeEach
   fun setup() {
     every { mockPersonTransformer.transformModelToPersonApi(any()) } returns mockk<Person>()
-    every { mockNomisUserTransformer.transformJpaToApi(any()) } returns mockNomisUser
+    every { mockCas2v2UserTransformer.transformJpaToApi(any()) } returns mockCas2v2User
     every { mockCas2v2TimelineEventsTransformer.transformApplicationToTimelineEvents(any()) } returns listOf(mockk<Cas2TimelineEvent>())
     every { mockCas2v2AssessmentsTransformer.transformJpaToApiRepresentation(any()) } returns mockAssessment
   }
@@ -94,7 +94,7 @@ class Cas2v2SubmissionsTransformerTest {
 
       val transformation = applicationTransformer.transformJpaToApiRepresentation(jpaEntity, mockk())
 
-      assertThat(transformation.submittedBy).isEqualTo(mockNomisUser)
+      assertThat(transformation.submittedBy).isEqualTo(mockCas2v2User)
 
       assertThat(transformation.assessment.statusUpdates).isEqualTo(
         listOf(mockStatusUpdate),
@@ -112,6 +112,7 @@ class Cas2v2SubmissionsTransformerTest {
         "telephoneNumber",
         "timelineEvents",
         "assessment",
+        "bailHearingDate",
       )
     }
   }

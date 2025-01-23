@@ -126,6 +126,7 @@ class PremisesController(
   private val cas1WithdrawableService: Cas1WithdrawableService,
 ) : PremisesApiDelegate {
 
+  @Suppress("TooGenericExceptionThrown")
   override fun premisesSummaryGet(
     xServiceName: ServiceName,
     probationRegionId: UUID?,
@@ -139,6 +140,8 @@ class PremisesController(
       }
 
       ServiceName.cas2 -> throw RuntimeException("CAS2 not supported")
+      ServiceName.cas2v2 -> throw RuntimeException("CAS2v2 not supported")
+
       ServiceName.temporaryAccommodation -> {
         val user = usersService.getUserForRequest()
         val summaries = cas3PremisesService.getAllPremisesSummaries(user.probationRegion.id)

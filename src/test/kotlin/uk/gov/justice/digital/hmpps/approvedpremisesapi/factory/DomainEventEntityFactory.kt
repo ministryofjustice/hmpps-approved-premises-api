@@ -26,7 +26,7 @@ class DomainEventEntityFactory : Factory<DomainEventEntity> {
   private var occurredAt: Yielded<OffsetDateTime> = { OffsetDateTime.now().randomDateTimeBefore(7) }
   private var createdAt: Yielded<OffsetDateTime> = { OffsetDateTime.now().randomDateTimeBefore(7) }
   private var data: Yielded<String> = { "{}" }
-  private var service: Yielded<String> = { randomOf(listOf("CAS1", "CAS2", "CAS3")) }
+  private var service: Yielded<String> = { randomOf(listOf("CAS1", "CAS2", "CAS2V2", "CAS3")) }
   private var triggerSource: Yielded<TriggerSourceType?> = { null }
   private var triggeredByUserId: Yielded<UUID?> = { null }
   private var nomsNumber: Yielded<String?> = { randomStringMultiCaseWithNumbers(8) }
@@ -83,6 +83,7 @@ class DomainEventEntityFactory : Factory<DomainEventEntity> {
       when (service) {
         ServiceName.approvedPremises -> "CAS1"
         ServiceName.cas2 -> "CAS2"
+        ServiceName.cas2v2 -> "CAS2V2"
         ServiceName.temporaryAccommodation -> "CAS3"
       }
     }

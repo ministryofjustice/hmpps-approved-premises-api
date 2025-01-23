@@ -15,19 +15,18 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApplicationOri
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.SubmitCas2v2Application
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.config.NotifyConfig
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas2v2ApplicationJsonSchemaEntity
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.NomisUserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas2v2.Cas2v2ApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas2v2.Cas2v2ApplicationRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas2v2.Cas2v2ApplicationSummaryEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas2v2.Cas2v2ApplicationSummaryRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas2v2.Cas2v2LockableApplicationRepository
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas2v2.Cas2v2UserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.DomainEvent
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PaginationMetadata
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.ValidationErrors
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.validated
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.AuthorisableActionResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.CasResult
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.ValidatableActionResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.EmailNotificationService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.UpstreamApiException
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas2.DomainEventService
@@ -35,6 +34,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas2.OffenderSer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.PageCriteria
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.getMetadata
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.getPageableOrAllPages
+import java.time.LocalDate
 import java.time.OffsetDateTime
 import java.util.UUID
 
@@ -44,9 +44,9 @@ class Cas2v2ApplicationService(
   private val cas2v2LockableApplicationRepository: Cas2v2LockableApplicationRepository,
   private val cas2v2ApplicationSummaryRepository: Cas2v2ApplicationSummaryRepository,
   private val cas2v2JsonSchemaService: Cas2v2JsonSchemaService,
-  private val cas2OffenderService: OffenderService,
+  private val cas2v2OffenderService: OffenderService,
   private val cas2v2UserAccessService: Cas2v2UserAccessService,
-  private val cas2DomainEventService: DomainEventService,
+  private val domainEventService: DomainEventService,
   private val emailNotificationService: EmailNotificationService,
   private val cas2v2AssessmentService: Cas2v2AssessmentService,
   private val notifyConfig: NotifyConfig,
@@ -70,7 +70,7 @@ class Cas2v2ApplicationService(
   fun getCas2v2Applications(
     prisonCode: String?,
     isSubmitted: Boolean?,
-    user: NomisUserEntity,
+    user: Cas2v2UserEntity,
     pageCriteria: PageCriteria<String>,
   ): Pair<MutableList<Cas2v2ApplicationSummaryEntity>, PaginationMetadata?> {
     val response = if (prisonCode == null) {
@@ -92,104 +92,107 @@ class Cas2v2ApplicationService(
     return Pair(response.content, metadata)
   }
 
-  fun getSubmittedCas2v2ApplicationForAssessor(applicationId: UUID): AuthorisableActionResult<Cas2v2ApplicationEntity> {
+  fun getSubmittedCas2v2ApplicationForAssessor(applicationId: UUID): CasResult<Cas2v2ApplicationEntity> {
     val applicationEntity = cas2v2ApplicationRepository.findSubmittedApplicationById(applicationId)
-      ?: return AuthorisableActionResult.NotFound()
+      ?: return CasResult.NotFound("Cas2v2ApplicationEntity", applicationId.toString())
 
-    return AuthorisableActionResult.Success(
+    return CasResult.Success(
       cas2v2JsonSchemaService.checkCas2v2SchemaOutdated(applicationEntity),
     )
   }
 
-  fun getCas2v2ApplicationForUser(applicationId: UUID, user: NomisUserEntity): AuthorisableActionResult<Cas2v2ApplicationEntity> {
+  fun getCas2v2ApplicationForUser(applicationId: UUID, user: Cas2v2UserEntity): CasResult<Cas2v2ApplicationEntity> {
     val applicationEntity = cas2v2ApplicationRepository.findByIdOrNull(applicationId)
-      ?: return AuthorisableActionResult.NotFound()
+      ?: return CasResult.NotFound("Cas2v2ApplicationEntity", applicationId.toString())
 
     if (applicationEntity.abandonedAt != null) {
-      return AuthorisableActionResult.NotFound()
+      return CasResult.NotFound()
     }
 
     val canAccess = cas2v2UserAccessService.userCanViewCas2v2Application(user, applicationEntity)
 
     return if (canAccess) {
-      AuthorisableActionResult.Success(
-        cas2v2JsonSchemaService.checkCas2v2SchemaOutdated
-          (applicationEntity),
-      )
+      CasResult.Success(cas2v2JsonSchemaService.checkCas2v2SchemaOutdated(applicationEntity))
     } else {
-      AuthorisableActionResult.Unauthorised()
+      CasResult.Unauthorised()
     }
   }
 
   @SuppressWarnings("TooGenericExceptionThrown")
-  fun createCas2v2Application(crn: String, user: NomisUserEntity, applicationOrigin: ApplicationOrigin = ApplicationOrigin.homeDetentionCurfew) =
-    validated<Cas2v2ApplicationEntity> {
-      val offenderDetailsResult = cas2OffenderService.getOffenderByCrn(crn)
+  fun createCas2v2Application(
+    crn: String,
+    user: Cas2v2UserEntity,
+    applicationOrigin: ApplicationOrigin = ApplicationOrigin.homeDetentionCurfew,
+    bailHearingDate: LocalDate? = null,
+  ) = validated<Cas2v2ApplicationEntity> {
+    val offenderDetailsResult = cas2v2OffenderService.getOffenderByCrn(crn)
 
-      val offenderDetails = when (offenderDetailsResult) {
-        is AuthorisableActionResult.NotFound -> return "$.crn" hasSingleValidationError "doesNotExist"
-        is AuthorisableActionResult.Unauthorised -> return "$.crn" hasSingleValidationError "userPermission"
-        is AuthorisableActionResult.Success -> offenderDetailsResult.entity
-      }
-
-      if (offenderDetails.otherIds.nomsNumber == null) {
-        throw RuntimeException("Cannot create an Application for an Offender without a NOMS number")
-      }
-
-      if (validationErrors.any()) {
-        return fieldValidationError
-      }
-
-      val id = UUID.randomUUID()
-
-      val entityToSave = Cas2v2ApplicationEntity(
-        id = id,
-        crn = crn,
-        createdByUser = user,
-        data = null,
-        document = null,
-        schemaVersion = cas2v2JsonSchemaService.getNewestSchema(Cas2v2ApplicationJsonSchemaEntity::class.java),
-        createdAt = OffsetDateTime.now(),
-        submittedAt = null,
-        schemaUpToDate = true,
-        nomsNumber = offenderDetails.otherIds.nomsNumber,
-        telephoneNumber = null,
-        applicationOrigin = applicationOrigin,
-      )
-
-      val createdApplication = cas2v2ApplicationRepository.save(
-        entityToSave,
-      )
-
-      return success(createdApplication.apply { schemaUpToDate = true })
+    val offenderDetails = when (offenderDetailsResult) {
+      is AuthorisableActionResult.NotFound -> return "$.crn" hasSingleValidationError "doesNotExist"
+      is AuthorisableActionResult.Unauthorised -> return "$.crn" hasSingleValidationError "userPermission"
+      is AuthorisableActionResult.Success -> offenderDetailsResult.entity
     }
 
+    if (offenderDetails.otherIds.nomsNumber == null) {
+      throw RuntimeException("Cannot create an Application for an Offender without a NOMS number")
+    }
+
+    if (validationErrors.any()) {
+      return fieldValidationError
+    }
+
+    val id = UUID.randomUUID()
+
+    val entityToSave = Cas2v2ApplicationEntity(
+      id = id,
+      crn = crn,
+      createdByUser = user,
+      data = null,
+      document = null,
+      schemaVersion = cas2v2JsonSchemaService.getNewestSchema(Cas2v2ApplicationJsonSchemaEntity::class.java),
+      createdAt = OffsetDateTime.now(),
+      submittedAt = null,
+      schemaUpToDate = true,
+      nomsNumber = offenderDetails.otherIds.nomsNumber,
+      telephoneNumber = null,
+      applicationOrigin = applicationOrigin,
+      bailHearingDate = bailHearingDate,
+    )
+
+    val createdApplication = cas2v2ApplicationRepository.save(
+      entityToSave,
+    )
+
+    return success(createdApplication.apply { schemaUpToDate = true })
+  }
+
   @SuppressWarnings("ReturnCount")
-  fun updateCas2v2Application(applicationId: UUID, data: String?, user: NomisUserEntity): AuthorisableActionResult<ValidatableActionResult<Cas2v2ApplicationEntity>> {
+  fun updateCas2v2Application(
+    applicationId: UUID,
+    data: String?,
+    user: Cas2v2UserEntity,
+    bailHearingDate: LocalDate?,
+  ): CasResult<Cas2v2ApplicationEntity> {
     val application = cas2v2ApplicationRepository.findByIdOrNull(applicationId)?.let(cas2v2JsonSchemaService::checkCas2v2SchemaOutdated)
-      ?: return AuthorisableActionResult.NotFound()
+      ?: return CasResult.NotFound("Cas2v2ApplicationEntity", applicationId.toString())
 
     if (application.createdByUser != user) {
-      return AuthorisableActionResult.Unauthorised()
+      return CasResult.Unauthorised()
     }
 
     if (application.submittedAt != null) {
-      return AuthorisableActionResult.Success(
-        ValidatableActionResult.GeneralValidationError("This application has already been submitted"),
-      )
+      return CasResult.GeneralValidationError("This application has already been submitted")
     }
 
     if (application.abandonedAt != null) {
-      return AuthorisableActionResult.Success(
-        ValidatableActionResult.GeneralValidationError("This application has been abandoned"),
-      )
+      return CasResult.GeneralValidationError("This application has been abandoned")
     }
 
     if (!application.schemaUpToDate) {
-      return AuthorisableActionResult.Success(
-        ValidatableActionResult.GeneralValidationError("The schema version is outdated"),
-      )
+      return CasResult.GeneralValidationError("The schema version is outdated")
     }
+
+    application.bailHearingDate = bailHearingDate
 
     application.apply {
       this.data = removeXssCharacters(data)
@@ -197,30 +200,24 @@ class Cas2v2ApplicationService(
 
     val savedApplication = cas2v2ApplicationRepository.save(application)
 
-    return AuthorisableActionResult.Success(
-      ValidatableActionResult.Success(savedApplication),
-    )
+    return CasResult.Success(savedApplication)
   }
 
   @SuppressWarnings("ReturnCount")
-  fun abandonCas2v2Application(applicationId: UUID, user: NomisUserEntity): AuthorisableActionResult<ValidatableActionResult<Cas2v2ApplicationEntity>> {
+  fun abandonCas2v2Application(applicationId: UUID, user: Cas2v2UserEntity): CasResult<Cas2v2ApplicationEntity> {
     val application = cas2v2ApplicationRepository.findByIdOrNull(applicationId)
-      ?: return AuthorisableActionResult.NotFound()
+      ?: return CasResult.NotFound("Cas2v2ApplicationEntity", applicationId.toString())
 
     if (application.createdByUser != user) {
-      return AuthorisableActionResult.Unauthorised()
+      return CasResult.Unauthorised()
     }
 
     if (application.submittedAt != null) {
-      return AuthorisableActionResult.Success(
-        ValidatableActionResult.ConflictError(applicationId, "This application has already been submitted"),
-      )
+      return CasResult.ConflictError(applicationId, "This application has already been submitted")
     }
 
     if (application.abandonedAt != null) {
-      return AuthorisableActionResult.Success(
-        ValidatableActionResult.Success(application),
-      )
+      return CasResult.Success(application)
     }
 
     application.apply {
@@ -230,16 +227,14 @@ class Cas2v2ApplicationService(
 
     val savedApplication = cas2v2ApplicationRepository.save(application)
 
-    return AuthorisableActionResult.Success(
-      ValidatableActionResult.Success(savedApplication),
-    )
+    return CasResult.Success(savedApplication)
   }
 
   @SuppressWarnings("ReturnCount", "TooGenericExceptionThrown")
   @Transactional
   fun submitCas2v2Application(
     submitCas2v2Application: SubmitCas2v2Application,
-    user: NomisUserEntity,
+    user: Cas2v2UserEntity,
   ): CasResult<Cas2v2ApplicationEntity> {
     val applicationId = submitCas2v2Application.applicationId
 
@@ -247,7 +242,7 @@ class Cas2v2ApplicationService(
 
     var application = cas2v2ApplicationRepository.findByIdOrNull(applicationId)
       ?.let(cas2v2JsonSchemaService::checkCas2v2SchemaOutdated)
-      ?: return CasResult.NotFound()
+      ?: return CasResult.NotFound("Cas2v2ApplicationEntity", applicationId.toString())
 
     val serializedTranslatedDocument = objectMapper.writeValueAsString(submitCas2v2Application.translatedDocument)
 
@@ -292,6 +287,7 @@ class Cas2v2ApplicationService(
         hdcEligibilityDate = submitCas2v2Application.hdcEligibilityDate
         conditionalReleaseDate = submitCas2v2Application.conditionalReleaseDate
         telephoneNumber = submitCas2v2Application.telephoneNumber
+        bailHearingDate = submitCas2v2Application.bailHearingDate
         applicationOrigin = submitCas2v2Application.applicationOrigin
       }
     } catch (error: UpstreamApiException) {
@@ -313,7 +309,7 @@ class Cas2v2ApplicationService(
     val domainEventId = UUID.randomUUID()
     val eventOccurredAt = application.submittedAt ?: OffsetDateTime.now()
 
-    cas2DomainEventService.saveCas2ApplicationSubmittedDomainEvent(
+    domainEventService.saveCas2ApplicationSubmittedDomainEvent(
       DomainEvent(
         id = domainEventId,
         applicationId = application.id,
@@ -328,6 +324,7 @@ class Cas2v2ApplicationService(
             applicationId = application.id,
             applicationUrl = applicationUrlTemplate
               .replace("#id", application.id.toString()),
+            bailHearingDate = application.bailHearingDate,
             submittedAt = eventOccurredAt.toInstant(),
             personReference = PersonReference(
               noms = application.nomsNumber ?: "Unknown NOMS Number",
@@ -339,9 +336,10 @@ class Cas2v2ApplicationService(
             conditionalReleaseDate = application.conditionalReleaseDate,
             submittedBy = Cas2ApplicationSubmittedEventDetailsSubmittedBy(
               staffMember = Cas2StaffMember(
-                staffIdentifier = application.createdByUser.nomisStaffId,
+                staffIdentifier = application.createdByUser.nomisStaffId ?: 0,
                 name = application.createdByUser.name,
-                username = application.createdByUser.nomisUsername,
+                username = application.createdByUser.username,
+                usertype = Cas2StaffMember.Usertype.valueOf(application.createdByUser.userType.authSource),
               ),
             ),
             cas2v2ApplicationOrigin = application.applicationOrigin.toString(),
@@ -357,7 +355,7 @@ class Cas2v2ApplicationService(
 
   @SuppressWarnings("ThrowsCount")
   private fun retrievePrisonCode(application: Cas2v2ApplicationEntity): String {
-    val inmateDetailResult = cas2OffenderService.getInmateDetailByNomsNumber(
+    val inmateDetailResult = cas2v2OffenderService.getInmateDetailByNomsNumber(
       crn = application.crn,
       nomsNumber = application.nomsNumber.toString(),
     )
@@ -370,7 +368,7 @@ class Cas2v2ApplicationService(
     return inmateDetail?.assignedLivingUnit?.agencyId ?: throw UpstreamApiException("No prison code available")
   }
 
-  private fun sendEmailApplicationSubmitted(user: NomisUserEntity, application: Cas2v2ApplicationEntity) {
+  private fun sendEmailApplicationSubmitted(user: Cas2v2UserEntity, application: Cas2v2ApplicationEntity) {
     emailNotificationService.sendEmail(
       recipientEmailAddress = notifyConfig.emailAddresses.cas2Assessors,
       templateId = notifyConfig.templates.cas2ApplicationSubmitted,

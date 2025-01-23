@@ -112,12 +112,12 @@ class Cas2v2ReportsTest : Cas2v2IntegrationTestBase() {
         withId(UUID.randomUUID())
       }
 
-      val user1 = nomisUserEntityFactory.produceAndPersist {
-        withNomisUsername("NOMIS_USER_1")
+      val user1 = cas2v2UserEntityFactory.produceAndPersist {
+        withUsername("NOMIS_USER_1")
       }
 
-      val user2 = nomisUserEntityFactory.produceAndPersist {
-        withNomisUsername("NOMIS_USER_2")
+      val user2 = cas2v2UserEntityFactory.produceAndPersist {
+        withUsername("NOMIS_USER_2")
       }
 
       val applicationId1 = UUID.randomUUID()
@@ -411,12 +411,12 @@ class Cas2v2ReportsTest : Cas2v2IntegrationTestBase() {
         withId(UUID.randomUUID())
       }
 
-      val user1 = nomisUserEntityFactory.produceAndPersist {
-        withNomisUsername("NOMIS_USER_1")
+      val user1 = cas2v2UserEntityFactory.produceAndPersist {
+        withUsername("NOMIS_USER_1")
       }
 
-      val user2 = nomisUserEntityFactory.produceAndPersist {
-        withNomisUsername("NOMIS_USER_2")
+      val user2 = cas2v2UserEntityFactory.produceAndPersist {
+        withUsername("NOMIS_USER_2")
       }
 
       val application1 = cas2v2ApplicationEntityFactory.produceAndPersist {
@@ -463,14 +463,14 @@ class Cas2v2ReportsTest : Cas2v2IntegrationTestBase() {
           personCrn = application2.crn,
           personNoms = application2.nomsNumber.toString(),
           startedAt = application2.createdAt.toString().split(".").first(),
-          startedBy = application2.createdByUser.nomisUsername,
+          startedBy = application2.createdByUser.username,
         ),
         UnsubmittedApplicationsReportRow(
           applicationId = application1.id.toString(),
           personCrn = application1.crn,
           personNoms = application1.nomsNumber.toString(),
           startedAt = application1.createdAt.toString().split(".").first(),
-          startedBy = application1.createdByUser.nomisUsername,
+          startedBy = application1.createdByUser.username,
         ),
       )
         .toDataFrame()

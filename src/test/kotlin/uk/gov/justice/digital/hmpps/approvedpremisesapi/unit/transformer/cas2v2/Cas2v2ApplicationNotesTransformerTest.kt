@@ -4,18 +4,18 @@ import org.assertj.core.api.Assertions
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas2v2ApplicationNote
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ExternalUserEntityFactory
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.NomisUserEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.cas2v2.Cas2v2ApplicationEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.cas2v2.Cas2v2AssessmentEntityFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.cas2v2.Cas2v2UserEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas2v2.Cas2v2ApplicationNoteEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas2v2.Cas2v2UserType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.cas2v2.Cas2v2ApplicationNotesTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomDateTimeBefore
 import java.time.OffsetDateTime
 import java.util.UUID
 
 class Cas2v2ApplicationNotesTransformerTest {
-  private val user = NomisUserEntityFactory().produce()
+  private val user = Cas2v2UserEntityFactory().produce()
   private val submittedApplication = Cas2v2ApplicationEntityFactory()
     .withCreatedByUser(user)
     .withSubmittedAt(OffsetDateTime.now())
@@ -27,7 +27,9 @@ class Cas2v2ApplicationNotesTransformerTest {
   inner class WithExternalUser {
     @Test
     fun `transforms JPA Cas2v2ApplicationNote db entity to API representation`() {
-      val externalUser = ExternalUserEntityFactory().produce()
+      val externalUser = Cas2v2UserEntityFactory().produce()
+      externalUser.userType = Cas2v2UserType.EXTERNAL
+
       val createdAt = OffsetDateTime.now().randomDateTimeBefore(1)
       val jpaEntity = Cas2v2ApplicationNoteEntity(
         id = UUID.randomUUID(),
@@ -56,7 +58,7 @@ class Cas2v2ApplicationNotesTransformerTest {
   inner class WithNomisUser {
     @Test
     fun `transforms JPA Cas2v2ApplicationNote db entity to API representation`() {
-      val nomisUser = NomisUserEntityFactory().produce()
+      val nomisUser = Cas2v2UserEntityFactory().produce()
       val createdAt = OffsetDateTime.now().randomDateTimeBefore(1)
       val jpaEntity = Cas2v2ApplicationNoteEntity(
         id = UUID.randomUUID(),

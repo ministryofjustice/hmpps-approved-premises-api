@@ -9,19 +9,20 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Application
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewCas2v2Application
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.SortDirection
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.UpdateApplication
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.UpdateCas2v2Application
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas2v2.Cas2v2ApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas2v2.Cas2v2ApplicationSummaryEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.BadRequestProblem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.ConflictProblem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.ForbiddenProblem
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.NotFoundProblem
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.AuthorisableActionResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.ValidatableActionResult
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.NomisUserService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas2.OffenderService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas2v2.Cas2v2ApplicationService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas2v2.Cas2v2UserService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.cas2v2.Cas2v2ApplicationsTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.PageCriteria
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.ensureEntityFromCasResultIsSuccess
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.extractEntityFromCasResult
 import java.net.URI
 import java.util.UUID
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas2v2ApplicationSummary as ModelCas2v2ApplicationSummary
@@ -34,7 +35,7 @@ class Cas2v2ApplicationController(
   private val cas2v2ApplicationsTransformer: Cas2v2ApplicationsTransformer,
   private val objectMapper: ObjectMapper,
   private val cas2OffenderService: OffenderService,
-  private val nomisUserService: NomisUserService,
+  private val userService: Cas2v2UserService,
 ) : ApplicationsCas2v2Delegate {
 
   override fun applicationsGet(
@@ -42,9 +43,9 @@ class Cas2v2ApplicationController(
     page: Int?,
     prisonCode: String?,
   ): ResponseEntity<List<ModelCas2v2ApplicationSummary>> {
-    val user = nomisUserService.getUserForRequest()
+    val user = userService.getUserForRequest()
 
-    prisonCode?.let { if (prisonCode != user.activeCaseloadId) throw ForbiddenProblem() }
+    prisonCode?.let { if (prisonCode != user.activeNomisCaseloadId) throw ForbiddenProblem() }
 
     val pageCriteria = PageCriteria("createdAt", SortDirection.desc, page)
 
@@ -56,30 +57,21 @@ class Cas2v2ApplicationController(
   }
 
   override fun applicationsApplicationIdGet(applicationId: UUID): ResponseEntity<Application> {
-    val user = nomisUserService.getUserForRequest()
+    val user = userService.getUserForRequest()
 
-    val application = when (
-      val applicationResult = cas2v2ApplicationService
-        .getCas2v2ApplicationForUser(
-          applicationId,
-          user,
-        )
+    val applicationResult = cas2v2ApplicationService
+      .getCas2v2ApplicationForUser(
+        applicationId,
+        user,
+      )
 
-    ) {
-      is AuthorisableActionResult.NotFound -> null
-      is AuthorisableActionResult.Unauthorised -> throw ForbiddenProblem()
-      is AuthorisableActionResult.Success -> applicationResult.entity
-    }
-
-    if (application != null) {
-      return ResponseEntity.ok(getPersonDetailAndTransform(application))
-    }
-    throw NotFoundProblem(applicationId, "Application")
+    val application = extractEntityFromCasResult(applicationResult)
+    return ResponseEntity.ok(getPersonDetailAndTransform(application))
   }
 
   @Transactional
   override fun applicationsPost(body: NewCas2v2Application): ResponseEntity<Application> {
-    val user = nomisUserService.getUserForRequest()
+    val user = userService.getUserForRequest()
 
     val personInfo = cas2OffenderService.getFullInfoForPersonOrThrow(body.crn)
 
@@ -87,12 +79,14 @@ class Cas2v2ApplicationController(
       body.crn,
       user,
       body.applicationOrigin,
+      body.bailHearingDate,
     )
 
     val application = when (applicationResult) {
       is ValidatableActionResult.GeneralValidationError -> throw BadRequestProblem(errorDetail = applicationResult.message)
       is ValidatableActionResult.FieldValidationError -> throw BadRequestProblem(invalidParams = applicationResult.validationMessages)
       is ValidatableActionResult.ConflictError -> throw ConflictProblem(id = applicationResult.conflictingEntityId, conflictReason = applicationResult.message)
+
       is ValidatableActionResult.Success -> applicationResult.entity
     }
 
@@ -101,55 +95,37 @@ class Cas2v2ApplicationController(
       .body(cas2v2ApplicationsTransformer.transformJpaToApi(application, personInfo))
   }
 
+  @Suppress("TooGenericExceptionThrown")
   @Transactional
   override fun applicationsApplicationIdPut(
     applicationId: UUID,
     body: UpdateApplication,
   ): ResponseEntity<Application> {
-    val user = nomisUserService.getUserForRequest()
+    val user = userService.getUserForRequest()
 
     val serializedData = objectMapper.writeValueAsString(body.data)
 
-    val applicationResult = cas2v2ApplicationService.updateCas2v2Application(
-      applicationId =
-      applicationId,
-      data = serializedData,
-      user,
-    )
+    val applicationResult = when (body) {
+      is UpdateCas2v2Application -> cas2v2ApplicationService.updateCas2v2Application(
+        applicationId = applicationId,
+        data = serializedData,
+        user,
+        body.bailHearingDate,
+      )
 
-    val validationResult = when (applicationResult) {
-      is AuthorisableActionResult.NotFound -> throw NotFoundProblem(applicationId, "Application")
-      is AuthorisableActionResult.Unauthorised -> throw ForbiddenProblem()
-      is AuthorisableActionResult.Success -> applicationResult.entity
+      else -> throw RuntimeException("Unsupported UpdateApplication type: ${body::class.qualifiedName}")
     }
 
-    val updatedApplication = when (validationResult) {
-      is ValidatableActionResult.GeneralValidationError -> throw BadRequestProblem(errorDetail = validationResult.message)
-      is ValidatableActionResult.FieldValidationError -> throw BadRequestProblem(invalidParams = validationResult.validationMessages)
-      is ValidatableActionResult.ConflictError -> throw ConflictProblem(id = validationResult.conflictingEntityId, conflictReason = validationResult.message)
-      is ValidatableActionResult.Success -> validationResult.entity
-    }
-
-    return ResponseEntity.ok(getPersonDetailAndTransform(updatedApplication))
+    val entity = extractEntityFromCasResult(applicationResult)
+    return ResponseEntity.ok(getPersonDetailAndTransform(entity))
   }
 
   @Transactional
   override fun applicationsApplicationIdAbandonPut(applicationId: UUID): ResponseEntity<Unit> {
-    val user = nomisUserService.getUserForRequest()
+    val user = userService.getUserForRequest()
 
-    val validationResult = when (val applicationResult = cas2v2ApplicationService.abandonCas2v2Application(applicationId, user)) {
-      is AuthorisableActionResult.NotFound -> throw NotFoundProblem(applicationId, "Application")
-      is AuthorisableActionResult.Unauthorised -> throw ForbiddenProblem()
-      is AuthorisableActionResult.Success -> applicationResult.entity
-    }
-
-    when (validationResult) {
-      is ValidatableActionResult.GeneralValidationError -> throw BadRequestProblem(errorDetail = validationResult.message)
-      is ValidatableActionResult.FieldValidationError -> throw BadRequestProblem(invalidParams = validationResult.validationMessages)
-      is ValidatableActionResult.ConflictError -> throw ConflictProblem(id = validationResult.conflictingEntityId, conflictReason = validationResult.message)
-      is ValidatableActionResult.Success -> validationResult.entity
-    }
-
+    val applicationResult = cas2v2ApplicationService.abandonCas2v2Application(applicationId, user)
+    ensureEntityFromCasResultIsSuccess(applicationResult)
     return ResponseEntity.ok(Unit)
   }
 

@@ -5,19 +5,19 @@ import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas2TimelineEvent
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.TimelineEventType
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ExternalUserEntityFactory
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.NomisUserEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.cas2v2.Cas2v2ApplicationEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.cas2v2.Cas2v2AssessmentEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.cas2v2.Cas2v2StatusUpdateEntityFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.cas2v2.Cas2v2UserEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas2v2.Cas2v2ApplicationNoteEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas2v2.Cas2v2StatusUpdateDetailEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas2v2.Cas2v2UserType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.cas2v2.Cas2v2TimelineEventsTransformer
 import java.time.OffsetDateTime
 import java.util.UUID
 
 class Cas2v2TimelineEventsTransformerTest {
-  private val user = NomisUserEntityFactory().produce()
+  private val user = Cas2v2UserEntityFactory().produce()
 
   private val cas2v2ApplicationFactory = Cas2v2ApplicationEntityFactory().withCreatedByUser(user)
 
@@ -37,7 +37,7 @@ class Cas2v2TimelineEventsTransformerTest {
         .withLabel("status update")
         .withApplication(submittedCas2v2ApplicationFactory.produce())
         .withAssessor(
-          ExternalUserEntityFactory().withName("Anne Assessor")
+          Cas2v2UserEntityFactory().withName("Anne Assessor")
             .produce(),
         ).produce()
 
@@ -63,12 +63,13 @@ class Cas2v2TimelineEventsTransformerTest {
         .withLabel("status update with details")
         .withApplication(submittedCas2v2ApplicationFactory.produce())
         .withAssessor(
-          ExternalUserEntityFactory().withName("Anne Other Assessor")
+          Cas2v2UserEntityFactory().withName("Anne Other Assessor")
+            .withUserType(Cas2v2UserType.EXTERNAL)
             .produce(),
         )
         .produce()
 
-      val nomisUser = NomisUserEntityFactory().withName("Some Nomis User").produce()
+      val nomisUser = Cas2v2UserEntityFactory().withName("Some Nomis User").withUserType(Cas2v2UserType.NOMIS).produce()
 
       val noteCreatedAt = OffsetDateTime.now().minusDays(3)
       val note = Cas2v2ApplicationNoteEntity(
