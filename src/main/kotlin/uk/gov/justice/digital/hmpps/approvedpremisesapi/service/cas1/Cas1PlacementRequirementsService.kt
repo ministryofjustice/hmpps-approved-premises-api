@@ -1,4 +1,4 @@
-package uk.gov.justice.digital.hmpps.approvedpremisesapi.service
+package uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1
 
 import org.springframework.stereotype.Service
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PlacementRequirements
@@ -17,11 +17,12 @@ import java.time.OffsetDateTime
 import java.util.UUID
 
 @Service
-class PlacementRequirementsService(
+class Cas1PlacementRequirementsService(
   private val postcodeDistrictRepository: PostcodeDistrictRepository,
   private val characteristicRepository: CharacteristicRepository,
   private val placementRequirementsRepository: PlacementRequirementsRepository,
 ) {
+  @SuppressWarnings("TooGenericExceptionThrown")
   fun createPlacementRequirements(
     assessment: AssessmentEntity,
     requirements: PlacementRequirements,
