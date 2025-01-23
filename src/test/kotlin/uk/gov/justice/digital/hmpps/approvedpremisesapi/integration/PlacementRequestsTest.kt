@@ -177,6 +177,7 @@ class PlacementRequestsTest : IntegrationTestBase() {
 
    Ideally all tests should be via the API, where possible
    */
+  @Deprecated("Superseded by Cas1Dashboard tests")
   @Nested
   inner class Dashboard {
 
