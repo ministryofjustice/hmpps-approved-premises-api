@@ -12,29 +12,29 @@ import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApplicationOrigin
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApplicationStatus
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas2StatusUpdate
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas2TimelineEvent
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas2v2Assessment
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.LatestCas2StatusUpdate
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NomisUser
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas2v2StatusUpdate
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas2v2User
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.LatestCas2v2StatusUpdate
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Person
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.NomisUserEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.cas2v2.Cas2v2ApplicationEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.cas2v2.Cas2v2AssessmentEntityFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.cas2v2.Cas2v2UserEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas2v2.Cas2v2ApplicationSummaryEntity
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.NomisUserTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.PersonTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.cas2v2.Cas2v2ApplicationsTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.cas2v2.Cas2v2AssessmentsTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.cas2v2.Cas2v2StatusUpdateTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.cas2v2.Cas2v2TimelineEventsTransformer
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.cas2v2.Cas2v2UserTransformer
 import java.time.LocalDate
 import java.time.OffsetDateTime
 import java.util.UUID
 
 class Cas2v2ApplicationsTransformerTest {
   private val mockPersonTransformer = mockk<PersonTransformer>()
-  private val mockNomisTransformer = mockk<NomisUserTransformer>()
+  private val mockCas2v2UserTransformer = mockk<Cas2v2UserTransformer>()
   private val mockCas2v2StatusUpdateTransformer = mockk<Cas2v2StatusUpdateTransformer>()
   private val mockCas2v2TimelineEventsTransformer = mockk<Cas2v2TimelineEventsTransformer>()
   private val mockCas2v2AssessmentsTransformer = mockk<Cas2v2AssessmentsTransformer>()
@@ -48,13 +48,13 @@ class Cas2v2ApplicationsTransformerTest {
   private val cas2v2ApplicationsTransformer = Cas2v2ApplicationsTransformer(
     objectMapper,
     mockPersonTransformer,
-    mockNomisTransformer,
+    mockCas2v2UserTransformer,
     mockCas2v2StatusUpdateTransformer,
     mockCas2v2TimelineEventsTransformer,
     mockCas2v2AssessmentsTransformer,
   )
 
-  private val user = NomisUserEntityFactory().produce()
+  private val user = Cas2v2UserEntityFactory().produce()
 
   private val cas2v2ApplicationFactory = Cas2v2ApplicationEntityFactory().withCreatedByUser(user)
 
@@ -64,14 +64,15 @@ class Cas2v2ApplicationsTransformerTest {
   @BeforeEach
   fun setup() {
     every { mockPersonTransformer.transformModelToPersonApi(any()) } returns mockk<Person>()
-    every { mockNomisTransformer.transformJpaToApi(any()) } returns NomisUser(
+    every { mockCas2v2UserTransformer.transformJpaToApi(any()) } returns Cas2v2User(
       id = user.id,
       name = user.name,
-      nomisUsername = user.nomisUsername,
+      username = user.username,
+      authSource = Cas2v2User.AuthSource.nomis,
       isActive = user.isActive,
     )
-    every { mockCas2v2StatusUpdateTransformer.transformJpaToApi(any()) } returns mockk<Cas2StatusUpdate>()
-    every { mockCas2v2StatusUpdateTransformer.transformJpaSummaryToLatestStatusUpdateApi(any()) } returns mockk<LatestCas2StatusUpdate>()
+    every { mockCas2v2StatusUpdateTransformer.transformJpaToApi(any()) } returns mockk<Cas2v2StatusUpdate>()
+    every { mockCas2v2StatusUpdateTransformer.transformJpaSummaryToLatestStatusUpdateApi(any()) } returns mockk<LatestCas2v2StatusUpdate>()
     every { mockCas2v2TimelineEventsTransformer.transformApplicationToTimelineEvents(any()) } returns listOf()
   }
 
@@ -132,7 +133,7 @@ class Cas2v2ApplicationsTransformerTest {
 
     @Test
     fun `transformJpaToApi transforms a submitted CAS2v2 application correctly with status updates`() {
-      val mockStatusUpdate = Cas2StatusUpdate(
+      val mockStatusUpdate = Cas2v2StatusUpdate(
         id = UUID.fromString("c426c63a-be35-421f-a1a0-fc286b60da41"),
         description = "On Waiting List",
         label = "On Waiting List",
@@ -206,7 +207,7 @@ class Cas2v2ApplicationsTransformerTest {
         prisonCode = "BRI",
       )
 
-      every { mockCas2v2StatusUpdateTransformer.transformJpaSummaryToLatestStatusUpdateApi(any()) } returns LatestCas2StatusUpdate(
+      every { mockCas2v2StatusUpdateTransformer.transformJpaSummaryToLatestStatusUpdateApi(any()) } returns LatestCas2v2StatusUpdate(
         statusId = UUID.fromString(application.latestStatusUpdateStatusId),
         label = application.latestStatusUpdateLabel!!,
       )

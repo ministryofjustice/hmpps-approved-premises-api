@@ -8,8 +8,8 @@ import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 import org.springframework.data.repository.findByIdOrNull
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.UpdateCas2Assessment
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.NomisUserEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.cas2v2.Cas2v2ApplicationEntityFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.cas2v2.Cas2v2UserEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas2v2.Cas2v2AssessmentEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas2v2.Cas2v2AssessmentRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.CasResult
@@ -32,7 +32,7 @@ class Cas2v2AssessmentServiceTest {
     fun `saves and returns entity from db`() {
       val cas2v2Application = Cas2v2ApplicationEntityFactory()
         .withCreatedByUser(
-          NomisUserEntityFactory()
+          Cas2v2UserEntityFactory()
             .produce(),
         ).produce()
       val assessEntity = Cas2v2AssessmentEntity(
@@ -67,7 +67,7 @@ class Cas2v2AssessmentServiceTest {
       val assessmentId = UUID.randomUUID()
       val cas2v2Application = Cas2v2ApplicationEntityFactory()
         .withCreatedByUser(
-          NomisUserEntityFactory()
+          Cas2v2UserEntityFactory()
             .produce(),
         ).produce()
       val assessEntity = Cas2v2AssessmentEntity(

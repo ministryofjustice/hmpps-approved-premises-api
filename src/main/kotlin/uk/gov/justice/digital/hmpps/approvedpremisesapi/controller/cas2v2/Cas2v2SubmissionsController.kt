@@ -11,11 +11,9 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.SortDirection
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.SubmitCas2v2Application
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas2v2.Cas2v2ApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas2v2.Cas2v2ApplicationSummaryEntity
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.ExternalUserService
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.HttpAuthService
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.NomisUserService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas2.OffenderService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas2v2.Cas2v2ApplicationService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas2v2.Cas2v2UserService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.cas2v2.Cas2v2SubmissionsTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.PageCriteria
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.ensureEntityFromCasResultIsSuccess
@@ -24,21 +22,14 @@ import java.util.UUID
 
 @Service("Cas2v2SubmissionsController")
 class Cas2v2SubmissionsController(
-  private val httpAuthService: HttpAuthService,
   private val cas2v2ApplicationService: Cas2v2ApplicationService,
   private val cas2v2SubmissionsTransformer: Cas2v2SubmissionsTransformer,
   private val offenderService: OffenderService,
-  private val externalUserService: ExternalUserService,
-  private val nomisUserService: NomisUserService,
+  private val userService: Cas2v2UserService,
 ) : SubmissionsCas2v2Delegate {
 
   override fun submissionsGet(page: Int?): ResponseEntity<List<Cas2v2SubmittedApplicationSummary>> {
-    val principal = httpAuthService.getCas2v2AuthenticatedPrincipalOrThrow()
-    if (principal.isExternalUser()) {
-      ensureExternalUserPersisted()
-    } else {
-      ensureNomisUserPersisted()
-    }
+    userService.ensureUserPersisted()
 
     val sortDirection = SortDirection.asc
     val sortBy = "submittedAt"
@@ -51,12 +42,7 @@ class Cas2v2SubmissionsController(
   }
 
   override fun submissionsApplicationIdGet(applicationId: UUID): ResponseEntity<Cas2v2SubmittedApplication> {
-    val principal = httpAuthService.getCas2v2AuthenticatedPrincipalOrThrow()
-    if (principal.isExternalUser()) {
-      ensureExternalUserPersisted()
-    } else {
-      ensureNomisUserPersisted()
-    }
+    userService.ensureUserPersisted()
 
     val applicationResult = cas2v2ApplicationService.getSubmittedCas2v2ApplicationForAssessor(applicationId)
     val application = extractEntityFromCasResult(applicationResult)
@@ -68,19 +54,11 @@ class Cas2v2SubmissionsController(
   override fun submissionsPost(
     submitCas2v2Application: SubmitCas2v2Application,
   ): ResponseEntity<Unit> {
-    val user = nomisUserService.getUserForRequest()
+    val user = userService.getUserForRequest()
     val submitResult = cas2v2ApplicationService.submitCas2v2Application(submitCas2v2Application, user)
     ensureEntityFromCasResultIsSuccess(submitResult)
 
     return ResponseEntity(HttpStatus.OK)
-  }
-
-  private fun ensureExternalUserPersisted() {
-    externalUserService.getUserForRequest()
-  }
-
-  private fun ensureNomisUserPersisted() {
-    nomisUserService.getUserForRequest()
   }
 
   private fun getPersonNamesAndTransformToSummaries(

@@ -12,16 +12,15 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas2.model.Ca
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas2.model.EventType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas2.model.ExternalUser
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas2.model.PersonReference
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas2AssessmentStatusUpdate
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas2v2AssessmentStatusUpdate
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.config.NotifyConfig
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ExternalUserEntity
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.NomisUserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas2v2.Cas2v2ApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas2v2.Cas2v2AssessmentRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas2v2.Cas2v2StatusUpdateDetailEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas2v2.Cas2v2StatusUpdateDetailRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas2v2.Cas2v2StatusUpdateEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas2v2.Cas2v2StatusUpdateRepository
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas2v2.Cas2v2UserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.DomainEvent
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.ValidationErrors
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.reference.Cas2PersistedApplicationStatus
@@ -53,7 +52,7 @@ class Cas2v2StatusUpdateService(
 
   private val log = LoggerFactory.getLogger(this::class.java)
 
-  fun isValidStatus(statusUpdate: Cas2AssessmentStatusUpdate): Boolean {
+  fun isValidStatus(statusUpdate: Cas2v2AssessmentStatusUpdate): Boolean {
     return findActiveStatusByName(statusUpdate.newStatus) != null
   }
 
@@ -61,8 +60,8 @@ class Cas2v2StatusUpdateService(
   @SuppressWarnings("ReturnCount")
   fun createForAssessment(
     assessmentId: UUID,
-    statusUpdate: Cas2AssessmentStatusUpdate,
-    assessor: ExternalUserEntity,
+    statusUpdate: Cas2v2AssessmentStatusUpdate,
+    assessor: Cas2v2UserEntity,
   ): CasResult<Cas2v2StatusUpdateEntity> {
     val assessment = cas2v2AssessmentRepository.findByIdOrNull(assessmentId)
       ?: return CasResult.NotFound()
@@ -157,8 +156,8 @@ class Cas2v2StatusUpdateService(
             updatedBy = ExternalUser(
               username = assessor.username,
               name = assessor.name,
-              email = assessor.email,
-              origin = assessor.origin,
+              email = assessor.email!!,
+              origin = "assessor.origin",
             ),
             updatedAt = eventOccurredAt.toInstant(),
           ),
@@ -167,7 +166,7 @@ class Cas2v2StatusUpdateService(
     )
   }
 
-  private fun sendEmailStatusUpdated(user: NomisUserEntity, application: Cas2v2ApplicationEntity, status: Cas2v2StatusUpdateEntity) {
+  private fun sendEmailStatusUpdated(user: Cas2v2UserEntity, application: Cas2v2ApplicationEntity, status: Cas2v2StatusUpdateEntity) {
     if (application.createdByUser.email != null) {
       emailNotificationService.sendCas2Email(
         recipientEmailAddress = user.email!!,

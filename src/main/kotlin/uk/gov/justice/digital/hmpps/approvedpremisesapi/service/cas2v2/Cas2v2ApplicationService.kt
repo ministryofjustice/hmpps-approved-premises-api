@@ -15,12 +15,12 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApplicationOri
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.SubmitCas2v2Application
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.config.NotifyConfig
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas2v2ApplicationJsonSchemaEntity
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.NomisUserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas2v2.Cas2v2ApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas2v2.Cas2v2ApplicationRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas2v2.Cas2v2ApplicationSummaryEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas2v2.Cas2v2ApplicationSummaryRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas2v2.Cas2v2LockableApplicationRepository
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas2v2.Cas2v2UserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.DomainEvent
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PaginationMetadata
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.ValidationErrors
@@ -46,7 +46,7 @@ class Cas2v2ApplicationService(
   private val cas2v2JsonSchemaService: Cas2v2JsonSchemaService,
   private val cas2v2OffenderService: OffenderService,
   private val cas2v2UserAccessService: Cas2v2UserAccessService,
-  private val cas2DomainEventService: DomainEventService,
+  private val domainEventService: DomainEventService,
   private val emailNotificationService: EmailNotificationService,
   private val cas2v2AssessmentService: Cas2v2AssessmentService,
   private val notifyConfig: NotifyConfig,
@@ -70,7 +70,7 @@ class Cas2v2ApplicationService(
   fun getCas2v2Applications(
     prisonCode: String?,
     isSubmitted: Boolean?,
-    user: NomisUserEntity,
+    user: Cas2v2UserEntity,
     pageCriteria: PageCriteria<String>,
   ): Pair<MutableList<Cas2v2ApplicationSummaryEntity>, PaginationMetadata?> {
     val response = if (prisonCode == null) {
@@ -101,7 +101,7 @@ class Cas2v2ApplicationService(
     )
   }
 
-  fun getCas2v2ApplicationForUser(applicationId: UUID, user: NomisUserEntity): CasResult<Cas2v2ApplicationEntity> {
+  fun getCas2v2ApplicationForUser(applicationId: UUID, user: Cas2v2UserEntity): CasResult<Cas2v2ApplicationEntity> {
     val applicationEntity = cas2v2ApplicationRepository.findByIdOrNull(applicationId)
       ?: return CasResult.NotFound("Cas2v2ApplicationEntity", applicationId.toString())
 
@@ -121,7 +121,7 @@ class Cas2v2ApplicationService(
   @SuppressWarnings("TooGenericExceptionThrown")
   fun createCas2v2Application(
     crn: String,
-    user: NomisUserEntity,
+    user: Cas2v2UserEntity,
     applicationOrigin: ApplicationOrigin = ApplicationOrigin.homeDetentionCurfew,
     bailHearingDate: LocalDate? = null,
   ) = validated<Cas2v2ApplicationEntity> {
@@ -170,7 +170,7 @@ class Cas2v2ApplicationService(
   fun updateCas2v2Application(
     applicationId: UUID,
     data: String?,
-    user: NomisUserEntity,
+    user: Cas2v2UserEntity,
     bailHearingDate: LocalDate?,
   ): CasResult<Cas2v2ApplicationEntity> {
     val application = cas2v2ApplicationRepository.findByIdOrNull(applicationId)?.let(cas2v2JsonSchemaService::checkCas2v2SchemaOutdated)
@@ -204,7 +204,7 @@ class Cas2v2ApplicationService(
   }
 
   @SuppressWarnings("ReturnCount")
-  fun abandonCas2v2Application(applicationId: UUID, user: NomisUserEntity): CasResult<Cas2v2ApplicationEntity> {
+  fun abandonCas2v2Application(applicationId: UUID, user: Cas2v2UserEntity): CasResult<Cas2v2ApplicationEntity> {
     val application = cas2v2ApplicationRepository.findByIdOrNull(applicationId)
       ?: return CasResult.NotFound("Cas2v2ApplicationEntity", applicationId.toString())
 
@@ -234,7 +234,7 @@ class Cas2v2ApplicationService(
   @Transactional
   fun submitCas2v2Application(
     submitCas2v2Application: SubmitCas2v2Application,
-    user: NomisUserEntity,
+    user: Cas2v2UserEntity,
   ): CasResult<Cas2v2ApplicationEntity> {
     val applicationId = submitCas2v2Application.applicationId
 
@@ -309,7 +309,7 @@ class Cas2v2ApplicationService(
     val domainEventId = UUID.randomUUID()
     val eventOccurredAt = application.submittedAt ?: OffsetDateTime.now()
 
-    cas2DomainEventService.saveCas2ApplicationSubmittedDomainEvent(
+    domainEventService.saveCas2ApplicationSubmittedDomainEvent(
       DomainEvent(
         id = domainEventId,
         applicationId = application.id,
@@ -336,9 +336,10 @@ class Cas2v2ApplicationService(
             conditionalReleaseDate = application.conditionalReleaseDate,
             submittedBy = Cas2ApplicationSubmittedEventDetailsSubmittedBy(
               staffMember = Cas2StaffMember(
-                staffIdentifier = application.createdByUser.nomisStaffId,
+                staffIdentifier = application.createdByUser.nomisStaffId ?: 0,
                 name = application.createdByUser.name,
-                username = application.createdByUser.nomisUsername,
+                username = application.createdByUser.username,
+                usertype = Cas2StaffMember.Usertype.valueOf(application.createdByUser.userType.authSource),
               ),
             ),
             cas2v2ApplicationOrigin = application.applicationOrigin.toString(),
@@ -367,7 +368,7 @@ class Cas2v2ApplicationService(
     return inmateDetail?.assignedLivingUnit?.agencyId ?: throw UpstreamApiException("No prison code available")
   }
 
-  private fun sendEmailApplicationSubmitted(user: NomisUserEntity, application: Cas2v2ApplicationEntity) {
+  private fun sendEmailApplicationSubmitted(user: Cas2v2UserEntity, application: Cas2v2ApplicationEntity) {
     emailNotificationService.sendEmail(
       recipientEmailAddress = notifyConfig.emailAddresses.cas2Assessors,
       templateId = notifyConfig.templates.cas2ApplicationSubmitted,

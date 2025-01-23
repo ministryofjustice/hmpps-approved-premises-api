@@ -14,8 +14,8 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas2.model.Ca
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas2.model.Cas2StatusDetail
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas2AssessmentStatusUpdate
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.Cas2v2IntegrationTestBase
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenACas2Assessor
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenACas2PomUser
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenACas2v2Assessor
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenACas2v2PomUser
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas2v2.Cas2v2StatusUpdateDetailRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas2v2.Cas2v2StatusUpdateRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.reference.Cas2ApplicationStatusSeeding
@@ -81,9 +81,9 @@ class Cas2v2StatusUpdateTest(
     fun `Create cas2v2 status update returns 201 and creates StatusUpdate when given status is valid`() {
       val assessmentId = UUID.fromString("22ceda56-98b2-411d-91cc-ace0ab8be872")
 
-      givenACas2Assessor { _, jwt ->
-        givenACas2PomUser { applicant, _ ->
-          val jsonSchema = approvedPremisesApplicationJsonSchemaEntityFactory.produceAndPersist()
+      givenACas2v2Assessor { _, jwt ->
+        givenACas2v2PomUser { applicant, _ ->
+          val jsonSchema = cas2v2ApplicationJsonSchemaEntityFactory.produceAndPersist()
           val application = cas2v2ApplicationEntityFactory.produceAndPersist {
             withCreatedByUser(applicant)
             withApplicationSchema(jsonSchema)
@@ -135,7 +135,7 @@ class Cas2v2StatusUpdateTest(
 
     @Test
     fun `Create cas2v2 status update returns 404 when assessment not found`() {
-      givenACas2Assessor { _, jwt ->
+      givenACas2v2Assessor { _, jwt ->
         webTestClient.post()
           .uri("/cas2v2/assessments/66f7127a-fe03-4b66-8378-5c0b048490f8/status-updates")
           .header("Authorization", "Bearer $jwt")
@@ -150,8 +150,8 @@ class Cas2v2StatusUpdateTest(
 
     @Test
     fun `Create cas2v2 status update returns 400 when new status NOT valid`() {
-      givenACas2Assessor { _, jwt ->
-        givenACas2PomUser { applicant, _ ->
+      givenACas2v2Assessor { _, jwt ->
+        givenACas2v2PomUser { applicant, _ ->
           val jsonSchema = approvedPremisesApplicationJsonSchemaEntityFactory.produceAndPersist()
           val application = cas2v2ApplicationEntityFactory.produceAndPersist {
             withCreatedByUser(applicant)
@@ -186,9 +186,9 @@ class Cas2v2StatusUpdateTest(
         val submittedAt = OffsetDateTime.now()
 
         try {
-          givenACas2Assessor { _, jwt ->
-            givenACas2PomUser { applicant, _ ->
-              val jsonSchema = approvedPremisesApplicationJsonSchemaEntityFactory.produceAndPersist()
+          givenACas2v2Assessor { _, jwt ->
+            givenACas2v2PomUser { applicant, _ ->
+              val jsonSchema = cas2v2ApplicationJsonSchemaEntityFactory.produceAndPersist()
               val application = cas2v2ApplicationEntityFactory.produceAndPersist {
                 withCreatedByUser(applicant)
                 withApplicationSchema(jsonSchema)
@@ -241,6 +241,7 @@ class Cas2v2StatusUpdateTest(
                 .isNotNull()
 
               emailAsserter.assertEmailsRequestedCount(1)
+
               val email = emailAsserter.assertEmailRequested(
                 toEmailAddress = applicant.email!!,
                 templateId = "ef4dc5e3-b1f1-4448-a545-7a936c50fc3a",
@@ -259,6 +260,7 @@ class Cas2v2StatusUpdateTest(
               // to the CAS2 domain
               val expectedFrontEndUrl = applicationUrlTemplate.replace("#id", application.id.toString())
               val persistedDomainEvent = domainEventRepository.findFirstByOrderByCreatedAtDesc()
+
               val domainEventFromJson = objectMapper.readValue(
                 persistedDomainEvent!!.data,
                 Cas2ApplicationStatusUpdatedEvent::class.java,
