@@ -53,9 +53,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.AssessmentServic
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.EmailNotificationService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.JsonSchemaService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.OffenderService
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.PlacementRequestService
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.PlacementRequestSource
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.PlacementRequirementsService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.TaskDeadlineService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.UserAccessService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.UserService
@@ -63,6 +60,9 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1Assessm
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1AssessmentEmailService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1DomainEventService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1PlacementRequestEmailService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1PlacementRequirementsService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.PlacementRequestService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.PlacementRequestSource
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.allocations.UserAllocator
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.unit.util.assertAssessmentHasSystemNote
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.UrlTemplate
@@ -84,7 +84,7 @@ class AcceptAssessmentTest {
   private val apDeliusContextApiClient = mockk<ApDeliusContextApiClient>()
   private val placementRequestServiceMock = mockk<PlacementRequestService>()
   private val emailNotificationServiceMock = mockk<EmailNotificationService>()
-  private val placementRequirementsServiceMock = mockk<PlacementRequirementsService>()
+  private val cas1PlacementRequirementsServiceMock = mockk<Cas1PlacementRequirementsService>()
   private val userAllocator = mockk<UserAllocator>()
   private val objectMapperMock = mockk<ObjectMapper>()
   private val taskDeadlineServiceMock = mockk<TaskDeadlineService>()
@@ -107,7 +107,7 @@ class AcceptAssessmentTest {
     offenderServiceMock,
     apDeliusContextApiClient,
     placementRequestServiceMock,
-    placementRequirementsServiceMock,
+    cas1PlacementRequirementsServiceMock,
     userAllocator,
     objectMapperMock,
     UrlTemplate("http://frontend/applications/#id"),
@@ -339,7 +339,7 @@ class AcceptAssessmentTest {
 
     every { userServiceMock.getUserForRequest() } returns user
 
-    every { placementRequirementsServiceMock.createPlacementRequirements(assessment, placementRequirements) } returns CasResult.Success(placementRequirementEntity)
+    every { cas1PlacementRequirementsServiceMock.createPlacementRequirements(assessment, placementRequirements) } returns CasResult.Success(placementRequirementEntity)
 
     every { cas1AssessmentDomainEventServiceMock.assessmentAccepted(any(), any(), any(), any(), any(), any()) } just Runs
 
@@ -394,7 +394,7 @@ class AcceptAssessmentTest {
     every { assessmentListener.preUpdate(any()) } returns Unit
     every { assessmentRepositoryMock.save(any()) } answers { it.invocation.args[0] as AssessmentEntity }
 
-    every { placementRequirementsServiceMock.createPlacementRequirements(assessment, placementRequirements) } returns CasResult.Success(placementRequirementEntity)
+    every { cas1PlacementRequirementsServiceMock.createPlacementRequirements(assessment, placementRequirements) } returns CasResult.Success(placementRequirementEntity)
 
     every { placementRequestServiceMock.createPlacementRequest(any(), any(), any(), any(), any(), any()) } returns PlacementRequestEntityFactory()
       .withPlacementRequirements(
@@ -469,7 +469,7 @@ class AcceptAssessmentTest {
     every { assessmentListener.preUpdate(any()) } returns Unit
     every { assessmentRepositoryMock.save(any()) } answers { it.invocation.args[0] as AssessmentEntity }
 
-    every { placementRequirementsServiceMock.createPlacementRequirements(assessment, placementRequirements) } returns CasResult.GeneralValidationError("Couldn't create Placement Requirements")
+    every { cas1PlacementRequirementsServiceMock.createPlacementRequirements(assessment, placementRequirements) } returns CasResult.GeneralValidationError("Couldn't create Placement Requirements")
 
     every { offenderServiceMock.getOffenderByCrn(assessment.application.crn, user.deliusUsername) } returns AuthorisableActionResult.Success(
       OffenderDetailsSummaryFactory().produce(),
@@ -484,7 +484,7 @@ class AcceptAssessmentTest {
     }
 
     verify(exactly = 1) {
-      placementRequirementsServiceMock.createPlacementRequirements(assessment, placementRequirements)
+      cas1PlacementRequirementsServiceMock.createPlacementRequirements(assessment, placementRequirements)
     }
   }
 

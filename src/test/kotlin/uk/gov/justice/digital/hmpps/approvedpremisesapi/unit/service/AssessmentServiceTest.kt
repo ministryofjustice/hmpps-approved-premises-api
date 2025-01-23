@@ -81,8 +81,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.ValidatableActio
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.AssessmentService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.JsonSchemaService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.OffenderService
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.PlacementRequestService
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.PlacementRequirementsService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.TaskDeadlineService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.UserAccessService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.UserService
@@ -90,6 +88,8 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1Assessm
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1AssessmentEmailService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1DomainEventService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1PlacementRequestEmailService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1PlacementRequirementsService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.PlacementRequestService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.allocations.UserAllocator
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.unit.util.assertAssessmentHasSystemNote
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.PageCriteria
@@ -111,7 +111,7 @@ class AssessmentServiceTest {
   private val offenderServiceMock = mockk<OffenderService>()
   private val apDeliusContextApiClient = mockk<ApDeliusContextApiClient>()
   private val placementRequestServiceMock = mockk<PlacementRequestService>()
-  private val placementRequirementsServiceMock = mockk<PlacementRequirementsService>()
+  private val cas1PlacementRequirementsServiceMock = mockk<Cas1PlacementRequirementsService>()
   private val userAllocatorMock = mockk<UserAllocator>()
   private val objectMapperMock = spyk<ObjectMapper>()
   private val taskDeadlineServiceMock = mockk<TaskDeadlineService>()
@@ -134,7 +134,7 @@ class AssessmentServiceTest {
     offenderServiceMock,
     apDeliusContextApiClient,
     placementRequestServiceMock,
-    placementRequirementsServiceMock,
+    cas1PlacementRequirementsServiceMock,
     userAllocatorMock,
     objectMapperMock,
     UrlTemplate("http://frontend/applications/#id"),
@@ -2369,7 +2369,7 @@ class AssessmentServiceTest {
     private val offenderServiceMock = mockk<OffenderService>()
     private val apDeliusContextApiClient = mockk<ApDeliusContextApiClient>()
     private val placementRequestServiceMock = mockk<PlacementRequestService>()
-    private val placementRequirementsServiceMock = mockk<PlacementRequirementsService>()
+    private val cas1PlacementRequirementsServiceMock = mockk<Cas1PlacementRequirementsService>()
     private val userAllocatorMock = mockk<UserAllocator>()
     private val objectMapperMock = spyk<ObjectMapper>()
     private val cas1AssessmentDomainEventService = mockk<Cas1AssessmentDomainEventService>()
@@ -2386,7 +2386,7 @@ class AssessmentServiceTest {
       offenderServiceMock,
       apDeliusContextApiClient,
       placementRequestServiceMock,
-      placementRequirementsServiceMock,
+      cas1PlacementRequirementsServiceMock,
       userAllocatorMock,
       objectMapperMock,
       UrlTemplate("http://frontend/applications/#id"),
