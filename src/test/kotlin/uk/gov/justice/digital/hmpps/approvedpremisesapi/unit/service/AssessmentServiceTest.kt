@@ -718,7 +718,7 @@ class AssessmentServiceTest {
   inner class UpdateAssessment {
 
     @Test
-    fun `updateAssessment returns unauthorised when the user does not have permission to access the assessment`() {
+    fun `unauthorised when the user does not have permission to access the assessment`() {
       val assessmentId = UUID.randomUUID()
 
       val user = UserEntityFactory()
@@ -765,7 +765,7 @@ class AssessmentServiceTest {
     }
 
     @Test
-    fun `updateAssessment returns general validation error for Assessment where schema is outdated`() {
+    fun `general validation where schema is outdated`() {
       val user = UserEntityFactory()
         .withYieldedProbationRegion {
           ProbationRegionEntityFactory()
@@ -814,7 +814,7 @@ class AssessmentServiceTest {
     }
 
     @Test
-    fun `updateAssessment returns general validation error for Assessment where assessment is withdrawn`() {
+    fun `general validation error where assessment is withdrawn`() {
       val user = UserEntityFactory()
         .withYieldedProbationRegion {
           ProbationRegionEntityFactory()
@@ -865,7 +865,7 @@ class AssessmentServiceTest {
     }
 
     @Test
-    fun `updateAssessment returns general validation error for Assessment where decision has already been taken`() {
+    fun `general validation error where decision has already been taken`() {
       val user = UserEntityFactory()
         .withYieldedProbationRegion {
           ProbationRegionEntityFactory()
@@ -921,7 +921,7 @@ class AssessmentServiceTest {
     }
 
     @Test
-    fun `updateAssessment returns general validation error for Assessment where assessment has been deallocated`() {
+    fun `general validation error where assessment has been deallocated`() {
       val user = UserEntityFactory()
         .withYieldedProbationRegion {
           ProbationRegionEntityFactory()
@@ -978,7 +978,7 @@ class AssessmentServiceTest {
     }
 
     @Test
-    fun `updateAssessment returns unauthorised when user cannot view Offender (LAO)`() {
+    fun `unauthorised when user cannot view Offender (LAO)`() {
       val user = UserEntityFactory()
         .withYieldedProbationRegion {
           ProbationRegionEntityFactory()
@@ -1032,7 +1032,7 @@ class AssessmentServiceTest {
     }
 
     @Test
-    fun `updateAssessment returns updated assessment`() {
+    fun `success`() {
       val user = UserEntityFactory()
         .withYieldedProbationRegion {
           ProbationRegionEntityFactory()
@@ -1088,7 +1088,6 @@ class AssessmentServiceTest {
       assertThatCasResult(result).isSuccess().with {
         assertThat(it.data).isEqualTo("{\"test\": \"data\"}")
       }
-
     }
   }
 
