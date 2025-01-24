@@ -179,7 +179,7 @@ class AssessmentService(
     val isAuthorised = userAccessService.userCanViewAssessment(user, assessment) || (forTimeline && userAccessService.userCanViewApplication(user, assessment.application))
 
     if (!isAuthorised) {
-      return CasResult.Unauthorised()
+      return CasResult.Unauthorised("Not authorised to view the assessment")
     }
 
     assessment.schemaUpToDate = assessment.schemaVersion.id == latestSchema.id
@@ -356,6 +356,15 @@ class AssessmentService(
     val assessment = when (val assessmentResult = getAssessmentAndValidate(acceptingUser, assessmentId)) {
       is CasResult.Success -> assessmentResult.value
       is CasResult.Error -> return assessmentResult
+    }
+
+    if (assessment is ApprovedPremisesAssessmentEntity) {
+      val allocatedToUser = assessment.allocatedToUser
+        ?: return CasResult.GeneralValidationError("An assessment must be allocated to a user to be updated")
+
+      if (allocatedToUser.id != acceptingUser.id) {
+        return CasResult.Unauthorised("The assessment can only be updated by the allocated user")
+      }
     }
 
     if (!assessment.schemaUpToDate) {

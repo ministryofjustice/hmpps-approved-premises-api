@@ -819,7 +819,7 @@ class AssessmentServiceTest {
 
       val result = assessmentService.updateAssessment(user, assessmentId, "{}")
 
-      assertThatCasResult(result).isUnauthorised()
+      assertThatCasResult(result).isUnauthorised("Not authorised to view the assessment")
     }
 
     @Test
@@ -2919,6 +2919,56 @@ class AssessmentServiceTest {
     }
 
     @Test
+    fun `CAS1 unauthorised when no user is allocated to the assessment`() {
+      val assessment = assessmentFactory
+        .withAllocatedToUser(null)
+        .produce()
+
+      every { userAccessServiceMock.userCanViewAssessment(any(), any()) } returns true
+
+      every { assessmentRepositoryMock.findByIdOrNull(assessmentId) } returns assessment
+
+      every { jsonSchemaServiceMock.getNewestSchema(ApprovedPremisesAssessmentJsonSchemaEntity::class.java) } returns assessmentSchema
+
+      every { jsonSchemaServiceMock.validate(assessmentSchema, "{\"test\": \"data\"}") } returns true
+
+      val offenderDetails = OffenderDetailsSummaryFactory().produce()
+
+      every { offenderServiceMock.getOffenderByCrn(assessment.application.crn, user.deliusUsername, any()) } returns AuthorisableActionResult.Success(offenderDetails)
+
+      every { userServiceMock.getUserForRequest() } returns user
+
+      val result = assessmentService.acceptAssessment(user, assessmentId, "{\"test\": \"data\"}", placementRequirements, null, null, null)
+
+      assertThatCasResult(result).isGeneralValidationError("An assessment must be allocated to a user to be updated")
+    }
+
+    @Test
+    fun `CAS1 unauthorised when submitted user is not allocated to the assessment`() {
+      val assessment = assessmentFactory
+        .withAllocatedToUser(UserEntityFactory().withDefaults().produce())
+        .produce()
+
+      every { userAccessServiceMock.userCanViewAssessment(any(), any()) } returns true
+
+      every { assessmentRepositoryMock.findByIdOrNull(assessmentId) } returns assessment
+
+      every { jsonSchemaServiceMock.getNewestSchema(ApprovedPremisesAssessmentJsonSchemaEntity::class.java) } returns assessmentSchema
+
+      every { jsonSchemaServiceMock.validate(assessmentSchema, "{\"test\": \"data\"}") } returns true
+
+      val offenderDetails = OffenderDetailsSummaryFactory().produce()
+
+      every { offenderServiceMock.getOffenderByCrn(assessment.application.crn, user.deliusUsername, any()) } returns AuthorisableActionResult.Success(offenderDetails)
+
+      every { userServiceMock.getUserForRequest() } returns user
+
+      val result = assessmentService.acceptAssessment(user, assessmentId, "{\"test\": \"data\"}", placementRequirements, null, null, null)
+
+      assertThatCasResult(result).isUnauthorised("The assessment can only be updated by the allocated user")
+    }
+
+    @Test
     fun `unauthorised when the user does not have permissions to access the assessment`() {
       every { assessmentRepositoryMock.findByIdOrNull(assessmentId) } returns assessmentFactory
         .withAllocatedToUser(
@@ -2938,7 +2988,7 @@ class AssessmentServiceTest {
 
       val result = assessmentService.acceptAssessment(user, assessmentId, "{}", placementRequirements, null, null, null)
 
-      assertThatCasResult(result).isUnauthorised()
+      assertThatCasResult(result).isUnauthorised("Not authorised to view the assessment")
     }
 
     @Test
@@ -3050,7 +3100,7 @@ class AssessmentServiceTest {
     }
 
     @Test
-    fun `CAS1 returns updated assessment, emits domain event, sends email, does not create placement request when no date information provided`() {
+    fun `CAS1 success returns updated assessment, emits domain event, sends email, does not create placement request when no date information provided`() {
       val assessment = assessmentFactory.produce()
       val application = assessment.application as ApprovedPremisesApplicationEntity
 
