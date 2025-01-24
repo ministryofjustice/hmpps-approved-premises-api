@@ -1,6 +1,10 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.seed
 
 import com.github.doyaaaaaken.kotlincsv.dsl.csvReader
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.runBlocking
 import org.springframework.context.ApplicationContext
 import org.springframework.scheduling.annotation.Async
 import org.springframework.stereotype.Service
@@ -100,6 +104,10 @@ class SeedService(
 
       val seedStarted = LocalDateTime.now()
 
+      if (job.runInTransaction && job.processRowsConcurrently) {
+        error("Can't run a job in a transaction and process rows in parallel")
+      }
+
       val rowsProcessed = if (job.runInTransaction) {
         transactionTemplate.execute { processJob(job, resolveCsvPath) }
       } else {
@@ -134,7 +142,8 @@ class SeedService(
     return rowsProcessed
   }
 
-  @SuppressWarnings("TooGenericExceptionThrown", "MagicNumber")
+  @OptIn(ExperimentalCoroutinesApi::class)
+  @SuppressWarnings("TooGenericExceptionThrown", "MagicNumber", "ThrowsCount")
   private fun <T> processCsv(
     job: SeedJob<T>,
     resolveCsvPath: SeedJob<T>.() -> String,
@@ -145,32 +154,58 @@ class SeedService(
 
     seedLogger.info("Processing $rowCount rows")
 
-    try {
-      csvReader().open(job.resolveCsvPath()) {
-        readAllWithHeaderAsSequence().forEach { row ->
-          rowNumber += 1
-          val deserializedRow = job.deserializeRow(row)
-          try {
-            job.processRow(deserializedRow)
-          } catch (exception: RuntimeException) {
-            val rootCauseException = findRootCause(exception)
-            errors.add("Error on row $rowNumber: ${exception.message} ${if (rootCauseException != null) rootCauseException.message else "no exception cause"}")
-            seedLogger.error("Error on row $rowNumber:", exception)
-          } finally {
-            if ((rowNumber % 10_000) == 0) {
-              seedLogger.info("Have processed $rowNumber of $rowCount rows")
+    if (job.processRowsConcurrently) {
+      runBlocking(Dispatchers.IO.limitedParallelism(5)) {
+        try {
+          csvReader().open(job.resolveCsvPath()) {
+            readAllWithHeaderAsSequence().forEach { row ->
+              rowNumber += 1
+              launch { processRow(job, row, rowNumber, rowCount, errors) }
             }
           }
+        } catch (exception: Exception) {
+          throw RuntimeException("Unable to process CSV at row $rowNumber", exception)
         }
       }
-    } catch (exception: Exception) {
-      throw RuntimeException("Unable to process CSV at row $rowNumber", exception)
+    } else {
+      try {
+        csvReader().open(job.resolveCsvPath()) {
+          readAllWithHeaderAsSequence().forEach { row ->
+            processRow(job, row, ++rowNumber, rowCount, errors)
+          }
+        }
+      } catch (exception: Exception) {
+        throw RuntimeException("Unable to process CSV at row $rowNumber", exception)
+      }
     }
+
     if (errors.isNotEmpty()) {
       throw RuntimeException("The following row-level errors were raised: ${errors.joinToString("\n")}")
     }
 
-    return rowNumber - 1
+    return rowNumber
+  }
+
+  @SuppressWarnings("MagicNumber")
+  private fun <T> processRow(
+    job: SeedJob<T>,
+    row: Map<String, String>,
+    rowNumber: Int,
+    rowCount: Int,
+    errors: MutableList<String>,
+  ) {
+    val deserializedRow = job.deserializeRow(row)
+    try {
+      job.processRow(deserializedRow)
+    } catch (exception: RuntimeException) {
+      val rootCauseException = findRootCause(exception)
+      errors.add("Error on row $rowNumber: ${exception.message} ${if (rootCauseException != null) rootCauseException.message else "no exception cause"}")
+      seedLogger.error("Error on row $rowNumber:", exception)
+    } finally {
+      if ((rowNumber % 10_000) == 0) {
+        seedLogger.info("Have processed $rowNumber of $rowCount rows")
+      }
+    }
   }
 
   private fun <T> enforcePresenceOfRequiredHeaders(job: SeedJob<T>, resolveCsvPath: SeedJob<T>.() -> String) {

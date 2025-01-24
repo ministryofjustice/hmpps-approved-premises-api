@@ -5,6 +5,7 @@ import java.io.File
 abstract class SeedJob<RowType>(
   val requiredHeaders: Set<String>? = null,
   val runInTransaction: Boolean = true,
+  val processRowsConcurrently: Boolean = false,
 ) {
   open fun verifyPresenceOfRequiredHeaders(headers: Set<String>) {
     if (requiredHeaders == null) return
