@@ -1283,3 +1283,72 @@ paths:
           $ref: '_shared.yml#/components/responses/403Response'
         500:
           $ref: '_shared.yml#/components/responses/500Response'
+  /applications/{applicationId}/timeline:
+    get:
+      tags:
+        - Applications
+      summary: Returns domain event summary
+      operationId: getApplicationTimeLine
+      parameters:
+        - name: applicationId
+          in: path
+          description: ID of the application
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        200:
+          description: successful operation
+          content:
+            'application/json':
+              schema:
+                type: array
+                items:
+                  $ref: '_shared.yml#/components/schemas/TimelineEvent'
+        401:
+          $ref: '_shared.yml#/components/responses/401Response'
+        403:
+          $ref: '_shared.yml#/components/responses/403Response'
+        404:
+          description: invalid CRN
+          content:
+            'application/json':
+              schema:
+                $ref: '_shared.yml#/components/schemas/Problem'
+        500:
+          $ref: '_shared.yml#/components/responses/500Response'
+  /people/{crn}/timeline:
+    get:
+      tags:
+        - People
+      summary: Returns a timeline of all applications for a Person.
+      operationId: getPeopleApplicationsTimeline
+      parameters:
+        - name: crn
+          in: path
+          description: CRN of the Person to fetch the timeline for
+          required: true
+          schema:
+            type: string
+      responses:
+        200:
+          description: successful operation
+          content:
+            'application/json':
+              schema:
+                $ref: '_shared.yml#/components/schemas/PersonalTimeline'
+        401:
+          $ref: '_shared.yml#/components/responses/401Response'
+        403:
+          $ref: '_shared.yml#/components/responses/403Response'
+        404:
+          description: invalid CRN
+          content:
+            'application/json':
+              schema:
+                $ref: '_shared.yml#/components/schemas/Problem'
+        500:
+          $ref: '_shared.yml#/components/responses/500Response'
+
+

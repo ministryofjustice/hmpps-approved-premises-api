@@ -1346,6 +1346,8 @@ paths:
           $ref: '_shared.yml#/components/responses/500Response'
   /people/{crn}/timeline:
     get:
+      description: deprecated, use /cas1/people/{crn}/timeline
+      deprecated: false
       summary: Returns a timeline of all applications for a Person.
       operationId: peopleCrnTimelineGet
       parameters:
@@ -1899,6 +1901,8 @@ paths:
       x-codegen-request-body-name: body
   /applications/{applicationId}/timeline:
     get:
+      description: deprecated, use /cas1/applications/{applicationId}/timeline
+      deprecated: true
       tags:
         - Application data timeline
       summary: Returns domain event summary
