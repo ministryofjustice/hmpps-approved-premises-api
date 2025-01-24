@@ -10,6 +10,7 @@ paths:
       tags:
         - Operations on CAS2 applications
       summary: Creates a CAS2 application
+      operationId: applicationsPost
       requestBody:
         description: Information to create a blank application with
         content:
@@ -47,6 +48,7 @@ paths:
       tags:
         - Operations on CAS2 applications
       summary: List summaries of all CAS2 applications authorised for the logged in user
+      operationId: applicationsGet
       parameters:
         - name: isSubmitted
           in: query
@@ -93,6 +95,7 @@ paths:
       tags:
         - Operations on CAS2 applications
       summary: Updates a CAS2 application
+      operationId: applicationsApplicationIdPut
       parameters:
         - name: applicationId
           in: path
@@ -132,6 +135,7 @@ paths:
       tags:
         - Operations on CAS2 applications
       summary: Gets a single CAS2 application by its ID
+      operationId: applicationsApplicationIdGet
       parameters:
         - name: applicationId
           in: path
@@ -158,6 +162,7 @@ paths:
       tags:
         - Operations on CAS2 applications
       summary: Abandons an in progress CAS2 application
+      operationId: applicationsApplicationIdAbandonPut
       parameters:
         - name: applicationId
           in: path
@@ -184,6 +189,7 @@ paths:
       tags:
         - Operations on submitted CAS2 applications (Assessors)
       summary: Updates a single CAS2 assessment by its ID
+      operationId: assessmentsAssessmentIdPut
       parameters:
         - name: assessmentId
           in: path
@@ -222,6 +228,7 @@ paths:
       tags:
         - Operations on submitted CAS2 applications (Assessors)
       summary: Gets a single CAS2 assessment by its ID
+      operationId: assessmentsAssessmentIdGet
       parameters:
         - name: assessmentId
           in: path
@@ -254,6 +261,7 @@ paths:
       tags:
         - Operations on submitted CAS2 applications (Assessors)
       summary: Creates a status update on an assessment
+      operationId: assessmentsAssessmentIdStatusUpdatesPost
       parameters:
         - name: assessmentId
           in: path
@@ -289,6 +297,7 @@ paths:
       tags:
         - Operations on CAS2 assessments
       summary: Add a note to an assessment
+      operationId: assessmentsAssessmentIdNotesPost
       parameters:
         - name: assessmentId
           in: path
@@ -329,6 +338,7 @@ paths:
       tags:
         - Operations on submitted CAS2 applications (Assessors)
       summary: List summaries of all submitted CAS2 applications
+      operationId: submissionsGet
       parameters:
         - name: page
           in: query
@@ -363,6 +373,7 @@ paths:
       tags:
         - Operations on CAS2 applications
       summary: Submits a CAS2 Application (creates a SubmittedApplication)
+      operationId: submissionsPost
       requestBody:
         description: Information needed to submit an application
         content:
@@ -390,6 +401,7 @@ paths:
       tags:
         - Operations on submitted CAS2 applications (Assessors)
       summary: Gets a single submitted CAS2 application by its ID
+      operationId: submissionsApplicationIdGet
       parameters:
         - name: applicationId
           in: path
@@ -416,6 +428,7 @@ paths:
       tags:
         - People operations
       summary: Searches for a Person by their Prison Number (NOMIS ID)
+      operationId: peopleSearchGet
       parameters:
         - name: nomsNumber
           in: query
@@ -453,6 +466,7 @@ paths:
       tags:
         - People operations
       summary: Returns the Risk To Individual (known as Risk to Self on frontend) section of an OASys.
+      operationId: peopleCrnOasysRiskToSelfGet
       parameters:
         - name: crn
           in: path
@@ -484,6 +498,7 @@ paths:
       tags:
         - People operations
       summary: Returns the Risk of Serious Harm section of an OASys.
+      operationId: peopleCrnOasysRoshGet
       parameters:
         - name: crn
           in: path
@@ -515,6 +530,7 @@ paths:
       tags:
         - People operations
       summary: Returns the risks for a Person
+      operationId: peopleCrnRisksGet
       parameters:
         - name: crn
           in: path
@@ -552,6 +568,7 @@ paths:
       tags:
         - Reference Data
       summary: Lists all application status update choices
+      operationId: reference_dataApplicationStatusGet
       responses:
         200:
           description: successful operation
@@ -572,6 +589,7 @@ paths:
       tags:
         - Reports
       summary: Returns a 'report' spreadsheet of metrics
+      operationId: reportsReportNameGet
       parameters:
         - name: reportName
           in: path

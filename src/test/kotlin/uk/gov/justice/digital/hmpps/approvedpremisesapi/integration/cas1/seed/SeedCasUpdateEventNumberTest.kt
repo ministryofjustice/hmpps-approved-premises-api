@@ -72,7 +72,7 @@ class SeedCasUpdateEventNumberTest : SeedTestBase() {
     assertThat(updatedApplication.offenceId).isEqualTo(NEW_OFFENCE_ID)
     assertThat(updatedApplication.convictionId).isEqualTo(NEW_CONVICTION_ID)
 
-    val notes = applicationTimelineNoteRepository.findApplicationTimelineNoteEntitiesByApplicationId(application.id)
+    val notes = applicationTimelineNoteRepository.findApplicationTimelineNoteEntitiesByApplicationIdAndDeletedAtIsNull(application.id)
     assertThat(notes).hasSize(1)
     assertThat(notes)
       .extracting("body")

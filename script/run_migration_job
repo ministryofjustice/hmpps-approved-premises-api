@@ -5,7 +5,7 @@
 
 set -e
 
-curl --location --request POST 'http://127.0.0.1:8080/migration-job' \
+curl --fail --show-error --location --request POST 'http://127.0.0.1:8080/migration-job' \
 --header 'Content-Type: application/json' \
 --data-raw '{
     "jobType": "'$1'"

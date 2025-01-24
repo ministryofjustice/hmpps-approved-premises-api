@@ -15,6 +15,7 @@ import java.time.OffsetDateTime
 import java.util.UUID
 
 @Component
+@Deprecated("Use Cas1SeedPremisesFromSiteSurveyXlsxJob instead")
 class ApprovedPremisesRoomsSeedJob(
   private val premisesRepository: PremisesRepository,
   private val roomRepository: RoomRepository,

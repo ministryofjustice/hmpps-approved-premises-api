@@ -68,7 +68,7 @@ class CasResultAssertions<T>(actual: CasResult<T>) : AbstractAssert<CasResultAss
     val message = (actual as CasResult.GeneralValidationError<T>).message
     if (message != expectedMessage) {
       failWithMessage(
-        "Expected GeneralValidationError message to be <%s> but was <%s>",
+        "Expected GeneralValidationError message to be <$expectedMessage> but was <%s>",
         message,
         (actual as CasResult.GeneralValidationError<T>).message,
       )

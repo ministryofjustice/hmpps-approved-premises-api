@@ -23,7 +23,7 @@ class SeedCas1ImportDeliusReferralsTest : SeedTestBase() {
     withCsv(
       csvName = "valid-csv",
       contents = listOf(
-        Cas1DeliusBookingManagementDataRowRaw(
+        Cas1DeliusImportDeliusReferralRowRaw(
           crn = "CRN1",
           eventNumber = "1",
           hostelCode = "hostel code",
@@ -41,7 +41,7 @@ class SeedCas1ImportDeliusReferralsTest : SeedTestBase() {
     withCsv(
       csvName = "valid-csv",
       contents = listOf(
-        Cas1DeliusBookingManagementDataRowRaw(
+        Cas1DeliusImportDeliusReferralRowRaw(
           crn = "CRN1",
           eventNumber = "1",
           decisionCode = "A1",
@@ -85,7 +85,7 @@ class SeedCas1ImportDeliusReferralsTest : SeedTestBase() {
     withCsv(
       csvName = "valid-csv",
       contents = listOf(
-        Cas1DeliusBookingManagementDataRowRaw(
+        Cas1DeliusImportDeliusReferralRowRaw(
           bookingId = bookingId.toString(),
           crn = "CRN2",
           eventNumber = "2",
@@ -108,6 +108,7 @@ class SeedCas1ImportDeliusReferralsTest : SeedTestBase() {
           nonArrivalReasonDescription = "non arrival reason description",
           nonArrivalNotes = "non arrival notes",
           hostelCode = "hostel code",
+          createdDateTime = "2021-01-15 11:09:01",
         ),
       ).toCsv(),
     )
@@ -136,6 +137,7 @@ class SeedCas1ImportDeliusReferralsTest : SeedTestBase() {
     assertThat(bookingImport.nonArrivalReasonDescription).isEqualTo("non arrival reason description")
     assertThat(bookingImport.nonArrivalNotes).isEqualTo("non arrival notes")
     assertThat(bookingImport.premisesQcode).isEqualTo("hostel code")
+    assertThat(bookingImport.createdAt).isEqualTo(OffsetDateTime.parse("2021-01-15T11:09:01+00:00"))
   }
 
   @Test
@@ -149,7 +151,7 @@ class SeedCas1ImportDeliusReferralsTest : SeedTestBase() {
       csvName = "valid-csv",
       contents =
       allDecisionCodes.map { decisionCode ->
-        Cas1DeliusBookingManagementDataRowRaw(
+        Cas1DeliusImportDeliusReferralRowRaw(
           crn = decisionCode,
           eventNumber = "1",
           decisionCode = decisionCode,
@@ -174,7 +176,7 @@ class SeedCas1ImportDeliusReferralsTest : SeedTestBase() {
     withCsv(
       csvName = "valid-csv",
       contents = listOf(
-        Cas1DeliusBookingManagementDataRowRaw(
+        Cas1DeliusImportDeliusReferralRowRaw(
           bookingId = bookingId.toString(),
           crn = "CRN1",
           eventNumber = "1",
@@ -206,7 +208,7 @@ class SeedCas1ImportDeliusReferralsTest : SeedTestBase() {
     assertThat(bookingImport.nonArrivalDate).isNull()
   }
 
-  private fun List<Cas1DeliusBookingManagementDataRowRaw>.toCsv(): String {
+  private fun List<Cas1DeliusImportDeliusReferralRowRaw>.toCsv(): String {
     val builder = CsvBuilder()
       .withUnquotedFields(
         "BOOKING_ID",
@@ -231,6 +233,7 @@ class SeedCas1ImportDeliusReferralsTest : SeedTestBase() {
         "NON_ARRIVAL_REASON_DESCRIPTION",
         "NON_ARRIVAL_NOTES",
         "HOSTEL_CODE",
+        "CREATED_DATETIME",
       )
       .newRow()
 
@@ -258,13 +261,14 @@ class SeedCas1ImportDeliusReferralsTest : SeedTestBase() {
         .withQuotedField(it.nonArrivalReasonDescription)
         .withQuotedField(it.nonArrivalNotes)
         .withQuotedField(it.hostelCode)
+        .withQuotedField(it.createdDateTime)
         .newRow()
     }
 
     return builder.build()
   }
 
-  data class Cas1DeliusBookingManagementDataRowRaw(
+  data class Cas1DeliusImportDeliusReferralRowRaw(
     val bookingId: String = "",
     val crn: String = "",
     val eventNumber: String = "",
@@ -287,5 +291,6 @@ class SeedCas1ImportDeliusReferralsTest : SeedTestBase() {
     val nonArrivalReasonDescription: String = "",
     val nonArrivalNotes: String = "",
     val hostelCode: String = "",
+    val createdDateTime: String = "",
   )
 }

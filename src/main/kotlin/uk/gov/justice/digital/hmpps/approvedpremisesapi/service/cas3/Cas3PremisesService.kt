@@ -16,8 +16,8 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TemporaryAcco
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TemporaryAccommodationPremisesSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas3.Cas3VoidBedspaceCancellationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas3.Cas3VoidBedspaceCancellationRepository
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas3.Cas3VoidBedspaceEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas3.Cas3VoidBedspaceReasonRepository
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas3.Cas3VoidBedspacesEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas3.Cas3VoidBedspacesRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.Availability
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.ValidationErrors
@@ -317,7 +317,7 @@ class Cas3PremisesService(
     referenceNumber: String?,
     notes: String?,
     bedId: UUID,
-  ): ValidatableActionResult<Cas3VoidBedspacesEntity> =
+  ): ValidatableActionResult<Cas3VoidBedspaceEntity> =
     validated {
       if (endDate.isBefore(startDate)) {
         "$.endDate" hasValidationError "beforeStartDate"
@@ -338,7 +338,7 @@ class Cas3PremisesService(
       }
 
       val voidBedspacesEntity = cas3VoidBedspacesRepository.save(
-        Cas3VoidBedspacesEntity(
+        Cas3VoidBedspaceEntity(
           id = UUID.randomUUID(),
           premises = premises,
           startDate = startDate,
@@ -361,7 +361,7 @@ class Cas3PremisesService(
     reasonId: UUID,
     referenceNumber: String?,
     notes: String?,
-  ): AuthorisableActionResult<ValidatableActionResult<Cas3VoidBedspacesEntity>> {
+  ): AuthorisableActionResult<ValidatableActionResult<Cas3VoidBedspaceEntity>> {
     val voidBedspace = cas3VoidBedspacesRepository.findByIdOrNull(voidBedspaceId)
       ?: return AuthorisableActionResult.NotFound()
 
@@ -396,7 +396,7 @@ class Cas3PremisesService(
   }
 
   fun cancelVoidBedspace(
-    voidBedspace: Cas3VoidBedspacesEntity,
+    voidBedspace: Cas3VoidBedspaceEntity,
     notes: String?,
   ) = validated<Cas3VoidBedspaceCancellationEntity> {
     if (voidBedspace.cancellation != null) {

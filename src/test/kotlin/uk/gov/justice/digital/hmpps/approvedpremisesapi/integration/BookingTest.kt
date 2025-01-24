@@ -1624,7 +1624,7 @@ class BookingTest : IntegrationTestBase() {
           }
         }
 
-        val existingLostBed = cas3VoidBedspacesEntityFactory.produceAndPersist {
+        val existingLostBed = cas3VoidBedspaceEntityFactory.produceAndPersist {
           withBed(bed)
           withPremises(premises)
           withStartDate(LocalDate.parse("2022-07-15"))
@@ -1680,7 +1680,7 @@ class BookingTest : IntegrationTestBase() {
           }
         }
 
-        val existingLostBed = cas3VoidBedspacesEntityFactory.produceAndPersist {
+        val existingLostBed = cas3VoidBedspaceEntityFactory.produceAndPersist {
           withBed(bed)
           withPremises(premises)
           withStartDate(LocalDate.parse("2022-07-15"))
@@ -1736,7 +1736,7 @@ class BookingTest : IntegrationTestBase() {
           }
         }
 
-        val existingLostBed = cas3VoidBedspacesEntityFactory.produceAndPersist {
+        val existingLostBed = cas3VoidBedspaceEntityFactory.produceAndPersist {
           withBed(bed)
           withPremises(premises)
           withStartDate(LocalDate.parse("2022-07-15"))
@@ -1933,7 +1933,7 @@ class BookingTest : IntegrationTestBase() {
           }
         }
 
-        val conflictingLostBed = cas3VoidBedspacesEntityFactory.produceAndPersist {
+        val conflictingLostBed = cas3VoidBedspaceEntityFactory.produceAndPersist {
           withBed(bed)
           withPremises(premises)
           withStartDate(LocalDate.parse("2022-07-15"))
@@ -3027,7 +3027,7 @@ class BookingTest : IntegrationTestBase() {
             }
           }
 
-          val conflictingLostBed = cas3VoidBedspacesEntityFactory.produceAndPersist {
+          val conflictingLostBed = cas3VoidBedspaceEntityFactory.produceAndPersist {
             withBed(bed)
             withPremises(premises)
             withStartDate(LocalDate.parse("2022-07-15"))
@@ -3088,7 +3088,7 @@ class BookingTest : IntegrationTestBase() {
             }
           }
 
-          val conflictingLostBed = cas3VoidBedspacesEntityFactory.produceAndPersist {
+          val conflictingLostBed = cas3VoidBedspaceEntityFactory.produceAndPersist {
             withBed(bed)
             withPremises(premises)
             withStartDate(LocalDate.parse("2022-07-15"))

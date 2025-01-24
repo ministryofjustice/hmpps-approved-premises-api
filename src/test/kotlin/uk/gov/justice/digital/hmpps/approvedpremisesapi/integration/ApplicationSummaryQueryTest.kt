@@ -153,6 +153,14 @@ class ApplicationSummaryQueryTest : IntegrationTestBase() {
           withProbationRegion(probationRegion)
         }
 
+        val deletedApplication = temporaryAccommodationApplicationEntityFactory.produceAndPersist {
+          withCrn(offenderDetails.otherIds.crn)
+          withCreatedByUser(user)
+          withApplicationSchema(applicationSchema)
+          withDeletedAt(OffsetDateTime.parse("2025-01-07T17:31:00+01:00"))
+          withProbationRegion(probationRegion)
+        }
+
         val assessmentForSubmittedApplication = temporaryAccommodationAssessmentEntityFactory.produceAndPersist {
           withApplication(submittedApplication)
           withAllocatedToUser(user)
@@ -197,6 +205,8 @@ class ApplicationSummaryQueryTest : IntegrationTestBase() {
           assertThat(it.getHasBooking()).isEqualTo(true)
           assertThat(it.getRiskRatings()).isNotBlank()
         }
+
+        assertThat(results.firstOrNull { it.getId() == deletedApplication.id }).isNull()
       }
     }
   }

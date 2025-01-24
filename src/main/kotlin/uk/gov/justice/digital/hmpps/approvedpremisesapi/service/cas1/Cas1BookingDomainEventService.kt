@@ -11,6 +11,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.Bo
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.BookingMadeEnvelope
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.BookingNotMade
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.BookingNotMadeEnvelope
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.Cas1SpaceCharacteristic
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.Cru
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.EventType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.PersonReference
@@ -23,6 +24,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.BookingEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.CancellationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.CancellationReasonEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas1SpaceBookingEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.CharacteristicEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.MetaDataName
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementRequestEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserEntity
@@ -138,20 +140,67 @@ class Cas1BookingDomainEventService(
     )
   }
 
+  fun spaceBookingChanged(
+    booking: Cas1SpaceBookingEntity,
+    changedBy: UserEntity,
+    bookingChangedAt: OffsetDateTime,
+    previousArrivalDateIfChanged: LocalDate?,
+    previousDepartureDateIfChanged: LocalDate?,
+    previousCharacteristicsIfChanged: List<CharacteristicEntity>?,
+  ) = bookingChanged(
+    BookingChangedInfo(
+      bookingId = booking.id,
+      crn = booking.crn,
+      arrivalDate = booking.expectedArrivalDate,
+      departureDate = booking.expectedDepartureDate,
+      applicationFacade = booking.applicationFacade,
+      approvedPremises = booking.premises,
+      changedAt = bookingChangedAt,
+      changedBy = changedBy,
+      previousArrivalDateIfChanged = previousArrivalDateIfChanged,
+      previousDepartureDateIfChanged = previousDepartureDateIfChanged,
+      isSpaceBooking = true,
+      characteristics = booking.criteria.toCas1SpaceCharacteristics(),
+      previousCharacteristics = previousCharacteristicsIfChanged?.toCas1SpaceCharacteristics(),
+    ),
+  )
+
   fun bookingChanged(
     booking: BookingEntity,
     changedBy: UserEntity,
     bookingChangedAt: OffsetDateTime,
     previousArrivalDateIfChanged: LocalDate?,
     previousDepartureDateIfChanged: LocalDate?,
+  ) = bookingChanged(
+    BookingChangedInfo(
+      bookingId = booking.id,
+      crn = booking.crn,
+      arrivalDate = booking.arrivalDate,
+      departureDate = booking.departureDate,
+      applicationFacade = booking.cas1ApplicationFacade,
+      approvedPremises = booking.premises as ApprovedPremisesEntity,
+      changedAt = bookingChangedAt,
+      changedBy = changedBy,
+      previousArrivalDateIfChanged = previousArrivalDateIfChanged,
+      previousDepartureDateIfChanged = previousDepartureDateIfChanged,
+      isSpaceBooking = false,
+    ),
+  )
+
+  private fun bookingChanged(
+    bookingChangedInfo: BookingChangedInfo,
   ) {
     val domainEventId = UUID.randomUUID()
-    val applicationFacade = booking.cas1ApplicationFacade
+    val applicationFacade = bookingChangedInfo.applicationFacade
     val applicationId = applicationFacade.id
     val eventNumber = applicationFacade.eventNumber!!
+    val crn = bookingChangedInfo.crn
+    val changedBy = bookingChangedInfo.changedBy
+    val changedAt = bookingChangedInfo.changedAt
+    val bookingId = bookingChangedInfo.bookingId
 
     val offenderDetails = getOffenderDetails(
-      booking.crn,
+      crn,
       changedBy.deliusUsername,
       ignoreLaoRestrictions = true,
     )
@@ -161,31 +210,40 @@ class Cas1BookingDomainEventService(
       is ClientResult.Failure -> staffDetailsResult.throwException()
     }
 
-    val approvedPremises = booking.premises as ApprovedPremisesEntity
+    val approvedPremises = bookingChangedInfo.approvedPremises
 
     domainEventService.saveBookingChangedEvent(
       DomainEvent(
         id = domainEventId,
         applicationId = applicationId,
-        crn = booking.crn,
+        crn = crn,
         nomsNumber = offenderDetails?.otherIds?.nomsNumber,
-        occurredAt = bookingChangedAt.toInstant(),
-        bookingId = booking.id,
+        occurredAt = changedAt.toInstant(),
         schemaVersion = 2,
+        bookingId = if (bookingChangedInfo.isSpaceBooking) {
+          null
+        } else {
+          bookingId
+        },
+        cas1SpaceBookingId = if (bookingChangedInfo.isSpaceBooking) {
+          bookingId
+        } else {
+          null
+        },
         data = BookingChangedEnvelope(
           id = domainEventId,
-          timestamp = bookingChangedAt.toInstant(),
+          timestamp = changedAt.toInstant(),
           eventType = EventType.bookingChanged,
           eventDetails = BookingChanged(
             applicationId = applicationId,
             applicationUrl = applicationUrlTemplate.resolve("id", applicationId.toString()),
-            bookingId = booking.id,
+            bookingId = bookingId,
             personReference = PersonReference(
-              crn = booking.crn,
+              crn = crn,
               noms = offenderDetails?.otherIds?.nomsNumber ?: "Unknown NOMS Number",
             ),
             deliusEventNumber = eventNumber,
-            changedAt = bookingChangedAt.toInstant(),
+            changedAt = changedAt.toInstant(),
             changedBy = staffDetails.toStaffMember(),
             premises = Premises(
               id = approvedPremises.id,
@@ -194,10 +252,12 @@ class Cas1BookingDomainEventService(
               legacyApCode = approvedPremises.qCode,
               localAuthorityAreaName = approvedPremises.localAuthorityArea!!.name,
             ),
-            arrivalOn = booking.arrivalDate,
-            departureOn = booking.departureDate,
-            previousArrivalOn = previousArrivalDateIfChanged,
-            previousDepartureOn = previousDepartureDateIfChanged,
+            arrivalOn = bookingChangedInfo.arrivalDate,
+            departureOn = bookingChangedInfo.departureDate,
+            characteristics = bookingChangedInfo.characteristics,
+            previousArrivalOn = bookingChangedInfo.previousArrivalDateIfChanged,
+            previousDepartureOn = bookingChangedInfo.previousDepartureDateIfChanged,
+            previousCharacteristics = bookingChangedInfo.previousCharacteristics,
           ),
         ),
       ),
@@ -285,6 +345,7 @@ class Cas1BookingDomainEventService(
         } else {
           null
         },
+        schemaVersion = 2,
         data = BookingMadeEnvelope(
           id = domainEventId,
           timestamp = bookingCreatedAt.toInstant(),
@@ -318,6 +379,7 @@ class Cas1BookingDomainEventService(
             releaseType = releaseType,
             sentenceType = sentenceType,
             situation = situation,
+            characteristics = bookingInfo.characteristics,
           ),
         ),
         metadata = mapOfNonNullValues(
@@ -425,6 +487,7 @@ class Cas1BookingDomainEventService(
     val arrivalDate: LocalDate,
     val departureDate: LocalDate,
     val isSpaceBooking: Boolean,
+    val characteristics: List<Cas1SpaceCharacteristic>? = null,
   )
 
   private fun BookingEntity.toBookingInfo() = BookingInfo(
@@ -445,6 +508,7 @@ class Cas1BookingDomainEventService(
     arrivalDate = canonicalArrivalDate,
     departureDate = canonicalDepartureDate,
     isSpaceBooking = true,
+    characteristics = criteria.toCas1SpaceCharacteristics(),
   )
 
   private data class CancellationInfo(
@@ -458,4 +522,26 @@ class Cas1BookingDomainEventService(
     val reason: CancellationReasonEntity,
     val isSpaceBooking: Boolean,
   )
+
+  private data class BookingChangedInfo(
+    val bookingId: UUID,
+    val crn: String,
+    val arrivalDate: LocalDate,
+    val departureDate: LocalDate,
+    val approvedPremises: ApprovedPremisesEntity,
+    val applicationFacade: Cas1ApplicationFacade,
+    val changedBy: UserEntity,
+    val changedAt: OffsetDateTime,
+    val previousArrivalDateIfChanged: LocalDate?,
+    val previousDepartureDateIfChanged: LocalDate?,
+    val isSpaceBooking: Boolean,
+    val characteristics: List<Cas1SpaceCharacteristic>? = null,
+    val previousCharacteristics: List<Cas1SpaceCharacteristic>? = null,
+  )
+
+  private fun List<CharacteristicEntity>.toCas1SpaceCharacteristics(): List<Cas1SpaceCharacteristic> =
+    this.map { it.asCas1SpaceCharacteristic() }
+
+  private fun CharacteristicEntity.asCas1SpaceCharacteristic() =
+    Cas1SpaceCharacteristic.entries.first { it.value == this.propertyName }
 }

@@ -16,7 +16,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.Pe
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.PersonReference
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.Premises
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.StaffMember
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.TimelineEvent
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.ApDeliusContextApiClient
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.ClientResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesEntity
@@ -29,7 +28,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.DomainEvent
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PersonSummaryInfoResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.deliuscontext.CaseSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.OffenderService
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.ApplicationTimelineTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.UrlTemplate
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.toInstant
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.toLocalDateTime
@@ -48,7 +46,6 @@ class Cas1SpaceBookingManagementDomainEventService(
   val domainEventService: Cas1DomainEventService,
   val offenderService: OffenderService,
   private val cas1SpaceBookingManagementConfig: Cas1SpaceBookingManagementDomainEventServiceConfig,
-  private val applicationTimelineTransformer: ApplicationTimelineTransformer,
   private val apDeliusContextApiClient: ApDeliusContextApiClient,
 ) {
 
@@ -221,13 +218,6 @@ class Cas1SpaceBookingManagementDomainEventService(
         ),
       ),
     )
-  }
-
-  fun getTimeline(bookingId: UUID): List<TimelineEvent> {
-    val domainEvents = domainEventService.getAllDomainEventsForSpaceBooking(bookingId)
-    return domainEvents.map {
-      applicationTimelineTransformer.transformDomainEventSummaryToTimelineEvent(it)
-    }
   }
 
   fun keyWorkerAssigned(

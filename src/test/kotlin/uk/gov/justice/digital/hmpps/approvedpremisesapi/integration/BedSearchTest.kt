@@ -1184,7 +1184,7 @@ class BedSearchTest : IntegrationTestBase() {
     @Test
     fun `Searching for a Temporary Accommodation Bed should not return bed when given premises bedspace endDate is same as search start date`() {
       givenAUser { _, jwt ->
-        val durationDays = 7
+        val durationDays = 7L
         val searchStartDate = LocalDate.parse("2023-03-23")
         val searchPdu = createTemporaryAccommodationWithBedSpaceEndDate(searchStartDate, searchStartDate)
 
@@ -1195,7 +1195,7 @@ class BedSearchTest : IntegrationTestBase() {
     @Test
     fun `Searching for a Temporary Accommodation Bed should not return bed when given premises bedspace endDate is between search start date and end date`() {
       givenAUser { _, jwt ->
-        val durationDays = 7
+        val durationDays = 7L
         val searchStartDate = LocalDate.parse("2023-03-23")
         val bedEndDate = searchStartDate.plusDays(2)
         val searchPdu = createTemporaryAccommodationWithBedSpaceEndDate(searchStartDate, bedEndDate)
@@ -1207,7 +1207,7 @@ class BedSearchTest : IntegrationTestBase() {
     @Test
     fun `Searching for a Temporary Accommodation Bed should not return bed when given premises bedspace endDate is same as search end date`() {
       givenAUser { _, jwt ->
-        val durationDays = 7
+        val durationDays = 7L
         val searchStartDate = LocalDate.parse("2023-03-23")
         val bedEndDate = searchStartDate.plusDays(durationDays.toLong() - 1)
         val searchPdu = createTemporaryAccommodationWithBedSpaceEndDate(searchStartDate, bedEndDate)
@@ -1219,7 +1219,7 @@ class BedSearchTest : IntegrationTestBase() {
     @Test
     fun `Searching for a Temporary Accommodation Bed should not return bed when given premises bedspace endDate less than than search start date`() {
       givenAUser { _, jwt ->
-        val durationDays = 7
+        val durationDays = 7L
         val searchStartDate = LocalDate.parse("2023-03-23")
         val bedEndDate = searchStartDate.minusDays(1)
         val searchPdu = createTemporaryAccommodationWithBedSpaceEndDate(searchStartDate, bedEndDate)
@@ -1238,7 +1238,7 @@ class BedSearchTest : IntegrationTestBase() {
         probationRegion = probationRegion,
       ) { _, jwt ->
         val searchStartDate = LocalDate.parse("2023-03-23")
-        val durationDays = 7
+        val durationDays = 7L
         val localAuthorityArea = localAuthorityEntityFactory.produceAndPersist()
 
         val premises = temporaryAccommodationPremisesEntityFactory.produceAndPersist {
@@ -1317,7 +1317,7 @@ class BedSearchTest : IntegrationTestBase() {
       givenAUser(
         probationRegion = probationRegion,
       ) { _, jwt ->
-        val durationDays = 7
+        val durationDays = 7L
         val searchStartDate = LocalDate.parse("2023-03-23")
         val localAuthorityArea = localAuthorityEntityFactory.produceAndPersist()
 
@@ -1382,7 +1382,7 @@ class BedSearchTest : IntegrationTestBase() {
     @Test
     fun `Searching for a Temporary Accommodation Bed should return no bed when given premises has got 2 rooms where one with endDate in the passed and another room with matching end date`() {
       givenAUser { _, jwt ->
-        val durationDays = 7
+        val durationDays = 7L
         val searchStartDate = LocalDate.parse("2023-03-23")
         val bedEndDate = searchStartDate.plusDays(1)
         val searchPdu = createTemporaryAccommodationWithBedSpaceEndDate(searchStartDate, bedEndDate)
@@ -1407,7 +1407,7 @@ class BedSearchTest : IntegrationTestBase() {
         probationRegion = probationRegion,
       ) { _, jwt ->
         val searchStartDate = LocalDate.parse("2024-03-12")
-        val durationDays = 7
+        val durationDays = 7L
         val localAuthorityArea = localAuthorityEntityFactory.produceAndPersist()
 
         val premisesOne = temporaryAccommodationPremisesEntityFactory.produceAndPersist {
@@ -1541,7 +1541,7 @@ class BedSearchTest : IntegrationTestBase() {
         probationRegion = probationRegion,
       ) { _, jwt ->
         val searchStartDate = LocalDate.parse("2024-08-12")
-        val durationDays = 7
+        val durationDays = 7L
         val localAuthorityArea = localAuthorityEntityFactory.produceAndPersist()
 
         val premisesOne = temporaryAccommodationPremisesEntityFactory.produceAndPersist {
@@ -1644,7 +1644,7 @@ class BedSearchTest : IntegrationTestBase() {
     private fun searchTemporaryAccommodationBedSpaceAndAssertNoAvailability(
       jwt: String,
       searchStartDate: LocalDate,
-      durationDays: Int,
+      durationDays: Long,
       pduId: UUID,
     ) {
       webTestClient.post()
@@ -1790,7 +1790,6 @@ class BedSearchTest : IntegrationTestBase() {
           id = bed.id,
           name = bed.name,
         ),
-        serviceName = ServiceName.temporaryAccommodation,
         overlaps = overlaps,
       )
     }

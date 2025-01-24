@@ -28,6 +28,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.CasResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.ValidatableActionResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1PlacementApplicationDomainEventService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1PlacementApplicationEmailService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.PlacementRequestService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.WithdrawableEntityType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.WithdrawableState
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.WithdrawalContext
@@ -227,7 +228,10 @@ class PlacementApplicationService(
     withdrawalContext: WithdrawalContext,
   ): CasResult<PlacementApplicationEntity> {
     val placementApplication =
-      placementApplicationRepository.findByIdOrNull(id) ?: return CasResult.NotFound()
+      placementApplicationRepository.findByIdOrNull(id) ?: return CasResult.NotFound(
+        entityType = "PlacementApplication",
+        id = id.toString(),
+      )
 
     if (placementApplication.isWithdrawn) {
       return CasResult.Success(placementApplication)
@@ -379,7 +383,10 @@ class PlacementApplicationService(
   ): CasResult<PlacementApplicationEntity> {
     val user = userService.getUserForRequest()
     val placementApplicationEntity =
-      placementApplicationRepository.findByIdOrNull(id) ?: return CasResult.NotFound()
+      placementApplicationRepository.findByIdOrNull(id) ?: return CasResult.NotFound(
+        entityType = "PlacementApplication",
+        id = id.toString(),
+      )
 
     if (placementApplicationEntity.allocatedToUser != user) {
       return CasResult.Unauthorised()
@@ -444,7 +451,12 @@ class PlacementApplicationService(
 
   private fun <T> getApplicationForUpdateOrSubmit(id: UUID): Either<CasResult<T>, PlacementApplicationEntity> {
     val placementApplication = placementApplicationRepository.findByIdOrNull(id)
-      ?: return Either.Left(CasResult.NotFound())
+      ?: return Either.Left(
+        CasResult.NotFound(
+          entityType = "PlacementApplication",
+          id = id.toString(),
+        ),
+      )
     val user = userService.getUserForRequest()
 
     if (placementApplication.createdByUser != user) {

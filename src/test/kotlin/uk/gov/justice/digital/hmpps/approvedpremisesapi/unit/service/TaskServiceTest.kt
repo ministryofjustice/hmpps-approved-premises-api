@@ -45,10 +45,10 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.CasResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.ValidatableActionResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.AssessmentService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.PlacementApplicationService
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.PlacementRequestService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.TaskService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.UserAccessService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.UserService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.PlacementRequestService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.UserTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.PageCriteria
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.PaginationConfig
@@ -116,7 +116,7 @@ class TaskServiceTest {
     every { userAccessServiceMock.userCanReallocateTask(any()) } returns true
 
     val assigneeUserId = UUID.fromString("55aa66be-0819-494e-955b-90b9aaa4f0c6")
-    every { userServiceMock.updateUserFromDelius(assigneeUserId, ServiceName.approvedPremises) } returns CasResult.NotFound()
+    every { userServiceMock.updateUserFromDelius(assigneeUserId, ServiceName.approvedPremises) } returns CasResult.NotFound("task", "id")
 
     val result = taskService.reallocateTask(requestUserWithPermission, TaskType.assessment, assigneeUserId, UUID.randomUUID())
 
@@ -135,7 +135,13 @@ class TaskServiceTest {
       .withAllocatedToUser(assigneeUser)
       .produce()
 
-    every { assessmentServiceMock.reallocateAssessment(assigneeUser, assessment.id) } returns AuthorisableActionResult.Success(
+    every {
+      assessmentServiceMock.reallocateAssessment(
+        allocatingUser = requestUserWithPermission,
+        assigneeUser = assigneeUser,
+        id = assessment.id,
+      )
+    } returns AuthorisableActionResult.Success(
       ValidatableActionResult.Success(
         assessment,
       ),

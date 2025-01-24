@@ -127,7 +127,7 @@ class Cas1OutOfServiceBedTest : InitialiseDatabasePerClassTestBase() {
     @ParameterizedTest
     @EnumSource(
       value = UserRole::class,
-      names = [ "CAS1_FUTURE_MANAGER", "CAS1_CRU_MEMBER", "CAS1_CRU_MEMBER_FIND_AND_BOOK_BETA", "CAS1_CRU_MEMBER_ENABLE_OUT_OF_SERVICE_BEDS", "CAS1_JANITOR" ],
+      names = [ "CAS1_FUTURE_MANAGER", "CAS1_CRU_MEMBER_ENABLE_OUT_OF_SERVICE_BEDS", "CAS1_JANITOR" ],
     )
     fun `Get All Out-Of-Service Beds returns OK with correct body when user has the correct role`(role: UserRole) {
       givenAUser(roles = listOf(role)) { user, jwt ->
@@ -457,7 +457,7 @@ class Cas1OutOfServiceBedTest : InitialiseDatabasePerClassTestBase() {
 
       @Test
       fun `Returns the latest revision information for an out of service bed when all temporalities are requested`() {
-        givenAUser(roles = listOf(UserRole.CAS1_CRU_MEMBER)) { user, jwt ->
+        givenAUser(roles = listOf(UserRole.CAS1_FUTURE_MANAGER)) { user, jwt ->
 
           initialiseOosBedsForAllTemporalities(user)
 
@@ -483,7 +483,7 @@ class Cas1OutOfServiceBedTest : InitialiseDatabasePerClassTestBase() {
 
       @Test
       fun `Returns no out of service bed when specified temporality is past and latest revision is not in the past`() {
-        givenAUser(roles = listOf(UserRole.CAS1_CRU_MEMBER)) { user, jwt ->
+        givenAUser(roles = listOf(UserRole.CAS1_FUTURE_MANAGER)) { user, jwt ->
 
           initialiseOosBedsForAllTemporalities(user)
 
@@ -505,7 +505,7 @@ class Cas1OutOfServiceBedTest : InitialiseDatabasePerClassTestBase() {
 
       @Test
       fun `Returns no out of service bed when specified temporality is current and the latest revision is not current`() {
-        givenAUser(roles = listOf(UserRole.CAS1_CRU_MEMBER)) { user, jwt ->
+        givenAUser(roles = listOf(UserRole.CAS1_FUTURE_MANAGER)) { user, jwt ->
 
           initialiseOosBedsForAllTemporalities(user)
 
@@ -527,7 +527,7 @@ class Cas1OutOfServiceBedTest : InitialiseDatabasePerClassTestBase() {
 
       @Test
       fun `Returns out of service bed when specified temporality is future and the latest revision is the future`() {
-        givenAUser(roles = listOf(UserRole.CAS1_CRU_MEMBER)) { user, jwt ->
+        givenAUser(roles = listOf(UserRole.CAS1_FUTURE_MANAGER)) { user, jwt ->
 
           initialiseOosBedsForAllTemporalities(user)
 
@@ -762,7 +762,7 @@ class Cas1OutOfServiceBedTest : InitialiseDatabasePerClassTestBase() {
     @ParameterizedTest
     @EnumSource(
       value = UserRole::class,
-      names = [ "CAS1_FUTURE_MANAGER", "CAS1_CRU_MEMBER", "CAS1_CRU_MEMBER_FIND_AND_BOOK_BETA", "CAS1_CRU_MEMBER_ENABLE_OUT_OF_SERVICE_BEDS", "CAS1_JANITOR" ],
+      names = [ "CAS1_FUTURE_MANAGER", "CAS1_CRU_MEMBER_ENABLE_OUT_OF_SERVICE_BEDS", "CAS1_JANITOR" ],
     )
     fun `Get All Out-Of-Service Beds On Premises returns OK with correct body when user has correct role`(role: UserRole) {
       givenAUser(roles = listOf(role)) { user, jwt ->
@@ -865,7 +865,7 @@ class Cas1OutOfServiceBedTest : InitialiseDatabasePerClassTestBase() {
 
     @Test
     fun `Get Out-Of-Service Bed for non-existent premises returns 404`() {
-      givenAUser(roles = listOf(UserRole.CAS1_CRU_MEMBER)) { _, jwt ->
+      givenAUser(roles = listOf(UserRole.CAS1_CRU_MEMBER_ENABLE_OUT_OF_SERVICE_BEDS)) { _, jwt ->
         webTestClient.get()
           .uri("/cas1/premises/9054b6a8-65ad-4d55-91ee-26ba65e05488/out-of-service-beds")
           .header("Authorization", "Bearer $jwt")
@@ -896,7 +896,7 @@ class Cas1OutOfServiceBedTest : InitialiseDatabasePerClassTestBase() {
     @ParameterizedTest
     @EnumSource(
       value = UserRole::class,
-      names = [ "CAS1_FUTURE_MANAGER", "CAS1_CRU_MEMBER", "CAS1_CRU_MEMBER_FIND_AND_BOOK_BETA", "CAS1_CRU_MEMBER_ENABLE_OUT_OF_SERVICE_BEDS", "CAS1_JANITOR" ],
+      names = [ "CAS1_FUTURE_MANAGER", "CAS1_CRU_MEMBER_ENABLE_OUT_OF_SERVICE_BEDS", "CAS1_JANITOR" ],
     )
     fun `Get Out-Of-Service Bed returns OK with correct body when user has the correct role`(role: UserRole) {
       givenAUser(roles = listOf(role)) { user, jwt ->
@@ -1051,7 +1051,7 @@ class Cas1OutOfServiceBedTest : InitialiseDatabasePerClassTestBase() {
     @ParameterizedTest
     @EnumSource(
       value = UserRole::class,
-      names = [ "CAS1_FUTURE_MANAGER", "CAS1_CRU_MEMBER", "CAS1_CRU_MEMBER_FIND_AND_BOOK_BETA", "CAS1_CRU_MEMBER_ENABLE_OUT_OF_SERVICE_BEDS", "CAS1_JANITOR" ],
+      names = [ "CAS1_FUTURE_MANAGER", "CAS1_CRU_MEMBER_ENABLE_OUT_OF_SERVICE_BEDS", "CAS1_JANITOR" ],
     )
     fun `Create Out-Of-Service Beds returns OK with correct body when user has correct roles`(role: UserRole) {
       givenAUser(roles = listOf(role)) { user, jwt ->
@@ -1574,7 +1574,7 @@ class Cas1OutOfServiceBedTest : InitialiseDatabasePerClassTestBase() {
     @ParameterizedTest
     @EnumSource(
       value = UserRole::class,
-      names = [ "CAS1_FUTURE_MANAGER", "CAS1_CRU_MEMBER", "CAS1_CRU_MEMBER_FIND_AND_BOOK_BETA", "CAS1_CRU_MEMBER_ENABLE_OUT_OF_SERVICE_BEDS", "CAS1_JANITOR" ],
+      names = [ "CAS1_FUTURE_MANAGER", "CAS1_CRU_MEMBER_ENABLE_OUT_OF_SERVICE_BEDS", "CAS1_JANITOR" ],
     )
     fun `Update Out-Of-Service Beds returns OK with correct body when user the correct role`(role: UserRole) {
       givenAUser(roles = listOf(role)) { user, jwt ->
@@ -2206,7 +2206,7 @@ class Cas1OutOfServiceBedTest : InitialiseDatabasePerClassTestBase() {
     @ParameterizedTest
     @EnumSource(
       value = UserRole::class,
-      names = [ "CAS1_FUTURE_MANAGER", "CAS1_CRU_MEMBER", "CAS1_CRU_MEMBER_FIND_AND_BOOK_BETA", "CAS1_CRU_MEMBER_ENABLE_OUT_OF_SERVICE_BEDS", "CAS1_JANITOR" ],
+      names = [ "CAS1_FUTURE_MANAGER", "CAS1_CRU_MEMBER_ENABLE_OUT_OF_SERVICE_BEDS", "CAS1_JANITOR" ],
     )
     fun `Cancel Out-Of-Service Bed returns OK with correct body when user has the correct roles`(role: UserRole) {
       givenAUser(roles = listOf(role)) { user, jwt ->

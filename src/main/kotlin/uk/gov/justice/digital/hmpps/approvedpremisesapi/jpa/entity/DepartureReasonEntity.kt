@@ -19,6 +19,10 @@ interface DepartureReasonRepository : JpaRepository<DepartureReasonEntity, UUID>
   @Query("SELECT d FROM DepartureReasonEntity d WHERE d.serviceScope = :serviceName OR d.serviceScope = '*'")
   fun findAllByServiceScope(serviceName: String): List<DepartureReasonEntity>
 
+  @Query("SELECT d FROM DepartureReasonEntity d WHERE d.serviceScope = 'approved-premises' AND d.isActive = true")
+  fun findActiveForCas1(): List<DepartureReasonEntity>
+
+  @Deprecated("This SQL is ambiguous and may return unexpected resulted")
   @Query("SELECT d FROM DepartureReasonEntity d WHERE d.serviceScope = :serviceName OR d.serviceScope = '*' AND d.isActive = true")
   fun findActiveByServiceScope(serviceName: String): List<DepartureReasonEntity>
 
@@ -34,6 +38,10 @@ data class DepartureReasonEntity(
   val id: UUID,
   val name: String,
   val isActive: Boolean,
+  /**
+   * Use of wildcard should be considered deprecated as blocks the ability to disable a reason
+   * for one service but no the other. Wildcard is no longer used by CAS1
+   */
   val serviceScope: String,
   val legacyDeliusReasonCode: String?,
   @ManyToOne(fetch = FetchType.LAZY)
@@ -42,12 +50,20 @@ data class DepartureReasonEntity(
 ) {
   override fun toString() = "DepartureReasonEntity:$id"
 
+  fun isCas1() = serviceScope == "approved-premises"
+
   companion object {
     fun valueOf(apiValue: WithdrawPlacementRequestReason): PlacementRequestWithdrawalReason? =
       PlacementRequestWithdrawalReason.entries.firstOrNull { it.apiValue == apiValue }
   }
 }
 
+@Deprecated(
+  """
+  Use of wildcard should be considered deprecated as blocks the ability to disable a reason
+  for one service but no the other. Wildcard is no longer used by CAS1
+""",
+)
 fun DepartureReasonEntity.serviceScopeMatches(bookingService: String): Boolean {
   return when (serviceScope) {
     "*" -> true

@@ -1,8 +1,6 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.integration
 
-import com.fasterxml.jackson.core.type.TypeReference
 import com.fasterxml.jackson.databind.ObjectMapper
-import net.minidev.json.JSONArray
 import org.assertj.core.api.Assertions.assertThat
 import org.assertj.core.api.Assumptions
 import org.junit.jupiter.api.Assertions.fail
@@ -16,11 +14,7 @@ import org.springframework.data.repository.findByIdOrNull
 import org.springframework.http.HttpStatus
 import org.springframework.test.web.reactive.server.WebTestClient
 import org.springframework.test.web.reactive.server.returnResult
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas3.model.CAS3AssessmentUpdatedEvent
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas3.model.CAS3AssessmentUpdatedField
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas3.model.EventType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApType
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Assessment
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.AssessmentAcceptance
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.AssessmentRejection
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.AssessmentSortField
@@ -39,9 +33,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PlacementCrite
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PlacementDates
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PlacementRequirements
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Problem
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ReferralHistoryNote
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ReferralHistorySystemNote
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ReferralHistoryUserNote
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.UpdateAssessment
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.UpdatedClarificationNote
@@ -73,7 +64,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DomainAssessm
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DomainAssessmentSummaryStatus.NOT_STARTED
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DomainEventType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ProbationDeliveryUnitEntity
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ReferralHistorySystemNoteType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TemporaryAccommodationApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TemporaryAccommodationApplicationJsonSchemaEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TemporaryAccommodationAssessmentEntity
@@ -1992,131 +1982,6 @@ class AssessmentTest : IntegrationTestBase() {
   }
 
   @Test
-  fun `Get Temporary Accommodation assessment by ID returns 200 with notes transformed correctly`() {
-    givenAUser(roles = listOf(UserRole.CAS3_ASSESSOR)) { userEntity, jwt ->
-      givenAnOffender { offenderDetails, inmateDetails ->
-
-        val assessmentSchema = temporaryAccommodationAssessmentJsonSchemaEntityFactory.produceAndPersist {
-          withPermissiveSchema()
-          withAddedAt(OffsetDateTime.now())
-        }
-
-        val application = produceAndPersistTemporaryAccommodationApplication(offenderDetails.otherIds.crn, userEntity) {
-          withArrivalDate(LocalDate.now().minusDays(100))
-          withPersonReleaseDate(LocalDate.now().minusDays(100))
-        }
-
-        val rejectedSystemNoteId1 = UUID.randomUUID()
-        val rejectedSystemNoteId2 = UUID.randomUUID()
-
-        val referralRejectionReason = referralRejectionReasonEntityFactory.produceAndPersist()
-        val referralRejectionReasonDetail = randomStringMultiCaseWithNumbers(15)
-
-        val assessment =
-          produceAndPersistTemporaryAccommodationAssessmentEntity(userEntity, application, assessmentSchema) {
-            withReferralRejectionReason(referralRejectionReason)
-            withReferralRejectionReasonDetail(referralRejectionReasonDetail)
-            withIsWithdrawn(true)
-          }.apply {
-            this.referralHistoryNotes += assessmentReferralHistoryUserNoteEntityFactory.produceAndPersist {
-              withCreatedBy(userEntity)
-              withMessage("Some user note")
-              withAssessment(this@apply)
-            }
-
-            this.referralHistoryNotes += assessmentReferralHistorySystemNoteEntityFactory.produceAndPersist {
-              withCreatedBy(userEntity)
-              withType(ReferralHistorySystemNoteType.SUBMITTED)
-              withAssessment(this@apply)
-            }
-
-            this.referralHistoryNotes += assessmentReferralHistorySystemNoteEntityFactory.produceAndPersist {
-              withId(rejectedSystemNoteId1)
-              withCreatedBy(userEntity)
-              withType(ReferralHistorySystemNoteType.REJECTED)
-              withCreatedAt(OffsetDateTime.now().minusDays(90))
-              withAssessment(this@apply)
-            }
-
-            this.referralHistoryNotes += assessmentReferralHistorySystemNoteEntityFactory.produceAndPersist {
-              withCreatedBy(userEntity)
-              withType(ReferralHistorySystemNoteType.UNALLOCATED)
-              withAssessment(this@apply)
-            }
-
-            this.referralHistoryNotes += assessmentReferralHistorySystemNoteEntityFactory.produceAndPersist {
-              withCreatedBy(userEntity)
-              withType(ReferralHistorySystemNoteType.IN_REVIEW)
-              withAssessment(this@apply)
-            }
-
-            this.referralHistoryNotes += assessmentReferralHistorySystemNoteEntityFactory.produceAndPersist {
-              withCreatedBy(userEntity)
-              withType(ReferralHistorySystemNoteType.READY_TO_PLACE)
-              withAssessment(this@apply)
-            }
-
-            this.referralHistoryNotes += assessmentReferralHistorySystemNoteEntityFactory.produceAndPersist {
-              withId(rejectedSystemNoteId2)
-              withCreatedBy(userEntity)
-              withType(ReferralHistorySystemNoteType.REJECTED)
-              withCreatedAt(OffsetDateTime.now().minusDays(4))
-              withAssessment(this@apply)
-            }
-
-            this.referralHistoryNotes += assessmentReferralHistorySystemNoteEntityFactory.produceAndPersist {
-              withCreatedBy(userEntity)
-              withType(ReferralHistorySystemNoteType.COMPLETED)
-              withAssessment(this@apply)
-            }
-          }
-
-        assessment.schemaUpToDate = true
-
-        webTestClient.get()
-          .uri("/assessments/${assessment.id}")
-          .header("Authorization", "Bearer $jwt")
-          .exchange()
-          .expectStatus()
-          .isOk
-          .expectBody()
-          .jsonPath("$.referralHistoryNotes")
-          .value<JSONArray> { json ->
-            val notes = json.toList().map {
-              objectMapper.readValue(
-                objectMapper.writeValueAsString(it),
-                object : TypeReference<ReferralHistoryNote>() {},
-              )
-            }
-
-            assertThat(notes).hasSize(8)
-            assertThat(notes).allMatch { it.createdByUserName == userEntity.name }
-            assertThat(notes).anyMatch { it is ReferralHistoryUserNote && it.message == "Some user note" }
-            assertThat(notes).anyMatch { it is ReferralHistorySystemNote && it.category == ReferralHistorySystemNote.Category.submitted }
-            assertThat(notes).anyMatch { it is ReferralHistorySystemNote && it.category == ReferralHistorySystemNote.Category.unallocated }
-            assertThat(notes).anyMatch { it is ReferralHistorySystemNote && it.category == ReferralHistorySystemNote.Category.inReview }
-            assertThat(notes).anyMatch { it is ReferralHistorySystemNote && it.category == ReferralHistorySystemNote.Category.readyToPlace }
-            assertThat(notes).anyMatch {
-              it is ReferralHistorySystemNote &&
-                it.category == ReferralHistorySystemNote.Category.rejected &&
-                it.id == rejectedSystemNoteId1 &&
-                it.messageDetails == null
-            }
-            assertThat(notes).anyMatch {
-              it is ReferralHistorySystemNote &&
-                it.category == ReferralHistorySystemNote.Category.rejected &&
-                it.id == rejectedSystemNoteId2 &&
-                it.messageDetails?.rejectionReason == referralRejectionReason.name &&
-                it.messageDetails?.rejectionReasonDetails == referralRejectionReasonDetail &&
-                it.messageDetails?.isWithdrawn == true
-            }
-            assertThat(notes).anyMatch { it is ReferralHistorySystemNote && it.category == ReferralHistorySystemNote.Category.completed }
-          }
-      }
-    }
-  }
-
-  @Test
   fun `Get Temporary Accommodation assessment by ID returns 200 with summary data transformed correctly`() {
     givenAUser(roles = listOf(UserRole.CAS3_ASSESSOR)) { userEntity, jwt ->
       givenAnOffender { offenderDetails, inmateDetails ->
@@ -2834,120 +2699,6 @@ class AssessmentTest : IntegrationTestBase() {
           )
 
         assertThat(domainEvents.size).isEqualTo(1)
-      }
-    }
-  }
-
-  @Test
-  fun `assessmentUpdated Domain Events are returned with the assessment notes with latest first`() {
-    givenAUser(roles = listOf(UserRole.CAS3_ASSESSOR, UserRole.CAS3_REPORTER)) { userEntity, jwt ->
-      givenAnOffender { offenderDetails, inmateDetails ->
-
-        val originalDate = LocalDate.now().plusDays(1)
-        val newDate = LocalDate.now().plusDays(7)
-
-        val application = produceAndPersistTemporaryAccommodationApplication(offenderDetails.otherIds.crn, userEntity) {
-          withPersonReleaseDate(originalDate)
-          withArrivalDate(originalDate)
-        }
-
-        val assessment = produceAndPersistTemporaryAccommodationAssessmentEntity(userEntity, application)
-        val accommodationReqDateId = UUID.randomUUID()
-        val accommodationReqCAS3AssessmentUpdatedField = CAS3AssessmentUpdatedField(
-          fieldName = "accommodationRequiredFromDate",
-          updatedFrom = originalDate.toString(),
-          updatedTo = newDate.toString(),
-        )
-
-        val accommodationReqCAS3AssessmentUpdatedEvent = CAS3AssessmentUpdatedEvent(
-          updatedFields = listOf(accommodationReqCAS3AssessmentUpdatedField),
-          id = accommodationReqDateId,
-          timestamp = Instant.now(),
-          eventType = EventType.assessmentUpdated,
-        )
-
-        domainEventFactory.produceAndPersist {
-          withId(accommodationReqDateId)
-          withCrn(application.crn)
-          withOccurredAt(OffsetDateTime.now())
-          withCreatedAt(OffsetDateTime.now())
-          withData(accommodationReqCAS3AssessmentUpdatedEvent)
-          withAssessmentId(assessment.id)
-          withType(DomainEventType.CAS3_ASSESSMENT_UPDATED)
-          withService(ServiceName.temporaryAccommodation)
-          withTriggeredByUserId(userEntity.id)
-        }
-
-        val releaseDateId = UUID.randomUUID()
-        val releaseDateCAS3AssessmentUpdatedField = CAS3AssessmentUpdatedField(
-          fieldName = "releaseDate",
-          updatedFrom = originalDate.toString(),
-          updatedTo = newDate.toString(),
-        )
-
-        val releaseDateCAS3AssessmentUpdatedEvent = CAS3AssessmentUpdatedEvent(
-          updatedFields = listOf(releaseDateCAS3AssessmentUpdatedField),
-          id = releaseDateId,
-          timestamp = Instant.now(),
-          eventType = EventType.assessmentUpdated,
-        )
-
-        domainEventFactory.produceAndPersist {
-          withId(releaseDateId)
-          withCrn(application.crn)
-          withOccurredAt(OffsetDateTime.now())
-          withCreatedAt(OffsetDateTime.now())
-          withData(releaseDateCAS3AssessmentUpdatedEvent)
-          withAssessmentId(assessment.id)
-          withService(ServiceName.temporaryAccommodation)
-          withTriggeredByUserId(userEntity.id)
-          withType(DomainEventType.CAS3_ASSESSMENT_UPDATED)
-        }
-
-        val response = webTestClient.get()
-          .uri("/assessments/${assessment.id}")
-          .header("Authorization", "Bearer $jwt")
-          .header("X-service-name", "temporary-accommodation")
-          .exchange()
-          .expectStatus()
-          .isOk
-          .expectBody(Assessment::class.java)
-          .returnResult()
-          .responseBody!!
-          .referralHistoryNotes!!
-
-        assertThat(response.size).isEqualTo(2)
-        val releaseDateUpdatedEvent = objectMapper.convertValue(
-          response[0].messageDetails!!.domainEvent,
-          CAS3AssessmentUpdatedEvent::class.java,
-        )
-        val accommodationReqFromUpdatedEvent = objectMapper.convertValue(
-          response[1].messageDetails!!.domainEvent,
-          CAS3AssessmentUpdatedEvent::class.java,
-        )
-
-        assertThat(releaseDateUpdatedEvent.eventType).isEqualTo(EventType.assessmentUpdated)
-        assertThat(accommodationReqFromUpdatedEvent.eventType).isEqualTo(EventType.assessmentUpdated)
-
-        assertThat(releaseDateUpdatedEvent.updatedFields).isEqualTo(
-          listOf(
-            CAS3AssessmentUpdatedField(
-              fieldName = "releaseDate",
-              updatedFrom = originalDate.toString(),
-              updatedTo = newDate.toString(),
-            ),
-          ),
-        )
-
-        assertThat(accommodationReqFromUpdatedEvent.updatedFields).isEqualTo(
-          listOf(
-            CAS3AssessmentUpdatedField(
-              fieldName = "accommodationRequiredFromDate",
-              updatedFrom = originalDate.toString(),
-              updatedTo = newDate.toString(),
-            ),
-          ),
-        )
       }
     }
   }

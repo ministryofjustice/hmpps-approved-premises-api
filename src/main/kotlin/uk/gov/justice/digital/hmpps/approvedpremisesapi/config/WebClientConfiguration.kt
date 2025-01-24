@@ -22,14 +22,18 @@ import java.time.Duration
 data class WebClientConfig(
   val webClient: WebClient,
   val maxRetryAttempts: Long = 1,
+  val retryOnReadTimeout: Boolean = false,
 )
 
+@SuppressWarnings("LongParameterList")
 @Configuration
 class WebClientConfiguration(
   @Value("\${upstream-timeout-ms}") private val upstreamTimeoutMs: Long,
+  @Value("\${nomis-user-roles-api-upstream-timeout-ms}") private val nomisUserRolesUpstreamTimeoutMs: Long,
   @Value("\${case-notes-service-upstream-timeout-ms}") private val caseNotesServiceUpstreamTimeoutMs: Long,
   @Value("\${web-clients.max-response-in-memory-size-bytes}") private val defaultMaxResponseInMemorySizeBytes: Int,
   @Value("\${web-clients.prison-api-max-response-in-memory-size-bytes}") private val prisonApiMaxResponseInMemorySizeBytes: Int,
+  @Value("\${web-clients.prisoner-alerts-api-max-response-in-memory-size-bytes}") private val prisonerAlertsApiMaxResponseInMemorySizeBytes: Int,
   @Value("\${web-clients.probation-offender-search-api-max-response-in-memory-size-bytes}") private val probationOffenderSearchApiMaxResponseInMemorySizeBytes: Int,
 ) {
 
@@ -138,6 +142,40 @@ class WebClientConfiguration(
     )
   }
 
+  @Bean(name = ["prisonerAlertsApiWebClient"])
+  fun prisonerAlertsApiWebClient(
+    clientRegistrations: ClientRegistrationRepository,
+    authorizedClients: OAuth2AuthorizedClientRepository,
+    authorizedClientManager: OAuth2AuthorizedClientManager,
+    @Value("\${services.prisoner-alerts-api.base-url}") prisonerAlertsApiBaseUrl: String,
+  ): WebClientConfig {
+    val oauth2Client = ServletOAuth2AuthorizedClientExchangeFilterFunction(authorizedClientManager)
+
+    oauth2Client.setDefaultClientRegistrationId("prisoner-alerts-api")
+
+    log.info("Using maxInMemorySize of $prisonerAlertsApiMaxResponseInMemorySizeBytes bytes for Prisoner Alerts API Web Client")
+
+    return WebClientConfig(
+      WebClient.builder()
+        .baseUrl(prisonerAlertsApiBaseUrl)
+        .clientConnector(
+          ReactorClientHttpConnector(
+            HttpClient
+              .create()
+              .responseTimeout(Duration.ofMillis(upstreamTimeoutMs))
+              .option(ChannelOption.CONNECT_TIMEOUT_MILLIS, Duration.ofMillis(upstreamTimeoutMs).toMillis().toInt()),
+          ),
+        )
+        .exchangeStrategies(
+          ExchangeStrategies.builder().codecs {
+            it.defaultCodecs().maxInMemorySize(prisonerAlertsApiMaxResponseInMemorySizeBytes)
+          }.build(),
+        )
+        .filter(oauth2Client)
+        .build(),
+    )
+  }
+
   @Bean(name = ["caseNotesWebClient"])
   fun caseNotesWebClient(
     clientRegistrations: ClientRegistrationRepository,
@@ -221,11 +259,12 @@ class WebClientConfiguration(
           ReactorClientHttpConnector(
             HttpClient
               .create()
-              .responseTimeout(Duration.ofMillis(upstreamTimeoutMs))
-              .option(ChannelOption.CONNECT_TIMEOUT_MILLIS, Duration.ofMillis(upstreamTimeoutMs).toMillis().toInt()),
+              .responseTimeout(Duration.ofMillis(nomisUserRolesUpstreamTimeoutMs))
+              .option(ChannelOption.CONNECT_TIMEOUT_MILLIS, Duration.ofMillis(nomisUserRolesUpstreamTimeoutMs).toMillis().toInt()),
           ),
         )
         .build(),
+      retryOnReadTimeout = true,
     )
   }
 

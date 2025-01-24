@@ -21,7 +21,7 @@ class VoidBedspacesReportGenerator(
     val startOfMonth = LocalDate.of(properties.year, properties.month, 1)
     val endOfMonth = LocalDate.of(properties.year, properties.month, startOfMonth.month.length(startOfMonth.isLeapYear))
 
-    val voidBedspaces = cas3VoidBedspacesRepository.findAllByOverlappingDateForBed(startOfMonth, endOfMonth, this)
+    val voidBedspaces = cas3VoidBedspacesRepository.findAllByOverlappingDateForBedspace(startOfMonth, endOfMonth, this)
 
     voidBedspaces.map {
       val bed = it.bed

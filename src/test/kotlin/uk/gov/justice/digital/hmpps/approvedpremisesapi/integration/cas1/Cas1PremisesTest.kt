@@ -5,9 +5,9 @@ import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1PremiseCapacity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1Premises
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1PremisesBasicSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1PremisesDaySummary
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1PremisesSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.FullPersonSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PersonSummaryDiscriminator
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
@@ -18,6 +18,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.given
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAProbationRegion
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAUser
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAnApArea
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAnApprovedPremises
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAnOffender
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAnOfflineApplication
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAnOutOfServiceBed
@@ -33,12 +34,14 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Characteristi
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.CharacteristicRepository.Constants.CAS1_PROPERTY_NAME_ENSUITE
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.CharacteristicRepository.Constants.CAS1_PROPERTY_NAME_SINGLE_ROOM
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementRequestEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRole.CAS1_ASSESSOR
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRole.CAS1_CRU_MEMBER
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRole.CAS1_FUTURE_MANAGER
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.deliuscontext.CaseSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.asCaseSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.bodyAsListOfObjects
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.bodyAsObject
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.roundNanosToMillisToAccountForLossOfPrecisionInPostgres
 import java.time.LocalDate
 import java.time.OffsetDateTime
@@ -104,20 +107,23 @@ class Cas1PremisesTest : IntegrationTestBase() {
         }
       }
 
-      val currentOutOfServiceBedCancelled = givenAnOutOfServiceBed(
+      // cancelled, ignored
+      givenAnOutOfServiceBed(
         bed = beds[0],
         startDate = LocalDate.now().minusDays(1),
         endDate = LocalDate.now().plusDays(4),
         cancelled = true,
       )
 
-      val futureOutOfServiceBed = givenAnOutOfServiceBed(
+      // future, ignored
+      givenAnOutOfServiceBed(
         bed = beds[0],
         startDate = LocalDate.now().plusDays(2),
         endDate = LocalDate.now().plusDays(4),
       )
 
-      val currentOutOfServiceBed = givenAnOutOfServiceBed(
+      // current
+      givenAnOutOfServiceBed(
         bed = beds[0],
         startDate = LocalDate.now().minusDays(2),
         endDate = LocalDate.now().plusDays(2),
@@ -129,7 +135,7 @@ class Cas1PremisesTest : IntegrationTestBase() {
         .exchange()
         .expectStatus()
         .isOk
-        .returnResult(Cas1PremisesSummary::class.java).responseBody.blockFirst()!!
+        .bodyAsObject<Cas1Premises>()
 
       assertThat(summary.id).isEqualTo(premises.id)
       assertThat(summary.name).isEqualTo("the premises name")
@@ -460,6 +466,7 @@ class Cas1PremisesTest : IntegrationTestBase() {
   @Nested
   inner class GetDaySummary : InitialiseDatabasePerClassTestBase() {
 
+    lateinit var user: UserEntity
     lateinit var premises: ApprovedPremisesEntity
     lateinit var spaceBookingEarly: Cas1SpaceBookingEntity
     lateinit var spaceBookingLate: Cas1SpaceBookingEntity
@@ -478,7 +485,7 @@ class Cas1PremisesTest : IntegrationTestBase() {
     lateinit var isArsonSuitableCharacteristic: CharacteristicEntity
     lateinit var hasEnSuiteCharacteristic: CharacteristicEntity
 
-    val summaryDate = LocalDate.now()
+    val summaryDate: LocalDate = LocalDate.now()
     val tierA = "A2"
     val tierB = "B3"
     val releaseTypeToBeDetermined = "TBD"
@@ -486,21 +493,19 @@ class Cas1PremisesTest : IntegrationTestBase() {
     @SuppressWarnings("UnusedPrivateProperty", "LongMethod")
     @BeforeAll
     fun setupTestData() {
-      val region = givenAProbationRegion(
-        apArea = givenAnApArea(name = "The ap area name"),
+      user = givenAUser().first
+
+      premises = givenAnApprovedPremises(
+        region = givenAProbationRegion(
+          apArea = givenAnApArea(name = "The ap area name"),
+        ),
       )
 
-      val premisesId = UUID.randomUUID()
-      premises = approvedPremisesEntityFactory.produceAndPersist {
-        withId(premisesId)
-        withName("the premises name")
-        withApCode("the ap code")
-        withPostcode("the postcode")
-        withYieldedProbationRegion { region }
-        withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
-        withManagerDetails("manager details")
-      }
+      setupBookings()
+      setupOutOfServiceBeds()
+    }
 
+    fun setupBookings() {
       bedEntityFactory.produceAndPersistMultiple(5) {
         withYieldedRoom {
           roomEntityFactory.produceAndPersist {
@@ -509,22 +514,13 @@ class Cas1PremisesTest : IntegrationTestBase() {
         }
       }
 
-      val (user) = givenAUser()
-      val (offenderAAA) = givenAnOffender(offenderDetailsConfigBlock = {
+      offenderA = givenAnOffender(offenderDetailsConfigBlock = {
         withCrn("crn1")
         withFirstName("firstNameAAA")
         withLastName("lastNameAAA")
         withCurrentRestriction(false)
-      })
-      offenderA = offenderAAA.asCaseSummary()
+      }).first.asCaseSummary()
 
-      val (offenderBBB) = givenAnOffender(offenderDetailsConfigBlock = {
-        withCrn("crn2")
-        withFirstName("firstNameBBB")
-        withLastName("lastNameBBB")
-        withCurrentRestriction(false)
-      })
-      offenderB = offenderBBB.asCaseSummary()
       val (offenderOfflineApplication) = givenAnOffender(offenderDetailsConfigBlock = {
         withCrn("offline_crn")
         withFirstName("mister")
@@ -538,22 +534,11 @@ class Cas1PremisesTest : IntegrationTestBase() {
         assessmentAllocatedTo = user,
         createdByUser = user,
         crn = offenderA.crn,
-        name = "$offenderA.firstName $offenderA.lastName",
+        name = "${offenderA.name.forename} ${offenderA.name.surname}",
         tier = tierA,
       )
       placementRequestA = pRequestA.first
       applicationA = pRequestA.second
-
-      val pRequestB = givenAPlacementRequest(
-        placementRequestAllocatedTo = user,
-        assessmentAllocatedTo = user,
-        createdByUser = user,
-        crn = offenderB.crn,
-        name = "$offenderB.firstName $offenderB.lastName",
-        tier = tierB,
-      )
-      placementRequestB = pRequestB.first
-      applicationB = pRequestB.second
 
       spaceBookingEarly = createSpaceBooking(
         crn = offenderA.crn,
@@ -569,6 +554,24 @@ class Cas1PremisesTest : IntegrationTestBase() {
           findCharacteristic(CAS1_PROPERTY_NAME_ARSON_SUITABLE),
         )
       }
+
+      offenderB = givenAnOffender(offenderDetailsConfigBlock = {
+        withCrn("crn2")
+        withFirstName("firstNameBBB")
+        withLastName("lastNameBBB")
+        withCurrentRestriction(false)
+      }).first.asCaseSummary()
+
+      val pRequestB = givenAPlacementRequest(
+        placementRequestAllocatedTo = user,
+        assessmentAllocatedTo = user,
+        createdByUser = user,
+        crn = offenderB.crn,
+        name = "${offenderB.name.forename} ${offenderB.name.surname}",
+        tier = tierB,
+      )
+      placementRequestB = pRequestB.first
+      applicationB = pRequestB.second
 
       spaceBookingLate = createSpaceBooking(
         crn = offenderA.crn,
@@ -587,7 +590,8 @@ class Cas1PremisesTest : IntegrationTestBase() {
         )
       }
 
-      val spaceBookingCancelled = createSpaceBooking(
+      // cancelled - ignored
+      createSpaceBooking(
         crn = offenderA.crn,
         placementRequest = this.placementRequestA,
         application = applicationB,
@@ -621,30 +625,12 @@ class Cas1PremisesTest : IntegrationTestBase() {
       }
 
       apDeliusContextAddListCaseSummaryToBulkResponse(listOf(offenderA, offenderB, offenderOffline))
+    }
 
-      hasEnSuiteCharacteristic = characteristicEntityFactory.produceAndPersist {
-        withId(UUID.fromString("138f63aa-7e51-4581-8d71-dfdf9b85bbd9"))
-        withPropertyName("hasEnSuite")
-        withName("hasEnSuite")
-        withModelScope("room")
-        withServiceScope("approved-premises")
-      }
-
-      isArsonSuitableCharacteristic = characteristicEntityFactory.produceAndPersist {
-        withId(UUID.fromString("a4ba038b-f762-4f19-ae94-2e308637a5ed"))
-        withPropertyName("isArsonSuitable")
-        withName("isArsonSuitable")
-        withModelScope("room")
-        withServiceScope("approved-premises")
-      }
-
-      isGroundFloorCharacteristic = characteristicEntityFactory.produceAndPersist {
-        withId(UUID.fromString("83377a71-6cda-4f83-90ca-32513f401500"))
-        withPropertyName("isGroundFloor")
-        withName("isGroundFloor")
-        withModelScope("room")
-        withServiceScope("approved-premises")
-      }
+    fun setupOutOfServiceBeds() {
+      hasEnSuiteCharacteristic = characteristicRepository.findByPropertyName("hasEnSuite", "approved-premises")!!
+      isArsonSuitableCharacteristic = characteristicRepository.findByPropertyName("isArsonSuitable", "approved-premises")!!
+      isGroundFloorCharacteristic = characteristicRepository.findByPropertyName("isGroundFloor", "approved-premises")!!
 
       val bed1 = bedEntityFactory.produceAndPersist {
         withRoom(
@@ -689,69 +675,43 @@ class Cas1PremisesTest : IntegrationTestBase() {
         }
       }
 
-      outOfServiceBedEndingToday = cas1OutOfServiceBedEntityFactory.produceAndPersist {
-        withCreatedAt(OffsetDateTime.now().roundNanosToMillisToAccountForLossOfPrecisionInPostgres())
-        withBed(bed2)
-      }.apply {
-        this.revisionHistory += cas1OutOfServiceBedRevisionEntityFactory.produceAndPersist {
-          withCreatedAt(OffsetDateTime.now().roundNanosToMillisToAccountForLossOfPrecisionInPostgres())
-          withCreatedBy(user)
-          withOutOfServiceBed(this@apply)
-          withStartDate(LocalDate.now().minusDays(10))
-          withEndDate(LocalDate.now())
-          withYieldedReason {
-            cas1OutOfServiceBedReasonEntityFactory.produceAndPersist()
-          }
-        }
-      }
+      outOfServiceBedEndingToday = givenAnOutOfServiceBed(
+        bed = bed2,
+        startDate = LocalDate.now().minusDays(10),
+        endDate = LocalDate.now(),
+        cancelled = false,
+      )
 
-      outOfServiceBedTodayOnly = cas1OutOfServiceBedEntityFactory.produceAndPersist {
-        withCreatedAt(OffsetDateTime.now().roundNanosToMillisToAccountForLossOfPrecisionInPostgres())
-        withBed(bed3)
-      }.apply {
-        this.revisionHistory += cas1OutOfServiceBedRevisionEntityFactory.produceAndPersist {
-          withCreatedAt(OffsetDateTime.now().roundNanosToMillisToAccountForLossOfPrecisionInPostgres())
-          withCreatedBy(user)
-          withOutOfServiceBed(this@apply)
-          withStartDate(LocalDate.now())
-          withEndDate(LocalDate.now())
-          withYieldedReason {
-            cas1OutOfServiceBedReasonEntityFactory.produceAndPersist()
-          }
-        }
-      }
+      outOfServiceBedTodayOnly = givenAnOutOfServiceBed(
+        bed = bed3,
+        startDate = LocalDate.now(),
+        endDate = LocalDate.now(),
+        cancelled = false,
+      )
 
-      val expiredOutOfServiceBed = cas1OutOfServiceBedEntityFactory.produceAndPersist {
-        withCreatedAt(OffsetDateTime.now().roundNanosToMillisToAccountForLossOfPrecisionInPostgres())
-        withBed(bed1)
-      }.apply {
-        this.revisionHistory += cas1OutOfServiceBedRevisionEntityFactory.produceAndPersist {
-          withCreatedAt(OffsetDateTime.now().roundNanosToMillisToAccountForLossOfPrecisionInPostgres())
-          withCreatedBy(user)
-          withOutOfServiceBed(this@apply)
-          withStartDate(LocalDate.now().minusDays(20))
-          withEndDate(LocalDate.now().minusDays(1))
-          withYieldedReason {
-            cas1OutOfServiceBedReasonEntityFactory.produceAndPersist()
-          }
-        }
-      }
+      // cancelled, ignored
+      givenAnOutOfServiceBed(
+        bed = bed3,
+        startDate = LocalDate.now(),
+        endDate = LocalDate.now(),
+        cancelled = true,
+      )
 
-      val upcomingOutOfServiceBed = cas1OutOfServiceBedEntityFactory.produceAndPersist {
-        withCreatedAt(OffsetDateTime.now().roundNanosToMillisToAccountForLossOfPrecisionInPostgres())
-        withBed(bed1)
-      }.apply {
-        this.revisionHistory += cas1OutOfServiceBedRevisionEntityFactory.produceAndPersist {
-          withCreatedAt(OffsetDateTime.now().roundNanosToMillisToAccountForLossOfPrecisionInPostgres())
-          withCreatedBy(user)
-          withOutOfServiceBed(this@apply)
-          withStartDate(LocalDate.now().plusDays(1))
-          withEndDate(LocalDate.now().plusDays(10))
-          withYieldedReason {
-            cas1OutOfServiceBedReasonEntityFactory.produceAndPersist()
-          }
-        }
-      }
+      // expired, ignored
+      givenAnOutOfServiceBed(
+        bed = bed1,
+        startDate = LocalDate.now().minusDays(20),
+        endDate = LocalDate.now().minusDays(1),
+        cancelled = false,
+      )
+
+      // upcoming, ignored
+      givenAnOutOfServiceBed(
+        bed = bed1,
+        startDate = LocalDate.now().plusDays(1),
+        endDate = LocalDate.now().plusDays(10),
+        cancelled = false,
+      )
     }
 
     @Test
@@ -860,7 +820,7 @@ class Cas1PremisesTest : IntegrationTestBase() {
       assertThat(oosBedSummary.reason.id).isEqualTo(outOfServiceBed.reason.id)
       assertThat(oosBedSummary.reason.name).isEqualTo(outOfServiceBed.reason.name)
       assertThat(oosBedSummary.characteristics.size).isEqualTo(1)
-      assertThat(oosBedSummary.characteristics[0].name).isEqualTo(hasEnSuiteCharacteristic.name)
+      assertThat(oosBedSummary.characteristics[0].value).isEqualTo(hasEnSuiteCharacteristic.propertyName)
 
       val oosBedEndingToday = summaries.outOfServiceBeds[1]
       assertThat(oosBedEndingToday.id).isEqualTo(outOfServiceBedEndingToday.id)
@@ -869,9 +829,9 @@ class Cas1PremisesTest : IntegrationTestBase() {
       assertThat(oosBedEndingToday.roomName).isEqualTo(outOfServiceBedEndingToday.bed.room.name)
       assertThat(oosBedEndingToday.reason.id).isEqualTo(outOfServiceBedEndingToday.reason.id)
       assertThat(oosBedEndingToday.reason.name).isEqualTo(outOfServiceBedEndingToday.reason.name)
-      assertThat(oosBedEndingToday.characteristics.map { it.name }).containsExactlyInAnyOrder(
-        hasEnSuiteCharacteristic.name,
-        isArsonSuitableCharacteristic.name,
+      assertThat(oosBedEndingToday.characteristics.map { it.value }).containsExactlyInAnyOrder(
+        hasEnSuiteCharacteristic.propertyName,
+        isArsonSuitableCharacteristic.propertyName,
       )
 
       val oosBedTodayOnly = summaries.outOfServiceBeds[2]
@@ -881,10 +841,10 @@ class Cas1PremisesTest : IntegrationTestBase() {
       assertThat(oosBedTodayOnly.roomName).isEqualTo(outOfServiceBedTodayOnly.bed.room.name)
       assertThat(oosBedTodayOnly.reason.id).isEqualTo(outOfServiceBedTodayOnly.reason.id)
       assertThat(oosBedTodayOnly.reason.name).isEqualTo(outOfServiceBedTodayOnly.reason.name)
-      assertThat(oosBedTodayOnly.characteristics.map { it.name }).containsExactlyInAnyOrder(
-        hasEnSuiteCharacteristic.name,
-        isArsonSuitableCharacteristic.name,
-        isGroundFloorCharacteristic.name,
+      assertThat(oosBedTodayOnly.characteristics.map { it.value }).containsExactlyInAnyOrder(
+        hasEnSuiteCharacteristic.propertyName,
+        isArsonSuitableCharacteristic.propertyName,
+        isGroundFloorCharacteristic.propertyName,
       )
     }
 

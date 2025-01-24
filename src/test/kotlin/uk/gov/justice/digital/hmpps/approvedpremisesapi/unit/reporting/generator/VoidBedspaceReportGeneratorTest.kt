@@ -14,8 +14,8 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ProbationDeliver
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ProbationRegionEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.RoomEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.TemporaryAccommodationPremisesEntityFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.cas3.Cas3VoidBedspaceEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.cas3.Cas3VoidBedspaceReasonEntityFactory
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.cas3.Cas3VoidBedspacesEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas3.Cas3VoidBedspacesRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.generator.VoidBedspacesReportGenerator
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.model.VoidBedspaceReportRow
@@ -43,7 +43,7 @@ class VoidBedspaceReportGeneratorTest {
       .withRoom(temporaryAccommodationRoom)
       .produce()
 
-    val temporaryAccommodationVoidBedspace = Cas3VoidBedspacesEntityFactory()
+    val temporaryAccommodationVoidBedspace = Cas3VoidBedspaceEntityFactory()
       .withBed(temporaryAccommodationBed)
       .withStartDate(LocalDate.parse("2023-04-05"))
       .withEndDate(LocalDate.parse("2023-04-07"))
@@ -63,7 +63,7 @@ class VoidBedspaceReportGeneratorTest {
       .withRoom(approvedPremisesRoom)
       .produce()
 
-    val approvedPremisesLostBed = Cas3VoidBedspacesEntityFactory()
+    val approvedPremisesLostBed = Cas3VoidBedspaceEntityFactory()
       .withBed(approvedPremisesBed)
       .withStartDate(LocalDate.parse("2023-04-05"))
       .withEndDate(LocalDate.parse("2023-04-07"))
@@ -72,14 +72,14 @@ class VoidBedspaceReportGeneratorTest {
       .produce()
 
     every {
-      mockCas3VoidBedspacesRepository.findAllByOverlappingDateForBed(
+      mockCas3VoidBedspacesRepository.findAllByOverlappingDateForBedspace(
         LocalDate.parse("2023-04-01"),
         LocalDate.parse("2023-04-30"),
         temporaryAccommodationBed,
       )
     } returns listOf(temporaryAccommodationVoidBedspace)
     every {
-      mockCas3VoidBedspacesRepository.findAllByOverlappingDateForBed(
+      mockCas3VoidBedspacesRepository.findAllByOverlappingDateForBedspace(
         LocalDate.parse("2023-04-01"),
         LocalDate.parse("2023-04-30"),
         approvedPremisesBed,
@@ -125,7 +125,7 @@ class VoidBedspaceReportGeneratorTest {
       .withRoom(temporaryAccommodationRoomInProbationRegion)
       .produce()
 
-    val temporaryAccommodationVoidBedspaceInProbationArea = Cas3VoidBedspacesEntityFactory()
+    val temporaryAccommodationVoidBedspaceInProbationArea = Cas3VoidBedspaceEntityFactory()
       .withBed(temporaryAccommodationBedInProbationRegion)
       .withStartDate(LocalDate.parse("2023-04-05"))
       .withEndDate(LocalDate.parse("2023-04-07"))
@@ -146,7 +146,7 @@ class VoidBedspaceReportGeneratorTest {
       .withRoom(temporaryAccommodationRoomOutsideProbationRegion)
       .produce()
 
-    val temporaryAccommodationVoidBedspaceOutsideProbationArea = Cas3VoidBedspacesEntityFactory()
+    val temporaryAccommodationVoidBedspaceOutsideProbationArea = Cas3VoidBedspaceEntityFactory()
       .withBed(temporaryAccommodationBedOutsideProbationRegion)
       .withStartDate(LocalDate.parse("2023-04-05"))
       .withEndDate(LocalDate.parse("2023-04-07"))
@@ -155,14 +155,14 @@ class VoidBedspaceReportGeneratorTest {
       .produce()
 
     every {
-      mockCas3VoidBedspacesRepository.findAllByOverlappingDateForBed(
+      mockCas3VoidBedspacesRepository.findAllByOverlappingDateForBedspace(
         LocalDate.parse("2023-04-01"),
         LocalDate.parse("2023-04-30"),
         temporaryAccommodationBedInProbationRegion,
       )
     } returns listOf(temporaryAccommodationVoidBedspaceInProbationArea)
     every {
-      mockCas3VoidBedspacesRepository.findAllByOverlappingDateForBed(
+      mockCas3VoidBedspacesRepository.findAllByOverlappingDateForBedspace(
         LocalDate.parse("2023-04-01"),
         LocalDate.parse("2023-04-30"),
         temporaryAccommodationBedOutsideProbationRegion,
@@ -208,7 +208,7 @@ class VoidBedspaceReportGeneratorTest {
       .withRoom(temporaryAccommodationRoomInProbationRegion)
       .produce()
 
-    val temporaryAccommodationVoidBedspaceInProbationArea = Cas3VoidBedspacesEntityFactory()
+    val temporaryAccommodationVoidBedspaceInProbationArea = Cas3VoidBedspaceEntityFactory()
       .withBed(temporaryAccommodationBedInProbationRegion)
       .withStartDate(LocalDate.parse("2023-04-05"))
       .withEndDate(LocalDate.parse("2023-04-07"))
@@ -229,7 +229,7 @@ class VoidBedspaceReportGeneratorTest {
       .withRoom(temporaryAccommodationRoomOutsideProbationRegion)
       .produce()
 
-    val temporaryAccommodationVoidBedspaceOutsideProbationArea = Cas3VoidBedspacesEntityFactory()
+    val temporaryAccommodationVoidBedspaceOutsideProbationArea = Cas3VoidBedspaceEntityFactory()
       .withBed(temporaryAccommodationBedOutsideProbationRegion)
       .withStartDate(LocalDate.parse("2023-04-05"))
       .withEndDate(LocalDate.parse("2023-04-07"))
@@ -238,14 +238,14 @@ class VoidBedspaceReportGeneratorTest {
       .produce()
 
     every {
-      mockCas3VoidBedspacesRepository.findAllByOverlappingDateForBed(
+      mockCas3VoidBedspacesRepository.findAllByOverlappingDateForBedspace(
         LocalDate.parse("2023-04-01"),
         LocalDate.parse("2023-04-30"),
         temporaryAccommodationBedInProbationRegion,
       )
     } returns listOf(temporaryAccommodationVoidBedspaceInProbationArea)
     every {
-      mockCas3VoidBedspacesRepository.findAllByOverlappingDateForBed(
+      mockCas3VoidBedspacesRepository.findAllByOverlappingDateForBedspace(
         LocalDate.parse("2023-04-01"),
         LocalDate.parse("2023-04-30"),
         temporaryAccommodationBedOutsideProbationRegion,
@@ -289,7 +289,7 @@ class VoidBedspaceReportGeneratorTest {
       .withRoom(temporaryAccommodationRoom)
       .produce()
 
-    val temporaryAccommodationVoidBedspace = Cas3VoidBedspacesEntityFactory()
+    val temporaryAccommodationVoidBedspace = Cas3VoidBedspaceEntityFactory()
       .withBed(temporaryAccommodationBed)
       .withStartDate(LocalDate.parse("2023-04-05"))
       .withEndDate(LocalDate.parse("2023-04-07"))
@@ -298,7 +298,7 @@ class VoidBedspaceReportGeneratorTest {
       .produce()
 
     every {
-      mockCas3VoidBedspacesRepository.findAllByOverlappingDateForBed(
+      mockCas3VoidBedspacesRepository.findAllByOverlappingDateForBedspace(
         LocalDate.parse("2023-04-01"),
         LocalDate.parse("2023-04-30"),
         temporaryAccommodationBed,
@@ -350,7 +350,7 @@ class VoidBedspaceReportGeneratorTest {
       .withRoom(temporaryAccommodationRoom)
       .produce()
 
-    val temporaryAccommodationVoidBedspace = Cas3VoidBedspacesEntityFactory()
+    val temporaryAccommodationVoidBedspace = Cas3VoidBedspaceEntityFactory()
       .withBed(temporaryAccommodationBed)
       .withStartDate(LocalDate.parse("2023-03-28"))
       .withEndDate(LocalDate.parse("2023-04-07"))
@@ -359,7 +359,7 @@ class VoidBedspaceReportGeneratorTest {
       .produce()
 
     every {
-      mockCas3VoidBedspacesRepository.findAllByOverlappingDateForBed(
+      mockCas3VoidBedspacesRepository.findAllByOverlappingDateForBedspace(
         LocalDate.parse("2023-04-01"),
         LocalDate.parse("2023-04-30"),
         temporaryAccommodationBed,

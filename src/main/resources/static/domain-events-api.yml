@@ -16,6 +16,7 @@ paths:
       tags:
         - "'Apply' events"
       summary: An application-submitted event
+      operationId: eventsApplicationSubmittedEventIdGet
       responses:
         '200':
           description: The application-submitted corresponding to the provided `eventId`
@@ -43,6 +44,7 @@ paths:
       tags:
         - "'Apply' events"
       summary: An application-withdrawn event
+      operationId: eventsApplicationWithdrawnEventIdGet
       responses:
         '200':
           description: The application-withdrawn event corresponding to the provided `eventId`
@@ -70,6 +72,7 @@ paths:
       tags:
         - "'Apply' events"
       summary: An assessment-allocated event
+      operationId: eventsAssessmentAllocatedEventIdGet
       responses:
         '200':
           description: The assessment-allocated event corresponding to the provided `eventId`
@@ -97,6 +100,7 @@ paths:
       tags:
         - "'Apply' events"
       summary: An 'application-assessed' event
+      operationId: eventsApplicationAssessedEventIdGet
       responses:
         '200':
           description: The 'application-assessed' event corresponding to the provided `eventId`
@@ -124,6 +128,7 @@ paths:
       tags:
         - "'Apply' events"
       summary: An 'assessment-appealed' event
+      operationId: eventsAssessmentAppealedEventIdGet
       responses:
         '200':
           description: The 'assessment-appealed' event corresponding to the provided `eventId`
@@ -151,6 +156,7 @@ paths:
       tags:
         - "'Match' events"
       summary: A 'booking-made' event
+      operationId: eventsBookingMadeEventIdGet
       responses:
         '200':
           description: The 'booking-made' event corresponding to the provided `eventId`
@@ -178,6 +184,7 @@ paths:
       tags:
         - "'Manage' events"
       summary: A 'booking-extended' event
+      operationId: eventsBookingExtendedEventIdGet
       responses:
         '200':
           description: The 'booking-extended' event corresponding to the provided `eventId`
@@ -205,6 +212,7 @@ paths:
       tags:
         - "'Manage' events"
       summary: A 'booking-cancelled' event
+      operationId: eventsBookingCancelledEventIdGet
       responses:
         '200':
           description: The 'booking-cancelled' event corresponding to the provided `eventId`
@@ -232,6 +240,7 @@ paths:
       tags:
         - "'Manage' events"
       summary: A 'booking-changed' event
+      operationId: eventsBookingChangedEventIdGet
       responses:
         '200':
           description: The 'booking-changed' event corresponding to the provided `eventId`
@@ -259,6 +268,7 @@ paths:
       tags:
         - "'Manage' events"
       summary: A 'booking-keyworker-assigned' event
+      operationId: eventsBookingKeyworkerAssignedEventIdGet
       responses:
         '200':
           description: The 'booking-keyworker-assigned' event corresponding to the provided `eventId`
@@ -286,6 +296,7 @@ paths:
       tags:
         - "'Match' events"
       summary: A 'booking-not-made' event
+      operationId: eventsBookingNotMadeEventIdGet
       responses:
         '200':
           description: The 'booking-not-made' event corresponding to the provided `eventId`
@@ -313,6 +324,7 @@ paths:
       tags:
         - "'Manage' events"
       summary: A 'person-arrived' event
+      operationId: eventsPersonArrivedEventIdGet
       responses:
         '200':
           description: The 'person-arrived' event corresponding to the provided `eventId`
@@ -340,6 +352,7 @@ paths:
       tags:
         - "'Manage' events"
       summary: A 'person-not-arrived' event
+      operationId: eventsPersonNotArrivedEventIdGet
       responses:
         '200':
           description: The 'person-not-arrived' event corresponding to the provided `eventId`
@@ -367,6 +380,7 @@ paths:
       tags:
         - "'Manage' events"
       summary: A 'person-departed' event
+      operationId: eventsPersonDepartedEventIdGet
       responses:
         '200':
           description: The 'person-departed' event corresponding to the provided `eventId`
@@ -394,6 +408,7 @@ paths:
       tags:
         - "'Apply' events"
       summary: A 'further-information-requested' event
+      operationId: eventsFurtherInformationRequestedEventIdGet
       responses:
         '200':
           description: The 'further-information-requested' event corresponding to the provided `eventId`
@@ -421,6 +436,7 @@ paths:
       tags:
         - "'Manage' events"
       summary: A 'placement-application-withdrawn' event
+      operationId: eventsPlacementApplicationWithdrawnEventIdGet
       responses:
         '200':
           description: The 'placement-application-withdrawn' event corresponding to the provided `eventId`
@@ -448,6 +464,7 @@ paths:
       tags:
         - "'Manage' events"
       summary: A 'placement-application-allocated' event
+      operationId: eventsPlacementApplicationAllocatedEventIdGet
       responses:
         '200':
           description: The 'placement-application-allocated' event corresponding to the provided `eventId`
@@ -475,6 +492,7 @@ paths:
       tags:
         - "'Manage' events"
       summary: A 'match-request-withdrawn' event
+      operationId: eventsMatchRequestWithdrawnEventIdGet
       responses:
         '200':
           description: The 'match-request-withdrawn' event corresponding to the provided `eventId`
@@ -502,6 +520,7 @@ paths:
       tags:
         - "'Manage' events"
       summary: A 'request-for-placement-created' event
+      operationId: eventsRequestForPlacementCreatedEventIdGet
       responses:
         '200':
           description: The 'request-for-placement-created' event corresponding to the provided `eventId`
@@ -529,6 +548,7 @@ paths:
       tags:
         - "'Manage' events"
       summary: A 'request-for-placement-assessed' event
+      operationId: eventsRequestForPlacementAssessedEventIdGet
       responses:
         '200':
           description: The 'request-for-placement-assessed' event corresponding to the provided `eventId`
@@ -556,6 +576,7 @@ paths:
       tags:
         - "'Manage' events"
       summary: An 'application-expired' event
+      operationId: eventsApplicationExpiredEventIdGet
       responses:
         '200':
           description: The 'application-expired' event corresponding to the provided `eventId`
@@ -729,6 +750,51 @@ components:
       required:
         - crn
         - noms
+    Cas1SpaceCharacteristic:
+      type: string
+      description: All of the characteristics of both premises and rooms
+      enum:
+        - acceptsChildSexOffenders
+        - acceptsHateCrimeOffenders
+        - acceptsNonSexualChildOffenders
+        - acceptsSexOffenders
+        - additionalRestrictions
+        - hasArsonInsuranceConditions
+        - hasBrailleSignage
+        - hasCallForAssistance
+        - hasCrib7Bedding
+        - hasEnSuite
+        - hasFixedMobilityAids
+        - hasHearingLoop
+        - hasLift
+        - hasNearbySprinkler
+        - hasSmokeDetector
+        - hasStepFreeAccess
+        - hasStepFreeAccessToCommunalAreas
+        - hasTactileFlooring
+        - hasTurningSpace
+        - hasWheelChairAccessibleBathrooms
+        - hasWideAccessToCommunalAreas
+        - hasWideDoor
+        - hasWideStepFreeAccess
+        - isArsonDesignated
+        - isArsonSuitable
+        - isCatered
+        - isESAP
+        - isFullyFm
+        - isGroundFloor
+        - isGroundFloorNrOffice
+        - isIAP
+        - isPIPE
+        - isRecoveryFocussed
+        - isSemiSpecialistMentalHealth
+        - isSingle
+        - isStepFreeDesignated
+        - isSuitableForVulnerable
+        - isSuitedForSexOffenders
+        - isTopFloorVulnerable
+        - isWheelchairAccessible
+        - isWheelchairDesignated
     ApplicationSubmittedEnvelope:
       type: object
       properties:
@@ -1183,6 +1249,10 @@ components:
           type: string
         situation:
           type: string
+        characteristics:
+          type: array
+          items:
+            $ref: '#/components/schemas/Cas1SpaceCharacteristic'
       required:
         - applicationId
         - applicationUrl
@@ -1251,6 +1321,14 @@ components:
           description: Only set if the expected departure on has changed
           example: '2023-01-30'
           format: date
+        characteristics:
+          type: array
+          items:
+            $ref: '#/components/schemas/Cas1SpaceCharacteristic'
+        previousCharacteristics:
+          type: array
+          items:
+            $ref: '#/components/schemas/Cas1SpaceCharacteristic'
       required:
         - applicationId
         - applicationUrl

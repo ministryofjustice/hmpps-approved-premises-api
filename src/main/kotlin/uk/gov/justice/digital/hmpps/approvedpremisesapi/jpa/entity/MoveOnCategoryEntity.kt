@@ -15,6 +15,9 @@ interface MoveOnCategoryRepository : JpaRepository<MoveOnCategoryEntity, UUID> {
     val NOT_APPLICABLE_MOVE_ON_CATEGORY_ID: UUID = UUID.fromString("ea3d79b0-1ee5-47ff-a7ae-b0d964ca7626")
   }
 
+  @Query("SELECT d FROM MoveOnCategoryEntity d WHERE d.serviceScope = 'approved-premises' AND d.isActive = true")
+  fun findActiveForCas1(): List<MoveOnCategoryEntity>
+
   @Query("SELECT m FROM MoveOnCategoryEntity m WHERE m.serviceScope IN (:serviceName, '*')")
   fun findAllByServiceScope(serviceName: String): List<MoveOnCategoryEntity>
 
@@ -23,8 +26,6 @@ interface MoveOnCategoryRepository : JpaRepository<MoveOnCategoryEntity, UUID> {
 
   @Query("SELECT m FROM MoveOnCategoryEntity m WHERE m.isActive = true")
   fun findActive(): List<MoveOnCategoryEntity>
-
-  fun findByLegacyDeliusCategoryCode(code: String): MoveOnCategoryEntity?
 }
 
 @Entity
@@ -35,12 +36,24 @@ data class MoveOnCategoryEntity(
   val id: UUID,
   val name: String,
   val isActive: Boolean,
+  /**
+   * Use of wildcard should be considered deprecated as blocks the ability to disable a reason
+   * for one service but no the other. Wildcard is no longer used by CAS1
+   */
   val serviceScope: String,
   val legacyDeliusCategoryCode: String?,
 ) {
+  fun isCas1() = serviceScope == "approved-premises"
+
   override fun toString() = "MoveOnCategoryEntity:$id"
 }
 
+@Deprecated(
+  """
+  Use of wildcard should be considered deprecated as blocks the ability to disable a reason
+  for one service but no the other. Wildcard is no longer used by CAS1
+""",
+)
 fun MoveOnCategoryEntity.serviceScopeMatches(bookingService: String): Boolean {
   return when (serviceScope) {
     "*" -> true

@@ -56,6 +56,9 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1Assessm
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1AssessmentEmailService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1DomainEventService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1PlacementRequestEmailService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1PlacementRequirementsService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.PlacementRequestService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.PlacementRequestSource
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.allocations.UserAllocator
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.PageCriteria
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.UrlTemplate
@@ -80,7 +83,7 @@ class AssessmentService(
   private val offenderService: OffenderService,
   private val apDeliusContextApiClient: ApDeliusContextApiClient,
   private val placementRequestService: PlacementRequestService,
-  private val placementRequirementsService: PlacementRequirementsService,
+  private val cas1PlacementRequirementsService: Cas1PlacementRequirementsService,
   private val userAllocator: UserAllocator,
   private val objectMapper: ObjectMapper,
   @Value("\${url-templates.frontend.application}") private val applicationUrlTemplate: UrlTemplate,
@@ -159,7 +162,7 @@ class AssessmentService(
     forTimeline: Boolean = false,
   ): CasResult<AssessmentEntity> {
     val assessment = assessmentRepository.findByIdOrNull(assessmentId)
-      ?: return CasResult.NotFound(AssessmentEntity::class.simpleName, assessmentId.toString())
+      ?: return CasResult.NotFound("AssessmentEntity", assessmentId.toString())
 
     val latestSchema = when (assessment) {
       is ApprovedPremisesAssessmentEntity -> jsonSchemaService.getNewestSchema(
@@ -296,11 +299,11 @@ class AssessmentService(
   }
 
   fun updateAssessment(
-    user: UserEntity,
+    updatingUser: UserEntity,
     assessmentId: UUID,
     data: String?,
   ): CasResult<AssessmentEntity> {
-    val assessmentResult = getAssessmentAndValidate(user, assessmentId)
+    val assessmentResult = getAssessmentAndValidate(updatingUser, assessmentId)
 
     val assessment = when (assessmentResult) {
       is CasResult.Success -> assessmentResult.value
@@ -332,7 +335,7 @@ class AssessmentService(
   }
 
   fun acceptAssessment(
-    user: UserEntity,
+    acceptingUser: UserEntity,
     assessmentId: UUID,
     document: String?,
     placementRequirements: PlacementRequirements?,
@@ -343,7 +346,7 @@ class AssessmentService(
     val acceptedAt = OffsetDateTime.now(clock)
     val createPlacementRequest = placementDates != null
 
-    val assessment = when (val assessmentResult = getAssessmentAndValidate(user, assessmentId)) {
+    val assessment = when (val assessmentResult = getAssessmentAndValidate(acceptingUser, assessmentId)) {
       is CasResult.Success -> assessmentResult.value
       is CasResult.Error -> return assessmentResult
     }
@@ -398,7 +401,7 @@ class AssessmentService(
       val placementRequirementsResult =
         when (
           val result =
-            placementRequirementsService.createPlacementRequirements(assessment, placementRequirements!!)
+            cas1PlacementRequirementsService.createPlacementRequirements(assessment, placementRequirements!!)
         ) {
           is CasResult.Success -> result.value
           is CasResult.Error -> return result.reviseType()
@@ -419,14 +422,21 @@ class AssessmentService(
     val application = savedAssessment.application
 
     val offenderDetails =
-      when (val offenderDetailsResult = offenderService.getOffenderByCrn(application.crn, user.deliusUsername, true)) {
+      when (val offenderDetailsResult = offenderService.getOffenderByCrn(application.crn, acceptingUser.deliusUsername, true)) {
         is AuthorisableActionResult.Success -> offenderDetailsResult.entity
         is AuthorisableActionResult.Unauthorised -> throw RuntimeException("Unable to get Offender Details when creating Application Assessed Domain Event: Unauthorised")
         is AuthorisableActionResult.NotFound -> throw RuntimeException("Unable to get Offender Details when creating Application Assessed Domain Event: Not Found")
       }
 
     if (application is ApprovedPremisesApplicationEntity) {
-      cas1AssessmentDomainEventService.assessmentAccepted(application, assessment, offenderDetails, placementDates, apType, userService.getUserForRequest())
+      cas1AssessmentDomainEventService.assessmentAccepted(
+        application = application,
+        assessment = assessment,
+        offenderDetails = offenderDetails,
+        placementDates = placementDates,
+        apType = apType,
+        acceptingUser = acceptingUser,
+      )
       cas1AssessmentEmailService.assessmentAccepted(application)
 
       if (createPlacementRequest) {
@@ -595,6 +605,7 @@ class AssessmentService(
   }
 
   fun reallocateAssessment(
+    allocatingUser: UserEntity,
     assigneeUser: UserEntity,
     id: UUID,
   ): AuthorisableActionResult<ValidatableActionResult<AssessmentEntity>> {
@@ -613,7 +624,11 @@ class AssessmentService(
     }
 
     return when (currentAssessment) {
-      is ApprovedPremisesAssessmentEntity -> reallocateApprovedPremisesAssessment(assigneeUser, currentAssessment)
+      is ApprovedPremisesAssessmentEntity -> reallocateApprovedPremisesAssessment(
+        allocatingUser = allocatingUser,
+        assigneeUser = assigneeUser,
+        currentAssessment = currentAssessment,
+      )
       is TemporaryAccommodationAssessmentEntity -> reallocateTemporaryAccommodationAssessment(
         assigneeUser,
         currentAssessment,
@@ -624,6 +639,7 @@ class AssessmentService(
   }
 
   private fun reallocateApprovedPremisesAssessment(
+    allocatingUser: UserEntity,
     assigneeUser: UserEntity,
     currentAssessment: ApprovedPremisesAssessmentEntity,
   ): AuthorisableActionResult<ValidatableActionResult<AssessmentEntity>> {
@@ -695,7 +711,7 @@ class AssessmentService(
       if (allocatedToUser != null) {
         cas1AssessmentEmailService.assessmentDeallocated(allocatedToUser, newAssessment.id, application)
       }
-      cas1AssessmentDomainEventService.assessmentAllocated(newAssessment, assigneeUser, userService.getUserForRequest())
+      cas1AssessmentDomainEventService.assessmentAllocated(newAssessment, assigneeUser, allocatingUser)
     }
 
     return AuthorisableActionResult.Success(
@@ -807,7 +823,7 @@ class AssessmentService(
     val clarificationNoteEntity = assessmentClarificationNoteRepository.findByAssessmentIdAndId(assessment.id, id)
 
     if (clarificationNoteEntity === null) {
-      return CasResult.NotFound()
+      return CasResult.NotFound(entityType = "ClarificationNote", id = id.toString())
     }
 
     if (clarificationNoteEntity.createdByUser.id !== user.id) {

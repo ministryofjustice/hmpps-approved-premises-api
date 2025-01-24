@@ -11,6 +11,9 @@ class BadRequestProblem(@JsonIgnore val invalidParams: Map<String, String>? = nu
     return null
   }
 
+  override val message: String
+    get() = listOfNotNull(this.title, this.detail, this.invalidParams).joinToString(": ")
+
   override fun getParameters(): MutableMap<String, Any> {
     return mutableMapOf(
       "invalid-params" to (

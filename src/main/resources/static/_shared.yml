@@ -1595,21 +1595,19 @@ components:
           format: int64
         comment:
           type: string
+        description:
+          type: string
         dateCreated:
           type: string
           format: date
         dateExpires:
           type: string
           format: date
-        expired:
-          type: boolean
-        active:
-          type: boolean
+        alertTypeDescription:
+            type: string
       required:
         - alertId
         - dateCreated
-        - expired
-        - active
     Application:
       type: object
       properties:
@@ -1773,7 +1771,6 @@ components:
           items:
             $ref: '_shared.yml#/components/schemas/Cas2TimelineEvent'
         assessment:
-          type: object
           $ref: '_shared.yml#/components/schemas/Cas2Assessment'
       required:
         - id
@@ -2556,10 +2553,6 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/ClarificationNote'
-        referralHistoryNotes:
-          type: array
-          items:
-            $ref: '#/components/schemas/ReferralHistoryNote'
       discriminator:
         propertyName: service
         mapping:
@@ -3354,7 +3347,6 @@ components:
             characteristics:
               type: array
               items:
-                type: object
                 $ref: '#/components/schemas/CharacteristicPair'
           required:
             - characteristics
@@ -3747,6 +3739,9 @@ components:
         - approved_premises_space_planning_dry_run
         - approved_premises_import_delius_referrals
         - approved_premises_update_space_booking
+        - approved_premises_backfill_active_space_bookings_created_in_delius
+        - approved_premises_create_test_applications
+        - approved_premises_delete_application_timeline_notes
         - temporary_accommodation_referral_rejection
     SeedFromExcelFileType:
       type: string
@@ -3780,6 +3775,7 @@ components:
         - update_cas3_application_offender_name
         - update_cas3_domain_event_type_for_person_departed_updated
         - update_cas1_applications_licence_expiry_date
+        - update_cas1_backfill_offline_application_name
     PlacementDates:
       type: object
       properties:
@@ -4142,7 +4138,7 @@ components:
         - rfap
         - mhapStJosephs
         - mhapElliottHouse
-    BedSearchParameters:
+    TemporaryAccommodationBedSearchParameters:
       type: object
       properties:
         serviceName:
@@ -4150,36 +4146,55 @@ components:
         startDate:
           type: string
           format: date
-          description: The date the Bed will need to be free from
         durationDays:
           type: integer
+          format: int64
           description: The number of days the Bed will need to be free from the start_date until
+        probationDeliveryUnits:
+          type: array
+          description: The list of pdus Ids to search within
+          items:
+            type: string
+            format: uuid
+        premisesFilters:
+          $ref: '#/components/schemas/PremisesFilters'
+        bedspaceFilters:
+          $ref: '#/components/schemas/BedspaceFilters'
+        attributes:
+          type: array
+          description: Bedspace and property attributes to filter on
+          items:
+            $ref: "_shared.yml#/components/schemas/BedSearchAttributes"
       required:
-        - serviceName
+        - probationDeliveryUnits
         - startDate
         - durationDays
-      discriminator:
-        propertyName: serviceName
-        mapping:
-          temporary-accommodation: '#/components/schemas/TemporaryAccommodationBedSearchParameters'
-    TemporaryAccommodationBedSearchParameters:
-      allOf:
-        - $ref: '#/components/schemas/BedSearchParameters'
-        - type: object
-          properties:
-            probationDeliveryUnits:
-              type: array
-              description: The list of pdus Ids to search within
-              items:
-                type: string
-                format: uuid
-            attributes:
-              type: array
-              description: Bedspace and property attributes to filter on
-              items:
-                $ref: "_shared.yml#/components/schemas/BedSearchAttributes"
-          required:
-            - probationDeliveryUnits
+    PremisesFilters:
+      type: object
+      properties:
+        includedCharacteristicIds:
+          type: array
+          items:
+            type: string
+            format: uuid
+        excludedCharacteristicIds:
+          type: array
+          items:
+            type: string
+            format: uuid
+    BedspaceFilters:
+      type: object
+      properties:
+        includedCharacteristicIds:
+          type: array
+          items:
+            type: string
+            format: uuid
+        excludedCharacteristicIds:
+          type: array
+          items:
+            type: string
+            format: uuid
     BedSearchResults:
       type: object
       properties:
@@ -4195,43 +4210,30 @@ components:
         results:
           type: array
           items:
-            $ref: '#/components/schemas/BedSearchResult'
+            $ref: '#/components/schemas/TemporaryAccommodationBedSearchResult'
       required:
         - resultsRoomCount
         - resultsPremisesCount
         - resultsBedCount
         - results
-    BedSearchResult:
+    TemporaryAccommodationBedSearchResult:
       type: object
       properties:
-        serviceName:
-          $ref: '#/components/schemas/ServiceName'
         premises:
           $ref: '#/components/schemas/BedSearchResultPremisesSummary'
         room:
           $ref: '#/components/schemas/BedSearchResultRoomSummary'
         bed:
           $ref: '#/components/schemas/BedSearchResultBedSummary'
+        overlaps:
+          type: array
+          items:
+            $ref: '#/components/schemas/TemporaryAccommodationBedSearchResultOverlap'
       required:
-        - serviceName
         - premises
         - room
         - bed
-      discriminator:
-        propertyName: serviceName
-        mapping:
-          temporary-accommodation: '#/components/schemas/TemporaryAccommodationBedSearchResult'
-    TemporaryAccommodationBedSearchResult:
-      allOf:
-        - $ref: '#/components/schemas/BedSearchResult'
-        - type: object
-          properties:
-            overlaps:
-              type: array
-              items:
-                $ref: '#/components/schemas/TemporaryAccommodationBedSearchResultOverlap'
-          required:
-            - overlaps
+        - overlaps
     TemporaryAccommodationBedSearchResultOverlap:
       type: object
       properties:

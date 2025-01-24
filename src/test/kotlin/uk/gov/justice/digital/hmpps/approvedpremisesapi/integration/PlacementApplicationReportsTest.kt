@@ -396,7 +396,7 @@ class PlacementApplicationReportsTest : IntegrationTestBase() {
 
     val (referrerEntity, _) = referrerDetails
 
-    assertThat(reportRow.crn).isEqualTo(application.crn)
+    assertThat(reportRow.crn).isEqualTo(application.crn.uppercase())
     assertThat(reportRow.tier).isEqualTo("A")
 
     assertThat(reportRow.placementRequestSubmittedAt).isEqualTo(placementApplication.submittedAt!!.toLocalDate())
@@ -489,7 +489,7 @@ class PlacementApplicationReportsTest : IntegrationTestBase() {
 
   private fun createAndSubmitApplication(crn: String): ApprovedPremisesApplicationEntity {
     val (referrer, jwt) = referrerDetails
-    val (offenderDetails, _) = givenAnOffender({ withCrn(crn) })
+    val (offenderDetails, _) = givenAnOffender({ withCrn(crn.uppercase()) })
 
     apDeliusContextMockSuccessfulCaseDetailCall(
       offenderDetails.otherIds.crn,

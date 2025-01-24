@@ -19,12 +19,19 @@ components:
           example: 22
         supportsSpaceBookings:
           type: boolean
+        fullAddress:
+          description: Full address, excluding postcode
+          type: string
+        postcode:
+          type: string
       required:
         - id
         - name
         - apArea
         - bedCount
         - supportsSpaceBookings
+        - fullAddress
+        - postcode
     Cas1PremisesSearchResultSummary:
       type: object
       properties:
@@ -77,7 +84,7 @@ components:
         - apArea
         - characteristics
         - fullAddress
-    Cas1PremisesSummary:
+    Cas1Premises:
       type: object
       properties:
         id:
@@ -89,6 +96,9 @@ components:
         apCode:
           type: string
           example: NEHOPE1
+        fullAddress:
+          description: Full address, excluding postcode
+          type: string
         postcode:
           type: string
           example: LS1 3AD
@@ -119,6 +129,7 @@ components:
         - id
         - name
         - apCode
+        - fullAddress
         - postcode
         - apArea
         - bedCount
@@ -149,6 +160,7 @@ components:
         - acceptsHateCrimeOffenders
         - acceptsNonSexualChildOffenders
         - acceptsSexOffenders
+        - additionalRestrictions
         - hasArsonInsuranceConditions
         - hasBrailleSignage
         - hasCallForAssistance
@@ -170,10 +182,14 @@ components:
         - isArsonDesignated
         - isArsonSuitable
         - isCatered
+        - isESAP
         - isFullyFm
         - isGroundFloor
         - isGroundFloorNrOffice
         - isIAP
+        - isPIPE
+        - isRecoveryFocussed
+        - isSemiSpecialistMentalHealth
         - isSingle
         - isStepFreeDesignated
         - isSuitableForVulnerable
@@ -250,11 +266,13 @@ components:
       properties:
         apTypes:
           deprecated: true
-          description: "Searching on multiple types is not supported, instead use apType. If this is used, the first type wll be matched, and type 'normal' will be ignored"
+          description: "Use 'spaceCharacteristics' to filter on premise types"
           type: array
           items:
             $ref: '_shared.yml#/components/schemas/ApType'
         apType:
+          deprecated: true
+          description: "Use 'spaceCharacteristics' to filter on premise types"
           $ref: '_shared.yml#/components/schemas/ApType'
         spaceCharacteristics:
           type: array
@@ -324,6 +342,9 @@ components:
           description: "This is not populated and will be removed in the future"
           items:
             $ref: '#/components/schemas/Cas1SpaceAvailability'
+      required:
+        - premises
+        - distanceInMiles
     Cas1SpaceAvailability:
       type: object
       deprecated: true
@@ -567,7 +588,7 @@ components:
         essentialCharacteristics:
           type: array
           items:
-            $ref: '#/components/schemas/Cas1SpaceBookingCharacteristic'
+            $ref: '#/components/schemas/Cas1SpaceCharacteristic'
       required:
         - id
         - person
@@ -739,7 +760,7 @@ components:
       type: object
       properties:
         premise:
-          $ref: '#/components/schemas/Cas1PremisesSummary'
+          $ref: '#/components/schemas/Cas1Premises'
         startDate:
           type: string
           format: date
@@ -814,6 +835,9 @@ components:
         id:
           type: string
           format: uuid
+        bedId:
+          type: string
+          format: uuid
         roomName:
           type: string
         startDate:
@@ -830,6 +854,7 @@ components:
             $ref: '#/components/schemas/Cas1SpaceCharacteristic'
       required:
         - id
+        - bedId
         - startDate
         - endDate
         - reason

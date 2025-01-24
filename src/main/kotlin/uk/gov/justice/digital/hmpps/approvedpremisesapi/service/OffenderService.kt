@@ -8,6 +8,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.ApDeliusContextAp
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.ApOASysContextApiClient
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.CaseNotesClient
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.ClientResult
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.PrisonerAlertsApiClient
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.PrisonsApiClient
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.config.ExcludedCategory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.config.PrisonAdjudicationsConfig
@@ -49,10 +50,12 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.asCaseSummary
 import java.io.OutputStream
 import java.time.LocalDate
 import java.util.stream.Collectors
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.prisoneralertsapi.Alert as PrisionerAlert
 
 @Service
 class OffenderService(
   private val prisonsApiClient: PrisonsApiClient,
+  private val prisionerAlertsApiClient: PrisonerAlertsApiClient,
   private val caseNotesClient: CaseNotesClient,
   private val apOASysContextApiClient: ApOASysContextApiClient,
   private val apDeliusContextApiClient: ApDeliusContextApiClient,
@@ -496,7 +499,7 @@ class OffenderService(
       currentPage = when (caseNotesPageResponse) {
         is ClientResult.Success -> caseNotesPageResponse.body
         is ClientResult.Failure.StatusCode -> when (caseNotesPageResponse.status) {
-          HttpStatus.NOT_FOUND -> return CasResult.NotFound()
+          HttpStatus.NOT_FOUND -> return CasResult.NotFound(entityType = "CaseNotes", id = "nomsNumber")
           HttpStatus.FORBIDDEN -> return CasResult.Unauthorised()
           else -> caseNotesPageResponse.throwException()
         }
@@ -555,20 +558,36 @@ class OffenderService(
     )
   }
 
-  fun getAcctAlertsByNomsNumber(nomsNumber: String): AuthorisableActionResult<List<Alert>> {
+  fun getAcctAlertsByNomsNumber(nomsNumber: String): CasResult<List<Alert>> {
     val alertsResult = prisonsApiClient.getAlerts(nomsNumber, "HA")
 
     val alerts = when (alertsResult) {
       is ClientResult.Success -> alertsResult.body
       is ClientResult.Failure.StatusCode -> when (alertsResult.status) {
-        HttpStatus.NOT_FOUND -> return AuthorisableActionResult.NotFound()
-        HttpStatus.FORBIDDEN -> return AuthorisableActionResult.Unauthorised()
+        HttpStatus.NOT_FOUND -> return CasResult.NotFound(entityType = "Alert", id = nomsNumber)
+        HttpStatus.FORBIDDEN -> return CasResult.Unauthorised()
         else -> alertsResult.throwException()
       }
       is ClientResult.Failure -> alertsResult.throwException()
     }
 
-    return AuthorisableActionResult.Success(alerts)
+    return CasResult.Success(alerts)
+  }
+
+  fun getAcctPrisonerAlertsByNomsNumber(nomsNumber: String): CasResult<List<PrisionerAlert>> {
+    val alertsResult = prisionerAlertsApiClient.getAlerts(nomsNumber, "HA")
+
+    val alerts = when (alertsResult) {
+      is ClientResult.Success -> alertsResult.body
+      is ClientResult.Failure.StatusCode -> when (alertsResult.status) {
+        HttpStatus.NOT_FOUND -> return CasResult.NotFound(entityType = "Alert", id = nomsNumber)
+        HttpStatus.FORBIDDEN -> return CasResult.Unauthorised()
+        else -> alertsResult.throwException()
+      }
+      is ClientResult.Failure -> alertsResult.throwException()
+    }
+
+    return CasResult.Success(alerts.content)
   }
 
   fun getOASysNeeds(crn: String): AuthorisableActionResult<NeedsDetails> {
@@ -662,7 +681,7 @@ class OffenderService(
     val caseDetail = when (val caseDetailResult = apDeliusContextApiClient.getCaseDetail(crn)) {
       is ClientResult.Success -> caseDetailResult.body
       is ClientResult.Failure.StatusCode -> when (caseDetailResult.status) {
-        HttpStatus.NOT_FOUND -> return CasResult.NotFound()
+        HttpStatus.NOT_FOUND -> return CasResult.NotFound("CaseDetail", crn)
         HttpStatus.FORBIDDEN -> return CasResult.Unauthorised()
         else -> caseDetailResult.throwException()
       }
@@ -719,7 +738,7 @@ class OffenderService(
     ignoreLaoRestrictions: Boolean,
   ): PersonInfoResult {
     check(ignoreLaoRestrictions || deliusUsername != null) { "If ignoreLao is false, delius username must be provided " }
-    return getPersonInfoResults(setOf(crn), deliusUsername, ignoreLaoRestrictions).first()
+    return getPersonInfoResults(setOf(crn.trim().uppercase()), deliusUsername, ignoreLaoRestrictions).first()
   }
 
   fun getPersonInfoResults(

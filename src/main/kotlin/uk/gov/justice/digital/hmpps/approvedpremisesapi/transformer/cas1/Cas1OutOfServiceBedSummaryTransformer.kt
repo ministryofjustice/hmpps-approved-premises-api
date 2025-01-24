@@ -13,6 +13,7 @@ class Cas1OutOfServiceBedSummaryTransformer(
 
   fun toCas1OutOfServiceBedSummary(jpa: Cas1OutOfServiceBedEntity) = Cas1OutOfServiceBedSummary(
     id = jpa.id,
+    bedId = jpa.bed.id,
     roomName = jpa.bed.room.name,
     startDate = jpa.startDate,
     endDate = jpa.endDate,

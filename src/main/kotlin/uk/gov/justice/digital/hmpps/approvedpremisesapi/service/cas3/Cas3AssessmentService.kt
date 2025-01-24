@@ -27,7 +27,7 @@ class Cas3AssessmentService(
   ): CasResult<TemporaryAccommodationAssessmentEntity> {
     val assessment: TemporaryAccommodationAssessmentEntity = (
       assessmentRepository.findAssessmentById(assessmentId)
-        ?: return CasResult.NotFound(TemporaryAccommodationAssessmentEntity::class.simpleName, assessmentId.toString())
+        ?: return CasResult.NotFound("TemporaryAccommodationAssessmentEntity", assessmentId.toString())
       )
 
     if (!userAccessService.userCanViewAssessment(user, assessment)) {

@@ -27,9 +27,9 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.seed.SeedLogger
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.seed.SeedOnStartupService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.seed.SeedService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.seed.cas1.ApprovedPremisesRoomsSeedJob
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.seed.cas1.Cas1AutoScript
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.seed.cas1.Cas1SeedPremisesFromCsvJob
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.seed.cas2.Cas2AutoScript
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.seed.cas1.Cas1StartupScript
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.seed.cas2.Cas2StartupScript
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.EnvironmentService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.SentryService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.LogEntry
@@ -39,8 +39,8 @@ class SeedOnStartupServiceTest {
   private val mockApplicationContext = mockk<ApplicationContext>()
   private val mockTransactionTemplate = mockk<TransactionTemplate>()
   private val mockSeedLogger = mockk<SeedLogger>()
-  private val mockCas1AutoScript = mockk<Cas1AutoScript>()
-  private val mockCas2AutoScript = mockk<Cas2AutoScript>()
+  private val mockCas1StartupScript = mockk<Cas1StartupScript>()
+  private val mockCas2StartupScript = mockk<Cas2StartupScript>()
   private val mockSeedService = mockk<SeedService>()
   private val mockEnvironmentService = mockk<EnvironmentService>()
   private val mockSentryService = mockk<SentryService>()
@@ -48,8 +48,8 @@ class SeedOnStartupServiceTest {
 
   private val seedService = SeedOnStartupService(
     seedConfig,
-    mockCas1AutoScript,
-    mockCas2AutoScript,
+    mockCas1StartupScript,
+    mockCas2StartupScript,
     mockSeedService,
     mockSeedLogger,
     mockEnvironmentService,
@@ -70,13 +70,13 @@ class SeedOnStartupServiceTest {
     every { mockSeedLogger.error(any(), any()) } answers {
       logEntries += LogEntry(it.invocation.args[0] as String, "error", it.invocation.args[1] as Throwable)
     }
-    every { mockCas1AutoScript.script() } answers { }
-    every { mockCas2AutoScript.script() } answers { }
+    every { mockCas1StartupScript.script() } answers { }
+    every { mockCas2StartupScript.script() } answers { }
   }
 
   @Test
-  fun `autoSeed does nothing if automatic seeding is not enabled`() {
-    seedConfig.auto.enabled = false
+  fun `does nothing if automatic seeding is not enabled`() {
+    seedConfig.onStartup.enabled = false
 
     every { mockEnvironmentService.isNotATestEnvironment() } returns false
 
@@ -86,21 +86,21 @@ class SeedOnStartupServiceTest {
   }
 
   @Test
-  fun `autoSeed does nothing and raises alert if not in a test environment`() {
-    seedConfig.auto.enabled = true
+  fun `does nothing and raises alert if not in a test environment`() {
+    seedConfig.onStartup.enabled = true
 
     every { mockEnvironmentService.isNotATestEnvironment() } returns true
     every { mockSentryService.captureErrorMessage(any()) } returns Unit
 
     seedService.seedOnStartup()
 
-    verify { mockSentryService.captureErrorMessage("Auto seeding should not be enabled outside of local and dev environments") }
+    verify { mockSentryService.captureErrorMessage("Seed on startup should not be enabled outside of local and dev environments") }
   }
 
   @Test
-  fun `autoSeed logs a warning if a file prefix corresponds to a location that does not exist`() {
-    seedConfig.auto.enabled = true
-    seedConfig.auto.filePrefixes = listOf("classpath:does/not/exist")
+  fun `logs a warning if a file prefix corresponds to a location that does not exist`() {
+    seedConfig.onStartup.enabled = true
+    seedConfig.onStartup.filePrefixes = listOf("classpath:does/not/exist")
 
     every { mockEnvironmentService.isNotATestEnvironment() } returns false
 
@@ -113,9 +113,9 @@ class SeedOnStartupServiceTest {
   }
 
   @Test
-  fun `autoSeed logs a warning if it encounters a CSV file with an unknown seed job type`() {
-    seedConfig.auto.enabled = true
-    seedConfig.auto.filePrefixes = listOf("classpath:db/seed/unknown-job-type")
+  fun `logs a warning if it encounters a CSV file with an unknown seed job type`() {
+    seedConfig.onStartup.enabled = true
+    seedConfig.onStartup.filePrefixes = listOf("classpath:db/seed/unknown-job-type")
 
     every { mockEnvironmentService.isNotATestEnvironment() } returns false
 
@@ -129,9 +129,9 @@ class SeedOnStartupServiceTest {
   }
 
   @Test
-  fun `autoSeed runs the jobs for a CSV file with the name of the job type in the correct order`() {
-    seedConfig.auto.enabled = true
-    seedConfig.auto.filePrefixes = listOf("classpath:db/seed/known-job-type")
+  fun `runs the jobs for a CSV file with the name of the job type in the correct order`() {
+    seedConfig.onStartup.enabled = true
+    seedConfig.onStartup.filePrefixes = listOf("classpath:db/seed/known-job-type")
 
     every { mockEnvironmentService.isNotATestEnvironment() } returns false
 
@@ -187,60 +187,60 @@ class SeedOnStartupServiceTest {
   }
 
   @Nested
-  inner class AutoScriptCas1 {
+  inner class StartupScriptCas1 {
     @Test
     fun `does nothing if autoScript is NOT enabled`() {
-      seedConfig.auto.enabled = true
-      seedConfig.autoScript.cas1Enabled = false
+      seedConfig.onStartup.enabled = true
+      seedConfig.onStartup.script.cas1Enabled = false
 
       every { mockEnvironmentService.isNotATestEnvironment() } returns false
 
       seedService.seedOnStartup()
 
-      verify { mockCas1AutoScript wasNot Called }
-      verify { mockCas2AutoScript wasNot Called }
+      verify { mockCas1StartupScript wasNot Called }
+      verify { mockCas2StartupScript wasNot Called }
     }
 
     @Test
     fun `runs Cas1AutoScript when autoScript IS enabled (along with auto-seeding)`() {
-      seedConfig.auto.enabled = true
-      seedConfig.autoScript.cas1Enabled = true
+      seedConfig.onStartup.enabled = true
+      seedConfig.onStartup.script.cas1Enabled = true
 
       every { mockEnvironmentService.isNotATestEnvironment() } returns false
 
       seedService.seedOnStartup()
 
-      verify { mockCas1AutoScript.script() }
-      verify { mockCas2AutoScript wasNot Called }
+      verify { mockCas1StartupScript.script() }
+      verify { mockCas2StartupScript wasNot Called }
     }
   }
 
   @Nested
-  inner class AutoScriptCas2 {
+  inner class StartupScriptCas2 {
     @Test
     fun `does nothing if autoScript is NOT enabled`() {
-      seedConfig.auto.enabled = true
-      seedConfig.autoScript.cas2Enabled = false
+      seedConfig.onStartup.enabled = true
+      seedConfig.onStartup.script.cas2Enabled = false
 
       every { mockEnvironmentService.isNotATestEnvironment() } returns false
 
       seedService.seedOnStartup()
 
-      verify { mockCas1AutoScript wasNot Called }
-      verify { mockCas2AutoScript wasNot Called }
+      verify { mockCas1StartupScript wasNot Called }
+      verify { mockCas2StartupScript wasNot Called }
     }
 
     @Test
     fun `runs Cas2AutoScript when autoScript IS enabled (along with auto-seeding)`() {
-      seedConfig.auto.enabled = true
-      seedConfig.autoScript.cas2Enabled = true
+      seedConfig.onStartup.enabled = true
+      seedConfig.onStartup.script.cas2Enabled = true
 
       every { mockEnvironmentService.isNotATestEnvironment() } returns false
 
       seedService.seedOnStartup()
 
-      verify { mockCas1AutoScript wasNot Called }
-      verify { mockCas2AutoScript.script() }
+      verify { mockCas1StartupScript wasNot Called }
+      verify { mockCas2StartupScript.script() }
     }
   }
 }

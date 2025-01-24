@@ -533,7 +533,7 @@ class BookingService(
     endDate: LocalDate,
     thisEntityId: UUID?,
     bedId: UUID,
-  ) = cas3VoidBedspacesRepository.findByBedIdAndOverlappingDate(
+  ) = cas3VoidBedspacesRepository.findByBedspaceIdAndOverlappingDate(
     bedId,
     startDate,
     endDate,

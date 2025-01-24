@@ -2280,7 +2280,7 @@ class Cas3ReportsTest : IntegrationTestBase() {
           bed.apply { createdAt = OffsetDateTime.parse("2023-02-16T14:03:00+00:00") }
           bedRepository.save(bed)
 
-          cas3VoidBedspacesEntityFactory.produceAndPersist {
+          cas3VoidBedspaceEntityFactory.produceAndPersist {
             withBed(bed)
             withPremises(premises)
             withStartDate(LocalDate.parse("2023-04-28"))
@@ -2913,7 +2913,7 @@ class Cas3ReportsTest : IntegrationTestBase() {
 
           govUKBankHolidaysAPIMockSuccessfullCallWithEmptyResponse()
 
-          cas3VoidBedspacesEntityFactory.produceAndPersist {
+          cas3VoidBedspaceEntityFactory.produceAndPersist {
             withBed(bed)
             withPremises(premises)
             withStartDate(LocalDate.parse("2023-03-28"))
@@ -2921,7 +2921,7 @@ class Cas3ReportsTest : IntegrationTestBase() {
             withYieldedReason { cas3VoidBedspaceReasonEntityFactory.produceAndPersist() }
           }
 
-          cas3VoidBedspacesEntityFactory.produceAndPersist {
+          cas3VoidBedspaceEntityFactory.produceAndPersist {
             withBed(bed)
             withPremises(premises)
             withStartDate(LocalDate.parse("2023-04-25"))

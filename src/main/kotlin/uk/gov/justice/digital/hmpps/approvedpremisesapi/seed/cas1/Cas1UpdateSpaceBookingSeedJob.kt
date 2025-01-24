@@ -81,7 +81,7 @@ class Cas1UpdateSpaceBookingSeedJob(
     spaceBooking: Cas1SpaceBookingEntity,
   ) {
     val updatedCriteria = row.criteria
-    val allowedCriteria = Cas1SpaceBookingEntity.Constants.CRITERIA_CHARACTERISTIC_PROPERTY_NAMES_OF_INTEREST
+    val allowedCriteria = Cas1SpaceBookingEntity.CHARACTERISTICS_OF_INTEREST
 
     val unexpectedCriteria = updatedCriteria.filter { !allowedCriteria.contains(it) }
     if (unexpectedCriteria.size > 1) {

@@ -51,13 +51,18 @@ class Cas1PremisesDayTransformerTest {
         canonicalDepartureDate = currentSearchDay.plusDays(1),
         tier = "Tier 1",
         releaseType = "rotl",
-        essentialCharacteristics = listOf(Cas1SpaceBookingCharacteristic.IS_SINGLE, Cas1SpaceBookingCharacteristic.HAS_EN_SUITE),
+        essentialCharacteristics = listOf(
+          Cas1SpaceCharacteristic.isSingle,
+          Cas1SpaceCharacteristic.hasEnSuite,
+          Cas1SpaceCharacteristic.isIAP,
+        ),
       ),
     )
 
     val outOfServiceBeds = listOf(
       Cas1OutOfServiceBedSummary(
         id = UUID.randomUUID(),
+        bedId = UUID.randomUUID(),
         startDate = LocalDate.now().minusDays(5),
         endDate = LocalDate.now().plusDays(5),
         reason = Cas1OutOfServiceBedReason(UUID.randomUUID(), "reason", true),

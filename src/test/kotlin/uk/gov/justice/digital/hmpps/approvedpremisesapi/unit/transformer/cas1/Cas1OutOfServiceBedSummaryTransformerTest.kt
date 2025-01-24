@@ -74,6 +74,7 @@ class Cas1OutOfServiceBedSummaryTransformerTest {
     val result = transformer.toCas1OutOfServiceBedSummary(outOfServiceBed)
 
     assertThat(result.id).isEqualTo(outOfServiceBed.id)
+    assertThat(result.bedId).isEqualTo(bed.id)
     assertThat(result.roomName).isEqualTo(bed.room.name)
     assertThat(result.startDate).isEqualTo(outOfServiceBed.startDate)
     assertThat(result.endDate).isEqualTo(outOfServiceBed.endDate)

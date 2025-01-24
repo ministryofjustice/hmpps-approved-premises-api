@@ -23,6 +23,11 @@ data class SeedColumns(
     return LocalDateTime.parse(lastDateTime, formatter)
   }
 
+  fun getDateTimeFromUtcDateTimeOrNull(label: String, formatter: DateTimeFormatter): LocalDateTime? {
+    val rawValue = getStringOrNull(label) ?: return null
+    return LocalDateTime.parse(rawValue, formatter)
+  }
+
   fun getDateFromUtcDateTimeOrNull(label: String): LocalDate? {
     val rawValue = getStringOrNull(label) ?: return null
     return LocalDate.parse(rawValue.substring(startIndex = 0, endIndex = 10))
