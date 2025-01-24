@@ -39,10 +39,10 @@ class Cas2v2ApplicationNoteService(
   @Suppress("ReturnCount")
   fun createAssessmentNote(assessmentId: UUID, note: NewCas2ApplicationNote): CasResult<Cas2v2ApplicationNoteEntity> {
     val assessment = cas2v2AssessmentRepository.findByIdOrNull(assessmentId)
-      ?: return CasResult.NotFound()
+      ?: return CasResult.NotFound("Cas2v2ApplicationNoteEntity", assessmentId.toString())
 
     val application = cas2v2ApplicationRepository.findByIdOrNull(assessment.application.id)
-      ?: return CasResult.NotFound()
+      ?: return CasResult.NotFound("Cas2v2ApplicationNoteEntity", assessmentId.toString())
 
     if (application.submittedAt == null) {
       return CasResult.GeneralValidationError("This application has not been submitted")

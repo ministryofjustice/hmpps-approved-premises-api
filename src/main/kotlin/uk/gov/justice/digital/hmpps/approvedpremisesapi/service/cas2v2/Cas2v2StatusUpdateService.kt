@@ -64,7 +64,7 @@ class Cas2v2StatusUpdateService(
     assessor: Cas2v2UserEntity,
   ): CasResult<Cas2v2StatusUpdateEntity> {
     val assessment = cas2v2AssessmentRepository.findByIdOrNull(assessmentId)
-      ?: return CasResult.NotFound()
+      ?: return CasResult.NotFound("Cas2v2StatusUpdateEntity", assessmentId.toString())
 
     val status = findActiveStatusByName(statusUpdate.newStatus)
       ?: return CasResult.GeneralValidationError("The status ${statusUpdate.newStatus} is not valid")
