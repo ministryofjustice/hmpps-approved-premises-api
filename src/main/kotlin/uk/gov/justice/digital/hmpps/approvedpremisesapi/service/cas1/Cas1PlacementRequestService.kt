@@ -29,9 +29,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.ApprovedPremisesAp
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PaginationMetadata
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.ValidationErrors
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.InternalServerErrorProblem
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.AuthorisableActionResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.CasResult
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.ValidatableActionResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.ApplicationService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.OffenderService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.TaskDeadlineService
@@ -138,32 +136,26 @@ class PlacementRequestService(
   fun reallocatePlacementRequest(
     assigneeUser: UserEntity,
     id: UUID,
-  ): AuthorisableActionResult<ValidatableActionResult<PlacementRequestEntity>> {
+  ): CasResult<PlacementRequestEntity> {
     val currentPlacementRequest = placementRequestRepository.findByIdOrNull(id)
-      ?: return AuthorisableActionResult.NotFound()
+      ?: return CasResult.NotFound("placementRequest", id.toString())
 
     if (currentPlacementRequest.reallocatedAt != null) {
-      return AuthorisableActionResult.Success(
-        ValidatableActionResult.ConflictError(
-          currentPlacementRequest.id,
-          "This placement request has already been reallocated",
-        ),
+      return CasResult.ConflictError(
+        currentPlacementRequest.id,
+        "This placement request has already been reallocated",
       )
     }
 
     if (currentPlacementRequest.booking != null) {
-      return AuthorisableActionResult.Success(
-        ValidatableActionResult.GeneralValidationError("This placement request has already been completed"),
-      )
+      return CasResult.GeneralValidationError("This placement request has already been completed")
     }
 
     if (!assigneeUser.hasRole(UserRole.CAS1_MATCHER)) {
-      return AuthorisableActionResult.Success(
-        ValidatableActionResult.FieldValidationError(
-          ValidationErrors().apply {
-            this["$.userId"] = "lackingMatcherRole"
-          },
-        ),
+      return CasResult.FieldValidationError(
+        ValidationErrors().apply {
+          this["$.userId"] = "lackingMatcherRole"
+        },
       )
     }
 
@@ -186,11 +178,7 @@ class PlacementRequestService(
 
     placementRequestRepository.save(newPlacementRequest)
 
-    return AuthorisableActionResult.Success(
-      ValidatableActionResult.Success(
-        newPlacementRequest,
-      ),
-    )
+    return CasResult.Success(newPlacementRequest)
   }
 
   fun createPlacementRequestsFromPlacementApplication(

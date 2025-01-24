@@ -39,7 +39,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementDate
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRole
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.ApprovedPremisesApplicationStatus
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.AuthorisableActionResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.CasResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.ValidatableActionResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.JsonSchemaService
@@ -54,6 +53,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Withdrawabl
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.WithdrawalContext
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.WithdrawalTriggeredByUser
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.allocations.UserAllocator
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.unit.util.assertThatCasResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.extractEntityFromCasResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.isWithinTheLastMinute
 import java.time.Clock
@@ -515,28 +515,28 @@ class PlacementApplicationServiceTest {
 
       val result = placementApplicationService.reallocateApplication(assigneeUser, previousPlacementApplication.id)
 
-      assertThat(result is AuthorisableActionResult.Success).isTrue
-      val validationResult = (result as AuthorisableActionResult.Success).entity
+      assertThatCasResult(result).isSuccess().with { newPlacementApplication ->
 
-      assertThat(validationResult is ValidatableActionResult.Success).isTrue
-      validationResult as ValidatableActionResult.Success
+        assertThat(previousPlacementApplication.reallocatedAt).isNotNull
 
-      assertThat(previousPlacementApplication.reallocatedAt).isNotNull
+        verify { placementApplicationRepository.save(match { it.allocatedToUser == assigneeUser }) }
+        verify {
+          cas1PlacementApplicationDomainEventService.placementApplicationAllocated(
+            match { it.allocatedToUser == assigneeUser },
+            currentRequestUser,
+          )
+        }
 
-      verify { placementApplicationRepository.save(match { it.allocatedToUser == assigneeUser }) }
-      verify { cas1PlacementApplicationDomainEventService.placementApplicationAllocated(match { it.allocatedToUser == assigneeUser }, currentRequestUser) }
-
-      val newPlacementApplication = validationResult.entity
-
-      assertThat(newPlacementApplication.application).isEqualTo(application)
-      assertThat(newPlacementApplication.allocatedToUser).isEqualTo(assigneeUser)
-      assertThat(newPlacementApplication.createdByUser).isEqualTo(previousPlacementApplication.createdByUser)
-      assertThat(newPlacementApplication.data).isEqualTo(previousPlacementApplication.data)
-      assertThat(newPlacementApplication.document).isEqualTo(previousPlacementApplication.document)
-      assertThat(newPlacementApplication.schemaVersion).isEqualTo(previousPlacementApplication.schemaVersion)
-      assertThat(newPlacementApplication.placementType).isEqualTo(previousPlacementApplication.placementType)
-      assertThat(newPlacementApplication.placementDates).isEqualTo(newPlacementDates)
-      assertThat(newPlacementApplication.dueAt).isEqualTo(dueAt)
+        assertThat(newPlacementApplication.application).isEqualTo(application)
+        assertThat(newPlacementApplication.allocatedToUser).isEqualTo(assigneeUser)
+        assertThat(newPlacementApplication.createdByUser).isEqualTo(previousPlacementApplication.createdByUser)
+        assertThat(newPlacementApplication.data).isEqualTo(previousPlacementApplication.data)
+        assertThat(newPlacementApplication.document).isEqualTo(previousPlacementApplication.document)
+        assertThat(newPlacementApplication.schemaVersion).isEqualTo(previousPlacementApplication.schemaVersion)
+        assertThat(newPlacementApplication.placementType).isEqualTo(previousPlacementApplication.placementType)
+        assertThat(newPlacementApplication.placementDates).isEqualTo(newPlacementDates)
+        assertThat(newPlacementApplication.dueAt).isEqualTo(dueAt)
+      }
     }
 
     @Test
@@ -589,31 +589,31 @@ class PlacementApplicationServiceTest {
 
       val result = placementApplicationService.reallocateApplication(assigneeUser, previousPlacementApplication.id)
 
-      assertThat(result is AuthorisableActionResult.Success).isTrue
-      val validationResult = (result as AuthorisableActionResult.Success).entity
+      assertThatCasResult(result).isSuccess().with { newPlacementApplication ->
 
-      assertThat(validationResult is ValidatableActionResult.Success).isTrue
-      validationResult as ValidatableActionResult.Success
+        assertThat(previousPlacementApplication.reallocatedAt).isNotNull
 
-      assertThat(previousPlacementApplication.reallocatedAt).isNotNull
+        verify { placementApplicationRepository.save(match { it.allocatedToUser == assigneeUser }) }
+        verify {
+          cas1PlacementApplicationDomainEventService.placementApplicationAllocated(
+            match { it.allocatedToUser == assigneeUser },
+            currentRequestUser,
+          )
+        }
 
-      verify { placementApplicationRepository.save(match { it.allocatedToUser == assigneeUser }) }
-      verify { cas1PlacementApplicationDomainEventService.placementApplicationAllocated(match { it.allocatedToUser == assigneeUser }, currentRequestUser) }
+        assertThat(newPlacementApplication.application).isEqualTo(application)
+        assertThat(newPlacementApplication.allocatedToUser).isEqualTo(assigneeUser)
+        assertThat(newPlacementApplication.createdByUser).isEqualTo(previousPlacementApplication.createdByUser)
+        assertThat(newPlacementApplication.data).isEqualTo(previousPlacementApplication.data)
+        assertThat(newPlacementApplication.document).isEqualTo(previousPlacementApplication.document)
+        assertThat(newPlacementApplication.schemaVersion).isEqualTo(previousPlacementApplication.schemaVersion)
+        assertThat(newPlacementApplication.placementType).isEqualTo(previousPlacementApplication.placementType)
+        assertThat(newPlacementApplication.placementDates).isEqualTo(newPlacementDates)
+        assertThat(newPlacementApplication.dueAt).isEqualTo(dueAt)
 
-      val newPlacementApplication = validationResult.entity
-
-      assertThat(newPlacementApplication.application).isEqualTo(application)
-      assertThat(newPlacementApplication.allocatedToUser).isEqualTo(assigneeUser)
-      assertThat(newPlacementApplication.createdByUser).isEqualTo(previousPlacementApplication.createdByUser)
-      assertThat(newPlacementApplication.data).isEqualTo(previousPlacementApplication.data)
-      assertThat(newPlacementApplication.document).isEqualTo(previousPlacementApplication.document)
-      assertThat(newPlacementApplication.schemaVersion).isEqualTo(previousPlacementApplication.schemaVersion)
-      assertThat(newPlacementApplication.placementType).isEqualTo(previousPlacementApplication.placementType)
-      assertThat(newPlacementApplication.placementDates).isEqualTo(newPlacementDates)
-      assertThat(newPlacementApplication.dueAt).isEqualTo(dueAt)
-
-      verify(exactly = 1) {
-        cas1PlacementApplicationEmailService.placementApplicationAllocated(newPlacementApplication)
+        verify(exactly = 1) {
+          cas1PlacementApplicationEmailService.placementApplicationAllocated(newPlacementApplication)
+        }
       }
     }
 
@@ -624,7 +624,7 @@ class PlacementApplicationServiceTest {
 
       val result = placementApplicationService.reallocateApplication(assigneeUser, previousPlacementApplication.id)
 
-      assertThat(result is AuthorisableActionResult.NotFound).isTrue
+      assertThatCasResult(result).isNotFound("placement application", previousPlacementApplication.id)
     }
 
     @Test
@@ -638,12 +638,7 @@ class PlacementApplicationServiceTest {
 
       val result = placementApplicationService.reallocateApplication(assigneeUser, previousPlacementApplication.id)
 
-      assertThat(result is AuthorisableActionResult.Success).isTrue
-      val validationResult = (result as AuthorisableActionResult.Success).entity
-
-      assertThat(validationResult is ValidatableActionResult.GeneralValidationError).isTrue
-      validationResult as ValidatableActionResult.GeneralValidationError
-      assertThat(validationResult.message).isEqualTo("This placement application has already been completed")
+      assertThatCasResult(result).isGeneralValidationError("This placement application has already been completed")
     }
 
     @Test
@@ -657,13 +652,9 @@ class PlacementApplicationServiceTest {
 
       val result = placementApplicationService.reallocateApplication(assigneeUser, previousPlacementApplication.id)
 
-      assertThat(result is AuthorisableActionResult.Success).isTrue
-      val validationResult = (result as AuthorisableActionResult.Success).entity
-
-      assertThat(validationResult is ValidatableActionResult.ConflictError).isTrue
-      validationResult as ValidatableActionResult.ConflictError
-      assertThat(validationResult.conflictingEntityId).isEqualTo(previousPlacementApplication.id)
-      assertThat(validationResult.message).isEqualTo("This placement application has already been reallocated")
+      assertThatCasResult(result).isConflictError()
+        .hasEntityId(previousPlacementApplication.id)
+        .hasMessage("This placement application has already been reallocated")
     }
 
     @Test
@@ -673,12 +664,7 @@ class PlacementApplicationServiceTest {
 
       val result = placementApplicationService.reallocateApplication(assigneeUser, previousPlacementApplication.id)
 
-      assertThat(result is AuthorisableActionResult.Success).isTrue
-      val validationResult = (result as AuthorisableActionResult.Success).entity
-
-      assertThat(validationResult is ValidatableActionResult.FieldValidationError).isTrue
-      validationResult as ValidatableActionResult.FieldValidationError
-      assertThat(validationResult.validationMessages).containsEntry("$.userId", "lackingMatcherRole")
+      assertThatCasResult(result).isFieldValidationError().hasMessage("$.userId", "lackingMatcherRole")
     }
   }
 
@@ -937,7 +923,7 @@ class PlacementApplicationServiceTest {
         ),
       )
 
-      assertThat(result is CasResult.Success).isTrue
+      assertThatCasResult(result).isSuccess()
     }
   }
 }
