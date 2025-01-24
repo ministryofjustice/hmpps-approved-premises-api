@@ -464,7 +464,7 @@ class AssessmentService(
   }
 
   fun rejectAssessment(
-    user: UserEntity,
+    rejectingUser: UserEntity,
     assessmentId: UUID,
     document: String?,
     rejectionRationale: String,
@@ -475,10 +475,19 @@ class AssessmentService(
     val domainEventId = UUID.randomUUID()
     val rejectedAt = OffsetDateTime.now(clock)
 
-    val assessmentResult = getAssessmentAndValidate(user, assessmentId)
+    val assessmentResult = getAssessmentAndValidate(rejectingUser, assessmentId)
     val assessment = when (assessmentResult) {
       is CasResult.Success -> assessmentResult.value
       else -> return assessmentResult
+    }
+
+    if (assessment is ApprovedPremisesAssessmentEntity) {
+      val allocatedToUser = assessment.allocatedToUser
+        ?: return CasResult.GeneralValidationError("An assessment must be allocated to a user to be updated")
+
+      if (allocatedToUser.id != rejectingUser.id) {
+        return CasResult.Unauthorised("The assessment can only be updated by the allocated user")
+      }
     }
 
     if (!assessment.schemaUpToDate) {
@@ -533,12 +542,12 @@ class AssessmentService(
     val application = savedAssessment.application
 
     val offenderDetails =
-      when (val offenderDetailsResult = offenderService.getOffenderByCrn(application.crn, user.deliusUsername, true)) {
+      when (val offenderDetailsResult = offenderService.getOffenderByCrn(application.crn, rejectingUser.deliusUsername, true)) {
         is AuthorisableActionResult.Success -> offenderDetailsResult.entity
         else -> null
       }
 
-    val staffDetails = when (val staffDetailsResult = apDeliusContextApiClient.getStaffDetail(user.deliusUsername)) {
+    val staffDetails = when (val staffDetailsResult = apDeliusContextApiClient.getStaffDetail(rejectingUser.deliusUsername)) {
       is ClientResult.Success -> staffDetailsResult.body
       is ClientResult.Failure -> staffDetailsResult.throwException()
     }
@@ -573,7 +582,7 @@ class AssessmentService(
                   name = staffDetails.probationArea.description,
                 ),
                 cru = Cru(
-                  name = user.apArea?.name ?: "Unknown CRU",
+                  name = rejectingUser.apArea?.name ?: "Unknown CRU",
                 ),
               ),
               decision = assessment.decision.toString(),

@@ -228,7 +228,6 @@ class ApplicationStateTest : InitialiseDatabasePerClassTestBase() {
     allocateAndUpdateAssessment()
 
     requestFurtherInformation()
-    // updateAssessment()
     assertApplicationStatus(ApprovedPremisesApplicationStatus.REQUESTED_FURTHER_INFORMATION)
 
     updateFurtherInformation()

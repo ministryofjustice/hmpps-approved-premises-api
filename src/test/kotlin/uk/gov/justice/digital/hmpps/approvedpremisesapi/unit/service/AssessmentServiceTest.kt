@@ -1077,6 +1077,54 @@ class AssessmentServiceTest {
     }
 
     @Test
+    fun `general validation error when assessment doesnt have an allocated user`() {
+      val assessment = ApprovedPremisesAssessmentEntityFactory()
+        .withApplication(application)
+        .withSubmittedAt(OffsetDateTime.now())
+        .withDecision(null)
+        .withAllocatedToUser(null)
+        .produce()
+
+      every { userAccessServiceMock.userCanViewAssessment(any(), any()) } returns true
+
+      every { assessmentRepositoryMock.findByIdOrNull(assessment.id) } returns assessment
+
+      every { jsonSchemaServiceMock.getNewestSchema(ApprovedPremisesAssessmentJsonSchemaEntity::class.java) } returns ApprovedPremisesAssessmentJsonSchemaEntityFactory().produce()
+
+      every { offenderServiceMock.getOffenderByCrn(assessment.application.crn, user.deliusUsername) } returns AuthorisableActionResult.Success(
+        OffenderDetailsSummaryFactory().produce(),
+      )
+
+      val result = assessmentService.rejectAssessment(user, assessment.id, "{}", "reasoning")
+
+      assertThatCasResult(result).isGeneralValidationError("An assessment must be allocated to a user to be updated")
+    }
+
+    @Test
+    fun `unauthorised when assessment doesnt have an allocated user`() {
+      val assessment = ApprovedPremisesAssessmentEntityFactory()
+        .withApplication(application)
+        .withSubmittedAt(OffsetDateTime.now())
+        .withDecision(null)
+        .withAllocatedToUser(UserEntityFactory().withDefaults().produce())
+        .produce()
+
+      every { userAccessServiceMock.userCanViewAssessment(any(), any()) } returns true
+
+      every { assessmentRepositoryMock.findByIdOrNull(assessment.id) } returns assessment
+
+      every { jsonSchemaServiceMock.getNewestSchema(ApprovedPremisesAssessmentJsonSchemaEntity::class.java) } returns ApprovedPremisesAssessmentJsonSchemaEntityFactory().produce()
+
+      every { offenderServiceMock.getOffenderByCrn(assessment.application.crn, user.deliusUsername) } returns AuthorisableActionResult.Success(
+        OffenderDetailsSummaryFactory().produce(),
+      )
+
+      val result = assessmentService.rejectAssessment(user, assessment.id, "{}", "reasoning")
+
+      assertThatCasResult(result).isUnauthorised("The assessment can only be updated by the allocated user")
+    }
+
+    @Test
     fun `general validation error for Assessment where schema is outdated`() {
       val assessment = ApprovedPremisesAssessmentEntityFactory()
         .withApplication(application)
