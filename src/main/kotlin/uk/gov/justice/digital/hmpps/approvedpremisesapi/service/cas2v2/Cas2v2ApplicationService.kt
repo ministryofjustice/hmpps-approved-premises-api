@@ -106,7 +106,7 @@ class Cas2v2ApplicationService(
       ?: return CasResult.NotFound("Cas2v2ApplicationEntity", applicationId.toString())
 
     if (applicationEntity.abandonedAt != null) {
-      return CasResult.NotFound()
+      return CasResult.NotFound("Cas2v2ApplicationEntity", applicationId.toString())
     }
 
     val canAccess = cas2v2UserAccessService.userCanViewCas2v2Application(user, applicationEntity)
