@@ -732,6 +732,78 @@ class AssessmentServiceTest {
       .produce()
 
     @Test
+    fun `CAS1 error if not allocated to a user`() {
+      val schema = ApprovedPremisesAssessmentJsonSchemaEntity(
+        id = UUID.randomUUID(),
+        addedAt = OffsetDateTime.now(),
+        schema = "{}",
+      )
+
+      val assessment = ApprovedPremisesAssessmentEntityFactory()
+        .withApplication(application)
+        .withAllocatedToUser(null)
+        .withAssessmentSchema(schema)
+        .produce()
+
+      every { userAccessServiceMock.userCanViewAssessment(any(), any()) } returns true
+
+      every { assessmentRepositoryMock.findByIdOrNull(assessment.id) } returns assessment
+
+      every { jsonSchemaServiceMock.getNewestSchema(ApprovedPremisesAssessmentJsonSchemaEntity::class.java) } returns schema
+
+      every { assessmentRepositoryMock.save(any()) } answers { it.invocation.args[0] as ApprovedPremisesAssessmentEntity }
+
+      every {
+        offenderServiceMock.getOffenderByCrn(
+          assessment.application.crn,
+          user.deliusUsername,
+        )
+      } returns AuthorisableActionResult.Success(
+        OffenderDetailsSummaryFactory().produce(),
+      )
+
+      val result = assessmentService.updateAssessment(user, assessment.id, "{\"test\": \"data\"}")
+
+      assertThatCasResult(result).isGeneralValidationError("An assessment must be allocated to a user to be updated")
+    }
+
+    @Test
+    fun `CAS1 unauthorised when not allocated to the user`() {
+      val schema = ApprovedPremisesAssessmentJsonSchemaEntity(
+        id = UUID.randomUUID(),
+        addedAt = OffsetDateTime.now(),
+        schema = "{}",
+      )
+
+      val assessment = ApprovedPremisesAssessmentEntityFactory()
+        .withApplication(application)
+        .withAllocatedToUser(UserEntityFactory().withDefaults().produce())
+        .withAssessmentSchema(schema)
+        .produce()
+
+      every { userAccessServiceMock.userCanViewAssessment(any(), any()) } returns true
+
+      every { assessmentRepositoryMock.findByIdOrNull(assessment.id) } returns assessment
+
+      every { jsonSchemaServiceMock.getNewestSchema(ApprovedPremisesAssessmentJsonSchemaEntity::class.java) } returns schema
+
+      every { assessmentRepositoryMock.save(any()) } answers { it.invocation.args[0] as ApprovedPremisesAssessmentEntity }
+
+      every {
+        offenderServiceMock.getOffenderByCrn(
+          assessment.application.crn,
+          user.deliusUsername,
+        )
+      } returns AuthorisableActionResult.Success(
+        OffenderDetailsSummaryFactory().produce(),
+      )
+
+      val result = assessmentService.updateAssessment(user, assessment.id, "{\"test\": \"data\"}")
+
+      assertThatCasResult(result).isUnauthorised("The assessment can only be updated by the allocated user")
+    }
+
+    @Test
     fun `unauthorised when the user does not have permission to access the assessment`() {
       val assessmentId = UUID.randomUUID()
 

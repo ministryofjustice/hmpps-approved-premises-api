@@ -303,11 +303,18 @@ class AssessmentService(
     assessmentId: UUID,
     data: String?,
   ): CasResult<AssessmentEntity> {
-    val assessmentResult = getAssessmentAndValidate(updatingUser, assessmentId)
-
-    val assessment = when (assessmentResult) {
+    val assessment = when (val assessmentResult = getAssessmentAndValidate(updatingUser, assessmentId)) {
       is CasResult.Success -> assessmentResult.value
       else -> return assessmentResult
+    }
+
+    if (assessment is ApprovedPremisesAssessmentEntity) {
+      val allocatedToUser = assessment.allocatedToUser
+        ?: return CasResult.GeneralValidationError("An assessment must be allocated to a user to be updated")
+
+      if (allocatedToUser.id != updatingUser.id) {
+        return CasResult.Unauthorised("The assessment can only be updated by the allocated user")
+      }
     }
 
     if (assessment.isWithdrawn) {

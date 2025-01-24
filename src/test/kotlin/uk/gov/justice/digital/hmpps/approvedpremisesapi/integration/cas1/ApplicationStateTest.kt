@@ -140,7 +140,7 @@ class ApplicationStateTest : InitialiseDatabasePerClassTestBase() {
     reallocateAssessment(user1)
     assertApplicationStatus(ApprovedPremisesApplicationStatus.AWAITING_ASSESSMENT)
 
-    startAssessment()
+    allocateAndUpdateAssessment()
     assertApplicationStatus(ApprovedPremisesApplicationStatus.ASSESSMENT_IN_PROGRESS)
 
     approveAssessment()
@@ -160,7 +160,7 @@ class ApplicationStateTest : InitialiseDatabasePerClassTestBase() {
     reallocateAssessment(user1)
     assertApplicationStatus(ApprovedPremisesApplicationStatus.AWAITING_ASSESSMENT)
 
-    startAssessment()
+    allocateAndUpdateAssessment()
     assertApplicationStatus(ApprovedPremisesApplicationStatus.ASSESSMENT_IN_PROGRESS)
 
     approveAssessment()
@@ -180,7 +180,7 @@ class ApplicationStateTest : InitialiseDatabasePerClassTestBase() {
     reallocateAssessment(user1)
     assertApplicationStatus(ApprovedPremisesApplicationStatus.AWAITING_ASSESSMENT)
 
-    startAssessment()
+    allocateAndUpdateAssessment()
     assertApplicationStatus(ApprovedPremisesApplicationStatus.ASSESSMENT_IN_PROGRESS)
 
     approveAssessment()
@@ -205,7 +205,7 @@ class ApplicationStateTest : InitialiseDatabasePerClassTestBase() {
   @Test
   fun `a CAS1 application can transition to a rejected state`() {
     submitApplication()
-    startAssessment()
+    allocateAndUpdateAssessment()
     rejectAssessment()
     assertApplicationStatus(ApprovedPremisesApplicationStatus.REJECTED)
   }
@@ -225,10 +225,10 @@ class ApplicationStateTest : InitialiseDatabasePerClassTestBase() {
   @Test
   fun `a CAS1 application can set the clarification notes status correctly and reset when the note has been completed`() {
     submitApplication()
-    startAssessment()
+    allocateAndUpdateAssessment()
 
     requestFurtherInformation()
-    updateAssessment()
+    // updateAssessment()
     assertApplicationStatus(ApprovedPremisesApplicationStatus.REQUESTED_FURTHER_INFORMATION)
 
     updateFurtherInformation()
@@ -239,7 +239,7 @@ class ApplicationStateTest : InitialiseDatabasePerClassTestBase() {
   fun `a CAS1 application with one booking will transition correctly if the booking is cancelled `() {
     assertApplicationStatus(ApprovedPremisesApplicationStatus.STARTED)
     submitApplication(false)
-    startAssessment()
+    allocateAndUpdateAssessment()
     approveAssessment()
     createBooking()
     assertApplicationStatus(ApprovedPremisesApplicationStatus.PLACEMENT_ALLOCATED)
@@ -251,7 +251,7 @@ class ApplicationStateTest : InitialiseDatabasePerClassTestBase() {
   fun `a CAS1 application with multiple bookings will not change status if 1 booking is cancelled `() {
     assertApplicationStatus(ApprovedPremisesApplicationStatus.STARTED)
     submitApplication(false)
-    startAssessment()
+    allocateAndUpdateAssessment()
     approveAssessment()
     createBooking()
     createAnotherBooking()
@@ -264,7 +264,7 @@ class ApplicationStateTest : InitialiseDatabasePerClassTestBase() {
   fun `a CAS1 application with space booking will transition correctly if the space booking is cancelled `() {
     assertApplicationStatus(ApprovedPremisesApplicationStatus.STARTED)
     submitApplication(false)
-    startAssessment()
+    allocateAndUpdateAssessment()
     approveAssessment()
     createSpaceBooking()
     assertApplicationStatus(ApprovedPremisesApplicationStatus.PLACEMENT_ALLOCATED)
@@ -276,7 +276,7 @@ class ApplicationStateTest : InitialiseDatabasePerClassTestBase() {
   fun `a CAS1 application with space bookings will not change status if 1 space booking is cancelled `() {
     assertApplicationStatus(ApprovedPremisesApplicationStatus.STARTED)
     submitApplication(false)
-    startAssessment()
+    allocateAndUpdateAssessment()
     approveAssessment()
     createSpaceBooking()
     createAnotherSpaceBooking()
@@ -445,12 +445,18 @@ class ApplicationStateTest : InitialiseDatabasePerClassTestBase() {
     givenACas1SpaceBooking(application.crn, premises = premises, application = application)
   }
 
-  private fun startAssessment() {
-    val application = realApplicationRepository.findByIdOrNull(applicationId) as ApprovedPremisesApplicationEntity
-    val assessment = application.getLatestAssessment()!!
+  @Autowired
+  lateinit var cas1SimpleApiClient: Cas1SimpleApiClient
+
+  private fun allocateAndUpdateAssessment() {
+    cas1SimpleApiClient.assessmentReallocate(
+      this,
+      assessmentId = realApplicationRepository.findByIdOrNull(applicationId)!!.getLatestAssessment()!!.id,
+      targetUserId = user1.id,
+    )
 
     webTestClient.put()
-      .uri("/assessments/${assessment.id}")
+      .uri("/assessments/${realApplicationRepository.findByIdOrNull(applicationId)!!.getLatestAssessment()!!.id}")
       .header("Authorization", "Bearer $jwt")
       .bodyValue(
         UpdateAssessment(
@@ -461,8 +467,6 @@ class ApplicationStateTest : InitialiseDatabasePerClassTestBase() {
       .expectStatus()
       .isOk
   }
-
-  private fun updateAssessment() = startAssessment()
 
   private fun approveAssessment() {
     val application = realApplicationRepository.findByIdOrNull(applicationId) as ApprovedPremisesApplicationEntity
