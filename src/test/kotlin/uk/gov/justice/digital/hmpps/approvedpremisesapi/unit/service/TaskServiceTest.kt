@@ -36,9 +36,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRole
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PaginationMetadata
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.TypedTask
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.AuthorisableActionResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.CasResult
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.ValidatableActionResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.AssessmentService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.PlacementApplicationService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.TaskService
@@ -208,7 +206,7 @@ class TaskServiceTest {
 
     val result = taskService.deallocateTask(requestUser, TaskType.assessment, UUID.randomUUID())
 
-    Assertions.assertThat(result is AuthorisableActionResult.Unauthorised).isTrue
+    assertThatCasResult(result).isUnauthorised()
   }
 
   @Test
@@ -223,18 +221,11 @@ class TaskServiceTest {
       .withAllocatedToUser(assigneeUser)
       .produce()
 
-    every { assessmentServiceMock.deallocateAssessment(assessment.id) } returns AuthorisableActionResult.Success(
-      ValidatableActionResult.Success(
-        assessment,
-      ),
-    )
+    every { assessmentServiceMock.deallocateAssessment(assessment.id) } returns CasResult.Success(assessment)
 
     val result = taskService.deallocateTask(requestUserWithPermission, TaskType.assessment, assessment.id)
 
-    Assertions.assertThat(result is AuthorisableActionResult.Success).isTrue
-    val validationResult = (result as AuthorisableActionResult.Success).entity
-
-    Assertions.assertThat(validationResult is ValidatableActionResult.Success).isTrue
+    assertThatCasResult(result).isSuccess()
   }
 
   @Test
