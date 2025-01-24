@@ -197,10 +197,11 @@ class Cas1SpaceBookingController(
   ): ResponseEntity<Unit> {
     userAccessService.ensureCurrentUserHasPermission(UserPermission.CAS1_SPACE_BOOKING_RECORD_ARRIVAL)
 
-    val arrivalDateAndTime = if (cas1NewArrival.arrivalDateTime != null) {
+    val arrivalDateTime = cas1NewArrival.arrivalDateTime
+    val arrivalDateAndTime = if (arrivalDateTime != null) {
       Pair(
-        cas1NewArrival.arrivalDateTime!!.toLocalDate(),
-        cas1NewArrival.arrivalDateTime!!.toLocalDateTime().toLocalTime(),
+        arrivalDateTime.toLocalDate(),
+        arrivalDateTime.toLocalDateTime().toLocalTime(),
       )
     } else {
       getArrivalDateAndTime(cas1NewArrival.arrivalDate, cas1NewArrival.arrivalTime)
@@ -224,10 +225,11 @@ class Cas1SpaceBookingController(
   ): ResponseEntity<Unit> {
     userAccessService.ensureCurrentUserHasPermission(UserPermission.CAS1_SPACE_BOOKING_RECORD_DEPARTURE)
 
-    val departureDateAndTime = if (cas1NewDeparture.departureDateTime != null) {
+    val departureDateTime = cas1NewDeparture.departureDateTime
+    val departureDateAndTime = if (departureDateTime != null) {
       Pair(
-        cas1NewDeparture.departureDateTime!!.toLocalDate(),
-        cas1NewDeparture.departureDateTime!!.toLocalDateTime().toLocalTime(),
+        departureDateTime.toLocalDate(),
+        departureDateTime.toLocalDateTime().toLocalTime(),
       )
     } else {
       val departureDate = cas1NewDeparture.departureDate
