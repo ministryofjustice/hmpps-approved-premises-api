@@ -1030,34 +1030,32 @@ class AssessmentServiceTest {
 
   @Nested
   inner class RejectAssessment {
+    val user = UserEntityFactory()
+      .withDefaults()
+      .withYieldedApArea {
+        ApAreaEntityFactory()
+          .withName("South West & South Central")
+          .produce()
+      }
+      .produce()
+
+    val schema = ApprovedPremisesAssessmentJsonSchemaEntity(
+      id = UUID.randomUUID(),
+      addedAt = OffsetDateTime.now(),
+      schema = "{}",
+    )
+
+    val application = ApprovedPremisesApplicationEntityFactory()
+      .withCreatedByUser(UserEntityFactory().withDefaults().produce())
+      .produce()
 
     @Test
     fun `unauthorised when the user does not have permission to access the assessment`() {
       val assessmentId = UUID.randomUUID()
 
-      val user = UserEntityFactory()
-        .withYieldedProbationRegion {
-          ProbationRegionEntityFactory()
-            .withYieldedApArea { ApAreaEntityFactory().produce() }
-            .produce()
-        }
-        .produce()
-
       every { assessmentRepositoryMock.findByIdOrNull(assessmentId) } returns ApprovedPremisesAssessmentEntityFactory()
         .withId(assessmentId)
-        .withApplication(
-          ApprovedPremisesApplicationEntityFactory()
-            .withCreatedByUser(
-              UserEntityFactory()
-                .withYieldedProbationRegion {
-                  ProbationRegionEntityFactory()
-                    .withYieldedApArea { ApAreaEntityFactory().produce() }
-                    .produce()
-                }
-                .produce(),
-            )
-            .produce(),
-        )
+        .withApplication(application)
         .withAllocatedToUser(
           UserEntityFactory()
             .withYieldedProbationRegion {
@@ -1080,28 +1078,8 @@ class AssessmentServiceTest {
 
     @Test
     fun `general validation error for Assessment where schema is outdated`() {
-      val user = UserEntityFactory()
-        .withYieldedProbationRegion {
-          ProbationRegionEntityFactory()
-            .withYieldedApArea { ApAreaEntityFactory().produce() }
-            .produce()
-        }
-        .produce()
-
       val assessment = ApprovedPremisesAssessmentEntityFactory()
-        .withApplication(
-          ApprovedPremisesApplicationEntityFactory()
-            .withCreatedByUser(
-              UserEntityFactory()
-                .withYieldedProbationRegion {
-                  ProbationRegionEntityFactory()
-                    .withYieldedApArea { ApAreaEntityFactory().produce() }
-                    .produce()
-                }
-                .produce(),
-            )
-            .produce(),
-        )
+        .withApplication(application)
         .withSubmittedAt(OffsetDateTime.now())
         .withDecision(AssessmentDecision.ACCEPTED)
         .withAllocatedToUser(user)
@@ -1126,34 +1104,8 @@ class AssessmentServiceTest {
 
     @Test
     fun `general validation error for Assessment where decision has already been taken`() {
-      val user = UserEntityFactory()
-        .withYieldedProbationRegion {
-          ProbationRegionEntityFactory()
-            .withYieldedApArea { ApAreaEntityFactory().produce() }
-            .produce()
-        }
-        .produce()
-
-      val schema = ApprovedPremisesAssessmentJsonSchemaEntity(
-        id = UUID.randomUUID(),
-        addedAt = OffsetDateTime.now(),
-        schema = "{}",
-      )
-
       val assessment = ApprovedPremisesAssessmentEntityFactory()
-        .withApplication(
-          ApprovedPremisesApplicationEntityFactory()
-            .withCreatedByUser(
-              UserEntityFactory()
-                .withYieldedProbationRegion {
-                  ProbationRegionEntityFactory()
-                    .withYieldedApArea { ApAreaEntityFactory().produce() }
-                    .produce()
-                }
-                .produce(),
-            )
-            .produce(),
-        )
+        .withApplication(application)
         .withSubmittedAt(OffsetDateTime.now())
         .withDecision(AssessmentDecision.ACCEPTED)
         .withAllocatedToUser(user)
@@ -1179,34 +1131,8 @@ class AssessmentServiceTest {
 
     @Test
     fun `general validation error for Assessment where assessment has been deallocated`() {
-      val user = UserEntityFactory()
-        .withYieldedProbationRegion {
-          ProbationRegionEntityFactory()
-            .withYieldedApArea { ApAreaEntityFactory().produce() }
-            .produce()
-        }
-        .produce()
-
-      val schema = ApprovedPremisesAssessmentJsonSchemaEntity(
-        id = UUID.randomUUID(),
-        addedAt = OffsetDateTime.now(),
-        schema = "{}",
-      )
-
       val assessment = ApprovedPremisesAssessmentEntityFactory()
-        .withApplication(
-          ApprovedPremisesApplicationEntityFactory()
-            .withCreatedByUser(
-              UserEntityFactory()
-                .withYieldedProbationRegion {
-                  ProbationRegionEntityFactory()
-                    .withYieldedApArea { ApAreaEntityFactory().produce() }
-                    .produce()
-                }
-                .produce(),
-            )
-            .produce(),
-        )
+        .withApplication(application)
         .withSubmittedAt(null)
         .withDecision(null)
         .withAllocatedToUser(user)
@@ -1233,14 +1159,6 @@ class AssessmentServiceTest {
 
     @Test
     fun `field validation error when JSON schema not satisfied by data`() {
-      val user = UserEntityFactory()
-        .withYieldedProbationRegion {
-          ProbationRegionEntityFactory()
-            .withYieldedApArea { ApAreaEntityFactory().produce() }
-            .produce()
-        }
-        .produce()
-
       val schema = ApprovedPremisesAssessmentJsonSchemaEntity(
         id = UUID.randomUUID(),
         addedAt = OffsetDateTime.now(),
@@ -1248,19 +1166,7 @@ class AssessmentServiceTest {
       )
 
       val assessment = ApprovedPremisesAssessmentEntityFactory()
-        .withApplication(
-          ApprovedPremisesApplicationEntityFactory()
-            .withCreatedByUser(
-              UserEntityFactory()
-                .withYieldedProbationRegion {
-                  ProbationRegionEntityFactory()
-                    .withYieldedApArea { ApAreaEntityFactory().produce() }
-                    .produce()
-                }
-                .produce(),
-            )
-            .produce(),
-        )
+        .withApplication(application)
         .withAllocatedToUser(user)
         .withAssessmentSchema(schema)
         .withData("{\"test\": \"data\"}")
@@ -1293,14 +1199,6 @@ class AssessmentServiceTest {
     fun `unauthorised when user not allowed to view Offender (LAO)`() {
       val assessmentId = UUID.randomUUID()
 
-      val user = UserEntityFactory()
-        .withYieldedProbationRegion {
-          ProbationRegionEntityFactory()
-            .withYieldedApArea { ApAreaEntityFactory().produce() }
-            .produce()
-        }
-        .produce()
-
       val schema = ApprovedPremisesAssessmentJsonSchemaEntity(
         id = UUID.randomUUID(),
         addedAt = OffsetDateTime.now(),
@@ -1309,19 +1207,7 @@ class AssessmentServiceTest {
 
       val assessment = ApprovedPremisesAssessmentEntityFactory()
         .withId(assessmentId)
-        .withApplication(
-          ApprovedPremisesApplicationEntityFactory()
-            .withCreatedByUser(
-              UserEntityFactory()
-                .withYieldedProbationRegion {
-                  ProbationRegionEntityFactory()
-                    .withYieldedApArea { ApAreaEntityFactory().produce() }
-                    .produce()
-                }
-                .produce(),
-            )
-            .produce(),
-        )
+        .withApplication(application)
         .withAllocatedToUser(user)
         .withAssessmentSchema(schema)
         .withData("{\"test\": \"data\"}")
@@ -1347,37 +1233,6 @@ class AssessmentServiceTest {
     @Test
     fun `success, returns updated assessment, emits domain event, sends email`() {
       val assessmentId = UUID.randomUUID()
-
-      val user = UserEntityFactory()
-        .withYieldedProbationRegion {
-          ProbationRegionEntityFactory()
-            .withYieldedApArea { ApAreaEntityFactory().produce() }
-            .produce()
-        }
-        .withYieldedApArea {
-          ApAreaEntityFactory()
-            .withName("South West & South Central")
-            .produce()
-        }
-        .produce()
-
-      val schema = ApprovedPremisesAssessmentJsonSchemaEntity(
-        id = UUID.randomUUID(),
-        addedAt = OffsetDateTime.now(),
-        schema = "{}",
-      )
-
-      val application = ApprovedPremisesApplicationEntityFactory()
-        .withCreatedByUser(
-          UserEntityFactory()
-            .withYieldedProbationRegion {
-              ProbationRegionEntityFactory()
-                .withYieldedApArea { ApAreaEntityFactory().produce() }
-                .produce()
-            }
-            .produce(),
-        )
-        .produce()
 
       val assessment = ApprovedPremisesAssessmentEntityFactory()
         .withId(assessmentId)
@@ -1471,19 +1326,15 @@ class AssessmentServiceTest {
       val assessmentId = UUID.randomUUID()
       val referralRejectionReasonId = UUID.randomUUID()
 
-      val probationRegion = ProbationRegionEntityFactory()
-        .withYieldedApArea { ApAreaEntityFactory().produce() }
-        .produce()
-
-      val user = UserEntityFactory()
-        .withProbationRegion(probationRegion)
-        .produce()
-
-      val schema = TemporaryAccommodationAssessmentJsonSchemaEntity(
+      val cas3Schema = TemporaryAccommodationAssessmentJsonSchemaEntity(
         id = UUID.randomUUID(),
         addedAt = OffsetDateTime.now(),
         schema = "{}",
       )
+
+      val probationRegion = ProbationRegionEntityFactory()
+        .withYieldedApArea { ApAreaEntityFactory().produce() }
+        .produce()
 
       val assessment = TemporaryAccommodationAssessmentEntityFactory()
         .withId(assessmentId)
@@ -1498,7 +1349,7 @@ class AssessmentServiceTest {
             .produce(),
         )
         .withAllocatedToUser(user)
-        .withAssessmentSchema(schema)
+        .withAssessmentSchema(cas3Schema)
         .withData("{\"test\": \"data\"}")
         .produce()
 
@@ -1510,9 +1361,9 @@ class AssessmentServiceTest {
 
       every { assessmentRepositoryMock.findByIdOrNull(assessmentId) } returns assessment
 
-      every { jsonSchemaServiceMock.getNewestSchema(TemporaryAccommodationAssessmentJsonSchemaEntity::class.java) } returns schema
+      every { jsonSchemaServiceMock.getNewestSchema(TemporaryAccommodationAssessmentJsonSchemaEntity::class.java) } returns cas3Schema
 
-      every { jsonSchemaServiceMock.validate(schema, "{\"test\": \"data\"}") } returns true
+      every { jsonSchemaServiceMock.validate(cas3Schema, "{\"test\": \"data\"}") } returns true
 
       every { assessmentRepositoryMock.save(any()) } answers { it.invocation.args[0] as TemporaryAccommodationAssessmentEntity }
 
