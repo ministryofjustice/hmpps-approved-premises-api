@@ -4,6 +4,7 @@ import org.springframework.stereotype.Service
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.BedSearchAttributes
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PersonType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.TemporaryAccommodationBedSearchParameters
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.BookingRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.OverlapBookingsSearchResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ProbationDeliveryUnitRepository
@@ -12,7 +13,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PersonSummaryInfoR
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.forCrn
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.validatedCasResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.repository.BedSearchRepository
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.repository.TemporaryAccommodationBedSearchResult
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.repository.Cas3BedSearchResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.repository.TemporaryAccommodationBedSearchResultOverlap
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.CasResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.CharacteristicService
@@ -41,23 +42,20 @@ class Cas3BedspaceSearchService(
   @Suppress("detekt:CyclomaticComplexMethod")
   fun findBedspaces(
     user: UserEntity,
-    probationDeliveryUnits: List<UUID>,
-    startDate: LocalDate,
-    durationInDays: Int,
-    propertyBedAttributes: List<BedSearchAttributes>?,
-  ): CasResult<List<TemporaryAccommodationBedSearchResult>> = validatedCasResult {
+    searchParams: TemporaryAccommodationBedSearchParameters,
+  ): CasResult<List<Cas3BedSearchResult>> = validatedCasResult {
     val probationDeliveryUnitIds = mutableListOf<UUID>()
 
-    if (durationInDays < 1) {
+    if (searchParams.durationDays < 1) {
       "$.durationDays" hasValidationError "mustBeAtLeast1"
     }
 
-    if (probationDeliveryUnits.isEmpty()) {
+    if (searchParams.probationDeliveryUnits.isEmpty()) {
       "$.probationDeliveryUnits" hasValidationError "empty"
-    } else if (probationDeliveryUnits.size > MAX_NUMBER_PDUS) {
+    } else if (searchParams.probationDeliveryUnits.size > MAX_NUMBER_PDUS) {
       "$.probationDeliveryUnits" hasValidationError "maxNumberProbationDeliveryUnits"
     } else {
-      probationDeliveryUnits.mapIndexed { index, id ->
+      searchParams.probationDeliveryUnits.mapIndexed { index, id ->
         val probationDeliveryUnitEntityExist = probationDeliveryUnitRepository.existsById(id)
         if (!probationDeliveryUnitEntityExist) {
           "$.probationDeliveryUnits[$index]" hasValidationError "doesNotExist"
@@ -71,45 +69,48 @@ class Cas3BedspaceSearchService(
       return fieldValidationError
     }
 
-    val premisesCharacteristicsPropertyNames = propertyBedAttributes?.map {
-      when (it) {
-        BedSearchAttributes.SINGLE_OCCUPANCY -> BedSearchAttributes.SINGLE_OCCUPANCY.value
-        BedSearchAttributes.SHARED_PROPERTY -> BedSearchAttributes.SHARED_PROPERTY.value
-        else -> ""
+    val endDate = searchParams.calculateEndDate()
+
+    val candidateResults = if (searchParams.premisesFilters != null || searchParams.bedspaceFilters != null) {
+      return CasResult.GeneralValidationError("Filters not implemented")
+    } else {
+      val premisesCharacteristicsPropertyNames = searchParams.attributes?.map {
+        when (it) {
+          BedSearchAttributes.SINGLE_OCCUPANCY, BedSearchAttributes.SHARED_PROPERTY -> it.value
+          else -> ""
+        }
       }
-    }
 
-    val premisesCharacteristicIds = getCharacteristicsIds(premisesCharacteristicsPropertyNames, "premises")
+      val premisesCharacteristicIds = getCharacteristicsIds(premisesCharacteristicsPropertyNames, "premises")
 
-    val roomCharacteristicsPropertyNames = propertyBedAttributes?.map {
-      when (it) {
-        BedSearchAttributes.WHEELCHAIR_ACCESSIBLE -> BedSearchAttributes.WHEELCHAIR_ACCESSIBLE.value
-        else -> ""
+      val roomCharacteristicsPropertyNames = searchParams.attributes?.map {
+        when (it) {
+          BedSearchAttributes.WHEELCHAIR_ACCESSIBLE -> it.value
+          else -> ""
+        }
       }
+
+      val roomCharacteristicIds = getCharacteristicsIds(roomCharacteristicsPropertyNames, "room")
+
+      bedSearchRepository.findTemporaryAccommodationBeds(
+        probationDeliveryUnits = probationDeliveryUnitIds,
+        startDate = searchParams.startDate,
+        endDate = endDate,
+        probationRegionId = user.probationRegion.id,
+        premisesCharacteristicIds,
+        roomCharacteristicIds,
+      )
     }
-
-    val roomCharacteristicIds = getCharacteristicsIds(roomCharacteristicsPropertyNames, "room")
-
-    val endDate = startDate.plusDays(durationInDays.toLong() - 1)
-
-    val candidateResults = bedSearchRepository.findTemporaryAccommodationBeds(
-      probationDeliveryUnits = probationDeliveryUnitIds,
-      startDate = startDate,
-      endDate = endDate,
-      probationRegionId = user.probationRegion.id,
-      premisesCharacteristicIds,
-      roomCharacteristicIds,
-    )
 
     val bedIds = candidateResults.map { it.bedId }
-    val bedsWithABookingInTurnaround = bookingRepository.findClosestBookingBeforeDateForBeds(startDate, bedIds)
-      .filter { workingDayService.addWorkingDays(it.departureDate, it.turnaround?.workingDayCount ?: 0) >= startDate }
+    val bedsWithABookingInTurnaround = bookingRepository.findClosestBookingBeforeDateForBeds(searchParams.startDate, bedIds)
+      .filter { workingDayService.addWorkingDays(it.departureDate, it.turnaround?.workingDayCount ?: 0) >= searchParams.startDate }
       .map { it.bed!!.id }
 
     val results = candidateResults.filter { !bedsWithABookingInTurnaround.contains(it.bedId) }
 
     val distinctIds = results.map { it.premisesId }.distinct()
-    val overlappedBookings = bookingRepository.findAllNotCancelledByPremisesIdsAndOverlappingDate(distinctIds, startDate, endDate)
+    val overlappedBookings = bookingRepository.findAllNotCancelledByPremisesIdsAndOverlappingDate(distinctIds, searchParams.startDate, endDate)
     val crns = overlappedBookings.map { it.crn }.distinct().toSet()
     val offenderSummaries = offenderService.getPersonSummaryInfoResults(
       crns = crns.toSet(),
@@ -117,7 +118,7 @@ class Cas3BedspaceSearchService(
     )
 
     val groupedOverlappedBookings = overlappedBookings
-      .map { transformBookingToOverlap(it, startDate, endDate, offenderSummaries.forCrn(it.crn)) }
+      .map { transformBookingToOverlap(it, searchParams.startDate, endDate, offenderSummaries.forCrn(it.crn)) }
       .groupBy { it.premisesId }
 
     results.forEach {
@@ -166,5 +167,11 @@ class Cas3BedspaceSearchService(
         it.isActive && it.matches(ServiceName.temporaryAccommodation.value, modelScope)
       }.map { it.id }.toList()
     }
+  }
+
+  private fun TemporaryAccommodationBedSearchParameters.calculateEndDate(): LocalDate {
+    // Adjust to include the start date in the duration, e.g. 1st January for 1 day should end on the 1st January
+    val adjustedDuration = durationDays - 1
+    return startDate.plusDays(adjustedDuration)
   }
 }

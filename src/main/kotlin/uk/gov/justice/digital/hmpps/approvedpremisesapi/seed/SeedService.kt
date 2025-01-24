@@ -10,7 +10,9 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.config.SeedConfig
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.seed.cas1.ApStaffUsersSeedJob
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.seed.cas1.ApprovedPremisesBookingCancelSeedJob
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.seed.cas1.ApprovedPremisesRoomsSeedJob
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.seed.cas1.Cas1BackfillActiveSpaceBookingsCreatedInDelius
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.seed.cas1.Cas1BookingToSpaceBookingSeedJob
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.seed.cas1.Cas1CreateTestApplicationsSeedJob
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.seed.cas1.Cas1CruManagementAreaSeedJob
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.seed.cas1.Cas1DomainEventReplaySeedJob
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.seed.cas1.Cas1DuplicateApplicationSeedJob
@@ -21,6 +23,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.seed.cas1.Cas1OutOfServi
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.seed.cas1.Cas1PlanSpacePlanningDryRunSeedJob
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.seed.cas1.Cas1RemoveAssessmentDetailsSeedJob
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.seed.cas1.Cas1SeedPremisesFromCsvJob
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.seed.cas1.Cas1SoftDeleteApplicationTimelineNotes
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.seed.cas1.Cas1UpdateEventNumberSeedJob
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.seed.cas1.Cas1UpdateSpaceBookingSeedJob
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.seed.cas1.Cas1UsersSeedJob
@@ -51,11 +54,11 @@ class SeedService(
 
   fun seedData(seedFileType: SeedFileType, filename: String) = seedData(seedFileType, filename) { "${seedConfig.filePrefix}/$filename" }
 
-  @SuppressWarnings("CyclomaticComplexMethod", "TooGenericExceptionThrown")
+  @SuppressWarnings("CyclomaticComplexMethod", "TooGenericExceptionThrown", "TooGenericExceptionCaught")
   fun seedData(seedFileType: SeedFileType, filename: String, resolveCsvPath: SeedJob<*>.() -> String) {
-    seedLogger.info("Starting seed request: $seedFileType - $filename")
-
     try {
+      seedLogger.info("Starting seed request: $seedFileType - $filename")
+
       if (filename.contains("/") || filename.contains("\\")) {
         throw RuntimeException("Filename must be just the filename of a .csv file in the /seed directory, e.g. for /seed/upload.csv, just `upload` should be supplied")
       }
@@ -89,7 +92,10 @@ class SeedService(
         SeedFileType.approvedPremisesSpacePlanningDryRun -> getBean(Cas1PlanSpacePlanningDryRunSeedJob::class)
         SeedFileType.approvedPremisesImportDeliusReferrals -> getBean(Cas1ImportDeliusReferralsSeedJob::class)
         SeedFileType.approvedPremisesUpdateSpaceBooking -> getBean(Cas1UpdateSpaceBookingSeedJob::class)
+        SeedFileType.approvedPremisesCreateTestApplications -> getBean(Cas1CreateTestApplicationsSeedJob::class)
         SeedFileType.temporaryAccommodationReferralRejection -> getBean(Cas3ReferralRejectionSeedJob::class)
+        SeedFileType.approvedPremisesBackfillActiveSpaceBookingsCreatedInDelius -> getBean(Cas1BackfillActiveSpaceBookingsCreatedInDelius::class)
+        SeedFileType.approvedPremisesDeleteApplicationTimelineNotes -> getBean(Cas1SoftDeleteApplicationTimelineNotes::class)
       }
 
       val seedStarted = LocalDateTime.now()
@@ -102,7 +108,7 @@ class SeedService(
 
       val timeTaken = ChronoUnit.MILLIS.between(seedStarted, LocalDateTime.now())
       seedLogger.info("Seed request complete. Took $timeTaken millis and processed $rowsProcessed rows")
-    } catch (exception: Exception) {
+    } catch (exception: Throwable) {
       seedLogger.error("Unable to complete Seed Job", exception)
     }
   }
@@ -115,22 +121,34 @@ class SeedService(
     // so we first do a full pass but only deserializing each row
     seedLogger.info("Processing CSV file ${Path.of(job.resolveCsvPath()).absolutePathString()}")
     enforcePresenceOfRequiredHeaders(job, resolveCsvPath)
-    ensureCsvCanBeDeserialized(job, resolveCsvPath)
+    val rowCount = ensureCsvCanBeDeserialized(job, resolveCsvPath)
 
     job.preSeed()
-    val rowsProcessed = processCsv(job, resolveCsvPath)
+    val rowsProcessed = processCsv(
+      job = job,
+      resolveCsvPath = resolveCsvPath,
+      rowCount = rowCount,
+    )
     job.postSeed()
 
     return rowsProcessed
   }
 
-  private fun <T> processCsv(job: SeedJob<T>, resolveCsvPath: SeedJob<T>.() -> String): Int {
-    var rowNumber = 1
+  @SuppressWarnings("TooGenericExceptionThrown", "MagicNumber")
+  private fun <T> processCsv(
+    job: SeedJob<T>,
+    resolveCsvPath: SeedJob<T>.() -> String,
+    rowCount: Int,
+  ): Int {
+    var rowNumber = 0
     val errors = mutableListOf<String>()
+
+    seedLogger.info("Processing $rowCount rows")
 
     try {
       csvReader().open(job.resolveCsvPath()) {
         readAllWithHeaderAsSequence().forEach { row ->
+          rowNumber += 1
           val deserializedRow = job.deserializeRow(row)
           try {
             job.processRow(deserializedRow)
@@ -138,16 +156,18 @@ class SeedService(
             val rootCauseException = findRootCause(exception)
             errors.add("Error on row $rowNumber: ${exception.message} ${if (rootCauseException != null) rootCauseException.message else "no exception cause"}")
             seedLogger.error("Error on row $rowNumber:", exception)
+          } finally {
+            if ((rowNumber % 10_000) == 0) {
+              seedLogger.info("Have processed $rowNumber of $rowCount rows")
+            }
           }
-
-          rowNumber += 1
         }
       }
     } catch (exception: Exception) {
       throw RuntimeException("Unable to process CSV at row $rowNumber", exception)
     }
     if (errors.isNotEmpty()) {
-      seedLogger.error("The following row-level errors were raised: ${errors.joinToString("\n")}")
+      throw RuntimeException("The following row-level errors were raised: ${errors.joinToString("\n")}")
     }
 
     return rowNumber - 1
@@ -171,21 +191,20 @@ class SeedService(
     }
   }
 
-  private fun <T> ensureCsvCanBeDeserialized(job: SeedJob<T>, resolveCsvPath: SeedJob<T>.() -> String) {
+  private fun <T> ensureCsvCanBeDeserialized(job: SeedJob<T>, resolveCsvPath: SeedJob<T>.() -> String): Int {
     seedLogger.info("Validating that CSV can be fully read")
-    var rowNumber = 1
+    var rowNumber = 0
     val errors = mutableListOf<String>()
 
     try {
       csvReader().open(job.resolveCsvPath()) {
         readAllWithHeaderAsSequence().forEach { row ->
+          rowNumber += 1
           try {
             job.deserializeRow(row)
           } catch (exception: Exception) {
             errors += "Unable to deserialize CSV at row: $rowNumber: ${exception.message} ${exception.stackTrace.joinToString("\n")}"
           }
-
-          rowNumber += 1
         }
       }
     } catch (exception: Exception) {
@@ -195,5 +214,7 @@ class SeedService(
     if (errors.any()) {
       throw RuntimeException("There were issues deserializing the CSV:\n${errors.joinToString(", \n")}")
     }
+
+    return rowNumber
   }
 }

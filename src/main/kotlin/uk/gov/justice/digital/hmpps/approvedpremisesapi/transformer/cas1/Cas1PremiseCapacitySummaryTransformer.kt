@@ -15,10 +15,10 @@ class Cas1PremiseCapacitySummaryTransformer(
 ) {
 
   fun toCas1PremiseCapacitySummary(
-    premiseSummaryInfo: Cas1PremisesService.Cas1PremisesSummaryInfo,
+    premiseSummaryInfo: Cas1PremisesService.Cas1PremisesInfo,
     premiseCapacity: PremiseCapacitySummary,
   ) = Cas1PremiseCapacity(
-    premise = cas1PremisesTransformer.toPremiseSummary(premiseSummaryInfo),
+    premise = cas1PremisesTransformer.toPremises(premiseSummaryInfo),
     startDate = premiseCapacity.range.fromInclusive,
     endDate = premiseCapacity.range.toInclusive,
     capacity = premiseCapacity.byDay.map { it.toApiType() },

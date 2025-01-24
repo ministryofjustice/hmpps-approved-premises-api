@@ -97,7 +97,7 @@ class Cas3BookingService(
         return@validated it.id hasConflictError "A Booking already exists for dates from ${it.arrivalDate} to ${it.lastUnavailableDate} which overlaps with the desired dates"
       }
 
-      getLostBedspaceWithConflictingDates(arrivalDate, expectedLastUnavailableDate, null, bedId)?.let {
+      getVoidBedspaceWithConflictingDates(arrivalDate, expectedLastUnavailableDate, null, bedId)?.let {
         return@validated it.id hasConflictError "A Lost Bed already exists for dates from ${it.startDate} to ${it.endDate} which overlaps with the desired dates"
       }
 
@@ -248,7 +248,7 @@ class Cas3BookingService(
       return@validated it.id hasConflictError "A Booking already exists for dates from ${it.arrivalDate} to ${it.lastUnavailableDate} which overlaps with the desired dates"
     }
 
-    getLostBedspaceWithConflictingDates(booking.arrivalDate, expectedLastUnavailableDate, null, booking.bed!!.id)?.let {
+    getVoidBedspaceWithConflictingDates(booking.arrivalDate, expectedLastUnavailableDate, null, booking.bed!!.id)?.let {
       return@validated it.id hasConflictError "A Lost Bed already exists for dates from ${it.startDate} to ${it.endDate} which overlaps with the desired dates"
     }
 
@@ -426,7 +426,7 @@ class Cas3BookingService(
       return@validated it.id hasConflictError "A Booking already exists for dates from ${it.arrivalDate} to ${it.lastUnavailableDate} which overlaps with the desired dates"
     }
 
-    getLostBedspaceWithConflictingDates(booking.arrivalDate, expectedLastUnavailableDate, null, bedId)?.let {
+    getVoidBedspaceWithConflictingDates(booking.arrivalDate, expectedLastUnavailableDate, null, bedId)?.let {
       return@validated it.id hasConflictError "A Lost Bed already exists for dates from ${it.startDate} to ${it.endDate} which overlaps with the desired dates"
     }
 
@@ -452,7 +452,7 @@ class Cas3BookingService(
   }
 
   @SuppressWarnings("ThrowsCount")
-  fun getBooking(id: UUID): AuthorisableActionResult<uk.gov.justice.digital.hmpps.approvedpremisesapi.service.BookingService.BookingAndPersons> {
+  fun getBooking(id: UUID): AuthorisableActionResult<BookingAndPersons> {
     val booking = bookingRepository.findByIdOrNull(id)
       ?: return AuthorisableActionResult.NotFound("Booking", id.toString())
 
@@ -469,7 +469,7 @@ class Cas3BookingService(
     )
 
     return AuthorisableActionResult.Success(
-      uk.gov.justice.digital.hmpps.approvedpremisesapi.service.BookingService.BookingAndPersons(
+      BookingAndPersons(
         booking,
         personInfo,
       ),
@@ -540,12 +540,12 @@ class Cas3BookingService(
     return candidateBookings.firstOrNull { it.lastUnavailableDate >= arrivalDate }
   }
 
-  private fun getLostBedspaceWithConflictingDates(
+  private fun getVoidBedspaceWithConflictingDates(
     startDate: LocalDate,
     endDate: LocalDate,
     thisEntityId: UUID?,
     bedId: UUID,
-  ) = cas3VoidBedspacesRepository.findByBedIdAndOverlappingDate(
+  ) = cas3VoidBedspacesRepository.findByBedspaceIdAndOverlappingDate(
     bedId,
     startDate,
     endDate,

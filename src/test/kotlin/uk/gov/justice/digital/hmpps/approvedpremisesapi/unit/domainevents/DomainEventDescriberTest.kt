@@ -3,6 +3,7 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.unit.domainevents
 import io.mockk.every
 import io.mockk.mockk
 import org.assertj.core.api.Assertions.assertThat
+import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
 import org.junit.jupiter.params.ParameterizedTest
@@ -87,6 +88,7 @@ import java.time.LocalDateTime
 import java.time.OffsetDateTime
 import java.util.UUID
 
+@SuppressWarnings("MaxLineLength")
 class DomainEventDescriberTest {
   private val mockDomainEventService = mockk<Cas1DomainEventService>()
   private val mockAssessmentClarificationNoteRepository = mockk<AssessmentClarificationNoteRepository>()
@@ -523,33 +525,144 @@ class DomainEventDescriberTest {
     assertThat(exception.message).isEqualTo("Space Booking ID $spaceBookingId does not have a cancellation")
   }
 
-  @Test
-  fun `Returns expected description for booking changed event`() {
-    val domainEventSummary = DomainEventSummaryImpl.ofType(DomainEventType.APPROVED_PREMISES_BOOKING_CHANGED)
+  @Nested
+  inner class BookingChanged {
 
-    val arrivalDate = LocalDate.of(2024, 1, 1)
-    val departureDate = LocalDate.of(2024, 4, 1)
+    @Test
+    fun `Returns expected description for booking changed event when schema version is null`() {
+      val domainEventSummary = DomainEventSummaryImpl.ofType(DomainEventType.APPROVED_PREMISES_BOOKING_CHANGED)
 
-    every { mockDomainEventService.getBookingChangedEvent(any()) } returns buildDomainEvent {
-      BookingChangedEnvelope(
-        id = it,
-        timestamp = Instant.now(),
-        eventType = EventType.bookingChanged,
-        eventDetails = BookingChangedFactory()
-          .withArrivalOn(arrivalDate)
-          .withDepartureOn(departureDate)
-          .withPremises(
-            EventPremisesFactory()
-              .withName("The Premises Name")
-              .produce(),
-          )
-          .produce(),
-      )
+      val arrivalDate = LocalDate.of(2024, 1, 1)
+      val departureDate = LocalDate.of(2024, 4, 1)
+
+      every { mockDomainEventService.getBookingChangedEvent(any()) } returns buildDomainEvent {
+        BookingChangedEnvelope(
+          id = it,
+          timestamp = Instant.now(),
+          eventType = EventType.bookingChanged,
+          eventDetails = BookingChangedFactory()
+            .withArrivalOn(arrivalDate)
+            .withDepartureOn(departureDate)
+            .withPremises(
+              EventPremisesFactory()
+                .withName("The Premises Name")
+                .produce(),
+            )
+            .produce(),
+        )
+      }
+
+      val result = domainEventDescriber.getDescription(domainEventSummary)
+
+      assertThat(result).isEqualTo("A placement at The Premises Name had its arrival and/or departure date changed to Monday 1 January 2024 to Monday 1 April 2024")
     }
 
-    val result = domainEventDescriber.getDescription(domainEventSummary)
+    @Test
+    fun `Returns expected description for booking changed event when schema version is 2 and only previous arrival date is present`() {
+      val domainEventSummary = DomainEventSummaryImpl.ofType(DomainEventType.APPROVED_PREMISES_BOOKING_CHANGED)
 
-    assertThat(result).isEqualTo("A placement at The Premises Name had its arrival and/or departure date changed to Monday 1 January 2024 to Monday 1 April 2024")
+      val arrivalDate = LocalDate.of(2025, 4, 5)
+      val departureDate = LocalDate.of(2025, 6, 1)
+      val previousArrivalOn = LocalDate.of(2025, 4, 1)
+
+      every { mockDomainEventService.getBookingChangedEvent(any()) } returns buildDomainEvent(
+        builder =
+        {
+          BookingChangedEnvelope(
+            id = it,
+            timestamp = Instant.now(),
+            eventType = EventType.bookingChanged,
+            eventDetails = BookingChangedFactory()
+              .withArrivalOn(arrivalDate)
+              .withDepartureOn(departureDate)
+              .withPreviousArrivalOn(previousArrivalOn)
+              .withPremises(
+                EventPremisesFactory()
+                  .withName("The Premises Name")
+                  .produce(),
+              )
+              .produce(),
+          )
+        },
+        schemaVersion = 2,
+      )
+
+      val result = domainEventDescriber.getDescription(domainEventSummary)
+
+      assertThat(result).isEqualTo("A placement at The Premises Name had its arrival date changed from Tuesday 1 April 2025 to Saturday 5 April 2025")
+    }
+
+    @Test
+    fun `Returns expected description for booking changed event when schema version is 2 and only previous departure date is present`() {
+      val domainEventSummary = DomainEventSummaryImpl.ofType(DomainEventType.APPROVED_PREMISES_BOOKING_CHANGED)
+
+      val arrivalDate = LocalDate.of(2025, 4, 5)
+      val departureDate = LocalDate.of(2025, 6, 10)
+      val previousDepartureOn = LocalDate.of(2025, 6, 1)
+
+      every { mockDomainEventService.getBookingChangedEvent(any()) } returns buildDomainEvent(
+        builder =
+        {
+          BookingChangedEnvelope(
+            id = it,
+            timestamp = Instant.now(),
+            eventType = EventType.bookingChanged,
+            eventDetails = BookingChangedFactory()
+              .withArrivalOn(arrivalDate)
+              .withDepartureOn(departureDate)
+              .withPreviousDepartureOn(previousDepartureOn)
+              .withPremises(
+                EventPremisesFactory()
+                  .withName("The Premises Name")
+                  .produce(),
+              )
+              .produce(),
+          )
+        },
+        schemaVersion = 2,
+      )
+
+      val result = domainEventDescriber.getDescription(domainEventSummary)
+
+      assertThat(result).isEqualTo("A placement at The Premises Name had its departure date changed from Sunday 1 June 2025 to Tuesday 10 June 2025")
+    }
+
+    @Test
+    fun `Returns expected description for booking changed event when schema version is 2 and both previous arrival and departure dates are present`() {
+      val domainEventSummary = DomainEventSummaryImpl.ofType(DomainEventType.APPROVED_PREMISES_BOOKING_CHANGED)
+
+      val arrivalDate = LocalDate.of(2025, 4, 5)
+      val departureDate = LocalDate.of(2025, 6, 10)
+      val previousArrivalOn = LocalDate.of(2025, 4, 1)
+      val previousDepartureOn = LocalDate.of(2025, 6, 1)
+
+      every { mockDomainEventService.getBookingChangedEvent(any()) } returns buildDomainEvent(
+        builder =
+        {
+          BookingChangedEnvelope(
+            id = it,
+            timestamp = Instant.now(),
+            eventType = EventType.bookingChanged,
+            eventDetails = BookingChangedFactory()
+              .withArrivalOn(arrivalDate)
+              .withDepartureOn(departureDate)
+              .withPreviousArrivalOn(previousArrivalOn)
+              .withPreviousDepartureOn(previousDepartureOn)
+              .withPremises(
+                EventPremisesFactory()
+                  .withName("The Premises Name")
+                  .produce(),
+              )
+              .produce(),
+          )
+        },
+        schemaVersion = 2,
+      )
+
+      val result = domainEventDescriber.getDescription(domainEventSummary)
+
+      assertThat(result).isEqualTo("A placement at The Premises Name had its arrival date changed from Tuesday 1 April 2025 to Saturday 5 April 2025, its departure date changed from Sunday 1 June 2025 to Tuesday 10 June 2025")
+    }
   }
 
   @Test
@@ -1024,10 +1137,12 @@ class DomainEventDescriberTest {
       .produce()
   }
 
-  private fun <T> buildDomainEvent(builder: (UUID) -> T): DomainEvent<T> {
+  private fun <T> buildDomainEvent(
+    builder: (UUID) -> T,
+    schemaVersion: Int? = null,
+  ): DomainEvent<T> {
     val id = UUID.randomUUID()
     val applicationId = UUID.randomUUID()
-
     return DomainEvent(
       id = id,
       applicationId = applicationId,
@@ -1035,7 +1150,12 @@ class DomainEventDescriberTest {
       nomsNumber = "theNomsNumber",
       occurredAt = Instant.now(),
       data = builder(id),
+      schemaVersion = schemaVersion,
     )
+  }
+
+  private fun <T> buildDomainEvent(builder: (UUID) -> T): DomainEvent<T> {
+    return buildDomainEvent(builder, null)
   }
 }
 

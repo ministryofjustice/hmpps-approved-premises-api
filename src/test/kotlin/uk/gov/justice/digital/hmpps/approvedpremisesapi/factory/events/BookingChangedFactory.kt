@@ -3,6 +3,7 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.events
 import io.github.bluegroundltd.kfactory.Factory
 import io.github.bluegroundltd.kfactory.Yielded
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.BookingChanged
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.Cas1SpaceCharacteristic
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.PersonReference
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.Premises
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.StaffMember
@@ -22,6 +23,9 @@ class BookingChangedFactory : Factory<BookingChanged> {
   private var premises: Yielded<Premises> = { EventPremisesFactory().produce() }
   private var arrivalOn: Yielded<LocalDate> = { LocalDate.now() }
   private var departureOn: Yielded<LocalDate> = { LocalDate.now() }
+  private var previousArrivalOn: Yielded<LocalDate?> = { null }
+  private var previousDepartureOn: Yielded<LocalDate?> = { null }
+  private var characteristics: Yielded<List<Cas1SpaceCharacteristic>> = { emptyList() }
 
   fun withApplicationId(applicationId: UUID) = apply {
     this.applicationId = { applicationId }
@@ -63,6 +67,18 @@ class BookingChangedFactory : Factory<BookingChanged> {
     this.departureOn = { departureOn }
   }
 
+  fun withPreviousArrivalOn(previousArrivalOn: LocalDate) = apply {
+    this.previousArrivalOn = { previousArrivalOn }
+  }
+
+  fun withPreviousDepartureOn(previousDepartureOn: LocalDate?) = apply {
+    this.previousDepartureOn = { previousDepartureOn }
+  }
+
+  fun withCharacteristics(characteristics: List<Cas1SpaceCharacteristic>) = apply {
+    this.characteristics = { characteristics }
+  }
+
   override fun produce() = BookingChanged(
     applicationId = this.applicationId(),
     applicationUrl = this.applicationUrl(),
@@ -74,5 +90,8 @@ class BookingChangedFactory : Factory<BookingChanged> {
     premises = this.premises(),
     arrivalOn = this.arrivalOn(),
     departureOn = this.departureOn(),
+    previousArrivalOn = this.previousArrivalOn(),
+    previousDepartureOn = this.previousDepartureOn(),
+    characteristics = this.characteristics(),
   )
 }

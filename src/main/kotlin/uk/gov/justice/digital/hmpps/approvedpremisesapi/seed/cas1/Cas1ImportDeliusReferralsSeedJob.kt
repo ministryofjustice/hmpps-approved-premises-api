@@ -82,6 +82,7 @@ class Cas1ImportDeliusReferralsSeedJob(
       nonArrivalReasonDescription = seedColumns.getStringOrNull("NON_ARRIVAL_REASON_DESCRIPTION"),
       nonArrivalNotes = seedColumns.getStringOrNull("NON_ARRIVAL_NOTES"),
       premisesQCode = seedColumns.getStringOrNull("HOSTEL_CODE")!!,
+      createdAt = seedColumns.getDateTimeFromUtcDateTimeOrNull("CREATED_DATETIME", DELIUS_IMPORT_DATE_TIME_FORMATTER),
     )
   }
 
@@ -133,6 +134,9 @@ class Cas1ImportDeliusReferralsSeedJob(
         row.nonArrivalReasonDescription,
         row.nonArrivalNotes,
         row.premisesQCode,
+        row.createdAt?.let {
+          ZonedDateTime.of(it, ZoneId.of("Europe/London")).toOffsetDateTime()
+        },
       ),
     )
   }
@@ -172,4 +176,5 @@ data class Cas1DeliusBookingManagementDataRow(
   val nonArrivalReasonDescription: String?,
   val nonArrivalNotes: String?,
   val premisesQCode: String,
+  val createdAt: LocalDateTime?,
 )

@@ -7,12 +7,11 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas1OutOfServ
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas1SpaceBookingEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.CharacteristicEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.CharacteristicRepository.Constants.CAS1_PROPERTY_NAME_SINGLE_ROOM
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.planning.SpacePlanningModelsFactory.Constants.DEFAULT_CHARACTERISTIC_WEIGHT
 import java.time.LocalDate
 
 @Service
 class SpacePlanningModelsFactory {
-  object Constants {
+  companion object {
     const val DEFAULT_CHARACTERISTIC_WEIGHT = 100
   }
 
@@ -77,7 +76,7 @@ class SpacePlanningModelsFactory {
     .asSequence()
     .filter { it.isActive }
     .filter { it.isModelScopeRoom() }
-    .filter { Cas1SpaceBookingEntity.Constants.CRITERIA_CHARACTERISTIC_PROPERTY_NAMES_OF_INTEREST.contains(it.propertyName) }
+    .filter { Cas1SpaceBookingEntity.ROOM_CHARACTERISTICS_OF_INTEREST.contains(it.propertyName) }
     .map { toCharacteristic(it) }
     .toSet()
 

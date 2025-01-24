@@ -46,13 +46,13 @@ class Cas1PremisesServiceTest {
   }
 
   @Nested
-  inner class GetPremisesSummary {
+  inner class GetPremisesInfo {
 
     @Test
     fun `premises not found return error`() {
       every { approvedPremisesRepository.findByIdOrNull(PREMISES_ID) } returns null
 
-      val result = service.getPremisesSummary(PREMISES_ID)
+      val result = service.getPremisesInfo(PREMISES_ID)
 
       assertThat(result).isInstanceOf(CasResult.NotFound::class.java)
     }
@@ -81,7 +81,7 @@ class Cas1PremisesServiceTest {
       every { outOfServiceBedService.getCurrentOutOfServiceBedsCountForPremisesId(PREMISES_ID) } returns 4
       every { spacePlanningService.capacity(premises, any(), null) } returns premisesCapacitySummary
 
-      val result = service.getPremisesSummary(PREMISES_ID)
+      val result = service.getPremisesInfo(PREMISES_ID)
 
       assertThat(result).isInstanceOf(CasResult.Success::class.java)
       result as CasResult.Success
@@ -118,7 +118,7 @@ class Cas1PremisesServiceTest {
       every { outOfServiceBedService.getCurrentOutOfServiceBedsCountForPremisesId(PREMISES_ID) } returns 4
       every { spacePlanningService.capacity(premises, any(), null) } returns premisesCapacitySummary
 
-      val result = service.getPremisesSummary(PREMISES_ID)
+      val result = service.getPremisesInfo(PREMISES_ID)
 
       assertThat(result).isInstanceOf(CasResult.Success::class.java)
       result as CasResult.Success

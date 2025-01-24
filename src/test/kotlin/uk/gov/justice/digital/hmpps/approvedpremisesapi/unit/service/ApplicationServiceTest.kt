@@ -85,7 +85,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.CasResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.ValidatableActionResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.ApplicationService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.ApplicationService.Cas1ApplicationUpdateFields
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.ApplicationTimelineNoteService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.AssessmentService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.JsonSchemaService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.OffenderService
@@ -94,8 +93,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.UserService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1ApplicationDomainEventService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1ApplicationEmailService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1DomainEventService
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.ApplicationTimelineNoteTransformer
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.ApplicationTimelineTransformer
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.unit.util.assertThatCasResult
 import java.time.Clock
 import java.time.Instant
 import java.time.LocalDate
@@ -113,8 +111,6 @@ class ApplicationServiceTest {
   private val mockUserService = mockk<UserService>()
   private val mockAssessmentService = mockk<AssessmentService>()
   private val mockOfflineApplicationRepository = mockk<OfflineApplicationRepository>()
-  private val mockApplicationTimelineNoteService = mockk<ApplicationTimelineNoteService>()
-  private val mockApplicationTimelineNoteTransformer = mockk<ApplicationTimelineNoteTransformer>()
   private val mockDomainEventService = mockk<Cas1DomainEventService>()
   private val mockCas3DomainEventService = mockk<Cas3DomainEventService>()
   private val mockApDeliusContextApiClient = mockk<ApDeliusContextApiClient>()
@@ -122,7 +118,6 @@ class ApplicationServiceTest {
   private val mockUserAccessService = mockk<UserAccessService>()
   private val mockObjectMapper = mockk<ObjectMapper>()
   private val mockApAreaRepository = mockk<ApAreaRepository>()
-  private val applicationTimelineTransformerMock = mockk<ApplicationTimelineTransformer>()
   private val mockCas1ApplicationDomainEventService = mockk<Cas1ApplicationDomainEventService>()
   private val mockCas1ApplicationUserDetailsRepository = mockk<Cas1ApplicationUserDetailsRepository>()
   private val mockCas1ApplicationEmailService = mockk<Cas1ApplicationEmailService>()
@@ -140,16 +135,12 @@ class ApplicationServiceTest {
     mockUserService,
     mockAssessmentService,
     mockOfflineApplicationRepository,
-    mockApplicationTimelineNoteService,
-    mockApplicationTimelineNoteTransformer,
-    mockDomainEventService,
     mockCas3DomainEventService,
     mockApDeliusContextApiClient,
     mockApplicationTeamCodeRepository,
     mockUserAccessService,
     mockObjectMapper,
     mockApAreaRepository,
-    applicationTimelineTransformerMock,
     mockCas1ApplicationDomainEventService,
     mockCas1ApplicationUserDetailsRepository,
     mockCas1ApplicationEmailService,
@@ -226,6 +217,35 @@ class ApplicationServiceTest {
 
   @Test
   fun `getApplicationForUsername where application does not exist returns NotFound result`() {
+    val distinguishedName = "SOMEPERSON"
+    val applicationId = UUID.fromString("c1750938-19fc-48a1-9ae9-f2e119ffc1f4")
+
+    val probationRegion = ProbationRegionEntityFactory()
+      .withYieldedApArea { ApAreaEntityFactory().produce() }
+      .produce()
+    val deletedApplication = TemporaryAccommodationApplicationEntityFactory()
+      .withId(applicationId)
+      .withYieldedCreatedByUser {
+        UserEntityFactory()
+          .withProbationRegion(probationRegion)
+          .produce()
+      }
+      .withProbationRegion(probationRegion)
+      .withDeletedAt(OffsetDateTime.now().minusDays(10))
+      .produce()
+
+    every { mockApplicationRepository.findByIdOrNull(applicationId) } returns deletedApplication
+
+    assertThat(
+      applicationService.getApplicationForUsername(
+        applicationId,
+        distinguishedName,
+      ) is CasResult.NotFound,
+    ).isTrue
+  }
+
+  @Test
+  fun `getApplicationForUsername where temporary accommodation application was deleted returns NotFound result`() {
     val distinguishedName = "SOMEPERSON"
     val applicationId = UUID.fromString("c1750938-19fc-48a1-9ae9-f2e119ffc1f4")
 
@@ -333,11 +353,10 @@ class ApplicationServiceTest {
 
     val result = applicationService.createApprovedPremisesApplication(offenderDetails, user, null, null, null)
 
-    assertThat(result is ValidatableActionResult.FieldValidationError).isTrue
-    result as ValidatableActionResult.FieldValidationError
-    assertThat(result.validationMessages).containsEntry("$.convictionId", "empty")
-    assertThat(result.validationMessages).containsEntry("$.deliusEventNumber", "empty")
-    assertThat(result.validationMessages).containsEntry("$.offenceId", "empty")
+    assertThatCasResult(result).isFieldValidationError()
+      .hasMessage("$.convictionId", "empty")
+      .hasMessage("$.deliusEventNumber", "empty")
+      .hasMessage("$.offenceId", "empty")
   }
 
   @Test
@@ -406,13 +425,11 @@ class ApplicationServiceTest {
 
     val result = applicationService.createApprovedPremisesApplication(offenderDetails, user, 123, "1", "A12HI")
 
-    assertThat(result is ValidatableActionResult.Success).isTrue
-    result as ValidatableActionResult.Success
-    assertThat(result.entity.crn).isEqualTo(crn)
-    assertThat(result.entity.createdByUser).isEqualTo(user)
-    val approvedPremisesApplication = result.entity as ApprovedPremisesApplicationEntity
-    assertThat(approvedPremisesApplication.riskRatings).isEqualTo(riskRatings)
-    assertThat(approvedPremisesApplication.name).isEqualTo("${offenderDetails.firstName.uppercase()} ${offenderDetails.surname.uppercase()}")
+    assertThatCasResult(result).isSuccess().with {
+      val approvedPremisesApplication = it as ApprovedPremisesApplicationEntity
+      assertThat(approvedPremisesApplication.riskRatings).isEqualTo(riskRatings)
+      assertThat(approvedPremisesApplication.name).isEqualTo("${offenderDetails.firstName.uppercase()} ${offenderDetails.surname.uppercase()}")
+    }
   }
 
   @Test
@@ -435,7 +452,7 @@ class ApplicationServiceTest {
       )
     }
 
-    val actionResult = applicationService.createTemporaryAccommodationApplication(
+    val result = applicationService.createTemporaryAccommodationApplication(
       crn,
       user,
       123,
@@ -444,7 +461,7 @@ class ApplicationServiceTest {
       personInfo = personInfo,
     )
 
-    assertThat(actionResult is AuthorisableActionResult.Unauthorised<*>).isTrue
+    assertThatCasResult(result).isUnauthorised()
   }
 
   @Test
@@ -469,7 +486,7 @@ class ApplicationServiceTest {
       )
     }
 
-    val actionResult = applicationService.createTemporaryAccommodationApplication(
+    val result = applicationService.createTemporaryAccommodationApplication(
       crn,
       user,
       123,
@@ -478,11 +495,8 @@ class ApplicationServiceTest {
       personInfo = personInfo,
     )
 
-    assertThat(actionResult is AuthorisableActionResult.Success).isTrue()
-    actionResult as AuthorisableActionResult.Success
-    assertThat(actionResult.entity is ValidatableActionResult.FieldValidationError).isTrue
-    val validationResult = actionResult.entity as ValidatableActionResult.FieldValidationError
-    assertThat(validationResult.validationMessages).containsEntry("$.crn", "doesNotExist")
+    assertThatCasResult(result).isFieldValidationError()
+      .hasMessage("$.crn", "doesNotExist")
   }
 
   @Test
@@ -507,7 +521,7 @@ class ApplicationServiceTest {
       )
     }
 
-    val actionResult = applicationService.createTemporaryAccommodationApplication(
+    val result = applicationService.createTemporaryAccommodationApplication(
       crn,
       user,
       123,
@@ -516,11 +530,8 @@ class ApplicationServiceTest {
       personInfo = personInfo,
     )
 
-    assertThat(actionResult is AuthorisableActionResult.Success).isTrue()
-    actionResult as AuthorisableActionResult.Success
-    assertThat(actionResult.entity is ValidatableActionResult.FieldValidationError).isTrue
-    val validationResult = actionResult.entity as ValidatableActionResult.FieldValidationError
-    assertThat(validationResult.validationMessages).containsEntry("$.crn", "userPermission")
+    assertThatCasResult(result).isFieldValidationError()
+      .hasMessage("$.crn", "userPermission")
   }
 
   @Test
@@ -548,7 +559,7 @@ class ApplicationServiceTest {
       )
     }
 
-    val actionResult = applicationService.createTemporaryAccommodationApplication(
+    val result = applicationService.createTemporaryAccommodationApplication(
       crn,
       user,
       null,
@@ -557,13 +568,10 @@ class ApplicationServiceTest {
       personInfo = personInfo,
     )
 
-    assertThat(actionResult is AuthorisableActionResult.Success).isTrue()
-    actionResult as AuthorisableActionResult.Success
-    assertThat(actionResult.entity is ValidatableActionResult.FieldValidationError).isTrue
-    val validationResult = actionResult.entity as ValidatableActionResult.FieldValidationError
-    assertThat(validationResult.validationMessages).containsEntry("$.convictionId", "empty")
-    assertThat(validationResult.validationMessages).containsEntry("$.deliusEventNumber", "empty")
-    assertThat(validationResult.validationMessages).containsEntry("$.offenceId", "empty")
+    assertThatCasResult(result).isFieldValidationError()
+      .hasMessage("$.convictionId", "empty")
+      .hasMessage("$.deliusEventNumber", "empty")
+      .hasMessage("$.offenceId", "empty")
   }
 
   @Test
@@ -631,7 +639,7 @@ class ApplicationServiceTest {
       riskRatings,
     )
 
-    val actionResult = applicationService.createTemporaryAccommodationApplication(
+    val result = applicationService.createTemporaryAccommodationApplication(
       crn,
       user,
       123,
@@ -640,13 +648,11 @@ class ApplicationServiceTest {
       personInfo = personInfo,
     )
 
-    assertThat(actionResult is AuthorisableActionResult.Success).isTrue()
-    actionResult as AuthorisableActionResult.Success
-    assertThat(actionResult.entity is ValidatableActionResult.Success).isTrue
-    val validationResult = actionResult.entity as ValidatableActionResult.Success
-    val temporaryAccommodationApplication = validationResult.entity as TemporaryAccommodationApplicationEntity
-    assertThat(temporaryAccommodationApplication.riskRatings).isEqualTo(riskRatings)
-    assertThat(temporaryAccommodationApplication.prisonNameOnCreation).isEqualTo(agencyName)
+    assertThatCasResult(result).isSuccess().with {
+      val temporaryAccommodationApplication = it as TemporaryAccommodationApplicationEntity
+      assertThat(temporaryAccommodationApplication.riskRatings).isEqualTo(riskRatings)
+      assertThat(temporaryAccommodationApplication.prisonNameOnCreation).isEqualTo(agencyName)
+    }
   }
 
   @Test
@@ -714,7 +720,7 @@ class ApplicationServiceTest {
       riskRatings,
     )
 
-    val actionResult = applicationService.createTemporaryAccommodationApplication(
+    val result = applicationService.createTemporaryAccommodationApplication(
       crn,
       user,
       123,
@@ -723,13 +729,11 @@ class ApplicationServiceTest {
       personInfo = personInfo,
     )
 
-    assertThat(actionResult is AuthorisableActionResult.Success).isTrue()
-    actionResult as AuthorisableActionResult.Success
-    assertThat(actionResult.entity is ValidatableActionResult.Success).isTrue
-    val validationResult = actionResult.entity as ValidatableActionResult.Success
-    val temporaryAccommodationApplication = validationResult.entity as TemporaryAccommodationApplicationEntity
-    assertThat(temporaryAccommodationApplication.riskRatings).isEqualTo(riskRatings)
-    assertThat(temporaryAccommodationApplication.prisonNameOnCreation).isEqualTo(agencyName)
+    assertThatCasResult(result).isSuccess().with {
+      val temporaryAccommodationApplication = it as TemporaryAccommodationApplicationEntity
+      assertThat(temporaryAccommodationApplication.riskRatings).isEqualTo(riskRatings)
+      assertThat(temporaryAccommodationApplication.prisonNameOnCreation).isEqualTo(agencyName)
+    }
   }
 
   @Test
@@ -796,7 +800,7 @@ class ApplicationServiceTest {
       riskRatings,
     )
 
-    val actionResult = applicationService.createTemporaryAccommodationApplication(
+    val result = applicationService.createTemporaryAccommodationApplication(
       crn,
       user,
       123,
@@ -805,13 +809,11 @@ class ApplicationServiceTest {
       personInfo = personInfo,
     )
 
-    assertThat(actionResult is AuthorisableActionResult.Success).isTrue()
-    actionResult as AuthorisableActionResult.Success
-    assertThat(actionResult.entity is ValidatableActionResult.Success).isTrue
-    val validationResult = actionResult.entity as ValidatableActionResult.Success
-    val temporaryAccommodationApplication = validationResult.entity as TemporaryAccommodationApplicationEntity
-    assertThat(temporaryAccommodationApplication.riskRatings).isEqualTo(riskRatings)
-    assertThat(temporaryAccommodationApplication.prisonNameOnCreation).isNull()
+    assertThatCasResult(result).isSuccess().with {
+      val temporaryAccommodationApplication = it as TemporaryAccommodationApplicationEntity
+      assertThat(temporaryAccommodationApplication.riskRatings).isEqualTo(riskRatings)
+      assertThat(temporaryAccommodationApplication.prisonNameOnCreation).isNull()
+    }
   }
 
   @Test
@@ -878,7 +880,7 @@ class ApplicationServiceTest {
       riskRatings,
     )
 
-    val actionResult = applicationService.createTemporaryAccommodationApplication(
+    val result = applicationService.createTemporaryAccommodationApplication(
       crn,
       user,
       123,
@@ -887,13 +889,11 @@ class ApplicationServiceTest {
       personInfo = personInfo,
     )
 
-    assertThat(actionResult is AuthorisableActionResult.Success).isTrue()
-    actionResult as AuthorisableActionResult.Success
-    assertThat(actionResult.entity is ValidatableActionResult.Success).isTrue
-    val validationResult = actionResult.entity as ValidatableActionResult.Success
-    val temporaryAccommodationApplication = validationResult.entity as TemporaryAccommodationApplicationEntity
-    assertThat(temporaryAccommodationApplication.riskRatings).isEqualTo(riskRatings)
-    assertThat(temporaryAccommodationApplication.prisonNameOnCreation).isNull()
+    assertThatCasResult(result).isSuccess().with {
+      val temporaryAccommodationApplication = it as TemporaryAccommodationApplicationEntity
+      assertThat(temporaryAccommodationApplication.riskRatings).isEqualTo(riskRatings)
+      assertThat(temporaryAccommodationApplication.prisonNameOnCreation).isNull()
+    }
   }
 
   @Nested
@@ -1374,6 +1374,48 @@ class ApplicationServiceTest {
   }
 
   @Test
+  fun `updateTemporaryAccommodationApplication returns GeneralValidationError when application has already been deleted`() {
+    val applicationId = UUID.fromString("fa6e97ce-7b9e-473c-883c-83b1c2af773d")
+    val username = "SOMEPERSON"
+
+    val newestSchema = TemporaryAccommodationApplicationJsonSchemaEntityFactory().produce()
+
+    val user = UserEntityFactory()
+      .withDeliusUsername(username)
+      .withYieldedProbationRegion {
+        ProbationRegionEntityFactory()
+          .withYieldedApArea { ApAreaEntityFactory().produce() }
+          .produce()
+      }
+      .produce()
+
+    val application = TemporaryAccommodationApplicationEntityFactory()
+      .withApplicationSchema(newestSchema)
+      .withId(applicationId)
+      .withCreatedByUser(user)
+      .withDeletedAt(OffsetDateTime.now().minusDays(7))
+      .withProbationRegion(user.probationRegion)
+      .produce()
+      .apply {
+        schemaUpToDate = true
+      }
+
+    every { mockUserService.getUserForRequest() } returns user
+    every { mockApplicationRepository.findByIdOrNull(applicationId) } returns application
+    every { mockJsonSchemaService.checkSchemaOutdated(application) } returns application
+
+    val result = applicationService.updateTemporaryAccommodationApplication(
+      applicationId = applicationId,
+      data = "{}",
+    )
+
+    assertThat(result is CasResult.GeneralValidationError).isTrue
+    result as CasResult.GeneralValidationError
+
+    assertThat(result.message).isEqualTo("This application has already been deleted")
+  }
+
+  @Test
   fun `updateTemporaryAccommodationApplication returns Success with updated Application`() {
     val applicationId = UUID.fromString("fa6e97ce-7b9e-473c-883c-83b1c2af773d")
     val username = "SOMEPERSON"
@@ -1464,7 +1506,7 @@ class ApplicationServiceTest {
         applicationService.submitApprovedPremisesApplication(
           applicationId,
           defaultSubmitApprovedPremisesApplication,
-          username,
+          user,
           apAreaId = UUID.randomUUID(),
         ) is AuthorisableActionResult.NotFound,
       ).isTrue
@@ -1477,10 +1519,6 @@ class ApplicationServiceTest {
         .withYieldedCreatedByUser { UserEntityFactory().withDefaultProbationRegion().produce() }
         .produce()
 
-      every { mockUserService.getUserForRequest() } returns UserEntityFactory()
-        .withDeliusUsername(username)
-        .withDefaultProbationRegion()
-        .produce()
       every { mockApplicationRepository.findByIdOrNull(applicationId) } returns application
       every { mockJsonSchemaService.checkSchemaOutdated(application) } returns application
 
@@ -1488,7 +1526,7 @@ class ApplicationServiceTest {
         applicationService.submitApprovedPremisesApplication(
           applicationId,
           defaultSubmitApprovedPremisesApplication,
-          username,
+          user,
           apAreaId = UUID.randomUUID(),
         ) is AuthorisableActionResult.Unauthorised,
       ).isTrue
@@ -1505,14 +1543,13 @@ class ApplicationServiceTest {
           schemaUpToDate = false
         }
 
-      every { mockUserService.getUserForRequest() } returns user
       every { mockApplicationRepository.findByIdOrNull(applicationId) } returns application
       every { mockJsonSchemaService.checkSchemaOutdated(application) } returns application
 
       val result = applicationService.submitApprovedPremisesApplication(
         applicationId,
         defaultSubmitApprovedPremisesApplication,
-        username,
+        user,
         apAreaId = UUID.randomUUID(),
       )
 
@@ -1539,14 +1576,13 @@ class ApplicationServiceTest {
           schemaUpToDate = true
         }
 
-      every { mockUserService.getUserForRequest() } returns user
       every { mockApplicationRepository.findByIdOrNull(applicationId) } returns application
       every { mockJsonSchemaService.checkSchemaOutdated(application) } returns application
 
       val result = applicationService.submitApprovedPremisesApplication(
         applicationId,
         defaultSubmitApprovedPremisesApplication,
-        username,
+        user,
         apAreaId = UUID.randomUUID(),
       )
 
@@ -1573,7 +1609,6 @@ class ApplicationServiceTest {
           schemaUpToDate = true
         }
 
-      every { mockUserService.getUserForRequest() } returns user
       every { mockApplicationRepository.findByIdOrNull(applicationId) } returns application
       every { mockJsonSchemaService.checkSchemaOutdated(application) } returns application
 
@@ -1596,7 +1631,7 @@ class ApplicationServiceTest {
       val result = applicationService.submitApprovedPremisesApplication(
         applicationId,
         defaultSubmitApprovedPremisesApplication,
-        username,
+        user,
         apAreaId = UUID.randomUUID(),
       )
 
@@ -1622,7 +1657,6 @@ class ApplicationServiceTest {
           schemaUpToDate = true
         }
 
-      every { mockUserService.getUserForRequest() } returns user
       every { mockApplicationRepository.findByIdOrNull(applicationId) } returns application
       every { mockJsonSchemaService.checkSchemaOutdated(application) } returns application
 
@@ -1646,7 +1680,7 @@ class ApplicationServiceTest {
       val result = applicationService.submitApprovedPremisesApplication(
         applicationId,
         defaultSubmitApprovedPremisesApplication,
-        username,
+        user,
         apAreaId = UUID.randomUUID(),
       )
 
@@ -1712,7 +1746,7 @@ class ApplicationServiceTest {
         applicationService.submitApprovedPremisesApplication(
           applicationId,
           defaultSubmitApprovedPremisesApplication,
-          username,
+          user,
           apAreaId = apArea.id,
         )
 
@@ -1810,7 +1844,7 @@ class ApplicationServiceTest {
         applicationService.submitApprovedPremisesApplication(
           applicationId,
           defaultSubmitApprovedPremisesApplication,
-          username,
+          user,
           apAreaId = apArea.id,
         )
 
@@ -1897,7 +1931,7 @@ class ApplicationServiceTest {
         applicationService.submitApprovedPremisesApplication(
           applicationId,
           defaultSubmitApprovedPremisesApplication,
-          username,
+          user,
           apAreaId = apArea.id,
         )
 
@@ -2007,7 +2041,7 @@ class ApplicationServiceTest {
         applicationService.submitApprovedPremisesApplication(
           applicationId,
           defaultSubmitApprovedPremisesApplication,
-          username,
+          user,
           apAreaId = apArea.id,
         )
 
@@ -2064,7 +2098,7 @@ class ApplicationServiceTest {
       val result = applicationService.submitApprovedPremisesApplication(
         applicationId,
         defaultSubmitApprovedPremisesApplication,
-        username,
+        user,
         apAreaId = apArea.id,
       )
 
@@ -2075,7 +2109,6 @@ class ApplicationServiceTest {
 
     private fun setupMocksForSuccess(application: ApprovedPremisesApplicationEntity) {
       every { mockObjectMapper.writeValueAsString(defaultSubmitApprovedPremisesApplication.translatedDocument) } returns "{}"
-      every { mockUserService.getUserForRequest() } returns user
       every { mockApplicationRepository.findByIdOrNull(applicationId) } returns application
       every { mockJsonSchemaService.checkSchemaOutdated(application) } returns application
       every { mockJsonSchemaService.validate(newestSchema, application.data!!) } returns true
@@ -2278,6 +2311,39 @@ class ApplicationServiceTest {
       val validatableActionResult = result.entity as ValidatableActionResult.GeneralValidationError
 
       assertThat(validatableActionResult.message).isEqualTo("This application has already been submitted")
+    }
+
+    @Test
+    fun `submitTemporaryAccommodationApplication returns GeneralValidationError when application has already been deleted`() {
+      val newestSchema = TemporaryAccommodationApplicationJsonSchemaEntityFactory().produce()
+
+      val application = TemporaryAccommodationApplicationEntityFactory()
+        .withApplicationSchema(newestSchema)
+        .withId(applicationId)
+        .withCreatedByUser(user)
+        .withDeletedAt(OffsetDateTime.now().minusDays(22))
+        .withProbationRegion(user.probationRegion)
+        .produce()
+        .apply {
+          schemaUpToDate = true
+        }
+
+      every { mockUserService.getUserForRequest() } returns user
+      every { mockApplicationRepository.findByIdOrNull(applicationId) } returns application
+      every { mockJsonSchemaService.checkSchemaOutdated(application) } returns application
+
+      val result = applicationService.submitTemporaryAccommodationApplication(
+        applicationId,
+        submitTemporaryAccommodationApplication,
+      )
+
+      assertThat(result is AuthorisableActionResult.Success).isTrue
+      result as AuthorisableActionResult.Success
+
+      assertThat(result.entity is ValidatableActionResult.GeneralValidationError).isTrue
+      val validatableActionResult = result.entity as ValidatableActionResult.GeneralValidationError
+
+      assertThat(validatableActionResult.message).isEqualTo("This application has already been deleted")
     }
 
     @Test

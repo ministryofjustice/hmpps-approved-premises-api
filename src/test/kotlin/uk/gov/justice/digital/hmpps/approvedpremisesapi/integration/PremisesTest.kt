@@ -44,7 +44,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.RoomEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TemporaryAccommodationPremisesEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRole
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas3.Cas3VoidBedspacesEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas3.Cas3VoidBedspaceEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.deliuscontext.StaffMembersPage
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.BookingTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.PremisesTransformer
@@ -1913,7 +1913,7 @@ class PremisesTest {
     lateinit var bookingTransformer: BookingTransformer
 
     private lateinit var premises: ApprovedPremisesEntity
-    private lateinit var voidBedspaces: List<Cas3VoidBedspacesEntity>
+    private lateinit var voidBedspaces: List<Cas3VoidBedspaceEntity>
     private lateinit var rooms: List<RoomEntity>
     private lateinit var bookings: List<BookingEntity>
 
@@ -1938,14 +1938,14 @@ class PremisesTest {
       }
 
       voidBedspaces = mutableListOf(
-        cas3VoidBedspacesEntityFactory.produceAndPersist {
+        cas3VoidBedspaceEntityFactory.produceAndPersist {
           withPremises(premises)
           withStartDate(startDate.plusDays(1))
           withEndDate(startDate.plusDays(2))
           withYieldedReason { cas3VoidBedspaceReasonEntityFactory.produceAndPersist() }
           withBed(rooms[0].beds[0])
         },
-        cas3VoidBedspacesEntityFactory.produceAndPersist {
+        cas3VoidBedspaceEntityFactory.produceAndPersist {
           withPremises(premises)
           withStartDate(startDate.plusDays(1))
           withEndDate(startDate.plusDays(2))
@@ -1954,7 +1954,7 @@ class PremisesTest {
         },
       )
 
-      val cancelledLostBed = cas3VoidBedspacesEntityFactory.produceAndPersist {
+      val cancelledLostBed = cas3VoidBedspaceEntityFactory.produceAndPersist {
         withPremises(premises)
         withStartDate(startDate.plusDays(1))
         withEndDate(startDate.plusDays(2))

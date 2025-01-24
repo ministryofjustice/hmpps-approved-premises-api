@@ -19,6 +19,11 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.given
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAnApplication
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesGender
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.CharacteristicEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.CharacteristicRepository.Constants.CAS1_PROPERTY_NAME_PREMISES_ESAP
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.CharacteristicRepository.Constants.CAS1_PROPERTY_NAME_PREMISES_PIPE
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.CharacteristicRepository.Constants.CAS1_PROPERTY_NAME_PREMISES_RECOVERY_FOCUSSED
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.CharacteristicRepository.Constants.CAS1_PROPERTY_NAME_PREMISES_SEMI_SPECIALIST_MENTAL_HEALTH
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.cas1.Cas1SpaceSearchResultsTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomInt
 import java.time.LocalDate
@@ -211,7 +216,7 @@ class Cas1SpaceSearchTest : InitialiseDatabasePerClassTestBase() {
   }
 
   @ParameterizedTest
-  @EnumSource
+  @EnumSource(mode = EnumSource.Mode.EXCLUDE, names = ["normal"])
   fun `Filtering APs by AP type returns only APs of that type - using single ap type option`(apType: ApType) {
     postCodeDistrictFactory.produceAndPersist {
       withOutcode("SE1")
@@ -284,8 +289,61 @@ class Cas1SpaceSearchTest : InitialiseDatabasePerClassTestBase() {
     }
   }
 
+  @Test
+  fun `Filtering AP type 'normal' returns all APs regardless of type`() {
+    postCodeDistrictFactory.produceAndPersist {
+      withOutcode("SE1")
+      withLatitude(-0.07)
+      withLongitude(51.48)
+    }
+
+    givenAUser { user, jwt ->
+      val application = givenAnApplication(createdByUser = user, isWomensApplication = false)
+
+      val onePremiseOfEachType = ApType.entries.map { apType ->
+        approvedPremisesEntityFactory.produceAndPersist {
+          withYieldedProbationRegion { givenAProbationRegion() }
+          withYieldedLocalAuthorityArea {
+            localAuthorityEntityFactory.produceAndPersist()
+          }
+          withCharacteristicsList(listOfNotNull(apType.asCharacteristicEntity()))
+          withSupportsSpaceBookings(true)
+        }
+      }
+
+      val searchParameters = Cas1SpaceSearchParameters(
+        applicationId = application.id,
+        startDate = LocalDate.now(),
+        durationInDays = 14,
+        targetPostcodeDistrict = "SE1",
+        requirements = Cas1SpaceSearchRequirements(
+          apTypes = emptyList(),
+          apType = ApType.normal,
+          spaceCharacteristics = null,
+        ),
+      )
+
+      val response = webTestClient.post()
+        .uri("/cas1/spaces/search")
+        .header("Authorization", "Bearer $jwt")
+        .bodyValue(searchParameters)
+        .exchange()
+        .expectStatus()
+        .isOk
+        .returnResult(Cas1SpaceSearchResults::class.java)
+
+      val results = response.responseBody.blockFirst()!!
+
+      assertThat(results.resultsCount).isEqualTo(onePremiseOfEachType.size)
+      assertThat(results.searchCriteria).isEqualTo(searchParameters)
+
+      assertThat(results.results.map { it.premises.id })
+        .containsExactlyInAnyOrder(*onePremiseOfEachType.map { it.id }.toTypedArray())
+    }
+  }
+
   @ParameterizedTest
-  @EnumSource
+  @EnumSource(mode = EnumSource.Mode.EXCLUDE, names = ["normal"])
   fun `Filtering APs by AP type returns only APs of that type - using multiple ap types option`(apType: ApType) {
     postCodeDistrictFactory.produceAndPersist {
       withOutcode("SE1")
@@ -358,6 +416,68 @@ class Cas1SpaceSearchTest : InitialiseDatabasePerClassTestBase() {
     }
   }
 
+  @Test
+  fun `Filtering APs by AP type characteristics returns APs matching the characteristics`() {
+    postCodeDistrictFactory.produceAndPersist {
+      withOutcode("SE1")
+      withLatitude(-0.07)
+      withLongitude(51.48)
+    }
+
+    givenAUser { user, jwt ->
+      val application = givenAnApplication(createdByUser = user, isWomensApplication = false)
+
+      fun createAp(characteristics: List<CharacteristicEntity>) = approvedPremisesEntityFactory.produceAndPersist {
+        withYieldedProbationRegion { givenAProbationRegion() }
+        withYieldedLocalAuthorityArea {
+          localAuthorityEntityFactory.produceAndPersist()
+        }
+        withCharacteristicsList(characteristics)
+        withSupportsSpaceBookings(true)
+      }
+
+      val pipe = createAp(getCharacteristics(CAS1_PROPERTY_NAME_PREMISES_PIPE))
+      val pipeAndEsap = createAp(
+        getCharacteristics(
+          CAS1_PROPERTY_NAME_PREMISES_PIPE,
+          CAS1_PROPERTY_NAME_PREMISES_ESAP,
+        ),
+      )
+      createAp(getCharacteristics(CAS1_PROPERTY_NAME_PREMISES_ESAP))
+      createAp(getCharacteristics(CAS1_PROPERTY_NAME_PREMISES_SEMI_SPECIALIST_MENTAL_HEALTH))
+      createAp(getCharacteristics(CAS1_PROPERTY_NAME_PREMISES_RECOVERY_FOCUSSED))
+      createAp(emptyList())
+
+      val searchParameters = Cas1SpaceSearchParameters(
+        applicationId = application.id,
+        startDate = LocalDate.now(),
+        durationInDays = 14,
+        targetPostcodeDistrict = "SE1",
+        requirements = Cas1SpaceSearchRequirements(
+          apTypes = null,
+          apType = null,
+          spaceCharacteristics = listOf(Cas1SpaceCharacteristic.isPIPE),
+        ),
+      )
+
+      val response = webTestClient.post()
+        .uri("/cas1/spaces/search")
+        .header("Authorization", "Bearer $jwt")
+        .bodyValue(searchParameters)
+        .exchange()
+        .expectStatus()
+        .isOk
+        .returnResult(Cas1SpaceSearchResults::class.java)
+
+      val results = response.responseBody.blockFirst()!!
+
+      assertThat(results.results.map { it.premises.id }).containsExactlyInAnyOrder(
+        pipe.id,
+        pipeAndEsap.id,
+      )
+    }
+  }
+
   private fun assertThatResultMatches(
     actual: Cas1SpaceSearchResult,
     expected: ApprovedPremisesEntity,
@@ -367,7 +487,7 @@ class Cas1SpaceSearchTest : InitialiseDatabasePerClassTestBase() {
     assertThat(actual.spacesAvailable).isEmpty()
     assertThat(actual.distanceInMiles).isGreaterThan(0f.toBigDecimal())
     assertThat(actual.premises).isNotNull
-    val premises = actual.premises!!
+    val premises = actual.premises
     assertThat(premises.id).isEqualTo(expected.id)
     assertThat(premises.apType).isEqualTo(expectedApType)
     assertThat(premises.name).isEqualTo(expected.name)
@@ -464,11 +584,11 @@ class Cas1SpaceSearchTest : InitialiseDatabasePerClassTestBase() {
       assertThat(results.resultsCount).isEqualTo(5)
       assertThat(results.searchCriteria).isEqualTo(searchParameters)
 
-      assertThatResultMatches(results.results[0], expectedPremises[0])
-      assertThatResultMatches(results.results[1], expectedPremises[1])
-      assertThatResultMatches(results.results[2], expectedPremises[2])
-      assertThatResultMatches(results.results[3], expectedPremises[3])
-      assertThatResultMatches(results.results[4], expectedPremises[4])
+      assertThat(results.results[0].premises.id).isEqualTo(expectedPremises[0].id)
+      assertThat(results.results[1].premises.id).isEqualTo(expectedPremises[1].id)
+      assertThat(results.results[2].premises.id).isEqualTo(expectedPremises[2].id)
+      assertThat(results.results[3].premises.id).isEqualTo(expectedPremises[3].id)
+      assertThat(results.results[4].premises.id).isEqualTo(expectedPremises[4].id)
     }
   }
 
@@ -567,8 +687,16 @@ class Cas1SpaceSearchTest : InitialiseDatabasePerClassTestBase() {
   }
 
   private fun ApType.asCharacteristicEntity() = this.asCharacteristicProperty()?.let {
-    characteristicRepository.findByPropertyName(it, ServiceName.approvedPremises.value)
+    getCharacteristic(it)
   }
 
-  private fun Cas1SpaceCharacteristic.asCharacteristicEntity() = characteristicRepository.findByPropertyName(this.value, ServiceName.approvedPremises.value)!!
+  private fun getCharacteristics(vararg propertyNames: String) =
+    propertyNames.map {
+      getCharacteristic(it)!!
+    }
+
+  private fun getCharacteristic(propertyName: String) =
+    characteristicRepository.findByPropertyName(propertyName, ServiceName.approvedPremises.value)
+
+  private fun Cas1SpaceCharacteristic.asCharacteristicEntity() = getCharacteristic(this.value)!!
 }

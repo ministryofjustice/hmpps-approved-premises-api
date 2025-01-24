@@ -5,6 +5,7 @@ import com.github.tomakehurst.wiremock.client.WireMock.aResponse
 import com.github.tomakehurst.wiremock.client.WireMock.getRequestedFor
 import com.github.tomakehurst.wiremock.client.WireMock.urlEqualTo
 import com.github.tomakehurst.wiremock.http.Fault
+import com.github.tomakehurst.wiremock.stubbing.Scenario
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.Test
@@ -17,9 +18,11 @@ import org.springframework.core.env.get
 import org.springframework.http.HttpStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.ApDeliusContextApiClient
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.ClientResult
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.NomisUserRolesApiClient
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.WebClientCache
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.config.WebClientConfig
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.CaseDetailFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.NomisUserDetailFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.InitialiseDatabasePerClassTestBase
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.apDeliusContextMockSuccessfulCaseDetailCall
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.apDeliusContextMockUnsuccesfullCaseDetailCall
@@ -60,13 +63,29 @@ class BaseHMPPSClientRetryTest : InitialiseDatabasePerClassTestBase() {
   lateinit var apDeliusContextApiWebClientConfig: WebClientConfig
 
   @Autowired
+  @Qualifier("nomisUserRolesApiWebClient")
+  lateinit var nomisUserRolesApiWebClientConfig: WebClientConfig
+
+  @Autowired
   lateinit var environment: Environment
 
-  fun setupTestClient(maxRetries: Long) =
+  fun setupTestClientWithoutRetriesEnabled(maxRetries: Long) =
     ApDeliusContextApiClient(
       WebClientConfig(
         apDeliusContextApiWebClientConfig.webClient,
         maxRetries,
+        retryOnReadTimeout = false,
+      ),
+      objectMapper,
+      webClientCache,
+    )
+
+  fun setupTestClientWithRetriesEnabled(maxRetries: Long) =
+    NomisUserRolesApiClient(
+      WebClientConfig(
+        nomisUserRolesApiWebClientConfig.webClient,
+        maxRetries,
+        retryOnReadTimeout = true,
       ),
       objectMapper,
       webClientCache,
@@ -81,7 +100,7 @@ class BaseHMPPSClientRetryTest : InitialiseDatabasePerClassTestBase() {
       responseStatus = httpStatusCode,
     )
 
-    val client = setupTestClient(maxRetries = 2)
+    val client = setupTestClientWithoutRetriesEnabled(maxRetries = 2)
 
     val result = client.getCaseDetail(CRN)
 
@@ -97,7 +116,7 @@ class BaseHMPPSClientRetryTest : InitialiseDatabasePerClassTestBase() {
       responseStatus = 500,
     )
 
-    val client = setupTestClient(maxRetries = 0)
+    val client = setupTestClientWithoutRetriesEnabled(maxRetries = 0)
 
     val result = client.getCaseDetail(CRN)
 
@@ -114,7 +133,7 @@ class BaseHMPPSClientRetryTest : InitialiseDatabasePerClassTestBase() {
       responseStatus = httpStatusCode,
     )
 
-    val client = setupTestClient(maxRetries = 2)
+    val client = setupTestClientWithoutRetriesEnabled(maxRetries = 2)
 
     val result = client.getCaseDetail(CRN)
 
@@ -133,7 +152,7 @@ class BaseHMPPSClientRetryTest : InitialiseDatabasePerClassTestBase() {
       responseStatus = httpStatusCode,
     )
 
-    val client = setupTestClient(maxRetries = 2)
+    val client = setupTestClientWithoutRetriesEnabled(maxRetries = 2)
 
     val result = client.getCaseDetail(CRN)
 
@@ -156,7 +175,7 @@ class BaseHMPPSClientRetryTest : InitialiseDatabasePerClassTestBase() {
       )
     }
 
-    val client = setupTestClient(maxRetries = 2)
+    val client = setupTestClientWithoutRetriesEnabled(maxRetries = 2)
 
     val result = client.getCaseDetail(CRN)
 
@@ -182,7 +201,7 @@ class BaseHMPPSClientRetryTest : InitialiseDatabasePerClassTestBase() {
       )
     }
 
-    val client = setupTestClient(maxRetries = 2)
+    val client = setupTestClientWithoutRetriesEnabled(maxRetries = 2)
 
     val result = client.getCaseDetail(CRN)
 
@@ -191,5 +210,41 @@ class BaseHMPPSClientRetryTest : InitialiseDatabasePerClassTestBase() {
     assertThat(result.exception.cause).isInstanceOf(io.netty.handler.timeout.ReadTimeoutException::class.java)
 
     wiremockManager.wiremockServer.verify(1, getRequestedFor(urlEqualTo("/probation-cases/$CRN/details")))
+  }
+
+  @Test
+  fun `Retry timeouts when enabled`() {
+    val clientTimeout = environment["nomis-user-roles-api-upstream-timeout-ms"]!!.toInt()
+
+    wiremockServer.stubFor(
+      WireMock.get(urlEqualTo("/me"))
+        .inScenario("retry on timeout")
+        .whenScenarioStateIs(Scenario.STARTED)
+        .willReturn(
+          aResponse()
+            .withFixedDelay(clientTimeout + 500),
+        ).willSetStateTo("successful call"),
+    )
+
+    val response = NomisUserDetailFactory().produce()
+    wiremockServer.stubFor(
+      WireMock.get(urlEqualTo("/me"))
+        .inScenario("retry on timeout")
+        .whenScenarioStateIs("successful call")
+        .willReturn(
+          aResponse()
+            .withHeader("Content-Type", "application/json")
+            .withStatus(200)
+            .withBody(objectMapper.writeValueAsString(response)),
+        ),
+    )
+
+    val client = setupTestClientWithRetriesEnabled(maxRetries = 1)
+    val clientResponse = client.getUserDetails("token")
+
+    wiremockManager.wiremockServer.verify(2, getRequestedFor(urlEqualTo("/me")))
+    assertThat(clientResponse).isInstanceOf(ClientResult.Success::class.java)
+    clientResponse as ClientResult.Success
+    assertThat(clientResponse.body).isEqualTo(response)
   }
 }

@@ -369,7 +369,7 @@ paths:
           content:
             'application/json':
               schema:
-                $ref: '#/components/schemas/Cas1PremisesSummary'
+                $ref: '#/components/schemas/Cas1Premises'
         401:
           $ref: '#/components/responses/401Response'
         403:
@@ -943,6 +943,48 @@ paths:
           $ref: '#/components/responses/403Response'
         500:
           $ref: '#/components/responses/500Response'
+  /reference-data/move-on-categories:
+    get:
+      tags:
+        - Reference Data
+      operationId: getMoveOnCategories
+      summary: Lists all active move-on categories
+      responses:
+        200:
+          description: successful operation
+          content:
+            'application/json':
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/MoveOnCategory'
+        401:
+          $ref: '#/components/responses/401Response'
+        403:
+          $ref: '#/components/responses/403Response'
+        500:
+          $ref: '#/components/responses/500Response'
+  /reference-data/non-arrival-reasons:
+    get:
+      tags:
+        - Reference Data
+      operationId: getNonArrivalReasons
+      summary: Lists all active non-arrivals reasons
+      responses:
+        200:
+          description: successful operation
+          content:
+            'application/json':
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/NonArrivalReason'
+        401:
+          $ref: '#/components/responses/401Response'
+        403:
+          $ref: '#/components/responses/403Response'
+        500:
+          $ref: '#/components/responses/500Response'
 
   /reference-data/out-of-service-bed-reasons:
     get:
@@ -988,11 +1030,34 @@ paths:
         500:
           $ref: '#/components/responses/500Response'
 
+  /reference-data/departure-reasons:
+    get:
+      tags:
+        - Reference Data
+      operationId: getDepartureReasons
+      summary: Lists all active departure reasons
+      responses:
+        200:
+          description: successful operation
+          content:
+            'application/json':
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/DepartureReason'
+        401:
+          $ref: '#/components/responses/401Response'
+        403:
+          $ref: '#/components/responses/403Response'
+        500:
+          $ref: '#/components/responses/500Response'
+
   /reports/{reportName}:
     get:
       tags:
         - Reports
       summary: Returns a spreadsheet of all data metrics for the 'reportName'.
+      operationId: reportsReportNameGet
       parameters:
         - name: X-Service-Name
           in: header
@@ -1220,6 +1285,75 @@ paths:
           $ref: '#/components/responses/403Response'
         500:
           $ref: '#/components/responses/500Response'
+  /applications/{applicationId}/timeline:
+    get:
+      tags:
+        - Applications
+      summary: Returns domain event summary
+      operationId: getApplicationTimeLine
+      parameters:
+        - name: applicationId
+          in: path
+          description: ID of the application
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        200:
+          description: successful operation
+          content:
+            'application/json':
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/TimelineEvent'
+        401:
+          $ref: '#/components/responses/401Response'
+        403:
+          $ref: '#/components/responses/403Response'
+        404:
+          description: invalid CRN
+          content:
+            'application/json':
+              schema:
+                $ref: '#/components/schemas/Problem'
+        500:
+          $ref: '#/components/responses/500Response'
+  /people/{crn}/timeline:
+    get:
+      tags:
+        - People
+      summary: Returns a timeline of all applications for a Person.
+      operationId: getPeopleApplicationsTimeline
+      parameters:
+        - name: crn
+          in: path
+          description: CRN of the Person to fetch the timeline for
+          required: true
+          schema:
+            type: string
+      responses:
+        200:
+          description: successful operation
+          content:
+            'application/json':
+              schema:
+                $ref: '#/components/schemas/PersonalTimeline'
+        401:
+          $ref: '#/components/responses/401Response'
+        403:
+          $ref: '#/components/responses/403Response'
+        404:
+          description: invalid CRN
+          content:
+            'application/json':
+              schema:
+                $ref: '#/components/schemas/Problem'
+        500:
+          $ref: '#/components/responses/500Response'
+
+
 components:
   responses:
     401Response:
@@ -2817,21 +2951,19 @@ components:
           format: int64
         comment:
           type: string
+        description:
+          type: string
         dateCreated:
           type: string
           format: date
         dateExpires:
           type: string
           format: date
-        expired:
-          type: boolean
-        active:
-          type: boolean
+        alertTypeDescription:
+            type: string
       required:
         - alertId
         - dateCreated
-        - expired
-        - active
     Application:
       type: object
       properties:
@@ -2995,7 +3127,6 @@ components:
           items:
             $ref: '#/components/schemas/Cas2TimelineEvent'
         assessment:
-          type: object
           $ref: '#/components/schemas/Cas2Assessment'
       required:
         - id
@@ -3778,10 +3909,6 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/ClarificationNote'
-        referralHistoryNotes:
-          type: array
-          items:
-            $ref: '#/components/schemas/ReferralHistoryNote'
       discriminator:
         propertyName: service
         mapping:
@@ -4576,7 +4703,6 @@ components:
             characteristics:
               type: array
               items:
-                type: object
                 $ref: '#/components/schemas/CharacteristicPair'
           required:
             - characteristics
@@ -4969,6 +5095,9 @@ components:
         - approved_premises_space_planning_dry_run
         - approved_premises_import_delius_referrals
         - approved_premises_update_space_booking
+        - approved_premises_backfill_active_space_bookings_created_in_delius
+        - approved_premises_create_test_applications
+        - approved_premises_delete_application_timeline_notes
         - temporary_accommodation_referral_rejection
     SeedFromExcelFileType:
       type: string
@@ -5002,6 +5131,7 @@ components:
         - update_cas3_application_offender_name
         - update_cas3_domain_event_type_for_person_departed_updated
         - update_cas1_applications_licence_expiry_date
+        - update_cas1_backfill_offline_application_name
     PlacementDates:
       type: object
       properties:
@@ -5364,7 +5494,7 @@ components:
         - rfap
         - mhapStJosephs
         - mhapElliottHouse
-    BedSearchParameters:
+    TemporaryAccommodationBedSearchParameters:
       type: object
       properties:
         serviceName:
@@ -5372,36 +5502,55 @@ components:
         startDate:
           type: string
           format: date
-          description: The date the Bed will need to be free from
         durationDays:
           type: integer
+          format: int64
           description: The number of days the Bed will need to be free from the start_date until
+        probationDeliveryUnits:
+          type: array
+          description: The list of pdus Ids to search within
+          items:
+            type: string
+            format: uuid
+        premisesFilters:
+          $ref: '#/components/schemas/PremisesFilters'
+        bedspaceFilters:
+          $ref: '#/components/schemas/BedspaceFilters'
+        attributes:
+          type: array
+          description: Bedspace and property attributes to filter on
+          items:
+            $ref: "#/components/schemas/BedSearchAttributes"
       required:
-        - serviceName
+        - probationDeliveryUnits
         - startDate
         - durationDays
-      discriminator:
-        propertyName: serviceName
-        mapping:
-          temporary-accommodation: '#/components/schemas/TemporaryAccommodationBedSearchParameters'
-    TemporaryAccommodationBedSearchParameters:
-      allOf:
-        - $ref: '#/components/schemas/BedSearchParameters'
-        - type: object
-          properties:
-            probationDeliveryUnits:
-              type: array
-              description: The list of pdus Ids to search within
-              items:
-                type: string
-                format: uuid
-            attributes:
-              type: array
-              description: Bedspace and property attributes to filter on
-              items:
-                $ref: "#/components/schemas/BedSearchAttributes"
-          required:
-            - probationDeliveryUnits
+    PremisesFilters:
+      type: object
+      properties:
+        includedCharacteristicIds:
+          type: array
+          items:
+            type: string
+            format: uuid
+        excludedCharacteristicIds:
+          type: array
+          items:
+            type: string
+            format: uuid
+    BedspaceFilters:
+      type: object
+      properties:
+        includedCharacteristicIds:
+          type: array
+          items:
+            type: string
+            format: uuid
+        excludedCharacteristicIds:
+          type: array
+          items:
+            type: string
+            format: uuid
     BedSearchResults:
       type: object
       properties:
@@ -5417,43 +5566,30 @@ components:
         results:
           type: array
           items:
-            $ref: '#/components/schemas/BedSearchResult'
+            $ref: '#/components/schemas/TemporaryAccommodationBedSearchResult'
       required:
         - resultsRoomCount
         - resultsPremisesCount
         - resultsBedCount
         - results
-    BedSearchResult:
+    TemporaryAccommodationBedSearchResult:
       type: object
       properties:
-        serviceName:
-          $ref: '#/components/schemas/ServiceName'
         premises:
           $ref: '#/components/schemas/BedSearchResultPremisesSummary'
         room:
           $ref: '#/components/schemas/BedSearchResultRoomSummary'
         bed:
           $ref: '#/components/schemas/BedSearchResultBedSummary'
+        overlaps:
+          type: array
+          items:
+            $ref: '#/components/schemas/TemporaryAccommodationBedSearchResultOverlap'
       required:
-        - serviceName
         - premises
         - room
         - bed
-      discriminator:
-        propertyName: serviceName
-        mapping:
-          temporary-accommodation: '#/components/schemas/TemporaryAccommodationBedSearchResult'
-    TemporaryAccommodationBedSearchResult:
-      allOf:
-        - $ref: '#/components/schemas/BedSearchResult'
-        - type: object
-          properties:
-            overlaps:
-              type: array
-              items:
-                $ref: '#/components/schemas/TemporaryAccommodationBedSearchResultOverlap'
-          required:
-            - overlaps
+        - overlaps
     TemporaryAccommodationBedSearchResultOverlap:
       type: object
       properties:
@@ -6058,12 +6194,19 @@ components:
           example: 22
         supportsSpaceBookings:
           type: boolean
+        fullAddress:
+          description: Full address, excluding postcode
+          type: string
+        postcode:
+          type: string
       required:
         - id
         - name
         - apArea
         - bedCount
         - supportsSpaceBookings
+        - fullAddress
+        - postcode
     Cas1PremisesSearchResultSummary:
       type: object
       properties:
@@ -6116,7 +6259,7 @@ components:
         - apArea
         - characteristics
         - fullAddress
-    Cas1PremisesSummary:
+    Cas1Premises:
       type: object
       properties:
         id:
@@ -6128,6 +6271,9 @@ components:
         apCode:
           type: string
           example: NEHOPE1
+        fullAddress:
+          description: Full address, excluding postcode
+          type: string
         postcode:
           type: string
           example: LS1 3AD
@@ -6158,6 +6304,7 @@ components:
         - id
         - name
         - apCode
+        - fullAddress
         - postcode
         - apArea
         - bedCount
@@ -6188,6 +6335,7 @@ components:
         - acceptsHateCrimeOffenders
         - acceptsNonSexualChildOffenders
         - acceptsSexOffenders
+        - additionalRestrictions
         - hasArsonInsuranceConditions
         - hasBrailleSignage
         - hasCallForAssistance
@@ -6209,10 +6357,14 @@ components:
         - isArsonDesignated
         - isArsonSuitable
         - isCatered
+        - isESAP
         - isFullyFm
         - isGroundFloor
         - isGroundFloorNrOffice
         - isIAP
+        - isPIPE
+        - isRecoveryFocussed
+        - isSemiSpecialistMentalHealth
         - isSingle
         - isStepFreeDesignated
         - isSuitableForVulnerable
@@ -6289,11 +6441,13 @@ components:
       properties:
         apTypes:
           deprecated: true
-          description: "Searching on multiple types is not supported, instead use apType. If this is used, the first type wll be matched, and type 'normal' will be ignored"
+          description: "Use 'spaceCharacteristics' to filter on premise types"
           type: array
           items:
             $ref: '#/components/schemas/ApType'
         apType:
+          deprecated: true
+          description: "Use 'spaceCharacteristics' to filter on premise types"
           $ref: '#/components/schemas/ApType'
         spaceCharacteristics:
           type: array
@@ -6363,6 +6517,9 @@ components:
           description: "This is not populated and will be removed in the future"
           items:
             $ref: '#/components/schemas/Cas1SpaceAvailability'
+      required:
+        - premises
+        - distanceInMiles
     Cas1SpaceAvailability:
       type: object
       deprecated: true
@@ -6606,7 +6763,7 @@ components:
         essentialCharacteristics:
           type: array
           items:
-            $ref: '#/components/schemas/Cas1SpaceBookingCharacteristic'
+            $ref: '#/components/schemas/Cas1SpaceCharacteristic'
       required:
         - id
         - person
@@ -6778,7 +6935,7 @@ components:
       type: object
       properties:
         premise:
-          $ref: '#/components/schemas/Cas1PremisesSummary'
+          $ref: '#/components/schemas/Cas1Premises'
         startDate:
           type: string
           format: date
@@ -6853,6 +7010,9 @@ components:
         id:
           type: string
           format: uuid
+        bedId:
+          type: string
+          format: uuid
         roomName:
           type: string
         startDate:
@@ -6869,6 +7029,7 @@ components:
             $ref: '#/components/schemas/Cas1SpaceCharacteristic'
       required:
         - id
+        - bedId
         - startDate
         - endDate
         - reason

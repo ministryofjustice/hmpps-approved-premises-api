@@ -153,7 +153,7 @@ class BedSearchRepositoryTest : IntegrationTestBase() {
       withRoom(roomInPremisesOneInPdu)
     }
 
-    cas3VoidBedspacesEntityFactory.produceAndPersist {
+    cas3VoidBedspaceEntityFactory.produceAndPersist {
       withPremises(premisesOneInPdu)
       withBed(bedFiveInRoomInPremisesOneInPdu)
       withYieldedReason { cas3VoidBedspaceReasonEntityFactory.produceAndPersist() }
@@ -168,7 +168,7 @@ class BedSearchRepositoryTest : IntegrationTestBase() {
       withRoom(roomInPremisesOneInPdu)
     }
 
-    cas3VoidBedspacesEntityFactory.produceAndPersist {
+    cas3VoidBedspaceEntityFactory.produceAndPersist {
       withPremises(premisesOneInPdu)
       withBed(bedSixInRoomInPremisesOneInPdu)
       withYieldedReason { cas3VoidBedspaceReasonEntityFactory.produceAndPersist() }
@@ -183,7 +183,7 @@ class BedSearchRepositoryTest : IntegrationTestBase() {
       withRoom(roomInPremisesOneInPdu)
     }
 
-    cas3VoidBedspacesEntityFactory.produceAndPersist {
+    cas3VoidBedspaceEntityFactory.produceAndPersist {
       withPremises(premisesOneInPdu)
       withBed(bedSevenInRoomInPremisesOneInPdu)
       withYieldedReason { cas3VoidBedspaceReasonEntityFactory.produceAndPersist() }
@@ -198,7 +198,7 @@ class BedSearchRepositoryTest : IntegrationTestBase() {
       withRoom(roomInPremisesOneInPdu)
     }
 
-    cas3VoidBedspacesEntityFactory.produceAndPersist {
+    cas3VoidBedspaceEntityFactory.produceAndPersist {
       withPremises(premisesOneInPdu)
       withBed(bedEightInRoomInPremisesOneInPdu)
       withYieldedReason { cas3VoidBedspaceReasonEntityFactory.produceAndPersist() }
@@ -253,7 +253,7 @@ class BedSearchRepositoryTest : IntegrationTestBase() {
       withRoom(roomInPremisesThreeInPdu)
     }
 
-    val cancelledLostBed = cas3VoidBedspacesEntityFactory.produceAndPersist {
+    val cancelledLostBed = cas3VoidBedspaceEntityFactory.produceAndPersist {
       withPremises(premisesThreeInPdu)
       withBed(bedWithCancelledLostBed)
       withYieldedReason { cas3VoidBedspaceReasonEntityFactory.produceAndPersist() }
@@ -469,7 +469,7 @@ class BedSearchRepositoryTest : IntegrationTestBase() {
       withRoom(roomInPremisesThreeInPdu)
     }
 
-    val cancelledLostBed = cas3VoidBedspacesEntityFactory.produceAndPersist {
+    val cancelledLostBed = cas3VoidBedspaceEntityFactory.produceAndPersist {
       withPremises(premisesThreeInPdu)
       withBed(bedWithCancelledLostBed)
       withYieldedReason { cas3VoidBedspaceReasonEntityFactory.produceAndPersist() }
@@ -667,7 +667,7 @@ class BedSearchRepositoryTest : IntegrationTestBase() {
       withRoom(roomInPremisesThreeInPdu)
     }
 
-    val cancelledLostBed = cas3VoidBedspacesEntityFactory.produceAndPersist {
+    val cancelledLostBed = cas3VoidBedspaceEntityFactory.produceAndPersist {
       withPremises(premisesThreeInPdu)
       withBed(bedWithCancelledLostBed)
       withYieldedReason { cas3VoidBedspaceReasonEntityFactory.produceAndPersist() }
@@ -862,7 +862,7 @@ class BedSearchRepositoryTest : IntegrationTestBase() {
       withRoom(roomInPremisesThreeInPdu)
     }
 
-    val cancelledLostBed = cas3VoidBedspacesEntityFactory.produceAndPersist {
+    val cancelledLostBed = cas3VoidBedspaceEntityFactory.produceAndPersist {
       withPremises(premisesThreeInPdu)
       withBed(bedWithCancelledLostBed)
       withYieldedReason { cas3VoidBedspaceReasonEntityFactory.produceAndPersist() }

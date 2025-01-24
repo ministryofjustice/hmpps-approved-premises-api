@@ -304,7 +304,7 @@ class ApplicationReportsTest : InitialiseDatabasePerClassTestBase() {
 
     val (referrerEntity, _) = referrerDetails
 
-    assertThat(reportRow.crn).isEqualTo(application.crn)
+    assertThat(reportRow.crn).isEqualTo(application.crn.uppercase())
     assertThat(reportRow.tier).isEqualTo("B")
 
     assertThat(reportRow.lastAllocatedToAssessorDate).isEqualTo(assessment.allocatedAt!!.toLocalDate())
@@ -396,7 +396,7 @@ class ApplicationReportsTest : InitialiseDatabasePerClassTestBase() {
   private fun createAndSubmitApplication(apType: ApType, crn: String, withArrivalDate: Boolean = true, shortNotice: Boolean = false): ApprovedPremisesApplicationEntity {
     val (referrer, jwt) = referrerDetails
     val (offenderDetails, _) = givenAnOffender(
-      offenderDetailsConfigBlock = { withCrn(crn) },
+      offenderDetailsConfigBlock = { withCrn(crn.uppercase()) },
     )
 
     apDeliusContextMockSuccessfulCaseDetailCall(

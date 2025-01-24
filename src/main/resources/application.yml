@@ -82,6 +82,11 @@ spring:
             client-id: approved-premises-api
             client-secret: clientsecret
             authorization-grant-type: client_credentials
+          prisoner-alerts-api:
+            provider: hmpps-auth
+            client-id: approved-premises-api
+            client-secret: clientsecret
+            authorization-grant-type: client_credentials
           nomis-user-roles-api:
             provider: hmpps-auth
             client-id: approved-premises-api
@@ -149,6 +154,8 @@ services:
     base-url: http://localhost:9004
   prisons-api:
     base-url: http://localhost:9570
+  prisoner-alerts-api:
+    base-url: http://localhost:9580
   nomis-user-roles-api:
     base-url: http://localhost:9575
   manage-users-api:
@@ -273,6 +280,7 @@ preemptive-cache-lock-duration-ms: 5400000
 arrived-departed-domain-events-disabled: true
 
 upstream-timeout-ms: 10000
+nomis-user-roles-api-upstream-timeout-ms: 2000
 case-notes-service-upstream-timeout-ms: 25000
 
 web-clients:
@@ -280,8 +288,10 @@ web-clients:
   max-response-in-memory-size-bytes: 750000
   # 1.5MB
   probation-offender-search-api-max-response-in-memory-size-bytes: 1572864
+  # 3 MB
+  prison-api-max-response-in-memory-size-bytes: 3145728
   # 2.5 MB
-  prison-api-max-response-in-memory-size-bytes: 2621440
+  prisoner-alerts-api-max-response-in-memory-size-bytes: 2621440
 
 pagination:
   default-page-size: 10

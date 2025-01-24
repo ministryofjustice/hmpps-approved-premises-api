@@ -20,8 +20,8 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ProbationRegionE
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.RoomEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.TemporaryAccommodationPremisesEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.TurnaroundEntityFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.cas3.Cas3VoidBedspaceEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.cas3.Cas3VoidBedspaceReasonEntityFactory
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.cas3.Cas3VoidBedspacesEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.generator.BedUtilisationReportGenerator
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.model.BedUtilisationReportData
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.model.BedUtilisationReportRow
@@ -53,7 +53,7 @@ class BedUtilisationReportGeneratorTest {
     val temporaryAccommodationBed = BedEntityFactory().withRoom(temporaryAccommodationRoom).produce()
 
     val temporaryAccommodationLostBed =
-      Cas3VoidBedspacesEntityFactory().withBed(temporaryAccommodationBed).withStartDate(LocalDate.parse("2023-04-05"))
+      Cas3VoidBedspaceEntityFactory().withBed(temporaryAccommodationBed).withStartDate(LocalDate.parse("2023-04-05"))
         .withEndDate(LocalDate.parse("2023-04-07")).withYieldedReason { Cas3VoidBedspaceReasonEntityFactory().produce() }
         .withPremises(temporaryAccommodationPremises).produce()
 
@@ -64,7 +64,7 @@ class BedUtilisationReportGeneratorTest {
 
     val approvedPremisesBed = BedEntityFactory().withRoom(approvedPremisesRoom).produce()
 
-    Cas3VoidBedspacesEntityFactory().withBed(approvedPremisesBed).withStartDate(LocalDate.parse("2023-04-10"))
+    Cas3VoidBedspaceEntityFactory().withBed(approvedPremisesBed).withStartDate(LocalDate.parse("2023-04-10"))
       .withEndDate(LocalDate.parse("2023-04-17")).withYieldedReason { Cas3VoidBedspaceReasonEntityFactory().produce() }
       .withPremises(approvedPremises).produce()
 
@@ -100,7 +100,7 @@ class BedUtilisationReportGeneratorTest {
     val temporaryAccommodationBed = BedEntityFactory().withRoom(temporaryAccommodationRoom).produce()
 
     val temporaryAccommodationLostBed =
-      Cas3VoidBedspacesEntityFactory().withBed(temporaryAccommodationBed).withStartDate(LocalDate.parse("2023-04-05"))
+      Cas3VoidBedspaceEntityFactory().withBed(temporaryAccommodationBed).withStartDate(LocalDate.parse("2023-04-05"))
         .withEndDate(LocalDate.parse("2023-04-07")).withYieldedReason { Cas3VoidBedspaceReasonEntityFactory().produce() }
         .withPremises(temporaryAccommodationPremises).produce()
 
@@ -111,7 +111,7 @@ class BedUtilisationReportGeneratorTest {
 
     val approvedPremisesBed = BedEntityFactory().withRoom(approvedPremisesRoom).produce()
 
-    Cas3VoidBedspacesEntityFactory().withBed(approvedPremisesBed).withStartDate(LocalDate.parse("2023-04-05"))
+    Cas3VoidBedspaceEntityFactory().withBed(approvedPremisesBed).withStartDate(LocalDate.parse("2023-04-05"))
       .withEndDate(LocalDate.parse("2023-04-07")).withYieldedReason { Cas3VoidBedspaceReasonEntityFactory().produce() }
       .withPremises(approvedPremises).produce()
 
@@ -146,7 +146,7 @@ class BedUtilisationReportGeneratorTest {
 
     val temporaryAccommodationBed = BedEntityFactory().withRoom(temporaryAccommodationRoom).produce()
 
-    Cas3VoidBedspacesEntityFactory().withBed(temporaryAccommodationBed).withStartDate(LocalDate.parse("2023-04-05"))
+    Cas3VoidBedspaceEntityFactory().withBed(temporaryAccommodationBed).withStartDate(LocalDate.parse("2023-04-05"))
       .withEndDate(LocalDate.parse("2023-04-07")).withYieldedReason { Cas3VoidBedspaceReasonEntityFactory().produce() }
       .withPremises(temporaryAccommodationPremises).produce()
 
@@ -158,7 +158,7 @@ class BedUtilisationReportGeneratorTest {
     val approvedPremisesBed = BedEntityFactory().withRoom(approvedPremisesRoom).produce()
 
     val approvedPremisesLostBed =
-      Cas3VoidBedspacesEntityFactory().withBed(approvedPremisesBed).withStartDate(LocalDate.parse("2023-04-05"))
+      Cas3VoidBedspaceEntityFactory().withBed(approvedPremisesBed).withStartDate(LocalDate.parse("2023-04-05"))
         .withEndDate(LocalDate.parse("2023-04-07")).withYieldedReason { Cas3VoidBedspaceReasonEntityFactory().produce() }
         .withPremises(approvedPremises).produce()
 
@@ -207,7 +207,7 @@ class BedUtilisationReportGeneratorTest {
       BedEntityFactory().withRoom(temporaryAccommodationRoomInProbationRegion).produce()
 
     val temporaryAccommodationLostBedInProbationArea =
-      Cas3VoidBedspacesEntityFactory().withBed(temporaryAccommodationBedInProbationRegion)
+      Cas3VoidBedspaceEntityFactory().withBed(temporaryAccommodationBedInProbationRegion)
         .withStartDate(LocalDate.parse("2023-04-05")).withEndDate(LocalDate.parse("2023-04-07"))
         .withYieldedReason { Cas3VoidBedspaceReasonEntityFactory().produce() }
         .withPremises(temporaryAccommodationPremisesInProbationRegion).produce()
@@ -223,7 +223,7 @@ class BedUtilisationReportGeneratorTest {
       BedEntityFactory().withRoom(temporaryAccommodationRoomOutsideProbationRegion).produce()
 
     val temporaryAccommodationLostBedOutsideProbationArea =
-      Cas3VoidBedspacesEntityFactory().withBed(temporaryAccommodationBedOutsideProbationRegion)
+      Cas3VoidBedspaceEntityFactory().withBed(temporaryAccommodationBedOutsideProbationRegion)
         .withStartDate(LocalDate.parse("2023-04-05")).withEndDate(LocalDate.parse("2023-04-07"))
         .withYieldedReason { Cas3VoidBedspaceReasonEntityFactory().produce() }
         .withPremises(temporaryAccommodationPremisesOutsideProbationRegion).produce()
@@ -277,7 +277,7 @@ class BedUtilisationReportGeneratorTest {
       BedEntityFactory().withRoom(temporaryAccommodationRoomInProbationRegion).produce()
 
     val temporaryAccommodationLostBedInProbationArea =
-      Cas3VoidBedspacesEntityFactory().withBed(temporaryAccommodationBedInProbationRegion)
+      Cas3VoidBedspaceEntityFactory().withBed(temporaryAccommodationBedInProbationRegion)
         .withStartDate(LocalDate.parse("2023-04-05")).withEndDate(LocalDate.parse("2023-04-07"))
         .withYieldedReason { Cas3VoidBedspaceReasonEntityFactory().produce() }
         .withPremises(temporaryAccommodationPremisesInProbationRegion).produce()
@@ -293,7 +293,7 @@ class BedUtilisationReportGeneratorTest {
       BedEntityFactory().withRoom(temporaryAccommodationRoomOutsideProbationRegion).produce()
 
     val temporaryAccommodationLostBedOutsideProbationArea =
-      Cas3VoidBedspacesEntityFactory().withBed(temporaryAccommodationBedOutsideProbationRegion)
+      Cas3VoidBedspaceEntityFactory().withBed(temporaryAccommodationBedOutsideProbationRegion)
         .withStartDate(LocalDate.parse("2023-04-05")).withEndDate(LocalDate.parse("2023-04-07"))
         .withYieldedReason { Cas3VoidBedspaceReasonEntityFactory().produce() }
         .withPremises(temporaryAccommodationPremisesOutsideProbationRegion).produce()
@@ -625,12 +625,12 @@ class BedUtilisationReportGeneratorTest {
     val bed = BedEntityFactory().withRoom(room).produce()
 
     val relevantVoidStraddlingStartOfMonth =
-      Cas3VoidBedspacesEntityFactory().withBed(bed).withPremises(premises).withStartDate(LocalDate.parse("2023-03-28"))
+      Cas3VoidBedspaceEntityFactory().withBed(bed).withPremises(premises).withStartDate(LocalDate.parse("2023-03-28"))
         .withEndDate(LocalDate.parse("2023-04-04")).withYieldedReason { Cas3VoidBedspaceReasonEntityFactory().produce() }
         .produce()
 
     val relevantVoidStraddlingEndOfMonth =
-      Cas3VoidBedspacesEntityFactory().withBed(bed).withPremises(premises).withStartDate(LocalDate.parse("2023-04-25"))
+      Cas3VoidBedspaceEntityFactory().withBed(bed).withPremises(premises).withStartDate(LocalDate.parse("2023-04-25"))
         .withEndDate(LocalDate.parse("2023-05-03")).withYieldedReason { Cas3VoidBedspaceReasonEntityFactory().produce() }
         .produce()
 
@@ -724,12 +724,12 @@ class BedUtilisationReportGeneratorTest {
     } returns 1
 
     val relevantVoidStraddlingStartOfMonth =
-      Cas3VoidBedspacesEntityFactory().withBed(bed).withPremises(premises).withStartDate(LocalDate.parse("2023-03-28"))
+      Cas3VoidBedspaceEntityFactory().withBed(bed).withPremises(premises).withStartDate(LocalDate.parse("2023-03-28"))
         .withEndDate(LocalDate.parse("2023-04-04")).withYieldedReason { Cas3VoidBedspaceReasonEntityFactory().produce() }
         .produce()
 
     val relevantVoidStraddlingEndOfMonth =
-      Cas3VoidBedspacesEntityFactory().withBed(bed).withPremises(premises).withStartDate(LocalDate.parse("2023-04-25"))
+      Cas3VoidBedspaceEntityFactory().withBed(bed).withPremises(premises).withStartDate(LocalDate.parse("2023-04-25"))
         .withEndDate(LocalDate.parse("2023-05-03")).withYieldedReason { Cas3VoidBedspaceReasonEntityFactory().produce() }
         .produce()
 

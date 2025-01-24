@@ -31,6 +31,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.UpdateApproved
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.UpdateTemporaryAccommodationApplication
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Withdrawable
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Withdrawables
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.controller.cas1.Cas1TimelineService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.OfflineApplicationEntity
@@ -87,6 +88,7 @@ class ApplicationsController(
   private val withdrawableTransformer: WithdrawableTransformer,
   private val applicationTimelineNoteService: ApplicationTimelineNoteService,
   private val applicationTimelineNoteTransformer: ApplicationTimelineNoteTransformer,
+  private val cas1TimelineService: Cas1TimelineService,
 ) : ApplicationsApiDelegate {
 
   override fun applicationsGet(xServiceName: ServiceName?): ResponseEntity<List<ApplicationSummary>> {
@@ -203,18 +205,7 @@ class ApplicationsController(
       createWithRisks,
     )
 
-    val application = when (applicationResult) {
-      is ValidatableActionResult.GeneralValidationError ->
-        throw BadRequestProblem(errorDetail = applicationResult.message)
-
-      is ValidatableActionResult.FieldValidationError ->
-        throw BadRequestProblem(invalidParams = applicationResult.validationMessages)
-
-      is ValidatableActionResult.ConflictError ->
-        throw ConflictProblem(id = applicationResult.conflictingEntityId, conflictReason = applicationResult.message)
-
-      is ValidatableActionResult.Success -> applicationResult.entity
-    }
+    val application = extractEntityFromCasResult(applicationResult)
 
     return ResponseEntity
       .created(URI.create("/applications/${application.id}"))
@@ -228,7 +219,7 @@ class ApplicationsController(
     user: UserEntity,
     body: NewApplication,
     createWithRisks: Boolean?,
-  ): ValidatableActionResult<ApplicationEntity> = when (serviceName) {
+  ): CasResult<out ApplicationEntity> = when (serviceName) {
     ServiceName.approvedPremises ->
       applicationService.createApprovedPremisesApplication(
         personInfo.offenderDetailSummary,
@@ -240,22 +231,15 @@ class ApplicationsController(
       )
 
     ServiceName.temporaryAccommodation -> {
-      when (
-        val actionResult =
-          applicationService.createTemporaryAccommodationApplication(
-            body.crn,
-            user,
-            body.convictionId,
-            body.deliusEventNumber,
-            body.offenceId,
-            createWithRisks,
-            personInfo,
-          )
-      ) {
-        is AuthorisableActionResult.NotFound -> throw NotFoundProblem(actionResult.id!!, actionResult.entityType!!)
-        is AuthorisableActionResult.Unauthorised -> throw ForbiddenProblem()
-        is AuthorisableActionResult.Success -> actionResult.entity
-      }
+      applicationService.createTemporaryAccommodationApplication(
+        body.crn,
+        user,
+        body.convictionId,
+        body.deliusEventNumber,
+        body.offenceId,
+        createWithRisks,
+        personInfo,
+      )
     }
 
     ServiceName.cas2 -> throw RuntimeException(
@@ -335,7 +319,7 @@ class ApplicationsController(
     if (xServiceName != ServiceName.approvedPremises) {
       throw NotImplementedProblem("Timeline is only supported for Approved Premises applications")
     }
-    val events = applicationService.getApplicationTimeline(applicationId)
+    val events = cas1TimelineService.getApplicationTimeline(applicationId)
     return ResponseEntity(events, HttpStatus.OK)
   }
 
@@ -374,7 +358,7 @@ class ApplicationsController(
         applicationService.submitApprovedPremisesApplication(
           applicationId,
           submitApplication,
-          username,
+          userService.getUserForRequest(),
           apAreaId,
         )
       }

@@ -1,0 +1,1 @@
+ALTER TABLE application_timeline_notes ADD deleted_at timestamptz NULL;

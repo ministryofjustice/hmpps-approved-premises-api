@@ -131,7 +131,7 @@ class SeedUpdateNomsNumberSeedJobTest : SeedTestBase() {
   }
 
   private fun assertNoteAdded(application: ApplicationEntity, message: String) {
-    val notes = applicationTimelineNoteRepository.findApplicationTimelineNoteEntitiesByApplicationId(application.id)
+    val notes = applicationTimelineNoteRepository.findApplicationTimelineNoteEntitiesByApplicationIdAndDeletedAtIsNull(application.id)
     assertThat(notes).hasSize(1)
     assertThat(notes)
       .extracting("body")
@@ -139,7 +139,7 @@ class SeedUpdateNomsNumberSeedJobTest : SeedTestBase() {
   }
 
   private fun assertNoteNotAdded(application: ApplicationEntity) {
-    val notes = applicationTimelineNoteRepository.findApplicationTimelineNoteEntitiesByApplicationId(application.id)
+    val notes = applicationTimelineNoteRepository.findApplicationTimelineNoteEntitiesByApplicationIdAndDeletedAtIsNull(application.id)
     assertThat(notes).isEmpty()
   }
 

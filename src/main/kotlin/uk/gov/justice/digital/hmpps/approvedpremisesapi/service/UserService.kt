@@ -205,13 +205,16 @@ class UserService(
     qualifications: List<APIUserQualification>,
     cruManagementAreaOverrideId: UUID?,
   ): CasResult<UserEntity> {
-    val user = userRepository.findByIdOrNull(id) ?: return CasResult.NotFound("User")
+    val user = userRepository.findByIdOrNull(id) ?: return CasResult.NotFound(
+      entityType = "User",
+      id = id.toString(),
+    )
 
     user.isActive = true
 
     if (cruManagementAreaOverrideId != null) {
       val override = cas1CruManagementAreaRepository.findByIdOrNull(cruManagementAreaOverrideId)
-        ?: return CasResult.NotFound("Cas1CruManagementArea")
+        ?: return CasResult.NotFound(entityType = "Cas1CruManagementArea", id = cruManagementAreaOverrideId.toString())
       user.cruManagementArea = override
       user.cruManagementAreaOverride = override
     } else {
@@ -251,7 +254,7 @@ class UserService(
     id: UUID,
     forService: ServiceName,
   ): CasResult<GetUserResponse> {
-    val user = userRepository.findByIdOrNull(id) ?: return CasResult.NotFound("User")
+    val user = userRepository.findByIdOrNull(id) ?: return CasResult.NotFound(entityType = "User", id = id.toString())
     return CasResult.Success(updateUserFromDelius(user, forService))
   }
 

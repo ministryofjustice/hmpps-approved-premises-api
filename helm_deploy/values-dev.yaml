@@ -23,32 +23,35 @@ generic-service:
     SERVICES_AP-DELIUS-CONTEXT-API_BASE-URL: https://approved-premises-and-delius-dev.hmpps.service.justice.gov.uk
     SERVICES_HMPPS-TIER_BASE-URL: https://hmpps-tier-dev.hmpps.service.justice.gov.uk
     SERVICES_PRISONS-API_BASE-URL: https://prison-api-dev.prison.service.justice.gov.uk
+    SERVICES_PRISONER-ALERTS-API_BASE-URL: https://alerts-api-dev.hmpps.service.justice.gov.uk
     SERVICES_NOMIS-USER-ROLES-API_BASE-URL: https://nomis-user-roles-api-dev.prison.service.justice.gov.uk
     SERVICES_MANAGE-USERS-API_BASE-URL: https://manage-users-api-dev.hmpps.service.justice.gov.uk
     SERVICES_PROBATION-OFFENDER-SEARCH-API_BASE-URL: https://probation-offender-search-dev.hmpps.service.justice.gov.uk
     SERVICES_CASE-NOTES_BASE-URL: https://dev.offender-case-notes.service.justice.gov.uk
     SERVICES_AP-OASYS-CONTEXT-API_BASE-URL: https://approved-premises-and-oasys-dev.hmpps.service.justice.gov.uk
     SERVICES_GOV-UK-BANK-HOLIDAYS-API_BASE-URL: https://www.gov.uk
-    SPRING_FLYWAY_LOCATIONS: classpath:db/migration/all,classpath:db/migration/local+dev+test,classpath:db/migration/dev+test,classpath:db/migration/all-except-integration
+    SPRING_FLYWAY_LOCATIONS: classpath:db/migration/all,classpath:db/migration/local+dev+test,classpath:db/migration/dev,classpath:db/migration/all-except-integration
     LOG-CLIENT-CREDENTIALS-JWT-INFO: true
     ASSIGN-DEFAULT-REGION-TO-USERS-WITH-UNKNOWN-REGION: true
     SENTRY_ENVIRONMENT: dev
     SENTRY_TRACES-SAMPLE-RATE: 0.01
     CACHES_STAFFMEMBERS_EXPIRY-SECONDS: 20
-    DOMAIN-EVENTS_CAS1_EMIT-ENABLED: true
+    DOMAIN-EVENTS_CAS1_EMIT-ENABLED: false
     DOMAIN-EVENTS_CAS2_EMIT-ENABLED: true
-    DOMAIN-EVENTS_CAS3_EMIT-ENABLED: referralSubmitted,bookingProvisionallyMade,bookingConfirmed,bookingCancelled,bookingCancelledUpdated,personArrived,personArrivedUpdated,personDeparted,personDepartureUpdated
+    DOMAIN-EVENTS_CAS3_EMIT-ENABLED:
     DOMAIN-EVENTS_CAS1_ASYNC-SAVE-ENABLED: false
     DOMAIN-EVENTS_CAS2_ASYNC-SAVE-ENABLED: false
     DOMAIN-EVENTS_CAS3_ASYNC-SAVE-ENABLED: false
     PREEMPTIVE-CACHE-LOGGING-ENABLED: true
     PREEMPTIVE-CACHE-DELAY-MS: 60000
-    SEED_AUTO_ENABLED: true
-    SEED_AUTO_FILE-PREFIXES: classpath:db/seed/local+dev+test,classpath:db/seed/dev+test
-    SEED_AUTO-SCRIPT_CAS1-ENABLED: true
-    SEED_AUTO-SCRIPT_CAS2-ENABLED: true
-    SEED_AUTO-SCRIPT_NOMS: A5276DZ
-    SEED_AUTO-SCRIPT_PRISON-CODE: MDI
+
+    SEED_ON-STARTUP_ENABLED: true
+    SEED_ON-STARTUP_FILE-PREFIXES: classpath:db/seed/local+dev+test
+    SEED_ON-STARTUP_SCRIPT_CAS1-ENABLED: true
+    SEED_ON-STARTUP_SCRIPT_CAS2-ENABLED: true
+    SEED_ON-STARTUP_SCRIPT_NOMS: A5276DZ
+    SEED_ON-STARTUP_SCRIPT_PRISON-CODE: MDI
+
     NOTIFY_MODE: TEST_AND_GUEST_LIST
     HMPPS_SQS_USE_WEB_TOKEN: true
 
@@ -98,6 +101,8 @@ generic-service:
     USER-ALLOCATIONS_RULES_ESAP-ASSESSMENTS_ALLOCATE-TO-USER: AP_USER_TEST_2
 
     WEB-CLIENTS_PROBATION-OFFENDER-SEARCH-API-MAX-RESPONSE-IN-MEMORY-SIZE-BYTES: "2621440"
+
+    FEATURE-FLAGS_GET-ALERTS-FROM-PRISONER-ALERTS-API: false
 
   namespace_secrets:
     hmpps-domain-events-topic:

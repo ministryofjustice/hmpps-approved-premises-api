@@ -25,7 +25,7 @@ class BedUsageReportGenerator(
 
   override val convert: BedEntity.(properties: BedUsageReportProperties) -> List<BedUsageReportRow> = { properties ->
     val bookings = bookingRepository.findAllByOverlappingDateForBed(properties.startDate, properties.endDate, this)
-    val voids = cas3VoidBedspacesRepository.findAllByOverlappingDateForBed(properties.startDate, properties.endDate, this)
+    val voids = cas3VoidBedspacesRepository.findAllByOverlappingDateForBedspace(properties.startDate, properties.endDate, this)
 
     val premises = this.room.premises
     val temporaryAccommodationPremisesEntity = premises as? TemporaryAccommodationPremisesEntity

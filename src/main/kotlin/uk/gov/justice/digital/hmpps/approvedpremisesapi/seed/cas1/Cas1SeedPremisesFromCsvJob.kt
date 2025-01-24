@@ -19,6 +19,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.seed.SeedJob
 import java.util.UUID
 
 @Component
+@Deprecated("Use Cas1SeedRoomsFromSiteSurveyXlsxJob instead")
 class Cas1SeedPremisesFromCsvJob(
   private val premisesRepository: PremisesRepository,
   private val probationRegionRepository: ProbationRegionRepository,

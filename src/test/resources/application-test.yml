@@ -85,6 +85,8 @@ services:
     base-url: http://localhost:#WIREMOCK_PORT
   prisons-api:
     base-url: http://localhost:#WIREMOCK_PORT
+  prisoner-alerts-api:
+    base-url: http://localhost:#WIREMOCK_PORT
   nomis-user-roles-api:
     base-url: http://localhost:#WIREMOCK_PORT
   manage-users-api:
@@ -173,6 +175,7 @@ arrived-departed-domain-events-disabled: false
 manual-bookings-domain-events-disabled: false
 
 upstream-timeout-ms: 500
+nomis-user-roles-api-upstream-timeout-ms: 500
 
 pagination:
   default-page-size: 10

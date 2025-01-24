@@ -10,6 +10,7 @@ paths:
       tags:
         - CAS3 Reports
       summary: Returns a spreadsheet of all data metrics for the 'reportName'.
+      operationId: reportsReportNameGet
       parameters:
         - name: reportName
           in: path
