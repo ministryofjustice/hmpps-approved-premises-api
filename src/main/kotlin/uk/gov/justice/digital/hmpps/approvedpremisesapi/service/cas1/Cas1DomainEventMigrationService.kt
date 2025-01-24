@@ -13,7 +13,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.UserService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.toLocalDate
 
 /**
-This is tested by the [DomainEventTest] integration test
+This is tested by the DomainEventTest integration test
  */
 @Service
 class Cas1DomainEventMigrationService(

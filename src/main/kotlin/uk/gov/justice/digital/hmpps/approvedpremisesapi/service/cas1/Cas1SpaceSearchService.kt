@@ -39,7 +39,7 @@ class Cas1SpaceSearchService(
 
   private fun getRequiredCharacteristics(requirements: Cas1SpaceSearchRequirements) = RequiredCharacteristics(
     apType = if (requirements.apType != null) {
-      requirements.apType!!.asApprovedPremisesType()
+      requirements.apType.asApprovedPremisesType()
     } else {
       requirements.apTypes?.map { it.asApprovedPremisesType() }?.firstOrNull()
     },
