@@ -45,7 +45,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.UserService.GetU
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1SpaceBookingService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.ensureEntityFromCasResultIsSuccess
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.extractEntityFromCasResult
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.extractEntityFromNestedAuthorisableValidatableActionResult
 import java.io.IOException
 import java.time.LocalDate
 import java.time.OffsetDateTime
@@ -237,7 +236,7 @@ class Cas1ApplicationSeedService(
   private fun assessAndAcceptApplication(application: ApprovedPremisesApplicationEntity) {
     val assessor = application.createdByUser
 
-    extractEntityFromNestedAuthorisableValidatableActionResult(
+    ensureEntityFromCasResultIsSuccess(
       assessmentService.reallocateAssessment(
         id = getAssessmentId(application),
         allocatingUser = assessor,
