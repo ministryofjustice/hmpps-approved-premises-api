@@ -21,6 +21,7 @@ class Cas1ImportDeliusReferralsSeedJob(
 ) : SeedJob<Cas1DeliusBookingManagementDataRow>(
   requiredHeaders = setOf(
     "BOOKING_ID",
+    "APPROVED_PREMISES_REFERRAL_ID",
     "CRN",
     "EVENT_NUMBER",
     "KEY_WORKER_STAFF_CODE",
@@ -62,6 +63,7 @@ class Cas1ImportDeliusReferralsSeedJob(
 
     return Cas1DeliusBookingManagementDataRow(
       bookingId = seedColumns.getUuidOrNull("BOOKING_ID"),
+      approvedPremisesReferralId = seedColumns.getStringOrNull("APPROVED_PREMISES_REFERRAL_ID")!!,
       crn = seedColumns.getStringOrNull("CRN")!!,
       eventNumber = seedColumns.getStringOrNull("EVENT_NUMBER")!!,
       keyWorkerStaffCode = seedColumns.getStringOrNullMinus1IsNull("KEY_WORKER_STAFF_CODE"),
@@ -114,6 +116,7 @@ class Cas1ImportDeliusReferralsSeedJob(
       Cas1DeliusBookingImportEntity(
         id = UUID.randomUUID(),
         row.bookingId,
+        row.approvedPremisesReferralId,
         row.crn,
         row.eventNumber,
         row.keyWorkerStaffCode,
@@ -156,6 +159,7 @@ class Cas1ImportDeliusReferralsSeedJob(
 
 data class Cas1DeliusBookingManagementDataRow(
   val bookingId: UUID?,
+  val approvedPremisesReferralId: String,
   val crn: String,
   val eventNumber: String,
   val keyWorkerStaffCode: String?,

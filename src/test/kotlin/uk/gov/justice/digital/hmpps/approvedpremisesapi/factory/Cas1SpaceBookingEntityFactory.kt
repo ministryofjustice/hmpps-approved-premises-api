@@ -232,5 +232,6 @@ class Cas1SpaceBookingEntityFactory : Factory<Cas1SpaceBookingEntity> {
     nonArrivalReason = this.nonArrivalReason(),
     deliusEventNumber = this.deliusEventNumber(),
     migratedManagementInfoFrom = this.migratedManagementInfoFrom(),
+    deliusId = null,
   )
 }

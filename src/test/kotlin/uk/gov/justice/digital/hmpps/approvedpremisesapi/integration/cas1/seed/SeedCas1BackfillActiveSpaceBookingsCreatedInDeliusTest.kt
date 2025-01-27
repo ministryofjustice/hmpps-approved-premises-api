@@ -95,6 +95,7 @@ class SeedCas1BackfillActiveSpaceBookingsCreatedInDeliusTest : SeedTestBase() {
     val deliusBooking = Cas1DeliusBookingImportEntity(
       id = UUID.randomUUID(),
       bookingId = null,
+      approvedPremisesReferralId = "Delius Referral Id",
       crn = "CRN1",
       eventNumber = "67",
       keyWorkerStaffCode = "kw001",
@@ -184,6 +185,7 @@ class SeedCas1BackfillActiveSpaceBookingsCreatedInDeliusTest : SeedTestBase() {
     val migratedBooking1 = premiseSpaceBookings[0]
 
     assertThat(migratedBooking1.crn).isEqualTo("CRN1")
+    assertThat(migratedBooking1.deliusId).isEqualTo("Delius Referral Id")
     assertThat(migratedBooking1.deliusEventNumber).isEqualTo("67")
     assertThat(migratedBooking1.premises.id).isEqualTo(premises.id)
     assertThat(migratedBooking1.placementRequest).isNull()
