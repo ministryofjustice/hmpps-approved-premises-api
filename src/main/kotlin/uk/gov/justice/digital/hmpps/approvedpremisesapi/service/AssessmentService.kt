@@ -608,18 +608,16 @@ class AssessmentService(
     allocatingUser: UserEntity,
     assigneeUser: UserEntity,
     id: UUID,
-  ): AuthorisableActionResult<ValidatableActionResult<AssessmentEntity>> {
+  ): CasResult<AssessmentEntity> {
     lockableAssessmentRepository.acquirePessimisticLock(id)
 
     val currentAssessment = assessmentRepository.findByIdOrNull(id)
-      ?: return AuthorisableActionResult.NotFound()
+      ?: return CasResult.NotFound("assessment", id.toString())
 
     if (currentAssessment.reallocatedAt != null) {
-      return AuthorisableActionResult.Success(
-        ValidatableActionResult.ConflictError(
-          currentAssessment.id,
-          "This assessment has already been reallocated",
-        ),
+      return CasResult.ConflictError(
+        currentAssessment.id,
+        "This assessment has already been reallocated",
       )
     }
 
@@ -642,33 +640,27 @@ class AssessmentService(
     allocatingUser: UserEntity,
     assigneeUser: UserEntity,
     currentAssessment: ApprovedPremisesAssessmentEntity,
-  ): AuthorisableActionResult<ValidatableActionResult<AssessmentEntity>> {
+  ): CasResult<AssessmentEntity> {
     if (currentAssessment.submittedAt != null) {
-      return AuthorisableActionResult.Success(
-        ValidatableActionResult.GeneralValidationError("A decision has already been taken on this assessment"),
-      )
+      return CasResult.GeneralValidationError("A decision has already been taken on this assessment")
     }
 
     val application = currentAssessment.application
     val requiredQualifications = application.getRequiredQualifications()
 
     if (!canUserAssessPlacement(assigneeUser, currentAssessment)) {
-      return AuthorisableActionResult.Success(
-        ValidatableActionResult.FieldValidationError(
-          ValidationErrors().apply {
-            this["$.userId"] = "lacking assess application or assess appealed application permission"
-          },
-        ),
+      return CasResult.FieldValidationError(
+        ValidationErrors().apply {
+          this["$.userId"] = "lacking assess application or assess appealed application permission"
+        },
       )
     }
 
     if (!assigneeUser.hasAllQualifications(requiredQualifications)) {
-      return AuthorisableActionResult.Success(
-        ValidatableActionResult.FieldValidationError(
-          ValidationErrors().apply {
-            this["$.userId"] = "lackingQualifications"
-          },
-        ),
+      return CasResult.FieldValidationError(
+        ValidationErrors().apply {
+          this["$.userId"] = "lackingQualifications"
+        },
       )
     }
 
@@ -714,11 +706,7 @@ class AssessmentService(
       cas1AssessmentDomainEventService.assessmentAllocated(newAssessment, assigneeUser, allocatingUser)
     }
 
-    return AuthorisableActionResult.Success(
-      ValidatableActionResult.Success(
-        newAssessment,
-      ),
-    )
+    return CasResult.Success(newAssessment)
   }
 
   private fun canUserAssessPlacement(user: UserEntity, assessment: ApprovedPremisesAssessmentEntity): Boolean {
@@ -733,14 +721,12 @@ class AssessmentService(
   private fun reallocateTemporaryAccommodationAssessment(
     assigneeUser: UserEntity,
     currentAssessment: TemporaryAccommodationAssessmentEntity,
-  ): AuthorisableActionResult<ValidatableActionResult<AssessmentEntity>> {
+  ): CasResult<AssessmentEntity> {
     if (!assigneeUser.hasRole(UserRole.CAS3_ASSESSOR)) {
-      return AuthorisableActionResult.Success(
-        ValidatableActionResult.FieldValidationError(
-          ValidationErrors().apply {
-            this["$.userId"] = "lackingAssessorRole"
-          },
-        ),
+      return CasResult.FieldValidationError(
+        ValidationErrors().apply {
+          this["$.userId"] = "lackingAssessorRole"
+        },
       )
     }
 
@@ -751,11 +737,7 @@ class AssessmentService(
     val savedAssessment = assessmentRepository.save(currentAssessment)
     savedAssessment.addSystemNote(userService.getUserForRequest(), ReferralHistorySystemNoteType.IN_REVIEW)
 
-    return AuthorisableActionResult.Success(
-      ValidatableActionResult.Success(
-        savedAssessment,
-      ),
-    )
+    return CasResult.Success(savedAssessment)
   }
 
   fun deallocateAssessment(id: UUID): AuthorisableActionResult<ValidatableActionResult<AssessmentEntity>> {

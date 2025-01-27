@@ -151,9 +151,9 @@ class TaskService(
 
   @SuppressWarnings("ReturnCount", "CyclomaticComplexMethod")
   @Transactional
-  fun reallocateTask(requestUser: UserEntity, taskType: TaskType, userToAllocateToId: UUID, taskId: UUID): AuthorisableActionResult<ValidatableActionResult<Reallocation>> {
+  fun reallocateTask(requestUser: UserEntity, taskType: TaskType, userToAllocateToId: UUID, taskId: UUID): CasResult<Reallocation> {
     if (!userAccessService.userCanReallocateTask(requestUser)) {
-      return AuthorisableActionResult.Unauthorised()
+      return CasResult.Unauthorised()
     }
 
     val assigneeUserResult = userService.updateUserFromDelius(userToAllocateToId, ServiceName.approvedPremises)
@@ -164,7 +164,7 @@ class TaskService(
       ) {
         assigneeUserResult.value.user
       } else {
-        return AuthorisableActionResult.NotFound()
+        return CasResult.NotFound("user", userToAllocateToId.toString())
       }
 
     val result = when (taskType) {
@@ -186,21 +186,9 @@ class TaskService(
       }
     }
 
-    val validationResult = when (result) {
-      is AuthorisableActionResult.NotFound -> return AuthorisableActionResult.NotFound()
-      is AuthorisableActionResult.Unauthorised -> return AuthorisableActionResult.Unauthorised()
-      is AuthorisableActionResult.Success -> result.entity
-    }
-
-    return when (validationResult) {
-      is ValidatableActionResult.GeneralValidationError -> AuthorisableActionResult.Success(ValidatableActionResult.GeneralValidationError(validationResult.message))
-      is ValidatableActionResult.FieldValidationError -> AuthorisableActionResult.Success(ValidatableActionResult.FieldValidationError(validationResult.validationMessages))
-      is ValidatableActionResult.ConflictError -> AuthorisableActionResult.Success(ValidatableActionResult.ConflictError(validationResult.conflictingEntityId, validationResult.message))
-      is ValidatableActionResult.Success -> AuthorisableActionResult.Success(
-        ValidatableActionResult.Success(
-          entityToReallocation(validationResult.entity, taskType),
-        ),
-      )
+    return when (result) {
+      is CasResult.Success -> CasResult.Success(entityToReallocation(result.value, taskType))
+      is CasResult.Error -> result.reviseType()
     }
   }
 

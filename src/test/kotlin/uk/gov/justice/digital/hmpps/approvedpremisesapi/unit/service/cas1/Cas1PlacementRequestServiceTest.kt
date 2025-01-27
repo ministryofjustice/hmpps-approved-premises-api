@@ -53,9 +53,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRole
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.ApprovedPremisesApplicationStatus.PENDING_PLACEMENT_REQUEST
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.RiskTier
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.RiskWithStatus
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.AuthorisableActionResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.CasResult
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.ValidatableActionResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.ApplicationService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.OffenderService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.TaskDeadlineService
@@ -230,12 +228,7 @@ class Cas1PlacementRequestServiceTest {
 
       val result = placementRequestService.reallocatePlacementRequest(assigneeUser, previousPlacementRequest.id)
 
-      assertThat(result is AuthorisableActionResult.Success).isTrue
-      val validationResult = (result as AuthorisableActionResult.Success).entity
-
-      assertThat(validationResult is ValidatableActionResult.GeneralValidationError).isTrue
-      validationResult as ValidatableActionResult.GeneralValidationError
-      assertThat(validationResult.message).isEqualTo("This placement request has already been completed")
+      assertThatCasResult(result).isGeneralValidationError("This placement request has already been completed")
     }
 
     @Test
@@ -248,13 +241,9 @@ class Cas1PlacementRequestServiceTest {
 
       val result = placementRequestService.reallocatePlacementRequest(assigneeUser, previousPlacementRequest.id)
 
-      assertThat(result is AuthorisableActionResult.Success).isTrue
-      val validationResult = (result as AuthorisableActionResult.Success).entity
-
-      assertThat(validationResult is ValidatableActionResult.ConflictError).isTrue
-      validationResult as ValidatableActionResult.ConflictError
-      assertThat(validationResult.conflictingEntityId).isEqualTo(previousPlacementRequest.id)
-      assertThat(validationResult.message).isEqualTo("This placement request has already been reallocated")
+      assertThatCasResult(result).isConflictError()
+        .hasEntityId(previousPlacementRequest.id)
+        .hasMessage("This placement request has already been reallocated")
     }
 
     @Test
@@ -267,12 +256,7 @@ class Cas1PlacementRequestServiceTest {
 
       val result = placementRequestService.reallocatePlacementRequest(assigneeUser, previousPlacementRequest.id)
 
-      assertThat(result is AuthorisableActionResult.Success).isTrue
-      val validationResult = (result as AuthorisableActionResult.Success).entity
-
-      assertThat(validationResult is ValidatableActionResult.FieldValidationError).isTrue
-      validationResult as ValidatableActionResult.FieldValidationError
-      assertThat(validationResult.validationMessages).containsEntry("$.userId", "lackingMatcherRole")
+      assertThatCasResult(result).isFieldValidationError().hasMessage("$.userId", "lackingMatcherRole")
     }
 
     @Test
@@ -294,29 +278,24 @@ class Cas1PlacementRequestServiceTest {
 
       val result = placementRequestService.reallocatePlacementRequest(assigneeUser, previousPlacementRequest.id)
 
-      assertThat(result is AuthorisableActionResult.Success).isTrue
-      val validationResult = (result as AuthorisableActionResult.Success).entity
+      assertThatCasResult(result).isSuccess().with { newPlacementRequest ->
 
-      assertThat(validationResult is ValidatableActionResult.Success).isTrue
-      validationResult as ValidatableActionResult.Success
+        assertThat(previousPlacementRequest.reallocatedAt).isNotNull
 
-      assertThat(previousPlacementRequest.reallocatedAt).isNotNull
+        verify { placementRequestRepository.save(match { it.allocatedToUser == assigneeUser }) }
 
-      verify { placementRequestRepository.save(match { it.allocatedToUser == assigneeUser }) }
-
-      val newPlacementRequest = validationResult.entity
-
-      assertThat(newPlacementRequest.application).isEqualTo(application)
-      assertThat(newPlacementRequest.allocatedToUser).isEqualTo(assigneeUser)
-      assertThat(newPlacementRequest.placementRequirements.radius).isEqualTo(previousPlacementRequest.placementRequirements.radius)
-      assertThat(newPlacementRequest.placementRequirements.postcodeDistrict).isEqualTo(previousPlacementRequest.placementRequirements.postcodeDistrict)
-      assertThat(newPlacementRequest.placementRequirements.gender).isEqualTo(previousPlacementRequest.placementRequirements.gender)
-      assertThat(newPlacementRequest.expectedArrival).isEqualTo(previousPlacementRequest.expectedArrival)
-      assertThat(newPlacementRequest.placementRequirements.apType).isEqualTo(previousPlacementRequest.placementRequirements.apType)
-      assertThat(newPlacementRequest.duration).isEqualTo(previousPlacementRequest.duration)
-      assertThat(newPlacementRequest.placementRequirements.desirableCriteria).isEqualTo(previousPlacementRequest.placementRequirements.desirableCriteria)
-      assertThat(newPlacementRequest.placementRequirements.essentialCriteria).isEqualTo(previousPlacementRequest.placementRequirements.essentialCriteria)
-      assertThat(newPlacementRequest.dueAt).isEqualTo(dueAt)
+        assertThat(newPlacementRequest.application).isEqualTo(application)
+        assertThat(newPlacementRequest.allocatedToUser).isEqualTo(assigneeUser)
+        assertThat(newPlacementRequest.placementRequirements.radius).isEqualTo(previousPlacementRequest.placementRequirements.radius)
+        assertThat(newPlacementRequest.placementRequirements.postcodeDistrict).isEqualTo(previousPlacementRequest.placementRequirements.postcodeDistrict)
+        assertThat(newPlacementRequest.placementRequirements.gender).isEqualTo(previousPlacementRequest.placementRequirements.gender)
+        assertThat(newPlacementRequest.expectedArrival).isEqualTo(previousPlacementRequest.expectedArrival)
+        assertThat(newPlacementRequest.placementRequirements.apType).isEqualTo(previousPlacementRequest.placementRequirements.apType)
+        assertThat(newPlacementRequest.duration).isEqualTo(previousPlacementRequest.duration)
+        assertThat(newPlacementRequest.placementRequirements.desirableCriteria).isEqualTo(previousPlacementRequest.placementRequirements.desirableCriteria)
+        assertThat(newPlacementRequest.placementRequirements.essentialCriteria).isEqualTo(previousPlacementRequest.placementRequirements.essentialCriteria)
+        assertThat(newPlacementRequest.dueAt).isEqualTo(dueAt)
+      }
     }
   }
 

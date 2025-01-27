@@ -50,6 +50,8 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.UserAccessServic
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.UserService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.PlacementRequestService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.UserTransformer
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.unit.util.assertThat
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.unit.util.assertThatCasResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.PageCriteria
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.PaginationConfig
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.getMetadata
@@ -108,7 +110,7 @@ class TaskServiceTest {
 
     val result = taskService.reallocateTask(requestUser, TaskType.assessment, UUID.randomUUID(), UUID.randomUUID())
 
-    Assertions.assertThat(result is AuthorisableActionResult.Unauthorised).isTrue
+    assertThatCasResult(result).isUnauthorised()
   }
 
   @Test
@@ -120,7 +122,7 @@ class TaskServiceTest {
 
     val result = taskService.reallocateTask(requestUserWithPermission, TaskType.assessment, assigneeUserId, UUID.randomUUID())
 
-    Assertions.assertThat(result is AuthorisableActionResult.NotFound).isTrue
+    assertThatCasResult(result).isNotFound("user", "55aa66be-0819-494e-955b-90b9aaa4f0c6")
   }
 
   @Test
@@ -141,11 +143,7 @@ class TaskServiceTest {
         assigneeUser = assigneeUser,
         id = assessment.id,
       )
-    } returns AuthorisableActionResult.Success(
-      ValidatableActionResult.Success(
-        assessment,
-      ),
-    )
+    } returns CasResult.Success(assessment)
 
     val transformedUser = mockk<ApprovedPremisesUser>()
 
@@ -158,13 +156,9 @@ class TaskServiceTest {
 
     val result = taskService.reallocateTask(requestUserWithPermission, TaskType.assessment, assigneeUser.id, assessment.id)
 
-    Assertions.assertThat(result is AuthorisableActionResult.Success).isTrue
-    val validationResult = (result as AuthorisableActionResult.Success).entity
-
-    Assertions.assertThat(validationResult is ValidatableActionResult.Success).isTrue
-    validationResult as ValidatableActionResult.Success
-
-    Assertions.assertThat(validationResult.entity).isEqualTo(reallocation)
+    assertThatCasResult(result).isSuccess().with {
+      Assertions.assertThat(it).isEqualTo(reallocation)
+    }
   }
 
   @Test
@@ -190,11 +184,9 @@ class TaskServiceTest {
       .withAllocatedToUser(assigneeUser)
       .produce()
 
-    every { placementRequestServiceMock.reallocatePlacementRequest(assigneeUser, placementRequest.id) } returns AuthorisableActionResult.Success(
-      ValidatableActionResult.Success(
-        placementRequest,
-      ),
-    )
+    every {
+      placementRequestServiceMock.reallocatePlacementRequest(assigneeUser, placementRequest.id)
+    } returns CasResult.Success(placementRequest)
 
     val transformedUser = mockk<ApprovedPremisesUser>()
 
@@ -207,13 +199,9 @@ class TaskServiceTest {
 
     val result = taskService.reallocateTask(requestUserWithPermission, TaskType.placementRequest, assigneeUser.id, placementRequest.id)
 
-    Assertions.assertThat(result is AuthorisableActionResult.Success).isTrue
-    val validationResult = (result as AuthorisableActionResult.Success).entity
-
-    Assertions.assertThat(validationResult is ValidatableActionResult.Success).isTrue
-    validationResult as ValidatableActionResult.Success
-
-    Assertions.assertThat(validationResult.entity).isEqualTo(reallocation)
+    assertThatCasResult(result).isSuccess().with {
+      Assertions.assertThat(it).isEqualTo(reallocation)
+    }
   }
 
   @Test
@@ -237,10 +225,10 @@ class TaskServiceTest {
       )
       .produce()
 
-    every { placementApplicationServiceMock.reallocateApplication(assigneeUser, placementApplication.id) } returns AuthorisableActionResult.Success(
-      ValidatableActionResult.Success(
-        placementApplication,
-      ),
+    every {
+      placementApplicationServiceMock.reallocateApplication(assigneeUser, placementApplication.id)
+    } returns CasResult.Success(
+      placementApplication,
     )
 
     val transformedUser = mockk<ApprovedPremisesUser>()
@@ -254,13 +242,9 @@ class TaskServiceTest {
 
     val result = taskService.reallocateTask(requestUserWithPermission, TaskType.placementApplication, assigneeUser.id, placementApplication.id)
 
-    Assertions.assertThat(result is AuthorisableActionResult.Success).isTrue
-    val validationResult = (result as AuthorisableActionResult.Success).entity
-
-    Assertions.assertThat(validationResult is ValidatableActionResult.Success).isTrue
-    validationResult as ValidatableActionResult.Success
-
-    Assertions.assertThat(validationResult.entity).isEqualTo(reallocation)
+    assertThatCasResult(result).isSuccess().with {
+      Assertions.assertThat(it).isEqualTo(reallocation)
+    }
   }
 
   @Test

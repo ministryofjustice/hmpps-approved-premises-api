@@ -1732,12 +1732,7 @@ class AssessmentServiceTest {
         id = previousAssessment.id,
       )
 
-      assertThat(result is AuthorisableActionResult.Success).isTrue
-      val validationResult = (result as AuthorisableActionResult.Success).entity
-
-      assertThat(validationResult is ValidatableActionResult.GeneralValidationError).isTrue
-      validationResult as ValidatableActionResult.GeneralValidationError
-      assertThat(validationResult.message).isEqualTo("A decision has already been taken on this assessment")
+      assertThatCasResult(result).isGeneralValidationError("A decision has already been taken on this assessment")
     }
 
     @Test
@@ -1755,12 +1750,8 @@ class AssessmentServiceTest {
         id = previousAssessment.id,
       )
 
-      assertThat(result is AuthorisableActionResult.Success).isTrue
-      val validationResult = (result as AuthorisableActionResult.Success).entity
-
-      assertThat(validationResult is ValidatableActionResult.FieldValidationError).isTrue
-      validationResult as ValidatableActionResult.FieldValidationError
-      assertThat(validationResult.validationMessages).containsEntry("$.userId", "lacking assess application or assess appealed application permission")
+      assertThatCasResult(result).isFieldValidationError()
+        .hasMessage("$.userId", "lacking assess application or assess appealed application permission")
     }
 
     @Test
@@ -1782,12 +1773,7 @@ class AssessmentServiceTest {
         id = previousAssessment.id,
       )
 
-      assertThat(result is AuthorisableActionResult.Success).isTrue
-      val validationResult = (result as AuthorisableActionResult.Success).entity
-
-      assertThat(validationResult is ValidatableActionResult.FieldValidationError).isTrue
-      validationResult as ValidatableActionResult.FieldValidationError
-      assertThat(validationResult.validationMessages).containsEntry("$.userId", "lacking assess application or assess appealed application permission")
+      assertThatCasResult(result).isFieldValidationError().hasMessage("$.userId", "lacking assess application or assess appealed application permission")
     }
 
     @Test
@@ -1826,12 +1812,7 @@ class AssessmentServiceTest {
         id = previousAssessment.id,
       )
 
-      assertThat(result is AuthorisableActionResult.Success).isTrue
-      val validationResult = (result as AuthorisableActionResult.Success).entity
-
-      assertThat(validationResult is ValidatableActionResult.FieldValidationError).isTrue
-      validationResult as ValidatableActionResult.FieldValidationError
-      assertThat(validationResult.validationMessages).containsEntry("$.userId", "lackingQualifications")
+      assertThatCasResult(result).isFieldValidationError().hasMessage("$.userId", "lackingQualifications")
     }
 
     @Test
@@ -1849,13 +1830,7 @@ class AssessmentServiceTest {
         id = previousAssessment.id,
       )
 
-      assertThat(result is AuthorisableActionResult.Success).isTrue
-      val validationResult = (result as AuthorisableActionResult.Success).entity
-
-      assertThat(validationResult is ValidatableActionResult.ConflictError).isTrue
-      validationResult as ValidatableActionResult.ConflictError
-      assertThat(validationResult.conflictingEntityId).isEqualTo(previousAssessment.id)
-      assertThat(validationResult.message).isEqualTo("This assessment has already been reallocated")
+      assertThatCasResult(result).isConflictError().hasMessage("This assessment has already been reallocated")
     }
 
     @ParameterizedTest
@@ -1906,38 +1881,35 @@ class AssessmentServiceTest {
         id = previousAssessment.id,
       )
 
-      assertThat(result is AuthorisableActionResult.Success).isTrue
-      val validationResult = (result as AuthorisableActionResult.Success).entity
+      assertThatCasResult(result).isSuccess().with { newAssessment ->
 
-      assertThat(validationResult is ValidatableActionResult.Success).isTrue
-      val newAssessment = (validationResult as ValidatableActionResult.Success).entity as ApprovedPremisesAssessmentEntity
+        assertThat(previousAssessment.reallocatedAt).isNotNull
+        assertThat((newAssessment as ApprovedPremisesAssessmentEntity).createdFromAppeal).isEqualTo(createdFromAppeal)
+        assertThat(newAssessment.dueAt).isEqualTo(dueAt)
 
-      assertThat(previousAssessment.reallocatedAt).isNotNull
-      assertThat(newAssessment.createdFromAppeal).isEqualTo(createdFromAppeal)
-      assertThat(newAssessment.dueAt).isEqualTo(dueAt)
+        verify { assessmentRepositoryMock.save(match { it.allocatedToUser == assigneeUser }) }
 
-      verify { assessmentRepositoryMock.save(match { it.allocatedToUser == assigneeUser }) }
+        verify(exactly = 1) {
+          cas1AssessmentEmailServiceMock.assessmentAllocated(
+            match { it.id == assigneeUser.id },
+            any<UUID>(),
+            application,
+            dueAt,
+            false,
+          )
+        }
 
-      verify(exactly = 1) {
-        cas1AssessmentEmailServiceMock.assessmentAllocated(
-          match { it.id == assigneeUser.id },
-          any<UUID>(),
-          application,
-          dueAt,
-          false,
-        )
-      }
+        verify(exactly = 1) {
+          cas1AssessmentEmailServiceMock.assessmentDeallocated(
+            match { it.id == previousAssessment.allocatedToUser!!.id },
+            any<UUID>(),
+            application,
+          )
+        }
 
-      verify(exactly = 1) {
-        cas1AssessmentEmailServiceMock.assessmentDeallocated(
-          match { it.id == previousAssessment.allocatedToUser!!.id },
-          any<UUID>(),
-          application,
-        )
-      }
-
-      verify {
-        cas1AssessmentDomainEventService.assessmentAllocated(any(), assigneeUser, actingUser)
+        verify {
+          cas1AssessmentDomainEventService.assessmentAllocated(any(), assigneeUser, actingUser)
+        }
       }
     }
 
@@ -1989,38 +1961,35 @@ class AssessmentServiceTest {
         id = previousAssessment.id,
       )
 
-      assertThat(result is AuthorisableActionResult.Success).isTrue
-      val validationResult = (result as AuthorisableActionResult.Success).entity
+      assertThatCasResult(result).isSuccess().with { newAssessment ->
 
-      assertThat(validationResult is ValidatableActionResult.Success).isTrue
-      val newAssessment = (validationResult as ValidatableActionResult.Success).entity as ApprovedPremisesAssessmentEntity
+        assertThat(previousAssessment.reallocatedAt).isNotNull
+        assertThat((newAssessment as ApprovedPremisesAssessmentEntity).createdFromAppeal).isEqualTo(true)
+        assertThat(newAssessment.dueAt).isEqualTo(dueAt)
 
-      assertThat(previousAssessment.reallocatedAt).isNotNull
-      assertThat(newAssessment.createdFromAppeal).isEqualTo(true)
-      assertThat(newAssessment.dueAt).isEqualTo(dueAt)
+        verify { assessmentRepositoryMock.save(match { it.allocatedToUser == assigneeUser }) }
 
-      verify { assessmentRepositoryMock.save(match { it.allocatedToUser == assigneeUser }) }
+        verify(exactly = 1) {
+          cas1AssessmentEmailServiceMock.assessmentAllocated(
+            match { it.id == assigneeUser.id },
+            any<UUID>(),
+            application,
+            dueAt,
+            false,
+          )
+        }
 
-      verify(exactly = 1) {
-        cas1AssessmentEmailServiceMock.assessmentAllocated(
-          match { it.id == assigneeUser.id },
-          any<UUID>(),
-          application,
-          dueAt,
-          false,
-        )
-      }
+        verify(exactly = 1) {
+          cas1AssessmentEmailServiceMock.assessmentDeallocated(
+            match { it.id == previousAssessment.allocatedToUser!!.id },
+            any<UUID>(),
+            application,
+          )
+        }
 
-      verify(exactly = 1) {
-        cas1AssessmentEmailServiceMock.assessmentDeallocated(
-          match { it.id == previousAssessment.allocatedToUser!!.id },
-          any<UUID>(),
-          application,
-        )
-      }
-
-      verify {
-        cas1AssessmentDomainEventService.assessmentAllocated(any(), assigneeUser, actingUser)
+        verify {
+          cas1AssessmentDomainEventService.assessmentAllocated(any(), assigneeUser, actingUser)
+        }
       }
     }
   }
@@ -2067,12 +2036,7 @@ class AssessmentServiceTest {
       id = previousAssessment.id,
     )
 
-    assertThat(result is AuthorisableActionResult.Success).isTrue
-    val validationResult = (result as AuthorisableActionResult.Success).entity
-
-    assertThat(validationResult is ValidatableActionResult.FieldValidationError).isTrue
-    validationResult as ValidatableActionResult.FieldValidationError
-    assertThat(validationResult.validationMessages).containsEntry("$.userId", "lackingAssessorRole")
+    assertThatCasResult(result).isFieldValidationError().hasMessage("$.userId", "lackingAssessorRole")
   }
 
   @Test
@@ -2133,16 +2097,12 @@ class AssessmentServiceTest {
       id = previousAssessment.id,
     )
 
-    assertThat(result is AuthorisableActionResult.Success).isTrue
-    val validationResult = (result as AuthorisableActionResult.Success).entity
+    assertThatCasResult(result).isSuccess().with {
+      assertThat(it).isEqualTo(previousAssessment)
+      assertAssessmentHasSystemNote(it, assigneeUser, ReferralHistorySystemNoteType.IN_REVIEW)
 
-    assertThat(validationResult is ValidatableActionResult.Success).isTrue
-    validationResult as ValidatableActionResult.Success
-
-    assertThat(validationResult.entity).isEqualTo(previousAssessment)
-    assertAssessmentHasSystemNote(validationResult.entity, assigneeUser, ReferralHistorySystemNoteType.IN_REVIEW)
-
-    verify { assessmentRepositoryMock.save(match { it.allocatedToUser == assigneeUser }) }
+      verify { assessmentRepositoryMock.save(match { it.allocatedToUser == assigneeUser }) }
+    }
   }
 
   @Test

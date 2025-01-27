@@ -43,6 +43,7 @@ class SeedCas1ImportDeliusReferralsTest : SeedTestBase() {
       contents = listOf(
         Cas1DeliusImportDeliusReferralRowRaw(
           crn = "CRN1",
+          approvedPremisesReferralId = "Delius Referral Id",
           eventNumber = "1",
           decisionCode = "A1",
           decisionDescription = "Accepted Code 1",
@@ -57,6 +58,7 @@ class SeedCas1ImportDeliusReferralsTest : SeedTestBase() {
     val bookingImport = cas1DeliusBookingImportRepository.findAll()[0]
 
     assertThat(bookingImport.bookingId).isNull()
+    assertThat(bookingImport.approvedPremisesReferralId).isEqualTo("Delius Referral Id")
     assertThat(bookingImport.crn).isEqualTo("CRN1")
     assertThat(bookingImport.eventNumber).isEqualTo("1")
     assertThat(bookingImport.keyWorkerStaffCode).isNull()
@@ -88,6 +90,7 @@ class SeedCas1ImportDeliusReferralsTest : SeedTestBase() {
         Cas1DeliusImportDeliusReferralRowRaw(
           bookingId = bookingId.toString(),
           crn = "CRN2",
+          approvedPremisesReferralId = "Delius Referral Id",
           eventNumber = "2",
           keyWorkerStaffCode = "kw1",
           keyWorkerForename = "kwForename",
@@ -118,6 +121,7 @@ class SeedCas1ImportDeliusReferralsTest : SeedTestBase() {
     val bookingImport = cas1DeliusBookingImportRepository.findAll()[0]
 
     assertThat(bookingImport.bookingId).isEqualTo(bookingId)
+    assertThat(bookingImport.approvedPremisesReferralId).isEqualTo("Delius Referral Id")
     assertThat(bookingImport.crn).isEqualTo("CRN2")
     assertThat(bookingImport.eventNumber).isEqualTo("2")
     assertThat(bookingImport.keyWorkerStaffCode).isEqualTo("kw1")
@@ -153,6 +157,7 @@ class SeedCas1ImportDeliusReferralsTest : SeedTestBase() {
       allDecisionCodes.map { decisionCode ->
         Cas1DeliusImportDeliusReferralRowRaw(
           crn = decisionCode,
+          approvedPremisesReferralId = "Delius Referral Id",
           eventNumber = "1",
           decisionCode = decisionCode,
           decisionDescription = decisionCode,
@@ -170,7 +175,7 @@ class SeedCas1ImportDeliusReferralsTest : SeedTestBase() {
   }
 
   @Test
-  fun `Fields containing invalid data are set to null`() {
+  fun `Fields containing data known to be unusable are set to null`() {
     val bookingId = UUID.randomUUID()
 
     withCsv(
@@ -178,6 +183,7 @@ class SeedCas1ImportDeliusReferralsTest : SeedTestBase() {
       contents = listOf(
         Cas1DeliusImportDeliusReferralRowRaw(
           bookingId = bookingId.toString(),
+          approvedPremisesReferralId = "Delius Referral Id",
           crn = "CRN1",
           eventNumber = "1",
           expectedArrivalDate = "2024-06-15 00:00:00",
@@ -212,6 +218,7 @@ class SeedCas1ImportDeliusReferralsTest : SeedTestBase() {
     val builder = CsvBuilder()
       .withUnquotedFields(
         "BOOKING_ID",
+        "APPROVED_PREMISES_REFERRAL_ID",
         "CRN",
         "EVENT_NUMBER",
         "KEY_WORKER_STAFF_CODE",
@@ -240,6 +247,7 @@ class SeedCas1ImportDeliusReferralsTest : SeedTestBase() {
     this.forEach {
       builder
         .withQuotedField(it.bookingId)
+        .withQuotedField(it.approvedPremisesReferralId)
         .withQuotedField(it.crn)
         .withQuotedField(it.eventNumber)
         .withQuotedField(it.keyWorkerStaffCode)
@@ -270,6 +278,7 @@ class SeedCas1ImportDeliusReferralsTest : SeedTestBase() {
 
   data class Cas1DeliusImportDeliusReferralRowRaw(
     val bookingId: String = "",
+    val approvedPremisesReferralId: String = "",
     val crn: String = "",
     val eventNumber: String = "",
     val keyWorkerStaffCode: String = "",

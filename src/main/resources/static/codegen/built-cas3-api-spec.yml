@@ -481,7 +481,6 @@ components:
         - Assessment
         - PlacementRequest
         - PlacementApplication
-        - BookingAppeal
     LocalAuthorityArea:
       type: object
       properties:

@@ -361,6 +361,15 @@ data class Cas1SpaceBookingEntity(
    */
   @Enumerated(EnumType.STRING)
   val migratedManagementInfoFrom: ManagementInfoSource?,
+  /**
+   * Delius' internal identifier for this referral.
+   *
+   * This will only be set for bookings back-filled from referrals created
+   * in delius, or those where management information was back-filled from
+   * delius when converted from a legacy booking. It is captured for support
+   * purposes
+   */
+  val deliusId: String?,
   @Version
   var version: Long = 1,
 ) {
