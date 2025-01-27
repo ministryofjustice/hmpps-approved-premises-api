@@ -95,6 +95,7 @@ class SeedCas1BackfillActiveSpaceBookingsCreatedInDeliusTest : SeedTestBase() {
     val deliusBooking = Cas1DeliusBookingImportEntity(
       id = UUID.randomUUID(),
       bookingId = null,
+      approvedPremisesReferralId = "Delius Referral Id",
       crn = "CRN1",
       eventNumber = "67",
       keyWorkerStaffCode = "kw001",

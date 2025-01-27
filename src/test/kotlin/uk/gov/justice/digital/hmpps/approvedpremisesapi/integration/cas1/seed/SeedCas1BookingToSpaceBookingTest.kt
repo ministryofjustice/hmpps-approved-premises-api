@@ -163,6 +163,7 @@ class SeedCas1BookingToSpaceBookingTest : SeedTestBase() {
       Cas1DeliusBookingImportEntity(
         id = UUID.randomUUID(),
         bookingId = booking1ManagementInfoFromDelius.id,
+        approvedPremisesReferralId = "Delius Ref Id",
         crn = "irrelevant",
         eventNumber = "irrelevant",
         keyWorkerStaffCode = "kw001",
@@ -213,6 +214,7 @@ class SeedCas1BookingToSpaceBookingTest : SeedTestBase() {
       Cas1DeliusBookingImportEntity(
         id = UUID.randomUUID(),
         bookingId = booking2MinimalManagementInfoFromDelius.id,
+        approvedPremisesReferralId = "Delius Ref Id",
         crn = "irrelevant",
         eventNumber = "irrelevant",
         keyWorkerStaffCode = null,
