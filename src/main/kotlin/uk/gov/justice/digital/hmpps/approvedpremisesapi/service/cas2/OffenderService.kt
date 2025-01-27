@@ -84,56 +84,11 @@ class OffenderService(
     }
   }
 
-  fun getPersonByNomsNumber(nomsNumber: String, currentUser: NomisUserEntity): ProbationOffenderSearchResult {
-    fun logFailedResponse(probationResponse: ClientResult.Failure<List<ProbationOffenderDetail>>) =
-      log.warn("Could not get inmate details for $nomsNumber", probationResponse.toException())
-
-    val probationResponse = probationOffenderSearchApiClient.searchOffenderByNomsNumber(nomsNumber)
-
-    val probationOffenderDetailList = when (probationResponse) {
-      is ClientResult.Success -> probationResponse.body
-      is ClientResult.Failure.StatusCode -> when (probationResponse.status) {
-        HttpStatus.NOT_FOUND -> return ProbationOffenderSearchResult.NotFound(nomsNumber)
-        HttpStatus.FORBIDDEN -> return ProbationOffenderSearchResult.Forbidden(nomsNumber, probationResponse.toException())
-        else -> {
-          logFailedResponse(probationResponse)
-          return ProbationOffenderSearchResult.Unknown(nomsNumber, probationResponse.toException())
-        }
-      }
-
-      is ClientResult.Failure -> {
-        logFailedResponse(probationResponse)
-        return ProbationOffenderSearchResult.Unknown(nomsNumber, probationResponse.toException())
-      }
-    }
-
-    if (probationOffenderDetailList.isEmpty()) {
-      return ProbationOffenderSearchResult.NotFound(nomsNumber)
-    } else {
-      val probationOffenderDetail = probationOffenderDetailList[0]
-
-      // check for restrictions or exclusions
-      if (hasRestrictionOrExclusion(probationOffenderDetail)) return ProbationOffenderSearchResult.Forbidden(nomsNumber)
-
-      // check inmate details from Prison API
-      val inmateDetails = getInmateDetailsForProbationOffender(probationOffenderDetail)
-        ?: return ProbationOffenderSearchResult.NotFound(nomsNumber)
-
-      // check if same prison
-      return if (isOffenderSamePrisonAsUser(inmateDetails, currentUser)) {
-        ProbationOffenderSearchResult.Success.Full(nomsNumber, probationOffenderDetail, inmateDetails)
-      } else {
-        ProbationOffenderSearchResult.Forbidden(nomsNumber)
-      }
-    }
-  }
+  fun getPersonByNomsNumber(nomsNumber: String, currentUser: NomisUserEntity) =
+    currentUser.activeCaseloadId?.let { getPersonByNomsNumberAndActiveCaseLoadId(nomsNumber, it) }
 
   private fun hasRestrictionOrExclusion(probationOffenderDetail: ProbationOffenderDetail): Boolean {
     return probationOffenderDetail.currentExclusion == true || probationOffenderDetail.currentRestriction == true
-  }
-
-  private fun isOffenderSamePrisonAsUser(inmateDetail: InmateDetail?, currentUser: NomisUserEntity): Boolean {
-    return currentUser.activeCaseloadId == inmateDetail?.assignedLivingUnit?.agencyId
   }
 
   private fun getInmateDetailsForProbationOffender(probationOffenderDetail: ProbationOffenderDetail): InmateDetail? {

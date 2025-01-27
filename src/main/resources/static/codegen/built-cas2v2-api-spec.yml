@@ -413,20 +413,55 @@ paths:
           $ref: '#/components/responses/403Response'
         500:
           $ref: '#/components/responses/500Response'
-  /people/search:
+  /people/search-by-crn/{crn}:
     get:
       tags:
         - People operations
-      summary: Searches for a Person by their Prison Number (NOMIS ID) or CRN
+      summary: Searches for a Person by their CRN
+      operationId: searchByCrnGet
       parameters:
-        - name: nomsNumber
-          in: query
-          description: Prison Number to search for
+        - name: crn
+          in: path
+          required: true
+          description: CRN to search for
           schema:
             type: string
-        - name: crn
-          in: query
-          description: CRN to search for
+      responses:
+        200:
+          description: successful operation
+          content:
+            'application/json':
+              schema:
+                $ref: '#/components/schemas/Person'
+        400:
+          description: invalid params
+          content:
+            'application/problem+json':
+              schema:
+                $ref: '#/components/schemas/ValidationError'
+        404:
+          description: invalid CRN
+          content:
+            'application/json':
+              schema:
+                $ref: '#/components/schemas/Problem'
+        401:
+          $ref: '#/components/responses/401Response'
+        403:
+          $ref: '#/components/responses/403Response'
+        500:
+          $ref: '#/components/responses/500Response'
+  /people/search-by-noms/{nomsNumber}:
+    get:
+      tags:
+        - People operations
+      summary: Searches for a Person by their Prison Number (NOMIS ID)
+      operationId: searchByNomisIdGet
+      parameters:
+        - name: nomsNumber
+          in: path
+          description: Prison Number to search for
+          required: true
           schema:
             type: string
       responses:

@@ -19,6 +19,8 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.datasource.OffenderDetai
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.datasource.OffenderRisksDataSource
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserQualification
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas2v2.Cas2v2UserEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas2v2.Cas2v2UserType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PersonInfoResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PersonRisks
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PersonSummaryInfoResult
@@ -781,3 +783,8 @@ fun UserEntity.cas1LimitedAccessStrategy() = if (this.hasQualification(UserQuali
 }
 
 fun UserEntity.cas3LimitedAccessStrategy() = LimitedAccessStrategy.ReturnRestrictedIfLimitedAccess(this.deliusUsername)
+
+fun Cas2v2UserEntity.limitedAccessStrategy() = when (userType) {
+  Cas2v2UserType.DELIUS -> LimitedAccessStrategy.ReturnRestrictedIfLimitedAccess(this.username)
+  else -> error("Can't provide strategy for users of type $userType")
+}

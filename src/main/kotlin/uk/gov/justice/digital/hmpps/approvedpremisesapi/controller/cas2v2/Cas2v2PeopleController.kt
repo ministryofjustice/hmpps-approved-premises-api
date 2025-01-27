@@ -18,6 +18,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.ForbiddenProblem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.NotFoundProblem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.AuthorisableActionResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas2v2.Cas2v2UserService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.limitedAccessStrategy
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.OASysSectionsTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.PersonTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.RisksTransformer
@@ -34,16 +35,20 @@ class Cas2v2PeopleController(
   private val cas2v2UserService: Cas2v2UserService,
 ) : PeopleCas2v2Delegate {
 
-  override fun peopleSearchGet(nomsNumber: String?, crn: String?): ResponseEntity<Person> {
-    return when {
-      nomsNumber != null -> searchByNoms(nomsNumber)
-      crn != null -> searchByCrn(crn)
-      else -> throw BadRequestProblem(errorDetail = "Either nomsNumber or crn must be provided")
+  override fun searchByCrnGet(crn: String): ResponseEntity<Person> {
+    val deliusUser = cas2v2UserService.getUserForRequest()
+    val personInfo = deliusOffenderService.getPersonInfoResult(crn, deliusUser.limitedAccessStrategy())
+
+    when (personInfo) {
+      is PersonInfoResult.NotFound -> throw NotFoundProblem(crn, "Offender")
+      is PersonInfoResult.Unknown -> throw personInfo.throwable ?: BadRequestProblem(errorDetail = "Could not retrieve person info for CRN: $crn")
+      is PersonInfoResult.Success -> return ResponseEntity.ok(
+        personTransformer.transformModelToPersonApi(personInfo),
+      )
     }
   }
 
-  @SuppressWarnings("ThrowsCount")
-  private fun searchByNoms(nomsNumber: String): ResponseEntity<Person> {
+  override fun searchByNomisIdGet(nomsNumber: String): ResponseEntity<Person> {
     val currentUser = cas2v2UserService.getUserForRequest()
     val caseLoadId = currentUser.activeNomisCaseloadId ?: return ResponseEntity.notFound().build()
     val probationOffenderResult = nomsOffenderService.getPersonByNomsNumberAndActiveCaseLoadId(nomsNumber, caseLoadId)
@@ -57,20 +62,6 @@ class Cas2v2PeopleController(
 
       is ProbationOffenderSearchResult.Success.Full -> return ResponseEntity.ok(
         personTransformer.transformProbationOffenderToPersonApi(probationOffenderResult, nomsNumber),
-      )
-    }
-  }
-
-  private fun searchByCrn(crn: String): ResponseEntity<Person> {
-    val deliusUser = cas2v2UserService.getUserForRequest()
-
-    val personInfo = deliusOffenderService.getPersonInfoResult(crn, deliusUser.username, false)
-
-    when (personInfo) {
-      is PersonInfoResult.NotFound -> throw NotFoundProblem(crn, "Offender")
-      is PersonInfoResult.Unknown -> throw personInfo.throwable ?: BadRequestProblem(errorDetail = "Could not retrieve person info for CRN: $crn")
-      is PersonInfoResult.Success -> return ResponseEntity.ok(
-        personTransformer.transformModelToPersonApi(personInfo),
       )
     }
   }
