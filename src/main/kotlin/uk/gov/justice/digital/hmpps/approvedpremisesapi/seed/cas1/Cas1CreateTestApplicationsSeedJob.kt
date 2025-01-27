@@ -20,6 +20,7 @@ class Cas1CreateTestApplicationsSeedJob(
     "crn",
     "count",
     "state",
+    "premises_qcode",
   ),
   runInTransaction = false,
 ) {
@@ -34,6 +35,7 @@ class Cas1CreateTestApplicationsSeedJob(
       crn = seedColumns.getStringOrNull("crn")!!,
       count = seedColumns.getIntOrNull("count")!!,
       state = Cas1ApplicationSeedService.ApplicationState.valueOf(seedColumns.getStringOrNull("state")!!),
+      premisesQCode = seedColumns.getStringOrNull("premises_qcode"),
     )
   }
 
@@ -56,6 +58,7 @@ class Cas1CreateTestApplicationsSeedJob(
               crn = crn,
               createIfExistingApplicationForCrn = true,
               state = row.state,
+              premisesQCode = row.premisesQCode,
             )
           }
         }
@@ -71,4 +74,5 @@ data class Cas1CreateTestApplicationsSeedCsvRow(
   val crn: String,
   val count: Int,
   val state: Cas1ApplicationSeedService.ApplicationState,
+  val premisesQCode: String?,
 )

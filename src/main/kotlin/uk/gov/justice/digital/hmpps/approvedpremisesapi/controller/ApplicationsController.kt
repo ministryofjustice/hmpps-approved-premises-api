@@ -31,6 +31,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.UpdateApproved
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.UpdateTemporaryAccommodationApplication
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Withdrawable
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Withdrawables
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.controller.cas1.Cas1TimelineService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.OfflineApplicationEntity
@@ -87,6 +88,7 @@ class ApplicationsController(
   private val withdrawableTransformer: WithdrawableTransformer,
   private val applicationTimelineNoteService: ApplicationTimelineNoteService,
   private val applicationTimelineNoteTransformer: ApplicationTimelineNoteTransformer,
+  private val cas1TimelineService: Cas1TimelineService,
 ) : ApplicationsApiDelegate {
 
   override fun applicationsGet(xServiceName: ServiceName?): ResponseEntity<List<ApplicationSummary>> {
@@ -308,7 +310,7 @@ class ApplicationsController(
     if (xServiceName != ServiceName.approvedPremises) {
       throw NotImplementedProblem("Timeline is only supported for Approved Premises applications")
     }
-    val events = applicationService.getApplicationTimeline(applicationId)
+    val events = cas1TimelineService.getApplicationTimeline(applicationId)
     return ResponseEntity(events, HttpStatus.OK)
   }
 

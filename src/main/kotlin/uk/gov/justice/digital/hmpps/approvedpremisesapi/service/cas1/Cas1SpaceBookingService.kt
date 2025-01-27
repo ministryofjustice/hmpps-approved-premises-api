@@ -29,7 +29,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PaginationMetadata
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.validatedCasResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.InternalServerErrorProblem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.CasResult
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.PlacementRequestService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.StaffMemberService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.UserService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.PageCriteria
@@ -138,6 +137,7 @@ class Cas1SpaceBookingService(
         nonArrivalReason = null,
         deliusEventNumber = application.eventNumber,
         migratedManagementInfoFrom = null,
+        deliusId = null,
       ),
     )
 
@@ -162,8 +162,7 @@ class Cas1SpaceBookingService(
     arrivalDate: LocalDate,
     arrivalTime: LocalTime,
   ): CasResult<Cas1SpaceBookingEntity> = validatedCasResult {
-    val premises = cas1PremisesService.findPremiseById(premisesId)
-    if (premises == null) {
+    if (cas1PremisesService.findPremiseById(premisesId) == null) {
       "$.premisesId" hasValidationError "doesNotExist"
     }
 
@@ -171,6 +170,7 @@ class Cas1SpaceBookingService(
     if (existingCas1SpaceBooking == null) {
       "$.bookingId" hasValidationError "doesNotExist"
     }
+
     if (validationErrors.any()) {
       return fieldValidationError
     }
@@ -215,8 +215,7 @@ class Cas1SpaceBookingService(
     cas1NonArrival: Cas1NonArrival,
     recordedBy: UserEntity,
   ): CasResult<Cas1SpaceBookingEntity> = validatedCasResult {
-    val premises = cas1PremisesService.findPremiseById(premisesId)
-    if (premises == null) {
+    if (cas1PremisesService.findPremiseById(premisesId) == null) {
       "$.premisesId" hasValidationError "doesNotExist"
     }
 
@@ -327,8 +326,7 @@ class Cas1SpaceBookingService(
     bookingId: UUID,
     departureInfo: DepartureInfo,
   ): CasResult<Cas1SpaceBookingEntity> = validatedCasResult {
-    val premises = cas1PremisesService.findPremiseById(premisesId)
-    if (premises == null) {
+    if (cas1PremisesService.findPremiseById(premisesId) == null) {
       "$.premisesId" hasValidationError "doesNotExist"
     }
 
@@ -558,6 +556,7 @@ class Cas1SpaceBookingService(
 
     val previousArrivalDate = bookingToUpdate.expectedArrivalDate
     val previousDepartureDate = bookingToUpdate.expectedDepartureDate
+    val previousCharacteristics = bookingToUpdate.criteria.toList()
 
     val updatedBooking = updateExistingSpaceBooking(bookingToUpdate, updateSpaceBookingDetails)
 
@@ -567,6 +566,7 @@ class Cas1SpaceBookingService(
       bookingChangedAt = OffsetDateTime.now(),
       previousArrivalDateIfChanged = if (previousArrivalDate != updatedBooking.expectedArrivalDate) previousArrivalDate else null,
       previousDepartureDateIfChanged = if (previousDepartureDate != updatedBooking.expectedDepartureDate) previousDepartureDate else null,
+      previousCharacteristicsIfChanged = if (previousCharacteristics.sortedBy { it.id } != updatedBooking.criteria.sortedBy { it.id }) previousCharacteristics else null,
     )
 
     success(updatedBooking)
@@ -615,7 +615,21 @@ class Cas1SpaceBookingService(
       updateFullBookingDates(bookingToUpdate, newArrivalDate, newDepartureDate)
     }
 
+    if (updateSpaceBookingDetails.characteristics?.isNotEmpty() == true) {
+      updateRoomCharacteristics(bookingToUpdate, updateSpaceBookingDetails.characteristics)
+    }
+
     return cas1SpaceBookingRepository.save(bookingToUpdate)
+  }
+
+  private fun updateRoomCharacteristics(
+    booking: Cas1SpaceBookingEntity,
+    newRoomCharacteristics: List<CharacteristicEntity>,
+  ) {
+    booking.criteria.apply {
+      retainAll { it.isModelScopePremises() }
+      addAll(newRoomCharacteristics)
+    }
   }
 
   private fun updateDepartureDates(booking: Cas1SpaceBookingEntity, newDepartureDate: LocalDate) {
@@ -642,6 +656,7 @@ class Cas1SpaceBookingService(
     val premisesId: UUID,
     val arrivalDate: LocalDate?,
     val departureDate: LocalDate?,
+    val characteristics: List<CharacteristicEntity>?,
     val updatedBy: UserEntity,
   )
 

@@ -1057,6 +1057,7 @@ paths:
       tags:
         - Reports
       summary: Returns a spreadsheet of all data metrics for the 'reportName'.
+      operationId: reportsReportNameGet
       parameters:
         - name: X-Service-Name
           in: header
@@ -1284,6 +1285,75 @@ paths:
           $ref: '#/components/responses/403Response'
         500:
           $ref: '#/components/responses/500Response'
+  /applications/{applicationId}/timeline:
+    get:
+      tags:
+        - Applications
+      summary: Returns domain event summary
+      operationId: getApplicationTimeLine
+      parameters:
+        - name: applicationId
+          in: path
+          description: ID of the application
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        200:
+          description: successful operation
+          content:
+            'application/json':
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/TimelineEvent'
+        401:
+          $ref: '#/components/responses/401Response'
+        403:
+          $ref: '#/components/responses/403Response'
+        404:
+          description: invalid CRN
+          content:
+            'application/json':
+              schema:
+                $ref: '#/components/schemas/Problem'
+        500:
+          $ref: '#/components/responses/500Response'
+  /people/{crn}/timeline:
+    get:
+      tags:
+        - People
+      summary: Returns a timeline of all applications for a Person.
+      operationId: getPeopleApplicationsTimeline
+      parameters:
+        - name: crn
+          in: path
+          description: CRN of the Person to fetch the timeline for
+          required: true
+          schema:
+            type: string
+      responses:
+        200:
+          description: successful operation
+          content:
+            'application/json':
+              schema:
+                $ref: '#/components/schemas/PersonalTimeline'
+        401:
+          $ref: '#/components/responses/401Response'
+        403:
+          $ref: '#/components/responses/403Response'
+        404:
+          description: invalid CRN
+          content:
+            'application/json':
+              schema:
+                $ref: '#/components/schemas/Problem'
+        500:
+          $ref: '#/components/responses/500Response'
+
+
 components:
   responses:
     401Response:
@@ -1667,7 +1737,6 @@ components:
         - Assessment
         - PlacementRequest
         - PlacementApplication
-        - BookingAppeal
     LocalAuthorityArea:
       type: object
       properties:
@@ -2881,21 +2950,19 @@ components:
           format: int64
         comment:
           type: string
+        description:
+          type: string
         dateCreated:
           type: string
           format: date
         dateExpires:
           type: string
           format: date
-        expired:
-          type: boolean
-        active:
-          type: boolean
+        alertTypeDescription:
+            type: string
       required:
         - alertId
         - dateCreated
-        - expired
-        - active
     Application:
       type: object
       properties:
@@ -3058,7 +3125,6 @@ components:
           items:
             $ref: '#/components/schemas/Cas2TimelineEvent'
         assessment:
-          type: object
           $ref: '#/components/schemas/Cas2Assessment'
       required:
         - id
@@ -4615,7 +4681,6 @@ components:
             characteristics:
               type: array
               items:
-                type: object
                 $ref: '#/components/schemas/CharacteristicPair'
           required:
             - characteristics
@@ -6354,11 +6419,13 @@ components:
       properties:
         apTypes:
           deprecated: true
-          description: "Searching on multiple types is not supported, instead use apType. If this is used, the first type wll be matched, and type 'normal' will be ignored"
+          description: "Use 'spaceCharacteristics' to filter on premise types"
           type: array
           items:
             $ref: '#/components/schemas/ApType'
         apType:
+          deprecated: true
+          description: "Use 'spaceCharacteristics' to filter on premise types"
           $ref: '#/components/schemas/ApType'
         spaceCharacteristics:
           type: array
@@ -6921,6 +6988,9 @@ components:
         id:
           type: string
           format: uuid
+        bedId:
+          type: string
+          format: uuid
         roomName:
           type: string
         startDate:
@@ -6937,6 +7007,7 @@ components:
             $ref: '#/components/schemas/Cas1SpaceCharacteristic'
       required:
         - id
+        - bedId
         - startDate
         - endDate
         - reason

@@ -17,13 +17,6 @@ import java.util.UUID
 
 class ApprovedPremisesAssessmentEntityFactory : Factory<ApprovedPremisesAssessmentEntity> {
 
-  companion object {
-    val DEFAULT = ApprovedPremisesAssessmentEntityFactory()
-      .withApplication(ApprovedPremisesApplicationEntityFactory.DEFAULT)
-      .withAllocatedToUser(UserEntityFactory.DEFAULT)
-      .produce()
-  }
-
   private var id: Yielded<UUID> = { UUID.randomUUID() }
   private var data: Yielded<String?> = { "{}" }
   private var document: Yielded<String?> = { "{}" }

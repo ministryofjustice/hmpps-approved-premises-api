@@ -141,12 +141,7 @@ interface Cas1SpaceBookingRepository : JpaRepository<Cas1SpaceBookingEntity, UUI
         ELSE
             oa.name
       END as personName,
-      CASE
-        WHEN 
-            apa.id IS NOT NULL THEN apa.release_type
-        ELSE
-            null
-      END as releaseType, 
+      apa.release_type as releaseType, 
       ( 
         SELECT STRING_AGG (characteristics.property_name, ',')
         FROM cas1_space_bookings_criteria sbc
@@ -349,7 +344,7 @@ data class Cas1SpaceBookingEntity(
     joinColumns = [JoinColumn(name = "space_booking_id")],
     inverseJoinColumns = [JoinColumn(name = "characteristic_id")],
   )
-  val criteria: MutableList<CharacteristicEntity>,
+  var criteria: MutableList<CharacteristicEntity>,
   var nonArrivalConfirmedAt: Instant?,
   @ManyToOne(fetch = FetchType.LAZY)
   @JoinColumn(name = "non_arrival_reason_id")
@@ -366,6 +361,15 @@ data class Cas1SpaceBookingEntity(
    */
   @Enumerated(EnumType.STRING)
   val migratedManagementInfoFrom: ManagementInfoSource?,
+  /**
+   * Delius' internal identifier for this referral.
+   *
+   * This will only be set for bookings back-filled from referrals created
+   * in delius, or those where management information was back-filled from
+   * delius when converted from a legacy booking. It is captured for support
+   * purposes
+   */
+  val deliusId: String?,
   @Version
   var version: Long = 1,
 ) {

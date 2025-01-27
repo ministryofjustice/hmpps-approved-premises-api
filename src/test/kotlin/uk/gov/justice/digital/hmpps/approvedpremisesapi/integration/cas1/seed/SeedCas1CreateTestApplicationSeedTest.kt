@@ -5,6 +5,7 @@ import org.junit.jupiter.api.Test
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.SeedFileType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.NeedsDetailsFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAUser
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAnApprovedPremises
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAnOffender
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.apDeliusContextMockSuccessfulTeamsManagingCaseCall
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.apOASysContextMockSuccessfulNeedsDetailsCall
@@ -29,6 +30,8 @@ class SeedCas1CreateTestApplicationSeedTest : SeedTestBase() {
     apOASysContextMockSuccessfulNeedsDetailsCall(crn, NeedsDetailsFactory().produce())
     govUKBankHolidaysAPIMockSuccessfullCallWithEmptyResponse()
 
+    val premises = givenAnApprovedPremises(supportsSpaceBookings = true)
+
     postCodeDistrictFactory.produceAndPersist()
 
     withCsv(
@@ -38,7 +41,8 @@ class SeedCas1CreateTestApplicationSeedTest : SeedTestBase() {
           creatorUsername = user.deliusUsername,
           crn = crn,
           count = 1,
-          state = Cas1ApplicationSeedService.ApplicationState.AUTHORISED,
+          state = Cas1ApplicationSeedService.ApplicationState.BOOKED,
+          premisesQCode = premises.qCode,
         ),
       ).toCsv(),
     )
@@ -56,6 +60,7 @@ class SeedCas1CreateTestApplicationSeedTest : SeedTestBase() {
         "crn",
         "count",
         "state",
+        "premises_qcode",
       )
       .newRow()
 
@@ -65,6 +70,7 @@ class SeedCas1CreateTestApplicationSeedTest : SeedTestBase() {
         .withQuotedField(it.crn)
         .withQuotedField(it.count)
         .withQuotedField(it.state)
+        .withQuotedField(it.premisesQCode ?: "")
         .newRow()
     }
 

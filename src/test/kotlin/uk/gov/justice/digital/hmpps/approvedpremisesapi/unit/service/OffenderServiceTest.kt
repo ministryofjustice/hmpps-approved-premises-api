@@ -19,6 +19,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.ApOASysContextApi
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.CaseNotesClient
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.ClientResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.ClientResult.Failure.StatusCode
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.PrisonerAlertsApiClient
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.PrisonsApiClient
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.config.ExcludedCategoryBindingModel
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.config.PrisonAdjudicationsConfigBindingModel
@@ -60,6 +61,7 @@ import java.time.LocalDate
 
 class OffenderServiceTest {
   private val mockPrisonsApiClient = mockk<PrisonsApiClient>()
+  private val mockPrisonerAlertsApiClient = mockk<PrisonerAlertsApiClient>()
   private val mockCaseNotesClient = mockk<CaseNotesClient>()
   private val mockApOASysContextApiClient = mockk<ApOASysContextApiClient>()
   private val mockApDeliusContextApiClient = mockk<ApDeliusContextApiClient>()
@@ -89,6 +91,7 @@ class OffenderServiceTest {
 
   private val offenderService = OffenderService(
     mockPrisonsApiClient,
+    mockPrisonerAlertsApiClient,
     mockCaseNotesClient,
     mockApOASysContextApiClient,
     mockApDeliusContextApiClient,

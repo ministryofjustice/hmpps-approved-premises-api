@@ -1,6 +1,10 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.seed
 
 import com.github.doyaaaaaken.kotlincsv.dsl.csvReader
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.runBlocking
 import org.springframework.context.ApplicationContext
 import org.springframework.scheduling.annotation.Async
 import org.springframework.stereotype.Service
@@ -54,11 +58,11 @@ class SeedService(
 
   fun seedData(seedFileType: SeedFileType, filename: String) = seedData(seedFileType, filename) { "${seedConfig.filePrefix}/$filename" }
 
-  @SuppressWarnings("CyclomaticComplexMethod", "TooGenericExceptionThrown")
+  @SuppressWarnings("CyclomaticComplexMethod", "TooGenericExceptionThrown", "TooGenericExceptionCaught")
   fun seedData(seedFileType: SeedFileType, filename: String, resolveCsvPath: SeedJob<*>.() -> String) {
-    seedLogger.info("Starting seed request: $seedFileType - $filename")
-
     try {
+      seedLogger.info("Starting seed request: $seedFileType - $filename")
+
       if (filename.contains("/") || filename.contains("\\")) {
         throw RuntimeException("Filename must be just the filename of a .csv file in the /seed directory, e.g. for /seed/upload.csv, just `upload` should be supplied")
       }
@@ -100,6 +104,10 @@ class SeedService(
 
       val seedStarted = LocalDateTime.now()
 
+      if (job.runInTransaction && job.processRowsConcurrently) {
+        error("Can't run a job in a transaction and process rows in parallel")
+      }
+
       val rowsProcessed = if (job.runInTransaction) {
         transactionTemplate.execute { processJob(job, resolveCsvPath) }
       } else {
@@ -108,7 +116,7 @@ class SeedService(
 
       val timeTaken = ChronoUnit.MILLIS.between(seedStarted, LocalDateTime.now())
       seedLogger.info("Seed request complete. Took $timeTaken millis and processed $rowsProcessed rows")
-    } catch (exception: Exception) {
+    } catch (exception: Throwable) {
       seedLogger.error("Unable to complete Seed Job", exception)
     }
   }
@@ -121,43 +129,83 @@ class SeedService(
     // so we first do a full pass but only deserializing each row
     seedLogger.info("Processing CSV file ${Path.of(job.resolveCsvPath()).absolutePathString()}")
     enforcePresenceOfRequiredHeaders(job, resolveCsvPath)
-    ensureCsvCanBeDeserialized(job, resolveCsvPath)
+    val rowCount = ensureCsvCanBeDeserialized(job, resolveCsvPath)
 
     job.preSeed()
-    val rowsProcessed = processCsv(job, resolveCsvPath)
+    val rowsProcessed = processCsv(
+      job = job,
+      resolveCsvPath = resolveCsvPath,
+      rowCount = rowCount,
+    )
     job.postSeed()
 
     return rowsProcessed
   }
 
-  @SuppressWarnings("TooGenericExceptionThrown")
-  private fun <T> processCsv(job: SeedJob<T>, resolveCsvPath: SeedJob<T>.() -> String): Int {
-    var rowNumber = 1
+  @OptIn(ExperimentalCoroutinesApi::class)
+  @SuppressWarnings("TooGenericExceptionThrown", "MagicNumber", "ThrowsCount")
+  private fun <T> processCsv(
+    job: SeedJob<T>,
+    resolveCsvPath: SeedJob<T>.() -> String,
+    rowCount: Int,
+  ): Int {
+    var rowNumber = 0
     val errors = mutableListOf<String>()
 
-    try {
-      csvReader().open(job.resolveCsvPath()) {
-        readAllWithHeaderAsSequence().forEach { row ->
-          val deserializedRow = job.deserializeRow(row)
-          try {
-            job.processRow(deserializedRow)
-          } catch (exception: RuntimeException) {
-            val rootCauseException = findRootCause(exception)
-            errors.add("Error on row $rowNumber: ${exception.message} ${if (rootCauseException != null) rootCauseException.message else "no exception cause"}")
-            seedLogger.error("Error on row $rowNumber:", exception)
-          }
+    seedLogger.info("Processing $rowCount rows")
 
-          rowNumber += 1
+    if (job.processRowsConcurrently) {
+      runBlocking(Dispatchers.IO.limitedParallelism(5)) {
+        try {
+          csvReader().open(job.resolveCsvPath()) {
+            readAllWithHeaderAsSequence().forEach { row ->
+              rowNumber += 1
+              launch { processRow(job, row, rowNumber, rowCount, errors) }
+            }
+          }
+        } catch (exception: Exception) {
+          throw RuntimeException("Unable to process CSV at row $rowNumber", exception)
         }
       }
-    } catch (exception: Exception) {
-      throw RuntimeException("Unable to process CSV at row $rowNumber", exception)
+    } else {
+      try {
+        csvReader().open(job.resolveCsvPath()) {
+          readAllWithHeaderAsSequence().forEach { row ->
+            processRow(job, row, ++rowNumber, rowCount, errors)
+          }
+        }
+      } catch (exception: Exception) {
+        throw RuntimeException("Unable to process CSV at row $rowNumber", exception)
+      }
     }
+
     if (errors.isNotEmpty()) {
       throw RuntimeException("The following row-level errors were raised: ${errors.joinToString("\n")}")
     }
 
-    return rowNumber - 1
+    return rowNumber
+  }
+
+  @SuppressWarnings("MagicNumber")
+  private fun <T> processRow(
+    job: SeedJob<T>,
+    row: Map<String, String>,
+    rowNumber: Int,
+    rowCount: Int,
+    errors: MutableList<String>,
+  ) {
+    val deserializedRow = job.deserializeRow(row)
+    try {
+      job.processRow(deserializedRow)
+    } catch (exception: RuntimeException) {
+      val rootCauseException = findRootCause(exception)
+      errors.add("Error on row $rowNumber: ${exception.message} ${if (rootCauseException != null) rootCauseException.message else "no exception cause"}")
+      seedLogger.error("Error on row $rowNumber:", exception)
+    } finally {
+      if ((rowNumber % 10_000) == 0) {
+        seedLogger.info("Have processed $rowNumber of $rowCount rows")
+      }
+    }
   }
 
   private fun <T> enforcePresenceOfRequiredHeaders(job: SeedJob<T>, resolveCsvPath: SeedJob<T>.() -> String) {
@@ -178,21 +226,20 @@ class SeedService(
     }
   }
 
-  private fun <T> ensureCsvCanBeDeserialized(job: SeedJob<T>, resolveCsvPath: SeedJob<T>.() -> String) {
+  private fun <T> ensureCsvCanBeDeserialized(job: SeedJob<T>, resolveCsvPath: SeedJob<T>.() -> String): Int {
     seedLogger.info("Validating that CSV can be fully read")
-    var rowNumber = 1
+    var rowNumber = 0
     val errors = mutableListOf<String>()
 
     try {
       csvReader().open(job.resolveCsvPath()) {
         readAllWithHeaderAsSequence().forEach { row ->
+          rowNumber += 1
           try {
             job.deserializeRow(row)
           } catch (exception: Exception) {
             errors += "Unable to deserialize CSV at row: $rowNumber: ${exception.message} ${exception.stackTrace.joinToString("\n")}"
           }
-
-          rowNumber += 1
         }
       }
     } catch (exception: Exception) {
@@ -202,5 +249,7 @@ class SeedService(
     if (errors.any()) {
       throw RuntimeException("There were issues deserializing the CSV:\n${errors.joinToString(", \n")}")
     }
+
+    return rowNumber
   }
 }

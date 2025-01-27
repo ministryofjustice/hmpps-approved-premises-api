@@ -1,4 +1,4 @@
-package uk.gov.justice.digital.hmpps.approvedpremisesapi.service
+package uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1
 
 import jakarta.transaction.Transactional
 import org.slf4j.Logger
@@ -29,18 +29,13 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.ApprovedPremisesAp
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PaginationMetadata
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.ValidationErrors
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.InternalServerErrorProblem
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.AuthorisableActionResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.CasResult
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.ValidatableActionResult
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1BookingDomainEventService
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1PlacementRequestDomainEventService
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1PlacementRequestEmailService
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1WithdrawableService
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.WithdrawableEntityType
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.WithdrawableState
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.WithdrawalContext
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.WithdrawalTriggeredByUser
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.ApplicationService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.OffenderService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.TaskDeadlineService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.UserAccessService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.allocations.UserAllocator
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1LimitedAccessStrategy
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.PageCriteria
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.getMetadata
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.getPageable
@@ -141,32 +136,26 @@ class PlacementRequestService(
   fun reallocatePlacementRequest(
     assigneeUser: UserEntity,
     id: UUID,
-  ): AuthorisableActionResult<ValidatableActionResult<PlacementRequestEntity>> {
+  ): CasResult<PlacementRequestEntity> {
     val currentPlacementRequest = placementRequestRepository.findByIdOrNull(id)
-      ?: return AuthorisableActionResult.NotFound()
+      ?: return CasResult.NotFound("placementRequest", id.toString())
 
     if (currentPlacementRequest.reallocatedAt != null) {
-      return AuthorisableActionResult.Success(
-        ValidatableActionResult.ConflictError(
-          currentPlacementRequest.id,
-          "This placement request has already been reallocated",
-        ),
+      return CasResult.ConflictError(
+        currentPlacementRequest.id,
+        "This placement request has already been reallocated",
       )
     }
 
     if (currentPlacementRequest.booking != null) {
-      return AuthorisableActionResult.Success(
-        ValidatableActionResult.GeneralValidationError("This placement request has already been completed"),
-      )
+      return CasResult.GeneralValidationError("This placement request has already been completed")
     }
 
     if (!assigneeUser.hasRole(UserRole.CAS1_MATCHER)) {
-      return AuthorisableActionResult.Success(
-        ValidatableActionResult.FieldValidationError(
-          ValidationErrors().apply {
-            this["$.userId"] = "lackingMatcherRole"
-          },
-        ),
+      return CasResult.FieldValidationError(
+        ValidationErrors().apply {
+          this["$.userId"] = "lackingMatcherRole"
+        },
       )
     }
 
@@ -189,11 +178,7 @@ class PlacementRequestService(
 
     placementRequestRepository.save(newPlacementRequest)
 
-    return AuthorisableActionResult.Success(
-      ValidatableActionResult.Success(
-        newPlacementRequest,
-      ),
-    )
+    return CasResult.Success(newPlacementRequest)
   }
 
   fun createPlacementRequestsFromPlacementApplication(

@@ -21,9 +21,9 @@ class SeedXlsxService(
 ) {
   @SuppressWarnings("TooGenericExceptionThrown", "TooGenericExceptionCaught")
   fun seedExcelData(excelSeedFileType: SeedFromExcelFileType, filename: String) {
-    seedLogger.info("Starting seed request: $excelSeedFileType - $filename")
-
     try {
+      seedLogger.info("Starting seed request: $excelSeedFileType - $filename")
+
       if (filename.contains("/") || filename.contains("\\")) {
         throw RuntimeException("Filename must be just the filename of a .xlsx file in the /seed directory, e.g. for /seed/upload.xlsx, just `upload` should be supplied")
       }
@@ -41,7 +41,7 @@ class SeedXlsxService(
 
       val timeTaken = ChronoUnit.MILLIS.between(seedStarted, LocalDateTime.now())
       seedLogger.info("Excel seed request complete. Took $timeTaken millis")
-    } catch (exception: Exception) {
+    } catch (exception: Throwable) {
       seedLogger.error("Unable to complete Excel seed job", exception)
     }
   }

@@ -14,12 +14,6 @@ import java.util.UUID
 
 class PlacementRequirementsEntityFactory : Factory<PlacementRequirementsEntity> {
 
-  companion object {
-    val DEFAULT = PlacementRequirementsEntityFactory()
-      .withDefaults()
-      .produce()
-  }
-
   private var id: Yielded<UUID> = { UUID.randomUUID() }
   private var gender: Yielded<Gender> = { Gender.male }
   private var apType: Yielded<ApType> = { ApType.normal }

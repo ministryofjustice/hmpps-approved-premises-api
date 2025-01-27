@@ -14,6 +14,7 @@ generic-service:
     SERVICES_AP-DELIUS-CONTEXT-API_BASE-URL: https://approved-premises-and-delius-dev.hmpps.service.justice.gov.uk
     SERVICES_HMPPS-TIER_BASE-URL: https://hmpps-tier-dev.hmpps.service.justice.gov.uk
     SERVICES_PRISONS-API_BASE-URL: https://prison-api-dev.prison.service.justice.gov.uk
+    SERVICES_PRISONER-ALERTS-API_BASE-URL: https://alerts-api-dev.hmpps.service.justice.gov.uk
     SERVICES_NOMIS-USER-ROLES-API_BASE-URL: https://nomis-user-roles-api-dev.prison.service.justice.gov.uk
     SERVICES_MANAGE-USERS-API_BASE-URL: https://manage-users-api-dev.hmpps.service.justice.gov.uk
     SERVICES_PROBATION-OFFENDER-SEARCH-API_BASE-URL: https://probation-offender-search-dev.hmpps.service.justice.gov.uk
@@ -84,8 +85,10 @@ generic-service:
 
     USER-ALLOCATIONS_RULES_ESAP-ASSESSMENTS_ALLOCATE-TO-USER: AP_USER_TEST_2
 
-    NOTIFY_MODE: TEST_AND_GUEST_LIST
+    NOTIFY_MODE: DISABLED
     CAS3-REPORT_END-DATE-OVERRIDE: 3
+
+    FEATURE-FLAGS_GET-ALERTS-FROM-PRISONER-ALERTS-API: false
 
   namespace_secrets:
     hmpps-approved-premises-api:

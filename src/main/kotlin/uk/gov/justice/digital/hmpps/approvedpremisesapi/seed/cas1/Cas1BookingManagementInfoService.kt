@@ -26,6 +26,7 @@ class Cas1BookingManagementInfoService(
 
   fun fromBooking(booking: BookingEntity) = ManagementInfo(
     source = ManagementInfoSource.LEGACY_CAS_1,
+    deliusId = null,
     arrivedAtDate = booking.arrival?.arrivalDateTime?.toLocalDate(),
     arrivedAtTime = booking.arrival?.arrivalDateTime?.toLocalDateTime()?.toLocalTime(),
     departedAtDate = booking.departure?.dateTime?.toLocalDate(),
@@ -42,6 +43,7 @@ class Cas1BookingManagementInfoService(
 
   fun fromDeliusBookingImport(import: Cas1DeliusBookingImportEntity) = ManagementInfo(
     source = ManagementInfoSource.DELIUS,
+    deliusId = import.approvedPremisesReferralId,
     arrivedAtDate = import.arrivalDate,
     arrivedAtTime = null,
     departedAtDate = import.departureDate,
@@ -71,6 +73,7 @@ class Cas1BookingManagementInfoService(
 
 data class ManagementInfo(
   val source: ManagementInfoSource,
+  val deliusId: String?,
   val arrivedAtDate: LocalDate?,
   val arrivedAtTime: LocalTime?,
   val departedAtDate: LocalDate?,

@@ -10,8 +10,7 @@ class AlertTransformer {
     alertId = alert.alertId,
     comment = alert.comment,
     dateCreated = alert.dateCreated,
-    expired = alert.expired,
-    active = alert.active,
     dateExpires = alert.dateExpires,
+    alertTypeDescription = alert.alertTypeDescription,
   )
 }

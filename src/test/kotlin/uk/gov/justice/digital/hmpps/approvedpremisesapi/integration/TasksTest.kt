@@ -13,7 +13,6 @@ import org.junit.jupiter.params.provider.CsvSource
 import org.junit.jupiter.params.provider.EnumSource
 import org.junit.jupiter.params.provider.ValueSource
 import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.http.HttpStatus
 import org.springframework.test.web.reactive.server.returnResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApprovedPremisesUser
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.AssessmentTask
@@ -35,7 +34,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.given
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAProbationRegion
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAUser
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAnApArea
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAnApplication
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAnAssessmentForApprovedPremises
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAnAssessmentForTemporaryAccommodation
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAnOffender
@@ -144,18 +142,6 @@ class TasksTest {
                 )
             }
           }
-        }
-      }
-
-      @Test
-      fun `Get all tasks with taskType BookingAppeal returns 400`() {
-        givenAUser(roles = listOf(UserRole.CAS1_WORKFLOW_MANAGER)) { _, jwt ->
-          webTestClient.get()
-            .uri("/tasks?type=BookingAppeal")
-            .header("Authorization", "Bearer $jwt")
-            .exchange()
-            .expectStatus()
-            .isBadRequest
         }
       }
 
@@ -2686,26 +2672,6 @@ class TasksTest {
       }
     }
 
-    @Test
-    fun `Get an non-implemented task type for an application returns 405`() {
-      givenAUser(roles = listOf(UserRole.CAS1_WORKFLOW_MANAGER)) { user, jwt ->
-        givenAnOffender { offenderDetails, _ ->
-          givenAnAssessmentForApprovedPremises(
-            allocatedToUser = user,
-            createdByUser = user,
-            crn = offenderDetails.otherIds.crn,
-          ) { _, application ->
-            webTestClient.get()
-              .uri("/tasks/booking-appeal/${application.id}")
-              .header("Authorization", "Bearer $jwt")
-              .exchange()
-              .expectStatus()
-              .isEqualTo(HttpStatus.METHOD_NOT_ALLOWED)
-          }
-        }
-      }
-    }
-
     private fun createAssessment(
       completedAt: OffsetDateTime?,
       allocatedUser: UserEntity,
@@ -3029,28 +2995,6 @@ class TasksTest {
                 assertThat(placementDates[0].duration).isEqualTo(placementDate.duration)
               }
             }
-          }
-        }
-      }
-    }
-
-    @Test
-    fun `Reallocating a booking appeal returns a NotAllowedProblem`() {
-      givenAUser(roles = listOf(UserRole.CAS1_WORKFLOW_MANAGER)) { user, jwt ->
-        givenAUser { userToReallocate, _ ->
-          givenAnApplication(createdByUser = user) { application ->
-            webTestClient.post()
-              .uri("/tasks/booking-appeal/${application.id}/allocations")
-              .header("Authorization", "Bearer $jwt")
-              .header("X-Service-Name", ServiceName.approvedPremises.value)
-              .bodyValue(
-                NewReallocation(
-                  userId = userToReallocate.id,
-                ),
-              )
-              .exchange()
-              .expectStatus()
-              .isEqualTo(HttpStatus.METHOD_NOT_ALLOWED)
           }
         }
       }

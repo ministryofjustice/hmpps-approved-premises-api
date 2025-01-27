@@ -266,11 +266,13 @@ components:
       properties:
         apTypes:
           deprecated: true
-          description: "Searching on multiple types is not supported, instead use apType. If this is used, the first type wll be matched, and type 'normal' will be ignored"
+          description: "Use 'spaceCharacteristics' to filter on premise types"
           type: array
           items:
             $ref: '_shared.yml#/components/schemas/ApType'
         apType:
+          deprecated: true
+          description: "Use 'spaceCharacteristics' to filter on premise types"
           $ref: '_shared.yml#/components/schemas/ApType'
         spaceCharacteristics:
           type: array
@@ -833,6 +835,9 @@ components:
         id:
           type: string
           format: uuid
+        bedId:
+          type: string
+          format: uuid
         roomName:
           type: string
         startDate:
@@ -849,6 +854,7 @@ components:
             $ref: '#/components/schemas/Cas1SpaceCharacteristic'
       required:
         - id
+        - bedId
         - startDate
         - endDate
         - reason

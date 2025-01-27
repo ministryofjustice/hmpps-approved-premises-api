@@ -25,9 +25,9 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.validated
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.InternalServerErrorProblem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.AuthorisableActionResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.CasResult
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.ValidatableActionResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1PlacementApplicationDomainEventService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1PlacementApplicationEmailService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.PlacementRequestService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.WithdrawableEntityType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.WithdrawableState
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.WithdrawalContext
@@ -123,34 +123,28 @@ class PlacementApplicationService(
   fun reallocateApplication(
     assigneeUser: UserEntity,
     id: UUID,
-  ): AuthorisableActionResult<ValidatableActionResult<PlacementApplicationEntity>> {
+  ): CasResult<PlacementApplicationEntity> {
     lockablePlacementApplicationRepository.acquirePessimisticLock(id)
 
     val currentPlacementApplication = placementApplicationRepository.findByIdOrNull(id)
-      ?: return AuthorisableActionResult.NotFound()
+      ?: return CasResult.NotFound("placement application", id.toString())
 
     if (currentPlacementApplication.reallocatedAt != null) {
-      return AuthorisableActionResult.Success(
-        ValidatableActionResult.ConflictError(
-          currentPlacementApplication.id,
-          "This placement application has already been reallocated",
-        ),
+      return CasResult.ConflictError(
+        currentPlacementApplication.id,
+        "This placement application has already been reallocated",
       )
     }
 
     if (currentPlacementApplication.decision != null) {
-      return AuthorisableActionResult.Success(
-        ValidatableActionResult.GeneralValidationError("This placement application has already been completed"),
-      )
+      return CasResult.GeneralValidationError("This placement application has already been completed")
     }
 
     if (!assigneeUser.hasPermission(UserPermission.CAS1_ASSESS_PLACEMENT_APPLICATION)) {
-      return AuthorisableActionResult.Success(
-        ValidatableActionResult.FieldValidationError(
-          ValidationErrors().apply {
-            this["$.userId"] = "lackingMatcherRole"
-          },
-        ),
+      return CasResult.FieldValidationError(
+        ValidationErrors().apply {
+          this["$.userId"] = "lackingMatcherRole"
+        },
       )
     }
 
@@ -196,11 +190,7 @@ class PlacementApplicationService(
 
     newPlacementApplication.placementDates = newPlacementDates
 
-    return AuthorisableActionResult.Success(
-      ValidatableActionResult.Success(
-        newPlacementApplication,
-      ),
-    )
+    return CasResult.Success(newPlacementApplication)
   }
 
   fun getWithdrawableState(placementApplication: PlacementApplicationEntity, user: UserEntity): WithdrawableState {

@@ -29,7 +29,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.CharacteristicSe
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.OffenderService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.UserAccessService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.UserService
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1SpaceBookingManagementDomainEventService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1SpaceBookingService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1SpaceBookingService.DepartureInfo
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1SpaceBookingService.SpaceBookingFilterCriteria
@@ -56,12 +55,12 @@ class Cas1SpaceBookingController(
   private val spaceBookingTransformer: Cas1SpaceBookingTransformer,
   private val cas1SpaceBookingService: Cas1SpaceBookingService,
   private val cas1WithdrawableService: Cas1WithdrawableService,
-  private val cas1SpaceBookingManagementDomainEventService: Cas1SpaceBookingManagementDomainEventService,
   private val characteristicService: CharacteristicService,
+  private val cas1TimelineService: Cas1TimelineService,
 ) : SpaceBookingsCas1Delegate {
 
   override fun getSpaceBookingTimeline(premisesId: UUID, bookingId: UUID): ResponseEntity<List<TimelineEvent>> {
-    val events = cas1SpaceBookingManagementDomainEventService.getTimeline(bookingId)
+    val events = cas1TimelineService.getSpaceBookingTimeline(bookingId)
     return ResponseEntity(events, HttpStatus.OK)
   }
 
@@ -168,6 +167,13 @@ class Cas1SpaceBookingController(
 
     val user = userService.getUserForRequest()
 
+    val characteristics = (cas1UpdateSpaceBooking.characteristics ?: emptyList())
+      .map { it.value }
+      .let { values ->
+        characteristicService.getCharacteristicsByPropertyNames(values, ServiceName.approvedPremises)
+      }
+      .filter { it.isModelScopeRoom() }
+
     ensureEntityFromCasResultIsSuccess(
       cas1SpaceBookingService.updateSpaceBooking(
         UpdateSpaceBookingDetails(
@@ -175,6 +181,7 @@ class Cas1SpaceBookingController(
           premisesId = premisesId,
           arrivalDate = cas1UpdateSpaceBooking.arrivalDate,
           departureDate = cas1UpdateSpaceBooking.departureDate,
+          characteristics = characteristics,
           updatedBy = user,
         ),
       ),
@@ -190,10 +197,11 @@ class Cas1SpaceBookingController(
   ): ResponseEntity<Unit> {
     userAccessService.ensureCurrentUserHasPermission(UserPermission.CAS1_SPACE_BOOKING_RECORD_ARRIVAL)
 
-    val arrivalDateAndTime = if (cas1NewArrival.arrivalDateTime != null) {
+    val arrivalDateTime = cas1NewArrival.arrivalDateTime
+    val arrivalDateAndTime = if (arrivalDateTime != null) {
       Pair(
-        cas1NewArrival.arrivalDateTime!!.toLocalDate(),
-        cas1NewArrival.arrivalDateTime!!.toLocalDateTime().toLocalTime(),
+        arrivalDateTime.toLocalDate(),
+        arrivalDateTime.toLocalDateTime().toLocalTime(),
       )
     } else {
       getArrivalDateAndTime(cas1NewArrival.arrivalDate, cas1NewArrival.arrivalTime)
@@ -217,10 +225,11 @@ class Cas1SpaceBookingController(
   ): ResponseEntity<Unit> {
     userAccessService.ensureCurrentUserHasPermission(UserPermission.CAS1_SPACE_BOOKING_RECORD_DEPARTURE)
 
-    val departureDateAndTime = if (cas1NewDeparture.departureDateTime != null) {
+    val departureDateTime = cas1NewDeparture.departureDateTime
+    val departureDateAndTime = if (departureDateTime != null) {
       Pair(
-        cas1NewDeparture.departureDateTime!!.toLocalDate(),
-        cas1NewDeparture.departureDateTime!!.toLocalDateTime().toLocalTime(),
+        departureDateTime.toLocalDate(),
+        departureDateTime.toLocalDateTime().toLocalTime(),
       )
     } else {
       val departureDate = cas1NewDeparture.departureDate
