@@ -50,7 +50,7 @@ class SeedUsersTest : SeedTestBase() {
     val probationRegion = givenAProbationRegion()
 
     val probationRegionDeliusMapping =
-      probationAreaProbationRegionMappingEntityTestFactory.produceAndPersist(probationRegion)
+      probationAreaProbationRegionMappingFactory.produceAndPersist(probationRegion)
 
     apDeliusContextAddStaffDetailResponse(
       StaffDetailFactory.staffDetail(
@@ -267,7 +267,7 @@ class SeedUsersTest : SeedTestBase() {
     val probationRegion = givenAProbationRegion()
 
     val probationRegionDeliusMapping =
-      probationAreaProbationRegionMappingEntityTestFactory.produceAndPersist(probationRegion = probationRegion)
+      probationAreaProbationRegionMappingFactory.produceAndPersist(probationRegion = probationRegion)
     StaffDetailFactory.staffDetail(
       probationArea = ProbationArea(
         code = probationRegionDeliusMapping.probationAreaDeliusCode,
@@ -360,7 +360,7 @@ class SeedUsersTest : SeedTestBase() {
     val probationRegion = givenAProbationRegion()
 
     val probationRegionDeliusMapping =
-      probationAreaProbationRegionMappingEntityTestFactory.produceAndPersist(probationRegion = probationRegion)
+      probationAreaProbationRegionMappingFactory.produceAndPersist(probationRegion = probationRegion)
 
     val seedInfos = listOf(
       SeedInfo(

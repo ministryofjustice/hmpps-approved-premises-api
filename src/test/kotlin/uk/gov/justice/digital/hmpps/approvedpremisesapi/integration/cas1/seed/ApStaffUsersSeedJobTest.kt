@@ -55,7 +55,7 @@ class ApStaffUsersSeedJobTest : SeedTestBase() {
     val probationRegion = givenAProbationRegion()
 
     val probationRegionDeliusMapping =
-      probationAreaProbationRegionMappingEntityTestFactory.produceAndPersist(probationRegion)
+      probationAreaProbationRegionMappingFactory.produceAndPersist(probationRegion)
 
     apDeliusContextAddStaffDetailResponse(
       StaffDetailFactory.staffDetail(

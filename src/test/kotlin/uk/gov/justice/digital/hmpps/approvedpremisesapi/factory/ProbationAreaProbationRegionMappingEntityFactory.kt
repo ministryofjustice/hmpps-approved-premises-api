@@ -1,27 +1,27 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.factory
 
-import java.util.UUID
 import org.springframework.stereotype.Component
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ProbationAreaProbationRegionMappingEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ProbationAreaProbationRegionMappingRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ProbationRegionEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomStringUpperCase
+import java.util.UUID
 
 @Component
-class ProbationAreaProbationRegionMappingEntityTestFactory(private val probationAreaProbationRegionMappingRepository: ProbationAreaProbationRegionMappingRepository) {
+class ProbationAreaProbationRegionMappingFactory(private val probationAreaProbationRegionMappingRepository: ProbationAreaProbationRegionMappingRepository) {
   fun produceAndPersist(
     probationRegion: ProbationRegionEntity,
-    deliusCode: String = randomStringUpperCase(6),
+    probationAreaDeliusCode: String = randomStringUpperCase(6),
   ): ProbationAreaProbationRegionMappingEntity =
     probationAreaProbationRegionMappingRepository.saveAndFlush(
-      ProbationAreaProbationRegionMappingEntityTestTest(
+      ProbationAreaProbationRegionMappingModel(
         probationRegion = probationRegion,
-        probationAreaDeliusCode = deliusCode,
+        probationAreaDeliusCode = probationAreaDeliusCode,
       ).toEntity(),
     )
 }
 
-data class ProbationAreaProbationRegionMappingEntityTestTest(
+data class ProbationAreaProbationRegionMappingModel(
   val id: UUID = UUID.randomUUID(),
   val probationAreaDeliusCode: String = randomStringUpperCase(6),
   val probationRegion: ProbationRegionEntity,

@@ -14,7 +14,7 @@ import org.junit.jupiter.api.TestInstance
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ProbationAreaProbationRegionMappingEntityTestFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ProbationAreaProbationRegionMappingFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.IntegrationTestBase
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.seed.SeedLogger
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.seed.SeedService
@@ -30,7 +30,7 @@ abstract class SeedTestBase : IntegrationTestBase() {
   lateinit var seedXlsxService: SeedXlsxService
 
   @Autowired
-  lateinit var probationAreaProbationRegionMappingEntityTestFactory: ProbationAreaProbationRegionMappingEntityTestFactory
+  lateinit var probationAreaProbationRegionMappingFactory: ProbationAreaProbationRegionMappingFactory
 
   @Value("\${seed.file-prefix}")
   lateinit var seedFilePrefix: String

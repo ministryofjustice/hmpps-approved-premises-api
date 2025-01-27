@@ -1,6 +1,5 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.integration
 
-import java.util.UUID
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
@@ -16,7 +15,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ProfileRespons
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.TemporaryAccommodationUser
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.TemporaryAccommodationUserRole
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ProbationAreaProbationRegionMappingEntityTestFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ProbationAreaProbationRegionMappingFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.StaffDetailFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAUser
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAnApArea
@@ -26,11 +25,12 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRole
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.deliuscontext.PersonName
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.deliuscontext.ProbationArea
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomStringMultiCaseWithNumbers
+import java.util.UUID
 
 class ProfileTest : IntegrationTestBase() {
 
   @Autowired
-  lateinit var probationAreaProbationRegionMappingEntityTestFactory: ProbationAreaProbationRegionMappingEntityTestFactory
+  lateinit var probationAreaProbationRegionMappingFactory: ProbationAreaProbationRegionMappingFactory
 
   @Nested
   inner class ProfileV2 {
@@ -97,9 +97,9 @@ class ProfileTest : IntegrationTestBase() {
 
       val region = createProbationRegion(deliusCode)
 
-      probationAreaProbationRegionMappingEntityTestFactory.produceAndPersist(
+      probationAreaProbationRegionMappingFactory.produceAndPersist(
         probationRegion = region,
-        deliusCode = deliusCode,
+        probationAreaDeliusCode = deliusCode,
       )
 
       givenAUser(
@@ -180,9 +180,9 @@ class ProfileTest : IntegrationTestBase() {
 
       val region = createProbationRegion(deliusCode)
 
-      probationAreaProbationRegionMappingEntityTestFactory.produceAndPersist(
+      probationAreaProbationRegionMappingFactory.produceAndPersist(
         probationRegion = region,
-        deliusCode = deliusCode,
+        probationAreaDeliusCode = deliusCode,
       )
 
       val userEntity = userEntityFactory.produceAndPersist {
@@ -266,9 +266,9 @@ class ProfileTest : IntegrationTestBase() {
 
       val region = createProbationRegion(deliusCode)
 
-      probationAreaProbationRegionMappingEntityTestFactory.produceAndPersist(
+      probationAreaProbationRegionMappingFactory.produceAndPersist(
         probationRegion = region,
-        deliusCode = deliusCode,
+        probationAreaDeliusCode = deliusCode,
       )
 
       val userEntity = userEntityFactory.produceAndPersist {
@@ -323,9 +323,9 @@ class ProfileTest : IntegrationTestBase() {
 
       val region = createProbationRegion(deliusCode)
 
-      probationAreaProbationRegionMappingEntityTestFactory.produceAndPersist(
+      probationAreaProbationRegionMappingFactory.produceAndPersist(
         probationRegion = region,
-        deliusCode = deliusCode,
+        probationAreaDeliusCode = deliusCode,
       )
 
       val userEntity = userEntityFactory.produceAndPersist {
@@ -381,9 +381,9 @@ class ProfileTest : IntegrationTestBase() {
 
       val region = createProbationRegion(deliusCode)
 
-      probationAreaProbationRegionMappingEntityTestFactory.produceAndPersist(
+      probationAreaProbationRegionMappingFactory.produceAndPersist(
         probationRegion = region,
-        deliusCode = deliusCode,
+        probationAreaDeliusCode = deliusCode,
       )
 
       userEntityFactory.produceAndPersist {
@@ -427,9 +427,9 @@ class ProfileTest : IntegrationTestBase() {
 
       val region = createProbationRegion(deliusCode)
 
-      probationAreaProbationRegionMappingEntityTestFactory.produceAndPersist(
+      probationAreaProbationRegionMappingFactory.produceAndPersist(
         probationRegion = region,
-        deliusCode = deliusCode,
+        probationAreaDeliusCode = deliusCode,
       )
 
       val userEntity = userEntityFactory.produceAndPersist {
@@ -511,9 +511,9 @@ class ProfileTest : IntegrationTestBase() {
       val deliusCode = "DeliusCode"
       val region = createProbationRegion(deliusCode)
 
-      probationAreaProbationRegionMappingEntityTestFactory.produceAndPersist(
+      probationAreaProbationRegionMappingFactory.produceAndPersist(
         probationRegion = region,
-        deliusCode = deliusCode,
+        probationAreaDeliusCode = deliusCode,
       )
 
       apDeliusContextAddStaffDetailResponse(
