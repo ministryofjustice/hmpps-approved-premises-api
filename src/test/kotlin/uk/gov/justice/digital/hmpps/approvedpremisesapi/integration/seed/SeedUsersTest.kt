@@ -6,6 +6,7 @@ import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.SeedFileType
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ProbationAreaProbationRegionMapping
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.StaffDetailFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAProbationRegion
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.apDeliusContextAddStaffDetailResponse
@@ -49,8 +50,7 @@ class SeedUsersTest : SeedTestBase() {
   fun `Attempting to seed a real but currently unknown user succeeds`() {
     val probationRegion = givenAProbationRegion()
 
-    val probationRegionDeliusMapping =
-      probationAreaProbationRegionMappingFactory.produceAndPersist(probationRegion)
+    val probationRegionDeliusMapping = ProbationAreaProbationRegionMapping(probationRegion).toEntity()
 
     apDeliusContextAddStaffDetailResponse(
       StaffDetailFactory.staffDetail(
@@ -267,7 +267,7 @@ class SeedUsersTest : SeedTestBase() {
     val probationRegion = givenAProbationRegion()
 
     val probationRegionDeliusMapping =
-      probationAreaProbationRegionMappingFactory.produceAndPersist(probationRegion = probationRegion)
+      probationAreaProbationRegionMappingPersistor.produceAndPersist(probationRegion = probationRegion)
     StaffDetailFactory.staffDetail(
       probationArea = ProbationArea(
         code = probationRegionDeliusMapping.probationAreaDeliusCode,
@@ -360,7 +360,7 @@ class SeedUsersTest : SeedTestBase() {
     val probationRegion = givenAProbationRegion()
 
     val probationRegionDeliusMapping =
-      probationAreaProbationRegionMappingFactory.produceAndPersist(probationRegion = probationRegion)
+      probationAreaProbationRegionMappingPersistor.produceAndPersist(probationRegion = probationRegion)
 
     val seedInfos = listOf(
       SeedInfo(

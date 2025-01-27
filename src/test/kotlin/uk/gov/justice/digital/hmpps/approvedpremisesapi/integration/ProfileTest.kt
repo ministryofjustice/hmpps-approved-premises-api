@@ -15,7 +15,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ProfileRespons
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.TemporaryAccommodationUser
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.TemporaryAccommodationUserRole
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ProbationAreaProbationRegionMappingFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ProbationAreaProbationRegionMappingPersistor
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.StaffDetailFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAUser
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAnApArea
@@ -30,7 +30,7 @@ import java.util.UUID
 class ProfileTest : IntegrationTestBase() {
 
   @Autowired
-  lateinit var probationAreaProbationRegionMappingFactory: ProbationAreaProbationRegionMappingFactory
+  lateinit var probationAreaProbationRegionMappingPersistor: ProbationAreaProbationRegionMappingPersistor
 
   @Nested
   inner class ProfileV2 {
@@ -97,7 +97,7 @@ class ProfileTest : IntegrationTestBase() {
 
       val region = createProbationRegion(deliusCode)
 
-      probationAreaProbationRegionMappingFactory.produceAndPersist(
+      probationAreaProbationRegionMappingPersistor.produceAndPersist(
         probationRegion = region,
         probationAreaDeliusCode = deliusCode,
       )
@@ -180,7 +180,7 @@ class ProfileTest : IntegrationTestBase() {
 
       val region = createProbationRegion(deliusCode)
 
-      probationAreaProbationRegionMappingFactory.produceAndPersist(
+      probationAreaProbationRegionMappingPersistor.produceAndPersist(
         probationRegion = region,
         probationAreaDeliusCode = deliusCode,
       )
@@ -266,7 +266,7 @@ class ProfileTest : IntegrationTestBase() {
 
       val region = createProbationRegion(deliusCode)
 
-      probationAreaProbationRegionMappingFactory.produceAndPersist(
+      probationAreaProbationRegionMappingPersistor.produceAndPersist(
         probationRegion = region,
         probationAreaDeliusCode = deliusCode,
       )
@@ -323,7 +323,7 @@ class ProfileTest : IntegrationTestBase() {
 
       val region = createProbationRegion(deliusCode)
 
-      probationAreaProbationRegionMappingFactory.produceAndPersist(
+      probationAreaProbationRegionMappingPersistor.produceAndPersist(
         probationRegion = region,
         probationAreaDeliusCode = deliusCode,
       )
@@ -381,7 +381,7 @@ class ProfileTest : IntegrationTestBase() {
 
       val region = createProbationRegion(deliusCode)
 
-      probationAreaProbationRegionMappingFactory.produceAndPersist(
+      probationAreaProbationRegionMappingPersistor.produceAndPersist(
         probationRegion = region,
         probationAreaDeliusCode = deliusCode,
       )
@@ -427,7 +427,7 @@ class ProfileTest : IntegrationTestBase() {
 
       val region = createProbationRegion(deliusCode)
 
-      probationAreaProbationRegionMappingFactory.produceAndPersist(
+      probationAreaProbationRegionMappingPersistor.produceAndPersist(
         probationRegion = region,
         probationAreaDeliusCode = deliusCode,
       )
@@ -511,7 +511,7 @@ class ProfileTest : IntegrationTestBase() {
       val deliusCode = "DeliusCode"
       val region = createProbationRegion(deliusCode)
 
-      probationAreaProbationRegionMappingFactory.produceAndPersist(
+      probationAreaProbationRegionMappingPersistor.produceAndPersist(
         probationRegion = region,
         probationAreaDeliusCode = deliusCode,
       )

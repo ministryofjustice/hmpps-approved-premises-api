@@ -5,8 +5,6 @@ import io.mockk.every
 import io.mockk.mockk
 import io.mockk.slot
 import io.mockk.verify
-import java.time.LocalDate
-import java.util.UUID
 import org.assertj.core.api.Assertions.assertThat
 import org.assertj.core.api.Assertions.assertThatThrownBy
 import org.junit.jupiter.api.BeforeEach
@@ -20,12 +18,11 @@ import org.springframework.http.HttpMethod
 import org.springframework.http.HttpStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApprovedPremisesUserRole
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.UserQualification as APIUserQualification
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.ApDeliusContextApiClient
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.ClientResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.config.AuthAwareAuthenticationToken
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApAreaEntityFactory
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ProbationAreaProbationRegionMappingModel
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ProbationAreaProbationRegionMapping
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ProbationDeliveryUnitEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ProbationRegionEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.StaffDetailFactory
@@ -62,6 +59,9 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.UserServiceConfi
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1ApAreaMappingService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.isWithinTheLastMinute
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomStringMultiCaseWithNumbers
+import java.time.LocalDate
+import java.util.UUID
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.UserQualification as APIUserQualification
 
 class UserServiceTest {
   private val mockUserServiceConfig = mockk<UserServiceConfig>()
@@ -186,7 +186,7 @@ class UserServiceTest {
         .withApArea(ApAreaEntityFactory().produce())
         .produce()
 
-      every { mockProbationAreaProbationRegionMappingRepository.findByProbationAreaDeliusCode("AREACODE") } returns ProbationAreaProbationRegionMappingModel(
+      every { mockProbationAreaProbationRegionMappingRepository.findByProbationAreaDeliusCode("AREACODE") } returns ProbationAreaProbationRegionMapping(
         probationRegion = probationRegion,
         probationAreaDeliusCode = "AREACODE",
       ).toEntity()
@@ -308,7 +308,7 @@ class UserServiceTest {
         .withApArea(ApAreaEntityFactory().produce())
         .produce()
 
-      every { mockProbationAreaProbationRegionMappingRepository.findByProbationAreaDeliusCode("AREACODE") } returns ProbationAreaProbationRegionMappingModel(
+      every { mockProbationAreaProbationRegionMappingRepository.findByProbationAreaDeliusCode("AREACODE") } returns ProbationAreaProbationRegionMapping(
         probationRegion = probationRegion,
         probationAreaDeliusCode = "AREACODE",
       ).toEntity()
@@ -807,8 +807,7 @@ class UserServiceTest {
         .withDeliusStaffCode(staffCode)
         .withProbationRegion(probationRegion)
 
-    val regionMappingEntity =
-      ProbationAreaProbationRegionMappingModel(probationRegion = probationRegion).toEntity()
+    val regionMappingEntity = ProbationAreaProbationRegionMapping(probationRegion = probationRegion).toEntity()
 
     val pdu =
       ProbationDeliveryUnitEntityFactory()

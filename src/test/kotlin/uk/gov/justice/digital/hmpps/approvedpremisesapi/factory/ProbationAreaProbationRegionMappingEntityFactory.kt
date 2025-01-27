@@ -8,27 +8,22 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomStringUpperCa
 import java.util.UUID
 
 @Component
-class ProbationAreaProbationRegionMappingFactory(private val probationAreaProbationRegionMappingRepository: ProbationAreaProbationRegionMappingRepository) {
+class ProbationAreaProbationRegionMappingPersistor(private val probationAreaProbationRegionMappingRepository: ProbationAreaProbationRegionMappingRepository) {
+
+  fun persist(probationAreaProbationRegionMappingEntity: ProbationAreaProbationRegionMappingEntity): ProbationAreaProbationRegionMappingEntity =
+    probationAreaProbationRegionMappingRepository.saveAndFlush(probationAreaProbationRegionMappingEntity)
+
   fun produceAndPersist(
     probationRegion: ProbationRegionEntity,
-    probationAreaDeliusCode: String = randomStringUpperCase(6),
+    probationAreaDeliusCode: String? = null,
   ): ProbationAreaProbationRegionMappingEntity =
-    probationAreaProbationRegionMappingRepository.saveAndFlush(
-      ProbationAreaProbationRegionMappingModel(
-        probationRegion = probationRegion,
-        probationAreaDeliusCode = probationAreaDeliusCode,
-      ).toEntity(),
-    )
+    persist(ProbationAreaProbationRegionMapping(probationRegion).toEntity())
 }
 
-data class ProbationAreaProbationRegionMappingModel(
+data class ProbationAreaProbationRegionMapping(
+  val probationRegion: ProbationRegionEntity = ProbationRegionEntityFactory().produce(),
   val id: UUID = UUID.randomUUID(),
   val probationAreaDeliusCode: String = randomStringUpperCase(6),
-  val probationRegion: ProbationRegionEntity,
 ) {
-  fun toEntity() = ProbationAreaProbationRegionMappingEntity(
-    id = this.id,
-    probationAreaDeliusCode = this.probationAreaDeliusCode,
-    probationRegion = this.probationRegion,
-  )
+  fun toEntity() = ProbationAreaProbationRegionMappingEntity(id, probationAreaDeliusCode, probationRegion)
 }

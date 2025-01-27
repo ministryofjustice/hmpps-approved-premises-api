@@ -2,11 +2,6 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.seed
 
 import com.ninjasquad.springmockk.MockkBean
 import io.mockk.every
-import java.io.File
-import java.nio.file.Files
-import java.nio.file.StandardOpenOption
-import kotlin.io.path.Path
-import kotlin.io.path.pathString
 import org.jetbrains.kotlinx.dataframe.DataFrame
 import org.jetbrains.kotlinx.dataframe.io.writeExcel
 import org.junit.jupiter.api.BeforeEach
@@ -14,12 +9,17 @@ import org.junit.jupiter.api.TestInstance
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ProbationAreaProbationRegionMappingFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ProbationAreaProbationRegionMappingPersistor
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.IntegrationTestBase
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.seed.SeedLogger
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.seed.SeedService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.seed.SeedXlsxService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.LogEntry
+import java.io.File
+import java.nio.file.Files
+import java.nio.file.StandardOpenOption
+import kotlin.io.path.Path
+import kotlin.io.path.pathString
 
 @TestInstance(TestInstance.Lifecycle.PER_METHOD)
 abstract class SeedTestBase : IntegrationTestBase() {
@@ -30,7 +30,7 @@ abstract class SeedTestBase : IntegrationTestBase() {
   lateinit var seedXlsxService: SeedXlsxService
 
   @Autowired
-  lateinit var probationAreaProbationRegionMappingFactory: ProbationAreaProbationRegionMappingFactory
+  lateinit var probationAreaProbationRegionMappingPersistor: ProbationAreaProbationRegionMappingPersistor
 
   @Value("\${seed.file-prefix}")
   lateinit var seedFilePrefix: String
