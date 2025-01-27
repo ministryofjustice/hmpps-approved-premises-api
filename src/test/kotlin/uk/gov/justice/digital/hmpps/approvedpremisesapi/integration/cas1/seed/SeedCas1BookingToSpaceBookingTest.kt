@@ -163,7 +163,7 @@ class SeedCas1BookingToSpaceBookingTest : SeedTestBase() {
       Cas1DeliusBookingImportEntity(
         id = UUID.randomUUID(),
         bookingId = booking1ManagementInfoFromDelius.id,
-        approvedPremisesReferralId = "Delius Ref Id",
+        approvedPremisesReferralId = "Delius Ref Id 1",
         crn = "irrelevant",
         eventNumber = "irrelevant",
         keyWorkerStaffCode = "kw001",
@@ -214,7 +214,7 @@ class SeedCas1BookingToSpaceBookingTest : SeedTestBase() {
       Cas1DeliusBookingImportEntity(
         id = UUID.randomUUID(),
         bookingId = booking2MinimalManagementInfoFromDelius.id,
-        approvedPremisesReferralId = "Delius Ref Id",
+        approvedPremisesReferralId = "Delius Ref Id 2",
         crn = "irrelevant",
         eventNumber = "irrelevant",
         keyWorkerStaffCode = null,
@@ -329,6 +329,7 @@ class SeedCas1BookingToSpaceBookingTest : SeedTestBase() {
     val migratedBooking1 = premiseSpaceBookings[0]
     assertBookingIsDeleted(booking1ManagementInfoFromDelius.id)
     assertThat(migratedBooking1.id).isEqualTo(booking1ManagementInfoFromDelius.id)
+    assertThat(migratedBooking1.deliusId).isEqualTo("Delius Ref Id 1")
     assertThat(migratedBooking1.premises.id).isEqualTo(premises.id)
     assertThat(migratedBooking1.placementRequest!!.id).isEqualTo(placementRequest1.id)
     assertThat(migratedBooking1.createdBy!!.id).isEqualTo(booking1CreatedByUser.id)
@@ -362,6 +363,7 @@ class SeedCas1BookingToSpaceBookingTest : SeedTestBase() {
     val migratedBooking2 = premiseSpaceBookings[1]
     assertBookingIsDeleted(booking1ManagementInfoFromDelius.id)
     assertThat(migratedBooking2.id).isEqualTo(booking2MinimalManagementInfoFromDelius.id)
+    assertThat(migratedBooking2.deliusId).isEqualTo("Delius Ref Id 2")
     assertThat(migratedBooking2.premises.id).isEqualTo(premises.id)
     assertThat(migratedBooking2.placementRequest!!.id).isEqualTo(placementRequest2.id)
     assertThat(migratedBooking2.createdBy!!.id).isEqualTo(booking2CreatedByUser.id)
@@ -395,6 +397,7 @@ class SeedCas1BookingToSpaceBookingTest : SeedTestBase() {
     val migratedBooking3 = premiseSpaceBookings[2]
     assertBookingIsDeleted(booking3ManagementInfoFromLegacyBooking.id)
     assertThat(migratedBooking3.id).isEqualTo(booking3ManagementInfoFromLegacyBooking.id)
+    assertThat(migratedBooking3.deliusId).isNull()
     assertThat(migratedBooking3.premises.id).isEqualTo(premises.id)
     assertThat(migratedBooking3.placementRequest!!.id).isEqualTo(placementRequest3.id)
     assertThat(migratedBooking3.createdBy!!.id).isEqualTo(booking3CreatedByUser.id)
@@ -429,6 +432,7 @@ class SeedCas1BookingToSpaceBookingTest : SeedTestBase() {
     val migratedBooking4 = premiseSpaceBookings[3]
     assertBookingIsDeleted(booking4OfflineApplicationNoManagementInfo.id)
     assertThat(migratedBooking4.id).isEqualTo(booking4OfflineApplicationNoManagementInfo.id)
+    assertThat(migratedBooking4.deliusId).isNull()
     assertThat(migratedBooking4.premises.id).isEqualTo(premises.id)
     assertThat(migratedBooking4.placementRequest).isNull()
     assertThat(migratedBooking4.createdBy!!.id).isEqualTo(booking4CreatedByUser.id)
@@ -462,6 +466,7 @@ class SeedCas1BookingToSpaceBookingTest : SeedTestBase() {
     val migratedBooking5 = premiseSpaceBookings[4]
     assertBookingIsDeleted(booking5OfflineNoDomainEventOrManagementInfo.id)
     assertThat(migratedBooking5.id).isEqualTo(booking5OfflineNoDomainEventOrManagementInfo.id)
+    assertThat(migratedBooking5.deliusId).isNull()
     assertThat(migratedBooking5.premises.id).isEqualTo(premises.id)
     assertThat(migratedBooking5.placementRequest).isNull()
     assertThat(migratedBooking5.createdBy).isNull()
