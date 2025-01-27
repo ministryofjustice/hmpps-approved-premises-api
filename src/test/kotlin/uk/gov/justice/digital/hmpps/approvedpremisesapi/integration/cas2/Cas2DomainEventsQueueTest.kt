@@ -12,7 +12,7 @@ import uk.gov.justice.hmpps.sqs.HmppsQueueService
 import uk.gov.justice.hmpps.sqs.MissingQueueException
 import java.util.concurrent.TimeUnit
 
-class InboundQueueTest : IntegrationTestBase() {
+class Cas2DomainEventsQueueTest : IntegrationTestBase() {
 
   @Autowired
   private lateinit var hmppsQueueService: HmppsQueueService
@@ -23,20 +23,20 @@ class InboundQueueTest : IntegrationTestBase() {
   @SpykBean
   private lateinit var mockMessageListener: MessageListener
 
-  private val inboundQueue by lazy {
-    hmppsQueueService.findByQueueId("inboundqueue") ?: throw MissingQueueException("HmppsQueue inboundqueue not found")
+  private val cas2DomainEventsQueue by lazy {
+    hmppsQueueService.findByQueueId("castwodomaineventsqueue") ?: throw MissingQueueException("HmppsQueue castwodomaineventsqueue not found")
   }
 
-  private val inboundQueueClient by lazy { inboundQueue.sqsClient }
+  private val cas2DomainEventsClient by lazy { cas2DomainEventsQueue.sqsClient }
 
-  fun putMessageOnInboundQueue() = putMessageOnQueue(
-    inboundQueueClient,
-    inboundQueue.queueUrl,
+  fun putMessageOnCas2DomainEventsQueue() = putMessageOnQueue(
+    cas2DomainEventsClient,
+    cas2DomainEventsQueue.queueUrl,
   )
 
   @Test
-  fun `Put Message on Inbound Queue Request is successful`() {
-    putMessageOnInboundQueue()
+  fun `Put Message on CAS 2 Domain Events Queue Request is successful`() {
+    putMessageOnCas2DomainEventsQueue()
     TimeUnit.MILLISECONDS.sleep(10000)
     verify(exactly = 1) { mockMessageListener.processMessage(any()) }
     verify(exactly = 1) { mockMessageService.handleMessage(any()) }

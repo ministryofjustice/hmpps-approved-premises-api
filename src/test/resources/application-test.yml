@@ -62,7 +62,7 @@ hmpps.sqs:
       dlqName: ${random.uuid}
       queueName: ${random.uuid}
       subscribeTopicId: domainevents
-    inboundqueue:
+    castwodomaineventsqueue:
       dlqName: ${random.uuid}
       queueName: ${random.uuid}
       subscribeTopicId: domainevents

@@ -6,7 +6,7 @@ import org.springframework.stereotype.Service
 @Service
 class MessageListener(private val messageService: MessageService) {
 
-  @SqsListener("inboundqueue", factory = "hmppsQueueContainerFactoryProxy")
+  @SqsListener("castwodomaineventsqueue", factory = "hmppsQueueContainerFactoryProxy")
   fun processMessage(message: Message) {
     messageService.handleMessage(message)
   }

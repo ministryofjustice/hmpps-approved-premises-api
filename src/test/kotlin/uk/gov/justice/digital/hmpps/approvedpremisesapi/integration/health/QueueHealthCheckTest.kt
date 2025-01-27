@@ -11,20 +11,20 @@ class QueueHealthCheckTest : IntegrationTestBase() {
   @MockitoSpyBean
   private lateinit var hmppsSqsPropertiesSpy: HmppsSqsProperties
 
-  fun HmppsSqsProperties.inboundQueueConfig() = queues["inboundqueue"]
-    ?: throw MissingQueueException("inboundqueue has not been loaded from configuration properties")
+  fun HmppsSqsProperties.cas2DomainEventsQueueConfig() = queues["castwodomaineventsqueue"]
+    ?: throw MissingQueueException("castwodomaineventsqueue has not been loaded from configuration properties")
 
   @Test
-  fun `Inbound queue health ok`() {
+  fun `CAS 2 Domain Events queue health ok`() {
     webTestClient.get().uri("/health").exchange().expectStatus().isOk.expectBody().jsonPath("status").isEqualTo("UP")
-      .jsonPath("components.inboundqueue-health.status").isEqualTo("UP")
-      .jsonPath("components.inboundqueue-health.details.queueName")
-      .isEqualTo(hmppsSqsPropertiesSpy.inboundQueueConfig().queueName)
-      .jsonPath("components.inboundqueue-health.details.messagesOnQueue").isEqualTo(0)
-      .jsonPath("components.inboundqueue-health.details.messagesInFlight").isEqualTo(0)
-      .jsonPath("components.inboundqueue-health.details.dlqName")
-      .isEqualTo(hmppsSqsPropertiesSpy.inboundQueueConfig().dlqName)
-      .jsonPath("components.inboundqueue-health.details.dlqStatus").isEqualTo("UP")
-      .jsonPath("components.inboundqueue-health.details.messagesOnDlq").isEqualTo(0)
+      .jsonPath("components.castwodomaineventsqueue-health.status").isEqualTo("UP")
+      .jsonPath("components.castwodomaineventsqueue-health.details.queueName")
+      .isEqualTo(hmppsSqsPropertiesSpy.cas2DomainEventsQueueConfig().queueName)
+      .jsonPath("components.castwodomaineventsqueue-health.details.messagesOnQueue").isEqualTo(0)
+      .jsonPath("components.castwodomaineventsqueue-health.details.messagesInFlight").isEqualTo(0)
+      .jsonPath("components.castwodomaineventsqueue-health.details.dlqName")
+      .isEqualTo(hmppsSqsPropertiesSpy.cas2DomainEventsQueueConfig().dlqName)
+      .jsonPath("components.castwodomaineventsqueue-health.details.dlqStatus").isEqualTo("UP")
+      .jsonPath("components.castwodomaineventsqueue-health.details.messagesOnDlq").isEqualTo(0)
   }
 }
