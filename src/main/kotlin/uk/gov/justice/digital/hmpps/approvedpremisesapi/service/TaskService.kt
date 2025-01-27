@@ -16,7 +16,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AssessmentRep
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementApplicationRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementRequestEntity
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementRequestRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Task
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TaskEntityType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TaskRepository
@@ -27,7 +26,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.NotAllowedProble
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.AuthorisableActionResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.CasResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.ValidatableActionResult
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.PlacementRequestService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.UserTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.PageCriteria
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.getMetadata
@@ -38,13 +36,11 @@ class TaskService(
   private val assessmentService: AssessmentService,
   private val userService: UserService,
   private val userAccessService: UserAccessService,
-  private val placementRequestService: PlacementRequestService,
   private val userTransformer: UserTransformer,
   private val placementApplicationService: PlacementApplicationService,
   private val taskRepository: TaskRepository,
   private val assessmentRepository: AssessmentRepository,
   private val placementApplicationRepository: PlacementApplicationRepository,
-  private val placementRequestRepository: PlacementRequestRepository,
 ) {
 
   data class TaskFilterCriteria(
@@ -81,19 +77,11 @@ class TaskService(
       emptyList()
     }
 
-    val placementRequests = if (taskTypes.contains(TaskEntityType.PLACEMENT_REQUEST)) {
-      val placementRequestIds = tasks.idsForType(TaskEntityType.PLACEMENT_REQUEST)
-      placementRequestRepository.findAllById(placementRequestIds).map { TypedTask.PlacementRequest(it) }
-    } else {
-      emptyList()
-    }
-
     val typedTasks = tasks
       .map { task ->
         val candidateList = when (task.type) {
           TaskEntityType.ASSESSMENT -> assessments
           TaskEntityType.PLACEMENT_APPLICATION -> placementApplications
-          TaskEntityType.PLACEMENT_REQUEST -> placementRequests
         }
 
         candidateList.first { it.id == task.id }
@@ -128,7 +116,6 @@ class TaskService(
       when (taskTypes[0]) {
         TaskEntityType.ASSESSMENT -> taskRepository::getAllAssessments
         TaskEntityType.PLACEMENT_APPLICATION -> taskRepository::getAllPlacementApplications
-        TaskEntityType.PLACEMENT_REQUEST -> taskRepository::getAllPlacementRequests
       }
     } else {
       taskRepository::getAll
@@ -174,9 +161,6 @@ class TaskService(
           assigneeUser = assigneeUser,
           id = taskId,
         )
-      }
-      TaskType.placementRequest -> {
-        placementRequestService.reallocatePlacementRequest(assigneeUser, taskId)
       }
       TaskType.placementApplication -> {
         placementApplicationService.reallocateApplication(assigneeUser, taskId)
