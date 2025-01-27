@@ -10,7 +10,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.OASysRiskOfSer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.OASysRiskToSelf
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Person
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PersonRisks
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserQualification
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PersonInfoResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.ProbationOffenderSearchResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.community.OffenderDetailSummary
@@ -18,25 +17,21 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.BadRequestProble
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.ForbiddenProblem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.NotFoundProblem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.AuthorisableActionResult
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.NomisUserService
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.UserService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas2v2.Cas2v2UserService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.OASysSectionsTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.PersonTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.RisksTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.OffenderService as DeliusOffenderService
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.OffenderService as OASysOffenderService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas2.OffenderService as NomsOffenderService
 
 @Service("Cas2v2PeopleController")
 class Cas2v2PeopleController(
   private val nomsOffenderService: NomsOffenderService,
   private val deliusOffenderService: DeliusOffenderService,
-  private val oaSysOffenderService: OASysOffenderService,
   private val oaSysSectionsTransformer: OASysSectionsTransformer,
   private val personTransformer: PersonTransformer,
   private val risksTransformer: RisksTransformer,
-  private val nomisUserService: NomisUserService,
-  private val deliusUserService: UserService,
+  private val cas2v2UserService: Cas2v2UserService,
 ) : PeopleCas2v2Delegate {
 
   override fun peopleSearchGet(nomsNumber: String?, crn: String?): ResponseEntity<Person> {
@@ -49,8 +44,9 @@ class Cas2v2PeopleController(
 
   @SuppressWarnings("ThrowsCount")
   private fun searchByNoms(nomsNumber: String): ResponseEntity<Person> {
-    val currentUser = nomisUserService.getUserForRequest()
-    val probationOffenderResult = nomsOffenderService.getPersonByNomsNumber(nomsNumber, currentUser)
+    val currentUser = cas2v2UserService.getUserForRequest()
+    val caseLoadId = currentUser.activeNomisCaseloadId ?: return ResponseEntity.notFound().build()
+    val probationOffenderResult = nomsOffenderService.getPersonByNomsNumberAndActiveCaseLoadId(nomsNumber, caseLoadId)
 
     when (probationOffenderResult) {
       is ProbationOffenderSearchResult.NotFound -> throw NotFoundProblem(nomsNumber, "Offender")
@@ -66,8 +62,9 @@ class Cas2v2PeopleController(
   }
 
   private fun searchByCrn(crn: String): ResponseEntity<Person> {
-    val deliusUser = deliusUserService.getUserForRequest()
-    val personInfo = deliusOffenderService.getPersonInfoResult(crn, deliusUser.deliusUsername, deliusUser.hasQualification(UserQualification.LAO))
+    val deliusUser = cas2v2UserService.getUserForRequest()
+
+    val personInfo = deliusOffenderService.getPersonInfoResult(crn, deliusUser.username, false)
 
     when (personInfo) {
       is PersonInfoResult.NotFound -> throw NotFoundProblem(crn, "Offender")
@@ -83,11 +80,11 @@ class Cas2v2PeopleController(
 
     return runBlocking(context = Dispatchers.IO) {
       val offenceDetailsResult = async {
-        oaSysOffenderService.getOASysOffenceDetails(crn)
+        deliusOffenderService.getOASysOffenceDetails(crn)
       }
 
       val riskToTheIndividualResult = async {
-        oaSysOffenderService.getOASysRiskToTheIndividual(crn)
+        deliusOffenderService.getOASysRiskToTheIndividual(crn)
       }
 
       val offenceDetails = getSuccessEntityOrThrow(crn, offenceDetailsResult.await())
@@ -104,11 +101,11 @@ class Cas2v2PeopleController(
 
     return runBlocking(context = Dispatchers.IO) {
       val offenceDetailsResult = async {
-        oaSysOffenderService.getOASysOffenceDetails(crn)
+        deliusOffenderService.getOASysOffenceDetails(crn)
       }
 
       val roshResult = async {
-        oaSysOffenderService.getOASysRoshSummary(crn)
+        deliusOffenderService.getOASysRoshSummary(crn)
       }
 
       val offenceDetails = getSuccessEntityOrThrow(crn, offenceDetailsResult.await())

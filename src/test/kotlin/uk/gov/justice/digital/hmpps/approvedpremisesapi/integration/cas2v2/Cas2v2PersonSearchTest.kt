@@ -3,7 +3,7 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.cas2v2
 import com.github.tomakehurst.wiremock.client.WireMock
 import com.github.tomakehurst.wiremock.client.WireMock.aResponse
 import com.github.tomakehurst.wiremock.client.WireMock.get
-import org.junit.jupiter.api.Disabled
+import com.github.tomakehurst.wiremock.client.WireMock.urlEqualTo
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.FullPerson
@@ -16,7 +16,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.Cas2v2Integr
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenACas2PomUser
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAUser
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAnOffender
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.cas2v2SearchAPIMockServerErrorSearchCall
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.prisonAPIMockSuccessfulInmateDetailsCall
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.probationOffenderSearchAPIMockForbiddenOffenderSearchCall
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.probationOffenderSearchAPIMockNotFoundSearchCall
@@ -155,7 +154,6 @@ class Cas2v2PersonSearchTest : Cas2v2IntegrationTestBase() {
             .is5xxServerError
         }
       }
-
     }
 
     @Nested
@@ -259,20 +257,48 @@ class Cas2v2PersonSearchTest : Cas2v2IntegrationTestBase() {
           .isForbidden
       }
 
-      @Test @Disabled
+      @Test
       fun `Searching for a CRN with ROLE_POM returns 403`() {
-        val jwt = jwtAuthHelper.createAuthorizationCodeJwt(
-          subject = "username",
-          authSource = "delius",
-          roles = listOf("ROLE_POM"),
-        )
 
-        webTestClient.get()
-          .uri("/cas2v2/people/search?crn=CRN")
-          .header("Authorization", "Bearer $jwt")
-          .exchange()
-          .expectStatus()
-          .isForbidden
+//        val jwt = jwtAuthHelper.createAuthorizationCodeJwt(
+//          subject = "username",
+//          authSource = "delius",
+//          roles = listOf("ROLE_POM"),
+//        )
+//
+//        webTestClient.get()
+//          .uri("/cas2v2/people/search?crn=CRN")
+//          .header("Authorization", "Bearer $jwt")
+//          .header("X-Service-Name", ServiceName.cas2v2.value)
+//          .exchange()
+//          .expectStatus()
+//          .isForbidden
+
+        givenAUser  { _, _ ->
+          val jwt = jwtAuthHelper.createAuthorizationCodeJwt(
+            subject = "username",
+            authSource = "delius",
+            roles = listOf("ROLE_POM"),
+          )
+          wiremockServer.stubFor(
+            get(WireMock.urlEqualTo("/search/USERNAME"))
+              .willReturn(
+                aResponse()
+                  .withHeader("Content-Type", "application/json")
+                  .withStatus(403),
+              ),
+          )
+
+          webTestClient.get()
+            .uri("/cas2v2/people/search?crn=CRN")
+            .header("Authorization", "Bearer $jwt")
+            .exchange()
+            .expectStatus()
+            .isForbidden
+        }
+
+
+
       }
 
       @Test
@@ -295,13 +321,10 @@ class Cas2v2PersonSearchTest : Cas2v2IntegrationTestBase() {
             .isNotFound
         }
       }
-
-
     }
 
-
     @Nested
-    inner class WhenSuccessfulCRN{
+    inner class WhenSuccessfulCRN {
 
       @Test
       fun `Searching for a CRN returns OK with correct body`() {
@@ -363,7 +386,6 @@ class Cas2v2PersonSearchTest : Cas2v2IntegrationTestBase() {
         }
       }
 
-
       @Test
       fun `Searching for a CRN without a NomsNumber returns OK with correct body`() {
         givenAUser { _, jwt ->
@@ -411,10 +433,6 @@ class Cas2v2PersonSearchTest : Cas2v2IntegrationTestBase() {
           }
         }
       }
-
-
     }
   }
-
-
 }
