@@ -5,7 +5,8 @@ import io.mockk.verify
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.IntegrationTestBase
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.setup.*
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.setup.putUnwantedMessageOnQueue
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.setup.putWantedMessageOnQueue
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas2.MessageListener
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas2.MessageService
 import uk.gov.justice.hmpps.sqs.HmppsQueueService
