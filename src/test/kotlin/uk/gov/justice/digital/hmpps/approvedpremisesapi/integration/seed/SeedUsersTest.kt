@@ -49,9 +49,8 @@ class SeedUsersTest : SeedTestBase() {
   fun `Attempting to seed a real but currently unknown user succeeds`() {
     val probationRegion = givenAProbationRegion()
 
-    val probationRegionDeliusMapping = probationAreaProbationRegionMappingFactory.produceAndPersist {
-      withProbationRegion(probationRegion)
-    }
+    val probationRegionDeliusMapping =
+      probationAreaProbationRegionMappingEntityTestFactory.produceAndPersist(probationRegion)
 
     apDeliusContextAddStaffDetailResponse(
       StaffDetailFactory.staffDetail(
@@ -267,9 +266,8 @@ class SeedUsersTest : SeedTestBase() {
   fun `Seeding same users multiple times works every time for base user seed job`() {
     val probationRegion = givenAProbationRegion()
 
-    val probationRegionDeliusMapping = probationAreaProbationRegionMappingFactory.produceAndPersist {
-      withProbationRegion(probationRegion)
-    }
+    val probationRegionDeliusMapping =
+      probationAreaProbationRegionMappingEntityTestFactory.produceAndPersist(probationRegion = probationRegion)
     StaffDetailFactory.staffDetail(
       probationArea = ProbationArea(
         code = probationRegionDeliusMapping.probationAreaDeliusCode,
@@ -361,9 +359,8 @@ class SeedUsersTest : SeedTestBase() {
   fun `Seeding same users multiple times works every time for AP user seed job`() {
     val probationRegion = givenAProbationRegion()
 
-    val probationRegionDeliusMapping = probationAreaProbationRegionMappingFactory.produceAndPersist {
-      withProbationRegion(probationRegion)
-    }
+    val probationRegionDeliusMapping =
+      probationAreaProbationRegionMappingEntityTestFactory.produceAndPersist(probationRegion = probationRegion)
 
     val seedInfos = listOf(
       SeedInfo(
