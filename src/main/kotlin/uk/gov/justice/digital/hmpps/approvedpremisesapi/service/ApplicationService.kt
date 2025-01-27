@@ -54,6 +54,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.InternalServerEr
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.AuthorisableActionResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.CasResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.ValidatableActionResult
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.OffenderService.Companion.MAX_OFFENDER_REQUEST_COUNT
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1ApplicationDomainEventService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1ApplicationEmailService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.WithdrawableState
@@ -100,27 +101,23 @@ class ApplicationService(
 ) {
   fun getApplication(applicationId: UUID) = applicationRepository.findByIdOrNull(applicationId)
 
-  fun getAllApplicationsForUsername(userDistinguishedName: String, serviceName: ServiceName): List<ApplicationSummary> {
-    val userEntity = userRepository.findByDeliusUsername(userDistinguishedName)
-      ?: return emptyList()
-
+  fun getAllApplicationsForUsername(user: UserEntity, serviceName: ServiceName): List<ApplicationSummary> {
     val applicationSummaries = when (serviceName) {
-      ServiceName.approvedPremises -> getAllApprovedPremisesApplicationsForUser(userEntity)
-      ServiceName.cas2 -> throw RuntimeException(
-        "CAS2 applications now require " +
-          "NomisUser",
-      )
-
-      ServiceName.cas2v2 -> throw RuntimeException(
-        "CAS2v2 applications now require " +
-          "Cas2v2User",
-      )
-
-      ServiceName.temporaryAccommodation -> getAllTemporaryAccommodationApplicationsForUser(userEntity)
+      ServiceName.approvedPremises -> getAllApprovedPremisesApplicationsForUser(user)
+      ServiceName.cas2 -> throw RuntimeException("CAS2 applications now require NomisUser")
+      ServiceName.cas2v2 -> throw RuntimeException("CAS2v2 applications now require Cas2v2User")
+      ServiceName.temporaryAccommodation -> {
+        applicationRepository.findAllTemporaryAccommodationSummariesCreatedByUser(user.id)
+      }
     }
 
-    val crns = applicationSummaries.map { it.getCrn() }.distinct()
-    val offendersAccess = offenderService.canAccessOffenders(userDistinguishedName, crns)
+    val offendersAccess = applicationSummaries.map { it.getCrn() }.distinct().chunked(MAX_OFFENDER_REQUEST_COUNT)
+      .map { chunk ->
+        offenderService.canAccessOffenders(user.deliusUsername, chunk)
+      }
+      .flatMap { it.entries }
+      .associate { it.key to it.value }
+
     return applicationSummaries.filter {
       offendersAccess.containsKey(it.getCrn()) && offendersAccess[it.getCrn()] == true
     }
@@ -161,18 +158,6 @@ class ApplicationService(
 
   private fun getAllApprovedPremisesApplicationsForUser(user: UserEntity) =
     applicationRepository.findNonWithdrawnApprovedPremisesSummariesForUser(user.id)
-
-  private fun getAllTemporaryAccommodationApplicationsForUser(user: UserEntity): List<ApplicationSummary> {
-    return when (userAccessService.getTemporaryAccommodationApplicationAccessLevelForUser(user)) {
-      TemporaryAccommodationApplicationAccessLevel.SUBMITTED_IN_REGION ->
-        applicationRepository.findAllSubmittedTemporaryAccommodationSummariesByRegion(user.probationRegion.id)
-
-      TemporaryAccommodationApplicationAccessLevel.SELF ->
-        applicationRepository.findAllTemporaryAccommodationSummariesCreatedByUser(user.id)
-
-      TemporaryAccommodationApplicationAccessLevel.NONE -> emptyList()
-    }
-  }
 
   fun getApplicationForUsername(
     applicationId: UUID,

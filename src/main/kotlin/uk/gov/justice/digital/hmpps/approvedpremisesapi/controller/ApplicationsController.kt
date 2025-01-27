@@ -37,6 +37,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremi
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.OfflineApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserQualification
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRole
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PersonInfoResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.deliuscontext.APDeliusDocument
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.BadRequestProblem
@@ -53,6 +54,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.ApplicationTimel
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.AssessmentService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.HttpAuthService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.OffenderService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.OffenderService.Companion.MAX_OFFENDER_REQUEST_COUNT
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.UserService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1RequestForPlacementService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1WithdrawableService
@@ -96,20 +98,27 @@ class ApplicationsController(
 
     val user = userService.getUserForRequest()
 
-    val applications = applicationService.getAllApplicationsForUsername(user.deliusUsername, serviceName)
+    /*there needs to be some significant refactoring in this class for it to follow the pattern for the service to return a CasResult.
+     * just adding validation in here for now to prevent having to refactor it all now.
+     */
+    if (serviceName == ServiceName.temporaryAccommodation && !user.hasRole(UserRole.CAS3_REFERRER)) {
+      throw ForbiddenProblem()
+    }
 
-      /*
-      This code is inefficient:
+    val applications = applicationService.getAllApplicationsForUsername(user, serviceName)
 
-      getPersonDetailAndTransformToSummary will retrieve/check user access (via the call to offenderService),
-      but the prior call to getAllApplicationsForUsername has already retrieved this information
-      and filtered out applications that the user cannot access. This leads to duplicate calls being made.
+    /*
+    This code is inefficient:
 
-      This check should be moved into getPersonDetailAndTransformToSummary (or a custom version of it to
-      avoid breaking behaviour for other callers), where we filter out any response from
-      offenderService.getInfoForPerson of type PersonInfoResult.Restricted. This will most likely have
-      to be optional as to not 'break' other functions using getPersonDetailAndTransformToSummary
-       */
+    getPersonDetailAndTransformToSummary will retrieve/check user access (via the call to offenderService),
+    but the prior call to getAllApplicationsForUsername has already retrieved this information
+    and filtered out applications that the user cannot access. This leads to duplicate calls being made.
+
+    This check should be moved into getPersonDetailAndTransformToSummary (or a custom version of it to
+    avoid breaking behaviour for other callers), where we filter out any response from
+    offenderService.getInfoForPerson of type PersonInfoResult.Restricted. This will most likely have
+    to be optional as to not 'break' other functions using getPersonDetailAndTransformToSummary
+     */
     return ResponseEntity.ok(getPersonDetailAndTransformToSummary(applications, user))
   }
 
@@ -541,8 +550,10 @@ class ApplicationsController(
     user: UserEntity,
     ignoreLaoRestrictions: Boolean = false,
   ): List<ApplicationSummary> {
-    val crns = applications.map { it.getCrn() }
-    val personInfoResults = offenderService.getPersonInfoResults(crns.toSet(), user.deliusUsername, ignoreLaoRestrictions)
+    val crns = applications.map { it.getCrn() }.chunked(MAX_OFFENDER_REQUEST_COUNT)
+    val personInfoResults = crns.flatMap { chunk ->
+      offenderService.getPersonInfoResults(chunk.toSet(), user.deliusUsername, ignoreLaoRestrictions)
+    }
 
     return applications.map {
       val crn = it.getCrn()

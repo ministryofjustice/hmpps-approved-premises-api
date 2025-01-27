@@ -76,7 +76,9 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.community.Offender
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.community.OffenderIds
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.community.OffenderLanguages
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.community.OffenderProfile
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.deliuscontext.CaseAccess
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.deliuscontext.ManagingTeamsResponse
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.deliuscontext.UserAccess
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.prisonsapi.AssignedLivingUnit
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.prisonsapi.InmateDetail
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.prisonsapi.InmateStatus
@@ -153,20 +155,6 @@ class ApplicationServiceTest {
   )
 
   @Test
-  fun `Get all applications where Probation Officer with provided distinguished name does not exist returns empty list`() {
-    val distinguishedName = "SOMEPERSON"
-
-    every { mockUserRepository.findByDeliusUsername(distinguishedName) } returns null
-
-    assertThat(
-      applicationService.getAllApplicationsForUsername(
-        distinguishedName,
-        ServiceName.approvedPremises,
-      ),
-    ).isEmpty()
-  }
-
-  @Test
   fun `Get all applications where Probation Officer exists returns applications returned from repository`() {
     val userId = UUID.fromString("8a0624b8-8e92-47ce-b645-b65ea5a197d0")
     val distinguishedName = "SOMEPERSON"
@@ -209,10 +197,84 @@ class ApplicationServiceTest {
 
     assertThat(
       applicationService.getAllApplicationsForUsername(
-        distinguishedName,
+        userEntity,
         ServiceName.approvedPremises,
       ),
     ).containsAll(applicationSummaries)
+  }
+
+  @Test
+  fun `Get all applications where Probation Officer has more than 500 open applications`() {
+    val userId = UUID.fromString("8a0624b8-8e92-47ce-b645-b65ea5a197d0")
+    val deliusUsername = "SOMEPERSON"
+    val userEntity = UserEntityFactory()
+      .withId(userId)
+      .withDeliusUsername(deliusUsername)
+      .withYieldedProbationRegion {
+        ProbationRegionEntityFactory()
+          .withYieldedApArea { ApAreaEntityFactory().produce() }
+          .produce()
+      }
+      .produce()
+
+    val summaries = mutableListOf<ApprovedPremisesApplicationSummary>()
+
+    for (i in 1..510) {
+      summaries.add(
+        object : ApprovedPremisesApplicationSummary {
+          override fun getIsWomensApplication(): Boolean? = true
+          override fun getIsPipeApplication(): Boolean? = true
+          override fun getIsEsapApplication() = true
+          override fun getIsEmergencyApplication() = true
+          override fun getArrivalDate(): Instant? = null
+          override fun getRiskRatings(): String? = null
+          override fun getId(): UUID = UUID.randomUUID()
+          override fun getCrn(): String = "CRN$i"
+          override fun getCreatedByUserId(): UUID = userId
+          override fun getCreatedAt(): Instant = Instant.parse("2023-04-20T10:11:00+01:00")
+          override fun getSubmittedAt(): Instant? = null
+          override fun getTier(): String? = null
+          override fun getStatus(): String = ApprovedPremisesApplicationStatus.started.toString()
+          override fun getIsWithdrawn(): Boolean = false
+          override fun getReleaseType(): String = ReleaseTypeOption.licence.toString()
+          override fun getHasRequestsForPlacement(): Boolean = false
+        },
+      )
+    }
+
+    every { mockUserRepository.findByDeliusUsername(deliusUsername) } returns userEntity
+    every { mockApplicationRepository.findNonWithdrawnApprovedPremisesSummariesForUser(userId) } returns summaries
+    every { mockJsonSchemaService.checkSchemaOutdated(any()) } answers { it.invocation.args[0] as ApplicationEntity }
+    every { mockOffenderService.canAccessOffenders(any(), any()) } answers {
+      val crns = secondArg<List<String>>()
+      crns.associateWith { true }
+    }
+
+    every { mockApDeliusContextApiClient.getUserAccessForCrns(any(), any()) } answers {
+      val crns = secondArg<List<String>>()
+      val caseAccess = crns.map { crn ->
+        CaseAccess(
+          crn = crn,
+          userExcluded = false,
+          userRestricted = false,
+          exclusionMessage = null,
+          restrictionMessage = null,
+        )
+      }
+
+      ClientResult.Success(
+        HttpStatus.OK,
+        UserAccess(
+          access = caseAccess,
+        ),
+      )
+    }
+
+    val result = applicationService.getAllApplicationsForUsername(
+      userEntity,
+      ServiceName.approvedPremises,
+    )
+    assertThat(result).hasSize(510)
   }
 
   @Test
