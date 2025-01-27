@@ -5,7 +5,7 @@ import io.mockk.verify
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.IntegrationTestBase
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.setup.putMessageOnQueue
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.setup.*
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas2.MessageListener
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas2.MessageService
 import uk.gov.justice.hmpps.sqs.HmppsQueueService
@@ -29,7 +29,12 @@ class Cas2DomainEventsQueueTest : IntegrationTestBase() {
 
   private val cas2DomainEventsClient by lazy { cas2DomainEventsQueue.sqsClient }
 
-  fun putMessageOnCas2DomainEventsQueue() = putMessageOnQueue(
+  fun putMessageOnCas2DomainEventsQueue() = putWantedMessageOnQueue(
+    cas2DomainEventsClient,
+    cas2DomainEventsQueue.queueUrl,
+  )
+
+  fun putUnwantedMessageOnCas2DomainEventsQueue() = putUnwantedMessageOnQueue(
     cas2DomainEventsClient,
     cas2DomainEventsQueue.queueUrl,
   )
@@ -40,5 +45,12 @@ class Cas2DomainEventsQueueTest : IntegrationTestBase() {
     TimeUnit.MILLISECONDS.sleep(10000)
     verify(exactly = 1) { mockMessageListener.processMessage(any()) }
     verify(exactly = 1) { mockMessageService.handleMessage(any()) }
+  }
+
+  @Test
+  fun `Put Unwanted Message on CAS 2 Domain Events Queue Request is successful`() {
+    putUnwantedMessageOnCas2DomainEventsQueue()
+    TimeUnit.MILLISECONDS.sleep(10000)
+    verify(exactly = 0) { mockMessageListener.processMessage(any()) }
   }
 }
