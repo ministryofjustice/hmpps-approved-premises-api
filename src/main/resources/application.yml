@@ -177,7 +177,6 @@ hmpps:
 
 log-client-credentials-jwt-info: false
 log-request-response: false
-cas2-sqs-listener-enabled: false
 
 prison-case-notes:
   lookback-days: 365
@@ -303,4 +302,4 @@ scheduling:
   enabled: true
 
 feature-flags:
-
+  cas2-sqs-listener-enabled: false

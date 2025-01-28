@@ -211,3 +211,4 @@ scheduling:
 logging.level.org.springframework.jdbc.core.JdbcTemplate: debug
 
 feature-flags:
+  cas2-sqs-listener-enabled: true

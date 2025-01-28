@@ -41,7 +41,7 @@ class Cas2DomainEventsQueueTest : IntegrationTestBase() {
   )
 
   @Test
-  fun `Put Message on CAS 2 Domain Events Queue Request is successful`() {
+  fun `Put Message on Domain Events Topic is successful`() {
     publishWantedMessageToDomainEventsTopic()
     TimeUnit.MILLISECONDS.sleep(10000)
     verify(exactly = 1) { mockMessageListener.processMessage(any()) }
@@ -49,7 +49,7 @@ class Cas2DomainEventsQueueTest : IntegrationTestBase() {
   }
 
   @Test
-  fun `Put Unwanted Message on CAS 2 Domain Events Queue Request is successful`() {
+  fun `Put Unwanted Message on Domain Events Topic is successful as it is filtered out by the queue`() {
     publishUnwantedMessageToDomainEventsTopic()
     TimeUnit.MILLISECONDS.sleep(10000)
     verify(exactly = 0) { mockMessageListener.processMessage(any()) }
