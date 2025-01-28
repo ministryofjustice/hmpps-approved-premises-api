@@ -405,6 +405,10 @@ components:
         label:
           type: string
           example: 'Change of Circumstances'
+        children:
+          type: array
+          items:
+            $ref: '#/components/schemas/Cas2v2ApplicationStatusDetail'
       required:
         - id
         - name
