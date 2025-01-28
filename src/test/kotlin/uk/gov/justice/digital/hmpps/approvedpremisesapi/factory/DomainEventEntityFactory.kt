@@ -3,6 +3,7 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.factory
 import com.fasterxml.jackson.databind.ObjectMapper
 import io.github.bluegroundltd.kfactory.Factory
 import io.github.bluegroundltd.kfactory.Yielded
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApplicationOrigin
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DomainEventEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DomainEventType
@@ -25,12 +26,13 @@ class DomainEventEntityFactory : Factory<DomainEventEntity> {
   private var occurredAt: Yielded<OffsetDateTime> = { OffsetDateTime.now().randomDateTimeBefore(7) }
   private var createdAt: Yielded<OffsetDateTime> = { OffsetDateTime.now().randomDateTimeBefore(7) }
   private var data: Yielded<String> = { "{}" }
-  private var service: Yielded<String> = { randomOf(listOf("CAS1", "CAS2", "CAS3")) }
+  private var service: Yielded<String> = { randomOf(listOf("CAS1", "CAS2", "CAS2V2", "CAS3")) }
   private var triggerSource: Yielded<TriggerSourceType?> = { null }
   private var triggeredByUserId: Yielded<UUID?> = { null }
   private var nomsNumber: Yielded<String?> = { randomStringMultiCaseWithNumbers(8) }
   private var metadata: Yielded<Map<MetaDataName, String?>> = { emptyMap() }
   private var schemaVersion: Yielded<Int?> = { null }
+  private var applicationOrigin: Yielded<ApplicationOrigin?> = { null }
 
   fun withId(id: UUID) = apply {
     this.id = { id }
@@ -81,6 +83,7 @@ class DomainEventEntityFactory : Factory<DomainEventEntity> {
       when (service) {
         ServiceName.approvedPremises -> "CAS1"
         ServiceName.cas2 -> "CAS2"
+        ServiceName.cas2v2 -> "CAS2V2"
         ServiceName.temporaryAccommodation -> "CAS3"
       }
     }
@@ -104,6 +107,10 @@ class DomainEventEntityFactory : Factory<DomainEventEntity> {
 
   fun withSchemaVersion(schemaVersion: Int?) = apply {
     this.schemaVersion = { schemaVersion }
+  }
+
+  fun withApplicationOrigin(applicationOrigin: ApplicationOrigin?) = apply {
+    this.applicationOrigin = { applicationOrigin }
   }
 
   override fun produce(): DomainEventEntity = DomainEventEntity(
