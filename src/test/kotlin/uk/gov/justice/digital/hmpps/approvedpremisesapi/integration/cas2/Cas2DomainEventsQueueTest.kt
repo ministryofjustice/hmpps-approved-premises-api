@@ -5,8 +5,8 @@ import io.mockk.verify
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.IntegrationTestBase
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.setup.putUnwantedMessageOnQueue
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.setup.putWantedMessageOnQueue
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.setup.publishUnwantedMessageToTopic
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.setup.publishWantedMessageToTopic
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas2.MessageListener
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas2.MessageService
 import uk.gov.justice.hmpps.sqs.HmppsQueueService
@@ -24,25 +24,25 @@ class Cas2DomainEventsQueueTest : IntegrationTestBase() {
   @SpykBean
   private lateinit var mockMessageListener: MessageListener
 
-  private val cas2DomainEventsQueue by lazy {
-    hmppsQueueService.findByQueueId("castwodomaineventsqueue") ?: throw MissingQueueException("HmppsQueue castwodomaineventsqueue not found")
+  private val domainEventsTopic by lazy {
+    hmppsQueueService.findByTopicId("domainevents") ?: throw MissingQueueException("HmppsTopic domainevents not found")
   }
 
-  private val cas2DomainEventsClient by lazy { cas2DomainEventsQueue.sqsClient }
+  private val domainEventsClient by lazy { domainEventsTopic.snsClient }
 
-  fun putMessageOnCas2DomainEventsQueue() = putWantedMessageOnQueue(
-    cas2DomainEventsClient,
-    cas2DomainEventsQueue.queueUrl,
+  fun publishUnwantedMessageToDomainEventsTopic() = publishUnwantedMessageToTopic(
+    domainEventsClient,
+    domainEventsTopic.arn,
   )
 
-  fun putUnwantedMessageOnCas2DomainEventsQueue() = putUnwantedMessageOnQueue(
-    cas2DomainEventsClient,
-    cas2DomainEventsQueue.queueUrl,
+  fun publishWantedMessageToDomainEventsTopic() = publishWantedMessageToTopic(
+    domainEventsClient,
+    domainEventsTopic.arn,
   )
 
   @Test
   fun `Put Message on CAS 2 Domain Events Queue Request is successful`() {
-    putMessageOnCas2DomainEventsQueue()
+    publishWantedMessageToDomainEventsTopic()
     TimeUnit.MILLISECONDS.sleep(10000)
     verify(exactly = 1) { mockMessageListener.processMessage(any()) }
     verify(exactly = 1) { mockMessageService.handleMessage(any()) }
@@ -50,7 +50,7 @@ class Cas2DomainEventsQueueTest : IntegrationTestBase() {
 
   @Test
   fun `Put Unwanted Message on CAS 2 Domain Events Queue Request is successful`() {
-    putUnwantedMessageOnCas2DomainEventsQueue()
+    publishUnwantedMessageToDomainEventsTopic()
     TimeUnit.MILLISECONDS.sleep(10000)
     verify(exactly = 0) { mockMessageListener.processMessage(any()) }
   }
