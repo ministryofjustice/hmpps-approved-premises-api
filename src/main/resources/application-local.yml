@@ -22,7 +22,7 @@ hmpps.sqs:
   queues:
     castwodomaineventsqueue:
       queueName: cas-2-domain-events-queue
-      dlqName: cas-2-domain-events-dlq
+      dlqName: cas-2-domain-events-dl-queue
       subscribeTopicId: domainevents
       subscribeFilter: '{"eventType":["offender-management.allocation.changed", "offender-management.handover.changed"]}'
   topics:
