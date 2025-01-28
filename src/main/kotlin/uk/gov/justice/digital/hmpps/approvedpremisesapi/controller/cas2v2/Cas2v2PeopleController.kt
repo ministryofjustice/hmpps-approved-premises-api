@@ -10,39 +10,55 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.OASysRiskOfSer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.OASysRiskToSelf
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Person
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PersonRisks
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PersonInfoResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.ProbationOffenderSearchResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.community.OffenderDetailSummary
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.BadRequestProblem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.ForbiddenProblem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.NotFoundProblem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.AuthorisableActionResult
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.NomisUserService
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas2.OffenderService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas2v2.Cas2v2UserService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.limitedAccessStrategy
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.OASysSectionsTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.PersonTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.RisksTransformer
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.OffenderService as OASysOffenderService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.OffenderService as DeliusOffenderService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas2.OffenderService as NomsOffenderService
 
 @Service("Cas2v2PeopleController")
 class Cas2v2PeopleController(
-  private val offenderService: OffenderService,
-  private val oaSysOffenderService: OASysOffenderService,
+  private val nomsOffenderService: NomsOffenderService,
+  private val deliusOffenderService: DeliusOffenderService,
   private val oaSysSectionsTransformer: OASysSectionsTransformer,
   private val personTransformer: PersonTransformer,
   private val risksTransformer: RisksTransformer,
-  private val nomisUserService: NomisUserService,
+  private val cas2v2UserService: Cas2v2UserService,
 ) : PeopleCas2v2Delegate {
 
-  override fun peopleSearchGet(nomsNumber: String): ResponseEntity<Person> {
-    val currentUser = nomisUserService.getUserForRequest()
+  override fun searchByCrnGet(crn: String): ResponseEntity<Person> {
+    val deliusUser = cas2v2UserService.getUserForRequest()
+    val personInfo = deliusOffenderService.getPersonInfoResult(crn, deliusUser.limitedAccessStrategy())
 
-    val probationOffenderResult = offenderService.getPersonByNomsNumber(nomsNumber, currentUser)
+    when (personInfo) {
+      is PersonInfoResult.NotFound -> throw NotFoundProblem(crn, "Offender")
+      is PersonInfoResult.Unknown -> throw personInfo.throwable ?: BadRequestProblem(errorDetail = "Could not retrieve person info for CRN: $crn")
+      is PersonInfoResult.Success -> return ResponseEntity.ok(
+        personTransformer.transformModelToPersonApi(personInfo),
+      )
+    }
+  }
+
+  override fun searchByNomisIdGet(nomsNumber: String): ResponseEntity<Person> {
+    val currentUser = cas2v2UserService.getUserForRequest()
+    val caseLoadId = currentUser.activeNomisCaseloadId ?: return ResponseEntity.notFound().build()
+    val probationOffenderResult = nomsOffenderService.getPersonByNomsNumberAndActiveCaseLoadId(nomsNumber, caseLoadId)
 
     when (probationOffenderResult) {
       is ProbationOffenderSearchResult.NotFound -> throw NotFoundProblem(nomsNumber, "Offender")
       is ProbationOffenderSearchResult.Forbidden -> throw ForbiddenProblem()
       is ProbationOffenderSearchResult.Unknown ->
         throw probationOffenderResult.throwable
-          ?: RuntimeException("Could not retrieve person info for Prison Number: $nomsNumber")
+          ?: BadRequestProblem(errorDetail = "Could not retrieve person info for Prison Number: $nomsNumber")
 
       is ProbationOffenderSearchResult.Success.Full -> return ResponseEntity.ok(
         personTransformer.transformProbationOffenderToPersonApi(probationOffenderResult, nomsNumber),
@@ -55,11 +71,11 @@ class Cas2v2PeopleController(
 
     return runBlocking(context = Dispatchers.IO) {
       val offenceDetailsResult = async {
-        oaSysOffenderService.getOASysOffenceDetails(crn)
+        deliusOffenderService.getOASysOffenceDetails(crn)
       }
 
       val riskToTheIndividualResult = async {
-        oaSysOffenderService.getOASysRiskToTheIndividual(crn)
+        deliusOffenderService.getOASysRiskToTheIndividual(crn)
       }
 
       val offenceDetails = getSuccessEntityOrThrow(crn, offenceDetailsResult.await())
@@ -76,11 +92,11 @@ class Cas2v2PeopleController(
 
     return runBlocking(context = Dispatchers.IO) {
       val offenceDetailsResult = async {
-        oaSysOffenderService.getOASysOffenceDetails(crn)
+        deliusOffenderService.getOASysOffenceDetails(crn)
       }
 
       val roshResult = async {
-        oaSysOffenderService.getOASysRoshSummary(crn)
+        deliusOffenderService.getOASysRoshSummary(crn)
       }
 
       val offenceDetails = getSuccessEntityOrThrow(crn, offenceDetailsResult.await())
@@ -93,7 +109,7 @@ class Cas2v2PeopleController(
   }
 
   override fun peopleCrnRisksGet(crn: String): ResponseEntity<PersonRisks> {
-    val risks = when (val risksResult = offenderService.getRiskByCrn(crn)) {
+    val risks = when (val risksResult = nomsOffenderService.getRiskByCrn(crn)) {
       is AuthorisableActionResult.Unauthorised -> throw ForbiddenProblem()
       is AuthorisableActionResult.NotFound -> throw NotFoundProblem(crn, "Person")
       is AuthorisableActionResult.Success -> risksResult.entity
@@ -103,7 +119,7 @@ class Cas2v2PeopleController(
   }
 
   private fun getOffenderDetails(crn: String): OffenderDetailSummary {
-    val offenderDetails = when (val offenderDetailsResult = offenderService.getOffenderByCrn(crn)) {
+    val offenderDetails = when (val offenderDetailsResult = nomsOffenderService.getOffenderByCrn(crn)) {
       is AuthorisableActionResult.NotFound -> throw NotFoundProblem(crn, "Person")
       is AuthorisableActionResult.Unauthorised -> throw ForbiddenProblem()
       is AuthorisableActionResult.Success -> offenderDetailsResult.entity
