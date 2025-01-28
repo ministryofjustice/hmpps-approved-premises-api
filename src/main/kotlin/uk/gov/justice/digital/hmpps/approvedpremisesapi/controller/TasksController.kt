@@ -133,7 +133,6 @@ class TasksController(
     TaskType.assessment -> TaskEntityType.ASSESSMENT
     TaskType.placementRequest -> TaskEntityType.PLACEMENT_REQUEST
     TaskType.placementApplication -> TaskEntityType.PLACEMENT_APPLICATION
-    TaskType.bookingAppeal -> throw BadRequestProblem()
   }
 
   override fun tasksTaskTypeIdGet(id: UUID, taskType: String): ResponseEntity<TaskWrapper> {
@@ -237,35 +236,14 @@ class TasksController(
       }
     }
 
-    val validationResult = when (
-      val authorisationResult = taskService.reallocateTask(
+    val reallocatedTask = extractEntityFromCasResult(
+      taskService.reallocateTask(
         requestUser = user,
         taskType = type,
         userToAllocateToId = userId,
         taskId = id,
-      )
-    ) {
-      is AuthorisableActionResult.NotFound -> throw NotFoundProblem(id, taskType)
-      is AuthorisableActionResult.Unauthorised -> throw ForbiddenProblem()
-      is AuthorisableActionResult.Success -> authorisationResult.entity
-    }
-
-    val reallocatedTask = when (validationResult) {
-      is ValidatableActionResult.GeneralValidationError -> throw BadRequestProblem(
-        errorDetail = validationResult.message,
-      )
-
-      is ValidatableActionResult.FieldValidationError -> throw BadRequestProblem(
-        invalidParams = validationResult.validationMessages,
-      )
-
-      is ValidatableActionResult.ConflictError -> throw ConflictProblem(
-        id = validationResult.conflictingEntityId,
-        conflictReason = validationResult.message,
-      )
-
-      is ValidatableActionResult.Success -> validationResult.entity
-    }
+      ),
+    )
 
     return ResponseEntity(reallocatedTask, HttpStatus.CREATED)
   }

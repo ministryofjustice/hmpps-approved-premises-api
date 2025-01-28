@@ -179,7 +179,7 @@ class AssessmentService(
     val isAuthorised = userAccessService.userCanViewAssessment(user, assessment) || (forTimeline && userAccessService.userCanViewApplication(user, assessment.application))
 
     if (!isAuthorised) {
-      return CasResult.Unauthorised()
+      return CasResult.Unauthorised("Not authorised to view the assessment")
     }
 
     assessment.schemaUpToDate = assessment.schemaVersion.id == latestSchema.id
@@ -303,11 +303,18 @@ class AssessmentService(
     assessmentId: UUID,
     data: String?,
   ): CasResult<AssessmentEntity> {
-    val assessmentResult = getAssessmentAndValidate(updatingUser, assessmentId)
-
-    val assessment = when (assessmentResult) {
+    val assessment = when (val assessmentResult = getAssessmentAndValidate(updatingUser, assessmentId)) {
       is CasResult.Success -> assessmentResult.value
       else -> return assessmentResult
+    }
+
+    if (assessment is ApprovedPremisesAssessmentEntity) {
+      val allocatedToUser = assessment.allocatedToUser
+        ?: return CasResult.GeneralValidationError("An assessment must be allocated to a user to be updated")
+
+      if (allocatedToUser.id != updatingUser.id) {
+        return CasResult.Unauthorised("The assessment can only be updated by the allocated user")
+      }
     }
 
     if (assessment.isWithdrawn) {
@@ -349,6 +356,15 @@ class AssessmentService(
     val assessment = when (val assessmentResult = getAssessmentAndValidate(acceptingUser, assessmentId)) {
       is CasResult.Success -> assessmentResult.value
       is CasResult.Error -> return assessmentResult
+    }
+
+    if (assessment is ApprovedPremisesAssessmentEntity) {
+      val allocatedToUser = assessment.allocatedToUser
+        ?: return CasResult.GeneralValidationError("An assessment must be allocated to a user to be updated")
+
+      if (allocatedToUser.id != acceptingUser.id) {
+        return CasResult.Unauthorised("The assessment can only be updated by the allocated user")
+      }
     }
 
     if (!assessment.schemaUpToDate) {
@@ -448,7 +464,7 @@ class AssessmentService(
   }
 
   fun rejectAssessment(
-    user: UserEntity,
+    rejectingUser: UserEntity,
     assessmentId: UUID,
     document: String?,
     rejectionRationale: String,
@@ -459,10 +475,19 @@ class AssessmentService(
     val domainEventId = UUID.randomUUID()
     val rejectedAt = OffsetDateTime.now(clock)
 
-    val assessmentResult = getAssessmentAndValidate(user, assessmentId)
+    val assessmentResult = getAssessmentAndValidate(rejectingUser, assessmentId)
     val assessment = when (assessmentResult) {
       is CasResult.Success -> assessmentResult.value
       else -> return assessmentResult
+    }
+
+    if (assessment is ApprovedPremisesAssessmentEntity) {
+      val allocatedToUser = assessment.allocatedToUser
+        ?: return CasResult.GeneralValidationError("An assessment must be allocated to a user to be updated")
+
+      if (allocatedToUser.id != rejectingUser.id) {
+        return CasResult.Unauthorised("The assessment can only be updated by the allocated user")
+      }
     }
 
     if (!assessment.schemaUpToDate) {
@@ -517,12 +542,12 @@ class AssessmentService(
     val application = savedAssessment.application
 
     val offenderDetails =
-      when (val offenderDetailsResult = offenderService.getOffenderByCrn(application.crn, user.deliusUsername, true)) {
+      when (val offenderDetailsResult = offenderService.getOffenderByCrn(application.crn, rejectingUser.deliusUsername, true)) {
         is AuthorisableActionResult.Success -> offenderDetailsResult.entity
         else -> null
       }
 
-    val staffDetails = when (val staffDetailsResult = apDeliusContextApiClient.getStaffDetail(user.deliusUsername)) {
+    val staffDetails = when (val staffDetailsResult = apDeliusContextApiClient.getStaffDetail(rejectingUser.deliusUsername)) {
       is ClientResult.Success -> staffDetailsResult.body
       is ClientResult.Failure -> staffDetailsResult.throwException()
     }
@@ -557,7 +582,7 @@ class AssessmentService(
                   name = staffDetails.probationArea.description,
                 ),
                 cru = Cru(
-                  name = user.apArea?.name ?: "Unknown CRU",
+                  name = rejectingUser.apArea?.name ?: "Unknown CRU",
                 ),
               ),
               decision = assessment.decision.toString(),
@@ -608,18 +633,16 @@ class AssessmentService(
     allocatingUser: UserEntity,
     assigneeUser: UserEntity,
     id: UUID,
-  ): AuthorisableActionResult<ValidatableActionResult<AssessmentEntity>> {
+  ): CasResult<AssessmentEntity> {
     lockableAssessmentRepository.acquirePessimisticLock(id)
 
     val currentAssessment = assessmentRepository.findByIdOrNull(id)
-      ?: return AuthorisableActionResult.NotFound()
+      ?: return CasResult.NotFound("assessment", id.toString())
 
     if (currentAssessment.reallocatedAt != null) {
-      return AuthorisableActionResult.Success(
-        ValidatableActionResult.ConflictError(
-          currentAssessment.id,
-          "This assessment has already been reallocated",
-        ),
+      return CasResult.ConflictError(
+        currentAssessment.id,
+        "This assessment has already been reallocated",
       )
     }
 
@@ -642,33 +665,27 @@ class AssessmentService(
     allocatingUser: UserEntity,
     assigneeUser: UserEntity,
     currentAssessment: ApprovedPremisesAssessmentEntity,
-  ): AuthorisableActionResult<ValidatableActionResult<AssessmentEntity>> {
+  ): CasResult<AssessmentEntity> {
     if (currentAssessment.submittedAt != null) {
-      return AuthorisableActionResult.Success(
-        ValidatableActionResult.GeneralValidationError("A decision has already been taken on this assessment"),
-      )
+      return CasResult.GeneralValidationError("A decision has already been taken on this assessment")
     }
 
     val application = currentAssessment.application
     val requiredQualifications = application.getRequiredQualifications()
 
     if (!canUserAssessPlacement(assigneeUser, currentAssessment)) {
-      return AuthorisableActionResult.Success(
-        ValidatableActionResult.FieldValidationError(
-          ValidationErrors().apply {
-            this["$.userId"] = "lacking assess application or assess appealed application permission"
-          },
-        ),
+      return CasResult.FieldValidationError(
+        ValidationErrors().apply {
+          this["$.userId"] = "lacking assess application or assess appealed application permission"
+        },
       )
     }
 
     if (!assigneeUser.hasAllQualifications(requiredQualifications)) {
-      return AuthorisableActionResult.Success(
-        ValidatableActionResult.FieldValidationError(
-          ValidationErrors().apply {
-            this["$.userId"] = "lackingQualifications"
-          },
-        ),
+      return CasResult.FieldValidationError(
+        ValidationErrors().apply {
+          this["$.userId"] = "lackingQualifications"
+        },
       )
     }
 
@@ -714,11 +731,7 @@ class AssessmentService(
       cas1AssessmentDomainEventService.assessmentAllocated(newAssessment, assigneeUser, allocatingUser)
     }
 
-    return AuthorisableActionResult.Success(
-      ValidatableActionResult.Success(
-        newAssessment,
-      ),
-    )
+    return CasResult.Success(newAssessment)
   }
 
   private fun canUserAssessPlacement(user: UserEntity, assessment: ApprovedPremisesAssessmentEntity): Boolean {
@@ -733,14 +746,12 @@ class AssessmentService(
   private fun reallocateTemporaryAccommodationAssessment(
     assigneeUser: UserEntity,
     currentAssessment: TemporaryAccommodationAssessmentEntity,
-  ): AuthorisableActionResult<ValidatableActionResult<AssessmentEntity>> {
+  ): CasResult<AssessmentEntity> {
     if (!assigneeUser.hasRole(UserRole.CAS3_ASSESSOR)) {
-      return AuthorisableActionResult.Success(
-        ValidatableActionResult.FieldValidationError(
-          ValidationErrors().apply {
-            this["$.userId"] = "lackingAssessorRole"
-          },
-        ),
+      return CasResult.FieldValidationError(
+        ValidationErrors().apply {
+          this["$.userId"] = "lackingAssessorRole"
+        },
       )
     }
 
@@ -751,11 +762,7 @@ class AssessmentService(
     val savedAssessment = assessmentRepository.save(currentAssessment)
     savedAssessment.addSystemNote(userService.getUserForRequest(), ReferralHistorySystemNoteType.IN_REVIEW)
 
-    return AuthorisableActionResult.Success(
-      ValidatableActionResult.Success(
-        savedAssessment,
-      ),
-    )
+    return CasResult.Success(savedAssessment)
   }
 
   fun deallocateAssessment(id: UUID): AuthorisableActionResult<ValidatableActionResult<AssessmentEntity>> {

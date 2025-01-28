@@ -54,7 +54,14 @@ interface Cas1DeliusBookingImportRepository : JpaRepository<Cas1DeliusBookingImp
 data class Cas1DeliusBookingImportEntity(
   @Id
   val id: UUID,
+  /**
+   * CAS1 ID
+   */
   val bookingId: UUID?,
+  /**
+   * Delius ID
+   */
+  val approvedPremisesReferralId: String,
   val crn: String,
   val eventNumber: String,
   val keyWorkerStaffCode: String?,

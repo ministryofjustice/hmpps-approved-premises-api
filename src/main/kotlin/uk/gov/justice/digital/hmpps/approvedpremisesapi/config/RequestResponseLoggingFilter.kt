@@ -24,6 +24,7 @@ class RequestResponseLoggingFilter(
 ) : OncePerRequestFilter() {
 
   var log: Logger = LoggerFactory.getLogger(this::class.java)
+  var simpleRequestLog: Logger = LoggerFactory.getLogger("${this::class.java.`package`.name}.RequestResponseLoggingFilterSimple")
 
   @PostConstruct
   fun logStartup() {
@@ -85,6 +86,7 @@ class RequestResponseLoggingFilter(
     log.info("Request {}", String(requestWrapper.contentAsByteArray))
 
     if (request is HttpServletRequest) {
+      simpleRequestLog.trace("${request.method} ${request.requestURI}" + (request.queryString?.let { "?$it" } ?: ""))
       log.trace("Authorization: {}", request.getHeader("authorization"))
     }
   }

@@ -1,0 +1,2 @@
+TRUNCATE cas1_delius_booking_import;
+ALTER TABLE cas1_delius_booking_import ADD approved_premises_referral_id text NOT NULL;

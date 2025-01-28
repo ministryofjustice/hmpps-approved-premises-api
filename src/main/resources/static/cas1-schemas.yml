@@ -76,7 +76,7 @@ components:
           type: array
           description: "Room and premise characteristics"
           items:
-            $ref: '#/components/schemas/Cas1SpaceCharacteristic'
+            $ref: '_shared.yml#/components/schemas/Cas1SpaceCharacteristic'
       required:
         - id
         - apType
@@ -152,51 +152,6 @@ components:
       required:
         - startInclusive
         - endInclusive
-    Cas1SpaceCharacteristic:
-      type: string
-      description: All of the characteristics of both premises and rooms
-      enum:
-        - acceptsChildSexOffenders
-        - acceptsHateCrimeOffenders
-        - acceptsNonSexualChildOffenders
-        - acceptsSexOffenders
-        - additionalRestrictions
-        - hasArsonInsuranceConditions
-        - hasBrailleSignage
-        - hasCallForAssistance
-        - hasCrib7Bedding
-        - hasEnSuite
-        - hasFixedMobilityAids
-        - hasHearingLoop
-        - hasLift
-        - hasNearbySprinkler
-        - hasSmokeDetector
-        - hasStepFreeAccess
-        - hasStepFreeAccessToCommunalAreas
-        - hasTactileFlooring
-        - hasTurningSpace
-        - hasWheelChairAccessibleBathrooms
-        - hasWideAccessToCommunalAreas
-        - hasWideDoor
-        - hasWideStepFreeAccess
-        - isArsonDesignated
-        - isArsonSuitable
-        - isCatered
-        - isESAP
-        - isFullyFm
-        - isGroundFloor
-        - isGroundFloorNrOffice
-        - isIAP
-        - isPIPE
-        - isRecoveryFocussed
-        - isSemiSpecialistMentalHealth
-        - isSingle
-        - isStepFreeDesignated
-        - isSuitableForVulnerable
-        - isSuitedForSexOffenders
-        - isTopFloorVulnerable
-        - isWheelchairAccessible
-        - isWheelchairDesignated
     Cas1SpaceBookingCharacteristic:
       type: string
       description: All of the characteristics applicable to a space booking
@@ -242,7 +197,7 @@ components:
         essentialCharacteristics:
           type: array
           items:
-            $ref: '#/components/schemas/Cas1SpaceCharacteristic'
+            $ref: '_shared.yml#/components/schemas/Cas1SpaceCharacteristic'
       required:
         - essentialCharacteristics
     Cas1UpdateSpaceBooking:
@@ -277,7 +232,7 @@ components:
         spaceCharacteristics:
           type: array
           items:
-            $ref: '#/components/schemas/Cas1SpaceCharacteristic'
+            $ref: '_shared.yml#/components/schemas/Cas1SpaceCharacteristic'
         genders:
           description: gender is obtained from application's associated gender
           deprecated: true
@@ -352,7 +307,7 @@ components:
         spaceCharacteristics:
           type: array
           items:
-            $ref: '#/components/schemas/Cas1SpaceCharacteristic'
+            $ref: '_shared.yml#/components/schemas/Cas1SpaceCharacteristic'
         durationInDays:
           type: integer
           example: 77
@@ -588,7 +543,7 @@ components:
         essentialCharacteristics:
           type: array
           items:
-            $ref: '#/components/schemas/Cas1SpaceCharacteristic'
+            $ref: '_shared.yml#/components/schemas/Cas1SpaceCharacteristic'
       required:
         - id
         - person
@@ -851,7 +806,7 @@ components:
         characteristics:
           type: array
           items:
-            $ref: '#/components/schemas/Cas1SpaceCharacteristic'
+            $ref: '_shared.yml#/components/schemas/Cas1SpaceCharacteristic'
       required:
         - id
         - bedId

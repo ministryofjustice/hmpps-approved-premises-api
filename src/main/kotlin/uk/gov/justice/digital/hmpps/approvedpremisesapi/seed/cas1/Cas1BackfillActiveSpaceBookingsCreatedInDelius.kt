@@ -172,6 +172,7 @@ class Cas1BackfillActiveSpaceBookingsCreatedInDelius(
         nonArrivalNotes = null,
         deliusEventNumber = deliusReferral.eventNumber,
         migratedManagementInfoFrom = managementInfo.source,
+        deliusId = deliusReferral.approvedPremisesReferralId,
       ),
     )
   }
