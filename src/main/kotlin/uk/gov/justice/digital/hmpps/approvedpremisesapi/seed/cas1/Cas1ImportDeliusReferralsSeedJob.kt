@@ -45,7 +45,7 @@ class Cas1ImportDeliusReferralsSeedJob(
     "HOSTEL_CODE",
   ),
   runInTransaction = false,
-  processRowsConcurrently = true,
+  processRowsConcurrently = false,
 ) {
   private val log = LoggerFactory.getLogger(this::class.java)
 
