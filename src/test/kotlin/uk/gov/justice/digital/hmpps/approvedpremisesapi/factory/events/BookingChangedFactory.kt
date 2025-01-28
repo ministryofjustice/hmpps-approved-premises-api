@@ -3,9 +3,9 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.events
 import io.github.bluegroundltd.kfactory.Factory
 import io.github.bluegroundltd.kfactory.Yielded
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.BookingChanged
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.Cas1SpaceCharacteristic
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.PersonReference
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.Premises
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.SpaceCharacteristic
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.StaffMember
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomStringMultiCaseWithNumbers
 import java.time.Instant
@@ -25,7 +25,8 @@ class BookingChangedFactory : Factory<BookingChanged> {
   private var departureOn: Yielded<LocalDate> = { LocalDate.now() }
   private var previousArrivalOn: Yielded<LocalDate?> = { null }
   private var previousDepartureOn: Yielded<LocalDate?> = { null }
-  private var characteristics: Yielded<List<Cas1SpaceCharacteristic>> = { emptyList() }
+  private var characteristics: Yielded<List<SpaceCharacteristic>> = { emptyList() }
+  private var previousCharacteristics: Yielded<List<SpaceCharacteristic>> = { emptyList() }
 
   fun withApplicationId(applicationId: UUID) = apply {
     this.applicationId = { applicationId }
@@ -75,8 +76,12 @@ class BookingChangedFactory : Factory<BookingChanged> {
     this.previousDepartureOn = { previousDepartureOn }
   }
 
-  fun withCharacteristics(characteristics: List<Cas1SpaceCharacteristic>) = apply {
+  fun withCharacteristics(characteristics: List<SpaceCharacteristic>) = apply {
     this.characteristics = { characteristics }
+  }
+
+  fun withPreviousCharacteristics(previousCharacteristics: List<SpaceCharacteristic>) = apply {
+    this.previousCharacteristics = { previousCharacteristics }
   }
 
   override fun produce() = BookingChanged(
@@ -93,5 +98,6 @@ class BookingChangedFactory : Factory<BookingChanged> {
     previousArrivalOn = this.previousArrivalOn(),
     previousDepartureOn = this.previousDepartureOn(),
     characteristics = this.characteristics(),
+    previousCharacteristics = this.previousCharacteristics(),
   )
 }
