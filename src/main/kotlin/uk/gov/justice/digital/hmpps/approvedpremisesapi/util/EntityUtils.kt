@@ -46,7 +46,7 @@ fun <EntityType> ensureEntityFromCasResultIsSuccess(result: CasResult<EntityType
 fun <EntityType> extractEntityFromCasResult(result: CasResult<EntityType>) = when (result) {
   is CasResult.Success -> result.value
   is CasResult.NotFound -> throw NotFoundProblem(result.id, result.entityType)
-  is CasResult.Unauthorised -> throw ForbiddenProblem()
+  is CasResult.Unauthorised -> throw ForbiddenProblem(result.message)
   is CasResult.GeneralValidationError -> throw BadRequestProblem(errorDetail = result.message)
   is CasResult.FieldValidationError -> throw BadRequestProblem(invalidParams = result.validationMessages)
   is CasResult.ConflictError -> throw ConflictProblem(id = result.conflictingEntityId, conflictReason = result.message)

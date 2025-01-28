@@ -9,6 +9,9 @@ import org.junit.jupiter.api.assertThrows
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.EnumSource
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApprovedPremisesUser
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.BookingChangedContentPayload
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1SpaceCharacteristic
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NamedId
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.TimelineEvent
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.TimelineEventAssociatedUrl
@@ -23,6 +26,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.DomainEventSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.ApplicationTimelineTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.UserTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.UrlTemplate
+import java.time.LocalDate
 import java.time.OffsetDateTime
 import java.util.UUID
 
@@ -75,7 +79,7 @@ class ApplicationTimelineTransformerTest {
 
     val userApi = mockk<ApprovedPremisesUser>()
     every { mockUserTransformer.transformJpaToApi(userJpa, ServiceName.approvedPremises) } returns userApi
-    every { mockDomainEventDescriber.getDescription(domainEvent) } returns "Some event"
+    every { mockDomainEventDescriber.getContentPayload(domainEvent) } returns Pair("Some event", null)
 
     val result = applicationTimelineTransformer.transformDomainEventSummaryToTimelineEvent(domainEvent)
 
@@ -104,6 +108,7 @@ class ApplicationTimelineTransformerTest {
       triggerSource = null,
       triggeredByUser = userJpa,
     )
+    every { mockDomainEventDescriber.getContentPayload(domainEvent) } returns Pair("Some event", null)
 
     val exception = assertThrows<RuntimeException> {
       applicationTimelineTransformer.transformDomainEventSummaryToTimelineEvent(domainEvent)
@@ -128,7 +133,7 @@ class ApplicationTimelineTransformerTest {
       triggeredByUser = null,
     )
 
-    every { mockDomainEventDescriber.getDescription(domainEvent) } returns "Some event"
+    every { mockDomainEventDescriber.getContentPayload(domainEvent) } returns Pair("Some event", null)
 
     Assertions.assertThat(applicationTimelineTransformer.transformDomainEventSummaryToTimelineEvent(domainEvent)).isEqualTo(
       TimelineEvent(
@@ -162,7 +167,7 @@ class ApplicationTimelineTransformerTest {
       triggeredByUser = null,
     )
 
-    every { mockDomainEventDescriber.getDescription(domainEvent) } returns "Some event"
+    every { mockDomainEventDescriber.getContentPayload(domainEvent) } returns Pair("Some event", null)
 
     Assertions.assertThat(applicationTimelineTransformer.transformDomainEventSummaryToTimelineEvent(domainEvent)).isEqualTo(
       TimelineEvent(
@@ -201,7 +206,7 @@ class ApplicationTimelineTransformerTest {
       triggeredByUser = null,
     )
 
-    every { mockDomainEventDescriber.getDescription(domainEvent) } returns "Some event"
+    every { mockDomainEventDescriber.getContentPayload(domainEvent) } returns Pair("Some event", null)
 
     assertThat(applicationTimelineTransformer.transformDomainEventSummaryToTimelineEvent(domainEvent)).isEqualTo(
       TimelineEvent(
@@ -234,7 +239,7 @@ class ApplicationTimelineTransformerTest {
       triggeredByUser = null,
     )
 
-    every { mockDomainEventDescriber.getDescription(domainEvent) } returns "Some event"
+    every { mockDomainEventDescriber.getContentPayload(domainEvent) } returns Pair("Some event", null)
 
     assertThat(applicationTimelineTransformer.transformDomainEventSummaryToTimelineEvent(domainEvent)).isEqualTo(
       TimelineEvent(
@@ -266,7 +271,7 @@ class ApplicationTimelineTransformerTest {
       triggeredByUser = null,
     )
 
-    every { mockDomainEventDescriber.getDescription(domainEvent) } returns "Some event"
+    every { mockDomainEventDescriber.getContentPayload(domainEvent) } returns Pair("Some event", null)
 
     Assertions.assertThat(applicationTimelineTransformer.transformDomainEventSummaryToTimelineEvent(domainEvent)).isEqualTo(
       TimelineEvent(
@@ -300,7 +305,7 @@ class ApplicationTimelineTransformerTest {
       triggeredByUser = null,
     )
 
-    every { mockDomainEventDescriber.getDescription(domainEvent) } returns "Some event"
+    every { mockDomainEventDescriber.getContentPayload(domainEvent) } returns Pair("Some event", null)
 
     Assertions.assertThat(applicationTimelineTransformer.transformDomainEventSummaryToTimelineEvent(domainEvent)).isEqualTo(
       TimelineEvent(
@@ -334,7 +339,7 @@ class ApplicationTimelineTransformerTest {
       triggeredByUser = null,
     )
 
-    every { mockDomainEventDescriber.getDescription(domainEvent) } returns "Some event"
+    every { mockDomainEventDescriber.getContentPayload(domainEvent) } returns Pair("Some event", null)
 
     Assertions.assertThat(applicationTimelineTransformer.transformDomainEventSummaryToTimelineEvent(domainEvent).associatedUrls)
       .containsOnly(
@@ -375,7 +380,7 @@ class ApplicationTimelineTransformerTest {
       triggeredByUser = null,
     )
 
-    every { mockDomainEventDescriber.getDescription(domainEvent) } returns "Some event"
+    every { mockDomainEventDescriber.getContentPayload(domainEvent) } returns Pair("Some event", null)
 
     Assertions.assertThat(applicationTimelineTransformer.transformDomainEventSummaryToTimelineEvent(domainEvent)).isEqualTo(
       TimelineEvent(
@@ -410,11 +415,65 @@ class ApplicationTimelineTransformerTest {
       triggeredByUser = null,
     )
 
-    every { mockDomainEventDescriber.getDescription(domainEvent) } returns "Some event"
+    every { mockDomainEventDescriber.getContentPayload(domainEvent) } returns Pair("Some event", null)
 
     Assertions.assertThat(
       applicationTimelineTransformer.transformDomainEventSummaryToTimelineEvent(domainEvent)
         .triggerSource?.name.equals(triggerSource.name, true),
     )
+  }
+
+  @Test
+  fun `transformDomainEventSummaryToTimelineEvent transforms domain event with booking changed payload`() {
+    val userJpa = UserEntityFactory().withDefaultProbationRegion().produce()
+    val premisesId = UUID.randomUUID()
+    val domainEventType = DomainEventType.APPROVED_PREMISES_BOOKING_CHANGED
+
+    val domainEvent = DomainEventSummaryImpl(
+      id = UUID.randomUUID().toString(),
+      type = domainEventType,
+      occurredAt = OffsetDateTime.now(),
+      bookingId = null,
+      applicationId = null,
+      assessmentId = null,
+      premisesId = premisesId,
+      appealId = null,
+      cas1SpaceBookingId = null,
+      triggerSource = null,
+      triggeredByUser = userJpa,
+    )
+
+    val userApi = mockk<ApprovedPremisesUser>()
+    val payload = BookingChangedContentPayload(
+      expectedArrival = LocalDate.now(),
+      expectedDeparture = LocalDate.now(),
+      type = domainEventType.timelineEventType!!,
+      premises = NamedId(premisesId, "name"),
+      schemaVersion = 2,
+      characteristics = listOf(Cas1SpaceCharacteristic.isArsonSuitable),
+      previousCharacteristics = listOf(Cas1SpaceCharacteristic.isGroundFloor),
+    )
+
+    every { mockUserTransformer.transformJpaToApi(userJpa, ServiceName.approvedPremises) } returns userApi
+    every { mockDomainEventDescriber.getContentPayload(domainEvent) } returns Pair("Some event", payload)
+
+    val result = applicationTimelineTransformer.transformDomainEventSummaryToTimelineEvent(domainEvent)
+
+    assertThat(result.id).isEqualTo(domainEvent.id)
+    assertThat(result.type).isEqualTo(domainEventType.timelineEventType)
+    assertThat(result.occurredAt).isEqualTo(domainEvent.occurredAt.toInstant())
+    assertThat(result.associatedUrls).isEmpty()
+    assertThat(result.content).isEqualTo("Some event")
+    assertThat(result.createdBy).isEqualTo(userApi)
+    assertThat(result.triggerSource).isEqualTo(null)
+    assertThat(result.payload).isInstanceOf(BookingChangedContentPayload::class.java)
+    assertThat(payload.premises.id).isEqualTo(premisesId)
+    assertThat(payload.premises.name).isEqualTo("name")
+    assertThat(payload.type).isEqualTo(domainEventType.timelineEventType)
+    assertThat(payload.schemaVersion).isEqualTo(2)
+    assertThat(payload.expectedArrival).isEqualTo(payload.expectedArrival)
+    assertThat(payload.expectedDeparture).isEqualTo(payload.expectedDeparture)
+    assertThat(payload.characteristics).isEqualTo(payload.characteristics)
+    assertThat(payload.previousCharacteristics).isEqualTo(payload.previousCharacteristics)
   }
 }
