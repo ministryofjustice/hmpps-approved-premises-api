@@ -60,7 +60,8 @@ class SwaggerConfiguration {
     return GroupedOpenApi.builder()
       .group("CAS1DomainEvents")
       .displayName("CAS1 Domain Events")
-      .pathsToMatch("/**/events/cas1/**")
+      .pathsToExclude("/**/events/cas2/**", "/**/events/cas3/**")
+      .pathsToMatch("/**/events/**")
       .build()
   }
 
