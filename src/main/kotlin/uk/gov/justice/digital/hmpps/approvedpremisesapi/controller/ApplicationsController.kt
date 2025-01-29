@@ -96,7 +96,7 @@ class ApplicationsController(
 
     val user = userService.getUserForRequest()
 
-    val applications = applicationService.getAllApplicationsForUsername(user.deliusUsername, serviceName)
+    val applications = applicationService.getAllApplicationsForUsername(user, serviceName)
 
       /*
       This code is inefficient:
