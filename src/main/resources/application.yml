@@ -283,6 +283,7 @@ arrived-departed-domain-events-disabled: true
 upstream-timeout-ms: 10000
 ap-and-oasys-upstream-timeout-ms: 4000
 nomis-user-roles-api-upstream-timeout-ms: 2000
+tier-api-upstream-timeout-ms: 2000
 case-notes-service-upstream-timeout-ms: 25000
 
 web-clients:
