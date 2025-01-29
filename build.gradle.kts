@@ -1,8 +1,8 @@
 import org.apache.commons.io.FileUtils
 
 plugins {
-  id("uk.gov.justice.hmpps.gradle-spring-boot") version "6.1.0"
-  kotlin("plugin.spring") version "2.0.20"
+  id("uk.gov.justice.hmpps.gradle-spring-boot") version "6.1.2"
+  kotlin("plugin.spring") version "2.0.21"
   id("org.openapi.generator") version "7.7.0"
   id("org.jetbrains.kotlin.plugin.jpa") version "1.9.22"
   id("io.gatling.gradle") version "3.13.1"
@@ -28,7 +28,7 @@ dependencies {
   implementation("org.springframework.boot:spring-boot-starter-data-jpa")
   implementation("org.springframework.retry:spring-retry")
   implementation("io.hypersistence:hypersistence-utils-hibernate-63:3.7.0")
-  implementation("org.hibernate:hibernate-spatial:6.4.4.Final")
+  implementation("org.hibernate:hibernate-spatial:6.6.4.Final")
   implementation("org.hibernate.orm:hibernate-jcache")
   implementation("org.flywaydb:flyway-core")
   implementation("org.springframework.boot:spring-boot-starter-data-redis")
