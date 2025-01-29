@@ -37,6 +37,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremi
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.OfflineApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserQualification
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRole
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PersonInfoResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.deliuscontext.APDeliusDocument
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.BadRequestProblem
@@ -96,7 +97,14 @@ class ApplicationsController(
 
     val user = userService.getUserForRequest()
 
-    val applications = applicationService.getAllApplicationsForUsername(user.deliusUsername, serviceName)
+    /*there needs to be some significant refactoring in this class for it to follow the pattern for the service to return a CasResult.
+     * just adding validation in here for now to prevent having to refactor it all now.
+     */
+    if (serviceName == ServiceName.temporaryAccommodation && !user.hasRole(UserRole.CAS3_REFERRER)) {
+      throw ForbiddenProblem()
+    }
+
+    val applications = applicationService.getAllApplicationsForUsername(user, serviceName)
 
       /*
       This code is inefficient:
