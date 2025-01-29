@@ -116,6 +116,7 @@ springdoc:
     urls-primary-name: "All CAS"
   remove-broken-reference-definitions: false
   writer-with-order-by-keys: true
+  pre-loading-enabled: true
 
 server:
   port: 8080
