@@ -33,11 +33,11 @@ class Cas2v2ReferenceDataTest : IntegrationTestBase() {
     assert(options.size == 9)
 
     val moreInfoRequestedStatus = statusFinder.findStatusByName("moreInfoRequested")
-    val riskToSelfDetails = statusFinder.findDetailsByName("riskToSelf")
+    val riskToSelfDetails = statusFinder.findDetailsBy(moreInfoRequestedStatus!!.id) { it.name == "riskToSelf" }
     assertThat(riskToSelfDetails).isNotNull
 
     // Make sure FIE is in the options returned, and this contains riskToSelf within it
-    val fie = options.find { option -> option.name == moreInfoRequestedStatus!!.name }
+    val fie = options.find { option -> option.name == moreInfoRequestedStatus.name }
     assertThat(fie).isNotNull
     assertThat(fie!!.statusDetails[3].id).isEqualTo(riskToSelfDetails!!.id)
     assertThat(fie.statusDetails[3].children?.size).isEqualTo(riskToSelfDetails.children?.size)

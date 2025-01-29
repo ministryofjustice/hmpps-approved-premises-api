@@ -12,13 +12,14 @@ import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Value
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas2.model.Cas2ApplicationStatusUpdatedEvent
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas2.model.Cas2StatusDetail
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas2AssessmentStatusUpdate
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas2v2AssessmentStatusUpdate
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.Cas2v2IntegrationTestBase
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenACas2v2Assessor
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenACas2v2PomUser
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas2v2.Cas2v2StatusUpdateDetailRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas2v2.Cas2v2StatusUpdateRepository
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.reference.Cas2ApplicationStatusSeeding
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.reference.Cas2v2ApplicationStatusSeeding
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.reference.Cas2v2PersistedApplicationStatusFinder
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.toCas2UiFormat
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.toCas2UiFormattedHourOfDay
 import java.time.OffsetDateTime
@@ -102,7 +103,7 @@ class Cas2v2StatusUpdateTest(
             .uri("/cas2v2/assessments/$assessmentId/status-updates")
             .header("Authorization", "Bearer $jwt")
             .bodyValue(
-              Cas2AssessmentStatusUpdate(newStatus = "moreInfoRequested"),
+              Cas2v2AssessmentStatusUpdate(newStatus = "moreInfoRequested"),
             )
             .exchange()
             .expectStatus()
@@ -113,7 +114,7 @@ class Cas2v2StatusUpdateTest(
           val persistedStatusUpdate = realCas2v2StatusUpdateRepository.findFirstByApplicationIdOrderByCreatedAtDesc(application.id)
           assertThat(persistedStatusUpdate!!.assessment!!.id).isEqualTo(assessmentId)
 
-          val appliedStatus = Cas2ApplicationStatusSeeding.statusList()
+          val appliedStatus = Cas2v2ApplicationStatusSeeding.statusList()
             .find { status ->
               status.id == persistedStatusUpdate.statusId
             }
@@ -140,7 +141,7 @@ class Cas2v2StatusUpdateTest(
           .uri("/cas2v2/assessments/66f7127a-fe03-4b66-8378-5c0b048490f8/status-updates")
           .header("Authorization", "Bearer $jwt")
           .bodyValue(
-            Cas2AssessmentStatusUpdate(newStatus = "moreInfoRequested"),
+            Cas2v2AssessmentStatusUpdate(newStatus = "moreInfoRequested"),
           )
           .exchange()
           .expectStatus()
@@ -167,7 +168,7 @@ class Cas2v2StatusUpdateTest(
             .uri("/cas2v2/assessments/${assessmemt.id}/status-updates")
             .header("Authorization", "Bearer $jwt")
             .bodyValue(
-              Cas2AssessmentStatusUpdate(newStatus = "invalidStatus"),
+              Cas2v2AssessmentStatusUpdate(newStatus = "invalidStatus"),
             )
             .exchange()
             .expectStatus()
@@ -211,7 +212,7 @@ class Cas2v2StatusUpdateTest(
                 .uri("/cas2v2/assessments/$assessmentId/status-updates")
                 .header("Authorization", "Bearer $jwt")
                 .bodyValue(
-                  Cas2AssessmentStatusUpdate(
+                  Cas2v2AssessmentStatusUpdate(
                     newStatus = "offerDeclined",
                     newStatusDetails = listOf("changeOfCircumstances"),
                   ),
@@ -231,7 +232,7 @@ class Cas2v2StatusUpdateTest(
                 realCas2v2StatusUpdateDetailRepository.findFirstByStatusUpdateIdOrderByCreatedAtDesc(persistedStatusUpdate!!.id)
               assertThat(persistedStatusDetailUpdate).isNotNull
 
-              val appliedStatus = Cas2ApplicationStatusSeeding.statusList()
+              val appliedStatus = Cas2v2ApplicationStatusSeeding.statusList()
                 .find { status ->
                   status.id == persistedStatusUpdate.statusId
                 }
@@ -270,6 +271,91 @@ class Cas2v2StatusUpdateTest(
 
               // verify that the persisted domain event contains the expected status details
               val expected = listOf(Cas2StatusDetail("changeOfCircumstances", "Change of circumstances"))
+              assertThat(domainEventFromJson.eventDetails.newStatus.statusDetails).isEqualTo(expected)
+            }
+          }
+        } finally {
+          unmockkAll()
+        }
+      }
+
+      @Test
+      fun `Create cas2v2 status update returns 201 with multiple details`() {
+        val assessmentId = UUID.fromString("714e4788-1185-4773-a149-76dc5ef0f0b2")
+        val submittedAt = OffsetDateTime.now()
+
+        val statusFinder = Cas2v2PersistedApplicationStatusFinder()
+
+        try {
+          givenACas2v2Assessor { _, jwt ->
+            givenACas2v2PomUser { applicant, _ ->
+              val jsonSchema = cas2v2ApplicationJsonSchemaEntityFactory.produceAndPersist()
+              val application = cas2v2ApplicationEntityFactory.produceAndPersist {
+                withCreatedByUser(applicant)
+                withApplicationSchema(jsonSchema)
+                withSubmittedAt(submittedAt)
+                withNomsNumber("123NOMS")
+              }
+
+              cas2v2AssessmentEntityFactory.produceAndPersist {
+                withId(assessmentId)
+                withApplication(application)
+              }
+
+              assertThat(realCas2v2StatusUpdateRepository.count()).isEqualTo(0)
+
+              val now = OffsetDateTime.now()
+              mockkStatic(OffsetDateTime::class)
+              every { OffsetDateTime.now() } returns now
+
+              webTestClient.post()
+                .uri("/cas2v2/assessments/$assessmentId/status-updates")
+                .header("Authorization", "Bearer $jwt")
+                .bodyValue(
+                  Cas2v2AssessmentStatusUpdate(
+                    newStatus = "moreInfoRequested",
+                    newStatusDetails = listOf("healthNeedsMobilityNeedsEffect", "healthNeedsEpilepsyMedication"),
+                  ),
+                )
+                .exchange()
+                .expectStatus()
+                .isCreated
+
+              assertThat(realCas2v2StatusUpdateRepository.count()).isEqualTo(1)
+              assertThat(realCas2v2StatusUpdateDetailRepository.count()).isEqualTo(2)
+
+              val persistedStatusUpdate =
+                realCas2v2StatusUpdateRepository.findFirstByApplicationIdOrderByCreatedAtDesc(application.id)
+              assertThat(persistedStatusUpdate!!.assessment!!.id).isEqualTo(assessmentId)
+
+              val detailsNames = persistedStatusUpdate.statusUpdateDetails!!.map { it.label }
+              assertThat(detailsNames).contains("Need and effect on everyday life")
+              assertThat(detailsNames).contains("Medication / treatment")
+
+              val referenceStatus = statusFinder.findStatusByName("moreInfoRequested")
+              assertThat(referenceStatus).isNotNull
+
+              val mobilityPath = statusFinder.findPathForMatchingDetail(referenceStatus!!.id) { it.name == "healthNeedsMobilityNeedsEffect" }
+              assertThat(mobilityPath).isEqualTo("Health needs - Mobility needs - Need and effect on everyday life")
+
+              val epilepsyPath = statusFinder.findPathForMatchingDetail(referenceStatus.id) { it.name == "healthNeedsEpilepsyMedication" }
+              assertThat(epilepsyPath).isEqualTo("Health needs - Epilepsy - Medication / treatment")
+
+              val expectedFrontEndUrl = applicationUrlTemplate.replace("#id", application.id.toString())
+              val persistedDomainEvent = domainEventRepository.findFirstByOrderByCreatedAtDesc()
+
+              val domainEventFromJson = objectMapper.readValue(
+                persistedDomainEvent!!.data,
+                Cas2ApplicationStatusUpdatedEvent::class.java,
+              )
+              assertThat(domainEventFromJson.eventDetails.applicationUrl)
+                .isEqualTo(expectedFrontEndUrl)
+
+              // verify that the persisted domain event contains the expected status details
+              val expected = listOf(
+                Cas2StatusDetail("healthNeedsMobilityNeedsEffect", "Need and effect on everyday life"),
+                Cas2StatusDetail("healthNeedsEpilepsyMedication", "Medication / treatment"),
+              )
               assertThat(domainEventFromJson.eventDetails.newStatus.statusDetails).isEqualTo(expected)
             }
           }

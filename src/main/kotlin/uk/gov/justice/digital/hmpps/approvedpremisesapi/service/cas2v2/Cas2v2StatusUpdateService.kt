@@ -23,14 +23,14 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas2v2.Cas2v2
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas2v2.Cas2v2UserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.DomainEvent
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.ValidationErrors
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.reference.Cas2PersistedApplicationStatus
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.reference.Cas2PersistedApplicationStatusDetail
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.reference.Cas2PersistedApplicationStatusFinder
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.reference.Cas2v2PersistedApplicationStatus
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.reference.Cas2v2PersistedApplicationStatusDetail
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.reference.Cas2v2PersistedApplicationStatusFinder
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.CasResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.EmailNotificationService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas2.Constants.HDC_APPLICATION_TYPE
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas2.DomainEventService
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.cas2.ApplicationStatusTransformer
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.cas2v2.Cas2v2ApplicationStatusTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.toCas2UiFormat
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.toCas2UiFormattedHourOfDay
 import java.time.OffsetDateTime
@@ -44,8 +44,8 @@ class Cas2v2StatusUpdateService(
   private val domainEventService: DomainEventService,
   private val emailNotificationService: EmailNotificationService,
   private val notifyConfig: NotifyConfig,
-  private val statusFinder: Cas2PersistedApplicationStatusFinder,
-  private val statusTransformer: ApplicationStatusTransformer,
+  private val statusFinder: Cas2v2PersistedApplicationStatusFinder,
+  private val statusTransformer: Cas2v2ApplicationStatusTransformer,
   @Value("\${url-templates.frontend.cas2v2.application}") private val applicationUrlTemplate: String,
   @Value("\${url-templates.frontend.cas2v2.application-overview}") private val applicationOverviewUrlTemplate: String,
 ) {
@@ -114,14 +114,14 @@ class Cas2v2StatusUpdateService(
     return CasResult.Success(createdStatusUpdate)
   }
 
-  private fun findActiveStatusByName(statusName: String): Cas2PersistedApplicationStatus? {
+  private fun findActiveStatusByName(statusName: String): Cas2v2PersistedApplicationStatus? {
     return statusFinder.active()
       .find { status -> status.name == statusName }
   }
 
   fun createStatusUpdatedDomainEvent(
     statusUpdate: Cas2v2StatusUpdateEntity,
-    statusDetails: List<Cas2PersistedApplicationStatusDetail>? = emptyList(),
+    statusDetails: List<Cas2v2PersistedApplicationStatusDetail>? = emptyList(),
   ) {
     val domainEventId = UUID.randomUUID()
     val eventOccurredAt = statusUpdate.createdAt
