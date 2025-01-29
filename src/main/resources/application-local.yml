@@ -17,6 +17,9 @@ spring:
     ansi:
       enabled: ALWAYS
 
+springdoc:
+  pre-loading-enabled: false
+
 hmpps.sqs:
   provider: localstack
   topics:
