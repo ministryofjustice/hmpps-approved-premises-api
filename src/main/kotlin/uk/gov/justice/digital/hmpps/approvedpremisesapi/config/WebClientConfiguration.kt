@@ -32,6 +32,7 @@ class WebClientConfiguration(
   @Value("\${ap-and-oasys-upstream-timeout-ms}") private val apAndOasysUpstreamTimeoutMs: Long,
   @Value("\${nomis-user-roles-api-upstream-timeout-ms}") private val nomisUserRolesUpstreamTimeoutMs: Long,
   @Value("\${case-notes-service-upstream-timeout-ms}") private val caseNotesServiceUpstreamTimeoutMs: Long,
+  @Value("\${tier-api-upstream-timeout-ms}") private val tierApiUpstreamTimeoutMs: Long,
   @Value("\${web-clients.max-response-in-memory-size-bytes}") private val defaultMaxResponseInMemorySizeBytes: Int,
   @Value("\${web-clients.prison-api-max-response-in-memory-size-bytes}") private val prisonApiMaxResponseInMemorySizeBytes: Int,
   @Value("\${web-clients.prisoner-alerts-api-max-response-in-memory-size-bytes}") private val prisonerAlertsApiMaxResponseInMemorySizeBytes: Int,
@@ -100,12 +101,13 @@ class WebClientConfiguration(
           ReactorClientHttpConnector(
             HttpClient
               .create()
-              .responseTimeout(Duration.ofMillis(upstreamTimeoutMs))
-              .option(ChannelOption.CONNECT_TIMEOUT_MILLIS, Duration.ofMillis(upstreamTimeoutMs).toMillis().toInt()),
+              .responseTimeout(Duration.ofMillis(tierApiUpstreamTimeoutMs))
+              .option(ChannelOption.CONNECT_TIMEOUT_MILLIS, Duration.ofMillis(tierApiUpstreamTimeoutMs).toMillis().toInt()),
           ),
         )
         .filter(oauth2Client)
         .build(),
+      retryOnReadTimeout = true,
     )
   }
 

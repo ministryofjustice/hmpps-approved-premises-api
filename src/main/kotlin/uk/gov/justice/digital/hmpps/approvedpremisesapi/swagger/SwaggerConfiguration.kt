@@ -38,15 +38,6 @@ class SwaggerConfiguration {
   }
 
   @Bean
-  fun cas1Only(): GroupedOpenApi {
-    return GroupedOpenApi.builder()
-      .group("CAS1")
-      .displayName("CAS1")
-      .pathsToMatch("/**/cas1/**")
-      .build()
-  }
-
-  @Bean
   fun cas1Shared(): GroupedOpenApi {
     return GroupedOpenApi.builder()
       .group("CAS1Shared")
@@ -60,16 +51,8 @@ class SwaggerConfiguration {
     return GroupedOpenApi.builder()
       .group("CAS1DomainEvents")
       .displayName("CAS1 Domain Events")
-      .pathsToMatch("/**/events/cas1/**")
-      .build()
-  }
-
-  @Bean
-  fun cas2Only(): GroupedOpenApi {
-    return GroupedOpenApi.builder()
-      .group("CAS2")
-      .displayName("CAS2")
-      .pathsToMatch("/**/cas2/**")
+      .pathsToExclude("/**/events/cas2/**", "/**/events/cas3/**")
+      .pathsToMatch("/**/events/**")
       .build()
   }
 
@@ -88,15 +71,6 @@ class SwaggerConfiguration {
       .group("CAS2DomainEvents")
       .displayName("CAS2 Domain Events")
       .pathsToMatch("/**/events/cas2/**")
-      .build()
-  }
-
-  @Bean
-  fun cas3Only(): GroupedOpenApi {
-    return GroupedOpenApi.builder()
-      .group("CAS3")
-      .displayName("CAS3")
-      .pathsToMatch("/**/cas3/**")
       .build()
   }
 
