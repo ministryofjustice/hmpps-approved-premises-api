@@ -7,15 +7,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRole
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.UserService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.UserService.GetUserResponse
 
-/**
- * Seeds users, along with their roles and qualifications.
- *
- *  NB: this clears roles and qualifications.
- *
- *  If you want to seed users without touching the pre-existing
- *  roles/qualifications of pre-existing users, then consider
- *  using ApStaffUsersSeedJob.
- */
 @SuppressWarnings("TooGenericExceptionThrown", "TooGenericExceptionCaught")
 abstract class AbstractUsersSeedJob(
   private val useRolesForServices: List<ServiceName>,
