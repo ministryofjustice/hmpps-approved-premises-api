@@ -5,7 +5,7 @@ orbs:
   mem: circleci/rememborb@0.0.2
   node: circleci/node@5.2.0
   slack: circleci/slack@5.1.1
-  cypress: cypress-io/cypress@3
+  cypress: cypress-io/cypress@3.4.2
 
 parameters:
   alerts-slack-channel:
