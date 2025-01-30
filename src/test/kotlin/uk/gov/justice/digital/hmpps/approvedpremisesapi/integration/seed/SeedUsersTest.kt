@@ -78,6 +78,7 @@ class SeedUsersTest : SeedTestBase() {
               .withDeliusUsername("unknown-user")
               .withRoles(listOf(UserRole.CAS1_ASSESSOR.name, UserRole.CAS1_CRU_MEMBER.name))
               .withQualifications(listOf(UserQualification.PIPE.name))
+              .withRemoveExistingRowsAndQualifications(true)
               .produce(),
           ),
         ),
@@ -98,7 +99,7 @@ class SeedUsersTest : SeedTestBase() {
     }
 
     @Test
-    fun `Assigning roles to an existing user succeeds`() {
+    fun `Assigning roles to an existing user with no roles succeeds`() {
       givenAUser(
         staffDetail = StaffDetailFactory.staffDetail(deliusUsername = "KNOWN-USER"),
         roles = emptyList(),
@@ -112,6 +113,81 @@ class SeedUsersTest : SeedTestBase() {
               .withDeliusUsername("KNOWN-USER")
               .withRoles(listOf("CAS1_ASSESSOR", "CAS1_CRU_MEMBER"))
               .withQualifications(listOf("PIPE"))
+              .withRemoveExistingRowsAndQualifications(true)
+              .produce(),
+          ),
+        ),
+      )
+
+      seedService.seedData(SeedFileType.user, "known-user.csv")
+
+      val persistedUser = userRepository.findByDeliusUsername("KNOWN-USER")
+
+      assertThat(persistedUser).isNotNull
+      assertThat(persistedUser!!.roles.map(UserRoleAssignmentEntity::role)).containsExactlyInAnyOrder(
+        UserRole.CAS1_ASSESSOR,
+        UserRole.CAS1_CRU_MEMBER,
+      )
+      assertThat(persistedUser.qualifications.map(UserQualificationAssignmentEntity::qualification)).containsExactlyInAnyOrder(
+        UserQualification.PIPE,
+      )
+    }
+
+    @Test
+    fun `Assigning roles to an existing user with roles, don't remove existing roles`() {
+      givenAUser(
+        staffDetail = StaffDetailFactory.staffDetail(deliusUsername = "KNOWN-USER"),
+        roles = listOf(UserRole.CAS1_FUTURE_MANAGER),
+        qualifications = listOf(UserQualification.EMERGENCY),
+      )
+
+      withCsv(
+        "known-user",
+        usersSeedRowToCsv(
+          listOf(
+            UserRoleAssignmentsSeedCsvRowFactory()
+              .withDeliusUsername("KNOWN-USER")
+              .withRoles(listOf("CAS1_ASSESSOR", "CAS1_CRU_MEMBER"))
+              .withQualifications(listOf("PIPE"))
+              .withRemoveExistingRowsAndQualifications(false)
+              .produce(),
+          ),
+        ),
+      )
+
+      seedService.seedData(SeedFileType.user, "known-user.csv")
+
+      val persistedUser = userRepository.findByDeliusUsername("KNOWN-USER")
+
+      assertThat(persistedUser).isNotNull
+      assertThat(persistedUser!!.roles.map(UserRoleAssignmentEntity::role)).containsExactlyInAnyOrder(
+        UserRole.CAS1_FUTURE_MANAGER,
+        UserRole.CAS1_ASSESSOR,
+        UserRole.CAS1_CRU_MEMBER,
+      )
+      assertThat(persistedUser.qualifications.map(UserQualificationAssignmentEntity::qualification)).containsExactlyInAnyOrder(
+        UserQualification.EMERGENCY,
+        UserQualification.PIPE,
+      )
+    }
+
+    @Test
+    fun `Assigning roles to an existing user with roles, remove existing roles`() {
+      givenAUser(
+        staffDetail = StaffDetailFactory.staffDetail(deliusUsername = "KNOWN-USER"),
+        roles = listOf(UserRole.CAS1_FUTURE_MANAGER),
+        qualifications = listOf(UserQualification.EMERGENCY),
+      )
+
+      withCsv(
+        "known-user",
+        usersSeedRowToCsv(
+          listOf(
+            UserRoleAssignmentsSeedCsvRowFactory()
+              .withDeliusUsername("KNOWN-USER")
+              .withRoles(listOf("CAS1_ASSESSOR", "CAS1_CRU_MEMBER"))
+              .withQualifications(listOf("PIPE"))
+              .withRemoveExistingRowsAndQualifications(true)
               .produce(),
           ),
         ),
@@ -146,6 +222,7 @@ class SeedUsersTest : SeedTestBase() {
               .withDeliusUsername("known-user")
               .withRoles(listOf("WORKFLOW_MANAGEF"))
               .withQualifications(listOf("PIPE"))
+              .withRemoveExistingRowsAndQualifications(true)
               .produce(),
           ),
         ),
@@ -176,6 +253,7 @@ class SeedUsersTest : SeedTestBase() {
             UserRoleAssignmentsSeedCsvRowFactory()
               .withDeliusUsername("known-user")
               .withQualifications(listOf("PIPEE"))
+              .withRemoveExistingRowsAndQualifications(true)
               .produce(),
           ),
         ),
@@ -259,6 +337,7 @@ class SeedUsersTest : SeedTestBase() {
               .withDeliusUsername(it.staffUserDetails.username!!)
               .withRoles(it.roles.map { it.name })
               .withQualifications(it.qualifications.map { it.name })
+              .withRemoveExistingRowsAndQualifications(true)
               .produce()
           },
         ),
@@ -354,6 +433,7 @@ class SeedUsersTest : SeedTestBase() {
               .withDeliusUsername(it.staffUserDetails.username!!)
               .withRoles(it.roles.map { it.name })
               .withQualifications(it.qualifications.map { it.name })
+              .withRemoveExistingRowsAndQualifications(true)
               .produce()
           },
         ),
@@ -394,7 +474,7 @@ class SeedUsersTest : SeedTestBase() {
     }
 
     @Test
-    fun `Assigning a role to an existing user succeeds`() {
+    fun `Assigning a role to an existing user with no roles succeeds`() {
       givenAUser(
         staffDetail = StaffDetailFactory.staffDetail(deliusUsername = "KNOWN-USER"),
         roles = emptyList(),
@@ -408,6 +488,7 @@ class SeedUsersTest : SeedTestBase() {
               .withDeliusUsername("KNOWN-USER")
               .withRoles(listOf("CAS3_REPORTER"))
               .withQualifications(listOf("PIPE"))
+              .withRemoveExistingRowsAndQualifications(true)
               .produce(),
           ),
         ),
@@ -444,6 +525,7 @@ class SeedUsersTest : SeedTestBase() {
             UserRoleAssignmentsSeedCsvRowFactory()
               .withDeliusUsername("MULTI-SERVICE-USER")
               .withRoles(listOf("CAS1_CRU_MEMBER"))
+              .withRemoveExistingRowsAndQualifications(true)
               .produce(),
           ),
         ),
@@ -478,6 +560,7 @@ class SeedUsersTest : SeedTestBase() {
             UserRoleAssignmentsSeedCsvRowFactory()
               .withDeliusUsername("MULTI-SERVICE-USER")
               .withRoles(listOf("CAS3_REFERRER"))
+              .withRemoveExistingRowsAndQualifications(true)
               .produce(),
           ),
         ),
@@ -500,6 +583,7 @@ private class UserRoleAssignmentsSeedCsvRowFactory : Factory<UsersSeedRow> {
   private var deliusUsername: Yielded<String> = { randomStringMultiCaseWithNumbers(10) }
   private var roles: Yielded<List<String>> = { listOf(UserRole.CAS1_ASSESSOR.name) }
   private var qualifications: Yielded<List<String>> = { listOf(UserQualification.PIPE.name) }
+  private var removeExistingRowsAndQualifications: Yielded<Boolean> = { false }
 
   fun withDeliusUsername(deliusUsername: String) = apply {
     this.deliusUsername = { deliusUsername }
@@ -513,10 +597,15 @@ private class UserRoleAssignmentsSeedCsvRowFactory : Factory<UsersSeedRow> {
     this.qualifications = { qualifications }
   }
 
+  fun withRemoveExistingRowsAndQualifications(removeExistingRolesAndQualifications: Boolean) = apply {
+    this.removeExistingRowsAndQualifications = { removeExistingRolesAndQualifications }
+  }
+
   override fun produce() = UsersSeedRow(
     deliusUsername = this.deliusUsername(),
     roles = this.roles(),
     qualifications = this.qualifications(),
+    removeExistingRolesAndQualifications = this.removeExistingRowsAndQualifications(),
   )
 }
 
@@ -524,6 +613,7 @@ private data class UsersSeedRow(
   val deliusUsername: String,
   val roles: List<String>,
   val qualifications: List<String>,
+  val removeExistingRolesAndQualifications: Boolean,
 )
 
 private data class SeedInfo(
@@ -541,9 +631,10 @@ private data class IterationValidation(
 private fun usersSeedRowToCsv(rows: List<UsersSeedRow>): String {
   val builder = CsvBuilder()
     .withUnquotedFields(
-      "deliusUsername",
+      "delius_username",
       "roles",
       "qualifications",
+      "remove_existing_roles_and_qualifications",
     )
     .newRow()
 
@@ -552,6 +643,13 @@ private fun usersSeedRowToCsv(rows: List<UsersSeedRow>): String {
       .withQuotedField(it.deliusUsername)
       .withQuotedField(it.roles.joinToString(","))
       .withQuotedField(it.qualifications.joinToString(","))
+      .withQuotedField(
+        if (it.removeExistingRolesAndQualifications) {
+          "YES"
+        } else {
+          "NO"
+        },
+      )
       .newRow()
   }
 
