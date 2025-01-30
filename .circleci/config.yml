@@ -326,9 +326,6 @@ jobs:
           command: |
             git clone https://github.com/ministryofjustice/hmpps-temporary-accommodation-ui.git .
       - run:
-          name: install
-          command: apt-get install xz-utils
-      - run:
           name: Update npm
           command: 'npm install -g npm@9.8.1'
       - node/install-packages
