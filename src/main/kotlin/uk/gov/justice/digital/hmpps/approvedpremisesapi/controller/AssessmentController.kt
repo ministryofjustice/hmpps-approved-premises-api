@@ -65,6 +65,7 @@ class AssessmentController(
     val domainSummaryStatuses = statuses?.map { assessmentTransformer.transformApiStatusToDomainSummaryState(it) } ?: emptyList()
 
     val (summaries, metadata) = when (xServiceName) {
+      ServiceName.cas2v2 -> throw UnsupportedOperationException("CAS2v2 not supported")
       ServiceName.cas2 -> throw UnsupportedOperationException("CAS2 not supported")
       ServiceName.temporaryAccommodation -> {
         val (summaries, metadata) = assessmentService.getAssessmentSummariesForUserCAS3(
@@ -77,10 +78,12 @@ class AssessmentController(
         val transformSummaries = when (sortBy) {
           AssessmentSortField.assessmentDueAt -> throw BadRequestProblem(errorDetail = "Sorting by due date is not supported for CAS3")
           AssessmentSortField.personName -> transformDomainToApi(user, summaries, user.hasQualification(UserQualification.LAO)).sortByName(resolvedSortDirection)
+
           else -> transformDomainToApi(user, summaries)
         }
         Pair(transformSummaries, metadata)
       }
+
       else -> {
         val (summaries, metadata) = assessmentService.getVisibleAssessmentSummariesForUserCAS1(user, domainSummaryStatuses, PageCriteria(resolvedSortBy, resolvedSortDirection, page, perPage))
         Pair(transformDomainToApi(user, summaries, user.hasQualification(UserQualification.LAO)), metadata)

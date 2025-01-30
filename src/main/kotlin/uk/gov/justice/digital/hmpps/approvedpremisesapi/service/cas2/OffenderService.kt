@@ -39,7 +39,7 @@ class OffenderService(
 
   private val log = LoggerFactory.getLogger(this::class.java)
 
-  fun getPersonByNomsNumber(nomsNumber: String, currentUser: NomisUserEntity): ProbationOffenderSearchResult {
+  fun getPersonByNomsNumberAndActiveCaseLoadId(nomsNumber: String, activeCaseLoadId: String): ProbationOffenderSearchResult {
     fun logFailedResponse(probationResponse: ClientResult.Failure<List<ProbationOffenderDetail>>) =
       log.warn("Could not get inmate details for $nomsNumber", probationResponse.toException())
 
@@ -74,8 +74,9 @@ class OffenderService(
       val inmateDetails = getInmateDetailsForProbationOffender(probationOffenderDetail)
         ?: return ProbationOffenderSearchResult.NotFound(nomsNumber)
 
+      val isOffenderSameAsUser = activeCaseLoadId == inmateDetails.assignedLivingUnit?.agencyId
       // check if same prison
-      return if (isOffenderSamePrisonAsUser(inmateDetails, currentUser)) {
+      return if (isOffenderSameAsUser) {
         ProbationOffenderSearchResult.Success.Full(nomsNumber, probationOffenderDetail, inmateDetails)
       } else {
         ProbationOffenderSearchResult.Forbidden(nomsNumber)
@@ -83,12 +84,11 @@ class OffenderService(
     }
   }
 
+  fun getPersonByNomsNumber(nomsNumber: String, currentUser: NomisUserEntity) =
+    currentUser.activeCaseloadId?.let { getPersonByNomsNumberAndActiveCaseLoadId(nomsNumber, it) }
+
   private fun hasRestrictionOrExclusion(probationOffenderDetail: ProbationOffenderDetail): Boolean {
     return probationOffenderDetail.currentExclusion == true || probationOffenderDetail.currentRestriction == true
-  }
-
-  private fun isOffenderSamePrisonAsUser(inmateDetail: InmateDetail?, currentUser: NomisUserEntity): Boolean {
-    return currentUser.activeCaseloadId == inmateDetail?.assignedLivingUnit?.agencyId
   }
 
   private fun getInmateDetailsForProbationOffender(probationOffenderDetail: ProbationOffenderDetail): InmateDetail? {

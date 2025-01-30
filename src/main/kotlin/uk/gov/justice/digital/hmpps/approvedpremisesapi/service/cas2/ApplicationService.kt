@@ -343,6 +343,7 @@ class ApplicationService(
                 staffIdentifier = application.createdByUser.nomisStaffId,
                 name = application.createdByUser.name,
                 username = application.createdByUser.nomisUsername,
+                usertype = Cas2StaffMember.Usertype.nomis,
               ),
             ),
           ),

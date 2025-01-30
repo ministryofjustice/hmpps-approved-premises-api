@@ -89,6 +89,7 @@ components:
         mapping:
           applications.cas2.application.submitted: '#/components/schemas/Cas2ApplicationSubmittedEvent'
           applications.cas2.application.status-updated: '#/components/schemas/Cas2ApplicationStatusUpdatedEvent'
+          offender-management.allocation.changed: '#/components/schemas/Cas2AllocationChangedEvent'
     Cas2ApplicationSubmittedEvent:
       allOf:
         - $ref: '#/components/schemas/Cas2Event'
@@ -116,6 +117,10 @@ components:
         applicationUrl:
           type: string
           example: https://community-accommodation-tier-2-dev.hmpps.service.justice.gov.uk/applications/484b8b5e-6c3b-4400-b200-425bbe410713
+        bailHearingDate:
+          type: string
+          example: '2023-03-30'
+          format: date
         personReference:
           $ref: '#/components/schemas/PersonReference'
         referringPrisonCode:
@@ -143,6 +148,8 @@ components:
               $ref: '#/components/schemas/Cas2StaffMember'
           required:
             - staffMember
+        cas2v2ApplicationOrigin:
+          type: string
       required:
         - applicationId
         - applicationUrl
@@ -241,6 +248,11 @@ components:
         username:
           type: string
           example: SMITHJ_GEN
+        usertype:
+          type: string
+          enum:
+            - nomis
+            - delius
       required:
         - staffIdentifier
         - name
@@ -266,9 +278,11 @@ components:
       enum:
         - applications.cas2.application.submitted
         - applications.cas2.application.status-updated
+        - offender-management.allocation.changed
       x-enum-varnames:
         - applicationSubmitted
         - applicationStatusUpdated
+        - allocationChanged
     Problem:
       type: object
       properties:

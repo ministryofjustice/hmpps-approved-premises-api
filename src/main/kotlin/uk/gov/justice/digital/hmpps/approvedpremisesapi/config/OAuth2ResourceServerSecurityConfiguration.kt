@@ -75,6 +75,19 @@ class OAuth2ResourceServerSecurityConfiguration {
         authorize(HttpMethod.GET, "/cas2/reference-data/**", hasAnyRole("CAS2_ASSESSOR", "POM"))
         authorize(HttpMethod.GET, "/cas2/reports/**", hasRole("CAS2_MI"))
         authorize("/cas2/**", hasAnyAuthority("ROLE_POM", "ROLE_LICENCE_CA"))
+
+        authorize(HttpMethod.PUT, "/cas2v2/assessments/**", hasRole("CAS2_ASSESSOR"))
+        authorize(HttpMethod.GET, "/cas2v2/assessments/**", hasAnyRole("CAS2_ASSESSOR", "CAS2_ADMIN"))
+        authorize(HttpMethod.POST, "/cas2v2/assessments/*/status-updates", hasRole("CAS2_ASSESSOR"))
+        authorize(HttpMethod.POST, "/cas2v2/assessments/*/notes", hasAnyRole("LICENCE_CA", "POM", "CAS2_ASSESSOR"))
+        authorize(HttpMethod.GET, "/cas2v2/submissions/**", hasAnyRole("CAS2_ASSESSOR", "CAS2_ADMIN"))
+        authorize(HttpMethod.POST, "/cas2v2/submissions/*/status-updates", hasRole("CAS2_ASSESSOR"))
+        authorize(HttpMethod.GET, "/cas2v2/reference-data/**", hasAnyRole("CAS2_ASSESSOR", "POM"))
+        authorize(HttpMethod.GET, "/cas2v2/reports/**", hasRole("CAS2_MI"))
+        authorize(HttpMethod.GET, "/cas2v2/people/search-by-crn/**", hasAnyAuthority("ROLE_LICENCE_CA", "ROLE_PROBATION"))
+        authorize(HttpMethod.GET, "/cas2v2/people/search-by-noms/**", hasAnyAuthority("ROLE_POM", "ROLE_LICENCE_CA", "ROLE_PROBATION"))
+        authorize("/cas2v2/**", hasAnyAuthority("ROLE_POM", "ROLE_LICENCE_CA"))
+
         authorize(HttpMethod.GET, "/cas3-api.yml", permitAll)
         authorize(HttpMethod.GET, "/subject-access-request", hasAnyRole("SAR_DATA_ACCESS"))
         authorize(anyRequest, hasAuthority("ROLE_PROBATION"))
@@ -173,6 +186,8 @@ class AuthAwareAuthenticationToken(
   override fun getPrincipal(): String {
     return aPrincipal
   }
+
+  fun authenticationSource(): String = jwt.claims["auth_source"] as String
 
   fun isExternalUser(): Boolean {
     return jwt.claims["auth_source"] == "auth"

@@ -5,6 +5,8 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.sync.Semaphore
+import kotlinx.coroutines.sync.withPermit
 import org.springframework.context.ApplicationContext
 import org.springframework.scheduling.annotation.Async
 import org.springframework.stereotype.Service
@@ -155,12 +157,18 @@ class SeedService(
     seedLogger.info("Processing $rowCount rows")
 
     if (job.processRowsConcurrently) {
-      runBlocking(Dispatchers.IO.limitedParallelism(5)) {
+      val requestSemaphore = Semaphore(5)
+
+      runBlocking(Dispatchers.IO) {
         try {
           csvReader().open(job.resolveCsvPath()) {
             readAllWithHeaderAsSequence().forEach { row ->
               rowNumber += 1
-              launch { processRow(job, row, rowNumber, rowCount, errors) }
+              launch {
+                requestSemaphore.withPermit {
+                  processRow(job, row, rowNumber, rowCount, errors)
+                }
+              }
             }
           }
         } catch (exception: Exception) {

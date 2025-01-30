@@ -750,7 +750,7 @@ components:
       required:
         - crn
         - noms
-    Cas1SpaceCharacteristic:
+    SpaceCharacteristic:
       type: string
       description: All of the characteristics of both premises and rooms
       enum:
@@ -1252,7 +1252,7 @@ components:
         characteristics:
           type: array
           items:
-            $ref: '#/components/schemas/Cas1SpaceCharacteristic'
+            $ref: '#/components/schemas/SpaceCharacteristic'
       required:
         - applicationId
         - applicationUrl
@@ -1324,11 +1324,11 @@ components:
         characteristics:
           type: array
           items:
-            $ref: '#/components/schemas/Cas1SpaceCharacteristic'
+            $ref: '#/components/schemas/SpaceCharacteristic'
         previousCharacteristics:
           type: array
           items:
-            $ref: '#/components/schemas/Cas1SpaceCharacteristic'
+            $ref: '#/components/schemas/SpaceCharacteristic'
       required:
         - applicationId
         - applicationUrl

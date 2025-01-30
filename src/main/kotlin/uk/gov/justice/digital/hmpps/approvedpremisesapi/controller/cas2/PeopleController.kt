@@ -34,6 +34,7 @@ class PeopleController(
 ) : PeopleCas2Delegate {
   private val log = LoggerFactory.getLogger(this::class.java)
 
+  @SuppressWarnings("TooGenericExceptionThrown")
   override fun peopleSearchGet(nomsNumber: String): ResponseEntity<Person> {
     val currentUser = nomisUserService.getUserForRequest()
 
@@ -49,6 +50,8 @@ class PeopleController(
       is ProbationOffenderSearchResult.Success.Full -> return ResponseEntity.ok(
         personTransformer.transformProbationOffenderToPersonApi(probationOffenderResult, nomsNumber),
       )
+
+      null -> throw NotFoundProblem(nomsNumber, "Offender")
     }
   }
 

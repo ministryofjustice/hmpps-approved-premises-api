@@ -244,6 +244,7 @@ class ProfileTest : IntegrationTestBase() {
         )
     }
 
+    @Test
     fun `Getting existing profile with no Delius staff record returns load error`() {
       val id = UUID.randomUUID()
       val deliusUsername = "UNKNOWNUSER"

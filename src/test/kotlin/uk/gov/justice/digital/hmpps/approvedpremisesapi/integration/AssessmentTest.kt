@@ -174,7 +174,7 @@ class AssessmentTest : IntegrationTestBase() {
     }
 
     @ParameterizedTest
-    @EnumSource(ServiceName::class, names = ["cas2"], mode = EnumSource.Mode.EXCLUDE)
+    @EnumSource(ServiceName::class, names = ["cas2", "cas2v2"], mode = EnumSource.Mode.EXCLUDE)
     @Suppress("TooGenericExceptionThrown") // The RuntimeException here will never be reached
     fun `Get all assessments returns successfully when an inmate details cache failure occurs`(serviceName: ServiceName) {
       val givenAnAssessment = when (serviceName) {

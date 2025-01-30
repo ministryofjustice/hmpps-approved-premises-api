@@ -1178,20 +1178,20 @@ components:
       required:
         - reason
     WithdrawPlacementRequestReason:
-        type: string
-        enum:
-          - DuplicatePlacementRequest
-          - AlternativeProvisionIdentified
-          - ChangeInCircumstances
-          - ChangeInReleaseDecision
-          - NoCapacityDueToLostBed
-          - NoCapacityDueToPlacementPrioritisation
-          - NoCapacity
-          - ErrorInPlacementRequest
-          - WithdrawnByPP
-          - RelatedApplicationWithdrawn
-          - RelatedPlacementRequestWithdrawn
-          - RelatedPlacementApplicationWithdrawn
+      type: string
+      enum:
+        - DuplicatePlacementRequest
+        - AlternativeProvisionIdentified
+        - ChangeInCircumstances
+        - ChangeInReleaseDecision
+        - NoCapacityDueToLostBed
+        - NoCapacityDueToPlacementPrioritisation
+        - NoCapacity
+        - ErrorInPlacementRequest
+        - WithdrawnByPP
+        - RelatedApplicationWithdrawn
+        - RelatedPlacementRequestWithdrawn
+        - RelatedPlacementApplicationWithdrawn
     PlacementApplicationType:
       type: string
       description: |
@@ -2235,6 +2235,7 @@ components:
           Offline: '#/components/schemas/OfflineApplication'
           CAS1: '#/components/schemas/ApprovedPremisesApplication'
           CAS2: '#/components/schemas/Cas2Application'
+          CAS2V2: '#/components/schemas/Cas2v2Application'
           CAS3: '#/components/schemas/TemporaryAccommodationApplication'
       required:
         - type
@@ -2783,6 +2784,13 @@ components:
       required:
         - note
       description: A note to add to an application
+    ApplicationOrigin:
+        type: string
+        default: homeDetentionCurfew
+        enum:
+          - courtBail
+          - prisonBail
+          - homeDetentionCurfew
     NewApplication:
       type: object
       properties:
@@ -2806,10 +2814,12 @@ components:
         - CAS1
         - CAS2
         - CAS3
+        - CAS2V2
       x-enum-varnames:
         - CAS1
         - CAS2
         - CAS3
+        - CAS2V2
     UpdateApplication:
       type: object
       properties:
@@ -2825,12 +2835,21 @@ components:
           CAS1: '#/components/schemas/UpdateApprovedPremisesApplication'
           CAS2: '#/components/schemas/UpdateCas2Application'
           CAS3: '#/components/schemas/UpdateTemporaryAccommodationApplication'
+          CAS2V2: '#/components/schemas/UpdateCas2v2Application'
       required:
         - type
         - data
     UpdateCas2Application:
       allOf:
         - $ref: '#/components/schemas/UpdateApplication'
+    UpdateCas2v2Application:
+      allOf:
+        - $ref: '#/components/schemas/UpdateApplication'
+        - type: object
+          properties:
+            bailHearingDate:
+              type: string
+              format: date
     UpdateApprovedPremisesApplication:
       allOf:
         - $ref: '#/components/schemas/UpdateApplication'
@@ -3821,10 +3840,12 @@ components:
       enum:
         - approved-premises
         - cas2
+        - cas2v2
         - temporary-accommodation
       x-enum-varnames:
         - approvedPremises
         - cas2
+        - cas2v2
         - temporaryAccommodation
     NewRoom:
       type: object
@@ -4196,6 +4217,8 @@ components:
           type: string
         createdBy:
           $ref: '#/components/schemas/User'
+        payload:
+          $ref: '#/components/schemas/TimelineEventContentPayload'
         associatedUrls:
           type: array
           items:
@@ -5156,7 +5179,7 @@ components:
     FullPersonSummary:
       allOf:
         - $ref: '#/components/schemas/PersonSummary'
-        - type : object
+        - type: object
           properties:
             name:
               type: string
@@ -5406,3 +5429,98 @@ components:
         - SHARED_PROPERTY
         - SINGLE_OCCUPANCY
         - WHEELCHAIR_ACCESSIBLE
+    TimelineEventContentPayload:
+      type: object
+      description: "Base schema for all timeline event payloads"
+      properties:
+        type:
+          $ref: '#/components/schemas/TimelineEventType'
+        premises:
+          $ref: '#/components/schemas/NamedId'
+        schemaVersion:
+          type: integer
+      required:
+        - type
+        - premises
+        - schemaVersion
+      discriminator:
+        propertyName: "type"
+        mapping:
+          approved_premises_booking_changed: '#/components/schemas/BookingChangedContentPayload'
+    BookingChangedContentPayload:
+      type: object
+      allOf:
+        - $ref: "#/components/schemas/TimelineEventContentPayload"
+      properties:
+        expectedArrival:
+          type: string
+          format: date
+        expectedDeparture:
+          type: string
+          format: date
+        previousExpectedArrival:
+          description: "Only populated if the new value is different, and where schema version = 2"
+          type: string
+          format: date
+        previousExpectedDeparture:
+          description: "Only populated if the new value is different, and where schema version = 2"
+          type: string
+          format: date
+        characteristics:
+          type: array
+          items:
+            $ref: '#/components/schemas/Cas1SpaceCharacteristic'
+        previousCharacteristics:
+          description: "Only populated if the new value is different, and where schema version = 2"
+          type: array
+          items:
+            $ref: '#/components/schemas/Cas1SpaceCharacteristic'
+      required:
+        - expectedArrival
+        - expectedDeparture
+    Cas1SpaceCharacteristic:
+      type: string
+      description: All of the characteristics of both premises and rooms
+      enum:
+        - acceptsChildSexOffenders
+        - acceptsHateCrimeOffenders
+        - acceptsNonSexualChildOffenders
+        - acceptsSexOffenders
+        - additionalRestrictions
+        - hasArsonInsuranceConditions
+        - hasBrailleSignage
+        - hasCallForAssistance
+        - hasCrib7Bedding
+        - hasEnSuite
+        - hasFixedMobilityAids
+        - hasHearingLoop
+        - hasLift
+        - hasNearbySprinkler
+        - hasSmokeDetector
+        - hasStepFreeAccess
+        - hasStepFreeAccessToCommunalAreas
+        - hasTactileFlooring
+        - hasTurningSpace
+        - hasWheelChairAccessibleBathrooms
+        - hasWideAccessToCommunalAreas
+        - hasWideDoor
+        - hasWideStepFreeAccess
+        - isArsonDesignated
+        - isArsonSuitable
+        - isCatered
+        - isESAP
+        - isFullyFm
+        - isGroundFloor
+        - isGroundFloorNrOffice
+        - isIAP
+        - isPIPE
+        - isRecoveryFocussed
+        - isSemiSpecialistMentalHealth
+        - isSingle
+        - isStepFreeDesignated
+        - isSuitableForVulnerable
+        - isSuitedForSexOffenders
+        - isTopFloorVulnerable
+        - isWheelchairAccessible
+        - isWheelchairDesignated
+

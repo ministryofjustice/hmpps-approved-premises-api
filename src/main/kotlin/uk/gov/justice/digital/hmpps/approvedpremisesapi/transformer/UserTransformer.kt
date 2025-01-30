@@ -56,10 +56,12 @@ class UserTransformer(
       name = jpa.name,
     )
 
+  @Suppress("TooGenericExceptionThrown")
   fun transformJpaToApi(jpa: UserEntity, serviceName: ServiceName) = when (serviceName) {
     ServiceName.approvedPremises -> transformCas1JpaToApi(jpa)
     ServiceName.temporaryAccommodation -> transformCas3JpatoApi(jpa)
     ServiceName.cas2 -> throw RuntimeException("CAS2 not supported")
+    ServiceName.cas2v2 -> throw RuntimeException("CAS2v2 not supported")
   }
 
   fun transformCas1JpaToApi(jpa: UserEntity): ApprovedPremisesUser {
