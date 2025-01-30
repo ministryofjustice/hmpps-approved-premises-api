@@ -20,11 +20,15 @@ abstract class AbstractUsersSeedJob(
 ) {
   private val log = LoggerFactory.getLogger(this::class.java)
 
-  override fun deserializeRow(columns: Map<String, String>) = UsersSeedCsvRow(
-    deliusUsername = columns["deliusUsername"]!!.trim().uppercase(),
-    roles = parseAllRolesOrThrow(columns["roles"]!!.split(",").filter(String::isNotBlank).map(String::trim)),
-    qualifications = parseAllQualificationsOrThrow(columns["qualifications"]!!.split(",").filter(String::isNotBlank).map(String::trim)),
-  )
+  override fun deserializeRow(columns: Map<String, String>): UsersSeedCsvRow {
+    val seedColumns = SeedColumns(columns)
+
+    return UsersSeedCsvRow(
+      deliusUsername = seedColumns.getStringOrNull("deliusUsername")!!.uppercase(),
+      roles = parseAllRolesOrThrow(seedColumns.getCommaSeparatedValues("roles")),
+      qualifications = parseAllQualificationsOrThrow(seedColumns.getCommaSeparatedValues("qualifications")),
+    )
+  }
 
   private fun parseAllRolesOrThrow(roleNames: List<String>): List<UserRole> {
     val unknownRoles = mutableListOf<String>()
