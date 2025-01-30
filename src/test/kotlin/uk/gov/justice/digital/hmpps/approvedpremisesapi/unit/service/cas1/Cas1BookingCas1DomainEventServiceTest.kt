@@ -15,8 +15,8 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.Bo
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.BookingChangedEnvelope
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.BookingMadeEnvelope
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.BookingNotMadeEnvelope
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.Cas1SpaceCharacteristic
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.EventType
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.SpaceCharacteristic
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ReleaseTypeOption
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.SentenceTypeOption
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.SituationOption
@@ -172,7 +172,7 @@ class Cas1BookingCas1DomainEventServiceTest {
       assertThat(data.releaseType).isEqualTo(application.releaseType)
       assertThat(data.sentenceType).isEqualTo(application.sentenceType)
       assertThat(data.situation).isEqualTo(application.situation)
-      assertThat(data.characteristics).isEqualTo(listOf(Cas1SpaceCharacteristic.hasEnSuite))
+      assertThat(data.characteristics).isEqualTo(listOf(SpaceCharacteristic.hasEnSuite))
 
       assertThat(domainEvent.metadata).isEqualTo(mapOf(MetaDataName.CAS1_PLACEMENT_REQUEST_ID to placementRequest.id.toString()))
     }
@@ -1120,8 +1120,8 @@ class Cas1BookingCas1DomainEventServiceTest {
       assertThat(data.departureOn).isEqualTo(LocalDate.of(2025, 5, 11))
       assertThat(data.previousArrivalOn).isEqualTo(LocalDate.of(2025, 2, 12))
       assertThat(data.previousDepartureOn).isEqualTo(LocalDate.of(2025, 4, 11))
-      assertThat(data.characteristics).isEqualTo(listOf(Cas1SpaceCharacteristic.isArsonSuitable))
-      assertThat(data.previousCharacteristics).isEqualTo(listOf(Cas1SpaceCharacteristic.hasEnSuite))
+      assertThat(data.characteristics).isEqualTo(listOf(SpaceCharacteristic.isArsonSuitable))
+      assertThat(data.previousCharacteristics).isEqualTo(listOf(SpaceCharacteristic.hasEnSuite))
     }
   }
 }

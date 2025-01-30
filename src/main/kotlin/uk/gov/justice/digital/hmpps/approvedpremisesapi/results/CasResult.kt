@@ -26,6 +26,6 @@ sealed interface CasResult<SuccessType> {
   data class FieldValidationError<SuccessType>(val validationMessages: Map<String, String>) : Error<SuccessType>
   data class GeneralValidationError<SuccessType>(val message: String) : Error<SuccessType>
   data class ConflictError<SuccessType>(val conflictingEntityId: UUID, val message: String) : Error<SuccessType>
-  class Unauthorised<SuccessType> : Error<SuccessType>
+  data class Unauthorised<SuccessType>(val message: String? = null) : Error<SuccessType>
   data class NotFound<SuccessType>(val entityType: String, val id: String) : Error<SuccessType>
 }

@@ -116,6 +116,10 @@ components:
         applicationUrl:
           type: string
           example: https://community-accommodation-tier-2-dev.hmpps.service.justice.gov.uk/applications/484b8b5e-6c3b-4400-b200-425bbe410713
+        bailHearingDate:
+          type: string
+          example: '2023-03-30'
+          format: date
         personReference:
           $ref: '#/components/schemas/PersonReference'
         referringPrisonCode:
@@ -143,6 +147,8 @@ components:
               $ref: '#/components/schemas/Cas2StaffMember'
           required:
             - staffMember
+        cas2v2ApplicationOrigin:
+          type: string
       required:
         - applicationId
         - applicationUrl
@@ -241,6 +247,11 @@ components:
         username:
           type: string
           example: SMITHJ_GEN
+        usertype:
+          type: string
+          enum:
+            - nomis
+            - delius
       required:
         - staffIdentifier
         - name

@@ -116,6 +116,7 @@ springdoc:
     urls-primary-name: "All CAS"
   remove-broken-reference-definitions: false
   writer-with-order-by-keys: true
+  pre-loading-enabled: true
 
 server:
   port: 8080
@@ -265,6 +266,10 @@ url-templates:
       application: http://localhost:3000/applications/#id
       application-overview: http://localhost:3000/applications/#id/overview
       submitted-application-overview: http://localhost:3000/assess/applications/#applicationId/overview
+    cas2v2:
+      application: http://localhost:3000/applications/#id
+      application-overview: http://localhost:3000/applications/#id/overview
+      submitted-application-overview: http://localhost:3000/assess/applications/#applicationId/overview
 
 preemptive-cache-enabled: true
 preemptive-cache-key-prefix: ""
@@ -278,6 +283,7 @@ arrived-departed-domain-events-disabled: true
 upstream-timeout-ms: 10000
 ap-and-oasys-upstream-timeout-ms: 4000
 nomis-user-roles-api-upstream-timeout-ms: 2000
+tier-api-upstream-timeout-ms: 2000
 case-notes-service-upstream-timeout-ms: 25000
 
 web-clients:

@@ -51,6 +51,9 @@ spring:
   cache:
     type: none
 
+springdoc:
+  pre-loading-enabled: false
+
 hmpps.sqs:
   useWebToken: false
   provider: localstack

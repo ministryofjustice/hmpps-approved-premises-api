@@ -54,10 +54,12 @@ class CasResultAssertions<T>(actual: CasResult<T>) : AbstractAssert<CasResultAss
     return this
   }
 
-  fun isUnauthorised(): CasResultAssertions<T> {
+  fun isUnauthorised(expectedMessage: String? = null): CasResultAssertions<T> {
     if (actual !is CasResult.Unauthorised) {
       failWithMessage("Expected CasResult.Unauthorised but was <%s>", actual.javaClass.simpleName, actual)
     }
+    val message = (actual as CasResult.Unauthorised<T>).message
+    assertThat(message).isEqualTo(expectedMessage)
     return this
   }
 

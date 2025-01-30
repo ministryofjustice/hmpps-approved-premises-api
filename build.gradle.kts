@@ -1,8 +1,8 @@
 import org.apache.commons.io.FileUtils
 
 plugins {
-  id("uk.gov.justice.hmpps.gradle-spring-boot") version "6.1.0"
-  kotlin("plugin.spring") version "2.0.20"
+  id("uk.gov.justice.hmpps.gradle-spring-boot") version "6.1.2"
+  kotlin("plugin.spring") version "2.0.21"
   id("org.openapi.generator") version "7.7.0"
   id("org.jetbrains.kotlin.plugin.jpa") version "1.9.22"
   id("io.gatling.gradle") version "3.13.1"
@@ -28,7 +28,7 @@ dependencies {
   implementation("org.springframework.boot:spring-boot-starter-data-jpa")
   implementation("org.springframework.retry:spring-retry")
   implementation("io.hypersistence:hypersistence-utils-hibernate-63:3.7.0")
-  implementation("org.hibernate:hibernate-spatial:6.4.4.Final")
+  implementation("org.hibernate:hibernate-spatial:6.6.4.Final")
   implementation("org.hibernate.orm:hibernate-jcache")
   implementation("org.flywaydb:flyway-core")
   implementation("org.springframework.boot:spring-boot-starter-data-redis")
@@ -251,6 +251,14 @@ registerAdditionalOpenApiGenerateTask(
 )
 
 registerAdditionalOpenApiGenerateTask(
+  name = "openApiGenerateCas2v2Namespace",
+  ymlPath = "$rootDir/src/main/resources/static/codegen/built-cas2v2-api-spec.yml",
+  apiPackageName = "uk.gov.justice.digital.hmpps.approvedpremisesapi.api.cas2v2",
+  modelPackageName = "uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model",
+  apiSuffix = "Cas2v2",
+)
+
+registerAdditionalOpenApiGenerateTask(
   name = "openApiGenerateCas2Namespace",
   ymlPath = "$rootDir/src/main/resources/static/codegen/built-cas2-api-spec.yml",
   apiPackageName = "uk.gov.justice.digital.hmpps.approvedpremisesapi.api.cas2",
@@ -329,6 +337,7 @@ tasks.register("openApiPreCompilation") {
       .readFileToString(file, "UTF-8")
       .replace("_shared.yml#/components", "#/components")
       .replace("cas1-schemas.yml#/components", "#/components")
+      .replace("cas2v2-schemas.yml#/components", "#/components")
     FileUtils.writeStringToFile(file, updatedContents, "UTF-8")
   }
 
@@ -382,6 +391,11 @@ tasks.register("openApiPreCompilation") {
     inputSpec = "cas2-api.yml",
   )
   buildSpecWithSharedComponentsAppended(
+    outputFileName = "built-cas2v2-api-spec.yml",
+    inputSpec = "cas2v2-api.yml",
+    inputSchemas = "cas2v2-schemas.yml",
+  )
+  buildSpecWithSharedComponentsAppended(
     outputFileName = "built-cas3-api-spec.yml",
     inputSpec = "cas3-api.yml",
   )
@@ -394,6 +408,7 @@ tasks.get("openApiGenerate").dependsOn(
   "openApiPreCompilation",
   "openApiGenerateCas1Namespace",
   "openApiGenerateCas2Namespace",
+  "openApiGenerateCas2v2Namespace",
   "openApiGenerateCas3Namespace",
 )
 

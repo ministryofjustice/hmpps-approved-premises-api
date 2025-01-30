@@ -111,6 +111,11 @@ class ApplicationService(
           "NomisUser",
       )
 
+      ServiceName.cas2v2 -> throw RuntimeException(
+        "CAS2v2 applications now require " +
+          "Cas2v2User",
+      )
+
       ServiceName.temporaryAccommodation -> getAllTemporaryAccommodationApplicationsForUser(userEntity)
     }
 
@@ -697,6 +702,7 @@ class ApplicationService(
         submitApplication.isEsapApplication == true -> ApprovedPremisesType.ESAP
         else -> ApprovedPremisesType.NORMAL
       }
+
       submitApplication.isUsingNewApTypeField -> submitApplication.apType!!.asApprovedPremisesType()
       else -> ApprovedPremisesType.NORMAL
     }

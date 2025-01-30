@@ -76,10 +76,12 @@ class StatusUpdateService(
         ValidatableActionResult.GeneralValidationError("The status ${statusUpdate.newStatus} is not valid"),
       )
 
-    val statusDetails = if (statusUpdate.newStatusDetails.isNullOrEmpty()) {
+    val newStatusDetails = statusUpdate.newStatusDetails
+
+    val statusDetails = if (newStatusDetails.isNullOrEmpty()) {
       emptyList()
     } else {
-      statusUpdate.newStatusDetails.map { detail ->
+      newStatusDetails.map { detail ->
         status.findStatusDetailOnStatus(detail)
           ?: return AuthorisableActionResult.Success(
             ValidatableActionResult.GeneralValidationError("The status detail $detail is not valid"),

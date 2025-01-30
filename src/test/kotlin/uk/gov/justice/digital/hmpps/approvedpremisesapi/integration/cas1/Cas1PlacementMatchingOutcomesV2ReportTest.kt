@@ -446,7 +446,7 @@ class Cas1PlacementMatchingOutcomesV2ReportTest : InitialiseDatabasePerClassTest
     matcherUsername: String,
   ) {
     val managerJwt = givenAUser(
-      roles = listOf(UserRole.CAS1_WORKFLOW_MANAGER),
+      roles = listOf(UserRole.CAS1_WORKFLOW_MANAGER, UserRole.CAS1_CRU_MEMBER),
       staffDetail = StaffDetailFactory.staffDetail(deliusUsername = matcherUsername),
       probationRegion = givenAProbationRegion(apArea = givenAnApArea(name = matcherApAreaName)),
     ).second
