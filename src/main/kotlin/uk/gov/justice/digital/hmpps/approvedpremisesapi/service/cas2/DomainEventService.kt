@@ -8,15 +8,14 @@ import org.springframework.data.repository.findByIdOrNull
 import org.springframework.stereotype.Service
 import software.amazon.awssdk.services.sns.model.MessageAttributeValue
 import software.amazon.awssdk.services.sns.model.PublishRequest
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas2.model.Cas2ApplicationStatusUpdatedEvent
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas2.model.Cas2ApplicationSubmittedEvent
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas2.model.Cas2Event
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas2.model.PersonReference
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas2.model.*
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.config.DomainEventUrlConfig
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DomainEventEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DomainEventRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DomainEventType
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TriggerSourceType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.DomainEvent
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.HmppsDomainEvent
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.domainevent.SnsEvent
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.domainevent.SnsEventAdditionalInformation
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.domainevent.SnsEventPersonReference
@@ -81,6 +80,45 @@ class DomainEventService(
       domainEvent = domainEvent,
       personReference = domainEvent.data.eventDetails.personReference,
     )
+
+  @Transactional
+  fun saveCas2AllocationChangedDomainEvent(domainEvent: HmppsDomainEvent, applicationId: UUID) =
+    saveCas2DomainEvent(
+      domainEvent = domainEvent,
+      applicationId = applicationId,
+      eventType = DomainEventType.CAS2_ALLOCATION_CHANGED,
+      data = objectMapper.writeValueAsString(domainEvent.additionalInformation),
+    )
+
+  private fun saveCas2DomainEvent(
+    domainEvent: HmppsDomainEvent, applicationId: UUID, eventType: DomainEventType, data: String
+  ) {
+    val domainEventId = UUID.randomUUID()
+    val occurredAt = domainEvent.occurredAt.toInstant().atOffset(ZoneOffset.UTC)
+    val crn = domainEvent.personReference.findCrn().toString()
+
+    domainEventRepository.save(
+      DomainEventEntity(
+        id = domainEventId,
+        applicationId = applicationId,
+        assessmentId = null,
+        bookingId = null,
+        cas1SpaceBookingId = null,
+        crn = crn,
+        nomsNumber = null,
+        type = eventType,
+        occurredAt = occurredAt,
+        createdAt = OffsetDateTime.now(),
+        data = objectMapper.writeValueAsString(data),
+        service = "CAS2",
+        triggerSource = TriggerSourceType.SYSTEM,
+        triggeredByUserId = null,
+        schemaVersion = domainEvent.version,
+      ),
+    )
+
+      log.info("Saved domain event with id: ${domainEventId} and event type: ${eventType}")
+  }
 
   private fun <T : Cas2Event> saveAndEmit(
     domainEvent: DomainEvent<T>,
