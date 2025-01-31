@@ -148,6 +148,21 @@ jobs:
             - project/**/*
             - .gradle/*
             - .gradle/**/*
+  check_openApI_file_changes:
+    environment:
+      _JAVA_OPTIONS: "-Xmx3g"
+      GRADLE_OPTS: "-Dorg.gradle.daemon=false -Dorg.gradle.workers.max=2"
+    docker:
+      - image: cimg/openjdk:21.0.2
+    steps:
+      - attach_workspace:
+          at: ~/
+      - run:
+          name: Check OpenAPI built files
+          command: ./gradlew openApiGenerate
+      - run:
+          name: Check for File Changes
+          command: git diff --exit-code || (echo "Changes detected after Generating OpenApiSpec files." && exit 1)
   code_linting_check_with_ktlint:
     environment:
       _JAVA_OPTIONS: "-Xmx3g"
@@ -366,6 +381,9 @@ workflows:
   build-test-and-deploy:
     jobs:
       - build
+      - check_openApI_file_changes:
+          requires:
+            - build
       - code_linting_check_with_ktlint:
           requires:
             - build
