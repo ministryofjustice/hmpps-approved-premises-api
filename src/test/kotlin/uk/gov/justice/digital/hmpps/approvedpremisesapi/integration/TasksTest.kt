@@ -153,23 +153,9 @@ class TasksTest {
 
               val offenderSummaries = getOffenderSummaries(offenderDetails)
 
-              val (task1, _) = givenAPlacementRequest(
-                placementRequestAllocatedTo = otherUser,
-                assessmentAllocatedTo = otherUser,
-                createdByUser = user,
-                crn = offenderDetails.otherIds.crn,
-              )
-
               val (task2, _) = givenAnAssessmentForApprovedPremises(
                 allocatedToUser = otherUser,
                 createdByUser = otherUser,
-                crn = offenderDetails.otherIds.crn,
-              )
-
-              val (task3, _) = givenAPlacementRequest(
-                placementRequestAllocatedTo = otherUser,
-                assessmentAllocatedTo = otherUser,
-                createdByUser = user,
                 crn = offenderDetails.otherIds.crn,
               )
 
@@ -190,16 +176,8 @@ class TasksTest {
               )
 
               val expectedTasks = listOf(
-                taskTransformer.transformPlacementRequestToTask(
-                  task1,
-                  offenderSummaries,
-                ),
                 taskTransformer.transformAssessmentToTask(
                   task2,
-                  offenderSummaries,
-                ),
-                taskTransformer.transformPlacementRequestToTask(
-                  task3,
                   offenderSummaries,
                 ),
                 taskTransformer.transformPlacementApplicationToTask(
@@ -265,23 +243,9 @@ class TasksTest {
 
               val offenderSummaries = getOffenderSummaries(offenderDetails)
 
-              val (task1, _) = givenAPlacementRequest(
-                placementRequestAllocatedTo = otherUser,
-                assessmentAllocatedTo = otherUser,
-                createdByUser = user,
-                crn = offenderDetails.otherIds.crn,
-              )
-
               val (task2, _) = givenAnAssessmentForApprovedPremises(
                 allocatedToUser = otherUser,
                 createdByUser = otherUser,
-                crn = offenderDetails.otherIds.crn,
-              )
-
-              val (task3, _) = givenAPlacementRequest(
-                placementRequestAllocatedTo = otherUser,
-                assessmentAllocatedTo = otherUser,
-                createdByUser = user,
                 crn = offenderDetails.otherIds.crn,
               )
 
@@ -299,17 +263,6 @@ class TasksTest {
                 allocatedToUser = otherUser,
                 createdByUser = otherUser,
                 crn = offenderDetails.otherIds.crn,
-              )
-
-              val placementRequests = listOf(
-                taskTransformer.transformPlacementRequestToTask(
-                  task1,
-                  offenderSummaries,
-                ),
-                taskTransformer.transformPlacementRequestToTask(
-                  task3,
-                  offenderSummaries,
-                ),
               )
 
               val placementApplications = listOf(
@@ -333,7 +286,6 @@ class TasksTest {
               tasks = mapOf(
                 TaskType.assessment to assessments,
                 TaskType.placementApplication to placementApplications,
-                TaskType.placementRequest to placementRequests,
               )
             }
           }
@@ -341,7 +293,7 @@ class TasksTest {
       }
 
       @ParameterizedTest
-      @EnumSource(value = TaskType::class, names = ["assessment", "placementRequest", "placementApplication"])
+      @EnumSource(value = TaskType::class, names = ["assessment", "placementApplication"])
       fun `Get all tasks filters by a single type`(taskType: TaskType) {
         val url = "/tasks?page=1&sortBy=createdAt&sortDirection=asc&types=${taskType.value}"
         val expectedTasks = tasks[taskType]!!.sortedBy { it.dueDate }
@@ -361,7 +313,7 @@ class TasksTest {
       }
 
       @ParameterizedTest
-      @CsvSource("assessment,placementRequest", "assessment,placementApplication", "placementRequest,placementApplication", "placementApplication,placementRequest")
+      @CsvSource("assessment,placementApplication")
       fun `Get all tasks filters by multiple types`(taskType1: TaskType, taskType2: TaskType) {
         val url = "/tasks?page=1&sortBy=createdAt&sortDirection=asc&types=${taskType1.value}&types=${taskType2.value}"
         val expectedTasks = listOf(
@@ -385,10 +337,9 @@ class TasksTest {
 
       @Test
       fun `Get all tasks returns all task types`() {
-        val url = "/tasks?page=1&sortBy=createdAt&sortDirection=asc&types=Assessment&types=PlacementRequest&types=PlacementApplication"
+        val url = "/tasks?page=1&sortBy=createdAt&sortDirection=asc&types=Assessment&types=PlacementApplication"
         val expectedTasks = listOf(
           tasks[TaskType.assessment]!!,
-          tasks[TaskType.placementRequest]!!,
           tasks[TaskType.placementApplication]!!,
         ).flatten().sortedBy { it.dueDate }
 
@@ -411,7 +362,6 @@ class TasksTest {
         val url = "/tasks?page=1&sortBy=createdAt&sortDirection=asc"
         val expectedTasks = listOf(
           tasks[TaskType.assessment]!!,
-          tasks[TaskType.placementRequest]!!,
           tasks[TaskType.placementApplication]!!,
         ).flatten().sortedBy { it.dueDate }
 
@@ -489,22 +439,6 @@ class TasksTest {
                 apArea = apArea2,
               )
 
-              val (placementRequest) = givenAPlacementRequest(
-                placementRequestAllocatedTo = otherUser,
-                assessmentAllocatedTo = otherUser,
-                createdByUser = user,
-                crn = offenderDetails.otherIds.crn,
-                apArea = apArea,
-              )
-
-              givenAPlacementRequest(
-                placementRequestAllocatedTo = otherUser,
-                assessmentAllocatedTo = otherUser,
-                createdByUser = user,
-                crn = offenderDetails.otherIds.crn,
-                apArea = apArea2,
-              )
-
               val assessments = listOf(
                 taskTransformer.transformAssessmentToTask(
                   assessment,
@@ -519,17 +453,9 @@ class TasksTest {
                 ),
               )
 
-              val placementRequests = listOf(
-                taskTransformer.transformPlacementRequestToTask(
-                  placementRequest,
-                  offenderSummaries,
-                ),
-              )
-
               tasks = mapOf(
                 TaskType.assessment to assessments,
                 TaskType.placementApplication to placementApplications,
-                TaskType.placementRequest to placementRequests,
               )
             }
           }
@@ -537,7 +463,7 @@ class TasksTest {
       }
 
       @ParameterizedTest
-      @EnumSource(value = TaskType::class, names = ["assessment", "placementRequest", "placementApplication"])
+      @EnumSource(value = TaskType::class, names = ["assessment", "placementApplication"])
       fun `it filters by Ap Area and task type`(taskType: TaskType) {
         val expectedTasks = tasks[taskType]
         val url = "/tasks?type=${taskType.value}&apAreaId=${apArea.id}"
@@ -560,7 +486,6 @@ class TasksTest {
       fun `it filters by all areas with no task type`() {
         val expectedTasks = listOf(
           tasks[TaskType.assessment]!!,
-          tasks[TaskType.placementRequest]!!,
           tasks[TaskType.placementApplication]!!,
         ).flatten().sortedBy { it.dueDate }
 
@@ -637,22 +562,6 @@ class TasksTest {
                 cruManagementArea = cruArea2,
               )
 
-              val (placementRequest) = givenAPlacementRequest(
-                placementRequestAllocatedTo = otherUser,
-                assessmentAllocatedTo = otherUser,
-                createdByUser = user,
-                crn = offenderDetails.otherIds.crn,
-                cruManagementArea = cruArea,
-              )
-
-              givenAPlacementRequest(
-                placementRequestAllocatedTo = otherUser,
-                assessmentAllocatedTo = otherUser,
-                createdByUser = user,
-                crn = offenderDetails.otherIds.crn,
-                cruManagementArea = cruArea2,
-              )
-
               val assessments = listOf(
                 taskTransformer.transformAssessmentToTask(
                   assessment,
@@ -667,17 +576,9 @@ class TasksTest {
                 ),
               )
 
-              val placementRequests = listOf(
-                taskTransformer.transformPlacementRequestToTask(
-                  placementRequest,
-                  offenderSummaries,
-                ),
-              )
-
               tasks = mapOf(
                 TaskType.assessment to assessments,
                 TaskType.placementApplication to placementApplications,
-                TaskType.placementRequest to placementRequests,
               )
             }
           }
@@ -708,7 +609,6 @@ class TasksTest {
       fun `it filters by all areas with no task type`() {
         val expectedTasks = listOf(
           tasks[TaskType.assessment]!!,
-          tasks[TaskType.placementRequest]!!,
           tasks[TaskType.placementApplication]!!,
         ).flatten().sortedBy { it.dueDate }
 
@@ -779,20 +679,6 @@ class TasksTest {
                 submittedAt = OffsetDateTime.now(),
               )
 
-              givenAPlacementRequest(
-                placementRequestAllocatedTo = otherUser,
-                assessmentAllocatedTo = otherUser,
-                createdByUser = user,
-                crn = offenderDetails.otherIds.crn,
-              )
-
-              val (allocatablePlacementRequest) = givenAPlacementRequest(
-                placementRequestAllocatedTo = user,
-                assessmentAllocatedTo = otherUser,
-                createdByUser = user,
-                crn = offenderDetails.otherIds.crn,
-              )
-
               val assessments = listOf(
                 taskTransformer.transformAssessmentToTask(
                   allocatableAssessment,
@@ -807,17 +693,9 @@ class TasksTest {
                 ),
               )
 
-              val placementRequests = listOf(
-                taskTransformer.transformPlacementRequestToTask(
-                  allocatablePlacementRequest,
-                  offenderSummaries,
-                ),
-              )
-
               tasks = mapOf(
                 TaskType.assessment to assessments,
                 TaskType.placementApplication to placementApplications,
-                TaskType.placementRequest to placementRequests,
               )
             }
           }
@@ -825,7 +703,7 @@ class TasksTest {
       }
 
       @ParameterizedTest
-      @EnumSource(value = TaskType::class, names = ["assessment", "placementRequest", "placementApplication"])
+      @EnumSource(value = TaskType::class, names = ["assessment", "placementApplication"])
       fun `it filters by user and task type`(taskType: TaskType) {
         val expectedTasks = tasks[taskType]
         val url = "/tasks?type=${taskType.value}&allocatedToUserId=${user.id}"
@@ -848,7 +726,6 @@ class TasksTest {
       fun `it filters by user with all tasks`() {
         val expectedTasks = listOf(
           tasks[TaskType.assessment]!!,
-          tasks[TaskType.placementRequest]!!,
           tasks[TaskType.placementApplication]!!,
         ).flatten().sortedBy { it.dueDate }
 
@@ -889,10 +766,6 @@ class TasksTest {
                   "unallocated" to 3,
                   "withdrawn" to 1,
                 ),
-                TaskType.placementRequest to mapOf(
-                  "allocated" to 2,
-                  "unallocated" to 4,
-                ),
                 TaskType.placementApplication to mapOf(
                   "allocated" to 3,
                   "unallocated" to 2,
@@ -927,24 +800,6 @@ class TasksTest {
                   createdByUser = otherUser,
                   crn = offenderDetails.otherIds.crn,
                   isWithdrawn = true,
-                )
-              }
-
-              repeat(counts[TaskType.placementRequest]!!["allocated"]!!) {
-                givenAPlacementRequest(
-                  placementRequestAllocatedTo = otherUser,
-                  assessmentAllocatedTo = otherUser,
-                  createdByUser = user,
-                  crn = offenderDetails.otherIds.crn,
-                )
-              }
-
-              repeat(counts[TaskType.placementRequest]!!["unallocated"]!!) {
-                givenAPlacementRequest(
-                  null,
-                  assessmentAllocatedTo = otherUser,
-                  createdByUser = user,
-                  crn = offenderDetails.otherIds.crn,
                 )
               }
 
@@ -993,10 +848,6 @@ class TasksTest {
         "assessment,allocated,2",
         "assessment,unallocated,1",
         "assessment,unallocated,1",
-        "placementRequest,allocated,1",
-        "placementRequest,allocated,2",
-        "placementRequest,unallocated,1",
-        "placementRequest,unallocated,2",
         "placementApplication,allocated,1",
         "placementApplication,allocated,2",
         "placementApplication,unallocated,1",
@@ -1026,7 +877,6 @@ class TasksTest {
       ) {
         val itemCount = listOf(
           counts[TaskType.assessment]!![allocatedFilter]!!,
-          counts[TaskType.placementRequest]!![allocatedFilter]!!,
           counts[TaskType.placementApplication]!![allocatedFilter]!!,
         ).sum()
 
@@ -1041,8 +891,6 @@ class TasksTest {
         val itemCount = listOf(
           counts[TaskType.assessment]!!["allocated"]!!,
           counts[TaskType.assessment]!!["unallocated"]!!,
-          counts[TaskType.placementRequest]!!["allocated"]!!,
-          counts[TaskType.placementRequest]!!["unallocated"]!!,
           counts[TaskType.placementApplication]!!["allocated"]!!,
           counts[TaskType.placementApplication]!!["unallocated"]!!,
         ).sum()
@@ -1084,7 +932,6 @@ class TasksTest {
 
               val offenderSummaries = getOffenderSummaries(offenderDetails)
               val assessmentTasks = mutableMapOf<UserQualification, List<Task>>()
-              val placementRequestTasks = mutableMapOf<UserQualification, List<Task>>()
               val placementApplicationTasks = mutableMapOf<UserQualification, List<Task>>()
 
               fun createAssessmentTask(
@@ -1101,25 +948,6 @@ class TasksTest {
 
                 return taskTransformer.transformAssessmentToTask(
                   assessment,
-                  offenderSummaries,
-                )
-              }
-
-              fun createPlacementRequestTask(
-                requiredQualification: UserQualification?,
-                noticeType: Cas1ApplicationTimelinessCategory? = Cas1ApplicationTimelinessCategory.standard,
-              ): Task {
-                val (placementRequest, _) = givenAPlacementRequest(
-                  placementRequestAllocatedTo = otherUser,
-                  assessmentAllocatedTo = otherUser,
-                  createdByUser = user,
-                  crn = offenderDetails.otherIds.crn,
-                  requiredQualification = requiredQualification,
-                  noticeType = noticeType,
-                )
-
-                return taskTransformer.transformPlacementRequestToTask(
-                  placementRequest,
                   offenderSummaries,
                 )
               }
@@ -1155,9 +983,6 @@ class TasksTest {
                 assessmentTasks[qualification] = listOf(
                   createAssessmentTask(qualification),
                 )
-                placementRequestTasks[qualification] = listOf(
-                  createPlacementRequestTask(qualification),
-                )
                 placementApplicationTasks[qualification] = listOf(
                   createPlacementApplicationTask(qualification),
                 )
@@ -1167,10 +992,6 @@ class TasksTest {
                 createAssessmentTask(null, Cas1ApplicationTimelinessCategory.shortNotice),
                 createAssessmentTask(null, Cas1ApplicationTimelinessCategory.emergency),
               )
-              placementRequestTasks[UserQualification.EMERGENCY] = listOf(
-                createPlacementRequestTask(null, Cas1ApplicationTimelinessCategory.shortNotice),
-                createPlacementRequestTask(null, Cas1ApplicationTimelinessCategory.emergency),
-              )
               placementApplicationTasks[UserQualification.EMERGENCY] = listOf(
                 createPlacementApplicationTask(null, Cas1ApplicationTimelinessCategory.shortNotice),
                 createPlacementApplicationTask(null, Cas1ApplicationTimelinessCategory.emergency),
@@ -1178,7 +999,6 @@ class TasksTest {
 
               tasks = mapOf(
                 TaskType.assessment to assessmentTasks,
-                TaskType.placementRequest to placementRequestTasks,
                 TaskType.placementApplication to placementApplicationTasks,
               )
             }
@@ -1193,12 +1013,6 @@ class TasksTest {
         "assessment,EMERGENCY",
         "assessment,RECOVERY_FOCUSED",
         "assessment,MENTAL_HEALTH_SPECIALIST",
-
-        "placementRequest,PIPE",
-        "placementRequest,ESAP",
-        "placementRequest,EMERGENCY",
-        "placementRequest,RECOVERY_FOCUSED",
-        "placementRequest,MENTAL_HEALTH_SPECIALIST",
 
         "placementApplication,PIPE",
         "placementApplication,ESAP",
@@ -1236,7 +1050,6 @@ class TasksTest {
         val url = "/tasks?requiredQualification=${qualification.name.lowercase()}"
         val expectedTasks = listOf(
           tasks[TaskType.assessment]!![qualification]!!,
-          tasks[TaskType.placementRequest]!![qualification]!!,
           tasks[TaskType.placementApplication]!![qualification]!!,
         ).flatten()
 
@@ -1291,22 +1104,6 @@ class TasksTest {
                   name = "ANOTHER",
                 )
 
-                val (placementRequest1, _) = givenAPlacementRequest(
-                  placementRequestAllocatedTo = otherUser,
-                  assessmentAllocatedTo = otherUser,
-                  createdByUser = user,
-                  crn = offenderDetails1.otherIds.crn,
-                  name = "SOMEONE",
-                )
-
-                val (placementRequest2, _) = givenAPlacementRequest(
-                  placementRequestAllocatedTo = otherUser,
-                  assessmentAllocatedTo = otherUser,
-                  createdByUser = user,
-                  crn = offenderDetails2.otherIds.crn,
-                  name = "ANOTHER",
-                )
-
                 val placementApplication1 = givenAPlacementApplication(
                   createdByUser = user,
                   allocatedToUser = user,
@@ -1338,10 +1135,6 @@ class TasksTest {
                     placementApplication1,
                     offenderSummaries1,
                   ),
-                  TaskType.placementRequest to taskTransformer.transformPlacementRequestToTask(
-                    placementRequest1,
-                    offenderSummaries1,
-                  ),
                 )
 
                 crnMatchTasks = mapOf(
@@ -1353,10 +1146,6 @@ class TasksTest {
                     placementApplication2,
                     offenderSummaries2,
                   ),
-                  TaskType.placementRequest to taskTransformer.transformPlacementRequestToTask(
-                    placementRequest2,
-                    offenderSummaries2,
-                  ),
                 )
               }
             }
@@ -1365,7 +1154,7 @@ class TasksTest {
       }
 
       @ParameterizedTest
-      @EnumSource(value = TaskType::class, names = ["assessment", "placementRequest", "placementApplication"])
+      @EnumSource(value = TaskType::class, names = ["assessment", "placementApplication"])
       fun `Get all tasks filters by name and task type`(taskType: TaskType) {
         val url = "/tasks?type=${taskType.value}&crnOrName=someone"
 
@@ -1384,7 +1173,7 @@ class TasksTest {
       }
 
       @ParameterizedTest
-      @EnumSource(value = TaskType::class, names = ["assessment", "placementRequest", "placementApplication"])
+      @EnumSource(value = TaskType::class, names = ["assessment", "placementApplication"])
       fun `Get all tasks filters by CRN and task type`(taskType: TaskType) {
         val url = "/tasks?type=${taskType.value}&crnOrName=$crn"
 
@@ -1407,7 +1196,6 @@ class TasksTest {
         val url = "/tasks?crnOrName=someone"
         val expectedTasks = listOf(
           nameMatchTasks[TaskType.assessment],
-          nameMatchTasks[TaskType.placementRequest],
           nameMatchTasks[TaskType.placementApplication],
         )
 
@@ -1430,7 +1218,6 @@ class TasksTest {
         val url = "/tasks?crnOrName=$crn"
         val expectedTasks = listOf(
           crnMatchTasks[TaskType.assessment],
-          crnMatchTasks[TaskType.placementRequest],
           crnMatchTasks[TaskType.placementApplication],
         )
 
@@ -1484,41 +1271,6 @@ class TasksTest {
                 submittedAt = OffsetDateTime.now(),
               )
 
-              val (placementRequest1, _) = givenAPlacementRequest(
-                placementRequestAllocatedTo = otherUser,
-                assessmentAllocatedTo = otherUser,
-                createdByUser = user,
-                crn = offenderDetails.otherIds.crn,
-              )
-
-              val (placementRequest2, _) = givenAPlacementRequest(
-                placementRequestAllocatedTo = otherUser,
-                assessmentAllocatedTo = otherUser,
-                createdByUser = user,
-                crn = offenderDetails.otherIds.crn,
-                booking = bookingEntityFactory.produceAndPersist {
-                  withPremises(
-                    approvedPremisesEntityFactory.produceAndPersist {
-                      withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
-                      withYieldedProbationRegion { givenAProbationRegion() }
-                    },
-                  )
-                },
-              )
-
-              val (placementRequest3, _) = givenAPlacementRequest(
-                placementRequestAllocatedTo = otherUser,
-                assessmentAllocatedTo = otherUser,
-                createdByUser = user,
-                crn = offenderDetails.otherIds.crn,
-              )
-
-              placementRequest3.bookingNotMades = mutableListOf(
-                bookingNotMadeFactory.produceAndPersist {
-                  withPlacementRequest(placementRequest3)
-                },
-              )
-
               val placementApplication1 = givenAPlacementApplication(
                 createdByUser = otherUser,
                 allocatedToUser = user,
@@ -1545,10 +1297,6 @@ class TasksTest {
                   assessment1,
                   offenderSummaries,
                 ),
-                taskTransformer.transformPlacementRequestToTask(
-                  placementRequest1,
-                  offenderSummaries,
-                ),
                 taskTransformer.transformPlacementApplicationToTask(
                   placementApplication1,
                   offenderSummaries,
@@ -1561,31 +1309,11 @@ class TasksTest {
                   offenderSummaries,
                 ),
                 taskTransformer.transformAssessmentToTask(
-                  placementRequest1.assessment,
-                  offenderSummaries,
-                ),
-                taskTransformer.transformAssessmentToTask(
-                  placementRequest2.assessment,
-                  offenderSummaries,
-                ),
-                taskTransformer.transformAssessmentToTask(
-                  placementRequest3.assessment,
-                  offenderSummaries,
-                ),
-                taskTransformer.transformAssessmentToTask(
                   assessmentTestRepository.findAllByApplication(placementApplication1.application)[0],
                   offenderSummaries,
                 ),
                 taskTransformer.transformAssessmentToTask(
                   assessmentTestRepository.findAllByApplication(placementApplication2.application)[0],
-                  offenderSummaries,
-                ),
-                taskTransformer.transformPlacementRequestToTask(
-                  placementRequest2,
-                  offenderSummaries,
-                ),
-                taskTransformer.transformPlacementRequestToTask(
-                  placementRequest3,
                   offenderSummaries,
                 ),
                 taskTransformer.transformPlacementApplicationToTask(
@@ -1780,12 +1508,6 @@ class TasksTest {
               tasks = mapOf()
               tasks += assessments.mapValues {
                 taskTransformer.transformAssessmentToTask(
-                  it.value,
-                  offenderSummaries,
-                )
-              }
-              tasks += placementRequests.mapValues {
-                taskTransformer.transformPlacementRequestToTask(
                   it.value,
                   offenderSummaries,
                 )
@@ -2215,48 +1937,6 @@ class TasksTest {
                         0,
                         0,
                       ),
-                    ),
-                  ),
-                ),
-              ),
-            )
-        }
-      }
-    }
-
-    @Test
-    fun `Get a Placement Request Task for an application returns users with MATCHER role`() {
-      val (workflowManager, jwt) = givenAUser(roles = listOf(UserRole.CAS1_WORKFLOW_MANAGER))
-      val (creator, _) = givenAUser()
-      val (matcher, _) = givenAUser(roles = listOf(UserRole.CAS1_MATCHER))
-      val (assessor, _) = givenAUser(roles = listOf(UserRole.CAS1_ASSESSOR))
-
-      givenAnOffender { offenderDetails, _ ->
-        givenAPlacementRequest(
-          placementRequestAllocatedTo = creator,
-          assessmentAllocatedTo = creator,
-          createdByUser = creator,
-          crn = offenderDetails.otherIds.crn,
-        ) { placementRequest, _ ->
-
-          webTestClient.get()
-            .uri("/tasks/placement-request/${placementRequest.id}")
-            .header("Authorization", "Bearer $jwt")
-            .exchange()
-            .expectStatus()
-            .isOk
-            .expectBody()
-            .json(
-              objectMapper.writeValueAsString(
-                TaskWrapper(
-                  task = taskTransformer.transformPlacementRequestToTask(
-                    placementRequest,
-                    getOffenderSummaries(offenderDetails),
-                  ),
-                  users = listOf(
-                    userTransformer.transformJpaToAPIUserWithWorkload(
-                      matcher,
-                      UserWorkload(0, 0, 0),
                     ),
                   ),
                 ),
@@ -2870,65 +2550,6 @@ class TasksTest {
                   .jsonPath("detail")
                   .isEqualTo("This assessment has already been reallocated: ${existingAssessment.id}")
               }
-            }
-          }
-        }
-      }
-    }
-
-    @Test
-    fun `Reallocating a placement request to different assessor returns 201, creates new placement request, deallocates old one`() {
-      givenAUser(roles = listOf(UserRole.CAS1_WORKFLOW_MANAGER)) { user, jwt ->
-        givenAUser(
-          roles = listOf(UserRole.CAS1_MATCHER),
-        ) { assigneeUser, _ ->
-          givenAnOffender { offenderDetails, _ ->
-            givenAPlacementRequest(
-              createdByUser = user,
-              placementRequestAllocatedTo = user,
-              assessmentAllocatedTo = user,
-              crn = offenderDetails.otherIds.crn,
-            ) { existingPlacementRequest, _ ->
-              webTestClient.post()
-                .uri("/tasks/placement-request/${existingPlacementRequest.id}/allocations")
-                .header("Authorization", "Bearer $jwt")
-                .header("X-Service-Name", ServiceName.approvedPremises.value)
-                .bodyValue(
-                  NewReallocation(
-                    userId = assigneeUser.id,
-                  ),
-                )
-                .exchange()
-                .expectStatus()
-                .isCreated
-                .expectBody()
-                .json(
-                  objectMapper.writeValueAsString(
-                    Reallocation(
-                      user = userTransformer.transformJpaToApi(
-                        assigneeUser,
-                        ServiceName.approvedPremises,
-                      ) as ApprovedPremisesUser,
-                      taskType = TaskType.placementRequest,
-                    ),
-                  ),
-                )
-
-              val placementRequests = placementRequestRepository.findAll()
-              val allocatedPlacementRequest = placementRequests.find { it.allocatedToUser!!.id == assigneeUser.id }
-
-              assertThat(placementRequests.first { it.id == existingPlacementRequest.id }.reallocatedAt).isNotNull
-              assertThat(allocatedPlacementRequest).isNotNull
-
-              val desirableCriteria =
-                allocatedPlacementRequest!!.placementRequirements.desirableCriteria.map { it.propertyName }
-              val essentialCriteria =
-                allocatedPlacementRequest.placementRequirements.essentialCriteria.map { it.propertyName }
-
-              assertThat(desirableCriteria)
-                .isEqualTo(existingPlacementRequest.placementRequirements.desirableCriteria.map { it.propertyName })
-              assertThat(essentialCriteria)
-                .isEqualTo(existingPlacementRequest.placementRequirements.essentialCriteria.map { it.propertyName })
             }
           }
         }

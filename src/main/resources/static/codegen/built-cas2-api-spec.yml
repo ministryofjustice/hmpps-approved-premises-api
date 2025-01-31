@@ -988,7 +988,6 @@ components:
       type: string
       enum:
         - Assessment
-        - PlacementRequest
         - PlacementApplication
     LocalAuthorityArea:
       type: object
