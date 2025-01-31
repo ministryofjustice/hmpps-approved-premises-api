@@ -2257,12 +2257,6 @@ class TasksTest {
                   createPlacementApplication(null, allocatableUser, user, crn, decision = WITHDRAW)
                   createPlacementApplication(null, allocatableUser, user, crn, decision = WITHDRAWN_BY_PP)
 
-                  val numPlacementRequestsPending = 2
-                  repeat(numPlacementRequestsPending) {
-                    createPlacementRequest(null, allocatableUser, user, crn)
-                  }
-                  createPlacementRequest(null, allocatableUser, user, crn, isWithdrawn = true)
-
                   val numAssessmentsCompletedBetween1And7DaysAgo = 4
                   repeat(numAssessmentsCompletedBetween1And7DaysAgo) {
                     val days = kotlin.random.Random.nextInt(1, 7).toLong()
@@ -2273,12 +2267,6 @@ class TasksTest {
                   repeat(numPlacementApplicationsCompletedBetween1And7DaysAgo) {
                     val days = kotlin.random.Random.nextInt(1, 7).toLong()
                     createPlacementApplication(OffsetDateTime.now().minusDays(days), allocatableUser, user, crn)
-                  }
-
-                  val numPlacementRequestsCompletedBetween1And7DaysAgo = 1
-                  repeat(numPlacementRequestsCompletedBetween1And7DaysAgo) {
-                    val days = kotlin.random.Random.nextInt(1, 7).toLong()
-                    createPlacementRequest(OffsetDateTime.now().minusDays(days), allocatableUser, user, crn)
                   }
 
                   val numAssessmentsCompletedBetween8And30DaysAgo = 4
@@ -2293,27 +2281,18 @@ class TasksTest {
                     createPlacementApplication(OffsetDateTime.now().minusDays(days), allocatableUser, user, crn)
                   }
 
-                  val numPlacementRequestsCompletedBetween8And30DaysAgo = 2
-                  repeat(numPlacementRequestsCompletedBetween8And30DaysAgo) {
-                    val days = kotlin.random.Random.nextInt(8, 30).toLong()
-                    createPlacementRequest(OffsetDateTime.now().minusDays(days), allocatableUser, user, crn)
-                  }
-
                   val numPendingTasks = listOf(
                     numAssessmentsPending,
-                    numPlacementRequestsPending,
                     numPlacementApplicationsPending,
                   ).sum()
                   val numTasksCompletedInTheLast7Days = listOf(
                     numAssessmentsCompletedBetween1And7DaysAgo,
                     numPlacementApplicationsCompletedBetween1And7DaysAgo,
-                    numPlacementRequestsCompletedBetween1And7DaysAgo,
                   ).sum()
                   val numTasksCompletedInTheLast30Days = listOf(
                     numTasksCompletedInTheLast7Days,
                     numAssessmentsCompletedBetween8And30DaysAgo,
                     numPlacementApplicationsCompletedBetween8And30DaysAgo,
-                    numPlacementRequestsCompletedBetween8And30DaysAgo,
                   ).sum()
 
                   webTestClient.get()
@@ -2365,36 +2344,6 @@ class TasksTest {
         decision = null,
         reallocated = false,
         submittedAt = completedAt,
-        isWithdrawn = isWithdrawn,
-      )
-    }
-
-    private fun createPlacementRequest(
-      completedAt: OffsetDateTime?,
-      allocatedUser: UserEntity,
-      createdByUser: UserEntity,
-      crn: String,
-      isWithdrawn: Boolean = false,
-    ) {
-      val booking = if (completedAt != null) {
-        val premises = approvedPremisesEntityFactory.produceAndPersist {
-          withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
-          withProbationRegion(createdByUser.probationRegion)
-        }
-        bookingEntityFactory.produceAndPersist {
-          withPremises(premises)
-          withCreatedAt(completedAt)
-        }
-      } else {
-        null
-      }
-
-      givenAPlacementRequest(
-        placementRequestAllocatedTo = allocatedUser,
-        assessmentAllocatedTo = createdByUser,
-        createdByUser = createdByUser,
-        crn = crn,
-        booking = booking,
         isWithdrawn = isWithdrawn,
       )
     }
