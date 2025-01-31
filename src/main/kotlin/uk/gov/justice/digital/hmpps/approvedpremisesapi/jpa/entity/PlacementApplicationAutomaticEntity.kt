@@ -13,6 +13,15 @@ import java.util.UUID
 @Repository
 interface PlacementApplicationAutomaticRepository : JpaRepository<PlacementApplicationAutomaticEntity, UUID>
 
+/**
+ * Used to capture requests for placements implicit in the original applications
+ * i.e. where an arrival date is defined in the original application
+ *
+ * This is a stop-gap solution to support reporting until we fix the
+ * bifurcated request for placement model
+ *
+ * See [PlacementRequestEntity.isForApplicationsArrivalDate] for more information
+ */
 @Entity
 @Table(name = "placement_applications_automatic")
 data class PlacementApplicationAutomaticEntity(
