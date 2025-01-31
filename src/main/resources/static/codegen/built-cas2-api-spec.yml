@@ -5289,8 +5289,11 @@ components:
     AllocatedFilter:
       type: string
       enum:
-        - allocated
-        - unallocated
+        - "allocated"
+        - "unallocated"
+      x-enum-varnames:
+        - ALLOCATED
+        - UNALLOCATED
     ApplicationSortField:
       type: string
       enum:
