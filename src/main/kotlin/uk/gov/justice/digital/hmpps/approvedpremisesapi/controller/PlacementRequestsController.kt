@@ -71,6 +71,7 @@ class PlacementRequestsController(
     )
   }
 
+  @Deprecated("Use Cas1PlacementRequestsController.placementRequestsDashboardGet instead")
   override fun placementRequestsDashboardGet(
     status: PlacementRequestStatus?,
     crn: String?,
