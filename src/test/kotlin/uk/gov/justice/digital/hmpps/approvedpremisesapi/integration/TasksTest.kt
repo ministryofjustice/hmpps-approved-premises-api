@@ -1864,7 +1864,7 @@ class TasksTest {
     lateinit var userTransformer: UserTransformer
 
     @Test
-    fun `Get a Task for an application without JWT returns 401`() {
+    fun `Request without JWT returns 401`() {
       webTestClient.get()
         .uri("/tasks/assessment/f601ff2d-b1e0-4878-8731-ccfa19a2ce84")
         .exchange()
@@ -1873,7 +1873,7 @@ class TasksTest {
     }
 
     @Test
-    fun `Get an unknown task type for an application returns 404`() {
+    fun `Unknown task type for an application returns 404`() {
       givenAUser(roles = listOf(UserRole.CAS1_WORKFLOW_MANAGER)) { user, jwt ->
         givenAnOffender { offenderDetails, _ ->
           givenAnAssessmentForApprovedPremises(
@@ -1893,17 +1893,19 @@ class TasksTest {
     }
 
     @Test
-    fun `Get an Assessment Task for an application returns users with ASSESSOR role`() {
+    fun `Assessment Task UserWithWorkload only returns users with ASSESSOR role`() {
       val (creator, _) = givenAUser()
-      val (workflowManager, jwt) = givenAUser(roles = listOf(UserRole.CAS1_WORKFLOW_MANAGER))
+      val (_, jwt) = givenAUser(roles = listOf(UserRole.CAS1_WORKFLOW_MANAGER))
       val (assessor, _) = givenAUser(
         roles = listOf(UserRole.CAS1_ASSESSOR),
       )
-      val (inactiveMatcher, _) = givenAUser(
+      // inactive matcher
+      givenAUser(
         roles = listOf(UserRole.CAS1_ASSESSOR),
         isActive = false,
       )
-      val (matcher, _) = givenAUser(
+      // matcher
+      givenAUser(
         roles = listOf(UserRole.CAS1_MATCHER),
       )
 
@@ -1947,7 +1949,7 @@ class TasksTest {
     }
 
     @Test
-    fun `Get a Placement Application Task for an application returns 200`() {
+    fun `Placement Application Task returns 200`() {
       givenAUser(roles = listOf(UserRole.CAS1_WORKFLOW_MANAGER)) { _, jwt ->
         givenAUser { user, _ ->
           givenAUser(
@@ -1994,7 +1996,7 @@ class TasksTest {
     }
 
     @Test
-    fun `Get a Placement Application Task for an application returns users with MATCHER or ASSESSOR roles`() {
+    fun `Placement Application Task UserWithWorkload only returns users with MATCHER or ASSESSOR roles`() {
       givenAUser(roles = listOf(UserRole.CAS1_WORKFLOW_MANAGER)) { _, jwt ->
 
         val (matcherUser1, _) = givenAUser(
@@ -2064,7 +2066,7 @@ class TasksTest {
     }
 
     @Test
-    fun `Get an Assessment Task for an appealed application returns users with CAS1_APPEALS_MANAGER or CAS1_ASSESSOR role`() {
+    fun `Assessment Task UserWithWorkload for an appealed application oly returns users with CAS1_APPEALS_MANAGER or CAS1_ASSESSOR role`() {
       givenAUser(roles = listOf(UserRole.CAS1_WORKFLOW_MANAGER)) { _, jwt ->
         givenAUser(
           roles = listOf(UserRole.CAS1_REPORT_VIEWER),
@@ -2075,7 +2077,7 @@ class TasksTest {
             givenAUser(
               roles = listOf(UserRole.CAS1_ASSESSOR),
             ) { assessor, _ ->
-              givenAnOffender { offenderDetails, inmateDetails ->
+              givenAnOffender { offenderDetails, _ ->
                 givenAnAssessmentForApprovedPremises(
                   allocatedToUser = user,
                   createdByUser = user,
@@ -2128,14 +2130,14 @@ class TasksTest {
     }
 
     @Test
-    fun `Get an Assessment Task for an application created from appeal returns 0 users if no users with CAS1_APPEALS_MANAGER or CAS1_ASSESSOR role`() {
+    fun `Assessment Task UserWithWorkload for an appealed application returns 0 users if no users with CAS1_APPEALS_MANAGER or CAS1_ASSESSOR role`() {
       givenAUser(roles = listOf(UserRole.CAS1_WORKFLOW_MANAGER)) { _, jwt ->
         givenAUser(
           roles = listOf(UserRole.CAS1_REPORT_VIEWER),
         ) { janitor, _ ->
           givenAUser(
             roles = listOf(UserRole.CAS1_MATCHER),
-          ) { matcher, _ ->
+          ) { _, _ ->
             givenAnOffender { offenderDetails, _ ->
               givenAnAssessmentForApprovedPremises(
                 allocatedToUser = null,
@@ -2171,7 +2173,7 @@ class TasksTest {
     }
 
     @Test
-    fun `Get an Assessment Task for an accepted application returns user with ASSESSOR role`() {
+    fun `Assessment Task UserWithWorkload for an accepted application only returns users with ASSESSOR role`() {
       givenAUser(roles = listOf(UserRole.CAS1_APPEALS_MANAGER)) { _, jwt ->
         givenAUser(
           roles = listOf(UserRole.CAS1_REPORT_VIEWER),
@@ -2222,7 +2224,7 @@ class TasksTest {
     }
 
     @Test
-    fun `Get a Placement Application Task for an application gets UserWithWorkload, ignores inactive users and returns 200`() {
+    fun `Placement Application Task UserWithWorkload ignoring inactive users`() {
       givenAUser(roles = listOf(UserRole.CAS1_WORKFLOW_MANAGER)) { _, jwt ->
         givenAUser { user, _ ->
           givenAUser(
@@ -2232,7 +2234,7 @@ class TasksTest {
               roles = listOf(UserRole.CAS1_MATCHER),
               isActive = false,
             ) { _, _ ->
-              givenAnOffender { offenderDetails, inmateDetails ->
+              givenAnOffender { offenderDetails, _ ->
                 givenAPlacementApplication(
                   createdByUser = user,
                   allocatedToUser = user,
