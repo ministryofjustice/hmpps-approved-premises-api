@@ -239,6 +239,9 @@ data class PlacementRequestEntity(
    * Unfortunately, it's non-trivial to amend the data model and workflow implementation
    * to allow us to use [PlacementApplicationEntity] for this purpose.
    *
+   * Note that we do populated [PlacementApplicationAutomaticEntity] to support reporting on
+   * such requests. This could maybe be used as a starting point to fix the data model.
+   *
    * For Withdrawal functionality we have a use-case for the user to be able to withdraw the original
    * application dates without withdrawing the whole application and/or assessment.
    *
