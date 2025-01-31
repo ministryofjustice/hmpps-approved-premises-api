@@ -23,9 +23,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PaginationMetadata
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.TypedTask
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.NotAllowedProblem
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.AuthorisableActionResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.CasResult
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.ValidatableActionResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.UserTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.PageCriteria
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.getMetadata
@@ -180,9 +178,9 @@ class TaskService(
     requestUser: UserEntity,
     taskType: TaskType,
     id: UUID,
-  ): AuthorisableActionResult<ValidatableActionResult<Unit>> {
+  ): CasResult<Unit> {
     if (!userAccessService.userCanDeallocateTask(requestUser)) {
-      return AuthorisableActionResult.Unauthorised()
+      return CasResult.Unauthorised()
     }
 
     val result = when (taskType) {
@@ -190,21 +188,9 @@ class TaskService(
       else -> throw NotAllowedProblem(detail = "The Task Type $taskType is not currently supported")
     }
 
-    val validationResult = when (result) {
-      is AuthorisableActionResult.NotFound -> return AuthorisableActionResult.NotFound()
-      is AuthorisableActionResult.Unauthorised -> return AuthorisableActionResult.Unauthorised()
-      is AuthorisableActionResult.Success -> result.entity
-    }
-
-    return when (validationResult) {
-      is ValidatableActionResult.GeneralValidationError -> AuthorisableActionResult.Success(ValidatableActionResult.GeneralValidationError(validationResult.message))
-      is ValidatableActionResult.FieldValidationError -> AuthorisableActionResult.Success(ValidatableActionResult.FieldValidationError(validationResult.validationMessages))
-      is ValidatableActionResult.ConflictError -> AuthorisableActionResult.Success(ValidatableActionResult.ConflictError(validationResult.conflictingEntityId, validationResult.message))
-      is ValidatableActionResult.Success -> AuthorisableActionResult.Success(
-        ValidatableActionResult.Success(
-          Unit,
-        ),
-      )
+    return when (result) {
+      is CasResult.Success -> CasResult.Success(Unit)
+      is CasResult.Error -> result.reviseType()
     }
   }
 

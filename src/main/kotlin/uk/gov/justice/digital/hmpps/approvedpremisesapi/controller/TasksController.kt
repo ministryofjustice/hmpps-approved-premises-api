@@ -29,11 +29,8 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PersonSummaryInfoR
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.TypedTask
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.ValidationErrors
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.BadRequestProblem
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.ConflictProblem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.ForbiddenProblem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.NotFoundProblem
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.AuthorisableActionResult
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.ValidatableActionResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.AssessmentService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.OffenderService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.PlacementApplicationService
@@ -42,7 +39,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.UserService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.TaskTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.UserTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.PageCriteria
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.extractEntityFromAuthorisableActionResult
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.ensureEntityFromCasResultIsSuccess
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.extractEntityFromCasResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.kebabCaseToPascalCase
 import java.util.UUID
@@ -153,7 +150,7 @@ class TasksController(
       }
 
       TaskType.placementApplication -> {
-        val placementApplication = extractEntityFromAuthorisableActionResult(
+        val placementApplication = extractEntityFromCasResult(
           placementApplicationService.getApplication(id),
         )
         val offenderSummaries = getOffenderSummariesForCrns(listOf(placementApplication.application.crn), user)
@@ -229,28 +226,9 @@ class TasksController(
 
     val type = toTaskType(taskType)
 
-    val validationResult = when (val authorisationResult = taskService.deallocateTask(user, type, id)) {
-      is AuthorisableActionResult.NotFound -> throw NotFoundProblem(id, taskType)
-      is AuthorisableActionResult.Unauthorised -> throw ForbiddenProblem()
-      is AuthorisableActionResult.Success -> authorisationResult.entity
-    }
-
-    when (validationResult) {
-      is ValidatableActionResult.GeneralValidationError -> throw BadRequestProblem(
-        errorDetail = validationResult.message,
-      )
-
-      is ValidatableActionResult.FieldValidationError -> throw BadRequestProblem(
-        invalidParams = validationResult.validationMessages,
-      )
-
-      is ValidatableActionResult.ConflictError -> throw ConflictProblem(
-        id = validationResult.conflictingEntityId,
-        conflictReason = validationResult.message,
-      )
-
-      is ValidatableActionResult.Success -> validationResult.entity
-    }
+    ensureEntityFromCasResultIsSuccess(
+      taskService.deallocateTask(user, type, id),
+    )
 
     return ResponseEntity(Unit, HttpStatus.NO_CONTENT)
   }
