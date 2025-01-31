@@ -101,17 +101,11 @@ class ApplicationService(
   fun getApplication(applicationId: UUID) = applicationRepository.findByIdOrNull(applicationId)
 
   fun getAllApplicationsForUsername(userEntity: UserEntity, serviceName: ServiceName): List<ApplicationSummary> {
-    val applicationSummaries = when (serviceName) {
+    return when (serviceName) {
       ServiceName.approvedPremises -> getAllApprovedPremisesApplicationsForUser(userEntity)
       ServiceName.cas2 -> throw RuntimeException("CAS2 applications now require NomisUser")
       ServiceName.cas2v2 -> throw RuntimeException("CAS2v2 applications now require Cas2v2User")
       ServiceName.temporaryAccommodation -> getAllTemporaryAccommodationApplicationsForUser(userEntity)
-    }
-
-    val crns = applicationSummaries.map { it.getCrn() }.distinct()
-    val offendersAccess = offenderService.canAccessOffenders(userEntity.deliusUsername, crns)
-    return applicationSummaries.filter {
-      offendersAccess.containsKey(it.getCrn()) && offendersAccess[it.getCrn()] == true
     }
   }
 
