@@ -20,8 +20,10 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Task
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TaskEntityType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TaskRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PaginationMetadata
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.TypedTask
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.UserWorkload
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.NotAllowedProblem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.CasResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.UserTransformer
@@ -39,6 +41,7 @@ class TaskService(
   private val taskRepository: TaskRepository,
   private val assessmentRepository: AssessmentRepository,
   private val placementApplicationRepository: PlacementApplicationRepository,
+  private val userRepository: UserRepository,
 ) {
 
   data class TaskFilterCriteria(
@@ -191,6 +194,28 @@ class TaskService(
     return when (result) {
       is CasResult.Success -> CasResult.Success(Unit)
       is CasResult.Error -> result.reviseType()
+    }
+  }
+
+  fun getUserWorkloads(userIds: List<UUID>): Map<UUID, UserWorkload> {
+    return userRepository.findWorkloadForUserIds(userIds).associate {
+      it.getUserId() to UserWorkload(
+        numTasksPending = listOf(
+          it.getPendingAssessments(),
+          it.getPendingPlacementRequests(),
+          it.getPendingPlacementApplications(),
+        ).sum(),
+        numTasksCompleted7Days = listOf(
+          it.getCompletedAssessmentsInTheLastSevenDays(),
+          it.getCompletedPlacementApplicationsInTheLastSevenDays(),
+          it.getCompletedPlacementRequestsInTheLastSevenDays(),
+        ).sum(),
+        numTasksCompleted30Days = listOf(
+          it.getCompletedAssessmentsInTheLastThirtyDays(),
+          it.getCompletedPlacementApplicationsInTheLastThirtyDays(),
+          it.getCompletedPlacementRequestsInTheLastThirtyDays(),
+        ).sum(),
+      )
     }
   }
 

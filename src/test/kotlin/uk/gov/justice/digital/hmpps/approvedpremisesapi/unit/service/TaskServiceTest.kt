@@ -33,6 +33,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Task
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TaskEntityType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TaskRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRole
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PaginationMetadata
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.TypedTask
@@ -58,6 +59,7 @@ class TaskServiceTest {
   private val taskRepositoryMock = mockk<TaskRepository>()
   private val assessmentRepositoryMock = mockk<AssessmentRepository>()
   private val placementApplicationRepositoryMock = mockk<PlacementApplicationRepository>()
+  private val userRepositoryMock = mockk<UserRepository>()
 
   private val taskService = TaskService(
     assessmentServiceMock,
@@ -68,6 +70,7 @@ class TaskServiceTest {
     taskRepositoryMock,
     assessmentRepositoryMock,
     placementApplicationRepositoryMock,
+    userRepositoryMock,
   )
 
   private val requestUserWithPermission = UserEntityFactory()
