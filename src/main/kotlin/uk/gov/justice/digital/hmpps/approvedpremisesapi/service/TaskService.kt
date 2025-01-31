@@ -202,18 +202,15 @@ class TaskService(
       it.getUserId() to UserWorkload(
         numTasksPending = listOf(
           it.getPendingAssessments(),
-          it.getPendingPlacementRequests(),
           it.getPendingPlacementApplications(),
         ).sum(),
         numTasksCompleted7Days = listOf(
           it.getCompletedAssessmentsInTheLastSevenDays(),
           it.getCompletedPlacementApplicationsInTheLastSevenDays(),
-          it.getCompletedPlacementRequestsInTheLastSevenDays(),
         ).sum(),
         numTasksCompleted30Days = listOf(
           it.getCompletedAssessmentsInTheLastThirtyDays(),
           it.getCompletedPlacementApplicationsInTheLastThirtyDays(),
-          it.getCompletedPlacementRequestsInTheLastThirtyDays(),
         ).sum(),
       )
     }
