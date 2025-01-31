@@ -599,7 +599,7 @@ paths:
               schema:
                 type: array
                 items:
-                  $ref: '_shared.yml#/components/schemas/Cas2ApplicationStatus'
+                  $ref: 'cas2v2-schemas.yml#/components/schemas/Cas2v2ApplicationStatus'
         401:
           $ref: '_shared.yml#/components/responses/401Response'
         403:

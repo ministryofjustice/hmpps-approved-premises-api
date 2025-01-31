@@ -601,7 +601,7 @@ paths:
               schema:
                 type: array
                 items:
-                  $ref: '#/components/schemas/Cas2ApplicationStatus'
+                  $ref: '#/components/schemas/Cas2v2ApplicationStatus'
         401:
           $ref: '#/components/responses/401Response'
         403:
@@ -5950,6 +5950,10 @@ components:
         label:
           type: string
           example: 'Change of Circumstances'
+        children:
+          type: array
+          items:
+            $ref: '#/components/schemas/Cas2v2ApplicationStatusDetail'
       required:
         - id
         - name

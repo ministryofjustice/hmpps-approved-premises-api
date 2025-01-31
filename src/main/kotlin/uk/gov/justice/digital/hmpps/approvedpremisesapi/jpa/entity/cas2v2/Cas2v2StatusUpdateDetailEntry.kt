@@ -8,8 +8,8 @@ import jakarta.persistence.Table
 import org.hibernate.annotations.CreationTimestamp
 import org.springframework.data.jpa.repository.JpaRepository
 import org.springframework.stereotype.Repository
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.reference.Cas2PersistedApplicationStatusDetail
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.reference.Cas2PersistedApplicationStatusFinder
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.reference.Cas2v2PersistedApplicationStatusDetail
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.reference.Cas2v2PersistedApplicationStatusFinder
 import java.time.OffsetDateTime
 import java.util.UUID
 
@@ -36,8 +36,8 @@ data class Cas2v2StatusUpdateDetailEntity(
 ) {
   override fun toString() = "Cas2v2StatusDetailEntity: $id"
 
-  fun statusDetail(statusId: UUID, detailId: UUID): Cas2PersistedApplicationStatusDetail {
-    return Cas2PersistedApplicationStatusFinder().getById(statusId).statusDetails?.find { detail -> detail.id == detailId }
+  fun statusDetail(statusId: UUID, detailId: UUID): Cas2v2PersistedApplicationStatusDetail {
+    return Cas2v2PersistedApplicationStatusFinder().findDetailsBy(statusId) { detail -> detail.id == detailId }
       ?: error("Status detail with id $detailId not found")
   }
 }
