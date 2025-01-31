@@ -3725,7 +3725,7 @@ components:
         - characteristics
         - update_noms_number
         - update_users_from_api
-        - approved_premises_ap_staff_users
+        - users_basic
         - approved_premises_cancel_bookings
         - approved_premises_assessment_more_info_bug_fix
         - approved_premises_redact_assessment_details
