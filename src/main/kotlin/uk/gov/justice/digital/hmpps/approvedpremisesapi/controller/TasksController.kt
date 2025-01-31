@@ -170,7 +170,7 @@ class TasksController(
       taskInfo.requiredPermission,
     )
 
-    val workload = userService.getUserWorkloads(users.map { it.id })
+    val workload = taskService.getUserWorkloads(users.map { it.id })
     val transformedAllocatableUsers = users.map {
       userTransformer.transformJpaToAPIUserWithWorkload(it, workload[it.id]!!)
     }
