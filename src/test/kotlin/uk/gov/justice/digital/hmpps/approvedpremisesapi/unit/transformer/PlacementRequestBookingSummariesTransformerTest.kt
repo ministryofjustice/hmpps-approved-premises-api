@@ -4,7 +4,7 @@ import io.mockk.every
 import io.mockk.mockk
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.BookingSummary
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PlacementRequestBookingSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApAreaEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApprovedPremisesApplicationEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApprovedPremisesAssessmentEntityFactory
@@ -15,15 +15,15 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.PlacementRequest
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.PlacementRequirementsEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ProbationRegionEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.UserEntityFactory
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.BookingSummaryTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.PlacementRequestBookingSummariesTransformer
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.PlacementRequestBookingSummaryTransformer
 import java.time.LocalDate
 import java.time.OffsetDateTime
 import java.util.UUID
 
 class PlacementRequestBookingSummariesTransformerTest {
 
-  private val bookingSummaryTransformer = mockk<BookingSummaryTransformer>()
+  private val bookingSummaryTransformer = mockk<PlacementRequestBookingSummaryTransformer>()
 
   private val placementRequestBookingSummaryTransformer = PlacementRequestBookingSummariesTransformer(
     bookingSummaryTransformer,
@@ -81,14 +81,14 @@ class PlacementRequestBookingSummariesTransformerTest {
 
   @Test
   fun `Transforms placement request booking summary correctly when booking is legacy booking`() {
-    val bookingSummary = BookingSummary(
+    val bookingSummary = PlacementRequestBookingSummary(
       booking.id,
       booking.premises.id,
       booking.premises.name,
       booking.arrivalDate,
       booking.departureDate,
       booking.createdAt.toInstant(),
-      BookingSummary.Type.legacy,
+      PlacementRequestBookingSummary.Type.legacy,
     )
 
     every { bookingSummaryTransformer.transformJpaToApi(booking) } returns bookingSummary
@@ -101,19 +101,19 @@ class PlacementRequestBookingSummariesTransformerTest {
     assertThat(result.arrivalDate).isEqualTo(booking.arrivalDate)
     assertThat(result.departureDate).isEqualTo(booking.departureDate)
     assertThat(result.createdAt).isEqualTo(booking.createdAt.toInstant())
-    assertThat(result.type).isEqualTo(BookingSummary.Type.legacy)
+    assertThat(result.type).isEqualTo(PlacementRequestBookingSummary.Type.legacy)
   }
 
   @Test
   fun `Transforms placement request booking summary correctly when booking is space booking`() {
-    val spaceBookingSummary = BookingSummary(
+    val spaceBookingSummary = PlacementRequestBookingSummary(
       spaceBooking.id,
       spaceBooking.premises.id,
       spaceBooking.premises.name,
       spaceBooking.canonicalArrivalDate,
       spaceBooking.canonicalDepartureDate,
       spaceBooking.createdAt.toInstant(),
-      BookingSummary.Type.space,
+      PlacementRequestBookingSummary.Type.space,
     )
 
     val placementWithSpaceBooking = placementRequest.copy(
@@ -131,7 +131,7 @@ class PlacementRequestBookingSummariesTransformerTest {
     assertThat(result.arrivalDate).isEqualTo(spaceBooking.canonicalArrivalDate)
     assertThat(result.departureDate).isEqualTo(spaceBooking.canonicalDepartureDate)
     assertThat(result.createdAt).isEqualTo(spaceBooking.createdAt.toInstant())
-    assertThat(result.type).isEqualTo(BookingSummary.Type.space)
+    assertThat(result.type).isEqualTo(PlacementRequestBookingSummary.Type.space)
   }
 
   @Test

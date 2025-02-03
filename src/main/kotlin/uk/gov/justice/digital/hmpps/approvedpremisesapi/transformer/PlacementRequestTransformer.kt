@@ -23,7 +23,7 @@ class PlacementRequestTransformer(
   private val risksTransformer: RisksTransformer,
   private val assessmentTransformer: AssessmentTransformer,
   private val userTransformer: UserTransformer,
-  bookingSummaryTransformer: BookingSummaryTransformer,
+  bookingSummaryTransformer: PlacementRequestBookingSummaryTransformer,
 ) {
 
   val placementRequestBookingSummaryTransformer = PlacementRequestBookingSummariesTransformer(

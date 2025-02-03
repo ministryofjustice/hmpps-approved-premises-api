@@ -10,7 +10,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PersonInfoResult
 class PlacementRequestDetailTransformer(
   private val placementRequestTransformer: PlacementRequestTransformer,
   private val cancellationTransformer: CancellationTransformer,
-  bookingSummaryTransformer: BookingSummaryTransformer,
+  bookingSummaryTransformer: PlacementRequestBookingSummaryTransformer,
   private val applicationTransformer: ApplicationsTransformer,
 ) {
   val placementRequestBookingSummaryTransformer = PlacementRequestBookingSummariesTransformer(

@@ -9,11 +9,11 @@ import org.junit.jupiter.api.Test
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Application
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApprovedPremisesUser
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.AssessmentDecision
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.BookingSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cancellation
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Person
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PersonRisks
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PlacementRequest
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PlacementRequestBookingSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApprovedPremisesApplicationEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApprovedPremisesAssessmentEntityFactory
@@ -30,9 +30,9 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementRequ
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PersonInfoResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.ApplicationsTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.AssessmentTransformer
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.BookingSummaryTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.CancellationTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.PersonTransformer
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.PlacementRequestBookingSummaryTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.PlacementRequestDetailTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.PlacementRequestTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.RisksTransformer
@@ -43,7 +43,7 @@ import java.time.OffsetDateTime
 class PlacementRequestDetailTransformerTest {
   private val mockPlacementRequestTransformer = mockk<PlacementRequestTransformer>()
   private val mockCancellationTransformer = mockk<CancellationTransformer>()
-  private val mockBookingSummaryTransformer = mockk<BookingSummaryTransformer>()
+  private val mockBookingSummaryTransformer = mockk<PlacementRequestBookingSummaryTransformer>()
   private val mockApplicationsTransformer = mockk<ApplicationsTransformer>()
 
   private val placementRequestDetailTransformer = PlacementRequestDetailTransformer(
@@ -57,7 +57,7 @@ class PlacementRequestDetailTransformerTest {
 
   private val mockPlacementRequestEntity = mockk<PlacementRequestEntity>()
   private val mockPersonInfoResult = mockk<PersonInfoResult.Success>()
-  private val mockBookingSummary = mockk<BookingSummary>()
+  private val mockBookingSummary = mockk<PlacementRequestBookingSummary>()
   private val mockCancellationEntities = listOf(
     mockk<CancellationEntity>(),
     mockk<CancellationEntity>(),
@@ -267,7 +267,7 @@ class PlacementRequestDetailTransformerTest {
     val mockPersonTransformer = mockk<PersonTransformer>()
     val mockRisksTransformer = mockk<RisksTransformer>()
     val mockUserTransformer = mockk<UserTransformer>()
-    val mockBookingSummaryTransformer = mockk<BookingSummaryTransformer>()
+    val mockBookingSummaryTransformer = mockk<PlacementRequestBookingSummaryTransformer>()
 
     val realPlacementRequestTransformer = PlacementRequestTransformer(
       mockPersonTransformer,

@@ -9,12 +9,12 @@ import org.junit.jupiter.api.Test
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.EnumSource
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApprovedPremisesUser
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.BookingSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.DatePeriod
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Person
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PersonRisks
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PlacementCriteria
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PlacementRequest
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PlacementRequestBookingSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PlacementRequestRequestType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PlacementRequestStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ReleaseTypeOption
@@ -42,8 +42,8 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.UserEntityFactor
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementRequestWithdrawalReason
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PersonInfoResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.AssessmentTransformer
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.BookingSummaryTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.PersonTransformer
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.PlacementRequestBookingSummaryTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.PlacementRequestTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.RisksTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.UserTransformer
@@ -57,7 +57,7 @@ class PlacementRequestTransformerTest {
   private val mockPersonTransformer = mockk<PersonTransformer>()
   private val mockRisksTransformer = mockk<RisksTransformer>()
   private val mockUserTransformer = mockk<UserTransformer>()
-  private val mockBookingSummaryTransformer = mockk<BookingSummaryTransformer>()
+  private val mockBookingSummaryTransformer = mockk<PlacementRequestBookingSummaryTransformer>()
 
   private val placementRequestTransformer = PlacementRequestTransformer(
     mockPersonTransformer,
@@ -70,7 +70,7 @@ class PlacementRequestTransformerTest {
   private val offenderDetailSummary = OffenderDetailsSummaryFactory().produce()
   private val inmateDetail = InmateDetailFactory().produce()
   private val personInfo = PersonInfoResult.Success.Full(offenderDetailSummary.otherIds.crn, offenderDetailSummary, inmateDetail)
-  private val mockBookingSummary = mockk<BookingSummary>()
+  private val mockBookingSummary = mockk<PlacementRequestBookingSummary>()
 
   private val user = UserEntityFactory()
     .withUnitTestControlProbationRegion()

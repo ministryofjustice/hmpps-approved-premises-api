@@ -3,18 +3,18 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.unit.transformer
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.BookingSummary
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PlacementRequestBookingSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApprovedPremisesEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.Cas1SpaceBookingEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.BookingEntity
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.BookingSummaryTransformer
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.PlacementRequestBookingSummaryTransformer
 import java.time.LocalDate
 import java.time.OffsetDateTime
 import java.util.UUID
 
-class BookingSummaryTransformerTest {
-  private val transformer = BookingSummaryTransformer()
+class PlacementRequestBookingSummaryTransformerTest {
+  private val transformer = PlacementRequestBookingSummaryTransformer()
 
   @Nested
   inner class BookingTransform {
@@ -61,7 +61,7 @@ class BookingSummaryTransformerTest {
       assertThat(result.arrivalDate).isEqualTo(booking.arrivalDate)
       assertThat(result.departureDate).isEqualTo(booking.departureDate)
       assertThat(result.createdAt).isEqualTo(booking.createdAt.toInstant())
-      assertThat(result.type).isEqualTo(BookingSummary.Type.legacy)
+      assertThat(result.type).isEqualTo(PlacementRequestBookingSummary.Type.legacy)
     }
   }
 
@@ -89,7 +89,7 @@ class BookingSummaryTransformerTest {
       assertThat(result.arrivalDate).isEqualTo(spaceBooking.canonicalArrivalDate)
       assertThat(result.departureDate).isEqualTo(spaceBooking.canonicalDepartureDate)
       assertThat(result.createdAt).isEqualTo(spaceBooking.createdAt.toInstant())
-      assertThat(result.type).isEqualTo(BookingSummary.Type.space)
+      assertThat(result.type).isEqualTo(PlacementRequestBookingSummary.Type.space)
     }
   }
 }
