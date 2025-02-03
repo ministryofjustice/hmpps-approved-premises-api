@@ -10,7 +10,6 @@ import org.springframework.stereotype.Service
 import org.springframework.transaction.support.TransactionTemplate
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.SeedFileType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.config.SeedConfig
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.seed.cas1.ApStaffUsersSeedJob
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.seed.cas1.ApprovedPremisesBookingCancelSeedJob
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.seed.cas1.ApprovedPremisesRoomsSeedJob
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.seed.cas1.Cas1BackfillActiveSpaceBookingsCreatedInDelius
@@ -70,8 +69,8 @@ class SeedService(
       val job: SeedJob<*> = when (seedFileType) {
         SeedFileType.approvedPremises -> getBean(Cas1SeedPremisesFromCsvJob::class)
         SeedFileType.approvedPremisesRooms -> getBean(ApprovedPremisesRoomsSeedJob::class)
-        SeedFileType.user -> getBean(AllCasUsersSeedJob::class)
-        SeedFileType.approvedPremisesApStaffUsers -> getBean(ApStaffUsersSeedJob::class)
+        SeedFileType.user -> getBean(UsersSeedJob::class)
+        SeedFileType.usersBasic -> getBean(UsersBasicSeedJob::class)
         SeedFileType.nomisUsers -> getBean(NomisUsersSeedJob::class)
         SeedFileType.externalUsers -> getBean(ExternalUsersSeedJob::class)
         SeedFileType.cas2Applications -> getBean(Cas2ApplicationsSeedJob::class)
