@@ -15,7 +15,7 @@ class BookingSummaryTransformerTest {
   private val bookingSummaryTransformer = BookingSummaryTransformer()
 
   @Test
-  fun `transformJpaToApi transforms correctly`() {
+  fun success() {
     val approvedPremisesEntityFactory = ApprovedPremisesEntityFactory()
     val premises = approvedPremisesEntityFactory
       .withUnitTestControlTestProbationAreaAndLocalAuthority()
@@ -48,16 +48,14 @@ class BookingSummaryTransformerTest {
       status = null,
     )
 
-    assertThat(bookingSummaryTransformer.transformJpaToApi(booking)).isEqualTo(
-      BookingSummary(
-        id = booking.id,
-        premisesId = premises.id,
-        premisesName = premises.name,
-        arrivalDate = booking.arrivalDate,
-        departureDate = booking.departureDate,
-        createdAt = booking.createdAt.toInstant(),
-        type = BookingSummary.Type.legacy,
-      ),
-    )
+    val result = bookingSummaryTransformer.transformJpaToApi(booking)
+
+    assertThat(result.id).isEqualTo(booking.id)
+    assertThat(result.premisesId).isEqualTo(premises.id)
+    assertThat(result.premisesName).isEqualTo(premises.name)
+    assertThat(result.arrivalDate).isEqualTo(booking.arrivalDate)
+    assertThat(result.departureDate).isEqualTo(booking.departureDate)
+    assertThat(result.createdAt).isEqualTo(booking.createdAt.toInstant())
+    assertThat(result.type).isEqualTo(BookingSummary.Type.legacy)
   }
 }
