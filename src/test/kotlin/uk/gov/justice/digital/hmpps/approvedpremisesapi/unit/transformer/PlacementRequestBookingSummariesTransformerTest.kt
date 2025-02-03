@@ -16,18 +16,18 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.PlacementRequire
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ProbationRegionEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.UserEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.BookingSummaryTransformer
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.PlacementRequestBookingSummaryTransformer
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.PlacementRequestBookingSummariesTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.cas1.Cas1SpaceBookingSummaryTransformer
 import java.time.LocalDate
 import java.time.OffsetDateTime
 import java.util.UUID
 
-class PlacementRequestBookingSummaryTransformerTest {
+class PlacementRequestBookingSummariesTransformerTest {
 
   private val bookingSummaryTransformer = mockk<BookingSummaryTransformer>()
   private val cas1SpaceBookingSummaryTransformer = mockk<Cas1SpaceBookingSummaryTransformer>()
 
-  private val placementRequestBookingSummaryTransformer = PlacementRequestBookingSummaryTransformer(
+  private val placementRequestBookingSummaryTransformer = PlacementRequestBookingSummariesTransformer(
     bookingSummaryTransformer,
     cas1SpaceBookingSummaryTransformer,
   )
@@ -96,15 +96,15 @@ class PlacementRequestBookingSummaryTransformerTest {
 
     every { bookingSummaryTransformer.transformJpaToApi(booking) } returns bookingSummary
 
-    var result = placementRequestBookingSummaryTransformer.getBookingSummary(placementRequest)
+    val result = placementRequestBookingSummaryTransformer.getBookingSummary(placementRequest)
 
     assertThat(result!!.id).isEqualTo(booking.id)
-    assertThat(result!!.premisesId).isEqualTo(booking.premises.id)
-    assertThat(result!!.premisesName).isEqualTo(booking.premises.name)
-    assertThat(result!!.arrivalDate).isEqualTo(booking.arrivalDate)
-    assertThat(result!!.departureDate).isEqualTo(booking.departureDate)
-    assertThat(result!!.createdAt).isEqualTo(booking.createdAt.toInstant())
-    assertThat(result!!.type).isEqualTo(BookingSummary.Type.legacy)
+    assertThat(result.premisesId).isEqualTo(booking.premises.id)
+    assertThat(result.premisesName).isEqualTo(booking.premises.name)
+    assertThat(result.arrivalDate).isEqualTo(booking.arrivalDate)
+    assertThat(result.departureDate).isEqualTo(booking.departureDate)
+    assertThat(result.createdAt).isEqualTo(booking.createdAt.toInstant())
+    assertThat(result.type).isEqualTo(BookingSummary.Type.legacy)
   }
 
   @Test
@@ -119,22 +119,22 @@ class PlacementRequestBookingSummaryTransformerTest {
       BookingSummary.Type.space,
     )
 
-    var placementWithSpaceBooking = placementRequest.copy(
+    val placementWithSpaceBooking = placementRequest.copy(
       booking = null,
       spaceBookings = mutableListOf(spaceBooking),
     )
 
     every { cas1SpaceBookingSummaryTransformer.transformJpaToApi(spaceBooking) } returns spaceBookingSummary
 
-    var result = placementRequestBookingSummaryTransformer.getBookingSummary(placementWithSpaceBooking)
+    val result = placementRequestBookingSummaryTransformer.getBookingSummary(placementWithSpaceBooking)
 
     assertThat(result!!.id).isEqualTo(spaceBooking.id)
-    assertThat(result!!.premisesId).isEqualTo(spaceBooking.premises.id)
-    assertThat(result!!.premisesName).isEqualTo(spaceBooking.premises.name)
-    assertThat(result!!.arrivalDate).isEqualTo(spaceBooking.canonicalArrivalDate)
-    assertThat(result!!.departureDate).isEqualTo(spaceBooking.canonicalDepartureDate)
-    assertThat(result!!.createdAt).isEqualTo(spaceBooking.createdAt.toInstant())
-    assertThat(result!!.type).isEqualTo(BookingSummary.Type.space)
+    assertThat(result.premisesId).isEqualTo(spaceBooking.premises.id)
+    assertThat(result.premisesName).isEqualTo(spaceBooking.premises.name)
+    assertThat(result.arrivalDate).isEqualTo(spaceBooking.canonicalArrivalDate)
+    assertThat(result.departureDate).isEqualTo(spaceBooking.canonicalDepartureDate)
+    assertThat(result.createdAt).isEqualTo(spaceBooking.createdAt.toInstant())
+    assertThat(result.type).isEqualTo(BookingSummary.Type.space)
   }
 
   @Test

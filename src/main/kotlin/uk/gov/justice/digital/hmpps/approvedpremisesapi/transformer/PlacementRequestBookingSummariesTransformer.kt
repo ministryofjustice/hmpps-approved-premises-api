@@ -6,7 +6,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas1SpaceBook
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementRequestEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.cas1.Cas1SpaceBookingSummaryTransformer
 
-class PlacementRequestBookingSummaryTransformer(
+class PlacementRequestBookingSummariesTransformer(
   private val bookingSummaryTransformer: BookingSummaryTransformer,
   private val cas1SpaceBookingSummaryTransformer: Cas1SpaceBookingSummaryTransformer,
 ) {

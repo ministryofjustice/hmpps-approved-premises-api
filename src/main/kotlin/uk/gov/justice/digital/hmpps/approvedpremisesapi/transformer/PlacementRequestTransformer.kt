@@ -28,7 +28,7 @@ class PlacementRequestTransformer(
   cas1SpaceBookingSummaryTransformer: Cas1SpaceBookingSummaryTransformer,
 ) {
 
-  val placementRequestBookingSummaryTransformer = PlacementRequestBookingSummaryTransformer(
+  val placementRequestBookingSummaryTransformer = PlacementRequestBookingSummariesTransformer(
     bookingSummaryTransformer,
     cas1SpaceBookingSummaryTransformer,
   )
