@@ -1,7 +1,9 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.unit.transformer
 
+import io.mockk.Called
 import io.mockk.every
 import io.mockk.mockk
+import io.mockk.verify
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Nested
@@ -30,6 +32,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.BookingEntityFac
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.BookingNotMadeEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.CancellationEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.CancellationReasonEntityFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.Cas1SpaceBookingEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.CharacteristicEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.InmateDetailFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.LocalAuthorityEntityFactory
@@ -366,6 +369,44 @@ class PlacementRequestTransformerTest {
 
       assertThat(result.isWithdrawn).isEqualTo(true)
       assertThat(result.withdrawalReason).isEqualTo(WithdrawPlacementRequestReason.duplicatePlacementRequest)
+    }
+
+    @Test
+    fun `delegates mapping of legacy booking`() {
+      val booking = BookingEntityFactory().withDefaults().produce()
+
+      val placementRequestEntity = placementRequestFactory
+        .withPlacementRequirements(placementRequirementsFactory.produce())
+        .withBooking(booking)
+        .withSpaceBookings(mutableListOf())
+        .produce()
+
+      every { mockBookingSummaryTransformer.transformJpaToApi(booking) } returns mockBookingSummary
+
+      val result = placementRequestTransformer.transformJpaToApi(placementRequestEntity, personInfo)
+
+      assertThat(result.booking).isEqualTo(mockBookingSummary)
+
+      verify { mockCas1SpaceBookingSummaryTransformer wasNot Called }
+    }
+
+    @Test
+    fun `delegates mapping of space booking`() {
+      val spaceBooking = Cas1SpaceBookingEntityFactory().produce()
+
+      val placementRequestEntity = placementRequestFactory
+        .withPlacementRequirements(placementRequirementsFactory.produce())
+        .withBooking(null)
+        .withSpaceBookings(mutableListOf(spaceBooking))
+        .produce()
+
+      every { mockCas1SpaceBookingSummaryTransformer.transformJpaToApi(spaceBooking) } returns mockBookingSummary
+
+      val result = placementRequestTransformer.transformJpaToApi(placementRequestEntity, personInfo)
+
+      assertThat(result.booking).isEqualTo(mockBookingSummary)
+
+      verify { mockBookingSummaryTransformer wasNot Called }
     }
   }
 
