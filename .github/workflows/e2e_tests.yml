@@ -1,16 +1,26 @@
 name: run-e2e-tests
 
-on: [workflow_dispatch]
+on:
+  workflow_dispatch:
+    inputs:
+      branch:
+        description: 'The Github branch to use'
+        required: true
 
 jobs:
   cas1_e2e_tests:
     runs-on: [self-hosted, hmpps-github-actions-runner]
+    strategy:
+      matrix:
+        shard: [1, 2, 3, 4] # this will create 4 parallel jobs
     steps:
       - uses: qoomon/actions--context@v1
         id: context
       - name: Clone E2E repo
         run: |
-          git clone https://github.com/ministryofjustice/hmpps-approved-premises-ui.git .
+          git clone https://github.com/ministryofjustice/hmpps-approved-premises-ui.git 
+          // TODO - switch to branch based on the input settings
+          // git checkout ${{ github.event.inputs.branch }}
       - name: Use Node.js
         uses: actions/setup-node@v4
         with:
@@ -22,7 +32,7 @@ jobs:
         run: npx playwright install
       - name: E2E Check
         run: |
-          SHARD="$((${CIRCLE_NODE_INDEX}+1))"
+          SHARD=$(( ${{ strategy.job-index }} + 1 ))
           username="HMPPS_AUTH_USERNAME_$SHARD"
           password="HMPPS_AUTH_PASSWORD_$SHARD"
           email="HMPPS_AUTH_EMAIL_$SHARD"
