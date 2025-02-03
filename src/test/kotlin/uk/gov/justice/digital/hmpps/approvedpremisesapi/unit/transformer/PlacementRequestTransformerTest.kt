@@ -1,9 +1,7 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.unit.transformer
 
-import io.mockk.Called
 import io.mockk.every
 import io.mockk.mockk
-import io.mockk.verify
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Nested
@@ -49,7 +47,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.PersonTransf
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.PlacementRequestTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.RisksTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.UserTransformer
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.cas1.Cas1SpaceBookingSummaryTransformer
 import java.time.LocalDate
 import java.time.OffsetDateTime
 import java.util.UUID
@@ -61,7 +58,6 @@ class PlacementRequestTransformerTest {
   private val mockRisksTransformer = mockk<RisksTransformer>()
   private val mockUserTransformer = mockk<UserTransformer>()
   private val mockBookingSummaryTransformer = mockk<BookingSummaryTransformer>()
-  private val mockCas1SpaceBookingSummaryTransformer = mockk<Cas1SpaceBookingSummaryTransformer>()
 
   private val placementRequestTransformer = PlacementRequestTransformer(
     mockPersonTransformer,
@@ -69,7 +65,6 @@ class PlacementRequestTransformerTest {
     mockAssessmentTransformer,
     mockUserTransformer,
     mockBookingSummaryTransformer,
-    mockCas1SpaceBookingSummaryTransformer,
   )
 
   private val offenderDetailSummary = OffenderDetailsSummaryFactory().produce()
@@ -386,8 +381,6 @@ class PlacementRequestTransformerTest {
       val result = placementRequestTransformer.transformJpaToApi(placementRequestEntity, personInfo)
 
       assertThat(result.booking).isEqualTo(mockBookingSummary)
-
-      verify { mockCas1SpaceBookingSummaryTransformer wasNot Called }
     }
 
     @Test
@@ -400,13 +393,11 @@ class PlacementRequestTransformerTest {
         .withSpaceBookings(mutableListOf(spaceBooking))
         .produce()
 
-      every { mockCas1SpaceBookingSummaryTransformer.transformJpaToApi(spaceBooking) } returns mockBookingSummary
+      every { mockBookingSummaryTransformer.transformJpaToApi(spaceBooking) } returns mockBookingSummary
 
       val result = placementRequestTransformer.transformJpaToApi(placementRequestEntity, personInfo)
 
       assertThat(result.booking).isEqualTo(mockBookingSummary)
-
-      verify { mockBookingSummaryTransformer wasNot Called }
     }
   }
 

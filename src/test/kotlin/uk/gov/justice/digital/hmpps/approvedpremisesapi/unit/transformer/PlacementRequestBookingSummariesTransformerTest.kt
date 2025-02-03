@@ -17,7 +17,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ProbationRegionE
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.UserEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.BookingSummaryTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.PlacementRequestBookingSummariesTransformer
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.cas1.Cas1SpaceBookingSummaryTransformer
 import java.time.LocalDate
 import java.time.OffsetDateTime
 import java.util.UUID
@@ -25,11 +24,9 @@ import java.util.UUID
 class PlacementRequestBookingSummariesTransformerTest {
 
   private val bookingSummaryTransformer = mockk<BookingSummaryTransformer>()
-  private val cas1SpaceBookingSummaryTransformer = mockk<Cas1SpaceBookingSummaryTransformer>()
 
   private val placementRequestBookingSummaryTransformer = PlacementRequestBookingSummariesTransformer(
     bookingSummaryTransformer,
-    cas1SpaceBookingSummaryTransformer,
   )
 
   val application = ApprovedPremisesApplicationEntityFactory()
@@ -124,7 +121,7 @@ class PlacementRequestBookingSummariesTransformerTest {
       spaceBookings = mutableListOf(spaceBooking),
     )
 
-    every { cas1SpaceBookingSummaryTransformer.transformJpaToApi(spaceBooking) } returns spaceBookingSummary
+    every { bookingSummaryTransformer.transformJpaToApi(spaceBooking) } returns spaceBookingSummary
 
     val result = placementRequestBookingSummaryTransformer.getBookingSummary(placementWithSpaceBooking)
 
