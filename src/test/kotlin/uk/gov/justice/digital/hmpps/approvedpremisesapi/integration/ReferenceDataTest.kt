@@ -2,9 +2,13 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.integration
 
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Assertions.assertEquals
+import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.params.ParameterizedTest
+import org.junit.jupiter.params.provider.ValueSource
 import org.springframework.beans.factory.annotation.Autowired
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.CancellationReason
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Characteristic
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.MoveOnCategory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAnApArea
@@ -65,132 +69,159 @@ class ReferenceDataTest : IntegrationTestBase() {
   @Autowired
   lateinit var referralRejectionReasonTransformer: ReferralRejectionReasonTransformer
 
-  @Test
-  fun `Get Characteristics returns 200 with correct body`() {
-    characteristicRepository.deleteAll()
+  @Nested
+  inner class GetCharacteristics {
 
-    val characteristics = characteristicEntityFactory.produceAndPersistMultiple(10)
-    val expectedJson = objectMapper.writeValueAsString(
-      characteristics.map(characteristicTransformer::transformJpaToApi),
-    )
+    private fun setupCharacteristics() {
+      characteristicRepository.deleteAll()
 
-    val jwt = jwtAuthHelper.createValidAuthorizationCodeJwt()
-
-    webTestClient.get()
-      .uri("/reference-data/characteristics")
-      .header("Authorization", "Bearer $jwt")
-      .exchange()
-      .expectStatus()
-      .isOk
-      .expectBody()
-      .json(expectedJson)
-  }
-
-  @Test
-  fun `Get Characteristics for only temporary accommodation returns 200 with correct body`() {
-    characteristicRepository.deleteAll()
-
-    val characteristics = characteristicEntityFactory.produceAndPersistMultiple(10) {
-      withServiceScope(ServiceName.temporaryAccommodation.value)
-    }
-    val expectedJson = objectMapper.writeValueAsString(
-      characteristics.map(characteristicTransformer::transformJpaToApi),
-    )
-
-    val jwt = jwtAuthHelper.createValidAuthorizationCodeJwt()
-
-    webTestClient.get()
-      .uri("/reference-data/characteristics")
-      .header("Authorization", "Bearer $jwt")
-      .header("X-Service-Name", "temporary-accommodation")
-      .exchange()
-      .expectStatus()
-      .isOk
-      .expectBody()
-      .json(expectedJson)
-  }
-
-  @Test
-  fun `Get Characteristics for only approved premises returns 200 with correct body`() {
-    characteristicRepository.deleteAll()
-
-    val characteristics = characteristicEntityFactory.produceAndPersistMultiple(10) {
-      withServiceScope(ServiceName.approvedPremises.value)
-    }
-    val expectedJson = objectMapper.writeValueAsString(
-      characteristics.map(characteristicTransformer::transformJpaToApi),
-    )
-
-    val jwt = jwtAuthHelper.createValidAuthorizationCodeJwt()
-
-    webTestClient.get()
-      .uri("/reference-data/characteristics")
-      .header("Authorization", "Bearer $jwt")
-      .header("X-Service-Name", "approved-premises")
-      .exchange()
-      .expectStatus()
-      .isOk
-      .expectBody()
-      .json(expectedJson)
-  }
-
-  @Test
-  fun `Get Characteristics returns only active characteristics by default`() {
-    characteristicRepository.deleteAll()
-
-    val characteristics = characteristicEntityFactory.produceAndPersistMultiple(10) {
-      withIsActive(true)
+      Characteristic.ModelScope.entries.forEach { entry ->
+        characteristicEntityFactory.produceAndPersist {
+          withIsActive(true)
+          withModelScope(entry.value)
+        }
+      }
     }
 
-    // Unexpected characteristics
-    characteristicEntityFactory.produceAndPersistMultiple(10) {
-      withIsActive(false)
+    private fun doRequest(modelScope: String? = null): MutableList<Characteristic>? {
+      val jwt = jwtAuthHelper.createValidAuthorizationCodeJwt()
+      return webTestClient.get()
+        .uri { uriBuilder ->
+          uriBuilder.path("/reference-data/characteristics")
+            .queryParam("modelScope", modelScope)
+            .build()
+        }
+        .header("Authorization", "Bearer $jwt")
+        .exchange()
+        .expectStatus()
+        .isOk
+        .expectBodyList(Characteristic::class.java)
+        .returnResult()
+        .responseBody
     }
 
-    val expectedJson = objectMapper.writeValueAsString(
-      characteristics.map(characteristicTransformer::transformJpaToApi),
-    )
+    @Test
+    fun `Get Characteristics returns 200 with correct body`() {
+      characteristicRepository.deleteAll()
 
-    val jwt = jwtAuthHelper.createValidAuthorizationCodeJwt()
+      val characteristics = characteristicEntityFactory.produceAndPersistMultiple(10)
+      val expectedJson = objectMapper.writeValueAsString(
+        characteristics.map(characteristicTransformer::transformJpaToApi),
+      )
 
-    webTestClient.get()
-      .uri("/reference-data/characteristics")
-      .header("Authorization", "Bearer $jwt")
-      .exchange()
-      .expectStatus()
-      .isOk
-      .expectBody()
-      .json(expectedJson)
-  }
+      val jwt = jwtAuthHelper.createValidAuthorizationCodeJwt()
 
-  @Test
-  fun `Get Characteristics returns both active and inactive characteristics when 'includeInactive' query is true`() {
-    characteristicRepository.deleteAll()
-
-    val activeCharacteristics = characteristicEntityFactory.produceAndPersistMultiple(10) {
-      withIsActive(true)
+      webTestClient.get()
+        .uri("/reference-data/characteristics")
+        .header("Authorization", "Bearer $jwt")
+        .exchange()
+        .expectStatus()
+        .isOk
+        .expectBody()
+        .json(expectedJson)
     }
 
-    val inactiveCharacteristics = characteristicEntityFactory.produceAndPersistMultiple(10) {
-      withIsActive(false)
+    @Test
+    fun `Get Characteristics for only temporary accommodation returns 200 with correct body`() {
+      characteristicRepository.deleteAll()
+
+      val characteristics = characteristicEntityFactory.produceAndPersistMultiple(10) {
+        withServiceScope(ServiceName.temporaryAccommodation.value)
+      }
+      val expectedJson = objectMapper.writeValueAsString(
+        characteristics.map(characteristicTransformer::transformJpaToApi),
+      )
+
+      val jwt = jwtAuthHelper.createValidAuthorizationCodeJwt()
+
+      webTestClient.get()
+        .uri("/reference-data/characteristics")
+        .header("Authorization", "Bearer $jwt")
+        .header("X-Service-Name", "temporary-accommodation")
+        .exchange()
+        .expectStatus()
+        .isOk
+        .expectBody()
+        .json(expectedJson)
     }
 
-    val characteristics = activeCharacteristics + inactiveCharacteristics
+    @Test
+    fun `Get Characteristics for only approved premises returns 200 with correct body`() {
+      characteristicRepository.deleteAll()
 
-    val expectedJson = objectMapper.writeValueAsString(
-      characteristics.map(characteristicTransformer::transformJpaToApi),
-    )
+      val characteristics = characteristicEntityFactory.produceAndPersistMultiple(10) {
+        withServiceScope(ServiceName.approvedPremises.value)
+      }
+      val expectedJson = objectMapper.writeValueAsString(
+        characteristics.map(characteristicTransformer::transformJpaToApi),
+      )
 
-    val jwt = jwtAuthHelper.createValidAuthorizationCodeJwt()
+      val jwt = jwtAuthHelper.createValidAuthorizationCodeJwt()
 
-    webTestClient.get()
-      .uri("/reference-data/characteristics?includeInactive=true")
-      .header("Authorization", "Bearer $jwt")
-      .exchange()
-      .expectStatus()
-      .isOk
-      .expectBody()
-      .json(expectedJson)
+      webTestClient.get()
+        .uri("/reference-data/characteristics")
+        .header("Authorization", "Bearer $jwt")
+        .header("X-Service-Name", "approved-premises")
+        .exchange()
+        .expectStatus()
+        .isOk
+        .expectBody()
+        .json(expectedJson)
+    }
+
+    @Test
+    fun `Get Characteristics returns only active characteristics by default`() {
+      characteristicRepository.deleteAll()
+
+      val characteristics = characteristicEntityFactory.produceAndPersistMultiple(10) {
+        withIsActive(true)
+      }
+
+      // Unexpected characteristics
+      characteristicEntityFactory.produceAndPersistMultiple(10) {
+        withIsActive(false)
+      }
+
+      val response = doRequest(modelScope = null)
+
+      assertThat(response).isNotNull.hasSize(characteristics.size)
+      val expectedResponse = characteristics.map(characteristicTransformer::transformJpaToApi)
+      assertThat(response!!.containsAll(expectedResponse)).isTrue()
+    }
+
+    @Test
+    fun `Get Characteristics returns all model scopes by default`() {
+      setupCharacteristics()
+      val response = doRequest()
+      assertThat(response).hasSize(Characteristic.ModelScope.entries.size)
+      assertThat(response!!.map { it.modelScope.value }).containsAll(Characteristic.ModelScope.entries.map { it.value })
+    }
+
+    @Test
+    fun `Get Characteristics only returns requested characteristics and star model scope `() {
+      setupCharacteristics()
+      val response = doRequest(modelScope = "PREMISES")
+      assertThat(response).isNotNull()
+      assertThat(response!!.map { it.modelScope.value }).containsOnly(
+        Characteristic.ModelScope.premises.value,
+        Characteristic.ModelScope.star.value,
+      )
+    }
+
+    /*
+    this currently returns the same results for BEDSPACE and ROOM, in preparation for the refactoring of CAS3 to use 'bedspace' instead of room and bed.
+     */
+    @ParameterizedTest
+    @ValueSource(strings = ["BEDSPACE", "ROOM"])
+    fun `Get Characteristics only returns requested room characteristics and star model scope `(modelScope: String) {
+      setupCharacteristics()
+      val response = doRequest(modelScope = modelScope)
+      assertThat(response).isNotNull()
+      assertThat(response!!.map { it.modelScope.value }).containsOnly(
+        Characteristic.ModelScope.room.value,
+        Characteristic.ModelScope.star.value,
+      )
+    }
   }
 
   @Test
