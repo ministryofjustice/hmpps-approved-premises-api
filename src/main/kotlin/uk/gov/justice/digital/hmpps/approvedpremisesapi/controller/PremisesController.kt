@@ -415,6 +415,7 @@ class PremisesController(
   @Transactional
   override fun premisesPremisesIdBookingsPost(premisesId: UUID, body: NewBooking): ResponseEntity<Booking> {
     val user = usersService.getUserForRequest()
+    val crn = body.crn.uppercase()
 
     val premises = premisesService.getPremises(premisesId)
       ?: throw NotFoundProblem(premisesId, "Premises")
@@ -424,16 +425,16 @@ class PremisesController(
     }
 
     val personInfo =
-      offenderService.getPersonInfoResult(body.crn, user.deliusUsername, user.hasQualification(UserQualification.LAO))
+      offenderService.getPersonInfoResult(crn, user.deliusUsername, user.hasQualification(UserQualification.LAO))
 
-    if (personInfo !is PersonInfoResult.Success) throw InternalServerErrorProblem("Unable to get Person Info for CRN: ${body.crn}")
+    if (personInfo !is PersonInfoResult.Success) throw InternalServerErrorProblem("Unable to get Person Info for CRN: $crn")
 
     val authorisableResult = when (premises) {
       is TemporaryAccommodationPremisesEntity -> {
         cas3BookingService.createBooking(
           user = user,
           premises = premises,
-          crn = body.crn,
+          crn = crn,
           nomsNumber = when (personInfo) {
             is PersonInfoResult.Success.Restricted -> personInfo.nomsNumber
             is PersonInfoResult.Success.Full -> personInfo.inmateDetail?.offenderNo
@@ -451,7 +452,7 @@ class PremisesController(
 
     val validatableResult = when (authorisableResult) {
       is AuthorisableActionResult.Unauthorised -> throw ForbiddenProblem()
-      is AuthorisableActionResult.NotFound -> throw NotFoundProblem(body.crn, "Offender")
+      is AuthorisableActionResult.NotFound -> throw NotFoundProblem(crn, "Offender")
       is AuthorisableActionResult.Success -> authorisableResult.entity
     }
 
