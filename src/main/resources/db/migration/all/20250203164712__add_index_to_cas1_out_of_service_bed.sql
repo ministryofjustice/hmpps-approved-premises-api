@@ -1,0 +1,2 @@
+CREATE INDEX idx_cas1_out_of_service_bed_cancellations_out_of_service_bed_id ON cas1_out_of_service_bed_cancellations(out_of_service_bed_id);
+CREATE INDEX idx_cas1_out_of_service_bed_revisions_out_of_service_bed_id ON cas1_out_of_service_bed_revisions(out_of_service_bed_id);
