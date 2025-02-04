@@ -78,7 +78,7 @@ class SeedCas1RoomsFromSiteSurveyXlsxTest : SeedTestBase() {
       "example.xlsx",
     )
 
-    val newRoom = roomRepository.findByCode("Q999 - 1")
+    val newRoom = roomRepository.findByCode("Q999-1")
     assertThat(newRoom).isNotNull
     assertThat(newRoom!!.characteristics).anyMatch {
       it.name == "Is this room located on the ground floor?" &&
@@ -89,7 +89,7 @@ class SeedCas1RoomsFromSiteSurveyXlsxTest : SeedTestBase() {
     assertThat(newBed!!.name).isEqualTo("1")
     assertThat(
       newBed.room.id == newRoom.id &&
-        newBed.room.code == "Q999 - 1",
+        newBed.room.code == "Q999-1",
     )
   }
 
@@ -132,17 +132,17 @@ class SeedCas1RoomsFromSiteSurveyXlsxTest : SeedTestBase() {
       "example.xlsx",
     )
 
-    val room1 = roomRepository.findByCode("Q999 - 1")
+    val room1 = roomRepository.findByCode("Q999-1")
     assertThat(room1!!.characteristics).isEmpty()
 
     val bed1 = bedRepository.findByCodeAndRoomId("SWABI01NEW", room1.id)
     assertThat(bed1!!.name).isEqualTo("1")
     assertThat(
       bed1.room.id == room1.id &&
-        bed1.room.code == "Q999 - 1",
+        bed1.room.code == "Q999-1",
     )
 
-    val room2 = roomRepository.findByCode("Q999 - 2")
+    val room2 = roomRepository.findByCode("Q999-2")
     assertThat(room2!!.characteristics).anyMatch {
       it.name == "Is this room located on the ground floor?" &&
         it.propertyName == "isGroundFloor"
@@ -152,17 +152,17 @@ class SeedCas1RoomsFromSiteSurveyXlsxTest : SeedTestBase() {
     assertThat(bed2!!.name).isEqualTo("1")
     assertThat(
       bed2.room.id == room2.id &&
-        bed2.room.code == "Q999 - 2",
+        bed2.room.code == "Q999-2",
     )
 
-    val room3 = roomRepository.findByCode("Q999 - 3")
+    val room3 = roomRepository.findByCode("Q999-3")
     assertThat(room3!!.characteristics).isEmpty()
 
     val bed3 = bedRepository.findByCodeAndRoomId("SWABI03NEW", room3.id)
     assertThat(bed3!!.name).isEqualTo("1")
     assertThat(
       bed3.room.id == room3.id &&
-        bed3.room.code == "Q999 - 1",
+        bed3.room.code == "Q999-1",
     )
   }
 
@@ -210,7 +210,7 @@ class SeedCas1RoomsFromSiteSurveyXlsxTest : SeedTestBase() {
           it.throwable != null &&
           it.throwable.message == "Unable to process XLSX file" &&
           it.throwable.cause is IllegalStateException &&
-          it.throwable.cause!!.message == "Room Q999 - 1 has different characteristics."
+          it.throwable.cause!!.message == "Room Q999-1 has different characteristics."
       }
   }
 
@@ -252,17 +252,17 @@ class SeedCas1RoomsFromSiteSurveyXlsxTest : SeedTestBase() {
       "example.xlsx",
     )
 
-    val room1 = roomRepository.findByCode("Q999 - 1")
+    val room1 = roomRepository.findByCode("Q999-1")
     assertThat(room1!!.characteristics).isEmpty()
 
     val bed1 = bedRepository.findByCodeAndRoomId("SWABI01NEW", room1.id)
     assertThat(bed1!!.name).isEqualTo("1")
     assertThat(
       bed1.room.id == room1.id &&
-        bed1.room.code == "Q999 - 1",
+        bed1.room.code == "Q999-1",
     )
 
-    val room2 = roomRepository.findByCode("Q999 - 2")
+    val room2 = roomRepository.findByCode("Q999-2")
     assertThat(room2!!.characteristics).anyMatch {
       it.name == "Is this room located on the ground floor?" &&
         it.propertyName == "isGroundFloor"
@@ -272,14 +272,14 @@ class SeedCas1RoomsFromSiteSurveyXlsxTest : SeedTestBase() {
     assertThat(bed2!!.name).isEqualTo("1")
     assertThat(
       bed2.room.id == room2.id &&
-        bed2.room.code == "Q999 - 2",
+        bed2.room.code == "Q999-2",
     )
 
     val bed3 = bedRepository.findByCodeAndRoomId("SWABI03NEW", room2.id)
     assertThat(bed3!!.name).isEqualTo("2")
     assertThat(
       bed3.room.id == room2.id &&
-        bed3.room.code == "Q999 - 2",
+        bed3.room.code == "Q999-2",
     )
   }
 
@@ -318,14 +318,14 @@ class SeedCas1RoomsFromSiteSurveyXlsxTest : SeedTestBase() {
       "example.xlsx",
     )
 
-    val newRoom = roomRepository.findByCode("Q999 - 1")
+    val newRoom = roomRepository.findByCode("Q999-1")
     assertThat(newRoom!!.characteristics).isEmpty()
 
     val newBed = bedRepository.findByCodeAndRoomId("SWABI01NEW", newRoom.id)
     assertThat(newBed!!.name).isEqualTo("1")
     assertThat(
       newBed.room.id == newRoom.id &&
-        newBed.room.code == "Q999 - 1",
+        newBed.room.code == "Q999-1",
     )
   }
 
@@ -339,7 +339,7 @@ class SeedCas1RoomsFromSiteSurveyXlsxTest : SeedTestBase() {
       withProbationRegion(probationRegion)
       withQCode(qCode)
     }
-    val roomCode = "$qCode - 1"
+    val roomCode = "$qCode-1"
     roomEntityFactory.produceAndPersist {
       withPremises(premises)
       withCode(roomCode)
@@ -379,7 +379,7 @@ class SeedCas1RoomsFromSiteSurveyXlsxTest : SeedTestBase() {
     assertThat(newBed!!.name).isEqualTo("1")
     assertThat(
       newBed.room.id == updatedRoom.id &&
-        newBed.room.code == "Q999 - 1",
+        newBed.room.code == "Q999-1",
     )
   }
 
@@ -393,7 +393,7 @@ class SeedCas1RoomsFromSiteSurveyXlsxTest : SeedTestBase() {
       withProbationRegion(probationRegion)
       withQCode(qCode)
     }
-    val roomCode = "$qCode - 1"
+    val roomCode = "$qCode-1"
     val room = roomEntityFactory.produceAndPersist {
       withPremises(premises)
       withCode(roomCode)
@@ -438,7 +438,7 @@ class SeedCas1RoomsFromSiteSurveyXlsxTest : SeedTestBase() {
     assertThat(existingBed!!.name).isEqualTo("1")
     assertThat(
       existingBed.room.id == updatedRoom.id &&
-        existingBed.room.code == "Q999 - 1",
+        existingBed.room.code == "Q999-1",
     )
   }
 
@@ -452,7 +452,7 @@ class SeedCas1RoomsFromSiteSurveyXlsxTest : SeedTestBase() {
       withProbationRegion(probationRegion)
       withQCode(qCode)
     }
-    val roomCode = "$qCode - 1"
+    val roomCode = "$qCode-1"
     val room = roomEntityFactory.produceAndPersist {
       withPremises(premises)
       withCode(roomCode)
@@ -494,7 +494,7 @@ class SeedCas1RoomsFromSiteSurveyXlsxTest : SeedTestBase() {
           it.throwable != null &&
           it.throwable.message == "Unable to process XLSX file" &&
           it.throwable.cause is IllegalStateException &&
-          it.throwable.cause!!.message == "Bed SWABI02 already exists in room Q999 - 1 but is being added to room Q999 - 2."
+          it.throwable.cause!!.message == "Bed SWABI02 already exists in room Q999-1 but is being added to room Q999-2."
       }
   }
 

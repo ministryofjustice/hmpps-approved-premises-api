@@ -78,7 +78,7 @@ class Cas1SeedRoomsFromSiteSurveyXlsxJob(
     }
   }
 
-  private fun buildRoomCode(qCode: String, roomNumber: String) = "$qCode - $roomNumber"
+  private fun buildRoomCode(qCode: String, roomNumber: String) = "$qCode-$roomNumber"
 
   private data class RoomInfo(
     val roomCode: String,
