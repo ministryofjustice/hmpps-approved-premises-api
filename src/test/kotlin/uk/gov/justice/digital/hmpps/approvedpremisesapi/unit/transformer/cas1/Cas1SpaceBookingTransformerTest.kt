@@ -11,6 +11,7 @@ import org.junit.jupiter.api.extension.ExtendWith
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.CancellationReason
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1SpaceBookingRequirements
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1SpaceBookingSummaryStatus
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1SpaceCharacteristic
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PersonSummaryDiscriminator
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PersonType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.RestrictedPerson
@@ -105,8 +106,8 @@ class Cas1SpaceBookingTransformerTest {
       val nonArrivalReason = NonArrivalReasonEntityFactory().produce()
 
       val criteria = listOf(
-        CharacteristicEntityFactory().produce(),
-        CharacteristicEntityFactory().produce(),
+        CharacteristicEntityFactory().withPropertyName("hasEnSuite").produce(),
+        CharacteristicEntityFactory().withPropertyName("isCatered").produce(),
       )
 
       val departureReason = DepartureReasonEntity(
@@ -238,6 +239,11 @@ class Cas1SpaceBookingTransformerTest {
       assertThat(result.otherBookingsInPremisesForCrn[0].canonicalDepartureDate).isEqualTo(LocalDate.parse("2025-05-07"))
       assertThat(result.requestForPlacementId).isEqualTo(placementRequest.id)
       assertThat(result.status).isEqualTo(Cas1SpaceBookingSummaryStatus.notArrived)
+
+      assertThat(result.characteristics).containsExactlyInAnyOrder(
+        Cas1SpaceCharacteristic.isCatered,
+        Cas1SpaceCharacteristic.hasEnSuite,
+      )
     }
 
     @Test

@@ -2,9 +2,8 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.cas1
 
 import org.springframework.stereotype.Component
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1OutOfServiceBedSummary
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1SpaceCharacteristic
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas1OutOfServiceBedEntity
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.CharacteristicEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.cas1.Cas1SpaceBookingTransformer.Companion.toCas1SpaceCharacteristics
 
 @Component
 class Cas1OutOfServiceBedSummaryTransformer(
@@ -18,9 +17,6 @@ class Cas1OutOfServiceBedSummaryTransformer(
     startDate = jpa.startDate,
     endDate = jpa.endDate,
     reason = cas1OutOfServiceBedReasonTransformer.transformJpaToApi(jpa.reason),
-    characteristics = jpa.bed.room.characteristics.map { it.asCas1SpaceCharacteristic() },
+    characteristics = jpa.bed.room.characteristics.toCas1SpaceCharacteristics(),
   )
-
-  private fun CharacteristicEntity.asCas1SpaceCharacteristic() =
-    Cas1SpaceCharacteristic.entries.first { it.value == this.propertyName }
 }
