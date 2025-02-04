@@ -1347,7 +1347,7 @@ components:
           $ref: '#/components/schemas/Bed'
         status:
           $ref: '#/components/schemas/BookingStatus'
-    BookingSummary:
+    PlacementRequestBookingSummary:
       type: object
       properties:
         id:
@@ -4679,7 +4679,7 @@ components:
               description: Notes from the assessor for the CRU Manager
               type: string
             booking:
-              $ref: '#/components/schemas/BookingSummary'
+              $ref: '#/components/schemas/PlacementRequestBookingSummary'
             requestType:
               $ref: '#/components/schemas/PlacementRequestRequestType'
             isWithdrawn:

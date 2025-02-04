@@ -1,29 +1,29 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer
 
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.BookingSummary
+import org.springframework.stereotype.Component
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PlacementRequestBookingSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.BookingEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas1SpaceBookingEntity
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementRequestEntity
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.cas1.Cas1SpaceBookingSummaryTransformer
 
-class PlacementRequestBookingSummaryTransformer(
-  private val bookingSummaryTransformer: BookingSummaryTransformer,
-  private val cas1SpaceBookingSummaryTransformer: Cas1SpaceBookingSummaryTransformer,
-) {
+@Component
+class PlacementRequestBookingSummaryTransformer {
+  fun transformJpaToApi(jpa: BookingEntity) = PlacementRequestBookingSummary(
+    id = jpa.id,
+    premisesId = jpa.premises.id,
+    premisesName = jpa.premises.name,
+    arrivalDate = jpa.arrivalDate,
+    departureDate = jpa.departureDate,
+    createdAt = jpa.createdAt.toInstant(),
+    type = PlacementRequestBookingSummary.Type.legacy,
+  )
 
-  fun getBookingSummary(placementRequest: PlacementRequestEntity): BookingSummary? {
-    return placementRequest.booking?.let {
-      getBookingSummary(placementRequest.booking!!)
-    } ?: getSpaceBookingSummary(placementRequest.spaceBookings)
-  }
-
-  private fun getBookingSummary(booking: BookingEntity): BookingSummary? {
-    if (!booking.isCancelled) {
-      return bookingSummaryTransformer.transformJpaToApi(booking)
-    }
-    return null
-  }
-
-  private fun getSpaceBookingSummary(bookings: List<Cas1SpaceBookingEntity>): BookingSummary? =
-    bookings.firstOrNull { !it.isCancelled() }?.let { booking -> cas1SpaceBookingSummaryTransformer.transformJpaToApi(booking) }
+  fun transformJpaToApi(jpa: Cas1SpaceBookingEntity) = PlacementRequestBookingSummary(
+    id = jpa.id,
+    premisesId = jpa.premises.id,
+    premisesName = jpa.premises.name,
+    arrivalDate = jpa.canonicalArrivalDate,
+    departureDate = jpa.canonicalDepartureDate,
+    createdAt = jpa.createdAt.toInstant(),
+    type = PlacementRequestBookingSummary.Type.space,
+  )
 }
