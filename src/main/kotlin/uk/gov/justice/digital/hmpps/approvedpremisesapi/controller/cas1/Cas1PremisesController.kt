@@ -87,7 +87,6 @@ class Cas1PremisesController(
 
     return ResponseEntity.ok().body(
       cas1PremiseCapacityTransformer.toCas1PremiseCapacitySummary(
-        premiseSummaryInfo = extractEntityFromCasResult(premiseSummaryInfo),
         premiseCapacity = extractEntityFromCasResult(premiseCapacity),
       ),
     )
@@ -110,7 +109,6 @@ class Cas1PremisesController(
       cas1PremisesDayTransformer.toCas1PremisesDaySummary(
         date = date,
         premisesCapacity = cas1PremiseCapacityTransformer.toCas1PremiseCapacitySummary(
-          premiseSummaryInfo = premiseSummaryInfo,
           premiseCapacity = extractEntityFromCasResult(
             cas1PremisesService.getPremiseCapacity(
               premisesId = premisesId,
