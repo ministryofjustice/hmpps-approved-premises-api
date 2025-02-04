@@ -83,7 +83,104 @@ paths:
         500:
           $ref: '_shared.yml#/components/responses/500Response'
       x-codegen-request-body-name: body
-
+  /placement-requests:
+    get:
+      tags:
+        - Placement requests
+      summary: Gets all placement requests
+      operationId: search
+      parameters:
+        - name: status
+          in: query
+          description: filter by status of an application
+          schema:
+            $ref: '_shared.yml#/components/schemas/PlacementRequestStatus'
+        - name: crn
+          in: query
+          description: filter by CRN
+          schema:
+            type: string
+        - name: crnOrName
+          in: query
+          description: search by CRN or name
+          schema:
+            type: string
+        - name: tier
+          in: query
+          description: filter by tier of Offender at time Application was created
+          schema:
+            $ref: '_shared.yml#/components/schemas/RiskTierLevel'
+        - name: arrivalDateStart
+          in: query
+          description: filter by minimum expected arrival date
+          schema:
+            type: string
+            format: date
+        - name: arrivalDateEnd
+          in: query
+          description: filter by maximum expected arrival date
+          schema:
+            type: string
+            format: date
+        - name: requestType
+          in: query
+          description: filter by request type
+          schema:
+            $ref: '_shared.yml#/components/schemas/PlacementRequestRequestType'
+        - name: apAreaId
+          in: query
+          required: false
+          description: filter by approved premises area ID.  Use cruManagementAreaId instead.
+          deprecated: true
+          schema:
+            type: string
+            format: uuid
+        - name: cruManagementAreaId
+          in: query
+          required: false
+          description: filter by CRU management area ID
+          schema:
+            type: string
+            format: uuid
+        - name: page
+          in: query
+          description: Page number of results to return. If blank, returns all results
+          schema:
+            type: integer
+        - name: sortBy
+          in: query
+          description: Which field to sort the results by. If blank, will sort by createdAt
+          schema:
+            $ref: '_shared.yml#/components/schemas/PlacementRequestSortField'
+        - name: sortDirection
+          in: query
+          description: The direction to sort the results by. If blank, will sort in descending order
+          schema:
+            $ref: '_shared.yml#/components/schemas/SortDirection'
+      responses:
+        200:
+          description: successfully retrieved placement requests
+          content:
+            'application/json':
+              schema:
+                type: array
+                items:
+                  $ref: 'cas1-schemas.yml#/components/schemas/Cas1PlacementRequestSummary'
+          headers:
+            X-Pagination-CurrentPage:
+              $ref: '_shared.yml#/components/headers/X-Pagination-CurrentPage'
+            X-Pagination-TotalPages:
+              $ref: '_shared.yml#/components/headers/X-Pagination-TotalPages'
+            X-Pagination-TotalResults:
+              $ref: '_shared.yml#/components/headers/X-Pagination-TotalResults'
+            X-Pagination-PageSize:
+              $ref: '_shared.yml#/components/headers/X-Pagination-TotalResults'
+        401:
+          $ref: '_shared.yml#/components/responses/401Response'
+        403:
+          $ref: '_shared.yml#/components/responses/403Response'
+        500:
+          $ref: '_shared.yml#/components/responses/500Response'
   /premises/summary:
     get:
       description: Provide a summary of all premises, with optional filtering
