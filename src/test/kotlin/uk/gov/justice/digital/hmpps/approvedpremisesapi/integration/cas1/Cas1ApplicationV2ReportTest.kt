@@ -66,7 +66,7 @@ import java.time.ZonedDateTime
 import java.util.UUID
 
 @SuppressWarnings("LongParameterList")
-class Cas1ApplicationReportTest : InitialiseDatabasePerClassTestBase() {
+class Cas1ApplicationV2ReportTest : InitialiseDatabasePerClassTestBase() {
 
   @Autowired
   lateinit var realApplicationRepository: ApplicationRepository
