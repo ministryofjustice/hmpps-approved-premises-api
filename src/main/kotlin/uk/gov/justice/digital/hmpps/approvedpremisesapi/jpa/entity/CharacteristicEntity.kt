@@ -6,8 +6,10 @@ import jakarta.persistence.Table
 import org.hibernate.annotations.CacheConcurrencyStrategy
 import org.springframework.data.jpa.repository.JpaRepository
 import org.springframework.data.jpa.repository.Query
+import org.springframework.stereotype.Repository
 import java.util.UUID
 
+@Repository
 interface CharacteristicRepository : JpaRepository<CharacteristicEntity, UUID> {
 
   companion object Constants {
@@ -29,14 +31,11 @@ interface CharacteristicRepository : JpaRepository<CharacteristicEntity, UUID> {
     const val CAS1_PROPERTY_NAME_WHEELCHAIR_DESIGNATED = "isWheelchairDesignated"
   }
 
-  @Query("SELECT c FROM CharacteristicEntity c WHERE c.serviceScope = :serviceName")
-  fun findAllByServiceScope(serviceName: String): List<CharacteristicEntity>
-
-  @Query("SELECT c FROM CharacteristicEntity c WHERE c.serviceScope = :serviceName AND c.isActive = true")
-  fun findActiveByServiceScope(serviceName: String): List<CharacteristicEntity>
-
-  @Query("SELECT c FROM CharacteristicEntity c WHERE c.isActive = true")
-  fun findActive(): List<CharacteristicEntity>
+  @Query(
+    "SELECT c FROM CharacteristicEntity c WHERE (c.serviceScope = :serviceScope OR :serviceScope = '*' )" +
+      "AND (:modelScope = '*' OR c.modelScope = :modelScope OR c.modelScope = '*') AND c.isActive = true",
+  )
+  fun findActiveByServiceScopeAndModelScope(serviceScope: String, modelScope: String): List<CharacteristicEntity>
 
   fun findByName(name: String): CharacteristicEntity?
 

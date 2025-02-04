@@ -2723,12 +2723,12 @@ paths:
           description: If given, only characteristics for this service will be returned
           schema:
             $ref: '_shared.yml#/components/schemas/ServiceName'
-        - name: includeInactive
+        - name: modelScope
           in: query
           required: false
-          description: Specifies whether inactive characteristics should be provided. Defaults to `false`.
           schema:
-            type: boolean
+            type: string
+            enum: [ PREMISES, BEDSPACE, ROOM ]
       responses:
         200:
           description: successful operation

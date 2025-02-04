@@ -71,19 +71,28 @@ class ReferenceDataController(
   private val apAreaTransformer: ApAreaTransformer,
 ) : ReferenceDataApiDelegate {
 
-  override fun referenceDataCharacteristicsGet(xServiceName: ServiceName?, includeInactive: Boolean?): ResponseEntity<List<Characteristic>> {
-    val characteristics = when (xServiceName != null) {
-      true -> when (includeInactive) {
-        true -> characteristicRepository.findAllByServiceScope(xServiceName.value)
-        else -> characteristicRepository.findActiveByServiceScope(xServiceName.value)
-      }
-      false -> when (includeInactive) {
-        true -> characteristicRepository.findAll()
-        else -> characteristicRepository.findActive()
-      }
-    }
+  override fun referenceDataCharacteristicsGet(
+    xServiceName: ServiceName?,
+    modelScope: String?,
+  ): ResponseEntity<List<Characteristic>> {
+    return ResponseEntity.ok(
+      characteristicRepository.findActiveByServiceScopeAndModelScope(
+        serviceScope = xServiceName?.value ?: "*",
+        modelScope = toModelScopeEnum(modelScope).value,
+      ).map(characteristicTransformer::transformJpaToApi),
+    )
+  }
 
-    return ResponseEntity.ok(characteristics.map(characteristicTransformer::transformJpaToApi))
+  /*
+  this can be refactored to use the enum directly in the controller
+  when we move away from the manually written openApiSpec files
+   */
+  private fun toModelScopeEnum(modelScope: String?): Characteristic.ModelScope {
+    return when (modelScope) {
+      "PREMISES" -> Characteristic.ModelScope.premises
+      "BEDSPACE", "ROOM" -> Characteristic.ModelScope.room
+      else -> Characteristic.ModelScope.star
+    }
   }
 
   override fun referenceDataLocalAuthorityAreasGet(): ResponseEntity<List<LocalAuthorityArea>> {
