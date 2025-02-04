@@ -147,7 +147,7 @@ class Cas1SeedRoomsFromSiteSurveyXlsxJob(
   private fun resolveBeds(qCode: String, siteSurveyBeds: List<Cas1SiteSurveyBed>): List<BedInfo> {
     return siteSurveyBeds.map {
       BedInfo(
-        bedName = it.bedNumber,
+        bedName = "${it.roomNumber} - ${it.bedNumber}",
         bedCode = it.uniqueBedRef,
         roomCode = buildRoomCode(qCode, it.roomNumber),
       )

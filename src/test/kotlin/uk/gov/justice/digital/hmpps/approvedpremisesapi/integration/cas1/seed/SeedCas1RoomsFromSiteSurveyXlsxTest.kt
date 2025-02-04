@@ -86,7 +86,7 @@ class SeedCas1RoomsFromSiteSurveyXlsxTest : SeedTestBase() {
     }
 
     val newBed = bedRepository.findByCodeAndRoomId("SWABI01NEW", newRoom.id)
-    assertThat(newBed!!.name).isEqualTo("1")
+    assertThat(newBed!!.name).isEqualTo("1 - 1")
     assertThat(
       newBed.room.id == newRoom.id &&
         newBed.room.code == "Q999-1",
@@ -136,7 +136,7 @@ class SeedCas1RoomsFromSiteSurveyXlsxTest : SeedTestBase() {
     assertThat(room1!!.characteristics).isEmpty()
 
     val bed1 = bedRepository.findByCodeAndRoomId("SWABI01NEW", room1.id)
-    assertThat(bed1!!.name).isEqualTo("1")
+    assertThat(bed1!!.name).isEqualTo("1 - 1")
     assertThat(
       bed1.room.id == room1.id &&
         bed1.room.code == "Q999-1",
@@ -149,7 +149,7 @@ class SeedCas1RoomsFromSiteSurveyXlsxTest : SeedTestBase() {
     }
 
     val bed2 = bedRepository.findByCodeAndRoomId("SWABI02NEW", room2.id)
-    assertThat(bed2!!.name).isEqualTo("1")
+    assertThat(bed2!!.name).isEqualTo("2 - 1")
     assertThat(
       bed2.room.id == room2.id &&
         bed2.room.code == "Q999-2",
@@ -159,7 +159,7 @@ class SeedCas1RoomsFromSiteSurveyXlsxTest : SeedTestBase() {
     assertThat(room3!!.characteristics).isEmpty()
 
     val bed3 = bedRepository.findByCodeAndRoomId("SWABI03NEW", room3.id)
-    assertThat(bed3!!.name).isEqualTo("1")
+    assertThat(bed3!!.name).isEqualTo("3 - 1")
     assertThat(
       bed3.room.id == room3.id &&
         bed3.room.code == "Q999-1",
@@ -256,7 +256,7 @@ class SeedCas1RoomsFromSiteSurveyXlsxTest : SeedTestBase() {
     assertThat(room1!!.characteristics).isEmpty()
 
     val bed1 = bedRepository.findByCodeAndRoomId("SWABI01NEW", room1.id)
-    assertThat(bed1!!.name).isEqualTo("1")
+    assertThat(bed1!!.name).isEqualTo("1 - 1")
     assertThat(
       bed1.room.id == room1.id &&
         bed1.room.code == "Q999-1",
@@ -269,14 +269,14 @@ class SeedCas1RoomsFromSiteSurveyXlsxTest : SeedTestBase() {
     }
 
     val bed2 = bedRepository.findByCodeAndRoomId("SWABI02NEW", room2.id)
-    assertThat(bed2!!.name).isEqualTo("1")
+    assertThat(bed2!!.name).isEqualTo("2 - 1")
     assertThat(
       bed2.room.id == room2.id &&
         bed2.room.code == "Q999-2",
     )
 
     val bed3 = bedRepository.findByCodeAndRoomId("SWABI03NEW", room2.id)
-    assertThat(bed3!!.name).isEqualTo("2")
+    assertThat(bed3!!.name).isEqualTo("2 - 2")
     assertThat(
       bed3.room.id == room2.id &&
         bed3.room.code == "Q999-2",
@@ -322,7 +322,7 @@ class SeedCas1RoomsFromSiteSurveyXlsxTest : SeedTestBase() {
     assertThat(newRoom!!.characteristics).isEmpty()
 
     val newBed = bedRepository.findByCodeAndRoomId("SWABI01NEW", newRoom.id)
-    assertThat(newBed!!.name).isEqualTo("1")
+    assertThat(newBed!!.name).isEqualTo("1 - 1")
     assertThat(
       newBed.room.id == newRoom.id &&
         newBed.room.code == "Q999-1",
@@ -376,7 +376,7 @@ class SeedCas1RoomsFromSiteSurveyXlsxTest : SeedTestBase() {
     }
 
     val newBed = bedRepository.findByCodeAndRoomId("SWABI01", updatedRoom.id)
-    assertThat(newBed!!.name).isEqualTo("1")
+    assertThat(newBed!!.name).isEqualTo("1 - 1")
     assertThat(
       newBed.room.id == updatedRoom.id &&
         newBed.room.code == "Q999-1",
@@ -401,7 +401,7 @@ class SeedCas1RoomsFromSiteSurveyXlsxTest : SeedTestBase() {
     bedEntityFactory.produceAndPersist {
       withRoom(room)
       withCode("SWABI01")
-      withName("1")
+      withName("1 - 1")
     }
 
     val header = listOf("Unique Reference Number for Bed", "SWABI01")
@@ -435,7 +435,7 @@ class SeedCas1RoomsFromSiteSurveyXlsxTest : SeedTestBase() {
     }
 
     val existingBed = bedRepository.findByCode("SWABI01")
-    assertThat(existingBed!!.name).isEqualTo("1")
+    assertThat(existingBed!!.name).isEqualTo("1 - 1")
     assertThat(
       existingBed.room.id == updatedRoom.id &&
         existingBed.room.code == "Q999-1",
