@@ -443,6 +443,59 @@ class SeedCas1RoomsFromSiteSurveyXlsxTest : SeedTestBase() {
   }
 
   @Test
+  fun `Creating a new room with two beds with the same name fails`() {
+    val localAuthorityArea = localAuthorityEntityFactory.produceAndPersist()
+    val probationRegion = probationRegionEntityFactory.produceAndPersist()
+    val qCode = "Q999"
+    val premises = approvedPremisesEntityFactory.produceAndPersist {
+      withLocalAuthorityArea(localAuthorityArea)
+      withProbationRegion(probationRegion)
+      withQCode(qCode)
+    }
+    val roomCode = "$qCode-2"
+    roomEntityFactory.produceAndPersist {
+      withPremises(premises)
+      withCode(roomCode)
+    }
+
+    val header = listOf("Unique Reference Number for Bed", "SWABI02a", "SWABI02b")
+    val rows = mutableListOf(
+      "Room Number / Name",
+      "2",
+      "2",
+      "Bed Number (in this room i.e if this is a single room insert 1.  If this is a shared room separate entries will need to be made for bed 1 and bed 2)",
+      "1",
+      "1",
+    )
+    rows.addCharacteristics(2)
+
+    val roomsSheet = dataFrameOf(header, rows)
+
+    createXlsxForSeeding(
+      fileName = "example.xlsx",
+      sheets = mapOf(
+        "Sheet2" to createNameValueDataFrame("AP Identifier (Q No.)", qCode),
+        "Sheet3" to roomsSheet,
+      ),
+    )
+
+    seedXlsxService.seedExcelData(
+      SeedFromExcelFileType.CAS1_IMPORT_SITE_SURVEY_ROOMS,
+      "example.xlsx",
+    )
+
+    assertThat(logEntries)
+      .anyMatch {
+        it.level == "error" &&
+          it.message == "Unable to complete Excel seed job" &&
+          it.throwable != null &&
+          it.throwable.message == "Unable to process XLSX file" &&
+          it.throwable.cause is IllegalStateException &&
+          it.throwable.cause!!.message == "Bed name '2 - 1' is not unique."
+      }
+  }
+
+  @Test
   fun `Creating a new room and a new bed using an existing bed code fails`() {
     val localAuthorityArea = localAuthorityEntityFactory.produceAndPersist()
     val probationRegion = probationRegionEntityFactory.produceAndPersist()
