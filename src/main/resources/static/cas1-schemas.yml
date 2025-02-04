@@ -714,8 +714,6 @@ components:
     Cas1PremiseCapacity:
       type: object
       properties:
-        premise:
-          $ref: '#/components/schemas/Cas1Premises'
         startDate:
           type: string
           format: date
@@ -728,7 +726,6 @@ components:
           items:
             $ref: '#/components/schemas/Cas1PremiseCapacityForDay'
       required:
-        - premise
         - startDate
         - endDate
         - capacity

@@ -1,30 +1,21 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.unit.transformer.cas1
 
-import io.mockk.every
 import io.mockk.impl.annotations.InjectMockKs
-import io.mockk.impl.annotations.MockK
 import io.mockk.junit5.MockKExtension
-import io.mockk.mockk
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.extension.ExtendWith
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1Premises
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1SpaceBookingCharacteristic
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApprovedPremisesEntityFactory
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1PremisesService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.planning.SpacePlanningService.PremiseCapacityForDay
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.planning.SpacePlanningService.PremiseCapacitySummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.planning.SpacePlanningService.PremiseCharacteristicAvailability
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.cas1.Cas1PremiseCapacitySummaryTransformer
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.cas1.Cas1PremisesTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.DateRange
 import java.time.LocalDate
 
 @ExtendWith(MockKExtension::class)
 class Cas1PremiseCapacitySummaryTransformerTest {
-
-  @MockK
-  lateinit var cas1PremisesTransformer: Cas1PremisesTransformer
 
   @InjectMockKs
   lateinit var transformer: Cas1PremiseCapacitySummaryTransformer
@@ -33,7 +24,6 @@ class Cas1PremiseCapacitySummaryTransformerTest {
   fun toCas1PremiseCapacitySummary() {
     val premise = ApprovedPremisesEntityFactory().withDefaults().produce()
 
-    val inputPremiseSummaryInfo = mockk<Cas1PremisesService.Cas1PremisesInfo>()
     val inputCapacitySummary = PremiseCapacitySummary(
       premise = premise,
       range = DateRange(
@@ -63,17 +53,10 @@ class Cas1PremiseCapacitySummaryTransformerTest {
       ),
     )
 
-    val transformedPremiseSummaryInfo = mockk<Cas1Premises>()
-    every {
-      cas1PremisesTransformer.toPremises(any())
-    } returns transformedPremiseSummaryInfo
-
     val result = transformer.toCas1PremiseCapacitySummary(
-      premiseSummaryInfo = inputPremiseSummaryInfo,
       premiseCapacity = inputCapacitySummary,
     )
 
-    assertThat(result.premise).isEqualTo(transformedPremiseSummaryInfo)
     assertThat(result.startDate).isEqualTo(LocalDate.of(2020, 1, 2))
     assertThat(result.endDate).isEqualTo(LocalDate.of(2021, 3, 4))
 
