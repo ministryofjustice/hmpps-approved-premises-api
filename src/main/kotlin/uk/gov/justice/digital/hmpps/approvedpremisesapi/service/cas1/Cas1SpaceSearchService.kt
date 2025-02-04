@@ -37,14 +37,17 @@ class Cas1SpaceSearchService(
     )
   }
 
-  private fun getRequiredCharacteristics(requirements: Cas1SpaceSearchRequirements) = RequiredCharacteristics(
-    apType = if (requirements.apType != null) {
-      requirements.apType.asApprovedPremisesType()
-    } else {
-      requirements.apTypes?.map { it.asApprovedPremisesType() }?.firstOrNull()
-    },
-    groupedCharacteristics = getSpaceCharacteristics(requirements),
-  )
+  private fun getRequiredCharacteristics(requirements: Cas1SpaceSearchRequirements): RequiredCharacteristics {
+    val apType = requirements.apType
+    return RequiredCharacteristics(
+      apType = if (apType != null) {
+        apType.asApprovedPremisesType()
+      } else {
+        requirements.apTypes?.map { it.asApprovedPremisesType() }?.firstOrNull()
+      },
+      groupedCharacteristics = getSpaceCharacteristics(requirements),
+    )
+  }
 
   private fun getSpaceCharacteristics(requirements: Cas1SpaceSearchRequirements): GroupedCharacteristics {
     val propertyNames = requirements.spaceCharacteristics?.map { it.value } ?: listOf()
