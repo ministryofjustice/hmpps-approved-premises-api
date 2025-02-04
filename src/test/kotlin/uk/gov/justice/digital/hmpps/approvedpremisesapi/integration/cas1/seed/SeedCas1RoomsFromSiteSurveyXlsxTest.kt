@@ -36,7 +36,7 @@ class SeedCas1RoomsFromSiteSurveyXlsxTest : SeedTestBase() {
     "Can this room be designated as suitable for people requiring step free access? (Must answer yes to Q23 and 25 on previous sheet and Q19 on this sheet)",
   )
 
-  fun MutableList<String>.addCharacteristics(numberOfRooms: Int = 1, activeCharacteristics: Map<String, List<String>> = emptyMap()) {
+  fun MutableList<Any>.addCharacteristics(numberOfRooms: Int = 1, activeCharacteristics: Map<String, List<String>> = emptyMap()) {
     questions.forEach { question ->
       this.add(question)
       this.addAll(activeCharacteristics.getOrDefault(question, MutableList(numberOfRooms) { "No" }))
@@ -55,11 +55,11 @@ class SeedCas1RoomsFromSiteSurveyXlsxTest : SeedTestBase() {
     }
 
     val header = listOf("Unique Reference Number for Bed", "SWABI01NEW")
-    val rows = mutableListOf(
+    val rows: MutableList<Any> = mutableListOf(
       "Room Number / Name",
-      "1",
+      1.0,
       "Bed Number (in this room i.e if this is a single room insert 1.  If this is a shared room separate entries will need to be made for bed 1 and bed 2)",
-      "1",
+      1.0,
     )
     rows.addCharacteristics(1, mapOf("Is this room located on the ground floor?" to listOf("Yes")))
 
@@ -105,15 +105,15 @@ class SeedCas1RoomsFromSiteSurveyXlsxTest : SeedTestBase() {
     }
 
     val header = listOf("Unique Reference Number for Bed", "SWABI01NEW", "SWABI02NEW", "SWABI03NEW")
-    val rows = mutableListOf(
+    val rows: MutableList<Any> = mutableListOf(
       "Room Number / Name",
-      "1",
-      "2",
-      "3",
+      1.0,
+      2.0,
+      3.0,
       "Bed Number (in this room i.e if this is a single room insert 1.  If this is a shared room separate entries will need to be made for bed 1 and bed 2)",
-      "1",
-      "1",
-      "1",
+      1.0,
+      1.0,
+      1.0,
     )
     rows.addCharacteristics(3, mapOf("Is this room located on the ground floor?" to listOf("No", "Yes", "No")))
 
@@ -178,13 +178,13 @@ class SeedCas1RoomsFromSiteSurveyXlsxTest : SeedTestBase() {
     }
 
     val header = listOf("Unique Reference Number for Bed", "SWABI01NEW", "SWABI02NEW")
-    val rows = mutableListOf(
+    val rows: MutableList<Any> = mutableListOf(
       "Room Number / Name",
-      "1",
-      "1",
+      1.0,
+      1.0,
       "Bed Number (in this room i.e if this is a single room insert 1.  If this is a shared room separate entries will need to be made for bed 1 and bed 2)",
-      "1",
-      "2",
+      1.0,
+      2.0,
     )
     rows.addCharacteristics(2, mapOf("Is this room located on the ground floor?" to listOf("No", "Yes")))
 
@@ -225,7 +225,7 @@ class SeedCas1RoomsFromSiteSurveyXlsxTest : SeedTestBase() {
       withQCode(qCode)
     }
     val header = listOf("Unique Reference Number for Bed", "SWABI01NEW", "SWABI02NEW", "SWABI03NEW")
-    val rows = mutableListOf(
+    val rows: MutableList<Any> = mutableListOf(
       "Room Number / Name",
       "1",
       "2",
@@ -295,7 +295,7 @@ class SeedCas1RoomsFromSiteSurveyXlsxTest : SeedTestBase() {
     }
 
     val header = listOf("Unique Reference Number for Bed", "SWABI01NEW")
-    val rows = mutableListOf(
+    val rows: MutableList<Any> = mutableListOf(
       "Room Number / Name",
       "1",
       "Bed Number (in this room i.e if this is a single room insert 1.  If this is a shared room separate entries will need to be made for bed 1 and bed 2)",
@@ -346,7 +346,7 @@ class SeedCas1RoomsFromSiteSurveyXlsxTest : SeedTestBase() {
     }
 
     val header = listOf("Unique Reference Number for Bed", "SWABI01")
-    val rows = mutableListOf(
+    val rows: MutableList<Any> = mutableListOf(
       "Room Number / Name",
       "1",
       "Bed Number (in this room i.e if this is a single room insert 1.  If this is a shared room separate entries will need to be made for bed 1 and bed 2)",
@@ -405,7 +405,7 @@ class SeedCas1RoomsFromSiteSurveyXlsxTest : SeedTestBase() {
     }
 
     val header = listOf("Unique Reference Number for Bed", "SWABI01")
-    val rows = mutableListOf(
+    val rows: MutableList<Any> = mutableListOf(
       "Room Number / Name",
       "1",
       "Bed Number (in this room i.e if this is a single room insert 1.  If this is a shared room separate entries will need to be made for bed 1 and bed 2)",
@@ -459,7 +459,7 @@ class SeedCas1RoomsFromSiteSurveyXlsxTest : SeedTestBase() {
     }
 
     val header = listOf("Unique Reference Number for Bed", "SWABI02a", "SWABI02b")
-    val rows = mutableListOf(
+    val rows: MutableList<Any> = mutableListOf(
       "Room Number / Name",
       "2",
       "2",
@@ -517,7 +517,7 @@ class SeedCas1RoomsFromSiteSurveyXlsxTest : SeedTestBase() {
     }
 
     val header = listOf("Unique Reference Number for Bed", "SWABI02")
-    val rows = mutableListOf(
+    val rows: MutableList<Any> = mutableListOf(
       "Room Number / Name",
       "2",
       "Bed Number (in this room i.e if this is a single room insert 1.  If this is a shared room separate entries will need to be made for bed 1 and bed 2)",
@@ -563,7 +563,7 @@ class SeedCas1RoomsFromSiteSurveyXlsxTest : SeedTestBase() {
     }
 
     val header = listOf("Unique Reference Number for Bed", "SWABI01NEW")
-    val rows = mutableListOf(
+    val rows: MutableList<Any> = mutableListOf(
       "Room Number / Name",
       "1",
       "Bed Number (in this room i.e if this is a single room insert 1.  If this is a shared room separate entries will need to be made for bed 1 and bed 2)",
@@ -610,7 +610,7 @@ class SeedCas1RoomsFromSiteSurveyXlsxTest : SeedTestBase() {
     }
 
     val header = listOf("Unique Reference Number for Bed", "SWABI01NEW")
-    val rows = mutableListOf(
+    val rows: MutableList<Any> = mutableListOf(
       "Room Number / Name",
       "1",
       "Bed Number (in this room i.e if this is a single room insert 1.  If this is a shared room separate entries will need to be made for bed 1 and bed 2)",

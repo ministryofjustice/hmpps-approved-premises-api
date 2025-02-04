@@ -109,7 +109,11 @@ fun DataFrame<*>.resolveAnswer(question: String, answerCol: Int = 1): String {
 
   if (questionIndex == -1) error("Question '$question' not found on sheet Sheet3.")
 
-  val answer = answers[questionIndex].toString().trim()
+  fun removeDecimalPlaces() = answers[questionIndex].let {
+    if (it is Double) it.toInt() else it
+  }.toString().trim()
+
+  val answer = removeDecimalPlaces()
 
   if (answer.isBlank()) {
     error("Answer for question '$question' cannot be blank")
