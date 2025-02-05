@@ -837,7 +837,8 @@ class Cas1SpaceBookingTest {
   inner class GetASpaceBooking : InitialiseDatabasePerClassTestBase() {
     lateinit var premises: ApprovedPremisesEntity
     lateinit var spaceBooking: Cas1SpaceBookingEntity
-    lateinit var otherSpaceBookingAtPremises: Cas1SpaceBookingEntity
+    lateinit var otherSpaceBookingAtPremises2021: Cas1SpaceBookingEntity
+    lateinit var otherSpaceBookingAtPremises2020: Cas1SpaceBookingEntity
 
     @BeforeAll
     fun setupTestData() {
@@ -875,14 +876,24 @@ class Cas1SpaceBookingTest {
         withActualDepartureTime(LocalTime.parse("10:24:35"))
       }
 
-      otherSpaceBookingAtPremises = cas1SpaceBookingEntityFactory.produceAndPersist {
+      otherSpaceBookingAtPremises2021 = cas1SpaceBookingEntityFactory.produceAndPersist {
         withCrn(offender.otherIds.crn)
         withPremises(premises)
         withPlacementRequest(placementRequest)
         withApplication(placementRequest.application)
         withCreatedBy(user)
-        withCanonicalArrivalDate(LocalDate.parse("2030-05-29"))
-        withCanonicalDepartureDate(LocalDate.parse("2030-06-29"))
+        withCanonicalArrivalDate(LocalDate.parse("2021-05-29"))
+        withCanonicalDepartureDate(LocalDate.parse("2021-06-29"))
+      }
+
+      otherSpaceBookingAtPremises2020 = cas1SpaceBookingEntityFactory.produceAndPersist {
+        withCrn(offender.otherIds.crn)
+        withPremises(premises)
+        withPlacementRequest(placementRequest)
+        withApplication(placementRequest.application)
+        withCreatedBy(user)
+        withCanonicalArrivalDate(LocalDate.parse("2020-06-29"))
+        withCanonicalDepartureDate(LocalDate.parse("2020-07-29"))
       }
 
       // otherSpaceBookingAtPremisesDifferentCrn
@@ -957,8 +968,12 @@ class Cas1SpaceBookingTest {
         .returnResult(Cas1SpaceBooking::class.java).responseBody.blockFirst()!!
 
       assertThat(response.id).isEqualTo(spaceBooking.id)
-      assertThat(response.otherBookingsInPremisesForCrn).hasSize(1)
-      assertThat(response.otherBookingsInPremisesForCrn[0].id).isEqualTo(otherSpaceBookingAtPremises.id)
+      assertThat(response.otherBookingsInPremisesForCrn).hasSize(2)
+      assertThat(response.otherBookingsInPremisesForCrn.map { it.id })
+        .containsExactly(
+          otherSpaceBookingAtPremises2020.id,
+          otherSpaceBookingAtPremises2021.id,
+        )
       assertThat(response.requestForPlacementId).isEqualTo(spaceBooking.placementRequest!!.id)
       assertThat(response.status).isEqualTo(Cas1SpaceBookingSummaryStatus.arrivingToday)
       assertThat(response.actualArrivalTime).isEqualTo("11:24")

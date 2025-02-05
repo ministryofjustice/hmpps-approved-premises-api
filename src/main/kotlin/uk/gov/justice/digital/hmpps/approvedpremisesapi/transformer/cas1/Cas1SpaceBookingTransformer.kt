@@ -1,5 +1,6 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.cas1
 
+import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Component
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1KeyWorkerAllocation
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1SpaceBooking
@@ -8,12 +9,14 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1SpaceBooki
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1SpaceBookingDeparture
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1SpaceBookingNonArrival
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1SpaceBookingSummary
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1SpaceCharacteristic
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NamedId
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.StaffMember
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas1SpaceBookingAtPremises
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas1SpaceBookingEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas1SpaceBookingSearchResult
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.CharacteristicEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PersonInfoResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PersonSummaryInfoResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.SpaceBookingDates
@@ -88,6 +91,7 @@ class Cas1SpaceBookingTransformer(
       deliusEventNumber = jpa.deliusEventNumber,
       departure = jpa.extractDeparture(),
       status = status,
+      characteristics = jpa.criteria.toCas1SpaceCharacteristics(),
     )
   }
 
@@ -191,4 +195,17 @@ class Cas1SpaceBookingTransformer(
       ),
     ),
   )
+
+  companion object {
+    private val log = LoggerFactory.getLogger(this::class.java)
+
+    fun List<CharacteristicEntity>.toCas1SpaceCharacteristics() =
+      this.mapNotNull { it.toCas1SpaceCharacteristicOrNull() }
+
+    fun CharacteristicEntity.toCas1SpaceCharacteristicOrNull() =
+      Cas1SpaceCharacteristic.entries.find { it.name == propertyName } ?: run {
+        log.warn("Couldn't find a Cas1SpaceCharacteristic enum entry for propertyName $propertyName")
+        null
+      }
+  }
 }

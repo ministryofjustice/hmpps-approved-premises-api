@@ -408,6 +408,10 @@ components:
           type: string
         status:
           $ref: '#/components/schemas/Cas1SpaceBookingSummaryStatus'
+        characteristics:
+          type: array
+          items:
+            $ref: '_shared.yml#/components/schemas/Cas1SpaceCharacteristic'
       required:
         - id
         - applicationId
@@ -421,6 +425,7 @@ components:
         - canonicalDepartureDate
         - createdAt
         - otherBookingsInPremisesForCrn
+        - characteristics
     Cas1SpaceBookingDates:
       type: object
       properties:
