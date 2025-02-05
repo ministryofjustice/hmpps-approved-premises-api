@@ -522,7 +522,13 @@ class Cas1ApplicationV2ReportTest : InitialiseDatabasePerClassTestBase() {
       val (assessor3, _) = givenAUser(
         roles = listOf(UserRole.CAS1_ASSESSOR),
         qualifications = UserQualification.entries,
-        staffDetail = StaffDetailFactory.staffDetail(deliusUsername = "ASSESSOR3"),
+        staffDetail = StaffDetailFactory.staffDetail(
+          deliusUsername = "ASSESSOR3",
+          name = PersonName(forename = "Barry", middleName = "Boggles", surname = "Briggs"),
+        ),
+        probationRegion = probationRegionEntityFactory.produceAndPersist {
+          withApArea(givenAnApArea(name = "Ap Area 3"))
+        },
       )
 
       application = createAndSubmitApplication(
@@ -597,8 +603,9 @@ class Cas1ApplicationV2ReportTest : InitialiseDatabasePerClassTestBase() {
       assertThat(row.initial_assessor_reason_for_late_application_detail).isNull()
       assertThat(row.initial_assessor_premises_type).isNull()
       assertThat(row.last_allocated_to_initial_assessor_date).isEqualTo("2023-08-11T03:25:10Z")
-      assertThat(row.initial_assessor_cru).isNull()
-      assertThat(row.initial_assessor_username).isNull()
+      assertThat(row.initial_assessor_cru).isEqualTo("Ap Area 3")
+      assertThat(row.initial_assessor_username).isEqualTo("ASSESSOR3")
+      assertThat(row.initial_assessor_name).isEqualTo("Barry Boggles Briggs")
       assertThat(row.initial_assessment_further_information_requested_on).isNull()
       assertThat(row.initial_assessment_further_information_received_at).isNull()
       assertThat(row.initial_assessment_decision_date).isNull()
