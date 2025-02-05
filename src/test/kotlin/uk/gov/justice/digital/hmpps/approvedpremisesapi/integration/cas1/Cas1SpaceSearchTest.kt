@@ -24,9 +24,11 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Characteristi
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.CharacteristicRepository.Constants.CAS1_PROPERTY_NAME_PREMISES_PIPE
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.CharacteristicRepository.Constants.CAS1_PROPERTY_NAME_PREMISES_RECOVERY_FOCUSSED
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.CharacteristicRepository.Constants.CAS1_PROPERTY_NAME_PREMISES_SEMI_SPECIALIST_MENTAL_HEALTH
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRole
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.cas1.Cas1SpaceSearchResultsTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomInt
 import java.time.LocalDate
+import java.util.UUID
 
 class Cas1SpaceSearchTest : InitialiseDatabasePerClassTestBase() {
   @Autowired
@@ -49,6 +51,30 @@ class Cas1SpaceSearchTest : InitialiseDatabasePerClassTestBase() {
   }
 
   @Test
+  fun `Requires CAS1_SPACE_BOOKING_CREATE permission`() {
+    givenAUser(roles = listOf(UserRole.CAS1_FUTURE_MANAGER)) { _, jwt ->
+      val searchParameters = Cas1SpaceSearchParameters(
+        applicationId = UUID.randomUUID(),
+        startDate = LocalDate.now(),
+        durationInDays = 14,
+        targetPostcodeDistrict = "SE1",
+        requirements = Cas1SpaceSearchRequirements(
+          apTypes = null,
+          spaceCharacteristics = null,
+        ),
+      )
+
+      webTestClient.post()
+        .uri("/cas1/spaces/search")
+        .header("Authorization", "Bearer $jwt")
+        .bodyValue(searchParameters)
+        .exchange()
+        .expectStatus()
+        .isForbidden
+    }
+  }
+
+  @Test
   fun `Search for Spaces returns OK with correct body, returning only premises supporting space bookings`() {
     postCodeDistrictFactory.produceAndPersist {
       withOutcode("SE1")
@@ -56,7 +82,7 @@ class Cas1SpaceSearchTest : InitialiseDatabasePerClassTestBase() {
       withLongitude(51.48)
     }
 
-    givenAUser { user, jwt ->
+    givenAUser(roles = listOf(UserRole.CAS1_CRU_MEMBER_FIND_AND_BOOK_BETA)) { user, jwt ->
       val application = givenAnApplication(createdByUser = user, isWomensApplication = false)
 
       val premises = approvedPremisesEntityFactory.produceAndPersistMultipleIndexed(5) {
@@ -157,7 +183,7 @@ class Cas1SpaceSearchTest : InitialiseDatabasePerClassTestBase() {
       withLongitude(51.48)
     }
 
-    givenAUser { user, jwt ->
+    givenAUser(roles = listOf(UserRole.CAS1_CRU_MEMBER_FIND_AND_BOOK_BETA)) { user, jwt ->
       val application = givenAnApplication(createdByUser = user, isWomensApplication = gender == ApprovedPremisesGender.WOMAN)
 
       val expectedPremises = approvedPremisesEntityFactory.produceAndPersistMultipleIndexed(5) {
@@ -224,7 +250,7 @@ class Cas1SpaceSearchTest : InitialiseDatabasePerClassTestBase() {
       withLongitude(51.48)
     }
 
-    givenAUser { user, jwt ->
+    givenAUser(roles = listOf(UserRole.CAS1_CRU_MEMBER_FIND_AND_BOOK_BETA)) { user, jwt ->
       val application = givenAnApplication(createdByUser = user, isWomensApplication = false)
 
       val expectedPremises = approvedPremisesEntityFactory.produceAndPersistMultipleIndexed(5) {
@@ -297,7 +323,7 @@ class Cas1SpaceSearchTest : InitialiseDatabasePerClassTestBase() {
       withLongitude(51.48)
     }
 
-    givenAUser { user, jwt ->
+    givenAUser(roles = listOf(UserRole.CAS1_CRU_MEMBER_FIND_AND_BOOK_BETA)) { user, jwt ->
       val application = givenAnApplication(createdByUser = user, isWomensApplication = false)
 
       val onePremiseOfEachType = ApType.entries.map { apType ->
@@ -351,7 +377,7 @@ class Cas1SpaceSearchTest : InitialiseDatabasePerClassTestBase() {
       withLongitude(51.48)
     }
 
-    givenAUser { user, jwt ->
+    givenAUser(roles = listOf(UserRole.CAS1_CRU_MEMBER_FIND_AND_BOOK_BETA)) { user, jwt ->
       val application = givenAnApplication(createdByUser = user, isWomensApplication = false)
 
       val expectedPremises = approvedPremisesEntityFactory.produceAndPersistMultipleIndexed(5) {
@@ -424,7 +450,7 @@ class Cas1SpaceSearchTest : InitialiseDatabasePerClassTestBase() {
       withLongitude(51.48)
     }
 
-    givenAUser { user, jwt ->
+    givenAUser(roles = listOf(UserRole.CAS1_CRU_MEMBER_FIND_AND_BOOK_BETA)) { user, jwt ->
       val application = givenAnApplication(createdByUser = user, isWomensApplication = false)
 
       fun createAp(characteristics: List<CharacteristicEntity>) = approvedPremisesEntityFactory.produceAndPersist {
@@ -512,7 +538,7 @@ class Cas1SpaceSearchTest : InitialiseDatabasePerClassTestBase() {
       withLongitude(51.48)
     }
 
-    givenAUser { user, jwt ->
+    givenAUser(roles = listOf(UserRole.CAS1_CRU_MEMBER_FIND_AND_BOOK_BETA)) { user, jwt ->
       val application = givenAnApplication(createdByUser = user, isWomensApplication = false)
 
       val expectedPremises = approvedPremisesEntityFactory.produceAndPersistMultipleIndexed(5) {
@@ -600,7 +626,7 @@ class Cas1SpaceSearchTest : InitialiseDatabasePerClassTestBase() {
       withLongitude(51.48)
     }
 
-    givenAUser { user, jwt ->
+    givenAUser(roles = listOf(UserRole.CAS1_CRU_MEMBER_FIND_AND_BOOK_BETA)) { user, jwt ->
       val application = givenAnApplication(createdByUser = user, isWomensApplication = false)
 
       val expectedPremises = approvedPremisesEntityFactory.produceAndPersistMultipleIndexed(5) {
