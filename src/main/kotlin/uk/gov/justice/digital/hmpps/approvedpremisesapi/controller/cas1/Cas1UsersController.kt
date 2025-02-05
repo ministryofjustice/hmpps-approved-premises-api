@@ -9,7 +9,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1UpdateUser
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.User
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.ForbiddenProblem
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.NotFoundProblem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.UserAccessService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.UserService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.UserTransformer
@@ -24,9 +23,17 @@ class Cas1UsersController(
 ) : UsersCas1Delegate {
 
   override fun getUser(id: UUID): ResponseEntity<ApprovedPremisesUser> {
-    return when (val getUserResponse = extractEntityFromCasResult(userService.updateUserFromDelius(id, ServiceName.approvedPremises))) {
-      UserService.GetUserResponse.StaffRecordNotFound -> throw NotFoundProblem(id, "Staff")
-      is UserService.GetUserResponse.Success -> ResponseEntity(userTransformer.transformCas1JpaToApi(getUserResponse.user), HttpStatus.OK)
+    return when (
+      val getUserResponse = extractEntityFromCasResult(
+        userService.updateUserFromDelius(id, ServiceName.approvedPremises),
+      )
+    ) {
+      is UserService.GetUserResponse.Success -> ResponseEntity.ok(
+        userTransformer.transformCas1JpaToApi(getUserResponse.user),
+      )
+      UserService.GetUserResponse.StaffRecordNotFound -> userService.findByIdOrNull(id)
+        ?.let { ResponseEntity.ok(userTransformer.transformCas1JpaToApi(it)) }
+        ?: ResponseEntity.notFound().build()
     }
   }
 
