@@ -56,6 +56,7 @@ class Cas1SeedRoomsFromSiteSurveyXlsxJob(
     checkRoomCharacteristics(rooms)
 
     val beds = resolveBeds(qCode, siteSurveyBedsInfo)
+    checkBedNamesUnique(beds)
 
     rooms.forEach {
       val existingRoom = roomRepository.findByCode(it.roomCode)
@@ -78,7 +79,7 @@ class Cas1SeedRoomsFromSiteSurveyXlsxJob(
     }
   }
 
-  private fun buildRoomCode(qCode: String, roomNumber: String) = "$qCode - $roomNumber"
+  private fun buildRoomCode(qCode: String, roomNumber: String) = "$qCode-$roomNumber"
 
   private data class RoomInfo(
     val roomCode: String,
@@ -99,6 +100,12 @@ class Cas1SeedRoomsFromSiteSurveyXlsxJob(
   private fun checkRoomCharacteristics(rooms: List<RoomInfo>) {
     rooms.groupBy { room -> room.roomCode }.forEach { (roomCode, rooms) ->
       rooms.all { it.characteristics == rooms.first().characteristics } || error("Room $roomCode has different characteristics.")
+    }
+  }
+
+  private fun checkBedNamesUnique(beds: List<BedInfo>) {
+    beds.groupBy { bed -> bed.bedName }.forEach { (bedName, beds) ->
+      beds.size == 1 || error("Bed name '$bedName' is not unique.")
     }
   }
 
@@ -147,7 +154,7 @@ class Cas1SeedRoomsFromSiteSurveyXlsxJob(
   private fun resolveBeds(qCode: String, siteSurveyBeds: List<Cas1SiteSurveyBed>): List<BedInfo> {
     return siteSurveyBeds.map {
       BedInfo(
-        bedName = it.bedNumber,
+        bedName = "${it.roomNumber} - ${it.bedNumber}",
         bedCode = it.uniqueBedRef,
         roomCode = buildRoomCode(qCode, it.roomNumber),
       )

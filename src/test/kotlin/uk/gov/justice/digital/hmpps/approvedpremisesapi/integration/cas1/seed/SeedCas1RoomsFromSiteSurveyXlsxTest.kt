@@ -36,7 +36,7 @@ class SeedCas1RoomsFromSiteSurveyXlsxTest : SeedTestBase() {
     "Can this room be designated as suitable for people requiring step free access? (Must answer yes to Q23 and 25 on previous sheet and Q19 on this sheet)",
   )
 
-  fun MutableList<String>.addCharacteristics(numberOfRooms: Int = 1, activeCharacteristics: Map<String, List<String>> = emptyMap()) {
+  fun MutableList<Any>.addCharacteristics(numberOfRooms: Int = 1, activeCharacteristics: Map<String, List<String>> = emptyMap()) {
     questions.forEach { question ->
       this.add(question)
       this.addAll(activeCharacteristics.getOrDefault(question, MutableList(numberOfRooms) { "No" }))
@@ -55,11 +55,11 @@ class SeedCas1RoomsFromSiteSurveyXlsxTest : SeedTestBase() {
     }
 
     val header = listOf("Unique Reference Number for Bed", "SWABI01NEW")
-    val rows = mutableListOf(
+    val rows: MutableList<Any> = mutableListOf(
       "Room Number / Name",
-      "1",
+      1.0,
       "Bed Number (in this room i.e if this is a single room insert 1.  If this is a shared room separate entries will need to be made for bed 1 and bed 2)",
-      "1",
+      1.0,
     )
     rows.addCharacteristics(1, mapOf("Is this room located on the ground floor?" to listOf("Yes")))
 
@@ -78,7 +78,7 @@ class SeedCas1RoomsFromSiteSurveyXlsxTest : SeedTestBase() {
       "example.xlsx",
     )
 
-    val newRoom = roomRepository.findByCode("Q999 - 1")
+    val newRoom = roomRepository.findByCode("Q999-1")
     assertThat(newRoom).isNotNull
     assertThat(newRoom!!.characteristics).anyMatch {
       it.name == "Is this room located on the ground floor?" &&
@@ -86,10 +86,10 @@ class SeedCas1RoomsFromSiteSurveyXlsxTest : SeedTestBase() {
     }
 
     val newBed = bedRepository.findByCodeAndRoomId("SWABI01NEW", newRoom.id)
-    assertThat(newBed!!.name).isEqualTo("1")
+    assertThat(newBed!!.name).isEqualTo("1 - 1")
     assertThat(
       newBed.room.id == newRoom.id &&
-        newBed.room.code == "Q999 - 1",
+        newBed.room.code == "Q999-1",
     )
   }
 
@@ -105,15 +105,15 @@ class SeedCas1RoomsFromSiteSurveyXlsxTest : SeedTestBase() {
     }
 
     val header = listOf("Unique Reference Number for Bed", "SWABI01NEW", "SWABI02NEW", "SWABI03NEW")
-    val rows = mutableListOf(
+    val rows: MutableList<Any> = mutableListOf(
       "Room Number / Name",
-      "1",
-      "2",
-      "3",
+      1.0,
+      2.0,
+      3.0,
       "Bed Number (in this room i.e if this is a single room insert 1.  If this is a shared room separate entries will need to be made for bed 1 and bed 2)",
-      "1",
-      "1",
-      "1",
+      1.0,
+      1.0,
+      1.0,
     )
     rows.addCharacteristics(3, mapOf("Is this room located on the ground floor?" to listOf("No", "Yes", "No")))
 
@@ -132,37 +132,37 @@ class SeedCas1RoomsFromSiteSurveyXlsxTest : SeedTestBase() {
       "example.xlsx",
     )
 
-    val room1 = roomRepository.findByCode("Q999 - 1")
+    val room1 = roomRepository.findByCode("Q999-1")
     assertThat(room1!!.characteristics).isEmpty()
 
     val bed1 = bedRepository.findByCodeAndRoomId("SWABI01NEW", room1.id)
-    assertThat(bed1!!.name).isEqualTo("1")
+    assertThat(bed1!!.name).isEqualTo("1 - 1")
     assertThat(
       bed1.room.id == room1.id &&
-        bed1.room.code == "Q999 - 1",
+        bed1.room.code == "Q999-1",
     )
 
-    val room2 = roomRepository.findByCode("Q999 - 2")
+    val room2 = roomRepository.findByCode("Q999-2")
     assertThat(room2!!.characteristics).anyMatch {
       it.name == "Is this room located on the ground floor?" &&
         it.propertyName == "isGroundFloor"
     }
 
     val bed2 = bedRepository.findByCodeAndRoomId("SWABI02NEW", room2.id)
-    assertThat(bed2!!.name).isEqualTo("1")
+    assertThat(bed2!!.name).isEqualTo("2 - 1")
     assertThat(
       bed2.room.id == room2.id &&
-        bed2.room.code == "Q999 - 2",
+        bed2.room.code == "Q999-2",
     )
 
-    val room3 = roomRepository.findByCode("Q999 - 3")
+    val room3 = roomRepository.findByCode("Q999-3")
     assertThat(room3!!.characteristics).isEmpty()
 
     val bed3 = bedRepository.findByCodeAndRoomId("SWABI03NEW", room3.id)
-    assertThat(bed3!!.name).isEqualTo("1")
+    assertThat(bed3!!.name).isEqualTo("3 - 1")
     assertThat(
       bed3.room.id == room3.id &&
-        bed3.room.code == "Q999 - 1",
+        bed3.room.code == "Q999-1",
     )
   }
 
@@ -178,13 +178,13 @@ class SeedCas1RoomsFromSiteSurveyXlsxTest : SeedTestBase() {
     }
 
     val header = listOf("Unique Reference Number for Bed", "SWABI01NEW", "SWABI02NEW")
-    val rows = mutableListOf(
+    val rows: MutableList<Any> = mutableListOf(
       "Room Number / Name",
-      "1",
-      "1",
+      1.0,
+      1.0,
       "Bed Number (in this room i.e if this is a single room insert 1.  If this is a shared room separate entries will need to be made for bed 1 and bed 2)",
-      "1",
-      "2",
+      1.0,
+      2.0,
     )
     rows.addCharacteristics(2, mapOf("Is this room located on the ground floor?" to listOf("No", "Yes")))
 
@@ -210,7 +210,7 @@ class SeedCas1RoomsFromSiteSurveyXlsxTest : SeedTestBase() {
           it.throwable != null &&
           it.throwable.message == "Unable to process XLSX file" &&
           it.throwable.cause is IllegalStateException &&
-          it.throwable.cause!!.message == "Room Q999 - 1 has different characteristics."
+          it.throwable.cause!!.message == "Room Q999-1 has different characteristics."
       }
   }
 
@@ -225,7 +225,7 @@ class SeedCas1RoomsFromSiteSurveyXlsxTest : SeedTestBase() {
       withQCode(qCode)
     }
     val header = listOf("Unique Reference Number for Bed", "SWABI01NEW", "SWABI02NEW", "SWABI03NEW")
-    val rows = mutableListOf(
+    val rows: MutableList<Any> = mutableListOf(
       "Room Number / Name",
       "1",
       "2",
@@ -252,34 +252,34 @@ class SeedCas1RoomsFromSiteSurveyXlsxTest : SeedTestBase() {
       "example.xlsx",
     )
 
-    val room1 = roomRepository.findByCode("Q999 - 1")
+    val room1 = roomRepository.findByCode("Q999-1")
     assertThat(room1!!.characteristics).isEmpty()
 
     val bed1 = bedRepository.findByCodeAndRoomId("SWABI01NEW", room1.id)
-    assertThat(bed1!!.name).isEqualTo("1")
+    assertThat(bed1!!.name).isEqualTo("1 - 1")
     assertThat(
       bed1.room.id == room1.id &&
-        bed1.room.code == "Q999 - 1",
+        bed1.room.code == "Q999-1",
     )
 
-    val room2 = roomRepository.findByCode("Q999 - 2")
+    val room2 = roomRepository.findByCode("Q999-2")
     assertThat(room2!!.characteristics).anyMatch {
       it.name == "Is this room located on the ground floor?" &&
         it.propertyName == "isGroundFloor"
     }
 
     val bed2 = bedRepository.findByCodeAndRoomId("SWABI02NEW", room2.id)
-    assertThat(bed2!!.name).isEqualTo("1")
+    assertThat(bed2!!.name).isEqualTo("2 - 1")
     assertThat(
       bed2.room.id == room2.id &&
-        bed2.room.code == "Q999 - 2",
+        bed2.room.code == "Q999-2",
     )
 
     val bed3 = bedRepository.findByCodeAndRoomId("SWABI03NEW", room2.id)
-    assertThat(bed3!!.name).isEqualTo("2")
+    assertThat(bed3!!.name).isEqualTo("2 - 2")
     assertThat(
       bed3.room.id == room2.id &&
-        bed3.room.code == "Q999 - 2",
+        bed3.room.code == "Q999-2",
     )
   }
 
@@ -295,7 +295,7 @@ class SeedCas1RoomsFromSiteSurveyXlsxTest : SeedTestBase() {
     }
 
     val header = listOf("Unique Reference Number for Bed", "SWABI01NEW")
-    val rows = mutableListOf(
+    val rows: MutableList<Any> = mutableListOf(
       "Room Number / Name",
       "1",
       "Bed Number (in this room i.e if this is a single room insert 1.  If this is a shared room separate entries will need to be made for bed 1 and bed 2)",
@@ -318,14 +318,14 @@ class SeedCas1RoomsFromSiteSurveyXlsxTest : SeedTestBase() {
       "example.xlsx",
     )
 
-    val newRoom = roomRepository.findByCode("Q999 - 1")
+    val newRoom = roomRepository.findByCode("Q999-1")
     assertThat(newRoom!!.characteristics).isEmpty()
 
     val newBed = bedRepository.findByCodeAndRoomId("SWABI01NEW", newRoom.id)
-    assertThat(newBed!!.name).isEqualTo("1")
+    assertThat(newBed!!.name).isEqualTo("1 - 1")
     assertThat(
       newBed.room.id == newRoom.id &&
-        newBed.room.code == "Q999 - 1",
+        newBed.room.code == "Q999-1",
     )
   }
 
@@ -339,14 +339,14 @@ class SeedCas1RoomsFromSiteSurveyXlsxTest : SeedTestBase() {
       withProbationRegion(probationRegion)
       withQCode(qCode)
     }
-    val roomCode = "$qCode - 1"
+    val roomCode = "$qCode-1"
     roomEntityFactory.produceAndPersist {
       withPremises(premises)
       withCode(roomCode)
     }
 
     val header = listOf("Unique Reference Number for Bed", "SWABI01")
-    val rows = mutableListOf(
+    val rows: MutableList<Any> = mutableListOf(
       "Room Number / Name",
       "1",
       "Bed Number (in this room i.e if this is a single room insert 1.  If this is a shared room separate entries will need to be made for bed 1 and bed 2)",
@@ -376,10 +376,10 @@ class SeedCas1RoomsFromSiteSurveyXlsxTest : SeedTestBase() {
     }
 
     val newBed = bedRepository.findByCodeAndRoomId("SWABI01", updatedRoom.id)
-    assertThat(newBed!!.name).isEqualTo("1")
+    assertThat(newBed!!.name).isEqualTo("1 - 1")
     assertThat(
       newBed.room.id == updatedRoom.id &&
-        newBed.room.code == "Q999 - 1",
+        newBed.room.code == "Q999-1",
     )
   }
 
@@ -393,7 +393,7 @@ class SeedCas1RoomsFromSiteSurveyXlsxTest : SeedTestBase() {
       withProbationRegion(probationRegion)
       withQCode(qCode)
     }
-    val roomCode = "$qCode - 1"
+    val roomCode = "$qCode-1"
     val room = roomEntityFactory.produceAndPersist {
       withPremises(premises)
       withCode(roomCode)
@@ -401,11 +401,11 @@ class SeedCas1RoomsFromSiteSurveyXlsxTest : SeedTestBase() {
     bedEntityFactory.produceAndPersist {
       withRoom(room)
       withCode("SWABI01")
-      withName("1")
+      withName("1 - 1")
     }
 
     val header = listOf("Unique Reference Number for Bed", "SWABI01")
-    val rows = mutableListOf(
+    val rows: MutableList<Any> = mutableListOf(
       "Room Number / Name",
       "1",
       "Bed Number (in this room i.e if this is a single room insert 1.  If this is a shared room separate entries will need to be made for bed 1 and bed 2)",
@@ -435,11 +435,64 @@ class SeedCas1RoomsFromSiteSurveyXlsxTest : SeedTestBase() {
     }
 
     val existingBed = bedRepository.findByCode("SWABI01")
-    assertThat(existingBed!!.name).isEqualTo("1")
+    assertThat(existingBed!!.name).isEqualTo("1 - 1")
     assertThat(
       existingBed.room.id == updatedRoom.id &&
-        existingBed.room.code == "Q999 - 1",
+        existingBed.room.code == "Q999-1",
     )
+  }
+
+  @Test
+  fun `Creating a new room with two beds with the same name fails`() {
+    val localAuthorityArea = localAuthorityEntityFactory.produceAndPersist()
+    val probationRegion = probationRegionEntityFactory.produceAndPersist()
+    val qCode = "Q999"
+    val premises = approvedPremisesEntityFactory.produceAndPersist {
+      withLocalAuthorityArea(localAuthorityArea)
+      withProbationRegion(probationRegion)
+      withQCode(qCode)
+    }
+    val roomCode = "$qCode-2"
+    roomEntityFactory.produceAndPersist {
+      withPremises(premises)
+      withCode(roomCode)
+    }
+
+    val header = listOf("Unique Reference Number for Bed", "SWABI02a", "SWABI02b")
+    val rows: MutableList<Any> = mutableListOf(
+      "Room Number / Name",
+      "2",
+      "2",
+      "Bed Number (in this room i.e if this is a single room insert 1.  If this is a shared room separate entries will need to be made for bed 1 and bed 2)",
+      "1",
+      "1",
+    )
+    rows.addCharacteristics(2)
+
+    val roomsSheet = dataFrameOf(header, rows)
+
+    createXlsxForSeeding(
+      fileName = "example.xlsx",
+      sheets = mapOf(
+        "Sheet2" to createNameValueDataFrame("AP Identifier (Q No.)", qCode),
+        "Sheet3" to roomsSheet,
+      ),
+    )
+
+    seedXlsxService.seedExcelData(
+      SeedFromExcelFileType.CAS1_IMPORT_SITE_SURVEY_ROOMS,
+      "example.xlsx",
+    )
+
+    assertThat(logEntries)
+      .anyMatch {
+        it.level == "error" &&
+          it.message == "Unable to complete Excel seed job" &&
+          it.throwable != null &&
+          it.throwable.message == "Unable to process XLSX file" &&
+          it.throwable.cause is IllegalStateException &&
+          it.throwable.cause!!.message == "Bed name '2 - 1' is not unique."
+      }
   }
 
   @Test
@@ -452,7 +505,7 @@ class SeedCas1RoomsFromSiteSurveyXlsxTest : SeedTestBase() {
       withProbationRegion(probationRegion)
       withQCode(qCode)
     }
-    val roomCode = "$qCode - 1"
+    val roomCode = "$qCode-1"
     val room = roomEntityFactory.produceAndPersist {
       withPremises(premises)
       withCode(roomCode)
@@ -464,7 +517,7 @@ class SeedCas1RoomsFromSiteSurveyXlsxTest : SeedTestBase() {
     }
 
     val header = listOf("Unique Reference Number for Bed", "SWABI02")
-    val rows = mutableListOf(
+    val rows: MutableList<Any> = mutableListOf(
       "Room Number / Name",
       "2",
       "Bed Number (in this room i.e if this is a single room insert 1.  If this is a shared room separate entries will need to be made for bed 1 and bed 2)",
@@ -494,7 +547,7 @@ class SeedCas1RoomsFromSiteSurveyXlsxTest : SeedTestBase() {
           it.throwable != null &&
           it.throwable.message == "Unable to process XLSX file" &&
           it.throwable.cause is IllegalStateException &&
-          it.throwable.cause!!.message == "Bed SWABI02 already exists in room Q999 - 1 but is being added to room Q999 - 2."
+          it.throwable.cause!!.message == "Bed SWABI02 already exists in room Q999-1 but is being added to room Q999-2."
       }
   }
 
@@ -510,7 +563,7 @@ class SeedCas1RoomsFromSiteSurveyXlsxTest : SeedTestBase() {
     }
 
     val header = listOf("Unique Reference Number for Bed", "SWABI01NEW")
-    val rows = mutableListOf(
+    val rows: MutableList<Any> = mutableListOf(
       "Room Number / Name",
       "1",
       "Bed Number (in this room i.e if this is a single room insert 1.  If this is a shared room separate entries will need to be made for bed 1 and bed 2)",
@@ -557,7 +610,7 @@ class SeedCas1RoomsFromSiteSurveyXlsxTest : SeedTestBase() {
     }
 
     val header = listOf("Unique Reference Number for Bed", "SWABI01NEW")
-    val rows = mutableListOf(
+    val rows: MutableList<Any> = mutableListOf(
       "Room Number / Name",
       "1",
       "Bed Number (in this room i.e if this is a single room insert 1.  If this is a shared room separate entries will need to be made for bed 1 and bed 2)",
