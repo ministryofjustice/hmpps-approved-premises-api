@@ -95,11 +95,6 @@ paths:
           description: filter by status of an application
           schema:
             $ref: '_shared.yml#/components/schemas/PlacementRequestStatus'
-        - name: crn
-          in: query
-          description: filter by CRN
-          schema:
-            type: string
         - name: crnOrName
           in: query
           description: search by CRN or name
@@ -127,14 +122,6 @@ paths:
           description: filter by request type
           schema:
             $ref: '_shared.yml#/components/schemas/PlacementRequestRequestType'
-        - name: apAreaId
-          in: query
-          required: false
-          description: filter by approved premises area ID.  Use cruManagementAreaId instead.
-          deprecated: true
-          schema:
-            type: string
-            format: uuid
         - name: cruManagementAreaId
           in: query
           required: false
