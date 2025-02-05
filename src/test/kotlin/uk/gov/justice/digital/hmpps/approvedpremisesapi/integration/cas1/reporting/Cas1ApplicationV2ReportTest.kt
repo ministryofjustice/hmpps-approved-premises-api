@@ -75,15 +75,15 @@ class Cas1ApplicationV2ReportTest : InitialiseDatabasePerClassTestBase() {
   @Autowired
   lateinit var cas1SimpleApiClient: Cas1SimpleApiClient
 
-  lateinit var applicationSchema: ApprovedPremisesApplicationJsonSchemaEntity
-  lateinit var assessmentSchema: ApprovedPremisesAssessmentJsonSchemaEntity
+  private lateinit var applicationSchema: ApprovedPremisesApplicationJsonSchemaEntity
+  private lateinit var assessmentSchema: ApprovedPremisesAssessmentJsonSchemaEntity
 
-  val appSubmittedWithSuccessfulAppealsClarificationsAndWithdrawnManager = AppSubmittedWithSuccessfulAppealsClarificationsAndWithdrawnManager()
-  val appSubmittedWithAcceptedAssessmentManager = AppSubmittedWithAcceptedAssessmentManager()
-  val appSubmittedWithNoAssessmentManager = AppSubmittedNoAssessmentManager()
-  val appWithdrawnDuringReportingPeriod = AppWithdrawnDuringReportingPeriod()
-  val appSubmittedBeforeReportingPeriod = AppSubmittedBeforeReportingPeriod()
-  val appSubmittedAfterReportingPeriod = AppSubmittedAfterReportingPeriod()
+  private val appSubmittedWithSuccessfulAppealsClarificationsAndWithdrawn = AppSubmittedWithSuccessfulAppealsClarificationsAndWithdrawn()
+  private val appSubmittedWithAssessmentAccepted = AppSubmittedWithAssessmentAccepted()
+  private val appSubmittedWithAssessmentAllocated = AppSubmittedWithAssessmentAllocated()
+  private val appWithdrawnDuringReportingPeriod = AppWithdrawnDuringReportingPeriod()
+  private val appSubmittedBeforeReportingPeriod = AppSubmittedBeforeReportingPeriod()
+  private val appSubmittedAfterReportingPeriod = AppSubmittedAfterReportingPeriod()
 
   @BeforeAll
   fun setup() {
@@ -92,9 +92,9 @@ class Cas1ApplicationV2ReportTest : InitialiseDatabasePerClassTestBase() {
     applicationSchema = approvedPremisesApplicationJsonSchemaEntityFactory.produceAndPersist { withDefaults() }
     assessmentSchema = approvedPremisesAssessmentJsonSchemaEntityFactory.produceAndPersist { withDefaults() }
 
-    appSubmittedWithSuccessfulAppealsClarificationsAndWithdrawnManager.createApplication()
-    appSubmittedWithAcceptedAssessmentManager.createApplication()
-    appSubmittedWithNoAssessmentManager.createApplication()
+    appSubmittedWithSuccessfulAppealsClarificationsAndWithdrawn.createApplication()
+    appSubmittedWithAssessmentAccepted.createApplication()
+    appSubmittedWithAssessmentAllocated.createApplication()
     appWithdrawnDuringReportingPeriod.createApplication()
 
     appSubmittedBeforeReportingPeriod.createApplication()
@@ -147,9 +147,9 @@ class Cas1ApplicationV2ReportTest : InitialiseDatabasePerClassTestBase() {
           assertThat(actual.size).isEqualTo(4)
 
           appWithdrawnDuringReportingPeriod.assertRow(actual[0])
-          appSubmittedWithSuccessfulAppealsClarificationsAndWithdrawnManager.assertRow(actual[1])
-          appSubmittedWithAcceptedAssessmentManager.assertRow(actual[2])
-          appSubmittedWithNoAssessmentManager.assertRow(actual[3])
+          appSubmittedWithSuccessfulAppealsClarificationsAndWithdrawn.assertRow(actual[1])
+          appSubmittedWithAssessmentAccepted.assertRow(actual[2])
+          appSubmittedWithAssessmentAllocated.assertRow(actual[3])
         }
     }
   }
@@ -188,7 +188,7 @@ class Cas1ApplicationV2ReportTest : InitialiseDatabasePerClassTestBase() {
 
           assertThat(actual.size).isEqualTo(4)
 
-          appSubmittedWithSuccessfulAppealsClarificationsAndWithdrawnManager.assertRow(
+          appSubmittedWithSuccessfulAppealsClarificationsAndWithdrawn.assertRow(
             row = actual[1],
             shouldIncludePii = false,
           )
@@ -196,7 +196,7 @@ class Cas1ApplicationV2ReportTest : InitialiseDatabasePerClassTestBase() {
     }
   }
 
-  inner class AppSubmittedWithSuccessfulAppealsClarificationsAndWithdrawnManager {
+  inner class AppSubmittedWithSuccessfulAppealsClarificationsAndWithdrawn {
     lateinit var application: ApprovedPremisesApplicationEntity
 
     fun createApplication() {
@@ -394,7 +394,7 @@ class Cas1ApplicationV2ReportTest : InitialiseDatabasePerClassTestBase() {
     }
   }
 
-  inner class AppSubmittedWithAcceptedAssessmentManager {
+  inner class AppSubmittedWithAssessmentAccepted {
     lateinit var application: ApprovedPremisesApplicationEntity
 
     fun createApplication() {
@@ -515,7 +515,7 @@ class Cas1ApplicationV2ReportTest : InitialiseDatabasePerClassTestBase() {
     }
   }
 
-  inner class AppSubmittedNoAssessmentManager {
+  inner class AppSubmittedWithAssessmentAllocated {
     lateinit var application: ApprovedPremisesApplicationEntity
 
     fun createApplication() {
