@@ -1,4 +1,4 @@
-package uk.gov.justice.digital.hmpps.approvedpremisesapi.integration
+package uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.cas1.reporting
 
 import org.assertj.core.api.Assertions.assertThat
 import org.jetbrains.kotlinx.dataframe.DataFrame
@@ -6,7 +6,7 @@ import org.jetbrains.kotlinx.dataframe.api.ExcessiveColumns
 import org.jetbrains.kotlinx.dataframe.api.convertTo
 import org.jetbrains.kotlinx.dataframe.api.toList
 import org.jetbrains.kotlinx.dataframe.io.readExcel
-import org.junit.jupiter.api.BeforeAll
+import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.data.repository.findByIdOrNull
@@ -20,6 +20,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Gender
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewAppeal
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewPlacementApplication
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewReallocation
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewWithdrawal
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PlacementApplication
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PlacementApplicationDecision
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PlacementApplicationDecisionEnvelope
@@ -33,14 +34,16 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.SubmitApprovedPremisesApplication
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.SubmitPlacementApplication
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.UpdatePlacementApplication
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.WithdrawalReason
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.ApDeliusContextApiClient
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.ClientResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.CaseDetailFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.PersonRisksFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.StaffDetailFactory
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.TeamFactoryDeliusContext
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.from
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.IntegrationTestBase
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.cas1.Cas1SimpleApiClient
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAProbationRegion
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAUser
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAnApArea
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAnOffender
@@ -58,6 +61,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremi
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AssessmentDecision
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AssessmentEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AssessmentRepository
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRole
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.Mappa
@@ -69,7 +73,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.community.Offender
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.deliuscontext.CaseDetail
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.deliuscontext.MappaDetail
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.deliuscontext.ProbationArea
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.model.ApplicationReportRow
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.model.PlacementApplicationReportRow
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.OffenderService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.asCaseDetail
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomStringMultiCaseWithNumbers
@@ -79,7 +83,8 @@ import java.time.Period
 import java.time.ZonedDateTime
 import java.util.UUID
 
-class ApplicationReportsTest : InitialiseDatabasePerClassTestBase() {
+class Cas1PlacementApplicationReportsTest : IntegrationTestBase() {
+
   @Autowired
   lateinit var realApplicationRepository: ApplicationRepository
 
@@ -99,7 +104,6 @@ class ApplicationReportsTest : InitialiseDatabasePerClassTestBase() {
   lateinit var cas1SimpleApiClient: Cas1SimpleApiClient
 
   lateinit var referrerDetails: Pair<UserEntity, String>
-  lateinit var referrerTeam: TeamFactoryDeliusContext
   lateinit var referrerProbationArea: String
 
   lateinit var assessorDetails: Pair<UserEntity, String>
@@ -112,40 +116,27 @@ class ApplicationReportsTest : InitialiseDatabasePerClassTestBase() {
   lateinit var assessmentSchema: ApprovedPremisesAssessmentJsonSchemaEntity
   lateinit var placementApplicationSchema: ApprovedPremisesPlacementApplicationJsonSchemaEntity
 
-  lateinit var applicationWithoutAssessment: ApprovedPremisesApplicationEntity
-  lateinit var applicationWithAssessment: ApprovedPremisesApplicationEntity
-  lateinit var applicationWithPlacementApplication: ApprovedPremisesApplicationEntity
-  lateinit var applicationWithReallocatedCompleteAssessments: ApprovedPremisesApplicationEntity
-  lateinit var applicationShortNotice: ApprovedPremisesApplicationEntity
-  lateinit var applicationWithAcceptedAppeal: ApprovedPremisesApplicationEntity
-  lateinit var applicationWithRejectedAppeal: ApprovedPremisesApplicationEntity
-  lateinit var applicationWithMultipleAppeals: ApprovedPremisesApplicationEntity
-  lateinit var applicationWithMultipleAssessments: ApprovedPremisesApplicationEntity
-
-  companion object Constants {
-    const val AUTHORISED_DURATION_DAYS: Int = 12
-  }
-
-  @BeforeAll
+  @BeforeEach
   fun setup() {
-    govUKBankHolidaysAPIMockSuccessfullCallWithEmptyResponse()
-
-    referrerTeam = TeamFactoryDeliusContext
     referrerProbationArea = "Referrer probation area"
 
     referrerDetails = givenAUser(
       staffDetail = StaffDetailFactory.staffDetail(
-        teams = listOf(referrerTeam.team()),
-        probationArea = ProbationArea(code = randomStringMultiCaseWithNumbers(8), description = referrerProbationArea),
+        probationArea = ProbationArea(
+          code = randomStringMultiCaseWithNumbers(6),
+          description = referrerProbationArea,
+        ),
       ),
     )
     assessorDetails = givenAUser(
       roles = listOf(UserRole.CAS1_ASSESSOR),
-      probationRegion = probationRegionEntityFactory.produceAndPersist {
-        withYieldedApArea {
-          givenAnApArea(name = "Wales")
-        }
-      },
+      probationRegion = givenAProbationRegion(apArea = givenAnApArea(name = "Wales")),
+      staffDetail = StaffDetailFactory.staffDetail(
+        probationArea = ProbationArea(
+          code = "N03",
+          description = randomStringMultiCaseWithNumbers(6),
+        ),
+      ),
     )
     futureManagerDetails = givenAUser(roles = listOf(UserRole.CAS1_FUTURE_MANAGER))
     workflowManagerDetails = givenAUser(roles = listOf(UserRole.CAS1_WORKFLOW_MANAGER))
@@ -167,44 +158,13 @@ class ApplicationReportsTest : InitialiseDatabasePerClassTestBase() {
     placementApplicationSchema = approvedPremisesPlacementApplicationJsonSchemaEntityFactory.produceAndPersist {
       withPermissiveSchema()
     }
-
-    applicationWithoutAssessment = createApplication("applicationWithoutAssessment")
-
-    applicationWithAssessment = createApplicationWithCompletedAssessment("application")
-
-    applicationWithPlacementApplication = createApplicationWithCompletedAssessment("applicationWithPlacementApplication")
-    createAndAcceptPlacementApplication(applicationWithPlacementApplication)
-
-    applicationWithMultipleAssessments = createApplication("applicationWithMultipleAssessments")
-    reallocateAssessment(applicationWithMultipleAssessments)
-    acceptAssessmentForApplication(applicationWithMultipleAssessments)
-
-    applicationWithReallocatedCompleteAssessments = createApplication("applicationWithReallocatedCompleteAssessments")
-    reallocateAssessment(applicationWithReallocatedCompleteAssessments)
-    acceptAssessmentForApplication(applicationWithReallocatedCompleteAssessments)
-
-    applicationShortNotice = createApplication("applicationShortNotice", shortNotice = true)
-    acceptAssessmentForApplication(applicationShortNotice, shortNotice = true)
-
-    applicationWithAcceptedAppeal = createApplication("applicationWithAcceptedAppeal")
-    val assessmentToAppealAccepted = rejectAssessmentForApplication(applicationWithAcceptedAppeal)
-    acceptAppealForAssessment(assessmentToAppealAccepted)
-
-    applicationWithRejectedAppeal = createApplication("applicationWithRejectedAppeal")
-    val assessmentToAppealRejected = rejectAssessmentForApplication(applicationWithRejectedAppeal)
-    rejectAppealForAssessment(assessmentToAppealRejected)
-
-    applicationWithMultipleAppeals = createApplication("applicationWithMultipleAppeals")
-    val assessmentToAppealMultiple = rejectAssessmentForApplication(applicationWithMultipleAppeals)
-    rejectAppealForAssessment(assessmentToAppealMultiple)
-    acceptAppealForAssessment(assessmentToAppealMultiple)
   }
 
   @Test
-  fun `Get application report returns 403 Forbidden if user does not have all regions access`() {
+  fun `Get placement application report returns 403 Forbidden if user does not have all regions access`() {
     givenAUser { _, jwt ->
       webTestClient.get()
-        .uri("/cas1/reports/applications?year=2023&month=4")
+        .uri("/cas1/reports/placementApplications?year=2023&month=4")
         .header("Authorization", "Bearer $jwt")
         .header("X-Service-Name", ServiceName.approvedPremises.value)
         .exchange()
@@ -214,10 +174,10 @@ class ApplicationReportsTest : InitialiseDatabasePerClassTestBase() {
   }
 
   @Test
-  fun `Get application report returns 400 if month is provided and not within 1-12`() {
+  fun `Get placement application report returns 400 if month is provided and not within 1-12`() {
     givenAUser(roles = listOf(UserRole.CAS1_REPORT_VIEWER)) { _, jwt ->
       webTestClient.get()
-        .uri("/cas1/reports/applications?year=2023&month=-1")
+        .uri("/cas1/reports/placementApplications?year=2023&month=-1")
         .header("Authorization", "Bearer $jwt")
         .header("X-Service-Name", ServiceName.approvedPremises.value)
         .exchange()
@@ -228,15 +188,136 @@ class ApplicationReportsTest : InitialiseDatabasePerClassTestBase() {
     }
   }
 
+  @SuppressWarnings("detekt:LongMethod") // This should be resolvable by using @ParameterizedTest, but this refactoring isn't trivial to do in a way that doesn't just move the warning
   @Test
-  fun `Get application report returns OK with correct applications`() {
+  fun `Get placement application report returns OK with correct applications`() {
     givenAUser(roles = listOf(UserRole.CAS1_REPORT_VIEWER)) { userEntity, jwt ->
+      govUKBankHolidaysAPIMockSuccessfullCallWithEmptyResponse()
+
+      val singleDateUnsubmittedPlacement = expectedRow {
+        isAccepted = false
+
+        application = createAssessedApplication("singleDateUnsubmittedPlacement")
+        placementApplicationId = createPlacementApplication(application).id
+      }
+
+      val singleDateReallocated = expectedRow {
+        placementDate = placementDateStarting(LocalDate.now())
+        application = createAssessedApplication("singleDateNoBookingReallocated")
+
+        val initialPlacementApplication = createAndSubmitPlacementApplication(application, listOf(placementDate!!))
+        reallocatePlacementApplication(initialPlacementApplication[0])
+
+        val reallocatedPlacementApplication = placementApplicationTestRepository.findByApplicationAndReallocatedAtNull(application)
+        acceptPlacementApplication(reallocatedPlacementApplication.id)
+        placementApplicationId = reallocatedPlacementApplication.id
+      }
+
+      val singleDate = expectedRow {
+        placementDate = placementDateStarting(LocalDate.now())
+        application = createAssessedApplication("singleDateBooked")
+        placementApplicationId = createAndAcceptPlacementApplication(application, listOf(placementDate!!))[0].id
+      }
+
+      val singleDateBookedPlacementApplicationSubmittedOutsideOfDateRange = expectedRow {
+        placementDate = placementDateStarting(LocalDate.now().plusMonths(2))
+        application = createAssessedApplication("singleDateBookedOutOfDateRange")
+        placementApplicationId = createAndAcceptPlacementApplication(application, listOf(placementDate!!))[0].id
+        placementApplicationTestRepository.updateSubmittedOn(placementApplicationId, OffsetDateTime.now().plusMonths(2))
+      }
+
+      val singleDateReallocatedAssessment = expectedRow {
+        placementDate = placementDateStarting(LocalDate.now())
+        application = createAndSubmitApplication("singleDateReallocatedAssessment")
+        reallocateAssessment(application)
+        acceptAssessmentForApplication(application)
+        placementApplicationId = createAndAcceptPlacementApplication(application, listOf(placementDate!!))[0].id
+      }
+
+      val singleDateWithWithdrawal = expectedRow {
+        isWithdrawn = true
+
+        placementDate = placementDateStarting(LocalDate.now())
+        application = createAssessedApplication("singleDateWithWithdrawal")
+        placementApplicationId = createAndAcceptPlacementApplication(application, listOf(placementDate!!))[0].id
+        withdrawApplication(application)
+      }
+
+      val (multiDateNoneBooked1, multiDateNoneBooked2) = run {
+        val placementDate1 = placementDateStarting(LocalDate.now())
+        val placementDate2 = placementDateStarting(LocalDate.now().plusMonths(1))
+        val application = createAssessedApplication("multiDateNoneBooked")
+        val placementApplications = createAndAcceptPlacementApplication(application, listOf(placementDate1, placementDate2))
+        val placementApp1 = placementApplications[0]
+        val placementApp2 = placementApplications[1]
+
+        listOf(
+          expectedRow {
+            placementDate = placementDate1
+            this.application = application
+            placementApplicationId = placementApp1.id
+          },
+          expectedRow {
+            placementDate = placementDate2
+            this.application = application
+            placementApplicationId = placementApp2.id
+          },
+        )
+      }
+
+      val acceptedAppeal = run {
+        val placementDate = placementDateStarting(LocalDate.now())
+        val (application, assessment) = createRejectedApplication("acceptedAppeal")
+        val (_, newAssessment) = acceptAppealForAssessment(assessment)
+        acceptAssessment(newAssessment)
+        val placementApplication = createAndAcceptPlacementApplication(application, listOf(placementDate))[0]
+
+        expectedRow {
+          this.isAccepted = true
+          this.application = application
+          this.hasAppeal = true
+          this.placementDate = placementDate
+          this.placementApplicationId = placementApplication.id
+        }
+      }
+
+      val rejectedAppeal = run {
+        val placementDate = placementDateStarting(LocalDate.now())
+        val (application, assessment) = createRejectedApplication("rejectedAppeal")
+        rejectAppealForAssessment(assessment)
+
+        expectedRow {
+          this.isAccepted = false
+          this.application = application
+          this.hasAppeal = true
+          this.placementDate = placementDate
+        }
+      }
+
+      val multipleAppeals = run {
+        val placementDate = placementDateStarting(LocalDate.now())
+        val (application, assessment) = createRejectedApplication("multipleAppeals")
+        rejectAppealForAssessment(assessment)
+        acceptAppealForAssessment(assessment)
+        val (_, newAssessment) = acceptAppealForAssessment(assessment)
+        acceptAssessment(newAssessment)
+        val placementApplication = createAndAcceptPlacementApplication(application, listOf(placementDate))[0]
+
+        expectedRow {
+          this.isAccepted = true
+          this.application = application
+          this.hasAppeal = true
+          this.placementDate = placementDate
+          this.placementApplicationId = placementApplication.id
+        }
+      }
+
       val now = LocalDate.now()
       val year = now.year.toString()
       val month = now.monthValue.toString()
 
       webTestClient.get()
-        .uri("/cas1/reports/applications?year=$year&month=$month")
+        .uri("/cas1/reports/placementApplications?year=$year&month=$month")
         .header("Authorization", "Bearer $jwt")
         .header("X-Service-Name", ServiceName.approvedPremises.value)
         .exchange()
@@ -244,42 +325,51 @@ class ApplicationReportsTest : InitialiseDatabasePerClassTestBase() {
         .isOk
         .expectHeader().valuesMatch(
           "content-disposition",
-          "attachment; filename=\"applications-$year-${month.padStart(2, '0')}-[0-9_]+.xlsx\"",
+          "attachment; filename=\"placement-applications-$year-${month.padStart(2, '0')}-[0-9_]+.xlsx\"",
         )
         .expectBody()
         .consumeWith {
-          val actual = DataFrame
+          val actualRows = DataFrame
             .readExcel(it.responseBody!!.inputStream())
-            .convertTo<ApplicationReportRow>(ExcessiveColumns.Remove)
+            .convertTo<PlacementApplicationReportRow>(ExcessiveColumns.Remove)
             .toList()
 
-          assertThat(actual.size).isEqualTo(9)
+          assertThat(actualRows.size).isEqualTo(8)
 
-          assertApplicationRowHasCorrectData(actual, applicationWithoutAssessment.id, userEntity, ApplicationFacets(isAssessed = false, isAccepted = false))
-          assertApplicationRowHasCorrectData(actual, applicationWithAssessment.id, userEntity)
-          assertApplicationRowHasCorrectData(actual, applicationWithPlacementApplication.id, userEntity, ApplicationFacets(hasPlacementApplication = true))
-          assertApplicationRowHasCorrectData(actual, applicationWithReallocatedCompleteAssessments.id, userEntity)
-          assertApplicationRowHasCorrectData(actual, applicationWithMultipleAssessments.id, userEntity)
-          assertApplicationRowHasCorrectData(actual, applicationShortNotice.id, userEntity, ApplicationFacets(isShortNotice = true))
-          assertApplicationRowHasCorrectData(actual, applicationWithAcceptedAppeal.id, userEntity, ApplicationFacets(hasAppeal = true, isAccepted = false))
-          assertApplicationRowHasCorrectData(actual, applicationWithRejectedAppeal.id, userEntity, ApplicationFacets(hasAppeal = true, isAccepted = false))
-          assertApplicationRowHasCorrectData(actual, applicationWithMultipleAppeals.id, userEntity, ApplicationFacets(hasAppeal = true, isAccepted = false))
+          val unsubmittedPlacementApplication = getPlacementApplication(singleDateUnsubmittedPlacement.application)
+          assertThat(actualRows).noneMatch { row -> row.placementRequestId == unsubmittedPlacementApplication.id.toString() }
+
+          val outOfDateRangePlacementApplication = getPlacementApplication(singleDateBookedPlacementApplicationSubmittedOutsideOfDateRange.application)
+          assertThat(actualRows).noneMatch { row -> row.placementRequestId == outOfDateRangePlacementApplication.id.toString() }
+
+          assertThat(actualRows).noneMatch { row -> row.crn == rejectedAppeal.application.crn }
+
+          assertApplicationRowHasCorrectData(actualRows, singleDateReallocated, userEntity)
+          assertApplicationRowHasCorrectData(actualRows, singleDate, userEntity)
+          assertApplicationRowHasCorrectData(actualRows, singleDateReallocatedAssessment, userEntity)
+          assertApplicationRowHasCorrectData(actualRows, singleDateWithWithdrawal, userEntity)
+          assertApplicationRowHasCorrectData(actualRows, multiDateNoneBooked1, userEntity)
+          assertApplicationRowHasCorrectData(actualRows, multiDateNoneBooked2, userEntity)
+          assertApplicationRowHasCorrectData(actualRows, acceptedAppeal, userEntity)
+          assertApplicationRowHasCorrectData(actualRows, multipleAppeals, userEntity)
         }
     }
   }
 
-  enum class ReportType {
-    Applications,
+  fun expectedRow(builder: ExpectedRow.() -> Unit): ExpectedRow {
+    val row = ExpectedRow()
+    builder(row)
+    return row
   }
 
-  data class ApplicationFacets(
-    val isAssessed: Boolean = true,
-    val isAccepted: Boolean = true,
-    val hasPlacementApplication: Boolean = false,
-    val hasAppeal: Boolean = false,
-    val reportType: ReportType = ReportType.Applications,
-    val isShortNotice: Boolean = false,
-  )
+  class ExpectedRow {
+    lateinit var application: ApprovedPremisesApplicationEntity
+    lateinit var placementApplicationId: UUID
+    var placementDate: PlacementDates? = null
+    var isAccepted: Boolean = true
+    var isWithdrawn: Boolean = false
+    var hasAppeal: Boolean = false
+  }
 
   private fun ApprovedPremisesApplicationEntity.getAppropriateAssessment(hasAppeal: Boolean): AssessmentEntity? = when (hasAppeal) {
     // By the time the assertions are made, a newer assessment will have automatically been made for accepted appeals.
@@ -290,75 +380,73 @@ class ApplicationReportsTest : InitialiseDatabasePerClassTestBase() {
   }
 
   private fun assertApplicationRowHasCorrectData(
-    report: List<ApplicationReportRow>,
-    applicationId: UUID,
+    report: List<PlacementApplicationReportRow>,
+    expectedRow: ExpectedRow,
     userEntity: UserEntity,
-    applicationFacets: ApplicationFacets = ApplicationFacets(),
   ) {
-    val reportRow = report.find { it.id == applicationId.toString() }!!
-
+    val applicationId = expectedRow.application.id
     val application = realApplicationRepository.findByIdOrNull(applicationId) as ApprovedPremisesApplicationEntity
-    val assessment = application.getAppropriateAssessment(applicationFacets.hasAppeal)!!
+    val placementApplication = placementApplicationTestRepository.findById(expectedRow.placementApplicationId).get()
+    val assessment = application.getAppropriateAssessment(expectedRow.hasAppeal)!!
     val offenderDetailSummary = getOffenderDetailForApplication(application, userEntity.deliusUsername)
-    val caseDetail = getCaseDetailForApplication(application)
+
+    val reportRow = report.find {
+      it.placementRequestId == placementApplication.id.toString() &&
+        it.requestedArrivalDate == expectedRow.placementDate!!.expectedArrival
+    }!!
 
     val (referrerEntity, _) = referrerDetails
 
     assertThat(reportRow.crn).isEqualTo(application.crn.uppercase())
-    assertThat(reportRow.tier).isEqualTo("B")
+    assertThat(reportRow.tier).isEqualTo("A")
 
-    assertThat(reportRow.lastAllocatedToAssessorDate).isEqualTo(assessment.allocatedAt!!.toLocalDate())
-    if (applicationFacets.isAssessed) {
-      assertThat(assessment).isNotNull
-      assertThat(assessment.submittedAt).isNotNull
-      assertThat(reportRow.applicationAssessedDate).isEqualTo(assessment.submittedAt!!.toLocalDate())
-      assertThat(reportRow.assessorCru).isEqualTo("Wales")
-      if (!applicationFacets.hasAppeal) {
-        assertThat(reportRow.assessmentDecision).isEqualTo(assessment.decision.toString())
-      }
-      assertThat(reportRow.assessmentDecisionRationale).isEqualTo(assessment.rejectionRationale)
+    assertThat(reportRow.placementRequestSubmittedAt).isEqualTo(placementApplication.submittedAt!!.toLocalDate())
+    assertThat(reportRow.requestedArrivalDate).isEqualTo(expectedRow.placementDate!!.expectedArrival)
+    assertThat(reportRow.requestedDurationDays).isEqualTo(expectedRow.placementDate!!.duration)
 
-      if (applicationFacets.isShortNotice) {
-        assertThat(reportRow.applicantReasonForLateApplication).isEqualTo("theReasonForShortNoticeReason")
-        assertThat(reportRow.applicantReasonForLateApplicationDetail).isEqualTo("theReasonForShortNoticeOther")
-        assertThat(reportRow.assessorAgreeWithShortNoticeReason).isEqualTo("yes")
-        assertThat(reportRow.assessorReasonForLateApplication).isEqualTo("thisIsAgreeWithShortNoticeReasonComments")
-        assertThat(reportRow.assessorReasonForLateApplicationDetail).isEqualTo("thisIsTheReasonForLateApplication")
-      } else {
-        assertThat(reportRow.applicantReasonForLateApplication).isNull()
-        assertThat(reportRow.applicantReasonForLateApplicationDetail).isNull()
-        assertThat(reportRow.assessorAgreeWithShortNoticeReason).isNull()
-        assertThat(reportRow.assessorReasonForLateApplication).isNull()
-        assertThat(reportRow.assessorReasonForLateApplicationDetail).isNull()
-      }
+    if (expectedRow.isAccepted) {
+      assertThat(reportRow.decision).isEqualTo("ACCEPTED")
+      assertThat(reportRow.decisionMadeAt).isToday()
+    } else {
+      assertThat(reportRow.decision).isNull()
+      assertThat(reportRow.decisionMadeAt).isNull()
     }
 
+    assertThat(reportRow.applicationSubmittedAt).isEqualTo(application.submittedAt!!.toLocalDate())
+    assertThat(reportRow.applicationAssessedDate).isEqualTo(assessment.submittedAt!!.toLocalDate())
+    assertThat(reportRow.assessorCru).isEqualTo("Wales")
+
+    if (!expectedRow.hasAppeal) {
+      assertThat(reportRow.assessmentDecision).isEqualTo(assessment.decision.toString())
+    }
+    assertThat(reportRow.assessmentDecisionRationale).isEqualTo(assessment.rejectionRationale)
     assertThat(reportRow.ageInYears).isEqualTo(Period.between(offenderDetailSummary.dateOfBirth, LocalDate.now()).years)
     assertThat(reportRow.gender).isEqualTo(offenderDetailSummary.gender)
     assertThat(reportRow.mappa).isEqualTo(application.riskRatings!!.mappa.value!!.level)
     assertThat(reportRow.offenceId).isEqualTo(application.offenceId)
     assertThat(reportRow.noms).isEqualTo(application.nomsNumber)
-
+    assertThat(reportRow.sentenceType).isEqualTo(application.sentenceType)
     assertThat(reportRow.releaseType).isEqualTo(application.releaseType)
-    assertThat(reportRow.applicationSubmissionDate).isEqualTo(application.submittedAt!!.toLocalDate())
-    assertThat(reportRow.targetLocation).isEqualTo(application.targetLocation)
-    assertThat(reportRow.applicationWithdrawalReason).isEqualTo(application.withdrawalReason)
 
-    assertThat(reportRow.referrerUsername).isEqualTo(referrerEntity.deliusUsername)
+    val caseDetail = getCaseDetailForApplication(application)
     assertThat(reportRow.referralLdu).isEqualTo(caseDetail.case.manager.team.ldu.name)
-    assertThat(reportRow.referralRegion).isEqualTo(referrerProbationArea)
     assertThat(reportRow.referralTeam).isEqualTo(caseDetail.case.manager.team.name)
 
-    val arrivalDate = application.arrivalDate?.toLocalDate()
+    assertThat(reportRow.referralRegion).isEqualTo(referrerProbationArea)
+    assertThat(reportRow.referrerUsername).isEqualTo(referrerEntity.deliusUsername)
+    assertThat(reportRow.targetLocation).isEqualTo(application.targetLocation)
+    assertThat(reportRow.applicationWithdrawalReason).isEqualTo(application.withdrawalReason)
+    assertThat(reportRow.applicationWithdrawalReason).isEqualTo(application.withdrawalReason)
 
-    assertThat(reportRow.expectedArrivalDate).isEqualTo(arrivalDate)
-    if (applicationFacets.isAssessed && applicationFacets.isAccepted && arrivalDate != null) {
-      assertThat(reportRow.expectedDepartureDate).isEqualTo(arrivalDate?.plusDays(AUTHORISED_DURATION_DAYS.toLong()))
-    } else {
-      assertThat(reportRow.expectedDepartureDate).isNull()
+    if (expectedRow.isWithdrawn) {
+      assertThat(reportRow.applicationWithdrawalReason).isEqualTo(application.withdrawalReason)
+      assertThat(reportRow.applicationWithdrawalDate).isEqualTo(LocalDate.now())
     }
 
-    if (applicationFacets.hasAppeal) {
+    assertThat(reportRow.placementRequestType).isEqualTo("Some Test Reason")
+    assertThat(reportRow.paroleDecisionDate).isEqualTo("2023-11-11")
+
+    if (expectedRow.hasAppeal) {
       val appeals = realAppealRepository.findAllByAssessmentId(assessment.id)
       val latestAppeal = appeals.maxByOrNull { it.createdAt }!!
       assertThat(reportRow.assessmentAppealCount).isEqualTo(appeals.size)
@@ -369,10 +457,15 @@ class ApplicationReportsTest : InitialiseDatabasePerClassTestBase() {
     }
   }
 
-  private fun getOffenderDetailForApplication(application: ApplicationEntity, deliusUsername: String): OffenderDetailSummary {
+  fun getPlacementApplication(application: ApprovedPremisesApplicationEntity) = placementApplicationTestRepository.findByApplicationAndReallocatedAtNull(application)
+
+  private fun getOffenderDetailForApplication(
+    application: ApplicationEntity,
+    deliusUsername: String,
+  ): OffenderDetailSummary {
     return when (val personInfo = realOffenderService.getPersonInfoResult(application.crn, deliusUsername, true)) {
       is PersonInfoResult.Success.Full -> personInfo.offenderDetailSummary
-      else -> throw Exception("No offender found for CRN ${application.crn}")
+      else -> error("No offender found for CRN ${application.crn}")
     }
   }
 
@@ -383,21 +476,21 @@ class ApplicationReportsTest : InitialiseDatabasePerClassTestBase() {
     }
   }
 
-  private fun createApplication(crn: String, withArrivalDate: Boolean = true, shortNotice: Boolean = false): ApprovedPremisesApplicationEntity {
-    return createAndSubmitApplication(ApType.normal, crn, withArrivalDate, shortNotice)
-  }
-
-  private fun createApplicationWithCompletedAssessment(crn: String, withArrivalDate: Boolean = true): ApprovedPremisesApplicationEntity {
-    val application = createAndSubmitApplication(ApType.normal, crn, withArrivalDate)
+  private fun createAssessedApplication(crn: String): ApprovedPremisesApplicationEntity {
+    val application = createAndSubmitApplication(crn)
     acceptAssessmentForApplication(application)
     return application
   }
 
-  private fun createAndSubmitApplication(apType: ApType, crn: String, withArrivalDate: Boolean = true, shortNotice: Boolean = false): ApprovedPremisesApplicationEntity {
+  private fun createRejectedApplication(crn: String): Pair<ApprovedPremisesApplicationEntity, ApprovedPremisesAssessmentEntity> {
+    val application = createAndSubmitApplication(crn)
+    val assessment = rejectAssessmentForApplication(application)
+    return application to assessment
+  }
+
+  private fun createAndSubmitApplication(crn: String): ApprovedPremisesApplicationEntity {
     val (referrer, jwt) = referrerDetails
-    val (offenderDetails, _) = givenAnOffender(
-      offenderDetailsConfigBlock = { withCrn(crn.uppercase()) },
-    )
+    val (offenderDetails, _) = givenAnOffender({ withCrn(crn.uppercase()) })
 
     apDeliusContextMockSuccessfulCaseDetailCall(
       offenderDetails.otherIds.crn,
@@ -416,35 +509,31 @@ class ApplicationReportsTest : InitialiseDatabasePerClassTestBase() {
         .produce(),
     )
 
-    val basicInformationJson =
-      mapOf(
-        "basic-information" to
-          listOfNotNull(
-            "sentence-type" to mapOf("sentenceType" to "Some Sentence Type"),
-            if (shortNotice) {
-              "reason-for-short-notice" to mapOf(
-                "reason" to "theReasonForShortNoticeReason",
-                "other" to "theReasonForShortNoticeOther",
-              )
-            } else {
-              null
-            },
-          ).toMap(),
-      )
-
     val application = approvedPremisesApplicationEntityFactory.produceAndPersist {
       withCreatedByUser(referrer)
       withCrn(offenderDetails.otherIds.crn)
       withNomsNumber(offenderDetails.otherIds.nomsNumber!!)
       withApplicationSchema(applicationSchema)
-      withData(objectMapper.writeValueAsString(basicInformationJson))
+      withData(
+        objectMapper.writeValueAsString(
+          mapOf(
+            "basic-information" to
+              mapOf(
+                "sentence-type"
+                  to mapOf(
+                    "sentenceType" to SentenceTypeOption.nonStatutory.value,
+                  ),
+              ),
+          ),
+        ),
+      )
       withRiskRatings(
         PersonRisksFactory()
           .withTier(
             RiskWithStatus(
               status = RiskStatus.Retrieved,
               value = RiskTier(
-                level = "B",
+                level = "A",
                 lastUpdated = LocalDate.now(),
               ),
             ),
@@ -461,12 +550,7 @@ class ApplicationReportsTest : InitialiseDatabasePerClassTestBase() {
       )
     }
 
-    val arrivalDate = if (withArrivalDate) {
-      LocalDate.now().plusMonths(8)
-    } else {
-      null
-    }
-
+    val apType = ApType.normal
     webTestClient.post()
       .uri("/applications/${application.id}/submission")
       .header("Authorization", "Bearer $jwt")
@@ -481,7 +565,6 @@ class ApplicationReportsTest : InitialiseDatabasePerClassTestBase() {
           releaseType = ReleaseTypeOption.licence,
           type = "CAS1",
           sentenceType = SentenceTypeOption.nonStatutory,
-          arrivalDate = arrivalDate,
           applicantUserDetails = Cas1ApplicationUserDetails("applicantName", "applicantEmail", "applicationPhone"),
           caseManagerIsNotApplicant = false,
         ),
@@ -493,39 +576,25 @@ class ApplicationReportsTest : InitialiseDatabasePerClassTestBase() {
     return realApplicationRepository.findByIdOrNull(application.id) as ApprovedPremisesApplicationEntity
   }
 
-  private fun acceptAssessmentForApplication(application: ApprovedPremisesApplicationEntity, shortNotice: Boolean = false): ApprovedPremisesAssessmentEntity {
+  private fun acceptAssessmentForApplication(application: ApprovedPremisesApplicationEntity): ApprovedPremisesAssessmentEntity {
     val (assessorEntity, jwt) = assessorDetails
+
     val assessment = realAssessmentRepository.findByApplicationIdAndReallocatedAtNull(application.id)!!
+
+    return acceptAssessment(assessment)
+  }
+
+  private fun acceptAssessment(assessment: AssessmentEntity): ApprovedPremisesAssessmentEntity {
+    val (assessorEntity, jwt) = assessorDetails
+
     val postcodeDistrict = postCodeDistrictFactory.produceAndPersist()
 
-    assessment.data = if (shortNotice) {
-      """{
-         "suitability-assessment": {
-            "application-timeliness": {
-               "agreeWithShortNoticeReason": "yes",
-               "agreeWithShortNoticeReasonComments": "thisIsAgreeWithShortNoticeReasonComments",
-               "reasonForLateApplication": "thisIsTheReasonForLateApplication"
-            }
-         }
-      }"""
-    } else {
-      "{ }"
-    }
-
+    assessment.data = "{}"
     assessment.allocatedToUser = assessorEntity
     realAssessmentRepository.save(assessment)
 
     val essentialCriteria = listOf(PlacementCriteria.isArsonSuitable, PlacementCriteria.isESAP)
     val desirableCriteria = listOf(PlacementCriteria.isRecoveryFocussed, PlacementCriteria.acceptsSexOffenders)
-
-    val placementDates = if (application.arrivalDate != null) {
-      PlacementDates(
-        expectedArrival = application.arrivalDate!!.toLocalDate(),
-        duration = AUTHORISED_DURATION_DAYS,
-      )
-    } else {
-      null
-    }
 
     val placementRequirements = PlacementRequirements(
       gender = Gender.male,
@@ -539,7 +608,7 @@ class ApplicationReportsTest : InitialiseDatabasePerClassTestBase() {
     webTestClient.post()
       .uri("/assessments/${assessment.id}/acceptance")
       .header("Authorization", "Bearer $jwt")
-      .bodyValue(AssessmentAcceptance(document = mapOf("document" to "value"), requirements = placementRequirements, placementDates = placementDates))
+      .bodyValue(AssessmentAcceptance(document = mapOf("document" to "value"), requirements = placementRequirements))
       .exchange()
       .expectStatus()
       .isOk
@@ -549,6 +618,7 @@ class ApplicationReportsTest : InitialiseDatabasePerClassTestBase() {
 
   private fun rejectAssessmentForApplication(application: ApprovedPremisesApplicationEntity): ApprovedPremisesAssessmentEntity {
     val (assessorEntity, jwt) = assessorDetails
+
     val assessment = realAssessmentRepository.findByApplicationIdAndReallocatedAtNull(application.id)!!
 
     assessment.data = "{}"
@@ -558,17 +628,126 @@ class ApplicationReportsTest : InitialiseDatabasePerClassTestBase() {
     webTestClient.post()
       .uri("/assessments/${assessment.id}/rejection")
       .header("Authorization", "Bearer $jwt")
+      .bodyValue(AssessmentRejection(document = mapOf("document" to "value"), rejectionRationale = "Some reason"))
+      .exchange()
+      .expectStatus()
+      .isOk
+
+    return realAssessmentRepository.findByIdOrNull(assessment.id) as ApprovedPremisesAssessmentEntity
+  }
+
+  fun placementDateStarting(start: LocalDate): PlacementDates =
+    PlacementDates(
+      expectedArrival = start,
+      duration = 12,
+    )
+
+  private fun createAndAcceptPlacementApplication(application: ApprovedPremisesApplicationEntity, placementDates: List<PlacementDates>): List<PlacementApplicationEntity> {
+    val placementApplications = createAndSubmitPlacementApplication(application, placementDates)
+    return placementApplications.map { placementApplication ->
+      val (matcher, _) = matcherDetails
+
+      cas1SimpleApiClient.placementApplicationReallocate(
+        integrationTestBase = this,
+        placementApplicationId = placementApplication.id,
+        NewReallocation(
+          userId = matcher.id,
+        ),
+      )
+
+      val reallocatedPlacementApp =
+        placementApplicationRepository.findByApplication(application)
+          .first {
+            it.reallocatedAt == null &&
+              it.placementDates.first().expectedArrival == placementApplication.placementDates.first().expectedArrival
+          }
+
+      acceptPlacementApplication(reallocatedPlacementApp.id)
+
+      reallocatedPlacementApp
+    }
+  }
+
+  private fun createPlacementApplication(application: ApprovedPremisesApplicationEntity): PlacementApplication {
+    val (_, jwt) = assessorDetails
+
+    val rawResult = webTestClient.post()
+      .uri("/placement-applications")
+      .header("Authorization", "Bearer $jwt")
       .bodyValue(
-        AssessmentRejection(
-          document = mapOf("document" to "value"),
-          rejectionRationale = "Some reason",
+        NewPlacementApplication(
+          applicationId = application.id,
+        ),
+      )
+      .exchange()
+      .expectStatus()
+      .isOk
+      .returnResult<String>()
+      .responseBody
+      .blockFirst()
+
+    return objectMapper.readValue(rawResult, PlacementApplication::class.java)
+  }
+
+  private fun createAndSubmitPlacementApplication(
+    application: ApprovedPremisesApplicationEntity,
+    placementDates: List<PlacementDates>,
+  ): List<PlacementApplication> {
+    val (_, jwt) = assessorDetails
+
+    val placementApplication = createPlacementApplication(application)
+
+    webTestClient.put()
+      .uri("/placement-applications/${placementApplication.id}")
+      .header("Authorization", "Bearer $jwt")
+      .bodyValue(
+        UpdatePlacementApplication(
+          data = mapOf(
+            "request-a-placement" to mapOf(
+              "decision-to-release" to mapOf("decisionToReleaseDate" to "2023-11-11"),
+              "reason-for-placement" to mapOf("reason" to "Some Test Reason"),
+            ),
+          ),
         ),
       )
       .exchange()
       .expectStatus()
       .isOk
 
-    return realAssessmentRepository.findByIdOrNull(assessment.id) as ApprovedPremisesAssessmentEntity
+    val rawResult = webTestClient.post()
+      .uri("/placement-applications/${placementApplication.id}/submission")
+      .header("Authorization", "Bearer $jwt")
+      .bodyValue(
+        SubmitPlacementApplication(
+          translatedDocument = mapOf("thingId" to 123),
+          placementType = PlacementType.additionalPlacement,
+          placementDates = placementDates,
+        ),
+      )
+      .exchange()
+      .expectStatus()
+      .isOk
+      .returnResult<String>().responseBody.blockFirst()
+
+    return objectMapper.readerForListOf(PlacementApplication::class.java).readValue(rawResult)
+  }
+
+  private fun acceptPlacementApplication(placementApplicationId: UUID) {
+    val (_, matcherJwt) = matcherDetails
+
+    webTestClient.post()
+      .uri("/placement-applications/$placementApplicationId/decision")
+      .header("Authorization", "Bearer $matcherJwt")
+      .bodyValue(
+        PlacementApplicationDecisionEnvelope(
+          decision = PlacementApplicationDecision.accepted,
+          summaryOfChanges = "ChangeSummary",
+          decisionSummary = "DecisionSummary",
+        ),
+      )
+      .exchange()
+      .expectStatus()
+      .isOk
   }
 
   private fun reallocateAssessment(application: ApprovedPremisesApplicationEntity) {
@@ -589,81 +768,41 @@ class ApplicationReportsTest : InitialiseDatabasePerClassTestBase() {
       .exchange()
       .expectStatus()
       .isCreated
+
+    // When assessments are reallocated, the millisecond part of the new assessment's created_on date is set to 0
+    // This can lead to the wrong assessment being selected when creating a placement application
+    // The following call ensures the new assessment always has the latest created_on date
+    assessmentTestRepository.updateCreatedAtOnLatestAssessment(OffsetDateTime.now(), application.id)
   }
 
-  private fun createAndAcceptPlacementApplication(application: ApprovedPremisesApplicationEntity) {
-    val (_, jwt) = assessorDetails
-
-    val rawResult = webTestClient.post()
-      .uri("/placement-applications")
-      .header("Authorization", "Bearer $jwt")
-      .bodyValue(
-        NewPlacementApplication(
-          applicationId = application.id,
-        ),
-      )
-      .exchange()
-      .expectStatus()
-      .isOk
-      .returnResult<String>()
-      .responseBody
-      .blockFirst()
-
-    val placementApplication = objectMapper.readValue(rawResult, PlacementApplication::class.java)
-
-    webTestClient.put()
-      .uri("/placement-applications/${placementApplication.id}")
-      .header("Authorization", "Bearer $jwt")
-      .bodyValue(
-        UpdatePlacementApplication(
-          data = mapOf("request-a-placement" to mapOf("decision-to-release" to mapOf("decisionToReleaseDate" to "2023-11-11"))),
-        ),
-      )
-      .exchange()
-      .expectStatus()
-      .isOk
-
-    val placementDates = listOf(
-      PlacementDates(
-        expectedArrival = LocalDate.now(),
-        duration = AUTHORISED_DURATION_DAYS,
-      ),
-    )
-    webTestClient.post()
-      .uri("/placement-applications/${placementApplication.id}/submission")
-      .header("Authorization", "Bearer $jwt")
-      .bodyValue(
-        SubmitPlacementApplication(
-          translatedDocument = mapOf("thingId" to 123),
-          placementType = PlacementType.additionalPlacement,
-          placementDates = placementDates,
-        ),
-      )
-      .exchange()
-      .expectStatus()
-      .isOk
-
-    val (matcher, matcherJwt) = matcherDetails
-
-    cas1SimpleApiClient.placementApplicationReallocate(
-      integrationTestBase = this,
-      placementApplicationId = placementApplication.id,
-      NewReallocation(
-        userId = matcher.id,
-      ),
-    )
-
-    val reallocatedPlacementApp =
-      placementApplicationRepository.findByApplication(application).first { it.reallocatedAt == null }
+  private fun reallocatePlacementApplication(placementApplication: PlacementApplication) {
+    val (_, jwt) = workflowManagerDetails
+    val (matcherUser, _) = matcherDetails
 
     webTestClient.post()
-      .uri("/placement-applications/${reallocatedPlacementApp.id}/decision")
-      .header("Authorization", "Bearer $matcherJwt")
+      .uri("/tasks/placement-application/${placementApplication.id}/allocations")
+      .header("Authorization", "Bearer $jwt")
+      .header("X-Service-Name", ServiceName.approvedPremises.value)
       .bodyValue(
-        PlacementApplicationDecisionEnvelope(
-          decision = PlacementApplicationDecision.accepted,
-          summaryOfChanges = "ChangeSummary",
-          decisionSummary = "DecisionSummary",
+        NewReallocation(
+          userId = matcherUser.id,
+        ),
+      )
+      .exchange()
+      .expectStatus()
+      .isCreated
+  }
+
+  private fun withdrawApplication(application: ApprovedPremisesApplicationEntity) {
+    val (_, jwt) = referrerDetails
+
+    webTestClient.post()
+      .uri("/applications/${application.id}/withdrawal")
+      .header("Authorization", "Bearer $jwt")
+      .header("X-Service-Name", ServiceName.approvedPremises.value)
+      .bodyValue(
+        NewWithdrawal(
+          reason = WithdrawalReason.duplicateApplication,
         ),
       )
       .exchange()
@@ -671,7 +810,7 @@ class ApplicationReportsTest : InitialiseDatabasePerClassTestBase() {
       .isOk
   }
 
-  private fun acceptAppealForAssessment(assessment: ApprovedPremisesAssessmentEntity): AppealEntity {
+  private fun acceptAppealForAssessment(assessment: ApprovedPremisesAssessmentEntity): Pair<AppealEntity, AssessmentEntity> {
     val (_, jwt) = appealManagerDetails
 
     webTestClient.post()
@@ -689,7 +828,10 @@ class ApplicationReportsTest : InitialiseDatabasePerClassTestBase() {
       .expectStatus()
       .isCreated
 
-    return realAppealRepository.findAllByAssessmentId(assessment.id).maxByOrNull { it.createdAt }!!
+    val appeal = realAppealRepository.findAllByAssessmentId(assessment.id).maxByOrNull { it.createdAt }!!
+    val newAssessment = realApplicationRepository.findByIdOrNull(assessment.application.id)!!.getLatestAssessment()!!
+
+    return appeal to newAssessment
   }
 
   private fun rejectAppealForAssessment(assessment: ApprovedPremisesAssessmentEntity): AppealEntity {
