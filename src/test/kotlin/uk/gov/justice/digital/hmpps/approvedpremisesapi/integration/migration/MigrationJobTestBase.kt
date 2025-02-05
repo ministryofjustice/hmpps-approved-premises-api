@@ -7,8 +7,8 @@ import org.junit.jupiter.api.TestInstance
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.IntegrationTestBase
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.migration.MigrationJobService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.migration.MigrationLogger
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.MigrationJobService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.LogEntry
 
 @TestInstance(TestInstance.Lifecycle.PER_METHOD)
