@@ -1625,13 +1625,144 @@ components:
           Offline: '#/components/schemas/OfflineApplication'
           CAS1: '#/components/schemas/ApprovedPremisesApplication'
           CAS2: '#/components/schemas/Cas2Application'
-          CAS2V2: 'cas2v2-schemas.yml#/components/schemas/Cas2v2Application'
+          CAS2V2: '#/components/schemas/Cas2v2Application'
           CAS3: '#/components/schemas/TemporaryAccommodationApplication'
       required:
         - type
         - id
         - person
         - createdAt
+    Cas2v2Application:
+      allOf:
+        - $ref: '_shared.yml#/components/schemas/Application'
+        - type: object
+          properties:
+            createdBy:
+              $ref: '#/components/schemas/Cas2v2User'
+            schemaVersion:
+              type: string
+              format: uuid
+            outdatedSchema:
+              type: boolean
+            data:
+              $ref: '_shared.yml#/components/schemas/Unit'
+            document:
+              $ref: '_shared.yml#/components/schemas/Unit'
+            status:
+              $ref: '_shared.yml#/components/schemas/ApplicationStatus'
+            submittedAt:
+              type: string
+              format: date-time
+            telephoneNumber:
+              type: string
+            assessment:
+              $ref: '#/components/schemas/Cas2v2Assessment'
+            timelineEvents:
+              type: array
+              items:
+                $ref: '_shared.yml#/components/schemas/Cas2TimelineEvent'
+            applicationOrigin:
+              $ref: "_shared.yml#/components/schemas/ApplicationOrigin"
+            bailHearingDate:
+              type: string
+              format: date
+          required:
+            - createdBy
+            - schemaVersion
+            - outdatedSchema
+            - status
+            - applicationOrigin
+    Cas2v2Assessment:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        nacroReferralId:
+          type: string
+        assessorName:
+          type: string
+        statusUpdates:
+          type: array
+          items:
+            $ref: '#/components/schemas/Cas2v2StatusUpdate'
+      required:
+        - id
+    Cas2v2User:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        name:
+          type: string
+          example: 'Roger Smith'
+        username:
+          type: string
+          example: 'SMITHR_GEN'
+        authSource:
+          type: string
+          enum:
+            - nomis
+            - delius
+            - auth
+        email:
+          type: string
+          example: 'Roger.Smith@justice.gov.uk'
+        isActive:
+          type: boolean
+          example: true
+      required:
+        - id
+        - name
+        - username
+        - authSource
+        - isActive
+    Cas2v2StatusUpdate:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        name:
+          type: string
+          example: 'moreInfoRequested'
+        label:
+          type: string
+          example: 'More information requested'
+        description:
+          type: string
+          example: 'More information about the application has been requested from the HMPPS user.'
+        updatedBy:
+          $ref: '#/components/schemas/Cas2v2User'
+        updatedAt:
+          type: string
+          format: date-time
+        statusUpdateDetails:
+          type: array
+          items:
+            $ref: '#/components/schemas/Cas2v2StatusUpdateDetail'
+      required:
+        - id
+        - name
+        - label
+        - description
+    Cas2v2StatusUpdateDetail:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        name:
+          type: string
+          example: 'moreInfoRequested'
+        label:
+          type: string
+          example: 'More information requested'
+      required:
+        - id
+        - name
+        - label
     OfflineApplication:
       allOf:
         - $ref: '#/components/schemas/Application'
