@@ -4736,6 +4736,7 @@ components:
         - isArsonSuitable
         - isGroundFloor
         - hasEnSuite
+        - arsonOffences
     Gender:
       type: string
       enum:
@@ -5476,5 +5477,3 @@ components:
         - isTopFloorVulnerable
         - isWheelchairAccessible
         - isWheelchairDesignated
-
-

@@ -4757,6 +4757,7 @@ components:
         - isArsonSuitable
         - isGroundFloor
         - hasEnSuite
+        - arsonOffences
     Gender:
       type: string
       enum:
@@ -5497,8 +5498,6 @@ components:
         - isTopFloorVulnerable
         - isWheelchairAccessible
         - isWheelchairDesignated
-
-
     NewCas2v2Application:
       type: object
       properties:
