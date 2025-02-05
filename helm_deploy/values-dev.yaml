@@ -36,9 +36,11 @@ generic-service:
     SENTRY_ENVIRONMENT: dev
     SENTRY_TRACES-SAMPLE-RATE: 0.01
     CACHES_STAFFMEMBERS_EXPIRY-SECONDS: 20
-    DOMAIN-EVENTS_CAS1_EMIT-ENABLED: false
+    # do not disable - these are used by probation-integration e2e tests
+    DOMAIN-EVENTS_CAS1_EMIT-ENABLED: true
     DOMAIN-EVENTS_CAS2_EMIT-ENABLED: true
-    DOMAIN-EVENTS_CAS3_EMIT-ENABLED:
+    # do not disable - these are used by probation-integration e2e tests
+    DOMAIN-EVENTS_CAS3_EMIT-ENABLED: referralSubmitted,bookingProvisionallyMade,bookingConfirmed,bookingCancelled,bookingCancelledUpdated,personArrived,personArrivedUpdated,personDeparted,personDepartureUpdated
     DOMAIN-EVENTS_CAS1_ASYNC-SAVE-ENABLED: false
     DOMAIN-EVENTS_CAS2_ASYNC-SAVE-ENABLED: false
     DOMAIN-EVENTS_CAS3_ASYNC-SAVE-ENABLED: false
