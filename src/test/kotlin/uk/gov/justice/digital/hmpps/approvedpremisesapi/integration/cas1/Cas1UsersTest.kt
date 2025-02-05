@@ -21,6 +21,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.given
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAUser
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAnApArea
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.apDeliusContextAddStaffDetailResponse
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.apDeliusContextMockNotFoundStaffDetailCall
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserPermission
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserQualification
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRole
@@ -155,6 +156,74 @@ class Cas1UsersTest : InitialiseDatabasePerClassTestBase() {
       assertThat(result.apArea).isEqualTo(ApArea(region.apArea!!.id, region.apArea!!.identifier, region.apArea!!.name))
       assertThat(result.permissions).isEqualTo(emptyList<UserPermission>())
       assertThat(result.version).isNotZero()
+    }
+
+    @Test
+    fun `should return the correct user when Delius user is not found`() {
+      val deliusUsername = "JimJimmerson"
+      val forename = "Jim"
+      val middleName = "C"
+      val surname = "Jimmerson"
+      val name = "$forename $middleName $surname"
+      val email = "foo@bar.com"
+      val telephoneNumber = "123445677"
+
+      val jwt = jwtAuthHelper.createAuthorizationCodeJwt(
+        subject = deliusUsername,
+        authSource = "delius",
+        roles = listOf("ROLE_PROBATION"),
+      )
+
+      val region = givenAProbationRegion()
+
+      userEntityFactory.produceAndPersist {
+        withId(id)
+        withDeliusUsername(deliusUsername)
+        withName(name)
+        withEmail(email)
+        withTelephoneNumber(telephoneNumber)
+        withYieldedProbationRegion { region }
+        withApArea(region.apArea)
+        withCruManagementArea(givenACas1CruManagementArea())
+      }
+
+      apDeliusContextMockNotFoundStaffDetailCall("userName")
+
+      mockClientCredentialsJwtRequest("username", listOf("ROLE_COMMUNITY"), authSource = "delius")
+
+      val result = webTestClient.get()
+        .uri("/cas1/users/$id")
+        .header("Authorization", "Bearer $jwt")
+        .exchange()
+        .expectStatus()
+        .isOk
+        .returnResult(ApprovedPremisesUser::class.java)
+        .responseBody
+        .blockFirst()!!
+
+      assertThat(result.id).isEqualTo(id)
+    }
+
+    @Test
+    fun `should return not found when neither Delius user nor system user exists`() {
+      val deliusUsername = "JimJimmerson"
+
+      val jwt = jwtAuthHelper.createAuthorizationCodeJwt(
+        subject = deliusUsername,
+        authSource = "delius",
+        roles = listOf("ROLE_PROBATION"),
+      )
+
+      apDeliusContextMockNotFoundStaffDetailCall("userName")
+
+      mockClientCredentialsJwtRequest("username", listOf("ROLE_COMMUNITY"), authSource = "delius")
+
+      webTestClient.get()
+        .uri("/cas1/users/$id")
+        .header("Authorization", "Bearer $jwt")
+        .exchange()
+        .expectStatus()
+        .isNotFound
     }
   }
 
