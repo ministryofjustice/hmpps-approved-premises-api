@@ -8,6 +8,7 @@ import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.EnumSource
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.data.repository.findByIdOrNull
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1PlacementRequestSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewBookingNotMade
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewPlacementRequestBooking
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PlacementRequest
@@ -46,6 +47,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.RiskWithStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.community.OffenderDetailSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.PlacementRequestDetailTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.PlacementRequestTransformer
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.cas1.Cas1PlacementRequestSummaryTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.bodyAsListOfObjects
 import java.time.LocalDate
 import java.time.OffsetDateTime
@@ -55,6 +57,9 @@ class PlacementRequestsTest : IntegrationTestBase() {
 
   @Autowired
   lateinit var placementRequestTransformer: PlacementRequestTransformer
+
+  @Autowired
+  lateinit var cas1PlacementRequestSummaryTransformer: Cas1PlacementRequestSummaryTransformer
 
   @Autowired
   lateinit var realPlacementRequestRepository: PlacementRequestRepository
@@ -177,6 +182,7 @@ class PlacementRequestsTest : IntegrationTestBase() {
 
    Ideally all tests should be via the API, where possible
    */
+  @Deprecated("Superseded by Cas1Dashboard tests")
   @Nested
   inner class Dashboard {
 
@@ -1113,6 +1119,965 @@ class PlacementRequestsTest : IntegrationTestBase() {
 
           webTestClient.get()
             .uri("/placement-requests/dashboard?page=1&sortBy=application_date&sortDirection=desc")
+            .header("Authorization", "Bearer $jwt")
+            .exchange()
+            .expectStatus()
+            .isOk
+            .expectBody()
+            .jsonPath("$[0].id").isEqualTo(placementRequestWithApplicationCreatedToday.id.toString())
+            .jsonPath("$[1].id").isEqualTo(placementRequestWithApplicationCreatedTwelveDaysAgo.id.toString())
+            .jsonPath("$[2].id").isEqualTo(placementRequestWithApplicationCreatedThirtyDaysAgo.id.toString())
+        }
+      }
+    }
+
+    @Suppress("LongParameterList")
+    private fun createPlacementRequest(
+      offenderDetails: OffenderDetailSummary,
+      user: UserEntity,
+      duration: Int = 12,
+      expectedArrival: LocalDate = LocalDate.now(),
+      createdAt: OffsetDateTime = OffsetDateTime.now(),
+      applicationDate: OffsetDateTime = OffsetDateTime.now(),
+      isWithdrawn: Boolean = false,
+      tier: RiskTierLevel = RiskTierLevel.b1,
+      isParole: Boolean = false,
+      apArea: ApAreaEntity? = null,
+      cruManagementArea: Cas1CruManagementAreaEntity? = null,
+    ): PlacementRequestEntity {
+      val applicationSchema = approvedPremisesApplicationJsonSchemaEntityFactory.produceAndPersist {
+        withPermissiveSchema()
+      }
+
+      val assessmentSchema = approvedPremisesAssessmentJsonSchemaEntityFactory.produceAndPersist {
+        withPermissiveSchema()
+      }
+
+      val application = approvedPremisesApplicationEntityFactory.produceAndPersist {
+        withCrn(offenderDetails.otherIds.crn)
+        withCreatedByUser(user)
+        withSubmittedAt(OffsetDateTime.now())
+        withApplicationSchema(applicationSchema)
+        withReleaseType("licence")
+        withSubmittedAt(applicationDate)
+        withName("${offenderDetails.firstName} ${offenderDetails.surname}")
+        withRiskRatings(
+          PersonRisksFactory()
+            .withTier(
+              RiskWithStatus(
+                RiskTier(
+                  level = tier.value,
+                  lastUpdated = LocalDate.parse("2023-06-26"),
+                ),
+              ),
+            ).produce(),
+        )
+        withApArea(apArea)
+        cruManagementArea?.let {
+          withCruManagementArea(it)
+        }
+      }
+
+      val assessment = approvedPremisesAssessmentEntityFactory.produceAndPersist {
+        withAssessmentSchema(assessmentSchema)
+        withApplication(application)
+        withSubmittedAt(OffsetDateTime.now())
+        withAllocatedToUser(user)
+        withDecision(AssessmentDecision.ACCEPTED)
+      }
+
+      val placementRequirements = placementRequirementsFactory.produceAndPersist {
+        withApplication(application)
+        withAssessment(assessment)
+        withPostcodeDistrict(postCodeDistrictFactory.produceAndPersist())
+        withDesirableCriteria(
+          characteristicEntityFactory.produceAndPersistMultiple(5),
+        )
+        withEssentialCriteria(
+          characteristicEntityFactory.produceAndPersistMultiple(3),
+        )
+      }
+
+      return placementRequestFactory.produceAndPersist {
+        withAllocatedToUser(
+          userEntityFactory.produceAndPersist {
+            withProbationRegion(probationRegion)
+          },
+        )
+        withApplication(application)
+        withAssessment(assessment)
+        withPlacementRequirements(placementRequirements)
+        withDuration(duration)
+        withExpectedArrival(expectedArrival)
+        withCreatedAt(createdAt)
+        withIsWithdrawn(isWithdrawn)
+        withIsParole(isParole)
+      }
+    }
+  }
+
+  @Nested
+  inner class Search {
+
+    private fun createBooking(placementRequest: PlacementRequestEntity) {
+      val premises = approvedPremisesEntityFactory.produceAndPersist {
+        withProbationRegion(probationRegion)
+        withLocalAuthorityArea(
+          localAuthorityEntityFactory.produceAndPersist(),
+        )
+      }
+
+      placementRequest.booking = bookingEntityFactory.produceAndPersist {
+        withPremises(premises)
+      }
+      realPlacementRequestRepository.save(placementRequest)
+    }
+
+    private fun createSpaceBooking(placementRequest: PlacementRequestEntity): Cas1SpaceBookingEntity {
+      val spaceBooking = givenACas1SpaceBooking(
+        crn = placementRequest.application.crn,
+        placementRequest = placementRequest,
+      )
+      placementRequest.spaceBookings.add(spaceBooking)
+      return spaceBooking
+    }
+
+    private fun createBookingNotMadeRecord(placementRequest: PlacementRequestEntity) {
+      placementRequest.bookingNotMades = mutableListOf(
+        bookingNotMadeFactory.produceAndPersist {
+          withPlacementRequest(placementRequest)
+        },
+      )
+    }
+
+    @Test
+    fun `Get dashboard without JWT returns 401`() {
+      webTestClient.get()
+        .uri("/cas1/placement-requests")
+        .exchange()
+        .expectStatus()
+        .isUnauthorized
+    }
+
+    @ParameterizedTest
+    @EnumSource(value = UserRole::class, names = ["CAS1_WORKFLOW_MANAGER", "CAS1_CRU_MEMBER", "CAS1_CRU_MEMBER_FIND_AND_BOOK_BETA", "CAS1_JANITOR"], mode = EnumSource.Mode.EXCLUDE)
+    fun `Get dashboard without CAS1_VIEW_CRU_DASHBOARD permission returns 401`(role: UserRole) {
+      givenAUser(roles = listOf(role)) { _, jwt ->
+        webTestClient.get()
+          .uri("/cas1/placement-requests")
+          .header("Authorization", "Bearer $jwt")
+          .exchange()
+          .expectStatus()
+          .isForbidden
+      }
+    }
+
+    @Test
+    fun `If status filter is not defined, returns the unmatched placement requests and withdrawn placement requests`() {
+      givenAUser(roles = listOf(UserRole.CAS1_WORKFLOW_MANAGER)) { user, jwt ->
+        givenAnOffender { unmatchedOffender, unmatchedInmate ->
+          givenAPlacementRequest(
+            placementRequestAllocatedTo = user,
+            assessmentAllocatedTo = user,
+            createdByUser = user,
+            crn = unmatchedOffender.otherIds.crn,
+          ) { unmatchedPlacementRequest, _ ->
+            val withdrawnPlacementRequest = createPlacementRequest(unmatchedOffender, user, isWithdrawn = true)
+
+            webTestClient.get()
+              .uri("/cas1/placement-requests")
+              .header("Authorization", "Bearer $jwt")
+              .exchange()
+              .expectStatus()
+              .isOk
+              .expectBody()
+              .json(
+                objectMapper.writeValueAsString(
+                  listOf(
+                    cas1PlacementRequestSummaryTransformer.transformPlacementRequestJpaToApi(
+                      unmatchedPlacementRequest,
+                      PersonInfoResult.Success.Full(unmatchedOffender.otherIds.crn, unmatchedOffender, unmatchedInmate),
+                    ),
+                    cas1PlacementRequestSummaryTransformer.transformPlacementRequestJpaToApi(
+                      withdrawnPlacementRequest,
+                      PersonInfoResult.Success.Full(unmatchedOffender.otherIds.crn, unmatchedOffender, unmatchedInmate),
+                    ),
+                  ),
+                ),
+              )
+          }
+        }
+      }
+    }
+
+    @Test
+    fun `If status filter is 'notMatched', returns the unmatched placement requests, ignoring withdrawn`() {
+      givenAUser(roles = listOf(UserRole.CAS1_WORKFLOW_MANAGER)) { user, jwt ->
+        givenAnOffender { unmatchedOffender, unmatchedInmate ->
+          val (unmatchedPlacementRequest) = givenAPlacementRequest(
+            placementRequestAllocatedTo = user,
+            assessmentAllocatedTo = user,
+            createdByUser = user,
+            crn = unmatchedOffender.otherIds.crn,
+          )
+
+          // withdrawn, ignored
+          createPlacementRequest(unmatchedOffender, user, isWithdrawn = true)
+
+          val result = webTestClient.get()
+            .uri("/cas1/placement-requests?status=notMatched")
+            .header("Authorization", "Bearer $jwt")
+            .exchange()
+            .expectStatus()
+            .isOk
+            .bodyAsListOfObjects<Cas1PlacementRequestSummary>()
+
+          assertThat(result.map { it.id }).containsExactlyInAnyOrder(
+            unmatchedPlacementRequest.id,
+          )
+        }
+      }
+    }
+
+    @Test
+    fun `If status filter is 'matched', returns the matched placement requests, ignoring withdrawn`() {
+      givenAUser(roles = listOf(UserRole.CAS1_WORKFLOW_MANAGER)) { user, jwt ->
+        givenAnOffender { matchedOffender, matchedInmate ->
+
+          // withdrawn placement request with booking, ignored
+          givenAPlacementRequest(
+            placementRequestAllocatedTo = user,
+            assessmentAllocatedTo = user,
+            createdByUser = user,
+            crn = matchedOffender.otherIds.crn,
+            isWithdrawn = true,
+          ) { placementRequest, _ ->
+            createBooking(placementRequest)
+          }
+
+          val (placementRequestWithBooking) = givenAPlacementRequest(
+            placementRequestAllocatedTo = user,
+            assessmentAllocatedTo = user,
+            createdByUser = user,
+            crn = matchedOffender.otherIds.crn,
+          ) { placementRequest, _ ->
+            createBooking(placementRequest)
+          }
+
+          val (placementRequestPreviouslyUnableToMatchNowHasBooking) = givenAPlacementRequest(
+            placementRequestAllocatedTo = user,
+            assessmentAllocatedTo = user,
+            createdByUser = user,
+            crn = matchedOffender.otherIds.crn,
+          ) { placementRequest, _ ->
+            createBookingNotMadeRecord(placementRequest)
+            createBooking(placementRequest)
+          }
+
+          // withdrawn placement request with space booking, ignored
+          givenAPlacementRequest(
+            placementRequestAllocatedTo = user,
+            assessmentAllocatedTo = user,
+            createdByUser = user,
+            crn = matchedOffender.otherIds.crn,
+            isWithdrawn = true,
+          ) { placementRequest, _ ->
+            createSpaceBooking(placementRequest)
+          }
+
+          val (placementRequestWithSpaceBooking) = givenAPlacementRequest(
+            placementRequestAllocatedTo = user,
+            assessmentAllocatedTo = user,
+            createdByUser = user,
+            crn = matchedOffender.otherIds.crn,
+          ) { placementRequest, _ ->
+            createSpaceBooking(placementRequest)
+          }
+
+          val (placementRequestPreviouslyUnableToMatchNowHasSpaceBooking) = givenAPlacementRequest(
+            placementRequestAllocatedTo = user,
+            assessmentAllocatedTo = user,
+            createdByUser = user,
+            crn = matchedOffender.otherIds.crn,
+          ) { placementRequest, _ ->
+            createBookingNotMadeRecord(placementRequest)
+            createSpaceBooking(placementRequest)
+          }
+
+          val result = webTestClient.get()
+            .uri("/cas1/placement-requests?status=matched")
+            .header("Authorization", "Bearer $jwt")
+            .exchange()
+            .expectStatus()
+            .isOk
+            .bodyAsListOfObjects<Cas1PlacementRequestSummary>()
+
+          assertThat(result.map { it.id }).containsExactlyInAnyOrder(
+            placementRequestWithBooking.id,
+            placementRequestPreviouslyUnableToMatchNowHasBooking.id,
+            placementRequestWithSpaceBooking.id,
+            placementRequestPreviouslyUnableToMatchNowHasSpaceBooking.id,
+          )
+        }
+      }
+    }
+
+    @Test
+    fun `If status filter is 'unableToMatch', returns the unable to match placement requests, ignoring withdrawn and those subsequently matched`() {
+      givenAUser(roles = listOf(UserRole.CAS1_WORKFLOW_MANAGER)) { user, jwt ->
+        givenAnOffender { unableToMatchOffender, unableToMatchInmate ->
+
+          // withdrawn, ignore
+          givenAPlacementRequest(
+            placementRequestAllocatedTo = user,
+            assessmentAllocatedTo = user,
+            createdByUser = user,
+            crn = unableToMatchOffender.otherIds.crn,
+            isWithdrawn = true,
+          ) { unableToMatchPlacementRequest, _ ->
+            createBookingNotMadeRecord(unableToMatchPlacementRequest)
+          }
+
+          val (unableToMatchPlacementRequest) = givenAPlacementRequest(
+            placementRequestAllocatedTo = user,
+            assessmentAllocatedTo = user,
+            createdByUser = user,
+            crn = unableToMatchOffender.otherIds.crn,
+          ) { placementRequest, _ ->
+            createBookingNotMadeRecord(placementRequest)
+          }
+
+          // previously unable to match, now has booking, ignored
+          givenAPlacementRequest(
+            placementRequestAllocatedTo = user,
+            assessmentAllocatedTo = user,
+            createdByUser = user,
+            crn = unableToMatchOffender.otherIds.crn,
+          ) { placementRequest, _ ->
+            createBookingNotMadeRecord(placementRequest)
+            createBooking(placementRequest)
+          }
+
+          val (hasCancelledBookingPlacementRequest) = givenAPlacementRequest(
+            placementRequestAllocatedTo = user,
+            assessmentAllocatedTo = user,
+            createdByUser = user,
+            crn = unableToMatchOffender.otherIds.crn,
+          ) { placementRequest, _ ->
+            createBookingNotMadeRecord(placementRequest)
+            createBooking(placementRequest)
+            val cancellation = cancellationEntityFactory.produceAndPersist {
+              withBooking(placementRequest.booking!!)
+              withReason(cancellationReasonEntityFactory.produceAndPersist())
+            }
+            placementRequest.booking!!.cancellations.add(cancellation)
+          }
+
+          // previously unable to match, now has space booking, ignored
+          givenAPlacementRequest(
+            placementRequestAllocatedTo = user,
+            assessmentAllocatedTo = user,
+            createdByUser = user,
+            crn = unableToMatchOffender.otherIds.crn,
+          ) { placementRequest, _ ->
+            createBookingNotMadeRecord(placementRequest)
+            createSpaceBooking(placementRequest)
+          }
+
+          val (hasCancelledSpaceBookingPlacementRequest) = givenAPlacementRequest(
+            placementRequestAllocatedTo = user,
+            assessmentAllocatedTo = user,
+            createdByUser = user,
+            crn = unableToMatchOffender.otherIds.crn,
+          ) { placementRequest, _ ->
+            createBookingNotMadeRecord(placementRequest)
+            val spaceBooking = createSpaceBooking(placementRequest)
+            spaceBooking.cancellationOccurredAt = LocalDate.now()
+            cas1SpaceBookingRepository.save(spaceBooking)
+          }
+
+          val result = webTestClient.get()
+            .uri("/cas1/placement-requests?status=unableToMatch")
+            .header("Authorization", "Bearer $jwt")
+            .exchange()
+            .expectStatus()
+            .isOk
+            .bodyAsListOfObjects<Cas1PlacementRequestSummary>()
+
+          assertThat(result.map { it.id }).containsExactlyInAnyOrder(
+            unableToMatchPlacementRequest.id,
+            hasCancelledBookingPlacementRequest.id,
+            hasCancelledSpaceBookingPlacementRequest.id,
+          )
+        }
+      }
+    }
+
+    @Test
+    fun `Returns paginated placement requests`() {
+      givenAUser(roles = listOf(UserRole.CAS1_WORKFLOW_MANAGER)) { user, jwt ->
+        givenAnOffender { offenderDetails, inmateDetails ->
+          val placementRequest = createPlacementRequest(offenderDetails, user)
+
+          webTestClient.get()
+            .uri("/cas1/placement-requests?page=1")
+            .header("Authorization", "Bearer $jwt")
+            .exchange()
+            .expectStatus()
+            .isOk
+            .expectHeader().valueEquals("X-Pagination-CurrentPage", 1)
+            .expectHeader().valueEquals("X-Pagination-TotalPages", 1)
+            .expectHeader().valueEquals("X-Pagination-TotalResults", 1)
+            .expectHeader().valueEquals("X-Pagination-PageSize", 10)
+            .expectBody()
+            .json(
+              objectMapper.writeValueAsString(
+                listOf(
+                  cas1PlacementRequestSummaryTransformer.transformPlacementRequestJpaToApi(
+                    placementRequest,
+                    PersonInfoResult.Success.Full(offenderDetails.otherIds.crn, offenderDetails, inmateDetails),
+                  ),
+                ),
+              ),
+            )
+        }
+      }
+    }
+
+    @Test
+    fun `It searches by name via crnOrName when the user is a manager`() {
+      givenAUser(roles = listOf(UserRole.CAS1_WORKFLOW_MANAGER)) { user, jwt ->
+        givenAnOffender(
+          offenderDetailsConfigBlock = {
+            withFirstName("JOHN")
+            withLastName("SMITH")
+          },
+        ) { offenderDetails, inmateDetails ->
+          givenAnOffender { otherOffenderDetails, _ ->
+            val placementRequest = createPlacementRequest(offenderDetails, user)
+            createPlacementRequest(otherOffenderDetails, user)
+
+            webTestClient.get()
+              .uri("/cas1/placement-requests?crnOrName=john")
+              .header("Authorization", "Bearer $jwt")
+              .exchange()
+              .expectStatus()
+              .isOk
+              .expectBody()
+              .json(
+                objectMapper.writeValueAsString(
+                  listOf(
+                    cas1PlacementRequestSummaryTransformer.transformPlacementRequestJpaToApi(
+                      placementRequest,
+                      PersonInfoResult.Success.Full(offenderDetails.otherIds.crn, offenderDetails, inmateDetails),
+                    ),
+                  ),
+                ),
+              )
+          }
+        }
+      }
+    }
+
+    @Test
+    fun `It searches by crn via crnOrName when the user is a manager`() {
+      givenAUser(roles = listOf(UserRole.CAS1_WORKFLOW_MANAGER)) { user, jwt ->
+        givenAnOffender { otherOffenderDetails, _ ->
+          givenAnOffender { offenderDetails, inmateDetails ->
+            val placementRequest = createPlacementRequest(offenderDetails, user)
+            createPlacementRequest(otherOffenderDetails, user)
+
+            webTestClient.get()
+              .uri("/cas1/placement-requests?crnOrName=${offenderDetails.otherIds.crn}")
+              .header("Authorization", "Bearer $jwt")
+              .exchange()
+              .expectStatus()
+              .isOk
+              .expectBody()
+              .json(
+                objectMapper.writeValueAsString(
+                  listOf(
+                    cas1PlacementRequestSummaryTransformer.transformPlacementRequestJpaToApi(
+                      placementRequest,
+                      PersonInfoResult.Success.Full(offenderDetails.otherIds.crn, offenderDetails, inmateDetails),
+                    ),
+                  ),
+                ),
+              )
+          }
+        }
+      }
+    }
+
+    @Test
+    fun `It searches by arrivalDateStart where user is manager`() {
+      givenAUser(roles = listOf(UserRole.CAS1_WORKFLOW_MANAGER)) { user, jwt ->
+        givenAnOffender { offenderDetails, inmateDetails ->
+          createPlacementRequest(offenderDetails, user, expectedArrival = LocalDate.of(2022, 1, 1))
+          val placementRequest5thJan = createPlacementRequest(offenderDetails, user, expectedArrival = LocalDate.of(2022, 1, 5))
+          val placementRequest10thJan = createPlacementRequest(offenderDetails, user, expectedArrival = LocalDate.of(2022, 1, 10))
+
+          webTestClient.get()
+            .uri("/cas1/placement-requests?arrivalDateStart=2022-01-04")
+            .header("Authorization", "Bearer $jwt")
+            .exchange()
+            .expectStatus()
+            .isOk
+            .expectBody()
+            .json(
+              objectMapper.writeValueAsString(
+                listOf(
+                  cas1PlacementRequestSummaryTransformer.transformPlacementRequestJpaToApi(
+                    placementRequest5thJan,
+                    PersonInfoResult.Success.Full(offenderDetails.otherIds.crn, offenderDetails, inmateDetails),
+                  ),
+                  cas1PlacementRequestSummaryTransformer.transformPlacementRequestJpaToApi(
+                    placementRequest10thJan,
+                    PersonInfoResult.Success.Full(offenderDetails.otherIds.crn, offenderDetails, inmateDetails),
+                  ),
+                ),
+              ),
+            )
+        }
+      }
+    }
+
+    @Test
+    fun `It searches by arrivalDateEnd where user is manager`() {
+      givenAUser(roles = listOf(UserRole.CAS1_WORKFLOW_MANAGER)) { user, jwt ->
+        givenAnOffender { offenderDetails, inmateDetails ->
+          val placementRequest1stJan = createPlacementRequest(offenderDetails, user, expectedArrival = LocalDate.of(2022, 1, 1))
+          val placementRequest5thJan = createPlacementRequest(offenderDetails, user, expectedArrival = LocalDate.of(2022, 1, 5))
+          createPlacementRequest(offenderDetails, user, expectedArrival = LocalDate.of(2022, 1, 10))
+
+          webTestClient.get()
+            .uri("/cas1/placement-requests?arrivalDateEnd=2022-01-09")
+            .header("Authorization", "Bearer $jwt")
+            .exchange()
+            .expectStatus()
+            .isOk
+            .expectBody()
+            .json(
+              objectMapper.writeValueAsString(
+                listOf(
+                  cas1PlacementRequestSummaryTransformer.transformPlacementRequestJpaToApi(
+                    placementRequest1stJan,
+                    PersonInfoResult.Success.Full(offenderDetails.otherIds.crn, offenderDetails, inmateDetails),
+                  ),
+                  cas1PlacementRequestSummaryTransformer.transformPlacementRequestJpaToApi(
+                    placementRequest5thJan,
+                    PersonInfoResult.Success.Full(offenderDetails.otherIds.crn, offenderDetails, inmateDetails),
+                  ),
+                ),
+              ),
+            )
+        }
+      }
+    }
+
+    @Test
+    fun `It searches by tier where user is manager`() {
+      givenAUser(roles = listOf(UserRole.CAS1_WORKFLOW_MANAGER)) { user, jwt ->
+        givenAnOffender { offenderDetails, inmateDetails ->
+          createPlacementRequest(offenderDetails, user, tier = RiskTierLevel.a0)
+          val placementRequestA1 = createPlacementRequest(offenderDetails, user, tier = RiskTierLevel.a1)
+          createPlacementRequest(offenderDetails, user, tier = RiskTierLevel.a2)
+
+          webTestClient.get()
+            .uri("/cas1/placement-requests?tier=A1")
+            .header("Authorization", "Bearer $jwt")
+            .exchange()
+            .expectStatus()
+            .isOk
+            .expectBody()
+            .json(
+              objectMapper.writeValueAsString(
+                listOf(
+                  cas1PlacementRequestSummaryTransformer.transformPlacementRequestJpaToApi(
+                    placementRequestA1,
+                    PersonInfoResult.Success.Full(offenderDetails.otherIds.crn, offenderDetails, inmateDetails),
+                  ),
+                ),
+              ),
+            )
+        }
+      }
+    }
+
+    @Test
+    fun `It searches by CRU Management Area ID where user is manager`() {
+      givenAUser(roles = listOf(UserRole.CAS1_WORKFLOW_MANAGER)) { user, jwt ->
+        givenAnOffender { offenderDetails, inmateDetails ->
+
+          val cruArea1 = givenACas1CruManagementArea()
+          val cruArea2 = givenACas1CruManagementArea()
+
+          createPlacementRequest(offenderDetails, user, cruManagementArea = cruArea1)
+          val placementRequestA1 = createPlacementRequest(offenderDetails, user, cruManagementArea = cruArea2)
+          createPlacementRequest(offenderDetails, user, cruManagementArea = cruArea1)
+
+          webTestClient.get()
+            .uri("/cas1/placement-requests?cruManagementAreaId=${cruArea2.id}")
+            .header("Authorization", "Bearer $jwt")
+            .exchange()
+            .expectStatus()
+            .isOk
+            .expectBody()
+            .json(
+              objectMapper.writeValueAsString(
+                listOf(
+                  cas1PlacementRequestSummaryTransformer.transformPlacementRequestJpaToApi(
+                    placementRequestA1,
+                    PersonInfoResult.Success.Full(offenderDetails.otherIds.crn, offenderDetails, inmateDetails),
+                  ),
+                ),
+              ),
+            )
+        }
+      }
+    }
+
+    @Test
+    fun `It searches by requestType where type is standardRelease`() {
+      givenAUser(roles = listOf(UserRole.CAS1_WORKFLOW_MANAGER)) { user, jwt ->
+        givenAnOffender { offenderDetails, inmateDetails ->
+          createPlacementRequest(offenderDetails, user, isParole = true)
+          val standardRelease = createPlacementRequest(offenderDetails, user, isParole = false)
+
+          webTestClient.get()
+            .uri("/cas1/placement-requests?requestType=${PlacementRequestRequestType.standardRelease.name}")
+            .header("Authorization", "Bearer $jwt")
+            .exchange()
+            .expectStatus()
+            .isOk
+            .expectBody()
+            .json(
+              objectMapper.writeValueAsString(
+                listOf(
+                  cas1PlacementRequestSummaryTransformer.transformPlacementRequestJpaToApi(
+                    standardRelease,
+                    PersonInfoResult.Success.Full(offenderDetails.otherIds.crn, offenderDetails, inmateDetails),
+                  ),
+                ),
+              ),
+            )
+        }
+      }
+    }
+
+    @Test
+    fun `It searches by requestType where type is parole`() {
+      givenAUser(roles = listOf(UserRole.CAS1_WORKFLOW_MANAGER)) { user, jwt ->
+        givenAnOffender { offenderDetails, inmateDetails ->
+          createPlacementRequest(offenderDetails, user, isParole = false)
+          val parole = createPlacementRequest(offenderDetails, user, isParole = true)
+
+          webTestClient.get()
+            .uri("/cas1/placement-requests?requestType=${PlacementRequestRequestType.parole.name}")
+            .header("Authorization", "Bearer $jwt")
+            .exchange()
+            .expectStatus()
+            .isOk
+            .expectBody()
+            .json(
+              objectMapper.writeValueAsString(
+                listOf(
+                  cas1PlacementRequestSummaryTransformer.transformPlacementRequestJpaToApi(
+                    parole,
+                    PersonInfoResult.Success.Full(offenderDetails.otherIds.crn, offenderDetails, inmateDetails),
+                  ),
+                ),
+              ),
+            )
+        }
+      }
+    }
+
+    @Test
+    fun `It searches using multiple criteria including CRU management area id where user is manager`() {
+      givenAUser(roles = listOf(UserRole.CAS1_WORKFLOW_MANAGER)) { user, jwt ->
+        givenAnOffender { offender1Details, inmate1Details ->
+          givenAnOffender { offender2Details, _ ->
+
+            val cruArea1 = givenACas1CruManagementArea()
+            val cruArea2 = givenACas1CruManagementArea()
+
+            createPlacementRequest(offender1Details, user, expectedArrival = LocalDate.of(2022, 1, 1), tier = RiskTierLevel.a2)
+            createPlacementRequest(offender1Details, user, expectedArrival = LocalDate.of(2022, 1, 5), tier = RiskTierLevel.a1)
+            val placementOffender1On5thJanTierA2Parole =
+              createPlacementRequest(offender1Details, user, expectedArrival = LocalDate.of(2022, 1, 5), tier = RiskTierLevel.a2, isParole = true, cruManagementArea = cruArea1)
+            createPlacementRequest(offender1Details, user, expectedArrival = LocalDate.of(2022, 1, 5), tier = RiskTierLevel.a2, isParole = true, cruManagementArea = cruArea2)
+            createPlacementRequest(offender1Details, user, expectedArrival = LocalDate.of(2022, 1, 5), tier = RiskTierLevel.a2, isParole = false)
+            createPlacementRequest(offender2Details, user, expectedArrival = LocalDate.of(2022, 1, 5), tier = RiskTierLevel.a2)
+            createPlacementRequest(offender1Details, user, expectedArrival = LocalDate.of(2022, 1, 10), tier = RiskTierLevel.a2)
+
+            webTestClient.get()
+              .uri(
+                "/cas1/placement-requests?arrivalDateStart=2022-01-02&arrivalDateEnd=2022-01-09&crnOrName=${offender1Details.otherIds.crn}" +
+                  "&tier=A2&requestType=parole&cruManagementAreaId=${cruArea1.id}",
+              )
+              .header("Authorization", "Bearer $jwt")
+              .exchange()
+              .expectStatus()
+              .isOk
+              .expectBody()
+              .json(
+                objectMapper.writeValueAsString(
+                  listOf(
+                    cas1PlacementRequestSummaryTransformer.transformPlacementRequestJpaToApi(
+                      placementOffender1On5thJanTierA2Parole,
+                      PersonInfoResult.Success.Full(offender1Details.otherIds.crn, offender1Details, inmate1Details),
+                    ),
+                  ),
+                ),
+              )
+          }
+        }
+      }
+    }
+
+    @Test
+    fun `It sorts by duration when the user is a manager`() {
+      givenAUser(roles = listOf(UserRole.CAS1_WORKFLOW_MANAGER)) { user, jwt ->
+        givenAnOffender { offenderDetails, _ ->
+          val placementRequestWithOneDayDuration = createPlacementRequest(offenderDetails, user, duration = 1)
+          val placementRequestWithFiveDayDuration = createPlacementRequest(offenderDetails, user, duration = 5)
+          val placementRequestWithTwelveDayDuration = createPlacementRequest(offenderDetails, user, duration = 12)
+
+          webTestClient.get()
+            .uri("/cas1/placement-requests?page=1&sortBy=duration")
+            .header("Authorization", "Bearer $jwt")
+            .exchange()
+            .expectStatus()
+            .isOk
+            .expectBody()
+            .jsonPath("$[0].id").isEqualTo(placementRequestWithOneDayDuration.id.toString())
+            .jsonPath("$[1].id").isEqualTo(placementRequestWithFiveDayDuration.id.toString())
+            .jsonPath("$[2].id").isEqualTo(placementRequestWithTwelveDayDuration.id.toString())
+
+          webTestClient.get()
+            .uri("/cas1/placement-requests?page=1&sortBy=duration&sortDirection=desc")
+            .header("Authorization", "Bearer $jwt")
+            .exchange()
+            .expectStatus()
+            .isOk
+            .expectBody()
+            .jsonPath("$[0].id").isEqualTo(placementRequestWithTwelveDayDuration.id.toString())
+            .jsonPath("$[1].id").isEqualTo(placementRequestWithFiveDayDuration.id.toString())
+            .jsonPath("$[2].id").isEqualTo(placementRequestWithOneDayDuration.id.toString())
+        }
+      }
+    }
+
+    @Test
+    fun `It sorts by expectedArrival when the user is a manager`() {
+      givenAUser(roles = listOf(UserRole.CAS1_WORKFLOW_MANAGER)) { user, jwt ->
+        givenAnOffender { offenderDetails, _ ->
+          val placementRequestWithExpectedArrivalOfToday = createPlacementRequest(offenderDetails, user)
+          val placementRequestWithExpectedArrivalInTwelveDays =
+            createPlacementRequest(offenderDetails, user, expectedArrival = LocalDate.now().plusDays(12))
+          val placementRequestWithExpectedArrivalInThirtyDays =
+            createPlacementRequest(offenderDetails, user, expectedArrival = LocalDate.now().plusDays(30))
+
+          webTestClient.get()
+            .uri("/cas1/placement-requests?page=1&sortBy=expected_arrival")
+            .header("Authorization", "Bearer $jwt")
+            .exchange()
+            .expectStatus()
+            .isOk
+            .expectBody()
+            .jsonPath("$[0].id").isEqualTo(placementRequestWithExpectedArrivalOfToday.id.toString())
+            .jsonPath("$[1].id").isEqualTo(placementRequestWithExpectedArrivalInTwelveDays.id.toString())
+            .jsonPath("$[2].id").isEqualTo(placementRequestWithExpectedArrivalInThirtyDays.id.toString())
+
+          webTestClient.get()
+            .uri("/cas1/placement-requests?page=1&sortBy=expected_arrival&sortDirection=desc")
+            .header("Authorization", "Bearer $jwt")
+            .exchange()
+            .expectStatus()
+            .isOk
+            .expectBody()
+            .jsonPath("$[0].id").isEqualTo(placementRequestWithExpectedArrivalInThirtyDays.id.toString())
+            .jsonPath("$[1].id").isEqualTo(placementRequestWithExpectedArrivalInTwelveDays.id.toString())
+            .jsonPath("$[2].id").isEqualTo(placementRequestWithExpectedArrivalOfToday.id.toString())
+        }
+      }
+    }
+
+    @Test
+    fun `It sorts by requestType when the user is a manager`() {
+      givenAUser(roles = listOf(UserRole.CAS1_WORKFLOW_MANAGER)) { user, jwt ->
+        givenAnOffender { offenderDetails, _ ->
+          val placementRequest1WithStatusParole = createPlacementRequest(offenderDetails, user, isParole = true)
+          val placementRequest2WithStatusStandard = createPlacementRequest(offenderDetails, user, isParole = false)
+
+          webTestClient.get()
+            .uri("/cas1/placement-requests?page=1&sortBy=request_type&sortDirection=asc")
+            .header("Authorization", "Bearer $jwt")
+            .exchange()
+            .expectStatus()
+            .isOk
+            .expectBody()
+            .jsonPath("$[0].id").isEqualTo(placementRequest1WithStatusParole.id.toString())
+            .jsonPath("$[1].id").isEqualTo(placementRequest2WithStatusStandard.id.toString())
+
+          webTestClient.get()
+            .uri("/cas1/placement-requests?page=1&sortBy=request_type&sortDirection=desc")
+            .header("Authorization", "Bearer $jwt")
+            .exchange()
+            .expectStatus()
+            .isOk
+            .expectBody()
+            .jsonPath("$[0].id").isEqualTo(placementRequest2WithStatusStandard.id.toString())
+            .jsonPath("$[1].id").isEqualTo(placementRequest1WithStatusParole.id.toString())
+        }
+      }
+    }
+
+    @Test
+    fun `It sorts by personName when the user is a manager`() {
+      givenAUser(roles = listOf(UserRole.CAS1_WORKFLOW_MANAGER)) { user, jwt ->
+
+        val (offenderJohnSmithDetails, _) = givenAnOffender(
+          offenderDetailsConfigBlock = {
+            withFirstName("JOHN")
+            withLastName("SMITH")
+          },
+        )
+
+        val (offenderZackeryZoikesDetails, _) = givenAnOffender(
+          offenderDetailsConfigBlock = {
+            withFirstName("ZAKERY")
+            withLastName("ZOIKES")
+          },
+        )
+
+        val (offenderHarryHarrisonDetails, _) = givenAnOffender(
+          offenderDetailsConfigBlock = {
+            withFirstName("HARRY")
+            withLastName("HARRISON")
+          },
+        )
+
+        val placementRequestJohnSmith = createPlacementRequest(offenderJohnSmithDetails, user)
+        val placementRequestZakeryZoikes = createPlacementRequest(offenderZackeryZoikesDetails, user)
+        val placementRequestHarryHarrisonDetails = createPlacementRequest(offenderHarryHarrisonDetails, user)
+
+        webTestClient.get()
+          .uri("/cas1/placement-requests?page=1&sortBy=person_name&sortDirection=asc")
+          .header("Authorization", "Bearer $jwt")
+          .exchange()
+          .expectStatus()
+          .isOk
+          .expectBody()
+          .jsonPath("$[0].id").isEqualTo(placementRequestHarryHarrisonDetails.id.toString())
+          .jsonPath("$[1].id").isEqualTo(placementRequestJohnSmith.id.toString())
+          .jsonPath("$[2].id").isEqualTo(placementRequestZakeryZoikes.id.toString())
+
+        webTestClient.get()
+          .uri("/cas1/placement-requests?page=1&sortBy=person_name&sortDirection=desc")
+          .header("Authorization", "Bearer $jwt")
+          .exchange()
+          .expectStatus()
+          .isOk
+          .expectBody()
+          .jsonPath("$[0].id").isEqualTo(placementRequestZakeryZoikes.id.toString())
+          .jsonPath("$[1].id").isEqualTo(placementRequestJohnSmith.id.toString())
+          .jsonPath("$[2].id").isEqualTo(placementRequestHarryHarrisonDetails.id.toString())
+      }
+    }
+
+    @Test
+    fun `It sorts by personRisksTier when the user is a manager`() {
+      givenAUser(roles = listOf(UserRole.CAS1_WORKFLOW_MANAGER)) { user, jwt ->
+        givenAnOffender { offenderDetails, _ ->
+          val placementRequest1TierB1 = createPlacementRequest(offenderDetails, user, tier = RiskTierLevel.b1)
+          val placementRequest2TierA0 = createPlacementRequest(offenderDetails, user, tier = RiskTierLevel.a0)
+          val placementRequest3TierA1 = createPlacementRequest(offenderDetails, user, tier = RiskTierLevel.a1)
+
+          webTestClient.get()
+            .uri("/cas1/placement-requests?page=1&sortBy=person_risks_tier&sortDirection=asc")
+            .header("Authorization", "Bearer $jwt")
+            .exchange()
+            .expectStatus()
+            .isOk
+            .expectBody()
+            .jsonPath("$[0].id").isEqualTo(placementRequest2TierA0.id.toString())
+            .jsonPath("$[1].id").isEqualTo(placementRequest3TierA1.id.toString())
+            .jsonPath("$[2].id").isEqualTo(placementRequest1TierB1.id.toString())
+
+          webTestClient.get()
+            .uri("/cas1/placement-requests?page=1&sortBy=person_risks_tier&sortDirection=desc")
+            .header("Authorization", "Bearer $jwt")
+            .exchange()
+            .expectStatus()
+            .isOk
+            .expectBody()
+            .jsonPath("$[0].id").isEqualTo(placementRequest1TierB1.id.toString())
+            .jsonPath("$[1].id").isEqualTo(placementRequest3TierA1.id.toString())
+            .jsonPath("$[2].id").isEqualTo(placementRequest2TierA0.id.toString())
+        }
+      }
+    }
+
+    @Test
+    fun `It sorts by createdAt when the user is a manager`() {
+      givenAUser(roles = listOf(UserRole.CAS1_WORKFLOW_MANAGER)) { user, jwt ->
+        givenAnOffender { offenderDetails, _ ->
+          val placementRequestCreatedToday = createPlacementRequest(offenderDetails, user)
+          val placementRequestCreatedFiveDaysAgo =
+            createPlacementRequest(offenderDetails, user, createdAt = OffsetDateTime.now().minusDays(5))
+          val placementRequestCreatedThirtyDaysAgo =
+            createPlacementRequest(offenderDetails, user, createdAt = OffsetDateTime.now().minusDays(30))
+
+          webTestClient.get()
+            .uri("/cas1/placement-requests?page=1&sortBy=created_at")
+            .header("Authorization", "Bearer $jwt")
+            .exchange()
+            .expectStatus()
+            .isOk
+            .expectBody()
+            .jsonPath("$[0].id").isEqualTo(placementRequestCreatedThirtyDaysAgo.id.toString())
+            .jsonPath("$[1].id").isEqualTo(placementRequestCreatedFiveDaysAgo.id.toString())
+            .jsonPath("$[2].id").isEqualTo(placementRequestCreatedToday.id.toString())
+
+          webTestClient.get()
+            .uri("/cas1/placement-requests?page=1&sortBy=created_at&sortDirection=desc")
+            .header("Authorization", "Bearer $jwt")
+            .exchange()
+            .expectStatus()
+            .isOk
+            .expectBody()
+            .jsonPath("$[0].id").isEqualTo(placementRequestCreatedToday.id.toString())
+            .jsonPath("$[1].id").isEqualTo(placementRequestCreatedFiveDaysAgo.id.toString())
+            .jsonPath("$[2].id").isEqualTo(placementRequestCreatedThirtyDaysAgo.id.toString())
+        }
+      }
+    }
+
+    @Test
+    fun `It sorts by applicationSubmittedAt when the user is a manager`() {
+      givenAUser(roles = listOf(UserRole.CAS1_WORKFLOW_MANAGER)) { user, jwt ->
+        givenAnOffender { offenderDetails, _ ->
+          val placementRequestWithApplicationCreatedToday = createPlacementRequest(offenderDetails, user)
+          val placementRequestWithApplicationCreatedTwelveDaysAgo =
+            createPlacementRequest(offenderDetails, user, applicationDate = OffsetDateTime.now().minusDays(12))
+          val placementRequestWithApplicationCreatedThirtyDaysAgo =
+            createPlacementRequest(offenderDetails, user, applicationDate = OffsetDateTime.now().minusDays(30))
+
+          webTestClient.get()
+            .uri("/cas1/placement-requests?page=1&sortBy=application_date")
+            .header("Authorization", "Bearer $jwt")
+            .exchange()
+            .expectStatus()
+            .isOk
+            .expectBody()
+            .jsonPath("$[0].id").isEqualTo(placementRequestWithApplicationCreatedThirtyDaysAgo.id.toString())
+            .jsonPath("$[1].id").isEqualTo(placementRequestWithApplicationCreatedTwelveDaysAgo.id.toString())
+            .jsonPath("$[2].id").isEqualTo(placementRequestWithApplicationCreatedToday.id.toString())
+
+          webTestClient.get()
+            .uri("/cas1/placement-requests?page=1&sortBy=application_date&sortDirection=desc")
             .header("Authorization", "Bearer $jwt")
             .exchange()
             .expectStatus()

@@ -85,7 +85,91 @@ paths:
         500:
           $ref: '#/components/responses/500Response'
       x-codegen-request-body-name: body
-
+  /placement-requests:
+    get:
+      tags:
+        - Placement requests
+      summary: Gets all placement requests
+      operationId: search
+      parameters:
+        - name: status
+          in: query
+          description: filter by status of an application
+          schema:
+            $ref: '#/components/schemas/PlacementRequestStatus'
+        - name: crnOrName
+          in: query
+          description: search by CRN or name
+          schema:
+            type: string
+        - name: tier
+          in: query
+          description: filter by tier of Offender at time Application was created
+          schema:
+            $ref: '#/components/schemas/RiskTierLevel'
+        - name: arrivalDateStart
+          in: query
+          description: filter by minimum expected arrival date
+          schema:
+            type: string
+            format: date
+        - name: arrivalDateEnd
+          in: query
+          description: filter by maximum expected arrival date
+          schema:
+            type: string
+            format: date
+        - name: requestType
+          in: query
+          description: filter by request type
+          schema:
+            $ref: '#/components/schemas/PlacementRequestRequestType'
+        - name: cruManagementAreaId
+          in: query
+          required: false
+          description: filter by CRU management area ID
+          schema:
+            type: string
+            format: uuid
+        - name: page
+          in: query
+          description: Page number of results to return. If blank, returns all results
+          schema:
+            type: integer
+        - name: sortBy
+          in: query
+          description: Which field to sort the results by. If blank, will sort by createdAt
+          schema:
+            $ref: '#/components/schemas/PlacementRequestSortField'
+        - name: sortDirection
+          in: query
+          description: The direction to sort the results by. If blank, will sort in descending order
+          schema:
+            $ref: '#/components/schemas/SortDirection'
+      responses:
+        200:
+          description: successfully retrieved placement requests
+          content:
+            'application/json':
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Cas1PlacementRequestSummary'
+          headers:
+            X-Pagination-CurrentPage:
+              $ref: '#/components/headers/X-Pagination-CurrentPage'
+            X-Pagination-TotalPages:
+              $ref: '#/components/headers/X-Pagination-TotalPages'
+            X-Pagination-TotalResults:
+              $ref: '#/components/headers/X-Pagination-TotalResults'
+            X-Pagination-PageSize:
+              $ref: '#/components/headers/X-Pagination-TotalResults'
+        401:
+          $ref: '#/components/responses/401Response'
+        403:
+          $ref: '#/components/responses/403Response'
+        500:
+          $ref: '#/components/responses/500Response'
   /premises/summary:
     get:
       description: Provide a summary of all premises, with optional filtering
@@ -7406,3 +7490,44 @@ components:
       required:
         - expectedArrival
         - expectedDeparture
+    Cas1PlacementRequestSummary:
+      type: object
+      properties:
+        requestedPlacementDuration:
+          type: integer
+        requestedPlacementArrivalDate:
+          type: string
+          format: date
+        id:
+          type: string
+          format: uuid
+        person:
+          $ref: '#/components/schemas/Person'
+        personTier:
+          type: string
+        applicationId:
+          type: string
+          format: uuid
+        placementRequestStatus:
+          type: string
+          enum:
+            - matched
+            - unableToMatch
+            - notMatched
+        applicationSubmittedDate:
+          type: string
+          format: date
+        isParole:
+          type: boolean
+        firstBookingPremisesName:
+          type: string
+        firstBookingArrivalDate:
+          type: string
+          format: date
+      required:
+        - placementDatesDuration
+        - placementDatesExpectedArrivalDate
+        - placementRequestStatus
+        - person
+        - isParole
+        - id

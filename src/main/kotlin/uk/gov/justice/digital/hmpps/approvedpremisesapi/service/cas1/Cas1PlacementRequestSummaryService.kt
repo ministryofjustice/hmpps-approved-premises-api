@@ -15,6 +15,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.BookingNotMad
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.BookingNotMadeRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.CancellationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.CancellationRepository
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas1PlacementRequestSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementDateRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementRequestEntity
@@ -96,6 +97,38 @@ class PlacementRequestService(
     )
 
     val response = placementRequestRepository.allForDashboard(
+      status = searchCriteria.status?.name,
+      crn = searchCriteria.crn,
+      crnOrName = searchCriteria.crnOrName,
+      tier = searchCriteria.tier,
+      arrivalDateFrom = searchCriteria.arrivalDateStart,
+      arrivalDateTo = searchCriteria.arrivalDateEnd,
+      requestType = searchCriteria.requestType?.name,
+      apAreaId = searchCriteria.apAreaId,
+      cruManagementAreaId = searchCriteria.cruManagementAreaId,
+      pageable = pageable,
+    )
+
+    return Pair(response.content, getMetadata(response, pageCriteria))
+  }
+
+  fun getAllCas1Active(
+    searchCriteria: AllActiveSearchCriteria,
+    pageCriteria: PageCriteria<PlacementRequestSortField>,
+  ): Pair<List<Cas1PlacementRequestSummary>, PaginationMetadata?> {
+    val pageable = pageCriteria.toPageable(
+      when (pageCriteria.sortBy) {
+        PlacementRequestSortField.applicationSubmittedAt -> "application.submitted_at"
+        PlacementRequestSortField.createdAt -> "created_at"
+        PlacementRequestSortField.expectedArrival -> "requestedPlacementArrivalDate"
+        PlacementRequestSortField.duration -> "requestedPlacementDuration"
+        PlacementRequestSortField.requestType -> "requestType"
+        PlacementRequestSortField.personName -> "personName"
+        PlacementRequestSortField.personRisksTier -> "personTier"
+      },
+    )
+
+    val response = placementRequestRepository.allForCas1Dashboard(
       status = searchCriteria.status?.name,
       crn = searchCriteria.crn,
       crnOrName = searchCriteria.crnOrName,
