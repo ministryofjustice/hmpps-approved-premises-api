@@ -18,12 +18,12 @@ To achieve this our code uses a custom `BaseHMPPSClient` which wraps Spring's Re
 
 There are some minor issues with `BaseHMPPSClient`
 
-* We don't leverage the reactive programming model provided by Spring's Reactive Web Client, and instead wrap the client to use it as a synchronous client (which adds complexity in `BaseHMPPSClient`). None of our controllers use WebFlux (e.g. return a `Mono<>` response) which enable the reactive programming model.
 * The `BaseHMPPSClient` is a large class, mixing various concerns (retry, caching) into a single class
 * The response hierarchy provided by `ClientResult` is complicated and littered with various caching information that is only used by a few clients
 * It doesn't support providing a complete URL to call (i.e. the base url is configured at startup). This will be required going forward.
+* We don't leverage the reactive programming model provided by Spring's Reactive Web Client, and instead wrap the client to use it as a synchronous client. This adds a little bit of complexity to `BaseHMPPSClient`. None of our controllers use WebFlux (e.g. return a `Mono<>` response) which enable the reactive programming model.
 
-Whilst the `BaseHMPPSClient` works well for us, other projects (e.g .hmpps-probation-integration) using the Spring Rest Client directly which appears to produce more fluent code when used in a synchronous request/response pattern. The `BaseHMPPSClient` is also becoming increasingly complex
+Whilst the `BaseHMPPSClient` works well for us, other projects (e.g .hmpps-probation-integration) use the Spring Rest Client directly which appears to produce more fluent code when used in a synchronous request/response pattern. Note that Spring's Rest Client [was introduced in 2023](https://spring.io/blog/2023/07/13/new-in-spring-6-1-restclient), after development started on CAS
 
 ## Options
 
