@@ -53,9 +53,16 @@ class Cas1PremisesTest : IntegrationTestBase() {
   inner class GetPremisesSummary : InitialiseDatabasePerClassTestBase() {
 
     lateinit var premises: ApprovedPremisesEntity
+    lateinit var offender: CaseSummary
+    lateinit var application: ApprovedPremisesApplicationEntity
+    lateinit var placementRequest: PlacementRequestEntity
+    lateinit var user: UserEntity
+    lateinit var spaceBooking: Cas1SpaceBookingEntity
+    val tierA = "TierA"
 
     @BeforeAll
     fun setupTestData() {
+      user = givenAUser().first
       val region = givenAProbationRegion(
         apArea = givenAnApArea(name = "The ap area name"),
       )
@@ -67,6 +74,66 @@ class Cas1PremisesTest : IntegrationTestBase() {
         withYieldedProbationRegion { region }
         withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
         withManagerDetails("manager details")
+      }
+
+      setupSpaceBookings()
+    }
+
+    fun setupSpaceBookings() {
+      offender = givenAnOffender(
+        offenderDetailsConfigBlock = {
+          withCrn("crn1")
+          withFirstName("firstNameAAA")
+          withLastName("lastNameAAA")
+          withCurrentRestriction(false)
+        },
+      ).first.asCaseSummary()
+
+      val pRequestA = givenAPlacementRequest(
+        placementRequestAllocatedTo = user,
+        assessmentAllocatedTo = user,
+        createdByUser = user,
+        crn = offender.crn,
+        name = "${offender.name.forename} ${offender.name.surname}",
+        tier = tierA,
+      )
+      placementRequest = pRequestA.first
+      application = pRequestA.second
+
+      spaceBooking = createSpaceBooking(
+        crn = offender.crn,
+        placementRequest = this.placementRequest,
+        application = application,
+      ) {
+        withCrn(offender.crn)
+        withPremises(premises)
+        withCanonicalArrivalDate(LocalDate.now().minusDays(3))
+        withCanonicalDepartureDate(LocalDate.now().plusDays(3))
+        withCreatedBy(user)
+        withCriteria(
+          findCharacteristic(CAS1_PROPERTY_NAME_ARSON_SUITABLE),
+        )
+      }
+    }
+
+    private fun findCharacteristic(propertyName: String) =
+      characteristicRepository.findByPropertyName(propertyName, ServiceName.approvedPremises.value)!!
+
+    private fun createSpaceBooking(
+      crn: String,
+      placementRequest: PlacementRequestEntity,
+      application: ApprovedPremisesApplicationEntity,
+      configuration: Cas1SpaceBookingEntityFactory.() -> Unit,
+    ): Cas1SpaceBookingEntity {
+      val (user) = givenAUser()
+
+      return cas1SpaceBookingEntityFactory.produceAndPersist {
+        withCrn(crn)
+        withPlacementRequest(placementRequest)
+        withApplication(application)
+        withCreatedBy(user)
+
+        configuration.invoke(this)
       }
     }
 
@@ -143,7 +210,7 @@ class Cas1PremisesTest : IntegrationTestBase() {
       assertThat(summary.postcode).isEqualTo("the postcode")
       assertThat(summary.bedCount).isEqualTo(5)
       assertThat(summary.outOfServiceBeds).isEqualTo(1)
-      assertThat(summary.availableBeds).isEqualTo(4)
+      assertThat(summary.availableBeds).isEqualTo(3)
       assertThat(summary.apArea.name).isEqualTo("The ap area name")
       assertThat(summary.managerDetails).isEqualTo("manager details")
     }

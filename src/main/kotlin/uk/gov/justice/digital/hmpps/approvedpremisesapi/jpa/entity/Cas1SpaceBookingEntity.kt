@@ -228,6 +228,20 @@ interface Cas1SpaceBookingRepository : JpaRepository<Cas1SpaceBookingEntity, UUI
     """,
   )
   fun updateEventNumber(applicationId: UUID, eventNumber: String)
+
+  @Query(
+    value = """
+        SELECT COUNT(*)
+        FROM cas1_space_bookings b
+        WHERE 
+            b.premises_id = :premisesId AND 
+            b.canonical_arrival_date <= CURRENT_DATE AND
+            b.canonical_departure_date > CURRENT_DATE AND
+            b.cancellation_occurred_at IS NULL
+    """,
+    nativeQuery = true,
+  )
+  fun countActiveSpaceBookings(premisesId: UUID): Long
 }
 
 interface Cas1SpaceBookingDaySummarySearchResult {

@@ -6,6 +6,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1Overbookin
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesGender
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesRepository
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas1SpaceBookingRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.CasResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.PremisesService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.planning.SpacePlanningService
@@ -20,6 +21,7 @@ class Cas1PremisesService(
   val premisesService: PremisesService,
   val outOfServiceBedService: Cas1OutOfServiceBedService,
   val spacePlanningService: SpacePlanningService,
+  val spaceBookingRepository: Cas1SpaceBookingRepository,
 ) {
   companion object {
     private const val OVERBOOKING_RANGE_DURATION_WEEKS = 12L
@@ -30,13 +32,15 @@ class Cas1PremisesService(
 
     val bedCount = premisesService.getBedCount(premise)
     val outOfServiceBedsCount = outOfServiceBedService.getCurrentOutOfServiceBedsCountForPremisesId(premisesId)
+    val spaceBookingCount = spaceBookingRepository.countActiveSpaceBookings(premisesId).toInt()
+
     val overbookingSummary = premise.takeIf { it.supportsSpaceBookings }?.let { buildOverBookingSummary(it) } ?: emptyList()
 
     return CasResult.Success(
       Cas1PremisesInfo(
         entity = premise,
         bedCount = bedCount,
-        availableBeds = bedCount - outOfServiceBedsCount,
+        availableBeds = bedCount - outOfServiceBedsCount - spaceBookingCount,
         outOfServiceBeds = outOfServiceBedsCount,
         overbookingSummary = overbookingSummary,
       ),

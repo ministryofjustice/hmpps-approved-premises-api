@@ -77,7 +77,6 @@ class Cas1PremisesController(
   ): ResponseEntity<Cas1PremiseCapacity> {
     userAccessService.ensureCurrentUserHasPermission(UserPermission.CAS1_PREMISES_VIEW)
 
-    val premiseSummaryInfo = cas1PremisesService.getPremisesInfo(premisesId)
     val premiseCapacity = cas1PremisesService.getPremiseCapacity(
       premisesId = premisesId,
       startDate = startDate,
@@ -100,10 +99,7 @@ class Cas1PremisesController(
     bookingsSortBy: Cas1SpaceBookingDaySummarySortField?,
   ): ResponseEntity<Cas1PremisesDaySummary> {
     userAccessService.ensureCurrentUserHasPermission(UserPermission.CAS1_PREMISES_VIEW)
-
-    val premiseSummaryInfo = extractEntityFromCasResult(
-      cas1PremisesService.getPremisesInfo(premisesId),
-    )
+    val premises = cas1PremisesService.findPremiseById(premisesId)
 
     return ResponseEntity.ok().body(
       cas1PremisesDayTransformer.toCas1PremisesDaySummary(
@@ -130,7 +126,7 @@ class Cas1PremisesController(
         outOfServiceBeds = extractEntityFromCasResult(
           cas1OutOfServiceBedSummaryService.getOutOfServiceBedSummaries(
             premisesId = premisesId,
-            apAreaId = premiseSummaryInfo.entity.probationRegion.apArea!!.id,
+            apAreaId = premises?.probationRegion?.apArea!!.id,
             date = date,
           ),
         ).map(cas1OutOfServiceBedSummaryTransformer::toCas1OutOfServiceBedSummary),
