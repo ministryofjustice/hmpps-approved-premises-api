@@ -1,4 +1,4 @@
-package uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.cas1
+package uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.cas1.reporting
 
 import com.opencsv.CSVReaderBuilder
 import org.assertj.core.api.Assertions.assertThat
@@ -38,6 +38,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.StaffDetailFacto
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.TeamFactoryDeliusContext
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.from
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.InitialiseDatabasePerClassTestBase
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.cas1.Cas1SimpleApiClient
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAUser
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAnApArea
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAnOffender
@@ -74,15 +75,15 @@ class Cas1ApplicationV2ReportTest : InitialiseDatabasePerClassTestBase() {
   @Autowired
   lateinit var cas1SimpleApiClient: Cas1SimpleApiClient
 
-  lateinit var applicationSchema: ApprovedPremisesApplicationJsonSchemaEntity
-  lateinit var assessmentSchema: ApprovedPremisesAssessmentJsonSchemaEntity
+  private lateinit var applicationSchema: ApprovedPremisesApplicationJsonSchemaEntity
+  private lateinit var assessmentSchema: ApprovedPremisesAssessmentJsonSchemaEntity
 
-  val appSubmittedWithSuccessfulAppealsClarificationsAndWithdrawnManager = AppSubmittedWithSuccessfulAppealsClarificationsAndWithdrawnManager()
-  val appSubmittedWithAcceptedAssessmentManager = AppSubmittedWithAcceptedAssessmentManager()
-  val appSubmittedWithNoAssessmentManager = AppSubmittedNoAssessmentManager()
-  val appWithdrawnDuringReportingPeriod = AppWithdrawnDuringReportingPeriod()
-  val appSubmittedBeforeReportingPeriod = AppSubmittedBeforeReportingPeriod()
-  val appSubmittedAfterReportingPeriod = AppSubmittedAfterReportingPeriod()
+  private val appSubmittedWithSuccessfulAppealsClarificationsAndWithdrawn = AppSubmittedWithSuccessfulAppealsClarificationsAndWithdrawn()
+  private val appSubmittedWithAssessmentAccepted = AppSubmittedWithAssessmentAccepted()
+  private val appSubmittedWithAssessmentAllocated = AppSubmittedWithAssessmentAllocated()
+  private val appWithdrawnDuringReportingPeriod = AppWithdrawnDuringReportingPeriod()
+  private val appSubmittedBeforeReportingPeriod = AppSubmittedBeforeReportingPeriod()
+  private val appSubmittedAfterReportingPeriod = AppSubmittedAfterReportingPeriod()
 
   @BeforeAll
   fun setup() {
@@ -91,9 +92,9 @@ class Cas1ApplicationV2ReportTest : InitialiseDatabasePerClassTestBase() {
     applicationSchema = approvedPremisesApplicationJsonSchemaEntityFactory.produceAndPersist { withDefaults() }
     assessmentSchema = approvedPremisesAssessmentJsonSchemaEntityFactory.produceAndPersist { withDefaults() }
 
-    appSubmittedWithSuccessfulAppealsClarificationsAndWithdrawnManager.createApplication()
-    appSubmittedWithAcceptedAssessmentManager.createApplication()
-    appSubmittedWithNoAssessmentManager.createApplication()
+    appSubmittedWithSuccessfulAppealsClarificationsAndWithdrawn.createApplication()
+    appSubmittedWithAssessmentAccepted.createApplication()
+    appSubmittedWithAssessmentAllocated.createApplication()
     appWithdrawnDuringReportingPeriod.createApplication()
 
     appSubmittedBeforeReportingPeriod.createApplication()
@@ -146,9 +147,9 @@ class Cas1ApplicationV2ReportTest : InitialiseDatabasePerClassTestBase() {
           assertThat(actual.size).isEqualTo(4)
 
           appWithdrawnDuringReportingPeriod.assertRow(actual[0])
-          appSubmittedWithSuccessfulAppealsClarificationsAndWithdrawnManager.assertRow(actual[1])
-          appSubmittedWithAcceptedAssessmentManager.assertRow(actual[2])
-          appSubmittedWithNoAssessmentManager.assertRow(actual[3])
+          appSubmittedWithSuccessfulAppealsClarificationsAndWithdrawn.assertRow(actual[1])
+          appSubmittedWithAssessmentAccepted.assertRow(actual[2])
+          appSubmittedWithAssessmentAllocated.assertRow(actual[3])
         }
     }
   }
@@ -187,7 +188,7 @@ class Cas1ApplicationV2ReportTest : InitialiseDatabasePerClassTestBase() {
 
           assertThat(actual.size).isEqualTo(4)
 
-          appSubmittedWithSuccessfulAppealsClarificationsAndWithdrawnManager.assertRow(
+          appSubmittedWithSuccessfulAppealsClarificationsAndWithdrawn.assertRow(
             row = actual[1],
             shouldIncludePii = false,
           )
@@ -195,7 +196,7 @@ class Cas1ApplicationV2ReportTest : InitialiseDatabasePerClassTestBase() {
     }
   }
 
-  inner class AppSubmittedWithSuccessfulAppealsClarificationsAndWithdrawnManager {
+  inner class AppSubmittedWithSuccessfulAppealsClarificationsAndWithdrawn {
     lateinit var application: ApprovedPremisesApplicationEntity
 
     fun createApplication() {
@@ -393,7 +394,7 @@ class Cas1ApplicationV2ReportTest : InitialiseDatabasePerClassTestBase() {
     }
   }
 
-  inner class AppSubmittedWithAcceptedAssessmentManager {
+  inner class AppSubmittedWithAssessmentAccepted {
     lateinit var application: ApprovedPremisesApplicationEntity
 
     fun createApplication() {
@@ -514,14 +515,20 @@ class Cas1ApplicationV2ReportTest : InitialiseDatabasePerClassTestBase() {
     }
   }
 
-  inner class AppSubmittedNoAssessmentManager {
+  inner class AppSubmittedWithAssessmentAllocated {
     lateinit var application: ApprovedPremisesApplicationEntity
 
     fun createApplication() {
       val (assessor3, _) = givenAUser(
         roles = listOf(UserRole.CAS1_ASSESSOR),
         qualifications = UserQualification.entries,
-        staffDetail = StaffDetailFactory.staffDetail(deliusUsername = "ASSESSOR3"),
+        staffDetail = StaffDetailFactory.staffDetail(
+          deliusUsername = "ASSESSOR3",
+          name = PersonName(forename = "Barry", middleName = "Boggles", surname = "Briggs"),
+        ),
+        probationRegion = probationRegionEntityFactory.produceAndPersist {
+          withApArea(givenAnApArea(name = "Ap Area 3"))
+        },
       )
 
       application = createAndSubmitApplication(
@@ -596,8 +603,9 @@ class Cas1ApplicationV2ReportTest : InitialiseDatabasePerClassTestBase() {
       assertThat(row.initial_assessor_reason_for_late_application_detail).isNull()
       assertThat(row.initial_assessor_premises_type).isNull()
       assertThat(row.last_allocated_to_initial_assessor_date).isEqualTo("2023-08-11T03:25:10Z")
-      assertThat(row.initial_assessor_cru).isNull()
-      assertThat(row.initial_assessor_username).isNull()
+      assertThat(row.initial_assessor_cru).isEqualTo("Ap Area 3")
+      assertThat(row.initial_assessor_username).isEqualTo("ASSESSOR3")
+      assertThat(row.initial_assessor_name).isEqualTo("Barry Boggles Briggs")
       assertThat(row.initial_assessment_further_information_requested_on).isNull()
       assertThat(row.initial_assessment_further_information_received_at).isNull()
       assertThat(row.initial_assessment_decision_date).isNull()

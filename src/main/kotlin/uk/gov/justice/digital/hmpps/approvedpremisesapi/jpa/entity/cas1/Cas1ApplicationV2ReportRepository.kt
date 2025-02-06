@@ -52,13 +52,9 @@ SELECT DISTINCT ON (application.submitted_at, application.id)
   initial_assessment.data -> 'suitability-assessment' -> 'application-timeliness' ->> 'reasonForLateApplication' AS initial_assessor_reason_for_late_application_detail,
   initial_assessment_ap_type_metadata.value AS initial_assessor_premises_type,
   to_char(initial_assessment.allocated_at, 'YYYY-MM-DD"T"HH24:MI:SS"Z"') AS last_allocated_to_initial_assessor_date,
-  initial_assessment_event.data -> 'eventDetails' -> 'assessedBy' -> 'cru' ->> 'name' AS initial_assessor_cru,
-  initial_assessment_event.data -> 'eventDetails' -> 'assessedBy' -> 'staffMember' ->> 'username' AS initial_assessor_username,
-  concat(
-    initial_assessment_event.data -> 'eventDetails' -> 'assessedBy' -> 'staffMember' ->> 'forenames', 
-    ' ',
-    initial_assessment_event.data -> 'eventDetails' -> 'assessedBy' -> 'staffMember' ->> 'surname'
-  ) AS initial_assessor_name,
+  initial_assessor_area.name as initial_assessor_cru,
+  initial_assessor.delius_username as initial_assessor_username,
+  initial_assessor.name as initial_assessor_name,
   to_char(initial_assessment_clarification_notes.created_at, 'YYYY-MM-DD"T"HH24:MI:SS"Z"') AS initial_assessment_further_information_requested_on,
   to_char(initial_assessment_clarification_notes.response_received_on, 'YYYY-MM-DD') AS initial_assessment_further_information_received_at,
   to_char(cast(initial_assessment_event.data -> 'eventDetails' ->> 'assessedAt' as timestamp), 'YYYY-MM-DD"T"HH24:MI:SS"Z"') AS initial_assessment_decision_date,
@@ -96,6 +92,9 @@ LEFT JOIN (
   WHERE reallocated_at IS NULL
   ORDER BY application_id, created_at asc
 ) initial_assessment ON initial_assessment.application_id = application.id
+
+LEFT JOIN users initial_assessor ON initial_assessor.id = initial_assessment.allocated_to_user_id
+LEFT JOIN ap_areas initial_assessor_area ON initial_assessor_area.id = initial_assessor.ap_area_id
 
 LEFT JOIN domain_events AS initial_assessment_event ON 
   initial_assessment_event.type = 'APPROVED_PREMISES_APPLICATION_ASSESSED' AND
