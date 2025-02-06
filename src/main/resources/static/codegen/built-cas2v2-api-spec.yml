@@ -5630,6 +5630,7 @@ components:
         - isTopFloorVulnerable
         - isWheelchairAccessible
         - isWheelchairDesignated
+        - arsonOffences
     NewCas2v2Application:
       type: object
       properties:

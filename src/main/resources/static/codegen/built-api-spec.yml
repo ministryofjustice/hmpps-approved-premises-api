@@ -9424,3 +9424,4 @@ components:
         - isTopFloorVulnerable
         - isWheelchairAccessible
         - isWheelchairDesignated
+        - arsonOffences
