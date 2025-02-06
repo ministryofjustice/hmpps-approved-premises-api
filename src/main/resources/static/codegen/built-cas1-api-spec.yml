@@ -6440,6 +6440,7 @@ components:
         - isTopFloorVulnerable
         - isWheelchairAccessible
         - isWheelchairDesignated
+        - arsonOffences
     Cas1PremisesBasicSummary:
       type: object
       properties:
