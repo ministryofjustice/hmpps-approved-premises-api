@@ -6780,6 +6780,8 @@ components:
         tier:
           type: string
         requirements:
+          deprecated: true
+          description: Use 'characteristics' instead
           $ref: '#/components/schemas/Cas1SpaceBookingRequirements'
         premises:
           $ref: '#/components/schemas/NamedId'
