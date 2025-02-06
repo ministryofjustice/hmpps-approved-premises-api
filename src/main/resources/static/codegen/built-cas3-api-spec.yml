@@ -3879,6 +3879,7 @@ components:
         - update_cas3_domain_event_type_for_person_departed_updated
         - update_cas1_applications_licence_expiry_date
         - update_cas1_backfill_offline_application_name
+        - update_cas1_arson_suitable_to_arson_offences
     PlacementDates:
       type: object
       properties:
@@ -4227,6 +4228,7 @@ components:
         - isArsonSuitable
         - isGroundFloor
         - hasEnSuite
+        - arsonOffences
     Gender:
       type: string
       enum:
@@ -4967,5 +4969,3 @@ components:
         - isTopFloorVulnerable
         - isWheelchairAccessible
         - isWheelchairDesignated
-
-
