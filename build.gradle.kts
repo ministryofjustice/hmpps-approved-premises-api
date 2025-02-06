@@ -3,7 +3,7 @@ import org.apache.commons.io.FileUtils
 plugins {
   id("uk.gov.justice.hmpps.gradle-spring-boot") version "6.1.2"
   kotlin("plugin.spring") version "2.0.21"
-  id("org.openapi.generator") version "7.7.0"
+  id("org.openapi.generator") version "7.11.0"
   id("org.jetbrains.kotlin.plugin.jpa") version "1.9.22"
   id("io.gatling.gradle") version "3.13.1"
   id("io.gitlab.arturbosch.detekt") version "1.23.7"
@@ -239,6 +239,7 @@ openApiGenerate {
   typeMappings.put("DateTime", "Instant")
   importMappings.put("Instant", "java.time.Instant")
   templateDir.set("$rootDir/openapi")
+  additionalProperties.put("removeEnumValuePrefix", "true")
 }
 
 registerAdditionalOpenApiGenerateTask(
