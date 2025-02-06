@@ -13,6 +13,7 @@ import org.springframework.data.repository.findByIdOrNull
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1OverbookingRange
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApprovedPremisesEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesRepository
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas1SpaceBookingRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.CasResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.PremisesService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1OutOfServiceBedService
@@ -37,6 +38,9 @@ class Cas1PremisesServiceTest {
 
   @MockK
   lateinit var spacePlanningService: SpacePlanningService
+
+  @MockK
+  lateinit var spaceBookingRepository: Cas1SpaceBookingRepository
 
   @InjectMockKs
   lateinit var service: Cas1PremisesService
@@ -80,6 +84,7 @@ class Cas1PremisesServiceTest {
       every { premisesService.getBedCount(premises) } returns 56
       every { outOfServiceBedService.getCurrentOutOfServiceBedsCountForPremisesId(PREMISES_ID) } returns 4
       every { spacePlanningService.capacity(premises, any(), null) } returns premisesCapacitySummary
+      every { spaceBookingRepository.countActiveSpaceBookings(PREMISES_ID) } returns 4
 
       val result = service.getPremisesInfo(PREMISES_ID)
 
@@ -90,7 +95,7 @@ class Cas1PremisesServiceTest {
       assertThat(premisesSummaryInfo.entity).isEqualTo(premises)
       assertThat(premisesSummaryInfo.bedCount).isEqualTo(56)
       assertThat(premisesSummaryInfo.outOfServiceBeds).isEqualTo(4)
-      assertThat(premisesSummaryInfo.availableBeds).isEqualTo(52)
+      assertThat(premisesSummaryInfo.availableBeds).isEqualTo(48)
       assertThat(premisesSummaryInfo.overbookingSummary).isEmpty()
     }
 
@@ -117,6 +122,7 @@ class Cas1PremisesServiceTest {
       every { premisesService.getBedCount(premises) } returns 56
       every { outOfServiceBedService.getCurrentOutOfServiceBedsCountForPremisesId(PREMISES_ID) } returns 4
       every { spacePlanningService.capacity(premises, any(), null) } returns premisesCapacitySummary
+      every { spaceBookingRepository.countActiveSpaceBookings(PREMISES_ID) } returns 5
 
       val result = service.getPremisesInfo(PREMISES_ID)
 
@@ -127,7 +133,7 @@ class Cas1PremisesServiceTest {
       assertThat(premisesSummaryInfo.entity).isEqualTo(premises)
       assertThat(premisesSummaryInfo.bedCount).isEqualTo(56)
       assertThat(premisesSummaryInfo.outOfServiceBeds).isEqualTo(4)
-      assertThat(premisesSummaryInfo.availableBeds).isEqualTo(52)
+      assertThat(premisesSummaryInfo.availableBeds).isEqualTo(47)
       assertThat(premisesSummaryInfo.overbookingSummary).isEqualTo(listOf(Cas1OverbookingRange(LocalDate.of(2024, 11, 12), LocalDate.of(2024, 11, 12))))
     }
   }
