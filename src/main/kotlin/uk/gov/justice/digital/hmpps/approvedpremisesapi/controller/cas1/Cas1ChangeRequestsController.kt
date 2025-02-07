@@ -7,10 +7,11 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1ChangeRequ
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1ChangeRequestSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1NewChangeRequest
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.SortDirection
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.controller.generated.cas1.ChangeRequestsCas1Delegate
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.cas1.cas1.ChangeRequestsCas1Delegate
 
 @Service
-class Cas1ChangeRequestsController : ChangeRequestsCas1Delegate {
+class Cas1ChangeRequestsController :
+    uk.gov.justice.digital.hmpps.approvedpremisesapi.api.cas1.cas1.ChangeRequestsCas1Delegate {
 
   override fun create(cas1NewChangeRequest: Cas1NewChangeRequest): ResponseEntity<Unit> {
     return super.create(cas1NewChangeRequest)

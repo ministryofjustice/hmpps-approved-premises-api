@@ -8,7 +8,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas2v2Assessme
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas2v2AssessmentStatusUpdate
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewCas2ApplicationNote
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.UpdateCas2Assessment
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.controller.generated.cas2v2.AssessmentsCas2v2Delegate
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.cas2v2.AssessmentsCas2v2Delegate
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.CasResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas2v2.Cas2v2ApplicationNoteService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas2v2.Cas2v2AssessmentService
@@ -28,7 +28,7 @@ class Cas2v2AssessmentsController(
   private val cas2v2ApplicationNotesTransformer: Cas2v2ApplicationNotesTransformer,
   private val cas2v2StatusUpdateService: Cas2v2StatusUpdateService,
   private val cas2v2UserService: Cas2v2UserService,
-) : AssessmentsCas2v2Delegate {
+) : uk.gov.justice.digital.hmpps.approvedpremisesapi.api.cas2v2.AssessmentsCas2v2Delegate {
 
   override fun assessmentsAssessmentIdGet(assessmentId: UUID): ResponseEntity<Cas2v2Assessment> {
     val assessmentResult = cas2v2AssessmentService.getAssessment(assessmentId)

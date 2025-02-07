@@ -10,7 +10,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1PremisesDa
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1SpaceBookingCharacteristic
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1SpaceBookingDaySummarySortField
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.SortDirection
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.controller.generated.cas1.PremisesCas1Delegate
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.cas1.cas1.PremisesCas1Delegate
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesGender
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserPermission
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.UserAccessService
@@ -35,7 +35,7 @@ class Cas1PremisesController(
   private val cas1SpaceBookingDaySummaryService: Cas1SpaceBookingDaySummaryService,
   private val cas1OutOfServiceBedSummaryService: Cas1OutOfServiceBedSummaryService,
   private val cas1OutOfServiceBedSummaryTransformer: Cas1OutOfServiceBedSummaryTransformer,
-) : PremisesCas1Delegate {
+) : uk.gov.justice.digital.hmpps.approvedpremisesapi.api.cas1.cas1.PremisesCas1Delegate {
 
   override fun getPremisesById(premisesId: UUID): ResponseEntity<Cas1Premises> {
     userAccessService.ensureCurrentUserHasPermission(UserPermission.CAS1_PREMISES_VIEW)

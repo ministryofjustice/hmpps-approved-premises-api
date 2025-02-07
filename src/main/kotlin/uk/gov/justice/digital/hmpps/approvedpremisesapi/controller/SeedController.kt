@@ -4,7 +4,7 @@ import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
 import org.springframework.stereotype.Service
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.SeedRequest
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.controller.generated.SeedApiDelegate
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.SeedApiDelegate
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.seed.SeedService
 
 @Service

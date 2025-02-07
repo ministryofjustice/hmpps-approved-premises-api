@@ -4983,3 +4983,194 @@ components:
         - isWheelchairAccessible
         - isWheelchairDesignated
         - arsonOffences
+    Cas2Event:
+      type: object
+      properties:
+        id:
+          $ref: '#/components/schemas/EventId'
+        timestamp:
+          type: string
+          example: '2022-11-30T14:53:44'
+          format: date-time
+        eventType:
+          $ref: '#/components/schemas/EventType'
+      required:
+        - id
+        - timestamp
+        - eventType
+      discriminator:
+        propertyName: eventType
+        mapping:
+          applications.cas2.application.submitted: '#/components/schemas/Cas2ApplicationSubmittedEvent'
+          applications.cas2.application.status-updated: '#/components/schemas/Cas2ApplicationStatusUpdatedEvent'
+    Cas2ApplicationSubmittedEvent:
+      allOf:
+        - $ref: '#/components/schemas/Cas2Event'
+        - type: object
+          properties:
+            eventDetails:
+              $ref: '#/components/schemas/Cas2ApplicationSubmittedEventDetails'
+          required:
+            - eventDetails
+    Cas2ApplicationStatusUpdatedEvent:
+      allOf:
+        - $ref: '#/components/schemas/Cas2Event'
+        - type: object
+          properties:
+            eventDetails:
+              $ref: '#/components/schemas/Cas2ApplicationStatusUpdatedEventDetails'
+          required:
+            - eventDetails
+    Cas2ApplicationSubmittedEventDetails:
+      type: object
+      properties:
+        applicationId:
+          type: string
+          format: uuid
+        applicationUrl:
+          type: string
+          example: https://community-accommodation-tier-2-dev.hmpps.service.justice.gov.uk/applications/484b8b5e-6c3b-4400-b200-425bbe410713
+        bailHearingDate:
+          type: string
+          example: '2023-03-30'
+          format: date
+        personReference:
+          $ref: '#/components/schemas/PersonReference'
+        referringPrisonCode:
+          type: string
+          example: 'BRI'
+        preferredAreas:
+          type: string
+          example: 'Leeds | Bradford'
+        hdcEligibilityDate:
+          type: string
+          example: '2023-03-30'
+          format: date
+        conditionalReleaseDate:
+          type: string
+          example: '2023-04-30'
+          format: date
+        submittedAt:
+          type: string
+          example: '2022-11-30T14:51:30'
+          format: date-time
+        submittedBy:
+          type: object
+          properties:
+            staffMember:
+              $ref: '#/components/schemas/Cas2StaffMember'
+          required:
+            - staffMember
+        cas2v2ApplicationOrigin:
+          type: string
+      required:
+        - applicationId
+        - applicationUrl
+        - personReference
+        - submittedAt
+        - submittedBy
+    Cas2ApplicationStatusUpdatedEventDetails:
+      type: object
+      properties:
+        applicationId:
+          type: string
+          format: uuid
+        applicationUrl:
+          type: string
+          example: https://community-accommodation-tier-2-dev.hmpps.service.justice.gov.uk/applications/484b8b5e-6c3b-4400-b200-425bbe410713
+        personReference:
+          $ref: '#/components/schemas/PersonReference'
+        newStatus:
+          $ref: '#/components/schemas/Cas2Status'
+        updatedBy:
+          $ref: '#/components/schemas/ExternalUser'
+        updatedAt:
+          type: string
+          format: date-time
+      required:
+        - applicationId
+        - applicationUrl
+        - personReference
+        - newStatus
+        - updatedBy
+        - updatedAt
+    Cas2Status:
+      description: A status which can be applied to a submitted application by an assessor
+      type: object
+      properties:
+        name:
+          type: string
+          example: 'moreInfoRequested'
+        label:
+          type: string
+          example: 'More information requested'
+        description:
+          type: string
+          example: 'More information about the application has been requested from the POM (Prison Offender Manager).'
+        statusDetails:
+          type: array
+          items:
+            $ref: '#/components/schemas/Cas2StatusDetail'
+      required:
+        - name
+        - label
+        - description
+    Cas2StatusDetail:
+      type: object
+      properties:
+        name:
+          type: string
+          example: 'changeOfCircumstances'
+        label:
+          type: string
+          example: 'Change of Circumstances'
+      required:
+        - name
+        - label
+    Cas2StaffMember:
+      description: A member of prison or CAS2 staff
+      type: object
+      properties:
+        staffIdentifier:
+          type: integer
+          format: int64
+          example: 1501234567
+        name:
+          type: string
+          example: John Smith
+        username:
+          type: string
+          example: SMITHJ_GEN
+        usertype:
+          type: string
+          enum:
+            - nomis
+            - delius
+      required:
+        - staffIdentifier
+        - name
+    PersonReference:
+      type: object
+      properties:
+        crn:
+          type: string
+        noms:
+          type: string
+      required:
+        - noms
+
+    # Utility schemas
+    EventId:
+      description: The UUID of an event
+      type: string
+      format: uuid
+      example: 364145f9-0af8-488e-9901-b4c46cd9ba37
+    EventType:
+      description: The type of an event
+      type: string
+      enum:
+        - applications.cas2.application.submitted
+        - applications.cas2.application.status-updated
+      x-enum-varnames:
+        - applicationSubmitted
+        - applicationStatusUpdated

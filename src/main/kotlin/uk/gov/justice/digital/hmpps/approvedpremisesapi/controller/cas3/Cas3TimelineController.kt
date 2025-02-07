@@ -3,7 +3,7 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.controller.cas3
 import org.springframework.http.ResponseEntity
 import org.springframework.stereotype.Service
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ReferralHistoryNote
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.controller.generated.cas3.TimelineCas3Delegate
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.cas3.TimelineCas3Delegate
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TemporaryAccommodationAssessmentEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRole
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.AssessmentService

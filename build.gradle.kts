@@ -206,7 +206,6 @@ fun addOpenApiConfigOptions(
   useTags: Boolean = false,
 ) {
   configOptions.apply {
-    put("basePackage", "uk.gov.justice.digital.hmpps.approvedpremisesapi")
     put("delegatePattern", "true")
     put("gradleBuildFile", "false")
     put("exceptionHandler", "false")
@@ -219,7 +218,7 @@ fun addOpenApiConfigOptions(
         "false"
       },
     )
-
+    put("useSpringBoot3", "true")
     put("dateLibrary", "custom")
     put("enumPropertyNaming", "camelCase")
   }
@@ -230,25 +229,17 @@ openApiGenerate {
   inputSpec.set("$rootDir/src/main/resources/static/codegen/built-api-spec.yml")
   outputDir.set("$buildDir/generated")
   modelPackage.set("uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model")
-
+  apiPackage.set("uk.gov.justice.digital.hmpps.api")
   addOpenApiConfigOptions(configOptions)
   typeMappings.put("DateTime", "Instant")
   importMappings.put("Instant", "java.time.Instant")
   templateDir.set("$rootDir/openapi")
   additionalProperties.put("removeEnumValuePrefix", "true")
 
-  generateModelTests.set(false) // Optional: Disable model test generation
-  generateApiTests.set(false) // Optional: Disable API test generation
-  generateApiDocumentation.set(false) // Optional: Disable API docs
+  generateModelTests.set(false)
+  generateApiTests.set(false)
+  generateApiDocumentation.set(false)
 
-  // Enable only model generation
-  configOptions.set(
-    mapOf(
-      "api" to "false", // Disable API generation
-      "models" to "true", // Enable models
-      "supportingFiles" to "false", // Disable supporting files
-    ),
-  )
 }
 
 registerAdditionalOpenApiGenerateTask(
@@ -307,10 +298,14 @@ fun registerAdditionalOpenApiGenerateTask(
     inputSpec.set(ymlPath)
     outputDir.set("$buildDir/generated")
     modelPackage.set(modelPackageName)
+    apiPackage.set("uk.gov.justice.digital.hmpps.api")
     addOpenApiConfigOptions(configOptions, useTags)
     typeMappings.put("DateTime", "Instant")
     importMappings.put("Instant", "java.time.Instant")
     templateDir.set("$rootDir/openapi")
+    generateModelTests.set(false)
+    generateApiTests.set(false)
+    generateApiDocumentation.set(false)
   }
 }
 
@@ -347,13 +342,16 @@ tasks.register("openApiPreCompilation") {
           FileUtils.writeStringToFile(it, replacedFileContents, "UTF-8")
         }
       }
+
+
   }
+
 
   ktlint {
     filter {
       exclude {
         it.file.path.contains("$buildDir${File.separator}generated${File.separator}") ||
-          it.file.path.contains("controller${File.separator}generated${File.separator}")
+                it.file.path.contains("${File.separator}api${File.separator}")
       }
     }
   }
@@ -384,7 +382,7 @@ tasks.register("openApiPreCompilation") {
 
   tasks.withType<io.gitlab.arturbosch.detekt.Detekt>().configureEach {
     source = source.asFileTree.matching {
-      exclude("**/uk/gov/justice/digital/hmpps/approvedpremisesapi/controller/generated/**")
+      exclude("**/uk/gov/justice/digital/hmpps/approvedpremisesapi/api/**")
     }
   }
 }
