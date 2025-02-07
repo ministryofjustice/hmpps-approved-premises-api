@@ -39,6 +39,7 @@ class Cas1SpaceBookingDaySummaryService(
     bookingsCriteriaFilter: List<Cas1SpaceBookingCharacteristic>?,
     bookingsSortBy: Cas1SpaceBookingDaySummarySortField,
     bookingsSortDirection: SortDirection,
+    excludeSpaceBookingId: UUID? = null,
   ): CasResult<List<Cas1SpaceBookingDaySummary>> {
     if (cas1PremisesService.findPremiseById(premisesId) == null) return CasResult.NotFound("premises", premisesId.toString())
 
@@ -55,6 +56,7 @@ class Cas1SpaceBookingDaySummaryService(
       daySummaryDate = date,
       bookingsCriteriaFilter = getBookingCharacteristicIds(bookingsCriteriaFilter),
       sort = sort,
+      excludeSpaceBookingId = excludeSpaceBookingId,
     )
 
     val offenderSummaries = getOffenderSummariesForBookings(spaceBookingsForDate)

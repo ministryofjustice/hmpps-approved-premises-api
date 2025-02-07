@@ -97,6 +97,7 @@ class Cas1PremisesController(
     bookingsCriteriaFilter: List<Cas1SpaceBookingCharacteristic>?,
     bookingsSortDirection: SortDirection?,
     bookingsSortBy: Cas1SpaceBookingDaySummarySortField?,
+    excludeSpaceBookingId: UUID?,
   ): ResponseEntity<Cas1PremisesDaySummary> {
     userAccessService.ensureCurrentUserHasPermission(UserPermission.CAS1_PREMISES_VIEW)
     val premises = cas1PremisesService.findPremiseById(premisesId)
@@ -110,7 +111,7 @@ class Cas1PremisesController(
               premisesId = premisesId,
               startDate = date,
               endDate = date,
-              null,
+              excludeSpaceBookingId = excludeSpaceBookingId,
             ),
           ),
         ).capacity.first(),
@@ -121,6 +122,7 @@ class Cas1PremisesController(
             bookingsCriteriaFilter = bookingsCriteriaFilter,
             bookingsSortBy = bookingsSortBy ?: Cas1SpaceBookingDaySummarySortField.PERSON_NAME,
             bookingsSortDirection = bookingsSortDirection ?: SortDirection.desc,
+            excludeSpaceBookingId = excludeSpaceBookingId,
           ),
         ),
         outOfServiceBeds = extractEntityFromCasResult(

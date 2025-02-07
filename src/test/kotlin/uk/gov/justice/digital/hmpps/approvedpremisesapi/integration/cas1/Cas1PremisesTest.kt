@@ -43,6 +43,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.asCaseSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.bodyAsListOfObjects
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.bodyAsObject
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.roundNanosToMillisToAccountForLossOfPrecisionInPostgres
+import java.net.URLEncoder
 import java.time.LocalDate
 import java.time.OffsetDateTime
 import java.util.UUID
@@ -955,6 +956,31 @@ class Cas1PremisesTest : IntegrationTestBase() {
       assertThat(summary.previousDate).isEqualTo(summaryDate.minusDays(1))
       assertThat(summary.spaceBookings).isEmpty()
       assertThat(summary.outOfServiceBeds.size).isEqualTo(3)
+    }
+
+    @Test
+    fun `returns premises day summary with accurate space bookings excluding the specified space booking ID`() {
+      val (_, jwt) = givenAUser(roles = listOf(CAS1_CRU_MEMBER))
+
+      val excludeSpaceBookingId: String = URLEncoder.encode(spaceBookingEarly.id.toString(), "UTF-8")
+
+      val summaries = webTestClient.get()
+        .uri("/cas1/premises/${premises.id}/day-summary/$summaryDate?excludeSpaceBookingId=$excludeSpaceBookingId")
+        .header("Authorization", "Bearer $jwt")
+        .exchange()
+        .expectStatus()
+        .isOk
+        .returnResult(Cas1PremisesDaySummary::class.java).responseBody.blockFirst()!!
+
+      val spaceBookingsAvailableInPremisesSummary = summaries.spaceBookings
+      assertThat(spaceBookingsAvailableInPremisesSummary.size).isEqualTo(2)
+      assertThat(spaceBookingsAvailableInPremisesSummary).extracting("id").doesNotContain(excludeSpaceBookingId)
+
+      val capacity = summaries.capacity
+      assertThat(capacity.date).isEqualTo(summaryDate)
+      assertThat(capacity.totalBedCount).isEqualTo(8)
+      assertThat(capacity.availableBedCount).isEqualTo(5)
+      assertThat(capacity.bookingCount).isEqualTo(2)
     }
 
     @Test

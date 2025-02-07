@@ -160,8 +160,10 @@ interface Cas1SpaceBookingRepository : JpaRepository<Cas1SpaceBookingEntity, UUI
       b.canonical_arrival_date <= :daySummaryDate AND 
       b.canonical_departure_date >= :daySummaryDate AND
       b.premises_id = :premisesId AND 
-      b.cancellation_occurred_at IS NULL AND (
-        :bookingsCriteriaCount = 0  OR (
+      b.cancellation_occurred_at IS NULL AND
+      (:excludeSpaceBookingId IS NUll OR 
+      b.id != :excludeSpaceBookingId) AND
+      (:bookingsCriteriaCount = 0  OR (
             SELECT COUNT(*) 
             FROM 
                 CAS1_SPACE_BOOKINGS_CRITERIA sbc
@@ -178,6 +180,7 @@ interface Cas1SpaceBookingRepository : JpaRepository<Cas1SpaceBookingEntity, UUI
     bookingsCriteriaFilter: List<UUID>?,
     sort: Sort,
     bookingsCriteriaCount: Int = bookingsCriteriaFilter?.size ?: 0,
+    excludeSpaceBookingId: UUID?,
   ): List<Cas1SpaceBookingDaySummarySearchResult>
 
   @Query(
