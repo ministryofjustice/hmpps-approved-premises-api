@@ -58,7 +58,7 @@ class Cas1BedSummaryTest : InitialiseDatabasePerClassTestBase() {
   fun `Getting beds for a premises returns a list of beds`() {
     givenAUser(roles = listOf(UserRole.CAS1_FUTURE_MANAGER)) { user, jwt ->
 
-      val bed = bedEntityFactory.produceAndPersist {
+      val beds = bedEntityFactory.produceAndPersistMultiple(2) {
         withYieldedRoom {
           roomEntityFactory.produceAndPersist {
             withYieldedPremises { premises }
@@ -80,9 +80,7 @@ class Cas1BedSummaryTest : InitialiseDatabasePerClassTestBase() {
       }
 
       val expectedJson = objectMapper.writeValueAsString(
-        listOf(
-          cas1BedSummaryTransformer.transformEntityToApi(bed),
-        ),
+        beds.map { cas1BedSummaryTransformer.transformEntityToApi(it) },
       )
 
       webTestClient.get()
