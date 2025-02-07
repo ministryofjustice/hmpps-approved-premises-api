@@ -1080,6 +1080,13 @@ paths:
           description: The field to sort the booking by. If not defined, will sort on person name
           schema:
             $ref: '#/components/schemas/Cas1SpaceBookingDaySummarySortField'
+        - name: excludeSpaceBookingId
+          in: query
+          description: ID of a booking to exclude from capacity calculations and the list of space bookings
+          required: false
+          schema:
+            type: string
+            format: uuid
       responses:
         200:
           description: successful operation
