@@ -24,7 +24,7 @@ class Cas1ArsonSuitableToArsonOffencesJobTest : IntegrationTestBase() {
       essentialCharacteristics = emptyList(),
     )
 
-    val noEffectedCriteria = givenAPlacementRequirements(
+    val noAffectedCriteria = givenAPlacementRequirements(
       desirableCharacteristics = listOf(characteristicArsonDesignated, characteristicEnSuite),
       essentialCharacteristics = listOf(characteristicArsonDesignated, characteristicEnSuite),
     )
@@ -50,7 +50,7 @@ class Cas1ArsonSuitableToArsonOffencesJobTest : IntegrationTestBase() {
     assertThat(noCriteriaUpdated.desirableCriteria).isEmpty()
     assertThat(noCriteriaUpdated.essentialCriteria).isEmpty()
 
-    val noEffectedCriteriaUpdated = placementRequirementsRepository.findById(noEffectedCriteria.id).get()
+    val noEffectedCriteriaUpdated = placementRequirementsRepository.findById(noAffectedCriteria.id).get()
     assertThat(noEffectedCriteriaUpdated.desirableCriteria).containsExactlyInAnyOrder(characteristicArsonDesignated, characteristicEnSuite)
     assertThat(noEffectedCriteriaUpdated.essentialCriteria).containsExactlyInAnyOrder(characteristicArsonDesignated, characteristicEnSuite)
 

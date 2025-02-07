@@ -4492,6 +4492,7 @@ components:
         - update_cas1_applications_licence_expiry_date
         - update_cas1_backfill_offline_application_name
         - update_cas1_arson_suitable_to_arson_offences
+        - update_cas1_backfill_arson_suitable
     PlacementDates:
       type: object
       properties:
