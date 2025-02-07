@@ -38,6 +38,19 @@ interface BedRepository : JpaRepository<BedEntity, UUID> {
   """,
   )
   fun findArchivedBedByBedIdAndDate(bedId: UUID, endDate: LocalDate): BedEntity?
+
+  @Query(
+    """
+        SELECT b.id as id,
+        b.name as bedName,
+        r.name as roomName
+        FROM beds b
+        LEFT JOIN rooms r ON b.room_id = r.id
+        WHERE r.premises_id = :premisesId
+    """,
+    nativeQuery = true,
+  )
+  fun findAllCas1BedSummariesForPremises(premisesId: UUID): List<Cas1PremisesBedSummary>
 }
 
 const val BED_SUMMARY_QUERY =
@@ -136,3 +149,9 @@ open class DomainBedSummary(
   val bedBooked: Boolean,
   val bedOutOfService: Boolean,
 )
+
+interface Cas1PremisesBedSummary {
+  fun getId(): UUID
+  fun getBedName(): String
+  fun getRoomName(): String
+}

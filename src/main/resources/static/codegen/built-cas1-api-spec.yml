@@ -541,7 +541,35 @@ paths:
                 $ref: '#/components/schemas/Problem'
         500:
           $ref: '#/components/responses/500Response'
-
+  /premises/{premisesId}/beds:
+    get:
+      tags:
+        - premises
+      summary: Lists all beds for the given premises
+      operationId: getBeds
+      parameters:
+        - name: premisesId
+          in: path
+          description: ID of the premises to list the beds for
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        200:
+          description: successful operation
+          content:
+            'application/json':
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Cas1PremisesBedSummary'
+        401:
+          $ref: '#/components/responses/401Response'
+        403:
+          $ref: '#/components/responses/403Response'
+        500:
+          $ref: '#/components/responses/500Response'
   /premises/{premisesId}/capacity:
     get:
       tags:
@@ -7785,3 +7813,17 @@ components:
       x-enum-varnames:
         - CREATED_AT
         - TYPE
+    Cas1PremisesBedSummary:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        roomName:
+          type: string
+        bedName:
+          type: string
+      required:
+        - id
+        - roomName
+        - bedName

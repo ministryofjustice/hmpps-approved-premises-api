@@ -6,6 +6,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1Overbookin
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesGender
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesRepository
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.BedRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas1SpaceBookingRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.CasResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.PremisesService
@@ -18,6 +19,7 @@ import java.util.UUID
 @Service
 class Cas1PremisesService(
   val premisesRepository: ApprovedPremisesRepository,
+  val bedRepository: BedRepository,
   val premisesService: PremisesService,
   val outOfServiceBedService: Cas1OutOfServiceBedService,
   val spacePlanningService: SpacePlanningService,
@@ -86,6 +88,8 @@ class Cas1PremisesService(
       ),
     )
   }
+
+  fun getBeds(premisesId: UUID) = bedRepository.findAllCas1BedSummariesForPremises(premisesId)
 
   data class Cas1PremisesInfo(
     val entity: ApprovedPremisesEntity,

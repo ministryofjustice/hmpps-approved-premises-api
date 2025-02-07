@@ -1289,3 +1289,17 @@ components:
       x-enum-varnames:
         - CREATED_AT
         - TYPE
+    Cas1PremisesBedSummary:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        roomName:
+          type: string
+        bedName:
+          type: string
+      required:
+        - id
+        - roomName
+        - bedName
