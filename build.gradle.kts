@@ -203,7 +203,6 @@ if (isTestInvokedFromIntellij) {
 
 fun addOpenApiConfigOptions(
   configOptions: MapProperty<String, String>,
-  apiSuffix: String? = null,
   useTags: Boolean = false,
 ) {
   configOptions.apply {
@@ -220,11 +219,8 @@ fun addOpenApiConfigOptions(
         "false"
       },
     )
-    apiSuffix?.let {
-      put("apiSuffix", it)
-    }
+
     put("dateLibrary", "custom")
-    put("useSpringBoot3", "true")
     put("enumPropertyNaming", "camelCase")
   }
 }
@@ -233,59 +229,62 @@ openApiGenerate {
   generatorName.set("kotlin-spring")
   inputSpec.set("$rootDir/src/main/resources/static/codegen/built-api-spec.yml")
   outputDir.set("$buildDir/generated")
-  apiPackage.set("uk.gov.justice.digital.hmpps.approvedpremisesapi.api")
   modelPackage.set("uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model")
+
   addOpenApiConfigOptions(configOptions)
   typeMappings.put("DateTime", "Instant")
   importMappings.put("Instant", "java.time.Instant")
   templateDir.set("$rootDir/openapi")
   additionalProperties.put("removeEnumValuePrefix", "true")
+
+  generateModelTests.set(false) // Optional: Disable model test generation
+  generateApiTests.set(false) // Optional: Disable API test generation
+  generateApiDocumentation.set(false) // Optional: Disable API docs
+
+  // Enable only model generation
+  configOptions.set(
+    mapOf(
+      "api" to "false", // Disable API generation
+      "models" to "true", // Enable models
+      "supportingFiles" to "false", // Disable supporting files
+    ),
+  )
 }
 
 registerAdditionalOpenApiGenerateTask(
   name = "openApiGenerateCas1Namespace",
   ymlPath = "$rootDir/src/main/resources/static/codegen/built-cas1-api-spec.yml",
-  apiPackageName = "uk.gov.justice.digital.hmpps.approvedpremisesapi.api.cas1",
   modelPackageName = "uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model",
-  apiSuffix = "Cas1",
   useTags = true,
 )
 
 registerAdditionalOpenApiGenerateTask(
   name = "openApiGenerateCas2v2Namespace",
   ymlPath = "$rootDir/src/main/resources/static/codegen/built-cas2v2-api-spec.yml",
-  apiPackageName = "uk.gov.justice.digital.hmpps.approvedpremisesapi.api.cas2v2",
   modelPackageName = "uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model",
-  apiSuffix = "Cas2v2",
 )
 
 registerAdditionalOpenApiGenerateTask(
   name = "openApiGenerateCas2Namespace",
   ymlPath = "$rootDir/src/main/resources/static/codegen/built-cas2-api-spec.yml",
-  apiPackageName = "uk.gov.justice.digital.hmpps.approvedpremisesapi.api.cas2",
   modelPackageName = "uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model",
-  apiSuffix = "Cas2",
 )
 
 registerAdditionalOpenApiGenerateTask(
   name = "openApiGenerateCas3Namespace",
   ymlPath = "$rootDir/src/main/resources/static/codegen/built-cas3-api-spec.yml",
-  apiPackageName = "uk.gov.justice.digital.hmpps.approvedpremisesapi.api.cas3",
   modelPackageName = "uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model",
-  apiSuffix = "Cas3",
 )
 
 registerAdditionalOpenApiGenerateTask(
   name = "openApiGenerateDomainEvents",
   ymlPath = "$rootDir/src/main/resources/static/domain-events-api.yml",
-  apiPackageName = "uk.gov.justice.digital.hmpps.approvedpremisesapi.api",
   modelPackageName = "uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model",
 )
 
 registerAdditionalOpenApiGenerateTask(
   name = "openApiGenerateCas2DomainEvents",
   ymlPath = "$rootDir/src/main/resources/static/cas2-domain-events-api.yml",
-  apiPackageName = "uk.gov.justice.digital.hmpps.approvedpremisesapi.api",
   modelPackageName = "uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas2.model",
   useTags = true,
 )
@@ -293,7 +292,6 @@ registerAdditionalOpenApiGenerateTask(
 registerAdditionalOpenApiGenerateTask(
   name = "openApiGenerateCas3DomainEvents",
   ymlPath = "$rootDir/src/main/resources/static/cas3-domain-events-api.yml",
-  apiPackageName = "uk.gov.justice.digital.hmpps.approvedpremisesapi.api",
   modelPackageName = "uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas3.model",
   useTags = true,
 )
@@ -301,18 +299,15 @@ registerAdditionalOpenApiGenerateTask(
 fun registerAdditionalOpenApiGenerateTask(
   name: String,
   ymlPath: String,
-  apiPackageName: String,
   modelPackageName: String,
-  apiSuffix: String? = null,
   useTags: Boolean = false,
 ) {
   tasks.register<org.openapitools.generator.gradle.plugin.tasks.GenerateTask>(name) {
     generatorName.set("kotlin-spring")
     inputSpec.set(ymlPath)
     outputDir.set("$buildDir/generated")
-    apiPackage.set(apiPackageName)
     modelPackage.set(modelPackageName)
-    addOpenApiConfigOptions(configOptions, apiSuffix, useTags)
+    addOpenApiConfigOptions(configOptions, useTags)
     typeMappings.put("DateTime", "Instant")
     importMappings.put("Instant", "java.time.Instant")
     templateDir.set("$rootDir/openapi")
@@ -320,18 +315,6 @@ fun registerAdditionalOpenApiGenerateTask(
 }
 
 tasks.register("openApiPreCompilation") {
-
-  // Generate OpenAPI spec files suited to Kotlin code generator
-  // -----------------------------------------------------------
-  // The 'built' files produced each contain all the shared 'components'
-  // -- as the Kotlin generator doesn't support $ref links to 'remote' files.
-
-  logger.quiet("Running task: openApiPreCompilation")
-
-  val sharedComponents = FileUtils.readFileToString(
-    File("$rootDir/src/main/resources/static/_shared.yml"),
-    "UTF-8",
-  )
 
   fun rewriteRefsForLocalComponents(file: File) {
     val updatedContents = FileUtils
@@ -342,125 +325,66 @@ tasks.register("openApiPreCompilation") {
     FileUtils.writeStringToFile(file, updatedContents, "UTF-8")
   }
 
-  fun buildSpecWithSharedComponentsAppended(
-    outputFileName: String,
-    inputSpec: String,
-    inputSchemas: String? = null,
-  ) {
-    val apiFileName = "$rootDir/src/main/resources/static/$inputSpec"
-    val api = FileUtils.readFileToString(
-      File(apiFileName),
-      "UTF-8",
-    )
+  tasks.get("openApiGenerate").dependsOn(
+    "openApiGenerateDomainEvents",
+    "openApiGenerateCas3DomainEvents",
+    "openApiGenerateCas2DomainEvents",
+    "openApiPreCompilation",
+    "openApiGenerateCas1Namespace",
+    "openApiGenerateCas2Namespace",
+    "openApiGenerateCas2v2Namespace",
+    "openApiGenerateCas3Namespace",
+  )
 
-    val schemas = if (inputSchemas != null) {
-      val schemasFileName = "$rootDir/src/main/resources/static/$inputSchemas"
-      FileUtils.readFileToString(
-        File(schemasFileName),
-        "UTF-8",
-      ).lines().filter {
-        !it.matches(""".*components\:.*""".toRegex()) &&
-          !it.matches(""".*schemas\:.*""".toRegex())
-      }.joinToString("\n")
-    } else {
-      ""
-    }
-
-    val compiledSpecFile = File("$rootDir/src/main/resources/static/codegen/$outputFileName")
-    val notice = "# DO NOT EDIT.\n# This is a build artefact for use in code generation.\n"
-
-    FileUtils.writeStringToFile(
-      compiledSpecFile,
-      (notice + api + sharedComponents + schemas),
-      "UTF-8",
-    )
-
-    rewriteRefsForLocalComponents(compiledSpecFile)
+  tasks.get("openApiGenerate").doLast {
+    // This is a workaround for an issue where we end up with duplicate keys in output JSON because we declare properties both in the discriminator
+    // and as a regular property in the OpenAPI spec.  The Typescript generator does not support just the discriminator so there is no alternative.
+    File("$rootDir/build/generated/src/main/kotlin/uk/gov/justice/digital/hmpps/approvedpremisesapi/api/model").walk()
+      .forEach {
+        if (it.isFile && it.extension == "kt") {
+          val replacedFileContents = FileUtils.readFileToString(it, "UTF-8")
+            .replace("include = JsonTypeInfo.As.PROPERTY", "include = JsonTypeInfo.As.EXISTING_PROPERTY")
+          FileUtils.writeStringToFile(it, replacedFileContents, "UTF-8")
+        }
+      }
   }
 
-  buildSpecWithSharedComponentsAppended(
-    outputFileName = "built-api-spec.yml",
-    inputSpec = "api.yml",
-  )
-  buildSpecWithSharedComponentsAppended(
-    outputFileName = "built-cas1-api-spec.yml",
-    inputSpec = "cas1-api.yml",
-    inputSchemas = "cas1-schemas.yml",
-  )
-  buildSpecWithSharedComponentsAppended(
-    outputFileName = "built-cas2-api-spec.yml",
-    inputSpec = "cas2-api.yml",
-  )
-  buildSpecWithSharedComponentsAppended(
-    outputFileName = "built-cas2v2-api-spec.yml",
-    inputSpec = "cas2v2-api.yml",
-    inputSchemas = "cas2v2-schemas.yml",
-  )
-  buildSpecWithSharedComponentsAppended(
-    outputFileName = "built-cas3-api-spec.yml",
-    inputSpec = "cas3-api.yml",
-  )
-}
-
-tasks.get("openApiGenerate").dependsOn(
-  "openApiGenerateDomainEvents",
-  "openApiGenerateCas3DomainEvents",
-  "openApiGenerateCas2DomainEvents",
-  "openApiPreCompilation",
-  "openApiGenerateCas1Namespace",
-  "openApiGenerateCas2Namespace",
-  "openApiGenerateCas2v2Namespace",
-  "openApiGenerateCas3Namespace",
-)
-
-tasks.get("openApiGenerate").doLast {
-  // This is a workaround for an issue where we end up with duplicate keys in output JSON because we declare properties both in the discriminator
-  // and as a regular property in the OpenAPI spec.  The Typescript generator does not support just the discriminator so there is no alternative.
-  File("$rootDir/build/generated/src/main/kotlin/uk/gov/justice/digital/hmpps/approvedpremisesapi/api/model").walk()
-    .forEach {
-      if (it.isFile && it.extension == "kt") {
-        val replacedFileContents = FileUtils.readFileToString(it, "UTF-8")
-          .replace("include = JsonTypeInfo.As.PROPERTY", "include = JsonTypeInfo.As.EXISTING_PROPERTY")
-        FileUtils.writeStringToFile(it, replacedFileContents, "UTF-8")
+  ktlint {
+    filter {
+      exclude {
+        it.file.path.contains("$buildDir${File.separator}generated${File.separator}") ||
+          it.file.path.contains("controller${File.separator}generated${File.separator}")
       }
     }
-}
+  }
 
-ktlint {
-  filter {
-    exclude {
-      it.file.path.contains("$buildDir${File.separator}generated${File.separator}") ||
-        it.file.path.contains("controller${File.separator}generated${File.separator}")
+  allOpen {
+    annotations("jakarta.persistence.Entity")
+  }
+
+  tasks {
+    withType<JavaExec> {
+      jvmArgs!!.plus("--add-opens")
+      jvmArgs!!.plus("java.base/java.lang=ALL-UNNAMED")
     }
   }
-}
 
-allOpen {
-  annotations("jakarta.persistence.Entity")
-}
+  tasks.getByName("runKtlintCheckOverMainSourceSet").dependsOn("openApiGenerate", "openApiGenerateDomainEvents")
 
-tasks {
-  withType<JavaExec> {
-    jvmArgs!!.plus("--add-opens")
-    jvmArgs!!.plus("java.base/java.lang=ALL-UNNAMED")
+  gatling {
+    gatlingVersion = "3.12.0"
   }
-}
 
-tasks.getByName("runKtlintCheckOverMainSourceSet").dependsOn("openApiGenerate", "openApiGenerateDomainEvents")
+  detekt {
+    config = files("./detekt.yml")
+    buildUponDefaultConfig = true
+    ignoreFailures = false
+    baseline = file("./detekt-baseline.xml")
+  }
 
-gatling {
-  gatlingVersion = "3.12.0"
-}
-
-detekt {
-  config = files("./detekt.yml")
-  buildUponDefaultConfig = true
-  ignoreFailures = false
-  baseline = file("./detekt-baseline.xml")
-}
-
-tasks.withType<io.gitlab.arturbosch.detekt.Detekt>().configureEach {
-  source = source.asFileTree.matching {
-    exclude("**/uk/gov/justice/digital/hmpps/approvedpremisesapi/controller/generated/**")
+  tasks.withType<io.gitlab.arturbosch.detekt.Detekt>().configureEach {
+    source = source.asFileTree.matching {
+      exclude("**/uk/gov/justice/digital/hmpps/approvedpremisesapi/controller/generated/**")
+    }
   }
 }

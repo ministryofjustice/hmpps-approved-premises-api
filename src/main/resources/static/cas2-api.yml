@@ -1,8 +1,0 @@
-openapi: 3.0.1
-info:
-  title: 'Community Accommodation Services: Tier 2 (CAS2)'
-  version: 1.0.0
-servers:
-  - url: /cas2
-paths: { }
-
