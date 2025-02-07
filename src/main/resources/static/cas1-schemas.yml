@@ -339,6 +339,8 @@ components:
         tier:
           type: string
         requirements:
+          deprecated: true
+          description: Use 'characteristics' instead
           $ref: '#/components/schemas/Cas1SpaceBookingRequirements'
         premises:
           $ref: '_shared.yml#/components/schemas/NamedId'
