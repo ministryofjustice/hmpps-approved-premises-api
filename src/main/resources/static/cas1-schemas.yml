@@ -1224,3 +1224,68 @@ components:
         - person
         - isParole
         - id
+    Cas1NewChangeRequest:
+      type: object
+      properties:
+        space_booking_id:
+          type: string
+          format: uuid
+        type:
+          $ref: '#/components/schemas/Cas1ChangeRequestType'
+        requester_notes:
+          type: string
+      required:
+        - space_booking_id
+        - type
+        - requester_notes
+    Cas1ChangeRequestStatus:
+      type: string
+      enum:
+        - resolved
+        - unresolved
+      x-enum-varnames:
+        - RESOLVED
+        - UNRESOLVED
+    Cas1ChangeRequestType:
+      type: string
+      enum:
+        - appeal
+        - extension
+        - plannedTransfer
+      x-enum-varnames:
+        - APPEAL
+        - EXTENSION
+        - PLANNED_TRANSFER
+    Cas1ChangeRequestSummary:
+      type: object
+      properties:
+        type:
+          $ref: '#/components/schemas/Cas1ChangeRequestType'
+        created_at:
+          type: string
+          format: date-time
+        resolution:
+          type: string
+          enum:
+            - approved
+            - rejected
+          x-enum-varnames:
+            - APPROVED
+            - REJECTED
+        resolved_at:
+          type: string
+          format: date-time
+        crn:
+          type: string
+      required:
+        - type
+        - created_at
+        - crn
+    Cas1ChangeRequestSortField:
+      type: string
+      enum:
+        - created_at
+        - type
+      x-enum-varnames:
+        - CREATED_AT
+        - TYPE
