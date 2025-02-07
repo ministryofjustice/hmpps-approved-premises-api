@@ -57,20 +57,6 @@ class PlacementRequestsController(
   private val cas1WithdrawableService: Cas1WithdrawableService,
 ) : PlacementRequestsApiDelegate {
 
-  override fun placementRequestsGet(): ResponseEntity<List<PlacementRequest>> {
-    val user = userService.getUserForRequest()
-
-    val requests = placementRequestService.getVisiblePlacementRequestsForUser(user, null, null)
-
-    return ResponseEntity.ok(
-      requests.first.map {
-        val personInfo = offenderService.getPersonInfoResult(it.application.crn, user.cas1LimitedAccessStrategy())
-
-        placementRequestTransformer.transformJpaToApi(it, personInfo)
-      },
-    )
-  }
-
   @Deprecated("Use Cas1PlacementRequestsController.search instead")
   override fun placementRequestsDashboardGet(
     status: PlacementRequestStatus?,

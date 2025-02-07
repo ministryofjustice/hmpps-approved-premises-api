@@ -10,7 +10,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PlacementDates
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PlacementRequestRequestType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PlacementRequestSortField
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PlacementRequestStatus
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.SortDirection
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.BookingNotMadeEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.BookingNotMadeRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.CancellationEntity
@@ -39,7 +38,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.allocations
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1LimitedAccessStrategy
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.PageCriteria
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.getMetadata
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.getPageable
 import java.time.LocalDate
 import java.time.OffsetDateTime
 import java.util.UUID
@@ -63,22 +61,6 @@ class PlacementRequestService(
 ) {
 
   var log: Logger = LoggerFactory.getLogger(this::class.java)
-
-  fun getVisiblePlacementRequestsForUser(
-    user: UserEntity,
-    page: Int? = null,
-    sortDirection: SortDirection? = null,
-    apAreaId: UUID? = null,
-  ): Pair<List<PlacementRequestEntity>, PaginationMetadata?> {
-    val sortField = "createdAt"
-    val pageable = getPageable(sortField, sortDirection, page)
-    val response = placementRequestRepository.findOpenRequestsAssignedToUser(
-      userId = user.id,
-      apAreaId = apAreaId,
-      pageable = pageable,
-    )
-    return Pair(response.content, getMetadata(response, page))
-  }
 
   fun getAllActive(
     searchCriteria: AllActiveSearchCriteria,
