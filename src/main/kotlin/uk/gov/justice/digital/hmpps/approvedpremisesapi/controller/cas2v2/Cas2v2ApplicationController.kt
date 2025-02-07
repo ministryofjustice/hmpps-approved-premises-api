@@ -4,12 +4,12 @@ import com.fasterxml.jackson.databind.ObjectMapper
 import jakarta.transaction.Transactional
 import org.springframework.http.ResponseEntity
 import org.springframework.stereotype.Service
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.cas2v2.ApplicationsCas2v2Delegate
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Application
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewCas2v2Application
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.SortDirection
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.UpdateApplication
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.UpdateCas2v2Application
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.controller.generated.cas2v2.ApplicationsCas2v2Delegate
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas2v2.Cas2v2ApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas2v2.Cas2v2ApplicationSummaryEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.BadRequestProblem

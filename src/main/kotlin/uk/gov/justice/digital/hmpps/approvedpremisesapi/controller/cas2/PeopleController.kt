@@ -6,11 +6,11 @@ import kotlinx.coroutines.runBlocking
 import org.slf4j.LoggerFactory
 import org.springframework.http.ResponseEntity
 import org.springframework.stereotype.Service
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.cas2.PeopleCas2Delegate
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.OASysRiskOfSeriousHarm
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.OASysRiskToSelf
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Person
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PersonRisks
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.controller.generated.cas2.PeopleCas2Delegate
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.ProbationOffenderSearchResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.community.OffenderDetailSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.ForbiddenProblem

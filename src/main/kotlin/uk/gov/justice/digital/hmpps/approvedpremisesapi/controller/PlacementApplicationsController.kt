@@ -3,7 +3,6 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.controller
 import com.fasterxml.jackson.databind.ObjectMapper
 import org.springframework.http.ResponseEntity
 import org.springframework.stereotype.Service
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.PlacementApplicationsApiDelegate
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewPlacementApplication
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PlacementApplication
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PlacementApplicationDecisionEnvelope
@@ -11,6 +10,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.SubmitPlacemen
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.UpdatePlacementApplication
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.WithdrawPlacementApplication
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.WithdrawPlacementRequestReason
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.controller.generated.PlacementApplicationsApiDelegate
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementApplicationWithdrawalReason
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserQualification

@@ -2,7 +2,6 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.controller
 
 import org.springframework.http.ResponseEntity
 import org.springframework.stereotype.Service
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.ReferenceDataApiDelegate
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApArea
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.CancellationReason
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Characteristic
@@ -16,6 +15,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ProbationDeliv
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ProbationRegion
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ReferralRejectionReason
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.controller.generated.ReferenceDataApiDelegate
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApAreaRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.CancellationReasonRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.CharacteristicRepository

@@ -5,7 +5,6 @@ import jakarta.transaction.Transactional
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
 import org.springframework.stereotype.Service
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.AssessmentsApiDelegate
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Assessment
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.AssessmentAcceptance
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.AssessmentRejection
@@ -20,6 +19,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.SortDirection
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.UpdateAssessment
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.UpdatedClarificationNote
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.controller.generated.AssessmentsApiDelegate
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DomainAssessmentSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserEntity

@@ -5,7 +5,6 @@ import jakarta.transaction.Transactional
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
 import org.springframework.stereotype.Service
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.ApplicationsApiDelegate
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Appeal
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Application
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApplicationSortField
@@ -32,6 +31,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.UpdateTemporar
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Withdrawable
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Withdrawables
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.controller.cas1.Cas1TimelineService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.controller.generated.ApplicationsApiDelegate
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.OfflineApplicationEntity

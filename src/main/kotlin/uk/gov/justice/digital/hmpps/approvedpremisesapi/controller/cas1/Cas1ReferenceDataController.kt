@@ -2,12 +2,12 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.controller.cas1
 
 import org.springframework.http.ResponseEntity
 import org.springframework.stereotype.Service
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.cas1.ReferenceDataCas1Delegate
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1CruManagementArea
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1OutOfServiceBedReason
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.DepartureReason
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.MoveOnCategory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NonArrivalReason
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.controller.generated.cas1.ReferenceDataCas1Delegate
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas1CruManagementAreaRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas1OutOfServiceBedReasonRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DepartureReasonRepository

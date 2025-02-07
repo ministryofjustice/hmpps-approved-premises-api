@@ -2,13 +2,13 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.controller.cas1
 
 import org.springframework.http.ResponseEntity
 import org.springframework.stereotype.Service
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.cas1.PlacementRequestsCas1Delegate
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1PlacementRequestSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PlacementRequestRequestType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PlacementRequestSortField
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PlacementRequestStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.RiskTierLevel
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.SortDirection
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.controller.generated.cas1.PlacementRequestsCas1Delegate
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserPermission
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.ForbiddenProblem

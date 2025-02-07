@@ -3,11 +3,11 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.controller.cas1
 import org.springframework.http.ResponseEntity
 import org.springframework.stereotype.Service
 import org.springframework.web.servlet.mvc.method.annotation.StreamingResponseBody
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.cas1.ReportsCas1Delegate
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1ReportName
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.controller.ContentType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.controller.generateStreamingResponse
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.controller.generated.cas1.ReportsCas1Delegate
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserPermission
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.BadRequestProblem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.NotAllowedProblem

@@ -3,7 +3,6 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.controller.cas3
 import org.springframework.http.ResponseEntity
 import org.springframework.stereotype.Service
 import org.springframework.web.servlet.mvc.method.annotation.StreamingResponseBody
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.cas3.ReportsCas3Delegate
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas3ReportType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas3ReportType.bedOccupancy
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas3ReportType.bedUsage
@@ -16,6 +15,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.controller.ContentType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.controller.generateStreamingResponse
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.controller.generateXlsxStreamingResponse
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.controller.generated.cas3.ReportsCas3Delegate
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.BadRequestProblem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.ForbiddenProblem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.properties.BedUsageReportProperties

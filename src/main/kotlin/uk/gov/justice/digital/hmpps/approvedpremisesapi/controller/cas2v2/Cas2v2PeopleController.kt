@@ -5,11 +5,11 @@ import kotlinx.coroutines.async
 import kotlinx.coroutines.runBlocking
 import org.springframework.http.ResponseEntity
 import org.springframework.stereotype.Service
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.cas2v2.PeopleCas2v2Delegate
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.OASysRiskOfSeriousHarm
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.OASysRiskToSelf
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Person
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PersonRisks
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.controller.generated.cas2v2.PeopleCas2v2Delegate
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PersonInfoResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.ProbationOffenderSearchResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.community.OffenderDetailSummary

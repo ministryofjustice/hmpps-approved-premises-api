@@ -3,7 +3,6 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.controller.cas1
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
 import org.springframework.stereotype.Service
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.cas1.SpaceBookingsCas1Delegate
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1AssignKeyWorker
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1NewArrival
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1NewDeparture
@@ -18,6 +17,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1UpdateSpac
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.SortDirection
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.TimelineEvent
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.controller.generated.cas1.SpaceBookingsCas1Delegate
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas1SpaceBookingEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserPermission
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserPermission.CAS1_SPACE_BOOKING_LIST

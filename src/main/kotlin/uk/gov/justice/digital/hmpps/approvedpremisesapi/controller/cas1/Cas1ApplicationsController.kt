@@ -2,8 +2,8 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.controller.cas1
 
 import org.springframework.http.ResponseEntity
 import org.springframework.stereotype.Service
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.cas1.ApplicationsCas1Delegate
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1TimelineEvent
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.controller.generated.cas1.ApplicationsCas1Delegate
 import java.util.UUID
 
 @Service
