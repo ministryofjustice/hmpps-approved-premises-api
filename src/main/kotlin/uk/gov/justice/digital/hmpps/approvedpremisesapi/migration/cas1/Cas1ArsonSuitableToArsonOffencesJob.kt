@@ -10,6 +10,9 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.migration.MigrationJob
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.migration.MigrationLogger
 import java.util.UUID
 
+/**
+ * Replaces all occurrences of 'isArsonSuitable' in placement requests with 'arsonOffences'
+ */
 @Component
 class Cas1ArsonSuitableToArsonOffencesJob(
   private val repository: Cas1ArsonSuitableToArsonOffencesRepository,
