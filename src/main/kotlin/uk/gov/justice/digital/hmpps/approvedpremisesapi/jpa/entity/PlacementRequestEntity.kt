@@ -303,6 +303,7 @@ data class PlacementRequestEntity(
   @OneToMany(mappedBy = "placementRequest", fetch = FetchType.LAZY)
   var spaceBookings: MutableList<Cas1SpaceBookingEntity>,
 
+  @Deprecated("Placement requests are no longer allocated to users")
   @ManyToOne
   @JoinColumn(name = "allocated_to_user_id")
   var allocatedToUser: UserEntity?,
@@ -310,6 +311,15 @@ data class PlacementRequestEntity(
   @OneToMany(mappedBy = "placementRequest", fetch = FetchType.LAZY)
   var bookingNotMades: MutableList<BookingNotMadeEntity>,
 
+  @Deprecated(
+    """
+    Placement requests are no longer allocated to users
+    
+    Note that because placement requests with a value in this field are excluded from
+    lists of active placement requests, we need to be careful if/when removing this
+    column to ensure such placement requests are still not shown
+    """,
+  )
   var reallocatedAt: OffsetDateTime?,
 
   @ManyToOne(fetch = FetchType.LAZY)
@@ -322,6 +332,7 @@ data class PlacementRequestEntity(
   @Enumerated(value = EnumType.STRING)
   var withdrawalReason: PlacementRequestWithdrawalReason?,
 
+  @Deprecated("Placement requests are no longer allocated to users and don't have a due at concept")
   var dueAt: OffsetDateTime?,
 
   @Version

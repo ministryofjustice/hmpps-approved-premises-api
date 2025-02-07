@@ -219,42 +219,7 @@ interface UserRepository : JpaRepository<UserEntity, UUID>, JpaSpecificationExec
           placement_application.allocated_to_user_id = u.id
           and placement_application.reallocated_at is null
           and placement_application.submitted_at > current_date - interval '30' day
-      ) as completedPlacementApplicationsInTheLastThirtyDays,
-      (
-        SELECT
-          count(*)
-        from
-          placement_requests placement_request
-        where
-          placement_request.allocated_to_user_id = u.id
-          and placement_request.booking_id is null
-          and placement_request.reallocated_at is null
-          and placement_request.is_withdrawn != true
-      ) as pendingPlacementRequests,
-      (
-        SELECT
-          count(*)
-        from
-          placement_requests placement_request
-          left join bookings booking on booking.id = placement_request.booking_id
-        where
-          placement_request.allocated_to_user_id = u.id
-          and placement_request.booking_id is not null
-          and placement_request.reallocated_at is null
-          and booking.created_at > current_date - interval '7' day
-      ) as completedPlacementRequestsInTheLastSevenDays,
-      (
-        SELECT
-          count(*)
-        from
-          placement_requests placement_request
-          left join bookings booking on booking.id = placement_request.booking_id
-        where
-          placement_request.allocated_to_user_id = u.id
-          and placement_request.booking_id is not null
-          and placement_request.reallocated_at is null
-          and booking.created_at > current_date - interval '30' day
-      ) as completedPlacementRequestsInTheLastThirtyDays
+      ) as completedPlacementApplicationsInTheLastThirtyDays
     FROM
       users u
     WHERE
@@ -397,9 +362,6 @@ interface UserWorkload {
   fun getPendingAssessments(): Int
   fun getCompletedAssessmentsInTheLastSevenDays(): Int
   fun getCompletedAssessmentsInTheLastThirtyDays(): Int
-  fun getPendingPlacementRequests(): Int
-  fun getCompletedPlacementRequestsInTheLastSevenDays(): Int
-  fun getCompletedPlacementRequestsInTheLastThirtyDays(): Int
   fun getPendingPlacementApplications(): Int
   fun getCompletedPlacementApplicationsInTheLastSevenDays(): Int
   fun getCompletedPlacementApplicationsInTheLastThirtyDays(): Int
