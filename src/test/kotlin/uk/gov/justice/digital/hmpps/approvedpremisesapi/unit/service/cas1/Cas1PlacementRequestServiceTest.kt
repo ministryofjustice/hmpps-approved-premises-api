@@ -64,7 +64,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Withdrawabl
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.WithdrawalContext
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.WithdrawalTriggeredBySeedJob
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.WithdrawalTriggeredByUser
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.allocations.UserAllocator
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1LimitedAccessStrategy
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.unit.util.assertThatCasResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.PageCriteria
@@ -80,7 +79,6 @@ class Cas1PlacementRequestServiceTest {
   private val placementRequirementsRepository = mockk<PlacementRequirementsRepository>()
   private val placementDateRepository = mockk<PlacementDateRepository>()
   private val cancellationRepository = mockk<CancellationRepository>()
-  private val userAllocator = mockk<UserAllocator>()
   private val userAccessService = mockk<UserAccessService>()
   private val applicationService = mockk<ApplicationService>()
   private val cas1PlacementRequestEmailService = mockk<Cas1PlacementRequestEmailService>()
@@ -95,7 +93,6 @@ class Cas1PlacementRequestServiceTest {
     placementRequirementsRepository,
     placementDateRepository,
     cancellationRepository,
-    userAllocator,
     userAccessService,
     applicationService,
     cas1PlacementRequestEmailService,
@@ -128,7 +125,6 @@ class Cas1PlacementRequestServiceTest {
       val dueAt = OffsetDateTime.now()
 
       every { taskDeadlineServiceMock.getDeadline(any<PlacementRequestEntity>()) } returns dueAt
-      every { userAllocator.getUserForPlacementRequestAllocation(any()) } returns assigneeUser
       every { placementRequestRepository.save(any()) } answers { it.invocation.args[0] as PlacementRequestEntity }
       every { cas1PlacementRequestDomainEventService.placementRequestCreated(any(), any()) } returns Unit
 
@@ -167,7 +163,7 @@ class Cas1PlacementRequestServiceTest {
       assertThat(placementRequest.application.id).isEqualTo(application.id)
       assertThat(placementRequest.isParole).isFalse()
       assertThat(placementRequest.dueAt).isEqualTo(dueAt)
-      assertThat(placementRequest.allocatedToUser!!.id).isEqualTo(assigneeUser.id)
+      assertThat(placementRequest.allocatedToUser).isNull()
 
       verify { cas1PlacementRequestDomainEventService.placementRequestCreated(placementRequest, source) }
     }
