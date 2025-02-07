@@ -3035,27 +3035,6 @@ paths:
           $ref: '#/components/responses/403Response'
         500:
           $ref: '#/components/responses/500Response'
-  /placement-requests:
-    get:
-      tags:
-        - Placement requests
-      summary: Gets placement requests for a given user
-      operationId: placement_requestsGet
-      responses:
-        200:
-          description: successfully retrieved placement requests
-          content:
-            'application/json':
-              schema:
-                type: array
-                items:
-                  $ref: '#/components/schemas/PlacementRequest'
-        401:
-          $ref: '#/components/responses/401Response'
-        403:
-          $ref: '#/components/responses/403Response'
-        500:
-          $ref: '#/components/responses/500Response'
   /placement-requests/dashboard:
     get:
       description: Deprecated, use cas1/placement-requests instead.
@@ -4710,9 +4689,7 @@ components:
         propertyName: taskType
         mapping:
           Assessment: '#/components/schemas/AssessmentTask'
-          PlacementRequest: '#/components/schemas/PlacementRequestTask'
           PlacementApplication: '#/components/schemas/PlacementApplicationTask'
-          BookingAppeal: '#/components/schemas/BookingAppealTask'
       required:
         - id
         - taskType
@@ -4751,24 +4728,6 @@ components:
               $ref: '#/components/schemas/AssessmentDecision'
           required:
             - createdFromAppeal
-    PlacementRequestTask:
-      allOf:
-        - $ref: '#/components/schemas/Task'
-        - $ref: '#/components/schemas/PlacementDates'
-        - type: object
-          properties:
-            tier:
-              $ref: '#/components/schemas/RiskTierEnvelope'
-            releaseType:
-              $ref: '#/components/schemas/ReleaseTypeOption'
-            placementRequestStatus:
-              $ref: '#/components/schemas/PlacementRequestStatus'
-            outcome:
-              $ref: '#/components/schemas/PlacementRequestTaskOutcome'
-          required:
-            - tier
-            - releaseType
-            - placementRequestStatus
     PlacementApplicationTask:
       allOf:
         - $ref: '#/components/schemas/Task'
@@ -4791,14 +4750,6 @@ components:
             - tier
             - releaseType
             - placementType
-    PlacementRequestTaskOutcome:
-      type: string
-      enum:
-        - matched
-        - unable_to_match
-    BookingAppealTask:
-      allOf:
-        - $ref: '#/components/schemas/Task'
     TaskType:
       type: string
       enum:

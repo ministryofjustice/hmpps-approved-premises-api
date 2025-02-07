@@ -3033,27 +3033,6 @@ paths:
           $ref: '_shared.yml#/components/responses/403Response'
         500:
           $ref: '_shared.yml#/components/responses/500Response'
-  /placement-requests:
-    get:
-      tags:
-        - Placement requests
-      summary: Gets placement requests for a given user
-      operationId: placement_requestsGet
-      responses:
-        200:
-          description: successfully retrieved placement requests
-          content:
-            'application/json':
-              schema:
-                type: array
-                items:
-                  $ref: '_shared.yml#/components/schemas/PlacementRequest'
-        401:
-          $ref: '_shared.yml#/components/responses/401Response'
-        403:
-          $ref: '_shared.yml#/components/responses/403Response'
-        500:
-          $ref: '_shared.yml#/components/responses/500Response'
   /placement-requests/dashboard:
     get:
       description: Deprecated, use cas1/placement-requests instead.
