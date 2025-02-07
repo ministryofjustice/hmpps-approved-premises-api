@@ -4689,9 +4689,7 @@ components:
         propertyName: taskType
         mapping:
           Assessment: '#/components/schemas/AssessmentTask'
-          PlacementRequest: '#/components/schemas/PlacementRequestTask'
           PlacementApplication: '#/components/schemas/PlacementApplicationTask'
-          BookingAppeal: '#/components/schemas/BookingAppealTask'
       required:
         - id
         - taskType
@@ -4730,24 +4728,6 @@ components:
               $ref: '#/components/schemas/AssessmentDecision'
           required:
             - createdFromAppeal
-    PlacementRequestTask:
-      allOf:
-        - $ref: '#/components/schemas/Task'
-        - $ref: '#/components/schemas/PlacementDates'
-        - type: object
-          properties:
-            tier:
-              $ref: '#/components/schemas/RiskTierEnvelope'
-            releaseType:
-              $ref: '#/components/schemas/ReleaseTypeOption'
-            placementRequestStatus:
-              $ref: '#/components/schemas/PlacementRequestStatus'
-            outcome:
-              $ref: '#/components/schemas/PlacementRequestTaskOutcome'
-          required:
-            - tier
-            - releaseType
-            - placementRequestStatus
     PlacementApplicationTask:
       allOf:
         - $ref: '#/components/schemas/Task'
@@ -4770,14 +4750,6 @@ components:
             - tier
             - releaseType
             - placementType
-    PlacementRequestTaskOutcome:
-      type: string
-      enum:
-        - matched
-        - unable_to_match
-    BookingAppealTask:
-      allOf:
-        - $ref: '#/components/schemas/Task'
     TaskType:
       type: string
       enum:

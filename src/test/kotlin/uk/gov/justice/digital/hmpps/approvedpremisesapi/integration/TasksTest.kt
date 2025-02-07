@@ -19,7 +19,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.AssessmentTask
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1ApplicationTimelinessCategory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewReallocation
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PlacementApplicationTask
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PlacementRequestTask
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Reallocation
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.SortDirection
@@ -1799,7 +1798,6 @@ class TasksTest {
         sortTasks(sortDirection) { id: UUID ->
           val createdAt = when (val task = tasks[id]!!) {
             is AssessmentTask -> assessments[id]!!.createdAt
-            is PlacementRequestTask -> placementRequests[id]!!.createdAt
             is PlacementApplicationTask -> placementApplications[id]!!.createdAt
             else -> fail("Unexpected task type ${task::class.qualifiedName}")
           }
@@ -1836,7 +1834,6 @@ class TasksTest {
         sortTasks(sortDirection) { id: UUID ->
           when (val task = tasks[id]!!) {
             is AssessmentTask -> task.outcome?.value
-            is PlacementRequestTask -> task.outcome?.value
             is PlacementApplicationTask -> task.outcome?.value
             else -> fail("Unexpected task type ${task::class.qualifiedName}")
           }

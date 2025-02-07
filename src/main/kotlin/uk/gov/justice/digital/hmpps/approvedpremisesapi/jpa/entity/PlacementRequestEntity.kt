@@ -23,7 +23,6 @@ import org.springframework.data.jpa.repository.Query
 import org.springframework.stereotype.Repository
 import org.springframework.stereotype.Service
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1PlacementRequestSummary.PlacementRequestStatus
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PlacementRequestTaskOutcome
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.WithdrawPlacementRequestReason
 import java.time.LocalDate
 import java.time.OffsetDateTime
@@ -372,20 +371,6 @@ data class PlacementRequestEntity(
    * This property is used to identify such instances.
    */
   fun isForApplicationsArrivalDate() = placementApplication == null
-
-  fun getOutcomeDetails(): Pair<OffsetDateTime?, PlacementRequestTaskOutcome?> {
-    val bookingNotMades = this.bookingNotMades
-
-    if (bookingNotMades.size > 0) {
-      return Pair(bookingNotMades.last().createdAt, PlacementRequestTaskOutcome.unableToMatch)
-    }
-
-    if (this.hasActiveBooking()) {
-      return Pair(this.booking!!.createdAt, PlacementRequestTaskOutcome.matched)
-    }
-
-    return Pair(null, null)
-  }
 }
 
 @Repository
