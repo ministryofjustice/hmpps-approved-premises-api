@@ -29,7 +29,7 @@ class SeedXlsxScaffoldingTest : SeedTestBase() {
 
     assertThat(logEntries).anyMatch {
       it.level == "error" &&
-        it.message == "Unable to complete Excel seed job" &&
+        it.message == "Unable to complete Excel seed job for /afile" &&
         it.throwable != null &&
         it.throwable.message!!.contains(
           "Filename must be just the filename of a .xlsx file in the /seed directory, e.g. for /seed/upload.xlsx, just `upload` should be supplied",
@@ -43,7 +43,7 @@ class SeedXlsxScaffoldingTest : SeedTestBase() {
 
     assertThat(logEntries).anyMatch {
       it.level == "error" &&
-        it.message == "Unable to complete Excel seed job" &&
+        it.message == "Unable to complete Excel seed job for \\afile" &&
         it.throwable != null &&
         it.throwable.message!!.contains(
           "Filename must be just the filename of a .xlsx file in the /seed directory, e.g. for /seed/upload.xlsx, just `upload` should be supplied",
@@ -53,11 +53,11 @@ class SeedXlsxScaffoldingTest : SeedTestBase() {
 
   @Test
   fun `Attempting to process a non-existent xlsx file logs an error`() {
-    seedXlsxService.seedExcelData(SeedFromExcelFileType.CAS1_IMPORT_SITE_SURVEY_ROOMS, "non-existent")
+    seedXlsxService.seedExcelData(SeedFromExcelFileType.CAS1_IMPORT_SITE_SURVEY_ROOMS, "non-existent.xlsx")
 
     assertThat(logEntries).anyMatch {
       it.level == "error" &&
-        it.message == "Unable to complete Excel seed job" &&
+        it.message == "Unable to complete Excel seed job for non-existent.xlsx" &&
         it.throwable != null &&
         it.throwable.message!!.contains(
           "Unable to process XLSX file",
@@ -76,7 +76,7 @@ class SeedXlsxScaffoldingTest : SeedTestBase() {
 
     assertThat(logEntries).anyMatch {
       it.level == "error" &&
-        it.message == "Unable to complete Excel seed job" &&
+        it.message == "Unable to complete Excel seed job for wrongSheetName.xlsx" &&
         it.throwable != null &&
         it.throwable.cause!!.message == "Sheet with name Sheet2 not found"
     }

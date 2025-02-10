@@ -206,11 +206,11 @@ class SeedCas1RoomsFromSiteSurveyXlsxTest : SeedTestBase() {
     assertThat(logEntries)
       .anyMatch {
         it.level == "error" &&
-          it.message == "Unable to complete Excel seed job" &&
+          it.message == "Unable to complete Excel seed job for example.xlsx" &&
           it.throwable != null &&
           it.throwable.message == "Unable to process XLSX file" &&
           it.throwable.cause is IllegalStateException &&
-          it.throwable.cause!!.message == "Room Q999-1 has different characteristics."
+          it.throwable.cause!!.message == "1 or more beds in room 'Q999-1' have different characteristics."
       }
   }
 
@@ -487,7 +487,7 @@ class SeedCas1RoomsFromSiteSurveyXlsxTest : SeedTestBase() {
     assertThat(logEntries)
       .anyMatch {
         it.level == "error" &&
-          it.message == "Unable to complete Excel seed job" &&
+          it.message == "Unable to complete Excel seed job for example.xlsx" &&
           it.throwable != null &&
           it.throwable.message == "Unable to process XLSX file" &&
           it.throwable.cause is IllegalStateException &&
@@ -543,7 +543,7 @@ class SeedCas1RoomsFromSiteSurveyXlsxTest : SeedTestBase() {
     assertThat(logEntries)
       .anyMatch {
         it.level == "error" &&
-          it.message == "Unable to complete Excel seed job" &&
+          it.message == "Unable to complete Excel seed job for example.xlsx" &&
           it.throwable != null &&
           it.throwable.message == "Unable to process XLSX file" &&
           it.throwable.cause is IllegalStateException &&
@@ -590,7 +590,7 @@ class SeedCas1RoomsFromSiteSurveyXlsxTest : SeedTestBase() {
     assertThat(logEntries)
       .anyMatch {
         it.level == "error" &&
-          it.message == "Unable to complete Excel seed job" &&
+          it.message == "Unable to complete Excel seed job for example.xlsx" &&
           it.throwable != null &&
           it.throwable.message == "Unable to process XLSX file" &&
           it.throwable.cause is RuntimeException &&
@@ -637,7 +637,7 @@ class SeedCas1RoomsFromSiteSurveyXlsxTest : SeedTestBase() {
     assertThat(logEntries)
       .anyMatch {
         it.level == "error" &&
-          it.message == "Unable to complete Excel seed job" &&
+          it.message == "Unable to complete Excel seed job for example.xlsx" &&
           it.throwable != null &&
           it.throwable.message == "Unable to process XLSX file" &&
           it.throwable.cause is RuntimeException &&
@@ -667,7 +667,7 @@ class SeedCas1RoomsFromSiteSurveyXlsxTest : SeedTestBase() {
     assertThat(logEntries)
       .anyMatch {
         it.level == "error" &&
-          it.message == "Unable to complete Excel seed job" &&
+          it.message == "Unable to complete Excel seed job for example.xlsx" &&
           it.throwable != null &&
           it.throwable.message == "Unable to process XLSX file" &&
           it.throwable.cause is SiteSurveyImportException &&
