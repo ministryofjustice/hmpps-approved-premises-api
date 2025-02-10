@@ -1993,6 +1993,50 @@ class Cas1SpaceBookingServiceTest {
         )
       }
     }
+
+    @Test
+    fun `should remove all room characteristics when no characteristics are provided`() {
+      existingSpaceBooking.expectedArrivalDate = LocalDate.of(2025, 1, 10)
+      existingSpaceBooking.expectedDepartureDate = LocalDate.of(2025, 3, 15)
+      val originalRoomCharacteristic = CharacteristicEntityFactory().withModelScope("room").withPropertyName("IsArsenCapable").produce()
+      existingSpaceBooking.criteria = mutableListOf(originalRoomCharacteristic)
+
+      val updateSpaceBookingDetails = UpdateSpaceBookingDetails(
+        bookingId = UUID.randomUUID(),
+        premisesId = PREMISES_ID,
+        arrivalDate = newArrivalDate,
+        departureDate = newDepartureDate,
+        updatedBy = user,
+        characteristics = emptyList(),
+      )
+
+      assertThat(existingSpaceBooking.criteria).isNotEmpty()
+
+      val updatedSpaceBookingCaptor = slot<Cas1SpaceBookingEntity>()
+
+      every { cas1PremisesService.findPremiseById(any()) } returns premises
+      every { spaceBookingRepository.findByIdOrNull(any()) } returns existingSpaceBooking
+      every { spaceBookingRepository.save(capture(updatedSpaceBookingCaptor)) } returnsArgument 0
+      every { cas1BookingDomainEventService.spaceBookingChanged(any(), any(), any(), any(), any(), any()) } just Runs
+
+      val result = service.updateSpaceBooking(updateSpaceBookingDetails)
+
+      assertThat(result).isInstanceOf(CasResult.Success::class.java)
+
+      val updatedSpaceBooking = updatedSpaceBookingCaptor.captured
+      assertThat(updatedSpaceBooking.criteria).isEmpty()
+
+      verify(exactly = 1) {
+        cas1BookingDomainEventService.spaceBookingChanged(
+          booking = updatedSpaceBookingCaptor.captured,
+          changedBy = user,
+          bookingChangedAt = any(),
+          previousArrivalDateIfChanged = LocalDate.of(2025, 1, 10),
+          previousDepartureDateIfChanged = LocalDate.of(2025, 3, 15),
+          previousCharacteristicsIfChanged = listOf(originalRoomCharacteristic),
+        )
+      }
+    }
   }
 
   data class TestCaseForDeparture(

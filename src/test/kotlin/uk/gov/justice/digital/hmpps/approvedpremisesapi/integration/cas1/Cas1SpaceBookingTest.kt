@@ -2,6 +2,7 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.cas1
 
 import org.assertj.core.api.Assertions.assertThat
 import org.assertj.core.api.Assertions.tuple
+import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
@@ -2180,6 +2181,74 @@ class Cas1SpaceBookingTest {
           tuple("room", "hasEnSuite"),
           tuple("premises", "isWheelchairAccessible"),
         )
+
+      domainEventAsserter.assertDomainEventOfTypeStored(updatedSpaceBooking.application?.id!!, DomainEventType.APPROVED_PREMISES_BOOKING_CHANGED)
+    }
+
+    @Test
+    fun `Update space booking correctly removes existing room characteristics when none provided`() {
+      val (_, jwt) = givenAUser(roles = listOf(UserRole.CAS1_CRU_MEMBER_FIND_AND_BOOK_BETA))
+
+      val (user) = givenAUser()
+
+      val (placementRequest) = givenAPlacementRequest(
+        placementRequestAllocatedTo = user,
+        assessmentAllocatedTo = user,
+        createdByUser = user,
+      )
+
+      val premises = approvedPremisesEntityFactory.produceAndPersist {
+        withSupportsSpaceBookings(true)
+        withYieldedProbationRegion { region }
+        withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
+      }
+
+      var characteristics = mutableListOf(
+        characteristicEntityFactory.produceAndPersist {
+          withName("Step Free Designated")
+          withPropertyName("isStepFreeDesignated")
+          withServiceScope("approved-premises")
+          withModelScope("room")
+        },
+        characteristicEntityFactory.produceAndPersist {
+          withName("Catered")
+          withPropertyName("isCatered")
+          withServiceScope("approved-premises")
+          withModelScope("premises")
+        },
+      )
+
+      val spaceBookingBeforeUpdate = cas1SpaceBookingEntityFactory.produceAndPersist {
+        withPremises(premises)
+        withPlacementRequest(placementRequest)
+        withApplication(placementRequest.application)
+        withCreatedBy(user)
+        withCriteria(characteristics)
+      }
+
+      assertThat(spaceBookingBeforeUpdate.criteria.size).isEqualTo(2)
+      assertThat(spaceBookingBeforeUpdate.criteria)
+        .extracting("modelScope", "propertyName")
+        .containsExactlyInAnyOrder(
+          tuple("room", "isStepFreeDesignated"),
+          tuple("premises", "isCatered"),
+        )
+
+      webTestClient.patch()
+        .uri("/cas1/premises/${premises.id}/space-bookings/${spaceBookingBeforeUpdate.id}")
+        .header("Authorization", "Bearer $jwt")
+        .bodyValue(
+          Cas1UpdateSpaceBooking(
+            characteristics = emptyList(),
+          ),
+        )
+        .exchange()
+        .expectStatus()
+        .isOk
+
+      val updatedSpaceBooking = cas1SpaceBookingRepository.findByIdOrNull(spaceBookingBeforeUpdate.id)!!
+      assertThat(updatedSpaceBooking.criteria.size).isEqualTo(1)
+      assertTrue(updatedSpaceBooking.criteria.none { it.modelScope == "room" })
 
       domainEventAsserter.assertDomainEventOfTypeStored(updatedSpaceBooking.application?.id!!, DomainEventType.APPROVED_PREMISES_BOOKING_CHANGED)
     }

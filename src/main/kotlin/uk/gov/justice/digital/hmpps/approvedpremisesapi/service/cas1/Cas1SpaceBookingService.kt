@@ -615,7 +615,7 @@ class Cas1SpaceBookingService(
       updateFullBookingDates(bookingToUpdate, newArrivalDate, newDepartureDate)
     }
 
-    if (updateSpaceBookingDetails.characteristics?.isNotEmpty() == true) {
+    if (updateSpaceBookingDetails.characteristics != null) {
       updateRoomCharacteristics(bookingToUpdate, updateSpaceBookingDetails.characteristics)
     }
 
