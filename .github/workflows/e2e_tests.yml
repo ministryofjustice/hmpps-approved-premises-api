@@ -24,6 +24,8 @@ jobs:
         run: git clone https://github.com/ministryofjustice/hmpps-approved-premises-ui.git 
       # - name: Checkout branch
         # run:  git checkout ${{ github.event.inputs.branch }}
+      - name: Change directory to cloned repo
+        run: cd hmpps-approved-premises-ui
       - name: Use Node.js
         uses: actions/setup-node@v4
         with:
