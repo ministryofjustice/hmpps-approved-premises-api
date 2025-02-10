@@ -45,12 +45,12 @@ jobs:
           HMPPS_AUTH_NAME="${!name}"
           npm run test:e2e:ci -- --shard=${{ matrix.shard }}/4
       - name: Store Playwright report
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: playwright-report
           path: playwright-report
       - name: Store test results
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: test-results
           path: test-results
@@ -81,7 +81,7 @@ jobs:
       - name: Run E2E tests
         run: npm run test:e2e
       - name: Store Playwright report
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: playwright-report
           path: e2e-tests/playwright-report
@@ -116,12 +116,12 @@ jobs:
   #           --config baseUrl=https://temporary-accommodation-${{ steps.context.outputs.environment }}.hmpps.service.justice.gov.uk \
   #           --spec $TESTS
   #     - name: Store screenshots
-  #       uses: actions/upload-artifact@v3
+  #       uses: actions/upload-artifact@v4
   #       with:
   #         name: screenshots
   #         path: e2e/screenshots
   #     - name: Store videos
-  #       uses: actions/upload-artifact@v3
+  #       uses: actions/upload-artifact@v4
   #       with:
   #         name: videos
   #         path: e2e/videos
