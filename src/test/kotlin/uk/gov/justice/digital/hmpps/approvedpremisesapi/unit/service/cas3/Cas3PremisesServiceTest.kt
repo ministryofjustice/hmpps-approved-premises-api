@@ -1,16 +1,24 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.unit.service.cas3
 
+import arrow.core.Ior
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.verify
 import org.assertj.core.api.Assertions.assertThat
 import org.assertj.core.api.Assertions.entry
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.params.ParameterizedTest
+import org.junit.jupiter.params.provider.CsvSource
 import org.springframework.data.repository.findByIdOrNull
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.BookingStatus
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PropertyStatus
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApAreaEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.BedEntityFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.BookingEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.BookingSummaryForAvailabilityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.LocalAuthorityEntityFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ProbationDeliveryUnitEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ProbationRegionEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.RoomEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.TemporaryAccommodationPremisesEntityFactory
@@ -31,6 +39,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.Availability
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.AuthorisableActionResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.ValidatableActionResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.CharacteristicService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.FeatureFlagService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas3.Cas3PremisesService
 import java.time.LocalDate
 import java.util.UUID
@@ -45,12 +54,15 @@ class Cas3PremisesServiceTest {
   private val probationRegionRepositoryMock = mockk<ProbationRegionRepository>()
   private val probationDeliveryUnitRepositoryMock = mockk<ProbationDeliveryUnitRepository>()
   private val characteristicServiceMock = mockk<CharacteristicService>()
+  private val featureFlagServiceMock = mockk<FeatureFlagService>()
 
   private val temporaryAccommodationPremisesFactory = TemporaryAccommodationPremisesEntityFactory()
     .withYieldedLocalAuthorityArea { LocalAuthorityEntityFactory().produce() }
     .withYieldedProbationRegion {
       ProbationRegionEntityFactory().withYieldedApArea { ApAreaEntityFactory().produce() }.produce()
     }
+
+  private val bookingEntityFactory = BookingEntityFactory()
 
   private val premisesService = Cas3PremisesService(
     premisesRepositoryMock,
@@ -62,6 +74,7 @@ class Cas3PremisesServiceTest {
     probationRegionRepositoryMock,
     probationDeliveryUnitRepositoryMock,
     characteristicServiceMock,
+    featureFlagServiceMock,
   )
 
   @Test
@@ -514,5 +527,69 @@ class Cas3PremisesServiceTest {
         },
       )
     }
+  }
+
+  @ParameterizedTest
+  @CsvSource(
+    value = [
+      "provisional",
+      "confirmed",
+      "arrived",
+    ],
+  )
+  fun `Archive premises returns FieldValidationError if there a booking in provisional, confirmed or arrived status`(bookingStatus: BookingStatus) {
+    val probationRegion = ProbationRegionEntityFactory()
+      .withApArea(ApAreaEntityFactory().produce())
+      .produce()
+
+    val localAuthority = LocalAuthorityEntityFactory()
+      .produce()
+
+    val probationDeliveryUnit = ProbationDeliveryUnitEntityFactory()
+      .withProbationRegion(probationRegion)
+      .produce()
+
+    val premises = temporaryAccommodationPremisesFactory
+      .withService(ServiceName.temporaryAccommodation.value)
+      .withProbationRegion(probationRegion)
+      .withProbationDeliveryUnit(probationDeliveryUnit)
+      .withLocalAuthorityArea(localAuthority)
+      .produce()
+
+    val booking = bookingEntityFactory
+      .withPremises(premises)
+      .withStatus(bookingStatus)
+      .withArrivalDate(LocalDate.now().plusDays(3))
+      .produce()
+
+    every { featureFlagServiceMock.getBooleanFlag("archive-property-validate-existing-bookings") } returns true
+    every { premisesRepositoryMock.findTemporaryAccommodationPremisesByIdOrNull(premises.id) } returns premises
+    every { localAuthorityAreaRepositoryMock.findByIdOrNull(premises.localAuthorityArea?.id) } returns localAuthority
+    every { probationRegionRepositoryMock.findByIdOrNull(premises.probationRegion.id) } returns probationRegion
+    every { probationDeliveryUnitRepositoryMock.findByIdAndProbationRegionId(probationDeliveryUnit.id, probationRegion.id) } returns probationDeliveryUnit
+    every { bookingRepositoryMock.findFutureBookingsByPremisesIdAndStatus(ServiceName.temporaryAccommodation.value, premises.id, any(), any()) } returns listOf(booking)
+
+    val result = premisesService.updatePremises(
+      premisesId = premises.id,
+      addressLine1 = premises.addressLine1,
+      addressLine2 = premises.addressLine2,
+      postcode = premises.postcode,
+      town = premises.town,
+      probationRegionId = premises.probationRegion.id,
+      localAuthorityAreaId = premises.localAuthorityArea?.id,
+      probationDeliveryUnitIdentifier = Ior.fromNullables(premises.probationDeliveryUnit?.name, premises.probationDeliveryUnit?.id)?.toEither(),
+      characteristicIds = premises.characteristics.map { it.id },
+      status = PropertyStatus.archived,
+      turnaroundWorkingDayCount = premises.turnaroundWorkingDayCount,
+      notes = premises.notes,
+    )
+
+    assertThat(result).isInstanceOf(AuthorisableActionResult.Success::class.java)
+    result as AuthorisableActionResult.Success
+    assertThat(result.entity).isInstanceOf(ValidatableActionResult.FieldValidationError::class.java)
+    val resultEntity = result.entity as ValidatableActionResult.FieldValidationError
+    assertThat(resultEntity.validationMessages).contains(
+      entry("$.bookings", "existingBookings"),
+    )
   }
 }

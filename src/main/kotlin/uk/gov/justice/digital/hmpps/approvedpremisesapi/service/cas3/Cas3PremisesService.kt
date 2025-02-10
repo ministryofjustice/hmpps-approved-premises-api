@@ -3,6 +3,7 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas3
 import arrow.core.Either
 import org.springframework.data.repository.findByIdOrNull
 import org.springframework.stereotype.Service
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.BookingStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PropertyStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.BookingRepository
@@ -25,6 +26,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.validated
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.AuthorisableActionResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.ValidatableActionResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.CharacteristicService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.FeatureFlagService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.getDaysUntilExclusiveEnd
 import java.time.LocalDate
 import java.time.OffsetDateTime
@@ -41,6 +43,7 @@ class Cas3PremisesService(
   private val probationRegionRepository: ProbationRegionRepository,
   private val probationDeliveryUnitRepository: ProbationDeliveryUnitRepository,
   private val characteristicService: CharacteristicService,
+  private val featureFlagService: FeatureFlagService,
 ) {
   fun getPremises(premisesId: UUID): TemporaryAccommodationPremisesEntity? = premisesRepository.findTemporaryAccommodationPremisesByIdOrNull(premisesId)
 
@@ -217,6 +220,19 @@ class Cas3PremisesService(
 
     if (turnaroundWorkingDayCount != null && turnaroundWorkingDayCount < 0) {
       validationErrors["$.turnaroundWorkingDayCount"] = "isNotAPositiveInteger"
+    }
+
+    if (featureFlagService.getBooleanFlag("archive-property-validate-existing-bookings") && status == PropertyStatus.archived) {
+      val futureBookings = bookingRepository.findFutureBookingsByPremisesIdAndStatus(
+        ServiceName.temporaryAccommodation.value,
+        premisesId,
+        LocalDate.now(),
+        listOf(BookingStatus.arrived, BookingStatus.confirmed, BookingStatus.provisional),
+      )
+
+      if (futureBookings.any()) {
+        validationErrors["$.bookings"] = "existingBookings"
+      }
     }
 
     if (validationErrors.any()) {
