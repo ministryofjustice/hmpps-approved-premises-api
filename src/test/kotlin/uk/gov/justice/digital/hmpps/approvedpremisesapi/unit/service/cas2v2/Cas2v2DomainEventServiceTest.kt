@@ -34,7 +34,7 @@ class Cas2v2DomainEventServiceTest {
 
   private val objectMapper = ObjectMapperFactory.createRuntimeLikeObjectMapper()
 
-  private val detailUrl = "http://example.com/123"
+  private val detailUrl = "https://example.com/123"
 
   private val domainEventService = DomainEventService(
     objectMapper = objectMapper,
@@ -102,8 +102,8 @@ class Cas2v2DomainEventServiceTest {
 
       verify(exactly = 1) {
         mockHmppsTopic.snsClient.publish(
-          match<PublishRequest> {
-            val deserializedMessage = objectMapper.readValue(it.message(), SnsEvent::class.java)
+          match<PublishRequest> { publishRequest ->
+            val deserializedMessage = objectMapper.readValue(publishRequest.message(), SnsEvent::class.java)
 
             deserializedMessage.eventType == "applications.cas2.application.submitted" &&
               deserializedMessage.version == 1 &&

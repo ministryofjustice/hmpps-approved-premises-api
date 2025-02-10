@@ -70,6 +70,13 @@ class JwtAuthHelper {
       roles = roles,
     )
 
+  internal fun createValidDeliusAuthorisationCodeJwt(username: String = "username", roles: List<String>? = listOf("ROLE_POM")) =
+    createAuthorizationCodeJwt(
+      subject = username,
+      authSource = "delius",
+      roles = roles,
+    )
+
   internal fun createValidExternalAuthorisationCodeJwt(username: String = "username") =
     createAuthorizationCodeJwt(
       subject = username,
