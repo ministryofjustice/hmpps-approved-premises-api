@@ -1,10 +1,14 @@
-name: run-e2e-tests
+name: Run E2E tests
 
 on:
+  push:
+    branches:
+      # - main
+      - 'CHORE/**' # only for now...
   workflow_dispatch:
     inputs:
       branch:
-        description: 'The Github branch to use'
+        description: 'The Github branch to run tests against'
         required: true
 
 jobs:
@@ -17,22 +21,20 @@ jobs:
       - uses: qoomon/actions--context@v1
         id: context
       - name: Clone E2E repo
-        run: |
-          git clone https://github.com/ministryofjustice/hmpps-approved-premises-ui.git 
-          // TODO - switch to branch based on the input settings
-          // git checkout ${{ github.event.inputs.branch }}
+        run: git clone https://github.com/ministryofjustice/hmpps-approved-premises-ui.git 
+      # - name: Checkout branch
+        # run:  git checkout ${{ github.event.inputs.branch }}
       - name: Use Node.js
         uses: actions/setup-node@v4
         with:
           node-version: 18.x
       - name: Update npm
         run: npm install -g npm@9.8.1
-
       - name: Install Playwright
         run: npx playwright install
       - name: E2E Check
         run: |
-          SHARD=$(( ${{ strategy.job-index }} + 1 ))
+          SHARD=$(( ${{ matrix.shard }} + 1 ))
           username="HMPPS_AUTH_USERNAME_$SHARD"
           password="HMPPS_AUTH_PASSWORD_$SHARD"
           email="HMPPS_AUTH_EMAIL_$SHARD"
@@ -41,7 +43,7 @@ jobs:
           HMPPS_AUTH_PASSWORD="${!password}"
           HMPPS_AUTH_EMAIL="${!email}"
           HMPPS_AUTH_NAME="${!name}"
-          npm run test:e2e:ci -- --shard=${SHARD}/${CIRCLE_NODE_TOTAL}
+          npm run test:e2e:ci -- --shard=${{ matrix.shard }}/4
       - name: Store Playwright report
         uses: actions/upload-artifact@v2
         with:
@@ -63,8 +65,9 @@ jobs:
     runs-on: [self-hosted, hmpps-github-actions-runner]
     steps:
       - name: Clone E2E repo
-        run: |
-          git clone https://github.com/ministryofjustice/hmpps-community-accommodation-tier-2-ui.git .
+        run:  git clone https://github.com/ministryofjustice/hmpps-community-accommodation-tier-2-ui.git
+      # - name: Checkout branch
+        # run:  git checkout ${{ github.event.inputs.branch }}
       - uses: qoomon/actions--context@v1
         id: context
       - name: Update npm
@@ -73,7 +76,6 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: 18.x
-      - run:
       - name: Install Playwright
         run: npx playwright install
       - name: Run E2E tests
