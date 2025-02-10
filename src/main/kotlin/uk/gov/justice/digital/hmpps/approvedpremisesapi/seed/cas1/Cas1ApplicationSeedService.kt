@@ -280,7 +280,7 @@ class Cas1ApplicationSeedService(
     application: ApprovedPremisesApplicationEntity,
     premises: ApprovedPremisesEntity,
   ) {
-    val arrivalDate = LocalDate.now().minusDays(Random.nextLong(0, 7))
+    val arrivalDate = LocalDate.now().minusDays(Random.nextLong(0, 365))
     val departureDate = arrivalDate.plusDays(Random.nextLong(1, 365))
     val characteristics = CHARACTERISTICS_OF_INTEREST.shuffled().take(Random.nextInt(0, CHARACTERISTICS_OF_INTEREST.size - 1))
 
