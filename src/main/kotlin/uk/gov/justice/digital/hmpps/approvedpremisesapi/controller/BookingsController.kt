@@ -18,7 +18,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.NotFoundProblem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.AuthorisableActionResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.BookingSearchService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.BookingService
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.swagger.DefaultErrorResponses
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.BookingSearchResultTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.BookingTransformer
 import java.util.UUID
@@ -32,11 +31,10 @@ class BookingsController(
   private val bookingTransformer: BookingTransformer,
 ) {
 
-  @Operation(summary = "Gets a booking")
+  @Operation(summary = "Get a booking by ID")
   @GetMapping("/{bookingId}")
-  @DefaultErrorResponses
   fun getBooking(
-    @PathVariable(required = true) bookingId: UUID,
+    @PathVariable bookingId: UUID,
   ): ResponseEntity<Booking> {
     val bookingAndPersons = when (val result = bookingService.getBooking(bookingId)) {
       is AuthorisableActionResult.Unauthorised -> throw ForbiddenProblem()
@@ -52,12 +50,9 @@ class BookingsController(
     return ResponseEntity.ok(apiBooking)
   }
 
-  @Operation(
-    summary = "Searches for bookings with the given parameters",
-  )
+  @Operation(summary = "Searches for bookings with the given parameters")
   @GetMapping("/search")
-  @DefaultErrorResponses
-  fun bookingsSearchGet(
+  fun getBookingSearchResults(
     @RequestParam(value = "status") status: BookingStatus?,
     @RequestParam(value = "sortOrder", defaultValue = "ascending") sortOrder: SortOrder,
     @RequestParam(value = "sortField", defaultValue = "createdAt") sortField: BookingSearchSortField,
