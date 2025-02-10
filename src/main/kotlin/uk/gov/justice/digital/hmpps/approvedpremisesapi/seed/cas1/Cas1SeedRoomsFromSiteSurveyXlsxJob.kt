@@ -170,7 +170,7 @@ class Cas1SeedRoomsFromSiteSurveyXlsxJob(
         premises = premises,
         characteristics = room.characteristics.toMutableList(),
         notes = null,
-        beds = mutableListOf<BedEntity>(),
+        beds = mutableListOf(),
       ),
     )
     log.info("Created new room with code ${room.roomCode} and name ${room.roomName} in premise ${premises.name}.")
