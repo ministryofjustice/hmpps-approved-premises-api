@@ -272,6 +272,7 @@ class LockableAssessmentEntity(
 @DiscriminatorValue("approved-premises")
 @Table(name = "approved_premises_assessments")
 @PrimaryKeyJoinColumn(name = "assessment_id")
+@SuppressWarnings("LongParameterList")
 class ApprovedPremisesAssessmentEntity(
   id: UUID,
   application: ApplicationEntity,
@@ -291,6 +292,9 @@ class ApprovedPremisesAssessmentEntity(
   isWithdrawn: Boolean,
   dueAt: OffsetDateTime?,
   var createdFromAppeal: Boolean,
+  var agreeWithShortNoticeReason: Boolean? = null,
+  var agreeWithShortNoticeReasonComments: String? = null,
+  var reasonForLateApplication: String? = null,
 ) : AssessmentEntity(
   id,
   application,
