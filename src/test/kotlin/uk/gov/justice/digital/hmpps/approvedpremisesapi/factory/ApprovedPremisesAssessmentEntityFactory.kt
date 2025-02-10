@@ -40,6 +40,9 @@ class ApprovedPremisesAssessmentEntityFactory : Factory<ApprovedPremisesAssessme
   private var isWithdrawn: Yielded<Boolean> = { false }
   private var createdFromAppeal: Yielded<Boolean> = { false }
   private var dueAt: Yielded<OffsetDateTime?> = { OffsetDateTime.now().randomDateTimeAfter(10) }
+  private var agreeWithShortNoticeReason: Yielded<Boolean?> = { null }
+  private var agreeWithShortNoticeReasonComments: Yielded<String?> = { null }
+  private var reasonForLateApplication: Yielded<String?> = { null }
 
   fun withDefaults() = apply {
     this.application = { ApprovedPremisesApplicationEntityFactory().withDefaults().produce() }
@@ -116,6 +119,17 @@ class ApprovedPremisesAssessmentEntityFactory : Factory<ApprovedPremisesAssessme
   fun withDueAt(dueAt: OffsetDateTime?) = apply {
     this.dueAt = { dueAt }
   }
+  fun withAgreeWithShortNoticeReason(agreeWithShortNoticeReason: Boolean?) = apply {
+    this.agreeWithShortNoticeReason = { agreeWithShortNoticeReason }
+  }
+
+  fun withAgreeWithShortNoticeReasonComments(agreeWithShortNoticeReasonComments: String?) = apply {
+    this.agreeWithShortNoticeReasonComments = { agreeWithShortNoticeReasonComments }
+  }
+
+  fun withReasonForLateApplication(reasonForLateApplication: String?) = apply {
+    this.reasonForLateApplication = { reasonForLateApplication }
+  }
 
   override fun produce(): ApprovedPremisesAssessmentEntity = ApprovedPremisesAssessmentEntity(
     id = this.id(),
@@ -136,5 +150,8 @@ class ApprovedPremisesAssessmentEntityFactory : Factory<ApprovedPremisesAssessme
     isWithdrawn = this.isWithdrawn(),
     createdFromAppeal = this.createdFromAppeal(),
     dueAt = this.dueAt(),
+    agreeWithShortNoticeReason = this.agreeWithShortNoticeReason(),
+    agreeWithShortNoticeReasonComments = this.agreeWithShortNoticeReasonComments(),
+    reasonForLateApplication = this.reasonForLateApplication(),
   )
 }
