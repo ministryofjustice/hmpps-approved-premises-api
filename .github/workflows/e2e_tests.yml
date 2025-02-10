@@ -5,33 +5,34 @@ on:
     branches:
       # - main
       - 'CHORE/**' # only for now...
-  workflow_dispatch:
-    inputs:
-      branch:
-        description: 'The Github branch to run tests against'
-        required: true
 
 jobs:
   cas1_e2e_tests:
     runs-on: [self-hosted, hmpps-github-actions-runner]
     strategy:
       matrix:
-        shard: [1, 2, 3, 4] # this will create 4 parallel jobs
+        shard: [0, 1, 2, 3]
+      fail-fast: false
+    defaults:
+      run:
+        working-directory: hmpps-approved-premises-ui
     steps:
-      - uses: qoomon/actions--context@v1
-        id: context
+      - name: Remove existing directory if it already exists
+        run: rm -rf hmpps-approved-premises-ui
+        working-directory: ${{ github.workspace }}
       - name: Clone E2E repo
-        run: git clone https://github.com/ministryofjustice/hmpps-approved-premises-ui.git 
-      # - name: Checkout branch
-        # run:  git checkout ${{ github.event.inputs.branch }}
-      - name: Change directory to cloned repo
-        run: cd hmpps-approved-premises-ui
+        run: git clone https://github.com/ministryofjustice/hmpps-approved-premises-ui.git
+        working-directory: ${{ github.workspace }}
       - name: Use Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: 18.x
+          node-version: '18.x'
+          cache: 'npm'
+          cache-dependency-path: '**/package-lock.json'
       - name: Update npm
         run: npm install -g npm@9.8.1
+      - name: Install dependencies
+        run: npm ci
       - name: Install Playwright
         run: npx playwright install
       - name: E2E Check
@@ -49,81 +50,12 @@ jobs:
       - name: Store Playwright report
         uses: actions/upload-artifact@v4
         with:
-          name: playwright-report
+          name: playwright-report-shard-${{ matrix.shard }}
           path: playwright-report
+          retention-days: 30
       - name: Store test results
         uses: actions/upload-artifact@v4
         with:
-          name: test-results
+          name: test-results-shard-${{ matrix.shard }}
           path: test-results
-      # - name: Notify Slack on failure - TODO
-      #   if: failure()
-      #   uses: slackapi/slack-github-action@v1.23.0
-      #   with:
-      #     channel-id: ${{ secrets.SLACK_CHANNEL_ID }}
-      #     slack-message: 'E2E tests failed. Check the logs for more details.'
-      #     bot-token: ${{ secrets.SLACK_BOT_TOKEN }}
-  cas2_e2e_tests:
-    runs-on: [self-hosted, hmpps-github-actions-runner]
-    steps:
-      - name: Clone E2E repo
-        run:  git clone https://github.com/ministryofjustice/hmpps-community-accommodation-tier-2-ui.git
-      # - name: Checkout branch
-        # run:  git checkout ${{ github.event.inputs.branch }}
-      - uses: qoomon/actions--context@v1
-        id: context
-      - name: Update npm
-        run: npm install -g npm@10.1.0
-      - name: Use Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: 18.x
-      - name: Install Playwright
-        run: npx playwright install
-      - name: Run E2E tests
-        run: npm run test:e2e
-      - name: Store Playwright report
-        uses: actions/upload-artifact@v4
-        with:
-          name: playwright-report
-          path: e2e-tests/playwright-report
-      # - name: Notify Slack on failure - TODO
-      #   if: failure()
-      #   uses: slackapi/slack-github-action@v1.23.0
-      #   with:
-      #     channel-id: ${{ secrets.SLACK_CHANNEL_ID }}
-      #     slack-message: 'E2E tests failed. Check the logs for more details.'
-      #     bot-token: ${{ secrets.SLACK_BOT_TOKEN }}
-  # cas3_e2e_tests: - TODO, work out how to grab cypres env vars from circle ci
-  #   runs-on: [self-hosted, hmpps-github-actions-runner]
-  #   steps:
-  #     - uses: qoomon/actions--context@v1
-  #       id: context
-  #     - name: Checkout e2e repo
-  #       run: |
-  #         git clone https://github.com/ministryofjustice/hmpps-temporary-accommodation-ui.git .
-  #     - name: Install xz-utils
-  #       run: apt-get install xz-utils
-  #     - name: Use Node.js
-  #       uses: actions/setup-node@v4
-  #       with:
-  #         node-version: 18.x
-  #     - name: Update npm
-  #       run: npm install -g npm@9.8.1
-  #     - name: E2E Check - ${{ steps.context.outputs.environment }}
-  #       run: |
-  #         TESTS=$(find "${{ github.workspace }}/e2e/tests" -name "*.feature" | paste -sd ',')
-  #         npm run test:e2e:ci -- \
-  #           --env "assessor_username=${{ env.CYPRESS_ASSESSOR_USERNAME}}_${{ steps.context.outputs.environment }},assessor_password=${{ env.CYPRESS_ASSESSOR_PASSWORD}}_${{ steps.context.outputs.environment }},referrer_username=${{ env.CYPRESS_REFERRER_USERNAME}}_${{ steps.context.outputs.environment }},referrer_password=${{ env.CYPRESS_REFERRER_PASSWORD}}_${{ steps.context.outputs.environment }},acting_user_probation_region_id=${{ env.CYPRESS_ACTING_USER_PROBATION_REGION_ID}}_${{ steps.context.outputs.environment }},acting_user_probation_region_name=${{ env.CYPRESS_ACTING_USER_PROBATION_REGION_NAME}}_${{ steps.context.outputs.environment }},environment=${{ env.CYPRESS_ENVIRONMENT}}_${{ steps.context.outputs.environment }}" \
-  #           --config baseUrl=https://temporary-accommodation-${{ steps.context.outputs.environment }}.hmpps.service.justice.gov.uk \
-  #           --spec $TESTS
-  #     - name: Store screenshots
-  #       uses: actions/upload-artifact@v4
-  #       with:
-  #         name: screenshots
-  #         path: e2e/screenshots
-  #     - name: Store videos
-  #       uses: actions/upload-artifact@v4
-  #       with:
-  #         name: videos
-  #         path: e2e/videos
+          retention-days: 30
