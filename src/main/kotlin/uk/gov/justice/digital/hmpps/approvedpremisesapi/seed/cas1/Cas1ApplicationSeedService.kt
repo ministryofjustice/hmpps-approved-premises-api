@@ -19,6 +19,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.SituationOption
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.SubmitApprovedPremisesApplication
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesApplicationEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesApplicationRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AssessmentRepository
@@ -70,6 +71,7 @@ class Cas1ApplicationSeedService(
   private val placementRequestRepository: PlacementRequestRepository,
   private val premisesRepository: ApprovedPremisesRepository,
   private val characteristicsRepository: CharacteristicRepository,
+  private val approvedPremisesApplicationRepository: ApprovedPremisesApplicationRepository,
 ) {
   companion object {
     private val log = LoggerFactory.getLogger(this::class.java)
@@ -127,7 +129,7 @@ class Cas1ApplicationSeedService(
     state: ApplicationState,
     premisesQCode: String?,
   ) {
-    if (!createIfExistingApplicationForCrn && applicationService.getApplicationsForCrn(crn, ServiceName.approvedPremises).isNotEmpty()) {
+    if (!createIfExistingApplicationForCrn && approvedPremisesApplicationRepository.existsApprovedPremisesApplicationEntityByCrn(crn)) {
       log.info("Already have CAS1 application for $crn, not seeding a new application")
       return
     }

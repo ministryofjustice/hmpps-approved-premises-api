@@ -1,0 +1,1 @@
+CREATE INDEX cas1_space_bookings_criteria_space_booking_id_idx ON cas1_space_bookings_criteria (space_booking_id);
