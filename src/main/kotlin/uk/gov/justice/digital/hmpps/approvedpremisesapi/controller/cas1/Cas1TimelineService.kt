@@ -28,8 +28,8 @@ class Cas1TimelineService(
     return timelineEvents
   }
 
-  fun getSpaceBookingTimeline(bookingId: UUID): List<TimelineEvent> =
-    toTimelineEvent(domainEventService.getAllDomainEventsForSpaceBooking(bookingId))
+  fun getSpaceBookingTimeline(bookingId: UUID): List<Cas1TimelineEvent> =
+    toTimelineEvents(domainEventService.getAllDomainEventsForSpaceBooking(bookingId))
 
   private fun getDomainEventsForApplication(applicationId: UUID) =
     toTimelineEvent(domainEventService.getAllDomainEventsForApplication(applicationId))

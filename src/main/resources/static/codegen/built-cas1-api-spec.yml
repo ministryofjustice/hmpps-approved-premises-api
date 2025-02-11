@@ -810,7 +810,7 @@ paths:
               schema:
                 type: array
                 items:
-                  $ref: '#/components/schemas/TimelineEvent'
+                  $ref: '#/components/schemas/Cas1TimelineEvent'
         401:
           $ref: '#/components/responses/401Response'
         403:
