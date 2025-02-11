@@ -11,6 +11,7 @@ import org.springframework.web.client.RestClient.Builder
 import org.springframework.web.client.support.RestClientAdapter
 import org.springframework.web.service.invoker.HttpServiceProxyFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.ManagePomCasesClient
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.PrisonerSearchClient
 import java.net.http.HttpClient
 import java.time.Duration
 
@@ -19,15 +20,37 @@ import java.time.Duration
 class RestClientConfig(
   private val restClientBuilder: Builder,
   private val clientManager: OAuth2AuthorizedClientManager,
-  @Value("\${services.manage-pom-cases.timeout}") private val timeout: String,
+  @Value("\${services.manage-pom-cases.connection-timeout}") private val managePomCasesConnectionTimeout: String,
+  @Value("\${services.manage-pom-cases.read-timeout}") private val managePomCasesReadTimeout: String,
+  @Value("\${services.prisoner-search.connection-timeout}") private val prisonerSearchConnectionTimeout: String,
+  @Value("\${services.prisoner-search.read-timeout}") private val prisonerSearchReadTimeout: String,
+
 ) {
 
-  @SuppressWarnings("MagicNumber")
   @Bean
   fun managePomCasesClient() = createClient<ManagePomCasesClient>(
     restClientBuilder
-      .requestFactory(withTimeouts(Duration.ofMillis(timeout.toLong()), Duration.ofMillis(timeout.toLong())))
+      .requestFactory(
+        withTimeouts(
+          Duration.ofMillis(managePomCasesConnectionTimeout.toLong()),
+          Duration.ofMillis(managePomCasesReadTimeout.toLong()),
+        ),
+      )
       .requestInterceptor(HmppsAuthInterceptor(clientManager, "manage-pom-cases"))
+      .requestInterceptor(RetryInterceptor())
+      .build(),
+  )
+
+  @Bean
+  fun prisonerSearchClient() = createClient<PrisonerSearchClient>(
+    restClientBuilder
+      .requestFactory(
+        withTimeouts(
+          Duration.ofMillis(prisonerSearchConnectionTimeout.toLong()),
+          Duration.ofMillis(prisonerSearchReadTimeout.toLong()),
+        ),
+      )
+      .requestInterceptor(HmppsAuthInterceptor(clientManager, "prisoner-search"))
       .requestInterceptor(RetryInterceptor())
       .build(),
   )

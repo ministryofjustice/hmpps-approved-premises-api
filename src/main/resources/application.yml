@@ -72,6 +72,11 @@ spring:
             client-id: approved-premises-api
             client-secret: clientsecret
             authorization-grant-type: client_credentials
+          prisoner-search:
+            provider: hmpps-auth
+            client-id: approved-premises-api
+            client-secret: clientsecret
+            authorization-grant-type: client_credentials
           delius-backed-apis:
             provider: hmpps-auth
             client-id: approved-premises-api
@@ -177,7 +182,11 @@ services:
   gov-uk-bank-holidays-api:
     base-url: https://www.gov.uk
   manage-pom-cases:
-    timeout: 2000
+    connection-timeout: 1000
+    read-timeout: 5000
+  prisoner-search:
+    connection-timeout: 1000
+    read-timeout: 5000
 
 hmpps:
   auth:
