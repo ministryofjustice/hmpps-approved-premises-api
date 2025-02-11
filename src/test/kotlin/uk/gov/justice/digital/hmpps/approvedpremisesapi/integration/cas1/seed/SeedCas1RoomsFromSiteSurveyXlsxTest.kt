@@ -44,7 +44,7 @@ class SeedCas1RoomsFromSiteSurveyXlsxTest : SeedTestBase() {
   }
 
   @Test
-  fun `Creating a new room and a new bed with a characteristic succeeds`() {
+  fun `Creating a new room and a new bed with a characteristic succeeds, ensuring no redundant decimal points`() {
     val localAuthorityArea = localAuthorityEntityFactory.produceAndPersist()
     val probationRegion = probationRegionEntityFactory.produceAndPersist()
     val qCode = "Q999"
@@ -57,9 +57,9 @@ class SeedCas1RoomsFromSiteSurveyXlsxTest : SeedTestBase() {
     val header = listOf("Unique Reference Number for Bed", "SWABI01NEW")
     val rows: MutableList<Any> = mutableListOf(
       "Room Number / Name",
-      1.0,
+      1,
       "Bed Number (in this room i.e if this is a single room insert 1.  If this is a shared room separate entries will need to be made for bed 1 and bed 2)",
-      1.0,
+      1,
     )
     rows.addCharacteristics(1, mapOf("Is this room located on the ground floor?" to listOf("Yes")))
 
@@ -87,10 +87,56 @@ class SeedCas1RoomsFromSiteSurveyXlsxTest : SeedTestBase() {
 
     val newBed = bedRepository.findByCodeAndRoomId("SWABI01NEW", newRoom.id)
     assertThat(newBed!!.name).isEqualTo("1 - 1")
-    assertThat(
-      newBed.room.id == newRoom.id &&
-        newBed.room.code == "Q999-1",
+    assertThat(newBed.room.id).isEqualTo(newRoom.id)
+    assertThat(newBed.room.code).isEqualTo("Q999-1")
+  }
+
+  @Test
+  fun `Creating a new room and a new bed with a characteristic succeeds, retaining non-redundant decimal points`() {
+    val localAuthorityArea = localAuthorityEntityFactory.produceAndPersist()
+    val probationRegion = probationRegionEntityFactory.produceAndPersist()
+    val qCode = "Q999"
+    approvedPremisesEntityFactory.produceAndPersist {
+      withLocalAuthorityArea(localAuthorityArea)
+      withProbationRegion(probationRegion)
+      withQCode(qCode)
+    }
+
+    val header = listOf("Unique Reference Number for Bed", "SWABI01NEW")
+    val rows: MutableList<Any> = mutableListOf(
+      "Room Number / Name",
+      1.1,
+      "Bed Number (in this room i.e if this is a single room insert 1.  If this is a shared room separate entries will need to be made for bed 1 and bed 2)",
+      1.2,
     )
+    rows.addCharacteristics(1, mapOf("Is this room located on the ground floor?" to listOf("Yes")))
+
+    val roomsSheet = dataFrameOf(header, rows)
+
+    withXlsx(
+      xlsxName = "example",
+      sheets = mapOf(
+        "Sheet2" to createNameValueDataFrame("AP Identifier (Q No.)", qCode),
+        "Sheet3" to roomsSheet,
+      ),
+    )
+
+    seedXlsxService.seedExcelData(
+      SeedFromExcelFileType.CAS1_IMPORT_SITE_SURVEY_ROOMS,
+      "example.xlsx",
+    )
+
+    val newRoom = roomRepository.findByCode("Q999-1.1")
+    assertThat(newRoom).isNotNull
+    assertThat(newRoom!!.characteristics).anyMatch {
+      it.name == "Is this room located on the ground floor?" &&
+        it.propertyName == "isGroundFloor"
+    }
+
+    val newBed = bedRepository.findByCodeAndRoomId("SWABI01NEW", newRoom.id)
+    assertThat(newBed!!.name).isEqualTo("1.1 - 1.2")
+    assertThat(newBed.room.id).isEqualTo(newRoom.id)
+    assertThat(newBed.room.code).isEqualTo("Q999-1.1")
   }
 
   @Test
@@ -206,11 +252,11 @@ class SeedCas1RoomsFromSiteSurveyXlsxTest : SeedTestBase() {
     assertThat(logEntries)
       .anyMatch {
         it.level == "error" &&
-          it.message == "Unable to complete Excel seed job" &&
+          it.message == "Unable to complete Excel seed job for example.xlsx" &&
           it.throwable != null &&
           it.throwable.message == "Unable to process XLSX file" &&
           it.throwable.cause is IllegalStateException &&
-          it.throwable.cause!!.message == "Room Q999-1 has different characteristics."
+          it.throwable.cause!!.message == "1 or more beds in room 'Q999-1' have different characteristics."
       }
   }
 
@@ -487,7 +533,7 @@ class SeedCas1RoomsFromSiteSurveyXlsxTest : SeedTestBase() {
     assertThat(logEntries)
       .anyMatch {
         it.level == "error" &&
-          it.message == "Unable to complete Excel seed job" &&
+          it.message == "Unable to complete Excel seed job for example.xlsx" &&
           it.throwable != null &&
           it.throwable.message == "Unable to process XLSX file" &&
           it.throwable.cause is IllegalStateException &&
@@ -543,7 +589,7 @@ class SeedCas1RoomsFromSiteSurveyXlsxTest : SeedTestBase() {
     assertThat(logEntries)
       .anyMatch {
         it.level == "error" &&
-          it.message == "Unable to complete Excel seed job" &&
+          it.message == "Unable to complete Excel seed job for example.xlsx" &&
           it.throwable != null &&
           it.throwable.message == "Unable to process XLSX file" &&
           it.throwable.cause is IllegalStateException &&
@@ -590,7 +636,7 @@ class SeedCas1RoomsFromSiteSurveyXlsxTest : SeedTestBase() {
     assertThat(logEntries)
       .anyMatch {
         it.level == "error" &&
-          it.message == "Unable to complete Excel seed job" &&
+          it.message == "Unable to complete Excel seed job for example.xlsx" &&
           it.throwable != null &&
           it.throwable.message == "Unable to process XLSX file" &&
           it.throwable.cause is RuntimeException &&
@@ -637,7 +683,7 @@ class SeedCas1RoomsFromSiteSurveyXlsxTest : SeedTestBase() {
     assertThat(logEntries)
       .anyMatch {
         it.level == "error" &&
-          it.message == "Unable to complete Excel seed job" &&
+          it.message == "Unable to complete Excel seed job for example.xlsx" &&
           it.throwable != null &&
           it.throwable.message == "Unable to process XLSX file" &&
           it.throwable.cause is RuntimeException &&
@@ -667,7 +713,7 @@ class SeedCas1RoomsFromSiteSurveyXlsxTest : SeedTestBase() {
     assertThat(logEntries)
       .anyMatch {
         it.level == "error" &&
-          it.message == "Unable to complete Excel seed job" &&
+          it.message == "Unable to complete Excel seed job for example.xlsx" &&
           it.throwable != null &&
           it.throwable.message == "Unable to process XLSX file" &&
           it.throwable.cause is SiteSurveyImportException &&

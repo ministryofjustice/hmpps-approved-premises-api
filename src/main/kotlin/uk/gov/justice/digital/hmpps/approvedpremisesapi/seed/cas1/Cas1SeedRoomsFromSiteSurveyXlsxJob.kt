@@ -99,7 +99,7 @@ class Cas1SeedRoomsFromSiteSurveyXlsxJob(
 
   private fun checkRoomCharacteristics(rooms: List<RoomInfo>) {
     rooms.groupBy { room -> room.roomCode }.forEach { (roomCode, rooms) ->
-      rooms.all { it.characteristics == rooms.first().characteristics } || error("Room $roomCode has different characteristics.")
+      rooms.all { it.characteristics == rooms.first().characteristics } || error("1 or more beds in room '$roomCode' have different characteristics.")
     }
   }
 
@@ -170,7 +170,7 @@ class Cas1SeedRoomsFromSiteSurveyXlsxJob(
         premises = premises,
         characteristics = room.characteristics.toMutableList(),
         notes = null,
-        beds = mutableListOf<BedEntity>(),
+        beds = mutableListOf(),
       ),
     )
     log.info("Created new room with code ${room.roomCode} and name ${room.roomName} in premise ${premises.name}.")
