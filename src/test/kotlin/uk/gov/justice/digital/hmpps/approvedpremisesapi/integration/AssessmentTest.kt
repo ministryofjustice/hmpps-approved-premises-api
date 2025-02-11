@@ -2117,6 +2117,9 @@ class AssessmentTest : IntegrationTestBase() {
                     requirements = placementRequirements,
                     placementDates = placementDates,
                     notes = "Some Notes",
+                    agreeWithShortNoticeReason = true,
+                    agreeWithShortNoticeReasonComments = "comments",
+                    reasonForLateApplication = "medical condition",
                   ),
                 )
                 .exchange()
@@ -2127,6 +2130,9 @@ class AssessmentTest : IntegrationTestBase() {
               assertThat(persistedAssessment.decision).isEqualTo(AssessmentDecision.ACCEPTED)
               assertThat(persistedAssessment.document).isEqualTo("{\"document\":\"value\"}")
               assertThat(persistedAssessment.submittedAt).isNotNull
+              assertThat(persistedAssessment.agreeWithShortNoticeReason).isTrue
+              assertThat(persistedAssessment.agreeWithShortNoticeReasonComments).isEqualTo("comments")
+              assertThat(persistedAssessment.reasonForLateApplication).isEqualTo("medical condition")
 
               val emittedMessage =
                 domainEventAsserter.blockForEmittedDomainEvent(DomainEventType.APPROVED_PREMISES_APPLICATION_ASSESSED)
@@ -2514,7 +2520,15 @@ class AssessmentTest : IntegrationTestBase() {
         webTestClient.post()
           .uri("/assessments/${assessment.id}/rejection")
           .header("Authorization", "Bearer $jwt")
-          .bodyValue(AssessmentRejection(document = mapOf("document" to "value"), rejectionRationale = "reasoning"))
+          .bodyValue(
+            AssessmentRejection(
+              agreeWithShortNoticeReason = false,
+              agreeWithShortNoticeReasonComments = "rejection comments",
+              reasonForLateApplication = "medical condition",
+              document = mapOf("document" to "value"),
+              rejectionRationale = "reasoning",
+            ),
+          )
           .exchange()
           .expectStatus()
           .isOk
@@ -2523,6 +2537,9 @@ class AssessmentTest : IntegrationTestBase() {
         assertThat(persistedAssessment.decision).isEqualTo(AssessmentDecision.REJECTED)
         assertThat(persistedAssessment.document).isEqualTo("{\"document\":\"value\"}")
         assertThat(persistedAssessment.submittedAt).isNotNull
+        assertThat(persistedAssessment.agreeWithShortNoticeReason).isFalse
+        assertThat(persistedAssessment.agreeWithShortNoticeReasonComments).isEqualTo("rejection comments")
+        assertThat(persistedAssessment.reasonForLateApplication).isEqualTo("medical condition")
 
         val emittedMessage =
           snsDomainEventListener.blockForMessage(DomainEventType.APPROVED_PREMISES_APPLICATION_ASSESSED)

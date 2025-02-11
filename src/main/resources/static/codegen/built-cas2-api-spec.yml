@@ -3535,6 +3535,12 @@ components:
           $ref: '#/components/schemas/ApType'
         notes:
           type: string
+        agreeWithShortNoticeReason:
+          type: boolean
+        agreeWithShortNoticeReasonComments:
+          type: string
+        reasonForLateApplication:
+          type: string
       required:
         - document
     AssessmentRejection:
@@ -3551,6 +3557,12 @@ components:
           type: string
         isWithdrawn:
           type: boolean
+        agreeWithShortNoticeReason:
+          type: boolean
+        agreeWithShortNoticeReasonComments:
+          type: string
+        reasonForLateApplication:
+          type: string
       required:
         - document
         - rejectionRationale
