@@ -16,6 +16,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremi
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.BedRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas1SpaceBookingRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.CasResult
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.FeatureFlagService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.PremisesService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1OutOfServiceBedService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1PremisesService
@@ -45,6 +46,9 @@ class Cas1PremisesServiceTest {
 
   @MockK
   lateinit var bedRepository: BedRepository
+
+  @MockK
+  lateinit var featureFlagService: FeatureFlagService
 
   @InjectMockKs
   lateinit var service: Cas1PremisesService
@@ -83,6 +87,7 @@ class Cas1PremisesServiceTest {
         byDay = emptyList(),
       )
 
+      every { featureFlagService.getBooleanFlag(eq("cas1-disable-overbooking-summary")) } returns false
       every { approvedPremisesRepository.findByIdOrNull(PREMISES_ID) } returns premises
 
       every { premisesService.getBedCount(premises) } returns 56
@@ -121,6 +126,7 @@ class Cas1PremisesServiceTest {
         byDay = listOf(SpacePlanningService.PremiseCapacityForDay(LocalDate.of(2024, 11, 12), 5, 2, 7, emptyList())),
       )
 
+      every { featureFlagService.getBooleanFlag(eq("cas1-disable-overbooking-summary")) } returns false
       every { approvedPremisesRepository.findByIdOrNull(PREMISES_ID) } returns premises
 
       every { premisesService.getBedCount(premises) } returns 56
