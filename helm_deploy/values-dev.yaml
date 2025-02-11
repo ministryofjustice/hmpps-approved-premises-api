@@ -106,6 +106,7 @@ generic-service:
 
     FEATURE-FLAGS_GET-ALERTS-FROM-PRISONER-ALERTS-API: true
     FEATURE-FLAGS_CAS2-SQS-LISTENER-ENABLED: false
+    FEATURE-FLAGS_ARCHIVE-PROPERTY-VALIDATE-EXISTING-BOOKINGS: false
 
   namespace_secrets:
     hmpps-domain-events-topic:

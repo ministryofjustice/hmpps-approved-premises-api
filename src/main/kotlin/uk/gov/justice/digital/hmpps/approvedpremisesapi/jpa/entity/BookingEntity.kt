@@ -269,6 +269,11 @@ interface BookingRepository : JpaRepository<BookingEntity, UUID> {
     nativeQuery = true,
   )
   fun findAllIdsByPremisesId(premisesId: UUID): List<UUID>
+
+  @Query(
+    "SELECT b FROM BookingEntity b WHERE b.service = :serviceName AND b.premises.id = :premisesId AND b.departureDate >= :date AND b.status in :statuses",
+  )
+  fun findFutureBookingsByPremisesIdAndStatus(serviceName: String, premisesId: UUID, date: LocalDate, statuses: List<BookingStatus>): List<BookingEntity>
 }
 
 @Entity

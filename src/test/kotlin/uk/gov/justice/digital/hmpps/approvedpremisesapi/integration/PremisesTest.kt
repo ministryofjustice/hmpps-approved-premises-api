@@ -3481,6 +3481,117 @@ class PremisesTest {
           .isEqualTo("Bedspace end date cannot be prior to the Bedspace creation date: ${bed.createdAt!!.toLocalDate()}")
       }
     }
+
+    @ParameterizedTest
+    @CsvSource(
+      value = [
+        "provisional",
+        "confirmed",
+        "arrived",
+      ],
+    )
+    fun `Archive Temporary Accommodation Premises with provisional, confirmed or arrived bookings throws bad request error`(bookingStatus: BookingStatus) {
+      givenAUser(roles = listOf(UserRole.CAS3_ASSESSOR)) { _, jwt ->
+
+        val region = givenAProbationRegion()
+        val premises = temporaryAccommodationPremisesEntityFactory.produceAndPersist {
+          withService(ServiceName.temporaryAccommodation.value)
+          withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
+          withYieldedProbationRegion { region }
+          withYieldedProbationDeliveryUnit {
+            probationDeliveryUnitFactory.produceAndPersist {
+              withProbationRegion(region)
+            }
+          }
+        }
+
+        bookingEntityFactory.produceAndPersist {
+          withServiceName(ServiceName.temporaryAccommodation)
+          withPremises(premises)
+          withStatus(bookingStatus)
+          withArrivalDate(LocalDate.now().plusDays(5))
+        }
+
+        mockFeatureFlagService.setFlag("archive-property-validate-existing-bookings", true)
+
+        webTestClient.put()
+          .uri("/premises/${premises.id}")
+          .header("Authorization", "Bearer $jwt")
+          .bodyValue(
+            UpdatePremises(
+              addressLine1 = premises.addressLine1,
+              addressLine2 = premises.addressLine2,
+              town = premises.town,
+              postcode = premises.postcode,
+              notes = "some arbitrary notes updated",
+              localAuthorityAreaId = premises.localAuthorityArea?.id,
+              probationRegionId = premises.probationRegion.id,
+              characteristicIds = mutableListOf(),
+              status = PropertyStatus.archived,
+              pdu = null,
+              probationDeliveryUnitId = premises.probationDeliveryUnit?.id,
+            ),
+          )
+          .exchange()
+          .expectStatus()
+          .is4xxClientError
+          .expectBody()
+          .jsonPath("title").isEqualTo("Bad Request")
+          .jsonPath("invalid-params[0].propertyName").isEqualTo("$.bookings")
+          .jsonPath("invalid-params[0].errorType").isEqualTo("existingBookings")
+      }
+    }
+
+    @Test
+    fun `Archive Temporary Accommodation Premises with cancelled booking returns OK with correct body`() {
+      givenAUser(roles = listOf(UserRole.CAS3_ASSESSOR)) { _, jwt ->
+
+        val region = givenAProbationRegion()
+        val premises = temporaryAccommodationPremisesEntityFactory.produceAndPersist {
+          withService(ServiceName.temporaryAccommodation.value)
+          withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
+          withYieldedProbationRegion { region }
+          withYieldedProbationDeliveryUnit {
+            probationDeliveryUnitFactory.produceAndPersist {
+              withProbationRegion(region)
+            }
+          }
+        }
+
+        bookingEntityFactory.produceAndPersist {
+          withServiceName(ServiceName.temporaryAccommodation)
+          withPremises(premises)
+          withStatus(BookingStatus.cancelled)
+          withArrivalDate(LocalDate.now().plusDays(12))
+        }
+
+        mockFeatureFlagService.setFlag("archive-property-validate-existing-bookings", true)
+
+        webTestClient.put()
+          .uri("/premises/${premises.id}")
+          .header("Authorization", "Bearer $jwt")
+          .bodyValue(
+            UpdatePremises(
+              addressLine1 = premises.addressLine1,
+              addressLine2 = premises.addressLine2,
+              town = premises.town,
+              postcode = premises.postcode,
+              notes = "some arbitrary notes updated",
+              localAuthorityAreaId = premises.localAuthorityArea?.id,
+              probationRegionId = premises.probationRegion.id,
+              characteristicIds = mutableListOf(),
+              status = PropertyStatus.archived,
+              pdu = null,
+              probationDeliveryUnitId = premises.probationDeliveryUnit?.id,
+            ),
+          )
+          .exchange()
+          .expectStatus()
+          .isOk
+          .expectBody()
+          .jsonPath("status").isEqualTo("archived")
+      }
+    }
   }
 
   @Nested
