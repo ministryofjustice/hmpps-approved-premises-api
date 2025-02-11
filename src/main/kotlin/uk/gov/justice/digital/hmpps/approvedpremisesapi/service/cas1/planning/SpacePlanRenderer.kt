@@ -44,16 +44,18 @@ object SpacePlanRenderer {
 
     val colWidths = listOf(ROOM_COL_WIDTH) + plan.dayPlans.map { DAY_COL_WIDTH }
 
-    val bedsBody = plan.beds.map { bed ->
-      listOf(
-        bedDescription(bed),
-      ) +
-        plan.dayPlans.map { dayPlan ->
-          val bedState = dayPlan.bedStates.first { it.bed == bed }
-          val bedBooking = dayPlan.planningResult.plan.firstOrNull { it.bed == bed }
-          bedDayDescription(bedState, bedBooking?.booking)
-        }
-    }
+    val bedsBody = plan.beds
+      .sortedBy { it.label }
+      .map { bed ->
+        listOf(
+          bedDescription(bed),
+        ) +
+          plan.dayPlans.map { dayPlan ->
+            val bedState = dayPlan.bedStates.first { it.bed == bed }
+            val bedBooking = dayPlan.planningResult.plan.firstOrNull { it.bed == bed }
+            bedDayDescription(bedState, bedBooking?.booking)
+          }
+      }
 
     val unplannedRow =
       listOf("unplanned".bold()) +
