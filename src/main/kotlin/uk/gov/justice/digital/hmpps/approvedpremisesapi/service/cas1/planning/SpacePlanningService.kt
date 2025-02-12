@@ -4,6 +4,7 @@ import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas1BedsRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas1SpaceBookingEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas1SpaceBookingRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PremisesEntity
@@ -18,6 +19,7 @@ class SpacePlanningService(
   private val spaceBookingDayPlanner: SpaceBookingDayPlanner,
   private val outOfServiceBedService: Cas1OutOfServiceBedService,
   private val spaceBookingRepository: Cas1SpaceBookingRepository,
+  private val cas1BedsRepository: Cas1BedsRepository,
 ) {
 
   var log: Logger = LoggerFactory.getLogger(this::class.java)
@@ -49,8 +51,9 @@ class SpacePlanningService(
       )
     }.toList()
 
+    val beds = cas1BedsRepository.bedSummary(premises.id)
     val plan = SpacePlan(
-      beds = spacePlanningModelsFactory.allBeds(premises),
+      beds = spacePlanningModelsFactory.allBeds(beds),
       dayPlans = dayPlans,
     )
 
@@ -110,6 +113,7 @@ class SpacePlanningService(
     range: DateRange,
   ): Map<LocalDate, List<BedDayState>> {
     val outOfServiceBedRecordsToConsider = outOfServiceBedService.getActiveOutOfServiceBedsForPremisesId(premises.id)
+    val beds = cas1BedsRepository.bedSummary(premises.id)
 
     return range.orderedDatesInRange()
       .toList()
@@ -118,7 +122,7 @@ class SpacePlanningService(
         valueTransform = { day ->
           spacePlanningModelsFactory.allBedsDayState(
             day = day,
-            premises = premises,
+            beds = beds,
             outOfServiceBedRecordsToConsider = outOfServiceBedRecordsToConsider,
           )
         },
