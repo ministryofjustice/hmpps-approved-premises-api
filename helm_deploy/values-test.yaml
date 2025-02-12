@@ -8,6 +8,7 @@ generic-service:
     tlsSecretName: hmpps-approved-premises-api-test-cert
 
   env:
+    JAVA_OPTS: "-Xmx2000m"
     SPRING_PROFILES_ACTIVE: dev
     APPLICATIONINSIGHTS_ROLE_NAME: approved-premises-api-test
     APPLICATIONINSIGHTS_CONFIGURATION_FILE: applicationinsights.nonprod.json
