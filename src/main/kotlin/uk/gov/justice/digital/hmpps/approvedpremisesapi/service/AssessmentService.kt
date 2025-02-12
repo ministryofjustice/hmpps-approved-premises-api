@@ -348,53 +348,32 @@ class AssessmentService(
     placementDates: PlacementDates?,
     apType: ApType?,
     notes: String?,
+    agreeWithShortNoticeReason: Boolean? = null,
+    agreeWithShortNoticeReasonComments: String? = null,
+    reasonForLateApplication: String? = null,
   ): CasResult<AssessmentEntity> {
     val acceptedAt = OffsetDateTime.now(clock)
     val createPlacementRequest = placementDates != null
 
-    val assessment = when (val assessmentResult = getAssessmentAndValidate(acceptingUser, assessmentId)) {
-      is CasResult.Success -> assessmentResult.value
-      is CasResult.Error -> return assessmentResult
+    val assessment = when (val validation = validateAssessment(acceptingUser, assessmentId)) {
+      is CasResult.Success -> validation.value
+      else -> return validation
     }
 
     if (assessment is ApprovedPremisesAssessmentEntity) {
-      val allocatedToUser = assessment.allocatedToUser
-        ?: return CasResult.GeneralValidationError("An assessment must be allocated to a user to be updated")
-
-      if (allocatedToUser.id != acceptingUser.id) {
-        return CasResult.Unauthorised("The assessment can only be updated by the allocated user")
-      }
-    }
-
-    if (!assessment.schemaUpToDate) {
-      return CasResult.GeneralValidationError("The schema version is outdated")
-    }
-
-    if (assessment is ApprovedPremisesAssessmentEntity && assessment.submittedAt != null) {
-      return CasResult.GeneralValidationError("A decision has already been taken on this assessment")
-    }
-
-    if (assessment.reallocatedAt != null) {
-      return CasResult.GeneralValidationError("The application has been reallocated, this assessment is read only")
-    }
-
-    val validationErrors = ValidationErrors()
-    val assessmentData = assessment.data
-
-    if (assessment is ApprovedPremisesAssessmentEntity) {
-      if (assessmentData == null) {
-        validationErrors["$.data"] = "empty"
-      } else if (!jsonSchemaService.validate(assessment.schemaVersion, assessmentData)) {
-        validationErrors["$.data"] = "invalid"
-      }
-
+      val validationErrors = ValidationErrors()
       if (placementRequirements == null) {
         validationErrors["$.requirements"] = "empty"
+        return CasResult.FieldValidationError(validationErrors)
       }
-    }
+      when (val dataValidation = validateCas1AssessmentData(assessment)) {
+        is CasResult.Success -> {}
+        is CasResult.Error -> return dataValidation
+      }
 
-    if (validationErrors.any()) {
-      return CasResult.FieldValidationError(validationErrors)
+      assessment.agreeWithShortNoticeReason = agreeWithShortNoticeReason
+      assessment.agreeWithShortNoticeReasonComments = agreeWithShortNoticeReasonComments
+      assessment.reasonForLateApplication = reasonForLateApplication
     }
 
     assessment.document = document
@@ -426,7 +405,7 @@ class AssessmentService(
         placementRequestService.createPlacementRequest(
           PlacementRequestSource.ASSESSMENT_OF_APPLICATION,
           placementRequirementsResult,
-          placementDates!!,
+          placementDates,
           notes,
           false,
           null,
@@ -470,50 +449,27 @@ class AssessmentService(
     referralRejectionReasonId: UUID? = null,
     referralRejectionReasonDetail: String? = null,
     isWithdrawn: Boolean? = null,
+    agreeWithShortNoticeReason: Boolean? = null,
+    agreeWithShortNoticeReasonComments: String? = null,
+    reasonForLateApplication: String? = null,
   ): CasResult<AssessmentEntity> {
     val domainEventId = UUID.randomUUID()
     val rejectedAt = OffsetDateTime.now(clock)
 
-    val assessmentResult = getAssessmentAndValidate(rejectingUser, assessmentId)
-    val assessment = when (assessmentResult) {
-      is CasResult.Success -> assessmentResult.value
-      else -> return assessmentResult
+    val assessment = when (val validation = validateAssessment(rejectingUser, assessmentId)) {
+      is CasResult.Success -> validation.value
+      else -> return validation
     }
 
     if (assessment is ApprovedPremisesAssessmentEntity) {
-      val allocatedToUser = assessment.allocatedToUser
-        ?: return CasResult.GeneralValidationError("An assessment must be allocated to a user to be updated")
-
-      if (allocatedToUser.id != rejectingUser.id) {
-        return CasResult.Unauthorised("The assessment can only be updated by the allocated user")
+      when (val dataValidation = validateCas1AssessmentData(assessment)) {
+        is CasResult.Success -> {}
+        is CasResult.Error -> return dataValidation
       }
-    }
 
-    if (!assessment.schemaUpToDate) {
-      return CasResult.GeneralValidationError("The schema version is outdated")
-    }
-
-    if (assessment is ApprovedPremisesAssessmentEntity && assessment.submittedAt != null) {
-      return CasResult.GeneralValidationError("A decision has already been taken on this assessment")
-    }
-
-    if (assessment.reallocatedAt != null) {
-      return CasResult.GeneralValidationError("The application has been reallocated, this assessment is read only")
-    }
-
-    val validationErrors = ValidationErrors()
-    val assessmentData = assessment.data
-
-    if (assessment is ApprovedPremisesAssessmentEntity) {
-      if (assessmentData == null) {
-        validationErrors["$.data"] = "empty"
-      } else if (!jsonSchemaService.validate(assessment.schemaVersion, assessmentData)) {
-        validationErrors["$.data"] = "invalid"
-      }
-    }
-
-    if (validationErrors.any()) {
-      return CasResult.FieldValidationError(validationErrors)
+      assessment.agreeWithShortNoticeReason = agreeWithShortNoticeReason
+      assessment.agreeWithShortNoticeReasonComments = agreeWithShortNoticeReasonComments
+      assessment.reasonForLateApplication = reasonForLateApplication
     }
 
     assessment.document = document
@@ -922,6 +878,55 @@ class AssessmentService(
   private fun preUpdateAssessment(assessment: AssessmentEntity) {
     if (assessment is ApprovedPremisesAssessmentEntity) {
       assessmentListener.preUpdate(assessment)
+    }
+  }
+
+  private fun validateAssessment(
+    user: UserEntity,
+    assessmentId: UUID,
+  ): CasResult<AssessmentEntity> {
+    val assessment = when (val assessmentResult = getAssessmentAndValidate(user, assessmentId)) {
+      is CasResult.Success -> assessmentResult.value
+      else -> return assessmentResult
+    }
+
+    if (assessment is ApprovedPremisesAssessmentEntity) {
+      val allocatedToUser = assessment.allocatedToUser
+        ?: return CasResult.GeneralValidationError("An assessment must be allocated to a user to be updated")
+
+      if (allocatedToUser.id != user.id) {
+        return CasResult.Unauthorised("The assessment can only be updated by the allocated user")
+      }
+
+      if (assessment.submittedAt != null) {
+        return CasResult.GeneralValidationError("A decision has already been taken on this assessment")
+      }
+    }
+
+    if (!assessment.schemaUpToDate) {
+      return CasResult.GeneralValidationError("The schema version is outdated")
+    }
+
+    if (assessment.reallocatedAt != null) {
+      return CasResult.GeneralValidationError("The application has been reallocated, this assessment is read only")
+    }
+
+    return CasResult.Success(assessment)
+  }
+
+  private fun validateCas1AssessmentData(
+    assessment: ApprovedPremisesAssessmentEntity,
+  ): CasResult<AssessmentEntity> {
+    val validationErrors = ValidationErrors()
+    if (assessment.data == null) {
+      validationErrors["$.data"] = "empty"
+    } else if (!jsonSchemaService.validate(assessment.schemaVersion, assessment.data!!)) {
+      validationErrors["$.data"] = "invalid"
+    }
+    return if (validationErrors.any()) {
+      CasResult.FieldValidationError(validationErrors)
+    } else {
+      CasResult.Success(assessment)
     }
   }
 }
