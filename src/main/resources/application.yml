@@ -39,6 +39,8 @@ spring:
     type: redis
 
   jpa:
+    # this is managed via CasOpenEntityManagerInViewInterceptor
+    open-in-view: false
     hibernate:
       ddl-auto: none
     properties:
