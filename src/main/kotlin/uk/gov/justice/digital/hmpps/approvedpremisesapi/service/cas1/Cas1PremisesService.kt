@@ -73,6 +73,8 @@ class Cas1PremisesService(
 
   fun findPremiseById(id: UUID) = premisesRepository.findByIdOrNull(id)
 
+  fun premiseExistsById(id: UUID) = premisesRepository.existsById(id)
+
   fun getPremiseCapacity(
     premisesId: UUID,
     startDate: LocalDate,
