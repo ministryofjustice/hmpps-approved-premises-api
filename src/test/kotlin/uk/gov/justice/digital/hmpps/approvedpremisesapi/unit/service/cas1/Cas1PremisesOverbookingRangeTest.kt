@@ -12,7 +12,10 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1Overbookin
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApprovedPremisesEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesRepository
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.BedRepository
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas1SpaceBookingRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.CasResult
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.FeatureFlagService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.PremisesService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1OutOfServiceBedService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1PremisesService
@@ -30,6 +33,9 @@ class Cas1PremisesOverbookingRangeTest {
   lateinit var approvedPremisesRepository: ApprovedPremisesRepository
 
   @MockK
+  lateinit var bedRepository: BedRepository
+
+  @MockK
   lateinit var premisesService: PremisesService
 
   @MockK
@@ -37,6 +43,12 @@ class Cas1PremisesOverbookingRangeTest {
 
   @MockK
   lateinit var spacePlanningService: SpacePlanningService
+
+  @MockK
+  lateinit var spaceBookingRepository: Cas1SpaceBookingRepository
+
+  @MockK
+  lateinit var featureFlagService: FeatureFlagService
 
   @InjectMockKs
   lateinit var service: Cas1PremisesService
@@ -60,7 +72,9 @@ class Cas1PremisesOverbookingRangeTest {
     rangeStart = LocalDate.of(2024, 7, 1)
     rangeEnd = rangeStart.plusWeeks(12)
 
+    every { featureFlagService.getBooleanFlag(eq("cas1-disable-overbooking-summary")) } returns false
     every { approvedPremisesRepository.findByIdOrNull(Cas1PremisesServiceTest.CONSTANTS.PREMISES_ID) } returns premises
+    every { spaceBookingRepository.countActiveSpaceBookings(eq(premises.id)) } returns 100
     every { premisesService.getBedCount(premises) } returns 56
     every { outOfServiceBedService.getCurrentOutOfServiceBedsCountForPremisesId(Cas1PremisesServiceTest.CONSTANTS.PREMISES_ID) } returns 4
   }
@@ -128,6 +142,44 @@ class Cas1PremisesOverbookingRangeTest {
     )
 
     assertEquals(expectedRanges, premisesSummaryInfo.overbookingSummary)
+  }
+
+  @Test
+  fun `should return empty list for correct overbooking ranges for same month when cas1-disable-overbooking-summary feature flag is switched on`() {
+    val overbookedDays = listOf(
+      createPremiseCapacityForDay(LocalDate.of(2024, 7, 1), 3, 0, 5, emptyList()),
+      createPremiseCapacityForDay(LocalDate.of(2024, 7, 2), 3, 0, 5, emptyList()),
+      createPremiseCapacityForDay(LocalDate.of(2024, 7, 3), 3, 0, 4, emptyList()),
+      createPremiseCapacityForDay(
+        LocalDate.of(2024, 7, 4),
+        3,
+        3,
+        1,
+        listOf(PremiseCharacteristicAvailability("single room", 0, 5)),
+      ),
+      createPremiseCapacityForDay(LocalDate.of(2024, 7, 5), 3, 0, 4, emptyList()),
+      createPremiseCapacityForDay(LocalDate.of(2024, 7, 10), 3, 0, 4, emptyList()),
+      createPremiseCapacityForDay(LocalDate.of(2024, 7, 11), 3, 0, 5, emptyList()),
+      createPremiseCapacityForDay(LocalDate.of(2024, 7, 12), 3, 1, 4, emptyList()),
+    )
+
+    val premisesCapacitySummary = PremiseCapacitySummary(
+      premise = premises,
+      range = DateRange(rangeStart, rangeEnd),
+      byDay = overbookedDays,
+    )
+
+    every { featureFlagService.getBooleanFlag(eq("cas1-disable-overbooking-summary")) } returns true
+    every { spacePlanningService.capacity(premises, any(), null) } returns premisesCapacitySummary
+
+    val result = service.getPremisesInfo(Cas1PremisesServiceTest.CONSTANTS.PREMISES_ID) as CasResult.Success
+
+    assertThat(result).isInstanceOf(CasResult.Success::class.java)
+
+    val premisesSummaryInfo = result.value
+    assertThat(premisesSummaryInfo.entity).isEqualTo(premises)
+
+    assertEquals(emptyList<Cas1OverbookingRange>(), premisesSummaryInfo.overbookingSummary)
   }
 
   @Test

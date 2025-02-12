@@ -9,6 +9,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremi
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.BedRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas1SpaceBookingRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.CasResult
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.FeatureFlagService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.PremisesService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.planning.SpacePlanningService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.Cas1PremiseOverbookingCalculator
@@ -24,6 +25,7 @@ class Cas1PremisesService(
   val outOfServiceBedService: Cas1OutOfServiceBedService,
   val spacePlanningService: SpacePlanningService,
   val spaceBookingRepository: Cas1SpaceBookingRepository,
+  val featureFlagService: FeatureFlagService,
 ) {
   companion object {
     private const val OVERBOOKING_RANGE_DURATION_WEEKS = 12L
@@ -36,7 +38,11 @@ class Cas1PremisesService(
     val outOfServiceBedsCount = outOfServiceBedService.getCurrentOutOfServiceBedsCountForPremisesId(premisesId)
     val spaceBookingCount = spaceBookingRepository.countActiveSpaceBookings(premisesId).toInt()
 
-    val overbookingSummary = premise.takeIf { it.supportsSpaceBookings }?.let { buildOverBookingSummary(it) } ?: emptyList()
+    val overbookingSummary = if (!featureFlagService.getBooleanFlag("cas1-disable-overbooking-summary")) {
+      premise.takeIf { it.supportsSpaceBookings }?.let { buildOverBookingSummary(it) } ?: emptyList()
+    } else {
+      emptyList()
+    }
 
     return CasResult.Success(
       Cas1PremisesInfo(
