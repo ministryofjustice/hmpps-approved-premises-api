@@ -65,7 +65,7 @@ hmpps.sqs:
       dlqName: ${random.uuid}
       queueName: ${random.uuid}
       subscribeTopicId: domainevents
-      subscribeFilter: '{"eventType":["offender-management.allocation.changed", "offender-management.handover.changed"]}'
+      subscribeFilter: '{"eventType":["offender-management.allocation.changed", "prisoner-offender-search.prisoner.updated"]}'
       dlqMaxReceiveCount: 1
       errorVisibilityTimeout: 0
     domaineventsqueue:

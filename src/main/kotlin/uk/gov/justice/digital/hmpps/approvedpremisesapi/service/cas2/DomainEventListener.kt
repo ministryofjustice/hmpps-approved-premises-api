@@ -13,6 +13,8 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.domainevent.HmppsD
 @Service
 class DomainEventListener(
   private val objectMapper: ObjectMapper,
+  private val allocationChangedService: AllocationChangedService,
+  private val locationChangedService: LocationChangedService,
 ) {
 
   private val log = LoggerFactory.getLogger(this::class.java)
@@ -20,24 +22,24 @@ class DomainEventListener(
   @SqsListener("domaineventslistenerqueue", factory = "hmppsQueueContainerFactoryProxy")
   fun processMessage(msg: String) {
     val (message) = objectMapper.readValue<SQSMessage>(msg)
-    val hmppsDomainEvent = objectMapper.readValue<HmppsDomainEvent>(message)
-    val prisonNumber = hmppsDomainEvent.personReference.findNomsNumber()
-    log.info("Request received to process domain event type ${hmppsDomainEvent.eventType} for prisoner number $prisonNumber")
-    handleMessage(hmppsDomainEvent)
+    val event = objectMapper.readValue<HmppsDomainEvent>(message)
+    val prisonNumber = event.personReference.findNomsNumber()
+    log.info("Request received to process domain event type ${event.eventType} for prisoner number $prisonNumber")
+    handleEvent(event)
   }
 
-  private fun handleMessage(message: HmppsDomainEvent) {
-    when (message.eventType) {
+  private fun handleEvent(event: HmppsDomainEvent) {
+    when (event.eventType) {
       "prisoner-offender-search.prisoner.updated" -> {
-        if (message.categoriesChanged?.find { it === "LOCATION" } != null) {
-          log.info("Handle location transfer message").toString()
+        if (event.categoriesChanged?.find { it == "LOCATION" } != null) {
+          locationChangedService.handleEvent(event)
         } else {
-          log.info("No Location category, ignore message")
+          log.info("No Location category, ignore event")
         }
       }
 
-      "offender-management.allocation-changed" -> log.info("Handle allocation changed message")
-      else -> log.error("Unknown event type: ${message.eventType}")
+      "offender-management.allocation.changed" -> allocationChangedService.handleEvent(event)
+      else -> log.error("Unknown event type: ${event.eventType}")
     }
   }
 

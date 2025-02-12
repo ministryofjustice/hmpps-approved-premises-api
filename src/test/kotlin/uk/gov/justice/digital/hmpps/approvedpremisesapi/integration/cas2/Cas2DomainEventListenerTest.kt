@@ -10,7 +10,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.IntegrationT
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas2.DomainEventListener
 import uk.gov.justice.hmpps.sqs.HmppsQueueService
 import uk.gov.justice.hmpps.sqs.MissingQueueException
-import java.time.OffsetDateTime
 import java.util.concurrent.TimeUnit
 
 class Cas2DomainEventListenerTest : IntegrationTestBase() {
@@ -27,7 +26,7 @@ class Cas2DomainEventListenerTest : IntegrationTestBase() {
 
   private val domainEventsClient by lazy { domainEventsTopic.snsClient }
 
-  private fun publishMessageToTopic(eventType: String, json: String) {
+  private fun publishMessageToTopic(eventType: String, json: String = "{}") {
     val sendMessageRequest = PublishRequest.builder()
       .topicArn(domainEventsTopic.arn)
       .message(json)
@@ -40,29 +39,21 @@ class Cas2DomainEventListenerTest : IntegrationTestBase() {
     domainEventsClient.publish(sendMessageRequest).get()
   }
 
-  private fun buildMessageJson(
-    eventType: String = "unwanted",
-    detailUrl: String = "/some/url",
-    occurredAt: String = OffsetDateTime.now().toString(),
-    type: String = "TYPE",
-    value: String = "VALUE",
-  ): String {
-    return """
-      {
-        "eventType":"$eventType",
-        "detailUrl":"$detailUrl",
-        "occurredAt":"$occurredAt",
-        "personReference":{"identifiers":[{"type":"$type","value":"$value"}]}
-      }"
-    """.trimIndent()
-  }
-
   @Test
   fun `Start to process Allocation Changed Message on Domain Events Topic`() {
     val eventType = "offender-management.allocation.changed"
 
-    publishMessageToTopic(eventType, buildMessageJson(eventType = eventType))
-    TimeUnit.MILLISECONDS.sleep(10000)
+    publishMessageToTopic(eventType)
+    TimeUnit.MILLISECONDS.sleep(3000)
+    verify(exactly = 1) { mockDomainEventListener.processMessage(any()) }
+  }
+
+  @Test
+  fun `Start to process Location Changed Message on Domain Events Topic`() {
+    val eventType = "prisoner-offender-search.prisoner.updated"
+
+    publishMessageToTopic(eventType)
+    TimeUnit.MILLISECONDS.sleep(3000)
     verify(exactly = 1) { mockDomainEventListener.processMessage(any()) }
   }
 
@@ -70,8 +61,8 @@ class Cas2DomainEventListenerTest : IntegrationTestBase() {
   fun `Do not process Message that is not a required event type`() {
     val eventType = "unwanted"
 
-    publishMessageToTopic(eventType, buildMessageJson(eventType = eventType))
-    TimeUnit.MILLISECONDS.sleep(10000)
+    publishMessageToTopic(eventType)
+    TimeUnit.MILLISECONDS.sleep(3000)
     verify(exactly = 0) { mockDomainEventListener.processMessage(any()) }
   }
 }

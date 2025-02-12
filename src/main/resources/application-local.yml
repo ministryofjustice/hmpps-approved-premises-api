@@ -27,7 +27,7 @@ hmpps.sqs:
       queueName: domain-events-listener-queue
       dlqName: domain-events-listener-dlq
       subscribeTopicId: domainevents
-      subscribeFilter: '{"eventType":["offender-management.allocation.changed", "offender-management.handover.changed"]}'
+      subscribeFilter: '{"eventType":["offender-management.allocation.changed", "prisoner-offender-search.prisoner.updated"]}'
   topics:
     domainevents:
       arn: arn:aws:sns:eu-west-2:000000000000:domainevents
