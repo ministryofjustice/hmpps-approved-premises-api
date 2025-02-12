@@ -3,6 +3,12 @@
 
 generic-service:
 
+  resources:
+    limits:
+      memory: 3Gi
+    requests:
+      memory: 2.5Gi
+
   ingress:
     host: approved-premises-api-test.hmpps.service.justice.gov.uk
     tlsSecretName: hmpps-approved-premises-api-test-cert
