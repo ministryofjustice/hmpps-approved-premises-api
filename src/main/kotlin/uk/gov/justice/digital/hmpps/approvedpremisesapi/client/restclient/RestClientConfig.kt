@@ -15,7 +15,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.PrisonerSearchCli
 import java.net.http.HttpClient
 import java.time.Duration
 
-@ConditionalOnProperty(prefix = "feature-flags", name = ["cas2-sqs-listener-enabled"], havingValue = "true")
+@ConditionalOnProperty(prefix = "feature-flags", name = ["domain-events-listener-enabled"], havingValue = "true")
 @Configuration
 class RestClientConfig(
   private val restClientBuilder: Builder,
