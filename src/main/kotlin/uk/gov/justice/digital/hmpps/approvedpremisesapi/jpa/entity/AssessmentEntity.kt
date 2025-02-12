@@ -6,6 +6,7 @@ import jakarta.persistence.DiscriminatorValue
 import jakarta.persistence.Entity
 import jakarta.persistence.EnumType
 import jakarta.persistence.Enumerated
+import jakarta.persistence.FetchType
 import jakarta.persistence.Id
 import jakarta.persistence.Inheritance
 import jakarta.persistence.InheritanceType
@@ -198,6 +199,7 @@ interface LockableAssessmentRepository : JpaRepository<LockableAssessmentEntity,
 
 fun <T : AssessmentEntity> AssessmentRepository.findAssessmentById(id: UUID): T? = findByIdOrNull(id) as T?
 
+@SuppressWarnings("LongParameterList")
 @Entity
 @Table(name = "assessments")
 @DiscriminatorColumn(name = "service")
@@ -216,7 +218,7 @@ abstract class AssessmentEntity(
   @Type(JsonType::class)
   var document: String?,
 
-  @ManyToOne
+  @ManyToOne(fetch = FetchType.LAZY)
   @JoinColumn(name = "schema_version")
   var schemaVersion: JsonSchemaEntity,
 

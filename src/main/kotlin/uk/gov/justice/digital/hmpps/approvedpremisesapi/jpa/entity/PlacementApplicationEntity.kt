@@ -85,7 +85,7 @@ data class PlacementApplicationEntity(
   @JoinColumn(name = "created_by_user_id")
   val createdByUser: UserEntity,
 
-  @ManyToOne
+  @ManyToOne(fetch = FetchType.LAZY)
   @JoinColumn(name = "schema_version")
   var schemaVersion: ApprovedPremisesPlacementApplicationJsonSchemaEntity,
 

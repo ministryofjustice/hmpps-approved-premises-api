@@ -4,6 +4,7 @@ import com.fasterxml.jackson.databind.ObjectMapper
 import com.networknt.schema.JsonSchema
 import com.networknt.schema.JsonSchemaFactory
 import com.networknt.schema.SpecVersionDetector
+import org.hibernate.Hibernate
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApplicationEntity
@@ -42,10 +43,10 @@ class JsonSchemaService(
   }
 
   fun checkSchemaOutdated(application: ApplicationEntity): ApplicationEntity {
-    val newestSchema = getNewestSchema(application.schemaVersion.javaClass)
+    val newestSchema = getNewestSchema(Hibernate.getClass(application.schemaVersion))
 
     return application.apply { application.schemaUpToDate = application.schemaVersion.id == newestSchema.id }
   }
 
-  fun <T : JsonSchemaEntity> getNewestSchema(type: Class<T>): T = jsonSchemaRepository.getSchemasForType(type).maxBy { it.addedAt } as T
+  fun <T : JsonSchemaEntity> getNewestSchema(type: Class<T>): T = Hibernate.unproxy(jsonSchemaRepository.getSchemasForType(type).maxBy { it.addedAt }) as T
 }

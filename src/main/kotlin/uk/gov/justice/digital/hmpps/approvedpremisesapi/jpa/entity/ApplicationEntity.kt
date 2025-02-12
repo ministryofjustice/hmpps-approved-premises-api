@@ -325,7 +325,7 @@ abstract class ApplicationEntity(
   @Type(JsonType::class)
   var document: String?,
 
-  @ManyToOne
+  @ManyToOne(fetch = FetchType.LAZY)
   @JoinColumn(name = "schema_version")
   var schemaVersion: JsonSchemaEntity,
   val createdAt: OffsetDateTime,
