@@ -61,13 +61,17 @@ hmpps.sqs:
     domainevents:
       arn: "dynamically set per test"
   queues:
-    domaineventsqueue:
+    domaineventslistenerqueue:
       dlqName: ${random.uuid}
       queueName: ${random.uuid}
       subscribeTopicId: domainevents
       subscribeFilter: '{"eventType":["offender-management.allocation.changed", "offender-management.handover.changed"]}'
       dlqMaxReceiveCount: 1
       errorVisibilityTimeout: 0
+    domaineventsqueue:
+      dlqName: ${random.uuid}
+      queueName: ${random.uuid}
+      subscribeTopicId: domainevents
 domain-events:
   cas1:
     emit-enabled: true

@@ -17,7 +17,7 @@ class DomainEventListener(
 
   private val log = LoggerFactory.getLogger(this::class.java)
 
-  @SqsListener("domaineventsqueue", factory = "hmppsQueueContainerFactoryProxy")
+  @SqsListener("domaineventslistenerqueue", factory = "hmppsQueueContainerFactoryProxy")
   fun processMessage(msg: String) {
     val (message) = objectMapper.readValue<SQSMessage>(msg)
     val hmppsDomainEvent = objectMapper.readValue<HmppsDomainEvent>(message)
