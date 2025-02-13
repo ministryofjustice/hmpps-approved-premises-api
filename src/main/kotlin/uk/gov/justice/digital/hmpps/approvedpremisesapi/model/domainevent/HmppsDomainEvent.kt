@@ -15,6 +15,7 @@ data class HmppsDomainEvent(
   val personReference: HmppsDomainEventPersonReference = HmppsDomainEventPersonReference(),
 ) {
   val staffCode = additionalInformation?.get("staffCode") as String?
+  val categoriesChanged = additionalInformation?.get("categoriesChanged") as List<String>?
 }
 
 data class HmppsDomainEventPersonReference(val identifiers: List<PersonIdentifier> = listOf()) {
