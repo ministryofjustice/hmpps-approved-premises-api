@@ -4,7 +4,7 @@ import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.domainevent.HmppsDomainEvent
 
-@Service("LocationChangedService")
+@Service
 class LocationChangedService {
 
   val log = LoggerFactory.getLogger(this::class.java)
