@@ -13,8 +13,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.domainevent.HmppsD
 @Service
 class Cas2DomainEventListener(
   private val objectMapper: ObjectMapper,
-  private val allocationChangedService: AllocationChangedService,
-  private val locationChangedService: LocationChangedService,
+  private val prisonerLocationService: PrisonerLocationService,
 ) {
 
   private val log = LoggerFactory.getLogger(this::class.java)
@@ -32,13 +31,13 @@ class Cas2DomainEventListener(
     when (event.eventType) {
       "prisoner-offender-search.prisoner.updated" -> {
         if (event.categoriesChanged?.find { it == "LOCATION" } != null) {
-          locationChangedService.handleEvent(event)
+          prisonerLocationService.handleLocationChangedEvent(event)
         } else {
           log.info("No Location category, ignore event")
         }
       }
 
-      "offender-management.allocation.changed" -> allocationChangedService.handleEvent(event)
+      "offender-management.allocation.changed" -> prisonerLocationService.handleAllocationChangedEvent(event)
       else -> log.error("Unknown event type: ${event.eventType}")
     }
   }
