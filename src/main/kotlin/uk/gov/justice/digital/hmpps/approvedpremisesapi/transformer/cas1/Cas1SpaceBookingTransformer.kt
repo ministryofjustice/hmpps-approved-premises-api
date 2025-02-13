@@ -42,7 +42,7 @@ class Cas1SpaceBookingTransformer(
     jpa: Cas1SpaceBookingEntity,
     otherBookingsAtPremiseForCrn: List<Cas1SpaceBookingAtPremises>,
   ): Cas1SpaceBooking {
-    log.info("Building cas1 space booking")
+    log.info("transformJpaToApi cas1 space booking")
     val placementRequest = jpa.placementRequest
     val application = jpa.application
     val applicationId = jpa.applicationFacade.id
@@ -58,8 +58,8 @@ class Cas1SpaceBookingTransformer(
     log.info("Force lazy load placement request")
     val force = placementRequest?.assessment
 
-    log.info("returning space booking")
-    return Cas1SpaceBooking(
+    log.info("building space booking")
+    val result = Cas1SpaceBooking(
       id = jpa.id,
       applicationId = applicationId,
       assessmentId = placementRequest?.assessment?.id,
@@ -100,6 +100,8 @@ class Cas1SpaceBookingTransformer(
       status = status,
       characteristics = jpa.criteria.toCas1SpaceCharacteristics(),
     )
+    log.info("returning result")
+    return result
   }
 
   private fun Cas1SpaceBookingAtPremises.toSpaceBookingDate() =
