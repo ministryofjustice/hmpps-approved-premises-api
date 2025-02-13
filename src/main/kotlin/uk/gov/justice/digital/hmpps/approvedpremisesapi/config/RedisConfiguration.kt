@@ -53,7 +53,8 @@ class RedisConfiguration {
         cacheName = "qCodeStaffMembersCache",
         duration = Duration.ofSeconds(staffMembersExpirySeconds),
         cachePrefix = time,
-        objectMapper = objectMapper)
+        objectMapper = objectMapper,
+      )
         .clientCacheFor<UserOffenderAccess>("userAccessCache", Duration.ofSeconds(userAccessExpirySeconds), time, objectMapper)
         .clientCacheFor<StaffDetail>("staffDetailsCache", Duration.ofSeconds(staffDetailsExpirySeconds), time, objectMapper)
         .clientCacheFor<ManagingTeamsResponse>("teamsManagingCaseCache", Duration.ofSeconds(teamManagingCasesExpirySeconds), time, objectMapper)
@@ -151,7 +152,7 @@ class ClientResultRedisSerializer(
     val deserializedWrapper = objectMapper.readValue(bytes, SerializableClientResult::class.java)
 
     if (deserializedWrapper.discriminator == ClientResultDiscriminator.SUCCESS) {
-      val result =  ClientResult.Success(
+      val result = ClientResult.Success(
         status = deserializedWrapper.status!!,
         body = objectMapper.readValue(deserializedWrapper.body, typeReference),
       )

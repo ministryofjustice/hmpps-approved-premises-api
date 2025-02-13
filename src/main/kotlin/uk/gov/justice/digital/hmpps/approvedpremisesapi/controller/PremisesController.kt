@@ -843,7 +843,7 @@ class PremisesController(
       throw NotImplementedProblem("Fetching staff for non-AP Premises is not currently supported")
     }
 
-    log.info("Getting staff members for qcode {}",premises.qCode)
+    log.info("Getting staff members for qcode {}", premises.qCode)
     val staffMembersResult = staffMemberService.getStaffMembersForQCode(premises.qCode)
 
     if (staffMembersResult is CasResult.NotFound) {

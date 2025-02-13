@@ -37,6 +37,8 @@ class Cas1SpaceBookingTransformer(
 ) {
 
   private val log = LoggerFactory.getLogger(this::class.java)
+
+  @SuppressWarnings("UnusedPrivateProperty")
   fun transformJpaToApi(
     person: PersonInfoResult,
     jpa: Cas1SpaceBookingEntity,
