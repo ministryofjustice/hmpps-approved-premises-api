@@ -553,7 +553,7 @@ class Cas1SpaceBookingServiceTest {
 
     @Test
     fun `Returns not found error if premises with the given ID doesn't exist`() {
-      every { cas1PremisesService.findPremiseById(any()) } returns null
+      every { cas1PremisesService.premiseExistsById(any()) } returns false
 
       val result = service.getBooking(UUID.randomUUID(), UUID.randomUUID())
 
@@ -567,7 +567,7 @@ class Cas1SpaceBookingServiceTest {
         .withDefaults()
         .produce()
 
-      every { cas1PremisesService.findPremiseById(premises.id) } returns premises
+      every { cas1PremisesService.premiseExistsById(premises.id) } returns true
       every { spaceBookingRepository.findByIdOrNull(any()) } returns null
 
       val result = service.getBooking(premises.id, UUID.randomUUID())
@@ -585,7 +585,7 @@ class Cas1SpaceBookingServiceTest {
       val spaceBooking = Cas1SpaceBookingEntityFactory()
         .produce()
 
-      every { cas1PremisesService.findPremiseById(premises.id) } returns premises
+      every { cas1PremisesService.premiseExistsById(premises.id) } returns true
       every { spaceBookingRepository.findByIdOrNull(spaceBooking.id) } returns spaceBooking
 
       val result = service.getBooking(premises.id, spaceBooking.id)
