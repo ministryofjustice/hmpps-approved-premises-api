@@ -336,10 +336,12 @@ class Cas1SpaceBookingController(
     val otherBookingsInPremiseForCrn = spaceBookingService.getBookingsForPremisesAndCrn(
       premisesId = booking.premises.id,
       crn = booking.crn,
-    ).filter { it.id != booking.id }
+    )
+    
+    val otherBookingsInPremiseForCrnExcludingThisOne = otherBookingsInPremiseForCrn.filter { it.id != booking.id }
 
     log.info("Got other bookings in premise")
-    return spaceBookingTransformer.transformJpaToApi(person, booking, otherBookingsInPremiseForCrn)
+    return spaceBookingTransformer.transformJpaToApi(person, booking, otherBookingsInPremiseForCrnExcludingThisOne)
   }
 
   @SuppressWarnings("ThrowsCount")

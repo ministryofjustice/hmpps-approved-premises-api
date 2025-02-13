@@ -58,7 +58,10 @@ class Cas1SpaceBookingTransformer(
       ),
     )
     log.info("Force lazy load placement request")
-    val force = placementRequest?.assessment
+    val force1  = placementRequest?.assessment
+
+    log.info("Force lazy load application")
+    val force2 = application?.riskRatings
 
     log.info("building space booking")
     val result = Cas1SpaceBooking(
