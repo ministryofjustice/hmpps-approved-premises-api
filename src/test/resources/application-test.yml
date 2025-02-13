@@ -61,7 +61,7 @@ hmpps.sqs:
     domainevents:
       arn: "dynamically set per test"
   queues:
-    domaineventslistenerqueue:
+    castwodomaineventslistenerqueue:
       dlqName: ${random.uuid}
       queueName: ${random.uuid}
       subscribeTopicId: domainevents

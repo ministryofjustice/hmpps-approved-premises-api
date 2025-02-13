@@ -23,9 +23,9 @@ springdoc:
 hmpps.sqs:
   provider: localstack
   queues:
-    domaineventslistenerqueue:
-      queueName: domain-events-listener-queue
-      dlqName: domain-events-listener-dlq
+    castwodomaineventslistenerqueue:
+      queueName: cas-2-domain-events-listener-queue
+      dlqName: cas-2-domain-events-listener-dlq
       subscribeTopicId: domainevents
       subscribeFilter: '{"eventType":["offender-management.allocation.changed", "prisoner-offender-search.prisoner.updated"]}'
   topics:
