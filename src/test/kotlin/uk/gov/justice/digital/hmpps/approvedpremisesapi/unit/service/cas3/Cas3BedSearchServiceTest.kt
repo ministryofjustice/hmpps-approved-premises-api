@@ -161,6 +161,7 @@ class Cas3BedSearchServiceTest {
       premisesId = UUID.randomUUID(),
       roomId = UUID.randomUUID(),
       assessmentId = UUID.randomUUID(),
+      sexualRisk = false,
     )
 
     val repositorySearchResults = listOf(
@@ -202,6 +203,7 @@ class Cas3BedSearchServiceTest {
             roomId = overlapBookingsSearchResult.roomId,
             bookingId = overlapBookingsSearchResult.bookingId,
             assessmentId = overlapBookingsSearchResult.assessmentId,
+            isSexualRisk = false,
           ),
         ),
       ),
@@ -443,5 +445,6 @@ class Cas3BedSearchServiceTest {
     override val premisesId: UUID,
     override val roomId: UUID,
     override val assessmentId: UUID,
+    override val sexualRisk: Boolean,
   ) : OverlapBookingsSearchResult
 }

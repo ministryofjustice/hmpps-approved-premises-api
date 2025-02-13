@@ -4987,6 +4987,8 @@ components:
         assessmentId:
           type: string
           format: uuid
+        isSexualRisk:
+          type: boolean
       required:
         - name
         - crn
@@ -4994,6 +4996,7 @@ components:
         - days
         - bookingId
         - roomId
+        - isSexualRisk
     BedSearchResultPremisesSummary:
       type: object
       properties:

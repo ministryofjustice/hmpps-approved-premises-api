@@ -148,6 +148,7 @@ class Cas3BedspaceSearchService(
       roomId = overlappedBooking.roomId,
       bookingId = overlappedBooking.bookingId,
       assessmentId = overlappedBooking.assessmentId,
+      isSexualRisk = overlappedBooking.sexualRisk,
     )
   }
 

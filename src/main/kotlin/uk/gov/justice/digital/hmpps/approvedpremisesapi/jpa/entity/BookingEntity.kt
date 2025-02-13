@@ -80,12 +80,19 @@ interface BookingRepository : JpaRepository<BookingEntity, UUID> {
         bk.departure_date as departureDate,
         bk.premises_id as premisesId,
         r.id as roomId,
-        a.id as assessmentId
+        a.id as assessmentId, 
+        CASE 
+            WHEN ap.is_registered_sex_offender = TRUE 
+            OR ap.is_concerning_sexual_behaviour = TRUE
+            OR ap.is_history_of_sexual_offence = TRUE 
+         THEN TRUE 
+        ELSE FALSE 
+        END as sexualRisk
     FROM bookings bk
              INNER JOIN premises p ON bk.premises_id = p.id
              INNER JOIN beds b ON bk.bed_id = b.id
              INNER JOIN rooms r ON b.room_id = r.id
-             LEFT JOIN applications ap ON bk.application_id = ap.id
+             LEFT JOIN temporary_accommodation_applications ap ON bk.application_id = ap.id
              LEFT JOIN assessments a ON ap.id = a.application_id
              LEFT JOIN cancellations c ON bk.id = c.booking_id
     WHERE bk.premises_id IN (:premisesIds) AND bk.arrival_date <= :endDate AND bk.departure_date >= :startDate AND c.id IS NULL
@@ -418,4 +425,5 @@ interface OverlapBookingsSearchResult {
   val premisesId: UUID
   val roomId: UUID
   val assessmentId: UUID
+  val sexualRisk: Boolean
 }

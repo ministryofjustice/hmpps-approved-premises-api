@@ -293,7 +293,6 @@ WHERE taa.probation_region_id = :probationRegionId AND a.submitted_at IS NOT NUL
 
 @Repository
 interface ApprovedPremisesApplicationRepository : JpaRepository<ApprovedPremisesApplicationEntity, UUID> {
-
   fun existsApprovedPremisesApplicationEntityByCrn(crn: String): Boolean
 }
 
