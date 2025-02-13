@@ -337,7 +337,7 @@ class Cas1SpaceBookingController(
       premisesId = booking.premises.id,
       crn = booking.crn,
     )
-    
+
     val otherBookingsInPremiseForCrnExcludingThisOne = otherBookingsInPremiseForCrn.filter { it.id != booking.id }
 
     log.info("Got other bookings in premise")
