@@ -100,6 +100,8 @@ generic-service:
     FEATURE-FLAGS_CAS2-SQS-LISTENER-ENABLED: false
     FEATURE-FLAGS_ARCHIVE-PROPERTY-VALIDATE-EXISTING-BOOKINGS: false
     FEATURE-FLAGS_CAS1-DISABLE-OVERBOOKING-SUMMARY: true
+  
+    PREEMPTIVE-CACHE-ENABLED: false
 
   namespace_secrets:
     hmpps-approved-premises-api:
