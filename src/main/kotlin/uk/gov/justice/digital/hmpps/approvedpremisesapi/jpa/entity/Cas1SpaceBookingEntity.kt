@@ -195,6 +195,7 @@ interface Cas1SpaceBookingRepository : JpaRepository<Cas1SpaceBookingEntity, UUI
       b.crn = :crn AND
       b.cancellation_occurred_at IS NULL 
       ORDER by b.canonical_arrival_date
+      LIMIT 100
     """,
     nativeQuery = true,
   )
