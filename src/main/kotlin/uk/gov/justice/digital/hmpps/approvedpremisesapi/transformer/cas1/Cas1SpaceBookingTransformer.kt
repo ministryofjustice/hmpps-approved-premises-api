@@ -35,11 +35,14 @@ class Cas1SpaceBookingTransformer(
   private val userTransformer: UserTransformer,
   private val spaceBookingStatusTransformer: Cas1SpaceBookingStatusTransformer,
 ) {
+
+  private val log = LoggerFactory.getLogger(this::class.java)
   fun transformJpaToApi(
     person: PersonInfoResult,
     jpa: Cas1SpaceBookingEntity,
     otherBookingsAtPremiseForCrn: List<Cas1SpaceBookingAtPremises>,
   ): Cas1SpaceBooking {
+    log.info("Building cas1 space booking")
     val placementRequest = jpa.placementRequest
     val application = jpa.application
     val applicationId = jpa.applicationFacade.id
@@ -52,6 +55,10 @@ class Cas1SpaceBookingTransformer(
         jpa.nonArrivalConfirmedAt?.toLocalDateTime(),
       ),
     )
+    log.info("Force lazy load placement request")
+    val force = placementRequest?.assessment
+
+    log.info("returning space booking")
     return Cas1SpaceBooking(
       id = jpa.id,
       applicationId = applicationId,

@@ -1,5 +1,6 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.controller.cas1
 
+import org.slf4j.LoggerFactory
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
 import org.springframework.stereotype.Service
@@ -321,6 +322,7 @@ class Cas1SpaceBookingController(
     return ResponseEntity(HttpStatus.OK)
   }
 
+  private val log = LoggerFactory.getLogger(this::class.java)
   private fun toCas1SpaceBooking(booking: Cas1SpaceBookingEntity): Cas1SpaceBooking {
     val user = userService.getUserForRequest()
 
@@ -329,11 +331,14 @@ class Cas1SpaceBookingController(
       user.cas1LimitedAccessStrategy(),
     )
 
+    log.info("Got person info result")
+
     val otherBookingsInPremiseForCrn = spaceBookingService.getBookingsForPremisesAndCrn(
       premisesId = booking.premises.id,
       crn = booking.crn,
     ).filter { it.id != booking.id }
 
+    log.info("Got other bookings in premise")
     return spaceBookingTransformer.transformJpaToApi(person, booking, otherBookingsInPremiseForCrn)
   }
 

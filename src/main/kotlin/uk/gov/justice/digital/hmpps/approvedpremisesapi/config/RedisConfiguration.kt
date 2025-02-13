@@ -2,6 +2,7 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.config
 
 import com.fasterxml.jackson.core.type.TypeReference
 import com.fasterxml.jackson.databind.ObjectMapper
+import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.boot.autoconfigure.cache.RedisCacheManagerBuilderCustomizer
 import org.springframework.boot.info.BuildProperties
@@ -30,6 +31,7 @@ import java.time.Duration
 @Configuration
 @EnableCaching
 class RedisConfiguration {
+
   @Bean
   fun redisCacheManagerBuilderCustomizer(
     buildProperties: BuildProperties,
@@ -42,10 +44,16 @@ class RedisConfiguration {
     @Value("\${caches.ukBankHolidays.expiry-seconds}") ukBankHolidaysExpirySeconds: Long,
     @Value("21600") crnGetCaseDetailExpirySeconds: Long,
   ): RedisCacheManagerBuilderCustomizer? {
+    // this means caches aren't shared across instances (!?)
     val time = buildProperties.time.epochSecond.toString()
 
     return RedisCacheManagerBuilderCustomizer { builder: RedisCacheManagerBuilder ->
-      builder.clientCacheFor<StaffMembersPage>("qCodeStaffMembersCache", Duration.ofSeconds(staffMembersExpirySeconds), time, objectMapper)
+      // i'm not convinced all these caches are used anymore (e.g. community api)
+      builder.clientCacheFor<StaffMembersPage>(
+        cacheName = "qCodeStaffMembersCache",
+        duration = Duration.ofSeconds(staffMembersExpirySeconds),
+        cachePrefix = time,
+        objectMapper = objectMapper)
         .clientCacheFor<UserOffenderAccess>("userAccessCache", Duration.ofSeconds(userAccessExpirySeconds), time, objectMapper)
         .clientCacheFor<StaffDetail>("staffDetailsCache", Duration.ofSeconds(staffDetailsExpirySeconds), time, objectMapper)
         .clientCacheFor<ManagingTeamsResponse>("teamsManagingCaseCache", Duration.ofSeconds(teamManagingCasesExpirySeconds), time, objectMapper)
@@ -54,8 +62,11 @@ class RedisConfiguration {
     }
   }
 
+  private val log = LoggerFactory.getLogger(this::class.java)
+
   @Bean
   fun redisTemplate(connectionFactory: RedisConnectionFactory): RedisTemplate<*, *>? {
+    log.info("Redis connection factory is " + connectionFactory)
     val template: RedisTemplate<*, *> = RedisTemplate<Any, Any>()
     template.connectionFactory = connectionFactory
     template.keySerializer = StringRedisSerializer()
@@ -75,13 +86,13 @@ class RedisConfiguration {
     return RedLock(arrayOf("$scheme://$passwordString$host:$port/$database"))
   }
 
-  private inline fun <reified T> RedisCacheManagerBuilder.clientCacheFor(cacheName: String, duration: Duration, version: String, objectMapper: ObjectMapper) =
+  private inline fun <reified T> RedisCacheManagerBuilder.clientCacheFor(cacheName: String, duration: Duration, cachePrefix: String, objectMapper: ObjectMapper) =
     this.withCacheConfiguration(
       cacheName,
       RedisCacheConfiguration.defaultCacheConfig()
         .entryTtl(duration)
         .serializeValuesWith(SerializationPair.fromSerializer(ClientResultRedisSerializer(objectMapper, object : TypeReference<T>() {})))
-        .prefixCacheNameWith(version),
+        .prefixCacheNameWith(cachePrefix),
     )
 }
 
@@ -89,6 +100,9 @@ class ClientResultRedisSerializer(
   private val objectMapper: ObjectMapper,
   private val typeReference: TypeReference<*>,
 ) : RedisSerializer<ClientResult<*>> {
+
+  private val log = LoggerFactory.getLogger(this::class.java)
+
   override fun serialize(clientResult: ClientResult<*>?): ByteArray {
     val toSerialize = when (clientResult) {
       is ClientResult.Failure.StatusCode -> {
@@ -133,13 +147,16 @@ class ClientResultRedisSerializer(
   }
 
   override fun deserialize(bytes: ByteArray?): ClientResult<Any> {
+    log.info("Deserializing result")
     val deserializedWrapper = objectMapper.readValue(bytes, SerializableClientResult::class.java)
 
     if (deserializedWrapper.discriminator == ClientResultDiscriminator.SUCCESS) {
-      return ClientResult.Success(
+      val result =  ClientResult.Success(
         status = deserializedWrapper.status!!,
         body = objectMapper.readValue(deserializedWrapper.body, typeReference),
       )
+      log.info("Deserialized success")
+      return result
     }
 
     if (deserializedWrapper.discriminator == ClientResultDiscriminator.STATUS_CODE_FAILURE) {
