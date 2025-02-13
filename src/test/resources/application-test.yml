@@ -213,5 +213,10 @@ scheduling:
 
 logging.level.org.springframework.jdbc.core.JdbcTemplate: debug
 
+refresh-inmate-details-cache:
+  lock-at-least-for: 1s
+  lock-at-most-for: 1s
+  logging-enabled: false
+
 feature-flags:
   cas1-disable-overbooking-summary: false
