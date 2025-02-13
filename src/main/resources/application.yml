@@ -324,4 +324,4 @@ scheduling:
   enabled: true
 
 feature-flags:
-  domain-events-listener-enabled: false
+  cas2-sqs-listener-enabled: false

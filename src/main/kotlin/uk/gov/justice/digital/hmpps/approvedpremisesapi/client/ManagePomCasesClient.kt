@@ -5,7 +5,7 @@ import org.springframework.stereotype.Component
 import org.springframework.web.service.annotation.GetExchange
 import java.net.URI
 
-@ConditionalOnProperty(prefix = "feature-flags", name = ["domain-events-listener-enabled"], havingValue = "true")
+@ConditionalOnProperty(prefix = "feature-flags", name = ["cas2-sqs-listener-enabled"], havingValue = "true")
 @Component
 interface ManagePomCasesClient {
 
