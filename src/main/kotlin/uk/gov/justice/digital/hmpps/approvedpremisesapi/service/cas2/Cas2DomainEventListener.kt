@@ -11,7 +11,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.domainevent.HmppsD
 
 @ConditionalOnProperty(prefix = "feature-flags", name = ["cas2-sqs-listener-enabled"], havingValue = "true")
 @Service
-class DomainEventListener(
+class Cas2DomainEventListener(
   private val objectMapper: ObjectMapper,
   private val allocationChangedService: AllocationChangedService,
   private val locationChangedService: LocationChangedService,
