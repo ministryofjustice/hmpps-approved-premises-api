@@ -392,6 +392,7 @@ workflows:
             branches:
               only:
                 - main
+                - feature/aps-1943-load-test-investigations
       - hmpps/deploy_env:
           name: deploy_dev
           env: "dev"
@@ -412,7 +413,7 @@ workflows:
       - request-test-approval:
           type: approval
           requires:
-            - deploy_dev
+            - build_docker
       - hmpps/deploy_env:
           name: deploy_test
           env: "test"
