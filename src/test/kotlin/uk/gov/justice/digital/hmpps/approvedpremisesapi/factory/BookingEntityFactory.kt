@@ -193,8 +193,8 @@ class BookingEntityFactory : Factory<BookingEntity> {
     this.placementRequest = { placementRequest }
   }
 
-  fun withStatus(departed: BookingStatus) = apply {
-    this.status = { departed }
+  fun withStatus(status: BookingStatus) = apply {
+    this.status = { status }
   }
 
   fun withAdhoc(adhoc: Boolean?) = apply {
