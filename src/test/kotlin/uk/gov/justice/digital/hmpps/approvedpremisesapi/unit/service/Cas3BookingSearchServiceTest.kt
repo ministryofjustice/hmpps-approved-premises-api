@@ -21,22 +21,22 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.NameFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.OffenderDetailsSummaryFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ProbationRegionEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.UserEntityFactory
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.BookingRepository
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas3BookingRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PersonSummaryInfoResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.AuthorisableActionResult
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.BookingSearchService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.Cas3BookingSearchService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.OffenderService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.UserService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.PaginationConfig
 import java.time.OffsetDateTime
 
-class BookingSearchServiceTest {
+class Cas3BookingSearchServiceTest {
   private val mockOffenderService = mockk<OffenderService>()
   private val mockUserService = mockk<UserService>()
-  private val mockBookingRepository = mockk<BookingRepository>()
+  private val mockBookingRepository = mockk<Cas3BookingRepository>()
   private val cas3BookingSearchPageSize = 50
 
-  private val bookingSearchService = BookingSearchService(
+  private val cas3BookingSearchService = Cas3BookingSearchService(
     mockOffenderService,
     mockUserService,
     mockBookingRepository,
@@ -69,7 +69,7 @@ class BookingSearchServiceTest {
     every { mockOffenderService.getOffenderSummariesByCrns(crns, any(), any()) } returns
       crns.map { PersonSummaryInfoResult.Success.Full(it, CaseSummaryFactory().produce()) }
 
-    val (results, metaData) = bookingSearchService.findBookings(
+    val (results, metaData) = cas3BookingSearchService.findBookings(
       null,
       SortOrder.ascending,
       BookingSearchSortField.bookingCreatedAt,
@@ -115,7 +115,7 @@ class BookingSearchServiceTest {
         PersonSummaryInfoResult.Success.Restricted("crn3", "crn3noms"),
       )
 
-    val (results, metadata) = bookingSearchService.findBookings(
+    val (results, metadata) = cas3BookingSearchService.findBookings(
       null,
       SortOrder.ascending,
       BookingSearchSortField.bookingCreatedAt,
@@ -169,7 +169,7 @@ class BookingSearchServiceTest {
       AuthorisableActionResult.NotFound(),
     )
 
-    val (results, metaData) = bookingSearchService.findBookings(
+    val (results, metaData) = cas3BookingSearchService.findBookings(
       null,
       SortOrder.ascending,
       BookingSearchSortField.bookingCreatedAt,
@@ -219,7 +219,7 @@ class BookingSearchServiceTest {
         PersonSummaryInfoResult.Success.Full("crn3", CaseSummaryFactory().produce()),
       )
 
-    val (results, metaData) = bookingSearchService.findBookings(
+    val (results, metaData) = cas3BookingSearchService.findBookings(
       null,
       sortOrder,
       BookingSearchSortField.personName,
@@ -271,7 +271,7 @@ class BookingSearchServiceTest {
         PersonSummaryInfoResult.Success.Full("crn3", CaseSummaryFactory().produce()),
       )
 
-    val (results, metaData) = bookingSearchService.findBookings(
+    val (results, metaData) = cas3BookingSearchService.findBookings(
       null,
       sortOrder,
       BookingSearchSortField.personName,
@@ -323,7 +323,7 @@ class BookingSearchServiceTest {
         PersonSummaryInfoResult.Success.Full("crn3", CaseSummaryFactory().produce()),
       )
 
-    val (results, metaData) = bookingSearchService.findBookings(
+    val (results, metaData) = cas3BookingSearchService.findBookings(
       null,
       sortOrder,
       BookingSearchSortField.personCrn,
@@ -352,7 +352,7 @@ class BookingSearchServiceTest {
     every { mockBookingRepository.findTemporaryAccommodationBookings(any(), any(), any(), any()) } returns PageImpl(emptyList())
     every { mockOffenderService.getOffenderSummariesByCrns(emptySet(), any(), any()) } returns emptyList()
 
-    val (results, metaData) = bookingSearchService.findBookings(
+    val (results, metaData) = cas3BookingSearchService.findBookings(
       null,
       SortOrder.ascending,
       BookingSearchSortField.bookingCreatedAt,
@@ -381,7 +381,7 @@ class BookingSearchServiceTest {
     every { mockBookingRepository.findTemporaryAccommodationBookings(any(), any(), any(), any()) } returns PageImpl(emptyList())
     every { mockOffenderService.getOffenderSummariesByCrns(emptySet(), any(), any()) } returns emptyList()
 
-    val (results, metaData) = bookingSearchService.findBookings(
+    val (results, metaData) = cas3BookingSearchService.findBookings(
       null,
       SortOrder.ascending,
       BookingSearchSortField.bookingCreatedAt,
@@ -414,7 +414,7 @@ class BookingSearchServiceTest {
     )
 
     Assertions.assertThrows(DataRetrievalFailureException::class.java) {
-      bookingSearchService.findBookings(
+      cas3BookingSearchService.findBookings(
         null,
         SortOrder.ascending,
         BookingSearchSortField.bookingCreatedAt,

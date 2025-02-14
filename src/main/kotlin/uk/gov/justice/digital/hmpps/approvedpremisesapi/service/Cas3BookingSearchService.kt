@@ -8,8 +8,8 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.BookingSearchS
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.BookingStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.SortDirection
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.SortOrder
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.BookingRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.BookingSearchResult
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas3BookingRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.BookingSearchResultDto
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PaginationMetadata
@@ -18,13 +18,12 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.getMetadataWithSize
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.getPageableOrAllPages
 import java.time.OffsetDateTime
 import java.time.ZoneOffset
-import kotlin.Comparator
 
 @Service
-class BookingSearchService(
+class Cas3BookingSearchService(
   private val offenderService: OffenderService,
   private val userService: UserService,
-  private val bookingRepository: BookingRepository,
+  private val cas3BookingRepository: Cas3BookingRepository,
   @Value("\${pagination.cas3.booking-search-page-size}") private val cas3BookingSearchPageSize: Int,
 ) {
   fun findBookings(
@@ -35,7 +34,7 @@ class BookingSearchService(
     crnOrName: String?,
   ): Pair<List<BookingSearchResultDto>, PaginationMetadata?> {
     val user = userService.getUserForRequest()
-    val findBookings = bookingRepository.findTemporaryAccommodationBookings(
+    val findBookings = cas3BookingRepository.findTemporaryAccommodationBookings(
       status?.name,
       user.probationRegion.id,
       crnOrName,
