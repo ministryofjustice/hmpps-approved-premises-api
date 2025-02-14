@@ -40,8 +40,7 @@ class OffenderService(
   private val log = LoggerFactory.getLogger(this::class.java)
 
   fun getPersonByNomsNumberAndActiveCaseLoadId(nomsNumber: String, activeCaseLoadId: String): ProbationOffenderSearchResult {
-    fun logFailedResponse(probationResponse: ClientResult.Failure<List<ProbationOffenderDetail>>) =
-      log.warn("Could not get inmate details for $nomsNumber", probationResponse.toException())
+    fun logFailedResponse(probationResponse: ClientResult.Failure<List<ProbationOffenderDetail>>) = log.warn("Could not get inmate details for $nomsNumber", probationResponse.toException())
 
     val probationResponse = probationOffenderSearchApiClient.searchOffenderByNomsNumber(nomsNumber)
 
@@ -84,19 +83,14 @@ class OffenderService(
     }
   }
 
-  fun getPersonByNomsNumber(nomsNumber: String, currentUser: NomisUserEntity) =
-    currentUser.activeCaseloadId?.let { getPersonByNomsNumberAndActiveCaseLoadId(nomsNumber, it) }
+  fun getPersonByNomsNumber(nomsNumber: String, currentUser: NomisUserEntity) = currentUser.activeCaseloadId?.let { getPersonByNomsNumberAndActiveCaseLoadId(nomsNumber, it) }
 
-  private fun hasRestrictionOrExclusion(probationOffenderDetail: ProbationOffenderDetail): Boolean {
-    return probationOffenderDetail.currentExclusion == true || probationOffenderDetail.currentRestriction == true
-  }
+  private fun hasRestrictionOrExclusion(probationOffenderDetail: ProbationOffenderDetail): Boolean = probationOffenderDetail.currentExclusion == true || probationOffenderDetail.currentRestriction == true
 
-  private fun getInmateDetailsForProbationOffender(probationOffenderDetail: ProbationOffenderDetail): InmateDetail? {
-    return probationOffenderDetail.otherIds.nomsNumber?.let { nomsNumber ->
-      when (val inmateDetailsResult = getInmateDetailByNomsNumber(probationOffenderDetail.otherIds.crn, nomsNumber)) {
-        is AuthorisableActionResult.Success -> inmateDetailsResult.entity
-        else -> null
-      }
+  private fun getInmateDetailsForProbationOffender(probationOffenderDetail: ProbationOffenderDetail): InmateDetail? = probationOffenderDetail.otherIds.nomsNumber?.let { nomsNumber ->
+    when (val inmateDetailsResult = getInmateDetailByNomsNumber(probationOffenderDetail.otherIds.crn, nomsNumber)) {
+      is AuthorisableActionResult.Success -> inmateDetailsResult.entity
+      else -> null
     }
   }
 
@@ -242,24 +236,22 @@ class OffenderService(
     return AuthorisableActionResult.Success(offender)
   }
 
-  fun getRiskByCrn(crn: String): AuthorisableActionResult<PersonRisks> {
-    return when (getOffenderByCrn(crn)) {
-      is AuthorisableActionResult.NotFound -> AuthorisableActionResult.NotFound()
-      is AuthorisableActionResult.Unauthorised -> AuthorisableActionResult.Unauthorised()
-      is AuthorisableActionResult.Success -> {
-        val risks = PersonRisks(
-          // Note that Tier, Mappa and Flags are all hardcoded to NotFound
-          // and these unused 'envelopes' will be removed.
-          roshRisks = getRoshRisksEnvelope(crn),
-          mappa = RiskWithStatus(status = RiskStatus.NotFound),
-          tier = RiskWithStatus(status = RiskStatus.NotFound),
-          flags = RiskWithStatus(status = RiskStatus.NotFound),
-        )
+  fun getRiskByCrn(crn: String): AuthorisableActionResult<PersonRisks> = when (getOffenderByCrn(crn)) {
+    is AuthorisableActionResult.NotFound -> AuthorisableActionResult.NotFound()
+    is AuthorisableActionResult.Unauthorised -> AuthorisableActionResult.Unauthorised()
+    is AuthorisableActionResult.Success -> {
+      val risks = PersonRisks(
+        // Note that Tier, Mappa and Flags are all hardcoded to NotFound
+        // and these unused 'envelopes' will be removed.
+        roshRisks = getRoshRisksEnvelope(crn),
+        mappa = RiskWithStatus(status = RiskStatus.NotFound),
+        tier = RiskWithStatus(status = RiskStatus.NotFound),
+        flags = RiskWithStatus(status = RiskStatus.NotFound),
+      )
 
-        AuthorisableActionResult.Success(
-          risks,
-        )
-      }
+      AuthorisableActionResult.Success(
+        risks,
+      )
     }
   }
 

@@ -193,21 +193,19 @@ class Cas3AssessmentServiceTest {
   private fun updateAssessmentEntity(
     releaseDate: LocalDate?,
     accommodationRequiredFromDate: LocalDate?,
-  ): UpdateAssessment =
-    UpdateAssessment(
-      releaseDate = releaseDate,
-      accommodationRequiredFromDate = accommodationRequiredFromDate,
-      data = emptyMap(),
-    )
+  ): UpdateAssessment = UpdateAssessment(
+    releaseDate = releaseDate,
+    accommodationRequiredFromDate = accommodationRequiredFromDate,
+    data = emptyMap(),
+  )
 
-  private fun assessmentEntity(user: UserEntity): TemporaryAccommodationAssessmentEntity =
-    TemporaryAccommodationAssessmentEntityFactory()
-      .withApplication(
-        TemporaryAccommodationApplicationEntityFactory()
-          .withProbationRegion(user.probationRegion)
-          .withCreatedByUser(user)
-          .produce(),
-      ).withReleaseDate(LocalDate.now().plusDays(5))
-      .withAccommodationRequiredFromDate(LocalDate.now().plusDays(5))
-      .produce()
+  private fun assessmentEntity(user: UserEntity): TemporaryAccommodationAssessmentEntity = TemporaryAccommodationAssessmentEntityFactory()
+    .withApplication(
+      TemporaryAccommodationApplicationEntityFactory()
+        .withProbationRegion(user.probationRegion)
+        .withCreatedByUser(user)
+        .produce(),
+    ).withReleaseDate(LocalDate.now().plusDays(5))
+    .withAccommodationRequiredFromDate(LocalDate.now().plusDays(5))
+    .produce()
 }

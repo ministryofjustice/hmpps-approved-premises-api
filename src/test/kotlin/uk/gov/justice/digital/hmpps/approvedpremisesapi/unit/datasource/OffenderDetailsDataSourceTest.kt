@@ -227,8 +227,7 @@ class OffenderDetailsDataSourceTest {
     }
 
     @JvmStatic
-    fun <T> cacheTimeoutClientResult() =
-      ClientResult.Failure.PreemptiveCacheTimeout<T>("some-cache", "some-cache-key", 1000)
+    fun <T> cacheTimeoutClientResult() = ClientResult.Failure.PreemptiveCacheTimeout<T>("some-cache", "some-cache-key", 1000)
 
     @JvmStatic
     fun userOffenderAccessClientResults(): Stream<Arguments> {

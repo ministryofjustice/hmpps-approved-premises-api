@@ -148,20 +148,16 @@ class AssessmentNoteService(
       "The assessor has not added their name to the application yet."
   }
 
-  private fun getCas2User(isExternalUser: Boolean): Cas2User {
-    return if (isExternalUser) {
-      externalUserService.getUserForRequest()
-    } else {
-      userService.getUserForRequest()
-    }
+  private fun getCas2User(isExternalUser: Boolean): Cas2User = if (isExternalUser) {
+    externalUserService.getUserForRequest()
+  } else {
+    userService.getUserForRequest()
   }
 
-  private fun nomisUserCanAddNote(application: Cas2ApplicationEntity, user: NomisUserEntity): Boolean {
-    return if (user.id == application.createdByUser.id) {
-      true
-    } else {
-      userAccessService.offenderIsFromSamePrisonAsUser(application.referringPrisonCode, user.activeCaseloadId)
-    }
+  private fun nomisUserCanAddNote(application: Cas2ApplicationEntity, user: NomisUserEntity): Boolean = if (user.id == application.createdByUser.id) {
+    true
+  } else {
+    userAccessService.offenderIsFromSamePrisonAsUser(application.referringPrisonCode, user.activeCaseloadId)
   }
 
   private fun saveNote(application: Cas2ApplicationEntity, assessment: Cas2AssessmentEntity, body: String, user: Cas2User): Cas2ApplicationNoteEntity {

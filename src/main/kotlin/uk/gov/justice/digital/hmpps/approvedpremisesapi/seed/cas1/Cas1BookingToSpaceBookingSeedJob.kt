@@ -173,11 +173,10 @@ class Cas1BookingToSpaceBookingSeedJob(
     }
   }
 
-  private fun BookingEntity.getEssentialCharacteristicsOfInterest() =
-    placementRequest?.placementRequirements?.essentialCriteria
-      ?.filter { Cas1SpaceBookingEntity.CHARACTERISTICS_OF_INTEREST.contains(it.propertyName) }
-      ?.toList()
-      ?: emptyList()
+  private fun BookingEntity.getEssentialCharacteristicsOfInterest() = placementRequest?.placementRequirements?.essentialCriteria
+    ?.filter { Cas1SpaceBookingEntity.CHARACTERISTICS_OF_INTEREST.contains(it.propertyName) }
+    ?.toList()
+    ?: emptyList()
 
   private fun DomainEvent<BookingMadeEnvelope>.getCreatedByUser(): UserEntity {
     val createdByUsernameUpper =

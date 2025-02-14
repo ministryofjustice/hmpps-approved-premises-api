@@ -9,33 +9,25 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.reference.Cas2Pers
 
 @Component("Cas2ApplicationStatusTransformer")
 class ApplicationStatusTransformer {
-  fun transformModelToApi(status: Cas2PersistedApplicationStatus): Cas2ApplicationStatus {
-    return Cas2ApplicationStatus(
-      id = status.id,
-      name = status.name,
-      label = status.label,
-      description = status.description,
-      statusDetails = status.statusDetails?.map { statusDetail -> transformStatusDetailModelToApi(statusDetail) }
-        ?: emptyList(),
-    )
-  }
+  fun transformModelToApi(status: Cas2PersistedApplicationStatus): Cas2ApplicationStatus = Cas2ApplicationStatus(
+    id = status.id,
+    name = status.name,
+    label = status.label,
+    description = status.description,
+    statusDetails = status.statusDetails?.map { statusDetail -> transformStatusDetailModelToApi(statusDetail) }
+      ?: emptyList(),
+  )
 
-  fun transformStatusDetailModelToApi(statusDetail: Cas2PersistedApplicationStatusDetail): Cas2ApplicationStatusDetail {
-    return Cas2ApplicationStatusDetail(
-      id = statusDetail.id,
-      name = statusDetail.name,
-      label = statusDetail.label,
-    )
-  }
+  fun transformStatusDetailModelToApi(statusDetail: Cas2PersistedApplicationStatusDetail): Cas2ApplicationStatusDetail = Cas2ApplicationStatusDetail(
+    id = statusDetail.id,
+    name = statusDetail.name,
+    label = statusDetail.label,
+  )
 
-  fun transformStatusDetailListToDetailItemList(statusDetailsList: List<Cas2PersistedApplicationStatusDetail>): List<Cas2StatusDetail> {
-    return statusDetailsList.map { status -> transformStatusDetailToStatusDetailItem(status) }
-  }
+  fun transformStatusDetailListToDetailItemList(statusDetailsList: List<Cas2PersistedApplicationStatusDetail>): List<Cas2StatusDetail> = statusDetailsList.map { status -> transformStatusDetailToStatusDetailItem(status) }
 
-  fun transformStatusDetailToStatusDetailItem(statusDetail: Cas2PersistedApplicationStatusDetail): Cas2StatusDetail {
-    return Cas2StatusDetail(
-      name = statusDetail.name,
-      label = statusDetail.label,
-    )
-  }
+  fun transformStatusDetailToStatusDetailItem(statusDetail: Cas2PersistedApplicationStatusDetail): Cas2StatusDetail = Cas2StatusDetail(
+    name = statusDetail.name,
+    label = statusDetail.label,
+  )
 }

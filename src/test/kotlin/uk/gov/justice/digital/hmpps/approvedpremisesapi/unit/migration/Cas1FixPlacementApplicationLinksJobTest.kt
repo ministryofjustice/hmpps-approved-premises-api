@@ -486,13 +486,12 @@ class Cas1FixPlacementApplicationLinksJobTest {
     application: ApprovedPremisesApplicationEntity = applicationWithNoArrivalDate,
     decision: PlacementApplicationDecision? = ACCEPTED,
     decisionDate: OffsetDateTime? = null,
-  ) =
-    PlacementApplicationEntityFactory()
-      .withDefaults()
-      .withApplication(application)
-      .withDecision(decision)
-      .withDecisionMadeAt(decisionDate)
-      .produce()
+  ) = PlacementApplicationEntityFactory()
+    .withDefaults()
+    .withApplication(application)
+    .withDecision(decision)
+    .withDecisionMadeAt(decisionDate)
+    .produce()
 
   private fun placementRequestForDates(
     start: LocalDate,

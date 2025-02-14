@@ -76,29 +76,28 @@ class Cas3BookingSearchService(
       }
   }
 
-  private fun mapToBookingSearchResults(findBookings: Page<BookingSearchResult>) =
-    findBookings.content
-      .mapNotNull { rs ->
-        BookingSearchResultDto(
-          rs.getPersonName(),
-          rs.getPersonCrn(),
-          rs.getBookingId(),
-          rs.getBookingStatus(),
-          rs.getBookingStartDate(),
-          rs.getBookingEndDate(),
-          OffsetDateTime.ofInstant(rs.getBookingCreatedAt(), ZoneOffset.UTC),
-          rs.getPremisesId(),
-          rs.getPremisesName(),
-          rs.getPremisesAddressLine1(),
-          rs.getPremisesAddressLine2(),
-          rs.getPremisesTown(),
-          rs.getPremisesPostcode(),
-          rs.getRoomId(),
-          rs.getRoomName(),
-          rs.getBedId(),
-          rs.getBedName(),
-        )
-      }
+  private fun mapToBookingSearchResults(findBookings: Page<BookingSearchResult>) = findBookings.content
+    .mapNotNull { rs ->
+      BookingSearchResultDto(
+        rs.getPersonName(),
+        rs.getPersonCrn(),
+        rs.getBookingId(),
+        rs.getBookingStatus(),
+        rs.getBookingStartDate(),
+        rs.getBookingEndDate(),
+        OffsetDateTime.ofInstant(rs.getBookingCreatedAt(), ZoneOffset.UTC),
+        rs.getPremisesId(),
+        rs.getPremisesName(),
+        rs.getPremisesAddressLine1(),
+        rs.getPremisesAddressLine2(),
+        rs.getPremisesTown(),
+        rs.getPremisesPostcode(),
+        rs.getRoomId(),
+        rs.getRoomName(),
+        rs.getBedId(),
+        rs.getBedName(),
+      )
+    }
 
   private fun buildPage(
     sortOrder: SortOrder,
@@ -114,15 +113,14 @@ class Cas3BookingSearchService(
     return getPageableOrAllPages(sortingField, sortDirection, page, pageSize)
   }
 
-  private fun convertSortFieldToDBField(sortField: BookingSearchSortField) =
-    when (sortField) {
-      BookingSearchSortField.bookingEndDate -> listOf("departure_date", "personName")
-      BookingSearchSortField.bookingStartDate -> listOf("arrival_date", "personName")
-      BookingSearchSortField.bookingCreatedAt -> listOf("created_at")
-      BookingSearchSortField.personCrn -> listOf("crn")
-      BookingSearchSortField.personName -> listOf("personName")
-      else -> listOf("created_at")
-    }
+  private fun convertSortFieldToDBField(sortField: BookingSearchSortField) = when (sortField) {
+    BookingSearchSortField.bookingEndDate -> listOf("departure_date", "personName")
+    BookingSearchSortField.bookingStartDate -> listOf("arrival_date", "personName")
+    BookingSearchSortField.bookingCreatedAt -> listOf("created_at")
+    BookingSearchSortField.personCrn -> listOf("crn")
+    BookingSearchSortField.personName -> listOf("personName")
+    else -> listOf("created_at")
+  }
 
   private fun sortBookingResultByPersonName(
     results: List<BookingSearchResultDto>,

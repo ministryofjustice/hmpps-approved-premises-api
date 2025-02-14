@@ -68,22 +68,20 @@ class Cas1PremisesController(
   override fun getPremisesSummaries(
     gender: Cas1ApprovedPremisesGender?,
     apAreaId: UUID?,
-  ): ResponseEntity<List<Cas1PremisesBasicSummary>> {
-    return ResponseEntity
-      .ok()
-      .body(
-        cas1PremisesService.getPremises(
-          gender = when (gender) {
-            Cas1ApprovedPremisesGender.man -> ApprovedPremisesGender.MAN
-            Cas1ApprovedPremisesGender.woman -> ApprovedPremisesGender.WOMAN
-            null -> null
-          },
-          apAreaId,
-        ).map {
-          cas1PremisesTransformer.toPremiseBasicSummary(it)
+  ): ResponseEntity<List<Cas1PremisesBasicSummary>> = ResponseEntity
+    .ok()
+    .body(
+      cas1PremisesService.getPremises(
+        gender = when (gender) {
+          Cas1ApprovedPremisesGender.man -> ApprovedPremisesGender.MAN
+          Cas1ApprovedPremisesGender.woman -> ApprovedPremisesGender.WOMAN
+          null -> null
         },
-      )
-  }
+        apAreaId,
+      ).map {
+        cas1PremisesTransformer.toPremiseBasicSummary(it)
+      },
+    )
 
   override fun getCapacity(
     premisesId: UUID,

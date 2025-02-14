@@ -668,22 +668,18 @@ class Cas1PlacementMatchingOutcomesV2ReportTest : InitialiseDatabasePerClassTest
   private fun getLatestAssessment(applicationId: UUID) = getApplication(applicationId)
     .assessments.filter { it.reallocatedAt == null }.maxByOrNull { it.createdAt }!!
 
-  private fun getApplication(applicationId: UUID) =
-    realApplicationRepository.findByIdOrNull(applicationId)!! as ApprovedPremisesApplicationEntity
+  private fun getApplication(applicationId: UUID) = realApplicationRepository.findByIdOrNull(applicationId)!! as ApprovedPremisesApplicationEntity
 
-  private fun getPlacementApplications(application: ApplicationEntity) =
-    placementApplicationRepository.findByApplication(application).filter { it.reallocatedAt == null }
+  private fun getPlacementApplications(application: ApplicationEntity) = placementApplicationRepository.findByApplication(application).filter { it.reallocatedAt == null }
 
-  private fun getPlacementApplication(application: ApplicationEntity) =
-    getPlacementApplications(application).first()
+  private fun getPlacementApplication(application: ApplicationEntity) = getPlacementApplications(application).first()
 
-  private fun getReportUrl(year: Int, month: Int, includePii: Boolean?) =
-    "/cas1/reports/placementMatchingOutcomesV2?year=$year&month=$month" +
-      if (includePii != null) {
-        "&includePii=$includePii"
-      } else {
-        ""
-      }
+  private fun getReportUrl(year: Int, month: Int, includePii: Boolean?) = "/cas1/reports/placementMatchingOutcomesV2?year=$year&month=$month" +
+    if (includePii != null) {
+      "&includePii=$includePii"
+    } else {
+      ""
+    }
 
   @SuppressWarnings("ConstructorParameterNaming")
   data class PlacementMatchingOutcomeReportRow(

@@ -110,30 +110,28 @@ class Cas3BookingServiceTest {
   private val mockUserAccessService = mockk<UserAccessService>()
   private val mockAssessmentService = mockk<AssessmentService>()
 
-  fun createCas3BookingService(): Cas3BookingService {
-    return Cas3BookingService(
-      bookingRepository = mockBookingRepository,
-      bedRepository = mockBedRepository,
-      confirmationRepository = mockConfirmationRepository,
-      assessmentRepository = mockAssessmentRepository,
-      arrivalRepository = mockArrivalRepository,
-      departureRepository = mockDepartureRepository,
-      departureReasonRepository = mockDepartureReasonRepository,
-      moveOnCategoryRepository = mockMoveOnCategoryRepository,
-      cancellationRepository = mockCancellationRepository,
-      cancellationReasonRepository = mockCancellationReasonRepository,
-      cas3VoidBedspacesRepository = mockCas3VoidBedspacesRepository,
-      turnaroundRepository = mockTurnaroundRepository,
-      extensionRepository = mockExtensionRepository,
-      cas3PremisesService = mockCas3PremisesService,
-      assessmentService = mockAssessmentService,
-      userService = mockUserService,
-      userAccessService = mockUserAccessService,
-      offenderService = mockOffenderService,
-      workingDayService = mockWorkingDayService,
-      cas3DomainEventService = mockCas3DomainEventService,
-    )
-  }
+  fun createCas3BookingService(): Cas3BookingService = Cas3BookingService(
+    bookingRepository = mockBookingRepository,
+    bedRepository = mockBedRepository,
+    confirmationRepository = mockConfirmationRepository,
+    assessmentRepository = mockAssessmentRepository,
+    arrivalRepository = mockArrivalRepository,
+    departureRepository = mockDepartureRepository,
+    departureReasonRepository = mockDepartureReasonRepository,
+    moveOnCategoryRepository = mockMoveOnCategoryRepository,
+    cancellationRepository = mockCancellationRepository,
+    cancellationReasonRepository = mockCancellationReasonRepository,
+    cas3VoidBedspacesRepository = mockCas3VoidBedspacesRepository,
+    turnaroundRepository = mockTurnaroundRepository,
+    extensionRepository = mockExtensionRepository,
+    cas3PremisesService = mockCas3PremisesService,
+    assessmentService = mockAssessmentService,
+    userService = mockUserService,
+    userAccessService = mockUserAccessService,
+    offenderService = mockOffenderService,
+    workingDayService = mockWorkingDayService,
+    cas3DomainEventService = mockCas3DomainEventService,
+  )
 
   private val cas3BookingService = createCas3BookingService()
 
@@ -411,15 +409,13 @@ class Cas3BookingServiceTest {
       status: BookingStatus,
       arrivalDate: LocalDate,
       departureDate: LocalDate,
-    ): BookingEntity {
-      return BookingEntityFactory()
-        .withPremises(premises)
-        .withCrn(crn)
-        .withStatus(status)
-        .withArrivalDate(arrivalDate)
-        .withDepartureDate(departureDate)
-        .produce()
-    }
+    ): BookingEntity = BookingEntityFactory()
+      .withPremises(premises)
+      .withCrn(crn)
+      .withStatus(status)
+      .withArrivalDate(arrivalDate)
+      .withDepartureDate(departureDate)
+      .produce()
   }
 
   @Nested
@@ -1670,21 +1666,20 @@ class Cas3BookingServiceTest {
       }
     }
 
-    private fun createBooking(application: TemporaryAccommodationApplicationEntity?) =
-      BookingEntityFactory()
-        .withYieldedPremises {
-          TemporaryAccommodationPremisesEntityFactory()
-            .withYieldedProbationRegion {
-              ProbationRegionEntityFactory()
-                .withYieldedApArea { ApAreaEntityFactory().produce() }
-                .produce()
-            }
-            .withService(ServiceName.temporaryAccommodation.value)
-            .withYieldedLocalAuthorityArea { LocalAuthorityEntityFactory().produce() }
-            .produce()
-        }
-        .withApplication(application.let { application })
-        .produce()
+    private fun createBooking(application: TemporaryAccommodationApplicationEntity?) = BookingEntityFactory()
+      .withYieldedPremises {
+        TemporaryAccommodationPremisesEntityFactory()
+          .withYieldedProbationRegion {
+            ProbationRegionEntityFactory()
+              .withYieldedApArea { ApAreaEntityFactory().produce() }
+              .produce()
+          }
+          .withService(ServiceName.temporaryAccommodation.value)
+          .withYieldedLocalAuthorityArea { LocalAuthorityEntityFactory().produce() }
+          .produce()
+      }
+      .withApplication(application.let { application })
+      .produce()
   }
 
   @Nested

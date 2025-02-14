@@ -36,8 +36,7 @@ class SpacePlanningServiceTest : InitialiseDatabasePerClassTestBase() {
 
   lateinit var premiseId: UUID
 
-  private fun findCharacteristic(propertyName: String) =
-    characteristicRepository.findByPropertyName(propertyName, ServiceName.approvedPremises.value)!!
+  private fun findCharacteristic(propertyName: String) = characteristicRepository.findByPropertyName(propertyName, ServiceName.approvedPremises.value)!!
 
   private lateinit var bookingCrn1: Cas1SpaceBookingEntity
 

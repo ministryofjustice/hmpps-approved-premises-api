@@ -12,8 +12,7 @@ interface UserAllocatorRule {
    */
   val priority: Int
 
-  fun evaluateAssessment(assessmentEntity: AssessmentEntity): UserAllocatorRuleOutcome =
-    UserAllocatorRuleOutcome.Skip
+  fun evaluateAssessment(assessmentEntity: AssessmentEntity): UserAllocatorRuleOutcome = UserAllocatorRuleOutcome.Skip
 
   @Deprecated(
     """
@@ -23,8 +22,7 @@ interface UserAllocatorRule {
   """,
     replaceWith = ReplaceWith("remove any call to this function as it will always return UserAllocatorRuleOutcome.Skip"),
   )
-  fun evaluatePlacementRequest(placementRequestEntity: PlacementRequestEntity): UserAllocatorRuleOutcome =
-    UserAllocatorRuleOutcome.Skip
+  fun evaluatePlacementRequest(placementRequestEntity: PlacementRequestEntity): UserAllocatorRuleOutcome = UserAllocatorRuleOutcome.Skip
 
   @Deprecated(
     """
@@ -34,6 +32,5 @@ interface UserAllocatorRule {
   """,
     replaceWith = ReplaceWith("remove any call to this function as it will always return UserAllocatorRuleOutcome.Skip"),
   )
-  fun evaluatePlacementApplication(placementApplicationEntity: PlacementApplicationEntity): UserAllocatorRuleOutcome =
-    UserAllocatorRuleOutcome.Skip
+  fun evaluatePlacementApplication(placementApplicationEntity: PlacementApplicationEntity): UserAllocatorRuleOutcome = UserAllocatorRuleOutcome.Skip
 }

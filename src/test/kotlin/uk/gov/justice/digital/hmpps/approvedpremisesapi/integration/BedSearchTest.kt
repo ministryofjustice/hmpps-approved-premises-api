@@ -1688,15 +1688,13 @@ class BedSearchTest : IntegrationTestBase() {
       localAuthorityArea: LocalAuthorityAreaEntity,
       probationDeliveryUnit: ProbationDeliveryUnitEntity,
       characteristics: MutableList<CharacteristicEntity>,
-    ): TemporaryAccommodationPremisesEntity {
-      return temporaryAccommodationPremisesEntityFactory.produceAndPersist {
-        withName(premisesName)
-        withProbationRegion(probationRegion)
-        withLocalAuthorityArea(localAuthorityArea)
-        withProbationDeliveryUnit(probationDeliveryUnit)
-        withStatus(PropertyStatus.active)
-        withCharacteristics(characteristics)
-      }
+    ): TemporaryAccommodationPremisesEntity = temporaryAccommodationPremisesEntityFactory.produceAndPersist {
+      withName(premisesName)
+      withProbationRegion(probationRegion)
+      withLocalAuthorityArea(localAuthorityArea)
+      withProbationDeliveryUnit(probationDeliveryUnit)
+      withStatus(PropertyStatus.active)
+      withCharacteristics(characteristics)
     }
 
     private fun createBedspace(premises: PremisesEntity, roomName: String, roomCharacteristics: List<CharacteristicEntity>): Pair<RoomEntity, BedEntity> {
@@ -1774,33 +1772,31 @@ class BedSearchTest : IntegrationTestBase() {
       premisesCharacteristics: List<CharacteristicPair>,
       roomCharacteristics: List<CharacteristicPair>,
       overlaps: List<TemporaryAccommodationBedSearchResultOverlap>,
-    ): TemporaryAccommodationBedSearchResult {
-      return TemporaryAccommodationBedSearchResult(
-        premises = BedSearchResultPremisesSummary(
-          id = premises.id,
-          name = premises.name,
-          addressLine1 = premises.addressLine1,
-          postcode = premises.postcode,
-          probationDeliveryUnitName = pduName,
-          characteristics = premisesCharacteristics,
-          addressLine2 = premises.addressLine2,
-          town = premises.town,
-          notes = premises.notes,
-          bedCount = numberOfBeds,
-          bookedBedCount = numberOfBookedBeds,
-        ),
-        room = BedSearchResultRoomSummary(
-          id = room.id,
-          name = room.name,
-          characteristics = roomCharacteristics,
-        ),
-        bed = BedSearchResultBedSummary(
-          id = bed.id,
-          name = bed.name,
-        ),
-        overlaps = overlaps,
-      )
-    }
+    ): TemporaryAccommodationBedSearchResult = TemporaryAccommodationBedSearchResult(
+      premises = BedSearchResultPremisesSummary(
+        id = premises.id,
+        name = premises.name,
+        addressLine1 = premises.addressLine1,
+        postcode = premises.postcode,
+        probationDeliveryUnitName = pduName,
+        characteristics = premisesCharacteristics,
+        addressLine2 = premises.addressLine2,
+        town = premises.town,
+        notes = premises.notes,
+        bedCount = numberOfBeds,
+        bookedBedCount = numberOfBookedBeds,
+      ),
+      room = BedSearchResultRoomSummary(
+        id = room.id,
+        name = room.name,
+        characteristics = roomCharacteristics,
+      ),
+      bed = BedSearchResultBedSummary(
+        id = bed.id,
+        name = bed.name,
+      ),
+      overlaps = overlaps,
+    )
 
     private fun createPremisesAndBedsWithCharacteristics(
       localAuthorityArea: LocalAuthorityAreaEntity,

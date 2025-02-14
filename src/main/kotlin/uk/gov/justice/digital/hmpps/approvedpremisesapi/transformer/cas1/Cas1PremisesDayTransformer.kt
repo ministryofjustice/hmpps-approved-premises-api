@@ -15,13 +15,12 @@ class Cas1PremisesDayTransformer {
     premisesCapacity: Cas1PremiseCapacityForDay,
     spaceBookings: List<Cas1SpaceBookingDaySummary>,
     outOfServiceBeds: List<Cas1OutOfServiceBedSummary>,
-  ) =
-    Cas1PremisesDaySummary(
-      forDate = date,
-      previousDate = date.minusDays(1),
-      nextDate = date.plusDays(1),
-      capacity = premisesCapacity,
-      spaceBookings = spaceBookings,
-      outOfServiceBeds = outOfServiceBeds,
-    )
+  ) = Cas1PremisesDaySummary(
+    forDate = date,
+    previousDate = date.minusDays(1),
+    nextDate = date.plusDays(1),
+    capacity = premisesCapacity,
+    spaceBookings = spaceBookings,
+    outOfServiceBeds = outOfServiceBeds,
+  )
 }

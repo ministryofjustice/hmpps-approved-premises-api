@@ -74,12 +74,10 @@ class Cas1PlacementRequestsController(
   private fun mapPersonDetailOntoPlacementRequests(
     placementRequests: List<uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas1PlacementRequestSummary>,
     user: UserEntity,
-  ): List<Cas1PlacementRequestSummary> {
-    return placementRequests.map {
-      cas1PlacementRequestSummaryTransformer.transformCas1PlacementRequestSummaryJpaToApi(
-        it,
-        offenderService.getPersonInfoResult(it.getPersonCrn(), user.cas1LimitedAccessStrategy()),
-      )
-    }
+  ): List<Cas1PlacementRequestSummary> = placementRequests.map {
+    cas1PlacementRequestSummaryTransformer.transformCas1PlacementRequestSummaryJpaToApi(
+      it,
+      offenderService.getPersonInfoResult(it.getPersonCrn(), user.cas1LimitedAccessStrategy()),
+    )
   }
 }

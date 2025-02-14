@@ -41,9 +41,7 @@ class MutableClockConfiguration {
       fixedTime = (fixedTime ?: Instant.now()).plusSeconds(60)
     }
 
-    override fun instant(): Instant {
-      return fixedTime ?: Instant.now()
-    }
+    override fun instant(): Instant = fixedTime ?: Instant.now()
 
     override fun withZone(zone: ZoneId?): Clock {
       error("Not supported")

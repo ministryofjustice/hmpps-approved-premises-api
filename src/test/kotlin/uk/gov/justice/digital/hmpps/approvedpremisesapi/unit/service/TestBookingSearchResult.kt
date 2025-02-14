@@ -59,71 +59,37 @@ class TestBookingSearchResult : BookingSearchResult {
     this.bookingCreatedAt = bookingCreatedAt
   }
 
-  override fun getPersonName(): String? {
-    return this.personName
-  }
+  override fun getPersonName(): String? = this.personName
 
-  override fun getPersonCrn(): String {
-    return this.personCrn
-  }
+  override fun getPersonCrn(): String = this.personCrn
 
-  override fun getBookingStatus(): String {
-    return this.bookingStatus
-  }
+  override fun getBookingStatus(): String = this.bookingStatus
 
-  override fun getBookingId(): UUID {
-    return this.bookingId
-  }
+  override fun getBookingId(): UUID = this.bookingId
 
-  override fun getBookingStartDate(): LocalDate {
-    return this.bookingStartDate
-  }
+  override fun getBookingStartDate(): LocalDate = this.bookingStartDate
 
-  override fun getBookingEndDate(): LocalDate {
-    return this.bookingEndDate
-  }
+  override fun getBookingEndDate(): LocalDate = this.bookingEndDate
 
-  override fun getBookingCreatedAt(): Instant {
-    return this.bookingCreatedAt.toInstant()
-  }
+  override fun getBookingCreatedAt(): Instant = this.bookingCreatedAt.toInstant()
 
-  override fun getPremisesId(): UUID {
-    return this.premisesId
-  }
+  override fun getPremisesId(): UUID = this.premisesId
 
-  override fun getPremisesName(): String {
-    return this.premisesName
-  }
+  override fun getPremisesName(): String = this.premisesName
 
-  override fun getPremisesAddressLine1(): String {
-    return this.premisesAddressLine1
-  }
+  override fun getPremisesAddressLine1(): String = this.premisesAddressLine1
 
-  override fun getPremisesAddressLine2(): String? {
-    return this.premisesAddressLine2
-  }
+  override fun getPremisesAddressLine2(): String? = this.premisesAddressLine2
 
-  override fun getPremisesTown(): String? {
-    return this.premisesTown
-  }
+  override fun getPremisesTown(): String? = this.premisesTown
 
-  override fun getPremisesPostcode(): String {
-    return this.premisesPostcode
-  }
+  override fun getPremisesPostcode(): String = this.premisesPostcode
 
-  override fun getRoomId(): UUID {
-    return this.roomId
-  }
+  override fun getRoomId(): UUID = this.roomId
 
-  override fun getRoomName(): String {
-    return this.roomName
-  }
+  override fun getRoomName(): String = this.roomName
 
-  override fun getBedId(): UUID {
-    return this.bedId
-  }
+  override fun getBedId(): UUID = this.bedId
 
-  override fun getBedName(): String {
-    return this.bedName
-  }
+  override fun getBedName(): String = this.bedName
 }

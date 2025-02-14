@@ -57,12 +57,10 @@ class DocumentsController(
     offenderService.getDocumentFromDelius(crn, documentId.toString(), outputStream)
   }
 
-  private fun getDocuments(crn: String): List<APDeliusDocument> {
-    return when (val result = offenderService.getDocumentsFromApDeliusApi(crn)) {
-      is AuthorisableActionResult.NotFound -> throw NotFoundProblem(crn, "Documents")
-      is AuthorisableActionResult.Unauthorised -> throw ForbiddenProblem()
-      is AuthorisableActionResult.Success -> result.entity
-    }
+  private fun getDocuments(crn: String): List<APDeliusDocument> = when (val result = offenderService.getDocumentsFromApDeliusApi(crn)) {
+    is AuthorisableActionResult.NotFound -> throw NotFoundProblem(crn, "Documents")
+    is AuthorisableActionResult.Unauthorised -> throw ForbiddenProblem()
+    is AuthorisableActionResult.Success -> result.entity
   }
 
   private fun getDocumentFileName(documentsMetaData: List<APDeliusDocument>, documentId: UUID): String {

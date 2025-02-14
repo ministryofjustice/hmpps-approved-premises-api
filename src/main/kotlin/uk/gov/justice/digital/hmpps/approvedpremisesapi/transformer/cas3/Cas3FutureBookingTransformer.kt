@@ -12,13 +12,11 @@ class Cas3FutureBookingTransformer(
   private val personTransformer: PersonTransformer,
   private val bedTransformer: BedTransformer,
 ) {
-  fun transformJpaToApi(jpa: BookingEntity, personSummaryInfo: PersonSummaryInfoResult): FutureBooking {
-    return FutureBooking(
-      id = jpa.id,
-      person = personTransformer.transformSummaryToPersonApi(personSummaryInfo),
-      arrivalDate = jpa.arrivalDate,
-      departureDate = jpa.departureDate,
-      bed = jpa.bed?.let { bedTransformer.transformJpaToApi(it) },
-    )
-  }
+  fun transformJpaToApi(jpa: BookingEntity, personSummaryInfo: PersonSummaryInfoResult): FutureBooking = FutureBooking(
+    id = jpa.id,
+    person = personTransformer.transformSummaryToPersonApi(personSummaryInfo),
+    arrivalDate = jpa.arrivalDate,
+    departureDate = jpa.departureDate,
+    bed = jpa.bed?.let { bedTransformer.transformJpaToApi(it) },
+  )
 }

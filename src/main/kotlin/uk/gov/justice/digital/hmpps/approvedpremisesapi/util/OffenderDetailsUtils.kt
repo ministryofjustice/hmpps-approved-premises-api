@@ -32,11 +32,9 @@ fun getNameFromPersonSummaryInfoResult(result: PersonSummaryInfoResult): String 
   }
 }
 
-fun <V> PersonSummaryInfoResult.tryGetDetails(value: (CaseSummary) -> V): V? {
-  return when (this) {
-    is PersonSummaryInfoResult.Success.Full -> value(this.summary)
-    else -> null
-  }
+fun <V> PersonSummaryInfoResult.tryGetDetails(value: (CaseSummary) -> V): V? = when (this) {
+  is PersonSummaryInfoResult.Success.Full -> value(this.summary)
+  else -> null
 }
 
 fun OffenderDetailSummary.asCaseSummary() = CaseSummary(

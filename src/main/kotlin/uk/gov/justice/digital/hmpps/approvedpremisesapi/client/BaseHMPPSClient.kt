@@ -30,23 +30,17 @@ abstract class BaseHMPPSClient(
 
   private val log = LoggerFactory.getLogger(this::class.java)
 
-  protected inline fun <reified ResponseType : Any> getRequest(noinline requestBuilderConfiguration: HMPPSRequestConfiguration.() -> Unit): ClientResult<ResponseType> =
-    request(HttpMethod.GET, requestBuilderConfiguration)
+  protected inline fun <reified ResponseType : Any> getRequest(noinline requestBuilderConfiguration: HMPPSRequestConfiguration.() -> Unit): ClientResult<ResponseType> = request(HttpMethod.GET, requestBuilderConfiguration)
 
-  protected inline fun <reified ResponseType : Any> postRequest(noinline requestBuilderConfiguration: HMPPSRequestConfiguration.() -> Unit): ClientResult<ResponseType> =
-    request(HttpMethod.POST, requestBuilderConfiguration)
+  protected inline fun <reified ResponseType : Any> postRequest(noinline requestBuilderConfiguration: HMPPSRequestConfiguration.() -> Unit): ClientResult<ResponseType> = request(HttpMethod.POST, requestBuilderConfiguration)
 
-  protected inline fun <reified ResponseType : Any> putRequest(noinline requestBuilderConfiguration: HMPPSRequestConfiguration.() -> Unit): ClientResult<ResponseType> =
-    request(HttpMethod.PUT, requestBuilderConfiguration)
+  protected inline fun <reified ResponseType : Any> putRequest(noinline requestBuilderConfiguration: HMPPSRequestConfiguration.() -> Unit): ClientResult<ResponseType> = request(HttpMethod.PUT, requestBuilderConfiguration)
 
-  protected inline fun <reified ResponseType : Any> deleteRequest(noinline requestBuilderConfiguration: HMPPSRequestConfiguration.() -> Unit): ClientResult<ResponseType> =
-    request(HttpMethod.DELETE, requestBuilderConfiguration)
+  protected inline fun <reified ResponseType : Any> deleteRequest(noinline requestBuilderConfiguration: HMPPSRequestConfiguration.() -> Unit): ClientResult<ResponseType> = request(HttpMethod.DELETE, requestBuilderConfiguration)
 
-  protected inline fun <reified ResponseType : Any> patchRequest(noinline requestBuilderConfiguration: HMPPSRequestConfiguration.() -> Unit): ClientResult<ResponseType> =
-    request(HttpMethod.PATCH, requestBuilderConfiguration)
+  protected inline fun <reified ResponseType : Any> patchRequest(noinline requestBuilderConfiguration: HMPPSRequestConfiguration.() -> Unit): ClientResult<ResponseType> = request(HttpMethod.PATCH, requestBuilderConfiguration)
 
-  protected fun checkPreemptiveCacheStatus(cacheConfig: WebClientCache.PreemptiveCacheConfig, key: String): PreemptiveCacheEntryStatus =
-    webClientCache.checkPreemptiveCacheStatus(cacheConfig, key)
+  protected fun checkPreemptiveCacheStatus(cacheConfig: WebClientCache.PreemptiveCacheConfig, key: String): PreemptiveCacheEntryStatus = webClientCache.checkPreemptiveCacheStatus(cacheConfig, key)
 
   protected inline fun <reified ResponseType : Any> request(method: HttpMethod, noinline requestBuilderConfiguration: HMPPSRequestConfiguration.() -> Unit): ClientResult<ResponseType> {
     val typeReference = object : TypeReference<ResponseType>() {}
@@ -151,22 +145,17 @@ abstract class BaseHMPPSClient(
     }
   }
 
-  private fun isApplicableForRetry(throwable: Throwable): Boolean {
-    return when {
-      isTimeoutException(throwable) && webClientConfig.retryOnReadTimeout -> true
-      !isTimeoutException(throwable) && hasRetryableException(throwable) -> true
-      else -> false
-    }
+  private fun isApplicableForRetry(throwable: Throwable): Boolean = when {
+    isTimeoutException(throwable) && webClientConfig.retryOnReadTimeout -> true
+    !isTimeoutException(throwable) && hasRetryableException(throwable) -> true
+    else -> false
   }
 
-  private fun hasRetryableException(throwable: Throwable): Boolean {
-    return (throwable !is WebClientResponseException || RETRY_ERROR_CODES.contains(throwable.statusCode.value()))
-  }
+  private fun hasRetryableException(throwable: Throwable): Boolean = (throwable !is WebClientResponseException || RETRY_ERROR_CODES.contains(throwable.statusCode.value()))
 
   // Timeout for NO_RESPONSE is wrapped in a WebClientRequestException
-  private fun isTimeoutException(throwable: Throwable): Boolean =
-    isTypeInThrowableChain(throwable, ReadTimeoutException::class.java) ||
-      isTypeInThrowableChain(throwable, ConnectTimeoutException::class.java)
+  private fun isTimeoutException(throwable: Throwable): Boolean = isTypeInThrowableChain(throwable, ReadTimeoutException::class.java) ||
+    isTypeInThrowableChain(throwable, ConnectTimeoutException::class.java)
 
   private fun logRetrySignal(retrySignal: Retry.RetrySignal) {
     val exception = retrySignal.failure()?.cause ?: retrySignal.failure()
@@ -197,8 +186,7 @@ sealed interface ClientResult<ResponseType> {
   ) : ClientResult<ResponseType> {
     fun <TargetType> copyWithBody(body: TargetType) = Success(this.status, body, this.isPreemptivelyCachedResponse)
 
-    override fun <TargetType> map(transform: (ResponseType) -> TargetType): ClientResult<TargetType> =
-      Success(this.status, transform(body), this.isPreemptivelyCachedResponse)
+    override fun <TargetType> map(transform: (ResponseType) -> TargetType): ClientResult<TargetType> = Success(this.status, transform(body), this.isPreemptivelyCachedResponse)
   }
 
   sealed interface Failure<ResponseType> : ClientResult<ResponseType> {

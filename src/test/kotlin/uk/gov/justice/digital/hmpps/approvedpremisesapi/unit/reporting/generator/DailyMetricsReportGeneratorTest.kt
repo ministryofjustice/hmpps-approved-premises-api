@@ -176,54 +176,52 @@ class DailyMetricsReportGeneratorTest {
     }
   }
 
-  private fun createApplicationSubmittedEvents(user: UserEntity, date: LocalDate, count: Int) =
-    DomainEventEntityFactory()
-      .withOccurredAt(date.toLocalDateTime())
-      .withType(DomainEventType.APPROVED_PREMISES_APPLICATION_SUBMITTED)
-      .withData(
-        objectMapper.writeValueAsString(
-          ApplicationSubmittedEnvelope(
-            id = UUID.randomUUID(),
-            timestamp = date.toLocalDateTime().toInstant(),
-            eventType = EventType.applicationSubmitted,
-            eventDetails = ApplicationSubmittedFactory()
-              .withSubmittedByStaffMember(
-                StaffMemberFactory()
-                  .withStaffCode(
-                    user.deliusStaffCode,
-                  )
-                  .produce(),
-              )
-              .produce(),
-          ),
+  private fun createApplicationSubmittedEvents(user: UserEntity, date: LocalDate, count: Int) = DomainEventEntityFactory()
+    .withOccurredAt(date.toLocalDateTime())
+    .withType(DomainEventType.APPROVED_PREMISES_APPLICATION_SUBMITTED)
+    .withData(
+      objectMapper.writeValueAsString(
+        ApplicationSubmittedEnvelope(
+          id = UUID.randomUUID(),
+          timestamp = date.toLocalDateTime().toInstant(),
+          eventType = EventType.applicationSubmitted,
+          eventDetails = ApplicationSubmittedFactory()
+            .withSubmittedByStaffMember(
+              StaffMemberFactory()
+                .withStaffCode(
+                  user.deliusStaffCode,
+                )
+                .produce(),
+            )
+            .produce(),
         ),
-      ).produceMany().take(count).toList()
+      ),
+    ).produceMany().take(count).toList()
 
-  private fun createAssessmentCompletedEvents(user: UserEntity, date: LocalDate, count: Int) =
-    DomainEventEntityFactory()
-      .withOccurredAt(date.toLocalDateTime())
-      .withType(DomainEventType.APPROVED_PREMISES_APPLICATION_ASSESSED)
-      .withData(
-        objectMapper.writeValueAsString(
-          ApplicationAssessedEnvelope(
-            id = UUID.randomUUID(),
-            timestamp = date.toLocalDateTime().toInstant(),
-            eventType = EventType.applicationAssessed,
-            eventDetails = ApplicationAssessedFactory()
-              .withAssessedBy(
-                ApplicationAssessedAssessedByFactory()
-                  .withStaffMember(
-                    StaffMemberFactory()
-                      .withStaffCode(
-                        user.deliusStaffCode,
-                      ).produce(),
-                  ).produce(),
-              )
-              .withArrivalDate(date.toLocalDateTime().toInstant())
-              .produce(),
-          ),
+  private fun createAssessmentCompletedEvents(user: UserEntity, date: LocalDate, count: Int) = DomainEventEntityFactory()
+    .withOccurredAt(date.toLocalDateTime())
+    .withType(DomainEventType.APPROVED_PREMISES_APPLICATION_ASSESSED)
+    .withData(
+      objectMapper.writeValueAsString(
+        ApplicationAssessedEnvelope(
+          id = UUID.randomUUID(),
+          timestamp = date.toLocalDateTime().toInstant(),
+          eventType = EventType.applicationAssessed,
+          eventDetails = ApplicationAssessedFactory()
+            .withAssessedBy(
+              ApplicationAssessedAssessedByFactory()
+                .withStaffMember(
+                  StaffMemberFactory()
+                    .withStaffCode(
+                      user.deliusStaffCode,
+                    ).produce(),
+                ).produce(),
+            )
+            .withArrivalDate(date.toLocalDateTime().toInstant())
+            .produce(),
         ),
-      ).produceMany().take(count).toList()
+      ),
+    ).produceMany().take(count).toList()
 
   private fun createBookingMadeEvents(user: UserEntity, date: LocalDate, count: Int) = DomainEventEntityFactory()
     .withOccurredAt(date.toLocalDateTime())
@@ -249,9 +247,7 @@ class DailyMetricsReportGeneratorTest {
       ),
     ).produceMany().take(count).toList()
 
-  private fun <T> countEntitiesForDate(events: Map<LocalDate, Map<UserEntity, List<T>>>, date: LocalDate) =
-    events[date]?.flatMap { it.value }?.count() ?: 0
+  private fun <T> countEntitiesForDate(events: Map<LocalDate, Map<UserEntity, List<T>>>, date: LocalDate) = events[date]?.flatMap { it.value }?.count() ?: 0
 
-  private fun <T> countUniqueUsersForDate(events: Map<LocalDate, Map<UserEntity, List<T>>>, date: LocalDate) =
-    events[date]?.keys?.count() ?: 0
+  private fun <T> countUniqueUsersForDate(events: Map<LocalDate, Map<UserEntity, List<T>>>, date: LocalDate) = events[date]?.keys?.count() ?: 0
 }

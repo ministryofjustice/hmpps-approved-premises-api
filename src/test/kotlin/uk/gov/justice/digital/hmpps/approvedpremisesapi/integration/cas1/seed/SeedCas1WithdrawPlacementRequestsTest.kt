@@ -130,12 +130,11 @@ class SeedCas1WithdrawPlacementRequestsTest : SeedTestBase() {
     }
   }
 
-  private fun assertMatchRequestWithdrawnEmail(emailAddress: String, placementRequest: PlacementRequestEntity) =
-    emailAsserter.assertEmailRequested(
-      emailAddress,
-      notifyConfig.templates.matchRequestWithdrawnV2,
-      mapOf("startDate" to placementRequest.expectedArrival.toString()),
-    )
+  private fun assertMatchRequestWithdrawnEmail(emailAddress: String, placementRequest: PlacementRequestEntity) = emailAsserter.assertEmailRequested(
+    emailAddress,
+    notifyConfig.templates.matchRequestWithdrawnV2,
+    mapOf("startDate" to placementRequest.expectedArrival.toString()),
+  )
 
   private fun assertPlacementApplicationNotWithdrawn(placementApplication: PlacementApplicationEntity) {
     val updatedPlacementApplication = placementApplicationRepository.findByIdOrNull(placementApplication.id)!!
@@ -237,28 +236,27 @@ class SeedCas1WithdrawPlacementRequestsTest : SeedTestBase() {
   private fun createPlacementRequest(
     application: ApprovedPremisesApplicationEntity,
     configuration: (PlacementRequestEntityFactory.() -> Unit)? = null,
-  ) =
-    placementRequestFactory.produceAndPersist {
-      val assessment = application.assessments[0] as ApprovedPremisesAssessmentEntity
+  ) = placementRequestFactory.produceAndPersist {
+    val assessment = application.assessments[0] as ApprovedPremisesAssessmentEntity
 
-      val placementRequirements = placementRequirementsFactory.produceAndPersist {
-        withApplication(application)
-        withAssessment(assessment)
-        withPostcodeDistrict(postCodeDistrictFactory.produceAndPersist())
-        withDesirableCriteria(
-          characteristicEntityFactory.produceAndPersistMultiple(5),
-        )
-        withEssentialCriteria(
-          characteristicEntityFactory.produceAndPersistMultiple(3),
-        )
-      }
-
-      withAllocatedToUser(application.createdByUser)
+    val placementRequirements = placementRequirementsFactory.produceAndPersist {
       withApplication(application)
       withAssessment(assessment)
-      withPlacementRequirements(placementRequirements)
-      configuration?.invoke(this)
+      withPostcodeDistrict(postCodeDistrictFactory.produceAndPersist())
+      withDesirableCriteria(
+        characteristicEntityFactory.produceAndPersistMultiple(5),
+      )
+      withEssentialCriteria(
+        characteristicEntityFactory.produceAndPersistMultiple(3),
+      )
     }
+
+    withAllocatedToUser(application.createdByUser)
+    withApplication(application)
+    withAssessment(assessment)
+    withPlacementRequirements(placementRequirements)
+    configuration?.invoke(this)
+  }
 
   private fun rowsToCsv(rows: List<Cas1WithdrawPlacementRequestSeedSeedCsvRow>): String {
     val builder = CsvBuilder()

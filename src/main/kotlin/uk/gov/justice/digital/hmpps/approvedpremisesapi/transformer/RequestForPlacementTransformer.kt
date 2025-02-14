@@ -84,11 +84,9 @@ class RequestForPlacementTransformer(
     else -> RequestForPlacementStatus.requestUnsubmitted
   }
 
-  private fun PlacementRequestEntity.deriveStatus(): RequestForPlacementStatus {
-    return when {
-      this.isWithdrawn -> RequestForPlacementStatus.requestWithdrawn
-      this.hasActiveBooking() -> RequestForPlacementStatus.placementBooked
-      else -> RequestForPlacementStatus.awaitingMatch
-    }
+  private fun PlacementRequestEntity.deriveStatus(): RequestForPlacementStatus = when {
+    this.isWithdrawn -> RequestForPlacementStatus.requestWithdrawn
+    this.hasActiveBooking() -> RequestForPlacementStatus.placementBooked
+    else -> RequestForPlacementStatus.awaitingMatch
   }
 }

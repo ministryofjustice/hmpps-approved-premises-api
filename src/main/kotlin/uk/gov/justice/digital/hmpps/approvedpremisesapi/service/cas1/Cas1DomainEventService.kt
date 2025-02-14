@@ -129,165 +129,142 @@ class Cas1DomainEventService(
   }
 
   @Transactional
-  fun saveApplicationSubmittedDomainEvent(domainEvent: DomainEvent<ApplicationSubmittedEnvelope>) =
-    saveAndEmit(
-      domainEvent = domainEvent,
-      eventType = DomainEventType.APPROVED_PREMISES_APPLICATION_SUBMITTED,
-    )
+  fun saveApplicationSubmittedDomainEvent(domainEvent: DomainEvent<ApplicationSubmittedEnvelope>) = saveAndEmit(
+    domainEvent = domainEvent,
+    eventType = DomainEventType.APPROVED_PREMISES_APPLICATION_SUBMITTED,
+  )
 
   @Transactional
-  fun saveApplicationAssessedDomainEvent(domainEvent: DomainEvent<ApplicationAssessedEnvelope>) =
-    saveAndEmit(
-      domainEvent = domainEvent,
-      eventType = DomainEventType.APPROVED_PREMISES_APPLICATION_ASSESSED,
-    )
+  fun saveApplicationAssessedDomainEvent(domainEvent: DomainEvent<ApplicationAssessedEnvelope>) = saveAndEmit(
+    domainEvent = domainEvent,
+    eventType = DomainEventType.APPROVED_PREMISES_APPLICATION_ASSESSED,
+  )
 
   @Transactional
-  fun saveBookingMadeDomainEvent(domainEvent: DomainEvent<BookingMadeEnvelope>) =
-    saveAndEmit(
-      domainEvent = domainEvent,
-      eventType = DomainEventType.APPROVED_PREMISES_BOOKING_MADE,
-    )
+  fun saveBookingMadeDomainEvent(domainEvent: DomainEvent<BookingMadeEnvelope>) = saveAndEmit(
+    domainEvent = domainEvent,
+    eventType = DomainEventType.APPROVED_PREMISES_BOOKING_MADE,
+  )
 
   @Transactional
-  fun savePersonArrivedEvent(domainEvent: DomainEvent<PersonArrivedEnvelope>) =
-    saveAndEmit(
-      domainEvent = domainEvent,
-      eventType = DomainEventType.APPROVED_PREMISES_PERSON_ARRIVED,
-    )
+  fun savePersonArrivedEvent(domainEvent: DomainEvent<PersonArrivedEnvelope>) = saveAndEmit(
+    domainEvent = domainEvent,
+    eventType = DomainEventType.APPROVED_PREMISES_PERSON_ARRIVED,
+  )
 
   @Transactional
-  fun savePersonNotArrivedEvent(domainEvent: DomainEvent<PersonNotArrivedEnvelope>, emit: Boolean) =
-    saveAndEmit(
-      domainEvent = domainEvent,
-      eventType = DomainEventType.APPROVED_PREMISES_PERSON_NOT_ARRIVED,
-      emit = emit,
-    )
+  fun savePersonNotArrivedEvent(domainEvent: DomainEvent<PersonNotArrivedEnvelope>, emit: Boolean) = saveAndEmit(
+    domainEvent = domainEvent,
+    eventType = DomainEventType.APPROVED_PREMISES_PERSON_NOT_ARRIVED,
+    emit = emit,
+  )
 
   @Transactional
-  fun savePersonDepartedEvent(domainEvent: DomainEvent<PersonDepartedEnvelope>) =
-    saveAndEmit(
-      domainEvent = domainEvent,
-      eventType = DomainEventType.APPROVED_PREMISES_PERSON_DEPARTED,
-    )
+  fun savePersonDepartedEvent(domainEvent: DomainEvent<PersonDepartedEnvelope>) = saveAndEmit(
+    domainEvent = domainEvent,
+    eventType = DomainEventType.APPROVED_PREMISES_PERSON_DEPARTED,
+  )
 
   @Transactional
-  fun saveBookingNotMadeEvent(domainEvent: DomainEvent<BookingNotMadeEnvelope>) =
-    saveAndEmit(
-      domainEvent = domainEvent,
-      eventType = DomainEventType.APPROVED_PREMISES_BOOKING_NOT_MADE,
-    )
+  fun saveBookingNotMadeEvent(domainEvent: DomainEvent<BookingNotMadeEnvelope>) = saveAndEmit(
+    domainEvent = domainEvent,
+    eventType = DomainEventType.APPROVED_PREMISES_BOOKING_NOT_MADE,
+  )
 
   @Transactional
-  fun saveBookingCancelledEvent(domainEvent: DomainEvent<BookingCancelledEnvelope>) =
-    saveAndEmit(
-      domainEvent = domainEvent,
-      eventType = DomainEventType.APPROVED_PREMISES_BOOKING_CANCELLED,
-    )
+  fun saveBookingCancelledEvent(domainEvent: DomainEvent<BookingCancelledEnvelope>) = saveAndEmit(
+    domainEvent = domainEvent,
+    eventType = DomainEventType.APPROVED_PREMISES_BOOKING_CANCELLED,
+  )
 
   @Transactional
-  fun saveBookingChangedEvent(domainEvent: DomainEvent<BookingChangedEnvelope>) =
-    saveAndEmit(
-      domainEvent = domainEvent,
-      eventType = DomainEventType.APPROVED_PREMISES_BOOKING_CHANGED,
-    )
+  fun saveBookingChangedEvent(domainEvent: DomainEvent<BookingChangedEnvelope>) = saveAndEmit(
+    domainEvent = domainEvent,
+    eventType = DomainEventType.APPROVED_PREMISES_BOOKING_CHANGED,
+  )
 
   @Transactional
-  fun saveApplicationWithdrawnEvent(domainEvent: DomainEvent<ApplicationWithdrawnEnvelope>, emit: Boolean) =
-    saveAndEmit(
-      domainEvent = domainEvent,
-      eventType = DomainEventType.APPROVED_PREMISES_APPLICATION_WITHDRAWN,
-      emit = emit,
-    )
+  fun saveApplicationWithdrawnEvent(domainEvent: DomainEvent<ApplicationWithdrawnEnvelope>, emit: Boolean) = saveAndEmit(
+    domainEvent = domainEvent,
+    eventType = DomainEventType.APPROVED_PREMISES_APPLICATION_WITHDRAWN,
+    emit = emit,
+  )
 
   @Transactional
-  fun saveAssessmentAppealedEvent(domainEvent: DomainEvent<AssessmentAppealedEnvelope>) =
-    saveAndEmit(
-      domainEvent = domainEvent,
-      eventType = DomainEventType.APPROVED_PREMISES_ASSESSMENT_APPEALED,
-    )
+  fun saveAssessmentAppealedEvent(domainEvent: DomainEvent<AssessmentAppealedEnvelope>) = saveAndEmit(
+    domainEvent = domainEvent,
+    eventType = DomainEventType.APPROVED_PREMISES_ASSESSMENT_APPEALED,
+  )
 
   @Transactional
-  fun savePlacementApplicationWithdrawnEvent(domainEvent: DomainEvent<PlacementApplicationWithdrawnEnvelope>) =
-    saveAndEmit(
-      domainEvent = domainEvent,
-      eventType = DomainEventType.APPROVED_PREMISES_PLACEMENT_APPLICATION_WITHDRAWN,
-    )
+  fun savePlacementApplicationWithdrawnEvent(domainEvent: DomainEvent<PlacementApplicationWithdrawnEnvelope>) = saveAndEmit(
+    domainEvent = domainEvent,
+    eventType = DomainEventType.APPROVED_PREMISES_PLACEMENT_APPLICATION_WITHDRAWN,
+  )
 
   @Transactional
-  fun savePlacementApplicationAllocatedEvent(domainEvent: DomainEvent<PlacementApplicationAllocatedEnvelope>) =
-    saveAndEmit(
-      domainEvent = domainEvent,
-      eventType = DomainEventType.APPROVED_PREMISES_PLACEMENT_APPLICATION_ALLOCATED,
-    )
+  fun savePlacementApplicationAllocatedEvent(domainEvent: DomainEvent<PlacementApplicationAllocatedEnvelope>) = saveAndEmit(
+    domainEvent = domainEvent,
+    eventType = DomainEventType.APPROVED_PREMISES_PLACEMENT_APPLICATION_ALLOCATED,
+  )
 
   @Transactional
-  fun saveMatchRequestWithdrawnEvent(domainEvent: DomainEvent<MatchRequestWithdrawnEnvelope>) =
-    saveAndEmit(
-      domainEvent = domainEvent,
-      eventType = DomainEventType.APPROVED_PREMISES_MATCH_REQUEST_WITHDRAWN,
-    )
+  fun saveMatchRequestWithdrawnEvent(domainEvent: DomainEvent<MatchRequestWithdrawnEnvelope>) = saveAndEmit(
+    domainEvent = domainEvent,
+    eventType = DomainEventType.APPROVED_PREMISES_MATCH_REQUEST_WITHDRAWN,
+  )
 
   @Transactional
-  fun saveRequestForPlacementCreatedEvent(domainEvent: DomainEvent<RequestForPlacementCreatedEnvelope>, emit: Boolean) =
-    saveAndEmit(
-      domainEvent = domainEvent,
-      eventType = DomainEventType.APPROVED_PREMISES_REQUEST_FOR_PLACEMENT_CREATED,
-      emit = emit,
-    )
+  fun saveRequestForPlacementCreatedEvent(domainEvent: DomainEvent<RequestForPlacementCreatedEnvelope>, emit: Boolean) = saveAndEmit(
+    domainEvent = domainEvent,
+    eventType = DomainEventType.APPROVED_PREMISES_REQUEST_FOR_PLACEMENT_CREATED,
+    emit = emit,
+  )
 
   @Transactional
-  fun saveRequestForPlacementAssessedEvent(domainEvent: DomainEvent<RequestForPlacementAssessedEnvelope>) =
-    saveAndEmit(
-      domainEvent = domainEvent,
-      eventType = DomainEventType.APPROVED_PREMISES_REQUEST_FOR_PLACEMENT_ASSESSED,
-    )
+  fun saveRequestForPlacementAssessedEvent(domainEvent: DomainEvent<RequestForPlacementAssessedEnvelope>) = saveAndEmit(
+    domainEvent = domainEvent,
+    eventType = DomainEventType.APPROVED_PREMISES_REQUEST_FOR_PLACEMENT_ASSESSED,
+  )
 
   @Transactional
   fun saveApplicationExpiredEvent(
     domainEvent: DomainEvent<ApplicationExpiredEnvelope>,
     triggerSource: TriggerSourceType,
     emit: Boolean,
-  ) =
-    saveAndEmit(
-      domainEvent = domainEvent,
-      eventType = DomainEventType.APPROVED_PREMISES_APPLICATION_EXPIRED,
-      triggerSource = triggerSource,
-      emit = emit,
-    )
+  ) = saveAndEmit(
+    domainEvent = domainEvent,
+    eventType = DomainEventType.APPROVED_PREMISES_APPLICATION_EXPIRED,
+    triggerSource = triggerSource,
+    emit = emit,
+  )
 
   @Transactional
-  fun saveAssessmentAllocatedEvent(domainEvent: DomainEvent<AssessmentAllocatedEnvelope>, triggerSource: TriggerSourceType) =
-    saveAndEmit(
-      domainEvent = domainEvent,
-      eventType = DomainEventType.APPROVED_PREMISES_ASSESSMENT_ALLOCATED,
-      triggerSource = triggerSource,
-    )
+  fun saveAssessmentAllocatedEvent(domainEvent: DomainEvent<AssessmentAllocatedEnvelope>, triggerSource: TriggerSourceType) = saveAndEmit(
+    domainEvent = domainEvent,
+    eventType = DomainEventType.APPROVED_PREMISES_ASSESSMENT_ALLOCATED,
+    triggerSource = triggerSource,
+  )
 
   @Transactional
-  fun saveFurtherInformationRequestedEvent(domainEvent: DomainEvent<FurtherInformationRequestedEnvelope>, emit: Boolean = true) =
-    saveAndEmit(
-      domainEvent = domainEvent,
-      eventType = DomainEventType.APPROVED_PREMISES_ASSESSMENT_INFO_REQUESTED,
-      emit = emit,
-    )
+  fun saveFurtherInformationRequestedEvent(domainEvent: DomainEvent<FurtherInformationRequestedEnvelope>, emit: Boolean = true) = saveAndEmit(
+    domainEvent = domainEvent,
+    eventType = DomainEventType.APPROVED_PREMISES_ASSESSMENT_INFO_REQUESTED,
+    emit = emit,
+  )
 
   @Transactional
-  fun saveKeyWorkerAssignedEvent(domainEvent: DomainEvent<BookingKeyWorkerAssignedEnvelope>, emit: Boolean) =
-    saveAndEmit(
-      domainEvent = domainEvent,
-      eventType = DomainEventType.APPROVED_PREMISES_BOOKING_KEYWORKER_ASSIGNED,
-      emit = emit,
-    )
+  fun saveKeyWorkerAssignedEvent(domainEvent: DomainEvent<BookingKeyWorkerAssignedEnvelope>, emit: Boolean) = saveAndEmit(
+    domainEvent = domainEvent,
+    eventType = DomainEventType.APPROVED_PREMISES_BOOKING_KEYWORKER_ASSIGNED,
+    emit = emit,
+  )
 
-  fun getAllDomainEventsForApplication(applicationId: UUID) =
-    getAllDomainEventsById(applicationId = applicationId)
+  fun getAllDomainEventsForApplication(applicationId: UUID) = getAllDomainEventsById(applicationId = applicationId)
 
-  fun getAllDomainEventsForSpaceBooking(spaceBookingId: UUID) =
-    getAllDomainEventsById(spaceBookingId = spaceBookingId)
+  fun getAllDomainEventsForSpaceBooking(spaceBookingId: UUID) = getAllDomainEventsById(spaceBookingId = spaceBookingId)
 
-  private fun getAllDomainEventsById(applicationId: UUID? = null, spaceBookingId: UUID? = null) =
-    domainEventRepository.findAllTimelineEventsByIds(applicationId, spaceBookingId).distinctBy { it.id }
+  private fun getAllDomainEventsById(applicationId: UUID? = null, spaceBookingId: UUID? = null) = domainEventRepository.findAllTimelineEventsByIds(applicationId, spaceBookingId).distinctBy { it.id }
 
   @Transactional
   fun saveAndEmit(

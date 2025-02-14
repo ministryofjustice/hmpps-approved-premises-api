@@ -30,31 +30,28 @@ class UserTransformer(
   private val apAreaTransformer: ApAreaTransformer,
 ) {
 
-  fun transformJpaToAPIUserWithWorkload(jpa: UserEntity, userWorkload: UserWorkload): UserWithWorkload {
-    return UserWithWorkload(
-      id = jpa.id,
-      deliusUsername = jpa.deliusUsername,
-      email = jpa.email,
-      name = jpa.name,
-      telephoneNumber = jpa.telephoneNumber,
-      isActive = jpa.isActive,
-      region = probationRegionTransformer.transformJpaToApi(jpa.probationRegion),
-      service = ServiceName.approvedPremises.value,
-      numTasksPending = userWorkload.numTasksPending,
-      numTasksCompleted7Days = userWorkload.numTasksCompleted7Days,
-      numTasksCompleted30Days = userWorkload.numTasksCompleted30Days,
-      qualifications = jpa.qualifications.distinctBy { it.qualification }.map(::transformQualificationToApi),
-      roles = jpa.roles.distinctBy { it.role }.mapNotNull(::transformApprovedPremisesRoleToApi),
-      apArea = jpa.apArea?.let { apAreaTransformer.transformJpaToApi(it) },
-      cruManagementArea = jpa.cruManagementArea?.toNamedId(),
-    )
-  }
+  fun transformJpaToAPIUserWithWorkload(jpa: UserEntity, userWorkload: UserWorkload): UserWithWorkload = UserWithWorkload(
+    id = jpa.id,
+    deliusUsername = jpa.deliusUsername,
+    email = jpa.email,
+    name = jpa.name,
+    telephoneNumber = jpa.telephoneNumber,
+    isActive = jpa.isActive,
+    region = probationRegionTransformer.transformJpaToApi(jpa.probationRegion),
+    service = ServiceName.approvedPremises.value,
+    numTasksPending = userWorkload.numTasksPending,
+    numTasksCompleted7Days = userWorkload.numTasksCompleted7Days,
+    numTasksCompleted30Days = userWorkload.numTasksCompleted30Days,
+    qualifications = jpa.qualifications.distinctBy { it.qualification }.map(::transformQualificationToApi),
+    roles = jpa.roles.distinctBy { it.role }.mapNotNull(::transformApprovedPremisesRoleToApi),
+    apArea = jpa.apArea?.let { apAreaTransformer.transformJpaToApi(it) },
+    cruManagementArea = jpa.cruManagementArea?.toNamedId(),
+  )
 
-  fun transformJpaToSummaryApi(jpa: UserEntity) =
-    UserSummary(
-      id = jpa.id,
-      name = jpa.name,
-    )
+  fun transformJpaToSummaryApi(jpa: UserEntity) = UserSummary(
+    id = jpa.id,
+    name = jpa.name,
+  )
 
   @Suppress("TooGenericExceptionThrown")
   fun transformJpaToApi(jpa: UserEntity, serviceName: ServiceName) = when (serviceName) {
@@ -102,18 +99,15 @@ class UserTransformer(
 
   fun Cas1CruManagementAreaEntity.toNamedId() = NamedId(id, name)
 
-  fun transformProfileResponseToApi(userName: String, userResponse: UserService.GetUserResponse, xServiceName: ServiceName): ProfileResponse {
-    return when (userResponse) {
-      UserService.GetUserResponse.StaffRecordNotFound -> ProfileResponse(userName, ProfileResponse.LoadError.staffRecordNotFound)
-      is UserService.GetUserResponse.Success -> ProfileResponse(userName, user = transformJpaToApi(userResponse.user, xServiceName))
-    }
+  fun transformProfileResponseToApi(userName: String, userResponse: UserService.GetUserResponse, xServiceName: ServiceName): ProfileResponse = when (userResponse) {
+    UserService.GetUserResponse.StaffRecordNotFound -> ProfileResponse(userName, ProfileResponse.LoadError.staffRecordNotFound)
+    is UserService.GetUserResponse.Success -> ProfileResponse(userName, user = transformJpaToApi(userResponse.user, xServiceName))
   }
 
-  private fun transformApprovedPremisesRoleToApi(userRole: UserRoleAssignmentEntity): ApprovedPremisesUserRole? =
-    when (userRole.role.service) {
-      ServiceName.approvedPremises -> userRole.role.cas1ApiValue!!
-      else -> null
-    }
+  private fun transformApprovedPremisesRoleToApi(userRole: UserRoleAssignmentEntity): ApprovedPremisesUserRole? = when (userRole.role.service) {
+    ServiceName.approvedPremises -> userRole.role.cas1ApiValue!!
+    else -> null
+  }
 
   private fun transformTemporaryAccommodationRoleToApi(userRole: UserRoleAssignmentEntity): TemporaryAccommodationUserRole? = when (userRole.role) {
     UserRole.CAS3_ASSESSOR -> TemporaryAccommodationUserRole.assessor
@@ -132,39 +126,37 @@ class UserTransformer(
   }
 
   @SuppressWarnings("CyclomaticComplexMethod")
-  private fun transformApprovedPremisesRoleToPermissionApi(userRole: UserRoleAssignmentEntity): List<ApiUserPermission> {
-    return userRole.role.permissions.map {
-      when (it) {
-        UserPermission.CAS1_ADHOC_BOOKING_CREATE -> ApiUserPermission.adhocBookingCreate
-        UserPermission.CAS1_ASSESS_APPEALED_APPLICATION -> ApiUserPermission.assessAppealedApplication
-        UserPermission.CAS1_ASSESS_APPLICATION -> ApiUserPermission.assessApplication
-        UserPermission.CAS1_ASSESS_PLACEMENT_APPLICATION -> ApiUserPermission.assessPlacementApplication
-        UserPermission.CAS1_ASSESS_PLACEMENT_REQUEST -> ApiUserPermission.assessPlacementRequest
-        UserPermission.CAS1_BOOKING_CREATE -> ApiUserPermission.bookingCreate
-        UserPermission.CAS1_BOOKING_CHANGE_DATES -> ApiUserPermission.bookingChangeDates
-        UserPermission.CAS1_BOOKING_WITHDRAW -> ApiUserPermission.bookingWithdraw
-        UserPermission.CAS1_OUT_OF_SERVICE_BED_CREATE -> ApiUserPermission.outOfServiceBedCreate
-        UserPermission.CAS1_PROCESS_AN_APPEAL -> ApiUserPermission.processAnAppeal
-        UserPermission.CAS1_USER_LIST -> ApiUserPermission.userList
-        UserPermission.CAS1_USER_MANAGEMENT -> ApiUserPermission.userManagement
-        UserPermission.CAS1_VIEW_ASSIGNED_ASSESSMENTS -> ApiUserPermission.viewAssignedAssessments
-        UserPermission.CAS1_VIEW_CRU_DASHBOARD -> ApiUserPermission.viewCruDashboard
-        UserPermission.CAS1_VIEW_MANAGE_TASKS -> ApiUserPermission.viewManageTasks
-        UserPermission.CAS1_VIEW_OUT_OF_SERVICE_BEDS -> ApiUserPermission.viewOutOfServiceBeds
-        UserPermission.CAS1_SPACE_BOOKING_CREATE -> ApiUserPermission.spaceBookingCreate
-        UserPermission.CAS1_SPACE_BOOKING_LIST -> ApiUserPermission.spaceBookingList
-        UserPermission.CAS1_SPACE_BOOKING_RECORD_ARRIVAL -> ApiUserPermission.spaceBookingRecordArrival
-        UserPermission.CAS1_SPACE_BOOKING_RECORD_DEPARTURE -> ApiUserPermission.spaceBookingRecordDeparture
-        UserPermission.CAS1_SPACE_BOOKING_RECORD_NON_ARRIVAL -> ApiUserPermission.spaceBookingRecordNonArrival
-        UserPermission.CAS1_SPACE_BOOKING_RECORD_KEYWORKER -> ApiUserPermission.spaceBookingRecordKeyworker
-        UserPermission.CAS1_SPACE_BOOKING_VIEW -> ApiUserPermission.spaceBookingView
-        UserPermission.CAS1_SPACE_BOOKING_WITHDRAW -> ApiUserPermission.spaceBookingWithdraw
-        UserPermission.CAS1_PREMISES_VIEW -> ApiUserPermission.premisesView
-        UserPermission.CAS1_PREMISES_MANAGE -> ApiUserPermission.premisesManage
-        UserPermission.CAS1_APPLICATION_WITHDRAW_OTHERS -> ApiUserPermission.applicationWithdrawOthers
-        UserPermission.CAS1_REQUEST_FOR_PLACEMENT_WITHDRAW_OTHERS -> ApiUserPermission.requestForPlacementWithdrawOthers
-        UserPermission.CAS1_REPORTS_VIEW -> ApiUserPermission.reportsView
-      }
+  private fun transformApprovedPremisesRoleToPermissionApi(userRole: UserRoleAssignmentEntity): List<ApiUserPermission> = userRole.role.permissions.map {
+    when (it) {
+      UserPermission.CAS1_ADHOC_BOOKING_CREATE -> ApiUserPermission.adhocBookingCreate
+      UserPermission.CAS1_ASSESS_APPEALED_APPLICATION -> ApiUserPermission.assessAppealedApplication
+      UserPermission.CAS1_ASSESS_APPLICATION -> ApiUserPermission.assessApplication
+      UserPermission.CAS1_ASSESS_PLACEMENT_APPLICATION -> ApiUserPermission.assessPlacementApplication
+      UserPermission.CAS1_ASSESS_PLACEMENT_REQUEST -> ApiUserPermission.assessPlacementRequest
+      UserPermission.CAS1_BOOKING_CREATE -> ApiUserPermission.bookingCreate
+      UserPermission.CAS1_BOOKING_CHANGE_DATES -> ApiUserPermission.bookingChangeDates
+      UserPermission.CAS1_BOOKING_WITHDRAW -> ApiUserPermission.bookingWithdraw
+      UserPermission.CAS1_OUT_OF_SERVICE_BED_CREATE -> ApiUserPermission.outOfServiceBedCreate
+      UserPermission.CAS1_PROCESS_AN_APPEAL -> ApiUserPermission.processAnAppeal
+      UserPermission.CAS1_USER_LIST -> ApiUserPermission.userList
+      UserPermission.CAS1_USER_MANAGEMENT -> ApiUserPermission.userManagement
+      UserPermission.CAS1_VIEW_ASSIGNED_ASSESSMENTS -> ApiUserPermission.viewAssignedAssessments
+      UserPermission.CAS1_VIEW_CRU_DASHBOARD -> ApiUserPermission.viewCruDashboard
+      UserPermission.CAS1_VIEW_MANAGE_TASKS -> ApiUserPermission.viewManageTasks
+      UserPermission.CAS1_VIEW_OUT_OF_SERVICE_BEDS -> ApiUserPermission.viewOutOfServiceBeds
+      UserPermission.CAS1_SPACE_BOOKING_CREATE -> ApiUserPermission.spaceBookingCreate
+      UserPermission.CAS1_SPACE_BOOKING_LIST -> ApiUserPermission.spaceBookingList
+      UserPermission.CAS1_SPACE_BOOKING_RECORD_ARRIVAL -> ApiUserPermission.spaceBookingRecordArrival
+      UserPermission.CAS1_SPACE_BOOKING_RECORD_DEPARTURE -> ApiUserPermission.spaceBookingRecordDeparture
+      UserPermission.CAS1_SPACE_BOOKING_RECORD_NON_ARRIVAL -> ApiUserPermission.spaceBookingRecordNonArrival
+      UserPermission.CAS1_SPACE_BOOKING_RECORD_KEYWORKER -> ApiUserPermission.spaceBookingRecordKeyworker
+      UserPermission.CAS1_SPACE_BOOKING_VIEW -> ApiUserPermission.spaceBookingView
+      UserPermission.CAS1_SPACE_BOOKING_WITHDRAW -> ApiUserPermission.spaceBookingWithdraw
+      UserPermission.CAS1_PREMISES_VIEW -> ApiUserPermission.premisesView
+      UserPermission.CAS1_PREMISES_MANAGE -> ApiUserPermission.premisesManage
+      UserPermission.CAS1_APPLICATION_WITHDRAW_OTHERS -> ApiUserPermission.applicationWithdrawOthers
+      UserPermission.CAS1_REQUEST_FOR_PLACEMENT_WITHDRAW_OTHERS -> ApiUserPermission.requestForPlacementWithdrawOthers
+      UserPermission.CAS1_REPORTS_VIEW -> ApiUserPermission.reportsView
     }
   }
 }

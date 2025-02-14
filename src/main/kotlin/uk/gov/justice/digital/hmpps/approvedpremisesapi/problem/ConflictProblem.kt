@@ -5,7 +5,5 @@ import org.zalando.problem.Exceptional
 import org.zalando.problem.Status
 
 class ConflictProblem(id: Any, conflictReason: String) : AbstractThrowableProblem(null, "Conflict", Status.CONFLICT, "$conflictReason: $id") {
-  override fun getCause(): Exceptional? {
-    return null
-  }
+  override fun getCause(): Exceptional? = null
 }

@@ -117,42 +117,41 @@ class ApplicationService(
     }
   }
 
-  fun createApplication(crn: String, user: NomisUserEntity, jwt: String) =
-    validated<Cas2ApplicationEntity> {
-      val offenderDetailsResult = offenderService.getOffenderByCrn(crn)
+  fun createApplication(crn: String, user: NomisUserEntity, jwt: String) = validated<Cas2ApplicationEntity> {
+    val offenderDetailsResult = offenderService.getOffenderByCrn(crn)
 
-      val offenderDetails = when (offenderDetailsResult) {
-        is AuthorisableActionResult.NotFound -> return "$.crn" hasSingleValidationError "doesNotExist"
-        is AuthorisableActionResult.Unauthorised -> return "$.crn" hasSingleValidationError "userPermission"
-        is AuthorisableActionResult.Success -> offenderDetailsResult.entity
-      }
-
-      if (offenderDetails.otherIds.nomsNumber == null) {
-        throw RuntimeException("Cannot create an Application for an Offender without a NOMS number")
-      }
-
-      if (validationErrors.any()) {
-        return fieldValidationError
-      }
-
-      val createdApplication = applicationRepository.save(
-        Cas2ApplicationEntity(
-          id = UUID.randomUUID(),
-          crn = crn,
-          createdByUser = user,
-          data = null,
-          document = null,
-          schemaVersion = jsonSchemaService.getNewestSchema(Cas2ApplicationJsonSchemaEntity::class.java),
-          createdAt = OffsetDateTime.now(),
-          submittedAt = null,
-          schemaUpToDate = true,
-          nomsNumber = offenderDetails.otherIds.nomsNumber,
-          telephoneNumber = null,
-        ),
-      )
-
-      return success(createdApplication.apply { schemaUpToDate = true })
+    val offenderDetails = when (offenderDetailsResult) {
+      is AuthorisableActionResult.NotFound -> return "$.crn" hasSingleValidationError "doesNotExist"
+      is AuthorisableActionResult.Unauthorised -> return "$.crn" hasSingleValidationError "userPermission"
+      is AuthorisableActionResult.Success -> offenderDetailsResult.entity
     }
+
+    if (offenderDetails.otherIds.nomsNumber == null) {
+      throw RuntimeException("Cannot create an Application for an Offender without a NOMS number")
+    }
+
+    if (validationErrors.any()) {
+      return fieldValidationError
+    }
+
+    val createdApplication = applicationRepository.save(
+      Cas2ApplicationEntity(
+        id = UUID.randomUUID(),
+        crn = crn,
+        createdByUser = user,
+        data = null,
+        document = null,
+        schemaVersion = jsonSchemaService.getNewestSchema(Cas2ApplicationJsonSchemaEntity::class.java),
+        createdAt = OffsetDateTime.now(),
+        submittedAt = null,
+        schemaUpToDate = true,
+        nomsNumber = offenderDetails.otherIds.nomsNumber,
+        telephoneNumber = null,
+      ),
+    )
+
+    return success(createdApplication.apply { schemaUpToDate = true })
+  }
 
   @SuppressWarnings("ReturnCount")
   fun updateApplication(applicationId: UUID, data: String?, user: NomisUserEntity): AuthorisableActionResult<ValidatableActionResult<Cas2ApplicationEntity>> {

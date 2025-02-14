@@ -829,9 +829,7 @@ class Cas1SpaceBookingTest {
       assertThat(result.status).isEqualTo(expectedResultStatus)
     }
 
-    fun spaceBookingSummaryStatusCases(): Stream<Arguments> {
-      return Cas1SpaceBookingSummaryStatusTestHelper().spaceBookingSummaryStatusCases()
-    }
+    fun spaceBookingSummaryStatusCases(): Stream<Arguments> = Cas1SpaceBookingSummaryStatusTestHelper().spaceBookingSummaryStatusCases()
   }
 
   @Nested

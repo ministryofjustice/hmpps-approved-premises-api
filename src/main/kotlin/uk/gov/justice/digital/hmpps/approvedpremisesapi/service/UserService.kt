@@ -67,9 +67,7 @@ class UserService(
 
   fun findByIdOrNull(id: UUID) = userRepository.findByIdOrNull(id)
 
-  fun getUsersByPartialName(name: String): List<UserEntity> {
-    return userRepository.findByNameContainingIgnoreCase(name)
-  }
+  fun getUsersByPartialName(name: String): List<UserEntity> = userRepository.findByNameContainingIgnoreCase(name)
   fun getDeliusUserNameForRequest() = httpAuthService.getDeliusPrincipalOrThrow().name
 
   fun getUserForRequest(): UserEntity {
@@ -91,8 +89,7 @@ class UserService(
     return userResponse
   }
 
-  fun getDeliusUserNameForRequestOrNull(): String? =
-    httpAuthService.getDeliusPrincipalOrNull()?.name
+  fun getDeliusUserNameForRequestOrNull(): String? = httpAuthService.getDeliusPrincipalOrNull()?.name
 
   fun getUserForRequestOrNull(): UserEntity? {
     val username = getDeliusUserNameForRequestOrNull() ?: return null
@@ -403,10 +400,8 @@ class UserService(
     return GetUserResponse.Success(savedUser, createdOnGet = true)
   }
 
-  private fun findProbationRegionFromArea(code: String): ProbationRegionEntity? {
-    return probationAreaProbationRegionMappingRepository
-      .findByProbationAreaDeliusCode(code)?.probationRegion
-  }
+  private fun findProbationRegionFromArea(code: String): ProbationRegionEntity? = probationAreaProbationRegionMappingRepository
+    .findByProbationAreaDeliusCode(code)?.probationRegion
 
   private fun findDeliusUserLastPdu(staffDetail: StaffDetail): CasSimpleResult<ProbationDeliveryUnitEntity> {
     val activeTeamsNewestFirst = staffDetail.activeTeamsNewestFirst()

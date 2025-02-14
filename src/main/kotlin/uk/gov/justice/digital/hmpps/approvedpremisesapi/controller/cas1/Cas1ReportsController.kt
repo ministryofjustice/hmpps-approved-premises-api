@@ -117,6 +117,5 @@ class Cas1ReportsController(
     }
   }
 
-  private fun createCas1ReportName(name: String, year: Int, month: Int, contentType: ContentType) =
-    "$name-$year-${month.toString().padStart(2, '0')}-${LocalDateTime.now().format(TIMESTAMP_FORMAT)}.${contentType.extension}"
+  private fun createCas1ReportName(name: String, year: Int, month: Int, contentType: ContentType) = "$name-$year-${month.toString().padStart(2, '0')}-${LocalDateTime.now().format(TIMESTAMP_FORMAT)}.${contentType.extension}"
 }

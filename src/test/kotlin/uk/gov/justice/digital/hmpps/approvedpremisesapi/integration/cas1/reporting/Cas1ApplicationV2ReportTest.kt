@@ -1079,14 +1079,12 @@ class Cas1ApplicationV2ReportTest : InitialiseDatabasePerClassTestBase() {
 
   private fun getLatestAssessment(applicationId: UUID) = getApplication(applicationId).getLatestAssessment()!!
 
-  private fun getApplication(applicationId: UUID) =
-    realApplicationRepository.findByIdOrNull(applicationId)!! as ApprovedPremisesApplicationEntity
+  private fun getApplication(applicationId: UUID) = realApplicationRepository.findByIdOrNull(applicationId)!! as ApprovedPremisesApplicationEntity
 
-  private fun getReportUrl(year: Int, month: Int, includePii: Boolean?) =
-    "/cas1/reports/applicationsV2?year=$year&month=$month" +
-      if (includePii != null) {
-        "&includePii=$includePii"
-      } else {
-        ""
-      }
+  private fun getReportUrl(year: Int, month: Int, includePii: Boolean?) = "/cas1/reports/applicationsV2?year=$year&month=$month" +
+    if (includePii != null) {
+      "&includePii=$includePii"
+    } else {
+      ""
+    }
 }

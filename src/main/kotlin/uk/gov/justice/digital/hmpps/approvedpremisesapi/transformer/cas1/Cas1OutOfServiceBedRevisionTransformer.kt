@@ -31,25 +31,18 @@ class Cas1OutOfServiceBedRevisionTransformer(
     )
   }
 
-  private fun Cas1OutOfServiceBedRevisionEntity.deriveRevisionType(): List<uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1OutOfServiceBedRevisionType> {
-    return when (this.revisionType) {
-      DomainRevisionType.INITIAL -> listOf(ApiRevisionType.created)
-      else -> Cas1OutOfServiceBedRevisionChangeType.unpack(this.changeTypePacked).map { it.apiValue }
-    }
+  private fun Cas1OutOfServiceBedRevisionEntity.deriveRevisionType(): List<uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1OutOfServiceBedRevisionType> = when (this.revisionType) {
+    DomainRevisionType.INITIAL -> listOf(ApiRevisionType.created)
+    else -> Cas1OutOfServiceBedRevisionChangeType.unpack(this.changeTypePacked).map { it.apiValue }
   }
 
-  private fun shouldDisplayOutOfServiceFrom(revisionType: List<uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1OutOfServiceBedRevisionType>): Boolean =
-    revisionType.containsAny(ApiRevisionType.created, ApiRevisionType.updatedStartDate)
+  private fun shouldDisplayOutOfServiceFrom(revisionType: List<uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1OutOfServiceBedRevisionType>): Boolean = revisionType.containsAny(ApiRevisionType.created, ApiRevisionType.updatedStartDate)
 
-  private fun shouldDisplayOutOfServiceTo(revisionType: List<uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1OutOfServiceBedRevisionType>): Boolean =
-    revisionType.containsAny(ApiRevisionType.created, ApiRevisionType.updatedEndDate)
+  private fun shouldDisplayOutOfServiceTo(revisionType: List<uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1OutOfServiceBedRevisionType>): Boolean = revisionType.containsAny(ApiRevisionType.created, ApiRevisionType.updatedEndDate)
 
-  private fun shouldDisplayReason(revisionType: List<uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1OutOfServiceBedRevisionType>): Boolean =
-    revisionType.containsAny(ApiRevisionType.created, ApiRevisionType.updatedReason)
+  private fun shouldDisplayReason(revisionType: List<uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1OutOfServiceBedRevisionType>): Boolean = revisionType.containsAny(ApiRevisionType.created, ApiRevisionType.updatedReason)
 
-  private fun shouldDisplayReferenceNumber(revisionType: List<uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1OutOfServiceBedRevisionType>): Boolean =
-    revisionType.containsAny(ApiRevisionType.created, ApiRevisionType.updatedReferenceNumber)
+  private fun shouldDisplayReferenceNumber(revisionType: List<uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1OutOfServiceBedRevisionType>): Boolean = revisionType.containsAny(ApiRevisionType.created, ApiRevisionType.updatedReferenceNumber)
 
-  private fun shouldDisplayNotes(revisionType: List<uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1OutOfServiceBedRevisionType>): Boolean =
-    revisionType.containsAny(ApiRevisionType.created, ApiRevisionType.updatedNotes)
+  private fun shouldDisplayNotes(revisionType: List<uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1OutOfServiceBedRevisionType>): Boolean = revisionType.containsAny(ApiRevisionType.created, ApiRevisionType.updatedNotes)
 }

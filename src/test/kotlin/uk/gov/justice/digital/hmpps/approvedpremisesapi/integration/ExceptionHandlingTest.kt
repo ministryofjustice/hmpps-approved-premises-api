@@ -327,41 +327,27 @@ class ExceptionHandlingTest : InitialiseDatabasePerClassTestBase() {
 @RestController
 class ExceptionHandlingTestController {
   @PostMapping(path = ["deserialization-test/object"], consumes = ["application/json"])
-  fun testDeserialization(@RequestBody body: DeserializationTestBody): ResponseEntity<Unit> {
-    return ResponseEntity.ok(Unit)
-  }
+  fun testDeserialization(@RequestBody body: DeserializationTestBody): ResponseEntity<Unit> = ResponseEntity.ok(Unit)
 
   @PostMapping(path = ["deserialization-test/array"], consumes = ["application/json"])
-  fun testDeserialization(@RequestBody body: List<DeserializationTestBody>): ResponseEntity<Unit> {
-    return ResponseEntity.ok(Unit)
-  }
+  fun testDeserialization(@RequestBody body: List<DeserializationTestBody>): ResponseEntity<Unit> = ResponseEntity.ok(Unit)
 
   @PostMapping(path = ["deserialization-test/special-json-primitives"], consumes = ["application/json"])
-  fun testDeserialization(@RequestBody body: AllSpecialJSONPrimitives): ResponseEntity<Unit> {
-    return ResponseEntity.ok(Unit)
-  }
+  fun testDeserialization(@RequestBody body: AllSpecialJSONPrimitives): ResponseEntity<Unit> = ResponseEntity.ok(Unit)
 
   @GetMapping(path = ["deserialization-test/query-params"])
-  fun testQueryParams(@RequestParam(value = "requiredProperty", required = true) requiredProperty: Int): ResponseEntity<Unit> {
-    return ResponseEntity.ok(Unit)
-  }
+  fun testQueryParams(@RequestParam(value = "requiredProperty", required = true) requiredProperty: Int): ResponseEntity<Unit> = ResponseEntity.ok(Unit)
 
   @GetMapping(path = ["unhandled-exception"])
-  fun unhandledException(): ResponseEntity<Unit> {
-    throw RuntimeException("I am an unhandled exception")
-  }
+  fun unhandledException(): ResponseEntity<Unit> = throw RuntimeException("I am an unhandled exception")
 
   @GetMapping(path = ["jdbc-connection-exception"])
-  fun jdbcConnectionException(): ResponseEntity<Unit> {
-    throw JDBCConnectionException("Oh dear", SQLException(""))
-  }
+  fun jdbcConnectionException(): ResponseEntity<Unit> = throw JDBCConnectionException("Oh dear", SQLException(""))
 
   @GetMapping(path = ["jdbc-connection-exception-in-cause"])
-  fun jdbcConnectionExceptionInCause(): ResponseEntity<Unit> {
-    throw RuntimeException(
-      JDBCConnectionException("Oh dear", SQLException("")),
-    )
-  }
+  fun jdbcConnectionExceptionInCause(): ResponseEntity<Unit> = throw RuntimeException(
+    JDBCConnectionException("Oh dear", SQLException("")),
+  )
 }
 
 data class DeserializationTestBody(

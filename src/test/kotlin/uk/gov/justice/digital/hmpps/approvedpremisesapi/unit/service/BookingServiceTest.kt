@@ -118,29 +118,27 @@ class BookingServiceTest {
   private val mockCas1ApplicationStatusService = mockk<Cas1ApplicationStatusService>()
   private val mockCas1BookingDomainEventService = mockk<Cas1BookingDomainEventService>()
 
-  fun createBookingService(): BookingService {
-    return BookingService(
-      premisesService = mockPremisesService,
-      offenderService = mockOffenderService,
-      workingDayService = mockWorkingDayService,
-      bookingRepository = mockBookingRepository,
-      arrivalRepository = mockArrivalRepository,
-      cancellationRepository = mockCancellationRepository,
-      confirmationRepository = mockConfirmationRepository,
-      dateChangeRepository = mockDateChangeRepository,
-      cancellationReasonRepository = mockCancellationReasonRepository,
-      bedRepository = mockBedRepository,
-      placementRequestRepository = mockPlacementRequestRepository,
-      cas3VoidBedspacesRepository = mockCas3LostBedsRepository,
-      premisesRepository = mockPremisesRepository,
-      userService = mockUserService,
-      userAccessService = mockUserAccessService,
-      cas1BookingEmailService = mockCas1BookingEmailService,
-      deliusService = mockDeliusService,
-      cas1BookingDomainEventService = mockCas1BookingDomainEventService,
-      cas1ApplicationStatusService = mockCas1ApplicationStatusService,
-    )
-  }
+  fun createBookingService(): BookingService = BookingService(
+    premisesService = mockPremisesService,
+    offenderService = mockOffenderService,
+    workingDayService = mockWorkingDayService,
+    bookingRepository = mockBookingRepository,
+    arrivalRepository = mockArrivalRepository,
+    cancellationRepository = mockCancellationRepository,
+    confirmationRepository = mockConfirmationRepository,
+    dateChangeRepository = mockDateChangeRepository,
+    cancellationReasonRepository = mockCancellationReasonRepository,
+    bedRepository = mockBedRepository,
+    placementRequestRepository = mockPlacementRequestRepository,
+    cas3VoidBedspacesRepository = mockCas3LostBedsRepository,
+    premisesRepository = mockPremisesRepository,
+    userService = mockUserService,
+    userAccessService = mockUserAccessService,
+    cas1BookingEmailService = mockCas1BookingEmailService,
+    deliusService = mockDeliusService,
+    cas1BookingDomainEventService = mockCas1BookingDomainEventService,
+    cas1ApplicationStatusService = mockCas1ApplicationStatusService,
+  )
 
   private val bookingService = createBookingService()
 
@@ -966,21 +964,20 @@ class BookingServiceTest {
     }
   }
 
-  private fun createApprovedPremisesAccommodationBooking(application: ApprovedPremisesApplicationEntity?) =
-    BookingEntityFactory()
-      .withYieldedPremises {
-        ApprovedPremisesEntityFactory()
-          .withYieldedProbationRegion {
-            ProbationRegionEntityFactory()
-              .withYieldedApArea { ApAreaEntityFactory().produce() }
-              .produce()
-          }
-          .withService(ServiceName.approvedPremises.value)
-          .withYieldedLocalAuthorityArea { LocalAuthorityEntityFactory().produce() }
-          .produce()
-      }
-      .withApplication(application.let { application })
-      .produce()
+  private fun createApprovedPremisesAccommodationBooking(application: ApprovedPremisesApplicationEntity?) = BookingEntityFactory()
+    .withYieldedPremises {
+      ApprovedPremisesEntityFactory()
+        .withYieldedProbationRegion {
+          ProbationRegionEntityFactory()
+            .withYieldedApArea { ApAreaEntityFactory().produce() }
+            .produce()
+        }
+        .withService(ServiceName.approvedPremises.value)
+        .withYieldedLocalAuthorityArea { LocalAuthorityEntityFactory().produce() }
+        .produce()
+    }
+    .withApplication(application.let { application })
+    .produce()
 
   @Nested
   inner class CreateApprovedPremisesBookingFromPlacementRequest {
@@ -2046,7 +2043,8 @@ class BookingServiceTest {
       every { mockBookingRepository.findByBedIdAndArrivingBeforeDate(temporaryAccommodationBed.id, LocalDate.parse("2023-07-14"), booking.id) } returns emptyList()
       every {
         mockCas3LostBedsRepository.findByBedspaceIdAndOverlappingDate(
-          temporaryAccommodationBed.id, LocalDate.parse("2023-07-12"),
+          temporaryAccommodationBed.id,
+          LocalDate.parse("2023-07-12"),
           LocalDate.parse("2023-07-14"),
           null,
         )

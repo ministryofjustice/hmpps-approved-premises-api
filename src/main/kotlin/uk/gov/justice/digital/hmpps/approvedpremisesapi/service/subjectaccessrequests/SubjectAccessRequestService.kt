@@ -143,17 +143,16 @@ class SubjectAccessRequestService(
     crn: String?,
     fromDate: LocalDate?,
     toDate: LocalDate?,
-  ): HmppsSubjectAccessRequestContent? =
-    HmppsSubjectAccessRequestContent(
-      content = JSONObject(
-        getSarResult(
-          crn,
-          prn,
-          fromDate?.atStartOfDay(),
-          toDate?.atTime(LocalTime.MAX),
-        ),
-      ).toMap().entries,
-    )
+  ): HmppsSubjectAccessRequestContent? = HmppsSubjectAccessRequestContent(
+    content = JSONObject(
+      getSarResult(
+        crn,
+        prn,
+        fromDate?.atStartOfDay(),
+        toDate?.atTime(LocalTime.MAX),
+      ),
+    ).toMap().entries,
+  )
   private fun Logger.logDebugMessage(service: String, result: String) {
     if (this.isDebugEnabled) {
       val prettyPrintJson = objectMapper.writerWithDefaultPrettyPrinter().writeValueAsString(

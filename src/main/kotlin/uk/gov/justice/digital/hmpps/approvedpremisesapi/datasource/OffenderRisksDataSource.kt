@@ -37,48 +37,45 @@ class OffenderRisksDataSource(
     )
   }
 
-  private fun getRoshRisksEnvelope(crn: String): RiskWithStatus<RoshRisks> {
-    return when (val roshRisksResponse = apOASysContextApiClient.getRoshRatings(crn)) {
-      is ClientResult.Success -> {
-        val summary = roshRisksResponse.body.rosh
+  private fun getRoshRisksEnvelope(crn: String): RiskWithStatus<RoshRisks> = when (val roshRisksResponse = apOASysContextApiClient.getRoshRatings(crn)) {
+    is ClientResult.Success -> {
+      val summary = roshRisksResponse.body.rosh
 
-        when (summary.anyRisksAreNull()) {
-          true -> RiskWithStatus(status = RiskStatus.NotFound)
-          false -> RiskWithStatus(
-            value = RoshRisks(
-              overallRisk = summary.determineOverallRiskLevel().text,
-              riskToChildren = summary.riskChildrenCommunity!!.text,
-              riskToPublic = summary.riskPublicCommunity!!.text,
-              riskToKnownAdult = summary.riskKnownAdultCommunity!!.text,
-              riskToStaff = summary.riskStaffCommunity!!.text,
-              lastUpdated = roshRisksResponse.body.dateCompleted?.toLocalDate()
-                ?: roshRisksResponse.body.initiationDate.toLocalDate(),
-            ),
-          )
-        }
+      when (summary.anyRisksAreNull()) {
+        true -> RiskWithStatus(status = RiskStatus.NotFound)
+        false -> RiskWithStatus(
+          value = RoshRisks(
+            overallRisk = summary.determineOverallRiskLevel().text,
+            riskToChildren = summary.riskChildrenCommunity!!.text,
+            riskToPublic = summary.riskPublicCommunity!!.text,
+            riskToKnownAdult = summary.riskKnownAdultCommunity!!.text,
+            riskToStaff = summary.riskStaffCommunity!!.text,
+            lastUpdated = roshRisksResponse.body.dateCompleted?.toLocalDate()
+              ?: roshRisksResponse.body.initiationDate.toLocalDate(),
+          ),
+        )
       }
-      is ClientResult.Failure.StatusCode -> when (roshRisksResponse.status) {
-        HttpStatus.NOT_FOUND -> RiskWithStatus(status = RiskStatus.NotFound)
-        else -> recordAndReturnError("getRoshRatings, crn: $crn", roshRisksResponse.toException())
-      }
-      is ClientResult.Failure -> recordAndReturnError("getRoshRatings, crn: $crn", roshRisksResponse.toException())
     }
+    is ClientResult.Failure.StatusCode -> when (roshRisksResponse.status) {
+      HttpStatus.NOT_FOUND -> RiskWithStatus(status = RiskStatus.NotFound)
+      else -> recordAndReturnError("getRoshRatings, crn: $crn", roshRisksResponse.toException())
+    }
+    is ClientResult.Failure -> recordAndReturnError("getRoshRatings, crn: $crn", roshRisksResponse.toException())
   }
 
-  private fun getRiskTierEnvelope(crn: String): RiskWithStatus<RiskTier> =
-    when (val tierResponse = hmppsTierApiClient.getTier(crn)) {
-      is ClientResult.Success -> RiskWithStatus(
-        value = RiskTier(
-          level = tierResponse.body.tierScore,
-          lastUpdated = tierResponse.body.calculationDate.toLocalDate(),
-        ),
-      )
-      is ClientResult.Failure.StatusCode -> when (tierResponse.status) {
-        HttpStatus.NOT_FOUND -> RiskWithStatus(status = RiskStatus.NotFound)
-        else -> recordAndReturnError("getTier, crn: $crn", tierResponse.toException())
-      }
-      is ClientResult.Failure -> recordAndReturnError("getTier, crn: $crn", tierResponse.toException())
+  private fun getRiskTierEnvelope(crn: String): RiskWithStatus<RiskTier> = when (val tierResponse = hmppsTierApiClient.getTier(crn)) {
+    is ClientResult.Success -> RiskWithStatus(
+      value = RiskTier(
+        level = tierResponse.body.tierScore,
+        lastUpdated = tierResponse.body.calculationDate.toLocalDate(),
+      ),
+    )
+    is ClientResult.Failure.StatusCode -> when (tierResponse.status) {
+      HttpStatus.NOT_FOUND -> RiskWithStatus(status = RiskStatus.NotFound)
+      else -> recordAndReturnError("getTier, crn: $crn", tierResponse.toException())
     }
+    is ClientResult.Failure -> recordAndReturnError("getTier, crn: $crn", tierResponse.toException())
+  }
 
   fun ClientResult<CaseDetail>.toMappa(): RiskWithStatus<Mappa> = when (this) {
     is ClientResult.Success -> this.body.toMappa()

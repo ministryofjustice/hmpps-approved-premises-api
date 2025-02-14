@@ -371,23 +371,17 @@ class Cas1ApplicationReportsTest : InitialiseDatabasePerClassTestBase() {
   }
 
   @SuppressWarnings("TooGenericExceptionThrown")
-  private fun getOffenderDetailForApplication(application: ApplicationEntity, deliusUsername: String): OffenderDetailSummary {
-    return when (val personInfo = realOffenderService.getPersonInfoResult(application.crn, deliusUsername, true)) {
-      is PersonInfoResult.Success.Full -> personInfo.offenderDetailSummary
-      else -> throw Exception("No offender found for CRN ${application.crn}")
-    }
+  private fun getOffenderDetailForApplication(application: ApplicationEntity, deliusUsername: String): OffenderDetailSummary = when (val personInfo = realOffenderService.getPersonInfoResult(application.crn, deliusUsername, true)) {
+    is PersonInfoResult.Success.Full -> personInfo.offenderDetailSummary
+    else -> throw Exception("No offender found for CRN ${application.crn}")
   }
 
-  private fun getCaseDetailForApplication(application: ApplicationEntity): CaseDetail {
-    return when (val caseDetailResult = apDeliusContextApiClient.getCaseDetail(application.crn)) {
-      is ClientResult.Success -> caseDetailResult.body
-      is ClientResult.Failure -> caseDetailResult.throwException()
-    }
+  private fun getCaseDetailForApplication(application: ApplicationEntity): CaseDetail = when (val caseDetailResult = apDeliusContextApiClient.getCaseDetail(application.crn)) {
+    is ClientResult.Success -> caseDetailResult.body
+    is ClientResult.Failure -> caseDetailResult.throwException()
   }
 
-  private fun createApplication(crn: String, withArrivalDate: Boolean = true, shortNotice: Boolean = false): ApprovedPremisesApplicationEntity {
-    return createAndSubmitApplication(ApType.normal, crn, withArrivalDate, shortNotice)
-  }
+  private fun createApplication(crn: String, withArrivalDate: Boolean = true, shortNotice: Boolean = false): ApprovedPremisesApplicationEntity = createAndSubmitApplication(ApType.normal, crn, withArrivalDate, shortNotice)
 
   private fun createApplicationWithCompletedAssessment(crn: String, withArrivalDate: Boolean = true): ApprovedPremisesApplicationEntity {
     val application = createAndSubmitApplication(ApType.normal, crn, withArrivalDate)

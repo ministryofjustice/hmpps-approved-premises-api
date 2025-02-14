@@ -1158,9 +1158,7 @@ class DomainEventDescriberTest {
     )
   }
 
-  private fun <T> buildDomainEvent(builder: (UUID) -> T): DomainEvent<T> {
-    return buildDomainEvent(builder, null)
-  }
+  private fun <T> buildDomainEvent(builder: (UUID) -> T): DomainEvent<T> = buildDomainEvent(builder, null)
 }
 
 data class DomainEventSummaryImpl(

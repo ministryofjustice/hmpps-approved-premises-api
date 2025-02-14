@@ -21,28 +21,23 @@ class DailyMetricsReportGenerator(
   }
 
   override val convert: LocalDate.(properties: Cas1ReportService.MonthSpecificReportParams) -> List<DailyMetricReportRow> = {
-    val applicationsCreatedToday = applications.filter {
-        application ->
+    val applicationsCreatedToday = applications.filter { application ->
       application.createdAt == this
     }
 
-    val domainEventsToday = domainEvents.filter {
-        domainEventEntity ->
+    val domainEventsToday = domainEvents.filter { domainEventEntity ->
       domainEventEntity.occurredAt.toLocalDate() == this
     }
 
-    val applicationsSubmittedToday = domainEventsToday.filter {
-        domainEventEntity ->
+    val applicationsSubmittedToday = domainEventsToday.filter { domainEventEntity ->
       domainEventEntity.type == DomainEventType.APPROVED_PREMISES_APPLICATION_SUBMITTED
     }.map { domainEventService.toDomainEvent(it, ApplicationSubmittedEnvelope::class) }
 
-    val assessmentsCompletedToday = domainEventsToday.filter {
-        domainEventEntity ->
+    val assessmentsCompletedToday = domainEventsToday.filter { domainEventEntity ->
       domainEventEntity.type == DomainEventType.APPROVED_PREMISES_APPLICATION_ASSESSED
     }.map { domainEventService.toDomainEvent(it, ApplicationAssessedEnvelope::class) }
 
-    val bookingsMadeToday = domainEventsToday.filter {
-        domainEventEntity ->
+    val bookingsMadeToday = domainEventsToday.filter { domainEventEntity ->
       domainEventEntity.type == DomainEventType.APPROVED_PREMISES_BOOKING_MADE
     }.map { domainEventService.toDomainEvent(it, BookingMadeEnvelope::class) }
 
