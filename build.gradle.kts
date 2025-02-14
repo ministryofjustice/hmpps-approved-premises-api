@@ -1,8 +1,8 @@
 import org.apache.commons.io.FileUtils
 
 plugins {
-  id("uk.gov.justice.hmpps.gradle-spring-boot") version "6.1.2"
-  kotlin("plugin.spring") version "2.0.21"
+  id("uk.gov.justice.hmpps.gradle-spring-boot") version "7.1.2"
+  kotlin("plugin.spring") version "2.1.10"
   id("org.openapi.generator") version "7.11.0"
   id("org.jetbrains.kotlin.plugin.jpa") version "1.9.22"
   id("io.gatling.gradle") version "3.13.1"
@@ -22,7 +22,7 @@ configurations.matching { it.name == "detekt" }.all {
 }
 
 dependencies {
-  implementation("uk.gov.justice.service.hmpps:hmpps-kotlin-spring-boot-starter:1.1.0")
+  implementation("uk.gov.justice.service.hmpps:hmpps-kotlin-spring-boot-starter:1.2.0")
   implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.7.3")
   implementation("org.springframework.boot:spring-boot-starter-webflux")
   implementation("org.springframework.boot:spring-boot-starter-data-jpa")
@@ -38,7 +38,7 @@ dependencies {
   implementation("org.postgresql:postgresql:42.7.4")
   implementation("org.javers:javers-core:7.7.0")
 
-  implementation("org.springdoc:springdoc-openapi-starter-webmvc-ui:2.7.0")
+  implementation("org.springdoc:springdoc-openapi-starter-webmvc-ui:2.8.4")
 
   implementation("org.zalando:problem-spring-web-starter:0.29.1")
 

@@ -1230,7 +1230,7 @@ class AssessmentTest : IntegrationTestBase() {
             withAddedAt(OffsetDateTime.now())
           }
 
-          val probationDeliveryUnits = probationDeliveryUnitRepository.findAll().take(4) as MutableList<ProbationDeliveryUnitEntity>
+          val probationDeliveryUnits = probationDeliveryUnitRepository.findAll().take(4) as MutableList<ProbationDeliveryUnitEntity?>
           probationDeliveryUnits.addLast(null)
 
           val assessments = offenders.mapIndexed { i, (offenderDetails, inmateDetails) ->
