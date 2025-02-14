@@ -96,8 +96,43 @@ paths:
             'application/problem+json':
               schema:
                 $ref: '#/components/schemas/ValidationError'
-
-
+  /premises/{premisesId}/future-bookings:
+    get:
+      tags:
+        - Operations on premises
+      summary: Returns all future bookings for a premises for a given statuses
+      operationId: getPremisesFutureBookings
+      parameters:
+        - name: premisesId
+          in: path
+          description: ID of the premises to get bookings for
+          required: true
+          schema:
+            type: string
+            format: uuid
+        - name: statuses
+          in: query
+          description: Only return bookings with these statuses
+          required: true
+          schema:
+            type: array
+            items:
+              $ref: '#/components/schemas/BookingStatus'
+      responses:
+        200:
+          description: successful operation
+          content:
+            'application/json':
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/FutureBooking'
+        401:
+          $ref: '#/components/responses/401Response'
+        403:
+          $ref: '#/components/responses/403Response'
+        500:
+          $ref: '#/components/responses/500Response'
 components:
   responses:
     401Response:
@@ -5086,3 +5121,24 @@ components:
         - isWheelchairAccessible
         - isWheelchairDesignated
         - arsonOffences
+    FutureBooking:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        person:
+          $ref: '#/components/schemas/Person'
+        arrivalDate:
+          type: string
+          format: date
+        departureDate:
+          type: string
+          format: date
+        bed:
+          $ref: '#/components/schemas/Bed'
+      required:
+        - id
+        - person
+        - arrivalDate
+        - departureDate

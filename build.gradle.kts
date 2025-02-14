@@ -339,6 +339,7 @@ tasks.register("openApiPreCompilation") {
       .replace("_shared.yml#/components", "#/components")
       .replace("cas1-schemas.yml#/components", "#/components")
       .replace("cas2v2-schemas.yml#/components", "#/components")
+      .replace("cas3-schemas.yml#/components", "#/components")
     FileUtils.writeStringToFile(file, updatedContents, "UTF-8")
   }
 
@@ -399,6 +400,7 @@ tasks.register("openApiPreCompilation") {
   buildSpecWithSharedComponentsAppended(
     outputFileName = "built-cas3-api-spec.yml",
     inputSpec = "cas3-api.yml",
+    inputSchemas = "cas3-schemas.yml",
   )
 }
 

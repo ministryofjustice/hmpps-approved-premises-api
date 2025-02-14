@@ -29,19 +29,21 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TemporaryAcco
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TurnaroundEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TurnaroundRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserEntity
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserQualification
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas3.Cas3VoidBedspacesRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.serviceScopeMatches
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PersonInfoResult
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PersonSummaryInfoResult
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.forCrn
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.validated
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.InternalServerErrorProblem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.AuthorisableActionResult
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.CasResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.ValidatableActionResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.AssessmentService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.OffenderService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.UserAccessService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.UserService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.WorkingDayService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas3LimitedAccessStrategy
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.extractEntityFromCasResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.toLocalDateTime
 import java.time.LocalDate
@@ -462,17 +464,50 @@ class Cas3BookingService(
       return AuthorisableActionResult.Unauthorised()
     }
 
-    val personInfo = offenderService.getPersonInfoResult(
-      booking.crn,
-      user.deliusUsername,
-      user.hasQualification(UserQualification.LAO),
-    )
+    val offenderSummaryInfo = offenderService.getPersonSummaryInfoResults(
+      crns = setOf(booking.crn),
+      limitedAccessStrategy = user.cas3LimitedAccessStrategy(),
+    ).first()
 
     return AuthorisableActionResult.Success(
       BookingAndPersons(
         booking,
-        personInfo,
+        offenderSummaryInfo,
       ),
+    )
+  }
+
+  fun findFutureBookingsForPremises(
+    premisesId: UUID,
+    statuses: List<BookingStatus>,
+    user: UserEntity,
+  ): CasResult<List<BookingAndPersons>> {
+    val premises = cas3PremisesService.getPremises(premisesId)
+      ?: return CasResult.NotFound("Premises", premisesId.toString())
+
+    if (!userAccessService.userCanManagePremisesBookings(user, premises)) {
+      return CasResult.Unauthorised()
+    }
+
+    val futureBookings = bookingRepository.findFutureBookingsByPremisesIdAndStatus(
+      ServiceName.temporaryAccommodation.value,
+      premisesId,
+      LocalDate.now(),
+      statuses,
+    )
+
+    val offenderSummaries = offenderService.getPersonSummaryInfoResults(
+      crns = futureBookings.map { it.crn }.toSet(),
+      limitedAccessStrategy = user.cas3LimitedAccessStrategy(),
+    )
+
+    return CasResult.Success(
+      futureBookings.map { booking ->
+        BookingAndPersons(
+          booking,
+          offenderSummaries.forCrn(booking.crn),
+        )
+      },
     )
   }
 
@@ -557,7 +592,7 @@ class Cas3BookingService(
 
   data class BookingAndPersons(
     val booking: BookingEntity,
-    val personInfo: PersonInfoResult,
+    val personInfo: PersonSummaryInfoResult,
   )
 }
 
