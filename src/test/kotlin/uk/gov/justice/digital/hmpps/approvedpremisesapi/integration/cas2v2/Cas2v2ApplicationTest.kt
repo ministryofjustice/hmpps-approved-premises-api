@@ -563,6 +563,44 @@ class Cas2v2ApplicationTest : Cas2v2IntegrationTestBase() {
       }
     }
 
+    @Test
+    fun `Court bail users do not need a prison code`() {
+      givenACas2v2PomUser { userEntity, _ ->
+        produceAndPersistBasicApplication("CRN", userEntity)
+
+        val jwt = jwtAuthHelper.createValidNomisAuthorisationCodeJwt(
+          "MY USERNAME",
+          listOf("ROLE_COURT_BAIL"),
+        )
+        webTestClient
+          .get()
+          .uri("/cas2v2/applications")
+          .header("Authorization", "Bearer $jwt")
+          .exchange()
+          .expectStatus()
+          .isOk
+      }
+    }
+
+    @Test
+    fun `Prison bail users do not need a prison code`() {
+      givenACas2v2PomUser { userEntity, _ ->
+        produceAndPersistBasicApplication("CRN", userEntity)
+
+        val jwt = jwtAuthHelper.createValidNomisAuthorisationCodeJwt(
+          "MY USERNAME",
+          listOf("ROLE_PRISON_BAIL"),
+        )
+        webTestClient
+          .get()
+          .uri("/cas2v2/applications")
+          .header("Authorization", "Bearer $jwt")
+          .exchange()
+          .expectStatus()
+          .isOk
+      }
+    }
+
     /**
      * Returns true if the list of application summaries is sorted by descending created_at
      * or false if not.
