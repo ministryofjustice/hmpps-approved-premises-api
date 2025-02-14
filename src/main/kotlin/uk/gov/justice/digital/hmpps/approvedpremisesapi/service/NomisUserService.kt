@@ -59,5 +59,8 @@ class NomisUserService(
     )
   }
 
-  private fun existingUserDetailsHaveChanged(existingUser: NomisUserEntity, nomisUserDetails: NomisUserDetail) = (existingUser.email != nomisUserDetails.primaryEmail || existingUser.activeCaseloadId != nomisUserDetails.activeCaseloadId)
+  private fun existingUserDetailsHaveChanged(existingUser: NomisUserEntity, nomisUserDetails: NomisUserDetail): Boolean = (
+    existingUser.email != nomisUserDetails.primaryEmail ||
+      existingUser.activeCaseloadId != nomisUserDetails.activeCaseloadId
+    )
 }

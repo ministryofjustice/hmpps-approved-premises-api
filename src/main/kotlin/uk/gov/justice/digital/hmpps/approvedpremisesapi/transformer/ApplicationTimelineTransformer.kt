@@ -42,7 +42,10 @@ class ApplicationTimelineTransformer(
     )
   }
 
-  private fun appealUrlOrNull(domainEventSummary: DomainEventSummary): TimelineEventAssociatedUrl? = if (domainEventSummary.type == DomainEventType.APPROVED_PREMISES_ASSESSMENT_APPEALED && domainEventSummary.appealId !== null) {
+  private fun appealUrlOrNull(domainEventSummary: DomainEventSummary): TimelineEventAssociatedUrl? = if (
+    domainEventSummary.type == DomainEventType.APPROVED_PREMISES_ASSESSMENT_APPEALED &&
+    domainEventSummary.appealId !== null
+  ) {
     TimelineEventAssociatedUrl(
       TimelineEventUrlType.assessmentAppeal,
       appealUrlTemplate.resolve(

@@ -15,7 +15,7 @@ performance:
 
 style:
   MaxLineLength:
-    maxLineLength: 200
+    maxLineLength: 220
   ReturnCount:
     max: 4
   WildcardImport:

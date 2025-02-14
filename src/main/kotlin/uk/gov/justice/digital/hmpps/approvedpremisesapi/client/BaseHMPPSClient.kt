@@ -30,15 +30,15 @@ abstract class BaseHMPPSClient(
 
   private val log = LoggerFactory.getLogger(this::class.java)
 
-  protected inline fun <reified ResponseType : Any> getRequest(noinline requestBuilderConfiguration: HMPPSRequestConfiguration.() -> Unit): ClientResult<ResponseType> = request(HttpMethod.GET, requestBuilderConfiguration)
+  protected inline fun <reified ResponseType : Any> getRequest(noinline requestBuilderConfig: HMPPSRequestConfiguration.() -> Unit): ClientResult<ResponseType> = request(HttpMethod.GET, requestBuilderConfig)
 
-  protected inline fun <reified ResponseType : Any> postRequest(noinline requestBuilderConfiguration: HMPPSRequestConfiguration.() -> Unit): ClientResult<ResponseType> = request(HttpMethod.POST, requestBuilderConfiguration)
+  protected inline fun <reified ResponseType : Any> postRequest(noinline requestBuilderConfig: HMPPSRequestConfiguration.() -> Unit): ClientResult<ResponseType> = request(HttpMethod.POST, requestBuilderConfig)
 
-  protected inline fun <reified ResponseType : Any> putRequest(noinline requestBuilderConfiguration: HMPPSRequestConfiguration.() -> Unit): ClientResult<ResponseType> = request(HttpMethod.PUT, requestBuilderConfiguration)
+  protected inline fun <reified ResponseType : Any> putRequest(noinline requestBuilderConfig: HMPPSRequestConfiguration.() -> Unit): ClientResult<ResponseType> = request(HttpMethod.PUT, requestBuilderConfig)
 
-  protected inline fun <reified ResponseType : Any> deleteRequest(noinline requestBuilderConfiguration: HMPPSRequestConfiguration.() -> Unit): ClientResult<ResponseType> = request(HttpMethod.DELETE, requestBuilderConfiguration)
+  protected inline fun <reified ResponseType : Any> deleteRequest(noinline requestBuilderConfig: HMPPSRequestConfiguration.() -> Unit): ClientResult<ResponseType> = request(HttpMethod.DELETE, requestBuilderConfig)
 
-  protected inline fun <reified ResponseType : Any> patchRequest(noinline requestBuilderConfiguration: HMPPSRequestConfiguration.() -> Unit): ClientResult<ResponseType> = request(HttpMethod.PATCH, requestBuilderConfiguration)
+  protected inline fun <reified ResponseType : Any> patchRequest(noinline requestBuilderConfig: HMPPSRequestConfiguration.() -> Unit): ClientResult<ResponseType> = request(HttpMethod.PATCH, requestBuilderConfig)
 
   protected fun checkPreemptiveCacheStatus(cacheConfig: WebClientCache.PreemptiveCacheConfig, key: String): PreemptiveCacheEntryStatus = webClientCache.checkPreemptiveCacheStatus(cacheConfig, key)
 

@@ -36,6 +36,7 @@ data class Cas2v2StatusUpdateDetailEntity(
 ) {
   override fun toString() = "Cas2v2StatusDetailEntity: $id"
 
-  fun statusDetail(statusId: UUID, detailId: UUID): Cas2PersistedApplicationStatusDetail = Cas2PersistedApplicationStatusFinder().getById(statusId).statusDetails?.find { detail -> detail.id == detailId }
+  fun statusDetail(statusId: UUID, detailId: UUID): Cas2PersistedApplicationStatusDetail = Cas2PersistedApplicationStatusFinder().getById(statusId).statusDetails
+    ?.find { detail -> detail.id == detailId }
     ?: error("Status detail with id $detailId not found")
 }

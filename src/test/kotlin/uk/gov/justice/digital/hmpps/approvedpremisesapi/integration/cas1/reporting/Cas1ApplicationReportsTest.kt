@@ -66,7 +66,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PersonInfoResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.RiskStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.RiskTier
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.RiskWithStatus
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.community.OffenderDetailSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.deliuscontext.CaseDetail
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.deliuscontext.MappaDetail
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.deliuscontext.ProbationArea
@@ -371,7 +370,7 @@ class Cas1ApplicationReportsTest : InitialiseDatabasePerClassTestBase() {
   }
 
   @SuppressWarnings("TooGenericExceptionThrown")
-  private fun getOffenderDetailForApplication(application: ApplicationEntity, deliusUsername: String): OffenderDetailSummary = when (val personInfo = realOffenderService.getPersonInfoResult(application.crn, deliusUsername, true)) {
+  private fun getOffenderDetailForApplication(application: ApplicationEntity, deliusUsername: String) = when (val personInfo = realOffenderService.getPersonInfoResult(application.crn, deliusUsername, true)) {
     is PersonInfoResult.Success.Full -> personInfo.offenderDetailSummary
     else -> throw Exception("No offender found for CRN ${application.crn}")
   }
@@ -381,7 +380,7 @@ class Cas1ApplicationReportsTest : InitialiseDatabasePerClassTestBase() {
     is ClientResult.Failure -> caseDetailResult.throwException()
   }
 
-  private fun createApplication(crn: String, withArrivalDate: Boolean = true, shortNotice: Boolean = false): ApprovedPremisesApplicationEntity = createAndSubmitApplication(ApType.normal, crn, withArrivalDate, shortNotice)
+  private fun createApplication(crn: String, withArrivalDate: Boolean = true, shortNotice: Boolean = false) = createAndSubmitApplication(ApType.normal, crn, withArrivalDate, shortNotice)
 
   private fun createApplicationWithCompletedAssessment(crn: String, withArrivalDate: Boolean = true): ApprovedPremisesApplicationEntity {
     val application = createAndSubmitApplication(ApType.normal, crn, withArrivalDate)

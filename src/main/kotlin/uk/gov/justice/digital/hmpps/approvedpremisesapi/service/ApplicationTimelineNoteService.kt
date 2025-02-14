@@ -12,7 +12,9 @@ class ApplicationTimelineNoteService(
   private val applicationTimelineNoteRepository: ApplicationTimelineNoteRepository,
 ) {
 
-  fun getApplicationTimelineNotesByApplicationId(applicationId: UUID): List<ApplicationTimelineNoteEntity> = applicationTimelineNoteRepository.findApplicationTimelineNoteEntitiesByApplicationIdAndDeletedAtIsNull(applicationId)
+  fun getApplicationTimelineNotesByApplicationId(applicationId: UUID): List<ApplicationTimelineNoteEntity> = applicationTimelineNoteRepository.findApplicationTimelineNoteEntitiesByApplicationIdAndDeletedAtIsNull(
+    applicationId,
+  )
 
   fun saveApplicationTimelineNote(
     applicationId: UUID,

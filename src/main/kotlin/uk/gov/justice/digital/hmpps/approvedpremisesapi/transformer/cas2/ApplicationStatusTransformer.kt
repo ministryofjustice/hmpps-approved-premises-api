@@ -24,7 +24,9 @@ class ApplicationStatusTransformer {
     label = statusDetail.label,
   )
 
-  fun transformStatusDetailListToDetailItemList(statusDetailsList: List<Cas2PersistedApplicationStatusDetail>): List<Cas2StatusDetail> = statusDetailsList.map { status -> transformStatusDetailToStatusDetailItem(status) }
+  fun transformStatusDetailListToDetailItemList(statusDetailsList: List<Cas2PersistedApplicationStatusDetail>): List<Cas2StatusDetail> = statusDetailsList.map { status ->
+    transformStatusDetailToStatusDetailItem(status)
+  }
 
   fun transformStatusDetailToStatusDetailItem(statusDetail: Cas2PersistedApplicationStatusDetail): Cas2StatusDetail = Cas2StatusDetail(
     name = statusDetail.name,

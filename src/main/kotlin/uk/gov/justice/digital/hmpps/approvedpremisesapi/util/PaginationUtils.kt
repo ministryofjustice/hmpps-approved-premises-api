@@ -60,7 +60,13 @@ fun getPageable(sortBy: String, sortDirection: SortDirection?, page: Int?, pageS
   null
 }
 
-fun getPageableOrAllPages(sortBy: String, sortDirection: SortDirection?, page: Int?, pageSize: Int?, unsafe: Boolean = false): Pageable = getPageableOrAllPages(listOf(sortBy), sortDirection, page, pageSize, unsafe)
+fun getPageableOrAllPages(sortBy: String, sortDirection: SortDirection?, page: Int?, pageSize: Int?, unsafe: Boolean = false): Pageable = getPageableOrAllPages(
+  sortBy = listOf(sortBy),
+  sortDirection = sortDirection,
+  page = page,
+  pageSize = pageSize,
+  unsafe = unsafe,
+)
 
 fun getPageableOrAllPages(sortBy: List<String>, sortDirection: SortDirection?, page: Int?, pageSize: Int?, unsafe: Boolean = false): Pageable {
   val direction = sortDirection(sortDirection)

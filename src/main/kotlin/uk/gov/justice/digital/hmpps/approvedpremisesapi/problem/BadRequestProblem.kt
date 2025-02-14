@@ -5,7 +5,10 @@ import org.zalando.problem.AbstractThrowableProblem
 import org.zalando.problem.Exceptional
 import org.zalando.problem.Status
 
-class BadRequestProblem(@JsonIgnore val invalidParams: Map<String, String>? = null, @JsonIgnore val errorDetail: String? = null) : AbstractThrowableProblem(null, "Bad Request", Status.BAD_REQUEST, errorDetail ?: "There is a problem with your request") {
+class BadRequestProblem(
+  @JsonIgnore val invalidParams: Map<String, String>? = null,
+  @JsonIgnore val errorDetail: String? = null,
+) : AbstractThrowableProblem(null, "Bad Request", Status.BAD_REQUEST, errorDetail ?: "There is a problem with your request") {
   override fun getCause(): Exceptional? = null
 
   override val message: String

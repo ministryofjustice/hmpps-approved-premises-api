@@ -411,7 +411,9 @@ class BookingService(
     return success(confirmationEntity)
   }
 
-  private fun shouldCreateDomainEventForBooking(booking: BookingEntity, user: UserEntity?) = booking.service == ServiceName.approvedPremises.value && user != null && (booking.application != null || booking.offlineApplication?.eventNumber != null)
+  private fun shouldCreateDomainEventForBooking(booking: BookingEntity, user: UserEntity?): Boolean = booking.service == ServiceName.approvedPremises.value &&
+    user != null &&
+    (booking.application != null || booking.offlineApplication?.eventNumber != null)
 
   @SuppressWarnings("CyclomaticComplexMethod")
   @Transactional
