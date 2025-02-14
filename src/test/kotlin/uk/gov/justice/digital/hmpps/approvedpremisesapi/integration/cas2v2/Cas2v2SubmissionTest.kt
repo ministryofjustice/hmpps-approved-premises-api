@@ -101,7 +101,7 @@ class Cas2v2SubmissionTest(
       )
 
       webTestClient.post()
-        .uri("/cas2v2/submissions?applicationId=de6512fc-a225-4109-bdcd-86c6307a5237")
+        .uri("/cas2v2/submissions?applicationId=de6512fc-a225-4109-b2cd-86c6307a5237")
         .header("Authorization", "Bearer $jwt")
         .exchange()
         .expectStatus()
@@ -194,7 +194,7 @@ class Cas2v2SubmissionTest(
 
     @Test
     fun `Assessor can view ALL submitted cas2v2 applications`() {
-      givenACas2v2Assessor { _externalUserEntity, jwt ->
+      givenACas2v2Assessor { _, jwt ->
         givenACas2v2PomUser { user, _ ->
           givenAnOffender { offenderDetails, _ ->
             cas2v2ApplicationJsonSchemaRepository.deleteAll()
@@ -205,7 +205,7 @@ class Cas2v2SubmissionTest(
                 withId(UUID.randomUUID())
               }
 
-            val submittedCas2v2ApplicationentitySecond = cas2v2ApplicationEntityFactory
+            val submittedCas2v2ApplicationEntitySecond = cas2v2ApplicationEntityFactory
               .produceAndPersist {
                 withApplicationSchema(cas2v2ApplicationSchema)
                 withCreatedByUser(user)
@@ -215,7 +215,7 @@ class Cas2v2SubmissionTest(
                 withData("{}")
               }
 
-            val submittedCas2v2ApplicationentityFirst = cas2v2ApplicationEntityFactory
+            val submittedCas2v2ApplicationEntityFirst = cas2v2ApplicationEntityFactory
               .produceAndPersist {
                 withApplicationSchema(cas2v2ApplicationSchema)
                 withCreatedByUser(user)
@@ -225,7 +225,7 @@ class Cas2v2SubmissionTest(
                 withData("{}")
               }
 
-            val submittedCas2v2ApplicationentityThird = cas2v2ApplicationEntityFactory
+            val submittedCas2v2ApplicationEntityThird = cas2v2ApplicationEntityFactory
               .produceAndPersist {
                 withApplicationSchema(cas2v2ApplicationSchema)
                 withCreatedByUser(user)
@@ -268,19 +268,19 @@ class Cas2v2SubmissionTest(
 
             assertApplicationResponseMatchesExpected(
               responseBody[0],
-              submittedCas2v2ApplicationentityFirst,
+              submittedCas2v2ApplicationEntityFirst,
               offenderDetails,
             )
 
             assertApplicationResponseMatchesExpected(
               responseBody[1],
-              submittedCas2v2ApplicationentitySecond,
+              submittedCas2v2ApplicationEntitySecond,
               offenderDetails,
             )
 
             assertApplicationResponseMatchesExpected(
               responseBody[2],
-              submittedCas2v2ApplicationentityThird,
+              submittedCas2v2ApplicationEntityThird,
               offenderDetails,
             )
 
@@ -512,7 +512,7 @@ class Cas2v2SubmissionTest(
               user,
             )
 
-            val rawResponseBody = webTestClient.get()
+            webTestClient.get()
               .uri("/cas2v2/submissions/${applicationEntity.id}")
               .header("Authorization", "Bearer $jwt")
               .exchange()
@@ -528,7 +528,7 @@ class Cas2v2SubmissionTest(
       @Test
       fun `Admin can view single submitted application`() {
         givenACas2v2Assessor { assessor, _ ->
-          givenACas2Admin { admin, jwt ->
+          givenACas2Admin { _, jwt ->
             givenACas2v2PomUser { user, _ ->
               givenAnOffender { offenderDetails, _ ->
                 cas2v2ApplicationJsonSchemaRepository.deleteAll()
@@ -654,7 +654,7 @@ class Cas2v2SubmissionTest(
                 user,
               )
 
-              val rawResponseBody = webTestClient.get()
+              webTestClient.get()
                 .uri("/cas2v2/submissions/${applicationEntity.id}")
                 .header("Authorization", "Bearer $jwt")
                 .exchange()
