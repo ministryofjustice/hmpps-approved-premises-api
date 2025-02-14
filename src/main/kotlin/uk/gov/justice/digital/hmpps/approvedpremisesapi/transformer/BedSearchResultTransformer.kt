@@ -62,6 +62,7 @@ class BedSearchResultTransformer {
         roomId = it.roomId,
         sex = it.sex,
         assessmentId = it.assessmentId,
+        isSexualRisk = it.isSexualRisk,
       )
     },
   )

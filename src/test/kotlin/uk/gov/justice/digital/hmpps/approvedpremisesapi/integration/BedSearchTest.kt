@@ -4,6 +4,8 @@ import org.hamcrest.Matchers
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.params.ParameterizedTest
+import org.junit.jupiter.params.provider.ValueSource
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.BedSearchAttributes
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.BedSearchResultBedSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.BedSearchResultPremisesSummary
@@ -248,8 +250,9 @@ class BedSearchTest : IntegrationTestBase() {
       }
     }
 
-    @Test
-    fun `Searching for a Temporary Accommodation Bed returns results which include overlapping bookings for rooms in the same premises`() {
+    @ParameterizedTest
+    @ValueSource(booleans = [true, false])
+    fun `Searching for a Temporary Accommodation Bed returns results which include overlapping bookings for rooms in the same premises`(sexualRisk: Boolean) {
       val searchPdu = probationDeliveryUnitFactory.produceAndPersist {
         withProbationRegion(probationRegion)
       }
@@ -265,8 +268,8 @@ class BedSearchTest : IntegrationTestBase() {
           val applications = mutableListOf<TemporaryAccommodationApplicationEntity>()
           val assessments = mutableListOf<AssessmentEntity>()
 
-          offenders.mapIndexed { i, (offenderDetails, inmateDetails) ->
-            val (application, assessment) = createAssessment(user, offenderDetails.otherIds.crn)
+          offenders.mapIndexed { _, (offenderDetails, _) ->
+            val (application, assessment) = createAssessment(user, offenderDetails.otherIds.crn, sexualRisk = sexualRisk)
             applications += application
             assessments += assessment
           }
@@ -434,6 +437,7 @@ class BedSearchTest : IntegrationTestBase() {
                           bookingId = overlappingBookingSameRoom.id,
                           roomId = roomTwo.id,
                           assessmentId = fullPersonAssessment.id,
+                          isSexualRisk = sexualRisk,
                         ),
                         TemporaryAccommodationBedSearchResultOverlap(
                           name = "Limited Access Offender",
@@ -443,6 +447,7 @@ class BedSearchTest : IntegrationTestBase() {
                           bookingId = currentRestrictionOverlappingBooking.id,
                           roomId = roomThree.id,
                           assessmentId = currentRestrictionAssessment.id,
+                          isSexualRisk = sexualRisk,
                         ),
                         TemporaryAccommodationBedSearchResultOverlap(
                           name = "Limited Access Offender",
@@ -452,6 +457,7 @@ class BedSearchTest : IntegrationTestBase() {
                           bookingId = userExcludedOverlappingBooking.id,
                           roomId = roomFour.id,
                           assessmentId = userExcludedAssessment.id,
+                          isSexualRisk = sexualRisk,
                         ),
                       ),
                     ),
@@ -616,6 +622,7 @@ class BedSearchTest : IntegrationTestBase() {
                           bookingId = overlappingBookingForBedInPremisesOne.id,
                           roomId = roomInPremisesOne.id,
                           assessmentId = assessment.id,
+                          isSexualRisk = false,
                         ),
                       ),
                     ),
@@ -638,6 +645,7 @@ class BedSearchTest : IntegrationTestBase() {
                           bookingId = overlappingBookingForBedInPremisesTwo.id,
                           roomId = roomInPremisesTwo.id,
                           assessmentId = assessment.id,
+                          isSexualRisk = false,
                         ),
                       ),
                     ),
@@ -1915,7 +1923,7 @@ class BedSearchTest : IntegrationTestBase() {
       return beds
     }
 
-    private fun createAssessment(user: UserEntity, crn: String): Pair<TemporaryAccommodationApplicationEntity, AssessmentEntity> {
+    private fun createAssessment(user: UserEntity, crn: String, sexualRisk: Boolean? = null): Pair<TemporaryAccommodationApplicationEntity, AssessmentEntity> {
       val applicationSchema = temporaryAccommodationApplicationJsonSchemaEntityFactory.produceAndPersist {
         withPermissiveSchema()
       }
@@ -1930,6 +1938,11 @@ class BedSearchTest : IntegrationTestBase() {
         withCreatedByUser(user)
         withProbationRegion(user.probationRegion)
         withApplicationSchema(applicationSchema)
+        if (sexualRisk != null) {
+          withHasHistoryOfSexualOffence(sexualRisk)
+          withIsConcerningSexualBehaviour(sexualRisk)
+          withHasRegisteredSexOffender(sexualRisk)
+        }
       }
 
       val assessment = temporaryAccommodationAssessmentEntityFactory.produceAndPersist {
