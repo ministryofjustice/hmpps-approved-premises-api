@@ -42,15 +42,46 @@ class RedisConfiguration {
     @Value("\${caches.ukBankHolidays.expiry-seconds}") ukBankHolidaysExpirySeconds: Long,
     @Value("21600") crnGetCaseDetailExpirySeconds: Long,
   ): RedisCacheManagerBuilderCustomizer? {
-    val time = buildProperties.time.epochSecond.toString()
+    val uniqueBuildId = buildProperties.time.epochSecond.toString()
 
     return RedisCacheManagerBuilderCustomizer { builder: RedisCacheManagerBuilder ->
-      builder.clientCacheFor<StaffMembersPage>("qCodeStaffMembersCache", Duration.ofSeconds(staffMembersExpirySeconds), time, objectMapper)
-        .clientCacheFor<UserOffenderAccess>("userAccessCache", Duration.ofSeconds(userAccessExpirySeconds), time, objectMapper)
-        .clientCacheFor<StaffDetail>("staffDetailsCache", Duration.ofSeconds(staffDetailsExpirySeconds), time, objectMapper)
-        .clientCacheFor<ManagingTeamsResponse>("teamsManagingCaseCache", Duration.ofSeconds(teamManagingCasesExpirySeconds), time, objectMapper)
-        .clientCacheFor<CaseDetail>("crnGetCaseDetailCache", Duration.ofSeconds(crnGetCaseDetailExpirySeconds), time, objectMapper)
-        .clientCacheFor<UKBankHolidays>("ukBankHolidaysCache", Duration.ofSeconds(ukBankHolidaysExpirySeconds), time, objectMapper)
+      builder
+        .clientCacheFor<StaffMembersPage>(
+          cacheName = "qCodeStaffMembersCache",
+          duration = Duration.ofSeconds(staffMembersExpirySeconds),
+          cacheNamePrefix = uniqueBuildId,
+          objectMapper = objectMapper,
+        )
+        .clientCacheFor<UserOffenderAccess>(
+          cacheName = "userAccessCache",
+          duration = Duration.ofSeconds(userAccessExpirySeconds),
+          cacheNamePrefix = uniqueBuildId,
+          objectMapper = objectMapper,
+        )
+        .clientCacheFor<StaffDetail>(
+          cacheName = "staffDetailsCache",
+          duration = Duration.ofSeconds(staffDetailsExpirySeconds),
+          cacheNamePrefix = uniqueBuildId,
+          objectMapper = objectMapper,
+        )
+        .clientCacheFor<ManagingTeamsResponse>(
+          cacheName = "teamsManagingCaseCache",
+          duration = Duration.ofSeconds(teamManagingCasesExpirySeconds),
+          cacheNamePrefix = uniqueBuildId,
+          objectMapper = objectMapper,
+        )
+        .clientCacheFor<CaseDetail>(
+          cacheName = "crnGetCaseDetailCache",
+          duration = Duration.ofSeconds(crnGetCaseDetailExpirySeconds),
+          cacheNamePrefix = uniqueBuildId,
+          objectMapper = objectMapper,
+        )
+        .clientCacheFor<UKBankHolidays>(
+          cacheName = "ukBankHolidaysCache",
+          duration = Duration.ofSeconds(ukBankHolidaysExpirySeconds),
+          cacheNamePrefix = uniqueBuildId,
+          objectMapper = objectMapper,
+        )
     }
   }
 
@@ -75,13 +106,18 @@ class RedisConfiguration {
     return RedLock(arrayOf("$scheme://$passwordString$host:$port/$database"))
   }
 
-  private inline fun <reified T> RedisCacheManagerBuilder.clientCacheFor(cacheName: String, duration: Duration, version: String, objectMapper: ObjectMapper) =
+  private inline fun <reified T> RedisCacheManagerBuilder.clientCacheFor(
+    cacheName: String,
+    duration: Duration,
+    cacheNamePrefix: String,
+    objectMapper: ObjectMapper,
+  ) =
     this.withCacheConfiguration(
       cacheName,
       RedisCacheConfiguration.defaultCacheConfig()
         .entryTtl(duration)
         .serializeValuesWith(SerializationPair.fromSerializer(ClientResultRedisSerializer(objectMapper, object : TypeReference<T>() {})))
-        .prefixCacheNameWith(version),
+        .prefixCacheNameWith(cacheNamePrefix),
     )
 }
 
