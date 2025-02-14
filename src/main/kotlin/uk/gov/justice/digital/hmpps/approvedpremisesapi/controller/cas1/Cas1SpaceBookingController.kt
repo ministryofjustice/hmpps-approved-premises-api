@@ -333,6 +333,7 @@ class Cas1SpaceBookingController(
       premisesId = booking.premises.id,
       crn = booking.crn,
     ).filter { it.id != booking.id }
+      .sortedBy { it.canonicalArrivalDate }
 
     return spaceBookingTransformer.transformJpaToApi(person, booking, otherBookingsInPremiseForCrn)
   }
