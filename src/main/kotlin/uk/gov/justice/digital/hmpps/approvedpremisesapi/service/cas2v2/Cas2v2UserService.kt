@@ -1,5 +1,7 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas2v2
 
+import org.springframework.security.core.GrantedAuthority
+import org.springframework.security.core.authority.SimpleGrantedAuthority
 import org.springframework.stereotype.Service
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.ApDeliusContextApiClient
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.ClientResult
@@ -45,6 +47,22 @@ class Cas2v2UserService(
 
     return userEntity
   }
+  fun requiresCaseLoadIdCheck(): Boolean {
+    return !userForRequestHasRole(
+      listOf(
+        SimpleGrantedAuthority("ROLE_COURT_BAIL"),
+        SimpleGrantedAuthority("ROLE_PRISON_BAIL"),
+      ),
+    )
+  }
+
+  fun userForRequestHasRole(grantedAuthorities: List<GrantedAuthority>): Boolean {
+    val roles = getRolesForUserForRequest()
+    return roles?.any { it in grantedAuthorities } ?: false
+  }
+
+  fun getRolesForUserForRequest(): MutableCollection<GrantedAuthority>? =
+    httpAuthService.getCas2v2AuthenticatedPrincipalOrThrow().authorities
 
   private fun getExistingUser(username: String, userType: Cas2v2UserType): Cas2v2UserEntity? = userRepository.findByUsernameAndUserType(username, userType)
 
