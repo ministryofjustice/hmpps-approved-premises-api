@@ -1,5 +1,6 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.integration
 
+import org.assertj.core.api.Assertions.assertThat
 import org.hamcrest.Matchers
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Nested
@@ -11,8 +12,11 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.BedSearchResul
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.BedSearchResultPremisesSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.BedSearchResultRoomSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.BedSearchResults
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.BedspaceFilters
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Characteristic
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.CharacteristicPair
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PersonType
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PremisesFilters
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PropertyStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.TemporaryAccommodationBedSearchParameters
@@ -20,6 +24,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.TemporaryAccom
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.TemporaryAccommodationBedSearchResultOverlap
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.CaseAccessFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.CaseSummaryFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.CharacteristicEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAProbationRegion
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAUser
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAnOffender
@@ -965,12 +970,12 @@ class BedSearchTest : IntegrationTestBase() {
                     numberOfBookedBeds = 0,
                     premisesCharacteristics = listOf(
                       CharacteristicPair(
-                        propertyName = "isMenOnly",
-                        name = "Men only",
-                      ),
-                      CharacteristicPair(
                         propertyName = "isSharedProperty",
                         name = "Shared property",
+                      ),
+                      CharacteristicPair(
+                        propertyName = "isMenOnly",
+                        name = "Men only",
                       ),
                     ),
                     roomCharacteristics = listOf(),
@@ -983,6 +988,318 @@ class BedSearchTest : IntegrationTestBase() {
           )
       }
     }
+
+    @Test
+    fun `Bed Search filter only returns included premises filters`() {
+      val searchPdu = probationDeliveryUnitFactory.produceAndPersist {
+        withProbationRegion(probationRegion)
+      }
+
+      givenAUser(
+        probationRegion = probationRegion,
+      ) { _, jwt ->
+        val localAuthorityArea = localAuthorityEntityFactory.produceAndPersist()
+
+        val characteristicOne = produceCharacteristic("CharacteristicOne", Characteristic.ModelScope.premises)
+        val characteristicTwo = produceCharacteristic("CharacteristicTwo", Characteristic.ModelScope.premises)
+
+        val premisesOne = createTemporaryAccommodationPremisesWithCharacteristics(
+          "Premises One",
+          probationRegion,
+          localAuthorityArea,
+          searchPdu,
+          mutableListOf(characteristicOne),
+        )
+
+        val premisesTwo = createTemporaryAccommodationPremisesWithCharacteristics(
+          "Premises Two",
+          probationRegion,
+          localAuthorityArea,
+          searchPdu,
+          mutableListOf(characteristicTwo),
+        )
+
+        createBedspace(premisesOne, "Room One", listOf())
+        createBedspace(premisesTwo, "Room One", listOf())
+
+        val result = getResponseForRequest(
+          jwt,
+          TemporaryAccommodationBedSearchParameters(
+            startDate = LocalDate.parse("2024-08-27"),
+            durationDays = 84,
+            serviceName = "temporary-accommodation",
+            probationDeliveryUnits = listOf(searchPdu.id),
+            premisesFilters = PremisesFilters(
+              includedCharacteristicIds = listOf(characteristicOne.id),
+            ),
+          ),
+        )
+
+        val returnedPremisesIds = result.results.map { it.premises.id }
+
+        assertThat(returnedPremisesIds).containsExactly(premisesOne.id)
+        assertThat(returnedPremisesIds).doesNotContain(premisesTwo.id)
+      }
+    }
+
+    @Test
+    fun `Bed Search filter does not return excluded premises filters`() {
+      val searchPdu = probationDeliveryUnitFactory.produceAndPersist {
+        withProbationRegion(probationRegion)
+      }
+
+      givenAUser(
+        probationRegion = probationRegion,
+      ) { _, jwt ->
+        val localAuthorityArea = localAuthorityEntityFactory.produceAndPersist()
+
+        val characteristicOne = produceCharacteristic("CharacteristicOne", Characteristic.ModelScope.premises)
+        val characteristicTwo = produceCharacteristic("CharacteristicTwo", Characteristic.ModelScope.premises)
+
+        val premisesOne = createTemporaryAccommodationPremisesWithCharacteristics(
+          "Premises One",
+          probationRegion,
+          localAuthorityArea,
+          searchPdu,
+          mutableListOf(characteristicOne),
+        )
+
+        val premisesTwo = createTemporaryAccommodationPremisesWithCharacteristics(
+          "Premises Two",
+          probationRegion,
+          localAuthorityArea,
+          searchPdu,
+          mutableListOf(characteristicTwo),
+        )
+
+        createBedspace(premisesOne, "Room One", listOf())
+        createBedspace(premisesTwo, "Room One", listOf())
+
+        val result = getResponseForRequest(
+          jwt,
+          TemporaryAccommodationBedSearchParameters(
+            startDate = LocalDate.parse("2024-08-27"),
+            durationDays = 84,
+            serviceName = "temporary-accommodation",
+            probationDeliveryUnits = listOf(searchPdu.id),
+            premisesFilters = PremisesFilters(
+              excludedCharacteristicIds = listOf(characteristicOne.id),
+            ),
+          ),
+        )
+
+        val returnedPremisesIds = result.results.map { it.premises.id }
+
+        assertThat(returnedPremisesIds).containsExactly(premisesTwo.id)
+        assertThat(returnedPremisesIds).doesNotContain(premisesOne.id)
+      }
+    }
+
+    @Test
+    fun `Bed Search filter only returns included bedspace filters`() {
+      val searchPdu = probationDeliveryUnitFactory.produceAndPersist {
+        withProbationRegion(probationRegion)
+      }
+
+      givenAUser(
+        probationRegion = probationRegion,
+      ) { _, jwt ->
+        val localAuthorityArea = localAuthorityEntityFactory.produceAndPersist()
+
+        val characteristicOne = produceCharacteristic("CharacteristicOne", Characteristic.ModelScope.room)
+        val characteristicTwo = produceCharacteristic("CharacteristicTwo", Characteristic.ModelScope.room)
+
+        val premisesOne = createTemporaryAccommodationPremisesWithCharacteristics(
+          "Premises One",
+          probationRegion,
+          localAuthorityArea,
+          searchPdu,
+          mutableListOf(),
+        )
+
+        val (_, premisesOneBedOne) = createBedspace(premisesOne, "Room One", listOf(characteristicOne))
+        val (_, premisesOneBedTwo) = createBedspace(premisesOne, "Room One", listOf(characteristicTwo))
+
+        val result = getResponseForRequest(
+          jwt,
+          TemporaryAccommodationBedSearchParameters(
+            startDate = LocalDate.parse("2024-08-27"),
+            durationDays = 84,
+            serviceName = "temporary-accommodation",
+            probationDeliveryUnits = listOf(searchPdu.id),
+            bedspaceFilters = BedspaceFilters(
+              includedCharacteristicIds = listOf(characteristicOne.id),
+            ),
+          ),
+        )
+
+        val returnedBedIds = result.results.map { it.bed.id }
+        assertThat(returnedBedIds).containsExactly(premisesOneBedOne.id)
+        assertThat(returnedBedIds).doesNotContain(premisesOneBedTwo.id)
+      }
+    }
+
+    @Test
+    fun `Bed Search filter does not return excluded bedspace filters`() {
+      val searchPdu = probationDeliveryUnitFactory.produceAndPersist {
+        withProbationRegion(probationRegion)
+      }
+
+      givenAUser(
+        probationRegion = probationRegion,
+      ) { _, jwt ->
+        val localAuthorityArea = localAuthorityEntityFactory.produceAndPersist()
+
+        val characteristicOne = produceCharacteristic("CharacteristicOne", Characteristic.ModelScope.room)
+        val characteristicTwo = produceCharacteristic("CharacteristicTwo", Characteristic.ModelScope.room)
+
+        val premisesOne = createTemporaryAccommodationPremisesWithCharacteristics(
+          "Premises One",
+          probationRegion,
+          localAuthorityArea,
+          searchPdu,
+          mutableListOf(characteristicOne),
+        )
+
+        val (_, premisesOneBedOne) = createBedspace(premisesOne, "Room One", listOf(characteristicOne))
+        val (_, premisesOneBedTwo) = createBedspace(premisesOne, "Room One", listOf(characteristicTwo))
+        val (_, premisesOneBedThree) = createBedspace(premisesOne, "Room One", listOf(characteristicOne, characteristicTwo))
+
+        val result = getResponseForRequest(
+          jwt,
+          TemporaryAccommodationBedSearchParameters(
+            startDate = LocalDate.parse("2024-08-27"),
+            durationDays = 84,
+            serviceName = "temporary-accommodation",
+            probationDeliveryUnits = listOf(searchPdu.id),
+            bedspaceFilters = BedspaceFilters(
+              excludedCharacteristicIds = listOf(characteristicOne.id),
+            ),
+          ),
+        )
+
+        val returnedBedIds = result.results.map { it.bed.id }
+        assertThat(returnedBedIds).containsExactly(premisesOneBedTwo.id)
+        assertThat(returnedBedIds).doesNotContain(premisesOneBedOne.id, premisesOneBedThree.id)
+      }
+    }
+
+    @Test
+    fun `Bed Search filter returns correct results with multiple bedspace filters`() {
+      val searchPdu = probationDeliveryUnitFactory.produceAndPersist {
+        withProbationRegion(probationRegion)
+      }
+
+      givenAUser(
+        probationRegion = probationRegion,
+      ) { _, jwt ->
+        val localAuthorityArea = localAuthorityEntityFactory.produceAndPersist()
+
+        val premisesCharacteristicOne = produceCharacteristic("CharacteristicOne", Characteristic.ModelScope.premises)
+        val premisesCharacteristicTwo = produceCharacteristic("CharacteristicTwo", Characteristic.ModelScope.premises)
+        val premisesCharacteristicThree =
+          produceCharacteristic("CharacteristicThree", Characteristic.ModelScope.premises)
+
+        val premisesOne = createTemporaryAccommodationPremisesWithCharacteristics(
+          "Premises One",
+          probationRegion,
+          localAuthorityArea,
+          searchPdu,
+          mutableListOf(premisesCharacteristicOne),
+        )
+
+        val premisesTwo = createTemporaryAccommodationPremisesWithCharacteristics(
+          "Premises Two",
+          probationRegion,
+          localAuthorityArea,
+          searchPdu,
+          mutableListOf(premisesCharacteristicOne, premisesCharacteristicTwo),
+        )
+
+        val premisesThree = createTemporaryAccommodationPremisesWithCharacteristics(
+          "Premises Three",
+          probationRegion,
+          localAuthorityArea,
+          searchPdu,
+          mutableListOf(premisesCharacteristicOne, premisesCharacteristicTwo, premisesCharacteristicThree),
+        )
+
+        val roomCharacteristicOne = produceCharacteristic("CharacteristicOne", Characteristic.ModelScope.room)
+        val roomCharacteristicTwo = produceCharacteristic("CharacteristicTwo", Characteristic.ModelScope.room)
+        val roomCharacteristicThree = produceCharacteristic("CharacteristicThree", Characteristic.ModelScope.room)
+
+        // premises one beds
+        val (_, premisesOneBedOne) = createBedspace(premisesOne, "11", listOf(roomCharacteristicOne))
+        val (_, premisesOneBedTwo) = createBedspace(premisesOne, "12", listOf(roomCharacteristicOne, roomCharacteristicTwo))
+        createBedspace(premisesOne, "13", listOf(roomCharacteristicOne, roomCharacteristicTwo, roomCharacteristicThree))
+
+        // premises two beds
+        val (_, premisesTwoBedOne) = createBedspace(premisesTwo, "21", listOf(roomCharacteristicOne))
+        val (_, premisesTwoBedTwo) = createBedspace(premisesTwo, "22", listOf(roomCharacteristicOne, roomCharacteristicTwo))
+        createBedspace(premisesTwo, "23", listOf(roomCharacteristicOne, roomCharacteristicTwo, roomCharacteristicThree))
+
+        // premises three beds
+        createBedspace(premisesThree, "31", listOf(roomCharacteristicOne))
+        createBedspace(premisesThree, "32", listOf(roomCharacteristicOne, roomCharacteristicTwo))
+        createBedspace(premisesThree, "33", listOf(roomCharacteristicOne, roomCharacteristicTwo, roomCharacteristicThree))
+
+        val result = getResponseForRequest(
+          jwt,
+          TemporaryAccommodationBedSearchParameters(
+            startDate = LocalDate.parse("2024-08-27"),
+            durationDays = 84,
+            serviceName = "temporary-accommodation",
+            probationDeliveryUnits = listOf(searchPdu.id),
+            bedspaceFilters = BedspaceFilters(
+              includedCharacteristicIds = listOf(roomCharacteristicOne.id),
+              excludedCharacteristicIds = listOf(roomCharacteristicThree.id),
+            ),
+            premisesFilters = PremisesFilters(
+              includedCharacteristicIds = listOf(premisesCharacteristicOne.id),
+              excludedCharacteristicIds = listOf(premisesCharacteristicThree.id),
+            ),
+          ),
+        )
+
+        // only premises one and two are returned, as both have PremisesCharacteristicOne and neither have PremisesCharacteristicThree
+        val returnedPremisesIds = result.results.map { it.premises.id }
+        assertThat(returnedPremisesIds).containsOnly(premisesOne.id, premisesTwo.id)
+        assertThat(returnedPremisesIds).doesNotContain(premisesThree.id)
+
+        // only rooms 1 and 2 should be returned, as both have RoomCharacteristicOne and neither have RoomCharacteristicThree
+        val returnedBedIds = result.results.map { it.bed.id }
+        assertThat(returnedBedIds).hasSize(4)
+          .containsExactlyInAnyOrder(
+            premisesOneBedOne.id,
+            premisesOneBedTwo.id,
+            premisesTwoBedOne.id,
+            premisesTwoBedTwo.id,
+          )
+      }
+    }
+
+    private fun produceCharacteristic(
+      propertyName: String,
+      modelScope: Characteristic.ModelScope,
+    ): CharacteristicEntity {
+      val characteristicTwo = characteristicRepository.save(
+        CharacteristicEntityFactory().withPropertyName(propertyName)
+          .withServiceScope(ServiceName.temporaryAccommodation.value)
+          .withModelScope(modelScope.value).produce(),
+      )
+      return characteristicTwo
+    }
+
+    private fun getResponseForRequest(jwt: String, searchParameters: TemporaryAccommodationBedSearchParameters) = webTestClient.post()
+      .uri("/beds/search")
+      .header("Authorization", "Bearer $jwt")
+      .bodyValue(searchParameters)
+      .exchange()
+      .expectStatus()
+      .isOk
+      .expectBody(BedSearchResults::class.java)
+      .returnResult()
+      .responseBody!!
 
     @Test
     fun `Searching for a Temporary Accommodation Bedspace in a Single Occupancy Property returns only bedspaces in properties with single occupancy`() {

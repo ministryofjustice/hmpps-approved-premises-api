@@ -215,8 +215,6 @@ class Cas3BedSearchServiceTest {
         endDate = LocalDate.parse("2023-03-28"),
         probationDeliveryUnits = listOf(probationDeliveryUnit.id),
         probationRegionId = user.probationRegion.id,
-        premisesCharacteristicsIds = listOf(),
-        roomCharacteristicsIds = listOf(),
       )
     } returns repositorySearchResults
 
@@ -331,8 +329,6 @@ class Cas3BedSearchServiceTest {
         endDate = LocalDate.parse("2023-03-28"),
         probationDeliveryUnits = listOf(probationDeliveryUnit.id),
         probationRegionId = user.probationRegion.id,
-        premisesCharacteristicsIds = listOf(),
-        roomCharacteristicsIds = listOf(),
       )
     } returns repositorySearchResults
 

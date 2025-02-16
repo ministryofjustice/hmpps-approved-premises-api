@@ -63,7 +63,6 @@ class BedSearchRepository(private val namedParameterJdbcTemplate: NamedParameter
              (void_bedspace.start_date, void_bedspace.end_date) OVERLAPS (:start_date, :end_date) AND
              void_bedspace_cancellation.id IS NULL
         ) AND 
-        #OPTIONAL_FILTERS
         pdu.id IN (:probation_delivery_unit_ids) AND
         p.probation_region_id = :probation_region_id AND 
         p.status = 'active' AND 
@@ -71,58 +70,22 @@ class BedSearchRepository(private val namedParameterJdbcTemplate: NamedParameter
         (b.end_date IS NULL OR b.end_date > :end_date)
         ORDER BY pdu.name, p.name, r.name;
 """
-  private val temporaryAccommodationPremisesCharacteristicFilter = """
-    p.id in (SELECT pc2.premises_id
-    FROM premises_characteristics pc2
-    INNER JOIN premises p2 ON pc2.premises_id = p2.id
-    WHERE service = 'temporary-accommodation'
-    And pc2.characteristic_id in (:premises_characteristic_ids)
-    Group By pc2.premises_id
-    Having count(pc2.premises_id) = :premises_characteristic_ids_count)
-"""
-
-  private val temporaryAccommodationRoomCharacteristicFilter = """
-    r.id in (SELECT rc2.room_id
-    FROM room_characteristics rc2
-             INNER JOIN rooms r2 ON rc2.room_id = r2.id
-    WHERE rc2.characteristic_id in (:room_characteristic_ids)
-    Group By rc2.room_id
-    Having count(rc2.room_id) = :room_characteristic_ids_count)
-"""
 
   fun findTemporaryAccommodationBeds(
     probationDeliveryUnits: List<UUID>,
     startDate: LocalDate,
     endDate: LocalDate,
     probationRegionId: UUID,
-    premisesCharacteristicsIds: List<UUID>,
-    roomCharacteristicsIds: List<UUID>,
   ): List<Cas3BedSearchResult> {
     val params = MapSqlParameterSource().apply {
       addValue("probation_region_id", probationRegionId)
       addValue("probation_delivery_unit_ids", probationDeliveryUnits)
       addValue("start_date", startDate)
       addValue("end_date", endDate)
-      addValue("premises_characteristic_ids", premisesCharacteristicsIds)
-      addValue("premises_characteristic_ids_count", premisesCharacteristicsIds.size)
-      addValue("room_characteristic_ids", roomCharacteristicsIds)
-      addValue("room_characteristic_ids_count", roomCharacteristicsIds.size)
     }
-
-    var optionalFilters = if (premisesCharacteristicsIds.any()) {
-      "$temporaryAccommodationPremisesCharacteristicFilter AND\n"
-    } else {
-      ""
-    }
-
-    if (roomCharacteristicsIds.any()) {
-      optionalFilters += "$temporaryAccommodationRoomCharacteristicFilter AND\n"
-    }
-
-    val query = temporaryAccommodationSearchQuery.replace("#OPTIONAL_FILTERS", optionalFilters)
 
     val result = namedParameterJdbcTemplate.query(
-      query,
+      temporaryAccommodationSearchQuery,
       params,
       ResultSetExtractor { resultSet ->
         val beds = mutableMapOf<UUID, Cas3BedSearchResult>()
