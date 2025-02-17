@@ -24,13 +24,5 @@ interface UserAllocatorRule {
   )
   fun evaluatePlacementRequest(placementRequestEntity: PlacementRequestEntity): UserAllocatorRuleOutcome = UserAllocatorRuleOutcome.Skip
 
-  @Deprecated(
-    """
-    This function was added to support the switch over from the Legacy behaviour to the
-    new allocation behaviour. The new allocation behaviour will never auto allocate a 
-    placement application, so this function will always return UserAllocatorRuleOutcome.Skip
-  """,
-    replaceWith = ReplaceWith("remove any call to this function as it will always return UserAllocatorRuleOutcome.Skip"),
-  )
   fun evaluatePlacementApplication(placementApplicationEntity: PlacementApplicationEntity): UserAllocatorRuleOutcome = UserAllocatorRuleOutcome.Skip
 }
