@@ -132,7 +132,7 @@ class SpacePlanningService(
     range: DateRange,
     excludeSpaceBookingId: UUID? = null,
   ): Map<LocalDate, List<SpaceBooking>> {
-    val spaceBookingsToConsider = spaceBookingRepository.findAllBookingsActiveWithinAGivenRangeWithCriteria(
+    val spaceBookingsToConsider = spaceBookingRepository.findNonCancelledBookingsInRange(
       premisesId = premises.id,
       rangeStartInclusive = range.fromInclusive,
       rangeEndInclusive = range.toInclusive,

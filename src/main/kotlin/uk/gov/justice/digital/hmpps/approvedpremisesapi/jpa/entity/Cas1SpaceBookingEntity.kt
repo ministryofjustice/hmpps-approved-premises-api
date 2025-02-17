@@ -214,7 +214,7 @@ interface Cas1SpaceBookingRepository : JpaRepository<Cas1SpaceBookingEntity, UUI
     AND b.canonicalDepartureDate >= :rangeStartInclusive 
   """,
   )
-  fun findAllBookingsActiveWithinAGivenRangeWithCriteria(
+  fun findNonCancelledBookingsInRange(
     premisesId: UUID,
     rangeStartInclusive: LocalDate,
     rangeEndInclusive: LocalDate,
