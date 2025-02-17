@@ -120,9 +120,7 @@ class PlacementApplicationServiceTest {
 
       val result = placementApplicationService.createPlacementApplication(application, user)
 
-      assertThat(result).isInstanceOf(ValidatableActionResult.GeneralValidationError::class.java)
-      assertThat((result as ValidatableActionResult.GeneralValidationError).message)
-        .isEqualTo("You cannot request a placement request for an application that has been withdrawn")
+      assertThatCasResult(result).isGeneralValidationError("You cannot request a placement request for an application that has been withdrawn")
     }
   }
 

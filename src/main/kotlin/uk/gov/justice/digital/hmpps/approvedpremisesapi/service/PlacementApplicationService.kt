@@ -21,11 +21,12 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserPermission
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.ApprovedPremisesApplicationStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.ValidationErrors
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.validated
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.validatedCasResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.InternalServerErrorProblem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.CasResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1PlacementApplicationDomainEventService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1PlacementApplicationEmailService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1WithdrawableService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.PlacementRequestService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.WithdrawableEntityType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.WithdrawableState
@@ -63,7 +64,7 @@ class PlacementApplicationService(
   fun createPlacementApplication(
     application: ApprovedPremisesApplicationEntity,
     user: UserEntity,
-  ) = validated<PlacementApplicationEntity> {
+  ) = validatedCasResult<PlacementApplicationEntity> {
     val assessment = application.getLatestAssessment()
 
     if (assessment?.decision !== AssessmentDecision.ACCEPTED) {
@@ -197,7 +198,7 @@ class PlacementApplicationService(
   )
 
   /**
-   * This function should not be called directly. Instead, use [WithdrawableService.withdrawPlacementApplication] that
+   * This function should not be called directly. Instead, use [Cas1WithdrawableService.withdrawPlacementApplication] that
    * will indirectly invoke this function. It will also ensure that:
    *
    * 1. The entity is withdrawable, and error if not
