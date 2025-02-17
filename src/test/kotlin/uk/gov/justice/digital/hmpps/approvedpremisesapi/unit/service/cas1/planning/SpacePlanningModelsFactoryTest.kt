@@ -19,6 +19,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.planning.Be
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.planning.Characteristic
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.planning.SpaceBooking
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.planning.SpacePlanningModelsFactory
+import java.time.Instant
 import java.time.LocalDate
 
 class SpacePlanningModelsFactoryTest {
@@ -402,6 +403,22 @@ class SpacePlanningModelsFactoryTest {
         .withCanonicalArrivalDate(LocalDate.of(2020, 4, 4))
         .withCanonicalDepartureDate(LocalDate.of(2020, 4, 5))
         .withCancellationOccurredAt(LocalDate.now())
+        .produce()
+
+      val result = factory.spaceBookingsForDay(
+        day = LocalDate.of(2020, 4, 4),
+        spaceBookingsToConsider = listOf(booking1),
+      )
+
+      assertThat(result).isEmpty()
+    }
+
+    @Test
+    fun `exclude non arrivals`() {
+      val booking1 = Cas1SpaceBookingEntityFactory()
+        .withCanonicalArrivalDate(LocalDate.of(2020, 4, 4))
+        .withCanonicalDepartureDate(LocalDate.of(2020, 4, 5))
+        .withNonArrivalConfirmedAt(Instant.now())
         .produce()
 
       val result = factory.spaceBookingsForDay(

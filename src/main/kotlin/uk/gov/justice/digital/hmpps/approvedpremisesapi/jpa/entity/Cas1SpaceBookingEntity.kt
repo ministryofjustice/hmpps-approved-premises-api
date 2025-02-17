@@ -422,7 +422,8 @@ data class Cas1SpaceBookingEntity(
   fun hasDeparted() = actualDepartureDate != null
   fun hasNonArrival() = nonArrivalConfirmedAt != null
   fun hasArrival() = actualArrivalDate != null
-  fun isResident(day: LocalDate) = !isCancelled() &&
+  fun isExpectedOrResident(day: LocalDate) = !isCancelled() &&
+    !hasNonArrival() &&
     canonicalArrivalDate <= day &&
     canonicalDepartureDate > day
 

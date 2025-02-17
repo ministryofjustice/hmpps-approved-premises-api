@@ -35,7 +35,7 @@ class SpacePlanningModelsFactory {
     day: LocalDate,
     spaceBookingsToConsider: List<Cas1SpaceBookingEntity>,
   ): List<SpaceBooking> = spaceBookingsToConsider
-    .filter { it.isResident(day) }
+    .filter { it.isExpectedOrResident(day) }
     .map { booking ->
       SpaceBooking(
         id = booking.id,
