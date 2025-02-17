@@ -102,7 +102,17 @@ class AssessmentService(
     statuses: List<DomainAssessmentSummaryStatus>,
     pageCriteria: PageCriteria<AssessmentSortField>,
   ): Pair<List<DomainAssessmentSummary>, PaginationMetadata?> {
-    val pageable = buildPageable(pageCriteria)
+    val pageable = pageCriteria.toPageableOrAllPages(
+      sortByConverter = when (pageCriteria.sortBy) {
+        AssessmentSortField.assessmentStatus -> "status"
+        AssessmentSortField.assessmentArrivalDate -> "arrivalDate"
+        AssessmentSortField.assessmentCreatedAt -> "createdAt"
+        AssessmentSortField.assessmentDueAt -> "dueAt"
+        AssessmentSortField.personCrn -> "crn"
+        AssessmentSortField.personName -> "personName"
+        AssessmentSortField.applicationProbationDeliveryUnitName -> "probationDeliveryUnit"
+      },
+    )
 
     val response = assessmentRepository.findAllApprovedPremisesAssessmentSummariesNotReallocated(
       user.id.toString(),
@@ -112,18 +122,6 @@ class AssessmentService(
 
     return Pair(response.content, getMetadata(response, pageCriteria))
   }
-
-  private fun buildPageable(pageCriteria: PageCriteria<AssessmentSortField>) = pageCriteria.toPageableOrAllPages(
-    sortByConverter = when (pageCriteria.sortBy) {
-      AssessmentSortField.assessmentStatus -> "status"
-      AssessmentSortField.assessmentArrivalDate -> "arrivalDate"
-      AssessmentSortField.assessmentCreatedAt -> "createdAt"
-      AssessmentSortField.assessmentDueAt -> "dueAt"
-      AssessmentSortField.personCrn -> "crn"
-      AssessmentSortField.personName -> "personName"
-      AssessmentSortField.applicationProbationDeliveryUnitName -> "probationDeliveryUnit"
-    },
-  )
 
   fun getAssessmentSummariesForUserCAS3(
     user: UserEntity,
