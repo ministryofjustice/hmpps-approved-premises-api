@@ -159,7 +159,7 @@ interface Cas1SpaceBookingRepository : JpaRepository<Cas1SpaceBookingEntity, UUI
       LEFT JOIN offline_applications offline_app ON b.offline_application_id = offline_app.id
       WHERE 
         b.canonical_arrival_date <= :date AND 
-        b.canonical_departure_date >= :date AND
+        b.canonical_departure_date > :date AND
         b.premises_id = :premisesId AND 
         b.cancellation_occurred_at IS NULL AND
         b.non_arrival_confirmed_at IS NULL AND

@@ -527,6 +527,8 @@ class Cas1PremisesTest : IntegrationTestBase() {
     }
 
     fun setupBookings() {
+      val now = LocalDate.now()
+
       bedEntityFactory.produceAndPersistMultiple(5) {
         withYieldedRoom {
           roomEntityFactory.produceAndPersist {
@@ -580,8 +582,8 @@ class Cas1PremisesTest : IntegrationTestBase() {
         application = applicationA,
       ) {
         withPremises(premises)
-        withCanonicalArrivalDate(LocalDate.now().minusDays(3))
-        withCanonicalDepartureDate(LocalDate.now().plusDays(3))
+        withCanonicalArrivalDate(now.minusDays(3))
+        withCanonicalDepartureDate(now.plusDays(3))
         withCriteria(
           findCharacteristic(CAS1_PROPERTY_NAME_ARSON_SUITABLE),
         )
@@ -605,8 +607,8 @@ class Cas1PremisesTest : IntegrationTestBase() {
         application = applicationB,
       ) {
         withPremises(premises)
-        withCanonicalArrivalDate(LocalDate.now().minusDays(6))
-        withCanonicalDepartureDate(LocalDate.now().plusDays(6))
+        withCanonicalArrivalDate(now.minusDays(6))
+        withCanonicalDepartureDate(now.plusDays(6))
         withCriteria(
           findCharacteristic(CAS1_PROPERTY_NAME_ARSON_SUITABLE),
           findCharacteristic(CAS1_PROPERTY_NAME_ENSUITE),
@@ -621,8 +623,8 @@ class Cas1PremisesTest : IntegrationTestBase() {
         premises = premises,
       ) {
         withPremises(premises)
-        withCanonicalArrivalDate(LocalDate.now().minusDays(2))
-        withCanonicalDepartureDate(LocalDate.now().plusDays(2))
+        withCanonicalArrivalDate(now.minusDays(2))
+        withCanonicalDepartureDate(now.plusDays(2))
         withActualDepartureDate(null)
         withCriteria(
           findCharacteristic(CAS1_PROPERTY_NAME_SINGLE_ROOM),
@@ -636,9 +638,9 @@ class Cas1PremisesTest : IntegrationTestBase() {
         application = applicationB,
       ) {
         withPremises(premises)
-        withCanonicalArrivalDate(LocalDate.now().minusDays(2))
-        withCanonicalDepartureDate(LocalDate.now().plusDays(2))
-        withCancellationOccurredAt(LocalDate.now())
+        withCanonicalArrivalDate(now.minusDays(2))
+        withCanonicalDepartureDate(now.plusDays(2))
+        withCancellationOccurredAt(now)
       }
 
       // non arrival - ignored
@@ -648,9 +650,20 @@ class Cas1PremisesTest : IntegrationTestBase() {
         application = applicationB,
       ) {
         withPremises(premises)
-        withCanonicalArrivalDate(LocalDate.now().minusDays(2))
-        withCanonicalDepartureDate(LocalDate.now().plusDays(2))
+        withCanonicalArrivalDate(now.minusDays(2))
+        withCanonicalDepartureDate(now.plusDays(2))
         withNonArrivalConfirmedAt(Instant.now())
+      }
+
+      // departing on same day - ignored
+      createSpaceBooking(
+        crn = offenderB.crn,
+        placementRequest = this.placementRequestA,
+        application = applicationB,
+      ) {
+        withPremises(premises)
+        withCanonicalArrivalDate(now.minusDays(2))
+        withCanonicalDepartureDate(now)
       }
     }
 
