@@ -374,6 +374,16 @@ class PlacementApplicationsTest : IntegrationTestBase() {
             withPermissiveSchema()
           },
         ) { placementApplicationEntity ->
+
+          apDeliusContextAddResponseToUserAccessCall(
+            listOf(
+              CaseAccessFactory()
+                .withCrn(placementApplicationEntity.application.crn)
+                .produce(),
+            ),
+            user.deliusUsername,
+          )
+
           val rawResult = webTestClient.get()
             .uri("/placement-applications/${placementApplicationEntity.id}")
             .header("Authorization", "Bearer $jwt")
