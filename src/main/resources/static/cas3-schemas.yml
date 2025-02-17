@@ -1,0 +1,23 @@
+components:
+  schemas:
+    FutureBooking:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        person:
+          $ref: '_shared.yml#/components/schemas/Person'
+        arrivalDate:
+          type: string
+          format: date
+        departureDate:
+          type: string
+          format: date
+        bed:
+          $ref: '_shared.yml#/components/schemas/Bed'
+      required:
+        - id
+        - person
+        - arrivalDate
+        - departureDate

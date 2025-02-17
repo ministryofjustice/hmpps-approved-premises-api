@@ -135,25 +135,23 @@ class Cas1AppealCas1DomainEventServiceTest {
     }
   }
 
-  fun DomainEvent<AssessmentAppealedEnvelope>.matches() =
-    this.applicationId == application.id &&
-      this.assessmentId == null &&
-      this.bookingId == null &&
-      this.crn == application.crn &&
-      withinSeconds(10).matches(this.occurredAt.toString()) &&
-      this.data.matches()
+  fun DomainEvent<AssessmentAppealedEnvelope>.matches() = this.applicationId == application.id &&
+    this.assessmentId == null &&
+    this.bookingId == null &&
+    this.crn == application.crn &&
+    withinSeconds(10).matches(this.occurredAt.toString()) &&
+    this.data.matches()
 
-  private fun AssessmentAppealedEnvelope.matches() =
-    this.eventDetails.applicationId == application.id &&
-      this.eventDetails.applicationUrl == "http://frontend/applications/${application.id}" &&
-      this.eventDetails.appealId == appealId &&
-      this.eventDetails.appealUrl == "http://frontend/applications/${application.id}/appeals/$appealId" &&
-      this.eventDetails.personReference.crn == application.crn &&
-      this.eventDetails.personReference.noms == application.nomsNumber &&
-      this.eventDetails.deliusEventNumber == application.eventNumber &&
-      withinSeconds(10).matches(this.eventDetails.createdAt.toString()) &&
-      this.eventDetails.createdBy == staffUserDetails.toStaffMember() &&
-      this.eventDetails.appealDetail == "Some information about why the appeal is being made" &&
-      this.eventDetails.decision == uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.AppealDecision.accepted &&
-      this.eventDetails.decisionDetail == "Some information about the decision made"
+  private fun AssessmentAppealedEnvelope.matches() = this.eventDetails.applicationId == application.id &&
+    this.eventDetails.applicationUrl == "http://frontend/applications/${application.id}" &&
+    this.eventDetails.appealId == appealId &&
+    this.eventDetails.appealUrl == "http://frontend/applications/${application.id}/appeals/$appealId" &&
+    this.eventDetails.personReference.crn == application.crn &&
+    this.eventDetails.personReference.noms == application.nomsNumber &&
+    this.eventDetails.deliusEventNumber == application.eventNumber &&
+    withinSeconds(10).matches(this.eventDetails.createdAt.toString()) &&
+    this.eventDetails.createdBy == staffUserDetails.toStaffMember() &&
+    this.eventDetails.appealDetail == "Some information about why the appeal is being made" &&
+    this.eventDetails.decision == uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.AppealDecision.accepted &&
+    this.eventDetails.decisionDetail == "Some information about the decision made"
 }

@@ -7,16 +7,10 @@ import java.util.UUID
 class Cas2PersistedApplicationStatusFinder(
   private val statusList: List<Cas2PersistedApplicationStatus> = Cas2ApplicationStatusSeeding.statusList(),
 ) {
-  fun all(): List<Cas2PersistedApplicationStatus> {
-    return statusList
-  }
+  fun all(): List<Cas2PersistedApplicationStatus> = statusList
 
-  fun active(): List<Cas2PersistedApplicationStatus> {
-    return statusList.filter { it.isActive }
-  }
+  fun active(): List<Cas2PersistedApplicationStatus> = statusList.filter { it.isActive }
 
-  fun getById(id: UUID): Cas2PersistedApplicationStatus {
-    return statusList.find { status -> status.id == id }
-      ?: error("Status with id $id not found")
-  }
+  fun getById(id: UUID): Cas2PersistedApplicationStatus = statusList.find { status -> status.id == id }
+    ?: error("Status with id $id not found")
 }

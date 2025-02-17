@@ -41,7 +41,7 @@ class Cas2v2AssessmentTest : Cas2v2IntegrationTestBase() {
       @Test
       fun `updating a cas2v2 assessment without JWT returns 401`() {
         webTestClient.put()
-          .uri("/cas2v2/assessments/de6512fc-a225-4109-bdcd-86c6307a5237")
+          .uri("/cas2v2/assessments/de6512fc-a225-4109-b2cd-86c6307a5237")
           .exchange()
           .expectStatus()
           .isUnauthorized
@@ -59,7 +59,7 @@ class Cas2v2AssessmentTest : Cas2v2IntegrationTestBase() {
         )
 
         webTestClient.put()
-          .uri("/cas2v2/assessments/de6512fc-a225-4109-bdcd-86c6307a5237")
+          .uri("/cas2v2/assessments/de6512fc-a225-4109-b2cd-86c6307a5237")
           .header("Authorization", "Bearer $jwt")
           .exchange()
           .expectStatus()
@@ -78,7 +78,7 @@ class Cas2v2AssessmentTest : Cas2v2IntegrationTestBase() {
         )
 
         webTestClient.put()
-          .uri("/cas2v2/assessments/de6512fc-a225-4109-bdcd-86c6307a5237")
+          .uri("/cas2v2/assessments/de6512fc-a225-4109-b2cd-86c6307a5237")
           .header("Authorization", "Bearer $jwt")
           .exchange()
           .expectStatus()
@@ -91,7 +91,7 @@ class Cas2v2AssessmentTest : Cas2v2IntegrationTestBase() {
       val applicationId = UUID.fromString("22ceda56-98b2-411d-91cc-ace0ab8be872")
 
       givenACas2v2PomUser { referrer, _ ->
-        givenACas2v2Assessor { assessor, jwt ->
+        givenACas2v2Assessor { _, jwt ->
           val submittedApplication = createSubmittedApplication(applicationId, referrer)
 
           // with an assessment
@@ -150,7 +150,7 @@ class Cas2v2AssessmentTest : Cas2v2IntegrationTestBase() {
       @Test
       fun `getting a cas2v2 assessment without JWT returns 401`() {
         webTestClient.get()
-          .uri("/cas2v2/assessments/de6512fc-a225-4109-bdcd-86c6307a5237")
+          .uri("/cas2v2/assessments/de6512fc-a225-4109-b2cd-86c6307a5237")
           .exchange()
           .expectStatus()
           .isUnauthorized
@@ -168,7 +168,7 @@ class Cas2v2AssessmentTest : Cas2v2IntegrationTestBase() {
         )
 
         webTestClient.get()
-          .uri("/cas2v2/assessments/de6512fc-a225-4109-bdcd-86c6307a5237")
+          .uri("/cas2v2/assessments/de6512fc-a225-4109-b2cd-86c6307a5237")
           .header("Authorization", "Bearer $jwt")
           .exchange()
           .expectStatus()
@@ -187,7 +187,7 @@ class Cas2v2AssessmentTest : Cas2v2IntegrationTestBase() {
         )
 
         webTestClient.get()
-          .uri("/cas2v2/assessments/de6512fc-a225-4109-bdcd-86c6307a5237")
+          .uri("/cas2v2/assessments/de6512fc-a225-4109-b2cd-86c6307a5237")
           .header("Authorization", "Bearer $jwt")
           .exchange()
           .expectStatus()
@@ -200,7 +200,7 @@ class Cas2v2AssessmentTest : Cas2v2IntegrationTestBase() {
       val applicationId = UUID.fromString("22ceda56-98b2-411d-91cc-ace0ab8be872")
 
       givenACas2v2PomUser { referrer, _ ->
-        givenACas2v2Assessor { assessor, jwt ->
+        givenACas2v2Assessor { _, jwt ->
           val submittedApplication = createSubmittedApplication(applicationId, referrer)
 
           // with an assessment
@@ -235,7 +235,7 @@ class Cas2v2AssessmentTest : Cas2v2IntegrationTestBase() {
       val applicationId = UUID.fromString("22ceda56-98b2-411d-91cc-ace0ab8be872")
 
       givenACas2v2PomUser { referrer, _ ->
-        givenACas2Admin { admin, jwt ->
+        givenACas2Admin { _, jwt ->
           val submittedApplication = createSubmittedApplication(applicationId, referrer)
 
           // with an assessment

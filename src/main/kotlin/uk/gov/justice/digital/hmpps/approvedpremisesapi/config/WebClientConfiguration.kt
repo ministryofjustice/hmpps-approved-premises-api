@@ -236,60 +236,54 @@ class WebClientConfiguration(
   @Bean(name = ["govUKBankHolidaysApiWebClient"])
   fun govUKBankHolidaysApiClient(
     @Value("\${services.gov-uk-bank-holidays-api.base-url}") govUKBankHolidaysApiBaseUrl: String,
-  ): WebClientConfig {
-    return WebClientConfig(
-      WebClient.builder()
-        .baseUrl(govUKBankHolidaysApiBaseUrl)
-        .clientConnector(
-          ReactorClientHttpConnector(
-            HttpClient
-              .create()
-              .responseTimeout(Duration.ofMillis(upstreamTimeoutMs))
-              .option(ChannelOption.CONNECT_TIMEOUT_MILLIS, Duration.ofMillis(upstreamTimeoutMs).toMillis().toInt()),
-          ),
-        )
-        .build(),
-    )
-  }
+  ): WebClientConfig = WebClientConfig(
+    WebClient.builder()
+      .baseUrl(govUKBankHolidaysApiBaseUrl)
+      .clientConnector(
+        ReactorClientHttpConnector(
+          HttpClient
+            .create()
+            .responseTimeout(Duration.ofMillis(upstreamTimeoutMs))
+            .option(ChannelOption.CONNECT_TIMEOUT_MILLIS, Duration.ofMillis(upstreamTimeoutMs).toMillis().toInt()),
+        ),
+      )
+      .build(),
+  )
 
   @Bean(name = ["nomisUserRolesApiWebClient"])
   fun nomisUserRolesApiClient(
     @Value("\${services.nomis-user-roles-api.base-url}") nomisUserRolesBaseUrl: String,
-  ): WebClientConfig {
-    return WebClientConfig(
-      WebClient.builder()
-        .baseUrl(nomisUserRolesBaseUrl)
-        .clientConnector(
-          ReactorClientHttpConnector(
-            HttpClient
-              .create()
-              .responseTimeout(Duration.ofMillis(nomisUserRolesUpstreamTimeoutMs))
-              .option(ChannelOption.CONNECT_TIMEOUT_MILLIS, Duration.ofMillis(nomisUserRolesUpstreamTimeoutMs).toMillis().toInt()),
-          ),
-        )
-        .build(),
-      retryOnReadTimeout = true,
-    )
-  }
+  ): WebClientConfig = WebClientConfig(
+    WebClient.builder()
+      .baseUrl(nomisUserRolesBaseUrl)
+      .clientConnector(
+        ReactorClientHttpConnector(
+          HttpClient
+            .create()
+            .responseTimeout(Duration.ofMillis(nomisUserRolesUpstreamTimeoutMs))
+            .option(ChannelOption.CONNECT_TIMEOUT_MILLIS, Duration.ofMillis(nomisUserRolesUpstreamTimeoutMs).toMillis().toInt()),
+        ),
+      )
+      .build(),
+    retryOnReadTimeout = true,
+  )
 
   @Bean(name = ["manageUsersApiWebClient"])
   fun manageUsersApiClient(
     @Value("\${services.manage-users-api.base-url}") manageUsersBaseUrl: String,
-  ): WebClientConfig {
-    return WebClientConfig(
-      WebClient.builder()
-        .baseUrl(manageUsersBaseUrl)
-        .clientConnector(
-          ReactorClientHttpConnector(
-            HttpClient
-              .create()
-              .responseTimeout(Duration.ofMillis(upstreamTimeoutMs))
-              .option(ChannelOption.CONNECT_TIMEOUT_MILLIS, Duration.ofMillis(upstreamTimeoutMs).toMillis().toInt()),
-          ),
-        )
-        .build(),
-    )
-  }
+  ): WebClientConfig = WebClientConfig(
+    WebClient.builder()
+      .baseUrl(manageUsersBaseUrl)
+      .clientConnector(
+        ReactorClientHttpConnector(
+          HttpClient
+            .create()
+            .responseTimeout(Duration.ofMillis(upstreamTimeoutMs))
+            .option(ChannelOption.CONNECT_TIMEOUT_MILLIS, Duration.ofMillis(upstreamTimeoutMs).toMillis().toInt()),
+        ),
+      )
+      .build(),
+  )
 
   @Bean(name = ["probationOffenderSearchApiWebClient"])
   fun probationOffenderSearchApiClient(

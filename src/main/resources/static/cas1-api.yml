@@ -808,7 +808,7 @@ paths:
               schema:
                 type: array
                 items:
-                  $ref: '_shared.yml#/components/schemas/TimelineEvent'
+                  $ref: 'cas1-schemas.yml#/components/schemas/Cas1TimelineEvent'
         401:
           $ref: '_shared.yml#/components/responses/401Response'
         403:

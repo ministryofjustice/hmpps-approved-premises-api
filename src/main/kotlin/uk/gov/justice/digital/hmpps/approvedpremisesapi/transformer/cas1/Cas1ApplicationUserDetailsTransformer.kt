@@ -6,10 +6,9 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas1Applicati
 
 @Component
 class Cas1ApplicationUserDetailsTransformer {
-  fun transformJpaToApi(jpa: Cas1ApplicationUserDetailsEntity) =
-    Cas1ApplicationUserDetails(
-      name = jpa.name,
-      email = jpa.email,
-      telephoneNumber = jpa.telephoneNumber,
-    )
+  fun transformJpaToApi(jpa: Cas1ApplicationUserDetailsEntity) = Cas1ApplicationUserDetails(
+    name = jpa.name,
+    email = jpa.email,
+    telephoneNumber = jpa.telephoneNumber,
+  )
 }

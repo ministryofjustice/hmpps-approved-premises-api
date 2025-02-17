@@ -11,15 +11,15 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.SortOrder
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.ForbiddenProblem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.NotFoundProblem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.AuthorisableActionResult
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.BookingSearchService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.BookingService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.Cas3BookingSearchService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.BookingSearchResultTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.BookingTransformer
 import java.util.UUID
 
 @Service
 class BookingsController(
-  private val bookingSearchService: BookingSearchService,
+  private val cas3BookingSearchService: Cas3BookingSearchService,
   private val bookingSearchResultTransformer: BookingSearchResultTransformer,
   private val bookingService: BookingService,
   private val bookingTransformer: BookingTransformer,
@@ -50,7 +50,7 @@ class BookingsController(
     val sortOrder = sortOrder ?: SortOrder.ascending
     val sortField = sortField ?: BookingSearchSortField.bookingCreatedAt
 
-    val (results, metadata) = bookingSearchService.findBookings(status, sortOrder, sortField, page, crnOrName)
+    val (results, metadata) = cas3BookingSearchService.findBookings(status, sortOrder, sortField, page, crnOrName)
 
     return ResponseEntity.ok()
       .headers(metadata?.toHeaders())

@@ -9,21 +9,17 @@ class Cas1SiteSurveyBedFactory {
 
   private fun toDataFame(file: File) = DataFrame.readExcel(file, "Sheet3")
 
-  private fun String.dropDownYesNoToBoolean(): Boolean {
-    return when (this.uppercase()) {
-      "YES" -> true
-      "NO" -> false
-      else -> error("Invalid value for Yes/No dropdown: $this")
-    }
+  private fun String.dropDownYesNoToBoolean(): Boolean = when (this.uppercase()) {
+    "YES" -> true
+    "NO" -> false
+    else -> error("Invalid value for Yes/No dropdown: $this")
   }
 
-  private fun String.dropDownYesNoNaToBoolean(): Boolean {
-    return when (this.uppercase()) {
-      "YES" -> true
-      "NO" -> false
-      "N/A" -> false
-      else -> error("Invalid value for Yes/No/N/A dropdown: $this")
-    }
+  private fun String.dropDownYesNoNaToBoolean(): Boolean = when (this.uppercase()) {
+    "YES" -> true
+    "NO" -> false
+    "N/A" -> false
+    else -> error("Invalid value for Yes/No/N/A dropdown: $this")
   }
 
   fun DataFrame<*>.toInternalModel(): List<Cas1SiteSurveyBed> {

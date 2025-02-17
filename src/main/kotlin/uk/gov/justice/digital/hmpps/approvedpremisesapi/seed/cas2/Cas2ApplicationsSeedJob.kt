@@ -136,9 +136,7 @@ class Cas2ApplicationsSeedJob(
     application.assessment = assessment
   }
 
-  private fun findStatusAtPosition(idx: Int): Cas2PersistedApplicationStatus {
-    return statusFinder.active()[idx]
-  }
+  private fun findStatusAtPosition(idx: Int): Cas2PersistedApplicationStatus = statusFinder.active()[idx]
 
   private fun dataFor(state: String, nomsNumber: String): String {
     if (state != "NOT_STARTED") {
@@ -154,13 +152,9 @@ class Cas2ApplicationsSeedJob(
     return "{}"
   }
 
-  private fun dataFixtureFor(nomsNumber: String): String {
-    return loadFixtureAsResource("data_$nomsNumber.json")
-  }
+  private fun dataFixtureFor(nomsNumber: String): String = loadFixtureAsResource("data_$nomsNumber.json")
 
-  private fun documentFixtureFor(nomsNumber: String): String {
-    return loadFixtureAsResource("document_$nomsNumber.json")
-  }
+  private fun documentFixtureFor(nomsNumber: String): String = loadFixtureAsResource("document_$nomsNumber.json")
 
   private fun loadFixtureAsResource(filename: String): String {
     val path = "db/seed/local+dev+test/cas2_application_data/$filename"

@@ -24,12 +24,12 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.BedEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.BookingEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.CancellationEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.CancellationReasonEntityFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.CaseSummaryFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ConfirmationEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ContextStaffMemberFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.DepartureEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.DepartureReasonEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.DestinationProviderEntityFactory
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.InmateDetailFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.LocalAuthorityEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.MoveOnCategoryEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.OffenderDetailsSummaryFactory
@@ -58,14 +58,14 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DestinationPr
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ExtensionEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ExtensionRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.MoveOnCategoryRepository
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PremisesEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ProbationRegionEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TemporaryAccommodationApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TurnaroundEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TurnaroundRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserEntity
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserQualification
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas3.Cas3VoidBedspacesRepository
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PersonInfoResult
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PersonSummaryInfoResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.AuthorisableActionResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.CasResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.ValidatableActionResult
@@ -77,6 +77,9 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.WorkingDayServic
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas3.Cas3BookingService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas3.Cas3PremisesService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas3.GetBookingForPremisesResult
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas3LimitedAccessStrategy
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.unit.util.assertThatCasResult
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomStringMultiCaseWithNumbers
 import java.time.Instant
 import java.time.LocalDate
 import java.time.OffsetDateTime
@@ -107,30 +110,28 @@ class Cas3BookingServiceTest {
   private val mockUserAccessService = mockk<UserAccessService>()
   private val mockAssessmentService = mockk<AssessmentService>()
 
-  fun createCas3BookingService(): Cas3BookingService {
-    return Cas3BookingService(
-      bookingRepository = mockBookingRepository,
-      bedRepository = mockBedRepository,
-      confirmationRepository = mockConfirmationRepository,
-      assessmentRepository = mockAssessmentRepository,
-      arrivalRepository = mockArrivalRepository,
-      departureRepository = mockDepartureRepository,
-      departureReasonRepository = mockDepartureReasonRepository,
-      moveOnCategoryRepository = mockMoveOnCategoryRepository,
-      cancellationRepository = mockCancellationRepository,
-      cancellationReasonRepository = mockCancellationReasonRepository,
-      cas3VoidBedspacesRepository = mockCas3VoidBedspacesRepository,
-      turnaroundRepository = mockTurnaroundRepository,
-      extensionRepository = mockExtensionRepository,
-      cas3PremisesService = mockCas3PremisesService,
-      assessmentService = mockAssessmentService,
-      userService = mockUserService,
-      userAccessService = mockUserAccessService,
-      offenderService = mockOffenderService,
-      workingDayService = mockWorkingDayService,
-      cas3DomainEventService = mockCas3DomainEventService,
-    )
-  }
+  fun createCas3BookingService(): Cas3BookingService = Cas3BookingService(
+    bookingRepository = mockBookingRepository,
+    bedRepository = mockBedRepository,
+    confirmationRepository = mockConfirmationRepository,
+    assessmentRepository = mockAssessmentRepository,
+    arrivalRepository = mockArrivalRepository,
+    departureRepository = mockDepartureRepository,
+    departureReasonRepository = mockDepartureReasonRepository,
+    moveOnCategoryRepository = mockMoveOnCategoryRepository,
+    cancellationRepository = mockCancellationRepository,
+    cancellationReasonRepository = mockCancellationReasonRepository,
+    cas3VoidBedspacesRepository = mockCas3VoidBedspacesRepository,
+    turnaroundRepository = mockTurnaroundRepository,
+    extensionRepository = mockExtensionRepository,
+    cas3PremisesService = mockCas3PremisesService,
+    assessmentService = mockAssessmentService,
+    userService = mockUserService,
+    userAccessService = mockUserAccessService,
+    offenderService = mockOffenderService,
+    workingDayService = mockWorkingDayService,
+    cas3DomainEventService = mockCas3DomainEventService,
+  )
 
   private val cas3BookingService = createCas3BookingService()
 
@@ -248,10 +249,9 @@ class Cas3BookingServiceTest {
       .withPremises(premises)
       .produce()
 
-    private val personInfo = PersonInfoResult.Success.Full(
+    private val personSummaryInfo = PersonSummaryInfoResult.Success.Full(
       crn = bookingEntity.crn,
-      offenderDetailSummary = OffenderDetailsSummaryFactory().produce(),
-      inmateDetail = InmateDetailFactory().produce(),
+      summary = CaseSummaryFactory().produce(),
     )
 
     @Test
@@ -259,14 +259,14 @@ class Cas3BookingServiceTest {
       every { mockBookingRepository.findByIdOrNull(bookingEntity.id) } returns bookingEntity
       every { mockUserService.getUserForRequest() } returns user
       every { mockUserAccessService.userCanViewBooking(user, bookingEntity) } returns true
-      every { mockOffenderService.getPersonInfoResult(bookingEntity.crn, user.deliusUsername, user.hasQualification(UserQualification.LAO)) } returns personInfo
+      every { mockOffenderService.getPersonSummaryInfoResults(setOf(bookingEntity.crn), user.cas3LimitedAccessStrategy()) } returns listOf(personSummaryInfo)
 
       val result = cas3BookingService.getBooking(bookingEntity.id)
 
       assertThat(result is AuthorisableActionResult.Success).isTrue()
       result as AuthorisableActionResult.Success
 
-      assertThat(result.entity).isEqualTo(Cas3BookingService.BookingAndPersons(bookingEntity, personInfo))
+      assertThat(result.entity).isEqualTo(Cas3BookingService.BookingAndPersons(bookingEntity, personSummaryInfo))
     }
 
     @Test
@@ -292,6 +292,130 @@ class Cas3BookingServiceTest {
 
       assertThat(result is AuthorisableActionResult.Unauthorised).isTrue()
     }
+  }
+
+  @Nested
+  inner class FindFutureBookingsForPremises {
+    val premises = TemporaryAccommodationPremisesEntityFactory()
+      .withYieldedProbationRegion {
+        ProbationRegionEntityFactory()
+          .withYieldedApArea { ApAreaEntityFactory().produce() }
+          .produce()
+      }
+      .withYieldedLocalAuthorityArea { LocalAuthorityEntityFactory().produce() }
+      .produce()
+
+    val fullPersonOffenderCaseSummary = CaseSummaryFactory().produce()
+    private val fullPersonSummaryInfo = PersonSummaryInfoResult.Success.Full(
+      crn = fullPersonOffenderCaseSummary.crn,
+      summary = fullPersonOffenderCaseSummary,
+    )
+
+    private val restrictedPersonSummaryInfo = PersonSummaryInfoResult.Success.Restricted(
+      randomStringMultiCaseWithNumbers(8),
+      randomStringMultiCaseWithNumbers(10),
+    )
+
+    @Test
+    fun `findFutureBookingsForPremises returns NotFound when premises with provided ID does not exist`() {
+      val premisesId = UUID.randomUUID()
+
+      every { mockCas3PremisesService.getPremises(premisesId) } returns null
+
+      val result = cas3BookingService.findFutureBookingsForPremises(premisesId, listOf(BookingStatus.provisional), user)
+
+      assertThatCasResult(result).isNotFound("Premises", premisesId.toString())
+    }
+
+    @Test
+    fun `findFutureBookingsForPremises returns Unauthorised if the user cannot view the bookings`() {
+      every { mockCas3PremisesService.getPremises(premises.id) } returns premises
+      every { mockUserAccessService.userCanManagePremisesBookings(user, premises) } returns false
+
+      val result = cas3BookingService.findFutureBookingsForPremises(premises.id, listOf(BookingStatus.provisional), user)
+
+      assertThat(result is CasResult.Unauthorised).isTrue()
+    }
+
+    @Test
+    fun `findFutureBookingsForPremises returns Success when there are current or future bookings belong to Premises`() {
+      val bookingStatuses = listOf(BookingStatus.provisional, BookingStatus.confirmed, BookingStatus.arrived)
+
+      val provisionalBookingEntity = createBooking(
+        premises,
+        fullPersonOffenderCaseSummary.crn,
+        BookingStatus.provisional,
+        LocalDate.now().plusDays(3),
+        LocalDate.now().plusDays(31),
+      )
+
+      val confirmedBookingEntity = createBooking(
+        premises,
+        fullPersonOffenderCaseSummary.crn,
+        BookingStatus.confirmed,
+        LocalDate.now().plusDays(21),
+        LocalDate.now().plusDays(76),
+      )
+
+      val arrivedBookingEntity = createBooking(
+        premises,
+        fullPersonOffenderCaseSummary.crn,
+        BookingStatus.arrived,
+        LocalDate.now().minusDays(3),
+        LocalDate.now().plusDays(22),
+      )
+
+      val restrictedOffenderBooking = createBooking(
+        premises,
+        restrictedPersonSummaryInfo.crn,
+        BookingStatus.arrived,
+        LocalDate.now().minusDays(17),
+        LocalDate.now().plusDays(31),
+      )
+
+      every { mockCas3PremisesService.getPremises(premises.id) } returns premises
+      every {
+        mockOffenderService.getPersonSummaryInfoResults(
+          setOf(fullPersonOffenderCaseSummary.crn, restrictedPersonSummaryInfo.crn),
+          user.cas3LimitedAccessStrategy(),
+        )
+      } returns listOf(fullPersonSummaryInfo, restrictedPersonSummaryInfo)
+      every { mockUserAccessService.userCanManagePremisesBookings(user, premises) } returns true
+      every {
+        mockBookingRepository.findFutureBookingsByPremisesIdAndStatus(
+          ServiceName.temporaryAccommodation.value,
+          premises.id,
+          LocalDate.now(),
+          bookingStatuses,
+        )
+      } returns listOf(provisionalBookingEntity, confirmedBookingEntity, arrivedBookingEntity, restrictedOffenderBooking)
+
+      assertThat(cas3BookingService.findFutureBookingsForPremises(premises.id, bookingStatuses, user))
+        .isEqualTo(
+          CasResult.Success(
+            listOf(
+              Cas3BookingService.BookingAndPersons(provisionalBookingEntity, fullPersonSummaryInfo),
+              Cas3BookingService.BookingAndPersons(confirmedBookingEntity, fullPersonSummaryInfo),
+              Cas3BookingService.BookingAndPersons(arrivedBookingEntity, fullPersonSummaryInfo),
+              Cas3BookingService.BookingAndPersons(restrictedOffenderBooking, restrictedPersonSummaryInfo),
+            ),
+          ),
+        )
+    }
+
+    private fun createBooking(
+      premises: PremisesEntity,
+      crn: String,
+      status: BookingStatus,
+      arrivalDate: LocalDate,
+      departureDate: LocalDate,
+    ): BookingEntity = BookingEntityFactory()
+      .withPremises(premises)
+      .withCrn(crn)
+      .withStatus(status)
+      .withArrivalDate(arrivalDate)
+      .withDepartureDate(departureDate)
+      .produce()
   }
 
   @Nested
@@ -1542,21 +1666,20 @@ class Cas3BookingServiceTest {
       }
     }
 
-    private fun createBooking(application: TemporaryAccommodationApplicationEntity?) =
-      BookingEntityFactory()
-        .withYieldedPremises {
-          TemporaryAccommodationPremisesEntityFactory()
-            .withYieldedProbationRegion {
-              ProbationRegionEntityFactory()
-                .withYieldedApArea { ApAreaEntityFactory().produce() }
-                .produce()
-            }
-            .withService(ServiceName.temporaryAccommodation.value)
-            .withYieldedLocalAuthorityArea { LocalAuthorityEntityFactory().produce() }
-            .produce()
-        }
-        .withApplication(application.let { application })
-        .produce()
+    private fun createBooking(application: TemporaryAccommodationApplicationEntity?) = BookingEntityFactory()
+      .withYieldedPremises {
+        TemporaryAccommodationPremisesEntityFactory()
+          .withYieldedProbationRegion {
+            ProbationRegionEntityFactory()
+              .withYieldedApArea { ApAreaEntityFactory().produce() }
+              .produce()
+          }
+          .withService(ServiceName.temporaryAccommodation.value)
+          .withYieldedLocalAuthorityArea { LocalAuthorityEntityFactory().produce() }
+          .produce()
+      }
+      .withApplication(application.let { application })
+      .produce()
   }
 
   @Nested

@@ -22,7 +22,9 @@ import java.util.UUID
 
 @SuppressWarnings("TooManyFunctions")
 @Repository
-interface UserRepository : JpaRepository<UserEntity, UUID>, JpaSpecificationExecutor<UserEntity> {
+interface UserRepository :
+  JpaRepository<UserEntity, UUID>,
+  JpaSpecificationExecutor<UserEntity> {
   @Query(
     """
     SELECT u.* FROM users u WHERE u.name ILIKE '%' || :str || '%' AND u.is_active IS TRUE
@@ -276,11 +278,9 @@ data class UserEntity(
 ) {
   fun hasRole(userRole: UserRole) = roles.any { it.role == userRole }
   fun hasAnyRole(vararg userRoles: UserRole) = userRoles.any(::hasRole)
-  fun hasQualification(userQualification: UserQualification) =
-    qualifications.any { it.qualification === userQualification }
+  fun hasQualification(userQualification: UserQualification) = qualifications.any { it.qualification === userQualification }
 
-  fun hasAllQualifications(requiredQualifications: List<UserQualification>) =
-    requiredQualifications.all(::hasQualification)
+  fun hasAllQualifications(requiredQualifications: List<UserQualification>) = requiredQualifications.all(::hasQualification)
   fun hasPermission(permission: UserPermission) = roles.any { it.role.hasPermission(permission) }
 
   override fun toString() = "User $id"

@@ -1031,12 +1031,11 @@ class PremisesController(
     )
   }
 
-  private fun getBookingForPremisesOrThrow(premisesId: UUID, bookingId: UUID) =
-    when (val result = bookingService.getBookingForPremises(premisesId, bookingId)) {
-      is GetBookingForPremisesResult.Success -> result.booking
-      is GetBookingForPremisesResult.PremisesNotFound -> throw NotFoundProblem(premisesId, "Premises")
-      is GetBookingForPremisesResult.BookingNotFound -> throw NotFoundProblem(bookingId, "Booking")
-    }
+  private fun getBookingForPremisesOrThrow(premisesId: UUID, bookingId: UUID) = when (val result = bookingService.getBookingForPremises(premisesId, bookingId)) {
+    is GetBookingForPremisesResult.Success -> result.booking
+    is GetBookingForPremisesResult.PremisesNotFound -> throw NotFoundProblem(premisesId, "Premises")
+    is GetBookingForPremisesResult.BookingNotFound -> throw NotFoundProblem(bookingId, "Booking")
+  }
 
   private fun <EntityType> extractResultEntityOrThrow(result: ValidatableActionResult<EntityType>) = when (result) {
     is ValidatableActionResult.Success -> result.entity

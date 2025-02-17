@@ -316,12 +316,11 @@ class CAS2SubjectAccessRequestServiceTest : SubjectAccessRequestServiceTestBase(
     withDescription("Some Description")
   }
 
-  private fun cas2StatusUpdateDetailEntity(statusUpdate: Cas2StatusUpdateEntity): Cas2StatusUpdateDetailEntity =
-    cas2StatusUpdateDetailEntityFactory.produceAndPersist {
-      withStatusUpdate(statusUpdate)
-      withLabel("Some detailed label")
-      withStatusDetailId(UUID.randomUUID())
-    }
+  private fun cas2StatusUpdateDetailEntity(statusUpdate: Cas2StatusUpdateEntity): Cas2StatusUpdateDetailEntity = cas2StatusUpdateDetailEntityFactory.produceAndPersist {
+    withStatusUpdate(statusUpdate)
+    withLabel("Some detailed label")
+    withStatusDetailId(UUID.randomUUID())
+  }
 
   private fun externalUserEntity() = externalUserEntityFactory.produceAndPersist {
     withName(randomStringMultiCaseWithNumbers(12))
@@ -330,13 +329,12 @@ class CAS2SubjectAccessRequestServiceTest : SubjectAccessRequestServiceTestBase(
     withUsername(randomStringMultiCaseWithNumbers(10))
   }
 
-  private fun cas2AssessmentEntity(application: Cas2ApplicationEntity) =
-    cas2AssessmentEntityFactory.produceAndPersist {
-      withApplication(application)
-      withAssessorName(randomStringMultiCaseWithNumbers(10))
-      withNacroReferralId(randomNumberChars(10))
-      withCreatedAt(OffsetDateTime.parse(CREATED_AT))
-    }
+  private fun cas2AssessmentEntity(application: Cas2ApplicationEntity) = cas2AssessmentEntityFactory.produceAndPersist {
+    withApplication(application)
+    withAssessorName(randomStringMultiCaseWithNumbers(10))
+    withNacroReferralId(randomNumberChars(10))
+    withCreatedAt(OffsetDateTime.parse(CREATED_AT))
+  }
 
   private fun cas2ApplicationEntity(
     offenderDetails: OffenderDetailSummary,

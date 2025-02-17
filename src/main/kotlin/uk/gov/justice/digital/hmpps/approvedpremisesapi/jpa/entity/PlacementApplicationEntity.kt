@@ -85,7 +85,7 @@ data class PlacementApplicationEntity(
   @JoinColumn(name = "created_by_user_id")
   val createdByUser: UserEntity,
 
-  @ManyToOne
+  @ManyToOne(fetch = FetchType.LAZY)
   @JoinColumn(name = "schema_version")
   var schemaVersion: ApprovedPremisesPlacementApplicationJsonSchemaEntity,
 
@@ -231,7 +231,6 @@ enum class PlacementApplicationWithdrawalReason(val apiValue: WithdrawPlacementR
   ;
 
   companion object {
-    fun valueOf(apiValue: WithdrawPlacementRequestReason): PlacementApplicationWithdrawalReason? =
-      PlacementApplicationWithdrawalReason.entries.firstOrNull { it.apiValue == apiValue }
+    fun valueOf(apiValue: WithdrawPlacementRequestReason): PlacementApplicationWithdrawalReason? = PlacementApplicationWithdrawalReason.entries.firstOrNull { it.apiValue == apiValue }
   }
 }

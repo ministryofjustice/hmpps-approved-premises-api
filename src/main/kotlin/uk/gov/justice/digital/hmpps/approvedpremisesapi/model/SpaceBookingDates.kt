@@ -22,8 +22,7 @@ data class SpaceBookingDates(
       expectedDepartureDate.isBefore(twoWeeksFromNow.plusDays(1))
   }
 
-  fun isDepartingToday(nowDate: LocalDate) =
-    nowDate == expectedDepartureDate && hasArrivedAndNotDeparted()
+  fun isDepartingToday(nowDate: LocalDate) = nowDate == expectedDepartureDate && hasArrivedAndNotDeparted()
 
   fun hasArrivedAndNotDeparted() = hasArrived() && !hasDeparted()
 
@@ -31,8 +30,7 @@ data class SpaceBookingDates(
 
   fun hasDeparted() = actualDepartureDate != null
 
-  fun isArrivalToday(nowDate: LocalDate): Boolean =
-    !hasArrived() && expectedArrivalDate == nowDate
+  fun isArrivalToday(nowDate: LocalDate): Boolean = !hasArrived() && expectedArrivalDate == nowDate
 
   fun isArrivalWithin2Weeks(nowDate: LocalDate): Boolean {
     val twoWeeksFromNow = LocalDate.now().plusWeeks(TWO_WEEKS)
@@ -48,9 +46,7 @@ data class SpaceBookingDates(
       expectedArrivalDate.isBefore(sixWeeksFromNow.plusDays(1))
   }
 
-  fun isOverdueArrival(nowDate: LocalDate) =
-    !hasArrived() && nowDate.isAfter(expectedArrivalDate)
+  fun isOverdueArrival(nowDate: LocalDate) = !hasArrived() && nowDate.isAfter(expectedArrivalDate)
 
-  fun isOverdueDeparture(nowDate: LocalDate) =
-    hasArrivedAndNotDeparted() && nowDate.isAfter(expectedDepartureDate)
+  fun isOverdueDeparture(nowDate: LocalDate) = hasArrivedAndNotDeparted() && nowDate.isAfter(expectedDepartureDate)
 }

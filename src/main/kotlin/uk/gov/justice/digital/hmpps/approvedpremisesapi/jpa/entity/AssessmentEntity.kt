@@ -6,6 +6,7 @@ import jakarta.persistence.DiscriminatorValue
 import jakarta.persistence.Entity
 import jakarta.persistence.EnumType
 import jakarta.persistence.Enumerated
+import jakarta.persistence.FetchType
 import jakarta.persistence.Id
 import jakarta.persistence.Inheritance
 import jakarta.persistence.InheritanceType
@@ -198,6 +199,7 @@ interface LockableAssessmentRepository : JpaRepository<LockableAssessmentEntity,
 
 fun <T : AssessmentEntity> AssessmentRepository.findAssessmentById(id: UUID): T? = findByIdOrNull(id) as T?
 
+@SuppressWarnings("LongParameterList")
 @Entity
 @Table(name = "assessments")
 @DiscriminatorColumn(name = "service")
@@ -216,7 +218,7 @@ abstract class AssessmentEntity(
   @Type(JsonType::class)
   var document: String?,
 
-  @ManyToOne
+  @ManyToOne(fetch = FetchType.LAZY)
   @JoinColumn(name = "schema_version")
   var schemaVersion: JsonSchemaEntity,
 
@@ -272,6 +274,7 @@ class LockableAssessmentEntity(
 @DiscriminatorValue("approved-premises")
 @Table(name = "approved_premises_assessments")
 @PrimaryKeyJoinColumn(name = "assessment_id")
+@SuppressWarnings("LongParameterList")
 class ApprovedPremisesAssessmentEntity(
   id: UUID,
   application: ApplicationEntity,
@@ -291,6 +294,9 @@ class ApprovedPremisesAssessmentEntity(
   isWithdrawn: Boolean,
   dueAt: OffsetDateTime?,
   var createdFromAppeal: Boolean,
+  var agreeWithShortNoticeReason: Boolean? = null,
+  var agreeWithShortNoticeReasonComments: String? = null,
+  var reasonForLateApplication: String? = null,
 ) : AssessmentEntity(
   id,
   application,
@@ -363,13 +369,11 @@ class TemporaryAccommodationAssessmentEntity(
   isWithdrawn,
   dueAt,
 ) {
-  fun currentReleaseDate(): LocalDate =
-    this.releaseDate
-      ?: this.typedApplication<TemporaryAccommodationApplicationEntity>().personReleaseDate!!
+  fun currentReleaseDate(): LocalDate = this.releaseDate
+    ?: this.typedApplication<TemporaryAccommodationApplicationEntity>().personReleaseDate!!
 
-  fun currentAccommodationRequiredFromDate(): LocalDate =
-    this.accommodationRequiredFromDate
-      ?: this.typedApplication<TemporaryAccommodationApplicationEntity>().arrivalDate!!.toLocalDate()
+  fun currentAccommodationRequiredFromDate(): LocalDate = this.accommodationRequiredFromDate
+    ?: this.typedApplication<TemporaryAccommodationApplicationEntity>().arrivalDate!!.toLocalDate()
 }
 
 interface DomainAssessmentSummary {

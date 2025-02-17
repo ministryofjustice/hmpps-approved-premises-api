@@ -5,8 +5,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.model.Placemen
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1ReportService.MonthSpecificReportParams
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.toLocalDate
 
-class PlacementApplicationReportGenerator :
-  ReportGenerator<PlacementApplicationEntityReportRow, PlacementApplicationReportRow, MonthSpecificReportParams>(PlacementApplicationReportRow::class) {
+class PlacementApplicationReportGenerator : ReportGenerator<PlacementApplicationEntityReportRow, PlacementApplicationReportRow, MonthSpecificReportParams>(PlacementApplicationReportRow::class) {
 
   override fun filter(properties: MonthSpecificReportParams): (PlacementApplicationEntityReportRow) -> Boolean = {
     true

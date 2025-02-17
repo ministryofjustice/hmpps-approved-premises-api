@@ -23,6 +23,10 @@ class RequestResponseLoggingFilter(
   val environmentService: EnvironmentService,
 ) : OncePerRequestFilter() {
 
+  companion object {
+    const val ATTRIBUTE_RECEIVED_TIMESTAMP = "received_timestamp"
+  }
+
   var log: Logger = LoggerFactory.getLogger(this::class.java)
   var simpleRequestLog: Logger = LoggerFactory.getLogger("${this::class.java.`package`.name}.RequestResponseLoggingFilterSimple")
 
@@ -39,6 +43,8 @@ class RequestResponseLoggingFilter(
     if (request.requestURI.contains("health")) {
       return filterChain.doFilter(request, response)
     }
+
+    request.setAttribute(ATTRIBUTE_RECEIVED_TIMESTAMP, System.currentTimeMillis())
 
     val requestWrapper = ContentCachingRequestWrapper(request)
     val responseWrapper = ContentCachingResponseWrapper(response)
@@ -83,7 +89,9 @@ class RequestResponseLoggingFilter(
     requestWrapper: ContentCachingRequestWrapper,
   ) {
     val request = requestWrapper.request
-    log.info("Request {}", String(requestWrapper.contentAsByteArray))
+    val timeTookMillis = request.getAttribute(ATTRIBUTE_RECEIVED_TIMESTAMP)?.let { System.currentTimeMillis() - it as Long }
+
+    log.info("Request took {}ms. Body was {}", timeTookMillis, String(requestWrapper.contentAsByteArray))
 
     if (request is HttpServletRequest) {
       simpleRequestLog.trace("${request.method} ${request.requestURI}" + (request.queryString?.let { "?$it" } ?: ""))

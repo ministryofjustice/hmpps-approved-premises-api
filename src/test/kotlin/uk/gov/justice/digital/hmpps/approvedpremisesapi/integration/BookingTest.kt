@@ -3591,13 +3591,12 @@ class BookingTest : IntegrationTestBase() {
     destinationProviderId = null,
   )
 
-  private fun createTemporaryAccommodationPremises(userEntity: UserEntity) =
-    temporaryAccommodationPremisesEntityFactory.produceAndPersist {
-      withProbationRegion(userEntity.probationRegion)
-      withYieldedLocalAuthorityArea {
-        localAuthorityEntityFactory.produceAndPersist()
-      }
+  private fun createTemporaryAccommodationPremises(userEntity: UserEntity) = temporaryAccommodationPremisesEntityFactory.produceAndPersist {
+    withProbationRegion(userEntity.probationRegion)
+    withYieldedLocalAuthorityArea {
+      localAuthorityEntityFactory.produceAndPersist()
     }
+  }
 
   private fun createTemporaryAccommodationBooking(
     premises: TemporaryAccommodationPremisesEntity,

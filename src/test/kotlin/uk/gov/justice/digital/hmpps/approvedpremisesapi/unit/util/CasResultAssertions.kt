@@ -8,10 +8,11 @@ fun <T> assertThat(actual: CasResult<T>): CasResultAssertions<T> = CasResultAsse
 
 fun <T> assertThatCasResult(actual: CasResult<T>): CasResultAssertions<T> = CasResultAssertions(actual)
 
-class CasResultAssertions<T>(actual: CasResult<T>) : AbstractAssert<CasResultAssertions<T>, CasResult<T>>(
-  actual,
-  CasResultAssertions::class.java,
-) {
+class CasResultAssertions<T>(actual: CasResult<T>) :
+  AbstractAssert<CasResultAssertions<T>, CasResult<T>>(
+    actual,
+    CasResultAssertions::class.java,
+  ) {
 
   fun isSuccess(): CasSuccessResultAssertions<T> {
     if (actual !is CasResult.Success) {
@@ -89,10 +90,11 @@ class CasResultAssertions<T>(actual: CasResult<T>) : AbstractAssert<CasResultAss
   }
 }
 
-class CasSuccessResultAssertions<T>(actual: CasResult.Success<T>) : AbstractAssert<CasSuccessResultAssertions<T>, CasResult.Success<T>>(
-  actual,
-  CasSuccessResultAssertions::class.java,
-) {
+class CasSuccessResultAssertions<T>(actual: CasResult.Success<T>) :
+  AbstractAssert<CasSuccessResultAssertions<T>, CasResult.Success<T>>(
+    actual,
+    CasSuccessResultAssertions::class.java,
+  ) {
   fun hasValueEqualTo(expected: Any): CasSuccessResultAssertions<T> {
     val value = actual.value
     if (value != expected) {

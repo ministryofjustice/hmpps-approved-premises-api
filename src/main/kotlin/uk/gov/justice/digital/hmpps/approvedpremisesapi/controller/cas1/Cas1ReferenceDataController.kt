@@ -33,40 +33,29 @@ class Cas1ReferenceDataController(
   private val moveOnCategoryTransformer: MoveOnCategoryTransformer,
 ) : ReferenceDataCas1Delegate {
 
-  override fun getOutOfServiceBedReasons(): ResponseEntity<List<Cas1OutOfServiceBedReason>> {
-    return ResponseEntity.ok(
-      cas1OutOfServiceBedReasonRepository.findActive().map {
-          reason ->
-        cas1OutOfServiceBedReasonTransformer.transformJpaToApi(reason)
-      },
-    )
-  }
+  override fun getOutOfServiceBedReasons(): ResponseEntity<List<Cas1OutOfServiceBedReason>> = ResponseEntity.ok(
+    cas1OutOfServiceBedReasonRepository.findActive().map { reason ->
+      cas1OutOfServiceBedReasonTransformer.transformJpaToApi(reason)
+    },
+  )
 
-  override fun getCruManagementAreas(): ResponseEntity<List<Cas1CruManagementArea>> {
-    return ResponseEntity.ok(
-      cas1CruManagementAreaRepository.findAll()
-        .map { cas1CruManagementAreaTransformer.transformJpaToApi(it) },
-    )
-  }
+  override fun getCruManagementAreas(): ResponseEntity<List<Cas1CruManagementArea>> = ResponseEntity.ok(
+    cas1CruManagementAreaRepository.findAll()
+      .map { cas1CruManagementAreaTransformer.transformJpaToApi(it) },
+  )
 
-  override fun getDepartureReasons(): ResponseEntity<List<DepartureReason>> {
-    return ResponseEntity.ok(
-      departureReasonRepository.findActiveForCas1()
-        .map { departureReasonTransformer.transformJpaToApi(it) },
-    )
-  }
+  override fun getDepartureReasons(): ResponseEntity<List<DepartureReason>> = ResponseEntity.ok(
+    departureReasonRepository.findActiveForCas1()
+      .map { departureReasonTransformer.transformJpaToApi(it) },
+  )
 
-  override fun getMoveOnCategories(): ResponseEntity<List<MoveOnCategory>> {
-    return ResponseEntity.ok(
-      moveOnCategoryRepository.findActiveForCas1()
-        .map(moveOnCategoryTransformer::transformJpaToApi),
-    )
-  }
+  override fun getMoveOnCategories(): ResponseEntity<List<MoveOnCategory>> = ResponseEntity.ok(
+    moveOnCategoryRepository.findActiveForCas1()
+      .map(moveOnCategoryTransformer::transformJpaToApi),
+  )
 
-  override fun getNonArrivalReasons(): ResponseEntity<List<NonArrivalReason>> {
-    return ResponseEntity.ok(
-      nonArrivalReasonRepository.findAllActiveReasons()
-        .map(nonArrivalReasonTransformer::transformJpaToApi),
-    )
-  }
+  override fun getNonArrivalReasons(): ResponseEntity<List<NonArrivalReason>> = ResponseEntity.ok(
+    nonArrivalReasonRepository.findAllActiveReasons()
+      .map(nonArrivalReasonTransformer::transformJpaToApi),
+  )
 }

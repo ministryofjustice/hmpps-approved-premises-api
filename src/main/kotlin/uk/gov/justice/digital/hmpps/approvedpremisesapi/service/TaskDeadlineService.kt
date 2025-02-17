@@ -60,10 +60,9 @@ class TaskDeadlineService(
     return addWorkingDays(effectivePlacementApplicationSubmittedAt, PLACEMENT_APPLICATION_TIMEFRAME_WORKDAYS)
   }
 
-  private fun addWorkingDays(date: OffsetDateTime, workingDays: Int): OffsetDateTime =
-    workingDayService
-      .addWorkingDays(date.toLocalDate(), workingDays)
-      .atTime(date.toOffsetTime())
+  private fun addWorkingDays(date: OffsetDateTime, workingDays: Int): OffsetDateTime = workingDayService
+    .addWorkingDays(date.toLocalDate(), workingDays)
+    .atTime(date.toOffsetTime())
 
   private fun ZonedDateTime.isWorkingDay() = this.toLocalDate().isWorkingDay(workingDayService.bankHolidays)
   private fun ZonedDateTime.isBeforeSameWorkingDayDeadline() = this.toLocalTime().isBefore(SAME_WORKING_DAY_DEADLINE_TIME)

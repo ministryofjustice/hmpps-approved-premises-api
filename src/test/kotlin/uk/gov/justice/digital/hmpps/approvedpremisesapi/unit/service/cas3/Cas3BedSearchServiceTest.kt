@@ -14,7 +14,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.RoomEntityFactor
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.TemporaryAccommodationPremisesEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.TurnaroundEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.UserEntityFactory
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.BookingRepository
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas3BookingRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.OverlapBookingsSearchResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ProbationDeliveryUnitRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PersonSummaryInfoResult
@@ -34,7 +34,7 @@ import java.util.UUID
 class Cas3BedSearchServiceTest {
   private val mockBedSearchRepository = mockk<BedSearchRepository>()
   private val mockCharacteristicService = mockk<CharacteristicService>()
-  private val mockBookingRepository = mockk<BookingRepository>()
+  private val mockBookingRepository = mockk<Cas3BookingRepository>()
   private val mockWorkingDayService = mockk<WorkingDayService>()
   private val mockProbationDeliveryUnitRepository = mockk<ProbationDeliveryUnitRepository>()
   private val mockOffenderService = mockk<OffenderService>()
@@ -161,6 +161,7 @@ class Cas3BedSearchServiceTest {
       premisesId = UUID.randomUUID(),
       roomId = UUID.randomUUID(),
       assessmentId = UUID.randomUUID(),
+      sexualRisk = false,
     )
 
     val repositorySearchResults = listOf(
@@ -202,6 +203,7 @@ class Cas3BedSearchServiceTest {
             roomId = overlapBookingsSearchResult.roomId,
             bookingId = overlapBookingsSearchResult.bookingId,
             assessmentId = overlapBookingsSearchResult.assessmentId,
+            isSexualRisk = false,
           ),
         ),
       ),
@@ -443,5 +445,6 @@ class Cas3BedSearchServiceTest {
     override val premisesId: UUID,
     override val roomId: UUID,
     override val assessmentId: UUID,
+    override val sexualRisk: Boolean,
   ) : OverlapBookingsSearchResult
 }

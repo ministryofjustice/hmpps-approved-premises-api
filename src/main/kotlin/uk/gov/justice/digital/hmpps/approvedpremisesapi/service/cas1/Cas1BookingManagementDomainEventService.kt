@@ -269,18 +269,15 @@ class Cas1SpaceBookingManagementDomainEventService(
     )
   }
 
-  private fun getStaffDetailsByUsername(deliusUsername: String) =
-    when (val staffDetailsResult = apDeliusContextApiClient.getStaffDetail(deliusUsername)) {
-      is ClientResult.Success -> staffDetailsResult.body
-      is ClientResult.Failure -> staffDetailsResult.throwException()
-    }
+  private fun getStaffDetailsByUsername(deliusUsername: String) = when (val staffDetailsResult = apDeliusContextApiClient.getStaffDetail(deliusUsername)) {
+    is ClientResult.Success -> staffDetailsResult.body
+    is ClientResult.Failure -> staffDetailsResult.throwException()
+  }
 
-  private fun getStaffDetailsByStaffCode(staffCode: String?): StaffMember? {
-    return staffCode?.let {
-      when (val staffDetailResponse = apDeliusContextApiClient.getStaffDetailByStaffCode(staffCode)) {
-        is ClientResult.Success -> staffDetailResponse.body.toStaffMember()
-        is ClientResult.Failure -> staffDetailResponse.throwException()
-      }
+  private fun getStaffDetailsByStaffCode(staffCode: String?): StaffMember? = staffCode?.let {
+    when (val staffDetailResponse = apDeliusContextApiClient.getStaffDetailByStaffCode(staffCode)) {
+      is ClientResult.Success -> staffDetailResponse.body.toStaffMember()
+      is ClientResult.Failure -> staffDetailResponse.throwException()
     }
   }
 
@@ -300,12 +297,11 @@ class Cas1SpaceBookingManagementDomainEventService(
     return offenderDetails
   }
 
-  private fun mapApprovedPremisesEntityToPremises(aPEntity: ApprovedPremisesEntity) =
-    Premises(
-      id = aPEntity.id,
-      name = aPEntity.name,
-      apCode = aPEntity.apCode,
-      legacyApCode = aPEntity.qCode,
-      localAuthorityAreaName = aPEntity.localAuthorityArea!!.name,
-    )
+  private fun mapApprovedPremisesEntityToPremises(aPEntity: ApprovedPremisesEntity) = Premises(
+    id = aPEntity.id,
+    name = aPEntity.name,
+    apCode = aPEntity.apCode,
+    legacyApCode = aPEntity.qCode,
+    localAuthorityAreaName = aPEntity.localAuthorityArea!!.name,
+  )
 }

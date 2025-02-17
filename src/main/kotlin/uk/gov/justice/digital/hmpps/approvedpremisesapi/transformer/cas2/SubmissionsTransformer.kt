@@ -24,34 +24,30 @@ class SubmissionsTransformer(
     jpa: Cas2ApplicationEntity,
     personInfo: PersonInfoResult
       .Success,
-  ): Cas2SubmittedApplication {
-    return Cas2SubmittedApplication(
-      id = jpa.id,
-      person = personTransformer.transformModelToPersonApi(personInfo),
-      submittedBy = nomisUserTransformer.transformJpaToApi(jpa.createdByUser),
-      schemaVersion = jpa.schemaVersion.id,
-      outdatedSchema = !jpa.schemaUpToDate,
-      createdAt = jpa.createdAt.toInstant(),
-      submittedAt = jpa.submittedAt?.toInstant(),
-      document = if (jpa.document != null) objectMapper.readTree(jpa.document) else null,
-      telephoneNumber = jpa.telephoneNumber,
-      timelineEvents = timelineEventsTransformer.transformApplicationToTimelineEvents(jpa),
-      assessment = assessmentsTransformer.transformJpaToApiRepresentation(jpa.assessment!!),
-    )
-  }
+  ): Cas2SubmittedApplication = Cas2SubmittedApplication(
+    id = jpa.id,
+    person = personTransformer.transformModelToPersonApi(personInfo),
+    submittedBy = nomisUserTransformer.transformJpaToApi(jpa.createdByUser),
+    schemaVersion = jpa.schemaVersion.id,
+    outdatedSchema = !jpa.schemaUpToDate,
+    createdAt = jpa.createdAt.toInstant(),
+    submittedAt = jpa.submittedAt?.toInstant(),
+    document = if (jpa.document != null) objectMapper.readTree(jpa.document) else null,
+    telephoneNumber = jpa.telephoneNumber,
+    timelineEvents = timelineEventsTransformer.transformApplicationToTimelineEvents(jpa),
+    assessment = assessmentsTransformer.transformJpaToApiRepresentation(jpa.assessment!!),
+  )
 
   fun transformJpaSummaryToApiRepresentation(
     jpaSummary: Cas2ApplicationSummaryEntity,
     personName: String,
-  ): Cas2SubmittedApplicationSummary {
-    return Cas2SubmittedApplicationSummary(
-      id = jpaSummary.id,
-      personName = personName,
-      createdByUserId = UUID.fromString(jpaSummary.userId),
-      createdAt = jpaSummary.createdAt.toInstant(),
-      submittedAt = jpaSummary.submittedAt?.toInstant(),
-      crn = jpaSummary.crn,
-      nomsNumber = jpaSummary.nomsNumber,
-    )
-  }
+  ): Cas2SubmittedApplicationSummary = Cas2SubmittedApplicationSummary(
+    id = jpaSummary.id,
+    personName = personName,
+    createdByUserId = UUID.fromString(jpaSummary.userId),
+    createdAt = jpaSummary.createdAt.toInstant(),
+    submittedAt = jpaSummary.submittedAt?.toInstant(),
+    crn = jpaSummary.crn,
+    nomsNumber = jpaSummary.nomsNumber,
+  )
 }

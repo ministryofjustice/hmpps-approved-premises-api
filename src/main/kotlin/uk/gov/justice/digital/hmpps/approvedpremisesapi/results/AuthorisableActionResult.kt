@@ -28,5 +28,4 @@ sealed interface AuthorisableActionResult<EntityType> {
   ) : AuthorisableActionResult<EntityType>
 }
 
-fun <T, U> AuthorisableActionResult.NotFound<T>.into(): AuthorisableActionResult.NotFound<U> =
-  AuthorisableActionResult.NotFound(this.entityType, this.id)
+fun <T, U> AuthorisableActionResult.NotFound<T>.into(): AuthorisableActionResult.NotFound<U> = AuthorisableActionResult.NotFound(this.entityType, this.id)

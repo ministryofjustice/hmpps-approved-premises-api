@@ -53,8 +53,7 @@ data class DepartureReasonEntity(
   fun isCas1() = serviceScope == "approved-premises"
 
   companion object {
-    fun valueOf(apiValue: WithdrawPlacementRequestReason): PlacementRequestWithdrawalReason? =
-      PlacementRequestWithdrawalReason.entries.firstOrNull { it.apiValue == apiValue }
+    fun valueOf(apiValue: WithdrawPlacementRequestReason): PlacementRequestWithdrawalReason? = PlacementRequestWithdrawalReason.entries.firstOrNull { it.apiValue == apiValue }
   }
 }
 

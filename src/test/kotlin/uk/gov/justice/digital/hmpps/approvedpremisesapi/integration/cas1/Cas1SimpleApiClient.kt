@@ -147,18 +147,16 @@ class Cas1SimpleApiClient {
     assessmentId: UUID,
     assessorJwt: String,
     body: NewClarificationNote,
-  ): ClarificationNote {
-    return integrationTestBase.webTestClient.post()
-      .uri("/assessments/$assessmentId/notes")
-      .header("Authorization", "Bearer $assessorJwt")
-      .bodyValue(body)
-      .exchange()
-      .expectStatus()
-      .isOk
-      .returnResult<ClarificationNote>()
-      .responseBody
-      .blockFirst()!!
-  }
+  ): ClarificationNote = integrationTestBase.webTestClient.post()
+    .uri("/assessments/$assessmentId/notes")
+    .header("Authorization", "Bearer $assessorJwt")
+    .bodyValue(body)
+    .exchange()
+    .expectStatus()
+    .isOk
+    .returnResult<ClarificationNote>()
+    .responseBody
+    .blockFirst()!!
 
   fun assessmentUpdateClarificationNote(
     integrationTestBase: IntegrationTestBase,

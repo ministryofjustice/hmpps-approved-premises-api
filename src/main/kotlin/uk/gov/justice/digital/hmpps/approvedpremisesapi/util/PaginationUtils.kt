@@ -30,9 +30,7 @@ data class PageCriteria<S>(
   val page: Int?,
   val perPage: Int? = null,
 ) {
-  fun <S2> withSortBy(sortBy: S2): PageCriteria<S2> {
-    return PageCriteria(sortBy, this.sortDirection, this.page, this.perPage)
-  }
+  fun <S2> withSortBy(sortBy: S2): PageCriteria<S2> = PageCriteria(sortBy, this.sortDirection, this.page, this.perPage)
 
   @Deprecated("This function will ignore sorting if no page is defined. This is most likely not the expected behaviour", ReplaceWith("getPageableOrAllPages"))
   fun toPageable(sortByConverter: String) = getPageable(
@@ -52,21 +50,23 @@ data class PageCriteria<S>(
 }
 
 @Deprecated("This function will ignore sorting if no page is defined. This is most likely not the expected behaviour", ReplaceWith("getPageableOrAllPages"))
-fun getPageable(sortBy: String, sortDirection: SortDirection?, page: Int?, pageSize: Int? = null, unsafe: Boolean = false): Pageable? {
-  return if (page != null) {
-    PageRequest.of(
-      page - 1,
-      resolvePageSize(pageSize),
-      toSort(sortBy, sortDirection, unsafe),
-    )
-  } else {
-    null
-  }
+fun getPageable(sortBy: String, sortDirection: SortDirection?, page: Int?, pageSize: Int? = null, unsafe: Boolean = false): Pageable? = if (page != null) {
+  PageRequest.of(
+    page - 1,
+    resolvePageSize(pageSize),
+    toSort(sortBy, sortDirection, unsafe),
+  )
+} else {
+  null
 }
 
-fun getPageableOrAllPages(sortBy: String, sortDirection: SortDirection?, page: Int?, pageSize: Int?, unsafe: Boolean = false): Pageable {
-  return getPageableOrAllPages(listOf(sortBy), sortDirection, page, pageSize, unsafe)
-}
+fun getPageableOrAllPages(sortBy: String, sortDirection: SortDirection?, page: Int?, pageSize: Int?, unsafe: Boolean = false): Pageable = getPageableOrAllPages(
+  sortBy = listOf(sortBy),
+  sortDirection = sortDirection,
+  page = page,
+  pageSize = pageSize,
+  unsafe = unsafe,
+)
 
 fun getPageableOrAllPages(sortBy: List<String>, sortDirection: SortDirection?, page: Int?, pageSize: Int?, unsafe: Boolean = false): Pageable {
   val direction = sortDirection(sortDirection)
@@ -100,28 +100,22 @@ fun getPageableOrAllPages(sortBy: List<String>, sortDirection: SortDirection?, p
   }
 }
 
-fun getPageableOrAllPages(criteria: PageCriteria<String>, unsafe: Boolean = false): Pageable =
-  getPageableOrAllPages(
-    criteria.sortBy,
-    criteria.sortDirection,
-    criteria.page,
-    criteria.perPage,
-    unsafe,
-  )
+fun getPageableOrAllPages(criteria: PageCriteria<String>, unsafe: Boolean = false): Pageable = getPageableOrAllPages(
+  criteria.sortBy,
+  criteria.sortDirection,
+  criteria.page,
+  criteria.perPage,
+  unsafe,
+)
 
-fun <T> getMetadata(response: Page<T>, pageCriteria: PageCriteria<*>): PaginationMetadata? =
-  getMetadataWithSize(response, pageCriteria.page, pageCriteria.perPage)
+fun <T> getMetadata(response: Page<T>, pageCriteria: PageCriteria<*>): PaginationMetadata? = getMetadataWithSize(response, pageCriteria.page, pageCriteria.perPage)
 
-fun <T> getMetadata(response: Page<T>, page: Int?, size: Int? = 10): PaginationMetadata? {
-  return getMetadataWithSize(response, page, size)
-}
+fun <T> getMetadata(response: Page<T>, page: Int?, size: Int? = 10): PaginationMetadata? = getMetadataWithSize(response, page, size)
 
-fun <T> getMetadataWithSize(response: Page<T>, page: Int?, pageSize: Int?): PaginationMetadata? {
-  return if (page != null) {
-    PaginationMetadata(page, response.totalPages, response.totalElements, resolvePageSize(pageSize))
-  } else {
-    null
-  }
+fun <T> getMetadataWithSize(response: Page<T>, page: Int?, pageSize: Int?): PaginationMetadata? = if (page != null) {
+  PaginationMetadata(page, response.totalPages, response.totalElements, resolvePageSize(pageSize))
+} else {
+  null
 }
 
 private fun resolvePageSize(perPage: Int?) = perPage ?: config.defaultPageSize

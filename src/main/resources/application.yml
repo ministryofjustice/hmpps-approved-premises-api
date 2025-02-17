@@ -67,6 +67,16 @@ spring:
           jwk-set-uri: ${hmpps.auth.url}/.well-known/jwks.json
       client:
         registration:
+          manage-pom-cases:
+            provider: hmpps-auth
+            client-id: approved-premises-api
+            client-secret: clientsecret
+            authorization-grant-type: client_credentials
+          prisoner-search:
+            provider: hmpps-auth
+            client-id: approved-premises-api
+            client-secret: clientsecret
+            authorization-grant-type: client_credentials
           delius-backed-apis:
             provider: hmpps-auth
             client-id: approved-premises-api
@@ -171,6 +181,12 @@ services:
     base-url: http://localhost:9004
   gov-uk-bank-holidays-api:
     base-url: https://www.gov.uk
+  manage-pom-cases:
+    connection-timeout: 1000
+    read-timeout: 5000
+  prisoner-search:
+    connection-timeout: 1000
+    read-timeout: 5000
 
 hmpps:
   auth:
@@ -308,4 +324,4 @@ scheduling:
   enabled: true
 
 feature-flags:
-
+  cas2-sqs-listener-enabled: false

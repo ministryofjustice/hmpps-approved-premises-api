@@ -5,7 +5,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.DepartureReaso
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DepartureReasonEntity
 
 @Component
-class DepartureReasonTransformer() {
+class DepartureReasonTransformer {
   fun transformJpaToApi(jpa: DepartureReasonEntity) = DepartureReason(
     id = jpa.id,
     name = jpa.name,

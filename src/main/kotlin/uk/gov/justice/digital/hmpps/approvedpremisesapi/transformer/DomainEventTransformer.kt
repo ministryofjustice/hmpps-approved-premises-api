@@ -10,11 +10,10 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.deliuscontext.Staf
 
 @Component
 class DomainEventTransformer(private val apDeliusContextApiClient: ApDeliusContextApiClient) {
-  fun toWithdrawnBy(user: UserEntity) =
-    when (val result = apDeliusContextApiClient.getStaffDetail(user.deliusUsername)) {
-      is ClientResult.Success -> toWithdrawnBy(result.body)
-      is ClientResult.Failure -> result.throwException()
-    }
+  fun toWithdrawnBy(user: UserEntity) = when (val result = apDeliusContextApiClient.getStaffDetail(user.deliusUsername)) {
+    is ClientResult.Success -> toWithdrawnBy(result.body)
+    is ClientResult.Failure -> result.throwException()
+  }
 
   fun toWithdrawnBy(staffDetails: StaffDetail): WithdrawnBy {
     val staffMember = staffDetails.toStaffMember()
@@ -22,16 +21,13 @@ class DomainEventTransformer(private val apDeliusContextApiClient: ApDeliusConte
     return WithdrawnBy(staffMember, probationArea)
   }
 
-  fun toProbationArea(staffDetails: StaffDetail): ProbationArea {
-    return ProbationArea(
-      code = staffDetails.probationArea.code,
-      name = staffDetails.probationArea.description,
-    )
-  }
+  fun toProbationArea(staffDetails: StaffDetail): ProbationArea = ProbationArea(
+    code = staffDetails.probationArea.code,
+    name = staffDetails.probationArea.description,
+  )
 
-  fun toStaffMember(user: UserEntity) =
-    when (val result = apDeliusContextApiClient.getStaffDetail(user.deliusUsername)) {
-      is ClientResult.Success -> result.body.toStaffMember()
-      is ClientResult.Failure -> result.throwException()
-    }
+  fun toStaffMember(user: UserEntity) = when (val result = apDeliusContextApiClient.getStaffDetail(user.deliusUsername)) {
+    is ClientResult.Success -> result.body.toStaffMember()
+    is ClientResult.Failure -> result.throwException()
+  }
 }

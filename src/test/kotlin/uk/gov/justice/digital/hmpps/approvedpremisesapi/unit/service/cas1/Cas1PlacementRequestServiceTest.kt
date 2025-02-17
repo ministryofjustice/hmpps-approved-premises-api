@@ -1248,56 +1248,54 @@ class Cas1PlacementRequestServiceTest {
     }
   }
 
-  private fun createPlacementRequests(num: Int, crn: String? = null, tier: String? = null, arrivalDate: LocalDate? = null): List<PlacementRequestEntity> {
-    return List(num) {
-      val user = UserEntityFactory()
-        .withUnitTestControlProbationRegion()
-        .produce()
+  private fun createPlacementRequests(num: Int, crn: String? = null, tier: String? = null, arrivalDate: LocalDate? = null): List<PlacementRequestEntity> = List(num) {
+    val user = UserEntityFactory()
+      .withUnitTestControlProbationRegion()
+      .produce()
 
-      val application = ApprovedPremisesApplicationEntityFactory()
-        .withCreatedByUser(user)
-        .apply {
-          if (crn != null) this.withCrn(crn)
+    val application = ApprovedPremisesApplicationEntityFactory()
+      .withCreatedByUser(user)
+      .apply {
+        if (crn != null) this.withCrn(crn)
 
-          if (tier != null) {
-            this.withRiskRatings(
-              PersonRisksFactory()
-                .withTier(
-                  RiskWithStatus(
-                    RiskTier(
-                      level = tier,
-                      lastUpdated = LocalDate.now(),
-                    ),
+        if (tier != null) {
+          this.withRiskRatings(
+            PersonRisksFactory()
+              .withTier(
+                RiskWithStatus(
+                  RiskTier(
+                    level = tier,
+                    lastUpdated = LocalDate.now(),
                   ),
-                )
-                .produce(),
-            )
-          }
+                ),
+              )
+              .produce(),
+          )
         }
-        .produce()
+      }
+      .produce()
 
-      val assessment = ApprovedPremisesAssessmentEntityFactory()
-        .withApplication(application)
-        .withAllocatedToUser(user)
-        .produce()
+    val assessment = ApprovedPremisesAssessmentEntityFactory()
+      .withApplication(application)
+      .withAllocatedToUser(user)
+      .produce()
 
-      PlacementRequestEntityFactory()
-        .withPlacementRequirements(
-          PlacementRequirementsEntityFactory()
-            .withApplication(application)
-            .withAssessment(assessment)
-            .produce(),
-        )
-        .withApplication(application)
-        .withAssessment(assessment)
-        .withAllocatedToUser(assigneeUser)
-        .apply {
-          if (arrivalDate != null) {
-            this.withExpectedArrival(arrivalDate)
-          }
+    PlacementRequestEntityFactory()
+      .withPlacementRequirements(
+        PlacementRequirementsEntityFactory()
+          .withApplication(application)
+          .withAssessment(assessment)
+          .produce(),
+      )
+      .withApplication(application)
+      .withAssessment(assessment)
+      .withAllocatedToUser(assigneeUser)
+      .apply {
+        if (arrivalDate != null) {
+          this.withExpectedArrival(arrivalDate)
         }
-        .produce()
-    }
+      }
+      .produce()
   }
 
   private fun createValidPlacementRequest(

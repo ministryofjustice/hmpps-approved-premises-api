@@ -82,13 +82,12 @@ class Cas1PlacementMatchingOutcomesV2ReportRepository(
     startDateTimeInclusive: LocalDateTime,
     endDateTimeInclusive: LocalDateTime,
     jbdcResultSetConsumer: JdbcResultSetConsumer,
-  ) =
-    reportJdbcTemplate.query(
-      query,
-      mapOf<String, Any>(
-        "startDateTimeInclusive" to startDateTimeInclusive,
-        "endDateTimeInclusive" to endDateTimeInclusive,
-      ),
-      jbdcResultSetConsumer,
-    )
+  ) = reportJdbcTemplate.query(
+    query,
+    mapOf<String, Any>(
+      "startDateTimeInclusive" to startDateTimeInclusive,
+      "endDateTimeInclusive" to endDateTimeInclusive,
+    ),
+    jbdcResultSetConsumer,
+  )
 }

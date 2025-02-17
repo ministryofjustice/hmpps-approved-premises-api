@@ -194,7 +194,7 @@ interface Cas1SpaceBookingRepository : JpaRepository<Cas1SpaceBookingEntity, UUI
       b.premises_id = :premisesId AND 
       b.crn = :crn AND
       b.cancellation_occurred_at IS NULL 
-      ORDER by b.canonical_arrival_date
+      LIMIT 100
     """,
     nativeQuery = true,
   )
@@ -425,14 +425,10 @@ data class Cas1SpaceBookingEntity(
   fun isResident(day: LocalDate) = canonicalArrivalDate <= day && canonicalDepartureDate > day
 
   @Deprecated("Any usage of this should instead be updated to use individual date and time fields")
-  fun actualArrivalAsDateTime(): Instant? {
-    return actualArrivalDate?.atTime(actualArrivalTime ?: LocalTime.NOON)?.toInstant()
-  }
+  fun actualArrivalAsDateTime(): Instant? = actualArrivalDate?.atTime(actualArrivalTime ?: LocalTime.NOON)?.toInstant()
 
   @Deprecated("Any usage of this should be updated to use individual date and time fields")
-  fun actualDepartureAsDateTime(): Instant? {
-    return actualDepartureDate?.atTime(actualDepartureTime ?: LocalTime.NOON)?.toInstant()
-  }
+  fun actualDepartureAsDateTime(): Instant? = actualDepartureDate?.atTime(actualDepartureTime ?: LocalTime.NOON)?.toInstant()
 
   override fun toString() = "Cas1SpaceBookingEntity:$id"
   val applicationFacade: Cas1ApplicationFacade

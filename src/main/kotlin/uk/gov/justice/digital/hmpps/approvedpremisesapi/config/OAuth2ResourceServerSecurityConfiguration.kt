@@ -137,20 +137,16 @@ class AuthAwareTokenConverter : Converter<Jwt, AbstractAuthenticationToken> {
     return AuthAwareAuthenticationToken(jwt, principal, authorities)
   }
 
-  private fun extractAuthSource(claims: Map<String, Any?>): String {
-    return claims[CLAIM_AUTH_SOURCE] as String
-  }
+  private fun extractAuthSource(claims: Map<String, Any?>): String = claims[CLAIM_AUTH_SOURCE] as String
 
-  private fun findPrincipal(claims: Map<String, Any?>): String {
-    return if (claims.containsKey(CLAIM_USERNAME)) {
-      claims[CLAIM_USERNAME] as String
-    } else if (claims.containsKey(CLAIM_USER_ID)) {
-      claims[CLAIM_USER_ID] as String
-    } else if (claims.containsKey(CLAIM_CLIENT_ID)) {
-      claims[CLAIM_CLIENT_ID] as String
-    } else {
-      throw RuntimeException("Unable to find a claim to identify Subject by")
-    }
+  private fun findPrincipal(claims: Map<String, Any?>): String = if (claims.containsKey(CLAIM_USERNAME)) {
+    claims[CLAIM_USERNAME] as String
+  } else if (claims.containsKey(CLAIM_USER_ID)) {
+    claims[CLAIM_USER_ID] as String
+  } else if (claims.containsKey(CLAIM_CLIENT_ID)) {
+    claims[CLAIM_CLIENT_ID] as String
+  } else {
+    throw RuntimeException("Unable to find a claim to identify Subject by")
   }
 
   private fun extractAuthorities(jwt: Jwt): Collection<GrantedAuthority> {
@@ -184,15 +180,11 @@ class AuthAwareAuthenticationToken(
 
   private val jwt = jwt
 
-  override fun getPrincipal(): String {
-    return aPrincipal
-  }
+  override fun getPrincipal(): String = aPrincipal
 
   fun authenticationSource(): String = jwt.claims["auth_source"] as String
 
-  fun isExternalUser(): Boolean {
-    return jwt.claims["auth_source"] == "auth"
-  }
+  fun isExternalUser(): Boolean = jwt.claims["auth_source"] == "auth"
 }
 
 @Configuration

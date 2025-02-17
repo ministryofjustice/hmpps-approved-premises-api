@@ -14,10 +14,10 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1SpaceBooki
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1SpaceBookingResidency
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1SpaceBookingSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1SpaceBookingSummarySortField
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1TimelineEvent
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1UpdateSpaceBooking
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.SortDirection
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.TimelineEvent
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas1SpaceBookingEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserPermission
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserPermission.CAS1_SPACE_BOOKING_LIST
@@ -59,9 +59,9 @@ class Cas1SpaceBookingController(
   private val cas1TimelineService: Cas1TimelineService,
 ) : SpaceBookingsCas1Delegate {
 
-  override fun getSpaceBookingTimeline(premisesId: UUID, bookingId: UUID): ResponseEntity<List<TimelineEvent>> {
+  override fun getSpaceBookingTimeline(premisesId: UUID, bookingId: UUID): ResponseEntity<List<Cas1TimelineEvent>> {
     val events = cas1TimelineService.getSpaceBookingTimeline(bookingId)
-    return ResponseEntity(events, HttpStatus.OK)
+    return ResponseEntity.ok(events)
   }
 
   override fun createSpaceBooking(
@@ -333,6 +333,7 @@ class Cas1SpaceBookingController(
       premisesId = booking.premises.id,
       crn = booking.crn,
     ).filter { it.id != booking.id }
+      .sortedBy { it.canonicalArrivalDate }
 
     return spaceBookingTransformer.transformJpaToApi(person, booking, otherBookingsInPremiseForCrn)
   }

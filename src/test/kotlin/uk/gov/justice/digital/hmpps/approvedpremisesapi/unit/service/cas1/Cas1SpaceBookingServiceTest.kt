@@ -553,7 +553,7 @@ class Cas1SpaceBookingServiceTest {
 
     @Test
     fun `Returns not found error if premises with the given ID doesn't exist`() {
-      every { cas1PremisesService.findPremiseById(any()) } returns null
+      every { cas1PremisesService.premiseExistsById(any()) } returns false
 
       val result = service.getBooking(UUID.randomUUID(), UUID.randomUUID())
 
@@ -567,7 +567,7 @@ class Cas1SpaceBookingServiceTest {
         .withDefaults()
         .produce()
 
-      every { cas1PremisesService.findPremiseById(premises.id) } returns premises
+      every { cas1PremisesService.premiseExistsById(premises.id) } returns true
       every { spaceBookingRepository.findByIdOrNull(any()) } returns null
 
       val result = service.getBooking(premises.id, UUID.randomUUID())
@@ -585,7 +585,7 @@ class Cas1SpaceBookingServiceTest {
       val spaceBooking = Cas1SpaceBookingEntityFactory()
         .produce()
 
-      every { cas1PremisesService.findPremiseById(premises.id) } returns premises
+      every { cas1PremisesService.premiseExistsById(premises.id) } returns true
       every { spaceBookingRepository.findByIdOrNull(spaceBooking.id) } returns spaceBooking
 
       val result = service.getBooking(premises.id, spaceBooking.id)
@@ -1981,6 +1981,50 @@ class Cas1SpaceBookingServiceTest {
       assertThat(updatedSpaceBooking.canonicalArrivalDate).isEqualTo(updateSpaceBookingDetails.arrivalDate)
       assertThat(updatedSpaceBooking.expectedDepartureDate).isEqualTo(updateSpaceBookingDetails.departureDate)
       assertThat(updatedSpaceBooking.canonicalDepartureDate).isEqualTo(updateSpaceBookingDetails.departureDate)
+
+      verify(exactly = 1) {
+        cas1BookingDomainEventService.spaceBookingChanged(
+          booking = updatedSpaceBookingCaptor.captured,
+          changedBy = user,
+          bookingChangedAt = any(),
+          previousArrivalDateIfChanged = LocalDate.of(2025, 1, 10),
+          previousDepartureDateIfChanged = LocalDate.of(2025, 3, 15),
+          previousCharacteristicsIfChanged = listOf(originalRoomCharacteristic),
+        )
+      }
+    }
+
+    @Test
+    fun `should remove all room characteristics when no characteristics are provided`() {
+      existingSpaceBooking.expectedArrivalDate = LocalDate.of(2025, 1, 10)
+      existingSpaceBooking.expectedDepartureDate = LocalDate.of(2025, 3, 15)
+      val originalRoomCharacteristic = CharacteristicEntityFactory().withModelScope("room").withPropertyName("IsArsenCapable").produce()
+      existingSpaceBooking.criteria = mutableListOf(originalRoomCharacteristic)
+
+      val updateSpaceBookingDetails = UpdateSpaceBookingDetails(
+        bookingId = UUID.randomUUID(),
+        premisesId = PREMISES_ID,
+        arrivalDate = newArrivalDate,
+        departureDate = newDepartureDate,
+        updatedBy = user,
+        characteristics = emptyList(),
+      )
+
+      assertThat(existingSpaceBooking.criteria).isNotEmpty()
+
+      val updatedSpaceBookingCaptor = slot<Cas1SpaceBookingEntity>()
+
+      every { cas1PremisesService.findPremiseById(any()) } returns premises
+      every { spaceBookingRepository.findByIdOrNull(any()) } returns existingSpaceBooking
+      every { spaceBookingRepository.save(capture(updatedSpaceBookingCaptor)) } returnsArgument 0
+      every { cas1BookingDomainEventService.spaceBookingChanged(any(), any(), any(), any(), any(), any()) } just Runs
+
+      val result = service.updateSpaceBooking(updateSpaceBookingDetails)
+
+      assertThat(result).isInstanceOf(CasResult.Success::class.java)
+
+      val updatedSpaceBooking = updatedSpaceBookingCaptor.captured
+      assertThat(updatedSpaceBooking.criteria).isEmpty()
 
       verify(exactly = 1) {
         cas1BookingDomainEventService.spaceBookingChanged(

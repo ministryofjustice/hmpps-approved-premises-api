@@ -200,8 +200,7 @@ open class SubjectAccessRequestServiceTestBase : IntegrationTestBase() {
       }
     """.trimIndent()
 
-  protected fun domainEventJson(domainEvent: DomainEventEntity, user: UserEntity?): String =
-    """ 
+  protected fun domainEventJson(domainEvent: DomainEventEntity, user: UserEntity?): String = """ 
       {
         "id": "${domainEvent.id}",
         "application_id": "${domainEvent.applicationId}",
@@ -217,7 +216,7 @@ open class SubjectAccessRequestServiceTestBase : IntegrationTestBase() {
         "noms_number": "${domainEvent.nomsNumber}",
         "trigger_source": null
       }
-    """.trimIndent()
+  """.trimIndent()
 
   protected fun domainEventsMetadataJson(domainEvent: DomainEventEntity): String =
     """
@@ -231,30 +230,27 @@ open class SubjectAccessRequestServiceTestBase : IntegrationTestBase() {
       }
     """.trimIndent()
 
-  protected fun cancellationEntity(booking: BookingEntity): CancellationEntity =
-    cancellationEntityFactory.produceAndPersist {
-      withReason(
-        cancellationReasonEntityFactory.produceAndPersist {
-          withName("some reason")
-          withServiceScope("approved-premises")
-          withIsActive(true)
-        },
-      )
-      withBooking(booking)
-      withNotes("some notes")
-      withCreatedAt(OffsetDateTime.parse(CREATED_AT))
-      withDate(LocalDate.parse(cancellationDateOnly))
-      withOtherReason("some other reason")
-    }
+  protected fun cancellationEntity(booking: BookingEntity): CancellationEntity = cancellationEntityFactory.produceAndPersist {
+    withReason(
+      cancellationReasonEntityFactory.produceAndPersist {
+        withName("some reason")
+        withServiceScope("approved-premises")
+        withIsActive(true)
+      },
+    )
+    withBooking(booking)
+    withNotes("some notes")
+    withCreatedAt(OffsetDateTime.parse(CREATED_AT))
+    withDate(LocalDate.parse(cancellationDateOnly))
+    withOtherReason("some other reason")
+  }
 
-  protected fun bookingExtensionEntity(booking: BookingEntity): ExtensionEntity {
-    return extensionEntityFactory.produceAndPersist {
-      withBooking(booking)
-      withNotes("some notes")
-      withCreatedAt(OffsetDateTime.parse(CREATED_AT))
-      withPreviousDepartureDate(LocalDate.parse(previousDepartureDateOnly))
-      withNewDepartureDate(LocalDate.parse(newDepartureDateOnly))
-    }
+  protected fun bookingExtensionEntity(booking: BookingEntity): ExtensionEntity = extensionEntityFactory.produceAndPersist {
+    withBooking(booking)
+    withNotes("some notes")
+    withCreatedAt(OffsetDateTime.parse(CREATED_AT))
+    withPreviousDepartureDate(LocalDate.parse(previousDepartureDateOnly))
+    withNewDepartureDate(LocalDate.parse(newDepartureDateOnly))
   }
 
   @SuppressWarnings("LongParameterList")
@@ -372,38 +368,35 @@ open class SubjectAccessRequestServiceTestBase : IntegrationTestBase() {
     withApArea(givenAnApArea(name = "Probation Area ${randomStringMultiCaseWithNumbers(5)}"))
   }
 
-  protected fun userEntity(): UserEntity =
-    userEntityFactory.produceAndPersist {
-      withProbationRegion(givenAProbationRegion())
-    }
+  protected fun userEntity(): UserEntity = userEntityFactory.produceAndPersist {
+    withProbationRegion(givenAProbationRegion())
+  }
 
-  protected fun personRisks() =
-    PersonRisksFactory()
-      .withTier(
-        RiskWithStatus(
-          status = RiskStatus.Retrieved,
-          RiskTier(
-            level = "M1",
-            lastUpdated = LocalDate.parse("2023-06-26"),
-          ),
+  protected fun personRisks() = PersonRisksFactory()
+    .withTier(
+      RiskWithStatus(
+        status = RiskStatus.Retrieved,
+        RiskTier(
+          level = "M1",
+          lastUpdated = LocalDate.parse("2023-06-26"),
         ),
-      ).withRoshRisks(
-        RiskWithStatus(status = RiskStatus.NotFound),
-      ).withMappa(
-        RiskWithStatus(status = RiskStatus.NotFound),
-      ).withFlags(
-        RiskWithStatus(status = RiskStatus.NotFound),
-      ).produce()
+      ),
+    ).withRoshRisks(
+      RiskWithStatus(status = RiskStatus.NotFound),
+    ).withMappa(
+      RiskWithStatus(status = RiskStatus.NotFound),
+    ).withFlags(
+      RiskWithStatus(status = RiskStatus.NotFound),
+    ).produce()
 
-  protected fun approvedPremisesAssessmentClarificationNoteEntity(assessment: ApprovedPremisesAssessmentEntity): AssessmentClarificationNoteEntity =
-    assessmentClarificationNoteEntityFactory.produceAndPersist {
-      withAssessment(assessment)
-      withCreatedBy(assessment.allocatedToUser!!)
-      withQuery("some query")
-      withResponse("a useful response")
-      withResponseReceivedOn(LocalDate.parse(RESPONSE_RECEIVED_AT))
-      withCreatedAt(OffsetDateTime.parse(CREATED_AT))
-    }
+  protected fun approvedPremisesAssessmentClarificationNoteEntity(assessment: ApprovedPremisesAssessmentEntity): AssessmentClarificationNoteEntity = assessmentClarificationNoteEntityFactory.produceAndPersist {
+    withAssessment(assessment)
+    withCreatedBy(assessment.allocatedToUser!!)
+    withQuery("some query")
+    withResponse("a useful response")
+    withResponseReceivedOn(LocalDate.parse(RESPONSE_RECEIVED_AT))
+    withCreatedAt(OffsetDateTime.parse(CREATED_AT))
+  }
 
   protected fun domainEventEntity(
     offender: OffenderDetailSummary,

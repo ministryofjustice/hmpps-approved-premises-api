@@ -810,7 +810,7 @@ paths:
               schema:
                 type: array
                 items:
-                  $ref: '#/components/schemas/TimelineEvent'
+                  $ref: '#/components/schemas/Cas1TimelineEvent'
         401:
           $ref: '#/components/responses/401Response'
         403:
@@ -4476,6 +4476,12 @@ components:
           $ref: '#/components/schemas/ApType'
         notes:
           type: string
+        agreeWithShortNoticeReason:
+          type: boolean
+        agreeWithShortNoticeReasonComments:
+          type: string
+        reasonForLateApplication:
+          type: string
       required:
         - document
     AssessmentRejection:
@@ -4492,6 +4498,12 @@ components:
           type: string
         isWithdrawn:
           type: boolean
+        agreeWithShortNoticeReason:
+          type: boolean
+        agreeWithShortNoticeReasonComments:
+          type: string
+        reasonForLateApplication:
+          type: string
       required:
         - document
         - rejectionRationale
@@ -5434,6 +5446,7 @@ components:
         - update_cas1_backfill_offline_application_name
         - update_cas1_arson_suitable_to_arson_offences
         - update_cas1_backfill_arson_suitable
+        - update_cas1_approved_premises_assessment_report_properties
     PlacementDates:
       type: object
       properties:
@@ -5915,6 +5928,8 @@ components:
         assessmentId:
           type: string
           format: uuid
+        isSexualRisk:
+          type: boolean
       required:
         - name
         - crn
@@ -5922,6 +5937,7 @@ components:
         - days
         - bookingId
         - roomId
+        - isSexualRisk
     BedSearchResultPremisesSummary:
       type: object
       properties:

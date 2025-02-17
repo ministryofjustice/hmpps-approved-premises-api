@@ -95,12 +95,11 @@ class Cas1SpaceBookingTransformer(
     )
   }
 
-  private fun Cas1SpaceBookingAtPremises.toSpaceBookingDate() =
-    Cas1SpaceBookingDates(
-      id = this.id,
-      canonicalArrivalDate = this.canonicalArrivalDate,
-      canonicalDepartureDate = this.canonicalDepartureDate,
-    )
+  private fun Cas1SpaceBookingAtPremises.toSpaceBookingDate() = Cas1SpaceBookingDates(
+    id = this.id,
+    canonicalArrivalDate = this.canonicalArrivalDate,
+    canonicalDepartureDate = this.canonicalDepartureDate,
+  )
 
   private fun Cas1SpaceBookingEntity.extractKeyWorkerAllocation(): Cas1KeyWorkerAllocation? {
     val staffCode = keyWorkerStaffCode
@@ -136,34 +135,30 @@ class Cas1SpaceBookingTransformer(
     }
   }
 
-  private fun Cas1SpaceBookingEntity.extractNonArrival(): Cas1SpaceBookingNonArrival? {
-    return if (hasNonArrival()) {
-      Cas1SpaceBookingNonArrival(
-        confirmedAt = nonArrivalConfirmedAt,
-        reason = nonArrivalReason!!.let {
-          NamedId(
-            id = it.id,
-            name = it.name,
-          )
-        },
-        notes = nonArrivalNotes,
-      )
-    } else {
-      null
-    }
+  private fun Cas1SpaceBookingEntity.extractNonArrival(): Cas1SpaceBookingNonArrival? = if (hasNonArrival()) {
+    Cas1SpaceBookingNonArrival(
+      confirmedAt = nonArrivalConfirmedAt,
+      reason = nonArrivalReason!!.let {
+        NamedId(
+          id = it.id,
+          name = it.name,
+        )
+      },
+      notes = nonArrivalNotes,
+    )
+  } else {
+    null
   }
 
-  private fun Cas1SpaceBookingEntity.extractDeparture(): Cas1SpaceBookingDeparture? {
-    return if (hasDeparted()) {
-      Cas1SpaceBookingDeparture(
-        reason = NamedId(departureReason!!.id, departureReason!!.name),
-        parentReason = departureReason!!.parentReasonId?.let { NamedId(it.id, it.name) },
-        moveOnCategory = departureMoveOnCategory?.let { NamedId(it.id, it.name) },
-        notes = departureNotes,
-      )
-    } else {
-      null
-    }
+  private fun Cas1SpaceBookingEntity.extractDeparture(): Cas1SpaceBookingDeparture? = if (hasDeparted()) {
+    Cas1SpaceBookingDeparture(
+      reason = NamedId(departureReason!!.id, departureReason!!.name),
+      parentReason = departureReason!!.parentReasonId?.let { NamedId(it.id, it.name) },
+      moveOnCategory = departureMoveOnCategory?.let { NamedId(it.id, it.name) },
+      notes = departureNotes,
+    )
+  } else {
+    null
   }
 
   fun transformSearchResultToSummary(
@@ -199,13 +194,11 @@ class Cas1SpaceBookingTransformer(
   companion object {
     private val log = LoggerFactory.getLogger(this::class.java)
 
-    fun List<CharacteristicEntity>.toCas1SpaceCharacteristics() =
-      this.mapNotNull { it.toCas1SpaceCharacteristicOrNull() }
+    fun List<CharacteristicEntity>.toCas1SpaceCharacteristics() = this.mapNotNull { it.toCas1SpaceCharacteristicOrNull() }
 
-    fun CharacteristicEntity.toCas1SpaceCharacteristicOrNull() =
-      Cas1SpaceCharacteristic.entries.find { it.name == propertyName } ?: run {
-        log.warn("Couldn't find a Cas1SpaceCharacteristic enum entry for propertyName $propertyName")
-        null
-      }
+    fun CharacteristicEntity.toCas1SpaceCharacteristicOrNull() = Cas1SpaceCharacteristic.entries.find { it.name == propertyName } ?: run {
+      log.warn("Couldn't find a Cas1SpaceCharacteristic enum entry for propertyName $propertyName")
+      null
+    }
   }
 }

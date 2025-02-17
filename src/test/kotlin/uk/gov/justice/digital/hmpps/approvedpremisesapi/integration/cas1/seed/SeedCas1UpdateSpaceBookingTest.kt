@@ -53,8 +53,7 @@ class SeedCas1UpdateSpaceBookingTest : SeedTestBase() {
     )
   }
 
-  private fun getCharacteristic(propertyName: String) =
-    characteristicRepository.findByPropertyName(propertyName, ServiceName.approvedPremises.value)!!
+  private fun getCharacteristic(propertyName: String) = characteristicRepository.findByPropertyName(propertyName, ServiceName.approvedPremises.value)!!
 
   private fun rowsToCsv(rows: List<Cas1UpdateSpaceBookingSeedJobCsvRow>): String {
     val builder = CsvBuilder()

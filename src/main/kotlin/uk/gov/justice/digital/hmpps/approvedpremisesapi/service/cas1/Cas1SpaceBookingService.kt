@@ -8,7 +8,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1AssignKeyW
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1NonArrival
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1SpaceBookingResidency
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1SpaceBookingSummarySortField
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.CancellationReasonRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.CancellationReasonRepository.Constants.CAS1_RELATED_APP_WITHDRAWN_ID
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.CancellationReasonRepository.Constants.CAS1_RELATED_PLACEMENT_APP_WITHDRAWN_ID
@@ -412,12 +411,10 @@ class Cas1SpaceBookingService(
   private fun hasExactDepartureDataAlreadyBeenRecorded(
     existingCas1SpaceBooking: Cas1SpaceBookingEntity,
     departureInfo: DepartureInfo,
-  ): Boolean {
-    return departureInfo.departureDate == existingCas1SpaceBooking.actualDepartureDate &&
-      departureInfo.departureTime == existingCas1SpaceBooking.actualDepartureTime &&
-      departureInfo.reasonId == existingCas1SpaceBooking.departureReason?.id &&
-      departureInfo.moveOnCategoryId == existingCas1SpaceBooking.departureMoveOnCategory?.id
-  }
+  ): Boolean = departureInfo.departureDate == existingCas1SpaceBooking.actualDepartureDate &&
+    departureInfo.departureTime == existingCas1SpaceBooking.actualDepartureTime &&
+    departureInfo.reasonId == existingCas1SpaceBooking.departureReason?.id &&
+    departureInfo.moveOnCategoryId == existingCas1SpaceBooking.departureMoveOnCategory?.id
 
   fun search(
     premisesId: UUID,
@@ -451,7 +448,7 @@ class Cas1SpaceBookingService(
   }
 
   fun getBooking(premisesId: UUID, bookingId: UUID): CasResult<Cas1SpaceBookingEntity> {
-    if (cas1PremisesService.findPremiseById(premisesId) !is ApprovedPremisesEntity) return CasResult.NotFound("premises", premisesId.toString())
+    if (!cas1PremisesService.premiseExistsById(premisesId)) return CasResult.NotFound("premises", premisesId.toString())
 
     return getBooking(bookingId)
   }
@@ -467,18 +464,16 @@ class Cas1SpaceBookingService(
     crn = crn,
   )
 
-  fun getWithdrawableState(spaceBooking: Cas1SpaceBookingEntity, user: UserEntity): WithdrawableState {
-    return WithdrawableState(
-      withdrawable = !spaceBooking.isCancelled() && !spaceBooking.hasArrival(),
-      withdrawn = spaceBooking.isCancelled(),
-      userMayDirectlyWithdraw = user.hasPermission(UserPermission.CAS1_SPACE_BOOKING_WITHDRAW),
-      blockingReason = if (spaceBooking.hasArrival()) {
-        BlockingReason.ArrivalRecordedInCas1
-      } else {
-        null
-      },
-    )
-  }
+  fun getWithdrawableState(spaceBooking: Cas1SpaceBookingEntity, user: UserEntity): WithdrawableState = WithdrawableState(
+    withdrawable = !spaceBooking.isCancelled() && !spaceBooking.hasArrival(),
+    withdrawn = spaceBooking.isCancelled(),
+    userMayDirectlyWithdraw = user.hasPermission(UserPermission.CAS1_SPACE_BOOKING_WITHDRAW),
+    blockingReason = if (spaceBooking.hasArrival()) {
+      BlockingReason.ArrivalRecordedInCas1
+    } else {
+      null
+    },
+  )
 
   fun withdraw(
     spaceBooking: Cas1SpaceBookingEntity,
@@ -615,7 +610,7 @@ class Cas1SpaceBookingService(
       updateFullBookingDates(bookingToUpdate, newArrivalDate, newDepartureDate)
     }
 
-    if (updateSpaceBookingDetails.characteristics?.isNotEmpty() == true) {
+    if (updateSpaceBookingDetails.characteristics != null) {
       updateRoomCharacteristics(bookingToUpdate, updateSpaceBookingDetails.characteristics)
     }
 

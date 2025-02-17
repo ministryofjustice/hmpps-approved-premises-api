@@ -21,9 +21,7 @@ enum class Cas2v2UserType(val authSource: String) {
   ;
 
   companion object {
-    fun fromString(authSource: String): Cas2v2UserType {
-      return entries.first { it.authSource == authSource }
-    }
+    fun fromString(authSource: String): Cas2v2UserType = entries.first { it.authSource == authSource }
   }
 }
 

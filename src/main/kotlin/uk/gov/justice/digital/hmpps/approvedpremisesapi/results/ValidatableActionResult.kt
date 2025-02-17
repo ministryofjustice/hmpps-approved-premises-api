@@ -11,8 +11,7 @@ sealed interface ValidatableActionResult<EntityType> {
   sealed interface ValidatableActionResultError<EntityType> : ValidatableActionResult<EntityType>
 
   @Deprecated("Replaced by CasResult.FieldValidationError", ReplaceWith("uk.gov.justice.digital.hmpps.approvedpremisesapi.CasResult.FieldValidationError"))
-  data class FieldValidationError<EntityType>(val validationMessages: ValidationErrors) :
-    ValidatableActionResultError<EntityType>
+  data class FieldValidationError<EntityType>(val validationMessages: ValidationErrors) : ValidatableActionResultError<EntityType>
 
   @Deprecated("Replaced by CasResult.GeneralValidationError", ReplaceWith("uk.gov.justice.digital.hmpps.approvedpremisesapi.CasResult.GeneralValidationError"))
   data class GeneralValidationError<EntityType>(val message: String) : ValidatableActionResultError<EntityType>

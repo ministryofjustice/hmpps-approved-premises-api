@@ -121,15 +121,14 @@ class Cas1BookingEmailService(
 
   private fun Cas1SpaceBookingEntity.toBookingInfo(
     application: ApprovedPremisesApplicationEntity,
-  ) =
-    BookingInfo(
-      bookingId = id,
-      arrivalDate = canonicalArrivalDate,
-      departureDate = canonicalDepartureDate,
-      premises = premises,
-      application = application,
-      placementApplication = placementRequest?.placementApplication,
-    )
+  ) = BookingInfo(
+    bookingId = id,
+    arrivalDate = canonicalArrivalDate,
+    departureDate = canonicalDepartureDate,
+    premises = premises,
+    application = application,
+    placementApplication = placementRequest?.placementApplication,
+  )
 
   private fun BookingEntity.toBookingInfo(
     application: ApprovedPremisesApplicationEntity,

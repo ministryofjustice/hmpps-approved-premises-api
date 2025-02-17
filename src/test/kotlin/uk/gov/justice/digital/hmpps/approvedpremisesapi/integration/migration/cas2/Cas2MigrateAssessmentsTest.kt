@@ -78,12 +78,11 @@ class Cas2MigrateAssessmentsTest : MigrationJobTestBase() {
     Assertions.assertThat(unsubmittedApplication.get().assessment).isNull()
   }
 
-  private fun createApplicationEntity(applicationSchema: Cas2ApplicationJsonSchemaEntity, userEntity: NomisUserEntity, submittedAt: OffsetDateTime?) =
-    cas2ApplicationEntityFactory.produceAndPersist {
-      withId(UUID.randomUUID())
-      withApplicationSchema(applicationSchema)
-      withCreatedByUser(userEntity)
-      withData("{}")
-      withSubmittedAt(submittedAt)
-    }
+  private fun createApplicationEntity(applicationSchema: Cas2ApplicationJsonSchemaEntity, userEntity: NomisUserEntity, submittedAt: OffsetDateTime?) = cas2ApplicationEntityFactory.produceAndPersist {
+    withId(UUID.randomUUID())
+    withApplicationSchema(applicationSchema)
+    withCreatedByUser(userEntity)
+    withData("{}")
+    withSubmittedAt(submittedAt)
+  }
 }

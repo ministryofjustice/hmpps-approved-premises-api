@@ -33,21 +33,16 @@ class BaseHMPPSClientRetryTest : InitialiseDatabasePerClassTestBase() {
     const val CRN = "ABC123"
 
     @JvmStatic
-    fun successHttpStatusCode() =
-      HttpStatus.entries.filter { it.is2xxSuccessful }.filter { it.value() != 204 }.map { it.value() }
+    fun successHttpStatusCode() = HttpStatus.entries.filter { it.is2xxSuccessful }.filter { it.value() != 204 }.map { it.value() }
 
     @JvmStatic
-    fun errorHttpStatusCodesForRetries(): List<Int> {
-      return listOf(500, 501, 502, 503)
-    }
+    fun errorHttpStatusCodesForRetries(): List<Int> = listOf(500, 501, 502, 503)
 
     @JvmStatic
-    fun errorHttpStatusCodeThatDontRetry(): List<Int> {
-      return HttpStatus.entries
-        .filter { it.is4xxClientError || it.is5xxServerError }
-        .filter { !errorHttpStatusCodesForRetries().contains(it.value()) }
-        .map { it.value() }
-    }
+    fun errorHttpStatusCodeThatDontRetry(): List<Int> = HttpStatus.entries
+      .filter { it.is4xxClientError || it.is5xxServerError }
+      .filter { !errorHttpStatusCodesForRetries().contains(it.value()) }
+      .map { it.value() }
   }
 
   @AfterEach
@@ -69,27 +64,25 @@ class BaseHMPPSClientRetryTest : InitialiseDatabasePerClassTestBase() {
   @Autowired
   lateinit var environment: Environment
 
-  fun setupTestClientWithoutRetriesEnabled(maxRetries: Long) =
-    ApDeliusContextApiClient(
-      WebClientConfig(
-        apDeliusContextApiWebClientConfig.webClient,
-        maxRetries,
-        retryOnReadTimeout = false,
-      ),
-      objectMapper,
-      webClientCache,
-    )
+  fun setupTestClientWithoutRetriesEnabled(maxRetries: Long) = ApDeliusContextApiClient(
+    WebClientConfig(
+      apDeliusContextApiWebClientConfig.webClient,
+      maxRetries,
+      retryOnReadTimeout = false,
+    ),
+    objectMapper,
+    webClientCache,
+  )
 
-  fun setupTestClientWithRetriesEnabled(maxRetries: Long) =
-    NomisUserRolesApiClient(
-      WebClientConfig(
-        nomisUserRolesApiWebClientConfig.webClient,
-        maxRetries,
-        retryOnReadTimeout = true,
-      ),
-      objectMapper,
-      webClientCache,
-    )
+  fun setupTestClientWithRetriesEnabled(maxRetries: Long) = NomisUserRolesApiClient(
+    WebClientConfig(
+      nomisUserRolesApiWebClientConfig.webClient,
+      maxRetries,
+      retryOnReadTimeout = true,
+    ),
+    objectMapper,
+    webClientCache,
+  )
 
   @ParameterizedTest
   @MethodSource("successHttpStatusCode")

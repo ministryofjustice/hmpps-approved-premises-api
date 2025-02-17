@@ -8,13 +8,14 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.util.toYesNo
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.toLocalDate
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.tryGetDetails
 
-class FutureBookingsReportGenerator : ReportGenerator<
-  FutureBookingsReportDataAndPersonInfo,
-  FutureBookingsReportRow,
-  FutureBookingsReportProperties,
-  >(
-  FutureBookingsReportRow::class,
-) {
+class FutureBookingsReportGenerator :
+  ReportGenerator<
+    FutureBookingsReportDataAndPersonInfo,
+    FutureBookingsReportRow,
+    FutureBookingsReportProperties,
+    >(
+    FutureBookingsReportRow::class,
+  ) {
   override val convert: FutureBookingsReportDataAndPersonInfo.(properties: FutureBookingsReportProperties) -> List<FutureBookingsReportRow> =
     {
       val bookingData = this.futureBookingsReportData
@@ -51,8 +52,7 @@ class FutureBookingsReportGenerator : ReportGenerator<
       )
     }
 
-  override fun filter(properties: FutureBookingsReportProperties): (FutureBookingsReportDataAndPersonInfo) -> Boolean =
-    {
-      true
-    }
+  override fun filter(properties: FutureBookingsReportProperties): (FutureBookingsReportDataAndPersonInfo) -> Boolean = {
+    true
+  }
 }

@@ -15,7 +15,5 @@ class ForbiddenProblem(detail: String? = null) :
       ""
     },
   ) {
-  override fun getCause(): Exceptional? {
-    return null
-  }
+  override fun getCause(): Exceptional? = null
 }

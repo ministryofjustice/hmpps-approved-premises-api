@@ -2499,21 +2499,19 @@ class DomainEventServiceTest {
     nomsNumber: String,
     occurredAt: OffsetDateTime,
     staffMember: StaffMember?,
-  ): DomainEvent<CAS3BookingCancelledUpdatedEvent> {
-    return DomainEvent(
+  ): DomainEvent<CAS3BookingCancelledUpdatedEvent> = DomainEvent(
+    id = id,
+    applicationId = applicationId,
+    crn = crn,
+    nomsNumber = nomsNumber,
+    occurredAt = Instant.now(),
+    data = CAS3BookingCancelledUpdatedEvent(
       id = id,
-      applicationId = applicationId,
-      crn = crn,
-      nomsNumber = nomsNumber,
-      occurredAt = Instant.now(),
-      data = CAS3BookingCancelledUpdatedEvent(
-        id = id,
-        timestamp = occurredAt.toInstant(),
-        eventType = EventType.bookingCancelledUpdated,
-        eventDetails = CAS3BookingCancelledEventDetailsFactory()
-          .withCancelledBy(staffMember)
-          .produce(),
-      ),
-    )
-  }
+      timestamp = occurredAt.toInstant(),
+      eventType = EventType.bookingCancelledUpdated,
+      eventDetails = CAS3BookingCancelledEventDetailsFactory()
+        .withCancelledBy(staffMember)
+        .produce(),
+    ),
+  )
 }

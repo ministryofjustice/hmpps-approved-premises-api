@@ -171,6 +171,9 @@ class AssessmentController(
       placementDates = assessmentAcceptance.placementDates,
       apType = assessmentAcceptance.apType,
       notes = assessmentAcceptance.notes,
+      agreeWithShortNoticeReason = assessmentAcceptance.agreeWithShortNoticeReason,
+      agreeWithShortNoticeReasonComments = assessmentAcceptance.agreeWithShortNoticeReasonComments,
+      reasonForLateApplication = assessmentAcceptance.reasonForLateApplication,
     )
 
     extractEntityFromCasResult(assessmentAuthResult)
@@ -193,6 +196,9 @@ class AssessmentController(
         assessmentRejection.referralRejectionReasonId,
         assessmentRejection.referralRejectionReasonDetail,
         assessmentRejection.isWithdrawn,
+        assessmentRejection.agreeWithShortNoticeReason,
+        assessmentRejection.agreeWithShortNoticeReasonComments,
+        assessmentRejection.reasonForLateApplication,
       )
 
     extractEntityFromCasResult(assessmentAuthResult)

@@ -96,8 +96,43 @@ paths:
             'application/problem+json':
               schema:
                 $ref: '#/components/schemas/ValidationError'
-
-
+  /premises/{premisesId}/future-bookings:
+    get:
+      tags:
+        - Operations on premises
+      summary: Returns all future bookings for a premises for a given statuses
+      operationId: getPremisesFutureBookings
+      parameters:
+        - name: premisesId
+          in: path
+          description: ID of the premises to get bookings for
+          required: true
+          schema:
+            type: string
+            format: uuid
+        - name: statuses
+          in: query
+          description: Only return bookings with these statuses
+          required: true
+          schema:
+            type: array
+            items:
+              $ref: '#/components/schemas/BookingStatus'
+      responses:
+        200:
+          description: successful operation
+          content:
+            'application/json':
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/FutureBooking'
+        401:
+          $ref: '#/components/responses/401Response'
+        403:
+          $ref: '#/components/responses/403Response'
+        500:
+          $ref: '#/components/responses/500Response'
 components:
   responses:
     401Response:
@@ -3026,6 +3061,12 @@ components:
           $ref: '#/components/schemas/ApType'
         notes:
           type: string
+        agreeWithShortNoticeReason:
+          type: boolean
+        agreeWithShortNoticeReasonComments:
+          type: string
+        reasonForLateApplication:
+          type: string
       required:
         - document
     AssessmentRejection:
@@ -3042,6 +3083,12 @@ components:
           type: string
         isWithdrawn:
           type: boolean
+        agreeWithShortNoticeReason:
+          type: boolean
+        agreeWithShortNoticeReasonComments:
+          type: string
+        reasonForLateApplication:
+          type: string
       required:
         - document
         - rejectionRationale
@@ -3984,6 +4031,7 @@ components:
         - update_cas1_backfill_offline_application_name
         - update_cas1_arson_suitable_to_arson_offences
         - update_cas1_backfill_arson_suitable
+        - update_cas1_approved_premises_assessment_report_properties
     PlacementDates:
       type: object
       properties:
@@ -4465,6 +4513,8 @@ components:
         assessmentId:
           type: string
           format: uuid
+        isSexualRisk:
+          type: boolean
       required:
         - name
         - crn
@@ -4472,6 +4522,7 @@ components:
         - days
         - bookingId
         - roomId
+        - isSexualRisk
     BedSearchResultPremisesSummary:
       type: object
       properties:
@@ -5074,3 +5125,24 @@ components:
         - isWheelchairAccessible
         - isWheelchairDesignated
         - arsonOffences
+    FutureBooking:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        person:
+          $ref: '#/components/schemas/Person'
+        arrivalDate:
+          type: string
+          format: date
+        departureDate:
+          type: string
+          format: date
+        bed:
+          $ref: '#/components/schemas/Bed'
+      required:
+        - id
+        - person
+        - arrivalDate
+        - departureDate

@@ -58,9 +58,7 @@ class PlacementApplicationService(
 
   var log: Logger = LoggerFactory.getLogger(this::class.java)
 
-  fun getAllSubmittedNonReallocatedApplications(applicationId: UUID): List<PlacementApplicationEntity> {
-    return placementApplicationRepository.findAllSubmittedNonReallocatedApplicationsForApplicationId(applicationId)
-  }
+  fun getAllSubmittedNonReallocatedApplications(applicationId: UUID): List<PlacementApplicationEntity> = placementApplicationRepository.findAllSubmittedNonReallocatedApplicationsForApplicationId(applicationId)
 
   fun createPlacementApplication(
     application: ApprovedPremisesApplicationEntity,
@@ -192,13 +190,11 @@ class PlacementApplicationService(
     return CasResult.Success(newPlacementApplication)
   }
 
-  fun getWithdrawableState(placementApplication: PlacementApplicationEntity, user: UserEntity): WithdrawableState {
-    return WithdrawableState(
-      withdrawable = placementApplication.isInWithdrawableState(),
-      withdrawn = placementApplication.isWithdrawn,
-      userMayDirectlyWithdraw = userAccessService.userMayWithdrawPlacementApplication(user, placementApplication),
-    )
-  }
+  fun getWithdrawableState(placementApplication: PlacementApplicationEntity, user: UserEntity): WithdrawableState = WithdrawableState(
+    withdrawable = placementApplication.isInWithdrawableState(),
+    withdrawn = placementApplication.isWithdrawn,
+    userMayDirectlyWithdraw = userAccessService.userMayWithdrawPlacementApplication(user, placementApplication),
+  )
 
   /**
    * This function should not be called directly. Instead, use [WithdrawableService.withdrawPlacementApplication] that
@@ -419,12 +415,10 @@ class PlacementApplicationService(
     return CasResult.Success(savedApplication)
   }
 
-  private fun getPlacementType(apiPlacementType: ApiPlacementType): PlacementType {
-    return when (apiPlacementType) {
-      ApiPlacementType.additionalPlacement -> PlacementType.ADDITIONAL_PLACEMENT
-      ApiPlacementType.rotl -> PlacementType.ROTL
-      ApiPlacementType.releaseFollowingDecision -> PlacementType.RELEASE_FOLLOWING_DECISION
-    }
+  private fun getPlacementType(apiPlacementType: ApiPlacementType): PlacementType = when (apiPlacementType) {
+    ApiPlacementType.additionalPlacement -> PlacementType.ADDITIONAL_PLACEMENT
+    ApiPlacementType.rotl -> PlacementType.ROTL
+    ApiPlacementType.releaseFollowingDecision -> PlacementType.RELEASE_FOLLOWING_DECISION
   }
 
   private fun setSchemaUpToDate(placementApplicationEntity: PlacementApplicationEntity): PlacementApplicationEntity {

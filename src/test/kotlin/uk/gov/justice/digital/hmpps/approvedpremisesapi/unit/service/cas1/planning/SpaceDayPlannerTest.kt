@@ -461,10 +461,9 @@ class SpaceDayPlannerTest {
     room = room,
   )
 
-  fun booking(label: String, requiredCharacteristics: Set<Characteristic> = emptySet()) =
-    SpaceBooking(
-      UUID.randomUUID(),
-      label,
-      requiredCharacteristics,
-    )
+  fun booking(label: String, requiredCharacteristics: Set<Characteristic> = emptySet()) = SpaceBooking(
+    UUID.randomUUID(),
+    label,
+    requiredCharacteristics,
+  )
 }

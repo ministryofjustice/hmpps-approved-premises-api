@@ -42,7 +42,7 @@ class SeedXlsxService(
       val timeTaken = ChronoUnit.MILLIS.between(seedStarted, LocalDateTime.now())
       seedLogger.info("Excel seed request complete. Took $timeTaken millis")
     } catch (exception: Throwable) {
-      seedLogger.error("Unable to complete Excel seed job", exception)
+      seedLogger.error("Unable to complete Excel seed job for $filename", exception)
     }
   }
 

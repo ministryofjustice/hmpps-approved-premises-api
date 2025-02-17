@@ -413,11 +413,9 @@ class DomainEventBuilder(
     recordedBy = user?.let { populateStaffMember(it) },
   )
 
-  private fun TemporaryAccommodationApplicationEntity?.toUrl(): URI? =
-    this?.let { URI(applicationUrlTemplate.replace("#applicationId", it.id.toString())) }
+  private fun TemporaryAccommodationApplicationEntity?.toUrl(): URI? = this?.let { URI(applicationUrlTemplate.replace("#applicationId", it.id.toString())) }
 
-  private fun BookingEntity.toUrl(): URI =
-    URI(bookingUrlTemplate.replace("#premisesId", this.premises.id.toString()).replace("#bookingId", this.id.toString()))
+  private fun BookingEntity.toUrl(): URI = URI(bookingUrlTemplate.replace("#premisesId", this.premises.id.toString()).replace("#bookingId", this.id.toString()))
 
   private fun populateStaffMember(it: UserEntity) = StaffMember(
     staffCode = it.deliusStaffCode,

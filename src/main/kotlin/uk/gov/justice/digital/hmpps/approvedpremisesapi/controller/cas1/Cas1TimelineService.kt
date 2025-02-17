@@ -28,11 +28,9 @@ class Cas1TimelineService(
     return timelineEvents
   }
 
-  fun getSpaceBookingTimeline(bookingId: UUID): List<TimelineEvent> =
-    toTimelineEvent(domainEventService.getAllDomainEventsForSpaceBooking(bookingId))
+  fun getSpaceBookingTimeline(bookingId: UUID): List<Cas1TimelineEvent> = toTimelineEvents(domainEventService.getAllDomainEventsForSpaceBooking(bookingId))
 
-  private fun getDomainEventsForApplication(applicationId: UUID) =
-    toTimelineEvent(domainEventService.getAllDomainEventsForApplication(applicationId))
+  private fun getDomainEventsForApplication(applicationId: UUID) = toTimelineEvent(domainEventService.getAllDomainEventsForApplication(applicationId))
 
   private fun getApplicationNotesForApplication(applicationId: UUID): List<TimelineEvent> {
     val noteEntities = applicationTimelineNoteService.getApplicationTimelineNotesByApplicationId(applicationId)
@@ -52,8 +50,7 @@ class Cas1TimelineService(
     return cas1TimelineEvents
   }
 
-  private fun getTimelineEvents(applicationId: UUID) =
-    toTimelineEvents(domainEventService.getAllDomainEventsForApplication(applicationId))
+  private fun getTimelineEvents(applicationId: UUID) = toTimelineEvents(domainEventService.getAllDomainEventsForApplication(applicationId))
 
   private fun getNotesTimelineEvents(applicationId: UUID): List<Cas1TimelineEvent> {
     val noteEntities = applicationTimelineNoteService.getApplicationTimelineNotesByApplicationId(applicationId)

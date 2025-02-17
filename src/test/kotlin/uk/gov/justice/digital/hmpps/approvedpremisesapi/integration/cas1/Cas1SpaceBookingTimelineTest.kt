@@ -6,8 +6,8 @@ import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.test.web.reactive.server.returnResult
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1TimelineEvent
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.TimelineEvent
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.InitialiseDatabasePerClassTestBase
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAPlacementRequest
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAProbationRegion
@@ -21,14 +21,14 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DomainEventCa
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DomainEventEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DomainEventType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserEntity
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.ApplicationTimelineTransformer
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.cas1.Cas1ApplicationTimelineTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.unit.domainevents.DomainEventSummaryImpl
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.Cas1DomainEventsFactory
 import java.time.LocalDate
 
 class Cas1SpaceBookingTimelineTest : InitialiseDatabasePerClassTestBase() {
   @Autowired
-  lateinit var applicationTimelineTransformer: ApplicationTimelineTransformer
+  lateinit var cas1applicationTimelineTransformer: Cas1ApplicationTimelineTransformer
 
   lateinit var user: UserEntity
   lateinit var domainEvents: List<DomainEventEntity>
@@ -150,14 +150,14 @@ class Cas1SpaceBookingTimelineTest : InitialiseDatabasePerClassTestBase() {
       val responseBody =
         objectMapper.readValue(
           rawResponseBody,
-          object : TypeReference<List<TimelineEvent>>() {},
+          object : TypeReference<List<Cas1TimelineEvent>>() {},
         )
 
-      val expectedItems = mutableListOf<TimelineEvent>()
+      val expectedItems = mutableListOf<Cas1TimelineEvent>()
 
       expectedItems.addAll(
         domainEvents.map {
-          applicationTimelineTransformer.transformDomainEventSummaryToTimelineEvent(
+          cas1applicationTimelineTransformer.transformDomainEventSummaryToTimelineEvent(
             DomainEventSummaryImpl(
               it.id.toString(),
               it.type,

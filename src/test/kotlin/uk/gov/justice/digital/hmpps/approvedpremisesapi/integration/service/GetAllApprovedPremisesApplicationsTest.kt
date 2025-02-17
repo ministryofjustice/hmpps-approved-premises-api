@@ -453,22 +453,20 @@ class GetAllApprovedPremisesApplicationsTest : InitialiseDatabasePerClassTestBas
     return this.sortedWith(comparator)
   }
 
-  private fun ApprovedPremisesApplicationSummary.matches(applicationEntity: ApprovedPremisesApplicationEntity): Boolean {
-    return this.getIsWomensApplication() == applicationEntity.isWomensApplication &&
-      (this.getIsEmergencyApplication() == (applicationEntity.noticeType == Cas1ApplicationTimelinessCategory.emergency)) &&
-      (this.getIsEsapApplication() == applicationEntity.isEsapApplication) &&
-      (this.getIsPipeApplication() == applicationEntity.isPipeApplication) &&
-      (this.getArrivalDate() == Instant.parse(applicationEntity.arrivalDate.toString())) &&
-      (this.getRiskRatings() == objectMapper.writeValueAsString(applicationEntity.riskRatings)) &&
-      (this.getId() == applicationEntity.id) &&
-      (this.getCrn() == applicationEntity.crn) &&
-      (this.getCreatedByUserId() == applicationEntity.createdByUser.id) &&
-      (this.getCreatedAt() == Instant.parse(applicationEntity.createdAt.toString())) &&
-      (this.getSubmittedAt() == Instant.parse(applicationEntity.submittedAt.toString())) &&
-      this.getTier() == applicationEntity.riskRatings?.tier?.value.toString() &&
-      this.getStatus() == applicationEntity.status.toString() &&
-      this.getIsWithdrawn() == applicationEntity.isWithdrawn &&
-      this.getReleaseType() == applicationEntity.releaseType.toString() &&
-      this.getHasRequestsForPlacement() == applicationIdsWithRequestsForPlacement.contains(applicationEntity.id)
-  }
+  private fun ApprovedPremisesApplicationSummary.matches(applicationEntity: ApprovedPremisesApplicationEntity): Boolean = this.getIsWomensApplication() == applicationEntity.isWomensApplication &&
+    (this.getIsEmergencyApplication() == (applicationEntity.noticeType == Cas1ApplicationTimelinessCategory.emergency)) &&
+    (this.getIsEsapApplication() == applicationEntity.isEsapApplication) &&
+    (this.getIsPipeApplication() == applicationEntity.isPipeApplication) &&
+    (this.getArrivalDate() == Instant.parse(applicationEntity.arrivalDate.toString())) &&
+    (this.getRiskRatings() == objectMapper.writeValueAsString(applicationEntity.riskRatings)) &&
+    (this.getId() == applicationEntity.id) &&
+    (this.getCrn() == applicationEntity.crn) &&
+    (this.getCreatedByUserId() == applicationEntity.createdByUser.id) &&
+    (this.getCreatedAt() == Instant.parse(applicationEntity.createdAt.toString())) &&
+    (this.getSubmittedAt() == Instant.parse(applicationEntity.submittedAt.toString())) &&
+    this.getTier() == applicationEntity.riskRatings?.tier?.value.toString() &&
+    this.getStatus() == applicationEntity.status.toString() &&
+    this.getIsWithdrawn() == applicationEntity.isWithdrawn &&
+    this.getReleaseType() == applicationEntity.releaseType.toString() &&
+    this.getHasRequestsForPlacement() == applicationIdsWithRequestsForPlacement.contains(applicationEntity.id)
 }

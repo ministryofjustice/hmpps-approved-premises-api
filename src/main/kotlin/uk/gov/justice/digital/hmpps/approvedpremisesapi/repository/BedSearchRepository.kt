@@ -242,4 +242,5 @@ data class TemporaryAccommodationBedSearchResultOverlap(
   val roomId: UUID,
   val bookingId: UUID,
   val assessmentId: UUID?,
+  val isSexualRisk: Boolean,
 )

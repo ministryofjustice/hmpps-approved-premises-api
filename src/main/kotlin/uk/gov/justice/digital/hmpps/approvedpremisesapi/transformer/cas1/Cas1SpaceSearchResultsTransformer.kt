@@ -18,40 +18,39 @@ class Cas1SpaceSearchResultsTransformer {
   private val log = LoggerFactory.getLogger(this::class.java)
 
   @SuppressWarnings("SwallowedException")
-  fun transformDomainToApi(searchParameters: Cas1SpaceSearchParameters, results: List<CandidatePremises>) =
-    Cas1SpaceSearchResults(
-      resultsCount = results.size,
-      searchCriteria = searchParameters,
-      results = results.map { candidatePremises ->
-        ApiSpaceSearchResult(
-          premises = Cas1PremisesSearchResultSummary(
-            id = candidatePremises.premisesId,
-            apType = candidatePremises.apType.asApiType(),
-            name = candidatePremises.name,
-            fullAddress = candidatePremises.resolveFullAddress(),
-            addressLine1 = candidatePremises.addressLine1,
-            addressLine2 = candidatePremises.addressLine2,
-            town = candidatePremises.town,
-            postcode = candidatePremises.postcode,
-            apArea = NamedId(
-              id = candidatePremises.apAreaId,
-              name = candidatePremises.apAreaName,
-            ),
-            premisesCharacteristics = emptyList(),
-            characteristics = candidatePremises.characteristics.mapNotNull {
-              try {
-                Cas1SpaceCharacteristic.valueOf(it)
-              } catch (e: IllegalArgumentException) {
-                log.warn("Couldn't find a Cas1SpaceCharacteristic enum entry for propertyName $it")
-                null
-              }
-            },
+  fun transformDomainToApi(searchParameters: Cas1SpaceSearchParameters, results: List<CandidatePremises>) = Cas1SpaceSearchResults(
+    resultsCount = results.size,
+    searchCriteria = searchParameters,
+    results = results.map { candidatePremises ->
+      ApiSpaceSearchResult(
+        premises = Cas1PremisesSearchResultSummary(
+          id = candidatePremises.premisesId,
+          apType = candidatePremises.apType.asApiType(),
+          name = candidatePremises.name,
+          fullAddress = candidatePremises.resolveFullAddress(),
+          addressLine1 = candidatePremises.addressLine1,
+          addressLine2 = candidatePremises.addressLine2,
+          town = candidatePremises.town,
+          postcode = candidatePremises.postcode,
+          apArea = NamedId(
+            id = candidatePremises.apAreaId,
+            name = candidatePremises.apAreaName,
           ),
-          distanceInMiles = candidatePremises.distanceInMiles.toBigDecimal(),
-          spacesAvailable = listOf(),
-        )
-      },
-    )
+          premisesCharacteristics = emptyList(),
+          characteristics = candidatePremises.characteristics.mapNotNull {
+            try {
+              Cas1SpaceCharacteristic.valueOf(it)
+            } catch (e: IllegalArgumentException) {
+              log.warn("Couldn't find a Cas1SpaceCharacteristic enum entry for propertyName $it")
+              null
+            }
+          },
+        ),
+        distanceInMiles = candidatePremises.distanceInMiles.toBigDecimal(),
+        spacesAvailable = listOf(),
+      )
+    },
+  )
 
   fun CandidatePremises.resolveFullAddress() = ApprovedPremisesEntity.resolveFullAddress(
     fullAddress = fullAddress,

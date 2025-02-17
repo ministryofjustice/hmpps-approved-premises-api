@@ -34,22 +34,20 @@ class BookingTransformer(
   private val workingDayService: WorkingDayService,
 ) {
 
-  fun transformBookingSummary(jpa: BookingSummary, personInfo: PersonSummaryInfoResult): PremisesBooking {
-    return PremisesBooking(
-      id = jpa.getID(),
-      arrivalDate = jpa.getArrivalDate(),
-      departureDate = jpa.getDepartureDate(),
-      person = personTransformer.transformSummaryToPersonApi(personInfo),
-      bed = jpa.getBedId()?.let {
-        Bed(
-          id = jpa.getBedId()!!,
-          name = jpa.getBedName()!!,
-          code = jpa.getBedCode(),
-        )
-      },
-      status = jpa.getStatus(),
-    )
-  }
+  fun transformBookingSummary(jpa: BookingSummary, personInfo: PersonSummaryInfoResult): PremisesBooking = PremisesBooking(
+    id = jpa.getID(),
+    arrivalDate = jpa.getArrivalDate(),
+    departureDate = jpa.getDepartureDate(),
+    person = personTransformer.transformSummaryToPersonApi(personInfo),
+    bed = jpa.getBedId()?.let {
+      Bed(
+        id = jpa.getBedId()!!,
+        name = jpa.getBedName()!!,
+        code = jpa.getBedCode(),
+      )
+    },
+    status = jpa.getStatus(),
+  )
 
   fun transformJpaToApi(jpa: BookingEntity, personInfo: PersonInfoResult): Booking {
     val hasNonZeroDayTurnaround = jpa.turnaround != null && jpa.turnaround!!.workingDayCount != 0

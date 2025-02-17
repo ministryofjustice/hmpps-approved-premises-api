@@ -716,13 +716,11 @@ class Cas1SpaceSearchTest : InitialiseDatabasePerClassTestBase() {
     getCharacteristic(it)
   }
 
-  private fun getCharacteristics(vararg propertyNames: String) =
-    propertyNames.map {
-      getCharacteristic(it)!!
-    }
+  private fun getCharacteristics(vararg propertyNames: String) = propertyNames.map {
+    getCharacteristic(it)!!
+  }
 
-  private fun getCharacteristic(propertyName: String) =
-    characteristicRepository.findByPropertyName(propertyName, ServiceName.approvedPremises.value)
+  private fun getCharacteristic(propertyName: String) = characteristicRepository.findByPropertyName(propertyName, ServiceName.approvedPremises.value)
 
   private fun Cas1SpaceCharacteristic.asCharacteristicEntity() = getCharacteristic(this.value)!!
 }

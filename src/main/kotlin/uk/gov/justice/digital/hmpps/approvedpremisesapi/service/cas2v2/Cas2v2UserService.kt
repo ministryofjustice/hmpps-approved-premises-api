@@ -46,8 +46,7 @@ class Cas2v2UserService(
     return userEntity
   }
 
-  private fun getExistingUser(username: String, userType: Cas2v2UserType): Cas2v2UserEntity? =
-    userRepository.findByUsernameAndUserType(username, userType)
+  private fun getExistingUser(username: String, userType: Cas2v2UserType): Cas2v2UserEntity? = userRepository.findByUsernameAndUserType(username, userType)
 
   private fun getEntityForNomisUser(username: String, jwt: String): Cas2v2UserEntity {
     val nomisUserDetails: NomisUserDetail = when (

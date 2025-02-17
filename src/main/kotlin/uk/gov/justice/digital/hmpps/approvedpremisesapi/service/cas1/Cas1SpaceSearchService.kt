@@ -5,7 +5,7 @@ import org.springframework.stereotype.Service
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1SpaceSearchParameters
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1SpaceSearchRequirements
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremiseApplicationRepository
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesApplicationRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.CharacteristicEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas1.CandidatePremises
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas1.Cas1SpaceSearchRepository
@@ -19,7 +19,7 @@ import java.util.UUID
 class Cas1SpaceSearchService(
   private val characteristicService: CharacteristicService,
   private val spaceSearchRepository: Cas1SpaceSearchRepository,
-  private val applicationRepository: ApprovedPremiseApplicationRepository,
+  private val applicationRepository: ApprovedPremisesApplicationRepository,
 ) {
   fun findSpaces(searchParameters: Cas1SpaceSearchParameters): List<CandidatePremises> {
     val applicationId = searchParameters.applicationId
@@ -59,11 +59,9 @@ class Cas1SpaceSearchService(
     )
   }
 
-  private fun CharacteristicEntity.isPremisesCharacteristic(): Boolean =
-    this.serviceMatches(ServiceName.approvedPremises.value) && this.modelMatches("premises")
+  private fun CharacteristicEntity.isPremisesCharacteristic(): Boolean = this.serviceMatches(ServiceName.approvedPremises.value) && this.modelMatches("premises")
 
-  private fun CharacteristicEntity.isRoomCharacteristic(): Boolean =
-    this.serviceMatches(ServiceName.approvedPremises.value) && this.modelMatches("room")
+  private fun CharacteristicEntity.isRoomCharacteristic(): Boolean = this.serviceMatches(ServiceName.approvedPremises.value) && this.modelMatches("room")
 }
 
 data class RequiredCharacteristics(

@@ -5,8 +5,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas1CruManage
 
 fun IntegrationTestBase.givenACas1CruManagementArea(
   assessmentAutoAllocationUsername: String? = null,
-): Cas1CruManagementAreaEntity {
-  return cas1CruManagementAreaEntityFactory.produceAndPersist {
-    withAssessmentAutoAllocationUsername(assessmentAutoAllocationUsername)
-  }
+): Cas1CruManagementAreaEntity = cas1CruManagementAreaEntityFactory.produceAndPersist {
+  withAssessmentAutoAllocationUsername(assessmentAutoAllocationUsername)
 }
