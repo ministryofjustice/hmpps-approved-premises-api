@@ -46,6 +46,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.asCaseSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.bodyAsListOfObjects
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.bodyAsObject
 import java.net.URLEncoder
+import java.time.Instant
 import java.time.LocalDate
 import java.util.UUID
 
@@ -637,12 +638,19 @@ class Cas1PremisesTest : IntegrationTestBase() {
         withPremises(premises)
         withCanonicalArrivalDate(LocalDate.now().minusDays(2))
         withCanonicalDepartureDate(LocalDate.now().plusDays(2))
-        withCriteria(
-          findCharacteristic(CAS1_PROPERTY_NAME_ARSON_SUITABLE),
-          findCharacteristic(CAS1_PROPERTY_NAME_ENSUITE),
-          findCharacteristic(CAS1_PROPERTY_NAME_SINGLE_ROOM),
-        )
         withCancellationOccurredAt(LocalDate.now())
+      }
+
+      // non arrival - ignored
+      createSpaceBooking(
+        crn = offenderB.crn,
+        placementRequest = this.placementRequestA,
+        application = applicationB,
+      ) {
+        withPremises(premises)
+        withCanonicalArrivalDate(LocalDate.now().minusDays(2))
+        withCanonicalDepartureDate(LocalDate.now().plusDays(2))
+        withNonArrivalConfirmedAt(Instant.now())
       }
     }
 
