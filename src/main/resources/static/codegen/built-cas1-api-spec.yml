@@ -160,6 +160,213 @@ paths:
         500:
           $ref: '#/components/responses/500Response'
       x-codegen-request-body-name: body
+  /placement-applications:
+    post:
+      tags:
+        - Placement applications
+      summary: Creates an application for a placement
+      operationId: placement_applicationsPost
+      requestBody:
+        description: Details about the application
+        content:
+          'application/json':
+            schema:
+              $ref: '#/components/schemas/NewPlacementApplication'
+        required: true
+      responses:
+        200:
+          description: successfully recorded that a placement application has been made
+          content:
+            'application/json':
+              schema:
+                $ref: '#/components/schemas/PlacementApplication'
+        401:
+          $ref: '#/components/responses/401Response'
+        403:
+          $ref: '#/components/responses/403Response'
+        500:
+          $ref: '#/components/responses/500Response'
+  /placement-applications/{id}:
+    get:
+      tags:
+        - Placement applications
+      summary: Retrieves an application for a placement request
+      operationId: placement_applicationsIdGet
+      parameters:
+        - in: path
+          name: id
+          required: true
+          description: Id of the application
+          schema:
+            type: string
+            format: uuid
+      responses:
+        200:
+          description: successfully retrieved placement request application
+          content:
+            'application/json':
+              schema:
+                $ref: '#/components/schemas/PlacementApplication'
+        401:
+          $ref: '#/components/responses/401Response'
+        403:
+          $ref: '#/components/responses/403Response'
+        500:
+          $ref: '#/components/responses/500Response'
+    put:
+      tags:
+        - Placement applications
+      summary: Updates an application for a placement request
+      operationId: placement_applicationsIdPut
+      parameters:
+        - in: path
+          name: id
+          required: true
+          description: Id of the application
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        description: Details about the application
+        content:
+          'application/json':
+            schema:
+              $ref: '#/components/schemas/UpdatePlacementApplication'
+        required: true
+      responses:
+        200:
+          description: successfully retrieved placement request application
+          content:
+            'application/json':
+              schema:
+                $ref: '#/components/schemas/PlacementApplication'
+        401:
+          $ref: '#/components/responses/401Response'
+        403:
+          $ref: '#/components/responses/403Response'
+        500:
+          $ref: '#/components/responses/500Response'
+  /placement-applications/{id}/submission:
+    post:
+      tags:
+        - Placement applications
+      summary: Submits an application for a placement request
+      operationId: placement_applicationsIdSubmissionPost
+      parameters:
+        - in: path
+          name: id
+          required: true
+          description: Id of the application
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        description: Information needed to submit a placement application
+        content:
+          'application/json':
+            schema:
+              $ref: '#/components/schemas/SubmitPlacementApplication'
+        required: true
+      responses:
+        200:
+          description: successfully submitted the placement application
+          content:
+            'application/json':
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/PlacementApplication'
+        400:
+          description: placement application has already been submitted
+          content:
+            'application/problem+json':
+              schema:
+                $ref: '#/components/schemas/ValidationError'
+        401:
+          $ref: '#/components/responses/401Response'
+        403:
+          $ref: '#/components/responses/403Response'
+        500:
+          $ref: '#/components/responses/500Response'
+  /placement-applications/{id}/decision:
+    post:
+      tags:
+        - Placement applications
+      summary: Submits a decision for a placement application
+      operationId: placement_applicationsIdDecisionPost
+      parameters:
+        - in: path
+          name: id
+          required: true
+          description: Id of the application
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        description: Information needed to submit a placement application
+        content:
+          'application/json':
+            schema:
+              $ref: '#/components/schemas/PlacementApplicationDecisionEnvelope'
+        required: true
+      responses:
+        200:
+          description: successfully made a decision on the placement application
+          content:
+            'application/json':
+              schema:
+                $ref: '#/components/schemas/PlacementApplication'
+        400:
+          description: placement application already has a decision made
+          content:
+            'application/problem+json':
+              schema:
+                $ref: '#/components/schemas/ValidationError'
+        401:
+          $ref: '#/components/responses/401Response'
+        403:
+          $ref: '#/components/responses/403Response'
+        500:
+          $ref: '#/components/responses/500Response'
+  /placement-applications/{id}/withdraw:
+    post:
+      tags:
+        - Placement applications
+      summary: Withdraw a placement application
+      operationId: placement_applicationsIdWithdrawPost
+      parameters:
+        - in: path
+          name: id
+          required: true
+          description: Id of the placement application to withdraw
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        description: Withdrawal details
+        content:
+          'application/json':
+            schema:
+              $ref: '#/components/schemas/WithdrawPlacementApplication'
+      responses:
+        200:
+          description: Placement application withdrawn
+          content:
+            'application/json':
+              schema:
+                $ref: '#/components/schemas/PlacementApplication'
+        400:
+          description: placement application already has a decision made
+          content:
+            'application/problem+json':
+              schema:
+                $ref: '#/components/schemas/ValidationError'
+        401:
+          $ref: '#/components/responses/401Response'
+        403:
+          $ref: '#/components/responses/403Response'
+        500:
+          $ref: '#/components/responses/500Response'
   /placement-requests:
     get:
       tags:
