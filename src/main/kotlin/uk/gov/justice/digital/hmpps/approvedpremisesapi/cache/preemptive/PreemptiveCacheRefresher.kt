@@ -14,6 +14,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.PrisonsApiClient
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApplicationRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.BookingRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.CacheRefreshExclusionsInmateDetailsRepository
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.FeatureFlagService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.SentryService
 
 @Component
@@ -24,6 +25,7 @@ class PreemptiveCacheRefresher(
   private val cacheRefreshExclusionsInmateDetailsRepository: CacheRefreshExclusionsInmateDetailsRepository,
   private val prisonsApiClient: PrisonsApiClient,
   private val sentryService: SentryService,
+  private val featureFlagService: FeatureFlagService,
   @Value("\${preemptive-cache-enabled}") private val enabled: Boolean,
   @Value("\${preemptive-cache-logging-enabled}") private val loggingEnabled: Boolean,
   @Value("\${preemptive-cache-delay-ms}") private val delayMs: Long,
@@ -39,32 +41,37 @@ class PreemptiveCacheRefresher(
 
   @EventListener(ApplicationReadyEvent::class)
   fun startThreads() {
-    if (!enabled) {
-      sentryService.captureErrorMessage("Pre-emptive cache is disabled")
-      return
-    }
-
-    Thread {
-      while (!haveFlywayMigrationsFinished()) {
-        if (shuttingDown) return@Thread
-        interruptableSleep(100)
+    if (featureFlagService.getBooleanFlag("cas1-enable-scheduled-job-refresh-inmate-details")) {
+      log.info("PreemptiveCacheRefresher not running - Scheduled job to refresh inmate details cache is switched on so that will run instead")
+    } else {
+      log.info("PreemptiveCacheRefresher starting...")
+      if (!enabled) {
+        sentryService.captureErrorMessage("Pre-emptive cache is disabled")
+        return
       }
 
-      preemptiveCacheThreads += InmateDetailsCacheRefreshWorker(
-        applicationRepository,
-        bookingRepository,
-        cacheRefreshExclusionsInmateDetailsRepository,
-        prisonsApiClient,
-        sentryService,
-        loggingEnabled,
-        delayMs,
-        redLock,
-        lockDurationMs,
-      )
+      Thread {
+        while (!haveFlywayMigrationsFinished()) {
+          if (shuttingDown) return@Thread
+          interruptableSleep(100)
+        }
 
-      log.info("Starting preemptive cache refresh threads")
-      preemptiveCacheThreads.forEach(CacheRefreshWorker::start)
-    }.start()
+        preemptiveCacheThreads += InmateDetailsCacheRefreshWorker(
+          applicationRepository,
+          bookingRepository,
+          cacheRefreshExclusionsInmateDetailsRepository,
+          prisonsApiClient,
+          sentryService,
+          loggingEnabled,
+          delayMs,
+          redLock,
+          lockDurationMs,
+        )
+
+        log.info("Starting preemptive cache refresh threads")
+        preemptiveCacheThreads.forEach(CacheRefreshWorker::start)
+      }.start()
+    }
   }
 
   @PreDestroy

@@ -294,6 +294,11 @@ preemptive-cache-delay-ms: 10000
 # 90 minutes
 preemptive-cache-lock-duration-ms: 5400000
 
+refresh-inmate-details-cache:
+  lock-at-least-for: 1m
+  lock-at-most-for: 210m
+  logging-enabled: false
+
 arrived-departed-domain-events-disabled: true
 
 upstream-timeout-ms: 10000
