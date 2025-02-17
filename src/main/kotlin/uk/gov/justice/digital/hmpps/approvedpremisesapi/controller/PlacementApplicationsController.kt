@@ -24,7 +24,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.UserService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1WithdrawableService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.PlacementApplicationTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.extractEntityFromCasResult
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.extractEntityFromValidatableActionResult
 import java.util.UUID
 
 @Service
@@ -48,7 +47,7 @@ class PlacementApplicationsController(
       throw RuntimeException("Only CAS1 Applications are currently supported")
     }
 
-    val placementApplication = extractEntityFromValidatableActionResult(
+    val placementApplication = extractEntityFromCasResult(
       placementApplicationService.createPlacementApplication(application, user),
     )
 
