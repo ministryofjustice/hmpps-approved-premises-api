@@ -13,15 +13,14 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.WithdrawPlacem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.WithdrawPlacementRequestReason
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementApplicationWithdrawalReason
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserQualification
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.ForbiddenProblem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.NotAllowedProblem
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.AuthorisableActionResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.ApplicationService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.OffenderService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.PlacementApplicationService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.UserService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1WithdrawableService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1LimitedAccessStrategy
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.PlacementApplicationTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.extractEntityFromCasResult
 import java.util.UUID
@@ -60,9 +59,7 @@ class PlacementApplicationsController(
     val result = placementApplicationService.getApplication(id)
     val placementApplication = extractEntityFromCasResult(result)
 
-    val offenderResult = offenderService.getOffenderByCrn(placementApplication.application.crn, user.deliusUsername, user.hasQualification(UserQualification.LAO))
-
-    if (offenderResult is AuthorisableActionResult.Unauthorised) {
+    if (!offenderService.canAccessOffender(placementApplication.application.crn, user.cas1LimitedAccessStrategy())) {
       throw ForbiddenProblem()
     }
 
