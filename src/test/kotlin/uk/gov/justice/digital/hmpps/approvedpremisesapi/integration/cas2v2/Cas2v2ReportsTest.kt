@@ -4,6 +4,7 @@ import org.assertj.core.api.Assertions
 import org.jetbrains.kotlinx.dataframe.DataFrame
 import org.jetbrains.kotlinx.dataframe.api.ExcessiveColumns
 import org.jetbrains.kotlinx.dataframe.api.convertTo
+import org.jetbrains.kotlinx.dataframe.api.filter
 import org.jetbrains.kotlinx.dataframe.api.toDataFrame
 import org.jetbrains.kotlinx.dataframe.io.readExcel
 import org.junit.jupiter.api.Nested
@@ -15,15 +16,20 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas2.model.Ca
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas2.model.Cas2ApplicationSubmittedEvent
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas2.model.Cas2StatusDetail
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas2.model.EventType
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApplicationOrigin
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas2ReportName
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.events.cas2.Cas2ApplicationStatusUpdatedEventDetailsFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.events.cas2.Cas2ApplicationSubmittedEventDetailsFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.events.cas2.Cas2StatusFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.Cas2v2IntegrationTestBase
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas2v2ApplicationJsonSchemaEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DomainEventType
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas2v2.Cas2v2ApplicationEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas2v2.Cas2v2UserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.model.cas2.ApplicationStatusUpdatesReportRow
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.model.cas2.SubmittedApplicationReportRow
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.model.cas2.UnsubmittedApplicationsReportRow
+import java.io.ByteArrayInputStream
 import java.time.Instant
 import java.time.OffsetDateTime
 import java.time.ZoneOffset
@@ -264,6 +270,60 @@ class Cas2v2ReportsTest : Cas2v2IntegrationTestBase() {
           Assertions.assertThat(actual).isEqualTo(expectedDataFrame)
         }
     }
+
+    @Test
+    fun `streams spreadsheet of cas2v2 Cas2SubmittedApplicationEvents, with application origin`() {
+      seedApplications(DomainEventType.CAS2_APPLICATION_SUBMITTED, EventType.applicationSubmitted)
+
+      val jwt = jwtAuthHelper.createClientCredentialsJwt(
+        username = "username",
+        authSource = "nomis",
+        roles = listOf("ROLE_CAS2_MI"),
+      )
+
+      val responseBody = webTestClient.get()
+        .uri("/cas2v2/reports/submitted-applications")
+        .header("Content-Type", "text/csv")
+        .header("Authorization", "Bearer $jwt")
+        .exchange()
+        .expectStatus()
+        .isOk
+        .expectHeader().contentType("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
+        .expectBody(ByteArray::class.java)
+        .returnResult()
+        .responseBody
+
+      val inputStream = ByteArrayInputStream(responseBody)
+      val dataFrame = DataFrame.readExcel(inputStream)
+
+      Assertions.assertThat(dataFrame.columnsCount()).isEqualTo(12)
+      Assertions.assertThat(dataFrame.rowsCount()).isEqualTo(40)
+
+      val headers = dataFrame.columns()
+      Assertions.assertThat(headers[0].name()).isEqualTo("eventId")
+      Assertions.assertThat(headers[1].name()).isEqualTo("applicationId")
+      Assertions.assertThat(headers[2].name()).isEqualTo("applicationOrigin")
+      Assertions.assertThat(headers[3].name()).isEqualTo("personCrn")
+      Assertions.assertThat(headers[4].name()).isEqualTo("personNoms")
+      Assertions.assertThat(headers[5].name()).isEqualTo("referringPrisonCode")
+      Assertions.assertThat(headers[6].name()).isEqualTo("preferredAreas")
+      Assertions.assertThat(headers[7].name()).isEqualTo("hdcEligibilityDate")
+      Assertions.assertThat(headers[8].name()).isEqualTo("conditionalReleaseDate")
+      Assertions.assertThat(headers[9].name()).isEqualTo("submittedAt")
+      Assertions.assertThat(headers[10].name()).isEqualTo("submittedBy")
+      Assertions.assertThat(headers[11].name()).isEqualTo("startedAt")
+
+      val prisonBailCount = dataFrame.filter { row -> row["applicationOrigin"] == "prisonBail" }
+        .rowsCount()
+      val courtBailCount = dataFrame.filter { row -> row["applicationOrigin"] == "courtBail" }
+        .rowsCount()
+      val hdcCount = dataFrame.filter { row -> row["applicationOrigin"] == "homeDetentionCurfew" }
+        .rowsCount()
+
+      Assertions.assertThat(prisonBailCount).isEqualTo(10)
+      Assertions.assertThat(courtBailCount).isEqualTo(10)
+      Assertions.assertThat(hdcCount).isEqualTo(20)
+    }
   }
 
   @Nested
@@ -495,6 +555,103 @@ class Cas2v2ReportsTest : Cas2v2IntegrationTestBase() {
 
           Assertions.assertThat(actual).isEqualTo(expectedDataFrame)
         }
+    }
+  }
+
+  private fun seedApplications(domainEventType: DomainEventType, eventType: EventType) {
+    val submitted = OffsetDateTime.now()
+    val created = submitted.minusDays(7)
+
+    val applicationSchema = cas2v2ApplicationJsonSchemaEntityFactory.produceAndPersist {
+      withAddedAt(OffsetDateTime.now())
+      withId(UUID.randomUUID())
+    }
+
+    val user = cas2v2UserEntityFactory.produceAndPersist {
+      withUsername("NOMIS_USER_1")
+    }
+
+    val allApplications: ArrayList<Cas2v2ApplicationEntity> = ArrayList()
+
+    repeat(5) { allApplications.add(createApplication(user, applicationSchema, created)) }
+    repeat(5) {
+      allApplications.add(
+        createApplication(
+          user,
+          applicationSchema,
+          created,
+          ApplicationOrigin.homeDetentionCurfew,
+        ),
+      )
+    }
+    repeat(5) {
+      allApplications.add(
+        createApplication(
+          user,
+          applicationSchema,
+          created,
+          ApplicationOrigin.prisonBail,
+        ),
+      )
+    }
+    repeat(5) {
+      allApplications.add(
+        createApplication(
+          user,
+          applicationSchema,
+          created,
+          ApplicationOrigin.courtBail,
+        ),
+      )
+    }
+
+    repeat(40) { index ->
+      val application = allApplications[index % allApplications.count()]
+      domainEventFactory.produceAndPersist {
+        withId(UUID.randomUUID())
+        withType(domainEventType)
+        withData(
+          objectMapper.writeValueAsString(
+            Cas2ApplicationSubmittedEvent(
+              id = UUID.randomUUID(),
+              timestamp = Instant.now(),
+              eventType = eventType,
+              eventDetails = Cas2ApplicationSubmittedEventDetailsFactory().withSubmittedAt(submitted.toInstant())
+                .produce(),
+            ),
+          ),
+        )
+        withOccurredAt(submitted)
+        withApplicationId(application.id)
+      }
+    }
+  }
+
+  private fun createApplication(
+    user: Cas2v2UserEntity,
+    schema: Cas2v2ApplicationJsonSchemaEntity,
+    created: OffsetDateTime,
+    applicationOrigin: ApplicationOrigin? = null,
+  ): Cas2v2ApplicationEntity {
+    if (applicationOrigin == null) {
+      return cas2v2ApplicationEntityFactory.produceAndPersist {
+        withCreatedByUser(user)
+        withApplicationSchema(schema)
+        withCreatedAt(created)
+        withCrn("CRN_2")
+        withNomsNumber("NOMS_2")
+        withData("{}")
+      }
+    } else {
+      return cas2v2ApplicationEntityFactory.produceAndPersist {
+        withCreatedByUser(user)
+        withApplicationSchema(schema)
+        withCreatedAt(created)
+        withApplicationOrigin(applicationOrigin)
+        withCrn("CRN_2")
+        withNomsNumber("NOMS_2")
+        withData("{}")
+      }
     }
   }
 
