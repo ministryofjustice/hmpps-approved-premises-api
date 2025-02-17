@@ -4,6 +4,7 @@ import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1OverbookingRange
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1PremiseCapacity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1Premises
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1PremisesBasicSummary
@@ -14,6 +15,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.Cas1SpaceBookingEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.InitialiseDatabasePerClassTestBase
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.IntegrationTestBase
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenACas1SpaceBooking
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAPlacementRequest
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAProbationRegion
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAUser
@@ -75,65 +77,7 @@ class Cas1PremisesTest : IntegrationTestBase() {
         withYieldedProbationRegion { region }
         withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
         withManagerDetails("manager details")
-      }
-
-      setupSpaceBookings()
-    }
-
-    fun setupSpaceBookings() {
-      offender = givenAnOffender(
-        offenderDetailsConfigBlock = {
-          withCrn("crn1")
-          withFirstName("firstNameAAA")
-          withLastName("lastNameAAA")
-          withCurrentRestriction(false)
-        },
-      ).first.asCaseSummary()
-
-      val pRequestA = givenAPlacementRequest(
-        placementRequestAllocatedTo = user,
-        assessmentAllocatedTo = user,
-        createdByUser = user,
-        crn = offender.crn,
-        name = "${offender.name.forename} ${offender.name.surname}",
-        tier = tierA,
-      )
-      placementRequest = pRequestA.first
-      application = pRequestA.second
-
-      spaceBooking = createSpaceBooking(
-        crn = offender.crn,
-        placementRequest = this.placementRequest,
-        application = application,
-      ) {
-        withCrn(offender.crn)
-        withPremises(premises)
-        withCanonicalArrivalDate(LocalDate.now().minusDays(3))
-        withCanonicalDepartureDate(LocalDate.now().plusDays(3))
-        withCreatedBy(user)
-        withCriteria(
-          findCharacteristic(CAS1_PROPERTY_NAME_ARSON_SUITABLE),
-        )
-      }
-    }
-
-    private fun findCharacteristic(propertyName: String) = characteristicRepository.findByPropertyName(propertyName, ServiceName.approvedPremises.value)!!
-
-    private fun createSpaceBooking(
-      crn: String,
-      placementRequest: PlacementRequestEntity,
-      application: ApprovedPremisesApplicationEntity,
-      configuration: Cas1SpaceBookingEntityFactory.() -> Unit,
-    ): Cas1SpaceBookingEntity {
-      val (user) = givenAUser()
-
-      return cas1SpaceBookingEntityFactory.produceAndPersist {
-        withCrn(crn)
-        withPlacementRequest(placementRequest)
-        withApplication(application)
-        withCreatedBy(user)
-
-        configuration.invoke(this)
+        withSupportsSpaceBookings(true)
       }
     }
 
@@ -165,6 +109,15 @@ class Cas1PremisesTest : IntegrationTestBase() {
     @Test
     fun `Returns premises summary`() {
       val (_, jwt) = givenAUser(roles = listOf(CAS1_FUTURE_MANAGER))
+
+      (1..10).forEach {
+        givenACas1SpaceBooking(
+          crn = "X123",
+          premises = premises,
+          expectedArrivalDate = LocalDate.now().minusDays(3),
+          expectedDepartureDate = LocalDate.now().plusWeeks(14),
+        )
+      }
 
       val beds = bedEntityFactory.produceAndPersistMultiple(5) {
         withYieldedRoom {
@@ -210,9 +163,12 @@ class Cas1PremisesTest : IntegrationTestBase() {
       assertThat(summary.postcode).isEqualTo("the postcode")
       assertThat(summary.bedCount).isEqualTo(5)
       assertThat(summary.outOfServiceBeds).isEqualTo(1)
-      assertThat(summary.availableBeds).isEqualTo(3)
+      assertThat(summary.availableBeds).isEqualTo(-6)
       assertThat(summary.apArea.name).isEqualTo("The ap area name")
       assertThat(summary.managerDetails).isEqualTo("manager details")
+      assertThat(summary.overbookingSummary).containsExactly(
+        Cas1OverbookingRange(LocalDate.now(), LocalDate.now().plusWeeks(12).minusDays(1)),
+      )
     }
   }
 
@@ -579,19 +535,23 @@ class Cas1PremisesTest : IntegrationTestBase() {
         }
       }
 
-      offenderA = givenAnOffender(offenderDetailsConfigBlock = {
-        withCrn("crn1")
-        withFirstName("firstNameAAA")
-        withLastName("lastNameAAA")
-        withCurrentRestriction(false)
-      }).first.asCaseSummary()
+      offenderA = givenAnOffender(
+        offenderDetailsConfigBlock = {
+          withCrn("crn1")
+          withFirstName("firstNameAAA")
+          withLastName("lastNameAAA")
+          withCurrentRestriction(false)
+        },
+      ).first.asCaseSummary()
 
-      val (offenderOfflineApplication) = givenAnOffender(offenderDetailsConfigBlock = {
-        withCrn("offline_crn")
-        withFirstName("mister")
-        withLastName("offline")
-        withCurrentRestriction(false)
-      })
+      val (offenderOfflineApplication) = givenAnOffender(
+        offenderDetailsConfigBlock = {
+          withCrn("offline_crn")
+          withFirstName("mister")
+          withLastName("offline")
+          withCurrentRestriction(false)
+        },
+      )
       offenderOffline = offenderOfflineApplication.asCaseSummary()
 
       val pRequestA = givenAPlacementRequest(
@@ -620,12 +580,14 @@ class Cas1PremisesTest : IntegrationTestBase() {
         )
       }
 
-      offenderB = givenAnOffender(offenderDetailsConfigBlock = {
-        withCrn("crn2")
-        withFirstName("firstNameBBB")
-        withLastName("lastNameBBB")
-        withCurrentRestriction(false)
-      }).first.asCaseSummary()
+      offenderB = givenAnOffender(
+        offenderDetailsConfigBlock = {
+          withCrn("crn2")
+          withFirstName("firstNameBBB")
+          withLastName("lastNameBBB")
+          withCurrentRestriction(false)
+        },
+      ).first.asCaseSummary()
 
       val pRequestB = givenAPlacementRequest(
         placementRequestAllocatedTo = user,

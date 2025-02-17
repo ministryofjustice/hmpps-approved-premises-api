@@ -64,13 +64,13 @@ class SpacePlanningService(
 
   fun capacity(
     premises: ApprovedPremisesEntity,
-    range: DateRange,
+    rangeInclusive: DateRange,
     excludeSpaceBookingId: UUID?,
   ): PremiseCapacitySummary {
-    val bedStatesForEachDay = bedStatesForEachDay(premises, range)
-    val bookingsForEachDay = spaceBookingsForEachDay(premises, range, excludeSpaceBookingId)
+    val bedStatesForEachDay = bedStatesForEachDay(premises, rangeInclusive)
+    val bookingsForEachDay = spaceBookingsForEachDay(premises, rangeInclusive, excludeSpaceBookingId)
 
-    val capacityForEachDay = range.orderedDatesInRange().map { day ->
+    val capacityForEachDay = rangeInclusive.orderedDatesInRange().map { day ->
       val bedStates = bedStatesForEachDay[day]!!
       val availableBeds = bedStates.filter { it.isActive() }
       val bookings = bookingsForEachDay[day]!!
@@ -91,7 +91,7 @@ class SpacePlanningService(
 
     return PremiseCapacitySummary(
       premise = premises,
-      range = range,
+      range = rangeInclusive,
       byDay = capacityForEachDay,
     )
   }
