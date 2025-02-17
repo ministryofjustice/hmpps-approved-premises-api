@@ -314,13 +314,11 @@ class Cas1PremisesOverbookingRangeTest {
     availableBeds: Int,
     bookings: Int,
     characteristics: List<PremiseCharacteristicAvailability> = emptyList(),
-  ): PremiseCapacityForDay {
-    return PremiseCapacityForDay(
-      day = date,
-      totalBedCount = totalBeds,
-      availableBedCount = availableBeds,
-      bookingCount = bookings,
-      characteristicAvailability = characteristics,
-    )
-  }
+  ): PremiseCapacityForDay = PremiseCapacityForDay(
+    day = date,
+    totalBedCount = totalBeds,
+    availableBedCount = availableBeds,
+    bookingCount = bookings,
+    characteristicAvailability = characteristics,
+  )
 }

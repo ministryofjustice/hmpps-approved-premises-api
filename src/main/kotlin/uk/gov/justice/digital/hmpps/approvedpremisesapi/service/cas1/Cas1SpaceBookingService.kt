@@ -411,12 +411,10 @@ class Cas1SpaceBookingService(
   private fun hasExactDepartureDataAlreadyBeenRecorded(
     existingCas1SpaceBooking: Cas1SpaceBookingEntity,
     departureInfo: DepartureInfo,
-  ): Boolean {
-    return departureInfo.departureDate == existingCas1SpaceBooking.actualDepartureDate &&
-      departureInfo.departureTime == existingCas1SpaceBooking.actualDepartureTime &&
-      departureInfo.reasonId == existingCas1SpaceBooking.departureReason?.id &&
-      departureInfo.moveOnCategoryId == existingCas1SpaceBooking.departureMoveOnCategory?.id
-  }
+  ): Boolean = departureInfo.departureDate == existingCas1SpaceBooking.actualDepartureDate &&
+    departureInfo.departureTime == existingCas1SpaceBooking.actualDepartureTime &&
+    departureInfo.reasonId == existingCas1SpaceBooking.departureReason?.id &&
+    departureInfo.moveOnCategoryId == existingCas1SpaceBooking.departureMoveOnCategory?.id
 
   fun search(
     premisesId: UUID,
@@ -466,18 +464,16 @@ class Cas1SpaceBookingService(
     crn = crn,
   )
 
-  fun getWithdrawableState(spaceBooking: Cas1SpaceBookingEntity, user: UserEntity): WithdrawableState {
-    return WithdrawableState(
-      withdrawable = !spaceBooking.isCancelled() && !spaceBooking.hasArrival(),
-      withdrawn = spaceBooking.isCancelled(),
-      userMayDirectlyWithdraw = user.hasPermission(UserPermission.CAS1_SPACE_BOOKING_WITHDRAW),
-      blockingReason = if (spaceBooking.hasArrival()) {
-        BlockingReason.ArrivalRecordedInCas1
-      } else {
-        null
-      },
-    )
-  }
+  fun getWithdrawableState(spaceBooking: Cas1SpaceBookingEntity, user: UserEntity): WithdrawableState = WithdrawableState(
+    withdrawable = !spaceBooking.isCancelled() && !spaceBooking.hasArrival(),
+    withdrawn = spaceBooking.isCancelled(),
+    userMayDirectlyWithdraw = user.hasPermission(UserPermission.CAS1_SPACE_BOOKING_WITHDRAW),
+    blockingReason = if (spaceBooking.hasArrival()) {
+      BlockingReason.ArrivalRecordedInCas1
+    } else {
+      null
+    },
+  )
 
   fun withdraw(
     spaceBooking: Cas1SpaceBookingEntity,

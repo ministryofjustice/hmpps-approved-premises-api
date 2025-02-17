@@ -133,12 +133,10 @@ fun DataFrame<*>.resolveAnswer(question: String, answerCol: Int = 1): String {
  * be truncated to '1'. In this case we could look at using POI directly
  * which doesn't have that issue (see example code on APS-1933)
  */
-private fun Double.toNumberWithNoRedundantDecimalPlaces(): Any {
-  return if (floor(this) == this) {
-    this.toInt()
-  } else {
-    this
-  }
+private fun Double.toNumberWithNoRedundantDecimalPlaces(): Any = if (floor(this) == this) {
+  this.toInt()
+} else {
+  this
 }
 
 data class Cas1SiteSurveyPremise(

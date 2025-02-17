@@ -498,7 +498,5 @@ class Cas2ReportsTest : IntegrationTestBase() {
     }
   }
 
-  private fun daysInSeconds(days: Int): Long {
-    return days.toLong() * 60 * 60 * 24
-  }
+  private fun daysInSeconds(days: Int): Long = days.toLong() * 60 * 60 * 24
 }

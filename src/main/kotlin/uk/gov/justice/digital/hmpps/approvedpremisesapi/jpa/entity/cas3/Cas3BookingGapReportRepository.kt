@@ -72,13 +72,12 @@ class Cas3BookingGapReportRepository(
     startDate: LocalDate,
     endDate: LocalDate,
     jbdcResultSetConsumer: JdbcResultSetConsumer,
-  ) =
-    reportJdbcTemplate.query(
-      GAP_RANGES_QUERY.trimIndent(),
-      mapOf<String, Any>(
-        "startDate" to startDate,
-        "endDate" to endDate,
-      ),
-      jbdcResultSetConsumer,
-    )
+  ) = reportJdbcTemplate.query(
+    GAP_RANGES_QUERY.trimIndent(),
+    mapOf<String, Any>(
+      "startDate" to startDate,
+      "endDate" to endDate,
+    ),
+    jbdcResultSetConsumer,
+  )
 }

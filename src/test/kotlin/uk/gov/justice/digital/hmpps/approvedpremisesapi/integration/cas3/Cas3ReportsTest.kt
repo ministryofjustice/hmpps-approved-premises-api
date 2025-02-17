@@ -4175,10 +4175,8 @@ class Cas3ReportsTest : IntegrationTestBase() {
     return Pair(premises, room)
   }
 
-  private fun createBed(room: RoomEntity): BedEntity {
-    return bedEntityFactory.produceAndPersist {
-      withRoom(room)
-    }
+  private fun createBed(room: RoomEntity): BedEntity = bedEntityFactory.produceAndPersist {
+    withRoom(room)
   }
 
   private fun createBooking(
@@ -4187,15 +4185,13 @@ class Cas3ReportsTest : IntegrationTestBase() {
     crn: String,
     arrivalDate: LocalDate,
     departureDate: LocalDate,
-  ): BookingEntity {
-    return bookingEntityFactory.produceAndPersist {
-      withApplication(application)
-      withPremises(premises)
-      withServiceName(ServiceName.temporaryAccommodation)
-      withCrn(crn)
-      withArrivalDate(arrivalDate)
-      withDepartureDate(departureDate)
-    }
+  ): BookingEntity = bookingEntityFactory.produceAndPersist {
+    withApplication(application)
+    withPremises(premises)
+    withServiceName(ServiceName.temporaryAccommodation)
+    withCrn(crn)
+    withArrivalDate(arrivalDate)
+    withDepartureDate(departureDate)
   }
 
   private fun createBooking(
@@ -4204,15 +4200,13 @@ class Cas3ReportsTest : IntegrationTestBase() {
     crn: String,
     arrivalDate: LocalDate,
     departureDate: LocalDate,
-  ): BookingEntity {
-    return bookingEntityFactory.produceAndPersist {
-      withPremises(premises)
-      withBed(bed)
-      withServiceName(ServiceName.temporaryAccommodation)
-      withCrn(crn)
-      withArrivalDate(arrivalDate)
-      withDepartureDate(departureDate)
-    }
+  ): BookingEntity = bookingEntityFactory.produceAndPersist {
+    withPremises(premises)
+    withBed(bed)
+    withServiceName(ServiceName.temporaryAccommodation)
+    withCrn(crn)
+    withArrivalDate(arrivalDate)
+    withDepartureDate(departureDate)
   }
 
   private fun randomBoolean() = randomInt(0, 20) > 10

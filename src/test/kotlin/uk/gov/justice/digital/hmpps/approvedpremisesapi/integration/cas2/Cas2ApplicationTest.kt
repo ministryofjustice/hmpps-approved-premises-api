@@ -205,23 +205,19 @@ class Cas2ApplicationTest : IntegrationTestBase() {
         withId(UUID.randomUUID())
       }
 
-      fun createApplication(userEntity: NomisUserEntity, offenderDetails: OffenderDetailSummary): Cas2ApplicationEntity {
-        return cas2ApplicationEntityFactory.produceAndPersist {
-          withApplicationSchema(applicationSchema)
-          withCreatedByUser(userEntity)
-          withCrn(offenderDetails.otherIds.crn)
-          withCreatedAt(OffsetDateTime.now().minusDays(28))
-          withConditionalReleaseDate(LocalDate.now().plusDays(1))
-        }
+      fun createApplication(userEntity: NomisUserEntity, offenderDetails: OffenderDetailSummary): Cas2ApplicationEntity = cas2ApplicationEntityFactory.produceAndPersist {
+        withApplicationSchema(applicationSchema)
+        withCreatedByUser(userEntity)
+        withCrn(offenderDetails.otherIds.crn)
+        withCreatedAt(OffsetDateTime.now().minusDays(28))
+        withConditionalReleaseDate(LocalDate.now().plusDays(1))
       }
 
-      fun createStatusUpdate(status: Pair<String, UUID>, application: Cas2ApplicationEntity): Cas2StatusUpdateEntity {
-        return cas2StatusUpdateEntityFactory.produceAndPersist {
-          withLabel(status.first)
-          withStatusId(status.second)
-          withApplication(application)
-          withAssessor(externalUserEntityFactory.produceAndPersist())
-        }
+      fun createStatusUpdate(status: Pair<String, UUID>, application: Cas2ApplicationEntity): Cas2StatusUpdateEntity = cas2StatusUpdateEntityFactory.produceAndPersist {
+        withLabel(status.first)
+        withStatusId(status.second)
+        withApplication(application)
+        withAssessor(externalUserEntityFactory.produceAndPersist())
       }
 
       fun unexpiredDateTime() = OffsetDateTime.now().randomDateTimeBefore(32)
@@ -1197,7 +1193,8 @@ class Cas2ApplicationTest : IntegrationTestBase() {
                 applicationEntity.createdByUser.id == it.createdBy.id &&
                 applicationEntity.submittedAt?.toInstant() == it.submittedAt &&
                 serializableToJsonNode(applicationEntity.data) == serializableToJsonNode(it.data) &&
-                newestJsonSchema.id == it.schemaVersion && !it.outdatedSchema
+                newestJsonSchema.id == it.schemaVersion &&
+                !it.outdatedSchema
             }
           }
         }

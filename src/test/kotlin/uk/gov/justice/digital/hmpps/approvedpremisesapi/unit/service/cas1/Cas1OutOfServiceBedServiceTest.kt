@@ -60,53 +60,51 @@ class Cas1OutOfServiceBedServiceTest {
 
   companion object {
     @JvmStatic
-    fun temporalityArgs(): Stream<Arguments> {
-      return Stream.of(
-        Arguments.of(
-          emptyList<Temporality>(),
+    fun temporalityArgs(): Stream<Arguments> = Stream.of(
+      Arguments.of(
+        emptyList<Temporality>(),
+      ),
+      Arguments.of(
+        listOf(
+          Temporality.past,
         ),
-        Arguments.of(
-          listOf(
-            Temporality.past,
-          ),
+      ),
+      Arguments.of(
+        listOf(
+          Temporality.current,
         ),
-        Arguments.of(
-          listOf(
-            Temporality.current,
-          ),
+      ),
+      Arguments.of(
+        listOf(
+          Temporality.future,
         ),
-        Arguments.of(
-          listOf(
-            Temporality.future,
-          ),
+      ),
+      Arguments.of(
+        listOf(
+          Temporality.past,
+          Temporality.current,
         ),
-        Arguments.of(
-          listOf(
-            Temporality.past,
-            Temporality.current,
-          ),
+      ),
+      Arguments.of(
+        listOf(
+          Temporality.past,
+          Temporality.future,
         ),
-        Arguments.of(
-          listOf(
-            Temporality.past,
-            Temporality.future,
-          ),
+      ),
+      Arguments.of(
+        listOf(
+          Temporality.current,
+          Temporality.future,
         ),
-        Arguments.of(
-          listOf(
-            Temporality.current,
-            Temporality.future,
-          ),
+      ),
+      Arguments.of(
+        listOf(
+          Temporality.past,
+          Temporality.current,
+          Temporality.future,
         ),
-        Arguments.of(
-          listOf(
-            Temporality.past,
-            Temporality.current,
-            Temporality.future,
-          ),
-        ),
-      )
-    }
+      ),
+    )
   }
 
   @Nested

@@ -68,7 +68,8 @@ class Cas1PlacementRequirementsServiceTest {
       every {
         characteristicRepository.findAllWherePropertyNameIn(
           listOf(
-            "isSingle", "isPIPE",
+            "isSingle",
+            "isPIPE",
           ),
           "approved-premises",
         )
@@ -77,7 +78,8 @@ class Cas1PlacementRequirementsServiceTest {
       every {
         characteristicRepository.findAllWherePropertyNameIn(
           listOf(
-            "isESAP", "isCatered",
+            "isESAP",
+            "isCatered",
           ),
           "approved-premises",
         )

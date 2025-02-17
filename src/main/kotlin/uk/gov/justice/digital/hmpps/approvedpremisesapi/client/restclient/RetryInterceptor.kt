@@ -9,8 +9,7 @@ import java.io.IOException
 import java.time.Duration
 
 @SuppressWarnings("MagicNumber")
-class RetryInterceptor(private val retries: Int = 3, private val delay: Duration = Duration.ofMillis(200)) :
-  ClientHttpRequestInterceptor {
+class RetryInterceptor(private val retries: Int = 3, private val delay: Duration = Duration.ofMillis(200)) : ClientHttpRequestInterceptor {
   override fun intercept(
     request: HttpRequest,
     body: ByteArray,

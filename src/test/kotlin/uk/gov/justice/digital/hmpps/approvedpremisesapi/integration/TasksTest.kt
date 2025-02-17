@@ -1794,61 +1794,53 @@ class TasksTest {
           )
       }
 
-      private fun tasksSortedByCreatedAt(sortDirection: SortDirection = SortDirection.asc) =
-        sortTasks(sortDirection) { id: UUID ->
-          val createdAt = when (val task = tasks[id]!!) {
-            is AssessmentTask -> assessments[id]!!.createdAt
-            is PlacementApplicationTask -> placementApplications[id]!!.createdAt
-            else -> fail("Unexpected task type ${task::class.qualifiedName}")
+      private fun tasksSortedByCreatedAt(sortDirection: SortDirection = SortDirection.asc) = sortTasks(sortDirection) { id: UUID ->
+        val createdAt = when (val task = tasks[id]!!) {
+          is AssessmentTask -> assessments[id]!!.createdAt
+          is PlacementApplicationTask -> placementApplications[id]!!.createdAt
+          else -> fail("Unexpected task type ${task::class.qualifiedName}")
+        }
+
+        createdAt.toInstant()
+      }
+
+      private fun tasksSortedByDueAt(sortDirection: SortDirection = SortDirection.asc) = sortTasks(sortDirection) { id: UUID ->
+        tasks[id]!!.dueAt
+      }
+
+      private fun tasksSortedByPerson(sortDirection: SortDirection = SortDirection.asc) = sortTasks(sortDirection) { id: UUID ->
+        tasks[id]!!.personName
+      }
+
+      private fun tasksSortedByAllocatedTo(sortDirection: SortDirection = SortDirection.asc) = sortTasks(sortDirection) { id: UUID ->
+        tasks[id]!!.allocatedToStaffMember!!.name
+      }
+
+      private fun tasksSortedByCompletedAt(sortDirection: SortDirection = SortDirection.asc) = sortTasks(sortDirection) { id: UUID ->
+        tasks[id]!!.outcomeRecordedAt
+      }
+
+      private fun tasksSortedByTaskType(sortDirection: SortDirection = SortDirection.asc) = sortTasks(sortDirection) { id: UUID ->
+        tasks[id]!!.taskType
+      }
+
+      private fun tasksSortedByDecision(sortDirection: SortDirection = SortDirection.asc) = sortTasks(sortDirection) { id: UUID ->
+        when (val task = tasks[id]!!) {
+          is AssessmentTask -> task.outcome?.value
+          is PlacementApplicationTask -> task.outcome?.value
+          else -> fail("Unexpected task type ${task::class.qualifiedName}")
+        }
+      }
+
+      private fun <T : Comparable<T>> sortTasks(sortDirection: SortDirection, sortFunc: (UUID) -> T?) = tasks
+        .keys
+        .apply {
+          when (sortDirection) {
+            SortDirection.asc -> sortedBy(sortFunc)
+            SortDirection.desc -> sortedByDescending(sortFunc)
           }
-
-          createdAt.toInstant()
         }
-
-      private fun tasksSortedByDueAt(sortDirection: SortDirection = SortDirection.asc) =
-        sortTasks(sortDirection) { id: UUID ->
-          tasks[id]!!.dueAt
-        }
-
-      private fun tasksSortedByPerson(sortDirection: SortDirection = SortDirection.asc) =
-        sortTasks(sortDirection) { id: UUID ->
-          tasks[id]!!.personName
-        }
-
-      private fun tasksSortedByAllocatedTo(sortDirection: SortDirection = SortDirection.asc) =
-        sortTasks(sortDirection) { id: UUID ->
-          tasks[id]!!.allocatedToStaffMember!!.name
-        }
-
-      private fun tasksSortedByCompletedAt(sortDirection: SortDirection = SortDirection.asc) =
-        sortTasks(sortDirection) { id: UUID ->
-          tasks[id]!!.outcomeRecordedAt
-        }
-
-      private fun tasksSortedByTaskType(sortDirection: SortDirection = SortDirection.asc) =
-        sortTasks(sortDirection) { id: UUID ->
-          tasks[id]!!.taskType
-        }
-
-      private fun tasksSortedByDecision(sortDirection: SortDirection = SortDirection.asc) =
-        sortTasks(sortDirection) { id: UUID ->
-          when (val task = tasks[id]!!) {
-            is AssessmentTask -> task.outcome?.value
-            is PlacementApplicationTask -> task.outcome?.value
-            else -> fail("Unexpected task type ${task::class.qualifiedName}")
-          }
-        }
-
-      private fun <T : Comparable<T>> sortTasks(sortDirection: SortDirection, sortFunc: (UUID) -> T?) =
-        tasks
-          .keys
-          .apply {
-            when (sortDirection) {
-              SortDirection.asc -> sortedBy(sortFunc)
-              SortDirection.desc -> sortedByDescending(sortFunc)
-            }
-          }
-          .map { tasks[it]!! }
+        .map { tasks[it]!! }
     }
   }
 
@@ -2675,18 +2667,16 @@ class TasksTest {
     }
   }
 
-  fun getOffenderSummaries(offenderDetails: OffenderDetailSummary): List<PersonSummaryInfoResult> {
-    return listOf(
-      PersonSummaryInfoResult.Success.Full(
-        offenderDetails.otherIds.crn,
-        CaseSummaryFactory().withName(
-          NameFactory()
-            .withForename(offenderDetails.firstName)
-            .withSurname(offenderDetails.surname)
-            .produce(),
-        )
+  fun getOffenderSummaries(offenderDetails: OffenderDetailSummary): List<PersonSummaryInfoResult> = listOf(
+    PersonSummaryInfoResult.Success.Full(
+      offenderDetails.otherIds.crn,
+      CaseSummaryFactory().withName(
+        NameFactory()
+          .withForename(offenderDetails.firstName)
+          .withSurname(offenderDetails.surname)
           .produce(),
-      ),
-    )
-  }
+      )
+        .produce(),
+    ),
+  )
 }

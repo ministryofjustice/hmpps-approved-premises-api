@@ -320,13 +320,11 @@ class OffenderService(
     " This function returns the now deprecated [OffenderDetailSummary], which is the community-api data model",
     ReplaceWith("getPersonSummaryInfoResults(crns, limitedAccessStrategy)"),
   )
-  fun getOffenderByCrn(crn: String, userDistinguishedName: String, ignoreLaoRestrictions: Boolean = false): AuthorisableActionResult<OffenderDetailSummary> {
-    return getOffender(
-      ignoreLaoRestrictions,
-      { offenderDetailsDataSource.getOffenderDetailSummary(crn) },
-      { offenderDetailsDataSource.getUserAccessForOffenderCrn(userDistinguishedName, crn) },
-    )
-  }
+  fun getOffenderByCrn(crn: String, userDistinguishedName: String, ignoreLaoRestrictions: Boolean = false): AuthorisableActionResult<OffenderDetailSummary> = getOffender(
+    ignoreLaoRestrictions,
+    { offenderDetailsDataSource.getOffenderDetailSummary(crn) },
+    { offenderDetailsDataSource.getUserAccessForOffenderCrn(userDistinguishedName, crn) },
+  )
 
   @Deprecated(
     """
@@ -469,14 +467,12 @@ class OffenderService(
     return AuthorisableActionResult.Success(inmateDetail)
   }
 
-  fun getRiskByCrn(crn: String, deliusUsername: String): AuthorisableActionResult<PersonRisks> {
-    return when (getOffenderByCrn(crn, deliusUsername)) {
-      is AuthorisableActionResult.NotFound -> AuthorisableActionResult.NotFound()
-      is AuthorisableActionResult.Unauthorised -> AuthorisableActionResult.Unauthorised()
-      is AuthorisableActionResult.Success -> AuthorisableActionResult.Success(
-        offenderRisksDataSource.getPersonRisks(crn),
-      )
-    }
+  fun getRiskByCrn(crn: String, deliusUsername: String): AuthorisableActionResult<PersonRisks> = when (getOffenderByCrn(crn, deliusUsername)) {
+    is AuthorisableActionResult.NotFound -> AuthorisableActionResult.NotFound()
+    is AuthorisableActionResult.Unauthorised -> AuthorisableActionResult.Unauthorised()
+    is AuthorisableActionResult.Success -> AuthorisableActionResult.Success(
+      offenderRisksDataSource.getPersonRisks(crn),
+    )
   }
 
   fun getFilteredPrisonCaseNotesByNomsNumber(nomsNumber: String, getCas1SpecificNoteTypes: Boolean): CasResult<List<CaseNote>> {

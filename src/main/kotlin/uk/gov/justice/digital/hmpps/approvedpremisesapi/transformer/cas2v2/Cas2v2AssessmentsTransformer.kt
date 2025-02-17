@@ -10,12 +10,10 @@ class Cas2v2AssessmentsTransformer(
 ) {
   fun transformJpaToApiRepresentation(
     jpaAssessment: Cas2v2AssessmentEntity,
-  ): Cas2v2Assessment {
-    return Cas2v2Assessment(
-      jpaAssessment.id,
-      jpaAssessment.nacroReferralId,
-      jpaAssessment.assessorName,
-      jpaAssessment.statusUpdates?.map { update -> statusUpdateTransformer.transformJpaToApi(update) },
-    )
-  }
+  ): Cas2v2Assessment = Cas2v2Assessment(
+    jpaAssessment.id,
+    jpaAssessment.nacroReferralId,
+    jpaAssessment.assessorName,
+    jpaAssessment.statusUpdates?.map { update -> statusUpdateTransformer.transformJpaToApi(update) },
+  )
 }

@@ -111,40 +111,34 @@ class DeserializationValidationService {
     return result
   }
 
-  private fun getExpectedSpecialHandlingJsonPrimitiveTypeChecker(jvmPrimitive: Class<*>, jsonNode: JsonNode): SpecialJsonPrimitiveTypeChecker? {
-    return when (jvmPrimitive) {
-      LocalDate::class.java -> LocalDateSpecialJsonPrimitiveTypeChecker(jsonNode)
-      LocalDateTime::class.java -> LocalDateTimeSpecialJsonPrimitiveTypeChecker(jsonNode)
-      OffsetDateTime::class.java -> OffsetDateTimeSpecialJsonPrimitiveTypeChecker(jsonNode)
-      Instant::class.java -> InstantSpecialJsonPrimitiveTypeChecker(jsonNode)
-      UUID::class.java -> UUIDSpecialJsonPrimitiveTypeChecker(jsonNode)
-      else -> null
-    }
+  private fun getExpectedSpecialHandlingJsonPrimitiveTypeChecker(jvmPrimitive: Class<*>, jsonNode: JsonNode): SpecialJsonPrimitiveTypeChecker? = when (jvmPrimitive) {
+    LocalDate::class.java -> LocalDateSpecialJsonPrimitiveTypeChecker(jsonNode)
+    LocalDateTime::class.java -> LocalDateTimeSpecialJsonPrimitiveTypeChecker(jsonNode)
+    OffsetDateTime::class.java -> OffsetDateTimeSpecialJsonPrimitiveTypeChecker(jsonNode)
+    Instant::class.java -> InstantSpecialJsonPrimitiveTypeChecker(jsonNode)
+    UUID::class.java -> UUIDSpecialJsonPrimitiveTypeChecker(jsonNode)
+    else -> null
   }
 
-  private fun getExpectedJsonPrimitiveType(jvmType: Class<*>): JsonNodeType? {
-    return when (jvmType) {
-      String::class.java -> JsonNodeType.STRING
-      Boolean::class.java -> JsonNodeType.BOOLEAN
-      Boolean::class.javaObjectType -> JsonNodeType.BOOLEAN
-      BigDecimal::class.java -> JsonNodeType.NUMBER
-      Int::class.java -> JsonNodeType.NUMBER
-      Int::class.javaObjectType -> JsonNodeType.NUMBER
-      LocalDate::class.java -> JsonNodeType.STRING
-      LocalDateTime::class.java -> JsonNodeType.STRING
-      OffsetDateTime::class.java -> JsonNodeType.STRING
-      Instant::class.java -> JsonNodeType.STRING
-      UUID::class.java -> JsonNodeType.STRING
-      else -> null
-    }
+  private fun getExpectedJsonPrimitiveType(jvmType: Class<*>): JsonNodeType? = when (jvmType) {
+    String::class.java -> JsonNodeType.STRING
+    Boolean::class.java -> JsonNodeType.BOOLEAN
+    Boolean::class.javaObjectType -> JsonNodeType.BOOLEAN
+    BigDecimal::class.java -> JsonNodeType.NUMBER
+    Int::class.java -> JsonNodeType.NUMBER
+    Int::class.javaObjectType -> JsonNodeType.NUMBER
+    LocalDate::class.java -> JsonNodeType.STRING
+    LocalDateTime::class.java -> JsonNodeType.STRING
+    OffsetDateTime::class.java -> JsonNodeType.STRING
+    Instant::class.java -> JsonNodeType.STRING
+    UUID::class.java -> JsonNodeType.STRING
+    else -> null
   }
 
   private fun nullOrNullNode(jsonNode: JsonNode?) = jsonNode == null || jsonNode is NullNode
 
   private val arrayTypes = listOf(java.util.List::class.java, java.util.HashSet::class.java)
-  fun isArrayType(type: Class<*>): Boolean {
-    return arrayTypes.any { arrayType -> arrayType.isAssignableFrom(type) } || type.isArray
-  }
+  fun isArrayType(type: Class<*>): Boolean = arrayTypes.any { arrayType -> arrayType.isAssignableFrom(type) } || type.isArray
 }
 
 interface SpecialJsonPrimitiveTypeChecker {

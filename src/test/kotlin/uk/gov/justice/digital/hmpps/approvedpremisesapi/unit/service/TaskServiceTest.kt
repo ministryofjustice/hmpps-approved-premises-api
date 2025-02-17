@@ -362,11 +362,9 @@ class TaskServiceTest {
     return application
   }
 
-  private fun generateAssessment(application: ApprovedPremisesApplicationEntity = generateApplication()): ApprovedPremisesAssessmentEntity {
-    return ApprovedPremisesAssessmentEntityFactory()
-      .withApplication(application)
-      .produce()
-  }
+  private fun generateAssessment(application: ApprovedPremisesApplicationEntity = generateApplication()): ApprovedPremisesAssessmentEntity = ApprovedPremisesAssessmentEntityFactory()
+    .withApplication(application)
+    .produce()
 
   private fun generatePlacementApplication(): PlacementApplicationEntity {
     val application = generateApplication()

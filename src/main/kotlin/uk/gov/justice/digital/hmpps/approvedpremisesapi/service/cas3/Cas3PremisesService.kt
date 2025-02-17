@@ -47,9 +47,7 @@ class Cas3PremisesService(
 ) {
   fun getPremises(premisesId: UUID): TemporaryAccommodationPremisesEntity? = premisesRepository.findTemporaryAccommodationPremisesByIdOrNull(premisesId)
 
-  fun getAllPremisesSummaries(regionId: UUID): List<TemporaryAccommodationPremisesSummary> {
-    return premisesRepository.findAllTemporaryAccommodationSummary(regionId)
-  }
+  fun getAllPremisesSummaries(regionId: UUID): List<TemporaryAccommodationPremisesSummary> = premisesRepository.findAllTemporaryAccommodationSummary(regionId)
 
   @SuppressWarnings("CyclomaticComplexMethod")
   fun createNewPremises(
@@ -295,9 +293,7 @@ class Cas3PremisesService(
     )
   }
 
-  fun getBedspaceCount(premises: PremisesEntity): Int {
-    return premisesRepository.getBedCount(premises)
-  }
+  fun getBedspaceCount(premises: PremisesEntity): Int = premisesRepository.getBedCount(premises)
 
   @SuppressWarnings("TooGenericExceptionThrown")
   fun getAvailabilityForRange(
@@ -333,42 +329,41 @@ class Cas3PremisesService(
     referenceNumber: String?,
     notes: String?,
     bedId: UUID,
-  ): ValidatableActionResult<Cas3VoidBedspaceEntity> =
-    validated {
-      if (endDate.isBefore(startDate)) {
-        "$.endDate" hasValidationError "beforeStartDate"
-      }
-
-      val bed = premises.rooms.flatMap { it.beds }.firstOrNull { it.id == bedId }
-      if (bed == null) {
-        "$.bedId" hasValidationError "doesNotExist"
-      }
-
-      val reason = cas3VoidBedspaceReasonRepository.findByIdOrNull(reasonId)
-      if (reason == null) {
-        "$.reason" hasValidationError "doesNotExist"
-      }
-
-      if (validationErrors.any()) {
-        return fieldValidationError
-      }
-
-      val voidBedspacesEntity = cas3VoidBedspacesRepository.save(
-        Cas3VoidBedspaceEntity(
-          id = UUID.randomUUID(),
-          premises = premises,
-          startDate = startDate,
-          endDate = endDate,
-          bed = bed!!,
-          reason = reason!!,
-          referenceNumber = referenceNumber,
-          notes = notes,
-          cancellation = null,
-        ),
-      )
-
-      return success(voidBedspacesEntity)
+  ): ValidatableActionResult<Cas3VoidBedspaceEntity> = validated {
+    if (endDate.isBefore(startDate)) {
+      "$.endDate" hasValidationError "beforeStartDate"
     }
+
+    val bed = premises.rooms.flatMap { it.beds }.firstOrNull { it.id == bedId }
+    if (bed == null) {
+      "$.bedId" hasValidationError "doesNotExist"
+    }
+
+    val reason = cas3VoidBedspaceReasonRepository.findByIdOrNull(reasonId)
+    if (reason == null) {
+      "$.reason" hasValidationError "doesNotExist"
+    }
+
+    if (validationErrors.any()) {
+      return fieldValidationError
+    }
+
+    val voidBedspacesEntity = cas3VoidBedspacesRepository.save(
+      Cas3VoidBedspaceEntity(
+        id = UUID.randomUUID(),
+        premises = premises,
+        startDate = startDate,
+        endDate = endDate,
+        bed = bed!!,
+        reason = reason!!,
+        referenceNumber = referenceNumber,
+        notes = notes,
+        cancellation = null,
+      ),
+    )
+
+    return success(voidBedspacesEntity)
+  }
 
   fun updateVoidBedspaces(
     voidBedspaceId: UUID,

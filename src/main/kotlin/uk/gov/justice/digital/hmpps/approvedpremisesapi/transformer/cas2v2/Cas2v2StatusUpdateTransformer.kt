@@ -16,25 +16,21 @@ class Cas2v2StatusUpdateTransformer(
 
   fun transformJpaToApi(
     jpa: Cas2v2StatusUpdateEntity,
-  ): Cas2v2StatusUpdate {
-    return Cas2v2StatusUpdate(
-      id = jpa.id,
-      name = jpa.status().name,
-      label = jpa.label,
-      description = jpa.description,
-      updatedBy = cas2v2UserTransformer.transformJpaToApi(jpa.assessor),
-      updatedAt = jpa.createdAt.toInstant(),
-      statusUpdateDetails = jpa.statusUpdateDetails?.map { detail -> transformStatusUpdateDetailsJpaToApi(detail) },
-    )
-  }
+  ): Cas2v2StatusUpdate = Cas2v2StatusUpdate(
+    id = jpa.id,
+    name = jpa.status().name,
+    label = jpa.label,
+    description = jpa.description,
+    updatedBy = cas2v2UserTransformer.transformJpaToApi(jpa.assessor),
+    updatedAt = jpa.createdAt.toInstant(),
+    statusUpdateDetails = jpa.statusUpdateDetails?.map { detail -> transformStatusUpdateDetailsJpaToApi(detail) },
+  )
 
-  private fun transformStatusUpdateDetailsJpaToApi(jpa: Cas2v2StatusUpdateDetailEntity): Cas2v2StatusUpdateDetail {
-    return Cas2v2StatusUpdateDetail(
-      id = jpa.id,
-      name = jpa.statusDetail(jpa.statusUpdate.statusId, jpa.statusDetailId).name,
-      label = jpa.label,
-    )
-  }
+  private fun transformStatusUpdateDetailsJpaToApi(jpa: Cas2v2StatusUpdateDetailEntity): Cas2v2StatusUpdateDetail = Cas2v2StatusUpdateDetail(
+    id = jpa.id,
+    name = jpa.statusDetail(jpa.statusUpdate.statusId, jpa.statusDetailId).name,
+    label = jpa.label,
+  )
 
   fun transformJpaSummaryToLatestStatusUpdateApi(jpa: Cas2v2ApplicationSummaryEntity): LatestCas2v2StatusUpdate? {
     if (jpa.latestStatusUpdateStatusId !== null) {

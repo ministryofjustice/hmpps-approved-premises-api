@@ -938,10 +938,8 @@ data class LatLong(
   val latitude: Double,
   val longitude: Double,
 ) {
-  fun plusLatitudeMiles(miles: Int): LatLong {
-    return LatLong(
-      latitude = latitude + ((1.0 / 69.0) * miles),
-      longitude = longitude,
-    )
-  }
+  fun plusLatitudeMiles(miles: Int): LatLong = LatLong(
+    latitude = latitude + ((1.0 / 69.0) * miles),
+    longitude = longitude,
+  )
 }

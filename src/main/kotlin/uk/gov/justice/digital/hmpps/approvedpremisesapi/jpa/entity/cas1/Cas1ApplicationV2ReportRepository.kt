@@ -153,13 +153,12 @@ ORDER BY application.submitted_at ASC, application.id ASC
     startDateTimeInclusive: LocalDateTime,
     endDateTimeInclusive: LocalDateTime,
     jbdcResultSetConsumer: JdbcResultSetConsumer,
-  ) =
-    reportJdbcTemplate.query(
-      QUERY,
-      mapOf<String, Any>(
-        "startDateTimeInclusive" to startDateTimeInclusive,
-        "endDateTimeInclusive" to endDateTimeInclusive,
-      ),
-      jbdcResultSetConsumer,
-    )
+  ) = reportJdbcTemplate.query(
+    QUERY,
+    mapOf<String, Any>(
+      "startDateTimeInclusive" to startDateTimeInclusive,
+      "endDateTimeInclusive" to endDateTimeInclusive,
+    ),
+    jbdcResultSetConsumer,
+  )
 }

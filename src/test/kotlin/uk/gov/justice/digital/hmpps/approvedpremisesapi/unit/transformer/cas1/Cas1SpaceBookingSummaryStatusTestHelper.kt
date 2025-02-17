@@ -18,20 +18,18 @@ class Cas1SpaceBookingSummaryStatusTestHelper {
   private val nowDate: LocalDate = LocalDate.now()
   private val dateWayInTheFuture: LocalDate = nowDate.plusDays(800)
 
-  fun spaceBookingSummaryStatusCases(): Stream<Arguments> {
-    return (
-      getArrivedCase() +
-        getArrivalTodayCase() +
-        getOverdueArrivalCases() +
-        getArrivalWithin2WeeksCases() +
-        getArrivalWithin6WeeksCases() +
-        getDepartingTodayCase() +
-        getDepartedCase() +
-        getOverdueDepartureCases() +
-        getDepartingWithin2WeeksCases() +
-        getNotArrivedCase()
-      ).stream()
-  }
+  fun spaceBookingSummaryStatusCases(): Stream<Arguments> = (
+    getArrivedCase() +
+      getArrivalTodayCase() +
+      getOverdueArrivalCases() +
+      getArrivalWithin2WeeksCases() +
+      getArrivalWithin6WeeksCases() +
+      getDepartingTodayCase() +
+      getDepartedCase() +
+      getOverdueDepartureCases() +
+      getDepartingWithin2WeeksCases() +
+      getNotArrivedCase()
+    ).stream()
 
   private fun getArrivedCase() = listOf(
     Arguments.of(

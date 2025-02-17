@@ -26,9 +26,7 @@ class ValidatedScope<EntityType> {
 }
 
 @Deprecated("Use of ValidatableActionResult is deprecated. Callers should use CasResult and validatedCasResult", ReplaceWith("validatedCasResult"))
-inline fun <EntityType> validated(scope: ValidatedScope<EntityType>.() -> ValidatableActionResult<EntityType>): ValidatableActionResult<EntityType> {
-  return scope(ValidatedScope())
-}
+inline fun <EntityType> validated(scope: ValidatedScope<EntityType>.() -> ValidatableActionResult<EntityType>): ValidatableActionResult<EntityType> = scope(ValidatedScope())
 
 class CasResultValidatedScope<EntityType> {
   val validationErrors = ValidationErrors()
@@ -42,6 +40,4 @@ class CasResultValidatedScope<EntityType> {
   infix fun UUID.hasConflictError(message: String) = CasResult.ConflictError<EntityType>(this, message)
 }
 
-inline fun <EntityType> validatedCasResult(scope: CasResultValidatedScope<EntityType>.() -> CasResult<EntityType>): CasResult<EntityType> {
-  return scope(CasResultValidatedScope())
-}
+inline fun <EntityType> validatedCasResult(scope: CasResultValidatedScope<EntityType>.() -> CasResult<EntityType>): CasResult<EntityType> = scope(CasResultValidatedScope())

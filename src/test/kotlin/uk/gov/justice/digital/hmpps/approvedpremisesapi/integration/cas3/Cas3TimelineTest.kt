@@ -130,14 +130,13 @@ class Cas3TimelineTest : IntegrationTestBase() {
     }
   }
 
-  private fun persistAssessment(application: TemporaryAccommodationApplicationEntity) =
-    temporaryAccommodationAssessmentEntityFactory.produceAndPersist {
-      withAllocatedToUser(application.createdByUser)
-      withApplication(application)
-      withAssessmentSchema(persistAssessmentSchema())
-      withReleaseDate(null)
-      withAccommodationRequiredFromDate(null)
-    }
+  private fun persistAssessment(application: TemporaryAccommodationApplicationEntity) = temporaryAccommodationAssessmentEntityFactory.produceAndPersist {
+    withAllocatedToUser(application.createdByUser)
+    withApplication(application)
+    withAssessmentSchema(persistAssessmentSchema())
+    withReleaseDate(null)
+    withAccommodationRequiredFromDate(null)
+  }
 
   private fun persistRejectedAssessment(application: TemporaryAccommodationApplicationEntity): TemporaryAccommodationAssessmentEntity {
     val referralRejectionReason = referralRejectionReasonEntityFactory.produceAndPersist()
@@ -157,38 +156,35 @@ class Cas3TimelineTest : IntegrationTestBase() {
     }
   }
 
-  private fun persistApplication(crn: String, user: UserEntity) =
-    temporaryAccommodationApplicationEntityFactory.produceAndPersist {
-      withCrn(crn)
-      withCreatedByUser(user)
-      withApplicationSchema(persistApplicationSchema())
-      withProbationRegion(user.probationRegion)
-      withArrivalDate(LocalDate.now().minusDays(100))
-      withPersonReleaseDate(LocalDate.now().minusDays(100))
-    }
+  private fun persistApplication(crn: String, user: UserEntity) = temporaryAccommodationApplicationEntityFactory.produceAndPersist {
+    withCrn(crn)
+    withCreatedByUser(user)
+    withApplicationSchema(persistApplicationSchema())
+    withProbationRegion(user.probationRegion)
+    withArrivalDate(LocalDate.now().minusDays(100))
+    withPersonReleaseDate(LocalDate.now().minusDays(100))
+  }
 
   private fun persistAssessmentSchema() = temporaryAccommodationAssessmentJsonSchemaEntityFactory.produceAndPersist {
     withPermissiveSchema()
     withAddedAt(OffsetDateTime.now())
   }
 
-  private fun persistApplicationSchema() =
-    temporaryAccommodationApplicationJsonSchemaEntityFactory.produceAndPersist {
-      withPermissiveSchema()
-    }
+  private fun persistApplicationSchema() = temporaryAccommodationApplicationJsonSchemaEntityFactory.produceAndPersist {
+    withPermissiveSchema()
+  }
 
-  private fun persistCas3UpdatedDomainEvent(id: UUID, assessment: TemporaryAccommodationAssessmentEntity, data: Any) =
-    domainEventFactory.produceAndPersist {
-      withId(id)
-      withCrn(assessment.application.crn)
-      withOccurredAt(OffsetDateTime.now())
-      withCreatedAt(OffsetDateTime.now())
-      withData(data)
-      withAssessmentId(assessment.id)
-      withService(ServiceName.temporaryAccommodation)
-      withTriggeredByUserId(assessment.allocatedToUser!!.id)
-      withType(DomainEventType.CAS3_ASSESSMENT_UPDATED)
-    }
+  private fun persistCas3UpdatedDomainEvent(id: UUID, assessment: TemporaryAccommodationAssessmentEntity, data: Any) = domainEventFactory.produceAndPersist {
+    withId(id)
+    withCrn(assessment.application.crn)
+    withOccurredAt(OffsetDateTime.now())
+    withCreatedAt(OffsetDateTime.now())
+    withData(data)
+    withAssessmentId(assessment.id)
+    withService(ServiceName.temporaryAccommodation)
+    withTriggeredByUserId(assessment.allocatedToUser!!.id)
+    withType(DomainEventType.CAS3_ASSESSMENT_UPDATED)
+  }
 
   private fun addReferralHistoryNotes(assessment: TemporaryAccommodationAssessmentEntity) {
     assessment.apply {

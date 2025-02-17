@@ -117,8 +117,7 @@ class Cas1PremisesTest : IntegrationTestBase() {
       }
     }
 
-    private fun findCharacteristic(propertyName: String) =
-      characteristicRepository.findByPropertyName(propertyName, ServiceName.approvedPremises.value)!!
+    private fun findCharacteristic(propertyName: String) = characteristicRepository.findByPropertyName(propertyName, ServiceName.approvedPremises.value)!!
 
     private fun createSpaceBooking(
       crn: String,
@@ -1043,8 +1042,7 @@ class Cas1PremisesTest : IntegrationTestBase() {
       assertThat(summaries.spaceBookings[2].tier).isEqualTo(tierA)
     }
 
-    private fun findCharacteristic(propertyName: String) =
-      characteristicRepository.findByPropertyName(propertyName, ServiceName.approvedPremises.value)!!
+    private fun findCharacteristic(propertyName: String) = characteristicRepository.findByPropertyName(propertyName, ServiceName.approvedPremises.value)!!
 
     private fun createSpaceBooking(
       crn: String,

@@ -8,15 +8,14 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.manageusers.Extern
 fun IntegrationTestBase.manageUsersMockSuccessfulExternalUsersCall(
   username: String,
   externalUserDetails: ExternalUserDetails,
-) =
-  wiremockServer.stubFor(
-    WireMock.get(urlEqualTo("/externalusers/$username"))
-      .willReturn(
-        aResponse()
-          .withHeader("Content-Type", "application/json")
-          .withStatus(200)
-          .withBody(
-            objectMapper.writeValueAsString(externalUserDetails),
-          ),
-      ),
-  )
+) = wiremockServer.stubFor(
+  WireMock.get(urlEqualTo("/externalusers/$username"))
+    .willReturn(
+      aResponse()
+        .withHeader("Content-Type", "application/json")
+        .withStatus(200)
+        .withBody(
+          objectMapper.writeValueAsString(externalUserDetails),
+        ),
+    ),
+)

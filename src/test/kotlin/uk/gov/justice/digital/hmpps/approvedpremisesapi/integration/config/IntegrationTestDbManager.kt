@@ -92,11 +92,10 @@ object IntegrationTestDbManager {
     flyway.migrate()
   }
 
-  fun recreateDatabaseFromTemplate(context: ApplicationContext) =
-    recreateDatabaseFromTemplate(
-      databaseName = context.environment.getProperty(CONFIG_PATH_DATABASE_NAME)!!,
-      templateDatabaseName = context.environment.getProperty(CONFIG_PATH_TEMPLATE_DATABASE_NAME)!!,
-    )
+  fun recreateDatabaseFromTemplate(context: ApplicationContext) = recreateDatabaseFromTemplate(
+    databaseName = context.environment.getProperty(CONFIG_PATH_DATABASE_NAME)!!,
+    templateDatabaseName = context.environment.getProperty(CONFIG_PATH_TEMPLATE_DATABASE_NAME)!!,
+  )
 
   fun recreateDatabaseFromTemplate(
     databaseName: String,
@@ -127,7 +126,9 @@ object IntegrationTestDbManager {
     },
   )
 
-  class IntegrationTestListener : BeforeAllCallback, BeforeEachCallback {
+  class IntegrationTestListener :
+    BeforeAllCallback,
+    BeforeEachCallback {
     override fun beforeAll(context: ExtensionContext?) {
       if (isPerClass(context)) {
         recreateDatabaseFromTemplate(SpringExtension.getApplicationContext(context!!))

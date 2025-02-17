@@ -5,7 +5,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.DestinationPro
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DestinationProviderEntity
 
 @Component
-class DestinationProviderTransformer() {
+class DestinationProviderTransformer {
   fun transformJpaToApi(jpa: DestinationProviderEntity) = DestinationProvider(
     id = jpa.id,
     name = jpa.name,

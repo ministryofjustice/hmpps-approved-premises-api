@@ -118,10 +118,76 @@ class Cas1StartupScript(
     }
   }
 
-  private fun usersToSeedLocal(): List<SeedUser> {
-    return listOf(
+  private fun usersToSeedLocal(): List<SeedUser> = listOf(
+    SeedUser(
+      username = "JIMSNOWLDAP",
+      roles = listOf(
+        UserRole.CAS1_CRU_MEMBER,
+        UserRole.CAS1_CRU_MEMBER_FIND_AND_BOOK_BETA,
+        UserRole.CAS1_ASSESSOR,
+        UserRole.CAS1_MATCHER,
+        UserRole.CAS1_WORKFLOW_MANAGER,
+        UserRole.CAS1_REPORT_VIEWER,
+        UserRole.CAS1_APPEALS_MANAGER,
+        UserRole.CAS1_CRU_MEMBER,
+      ),
+      qualifications = UserQualification.entries.toList(),
+      documentation = "For local use in development and testing",
+    ),
+    SeedUser(
+      username = "LAOFULLACCESS",
+      roles = listOf(
+        UserRole.CAS1_CRU_MEMBER,
+        UserRole.CAS1_CRU_MEMBER_FIND_AND_BOOK_BETA,
+        UserRole.CAS1_ASSESSOR,
+        UserRole.CAS1_MATCHER,
+        UserRole.CAS1_WORKFLOW_MANAGER,
+        UserRole.CAS1_REPORT_VIEWER,
+        UserRole.CAS1_APPEALS_MANAGER,
+        UserRole.CAS1_FUTURE_MANAGER,
+        UserRole.CAS1_CRU_MEMBER,
+      ),
+      qualifications = emptyList(),
+      documentation = "For local use in development and testing. This user has an exclusion (whitelisted) for LAO CRN X400000",
+    ),
+    SeedUser(
+      username = "LAORESTRICTED",
+      roles = listOf(
+        UserRole.CAS1_CRU_MEMBER,
+        UserRole.CAS1_CRU_MEMBER_FIND_AND_BOOK_BETA,
+        UserRole.CAS1_ASSESSOR,
+        UserRole.CAS1_MATCHER,
+        UserRole.CAS1_WORKFLOW_MANAGER,
+        UserRole.CAS1_REPORT_VIEWER,
+        UserRole.CAS1_APPEALS_MANAGER,
+        UserRole.CAS1_FUTURE_MANAGER,
+        UserRole.CAS3_ASSESSOR,
+      ),
+      qualifications = emptyList(),
+      documentation = "For local use in development and testing. This user has a restriction (blacklisted) for LAO CRN X400001",
+    ),
+    SeedUser(
+      username = "CRUWOMENSESTATE",
+      roles = listOf(
+        UserRole.CAS1_CRU_MEMBER,
+        UserRole.CAS1_CRU_MEMBER_FIND_AND_BOOK_BETA,
+        UserRole.CAS1_ASSESSOR,
+        UserRole.CAS1_MATCHER,
+        UserRole.CAS1_WORKFLOW_MANAGER,
+        UserRole.CAS1_REPORT_VIEWER,
+        UserRole.CAS1_APPEALS_MANAGER,
+        UserRole.CAS1_FUTURE_MANAGER,
+      ),
+      qualifications = UserQualification.entries.toList(),
+      cruManagementAreaOverrideId = Cas1CruManagementAreaEntity.WOMENS_ESTATE_ID,
+      documentation = "For local use in development and testing. This user's CRU Management Area is overridden to women's estate",
+    ),
+  )
+
+  private fun usersToSeedDev(): List<SeedUser> = listOf("AP_USER_TEST_1", "AP_USER_TEST_3", "AP_USER_TEST_4", "AP_USER_TEST_5")
+    .map {
       SeedUser(
-        username = "JIMSNOWLDAP",
+        username = it,
         roles = listOf(
           UserRole.CAS1_CRU_MEMBER,
           UserRole.CAS1_CRU_MEMBER_FIND_AND_BOOK_BETA,
@@ -131,92 +197,23 @@ class Cas1StartupScript(
           UserRole.CAS1_REPORT_VIEWER,
           UserRole.CAS1_APPEALS_MANAGER,
           UserRole.CAS1_CRU_MEMBER,
+          UserRole.CAS1_FUTURE_MANAGER,
         ),
         qualifications = UserQualification.entries.toList(),
-        documentation = "For local use in development and testing",
-      ),
+        documentation = "Generic E2E test user",
+      )
+    } +
+    listOf(
       SeedUser(
-        username = "LAOFULLACCESS",
+        username = "AP_USER_TEST_2",
         roles = listOf(
-          UserRole.CAS1_CRU_MEMBER,
-          UserRole.CAS1_CRU_MEMBER_FIND_AND_BOOK_BETA,
-          UserRole.CAS1_ASSESSOR,
-          UserRole.CAS1_MATCHER,
-          UserRole.CAS1_WORKFLOW_MANAGER,
+          UserRole.CAS1_USER_MANAGER,
           UserRole.CAS1_REPORT_VIEWER,
-          UserRole.CAS1_APPEALS_MANAGER,
-          UserRole.CAS1_FUTURE_MANAGER,
-          UserRole.CAS1_CRU_MEMBER,
         ),
         qualifications = emptyList(),
-        documentation = "For local use in development and testing. This user has an exclusion (whitelisted) for LAO CRN X400000",
-      ),
-      SeedUser(
-        username = "LAORESTRICTED",
-        roles = listOf(
-          UserRole.CAS1_CRU_MEMBER,
-          UserRole.CAS1_CRU_MEMBER_FIND_AND_BOOK_BETA,
-          UserRole.CAS1_ASSESSOR,
-          UserRole.CAS1_MATCHER,
-          UserRole.CAS1_WORKFLOW_MANAGER,
-          UserRole.CAS1_REPORT_VIEWER,
-          UserRole.CAS1_APPEALS_MANAGER,
-          UserRole.CAS1_FUTURE_MANAGER,
-          UserRole.CAS3_ASSESSOR,
-        ),
-        qualifications = emptyList(),
-        documentation = "For local use in development and testing. This user has a restriction (blacklisted) for LAO CRN X400001",
-      ),
-      SeedUser(
-        username = "CRUWOMENSESTATE",
-        roles = listOf(
-          UserRole.CAS1_CRU_MEMBER,
-          UserRole.CAS1_CRU_MEMBER_FIND_AND_BOOK_BETA,
-          UserRole.CAS1_ASSESSOR,
-          UserRole.CAS1_MATCHER,
-          UserRole.CAS1_WORKFLOW_MANAGER,
-          UserRole.CAS1_REPORT_VIEWER,
-          UserRole.CAS1_APPEALS_MANAGER,
-          UserRole.CAS1_FUTURE_MANAGER,
-        ),
-        qualifications = UserQualification.entries.toList(),
-        cruManagementAreaOverrideId = Cas1CruManagementAreaEntity.WOMENS_ESTATE_ID,
-        documentation = "For local use in development and testing. This user's CRU Management Area is overridden to women's estate",
+        documentation = "Admin and Reports Test User",
       ),
     )
-  }
-
-  private fun usersToSeedDev(): List<SeedUser> =
-    listOf("AP_USER_TEST_1", "AP_USER_TEST_3", "AP_USER_TEST_4", "AP_USER_TEST_5")
-      .map {
-        SeedUser(
-          username = it,
-          roles = listOf(
-            UserRole.CAS1_CRU_MEMBER,
-            UserRole.CAS1_CRU_MEMBER_FIND_AND_BOOK_BETA,
-            UserRole.CAS1_ASSESSOR,
-            UserRole.CAS1_MATCHER,
-            UserRole.CAS1_WORKFLOW_MANAGER,
-            UserRole.CAS1_REPORT_VIEWER,
-            UserRole.CAS1_APPEALS_MANAGER,
-            UserRole.CAS1_CRU_MEMBER,
-            UserRole.CAS1_FUTURE_MANAGER,
-          ),
-          qualifications = UserQualification.entries.toList(),
-          documentation = "Generic E2E test user",
-        )
-      } +
-      listOf(
-        SeedUser(
-          username = "AP_USER_TEST_2",
-          roles = listOf(
-            UserRole.CAS1_USER_MANAGER,
-            UserRole.CAS1_REPORT_VIEWER,
-          ),
-          qualifications = emptyList(),
-          documentation = "Admin and Reports Test User",
-        ),
-      )
 }
 
 data class SeedUser(

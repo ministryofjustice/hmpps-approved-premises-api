@@ -5,7 +5,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NonArrivalReas
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.NonArrivalReasonEntity
 
 @Component
-class NonArrivalReasonTransformer() {
+class NonArrivalReasonTransformer {
   fun transformJpaToApi(jpa: NonArrivalReasonEntity) = NonArrivalReason(
     id = jpa.id,
     name = jpa.name,

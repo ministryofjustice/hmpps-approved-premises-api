@@ -86,8 +86,7 @@ class PreemptiveCacheRefresher(
     }
   }
 
-  private fun allPendingNonRepeatableFlywayMigrationsAreComplete() =
-    flyway.info().pending().none { !it.script.startsWith("R__") }
+  private fun allPendingNonRepeatableFlywayMigrationsAreComplete() = flyway.info().pending().none { !it.script.startsWith("R__") }
 }
 
 fun interruptableSleep(millis: Long) {
@@ -136,14 +135,12 @@ abstract class CacheRefreshWorker(
     }
   }
 
-  private fun shouldStop(lockExpiresAt: Double): PrematureStopReason? {
-    return if (shuttingDown) {
-      PrematureStopReason.Shutdown
-    } else if (System.currentTimeMillis() > lockExpiresAt) {
-      PrematureStopReason.LockExpired
-    } else {
-      null
-    }
+  private fun shouldStop(lockExpiresAt: Double): PrematureStopReason? = if (shuttingDown) {
+    PrematureStopReason.Shutdown
+  } else if (System.currentTimeMillis() > lockExpiresAt) {
+    PrematureStopReason.LockExpired
+  } else {
+    null
   }
 
   private fun attemptToReleaseLock(lock: LockResult?) {

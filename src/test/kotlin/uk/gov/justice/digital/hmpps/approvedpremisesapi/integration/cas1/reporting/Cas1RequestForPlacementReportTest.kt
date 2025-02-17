@@ -781,20 +781,17 @@ class Cas1RequestForPlacementReportTest : InitialiseDatabasePerClassTestBase() {
     )
   }
 
-  private fun getPlacementApplication(application: ApplicationEntity) =
-    placementApplicationRepository.findByApplication(application).first { it.reallocatedAt == null }
+  private fun getPlacementApplication(application: ApplicationEntity) = placementApplicationRepository.findByApplication(application).first { it.reallocatedAt == null }
 
   private fun getLatestAssessment(applicationId: UUID) = getApplication(applicationId)
     .assessments.filter { it.reallocatedAt == null }.maxByOrNull { it.createdAt }!!
 
-  private fun getApplication(applicationId: UUID) =
-    realApplicationRepository.findByIdOrNull(applicationId)!! as ApprovedPremisesApplicationEntity
+  private fun getApplication(applicationId: UUID) = realApplicationRepository.findByIdOrNull(applicationId)!! as ApprovedPremisesApplicationEntity
 
-  private fun getReportUrl(year: Int, month: Int, includePii: Boolean?) =
-    "/cas1/reports/requestsForPlacement?year=$year&month=$month" +
-      if (includePii != null) {
-        "&includePii=$includePii"
-      } else {
-        ""
-      }
+  private fun getReportUrl(year: Int, month: Int, includePii: Boolean?) = "/cas1/reports/requestsForPlacement?year=$year&month=$month" +
+    if (includePii != null) {
+      "&includePii=$includePii"
+    } else {
+      ""
+    }
 }

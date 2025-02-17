@@ -403,6 +403,5 @@ class UserTransformerTest {
     .produce()
     .addRoleForUnitTest(role)
 
-  private fun buildProbationRegionEntity() =
-    ProbationRegionEntityFactory().withId(randomUUID()).withApArea(ApAreaEntityFactory().produce()).produce()
+  private fun buildProbationRegionEntity() = ProbationRegionEntityFactory().withId(randomUUID()).withApArea(ApAreaEntityFactory().produce()).produce()
 }

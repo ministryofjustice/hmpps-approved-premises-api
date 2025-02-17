@@ -9,12 +9,10 @@ fun IntegrationTestBase.givenAnApprovedPremises(
   name: String = randomStringMultiCaseWithNumbers(8),
   supportsSpaceBookings: Boolean = false,
   region: ProbationRegionEntity? = null,
-): ApprovedPremisesEntity {
-  return approvedPremisesEntityFactory
-    .produceAndPersist {
-      withName(name)
-      withProbationRegion(region ?: probationRegionEntityFactory.produceAndPersist())
-      withLocalAuthorityArea(localAuthorityEntityFactory.produceAndPersist())
-      withSupportsSpaceBookings(supportsSpaceBookings)
-    }
-}
+): ApprovedPremisesEntity = approvedPremisesEntityFactory
+  .produceAndPersist {
+    withName(name)
+    withProbationRegion(region ?: probationRegionEntityFactory.produceAndPersist())
+    withLocalAuthorityArea(localAuthorityEntityFactory.produceAndPersist())
+    withSupportsSpaceBookings(supportsSpaceBookings)
+  }

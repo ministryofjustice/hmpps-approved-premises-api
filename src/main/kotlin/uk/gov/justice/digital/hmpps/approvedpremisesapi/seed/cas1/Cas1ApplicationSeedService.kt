@@ -407,25 +407,22 @@ class Cas1ApplicationSeedServiceCaches(
     .maximumSize(10000)
     .expireAfterWrite(1, TimeUnit.MINUTES)
     .build(object : CacheLoader<String, PersonInfoResult.Success.Full>() {
-      override fun load(crn: String): PersonInfoResult.Success.Full {
-        return when (
-          val personInfoResult = offenderService.getPersonInfoResult(
-            crn = crn,
-            deliusUsername = null,
-            ignoreLaoRestrictions = true,
-          )
-        ) {
-          is PersonInfoResult.NotFound, is PersonInfoResult.Unknown -> throw NotFoundProblem(
-            personInfoResult.crn,
-            "Offender",
-          )
+      override fun load(crn: String): PersonInfoResult.Success.Full = when (
+        val personInfoResult = offenderService.getPersonInfoResult(
+          crn = crn,
+          deliusUsername = null,
+          ignoreLaoRestrictions = true,
+        )
+      ) {
+        is PersonInfoResult.NotFound, is PersonInfoResult.Unknown -> throw NotFoundProblem(
+          personInfoResult.crn,
+          "Offender",
+        )
 
-          is PersonInfoResult.Success.Restricted -> throw ForbiddenProblem()
-          is PersonInfoResult.Success.Full -> personInfoResult
-        }
+        is PersonInfoResult.Success.Restricted -> throw ForbiddenProblem()
+        is PersonInfoResult.Success.Full -> personInfoResult
       }
     })
 
-  fun getPersonInfo(crn: String): PersonInfoResult.Success.Full =
-    personInfoCache.get(crn)
+  fun getPersonInfo(crn: String): PersonInfoResult.Success.Full = personInfoCache.get(crn)
 }

@@ -100,13 +100,11 @@ class SpacePlanningService(
     characteristicPropertyName: String,
     availableBeds: List<BedDayState>,
     bookings: List<SpaceBooking>,
-  ): PremiseCharacteristicAvailability {
-    return PremiseCharacteristicAvailability(
-      characteristicPropertyName = characteristicPropertyName,
-      availableBedCount = availableBeds.count { it.bed.hasCharacteristic(characteristicPropertyName) },
-      bookingCount = bookings.count { it.hasCharacteristic(characteristicPropertyName) },
-    )
-  }
+  ): PremiseCharacteristicAvailability = PremiseCharacteristicAvailability(
+    characteristicPropertyName = characteristicPropertyName,
+    availableBedCount = availableBeds.count { it.bed.hasCharacteristic(characteristicPropertyName) },
+    bookingCount = bookings.count { it.hasCharacteristic(characteristicPropertyName) },
+  )
 
   private fun bedStatesForEachDay(
     premises: ApprovedPremisesEntity,
@@ -176,13 +174,9 @@ class SpacePlanningService(
     val bookingCount: Int,
     val characteristicAvailability: List<PremiseCharacteristicAvailability>,
   ) {
-    fun isPremiseOverbooked(): Boolean {
-      return isPremisesCapacityOverbooked() || characteristicAvailability.any { it.isCharacteristicOverbooked() }
-    }
+    fun isPremiseOverbooked(): Boolean = isPremisesCapacityOverbooked() || characteristicAvailability.any { it.isCharacteristicOverbooked() }
 
-    private fun isPremisesCapacityOverbooked(): Boolean {
-      return bookingCount > availableBedCount
-    }
+    private fun isPremisesCapacityOverbooked(): Boolean = bookingCount > availableBedCount
   }
 
   data class PremiseCharacteristicAvailability(
@@ -191,8 +185,6 @@ class SpacePlanningService(
     val bookingCount: Int,
   ) {
 
-    fun isCharacteristicOverbooked(): Boolean {
-      return bookingCount > availableBedCount
-    }
+    fun isCharacteristicOverbooked(): Boolean = bookingCount > availableBedCount
   }
 }
