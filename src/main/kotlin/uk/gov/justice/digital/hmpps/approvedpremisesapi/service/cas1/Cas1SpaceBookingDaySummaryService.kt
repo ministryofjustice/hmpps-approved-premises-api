@@ -51,10 +51,10 @@ class Cas1SpaceBookingDaySummaryService(
       bookingsSortBy.value,
     )
 
-    val spaceBookingsForDate = cas1SpaceBookingRepository.findAllPremisesBookingsForDate(
+    val spaceBookingsForDate = cas1SpaceBookingRepository.findByPremisesIdAndCriteriaForDate(
       premisesId = premisesId,
-      daySummaryDate = date,
-      bookingsCriteriaFilter = getBookingCharacteristicIds(bookingsCriteriaFilter),
+      date = date,
+      criteria = getBookingCharacteristicIds(bookingsCriteriaFilter),
       sort = sort,
       excludeSpaceBookingId = excludeSpaceBookingId,
     )
