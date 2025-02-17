@@ -110,7 +110,7 @@ class AssessmentService(
         AssessmentSortField.assessmentDueAt -> "dueAt"
         AssessmentSortField.personCrn -> "crn"
         AssessmentSortField.personName -> "personName"
-        AssessmentSortField.applicationProbationDeliveryUnitName -> "probationDeliveryUnit"
+        AssessmentSortField.applicationProbationDeliveryUnitName -> error("not supported for CAS1")
       },
     )
 
