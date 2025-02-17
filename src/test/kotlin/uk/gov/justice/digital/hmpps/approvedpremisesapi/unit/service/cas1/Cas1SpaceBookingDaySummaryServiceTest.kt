@@ -146,7 +146,7 @@ class Cas1SpaceBookingDaySummaryServiceTest {
       .produce()
 
     every { cas1PremisesService.findPremiseById(premisesId) } returns ApprovedPremisesEntityFactory().withDefaults().produce()
-    every { cas1SpaceBookingRepository.findAllPremisesBookingsForDate(premisesId, date, any(), sort, any(), any()) } returns spaceBookingSummaries
+    every { cas1SpaceBookingRepository.findByPremisesIdAndCriteriaForDate(premisesId, date, any(), any(), any(), sort) } returns spaceBookingSummaries
     every { characteristicService.getCharacteristicsByPropertyNames(any(), ServiceName.approvedPremises) } returns listOf(roomCharacteristic)
     every { userService.getUserForRequest() } returns user
     every { offenderService.getPersonSummaryInfoResults(any(), any()) } returns personSummaries
