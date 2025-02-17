@@ -3,7 +3,6 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas3
 import org.springframework.stereotype.Service
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.BedSearchAttributes
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PersonType
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.TemporaryAccommodationBedSearchParameters
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas3BookingRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.OverlapBookingsSearchResult
@@ -71,36 +70,17 @@ class Cas3BedspaceSearchService(
 
     val endDate = searchParams.calculateEndDate()
 
-    val candidateResults = if (searchParams.premisesFilters != null || searchParams.bedspaceFilters != null) {
-      return CasResult.GeneralValidationError("Filters not implemented")
-    } else {
-      val premisesCharacteristicsPropertyNames = searchParams.attributes?.map {
-        when (it) {
-          BedSearchAttributes.SINGLE_OCCUPANCY, BedSearchAttributes.SHARED_PROPERTY -> it.value
-          else -> ""
-        }
-      }
+    if ((searchParams.bedspaceFilters != null || searchParams.premisesFilters != null) && searchParams.attributes != null) {
+      return CasResult.GeneralValidationError("Cannot use both filters and attributes")
+    }
 
-      val premisesCharacteristicIds = getCharacteristicsIds(premisesCharacteristicsPropertyNames, "premises")
-
-      val roomCharacteristicsPropertyNames = searchParams.attributes?.map {
-        when (it) {
-          BedSearchAttributes.WHEELCHAIR_ACCESSIBLE -> it.value
-          else -> ""
-        }
-      }
-
-      val roomCharacteristicIds = getCharacteristicsIds(roomCharacteristicsPropertyNames, "room")
-
+    val candidateResults =
       bedSearchRepository.findTemporaryAccommodationBeds(
         probationDeliveryUnits = probationDeliveryUnitIds,
         startDate = searchParams.startDate,
         endDate = endDate,
         probationRegionId = user.probationRegion.id,
-        premisesCharacteristicIds,
-        roomCharacteristicIds,
       )
-    }
 
     val bedIds = candidateResults.map { it.bedId }
     val bedsWithABookingInTurnaround = cas3BookingRepository.findClosestBookingBeforeDateForBeds(searchParams.startDate, bedIds)
@@ -126,8 +106,68 @@ class Cas3BedspaceSearchService(
       it.overlaps.addAll(overlappingBookings)
     }
 
-    return success(results)
+    return success(applySearchFilters(searchParams, results))
   }
+
+  /*
+  this temporally adds new filter functionality to the search results and to unblock the UI whilst we await confirmation from central team on how
+  bed search should work. This will be removed and be added to the query added earlier in the search process to improve performance.
+   */
+  private fun applySearchFilters(
+    searchParams: TemporaryAccommodationBedSearchParameters,
+    results: List<Cas3BedSearchResult>,
+  ): List<Cas3BedSearchResult> {
+    // use the legacy filters until the UI switches over.
+    if (searchParams.attributes != null) {
+      return applyLegacyFilters(searchParams, results)
+    }
+
+    if (searchParams.bedspaceFilters == null && searchParams.premisesFilters == null) {
+      return results
+    }
+
+    val characteristicPropertyNames =
+      characteristicService.getTemporaryAccommodationCharacteristics().associateBy({ it.id }, { it.propertyName })
+
+    // we will use IDs in the query in future refactoring, but for now it only returns names, so map IDs to characteristic propertyNames.
+    val roomToInclude =
+      searchParams.bedspaceFilters?.includedCharacteristicIds?.map { characteristicPropertyNames[it]!! }
+    val roomToExclude =
+      searchParams.bedspaceFilters?.excludedCharacteristicIds?.map { characteristicPropertyNames[it]!! }
+    val premisesToInclude =
+      searchParams.premisesFilters?.includedCharacteristicIds?.map { characteristicPropertyNames[it]!! }
+    val premisesToExclude =
+      searchParams.premisesFilters?.excludedCharacteristicIds?.map { characteristicPropertyNames[it]!! }
+
+    return results
+      .filter { result ->
+        val premisesCharacteristics = result.premisesCharacteristics.map { it.propertyName }
+        (premisesToInclude.isNullOrEmpty() || premisesToInclude.all { it in premisesCharacteristics }) &&
+          (premisesToExclude.isNullOrEmpty() || premisesToExclude.none { it in premisesCharacteristics })
+      }.filter { result ->
+        val roomCharacteristics = result.roomCharacteristics.map { it.propertyName }
+        (roomToInclude.isNullOrEmpty() || roomToInclude.all { it in roomCharacteristics }) &&
+          (roomToExclude.isNullOrEmpty() || roomToExclude.none { it in roomCharacteristics })
+      }
+  }
+
+  @Deprecated("adding to maintain functionality until the UI switches to use search filters")
+  private fun applyLegacyFilters(
+    searchParams: TemporaryAccommodationBedSearchParameters,
+    results: List<Cas3BedSearchResult>,
+  ): List<Cas3BedSearchResult> = results
+    .filter { bedspace ->
+      searchParams.attributes?.contains(BedSearchAttributes.WHEELCHAIR_ACCESSIBLE) != true ||
+        bedspace.roomCharacteristics.any { it.propertyName == BedSearchAttributes.WHEELCHAIR_ACCESSIBLE.value }
+    }
+    .filter { premises ->
+      searchParams.attributes?.contains(BedSearchAttributes.SINGLE_OCCUPANCY) != true ||
+        premises.premisesCharacteristics.any { it.propertyName == BedSearchAttributes.SINGLE_OCCUPANCY.value }
+    }
+    .filter { premises ->
+      searchParams.attributes?.contains(BedSearchAttributes.SHARED_PROPERTY) != true ||
+        premises.premisesCharacteristics.any { it.propertyName == BedSearchAttributes.SHARED_PROPERTY.value }
+    }
 
   fun transformBookingToOverlap(
     overlappedBooking: OverlapBookingsSearchResult,
@@ -158,16 +198,6 @@ class Cas3BedspaceSearchService(
     is PersonSummaryInfoResult.Success.Full -> PersonType.fullPerson
     is PersonSummaryInfoResult.Success.Restricted -> PersonType.restrictedPerson
     is PersonSummaryInfoResult.NotFound, is PersonSummaryInfoResult.Unknown -> PersonType.unknownPerson
-  }
-
-  private fun getCharacteristicsIds(characteristicsPropertyNames: List<String>?, modelScope: String): List<UUID> {
-    if (characteristicsPropertyNames.isNullOrEmpty()) return emptyList()
-    return characteristicsPropertyNames.let {
-      val characteristics = characteristicService.getCharacteristicsByPropertyNames(characteristicsPropertyNames, ServiceName.temporaryAccommodation)
-      characteristics.filter {
-        it.isActive && it.matches(ServiceName.temporaryAccommodation.value, modelScope)
-      }.map { it.id }.toList()
-    }
   }
 
   private fun TemporaryAccommodationBedSearchParameters.calculateEndDate(): LocalDate {
