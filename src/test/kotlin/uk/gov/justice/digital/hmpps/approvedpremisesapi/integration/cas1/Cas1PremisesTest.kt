@@ -14,6 +14,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.Cas1SpaceBookingEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.InitialiseDatabasePerClassTestBase
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.IntegrationTestBase
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenACas1SpaceBooking
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAPlacementRequest
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAProbationRegion
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAUser
@@ -76,48 +77,7 @@ class Cas1PremisesTest : IntegrationTestBase() {
         withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
         withManagerDetails("manager details")
       }
-
-      setupSpaceBookings()
     }
-
-    fun setupSpaceBookings() {
-      offender = givenAnOffender(
-        offenderDetailsConfigBlock = {
-          withCrn("crn1")
-          withFirstName("firstNameAAA")
-          withLastName("lastNameAAA")
-          withCurrentRestriction(false)
-        },
-      ).first.asCaseSummary()
-
-      val pRequestA = givenAPlacementRequest(
-        placementRequestAllocatedTo = user,
-        assessmentAllocatedTo = user,
-        createdByUser = user,
-        crn = offender.crn,
-        name = "${offender.name.forename} ${offender.name.surname}",
-        tier = tierA,
-      )
-      placementRequest = pRequestA.first
-      application = pRequestA.second
-
-      spaceBooking = createSpaceBooking(
-        crn = offender.crn,
-        placementRequest = this.placementRequest,
-        application = application,
-      ) {
-        withCrn(offender.crn)
-        withPremises(premises)
-        withCanonicalArrivalDate(LocalDate.now().minusDays(3))
-        withCanonicalDepartureDate(LocalDate.now().plusDays(3))
-        withCreatedBy(user)
-        withCriteria(
-          findCharacteristic(CAS1_PROPERTY_NAME_ARSON_SUITABLE),
-        )
-      }
-    }
-
-    private fun findCharacteristic(propertyName: String) = characteristicRepository.findByPropertyName(propertyName, ServiceName.approvedPremises.value)!!
 
     private fun createSpaceBooking(
       crn: String,
@@ -165,6 +125,13 @@ class Cas1PremisesTest : IntegrationTestBase() {
     @Test
     fun `Returns premises summary`() {
       val (_, jwt) = givenAUser(roles = listOf(CAS1_FUTURE_MANAGER))
+
+      givenACas1SpaceBooking(
+        crn = "X123",
+        premises = premises,
+        expectedArrivalDate = LocalDate.now().minusDays(3),
+        expectedDepartureDate = LocalDate.now().plusDays(3),
+      )
 
       val beds = bedEntityFactory.produceAndPersistMultiple(5) {
         withYieldedRoom {

@@ -7,6 +7,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas1SpaceBook
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.CharacteristicEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.OfflineApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementRequestEntity
+import java.time.LocalDate
 
 @SuppressWarnings("LongParameterList")
 fun IntegrationTestBase.givenACas1SpaceBooking(
@@ -17,6 +18,8 @@ fun IntegrationTestBase.givenACas1SpaceBooking(
   offlineApplication: OfflineApplicationEntity? = null,
   criteria: List<CharacteristicEntity>? = null,
   placementRequest: PlacementRequestEntity? = null,
+  expectedArrivalDate: LocalDate = LocalDate.now(),
+  expectedDepartureDate: LocalDate = LocalDate.now(),
 ): Cas1SpaceBookingEntity {
   val (user) = givenAUser()
   val placementRequestToUse = placementRequest ?: if (offlineApplication == null) {
@@ -32,6 +35,10 @@ fun IntegrationTestBase.givenACas1SpaceBooking(
 
   return cas1SpaceBookingEntityFactory.produceAndPersist {
     withCrn(crn)
+    withExpectedArrivalDate(expectedArrivalDate)
+    withCanonicalArrivalDate(expectedArrivalDate)
+    withExpectedDepartureDate(expectedDepartureDate)
+    withCanonicalDepartureDate(expectedDepartureDate)
     withPlacementRequest(placementRequestToUse)
     withApplication(placementRequestToUse?.application)
     withOfflineApplication(offlineApplication)
