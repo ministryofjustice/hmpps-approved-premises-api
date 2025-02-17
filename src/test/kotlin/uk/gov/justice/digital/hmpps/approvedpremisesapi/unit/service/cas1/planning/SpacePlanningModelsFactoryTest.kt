@@ -395,5 +395,21 @@ class SpacePlanningModelsFactoryTest {
 
       assertThat(result).isEmpty()
     }
+
+    @Test
+    fun `exclude cancelled bookings`() {
+      val booking1 = Cas1SpaceBookingEntityFactory()
+        .withCanonicalArrivalDate(LocalDate.of(2020, 4, 4))
+        .withCanonicalDepartureDate(LocalDate.of(2020, 4, 5))
+        .withCancellationOccurredAt(LocalDate.now())
+        .produce()
+
+      val result = factory.spaceBookingsForDay(
+        day = LocalDate.of(2020, 4, 4),
+        spaceBookingsToConsider = listOf(booking1),
+      )
+
+      assertThat(result).isEmpty()
+    }
   }
 }

@@ -422,7 +422,9 @@ data class Cas1SpaceBookingEntity(
   fun hasDeparted() = actualDepartureDate != null
   fun hasNonArrival() = nonArrivalConfirmedAt != null
   fun hasArrival() = actualArrivalDate != null
-  fun isResident(day: LocalDate) = canonicalArrivalDate <= day && canonicalDepartureDate > day
+  fun isResident(day: LocalDate) = !isCancelled() &&
+    canonicalArrivalDate <= day &&
+    canonicalDepartureDate > day
 
   @Deprecated("Any usage of this should instead be updated to use individual date and time fields")
   fun actualArrivalAsDateTime(): Instant? = actualArrivalDate?.atTime(actualArrivalTime ?: LocalTime.NOON)?.toInstant()
