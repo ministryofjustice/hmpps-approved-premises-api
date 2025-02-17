@@ -194,7 +194,7 @@ class Cas1PremisesServiceTest {
       every {
         spacePlanningService.capacity(
           premises = premise,
-          range = DateRange(
+          rangeInclusive = DateRange(
             LocalDate.of(2020, 1, 2),
             LocalDate.of(2020, 1, 3),
           ),
