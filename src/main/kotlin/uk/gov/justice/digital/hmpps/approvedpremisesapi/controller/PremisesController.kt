@@ -44,6 +44,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.UpdateLostBed
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.UpdatePremises
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.UpdateRoom
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.BookingEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PremisesEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TemporaryAccommodationPremisesEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserQualification
@@ -93,6 +94,7 @@ import java.time.LocalDate
 import java.time.OffsetDateTime
 import java.time.ZoneOffset
 import java.util.UUID
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas3.GetBookingForPremisesResult as cas3GetBookingForPremisesResult
 
 @Service
 class PremisesController(
@@ -1031,10 +1033,25 @@ class PremisesController(
     )
   }
 
-  private fun getBookingForPremisesOrThrow(premisesId: UUID, bookingId: UUID) = when (val result = bookingService.getBookingForPremises(premisesId, bookingId)) {
-    is GetBookingForPremisesResult.Success -> result.booking
-    is GetBookingForPremisesResult.PremisesNotFound -> throw NotFoundProblem(premisesId, "Premises")
-    is GetBookingForPremisesResult.BookingNotFound -> throw NotFoundProblem(bookingId, "Booking")
+  @SuppressWarnings("ThrowsCount")
+  private fun getBookingForPremisesOrThrow(premisesId: UUID, bookingId: UUID): BookingEntity {
+    val premises = premisesService.getPremises(premisesId)
+      ?: throw NotFoundProblem(premisesId, "Premises")
+
+    return when (premises) {
+      is TemporaryAccommodationPremisesEntity -> {
+        when (val result = cas3BookingService.getBookingForPremises(premises, bookingId)) {
+          is cas3GetBookingForPremisesResult.Success -> result.booking
+          is cas3GetBookingForPremisesResult.BookingNotFound -> throw NotFoundProblem(bookingId, "Booking")
+        }
+      }
+      else -> {
+        when (val result = bookingService.getBookingForPremises(premises, bookingId)) {
+          is GetBookingForPremisesResult.Success -> result.booking
+          is GetBookingForPremisesResult.BookingNotFound -> throw NotFoundProblem(bookingId, "Booking")
+        }
+      }
+    }
   }
 
   private fun <EntityType> extractResultEntityOrThrow(result: ValidatableActionResult<EntityType>) = when (result) {

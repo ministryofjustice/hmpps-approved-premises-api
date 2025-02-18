@@ -49,6 +49,7 @@ import java.time.LocalDate
 import java.time.LocalDateTime
 import java.time.OffsetDateTime
 import java.time.ZoneOffset
+import java.time.temporal.ChronoUnit
 import java.util.UUID
 
 class BookingTest : IntegrationTestBase() {
@@ -2215,6 +2216,57 @@ class BookingTest : IntegrationTestBase() {
   }
 
   @Test
+  fun `Create Arrival for a Temporary Accommodation booking on a premises that does not exist returns 404 Not Found`() {
+    givenAUser { userEntity, jwt ->
+      givenAnOffender { offenderDetails, inmateDetails ->
+        val premises = temporaryAccommodationPremisesEntityFactory.produceAndPersist {
+          withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
+          withYieldedProbationRegion { probationRegion }
+        }
+
+        val bed = bedEntityFactory.produceAndPersist {
+          withYieldedRoom {
+            roomEntityFactory.produceAndPersist {
+              withYieldedPremises { premises }
+            }
+          }
+        }
+
+        val booking = bookingEntityFactory.produceAndPersist {
+          withCrn(offenderDetails.otherIds.crn)
+          withYieldedPremises { premises }
+          withYieldedBed { bed }
+          withServiceName(ServiceName.temporaryAccommodation)
+          withArrivalDate(LocalDate.parse("2022-08-10"))
+          withDepartureDate(LocalDate.parse("2022-08-30"))
+          withCreatedAt(OffsetDateTime.parse("2022-07-01T12:34:56.789Z"))
+        }
+
+        val premisesId = UUID.randomUUID()
+
+        webTestClient.post()
+          .uri("/premises/$premisesId/bookings/${booking.id}/arrivals")
+          .header("Authorization", "Bearer $jwt")
+          .header("X-Service-Name", ServiceName.temporaryAccommodation.value)
+          .bodyValue(
+            NewCas3Arrival(
+              type = "CAS3",
+              arrivalDate = LocalDate.parse("2022-08-12"),
+              expectedDepartureDate = LocalDate.parse("2022-08-14"),
+              notes = "Hello",
+              keyWorkerStaffCode = null,
+            ),
+          )
+          .exchange()
+          .expectStatus()
+          .isNotFound
+          .expectBody()
+          .jsonPath("$.detail").isEqualTo("No Premises with an ID of $premisesId could be found")
+      }
+    }
+  }
+
+  @Test
   fun `Create Departure updates the departure date for a Temporary Accommodation booking`() {
     givenAUser(roles = listOf(UserRole.CAS3_ASSESSOR)) { userEntity, jwt ->
       givenAnOffender { offenderDetails, inmateDetails ->
@@ -2370,6 +2422,55 @@ class BookingTest : IntegrationTestBase() {
           .exchange()
           .expectStatus()
           .isForbidden
+      }
+    }
+  }
+
+  @Test
+  fun `Create Departure for a Temporary Accommodation booking on a premises that does not exist returns 404 Not Found`() {
+    givenAUser { userEntity, jwt ->
+      givenAnOffender { offenderDetails, inmateDetails ->
+        val booking = bookingEntityFactory.produceAndPersist {
+          withCrn(offenderDetails.otherIds.crn)
+          withYieldedPremises {
+            temporaryAccommodationPremisesEntityFactory.produceAndPersist {
+              withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
+              withYieldedProbationRegion { probationRegion }
+            }
+          }
+          withServiceName(ServiceName.temporaryAccommodation)
+          withArrivalDate(LocalDate.now().plusDays(5))
+          withDepartureDate(LocalDate.now().plusDays(63))
+          withCreatedAt(OffsetDateTime.now())
+        }
+
+        val reason = departureReasonEntityFactory.produceAndPersist {
+          withServiceScope("temporary-accommodation")
+        }
+        val moveOnCategory = moveOnCategoryEntityFactory.produceAndPersist {
+          withServiceScope("temporary-accommodation")
+        }
+
+        val premisesId = UUID.randomUUID()
+
+        webTestClient.post()
+          .uri("/premises/$premisesId/bookings/${booking.id}/departures")
+          .header("Authorization", "Bearer $jwt")
+          .header("X-Service-Name", ServiceName.temporaryAccommodation.value)
+          .bodyValue(
+            NewDeparture(
+              dateTime = Instant.now().plus(10, ChronoUnit.DAYS),
+              reasonId = reason.id,
+              moveOnCategoryId = moveOnCategory.id,
+              destinationProviderId = null,
+              notes = "Some notes",
+            ),
+          )
+          .exchange()
+          .expectStatus()
+          .isNotFound
+          .expectBody()
+          .jsonPath("$.detail").isEqualTo("No Premises with an ID of $premisesId could be found")
       }
     }
   }
@@ -2555,13 +2656,73 @@ class BookingTest : IntegrationTestBase() {
 
               emailAsserter.assertEmailsRequestedCount(4)
               emailAsserter.assertEmailRequested(applicant.email!!, notifyConfig.templates.bookingWithdrawnV2)
-              emailAsserter.assertEmailRequested(placementApplicationCreator.email!!, notifyConfig.templates.bookingWithdrawnV2)
+              emailAsserter.assertEmailRequested(
+                placementApplicationCreator.email!!,
+                notifyConfig.templates.bookingWithdrawnV2,
+              )
               emailAsserter.assertEmailRequested(
                 booking.premises.emailAddress!!,
                 notifyConfig.templates.bookingWithdrawnV2,
               )
-              emailAsserter.assertEmailRequested(application.cruManagementArea!!.emailAddress!!, notifyConfig.templates.bookingWithdrawnV2)
+              emailAsserter.assertEmailRequested(
+                application.cruManagementArea!!.emailAddress!!,
+                notifyConfig.templates.bookingWithdrawnV2,
+              )
             }
+          }
+        }
+      }
+    }
+
+    @Test
+    fun `Create Cancellation on CAS1 Booking on a premises that does not exist returns 404 Not Found`() {
+      givenAUser(roles = listOf(UserRole.CAS1_CRU_MEMBER)) { _, jwt ->
+        givenAUser { applicant, _ ->
+          givenAnOffender { offenderDetails, _ ->
+            val apArea = givenAnApArea()
+
+            val application = approvedPremisesApplicationEntityFactory.produceAndPersist {
+              withCrn(offenderDetails.otherIds.crn)
+              withCreatedByUser(applicant)
+              withApplicationSchema(approvedPremisesApplicationJsonSchemaEntityFactory.produceAndPersist())
+              withApArea(apArea)
+              withSubmittedAt(OffsetDateTime.now())
+            }
+
+            val booking = bookingEntityFactory.produceAndPersist {
+              withYieldedPremises {
+                approvedPremisesEntityFactory.produceAndPersist {
+                  withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
+                  withYieldedProbationRegion {
+                    probationRegion
+                  }
+                }
+              }
+              withCrn(offenderDetails.otherIds.crn)
+              withApplication(application)
+            }
+
+            val cancellationReason = cancellationReasonEntityFactory.produceAndPersist {
+              withServiceScope("*")
+            }
+
+            val premisesId = UUID.randomUUID()
+
+            webTestClient.post()
+              .uri("/premises/$premisesId/bookings/${booking.id}/cancellations")
+              .header("Authorization", "Bearer $jwt")
+              .bodyValue(
+                NewCancellation(
+                  date = LocalDate.now().plusDays(13),
+                  reason = cancellationReason.id,
+                  notes = null,
+                ),
+              )
+              .exchange()
+              .expectStatus()
+              .isNotFound
+              .expectBody()
+              .jsonPath("$.detail").isEqualTo("No Premises with an ID of $premisesId could be found")
           }
         }
       }
@@ -2598,6 +2759,43 @@ class BookingTest : IntegrationTestBase() {
         .exchange()
         .expectStatus()
         .isForbidden
+    }
+  }
+
+  @Test
+  fun `Create Cancellation on CAS3 Booking on a premises that does not exist returns 404 Not Found`() {
+    givenAUser { userEntity, jwt ->
+      val booking = bookingEntityFactory.produceAndPersist {
+        withYieldedPremises {
+          temporaryAccommodationPremisesEntityFactory.produceAndPersist {
+            withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
+            withYieldedProbationRegion { probationRegion }
+          }
+        }
+      }
+
+      val cancellationReason = cancellationReasonEntityFactory.produceAndPersist {
+        withServiceScope("*")
+      }
+
+      val premisesId = UUID.randomUUID()
+
+      webTestClient.post()
+        .uri("/premises/$premisesId/bookings/${booking.id}/cancellations")
+        .header("Authorization", "Bearer $jwt")
+        .header("X-Service-Name", ServiceName.temporaryAccommodation.value)
+        .bodyValue(
+          NewCancellation(
+            date = LocalDate.parse("2022-08-17"),
+            reason = cancellationReason.id,
+            notes = null,
+          ),
+        )
+        .exchange()
+        .expectStatus()
+        .isNotFound
+        .expectBody()
+        .jsonPath("$.detail").isEqualTo("No Premises with an ID of $premisesId could be found")
     }
   }
 
@@ -3215,7 +3413,7 @@ class BookingTest : IntegrationTestBase() {
     }
 
     @Test
-    fun `CAS1 Date Change without correct role returns 403`() {
+    fun `CAS1 Date Change for a booking on a premises that does not exist returns 404 Not Found`() {
       givenAUser(roles = emptyList()) { _, jwt ->
         val premises = approvedPremisesEntityFactory.produceAndPersist {
           withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
@@ -3224,18 +3422,16 @@ class BookingTest : IntegrationTestBase() {
           }
         }
 
-        val room = roomEntityFactory.produceAndPersist {
-          withPremises(premises)
-        }
-
         val booking = bookingEntityFactory.produceAndPersist {
           withArrivalDate(LocalDate.parse("2022-08-18"))
           withDepartureDate(LocalDate.parse("2022-08-20"))
           withPremises(premises)
         }
 
+        val premisesId = UUID.randomUUID()
+
         webTestClient.post()
-          .uri("/premises/${premises.id}/bookings/${booking.id}/date-changes")
+          .uri("/premises/$premisesId/bookings/${booking.id}/date-changes")
           .header("Authorization", "Bearer $jwt")
           .bodyValue(
             NewDateChange(
@@ -3245,7 +3441,9 @@ class BookingTest : IntegrationTestBase() {
           )
           .exchange()
           .expectStatus()
-          .isForbidden
+          .isNotFound
+          .expectBody()
+          .jsonPath("$.detail").isEqualTo("No Premises with an ID of $premisesId could be found")
       }
     }
 
@@ -3356,6 +3554,39 @@ class BookingTest : IntegrationTestBase() {
         .jsonPath("$.dateTime").value(withinSeconds(5L), OffsetDateTime::class.java)
         .jsonPath("$.notes").isEqualTo(null)
         .jsonPath("$.createdAt").value(withinSeconds(5L), OffsetDateTime::class.java)
+    }
+  }
+
+  @Test
+  fun `Create Confirmation on Approved Premises Booking on a premises that does not exist returns 404 Not Found`() {
+    givenAUser(roles = listOf(UserRole.CAS1_FUTURE_MANAGER)) { _, jwt ->
+      val booking = bookingEntityFactory.produceAndPersist {
+        withYieldedPremises {
+          approvedPremisesEntityFactory.produceAndPersist {
+            withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
+            withYieldedProbationRegion {
+              probationRegion
+            }
+          }
+        }
+        withServiceName(ServiceName.approvedPremises)
+      }
+
+      val premisesId = UUID.randomUUID()
+
+      webTestClient.post()
+        .uri("/premises/$premisesId/bookings/${booking.id}/confirmations")
+        .header("Authorization", "Bearer $jwt")
+        .bodyValue(
+          NewConfirmation(
+            notes = null,
+          ),
+        )
+        .exchange()
+        .expectStatus()
+        .isNotFound
+        .expectBody()
+        .jsonPath("$.detail").isEqualTo("No Premises with an ID of $premisesId could be found")
     }
   }
 
@@ -3480,6 +3711,38 @@ class BookingTest : IntegrationTestBase() {
         .exchange()
         .expectStatus()
         .isForbidden
+    }
+  }
+
+  @Test
+  fun `Create Confirmation on Temporary Accommodation Booking for a premises that does not exist returns 404 Not Found`() {
+    givenAUser { userEntity, jwt ->
+      val booking = bookingEntityFactory.produceAndPersist {
+        withYieldedPremises {
+          temporaryAccommodationPremisesEntityFactory.produceAndPersist {
+            withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
+            withYieldedProbationRegion { probationRegion }
+          }
+        }
+        withServiceName(ServiceName.temporaryAccommodation)
+      }
+
+      val premisesId = UUID.randomUUID()
+
+      webTestClient.post()
+        .uri("/premises/$premisesId/bookings/${booking.id}/confirmations")
+        .header("Authorization", "Bearer $jwt")
+        .header("X-Service-Name", ServiceName.temporaryAccommodation.value)
+        .bodyValue(
+          NewConfirmation(
+            notes = null,
+          ),
+        )
+        .exchange()
+        .expectStatus()
+        .isNotFound
+        .expectBody()
+        .jsonPath("$.detail").isEqualTo("No Premises with an ID of $premisesId could be found")
     }
   }
 

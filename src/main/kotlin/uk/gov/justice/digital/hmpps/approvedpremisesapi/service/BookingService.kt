@@ -56,7 +56,6 @@ import java.util.UUID
 
 @Service
 class BookingService(
-  private val premisesService: PremisesService,
   private val offenderService: OffenderService,
   private val workingDayService: WorkingDayService,
   private val bookingRepository: BookingRepository,
@@ -501,10 +500,7 @@ class BookingService(
     return success(dateChangeEntity)
   }
 
-  fun getBookingForPremises(premisesId: UUID, bookingId: UUID): GetBookingForPremisesResult {
-    val premises = premisesService.getPremises(premisesId)
-      ?: return GetBookingForPremisesResult.PremisesNotFound
-
+  fun getBookingForPremises(premises: PremisesEntity, bookingId: UUID): GetBookingForPremisesResult {
     val booking = bookingRepository.findByIdOrNull(bookingId)
       ?: return GetBookingForPremisesResult.BookingNotFound
 
@@ -544,6 +540,5 @@ class BookingService(
 
 sealed interface GetBookingForPremisesResult {
   data class Success(val booking: BookingEntity) : GetBookingForPremisesResult
-  object PremisesNotFound : GetBookingForPremisesResult
   object BookingNotFound : GetBookingForPremisesResult
 }
