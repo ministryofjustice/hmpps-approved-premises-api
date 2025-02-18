@@ -45,7 +45,9 @@ class Cas2v2ApplicationController(
   ): ResponseEntity<List<ModelCas2v2ApplicationSummary>> {
     val user = userService.getUserForRequest()
 
-    prisonCode?.let { if (prisonCode != user.activeNomisCaseloadId) throw ForbiddenProblem() }
+    if (userService.requiresCaseLoadIdCheck()) {
+      prisonCode?.let { if (prisonCode != user.activeNomisCaseloadId) throw ForbiddenProblem() }
+    }
 
     val pageCriteria = PageCriteria("createdAt", SortDirection.desc, page)
 
