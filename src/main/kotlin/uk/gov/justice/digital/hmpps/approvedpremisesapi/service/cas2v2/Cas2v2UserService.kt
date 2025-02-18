@@ -47,22 +47,20 @@ class Cas2v2UserService(
 
     return userEntity
   }
-  fun requiresCaseLoadIdCheck(): Boolean {
-    return !userForRequestHasRole(
-      listOf(
-        SimpleGrantedAuthority("ROLE_COURT_BAIL"),
-        SimpleGrantedAuthority("ROLE_PRISON_BAIL"),
-      ),
-    )
-  }
+
+  fun requiresCaseLoadIdCheck(): Boolean = !userForRequestHasRole(
+    listOf(
+      SimpleGrantedAuthority("ROLE_COURT_BAIL"),
+      SimpleGrantedAuthority("ROLE_PRISON_BAIL"),
+    ),
+  )
 
   fun userForRequestHasRole(grantedAuthorities: List<GrantedAuthority>): Boolean {
     val roles = getRolesForUserForRequest()
     return roles?.any { it in grantedAuthorities } ?: false
   }
 
-  fun getRolesForUserForRequest(): MutableCollection<GrantedAuthority>? =
-    httpAuthService.getCas2v2AuthenticatedPrincipalOrThrow().authorities
+  fun getRolesForUserForRequest(): MutableCollection<GrantedAuthority>? = httpAuthService.getCas2v2AuthenticatedPrincipalOrThrow().authorities
 
   private fun getExistingUser(username: String, userType: Cas2v2UserType): Cas2v2UserEntity? = userRepository.findByUsernameAndUserType(username, userType)
 
