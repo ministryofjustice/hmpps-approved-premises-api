@@ -2,6 +2,7 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.service
 
 import org.springframework.data.repository.findByIdOrNull
 import org.springframework.stereotype.Service
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Characteristic
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.CharacteristicEntity
@@ -32,6 +33,11 @@ class CharacteristicService(
       else -> return false
     }
   }
+
+  fun getCas3Characteristics(): List<CharacteristicEntity> = characteristicRepository.findActiveByServiceScopeAndModelScope(
+    ServiceName.temporaryAccommodation.value,
+    Characteristic.ModelScope.star.value,
+  )
 
   fun modelScopeMatches(characteristic: CharacteristicEntity, target: Any): Boolean = when (characteristic.modelScope) {
     "*" -> true
