@@ -60,7 +60,7 @@ class PlacementApplicationsTest : IntegrationTestBase() {
     @Test
     fun `creating a placement application JWT returns 401`() {
       webTestClient.post()
-        .uri("/placement-applications")
+        .uri("/cas1/placement-applications")
         .bodyValue(
           NewPlacementApplication(
             applicationId = UUID.randomUUID(),
@@ -75,7 +75,7 @@ class PlacementApplicationsTest : IntegrationTestBase() {
     fun `creating a placement application when the application does not exist returns 404`() {
       givenAUser { _, jwt ->
         webTestClient.post()
-          .uri("/placement-applications")
+          .uri("/cas1/placement-applications")
           .header("Authorization", "Bearer $jwt")
           .bodyValue(
             NewPlacementApplication(
@@ -102,7 +102,7 @@ class PlacementApplicationsTest : IntegrationTestBase() {
             crn = offender.otherIds.crn,
           ) { application ->
             webTestClient.post()
-              .uri("/placement-applications")
+              .uri("/cas1/placement-applications")
               .header("Authorization", "Bearer $jwt")
               .bodyValue(
                 NewPlacementApplication(
@@ -122,7 +122,7 @@ class PlacementApplicationsTest : IntegrationTestBase() {
       givenAUser { user, jwt ->
         givenASubmittedApplication(createdByUser = user) { application ->
           webTestClient.post()
-            .uri("/placement-applications")
+            .uri("/cas1/placement-applications")
             .header("Authorization", "Bearer $jwt")
             .bodyValue(
               NewPlacementApplication(
@@ -145,7 +145,7 @@ class PlacementApplicationsTest : IntegrationTestBase() {
           }
 
           webTestClient.post()
-            .uri("/placement-applications")
+            .uri("/cas1/placement-applications")
             .header("Authorization", "Bearer $jwt")
             .bodyValue(
               NewPlacementApplication(
@@ -171,7 +171,7 @@ class PlacementApplicationsTest : IntegrationTestBase() {
           approvedPremisesApplicationRepository.save(application)
 
           webTestClient.post()
-            .uri("/placement-applications")
+            .uri("/cas1/placement-applications")
             .header("Authorization", "Bearer $jwt")
             .bodyValue(
               NewPlacementApplication(
@@ -196,7 +196,7 @@ class PlacementApplicationsTest : IntegrationTestBase() {
           }
 
           val rawResult = webTestClient.post()
-            .uri("/placement-applications")
+            .uri("/cas1/placement-applications")
             .header("Authorization", "Bearer $jwt")
             .bodyValue(
               NewPlacementApplication(
@@ -246,7 +246,7 @@ class PlacementApplicationsTest : IntegrationTestBase() {
     fun `getting a nonexistent placement request application returns 404`() {
       givenAUser { _, jwt ->
         webTestClient.get()
-          .uri("/placement-applications/${UUID.randomUUID()}")
+          .uri("/cas1/placement-applications/${UUID.randomUUID()}")
           .header("Authorization", "Bearer $jwt")
           .exchange()
           .expectStatus()
@@ -270,7 +270,7 @@ class PlacementApplicationsTest : IntegrationTestBase() {
             },
           ) { placementApplicationEntity ->
             webTestClient.get()
-              .uri("/placement-applications/${placementApplicationEntity.id}")
+              .uri("/cas1/placement-applications/${placementApplicationEntity.id}")
               .header("Authorization", "Bearer $jwt")
               .exchange()
               .expectStatus()
@@ -305,7 +305,7 @@ class PlacementApplicationsTest : IntegrationTestBase() {
             )
 
             val rawResult = webTestClient.get()
-              .uri("/placement-applications/${placementApplicationEntity.id}")
+              .uri("/cas1/placement-applications/${placementApplicationEntity.id}")
               .header("Authorization", "Bearer $jwt")
               .exchange()
               .expectStatus()
@@ -343,7 +343,7 @@ class PlacementApplicationsTest : IntegrationTestBase() {
             },
           ) { placementApplicationEntity ->
             val rawResult = webTestClient.get()
-              .uri("/placement-applications/${placementApplicationEntity.id}")
+              .uri("/cas1/placement-applications/${placementApplicationEntity.id}")
               .header("Authorization", "Bearer $jwt")
               .exchange()
               .expectStatus()
@@ -374,8 +374,18 @@ class PlacementApplicationsTest : IntegrationTestBase() {
             withPermissiveSchema()
           },
         ) { placementApplicationEntity ->
+
+          apDeliusContextAddResponseToUserAccessCall(
+            listOf(
+              CaseAccessFactory()
+                .withCrn(placementApplicationEntity.application.crn)
+                .produce(),
+            ),
+            user.deliusUsername,
+          )
+
           val rawResult = webTestClient.get()
-            .uri("/placement-applications/${placementApplicationEntity.id}")
+            .uri("/cas1/placement-applications/${placementApplicationEntity.id}")
             .header("Authorization", "Bearer $jwt")
             .exchange()
             .expectStatus()
@@ -402,7 +412,7 @@ class PlacementApplicationsTest : IntegrationTestBase() {
     @Test
     fun `updating a placement request application without a JWT returns 401`() {
       webTestClient.put()
-        .uri("/placement-applications/${UUID.randomUUID()}")
+        .uri("/cas1/placement-applications/${UUID.randomUUID()}")
         .bodyValue(
           UpdatePlacementApplication(
             data = mapOf("thingId" to 123),
@@ -424,7 +434,7 @@ class PlacementApplicationsTest : IntegrationTestBase() {
           submittedAt = OffsetDateTime.now(),
         ) { placementApplicationEntity ->
           webTestClient.put()
-            .uri("/placement-applications/${placementApplicationEntity.id}")
+            .uri("/cas1/placement-applications/${placementApplicationEntity.id}")
             .header("Authorization", "Bearer $jwt")
             .bodyValue(
               UpdatePlacementApplication(
@@ -451,7 +461,7 @@ class PlacementApplicationsTest : IntegrationTestBase() {
           submittedAt = OffsetDateTime.now(),
         ) { placementApplicationEntity ->
           webTestClient.put()
-            .uri("/placement-applications/${placementApplicationEntity.id}")
+            .uri("/cas1/placement-applications/${placementApplicationEntity.id}")
             .header("Authorization", "Bearer $jwt")
             .bodyValue(
               UpdatePlacementApplication(
@@ -480,7 +490,7 @@ class PlacementApplicationsTest : IntegrationTestBase() {
           }
 
           webTestClient.put()
-            .uri("/placement-applications/${placementApplicationEntity.id}")
+            .uri("/cas1/placement-applications/${placementApplicationEntity.id}")
             .header("Authorization", "Bearer $jwt")
             .bodyValue(
               UpdatePlacementApplication(
@@ -509,7 +519,7 @@ class PlacementApplicationsTest : IntegrationTestBase() {
           approvedPremisesApplicationRepository.save(application)
 
           webTestClient.put()
-            .uri("/placement-applications/${placementApplicationEntity.id}")
+            .uri("/cas1/placement-applications/${placementApplicationEntity.id}")
             .header("Authorization", "Bearer $jwt")
             .bodyValue(
               UpdatePlacementApplication(
@@ -535,7 +545,7 @@ class PlacementApplicationsTest : IntegrationTestBase() {
           },
         ) { placementApplicationEntity ->
           val rawResult = webTestClient.put()
-            .uri("/placement-applications/${placementApplicationEntity.id}")
+            .uri("/cas1/placement-applications/${placementApplicationEntity.id}")
             .header("Authorization", "Bearer $jwt")
             .bodyValue(
               UpdatePlacementApplication(
@@ -577,7 +587,7 @@ class PlacementApplicationsTest : IntegrationTestBase() {
     @Test
     fun `submitting a placement request application without a JWT returns 401`() {
       webTestClient.post()
-        .uri("/placement-applications/${UUID.randomUUID()}/submission")
+        .uri("/cas1/placement-applications/${UUID.randomUUID()}/submission")
         .bodyValue(
           SubmitPlacementApplication(
             translatedDocument = mapOf("thingId" to 123),
@@ -606,7 +616,7 @@ class PlacementApplicationsTest : IntegrationTestBase() {
           submittedAt = OffsetDateTime.now(),
         ) { placementApplicationEntity ->
           webTestClient.post()
-            .uri("/placement-applications/${placementApplicationEntity.id}/submission")
+            .uri("/cas1/placement-applications/${placementApplicationEntity.id}/submission")
             .header("Authorization", "Bearer $jwt")
             .bodyValue(
               SubmitPlacementApplication(
@@ -642,7 +652,7 @@ class PlacementApplicationsTest : IntegrationTestBase() {
           approvedPremisesApplicationRepository.save(application)
 
           webTestClient.post()
-            .uri("/placement-applications/${placementApplicationEntity.id}/submission")
+            .uri("/cas1/placement-applications/${placementApplicationEntity.id}/submission")
             .header("Authorization", "Bearer $jwt")
             .bodyValue(
               SubmitPlacementApplication(
@@ -678,7 +688,7 @@ class PlacementApplicationsTest : IntegrationTestBase() {
           submittedAt = OffsetDateTime.now(),
         ) { placementApplicationEntity ->
           webTestClient.post()
-            .uri("/placement-applications/${placementApplicationEntity.id}/submission")
+            .uri("/cas1/placement-applications/${placementApplicationEntity.id}/submission")
             .header("Authorization", "Bearer $jwt")
             .bodyValue(
               SubmitPlacementApplication(
@@ -714,7 +724,7 @@ class PlacementApplicationsTest : IntegrationTestBase() {
           }
 
           webTestClient.post()
-            .uri("/placement-applications/${placementApplicationEntity.id}/submission")
+            .uri("/cas1/placement-applications/${placementApplicationEntity.id}/submission")
             .header("Authorization", "Bearer $jwt")
             .bodyValue(
               SubmitPlacementApplication(
@@ -759,7 +769,7 @@ class PlacementApplicationsTest : IntegrationTestBase() {
                 ),
               )
               val rawResult = webTestClient.post()
-                .uri("/placement-applications/${placementApplicationEntity.id}/submission")
+                .uri("/cas1/placement-applications/${placementApplicationEntity.id}/submission")
                 .header("Authorization", "Bearer $jwt")
                 .bodyValue(
                   SubmitPlacementApplication(
@@ -862,7 +872,7 @@ class PlacementApplicationsTest : IntegrationTestBase() {
                 ),
               )
               val rawResult = webTestClient.post()
-                .uri("/placement-applications/${placementApplicationEntity.id}/submission")
+                .uri("/cas1/placement-applications/${placementApplicationEntity.id}/submission")
                 .header("Authorization", "Bearer $jwt")
                 .bodyValue(
                   SubmitPlacementApplication(
@@ -928,7 +938,7 @@ class PlacementApplicationsTest : IntegrationTestBase() {
     @Test
     fun `submitting a placement request application decision without a JWT returns 401`() {
       webTestClient.post()
-        .uri("/placement-applications/${UUID.randomUUID()}/decision")
+        .uri("/cas1/placement-applications/${UUID.randomUUID()}/decision")
         .bodyValue(
           PlacementApplicationDecisionEnvelope(
             decision = PlacementApplicationDecision.accepted,
@@ -945,7 +955,7 @@ class PlacementApplicationsTest : IntegrationTestBase() {
     fun `submitting a placement application decision when the placement application does not exist returns 404`() {
       givenAUser { _, jwt ->
         webTestClient.post()
-          .uri("/placement-applications/${UUID.randomUUID()}/decision")
+          .uri("/cas1/placement-applications/${UUID.randomUUID()}/decision")
           .header("Authorization", "Bearer $jwt")
           .bodyValue(
             PlacementApplicationDecisionEnvelope(
@@ -970,7 +980,7 @@ class PlacementApplicationsTest : IntegrationTestBase() {
             decision = JpaPlacementApplicationDecision.REJECTED,
           ) { placementApplicationEntity ->
             webTestClient.post()
-              .uri("/placement-applications/${placementApplicationEntity.id}/decision")
+              .uri("/cas1/placement-applications/${placementApplicationEntity.id}/decision")
               .header("Authorization", "Bearer $jwt")
               .bodyValue(
                 PlacementApplicationDecisionEnvelope(
@@ -998,7 +1008,7 @@ class PlacementApplicationsTest : IntegrationTestBase() {
               decision = JpaPlacementApplicationDecision.REJECTED,
             ) { placementApplicationEntity ->
               webTestClient.post()
-                .uri("/placement-applications/${placementApplicationEntity.id}/decision")
+                .uri("/cas1/placement-applications/${placementApplicationEntity.id}/decision")
                 .header("Authorization", "Bearer $jwt")
                 .bodyValue(
                   PlacementApplicationDecisionEnvelope(
@@ -1022,7 +1032,7 @@ class PlacementApplicationsTest : IntegrationTestBase() {
         givenAnOffender { offenderDetails, _ ->
           `Given a submitted Placement Application`(allocatedToUser = user, offenderDetails = offenderDetails) { placementApplicationEntity ->
             webTestClient.post()
-              .uri("/placement-applications/${placementApplicationEntity.id}/decision")
+              .uri("/cas1/placement-applications/${placementApplicationEntity.id}/decision")
               .header("Authorization", "Bearer $jwt")
               .bodyValue(
                 PlacementApplicationDecisionEnvelope(
@@ -1051,7 +1061,7 @@ class PlacementApplicationsTest : IntegrationTestBase() {
           `Given a submitted Placement Application`(allocatedToUser = user, offenderDetails = offenderDetails) { placementApplicationEntity ->
             `Given placement requirements`(placementApplicationEntity = placementApplicationEntity) { _ ->
               webTestClient.post()
-                .uri("/placement-applications/${placementApplicationEntity.id}/decision")
+                .uri("/cas1/placement-applications/${placementApplicationEntity.id}/decision")
                 .header("Authorization", "Bearer $jwt")
                 .bodyValue(
                   PlacementApplicationDecisionEnvelope(
@@ -1087,7 +1097,7 @@ class PlacementApplicationsTest : IntegrationTestBase() {
                     `Given placement dates`(placementApplicationEntity = placementApplicationEntity) { placementDates ->
 
                       webTestClient.post()
-                        .uri("/placement-applications/${placementApplicationEntity.id}/decision")
+                        .uri("/cas1/placement-applications/${placementApplicationEntity.id}/decision")
                         .header("Authorization", "Bearer $jwt")
                         .bodyValue(
                           PlacementApplicationDecisionEnvelope(
@@ -1146,7 +1156,7 @@ class PlacementApplicationsTest : IntegrationTestBase() {
                     `Given placement dates`(placementApplicationEntity = placementApplicationEntity) { placementDates ->
 
                       webTestClient.post()
-                        .uri("/placement-applications/${placementApplicationEntity.id}/decision")
+                        .uri("/cas1/placement-applications/${placementApplicationEntity.id}/decision")
                         .header("Authorization", "Bearer $jwt")
                         .bodyValue(
                           PlacementApplicationDecisionEnvelope(
@@ -1248,7 +1258,7 @@ class PlacementApplicationsTest : IntegrationTestBase() {
     @Test
     fun `withdrawing a placement application JWT returns 401`() {
       webTestClient.post()
-        .uri("/placement-applications/${UUID.randomUUID()}/withdraw")
+        .uri("/cas1/placement-applications/${UUID.randomUUID()}/withdraw")
         .exchange()
         .expectStatus()
         .isUnauthorized
@@ -1258,7 +1268,7 @@ class PlacementApplicationsTest : IntegrationTestBase() {
     fun `withdrawing a placement application decision when the placement application does not exist returns 404`() {
       givenAUser { _, jwt ->
         webTestClient.post()
-          .uri("/placement-applications/${UUID.randomUUID()}/withdraw")
+          .uri("/cas1/placement-applications/${UUID.randomUUID()}/withdraw")
           .header("Authorization", "Bearer $jwt")
           .bodyValue(
             WithdrawPlacementApplication(WithdrawPlacementRequestReason.duplicatePlacementRequest),
@@ -1283,7 +1293,7 @@ class PlacementApplicationsTest : IntegrationTestBase() {
         ) { placementApplicationEntity ->
 
           webTestClient.post()
-            .uri("/placement-applications/${placementApplicationEntity.id}/withdraw")
+            .uri("/cas1/placement-applications/${placementApplicationEntity.id}/withdraw")
             .header("Authorization", "Bearer $jwt")
             .bodyValue(
               WithdrawPlacementApplication(WithdrawPlacementRequestReason.duplicatePlacementRequest),
@@ -1306,7 +1316,7 @@ class PlacementApplicationsTest : IntegrationTestBase() {
           },
         ) { placementApplicationEntity ->
           val rawResult = webTestClient.post()
-            .uri("/placement-applications/${placementApplicationEntity.id}/withdraw")
+            .uri("/cas1/placement-applications/${placementApplicationEntity.id}/withdraw")
             .header("Authorization", "Bearer $jwt")
             .bodyValue(
               WithdrawPlacementApplication(WithdrawPlacementRequestReason.duplicatePlacementRequest),
@@ -1355,7 +1365,7 @@ class PlacementApplicationsTest : IntegrationTestBase() {
             val application = placementApplicationEntity.application
 
             val rawResult = webTestClient.post()
-              .uri("/placement-applications/${placementApplicationEntity.id}/withdraw")
+              .uri("/cas1/placement-applications/${placementApplicationEntity.id}/withdraw")
               .header("Authorization", "Bearer $jwt")
               .bodyValue(
                 WithdrawPlacementApplication(WithdrawPlacementRequestReason.duplicatePlacementRequest),
@@ -1416,7 +1426,7 @@ class PlacementApplicationsTest : IntegrationTestBase() {
               val application = placementApplicationEntity.application
 
               val rawResult = webTestClient.post()
-                .uri("/placement-applications/${placementApplicationEntity.id}/withdraw")
+                .uri("/cas1/placement-applications/${placementApplicationEntity.id}/withdraw")
                 .header("Authorization", "Bearer $jwt")
                 .bodyValue(
                   WithdrawPlacementApplication(WithdrawPlacementRequestReason.duplicatePlacementRequest),
