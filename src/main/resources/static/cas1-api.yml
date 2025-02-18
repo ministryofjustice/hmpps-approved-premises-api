@@ -1487,12 +1487,6 @@ paths:
           description: The report content will reflect that specified by the given month.
           schema:
             type: integer
-        - name: includePii
-          in: query
-          required: false
-          description: If Personally Identifiable Information (PII) should be included in the report. Defaults to `false`
-          schema:
-            type: boolean
       responses:
         200:
           description: Successfully retrieved the report

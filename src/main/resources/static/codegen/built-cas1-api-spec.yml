@@ -1489,12 +1489,6 @@ paths:
           description: The report content will reflect that specified by the given month.
           schema:
             type: integer
-        - name: includePii
-          in: query
-          required: false
-          description: If Personally Identifiable Information (PII) should be included in the report. Defaults to `false`
-          schema:
-            type: boolean
       responses:
         200:
           description: Successfully retrieved the report
@@ -5009,6 +5003,7 @@ components:
         - cru_member_enable_out_of_service_beds
         - applicant
         - report_viewer
+        - report_viewer_with_pii
         - excluded_from_assess_allocation
         - excluded_from_match_allocation
         - excluded_from_placement_application_allocation
@@ -5047,6 +5042,7 @@ components:
         - cas1_premises_view
         - cas1_premises_manage
         - cas1_reports_view
+        - cas1_reports_view_with_pii
     TemporaryAccommodationUserRole:
       type: string
       enum:
@@ -7516,6 +7512,7 @@ components:
       enum:
         - applications
         - applicationsV2
+        - applicationsV2WithPii
         - dailyMetrics
         - lostBeds
         - outOfServiceBeds
@@ -7523,6 +7520,7 @@ components:
         - placementMatchingOutcomes
         - placementMatchingOutcomesV2
         - requestsForPlacement
+        - requestsForPlacementWithPii
     Cas1OutOfServiceBedSummary:
       type: object
       properties:

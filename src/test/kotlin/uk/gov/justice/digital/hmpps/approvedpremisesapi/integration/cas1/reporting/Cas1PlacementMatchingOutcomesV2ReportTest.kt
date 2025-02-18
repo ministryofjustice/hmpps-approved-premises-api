@@ -144,7 +144,7 @@ class Cas1PlacementMatchingOutcomesV2ReportTest : InitialiseDatabasePerClassTest
   }
 
   @Test
-  fun `Get report returns OK with correct applications, exclude PII by default`() {
+  fun `Get report returns OK with correct applications, excluding PII`() {
     givenAUser(roles = listOf(UserRole.CAS1_REPORT_VIEWER)) { _, jwt ->
 
       webTestClient.get()
@@ -172,36 +172,6 @@ class Cas1PlacementMatchingOutcomesV2ReportTest : InitialiseDatabasePerClassTest
           assertThat(actual.size).isEqualTo(5)
 
           standardRFPNoDecision.assertRow(actual[0])
-        }
-    }
-  }
-
-  @Test
-  fun `Get report returns OK with correct applications, including PII`() {
-    givenAUser(roles = listOf(UserRole.CAS1_REPORT_VIEWER)) { _, jwt ->
-
-      webTestClient.get()
-        .uri(getReportUrl(year = REPORT_YEAR, month = REPORT_MONTH, includePii = true))
-        .header("Authorization", "Bearer $jwt")
-        .header("X-Service-Name", ServiceName.approvedPremises.value)
-        .exchange()
-        .expectStatus()
-        .isOk
-        .expectHeader().valuesMatch("content-disposition", "attachment; filename=\"placement-matching-outcomes-2020-02-[0-9_]*.csv\"")
-        .expectBody()
-        .consumeWith {
-          val actual = DataFrame
-            .readCSV(it.responseBody!!.inputStream())
-            .convertTo<PlacementMatchingOutcomeReportRow>(ExcessiveColumns.Remove)
-            .toList()
-
-          assertThat(actual.size).isEqualTo(5)
-
-          standardRFPNoDecision.assertRow(actual[0])
-          standardRFPMatched.assertRow(actual[1])
-          standardRFPNotMatched.assertRow(actual[2])
-          standardRFPNotMatchedAndThenMatched.assertRow(actual[3])
-          placementAppMatched.assertRow(actual[4])
         }
     }
   }
