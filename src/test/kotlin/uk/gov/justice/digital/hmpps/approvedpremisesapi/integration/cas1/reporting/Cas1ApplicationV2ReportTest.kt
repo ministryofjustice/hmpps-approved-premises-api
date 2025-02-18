@@ -17,6 +17,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.AssessmentAcce
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.AssessmentRejection
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1ApplicationTimelinessCategory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1ApplicationUserDetails
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1ReportName
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Gender
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewAppeal
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewClarificationNote
@@ -106,7 +107,7 @@ class Cas1ApplicationV2ReportTest : InitialiseDatabasePerClassTestBase() {
     givenAUser(roles = listOf(UserRole.CAS1_REPORT_VIEWER)) { _, jwt ->
 
       webTestClient.get()
-        .uri(getReportUrl(year = 2019, month = 2, includePii = true))
+        .uri(getReportUrl(Cas1ReportName.applicationsV2, year = 2019, month = 2))
         .header("Authorization", "Bearer $jwt")
         .header("X-Service-Name", ServiceName.approvedPremises.value)
         .exchange()
@@ -126,17 +127,29 @@ class Cas1ApplicationV2ReportTest : InitialiseDatabasePerClassTestBase() {
   }
 
   @Test
-  fun `Get application report returns OK with correct applications, including PII`() {
+  fun `Permission denied if trying to access report with PII without correct role`() {
     givenAUser(roles = listOf(UserRole.CAS1_REPORT_VIEWER)) { _, jwt ->
-
       webTestClient.get()
-        .uri(getReportUrl(year = 2020, month = 2, includePii = true))
+        .uri(getReportUrl(Cas1ReportName.applicationsV2WithPii, year = 2020, month = 2))
+        .header("Authorization", "Bearer $jwt")
+        .header("X-Service-Name", ServiceName.approvedPremises.value)
+        .exchange()
+        .expectStatus()
+        .isForbidden
+    }
+  }
+
+  @Test
+  fun `Get application report returns OK with correct applications, including PII`() {
+    givenAUser(roles = listOf(UserRole.CAS1_REPORT_VIEWER_WITH_PII)) { _, jwt ->
+      webTestClient.get()
+        .uri(getReportUrl(Cas1ReportName.applicationsV2WithPii, year = 2020, month = 2))
         .header("Authorization", "Bearer $jwt")
         .header("X-Service-Name", ServiceName.approvedPremises.value)
         .exchange()
         .expectStatus()
         .isOk
-        .expectHeader().valuesMatch("content-disposition", "attachment; filename=\"applications-2020-02-[0-9_]*.csv\"")
+        .expectHeader().valuesMatch("content-disposition", "attachment; filename=\"applications-with-pii-2020-02-[0-9_]*.csv\"")
         .expectBody()
         .consumeWith {
           val actual = DataFrame
@@ -155,11 +168,11 @@ class Cas1ApplicationV2ReportTest : InitialiseDatabasePerClassTestBase() {
   }
 
   @Test
-  fun `Get application report returns OK with correct applications, excludes PII by default`() {
+  fun `Get application report returns OK with correct applications, excluding PII`() {
     givenAUser(roles = listOf(UserRole.CAS1_REPORT_VIEWER)) { _, jwt ->
 
       webTestClient.get()
-        .uri(getReportUrl(year = 2020, month = 2, includePii = null))
+        .uri(getReportUrl(Cas1ReportName.applicationsV2, year = 2020, month = 2))
         .header("Authorization", "Bearer $jwt")
         .header("X-Service-Name", ServiceName.approvedPremises.value)
         .exchange()
@@ -1081,10 +1094,5 @@ class Cas1ApplicationV2ReportTest : InitialiseDatabasePerClassTestBase() {
 
   private fun getApplication(applicationId: UUID) = realApplicationRepository.findByIdOrNull(applicationId)!! as ApprovedPremisesApplicationEntity
 
-  private fun getReportUrl(year: Int, month: Int, includePii: Boolean?) = "/cas1/reports/applicationsV2?year=$year&month=$month" +
-    if (includePii != null) {
-      "&includePii=$includePii"
-    } else {
-      ""
-    }
+  private fun getReportUrl(reportName: Cas1ReportName, year: Int, month: Int) = "/cas1/reports/${reportName.value}?year=$year&month=$month"
 }
