@@ -25,6 +25,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DepartureRepo
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ExtensionEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ExtensionRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.MoveOnCategoryRepository
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PremisesEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TemporaryAccommodationPremisesEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TurnaroundEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TurnaroundRepository
@@ -41,7 +42,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.ValidatableActio
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.AssessmentService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.OffenderService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.UserAccessService
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.UserService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.WorkingDayService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas3LimitedAccessStrategy
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.extractEntityFromCasResult
@@ -67,7 +67,6 @@ class Cas3BookingService(
   private val extensionRepository: ExtensionRepository,
   private val cas3PremisesService: Cas3PremisesService,
   private val assessmentService: AssessmentService,
-  private val userService: UserService,
   private val userAccessService: UserAccessService,
   private val offenderService: OffenderService,
   private val workingDayService: WorkingDayService,
@@ -187,10 +186,7 @@ class Cas3BookingService(
 
   fun updateBooking(bookingEntity: BookingEntity): BookingEntity = bookingRepository.save(bookingEntity)
 
-  fun getBookingForPremises(premisesId: UUID, bookingId: UUID): GetBookingForPremisesResult {
-    val premises = cas3PremisesService.getPremises(premisesId)
-      ?: return GetBookingForPremisesResult.PremisesNotFound
-
+  fun getBookingForPremises(premises: PremisesEntity, bookingId: UUID): GetBookingForPremisesResult {
     val booking = bookingRepository.findByIdOrNull(bookingId)
       ?: return GetBookingForPremisesResult.BookingNotFound
 
@@ -453,30 +449,6 @@ class Cas3BookingService(
     return success(extensionEntity)
   }
 
-  @SuppressWarnings("ThrowsCount")
-  fun getBooking(id: UUID): AuthorisableActionResult<BookingAndPersons> {
-    val booking = bookingRepository.findByIdOrNull(id)
-      ?: return AuthorisableActionResult.NotFound("Booking", id.toString())
-
-    val user = userService.getUserForRequest()
-
-    if (!userAccessService.userCanViewBooking(user, booking)) {
-      return AuthorisableActionResult.Unauthorised()
-    }
-
-    val offenderSummaryInfo = offenderService.getPersonSummaryInfoResults(
-      crns = setOf(booking.crn),
-      limitedAccessStrategy = user.cas3LimitedAccessStrategy(),
-    ).first()
-
-    return AuthorisableActionResult.Success(
-      BookingAndPersons(
-        booking,
-        offenderSummaryInfo,
-      ),
-    )
-  }
-
   fun findFutureBookingsForPremises(
     premisesId: UUID,
     statuses: List<BookingStatus>,
@@ -598,6 +570,5 @@ class Cas3BookingService(
 
 sealed interface GetBookingForPremisesResult {
   data class Success(val booking: BookingEntity) : GetBookingForPremisesResult
-  object PremisesNotFound : GetBookingForPremisesResult
   object BookingNotFound : GetBookingForPremisesResult
 }

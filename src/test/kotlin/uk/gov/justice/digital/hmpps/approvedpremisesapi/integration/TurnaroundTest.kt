@@ -98,6 +98,47 @@ class TurnaroundTest : InitialiseDatabasePerClassTestBase() {
   }
 
   @Test
+  fun `Create Turnaround returns 404 Not Found if a premises that does not exist `() {
+    givenAUser(roles = listOf(UserRole.CAS3_ASSESSOR)) { userEntity, jwt ->
+      val premises = temporaryAccommodationPremisesEntityFactory.produceAndPersist {
+        withProbationRegion(userEntity.probationRegion)
+        withYieldedLocalAuthorityArea {
+          localAuthorityEntityFactory.produceAndPersist()
+        }
+      }
+
+      val room = roomEntityFactory.produceAndPersist {
+        withPremises(premises)
+      }
+
+      val bed = bedEntityFactory.produceAndPersist {
+        withRoom(room)
+      }
+
+      val booking = bookingEntityFactory.produceAndPersist {
+        withPremises(premises)
+        withBed(bed)
+      }
+
+      val premisesId = UUID.randomUUID()
+
+      webTestClient.post()
+        .uri("/premises/$premisesId/bookings/${booking.id}/turnarounds")
+        .header("Authorization", "Bearer $jwt")
+        .bodyValue(
+          NewTurnaround(
+            workingDays = -1,
+          ),
+        )
+        .exchange()
+        .expectStatus()
+        .isNotFound
+        .expectBody()
+        .jsonPath("$.detail").isEqualTo("No Premises with an ID of $premisesId could be found")
+    }
+  }
+
+  @Test
   fun `Create Turnaround returns 409 Conflict if the turnaround overlaps with an existing booking`() {
     givenAUser(roles = listOf(UserRole.CAS3_ASSESSOR)) { userEntity, jwt ->
       val premises = temporaryAccommodationPremisesEntityFactory.produceAndPersist {

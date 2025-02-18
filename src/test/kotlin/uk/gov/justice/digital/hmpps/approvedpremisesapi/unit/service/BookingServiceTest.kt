@@ -76,7 +76,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.BookingService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.DeliusService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.GetBookingForPremisesResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.OffenderService
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.PremisesService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.UserAccessService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.UserService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.WorkingDayService
@@ -94,7 +93,6 @@ import java.util.UUID
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas3.DomainEventService as Cas3DomainEventService
 
 class BookingServiceTest {
-  private val mockPremisesService = mockk<PremisesService>()
   private val mockOffenderService = mockk<OffenderService>()
   private val mockCas3DomainEventService = mockk<Cas3DomainEventService>()
   private val mockWorkingDayService = mockk<WorkingDayService>()
@@ -119,7 +117,6 @@ class BookingServiceTest {
   private val mockCas1BookingDomainEventService = mockk<Cas1BookingDomainEventService>()
 
   fun createBookingService(): BookingService = BookingService(
-    premisesService = mockPremisesService,
     offenderService = mockOffenderService,
     workingDayService = mockWorkingDayService,
     bookingRepository = mockBookingRepository,
@@ -147,23 +144,10 @@ class BookingServiceTest {
     .produce()
 
   @Test
-  fun `getBookingForPremises returns PremisesNotFound when premises with provided ID does not exist`() {
-    val premisesId = UUID.fromString("8461d08b-0e3f-426a-a941-0ada4160e6db")
-    val bookingId = UUID.fromString("75ed7091-1767-4901-8c2b-371dd0f5864c")
-
-    every { mockPremisesService.getPremises(premisesId) } returns null
-
-    assertThat(bookingService.getBookingForPremises(premisesId, bookingId))
-      .isEqualTo(GetBookingForPremisesResult.PremisesNotFound)
-  }
-
-  @Test
   fun `getBookingForPremises returns BookingNotFound when booking with provided ID does not exist`() {
-    val premisesId = UUID.fromString("8461d08b-0e3f-426a-a941-0ada4160e6db")
-    val bookingId = UUID.fromString("75ed7091-1767-4901-8c2b-371dd0f5864c")
-
-    every { mockPremisesService.getPremises(premisesId) } returns ApprovedPremisesEntityFactory()
-      .withId(premisesId)
+    val bookingId = UUID.randomUUID()
+    val premises = ApprovedPremisesEntityFactory()
+      .withId(UUID.randomUUID())
       .withYieldedProbationRegion {
         ProbationRegionEntityFactory()
           .withYieldedApArea { ApAreaEntityFactory().produce() }
@@ -174,25 +158,21 @@ class BookingServiceTest {
 
     every { mockBookingRepository.findByIdOrNull(bookingId) } returns null
 
-    assertThat(bookingService.getBookingForPremises(premisesId, bookingId))
+    assertThat(bookingService.getBookingForPremises(premises, bookingId))
       .isEqualTo(GetBookingForPremisesResult.BookingNotFound)
   }
 
   @Test
   fun `getBookingForPremises returns BookingNotFound when booking does not belong to Premises`() {
-    val premisesId = UUID.fromString("8461d08b-0e3f-426a-a941-0ada4160e6db")
-    val bookingId = UUID.fromString("75ed7091-1767-4901-8c2b-371dd0f5864c")
+    val bookingId = UUID.randomUUID()
 
     val premisesEntityFactory = ApprovedPremisesEntityFactory()
-      .withId(premisesId)
       .withYieldedProbationRegion {
         ProbationRegionEntityFactory()
           .withYieldedApArea { ApAreaEntityFactory().produce() }
           .produce()
       }
       .withYieldedLocalAuthorityArea { LocalAuthorityEntityFactory().produce() }
-
-    every { mockPremisesService.getPremises(premisesId) } returns premisesEntityFactory.produce()
 
     val keyWorker = ContextStaffMemberFactory().produce()
 
@@ -202,7 +182,7 @@ class BookingServiceTest {
       .withStaffKeyWorkerCode(keyWorker.code)
       .produce()
 
-    assertThat(bookingService.getBookingForPremises(premisesId, bookingId))
+    assertThat(bookingService.getBookingForPremises(premisesEntityFactory.withId(UUID.randomUUID()).produce(), bookingId))
       .isEqualTo(GetBookingForPremisesResult.BookingNotFound)
   }
 
@@ -221,8 +201,6 @@ class BookingServiceTest {
       .withYieldedLocalAuthorityArea { LocalAuthorityEntityFactory().produce() }
       .produce()
 
-    every { mockPremisesService.getPremises(premisesId) } returns premisesEntity
-
     val keyWorker = ContextStaffMemberFactory().produce()
 
     val bookingEntity = BookingEntityFactory()
@@ -233,7 +211,7 @@ class BookingServiceTest {
 
     every { mockBookingRepository.findByIdOrNull(bookingId) } returns bookingEntity
 
-    assertThat(bookingService.getBookingForPremises(premisesId, bookingId))
+    assertThat(bookingService.getBookingForPremises(premisesEntity, bookingId))
       .isEqualTo(GetBookingForPremisesResult.Success(bookingEntity))
   }
 
