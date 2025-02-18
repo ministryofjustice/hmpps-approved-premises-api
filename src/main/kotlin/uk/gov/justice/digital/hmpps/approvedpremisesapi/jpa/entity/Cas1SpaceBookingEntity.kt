@@ -143,10 +143,8 @@ interface Cas1SpaceBookingRepository : JpaRepository<Cas1SpaceBookingEntity, UUI
       b.canonical_departure_date as canonicalDepartureDate,
       apa.risk_ratings -> 'tier' -> 'value' ->> 'level' as tier,
       CASE
-        WHEN 
-            apa.id IS NOT NULL THEN apa.name
-        ELSE
-            oa.name
+        WHEN apa.id IS NOT NULL THEN apa.name
+        ELSE offline_app.name
       END as personName,
       apa.release_type as releaseType, 
       ( 
@@ -157,37 +155,32 @@ interface Cas1SpaceBookingRepository : JpaRepository<Cas1SpaceBookingEntity, UUI
         GROUP by sbc.space_booking_id
       ) AS characteristicsPropertyNames
       FROM cas1_space_bookings b
-      LEFT JOIN approved_premises_applications apa 
-      ON 
-        b.approved_premises_application_id = apa.id
-      LEFT JOIN offline_applications oa
-      ON 
-        b.offline_application_id = oa.id
+      LEFT JOIN approved_premises_applications apa ON b.approved_premises_application_id = apa.id
+      LEFT JOIN offline_applications offline_app ON b.offline_application_id = offline_app.id
       WHERE 
-      b.canonical_arrival_date <= :daySummaryDate AND 
-      b.canonical_departure_date >= :daySummaryDate AND
-      b.premises_id = :premisesId AND 
-      b.cancellation_occurred_at IS NULL AND
-      (:excludeSpaceBookingId IS NUll OR 
-      b.id != :excludeSpaceBookingId) AND
-      (:bookingsCriteriaCount = 0  OR (
-            SELECT COUNT(*) 
-            FROM 
-                CAS1_SPACE_BOOKINGS_CRITERIA sbc
-            WHERE b.id = sbc.space_booking_id AND
-            sbc.characteristic_id IN (:bookingsCriteriaFilter)
-        ) = :bookingsCriteriaCount
-      )
+        b.canonical_arrival_date <= :date AND 
+        b.canonical_departure_date > :date AND
+        b.premises_id = :premisesId AND 
+        b.cancellation_occurred_at IS NULL AND
+        b.non_arrival_confirmed_at IS NULL AND
+        (:excludeSpaceBookingId IS NULL OR b.id != :excludeSpaceBookingId) AND
+        (:criteriaCount = 0 OR 
+            (
+              SELECT COUNT(*) 
+              FROM cas1_space_bookings_criteria sbc
+              WHERE b.id = sbc.space_booking_id AND sbc.characteristic_id IN (:criteria)
+            ) = :criteriaCount
+        )
     """,
     nativeQuery = true,
   )
-  fun findAllPremisesBookingsForDate(
+  fun findByPremisesIdAndCriteriaForDate(
     premisesId: UUID,
-    daySummaryDate: LocalDate,
-    bookingsCriteriaFilter: List<UUID>?,
-    sort: Sort,
-    bookingsCriteriaCount: Int = bookingsCriteriaFilter?.size ?: 0,
+    date: LocalDate,
+    criteria: List<UUID>?,
+    criteriaCount: Int = criteria?.size ?: 0,
     excludeSpaceBookingId: UUID?,
+    sort: Sort,
   ): List<Cas1SpaceBookingDaySummarySearchResult>
 
   @Query(
