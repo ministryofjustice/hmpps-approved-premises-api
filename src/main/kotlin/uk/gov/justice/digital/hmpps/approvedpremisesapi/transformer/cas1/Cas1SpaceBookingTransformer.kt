@@ -169,6 +169,13 @@ class Cas1SpaceBookingTransformer(
     person = personTransformer.personSummaryInfoToPersonSummary(personSummaryInfo),
     canonicalArrivalDate = searchResult.canonicalArrivalDate,
     canonicalDepartureDate = searchResult.canonicalDepartureDate,
+    expectedArrivalDate = searchResult.expectedArrivalDate,
+    expectedDepartureDate = searchResult.expectedDepartureDate,
+    isNonArrival = when {
+      searchResult.nonArrivalConfirmedAtDateTime != null -> true
+      searchResult.actualArrivalDate != null -> false
+      else -> null
+    },
     tier = searchResult.tier,
     keyWorkerAllocation = searchResult.keyWorkerStaffCode?.let { staffCode ->
       Cas1KeyWorkerAllocation(
@@ -189,6 +196,10 @@ class Cas1SpaceBookingTransformer(
         searchResult.nonArrivalConfirmedAtDateTime,
       ),
     ),
+    characteristics = searchResult.characteristicsPropertyNames?.split(",")?.mapNotNull { propertyName ->
+      Cas1SpaceCharacteristic.entries.find { it.name == propertyName }
+    } ?: listOf(),
+
   )
 
   companion object {

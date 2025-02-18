@@ -68,7 +68,14 @@ interface Cas1SpaceBookingRepository : JpaRepository<Cas1SpaceBookingEntity, UUI
       CASE 
         WHEN apa.id IS NOT NULL THEN apa.name
         ELSE offline_app.name
-      END as personName
+      END as personName,
+      ( 
+        SELECT STRING_AGG (characteristics.property_name, ',')
+        FROM cas1_space_bookings_criteria sbc
+        LEFT OUTER JOIN characteristics ON characteristics.id = sbc.characteristic_id
+        WHERE sbc.space_booking_id = b.id 
+        GROUP by sbc.space_booking_id
+      ) AS characteristicsPropertyNames 
       FROM cas1_space_bookings b
       LEFT OUTER JOIN approved_premises_applications apa ON b.approved_premises_application_id = apa.id
       LEFT OUTER JOIN offline_applications offline_app ON b.offline_application_id = offline_app.id
@@ -273,6 +280,7 @@ interface Cas1SpaceBookingSearchResult {
   val keyWorkerStaffCode: String?
   val keyWorkerAssignedAt: Instant?
   val keyWorkerName: String?
+  val characteristicsPropertyNames: String?
 }
 
 interface Cas1SpaceBookingAtPremises {

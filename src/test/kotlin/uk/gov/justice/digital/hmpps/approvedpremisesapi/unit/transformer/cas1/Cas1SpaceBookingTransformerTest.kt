@@ -445,6 +445,7 @@ class Cas1SpaceBookingTransformerTest {
           keyWorkerStaffCode = "the staff code",
           keyWorkerAssignedAt = LocalDateTime.of(2023, 12, 12, 0, 0, 0).toInstant(ZoneOffset.UTC),
           keyWorkerName = "the keyworker name",
+          characteristicsPropertyNames = null,
         ),
         personSummaryInfo,
       )
@@ -490,6 +491,7 @@ class Cas1SpaceBookingTransformerTest {
           keyWorkerStaffCode = null,
           keyWorkerAssignedAt = null,
           keyWorkerName = null,
+          characteristicsPropertyNames = null,
         ),
         personSummaryInfo,
       )
@@ -516,6 +518,7 @@ data class Cas1SpaceBookingSearchResultImpl(
   override val keyWorkerStaffCode: String?,
   override val keyWorkerAssignedAt: Instant?,
   override val keyWorkerName: String?,
+  override val characteristicsPropertyNames: String?,
 ) : Cas1SpaceBookingSearchResult
 
 data class Cas1SpaceBookingAtPremisesImpl(

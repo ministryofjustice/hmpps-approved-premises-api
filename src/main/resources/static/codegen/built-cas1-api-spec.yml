@@ -7169,6 +7169,24 @@ components:
           description: actual departure date or, if not known, the expected departure date
           type: string
           format: date
+        expectedArrivalDate:
+          description: expected arrival date
+          type: string
+          format: date
+        actualArrivalDate:
+          description: actual arrival date if known
+          type: string
+          format: date
+        expectedDepartureDate:
+          description: expected departure date
+          type: string
+          format: date
+        actualDepartureDate:
+          description: actual departure date if known
+          type: string
+          format: date
+        isNonArrival:
+          type: boolean
         tier:
           description: Risk rating tier level of corresponding application
           type: string
@@ -7176,11 +7194,20 @@ components:
           $ref: '#/components/schemas/Cas1KeyWorkerAllocation'
         status:
           $ref: '#/components/schemas/Cas1SpaceBookingSummaryStatus'
+        characteristics:
+          description: "Room and premise characteristics"
+          type: array
+          items:
+            $ref: '#/components/schemas/Cas1SpaceCharacteristic'
+          default: []
       required:
         - id
         - person
         - canonicalArrivalDate
         - canonicalDepartureDate
+        - characteristics
+        - expectedArrivalDate
+        - expectedDepartureDate
     Cas1SpaceBookingSummarySortField:
       type: string
       enum:
@@ -7266,6 +7293,7 @@ components:
         - spaceType
         - essentialCharacteristics
     Cas1SpaceBookingSummaryStatus:
+      deprecated: true
       type: string
       enum:
         - arrivingWithin6Weeks
