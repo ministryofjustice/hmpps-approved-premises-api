@@ -3,6 +3,7 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.cas2v2
 import com.fasterxml.jackson.core.type.TypeReference
 import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.databind.node.NullNode
+import com.github.tomakehurst.wiremock.client.WireMock.get
 import com.ninjasquad.springmockk.SpykBean
 import io.mockk.clearMocks
 import org.assertj.core.api.Assertions
@@ -23,13 +24,13 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PersonStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.UpdateApplicationType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.UpdateCas2v2Application
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.StaffDetailFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.Cas2v2IntegrationTestBase
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenACas2LicenceCaseAdminUser
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenACas2v2Assessor
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenACas2v2DeliusUser
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenACas2v2LicenceCaseAdminUser
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenACas2v2PomUser
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAnOffender
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.apDeliusContextAddStaffDetailResponse
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.apDeliusContextEmptyCaseSummaryToBulkResponse
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.prisonAPIMockNotFoundInmateDetailsCall
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApplicationRepository
@@ -316,7 +317,7 @@ class Cas2v2ApplicationTest : Cas2v2IntegrationTestBase() {
     }
 
     @Test
-    fun `Get all cas2v2 applications a Delius user, POM user returns 200 with correct body`() {
+    fun `Get all cas2v2 applications as a Delius user, where a POM user created the applications returns 200 with correct body`() {
       givenACas2v2DeliusUser { deliusUser, jwt ->
         givenACas2v2PomUser { otherPomUser, _ ->
           getAllCas2v2applications(deliusUser, otherPomUser, jwt)
@@ -333,7 +334,7 @@ class Cas2v2ApplicationTest : Cas2v2IntegrationTestBase() {
       }
     }
 
-    private fun getAllCas2v2applications(userEntity: Cas2v2UserEntity, otherUser: Cas2v2UserEntity, jwt: String) {
+    private fun getAllCas2v2applications(creationUser: Cas2v2UserEntity, accessingUser: Cas2v2UserEntity, jwt: String) {
       givenAnOffender { offenderDetails, _ ->
         cas2v2ApplicationJsonSchemaRepository.deleteAll()
 
@@ -345,7 +346,7 @@ class Cas2v2ApplicationTest : Cas2v2IntegrationTestBase() {
         // abandoned application
         val abandonedApplicationEntity = cas2v2ApplicationEntityFactory.produceAndPersist {
           withApplicationSchema(applicationSchema)
-          withCreatedByUser(userEntity)
+          withCreatedByUser(creationUser)
           withCrn(offenderDetails.otherIds.crn)
           withData("{}")
           withCreatedAt(OffsetDateTime.parse("2024-01-03T16:10:00+01:00"))
@@ -355,7 +356,7 @@ class Cas2v2ApplicationTest : Cas2v2IntegrationTestBase() {
         // unsubmitted application
         val firstApplicationEntity = cas2v2ApplicationEntityFactory.produceAndPersist {
           withApplicationSchema(applicationSchema)
-          withCreatedByUser(userEntity)
+          withCreatedByUser(creationUser)
           withCrn(offenderDetails.otherIds.crn)
           withData("{}")
           withCreatedAt(OffsetDateTime.parse("2024-01-03T16:10:00+01:00"))
@@ -365,7 +366,7 @@ class Cas2v2ApplicationTest : Cas2v2IntegrationTestBase() {
         // submitted application, CRD >= today so should be returned
         val secondApplicationEntity = cas2v2ApplicationEntityFactory.produceAndPersist {
           withApplicationSchema(applicationSchema)
-          withCreatedByUser(userEntity)
+          withCreatedByUser(creationUser)
           withCrn(offenderDetails.otherIds.crn)
           withData("{}")
           withCreatedAt(OffsetDateTime.parse("2024-02-29T09:00:00+01:00"))
@@ -376,7 +377,7 @@ class Cas2v2ApplicationTest : Cas2v2IntegrationTestBase() {
         // submitted application, CRD = yesterday, so should not be returned
         val thirdApplicationEntity = cas2v2ApplicationEntityFactory.produceAndPersist {
           withApplicationSchema(applicationSchema)
-          withCreatedByUser(userEntity)
+          withCreatedByUser(creationUser)
           withCrn(offenderDetails.otherIds.crn)
           withData("{}")
           withCreatedAt(OffsetDateTime.parse("2024-02-29T09:00:00+01:00"))
@@ -392,7 +393,7 @@ class Cas2v2ApplicationTest : Cas2v2IntegrationTestBase() {
 
         val otherCas2v2ApplicationEntity = cas2v2ApplicationEntityFactory.produceAndPersist {
           withApplicationSchema(applicationSchema)
-          withCreatedByUser(otherUser)
+          withCreatedByUser(accessingUser)
           withCrn(offenderDetails.otherIds.crn)
           withData("{}")
         }
@@ -619,13 +620,13 @@ class Cas2v2ApplicationTest : Cas2v2IntegrationTestBase() {
 
     @Test
     fun `Court bail users do not need a prison code`() {
-      givenACas2v2PomUser { userEntity, _ ->
+      val staffUserDetails = StaffDetailFactory.staffDetail(deliusUsername = "USERNAME")
+      apDeliusContextAddStaffDetailResponse(staffUserDetails)
+
+      givenACas2v2DeliusUser { userEntity, _ ->
         produceAndPersistBasicApplication("CRN", userEntity)
 
-        val jwt = jwtAuthHelper.createValidNomisAuthorisationCodeJwt(
-          "MY USERNAME",
-          listOf("ROLE_COURT_BAIL"),
-        )
+        val jwt = jwtAuthHelper.createValidDeliusAuthorisationCodeJwt(staffUserDetails.username!!, listOf("ROLE_CAS2_COURT_BAIL_REFERRER"))
         webTestClient
           .get()
           .uri("/cas2v2/applications")
@@ -643,7 +644,7 @@ class Cas2v2ApplicationTest : Cas2v2IntegrationTestBase() {
 
         val jwt = jwtAuthHelper.createValidNomisAuthorisationCodeJwt(
           "MY USERNAME",
-          listOf("ROLE_PRISON_BAIL"),
+          listOf("ROLE_CAS2_PRISON_BAIL_REFERRER"),
         )
         webTestClient
           .get()
@@ -998,115 +999,6 @@ class Cas2v2ApplicationTest : Cas2v2IntegrationTestBase() {
             .exchange()
             .expectStatus()
             .isForbidden()
-        }
-      }
-    }
-
-    @Nested
-    inner class AsLicenceCaseAdminUser {
-      @Test
-      fun `Get all submitted cas2v2 applications using prisonCode returns 200 with correct body`() {
-        givenACas2v2Assessor { _, _ ->
-          givenACas2LicenceCaseAdminUser { caseAdminPrisonA, jwt ->
-            givenAnOffender { offenderDetails, _ ->
-              cas2v2ApplicationJsonSchemaRepository.deleteAll()
-
-              val applicationSchema = cas2v2ApplicationJsonSchemaEntityFactory.produceAndPersist {
-                withAddedAt(OffsetDateTime.now())
-                withId(UUID.randomUUID())
-              }
-
-              val pomUserPrisonA = cas2v2UserEntityFactory.produceAndPersist {
-                withActiveNomisCaseloadId(caseAdminPrisonA.activeCaseloadId!!)
-              }
-
-              val userBPrisonAApplicationIds = mutableListOf<UUID>()
-
-              // submitted applications with conditional release dates in the future
-              repeat(6) {
-                userBPrisonAApplicationIds.add(
-                  cas2v2ApplicationEntityFactory.produceAndPersist {
-                    withApplicationSchema(applicationSchema)
-                    withCreatedByUser(pomUserPrisonA)
-                    withCrn(offenderDetails.otherIds.crn)
-                    withData("{}")
-                    withCreatedAt(OffsetDateTime.now().minusDays(it.toLong()))
-                    withSubmittedAt(OffsetDateTime.now().randomDateTimeBefore(14))
-                    withReferringPrisonCode(caseAdminPrisonA.activeCaseloadId!!)
-                    withConditionalReleaseDate(LocalDate.now().randomDateAfter(14))
-                  }.id,
-                )
-              }
-
-              // submitted applications with conditional release date of today
-              repeat(2) {
-                userBPrisonAApplicationIds.add(
-                  cas2v2ApplicationEntityFactory.produceAndPersist {
-                    withApplicationSchema(applicationSchema)
-                    withCreatedByUser(pomUserPrisonA)
-                    withCrn(offenderDetails.otherIds.crn)
-                    withData("{}")
-                    withCreatedAt(OffsetDateTime.now().minusDays(it.toLong() + 6))
-                    withSubmittedAt(OffsetDateTime.now().randomDateTimeBefore(14))
-                    withReferringPrisonCode(caseAdminPrisonA.activeCaseloadId!!)
-                    withConditionalReleaseDate(LocalDate.now())
-                  }.id,
-                )
-              }
-
-              // submitted application with a conditional release date before today
-              val excludedApplicationId = cas2v2ApplicationEntityFactory.produceAndPersist {
-                withApplicationSchema(applicationSchema)
-                withCreatedByUser(pomUserPrisonA)
-                withCrn(offenderDetails.otherIds.crn)
-                withData("{}")
-                withCreatedAt(OffsetDateTime.now().randomDateTimeBefore(14))
-                withSubmittedAt(OffsetDateTime.now().randomDateTimeBefore(14))
-                withReferringPrisonCode(caseAdminPrisonA.activeCaseloadId!!)
-                withConditionalReleaseDate(LocalDate.now().randomDateBefore(14))
-              }.id
-
-              val pomUserPrisonB = cas2v2UserEntityFactory.produceAndPersist {
-                withActiveNomisCaseloadId("other_prison")
-              }
-
-              val otherPrisonApplication = cas2v2ApplicationEntityFactory.produceAndPersist {
-                withApplicationSchema(applicationSchema)
-                withCreatedByUser(pomUserPrisonB)
-                withCrn(offenderDetails.otherIds.crn)
-                withData("{}")
-                withCreatedAt(OffsetDateTime.now())
-                withSubmittedAt(OffsetDateTime.now().randomDateTimeBefore(14))
-                withReferringPrisonCode("other_prison")
-              }
-
-              val rawResponseBody = webTestClient.get()
-                .uri(
-                  "/cas2v2/applications?isSubmitted=true&prisonCode=${caseAdminPrisonA.activeCaseloadId}",
-                )
-                .header("Authorization", "Bearer $jwt")
-                .header("X-Service-Name", ServiceName.cas2v2.value)
-                .exchange()
-                .expectStatus()
-                .isOk
-                .returnResult<String>()
-                .responseBody
-                .blockFirst()
-
-              val responseBody =
-                objectMapper.readValue(rawResponseBody, object : TypeReference<List<Cas2v2ApplicationSummary>>() {})
-
-              Assertions.assertThat(responseBody).noneMatch {
-                excludedApplicationId == it.id
-              }
-              val returnedApplicationIds = responseBody.map { it.id }.toSet()
-
-              Assertions.assertThat(returnedApplicationIds).isEqualTo(userBPrisonAApplicationIds.toSet())
-              Assertions.assertThat(returnedApplicationIds).noneMatch {
-                otherPrisonApplication.id == it
-              }
-            }
-          }
         }
       }
     }
@@ -1645,13 +1537,6 @@ class Cas2v2ApplicationTest : Cas2v2IntegrationTestBase() {
     }
 
     @Test
-    fun `Create new application for cas2v2 as a LicenceCaseAdminUsers user returns 201 with correct body and Location header`() {
-      givenACas2v2LicenceCaseAdminUser { _, jwt ->
-        createNewApplicationForCas2v2returns201(jwt)
-      }
-    }
-
-    @Test
     fun `Create new cas2v2 application as a LicenceCaseAdminUsers user returns 404 when a person cannot be found`() {
       givenACas2v2PomUser { _, jwt ->
         createNewApplicationForCas2v2Returns404WhenAPersonIsNotFound(jwt)
@@ -1728,13 +1613,6 @@ class Cas2v2ApplicationTest : Cas2v2IntegrationTestBase() {
     @Test
     fun `Update existing cas2v2 application given a Delius user returns 200 with correct body`() {
       givenACas2v2DeliusUser { submittingUser, jwt ->
-        updateExistingCas2v2ApplicationReturns200WithCorrectBody(submittingUser, jwt)
-      }
-    }
-
-    @Test
-    fun `Update existing cas2v2 application given a LicencedCaseAdmin user returns 200 with correct body`() {
-      givenACas2v2LicenceCaseAdminUser { submittingUser, jwt ->
         updateExistingCas2v2ApplicationReturns200WithCorrectBody(submittingUser, jwt)
       }
     }
