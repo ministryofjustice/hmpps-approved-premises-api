@@ -160,6 +160,7 @@ paths:
       x-codegen-request-body-name: body
   /placement-applications:
     post:
+      deprecated: true
       tags:
         - Placement applications
       summary: Creates an application for a placement
@@ -186,6 +187,7 @@ paths:
           $ref: '_shared.yml#/components/responses/500Response'
   /placement-applications/{id}:
     get:
+      deprecated: true
       tags:
         - Placement applications
       summary: Retrieves an application for a placement request
@@ -246,6 +248,7 @@ paths:
           $ref: '_shared.yml#/components/responses/500Response'
   /placement-applications/{id}/submission:
     post:
+      deprecated: true
       tags:
         - Placement applications
       summary: Submits an application for a placement request
@@ -288,6 +291,7 @@ paths:
           $ref: '_shared.yml#/components/responses/500Response'
   /placement-applications/{id}/decision:
     post:
+      deprecated: true
       tags:
         - Placement applications
       summary: Submits a decision for a placement application
@@ -328,6 +332,7 @@ paths:
           $ref: '_shared.yml#/components/responses/500Response'
   /placement-applications/{id}/withdraw:
     post:
+      deprecated: true
       tags:
         - Placement applications
       summary: Withdraw a placement application
