@@ -58,14 +58,12 @@ class SeedService(
   fun seedData(seedFileType: SeedFileType, filename: String) = seedData(seedFileType, filename) { "${seedConfig.filePrefix}/$filename" }
 
   @SuppressWarnings("CyclomaticComplexMethod", "TooGenericExceptionThrown", "TooGenericExceptionCaught")
-  fun seedData(seedFileType: SeedFileType, filename: String, resolveCsvPath: SeedJob<*>.() -> String) {
+  fun seedData(
+    seedFileType: SeedFileType,
+    filename: String,
+    resolveCsvPath: SeedJob<*>.() -> String,
+  ) {
     try {
-      seedLogger.info("Starting seed request: $seedFileType - $filename")
-
-      if (filename.contains("/") || filename.contains("\\")) {
-        throw RuntimeException("Filename must be just the filename of a .csv file in the /seed directory, e.g. for /seed/upload.csv, just `upload` should be supplied")
-      }
-
       val job: SeedJob<*> = when (seedFileType) {
         SeedFileType.approvedPremises -> getBean(Cas1SeedPremisesFromCsvJob::class)
         SeedFileType.approvedPremisesRooms -> getBean(ApprovedPremisesRoomsSeedJob::class)
@@ -101,6 +99,10 @@ class SeedService(
         SeedFileType.approvedPremisesDeleteApplicationTimelineNotes -> getBean(Cas1SoftDeleteApplicationTimelineNotes::class)
       }
 
+      val filePath = job.resolveCsvPath()
+      val jobDescription = "job type: $seedFileType, file: $filePath"
+      seedLogger.info("Starting seed request: $jobDescription")
+
       val seedStarted = LocalDateTime.now()
 
       if (job.runInTransaction && job.processRowsConcurrently) {
@@ -114,7 +116,7 @@ class SeedService(
       }
 
       val timeTaken = ChronoUnit.MILLIS.between(seedStarted, LocalDateTime.now())
-      seedLogger.info("Seed request complete. Took $timeTaken millis and processed $rowsProcessed rows")
+      seedLogger.info("Seed request for $jobDescription complete. Took $timeTaken millis and processed $rowsProcessed rows")
     } catch (exception: Throwable) {
       seedLogger.error("Unable to complete Seed Job", exception)
     }
