@@ -1,6 +1,5 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens
 
-import java.util.UUID
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.NomisUserDetailFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.StaffDetailFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.Cas2v2IntegrationTestBase
@@ -17,6 +16,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRole
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas2v2.Cas2v2UserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas2v2.Cas2v2UserType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.deliuscontext.StaffDetail
+import java.util.UUID
 
 @SuppressWarnings("LongParameterList")
 fun IntegrationTestBase.givenAUser(
@@ -204,7 +204,7 @@ fun Cas2v2IntegrationTestBase.givenACas2v2DeliusUser(
   mockStaffUserDetailsCall: Boolean = true,
   block: (userEntity: Cas2v2UserEntity, jwt: String) -> Unit,
 ) {
-  val (deliusUser, jwt) = givenAUser(
+  val (deliusUser, _) = givenAUser(
     id,
     staffDetail,
     roles,
@@ -223,7 +223,7 @@ fun Cas2v2IntegrationTestBase.givenACas2v2DeliusUser(
     withUserType(Cas2v2UserType.DELIUS)
   }
 
-//  val jwt = jwtAuthHelper.createValidDeliusAuthorisationCodeJwt(deliusUser.deliusUsername)
+  val jwt = jwtAuthHelper.createValidDeliusAuthorisationCodeJwt(deliusUser.deliusUsername, roles = listOf("ROLE_COURT_BAIL_REFERRER"))
 //  nomisUserRolesMockSuccessfulGetUserDetailsCall(jwt, nomisUserDetails)
 
   block(user, jwt)
@@ -231,6 +231,7 @@ fun Cas2v2IntegrationTestBase.givenACas2v2DeliusUser(
 
 fun Cas2v2IntegrationTestBase.givenACas2v2PomUser(
   id: UUID = UUID.randomUUID(),
+  roles: List<String> = listOf("ROLE_CAS2_COURT_BAIL_REFERRER"),
   nomisUserDetailsConfigBlock: (NomisUserDetailFactory.() -> Unit)? = null,
   block: (userEntity: Cas2v2UserEntity, jwt: String) -> Unit,
 ) {
@@ -251,7 +252,7 @@ fun Cas2v2IntegrationTestBase.givenACas2v2PomUser(
     withActiveNomisCaseloadId(nomisUserDetails.activeCaseloadId!!)
   }
 
-  val jwt = jwtAuthHelper.createValidNomisAuthorisationCodeJwt(nomisUserDetails.username)
+  val jwt = jwtAuthHelper.createValidNomisAuthorisationCodeJwt(nomisUserDetails.username, roles)
 
   nomisUserRolesMockSuccessfulGetUserDetailsCall(jwt, nomisUserDetails)
 
