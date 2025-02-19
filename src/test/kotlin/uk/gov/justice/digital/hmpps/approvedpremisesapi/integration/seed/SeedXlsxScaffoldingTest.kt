@@ -4,20 +4,69 @@ import org.assertj.core.api.Assertions.assertThat
 import org.jetbrains.kotlinx.dataframe.api.emptyDataFrame
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.SeedFromExcelDirectoryRequest
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.SeedFromExcelFileRequest
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.SeedFromExcelFileType
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.SeedFromExcelRequest
 
 class SeedXlsxScaffoldingTest : SeedTestBase() {
+
+  @Nested
+  inner class SeedDirectory {
+    @Test
+    fun success() {
+      webTestClient.post()
+        .uri("/seedFromExcel/directory")
+        .bodyValue(
+          SeedFromExcelDirectoryRequest(
+            seedType = SeedFromExcelFileType.CAS1_IMPORT_SITE_SURVEY_ROOMS,
+            directoryName = "my-dir",
+          ),
+        )
+        .exchange()
+        .expectStatus()
+        .isAccepted
+    }
+
+    @Test
+    fun `Attempting to process a directory containing forward slashes logs an error`() {
+      seedXlsxService.seedDirectoryRecursive(SeedFromExcelFileType.CAS1_IMPORT_SITE_SURVEY_ROOMS, "/afile")
+
+      assertThat(logEntries).anyMatch {
+        it.level == "error" &&
+          it.message == "Invalid directory /afile. Should be the name of a file within ./test-seed-csvs. Sub directories are not allowed"
+      }
+    }
+
+    @Test
+    fun `Attempting to process a directory containing backward slashes logs an error`() {
+      seedXlsxService.seedDirectoryRecursive(SeedFromExcelFileType.CAS1_IMPORT_SITE_SURVEY_ROOMS, "\\afile")
+
+      assertThat(logEntries).anyMatch {
+        it.level == "error" &&
+          it.message == "Invalid directory \\afile. Should be the name of a file within ./test-seed-csvs. Sub directories are not allowed"
+      }
+    }
+
+    @Test
+    fun `Attempting to process a non-existent directory logs an error`() {
+      seedXlsxService.seedDirectoryRecursive(SeedFromExcelFileType.CAS1_IMPORT_SITE_SURVEY_ROOMS, "non-existent")
+
+      assertThat(logEntries).anyMatch {
+        it.level == "error" &&
+          it.message.contains("Cannot find directory 'non-existent' within ./test-seed-csvs")
+      }
+    }
+  }
 
   @Nested
   inner class SeedFile {
 
     @Test
-    fun `Requesting a seed from Excel operation returns 202`() {
+    fun success() {
       webTestClient.post()
-        .uri("/seedFromExcel")
+        .uri("/seedFromExcel/file")
         .bodyValue(
-          SeedFromExcelRequest(
+          SeedFromExcelFileRequest(
             seedType = SeedFromExcelFileType.CAS1_IMPORT_SITE_SURVEY_ROOMS,
             fileName = "file.xlsx",
           ),
@@ -33,11 +82,7 @@ class SeedXlsxScaffoldingTest : SeedTestBase() {
 
       assertThat(logEntries).anyMatch {
         it.level == "error" &&
-          it.message == "Unable to complete Excel seed job for /afile" &&
-          it.throwable != null &&
-          it.throwable.message!!.contains(
-            "Invalid path. Should be the name of a file/directory within ./test-seed-csvs. Sub directories are not allowed",
-          )
+          it.message == "Invalid filename /afile. Should be the name of a file within ./test-seed-csvs. Sub directories are not allowed"
       }
     }
 
@@ -47,11 +92,7 @@ class SeedXlsxScaffoldingTest : SeedTestBase() {
 
       assertThat(logEntries).anyMatch {
         it.level == "error" &&
-          it.message == "Unable to complete Excel seed job for \\afile" &&
-          it.throwable != null &&
-          it.throwable.message!!.contains(
-            "Invalid path. Should be the name of a file/directory within ./test-seed-csvs. Sub directories are not allowed",
-          )
+          it.message == "Invalid filename \\afile. Should be the name of a file within ./test-seed-csvs. Sub directories are not allowed"
       }
     }
 
@@ -61,11 +102,7 @@ class SeedXlsxScaffoldingTest : SeedTestBase() {
 
       assertThat(logEntries).anyMatch {
         it.level == "error" &&
-          it.message == "Unable to complete Excel seed job for non-existent.xlsx" &&
-          it.throwable != null &&
-          it.throwable.message!!.contains(
-            "Unable to process XLSX file",
-          )
+          it.message.contains("Unable to complete Excel seed job for 'non-existent.xlsx' with message")
       }
     }
 
@@ -80,9 +117,7 @@ class SeedXlsxScaffoldingTest : SeedTestBase() {
 
       assertThat(logEntries).anyMatch {
         it.level == "error" &&
-          it.message == "Unable to complete Excel seed job for wrongSheetName.xlsx" &&
-          it.throwable != null &&
-          it.throwable.cause!!.message == "Sheet with name Sheet2 not found"
+          it.message == "Unable to complete Excel seed job for 'wrongSheetName.xlsx' with message 'Sheet with name Sheet2 not found'"
       }
     }
   }

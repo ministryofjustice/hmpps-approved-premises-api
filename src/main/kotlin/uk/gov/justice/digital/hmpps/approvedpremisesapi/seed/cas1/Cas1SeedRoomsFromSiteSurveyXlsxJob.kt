@@ -19,8 +19,6 @@ import java.io.File
 import java.util.UUID
 import kotlin.Boolean
 
-class SiteSurveyImportException(message: String) : Exception(message)
-
 /**
  * This job seeds rooms and beds from a site survey xlsx Excel file.
  * The xlsx file should have two sheets:
@@ -220,5 +218,5 @@ class Cas1SeedRoomsFromSiteSurveyXlsxJob(
   }
 
   private fun findExistingPremisesByQCodeOrThrow(qCode: String): ApprovedPremisesEntity = approvedPremisesRepository.findByQCode(qCode)
-    ?: throw SiteSurveyImportException("No premises with qcode '$qCode' found.")
+    ?: error("No premises with qcode '$qCode' found.")
 }
