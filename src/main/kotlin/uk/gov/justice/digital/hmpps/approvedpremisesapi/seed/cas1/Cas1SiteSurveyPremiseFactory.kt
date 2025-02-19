@@ -58,7 +58,7 @@ class Cas1SiteSurveyPremiseFactory {
       hasTactileAndDirectionalFlooring = resolveAnswer("Does this AP have tactile & directional flooring?").dropDownYesNoToBoolean(),
       hasSignsInBraille = resolveAnswer("Does this AP have signs in braille?").dropDownYesNoToBoolean(),
       hasAHearingLoop = resolveAnswer("Does this AP have or has access to a hearing loop?").dropDownYesNoToBoolean(),
-      additionalRestrictions = resolveAnswer("Are there any additional restrictions on people that this AP can accommodate?"),
+      additionalRestrictions = resolveOptionalAnswer("Are there any additional restrictions on people that this AP can accommodate?"),
     )
   }
 
@@ -121,7 +121,7 @@ data class Cas1SiteSurveyPremise(
   val hasTactileAndDirectionalFlooring: Boolean,
   val hasSignsInBraille: Boolean,
   val hasAHearingLoop: Boolean,
-  val additionalRestrictions: String,
+  val additionalRestrictions: String?,
 )
 
 data class WillAcceptPeopleWhoHave(

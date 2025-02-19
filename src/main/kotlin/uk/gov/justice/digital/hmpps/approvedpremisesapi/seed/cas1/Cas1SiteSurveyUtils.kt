@@ -15,7 +15,9 @@ object Cas1SiteSurveyUtils {
    **/
   private fun AnyCol.toListIncludingHeader() = listOf(this.name) + this.values().toList()
 
-  fun DataFrame<*>.resolveAnswer(question: String, answerCol: Int = 1): String {
+  fun DataFrame<*>.resolveAnswer(question: String, answerCol: Int = 1): String = resolveOptionalAnswer(question, answerCol) ?: error("Answer for question '$question' cannot be blank")
+
+  fun DataFrame<*>.resolveOptionalAnswer(question: String, answerCol: Int = 1): String? {
     val questions = getColumn(0).toListIncludingHeader()
     val answers = getColumn(answerCol).toListIncludingHeader()
 
@@ -29,11 +31,9 @@ object Cas1SiteSurveyUtils {
 
     val answer = removeDecimalPlaces()
 
-    if (answer.isBlank()) {
-      error("Answer for question '$question' cannot be blank")
+    return answer.ifBlank {
+      null
     }
-
-    return answer
   }
 
   fun DataFrame<*>.resolveAnswerYesNoDropDown(question: String, answerCol: Int = 1): Boolean {
