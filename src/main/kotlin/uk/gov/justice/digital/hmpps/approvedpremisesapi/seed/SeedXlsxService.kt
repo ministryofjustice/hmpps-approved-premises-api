@@ -19,14 +19,15 @@ class SeedXlsxService(
   private val transactionTemplate: TransactionTemplate,
   private val seedLogger: SeedLogger,
 ) {
+
+  val filePrefix = seedConfig.filePrefix
+
   @SuppressWarnings("TooGenericExceptionThrown", "TooGenericExceptionCaught")
-  fun seedExcelData(excelSeedFileType: SeedFromExcelFileType, filename: String) {
+  fun seed(excelSeedFileType: SeedFromExcelFileType, filename: String) {
     try {
       seedLogger.info("Starting seed request: $excelSeedFileType - $filename")
 
-      if (filename.contains("/") || filename.contains("\\")) {
-        throw RuntimeException("Filename must be just the filename of a .xlsx file in the /seed directory, e.g. for /seed/upload.xlsx, just `upload` should be supplied")
-      }
+      validateFileName(filename)
 
       val file = File("${seedConfig.filePrefix}/$filename")
 
@@ -43,6 +44,12 @@ class SeedXlsxService(
       seedLogger.info("Excel seed request complete. Took $timeTaken millis")
     } catch (exception: Throwable) {
       seedLogger.error("Unable to complete Excel seed job for $filename", exception)
+    }
+  }
+
+  private fun validateFileName(filename: String) {
+    if (filename.contains("/") || filename.contains("\\")) {
+      error("Invalid path. Should be the name of a file/directory within $filePrefix. Sub directories are not allowed")
     }
   }
 
