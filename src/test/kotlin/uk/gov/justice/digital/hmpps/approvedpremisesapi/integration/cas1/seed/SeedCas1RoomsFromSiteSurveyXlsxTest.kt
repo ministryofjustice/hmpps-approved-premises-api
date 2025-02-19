@@ -668,9 +668,9 @@ class SeedCas1RoomsFromSiteSurveyXlsxTest : SeedTestBase() {
     assertThat(logEntries)
       .anyMatch {
         it.level == "error" &&
-          it.message == "Unable to complete Excel seed job for 'example.xlsx' with message 'Invalid value for Yes/No dropdown: Bad answer'" &&
+          it.message == "Unable to complete Excel seed job for 'example.xlsx' with message 'Invalid value for Yes/No dropdown: BAD ANSWER. Question is Is this room located on the ground floor?'" &&
           it.throwable != null &&
-          it.throwable.message == "Invalid value for Yes/No dropdown: Bad answer"
+          it.throwable.message == "Invalid value for Yes/No dropdown: BAD ANSWER. Question is Is this room located on the ground floor?"
       }
   }
 
