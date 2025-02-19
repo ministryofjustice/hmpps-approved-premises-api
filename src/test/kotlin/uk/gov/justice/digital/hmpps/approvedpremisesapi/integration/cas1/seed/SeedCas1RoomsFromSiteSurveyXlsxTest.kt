@@ -73,7 +73,7 @@ class SeedCas1RoomsFromSiteSurveyXlsxTest : SeedTestBase() {
       ),
     )
 
-    seedXlsxService.seed(
+    seedXlsxService.seedFile(
       SeedFromExcelFileType.CAS1_IMPORT_SITE_SURVEY_ROOMS,
       "example.xlsx",
     )
@@ -121,7 +121,7 @@ class SeedCas1RoomsFromSiteSurveyXlsxTest : SeedTestBase() {
       ),
     )
 
-    seedXlsxService.seed(
+    seedXlsxService.seedFile(
       SeedFromExcelFileType.CAS1_IMPORT_SITE_SURVEY_ROOMS,
       "example.xlsx",
     )
@@ -173,7 +173,7 @@ class SeedCas1RoomsFromSiteSurveyXlsxTest : SeedTestBase() {
       ),
     )
 
-    seedXlsxService.seed(
+    seedXlsxService.seedFile(
       SeedFromExcelFileType.CAS1_IMPORT_SITE_SURVEY_ROOMS,
       "example.xlsx",
     )
@@ -244,7 +244,7 @@ class SeedCas1RoomsFromSiteSurveyXlsxTest : SeedTestBase() {
       ),
     )
 
-    seedXlsxService.seed(
+    seedXlsxService.seedFile(
       SeedFromExcelFileType.CAS1_IMPORT_SITE_SURVEY_ROOMS,
       "example.xlsx",
     )
@@ -293,7 +293,7 @@ class SeedCas1RoomsFromSiteSurveyXlsxTest : SeedTestBase() {
       ),
     )
 
-    seedXlsxService.seed(
+    seedXlsxService.seedFile(
       SeedFromExcelFileType.CAS1_IMPORT_SITE_SURVEY_ROOMS,
       "example.xlsx",
     )
@@ -359,7 +359,7 @@ class SeedCas1RoomsFromSiteSurveyXlsxTest : SeedTestBase() {
       ),
     )
 
-    seedXlsxService.seed(
+    seedXlsxService.seedFile(
       SeedFromExcelFileType.CAS1_IMPORT_SITE_SURVEY_ROOMS,
       "example.xlsx",
     )
@@ -410,7 +410,7 @@ class SeedCas1RoomsFromSiteSurveyXlsxTest : SeedTestBase() {
       ),
     )
 
-    seedXlsxService.seed(
+    seedXlsxService.seedFile(
       SeedFromExcelFileType.CAS1_IMPORT_SITE_SURVEY_ROOMS,
       "example.xlsx",
     )
@@ -469,7 +469,7 @@ class SeedCas1RoomsFromSiteSurveyXlsxTest : SeedTestBase() {
       ),
     )
 
-    seedXlsxService.seed(
+    seedXlsxService.seedFile(
       SeedFromExcelFileType.CAS1_IMPORT_SITE_SURVEY_ROOMS,
       "example.xlsx",
     )
@@ -525,7 +525,7 @@ class SeedCas1RoomsFromSiteSurveyXlsxTest : SeedTestBase() {
       ),
     )
 
-    seedXlsxService.seed(
+    seedXlsxService.seedFile(
       SeedFromExcelFileType.CAS1_IMPORT_SITE_SURVEY_ROOMS,
       "example.xlsx",
     )
@@ -581,7 +581,7 @@ class SeedCas1RoomsFromSiteSurveyXlsxTest : SeedTestBase() {
       ),
     )
 
-    seedXlsxService.seed(
+    seedXlsxService.seedFile(
       SeedFromExcelFileType.CAS1_IMPORT_SITE_SURVEY_ROOMS,
       "example.xlsx",
     )
@@ -628,7 +628,7 @@ class SeedCas1RoomsFromSiteSurveyXlsxTest : SeedTestBase() {
       ),
     )
 
-    seedXlsxService.seed(
+    seedXlsxService.seedFile(
       SeedFromExcelFileType.CAS1_IMPORT_SITE_SURVEY_ROOMS,
       "example.xlsx",
     )
@@ -675,7 +675,7 @@ class SeedCas1RoomsFromSiteSurveyXlsxTest : SeedTestBase() {
       ),
     )
 
-    seedXlsxService.seed(
+    seedXlsxService.seedFile(
       SeedFromExcelFileType.CAS1_IMPORT_SITE_SURVEY_ROOMS,
       "example.xlsx",
     )
@@ -705,7 +705,7 @@ class SeedCas1RoomsFromSiteSurveyXlsxTest : SeedTestBase() {
       ),
     )
 
-    seedXlsxService.seed(
+    seedXlsxService.seedFile(
       SeedFromExcelFileType.CAS1_IMPORT_SITE_SURVEY_ROOMS,
       "example.xlsx",
     )

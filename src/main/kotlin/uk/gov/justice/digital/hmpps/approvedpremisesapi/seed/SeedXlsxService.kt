@@ -23,7 +23,7 @@ class SeedXlsxService(
   val filePrefix = seedConfig.filePrefix
 
   @SuppressWarnings("TooGenericExceptionThrown", "TooGenericExceptionCaught")
-  fun seed(excelSeedFileType: SeedFromExcelFileType, filename: String) {
+  fun seedFile(excelSeedFileType: SeedFromExcelFileType, filename: String) {
     try {
       seedLogger.info("Starting seed request: $excelSeedFileType - $filename")
 
