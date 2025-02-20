@@ -17,7 +17,7 @@ data class Cas1SiteSurveyDataFrame(
 
     val questionIndex = questions.indexOf(question)
 
-    if (questionIndex == -1) error("Question '$question' not found on sheet Sheet3.")
+    if (questionIndex == -1) error("Question '$question' not found on sheet $sheetName.")
 
     fun removeDecimalPlaces() = answers[questionIndex].let {
       if (it is Double) it.toNumberWithNoRedundantDecimalPlaces() else it
@@ -26,7 +26,7 @@ data class Cas1SiteSurveyDataFrame(
     val answer = removeDecimalPlaces()
 
     if (answer.isBlank()) {
-      error("Answer for question '$question' cannot be blank")
+      error("Answer for question '$question' on sheet $sheetName cannot be blank")
     }
 
     return answer
@@ -35,7 +35,7 @@ data class Cas1SiteSurveyDataFrame(
   fun resolveAnswerYesNoDropDown(question: String, answerCol: Int = 1): Boolean = when (val answer = resolveAnswer(question, answerCol).uppercase()) {
     "YES" -> true
     "NO" -> false
-    else -> error("Invalid value for Yes/No dropdown: $answer. Question is $question")
+    else -> error("Invalid value for Yes/No dropdown: $answer on sheet $sheetName. Question is $question")
   }
 
   fun resolveAnswerYesNoNaDropDown(question: String, answerCol: Int = 1): Boolean {
@@ -44,7 +44,7 @@ data class Cas1SiteSurveyDataFrame(
       "YES" -> true
       "NO" -> false
       "N/A" -> false
-      else -> error("Invalid value for Yes/No/N/A dropdown: $answer. Question is $question")
+      else -> error("Invalid value for Yes/No/N/A dropdown: $answer on sheet $sheetName. Question is $question")
     }
   }
 
