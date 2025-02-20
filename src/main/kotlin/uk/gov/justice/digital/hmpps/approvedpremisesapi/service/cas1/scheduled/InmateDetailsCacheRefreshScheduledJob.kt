@@ -11,7 +11,7 @@ class InmateDetailsCacheRefreshScheduledJob(
   private val inmateDetailsCacheRefreshService: InmateDetailsCacheRefreshService,
 ) {
 
-  @Scheduled(cron = "0 0 0/4 * * *")
+  @Scheduled(cron = "0 0 0/2 * * *")
   @SchedulerLock(
     name = "inmate_details_cache_refresh",
     lockAtMostFor = "\${refresh-inmate-details-cache.lock-at-most-for}",
