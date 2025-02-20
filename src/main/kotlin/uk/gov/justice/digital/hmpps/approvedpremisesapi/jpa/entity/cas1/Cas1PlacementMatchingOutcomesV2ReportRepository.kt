@@ -11,19 +11,8 @@ class Cas1PlacementMatchingOutcomesV2ReportRepository(
   val cas1RequestForPlacementReportRepository: Cas1RequestForPlacementReportRepository,
 ) {
 
-  @Deprecated("This report is not currently in use and will be superseded by the space bookings placement report")
-  fun buildQuery(): String {
-    val cte = cas1RequestForPlacementReportRepository.buildQuery(
-      placementRequestsRangeConstraints = """
-        (pr.expected_arrival >= :startDateTimeInclusive AND pr.expected_arrival <= :endDateTimeInclusive)
-      """.trimIndent(),
-      placementApplicationsRangeConstraints = """
-        (pa_date.expected_arrival >= :startDateTimeInclusive AND pa_date.expected_arrival <= :endDateTimeInclusive)
-      """.trimIndent(),
-    )
-
-    return """
-      WITH raw_requests_for_placements AS ($cte)
+  companion object {
+    const val CORE_QUERY = """
       SELECT 
         pr.id as match_request_id,
         CASE
@@ -70,14 +59,41 @@ class Cas1PlacementMatchingOutcomesV2ReportRepository(
       ) latest_match_outcome_event on 
         latest_match_outcome_event.application_id = pr.application_id AND 
         latest_match_outcome_event.placement_request_id = CAST(pr.id as TEXT)
+    """
+  }
+
+  fun buildQueryForPlacementReport(): String {
+    val cte = cas1RequestForPlacementReportRepository.buildQuery(
+      placementRequestsRangeConstraints = "true",
+      placementApplicationsRangeConstraints = "true",
+    )
+
+    return """
+      WITH raw_requests_for_placements AS ($cte)
+      $CORE_QUERY
+    """.trimIndent()
+  }
+
+  private final fun buildQueryWithRange(): String {
+    val cte = cas1RequestForPlacementReportRepository.buildQuery(
+      placementRequestsRangeConstraints = """
+        (pr.expected_arrival >= :startDateTimeInclusive AND pr.expected_arrival <= :endDateTimeInclusive)
+      """.trimIndent(),
+      placementApplicationsRangeConstraints = """
+        (pa_date.expected_arrival >= :startDateTimeInclusive AND pa_date.expected_arrival <= :endDateTimeInclusive)
+      """.trimIndent(),
+    )
+
+    return """
+      WITH raw_requests_for_placements AS ($cte)
+      $CORE_QUERY
       WHERE pr.is_withdrawn is false
       ORDER BY pr.expected_arrival ASC
     """.trimIndent()
   }
 
-  val query = buildQuery()
+  val query = buildQueryWithRange()
 
-  @Deprecated("This report is not currently in use and will be superseded by the space bookings placement report")
   fun generateForArrivalDateThisMonth(
     startDateTimeInclusive: LocalDateTime,
     endDateTimeInclusive: LocalDateTime,
