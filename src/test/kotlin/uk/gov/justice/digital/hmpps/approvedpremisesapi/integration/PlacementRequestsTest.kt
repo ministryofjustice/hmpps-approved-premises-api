@@ -2085,37 +2085,12 @@ class PlacementRequestsTest : IntegrationTestBase() {
     }
 
     @Test
-    fun `Not allocated to calling User without WORKFLOW_MANAGER role returns 403`() {
+    fun `Offender not LAO, returns 200`() {
       givenAUser { _, jwt ->
-        givenAUser { otherUser, _ ->
-          givenAnOffender { offenderDetails, _ ->
-            givenAnApplication(createdByUser = otherUser) {
-              givenAPlacementRequest(
-                placementRequestAllocatedTo = otherUser,
-                assessmentAllocatedTo = otherUser,
-                createdByUser = otherUser,
-                crn = offenderDetails.otherIds.crn,
-              ) { placementRequest, _ ->
-                webTestClient.get()
-                  .uri("/placement-requests/${placementRequest.id}")
-                  .header("Authorization", "Bearer $jwt")
-                  .exchange()
-                  .expectStatus()
-                  .isForbidden
-              }
-            }
-          }
-        }
-      }
-    }
-
-    @Test
-    fun `Allocated to calling User, offender not LAO, returns 200`() {
-      givenAUser { user, jwt ->
         givenAUser { otherUser, _ ->
           givenAnOffender { offenderDetails, inmateDetails ->
             givenAPlacementRequest(
-              placementRequestAllocatedTo = user,
+              placementRequestAllocatedTo = null,
               assessmentAllocatedTo = otherUser,
               createdByUser = otherUser,
               crn = offenderDetails.otherIds.crn,
@@ -2143,8 +2118,8 @@ class PlacementRequestsTest : IntegrationTestBase() {
     }
 
     @Test
-    fun `Allocated to calling User, offender is LAO, user doesn't have LAO access or LAO qualification, returns 403`() {
-      givenAUser { user, jwt ->
+    fun `Offender is LAO, user doesn't have LAO access or LAO qualification, returns 403`() {
+      givenAUser { _, jwt ->
         givenAUser { otherUser, _ ->
           givenAnOffender(
             offenderDetailsConfigBlock = {
@@ -2152,7 +2127,7 @@ class PlacementRequestsTest : IntegrationTestBase() {
             },
           ) { offenderDetails, _ ->
             givenAPlacementRequest(
-              placementRequestAllocatedTo = user,
+              placementRequestAllocatedTo = null,
               assessmentAllocatedTo = otherUser,
               createdByUser = otherUser,
               crn = offenderDetails.otherIds.crn,
@@ -2170,7 +2145,7 @@ class PlacementRequestsTest : IntegrationTestBase() {
     }
 
     @Test
-    fun `Allocated to calling User, offender is LAO, user has LAO access, returns 200 and FullPerson`() {
+    fun `Offender is LAO, user has LAO access, returns 200 and FullPerson`() {
       givenAUser { user, jwt ->
         givenAUser { otherUser, _ ->
           givenAnOffender(
@@ -2179,7 +2154,7 @@ class PlacementRequestsTest : IntegrationTestBase() {
             },
           ) { offenderDetails, inmateDetails ->
             givenAPlacementRequest(
-              placementRequestAllocatedTo = user,
+              placementRequestAllocatedTo = null,
               assessmentAllocatedTo = otherUser,
               createdByUser = otherUser,
               crn = offenderDetails.otherIds.crn,
@@ -2216,7 +2191,7 @@ class PlacementRequestsTest : IntegrationTestBase() {
     }
 
     @Test
-    fun `Allocated to calling User, offender is LAO, user doesn't have LAO access but has LAO qualification, returns 200 and FullPerson`() {
+    fun `Offender is LAO, user doesn't have LAO access but has LAO qualification, returns 200 and FullPerson`() {
       givenAUser(qualifications = listOf(UserQualification.LAO)) { user, jwt ->
         givenAUser { otherUser, _ ->
           givenAnOffender(
@@ -2225,7 +2200,7 @@ class PlacementRequestsTest : IntegrationTestBase() {
             },
           ) { offenderDetails, inmateDetails ->
             givenAPlacementRequest(
-              placementRequestAllocatedTo = user,
+              placementRequestAllocatedTo = null,
               assessmentAllocatedTo = otherUser,
               createdByUser = otherUser,
               crn = offenderDetails.otherIds.crn,
@@ -2253,12 +2228,12 @@ class PlacementRequestsTest : IntegrationTestBase() {
     }
 
     @Test
-    fun `Allocated to calling User, offender not LAO, returns 200 with cancellations when they exist`() {
-      givenAUser { user, jwt ->
+    fun `Offender not LAO, returns 200 with cancellations when they exist`() {
+      givenAUser { _, jwt ->
         givenAUser { otherUser, _ ->
           givenAnOffender { offenderDetails, inmateDetails ->
             givenAPlacementRequest(
-              placementRequestAllocatedTo = user,
+              placementRequestAllocatedTo = null,
               assessmentAllocatedTo = otherUser,
               createdByUser = otherUser,
               crn = offenderDetails.otherIds.crn,
