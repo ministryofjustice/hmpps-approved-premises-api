@@ -555,14 +555,27 @@ class Cas1SpaceBookingService(
 
     val updatedBooking = updateExistingSpaceBooking(bookingToUpdate, updateSpaceBookingDetails)
 
+    val previousArrivalDateIfChanged = if (previousArrivalDate != updatedBooking.expectedArrivalDate) previousArrivalDate else null
+    val previousDepartureDateIfChanged = if (previousDepartureDate != updatedBooking.expectedDepartureDate) previousDepartureDate else null
+    val previousCharacteristicsIfChanged = if (previousCharacteristics.sortedBy { it.id } != updatedBooking.criteria.sortedBy { it.id }) previousCharacteristics else null
+
     cas1BookingDomainEventService.spaceBookingChanged(
       booking = updatedBooking,
       changedBy = updateSpaceBookingDetails.updatedBy,
       bookingChangedAt = OffsetDateTime.now(),
-      previousArrivalDateIfChanged = if (previousArrivalDate != updatedBooking.expectedArrivalDate) previousArrivalDate else null,
-      previousDepartureDateIfChanged = if (previousDepartureDate != updatedBooking.expectedDepartureDate) previousDepartureDate else null,
-      previousCharacteristicsIfChanged = if (previousCharacteristics.sortedBy { it.id } != updatedBooking.criteria.sortedBy { it.id }) previousCharacteristics else null,
+      previousArrivalDateIfChanged = previousArrivalDateIfChanged,
+      previousDepartureDateIfChanged = previousDepartureDateIfChanged,
+      previousCharacteristicsIfChanged = previousCharacteristicsIfChanged,
     )
+
+    updatedBooking.application?.let {
+      if (previousArrivalDateIfChanged != null || previousDepartureDateIfChanged != null) {
+        cas1BookingEmailService.spaceBookingAmended(
+          spaceBooking = updatedBooking,
+          application = updatedBooking.application!!,
+        )
+      }
+    }
 
     success(updatedBooking)
   }
