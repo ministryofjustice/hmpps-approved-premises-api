@@ -139,10 +139,6 @@ class PlacementRequestService(
       return CasResult.Unauthorised()
     }
 
-    if (placementRequest.allocatedToUser?.id != user.id && !user.hasRole(UserRole.CAS1_WORKFLOW_MANAGER)) {
-      return CasResult.Unauthorised()
-    }
-
     return CasResult.Success(toPlacementRequestAndCancellations(placementRequest))
   }
 
