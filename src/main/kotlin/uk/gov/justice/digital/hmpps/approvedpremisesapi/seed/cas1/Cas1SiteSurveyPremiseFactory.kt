@@ -2,7 +2,6 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.seed.cas1
 
 import org.jetbrains.kotlinx.dataframe.DataFrame
 import org.jetbrains.kotlinx.dataframe.io.readExcel
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.seed.cas1.Cas1SiteSurveyUtils.resolveAnswer
 import java.io.File
 
 class Cas1SiteSurveyPremiseFactory {
@@ -11,15 +10,18 @@ class Cas1SiteSurveyPremiseFactory {
 
   fun getQCode(file: File) = toDataFame(file).getQCode()
 
-  private fun toDataFame(file: File) = DataFrame.readExcel(file, "Sheet2")
+  private fun toDataFame(file: File) = Cas1SiteSurveyDataFrame(
+    dataFrame = DataFrame.readExcel(file, "Sheet2"),
+    sheetName = "Sheet2",
+  )
 
-  private fun DataFrame<*>.getQCode(): String {
+  private fun Cas1SiteSurveyDataFrame.getQCode(): String {
     ensureCorrectColumnCount()
 
     return resolveAnswer("AP Identifier (Q No.)")
   }
 
-  private fun DataFrame<*>.toInternalModel(): Cas1SiteSurveyPremise {
+  private fun Cas1SiteSurveyDataFrame.toInternalModel(): Cas1SiteSurveyPremise {
     ensureCorrectColumnCount()
 
     return Cas1SiteSurveyPremise(
@@ -60,8 +62,8 @@ class Cas1SiteSurveyPremiseFactory {
     )
   }
 
-  private fun DataFrame<*>.ensureCorrectColumnCount() {
-    val columnsCount = columnsCount()
+  private fun Cas1SiteSurveyDataFrame.ensureCorrectColumnCount() {
+    val columnsCount = dataFrame.columnsCount()
     if (columnsCount < 2) {
       error("Inadequate number of columns. Expected at least 2 columns, got $columnsCount")
     }

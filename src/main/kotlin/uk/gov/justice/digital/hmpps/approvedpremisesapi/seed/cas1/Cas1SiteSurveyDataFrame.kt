@@ -6,18 +6,14 @@ import org.jetbrains.kotlinx.dataframe.api.getColumn
 import org.jetbrains.kotlinx.dataframe.name
 import kotlin.math.floor
 
-object Cas1SiteSurveyUtils {
+data class Cas1SiteSurveyDataFrame(
+  val dataFrame: DataFrame<*>,
+  val sheetName: String,
+) {
 
-  /**
-   Data frame assumes the first row is a header, and assigns it to name
-   In our case we don't have a header, so this function produces a list
-   which includes the header followed by all other column values
-   **/
-  private fun AnyCol.toListIncludingHeader() = listOf(this.name) + this.values().toList()
-
-  fun DataFrame<*>.resolveAnswer(question: String, answerCol: Int = 1): String {
-    val questions = getColumn(0).toListIncludingHeader()
-    val answers = getColumn(answerCol).toListIncludingHeader()
+  fun resolveAnswer(question: String, answerCol: Int = 1): String {
+    val questions = dataFrame.getColumn(0).toListIncludingHeader()
+    val answers = dataFrame.getColumn(answerCol).toListIncludingHeader()
 
     val questionIndex = questions.indexOf(question)
 
@@ -36,16 +32,13 @@ object Cas1SiteSurveyUtils {
     return answer
   }
 
-  fun DataFrame<*>.resolveAnswerYesNoDropDown(question: String, answerCol: Int = 1): Boolean {
-    val answer = resolveAnswer(question, answerCol).uppercase()
-    return when (answer) {
-      "YES" -> true
-      "NO" -> false
-      else -> error("Invalid value for Yes/No dropdown: $answer. Question is $question")
-    }
+  fun resolveAnswerYesNoDropDown(question: String, answerCol: Int = 1): Boolean = when (val answer = resolveAnswer(question, answerCol).uppercase()) {
+    "YES" -> true
+    "NO" -> false
+    else -> error("Invalid value for Yes/No dropdown: $answer. Question is $question")
   }
 
-  fun DataFrame<*>.resolveAnswerYesNoNaDropDown(question: String, answerCol: Int = 1): Boolean {
+  fun resolveAnswerYesNoNaDropDown(question: String, answerCol: Int = 1): Boolean {
     val answer = resolveAnswer(question, answerCol).uppercase()
     return when (answer) {
       "YES" -> true
@@ -54,6 +47,13 @@ object Cas1SiteSurveyUtils {
       else -> error("Invalid value for Yes/No/N/A dropdown: $answer. Question is $question")
     }
   }
+
+  /**
+   Data frame assumes the first row is a header, and assigns it to name
+   In our case we don't have a header, so this function produces a list
+   which includes the header followed by all other column values
+   **/
+  private fun AnyCol.toListIncludingHeader() = listOf(this.name) + this.values().toList()
 
   /**
    * When 'general' types are read by Dataframe they're assumed to be
@@ -65,7 +65,7 @@ object Cas1SiteSurveyUtils {
    * be truncated to '1'. In this case we could look at using POI directly
    * which doesn't have that issue (see example code on APS-1933)
    */
-  fun Double.toNumberWithNoRedundantDecimalPlaces(): Any = if (floor(this) == this) {
+  private fun Double.toNumberWithNoRedundantDecimalPlaces(): Any = if (floor(this) == this) {
     this.toInt()
   } else {
     this

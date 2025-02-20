@@ -2,19 +2,19 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.seed.cas1
 
 import org.jetbrains.kotlinx.dataframe.DataFrame
 import org.jetbrains.kotlinx.dataframe.io.readExcel
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.seed.cas1.Cas1SiteSurveyUtils.resolveAnswer
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.seed.cas1.Cas1SiteSurveyUtils.resolveAnswerYesNoDropDown
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.seed.cas1.Cas1SiteSurveyUtils.resolveAnswerYesNoNaDropDown
 import java.io.File
 
 class Cas1SiteSurveyBedFactory {
   fun load(file: File) = toDataFame(file).toInternalModel()
 
-  private fun toDataFame(file: File) = DataFrame.readExcel(file, "Sheet3")
+  private fun toDataFame(file: File) = Cas1SiteSurveyDataFrame(
+    dataFrame = DataFrame.readExcel(file, "Sheet3"),
+    sheetName = "Sheet3",
+  )
 
-  fun DataFrame<*>.toInternalModel(): List<Cas1SiteSurveyBed> {
+  private fun Cas1SiteSurveyDataFrame.toInternalModel(): List<Cas1SiteSurveyBed> {
     val beds = mutableListOf<Cas1SiteSurveyBed>()
-    for (i in 1..<this.columnsCount()) {
+    for (i in 1..<dataFrame.columnsCount()) {
       beds.add(
         Cas1SiteSurveyBed(
           uniqueBedRef = resolveAnswer("Unique Reference Number for Bed", i),
