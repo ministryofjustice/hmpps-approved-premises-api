@@ -11,7 +11,6 @@ class Cas1PlacementMatchingOutcomesV2ReportRepository(
   val cas1RequestForPlacementReportRepository: Cas1RequestForPlacementReportRepository,
 ) {
 
-  @Deprecated("This report is not currently in use and will be superseded by the space bookings placement report")
   fun buildQuery(): String {
     val cte = cas1RequestForPlacementReportRepository.buildQuery(
       placementRequestsRangeConstraints = """
@@ -77,7 +76,6 @@ class Cas1PlacementMatchingOutcomesV2ReportRepository(
 
   val query = buildQuery()
 
-  @Deprecated("This report is not currently in use and will be superseded by the space bookings placement report")
   fun generateForArrivalDateThisMonth(
     startDateTimeInclusive: LocalDateTime,
     endDateTimeInclusive: LocalDateTime,

@@ -117,7 +117,14 @@ class Cas1ReportsController(
         contentType = ContentType.CSV,
         fileName = createCas1ReportName("placement-matching-outcomes", year, month, ContentType.CSV),
       ) { outputStream ->
-        cas1ReportService.createPlacementMatchingOutcomesV2Report(monthSpecificReportParams, outputStream)
+        cas1ReportService.createPlacementMatchingOutcomesV2Report(monthSpecificReportParams, includePii = false, outputStream)
+      }
+      Cas1ReportName.placementMatchingOutcomesV2WithPii -> generateStreamingResponse(
+        contentType = ContentType.CSV,
+        fileName = createCas1ReportName("placement-matching-outcomes-with-pii", year, month, ContentType.CSV),
+      ) { outputStream ->
+        userAccessService.ensureCurrentUserHasPermission(UserPermission.CAS1_REPORTS_VIEW_WITH_PII)
+        cas1ReportService.createPlacementMatchingOutcomesV2Report(monthSpecificReportParams, includePii = true, outputStream)
       }
     }
   }

@@ -166,7 +166,10 @@ class Cas1ReportService(
   }
 
   @Deprecated("This report is no longer supported and should be removed for CAS1 once we confirmed all users have migrated to new reports")
-  fun createPlacementMatchingOutcomesReport(properties: MonthSpecificReportParams, outputStream: OutputStream) {
+  fun createPlacementMatchingOutcomesReport(
+    properties: MonthSpecificReportParams,
+    outputStream: OutputStream,
+  ) {
     ExcelJdbcResultSetConsumer().use { consumer ->
       cas1PlacementMatchingOutcomesReportRepository.generateReportRowsForExpectedArrivalMonth(
         properties.month,
@@ -178,9 +181,16 @@ class Cas1ReportService(
     }
   }
 
-  @Deprecated("This report is not currently in use and will be superseded by the space bookings placement report")
-  fun createPlacementMatchingOutcomesV2Report(properties: MonthSpecificReportParams, outputStream: OutputStream) {
-    val columnsToExclude = PII_COLUMN_NAMES
+  fun createPlacementMatchingOutcomesV2Report(
+    properties: MonthSpecificReportParams,
+    includePii: Boolean,
+    outputStream: OutputStream,
+  ) {
+    val columnsToExclude = if (includePii) {
+      emptyList()
+    } else {
+      PII_COLUMN_NAMES
+    }
 
     CsvJdbcResultSetConsumer(
       outputStream = outputStream,

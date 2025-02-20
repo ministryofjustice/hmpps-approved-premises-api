@@ -7535,6 +7535,7 @@ components:
         - placementApplications
         - placementMatchingOutcomes
         - placementMatchingOutcomesV2
+        - placementMatchingOutcomesV2WithPii
         - requestsForPlacement
         - requestsForPlacementWithPii
     Cas1OutOfServiceBedSummary:
