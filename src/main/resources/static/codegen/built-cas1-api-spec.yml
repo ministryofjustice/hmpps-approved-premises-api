@@ -7063,6 +7063,11 @@ components:
         bookedBy:
           $ref: '#/components/schemas/User'
         requestForPlacementId:
+          deprecated: true
+          description: use the better named 'placementRequestId'
+          type: string
+          format: uuid
+        placementRequestId:
           type: string
           format: uuid
         expectedArrivalDate:
