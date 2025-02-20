@@ -94,7 +94,7 @@ class Cas1SeedPremisesFromSiteSurveyXlsxJob(
       else -> siteSurveyPremise.localAuthorityArea
     }
 
-    return localAuthorityAreaRepository.findByName(localAuthorityAreaName)
+    return localAuthorityAreaRepository.findByNameIgnoringCase(localAuthorityAreaName)
       ?: error("Local Authority Area '$localAuthorityAreaName' does not exist")
   }
 

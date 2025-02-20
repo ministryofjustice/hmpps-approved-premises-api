@@ -121,7 +121,7 @@ class Cas1SeedPremisesFromCsvJob(
     val probationRegion = probationRegionRepository.findByName(row.probationRegion)
       ?: throw RuntimeException("Probation Region ${row.probationRegion} does not exist")
 
-    val localAuthorityArea = localAuthorityAreaRepository.findByName(row.localAuthorityArea)
+    val localAuthorityArea = localAuthorityAreaRepository.findByNameIgnoringCase(row.localAuthorityArea)
       ?: throw RuntimeException("Local Authority Area ${row.localAuthorityArea} does not exist")
 
     val characteristics = characteristicsFromRow(row)
