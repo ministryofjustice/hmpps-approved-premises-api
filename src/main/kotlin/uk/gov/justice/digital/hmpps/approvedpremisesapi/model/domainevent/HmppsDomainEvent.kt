@@ -12,13 +12,14 @@ data class HmppsDomainEvent(
   val description: String? = null,
   @JsonSetter(nulls = Nulls.SKIP)
   val additionalInformation: Map<String, Any>? = mapOf(),
-  val personReference: HmppsDomainEventPersonReference = HmppsDomainEventPersonReference(),
+  val personReference: PersonReference = PersonReference(),
 ) {
   val staffCode = additionalInformation?.get("staffCode") as String?
   val categoriesChanged = additionalInformation?.get("categoriesChanged") as List<String>?
 }
 
-data class HmppsDomainEventPersonReference(val identifiers: List<PersonIdentifier> = listOf()) {
+data class PersonReference(val identifiers: List<PersonIdentifier> = listOf()) {
+  fun findCrn() = get("CRN")
   fun findNomsNumber() = get("NOMS")
   operator fun get(key: String) = identifiers.find { it.type == key }?.value
 }
