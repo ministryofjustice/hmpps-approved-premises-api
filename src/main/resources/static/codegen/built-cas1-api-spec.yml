@@ -5528,17 +5528,28 @@ components:
       required:
         - seedType
         - fileName
-    SeedFromExcelRequest:
+    SeedFromExcelFileRequest:
       type: object
       properties:
         seedType:
           $ref: '#/components/schemas/SeedFromExcelFileType'
         fileName:
+          description: File within the pre-configured seed directory
           type: string
       required:
         - seedType
-        - premisesId
         - fileName
+    SeedFromExcelDirectoryRequest:
+      type: object
+      properties:
+        seedType:
+          $ref: '#/components/schemas/SeedFromExcelFileType'
+        directoryName:
+          description: Directory within the pre-configured seed directory
+          type: string
+      required:
+        - seedType
+        - directoryName
     SeedFileType:
       type: string
       enum:
