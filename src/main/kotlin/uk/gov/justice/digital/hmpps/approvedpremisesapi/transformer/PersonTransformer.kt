@@ -17,11 +17,31 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PersonSummaryInfoR
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.ProbationOffenderSearchResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.prisonsapi.InmateDetail
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.prisonsapi.InmateStatus
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.asCaseSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.asOffenderDetailSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.getNameFromPersonSummaryInfoResult
 
 @Component
 class PersonTransformer {
+
+  fun personInfoResultToPersonSummaryInfoResult(
+    personInfo: PersonInfoResult,
+  ): PersonSummaryInfoResult = when (personInfo) {
+    is PersonInfoResult.NotFound -> PersonSummaryInfoResult.NotFound(
+      crn = personInfo.crn,
+    )
+    is PersonInfoResult.Success.Full -> PersonSummaryInfoResult.Success.Full(
+      crn = personInfo.crn,
+      summary = personInfo.offenderDetailSummary.asCaseSummary(),
+    )
+    is PersonInfoResult.Success.Restricted -> PersonSummaryInfoResult.Success.Restricted(
+      crn = personInfo.crn,
+      nomsNumber = personInfo.nomsNumber,
+    )
+    is PersonInfoResult.Unknown -> PersonSummaryInfoResult.Unknown(
+      crn = personInfo.crn,
+    )
+  }
 
   fun personSummaryInfoToPersonSummary(
     personSummaryInfo: PersonSummaryInfoResult,
