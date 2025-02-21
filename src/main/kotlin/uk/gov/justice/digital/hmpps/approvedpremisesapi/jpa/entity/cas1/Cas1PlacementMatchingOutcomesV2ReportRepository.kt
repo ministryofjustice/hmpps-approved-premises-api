@@ -14,7 +14,7 @@ class Cas1PlacementMatchingOutcomesV2ReportRepository(
   companion object {
     const val CORE_QUERY = """
       SELECT 
-        pr.id as match_request_id,
+        pr.id as placement_request_id,
         CASE
           WHEN latest_match_outcome_event.type = 'APPROVED_PREMISES_BOOKING_MADE' THEN latest_match_outcome_event.data -> 'eventDetails' -> 'bookedBy' -> 'cru' ->> 'name'
           WHEN latest_match_outcome_event.type = 'APPROVED_PREMISES_BOOKING_NOT_MADE' THEN latest_match_outcome_event.data -> 'eventDetails' -> 'attemptedBy' -> 'cru' ->> 'name'

@@ -231,7 +231,7 @@ class Cas1PlacementMatchingOutcomesV2ReportTest : InitialiseDatabasePerClassTest
     }
 
     fun assertRow(row: PlacementMatchingOutcomeReportRow) {
-      assertThat(row.match_request_id).isEqualTo(application.placementRequests[0].id.toString())
+      assertThat(row.placement_request_id).isEqualTo(application.placementRequests[0].id.toString())
       assertThat(row.matcher_cru).isNull()
       assertThat(row.matcher_username).isNull()
       assertThat(row.match_outcome).isNull()
@@ -286,7 +286,7 @@ class Cas1PlacementMatchingOutcomesV2ReportTest : InitialiseDatabasePerClassTest
     }
 
     fun assertRow(row: PlacementMatchingOutcomeReportRow) {
-      assertThat(row.match_request_id).isEqualTo(application.placementRequests[0].id.toString())
+      assertThat(row.placement_request_id).isEqualTo(application.placementRequests[0].id.toString())
       assertThat(row.matcher_cru).isEqualTo("MATCHER1CRU")
       assertThat(row.matcher_username).isEqualTo("MATCHER1")
       assertThat(row.match_outcome).isEqualTo("Placed")
@@ -314,7 +314,7 @@ class Cas1PlacementMatchingOutcomesV2ReportTest : InitialiseDatabasePerClassTest
     }
 
     fun assertRow(row: PlacementMatchingOutcomeReportRow) {
-      assertThat(row.match_request_id).isEqualTo(application.placementRequests[0].id.toString())
+      assertThat(row.placement_request_id).isEqualTo(application.placementRequests[0].id.toString())
       assertThat(row.matcher_cru).isEqualTo("MATCHER2CRU")
       assertThat(row.matcher_username).isEqualTo("MATCHER2")
       assertThat(row.match_outcome).isEqualTo("Not matched")
@@ -347,7 +347,7 @@ class Cas1PlacementMatchingOutcomesV2ReportTest : InitialiseDatabasePerClassTest
     }
 
     fun assertRow(row: PlacementMatchingOutcomeReportRow) {
-      assertThat(row.match_request_id).isEqualTo(application.placementRequests[0].id.toString())
+      assertThat(row.placement_request_id).isEqualTo(application.placementRequests[0].id.toString())
       assertThat(row.matcher_cru).isEqualTo("MATCHER13CRU")
       assertThat(row.matcher_username).isEqualTo("MATCHER13")
       assertThat(row.match_outcome).isEqualTo("Placed")
@@ -387,7 +387,7 @@ class Cas1PlacementMatchingOutcomesV2ReportTest : InitialiseDatabasePerClassTest
     }
 
     fun assertRow(row: PlacementMatchingOutcomeReportRow) {
-      assertThat(row.match_request_id).isEqualTo(application.placementRequests[0].id.toString())
+      assertThat(row.placement_request_id).isEqualTo(application.placementRequests[0].id.toString())
       assertThat(row.matcher_cru).isEqualTo("MATCHER4CRU")
       assertThat(row.matcher_username).isEqualTo("MATCHER4")
       assertThat(row.match_outcome).isEqualTo("Placed")
@@ -692,7 +692,7 @@ class Cas1PlacementMatchingOutcomesV2ReportTest : InitialiseDatabasePerClassTest
 
   @SuppressWarnings("ConstructorParameterNaming")
   data class PlacementMatchingOutcomeReportRow(
-    val match_request_id: String?,
+    val placement_request_id: String?,
     val matcher_cru: String?,
     val matcher_username: String?,
     val match_outcome: String?,
