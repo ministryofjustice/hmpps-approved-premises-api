@@ -68,7 +68,6 @@ class Cas1AppealDomainEventService(
     )
   }
 
-  private fun parseDecision(value: String): AppealDecision =
-    AppealDecision.entries.firstOrNull { it.value == value }
-      ?: throw IllegalArgumentException("Unknown appeal decision type '$value'")
+  private fun parseDecision(value: String): AppealDecision = AppealDecision.entries.firstOrNull { it.value == value }
+    ?: throw IllegalArgumentException("Unknown appeal decision type '$value'")
 }

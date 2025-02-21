@@ -86,7 +86,8 @@ class Cas1SpaceBookingTransformer(
       canonicalDepartureDate = jpa.canonicalDepartureDate,
       otherBookingsInPremisesForCrn = otherBookingsAtPremiseForCrn.map { it.toSpaceBookingDate() },
       cancellation = jpa.extractCancellation(),
-      requestForPlacementId = jpa.placementRequest?.placementApplication?.id ?: jpa.placementRequest?.id,
+      requestForPlacementId = jpa.placementRequest?.id,
+      placementRequestId = jpa.placementRequest?.id,
       nonArrival = jpa.extractNonArrival(),
       deliusEventNumber = jpa.deliusEventNumber,
       departure = jpa.extractDeparture(),
@@ -95,12 +96,11 @@ class Cas1SpaceBookingTransformer(
     )
   }
 
-  private fun Cas1SpaceBookingAtPremises.toSpaceBookingDate() =
-    Cas1SpaceBookingDates(
-      id = this.id,
-      canonicalArrivalDate = this.canonicalArrivalDate,
-      canonicalDepartureDate = this.canonicalDepartureDate,
-    )
+  private fun Cas1SpaceBookingAtPremises.toSpaceBookingDate() = Cas1SpaceBookingDates(
+    id = this.id,
+    canonicalArrivalDate = this.canonicalArrivalDate,
+    canonicalDepartureDate = this.canonicalDepartureDate,
+  )
 
   private fun Cas1SpaceBookingEntity.extractKeyWorkerAllocation(): Cas1KeyWorkerAllocation? {
     val staffCode = keyWorkerStaffCode
@@ -136,35 +136,58 @@ class Cas1SpaceBookingTransformer(
     }
   }
 
-  private fun Cas1SpaceBookingEntity.extractNonArrival(): Cas1SpaceBookingNonArrival? {
-    return if (hasNonArrival()) {
-      Cas1SpaceBookingNonArrival(
-        confirmedAt = nonArrivalConfirmedAt,
-        reason = nonArrivalReason!!.let {
-          NamedId(
-            id = it.id,
-            name = it.name,
-          )
-        },
-        notes = nonArrivalNotes,
-      )
-    } else {
-      null
-    }
+  private fun Cas1SpaceBookingEntity.extractNonArrival(): Cas1SpaceBookingNonArrival? = if (hasNonArrival()) {
+    Cas1SpaceBookingNonArrival(
+      confirmedAt = nonArrivalConfirmedAt,
+      reason = nonArrivalReason!!.let {
+        NamedId(
+          id = it.id,
+          name = it.name,
+        )
+      },
+      notes = nonArrivalNotes,
+    )
+  } else {
+    null
   }
 
-  private fun Cas1SpaceBookingEntity.extractDeparture(): Cas1SpaceBookingDeparture? {
-    return if (hasDeparted()) {
-      Cas1SpaceBookingDeparture(
-        reason = NamedId(departureReason!!.id, departureReason!!.name),
-        parentReason = departureReason!!.parentReasonId?.let { NamedId(it.id, it.name) },
-        moveOnCategory = departureMoveOnCategory?.let { NamedId(it.id, it.name) },
-        notes = departureNotes,
-      )
-    } else {
-      null
-    }
+  private fun Cas1SpaceBookingEntity.extractDeparture(): Cas1SpaceBookingDeparture? = if (hasDeparted()) {
+    Cas1SpaceBookingDeparture(
+      reason = NamedId(departureReason!!.id, departureReason!!.name),
+      parentReason = departureReason!!.parentReasonId?.let { NamedId(it.id, it.name) },
+      moveOnCategory = departureMoveOnCategory?.let { NamedId(it.id, it.name) },
+      notes = departureNotes,
+    )
+  } else {
+    null
   }
+
+  fun transformToSummary(
+    spaceBooking: Cas1SpaceBookingEntity,
+    personSummaryInfo: PersonSummaryInfoResult,
+  ) = Cas1SpaceBookingSummary(
+    id = spaceBooking.id,
+    person = personTransformer.personSummaryInfoToPersonSummary(personSummaryInfo),
+    canonicalArrivalDate = spaceBooking.canonicalArrivalDate,
+    canonicalDepartureDate = spaceBooking.canonicalDepartureDate,
+    expectedArrivalDate = spaceBooking.expectedArrivalDate,
+    expectedDepartureDate = spaceBooking.expectedDepartureDate,
+    isNonArrival = spaceBooking.hasNonArrival(),
+    tier = spaceBooking.application?.riskRatings?.tier?.value?.level,
+    keyWorkerAllocation = spaceBooking.extractKeyWorkerAllocation(),
+    status = spaceBookingStatusTransformer.transformToSpaceBookingSummaryStatus(
+      SpaceBookingDates(
+        spaceBooking.expectedArrivalDate,
+        spaceBooking.expectedDepartureDate,
+        spaceBooking.actualArrivalDate,
+        spaceBooking.actualDepartureDate,
+        spaceBooking.nonArrivalConfirmedAt?.toLocalDateTime(),
+      ),
+    ),
+    characteristics = spaceBooking.criteria.mapNotNull { criteria ->
+      Cas1SpaceCharacteristic.entries.find { it.name == criteria.propertyName }
+    },
+  )
 
   fun transformSearchResultToSummary(
     searchResult: Cas1SpaceBookingSearchResult,
@@ -174,6 +197,13 @@ class Cas1SpaceBookingTransformer(
     person = personTransformer.personSummaryInfoToPersonSummary(personSummaryInfo),
     canonicalArrivalDate = searchResult.canonicalArrivalDate,
     canonicalDepartureDate = searchResult.canonicalDepartureDate,
+    expectedArrivalDate = searchResult.expectedArrivalDate,
+    expectedDepartureDate = searchResult.expectedDepartureDate,
+    isNonArrival = when {
+      searchResult.nonArrivalConfirmedAtDateTime != null -> true
+      searchResult.actualArrivalDate != null -> false
+      else -> null
+    },
     tier = searchResult.tier,
     keyWorkerAllocation = searchResult.keyWorkerStaffCode?.let { staffCode ->
       Cas1KeyWorkerAllocation(
@@ -194,18 +224,20 @@ class Cas1SpaceBookingTransformer(
         searchResult.nonArrivalConfirmedAtDateTime,
       ),
     ),
+    characteristics = searchResult.characteristicsPropertyNames?.split(",")?.mapNotNull { propertyName ->
+      Cas1SpaceCharacteristic.entries.find { it.name == propertyName }
+    } ?: listOf(),
+
   )
 
   companion object {
     private val log = LoggerFactory.getLogger(this::class.java)
 
-    fun List<CharacteristicEntity>.toCas1SpaceCharacteristics() =
-      this.mapNotNull { it.toCas1SpaceCharacteristicOrNull() }
+    fun List<CharacteristicEntity>.toCas1SpaceCharacteristics() = this.mapNotNull { it.toCas1SpaceCharacteristicOrNull() }
 
-    fun CharacteristicEntity.toCas1SpaceCharacteristicOrNull() =
-      Cas1SpaceCharacteristic.entries.find { it.name == propertyName } ?: run {
-        log.warn("Couldn't find a Cas1SpaceCharacteristic enum entry for propertyName $propertyName")
-        null
-      }
+    fun CharacteristicEntity.toCas1SpaceCharacteristicOrNull() = Cas1SpaceCharacteristic.entries.find { it.name == propertyName } ?: run {
+      log.warn("Couldn't find a Cas1SpaceCharacteristic enum entry for propertyName $propertyName")
+      null
+    }
   }
 }

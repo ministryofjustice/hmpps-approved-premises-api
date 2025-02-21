@@ -2,7 +2,6 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.cas1.report
 
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.params.ParameterizedTest
-import org.junit.jupiter.params.provider.EnumSource
 import org.junit.jupiter.params.provider.ValueSource
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1ReportName
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
@@ -84,20 +83,6 @@ class Cas1ReportsTest : IntegrationTestBase() {
         .exchange()
         .expectStatus()
         .is5xxServerError
-    }
-  }
-
-  @ParameterizedTest
-  @EnumSource(value = Cas1ReportName::class)
-  fun `Get report returns OK response if user role is valid and parameters are valid `(reportName: Cas1ReportName) {
-    givenAUser(roles = listOf(CAS1_REPORT_VIEWER)) { _, jwt ->
-      webTestClient.get()
-        .uri("/cas1/reports/$reportName?year=2024&month=1")
-        .header("Authorization", "Bearer $jwt")
-        .header("X-Service-Name", approvedPremisesServiceName)
-        .exchange()
-        .expectStatus()
-        .isOk
     }
   }
 }

@@ -964,13 +964,12 @@ class CAS1SubjectAccessRequestServiceTest : SubjectAccessRequestServiceTestBase(
       }
     """.trimIndent()
 
-  private fun offlineApplicationEntity(offenderDetails: OffenderDetailSummary) =
-    offlineApplicationEntityFactory.produceAndPersist {
-      withService(ServiceName.approvedPremises.value)
-      withCrn(offenderDetails.otherIds.crn)
-      withEventNumber("1")
-      withCreatedAt(OffsetDateTime.parse(CREATED_AT))
-    }
+  private fun offlineApplicationEntity(offenderDetails: OffenderDetailSummary) = offlineApplicationEntityFactory.produceAndPersist {
+    withService(ServiceName.approvedPremises.value)
+    withCrn(offenderDetails.otherIds.crn)
+    withEventNumber("1")
+    withCreatedAt(OffsetDateTime.parse(CREATED_AT))
+  }
 
   private fun placementRequestEntity(
     booking: BookingEntity,
@@ -1008,32 +1007,30 @@ class CAS1SubjectAccessRequestServiceTest : SubjectAccessRequestServiceTestBase(
     withPostcodeDistrict(postCodeDistrictFactory.produceAndPersist())
   }
 
-  private fun characteristicEntity() =
-    characteristicEntityFactory.produceAndPersist {
-      withName(randomStringMultiCaseWithNumbers(10))
-      withServiceScope(Characteristic.ServiceScope.star.value)
-      withModelScope(Characteristic.ModelScope.room.value)
-      withPropertyName(randomStringMultiCaseWithNumbers(6))
-    }
+  private fun characteristicEntity() = characteristicEntityFactory.produceAndPersist {
+    withName(randomStringMultiCaseWithNumbers(10))
+    withServiceScope(Characteristic.ServiceScope.star.value)
+    withModelScope(Characteristic.ModelScope.room.value)
+    withPropertyName(randomStringMultiCaseWithNumbers(6))
+  }
 
-  private fun placementApplicationEntity(application: ApprovedPremisesApplicationEntity) =
-    placementApplicationFactory.produceAndPersist {
-      withApplication(application)
-      withCreatedAt(OffsetDateTime.parse(CREATED_AT))
-      withSubmittedAt(OffsetDateTime.parse(SUBMITTED_AT))
-      withDueAt(null)
-      withData(DATA_JSON_SIMPLE)
-      withDocument(DOCUMENT_JSON_SIMPLE)
-      withAllocatedToUser(null)
-      withCreatedByUser(application.createdByUser)
-      withDecision(PlacementApplicationDecision.ACCEPTED)
-      withDecisionMadeAt(OffsetDateTime.parse(DECISION_MADE_AT))
-      withIsWithdrawn(true)
-      withPlacementType(PlacementType.ADDITIONAL_PLACEMENT)
-      withReallocatedAt(null)
-      withSchemaVersion(approvedPremisesPlacementApplicationJsonSchemaEntity())
-      withWithdrawalReason(PlacementApplicationWithdrawalReason.DUPLICATE_PLACEMENT_REQUEST)
-    }
+  private fun placementApplicationEntity(application: ApprovedPremisesApplicationEntity) = placementApplicationFactory.produceAndPersist {
+    withApplication(application)
+    withCreatedAt(OffsetDateTime.parse(CREATED_AT))
+    withSubmittedAt(OffsetDateTime.parse(SUBMITTED_AT))
+    withDueAt(null)
+    withData(DATA_JSON_SIMPLE)
+    withDocument(DOCUMENT_JSON_SIMPLE)
+    withAllocatedToUser(null)
+    withCreatedByUser(application.createdByUser)
+    withDecision(PlacementApplicationDecision.ACCEPTED)
+    withDecisionMadeAt(OffsetDateTime.parse(DECISION_MADE_AT))
+    withIsWithdrawn(true)
+    withPlacementType(PlacementType.ADDITIONAL_PLACEMENT)
+    withReallocatedAt(null)
+    withSchemaVersion(approvedPremisesPlacementApplicationJsonSchemaEntity())
+    withWithdrawalReason(PlacementApplicationWithdrawalReason.DUPLICATE_PLACEMENT_REQUEST)
+  }
 
   private fun appealEntity(
     application: ApprovedPremisesApplicationEntity,
@@ -1049,47 +1046,40 @@ class CAS1SubjectAccessRequestServiceTest : SubjectAccessRequestServiceTestBase(
     withDecisionDetail("rejected as no good")
   }
 
-  private fun approvedPremisesApplicationJsonSchemaEntity(): ApprovedPremisesApplicationJsonSchemaEntity =
-    approvedPremisesApplicationJsonSchemaEntityFactory.produceAndPersist {
-      withPermissiveSchema()
-    }
+  private fun approvedPremisesApplicationJsonSchemaEntity(): ApprovedPremisesApplicationJsonSchemaEntity = approvedPremisesApplicationJsonSchemaEntityFactory.produceAndPersist {
+    withPermissiveSchema()
+  }
 
-  private fun approvedPremisesAssessmentJsonSchemaEntity(): ApprovedPremisesAssessmentJsonSchemaEntity =
-    approvedPremisesAssessmentJsonSchemaEntityFactory.produceAndPersist {
-      withPermissiveSchema()
-    }
+  private fun approvedPremisesAssessmentJsonSchemaEntity(): ApprovedPremisesAssessmentJsonSchemaEntity = approvedPremisesAssessmentJsonSchemaEntityFactory.produceAndPersist {
+    withPermissiveSchema()
+  }
 
-  private fun approvedPremisesPlacementApplicationJsonSchemaEntity() =
-    approvedPremisesPlacementApplicationJsonSchemaEntityFactory.produceAndPersist {
-      withPermissiveSchema()
-    }
+  private fun approvedPremisesPlacementApplicationJsonSchemaEntity() = approvedPremisesPlacementApplicationJsonSchemaEntityFactory.produceAndPersist {
+    withPermissiveSchema()
+  }
 
-  private fun cas1ApplicationUserDetailsEntity(): Cas1ApplicationUserDetailsEntity =
-    cas1ApplicationUserDetailsEntityFactory.produceAndPersist {
-      withEmailAddress("noname_applicant_user@noname.net")
-    }
+  private fun cas1ApplicationUserDetailsEntity(): Cas1ApplicationUserDetailsEntity = cas1ApplicationUserDetailsEntityFactory.produceAndPersist {
+    withEmailAddress("noname_applicant_user@noname.net")
+  }
 
-  private fun cas1CaseManagerUserDetailsEntity(): Cas1ApplicationUserDetailsEntity =
-    cas1ApplicationUserDetailsEntityFactory.produceAndPersist {
-      withEmailAddress("noname@noname.net")
-    }
+  private fun cas1CaseManagerUserDetailsEntity(): Cas1ApplicationUserDetailsEntity = cas1ApplicationUserDetailsEntityFactory.produceAndPersist {
+    withEmailAddress("noname@noname.net")
+  }
 
-  private fun applicationTimelineNoteEntity(application: ApprovedPremisesApplicationEntity) =
-    applicationTimelineNoteEntityFactory.produceAndPersist {
-      withApplicationId(application.id)
-      withBody("Some random note about this application")
-      withCreatedAt(OffsetDateTime.parse(CREATED_AT))
-      withCreatedBy(application.createdByUser)
-    }
+  private fun applicationTimelineNoteEntity(application: ApprovedPremisesApplicationEntity) = applicationTimelineNoteEntityFactory.produceAndPersist {
+    withApplicationId(application.id)
+    withBody("Some random note about this application")
+    withCreatedAt(OffsetDateTime.parse(CREATED_AT))
+    withCreatedBy(application.createdByUser)
+  }
 
-  private fun bedMoveEntity(booking: BookingEntity, previousBed: BedEntity, newBed: BedEntity): BedMoveEntity =
-    this.bedMoveEntityFactory.produceAndPersist {
-      withBooking(booking)
-      withPreviousBed(previousBed)
-      withNewBed(newBed)
-      withNotes("Some Notes about a bed move")
-      withCreatedAt(OffsetDateTime.parse(CREATED_AT))
-    }
+  private fun bedMoveEntity(booking: BookingEntity, previousBed: BedEntity, newBed: BedEntity): BedMoveEntity = this.bedMoveEntityFactory.produceAndPersist {
+    withBooking(booking)
+    withPreviousBed(previousBed)
+    withNewBed(newBed)
+    withNotes("Some Notes about a bed move")
+    withCreatedAt(OffsetDateTime.parse(CREATED_AT))
+  }
   private fun approvedPremisesApplicationEntity(offenderDetails: OffenderDetailSummary): ApprovedPremisesApplicationEntity {
     val user = userEntity()
     val risk1 = personRisks()
@@ -1148,10 +1138,9 @@ class CAS1SubjectAccessRequestServiceTest : SubjectAccessRequestServiceTestBase(
     withDueAt(OffsetDateTime.parse(DUE_AT))
   }
 
-  private fun bookingNotMadeEntity(placementRequest: PlacementRequestEntity) =
-    bookingNotMadeFactory.produceAndPersist {
-      withPlacementRequest(placementRequest)
-      withCreatedAt(OffsetDateTime.parse(CREATED_AT))
-      withNotes("Some notes on booking not made")
-    }
+  private fun bookingNotMadeEntity(placementRequest: PlacementRequestEntity) = bookingNotMadeFactory.produceAndPersist {
+    withPlacementRequest(placementRequest)
+    withCreatedAt(OffsetDateTime.parse(CREATED_AT))
+    withNotes("Some notes on booking not made")
+  }
 }

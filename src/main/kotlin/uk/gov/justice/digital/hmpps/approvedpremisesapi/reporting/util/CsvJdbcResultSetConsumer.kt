@@ -10,7 +10,8 @@ import java.sql.ResultSet
 class CsvJdbcResultSetConsumer(
   private val outputStream: OutputStream,
   private val columnsToExclude: List<String> = emptyList(),
-) : JdbcResultSetConsumer, AutoCloseable {
+) : JdbcResultSetConsumer,
+  AutoCloseable {
   private lateinit var writer: ICSVWriter
   private lateinit var resultSet: ResultSet
 

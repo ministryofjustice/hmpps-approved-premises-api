@@ -3764,17 +3764,15 @@ class PremisesTest {
   }
 }
 
-fun IntegrationTestBase.addRoomsAndBeds(premises: PremisesEntity, roomCount: Int, bedsPerRoom: Int, isActive: Boolean = true): List<RoomEntity> {
-  return roomEntityFactory.produceAndPersistMultiple(roomCount) {
-    withYieldedPremises { premises }
-  }.onEach {
-    bedEntityFactory.produceAndPersistMultiple(bedsPerRoom) {
-      withYieldedRoom { it }
-      if (!isActive) {
-        withEndDate { LocalDate.now().minusDays(Random.nextLong(1, 10)) }
-      }
+fun IntegrationTestBase.addRoomsAndBeds(premises: PremisesEntity, roomCount: Int, bedsPerRoom: Int, isActive: Boolean = true): List<RoomEntity> = roomEntityFactory.produceAndPersistMultiple(roomCount) {
+  withYieldedPremises { premises }
+}.onEach {
+  bedEntityFactory.produceAndPersistMultiple(bedsPerRoom) {
+    withYieldedRoom { it }
+    if (!isActive) {
+      withEndDate { LocalDate.now().minusDays(Random.nextLong(1, 10)) }
     }
-  }.map {
-    roomTestRepository.getReferenceById(it.id)
   }
+}.map {
+  roomTestRepository.getReferenceById(it.id)
 }

@@ -37,8 +37,7 @@ class ApplicationSubmittedFactory : Factory<ApplicationSubmitted> {
   private var submittedByRegion: Yielded<Region> = { RegionFactory().produce() }
   private var sentenceLengthInMonths: Yielded<Int?> = { null }
 
-  private fun uk.gov.justice.digital.hmpps.approvedpremisesapi.model.deliuscontext.Team.toDomainEventTeam() =
-    Team(this.code, this.name)
+  private fun uk.gov.justice.digital.hmpps.approvedpremisesapi.model.deliuscontext.Team.toDomainEventTeam() = Team(this.code, this.name)
 
   fun withApplicationId(applicationId: UUID) = apply {
     this.applicationId = { applicationId }

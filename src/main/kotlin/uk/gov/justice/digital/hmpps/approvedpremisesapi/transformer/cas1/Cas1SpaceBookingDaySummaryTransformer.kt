@@ -24,10 +24,9 @@ class Cas1SpaceBookingDaySummaryTransformer {
     person = personSummary,
   )
 
-  private fun characteristicEntityToCharacteristic(characteristics: String?): List<Cas1SpaceCharacteristic> =
-    characteristics?.let { characteristicList ->
-      characteristicList.split(",").map { characteristic ->
-        Cas1SpaceCharacteristic.entries.firstOrNull { it.value == characteristic } ?: error("Cannot find characteristics $characteristic")
-      }
-    } ?: emptyList()
+  private fun characteristicEntityToCharacteristic(characteristics: String?): List<Cas1SpaceCharacteristic> = characteristics?.let { characteristicList ->
+    characteristicList.split(",").map { characteristic ->
+      Cas1SpaceCharacteristic.entries.firstOrNull { it.value == characteristic } ?: error("Cannot find characteristics $characteristic")
+    }
+  } ?: emptyList()
 }

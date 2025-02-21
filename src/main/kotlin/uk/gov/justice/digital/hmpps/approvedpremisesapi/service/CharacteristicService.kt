@@ -2,6 +2,7 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.service
 
 import org.springframework.data.repository.findByIdOrNull
 import org.springframework.stereotype.Service
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Characteristic
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.CharacteristicEntity
@@ -15,17 +16,13 @@ import java.util.UUID
 class CharacteristicService(
   val characteristicRepository: CharacteristicRepository,
 ) {
-  fun getCharacteristic(characteristicId: UUID): CharacteristicEntity? =
-    characteristicRepository.findByIdOrNull(characteristicId)
+  fun getCharacteristic(characteristicId: UUID): CharacteristicEntity? = characteristicRepository.findByIdOrNull(characteristicId)
 
-  fun getCharacteristicByPropertyName(propertyName: String, serviceName: ServiceName): CharacteristicEntity? =
-    characteristicRepository.findByPropertyName(propertyName, serviceName.value)
+  fun getCharacteristicByPropertyName(propertyName: String, serviceName: ServiceName): CharacteristicEntity? = characteristicRepository.findByPropertyName(propertyName, serviceName.value)
 
-  fun getCharacteristics(characteristicName: String): List<CharacteristicEntity> =
-    characteristicRepository.findAllByName(characteristicName)
+  fun getCharacteristics(characteristicName: String): List<CharacteristicEntity> = characteristicRepository.findAllByName(characteristicName)
 
-  fun getCharacteristicsByPropertyNames(requiredCharacteristics: List<String>, serviceName: ServiceName) =
-    characteristicRepository.findAllWherePropertyNameIn(requiredCharacteristics, serviceName.value)
+  fun getCharacteristicsByPropertyNames(requiredCharacteristics: List<String>, serviceName: ServiceName) = characteristicRepository.findAllWherePropertyNameIn(requiredCharacteristics, serviceName.value)
 
   fun serviceScopeMatches(characteristic: CharacteristicEntity, target: Any): Boolean {
     val targetService = getServiceForTarget(target) ?: return false
@@ -37,21 +34,22 @@ class CharacteristicService(
     }
   }
 
-  fun modelScopeMatches(characteristic: CharacteristicEntity, target: Any): Boolean {
-    return when (characteristic.modelScope) {
-      "*" -> true
-      "room" -> target is RoomEntity
-      "premises" -> target is PremisesEntity
-      else -> false
-    }
+  fun getCas3Characteristics(): List<CharacteristicEntity> = characteristicRepository.findActiveByServiceScopeAndModelScope(
+    ServiceName.temporaryAccommodation.value,
+    Characteristic.ModelScope.star.value,
+  )
+
+  fun modelScopeMatches(characteristic: CharacteristicEntity, target: Any): Boolean = when (characteristic.modelScope) {
+    "*" -> true
+    "room" -> target is RoomEntity
+    "premises" -> target is PremisesEntity
+    else -> false
   }
 
-  private fun getServiceForTarget(target: Any): String? {
-    return when (target) {
-      is RoomEntity -> getServiceForTarget(target.premises)
-      is ApprovedPremisesEntity -> ServiceName.approvedPremises.value
-      is TemporaryAccommodationPremisesEntity -> ServiceName.temporaryAccommodation.value
-      else -> null
-    }
+  private fun getServiceForTarget(target: Any): String? = when (target) {
+    is RoomEntity -> getServiceForTarget(target.premises)
+    is ApprovedPremisesEntity -> ServiceName.approvedPremises.value
+    is TemporaryAccommodationPremisesEntity -> ServiceName.temporaryAccommodation.value
+    else -> null
   }
 }

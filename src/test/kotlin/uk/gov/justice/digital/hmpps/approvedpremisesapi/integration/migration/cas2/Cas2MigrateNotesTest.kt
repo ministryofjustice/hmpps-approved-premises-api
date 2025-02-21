@@ -105,12 +105,11 @@ class Cas2MigrateNotesTest : MigrationJobTestBase() {
     }
   }
 
-  private fun createApplicationEntity(applicationSchema: Cas2ApplicationJsonSchemaEntity, userEntity: NomisUserEntity, submittedAt: OffsetDateTime?) =
-    cas2ApplicationEntityFactory.produceAndPersist {
-      withId(UUID.randomUUID())
-      withApplicationSchema(applicationSchema)
-      withCreatedByUser(userEntity)
-      withData("{}")
-      withSubmittedAt(submittedAt)
-    }
+  private fun createApplicationEntity(applicationSchema: Cas2ApplicationJsonSchemaEntity, userEntity: NomisUserEntity, submittedAt: OffsetDateTime?) = cas2ApplicationEntityFactory.produceAndPersist {
+    withId(UUID.randomUUID())
+    withApplicationSchema(applicationSchema)
+    withCreatedByUser(userEntity)
+    withData("{}")
+    withSubmittedAt(submittedAt)
+  }
 }

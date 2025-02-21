@@ -24,28 +24,25 @@ object StaffDetailFactory {
     name: PersonName = PersonName(randomStringLowerCase(6), randomStringLowerCase(6), randomStringLowerCase(6)),
     code: String = randomStringUpperCase(10),
     active: Boolean = true,
-  ) =
-    StaffDetail(
-      email = email,
-      telephoneNumber = telephoneNumber,
-      teams = teams,
-      probationArea = probationArea,
-      username = deliusUsername,
-      name = name,
-      code = code,
-      active = active,
-    )
+  ) = StaffDetail(
+    email = email,
+    telephoneNumber = telephoneNumber,
+    teams = teams,
+    probationArea = probationArea,
+    username = deliusUsername,
+    name = name,
+    code = code,
+    active = active,
+  )
 
-  fun team() =
-    Team(
-      code = randomStringMultiCaseWithNumbers(10),
-      name = randomStringMultiCaseWithNumbers(10),
-      ldu = Ldu(code = randomStringUpperCase(10), name = randomStringUpperCase(10)),
-      borough = Borough(randomStringMultiCaseWithNumbers(5), randomStringMultiCaseWithNumbers(25)),
-      startDate = LocalDate.now().minusYears(1),
-      endDate = null,
-    )
+  fun team() = Team(
+    code = randomStringMultiCaseWithNumbers(10),
+    name = randomStringMultiCaseWithNumbers(10),
+    ldu = Ldu(code = randomStringUpperCase(10), name = randomStringUpperCase(10)),
+    borough = Borough(randomStringMultiCaseWithNumbers(5), randomStringMultiCaseWithNumbers(25)),
+    startDate = LocalDate.now().minusYears(1),
+    endDate = null,
+  )
 
-  fun probationArea() =
-    ProbationArea(code = randomStringUpperCase(10), description = randomStringMultiCaseWithNumbers(50))
+  fun probationArea() = ProbationArea(code = randomStringUpperCase(10), description = randomStringMultiCaseWithNumbers(50))
 }

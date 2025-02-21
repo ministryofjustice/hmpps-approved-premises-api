@@ -46,6 +46,11 @@ spring:
         dialect: org.hibernate.dialect.PostgreSQLDialect
         cache:
           use_second_level_cache: true
+      jakarta:
+        persistence:
+          query:
+            # ensure that wait on locks will eventually error, aiding investigations
+            timeout: 60000
       javax.cache:
         provider: org.ehcache.jsr107.EhcacheCachingProvider
         uri: hibernate-ehcache.xml
@@ -293,6 +298,11 @@ preemptive-cache-logging-enabled: false
 preemptive-cache-delay-ms: 10000
 # 90 minutes
 preemptive-cache-lock-duration-ms: 5400000
+
+refresh-inmate-details-cache:
+  lock-at-least-for: 1m
+  lock-at-most-for: 110m
+  logging-enabled: false
 
 arrived-departed-domain-events-disabled: true
 

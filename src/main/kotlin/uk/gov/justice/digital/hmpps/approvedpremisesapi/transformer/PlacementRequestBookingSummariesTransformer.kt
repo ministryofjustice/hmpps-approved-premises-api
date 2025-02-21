@@ -9,11 +9,9 @@ class PlacementRequestBookingSummariesTransformer(
   private val bookingSummaryTransformer: PlacementRequestBookingSummaryTransformer,
 ) {
 
-  fun getBookingSummary(placementRequest: PlacementRequestEntity): PlacementRequestBookingSummary? {
-    return placementRequest.booking?.let {
-      getBookingSummary(placementRequest.booking!!)
-    } ?: getSpaceBookingSummary(placementRequest.spaceBookings)
-  }
+  fun getBookingSummary(placementRequest: PlacementRequestEntity): PlacementRequestBookingSummary? = placementRequest.booking?.let {
+    getBookingSummary(placementRequest.booking!!)
+  } ?: getSpaceBookingSummary(placementRequest.spaceBookings)
 
   private fun getBookingSummary(booking: BookingEntity): PlacementRequestBookingSummary? {
     if (!booking.isCancelled) {
@@ -22,6 +20,7 @@ class PlacementRequestBookingSummariesTransformer(
     return null
   }
 
-  private fun getSpaceBookingSummary(bookings: List<Cas1SpaceBookingEntity>): PlacementRequestBookingSummary? =
-    bookings.firstOrNull { !it.isCancelled() }?.let { booking -> bookingSummaryTransformer.transformJpaToApi(booking) }
+  private fun getSpaceBookingSummary(bookings: List<Cas1SpaceBookingEntity>): PlacementRequestBookingSummary? = bookings
+    .firstOrNull { !it.isCancelled() }
+    ?.let { booking -> bookingSummaryTransformer.transformJpaToApi(booking) }
 }

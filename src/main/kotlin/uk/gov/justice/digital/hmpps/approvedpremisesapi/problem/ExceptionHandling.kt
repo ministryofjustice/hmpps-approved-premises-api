@@ -35,7 +35,8 @@ class ExceptionHandling(
   private val objectMapper: ObjectMapper,
   private val deserializationValidationService: DeserializationValidationService,
   private val sentryService: SentryService,
-) : ProblemHandling, MessageNotReadableAdviceTrait {
+) : ProblemHandling,
+  MessageNotReadableAdviceTrait {
   private val log = LoggerFactory.getLogger(this::class.java)
 
   override fun toProblem(throwable: Throwable, status: StatusType): ThrowableProblem? {

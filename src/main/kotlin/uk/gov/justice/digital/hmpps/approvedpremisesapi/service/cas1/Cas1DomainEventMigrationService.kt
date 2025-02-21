@@ -21,34 +21,29 @@ class Cas1DomainEventMigrationService(
   val userService: UserService,
 ) {
 
-  fun bookingCancelledJson(entity: DomainEventEntity) =
-    when (entity.schemaVersion) {
-      2 -> entity.data
-      else -> bookingCancelledV1JsonToV2Json(entity)
-    }
+  fun bookingCancelledJson(entity: DomainEventEntity) = when (entity.schemaVersion) {
+    2 -> entity.data
+    else -> bookingCancelledV1JsonToV2Json(entity)
+  }
 
-  fun personArrivedJson(entity: DomainEventEntity) =
-    when (entity.schemaVersion) {
-      2 -> entity.data
-      else -> personArrivedDepartedV1JsonToV2Json(entity)
-    }
+  fun personArrivedJson(entity: DomainEventEntity) = when (entity.schemaVersion) {
+    2 -> entity.data
+    else -> personArrivedDepartedV1JsonToV2Json(entity)
+  }
 
-  fun personDepartedJson(entity: DomainEventEntity) =
-    when (entity.schemaVersion) {
-      2 -> entity.data
-      else -> personArrivedDepartedV1JsonToV2Json(entity)
-    }
+  fun personDepartedJson(entity: DomainEventEntity) = when (entity.schemaVersion) {
+    2 -> entity.data
+    else -> personArrivedDepartedV1JsonToV2Json(entity)
+  }
 
-  private fun bookingCancelledV1JsonToV2Json(domainEventEntity: DomainEventEntity): String {
-    return modifyEventDetails(domainEventEntity) { eventDetailsNode ->
-      val cancellationRecordedAt = objectMapper.convertValue(domainEventEntity.occurredAt, TextNode::class.java)
-      eventDetailsNode.set<TextNode>("cancellationRecordedAt", cancellationRecordedAt)
+  private fun bookingCancelledV1JsonToV2Json(domainEventEntity: DomainEventEntity): String = modifyEventDetails(domainEventEntity) { eventDetailsNode ->
+    val cancellationRecordedAt = objectMapper.convertValue(domainEventEntity.occurredAt, TextNode::class.java)
+    eventDetailsNode.set<TextNode>("cancellationRecordedAt", cancellationRecordedAt)
 
-      val cancelledAt =
-        objectMapper.convertValue(eventDetailsNode["cancelledAt"], java.time.Instant::class.java)
-      val cancelledAtDate = objectMapper.convertValue(cancelledAt.toLocalDate(), TextNode::class.java)
-      eventDetailsNode.set<ArrayNode>("cancelledAtDate", cancelledAtDate)
-    }
+    val cancelledAt =
+      objectMapper.convertValue(eventDetailsNode["cancelledAt"], java.time.Instant::class.java)
+    val cancelledAtDate = objectMapper.convertValue(cancelledAt.toLocalDate(), TextNode::class.java)
+    eventDetailsNode.set<ArrayNode>("cancelledAtDate", cancelledAtDate)
   }
 
   private fun personArrivedDepartedV1JsonToV2Json(domainEventEntity: DomainEventEntity) = modifyEventDetails(domainEventEntity) { eventDetailsNode ->

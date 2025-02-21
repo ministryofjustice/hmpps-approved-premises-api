@@ -100,13 +100,11 @@ class ApplicationService(
 ) {
   fun getApplication(applicationId: UUID) = applicationRepository.findByIdOrNull(applicationId)
 
-  fun getAllApplicationsForUsername(userEntity: UserEntity, serviceName: ServiceName): List<ApplicationSummary> {
-    return when (serviceName) {
-      ServiceName.approvedPremises -> getAllApprovedPremisesApplicationsForUser(userEntity)
-      ServiceName.cas2 -> throw RuntimeException("CAS2 applications now require NomisUser")
-      ServiceName.cas2v2 -> throw RuntimeException("CAS2v2 applications now require Cas2v2User")
-      ServiceName.temporaryAccommodation -> getAllTemporaryAccommodationApplicationsForUser(userEntity)
-    }
+  fun getAllApplicationsForUsername(userEntity: UserEntity, serviceName: ServiceName): List<ApplicationSummary> = when (serviceName) {
+    ServiceName.approvedPremises -> getAllApprovedPremisesApplicationsForUser(userEntity)
+    ServiceName.cas2 -> throw RuntimeException("CAS2 applications now require NomisUser")
+    ServiceName.cas2v2 -> throw RuntimeException("CAS2v2 applications now require Cas2v2User")
+    ServiceName.temporaryAccommodation -> getAllTemporaryAccommodationApplicationsForUser(userEntity)
   }
 
   fun getAllApprovedPremisesApplications(
@@ -142,11 +140,9 @@ class ApplicationService(
     return Pair(response.content, getMetadata(response, page, pageSize))
   }
 
-  private fun getAllApprovedPremisesApplicationsForUser(user: UserEntity) =
-    applicationRepository.findNonWithdrawnApprovedPremisesSummariesForUser(user.id)
+  private fun getAllApprovedPremisesApplicationsForUser(user: UserEntity) = applicationRepository.findNonWithdrawnApprovedPremisesSummariesForUser(user.id)
 
-  private fun getAllTemporaryAccommodationApplicationsForUser(user: UserEntity): List<ApplicationSummary> =
-    applicationRepository.findAllTemporaryAccommodationSummariesCreatedByUser(user.id)
+  private fun getAllTemporaryAccommodationApplicationsForUser(user: UserEntity): List<ApplicationSummary> = applicationRepository.findAllTemporaryAccommodationSummariesCreatedByUser(user.id)
 
   fun getApplicationForUsername(
     applicationId: UUID,
@@ -271,53 +267,50 @@ class ApplicationService(
     offenceId: String?,
     riskRatings: PersonRisks?,
     offenderDetails: OffenderDetailSummary,
-  ): ApprovedPremisesApplicationEntity {
-    return ApprovedPremisesApplicationEntity(
-      id = UUID.randomUUID(),
-      crn = crn,
-      createdByUser = user,
-      data = null,
-      document = null,
-      schemaVersion = jsonSchemaService.getNewestSchema(ApprovedPremisesApplicationJsonSchemaEntity::class.java),
-      createdAt = OffsetDateTime.now(),
-      submittedAt = null,
-      deletedAt = null,
-      isWomensApplication = null,
-      isEmergencyApplication = null,
-      apType = ApprovedPremisesType.NORMAL,
-      convictionId = convictionId!!,
-      eventNumber = deliusEventNumber!!,
-      offenceId = offenceId!!,
-      schemaUpToDate = true,
-      riskRatings = riskRatings,
-      assessments = mutableListOf(),
-      teamCodes = mutableListOf(),
-      placementRequests = mutableListOf(),
-      releaseType = null,
-      arrivalDate = null,
-      isInapplicable = null,
-      isWithdrawn = false,
-      withdrawalReason = null,
-      otherWithdrawalReason = null,
-      nomsNumber = offenderDetails.otherIds.nomsNumber,
-      name = "${offenderDetails.firstName.uppercase()} ${offenderDetails.surname.uppercase()}",
-      targetLocation = null,
-      status = ApprovedPremisesApplicationStatus.STARTED,
-      sentenceType = null,
-      situation = null,
-      inmateInOutStatusOnSubmission = null,
-      apArea = null,
-      cruManagementArea = null,
-      applicantUserDetails = null,
-      caseManagerIsNotApplicant = null,
-      caseManagerUserDetails = null,
-      noticeType = null,
-      licenceExpiryDate = null,
-    )
-  }
+  ): ApprovedPremisesApplicationEntity = ApprovedPremisesApplicationEntity(
+    id = UUID.randomUUID(),
+    crn = crn,
+    createdByUser = user,
+    data = null,
+    document = null,
+    schemaVersion = jsonSchemaService.getNewestSchema(ApprovedPremisesApplicationJsonSchemaEntity::class.java),
+    createdAt = OffsetDateTime.now(),
+    submittedAt = null,
+    deletedAt = null,
+    isWomensApplication = null,
+    isEmergencyApplication = null,
+    apType = ApprovedPremisesType.NORMAL,
+    convictionId = convictionId!!,
+    eventNumber = deliusEventNumber!!,
+    offenceId = offenceId!!,
+    schemaUpToDate = true,
+    riskRatings = riskRatings,
+    assessments = mutableListOf(),
+    teamCodes = mutableListOf(),
+    placementRequests = mutableListOf(),
+    releaseType = null,
+    arrivalDate = null,
+    isInapplicable = null,
+    isWithdrawn = false,
+    withdrawalReason = null,
+    otherWithdrawalReason = null,
+    nomsNumber = offenderDetails.otherIds.nomsNumber,
+    name = "${offenderDetails.firstName.uppercase()} ${offenderDetails.surname.uppercase()}",
+    targetLocation = null,
+    status = ApprovedPremisesApplicationStatus.STARTED,
+    sentenceType = null,
+    situation = null,
+    inmateInOutStatusOnSubmission = null,
+    apArea = null,
+    cruManagementArea = null,
+    applicantUserDetails = null,
+    caseManagerIsNotApplicant = null,
+    caseManagerUserDetails = null,
+    noticeType = null,
+    licenceExpiryDate = null,
+  )
 
-  fun createOfflineApplication(offlineApplication: OfflineApplicationEntity) =
-    offlineApplicationRepository.save(offlineApplication)
+  fun createOfflineApplication(offlineApplication: OfflineApplicationEntity) = offlineApplicationRepository.save(offlineApplication)
 
   fun createTemporaryAccommodationApplication(
     crn: String,
@@ -404,48 +397,46 @@ class ApplicationService(
     riskRatings: PersonRisks?,
     offenderDetails: OffenderDetailSummary,
     prisonName: String?,
-  ): TemporaryAccommodationApplicationEntity {
-    return TemporaryAccommodationApplicationEntity(
-      id = UUID.randomUUID(),
-      crn = crn,
-      createdByUser = user,
-      data = null,
-      document = null,
-      schemaVersion = jsonSchemaService.getNewestSchema(
-        TemporaryAccommodationApplicationJsonSchemaEntity::class.java,
-      ),
-      createdAt = OffsetDateTime.now(),
-      submittedAt = null,
-      deletedAt = null,
-      convictionId = convictionId!!,
-      eventNumber = deliusEventNumber!!,
-      offenceId = offenceId!!,
-      schemaUpToDate = true,
-      riskRatings = riskRatings,
-      assessments = mutableListOf(),
-      probationRegion = user.probationRegion,
-      nomsNumber = offenderDetails.otherIds.nomsNumber,
-      arrivalDate = null,
-      isRegisteredSexOffender = null,
-      needsAccessibleProperty = null,
-      hasHistoryOfArson = null,
-      isDutyToReferSubmitted = null,
-      dutyToReferSubmissionDate = null,
-      isEligible = null,
-      eligibilityReason = null,
-      dutyToReferLocalAuthorityAreaName = null,
-      dutyToReferOutcome = null,
-      prisonNameOnCreation = prisonName,
-      personReleaseDate = null,
-      pdu = null,
-      name = "${offenderDetails.firstName} ${offenderDetails.surname}",
-      isHistoryOfSexualOffence = null,
-      isConcerningSexualBehaviour = null,
-      isConcerningArsonBehaviour = null,
-      prisonReleaseTypes = null,
-      probationDeliveryUnit = null,
-    )
-  }
+  ): TemporaryAccommodationApplicationEntity = TemporaryAccommodationApplicationEntity(
+    id = UUID.randomUUID(),
+    crn = crn,
+    createdByUser = user,
+    data = null,
+    document = null,
+    schemaVersion = jsonSchemaService.getNewestSchema(
+      TemporaryAccommodationApplicationJsonSchemaEntity::class.java,
+    ),
+    createdAt = OffsetDateTime.now(),
+    submittedAt = null,
+    deletedAt = null,
+    convictionId = convictionId!!,
+    eventNumber = deliusEventNumber!!,
+    offenceId = offenceId!!,
+    schemaUpToDate = true,
+    riskRatings = riskRatings,
+    assessments = mutableListOf(),
+    probationRegion = user.probationRegion,
+    nomsNumber = offenderDetails.otherIds.nomsNumber,
+    arrivalDate = null,
+    isRegisteredSexOffender = null,
+    needsAccessibleProperty = null,
+    hasHistoryOfArson = null,
+    isDutyToReferSubmitted = null,
+    dutyToReferSubmissionDate = null,
+    isEligible = null,
+    eligibilityReason = null,
+    dutyToReferLocalAuthorityAreaName = null,
+    dutyToReferOutcome = null,
+    prisonNameOnCreation = prisonName,
+    personReleaseDate = null,
+    pdu = null,
+    name = "${offenderDetails.firstName} ${offenderDetails.surname}",
+    isHistoryOfSexualOffence = null,
+    isConcerningSexualBehaviour = null,
+    isConcerningArsonBehaviour = null,
+    prisonReleaseTypes = null,
+    probationDeliveryUnit = null,
+  )
 
   data class Cas1ApplicationUpdateFields(
     val isWomensApplication: Boolean?,
@@ -589,13 +580,11 @@ class ApplicationService(
     return CasResult.Success(Unit)
   }
 
-  fun getWithdrawableState(application: ApprovedPremisesApplicationEntity, user: UserEntity): WithdrawableState {
-    return WithdrawableState(
-      withdrawable = !application.isWithdrawn,
-      withdrawn = application.isWithdrawn,
-      userMayDirectlyWithdraw = userAccessService.userMayWithdrawApplication(user, application),
-    )
-  }
+  fun getWithdrawableState(application: ApprovedPremisesApplicationEntity, user: UserEntity): WithdrawableState = WithdrawableState(
+    withdrawable = !application.isWithdrawn,
+    withdrawn = application.isWithdrawn,
+    userMayDirectlyWithdraw = userAccessService.userMayWithdrawApplication(user, application),
+  )
 
   fun updateTemporaryAccommodationApplication(
     applicationId: UUID,
@@ -901,8 +890,7 @@ class ApplicationService(
     return applicationRepository.findByCrn(crn, entityType)
   }
 
-  fun getOfflineApplicationsForCrn(crn: String, serviceName: ServiceName) =
-    offlineApplicationRepository.findAllByServiceAndCrn(serviceName.value, crn)
+  fun getOfflineApplicationsForCrn(crn: String, serviceName: ServiceName) = offlineApplicationRepository.findAllByServiceAndCrn(serviceName.value, crn)
 
   private fun getPrisonName(personInfo: PersonInfoResult.Success.Full): String? {
     val prisonName = when (personInfo.inmateDetail?.custodyStatus) {

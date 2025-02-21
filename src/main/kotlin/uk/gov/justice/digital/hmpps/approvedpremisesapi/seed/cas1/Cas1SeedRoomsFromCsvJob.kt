@@ -110,9 +110,7 @@ class ApprovedPremisesRoomsSeedJob(
     return room
   }
 
-  private fun updateExistingRoom(room: RoomEntity, row: ApprovedPremisesRoomsSeedCsvRow): RoomEntity {
-    return room.apply { this!!.notes = row.notes }
-  }
+  private fun updateExistingRoom(room: RoomEntity, row: ApprovedPremisesRoomsSeedCsvRow): RoomEntity = room.apply { this!!.notes = row.notes }
 
   private fun createRoom(row: ApprovedPremisesRoomsSeedCsvRow, premises: PremisesEntity, roomCode: String): RoomEntity? {
     val room = roomRepository.save(
@@ -165,44 +163,40 @@ class ApprovedPremisesRoomsSeedJob(
   }
 
   @SuppressWarnings("TooGenericExceptionThrown")
-  private fun findExistingPremisesOrThrow(row: ApprovedPremisesRoomsSeedCsvRow): PremisesEntity {
-    return premisesRepository.findByApCode(row.apCode)
-      ?: throw RuntimeException(
-        "Error: no premises with apCode '${row.apCode}' found. " +
-          "Please seed premises before rooms/beds.",
-      )
-  }
+  private fun findExistingPremisesOrThrow(row: ApprovedPremisesRoomsSeedCsvRow): PremisesEntity = premisesRepository.findByApCode(row.apCode)
+    ?: throw RuntimeException(
+      "Error: no premises with apCode '${row.apCode}' found. " +
+        "Please seed premises before rooms/beds.",
+    )
 
   @SuppressWarnings("TooGenericExceptionThrown")
-  private fun characteristicsFromRow(row: ApprovedPremisesRoomsSeedCsvRow): List<CharacteristicEntity> {
-    return listOf(
-      CharacteristicValue("isSingle", castBooleanString(row.isSingle)),
-      CharacteristicValue("isGroundFloor", castBooleanString(row.isGroundFloor)),
-      CharacteristicValue("isFullyFm", castBooleanString(row.isFullyFm)),
-      CharacteristicValue("hasCrib7Bedding", castBooleanString(row.hasCrib7Bedding)),
-      CharacteristicValue("hasSmokeDetector", castBooleanString(row.hasSmokeDetector)),
-      CharacteristicValue("isTopFloorVulnerable", castBooleanString(row.isTopFloorVulnerable)),
-      CharacteristicValue("isGroundFloorNrOffice", castBooleanString(row.isGroundFloorNrOffice)),
-      CharacteristicValue("hasNearbySprinkler", castBooleanString(row.hasNearbySprinkler)),
-      CharacteristicValue("isArsonSuitable", castBooleanString(row.isArsonSuitable)),
-      CharacteristicValue("isArsonDesignated", castBooleanString(row.isArsonDesignated)),
-      CharacteristicValue("hasArsonInsuranceConditions", castBooleanString(row.hasArsonInsuranceConditions)),
-      CharacteristicValue("isSuitedForSexOffenders", castBooleanString(row.isSuitedForSexOffenders)),
-      CharacteristicValue("hasEnSuite", castBooleanString(row.hasEnSuite)),
-      CharacteristicValue("isWheelchairAccessible", castBooleanString(row.isWheelchairAccessible)),
-      CharacteristicValue("hasWideDoor", castBooleanString(row.hasWideDoor)),
-      CharacteristicValue("hasStepFreeAccess", castBooleanString(row.hasStepFreeAccess)),
-      CharacteristicValue("hasFixedMobilityAids", castBooleanString(row.hasFixedMobilityAids)),
-      CharacteristicValue("hasTurningSpace", castBooleanString(row.hasTurningSpace)),
-      CharacteristicValue("hasCallForAssistance", castBooleanString(row.hasCallForAssistance)),
-      CharacteristicValue("isWheelchairDesignated", castBooleanString(row.isWheelchairDesignated)),
-      CharacteristicValue("isStepFreeDesignated", castBooleanString(row.isStepFreeDesignated)),
-    ).filter { it.value }
-      .map {
-        characteristicRepository.findByPropertyNameAndScopes(propertyName = it.propertyName, serviceName = "approved-premises", modelName = "room")
-          ?: throw RuntimeException("Characteristic '${it.propertyName}' does not exist for AP room")
-      }
-  }
+  private fun characteristicsFromRow(row: ApprovedPremisesRoomsSeedCsvRow): List<CharacteristicEntity> = listOf(
+    CharacteristicValue("isSingle", castBooleanString(row.isSingle)),
+    CharacteristicValue("isGroundFloor", castBooleanString(row.isGroundFloor)),
+    CharacteristicValue("isFullyFm", castBooleanString(row.isFullyFm)),
+    CharacteristicValue("hasCrib7Bedding", castBooleanString(row.hasCrib7Bedding)),
+    CharacteristicValue("hasSmokeDetector", castBooleanString(row.hasSmokeDetector)),
+    CharacteristicValue("isTopFloorVulnerable", castBooleanString(row.isTopFloorVulnerable)),
+    CharacteristicValue("isGroundFloorNrOffice", castBooleanString(row.isGroundFloorNrOffice)),
+    CharacteristicValue("hasNearbySprinkler", castBooleanString(row.hasNearbySprinkler)),
+    CharacteristicValue("isArsonSuitable", castBooleanString(row.isArsonSuitable)),
+    CharacteristicValue("isArsonDesignated", castBooleanString(row.isArsonDesignated)),
+    CharacteristicValue("hasArsonInsuranceConditions", castBooleanString(row.hasArsonInsuranceConditions)),
+    CharacteristicValue("isSuitedForSexOffenders", castBooleanString(row.isSuitedForSexOffenders)),
+    CharacteristicValue("hasEnSuite", castBooleanString(row.hasEnSuite)),
+    CharacteristicValue("isWheelchairAccessible", castBooleanString(row.isWheelchairAccessible)),
+    CharacteristicValue("hasWideDoor", castBooleanString(row.hasWideDoor)),
+    CharacteristicValue("hasStepFreeAccess", castBooleanString(row.hasStepFreeAccess)),
+    CharacteristicValue("hasFixedMobilityAids", castBooleanString(row.hasFixedMobilityAids)),
+    CharacteristicValue("hasTurningSpace", castBooleanString(row.hasTurningSpace)),
+    CharacteristicValue("hasCallForAssistance", castBooleanString(row.hasCallForAssistance)),
+    CharacteristicValue("isWheelchairDesignated", castBooleanString(row.isWheelchairDesignated)),
+    CharacteristicValue("isStepFreeDesignated", castBooleanString(row.isStepFreeDesignated)),
+  ).filter { it.value }
+    .map {
+      characteristicRepository.findByPropertyNameAndScopes(propertyName = it.propertyName, serviceName = "approved-premises", modelName = "room")
+        ?: throw RuntimeException("Characteristic '${it.propertyName}' does not exist for AP room")
+    }
 
   @SuppressWarnings("TooGenericExceptionThrown")
   private fun parseBooleanStringOrThrow(value: String, fieldName: String): String {
@@ -212,9 +206,7 @@ class ApprovedPremisesRoomsSeedJob(
     return if (booleanString == "YES") "YES" else "NO"
   }
 
-  private fun castBooleanString(booleanString: String): Boolean {
-    return booleanString == "YES"
-  }
+  private fun castBooleanString(booleanString: String): Boolean = booleanString == "YES"
 }
 
 data class ApprovedPremisesRoomsSeedCsvRow(

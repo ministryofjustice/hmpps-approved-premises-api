@@ -60,12 +60,17 @@ assign-default-region-to-users-with-unknown-region: true
 preemptive-cache-logging-enabled: true
 preemptive-cache-lock-duration-ms: 60000
 
+refresh-inmate-details-cache:
+  logging-enabled: true
+
 user-allocations:
   rules:
     esap-assessments:
       allocate-to-user: JIMSNOWLDAP
 
 feature-flags:
+  cas1-disable-overbooking-summary: true
+  cas1-enable-scheduled-job-refresh-inmate-details: true
 
 logging:
   level:

@@ -7,7 +7,7 @@ import java.time.ZoneOffset
 import java.time.format.DateTimeFormatter
 
 @Component
-class ArrivalTransformer() {
+class ArrivalTransformer {
   fun transformJpaToApi(jpa: ArrivalEntity?) = jpa?.let {
     Arrival(
       bookingId = jpa.booking.id,

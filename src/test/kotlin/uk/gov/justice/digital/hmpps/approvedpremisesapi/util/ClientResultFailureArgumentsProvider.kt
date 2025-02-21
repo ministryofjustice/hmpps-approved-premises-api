@@ -12,28 +12,26 @@ import java.util.stream.Stream
  * Provides an instance of each subtype of sealed interface ClientResult.Failure
  */
 class ClientResultFailureArgumentsProvider<T> : ArgumentsProvider {
-  override fun provideArguments(context: ExtensionContext): Stream<Arguments> {
-    return Stream.of(
-      Arguments.of(ClientResult.Failure.CachedValueUnavailable<T>("some-cache-key")),
-      Arguments.of(
-        ClientResult.Failure.StatusCode<T>(
-          HttpMethod.GET,
-          "/",
-          HttpStatus.NOT_FOUND,
-          null,
-          false,
-        ),
+  override fun provideArguments(context: ExtensionContext): Stream<Arguments> = Stream.of(
+    Arguments.of(ClientResult.Failure.CachedValueUnavailable<T>("some-cache-key")),
+    Arguments.of(
+      ClientResult.Failure.StatusCode<T>(
+        HttpMethod.GET,
+        "/",
+        HttpStatus.NOT_FOUND,
+        null,
+        false,
       ),
-      Arguments.of(
-        ClientResult.Failure.Other<T>(
-          HttpMethod.POST,
-          "/",
-          RuntimeException("Some error"),
-        ),
+    ),
+    Arguments.of(
+      ClientResult.Failure.Other<T>(
+        HttpMethod.POST,
+        "/",
+        RuntimeException("Some error"),
       ),
-      Arguments.of(
-        ClientResult.Failure.PreemptiveCacheTimeout<T>("some-cache", "some-cache-key", 1000),
-      ),
-    )
-  }
+    ),
+    Arguments.of(
+      ClientResult.Failure.PreemptiveCacheTimeout<T>("some-cache", "some-cache-key", 1000),
+    ),
+  )
 }

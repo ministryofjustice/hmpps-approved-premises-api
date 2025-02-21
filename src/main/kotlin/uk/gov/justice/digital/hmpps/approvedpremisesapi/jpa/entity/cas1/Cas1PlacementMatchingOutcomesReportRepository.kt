@@ -119,10 +119,9 @@ class Cas1PlacementMatchingOutcomesReportRepository(
     month: Int,
     year: Int,
     jbdcResultSetConsumer: JdbcResultSetConsumer,
-  ) =
-    reportJdbcTemplate.query(
-      QUERY,
-      mapOf<String, Any>("month" to month, "year" to year),
-      jbdcResultSetConsumer,
-    )
+  ) = reportJdbcTemplate.query(
+    QUERY,
+    mapOf<String, Any>("month" to month, "year" to year),
+    jbdcResultSetConsumer,
+  )
 }

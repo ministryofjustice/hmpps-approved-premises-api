@@ -59,7 +59,7 @@ class OAuth2ResourceServerSecurityConfiguration {
         authorize(HttpMethod.GET, "/favicon.ico", permitAll)
         authorize(HttpMethod.GET, "/info", permitAll)
         authorize(HttpMethod.POST, "/seed", permitAll)
-        authorize(HttpMethod.POST, "/seedFromExcel", permitAll)
+        authorize(HttpMethod.POST, "/seedFromExcel/*", permitAll)
         authorize(HttpMethod.DELETE, "/cache/*", permitAll)
         authorize(HttpMethod.POST, "/migration-job", permitAll)
         authorize(HttpMethod.DELETE, "/internal/premises/*", permitAll)
@@ -86,7 +86,7 @@ class OAuth2ResourceServerSecurityConfiguration {
         authorize(HttpMethod.GET, "/cas2v2/reports/**", hasRole("CAS2_MI"))
         authorize(HttpMethod.GET, "/cas2v2/people/search-by-crn/**", hasAnyAuthority("ROLE_PROBATION"))
         authorize(HttpMethod.GET, "/cas2v2/people/search-by-noms/**", hasAnyAuthority("ROLE_POM", "ROLE_LICENCE_CA", "ROLE_PROBATION"))
-        authorize("/cas2v2/applications/**", hasAnyAuthority("ROLE_PROBATION", "ROLE_POM", "ROLE_LICENCE_CA"))
+        authorize("/cas2v2/applications/**", hasAnyAuthority("ROLE_PROBATION", "ROLE_POM", "ROLE_LICENCE_CA", "ROLE_COURT_BAIL", "ROLE_PRISON_BAIL"))
         authorize("/cas2v2/**", hasAnyAuthority("ROLE_POM", "ROLE_LICENCE_CA"))
 
         authorize(HttpMethod.GET, "/cas3-api.yml", permitAll)
@@ -137,20 +137,16 @@ class AuthAwareTokenConverter : Converter<Jwt, AbstractAuthenticationToken> {
     return AuthAwareAuthenticationToken(jwt, principal, authorities)
   }
 
-  private fun extractAuthSource(claims: Map<String, Any?>): String {
-    return claims[CLAIM_AUTH_SOURCE] as String
-  }
+  private fun extractAuthSource(claims: Map<String, Any?>): String = claims[CLAIM_AUTH_SOURCE] as String
 
-  private fun findPrincipal(claims: Map<String, Any?>): String {
-    return if (claims.containsKey(CLAIM_USERNAME)) {
-      claims[CLAIM_USERNAME] as String
-    } else if (claims.containsKey(CLAIM_USER_ID)) {
-      claims[CLAIM_USER_ID] as String
-    } else if (claims.containsKey(CLAIM_CLIENT_ID)) {
-      claims[CLAIM_CLIENT_ID] as String
-    } else {
-      throw RuntimeException("Unable to find a claim to identify Subject by")
-    }
+  private fun findPrincipal(claims: Map<String, Any?>): String = if (claims.containsKey(CLAIM_USERNAME)) {
+    claims[CLAIM_USERNAME] as String
+  } else if (claims.containsKey(CLAIM_USER_ID)) {
+    claims[CLAIM_USER_ID] as String
+  } else if (claims.containsKey(CLAIM_CLIENT_ID)) {
+    claims[CLAIM_CLIENT_ID] as String
+  } else {
+    throw RuntimeException("Unable to find a claim to identify Subject by")
   }
 
   private fun extractAuthorities(jwt: Jwt): Collection<GrantedAuthority> {
@@ -184,15 +180,11 @@ class AuthAwareAuthenticationToken(
 
   private val jwt = jwt
 
-  override fun getPrincipal(): String {
-    return aPrincipal
-  }
+  override fun getPrincipal(): String = aPrincipal
 
   fun authenticationSource(): String = jwt.claims["auth_source"] as String
 
-  fun isExternalUser(): Boolean {
-    return jwt.claims["auth_source"] == "auth"
-  }
+  fun isExternalUser(): Boolean = jwt.claims["auth_source"] == "auth"
 }
 
 @Configuration

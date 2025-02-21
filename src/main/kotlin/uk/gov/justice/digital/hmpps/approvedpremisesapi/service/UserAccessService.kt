@@ -33,24 +33,20 @@ class UserAccessService(
     }
   }
 
-  fun currentUserCanAccessRegion(probationRegionId: UUID?) =
-    userCanAccessRegion(userService.getUserForRequest(), probationRegionId)
+  fun currentUserCanAccessRegion(probationRegionId: UUID?) = userCanAccessRegion(userService.getUserForRequest(), probationRegionId)
 
-  fun userCanAccessRegion(user: UserEntity, probationRegionId: UUID?) =
-    userHasAllRegionsAccess(user) || user.probationRegion.id == probationRegionId
+  fun userCanAccessRegion(user: UserEntity, probationRegionId: UUID?) = userHasAllRegionsAccess(user) || user.probationRegion.id == probationRegionId
 
   fun currentUserHasAllRegionsAccess() = userHasAllRegionsAccess(userService.getUserForRequest())
 
-  fun userHasAllRegionsAccess(user: UserEntity) =
-    when (requestContextService.getServiceForRequest()) {
-      // TODO: Revisit once Temporary Accommodation introduces user roles
-      ServiceName.temporaryAccommodation -> user.hasRole(CAS3_REPORTER)
-      // TODO: Revisit if Approved Premises introduces region-limited access
-      else -> true
-    }
+  fun userHasAllRegionsAccess(user: UserEntity) = when (requestContextService.getServiceForRequest()) {
+    // TODO: Revisit once Temporary Accommodation introduces user roles
+    ServiceName.temporaryAccommodation -> user.hasRole(CAS3_REPORTER)
+    // TODO: Revisit if Approved Premises introduces region-limited access
+    else -> true
+  }
 
-  fun currentUserCanViewPremises(premises: PremisesEntity) =
-    userCanViewPremises(userService.getUserForRequest(), premises)
+  fun currentUserCanViewPremises(premises: PremisesEntity) = userCanViewPremises(userService.getUserForRequest(), premises)
 
   fun userCanViewPremises(user: UserEntity, premises: PremisesEntity) = when (premises) {
     is ApprovedPremisesEntity -> true
@@ -58,8 +54,7 @@ class UserAccessService(
     else -> false
   }
 
-  fun currentUserCanManagePremises(premises: PremisesEntity) =
-    userCanManagePremises(userService.getUserForRequest(), premises)
+  fun currentUserCanManagePremises(premises: PremisesEntity) = userCanManagePremises(userService.getUserForRequest(), premises)
 
   fun userCanManagePremises(user: UserEntity, premises: PremisesEntity) = when (premises) {
     is ApprovedPremisesEntity -> true
@@ -67,8 +62,7 @@ class UserAccessService(
     else -> false
   }
 
-  fun currentUserCanManagePremisesBookings(premises: PremisesEntity) =
-    userCanManagePremisesBookings(userService.getUserForRequest(), premises)
+  fun currentUserCanManagePremisesBookings(premises: PremisesEntity) = userCanManagePremisesBookings(userService.getUserForRequest(), premises)
 
   fun userCanViewBooking(user: UserEntity, booking: BookingEntity) = when (booking.premises) {
     is ApprovedPremisesEntity -> true
@@ -93,16 +87,14 @@ class UserAccessService(
     else -> false
   }
 
-  fun currentUserCanManagePremisesVoidBedspaces(premises: PremisesEntity) =
-    userCanManagePremisesVoidBedspaces(userService.getUserForRequest(), premises)
+  fun currentUserCanManagePremisesVoidBedspaces(premises: PremisesEntity) = userCanManagePremisesVoidBedspaces(userService.getUserForRequest(), premises)
 
   fun userCanManagePremisesVoidBedspaces(user: UserEntity, premises: PremisesEntity) = when (premises) {
     is TemporaryAccommodationPremisesEntity -> userCanAccessRegion(user, premises.probationRegion.id) && user.hasRole(UserRole.CAS3_ASSESSOR)
     else -> false
   }
 
-  fun currentUserCanViewPremisesStaff(premises: PremisesEntity) =
-    userCanViewPremisesStaff(userService.getUserForRequest(), premises)
+  fun currentUserCanViewPremisesStaff(premises: PremisesEntity) = userCanViewPremisesStaff(userService.getUserForRequest(), premises)
 
   fun userCanViewPremisesStaff(user: UserEntity, premises: PremisesEntity) = when (premises) {
     is ApprovedPremisesEntity -> user.hasAnyRole(UserRole.CAS1_FUTURE_MANAGER, UserRole.CAS1_MATCHER)
@@ -110,14 +102,12 @@ class UserAccessService(
     else -> false
   }
 
-  fun currentUserCanViewReport() =
-    userCanViewReport(userService.getUserForRequest())
+  fun currentUserCanViewReport() = userCanViewReport(userService.getUserForRequest())
 
-  fun userCanViewReport(user: UserEntity) =
-    when (requestContextService.getServiceForRequest()) {
-      ServiceName.temporaryAccommodation -> user.hasAnyRole(UserRole.CAS3_ASSESSOR, CAS3_REPORTER)
-      else -> false
-    }
+  fun userCanViewReport(user: UserEntity) = when (requestContextService.getServiceForRequest()) {
+    ServiceName.temporaryAccommodation -> user.hasAnyRole(UserRole.CAS3_ASSESSOR, CAS3_REPORTER)
+    else -> false
+  }
 
   fun userCanViewApplication(user: UserEntity, application: ApplicationEntity): Boolean {
     if (user.id == application.createdByUser.id) {
@@ -139,11 +129,9 @@ class UserAccessService(
   private fun userCanViewTemporaryAccommodationApplicationCreatedBySomeoneElse(
     user: UserEntity,
     application: TemporaryAccommodationApplicationEntity,
-  ): Boolean {
-    return userCanAccessRegion(user, application.probationRegion.id) &&
-      user.hasRole(UserRole.CAS3_ASSESSOR) &&
-      application.submittedAt != null
-  }
+  ): Boolean = userCanAccessRegion(user, application.probationRegion.id) &&
+    user.hasRole(UserRole.CAS3_ASSESSOR) &&
+    application.submittedAt != null
 
   fun userCanReallocateTask(user: UserEntity): Boolean = when (requestContextService.getServiceForRequest()) {
     ServiceName.temporaryAccommodation -> user.hasRole(UserRole.CAS3_ASSESSOR)
@@ -190,9 +178,10 @@ class UserAccessService(
    */
   fun userMayWithdrawApplication(user: UserEntity, application: ApplicationEntity): Boolean = when (application) {
     is ApprovedPremisesApplicationEntity ->
-      application.createdByUser == user || (
-        application.isSubmitted() && user.hasPermission(UserPermission.CAS1_APPLICATION_WITHDRAW_OTHERS)
-        )
+      application.createdByUser == user ||
+        (
+          application.isSubmitted() && user.hasPermission(UserPermission.CAS1_APPLICATION_WITHDRAW_OTHERS)
+          )
     else -> false
   }
 
@@ -201,22 +190,18 @@ class UserAccessService(
    *
    * It doesn't consider if the placement request is in a withdrawable state
    */
-  fun userMayWithdrawPlacementRequest(user: UserEntity, placementRequest: PlacementRequestEntity) =
-    placementRequest.application.createdByUser == user ||
-      user.hasPermission(UserPermission.CAS1_REQUEST_FOR_PLACEMENT_WITHDRAW_OTHERS)
+  fun userMayWithdrawPlacementRequest(user: UserEntity, placementRequest: PlacementRequestEntity) = placementRequest.application.createdByUser == user ||
+    user.hasPermission(UserPermission.CAS1_REQUEST_FOR_PLACEMENT_WITHDRAW_OTHERS)
 
   /**
    * This function only checks if the user has the correct permissions to withdraw the given placement application.
    *
    * It doesn't consider if the placement request is in a withdrawable state
    */
-  fun userMayWithdrawPlacementApplication(user: UserEntity, placementApplication: PlacementApplicationEntity) =
-    placementApplication.createdByUser == user ||
-      (placementApplication.isSubmitted() && user.hasPermission(UserPermission.CAS1_REQUEST_FOR_PLACEMENT_WITHDRAW_OTHERS))
+  fun userMayWithdrawPlacementApplication(user: UserEntity, placementApplication: PlacementApplicationEntity) = placementApplication.createdByUser == user ||
+    (placementApplication.isSubmitted() && user.hasPermission(UserPermission.CAS1_REQUEST_FOR_PLACEMENT_WITHDRAW_OTHERS))
 
-  fun userCanAccessTemporaryAccommodationApplication(user: UserEntity, application: ApplicationEntity): Boolean {
-    return (user == application.createdByUser) &&
-      userCanAccessRegion(user, (application as TemporaryAccommodationApplicationEntity).probationRegion.id) &&
-      user.hasRole(UserRole.CAS3_REFERRER)
-  }
+  fun userCanAccessTemporaryAccommodationApplication(user: UserEntity, application: ApplicationEntity): Boolean = (user == application.createdByUser) &&
+    userCanAccessRegion(user, (application as TemporaryAccommodationApplicationEntity).probationRegion.id) &&
+    user.hasRole(UserRole.CAS3_REFERRER)
 }

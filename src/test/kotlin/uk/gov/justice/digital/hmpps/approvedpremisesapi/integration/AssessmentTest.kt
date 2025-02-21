@@ -1230,7 +1230,7 @@ class AssessmentTest : IntegrationTestBase() {
             withAddedAt(OffsetDateTime.now())
           }
 
-          val probationDeliveryUnits = probationDeliveryUnitRepository.findAll().take(4) as MutableList<ProbationDeliveryUnitEntity>
+          val probationDeliveryUnits = probationDeliveryUnitRepository.findAll().take(4) as MutableList<ProbationDeliveryUnitEntity?>
           probationDeliveryUnits.addLast(null)
 
           val assessments = offenders.mapIndexed { i, (offenderDetails, inmateDetails) ->
@@ -3212,21 +3212,18 @@ class AssessmentTest : IntegrationTestBase() {
     }
   }
 
-  private fun buildTemporaryAccommodationAssessmentJsonSchemaEntity() =
-    temporaryAccommodationAssessmentJsonSchemaEntityFactory.produceAndPersist {
-      withPermissiveSchema()
-    }
+  private fun buildTemporaryAccommodationAssessmentJsonSchemaEntity() = temporaryAccommodationAssessmentJsonSchemaEntityFactory.produceAndPersist {
+    withPermissiveSchema()
+  }
 
-  private fun buildTemporaryAccommodationApplicationJsonSchemaEntity() =
-    temporaryAccommodationApplicationJsonSchemaEntityFactory.produceAndPersist {
-      withPermissiveSchema()
-    }
+  private fun buildTemporaryAccommodationApplicationJsonSchemaEntity() = temporaryAccommodationApplicationJsonSchemaEntityFactory.produceAndPersist {
+    withPermissiveSchema()
+  }
 
   fun assessmentSummaryMapper(
     offenderDetails: OffenderDetailSummary,
     inmateDetails: InmateDetail?,
-  ) =
-    AssessmentSummaryMapper(assessmentTransformer, objectMapper, offenderDetails, inmateDetails)
+  ) = AssessmentSummaryMapper(assessmentTransformer, objectMapper, offenderDetails, inmateDetails)
 
   class AssessmentSummaryMapper(
     private val assessmentTransformer: AssessmentTransformer,
@@ -3238,68 +3235,63 @@ class AssessmentTest : IntegrationTestBase() {
     fun toSummaries(
       vararg assessments: AssessmentEntity,
       status: DomainAssessmentSummaryStatus? = null,
-    ): List<AssessmentSummary> {
-      return assessments.map { toSummary(it, status) }
-    }
+    ): List<AssessmentSummary> = assessments.map { toSummary(it, status) }
 
-    fun toSummary(assessment: AssessmentEntity, status: DomainAssessmentSummaryStatus? = null): AssessmentSummary =
-      assessmentTransformer.transformDomainToApiSummary(
-        toAssessmentSummaryEntity(assessment, status),
-        PersonInfoResult.Success.Full(offenderDetails.otherIds.crn, offenderDetails, inmateDetails),
-      )
+    fun toSummary(assessment: AssessmentEntity, status: DomainAssessmentSummaryStatus? = null): AssessmentSummary = assessmentTransformer.transformDomainToApiSummary(
+      toAssessmentSummaryEntity(assessment, status),
+      PersonInfoResult.Success.Full(offenderDetails.otherIds.crn, offenderDetails, inmateDetails),
+    )
 
-    fun toRestricted(assessment: AssessmentEntity, status: DomainAssessmentSummaryStatus? = null): AssessmentSummary =
-      assessmentTransformer.transformDomainToApiSummary(
-        toAssessmentSummaryEntity(assessment, status),
-        PersonInfoResult.Success.Restricted(offenderDetails.otherIds.crn, offenderDetails.otherIds.nomsNumber),
-      )
+    fun toRestricted(assessment: AssessmentEntity, status: DomainAssessmentSummaryStatus? = null): AssessmentSummary = assessmentTransformer.transformDomainToApiSummary(
+      toAssessmentSummaryEntity(assessment, status),
+      PersonInfoResult.Success.Restricted(offenderDetails.otherIds.crn, offenderDetails.otherIds.nomsNumber),
+    )
 
     private fun toAssessmentSummaryEntity(
       assessment: AssessmentEntity,
       status: DomainAssessmentSummaryStatus?,
-    ): DomainAssessmentSummary =
-      DomainAssessmentSummaryImpl(
-        type = when (assessment.application) {
-          is ApprovedPremisesApplicationEntity -> "approved-premises"
-          is TemporaryAccommodationApplicationEntity -> "temporary-accommodation"
-          else -> fail()
-        },
+    ): DomainAssessmentSummary = DomainAssessmentSummaryImpl(
+      type = when (assessment.application) {
+        is ApprovedPremisesApplicationEntity -> "approved-premises"
+        is TemporaryAccommodationApplicationEntity -> "temporary-accommodation"
+        else -> fail()
+      },
 
-        id = assessment.id,
+      id = assessment.id,
 
-        applicationId = assessment.application.id,
+      applicationId = assessment.application.id,
 
-        createdAt = assessment.createdAt.toInstant(),
+      createdAt = assessment.createdAt.toInstant(),
 
-        riskRatings = when (val reified = assessment.application) {
-          is ApprovedPremisesApplicationEntity -> reified.riskRatings?.let { objectMapper.writeValueAsString(it) }
-          is TemporaryAccommodationApplicationEntity -> reified.riskRatings?.let { objectMapper.writeValueAsString(it) }
-          else -> null
-        },
+      riskRatings = when (val reified = assessment.application) {
+        is ApprovedPremisesApplicationEntity -> reified.riskRatings?.let { objectMapper.writeValueAsString(it) }
+        is TemporaryAccommodationApplicationEntity -> reified.riskRatings?.let { objectMapper.writeValueAsString(it) }
+        else -> null
+      },
 
-        arrivalDate = when (val application = assessment.application) {
-          is ApprovedPremisesApplicationEntity -> application.arrivalDate?.toInstant()
-          is TemporaryAccommodationApplicationEntity -> application.arrivalDate?.toInstant()
-          else -> null
-        },
+      arrivalDate = when (val application = assessment.application) {
+        is ApprovedPremisesApplicationEntity -> application.arrivalDate?.toInstant()
+        is TemporaryAccommodationApplicationEntity -> application.arrivalDate?.toInstant()
+        else -> null
+      },
 
-        completed = when (assessment) {
-          is TemporaryAccommodationAssessmentEntity -> assessment.completedAt != null
-          else -> assessment.decision != null
-        },
-        decision = assessment.decision?.name,
-        crn = assessment.application.crn,
-        allocated = assessment.allocatedToUser != null,
-        status = status,
-        dueAt = assessment.dueAt?.toInstant(),
+      completed = when (assessment) {
+        is TemporaryAccommodationAssessmentEntity -> assessment.completedAt != null
+        else -> assessment.decision != null
+      },
+      decision = assessment.decision?.name,
+      crn = assessment.application.crn,
+      allocated = assessment.allocatedToUser != null,
+      status = status,
+      dueAt = assessment.dueAt?.toInstant(),
 
         /*
         If assessment.application is not TemporaryAccommodationApplicationEntity this returns null due to cast failing.
         If assessment.application is not null but probationDeliveryUnit is null, then null is also returned,
         which makes sense for applications for which the PDU hasn't been specified (and would therefore need to be null
          */
-        probationDeliveryUnitName = (assessment.application as? TemporaryAccommodationApplicationEntity)?.probationDeliveryUnit?.name,
-      )
+      probationDeliveryUnitName = (assessment.application as? TemporaryAccommodationApplicationEntity)?.probationDeliveryUnit?.name,
+    )
   }
 
   private fun produceAndPersistTemporaryAccommodationAssessmentEntity(
@@ -3324,14 +3316,12 @@ class AssessmentTest : IntegrationTestBase() {
     user: UserEntity,
     applicationSchema: TemporaryAccommodationApplicationJsonSchemaEntity = buildTemporaryAccommodationApplicationJsonSchemaEntity(),
     nonDefaultFields: TemporaryAccommodationApplicationEntityFactory.() -> Unit = {},
-  ): TemporaryAccommodationApplicationEntity {
-    return temporaryAccommodationApplicationEntityFactory.produceAndPersist {
-      withCrn(crn)
-      withCreatedByUser(user)
-      withApplicationSchema(applicationSchema)
-      withProbationRegion(user.probationRegion)
-      nonDefaultFields()
-    }
+  ): TemporaryAccommodationApplicationEntity = temporaryAccommodationApplicationEntityFactory.produceAndPersist {
+    withCrn(crn)
+    withCreatedByUser(user)
+    withApplicationSchema(applicationSchema)
+    withProbationRegion(user.probationRegion)
+    nonDefaultFields()
   }
 
   @SuppressWarnings("LongParameterList")

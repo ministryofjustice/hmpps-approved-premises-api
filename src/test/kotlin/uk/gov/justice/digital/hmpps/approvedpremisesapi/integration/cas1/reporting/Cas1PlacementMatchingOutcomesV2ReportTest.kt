@@ -15,6 +15,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.AssessmentAcceptance
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1ApplicationTimelinessCategory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1ApplicationUserDetails
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1ReportName
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Gender
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewBookingNotMade
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewPlacementApplication
@@ -124,7 +125,7 @@ class Cas1PlacementMatchingOutcomesV2ReportTest : InitialiseDatabasePerClassTest
     givenAUser(roles = listOf(UserRole.CAS1_REPORT_VIEWER)) { _, jwt ->
 
       webTestClient.get()
-        .uri(getReportUrl(year = REPORT_YEAR - 1, month = REPORT_MONTH, includePii = true))
+        .uri(getReportUrl(Cas1ReportName.placementMatchingOutcomesV2, year = REPORT_YEAR - 1, month = REPORT_MONTH))
         .header("Authorization", "Bearer $jwt")
         .header("X-Service-Name", ServiceName.approvedPremises.value)
         .exchange()
@@ -144,11 +145,11 @@ class Cas1PlacementMatchingOutcomesV2ReportTest : InitialiseDatabasePerClassTest
   }
 
   @Test
-  fun `Get report returns OK with correct applications, exclude PII by default`() {
+  fun `Get report returns OK with correct applications, excluding PII`() {
     givenAUser(roles = listOf(UserRole.CAS1_REPORT_VIEWER)) { _, jwt ->
 
       webTestClient.get()
-        .uri(getReportUrl(year = REPORT_YEAR, month = REPORT_MONTH, includePii = null))
+        .uri(getReportUrl(Cas1ReportName.placementMatchingOutcomesV2, year = REPORT_YEAR, month = REPORT_MONTH))
         .header("Authorization", "Bearer $jwt")
         .header("X-Service-Name", ServiceName.approvedPremises.value)
         .exchange()
@@ -177,17 +178,30 @@ class Cas1PlacementMatchingOutcomesV2ReportTest : InitialiseDatabasePerClassTest
   }
 
   @Test
-  fun `Get report returns OK with correct applications, including PII`() {
+  fun `Permission denied if trying to access report with PII without correct role`() {
     givenAUser(roles = listOf(UserRole.CAS1_REPORT_VIEWER)) { _, jwt ->
+      webTestClient.get()
+        .uri(getReportUrl(Cas1ReportName.placementMatchingOutcomesV2WithPii, year = 2020, month = 2))
+        .header("Authorization", "Bearer $jwt")
+        .header("X-Service-Name", ServiceName.approvedPremises.value)
+        .exchange()
+        .expectStatus()
+        .isForbidden
+    }
+  }
+
+  @Test
+  fun `Get report returns OK with correct applications, including PII`() {
+    givenAUser(roles = listOf(UserRole.CAS1_REPORT_VIEWER_WITH_PII)) { _, jwt ->
 
       webTestClient.get()
-        .uri(getReportUrl(year = REPORT_YEAR, month = REPORT_MONTH, includePii = true))
+        .uri(getReportUrl(Cas1ReportName.placementMatchingOutcomesV2WithPii, year = REPORT_YEAR, month = REPORT_MONTH))
         .header("Authorization", "Bearer $jwt")
         .header("X-Service-Name", ServiceName.approvedPremises.value)
         .exchange()
         .expectStatus()
         .isOk
-        .expectHeader().valuesMatch("content-disposition", "attachment; filename=\"placement-matching-outcomes-2020-02-[0-9_]*.csv\"")
+        .expectHeader().valuesMatch("content-disposition", "attachment; filename=\"placement-matching-outcomes-with-pii-2020-02-[0-9_]*.csv\"")
         .expectBody()
         .consumeWith {
           val actual = DataFrame
@@ -668,22 +682,13 @@ class Cas1PlacementMatchingOutcomesV2ReportTest : InitialiseDatabasePerClassTest
   private fun getLatestAssessment(applicationId: UUID) = getApplication(applicationId)
     .assessments.filter { it.reallocatedAt == null }.maxByOrNull { it.createdAt }!!
 
-  private fun getApplication(applicationId: UUID) =
-    realApplicationRepository.findByIdOrNull(applicationId)!! as ApprovedPremisesApplicationEntity
+  private fun getApplication(applicationId: UUID) = realApplicationRepository.findByIdOrNull(applicationId)!! as ApprovedPremisesApplicationEntity
 
-  private fun getPlacementApplications(application: ApplicationEntity) =
-    placementApplicationRepository.findByApplication(application).filter { it.reallocatedAt == null }
+  private fun getPlacementApplications(application: ApplicationEntity) = placementApplicationRepository.findByApplication(application).filter { it.reallocatedAt == null }
 
-  private fun getPlacementApplication(application: ApplicationEntity) =
-    getPlacementApplications(application).first()
+  private fun getPlacementApplication(application: ApplicationEntity) = getPlacementApplications(application).first()
 
-  private fun getReportUrl(year: Int, month: Int, includePii: Boolean?) =
-    "/cas1/reports/placementMatchingOutcomesV2?year=$year&month=$month" +
-      if (includePii != null) {
-        "&includePii=$includePii"
-      } else {
-        ""
-      }
+  private fun getReportUrl(reportName: Cas1ReportName, year: Int, month: Int) = "/cas1/reports/${reportName.value}?year=$year&month=$month"
 
   @SuppressWarnings("ConstructorParameterNaming")
   data class PlacementMatchingOutcomeReportRow(

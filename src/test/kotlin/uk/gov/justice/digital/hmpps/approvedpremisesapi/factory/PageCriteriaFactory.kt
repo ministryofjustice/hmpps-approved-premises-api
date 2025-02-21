@@ -11,11 +11,10 @@ class PageCriteriaFactory<S>(defaultSortBy: S) : Factory<PageCriteria<S>> {
   val page: Yielded<Int?> = { null }
   val perPage: Yielded<Int?> = { null }
 
-  override fun produce(): PageCriteria<S> =
-    PageCriteria(
-      sortBy(),
-      sortDirection(),
-      page(),
-      perPage(),
-    )
+  override fun produce(): PageCriteria<S> = PageCriteria(
+    sortBy(),
+    sortDirection(),
+    page(),
+    perPage(),
+  )
 }

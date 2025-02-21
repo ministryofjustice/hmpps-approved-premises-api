@@ -164,24 +164,19 @@ class ApplicationsTransformer(
     type = "Offline",
   )
 
-  private fun getStatus(entity: ApplicationEntity, latestAssessment: AssessmentEntity?): ApplicationStatus {
-    return when {
-      latestAssessment?.clarificationNotes?.any { it.response == null } == true -> ApplicationStatus.requestedFurtherInformation
-      entity.submittedAt !== null -> ApplicationStatus.submitted
-      else -> ApplicationStatus.inProgress
-    }
+  private fun getStatus(entity: ApplicationEntity, latestAssessment: AssessmentEntity?): ApplicationStatus = when {
+    latestAssessment?.clarificationNotes?.any { it.response == null } == true -> ApplicationStatus.requestedFurtherInformation
+    entity.submittedAt !== null -> ApplicationStatus.submitted
+    else -> ApplicationStatus.inProgress
   }
 
-  private fun getStatusFromSummary(entity: DomainTemporaryAccommodationApplicationSummary): ApplicationStatus {
-    return when {
-      entity.getLatestAssessmentHasClarificationNotesWithoutResponse() -> ApplicationStatus.requestedFurtherInformation
-      entity.getSubmittedAt() !== null -> ApplicationStatus.submitted
-      else -> ApplicationStatus.inProgress
-    }
+  private fun getStatusFromSummary(entity: DomainTemporaryAccommodationApplicationSummary): ApplicationStatus = when {
+    entity.getLatestAssessmentHasClarificationNotesWithoutResponse() -> ApplicationStatus.requestedFurtherInformation
+    entity.getSubmittedAt() !== null -> ApplicationStatus.submitted
+    else -> ApplicationStatus.inProgress
   }
 
-  private fun getStatusFromSummary(entity: DomainApprovedPremisesApplicationSummary): ApiApprovedPremisesApplicationStatus =
-    ApprovedPremisesApplicationStatus.valueOf(entity.getStatus()).apiValue
+  private fun getStatusFromSummary(entity: DomainApprovedPremisesApplicationSummary): ApiApprovedPremisesApplicationStatus = ApprovedPremisesApplicationStatus.valueOf(entity.getStatus()).apiValue
 
   fun transformJpaDecisionToApi(decision: AssessmentDecision?) = when (decision) {
     AssessmentDecision.ACCEPTED -> uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.AssessmentDecision.accepted

@@ -57,9 +57,7 @@ class StatusUpdateService(
 
   private val log = LoggerFactory.getLogger(this::class.java)
 
-  fun isValidStatus(statusUpdate: Cas2AssessmentStatusUpdate): Boolean {
-    return findActiveStatusByName(statusUpdate.newStatus) != null
-  }
+  fun isValidStatus(statusUpdate: Cas2AssessmentStatusUpdate): Boolean = findActiveStatusByName(statusUpdate.newStatus) != null
 
   @Transactional
   @SuppressWarnings("ReturnCount")
@@ -128,10 +126,8 @@ class StatusUpdateService(
     )
   }
 
-  private fun findActiveStatusByName(statusName: String): Cas2PersistedApplicationStatus? {
-    return statusFinder.active()
-      .find { status -> status.name == statusName }
-  }
+  private fun findActiveStatusByName(statusName: String): Cas2PersistedApplicationStatus? = statusFinder.active()
+    .find { status -> status.name == statusName }
 
   fun createStatusUpdatedDomainEvent(statusUpdate: Cas2StatusUpdateEntity, statusDetails: List<Cas2PersistedApplicationStatusDetail> = emptyList()) {
     val domainEventId = UUID.randomUUID()

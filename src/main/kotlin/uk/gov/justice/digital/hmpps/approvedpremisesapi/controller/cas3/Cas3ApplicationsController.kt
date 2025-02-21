@@ -12,9 +12,7 @@ class Cas3ApplicationsController(
   private val cas3ApplicationService: Cas3ApplicationService,
 ) : ApplicationsCas3Delegate {
 
-  override fun deleteApplication(applicationId: UUID): ResponseEntity<Unit> {
-    return ResponseEntity.ok(
-      extractEntityFromCasResult(cas3ApplicationService.markApplicationAsDeleted(applicationId)),
-    )
-  }
+  override fun deleteApplication(applicationId: UUID): ResponseEntity<Unit> = ResponseEntity.ok(
+    extractEntityFromCasResult(cas3ApplicationService.markApplicationAsDeleted(applicationId)),
+  )
 }

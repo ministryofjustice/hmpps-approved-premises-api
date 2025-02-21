@@ -121,7 +121,7 @@ class Cas1SeedPremisesFromCsvJob(
     val probationRegion = probationRegionRepository.findByName(row.probationRegion)
       ?: throw RuntimeException("Probation Region ${row.probationRegion} does not exist")
 
-    val localAuthorityArea = localAuthorityAreaRepository.findByName(row.localAuthorityArea)
+    val localAuthorityArea = localAuthorityAreaRepository.findByNameIgnoringCase(row.localAuthorityArea)
       ?: throw RuntimeException("Local Authority Area ${row.localAuthorityArea} does not exist")
 
     val characteristics = characteristicsFromRow(row)
@@ -134,33 +134,31 @@ class Cas1SeedPremisesFromCsvJob(
   }
 
   @SuppressWarnings("TooGenericExceptionThrown")
-  private fun characteristicsFromRow(row: ApprovedPremisesSeedCsvRow): List<CharacteristicEntity> {
-    return listOf(
-      CharacteristicValue("isIAP", castBooleanString(row.isIAP)),
-      CharacteristicValue("isPIPE", castBooleanString(row.isPIPE)),
-      CharacteristicValue("isESAP", castBooleanString(row.isESAP)),
-      CharacteristicValue("isSemiSpecialistMentalHealth", castBooleanString(row.isSemiSpecialistMentalHealth)),
-      CharacteristicValue("isRecoveryFocussed", castBooleanString(row.isRecoveryFocussed)),
-      CharacteristicValue("isSuitableForVulnerable", castBooleanString(row.isSuitableForVulnerable)),
-      CharacteristicValue("acceptsSexOffenders", castBooleanString(row.acceptsSexOffenders)),
-      CharacteristicValue("acceptsChildSexOffenders", castBooleanString(row.acceptsChildSexOffenders)),
-      CharacteristicValue("acceptsNonSexualChildOffenders", castBooleanString(row.acceptsNonSexualChildOffenders)),
-      CharacteristicValue("acceptsHateCrimeOffenders", castBooleanString(row.acceptsHateCrimeOffenders)),
-      CharacteristicValue("isCatered", castBooleanString(row.isCatered)),
-      CharacteristicValue("hasWideStepFreeAccess", castBooleanString(row.hasWideStepFreeAccess)),
-      CharacteristicValue("hasWideAccessToCommunalAreas", castBooleanString(row.hasWideAccessToCommunalAreas)),
-      CharacteristicValue("hasStepFreeAccessToCommunalAreas", castBooleanString(row.hasStepFreeAccessToCommunalAreas)),
-      CharacteristicValue("hasWheelChairAccessibleBathrooms", castBooleanString(row.hasWheelChairAccessibleBathrooms)),
-      CharacteristicValue("hasLift", castBooleanString(row.hasLift)),
-      CharacteristicValue("hasTactileFlooring", castBooleanString(row.hasTactileFlooring)),
-      CharacteristicValue("hasBrailleSignage", castBooleanString(row.hasBrailleSignage)),
-      CharacteristicValue("hasHearingLoop", castBooleanString(row.hasHearingLoop)),
-    ).filter { it.value }
-      .map {
-        characteristicRepository.findByPropertyNameAndScopes(propertyName = it.propertyName, serviceName = "approved-premises", modelName = "premises")
-          ?: throw RuntimeException("Characteristic '${it.propertyName}' does not exist for AP premises")
-      }
-  }
+  private fun characteristicsFromRow(row: ApprovedPremisesSeedCsvRow): List<CharacteristicEntity> = listOf(
+    CharacteristicValue("isIAP", castBooleanString(row.isIAP)),
+    CharacteristicValue("isPIPE", castBooleanString(row.isPIPE)),
+    CharacteristicValue("isESAP", castBooleanString(row.isESAP)),
+    CharacteristicValue("isSemiSpecialistMentalHealth", castBooleanString(row.isSemiSpecialistMentalHealth)),
+    CharacteristicValue("isRecoveryFocussed", castBooleanString(row.isRecoveryFocussed)),
+    CharacteristicValue("isSuitableForVulnerable", castBooleanString(row.isSuitableForVulnerable)),
+    CharacteristicValue("acceptsSexOffenders", castBooleanString(row.acceptsSexOffenders)),
+    CharacteristicValue("acceptsChildSexOffenders", castBooleanString(row.acceptsChildSexOffenders)),
+    CharacteristicValue("acceptsNonSexualChildOffenders", castBooleanString(row.acceptsNonSexualChildOffenders)),
+    CharacteristicValue("acceptsHateCrimeOffenders", castBooleanString(row.acceptsHateCrimeOffenders)),
+    CharacteristicValue("isCatered", castBooleanString(row.isCatered)),
+    CharacteristicValue("hasWideStepFreeAccess", castBooleanString(row.hasWideStepFreeAccess)),
+    CharacteristicValue("hasWideAccessToCommunalAreas", castBooleanString(row.hasWideAccessToCommunalAreas)),
+    CharacteristicValue("hasStepFreeAccessToCommunalAreas", castBooleanString(row.hasStepFreeAccessToCommunalAreas)),
+    CharacteristicValue("hasWheelChairAccessibleBathrooms", castBooleanString(row.hasWheelChairAccessibleBathrooms)),
+    CharacteristicValue("hasLift", castBooleanString(row.hasLift)),
+    CharacteristicValue("hasTactileFlooring", castBooleanString(row.hasTactileFlooring)),
+    CharacteristicValue("hasBrailleSignage", castBooleanString(row.hasBrailleSignage)),
+    CharacteristicValue("hasHearingLoop", castBooleanString(row.hasHearingLoop)),
+  ).filter { it.value }
+    .map {
+      characteristicRepository.findByPropertyNameAndScopes(propertyName = it.propertyName, serviceName = "approved-premises", modelName = "premises")
+        ?: throw RuntimeException("Characteristic '${it.propertyName}' does not exist for AP premises")
+    }
 
   private fun createNewApprovedPremises(
     row: ApprovedPremisesSeedCsvRow,
@@ -212,9 +210,7 @@ class Cas1SeedPremisesFromCsvJob(
     return if (booleanString == "YES") "YES" else "NO"
   }
 
-  private fun castBooleanString(booleanString: String): Boolean {
-    return booleanString == "YES"
-  }
+  private fun castBooleanString(booleanString: String): Boolean = booleanString == "YES"
 
   private fun updateExistingApprovedPremises(
     row: ApprovedPremisesSeedCsvRow,

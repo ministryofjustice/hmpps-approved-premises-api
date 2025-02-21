@@ -112,24 +112,18 @@ class AssessmentsController(
   private fun <EntityType> processAuthorisationFor(
     assessmentId: UUID,
     result: AuthorisableActionResult<ValidatableActionResult<EntityType>>,
-  ): Any {
-    return when (result) {
-      is AuthorisableActionResult.NotFound -> throwProblem(NotFoundProblem(assessmentId, "Cas2Application"))
-      is AuthorisableActionResult.Unauthorised -> throwProblem(ForbiddenProblem())
-      is AuthorisableActionResult.Success -> result.entity
-    }
+  ): Any = when (result) {
+    is AuthorisableActionResult.NotFound -> throwProblem(NotFoundProblem(assessmentId, "Cas2Application"))
+    is AuthorisableActionResult.Unauthorised -> throwProblem(ForbiddenProblem())
+    is AuthorisableActionResult.Success -> result.entity
   }
 
-  private fun throwProblem(problem: AbstractThrowableProblem) {
-    throw problem
-  }
+  private fun throwProblem(problem: AbstractThrowableProblem): Unit = throw problem
 
-  private fun <EntityType : Any> processValidation(validationResult: ValidatableActionResult<EntityType>): Any {
-    return when (validationResult) {
-      is ValidatableActionResult.GeneralValidationError -> throwProblem(BadRequestProblem(errorDetail = validationResult.message))
-      is ValidatableActionResult.FieldValidationError -> throwProblem(BadRequestProblem(invalidParams = validationResult.validationMessages))
-      is ValidatableActionResult.ConflictError -> throwProblem(ConflictProblem(id = validationResult.conflictingEntityId, conflictReason = validationResult.message))
-      is ValidatableActionResult.Success -> validationResult.entity
-    }
+  private fun <EntityType : Any> processValidation(validationResult: ValidatableActionResult<EntityType>): Any = when (validationResult) {
+    is ValidatableActionResult.GeneralValidationError -> throwProblem(BadRequestProblem(errorDetail = validationResult.message))
+    is ValidatableActionResult.FieldValidationError -> throwProblem(BadRequestProblem(invalidParams = validationResult.validationMessages))
+    is ValidatableActionResult.ConflictError -> throwProblem(ConflictProblem(id = validationResult.conflictingEntityId, conflictReason = validationResult.message))
+    is ValidatableActionResult.Success -> validationResult.entity
   }
 }

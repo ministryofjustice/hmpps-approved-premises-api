@@ -66,7 +66,7 @@ class SeedCas1PremisesFromSiteSurveyXlsxTest : SeedTestBase() {
       sheets = mapOf("Sheet2" to dataFrame),
     )
 
-    seedXlsxService.seedExcelData(
+    seedXlsxService.seedFile(
       SeedFromExcelFileType.CAS1_IMPORT_SITE_SURVEY_PREMISES,
       "site_survey.xlsx",
     )
@@ -161,7 +161,7 @@ class SeedCas1PremisesFromSiteSurveyXlsxTest : SeedTestBase() {
       sheets = mapOf("Sheet2" to dataFrame),
     )
 
-    seedXlsxService.seedExcelData(
+    seedXlsxService.seedFile(
       SeedFromExcelFileType.CAS1_IMPORT_SITE_SURVEY_PREMISES,
       "site_survey.xlsx",
     )
@@ -271,7 +271,7 @@ class SeedCas1PremisesFromSiteSurveyXlsxTest : SeedTestBase() {
       sheets = mapOf("Sheet2" to dataFrame),
     )
 
-    seedXlsxService.seedExcelData(
+    seedXlsxService.seedFile(
       SeedFromExcelFileType.CAS1_IMPORT_SITE_SURVEY_PREMISES,
       "site_survey.xlsx",
     )

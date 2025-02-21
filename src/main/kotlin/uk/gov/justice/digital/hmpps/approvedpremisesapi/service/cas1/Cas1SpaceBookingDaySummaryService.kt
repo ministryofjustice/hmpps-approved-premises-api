@@ -51,10 +51,10 @@ class Cas1SpaceBookingDaySummaryService(
       bookingsSortBy.value,
     )
 
-    val spaceBookingsForDate = cas1SpaceBookingRepository.findAllPremisesBookingsForDate(
+    val spaceBookingsForDate = cas1SpaceBookingRepository.findByPremisesIdAndCriteriaForDate(
       premisesId = premisesId,
-      daySummaryDate = date,
-      bookingsCriteriaFilter = getBookingCharacteristicIds(bookingsCriteriaFilter),
+      date = date,
+      criteria = getBookingCharacteristicIds(bookingsCriteriaFilter),
       sort = sort,
       excludeSpaceBookingId = excludeSpaceBookingId,
     )
@@ -76,12 +76,11 @@ class Cas1SpaceBookingDaySummaryService(
     )
   }
 
-  private fun getBookingCharacteristicIds(bookingsCriteriaFilter: List<Cas1SpaceBookingCharacteristic>?) =
-    bookingsCriteriaFilter?.let { bookingCriteria ->
-      val characteristics = bookingCriteria.map { it.value }
-      characteristicService.getCharacteristicsByPropertyNames(characteristics, ServiceName.approvedPremises)
-        .map { characteristic -> characteristic.id }
-    }
+  private fun getBookingCharacteristicIds(bookingsCriteriaFilter: List<Cas1SpaceBookingCharacteristic>?) = bookingsCriteriaFilter?.let { bookingCriteria ->
+    val characteristics = bookingCriteria.map { it.value }
+    characteristicService.getCharacteristicsByPropertyNames(characteristics, ServiceName.approvedPremises)
+      .map { characteristic -> characteristic.id }
+  }
 
   private fun getOffenderSummariesForBookings(spaceBookings: List<Cas1SpaceBookingDaySummarySearchResult>): List<PersonSummaryInfoResult> {
     val user = userService.getUserForRequest()

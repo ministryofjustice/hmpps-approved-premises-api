@@ -263,9 +263,7 @@ class Cas3ReportServiceTest {
     verify(exactly = 1) { mockOffenderService.getPersonSummaryInfoResultsInBatches(any<Set<String>>(), any(), batchSize = 2) }
   }
 
-  private fun createDBReferralReportData(): TestTransitionalAccommodationReferralReportData {
-    return createDBReferralReportData("crn")
-  }
+  private fun createDBReferralReportData(): TestTransitionalAccommodationReferralReportData = createDBReferralReportData("crn")
   private fun createDBReferralReportData(crn: String) = TestTransitionalAccommodationReferralReportData(
     UUID.randomUUID().toString(), UUID.randomUUID().toString(), UUID.randomUUID().toString(),
     Instant.now(), crn, Instant.now(), "riskOfSeriousHarm",

@@ -27,10 +27,9 @@ class Cas1PremiseCapacitySummaryTransformer {
     characteristicAvailability = characteristicAvailability.map { it.toApiType() },
   )
 
-  private fun SpacePlanningService.PremiseCharacteristicAvailability.toApiType() =
-    Cas1PremiseCharacteristicAvailability(
-      characteristic = Cas1SpaceBookingCharacteristic.entries.first { it.value == this.characteristicPropertyName },
-      availableBedsCount = availableBedCount,
-      bookingsCount = bookingCount,
-    )
+  private fun SpacePlanningService.PremiseCharacteristicAvailability.toApiType() = Cas1PremiseCharacteristicAvailability(
+    characteristic = Cas1SpaceBookingCharacteristic.entries.first { it.value == this.characteristicPropertyName },
+    availableBedsCount = availableBedCount,
+    bookingsCount = bookingCount,
+  )
 }
