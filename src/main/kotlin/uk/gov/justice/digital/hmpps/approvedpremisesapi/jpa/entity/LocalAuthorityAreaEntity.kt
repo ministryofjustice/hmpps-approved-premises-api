@@ -10,7 +10,7 @@ import org.springframework.stereotype.Repository
 import java.util.UUID
 @Repository
 interface LocalAuthorityAreaRepository : JpaRepository<LocalAuthorityAreaEntity, UUID> {
-  fun findByName(name: String): LocalAuthorityAreaEntity?
+  fun findByNameIgnoringCase(name: String): LocalAuthorityAreaEntity?
 }
 
 @Entity

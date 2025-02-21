@@ -11,7 +11,9 @@ data class Cas1SiteSurveyDataFrame(
   val sheetName: String,
 ) {
 
-  fun resolveAnswer(question: String, answerCol: Int = 1): String {
+  fun resolveAnswer(question: String, answerCol: Int = 1): String = resolveAnswerOptional(question, answerCol) ?: error("Answer for question '$question' on sheet $sheetName cannot be blank")
+
+  fun resolveAnswerOptional(question: String, answerCol: Int = 1): String? {
     val questions = dataFrame.getColumn(0).toListIncludingHeader()
     val answers = dataFrame.getColumn(answerCol).toListIncludingHeader()
 
@@ -26,7 +28,7 @@ data class Cas1SiteSurveyDataFrame(
     val answer = removeDecimalPlaces()
 
     if (answer.isBlank()) {
-      error("Answer for question '$question' on sheet $sheetName cannot be blank")
+      return null
     }
 
     return answer

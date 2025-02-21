@@ -86,15 +86,27 @@ class Cas1SeedPremisesFromSiteSurveyXlsxJob(
     return postcodeDistrict
   }
 
+  @SuppressWarnings("CyclomaticComplexMethod")
   private fun resolveLocalAuthorityArea(siteSurveyPremise: Cas1SiteSurveyPremise): LocalAuthorityAreaEntity {
     val localAuthorityAreaName = when (siteSurveyPremise.localAuthorityArea) {
-      "Bournemouth" -> "Bournemouth, Christchurch and Poole"
+      "Brent (London)" -> "Brent"
+      "Brighton & Hove" -> "Brighton and Hove"
       "Bristol" -> "Bristol, City of"
+      "Bournemouth" -> "Bournemouth, Christchurch and Poole"
+      "Camden (London)" -> "Camden"
+      "Cheshire West" -> "Cheshire West and Chester"
+      "Hull" -> "Kingston upon Hull, City of"
+      "Islington (London)" -> "Islington"
+      "Lewisham (London)" -> "Lewisham"
+      "Newham (London)" -> "Newham"
+      "Richmond (London)" -> "Richmond upon Thames"
+      "Southwark (London)" -> "Southwark"
+      "Wandsworth (London)" -> "Wandsworth"
       "Windsor & Maidenhead" -> "Windsor and Maidenhead"
       else -> siteSurveyPremise.localAuthorityArea
     }
 
-    return localAuthorityAreaRepository.findByName(localAuthorityAreaName)
+    return localAuthorityAreaRepository.findByNameIgnoringCase(localAuthorityAreaName)
       ?: error("Local Authority Area '$localAuthorityAreaName' does not exist")
   }
 
