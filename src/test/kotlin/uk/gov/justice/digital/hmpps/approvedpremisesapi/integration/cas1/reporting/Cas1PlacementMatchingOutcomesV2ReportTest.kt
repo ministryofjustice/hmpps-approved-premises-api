@@ -242,6 +242,8 @@ class Cas1PlacementMatchingOutcomesV2ReportTest : InitialiseDatabasePerClassTest
       assertThat(row.request_for_placement_type).isEqualTo("STANDARD")
       assertThat(row.crn).matches("StandardRFPNotAllocated")
 
+      assertThat(row.first_match_attempt_date_time).isNull()
+
       assertThat(row.last_successful_match_attempt_date_time).isNull()
       assertThat(row.last_successful_match_attempt_premises_name).isNull()
     }
@@ -305,6 +307,8 @@ class Cas1PlacementMatchingOutcomesV2ReportTest : InitialiseDatabasePerClassTest
       assertThat(row.requested_arrival_date).isEqualTo("2020-02-02")
       assertThat(row.crn).matches("StandardRFPMatched")
 
+      assertThat(row.first_match_attempt_date_time).isEqualTo("2030-01-02T03:04:05Z")
+
       assertThat(row.last_successful_match_attempt_date_time).isEqualTo("2030-01-02T03:04:05Z")
       assertThat(row.last_successful_match_attempt_premises_name).isEqualTo("StandardRFPMatched Premise")
     }
@@ -318,6 +322,9 @@ class Cas1PlacementMatchingOutcomesV2ReportTest : InitialiseDatabasePerClassTest
         crn = "StandardRFPNotMatched",
         arrivalDateOnApplication = LocalDate.of(REPORT_YEAR, REPORT_MONTH, 3),
       )
+
+      clock.setNow(LocalDateTime.of(2028, 1, 2, 3, 4, 5))
+
       createBookingNotMade(
         placementRequestId = application.placementRequests[0].id,
         matcherUsername = "MATCHER2",
@@ -336,6 +343,8 @@ class Cas1PlacementMatchingOutcomesV2ReportTest : InitialiseDatabasePerClassTest
       assertThat(row.requested_arrival_date).isEqualTo("2020-02-03")
       assertThat(row.crn).matches("StandardRFPNotMatched")
 
+      assertThat(row.first_match_attempt_date_time).isEqualTo("2028-01-02T03:04:05Z")
+
       assertThat(row.last_successful_match_attempt_date_time).isNull()
       assertThat(row.last_successful_match_attempt_premises_name).isNull()
     }
@@ -349,6 +358,8 @@ class Cas1PlacementMatchingOutcomesV2ReportTest : InitialiseDatabasePerClassTest
         crn = "StandardRFPMNotMatchedAndThenMatched",
         arrivalDateOnApplication = LocalDate.of(REPORT_YEAR, REPORT_MONTH, 4),
       )
+      clock.setNow(LocalDateTime.of(2028, 2, 3, 4, 5, 7))
+
       createBookingNotMade(
         placementRequestId = application.placementRequests[0].id,
         matcherUsername = "MATCHER3",
@@ -375,6 +386,8 @@ class Cas1PlacementMatchingOutcomesV2ReportTest : InitialiseDatabasePerClassTest
       assertThat(row.request_for_placement_type).isEqualTo("STANDARD")
       assertThat(row.requested_arrival_date).isEqualTo("2020-02-04")
       assertThat(row.crn).matches("StandardRFPMNotMatchedAndThenMatched")
+
+      assertThat(row.first_match_attempt_date_time).isEqualTo("2028-02-03T04:05:07Z")
 
       assertThat(row.last_successful_match_attempt_date_time).isEqualTo("2030-02-03T04:05:06Z")
       assertThat(row.last_successful_match_attempt_premises_name).isEqualTo("StandardRFPNotMatchedAndThenMatched premise")
@@ -422,6 +435,7 @@ class Cas1PlacementMatchingOutcomesV2ReportTest : InitialiseDatabasePerClassTest
       assertThat(row.requested_arrival_date).isEqualTo("2020-02-05")
       assertThat(row.crn).matches("ROTLRFPMultiDates")
 
+      assertThat(row.first_match_attempt_date_time).isEqualTo("2031-08-07T06:05:06Z")
       assertThat(row.last_successful_match_attempt_date_time).isEqualTo("2031-08-07T06:05:06Z")
       assertThat(row.last_successful_match_attempt_premises_name).isEqualTo("PlacementAppMatched Premise")
     }
@@ -730,6 +744,7 @@ class Cas1PlacementMatchingOutcomesV2ReportTest : InitialiseDatabasePerClassTest
     val request_for_placement_id: String?,
     val request_for_placement_type: String?,
     val requested_arrival_date: String?,
+    val first_match_attempt_date_time: String?,
     val last_successful_match_attempt_date_time: String?,
     val last_successful_match_attempt_premises_name: String?,
   )

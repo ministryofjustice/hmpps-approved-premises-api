@@ -17,20 +17,22 @@ class Cas1PlacementMatchingOutcomesV2ReportRepository(
         pr.id as placement_request_id,
         
         CASE
-          WHEN latest_match_outcome_event.type = 'APPROVED_PREMISES_BOOKING_MADE' THEN latest_match_outcome_event.data -> 'eventDetails' -> 'bookedBy' -> 'cru' ->> 'name'
-          WHEN latest_match_outcome_event.type = 'APPROVED_PREMISES_BOOKING_NOT_MADE' THEN latest_match_outcome_event.data -> 'eventDetails' -> 'attemptedBy' -> 'cru' ->> 'name'
+          WHEN latest_match_attempt_event.type = 'APPROVED_PREMISES_BOOKING_MADE' THEN latest_match_attempt_event.data -> 'eventDetails' -> 'bookedBy' -> 'cru' ->> 'name'
+          WHEN latest_match_attempt_event.type = 'APPROVED_PREMISES_BOOKING_NOT_MADE' THEN latest_match_attempt_event.data -> 'eventDetails' -> 'attemptedBy' -> 'cru' ->> 'name'
           ELSE ''
         END as matcher_cru,
         CASE
-          WHEN latest_match_outcome_event.type = 'APPROVED_PREMISES_BOOKING_MADE' THEN latest_match_outcome_event.data -> 'eventDetails' -> 'bookedBy' -> 'staffMember' ->> 'username'
-          WHEN latest_match_outcome_event.type = 'APPROVED_PREMISES_BOOKING_NOT_MADE' THEN latest_match_outcome_event.data -> 'eventDetails' -> 'attemptedBy' -> 'staffMember' ->> 'username'
+          WHEN latest_match_attempt_event.type = 'APPROVED_PREMISES_BOOKING_MADE' THEN latest_match_attempt_event.data -> 'eventDetails' -> 'bookedBy' -> 'staffMember' ->> 'username'
+          WHEN latest_match_attempt_event.type = 'APPROVED_PREMISES_BOOKING_NOT_MADE' THEN latest_match_attempt_event.data -> 'eventDetails' -> 'attemptedBy' -> 'staffMember' ->> 'username'
           ELSE ''
         END as matcher_username,
         CASE
-          WHEN latest_match_outcome_event.type = 'APPROVED_PREMISES_BOOKING_MADE' THEN 'Placed'
-          WHEN latest_match_outcome_event.type = 'APPROVED_PREMISES_BOOKING_NOT_MADE' THEN 'Not matched'
+          WHEN latest_match_attempt_event.type = 'APPROVED_PREMISES_BOOKING_MADE' THEN 'Placed'
+          WHEN latest_match_attempt_event.type = 'APPROVED_PREMISES_BOOKING_NOT_MADE' THEN 'Not matched'
           ELSE ''
         END as match_outcome,
+        
+        to_char(first_match_attempt_event.occurred_at, 'YYYY-MM-DD"T"HH24:MI:SS"Z"') as first_match_attempt_date_time,
         
         to_char(latest_match_event.occurred_at, 'YYYY-MM-DD"T"HH24:MI:SS"Z"') as last_successful_match_attempt_date_time,
         latest_match_event.data -> 'eventDetails' -> 'premises' ->> 'name' as last_successful_match_attempt_premises_name,
@@ -59,15 +61,33 @@ class Cas1PlacementMatchingOutcomesV2ReportRepository(
                  evt.type,
                  evt.data,
                  evt.application_id,
+                 evt.occurred_at,
+                 m.value as placement_request_id
+         FROM domain_events evt
+         INNER JOIN domain_events_metadata m ON m.domain_event_id = evt.id AND m.name = 'CAS1_PLACEMENT_REQUEST_ID'
+         WHERE 
+         type IN ('APPROVED_PREMISES_BOOKING_MADE','APPROVED_PREMISES_BOOKING_NOT_MADE')
+         ORDER BY evt.application_id, m.value, created_at asc
+      ) first_match_attempt_event on 
+        first_match_attempt_event.application_id = pr.application_id AND 
+        first_match_attempt_event.placement_request_id = CAST(pr.id as TEXT)
+      
+      LEFT OUTER JOIN (
+         SELECT DISTINCT ON (evt.application_id, m.value)
+                 evt.id,
+                 evt.type,
+                 evt.data,
+                 evt.application_id,
+                 evt.occurred_at,
                  m.value as placement_request_id
          FROM domain_events evt
          INNER JOIN domain_events_metadata m ON m.domain_event_id = evt.id AND m.name = 'CAS1_PLACEMENT_REQUEST_ID'
          WHERE 
          type IN ('APPROVED_PREMISES_BOOKING_MADE','APPROVED_PREMISES_BOOKING_NOT_MADE')
          ORDER BY evt.application_id, m.value, created_at desc
-      ) latest_match_outcome_event on 
-        latest_match_outcome_event.application_id = pr.application_id AND 
-        latest_match_outcome_event.placement_request_id = CAST(pr.id as TEXT)
+      ) latest_match_attempt_event on 
+        latest_match_attempt_event.application_id = pr.application_id AND 
+        latest_match_attempt_event.placement_request_id = CAST(pr.id as TEXT)
         
       LEFT OUTER JOIN (
          SELECT DISTINCT ON (evt.application_id, m.value)
