@@ -2049,6 +2049,8 @@ class Cas1SpaceBookingTest {
     lateinit var region: ProbationRegionEntity
     lateinit var premises: ApprovedPremisesEntity
     lateinit var spaceBooking: Cas1SpaceBookingEntity
+    lateinit var applicant: UserEntity
+    lateinit var application: ApprovedPremisesApplicationEntity
 
     @BeforeAll
     fun setupTestData() {
@@ -2056,18 +2058,34 @@ class Cas1SpaceBookingTest {
 
       region = givenAProbationRegion()
 
+      val (user) = givenAUser()
+      val (offender) = givenAnOffender()
+
       premises = approvedPremisesEntityFactory.produceAndPersist {
         withSupportsSpaceBookings(true)
         withYieldedProbationRegion { region }
         withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
+        withEmailAddress("premises@test.com")
       }
 
-      val (user) = givenAUser()
-      val (offender) = givenAnOffender()
+      applicant = givenAUser(
+        staffDetail =
+        StaffDetailFactory.staffDetail(email = "applicant@test.com"),
+      ).first
+
+      application = approvedPremisesApplicationEntityFactory.produceAndPersist {
+        withCrn(offender.otherIds.crn)
+        withCreatedByUser(applicant)
+        withApplicationSchema(approvedPremisesApplicationJsonSchemaEntityFactory.produceAndPersist())
+        withApArea(givenAnApArea())
+        withSubmittedAt(OffsetDateTime.now())
+      }
+
       val (placementRequest) = givenAPlacementRequest(
         placementRequestAllocatedTo = user,
         assessmentAllocatedTo = user,
         createdByUser = user,
+        application = application,
       )
 
       spaceBooking = cas1SpaceBookingEntityFactory.produceAndPersist {
@@ -2122,6 +2140,10 @@ class Cas1SpaceBookingTest {
       assertThat(updatedSpaceBooking.expectedDepartureDate).isEqualTo(LocalDate.parse("2025-04-05"))
 
       domainEventAsserter.assertDomainEventOfTypeStored(updatedSpaceBooking.application?.id!!, DomainEventType.APPROVED_PREMISES_BOOKING_CHANGED)
+
+      emailAsserter.assertEmailsRequestedCount(2)
+      emailAsserter.assertEmailRequested(applicant.email!!, notifyConfig.templates.bookingAmended)
+      emailAsserter.assertEmailRequested(spaceBooking.premises.emailAddress!!, notifyConfig.templates.bookingAmended)
     }
 
     @Test
@@ -2209,6 +2231,8 @@ class Cas1SpaceBookingTest {
         )
 
       domainEventAsserter.assertDomainEventOfTypeStored(updatedSpaceBooking.application?.id!!, DomainEventType.APPROVED_PREMISES_BOOKING_CHANGED)
+
+      emailAsserter.assertNoEmailsRequested()
     }
 
     @Test
@@ -2277,6 +2301,8 @@ class Cas1SpaceBookingTest {
       assertTrue(updatedSpaceBooking.criteria.none { it.modelScope == "room" })
 
       domainEventAsserter.assertDomainEventOfTypeStored(updatedSpaceBooking.application?.id!!, DomainEventType.APPROVED_PREMISES_BOOKING_CHANGED)
+
+      emailAsserter.assertNoEmailsRequested()
     }
   }
 }
