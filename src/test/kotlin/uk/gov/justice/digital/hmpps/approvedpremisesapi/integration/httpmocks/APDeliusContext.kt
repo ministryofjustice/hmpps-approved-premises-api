@@ -22,14 +22,13 @@ fun IntegrationTestBase.apDeliusContextMockSuccessfulGetReferralDetails(
   bookingId: String,
   arrivedAt: ZonedDateTime?,
   departedAt: ZonedDateTime?,
-) =
-  mockSuccessfulGetCallWithJsonResponse(
-    url = "/probation-case/$crn/referrals/$bookingId",
-    responseBody = ReferralDetail(
-      arrivedAt = arrivedAt,
-      departedAt = departedAt,
-    ),
-  )
+) = mockSuccessfulGetCallWithJsonResponse(
+  url = "/probation-case/$crn/referrals/$bookingId",
+  responseBody = ReferralDetail(
+    arrivedAt = arrivedAt,
+    departedAt = departedAt,
+  ),
+)
 
 fun IntegrationTestBase.apDeliusContextMockSuccessfulStaffMembersCall(staffMember: StaffMember, qCode: String) {
   mockSuccessfulGetCallWithJsonResponse(
@@ -50,24 +49,21 @@ fun IntegrationTestBase.apDeliusContextMockSuccessfulStaffMembersCall(staffMembe
   )
 }
 
-fun IntegrationTestBase.apDeliusContextMockSuccessfulCaseDetailCall(crn: String, response: CaseDetail, responseStatus: Int = 200) =
-  mockSuccessfulGetCallWithJsonResponse(
-    url = "/probation-cases/$crn/details",
-    responseBody = response,
-    responseStatus = responseStatus,
-  )
+fun IntegrationTestBase.apDeliusContextMockSuccessfulCaseDetailCall(crn: String, response: CaseDetail, responseStatus: Int = 200) = mockSuccessfulGetCallWithJsonResponse(
+  url = "/probation-cases/$crn/details",
+  responseBody = response,
+  responseStatus = responseStatus,
+)
 
-fun IntegrationTestBase.apDeliusContextMockUnsuccesfullCaseDetailCall(crn: String, responseStatus: Int) =
-  mockUnsuccessfulGetCall(
-    url = "/probation-cases/$crn/details",
-    responseStatus = responseStatus,
-  )
+fun IntegrationTestBase.apDeliusContextMockUnsuccesfullCaseDetailCall(crn: String, responseStatus: Int) = mockUnsuccessfulGetCall(
+  url = "/probation-cases/$crn/details",
+  responseStatus = responseStatus,
+)
 
-fun IntegrationTestBase.apDeliusContextMockSuccessfulTeamsManagingCaseCall(crn: String, response: ManagingTeamsResponse) =
-  mockSuccessfulGetCallWithJsonResponse(
-    url = "/teams/managingCase/$crn",
-    responseBody = response,
-  )
+fun IntegrationTestBase.apDeliusContextMockSuccessfulTeamsManagingCaseCall(crn: String, response: ManagingTeamsResponse) = mockSuccessfulGetCallWithJsonResponse(
+  url = "/teams/managingCase/$crn",
+  responseBody = response,
+)
 
 fun IntegrationTestBase.apDeliusContextMockUserAccess(caseAccess: CaseAccess, username: String = ".*") {
   apDeliusContextAddResponseToUserAccessCall(listOf(caseAccess), username)
@@ -238,27 +234,24 @@ fun IntegrationTestBase.apDeliusContextAddStaffDetailResponse(staffDetail: Staff
   )
 }
 
-fun IntegrationTestBase.apDeliusContextMockNotFoundStaffDetailCall(username: String) =
-  mockUnsuccessfulGetCall(
-    url = "/staff/$username",
-    responseStatus = 404,
-  )
+fun IntegrationTestBase.apDeliusContextMockNotFoundStaffDetailCall(username: String) = mockUnsuccessfulGetCall(
+  url = "/staff/$username",
+  responseStatus = 404,
+)
 
-fun IntegrationTestBase.apDeliusContextMockSuccessfulDocumentsCall(crn: String, documents: List<APDeliusDocument>) =
-  mockSuccessfulGetCallWithJsonResponse(
-    url = "/documents/$crn/all",
-    responseBody = documents,
-  )
+fun IntegrationTestBase.apDeliusContextMockSuccessfulDocumentsCall(crn: String, documents: List<APDeliusDocument>) = mockSuccessfulGetCallWithJsonResponse(
+  url = "/documents/$crn/all",
+  responseBody = documents,
+)
 
-fun IntegrationTestBase.apDeliusContextMockSuccessfulDocumentDownloadCall(crn: String, documentId: UUID, fileContents: ByteArray) =
-  mockOAuth2ClientCredentialsCallIfRequired {
-    wiremockServer.stubFor(
-      WireMock.get(WireMock.urlEqualTo("/documents/$crn/$documentId"))
-        .willReturn(
-          WireMock.aResponse()
-            .withHeader("Content-Type", "application/octet-stream")
-            .withStatus(200)
-            .withBody(fileContents),
-        ),
-    )
-  }
+fun IntegrationTestBase.apDeliusContextMockSuccessfulDocumentDownloadCall(crn: String, documentId: UUID, fileContents: ByteArray) = mockOAuth2ClientCredentialsCallIfRequired {
+  wiremockServer.stubFor(
+    WireMock.get(WireMock.urlEqualTo("/documents/$crn/$documentId"))
+      .willReturn(
+        WireMock.aResponse()
+          .withHeader("Content-Type", "application/octet-stream")
+          .withStatus(200)
+          .withBody(fileContents),
+      ),
+  )
+}

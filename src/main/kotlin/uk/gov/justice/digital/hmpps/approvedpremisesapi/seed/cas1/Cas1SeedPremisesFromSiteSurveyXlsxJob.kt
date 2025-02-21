@@ -86,15 +86,27 @@ class Cas1SeedPremisesFromSiteSurveyXlsxJob(
     return postcodeDistrict
   }
 
+  @SuppressWarnings("CyclomaticComplexMethod")
   private fun resolveLocalAuthorityArea(siteSurveyPremise: Cas1SiteSurveyPremise): LocalAuthorityAreaEntity {
     val localAuthorityAreaName = when (siteSurveyPremise.localAuthorityArea) {
-      "Bournemouth" -> "Bournemouth, Christchurch and Poole"
+      "Brent (London)" -> "Brent"
+      "Brighton & Hove" -> "Brighton and Hove"
       "Bristol" -> "Bristol, City of"
+      "Bournemouth" -> "Bournemouth, Christchurch and Poole"
+      "Camden (London)" -> "Camden"
+      "Cheshire West" -> "Cheshire West and Chester"
+      "Hull" -> "Kingston upon Hull, City of"
+      "Islington (London)" -> "Islington"
+      "Lewisham (London)" -> "Lewisham"
+      "Newham (London)" -> "Newham"
+      "Richmond (London)" -> "Richmond upon Thames"
+      "Southwark (London)" -> "Southwark"
+      "Wandsworth (London)" -> "Wandsworth"
       "Windsor & Maidenhead" -> "Windsor and Maidenhead"
       else -> siteSurveyPremise.localAuthorityArea
     }
 
-    return localAuthorityAreaRepository.findByName(localAuthorityAreaName)
+    return localAuthorityAreaRepository.findByNameIgnoringCase(localAuthorityAreaName)
       ?: error("Local Authority Area '$localAuthorityAreaName' does not exist")
   }
 
@@ -272,31 +284,29 @@ class Cas1SeedPremisesFromSiteSurveyXlsxJob(
   }
 
   @SuppressWarnings("TooGenericExceptionThrown")
-  private fun resolveCharacteristics(siteSurveyPremise: Cas1SiteSurveyPremise): List<CharacteristicEntity> {
-    return listOf(
-      CharacteristicRequired("isIAP", siteSurveyPremise.iap),
-      CharacteristicRequired("isPIPE", siteSurveyPremise.pipe),
-      CharacteristicRequired("isESAP", siteSurveyPremise.enhancedSecuritySite),
-      CharacteristicRequired("isSemiSpecialistMentalHealth", siteSurveyPremise.mentalHealth),
-      CharacteristicRequired("isRecoveryFocussed", siteSurveyPremise.recoveryFocussed),
-      CharacteristicRequired("isSuitableForVulnerable", siteSurveyPremise.suitableForPeopleAtRiskOfCriminalExploitation),
-      CharacteristicRequired("acceptsSexOffenders", siteSurveyPremise.willAcceptPeopleWhoHave.committedSexualOffencesAgainstAdults),
-      CharacteristicRequired("acceptsChildSexOffenders", siteSurveyPremise.willAcceptPeopleWhoHave.committedSexualOffencesAgainstChildren),
-      CharacteristicRequired("acceptsNonSexualChildOffenders", siteSurveyPremise.willAcceptPeopleWhoHave.committedNonSexualOffencesAgainstChildren),
-      CharacteristicRequired("acceptsHateCrimeOffenders", siteSurveyPremise.willAcceptPeopleWhoHave.beenConvictedOfHateCrimes),
-      CharacteristicRequired("isCatered", siteSurveyPremise.cateredOrSelfCatered),
-      CharacteristicRequired("hasWideStepFreeAccess", siteSurveyPremise.stepFreeEntrance),
-      CharacteristicRequired("hasWideAccessToCommunalAreas", siteSurveyPremise.corridorsAtLeast1200CmWide),
-      CharacteristicRequired("hasStepFreeAccessToCommunalAreas", siteSurveyPremise.corridorsHaveStepFreeAccess),
-      CharacteristicRequired("hasWheelChairAccessibleBathrooms", siteSurveyPremise.bathroomFacilitiesAdaptedForWheelchairUsers),
-      CharacteristicRequired("hasLift", siteSurveyPremise.hasALift),
-      CharacteristicRequired("hasTactileFlooring", siteSurveyPremise.hasTactileAndDirectionalFlooring),
-      CharacteristicRequired("hasBrailleSignage", siteSurveyPremise.hasSignsInBraille),
-      CharacteristicRequired("hasHearingLoop", siteSurveyPremise.hasAHearingLoop),
-    ).filter { it.value }
-      .map {
-        characteristicRepository.findByPropertyNameAndScopes(propertyName = it.propertyName, serviceName = "approved-premises", modelName = "premises")
-          ?: throw RuntimeException("Characteristic '${it.propertyName}' does not exist for AP premises")
-      }
-  }
+  private fun resolveCharacteristics(siteSurveyPremise: Cas1SiteSurveyPremise): List<CharacteristicEntity> = listOf(
+    CharacteristicRequired("isIAP", siteSurveyPremise.iap),
+    CharacteristicRequired("isPIPE", siteSurveyPremise.pipe),
+    CharacteristicRequired("isESAP", siteSurveyPremise.enhancedSecuritySite),
+    CharacteristicRequired("isSemiSpecialistMentalHealth", siteSurveyPremise.mentalHealth),
+    CharacteristicRequired("isRecoveryFocussed", siteSurveyPremise.recoveryFocussed),
+    CharacteristicRequired("isSuitableForVulnerable", siteSurveyPremise.suitableForPeopleAtRiskOfCriminalExploitation),
+    CharacteristicRequired("acceptsSexOffenders", siteSurveyPremise.willAcceptPeopleWhoHave.committedSexualOffencesAgainstAdults),
+    CharacteristicRequired("acceptsChildSexOffenders", siteSurveyPremise.willAcceptPeopleWhoHave.committedSexualOffencesAgainstChildren),
+    CharacteristicRequired("acceptsNonSexualChildOffenders", siteSurveyPremise.willAcceptPeopleWhoHave.committedNonSexualOffencesAgainstChildren),
+    CharacteristicRequired("acceptsHateCrimeOffenders", siteSurveyPremise.willAcceptPeopleWhoHave.beenConvictedOfHateCrimes),
+    CharacteristicRequired("isCatered", siteSurveyPremise.cateredOrSelfCatered),
+    CharacteristicRequired("hasWideStepFreeAccess", siteSurveyPremise.stepFreeEntrance),
+    CharacteristicRequired("hasWideAccessToCommunalAreas", siteSurveyPremise.corridorsAtLeast1200CmWide),
+    CharacteristicRequired("hasStepFreeAccessToCommunalAreas", siteSurveyPremise.corridorsHaveStepFreeAccess),
+    CharacteristicRequired("hasWheelChairAccessibleBathrooms", siteSurveyPremise.bathroomFacilitiesAdaptedForWheelchairUsers),
+    CharacteristicRequired("hasLift", siteSurveyPremise.hasALift),
+    CharacteristicRequired("hasTactileFlooring", siteSurveyPremise.hasTactileAndDirectionalFlooring),
+    CharacteristicRequired("hasBrailleSignage", siteSurveyPremise.hasSignsInBraille),
+    CharacteristicRequired("hasHearingLoop", siteSurveyPremise.hasAHearingLoop),
+  ).filter { it.value }
+    .map {
+      characteristicRepository.findByPropertyNameAndScopes(propertyName = it.propertyName, serviceName = "approved-premises", modelName = "premises")
+        ?: throw RuntimeException("Characteristic '${it.propertyName}' does not exist for AP premises")
+    }
 }

@@ -30,35 +30,33 @@ class PlacementRequestTransformer(
     bookingSummaryTransformer,
   )
 
-  fun transformJpaToApi(jpa: PlacementRequestEntity, personInfo: PersonInfoResult): PlacementRequest {
-    return PlacementRequest(
-      id = jpa.id,
-      gender = jpa.placementRequirements.gender,
-      type = jpa.placementRequirements.apType,
-      expectedArrival = jpa.expectedArrival,
-      duration = jpa.duration,
-      location = jpa.placementRequirements.postcodeDistrict.outcode,
-      radius = jpa.placementRequirements.radius,
-      essentialCriteria = jpa.placementRequirements.essentialCriteria.mapNotNull { characteristicToCriteria(it) },
-      desirableCriteria = jpa.placementRequirements.desirableCriteria.mapNotNull { characteristicToCriteria(it) },
-      person = personTransformer.transformModelToPersonApi(personInfo),
-      risks = risksTransformer.transformDomainToApi(jpa.application.riskRatings!!, jpa.application.crn),
-      applicationId = jpa.application.id,
-      assessmentId = jpa.assessment.id,
-      releaseType = getReleaseType(jpa.application.releaseType),
-      status = getStatus(jpa),
-      assessmentDecision = assessmentTransformer.transformJpaDecisionToApi(jpa.assessment.decision)!!,
-      assessmentDate = jpa.assessment.submittedAt?.toInstant()!!,
-      applicationDate = jpa.application.submittedAt?.toInstant()!!,
-      assessor = userTransformer.transformJpaToApi(jpa.assessment.allocatedToUser!!, ServiceName.approvedPremises) as ApprovedPremisesUser,
-      notes = jpa.notes,
-      isParole = jpa.isParole,
-      booking = placementRequestBookingSummaryTransformer.getBookingSummary(jpa),
-      requestType = if (jpa.isParole) PlacementRequestRequestType.parole else PlacementRequestRequestType.standardRelease,
-      isWithdrawn = jpa.isWithdrawn,
-      withdrawalReason = getWithdrawalReason(jpa.withdrawalReason),
-    )
-  }
+  fun transformJpaToApi(jpa: PlacementRequestEntity, personInfo: PersonInfoResult): PlacementRequest = PlacementRequest(
+    id = jpa.id,
+    gender = jpa.placementRequirements.gender,
+    type = jpa.placementRequirements.apType,
+    expectedArrival = jpa.expectedArrival,
+    duration = jpa.duration,
+    location = jpa.placementRequirements.postcodeDistrict.outcode,
+    radius = jpa.placementRequirements.radius,
+    essentialCriteria = jpa.placementRequirements.essentialCriteria.mapNotNull { characteristicToCriteria(it) },
+    desirableCriteria = jpa.placementRequirements.desirableCriteria.mapNotNull { characteristicToCriteria(it) },
+    person = personTransformer.transformModelToPersonApi(personInfo),
+    risks = risksTransformer.transformDomainToApi(jpa.application.riskRatings!!, jpa.application.crn),
+    applicationId = jpa.application.id,
+    assessmentId = jpa.assessment.id,
+    releaseType = getReleaseType(jpa.application.releaseType),
+    status = getStatus(jpa),
+    assessmentDecision = assessmentTransformer.transformJpaDecisionToApi(jpa.assessment.decision)!!,
+    assessmentDate = jpa.assessment.submittedAt?.toInstant()!!,
+    applicationDate = jpa.application.submittedAt?.toInstant()!!,
+    assessor = userTransformer.transformJpaToApi(jpa.assessment.allocatedToUser!!, ServiceName.approvedPremises) as ApprovedPremisesUser,
+    notes = jpa.notes,
+    isParole = jpa.isParole,
+    booking = placementRequestBookingSummaryTransformer.getBookingSummary(jpa),
+    requestType = if (jpa.isParole) PlacementRequestRequestType.parole else PlacementRequestRequestType.standardRelease,
+    isWithdrawn = jpa.isWithdrawn,
+    withdrawalReason = getWithdrawalReason(jpa.withdrawalReason),
+  )
 
   fun getStatus(placementRequest: PlacementRequestEntity): PlacementRequestStatus {
     if (placementRequest.hasActiveBooking()) {
@@ -78,12 +76,10 @@ class PlacementRequestTransformer(
     listOf(DatePeriod(jpa.expectedArrival, jpa.expectedDeparture())),
   )
 
-  private fun characteristicToCriteria(characteristic: CharacteristicEntity): PlacementCriteria? {
-    return try {
-      PlacementCriteria.valueOf(characteristic.propertyName!!)
-    } catch (exception: Exception) {
-      null
-    }
+  private fun characteristicToCriteria(characteristic: CharacteristicEntity): PlacementCriteria? = try {
+    PlacementCriteria.valueOf(characteristic.propertyName!!)
+  } catch (exception: Exception) {
+    null
   }
 
   fun getReleaseType(releaseType: String?): ReleaseTypeOption = when (releaseType) {

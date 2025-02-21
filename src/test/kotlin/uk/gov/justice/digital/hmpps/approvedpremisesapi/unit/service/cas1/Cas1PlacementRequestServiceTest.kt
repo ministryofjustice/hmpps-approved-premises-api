@@ -318,90 +318,6 @@ class Cas1PlacementRequestServiceTest {
     }
 
     @Test
-    fun `returns Unauthorised when user can access offender and PlacementRequest not allocated to User and User does not have WORKFLOW_MANAGER role`() {
-      val requestingUser = UserEntityFactory()
-        .withUnitTestControlProbationRegion()
-        .produce()
-
-      val application = ApprovedPremisesApplicationEntityFactory()
-        .withCreatedByUser(requestingUser)
-        .produce()
-
-      val assessment = ApprovedPremisesAssessmentEntityFactory()
-        .withApplication(application)
-        .withAllocatedToUser(requestingUser)
-        .produce()
-
-      val placementRequest = PlacementRequestEntityFactory()
-        .withPlacementRequirements(
-          PlacementRequirementsEntityFactory()
-            .withApplication(application)
-            .withAssessment(assessment)
-            .produce(),
-        )
-        .withApplication(application)
-        .withAssessment(assessment)
-        .withAllocatedToUser(assigneeUser)
-        .produce()
-
-      every {
-        offenderService.canAccessOffender(application.crn, requestingUser.cas1LimitedAccessStrategy())
-      } returns true
-      every { placementRequestRepository.findByIdOrNull(placementRequest.id) } returns placementRequest
-
-      val result = placementRequestService.getPlacementRequestForUser(requestingUser, placementRequest.id)
-
-      assertThat(result is CasResult.Unauthorised).isTrue()
-    }
-
-    @Test
-    fun `returns Unauthorised when user cannot access offender and User has the WORKFLOW_MANAGER role`() {
-      val requestingUser = UserEntityFactory()
-        .withUnitTestControlProbationRegion()
-        .produce()
-        .apply {
-          roles += UserRoleAssignmentEntityFactory()
-            .withUser(this)
-            .withRole(UserRole.CAS1_WORKFLOW_MANAGER)
-            .produce()
-        }
-
-      val otherUser = UserEntityFactory()
-        .withUnitTestControlProbationRegion()
-        .produce()
-
-      val application = ApprovedPremisesApplicationEntityFactory()
-        .withCreatedByUser(assigneeUser)
-        .produce()
-
-      val assessment = ApprovedPremisesAssessmentEntityFactory()
-        .withApplication(application)
-        .withAllocatedToUser(assigneeUser)
-        .produce()
-
-      val placementRequest = PlacementRequestEntityFactory()
-        .withPlacementRequirements(
-          PlacementRequirementsEntityFactory()
-            .withApplication(application)
-            .withAssessment(assessment)
-            .produce(),
-        )
-        .withApplication(application)
-        .withAssessment(assessment)
-        .withAllocatedToUser(otherUser)
-        .produce()
-
-      every {
-        offenderService.canAccessOffender(application.crn, requestingUser.cas1LimitedAccessStrategy())
-      } returns false
-      every { placementRequestRepository.findByIdOrNull(placementRequest.id) } returns placementRequest
-
-      val result = placementRequestService.getPlacementRequestForUser(requestingUser, placementRequest.id)
-
-      assertThat(result is CasResult.Unauthorised).isTrue()
-    }
-
-    @Test
     fun `returns Success when user can access offender and PlacementRequest is allocated to User`() {
       val requestingUser = UserEntityFactory()
         .withUnitTestControlProbationRegion()
@@ -1248,56 +1164,54 @@ class Cas1PlacementRequestServiceTest {
     }
   }
 
-  private fun createPlacementRequests(num: Int, crn: String? = null, tier: String? = null, arrivalDate: LocalDate? = null): List<PlacementRequestEntity> {
-    return List(num) {
-      val user = UserEntityFactory()
-        .withUnitTestControlProbationRegion()
-        .produce()
+  private fun createPlacementRequests(num: Int, crn: String? = null, tier: String? = null, arrivalDate: LocalDate? = null): List<PlacementRequestEntity> = List(num) {
+    val user = UserEntityFactory()
+      .withUnitTestControlProbationRegion()
+      .produce()
 
-      val application = ApprovedPremisesApplicationEntityFactory()
-        .withCreatedByUser(user)
-        .apply {
-          if (crn != null) this.withCrn(crn)
+    val application = ApprovedPremisesApplicationEntityFactory()
+      .withCreatedByUser(user)
+      .apply {
+        if (crn != null) this.withCrn(crn)
 
-          if (tier != null) {
-            this.withRiskRatings(
-              PersonRisksFactory()
-                .withTier(
-                  RiskWithStatus(
-                    RiskTier(
-                      level = tier,
-                      lastUpdated = LocalDate.now(),
-                    ),
+        if (tier != null) {
+          this.withRiskRatings(
+            PersonRisksFactory()
+              .withTier(
+                RiskWithStatus(
+                  RiskTier(
+                    level = tier,
+                    lastUpdated = LocalDate.now(),
                   ),
-                )
-                .produce(),
-            )
-          }
+                ),
+              )
+              .produce(),
+          )
         }
-        .produce()
+      }
+      .produce()
 
-      val assessment = ApprovedPremisesAssessmentEntityFactory()
-        .withApplication(application)
-        .withAllocatedToUser(user)
-        .produce()
+    val assessment = ApprovedPremisesAssessmentEntityFactory()
+      .withApplication(application)
+      .withAllocatedToUser(user)
+      .produce()
 
-      PlacementRequestEntityFactory()
-        .withPlacementRequirements(
-          PlacementRequirementsEntityFactory()
-            .withApplication(application)
-            .withAssessment(assessment)
-            .produce(),
-        )
-        .withApplication(application)
-        .withAssessment(assessment)
-        .withAllocatedToUser(assigneeUser)
-        .apply {
-          if (arrivalDate != null) {
-            this.withExpectedArrival(arrivalDate)
-          }
+    PlacementRequestEntityFactory()
+      .withPlacementRequirements(
+        PlacementRequirementsEntityFactory()
+          .withApplication(application)
+          .withAssessment(assessment)
+          .produce(),
+      )
+      .withApplication(application)
+      .withAssessment(assessment)
+      .withAllocatedToUser(assigneeUser)
+      .apply {
+        if (arrivalDate != null) {
+          this.withExpectedArrival(arrivalDate)
         }
-        .produce()
-    }
+      }
+      .produce()
   }
 
   private fun createValidPlacementRequest(

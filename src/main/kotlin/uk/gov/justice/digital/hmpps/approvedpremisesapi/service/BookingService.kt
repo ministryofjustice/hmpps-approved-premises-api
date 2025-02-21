@@ -56,7 +56,6 @@ import java.util.UUID
 
 @Service
 class BookingService(
-  private val premisesService: PremisesService,
   private val offenderService: OffenderService,
   private val workingDayService: WorkingDayService,
   private val bookingRepository: BookingRepository,
@@ -273,28 +272,25 @@ class BookingService(
     return success(arrivalEntity)
   }
 
-  fun getWithdrawableState(booking: BookingEntity, user: UserEntity): WithdrawableState {
-    return WithdrawableState(
-      withdrawable = booking.isInCancellableStateCas1(),
-      withdrawn = booking.isCancelled,
-      userMayDirectlyWithdraw = userAccessService.userMayCancelBooking(user, booking),
-      blockingReason = if (booking.hasArrivals()) {
-        BlockingReason.ArrivalRecordedInCas1
-      } else if (deliusService.referralHasArrival(booking)) {
-        BlockingReason.ArrivalRecordedInDelius
-      } else {
-        null
-      },
-    )
-  }
+  fun getWithdrawableState(booking: BookingEntity, user: UserEntity): WithdrawableState = WithdrawableState(
+    withdrawable = booking.isInCancellableStateCas1(),
+    withdrawn = booking.isCancelled,
+    userMayDirectlyWithdraw = userAccessService.userMayCancelBooking(user, booking),
+    blockingReason = if (booking.hasArrivals()) {
+      BlockingReason.ArrivalRecordedInCas1
+    } else if (deliusService.referralHasArrival(booking)) {
+      BlockingReason.ArrivalRecordedInDelius
+    } else {
+      null
+    },
+  )
 
   /**
    * In CAS1 there are some legacy applications where the adhoc status is not known, indicated
    * by the adhoc column being null. These are typically treated the same as adhoc
    * bookings for certain operations (e.g. withdrawals)
    */
-  fun getAllAdhocOrUnknownForApplication(applicationEntity: ApplicationEntity) =
-    bookingRepository.findAllAdhocOrUnknownByApplication(applicationEntity)
+  fun getAllAdhocOrUnknownForApplication(applicationEntity: ApplicationEntity) = bookingRepository.findAllAdhocOrUnknownByApplication(applicationEntity)
 
   /**
    * This function should not be called directly. Instead, use [WithdrawableService.withdrawBooking] that
@@ -414,8 +410,9 @@ class BookingService(
     return success(confirmationEntity)
   }
 
-  private fun shouldCreateDomainEventForBooking(booking: BookingEntity, user: UserEntity?) =
-    booking.service == ServiceName.approvedPremises.value && user != null && (booking.application != null || booking.offlineApplication?.eventNumber != null)
+  private fun shouldCreateDomainEventForBooking(booking: BookingEntity, user: UserEntity?): Boolean = booking.service == ServiceName.approvedPremises.value &&
+    user != null &&
+    (booking.application != null || booking.offlineApplication?.eventNumber != null)
 
   @SuppressWarnings("CyclomaticComplexMethod")
   @Transactional
@@ -503,10 +500,7 @@ class BookingService(
     return success(dateChangeEntity)
   }
 
-  fun getBookingForPremises(premisesId: UUID, bookingId: UUID): GetBookingForPremisesResult {
-    val premises = premisesService.getPremises(premisesId)
-      ?: return GetBookingForPremisesResult.PremisesNotFound
-
+  fun getBookingForPremises(premises: PremisesEntity, bookingId: UUID): GetBookingForPremisesResult {
     val booking = bookingRepository.findByIdOrNull(bookingId)
       ?: return GetBookingForPremisesResult.BookingNotFound
 
@@ -546,6 +540,5 @@ class BookingService(
 
 sealed interface GetBookingForPremisesResult {
   data class Success(val booking: BookingEntity) : GetBookingForPremisesResult
-  object PremisesNotFound : GetBookingForPremisesResult
   object BookingNotFound : GetBookingForPremisesResult
 }

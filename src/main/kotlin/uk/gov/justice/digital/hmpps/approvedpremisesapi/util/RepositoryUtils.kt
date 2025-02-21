@@ -8,9 +8,7 @@ import org.springframework.data.jpa.repository.JpaRepository
 import org.springframework.data.jpa.repository.support.JpaEntityInformationSupport
 import org.springframework.stereotype.Component
 
-inline fun <reified T, ID> JpaRepository<T, ID>.findAllByIdOrdered(ids: List<ID>): List<T> {
-  return findAllByIdOrdered(ids, T::class.java)
-}
+inline fun <reified T, ID> JpaRepository<T, ID>.findAllByIdOrdered(ids: List<ID>): List<T> = findAllByIdOrdered(ids, T::class.java)
 
 fun <T, ID> JpaRepository<T, ID>.findAllByIdOrdered(ids: List<ID>, cls: Class<T>): List<T> {
   if (!RepositoryUtilHelper.instanceExists()) {

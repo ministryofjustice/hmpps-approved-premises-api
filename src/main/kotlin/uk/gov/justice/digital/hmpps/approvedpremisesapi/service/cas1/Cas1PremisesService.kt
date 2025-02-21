@@ -58,7 +58,7 @@ class Cas1PremisesService(
   private fun buildOverBookingSummary(premises: ApprovedPremisesEntity): List<Cas1OverbookingRange> {
     val premisesCapacitySummary = spacePlanningService.capacity(
       premises,
-      range = DateRange(LocalDate.now(), LocalDate.now().plusWeeks(OVERBOOKING_RANGE_DURATION_WEEKS)),
+      rangeInclusive = DateRange(LocalDate.now(), LocalDate.now().plusWeeks(OVERBOOKING_RANGE_DURATION_WEEKS).minusDays(1)),
       excludeSpaceBookingId = null,
     )
 
@@ -91,7 +91,7 @@ class Cas1PremisesService(
     return CasResult.Success(
       spacePlanningService.capacity(
         premises = premises,
-        range = DateRange(startDate, endDate),
+        rangeInclusive = DateRange(startDate, endDate),
         excludeSpaceBookingId = excludeSpaceBookingId,
       ),
     )

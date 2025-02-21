@@ -38,45 +38,37 @@ fun convertToCas3BedUtilisationBedspaceReportData(bed: BedEntity): Cas3BedUtilis
   )
 }
 
-fun convertToCas3BedUtilisationBookingReportData(booking: BookingEntity): Cas3BedUtilisationBookingReportData {
-  return Cas3BedUtilisationBookingReportData(
-    bookingId = booking.id.toString(),
-    arrivalDate = booking.arrivalDate,
-    departureDate = booking.departureDate,
-    bedId = booking.bed?.id.toString(),
-    arrivalId = booking.arrival?.id?.toString(),
-    arrivalCreatedAt = booking.arrival?.createdAt?.toInstant(),
-    confirmationId = booking.confirmation?.id?.toString(),
-  )
-}
+fun convertToCas3BedUtilisationBookingReportData(booking: BookingEntity): Cas3BedUtilisationBookingReportData = Cas3BedUtilisationBookingReportData(
+  bookingId = booking.id.toString(),
+  arrivalDate = booking.arrivalDate,
+  departureDate = booking.departureDate,
+  bedId = booking.bed?.id.toString(),
+  arrivalId = booking.arrival?.id?.toString(),
+  arrivalCreatedAt = booking.arrival?.createdAt?.toInstant(),
+  confirmationId = booking.confirmation?.id?.toString(),
+)
 
-fun convertToCas3BedUtilisationBookingCancellationReportData(booking: BookingEntity): Cas3BedUtilisationBookingCancellationReportData {
-  return Cas3BedUtilisationBookingCancellationReportData(
-    cancellationId = booking.cancellation?.id.toString(),
-    bedId = booking.bed?.id.toString(),
-    bookingId = booking.id.toString(),
-    createdAt = booking.cancellation?.createdAt?.toInstant()!!,
-  )
-}
+fun convertToCas3BedUtilisationBookingCancellationReportData(booking: BookingEntity): Cas3BedUtilisationBookingCancellationReportData = Cas3BedUtilisationBookingCancellationReportData(
+  cancellationId = booking.cancellation?.id.toString(),
+  bedId = booking.bed?.id.toString(),
+  bookingId = booking.id.toString(),
+  createdAt = booking.cancellation?.createdAt?.toInstant()!!,
+)
 
-fun convertToCas3BedUtilisationBookingTurnaroundReportData(booking: BookingEntity): Cas3BedUtilisationBookingTurnaroundReportData {
-  return Cas3BedUtilisationBookingTurnaroundReportData(
-    turnaroundId = booking.turnaround?.id.toString(),
-    bedId = booking.bed?.id.toString(),
-    bookingId = booking.id.toString(),
-    workingDayCount = booking.turnaround?.workingDayCount!!,
-    createdAt = booking.turnaround?.createdAt?.toInstant()!!,
-  )
-}
+fun convertToCas3BedUtilisationBookingTurnaroundReportData(booking: BookingEntity): Cas3BedUtilisationBookingTurnaroundReportData = Cas3BedUtilisationBookingTurnaroundReportData(
+  turnaroundId = booking.turnaround?.id.toString(),
+  bedId = booking.bed?.id.toString(),
+  bookingId = booking.id.toString(),
+  workingDayCount = booking.turnaround?.workingDayCount!!,
+  createdAt = booking.turnaround?.createdAt?.toInstant()!!,
+)
 
-fun convertToCas3BedUtilisationLostBedReportData(voidBedspace: Cas3VoidBedspaceEntity): Cas3BedUtilisationVoidBedspaceUtilisationVoidBedspaceReportData {
-  return Cas3BedUtilisationVoidBedspaceUtilisationVoidBedspaceReportData(
-    bedId = voidBedspace.bed.id.toString(),
-    startDate = voidBedspace.startDate,
-    endDate = voidBedspace.endDate,
-    cancellationId = voidBedspace.cancellation?.id?.toString(),
-  )
-}
+fun convertToCas3BedUtilisationLostBedReportData(voidBedspace: Cas3VoidBedspaceEntity): Cas3BedUtilisationVoidBedspaceUtilisationVoidBedspaceReportData = Cas3BedUtilisationVoidBedspaceUtilisationVoidBedspaceReportData(
+  bedId = voidBedspace.bed.id.toString(),
+  startDate = voidBedspace.startDate,
+  endDate = voidBedspace.endDate,
+  cancellationId = voidBedspace.cancellation?.id?.toString(),
+)
 
 @Suppress("LongParameterList")
 class Cas3BedUtilisationBedspaceReportData(

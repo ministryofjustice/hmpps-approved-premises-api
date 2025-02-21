@@ -369,13 +369,11 @@ class TemporaryAccommodationAssessmentEntity(
   isWithdrawn,
   dueAt,
 ) {
-  fun currentReleaseDate(): LocalDate =
-    this.releaseDate
-      ?: this.typedApplication<TemporaryAccommodationApplicationEntity>().personReleaseDate!!
+  fun currentReleaseDate(): LocalDate = this.releaseDate
+    ?: this.typedApplication<TemporaryAccommodationApplicationEntity>().personReleaseDate!!
 
-  fun currentAccommodationRequiredFromDate(): LocalDate =
-    this.accommodationRequiredFromDate
-      ?: this.typedApplication<TemporaryAccommodationApplicationEntity>().arrivalDate!!.toLocalDate()
+  fun currentAccommodationRequiredFromDate(): LocalDate = this.accommodationRequiredFromDate
+    ?: this.typedApplication<TemporaryAccommodationApplicationEntity>().arrivalDate!!.toLocalDate()
 }
 
 interface DomainAssessmentSummary {

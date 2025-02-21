@@ -18,14 +18,13 @@ class AssessmentService(
 ) {
 
   @Transactional
-  fun createCas2Assessment(cas2ApplicationEntity: Cas2ApplicationEntity): Cas2AssessmentEntity =
-    assessmentRepository.save(
-      Cas2AssessmentEntity(
-        id = UUID.randomUUID(),
-        createdAt = OffsetDateTime.now(),
-        application = cas2ApplicationEntity,
-      ),
-    )
+  fun createCas2Assessment(cas2ApplicationEntity: Cas2ApplicationEntity): Cas2AssessmentEntity = assessmentRepository.save(
+    Cas2AssessmentEntity(
+      id = UUID.randomUUID(),
+      createdAt = OffsetDateTime.now(),
+      application = cas2ApplicationEntity,
+    ),
+  )
 
   fun updateAssessment(assessmentId: UUID, newAssessment: UpdateCas2Assessment): AuthorisableActionResult<ValidatableActionResult<Cas2AssessmentEntity>> {
     val assessmentEntity = assessmentRepository.findByIdOrNull(assessmentId)

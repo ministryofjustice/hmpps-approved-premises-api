@@ -51,9 +51,7 @@ class PremisesService(
 
   fun getAllPremises(): List<PremisesWithBedCount> = premisesRepository.findAllWithBedCount()
 
-  fun getAllApprovedPremisesSummaries(probationRegionId: UUID?, apAreaId: UUID?): List<ApprovedPremisesSummary> {
-    return premisesRepository.findAllApprovedPremisesSummary(probationRegionId, apAreaId)
-  }
+  fun getAllApprovedPremisesSummaries(probationRegionId: UUID?, apAreaId: UUID?): List<ApprovedPremisesSummary> = premisesRepository.findAllApprovedPremisesSummary(probationRegionId, apAreaId)
 
   fun getAllPremisesInRegion(probationRegionId: UUID): List<PremisesWithBedCount> = premisesRepository.findAllByProbationRegion(probationRegionId)
 
@@ -389,7 +387,5 @@ class PremisesService(
     }
   }
 
-  fun getBedCount(premises: PremisesEntity): Int {
-    return premisesRepository.getBedCount(premises)
-  }
+  fun getBedCount(premises: PremisesEntity): Int = premisesRepository.getBedCount(premises)
 }

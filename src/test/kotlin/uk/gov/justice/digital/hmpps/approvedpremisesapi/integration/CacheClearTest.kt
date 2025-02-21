@@ -115,8 +115,7 @@ class CacheClearTest : IntegrationTestBase() {
     }
   }
 
-  private fun validateUpstreamQCodeRequestMade(qCode: String, times: Int) =
-    wiremockServer.verify(WireMock.exactly(times), WireMock.getRequestedFor(WireMock.urlEqualTo("/approved-premises/$qCode/staff")))
+  private fun validateUpstreamQCodeRequestMade(qCode: String, times: Int) = wiremockServer.verify(WireMock.exactly(times), WireMock.getRequestedFor(WireMock.urlEqualTo("/approved-premises/$qCode/staff")))
 
   private fun setupQCodeUpstreamResponse(premisesId: UUID, qCode: String) {
     approvedPremisesEntityFactory.produceAndPersist {
@@ -129,6 +128,5 @@ class CacheClearTest : IntegrationTestBase() {
     apDeliusContextMockSuccessfulStaffMembersCall(ContextStaffMemberFactory().produce(), qCode)
   }
 
-  private fun validateUpstreamOffenderDetailsRequestMade(crn: String, times: Int) =
-    wiremockServer.verify(WireMock.exactly(times), WireMock.getRequestedFor(WireMock.urlEqualTo("/secure/offenders/crn/$crn")))
+  private fun validateUpstreamOffenderDetailsRequestMade(crn: String, times: Int) = wiremockServer.verify(WireMock.exactly(times), WireMock.getRequestedFor(WireMock.urlEqualTo("/secure/offenders/crn/$crn")))
 }

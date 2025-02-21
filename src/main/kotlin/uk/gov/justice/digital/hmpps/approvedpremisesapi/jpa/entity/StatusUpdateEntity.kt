@@ -58,7 +58,5 @@ data class Cas2StatusUpdateEntity(
 ) {
   override fun toString() = "Cas2StatusEntity: $id"
 
-  fun status(): Cas2PersistedApplicationStatus {
-    return Cas2PersistedApplicationStatusFinder().getById(statusId)
-  }
+  fun status(): Cas2PersistedApplicationStatus = Cas2PersistedApplicationStatusFinder().getById(statusId)
 }

@@ -340,9 +340,8 @@ data class PlacementRequestEntity(
 ) {
   fun isInWithdrawableState() = isActive()
 
-  fun hasActiveBooking() =
-    (booking != null && booking?.cancellations.isNullOrEmpty()) ||
-      (spaceBookings.any { it.isActive() })
+  fun hasActiveBooking() = (booking != null && booking?.cancellations.isNullOrEmpty()) ||
+    (spaceBookings.any { it.isActive() })
 
   fun expectedDeparture(): LocalDate = expectedArrival.plusDays(duration.toLong())
 
@@ -419,8 +418,7 @@ enum class PlacementRequestWithdrawalReason(val apiValue: WithdrawPlacementReque
   ;
 
   companion object {
-    fun valueOf(apiValue: WithdrawPlacementRequestReason): PlacementRequestWithdrawalReason? =
-      PlacementRequestWithdrawalReason.entries.firstOrNull { it.apiValue == apiValue }
+    fun valueOf(apiValue: WithdrawPlacementRequestReason): PlacementRequestWithdrawalReason? = PlacementRequestWithdrawalReason.entries.firstOrNull { it.apiValue == apiValue }
   }
 }
 

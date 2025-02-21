@@ -2505,48 +2505,6 @@ paths:
           $ref: '_shared.yml#/components/responses/403Response'
         500:
           $ref: '_shared.yml#/components/responses/500Response'
-  /reference-data/supervising-providers:
-    get:
-      tags:
-        - Reference Data
-      summary: Lists all supervising providers for arrivals
-      operationId: reference_dataSupervisingProvidersGet
-      responses:
-        200:
-          description: successful operation
-          content:
-            'application/json':
-              schema:
-                type: array
-                items:
-                  $ref: '_shared.yml#/components/schemas/SupervisingProvider'
-        401:
-          $ref: '_shared.yml#/components/responses/401Response'
-        403:
-          $ref: '_shared.yml#/components/responses/403Response'
-        500:
-          $ref: '_shared.yml#/components/responses/500Response'
-  /reference-data/supervising-teams:
-    get:
-      tags:
-        - Reference Data
-      summary: Lists all supervising teams for arrivals
-      operationId: reference_dataSupervisingTeamsGet
-      responses:
-        200:
-          description: successful operation
-          content:
-            'application/json':
-              schema:
-                type: array
-                items:
-                  $ref: '_shared.yml#/components/schemas/SupervisingTeam'
-        401:
-          $ref: '_shared.yml#/components/responses/401Response'
-        403:
-          $ref: '_shared.yml#/components/responses/403Response'
-        500:
-          $ref: '_shared.yml#/components/responses/500Response'
   /reference-data/non-arrival-reasons:
     get:
       description: deprecated, use /cas1/reference-data/non-arrival-reasons
@@ -2564,27 +2522,6 @@ paths:
                 type: array
                 items:
                   $ref: '_shared.yml#/components/schemas/NonArrivalReason'
-        401:
-          $ref: '_shared.yml#/components/responses/401Response'
-        403:
-          $ref: '_shared.yml#/components/responses/403Response'
-        500:
-          $ref: '_shared.yml#/components/responses/500Response'
-  /reference-data/supervising-officers:
-    get:
-      tags:
-        - Reference Data
-      summary: Lists all supervising officers for arrivals
-      operationId: reference_dataSupervisingOfficersGet
-      responses:
-        200:
-          description: successful operation
-          content:
-            'application/json':
-              schema:
-                type: array
-                items:
-                  $ref: '_shared.yml#/components/schemas/SupervisingOfficer'
         401:
           $ref: '_shared.yml#/components/responses/401Response'
         403:
@@ -4222,15 +4159,38 @@ paths:
           $ref: '_shared.yml#/components/responses/403Response'
         500:
           $ref: '_shared.yml#/components/responses/500Response'
-  /seedFromExcel:
+  /seedFromExcel/file:
     post:
+      tags:
+        - Seed excel
       summary: Starts the data seeding from Excel process, can only be called from a local connection
-      operationId: seedFromExcelPost
+      operationId: seedFromExcelFile
       requestBody:
         content:
           'application/json':
             schema:
-              $ref: '_shared.yml#/components/schemas/SeedFromExcelRequest'
+              $ref: '_shared.yml#/components/schemas/SeedFromExcelFileRequest'
+        required: true
+      responses:
+        202:
+          description: successfully requested task
+        401:
+          $ref: '_shared.yml#/components/responses/401Response'
+        403:
+          $ref: '_shared.yml#/components/responses/403Response'
+        500:
+          $ref: '_shared.yml#/components/responses/500Response'
+  /seedFromExcel/directory:
+    post:
+      tags:
+        - Seed excel
+      summary: Starts the data seeding from Excel process for a directory, can only be called from a local connection
+      operationId: seedFromExcelDirectory
+      requestBody:
+        content:
+          'application/json':
+            schema:
+              $ref: '_shared.yml#/components/schemas/SeedFromExcelDirectoryRequest'
         required: true
       responses:
         202:

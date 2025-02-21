@@ -36,9 +36,7 @@ class Cas3ApplicationService(
     }
   }
 
-  private fun isUserAuthorizedToAccessApplication(user: UserEntity, application: ApplicationEntity): Boolean {
-    return userAccessService.userCanAccessTemporaryAccommodationApplication(user, application)
-  }
+  private fun isUserAuthorizedToAccessApplication(user: UserEntity, application: ApplicationEntity): Boolean = userAccessService.userCanAccessTemporaryAccommodationApplication(user, application)
 
   private fun markAsDeleted(application: ApplicationEntity, user: UserEntity): CasResult<Unit> {
     application.deletedAt = OffsetDateTime.now()

@@ -55,12 +55,9 @@ class RestClientConfig(
       .build(),
   )
 
-  fun withTimeouts(connection: Duration, read: Duration) =
-    JdkClientHttpRequestFactory(HttpClient.newBuilder().connectTimeout(connection).build())
-      .also { it.setReadTimeout(read) }
+  fun withTimeouts(connection: Duration, read: Duration) = JdkClientHttpRequestFactory(HttpClient.newBuilder().connectTimeout(connection).build())
+    .also { it.setReadTimeout(read) }
 }
 
-inline fun <reified T> createClient(client: RestClient): T {
-  return HttpServiceProxyFactory.builderFor(RestClientAdapter.create(client)).build()
-    .createClient(T::class.java)
-}
+inline fun <reified T> createClient(client: RestClient): T = HttpServiceProxyFactory.builderFor(RestClientAdapter.create(client)).build()
+  .createClient(T::class.java)

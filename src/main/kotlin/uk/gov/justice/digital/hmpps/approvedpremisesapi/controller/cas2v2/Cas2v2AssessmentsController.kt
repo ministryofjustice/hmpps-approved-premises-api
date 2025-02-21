@@ -78,11 +78,7 @@ class Cas2v2AssessmentsController(
 
   private fun <EntityType> processAuthorisationFor(
     result: CasResult<EntityType>,
-  ): Any? {
-    return extractEntityFromCasResult(result)
-  }
+  ): Any? = extractEntityFromCasResult(result)
 
-  private fun <EntityType : Any> processValidation(casResult: CasResult<EntityType>): Any {
-    return extractEntityFromCasResult(casResult)
-  }
+  private fun <EntityType : Any> processValidation(casResult: CasResult<EntityType>): Any = extractEntityFromCasResult(casResult)
 }

@@ -190,8 +190,7 @@ class Cas1PlacementMatchingOutcomesReportTest : IntegrationTestBase() {
           reallocated = true,
         )
 
-        getReport(jwt) {
-            rows ->
+        getReport(jwt) { rows ->
           assertThat(rows).hasSize(1)
 
           assertThat(rows[0].applicationId).isEqualTo(toInclude.application.id.toString())
@@ -308,18 +307,17 @@ class Cas1PlacementMatchingOutcomesReportTest : IntegrationTestBase() {
           withDuration(duration3)
         }
 
-        fun createPlacementRequest(arrival: LocalDate, duration: Int): PlacementRequestEntity =
-          givenAPlacementRequest(
-            placementRequestAllocatedTo = user,
-            assessmentAllocatedTo = user,
-            createdByUser = user,
-            expectedArrival = arrival,
-            duration = duration,
-            reallocated = false,
-            applicationSubmittedAt = LocalDate.of(2019, 10, 11).toUtcOffsetDateTime(),
-            assessmentSubmittedAt = LocalDate.of(2019, 11, 12).toUtcOffsetDateTime(),
-            placementApplication = placementApplication,
-          ).first
+        fun createPlacementRequest(arrival: LocalDate, duration: Int): PlacementRequestEntity = givenAPlacementRequest(
+          placementRequestAllocatedTo = user,
+          assessmentAllocatedTo = user,
+          createdByUser = user,
+          expectedArrival = arrival,
+          duration = duration,
+          reallocated = false,
+          applicationSubmittedAt = LocalDate.of(2019, 10, 11).toUtcOffsetDateTime(),
+          assessmentSubmittedAt = LocalDate.of(2019, 11, 12).toUtcOffsetDateTime(),
+          placementApplication = placementApplication,
+        ).first
 
         val placementRequest1 = createPlacementRequest(
           expectedArrival1,
@@ -430,8 +428,7 @@ class Cas1PlacementMatchingOutcomesReportTest : IntegrationTestBase() {
           decision = PlacementApplicationDecision.ACCEPTED,
         )
 
-        getReport(jwt) {
-            rows ->
+        getReport(jwt) { rows ->
           assertThat(rows).hasSize(1)
 
           assertThat(rows[0].applicationId).isEqualTo(onlyMatchingRequest.application.id.toString())

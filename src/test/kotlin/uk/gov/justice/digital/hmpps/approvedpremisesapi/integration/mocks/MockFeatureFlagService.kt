@@ -31,7 +31,5 @@ class MockFeatureFlagService(
   }
 
   @SuppressWarnings("TooGenericExceptionCaught")
-  override fun getBooleanFlag(key: String): Boolean {
-    return testOverrides.getOrDefault(key, featureFlags.getOrDefault(key, false))
-  }
+  override fun getBooleanFlag(key: String): Boolean = testOverrides.getOrDefault(key, featureFlags.getOrDefault(key, false))
 }

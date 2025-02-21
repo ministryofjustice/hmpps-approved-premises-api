@@ -1,5 +1,6 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.unit.service.cas1
 
+import io.mockk.Called
 import io.mockk.Runs
 import io.mockk.every
 import io.mockk.impl.annotations.InjectMockKs
@@ -1917,8 +1918,8 @@ class Cas1SpaceBookingServiceTest {
       every { cas1PremisesService.findPremiseById(any()) } returns premises
       every { spaceBookingRepository.findByIdOrNull(any()) } returns existingSpaceBooking
       every { spaceBookingRepository.save(capture(updatedSpaceBookingCaptor)) } returnsArgument 0
-
       every { cas1BookingDomainEventService.spaceBookingChanged(any(), any(), any(), any(), any(), any()) } just Runs
+      every { cas1BookingEmailService.spaceBookingAmended(any(), any()) } returns Unit
 
       val result = service.updateSpaceBooking(updateSpaceBookingDetails)
 
@@ -1938,6 +1939,13 @@ class Cas1SpaceBookingServiceTest {
           previousArrivalDateIfChanged = null,
           previousDepartureDateIfChanged = LocalDate.of(2025, 1, 10),
           previousCharacteristicsIfChanged = null,
+        )
+      }
+
+      verify(exactly = 1) {
+        cas1BookingEmailService.spaceBookingAmended(
+          spaceBooking = updatedSpaceBookingCaptor.captured,
+          application = updatedSpaceBookingCaptor.captured.application!!,
         )
       }
     }
@@ -1971,6 +1979,7 @@ class Cas1SpaceBookingServiceTest {
       every { spaceBookingRepository.findByIdOrNull(any()) } returns existingSpaceBooking
       every { spaceBookingRepository.save(capture(updatedSpaceBookingCaptor)) } returnsArgument 0
       every { cas1BookingDomainEventService.spaceBookingChanged(any(), any(), any(), any(), any(), any()) } just Runs
+      every { cas1BookingEmailService.spaceBookingAmended(any(), any()) } returns Unit
 
       val result = service.updateSpaceBooking(updateSpaceBookingDetails)
 
@@ -1990,6 +1999,13 @@ class Cas1SpaceBookingServiceTest {
           previousArrivalDateIfChanged = LocalDate.of(2025, 1, 10),
           previousDepartureDateIfChanged = LocalDate.of(2025, 3, 15),
           previousCharacteristicsIfChanged = listOf(originalRoomCharacteristic),
+        )
+      }
+
+      verify(exactly = 1) {
+        cas1BookingEmailService.spaceBookingAmended(
+          spaceBooking = updatedSpaceBookingCaptor.captured,
+          application = updatedSpaceBookingCaptor.captured.application!!,
         )
       }
     }
@@ -2018,6 +2034,7 @@ class Cas1SpaceBookingServiceTest {
       every { spaceBookingRepository.findByIdOrNull(any()) } returns existingSpaceBooking
       every { spaceBookingRepository.save(capture(updatedSpaceBookingCaptor)) } returnsArgument 0
       every { cas1BookingDomainEventService.spaceBookingChanged(any(), any(), any(), any(), any(), any()) } just Runs
+      every { cas1BookingEmailService.spaceBookingAmended(any(), any()) } returns Unit
 
       val result = service.updateSpaceBooking(updateSpaceBookingDetails)
 
@@ -2036,6 +2053,108 @@ class Cas1SpaceBookingServiceTest {
           previousCharacteristicsIfChanged = listOf(originalRoomCharacteristic),
         )
       }
+
+      verify(exactly = 1) {
+        cas1BookingEmailService.spaceBookingAmended(
+          spaceBooking = updatedSpaceBookingCaptor.captured,
+          application = updatedSpaceBookingCaptor.captured.application!!,
+        )
+      }
+    }
+
+    @Test
+    fun `should not send booking amended email when only characteristics are changed`() {
+      existingSpaceBooking.expectedArrivalDate = LocalDate.of(2025, 1, 10)
+      existingSpaceBooking.expectedDepartureDate = LocalDate.of(2025, 3, 15)
+      val originalRoomCharacteristic = CharacteristicEntityFactory().withModelScope("room").withPropertyName("IsArsenCapable").produce()
+      existingSpaceBooking.criteria = mutableListOf(originalRoomCharacteristic)
+
+      val updateSpaceBookingDetails = UpdateSpaceBookingDetails(
+        bookingId = UUID.randomUUID(),
+        premisesId = PREMISES_ID,
+        arrivalDate = null,
+        departureDate = null,
+        updatedBy = user,
+        characteristics = emptyList(),
+      )
+
+      assertThat(existingSpaceBooking.criteria).isNotEmpty()
+
+      val updatedSpaceBookingCaptor = slot<Cas1SpaceBookingEntity>()
+
+      every { cas1PremisesService.findPremiseById(any()) } returns premises
+      every { spaceBookingRepository.findByIdOrNull(any()) } returns existingSpaceBooking
+      every { spaceBookingRepository.save(capture(updatedSpaceBookingCaptor)) } returnsArgument 0
+      every { cas1BookingDomainEventService.spaceBookingChanged(any(), any(), any(), any(), any(), any()) } just Runs
+
+      val result = service.updateSpaceBooking(updateSpaceBookingDetails)
+
+      assertThat(result).isInstanceOf(CasResult.Success::class.java)
+
+      val updatedSpaceBooking = updatedSpaceBookingCaptor.captured
+      assertThat(updatedSpaceBooking.criteria).isEmpty()
+
+      verify(exactly = 1) {
+        cas1BookingDomainEventService.spaceBookingChanged(
+          booking = updatedSpaceBookingCaptor.captured,
+          changedBy = user,
+          bookingChangedAt = any(),
+          previousArrivalDateIfChanged = null,
+          previousDepartureDateIfChanged = null,
+          previousCharacteristicsIfChanged = listOf(originalRoomCharacteristic),
+        )
+      }
+
+      verify { cas1BookingEmailService wasNot Called }
+    }
+
+    @Test
+    fun `should not send booking amended email when application is missing`() {
+      val existingSpaceBooking = Cas1SpaceBookingEntityFactory()
+        .withPremises(premises)
+        .withApplication(null)
+        .produce()
+
+      val originalRoomCharacteristic = CharacteristicEntityFactory().withModelScope("room").withPropertyName("IsArsenCapable").produce()
+      existingSpaceBooking.criteria = mutableListOf(originalRoomCharacteristic)
+
+      val updateSpaceBookingDetails = UpdateSpaceBookingDetails(
+        bookingId = UUID.randomUUID(),
+        premisesId = PREMISES_ID,
+        arrivalDate = null,
+        departureDate = null,
+        updatedBy = user,
+        characteristics = emptyList(),
+      )
+
+      assertThat(existingSpaceBooking.criteria).isNotEmpty()
+
+      val updatedSpaceBookingCaptor = slot<Cas1SpaceBookingEntity>()
+
+      every { cas1PremisesService.findPremiseById(any()) } returns premises
+      every { spaceBookingRepository.findByIdOrNull(any()) } returns existingSpaceBooking
+      every { spaceBookingRepository.save(capture(updatedSpaceBookingCaptor)) } returnsArgument 0
+      every { cas1BookingDomainEventService.spaceBookingChanged(any(), any(), any(), any(), any(), any()) } just Runs
+
+      val result = service.updateSpaceBooking(updateSpaceBookingDetails)
+
+      assertThat(result).isInstanceOf(CasResult.Success::class.java)
+
+      val updatedSpaceBooking = updatedSpaceBookingCaptor.captured
+      assertThat(updatedSpaceBooking.criteria).isEmpty()
+
+      verify(exactly = 1) {
+        cas1BookingDomainEventService.spaceBookingChanged(
+          booking = updatedSpaceBookingCaptor.captured,
+          changedBy = user,
+          bookingChangedAt = any(),
+          previousArrivalDateIfChanged = null,
+          previousDepartureDateIfChanged = null,
+          previousCharacteristicsIfChanged = listOf(originalRoomCharacteristic),
+        )
+      }
+
+      verify { cas1BookingEmailService wasNot Called }
     }
   }
 

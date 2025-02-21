@@ -139,10 +139,6 @@ class PlacementRequestService(
       return CasResult.Unauthorised()
     }
 
-    if (placementRequest.allocatedToUser?.id != user.id && !user.hasRole(UserRole.CAS1_WORKFLOW_MANAGER)) {
-      return CasResult.Unauthorised()
-    }
-
     return CasResult.Success(toPlacementRequestAndCancellations(placementRequest))
   }
 
@@ -308,13 +304,11 @@ class PlacementRequestService(
     return CasResult.Success(bookingNotMadeRepository.save(bookingNotMade))
   }
 
-  fun getWithdrawableState(placementRequest: PlacementRequestEntity, user: UserEntity): WithdrawableState {
-    return WithdrawableState(
-      withdrawable = placementRequest.isInWithdrawableState(),
-      withdrawn = placementRequest.isWithdrawn,
-      userMayDirectlyWithdraw = placementRequest.isForApplicationsArrivalDate() && userAccessService.userMayWithdrawPlacementRequest(user, placementRequest),
-    )
-  }
+  fun getWithdrawableState(placementRequest: PlacementRequestEntity, user: UserEntity): WithdrawableState = WithdrawableState(
+    withdrawable = placementRequest.isInWithdrawableState(),
+    withdrawn = placementRequest.isWithdrawn,
+    userMayDirectlyWithdraw = placementRequest.isForApplicationsArrivalDate() && userAccessService.userMayWithdrawPlacementRequest(user, placementRequest),
+  )
 
   /**
    * This function should not be called directly. Instead, use [Cas1WithdrawableService.withdrawPlacementRequest] that
@@ -373,10 +367,9 @@ class PlacementRequestService(
    *
    * See [uk.gov.justice.digital.hmpps.approvedpremisesapi.migration.cas1.Cas1FixPlacementApplicationLinksJob] for more information.
    */
-  fun getPlacementRequestForInitialApplicationDates(applicationId: UUID) =
-    placementRequestRepository.findByApplicationId(applicationId)
-      .filter { it.isForApplicationsArrivalDate() }
-      .filter { !it.isReallocated() }
+  fun getPlacementRequestForInitialApplicationDates(applicationId: UUID) = placementRequestRepository.findByApplicationId(applicationId)
+    .filter { it.isForApplicationsArrivalDate() }
+    .filter { !it.isReallocated() }
 
   private fun updateApplicationStatusOnWithdrawal(
     placementRequest: PlacementRequestEntity,

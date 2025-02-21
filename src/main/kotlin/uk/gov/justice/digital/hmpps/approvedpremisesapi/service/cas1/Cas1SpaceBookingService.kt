@@ -411,12 +411,10 @@ class Cas1SpaceBookingService(
   private fun hasExactDepartureDataAlreadyBeenRecorded(
     existingCas1SpaceBooking: Cas1SpaceBookingEntity,
     departureInfo: DepartureInfo,
-  ): Boolean {
-    return departureInfo.departureDate == existingCas1SpaceBooking.actualDepartureDate &&
-      departureInfo.departureTime == existingCas1SpaceBooking.actualDepartureTime &&
-      departureInfo.reasonId == existingCas1SpaceBooking.departureReason?.id &&
-      departureInfo.moveOnCategoryId == existingCas1SpaceBooking.departureMoveOnCategory?.id
-  }
+  ): Boolean = departureInfo.departureDate == existingCas1SpaceBooking.actualDepartureDate &&
+    departureInfo.departureTime == existingCas1SpaceBooking.actualDepartureTime &&
+    departureInfo.reasonId == existingCas1SpaceBooking.departureReason?.id &&
+    departureInfo.moveOnCategoryId == existingCas1SpaceBooking.departureMoveOnCategory?.id
 
   fun search(
     premisesId: UUID,
@@ -466,18 +464,16 @@ class Cas1SpaceBookingService(
     crn = crn,
   )
 
-  fun getWithdrawableState(spaceBooking: Cas1SpaceBookingEntity, user: UserEntity): WithdrawableState {
-    return WithdrawableState(
-      withdrawable = !spaceBooking.isCancelled() && !spaceBooking.hasArrival(),
-      withdrawn = spaceBooking.isCancelled(),
-      userMayDirectlyWithdraw = user.hasPermission(UserPermission.CAS1_SPACE_BOOKING_WITHDRAW),
-      blockingReason = if (spaceBooking.hasArrival()) {
-        BlockingReason.ArrivalRecordedInCas1
-      } else {
-        null
-      },
-    )
-  }
+  fun getWithdrawableState(spaceBooking: Cas1SpaceBookingEntity, user: UserEntity): WithdrawableState = WithdrawableState(
+    withdrawable = !spaceBooking.isCancelled() && !spaceBooking.hasArrival(),
+    withdrawn = spaceBooking.isCancelled(),
+    userMayDirectlyWithdraw = user.hasPermission(UserPermission.CAS1_SPACE_BOOKING_WITHDRAW),
+    blockingReason = if (spaceBooking.hasArrival()) {
+      BlockingReason.ArrivalRecordedInCas1
+    } else {
+      null
+    },
+  )
 
   fun withdraw(
     spaceBooking: Cas1SpaceBookingEntity,
@@ -559,14 +555,27 @@ class Cas1SpaceBookingService(
 
     val updatedBooking = updateExistingSpaceBooking(bookingToUpdate, updateSpaceBookingDetails)
 
+    val previousArrivalDateIfChanged = if (previousArrivalDate != updatedBooking.expectedArrivalDate) previousArrivalDate else null
+    val previousDepartureDateIfChanged = if (previousDepartureDate != updatedBooking.expectedDepartureDate) previousDepartureDate else null
+    val previousCharacteristicsIfChanged = if (previousCharacteristics.sortedBy { it.id } != updatedBooking.criteria.sortedBy { it.id }) previousCharacteristics else null
+
     cas1BookingDomainEventService.spaceBookingChanged(
       booking = updatedBooking,
       changedBy = updateSpaceBookingDetails.updatedBy,
       bookingChangedAt = OffsetDateTime.now(),
-      previousArrivalDateIfChanged = if (previousArrivalDate != updatedBooking.expectedArrivalDate) previousArrivalDate else null,
-      previousDepartureDateIfChanged = if (previousDepartureDate != updatedBooking.expectedDepartureDate) previousDepartureDate else null,
-      previousCharacteristicsIfChanged = if (previousCharacteristics.sortedBy { it.id } != updatedBooking.criteria.sortedBy { it.id }) previousCharacteristics else null,
+      previousArrivalDateIfChanged = previousArrivalDateIfChanged,
+      previousDepartureDateIfChanged = previousDepartureDateIfChanged,
+      previousCharacteristicsIfChanged = previousCharacteristicsIfChanged,
     )
+
+    updatedBooking.application?.let {
+      if (previousArrivalDateIfChanged != null || previousDepartureDateIfChanged != null) {
+        cas1BookingEmailService.spaceBookingAmended(
+          spaceBooking = updatedBooking,
+          application = updatedBooking.application!!,
+        )
+      }
+    }
 
     success(updatedBooking)
   }

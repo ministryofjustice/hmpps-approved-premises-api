@@ -818,172 +818,160 @@ class BookingSearchTest : IntegrationTestBase() {
   private fun getExpectedResponse(
     expectedBookings: List<BookingEntity>,
     offenderDetails: OffenderDetailSummary,
-  ): BookingSearchResults {
-    return BookingSearchResults(
-      resultsCount = expectedBookings.size,
-      results = expectedBookings.map { booking ->
-        BookingSearchResult(
-          person = BookingSearchResultPersonSummary(
-            name = "${offenderDetails.firstName} ${offenderDetails.surname}",
-            crn = offenderDetails.otherIds.crn,
-          ),
-          booking = BookingSearchResultBookingSummary(
-            id = booking.id,
-            status = when {
-              booking.cancellation != null -> BookingStatus.cancelled
-              booking.departure != null -> BookingStatus.departed
-              booking.arrival != null -> BookingStatus.arrived
-              booking.nonArrival != null -> BookingStatus.notMinusArrived
-              booking.confirmation != null -> BookingStatus.confirmed
-              else -> BookingStatus.provisional
-            },
-            startDate = booking.arrivalDate,
-            endDate = booking.departureDate,
-            createdAt = booking.createdAt.toInstant(),
-          ),
-          premises = BookingSearchResultPremisesSummary(
-            id = booking.premises.id,
-            name = booking.premises.name,
-            addressLine1 = booking.premises.addressLine1,
-            addressLine2 = booking.premises.addressLine2,
-            town = booking.premises.town,
-            postcode = booking.premises.postcode,
-          ),
-          room = BookingSearchResultRoomSummary(
-            id = booking.bed!!.room.id,
-            name = booking.bed!!.room.name,
-          ),
-          bed = BookingSearchResultBedSummary(
-            id = booking.bed!!.id,
-            name = booking.bed!!.name,
-          ),
-        )
-      },
-    )
-  }
+  ): BookingSearchResults = BookingSearchResults(
+    resultsCount = expectedBookings.size,
+    results = expectedBookings.map { booking ->
+      BookingSearchResult(
+        person = BookingSearchResultPersonSummary(
+          name = "${offenderDetails.firstName} ${offenderDetails.surname}",
+          crn = offenderDetails.otherIds.crn,
+        ),
+        booking = BookingSearchResultBookingSummary(
+          id = booking.id,
+          status = when {
+            booking.cancellation != null -> BookingStatus.cancelled
+            booking.departure != null -> BookingStatus.departed
+            booking.arrival != null -> BookingStatus.arrived
+            booking.nonArrival != null -> BookingStatus.notMinusArrived
+            booking.confirmation != null -> BookingStatus.confirmed
+            else -> BookingStatus.provisional
+          },
+          startDate = booking.arrivalDate,
+          endDate = booking.departureDate,
+          createdAt = booking.createdAt.toInstant(),
+        ),
+        premises = BookingSearchResultPremisesSummary(
+          id = booking.premises.id,
+          name = booking.premises.name,
+          addressLine1 = booking.premises.addressLine1,
+          addressLine2 = booking.premises.addressLine2,
+          town = booking.premises.town,
+          postcode = booking.premises.postcode,
+        ),
+        room = BookingSearchResultRoomSummary(
+          id = booking.bed!!.room.id,
+          name = booking.bed!!.room.name,
+        ),
+        bed = BookingSearchResultBedSummary(
+          id = booking.bed!!.id,
+          name = booking.bed!!.name,
+        ),
+      )
+    },
+  )
 
   private fun getExpectedResponse(
     expectedBookings: List<BookingEntity>,
     temporaryAccommodationApplications: List<TemporaryAccommodationApplicationEntity>,
-  ): BookingSearchResults {
-    return BookingSearchResults(
-      resultsCount = expectedBookings.size,
-      results = expectedBookings.map { booking ->
-        val userApplication = temporaryAccommodationApplications.firstOrNull { a -> a.crn == booking.crn }
-        BookingSearchResult(
-          person = BookingSearchResultPersonSummary(
-            name = userApplication?.name,
-            crn = booking.crn,
-          ),
-          booking = BookingSearchResultBookingSummary(
-            id = booking.id,
-            status = when {
-              booking.cancellation != null -> BookingStatus.cancelled
-              booking.departure != null -> BookingStatus.departed
-              booking.arrival != null -> BookingStatus.arrived
-              booking.nonArrival != null -> BookingStatus.notMinusArrived
-              booking.confirmation != null -> BookingStatus.confirmed
-              else -> BookingStatus.provisional
-            },
-            startDate = booking.arrivalDate,
-            endDate = booking.departureDate,
-            createdAt = booking.createdAt.toInstant(),
-          ),
-          premises = BookingSearchResultPremisesSummary(
-            id = booking.premises.id,
-            name = booking.premises.name,
-            addressLine1 = booking.premises.addressLine1,
-            addressLine2 = booking.premises.addressLine2,
-            town = booking.premises.town,
-            postcode = booking.premises.postcode,
-          ),
-          room = BookingSearchResultRoomSummary(
-            id = booking.bed!!.room.id,
-            name = booking.bed!!.room.name,
-          ),
-          bed = BookingSearchResultBedSummary(
-            id = booking.bed!!.id,
-            name = booking.bed!!.name,
-          ),
-        )
-      },
-    )
-  }
+  ): BookingSearchResults = BookingSearchResults(
+    resultsCount = expectedBookings.size,
+    results = expectedBookings.map { booking ->
+      val userApplication = temporaryAccommodationApplications.firstOrNull { a -> a.crn == booking.crn }
+      BookingSearchResult(
+        person = BookingSearchResultPersonSummary(
+          name = userApplication?.name,
+          crn = booking.crn,
+        ),
+        booking = BookingSearchResultBookingSummary(
+          id = booking.id,
+          status = when {
+            booking.cancellation != null -> BookingStatus.cancelled
+            booking.departure != null -> BookingStatus.departed
+            booking.arrival != null -> BookingStatus.arrived
+            booking.nonArrival != null -> BookingStatus.notMinusArrived
+            booking.confirmation != null -> BookingStatus.confirmed
+            else -> BookingStatus.provisional
+          },
+          startDate = booking.arrivalDate,
+          endDate = booking.departureDate,
+          createdAt = booking.createdAt.toInstant(),
+        ),
+        premises = BookingSearchResultPremisesSummary(
+          id = booking.premises.id,
+          name = booking.premises.name,
+          addressLine1 = booking.premises.addressLine1,
+          addressLine2 = booking.premises.addressLine2,
+          town = booking.premises.town,
+          postcode = booking.premises.postcode,
+        ),
+        room = BookingSearchResultRoomSummary(
+          id = booking.bed!!.room.id,
+          name = booking.bed!!.room.name,
+        ),
+        bed = BookingSearchResultBedSummary(
+          id = booking.bed!!.id,
+          name = booking.bed!!.name,
+        ),
+      )
+    },
+  )
 
   private fun getExpectedResponseWithoutPersonName(
     expectedBookings: List<BookingEntity>,
     crn: String,
-  ): BookingSearchResults {
-    return BookingSearchResults(
-      resultsCount = expectedBookings.size,
-      results = expectedBookings.map { booking ->
-        BookingSearchResult(
-          person = BookingSearchResultPersonSummary(
-            name = null,
-            crn = crn,
-          ),
-          booking = BookingSearchResultBookingSummary(
-            id = booking.id,
-            status = when {
-              booking.cancellation != null -> BookingStatus.cancelled
-              booking.departure != null -> BookingStatus.departed
-              booking.arrival != null -> BookingStatus.arrived
-              booking.nonArrival != null -> BookingStatus.notMinusArrived
-              booking.confirmation != null -> BookingStatus.confirmed
-              else -> BookingStatus.provisional
-            },
-            startDate = booking.arrivalDate,
-            endDate = booking.departureDate,
-            createdAt = booking.createdAt.toInstant(),
-          ),
-          premises = BookingSearchResultPremisesSummary(
-            id = booking.premises.id,
-            name = booking.premises.name,
-            addressLine1 = booking.premises.addressLine1,
-            addressLine2 = booking.premises.addressLine2,
-            town = booking.premises.town,
-            postcode = booking.premises.postcode,
-          ),
-          room = BookingSearchResultRoomSummary(
-            id = booking.bed!!.room.id,
-            name = booking.bed!!.room.name,
-          ),
-          bed = BookingSearchResultBedSummary(
-            id = booking.bed!!.id,
-            name = booking.bed!!.name,
-          ),
-        )
-      },
-    )
-  }
+  ): BookingSearchResults = BookingSearchResults(
+    resultsCount = expectedBookings.size,
+    results = expectedBookings.map { booking ->
+      BookingSearchResult(
+        person = BookingSearchResultPersonSummary(
+          name = null,
+          crn = crn,
+        ),
+        booking = BookingSearchResultBookingSummary(
+          id = booking.id,
+          status = when {
+            booking.cancellation != null -> BookingStatus.cancelled
+            booking.departure != null -> BookingStatus.departed
+            booking.arrival != null -> BookingStatus.arrived
+            booking.nonArrival != null -> BookingStatus.notMinusArrived
+            booking.confirmation != null -> BookingStatus.confirmed
+            else -> BookingStatus.provisional
+          },
+          startDate = booking.arrivalDate,
+          endDate = booking.departureDate,
+          createdAt = booking.createdAt.toInstant(),
+        ),
+        premises = BookingSearchResultPremisesSummary(
+          id = booking.premises.id,
+          name = booking.premises.name,
+          addressLine1 = booking.premises.addressLine1,
+          addressLine2 = booking.premises.addressLine2,
+          town = booking.premises.town,
+          postcode = booking.premises.postcode,
+        ),
+        room = BookingSearchResultRoomSummary(
+          id = booking.bed!!.room.id,
+          name = booking.bed!!.room.name,
+        ),
+        bed = BookingSearchResultBedSummary(
+          id = booking.bed!!.id,
+          name = booking.bed!!.name,
+        ),
+      )
+    },
+  )
 
   private fun create10TestTemporaryAccommodationBookings(
     userEntity: UserEntity,
     offenderDetails: OffenderDetailSummary,
-  ): MutableList<BookingEntity> {
-    return createTestTemporaryAccommodationBookings(userEntity, offenderDetails, 5, 2)
-  }
+  ): MutableList<BookingEntity> = createTestTemporaryAccommodationBookings(userEntity, offenderDetails, 5, 2)
 
   private fun create15TestTemporaryAccommodationBookings(
     userEntity: UserEntity,
     offenderDetails: OffenderDetailSummary,
-  ): MutableList<BookingEntity> {
-    return createTestTemporaryAccommodationBookings(userEntity, offenderDetails, 5, 3)
-  }
+  ): MutableList<BookingEntity> = createTestTemporaryAccommodationBookings(userEntity, offenderDetails, 5, 3)
 
   private fun createTestTemporaryAccommodationBookings(
     userEntity: UserEntity,
     offenderDetails: OffenderDetailSummary,
     numberOfPremises: Int,
     numberOfBedsInEachPremises: Int,
-  ): MutableList<BookingEntity> {
-    return createTestTemporaryAccommodationBookings(
-      userEntity.probationRegion,
-      numberOfPremises,
-      numberOfBedsInEachPremises,
-      offenderDetails.otherIds.crn,
-    )
-  }
+  ): MutableList<BookingEntity> = createTestTemporaryAccommodationBookings(
+    userEntity.probationRegion,
+    numberOfPremises,
+    numberOfBedsInEachPremises,
+    offenderDetails.otherIds.crn,
+  )
 
   private fun createTestTemporaryAccommodationBookings(
     probationRegion: ProbationRegionEntity,
@@ -1051,17 +1039,15 @@ class BookingSearchTest : IntegrationTestBase() {
     arrivalDate: LocalDate,
     departureDate: LocalDate,
     createdAt: OffsetDateTime,
-  ): BookingEntity {
-    return bookingEntityFactory.produceAndPersist {
-      withPremises(bed.room.premises)
-      withCrn(crn)
-      withBed(bed)
-      withStatus(BookingStatus.provisional)
-      withServiceName(ServiceName.temporaryAccommodation)
-      withArrivalDate(arrivalDate)
-      withDepartureDate(departureDate)
-      withCreatedAt(createdAt)
-    }
+  ): BookingEntity = bookingEntityFactory.produceAndPersist {
+    withPremises(bed.room.premises)
+    withCrn(crn)
+    withBed(bed)
+    withStatus(BookingStatus.provisional)
+    withServiceName(ServiceName.temporaryAccommodation)
+    withArrivalDate(arrivalDate)
+    withDepartureDate(departureDate)
+    withCreatedAt(createdAt)
   }
 
   private fun callApiAndAssertResponse(
@@ -1107,19 +1093,15 @@ class BookingSearchTest : IntegrationTestBase() {
     apDeliusContextAddListCaseSummaryToBulkResponse(cases)
   }
 
-  private fun getSortedBooking(bookings: MutableList<BookingEntity>, sortBy: BookingSearchSortField, sortOrder: SortOrder) {
-    return when (sortBy) {
-      BookingSearchSortField.bookingEndDate -> sortBookings(BookingEntity::departureDate, bookings, sortOrder)
-      BookingSearchSortField.bookingStartDate -> sortBookings(BookingEntity::arrivalDate, bookings, sortOrder)
-      BookingSearchSortField.personCrn -> sortBookings(BookingEntity::crn, bookings, sortOrder)
-      else -> sortBookings(BookingEntity::createdAt, bookings, sortOrder)
-    }
+  private fun getSortedBooking(bookings: MutableList<BookingEntity>, sortBy: BookingSearchSortField, sortOrder: SortOrder) = when (sortBy) {
+    BookingSearchSortField.bookingEndDate -> sortBookings(BookingEntity::departureDate, bookings, sortOrder)
+    BookingSearchSortField.bookingStartDate -> sortBookings(BookingEntity::arrivalDate, bookings, sortOrder)
+    BookingSearchSortField.personCrn -> sortBookings(BookingEntity::crn, bookings, sortOrder)
+    else -> sortBookings(BookingEntity::createdAt, bookings, sortOrder)
   }
 
-  fun <T : Comparable<T>> sortBookings(fn: BookingEntity.() -> T, bookings: MutableList<BookingEntity>, sortOrder: SortOrder) {
-    return when (sortOrder) {
-      SortOrder.ascending -> bookings.sortBy { it.fn() }
-      else -> bookings.sortByDescending { it.fn() }
-    }
+  fun <T : Comparable<T>> sortBookings(fn: BookingEntity.() -> T, bookings: MutableList<BookingEntity>, sortOrder: SortOrder) = when (sortOrder) {
+    SortOrder.ascending -> bookings.sortBy { it.fn() }
+    else -> bookings.sortByDescending { it.fn() }
   }
 }

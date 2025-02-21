@@ -6,7 +6,6 @@ import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.SeedFromExcelFileType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.seed.SeedTestBase
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.seed.cas1.SiteSurveyImportException
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.DataFrameUtils.createNameValueDataFrame
 
 @TestInstance(TestInstance.Lifecycle.PER_METHOD)
@@ -73,7 +72,7 @@ class SeedCas1RoomsFromSiteSurveyXlsxTest : SeedTestBase() {
       ),
     )
 
-    seedXlsxService.seedExcelData(
+    seedXlsxService.seedFile(
       SeedFromExcelFileType.CAS1_IMPORT_SITE_SURVEY_ROOMS,
       "example.xlsx",
     )
@@ -121,7 +120,7 @@ class SeedCas1RoomsFromSiteSurveyXlsxTest : SeedTestBase() {
       ),
     )
 
-    seedXlsxService.seedExcelData(
+    seedXlsxService.seedFile(
       SeedFromExcelFileType.CAS1_IMPORT_SITE_SURVEY_ROOMS,
       "example.xlsx",
     )
@@ -173,7 +172,7 @@ class SeedCas1RoomsFromSiteSurveyXlsxTest : SeedTestBase() {
       ),
     )
 
-    seedXlsxService.seedExcelData(
+    seedXlsxService.seedFile(
       SeedFromExcelFileType.CAS1_IMPORT_SITE_SURVEY_ROOMS,
       "example.xlsx",
     )
@@ -244,7 +243,7 @@ class SeedCas1RoomsFromSiteSurveyXlsxTest : SeedTestBase() {
       ),
     )
 
-    seedXlsxService.seedExcelData(
+    seedXlsxService.seedFile(
       SeedFromExcelFileType.CAS1_IMPORT_SITE_SURVEY_ROOMS,
       "example.xlsx",
     )
@@ -252,11 +251,7 @@ class SeedCas1RoomsFromSiteSurveyXlsxTest : SeedTestBase() {
     assertThat(logEntries)
       .anyMatch {
         it.level == "error" &&
-          it.message == "Unable to complete Excel seed job for example.xlsx" &&
-          it.throwable != null &&
-          it.throwable.message == "Unable to process XLSX file" &&
-          it.throwable.cause is IllegalStateException &&
-          it.throwable.cause!!.message == "1 or more beds in room 'Q999-1' have different characteristics."
+          it.message == "Unable to complete Excel seed job for 'example.xlsx' with message '1 or more beds in room 'Q999-1' have different characteristics.'"
       }
   }
 
@@ -293,7 +288,7 @@ class SeedCas1RoomsFromSiteSurveyXlsxTest : SeedTestBase() {
       ),
     )
 
-    seedXlsxService.seedExcelData(
+    seedXlsxService.seedFile(
       SeedFromExcelFileType.CAS1_IMPORT_SITE_SURVEY_ROOMS,
       "example.xlsx",
     )
@@ -359,7 +354,7 @@ class SeedCas1RoomsFromSiteSurveyXlsxTest : SeedTestBase() {
       ),
     )
 
-    seedXlsxService.seedExcelData(
+    seedXlsxService.seedFile(
       SeedFromExcelFileType.CAS1_IMPORT_SITE_SURVEY_ROOMS,
       "example.xlsx",
     )
@@ -410,7 +405,7 @@ class SeedCas1RoomsFromSiteSurveyXlsxTest : SeedTestBase() {
       ),
     )
 
-    seedXlsxService.seedExcelData(
+    seedXlsxService.seedFile(
       SeedFromExcelFileType.CAS1_IMPORT_SITE_SURVEY_ROOMS,
       "example.xlsx",
     )
@@ -469,7 +464,7 @@ class SeedCas1RoomsFromSiteSurveyXlsxTest : SeedTestBase() {
       ),
     )
 
-    seedXlsxService.seedExcelData(
+    seedXlsxService.seedFile(
       SeedFromExcelFileType.CAS1_IMPORT_SITE_SURVEY_ROOMS,
       "example.xlsx",
     )
@@ -525,7 +520,7 @@ class SeedCas1RoomsFromSiteSurveyXlsxTest : SeedTestBase() {
       ),
     )
 
-    seedXlsxService.seedExcelData(
+    seedXlsxService.seedFile(
       SeedFromExcelFileType.CAS1_IMPORT_SITE_SURVEY_ROOMS,
       "example.xlsx",
     )
@@ -533,11 +528,7 @@ class SeedCas1RoomsFromSiteSurveyXlsxTest : SeedTestBase() {
     assertThat(logEntries)
       .anyMatch {
         it.level == "error" &&
-          it.message == "Unable to complete Excel seed job for example.xlsx" &&
-          it.throwable != null &&
-          it.throwable.message == "Unable to process XLSX file" &&
-          it.throwable.cause is IllegalStateException &&
-          it.throwable.cause!!.message == "Bed name '2 - 1' is not unique."
+          it.message == "Unable to complete Excel seed job for 'example.xlsx' with message 'Bed name '2 - 1' is not unique.'"
       }
   }
 
@@ -581,7 +572,7 @@ class SeedCas1RoomsFromSiteSurveyXlsxTest : SeedTestBase() {
       ),
     )
 
-    seedXlsxService.seedExcelData(
+    seedXlsxService.seedFile(
       SeedFromExcelFileType.CAS1_IMPORT_SITE_SURVEY_ROOMS,
       "example.xlsx",
     )
@@ -589,11 +580,7 @@ class SeedCas1RoomsFromSiteSurveyXlsxTest : SeedTestBase() {
     assertThat(logEntries)
       .anyMatch {
         it.level == "error" &&
-          it.message == "Unable to complete Excel seed job for example.xlsx" &&
-          it.throwable != null &&
-          it.throwable.message == "Unable to process XLSX file" &&
-          it.throwable.cause is IllegalStateException &&
-          it.throwable.cause!!.message == "Bed SWABI02 already exists in room Q999-1 but is being added to room Q999-2."
+          it.message == "Unable to complete Excel seed job for 'example.xlsx' with message 'Bed SWABI02 already exists in room Q999-1 but is being added to room Q999-2.'"
       }
   }
 
@@ -628,7 +615,7 @@ class SeedCas1RoomsFromSiteSurveyXlsxTest : SeedTestBase() {
       ),
     )
 
-    seedXlsxService.seedExcelData(
+    seedXlsxService.seedFile(
       SeedFromExcelFileType.CAS1_IMPORT_SITE_SURVEY_ROOMS,
       "example.xlsx",
     )
@@ -636,11 +623,9 @@ class SeedCas1RoomsFromSiteSurveyXlsxTest : SeedTestBase() {
     assertThat(logEntries)
       .anyMatch {
         it.level == "error" &&
-          it.message == "Unable to complete Excel seed job for example.xlsx" &&
+          it.message == "Unable to complete Excel seed job for 'example.xlsx' with message 'Question 'Is this room located on the ground floor?' not found on sheet Sheet3.'" &&
           it.throwable != null &&
-          it.throwable.message == "Unable to process XLSX file" &&
-          it.throwable.cause is RuntimeException &&
-          it.throwable.cause!!.message == "Question 'Is this room located on the ground floor?' not found on sheet Sheet3."
+          it.throwable.message == "Question 'Is this room located on the ground floor?' not found on sheet Sheet3."
       }
   }
 
@@ -675,7 +660,7 @@ class SeedCas1RoomsFromSiteSurveyXlsxTest : SeedTestBase() {
       ),
     )
 
-    seedXlsxService.seedExcelData(
+    seedXlsxService.seedFile(
       SeedFromExcelFileType.CAS1_IMPORT_SITE_SURVEY_ROOMS,
       "example.xlsx",
     )
@@ -683,11 +668,9 @@ class SeedCas1RoomsFromSiteSurveyXlsxTest : SeedTestBase() {
     assertThat(logEntries)
       .anyMatch {
         it.level == "error" &&
-          it.message == "Unable to complete Excel seed job for example.xlsx" &&
+          it.message == "Unable to complete Excel seed job for 'example.xlsx' with message 'Invalid value for Yes/No dropdown: BAD ANSWER on sheet Sheet3. Question is Is this room located on the ground floor?'" &&
           it.throwable != null &&
-          it.throwable.message == "Unable to process XLSX file" &&
-          it.throwable.cause is RuntimeException &&
-          it.throwable.cause!!.message == "Invalid value for Yes/No dropdown: Bad answer"
+          it.throwable.message == "Invalid value for Yes/No dropdown: BAD ANSWER on sheet Sheet3. Question is Is this room located on the ground floor?"
       }
   }
 
@@ -705,7 +688,7 @@ class SeedCas1RoomsFromSiteSurveyXlsxTest : SeedTestBase() {
       ),
     )
 
-    seedXlsxService.seedExcelData(
+    seedXlsxService.seedFile(
       SeedFromExcelFileType.CAS1_IMPORT_SITE_SURVEY_ROOMS,
       "example.xlsx",
     )
@@ -713,11 +696,9 @@ class SeedCas1RoomsFromSiteSurveyXlsxTest : SeedTestBase() {
     assertThat(logEntries)
       .anyMatch {
         it.level == "error" &&
-          it.message == "Unable to complete Excel seed job for example.xlsx" &&
+          it.message == "Unable to complete Excel seed job for 'example.xlsx' with message 'No premises with qcode 'INVALIDQCODE' found.'" &&
           it.throwable != null &&
-          it.throwable.message == "Unable to process XLSX file" &&
-          it.throwable.cause is SiteSurveyImportException &&
-          it.throwable.cause!!.message == "No premises with qcode 'INVALIDQCODE' found."
+          it.throwable.message == "No premises with qcode 'INVALIDQCODE' found."
       }
   }
 }

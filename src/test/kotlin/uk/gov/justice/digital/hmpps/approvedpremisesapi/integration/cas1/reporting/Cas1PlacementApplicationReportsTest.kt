@@ -462,18 +462,14 @@ class Cas1PlacementApplicationReportsTest : IntegrationTestBase() {
   private fun getOffenderDetailForApplication(
     application: ApplicationEntity,
     deliusUsername: String,
-  ): OffenderDetailSummary {
-    return when (val personInfo = realOffenderService.getPersonInfoResult(application.crn, deliusUsername, true)) {
-      is PersonInfoResult.Success.Full -> personInfo.offenderDetailSummary
-      else -> error("No offender found for CRN ${application.crn}")
-    }
+  ): OffenderDetailSummary = when (val personInfo = realOffenderService.getPersonInfoResult(application.crn, deliusUsername, true)) {
+    is PersonInfoResult.Success.Full -> personInfo.offenderDetailSummary
+    else -> error("No offender found for CRN ${application.crn}")
   }
 
-  private fun getCaseDetailForApplication(application: ApplicationEntity): CaseDetail {
-    return when (val caseDetailResult = apDeliusContextApiClient.getCaseDetail(application.crn)) {
-      is ClientResult.Success -> caseDetailResult.body
-      is ClientResult.Failure -> caseDetailResult.throwException()
-    }
+  private fun getCaseDetailForApplication(application: ApplicationEntity): CaseDetail = when (val caseDetailResult = apDeliusContextApiClient.getCaseDetail(application.crn)) {
+    is ClientResult.Success -> caseDetailResult.body
+    is ClientResult.Failure -> caseDetailResult.throwException()
   }
 
   private fun createAssessedApplication(crn: String): ApprovedPremisesApplicationEntity {
@@ -636,11 +632,10 @@ class Cas1PlacementApplicationReportsTest : IntegrationTestBase() {
     return realAssessmentRepository.findByIdOrNull(assessment.id) as ApprovedPremisesAssessmentEntity
   }
 
-  fun placementDateStarting(start: LocalDate): PlacementDates =
-    PlacementDates(
-      expectedArrival = start,
-      duration = 12,
-    )
+  fun placementDateStarting(start: LocalDate): PlacementDates = PlacementDates(
+    expectedArrival = start,
+    duration = 12,
+  )
 
   private fun createAndAcceptPlacementApplication(application: ApprovedPremisesApplicationEntity, placementDates: List<PlacementDates>): List<PlacementApplicationEntity> {
     val placementApplications = createAndSubmitPlacementApplication(application, placementDates)

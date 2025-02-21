@@ -21,45 +21,41 @@ class ApplicationsTransformer(
   private val assessmentsTransformer: AssessmentsTransformer,
 ) {
 
-  fun transformJpaToApi(jpa: Cas2ApplicationEntity, personInfo: PersonInfoResult): Cas2Application {
-    return Cas2Application(
-      id = jpa.id,
-      person = personTransformer.transformModelToPersonApi(personInfo),
-      createdBy = nomisUserTransformer.transformJpaToApi(jpa.createdByUser),
-      schemaVersion = jpa.schemaVersion.id,
-      outdatedSchema = !jpa.schemaUpToDate,
-      createdAt = jpa.createdAt.toInstant(),
-      submittedAt = jpa.submittedAt?.toInstant(),
-      data = if (jpa.data != null) objectMapper.readTree(jpa.data) else null,
-      document = if (jpa.document != null) objectMapper.readTree(jpa.document) else null,
-      status = getStatus(jpa),
-      type = "CAS2",
-      telephoneNumber = jpa.telephoneNumber,
-      assessment = if (jpa.assessment != null) assessmentsTransformer.transformJpaToApiRepresentation(jpa.assessment!!) else null,
-      timelineEvents = timelineEventsTransformer.transformApplicationToTimelineEvents(jpa),
-    )
-  }
+  fun transformJpaToApi(jpa: Cas2ApplicationEntity, personInfo: PersonInfoResult): Cas2Application = Cas2Application(
+    id = jpa.id,
+    person = personTransformer.transformModelToPersonApi(personInfo),
+    createdBy = nomisUserTransformer.transformJpaToApi(jpa.createdByUser),
+    schemaVersion = jpa.schemaVersion.id,
+    outdatedSchema = !jpa.schemaUpToDate,
+    createdAt = jpa.createdAt.toInstant(),
+    submittedAt = jpa.submittedAt?.toInstant(),
+    data = if (jpa.data != null) objectMapper.readTree(jpa.data) else null,
+    document = if (jpa.document != null) objectMapper.readTree(jpa.document) else null,
+    status = getStatus(jpa),
+    type = "CAS2",
+    telephoneNumber = jpa.telephoneNumber,
+    assessment = if (jpa.assessment != null) assessmentsTransformer.transformJpaToApiRepresentation(jpa.assessment!!) else null,
+    timelineEvents = timelineEventsTransformer.transformApplicationToTimelineEvents(jpa),
+  )
 
   fun transformJpaSummaryToSummary(
     jpaSummary: Cas2ApplicationSummaryEntity,
     personName: String,
-  ): uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas2ApplicationSummary {
-    return uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model
-      .Cas2ApplicationSummary(
-        id = jpaSummary.id,
-        createdByUserId = UUID.fromString(jpaSummary.userId),
-        createdByUserName = jpaSummary.userName,
-        createdAt = jpaSummary.createdAt.toInstant(),
-        submittedAt = jpaSummary.submittedAt?.toInstant(),
-        status = getStatusFromSummary(jpaSummary),
-        latestStatusUpdate = statusUpdateTransformer.transformJpaSummaryToLatestStatusUpdateApi(jpaSummary),
-        type = "CAS2",
-        hdcEligibilityDate = jpaSummary.hdcEligibilityDate,
-        crn = jpaSummary.crn,
-        nomsNumber = jpaSummary.nomsNumber,
-        personName = personName,
-      )
-  }
+  ): uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas2ApplicationSummary = uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model
+    .Cas2ApplicationSummary(
+      id = jpaSummary.id,
+      createdByUserId = UUID.fromString(jpaSummary.userId),
+      createdByUserName = jpaSummary.userName,
+      createdAt = jpaSummary.createdAt.toInstant(),
+      submittedAt = jpaSummary.submittedAt?.toInstant(),
+      status = getStatusFromSummary(jpaSummary),
+      latestStatusUpdate = statusUpdateTransformer.transformJpaSummaryToLatestStatusUpdateApi(jpaSummary),
+      type = "CAS2",
+      hdcEligibilityDate = jpaSummary.hdcEligibilityDate,
+      crn = jpaSummary.crn,
+      nomsNumber = jpaSummary.nomsNumber,
+      personName = personName,
+    )
 
   private fun getStatus(entity: Cas2ApplicationEntity): ApplicationStatus {
     if (entity.submittedAt !== null) {
@@ -69,10 +65,8 @@ class ApplicationsTransformer(
     return ApplicationStatus.inProgress
   }
 
-  private fun getStatusFromSummary(summary: Cas2ApplicationSummaryEntity): ApplicationStatus {
-    return when {
-      summary.submittedAt != null -> ApplicationStatus.submitted
-      else -> ApplicationStatus.inProgress
-    }
+  private fun getStatusFromSummary(summary: Cas2ApplicationSummaryEntity): ApplicationStatus = when {
+    summary.submittedAt != null -> ApplicationStatus.submitted
+    else -> ApplicationStatus.inProgress
   }
 }

@@ -74,27 +74,25 @@ class Cas2PersistedApplicationStatusFinderTest {
     }
   }
 
-  private fun statusList(): List<Cas2PersistedApplicationStatus> {
-    return listOf(
-      Cas2PersistedApplicationStatus(
-        id = UUID.fromString("f5cd423b-08eb-4efb-96ff-5cc6bb073905"),
-        name = "moreInfoRequested",
-        label = "",
-        description = "",
-      ),
-      Cas2PersistedApplicationStatus(
-        id = UUID.fromString("ba4d8432-250b-4ab9-81ec-7eb4b16e5dd1"),
-        name = "awaitingDecision",
-        label = "",
-        description = "",
-        isActive = false,
-      ),
-      Cas2PersistedApplicationStatus(
-        id = UUID.fromString("176bbda0-0766-4d77-8d56-18ed8f9a4ef2"),
-        name = "placeOffered",
-        label = "",
-        description = "",
-      ),
-    )
-  }
+  private fun statusList(): List<Cas2PersistedApplicationStatus> = listOf(
+    Cas2PersistedApplicationStatus(
+      id = UUID.fromString("f5cd423b-08eb-4efb-96ff-5cc6bb073905"),
+      name = "moreInfoRequested",
+      label = "",
+      description = "",
+    ),
+    Cas2PersistedApplicationStatus(
+      id = UUID.fromString("ba4d8432-250b-4ab9-81ec-7eb4b16e5dd1"),
+      name = "awaitingDecision",
+      label = "",
+      description = "",
+      isActive = false,
+    ),
+    Cas2PersistedApplicationStatus(
+      id = UUID.fromString("176bbda0-0766-4d77-8d56-18ed8f9a4ef2"),
+      name = "placeOffered",
+      label = "",
+      description = "",
+    ),
+  )
 }

@@ -47,6 +47,7 @@ class NotifyTemplates {
   val cas2ApplicationStatusUpdated = "ef4dc5e3-b1f1-4448-a545-7a936c50fc3a"
   val appealSuccess = "ae21f3ae-3a4a-4df8-a1b8-2640ea80d101"
   val appealReject = "32c9c282-198d-4d43-960e-89c97f1bcf81"
+  val bookingAmended = "da50a791-fe7c-4bc3-b31f-62b88b62f2d6"
 }
 
 enum class NotifyMode {

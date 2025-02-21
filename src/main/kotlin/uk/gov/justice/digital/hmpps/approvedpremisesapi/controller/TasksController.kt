@@ -236,30 +236,24 @@ class TasksController(
   private fun getAssessmentTask(
     assessment: AssessmentEntity,
     offenderSummaries: List<PersonSummaryInfoResult>,
-  ): AssessmentTask {
-    return taskTransformer.transformAssessmentToTask(
-      assessment = assessment,
-      offenderSummaries = offenderSummaries,
-    )
-  }
+  ): AssessmentTask = taskTransformer.transformAssessmentToTask(
+    assessment = assessment,
+    offenderSummaries = offenderSummaries,
+  )
 
   private fun getPlacementApplicationTask(
     placementApplication: PlacementApplicationEntity,
     offenderSummaries: List<PersonSummaryInfoResult>,
-  ): PlacementApplicationTask {
-    return taskTransformer.transformPlacementApplicationToTask(
-      placementApplication = placementApplication,
-      offenderSummaries = offenderSummaries,
-    )
-  }
+  ): PlacementApplicationTask = taskTransformer.transformPlacementApplicationToTask(
+    placementApplication = placementApplication,
+    offenderSummaries = offenderSummaries,
+  )
 
-  private fun getOffenderSummariesForCrns(crns: List<String>, user: UserEntity): List<PersonSummaryInfoResult> {
-    return offenderService.getOffenderSummariesByCrns(
-      crns.toSet(),
-      user.deliusUsername,
-      user.hasQualification(UserQualification.LAO),
-    )
-  }
+  private fun getOffenderSummariesForCrns(crns: List<String>, user: UserEntity): List<PersonSummaryInfoResult> = offenderService.getOffenderSummariesByCrns(
+    crns.toSet(),
+    user.deliusUsername,
+    user.hasQualification(UserQualification.LAO),
+  )
 
   private fun toTaskType(type: String) = enumConverterFactory.getConverter(TaskType::class.java).convert(
     type.kebabCaseToPascalCase(),

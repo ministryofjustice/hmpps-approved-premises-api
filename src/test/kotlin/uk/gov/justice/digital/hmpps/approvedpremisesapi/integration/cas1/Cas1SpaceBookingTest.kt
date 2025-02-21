@@ -327,6 +327,23 @@ class Cas1SpaceBookingTest {
     @BeforeAll
     fun setupTestData() {
       super.setupRegionAndKeyWorkerAndPremises()
+      characteristicRepository.deleteAll()
+
+      val criteria = mutableListOf(
+        characteristicEntityFactory.produceAndPersist {
+          withName("Single room")
+          withPropertyName("isSingle")
+          withServiceScope("approved-premises")
+
+          withModelScope("room")
+        },
+        characteristicEntityFactory.produceAndPersist {
+          withName("Wheelchair accessible")
+          withPropertyName("isWheelchairAccessible")
+          withServiceScope("approved-premises")
+          withModelScope("premises")
+        },
+      )
 
       currentSpaceBooking1 = createSpaceBooking(crn = "CRN_CURRENT1", firstName = "curt", lastName = "rent 1", tier = "A") {
         withPremises(premisesWithBookings)
@@ -339,6 +356,7 @@ class Cas1SpaceBookingTest {
         withKeyworkerName(null)
         withKeyworkerStaffCode(null)
         withKeyworkerAssignedAt(Instant.now())
+        withCriteria(criteria)
       }
 
       currentSpaceBooking2OfflineApplication = createSpaceBookingWithOfflineApplication(crn = "CRN_CURRENT2_OFFLINE", firstName = "curt", lastName = "rent 2") {
@@ -453,6 +471,7 @@ class Cas1SpaceBookingTest {
         withKeyworkerName(null)
         withKeyworkerStaffCode(null)
         withKeyworkerAssignedAt(Instant.now())
+        withNonArrivalConfirmedAt(Instant.now())
       }
 
       legacySpaceBookingNoDeparture = createSpaceBooking(crn = "CRN_LEGACY_NO_DEPARTURE", firstName = "None", lastName = "Historic", tier = "Z") {
@@ -553,6 +572,12 @@ class Cas1SpaceBookingTest {
 
       assertThat(response).hasSize(1)
       assertThat(response[0].person.crn).isEqualTo("CRN_UPCOMING")
+      assertThat(response[0].expectedArrivalDate).isEqualTo(LocalDate.parse("2027-01-01"))
+      assertThat(response[0].expectedDepartureDate).isEqualTo(LocalDate.parse("2027-02-01"))
+      assertThat(response[0].actualArrivalDate).isNull()
+      assertThat(response[0].actualDepartureDate).isNull()
+      assertThat(response[0].isNonArrival).isNull()
+      assertThat(response[0].characteristics).isEmpty()
     }
 
     @Test
@@ -569,9 +594,11 @@ class Cas1SpaceBookingTest {
 
       assertThat(response).hasSize(4)
       assertThat(response[0].person.crn).isEqualTo("CRN_CURRENT1")
+      assertThat(response[0].characteristics).isEqualTo(listOf(Cas1SpaceCharacteristic.isSingle, Cas1SpaceCharacteristic.isWheelchairAccessible))
       assertThat(response[1].person.crn).isEqualTo("CRN_CURRENT2_OFFLINE")
       assertThat(response[2].person.crn).isEqualTo("CRN_CURRENT3")
       assertThat(response[3].person.crn).isEqualTo("CRN_CURRENT4")
+      assertThat(response[3].isNonArrival).isFalse
     }
 
     @Test
@@ -693,6 +720,7 @@ class Cas1SpaceBookingTest {
       assertThat(response[5].person.crn).isEqualTo("CRN_CURRENT1")
       assertThat(response[6].person.crn).isEqualTo("CRN_DEPARTED")
       assertThat(response[7].person.crn).isEqualTo("CRN_LEGACY_NO_ARRIVAL")
+      assertThat(response[7].isNonArrival).isTrue
       assertThat(response[8].person.crn).isEqualTo("CRN_LEGACY_NO_DEPARTURE")
     }
 
@@ -829,9 +857,7 @@ class Cas1SpaceBookingTest {
       assertThat(result.status).isEqualTo(expectedResultStatus)
     }
 
-    fun spaceBookingSummaryStatusCases(): Stream<Arguments> {
-      return Cas1SpaceBookingSummaryStatusTestHelper().spaceBookingSummaryStatusCases()
-    }
+    fun spaceBookingSummaryStatusCases(): Stream<Arguments> = Cas1SpaceBookingSummaryStatusTestHelper().spaceBookingSummaryStatusCases()
   }
 
   @Nested
@@ -2023,6 +2049,8 @@ class Cas1SpaceBookingTest {
     lateinit var region: ProbationRegionEntity
     lateinit var premises: ApprovedPremisesEntity
     lateinit var spaceBooking: Cas1SpaceBookingEntity
+    lateinit var applicant: UserEntity
+    lateinit var application: ApprovedPremisesApplicationEntity
 
     @BeforeAll
     fun setupTestData() {
@@ -2030,18 +2058,34 @@ class Cas1SpaceBookingTest {
 
       region = givenAProbationRegion()
 
+      val (user) = givenAUser()
+      val (offender) = givenAnOffender()
+
       premises = approvedPremisesEntityFactory.produceAndPersist {
         withSupportsSpaceBookings(true)
         withYieldedProbationRegion { region }
         withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
+        withEmailAddress("premises@test.com")
       }
 
-      val (user) = givenAUser()
-      val (offender) = givenAnOffender()
+      applicant = givenAUser(
+        staffDetail =
+        StaffDetailFactory.staffDetail(email = "applicant@test.com"),
+      ).first
+
+      application = approvedPremisesApplicationEntityFactory.produceAndPersist {
+        withCrn(offender.otherIds.crn)
+        withCreatedByUser(applicant)
+        withApplicationSchema(approvedPremisesApplicationJsonSchemaEntityFactory.produceAndPersist())
+        withApArea(givenAnApArea())
+        withSubmittedAt(OffsetDateTime.now())
+      }
+
       val (placementRequest) = givenAPlacementRequest(
         placementRequestAllocatedTo = user,
         assessmentAllocatedTo = user,
         createdByUser = user,
+        application = application,
       )
 
       spaceBooking = cas1SpaceBookingEntityFactory.produceAndPersist {
@@ -2096,6 +2140,10 @@ class Cas1SpaceBookingTest {
       assertThat(updatedSpaceBooking.expectedDepartureDate).isEqualTo(LocalDate.parse("2025-04-05"))
 
       domainEventAsserter.assertDomainEventOfTypeStored(updatedSpaceBooking.application?.id!!, DomainEventType.APPROVED_PREMISES_BOOKING_CHANGED)
+
+      emailAsserter.assertEmailsRequestedCount(2)
+      emailAsserter.assertEmailRequested(applicant.email!!, notifyConfig.templates.bookingAmended)
+      emailAsserter.assertEmailRequested(spaceBooking.premises.emailAddress!!, notifyConfig.templates.bookingAmended)
     }
 
     @Test
@@ -2183,6 +2231,8 @@ class Cas1SpaceBookingTest {
         )
 
       domainEventAsserter.assertDomainEventOfTypeStored(updatedSpaceBooking.application?.id!!, DomainEventType.APPROVED_PREMISES_BOOKING_CHANGED)
+
+      emailAsserter.assertNoEmailsRequested()
     }
 
     @Test
@@ -2251,6 +2301,8 @@ class Cas1SpaceBookingTest {
       assertTrue(updatedSpaceBooking.criteria.none { it.modelScope == "room" })
 
       domainEventAsserter.assertDomainEventOfTypeStored(updatedSpaceBooking.application?.id!!, DomainEventType.APPROVED_PREMISES_BOOKING_CHANGED)
+
+      emailAsserter.assertNoEmailsRequested()
     }
   }
 }

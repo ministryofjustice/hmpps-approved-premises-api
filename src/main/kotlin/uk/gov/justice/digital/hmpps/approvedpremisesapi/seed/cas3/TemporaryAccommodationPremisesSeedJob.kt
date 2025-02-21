@@ -64,7 +64,7 @@ class TemporaryAccommodationPremisesSeedJob(
       log.warn("'${row.localAuthorityArea}' is not the canonical local authority name, correcting to '$canonicalLocalAuthorityName'")
     }
 
-    val localAuthorityArea = localAuthorityAreaRepository.findByName(canonicalLocalAuthorityName)
+    val localAuthorityArea = localAuthorityAreaRepository.findByNameIgnoringCase(canonicalLocalAuthorityName)
       ?: throw RuntimeException("Local Authority Area ${row.localAuthorityArea} does not exist")
 
     val characteristics = row.characteristics.map {

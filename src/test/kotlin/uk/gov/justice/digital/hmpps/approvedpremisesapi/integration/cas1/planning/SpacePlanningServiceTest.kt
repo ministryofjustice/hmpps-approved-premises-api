@@ -36,8 +36,7 @@ class SpacePlanningServiceTest : InitialiseDatabasePerClassTestBase() {
 
   lateinit var premiseId: UUID
 
-  private fun findCharacteristic(propertyName: String) =
-    characteristicRepository.findByPropertyName(propertyName, ServiceName.approvedPremises.value)!!
+  private fun findCharacteristic(propertyName: String) = characteristicRepository.findByPropertyName(propertyName, ServiceName.approvedPremises.value)!!
 
   private lateinit var bookingCrn1: Cas1SpaceBookingEntity
 
@@ -212,7 +211,7 @@ class SpacePlanningServiceTest : InitialiseDatabasePerClassTestBase() {
   fun capacity() {
     val capacity = spacePlanner.capacity(
       premises = approvedPremisesRepository.findByIdOrNull(premiseId)!!,
-      range = DateRange(
+      rangeInclusive = DateRange(
         fromInclusive = date(2020, 5, 6),
         toInclusive = date(2020, 5, 10),
       ),
@@ -293,7 +292,7 @@ class SpacePlanningServiceTest : InitialiseDatabasePerClassTestBase() {
   fun `capacity, excluding a space booking`() {
     val capacity = spacePlanner.capacity(
       premises = approvedPremisesRepository.findByIdOrNull(premiseId)!!,
-      range = DateRange(
+      rangeInclusive = DateRange(
         fromInclusive = date(2020, 5, 6),
         toInclusive = date(2020, 5, 10),
       ),

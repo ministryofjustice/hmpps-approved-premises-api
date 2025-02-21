@@ -119,17 +119,41 @@ class Cas1BookingEmailService(
     )
   }
 
+  fun spaceBookingAmended(
+    spaceBooking: Cas1SpaceBookingEntity,
+    application: ApprovedPremisesApplicationEntity,
+  ) = bookingAmended(
+    spaceBooking.toBookingInfo(application),
+  )
+
+  private fun bookingAmended(bookingInfo: BookingInfo) {
+    val application = bookingInfo.application
+    val emailPersonalisation = buildCommonPersonalisation(bookingInfo)
+
+    val interestedParties =
+      (
+        application.interestedPartiesEmailAddresses() +
+          setOfNotNull(bookingInfo.premises.emailAddress)
+        ).toSet()
+
+    emailNotifier.sendEmails(
+      recipientEmailAddresses = interestedParties,
+      templateId = notifyConfig.templates.bookingAmended,
+      personalisation = emailPersonalisation,
+      application = application,
+    )
+  }
+
   private fun Cas1SpaceBookingEntity.toBookingInfo(
     application: ApprovedPremisesApplicationEntity,
-  ) =
-    BookingInfo(
-      bookingId = id,
-      arrivalDate = canonicalArrivalDate,
-      departureDate = canonicalDepartureDate,
-      premises = premises,
-      application = application,
-      placementApplication = placementRequest?.placementApplication,
-    )
+  ) = BookingInfo(
+    bookingId = id,
+    arrivalDate = canonicalArrivalDate,
+    departureDate = canonicalDepartureDate,
+    premises = premises,
+    application = application,
+    placementApplication = placementRequest?.placementApplication,
+  )
 
   private fun BookingEntity.toBookingInfo(
     application: ApprovedPremisesApplicationEntity,

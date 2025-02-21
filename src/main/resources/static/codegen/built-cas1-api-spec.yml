@@ -160,6 +160,218 @@ paths:
         500:
           $ref: '#/components/responses/500Response'
       x-codegen-request-body-name: body
+  /placement-applications:
+    post:
+      deprecated: true
+      tags:
+        - Placement applications
+      summary: Creates an application for a placement
+      operationId: placement_applicationsPost
+      requestBody:
+        description: Details about the application
+        content:
+          'application/json':
+            schema:
+              $ref: '#/components/schemas/NewPlacementApplication'
+        required: true
+      responses:
+        200:
+          description: successfully recorded that a placement application has been made
+          content:
+            'application/json':
+              schema:
+                $ref: '#/components/schemas/PlacementApplication'
+        401:
+          $ref: '#/components/responses/401Response'
+        403:
+          $ref: '#/components/responses/403Response'
+        500:
+          $ref: '#/components/responses/500Response'
+  /placement-applications/{id}:
+    get:
+      deprecated: true
+      tags:
+        - Placement applications
+      summary: Retrieves an application for a placement request
+      operationId: placement_applicationsIdGet
+      parameters:
+        - in: path
+          name: id
+          required: true
+          description: Id of the application
+          schema:
+            type: string
+            format: uuid
+      responses:
+        200:
+          description: successfully retrieved placement request application
+          content:
+            'application/json':
+              schema:
+                $ref: '#/components/schemas/PlacementApplication'
+        401:
+          $ref: '#/components/responses/401Response'
+        403:
+          $ref: '#/components/responses/403Response'
+        500:
+          $ref: '#/components/responses/500Response'
+    put:
+      tags:
+        - Placement applications
+      summary: Updates an application for a placement request
+      operationId: placement_applicationsIdPut
+      parameters:
+        - in: path
+          name: id
+          required: true
+          description: Id of the application
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        description: Details about the application
+        content:
+          'application/json':
+            schema:
+              $ref: '#/components/schemas/UpdatePlacementApplication'
+        required: true
+      responses:
+        200:
+          description: successfully retrieved placement request application
+          content:
+            'application/json':
+              schema:
+                $ref: '#/components/schemas/PlacementApplication'
+        401:
+          $ref: '#/components/responses/401Response'
+        403:
+          $ref: '#/components/responses/403Response'
+        500:
+          $ref: '#/components/responses/500Response'
+  /placement-applications/{id}/submission:
+    post:
+      deprecated: true
+      tags:
+        - Placement applications
+      summary: Submits an application for a placement request
+      operationId: placement_applicationsIdSubmissionPost
+      parameters:
+        - in: path
+          name: id
+          required: true
+          description: Id of the application
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        description: Information needed to submit a placement application
+        content:
+          'application/json':
+            schema:
+              $ref: '#/components/schemas/SubmitPlacementApplication'
+        required: true
+      responses:
+        200:
+          description: successfully submitted the placement application
+          content:
+            'application/json':
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/PlacementApplication'
+        400:
+          description: placement application has already been submitted
+          content:
+            'application/problem+json':
+              schema:
+                $ref: '#/components/schemas/ValidationError'
+        401:
+          $ref: '#/components/responses/401Response'
+        403:
+          $ref: '#/components/responses/403Response'
+        500:
+          $ref: '#/components/responses/500Response'
+  /placement-applications/{id}/decision:
+    post:
+      deprecated: true
+      tags:
+        - Placement applications
+      summary: Submits a decision for a placement application
+      operationId: placement_applicationsIdDecisionPost
+      parameters:
+        - in: path
+          name: id
+          required: true
+          description: Id of the application
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        description: Information needed to submit a placement application
+        content:
+          'application/json':
+            schema:
+              $ref: '#/components/schemas/PlacementApplicationDecisionEnvelope'
+        required: true
+      responses:
+        200:
+          description: successfully made a decision on the placement application
+          content:
+            'application/json':
+              schema:
+                $ref: '#/components/schemas/PlacementApplication'
+        400:
+          description: placement application already has a decision made
+          content:
+            'application/problem+json':
+              schema:
+                $ref: '#/components/schemas/ValidationError'
+        401:
+          $ref: '#/components/responses/401Response'
+        403:
+          $ref: '#/components/responses/403Response'
+        500:
+          $ref: '#/components/responses/500Response'
+  /placement-applications/{id}/withdraw:
+    post:
+      deprecated: true
+      tags:
+        - Placement applications
+      summary: Withdraw a placement application
+      operationId: placement_applicationsIdWithdrawPost
+      parameters:
+        - in: path
+          name: id
+          required: true
+          description: Id of the placement application to withdraw
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        description: Withdrawal details
+        content:
+          'application/json':
+            schema:
+              $ref: '#/components/schemas/WithdrawPlacementApplication'
+      responses:
+        200:
+          description: Placement application withdrawn
+          content:
+            'application/json':
+              schema:
+                $ref: '#/components/schemas/PlacementApplication'
+        400:
+          description: placement application already has a decision made
+          content:
+            'application/problem+json':
+              schema:
+                $ref: '#/components/schemas/ValidationError'
+        401:
+          $ref: '#/components/responses/401Response'
+        403:
+          $ref: '#/components/responses/403Response'
+        500:
+          $ref: '#/components/responses/500Response'
   /placement-requests:
     get:
       tags:
@@ -1277,12 +1489,6 @@ paths:
           description: The report content will reflect that specified by the given month.
           schema:
             type: integer
-        - name: includePii
-          in: query
-          required: false
-          description: If Personally Identifiable Information (PII) should be included in the report. Defaults to `false`
-          schema:
-            type: boolean
       responses:
         200:
           description: Successfully retrieved the report
@@ -2877,51 +3083,6 @@ components:
         name:
           type: string
           example: Ext - North East Region
-        isActive:
-          type: boolean
-      required:
-        - id
-        - name
-        - isActive
-    SupervisingProvider:
-      type: object
-      properties:
-        id:
-          type: string
-          format: uuid
-        name:
-          type: string
-          example: North East Region
-        isActive:
-          type: boolean
-      required:
-        - id
-        - name
-        - isActive
-    SupervisingTeam:
-      type: object
-      properties:
-        id:
-          type: string
-          format: uuid
-        name:
-          type: string
-          example: CP - Sheffield
-        isActive:
-          type: boolean
-      required:
-        - id
-        - name
-        - isActive
-    SupervisingOfficer:
-      type: object
-      properties:
-        id:
-          type: string
-          format: uuid
-        name:
-          type: string
-          example: Smith, John (PS - PO)
         isActive:
           type: boolean
       required:
@@ -4842,6 +5003,7 @@ components:
         - cru_member_enable_out_of_service_beds
         - applicant
         - report_viewer
+        - report_viewer_with_pii
         - excluded_from_assess_allocation
         - excluded_from_match_allocation
         - excluded_from_placement_application_allocation
@@ -4880,6 +5042,7 @@ components:
         - cas1_premises_view
         - cas1_premises_manage
         - cas1_reports_view
+        - cas1_reports_view_with_pii
     TemporaryAccommodationUserRole:
       type: string
       enum:
@@ -5365,17 +5528,28 @@ components:
       required:
         - seedType
         - fileName
-    SeedFromExcelRequest:
+    SeedFromExcelFileRequest:
       type: object
       properties:
         seedType:
           $ref: '#/components/schemas/SeedFromExcelFileType'
         fileName:
+          description: File within the pre-configured seed directory
           type: string
       required:
         - seedType
-        - premisesId
         - fileName
+    SeedFromExcelDirectoryRequest:
+      type: object
+      properties:
+        seedType:
+          $ref: '#/components/schemas/SeedFromExcelFileType'
+        directoryName:
+          description: Directory within the pre-configured seed directory
+          type: string
+      required:
+        - seedType
+        - directoryName
     SeedFileType:
       type: string
       enum:
@@ -5683,6 +5857,7 @@ components:
         - person_not_arrived
         - person_departed
     PlacementRequest:
+      description: This type is to broad for use in search results, and as such we're moving towards using Cas1PlacementRequestSummary instead for that purpose.
       allOf:
         - $ref: '#/components/schemas/PlacementRequirements'
         - $ref: '#/components/schemas/PlacementDates'
@@ -5721,6 +5896,7 @@ components:
               description: Notes from the assessor for the CRU Manager
               type: string
             booking:
+              description: Information about the legacy booking or space booking associated with the placement request
               $ref: '#/components/schemas/PlacementRequestBookingSummary'
             requestType:
               $ref: '#/components/schemas/PlacementRequestRequestType'
@@ -5760,9 +5936,18 @@ components:
                 $ref: '#/components/schemas/Cancellation'
             application:
               $ref: '#/components/schemas/Application'
+            legacyBooking:
+              description: The legacy booking associated with this placement request
+              $ref: '#/components/schemas/PlacementRequestBookingSummary'
+            spaceBookings:
+              description: The space bookings associated with this placement request
+              type: array
+              items:
+                $ref: '#/components/schemas/Cas1SpaceBookingSummary'
           required:
             - cancellations
             - application
+            - spaceBookings
     PlacementRequestStatus:
       type: string
       enum:
@@ -6540,6 +6725,85 @@ components:
         - isWheelchairAccessible
         - isWheelchairDesignated
         - arsonOffences
+    Cas1SpaceBookingSummary:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        person:
+          $ref: "#/components/schemas/PersonSummary"
+        canonicalArrivalDate:
+          description: actual arrival date or, if not known, the expected arrival date
+          type: string
+          format: date
+        canonicalDepartureDate:
+          description: actual departure date or, if not known, the expected departure date
+          type: string
+          format: date
+        expectedArrivalDate:
+          description: expected arrival date
+          type: string
+          format: date
+        actualArrivalDate:
+          description: actual arrival date if known
+          type: string
+          format: date
+        expectedDepartureDate:
+          description: expected departure date
+          type: string
+          format: date
+        actualDepartureDate:
+          description: actual departure date if known
+          type: string
+          format: date
+        isNonArrival:
+          type: boolean
+        tier:
+          description: Risk rating tier level of corresponding application
+          type: string
+        keyWorkerAllocation:
+          $ref: '#/components/schemas/Cas1KeyWorkerAllocation'
+        status:
+          $ref: '#/components/schemas/Cas1SpaceBookingSummaryStatus'
+        characteristics:
+          description: "Room and premise characteristics"
+          type: array
+          items:
+            $ref: '#/components/schemas/Cas1SpaceCharacteristic'
+          default: []
+      required:
+        - id
+        - person
+        - canonicalArrivalDate
+        - canonicalDepartureDate
+        - characteristics
+        - expectedArrivalDate
+        - expectedDepartureDate
+    Cas1KeyWorkerAllocation:
+      type: object
+      properties:
+        keyWorker:
+          $ref: '#/components/schemas/StaffMember'
+        allocatedAt:
+          type: string
+          format: date
+      required:
+        - keyWorker
+    Cas1SpaceBookingSummaryStatus:
+      deprecated: true
+      type: string
+      enum:
+        - arrivingWithin6Weeks
+        - arrivingWithin2Weeks
+        - arrivingToday
+        - overdueArrival
+        - arrived
+        - notArrived
+        - departingWithin2Weeks
+        - departingToday
+        - overdueDeparture
+        - departed
     Cas1PremisesBasicSummary:
       type: object
       properties:
@@ -6889,6 +7153,11 @@ components:
         bookedBy:
           $ref: '#/components/schemas/User'
         requestForPlacementId:
+          deprecated: true
+          description: use the better named 'placementRequestId'
+          type: string
+          format: uuid
+        placementRequestId:
           type: string
           format: uuid
         expectedArrivalDate:
@@ -6986,34 +7255,6 @@ components:
         - id
         - canonicalArrivalDate
         - canonicalDepartureDate
-    Cas1SpaceBookingSummary:
-      type: object
-      properties:
-        id:
-          type: string
-          format: uuid
-        person:
-          $ref: "#/components/schemas/PersonSummary"
-        canonicalArrivalDate:
-          description: actual arrival date or, if not known, the expected arrival date
-          type: string
-          format: date
-        canonicalDepartureDate:
-          description: actual departure date or, if not known, the expected departure date
-          type: string
-          format: date
-        tier:
-          description: Risk rating tier level of corresponding application
-          type: string
-        keyWorkerAllocation:
-          $ref: '#/components/schemas/Cas1KeyWorkerAllocation'
-        status:
-          $ref: '#/components/schemas/Cas1SpaceBookingSummaryStatus'
-      required:
-        - id
-        - person
-        - canonicalArrivalDate
-        - canonicalDepartureDate
     Cas1SpaceBookingSummarySortField:
       type: string
       enum:
@@ -7098,35 +7339,12 @@ components:
         - canonicalDepartureDate
         - spaceType
         - essentialCharacteristics
-    Cas1SpaceBookingSummaryStatus:
-      type: string
-      enum:
-        - arrivingWithin6Weeks
-        - arrivingWithin2Weeks
-        - arrivingToday
-        - overdueArrival
-        - arrived
-        - notArrived
-        - departingWithin2Weeks
-        - departingToday
-        - overdueDeparture
-        - departed
     Cas1SpaceBookingResidency:
       type: string
       enum:
         - upcoming
         - current
         - historic
-    Cas1KeyWorkerAllocation:
-      type: object
-      properties:
-        keyWorker:
-          $ref: '#/components/schemas/StaffMember'
-        allocatedAt:
-          type: string
-          format: date
-      required:
-        - keyWorker
     Cas1SpaceBookingDeparture:
       type: object
       properties:
@@ -7321,13 +7539,16 @@ components:
       enum:
         - applications
         - applicationsV2
+        - applicationsV2WithPii
         - dailyMetrics
         - lostBeds
         - outOfServiceBeds
         - placementApplications
         - placementMatchingOutcomes
         - placementMatchingOutcomesV2
+        - placementMatchingOutcomesV2WithPii
         - requestsForPlacement
+        - requestsForPlacementWithPii
     Cas1OutOfServiceBedSummary:
       type: object
       properties:

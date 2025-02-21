@@ -1,0 +1,32 @@
+name: Generate UI Types
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - 'src/main/resources/static/codegen/built-cas2v2-api-spec.yml'
+
+jobs:
+  generate-ui:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Generate Token
+        uses: tibdex/github-app-token@v1
+        id: generate-token
+        with:
+          app_id: ${{ secrets.APP_ID }}
+          private_key: ${{ secrets.APP_PRIVATE_KEY }}
+      - name: Trigger CAS-2 Bail UI Type Generation Workflow
+        if: ${{ github.ref == 'refs/heads/main' }}
+        id: sa-trigger-ui-workflow
+        uses: actions/github-script@v6
+        with:
+          github-token: ${{ steps.generate-token.outputs.token }}
+          script: |
+            await github.rest.actions.createWorkflowDispatch({
+              owner: context.repo.owner,
+              repo: 'hmpps-community-accommodation-tier-2-bail-ui',
+              workflow_id: 'generate-types.yml',
+              ref: 'main'
+            })

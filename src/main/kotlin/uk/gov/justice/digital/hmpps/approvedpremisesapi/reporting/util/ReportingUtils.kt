@@ -21,24 +21,18 @@ fun UUID.toShortBase58(): String {
   return sb.reverse().toString()
 }
 
-fun Boolean?.toYesNo(): String? {
-  return when (this) {
-    null -> null
-    true -> "Yes"
-    false -> "No"
-  }
+fun Boolean?.toYesNo(): String? = when (this) {
+  null -> null
+  true -> "Yes"
+  false -> "No"
 }
 
-fun PersonSummaryInfoResult.getPersonName(): String? {
-  return this.tryGetDetails {
-    val nameParts = listOf(it.name.forename) + it.name.middleNames + it.name.surname
-    nameParts.joinToString(" ")
-  }
+fun PersonSummaryInfoResult.getPersonName(): String? = this.tryGetDetails {
+  val nameParts = listOf(it.name.forename) + it.name.middleNames + it.name.surname
+  nameParts.joinToString(" ")
 }
 
-fun PersonSummaryInfoResult.getPersonGender(): String {
-  return when (this.tryGetDetails { it.profile?.genderIdentity }) {
-    "Prefer to self-describe" -> "Prefer to self-describe"
-    else -> this.tryGetDetails { it.profile?.genderIdentity }
-  }.toString()
-}
+fun PersonSummaryInfoResult.getPersonGender(): String = when (this.tryGetDetails { it.profile?.genderIdentity }) {
+  "Prefer to self-describe" -> "Prefer to self-describe"
+  else -> this.tryGetDetails { it.profile?.genderIdentity }
+}.toString()

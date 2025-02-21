@@ -197,23 +197,21 @@ class TaskService(
     }
   }
 
-  fun getUserWorkloads(userIds: List<UUID>): Map<UUID, UserWorkload> {
-    return userRepository.findWorkloadForUserIds(userIds).associate {
-      it.getUserId() to UserWorkload(
-        numTasksPending = listOf(
-          it.getPendingAssessments(),
-          it.getPendingPlacementApplications(),
-        ).sum(),
-        numTasksCompleted7Days = listOf(
-          it.getCompletedAssessmentsInTheLastSevenDays(),
-          it.getCompletedPlacementApplicationsInTheLastSevenDays(),
-        ).sum(),
-        numTasksCompleted30Days = listOf(
-          it.getCompletedAssessmentsInTheLastThirtyDays(),
-          it.getCompletedPlacementApplicationsInTheLastThirtyDays(),
-        ).sum(),
-      )
-    }
+  fun getUserWorkloads(userIds: List<UUID>): Map<UUID, UserWorkload> = userRepository.findWorkloadForUserIds(userIds).associate {
+    it.getUserId() to UserWorkload(
+      numTasksPending = listOf(
+        it.getPendingAssessments(),
+        it.getPendingPlacementApplications(),
+      ).sum(),
+      numTasksCompleted7Days = listOf(
+        it.getCompletedAssessmentsInTheLastSevenDays(),
+        it.getCompletedPlacementApplicationsInTheLastSevenDays(),
+      ).sum(),
+      numTasksCompleted30Days = listOf(
+        it.getCompletedAssessmentsInTheLastThirtyDays(),
+        it.getCompletedPlacementApplicationsInTheLastThirtyDays(),
+      ).sum(),
+    )
   }
 
   private fun entityToReallocation(entity: Any, taskType: TaskType): Reallocation {

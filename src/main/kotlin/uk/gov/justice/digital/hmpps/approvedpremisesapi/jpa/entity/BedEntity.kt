@@ -180,9 +180,7 @@ data class BedEntity(
   override fun toString() = "BedEntity: $id"
 
   companion object {
-    fun isActive(now: LocalDate, bedEndDate: LocalDate?): Boolean {
-      return bedEndDate == null || bedEndDate.isAfter(now)
-    }
+    fun isActive(now: LocalDate, bedEndDate: LocalDate?): Boolean = bedEndDate == null || bedEndDate.isAfter(now)
   }
 }
 

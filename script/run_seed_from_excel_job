@@ -15,7 +15,7 @@ then
   exit 1
 fi
 
-curl --fail --show-error --location --request POST 'http://127.0.0.1:8080/seedFromExcel' \
+curl --fail --show-error --location --request POST 'http://127.0.0.1:8080/seedFromExcel/file' \
 --header 'Content-Type: application/json' \
 --data-raw '{
     "seedType": "'"$SEED_JOB_ID"'",

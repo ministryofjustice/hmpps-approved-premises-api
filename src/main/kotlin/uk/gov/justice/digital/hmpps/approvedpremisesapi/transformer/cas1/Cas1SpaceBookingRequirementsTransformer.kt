@@ -12,6 +12,5 @@ class Cas1SpaceBookingRequirementsTransformer {
     essentialCharacteristics = cas1SpaceBookingEntity.criteria.map { it.asCas1SpaceCharacteristic() },
   )
 
-  private fun CharacteristicEntity.asCas1SpaceCharacteristic() =
-    Cas1SpaceCharacteristic.entries.first { it.value == this.propertyName }
+  private fun CharacteristicEntity.asCas1SpaceCharacteristic() = Cas1SpaceCharacteristic.entries.first { it.value == this.propertyName }
 }

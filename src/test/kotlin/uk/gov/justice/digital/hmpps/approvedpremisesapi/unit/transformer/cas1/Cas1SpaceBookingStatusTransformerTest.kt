@@ -33,8 +33,6 @@ class Cas1SpaceBookingStatusTransformerTest {
 
   companion object {
     @JvmStatic
-    fun spaceBookingSummaryStatusCases(): Stream<Arguments> {
-      return Cas1SpaceBookingSummaryStatusTestHelper().spaceBookingSummaryStatusCases()
-    }
+    fun spaceBookingSummaryStatusCases(): Stream<Arguments> = Cas1SpaceBookingSummaryStatusTestHelper().spaceBookingSummaryStatusCases()
   }
 }

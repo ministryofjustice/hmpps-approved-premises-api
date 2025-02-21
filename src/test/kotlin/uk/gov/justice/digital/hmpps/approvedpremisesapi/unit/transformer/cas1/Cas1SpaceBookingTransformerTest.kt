@@ -24,7 +24,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.CaseSummaryFacto
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.CharacteristicEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.NonArrivalReasonEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.PersonRisksFactory
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.PlacementApplicationEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.PlacementRequestEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.events.ApprovedPremisesUserFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas1SpaceBookingAtPremises
@@ -199,6 +198,8 @@ class Cas1SpaceBookingTransformerTest {
       assertThat(result.apArea.id).isEqualTo(spaceBooking.premises.probationRegion.apArea!!.id)
       assertThat(result.apArea.name).isEqualTo(spaceBooking.premises.probationRegion.apArea!!.name)
       assertThat(result.bookedBy).isEqualTo(expectedUser)
+      assertThat(result.requestForPlacementId).isEqualTo(placementRequest.id)
+      assertThat(result.placementRequestId).isEqualTo(placementRequest.id)
       assertThat(result.expectedArrivalDate).isEqualTo(spaceBooking.expectedArrivalDate)
       assertThat(result.expectedDepartureDate).isEqualTo(spaceBooking.expectedDepartureDate)
       assertThat(result.actualArrivalDate).isEqualTo(Instant.parse("2009-02-05T11:25:10.00Z"))
@@ -244,87 +245,6 @@ class Cas1SpaceBookingTransformerTest {
         Cas1SpaceCharacteristic.isCatered,
         Cas1SpaceCharacteristic.hasEnSuite,
       )
-    }
-
-    @Test
-    fun `Space booking is transformed correctly via placement application`() {
-      val personInfo = PersonInfoResult.Success.Full(
-        "SOMECRN",
-        CaseSummaryFactory().produce().asOffenderDetailSummary(),
-        null,
-      )
-
-      val expectedPerson = RestrictedPerson(
-        "SOMECRN",
-        PersonType.restrictedPerson,
-      )
-
-      val application = ApprovedPremisesApplicationEntityFactory()
-        .withDefaults()
-        .withRiskRatings(
-          PersonRisksFactory()
-            .withTier(RiskWithStatus(RiskStatus.Retrieved, RiskTier("A", LocalDate.now())))
-            .produce(),
-        )
-        .produce()
-
-      val placementApplication = PlacementApplicationEntityFactory()
-        .withDefaults()
-        .produce()
-
-      val placementRequest = PlacementRequestEntityFactory()
-        .withDefaults()
-        .withApplication(application)
-        .withPlacementApplication(placementApplication)
-        .produce()
-
-      val criteria = listOf(
-        CharacteristicEntityFactory().produce(),
-        CharacteristicEntityFactory().produce(),
-      )
-
-      val spaceBooking = Cas1SpaceBookingEntityFactory()
-        .withPlacementRequest(placementRequest)
-        .withCreatedAt(OffsetDateTime.now().roundNanosToMillisToAccountForLossOfPrecisionInPostgres())
-        .withKeyworkerName("Mr Key Worker")
-        .withKeyworkerStaffCode("K123")
-        .withKeyworkerAssignedAt(LocalDateTime.parse("2007-12-03T10:15:30").toInstant(ZoneOffset.UTC))
-        .withActualArrivalDate(LocalDate.parse("2009-02-05"))
-        .withActualArrivalTime(LocalTime.parse("11:25:10"))
-        .withCancellationOccurredAt(LocalDate.parse("2039-12-28"))
-        .withCancellationRecordedAt(Instant.parse("2023-12-29T11:25:10.00Z"))
-        .withCancellationReasonNotes("some extra info on cancellation")
-        .withCriteria(criteria.toMutableList())
-        .produce()
-
-      val expectedRequirements = Cas1SpaceBookingRequirements(
-        essentialCharacteristics = listOf(),
-      )
-
-      val expectedUser = ApprovedPremisesUserFactory().produce()
-
-      val otherBookings = listOf(
-        Cas1SpaceBookingAtPremisesImpl(
-          id = UUID.randomUUID(),
-          canonicalArrivalDate = LocalDate.parse("2025-04-06"),
-          canonicalDepartureDate = LocalDate.parse("2025-05-07"),
-        ),
-      )
-
-      every { personTransformer.transformModelToPersonApi(personInfo) } returns expectedPerson
-      every {
-        requirementsTransformer.transformJpaToApi(spaceBooking)
-      } returns expectedRequirements
-      every {
-        userTransformer.transformJpaToApi(
-          spaceBooking.createdBy!!,
-          ServiceName.approvedPremises,
-        )
-      } returns expectedUser
-
-      val result = transformer.transformJpaToApi(personInfo, spaceBooking, otherBookings)
-
-      assertThat(result.requestForPlacementId).isEqualTo(placementApplication.id)
     }
 
     @Test
@@ -413,6 +333,65 @@ class Cas1SpaceBookingTransformerTest {
   }
 
   @Nested
+  inner class TransformToSummary {
+
+    @Test
+    fun success() {
+      val id = UUID.randomUUID()
+
+      val personSummaryInfo = PersonSummaryInfoResult.Success.Restricted("the crn", "the noms")
+
+      val expectedPersonSummary = RestrictedPersonSummary(
+        "the crn",
+        PersonSummaryDiscriminator.restrictedPersonSummary,
+      )
+      every { personTransformer.personSummaryInfoToPersonSummary(personSummaryInfo) } returns expectedPersonSummary
+      every { spaceBookingStatusTransformer.transformToSpaceBookingSummaryStatus(any()) } returns Cas1SpaceBookingSummaryStatus.departed
+
+      val result = transformer.transformToSummary(
+        Cas1SpaceBookingEntityFactory()
+          .withId(id)
+          .withCrn("the crn")
+          .withCanonicalArrivalDate(LocalDate.parse("2023-12-13"))
+          .withCanonicalDepartureDate(LocalDate.parse("2023-01-02"))
+          .withExpectedArrivalDate(LocalDate.parse("2023-12-13"))
+          .withExpectedDepartureDate(LocalDate.parse("2023-01-02"))
+          .withApplication(
+            ApprovedPremisesApplicationEntityFactory()
+              .withDefaults()
+              .withRiskRatings(
+                PersonRisksFactory().withTier(
+                  RiskWithStatus(
+                    RiskTier(
+                      level = "M1",
+                      lastUpdated = LocalDate.parse("2023-06-26"),
+                    ),
+                  ),
+                ).produce(),
+              )
+              .produce(),
+          )
+          .withKeyworkerStaffCode("the staff code")
+          .withKeyworkerAssignedAt(LocalDateTime.of(2023, 12, 12, 0, 0, 0).toInstant(ZoneOffset.UTC))
+          .withKeyworkerName("the keyworker name")
+          .withCriteria(mutableListOf())
+          .produce(),
+        personSummaryInfo,
+      )
+
+      assertThat(result.id).isEqualTo(id)
+      assertThat(result.person).isEqualTo(expectedPersonSummary)
+      assertThat(result.canonicalArrivalDate).isEqualTo(LocalDate.parse("2023-12-13"))
+      assertThat(result.canonicalDepartureDate).isEqualTo(LocalDate.parse("2023-01-02"))
+      assertThat(result.tier).isEqualTo("M1")
+      assertThat(result.keyWorkerAllocation!!.allocatedAt).isEqualTo(LocalDate.parse("2023-12-12"))
+      assertThat(result.keyWorkerAllocation!!.keyWorker.name).isEqualTo("the keyworker name")
+      assertThat(result.keyWorkerAllocation!!.keyWorker.code).isEqualTo("the staff code")
+      assertThat(result.status).isEqualTo(Cas1SpaceBookingSummaryStatus.departed)
+    }
+  }
+
+  @Nested
   inner class TransformSearchResultToSummary {
 
     @Test
@@ -445,6 +424,7 @@ class Cas1SpaceBookingTransformerTest {
           keyWorkerStaffCode = "the staff code",
           keyWorkerAssignedAt = LocalDateTime.of(2023, 12, 12, 0, 0, 0).toInstant(ZoneOffset.UTC),
           keyWorkerName = "the keyworker name",
+          characteristicsPropertyNames = null,
         ),
         personSummaryInfo,
       )
@@ -490,6 +470,7 @@ class Cas1SpaceBookingTransformerTest {
           keyWorkerStaffCode = null,
           keyWorkerAssignedAt = null,
           keyWorkerName = null,
+          characteristicsPropertyNames = null,
         ),
         personSummaryInfo,
       )
@@ -516,6 +497,7 @@ data class Cas1SpaceBookingSearchResultImpl(
   override val keyWorkerStaffCode: String?,
   override val keyWorkerAssignedAt: Instant?,
   override val keyWorkerName: String?,
+  override val characteristicsPropertyNames: String?,
 ) : Cas1SpaceBookingSearchResult
 
 data class Cas1SpaceBookingAtPremisesImpl(
