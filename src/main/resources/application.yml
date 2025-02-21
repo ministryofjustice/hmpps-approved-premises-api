@@ -46,6 +46,11 @@ spring:
         dialect: org.hibernate.dialect.PostgreSQLDialect
         cache:
           use_second_level_cache: true
+      jakarta:
+        persistence:
+          query:
+            # ensure that wait on locks will eventually error, aiding investigations
+            timeout: 60000
       javax.cache:
         provider: org.ehcache.jsr107.EhcacheCachingProvider
         uri: hibernate-ehcache.xml
