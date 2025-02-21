@@ -88,6 +88,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Withdrawabl
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.WithdrawalContext
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.WithdrawalTriggeredByUser
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.unit.util.assertThat
+import java.time.Clock
 import java.time.LocalDate
 import java.time.OffsetDateTime
 import java.util.UUID
@@ -136,6 +137,7 @@ class BookingServiceTest {
     deliusService = mockDeliusService,
     cas1BookingDomainEventService = mockCas1BookingDomainEventService,
     cas1ApplicationStatusService = mockCas1ApplicationStatusService,
+    clock = Clock.systemDefaultZone(),
   )
 
   private val bookingService = createBookingService()
