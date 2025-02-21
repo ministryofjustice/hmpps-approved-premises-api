@@ -497,6 +497,17 @@ class BookingService(
       )
     }
 
+    if (booking.service == ServiceName.approvedPremises.value) {
+      val application = booking.application as ApprovedPremisesApplicationEntity?
+      application?.let {
+        cas1BookingEmailService.bookingAmended(
+          application = it,
+          booking = booking,
+          placementApplication = booking.placementRequest?.placementApplication,
+        )
+      }
+    }
+
     return success(dateChangeEntity)
   }
 

@@ -3502,6 +3502,8 @@ class BookingTest : IntegrationTestBase() {
           DomainEventType.APPROVED_PREMISES_BOOKING_CHANGED,
         )
         assertThat(savedEvent.bookingId).isEqualTo(booking.id)
+
+        emailAsserter.assertEmailsRequestedCount(2)
       }
     }
   }
