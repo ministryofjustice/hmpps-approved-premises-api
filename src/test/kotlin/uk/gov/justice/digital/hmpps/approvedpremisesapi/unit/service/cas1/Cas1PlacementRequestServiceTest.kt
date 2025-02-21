@@ -72,6 +72,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1LimitedAcces
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.unit.util.assertThatCasResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.PageCriteria
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.PaginationConfig
+import java.time.Clock
 import java.time.LocalDate
 import java.time.OffsetDateTime
 import java.util.UUID
@@ -105,6 +106,7 @@ class Cas1PlacementRequestServiceTest {
     taskDeadlineServiceMock,
     cas1BookingDomainEventService,
     offenderService,
+    clock = Clock.systemDefaultZone(),
   )
 
   private val previousUser = UserEntityFactory()
