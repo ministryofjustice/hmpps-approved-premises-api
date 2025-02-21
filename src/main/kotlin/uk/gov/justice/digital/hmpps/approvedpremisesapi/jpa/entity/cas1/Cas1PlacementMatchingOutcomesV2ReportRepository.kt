@@ -15,6 +15,7 @@ class Cas1PlacementMatchingOutcomesV2ReportRepository(
     const val CORE_QUERY = """
       SELECT 
         pr.id as placement_request_id,
+        
         CASE
           WHEN latest_match_outcome_event.type = 'APPROVED_PREMISES_BOOKING_MADE' THEN latest_match_outcome_event.data -> 'eventDetails' -> 'bookedBy' -> 'cru' ->> 'name'
           WHEN latest_match_outcome_event.type = 'APPROVED_PREMISES_BOOKING_NOT_MADE' THEN latest_match_outcome_event.data -> 'eventDetails' -> 'attemptedBy' -> 'cru' ->> 'name'
@@ -30,9 +31,16 @@ class Cas1PlacementMatchingOutcomesV2ReportRepository(
           WHEN latest_match_outcome_event.type = 'APPROVED_PREMISES_BOOKING_NOT_MADE' THEN 'Not matched'
           ELSE ''
         END as match_outcome,
+        
+        to_char(latest_match_event.occurred_at, 'YYYY-MM-DD"T"HH24:MI:SS"Z"') as last_successful_match_attempt_date_time,
+        latest_match_event.data -> 'eventDetails' -> 'premises' ->> 'name' as last_successful_match_attempt_premises_name,
+        
         rfp.* 
       FROM raw_requests_for_placements rfp
+      
       LEFT OUTER JOIN placement_application_dates pad ON pad.id = rfp.internal_placement_application_date_id
+      
+      -- this is required because placement applications can have many dates linked to different placement requests
       INNER JOIN placement_requests pr ON (
         (
           rfp.internal_placement_request_id IS NOT NULL AND
@@ -44,6 +52,7 @@ class Cas1PlacementMatchingOutcomesV2ReportRepository(
           pr.id = pad.placement_request_id
         )
       )
+      
       LEFT OUTER JOIN (
          SELECT DISTINCT ON (evt.application_id, m.value)
                  evt.id,
@@ -59,6 +68,23 @@ class Cas1PlacementMatchingOutcomesV2ReportRepository(
       ) latest_match_outcome_event on 
         latest_match_outcome_event.application_id = pr.application_id AND 
         latest_match_outcome_event.placement_request_id = CAST(pr.id as TEXT)
+        
+      LEFT OUTER JOIN (
+         SELECT DISTINCT ON (evt.application_id, m.value)
+                 evt.id,
+                 evt.type,
+                 evt.data,
+                 evt.application_id,
+                 evt.occurred_at,
+                 m.value as placement_request_id
+         FROM domain_events evt
+         INNER JOIN domain_events_metadata m ON m.domain_event_id = evt.id AND m.name = 'CAS1_PLACEMENT_REQUEST_ID'
+         WHERE
+         type IN ('APPROVED_PREMISES_BOOKING_MADE')
+         ORDER BY evt.application_id, m.value, created_at desc
+      ) latest_match_event on 
+        latest_match_event.application_id = pr.application_id AND 
+        latest_match_event.placement_request_id = CAST(pr.id as TEXT)  
     """
   }
 

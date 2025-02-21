@@ -59,8 +59,10 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserQualification
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRole
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.asCaseDetail
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomStringMultiCaseWithNumbers
 import java.io.StringReader
 import java.time.LocalDate
+import java.time.LocalDateTime
 import java.util.UUID
 
 class Cas1PlacementMatchingOutcomesV2ReportTest : InitialiseDatabasePerClassTestBase() {
@@ -239,6 +241,9 @@ class Cas1PlacementMatchingOutcomesV2ReportTest : InitialiseDatabasePerClassTest
       assertThat(row.request_for_placement_id).matches("placement_request:[a-f0-9-]+")
       assertThat(row.request_for_placement_type).isEqualTo("STANDARD")
       assertThat(row.crn).matches("StandardRFPNotAllocated")
+
+      assertThat(row.last_successful_match_attempt_date_time).isNull()
+      assertThat(row.last_successful_match_attempt_premises_name).isNull()
     }
   }
 
@@ -278,10 +283,14 @@ class Cas1PlacementMatchingOutcomesV2ReportTest : InitialiseDatabasePerClassTest
         crn = "StandardRFPMatched",
         arrivalDateOnApplication = LocalDate.of(REPORT_YEAR, REPORT_MONTH, 2),
       )
+
+      clock.setNow(LocalDateTime.of(2030, 1, 2, 3, 4, 5))
+
       createBooking(
         placementRequestId = application.placementRequests[0].id,
         matcherUsername = "MATCHER1",
         matcherApAreaName = "MATCHER1CRU",
+        premisesName = "StandardRFPMatched Premise",
       )
     }
 
@@ -295,6 +304,9 @@ class Cas1PlacementMatchingOutcomesV2ReportTest : InitialiseDatabasePerClassTest
       assertThat(row.request_for_placement_type).isEqualTo("STANDARD")
       assertThat(row.requested_arrival_date).isEqualTo("2020-02-02")
       assertThat(row.crn).matches("StandardRFPMatched")
+
+      assertThat(row.last_successful_match_attempt_date_time).isEqualTo("2030-01-02T03:04:05Z")
+      assertThat(row.last_successful_match_attempt_premises_name).isEqualTo("StandardRFPMatched Premise")
     }
   }
 
@@ -323,6 +335,9 @@ class Cas1PlacementMatchingOutcomesV2ReportTest : InitialiseDatabasePerClassTest
       assertThat(row.request_for_placement_type).isEqualTo("STANDARD")
       assertThat(row.requested_arrival_date).isEqualTo("2020-02-03")
       assertThat(row.crn).matches("StandardRFPNotMatched")
+
+      assertThat(row.last_successful_match_attempt_date_time).isNull()
+      assertThat(row.last_successful_match_attempt_premises_name).isNull()
     }
   }
 
@@ -339,10 +354,14 @@ class Cas1PlacementMatchingOutcomesV2ReportTest : InitialiseDatabasePerClassTest
         matcherUsername = "MATCHER3",
         matcherApAreaName = "MATCHER3CRU",
       )
+
+      clock.setNow(LocalDateTime.of(2030, 2, 3, 4, 5, 6))
+
       createBooking(
         placementRequestId = application.placementRequests[0].id,
         matcherUsername = "MATCHER13",
         matcherApAreaName = "MATCHER13CRU",
+        premisesName = "StandardRFPNotMatchedAndThenMatched premise",
       )
     }
 
@@ -356,6 +375,9 @@ class Cas1PlacementMatchingOutcomesV2ReportTest : InitialiseDatabasePerClassTest
       assertThat(row.request_for_placement_type).isEqualTo("STANDARD")
       assertThat(row.requested_arrival_date).isEqualTo("2020-02-04")
       assertThat(row.crn).matches("StandardRFPMNotMatchedAndThenMatched")
+
+      assertThat(row.last_successful_match_attempt_date_time).isEqualTo("2030-02-03T04:05:06Z")
+      assertThat(row.last_successful_match_attempt_premises_name).isEqualTo("StandardRFPNotMatchedAndThenMatched premise")
     }
   }
 
@@ -379,10 +401,13 @@ class Cas1PlacementMatchingOutcomesV2ReportTest : InitialiseDatabasePerClassTest
         ),
       )
 
+      clock.setNow(LocalDateTime.of(2031, 8, 7, 6, 5, 6))
+
       createBooking(
         placementRequestId = application.placementRequests[0].id,
         matcherUsername = "MATCHER4",
         matcherApAreaName = "MATCHER4CRU",
+        premisesName = "PlacementAppMatched Premise",
       )
     }
 
@@ -396,6 +421,9 @@ class Cas1PlacementMatchingOutcomesV2ReportTest : InitialiseDatabasePerClassTest
       assertThat(row.request_for_placement_type).isEqualTo("ROTL")
       assertThat(row.requested_arrival_date).isEqualTo("2020-02-05")
       assertThat(row.crn).matches("ROTLRFPMultiDates")
+
+      assertThat(row.last_successful_match_attempt_date_time).isEqualTo("2031-08-07T06:05:06Z")
+      assertThat(row.last_successful_match_attempt_premises_name).isEqualTo("PlacementAppMatched Premise")
     }
   }
 
@@ -459,6 +487,7 @@ class Cas1PlacementMatchingOutcomesV2ReportTest : InitialiseDatabasePerClassTest
     placementRequestId: UUID,
     matcherApAreaName: String,
     matcherUsername: String,
+    premisesName: String = randomStringMultiCaseWithNumbers(8),
   ) {
     val managerJwt = givenAUser(
       roles = listOf(UserRole.CAS1_WORKFLOW_MANAGER, UserRole.CAS1_CRU_MEMBER),
@@ -469,6 +498,7 @@ class Cas1PlacementMatchingOutcomesV2ReportTest : InitialiseDatabasePerClassTest
     val premises = approvedPremisesEntityFactory.produceAndPersist {
       withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
       withYieldedProbationRegion { givenAProbationRegion() }
+      withName(premisesName)
     }
 
     cas1SimpleApiClient.bookingForPlacementRequest(
@@ -700,5 +730,7 @@ class Cas1PlacementMatchingOutcomesV2ReportTest : InitialiseDatabasePerClassTest
     val request_for_placement_id: String?,
     val request_for_placement_type: String?,
     val requested_arrival_date: String?,
+    val last_successful_match_attempt_date_time: String?,
+    val last_successful_match_attempt_premises_name: String?,
   )
 }
