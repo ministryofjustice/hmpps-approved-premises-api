@@ -4314,6 +4314,8 @@ components:
           type: string
         createdBy:
           $ref: '#/components/schemas/User'
+        payload:
+          $ref: '#/components/schemas/TimelineEventContentPayload'
         associatedUrls:
           type: array
           items:
