@@ -402,7 +402,7 @@ components:
           type: string
           format: date-time
         keyWorkerAllocation:
-          $ref: '#/components/schemas/Cas1KeyWorkerAllocation'
+          $ref: '_shared.yml#/components/schemas/Cas1KeyWorkerAllocation'
         otherBookingsInPremisesForCrn:
           type: array
           items:
@@ -414,7 +414,7 @@ components:
         deliusEventNumber:
           type: string
         status:
-          $ref: '#/components/schemas/Cas1SpaceBookingSummaryStatus'
+          $ref: '_shared.yml#/components/schemas/Cas1SpaceBookingSummaryStatus'
         characteristics:
           type: array
           items:
@@ -451,61 +451,6 @@ components:
         - id
         - canonicalArrivalDate
         - canonicalDepartureDate
-    Cas1SpaceBookingSummary:
-      type: object
-      properties:
-        id:
-          type: string
-          format: uuid
-        person:
-          $ref: "_shared.yml#/components/schemas/PersonSummary"
-        canonicalArrivalDate:
-          description: actual arrival date or, if not known, the expected arrival date
-          type: string
-          format: date
-        canonicalDepartureDate:
-          description: actual departure date or, if not known, the expected departure date
-          type: string
-          format: date
-        expectedArrivalDate:
-          description: expected arrival date
-          type: string
-          format: date
-        actualArrivalDate:
-          description: actual arrival date if known
-          type: string
-          format: date
-        expectedDepartureDate:
-          description: expected departure date
-          type: string
-          format: date
-        actualDepartureDate:
-          description: actual departure date if known
-          type: string
-          format: date
-        isNonArrival:
-          type: boolean
-        tier:
-          description: Risk rating tier level of corresponding application
-          type: string
-        keyWorkerAllocation:
-          $ref: '#/components/schemas/Cas1KeyWorkerAllocation'
-        status:
-          $ref: '#/components/schemas/Cas1SpaceBookingSummaryStatus'
-        characteristics:
-          description: "Room and premise characteristics"
-          type: array
-          items:
-            $ref: '_shared.yml#/components/schemas/Cas1SpaceCharacteristic'
-          default: []
-      required:
-        - id
-        - person
-        - canonicalArrivalDate
-        - canonicalDepartureDate
-        - characteristics
-        - expectedArrivalDate
-        - expectedDepartureDate
     Cas1SpaceBookingSummarySortField:
       type: string
       enum:
@@ -590,36 +535,12 @@ components:
         - canonicalDepartureDate
         - spaceType
         - essentialCharacteristics
-    Cas1SpaceBookingSummaryStatus:
-      deprecated: true
-      type: string
-      enum:
-        - arrivingWithin6Weeks
-        - arrivingWithin2Weeks
-        - arrivingToday
-        - overdueArrival
-        - arrived
-        - notArrived
-        - departingWithin2Weeks
-        - departingToday
-        - overdueDeparture
-        - departed
     Cas1SpaceBookingResidency:
       type: string
       enum:
         - upcoming
         - current
         - historic
-    Cas1KeyWorkerAllocation:
-      type: object
-      properties:
-        keyWorker:
-          $ref: '_shared.yml#/components/schemas/StaffMember'
-        allocatedAt:
-          type: string
-          format: date
-      required:
-        - keyWorker
     Cas1SpaceBookingDeparture:
       type: object
       properties:

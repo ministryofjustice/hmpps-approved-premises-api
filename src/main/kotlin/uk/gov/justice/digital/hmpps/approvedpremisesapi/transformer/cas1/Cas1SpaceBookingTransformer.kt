@@ -162,6 +162,33 @@ class Cas1SpaceBookingTransformer(
     null
   }
 
+  fun transformToSummary(
+    spaceBooking: Cas1SpaceBookingEntity,
+    personSummaryInfo: PersonSummaryInfoResult,
+  ) = Cas1SpaceBookingSummary(
+    id = spaceBooking.id,
+    person = personTransformer.personSummaryInfoToPersonSummary(personSummaryInfo),
+    canonicalArrivalDate = spaceBooking.canonicalArrivalDate,
+    canonicalDepartureDate = spaceBooking.canonicalDepartureDate,
+    expectedArrivalDate = spaceBooking.expectedArrivalDate,
+    expectedDepartureDate = spaceBooking.expectedDepartureDate,
+    isNonArrival = spaceBooking.hasNonArrival(),
+    tier = spaceBooking.application?.riskRatings?.tier?.value?.level,
+    keyWorkerAllocation = spaceBooking.extractKeyWorkerAllocation(),
+    status = spaceBookingStatusTransformer.transformToSpaceBookingSummaryStatus(
+      SpaceBookingDates(
+        spaceBooking.expectedArrivalDate,
+        spaceBooking.expectedDepartureDate,
+        spaceBooking.actualArrivalDate,
+        spaceBooking.actualDepartureDate,
+        spaceBooking.nonArrivalConfirmedAt?.toLocalDateTime(),
+      ),
+    ),
+    characteristics = spaceBooking.criteria.mapNotNull { criteria ->
+      Cas1SpaceCharacteristic.entries.find { it.name == criteria.propertyName }
+    },
+  )
+
   fun transformSearchResultToSummary(
     searchResult: Cas1SpaceBookingSearchResult,
     personSummaryInfo: PersonSummaryInfoResult,

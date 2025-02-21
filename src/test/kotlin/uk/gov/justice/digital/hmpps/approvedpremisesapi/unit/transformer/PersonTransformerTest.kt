@@ -40,6 +40,69 @@ class PersonTransformerTest {
   private val personTransformer = PersonTransformer()
 
   @Nested
+  inner class PersonInfoResultToPersonSummaryInfoResult {
+
+    @Test
+    fun `not found`() {
+      val result = personTransformer.personInfoResultToPersonSummaryInfoResult(
+        PersonInfoResult.NotFound(
+          crn = "CRN123",
+        ),
+      )
+
+      assertThat(result).isInstanceOf(PersonSummaryInfoResult.NotFound::class.java)
+      assertThat((result as PersonSummaryInfoResult.NotFound).crn).isEqualTo("CRN123")
+    }
+
+    @Test
+    fun unknown() {
+      val result = personTransformer.personInfoResultToPersonSummaryInfoResult(
+        PersonInfoResult.Unknown(
+          crn = "CRN123",
+        ),
+      )
+
+      assertThat(result).isInstanceOf(PersonSummaryInfoResult.Unknown::class.java)
+      val unknown = result as PersonSummaryInfoResult.Unknown
+
+      assertThat(unknown.crn).isEqualTo("CRN123")
+    }
+
+    @Test
+    fun restricted() {
+      val result = personTransformer.personInfoResultToPersonSummaryInfoResult(
+        PersonInfoResult.Success.Restricted(
+          crn = "CRN123",
+          nomsNumber = "NOMS123",
+        ),
+      )
+
+      assertThat(result).isInstanceOf(PersonSummaryInfoResult.Success.Restricted::class.java)
+      val restricted = result as PersonSummaryInfoResult.Success.Restricted
+
+      assertThat(restricted.crn).isEqualTo("CRN123")
+      assertThat(restricted.nomsNumber).isEqualTo("NOMS123")
+    }
+
+    @Test
+    fun full() {
+      val result = personTransformer.personInfoResultToPersonSummaryInfoResult(
+        PersonInfoResult.Success.Full(
+          crn = "CRN123",
+          offenderDetailSummary = OffenderDetailsSummaryFactory().withGender("male").produce(),
+          inmateDetail = InmateDetailFactory().produce(),
+        ),
+      )
+
+      assertThat(result).isInstanceOf(PersonSummaryInfoResult.Success.Full::class.java)
+      val full = result as PersonSummaryInfoResult.Success.Full
+
+      assertThat(full.crn).isEqualTo("CRN123")
+      assertThat(full.summary.gender).isEqualTo("male")
+    }
+  }
+
+  @Nested
   inner class PersonSummaryInfoToPersonSummary {
 
     @Test

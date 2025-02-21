@@ -4710,6 +4710,7 @@ components:
         - person_not_arrived
         - person_departed
     PlacementRequest:
+      description: This type is to broad for use in search results, and as such we're moving towards using Cas1PlacementRequestSummary instead for that purpose.
       allOf:
         - $ref: '#/components/schemas/PlacementRequirements'
         - $ref: '#/components/schemas/PlacementDates'
@@ -4748,6 +4749,7 @@ components:
               description: Notes from the assessor for the CRU Manager
               type: string
             booking:
+              description: Information about the legacy booking or space booking associated with the placement request
               $ref: '#/components/schemas/PlacementRequestBookingSummary'
             requestType:
               $ref: '#/components/schemas/PlacementRequestRequestType'
@@ -4787,9 +4789,18 @@ components:
                 $ref: '#/components/schemas/Cancellation'
             application:
               $ref: '#/components/schemas/Application'
+            legacyBooking:
+              description: The legacy booking associated with this placement request
+              $ref: '#/components/schemas/PlacementRequestBookingSummary'
+            spaceBookings:
+              description: The space bookings associated with this placement request
+              type: array
+              items:
+                $ref: '#/components/schemas/Cas1SpaceBookingSummary'
           required:
             - cancellations
             - application
+            - spaceBookings
     PlacementRequestStatus:
       type: string
       enum:
@@ -5567,3 +5578,82 @@ components:
         - isWheelchairAccessible
         - isWheelchairDesignated
         - arsonOffences
+    Cas1SpaceBookingSummary:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        person:
+          $ref: "#/components/schemas/PersonSummary"
+        canonicalArrivalDate:
+          description: actual arrival date or, if not known, the expected arrival date
+          type: string
+          format: date
+        canonicalDepartureDate:
+          description: actual departure date or, if not known, the expected departure date
+          type: string
+          format: date
+        expectedArrivalDate:
+          description: expected arrival date
+          type: string
+          format: date
+        actualArrivalDate:
+          description: actual arrival date if known
+          type: string
+          format: date
+        expectedDepartureDate:
+          description: expected departure date
+          type: string
+          format: date
+        actualDepartureDate:
+          description: actual departure date if known
+          type: string
+          format: date
+        isNonArrival:
+          type: boolean
+        tier:
+          description: Risk rating tier level of corresponding application
+          type: string
+        keyWorkerAllocation:
+          $ref: '#/components/schemas/Cas1KeyWorkerAllocation'
+        status:
+          $ref: '#/components/schemas/Cas1SpaceBookingSummaryStatus'
+        characteristics:
+          description: "Room and premise characteristics"
+          type: array
+          items:
+            $ref: '#/components/schemas/Cas1SpaceCharacteristic'
+          default: []
+      required:
+        - id
+        - person
+        - canonicalArrivalDate
+        - canonicalDepartureDate
+        - characteristics
+        - expectedArrivalDate
+        - expectedDepartureDate
+    Cas1KeyWorkerAllocation:
+      type: object
+      properties:
+        keyWorker:
+          $ref: '#/components/schemas/StaffMember'
+        allocatedAt:
+          type: string
+          format: date
+      required:
+        - keyWorker
+    Cas1SpaceBookingSummaryStatus:
+      deprecated: true
+      type: string
+      enum:
+        - arrivingWithin6Weeks
+        - arrivingWithin2Weeks
+        - arrivingToday
+        - overdueArrival
+        - arrived
+        - notArrived
+        - departingWithin2Weeks
+        - departingToday
+        - overdueDeparture
+        - departed

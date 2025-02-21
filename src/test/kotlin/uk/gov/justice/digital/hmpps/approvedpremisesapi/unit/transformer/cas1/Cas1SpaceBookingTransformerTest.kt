@@ -333,6 +333,65 @@ class Cas1SpaceBookingTransformerTest {
   }
 
   @Nested
+  inner class TransformToSummary {
+
+    @Test
+    fun success() {
+      val id = UUID.randomUUID()
+
+      val personSummaryInfo = PersonSummaryInfoResult.Success.Restricted("the crn", "the noms")
+
+      val expectedPersonSummary = RestrictedPersonSummary(
+        "the crn",
+        PersonSummaryDiscriminator.restrictedPersonSummary,
+      )
+      every { personTransformer.personSummaryInfoToPersonSummary(personSummaryInfo) } returns expectedPersonSummary
+      every { spaceBookingStatusTransformer.transformToSpaceBookingSummaryStatus(any()) } returns Cas1SpaceBookingSummaryStatus.departed
+
+      val result = transformer.transformToSummary(
+        Cas1SpaceBookingEntityFactory()
+          .withId(id)
+          .withCrn("the crn")
+          .withCanonicalArrivalDate(LocalDate.parse("2023-12-13"))
+          .withCanonicalDepartureDate(LocalDate.parse("2023-01-02"))
+          .withExpectedArrivalDate(LocalDate.parse("2023-12-13"))
+          .withExpectedDepartureDate(LocalDate.parse("2023-01-02"))
+          .withApplication(
+            ApprovedPremisesApplicationEntityFactory()
+              .withDefaults()
+              .withRiskRatings(
+                PersonRisksFactory().withTier(
+                  RiskWithStatus(
+                    RiskTier(
+                      level = "M1",
+                      lastUpdated = LocalDate.parse("2023-06-26"),
+                    ),
+                  ),
+                ).produce(),
+              )
+              .produce(),
+          )
+          .withKeyworkerStaffCode("the staff code")
+          .withKeyworkerAssignedAt(LocalDateTime.of(2023, 12, 12, 0, 0, 0).toInstant(ZoneOffset.UTC))
+          .withKeyworkerName("the keyworker name")
+          .withCriteria(mutableListOf())
+          .produce(),
+        personSummaryInfo,
+      )
+
+      assertThat(result.id).isEqualTo(id)
+      assertThat(result.person).isEqualTo(expectedPersonSummary)
+      assertThat(result.canonicalArrivalDate).isEqualTo(LocalDate.parse("2023-12-13"))
+      assertThat(result.canonicalDepartureDate).isEqualTo(LocalDate.parse("2023-01-02"))
+      assertThat(result.tier).isEqualTo("M1")
+      assertThat(result.keyWorkerAllocation!!.allocatedAt).isEqualTo(LocalDate.parse("2023-12-12"))
+      assertThat(result.keyWorkerAllocation!!.keyWorker.name).isEqualTo("the keyworker name")
+      assertThat(result.keyWorkerAllocation!!.keyWorker.code).isEqualTo("the staff code")
+      assertThat(result.status).isEqualTo(Cas1SpaceBookingSummaryStatus.departed)
+    }
+  }
+
+  @Nested
   inner class TransformSearchResultToSummary {
 
     @Test
