@@ -5,6 +5,7 @@ import io.mockk.Runs
 import io.mockk.every
 import io.mockk.just
 import io.mockk.mockk
+import io.mockk.runs
 import io.mockk.slot
 import io.mockk.verify
 import org.assertj.core.api.Assertions.assertThat
@@ -2244,7 +2245,7 @@ class BookingServiceTest {
       every { mockWorkingDayService.addWorkingDays(any(), any()) } answers { it.invocation.args[0] as LocalDate }
       every { mockDateChangeRepository.save(any()) } answers { it.invocation.args[0] as DateChangeEntity }
       every { mockBookingRepository.save(any()) } answers { it.invocation.args[0] as BookingEntity }
-
+      every { mockCas1BookingEmailService.bookingAmended(any(), any(), any()) } just runs
       every { mockCas1BookingDomainEventService.bookingChanged(any(), any(), any(), any(), any()) } just Runs
 
       val newArrivalDate = LocalDate.parse("2023-07-15")
@@ -2290,6 +2291,14 @@ class BookingServiceTest {
           bookingChangedAt = any(),
           previousArrivalDateIfChanged = LocalDate.of(2023, 7, 14),
           previousDepartureDateIfChanged = null,
+        )
+      }
+
+      verify(exactly = 1) {
+        mockCas1BookingEmailService.bookingAmended(
+          application = booking.application as ApprovedPremisesApplicationEntity,
+          booking = booking,
+          placementApplication = booking.placementRequest?.placementApplication,
         )
       }
     }

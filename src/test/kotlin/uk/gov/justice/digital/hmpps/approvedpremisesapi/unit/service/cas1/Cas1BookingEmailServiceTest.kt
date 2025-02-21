@@ -696,6 +696,68 @@ class Cas1BookingEmailServiceTest {
     }
   }
 
+  @Nested
+  inner class BookingAmended {
+    @Test
+    fun `bookingAmended sends email to applicant and premises email addresses when defined`() {
+      val applicant = UserEntityFactory()
+        .withUnitTestControlProbationRegion()
+        .withEmail(APPLICANT_EMAIL)
+        .produce()
+
+      val (application, booking) = createApplicationAndBooking(
+        applicant,
+        premises,
+        arrivalDate = LocalDate.of(2023, 2, 1),
+        departureDate = LocalDate.of(2023, 2, 14),
+        caseManagerNotApplicant = true,
+        cruManagementArea = Cas1CruManagementAreaEntityFactory()
+          .withEmailAddress(CRU_MANAGEMENT_AREA_EMAIL)
+          .produce(),
+      )
+
+      service.bookingAmended(
+        application = application,
+        booking = booking,
+        placementApplication = null,
+      )
+
+      mockEmailNotificationService.assertEmailRequestCount(3)
+
+      val expectedPersonalisation = mapOf(
+        "apName" to PREMISES_NAME,
+        "applicationUrl" to "http://frontend/applications/${application.id}",
+        "applicationTimelineUrl" to "http://frontend/applications/${application.id}?tab=timeline",
+        "crn" to CRN,
+        "startDate" to "2023-02-01",
+        "endDate" to "2023-02-14",
+        "lengthStay" to 2,
+        "lengthStayUnit" to "weeks",
+      )
+
+      mockEmailNotificationService.assertEmailRequested(
+        APPLICANT_EMAIL,
+        notifyConfig.templates.bookingAmended,
+        expectedPersonalisation,
+        application,
+      )
+
+      mockEmailNotificationService.assertEmailRequested(
+        CASE_MANAGER_EMAIL,
+        notifyConfig.templates.bookingAmended,
+        expectedPersonalisation,
+        application,
+      )
+
+      mockEmailNotificationService.assertEmailRequested(
+        PREMISES_EMAIL,
+        notifyConfig.templates.bookingAmended,
+        expectedPersonalisation,
+        application,
+      )
+    }
+  }
+
   @SuppressWarnings("LongParameterList")
   private fun createApplicationAndBooking(
     applicant: UserEntity,

@@ -126,6 +126,14 @@ class Cas1BookingEmailService(
     spaceBooking.toBookingInfo(application),
   )
 
+  fun bookingAmended(
+    application: ApprovedPremisesApplicationEntity,
+    booking: BookingEntity,
+    placementApplication: PlacementApplicationEntity?,
+  ) = bookingAmended(
+    booking.toBookingInfo(application, placementApplication),
+  )
+
   private fun bookingAmended(bookingInfo: BookingInfo) {
     val application = bookingInfo.application
     val emailPersonalisation = buildCommonPersonalisation(bookingInfo)
