@@ -33,6 +33,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.UserService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.PageCriteria
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.extractEntityFromCasResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.getMetadata
+import java.time.Clock
 import java.time.Instant
 import java.time.LocalDate
 import java.time.LocalTime
@@ -56,6 +57,7 @@ class Cas1SpaceBookingService(
   private val nonArrivalReasonRepository: NonArrivalReasonRepository,
   private val lockablePlacementRequestRepository: LockablePlacementRequestRepository,
   private val userService: UserService,
+  private val clock: Clock,
 ) {
   @Transactional
   fun createNewBooking(
@@ -110,7 +112,7 @@ class Cas1SpaceBookingService(
         offlineApplication = null,
         placementRequest = placementRequest,
         createdBy = createdBy,
-        createdAt = OffsetDateTime.now(),
+        createdAt = OffsetDateTime.now(clock),
         expectedArrivalDate = arrivalDate,
         expectedDepartureDate = departureDate,
         actualArrivalDate = null,

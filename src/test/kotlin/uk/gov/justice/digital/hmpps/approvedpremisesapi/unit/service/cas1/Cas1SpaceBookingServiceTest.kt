@@ -3,8 +3,6 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.unit.service.cas1
 import io.mockk.Called
 import io.mockk.Runs
 import io.mockk.every
-import io.mockk.impl.annotations.InjectMockKs
-import io.mockk.impl.annotations.MockK
 import io.mockk.junit5.MockKExtension
 import io.mockk.just
 import io.mockk.mockk
@@ -74,6 +72,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Withdrawabl
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.WithdrawalContext
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.WithdrawalTriggeredByUser
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.isWithinTheLastMinute
+import java.time.Clock
 import java.time.Instant
 import java.time.LocalDate
 import java.time.LocalDateTime
@@ -85,50 +84,38 @@ import java.util.stream.Stream
 
 @ExtendWith(MockKExtension::class)
 class Cas1SpaceBookingServiceTest {
-  @MockK
-  private lateinit var cas1PremisesService: Cas1PremisesService
+  private val cas1PremisesService = mockk<Cas1PremisesService>()
+  private val placementRequestService = mockk<PlacementRequestService>()
+  private val spaceBookingRepository = mockk<Cas1SpaceBookingRepository>()
+  private val cas1BookingDomainEventService = mockk<Cas1BookingDomainEventService>()
+  private val cas1BookingEmailService = mockk<Cas1BookingEmailService>()
+  private val cas1SpaceBookingManagementDomainEventService = mockk<Cas1SpaceBookingManagementDomainEventService>()
+  private val moveOnCategoryRepository = mockk<MoveOnCategoryRepository>()
+  private val departureReasonRepository = mockk<DepartureReasonRepository>()
+  private val cas1ApplicationStatusService = mockk<Cas1ApplicationStatusService>()
+  private val staffMemberService = mockk<StaffMemberService>()
+  private val cancellationReasonRepository = mockk<CancellationReasonRepository>()
+  private val nonArrivalReasonRepository = mockk<NonArrivalReasonRepository>()
+  private val lockablePlacementRequestRepository = mockk<LockablePlacementRequestRepository>()
+  private val userService = mockk<UserService>()
 
-  @MockK
-  private lateinit var placementRequestService: PlacementRequestService
-
-  @MockK
-  private lateinit var spaceBookingRepository: Cas1SpaceBookingRepository
-
-  @MockK
-  private lateinit var cas1BookingDomainEventService: Cas1BookingDomainEventService
-
-  @MockK
-  private lateinit var cas1BookingEmailService: Cas1BookingEmailService
-
-  @MockK
-  private lateinit var cas1SpaceBookingManagementDomainEventService: Cas1SpaceBookingManagementDomainEventService
-
-  @MockK
-  private lateinit var moveOnCategoryRepository: MoveOnCategoryRepository
-
-  @MockK
-  private lateinit var departureReasonRepository: DepartureReasonRepository
-
-  @MockK
-  private lateinit var cas1ApplicationStatusService: Cas1ApplicationStatusService
-
-  @MockK
-  private lateinit var staffMemberService: StaffMemberService
-
-  @MockK
-  private lateinit var cancellationReasonRepository: CancellationReasonRepository
-
-  @MockK
-  private lateinit var nonArrivalReasonRepository: NonArrivalReasonRepository
-
-  @MockK
-  private lateinit var lockablePlacementRequestRepository: LockablePlacementRequestRepository
-
-  @MockK
-  private lateinit var userService: UserService
-
-  @InjectMockKs
-  private lateinit var service: Cas1SpaceBookingService
+  private val service = Cas1SpaceBookingService(
+    cas1PremisesService,
+    placementRequestService,
+    spaceBookingRepository,
+    cas1BookingDomainEventService,
+    cas1BookingEmailService,
+    cas1SpaceBookingManagementDomainEventService,
+    departureReasonRepository,
+    moveOnCategoryRepository,
+    cas1ApplicationStatusService,
+    staffMemberService,
+    cancellationReasonRepository,
+    nonArrivalReasonRepository,
+    lockablePlacementRequestRepository,
+    userService,
+    Clock.systemDefaultZone(),
+  )
 
   companion object CONSTANTS {
     val PREMISES_ID: UUID = UUID.randomUUID()
