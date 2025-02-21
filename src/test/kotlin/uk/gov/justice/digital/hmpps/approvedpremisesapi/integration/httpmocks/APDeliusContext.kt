@@ -229,7 +229,7 @@ fun IntegrationTestBase.apDeliusContextAddStaffDetailResponse(staffDetail: Staff
   )
 
   mockSuccessfulGetCallWithJsonResponse(
-    url = "/staff/${username}",
+    url = "/staff/$username",
     responseBody = staffDetail,
   )
 
