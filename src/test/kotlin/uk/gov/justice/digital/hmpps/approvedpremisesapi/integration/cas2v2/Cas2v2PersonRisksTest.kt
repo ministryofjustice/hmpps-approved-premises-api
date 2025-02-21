@@ -17,6 +17,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.ap
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.oasyscontext.RiskLevel
 import java.time.LocalDate
 import java.time.OffsetDateTime
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenACas2v2DeliusUser
 
 class Cas2v2PersonRisksTest : Cas2v2IntegrationTestBase() {
   @Test

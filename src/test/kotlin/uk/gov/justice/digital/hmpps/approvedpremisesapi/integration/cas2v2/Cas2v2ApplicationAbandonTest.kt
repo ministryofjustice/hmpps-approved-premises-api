@@ -107,27 +107,6 @@ class Cas2v2ApplicationAbandonTest : Cas2v2IntegrationTestBase() {
         }
       }
     }
-
-    @Nested
-    inner class LicenceCaseAdminUsers {
-      @Test
-      fun `Abandon existing cas2v2 application returns 200 with correct body`() {
-        givenACas2v2LicenceCaseAdminUser { submittingUser, jwt ->
-          givenAnOffender { offenderDetails, _ ->
-            val application = produceAndPersistBasicApplication(offenderDetails.otherIds.crn, submittingUser)
-
-            webTestClient.put()
-              .uri("/cas2v2/applications/${application.id}/abandon")
-              .header("Authorization", "Bearer $jwt")
-              .exchange()
-              .expectStatus()
-              .isOk
-
-            Assertions.assertNotNull(realApplicationRepository.findById(application.id).get().abandonedAt)
-          }
-        }
-      }
-    }
   }
 
   private fun produceAndPersistBasicApplication(

@@ -223,7 +223,7 @@ fun Cas2v2IntegrationTestBase.givenACas2v2DeliusUser(
     withUserType(Cas2v2UserType.DELIUS)
   }
 
-  val jwt = jwtAuthHelper.createValidDeliusAuthorisationCodeJwt(deliusUser.deliusUsername, roles = listOf("ROLE_COURT_BAIL_REFERRER"))
+  val jwt = jwtAuthHelper.createValidDeliusAuthorisationCodeJwt(deliusUser.deliusUsername, roles = listOf("ROLE_CAS2_COURT_BAIL_REFERRER"))
 //  nomisUserRolesMockSuccessfulGetUserDetailsCall(jwt, nomisUserDetails)
 
   block(user, jwt)

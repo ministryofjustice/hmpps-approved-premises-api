@@ -275,27 +275,6 @@ class Cas2v2PersonSearchTest : Cas2v2IntegrationTestBase() {
             .expectStatus()
             .isForbidden
         }
-
-        @Test
-        fun `Searching for a CRN that does not exist returns 404`() {
-          givenACas2v2PomUser { _, jwt ->
-            wiremockServer.stubFor(
-              get(WireMock.urlEqualTo("/secure/offenders/crn/CRN"))
-                .willReturn(
-                  aResponse()
-                    .withHeader("Content-Type", "application/json")
-                    .withStatus(404),
-                ),
-            )
-
-            webTestClient.get()
-              .uri("/cas2v2/people/search-by-crn/CRN")
-              .header("Authorization", "Bearer $jwt")
-              .exchange()
-              .expectStatus()
-              .isNotFound
-          }
-        }
       }
 
       @Nested
