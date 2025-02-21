@@ -38,6 +38,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.allocations
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1LimitedAccessStrategy
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.PageCriteria
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.getMetadata
+import java.time.Clock
 import java.time.LocalDate
 import java.time.OffsetDateTime
 import java.util.UUID
@@ -58,6 +59,7 @@ class PlacementRequestService(
   private val taskDeadlineService: TaskDeadlineService,
   private val cas1BookingDomainEventService: Cas1BookingDomainEventService,
   private val offenderService: OffenderService,
+  private val clock: Clock,
 ) {
 
   var log: Logger = LoggerFactory.getLogger(this::class.java)
@@ -287,7 +289,7 @@ class PlacementRequestService(
     placementRequestId: UUID,
     notes: String?,
   ): CasResult<BookingNotMadeEntity> {
-    val bookingNotCreatedAt = OffsetDateTime.now()
+    val bookingNotMadeCreatedAt = OffsetDateTime.now(clock)
 
     val placementRequest = placementRequestRepository.findByIdOrNull(placementRequestId)
       ?: return CasResult.NotFound("PlacementRequest", placementRequestId.toString())
@@ -295,11 +297,11 @@ class PlacementRequestService(
     val bookingNotMade = BookingNotMadeEntity(
       id = UUID.randomUUID(),
       placementRequest = placementRequest,
-      createdAt = bookingNotCreatedAt,
+      createdAt = bookingNotMadeCreatedAt,
       notes = notes,
     )
 
-    cas1BookingDomainEventService.bookingNotMade(user, placementRequest, bookingNotCreatedAt, notes)
+    cas1BookingDomainEventService.bookingNotMade(user, placementRequest, bookingNotMadeCreatedAt, notes)
 
     return CasResult.Success(bookingNotMadeRepository.save(bookingNotMade))
   }
