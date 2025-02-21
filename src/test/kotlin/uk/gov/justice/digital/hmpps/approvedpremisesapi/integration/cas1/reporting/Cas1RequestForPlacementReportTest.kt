@@ -16,6 +16,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.AssessmentAcce
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.AssessmentRejection
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1ApplicationTimelinessCategory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1ApplicationUserDetails
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1ReportName
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Gender
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewPlacementApplication
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewReallocation
@@ -131,7 +132,7 @@ class Cas1RequestForPlacementReportTest : InitialiseDatabasePerClassTestBase() {
     givenAUser(roles = listOf(UserRole.CAS1_REPORT_VIEWER)) { _, jwt ->
 
       webTestClient.get()
-        .uri(getReportUrl(year = 2020, month = 2, includePii = true))
+        .uri(getReportUrl(Cas1ReportName.requestsForPlacement, year = 2020, month = 2))
         .header("Authorization", "Bearer $jwt")
         .header("X-Service-Name", ServiceName.approvedPremises.value)
         .exchange()
@@ -151,17 +152,30 @@ class Cas1RequestForPlacementReportTest : InitialiseDatabasePerClassTestBase() {
   }
 
   @Test
-  fun `Get application report returns OK with applications, include PII`() {
+  fun `Permission denied if trying to access report with PII without correct role`() {
     givenAUser(roles = listOf(UserRole.CAS1_REPORT_VIEWER)) { _, jwt ->
+      webTestClient.get()
+        .uri(getReportUrl(Cas1ReportName.requestsForPlacementWithPii, year = 2020, month = 2))
+        .header("Authorization", "Bearer $jwt")
+        .header("X-Service-Name", ServiceName.approvedPremises.value)
+        .exchange()
+        .expectStatus()
+        .isForbidden
+    }
+  }
+
+  @Test
+  fun `Get application report returns OK with applications, include PII`() {
+    givenAUser(roles = listOf(UserRole.CAS1_REPORT_VIEWER_WITH_PII)) { _, jwt ->
 
       webTestClient.get()
-        .uri(getReportUrl(year = 2021, month = 3, includePii = true))
+        .uri(getReportUrl(Cas1ReportName.requestsForPlacementWithPii, year = 2021, month = 3))
         .header("Authorization", "Bearer $jwt")
         .header("X-Service-Name", ServiceName.approvedPremises.value)
         .exchange()
         .expectStatus()
         .isOk
-        .expectHeader().valuesMatch("content-disposition", "attachment; filename=\"requests-for-placement-2021-03-[0-9_]*.csv\"")
+        .expectHeader().valuesMatch("content-disposition", "attachment; filename=\"requests-for-placement-with-pii-2021-03-[0-9_]*.csv\"")
         .expectBody()
         .consumeWith { response ->
           val completeCsvString = response.responseBody!!.inputStream().bufferedReader().use { it.readText() }
@@ -198,7 +212,7 @@ class Cas1RequestForPlacementReportTest : InitialiseDatabasePerClassTestBase() {
     givenAUser(roles = listOf(UserRole.CAS1_REPORT_VIEWER)) { _, jwt ->
 
       webTestClient.get()
-        .uri(getReportUrl(year = 2021, month = 3, includePii = null))
+        .uri(getReportUrl(Cas1ReportName.requestsForPlacement, year = 2021, month = 3))
         .header("Authorization", "Bearer $jwt")
         .header("X-Service-Name", ServiceName.approvedPremises.value)
         .exchange()
@@ -781,20 +795,12 @@ class Cas1RequestForPlacementReportTest : InitialiseDatabasePerClassTestBase() {
     )
   }
 
-  private fun getPlacementApplication(application: ApplicationEntity) =
-    placementApplicationRepository.findByApplication(application).first { it.reallocatedAt == null }
+  private fun getPlacementApplication(application: ApplicationEntity) = placementApplicationRepository.findByApplication(application).first { it.reallocatedAt == null }
 
   private fun getLatestAssessment(applicationId: UUID) = getApplication(applicationId)
     .assessments.filter { it.reallocatedAt == null }.maxByOrNull { it.createdAt }!!
 
-  private fun getApplication(applicationId: UUID) =
-    realApplicationRepository.findByIdOrNull(applicationId)!! as ApprovedPremisesApplicationEntity
+  private fun getApplication(applicationId: UUID) = realApplicationRepository.findByIdOrNull(applicationId)!! as ApprovedPremisesApplicationEntity
 
-  private fun getReportUrl(year: Int, month: Int, includePii: Boolean?) =
-    "/cas1/reports/requestsForPlacement?year=$year&month=$month" +
-      if (includePii != null) {
-        "&includePii=$includePii"
-      } else {
-        ""
-      }
+  private fun getReportUrl(reportName: Cas1ReportName, year: Int, month: Int) = "/cas1/reports/${reportName.value}?year=$year&month=$month"
 }

@@ -42,10 +42,8 @@ class MDCHandlerInterceptor(
     MDC.put("request.user", userService.getDeliusUserNameForRequestOrNull() ?: "Anonymous")
   }
 
-  private fun HttpServletRequest.getPathPattern() =
-    this.getAttribute(HandlerMapping.BEST_MATCHING_PATTERN_ATTRIBUTE) as? String
-  private fun HttpServletRequest.getPathParams() =
-    this.getAttribute(HandlerMapping.URI_TEMPLATE_VARIABLES_ATTRIBUTE) as? Map<*, *>
+  private fun HttpServletRequest.getPathPattern() = this.getAttribute(HandlerMapping.BEST_MATCHING_PATTERN_ATTRIBUTE) as? String
+  private fun HttpServletRequest.getPathParams() = this.getAttribute(HandlerMapping.URI_TEMPLATE_VARIABLES_ATTRIBUTE) as? Map<*, *>
 }
 
 @Component

@@ -9,9 +9,7 @@ class StringListConverter : AttributeConverter<List<String?>?, String?> {
     private const val SPLIT_CHAR = ";"
   }
 
-  override fun convertToDatabaseColumn(stringList: List<String?>?): String? {
-    return stringList?.joinToString(separator = SPLIT_CHAR)
-  }
+  override fun convertToDatabaseColumn(stringList: List<String?>?): String? = stringList?.joinToString(separator = SPLIT_CHAR)
 
   override fun convertToEntityAttribute(string: String?): List<String?>? {
     if (string == null) {

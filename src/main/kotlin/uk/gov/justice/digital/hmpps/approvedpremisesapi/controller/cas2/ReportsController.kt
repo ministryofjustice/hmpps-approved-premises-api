@@ -11,20 +11,15 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas2.ReportsServ
 @Service("Cas2ReportsController")
 class ReportsController(private val reportService: ReportsService) : ReportsCas2Delegate {
 
-  override fun reportsReportNameGet(reportName: Cas2ReportName): ResponseEntity<StreamingResponseBody> {
-    return when (reportName) {
-      Cas2ReportName.submittedMinusApplications -> generateXlsxStreamingResponse {
-          outputStream ->
-        reportService.createSubmittedApplicationsReport(outputStream)
-      }
-      Cas2ReportName.applicationMinusStatusMinusUpdates -> generateXlsxStreamingResponse {
-          outputStream ->
-        reportService.createApplicationStatusUpdatesReport(outputStream)
-      }
-      Cas2ReportName.unsubmittedMinusApplications -> generateXlsxStreamingResponse {
-          outputStream ->
-        reportService.createUnsubmittedApplicationsReport(outputStream)
-      }
+  override fun reportsReportNameGet(reportName: Cas2ReportName): ResponseEntity<StreamingResponseBody> = when (reportName) {
+    Cas2ReportName.submittedMinusApplications -> generateXlsxStreamingResponse { outputStream ->
+      reportService.createSubmittedApplicationsReport(outputStream)
+    }
+    Cas2ReportName.applicationMinusStatusMinusUpdates -> generateXlsxStreamingResponse { outputStream ->
+      reportService.createApplicationStatusUpdatesReport(outputStream)
+    }
+    Cas2ReportName.unsubmittedMinusApplications -> generateXlsxStreamingResponse { outputStream ->
+      reportService.createUnsubmittedApplicationsReport(outputStream)
     }
   }
 }

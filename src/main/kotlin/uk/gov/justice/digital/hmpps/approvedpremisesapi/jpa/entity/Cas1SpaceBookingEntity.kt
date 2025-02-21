@@ -47,31 +47,14 @@ import java.util.UUID
 interface Cas1SpaceBookingRepository : JpaRepository<Cas1SpaceBookingEntity, UUID> {
   fun findByPlacementRequestId(placementRequestId: UUID): List<Cas1SpaceBookingEntity>
 
-  @Query(
-    value = """
-      SELECT 
-      Cast(b.id as varchar),
-      b.crn as crn,
-      b.canonical_arrival_date as canonicalArrivalDate,
-      b.canonical_departure_date as canonicalDepartureDate,
-      b.expected_arrival_date as expectedArrivalDate,
-      b.expected_departure_date as expectedDepartureDate,
-      b.actual_arrival_date as actualArrivalDate,
-      b.actual_arrival_time as actualArrivalTime,
-      b.actual_departure_date as actualDepartureDate,
-      b.actual_departure_time as actualDepartureTime,
-      b.non_arrival_confirmed_at as nonArrivalConfirmedAtDateTime,
-      apa.risk_ratings -> 'tier' -> 'value' ->> 'level' as tier,
-      b.key_worker_staff_code as keyWorkerStaffCode,
-      b.key_worker_assigned_at as keyWorkerAssignedAt,
-      b.key_worker_name as keyWorkerName,
-      CASE 
-        WHEN apa.id IS NOT NULL THEN apa.name
-        ELSE offline_app.name
-      END as personName
+  companion object {
+    private const val SPACE_BOOKING_SUMMARY_JOIN_CLAUSE = """
       FROM cas1_space_bookings b
       LEFT OUTER JOIN approved_premises_applications apa ON b.approved_premises_application_id = apa.id
       LEFT OUTER JOIN offline_applications offline_app ON b.offline_application_id = offline_app.id
+    """
+
+    private const val SPACE_BOOKING_SUMMARY_WHERE_CLAUSE = """
       WHERE 
       b.premises_id = :premisesId AND 
       b.cancellation_occurred_at IS NULL AND 
@@ -95,9 +78,9 @@ interface Cas1SpaceBookingRepository : JpaRepository<Cas1SpaceBookingEntity, UUI
           (
             :residency = 'historic' AND 
             (
-                b.actual_departure_date IS NOT NULL OR 
-                b.non_arrival_confirmed_at IS NOT NULL OR 
-                b.expected_departure_date < '2024-06-01'
+              b.actual_departure_date IS NOT NULL OR 
+              b.non_arrival_confirmed_at IS NOT NULL OR 
+              b.expected_departure_date < '2024-06-01'
             )
           )
         ) 
@@ -116,7 +99,54 @@ interface Cas1SpaceBookingRepository : JpaRepository<Cas1SpaceBookingEntity, UUI
             (b.key_worker_staff_code = :keyWorkerStaffCode)
         ) 
       )
-    """,
+    """
+
+    private const val SPACE_BOOKING_SUMMARY_CHARACTERISTICS_SUBQUERY = """
+        (
+          SELECT STRING_AGG(characteristics.property_name, ',')
+          FROM cas1_space_bookings_criteria sbc
+          LEFT OUTER JOIN characteristics ON characteristics.id = sbc.characteristic_id
+          WHERE sbc.space_booking_id = b.id 
+          GROUP BY sbc.space_booking_id
+        ) AS characteristicsPropertyNames
+      """
+
+    private const val SPACE_BOOKING_SUMMARY_SELECT_QUERY = """
+        SELECT 
+        CAST(b.id AS varchar) AS id,
+        b.crn AS crn,
+        b.canonical_arrival_date AS canonicalArrivalDate,
+        b.canonical_departure_date AS canonicalDepartureDate,
+        b.expected_arrival_date AS expectedArrivalDate,
+        b.expected_departure_date AS expectedDepartureDate,
+        b.actual_arrival_date AS actualArrivalDate,
+        b.actual_arrival_time AS actualArrivalTime,
+        b.actual_departure_date AS actualDepartureDate,
+        b.actual_departure_time AS actualDepartureTime,
+        b.non_arrival_confirmed_at AS nonArrivalConfirmedAtDateTime,
+        apa.risk_ratings -> 'tier' -> 'value' ->> 'level' AS tier,
+        b.key_worker_staff_code AS keyWorkerStaffCode,
+        b.key_worker_assigned_at AS keyWorkerAssignedAt,
+        b.key_worker_name AS keyWorkerName,
+        CASE 
+          WHEN apa.id IS NOT NULL THEN apa.name
+          ELSE offline_app.name
+        END AS personName,
+        $SPACE_BOOKING_SUMMARY_CHARACTERISTICS_SUBQUERY
+        $SPACE_BOOKING_SUMMARY_JOIN_CLAUSE
+        $SPACE_BOOKING_SUMMARY_WHERE_CLAUSE
+      """
+
+    private const val SPACE_BOOKING_SUMMARY_COUNT_QUERY = """
+      SELECT COUNT(*)
+      $SPACE_BOOKING_SUMMARY_JOIN_CLAUSE
+      $SPACE_BOOKING_SUMMARY_WHERE_CLAUSE
+    """
+  }
+
+  @Query(
+    value = SPACE_BOOKING_SUMMARY_SELECT_QUERY,
+    countQuery = SPACE_BOOKING_SUMMARY_COUNT_QUERY,
     nativeQuery = true,
   )
   fun search(
@@ -136,10 +166,8 @@ interface Cas1SpaceBookingRepository : JpaRepository<Cas1SpaceBookingEntity, UUI
       b.canonical_departure_date as canonicalDepartureDate,
       apa.risk_ratings -> 'tier' -> 'value' ->> 'level' as tier,
       CASE
-        WHEN 
-            apa.id IS NOT NULL THEN apa.name
-        ELSE
-            oa.name
+        WHEN apa.id IS NOT NULL THEN apa.name
+        ELSE offline_app.name
       END as personName,
       apa.release_type as releaseType, 
       ( 
@@ -150,37 +178,32 @@ interface Cas1SpaceBookingRepository : JpaRepository<Cas1SpaceBookingEntity, UUI
         GROUP by sbc.space_booking_id
       ) AS characteristicsPropertyNames
       FROM cas1_space_bookings b
-      LEFT JOIN approved_premises_applications apa 
-      ON 
-        b.approved_premises_application_id = apa.id
-      LEFT JOIN offline_applications oa
-      ON 
-        b.offline_application_id = oa.id
+      LEFT JOIN approved_premises_applications apa ON b.approved_premises_application_id = apa.id
+      LEFT JOIN offline_applications offline_app ON b.offline_application_id = offline_app.id
       WHERE 
-      b.canonical_arrival_date <= :daySummaryDate AND 
-      b.canonical_departure_date >= :daySummaryDate AND
-      b.premises_id = :premisesId AND 
-      b.cancellation_occurred_at IS NULL AND
-      (:excludeSpaceBookingId IS NUll OR 
-      b.id != :excludeSpaceBookingId) AND
-      (:bookingsCriteriaCount = 0  OR (
-            SELECT COUNT(*) 
-            FROM 
-                CAS1_SPACE_BOOKINGS_CRITERIA sbc
-            WHERE b.id = sbc.space_booking_id AND
-            sbc.characteristic_id IN (:bookingsCriteriaFilter)
-        ) = :bookingsCriteriaCount
-      )
+        b.canonical_arrival_date <= :date AND 
+        b.canonical_departure_date > :date AND
+        b.premises_id = :premisesId AND 
+        b.cancellation_occurred_at IS NULL AND
+        b.non_arrival_confirmed_at IS NULL AND
+        (:excludeSpaceBookingId IS NULL OR b.id != :excludeSpaceBookingId) AND
+        (:criteriaCount = 0 OR 
+            (
+              SELECT COUNT(*) 
+              FROM cas1_space_bookings_criteria sbc
+              WHERE b.id = sbc.space_booking_id AND sbc.characteristic_id IN (:criteria)
+            ) = :criteriaCount
+        )
     """,
     nativeQuery = true,
   )
-  fun findAllPremisesBookingsForDate(
+  fun findByPremisesIdAndCriteriaForDate(
     premisesId: UUID,
-    daySummaryDate: LocalDate,
-    bookingsCriteriaFilter: List<UUID>?,
-    sort: Sort,
-    bookingsCriteriaCount: Int = bookingsCriteriaFilter?.size ?: 0,
+    date: LocalDate,
+    criteria: List<UUID>?,
+    criteriaCount: Int = criteria?.size ?: 0,
     excludeSpaceBookingId: UUID?,
+    sort: Sort,
   ): List<Cas1SpaceBookingDaySummarySearchResult>
 
   @Query(
@@ -214,7 +237,7 @@ interface Cas1SpaceBookingRepository : JpaRepository<Cas1SpaceBookingEntity, UUI
     AND b.canonicalDepartureDate >= :rangeStartInclusive 
   """,
   )
-  fun findAllBookingsActiveWithinAGivenRangeWithCriteria(
+  fun findNonCancelledBookingsInRange(
     premisesId: UUID,
     rangeStartInclusive: LocalDate,
     rangeEndInclusive: LocalDate,
@@ -240,6 +263,7 @@ interface Cas1SpaceBookingRepository : JpaRepository<Cas1SpaceBookingEntity, UUI
             b.premises_id = :premisesId AND 
             b.canonical_arrival_date <= CURRENT_DATE AND
             b.canonical_departure_date > CURRENT_DATE AND
+            b.non_arrival_confirmed_at IS NULL AND 
             b.cancellation_occurred_at IS NULL
     """,
     nativeQuery = true,
@@ -273,6 +297,7 @@ interface Cas1SpaceBookingSearchResult {
   val keyWorkerStaffCode: String?
   val keyWorkerAssignedAt: Instant?
   val keyWorkerName: String?
+  val characteristicsPropertyNames: String?
 }
 
 interface Cas1SpaceBookingAtPremises {
@@ -422,17 +447,16 @@ data class Cas1SpaceBookingEntity(
   fun hasDeparted() = actualDepartureDate != null
   fun hasNonArrival() = nonArrivalConfirmedAt != null
   fun hasArrival() = actualArrivalDate != null
-  fun isResident(day: LocalDate) = canonicalArrivalDate <= day && canonicalDepartureDate > day
+  fun isExpectedOrResident(day: LocalDate) = !isCancelled() &&
+    !hasNonArrival() &&
+    canonicalArrivalDate <= day &&
+    canonicalDepartureDate > day
 
   @Deprecated("Any usage of this should instead be updated to use individual date and time fields")
-  fun actualArrivalAsDateTime(): Instant? {
-    return actualArrivalDate?.atTime(actualArrivalTime ?: LocalTime.NOON)?.toInstant()
-  }
+  fun actualArrivalAsDateTime(): Instant? = actualArrivalDate?.atTime(actualArrivalTime ?: LocalTime.NOON)?.toInstant()
 
   @Deprecated("Any usage of this should be updated to use individual date and time fields")
-  fun actualDepartureAsDateTime(): Instant? {
-    return actualDepartureDate?.atTime(actualDepartureTime ?: LocalTime.NOON)?.toInstant()
-  }
+  fun actualDepartureAsDateTime(): Instant? = actualDepartureDate?.atTime(actualDepartureTime ?: LocalTime.NOON)?.toInstant()
 
   override fun toString() = "Cas1SpaceBookingEntity:$id"
   val applicationFacade: Cas1ApplicationFacade

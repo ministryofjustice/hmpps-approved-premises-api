@@ -74,8 +74,6 @@ fun List<BookingEntity>.toBookingsReportData(): List<BookingsReportData> = this
   }
   .sortedBy { it.bookingId }
 
-fun List<BookingEntity>.toBookingsReportDataAndPersonInfo(): List<BookingsReportDataAndPersonInfo> =
-  this.toBookingsReportDataAndPersonInfo { PersonInformationReportData(null, null, null, null, null) }
+fun List<BookingEntity>.toBookingsReportDataAndPersonInfo(): List<BookingsReportDataAndPersonInfo> = this.toBookingsReportDataAndPersonInfo { PersonInformationReportData(null, null, null, null, null) }
 
-fun List<BookingEntity>.toBookingsReportDataAndPersonInfo(configuration: (crn: String) -> PersonInformationReportData): List<BookingsReportDataAndPersonInfo> =
-  this.toBookingsReportData().map { BookingsReportDataAndPersonInfo(it, configuration(it.crn)) }
+fun List<BookingEntity>.toBookingsReportDataAndPersonInfo(configuration: (crn: String) -> PersonInformationReportData) = this.toBookingsReportData().map { BookingsReportDataAndPersonInfo(it, configuration(it.crn)) }

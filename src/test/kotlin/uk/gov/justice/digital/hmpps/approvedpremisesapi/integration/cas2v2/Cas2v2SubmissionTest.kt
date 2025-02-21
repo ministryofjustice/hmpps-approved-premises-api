@@ -467,7 +467,8 @@ class Cas2v2SubmissionTest(
                 applicant == it.submittedBy &&
                 applicationEntity.submittedAt?.toInstant() == it.submittedAt &&
                 serializableToJsonNode(applicationEntity.document) == serializableToJsonNode(it.document) &&
-                newestJsonSchema.id == it.schemaVersion && !it.outdatedSchema &&
+                newestJsonSchema.id == it.schemaVersion &&
+                !it.outdatedSchema &&
                 assessmentEntity.assessorName == it.assessment.assessorName &&
                 assessmentEntity.nacroReferralId == it.assessment.nacroReferralId
             }

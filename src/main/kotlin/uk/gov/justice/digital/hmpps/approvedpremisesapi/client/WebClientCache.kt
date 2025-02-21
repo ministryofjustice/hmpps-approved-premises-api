@@ -177,9 +177,7 @@ class WebClientCache(
     )
   }
 
-  private fun getCacheEntryBody(dataKey: String): String? {
-    return redisTemplate.boundValueOps(dataKey).get()
-  }
+  private fun getCacheEntryBody(dataKey: String): String? = redisTemplate.boundValueOps(dataKey).get()
 
   private fun <ResponseType> resultFromCacheMetadata(cacheEntry: PreemptiveCacheMetadata, cacheKeySet: CacheKeySet, typeReference: TypeReference<ResponseType>): ClientResult<ResponseType> {
     val cachedBody = if (cacheEntry.hasResponseBody) {

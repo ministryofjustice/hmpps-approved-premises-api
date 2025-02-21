@@ -12,25 +12,24 @@ class ApplicationTimelineNoteService(
   private val applicationTimelineNoteRepository: ApplicationTimelineNoteRepository,
 ) {
 
-  fun getApplicationTimelineNotesByApplicationId(applicationId: UUID): List<ApplicationTimelineNoteEntity> =
-    applicationTimelineNoteRepository.findApplicationTimelineNoteEntitiesByApplicationIdAndDeletedAtIsNull(applicationId)
+  fun getApplicationTimelineNotesByApplicationId(applicationId: UUID): List<ApplicationTimelineNoteEntity> = applicationTimelineNoteRepository.findApplicationTimelineNoteEntitiesByApplicationIdAndDeletedAtIsNull(
+    applicationId,
+  )
 
   fun saveApplicationTimelineNote(
     applicationId: UUID,
     note: String,
     user: UserEntity?,
     cas1SpaceBookingId: UUID? = null,
-  ): ApplicationTimelineNoteEntity {
-    return applicationTimelineNoteRepository.save(
-      ApplicationTimelineNoteEntity(
-        id = UUID.randomUUID(),
-        applicationId = applicationId,
-        createdBy = user,
-        createdAt = OffsetDateTime.now(),
-        body = note,
-        cas1SpaceBookingId = cas1SpaceBookingId,
-        deletedAt = null,
-      ),
-    )
-  }
+  ): ApplicationTimelineNoteEntity = applicationTimelineNoteRepository.save(
+    ApplicationTimelineNoteEntity(
+      id = UUID.randomUUID(),
+      applicationId = applicationId,
+      createdBy = user,
+      createdAt = OffsetDateTime.now(),
+      body = note,
+      cas1SpaceBookingId = cas1SpaceBookingId,
+      deletedAt = null,
+    ),
+  )
 }

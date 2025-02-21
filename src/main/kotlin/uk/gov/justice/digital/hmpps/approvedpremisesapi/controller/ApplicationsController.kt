@@ -150,9 +150,10 @@ class ApplicationsController(
         getPersonDetailAndTransform(
           application = application,
           user = user,
-          ignoreLaoRestrictions = application is ApprovedPremisesApplicationEntity && user.hasQualification(
-            UserQualification.LAO,
-          ),
+          ignoreLaoRestrictions = application is ApprovedPremisesApplicationEntity &&
+            user.hasQualification(
+              UserQualification.LAO,
+            ),
         ),
       )
     } else {
@@ -311,11 +312,9 @@ class ApplicationsController(
     return ResponseEntity(events, HttpStatus.OK)
   }
 
-  override fun applicationsApplicationIdRequestsForPlacementGet(applicationId: UUID): ResponseEntity<List<RequestForPlacement>> {
-    return ResponseEntity.ok(
-      extractEntityFromCasResult(cas1RequestForPlacementService.getRequestsForPlacementByApplication(applicationId, userService.getUserForRequest())),
-    )
-  }
+  override fun applicationsApplicationIdRequestsForPlacementGet(applicationId: UUID): ResponseEntity<List<RequestForPlacement>> = ResponseEntity.ok(
+    extractEntityFromCasResult(cas1RequestForPlacementService.getRequestsForPlacementByApplication(applicationId, userService.getUserForRequest())),
+  )
 
   override fun applicationsApplicationIdRequestsForPlacementRequestForPlacementIdGet(
     applicationId: UUID,
@@ -390,12 +389,10 @@ class ApplicationsController(
     return ResponseEntity(apiDocuments, HttpStatus.OK)
   }
 
-  private fun getDocuments(crn: String): List<APDeliusDocument> {
-    return when (val result = offenderService.getDocumentsFromApDeliusApi(crn)) {
-      is AuthorisableActionResult.NotFound -> throw NotFoundProblem(crn, "Documents")
-      is AuthorisableActionResult.Unauthorised -> throw ForbiddenProblem()
-      is AuthorisableActionResult.Success -> result.entity
-    }
+  private fun getDocuments(crn: String): List<APDeliusDocument> = when (val result = offenderService.getDocumentsFromApDeliusApi(crn)) {
+    is AuthorisableActionResult.NotFound -> throw NotFoundProblem(crn, "Documents")
+    is AuthorisableActionResult.Unauthorised -> throw ForbiddenProblem()
+    is AuthorisableActionResult.Success -> result.entity
   }
 
   override fun applicationsApplicationIdAppealsAppealIdGet(

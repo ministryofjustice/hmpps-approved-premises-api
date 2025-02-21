@@ -118,15 +118,14 @@ private class BedLedger(initialState: Set<Bed>) {
     }
   }
 
-  private fun findBedWithLeastSurplusCharacteristics(beds: List<Bed>, characteristics: Set<Characteristic>) =
-    beds
-      .map { bed ->
-        Pair(
-          bed,
-          bed.room.characteristicsExcludingSingle().minus(characteristics).size,
-        )
-      }
-      .minByOrNull { it.second }?.first
+  private fun findBedWithLeastSurplusCharacteristics(beds: List<Bed>, characteristics: Set<Characteristic>) = beds
+    .map { bed ->
+      Pair(
+        bed,
+        bed.room.characteristicsExcludingSingle().minus(characteristics).size,
+      )
+    }
+    .minByOrNull { it.second }?.first
 
   fun reserve(bed: Bed) {
     availableBeds.remove(bed)

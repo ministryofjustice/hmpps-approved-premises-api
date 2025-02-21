@@ -152,6 +152,9 @@ class Cas1ImportDeliusReferralsSeedJob(
       """
         Seeding complete. Note that the reported row count may be lower than the number of lines in the CSV file. 
         This is because some CSV rows have line breaks in 'notes' values
+        
+        Also note that not all rows are imported into cas1_delius_booking_import. Any rows with decision code
+        starting with "A" or with no expected arrival date are ignored.
       """.trimIndent(),
     )
   }

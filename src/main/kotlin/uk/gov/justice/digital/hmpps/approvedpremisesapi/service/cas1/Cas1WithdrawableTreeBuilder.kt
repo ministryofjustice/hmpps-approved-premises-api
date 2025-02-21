@@ -108,31 +108,27 @@ class Cas1WithdrawableTreeBuilder(
     )
   }
 
-  fun treeForBooking(booking: BookingEntity, user: UserEntity): WithdrawableTree {
-    return WithdrawableTree(
-      WithdrawableTreeNode(
-        applicationId = booking.application?.id,
-        entityType = WithdrawableEntityType.Booking,
-        entityId = booking.id,
-        status = bookingService.getWithdrawableState(booking, user),
-        dates = listOf(WithdrawableDatePeriod(booking.arrivalDate, booking.departureDate)),
-        children = emptyList(),
-      ),
-    )
-  }
+  fun treeForBooking(booking: BookingEntity, user: UserEntity): WithdrawableTree = WithdrawableTree(
+    WithdrawableTreeNode(
+      applicationId = booking.application?.id,
+      entityType = WithdrawableEntityType.Booking,
+      entityId = booking.id,
+      status = bookingService.getWithdrawableState(booking, user),
+      dates = listOf(WithdrawableDatePeriod(booking.arrivalDate, booking.departureDate)),
+      children = emptyList(),
+    ),
+  )
 
-  fun treeForSpaceBooking(spaceBooking: Cas1SpaceBookingEntity, user: UserEntity): WithdrawableTree {
-    return WithdrawableTree(
-      WithdrawableTreeNode(
-        applicationId = spaceBooking.application?.id,
-        entityType = WithdrawableEntityType.SpaceBooking,
-        entityId = spaceBooking.id,
-        status = cas1SpaceBookingService.getWithdrawableState(spaceBooking, user),
-        dates = listOf(WithdrawableDatePeriod(spaceBooking.canonicalArrivalDate, spaceBooking.canonicalDepartureDate)),
-        children = emptyList(),
-      ),
-    )
-  }
+  fun treeForSpaceBooking(spaceBooking: Cas1SpaceBookingEntity, user: UserEntity): WithdrawableTree = WithdrawableTree(
+    WithdrawableTreeNode(
+      applicationId = spaceBooking.application?.id,
+      entityType = WithdrawableEntityType.SpaceBooking,
+      entityId = spaceBooking.id,
+      status = cas1SpaceBookingService.getWithdrawableState(spaceBooking, user),
+      dates = listOf(WithdrawableDatePeriod(spaceBooking.canonicalArrivalDate, spaceBooking.canonicalDepartureDate)),
+      children = emptyList(),
+    ),
+  )
 }
 
 data class WithdrawableTree(
@@ -153,13 +149,9 @@ data class WithdrawableTree(
     return notes
   }
 
-  fun render(includeIds: Boolean = true): String {
-    return "${rootNode.render(0,includeIds)}\nNotes: ${notes()}\n"
-  }
+  fun render(includeIds: Boolean = true): String = "${rootNode.render(0,includeIds)}\nNotes: ${notes()}\n"
 
-  override fun toString(): String {
-    return "\n\n${render()}\n"
-  }
+  override fun toString(): String = "\n\n${render()}\n"
 }
 
 data class WithdrawableTreeNode(
@@ -170,9 +162,7 @@ data class WithdrawableTreeNode(
   val dates: List<WithdrawableDatePeriod> = emptyList(),
   val children: List<WithdrawableTreeNode> = emptyList(),
 ) {
-  fun flatten(): List<WithdrawableTreeNode> {
-    return listOf(this) + collectDescendants()
-  }
+  fun flatten(): List<WithdrawableTreeNode> = listOf(this) + collectDescendants()
 
   fun collectDescendants(): List<WithdrawableTreeNode> {
     val result = mutableListOf<WithdrawableTreeNode>()
@@ -187,13 +177,9 @@ data class WithdrawableTreeNode(
 
   fun isBlocked(): Boolean = isBlockAncestorWithdrawals() || children.any { it.isBlocked() }
 
-  fun blockedReasons(): Set<BlockingReason> {
-    return setOfNotNull(status.blockingReason) + children.flatMap { it.blockedReasons() }.toSet()
-  }
+  fun blockedReasons(): Set<BlockingReason> = setOfNotNull(status.blockingReason) + children.flatMap { it.blockedReasons() }.toSet()
 
-  override fun toString(): String {
-    return "\n\n${render(0)}\n"
-  }
+  override fun toString(): String = "\n\n${render(0)}\n"
 
   fun simpleDescription(): String = "$entityType $entityId (application $applicationId)"
 

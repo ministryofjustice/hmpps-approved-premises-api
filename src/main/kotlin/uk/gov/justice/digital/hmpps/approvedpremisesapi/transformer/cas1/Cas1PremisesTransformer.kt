@@ -31,21 +31,19 @@ class Cas1PremisesTransformer(
     )
   }
 
-  fun toPremiseBasicSummary(entity: ApprovedPremisesBasicSummary): Cas1PremisesBasicSummary {
-    return Cas1PremisesBasicSummary(
-      id = entity.id,
-      name = entity.name,
-      apCode = entity.apCode,
-      apArea = NamedId(entity.apAreaId, entity.apAreaName),
-      bedCount = entity.bedCount,
-      supportsSpaceBookings = entity.supportsSpaceBookings,
-      fullAddress = ApprovedPremisesEntity.resolveFullAddress(
-        fullAddress = entity.fullAddress,
-        addressLine1 = entity.addressLine1,
-        addressLine2 = entity.addressLine2,
-        town = entity.town,
-      ),
-      postcode = entity.postcode,
-    )
-  }
+  fun toPremiseBasicSummary(entity: ApprovedPremisesBasicSummary): Cas1PremisesBasicSummary = Cas1PremisesBasicSummary(
+    id = entity.id,
+    name = entity.name,
+    apCode = entity.apCode,
+    apArea = NamedId(entity.apAreaId, entity.apAreaName),
+    bedCount = entity.bedCount,
+    supportsSpaceBookings = entity.supportsSpaceBookings,
+    fullAddress = ApprovedPremisesEntity.resolveFullAddress(
+      fullAddress = entity.fullAddress,
+      addressLine1 = entity.addressLine1,
+      addressLine2 = entity.addressLine2,
+      town = entity.town,
+    ),
+    postcode = entity.postcode,
+  )
 }

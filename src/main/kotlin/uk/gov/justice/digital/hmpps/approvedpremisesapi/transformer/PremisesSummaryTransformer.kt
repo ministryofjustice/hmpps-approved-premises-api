@@ -8,7 +8,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremi
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TemporaryAccommodationPremisesSummary as DomainTemporaryAccommodationPremisesSummary
 
 @Component
-class PremisesSummaryTransformer() {
+class PremisesSummaryTransformer {
   fun transformDomainToApi(domain: DomainTemporaryAccommodationPremisesSummary): ApiPremisesSummary = TemporaryAccommodationPremisesSummary(
     id = domain.id,
     name = domain.name,

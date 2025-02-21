@@ -24,10 +24,8 @@ import kotlin.reflect.jvm.isAccessible
 @Component
 class EnumConverterFactory : ConverterFactory<String, Enum<*>> {
   class EnumConverter<T : Enum<*>>(private val targetType: Class<T>) : Converter<String, T> {
-    override fun convert(source: String): T? {
-      return targetType.enumConstants.firstOrNull {
-        it.getOpenApiValueOrDefault() == source
-      }
+    override fun convert(source: String): T? = targetType.enumConstants.firstOrNull {
+      it.getOpenApiValueOrDefault() == source
     }
 
     @Suppress("UNCHECKED_CAST")

@@ -59,11 +59,9 @@ class Cas1SpaceSearchService(
     )
   }
 
-  private fun CharacteristicEntity.isPremisesCharacteristic(): Boolean =
-    this.serviceMatches(ServiceName.approvedPremises.value) && this.modelMatches("premises")
+  private fun CharacteristicEntity.isPremisesCharacteristic(): Boolean = this.serviceMatches(ServiceName.approvedPremises.value) && this.modelMatches("premises")
 
-  private fun CharacteristicEntity.isRoomCharacteristic(): Boolean =
-    this.serviceMatches(ServiceName.approvedPremises.value) && this.modelMatches("room")
+  private fun CharacteristicEntity.isRoomCharacteristic(): Boolean = this.serviceMatches(ServiceName.approvedPremises.value) && this.modelMatches("room")
 }
 
 data class RequiredCharacteristics(

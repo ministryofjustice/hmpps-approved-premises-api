@@ -85,13 +85,11 @@ class Cas3AssessmentService(
     return CasResult.Success(assessmentRepository.save(assessment))
   }
 
-  private fun notBeforeValidationResult(existingDate: LocalDate) =
-    CasResult.GeneralValidationError<TemporaryAccommodationAssessmentEntity>(
-      "Accommodation required from date cannot be before release date: $existingDate",
-    )
+  private fun notBeforeValidationResult(existingDate: LocalDate) = CasResult.GeneralValidationError<TemporaryAccommodationAssessmentEntity>(
+    "Accommodation required from date cannot be before release date: $existingDate",
+  )
 
-  private fun notAfterValidationResult(existingDate: LocalDate) =
-    CasResult.GeneralValidationError<TemporaryAccommodationAssessmentEntity>(
-      "Release date cannot be after accommodation required from date: $existingDate",
-    )
+  private fun notAfterValidationResult(existingDate: LocalDate) = CasResult.GeneralValidationError<TemporaryAccommodationAssessmentEntity>(
+    "Release date cannot be after accommodation required from date: $existingDate",
+  )
 }

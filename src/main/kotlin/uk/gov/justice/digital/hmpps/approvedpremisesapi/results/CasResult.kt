@@ -19,9 +19,7 @@ sealed interface CasResult<SuccessType> {
   sealed interface Error<SuccessType> : CasResult<SuccessType> {
     // This is safe as the generic is irrelevant on Error types
     @Suppress("UNCHECKED_CAST")
-    fun <R> reviseType(): CasResult<R> {
-      return this as Error<R>
-    }
+    fun <R> reviseType(): CasResult<R> = this as Error<R>
   }
   data class FieldValidationError<SuccessType>(val validationMessages: Map<String, String>) : Error<SuccessType>
   data class GeneralValidationError<SuccessType>(val message: String) : Error<SuccessType>

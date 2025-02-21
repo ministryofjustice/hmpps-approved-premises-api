@@ -466,7 +466,8 @@ class Cas2SubmissionTest(
                 applicant == it.submittedBy &&
                 applicationEntity.submittedAt?.toInstant() == it.submittedAt &&
                 serializableToJsonNode(applicationEntity.document) == serializableToJsonNode(it.document) &&
-                newestJsonSchema.id == it.schemaVersion && !it.outdatedSchema &&
+                newestJsonSchema.id == it.schemaVersion &&
+                !it.outdatedSchema &&
                 assessmentEntity.assessorName == it.assessment.assessorName &&
                 assessmentEntity.nacroReferralId == it.assessment.nacroReferralId
             }
@@ -617,7 +618,8 @@ class Cas2SubmissionTest(
                     applicant == it.submittedBy &&
                     applicationEntity.submittedAt?.toInstant() == it.submittedAt &&
                     serializableToJsonNode(applicationEntity.document) == serializableToJsonNode(it.document) &&
-                    newestJsonSchema.id == it.schemaVersion && !it.outdatedSchema
+                    newestJsonSchema.id == it.schemaVersion &&
+                    !it.outdatedSchema
                 }
 
                 Assertions.assertThat(responseBody.assessment.statusUpdates!!.map { update -> update.label })

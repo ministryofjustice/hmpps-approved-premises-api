@@ -224,26 +224,22 @@ class Cas2v2ApplicationTest : Cas2v2IntegrationTestBase() {
       fun createApplication(
         userEntity: Cas2v2UserEntity,
         offenderDetails: OffenderDetailSummary,
-      ): Cas2v2ApplicationEntity {
-        return cas2v2ApplicationEntityFactory.produceAndPersist {
-          withApplicationSchema(applicationSchema)
-          withCreatedByUser(userEntity)
-          withCrn(offenderDetails.otherIds.crn)
-          withCreatedAt(OffsetDateTime.now().minusDays(28))
-          withConditionalReleaseDate(LocalDate.now().plusDays(1))
-        }
+      ): Cas2v2ApplicationEntity = cas2v2ApplicationEntityFactory.produceAndPersist {
+        withApplicationSchema(applicationSchema)
+        withCreatedByUser(userEntity)
+        withCrn(offenderDetails.otherIds.crn)
+        withCreatedAt(OffsetDateTime.now().minusDays(28))
+        withConditionalReleaseDate(LocalDate.now().plusDays(1))
       }
 
       fun createStatusUpdate(
         status: Pair<String, UUID>,
         application: Cas2v2ApplicationEntity,
-      ): Cas2v2StatusUpdateEntity {
-        return cas2v2StatusUpdateEntityFactory.produceAndPersist {
-          withLabel(status.first)
-          withStatusId(status.second)
-          withApplication(application)
-          withAssessor(cas2v2UserEntityFactory.produceAndPersist { withUserType(Cas2v2UserType.EXTERNAL) })
-        }
+      ): Cas2v2StatusUpdateEntity = cas2v2StatusUpdateEntityFactory.produceAndPersist {
+        withLabel(status.first)
+        withStatusId(status.second)
+        withApplication(application)
+        withAssessor(cas2v2UserEntityFactory.produceAndPersist { withUserType(Cas2v2UserType.EXTERNAL) })
       }
 
       fun unexpiredDateTime() = OffsetDateTime.now().randomDateTimeBefore(32)
@@ -618,6 +614,44 @@ class Cas2v2ApplicationTest : Cas2v2IntegrationTestBase() {
           .expectBody()
           .jsonPath("$[0].personName")
           .isEqualTo("Person Not Found")
+      }
+    }
+
+    @Test
+    fun `Court bail users do not need a prison code`() {
+      givenACas2v2PomUser { userEntity, _ ->
+        produceAndPersistBasicApplication("CRN", userEntity)
+
+        val jwt = jwtAuthHelper.createValidNomisAuthorisationCodeJwt(
+          "MY USERNAME",
+          listOf("ROLE_COURT_BAIL"),
+        )
+        webTestClient
+          .get()
+          .uri("/cas2v2/applications")
+          .header("Authorization", "Bearer $jwt")
+          .exchange()
+          .expectStatus()
+          .isOk
+      }
+    }
+
+    @Test
+    fun `Prison bail users do not need a prison code`() {
+      givenACas2v2PomUser { userEntity, _ ->
+        produceAndPersistBasicApplication("CRN", userEntity)
+
+        val jwt = jwtAuthHelper.createValidNomisAuthorisationCodeJwt(
+          "MY USERNAME",
+          listOf("ROLE_PRISON_BAIL"),
+        )
+        webTestClient
+          .get()
+          .uri("/cas2v2/applications")
+          .header("Authorization", "Bearer $jwt")
+          .exchange()
+          .expectStatus()
+          .isOk
       }
     }
 
@@ -1341,7 +1375,8 @@ class Cas2v2ApplicationTest : Cas2v2IntegrationTestBase() {
                 applicationEntity.createdByUser.id == it.createdBy.id &&
                 applicationEntity.submittedAt?.toInstant() == it.submittedAt &&
                 serializableToJsonNode(applicationEntity.data) == serializableToJsonNode(it.data) &&
-                newestJsonSchema.id == it.schemaVersion && !it.outdatedSchema
+                newestJsonSchema.id == it.schemaVersion &&
+                !it.outdatedSchema
             }
           }
         }

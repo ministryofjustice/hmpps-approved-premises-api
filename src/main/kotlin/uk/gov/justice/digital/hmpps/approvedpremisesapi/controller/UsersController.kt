@@ -28,11 +28,9 @@ class UsersController(
   private val userAccessService: UserAccessService,
 ) : UsersApiDelegate {
 
-  override fun usersIdGet(id: UUID, xServiceName: ServiceName): ResponseEntity<User> {
-    return when (val getUserResponse = extractEntityFromCasResult(userService.updateUserFromDelius(id, xServiceName))) {
-      UserService.GetUserResponse.StaffRecordNotFound -> throw NotFoundProblem(id, "Staff")
-      is UserService.GetUserResponse.Success -> ResponseEntity(userTransformer.transformJpaToApi(getUserResponse.user, xServiceName), HttpStatus.OK)
-    }
+  override fun usersIdGet(id: UUID, xServiceName: ServiceName): ResponseEntity<User> = when (val getUserResponse = extractEntityFromCasResult(userService.updateUserFromDelius(id, xServiceName))) {
+    UserService.GetUserResponse.StaffRecordNotFound -> throw NotFoundProblem(id, "Staff")
+    is UserService.GetUserResponse.Success -> ResponseEntity(userTransformer.transformJpaToApi(getUserResponse.user, xServiceName), HttpStatus.OK)
   }
 
   override fun usersGet(
@@ -45,20 +43,19 @@ class UsersController(
     page: Int?,
     sortBy: UserSortField?,
     sortDirection: SortDirection?,
-  ) =
-    getUsers(
-      xServiceName,
-      roles,
-      qualifications,
-      probationRegionId,
-      apAreaId,
-      page,
-      sortBy,
-      sortDirection,
-      cruManagementAreaId,
-    ) { user ->
-      userTransformer.transformJpaToApi(user, ServiceName.approvedPremises)
-    }
+  ) = getUsers(
+    xServiceName,
+    roles,
+    qualifications,
+    probationRegionId,
+    apAreaId,
+    page,
+    sortBy,
+    sortDirection,
+    cruManagementAreaId,
+  ) { user ->
+    userTransformer.transformJpaToApi(user, ServiceName.approvedPremises)
+  }
 
   override fun usersSummaryGet(
     xServiceName: ServiceName,
@@ -69,19 +66,18 @@ class UsersController(
     page: Int?,
     sortBy: UserSortField?,
     sortDirection: SortDirection?,
-  ) =
-    getUsers(
-      xServiceName,
-      roles,
-      qualifications,
-      probationRegionId,
-      apAreaId,
-      page,
-      sortBy,
-      sortDirection,
-    ) { user ->
-      userTransformer.transformJpaToSummaryApi(user)
-    }
+  ) = getUsers(
+    xServiceName,
+    roles,
+    qualifications,
+    probationRegionId,
+    apAreaId,
+    page,
+    sortBy,
+    sortDirection,
+  ) { user ->
+    userTransformer.transformJpaToSummaryApi(user)
+  }
 
   private fun <T> getUsers(
     xServiceName: ServiceName,
@@ -170,13 +166,12 @@ class UsersController(
     }
   }
 
-  private fun transformApiQualification(apiQualification: UserQualification): uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserQualification =
-    when (apiQualification) {
-      UserQualification.pipe -> uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserQualification.PIPE
-      UserQualification.lao -> uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserQualification.LAO
-      UserQualification.emergency -> uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserQualification.EMERGENCY
-      UserQualification.esap -> uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserQualification.ESAP
-      UserQualification.mentalHealthSpecialist -> uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserQualification.MENTAL_HEALTH_SPECIALIST
-      UserQualification.recoveryFocused -> uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserQualification.RECOVERY_FOCUSED
-    }
+  private fun transformApiQualification(apiQualification: UserQualification): uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserQualification = when (apiQualification) {
+    UserQualification.pipe -> uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserQualification.PIPE
+    UserQualification.lao -> uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserQualification.LAO
+    UserQualification.emergency -> uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserQualification.EMERGENCY
+    UserQualification.esap -> uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserQualification.ESAP
+    UserQualification.mentalHealthSpecialist -> uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserQualification.MENTAL_HEALTH_SPECIALIST
+    UserQualification.recoveryFocused -> uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserQualification.RECOVERY_FOCUSED
+  }
 }

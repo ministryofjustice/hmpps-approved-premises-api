@@ -16,9 +16,7 @@ class FeatureFlagConfig {
 
   @Bean
   @ConfigurationProperties(prefix = "feature-flags")
-  fun featureFlags(): Map<String, Boolean?> {
-    return mutableMapOf()
-  }
+  fun featureFlags(): Map<String, Boolean?> = mutableMapOf()
 }
 
 @Service
@@ -33,7 +31,5 @@ class SpringConfigFeatureFlagService(
   }
 
   @SuppressWarnings("TooGenericExceptionCaught")
-  override fun getBooleanFlag(key: String): Boolean {
-    return featureFlags.getOrDefault(key, false)
-  }
+  override fun getBooleanFlag(key: String): Boolean = featureFlags.getOrDefault(key, false)
 }

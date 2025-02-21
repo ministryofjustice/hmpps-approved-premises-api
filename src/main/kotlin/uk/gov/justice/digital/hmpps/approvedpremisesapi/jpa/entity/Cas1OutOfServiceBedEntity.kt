@@ -158,9 +158,7 @@ data class Cas1OutOfServiceBedEntity(
   val notes
     get() = latestRevision.notes
 
-  fun isApplicable(now: LocalDate, bedId: UUID): Boolean {
-    return bed.id == bedId &&
-      cancellation == null &&
-      (!now.isBefore(startDate) && !now.isAfter(endDate))
-  }
+  fun isApplicable(now: LocalDate, bedId: UUID): Boolean = bed.id == bedId &&
+    cancellation == null &&
+    (!now.isBefore(startDate) && !now.isAfter(endDate))
 }

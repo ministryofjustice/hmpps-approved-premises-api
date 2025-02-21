@@ -8,9 +8,7 @@ class ApplicationContextProvider(applicationContext: ApplicationContext) {
   companion object {
     private lateinit var instance: ApplicationContext
 
-    fun get(): ApplicationContext {
-      return instance
-    }
+    fun get(): ApplicationContext = instance
   }
 
   init {

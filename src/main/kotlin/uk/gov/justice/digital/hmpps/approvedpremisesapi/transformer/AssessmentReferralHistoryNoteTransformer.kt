@@ -51,24 +51,21 @@ class AssessmentReferralHistoryNoteTransformer(
     else -> throw RuntimeException("Unsupported ReferralHistoryNote type: ${jpa::class.qualifiedName}")
   }
 
-  fun transformToReferralHistoryDomainEventNote(domainEventEntity: DomainEventEntity, user: UserEntity) =
-    ReferralHistoryDomainEventNote(
-      id = domainEventEntity.id,
-      createdAt = domainEventEntity.createdAt.toInstant(),
-      messageDetails = ReferralHistoryNoteMessageDetails(domainEvent = objectMapper.readTree(domainEventEntity.data)),
-      createdByUserName = user.name,
-      type = "domainEvent",
-    )
+  fun transformToReferralHistoryDomainEventNote(domainEventEntity: DomainEventEntity, user: UserEntity) = ReferralHistoryDomainEventNote(
+    id = domainEventEntity.id,
+    createdAt = domainEventEntity.createdAt.toInstant(),
+    messageDetails = ReferralHistoryNoteMessageDetails(domainEvent = objectMapper.readTree(domainEventEntity.data)),
+    createdByUserName = user.name,
+    type = "domainEvent",
+  )
 
-  private fun transformJpaToReferralHistoryUserNote(jpa: AssessmentReferralHistoryNoteEntity): ReferralHistoryUserNote {
-    return ReferralHistoryUserNote(
-      id = jpa.id,
-      createdAt = jpa.createdAt.toInstant(),
-      message = jpa.message,
-      createdByUserName = jpa.createdByUser.name,
-      type = "user",
-    )
-  }
+  private fun transformJpaToReferralHistoryUserNote(jpa: AssessmentReferralHistoryNoteEntity): ReferralHistoryUserNote = ReferralHistoryUserNote(
+    id = jpa.id,
+    createdAt = jpa.createdAt.toInstant(),
+    message = jpa.message,
+    createdByUserName = jpa.createdByUser.name,
+    type = "user",
+  )
 
   private fun getMessageDetails(
     systemNoteType: ReferralHistorySystemNoteType,

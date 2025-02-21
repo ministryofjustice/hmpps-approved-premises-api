@@ -111,14 +111,13 @@ class RedisConfiguration {
     duration: Duration,
     cacheNamePrefix: String,
     objectMapper: ObjectMapper,
-  ) =
-    this.withCacheConfiguration(
-      cacheName,
-      RedisCacheConfiguration.defaultCacheConfig()
-        .entryTtl(duration)
-        .serializeValuesWith(SerializationPair.fromSerializer(ClientResultRedisSerializer(objectMapper, object : TypeReference<T>() {})))
-        .prefixCacheNameWith(cacheNamePrefix),
-    )
+  ) = this.withCacheConfiguration(
+    cacheName,
+    RedisCacheConfiguration.defaultCacheConfig()
+      .entryTtl(duration)
+      .serializeValuesWith(SerializationPair.fromSerializer(ClientResultRedisSerializer(objectMapper, object : TypeReference<T>() {})))
+      .prefixCacheNameWith(cacheNamePrefix),
+  )
 }
 
 class ClientResultRedisSerializer(

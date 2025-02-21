@@ -1,0 +1,21 @@
+#!/bin/sh
+
+set -e
+
+SEED_JOB_ID=$1
+DIRECTORY_NAME=$2
+
+if [ -z "$SEED_JOB_ID" ] || [ -z "$DIRECTORY_NAME" ]
+then
+  echo "Usage: run_seed_from_excel_directory_job seed_job_id directory_name"
+  exit 1
+fi
+
+curl --fail --show-error --location --request POST 'http://127.0.0.1:8080/seedFromExcel/directory' \
+--header 'Content-Type: application/json' \
+--data-raw '{
+    "seedType": "'"$SEED_JOB_ID"'",
+    "directoryName": "'"$DIRECTORY_NAME"'"
+}'
+
+echo "Requested job - check the application logs for processing status"

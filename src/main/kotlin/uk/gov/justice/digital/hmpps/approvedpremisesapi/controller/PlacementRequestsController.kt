@@ -200,11 +200,9 @@ class PlacementRequestsController(
     )
   }
 
-  private fun mapPersonDetailOntoPlacementRequests(placementRequests: List<PlacementRequestEntity>, user: UserEntity): List<PlacementRequest> {
-    return placementRequests.map {
-      val personInfo = offenderService.getPersonInfoResult(it.application.crn, user.cas1LimitedAccessStrategy())
+  private fun mapPersonDetailOntoPlacementRequests(placementRequests: List<PlacementRequestEntity>, user: UserEntity): List<PlacementRequest> = placementRequests.map {
+    val personInfo = offenderService.getPersonInfoResult(it.application.crn, user.cas1LimitedAccessStrategy())
 
-      placementRequestTransformer.transformJpaToApi(it, personInfo)
-    }
+    placementRequestTransformer.transformJpaToApi(it, personInfo)
   }
 }

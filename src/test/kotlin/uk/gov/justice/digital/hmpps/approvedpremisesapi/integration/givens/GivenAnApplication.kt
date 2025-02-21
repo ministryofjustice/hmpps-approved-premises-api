@@ -49,12 +49,10 @@ fun IntegrationTestBase.givenASubmittedApplication(
   createdByUser: UserEntity,
   crn: String = randomStringMultiCaseWithNumbers(8),
   block: (application: ApplicationEntity) -> Unit = {},
-): ApprovedPremisesApplicationEntity {
-  return givenAnApplication(
-    createdByUser,
-    crn,
-    OffsetDateTime.now(),
-  ) { application ->
-    block(application)
-  }
+): ApprovedPremisesApplicationEntity = givenAnApplication(
+  createdByUser,
+  crn,
+  OffsetDateTime.now(),
+) { application ->
+  block(application)
 }

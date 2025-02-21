@@ -135,46 +135,45 @@ class AssessmentTransformer(
     return notes.sortedByDescending { it.createdAt }
   }
 
-  fun transformDomainToApiSummary(ase: DomainAssessmentSummary, personInfo: PersonInfoResult): AssessmentSummary =
-    when (ase.type) {
-      "approved-premises" -> ApprovedPremisesAssessmentSummary(
-        type = "CAS1",
-        id = ase.id,
-        applicationId = ase.applicationId,
-        createdAt = ase.createdAt,
-        arrivalDate = ase.arrivalDate,
-        status = getStatusForApprovedPremisesAssessment(ase),
-        decision = transformDomainSummaryDecisionToApi(ase.decision),
-        risks = ase.riskRatings?.let {
-          risksTransformer.transformDomainToApi(
-            objectMapper.readValue<PersonRisks>(it),
-            ase.crn,
-          )
-        },
-        person = personTransformer.transformModelToPersonApi(personInfo),
-        dueAt = ase.dueAt!!,
-      )
+  fun transformDomainToApiSummary(ase: DomainAssessmentSummary, personInfo: PersonInfoResult): AssessmentSummary = when (ase.type) {
+    "approved-premises" -> ApprovedPremisesAssessmentSummary(
+      type = "CAS1",
+      id = ase.id,
+      applicationId = ase.applicationId,
+      createdAt = ase.createdAt,
+      arrivalDate = ase.arrivalDate,
+      status = getStatusForApprovedPremisesAssessment(ase),
+      decision = transformDomainSummaryDecisionToApi(ase.decision),
+      risks = ase.riskRatings?.let {
+        risksTransformer.transformDomainToApi(
+          objectMapper.readValue<PersonRisks>(it),
+          ase.crn,
+        )
+      },
+      person = personTransformer.transformModelToPersonApi(personInfo),
+      dueAt = ase.dueAt!!,
+    )
 
-      "temporary-accommodation" -> TemporaryAccommodationAssessmentSummary(
-        type = "CAS3",
-        id = ase.id,
-        applicationId = ase.applicationId,
-        createdAt = ase.createdAt,
-        arrivalDate = ase.arrivalDate,
-        status = getStatusForTemporaryAccommodationAssessment(ase),
-        decision = transformDomainSummaryDecisionToApi(ase.decision),
-        risks = ase.riskRatings?.let {
-          risksTransformer.transformDomainToApi(
-            objectMapper.readValue<PersonRisks>(it),
-            ase.crn,
-          )
-        },
-        person = personTransformer.transformModelToPersonApi(personInfo),
-        probationDeliveryUnitName = ase.probationDeliveryUnitName,
-      )
+    "temporary-accommodation" -> TemporaryAccommodationAssessmentSummary(
+      type = "CAS3",
+      id = ase.id,
+      applicationId = ase.applicationId,
+      createdAt = ase.createdAt,
+      arrivalDate = ase.arrivalDate,
+      status = getStatusForTemporaryAccommodationAssessment(ase),
+      decision = transformDomainSummaryDecisionToApi(ase.decision),
+      risks = ase.riskRatings?.let {
+        risksTransformer.transformDomainToApi(
+          objectMapper.readValue<PersonRisks>(it),
+          ase.crn,
+        )
+      },
+      person = personTransformer.transformModelToPersonApi(personInfo),
+      probationDeliveryUnitName = ase.probationDeliveryUnitName,
+    )
 
-      else -> throw RuntimeException("Unsupported type: ${ase.type}")
-    }
+    else -> throw RuntimeException("Unsupported type: ${ase.type}")
+  }
 
   fun transformJpaDecisionToApi(decision: JpaAssessmentDecision?) = when (decision) {
     JpaAssessmentDecision.ACCEPTED -> ApiAssessmentDecision.accepted
@@ -214,14 +213,12 @@ class AssessmentTransformer(
     else -> ApprovedPremisesAssessmentStatus.notStarted
   }
 
-  private fun getStatusForApprovedPremisesAssessment(ase: DomainAssessmentSummary): ApprovedPremisesAssessmentStatus {
-    return when (ase.status) {
-      DomainAssessmentSummaryStatus.COMPLETED -> ApprovedPremisesAssessmentStatus.completed
-      DomainAssessmentSummaryStatus.AWAITING_RESPONSE -> ApprovedPremisesAssessmentStatus.awaitingResponse
-      DomainAssessmentSummaryStatus.IN_PROGRESS -> ApprovedPremisesAssessmentStatus.inProgress
-      DomainAssessmentSummaryStatus.REALLOCATED -> ApprovedPremisesAssessmentStatus.reallocated
-      else -> ApprovedPremisesAssessmentStatus.notStarted
-    }
+  private fun getStatusForApprovedPremisesAssessment(ase: DomainAssessmentSummary): ApprovedPremisesAssessmentStatus = when (ase.status) {
+    DomainAssessmentSummaryStatus.COMPLETED -> ApprovedPremisesAssessmentStatus.completed
+    DomainAssessmentSummaryStatus.AWAITING_RESPONSE -> ApprovedPremisesAssessmentStatus.awaitingResponse
+    DomainAssessmentSummaryStatus.IN_PROGRESS -> ApprovedPremisesAssessmentStatus.inProgress
+    DomainAssessmentSummaryStatus.REALLOCATED -> ApprovedPremisesAssessmentStatus.reallocated
+    else -> ApprovedPremisesAssessmentStatus.notStarted
   }
 
   private fun getStatusForTemporaryAccommodationAssessment(entity: AssessmentEntity) = when {

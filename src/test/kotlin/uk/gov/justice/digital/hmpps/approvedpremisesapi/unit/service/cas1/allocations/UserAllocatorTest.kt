@@ -436,14 +436,11 @@ data class TestRule(
   private val evaluatePlacementRequestOutcome: UserAllocatorRuleOutcome = UserAllocatorRuleOutcome.Skip,
   private val evaluatePlacementApplicationOutcome: UserAllocatorRuleOutcome = UserAllocatorRuleOutcome.Skip,
 ) : UserAllocatorRule {
-  override fun evaluateAssessment(assessmentEntity: AssessmentEntity): UserAllocatorRuleOutcome =
-    evaluateAssessmentOutcome
+  override fun evaluateAssessment(assessmentEntity: AssessmentEntity): UserAllocatorRuleOutcome = evaluateAssessmentOutcome
 
-  override fun evaluatePlacementRequest(placementRequestEntity: PlacementRequestEntity): UserAllocatorRuleOutcome =
-    evaluatePlacementRequestOutcome
+  override fun evaluatePlacementRequest(placementRequestEntity: PlacementRequestEntity): UserAllocatorRuleOutcome = evaluatePlacementRequestOutcome
 
-  override fun evaluatePlacementApplication(placementApplicationEntity: PlacementApplicationEntity): UserAllocatorRuleOutcome =
-    evaluatePlacementApplicationOutcome
+  override fun evaluatePlacementApplication(placementApplicationEntity: PlacementApplicationEntity): UserAllocatorRuleOutcome = evaluatePlacementApplicationOutcome
 
   companion object {
     fun skip(ruleType: RuleType, priority: Int = 0, name: String = "test rule") = when (ruleType) {

@@ -17,14 +17,13 @@ class Cas2v2AssessmentService(
 ) {
 
   @Transactional
-  fun createCas2v2Assessment(cas2v2ApplicationEntity: Cas2v2ApplicationEntity): Cas2v2AssessmentEntity =
-    cas2AssessmentRepository.save(
-      Cas2v2AssessmentEntity(
-        id = UUID.randomUUID(),
-        createdAt = OffsetDateTime.now(),
-        application = cas2v2ApplicationEntity,
-      ),
-    )
+  fun createCas2v2Assessment(cas2v2ApplicationEntity: Cas2v2ApplicationEntity): Cas2v2AssessmentEntity = cas2AssessmentRepository.save(
+    Cas2v2AssessmentEntity(
+      id = UUID.randomUUID(),
+      createdAt = OffsetDateTime.now(),
+      application = cas2v2ApplicationEntity,
+    ),
+  )
 
   fun updateAssessment(
     assessmentId: UUID,

@@ -5,7 +5,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Extension
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ExtensionEntity
 
 @Component
-class ExtensionTransformer() {
+class ExtensionTransformer {
   fun transformJpaToApi(jpa: ExtensionEntity) = Extension(
     id = jpa.id,
     bookingId = jpa.booking.id,

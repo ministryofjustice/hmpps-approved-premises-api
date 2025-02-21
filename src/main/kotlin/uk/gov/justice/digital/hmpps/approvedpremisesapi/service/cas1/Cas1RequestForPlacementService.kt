@@ -68,17 +68,15 @@ class Cas1RequestForPlacementService(
     }
   }
 
-  private fun toRequestForPlacement(placementApplication: PlacementApplicationEntity, user: UserEntity) =
-    requestForPlacementTransformer.transformPlacementApplicationEntityToApi(
-      placementApplication,
-      cas1WithdrawableService.isDirectlyWithdrawable(placementApplication, user),
-    )
+  private fun toRequestForPlacement(placementApplication: PlacementApplicationEntity, user: UserEntity) = requestForPlacementTransformer.transformPlacementApplicationEntityToApi(
+    placementApplication,
+    cas1WithdrawableService.isDirectlyWithdrawable(placementApplication, user),
+  )
 
-  private fun toRequestForPlacement(placementRequest: PlacementRequestEntity, user: UserEntity) =
-    requestForPlacementTransformer.transformPlacementRequestEntityToApi(
-      placementRequest,
-      cas1WithdrawableService.isDirectlyWithdrawable(placementRequest, user),
-    )
+  private fun toRequestForPlacement(placementRequest: PlacementRequestEntity, user: UserEntity) = requestForPlacementTransformer.transformPlacementRequestEntityToApi(
+    placementRequest,
+    cas1WithdrawableService.isDirectlyWithdrawable(placementRequest, user),
+  )
 
   private sealed class RequestForPlacementServiceException(message: String) : RuntimeException(message) {
     class AmbiguousRequestForPlacementId : RequestForPlacementServiceException("A placement application and placement request could not be distinguished as they share the same UUID")

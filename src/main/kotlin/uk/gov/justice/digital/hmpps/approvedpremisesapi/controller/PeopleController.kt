@@ -273,8 +273,7 @@ class PeopleController(
     is PersonInfoResult.Success.Restricted -> buildPersonInfoWithoutTimeline(personInfoResult)
   }
 
-  private fun buildPersonInfoWithoutTimeline(personInfo: PersonInfoResult.Success.Restricted): PersonalTimeline =
-    personalTimelineTransformer.transformApplicationTimelineModels(personInfo, emptyList())
+  private fun buildPersonInfoWithoutTimeline(personInfo: PersonInfoResult.Success.Restricted): PersonalTimeline = personalTimelineTransformer.transformApplicationTimelineModels(personInfo, emptyList())
 
   private fun buildPersonInfoWithTimeline(personInfo: PersonInfoResult.Success.Full, crn: String): PersonalTimeline {
     val regularApplications = getRegularApplications(crn)

@@ -4,6 +4,7 @@ import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1OverbookingRange
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1PremiseCapacity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1Premises
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1PremisesBasicSummary
@@ -14,11 +15,13 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.Cas1SpaceBookingEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.InitialiseDatabasePerClassTestBase
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.IntegrationTestBase
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenACas1SpaceBooking
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAPlacementRequest
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAProbationRegion
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAUser
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAnApArea
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAnApprovedPremises
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAnApprovedPremisesBed
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAnOffender
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAnOfflineApplication
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAnOutOfServiceBed
@@ -42,10 +45,9 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.deliuscontext.Case
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.asCaseSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.bodyAsListOfObjects
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.bodyAsObject
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.roundNanosToMillisToAccountForLossOfPrecisionInPostgres
 import java.net.URLEncoder
+import java.time.Instant
 import java.time.LocalDate
-import java.time.OffsetDateTime
 import java.util.UUID
 
 class Cas1PremisesTest : IntegrationTestBase() {
@@ -59,7 +61,6 @@ class Cas1PremisesTest : IntegrationTestBase() {
     lateinit var placementRequest: PlacementRequestEntity
     lateinit var user: UserEntity
     lateinit var spaceBooking: Cas1SpaceBookingEntity
-    val tierA = "TierA"
 
     @BeforeAll
     fun setupTestData() {
@@ -75,66 +76,7 @@ class Cas1PremisesTest : IntegrationTestBase() {
         withYieldedProbationRegion { region }
         withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
         withManagerDetails("manager details")
-      }
-
-      setupSpaceBookings()
-    }
-
-    fun setupSpaceBookings() {
-      offender = givenAnOffender(
-        offenderDetailsConfigBlock = {
-          withCrn("crn1")
-          withFirstName("firstNameAAA")
-          withLastName("lastNameAAA")
-          withCurrentRestriction(false)
-        },
-      ).first.asCaseSummary()
-
-      val pRequestA = givenAPlacementRequest(
-        placementRequestAllocatedTo = user,
-        assessmentAllocatedTo = user,
-        createdByUser = user,
-        crn = offender.crn,
-        name = "${offender.name.forename} ${offender.name.surname}",
-        tier = tierA,
-      )
-      placementRequest = pRequestA.first
-      application = pRequestA.second
-
-      spaceBooking = createSpaceBooking(
-        crn = offender.crn,
-        placementRequest = this.placementRequest,
-        application = application,
-      ) {
-        withCrn(offender.crn)
-        withPremises(premises)
-        withCanonicalArrivalDate(LocalDate.now().minusDays(3))
-        withCanonicalDepartureDate(LocalDate.now().plusDays(3))
-        withCreatedBy(user)
-        withCriteria(
-          findCharacteristic(CAS1_PROPERTY_NAME_ARSON_SUITABLE),
-        )
-      }
-    }
-
-    private fun findCharacteristic(propertyName: String) =
-      characteristicRepository.findByPropertyName(propertyName, ServiceName.approvedPremises.value)!!
-
-    private fun createSpaceBooking(
-      crn: String,
-      placementRequest: PlacementRequestEntity,
-      application: ApprovedPremisesApplicationEntity,
-      configuration: Cas1SpaceBookingEntityFactory.() -> Unit,
-    ): Cas1SpaceBookingEntity {
-      val (user) = givenAUser()
-
-      return cas1SpaceBookingEntityFactory.produceAndPersist {
-        withCrn(crn)
-        withPlacementRequest(placementRequest)
-        withApplication(application)
-        withCreatedBy(user)
-
-        configuration.invoke(this)
+        withSupportsSpaceBookings(true)
       }
     }
 
@@ -166,6 +108,33 @@ class Cas1PremisesTest : IntegrationTestBase() {
     @Test
     fun `Returns premises summary`() {
       val (_, jwt) = givenAUser(roles = listOf(CAS1_FUTURE_MANAGER))
+
+      repeat((1..10).count()) {
+        givenACas1SpaceBooking(
+          crn = "X123",
+          premises = premises,
+          expectedArrivalDate = LocalDate.now().minusDays(3),
+          expectedDepartureDate = LocalDate.now().plusWeeks(14),
+        )
+      }
+
+      // non arrival, ignored
+      givenACas1SpaceBooking(
+        crn = "X123",
+        premises = premises,
+        expectedArrivalDate = LocalDate.now().minusDays(3),
+        expectedDepartureDate = LocalDate.now().plusWeeks(14),
+        nonArrivalConfirmedAt = Instant.now(),
+      )
+
+      // cancelled, ignored
+      givenACas1SpaceBooking(
+        crn = "X123",
+        premises = premises,
+        expectedArrivalDate = LocalDate.now().minusDays(3),
+        expectedDepartureDate = LocalDate.now().plusWeeks(14),
+        cancellationOccurredAt = LocalDate.now(),
+      )
 
       val beds = bedEntityFactory.produceAndPersistMultiple(5) {
         withYieldedRoom {
@@ -211,9 +180,12 @@ class Cas1PremisesTest : IntegrationTestBase() {
       assertThat(summary.postcode).isEqualTo("the postcode")
       assertThat(summary.bedCount).isEqualTo(5)
       assertThat(summary.outOfServiceBeds).isEqualTo(1)
-      assertThat(summary.availableBeds).isEqualTo(3)
+      assertThat(summary.availableBeds).isEqualTo(-6)
       assertThat(summary.apArea.name).isEqualTo("The ap area name")
       assertThat(summary.managerDetails).isEqualTo("manager details")
+      assertThat(summary.overbookingSummary).containsExactly(
+        Cas1OverbookingRange(LocalDate.now(), LocalDate.now().plusWeeks(12).minusDays(1)),
+      )
     }
   }
 
@@ -572,6 +544,8 @@ class Cas1PremisesTest : IntegrationTestBase() {
     }
 
     fun setupBookings() {
+      val now = LocalDate.now()
+
       bedEntityFactory.produceAndPersistMultiple(5) {
         withYieldedRoom {
           roomEntityFactory.produceAndPersist {
@@ -580,99 +554,83 @@ class Cas1PremisesTest : IntegrationTestBase() {
         }
       }
 
-      offenderA = givenAnOffender(offenderDetailsConfigBlock = {
-        withCrn("crn1")
-        withFirstName("firstNameAAA")
-        withLastName("lastNameAAA")
-        withCurrentRestriction(false)
-      }).first.asCaseSummary()
+      offenderA = givenAnOffender(
+        offenderDetailsConfigBlock = {
+          withCrn("crn1")
+          withFirstName("firstNameAAA")
+          withLastName("lastNameAAA")
+        },
+      ).first.asCaseSummary()
 
-      val (offenderOfflineApplication) = givenAnOffender(offenderDetailsConfigBlock = {
-        withCrn("offline_crn")
-        withFirstName("mister")
-        withLastName("offline")
-        withCurrentRestriction(false)
-      })
+      val (offenderOfflineApplication) = givenAnOffender(
+        offenderDetailsConfigBlock = {
+          withCrn("offline_crn")
+          withFirstName("mister")
+          withLastName("offline")
+        },
+      )
       offenderOffline = offenderOfflineApplication.asCaseSummary()
 
-      val pRequestA = givenAPlacementRequest(
+      offenderB = givenAnOffender(
+        offenderDetailsConfigBlock = {
+          withCrn("crn2")
+          withFirstName("firstNameBBB")
+          withLastName("lastNameBBB")
+        },
+      ).first.asCaseSummary()
+
+      apDeliusContextAddListCaseSummaryToBulkResponse(listOf(offenderA, offenderB, offenderOffline))
+
+      givenAPlacementRequest(
         placementRequestAllocatedTo = user,
         assessmentAllocatedTo = user,
         createdByUser = user,
         crn = offenderA.crn,
         name = "${offenderA.name.forename} ${offenderA.name.surname}",
         tier = tierA,
-      )
-      placementRequestA = pRequestA.first
-      applicationA = pRequestA.second
+      ).let {
+        placementRequestA = it.first
+        applicationA = it.second
+      }
 
       spaceBookingEarly = createSpaceBooking(
         crn = offenderA.crn,
         placementRequest = this.placementRequestA,
         application = applicationA,
       ) {
-        withCrn(offenderA.crn)
         withPremises(premises)
-        withCanonicalArrivalDate(LocalDate.now().minusDays(3))
-        withCanonicalDepartureDate(LocalDate.now().plusDays(3))
-        withCreatedBy(user)
+        withCanonicalArrivalDate(now.minusDays(3))
+        withCanonicalDepartureDate(now.plusDays(3))
         withCriteria(
           findCharacteristic(CAS1_PROPERTY_NAME_ARSON_SUITABLE),
         )
       }
 
-      offenderB = givenAnOffender(offenderDetailsConfigBlock = {
-        withCrn("crn2")
-        withFirstName("firstNameBBB")
-        withLastName("lastNameBBB")
-        withCurrentRestriction(false)
-      }).first.asCaseSummary()
-
-      val pRequestB = givenAPlacementRequest(
+      givenAPlacementRequest(
         placementRequestAllocatedTo = user,
         assessmentAllocatedTo = user,
         createdByUser = user,
         crn = offenderB.crn,
         name = "${offenderB.name.forename} ${offenderB.name.surname}",
         tier = tierB,
-      )
-      placementRequestB = pRequestB.first
-      applicationB = pRequestB.second
-
-      spaceBookingLate = createSpaceBooking(
-        crn = offenderA.crn,
-        placementRequest = this.placementRequestA,
-        application = applicationB,
-      ) {
-        withCrn(offenderB.crn)
-        withPremises(premises)
-        withCanonicalArrivalDate(LocalDate.now().minusDays(6))
-        withCanonicalDepartureDate(LocalDate.now().plusDays(6))
-        withCreatedBy(user)
-        withCriteria(
-          findCharacteristic(CAS1_PROPERTY_NAME_ARSON_SUITABLE),
-          findCharacteristic(CAS1_PROPERTY_NAME_ENSUITE),
-          findCharacteristic(CAS1_PROPERTY_NAME_SINGLE_ROOM),
-        )
+      ).let {
+        placementRequestB = it.first
+        applicationB = it.second
       }
 
-      // cancelled - ignored
-      createSpaceBooking(
-        crn = offenderA.crn,
+      spaceBookingLate = createSpaceBooking(
+        crn = offenderB.crn,
         placementRequest = this.placementRequestA,
         application = applicationB,
       ) {
-        withCrn(offenderB.crn)
         withPremises(premises)
-        withCanonicalArrivalDate(LocalDate.now().minusDays(2))
-        withCanonicalDepartureDate(LocalDate.now().plusDays(2))
-        withCreatedBy(user)
+        withCanonicalArrivalDate(now.minusDays(6))
+        withCanonicalDepartureDate(now.plusDays(6))
         withCriteria(
           findCharacteristic(CAS1_PROPERTY_NAME_ARSON_SUITABLE),
           findCharacteristic(CAS1_PROPERTY_NAME_ENSUITE),
           findCharacteristic(CAS1_PROPERTY_NAME_SINGLE_ROOM),
         )
-        withCancellationOccurredAt(LocalDate.now())
       }
 
       spaceBookingOfflineApplication = createSpaceBookingWithOfflineApplication(
@@ -682,106 +640,117 @@ class Cas1PremisesTest : IntegrationTestBase() {
         premises = premises,
       ) {
         withPremises(premises)
-        withCanonicalArrivalDate(LocalDate.now().minusDays(2))
-        withCanonicalDepartureDate(LocalDate.now().plusDays(2))
+        withCanonicalArrivalDate(now.minusDays(2))
+        withCanonicalDepartureDate(now.plusDays(2))
         withActualDepartureDate(null)
         withCriteria(
           findCharacteristic(CAS1_PROPERTY_NAME_SINGLE_ROOM),
         )
       }
 
-      apDeliusContextAddListCaseSummaryToBulkResponse(listOf(offenderA, offenderB, offenderOffline))
+      // cancelled - ignored
+      createSpaceBooking(
+        crn = offenderB.crn,
+        placementRequest = this.placementRequestA,
+        application = applicationB,
+      ) {
+        withPremises(premises)
+        withCanonicalArrivalDate(now.minusDays(2))
+        withCanonicalDepartureDate(now.plusDays(2))
+        withCancellationOccurredAt(now)
+      }
+
+      // non arrival - ignored
+      createSpaceBooking(
+        crn = offenderB.crn,
+        placementRequest = this.placementRequestA,
+        application = applicationB,
+      ) {
+        withPremises(premises)
+        withCanonicalArrivalDate(now.minusDays(2))
+        withCanonicalDepartureDate(now.plusDays(2))
+        withNonArrivalConfirmedAt(Instant.now())
+      }
+
+      // departing on same day - ignored
+      createSpaceBooking(
+        crn = offenderB.crn,
+        placementRequest = this.placementRequestA,
+        application = applicationB,
+      ) {
+        withPremises(premises)
+        withCanonicalArrivalDate(now.minusDays(2))
+        withCanonicalDepartureDate(now)
+      }
     }
 
     fun setupOutOfServiceBeds() {
+      val now = LocalDate.now()
+
       hasEnSuiteCharacteristic = characteristicRepository.findByPropertyName("hasEnSuite", "approved-premises")!!
       isArsonSuitableCharacteristic = characteristicRepository.findByPropertyName("isArsonSuitable", "approved-premises")!!
       isGroundFloorCharacteristic = characteristicRepository.findByPropertyName("isGroundFloor", "approved-premises")!!
 
-      val bed1 = bedEntityFactory.produceAndPersist {
-        withRoom(
-          roomEntityFactory.produceAndPersist {
-            withCharacteristics(mutableListOf(hasEnSuiteCharacteristic))
-            withPremises(premises)
-          },
-        )
-      }
+      val bed1 = givenAnApprovedPremisesBed(
+        premises = premises,
+        characteristics = listOf(hasEnSuiteCharacteristic),
+      )
 
-      val bed2 = bedEntityFactory.produceAndPersist {
-        withRoom(
-          roomEntityFactory.produceAndPersist {
-            withCharacteristics(mutableListOf(hasEnSuiteCharacteristic, isArsonSuitableCharacteristic))
-            withPremises(premises)
-          },
-        )
-      }
+      val bed2 = givenAnApprovedPremisesBed(
+        premises = premises,
+        characteristics = listOf(hasEnSuiteCharacteristic, isArsonSuitableCharacteristic),
+      )
 
-      val bed3 = bedEntityFactory.produceAndPersist {
-        withRoom(
-          roomEntityFactory.produceAndPersist {
-            withCharacteristics(mutableListOf(hasEnSuiteCharacteristic, isArsonSuitableCharacteristic, isGroundFloorCharacteristic))
-            withPremises(premises)
-          },
-        )
-      }
+      val bed3 = givenAnApprovedPremisesBed(
+        premises = premises,
+        characteristics = listOf(hasEnSuiteCharacteristic, isArsonSuitableCharacteristic, isGroundFloorCharacteristic),
+      )
 
-      outOfServiceBed = cas1OutOfServiceBedEntityFactory.produceAndPersist {
-        withCreatedAt(OffsetDateTime.now().roundNanosToMillisToAccountForLossOfPrecisionInPostgres())
-        withBed(bed1)
-      }.apply {
-        this.revisionHistory += cas1OutOfServiceBedRevisionEntityFactory.produceAndPersist {
-          withCreatedAt(OffsetDateTime.now().roundNanosToMillisToAccountForLossOfPrecisionInPostgres())
-          withCreatedBy(user)
-          withOutOfServiceBed(this@apply)
-          withStartDate(LocalDate.now().minusDays(20))
-          withEndDate(LocalDate.now().plusDays(20))
-          withYieldedReason {
-            cas1OutOfServiceBedReasonEntityFactory.produceAndPersist()
-          }
-        }
-      }
+      outOfServiceBed = givenAnOutOfServiceBed(
+        bed = bed1,
+        startDate = now.minusDays(20),
+        endDate = now.plusDays(20),
+      )
 
       outOfServiceBedEndingToday = givenAnOutOfServiceBed(
         bed = bed2,
-        startDate = LocalDate.now().minusDays(10),
-        endDate = LocalDate.now(),
-        cancelled = false,
+        startDate = now.minusDays(10),
+        endDate = now,
       )
 
       outOfServiceBedTodayOnly = givenAnOutOfServiceBed(
         bed = bed3,
-        startDate = LocalDate.now(),
-        endDate = LocalDate.now(),
-        cancelled = false,
+        startDate = now,
+        endDate = now,
       )
 
       // cancelled, ignored
       givenAnOutOfServiceBed(
         bed = bed3,
-        startDate = LocalDate.now(),
-        endDate = LocalDate.now(),
+        startDate = now,
+        endDate = now,
         cancelled = true,
       )
 
       // expired, ignored
       givenAnOutOfServiceBed(
         bed = bed1,
-        startDate = LocalDate.now().minusDays(20),
-        endDate = LocalDate.now().minusDays(1),
+        startDate = now.minusDays(20),
+        endDate = now.minusDays(1),
         cancelled = false,
       )
 
       // upcoming, ignored
       givenAnOutOfServiceBed(
         bed = bed1,
-        startDate = LocalDate.now().plusDays(1),
-        endDate = LocalDate.now().plusDays(10),
+        startDate = now.plusDays(1),
+        endDate = now.plusDays(10),
         cancelled = false,
       )
     }
 
     @Test
-    fun `returns 403 Forbidden if user does not have correct role`() {
+    fun `403 Forbidden if user does not have correct role`() {
       val (_, jwt) = givenAUser(roles = listOf(CAS1_ASSESSOR))
 
       webTestClient.get()
@@ -793,7 +762,7 @@ class Cas1PremisesTest : IntegrationTestBase() {
     }
 
     @Test
-    fun `returns 404 if premise doesn't exist`() {
+    fun `404 if premise doesn't exist`() {
       val (_, jwt) = givenAUser(roles = listOf(CAS1_CRU_MEMBER))
 
       webTestClient.get()
@@ -805,7 +774,7 @@ class Cas1PremisesTest : IntegrationTestBase() {
     }
 
     @Test
-    fun `returns premises day summary with no filters applied`() {
+    fun `return bookings applicable to given date`() {
       val (_, jwt) = givenAUser(roles = listOf(CAS1_CRU_MEMBER))
 
       val summaries = webTestClient.get()
@@ -823,6 +792,8 @@ class Cas1PremisesTest : IntegrationTestBase() {
       assertThat(summaries.spaceBookings.size).isEqualTo(3)
       assertThat(summaries.outOfServiceBeds.size).isEqualTo(3)
 
+      assertThat(summaries.spaceBookings).hasSize(3)
+
       val summaryBookingOffline = summaries.spaceBookings[0]
       assertThat(summaryBookingOffline.id).isEqualTo(spaceBookingOfflineApplication.id)
       assertThat(summaryBookingOffline.tier).isEqualTo(null)
@@ -832,17 +803,29 @@ class Cas1PremisesTest : IntegrationTestBase() {
       assertThat(summaryBookingOffline.essentialCharacteristics.size).isEqualTo(1)
       assertThat(summaryBookingOffline.essentialCharacteristics[0].value).isEqualTo(CAS1_PROPERTY_NAME_SINGLE_ROOM)
 
+      val summaryBookingOfflineOffender = summaryBookingOffline.person
+      assertThat(summaryBookingOfflineOffender.crn).isEqualTo(offenderOffline.crn)
+      assertThat(summaryBookingOfflineOffender.personType).isEqualTo(PersonSummaryDiscriminator.fullPersonSummary)
+      assertThat(summaryBookingOfflineOffender).isInstanceOf(FullPersonSummary::class.java)
+      assertThat((summaryBookingOfflineOffender as FullPersonSummary).name).isEqualTo("${offenderOffline.name.forename} ${offenderOffline.name.surname}")
+
       val summaryBooking1 = summaries.spaceBookings[1]
       assertThat(summaryBooking1.id).isEqualTo(spaceBookingLate.id)
       assertThat(summaryBooking1.tier).isEqualTo(tierB)
       assertThat(summaryBooking1.canonicalArrivalDate).isEqualTo(spaceBookingLate.canonicalArrivalDate)
       assertThat(summaryBooking1.canonicalDepartureDate).isEqualTo(spaceBookingLate.canonicalDepartureDate)
       assertThat(summaryBooking1.essentialCharacteristics.size).isEqualTo(3)
-      val bookingCharacteristics = summaryBooking1.essentialCharacteristics.map { it.value }
-      assertThat(bookingCharacteristics).contains(CAS1_PROPERTY_NAME_SINGLE_ROOM)
-      assertThat(bookingCharacteristics).contains(CAS1_PROPERTY_NAME_ENSUITE)
-      assertThat(bookingCharacteristics).contains(CAS1_PROPERTY_NAME_ARSON_SUITABLE)
-      assertThat(summaryBooking1.releaseType).isEqualTo(releaseTypeToBeDetermined)
+      assertThat(summaryBooking1.essentialCharacteristics.map { it.value }).containsExactlyInAnyOrder(
+        CAS1_PROPERTY_NAME_SINGLE_ROOM,
+        CAS1_PROPERTY_NAME_ENSUITE,
+        CAS1_PROPERTY_NAME_ARSON_SUITABLE,
+      )
+
+      val summaryBooking1Offender = summaryBooking1.person
+      assertThat(summaryBooking1Offender.crn).isEqualTo(offenderB.crn)
+      assertThat(summaryBooking1Offender.personType).isEqualTo(PersonSummaryDiscriminator.fullPersonSummary)
+      assertThat(summaryBooking1Offender).isInstanceOf(FullPersonSummary::class.java)
+      assertThat((summaryBooking1Offender as FullPersonSummary).name).isEqualTo("${offenderB.name.forename} ${offenderB.name.surname}")
 
       val summaryBooking2 = summaries.spaceBookings[2]
       assertThat(summaryBooking2.id).isEqualTo(spaceBookingEarly.id)
@@ -853,23 +836,24 @@ class Cas1PremisesTest : IntegrationTestBase() {
       assertThat(summaryBooking2.essentialCharacteristics[0].value).isEqualTo(CAS1_PROPERTY_NAME_ARSON_SUITABLE)
       assertThat(summaryBooking2.releaseType).isEqualTo(releaseTypeToBeDetermined)
 
-      val offender1 = summaryBookingOffline.person
-      assertThat(offender1.crn).isEqualTo(offenderOffline.crn)
-      assertThat(offender1.personType).isEqualTo(PersonSummaryDiscriminator.fullPersonSummary)
-      assertThat(offender1).isInstanceOf(FullPersonSummary::class.java)
-      assertThat((offender1 as FullPersonSummary).name).isEqualTo("${offenderOffline.name.forename} ${offenderOffline.name.surname}")
+      val summaryBookingOffender = summaryBooking2.person
+      assertThat(summaryBookingOffender.crn).isEqualTo(offenderA.crn)
+      assertThat(summaryBookingOffender.personType).isEqualTo(PersonSummaryDiscriminator.fullPersonSummary)
+      assertThat(summaryBookingOffender).isInstanceOf(FullPersonSummary::class.java)
+      assertThat((summaryBookingOffender as FullPersonSummary).name).isEqualTo("${offenderA.name.forename} ${offenderA.name.surname}")
+    }
 
-      val offender2 = summaryBooking1.person
-      assertThat(offender2.crn).isEqualTo(offenderB.crn)
-      assertThat(offender2.personType).isEqualTo(PersonSummaryDiscriminator.fullPersonSummary)
-      assertThat(offender2).isInstanceOf(FullPersonSummary::class.java)
-      assertThat((offender2 as FullPersonSummary).name).isEqualTo("${offenderB.name.forename} ${offenderB.name.surname}")
+    @Test
+    fun `return capacity information`() {
+      val (_, jwt) = givenAUser(roles = listOf(CAS1_CRU_MEMBER))
 
-      val offender3 = summaryBooking2.person
-      assertThat(offender3.crn).isEqualTo(offenderA.crn)
-      assertThat(offender3.personType).isEqualTo(PersonSummaryDiscriminator.fullPersonSummary)
-      assertThat(offender3).isInstanceOf(FullPersonSummary::class.java)
-      assertThat((offender3 as FullPersonSummary).name).isEqualTo("${offenderA.name.forename} ${offenderA.name.surname}")
+      val summaries = webTestClient.get()
+        .uri("/cas1/premises/${premises.id}/day-summary/$summaryDate")
+        .header("Authorization", "Bearer $jwt")
+        .exchange()
+        .expectStatus()
+        .isOk
+        .returnResult(Cas1PremisesDaySummary::class.java).responseBody.blockFirst()!!
 
       val capacity = summaries.capacity
       assertThat(capacity.date).isEqualTo(summaryDate)
@@ -877,6 +861,19 @@ class Cas1PremisesTest : IntegrationTestBase() {
       assertThat(capacity.availableBedCount).isEqualTo(5)
       assertThat(capacity.bookingCount).isEqualTo(3)
       assertThat(capacity.characteristicAvailability.count()).isEqualTo(6)
+    }
+
+    @Test
+    fun `return out of service beds applicable to given date`() {
+      val (_, jwt) = givenAUser(roles = listOf(CAS1_CRU_MEMBER))
+
+      val summaries = webTestClient.get()
+        .uri("/cas1/premises/${premises.id}/day-summary/$summaryDate")
+        .header("Authorization", "Bearer $jwt")
+        .exchange()
+        .expectStatus()
+        .isOk
+        .returnResult(Cas1PremisesDaySummary::class.java).responseBody.blockFirst()!!
 
       val oosBedSummary = summaries.outOfServiceBeds[0]
       assertThat(oosBedSummary.id).isEqualTo(outOfServiceBed.id)
@@ -915,7 +912,7 @@ class Cas1PremisesTest : IntegrationTestBase() {
     }
 
     @Test
-    fun `returns premises day summaries when filters applied with matching bookings`() {
+    fun `filter on criteria, has matching bookings`() {
       val (_, jwt) = givenAUser(roles = listOf(CAS1_CRU_MEMBER))
 
       val summary = webTestClient.get()
@@ -940,7 +937,7 @@ class Cas1PremisesTest : IntegrationTestBase() {
     }
 
     @Test
-    fun `returns no space booking summaries when filters applied with no matching bookings`() {
+    fun `filter on criteria, has no matching bookings`() {
       val (_, jwt) = givenAUser(roles = listOf(CAS1_CRU_MEMBER))
 
       val summary = webTestClient.get()
@@ -959,7 +956,7 @@ class Cas1PremisesTest : IntegrationTestBase() {
     }
 
     @Test
-    fun `returns premises day summary with accurate space bookings excluding the specified space booking ID`() {
+    fun `exclude specified booking by ID`() {
       val (_, jwt) = givenAUser(roles = listOf(CAS1_CRU_MEMBER))
 
       val excludeSpaceBookingId: String = URLEncoder.encode(spaceBookingEarly.id.toString(), "UTF-8")
@@ -981,10 +978,15 @@ class Cas1PremisesTest : IntegrationTestBase() {
       assertThat(capacity.totalBedCount).isEqualTo(8)
       assertThat(capacity.availableBedCount).isEqualTo(5)
       assertThat(capacity.bookingCount).isEqualTo(2)
+
+      assertThat(summaries.spaceBookings.map { it.id }).containsExactly(
+        spaceBookingOfflineApplication.id,
+        spaceBookingLate.id,
+      )
     }
 
     @Test
-    fun `returns ordered space booking summaries when order by person name ascending`() {
+    fun `sort by person name ascending`() {
       val (_, jwt) = givenAUser(roles = listOf(CAS1_CRU_MEMBER))
 
       val summaries = webTestClient.get()
@@ -1006,7 +1008,7 @@ class Cas1PremisesTest : IntegrationTestBase() {
     }
 
     @Test
-    fun `returns ordered space booking summaries when order by tier ascending`() {
+    fun `sort by tier ascending`() {
       val (_, jwt) = givenAUser(roles = listOf(CAS1_CRU_MEMBER))
 
       val summaries = webTestClient.get()
@@ -1025,7 +1027,7 @@ class Cas1PremisesTest : IntegrationTestBase() {
     }
 
     @Test
-    fun `returns ordered space booking summaries when order by tier descending`() {
+    fun `sort by tier descending`() {
       val (_, jwt) = givenAUser(roles = listOf(CAS1_CRU_MEMBER))
 
       val summaries = webTestClient.get()
@@ -1043,8 +1045,7 @@ class Cas1PremisesTest : IntegrationTestBase() {
       assertThat(summaries.spaceBookings[2].tier).isEqualTo(tierA)
     }
 
-    private fun findCharacteristic(propertyName: String) =
-      characteristicRepository.findByPropertyName(propertyName, ServiceName.approvedPremises.value)!!
+    private fun findCharacteristic(propertyName: String) = characteristicRepository.findByPropertyName(propertyName, ServiceName.approvedPremises.value)!!
 
     private fun createSpaceBooking(
       crn: String,

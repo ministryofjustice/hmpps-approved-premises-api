@@ -13,11 +13,7 @@ class ReferenceDataController(
   private val statusTransformer: ApplicationStatusTransformer,
   private val statusFinder: Cas2PersistedApplicationStatusFinder,
 ) : ReferenceDataCas2Delegate {
-  override fun referenceDataApplicationStatusGet(): ResponseEntity<List<Cas2ApplicationStatus>> {
-    return ResponseEntity.ok(transformToApi(statusFinder.active()))
-  }
+  override fun referenceDataApplicationStatusGet(): ResponseEntity<List<Cas2ApplicationStatus>> = ResponseEntity.ok(transformToApi(statusFinder.active()))
 
-  private fun transformToApi(statusList: List<Cas2PersistedApplicationStatus>): List<Cas2ApplicationStatus> {
-    return statusList.map { status -> statusTransformer.transformModelToApi(status) }
-  }
+  private fun transformToApi(statusList: List<Cas2PersistedApplicationStatus>): List<Cas2ApplicationStatus> = statusList.map { status -> statusTransformer.transformModelToApi(status) }
 }

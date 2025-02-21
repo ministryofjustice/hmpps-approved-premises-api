@@ -56,15 +56,14 @@ class Cas3ApplicationTest : InitialiseDatabasePerClassTestBase() {
     }
   }
 
-  private fun persistApplication(crn: String, user: UserEntity) =
-    temporaryAccommodationApplicationEntityFactory.produceAndPersist {
-      withCrn(crn)
-      withCreatedByUser(user)
-      withApplicationSchema(persistApplicationSchema())
-      withProbationRegion(user.probationRegion)
-      withArrivalDate(LocalDate.now().plusDays(30))
-      withSubmittedAt(null)
-    }
+  private fun persistApplication(crn: String, user: UserEntity) = temporaryAccommodationApplicationEntityFactory.produceAndPersist {
+    withCrn(crn)
+    withCreatedByUser(user)
+    withApplicationSchema(persistApplicationSchema())
+    withProbationRegion(user.probationRegion)
+    withArrivalDate(LocalDate.now().plusDays(30))
+    withSubmittedAt(null)
+  }
 
   private fun persistApplicationSchema() = temporaryAccommodationAssessmentJsonSchemaEntityFactory.produceAndPersist {
     temporaryAccommodationApplicationJsonSchemaEntityFactory.produceAndPersist {

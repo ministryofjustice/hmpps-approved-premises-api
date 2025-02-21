@@ -44,20 +44,21 @@ class Cas1ApplicationTimelineTransformer(
     )
   }
 
-  private fun appealUrlOrNull(domainEventSummary: DomainEventSummary): Cas1TimelineEventAssociatedUrl? {
-    return if (domainEventSummary.type == DomainEventType.APPROVED_PREMISES_ASSESSMENT_APPEALED && domainEventSummary.appealId !== null) {
-      Cas1TimelineEventAssociatedUrl(
-        Cas1TimelineEventUrlType.assessmentAppeal,
-        appealUrlTemplate.resolve(
-          mapOf(
-            "applicationId" to domainEventSummary.applicationId.toString(),
-            "appealId" to domainEventSummary.appealId.toString(),
-          ),
+  private fun appealUrlOrNull(domainEventSummary: DomainEventSummary): Cas1TimelineEventAssociatedUrl? = if (
+    domainEventSummary.type == DomainEventType.APPROVED_PREMISES_ASSESSMENT_APPEALED &&
+    domainEventSummary.appealId !== null
+  ) {
+    Cas1TimelineEventAssociatedUrl(
+      Cas1TimelineEventUrlType.assessmentAppeal,
+      appealUrlTemplate.resolve(
+        mapOf(
+          "applicationId" to domainEventSummary.applicationId.toString(),
+          "appealId" to domainEventSummary.appealId.toString(),
         ),
-      )
-    } else {
-      null
-    }
+      ),
+    )
+  } else {
+    null
   }
 
   private fun applicationUrlOrNull(domainEventSummary: DomainEventSummary) = domainEventSummary.applicationId?.let {
@@ -102,22 +103,20 @@ class Cas1ApplicationTimelineTransformer(
     }
   }
 
-  fun generateUrlsForTimelineEventType(domainEventSummary: DomainEventSummary): List<Cas1TimelineEventAssociatedUrl> {
-    return when (domainEventSummary.type) {
-      DomainEventType.APPROVED_PREMISES_ASSESSMENT_APPEALED -> listOfNotNull(
-        appealUrlOrNull(domainEventSummary),
-      )
-      DomainEventType.APPROVED_PREMISES_ASSESSMENT_INFO_REQUESTED,
-      DomainEventType.APPROVED_PREMISES_ASSESSMENT_ALLOCATED,
-      -> listOfNotNull(
-        applicationUrlOrNull(domainEventSummary),
-      )
-      else -> listOfNotNull(
-        applicationUrlOrNull(domainEventSummary),
-        assessmentUrlOrNull(domainEventSummary),
-        bookingUrlOrNull(domainEventSummary),
-        cas1SpaceBookingUrlOrNull(domainEventSummary),
-      )
-    }
+  fun generateUrlsForTimelineEventType(domainEventSummary: DomainEventSummary): List<Cas1TimelineEventAssociatedUrl> = when (domainEventSummary.type) {
+    DomainEventType.APPROVED_PREMISES_ASSESSMENT_APPEALED -> listOfNotNull(
+      appealUrlOrNull(domainEventSummary),
+    )
+    DomainEventType.APPROVED_PREMISES_ASSESSMENT_INFO_REQUESTED,
+    DomainEventType.APPROVED_PREMISES_ASSESSMENT_ALLOCATED,
+    -> listOfNotNull(
+      applicationUrlOrNull(domainEventSummary),
+    )
+    else -> listOfNotNull(
+      applicationUrlOrNull(domainEventSummary),
+      assessmentUrlOrNull(domainEventSummary),
+      bookingUrlOrNull(domainEventSummary),
+      cas1SpaceBookingUrlOrNull(domainEventSummary),
+    )
   }
 }

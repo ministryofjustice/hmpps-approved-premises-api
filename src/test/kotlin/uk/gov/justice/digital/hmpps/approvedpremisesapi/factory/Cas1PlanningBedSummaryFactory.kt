@@ -39,14 +39,12 @@ class Cas1PlanningBedSummaryFactory : Factory<Cas1PlanningBedSummary> {
     this.characteristicsPropertyNames = { characteristicsPropertyNames }
   }
 
-  override fun produce(): Cas1PlanningBedSummary {
-    return Cas1PlanningBedSummary(
-      this.bedId(),
-      this.bedName(),
-      this.bedEndDate(),
-      this.roomId(),
-      this.roomName(),
-      this.characteristicsPropertyNames(),
-    )
-  }
+  override fun produce(): Cas1PlanningBedSummary = Cas1PlanningBedSummary(
+    this.bedId(),
+    this.bedName(),
+    this.bedEndDate(),
+    this.roomId(),
+    this.roomName(),
+    this.characteristicsPropertyNames(),
+  )
 }

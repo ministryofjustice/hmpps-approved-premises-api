@@ -19,6 +19,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.planning.Be
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.planning.Characteristic
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.planning.SpaceBooking
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.planning.SpacePlanningModelsFactory
+import java.time.Instant
 import java.time.LocalDate
 
 class SpacePlanningModelsFactoryTest {
@@ -276,7 +277,7 @@ class SpacePlanningModelsFactoryTest {
     }
 
     @Test
-    fun `all booking properties including characteristics are correctly mapped`() {
+    fun `all booking properties are correctly mapped`() {
       val characteristic1 = CharacteristicEntityFactory().withPropertyName(CAS1_PROPERTY_NAME_STEP_FREE_DESIGNATED).withIsActive(true).withModelScope("room").produce()
       val characteristic2 = CharacteristicEntityFactory().withPropertyName(CAS1_PROPERTY_NAME_ARSON_SUITABLE).withIsActive(true).withModelScope("room").produce()
       val characteristicSingleRoom = CharacteristicEntityFactory().withPropertyName(CAS1_PROPERTY_NAME_SINGLE_ROOM).withModelScope("room").withIsActive(true).produce()
@@ -334,6 +335,98 @@ class SpacePlanningModelsFactoryTest {
           ),
         ),
       )
+    }
+
+    @Test
+    fun `include bookings arriving today`() {
+      val booking1 = Cas1SpaceBookingEntityFactory()
+        .withCanonicalArrivalDate(LocalDate.of(2020, 4, 4))
+        .withCanonicalDepartureDate(LocalDate.of(2020, 4, 5))
+        .produce()
+
+      val result = factory.spaceBookingsForDay(
+        day = LocalDate.of(2020, 4, 4),
+        spaceBookingsToConsider = listOf(booking1),
+      )
+
+      assertThat(result.map { it.id }).containsExactly(booking1.id)
+    }
+
+    @Test
+    fun `exclude bookings arriving after today`() {
+      val booking1 = Cas1SpaceBookingEntityFactory()
+        .withCanonicalArrivalDate(LocalDate.of(2020, 4, 5))
+        .withCanonicalDepartureDate(LocalDate.of(2020, 4, 6))
+        .produce()
+
+      val result = factory.spaceBookingsForDay(
+        day = LocalDate.of(2020, 4, 4),
+        spaceBookingsToConsider = listOf(booking1),
+      )
+
+      assertThat(result).isEmpty()
+    }
+
+    @Test
+    fun `exclude bookings departing before today`() {
+      val booking1 = Cas1SpaceBookingEntityFactory()
+        .withCanonicalArrivalDate(LocalDate.of(2020, 4, 1))
+        .withCanonicalDepartureDate(LocalDate.of(2020, 4, 3))
+        .produce()
+
+      val result = factory.spaceBookingsForDay(
+        day = LocalDate.of(2020, 4, 4),
+        spaceBookingsToConsider = listOf(booking1),
+      )
+
+      assertThat(result).isEmpty()
+    }
+
+    @Test
+    fun `exclude bookings departing today`() {
+      val booking1 = Cas1SpaceBookingEntityFactory()
+        .withCanonicalArrivalDate(LocalDate.of(2020, 4, 1))
+        .withCanonicalDepartureDate(LocalDate.of(2020, 4, 4))
+        .produce()
+
+      val result = factory.spaceBookingsForDay(
+        day = LocalDate.of(2020, 4, 4),
+        spaceBookingsToConsider = listOf(booking1),
+      )
+
+      assertThat(result).isEmpty()
+    }
+
+    @Test
+    fun `exclude cancelled bookings`() {
+      val booking1 = Cas1SpaceBookingEntityFactory()
+        .withCanonicalArrivalDate(LocalDate.of(2020, 4, 4))
+        .withCanonicalDepartureDate(LocalDate.of(2020, 4, 5))
+        .withCancellationOccurredAt(LocalDate.now())
+        .produce()
+
+      val result = factory.spaceBookingsForDay(
+        day = LocalDate.of(2020, 4, 4),
+        spaceBookingsToConsider = listOf(booking1),
+      )
+
+      assertThat(result).isEmpty()
+    }
+
+    @Test
+    fun `exclude non arrivals`() {
+      val booking1 = Cas1SpaceBookingEntityFactory()
+        .withCanonicalArrivalDate(LocalDate.of(2020, 4, 4))
+        .withCanonicalDepartureDate(LocalDate.of(2020, 4, 5))
+        .withNonArrivalConfirmedAt(Instant.now())
+        .produce()
+
+      val result = factory.spaceBookingsForDay(
+        day = LocalDate.of(2020, 4, 4),
+        spaceBookingsToConsider = listOf(booking1),
+      )
+
+      assertThat(result).isEmpty()
     }
   }
 }

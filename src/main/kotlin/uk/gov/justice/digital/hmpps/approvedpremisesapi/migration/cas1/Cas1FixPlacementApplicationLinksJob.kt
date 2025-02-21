@@ -220,8 +220,7 @@ class Cas1FixPlacementApplicationLinksJob(
     placementRequestRepository.save(placementRequest)
   }
 
-  private fun describe(placementApp: PlacementAppAndDate) =
-    "${placementApp.placementApplication.id} for date ${placementApp.date.expectedArrival} and duration ${placementApp.date.duration}"
+  private fun describe(placementApp: PlacementAppAndDate) = "${placementApp.placementApplication.id} for date ${placementApp.date.expectedArrival} and duration ${placementApp.date.duration}"
 
   data class PlacementAppAndDate(
     val placementApplication: PlacementApplicationEntity,

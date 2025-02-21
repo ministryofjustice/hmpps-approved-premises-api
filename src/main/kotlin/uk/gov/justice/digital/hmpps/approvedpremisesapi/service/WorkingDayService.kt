@@ -18,13 +18,9 @@ class WorkingDayService(
     bankHolidaysProvider.getUKBankHolidays()
   }
 
-  fun getWorkingDaysCount(from: LocalDate, to: LocalDate): Int {
-    return from.getDaysUntilInclusive(to).filter { it.isWorkingDay(bankHolidays) }.size
-  }
+  fun getWorkingDaysCount(from: LocalDate, to: LocalDate): Int = from.getDaysUntilInclusive(to).filter { it.isWorkingDay(bankHolidays) }.size
 
-  fun getCompleteWorkingDaysFromNowUntil(to: LocalDate): Int {
-    return timeService.nowAsLocalDate().getDaysUntilExclusiveEnd(to).filter { it.isWorkingDay(bankHolidays) }.size
-  }
+  fun getCompleteWorkingDaysFromNowUntil(to: LocalDate): Int = timeService.nowAsLocalDate().getDaysUntilExclusiveEnd(to).filter { it.isWorkingDay(bankHolidays) }.size
 
   @SuppressWarnings("UnusedPrivateProperty")
   fun addWorkingDays(date: LocalDate, daysToAdd: Int): LocalDate {
@@ -36,9 +32,7 @@ class WorkingDayService(
     return result
   }
 
-  fun nextWorkingDay(date: LocalDate): LocalDate {
-    return date.getNextWorkingDay(bankHolidays)
-  }
+  fun nextWorkingDay(date: LocalDate): LocalDate = date.getNextWorkingDay(bankHolidays)
 }
 
 fun interface BankHolidaysProvider {
@@ -49,17 +43,15 @@ fun interface BankHolidaysProvider {
 class GovUkBankHolidaysProvider(
   private val govUKBankHolidaysApiClient: GovUKBankHolidaysApiClient,
 ) : BankHolidaysProvider {
-  override fun getUKBankHolidays() =
-    when (val govUKBankHolidaysResponse = this.govUKBankHolidaysApiClient.getUKBankHolidays()) {
-      is ClientResult.Success -> govUKBankHolidaysResponse.body.englandAndWales.events.map { it.date }
-      is ClientResult.Failure -> govUKBankHolidaysResponse.throwException()
-    }
+  override fun getUKBankHolidays() = when (val govUKBankHolidaysResponse = this.govUKBankHolidaysApiClient.getUKBankHolidays()) {
+    is ClientResult.Success -> govUKBankHolidaysResponse.body.englandAndWales.events.map { it.date }
+    is ClientResult.Failure -> govUKBankHolidaysResponse.throwException()
+  }
 }
 
-fun LocalDate.isWorkingDay(bankHolidays: List<LocalDate>) =
-  this.dayOfWeek != DayOfWeek.SATURDAY &&
-    this.dayOfWeek != DayOfWeek.SUNDAY &&
-    !bankHolidays.contains(this)
+fun LocalDate.isWorkingDay(bankHolidays: List<LocalDate>) = this.dayOfWeek != DayOfWeek.SATURDAY &&
+  this.dayOfWeek != DayOfWeek.SUNDAY &&
+  !bankHolidays.contains(this)
 
 fun LocalDate.getNextWorkingDay(bankHolidays: List<LocalDate>): LocalDate {
   var result = this.plusDays(1)

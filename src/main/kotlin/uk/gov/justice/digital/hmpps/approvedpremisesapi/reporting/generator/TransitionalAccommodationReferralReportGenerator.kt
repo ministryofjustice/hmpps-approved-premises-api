@@ -10,13 +10,14 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.util.toYesNo
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.toLocalDate
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.tryGetDetails
 
-class TransitionalAccommodationReferralReportGenerator : ReportGenerator<
-  TransitionalAccommodationReferralReportDataAndPersonInfo,
-  TransitionalAccommodationReferralReportRow,
-  TransitionalAccommodationReferralReportProperties,
-  >(
-  TransitionalAccommodationReferralReportRow::class,
-) {
+class TransitionalAccommodationReferralReportGenerator :
+  ReportGenerator<
+    TransitionalAccommodationReferralReportDataAndPersonInfo,
+    TransitionalAccommodationReferralReportRow,
+    TransitionalAccommodationReferralReportProperties,
+    >(
+    TransitionalAccommodationReferralReportRow::class,
+  ) {
 
   override val convert: TransitionalAccommodationReferralReportDataAndPersonInfo.(properties: TransitionalAccommodationReferralReportProperties) -> List<TransitionalAccommodationReferralReportRow> =
     {
@@ -66,8 +67,7 @@ class TransitionalAccommodationReferralReportGenerator : ReportGenerator<
       )
     }
 
-  override fun filter(properties: TransitionalAccommodationReferralReportProperties): (TransitionalAccommodationReferralReportDataAndPersonInfo) -> Boolean =
-    {
-      true
-    }
+  override fun filter(properties: TransitionalAccommodationReferralReportProperties): (TransitionalAccommodationReferralReportDataAndPersonInfo) -> Boolean = {
+    true
+  }
 }
