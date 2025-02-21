@@ -61,7 +61,6 @@ class Cas1PremisesTest : IntegrationTestBase() {
     lateinit var placementRequest: PlacementRequestEntity
     lateinit var user: UserEntity
     lateinit var spaceBooking: Cas1SpaceBookingEntity
-    val tierA = "TierA"
 
     @BeforeAll
     fun setupTestData() {
@@ -110,7 +109,7 @@ class Cas1PremisesTest : IntegrationTestBase() {
     fun `Returns premises summary`() {
       val (_, jwt) = givenAUser(roles = listOf(CAS1_FUTURE_MANAGER))
 
-      (1..10).forEach {
+      repeat((1..10).count()) {
         givenACas1SpaceBooking(
           crn = "X123",
           premises = premises,
@@ -118,6 +117,24 @@ class Cas1PremisesTest : IntegrationTestBase() {
           expectedDepartureDate = LocalDate.now().plusWeeks(14),
         )
       }
+
+      // non arrival, ignored
+      givenACas1SpaceBooking(
+        crn = "X123",
+        premises = premises,
+        expectedArrivalDate = LocalDate.now().minusDays(3),
+        expectedDepartureDate = LocalDate.now().plusWeeks(14),
+        nonArrivalConfirmedAt = Instant.now(),
+      )
+
+      // cancelled, ignored
+      givenACas1SpaceBooking(
+        crn = "X123",
+        premises = premises,
+        expectedArrivalDate = LocalDate.now().minusDays(3),
+        expectedDepartureDate = LocalDate.now().plusWeeks(14),
+        cancellationOccurredAt = LocalDate.now(),
+      )
 
       val beds = bedEntityFactory.produceAndPersistMultiple(5) {
         withYieldedRoom {

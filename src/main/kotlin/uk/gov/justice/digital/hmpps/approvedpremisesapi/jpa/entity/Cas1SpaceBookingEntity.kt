@@ -263,6 +263,7 @@ interface Cas1SpaceBookingRepository : JpaRepository<Cas1SpaceBookingEntity, UUI
             b.premises_id = :premisesId AND 
             b.canonical_arrival_date <= CURRENT_DATE AND
             b.canonical_departure_date > CURRENT_DATE AND
+            b.non_arrival_confirmed_at IS NULL AND 
             b.cancellation_occurred_at IS NULL
     """,
     nativeQuery = true,
