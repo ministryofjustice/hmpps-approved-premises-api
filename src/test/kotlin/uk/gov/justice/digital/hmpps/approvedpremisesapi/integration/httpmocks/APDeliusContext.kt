@@ -222,9 +222,14 @@ fun IntegrationTestBase.apDeliusContextEmptyCaseSummaryToBulkResponse(crn: Strin
   )
 }
 
-fun IntegrationTestBase.apDeliusContextAddStaffDetailResponse(staffDetail: StaffDetail) {
+fun IntegrationTestBase.apDeliusContextAddStaffDetailResponse(staffDetail: StaffDetail, username: String? = null) {
   mockSuccessfulGetCallWithJsonResponse(
     url = "/staff/${staffDetail.username}",
+    responseBody = staffDetail,
+  )
+
+  mockSuccessfulGetCallWithJsonResponse(
+    url = "/staff/$username",
     responseBody = staffDetail,
   )
 
