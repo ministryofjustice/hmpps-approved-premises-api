@@ -7,6 +7,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.AssessmentReje
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ClarificationNote
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewAppeal
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewBookingNotMade
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewCancellation
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewClarificationNote
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewPlacementApplication
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewPlacementRequestBooking
@@ -24,6 +25,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.WithdrawPlacem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.IntegrationTestBase
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAUser
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRole
+import java.time.LocalDate
 import java.util.UUID
 
 @Component
@@ -308,6 +310,33 @@ class Cas1SimpleApiClient {
       .uri("/placement-requests/$placementRequestId/booking")
       .header("Authorization", "Bearer $managerJwt")
       .bodyValue(body)
+      .exchange()
+      .expectStatus()
+      .isOk
+  }
+
+  fun bookingCancel(
+    integrationTestBase: IntegrationTestBase,
+    premisesId: UUID,
+    bookingId: UUID,
+  ) {
+    val managerJwt = integrationTestBase.givenAUser(roles = listOf(UserRole.CAS1_WORKFLOW_MANAGER)).second
+    val reason = integrationTestBase.cancellationReasonEntityFactory.produceAndPersist {
+      withServiceScope("approved-premises")
+      withIsActive(true)
+    }
+
+    integrationTestBase.webTestClient.post()
+      .uri("/premises/$premisesId/bookings/$bookingId/cancellations")
+      .header("Authorization", "Bearer $managerJwt")
+      .bodyValue(
+        NewCancellation(
+          date = LocalDate.now(),
+          reason = reason.id,
+          notes = "",
+          otherReason = "",
+        ),
+      )
       .exchange()
       .expectStatus()
       .isOk
