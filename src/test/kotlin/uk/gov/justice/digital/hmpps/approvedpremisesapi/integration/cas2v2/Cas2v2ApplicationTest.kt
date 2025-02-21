@@ -3,8 +3,6 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.cas2v2
 import com.fasterxml.jackson.core.type.TypeReference
 import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.databind.node.NullNode
-import com.github.tomakehurst.wiremock.client.WireMock
-import com.github.tomakehurst.wiremock.client.WireMock.aResponse
 import com.github.tomakehurst.wiremock.client.WireMock.get
 import com.ninjasquad.springmockk.SpykBean
 import io.mockk.clearMocks
@@ -26,13 +24,14 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PersonStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.UpdateApplicationType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.UpdateCas2v2Application
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.StaffDetailFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.Cas2v2IntegrationTestBase
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenACas2LicenceCaseAdminUser
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenACas2v2Assessor
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenACas2v2DeliusUser
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenACas2v2LicenceCaseAdminUser
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenACas2v2PomUser
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAnOffender
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.apDeliusContextAddStaffDetailResponse
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.apDeliusContextEmptyCaseSummaryToBulkResponse
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.prisonAPIMockNotFoundInmateDetailsCall
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApplicationRepository
@@ -48,8 +47,6 @@ import java.time.LocalDate
 import java.time.OffsetDateTime
 import java.util.UUID
 import kotlin.math.sign
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.StaffDetailFactory
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.apDeliusContextAddStaffDetailResponse
 
 class Cas2v2ApplicationTest : Cas2v2IntegrationTestBase() {
 
@@ -624,7 +621,7 @@ class Cas2v2ApplicationTest : Cas2v2IntegrationTestBase() {
 
     @Test
     fun `Court bail users do not need a prison code`() {
-      val staffUserDetails = StaffDetailFactory.staffDetail(deliusUsername="USERNAME")
+      val staffUserDetails = StaffDetailFactory.staffDetail(deliusUsername = "USERNAME")
       apDeliusContextAddStaffDetailResponse(staffUserDetails)
 
       givenACas2v2DeliusUser { userEntity, _ ->
