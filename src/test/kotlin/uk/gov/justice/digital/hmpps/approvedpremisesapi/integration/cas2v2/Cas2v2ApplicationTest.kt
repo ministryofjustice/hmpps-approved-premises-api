@@ -624,15 +624,13 @@ class Cas2v2ApplicationTest : Cas2v2IntegrationTestBase() {
 
     @Test
     fun `Court bail users do not need a prison code`() {
-      val username = "MY_USERNAME"
-
-      val staffUserDetails = StaffDetailFactory.staffDetail()
-      apDeliusContextAddStaffDetailResponse(staffUserDetails, username)
+      val staffUserDetails = StaffDetailFactory.staffDetail(deliusUsername="USERNAME")
+      apDeliusContextAddStaffDetailResponse(staffUserDetails)
 
       givenACas2v2DeliusUser { userEntity, _ ->
         produceAndPersistBasicApplication("CRN", userEntity)
 
-        val jwt = jwtAuthHelper.createValidDeliusAuthorisationCodeJwt(username, listOf("ROLE_CAS2_COURT_BAIL_REFERRER"))
+        val jwt = jwtAuthHelper.createValidDeliusAuthorisationCodeJwt(staffUserDetails.username!!, listOf("ROLE_CAS2_COURT_BAIL_REFERRER"))
         webTestClient
           .get()
           .uri("/cas2v2/applications")
