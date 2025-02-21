@@ -905,7 +905,7 @@ paths:
               schema:
                 type: array
                 items:
-                  $ref: 'cas1-schemas.yml#/components/schemas/Cas1SpaceBookingSummary'
+                  $ref: '_shared.yml#/components/schemas/Cas1SpaceBookingSummary'
           headers:
             X-Pagination-CurrentPage:
               $ref: '_shared.yml#/components/headers/X-Pagination-CurrentPage'

@@ -46,6 +46,8 @@ class PlacementRequestDetailTransformer(
       isWithdrawn = jpa.isWithdrawn,
       isParole = jpa.isParole,
       application = applicationTransformer.transformJpaToApi(jpa.application, personInfo),
+      spaceBookings = emptyList(),
+      legacyBooking = null,
     )
   }
 }
