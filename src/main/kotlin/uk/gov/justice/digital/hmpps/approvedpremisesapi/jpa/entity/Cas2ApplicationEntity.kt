@@ -30,6 +30,12 @@ interface Cas2ApplicationRepository : JpaRepository<Cas2ApplicationEntity, UUID>
   )
   fun findSubmittedApplicationById(id: UUID): Cas2ApplicationEntity?
 
+  @Query(
+    "SELECT a FROM Cas2ApplicationEntity a WHERE a.nomsNumber = :nomsNumber AND " +
+      "a.submittedAt IS NOT NULL",
+  )
+  fun findAllSubmittedApplicationByNomsNumber(nomsNumber: String): List<Cas2ApplicationEntity>
+
   @Query("SELECT a FROM Cas2ApplicationEntity a WHERE a.createdByUser.id = :id")
   fun findAllByCreatedByUserId(id: UUID): List<Cas2ApplicationEntity>
 
