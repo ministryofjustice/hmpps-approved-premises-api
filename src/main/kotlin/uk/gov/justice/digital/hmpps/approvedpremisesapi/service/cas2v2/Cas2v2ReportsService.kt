@@ -4,7 +4,6 @@ import org.apache.poi.ss.usermodel.WorkbookFactory
 import org.jetbrains.kotlinx.dataframe.api.toDataFrame
 import org.jetbrains.kotlinx.dataframe.io.writeExcel
 import org.springframework.stereotype.Service
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApplicationOrigin
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas2v2.Cas2v2ApplicationStatusUpdatesReportRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas2v2.Cas2v2SubmittedApplicationReportRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas2v2.Cas2v2UnsubmittedApplicationsReportRepository
@@ -50,7 +49,6 @@ class Cas2v2ReportsService(
       ApplicationStatusUpdatesReportRow(
         eventId = row.getId(),
         applicationId = row.getApplicationId(),
-        applicationOrigin = row.getApplicationOrigin() ?: ApplicationOrigin.homeDetentionCurfew,
         personCrn = row.getPersonCrn(),
         personNoms = row.getPersonNoms(),
         newStatus = row.getNewStatus(),
