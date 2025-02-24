@@ -122,7 +122,7 @@ class Cas1BookingEmailServiceTest {
 
     @SuppressWarnings("CyclomaticComplexMethod")
     @Test
-    fun `bookingMade sends email to applicant, premises email addresses when defined, when length of stay whole number of weeks`() {
+    fun `bookingMade sends email to applicant, premises and case manager email addresses when defined, when length of stay whole number of weeks`() {
       val applicant = UserEntityFactory()
         .withUnitTestControlProbationRegion()
         .withEmail(APPLICANT_EMAIL)
@@ -133,6 +133,7 @@ class Cas1BookingEmailServiceTest {
         premises,
         arrivalDate = LocalDate.of(2023, 2, 1),
         departureDate = LocalDate.of(2023, 2, 14),
+        caseManagerNotApplicant = true,
       )
 
       service.bookingMade(
@@ -141,7 +142,7 @@ class Cas1BookingEmailServiceTest {
         placementApplication = null,
       )
 
-      mockEmailNotificationService.assertEmailRequestCount(2)
+      mockEmailNotificationService.assertEmailRequestCount(3)
 
       val personalisation = mapOf(
         "apName" to PREMISES_NAME,
@@ -156,6 +157,13 @@ class Cas1BookingEmailServiceTest {
 
       mockEmailNotificationService.assertEmailRequested(
         APPLICANT_EMAIL,
+        notifyConfig.templates.bookingMade,
+        personalisation,
+        application,
+      )
+
+      mockEmailNotificationService.assertEmailRequested(
+        CASE_MANAGER_EMAIL,
         notifyConfig.templates.bookingMade,
         personalisation,
         application,

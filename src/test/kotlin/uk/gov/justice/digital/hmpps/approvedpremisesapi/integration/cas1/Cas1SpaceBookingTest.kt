@@ -235,6 +235,9 @@ class Cas1SpaceBookingTest {
           placementRequestAllocatedTo = applicant,
           assessmentAllocatedTo = applicant,
           createdByUser = applicant,
+          caseManager = cas1ApplicationUserDetailsEntityFactory.produceAndPersist {
+            withEmailAddress("caseManager@test.com")
+          },
         ) { placementRequest, application ->
           val essentialCharacteristics = listOf(
             Cas1SpaceCharacteristic.hasEnSuite,
@@ -301,9 +304,10 @@ class Cas1SpaceBookingTest {
 
           domainEventAsserter.assertDomainEventOfTypeStored(placementRequest.application.id, DomainEventType.APPROVED_PREMISES_BOOKING_MADE)
 
-          emailAsserter.assertEmailsRequestedCount(2)
+          emailAsserter.assertEmailsRequestedCount(3)
           emailAsserter.assertEmailRequested(applicant.email!!, notifyConfig.templates.bookingMade)
           emailAsserter.assertEmailRequested(premises.emailAddress!!, notifyConfig.templates.bookingMadePremises)
+          emailAsserter.assertEmailRequested(placementRequest.application.caseManagerUserDetails?.email!!, notifyConfig.templates.bookingMade)
 
           assertThat(approvedPremisesApplicationRepository.findByIdOrNull(placementRequest.application.id)!!.status)
             .isEqualTo(ApprovedPremisesApplicationStatus.PLACEMENT_ALLOCATED)

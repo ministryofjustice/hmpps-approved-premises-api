@@ -46,17 +46,15 @@ class Cas1BookingEmailService(
     val application = bookingInfo.application
     val placementApplication = bookingInfo.placementApplication
 
-    val applicationSubmittedByUser = application.createdByUser
-
     val emailPersonalisation = buildCommonPersonalisation(bookingInfo)
 
-    val applicants = setOfNotNull(
-      applicationSubmittedByUser.email,
-      placementApplication?.createdByUser?.email,
-    )
+    val recipientEmailAddresses = (
+      application.interestedPartiesEmailAddresses() +
+        setOfNotNull(placementApplication?.createdByUser?.email)
+      ).toSet()
 
     emailNotifier.sendEmails(
-      recipientEmailAddresses = applicants,
+      recipientEmailAddresses = recipientEmailAddresses,
       templateId = notifyConfig.templates.bookingMade,
       personalisation = emailPersonalisation,
       application = application,
