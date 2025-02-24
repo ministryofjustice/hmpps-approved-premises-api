@@ -25,6 +25,7 @@ import java.time.LocalDate
 import kotlin.time.Duration.Companion.seconds
 import kotlin.time.toJavaDuration
 
+@Deprecated(message = "No longer used as migrated Performance tests to hmpps-load-testing-probation")
 @Suppress("MagicNumber")
 class BookingsTimeSimulation : Simulation() {
   private val arrivalDateKey = "arrival_date"

@@ -18,6 +18,7 @@ import kotlin.time.Duration.Companion.minutes
 import kotlin.time.Duration.Companion.seconds
 import kotlin.time.toJavaDuration
 
+@Deprecated(message = "No longer used as migrated Performance tests to hmpps-load-testing-probation")
 @Suppress("MagicNumber")
 class ApplyJourneyStressSimulation : Simulation() {
   private val applicationIdKey = "application_id"
