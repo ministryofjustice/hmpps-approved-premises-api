@@ -316,7 +316,7 @@ jobs:
     environment:
       CYPRESS_SKIP_AXE: 1
     docker:
-      - image: cypress/browsers:node16.14.2-slim-chrome100-ff99-edge
+      - image: cypress/browsers:node-22.14.0-chrome-133.0.6943.53-1-ff-135.0-edge-133.0.3065.59-1
     parameters:
       environment:
         type: string
@@ -329,9 +329,6 @@ jobs:
       - run:
           name: install
           command: apt-get install xz-utils
-      - run:
-          name: Update npm
-          command: 'npm install -g npm@9.8.1'
       - node/install-packages
       - run:
           name: E2E Check - << parameters.environment >>
