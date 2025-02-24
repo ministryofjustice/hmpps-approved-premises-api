@@ -18,6 +18,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.RestrictedPers
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.RestrictedPersonSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApprovedPremisesApplicationEntityFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApprovedPremisesEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.CancellationReasonEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.Cas1SpaceBookingEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.CaseSummaryFactory
@@ -348,10 +349,13 @@ class Cas1SpaceBookingTransformerTest {
       every { personTransformer.personSummaryInfoToPersonSummary(personSummaryInfo) } returns expectedPersonSummary
       every { spaceBookingStatusTransformer.transformToSpaceBookingSummaryStatus(any()) } returns Cas1SpaceBookingSummaryStatus.departed
 
+      val premises = ApprovedPremisesEntityFactory().withDefaults().withName("The booking's premise").produce()
+
       val result = transformer.transformToSummary(
         Cas1SpaceBookingEntityFactory()
           .withId(id)
           .withCrn("the crn")
+          .withPremises(premises)
           .withCanonicalArrivalDate(LocalDate.parse("2023-12-13"))
           .withCanonicalDepartureDate(LocalDate.parse("2023-01-02"))
           .withExpectedArrivalDate(LocalDate.parse("2023-12-13"))
@@ -381,6 +385,8 @@ class Cas1SpaceBookingTransformerTest {
 
       assertThat(result.id).isEqualTo(id)
       assertThat(result.person).isEqualTo(expectedPersonSummary)
+      assertThat(result.premises.id).isEqualTo(premises.id)
+      assertThat(result.premises.name).isEqualTo(premises.name)
       assertThat(result.canonicalArrivalDate).isEqualTo(LocalDate.parse("2023-12-13"))
       assertThat(result.canonicalDepartureDate).isEqualTo(LocalDate.parse("2023-01-02"))
       assertThat(result.tier).isEqualTo("M1")
@@ -404,6 +410,8 @@ class Cas1SpaceBookingTransformerTest {
         PersonSummaryDiscriminator.restrictedPersonSummary,
       )
 
+      val premises = ApprovedPremisesEntityFactory().withDefaults().withName("the premise").produce()
+
       every { personTransformer.personSummaryInfoToPersonSummary(personSummaryInfo) } returns expectedPersonSummary
       every { spaceBookingStatusTransformer.transformToSpaceBookingSummaryStatus(any()) } returns Cas1SpaceBookingSummaryStatus.departed
 
@@ -426,11 +434,14 @@ class Cas1SpaceBookingTransformerTest {
           keyWorkerName = "the keyworker name",
           characteristicsPropertyNames = null,
         ),
+        premises,
         personSummaryInfo,
       )
 
       assertThat(result.id).isEqualTo(id)
       assertThat(result.person).isEqualTo(expectedPersonSummary)
+      assertThat(result.premises.id).isEqualTo(premises.id)
+      assertThat(result.premises.name).isEqualTo(premises.name)
       assertThat(result.canonicalArrivalDate).isEqualTo(LocalDate.parse("2023-12-13"))
       assertThat(result.canonicalDepartureDate).isEqualTo(LocalDate.parse("2023-01-02"))
       assertThat(result.tier).isEqualTo("A")
@@ -472,6 +483,7 @@ class Cas1SpaceBookingTransformerTest {
           keyWorkerName = null,
           characteristicsPropertyNames = null,
         ),
+        premises = ApprovedPremisesEntityFactory().withDefaults().produce(),
         personSummaryInfo,
       )
 

@@ -530,7 +530,7 @@ class Cas1SpaceBookingServiceTest {
 
       assertThat(result).isInstanceOf(CasResult.Success::class.java)
       result as CasResult.Success
-      assertThat(result.value.first).hasSize(3)
+      assertThat(result.value.results).hasSize(3)
 
       assertThat(pageableCaptor.captured.sort.toList()[0].property).isEqualTo(sqlSortField)
     }

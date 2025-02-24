@@ -13,6 +13,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1SpaceChara
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NamedId
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.StaffMember
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas1SpaceBookingAtPremises
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas1SpaceBookingEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas1SpaceBookingSearchResult
@@ -168,6 +169,10 @@ class Cas1SpaceBookingTransformer(
   ) = Cas1SpaceBookingSummary(
     id = spaceBooking.id,
     person = personTransformer.personSummaryInfoToPersonSummary(personSummaryInfo),
+    premises = NamedId(
+      spaceBooking.premises.id,
+      spaceBooking.premises.name,
+    ),
     canonicalArrivalDate = spaceBooking.canonicalArrivalDate,
     canonicalDepartureDate = spaceBooking.canonicalDepartureDate,
     expectedArrivalDate = spaceBooking.expectedArrivalDate,
@@ -191,10 +196,15 @@ class Cas1SpaceBookingTransformer(
 
   fun transformSearchResultToSummary(
     searchResult: Cas1SpaceBookingSearchResult,
+    premises: ApprovedPremisesEntity,
     personSummaryInfo: PersonSummaryInfoResult,
   ) = Cas1SpaceBookingSummary(
     id = searchResult.id,
     person = personTransformer.personSummaryInfoToPersonSummary(personSummaryInfo),
+    premises = NamedId(
+      id = premises.id,
+      name = premises.name,
+    ),
     canonicalArrivalDate = searchResult.canonicalArrivalDate,
     canonicalDepartureDate = searchResult.canonicalDepartureDate,
     expectedArrivalDate = searchResult.expectedArrivalDate,
