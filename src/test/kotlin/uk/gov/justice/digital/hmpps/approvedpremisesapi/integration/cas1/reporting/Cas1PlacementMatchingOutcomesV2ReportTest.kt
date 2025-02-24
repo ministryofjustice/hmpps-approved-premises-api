@@ -15,11 +15,12 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.AssessmentAcceptance
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1ApplicationTimelinessCategory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1ApplicationUserDetails
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1NewSpaceBooking
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1ReportName
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1SpaceBookingRequirements
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Gender
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewBookingNotMade
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewPlacementApplication
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewPlacementRequestBooking
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewReallocation
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PlacementApplicationDecision
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PlacementApplicationDecisionEnvelope
@@ -572,7 +573,7 @@ class Cas1PlacementMatchingOutcomesV2ReportTest : InitialiseDatabasePerClassTest
     premisesName: String = randomStringMultiCaseWithNumbers(8),
   ) {
     val managerJwt = givenAUser(
-      roles = listOf(UserRole.CAS1_WORKFLOW_MANAGER, UserRole.CAS1_CRU_MEMBER),
+      roles = listOf(UserRole.CAS1_CRU_MEMBER_FIND_AND_BOOK_BETA),
       staffDetail = StaffDetailFactory.staffDetail(deliusUsername = matcherUsername),
       probationRegion = givenAProbationRegion(apArea = givenAnApArea(name = matcherApAreaName)),
     ).second
@@ -581,17 +582,18 @@ class Cas1PlacementMatchingOutcomesV2ReportTest : InitialiseDatabasePerClassTest
       withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
       withYieldedProbationRegion { givenAProbationRegion() }
       withName(premisesName)
+      withSupportsSpaceBookings(true)
     }
 
-    cas1SimpleApiClient.bookingForPlacementRequest(
+    cas1SimpleApiClient.spaceBookingForPlacementRequest(
       integrationTestBase = this,
       placementRequestId = placementRequestId,
       managerJwt = managerJwt,
-      NewPlacementRequestBooking(
+      Cas1NewSpaceBooking(
         arrivalDate = LocalDate.now(),
-        departureDate = LocalDate.now(),
-        bedId = null,
+        departureDate = LocalDate.now().plusDays(1),
         premisesId = premises.id,
+        requirements = Cas1SpaceBookingRequirements(essentialCharacteristics = emptyList()),
       ),
     )
   }
@@ -795,9 +797,9 @@ class Cas1PlacementMatchingOutcomesV2ReportTest : InitialiseDatabasePerClassTest
     applicationId: UUID,
   ) {
     val placementRequest = getApplication(applicationId).placementRequests.first { it.isForApplicationsArrivalDate() }
-    val booking = placementRequest.booking!!
+    val booking = placementRequest.spaceBookings.first { it.isActive() }
 
-    cas1SimpleApiClient.bookingCancel(
+    cas1SimpleApiClient.spaceBookingCancel(
       integrationTestBase = this,
       premisesId = booking.premises.id,
       bookingId = booking.id,
