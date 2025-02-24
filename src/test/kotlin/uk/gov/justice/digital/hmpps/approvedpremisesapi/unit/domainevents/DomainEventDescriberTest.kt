@@ -578,6 +578,7 @@ class DomainEventDescriberTest {
             eventType = EventType.bookingChanged,
             eventDetails = BookingChangedFactory()
               .withArrivalOn(arrivalDate)
+              .withPreviousArrivalOn(null)
               .withDepartureOn(departureDate)
               .withPreviousArrivalOn(previousArrivalOn)
               .withPremises(
@@ -585,6 +586,8 @@ class DomainEventDescriberTest {
                   .withName("The Premises Name")
                   .produce(),
               )
+              .withCharacteristics(listOf(SpaceCharacteristic.hasEnSuite))
+              .withPreviousCharacteristics(null)
               .produce(),
           )
         },
@@ -601,8 +604,8 @@ class DomainEventDescriberTest {
       assertThat(contentPayload.previousExpectedArrival).isEqualTo(previousArrivalOn)
       assertThat(contentPayload.expectedDeparture).isEqualTo(departureDate)
       assertThat(contentPayload.previousExpectedDeparture).isNull()
-      assertThat(contentPayload.characteristics).isEmpty()
-      assertThat(contentPayload.previousCharacteristics).isEmpty()
+      assertThat(contentPayload.characteristics).isEqualTo(listOf(Cas1SpaceCharacteristic.hasEnSuite))
+      assertThat(contentPayload.previousCharacteristics).isNull()
     }
 
     @Test
@@ -622,6 +625,7 @@ class DomainEventDescriberTest {
             eventType = EventType.bookingChanged,
             eventDetails = BookingChangedFactory()
               .withArrivalOn(arrivalDate)
+              .withPreviousArrivalOn(null)
               .withDepartureOn(departureDate)
               .withPreviousDepartureOn(previousDepartureOn)
               .withPremises(
@@ -629,6 +633,8 @@ class DomainEventDescriberTest {
                   .withName("The Premises Name")
                   .produce(),
               )
+              .withCharacteristics(listOf(SpaceCharacteristic.hasEnSuite))
+              .withPreviousCharacteristics(null)
               .produce(),
           )
         },
@@ -645,8 +651,8 @@ class DomainEventDescriberTest {
       assertThat(contentPayload.previousExpectedArrival).isNull()
       assertThat(contentPayload.expectedDeparture).isEqualTo(departureDate)
       assertThat(contentPayload.previousExpectedDeparture).isEqualTo(previousDepartureOn)
-      assertThat(contentPayload.characteristics).isEmpty()
-      assertThat(contentPayload.previousCharacteristics).isEmpty()
+      assertThat(contentPayload.characteristics).containsExactly(Cas1SpaceCharacteristic.hasEnSuite)
+      assertThat(contentPayload.previousCharacteristics).isNull()
     }
 
     @Test

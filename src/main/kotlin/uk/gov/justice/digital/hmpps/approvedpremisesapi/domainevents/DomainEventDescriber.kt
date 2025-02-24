@@ -66,11 +66,9 @@ class DomainEventDescriber(
     else -> throw IllegalArgumentException("Cannot map ${domainEventSummary.type}, only CAS1 is currently supported")
   }
 
-  private fun convertToCas1SpaceCharacteristics(spaceCharacteristics: List<SpaceCharacteristic>?): List<Cas1SpaceCharacteristic> = spaceCharacteristics?.map { spaceCharacteristics ->
-    spaceCharacteristics.let {
-      Cas1SpaceCharacteristic.valueOf(spaceCharacteristics.value)
-    }
-  } ?: emptyList()
+  private fun convertToCas1SpaceCharacteristics(spaceCharacteristics: List<SpaceCharacteristic>?): List<Cas1SpaceCharacteristic>? = spaceCharacteristics?.map { spaceCharacteristic ->
+    Cas1SpaceCharacteristic.valueOf(spaceCharacteristic.value)
+  }
 
   private fun buildInfoRequestDescription(domainEventSummary: DomainEventSummary): Pair<String?, Cas1TimelineEventContentPayload?> {
     val event = domainEventService.getFurtherInformationRequestMadeEvent(domainEventSummary.id())
@@ -187,7 +185,7 @@ class DomainEventDescriber(
   private fun buildBookingKeyWorkerAssignedDescription(domainEventSummary: DomainEventSummary): Pair<String?, Cas1TimelineEventContentPayload?> {
     val event = domainEventService.getBookingKeyWorkerAssignedEvent(domainEventSummary.id())
     val keyWorkersDetail = event?.data?.eventDetails?.previousKeyWorkerName?.let {
-      "changes from $it to ${event?.data?.eventDetails?.assignedKeyWorkerName}"
+      "changes from $it to ${event.data.eventDetails.assignedKeyWorkerName}"
     } ?: "set to ${event?.data?.eventDetails?.assignedKeyWorkerName}"
     val description = event.describe {
       "Keyworker for placement at ${it.eventDetails.premises.name} for ${it.eventDetails.arrivalDate.toUiFormat()} to ${it.eventDetails.departureDate.toUiFormat()} $keyWorkersDetail".trimMargin()
