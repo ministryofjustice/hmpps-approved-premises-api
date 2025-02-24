@@ -11,7 +11,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas2PrisonerL
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.domainevent.HmppsDomainEvent
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.IgnorableMessageException
 import java.net.URI
-import java.util.*
+import java.util.UUID
 
 @Service
 class PrisonerLocationService(
@@ -26,6 +26,7 @@ class PrisonerLocationService(
     log.info("Handle allocation changed event ${event.occurredAt}")
   }
 
+  @SuppressWarnings("ThrowsCount")
   fun handleLocationChangedEvent(event: HmppsDomainEvent) {
     val nomsNumber = event.personReference.findNomsNumber() ?: throw IgnorableMessageException("No nomsNumber found")
     val detailUrl = event.detailUrl ?: throw IgnorableMessageException("No detail URL found")

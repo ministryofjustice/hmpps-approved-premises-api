@@ -68,7 +68,6 @@ class PrisonerLocationServiceTest {
 
   @Test
   fun `handle Location Changed Event and save new prisonerLocation to table and update previous location endDate`() {
-
     val oldPrisonerLocationWithEndDate = oldPrisonerLocation.copy(endDate = occurredAt.toOffsetDateTime())
 
     val newPrisonerLocation = Cas2PrisonerLocationEntity(
@@ -100,7 +99,6 @@ class PrisonerLocationServiceTest {
 
   @Test
   fun `handle Location Changed Event and throw error when prisoner location table is not populated with that prisoner's location`() {
-
     val applications = listOf(application)
 
     every { mockPrisonerSearchClient.getPrisoner(any()) } returns prisoner
@@ -118,7 +116,6 @@ class PrisonerLocationServiceTest {
 
   @Test
   fun `handle Location Changed Event and throw error when prisoner not found from event detailUrl`() {
-
     val applications = listOf(application)
 
     every { mockPrisonerSearchClient.getPrisoner(any()) } returns null
@@ -134,7 +131,6 @@ class PrisonerLocationServiceTest {
 
   @Test
   fun `handle Location Changed Event and throw error when there is no detailUrl in the event`() {
-
     val eventWithNoDetailUrl = HmppsDomainEvent(
       eventType = eventType,
       version = 1,
@@ -151,7 +147,6 @@ class PrisonerLocationServiceTest {
 
   @Test
   fun `handle Location Changed Event and throw error when there is no nomsNumber in the event`() {
-
     val eventWithNoNomsNumber = HmppsDomainEvent(
       eventType = eventType,
       version = 1,
