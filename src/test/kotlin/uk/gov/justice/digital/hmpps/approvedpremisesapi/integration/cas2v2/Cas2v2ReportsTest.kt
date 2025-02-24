@@ -34,7 +34,6 @@ import java.time.Instant
 import java.time.OffsetDateTime
 import java.time.ZoneOffset
 import java.util.UUID
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas2.model.Cas2Status
 
 class Cas2v2ReportsTest : Cas2v2IntegrationTestBase() {
 
