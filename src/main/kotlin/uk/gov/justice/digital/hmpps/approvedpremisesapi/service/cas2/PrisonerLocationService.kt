@@ -9,6 +9,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas2Applicati
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas2PrisonerLocationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas2PrisonerLocationRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.domainevent.HmppsDomainEvent
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.IgnorableMessageException
 import java.net.URI
 import java.util.*
 
@@ -26,30 +27,27 @@ class PrisonerLocationService(
   }
 
   fun handleLocationChangedEvent(event: HmppsDomainEvent) {
-    val nomsNumber = event.personReference.findNomsNumber() ?: throw Exception("No nomsNumber found")
-    val detailUrl = event.detailUrl ?: throw Exception("No detail URL found")
+    val nomsNumber = event.personReference.findNomsNumber() ?: throw IgnorableMessageException("No nomsNumber found")
+    val detailUrl = event.detailUrl ?: throw IgnorableMessageException("No detail URL found")
 
     val applications = applicationRepository.findAllSubmittedApplicationByNomsNumber(nomsNumber)
 
     if (applications.isEmpty()) {
-      log.info("No submitted applications found for NomsNumber $nomsNumber")
       return
     }
 
     val prisoner = prisonerSearchClient.getPrisoner(URI.create(detailUrl))
-      ?: throw Exception("No prisoner found for detailUrl $detailUrl")
+      ?: throw IgnorableMessageException("No prisoner found for detailUrl $detailUrl")
 
-    applicationRepository.findAllSubmittedApplicationByNomsNumber(nomsNumber).forEach {
+    applications.forEach {
       updatePrisonerLocation(it, prisoner, event)
     }
   }
 
   fun updatePrisonerLocation(application: Cas2ApplicationEntity, prisoner: Prisoner, event: HmppsDomainEvent) {
     val oldPrisonerLocation = prisonerLocationRepository.findPrisonerLocation(application.id)
-    if (oldPrisonerLocation != null) {
-      val oldPrisonerLocationUpdated = oldPrisonerLocation.copy(occurredAt = event.occurredAt.toOffsetDateTime())
-      prisonerLocationRepository.save(oldPrisonerLocationUpdated)
-    }
+      ?: throw IgnorableMessageException("No null prisoner location found for applicationId ${application.id}")
+    prisonerLocationRepository.save(oldPrisonerLocation.copy(endDate = event.occurredAt.toOffsetDateTime()))
     prisonerLocationRepository.save(
       Cas2PrisonerLocationEntity(
         id = UUID.randomUUID(),
