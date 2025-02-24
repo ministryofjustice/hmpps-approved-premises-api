@@ -58,13 +58,13 @@ class Cas1RequestForPlacementReportRepository(
     INNER JOIN approved_premises_applications apa ON apa.id = paa.application_id 
     INNER JOIN raw_applications_report ON raw_applications_report.application_id = paa.application_id
     INNER JOIN applications a ON a.id = apa.id
-    LEFT OUTER JOIN (
-      SELECT DISTINCT ON (application_id)
-             assessments.*
+    LEFT OUTER JOIN LATERAL (
+      SELECT assessments.*
       FROM assessments
-      WHERE reallocated_at IS NULL
-      ORDER BY application_id, created_at DESC
-    ) latest_assessment on latest_assessment.application_id = a.id
+      WHERE application_id = a.id AND reallocated_at IS NULL
+      ORDER BY created_at DESC
+      LIMIT 1
+    ) latest_assessment on TRUE -- ON condition is mandatory with LEFT OUTER JOIN, but satisfied already in lateral join subquery
     LEFT OUTER JOIN placement_requests pr ON pr.application_id = a.id AND 
                     pr.reallocated_at IS NULL AND 
                     pr.placement_application_id IS NULL
@@ -109,14 +109,17 @@ UNION ALL
     INNER JOIN raw_applications_report ON raw_applications_report.application_id = pa.application_id
     INNER JOIN placement_application_dates pa_date ON pa.id = pa_date.placement_application_id
     INNER JOIN approved_premises_applications apa ON pa.application_id = apa.id
-    LEFT OUTER JOIN (
-      SELECT DISTINCT ON (m.value)
-             d.occurred_at,
+    LEFT OUTER JOIN LATERAL (
+      SELECT d.occurred_at,
              m.value as placement_application_id
       FROM domain_events d
       INNER JOIN domain_events_metadata m ON m.domain_event_id = d.id AND m.name = 'CAS1_PLACEMENT_APPLICATION_ID'
-      WHERE d.type = 'APPROVED_PREMISES_PLACEMENT_APPLICATION_WITHDRAWN'
-    ) withdrawn_event ON withdrawn_event.placement_application_id = CAST(pa.id as text)
+      WHERE
+        d.application_id = pa.application_id AND
+      	d.type = 'APPROVED_PREMISES_PLACEMENT_APPLICATION_WITHDRAWN' 
+      	AND m.value = CAST(pa.id as text)
+      LIMIT 1
+    ) withdrawn_event ON TRUE -- ON condition is mandatory with LEFT OUTER JOIN, but satisfied already in lateral join subquery
     
   WHERE
     pa.submitted_at IS NOT NULL AND
