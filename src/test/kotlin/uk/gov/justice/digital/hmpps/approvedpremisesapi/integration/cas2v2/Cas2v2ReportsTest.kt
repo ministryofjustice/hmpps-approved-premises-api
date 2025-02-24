@@ -34,6 +34,7 @@ import java.time.Instant
 import java.time.OffsetDateTime
 import java.time.ZoneOffset
 import java.util.UUID
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas2.model.Cas2Status
 
 class Cas2v2ReportsTest : Cas2v2IntegrationTestBase() {
 
@@ -493,6 +494,7 @@ class Cas2v2ReportsTest : Cas2v2IntegrationTestBase() {
         withApplicationSchema(applicationSchema)
         withCreatedByUser(user2)
         withCrn("CRN_2")
+        withApplicationOrigin(ApplicationOrigin.prisonBail)
         withNomsNumber("NOMS_2")
         withCreatedAt(newer.atOffset(ZoneOffset.ofHoursMinutes(0, 0)))
         withData("{}")
@@ -521,6 +523,7 @@ class Cas2v2ReportsTest : Cas2v2IntegrationTestBase() {
         UnsubmittedApplicationsReportRow(
           applicationId = application2.id.toString(),
           personCrn = application2.crn,
+          applicationOrigin = ApplicationOrigin.prisonBail,
           personNoms = application2.nomsNumber.toString(),
           startedAt = application2.createdAt.toString().split(".").first(),
           startedBy = application2.createdByUser.username,
@@ -607,6 +610,7 @@ class Cas2v2ReportsTest : Cas2v2IntegrationTestBase() {
 
     repeat(40) { index ->
       val application = allApplications[index % allApplications.count()]
+
       domainEventFactory.produceAndPersist {
         withId(UUID.randomUUID())
         withType(domainEventType)
