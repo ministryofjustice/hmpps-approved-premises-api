@@ -137,8 +137,7 @@ LEFT JOIN domain_events_metadata latest_appeal_assessment_ap_type_metadata ON la
 LEFT JOIN users as latest_appeal_assessment_assessor on latest_appeal_assessment_assessor.id = latest_appeal_assessment.allocated_to_user_id
 LEFT JOIN ap_areas as ap_area on ap_area.id = apa.ap_area_id
 
-WHERE application.service = 'approved-premises' AND
-      application.submitted_at IS NOT NULL
+WHERE application.submitted_at IS NOT NULL
     """
 
     const val QUERY =
