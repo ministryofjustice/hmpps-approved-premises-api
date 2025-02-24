@@ -62,7 +62,7 @@ class Cas1RequestForPlacementReportRepository(
       SELECT assessments.*
       FROM assessments
       WHERE application_id = a.id AND reallocated_at IS NULL
-      ORDER BY application_id, created_at DESC
+      ORDER BY created_at DESC
       LIMIT 1
     ) latest_assessment on TRUE -- ON condition is mandatory with LEFT OUTER JOIN, but satisfied already in lateral join subquery
     LEFT OUTER JOIN placement_requests pr ON pr.application_id = a.id AND 

@@ -90,7 +90,7 @@ LEFT OUTER JOIN LATERAL (
   SELECT assessments.*
   FROM assessments
   WHERE reallocated_at IS NULL AND application_id = application.id
-  ORDER BY application_id, created_at ASC
+  ORDER BY created_at ASC
   LIMIT 1
 ) initial_assessment ON TRUE -- ON condition is mandatory with LEFT OUTER JOIN, but satisfied already in lateral join subquery
 
@@ -107,7 +107,7 @@ LEFT OUTER JOIN LATERAL (
   SELECT assessment_clarification_notes.*
   FROM assessment_clarification_notes
   WHERE assessment_id = initial_assessment.id
-  ORDER BY assessment_id, created_at ASC
+  ORDER BY created_at ASC
   LIMIT 1
 ) initial_assessment_clarification_notes ON TRUE -- ON condition is mandatory with LEFT OUTER JOIN, but satisfied already in lateral join subquery
 
@@ -115,7 +115,7 @@ LEFT OUTER JOIN LATERAL (
   SELECT appeals.*
   FROM appeals
   WHERE application_id = application.id
-  ORDER BY application_id, created_at DESC
+  ORDER BY created_at DESC
   LIMIT 1
 ) latest_appeal ON TRUE -- ON condition is mandatory with LEFT OUTER JOIN, but satisfied already in lateral join subquery
 
@@ -123,7 +123,7 @@ LEFT OUTER JOIN LATERAL (
   SELECT assess.*
   FROM assessments assess INNER JOIN approved_premises_assessments apa_assess ON assess.id = apa_assess.assessment_id
   WHERE assess.application_id = application.id AND assess.reallocated_at IS NULL AND apa_assess.created_from_appeal is TRUE
-  ORDER by assess.application_id, assess.created_at DESC
+  ORDER by assess.created_at DESC
   LIMIT 1
 ) latest_appeal_assessment ON TRUE -- ON condition is mandatory with LEFT OUTER JOIN, but satisfied already in lateral join subquery
 
