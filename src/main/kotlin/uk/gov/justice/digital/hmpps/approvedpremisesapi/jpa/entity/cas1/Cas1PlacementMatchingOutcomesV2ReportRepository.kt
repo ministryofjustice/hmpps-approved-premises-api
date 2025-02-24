@@ -56,9 +56,8 @@ class Cas1PlacementMatchingOutcomesV2ReportRepository(
         )
       )
       
-      LEFT OUTER JOIN (
-         SELECT DISTINCT ON (evt.application_id, m.value)
-                 evt.id,
+      LEFT OUTER JOIN LATERAL (
+         SELECT  evt.id,
                  evt.type,
                  evt.data,
                  evt.application_id,
@@ -66,16 +65,15 @@ class Cas1PlacementMatchingOutcomesV2ReportRepository(
                  m.value as placement_request_id
          FROM domain_events evt
          INNER JOIN domain_events_metadata m ON m.domain_event_id = evt.id AND m.name = 'CAS1_PLACEMENT_REQUEST_ID'
-         WHERE 
-         type IN ('APPROVED_PREMISES_BOOKING_MADE','APPROVED_PREMISES_BOOKING_NOT_MADE')
-         ORDER BY evt.application_id, m.value, created_at asc
-      ) first_match_attempt_event on 
-        first_match_attempt_event.application_id = pr.application_id AND 
-        first_match_attempt_event.placement_request_id = CAST(pr.id as TEXT)
+         WHERE type IN ('APPROVED_PREMISES_BOOKING_MADE','APPROVED_PREMISES_BOOKING_NOT_MADE') AND
+         evt.application_id = pr.application_id AND 
+         m.value = CAST(pr.id as TEXT)
+         ORDER BY evt.application_id, m.value, created_at ASC
+         LIMIT 1
+      ) first_match_attempt_event ON TRUE -- ON condition is mandatory with LEFT OUTER JOIN, but satisfied already in lateral join subquery
       
-      LEFT OUTER JOIN (
-         SELECT DISTINCT ON (evt.application_id, m.value)
-                 evt.id,
+      LEFT OUTER JOIN LATERAL (
+         SELECT  evt.id,
                  evt.type,
                  evt.data,
                  evt.application_id,
@@ -83,46 +81,45 @@ class Cas1PlacementMatchingOutcomesV2ReportRepository(
                  m.value as placement_request_id
          FROM domain_events evt
          INNER JOIN domain_events_metadata m ON m.domain_event_id = evt.id AND m.name = 'CAS1_PLACEMENT_REQUEST_ID'
-         WHERE
-         type IN ('APPROVED_PREMISES_BOOKING_MADE')
-         ORDER BY evt.application_id, m.value, created_at asc
-      ) first_match_event on 
-        first_match_event.application_id = pr.application_id AND 
-        first_match_event.placement_request_id = CAST(pr.id as TEXT)  
+         WHERE evt.type IN ('APPROVED_PREMISES_BOOKING_MADE') AND
+         evt.application_id = pr.application_id AND 
+         m.value = CAST(pr.id as TEXT)
+         ORDER BY evt.application_id, m.value, created_at ASC
+         LIMIT 1
+      ) first_match_event ON TRUE -- ON condition is mandatory with LEFT OUTER JOIN, but satisfied already in lateral join subquery
       
-      LEFT OUTER JOIN (
-         SELECT DISTINCT ON (evt.application_id, m.value)
-                 evt.id,
-                 evt.type,
-                 evt.data,
-                 evt.application_id,
-                 evt.occurred_at,
-                 m.value as placement_request_id
+      LEFT OUTER JOIN LATERAL (
+         SELECT  evt.id,
+	             evt.type,
+	             evt.data,
+	             evt.application_id,
+	             evt.occurred_at,
+	             m.value as placement_request_id
          FROM domain_events evt
          INNER JOIN domain_events_metadata m ON m.domain_event_id = evt.id AND m.name = 'CAS1_PLACEMENT_REQUEST_ID'
-         WHERE 
-         type IN ('APPROVED_PREMISES_BOOKING_MADE','APPROVED_PREMISES_BOOKING_NOT_MADE')
+         WHERE evt.type IN ('APPROVED_PREMISES_BOOKING_MADE','APPROVED_PREMISES_BOOKING_NOT_MADE') AND
+         evt.application_id = pr.application_id AND 
+         m.value = CAST(pr.id as TEXT)
          ORDER BY evt.application_id, m.value, created_at desc
-      ) latest_match_attempt_event on 
-        latest_match_attempt_event.application_id = pr.application_id AND 
-        latest_match_attempt_event.placement_request_id = CAST(pr.id as TEXT)
-        
-      LEFT OUTER JOIN (
-         SELECT DISTINCT ON (evt.application_id, m.value)
-                 evt.id,
-                 evt.type,
-                 evt.data,
-                 evt.application_id,
-                 evt.occurred_at,
-                 m.value as placement_request_id
+         LIMIT 1
+      ) latest_match_attempt_event ON TRUE -- ON condition is mandatory with LEFT OUTER JOIN, but satisfied already in lateral join subquery
+                
+      LEFT OUTER JOIN LATERAL (
+         SELECT evt.id,
+                evt.type,
+                evt.data,
+                evt.application_id,
+                evt.occurred_at,
+                m.value as placement_request_id
          FROM domain_events evt
          INNER JOIN domain_events_metadata m ON m.domain_event_id = evt.id AND m.name = 'CAS1_PLACEMENT_REQUEST_ID'
-         WHERE
-         type IN ('APPROVED_PREMISES_BOOKING_MADE')
+         WHERE evt.type IN ('APPROVED_PREMISES_BOOKING_MADE') AND
+         evt.application_id = pr.application_id AND
+         m.value = CAST(pr.id as TEXT)
          ORDER BY evt.application_id, m.value, created_at desc
-      ) latest_match_event on 
-        latest_match_event.application_id = pr.application_id AND 
-        latest_match_event.placement_request_id = CAST(pr.id as TEXT)
+         LIMIT 1
+      ) latest_match_event on true -- ON condition is mandatory with LEFT OUTER JOIN, but lateral join already does all required 'joining' in the subquery
+    
     """
   }
 
