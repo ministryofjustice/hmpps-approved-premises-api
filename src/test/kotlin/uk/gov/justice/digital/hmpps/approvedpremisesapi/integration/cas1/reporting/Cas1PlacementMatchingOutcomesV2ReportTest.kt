@@ -15,11 +15,12 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.AssessmentAcceptance
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1ApplicationTimelinessCategory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1ApplicationUserDetails
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1NewSpaceBooking
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1ReportName
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1SpaceBookingRequirements
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Gender
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewBookingNotMade
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewPlacementApplication
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewPlacementRequestBooking
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewReallocation
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PlacementApplicationDecision
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PlacementApplicationDecisionEnvelope
@@ -59,8 +60,10 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserQualification
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRole
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.asCaseDetail
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomStringMultiCaseWithNumbers
 import java.io.StringReader
 import java.time.LocalDate
+import java.time.LocalDateTime
 import java.util.UUID
 
 class Cas1PlacementMatchingOutcomesV2ReportTest : InitialiseDatabasePerClassTestBase() {
@@ -84,6 +87,7 @@ class Cas1PlacementMatchingOutcomesV2ReportTest : InitialiseDatabasePerClassTest
   val standardRFPNoDecisionAfterReportingMonth = StandardRFPNoDecisionAfterReportingMonth()
   val standardRFPWithdrawn = StandardRFPWithdrawn()
   val standardRFPNotMatchedAndThenMatched = StandardRFPNotMatchedAndThenMatched()
+  val standardRFPMultipleTransfers = StandardRFPMultipleTransfers()
   val placementAppMatched = PlacementAppMatched()
   val placementAppBeforeReportingMonth = PlacementAppBeforeReportingMonth()
   val placementAppAfterReportingMonth = PlacementAppAfterReportingMonth()
@@ -115,6 +119,7 @@ class Cas1PlacementMatchingOutcomesV2ReportTest : InitialiseDatabasePerClassTest
     standardRFPNoDecisionAfterReportingMonth.createRequestForPlacement()
     standardRFPWithdrawn.createRequestForPlacement()
     standardRFPNotMatchedAndThenMatched.createRequestForPlacement()
+    standardRFPMultipleTransfers.createRequestForPlacement()
     placementAppMatched.createRequestForPlacement()
     placementAppBeforeReportingMonth.createRequestForPlacement()
     placementAppAfterReportingMonth.createRequestForPlacement()
@@ -170,7 +175,7 @@ class Cas1PlacementMatchingOutcomesV2ReportTest : InitialiseDatabasePerClassTest
             .convertTo<PlacementMatchingOutcomeReportRow>(ExcessiveColumns.Remove)
             .toList()
 
-          assertThat(actual.size).isEqualTo(5)
+          assertThat(actual.size).isEqualTo(6)
 
           standardRFPNoDecision.assertRow(actual[0])
         }
@@ -209,13 +214,14 @@ class Cas1PlacementMatchingOutcomesV2ReportTest : InitialiseDatabasePerClassTest
             .convertTo<PlacementMatchingOutcomeReportRow>(ExcessiveColumns.Remove)
             .toList()
 
-          assertThat(actual.size).isEqualTo(5)
+          assertThat(actual.size).isEqualTo(6)
 
           standardRFPNoDecision.assertRow(actual[0])
           standardRFPMatched.assertRow(actual[1])
           standardRFPNotMatched.assertRow(actual[2])
           standardRFPNotMatchedAndThenMatched.assertRow(actual[3])
-          placementAppMatched.assertRow(actual[4])
+          standardRFPMultipleTransfers.assertRow(actual[4])
+          placementAppMatched.assertRow(actual[5])
         }
     }
   }
@@ -231,7 +237,7 @@ class Cas1PlacementMatchingOutcomesV2ReportTest : InitialiseDatabasePerClassTest
     }
 
     fun assertRow(row: PlacementMatchingOutcomeReportRow) {
-      assertThat(row.match_request_id).isEqualTo(application.placementRequests[0].id.toString())
+      assertThat(row.placement_request_id).isEqualTo(application.placementRequests[0].id.toString())
       assertThat(row.matcher_cru).isNull()
       assertThat(row.matcher_username).isNull()
       assertThat(row.match_outcome).isNull()
@@ -239,6 +245,12 @@ class Cas1PlacementMatchingOutcomesV2ReportTest : InitialiseDatabasePerClassTest
       assertThat(row.request_for_placement_id).matches("placement_request:[a-f0-9-]+")
       assertThat(row.request_for_placement_type).isEqualTo("STANDARD")
       assertThat(row.crn).matches("StandardRFPNotAllocated")
+
+      assertThat(row.first_match_attempt_date_time).isNull()
+      assertThat(row.first_successful_match_attempt_date_time).isNull()
+      assertThat(row.first_successful_match_attempt_premises_name).isNull()
+      assertThat(row.last_successful_match_attempt_date_time).isNull()
+      assertThat(row.last_successful_match_attempt_premises_name).isNull()
     }
   }
 
@@ -278,15 +290,19 @@ class Cas1PlacementMatchingOutcomesV2ReportTest : InitialiseDatabasePerClassTest
         crn = "StandardRFPMatched",
         arrivalDateOnApplication = LocalDate.of(REPORT_YEAR, REPORT_MONTH, 2),
       )
+
+      clock.setNow(LocalDateTime.of(2030, 1, 2, 3, 4, 5))
+
       createBooking(
         placementRequestId = application.placementRequests[0].id,
         matcherUsername = "MATCHER1",
         matcherApAreaName = "MATCHER1CRU",
+        premisesName = "StandardRFPMatched Premise",
       )
     }
 
     fun assertRow(row: PlacementMatchingOutcomeReportRow) {
-      assertThat(row.match_request_id).isEqualTo(application.placementRequests[0].id.toString())
+      assertThat(row.placement_request_id).isEqualTo(application.placementRequests[0].id.toString())
       assertThat(row.matcher_cru).isEqualTo("MATCHER1CRU")
       assertThat(row.matcher_username).isEqualTo("MATCHER1")
       assertThat(row.match_outcome).isEqualTo("Placed")
@@ -295,6 +311,12 @@ class Cas1PlacementMatchingOutcomesV2ReportTest : InitialiseDatabasePerClassTest
       assertThat(row.request_for_placement_type).isEqualTo("STANDARD")
       assertThat(row.requested_arrival_date).isEqualTo("2020-02-02")
       assertThat(row.crn).matches("StandardRFPMatched")
+
+      assertThat(row.first_match_attempt_date_time).isEqualTo("2030-01-02T03:04:05Z")
+      assertThat(row.first_successful_match_attempt_date_time).isEqualTo("2030-01-02T03:04:05Z")
+      assertThat(row.first_successful_match_attempt_premises_name).isEqualTo("StandardRFPMatched Premise")
+      assertThat(row.last_successful_match_attempt_date_time).isEqualTo("2030-01-02T03:04:05Z")
+      assertThat(row.last_successful_match_attempt_premises_name).isEqualTo("StandardRFPMatched Premise")
     }
   }
 
@@ -306,6 +328,9 @@ class Cas1PlacementMatchingOutcomesV2ReportTest : InitialiseDatabasePerClassTest
         crn = "StandardRFPNotMatched",
         arrivalDateOnApplication = LocalDate.of(REPORT_YEAR, REPORT_MONTH, 3),
       )
+
+      clock.setNow(LocalDateTime.of(2028, 1, 2, 3, 4, 5))
+
       createBookingNotMade(
         placementRequestId = application.placementRequests[0].id,
         matcherUsername = "MATCHER2",
@@ -314,7 +339,7 @@ class Cas1PlacementMatchingOutcomesV2ReportTest : InitialiseDatabasePerClassTest
     }
 
     fun assertRow(row: PlacementMatchingOutcomeReportRow) {
-      assertThat(row.match_request_id).isEqualTo(application.placementRequests[0].id.toString())
+      assertThat(row.placement_request_id).isEqualTo(application.placementRequests[0].id.toString())
       assertThat(row.matcher_cru).isEqualTo("MATCHER2CRU")
       assertThat(row.matcher_username).isEqualTo("MATCHER2")
       assertThat(row.match_outcome).isEqualTo("Not matched")
@@ -323,6 +348,12 @@ class Cas1PlacementMatchingOutcomesV2ReportTest : InitialiseDatabasePerClassTest
       assertThat(row.request_for_placement_type).isEqualTo("STANDARD")
       assertThat(row.requested_arrival_date).isEqualTo("2020-02-03")
       assertThat(row.crn).matches("StandardRFPNotMatched")
+
+      assertThat(row.first_match_attempt_date_time).isEqualTo("2028-01-02T03:04:05Z")
+      assertThat(row.first_successful_match_attempt_date_time).isNull()
+      assertThat(row.first_successful_match_attempt_premises_name).isNull()
+      assertThat(row.last_successful_match_attempt_date_time).isNull()
+      assertThat(row.last_successful_match_attempt_premises_name).isNull()
     }
   }
 
@@ -334,20 +365,26 @@ class Cas1PlacementMatchingOutcomesV2ReportTest : InitialiseDatabasePerClassTest
         crn = "StandardRFPMNotMatchedAndThenMatched",
         arrivalDateOnApplication = LocalDate.of(REPORT_YEAR, REPORT_MONTH, 4),
       )
+      clock.setNow(LocalDateTime.of(2028, 2, 3, 4, 5, 7))
+
       createBookingNotMade(
         placementRequestId = application.placementRequests[0].id,
         matcherUsername = "MATCHER3",
         matcherApAreaName = "MATCHER3CRU",
       )
+
+      clock.setNow(LocalDateTime.of(2030, 2, 3, 4, 5, 6))
+
       createBooking(
         placementRequestId = application.placementRequests[0].id,
         matcherUsername = "MATCHER13",
         matcherApAreaName = "MATCHER13CRU",
+        premisesName = "StandardRFPNotMatchedAndThenMatched premise",
       )
     }
 
     fun assertRow(row: PlacementMatchingOutcomeReportRow) {
-      assertThat(row.match_request_id).isEqualTo(application.placementRequests[0].id.toString())
+      assertThat(row.placement_request_id).isEqualTo(application.placementRequests[0].id.toString())
       assertThat(row.matcher_cru).isEqualTo("MATCHER13CRU")
       assertThat(row.matcher_username).isEqualTo("MATCHER13")
       assertThat(row.match_outcome).isEqualTo("Placed")
@@ -356,6 +393,71 @@ class Cas1PlacementMatchingOutcomesV2ReportTest : InitialiseDatabasePerClassTest
       assertThat(row.request_for_placement_type).isEqualTo("STANDARD")
       assertThat(row.requested_arrival_date).isEqualTo("2020-02-04")
       assertThat(row.crn).matches("StandardRFPMNotMatchedAndThenMatched")
+
+      assertThat(row.first_match_attempt_date_time).isEqualTo("2028-02-03T04:05:07Z")
+      assertThat(row.first_successful_match_attempt_date_time).isEqualTo("2030-02-03T04:05:06Z")
+      assertThat(row.first_successful_match_attempt_premises_name).isEqualTo("StandardRFPNotMatchedAndThenMatched premise")
+      assertThat(row.last_successful_match_attempt_date_time).isEqualTo("2030-02-03T04:05:06Z")
+      assertThat(row.last_successful_match_attempt_premises_name).isEqualTo("StandardRFPNotMatchedAndThenMatched premise")
+    }
+  }
+
+  inner class StandardRFPMultipleTransfers {
+    lateinit var application: ApprovedPremisesApplicationEntity
+
+    fun createRequestForPlacement() {
+      application = createSubmitAndAssessedApplication(
+        crn = "StandardRFPMultipleTransfers",
+        arrivalDateOnApplication = LocalDate.of(REPORT_YEAR, REPORT_MONTH, 4),
+      )
+      clock.setNow(LocalDateTime.of(2028, 2, 3, 4, 5, 7))
+
+      createBooking(
+        placementRequestId = application.placementRequests[0].id,
+        matcherUsername = "MATCHER4",
+        matcherApAreaName = "MATCHER4CRU",
+        premisesName = "StandardRFPMultipleTransfers premise 1",
+      )
+
+      cancelBooking(application.id)
+
+      clock.setNow(LocalDateTime.of(2030, 2, 3, 4, 5, 6))
+
+      createBooking(
+        placementRequestId = application.placementRequests[0].id,
+        matcherUsername = "MATCHER5",
+        matcherApAreaName = "MATCHER5CRU",
+        premisesName = "StandardRFPMultipleTransfers premise 2",
+      )
+
+      cancelBooking(application.id)
+
+      clock.setNow(LocalDateTime.of(2032, 1, 2, 3, 4, 5))
+
+      createBooking(
+        placementRequestId = application.placementRequests[0].id,
+        matcherUsername = "MATCHER6",
+        matcherApAreaName = "MATCHER6CRU",
+        premisesName = "StandardRFPMultipleTransfers premise 3",
+      )
+    }
+
+    fun assertRow(row: PlacementMatchingOutcomeReportRow) {
+      assertThat(row.placement_request_id).isEqualTo(application.placementRequests[0].id.toString())
+      assertThat(row.matcher_cru).isEqualTo("MATCHER6CRU")
+      assertThat(row.matcher_username).isEqualTo("MATCHER6")
+      assertThat(row.match_outcome).isEqualTo("Placed")
+
+      assertThat(row.request_for_placement_id).matches("placement_request:[a-f0-9-]+")
+      assertThat(row.request_for_placement_type).isEqualTo("STANDARD")
+      assertThat(row.requested_arrival_date).isEqualTo("2020-02-04")
+      assertThat(row.crn).matches("StandardRFPMultipleTransfers")
+
+      assertThat(row.first_match_attempt_date_time).isEqualTo("2028-02-03T04:05:07Z")
+      assertThat(row.first_successful_match_attempt_date_time).isEqualTo("2028-02-03T04:05:07Z")
+      assertThat(row.first_successful_match_attempt_premises_name).isEqualTo("StandardRFPMultipleTransfers premise 1")
+      assertThat(row.last_successful_match_attempt_date_time).isEqualTo("2032-01-02T03:04:05Z")
+      assertThat(row.last_successful_match_attempt_premises_name).isEqualTo("StandardRFPMultipleTransfers premise 3")
     }
   }
 
@@ -373,29 +475,38 @@ class Cas1PlacementMatchingOutcomesV2ReportTest : InitialiseDatabasePerClassTest
         placementType = PlacementType.rotl,
         placementDates = listOf(
           PlacementDates(
-            expectedArrival = LocalDate.of(REPORT_YEAR, REPORT_MONTH, 5),
+            expectedArrival = LocalDate.of(REPORT_YEAR, REPORT_MONTH, 6),
             duration = 5,
           ),
         ),
       )
 
+      clock.setNow(LocalDateTime.of(2031, 8, 7, 6, 5, 6))
+
       createBooking(
         placementRequestId = application.placementRequests[0].id,
-        matcherUsername = "MATCHER4",
-        matcherApAreaName = "MATCHER4CRU",
+        matcherUsername = "MATCHER10",
+        matcherApAreaName = "MATCHER10CRU",
+        premisesName = "PlacementAppMatched Premise",
       )
     }
 
     fun assertRow(row: PlacementMatchingOutcomeReportRow) {
-      assertThat(row.match_request_id).isEqualTo(application.placementRequests[0].id.toString())
-      assertThat(row.matcher_cru).isEqualTo("MATCHER4CRU")
-      assertThat(row.matcher_username).isEqualTo("MATCHER4")
+      assertThat(row.placement_request_id).isEqualTo(application.placementRequests[0].id.toString())
+      assertThat(row.matcher_cru).isEqualTo("MATCHER10CRU")
+      assertThat(row.matcher_username).isEqualTo("MATCHER10")
       assertThat(row.match_outcome).isEqualTo("Placed")
 
       assertThat(row.request_for_placement_id).matches("placement_application:[a-f0-9-]+")
       assertThat(row.request_for_placement_type).isEqualTo("ROTL")
-      assertThat(row.requested_arrival_date).isEqualTo("2020-02-05")
+      assertThat(row.requested_arrival_date).isEqualTo("2020-02-06")
       assertThat(row.crn).matches("ROTLRFPMultiDates")
+
+      assertThat(row.first_match_attempt_date_time).isEqualTo("2031-08-07T06:05:06Z")
+      assertThat(row.first_successful_match_attempt_date_time).isEqualTo("2031-08-07T06:05:06Z")
+      assertThat(row.first_successful_match_attempt_premises_name).isEqualTo("PlacementAppMatched Premise")
+      assertThat(row.last_successful_match_attempt_date_time).isEqualTo("2031-08-07T06:05:06Z")
+      assertThat(row.last_successful_match_attempt_premises_name).isEqualTo("PlacementAppMatched Premise")
     }
   }
 
@@ -421,8 +532,8 @@ class Cas1PlacementMatchingOutcomesV2ReportTest : InitialiseDatabasePerClassTest
 
       createBooking(
         placementRequestId = application.placementRequests[0].id,
-        matcherUsername = "MATCHER5",
-        matcherApAreaName = "MATCHER5CRU",
+        matcherUsername = "MATCHER11",
+        matcherApAreaName = "MATCHER11CRU",
       )
     }
   }
@@ -449,19 +560,20 @@ class Cas1PlacementMatchingOutcomesV2ReportTest : InitialiseDatabasePerClassTest
 
       createBooking(
         placementRequestId = application.placementRequests[0].id,
-        matcherUsername = "MATCHER6",
-        matcherApAreaName = "MATCHER6CRU",
+        matcherUsername = "MATCHER12",
+        matcherApAreaName = "MATCHER12CRU",
       )
     }
   }
 
   private fun createBooking(
     placementRequestId: UUID,
-    matcherApAreaName: String,
     matcherUsername: String,
+    matcherApAreaName: String,
+    premisesName: String = randomStringMultiCaseWithNumbers(8),
   ) {
     val managerJwt = givenAUser(
-      roles = listOf(UserRole.CAS1_WORKFLOW_MANAGER, UserRole.CAS1_CRU_MEMBER),
+      roles = listOf(UserRole.CAS1_CRU_MEMBER_FIND_AND_BOOK_BETA),
       staffDetail = StaffDetailFactory.staffDetail(deliusUsername = matcherUsername),
       probationRegion = givenAProbationRegion(apArea = givenAnApArea(name = matcherApAreaName)),
     ).second
@@ -469,17 +581,19 @@ class Cas1PlacementMatchingOutcomesV2ReportTest : InitialiseDatabasePerClassTest
     val premises = approvedPremisesEntityFactory.produceAndPersist {
       withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
       withYieldedProbationRegion { givenAProbationRegion() }
+      withName(premisesName)
+      withSupportsSpaceBookings(true)
     }
 
-    cas1SimpleApiClient.bookingForPlacementRequest(
+    cas1SimpleApiClient.spaceBookingForPlacementRequest(
       integrationTestBase = this,
       placementRequestId = placementRequestId,
       managerJwt = managerJwt,
-      NewPlacementRequestBooking(
+      Cas1NewSpaceBooking(
         arrivalDate = LocalDate.now(),
-        departureDate = LocalDate.now(),
-        bedId = null,
+        departureDate = LocalDate.now().plusDays(1),
         premisesId = premises.id,
+        requirements = Cas1SpaceBookingRequirements(essentialCharacteristics = emptyList()),
       ),
     )
   }
@@ -679,6 +793,19 @@ class Cas1PlacementMatchingOutcomesV2ReportTest : InitialiseDatabasePerClassTest
     )
   }
 
+  private fun cancelBooking(
+    applicationId: UUID,
+  ) {
+    val placementRequest = getApplication(applicationId).placementRequests.first { it.isForApplicationsArrivalDate() }
+    val booking = placementRequest.spaceBookings.first { it.isActive() }
+
+    cas1SimpleApiClient.spaceBookingCancel(
+      integrationTestBase = this,
+      premisesId = booking.premises.id,
+      bookingId = booking.id,
+    )
+  }
+
   private fun getLatestAssessment(applicationId: UUID) = getApplication(applicationId)
     .assessments.filter { it.reallocatedAt == null }.maxByOrNull { it.createdAt }!!
 
@@ -692,7 +819,7 @@ class Cas1PlacementMatchingOutcomesV2ReportTest : InitialiseDatabasePerClassTest
 
   @SuppressWarnings("ConstructorParameterNaming")
   data class PlacementMatchingOutcomeReportRow(
-    val match_request_id: String?,
+    val placement_request_id: String?,
     val matcher_cru: String?,
     val matcher_username: String?,
     val match_outcome: String?,
@@ -700,5 +827,10 @@ class Cas1PlacementMatchingOutcomesV2ReportTest : InitialiseDatabasePerClassTest
     val request_for_placement_id: String?,
     val request_for_placement_type: String?,
     val requested_arrival_date: String?,
+    val first_match_attempt_date_time: String?,
+    val first_successful_match_attempt_date_time: String?,
+    val first_successful_match_attempt_premises_name: String?,
+    val last_successful_match_attempt_date_time: String?,
+    val last_successful_match_attempt_premises_name: String?,
   )
 }

@@ -50,6 +50,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.WithdrawalC
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.WithdrawalTriggeredBySeedJob
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.WithdrawalTriggeredByUser
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.toLocalDateTime
+import java.time.Clock
 import java.time.LocalDate
 import java.time.OffsetDateTime
 import java.util.UUID
@@ -74,6 +75,7 @@ class BookingService(
   private val deliusService: DeliusService,
   private val cas1BookingDomainEventService: Cas1BookingDomainEventService,
   private val cas1ApplicationStatusService: Cas1ApplicationStatusService,
+  private val clock: Clock,
 ) {
   fun updateBooking(bookingEntity: BookingEntity): BookingEntity = bookingRepository.save(bookingEntity)
 
@@ -171,7 +173,7 @@ class BookingService(
         return@validated fieldValidationError
       }
 
-      val bookingCreatedAt = OffsetDateTime.now()
+      val bookingCreatedAt = OffsetDateTime.now(clock)
 
       val booking = bookingRepository.save(
         BookingEntity(
