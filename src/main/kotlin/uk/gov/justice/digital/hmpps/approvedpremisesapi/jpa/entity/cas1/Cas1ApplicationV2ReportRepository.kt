@@ -69,6 +69,7 @@ SELECT DISTINCT ON (application.submitted_at, application.id)
   to_char(withdrawal_event.occurred_at, 'YYYY-MM-DD"T"HH24:MI:SS"Z"') AS application_withdrawal_date,
   withdrawal_event.data -> 'eventDetails' ->> 'withdrawalReason' AS application_withdrawal_reason
   
+
 FROM approved_premises_applications apa
 
 INNER JOIN applications application on application.id = apa.id
@@ -85,13 +86,13 @@ LEFT OUTER JOIN domain_events_metadata reason_for_short_notice_other_metadata ON
 LEFT JOIN domain_events withdrawal_event on withdrawal_event.type = 'APPROVED_PREMISES_APPLICATION_WITHDRAWN'
   AND application.id = withdrawal_event.application_id
  
-LEFT JOIN (
-  SELECT DISTINCT ON (application_id)
-    assessments.*
+LEFT OUTER JOIN LATERAL (
+  SELECT assessments.*
   FROM assessments
-  WHERE reallocated_at IS NULL
-  ORDER BY application_id, created_at asc
-) initial_assessment ON initial_assessment.application_id = application.id
+  WHERE reallocated_at IS NULL AND application_id = application.id
+  ORDER BY application_id, created_at ASC
+  LIMIT 1
+) initial_assessment ON TRUE -- ON condition is mandatory with LEFT OUTER JOIN, but satisfied already in lateral join subquery
 
 LEFT JOIN users initial_assessor ON initial_assessor.id = initial_assessment.allocated_to_user_id
 LEFT JOIN ap_areas initial_assessor_area ON initial_assessor_area.id = initial_assessor.ap_area_id
@@ -102,27 +103,30 @@ LEFT JOIN domain_events AS initial_assessment_event ON
 LEFT JOIN domain_events_metadata initial_assessment_ap_type_metadata on initial_assessment_ap_type_metadata.domain_event_id = initial_assessment_event.id 
   AND initial_assessment_ap_type_metadata.name = 'CAS1_REQUESTED_AP_TYPE' 
  
-LEFT JOIN (
-  SELECT DISTINCT ON (assessment_id)
-    assessment_clarification_notes.*
+LEFT OUTER JOIN LATERAL (
+  SELECT assessment_clarification_notes.*
   FROM assessment_clarification_notes
+  WHERE assessment_id = initial_assessment.id
   ORDER BY assessment_id, created_at ASC
-) initial_assessment_clarification_notes ON initial_assessment_clarification_notes.assessment_id = initial_assessment.id
+  LIMIT 1
+) initial_assessment_clarification_notes ON TRUE -- ON condition is mandatory with LEFT OUTER JOIN, but satisfied already in lateral join subquery
 
-LEFT JOIN (
-  SELECT DISTINCT ON (application_id)
-    appeals.*
+LEFT OUTER JOIN LATERAL (
+  SELECT appeals.*
   FROM appeals
+  WHERE application_id = application.id
   ORDER BY application_id, created_at DESC
-) latest_appeal ON latest_appeal.application_id = application.id
+  LIMIT 1
+) latest_appeal ON TRUE -- ON condition is mandatory with LEFT OUTER JOIN, but satisfied already in lateral join subquery
 
-LEFT JOIN (
-  SELECT DISTINCT ON (application_id)
-    assess.*
+LEFT OUTER JOIN LATERAL (
+  SELECT assess.*
   FROM assessments assess INNER JOIN approved_premises_assessments apa_assess ON assess.id = apa_assess.assessment_id
-  WHERE assess.reallocated_at IS NULL AND apa_assess.created_from_appeal is TRUE
+  WHERE assess.application_id = application.id AND assess.reallocated_at IS NULL AND apa_assess.created_from_appeal is TRUE
   ORDER by assess.application_id, assess.created_at DESC
-) latest_appeal_assessment ON latest_appeal_assessment.application_id = application.id
+  LIMIT 1
+) latest_appeal_assessment ON TRUE -- ON condition is mandatory with LEFT OUTER JOIN, but satisfied already in lateral join subquery
+
 
 LEFT JOIN domain_events as latest_appeal_assessment_event ON 
   latest_appeal_assessment_event.type = 'APPROVED_PREMISES_APPLICATION_ASSESSED' AND
