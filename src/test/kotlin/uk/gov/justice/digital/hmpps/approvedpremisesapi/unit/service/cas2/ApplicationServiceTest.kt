@@ -42,6 +42,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas2.DomainEvent
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas2.JsonSchemaService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas2.OffenderService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas2.UserAccessService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.unit.util.assertThatCasResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.PageCriteria
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.PaginationConfig
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.getPageableOrAllPages
@@ -283,7 +284,10 @@ class ApplicationServiceTest {
 
       every { mockApplicationRepository.findByIdOrNull(applicationId) } returns null
 
-      assertThat(applicationService.getApplicationForUser(applicationId, user) is AuthorisableActionResult.NotFound).isTrue
+      assertThatCasResult(applicationService.getApplicationForUser(applicationId, user)).isNotFound(
+        "Application",
+        applicationId,
+      )
     }
 
     @Test
@@ -300,7 +304,10 @@ class ApplicationServiceTest {
           .withAbandonedAt(OffsetDateTime.now())
           .produce()
 
-      assertThat(applicationService.getApplicationForUser(applicationId, user) is AuthorisableActionResult.NotFound).isTrue
+      assertThatCasResult(applicationService.getApplicationForUser(applicationId, user)).isNotFound(
+        "Application",
+        applicationId,
+      )
     }
 
     @Test
@@ -319,7 +326,7 @@ class ApplicationServiceTest {
 
       every { mockUserAccessService.userCanViewApplication(any(), any()) } returns false
 
-      assertThat(applicationService.getApplicationForUser(applicationId, user) is AuthorisableActionResult.Unauthorised).isTrue
+      assertThatCasResult(applicationService.getApplicationForUser(applicationId, user)).isUnauthorised()
     }
 
     @Test
@@ -351,10 +358,7 @@ class ApplicationServiceTest {
 
       val result = applicationService.getApplicationForUser(applicationId, userEntity)
 
-      assertThat(result is AuthorisableActionResult.Success).isTrue
-      result as AuthorisableActionResult.Success
-
-      assertThat(result.entity).isEqualTo(applicationEntity)
+      assertThatCasResult(result).isSuccess().hasValueEqualTo(applicationEntity)
     }
   }
 
@@ -690,12 +694,12 @@ class ApplicationServiceTest {
 
       every { mockApplicationRepository.findByIdOrNull(applicationId) } returns null
 
-      assertThat(
+      assertThatCasResult(
         applicationService.abandonApplication(
           applicationId = applicationId,
           user = user,
-        ) is AuthorisableActionResult.NotFound,
-      ).isTrue
+        ),
+      ).isNotFound("Application", applicationId)
     }
 
     @Test
@@ -713,12 +717,12 @@ class ApplicationServiceTest {
       every { mockApplicationRepository.findByIdOrNull(applicationId) } returns
         application
 
-      assertThat(
+      assertThatCasResult(
         applicationService.abandonApplication(
           applicationId = applicationId,
           user = user,
-        ) is AuthorisableActionResult.Unauthorised,
-      ).isTrue
+        ),
+      ).isUnauthorised()
     }
 
     @Test
@@ -745,13 +749,7 @@ class ApplicationServiceTest {
         user = user,
       )
 
-      assertThat(result is AuthorisableActionResult.Success).isTrue
-      result as AuthorisableActionResult.Success
-
-      assertThat(result.entity is ValidatableActionResult.ConflictError).isTrue
-      val validatableActionResult = result.entity as ValidatableActionResult.ConflictError
-
-      assertThat(validatableActionResult.message).isEqualTo("This application has already been submitted")
+      assertThatCasResult(result).isConflictError().hasMessage("This application has already been submitted")
     }
 
     @Test
@@ -777,11 +775,7 @@ class ApplicationServiceTest {
         applicationId = applicationId,
         user = user,
       )
-
-      assertThat(result is AuthorisableActionResult.Success).isTrue
-      result as AuthorisableActionResult.Success
-
-      assertThat(result.entity is ValidatableActionResult.Success).isTrue
+      assertThatCasResult(result).isSuccess()
     }
 
     @Test
@@ -817,15 +811,7 @@ class ApplicationServiceTest {
         user = user,
       )
 
-      assertThat(result is AuthorisableActionResult.Success).isTrue
-      result as AuthorisableActionResult.Success
-
-      assertThat(result.entity is ValidatableActionResult.Success).isTrue
-      val validatableActionResult = result.entity as ValidatableActionResult.Success
-
-      val cas2Application = validatableActionResult.entity
-
-      assertThat(cas2Application.data).isNull()
+      assertThatCasResult(result).isSuccess().with { assertThat(it.data.isNullOrEmpty()) }
     }
   }
 

@@ -25,6 +25,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PaginationMetadata
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.ValidationErrors
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.validated
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.AuthorisableActionResult
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.CasResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.ValidatableActionResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.EmailNotificationService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.UpstreamApiException
@@ -97,23 +98,23 @@ class ApplicationService(
     )
   }
 
-  fun getApplicationForUser(applicationId: UUID, user: NomisUserEntity): AuthorisableActionResult<Cas2ApplicationEntity> {
+  fun getApplicationForUser(applicationId: UUID, user: NomisUserEntity): CasResult<Cas2ApplicationEntity> {
     val applicationEntity = applicationRepository.findByIdOrNull(applicationId)
-      ?: return AuthorisableActionResult.NotFound()
+      ?: return CasResult.NotFound("Application", applicationId.toString())
 
     if (applicationEntity.abandonedAt != null) {
-      return AuthorisableActionResult.NotFound()
+      return CasResult.NotFound("Application", applicationId.toString())
     }
 
     val canAccess = userAccessService.userCanViewApplication(user, applicationEntity)
 
     return if (canAccess) {
-      AuthorisableActionResult.Success(
+      CasResult.Success(
         jsonSchemaService.checkSchemaOutdated
           (applicationEntity),
       )
     } else {
-      AuthorisableActionResult.Unauthorised()
+      CasResult.Unauthorised()
     }
   }
 
@@ -192,24 +193,20 @@ class ApplicationService(
   }
 
   @SuppressWarnings("ReturnCount")
-  fun abandonApplication(applicationId: UUID, user: NomisUserEntity): AuthorisableActionResult<ValidatableActionResult<Cas2ApplicationEntity>> {
+  fun abandonApplication(applicationId: UUID, user: NomisUserEntity): CasResult<Cas2ApplicationEntity> {
     val application = applicationRepository.findByIdOrNull(applicationId)
-      ?: return AuthorisableActionResult.NotFound()
+      ?: return CasResult.NotFound("Application", applicationId.toString())
 
     if (application.createdByUser != user) {
-      return AuthorisableActionResult.Unauthorised()
+      return CasResult.Unauthorised()
     }
 
     if (application.submittedAt != null) {
-      return AuthorisableActionResult.Success(
-        ValidatableActionResult.ConflictError(applicationId, "This application has already been submitted"),
-      )
+      return CasResult.ConflictError(applicationId, "This application has already been submitted")
     }
 
     if (application.abandonedAt != null) {
-      return AuthorisableActionResult.Success(
-        ValidatableActionResult.Success(application),
-      )
+      return CasResult.Success(application)
     }
 
     application.apply {
@@ -219,9 +216,7 @@ class ApplicationService(
 
     val savedApplication = applicationRepository.save(application)
 
-    return AuthorisableActionResult.Success(
-      ValidatableActionResult.Success(savedApplication),
-    )
+    return CasResult.Success(savedApplication)
   }
 
   @SuppressWarnings("ReturnCount")
