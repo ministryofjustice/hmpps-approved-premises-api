@@ -20,6 +20,7 @@ fun IntegrationTestBase.givenACas1SpaceBooking(
   criteria: List<CharacteristicEntity>? = null,
   placementRequest: PlacementRequestEntity? = null,
   expectedArrivalDate: LocalDate = LocalDate.now(),
+  canonicalArrivalDate: LocalDate = expectedArrivalDate,
   expectedDepartureDate: LocalDate = LocalDate.now(),
   nonArrivalConfirmedAt: Instant? = null,
   cancellationOccurredAt: LocalDate? = null,
@@ -39,7 +40,7 @@ fun IntegrationTestBase.givenACas1SpaceBooking(
   return cas1SpaceBookingEntityFactory.produceAndPersist {
     withCrn(crn)
     withExpectedArrivalDate(expectedArrivalDate)
-    withCanonicalArrivalDate(expectedArrivalDate)
+    withCanonicalArrivalDate(canonicalArrivalDate)
     withExpectedDepartureDate(expectedDepartureDate)
     withCanonicalDepartureDate(expectedDepartureDate)
     withPlacementRequest(placementRequestToUse)
