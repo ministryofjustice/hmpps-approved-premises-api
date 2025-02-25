@@ -26,7 +26,7 @@ interface Cas2v2SubmittedApplicationReportRepository : JpaRepository<DomainEvent
         applications.application_origin as applicationOrigin
       FROM domain_events events
       LEFT JOIN cas_2_v2_applications applications ON events.application_id = applications.id      
-      WHERE events.type = 'CAS2_APPLICATION_SUBMITTED'
+      WHERE events.type = 'CAS2V2_APPLICATION_SUBMITTED'
         AND events.occurred_at  > CURRENT_DATE - 365
       ORDER BY submittedAt DESC;
     """,

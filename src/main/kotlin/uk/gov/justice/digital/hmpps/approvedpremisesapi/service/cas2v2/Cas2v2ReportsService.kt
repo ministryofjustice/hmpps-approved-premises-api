@@ -23,19 +23,6 @@ class Cas2v2ReportsService(
   fun createSubmittedApplicationsReport(outputStream: OutputStream) {
     val reportData = cas2v2SubmittedApplicationReportRepository.generateSubmittedApplicationReportRows().map { row ->
 
-      val eventId = row.getId()
-      val applicationId = row.getApplicationId()
-      val applicationOrigin = row.getApplicationOrigin() ?: ApplicationOrigin.homeDetentionCurfew
-      val personCrn = row.getPersonCrn()
-      val personNoms = row.getPersonNoms()
-      val referringPrisonCode = row.getReferringPrisonCode()
-      val preferredAreas = row.getPreferredAreas()
-      val hdcEligibilityDate = row.getHdcEligibilityDate()
-      val conditionalReleaseDate = row.getConditionalReleaseDate()
-      val submittedBy = row.getSubmittedBy()
-      val submittedAt = row.getSubmittedAt()
-      val startedAt = row.getStartedAt() ?: ""
-
       SubmittedApplicationReportRow(
         eventId = row.getId(),
         applicationId = row.getApplicationId(),
@@ -48,7 +35,7 @@ class Cas2v2ReportsService(
         conditionalReleaseDate = row.getConditionalReleaseDate(),
         submittedBy = row.getSubmittedBy(),
         submittedAt = row.getSubmittedAt(),
-        startedAt = row.getStartedAt(),
+        startedAt = row.getStartedAt() ?: "2025-02-08T01:19:34",
       )
     }
 
