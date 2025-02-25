@@ -1,8 +1,9 @@
 #!/bin/bash
 
 if [ -z "$1" ] || ! [[ "$1" =~ ^(dev|test|preprod|prod)$ ]] || [ -z "$2" ]; then
+  echo "Upload files or a directory of files to a pod in a target environment"
   echo "Usage:"
-  echo "pod_upload_file dev|test|preprod|prod file_path"
+  echo "pod_upload_file dev|test|preprod|prod file_path/dir_path"
   exit 1
 fi
 
