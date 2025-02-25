@@ -118,23 +118,24 @@ class Cas1SpaceBookingController(
       ),
     )
 
-    val (searchResults, metadata) = extractEntityFromCasResult(result)
+    val searchResultsContainer = extractEntityFromCasResult(result)
 
     val user = userService.getUserForRequest()
     val offenderSummaries = offenderService.getPersonSummaryInfoResults(
-      crns = searchResults.map { it.crn }.toSet(),
+      crns = searchResultsContainer.results.map { it.crn }.toSet(),
       limitedAccessStrategy = user.cas1LimitedAccessStrategy(),
     )
 
-    val summaries = searchResults.map {
+    val summaries = searchResultsContainer.results.map {
       spaceBookingTransformer.transformSearchResultToSummary(
-        it,
-        offenderSummaries.forCrn(it.crn),
+        searchResult = it,
+        premises = searchResultsContainer.premises,
+        personSummaryInfo = offenderSummaries.forCrn(it.crn),
       )
     }
 
     return ResponseEntity.ok()
-      .headers(metadata?.toHeaders())
+      .headers(searchResultsContainer.paginationMetadata?.toHeaders())
       .body(summaries)
   }
 

@@ -8,6 +8,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1AssignKeyW
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1NonArrival
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1SpaceBookingResidency
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1SpaceBookingSummarySortField
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.CancellationReasonRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.CancellationReasonRepository.Constants.CAS1_RELATED_APP_WITHDRAWN_ID
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.CancellationReasonRepository.Constants.CAS1_RELATED_PLACEMENT_APP_WITHDRAWN_ID
@@ -422,8 +423,9 @@ class Cas1SpaceBookingService(
     premisesId: UUID,
     filterCriteria: SpaceBookingFilterCriteria,
     pageCriteria: PageCriteria<Cas1SpaceBookingSummarySortField>,
-  ): CasResult<Pair<List<Cas1SpaceBookingSearchResult>, PaginationMetadata?>> {
-    if (cas1PremisesService.findPremiseById(premisesId) == null) return CasResult.NotFound("premises", premisesId.toString())
+  ): CasResult<SearchResultContainer> {
+    val premises = cas1PremisesService.findPremiseById(premisesId)
+      ?: return CasResult.NotFound("premises", premisesId.toString())
 
     val page = cas1SpaceBookingRepository.search(
       filterCriteria.residency?.name,
@@ -442,12 +444,19 @@ class Cas1SpaceBookingService(
     )
 
     return CasResult.Success(
-      Pair(
-        page.toList(),
-        getMetadata(page, pageCriteria),
+      SearchResultContainer(
+        results = page.toList(),
+        paginationMetadata = getMetadata(page, pageCriteria),
+        premises = premises,
       ),
     )
   }
+
+  data class SearchResultContainer(
+    val results: List<Cas1SpaceBookingSearchResult>,
+    val paginationMetadata: PaginationMetadata?,
+    val premises: ApprovedPremisesEntity,
+  )
 
   fun getBooking(premisesId: UUID, bookingId: UUID): CasResult<Cas1SpaceBookingEntity> {
     if (!cas1PremisesService.premiseExistsById(premisesId)) return CasResult.NotFound("premises", premisesId.toString())

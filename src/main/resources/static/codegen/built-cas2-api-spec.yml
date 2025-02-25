@@ -5586,6 +5586,8 @@ components:
           format: uuid
         person:
           $ref: "#/components/schemas/PersonSummary"
+        premises:
+          $ref: "#/components/schemas/NamedId"
         canonicalArrivalDate:
           description: actual arrival date or, if not known, the expected arrival date
           type: string
@@ -5628,6 +5630,7 @@ components:
       required:
         - id
         - person
+        - premises
         - canonicalArrivalDate
         - canonicalDepartureDate
         - characteristics
