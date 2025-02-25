@@ -31,6 +31,7 @@ class Cas1ReportsController(
     val TIMESTAMP_FORMAT: DateTimeFormatter = DateTimeFormatter.ofPattern("uuuuMMdd_HHmm")
   }
 
+  @SuppressWarnings("CyclomaticComplexMethod")
   override fun reportsReportNameGet(
     xServiceName: ServiceName,
     reportName: Cas1ReportName,
@@ -125,6 +126,19 @@ class Cas1ReportsController(
       ) { outputStream ->
         userAccessService.ensureCurrentUserHasPermission(UserPermission.CAS1_REPORTS_VIEW_WITH_PII)
         cas1ReportService.createPlacementMatchingOutcomesV2Report(monthSpecificReportParams, includePii = true, outputStream)
+      }
+      Cas1ReportName.placements -> generateStreamingResponse(
+        contentType = ContentType.CSV,
+        fileName = createCas1ReportName("placements", year, month, ContentType.CSV),
+      ) { outputStream ->
+        cas1ReportService.createPlacementReport(monthSpecificReportParams, includePii = false, outputStream)
+      }
+      Cas1ReportName.placementsWithPii -> generateStreamingResponse(
+        contentType = ContentType.CSV,
+        fileName = createCas1ReportName("placements-with-pii", year, month, ContentType.CSV),
+      ) { outputStream ->
+        userAccessService.ensureCurrentUserHasPermission(UserPermission.CAS1_REPORTS_VIEW_WITH_PII)
+        cas1ReportService.createPlacementReport(monthSpecificReportParams, includePii = true, outputStream)
       }
     }
   }
