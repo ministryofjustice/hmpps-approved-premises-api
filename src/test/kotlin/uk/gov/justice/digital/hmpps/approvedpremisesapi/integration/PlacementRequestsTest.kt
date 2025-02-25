@@ -102,15 +102,6 @@ class PlacementRequestsTest : IntegrationTestBase() {
       realPlacementRequestRepository.save(placementRequest)
     }
 
-    private fun createSpaceBooking(placementRequest: PlacementRequestEntity): Cas1SpaceBookingEntity {
-      val spaceBooking = givenACas1SpaceBooking(
-        crn = placementRequest.application.crn,
-        placementRequest = placementRequest,
-      )
-      placementRequest.spaceBookings.add(spaceBooking)
-      return spaceBooking
-    }
-
     private fun createBookingNotMadeRecord(placementRequest: PlacementRequestEntity) {
       placementRequest.bookingNotMades = mutableListOf(
         bookingNotMadeFactory.produceAndPersist {
@@ -251,7 +242,10 @@ class PlacementRequestsTest : IntegrationTestBase() {
             crn = matchedOffender.otherIds.crn,
             isWithdrawn = true,
           ) { placementRequest, _ ->
-            createSpaceBooking(placementRequest)
+            givenACas1SpaceBooking(
+              crn = placementRequest.application.crn,
+              placementRequest = placementRequest,
+            )
           }
 
           val (placementRequestWithSpaceBooking) = givenAPlacementRequest(
@@ -260,7 +254,10 @@ class PlacementRequestsTest : IntegrationTestBase() {
             createdByUser = user,
             crn = matchedOffender.otherIds.crn,
           ) { placementRequest, _ ->
-            createSpaceBooking(placementRequest)
+            givenACas1SpaceBooking(
+              crn = placementRequest.application.crn,
+              placementRequest = placementRequest,
+            )
           }
 
           val (placementRequestPreviouslyUnableToMatchNowHasSpaceBooking) = givenAPlacementRequest(
@@ -270,7 +267,10 @@ class PlacementRequestsTest : IntegrationTestBase() {
             crn = matchedOffender.otherIds.crn,
           ) { placementRequest, _ ->
             createBookingNotMadeRecord(placementRequest)
-            createSpaceBooking(placementRequest)
+            givenACas1SpaceBooking(
+              crn = placementRequest.application.crn,
+              placementRequest = placementRequest,
+            )
           }
 
           val result = webTestClient.get()
@@ -350,7 +350,10 @@ class PlacementRequestsTest : IntegrationTestBase() {
             crn = unableToMatchOffender.otherIds.crn,
           ) { placementRequest, _ ->
             createBookingNotMadeRecord(placementRequest)
-            createSpaceBooking(placementRequest)
+            givenACas1SpaceBooking(
+              crn = placementRequest.application.crn,
+              placementRequest = placementRequest,
+            )
           }
 
           val (hasCancelledSpaceBookingPlacementRequest) = givenAPlacementRequest(
@@ -360,7 +363,10 @@ class PlacementRequestsTest : IntegrationTestBase() {
             crn = unableToMatchOffender.otherIds.crn,
           ) { placementRequest, _ ->
             createBookingNotMadeRecord(placementRequest)
-            val spaceBooking = createSpaceBooking(placementRequest)
+            val spaceBooking = givenACas1SpaceBooking(
+              crn = placementRequest.application.crn,
+              placementRequest = placementRequest,
+            )
             spaceBooking.cancellationOccurredAt = LocalDate.now()
             cas1SpaceBookingRepository.save(spaceBooking)
           }
