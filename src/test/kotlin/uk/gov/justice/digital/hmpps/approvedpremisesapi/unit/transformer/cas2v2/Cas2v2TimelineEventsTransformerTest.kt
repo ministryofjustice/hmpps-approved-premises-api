@@ -95,28 +95,28 @@ class Cas2v2TimelineEventsTransformerTest {
       Assertions.assertThat(transformation).isEqualTo(
         listOf(
           Cas2TimelineEvent(
-            type = TimelineEventType.cas2StatusUpdate,
+            type = TimelineEventType.cas2v2StatusUpdate,
             occurredAt = statusWithDetailCreatedAt.toInstant(),
             label = statusUpdateWithDetailsEntity.label,
             createdByName = statusUpdateWithDetailsEntity.assessor.name,
             body = "first detail, second detail",
           ),
           Cas2TimelineEvent(
-            type = TimelineEventType.cas2StatusUpdate,
+            type = TimelineEventType.cas2v2StatusUpdate,
             occurredAt = statusCreatedAt.toInstant(),
             label = statusUpdateEntity.label,
             createdByName = statusUpdateEntity.assessor.name,
             body = null,
           ),
           Cas2TimelineEvent(
-            type = TimelineEventType.cas2Note,
+            type = TimelineEventType.cas2v2Note,
             occurredAt = noteCreatedAt.toInstant(),
             label = "Note",
             createdByName = note.getUser().name,
             body = "a comment",
           ),
           Cas2TimelineEvent(
-            type = TimelineEventType.cas2ApplicationSubmitted,
+            type = TimelineEventType.cas2v2ApplicationSubmitted,
             occurredAt = submittedAt.toInstant(),
             label = "Application submitted",
             createdByName = "Some Nomis User",

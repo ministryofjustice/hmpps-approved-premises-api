@@ -277,9 +277,13 @@ components:
       enum:
         - applications.cas2.application.submitted
         - applications.cas2.application.status-updated
+        - applications.cas2v2.application.submitted
+        - applications.cas2v2.application.status-updated
       x-enum-varnames:
         - applicationSubmitted
         - applicationStatusUpdated
+        - cas2v2ApplicationSubmitted
+        - cas2V2ApplicationStatusUpdated
     Problem:
       type: object
       properties:

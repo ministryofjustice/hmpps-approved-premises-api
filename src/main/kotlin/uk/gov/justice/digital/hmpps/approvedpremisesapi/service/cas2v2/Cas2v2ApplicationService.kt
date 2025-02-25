@@ -296,7 +296,7 @@ class Cas2v2ApplicationService(
 
     application = cas2v2ApplicationRepository.save(application)
 
-    createCas2ApplicationSubmittedEvent(application)
+    createCas2v2ApplicationSubmittedEvent(application)
 
     createAssessment(application)
 
@@ -305,7 +305,7 @@ class Cas2v2ApplicationService(
     return CasResult.Success(application)
   }
 
-  fun createCas2ApplicationSubmittedEvent(application: Cas2v2ApplicationEntity) {
+  fun createCas2v2ApplicationSubmittedEvent(application: Cas2v2ApplicationEntity) {
     val domainEventId = UUID.randomUUID()
     val eventOccurredAt = application.submittedAt ?: OffsetDateTime.now()
 
@@ -319,7 +319,7 @@ class Cas2v2ApplicationService(
         data = Cas2ApplicationSubmittedEvent(
           id = domainEventId,
           timestamp = eventOccurredAt.toInstant(),
-          eventType = EventType.applicationSubmitted,
+          eventType = EventType.cas2v2ApplicationSubmitted,
           eventDetails = Cas2ApplicationSubmittedEventDetails(
             applicationId = application.id,
             applicationUrl = applicationUrlTemplate

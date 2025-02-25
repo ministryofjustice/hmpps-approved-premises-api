@@ -4,6 +4,7 @@ import org.apache.poi.ss.usermodel.WorkbookFactory
 import org.jetbrains.kotlinx.dataframe.api.toDataFrame
 import org.jetbrains.kotlinx.dataframe.io.writeExcel
 import org.springframework.stereotype.Service
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApplicationOrigin
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas2v2.Cas2v2ApplicationStatusUpdatesReportRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas2v2.Cas2v2SubmittedApplicationReportRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas2v2.Cas2v2UnsubmittedApplicationsReportRepository
@@ -21,10 +22,24 @@ class Cas2v2ReportsService(
 
   fun createSubmittedApplicationsReport(outputStream: OutputStream) {
     val reportData = cas2v2SubmittedApplicationReportRepository.generateSubmittedApplicationReportRows().map { row ->
+
+      val eventId = row.getId()
+      val applicationId = row.getApplicationId()
+      val applicationOrigin = row.getApplicationOrigin() ?: ApplicationOrigin.homeDetentionCurfew
+      val personCrn = row.getPersonCrn()
+      val personNoms = row.getPersonNoms()
+      val referringPrisonCode = row.getReferringPrisonCode()
+      val preferredAreas = row.getPreferredAreas()
+      val hdcEligibilityDate = row.getHdcEligibilityDate()
+      val conditionalReleaseDate = row.getConditionalReleaseDate()
+      val submittedBy = row.getSubmittedBy()
+      val submittedAt = row.getSubmittedAt()
+      val startedAt = row.getStartedAt() ?: ""
+
       SubmittedApplicationReportRow(
         eventId = row.getId(),
         applicationId = row.getApplicationId(),
-        applicationOrigin = row.getApplicationOrigin(),
+        applicationOrigin = row.getApplicationOrigin() ?: ApplicationOrigin.homeDetentionCurfew,
         personCrn = row.getPersonCrn(),
         personNoms = row.getPersonNoms(),
         referringPrisonCode = row.getReferringPrisonCode(),

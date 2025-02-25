@@ -23,9 +23,9 @@ class Cas2v2TimelineEventsTransformer {
   private fun addNoteEvents(jpa: Cas2v2ApplicationEntity, timelineEvents: MutableList<Cas2TimelineEvent>) {
     jpa.notes?.forEach {
       timelineEvents += Cas2TimelineEvent(
-        type = TimelineEventType.cas2Note,
+        type = TimelineEventType.cas2v2Note,
         occurredAt = it.createdAt.toInstant(),
-        label = "Note",
+        label = "CAS2v2 Note",
         createdByName = it.getUser().name,
         body = it.body,
       )
@@ -35,7 +35,7 @@ class Cas2v2TimelineEventsTransformer {
   private fun addStatusUpdateEvents(jpa: Cas2v2ApplicationEntity, timelineEvents: MutableList<Cas2TimelineEvent>) {
     jpa.statusUpdates?.forEach {
       timelineEvents += Cas2TimelineEvent(
-        type = TimelineEventType.cas2StatusUpdate,
+        type = TimelineEventType.cas2v2StatusUpdate,
         occurredAt = it.createdAt.toInstant(),
         label = it.label,
         createdByName = it.assessor.name,
@@ -47,9 +47,9 @@ class Cas2v2TimelineEventsTransformer {
   private fun addSubmittedEvent(jpa: Cas2v2ApplicationEntity, timelineEvents: MutableList<Cas2TimelineEvent>) {
     if (jpa.submittedAt !== null) {
       val submittedAtEvent = Cas2TimelineEvent(
-        type = TimelineEventType.cas2ApplicationSubmitted,
+        type = TimelineEventType.cas2v2ApplicationSubmitted,
         occurredAt = jpa.submittedAt?.toInstant()!!,
-        label = "Application submitted",
+        label = "CAS2v2 Application submitted",
         createdByName = jpa.createdByUser.name,
       )
       timelineEvents += submittedAtEvent

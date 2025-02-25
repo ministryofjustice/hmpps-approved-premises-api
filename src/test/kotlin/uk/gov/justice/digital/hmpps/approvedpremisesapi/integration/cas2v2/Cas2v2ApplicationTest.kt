@@ -1471,7 +1471,7 @@ class Cas2v2ApplicationTest : Cas2v2IntegrationTestBase() {
             Assertions.assertThat(responseBody.assessment!!.statusUpdates).isEqualTo(emptyList<Cas2v2StatusUpdate>())
 
             Assertions.assertThat(responseBody.timelineEvents!!.map { event -> event.label })
-              .isEqualTo(listOf("Application submitted"))
+              .isEqualTo(listOf("CAS2v2 Application submitted"))
           }
         }
       }
@@ -1571,7 +1571,7 @@ class Cas2v2ApplicationTest : Cas2v2IntegrationTestBase() {
               Assertions.assertThat(responseBody.assessment!!.statusUpdates).isEqualTo(emptyList<Cas2v2StatusUpdate>())
 
               Assertions.assertThat(responseBody.timelineEvents!!.map { event -> event.label })
-                .isEqualTo(listOf("Application submitted"))
+                .isEqualTo(listOf("CAS2v2 Application submitted"))
             }
           }
         }

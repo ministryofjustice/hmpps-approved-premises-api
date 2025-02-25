@@ -3865,6 +3865,9 @@ components:
         - cas2_application_submitted
         - cas2_note
         - cas2_status_update
+        - cas2v2_application_submitted
+        - cas2v2_note
+        - cas2v2_status_update
     TriggerSourceType:
       type: string
       enum:
