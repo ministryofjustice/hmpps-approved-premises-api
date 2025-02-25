@@ -219,4 +219,5 @@ refresh-inmate-details-cache:
   logging-enabled: false
 
 feature-flags:
+  cas2-sqs-listener-enabled: true
   cas1-disable-overbooking-summary: false
