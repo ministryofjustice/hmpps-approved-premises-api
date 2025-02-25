@@ -5,7 +5,7 @@ import org.springframework.beans.factory.annotation.Autowired
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.OffenceDetailsFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.RiskToTheIndividualFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.Cas2v2IntegrationTestBase
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenACas2PomUser
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenACas2v2PomUser
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAnOffender
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.apDeliusContextEmptyCaseSummaryToBulkResponse
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.apOASysContextMockSuccessfulOffenceDetailsCall
@@ -59,7 +59,7 @@ class Cas2v2PersonOASysRiskToSelfTest : Cas2v2IntegrationTestBase() {
 
   @Test
   fun `Getting cas2v2 Risk To Self for a CRN that does not exist returns 404`() {
-    givenACas2PomUser { userEntity, jwt ->
+    givenACas2v2PomUser(roles = listOf("ROLE_CAS2_COURT_BAIL_REFERRER")) { _, jwt ->
       val crn = "CRN123"
 
       apDeliusContextEmptyCaseSummaryToBulkResponse(crn)
@@ -75,7 +75,7 @@ class Cas2v2PersonOASysRiskToSelfTest : Cas2v2IntegrationTestBase() {
 
   @Test
   fun `Getting cas2v2 Risk to Self for a CRN returns OK with correct body`() {
-    givenACas2PomUser { userEntity, jwt ->
+    givenACas2v2PomUser(roles = listOf("ROLE_CAS2_COURT_BAIL_REFERRER")) { userEntity, jwt ->
       givenAnOffender { offenderDetails, inmateDetails ->
         val offenceDetails = OffenceDetailsFactory().produce()
         apOASysContextMockSuccessfulOffenceDetailsCall(offenderDetails.otherIds.crn, offenceDetails)
@@ -104,7 +104,7 @@ class Cas2v2PersonOASysRiskToSelfTest : Cas2v2IntegrationTestBase() {
 
   @Test
   fun `Getting cas2v2 Risk to Self when upstream times out returns 404`() {
-    givenACas2PomUser { userEntity, jwt ->
+    givenACas2v2PomUser(roles = listOf("ROLE_CAS2_COURT_BAIL_REFERRER")) { userEntity, jwt ->
       givenAnOffender { offenderDetails, inmateDetails ->
         val risksToTheIndividual = RiskToTheIndividualFactory().produce()
         apOASysContextMockUnsuccessfulRisksToTheIndividualCallWithDelay(offenderDetails.otherIds.crn, risksToTheIndividual, 2500)
