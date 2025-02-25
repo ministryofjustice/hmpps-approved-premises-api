@@ -12,6 +12,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementAppl
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas1.Cas1ApplicationV2ReportRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas1.Cas1PlacementMatchingOutcomesReportRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas1.Cas1PlacementMatchingOutcomesV2ReportRepository
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas1.Cas1PlacementReportRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas1.Cas1RequestForPlacementReportRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas3.Cas3VoidBedspacesRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.generator.ApplicationReportGenerator
@@ -43,6 +44,7 @@ class Cas1ReportService(
   private val cas1OutOfServiceBedRepository: Cas1OutOfServiceBedRepository,
   private val domainEventService: Cas1DomainEventService,
   private val placementApplicationEntityReportRowRepository: PlacementApplicationEntityReportRowRepository,
+  private val cas1PlacementReportRepository: Cas1PlacementReportRepository,
 ) {
 
   companion object {
@@ -197,6 +199,29 @@ class Cas1ReportService(
       columnsToExclude = columnsToExclude,
     ).use { consumer ->
       cas1PlacementMatchingOutcomesV2ReportRepository.generateForArrivalDateThisMonth(
+        startDateTimeInclusive = getFirstSecondOfMonth(properties.year, properties.month),
+        endDateTimeInclusive = getLastSecondOfMonth(properties.year, properties.month),
+        consumer,
+      )
+    }
+  }
+
+  fun createPlacementReport(
+    properties: MonthSpecificReportParams,
+    includePii: Boolean,
+    outputStream: OutputStream,
+  ) {
+    val columnsToExclude = if (includePii) {
+      emptyList()
+    } else {
+      PII_COLUMN_NAMES
+    }
+
+    CsvJdbcResultSetConsumer(
+      outputStream = outputStream,
+      columnsToExclude = columnsToExclude,
+    ).use { consumer ->
+      cas1PlacementReportRepository.generatePlacementReport(
         startDateTimeInclusive = getFirstSecondOfMonth(properties.year, properties.month),
         endDateTimeInclusive = getLastSecondOfMonth(properties.year, properties.month),
         consumer,
