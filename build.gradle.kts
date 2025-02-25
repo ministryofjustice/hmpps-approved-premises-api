@@ -3,8 +3,8 @@ import org.apache.commons.io.FileUtils
 plugins {
   id("uk.gov.justice.hmpps.gradle-spring-boot") version "7.1.2"
   kotlin("plugin.spring") version "2.1.10"
+  kotlin("plugin.jpa") version "2.1.10"
   id("org.openapi.generator") version "7.11.0"
-  id("org.jetbrains.kotlin.plugin.jpa") version "1.9.22"
   id("io.gatling.gradle") version "3.13.1"
   id("io.gitlab.arturbosch.detekt") version "1.23.7"
 }
