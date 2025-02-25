@@ -90,8 +90,8 @@ class Cas1UpdateAssessmentReportPropertiesJobTest : IntegrationTestBase() {
       withApplication(application)
       withAssessmentSchema(assessmentSchema)
       withAgreeWithShortNoticeReason(null)
-      withAgreeWithShortNoticeReasonComments(null)
-      withReasonForLateApplication(null)
+      withAgreeWithShortNoticeReasonComments("")
+      withReasonForLateApplication("")
       withSubmittedAt(OffsetDateTime.now())
       withData(
         objectMapper.writeValueAsString(

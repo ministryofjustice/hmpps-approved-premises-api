@@ -55,8 +55,8 @@ interface UpdateAssessmentReportPropertiesRepository : JpaRepository<ApprovedPre
                                                WHEN source.agreeWithShortNoticeReason = 'yes' THEN TRUE
                                                WHEN source.agreeWithShortNoticeReason = 'no' THEN FALSE
               END,
-          agree_with_short_notice_reason_comments = source.agreeWithShortNoticeReasonComments,
-          reason_for_late_application = source.reasonForLateApplication
+          agree_with_short_notice_reason_comments = NULLIF(source.agreeWithShortNoticeReasonComments, ''),
+          reason_for_late_application = NULLIF(source.reasonForLateApplication, '')
       FROM assessment_data AS source
       WHERE target.assessment_id = source.id;
     """
