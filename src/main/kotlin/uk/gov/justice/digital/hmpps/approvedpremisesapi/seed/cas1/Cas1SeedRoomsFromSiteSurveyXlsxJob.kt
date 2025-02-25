@@ -39,6 +39,7 @@ class Cas1SeedRoomsFromSiteSurveyXlsxJob(
 
   companion object {
     val javers: Javers = JaversBuilder.javers().withListCompareAlgorithm(ListCompareAlgorithm.AS_SET).build()
+    fun buildRoomCode(qCode: String, roomNumber: String) = "$qCode-$roomNumber"
   }
 
   private val log = LoggerFactory.getLogger(this::class.java)
@@ -76,8 +77,6 @@ class Cas1SeedRoomsFromSiteSurveyXlsxJob(
       }
     }
   }
-
-  private fun buildRoomCode(qCode: String, roomNumber: String) = "$qCode-$roomNumber"
 
   private data class RoomInfo(
     val roomCode: String,
