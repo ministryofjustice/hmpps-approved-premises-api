@@ -32,7 +32,6 @@ class PrisonerLocationService(
     val detailUrl = event.detailUrl ?: throw IgnorableMessageException("No detail URL found")
 
     val applications = applicationRepository.findAllSubmittedApplicationByNomsNumber(nomsNumber)
-
     if (applications.isEmpty()) {
       return
     }

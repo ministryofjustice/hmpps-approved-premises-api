@@ -35,7 +35,7 @@ class PrisonerLocationServiceTest {
     mockPrisonerLocationRepository,
   )
 
-  private val prisoner = Prisoner(prisonId = "A1234AB", prisonName = "Bob", lastPrisonId = "1234")
+  private val prisoner = Prisoner(prisonId = "A1234AB")
   private val eventType = "prisoner-offender-search.prisoner.updated"
   private val nomsNumber = "NOMSABC"
   private val detailUrl = "some/url"
@@ -51,7 +51,7 @@ class PrisonerLocationServiceTest {
   private val oldPrisonerLocation = Cas2PrisonerLocationEntity(
     id = UUID.randomUUID(),
     application = application,
-    prisonCode = prisoner.lastPrisonId,
+    prisonCode = "LON",
     staffId = application.createdByUser.id,
     occurredAt = occurredAt.toOffsetDateTime(),
     endDate = null,
@@ -188,7 +188,7 @@ class PrisonerLocationServiceTest {
     val oldPrisonerLocation2 = Cas2PrisonerLocationEntity(
       id = UUID.randomUUID(),
       application = application2,
-      prisonCode = prisoner.lastPrisonId,
+      prisonCode = "LON",
       staffId = application2.createdByUser.id,
       occurredAt = occurredAt.toOffsetDateTime(),
       endDate = null,
@@ -196,7 +196,7 @@ class PrisonerLocationServiceTest {
     val oldPrisonerLocation3 = Cas2PrisonerLocationEntity(
       id = UUID.randomUUID(),
       application = application3,
-      prisonCode = prisoner.lastPrisonId,
+      prisonCode = "LON",
       staffId = application3.createdByUser.id,
       occurredAt = occurredAt.toOffsetDateTime(),
       endDate = null,
