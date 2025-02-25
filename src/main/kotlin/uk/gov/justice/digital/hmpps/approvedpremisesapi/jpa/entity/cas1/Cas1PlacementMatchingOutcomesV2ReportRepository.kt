@@ -148,7 +148,6 @@ class Cas1PlacementMatchingOutcomesV2ReportRepository(
     return """
       WITH raw_requests_for_placements AS ($cte)
       $CORE_QUERY
-      WHERE pr.is_withdrawn is false
       ORDER BY pr.expected_arrival ASC
     """.trimIndent()
   }

@@ -82,10 +82,9 @@ class Cas1PlacementMatchingOutcomesV2ReportTest : InitialiseDatabasePerClassTest
 
   val standardRFPNoDecision = StandardRFPNoDecision()
   val standardRFPMatched = StandardRFPMatched()
-  val standardRFPNotMatched = StandardRFPNotMatched()
+  val standardRFPNotMatchedAndWithdrawn = StandardRFPNotMatchedAndWithdrawn()
   val standardRFPNoDecisionBeforeReportingMonth = StandardRFPNoDecisionBeforeReportingMonth()
   val standardRFPNoDecisionAfterReportingMonth = StandardRFPNoDecisionAfterReportingMonth()
-  val standardRFPWithdrawn = StandardRFPWithdrawn()
   val standardRFPNotMatchedAndThenMatched = StandardRFPNotMatchedAndThenMatched()
   val standardRFPMultipleTransfers = StandardRFPMultipleTransfers()
   val placementAppMatched = PlacementAppMatched()
@@ -114,10 +113,9 @@ class Cas1PlacementMatchingOutcomesV2ReportTest : InitialiseDatabasePerClassTest
 
     standardRFPNoDecision.createRequestForPlacement()
     standardRFPMatched.createRequestForPlacement()
-    standardRFPNotMatched.createRequestForPlacement()
+    standardRFPNotMatchedAndWithdrawn.createRequestForPlacement()
     standardRFPNoDecisionBeforeReportingMonth.createRequestForPlacement()
     standardRFPNoDecisionAfterReportingMonth.createRequestForPlacement()
-    standardRFPWithdrawn.createRequestForPlacement()
     standardRFPNotMatchedAndThenMatched.createRequestForPlacement()
     standardRFPMultipleTransfers.createRequestForPlacement()
     placementAppMatched.createRequestForPlacement()
@@ -218,7 +216,7 @@ class Cas1PlacementMatchingOutcomesV2ReportTest : InitialiseDatabasePerClassTest
 
           standardRFPNoDecision.assertRow(actual[0])
           standardRFPMatched.assertRow(actual[1])
-          standardRFPNotMatched.assertRow(actual[2])
+          standardRFPNotMatchedAndWithdrawn.assertRow(actual[2])
           standardRFPNotMatchedAndThenMatched.assertRow(actual[3])
           standardRFPMultipleTransfers.assertRow(actual[4])
           placementAppMatched.assertRow(actual[5])
@@ -272,16 +270,6 @@ class Cas1PlacementMatchingOutcomesV2ReportTest : InitialiseDatabasePerClassTest
     }
   }
 
-  inner class StandardRFPWithdrawn {
-    fun createRequestForPlacement() {
-      val application = createSubmitAndAssessedApplication(
-        crn = "StandardRFPNoDecisionAfterReportingMonth",
-        arrivalDateOnApplication = LocalDate.of(REPORT_YEAR, REPORT_MONTH, 1),
-      )
-      withdrawPlacementRequest(applicationId = application.id)
-    }
-  }
-
   inner class StandardRFPMatched {
     lateinit var application: ApprovedPremisesApplicationEntity
 
@@ -320,12 +308,12 @@ class Cas1PlacementMatchingOutcomesV2ReportTest : InitialiseDatabasePerClassTest
     }
   }
 
-  inner class StandardRFPNotMatched {
+  inner class StandardRFPNotMatchedAndWithdrawn {
     lateinit var application: ApprovedPremisesApplicationEntity
 
     fun createRequestForPlacement() {
       application = createSubmitAndAssessedApplication(
-        crn = "StandardRFPNotMatched",
+        crn = "StandardRFPNotMatchedAndWithdrawn",
         arrivalDateOnApplication = LocalDate.of(REPORT_YEAR, REPORT_MONTH, 3),
       )
 
@@ -336,6 +324,8 @@ class Cas1PlacementMatchingOutcomesV2ReportTest : InitialiseDatabasePerClassTest
         matcherUsername = "MATCHER2",
         matcherApAreaName = "MATCHER2CRU",
       )
+
+      withdrawPlacementRequest(applicationId = application.id)
     }
 
     fun assertRow(row: PlacementMatchingOutcomeReportRow) {
@@ -347,7 +337,7 @@ class Cas1PlacementMatchingOutcomesV2ReportTest : InitialiseDatabasePerClassTest
       assertThat(row.request_for_placement_id).matches("placement_request:[a-f0-9-]+")
       assertThat(row.request_for_placement_type).isEqualTo("STANDARD")
       assertThat(row.requested_arrival_date).isEqualTo("2020-02-03")
-      assertThat(row.crn).matches("StandardRFPNotMatched")
+      assertThat(row.crn).matches("StandardRFPNotMatchedAndWithdrawn")
 
       assertThat(row.first_match_attempt_date_time).isEqualTo("2028-01-02T03:04:05Z")
       assertThat(row.first_successful_match_attempt_date_time).isNull()
