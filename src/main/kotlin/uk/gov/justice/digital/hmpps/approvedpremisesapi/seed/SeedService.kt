@@ -227,7 +227,6 @@ class SeedService(
     seedLogger.info("Checking that required headers are present...")
 
     val headerRow = try {
-      val j = job.resolveCsvPath()
       csvReader().open(job.resolveCsvPath()) {
         readAllWithHeaderAsSequence().first().keys
       }
