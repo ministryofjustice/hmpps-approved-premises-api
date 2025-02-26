@@ -10,7 +10,6 @@ import org.springframework.stereotype.Service
 import org.springframework.transaction.support.TransactionTemplate
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.SeedFileType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.config.SeedConfig
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.seed.cas1.ApprovedPremisesBookingCancelSeedJob
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.seed.cas1.ApprovedPremisesRoomsSeedJob
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.seed.cas1.Cas1BackfillActiveSpaceBookingsCreatedInDelius
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.seed.cas1.Cas1BookingToSpaceBookingSeedJob
@@ -81,7 +80,6 @@ class SeedService(
         SeedFileType.updateNomsNumber -> getBean(Cas1UpdateNomsNumberSeedJob::class)
         SeedFileType.temporaryAccommodationPremises -> getBean(TemporaryAccommodationPremisesSeedJob::class)
         SeedFileType.temporaryAccommodationBedspace -> getBean(TemporaryAccommodationBedspaceSeedJob::class)
-        SeedFileType.approvedPremisesCancelBookings -> getBean(ApprovedPremisesBookingCancelSeedJob::class)
         SeedFileType.approvedPremisesAssessmentMoreInfoBugFix -> getBean(Cas1FurtherInfoBugFixSeedJob::class)
         SeedFileType.approvedPremisesRedactAssessmentDetails -> getBean(Cas1RemoveAssessmentDetailsSeedJob::class)
         SeedFileType.approvedPremisesWithdrawPlacementRequest -> getBean(Cas1WithdrawPlacementRequestSeedJob::class)
