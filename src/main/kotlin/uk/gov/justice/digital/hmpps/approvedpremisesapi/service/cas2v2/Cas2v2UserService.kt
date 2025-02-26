@@ -50,8 +50,8 @@ class Cas2v2UserService(
 
   fun requiresCaseLoadIdCheck(): Boolean = !userForRequestHasRole(
     listOf(
-      SimpleGrantedAuthority("ROLE_COURT_BAIL"),
-      SimpleGrantedAuthority("ROLE_PRISON_BAIL"),
+      SimpleGrantedAuthority("ROLE_CAS2_COURT_BAIL_REFERRER"),
+      SimpleGrantedAuthority("ROLE_CAS2_PRISON_BAIL_REFERRER"),
     ),
   )
 
