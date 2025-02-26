@@ -16,7 +16,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.seed.SeedXlsxService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.LogEntry
 import java.io.File
 import java.nio.file.Files
-import java.nio.file.StandardOpenOption
 import kotlin.io.path.Path
 import kotlin.io.path.pathString
 
@@ -64,8 +63,6 @@ abstract class SeedTestBase : IntegrationTestBase() {
     Files.writeString(
       Path("$seedFilePrefix/$csvName.csv"),
       contents,
-      StandardOpenOption.CREATE,
-      StandardOpenOption.TRUNCATE_EXISTING,
     )
   }
 
