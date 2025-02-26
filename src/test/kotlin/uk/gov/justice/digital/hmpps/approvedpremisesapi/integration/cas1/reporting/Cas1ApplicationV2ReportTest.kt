@@ -273,9 +273,6 @@ class Cas1ApplicationV2ReportTest : InitialiseDatabasePerClassTestBase() {
       )
       updateLatestAssessment(
         applicationId = application.id,
-        agreeWithShortNoticeReason = "agreeWithShortNoticeReason1",
-        agreeWithShortNoticeReasonComments = "agreeWithShortNoticeReasonComments1",
-        reasonForLateApplication = "reasonForLateApplication1",
         assessorJwt = assessor1Jwt,
       )
       rejectLatestAssessment(
@@ -283,6 +280,9 @@ class Cas1ApplicationV2ReportTest : InitialiseDatabasePerClassTestBase() {
         decisionDate = LocalDateTime.of(2020, 4, 1, 9, 15, 45),
         rationale = "theRejectionRationale1",
         assessorJwt = assessor1Jwt,
+        agreeWithShortNoticeReason = false,
+        agreeWithShortNoticeReasonComments = "agreeWithShortNoticeReasonComments1",
+        reasonForLateApplication = "reasonForLateApplication1",
       )
       createAppeal(
         application = application,
@@ -303,9 +303,6 @@ class Cas1ApplicationV2ReportTest : InitialiseDatabasePerClassTestBase() {
       )
       updateLatestAssessment(
         applicationId = application.id,
-        agreeWithShortNoticeReason = "agreeWithShortNoticeReason2",
-        agreeWithShortNoticeReasonComments = "agreeWithShortNoticeReasonComments2",
-        reasonForLateApplication = "reasonForLateApplication2",
         assessorJwt = assessor2Jwt,
       )
       acceptLatestAssessment(
@@ -313,6 +310,9 @@ class Cas1ApplicationV2ReportTest : InitialiseDatabasePerClassTestBase() {
         apType = ApType.pipe,
         decisionDate = LocalDateTime.of(2020, 5, 1, 9, 15, 45),
         assessorJwt = assessor2Jwt,
+        agreeWithShortNoticeReason = true,
+        agreeWithShortNoticeReasonComments = "agreeWithShortNoticeReasonComments2",
+        reasonForLateApplication = "reasonForLateApplication2",
       )
       withdrawApplication(
         applicationId = application.id,
@@ -364,7 +364,7 @@ class Cas1ApplicationV2ReportTest : InitialiseDatabasePerClassTestBase() {
         assertThat(row.applicant_reason_for_late_application_detail).isNull()
       }
 
-      assertThat(row.initial_assessor_agree_with_short_notice_reason).isEqualTo("agreeWithShortNoticeReason1")
+      assertThat(row.initial_assessor_agree_with_short_notice_reason).isEqualTo("false")
 
       if (shouldIncludePii) {
         assertThat(row.initial_assessor_reason_for_late_application).isEqualTo("agreeWithShortNoticeReasonComments1")
@@ -459,15 +459,15 @@ class Cas1ApplicationV2ReportTest : InitialiseDatabasePerClassTestBase() {
       )
       updateLatestAssessment(
         applicationId = application.id,
-        agreeWithShortNoticeReason = "agreeWithShortNoticeReason4",
-        agreeWithShortNoticeReasonComments = "agreeWithShortNoticeReasonComments4",
-        reasonForLateApplication = "reasonForLateApplication4",
         assessorJwt = assessor4jwt,
       )
       acceptLatestAssessment(
         applicationId = application.id,
         apType = ApType.mhapStJosephs,
         decisionDate = LocalDateTime.of(2020, 12, 1, 9, 15, 45),
+        agreeWithShortNoticeReason = true,
+        agreeWithShortNoticeReasonComments = "agreeWithShortNoticeReasonComments4",
+        reasonForLateApplication = "reasonForLateApplication4",
         assessorJwt = assessor4jwt,
       )
     }
@@ -503,7 +503,7 @@ class Cas1ApplicationV2ReportTest : InitialiseDatabasePerClassTestBase() {
       assertThat(row.applicant_reason_for_late_application).isEqualTo("reasonForShortNotice3")
       assertThat(row.applicant_reason_for_late_application_detail).isEqualTo("reasonForShortNoticeOther3")
 
-      assertThat(row.initial_assessor_agree_with_short_notice_reason).isEqualTo("agreeWithShortNoticeReason4")
+      assertThat(row.initial_assessor_agree_with_short_notice_reason).isEqualTo("true")
       assertThat(row.initial_assessor_reason_for_late_application).isEqualTo("agreeWithShortNoticeReasonComments4")
       assertThat(row.initial_assessor_reason_for_late_application_detail).isEqualTo("reasonForLateApplication4")
       assertThat(row.initial_assessor_premises_type).isEqualTo("MHAP_ST_JOSEPHS")
@@ -974,9 +974,6 @@ class Cas1ApplicationV2ReportTest : InitialiseDatabasePerClassTestBase() {
   fun updateLatestAssessment(
     applicationId: UUID,
     assessorJwt: String,
-    agreeWithShortNoticeReason: String,
-    agreeWithShortNoticeReasonComments: String,
-    reasonForLateApplication: String,
   ) {
     val assessmentId = getLatestAssessment(applicationId).id
 
@@ -985,15 +982,7 @@ class Cas1ApplicationV2ReportTest : InitialiseDatabasePerClassTestBase() {
       assessmentId,
       assessorJwt,
       UpdateAssessment(
-        data = mapOf(
-          "suitability-assessment" to mapOf(
-            "application-timeliness" to mapOf(
-              "agreeWithShortNoticeReason" to agreeWithShortNoticeReason,
-              "agreeWithShortNoticeReasonComments" to agreeWithShortNoticeReasonComments,
-              "reasonForLateApplication" to reasonForLateApplication,
-            ),
-          ),
-        ),
+        data = emptyMap(),
       ),
     )
   }
@@ -1002,6 +991,9 @@ class Cas1ApplicationV2ReportTest : InitialiseDatabasePerClassTestBase() {
     applicationId: UUID,
     apType: ApType,
     decisionDate: LocalDateTime,
+    agreeWithShortNoticeReason: Boolean,
+    agreeWithShortNoticeReasonComments: String,
+    reasonForLateApplication: String,
     assessorJwt: String,
   ) {
     val assessmentId = getLatestAssessment(applicationId).id
@@ -1029,6 +1021,9 @@ class Cas1ApplicationV2ReportTest : InitialiseDatabasePerClassTestBase() {
         requirements = placementRequirements,
         placementDates = null,
         apType = apType,
+        agreeWithShortNoticeReason = agreeWithShortNoticeReason,
+        agreeWithShortNoticeReasonComments = agreeWithShortNoticeReasonComments,
+        reasonForLateApplication = reasonForLateApplication,
       ),
     )
   }
@@ -1037,6 +1032,9 @@ class Cas1ApplicationV2ReportTest : InitialiseDatabasePerClassTestBase() {
     application: ApprovedPremisesApplicationEntity,
     decisionDate: LocalDateTime,
     rationale: String,
+    agreeWithShortNoticeReason: Boolean,
+    agreeWithShortNoticeReasonComments: String,
+    reasonForLateApplication: String,
     assessorJwt: String,
   ) {
     val assessmentId = getLatestAssessment(application.id).id
@@ -1050,6 +1048,9 @@ class Cas1ApplicationV2ReportTest : InitialiseDatabasePerClassTestBase() {
       AssessmentRejection(
         document = mapOf("document" to "value"),
         rejectionRationale = rationale,
+        agreeWithShortNoticeReason = agreeWithShortNoticeReason,
+        agreeWithShortNoticeReasonComments = agreeWithShortNoticeReasonComments,
+        reasonForLateApplication = reasonForLateApplication,
       ),
     )
   }
