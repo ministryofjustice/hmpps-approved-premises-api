@@ -162,14 +162,14 @@ class OffenderServiceTest {
     fun `returns NotFound result when Client returns 404`() {
       every { mockOffenderDetailsDataSource.getOffenderDetailSummary("a-crn") } returns StatusCode(HttpMethod.GET, "/secure/offenders/crn/a-crn", HttpStatus.NOT_FOUND, null)
 
-      assertThat(offenderService.getOffenderByCrn("a-crn") is AuthorisableActionResult.NotFound).isTrue
+      assertThat(offenderService.getOffenderByCrnDeprecated("a-crn") is AuthorisableActionResult.NotFound).isTrue
     }
 
     @Test
     fun `throws when Client returns other non-2xx status code except 403`() {
       every { mockOffenderDetailsDataSource.getOffenderDetailSummary("a-crn") } returns StatusCode(HttpMethod.GET, "/secure/offenders/crn/a-crn", HttpStatus.BAD_REQUEST, null)
 
-      val exception = assertThrows<RuntimeException> { offenderService.getOffenderByCrn("a-crn") }
+      val exception = assertThrows<RuntimeException> { offenderService.getOffenderByCrnDeprecated("a-crn") }
       assertThat(exception.message).isEqualTo("Unable to complete GET request to /secure/offenders/crn/a-crn: 400 BAD_REQUEST")
     }
   }

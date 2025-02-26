@@ -108,7 +108,7 @@ class PeopleController(
   }
 
   private fun getOffenderDetails(crn: String): OffenderDetailSummary {
-    val offenderDetails = when (val offenderDetailsResult = offenderService.getOffenderByCrn(crn)) {
+    val offenderDetails = when (val offenderDetailsResult = offenderService.getOffenderByCrnDeprecated(crn)) {
       is AuthorisableActionResult.NotFound -> throw NotFoundProblem(crn, "Person")
       is AuthorisableActionResult.Unauthorised -> throw ForbiddenProblem()
       is AuthorisableActionResult.Success -> offenderDetailsResult.entity
