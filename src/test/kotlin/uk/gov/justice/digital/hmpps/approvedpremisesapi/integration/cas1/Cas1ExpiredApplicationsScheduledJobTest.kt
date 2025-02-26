@@ -9,9 +9,9 @@ import org.springframework.test.web.reactive.server.returnResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.ApplicationAssessedEnvelope
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.ApplicationExpiredEnvelope
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.EventType
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1TimelineEvent
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1TimelineEventType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.TimelineEvent
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.TimelineEventType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.events.ApplicationAssessedFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.IntegrationTestBase
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAProbationRegion
@@ -24,7 +24,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.ApprovedPremisesApplicationStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1DomainEventService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.scheduled.Cas1ExpiredApplicationsScheduledJob
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.ApplicationTimelineTransformer
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.cas1.Cas1ApplicationTimelineTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.unit.domainevents.DomainEventSummaryImpl
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomDateTimeBefore
 import java.time.Instant
@@ -43,7 +43,7 @@ class Cas1ExpiredApplicationsScheduledJobTest : IntegrationTestBase() {
   lateinit var domainEventService: Cas1DomainEventService
 
   @Autowired
-  lateinit var applicationTimelineTransformer: ApplicationTimelineTransformer
+  lateinit var cas1ApplicationTimelineTransformer: Cas1ApplicationTimelineTransformer
 
   @Test
   fun `sets the application status to EXPIRED for the correct applications when the job is run`() {
@@ -105,7 +105,7 @@ class Cas1ExpiredApplicationsScheduledJobTest : IntegrationTestBase() {
         expiredApplications.first().id
 
         val rawResponseBody = webTestClient.get()
-          .uri("/applications/${expiredApplications.first().id}/timeline")
+          .uri("/cas1/applications/${expiredApplications.first().id}/timeline")
           .header("Authorization", "Bearer $jwt")
           .header("X-Service-Name", ServiceName.approvedPremises.value)
           .exchange()
@@ -118,15 +118,15 @@ class Cas1ExpiredApplicationsScheduledJobTest : IntegrationTestBase() {
         val responseBody =
           objectMapper.readValue(
             rawResponseBody,
-            object : TypeReference<List<TimelineEvent>>() {},
+            object : TypeReference<List<Cas1TimelineEvent>>() {},
           )
 
         val domainEvents = domainEventService.getAllDomainEventsForApplication(expiredApplications.first().id)
 
-        val expectedItems = mutableListOf<TimelineEvent>()
+        val expectedItems = mutableListOf<Cas1TimelineEvent>()
         expectedItems.addAll(
           domainEvents.map {
-            applicationTimelineTransformer.transformDomainEventSummaryToTimelineEvent(
+            cas1ApplicationTimelineTransformer.transformDomainEventSummaryToTimelineEvent(
               DomainEventSummaryImpl(
                 it.id,
                 it.type,
@@ -146,7 +146,7 @@ class Cas1ExpiredApplicationsScheduledJobTest : IntegrationTestBase() {
 
         assertThat(responseBody.count()).isEqualTo(expectedItems.count())
         assertThat(responseBody).hasSameElementsAs(expectedItems)
-        assertThat(responseBody.last().type).isEqualTo(TimelineEventType.approvedPremisesApplicationExpired)
+        assertThat(responseBody.last().type).isEqualTo(Cas1TimelineEventType.applicationExpired)
       }
     }
   }
