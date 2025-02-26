@@ -46,7 +46,6 @@ class MigrationJobService(
         MigrationJobType.cas2StatusUpdatesWithAssessments -> getBean(Cas2StatusUpdateMigrationJob::class)
         MigrationJobType.cas2NotesWithAssessments -> getBean(Cas2NoteMigrationJob::class)
         MigrationJobType.cas1FixPlacementAppLinks -> getBean(Cas1FixPlacementApplicationLinksJob::class)
-        MigrationJobType.cas1NoticeTypes -> getBean(NoticeTypeMigrationJob::class)
         MigrationJobType.cas1BackfillUserApArea -> getBean(Cas1BackfillUserApArea::class)
         MigrationJobType.cas3ApplicationOffenderName -> getBean(Cas3UpdateApplicationOffenderNameJob::class)
         MigrationJobType.cas3DomainEventTypeForPersonDepartedUpdated -> getBean(Cas3UpdateDomainEventTypeForPersonDepartureUpdatedJob::class)
