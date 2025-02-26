@@ -10,7 +10,7 @@ paths:
       tags:
         - Operations on CAS2 applications
       summary: Creates a CAS2 application
-      operationId: applicationsPost
+      operationId: createCas2Application
       requestBody:
         description: Information to create a blank application with
         content:
@@ -24,7 +24,7 @@ paths:
           content:
             'application/json':
               schema:
-                $ref: '_shared.yml#/components/schemas/Application'
+                $ref: '_shared.yml#/components/schemas/Cas2Application'
         400:
           description: invalid params
           content:
@@ -48,7 +48,7 @@ paths:
       tags:
         - Operations on CAS2 applications
       summary: List summaries of all CAS2 applications authorised for the logged in user
-      operationId: applicationsGet
+      operationId: getCas2Applications
       parameters:
         - name: isSubmitted
           in: query
@@ -95,7 +95,7 @@ paths:
       tags:
         - Operations on CAS2 applications
       summary: Updates a CAS2 application
-      operationId: applicationsApplicationIdPut
+      operationId: updateCas2Application
       parameters:
         - name: applicationId
           in: path
@@ -109,7 +109,7 @@ paths:
         content:
           'application/json':
             schema:
-              $ref: '_shared.yml#/components/schemas/UpdateApplication'
+              $ref: '_shared.yml#/components/schemas/UpdateCas2Application'
         required: true
       responses:
         200:
@@ -117,7 +117,7 @@ paths:
           content:
             'application/json':
               schema:
-                $ref: '_shared.yml#/components/schemas/Application'
+                $ref: '_shared.yml#/components/schemas/Cas2Application'
         400:
           description: invalid params
           content:
@@ -135,7 +135,7 @@ paths:
       tags:
         - Operations on CAS2 applications
       summary: Gets a single CAS2 application by its ID
-      operationId: applicationsApplicationIdGet
+      operationId: getCas2Application
       parameters:
         - name: applicationId
           in: path
@@ -150,7 +150,7 @@ paths:
           content:
             'application/json':
               schema:
-                $ref: '_shared.yml#/components/schemas/Application'
+                $ref: '_shared.yml#/components/schemas/Cas2Application'
         401:
           $ref: '_shared.yml#/components/responses/401Response'
         403:
@@ -162,7 +162,7 @@ paths:
       tags:
         - Operations on CAS2 applications
       summary: Abandons an in progress CAS2 application
-      operationId: applicationsApplicationIdAbandonPut
+      operationId: abandonCas2Application
       parameters:
         - name: applicationId
           in: path
