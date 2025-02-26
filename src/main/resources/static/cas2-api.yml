@@ -24,7 +24,7 @@ paths:
           content:
             'application/json':
               schema:
-                $ref: '_shared.yml#/components/schemas/Cas2Application'
+                $ref: 'cas2-schemas.yml#/components/schemas/Cas2Application'
         400:
           description: invalid params
           content:
@@ -73,7 +73,7 @@ paths:
               schema:
                 type: array
                 items:
-                  $ref: '_shared.yml#/components/schemas/Cas2ApplicationSummary'
+                  $ref: 'cas2-schemas.yml#/components/schemas/Cas2ApplicationSummary'
           headers:
             X-Pagination-CurrentPage:
               $ref: '_shared.yml#/components/headers/X-Pagination-CurrentPage'
@@ -109,7 +109,7 @@ paths:
         content:
           'application/json':
             schema:
-              $ref: '_shared.yml#/components/schemas/UpdateCas2Application'
+              $ref: 'cas2-schemas.yml#/components/schemas/UpdateCas2Application'
         required: true
       responses:
         200:
@@ -117,7 +117,7 @@ paths:
           content:
             'application/json':
               schema:
-                $ref: '_shared.yml#/components/schemas/Cas2Application'
+                $ref: 'cas2-schemas.yml#/components/schemas/Cas2Application'
         400:
           description: invalid params
           content:
@@ -150,7 +150,7 @@ paths:
           content:
             'application/json':
               schema:
-                $ref: '_shared.yml#/components/schemas/Cas2Application'
+                $ref: 'cas2-schemas.yml#/components/schemas/Cas2Application'
         401:
           $ref: '_shared.yml#/components/responses/401Response'
         403:
@@ -203,7 +203,7 @@ paths:
         content:
           'application/json':
             schema:
-              $ref: '_shared.yml#/components/schemas/UpdateCas2Assessment'
+              $ref: 'cas2-schemas.yml#/components/schemas/UpdateCas2Assessment'
         required: true
       responses:
         200:
@@ -211,7 +211,7 @@ paths:
           content:
             'application/json':
               schema:
-                $ref: '_shared.yml#/components/schemas/Cas2Assessment'
+                $ref: 'cas2-schemas.yml#/components/schemas/Cas2Assessment'
         401:
           $ref: '_shared.yml#/components/responses/401Response'
         403:
@@ -243,7 +243,7 @@ paths:
           content:
             'application/json':
               schema:
-                $ref: '_shared.yml#/components/schemas/Cas2Assessment'
+                $ref: 'cas2-schemas.yml#/components/schemas/Cas2Assessment'
         401:
           $ref: '_shared.yml#/components/responses/401Response'
         403:
@@ -275,7 +275,7 @@ paths:
         content:
           'application/json':
             schema:
-              $ref: '_shared.yml#/components/schemas/Cas2AssessmentStatusUpdate'
+              $ref: 'cas2-schemas.yml#/components/schemas/Cas2AssessmentStatusUpdate'
         required: true
       responses:
         200:
@@ -311,7 +311,7 @@ paths:
         content:
           'application/json':
             schema:
-              $ref: '_shared.yml#/components/schemas/NewCas2ApplicationNote'
+              $ref: 'cas2-schemas.yml#/components/schemas/NewCas2ApplicationNote'
         required: true
       responses:
         200:
@@ -319,7 +319,7 @@ paths:
           content:
             'application/json':
               schema:
-                $ref: '_shared.yml#/components/schemas/Cas2ApplicationNote'
+                $ref: 'cas2-schemas.yml#/components/schemas/Cas2ApplicationNote'
         401:
           $ref: '_shared.yml#/components/responses/401Response'
         403:
@@ -353,7 +353,7 @@ paths:
               schema:
                 type: array
                 items:
-                  $ref: '_shared.yml#/components/schemas/Cas2SubmittedApplicationSummary'
+                  $ref: 'cas2-schemas.yml#/components/schemas/Cas2SubmittedApplicationSummary'
           headers:
             X-Pagination-CurrentPage:
               $ref: '_shared.yml#/components/headers/X-Pagination-CurrentPage'
@@ -379,7 +379,7 @@ paths:
         content:
           'application/json':
             schema:
-              $ref: '_shared.yml#/components/schemas/SubmitCas2Application'
+              $ref: 'cas2-schemas.yml#/components/schemas/SubmitCas2Application'
         required: true
       responses:
         200:
@@ -416,7 +416,7 @@ paths:
           content:
             'application/json':
               schema:
-                $ref: '_shared.yml#/components/schemas/Cas2SubmittedApplication'
+                $ref: 'cas2-schemas.yml#/components/schemas/Cas2SubmittedApplication'
         401:
           $ref: '_shared.yml#/components/responses/401Response'
         403:
@@ -577,7 +577,7 @@ paths:
               schema:
                 type: array
                 items:
-                  $ref: '_shared.yml#/components/schemas/Cas2ApplicationStatus'
+                  $ref: 'cas2-schemas.yml#/components/schemas/Cas2ApplicationStatus'
         401:
           $ref: '_shared.yml#/components/responses/401Response'
         403:
@@ -596,7 +596,7 @@ paths:
           description: name of the report to download
           required: true
           schema:
-            $ref: '_shared.yml#/components/schemas/Cas2ReportName'
+            $ref: 'cas2-schemas.yml#/components/schemas/Cas2ReportName'
       responses:
         200:
           description: successful operation
