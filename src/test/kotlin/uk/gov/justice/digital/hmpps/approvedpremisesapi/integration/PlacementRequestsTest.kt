@@ -27,10 +27,13 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.given
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAUser
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAnApArea
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAnApplication
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAnApprovedPremises
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAnOffender
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.apDeliusContextAddResponseToUserAccessCall
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApAreaEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AssessmentDecision
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.BookingEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas1CruManagementAreaEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas1SpaceBookingEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DomainEventType
@@ -38,6 +41,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementRequ
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementRequestRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementRequestWithdrawalReason
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ProbationRegionEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PremisesEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserQualification
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRole
@@ -45,6 +49,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PersonInfoResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.RiskTier
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.RiskWithStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.community.OffenderDetailSummary
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.PersonTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.PlacementRequestDetailTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.PlacementRequestTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.cas1.Cas1PlacementRequestSummaryTransformer
@@ -60,6 +65,9 @@ class PlacementRequestsTest : IntegrationTestBase() {
 
   @Autowired
   lateinit var cas1PlacementRequestSummaryTransformer: Cas1PlacementRequestSummaryTransformer
+
+  @Autowired
+  lateinit var personTransformer: PersonTransformer
 
   @Autowired
   lateinit var realPlacementRequestRepository: PlacementRequestRepository
@@ -92,15 +100,6 @@ class PlacementRequestsTest : IntegrationTestBase() {
         withPremises(premises)
       }
       realPlacementRequestRepository.save(placementRequest)
-    }
-
-    private fun createSpaceBooking(placementRequest: PlacementRequestEntity): Cas1SpaceBookingEntity {
-      val spaceBooking = givenACas1SpaceBooking(
-        crn = placementRequest.application.crn,
-        placementRequest = placementRequest,
-      )
-      placementRequest.spaceBookings.add(spaceBooking)
-      return spaceBooking
     }
 
     private fun createBookingNotMadeRecord(placementRequest: PlacementRequestEntity) {
@@ -243,7 +242,10 @@ class PlacementRequestsTest : IntegrationTestBase() {
             crn = matchedOffender.otherIds.crn,
             isWithdrawn = true,
           ) { placementRequest, _ ->
-            createSpaceBooking(placementRequest)
+            givenACas1SpaceBooking(
+              crn = placementRequest.application.crn,
+              placementRequest = placementRequest,
+            )
           }
 
           val (placementRequestWithSpaceBooking) = givenAPlacementRequest(
@@ -252,7 +254,10 @@ class PlacementRequestsTest : IntegrationTestBase() {
             createdByUser = user,
             crn = matchedOffender.otherIds.crn,
           ) { placementRequest, _ ->
-            createSpaceBooking(placementRequest)
+            givenACas1SpaceBooking(
+              crn = placementRequest.application.crn,
+              placementRequest = placementRequest,
+            )
           }
 
           val (placementRequestPreviouslyUnableToMatchNowHasSpaceBooking) = givenAPlacementRequest(
@@ -262,7 +267,10 @@ class PlacementRequestsTest : IntegrationTestBase() {
             crn = matchedOffender.otherIds.crn,
           ) { placementRequest, _ ->
             createBookingNotMadeRecord(placementRequest)
-            createSpaceBooking(placementRequest)
+            givenACas1SpaceBooking(
+              crn = placementRequest.application.crn,
+              placementRequest = placementRequest,
+            )
           }
 
           val result = webTestClient.get()
@@ -342,7 +350,10 @@ class PlacementRequestsTest : IntegrationTestBase() {
             crn = unableToMatchOffender.otherIds.crn,
           ) { placementRequest, _ ->
             createBookingNotMadeRecord(placementRequest)
-            createSpaceBooking(placementRequest)
+            givenACas1SpaceBooking(
+              crn = placementRequest.application.crn,
+              placementRequest = placementRequest,
+            )
           }
 
           val (hasCancelledSpaceBookingPlacementRequest) = givenAPlacementRequest(
@@ -352,7 +363,10 @@ class PlacementRequestsTest : IntegrationTestBase() {
             crn = unableToMatchOffender.otherIds.crn,
           ) { placementRequest, _ ->
             createBookingNotMadeRecord(placementRequest)
-            val spaceBooking = createSpaceBooking(placementRequest)
+            val spaceBooking = givenACas1SpaceBooking(
+              crn = placementRequest.application.crn,
+              placementRequest = placementRequest,
+            )
             spaceBooking.cancellationOccurredAt = LocalDate.now()
             cas1SpaceBookingRepository.save(spaceBooking)
           }
@@ -1111,30 +1125,34 @@ class PlacementRequestsTest : IntegrationTestBase() {
   }
 
   @Nested
+  @SuppressWarnings("LargeClass")
   inner class Search {
 
-    private fun createBooking(placementRequest: PlacementRequestEntity) {
-      val premises = approvedPremisesEntityFactory.produceAndPersist {
+    private fun createBooking(
+      placementRequest: PlacementRequestEntity,
+      premises: ApprovedPremisesEntity? = approvedPremisesEntityFactory.produceAndPersist {
         withProbationRegion(probationRegion)
         withLocalAuthorityArea(
           localAuthorityEntityFactory.produceAndPersist(),
         )
-      }
-
+      },
+      arrivalDate: LocalDate? = LocalDate.now(),
+    ): BookingEntity {
       placementRequest.booking = bookingEntityFactory.produceAndPersist {
-        withPremises(premises)
+        withPremises(premises as PremisesEntity)
+        withArrivalDate(arrivalDate!!)
       }
       realPlacementRequestRepository.save(placementRequest)
+
+      return placementRequest.booking!!
     }
 
-    private fun createSpaceBooking(placementRequest: PlacementRequestEntity): Cas1SpaceBookingEntity {
-      val spaceBooking = givenACas1SpaceBooking(
-        crn = placementRequest.application.crn,
-        placementRequest = placementRequest,
-      )
-      placementRequest.spaceBookings.add(spaceBooking)
-      return spaceBooking
-    }
+    private fun createSpaceBooking(placementRequest: PlacementRequestEntity, premises: ApprovedPremisesEntity? = null, canonicalArrivalDate: LocalDate? = LocalDate.now()): Cas1SpaceBookingEntity = givenACas1SpaceBooking(
+      premises = premises,
+      crn = placementRequest.application.crn,
+      placementRequest = placementRequest,
+      canonicalArrivalDate = canonicalArrivalDate!!,
+    )
 
     private fun createBookingNotMadeRecord(placementRequest: PlacementRequestEntity) {
       placementRequest.bookingNotMades = mutableListOf(
@@ -1163,6 +1181,173 @@ class PlacementRequestsTest : IntegrationTestBase() {
           .exchange()
           .expectStatus()
           .isForbidden
+      }
+    }
+
+    @Test
+    fun `should return 1 placement request when there are 0 active bookings`() {
+      givenAUser(roles = listOf(UserRole.CAS1_WORKFLOW_MANAGER)) { user, jwt ->
+        givenAnOffender { unmatchedOffender, unmatchedInmate ->
+          givenAPlacementRequest(
+            placementRequestAllocatedTo = user,
+            assessmentAllocatedTo = user,
+            createdByUser = user,
+            crn = unmatchedOffender.otherIds.crn,
+          ) { placementRequest, _ ->
+
+            // create a cancelled booking
+            createBookingNotMadeRecord(placementRequest)
+            createBooking(placementRequest)
+            val cancellation = cancellationEntityFactory.produceAndPersist {
+              withBooking(placementRequest.booking!!)
+              withReason(cancellationReasonEntityFactory.produceAndPersist())
+            }
+            placementRequest.booking!!.cancellations.add(cancellation)
+
+            // create a cancelled space booking
+            createBookingNotMadeRecord(placementRequest)
+            val spaceBooking = createSpaceBooking(placementRequest)
+            spaceBooking.cancellationOccurredAt = LocalDate.now()
+            cas1SpaceBookingRepository.save(spaceBooking)
+
+            // should return 1 placement request from GET /cas1/placement-requests
+            val summaries = webTestClient.get()
+              .uri("/cas1/placement-requests")
+              .header("Authorization", "Bearer $jwt")
+              .exchange()
+              .expectStatus()
+              .isOk
+              .bodyAsListOfObjects<Cas1PlacementRequestSummary>()
+
+            assertThat(summaries).hasSize(1)
+
+            assertThat(summaries[0].id).isEqualTo(placementRequest.id)
+            assertThat(summaries[0].person.crn).isEqualTo(unmatchedOffender.otherIds.crn)
+            assertThat(summaries[0].placementRequestStatus).isEqualTo(Cas1PlacementRequestSummary.PlacementRequestStatus.unableToMatch)
+            assertThat(summaries[0].isParole).isEqualTo(placementRequest.isParole)
+            assertThat(summaries[0].requestedPlacementDuration).isEqualTo(placementRequest.duration)
+            assertThat(summaries[0].requestedPlacementArrivalDate).isEqualTo(placementRequest.expectedArrival)
+            assertThat(summaries[0].personTier).isEqualTo(placementRequest.application.riskRatings?.tier?.value?.level)
+            assertThat(summaries[0].applicationId).isEqualTo(placementRequest.application.id)
+            assertThat(summaries[0].applicationSubmittedDate).isEqualTo(placementRequest.application.submittedAt!!.toLocalDate())
+            assertThat(summaries[0].firstBookingPremisesName).isNull()
+            assertThat(summaries[0].firstBookingArrivalDate).isNull()
+          }
+        }
+      }
+    }
+
+    @Test
+    fun `should return 1 placement request when it has an active booking`() {
+      givenAUser(roles = listOf(UserRole.CAS1_WORKFLOW_MANAGER)) { user, jwt ->
+        givenAnOffender { unmatchedOffender, unmatchedInmate ->
+          givenAPlacementRequest(
+            placementRequestAllocatedTo = user,
+            assessmentAllocatedTo = user,
+            createdByUser = user,
+            crn = unmatchedOffender.otherIds.crn,
+          ) { placementRequest, _ ->
+
+            // create a cancelled space booking
+            createBookingNotMadeRecord(placementRequest)
+            val spaceBooking = createSpaceBooking(placementRequest)
+            spaceBooking.cancellationOccurredAt = LocalDate.now()
+            cas1SpaceBookingRepository.save(spaceBooking)
+
+            // create a booking
+            createBooking(
+              placementRequest,
+              premises = givenAnApprovedPremises("legacy_booking_premises"),
+              arrivalDate = LocalDate.parse("2025-01-01"),
+            )
+
+            // should return 1 placement request from GET /cas1/placement-requests
+            val summaries = webTestClient.get()
+              .uri("/cas1/placement-requests")
+              .header("Authorization", "Bearer $jwt")
+              .exchange()
+              .expectStatus()
+              .isOk
+              .bodyAsListOfObjects<Cas1PlacementRequestSummary>()
+
+            assertThat(summaries).hasSize(1)
+
+            val person = personTransformer.transformModelToPersonApi(
+              PersonInfoResult.Success.Full(unmatchedOffender.otherIds.crn, unmatchedOffender, unmatchedInmate),
+            )
+
+            assertThat(summaries[0].id).isEqualTo(placementRequest.id)
+            assertThat(summaries[0].person).isEqualTo(person)
+            assertThat(summaries[0].placementRequestStatus).isEqualTo(cas1PlacementRequestSummaryTransformer.getStatus(placementRequest))
+            assertThat(summaries[0].isParole).isEqualTo(placementRequest.isParole)
+            assertThat(summaries[0].requestedPlacementDuration).isEqualTo(placementRequest.duration)
+            assertThat(summaries[0].requestedPlacementArrivalDate).isEqualTo(placementRequest.expectedArrival)
+            assertThat(summaries[0].personTier).isEqualTo(placementRequest.application.riskRatings?.tier?.value?.level)
+            assertThat(summaries[0].applicationId).isEqualTo(placementRequest.application.id)
+            assertThat(summaries[0].applicationSubmittedDate).isEqualTo(placementRequest.application.submittedAt!!.toLocalDate())
+            assertThat(summaries[0].firstBookingPremisesName).isEqualTo("legacy_booking_premises")
+            assertThat(summaries[0].firstBookingArrivalDate).isEqualTo(LocalDate.parse("2025-01-01"))
+          }
+        }
+      }
+    }
+
+    @Test
+    fun `should return 1 placement request when it has an active space booking`() {
+      givenAUser(roles = listOf(UserRole.CAS1_WORKFLOW_MANAGER)) { user, jwt ->
+        givenAnOffender { unmatchedOffender, unmatchedInmate ->
+          givenAPlacementRequest(
+            placementRequestAllocatedTo = user,
+            assessmentAllocatedTo = user,
+            createdByUser = user,
+            crn = unmatchedOffender.otherIds.crn,
+          ) { placementRequest, _ ->
+
+            // create a cancelled booking
+            val booking = createBooking(placementRequest)
+
+            cancellationEntityFactory.produceAndPersist {
+              withBooking(booking)
+              withReason(cancellationReasonEntityFactory.produceAndPersist())
+            }
+
+            // create a cancelled space booking
+            createBookingNotMadeRecord(placementRequest)
+            val spaceBooking = createSpaceBooking(placementRequest)
+            spaceBooking.cancellationOccurredAt = LocalDate.now()
+            cas1SpaceBookingRepository.save(spaceBooking)
+
+            // create a space booking
+            createSpaceBooking(
+              placementRequest,
+              premises = givenAnApprovedPremises("space_booking_premises"),
+              canonicalArrivalDate = LocalDate.parse("2025-01-01"),
+            )
+
+            // should return 1 placement request from GET /cas1/placement-requests
+            val summaries = webTestClient.get()
+              .uri("/cas1/placement-requests")
+              .header("Authorization", "Bearer $jwt")
+              .exchange()
+              .expectStatus()
+              .isOk
+              .bodyAsListOfObjects<Cas1PlacementRequestSummary>()
+
+            assertThat(summaries).hasSize(1)
+
+            assertThat(summaries[0].id).isEqualTo(placementRequest.id)
+            assertThat(summaries[0].person.crn).isEqualTo(unmatchedOffender.otherIds.crn)
+            assertThat(summaries[0].placementRequestStatus).isEqualTo(Cas1PlacementRequestSummary.PlacementRequestStatus.matched)
+            assertThat(summaries[0].isParole).isEqualTo(placementRequest.isParole)
+            assertThat(summaries[0].requestedPlacementDuration).isEqualTo(placementRequest.duration)
+            assertThat(summaries[0].requestedPlacementArrivalDate).isEqualTo(placementRequest.expectedArrival)
+            assertThat(summaries[0].personTier).isEqualTo(placementRequest.application.riskRatings?.tier?.value?.level)
+            assertThat(summaries[0].applicationId).isEqualTo(placementRequest.application.id)
+            assertThat(summaries[0].applicationSubmittedDate).isEqualTo(placementRequest.application.submittedAt!!.toLocalDate())
+            assertThat(summaries[0].firstBookingPremisesName).isEqualTo("space_booking_premises")
+            assertThat(summaries[0].firstBookingArrivalDate).isEqualTo(LocalDate.parse("2025-01-01"))
+          }
+        }
       }
     }
 
