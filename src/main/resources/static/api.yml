@@ -1834,49 +1834,6 @@ paths:
         500:
           $ref: '_shared.yml#/components/responses/500Response'
       x-codegen-request-body-name: body
-  /applications/{applicationId}/timeline:
-    get:
-      description: deprecated, use /cas1/applications/{applicationId}/timeline
-      deprecated: true
-      tags:
-        - Application data timeline
-      summary: Returns domain event summary
-      operationId: applicationsApplicationIdTimelineGet
-      parameters:
-        - name: applicationId
-          in: path
-          description: ID of the application
-          required: true
-          schema:
-            type: string
-            format: uuid
-        - name: X-Service-Name
-          in: header
-          required: true
-          description: If given, only users for this service will be returned
-          schema:
-            $ref: '_shared.yml#/components/schemas/ServiceName'
-      responses:
-        200:
-          description: successful operation
-          content:
-            'application/json':
-              schema:
-                type: array
-                items:
-                  $ref: '_shared.yml#/components/schemas/TimelineEvent'
-        401:
-          $ref: '_shared.yml#/components/responses/401Response'
-        403:
-          $ref: '_shared.yml#/components/responses/403Response'
-        404:
-          description: invalid CRN
-          content:
-            'application/json':
-              schema:
-                $ref: '_shared.yml#/components/schemas/Problem'
-        500:
-          $ref: '_shared.yml#/components/responses/500Response'
   /applications/{applicationId}/documents:
     get:
       tags:
