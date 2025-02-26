@@ -185,13 +185,20 @@ components:
           format: uuid
           example: 290fa58c-77b2-47e2-b729-4cd6b2ed1a78
         requirements:
+          deprecated: true
+          description: use characteristics
           $ref: '#/components/schemas/Cas1SpaceBookingRequirements'
+        characteristics:
+          type: array
+          items:
+            $ref: '_shared.yml#/components/schemas/Cas1SpaceCharacteristic'
       required:
         - arrivalDate
         - departureDate
         - premisesId
-        - requirements
     Cas1SpaceBookingRequirements:
+      deprecated: true
+      description: this is only used by deprecated fields
       type: object
       properties:
         essentialCharacteristics:
