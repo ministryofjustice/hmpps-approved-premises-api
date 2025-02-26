@@ -35,7 +35,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Characteristi
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.CharacteristicRepository.Constants.CAS1_PROPERTY_NAME_SUITED_FOR_SEX_OFFENDERS
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.CharacteristicRepository.Constants.CAS1_PROPERTY_NAME_WHEELCHAIR_DESIGNATED
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas1.Cas1ApplicationFacade
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.toInstant
 import java.time.Instant
 import java.time.LocalDate
 import java.time.LocalDateTime
@@ -451,12 +450,6 @@ data class Cas1SpaceBookingEntity(
     !hasNonArrival() &&
     canonicalArrivalDate <= day &&
     canonicalDepartureDate > day
-
-  @Deprecated("Any usage of this should instead be updated to use individual date and time fields")
-  fun actualArrivalAsDateTime(): Instant? = actualArrivalDate?.atTime(actualArrivalTime ?: LocalTime.NOON)?.toInstant()
-
-  @Deprecated("Any usage of this should be updated to use individual date and time fields")
-  fun actualDepartureAsDateTime(): Instant? = actualDepartureDate?.atTime(actualDepartureTime ?: LocalTime.NOON)?.toInstant()
 
   override fun toString() = "Cas1SpaceBookingEntity:$id"
   val applicationFacade: Cas1ApplicationFacade

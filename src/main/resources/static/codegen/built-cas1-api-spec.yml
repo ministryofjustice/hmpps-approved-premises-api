@@ -7171,11 +7171,11 @@ components:
           type: string
           format: date
         actualArrivalDate:
-          description: Use actualArrivalDateOnly and actualArrivalTime
-          deprecated: true
           type: string
-          format: date-time
+          format: date
         actualArrivalDateOnly:
+          description: Use actualArrivalDate
+          deprecated: true
           type: string
           format: date
         actualArrivalTime:
@@ -7184,11 +7184,11 @@ components:
           pattern: '^([01][0-9]|2[0-3]):([0-5][0-9])$'
           example: '23:15'
         actualDepartureDate:
-          description: Use actualDepartureDateOnly and actualDepartureTime
-          deprecated: true
           type: string
-          format: date-time
+          format: date
         actualDepartureDateOnly:
+          description: Use actualDepartureDate
+          deprecated: true
           type: string
           format: date
         actualDepartureTime:
