@@ -342,7 +342,7 @@ class Cas2v2ApplicationService(
                 usertype = Cas2StaffMember.Usertype.valueOf(application.createdByUser.userType.authSource),
               ),
             ),
-            cas2v2ApplicationOrigin = application.applicationOrigin.toString(),
+            applicationOrigin = application.applicationOrigin.toString(),
           ),
         ),
       ),
