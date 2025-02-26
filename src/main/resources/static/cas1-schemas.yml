@@ -392,10 +392,12 @@ components:
           pattern: '^([01][0-9]|2[0-3]):([0-5][0-9])$'
           example: '23:15'
         canonicalArrivalDate:
-          description: actual arrival date or, if not known, the expected arrival date
+          deprecated: true
+          description: actual arrival date or, if not known, the expected arrival date.
           type: string
           format: date
         canonicalDepartureDate:
+          deprecated: true
           description: actual departure date or, if not known, the expected departure date
           type: string
           format: date
