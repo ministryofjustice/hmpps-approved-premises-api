@@ -34,6 +34,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.getMetadata
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.getPageableOrAllPages
 import java.time.OffsetDateTime
 import java.util.UUID
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApplicationOrigin
 
 @Service("Cas2ApplicationService")
 class ApplicationService(
@@ -321,6 +322,7 @@ class ApplicationService(
                 usertype = Cas2StaffMember.Usertype.nomis,
               ),
             ),
+            applicationOrigin = ApplicationOrigin.homeDetentionCurfew.toString(),
           ),
         ),
       ),

@@ -147,14 +147,16 @@ components:
               $ref: '#/components/schemas/Cas2StaffMember'
           required:
             - staffMember
-        cas2v2ApplicationOrigin:
-          type: string
+        applicationOrigin:
+            type: string
+            default: homeDetentionCurfew
       required:
         - applicationId
         - applicationUrl
         - personReference
         - submittedAt
         - submittedBy
+        - applicationOrigin
     Cas2ApplicationStatusUpdatedEventDetails:
       type: object
       properties:
