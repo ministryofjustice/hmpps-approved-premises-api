@@ -31,7 +31,6 @@ import java.time.format.DateTimeFormatter
 @Component
 class Cas1SpaceBookingTransformer(
   private val personTransformer: PersonTransformer,
-  private val spaceBookingRequirementsTransformer: Cas1SpaceBookingRequirementsTransformer,
   private val cancellationReasonTransformer: CancellationReasonTransformer,
   private val userTransformer: UserTransformer,
   private val spaceBookingStatusTransformer: Cas1SpaceBookingStatusTransformer,
@@ -58,9 +57,6 @@ class Cas1SpaceBookingTransformer(
       applicationId = applicationId,
       assessmentId = placementRequest?.assessment?.id,
       person = personTransformer.transformModelToPersonApi(person),
-      requirements = spaceBookingRequirementsTransformer.transformJpaToApi(
-        cas1SpaceBookingEntity = jpa,
-      ),
       premises = NamedId(
         id = jpa.premises.id,
         name = jpa.premises.name,

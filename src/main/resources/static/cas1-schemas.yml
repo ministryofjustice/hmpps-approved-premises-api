@@ -338,10 +338,6 @@ components:
           $ref: '_shared.yml#/components/schemas/Person'
         tier:
           type: string
-        requirements:
-          deprecated: true
-          description: Use 'characteristics' instead
-          $ref: '#/components/schemas/Cas1SpaceBookingRequirements'
         premises:
           $ref: '_shared.yml#/components/schemas/NamedId'
         apArea:
@@ -423,7 +419,6 @@ components:
         - id
         - applicationId
         - person
-        - requirements
         - premises
         - apArea
         - expectedArrivalDate
