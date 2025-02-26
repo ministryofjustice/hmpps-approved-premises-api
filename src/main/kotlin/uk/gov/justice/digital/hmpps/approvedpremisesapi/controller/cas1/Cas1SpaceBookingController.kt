@@ -72,8 +72,14 @@ class Cas1SpaceBookingController(
 
     val user = userService.getUserForRequest()
 
+    val requestedCharacteristics =
+      (
+        (body.requirements?.essentialCharacteristics ?: emptyList()) +
+          ((body.characteristics) ?: emptyList())
+        ).toSet()
+
     val characteristics = characteristicService.getCharacteristicsByPropertyNames(
-      body.requirements.essentialCharacteristics.map { it.value },
+      requestedCharacteristics.map { it.value },
       ServiceName.approvedPremises,
     )
 

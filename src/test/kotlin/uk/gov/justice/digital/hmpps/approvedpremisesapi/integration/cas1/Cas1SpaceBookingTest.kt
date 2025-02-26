@@ -20,7 +20,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1NewSpaceBo
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1NonArrival
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1SpaceBooking
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1SpaceBookingCharacteristic
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1SpaceBookingRequirements
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1SpaceBookingSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1SpaceBookingSummaryStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1SpaceCharacteristic
@@ -112,9 +111,7 @@ class Cas1SpaceBookingTest {
               arrivalDate = LocalDate.now().plusDays(1),
               departureDate = LocalDate.now().plusDays(8),
               premisesId = premises.id,
-              requirements = Cas1SpaceBookingRequirements(
-                essentialCharacteristics = listOf(),
-              ),
+              characteristics = listOf(),
             ),
           )
           .exchange()
@@ -144,9 +141,7 @@ class Cas1SpaceBookingTest {
               arrivalDate = LocalDate.now().plusDays(1),
               departureDate = LocalDate.now().plusDays(8),
               premisesId = premises.id,
-              requirements = Cas1SpaceBookingRequirements(
-                essentialCharacteristics = listOf(),
-              ),
+              characteristics = listOf(),
             ),
           )
           .exchange()
@@ -174,9 +169,7 @@ class Cas1SpaceBookingTest {
                 arrivalDate = LocalDate.now().plusDays(1),
                 departureDate = LocalDate.now().plusDays(8),
                 premisesId = UUID.randomUUID(),
-                requirements = Cas1SpaceBookingRequirements(
-                  essentialCharacteristics = listOf(),
-                ),
+                characteristics = listOf(),
               ),
             )
             .exchange()
@@ -213,9 +206,7 @@ class Cas1SpaceBookingTest {
                 arrivalDate = LocalDate.now().plusDays(1),
                 departureDate = LocalDate.now(),
                 premisesId = premises.id,
-                requirements = Cas1SpaceBookingRequirements(
-                  essentialCharacteristics = listOf(),
-                ),
+                characteristics = listOf(),
               ),
             )
             .exchange()
@@ -239,7 +230,7 @@ class Cas1SpaceBookingTest {
             withEmailAddress("caseManager@test.com")
           },
         ) { placementRequest, application ->
-          val essentialCharacteristics = listOf(
+          val characteristics = listOf(
             Cas1SpaceCharacteristic.hasEnSuite,
             Cas1SpaceCharacteristic.isArsonSuitable,
           )
@@ -272,9 +263,7 @@ class Cas1SpaceBookingTest {
                 arrivalDate = LocalDate.now().plusDays(1),
                 departureDate = LocalDate.now().plusDays(8),
                 premisesId = premises.id,
-                requirements = Cas1SpaceBookingRequirements(
-                  essentialCharacteristics = essentialCharacteristics,
-                ),
+                characteristics = characteristics,
               ),
             )
             .exchange()
@@ -286,7 +275,7 @@ class Cas1SpaceBookingTest {
 
           assertThat(result.person)
           assertThat(result.characteristics).containsExactlyInAnyOrderElementsOf(
-            essentialCharacteristics,
+            characteristics,
           )
           assertThat(result.premises.id).isEqualTo(premises.id)
           assertThat(result.premises.name).isEqualTo(premises.name)
