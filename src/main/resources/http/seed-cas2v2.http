@@ -1,0 +1,32 @@
+# You'll need to link the seeds folder into the root of the repo
+# ln -s src/main/resources/db/seed/local+dev+test seed
+
+### POST seed cas2v2 users
+POST http://127.0.0.1:8080/seed
+Content-Type: application/json
+
+{
+  "seedType": "cas2v2_users",
+  "fileName": "09__cas2v2_users.csv"
+}
+###
+
+### POST seed cas2v2 applications
+POST http://127.0.0.1:8080/seed
+Content-Type: application/json
+
+{
+  "seedType": "cas2v2_applications",
+  "fileName": "10__cas2v2_applications.csv"
+}
+###
+
+
+
+
+
+
+
+
+
+
