@@ -9,6 +9,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.SeedFileType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.config.SeedConfig
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.seed.cas1.Cas1StartupScript
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.seed.cas2.Cas2StartupScript
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.seed.cas2v2.Cas2v2StartupScript
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.EnvironmentService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.SentryService
 import java.io.File
@@ -19,6 +20,7 @@ class SeedOnStartupService(
   private val seedConfig: SeedConfig,
   private val cas1StartupScript: Cas1StartupScript,
   private val cas2StartupScript: Cas2StartupScript,
+  private val cas2v2StartupScript: Cas2v2StartupScript,
   private val seedService: SeedService,
   private val seedLogger: SeedLogger,
   private val environmentService: EnvironmentService,
@@ -81,6 +83,10 @@ class SeedOnStartupService(
 
     if (startupConfig.script.cas2Enabled) {
       cas2StartupScript.script()
+    }
+
+    if (startupConfig.script.cas2v2Enabled) {
+      cas2v2StartupScript.script()
     }
   }
 }
