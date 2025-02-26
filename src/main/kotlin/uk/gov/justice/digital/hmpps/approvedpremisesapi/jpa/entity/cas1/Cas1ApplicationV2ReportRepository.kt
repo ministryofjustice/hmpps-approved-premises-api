@@ -47,9 +47,15 @@ SELECT DISTINCT ON (application.submitted_at, application.id)
   apa.notice_type AS application_timeliness_status,
   reason_for_short_notice_metadata.value AS applicant_reason_for_late_application,
   reason_for_short_notice_other_metadata.value AS applicant_reason_for_late_application_detail,
-  initial_assessment.data -> 'suitability-assessment' -> 'application-timeliness' ->> 'agreeWithShortNoticeReason' AS initial_assessor_agree_with_short_notice_reason,
-  initial_assessment.data -> 'suitability-assessment' -> 'application-timeliness' ->> 'agreeWithShortNoticeReasonComments' AS initial_assessor_reason_for_late_application,
-  initial_assessment.data -> 'suitability-assessment' -> 'application-timeliness' ->> 'reasonForLateApplication' AS initial_assessor_reason_for_late_application_detail,
+  
+  CASE 
+  	WHEN initial_ap_assessment.agree_with_short_notice_reason IS TRUE THEN 'yes' 
+  	WHEN initial_ap_assessment.agree_with_short_notice_reason IS FALSE THEN 'no'
+  	ELSE null
+  END AS initial_assessor_agree_with_short_notice_reason,
+  initial_ap_assessment.agree_with_short_notice_reason_comments AS initial_assessor_reason_for_late_application,
+  initial_ap_assessment.reason_for_late_application AS initial_assessor_reason_for_late_application_detail,
+  
   initial_assessment_ap_type_metadata.value AS initial_assessor_premises_type,
   to_char(initial_assessment.allocated_at, 'YYYY-MM-DD"T"HH24:MI:SS"Z"') AS last_allocated_to_initial_assessor_date,
   initial_assessor_area.name as initial_assessor_cru,
@@ -93,6 +99,7 @@ LEFT OUTER JOIN LATERAL (
   ORDER BY created_at ASC
   LIMIT 1
 ) initial_assessment ON TRUE -- ON condition is mandatory with LEFT OUTER JOIN, but satisfied already in lateral join subquery
+LEFT OUTER JOIN approved_premises_assessments initial_ap_assessment ON initial_ap_assessment.assessment_id = initial_assessment.id
 
 LEFT JOIN users initial_assessor ON initial_assessor.id = initial_assessment.allocated_to_user_id
 LEFT JOIN ap_areas initial_assessor_area ON initial_assessor_area.id = initial_assessor.ap_area_id
