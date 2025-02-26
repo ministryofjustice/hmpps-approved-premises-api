@@ -27,7 +27,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas2Applicatio
   "uk.gov.justice.digital.hmpps.approvedpremisesapi.controller.cas2" +
     ".ApplicationsController",
 )
-class ApplicationsController(
+class Cas2ApplicationsController(
   private val httpAuthService: HttpAuthService,
   private val applicationService: ApplicationService,
   private val applicationsTransformer: ApplicationsTransformer,

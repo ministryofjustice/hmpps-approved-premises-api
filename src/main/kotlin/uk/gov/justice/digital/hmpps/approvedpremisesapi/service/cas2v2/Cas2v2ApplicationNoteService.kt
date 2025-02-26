@@ -5,7 +5,7 @@ import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.data.repository.findByIdOrNull
 import org.springframework.stereotype.Service
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewCas2ApplicationNote
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewCas2v2ApplicationNote
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.config.NotifyConfig
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas2v2.Cas2v2ApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas2v2.Cas2v2ApplicationNoteEntity
@@ -37,7 +37,7 @@ class Cas2v2ApplicationNoteService(
   private val log = LoggerFactory.getLogger(this::class.java)
 
   @Suppress("ReturnCount")
-  fun createAssessmentNote(assessmentId: UUID, note: NewCas2ApplicationNote): CasResult<Cas2v2ApplicationNoteEntity> {
+  fun createAssessmentNote(assessmentId: UUID, note: NewCas2v2ApplicationNote): CasResult<Cas2v2ApplicationNoteEntity> {
     val assessment = cas2v2AssessmentRepository.findByIdOrNull(assessmentId)
       ?: return CasResult.NotFound("Cas2v2ApplicationNoteEntity", assessmentId.toString())
 
