@@ -1311,38 +1311,6 @@ paths:
                 $ref: '_shared.yml#/components/schemas/Problem'
         500:
           $ref: '_shared.yml#/components/responses/500Response'
-  /people/{crn}/timeline:
-    get:
-      description: deprecated, use /cas1/people/{crn}/timeline
-      deprecated: false
-      summary: Returns a timeline of all applications for a Person.
-      operationId: peopleCrnTimelineGet
-      parameters:
-        - name: crn
-          in: path
-          description: CRN of the Person to fetch the timeline for
-          required: true
-          schema:
-            type: string
-      responses:
-        200:
-          description: successful operation
-          content:
-            'application/json':
-              schema:
-                $ref: '_shared.yml#/components/schemas/PersonalTimeline'
-        401:
-          $ref: '_shared.yml#/components/responses/401Response'
-        403:
-          $ref: '_shared.yml#/components/responses/403Response'
-        404:
-          description: invalid CRN
-          content:
-            'application/json':
-              schema:
-                $ref: '_shared.yml#/components/schemas/Problem'
-        500:
-          $ref: '_shared.yml#/components/responses/500Response'
   /premises/{premisesId}/lost-beds:
     post:
       tags:
