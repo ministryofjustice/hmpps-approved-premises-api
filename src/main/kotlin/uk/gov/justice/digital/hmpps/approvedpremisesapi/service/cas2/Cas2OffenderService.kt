@@ -5,6 +5,7 @@ import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.http.HttpStatus
 import org.springframework.stereotype.Service
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.ApDeliusContextApiClient
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.ApOASysContextApiClient
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.ClientResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.PrisonsApiClient
@@ -35,6 +36,7 @@ class Cas2OffenderService(
   private val probationOffenderSearchApiClient: ProbationOffenderSearchApiClient,
   private val apOASysContextApiClient: ApOASysContextApiClient,
   private val offenderDetailsDataSource: OffenderDetailsDataSource,
+  private val apDeliusContextApiClient: ApDeliusContextApiClient,
   @Value("\${cas2.crn-search-limit:400}") private val numberOfCrn: Int,
 ) {
 
@@ -235,6 +237,8 @@ class Cas2OffenderService(
 
     return AuthorisableActionResult.Success(offender)
   }
+
+  fun getCaseDetail(crn: String) = apDeliusContextApiClient.getCaseDetail(crn)
 
   fun getOffenderByCrn(crn: String): CasResult<OffenderDetailSummary> {
     when (val offenderResponse = offenderDetailsDataSource.getOffenderDetailSummary(crn)) {

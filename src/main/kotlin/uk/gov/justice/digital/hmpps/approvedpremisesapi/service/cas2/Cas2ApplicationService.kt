@@ -4,6 +4,7 @@ import com.fasterxml.jackson.databind.ObjectMapper
 import jakarta.transaction.Transactional
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.data.repository.findByIdOrNull
+import org.springframework.http.HttpStatus
 import org.springframework.stereotype.Service
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas2.model.Cas2ApplicationSubmittedEvent
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas2.model.Cas2ApplicationSubmittedEventDetails
@@ -13,6 +14,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas2.model.Ev
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas2.model.PersonReference
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApplicationOrigin
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.SubmitCas2Application
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.ClientResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.config.NotifyConfig
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApplicationSummaryRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas2ApplicationEntity
@@ -24,13 +26,11 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.NomisUserEnti
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.DomainEvent
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PaginationMetadata
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.ValidationErrors
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.validatedCasResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.AuthorisableActionResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.CasResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.EmailNotificationService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.UpstreamApiException
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.PageCriteria
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.extractEntityFromCasResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.getMetadata
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.getPageableOrAllPages
 import java.time.OffsetDateTime
@@ -120,22 +120,18 @@ class Cas2ApplicationService(
     }
   }
 
-  fun createApplication(crn: String, user: NomisUserEntity, jwt: String) = validatedCasResult<Cas2ApplicationEntity> {
-    val offenderDetails = when (val offenderDetailsResult = offenderService.getOffenderByCrn(crn)) {
-      is CasResult.NotFound -> return "$.crn" hasSingleValidationError "doesNotExist"
-      is CasResult.Unauthorised -> return "$.crn" hasSingleValidationError "userPermission"
-      is CasResult.Success -> offenderDetailsResult.value
+  fun createApplication(crn: String, user: NomisUserEntity, jwt: String): CasResult<Cas2ApplicationEntity> {
+    val caseDetailResponse = offenderService.getCaseDetail(crn)
 
-      // this should never happen, as an error will be throw in offenderService.getOffenderByCrn(crn)
-      else -> extractEntityFromCasResult(offenderDetailsResult)
-    }
+    val caseDetail = when (caseDetailResponse) {
+      is ClientResult.Success -> caseDetailResponse.body
+      is ClientResult.Failure.StatusCode -> when (caseDetailResponse.status) {
+        HttpStatus.NOT_FOUND -> return CasResult.NotFound("CaseDetail", crn)
+        HttpStatus.FORBIDDEN -> return CasResult.Unauthorised()
+        else -> caseDetailResponse.throwException()
+      }
 
-    if (offenderDetails.otherIds.nomsNumber == null) {
-      throw RuntimeException("Cannot create an Application for an Offender without a NOMS number")
-    }
-
-    if (validationErrors.any()) {
-      return fieldValidationError
+      is ClientResult.Failure -> caseDetailResponse.throwException()
     }
 
     val createdApplication = applicationRepository.save(
@@ -149,12 +145,12 @@ class Cas2ApplicationService(
         createdAt = OffsetDateTime.now(),
         submittedAt = null,
         schemaUpToDate = true,
-        nomsNumber = offenderDetails.otherIds.nomsNumber,
+        nomsNumber = caseDetail.case.nomsId,
         telephoneNumber = null,
       ),
     )
 
-    return success(createdApplication.apply { schemaUpToDate = true })
+    return CasResult.Success(createdApplication.apply { schemaUpToDate = true })
   }
 
   @SuppressWarnings("ReturnCount")
