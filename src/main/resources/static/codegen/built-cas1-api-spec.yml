@@ -5610,7 +5610,6 @@ components:
         - update_cas2_applications_with_assessments
         - update_cas2_status_updates_with_assessments
         - update_cas2_notes_with_assessments
-        - update_cas1_fix_placement_app_links
         - update_cas1_backfill_user_ap_area
         - update_cas3_application_offender_name
         - update_cas3_domain_event_type_for_person_departed_updated
