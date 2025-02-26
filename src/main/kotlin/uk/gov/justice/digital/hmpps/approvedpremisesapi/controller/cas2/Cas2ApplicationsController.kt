@@ -5,10 +5,10 @@ import jakarta.transaction.Transactional
 import org.springframework.http.ResponseEntity
 import org.springframework.stereotype.Service
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.cas2.ApplicationsCas2Delegate
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Application
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas2Application
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewApplication
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.SortDirection
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.UpdateApplication
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.UpdateCas2Application
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas2ApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas2ApplicationSummaryEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.ForbiddenProblem
@@ -27,7 +27,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas2Applicatio
   "uk.gov.justice.digital.hmpps.approvedpremisesapi.controller.cas2" +
     ".ApplicationsController",
 )
-class ApplicationsController(
+class Cas2ApplicationsController(
   private val httpAuthService: HttpAuthService,
   private val applicationService: ApplicationService,
   private val applicationsTransformer: ApplicationsTransformer,
@@ -36,7 +36,7 @@ class ApplicationsController(
   private val userService: NomisUserService,
 ) : ApplicationsCas2Delegate {
 
-  override fun applicationsGet(
+  override fun getCas2Applications(
     isSubmitted: Boolean?,
     page: Int?,
     prisonCode: String?,
@@ -54,14 +54,14 @@ class ApplicationsController(
     ).body(getPersonNamesAndTransformToSummaries(applications))
   }
 
-  override fun applicationsApplicationIdGet(applicationId: UUID): ResponseEntity<Application> {
+  override fun getCas2Application(applicationId: UUID): ResponseEntity<Cas2Application> {
     val user = userService.getUserForRequest()
     val application = extractEntityFromCasResult(applicationService.getApplicationForUser(applicationId, user))
     return ResponseEntity.ok(getPersonDetailAndTransform(application))
   }
 
   @Transactional
-  override fun applicationsPost(body: NewApplication): ResponseEntity<Application> {
+  override fun createCas2Application(body: NewApplication): ResponseEntity<Cas2Application> {
     val nomisPrincipal = httpAuthService.getNomisPrincipalOrThrow()
     val user = userService.getUserForRequest()
 
@@ -81,10 +81,10 @@ class ApplicationsController(
   }
 
   @Transactional
-  override fun applicationsApplicationIdPut(
+  override fun updateCas2Application(
     applicationId: UUID,
-    body: UpdateApplication,
-  ): ResponseEntity<Application> {
+    body: UpdateCas2Application,
+  ): ResponseEntity<Cas2Application> {
     val user = userService.getUserForRequest()
 
     val serializedData = objectMapper.writeValueAsString(body.data)
@@ -100,7 +100,7 @@ class ApplicationsController(
   }
 
   @Transactional
-  override fun applicationsApplicationIdAbandonPut(applicationId: UUID): ResponseEntity<Unit> {
+  override fun abandonCas2Application(applicationId: UUID): ResponseEntity<Unit> {
     val user = userService.getUserForRequest()
     extractEntityFromCasResult(applicationService.abandonApplication(applicationId, user))
     return ResponseEntity.ok(Unit)
@@ -118,7 +118,7 @@ class ApplicationsController(
 
   private fun getPersonDetailAndTransform(
     application: Cas2ApplicationEntity,
-  ): Application {
+  ): Cas2Application {
     val personInfo = offenderService.getFullInfoForPersonOrThrow(application.crn)
 
     return applicationsTransformer.transformJpaToApi(application, personInfo)

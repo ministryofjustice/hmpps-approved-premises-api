@@ -197,7 +197,7 @@ paths:
         content:
           'application/json':
             schema:
-              $ref: '_shared.yml#/components/schemas/UpdateCas2Assessment'
+              $ref: 'cas2v2-schemas.yml#/components/schemas/UpdateCas2v2Assessment'
         required: true
       responses:
         200:
@@ -205,7 +205,7 @@ paths:
           content:
             'application/json':
               schema:
-                $ref: 'cas2v2-schemas.yml#/components/schemas/Cas2v2Assessment'
+                $ref: '_shared.yml#/components/schemas/Cas2v2Assessment'
         401:
           $ref: '_shared.yml#/components/responses/401Response'
         403:
@@ -236,7 +236,7 @@ paths:
           content:
             'application/json':
               schema:
-                $ref: 'cas2v2-schemas.yml#/components/schemas/Cas2v2Assessment'
+                $ref: '_shared.yml#/components/schemas/Cas2v2Assessment'
         401:
           $ref: '_shared.yml#/components/responses/401Response'
         403:
@@ -302,7 +302,7 @@ paths:
         content:
           'application/json':
             schema:
-              $ref: '_shared.yml#/components/schemas/NewCas2ApplicationNote'
+              $ref: 'cas2v2-schemas.yml#/components/schemas/NewCas2v2ApplicationNote'
         required: true
       responses:
         200:
@@ -599,7 +599,7 @@ paths:
               schema:
                 type: array
                 items:
-                  $ref: '_shared.yml#/components/schemas/Cas2ApplicationStatus'
+                  $ref: 'cas2v2-schemas.yml#/components/schemas/Cas2v2ApplicationStatus'
         401:
           $ref: '_shared.yml#/components/responses/401Response'
         403:
@@ -617,7 +617,7 @@ paths:
           description: name of the report to download
           required: true
           schema:
-            $ref: '_shared.yml#/components/schemas/Cas2ReportName'
+            $ref: 'cas2v2-schemas.yml#/components/schemas/Cas2v2ReportName'
       responses:
         200:
           description: successful operation
