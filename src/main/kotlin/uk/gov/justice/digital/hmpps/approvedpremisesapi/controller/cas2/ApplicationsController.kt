@@ -11,12 +11,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.SortDirection
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.UpdateApplication
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas2ApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas2ApplicationSummaryEntity
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.BadRequestProblem
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.ConflictProblem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.ForbiddenProblem
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.NotFoundProblem
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.AuthorisableActionResult
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.ValidatableActionResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.HttpAuthService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.NomisUserService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas2.ApplicationService
@@ -78,12 +73,7 @@ class ApplicationsController(
       nomisPrincipal.token.tokenValue,
     )
 
-    val application = when (applicationResult) {
-      is ValidatableActionResult.GeneralValidationError -> throw BadRequestProblem(errorDetail = applicationResult.message)
-      is ValidatableActionResult.FieldValidationError -> throw BadRequestProblem(invalidParams = applicationResult.validationMessages)
-      is ValidatableActionResult.ConflictError -> throw ConflictProblem(id = applicationResult.conflictingEntityId, conflictReason = applicationResult.message)
-      is ValidatableActionResult.Success -> applicationResult.entity
-    }
+    val application = extractEntityFromCasResult(applicationResult)
 
     return ResponseEntity
       .created(URI.create("/cas2/applications/${application.id}"))
@@ -106,20 +96,7 @@ class ApplicationsController(
       user,
     )
 
-    val validationResult = when (applicationResult) {
-      is AuthorisableActionResult.NotFound -> throw NotFoundProblem(applicationId, "Application")
-      is AuthorisableActionResult.Unauthorised -> throw ForbiddenProblem()
-      is AuthorisableActionResult.Success -> applicationResult.entity
-    }
-
-    val updatedApplication = when (validationResult) {
-      is ValidatableActionResult.GeneralValidationError -> throw BadRequestProblem(errorDetail = validationResult.message)
-      is ValidatableActionResult.FieldValidationError -> throw BadRequestProblem(invalidParams = validationResult.validationMessages)
-      is ValidatableActionResult.ConflictError -> throw ConflictProblem(id = validationResult.conflictingEntityId, conflictReason = validationResult.message)
-      is ValidatableActionResult.Success -> validationResult.entity
-    }
-
-    return ResponseEntity.ok(getPersonDetailAndTransform(updatedApplication))
+    return ResponseEntity.ok(getPersonDetailAndTransform(extractEntityFromCasResult(applicationResult)))
   }
 
   @Transactional

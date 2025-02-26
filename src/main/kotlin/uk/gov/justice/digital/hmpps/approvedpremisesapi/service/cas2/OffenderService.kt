@@ -23,6 +23,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.probationoffenders
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.ForbiddenProblem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.NotFoundProblem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.AuthorisableActionResult
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.CasResult
 import java.util.stream.Collectors
 
 @Service("CAS2OffenderService")
@@ -224,10 +225,9 @@ class OffenderService(
     return AuthorisableActionResult.Success(inmateDetail)
   }
 
-  fun getOffenderByCrn(crn: String): AuthorisableActionResult<OffenderDetailSummary> {
-    var offenderResponse = offenderDetailsDataSource.getOffenderDetailSummary(crn)
-
-    val offender = when (offenderResponse) {
+  @Deprecated(message = "Use getOffenderByCrn to return a CasResult")
+  fun getOffenderByCrnDeprecated(crn: String): AuthorisableActionResult<OffenderDetailSummary> {
+    val offender = when (val offenderResponse = offenderDetailsDataSource.getOffenderDetailSummary(crn)) {
       is ClientResult.Success -> offenderResponse.body
       is ClientResult.Failure.StatusCode -> if (offenderResponse.status.equals(HttpStatus.NOT_FOUND)) return AuthorisableActionResult.NotFound() else offenderResponse.throwException()
       is ClientResult.Failure -> offenderResponse.throwException()
@@ -236,7 +236,23 @@ class OffenderService(
     return AuthorisableActionResult.Success(offender)
   }
 
-  fun getRiskByCrn(crn: String): AuthorisableActionResult<PersonRisks> = when (getOffenderByCrn(crn)) {
+  fun getOffenderByCrn(crn: String): CasResult<OffenderDetailSummary> {
+    when (val offenderResponse = offenderDetailsDataSource.getOffenderDetailSummary(crn)) {
+      is ClientResult.Success -> return CasResult.Success(offenderResponse.body)
+      is ClientResult.Failure.StatusCode -> if (offenderResponse.status == HttpStatus.NOT_FOUND) {
+        return CasResult.NotFound(
+          "OffenderDetailSummary",
+          crn,
+        )
+      } else {
+        offenderResponse.throwException()
+      }
+
+      is ClientResult.Failure -> offenderResponse.throwException()
+    }
+  }
+
+  fun getRiskByCrn(crn: String): AuthorisableActionResult<PersonRisks> = when (getOffenderByCrnDeprecated(crn)) {
     is AuthorisableActionResult.NotFound -> AuthorisableActionResult.NotFound()
     is AuthorisableActionResult.Unauthorised -> AuthorisableActionResult.Unauthorised()
     is AuthorisableActionResult.Success -> {

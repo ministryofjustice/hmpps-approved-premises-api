@@ -298,7 +298,7 @@ class Cas2v2ApplicationServiceTest {
       val crn = "CRN345"
       val username = "SOME_PERSON"
 
-      every { mockOffenderService.getOffenderByCrn(crn) } returns AuthorisableActionResult.NotFound()
+      every { mockOffenderService.getOffenderByCrnDeprecated(crn) } returns AuthorisableActionResult.NotFound()
 
       val user = userWithUsername(username)
 
@@ -314,7 +314,7 @@ class Cas2v2ApplicationServiceTest {
       val crn = "CRN345"
       val username = "SOME PERSON"
 
-      every { mockOffenderService.getOffenderByCrn(crn) } returns AuthorisableActionResult.Unauthorised()
+      every { mockOffenderService.getOffenderByCrnDeprecated(crn) } returns AuthorisableActionResult.Unauthorised()
 
       val user = userWithUsername(username)
 
@@ -335,7 +335,7 @@ class Cas2v2ApplicationServiceTest {
 
       val user = userWithUsername(username)
 
-      every { mockOffenderService.getOffenderByCrn(crn) } returns AuthorisableActionResult.Success(
+      every { mockOffenderService.getOffenderByCrnDeprecated(crn) } returns AuthorisableActionResult.Success(
         OffenderDetailsSummaryFactory().produce(),
       )
 
@@ -915,7 +915,7 @@ class Cas2v2ApplicationServiceTest {
         .withCrn(cas2v2Application.crn)
         .produce()
 
-      every { mockOffenderService.getOffenderByCrn(any()) } returns AuthorisableActionResult.Success(
+      every { mockOffenderService.getOffenderByCrnDeprecated(any()) } returns AuthorisableActionResult.Success(
         offenderDetails,
       )
 
@@ -963,7 +963,7 @@ class Cas2v2ApplicationServiceTest {
         .withCrn(cas2v2Application.crn)
         .produce()
 
-      every { mockOffenderService.getOffenderByCrn(any()) } returns AuthorisableActionResult.Success(
+      every { mockOffenderService.getOffenderByCrnDeprecated(any()) } returns AuthorisableActionResult.Success(
         offenderDetails,
       )
 
@@ -1048,7 +1048,7 @@ class Cas2v2ApplicationServiceTest {
         .withCrn(cas2v2Application.crn)
         .produce()
 
-      every { mockOffenderService.getOffenderByCrn(cas2v2Application.crn) } returns AuthorisableActionResult.Success(
+      every { mockOffenderService.getOffenderByCrnDeprecated(cas2v2Application.crn) } returns AuthorisableActionResult.Success(
         offenderDetails,
       )
 

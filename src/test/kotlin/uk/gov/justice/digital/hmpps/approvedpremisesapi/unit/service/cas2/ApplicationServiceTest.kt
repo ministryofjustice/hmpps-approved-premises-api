@@ -35,7 +35,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas2LockableA
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas2LockableApplicationRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.prisonsapi.AssignedLivingUnit
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.AuthorisableActionResult
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.ValidatableActionResult
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.CasResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.EmailNotificationService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas2.AssessmentService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas2.DomainEventService
@@ -369,15 +369,13 @@ class ApplicationServiceTest {
       val crn = "CRN345"
       val username = "SOMEPERSON"
 
-      every { mockOffenderService.getOffenderByCrn(crn) } returns AuthorisableActionResult.NotFound()
+      every { mockOffenderService.getOffenderByCrn(crn) } returns CasResult.NotFound("Offender", crn)
 
       val user = userWithUsername(username)
 
       val result = applicationService.createApplication(crn, user, "jwt")
 
-      assertThat(result is ValidatableActionResult.FieldValidationError).isTrue
-      result as ValidatableActionResult.FieldValidationError
-      assertThat(result.validationMessages).containsEntry("$.crn", "doesNotExist")
+      assertThatCasResult(result).isFieldValidationError().hasMessage("$.crn", "doesNotExist")
     }
 
     @Test
@@ -385,15 +383,13 @@ class ApplicationServiceTest {
       val crn = "CRN345"
       val username = "SOMEPERSON"
 
-      every { mockOffenderService.getOffenderByCrn(crn) } returns AuthorisableActionResult.Unauthorised()
+      every { mockOffenderService.getOffenderByCrn(crn) } returns CasResult.Unauthorised()
 
       val user = userWithUsername(username)
 
       val result = applicationService.createApplication(crn, user, "jwt")
 
-      assertThat(result is ValidatableActionResult.FieldValidationError).isTrue
-      result as ValidatableActionResult.FieldValidationError
-      assertThat(result.validationMessages).containsEntry("$.crn", "userPermission")
+      assertThatCasResult(result).isFieldValidationError().hasMessage("$.crn", "userPermission")
     }
 
     @Test
@@ -405,7 +401,7 @@ class ApplicationServiceTest {
 
       val user = userWithUsername(username)
 
-      every { mockOffenderService.getOffenderByCrn(crn) } returns AuthorisableActionResult.Success(
+      every { mockOffenderService.getOffenderByCrn(crn) } returns CasResult.Success(
         OffenderDetailsSummaryFactory().produce(),
       )
 
@@ -417,10 +413,10 @@ class ApplicationServiceTest {
 
       val result = applicationService.createApplication(crn, user, "jwt")
 
-      assertThat(result is ValidatableActionResult.Success).isTrue
-      result as ValidatableActionResult.Success
-      assertThat(result.entity.crn).isEqualTo(crn)
-      assertThat(result.entity.createdByUser).isEqualTo(user)
+      assertThatCasResult(result).isSuccess().with {
+        assertThat(it.crn).isEqualTo(crn)
+        assertThat(it.createdByUser).isEqualTo(user)
+      }
     }
   }
 
@@ -434,13 +430,13 @@ class ApplicationServiceTest {
 
       every { mockApplicationRepository.findByIdOrNull(applicationId) } returns null
 
-      assertThat(
+      assertThatCasResult(
         applicationService.updateApplication(
           applicationId = applicationId,
           data = "{}",
           user = user,
-        ) is AuthorisableActionResult.NotFound,
-      ).isTrue
+        ),
+      ).isNotFound("Application", applicationId)
     }
 
     @Test
@@ -460,13 +456,13 @@ class ApplicationServiceTest {
       every { mockJsonSchemaService.checkSchemaOutdated(application) } returns
         application
 
-      assertThat(
+      assertThatCasResult(
         applicationService.updateApplication(
           applicationId = applicationId,
           data = "{}",
           user = user,
-        ) is AuthorisableActionResult.Unauthorised,
-      ).isTrue
+        ),
+      ).isUnauthorised()
     }
 
     @Test
@@ -496,13 +492,7 @@ class ApplicationServiceTest {
         user = user,
       )
 
-      assertThat(result is AuthorisableActionResult.Success).isTrue
-      result as AuthorisableActionResult.Success
-
-      assertThat(result.entity is ValidatableActionResult.GeneralValidationError).isTrue
-      val validatableActionResult = result.entity as ValidatableActionResult.GeneralValidationError
-
-      assertThat(validatableActionResult.message).isEqualTo("This application has already been submitted")
+      assertThatCasResult(result).isGeneralValidationError("This application has already been submitted")
     }
 
     @Test
@@ -530,13 +520,7 @@ class ApplicationServiceTest {
         user = user,
       )
 
-      assertThat(result is AuthorisableActionResult.Success).isTrue
-      result as AuthorisableActionResult.Success
-
-      assertThat(result.entity is ValidatableActionResult.GeneralValidationError).isTrue
-      val validatableActionResult = result.entity as ValidatableActionResult.GeneralValidationError
-
-      assertThat(validatableActionResult.message).isEqualTo("This application has been abandoned")
+      assertThatCasResult(result).isGeneralValidationError("This application has been abandoned")
     }
 
     @Test
@@ -561,13 +545,7 @@ class ApplicationServiceTest {
         user = user,
       )
 
-      assertThat(result is AuthorisableActionResult.Success).isTrue
-      result as AuthorisableActionResult.Success
-
-      assertThat(result.entity is ValidatableActionResult.GeneralValidationError).isTrue
-      val validatableActionResult = result.entity as ValidatableActionResult.GeneralValidationError
-
-      assertThat(validatableActionResult.message).isEqualTo("The schema version is outdated")
+      assertThatCasResult(result).isGeneralValidationError("The schema version is outdated")
     }
 
     @ParameterizedTest
@@ -613,21 +591,15 @@ class ApplicationServiceTest {
         user = user,
       )
 
-      assertThat(result is AuthorisableActionResult.Success).isTrue
-      result as AuthorisableActionResult.Success
-
-      assertThat(result.entity is ValidatableActionResult.Success).isTrue
-      val validatableActionResult = result.entity as ValidatableActionResult.Success
-
-      val cas2Application = validatableActionResult.entity
-
-      assertThat(cas2Application.data).isEqualTo(
-        """
+      assertThatCasResult(result).isSuccess().with {
+        assertThat(it.data).isEqualTo(
+          """
       {
         "aProperty": "value"
       }
     """,
-      )
+        )
+      }
     }
 
     @Test
@@ -650,16 +622,9 @@ class ApplicationServiceTest {
           schemaUpToDate = true
         }
 
-      every { mockApplicationRepository.findByIdOrNull(applicationId) } returns
-        application
-      every { mockJsonSchemaService.checkSchemaOutdated(application) } returns
-        application
-      every {
-        mockJsonSchemaService.getNewestSchema(
-          Cas2ApplicationJsonSchemaEntity::class
-            .java,
-        )
-      } returns newestSchema
+      every { mockApplicationRepository.findByIdOrNull(applicationId) } returns application
+      every { mockJsonSchemaService.checkSchemaOutdated(application) } returns application
+      every { mockJsonSchemaService.getNewestSchema(Cas2ApplicationJsonSchemaEntity::class.java) } returns newestSchema
       every { mockJsonSchemaService.validate(newestSchema, updatedData) } returns true
       every { mockApplicationRepository.save(any()) } answers {
         it.invocation.args[0]
@@ -671,518 +636,464 @@ class ApplicationServiceTest {
         data = updatedData,
         user = user,
       )
-
-      assertThat(result is AuthorisableActionResult.Success).isTrue
-      result as AuthorisableActionResult.Success
-
-      assertThat(result.entity is ValidatableActionResult.Success).isTrue
-      val validatableActionResult = result.entity as ValidatableActionResult.Success
-
-      val cas2Application = validatableActionResult.entity
-
-      assertThat(cas2Application.data).isEqualTo(updatedData)
+      assertThatCasResult(result).isSuccess().with {
+        assertThat(it.data).isEqualTo(updatedData)
+      }
     }
-  }
 
-  @Nested
-  inner class AbandonApplication {
-    val user = NomisUserEntityFactory().produce()
+    @Nested
+    inner class AbandonApplication {
+      val user = NomisUserEntityFactory().produce()
 
-    @Test
-    fun `returns NotFound when application doesn't exist`() {
-      val applicationId = UUID.fromString("fa6e97ce-7b9e-473c-883c-83b1c2af773d")
+      @Test
+      fun `returns NotFound when application doesn't exist`() {
+        val applicationId = UUID.fromString("fa6e97ce-7b9e-473c-883c-83b1c2af773d")
 
-      every { mockApplicationRepository.findByIdOrNull(applicationId) } returns null
+        every { mockApplicationRepository.findByIdOrNull(applicationId) } returns null
 
-      assertThatCasResult(
-        applicationService.abandonApplication(
+        assertThatCasResult(
+          applicationService.abandonApplication(
+            applicationId = applicationId,
+            user = user,
+          ),
+        ).isNotFound("Application", applicationId)
+      }
+
+      @Test
+      fun `returns Unauthorised when application doesn't belong to request user`() {
+        val applicationId = UUID.fromString("fa6e97ce-7b9e-473c-883c-83b1c2af773d")
+
+        val application = Cas2ApplicationEntityFactory()
+          .withId(applicationId)
+          .withYieldedCreatedByUser {
+            NomisUserEntityFactory()
+              .produce()
+          }
+          .produce()
+
+        every { mockApplicationRepository.findByIdOrNull(applicationId) } returns
+          application
+
+        assertThatCasResult(
+          applicationService.abandonApplication(
+            applicationId = applicationId,
+            user = user,
+          ),
+        ).isUnauthorised()
+      }
+
+      @Test
+      fun `returns Conflict Error when application has already been submitted`() {
+        val applicationId = UUID.fromString("fa6e97ce-7b9e-473c-883c-83b1c2af773d")
+
+        val newestSchema = Cas2ApplicationJsonSchemaEntityFactory().produce()
+
+        val application = Cas2ApplicationEntityFactory()
+          .withApplicationSchema(newestSchema)
+          .withId(applicationId)
+          .withCreatedByUser(user)
+          .withSubmittedAt(OffsetDateTime.now())
+          .produce()
+          .apply {
+            schemaUpToDate = true
+          }
+
+        every { mockApplicationRepository.findByIdOrNull(applicationId) } returns
+          application
+
+        val result = applicationService.abandonApplication(
           applicationId = applicationId,
           user = user,
-        ),
-      ).isNotFound("Application", applicationId)
-    }
+        )
 
-    @Test
-    fun `returns Unauthorised when application doesn't belong to request user`() {
-      val applicationId = UUID.fromString("fa6e97ce-7b9e-473c-883c-83b1c2af773d")
+        assertThatCasResult(result).isConflictError().hasMessage("This application has already been submitted")
+      }
 
-      val application = Cas2ApplicationEntityFactory()
-        .withId(applicationId)
-        .withYieldedCreatedByUser {
-          NomisUserEntityFactory()
-            .produce()
-        }
-        .produce()
+      @Test
+      fun `returns Success when application has already been abandoned`() {
+        val applicationId = UUID.fromString("fa6e97ce-7b9e-473c-883c-83b1c2af773d")
 
-      every { mockApplicationRepository.findByIdOrNull(applicationId) } returns
-        application
+        val newestSchema = Cas2ApplicationJsonSchemaEntityFactory().produce()
 
-      assertThatCasResult(
-        applicationService.abandonApplication(
+        val application = Cas2ApplicationEntityFactory()
+          .withApplicationSchema(newestSchema)
+          .withId(applicationId)
+          .withCreatedByUser(user)
+          .withAbandonedAt(OffsetDateTime.now())
+          .produce()
+          .apply {
+            schemaUpToDate = true
+          }
+
+        every { mockApplicationRepository.findByIdOrNull(applicationId) } returns
+          application
+
+        val result = applicationService.abandonApplication(
           applicationId = applicationId,
           user = user,
-        ),
-      ).isUnauthorised()
-    }
+        )
+        assertThatCasResult(result).isSuccess()
+      }
 
-    @Test
-    fun `returns Conflict Error when application has already been submitted`() {
-      val applicationId = UUID.fromString("fa6e97ce-7b9e-473c-883c-83b1c2af773d")
+      @Test
+      fun `returns Success and deletes the application data`() {
+        val applicationId = UUID.fromString("dced02b1-8e3b-4ea5-bf99-1fba0ca1b87c")
 
-      val newestSchema = Cas2ApplicationJsonSchemaEntityFactory().produce()
-
-      val application = Cas2ApplicationEntityFactory()
-        .withApplicationSchema(newestSchema)
-        .withId(applicationId)
-        .withCreatedByUser(user)
-        .withSubmittedAt(OffsetDateTime.now())
-        .produce()
-        .apply {
-          schemaUpToDate = true
-        }
-
-      every { mockApplicationRepository.findByIdOrNull(applicationId) } returns
-        application
-
-      val result = applicationService.abandonApplication(
-        applicationId = applicationId,
-        user = user,
-      )
-
-      assertThatCasResult(result).isConflictError().hasMessage("This application has already been submitted")
-    }
-
-    @Test
-    fun `returns Success when application has already been abandoned`() {
-      val applicationId = UUID.fromString("fa6e97ce-7b9e-473c-883c-83b1c2af773d")
-
-      val newestSchema = Cas2ApplicationJsonSchemaEntityFactory().produce()
-
-      val application = Cas2ApplicationEntityFactory()
-        .withApplicationSchema(newestSchema)
-        .withId(applicationId)
-        .withCreatedByUser(user)
-        .withAbandonedAt(OffsetDateTime.now())
-        .produce()
-        .apply {
-          schemaUpToDate = true
-        }
-
-      every { mockApplicationRepository.findByIdOrNull(applicationId) } returns
-        application
-
-      val result = applicationService.abandonApplication(
-        applicationId = applicationId,
-        user = user,
-      )
-      assertThatCasResult(result).isSuccess()
-    }
-
-    @Test
-    fun `returns Success and deletes the application data`() {
-      val applicationId = UUID.fromString("dced02b1-8e3b-4ea5-bf99-1fba0ca1b87c")
-
-      val newestSchema = Cas2ApplicationJsonSchemaEntityFactory().produce()
-      val data = """
+        val newestSchema = Cas2ApplicationJsonSchemaEntityFactory().produce()
+        val data = """
             {
               "aProperty": "value"
             }
       """
 
-      val application = Cas2ApplicationEntityFactory()
-        .withApplicationSchema(newestSchema)
-        .withId(applicationId)
-        .withCreatedByUser(user)
-        .withData(data)
-        .produce()
-        .apply {
-          schemaUpToDate = true
+        val application = Cas2ApplicationEntityFactory()
+          .withApplicationSchema(newestSchema)
+          .withId(applicationId)
+          .withCreatedByUser(user)
+          .withData(data)
+          .produce()
+          .apply {
+            schemaUpToDate = true
+          }
+
+        every { mockApplicationRepository.findByIdOrNull(applicationId) } returns
+          application
+
+        every { mockApplicationRepository.save(any()) } answers {
+          it.invocation.args[0] as Cas2ApplicationEntity
         }
 
-      every { mockApplicationRepository.findByIdOrNull(applicationId) } returns
-        application
+        val result = applicationService.abandonApplication(
+          applicationId = applicationId,
+          user = user,
+        )
 
-      every { mockApplicationRepository.save(any()) } answers {
-        it.invocation.args[0] as Cas2ApplicationEntity
+        assertThatCasResult(result).isSuccess().with { assertThat(it.data.isNullOrEmpty()) }
       }
+    }
 
-      val result = applicationService.abandonApplication(
+    @Nested
+    inner class SubmitApplication {
+      val applicationId: UUID = UUID.fromString("fa6e97ce-7b9e-473c-883c-83b1c2af773d")
+      val username = "SOMEPERSON"
+      val user = NomisUserEntityFactory()
+        .withNomisUsername(this.username)
+        .produce()
+      val hdcEligibilityDate = LocalDate.parse("2023-03-30")
+      val conditionalReleaseDate = LocalDate.parse("2023-04-29")
+
+      private val submitCas2Application = SubmitCas2Application(
+        translatedDocument = {},
         applicationId = applicationId,
-        user = user,
+        preferredAreas = "Leeds | Bradford",
+        hdcEligibilityDate = hdcEligibilityDate,
+        conditionalReleaseDate = conditionalReleaseDate,
+        telephoneNumber = "123",
       )
 
-      assertThatCasResult(result).isSuccess().with { assertThat(it.data.isNullOrEmpty()) }
-    }
-  }
-
-  @Nested
-  inner class SubmitApplication {
-    val applicationId: UUID = UUID.fromString("fa6e97ce-7b9e-473c-883c-83b1c2af773d")
-    val username = "SOMEPERSON"
-    val user = NomisUserEntityFactory()
-      .withNomisUsername(this.username)
-      .produce()
-    val hdcEligibilityDate = LocalDate.parse("2023-03-30")
-    val conditionalReleaseDate = LocalDate.parse("2023-04-29")
-
-    private val submitCas2Application = SubmitCas2Application(
-      translatedDocument = {},
-      applicationId = applicationId,
-      preferredAreas = "Leeds | Bradford",
-      hdcEligibilityDate = hdcEligibilityDate,
-      conditionalReleaseDate = conditionalReleaseDate,
-      telephoneNumber = "123",
-    )
-
-    @BeforeEach
-    fun setup() {
-      every { mockLockableApplicationRepository.acquirePessimisticLock(any()) } returns Cas2LockableApplicationEntity(UUID.randomUUID())
-      every { mockObjectMapper.writeValueAsString(submitCas2Application.translatedDocument) } returns "{}"
-      every { mockDomainEventService.saveCas2ApplicationSubmittedDomainEvent(any()) } just Runs
-    }
-
-    @Test
-    fun `returns NotFound when application doesn't exist`() {
-      val applicationId = UUID.fromString("fa6e97ce-7b9e-473c-883c-83b1c2af773d")
-
-      every { mockApplicationRepository.findByIdOrNull(applicationId) } returns null
-
-      assertThat(applicationService.submitApplication(submitCas2Application, user) is AuthorisableActionResult.NotFound).isTrue
-
-      assertEmailAndAssessmentsWereNotCreated()
-    }
-
-    @Test
-    fun `returns Unauthorised when application doesn't belong to request user`() {
-      val differentUser = NomisUserEntityFactory()
-        .produce()
-
-      val application = Cas2ApplicationEntityFactory()
-        .withId(applicationId)
-        .withCreatedByUser(differentUser)
-        .produce()
-
-      every { mockApplicationRepository.findByIdOrNull(applicationId) } returns application
-      every { mockJsonSchemaService.checkSchemaOutdated(application) } returns
-        application
-
-      assertThat(applicationService.submitApplication(submitCas2Application, user) is AuthorisableActionResult.Unauthorised).isTrue
-
-      assertEmailAndAssessmentsWereNotCreated()
-    }
-
-    @Test
-    fun `returns GeneralValidationError when application schema is outdated`() {
-      val application = Cas2ApplicationEntityFactory()
-        .withId(applicationId)
-        .withCreatedByUser(user)
-        .withSubmittedAt(null)
-        .produce()
-        .apply {
-          schemaUpToDate = false
-        }
-
-      every {
-        mockApplicationRepository.findByIdOrNull(applicationId)
-      } returns application
-      every { mockJsonSchemaService.checkSchemaOutdated(application) } returns application
-
-      val result = applicationService.submitApplication(submitCas2Application, user)
-
-      assertThat(result is AuthorisableActionResult.Success).isTrue
-      result as AuthorisableActionResult.Success
-
-      assertThat(result.entity is ValidatableActionResult.GeneralValidationError).isTrue
-      val validatableActionResult = result.entity as ValidatableActionResult.GeneralValidationError
-
-      assertThat(validatableActionResult.message).isEqualTo("The schema version is outdated")
-
-      assertEmailAndAssessmentsWereNotCreated()
-    }
-
-    @Test
-    fun `returns GeneralValidationError when application has already been submitted`() {
-      val newestSchema = Cas2ApplicationJsonSchemaEntityFactory().produce()
-
-      val application = Cas2ApplicationEntityFactory()
-        .withApplicationSchema(newestSchema)
-        .withId(applicationId)
-        .withCreatedByUser(user)
-        .withSubmittedAt(OffsetDateTime.now())
-        .produce()
-        .apply {
-          schemaUpToDate = true
-        }
-
-      every {
-        mockApplicationRepository.findByIdOrNull(applicationId)
-      } returns application
-      every { mockJsonSchemaService.checkSchemaOutdated(application) } returns application
-
-      val result = applicationService.submitApplication(submitCas2Application, user)
-
-      assertThat(result is AuthorisableActionResult.Success).isTrue
-      result as AuthorisableActionResult.Success
-
-      assertThat(result.entity is ValidatableActionResult.GeneralValidationError).isTrue
-      val validatableActionResult = result.entity as ValidatableActionResult.GeneralValidationError
-
-      assertThat(validatableActionResult.message).isEqualTo("This application has already been submitted")
-
-      assertEmailAndAssessmentsWereNotCreated()
-    }
-
-    @Test
-    fun `returns GeneralValidationError when application has already been abandoned`() {
-      val newestSchema = Cas2ApplicationJsonSchemaEntityFactory().produce()
-
-      val application = Cas2ApplicationEntityFactory()
-        .withApplicationSchema(newestSchema)
-        .withId(applicationId)
-        .withCreatedByUser(user)
-        .withAbandonedAt(OffsetDateTime.now())
-        .produce()
-
-      every {
-        mockApplicationRepository.findByIdOrNull(applicationId)
-      } returns application
-      every { mockJsonSchemaService.checkSchemaOutdated(application) } returns application
-
-      val result = applicationService.submitApplication(submitCas2Application, user)
-
-      assertThat(result is AuthorisableActionResult.Success).isTrue
-      result as AuthorisableActionResult.Success
-
-      assertThat(result.entity is ValidatableActionResult.GeneralValidationError).isTrue
-      val validatableActionResult = result.entity as ValidatableActionResult.GeneralValidationError
-
-      assertThat(validatableActionResult.message).isEqualTo("This application has already been abandoned")
-
-      assertEmailAndAssessmentsWereNotCreated()
-    }
-
-    @Test
-    fun `throws a validation error if InmateDetails (for prison code) are not available`() {
-      val newestSchema = Cas2ApplicationJsonSchemaEntityFactory().produce()
-
-      val application = Cas2ApplicationEntityFactory()
-        .withApplicationSchema(newestSchema)
-        .withId(applicationId)
-        .withCreatedByUser(user)
-        .withSubmittedAt(null)
-        .produce()
-        .apply {
-          schemaUpToDate = true
-        }
-
-      every {
-        mockApplicationRepository.findByIdOrNull(any())
-      } returns application
-      every { mockJsonSchemaService.checkSchemaOutdated(any()) } returns
-        application
-      every { mockJsonSchemaService.validate(any(), any()) } returns true
-
-      every { mockApplicationRepository.save(any()) } answers {
-        it.invocation.args[0]
-          as Cas2ApplicationEntity
+      @BeforeEach
+      fun setup() {
+        every { mockLockableApplicationRepository.acquirePessimisticLock(any()) } returns Cas2LockableApplicationEntity(
+          UUID.randomUUID(),
+        )
+        every { mockObjectMapper.writeValueAsString(submitCas2Application.translatedDocument) } returns "{}"
+        every { mockDomainEventService.saveCas2ApplicationSubmittedDomainEvent(any()) } just Runs
       }
 
-      val offenderDetails = OffenderDetailsSummaryFactory()
-        .withCrn(application.crn)
-        .produce()
+      @Test
+      fun `returns NotFound when application doesn't exist`() {
+        val applicationId = UUID.fromString("fa6e97ce-7b9e-473c-883c-83b1c2af773d")
 
-      every { mockOffenderService.getOffenderByCrn(any()) } returns AuthorisableActionResult.Success(
-        offenderDetails,
-      )
+        every { mockApplicationRepository.findByIdOrNull(applicationId) } returns null
 
-      // this call to the Prison API to find the referringPrisonCode when saving
-      // the application.submitted domain event *should* never 404 or otherwise fail,
-      // as when creating  the application initially a similar call was made.
-      // If there is a problem with accessing the Prison API, we fail hard and
-      // abort our attempt to submit the application.
-      every {
-        mockOffenderService.getInmateDetailByNomsNumber(any(), any())
-      } returns AuthorisableActionResult.NotFound()
-
-      assertGeneralValidationError("Inmate Detail not found")
-
-      assertEmailAndAssessmentsWereNotCreated()
-    }
-
-    @Test
-    fun `throws an UpstreamApiException if prison code is null`() {
-      val newestSchema = Cas2ApplicationJsonSchemaEntityFactory().produce()
-
-      val application = Cas2ApplicationEntityFactory()
-        .withApplicationSchema(newestSchema)
-        .withId(applicationId)
-        .withCreatedByUser(user)
-        .withSubmittedAt(null)
-        .produce()
-        .apply {
-          schemaUpToDate = true
-        }
-
-      every {
-        mockApplicationRepository.findByIdOrNull(any())
-      } returns application
-      every { mockJsonSchemaService.checkSchemaOutdated(any()) } returns
-        application
-      every { mockJsonSchemaService.validate(any(), any()) } returns true
-
-      every { mockApplicationRepository.save(any()) } answers {
-        it.invocation.args[0]
-          as Cas2ApplicationEntity
-      }
-
-      val offenderDetails = OffenderDetailsSummaryFactory()
-        .withCrn(application.crn)
-        .produce()
-
-      every { mockOffenderService.getOffenderByCrn(any()) } returns AuthorisableActionResult.Success(
-        offenderDetails,
-      )
-
-      // this call to the Prison API to find the referringPrisonCode when saving
-      // the application.submitted domain event *should* always have a prison code,
-      // but we need to account for possibility it may be missing.
-      // If there is a problem with accessing the Prison API, we fail hard and
-      // abort our attempt to submit the application and return a validation message.
-      every {
-        mockOffenderService.getInmateDetailByNomsNumber(any(), any())
-      } returns AuthorisableActionResult.Success(InmateDetailFactory().produce())
-
-      assertGeneralValidationError("No prison code available")
-
-      assertEmailAndAssessmentsWereNotCreated()
-    }
-
-    private fun assertGeneralValidationError(message: String) {
-      val result = applicationService.submitApplication(submitCas2Application, user)
-      assertThat(result is AuthorisableActionResult.Success).isTrue
-      result as AuthorisableActionResult.Success
-
-      assertThat(result.entity is ValidatableActionResult.GeneralValidationError).isTrue
-      val error = result.entity as ValidatableActionResult.GeneralValidationError
-
-      assertThat(error.message).isEqualTo(message)
-    }
-
-    private fun assertEmailAndAssessmentsWereNotCreated() {
-      verify(exactly = 0) { mockEmailNotificationService.sendEmail(any(), any(), any()) }
-      verify(exactly = 0) { mockAssessmentService.createCas2Assessment(any()) }
-    }
-
-    @Test
-    fun `returns Success and stores event`() {
-      val newestSchema = Cas2ApplicationJsonSchemaEntityFactory().produce()
-
-      val application = Cas2ApplicationEntityFactory()
-        .withApplicationSchema(newestSchema)
-        .withId(applicationId)
-        .withCreatedByUser(user)
-        .withSubmittedAt(null)
-        .produce()
-        .apply {
-          schemaUpToDate = true
-        }
-
-      every {
-        mockApplicationRepository.findByIdOrNull(applicationId)
-      } returns application
-      every { mockJsonSchemaService.checkSchemaOutdated(application) } returns
-        application
-      every { mockJsonSchemaService.validate(newestSchema, application.data!!) } returns true
-
-      val inmateDetail = InmateDetailFactory()
-        .withAssignedLivingUnit(
-          AssignedLivingUnit(
-            agencyId = "BRI",
-            locationId = 1234,
-            description = "description",
-            agencyName = "HMP Bristol",
+        assertThatCasResult(
+          applicationService.submitApplication(
+            submitCas2Application,
+            user,
           ),
-        )
-        .produce()
+        ).isNotFound("Application", applicationId)
 
-      every {
-        mockOffenderService.getInmateDetailByNomsNumber(
-          application.crn,
-          application.nomsNumber.toString(),
-        )
-      } returns AuthorisableActionResult.Success(inmateDetail)
-
-      every { mockNotifyConfig.templates.cas2ApplicationSubmitted } returns "abc123"
-      every { mockNotifyConfig.emailAddresses.cas2Assessors } returns "exampleAssessorInbox@example.com"
-      every { mockNotifyConfig.emailAddresses.cas2ReplyToId } returns "def456"
-      every { mockEmailNotificationService.sendEmail(any(), any(), any(), any()) } just Runs
-
-      every { mockApplicationRepository.save(any()) } answers {
-        it.invocation.args[0]
-          as Cas2ApplicationEntity
+        assertEmailAndAssessmentsWereNotCreated()
       }
 
-      val offenderDetails = OffenderDetailsSummaryFactory()
-        .withGender("male")
-        .withCrn(application.crn)
-        .produce()
+      @Test
+      fun `returns Unauthorised when application doesn't belong to request user`() {
+        val differentUser = NomisUserEntityFactory()
+          .produce()
 
-      every { mockOffenderService.getOffenderByCrn(application.crn) } returns AuthorisableActionResult.Success(
-        offenderDetails,
-      )
+        val application = Cas2ApplicationEntityFactory()
+          .withId(applicationId)
+          .withCreatedByUser(differentUser)
+          .produce()
 
-      every { mockAssessmentService.createCas2Assessment(any()) } returns any()
+        every { mockApplicationRepository.findByIdOrNull(applicationId) } returns application
+        every { mockJsonSchemaService.checkSchemaOutdated(application) } returns
+          application
 
-      val result = applicationService.submitApplication(submitCas2Application, user)
+        assertThatCasResult(applicationService.submitApplication(submitCas2Application, user)).isUnauthorised()
 
-      assertThat(result is AuthorisableActionResult.Success).isTrue
-      result as AuthorisableActionResult.Success
-
-      assertThat(result.entity is ValidatableActionResult.Success).isTrue
-      val validatableActionResult = result.entity as ValidatableActionResult.Success
-      val persistedApplication = validatableActionResult.entity
-
-      assertThat(persistedApplication.crn).isEqualTo(application.crn)
-      assertThat(persistedApplication.preferredAreas).isEqualTo("Leeds | Bradford")
-      assertThat(persistedApplication.hdcEligibilityDate).isEqualTo(hdcEligibilityDate)
-      assertThat(persistedApplication.conditionalReleaseDate).isEqualTo(conditionalReleaseDate)
-
-      verify { mockApplicationRepository.save(any()) }
-
-      verify(exactly = 1) {
-        mockDomainEventService.saveCas2ApplicationSubmittedDomainEvent(
-          match {
-            val data = it.data.eventDetails
-
-            it.applicationId == application.id &&
-              data.personReference.noms == application.nomsNumber &&
-              data.personReference.crn == application.crn &&
-              data.applicationUrl == "http://frontend/applications/${application.id}" &&
-              data.submittedBy.staffMember.username == username &&
-              data.referringPrisonCode == "BRI" &&
-              data.preferredAreas == "Leeds | Bradford" &&
-              data.hdcEligibilityDate == hdcEligibilityDate &&
-              data.conditionalReleaseDate == conditionalReleaseDate
-          },
-        )
+        assertEmailAndAssessmentsWereNotCreated()
       }
 
-      verify(exactly = 1) {
-        mockEmailNotificationService.sendEmail(
-          "exampleAssessorInbox@example.com",
-          "abc123",
-          match {
-            it["name"] == user.name &&
-              it["email"] == user.email &&
-              it["prisonNumber"] == application.nomsNumber &&
-              it["telephoneNumber"] == application.telephoneNumber &&
-              it["applicationUrl"] == "http://frontend/assess/applications/$applicationId/overview"
-          },
-          "def456",
-        )
+      @Test
+      fun `returns GeneralValidationError when application schema is outdated`() {
+        val application = Cas2ApplicationEntityFactory()
+          .withId(applicationId)
+          .withCreatedByUser(user)
+          .withSubmittedAt(null)
+          .produce()
+          .apply {
+            schemaUpToDate = false
+          }
+
+        every {
+          mockApplicationRepository.findByIdOrNull(applicationId)
+        } returns application
+        every { mockJsonSchemaService.checkSchemaOutdated(application) } returns application
+
+        val result = applicationService.submitApplication(submitCas2Application, user)
+
+        assertThatCasResult(result).isGeneralValidationError("The schema version is outdated")
+
+        assertEmailAndAssessmentsWereNotCreated()
       }
 
-      verify(exactly = 1) { mockAssessmentService.createCas2Assessment(persistedApplication) }
+      @Test
+      fun `returns GeneralValidationError when application has already been submitted`() {
+        val newestSchema = Cas2ApplicationJsonSchemaEntityFactory().produce()
+
+        val application = Cas2ApplicationEntityFactory()
+          .withApplicationSchema(newestSchema)
+          .withId(applicationId)
+          .withCreatedByUser(user)
+          .withSubmittedAt(OffsetDateTime.now())
+          .produce()
+          .apply {
+            schemaUpToDate = true
+          }
+
+        every {
+          mockApplicationRepository.findByIdOrNull(applicationId)
+        } returns application
+        every { mockJsonSchemaService.checkSchemaOutdated(application) } returns application
+
+        val result = applicationService.submitApplication(submitCas2Application, user)
+
+        assertThatCasResult(result).isGeneralValidationError("This application has already been submitted")
+
+        assertEmailAndAssessmentsWereNotCreated()
+      }
+
+      @Test
+      fun `returns GeneralValidationError when application has already been abandoned`() {
+        val newestSchema = Cas2ApplicationJsonSchemaEntityFactory().produce()
+
+        val application = Cas2ApplicationEntityFactory()
+          .withApplicationSchema(newestSchema)
+          .withId(applicationId)
+          .withCreatedByUser(user)
+          .withAbandonedAt(OffsetDateTime.now())
+          .produce()
+
+        every {
+          mockApplicationRepository.findByIdOrNull(applicationId)
+        } returns application
+        every { mockJsonSchemaService.checkSchemaOutdated(application) } returns application
+
+        val result = applicationService.submitApplication(submitCas2Application, user)
+
+        assertThatCasResult(result).isGeneralValidationError("This application has already been abandoned")
+
+        assertEmailAndAssessmentsWereNotCreated()
+      }
+
+      @Test
+      fun `throws a validation error if InmateDetails (for prison code) are not available`() {
+        val newestSchema = Cas2ApplicationJsonSchemaEntityFactory().produce()
+
+        val application = Cas2ApplicationEntityFactory()
+          .withApplicationSchema(newestSchema)
+          .withId(applicationId)
+          .withCreatedByUser(user)
+          .withSubmittedAt(null)
+          .produce()
+          .apply {
+            schemaUpToDate = true
+          }
+
+        every {
+          mockApplicationRepository.findByIdOrNull(any())
+        } returns application
+        every { mockJsonSchemaService.checkSchemaOutdated(any()) } returns
+          application
+        every { mockJsonSchemaService.validate(any(), any()) } returns true
+
+        every { mockApplicationRepository.save(any()) } answers {
+          it.invocation.args[0]
+            as Cas2ApplicationEntity
+        }
+
+        // this call to the Prison API to find the referringPrisonCode when saving
+        // the application.submitted domain event *should* never 404 or otherwise fail,
+        // as when creating  the application initially a similar call was made.
+        // If there is a problem with accessing the Prison API, we fail hard and
+        // abort our attempt to submit the application.
+        every {
+          mockOffenderService.getInmateDetailByNomsNumber(any(), any())
+        } returns AuthorisableActionResult.NotFound()
+
+        assertGeneralValidationError("Inmate Detail not found")
+
+        assertEmailAndAssessmentsWereNotCreated()
+      }
+
+      @Test
+      fun `throws an UpstreamApiException if prison code is null`() {
+        val newestSchema = Cas2ApplicationJsonSchemaEntityFactory().produce()
+
+        val application = Cas2ApplicationEntityFactory()
+          .withApplicationSchema(newestSchema)
+          .withId(applicationId)
+          .withCreatedByUser(user)
+          .withSubmittedAt(null)
+          .produce()
+          .apply {
+            schemaUpToDate = true
+          }
+
+        every {
+          mockApplicationRepository.findByIdOrNull(any())
+        } returns application
+        every { mockJsonSchemaService.checkSchemaOutdated(any()) } returns
+          application
+        every { mockJsonSchemaService.validate(any(), any()) } returns true
+
+        every { mockApplicationRepository.save(any()) } answers {
+          it.invocation.args[0]
+            as Cas2ApplicationEntity
+        }
+
+        // this call to the Prison API to find the referringPrisonCode when saving
+        // the application.submitted domain event *should* always have a prison code,
+        // but we need to account for possibility it may be missing.
+        // If there is a problem with accessing the Prison API, we fail hard and
+        // abort our attempt to submit the application and return a validation message.
+        every {
+          mockOffenderService.getInmateDetailByNomsNumber(any(), any())
+        } returns AuthorisableActionResult.Success(InmateDetailFactory().produce())
+
+        assertGeneralValidationError("No prison code available")
+
+        assertEmailAndAssessmentsWereNotCreated()
+      }
+
+      private fun assertGeneralValidationError(message: String) {
+        val result = applicationService.submitApplication(submitCas2Application, user)
+        assertThatCasResult(result).isGeneralValidationError(message)
+      }
+
+      private fun assertEmailAndAssessmentsWereNotCreated() {
+        verify(exactly = 0) { mockEmailNotificationService.sendEmail(any(), any(), any()) }
+        verify(exactly = 0) { mockAssessmentService.createCas2Assessment(any()) }
+      }
+
+      @SuppressWarnings("CyclomaticComplexMethod")
+      @Test
+      fun `returns Success and stores event`() {
+        val newestSchema = Cas2ApplicationJsonSchemaEntityFactory().produce()
+
+        val application = Cas2ApplicationEntityFactory()
+          .withApplicationSchema(newestSchema)
+          .withId(applicationId)
+          .withCreatedByUser(user)
+          .withSubmittedAt(null)
+          .produce()
+          .apply {
+            schemaUpToDate = true
+          }
+
+        every {
+          mockApplicationRepository.findByIdOrNull(applicationId)
+        } returns application
+        every { mockJsonSchemaService.checkSchemaOutdated(application) } returns
+          application
+        every { mockJsonSchemaService.validate(newestSchema, application.data!!) } returns true
+
+        val inmateDetail = InmateDetailFactory()
+          .withAssignedLivingUnit(
+            AssignedLivingUnit(
+              agencyId = "BRI",
+              locationId = 1234,
+              description = "description",
+              agencyName = "HMP Bristol",
+            ),
+          )
+          .produce()
+
+        every {
+          mockOffenderService.getInmateDetailByNomsNumber(
+            application.crn,
+            application.nomsNumber.toString(),
+          )
+        } returns AuthorisableActionResult.Success(inmateDetail)
+
+        every { mockNotifyConfig.templates.cas2ApplicationSubmitted } returns "abc123"
+        every { mockNotifyConfig.emailAddresses.cas2Assessors } returns "exampleAssessorInbox@example.com"
+        every { mockNotifyConfig.emailAddresses.cas2ReplyToId } returns "def456"
+        every { mockEmailNotificationService.sendEmail(any(), any(), any(), any()) } just Runs
+
+        every { mockApplicationRepository.save(any()) } answers {
+          it.invocation.args[0]
+            as Cas2ApplicationEntity
+        }
+
+        every { mockAssessmentService.createCas2Assessment(any()) } returns any()
+
+        val result = applicationService.submitApplication(submitCas2Application, user)
+
+        assertThatCasResult(result).isSuccess().with {
+          assertThat(it.crn).isEqualTo(application.crn)
+          assertThat(it.preferredAreas).isEqualTo("Leeds | Bradford")
+          assertThat(it.hdcEligibilityDate).isEqualTo(hdcEligibilityDate)
+          assertThat(it.conditionalReleaseDate).isEqualTo(conditionalReleaseDate)
+          verify(exactly = 1) { mockAssessmentService.createCas2Assessment(it) }
+        }
+
+        verify { mockApplicationRepository.save(any()) }
+
+        verify(exactly = 1) {
+          mockDomainEventService.saveCas2ApplicationSubmittedDomainEvent(
+            match {
+              val data = it.data.eventDetails
+
+              it.applicationId == application.id &&
+                data.personReference.noms == application.nomsNumber &&
+                data.personReference.crn == application.crn &&
+                data.applicationUrl == "http://frontend/applications/${application.id}" &&
+                data.submittedBy.staffMember.username == username &&
+                data.referringPrisonCode == "BRI" &&
+                data.preferredAreas == "Leeds | Bradford" &&
+                data.hdcEligibilityDate == hdcEligibilityDate &&
+                data.conditionalReleaseDate == conditionalReleaseDate
+            },
+          )
+        }
+
+        verify(exactly = 1) {
+          mockEmailNotificationService.sendEmail(
+            "exampleAssessorInbox@example.com",
+            "abc123",
+            match {
+              it["name"] == user.name &&
+                it["email"] == user.email &&
+                it["prisonNumber"] == application.nomsNumber &&
+                it["telephoneNumber"] == application.telephoneNumber &&
+                it["applicationUrl"] == "http://frontend/assess/applications/$applicationId/overview"
+            },
+            "def456",
+          )
+        }
+      }
     }
   }
 
