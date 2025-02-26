@@ -5254,6 +5254,8 @@ components:
         - nomis_users
         - external_users
         - cas2_applications
+        - cas2v2_applications
+        - cas2v2_users
         - temporary_accommodation_users
         - approved_premises_users
         - characteristics
