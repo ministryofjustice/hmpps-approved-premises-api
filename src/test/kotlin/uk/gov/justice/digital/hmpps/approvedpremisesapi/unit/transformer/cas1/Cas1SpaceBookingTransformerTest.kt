@@ -9,7 +9,6 @@ import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.extension.ExtendWith
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.CancellationReason
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1SpaceBookingRequirements
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1SpaceBookingSummaryStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1SpaceCharacteristic
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PersonSummaryDiscriminator
@@ -39,7 +38,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.RiskWithStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.CancellationReasonTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.PersonTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.UserTransformer
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.cas1.Cas1SpaceBookingRequirementsTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.cas1.Cas1SpaceBookingStatusTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.cas1.Cas1SpaceBookingTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.asOffenderDetailSummary
@@ -56,9 +54,6 @@ import java.util.UUID
 class Cas1SpaceBookingTransformerTest {
   @MockK
   private lateinit var personTransformer: PersonTransformer
-
-  @MockK
-  private lateinit var requirementsTransformer: Cas1SpaceBookingRequirementsTransformer
 
   @MockK
   private lateinit var cancellationReasonTransformer: CancellationReasonTransformer
@@ -154,10 +149,6 @@ class Cas1SpaceBookingTransformerTest {
         .withDeliusEventNumber("97")
         .produce()
 
-      val expectedRequirements = Cas1SpaceBookingRequirements(
-        essentialCharacteristics = listOf(),
-      )
-
       val expectedCancellationReason = CancellationReason(
         id = UUID.randomUUID(),
         name = "some reason",
@@ -177,9 +168,6 @@ class Cas1SpaceBookingTransformerTest {
 
       every { personTransformer.transformModelToPersonApi(personInfo) } returns expectedPerson
       every {
-        requirementsTransformer.transformJpaToApi(spaceBooking)
-      } returns expectedRequirements
-      every {
         userTransformer.transformJpaToApi(
           spaceBooking.createdBy!!,
           ServiceName.approvedPremises,
@@ -193,7 +181,6 @@ class Cas1SpaceBookingTransformerTest {
       assertThat(result.applicationId).isEqualTo(application.id)
       assertThat(result.assessmentId).isEqualTo(placementRequest.assessment.id)
       assertThat(result.person).isEqualTo(expectedPerson)
-      assertThat(result.requirements).isEqualTo(expectedRequirements)
       assertThat(result.premises.id).isEqualTo(spaceBooking.premises.id)
       assertThat(result.premises.name).isEqualTo(spaceBooking.premises.name)
       assertThat(result.apArea.id).isEqualTo(spaceBooking.premises.probationRegion.apArea!!.id)
@@ -302,16 +289,9 @@ class Cas1SpaceBookingTransformerTest {
         .withDepartureReason(departureReason)
         .produce()
 
-      val expectedRequirements = Cas1SpaceBookingRequirements(
-        essentialCharacteristics = listOf(),
-      )
-
       val expectedUser = ApprovedPremisesUserFactory().produce()
 
       every { personTransformer.transformModelToPersonApi(personInfo) } returns expectedPerson
-      every {
-        requirementsTransformer.transformJpaToApi(spaceBooking)
-      } returns expectedRequirements
       every {
         userTransformer.transformJpaToApi(
           spaceBooking.createdBy!!,

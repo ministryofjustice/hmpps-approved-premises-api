@@ -285,7 +285,7 @@ class Cas1SpaceBookingTest {
           val result = response.responseBody.blockFirst()!!
 
           assertThat(result.person)
-          assertThat(result.requirements.essentialCharacteristics).containsExactlyInAnyOrderElementsOf(
+          assertThat(result.characteristics).containsExactlyInAnyOrderElementsOf(
             essentialCharacteristics,
           )
           assertThat(result.premises.id).isEqualTo(premises.id)
