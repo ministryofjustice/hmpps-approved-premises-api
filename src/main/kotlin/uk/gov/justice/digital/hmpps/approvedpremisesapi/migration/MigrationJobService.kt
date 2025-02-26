@@ -9,7 +9,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.MigrationJobTy
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.migration.cas1.Cas1ArsonSuitableToArsonOffencesJob
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.migration.cas1.Cas1BackfillOfflineApplicationName
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.migration.cas1.Cas1BackfillUserApArea
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.migration.cas1.Cas1FixPlacementApplicationLinksJob
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.migration.cas1.Cas1IsArsonSuitableBackfillJob
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.migration.cas1.Cas1TaskDueMigrationJob
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.migration.cas1.Cas1UpdateApplicationLicenceExpiryDateJob
@@ -45,8 +44,6 @@ class MigrationJobService(
         MigrationJobType.cas2ApplicationsWithAssessments -> getBean(Cas2AssessmentMigrationJob::class)
         MigrationJobType.cas2StatusUpdatesWithAssessments -> getBean(Cas2StatusUpdateMigrationJob::class)
         MigrationJobType.cas2NotesWithAssessments -> getBean(Cas2NoteMigrationJob::class)
-        MigrationJobType.cas1FixPlacementAppLinks -> getBean(Cas1FixPlacementApplicationLinksJob::class)
-        MigrationJobType.cas1NoticeTypes -> getBean(NoticeTypeMigrationJob::class)
         MigrationJobType.cas1BackfillUserApArea -> getBean(Cas1BackfillUserApArea::class)
         MigrationJobType.cas3ApplicationOffenderName -> getBean(Cas3UpdateApplicationOffenderNameJob::class)
         MigrationJobType.cas3DomainEventTypeForPersonDepartedUpdated -> getBean(Cas3UpdateDomainEventTypeForPersonDepartureUpdatedJob::class)

@@ -4420,7 +4420,6 @@ components:
         - update_noms_number
         - update_users_from_api
         - users_basic
-        - approved_premises_cancel_bookings
         - approved_premises_assessment_more_info_bug_fix
         - approved_premises_redact_assessment_details
         - approved_premises_booking_to_space_booking
@@ -4464,8 +4463,6 @@ components:
         - update_cas2_applications_with_assessments
         - update_cas2_status_updates_with_assessments
         - update_cas2_notes_with_assessments
-        - update_cas1_fix_placement_app_links
-        - update_cas1_notice_types
         - update_cas1_backfill_user_ap_area
         - update_cas3_application_offender_name
         - update_cas3_domain_event_type_for_person_departed_updated
