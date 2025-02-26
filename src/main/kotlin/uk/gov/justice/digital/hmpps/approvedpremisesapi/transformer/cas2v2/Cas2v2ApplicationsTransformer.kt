@@ -63,6 +63,12 @@ class Cas2v2ApplicationsTransformer(
     },
   )
 
+  fun applicationOriginFromText(applicationOrigin: String): ApplicationOrigin = when (applicationOrigin) {
+    "courtBail" -> ApplicationOrigin.courtBail
+    "prisonBail" -> ApplicationOrigin.prisonBail
+    else -> ApplicationOrigin.homeDetentionCurfew
+  }
+
   private fun getStatus(entity: Cas2v2ApplicationEntity): ApplicationStatus {
     if (entity.submittedAt !== null) {
       return ApplicationStatus.submitted
