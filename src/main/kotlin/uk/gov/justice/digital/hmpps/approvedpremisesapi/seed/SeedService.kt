@@ -19,7 +19,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.seed.cas1.Cas1DomainEven
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.seed.cas1.Cas1DuplicateApplicationSeedJob
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.seed.cas1.Cas1FurtherInfoBugFixSeedJob
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.seed.cas1.Cas1ImportDeliusReferralsSeedJob
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.seed.cas1.Cas1LinkedBookingToPlacementRequestSeedJob
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.seed.cas1.Cas1LinkBookingToPlacementRequestSeedJob
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.seed.cas1.Cas1OutOfServiceBedSeedJob
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.seed.cas1.Cas1PlanSpacePlanningDryRunSeedJob
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.seed.cas1.Cas1RemoveAssessmentDetailsSeedJob
@@ -86,7 +86,7 @@ class SeedService(
         SeedFileType.approvedPremisesReplayDomainEvents -> getBean(Cas1DomainEventReplaySeedJob::class)
         SeedFileType.approvedPremisesDuplicateApplication -> getBean(Cas1DuplicateApplicationSeedJob::class)
         SeedFileType.approvedPremisesUpdateEventNumber -> getBean(Cas1UpdateEventNumberSeedJob::class)
-        SeedFileType.approvedPremisesLinkBookingToPlacementRequest -> getBean(Cas1LinkedBookingToPlacementRequestSeedJob::class)
+        SeedFileType.approvedPremisesLinkBookingToPlacementRequest -> getBean(Cas1LinkBookingToPlacementRequestSeedJob::class)
         SeedFileType.approvedPremisesOutOfServiceBeds -> getBean(Cas1OutOfServiceBedSeedJob::class)
         SeedFileType.updateUsersFromApi -> getBean(UpdateUsersFromApiSeedJob::class)
         SeedFileType.approvedPremisesCruManagementAreas -> getBean(Cas1CruManagementAreaSeedJob::class)

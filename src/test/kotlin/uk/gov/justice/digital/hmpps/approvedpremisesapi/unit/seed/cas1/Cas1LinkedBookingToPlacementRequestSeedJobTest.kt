@@ -15,8 +15,8 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.BookingEntityFac
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.PlacementRequestEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.BookingRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementRequestRepository
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.seed.cas1.Cas1LinkBookingToPlacementRequestSeedJob
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.seed.cas1.Cas1LinkBookingToPlacementRequestSeedJobCsvRow
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.seed.cas1.Cas1LinkedBookingToPlacementRequestSeedJob
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.ApplicationTimelineNoteService
 import java.time.LocalDate
 import java.util.UUID
@@ -42,7 +42,7 @@ class Cas1LinkedBookingToPlacementRequestSeedJobTest {
     val bookingId: UUID = UUID.randomUUID()
   }
 
-  val service = Cas1LinkedBookingToPlacementRequestSeedJob(
+  val service = Cas1LinkBookingToPlacementRequestSeedJob(
     placementRequestRepository = placementRequestRepository,
     bookingRepository = bookingRepository,
     applicationTimelineNoteService = applicationTimelineNoteService,
