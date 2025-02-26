@@ -23,6 +23,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas2.Application
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas2.OffenderService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.cas2.ApplicationsTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.PageCriteria
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.extractEntityFromCasResult
 import java.net.URI
 import java.util.UUID
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas2ApplicationSummary as ModelCas2ApplicationSummary
@@ -60,20 +61,8 @@ class ApplicationsController(
 
   override fun applicationsApplicationIdGet(applicationId: UUID): ResponseEntity<Application> {
     val user = userService.getUserForRequest()
-
-    val application = when (
-      val applicationResult = applicationService
-        .getApplicationForUser(applicationId, user)
-    ) {
-      is AuthorisableActionResult.NotFound -> null
-      is AuthorisableActionResult.Unauthorised -> throw ForbiddenProblem()
-      is AuthorisableActionResult.Success -> applicationResult.entity
-    }
-
-    if (application != null) {
-      return ResponseEntity.ok(getPersonDetailAndTransform(application))
-    }
-    throw NotFoundProblem(applicationId, "Application")
+    val application = extractEntityFromCasResult(applicationService.getApplicationForUser(applicationId, user))
+    return ResponseEntity.ok(getPersonDetailAndTransform(application))
   }
 
   @Transactional
@@ -136,20 +125,7 @@ class ApplicationsController(
   @Transactional
   override fun applicationsApplicationIdAbandonPut(applicationId: UUID): ResponseEntity<Unit> {
     val user = userService.getUserForRequest()
-
-    val validationResult = when (val applicationResult = applicationService.abandonApplication(applicationId, user)) {
-      is AuthorisableActionResult.NotFound -> throw NotFoundProblem(applicationId, "Application")
-      is AuthorisableActionResult.Unauthorised -> throw ForbiddenProblem()
-      is AuthorisableActionResult.Success -> applicationResult.entity
-    }
-
-    when (validationResult) {
-      is ValidatableActionResult.GeneralValidationError -> throw BadRequestProblem(errorDetail = validationResult.message)
-      is ValidatableActionResult.FieldValidationError -> throw BadRequestProblem(invalidParams = validationResult.validationMessages)
-      is ValidatableActionResult.ConflictError -> throw ConflictProblem(id = validationResult.conflictingEntityId, conflictReason = validationResult.message)
-      is ValidatableActionResult.Success -> validationResult.entity
-    }
-
+    extractEntityFromCasResult(applicationService.abandonApplication(applicationId, user))
     return ResponseEntity.ok(Unit)
   }
 
