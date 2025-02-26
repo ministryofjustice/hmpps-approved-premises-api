@@ -1,0 +1,4 @@
+username,email,name,userType,nomisStaffId,activeCaseloadId,deliusTeamCodes,deliusStaffCode,isEnabled,isActive
+cas2v2_nomis_referrer,nick.bail@example.com,Nick Bail,NOMIS,12345,LEI,aaa,bbb,YES,YES
+cas2v2_nomis_offender,ivor.record@example.com,Ivor Record,NOMIS,,,,,YES,
+cas2v2_delius,courtney.clark@example.com,Courtney Clark,DELIUS,,,code1|code2,delius_code,YES,
