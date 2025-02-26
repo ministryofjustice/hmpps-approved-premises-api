@@ -3873,37 +3873,6 @@ components:
         - createdAt
         - typeCode
         - typeDescription
-    TimelineEvent:
-      type: object
-      properties:
-        type:
-          $ref: '#/components/schemas/TimelineEventType'
-        id:
-          type: string
-        occurredAt:
-          type: string
-          format: date-time
-        content:
-          type: string
-        createdBy:
-          $ref: '#/components/schemas/User'
-        associatedUrls:
-          type: array
-          items:
-            $ref: '#/components/schemas/TimelineEventAssociatedUrl'
-        triggerSource:
-          type: string
-          $ref: '#/components/schemas/TriggerSourceType'
-    TimelineEventAssociatedUrl:
-      type: object
-      properties:
-        type:
-          $ref: '#/components/schemas/TimelineEventUrlType'
-        url:
-          type: string
-      required:
-        - type
-        - url
     TimelineEventType:
       type: string
       enum:
@@ -3933,19 +3902,6 @@ components:
         - cas2_application_submitted
         - cas2_note
         - cas2_status_update
-    TriggerSourceType:
-      type: string
-      enum:
-        - user
-        - system
-    TimelineEventUrlType:
-      type: string
-      enum:
-        - application
-        - booking
-        - assessment
-        - assessmentAppeal
-        - cas1SpaceBooking
     Cas2TimelineEvent:
       type: object
       properties:
