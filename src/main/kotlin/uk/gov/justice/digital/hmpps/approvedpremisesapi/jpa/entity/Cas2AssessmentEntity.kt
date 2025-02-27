@@ -3,10 +3,10 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity
 import jakarta.persistence.Entity
 import jakarta.persistence.Id
 import jakarta.persistence.JoinColumn
-import jakarta.persistence.ManyToOne
 import jakarta.persistence.OneToMany
+import jakarta.persistence.OneToOne
 import jakarta.persistence.Table
-import org.hibernate.annotations.OrderBy
+import org.hibernate.annotations.SQLOrder
 import org.springframework.data.jpa.repository.JpaRepository
 import org.springframework.stereotype.Repository
 import java.time.OffsetDateTime
@@ -23,7 +23,7 @@ data class Cas2AssessmentEntity(
   @Id
   val id: UUID,
 
-  @ManyToOne
+  @OneToOne
   @JoinColumn(name = "application_id")
   val application: Cas2ApplicationEntity,
 
@@ -34,7 +34,7 @@ data class Cas2AssessmentEntity(
   var assessorName: String? = null,
 
   @OneToMany(mappedBy = "assessment")
-  @OrderBy(clause = "createdAt DESC")
+  @SQLOrder("createdAt DESC")
   var statusUpdates: MutableList<Cas2StatusUpdateEntity>? = null,
 ) {
   override fun toString() = "Cas2AssessmentEntity: $id"

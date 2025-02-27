@@ -4,7 +4,6 @@ import com.fasterxml.jackson.databind.ObjectMapper
 import jakarta.transaction.Transactional
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.data.repository.findByIdOrNull
-import org.springframework.http.HttpStatus
 import org.springframework.stereotype.Service
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas2.model.Cas2ApplicationSubmittedEvent
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas2.model.Cas2ApplicationSubmittedEventDetails
@@ -14,7 +13,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas2.model.Ev
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas2.model.PersonReference
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApplicationOrigin
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.SubmitCas2Application
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.ClientResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.config.NotifyConfig
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApplicationSummaryRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas2ApplicationEntity
@@ -25,6 +23,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas2LockableA
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.NomisUserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.DomainEvent
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PaginationMetadata
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PersonInfoResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.ValidationErrors
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.AuthorisableActionResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.CasResult
@@ -36,7 +35,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.getPageableOrAllPag
 import java.time.OffsetDateTime
 import java.util.UUID
 
-@SuppressWarnings("TooGenericExceptionThrown", "UnusedParameter")
+@SuppressWarnings("TooGenericExceptionThrown")
 @Service
 class Cas2ApplicationService(
   private val applicationRepository: Cas2ApplicationRepository,
@@ -120,24 +119,14 @@ class Cas2ApplicationService(
     }
   }
 
-  fun createApplication(crn: String, user: NomisUserEntity, jwt: String): CasResult<Cas2ApplicationEntity> {
-    val caseDetailResponse = offenderService.getCaseDetail(crn)
-
-    val caseDetail = when (caseDetailResponse) {
-      is ClientResult.Success -> caseDetailResponse.body
-      is ClientResult.Failure.StatusCode -> when (caseDetailResponse.status) {
-        HttpStatus.NOT_FOUND -> return CasResult.NotFound("CaseDetail", crn)
-        HttpStatus.FORBIDDEN -> return CasResult.Unauthorised()
-        else -> caseDetailResponse.throwException()
-      }
-
-      is ClientResult.Failure -> caseDetailResponse.throwException()
-    }
-
+  fun createApplication(
+    personInfoResult: PersonInfoResult.Success.Full,
+    user: NomisUserEntity,
+  ): CasResult<Cas2ApplicationEntity> {
     val createdApplication = applicationRepository.save(
       Cas2ApplicationEntity(
         id = UUID.randomUUID(),
-        crn = crn,
+        crn = personInfoResult.crn,
         createdByUser = user,
         data = null,
         document = null,
@@ -145,7 +134,7 @@ class Cas2ApplicationService(
         createdAt = OffsetDateTime.now(),
         submittedAt = null,
         schemaUpToDate = true,
-        nomsNumber = caseDetail.case.nomsId,
+        nomsNumber = personInfoResult.offenderDetailSummary.otherIds.nomsNumber!!,
         telephoneNumber = null,
       ),
     )
@@ -210,7 +199,7 @@ class Cas2ApplicationService(
     return CasResult.Success(savedApplication)
   }
 
-  @SuppressWarnings("ReturnCount", "UnusedPrivateProperty")
+  @SuppressWarnings("ReturnCount")
   @Transactional
   fun submitApplication(
     submitApplication: SubmitCas2Application,
@@ -255,8 +244,7 @@ class Cas2ApplicationService(
       return CasResult.FieldValidationError(validationErrors)
     }
 
-    val schema = application.schemaVersion as? Cas2ApplicationJsonSchemaEntity
-      ?: throw RuntimeException("Incorrect type of JSON schema referenced by CAS2 Application")
+    if (application.schemaVersion !is Cas2ApplicationJsonSchemaEntity) throw RuntimeException("Incorrect type of JSON schema referenced by CAS2 Application")
 
     try {
       application.apply {
