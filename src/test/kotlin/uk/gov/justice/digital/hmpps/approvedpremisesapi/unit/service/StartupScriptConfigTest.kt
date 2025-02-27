@@ -30,7 +30,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.LogEntry
 import java.time.OffsetDateTime
 import java.util.UUID
 
-class Cas2StartupScriptConfigTest {
+class StartupScriptConfigTest {
   private val mockSeedLogger = mockk<SeedLogger>()
   private val logEntries = mutableListOf<LogEntry>()
 
