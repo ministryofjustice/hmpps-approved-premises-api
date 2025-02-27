@@ -23,9 +23,9 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.SubmitCas2Appl
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.config.NotifyConfig
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.Cas2ApplicationEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.Cas2ApplicationJsonSchemaEntityFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.CaseDetailFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.InmateDetailFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.NomisUserEntityFactory
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.OffenderDetailsSummaryFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApplicationSummaryRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas2ApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas2ApplicationJsonSchemaEntity
@@ -369,27 +369,27 @@ class Cas2ApplicationServiceTest {
       val crn = "CRN345"
       val username = "SOMEPERSON"
 
-      every { mockOffenderService.getOffenderByCrn(crn) } returns CasResult.NotFound("Offender", crn)
+      every { mockOffenderService.getCaseDetail(crn) } returns CasResult.NotFound("CaseDetail", crn)
 
       val user = userWithUsername(username)
 
       val result = applicationService.createApplication(crn, user, "jwt")
 
-      assertThatCasResult(result).isFieldValidationError().hasMessage("$.crn", "doesNotExist")
+      assertThatCasResult(result).isNotFound("CaseDetail", crn)
     }
 
     @Test
-    fun `returns FieldValidationError when user is not authorised to view CRN`() {
+    fun `returns Unauthorised when user is not authorised to view CRN`() {
       val crn = "CRN345"
       val username = "SOMEPERSON"
 
-      every { mockOffenderService.getOffenderByCrn(crn) } returns CasResult.Unauthorised()
+      every { mockOffenderService.getCaseDetail(crn) } returns CasResult.Unauthorised()
 
       val user = userWithUsername(username)
 
       val result = applicationService.createApplication(crn, user, "jwt")
 
-      assertThatCasResult(result).isFieldValidationError().hasMessage("$.crn", "userPermission")
+      assertThatCasResult(result).isUnauthorised()
     }
 
     @Test
@@ -401,9 +401,7 @@ class Cas2ApplicationServiceTest {
 
       val user = userWithUsername(username)
 
-      every { mockOffenderService.getOffenderByCrn(crn) } returns CasResult.Success(
-        OffenderDetailsSummaryFactory().produce(),
-      )
+      every { mockOffenderService.getCaseDetail(crn) } returns CasResult.Success(CaseDetailFactory().produce())
 
       every { mockJsonSchemaService.getNewestSchema(Cas2ApplicationJsonSchemaEntity::class.java) } returns schema
       every { mockApplicationRepository.save(any()) } answers {

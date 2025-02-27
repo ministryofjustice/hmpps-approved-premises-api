@@ -24,13 +24,11 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.NomisUserEnti
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.DomainEvent
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PaginationMetadata
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.ValidationErrors
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.validatedCasResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.AuthorisableActionResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.CasResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.EmailNotificationService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.UpstreamApiException
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.PageCriteria
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.extractEntityFromCasResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.getMetadata
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.getPageableOrAllPages
 import java.time.OffsetDateTime
@@ -120,22 +118,10 @@ class Cas2ApplicationService(
     }
   }
 
-  fun createApplication(crn: String, user: NomisUserEntity, jwt: String) = validatedCasResult<Cas2ApplicationEntity> {
-    val offenderDetails = when (val offenderDetailsResult = offenderService.getOffenderByCrn(crn)) {
-      is CasResult.NotFound -> return "$.crn" hasSingleValidationError "doesNotExist"
-      is CasResult.Unauthorised -> return "$.crn" hasSingleValidationError "userPermission"
-      is CasResult.Success -> offenderDetailsResult.value
-
-      // this should never happen, as an error will be throw in offenderService.getOffenderByCrn(crn)
-      else -> extractEntityFromCasResult(offenderDetailsResult)
-    }
-
-    if (offenderDetails.otherIds.nomsNumber == null) {
-      throw RuntimeException("Cannot create an Application for an Offender without a NOMS number")
-    }
-
-    if (validationErrors.any()) {
-      return fieldValidationError
+  fun createApplication(crn: String, user: NomisUserEntity, jwt: String): CasResult<Cas2ApplicationEntity> {
+    val caseDetail = when (val result = offenderService.getCaseDetail(crn)) {
+      is CasResult.Error -> return result.reviseType()
+      is CasResult.Success -> result.value
     }
 
     val createdApplication = applicationRepository.save(
@@ -149,12 +135,12 @@ class Cas2ApplicationService(
         createdAt = OffsetDateTime.now(),
         submittedAt = null,
         schemaUpToDate = true,
-        nomsNumber = offenderDetails.otherIds.nomsNumber,
+        nomsNumber = caseDetail.case.nomsId,
         telephoneNumber = null,
       ),
     )
 
-    return success(createdApplication.apply { schemaUpToDate = true })
+    return CasResult.Success(createdApplication.apply { schemaUpToDate = true })
   }
 
   @SuppressWarnings("ReturnCount")
@@ -214,7 +200,7 @@ class Cas2ApplicationService(
     return CasResult.Success(savedApplication)
   }
 
-  @SuppressWarnings("ReturnCount", "UnusedPrivateProperty")
+  @SuppressWarnings("ReturnCount")
   @Transactional
   fun submitApplication(
     submitApplication: SubmitCas2Application,
@@ -259,7 +245,7 @@ class Cas2ApplicationService(
       return CasResult.FieldValidationError(validationErrors)
     }
 
-    val schema = application.schemaVersion as? Cas2ApplicationJsonSchemaEntity
+    application.schemaVersion as? Cas2ApplicationJsonSchemaEntity
       ?: throw RuntimeException("Incorrect type of JSON schema referenced by CAS2 Application")
 
     try {
