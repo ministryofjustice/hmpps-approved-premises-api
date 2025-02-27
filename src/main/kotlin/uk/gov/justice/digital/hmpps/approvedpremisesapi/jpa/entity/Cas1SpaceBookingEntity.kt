@@ -47,13 +47,10 @@ interface Cas1SpaceBookingRepository : JpaRepository<Cas1SpaceBookingEntity, UUI
   fun findByPlacementRequestId(placementRequestId: UUID): List<Cas1SpaceBookingEntity>
 
   companion object {
-    private const val SPACE_BOOKING_SUMMARY_JOIN_CLAUSE = """
+    private const val SPACE_BOOKING_SUMMARY_FROM_CLAUSE = """
       FROM cas1_space_bookings b
       LEFT OUTER JOIN approved_premises_applications apa ON b.approved_premises_application_id = apa.id
       LEFT OUTER JOIN offline_applications offline_app ON b.offline_application_id = offline_app.id
-    """
-
-    private const val SPACE_BOOKING_SUMMARY_WHERE_CLAUSE = """
       WHERE 
       b.premises_id = :premisesId AND 
       b.cancellation_occurred_at IS NULL AND 
@@ -100,16 +97,6 @@ interface Cas1SpaceBookingRepository : JpaRepository<Cas1SpaceBookingEntity, UUI
       )
     """
 
-    private const val SPACE_BOOKING_SUMMARY_CHARACTERISTICS_SUBQUERY = """
-        (
-          SELECT STRING_AGG(characteristics.property_name, ',')
-          FROM cas1_space_bookings_criteria sbc
-          LEFT OUTER JOIN characteristics ON characteristics.id = sbc.characteristic_id
-          WHERE sbc.space_booking_id = b.id 
-          GROUP BY sbc.space_booking_id
-        ) AS characteristicsPropertyNames
-      """
-
     private const val SPACE_BOOKING_SUMMARY_SELECT_QUERY = """
         SELECT 
         CAST(b.id AS varchar) AS id,
@@ -131,15 +118,19 @@ interface Cas1SpaceBookingRepository : JpaRepository<Cas1SpaceBookingEntity, UUI
           WHEN apa.id IS NOT NULL THEN apa.name
           ELSE offline_app.name
         END AS personName,
-        $SPACE_BOOKING_SUMMARY_CHARACTERISTICS_SUBQUERY
-        $SPACE_BOOKING_SUMMARY_JOIN_CLAUSE
-        $SPACE_BOOKING_SUMMARY_WHERE_CLAUSE
+        (
+          SELECT STRING_AGG(characteristics.property_name, ',')
+          FROM cas1_space_bookings_criteria sbc
+          LEFT OUTER JOIN characteristics ON characteristics.id = sbc.characteristic_id
+          WHERE sbc.space_booking_id = b.id 
+          GROUP BY sbc.space_booking_id
+        ) AS characteristicsPropertyNames
+        $SPACE_BOOKING_SUMMARY_FROM_CLAUSE
       """
 
     private const val SPACE_BOOKING_SUMMARY_COUNT_QUERY = """
       SELECT COUNT(*)
-      $SPACE_BOOKING_SUMMARY_JOIN_CLAUSE
-      $SPACE_BOOKING_SUMMARY_WHERE_CLAUSE
+      $SPACE_BOOKING_SUMMARY_FROM_CLAUSE
     """
   }
 
