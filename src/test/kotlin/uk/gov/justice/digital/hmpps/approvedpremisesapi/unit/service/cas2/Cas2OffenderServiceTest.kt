@@ -59,7 +59,6 @@ class Cas2OffenderServiceTest {
     mockProbationOffenderSearchClient,
     mockApOASysContextApiClient,
     mockOffenderDetailsDataSource,
-    apDeliusContextApiClient,
     2,
   )
 

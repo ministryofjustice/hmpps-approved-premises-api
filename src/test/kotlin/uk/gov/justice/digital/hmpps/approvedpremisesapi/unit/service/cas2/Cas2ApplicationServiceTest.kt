@@ -18,15 +18,11 @@ import org.springframework.data.domain.Page
 import org.springframework.data.domain.PageRequest
 import org.springframework.data.domain.Sort
 import org.springframework.data.repository.findByIdOrNull
-import org.springframework.http.HttpMethod
-import org.springframework.http.HttpStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.SortDirection
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.SubmitCas2Application
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.ClientResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.config.NotifyConfig
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.Cas2ApplicationEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.Cas2ApplicationJsonSchemaEntityFactory
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.CaseDetailFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.InmateDetailFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.NomisUserEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApplicationSummaryRepository
@@ -36,6 +32,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas2Applicati
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas2ApplicationSummaryEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas2LockableApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas2LockableApplicationRepository
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PersonInfoResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.prisonsapi.AssignedLivingUnit
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.AuthorisableActionResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.EmailNotificationService
@@ -367,55 +364,17 @@ class Cas2ApplicationServiceTest {
   @Nested
   inner class CreateApplication {
     @Test
-    fun `returns FieldValidationError when Offender is not found`() {
-      val crn = "CRN345"
-      val username = "SOMEPERSON"
-
-      every { mockOffenderService.getCaseDetail(crn) } returns ClientResult.Failure.StatusCode(
-        method = HttpMethod.GET,
-        path = "/probation-cases/$crn/details",
-        status = HttpStatus.NOT_FOUND,
-        body = null,
-        isPreemptivelyCachedResponse = false,
-      )
-
-      val user = userWithUsername(username)
-
-      val result = applicationService.createApplication(crn, user, "jwt")
-
-      assertThatCasResult(result).isNotFound("CaseDetail", crn)
-    }
-
-    @Test
-    fun `returns Unauthorised when user is not authorised to view CRN`() {
-      val crn = "CRN345"
-      val username = "SOMEPERSON"
-
-      every { mockOffenderService.getCaseDetail(crn) } returns ClientResult.Failure.StatusCode(
-        method = HttpMethod.GET,
-        path = "/probation-cases/$crn/details",
-        status = HttpStatus.FORBIDDEN,
-        body = null,
-        isPreemptivelyCachedResponse = false,
-      )
-
-      val user = userWithUsername(username)
-
-      val result = applicationService.createApplication(crn, user, "jwt")
-
-      assertThatCasResult(result).isUnauthorised()
-    }
-
-    @Test
     fun `returns Success with created Application`() {
       val crn = "CRN345"
       val username = "SOMEPERSON"
+      val personInfoResult = mockk<PersonInfoResult.Success.Full>()
+
+      every { personInfoResult.crn } returns crn
+      every { personInfoResult.offenderDetailSummary.otherIds.nomsNumber } returns "NOMS123"
 
       val schema = Cas2ApplicationJsonSchemaEntityFactory().produce()
 
       val user = userWithUsername(username)
-
-      every { mockOffenderService.getCaseDetail(crn) } returns ClientResult.Success(HttpStatus.OK, CaseDetailFactory().produce())
 
       every { mockJsonSchemaService.getNewestSchema(Cas2ApplicationJsonSchemaEntity::class.java) } returns schema
       every { mockApplicationRepository.save(any()) } answers {
@@ -423,7 +382,7 @@ class Cas2ApplicationServiceTest {
           Cas2ApplicationEntity
       }
 
-      val result = applicationService.createApplication(crn, user, "jwt")
+      val result = applicationService.createApplication(personInfoResult, user)
 
       assertThatCasResult(result).isSuccess().with {
         assertThat(it.crn).isEqualTo(crn)
