@@ -26,7 +26,7 @@ import java.util.UUID
 import java.util.concurrent.CompletableFuture
 
 @SuppressWarnings("CyclomaticComplexMethod")
-class Cas2V2DomainEventServiceTest {
+class Cas2v2DomainEventServiceTest {
 
   private val domainEventRepositoryMock = mockk<DomainEventRepository>()
   private val hmppsQueueServiceMock = mockk<HmppsQueueService>()
