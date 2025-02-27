@@ -7172,6 +7172,8 @@ components:
         - placementMatchingOutcomesV2WithPii
         - requestsForPlacement
         - requestsForPlacementWithPii
+        - placements
+        - placementsWithPii
     Cas1OutOfServiceBedSummary:
       type: object
       properties:
