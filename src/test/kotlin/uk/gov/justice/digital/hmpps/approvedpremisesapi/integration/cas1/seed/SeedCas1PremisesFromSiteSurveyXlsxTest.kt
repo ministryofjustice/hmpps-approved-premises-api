@@ -190,6 +190,122 @@ class SeedCas1PremisesFromSiteSurveyXlsxTest : SeedTestBase() {
   }
 
   @Test
+  fun `create new premise - Q091 assigned elliot house characteristics`() {
+    val dataFrame = createNameValueDataFrame(
+      "Name of AP", "The Premise Name 2",
+      "AP Identifier (Q No.)", "Q091",
+      "AP Area", "Irrelevant",
+      "Probation Delivery Unit", "Irrelevant",
+      "Probation Region", "North West",
+      "Local Authority Area", "Bristol",
+      "Town / City", "Narnia",
+      "Address", "456 Nowhere",
+      "Postcode", "LE12 XYZ",
+      "Male / Female AP?", "Female",
+      "Total number of beds (including any beds out of service)", "33",
+      "Is this an IAP?", "No",
+      "Is this AP a PIPE?", "No",
+      "Is this AP an Enhanced Security Site?", "No",
+      "Is this AP semi specialist - Mental Health?", "No",
+      "Is this a Recovery Focussed AP?", "No",
+      "Is this AP suitable for people at risk of criminal exploitation? N.B Enhanced Security sites answer No, other AP's answer Yes.", "No",
+      "Does this AP accept people who have committed sexual offences against adults?", "No",
+      "Does this AP accept people who have committed sexual offences against children?", "No",
+      "Does this AP accept people who have committed non-sexual offences against children?", "No",
+      "Does this AP accept people who have been convicted of hate crimes?", "No",
+      "Is this AP Catered? Self catering AP's answer 'No'", "No",
+      "Is there a step free entrance to the AP at least 900mm wide?", "no",
+      "Are corridors leading to communal areas at least 1.2m wide?", "no",
+      "Do corridors leading to communal areas have step free access?", "no",
+      "Does this AP have bathroom facilities that have been adapted for wheelchair users?", "No",
+      "Is there a lift at this AP?", "Yes",
+      "Does this AP have tactile & directional flooring?", "No",
+      "Does this AP have signs in braille?", "No",
+      "Does this AP have or has access to a hearing loop?", "No",
+      "Are there any additional restrictions on people that this AP can accommodate?", "Some useful notes here",
+    )
+
+    createXlsxForSeeding(
+      fileName = "site_survey.xlsx",
+      sheets = mapOf("Sheet2" to dataFrame),
+    )
+
+    seedXlsxService.seedFile(
+      SeedFromExcelFileType.CAS1_IMPORT_SITE_SURVEY_PREMISES,
+      "site_survey.xlsx",
+    )
+
+    val createdPremise = approvedPremisesRepository.findByQCode("Q091")!!
+    assertThat(createdPremise.characteristics).hasSize(2)
+
+    assertCharacteristics(
+      createdPremise,
+      listOf(
+        "isSpecialistPremisesElliotHouse",
+        "hasLift",
+      ),
+    )
+  }
+
+  @Test
+  fun `create new premise - Q035 assigned st josephs characteristics`() {
+    val dataFrame = createNameValueDataFrame(
+      "Name of AP", "The Premise Name 2",
+      "AP Identifier (Q No.)", "Q035",
+      "AP Area", "Irrelevant",
+      "Probation Delivery Unit", "Irrelevant",
+      "Probation Region", "North West",
+      "Local Authority Area", "Bristol",
+      "Town / City", "Narnia",
+      "Address", "456 Nowhere",
+      "Postcode", "LE12 XYZ",
+      "Male / Female AP?", "Female",
+      "Total number of beds (including any beds out of service)", "33",
+      "Is this an IAP?", "No",
+      "Is this AP a PIPE?", "No",
+      "Is this AP an Enhanced Security Site?", "No",
+      "Is this AP semi specialist - Mental Health?", "No",
+      "Is this a Recovery Focussed AP?", "No",
+      "Is this AP suitable for people at risk of criminal exploitation? N.B Enhanced Security sites answer No, other AP's answer Yes.", "No",
+      "Does this AP accept people who have committed sexual offences against adults?", "No",
+      "Does this AP accept people who have committed sexual offences against children?", "No",
+      "Does this AP accept people who have committed non-sexual offences against children?", "No",
+      "Does this AP accept people who have been convicted of hate crimes?", "No",
+      "Is this AP Catered? Self catering AP's answer 'No'", "Yes",
+      "Is there a step free entrance to the AP at least 900mm wide?", "no",
+      "Are corridors leading to communal areas at least 1.2m wide?", "no",
+      "Do corridors leading to communal areas have step free access?", "no",
+      "Does this AP have bathroom facilities that have been adapted for wheelchair users?", "No",
+      "Is there a lift at this AP?", "No",
+      "Does this AP have tactile & directional flooring?", "No",
+      "Does this AP have signs in braille?", "No",
+      "Does this AP have or has access to a hearing loop?", "No",
+      "Are there any additional restrictions on people that this AP can accommodate?", "Some useful notes here",
+    )
+
+    createXlsxForSeeding(
+      fileName = "site_survey.xlsx",
+      sheets = mapOf("Sheet2" to dataFrame),
+    )
+
+    seedXlsxService.seedFile(
+      SeedFromExcelFileType.CAS1_IMPORT_SITE_SURVEY_PREMISES,
+      "site_survey.xlsx",
+    )
+
+    val createdPremise = approvedPremisesRepository.findByQCode("Q035")!!
+    assertThat(createdPremise.characteristics).hasSize(2)
+
+    assertCharacteristics(
+      createdPremise,
+      listOf(
+        "isSpecialistPremisesStJosephs",
+        "isCatered",
+      ),
+    )
+  }
+
+  @Test
   fun `update existing premise - rooms & bookings unaffected`() {
     val existingPremises = approvedPremisesEntityFactory.produceAndPersist {
       withQCode("QExisting")

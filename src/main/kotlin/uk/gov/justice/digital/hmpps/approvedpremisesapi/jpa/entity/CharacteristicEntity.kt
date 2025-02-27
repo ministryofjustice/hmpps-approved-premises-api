@@ -22,6 +22,8 @@ interface CharacteristicRepository : JpaRepository<CharacteristicEntity, UUID> {
     const val CAS1_PROPERTY_NAME_PREMISES_ACCEPTS_SEX_OFFENDERS = "acceptsSexOffenders"
     const val CAS1_PROPERTY_NAME_PREMISES_CATERED = "isCatered"
     const val CAS1_PROPERTY_NAME_PREMISES_SUITABLE_FOR_VULNERABLE = "isSuitableForVulnerable"
+    const val CAS1_PROPERTY_NAME_PREMISES_ELLIOT_HOUSE = "isSpecialistPremisesElliotHouse"
+    const val CAS1_PROPERTY_NAME_PREMISES_ST_JOSEPHS = "isSpecialistPremisesStJosephs"
 
     const val CAS1_PROPERTY_NAME_ARSON_SUITABLE = "isArsonSuitable"
     const val CAS1_PROPERTY_NAME_ENSUITE = "hasEnSuite"
@@ -50,6 +52,12 @@ interface CharacteristicRepository : JpaRepository<CharacteristicEntity, UUID> {
       "WHERE c.propertyName = :propertyName AND c.serviceScope = 'approved-premises'",
   )
   fun findCas1ByPropertyName(propertyName: String): CharacteristicEntity?
+
+  @Query(
+    "SELECT c FROM CharacteristicEntity c " +
+      "WHERE c.propertyName = :propertyName AND c.modelScope = :modelName AND c.serviceScope = 'approved-premises'",
+  )
+  fun findCas1ByPropertyNameAndScope(propertyName: String, modelName: String): CharacteristicEntity?
 
   @Query(
     "SELECT c FROM CharacteristicEntity c " +
