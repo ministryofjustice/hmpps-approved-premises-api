@@ -29,10 +29,10 @@ data class WebClientConfig(
 @Configuration
 class WebClientConfiguration(
   @Value("\${services.default.timeout-ms}") private val defaultUpstreamTimeoutMs: Long,
-  @Value("\${web-clients.max-response-in-memory-size-bytes}") private val defaultMaxResponseInMemorySizeBytes: Int,
-  @Value("\${web-clients.prison-api-max-response-in-memory-size-bytes}") private val prisonApiMaxResponseInMemorySizeBytes: Int,
-  @Value("\${web-clients.prisoner-alerts-api-max-response-in-memory-size-bytes}") private val prisonerAlertsApiMaxResponseInMemorySizeBytes: Int,
-  @Value("\${web-clients.probation-offender-search-api-max-response-in-memory-size-bytes}") private val probationOffenderSearchApiMaxResponseInMemorySizeBytes: Int,
+  @Value("\${services.default.max-response-in-memory-size-bytes}") private val defaultMaxResponseInMemorySizeBytes: Int,
+  @Value("\${services.prisons-api.max-response-in-memory-size-bytes}") private val prisonApiMaxResponseInMemorySizeBytes: Int,
+  @Value("\${services.prisoner-alerts-api.max-response-in-memory-size-bytes}") private val prisonerAlertsApiMaxResponseInMemorySizeBytes: Int,
+  @Value("\${services.probation-offender-search-api.max-response-in-memory-size-bytes}") private val probationOffenderSearchApiMaxResponseInMemorySizeBytes: Int,
 ) {
 
   private val log = LoggerFactory.getLogger(this::class.java)

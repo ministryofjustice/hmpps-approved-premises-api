@@ -167,14 +167,20 @@ management:
 
 services:
   default:
+    # 0.7MB
+    max-response-in-memory-size-bytes: 750000
     timeout-ms: 10000
   hmpps-tier:
     base-url: http://localhost:9004
     timeout-ms: 2000
   prisons-api:
     base-url: http://localhost:9570
+    # 3 MB
+    max-response-in-memory-size-bytes: 3145728
   prisoner-alerts-api:
     base-url: http://localhost:9580
+    # 2.5 MB
+    max-response-in-memory-size-bytes: 2621440
   nomis-user-roles-api:
     base-url: http://localhost:9575
     timeout-ms: 2000
@@ -182,6 +188,8 @@ services:
     base-url: http://localhost:9560
   probation-offender-search-api:
     base-url: http://localhost:9004
+    # 1.5MB
+    max-response-in-memory-size-bytes: 1572864
   case-notes:
     base-url: http://localhost:9004
     timeout-ms: 25000
@@ -311,16 +319,6 @@ refresh-inmate-details-cache:
   logging-enabled: false
 
 arrived-departed-domain-events-disabled: true
-
-web-clients:
-  # 0.7MB
-  max-response-in-memory-size-bytes: 750000
-  # 1.5MB
-  probation-offender-search-api-max-response-in-memory-size-bytes: 1572864
-  # 3 MB
-  prison-api-max-response-in-memory-size-bytes: 3145728
-  # 2.5 MB
-  prisoner-alerts-api-max-response-in-memory-size-bytes: 2621440
 
 pagination:
   default-page-size: 10
