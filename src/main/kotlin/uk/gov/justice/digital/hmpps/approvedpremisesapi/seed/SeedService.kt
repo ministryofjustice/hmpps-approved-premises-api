@@ -35,7 +35,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.seed.cas2.ExternalUsersS
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.seed.cas2.NomisUsersSeedJob
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.seed.cas2v2.Cas2v2ApplicationsSeedJob
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.seed.cas2v2.Cas2v2UsersSeedJob
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.seed.cas2v2.Cas2v2ApplicationsSeedJob
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.seed.cas3.Cas3ReferralRejectionSeedJob
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.seed.cas3.Cas3UsersSeedJob
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.seed.cas3.TemporaryAccommodationBedspaceSeedJob
