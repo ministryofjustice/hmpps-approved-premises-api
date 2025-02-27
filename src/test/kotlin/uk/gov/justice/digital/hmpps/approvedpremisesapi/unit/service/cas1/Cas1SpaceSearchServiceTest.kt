@@ -63,9 +63,9 @@ class Cas1SpaceSearchServiceTest {
           startDate = LocalDate.parse("2024-08-01"),
           durationInDays = 14,
           targetPostcodeDistrict = "TB1",
+          spaceCharacteristics = Cas1SpaceCharacteristic.entries,
           requirements = Cas1SpaceSearchRequirements(
             apTypes = ApType.entries,
-            spaceCharacteristics = Cas1SpaceCharacteristic.entries,
           ),
         ),
       )
@@ -474,9 +474,9 @@ class Cas1SpaceSearchServiceTest {
         startDate = LocalDate.parse("2024-08-01"),
         durationInDays = 14,
         targetPostcodeDistrict = "TB1",
+        spaceCharacteristics = spaceCharacteristics,
         requirements = Cas1SpaceSearchRequirements(
           apTypes = ApType.entries,
-          spaceCharacteristics = spaceCharacteristics,
         ),
       ),
     )

@@ -6658,6 +6658,7 @@ components:
           items:
             $ref: '#/components/schemas/Cas1SpaceBookingCharacteristic'
     Cas1SpaceSearchRequirements:
+      deprecated: true
       type: object
       properties:
         apTypes:
@@ -6671,6 +6672,8 @@ components:
           description: "Use 'spaceCharacteristics' to filter on premise types"
           $ref: '#/components/schemas/ApType'
         spaceCharacteristics:
+          deprecated: true
+          description: use Cas1SpaceSearchParameters.spaceCharacteristics
           type: array
           items:
             $ref: '#/components/schemas/Cas1SpaceCharacteristic'
@@ -6702,7 +6705,12 @@ components:
           description: The 'target' location, in the form of a postcode district
           example: SE5
         requirements:
+          deprecated: true
           $ref: '#/components/schemas/Cas1SpaceSearchRequirements'
+        spaceCharacteristics:
+          type: array
+          items:
+            $ref: '#/components/schemas/Cas1SpaceCharacteristic'
       required:
         - applicationId
         - startDate
