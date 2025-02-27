@@ -28,11 +28,11 @@ data class WebClientConfig(
 @SuppressWarnings("LongParameterList")
 @Configuration
 class WebClientConfiguration(
-  @Value("\${upstream-timeout-ms}") private val upstreamTimeoutMs: Long,
-  @Value("\${ap-and-oasys-upstream-timeout-ms}") private val apAndOasysUpstreamTimeoutMs: Long,
-  @Value("\${nomis-user-roles-api-upstream-timeout-ms}") private val nomisUserRolesUpstreamTimeoutMs: Long,
-  @Value("\${case-notes-service-upstream-timeout-ms}") private val caseNotesServiceUpstreamTimeoutMs: Long,
-  @Value("\${tier-api-upstream-timeout-ms}") private val tierApiUpstreamTimeoutMs: Long,
+  @Value("\${services.default.timeout-ms}") private val defaultUpstreamTimeoutMs: Long,
+  @Value("\${services.ap-oasys-context-api.timeout-ms}") private val apAndOasysUpstreamTimeoutMs: Long,
+  @Value("\${services.nomis-user-roles-api.timeout-ms}") private val nomisUserRolesUpstreamTimeoutMs: Long,
+  @Value("\${services.case-notes.timeout-ms}") private val caseNotesServiceUpstreamTimeoutMs: Long,
+  @Value("\${services.hmpps-tier.timeout-ms}") private val tierApiUpstreamTimeoutMs: Long,
   @Value("\${web-clients.max-response-in-memory-size-bytes}") private val defaultMaxResponseInMemorySizeBytes: Int,
   @Value("\${web-clients.prison-api-max-response-in-memory-size-bytes}") private val prisonApiMaxResponseInMemorySizeBytes: Int,
   @Value("\${web-clients.prisoner-alerts-api-max-response-in-memory-size-bytes}") private val prisonerAlertsApiMaxResponseInMemorySizeBytes: Int,
@@ -71,8 +71,8 @@ class WebClientConfiguration(
           ReactorClientHttpConnector(
             HttpClient
               .create()
-              .responseTimeout(Duration.ofMillis(upstreamTimeoutMs))
-              .option(ChannelOption.CONNECT_TIMEOUT_MILLIS, Duration.ofMillis(upstreamTimeoutMs).toMillis().toInt()),
+              .responseTimeout(Duration.ofMillis(defaultUpstreamTimeoutMs))
+              .option(ChannelOption.CONNECT_TIMEOUT_MILLIS, Duration.ofMillis(defaultUpstreamTimeoutMs).toMillis().toInt()),
           ),
         )
         .exchangeStrategies(
@@ -131,8 +131,8 @@ class WebClientConfiguration(
           ReactorClientHttpConnector(
             HttpClient
               .create()
-              .responseTimeout(Duration.ofMillis(upstreamTimeoutMs))
-              .option(ChannelOption.CONNECT_TIMEOUT_MILLIS, Duration.ofMillis(upstreamTimeoutMs).toMillis().toInt()),
+              .responseTimeout(Duration.ofMillis(defaultUpstreamTimeoutMs))
+              .option(ChannelOption.CONNECT_TIMEOUT_MILLIS, Duration.ofMillis(defaultUpstreamTimeoutMs).toMillis().toInt()),
           ),
         )
         .exchangeStrategies(
@@ -165,8 +165,8 @@ class WebClientConfiguration(
           ReactorClientHttpConnector(
             HttpClient
               .create()
-              .responseTimeout(Duration.ofMillis(upstreamTimeoutMs))
-              .option(ChannelOption.CONNECT_TIMEOUT_MILLIS, Duration.ofMillis(upstreamTimeoutMs).toMillis().toInt()),
+              .responseTimeout(Duration.ofMillis(defaultUpstreamTimeoutMs))
+              .option(ChannelOption.CONNECT_TIMEOUT_MILLIS, Duration.ofMillis(defaultUpstreamTimeoutMs).toMillis().toInt()),
           ),
         )
         .exchangeStrategies(
@@ -243,8 +243,8 @@ class WebClientConfiguration(
         ReactorClientHttpConnector(
           HttpClient
             .create()
-            .responseTimeout(Duration.ofMillis(upstreamTimeoutMs))
-            .option(ChannelOption.CONNECT_TIMEOUT_MILLIS, Duration.ofMillis(upstreamTimeoutMs).toMillis().toInt()),
+            .responseTimeout(Duration.ofMillis(defaultUpstreamTimeoutMs))
+            .option(ChannelOption.CONNECT_TIMEOUT_MILLIS, Duration.ofMillis(defaultUpstreamTimeoutMs).toMillis().toInt()),
         ),
       )
       .build(),
@@ -278,8 +278,8 @@ class WebClientConfiguration(
         ReactorClientHttpConnector(
           HttpClient
             .create()
-            .responseTimeout(Duration.ofMillis(upstreamTimeoutMs))
-            .option(ChannelOption.CONNECT_TIMEOUT_MILLIS, Duration.ofMillis(upstreamTimeoutMs).toMillis().toInt()),
+            .responseTimeout(Duration.ofMillis(defaultUpstreamTimeoutMs))
+            .option(ChannelOption.CONNECT_TIMEOUT_MILLIS, Duration.ofMillis(defaultUpstreamTimeoutMs).toMillis().toInt()),
         ),
       )
       .build(),
@@ -302,8 +302,8 @@ class WebClientConfiguration(
           ReactorClientHttpConnector(
             HttpClient
               .create()
-              .responseTimeout(Duration.ofMillis(upstreamTimeoutMs))
-              .option(ChannelOption.CONNECT_TIMEOUT_MILLIS, Duration.ofMillis(upstreamTimeoutMs).toMillis().toInt()),
+              .responseTimeout(Duration.ofMillis(defaultUpstreamTimeoutMs))
+              .option(ChannelOption.CONNECT_TIMEOUT_MILLIS, Duration.ofMillis(defaultUpstreamTimeoutMs).toMillis().toInt()),
           ),
         )
         .filter(oauth2Client)

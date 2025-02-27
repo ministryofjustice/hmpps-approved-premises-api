@@ -166,24 +166,30 @@ management:
         time-to-live: 2000ms
 
 services:
+  default:
+    timeout-ms: 10000
   hmpps-tier:
     base-url: http://localhost:9004
+    timeout-ms: 2000
   prisons-api:
     base-url: http://localhost:9570
   prisoner-alerts-api:
     base-url: http://localhost:9580
   nomis-user-roles-api:
     base-url: http://localhost:9575
+    timeout-ms: 2000
   manage-users-api:
     base-url: http://localhost:9560
   probation-offender-search-api:
     base-url: http://localhost:9004
   case-notes:
     base-url: http://localhost:9004
+    timeout-ms: 25000
   ap-delius-context-api:
     base-url: http://localhost:8181
   ap-oasys-context-api:
     base-url: http://localhost:9004
+    timeout-ms: 4000
   gov-uk-bank-holidays-api:
     base-url: https://www.gov.uk
   manage-pom-cases:
@@ -305,12 +311,6 @@ refresh-inmate-details-cache:
   logging-enabled: false
 
 arrived-departed-domain-events-disabled: true
-
-upstream-timeout-ms: 10000
-ap-and-oasys-upstream-timeout-ms: 4000
-nomis-user-roles-api-upstream-timeout-ms: 2000
-tier-api-upstream-timeout-ms: 2000
-case-notes-service-upstream-timeout-ms: 25000
 
 web-clients:
   # 0.7MB

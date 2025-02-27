@@ -181,7 +181,7 @@ class BaseHMPPSClientRetryTest : InitialiseDatabasePerClassTestBase() {
 
   @Test
   fun `Don't retry timeouts`() {
-    val clientTimeout = environment["upstream-timeout-ms"]!!.toInt()
+    val clientTimeout = environment["services.default.timeout-ms"]!!.toInt()
 
     mockOAuth2ClientCredentialsCallIfRequired {
       wiremockServer.stubFor(
@@ -207,7 +207,7 @@ class BaseHMPPSClientRetryTest : InitialiseDatabasePerClassTestBase() {
 
   @Test
   fun `Retry timeouts when enabled`() {
-    val clientTimeout = environment["nomis-user-roles-api-upstream-timeout-ms"]!!.toInt()
+    val clientTimeout = environment["services.nomis-user-roles-api.timeout-ms"]!!.toInt()
 
     wiremockServer.stubFor(
       WireMock.get(urlEqualTo("/me"))
