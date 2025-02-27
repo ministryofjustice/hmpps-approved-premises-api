@@ -31,7 +31,9 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.seed.cas1.Cas1UsersSeedJ
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.seed.cas1.Cas1WithdrawPlacementRequestSeedJob
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.seed.cas2.Cas2ApplicationsSeedJob
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.seed.cas2.ExternalUsersSeedJob
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.seed.cas2.NomisUsersSeedJob
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.seed.cas2v2.Cas2v2ApplicationsSeedJob
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.seed.cas2v2.Cas2v2UsersSeedJob
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.seed.cas3.Cas3ReferralRejectionSeedJob
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.seed.cas3.Cas3UsersSeedJob
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.seed.cas3.TemporaryAccommodationBedspaceSeedJob
@@ -43,8 +45,6 @@ import java.time.temporal.ChronoUnit
 import java.util.concurrent.Semaphore
 import kotlin.io.path.absolutePathString
 import kotlin.reflect.KClass
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.seed.cas2.NomisUsersSeedJob
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.seed.cas2v2.Cas2v2UsersSeedJob
 
 @Service
 class SeedService(
