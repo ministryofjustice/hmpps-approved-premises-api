@@ -30,6 +30,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.AuthorisableActi
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.ApplicationService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.FeatureFlagService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.HttpAuthService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.OASysService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.OffenderService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.UserService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.AdjudicationTransformer
@@ -64,6 +65,7 @@ class PeopleController(
   private val personalTimelineTransformer: PersonalTimelineTransformer,
   private val cas1TimelineService: Cas1TimelineService,
   private val featureFlagService: FeatureFlagService,
+  private val oasysService: OASysService,
 ) : PeopleApiDelegate {
 
   override fun peopleSearchGet(crn: String): ResponseEntity<Person> {
@@ -161,40 +163,36 @@ class PeopleController(
   override fun peopleCrnOasysSelectionGet(crn: String): ResponseEntity<List<OASysSection>> {
     ensureUserCanAccessOffenderInfo(crn)
 
-    val needsResult = offenderService.getOASysNeeds(crn)
-
-    val needs = when (needsResult) {
-      is AuthorisableActionResult.NotFound -> throw NotFoundProblem(crn, "Person")
-      is AuthorisableActionResult.Unauthorised -> throw ForbiddenProblem()
-      is AuthorisableActionResult.Success -> needsResult.entity
-    }
-
-    return ResponseEntity.ok(needsDetailsTransformer.transformToApi(needs))
+    return ResponseEntity.ok(
+      needsDetailsTransformer.transformToApi(
+        extractEntityFromCasResult(oasysService.getOASysNeeds(crn)),
+      ),
+    )
   }
 
   override fun peopleCrnOasysSectionsGet(crn: String, selectedSections: List<Int>?): ResponseEntity<OASysSections> {
     ensureUserCanAccessOffenderInfo(crn)
 
-    val needs = getSuccessEntityOrThrow(crn, offenderService.getOASysNeeds(crn))
+    val needs = extractEntityFromCasResult(oasysService.getOASysNeeds(crn))
 
     return runBlocking(context = Dispatchers.IO) {
       val offenceDetailsResult = async {
-        offenderService.getOASysOffenceDetails(crn)
+        oasysService.getOASysOffenceDetails(crn)
       }
       val roshSummaryResult = async {
-        offenderService.getOASysRoshSummary(crn)
+        oasysService.getOASysRoshSummary(crn)
       }
       val riskToTheIndividualResult = async {
-        offenderService.getOASysRiskToTheIndividual(crn)
+        oasysService.getOASysRiskToTheIndividual(crn)
       }
       val riskManagementPlanResult = async {
-        offenderService.getOASysRiskManagementPlan(crn)
+        oasysService.getOASysRiskManagementPlan(crn)
       }
 
-      val offenceDetails = getSuccessEntityOrThrow(crn, offenceDetailsResult.await())
-      val roshSummary = getSuccessEntityOrThrow(crn, roshSummaryResult.await())
-      val riskToTheIndividual = getSuccessEntityOrThrow(crn, riskToTheIndividualResult.await())
-      val riskManagementPlan = getSuccessEntityOrThrow(crn, riskManagementPlanResult.await())
+      val offenceDetails = extractEntityFromCasResult(offenceDetailsResult.await())
+      val roshSummary = extractEntityFromCasResult(roshSummaryResult.await())
+      val riskToTheIndividual = extractEntityFromCasResult(riskToTheIndividualResult.await())
+      val riskManagementPlan = extractEntityFromCasResult(riskManagementPlanResult.await())
 
       ResponseEntity.ok(
         oaSysSectionsTransformer.transformToApi(
@@ -214,15 +212,15 @@ class PeopleController(
 
     return runBlocking(context = Dispatchers.IO) {
       val offenceDetailsResult = async {
-        offenderService.getOASysOffenceDetails(crn)
+        oasysService.getOASysOffenceDetails(crn)
       }
 
       val riskToTheIndividualResult = async {
-        offenderService.getOASysRiskToTheIndividual(crn)
+        oasysService.getOASysRiskToTheIndividual(crn)
       }
 
-      val offenceDetails = getSuccessEntityOrThrow(crn, offenceDetailsResult.await())
-      val riskToTheIndividual = getSuccessEntityOrThrow(crn, riskToTheIndividualResult.await())
+      val offenceDetails = extractEntityFromCasResult(offenceDetailsResult.await())
+      val riskToTheIndividual = extractEntityFromCasResult(riskToTheIndividualResult.await())
 
       ResponseEntity.ok(
         oaSysSectionsTransformer.transformRiskToIndividual(offenceDetails, riskToTheIndividual),
@@ -235,15 +233,15 @@ class PeopleController(
 
     return runBlocking(context = Dispatchers.IO) {
       val offenceDetailsResult = async {
-        offenderService.getOASysOffenceDetails(crn)
+        oasysService.getOASysOffenceDetails(crn)
       }
 
       val roshResult = async {
-        offenderService.getOASysRoshSummary(crn)
+        oasysService.getOASysRoshSummary(crn)
       }
 
-      val offenceDetails = getSuccessEntityOrThrow(crn, offenceDetailsResult.await())
-      val rosh = getSuccessEntityOrThrow(crn, roshResult.await())
+      val offenceDetails = extractEntityFromCasResult(offenceDetailsResult.await())
+      val rosh = extractEntityFromCasResult(roshResult.await())
 
       ResponseEntity.ok(
         oaSysSectionsTransformer.transformRiskOfSeriousHarm(offenceDetails, rosh),
@@ -299,12 +297,6 @@ class PeopleController(
   private fun getOfflineApplications(crn: String) = applicationService
     .getOfflineApplicationsForCrn(crn, ServiceName.approvedPremises)
     .map { BoxedApplication.of(it) }
-
-  private fun <T> getSuccessEntityOrThrow(crn: String, authorisableActionResult: AuthorisableActionResult<T>): T = when (authorisableActionResult) {
-    is AuthorisableActionResult.NotFound -> throw NotFoundProblem(crn, "Person")
-    is AuthorisableActionResult.Unauthorised -> throw ForbiddenProblem()
-    is AuthorisableActionResult.Success -> authorisableActionResult.entity
-  }
 
   private fun ensureUserCanAccessOffenderInfo(crn: String) {
     getOffenderDetails(crn)
