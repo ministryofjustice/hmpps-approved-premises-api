@@ -18,8 +18,12 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ProbationRegi
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.seed.SeedJob
 import java.util.UUID
 
+/**
+ * This seed job is only used for seed test data
+ *
+ * If seeding actual premises, use [Cas1SeedPremisesFromSiteSurveyXlsxJob]
+ */
 @Component
-@Deprecated("Use Cas1SeedRoomsFromSiteSurveyXlsxJob instead")
 class Cas1SeedPremisesFromCsvJob(
   private val premisesRepository: PremisesRepository,
   private val probationRegionRepository: ProbationRegionRepository,
@@ -64,6 +68,8 @@ class Cas1SeedPremisesFromCsvJob(
     "supportsSpaceBookings",
     "managerDetails",
     "fullAddress",
+    "isSpecialistPremisesElliotHouse",
+    "isSpecialistPremisesStJosephs",
   ),
 ) {
   private val log = LoggerFactory.getLogger(this::class.java)
@@ -112,6 +118,8 @@ class Cas1SeedPremisesFromCsvJob(
     supportsSpaceBookings = parseBooleanStringOrThrow(columns["supportsSpaceBookings"]!!, "supportsSpaceBookings"),
     managerDetails = columns["managerDetails"]!!,
     fullAddress = columns["fullAddress"],
+    isSpecialistPremisesElliotHouse = columns["isSpecialistPremisesElliotHouse"]!!,
+    isSpecialistPremisesStJosephs = columns["isSpecialistPremisesStJosephs"]!!,
   )
 
   @SuppressWarnings("TooGenericExceptionThrown")
@@ -154,6 +162,8 @@ class Cas1SeedPremisesFromCsvJob(
     CharacteristicValue("hasTactileFlooring", castBooleanString(row.hasTactileFlooring)),
     CharacteristicValue("hasBrailleSignage", castBooleanString(row.hasBrailleSignage)),
     CharacteristicValue("hasHearingLoop", castBooleanString(row.hasHearingLoop)),
+    CharacteristicValue("isSpecialistPremisesElliotHouse", castBooleanString(row.isSpecialistPremisesElliotHouse)),
+    CharacteristicValue("isSpecialistPremisesStJosephs", castBooleanString(row.isSpecialistPremisesStJosephs)),
   ).filter { it.value }
     .map {
       characteristicRepository.findByPropertyNameAndScopes(propertyName = it.propertyName, serviceName = "approved-premises", modelName = "premises")
@@ -296,4 +306,6 @@ data class ApprovedPremisesSeedCsvRow(
   val supportsSpaceBookings: String,
   val managerDetails: String,
   val fullAddress: String?,
+  val isSpecialistPremisesElliotHouse: String,
+  val isSpecialistPremisesStJosephs: String,
 )

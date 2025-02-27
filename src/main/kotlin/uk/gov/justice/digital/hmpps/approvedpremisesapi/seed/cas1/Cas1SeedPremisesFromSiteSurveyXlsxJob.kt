@@ -13,6 +13,8 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremi
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.CharacteristicEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.CharacteristicRepository
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.CharacteristicRepository.Constants.CAS1_PROPERTY_NAME_PREMISES_ELLIOT_HOUSE
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.CharacteristicRepository.Constants.CAS1_PROPERTY_NAME_PREMISES_ST_JOSEPHS
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.LocalAuthorityAreaEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.LocalAuthorityAreaRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PostCodeDistrictEntity
@@ -42,8 +44,12 @@ class Cas1SeedPremisesFromSiteSurveyXlsxJob(
   private val entityManager: EntityManager,
 ) : ExcelSeedJob {
 
-  companion object {
+  private companion object {
     val javers: Javers = JaversBuilder.javers().withListCompareAlgorithm(ListCompareAlgorithm.AS_SET).build()
+    val qCodeToCharacteristic = mapOf(
+      "Q091" to CAS1_PROPERTY_NAME_PREMISES_ELLIOT_HOUSE,
+      "Q035" to CAS1_PROPERTY_NAME_PREMISES_ST_JOSEPHS,
+    )
   }
 
   private val log = LoggerFactory.getLogger(this::class.java)
@@ -284,29 +290,62 @@ class Cas1SeedPremisesFromSiteSurveyXlsxJob(
   }
 
   @SuppressWarnings("TooGenericExceptionThrown")
-  private fun resolveCharacteristics(siteSurveyPremise: Cas1SiteSurveyPremise): List<CharacteristicEntity> = listOf(
-    CharacteristicRequired("isIAP", siteSurveyPremise.iap),
-    CharacteristicRequired("isPIPE", siteSurveyPremise.pipe),
-    CharacteristicRequired("isESAP", siteSurveyPremise.enhancedSecuritySite),
-    CharacteristicRequired("isSemiSpecialistMentalHealth", siteSurveyPremise.mentalHealth),
-    CharacteristicRequired("isRecoveryFocussed", siteSurveyPremise.recoveryFocussed),
-    CharacteristicRequired("isSuitableForVulnerable", siteSurveyPremise.suitableForPeopleAtRiskOfCriminalExploitation),
-    CharacteristicRequired("acceptsSexOffenders", siteSurveyPremise.willAcceptPeopleWhoHave.committedSexualOffencesAgainstAdults),
-    CharacteristicRequired("acceptsChildSexOffenders", siteSurveyPremise.willAcceptPeopleWhoHave.committedSexualOffencesAgainstChildren),
-    CharacteristicRequired("acceptsNonSexualChildOffenders", siteSurveyPremise.willAcceptPeopleWhoHave.committedNonSexualOffencesAgainstChildren),
-    CharacteristicRequired("acceptsHateCrimeOffenders", siteSurveyPremise.willAcceptPeopleWhoHave.beenConvictedOfHateCrimes),
-    CharacteristicRequired("isCatered", siteSurveyPremise.cateredOrSelfCatered),
-    CharacteristicRequired("hasWideStepFreeAccess", siteSurveyPremise.stepFreeEntrance),
-    CharacteristicRequired("hasWideAccessToCommunalAreas", siteSurveyPremise.corridorsAtLeast1200CmWide),
-    CharacteristicRequired("hasStepFreeAccessToCommunalAreas", siteSurveyPremise.corridorsHaveStepFreeAccess),
-    CharacteristicRequired("hasWheelChairAccessibleBathrooms", siteSurveyPremise.bathroomFacilitiesAdaptedForWheelchairUsers),
-    CharacteristicRequired("hasLift", siteSurveyPremise.hasALift),
-    CharacteristicRequired("hasTactileFlooring", siteSurveyPremise.hasTactileAndDirectionalFlooring),
-    CharacteristicRequired("hasBrailleSignage", siteSurveyPremise.hasSignsInBraille),
-    CharacteristicRequired("hasHearingLoop", siteSurveyPremise.hasAHearingLoop),
-  ).filter { it.value }
-    .map {
-      characteristicRepository.findByPropertyNameAndScopes(propertyName = it.propertyName, serviceName = "approved-premises", modelName = "premises")
-        ?: throw RuntimeException("Characteristic '${it.propertyName}' does not exist for AP premises")
+  private fun resolveCharacteristics(siteSurveyPremise: Cas1SiteSurveyPremise): List<CharacteristicEntity> {
+    val specifiedCharacteristics = listOf(
+      CharacteristicRequired("isIAP", siteSurveyPremise.iap),
+      CharacteristicRequired("isPIPE", siteSurveyPremise.pipe),
+      CharacteristicRequired("isESAP", siteSurveyPremise.enhancedSecuritySite),
+      CharacteristicRequired("isSemiSpecialistMentalHealth", siteSurveyPremise.mentalHealth),
+      CharacteristicRequired("isRecoveryFocussed", siteSurveyPremise.recoveryFocussed),
+      CharacteristicRequired(
+        "isSuitableForVulnerable",
+        siteSurveyPremise.suitableForPeopleAtRiskOfCriminalExploitation,
+      ),
+      CharacteristicRequired(
+        "acceptsSexOffenders",
+        siteSurveyPremise.willAcceptPeopleWhoHave.committedSexualOffencesAgainstAdults,
+      ),
+      CharacteristicRequired(
+        "acceptsChildSexOffenders",
+        siteSurveyPremise.willAcceptPeopleWhoHave.committedSexualOffencesAgainstChildren,
+      ),
+      CharacteristicRequired(
+        "acceptsNonSexualChildOffenders",
+        siteSurveyPremise.willAcceptPeopleWhoHave.committedNonSexualOffencesAgainstChildren,
+      ),
+      CharacteristicRequired(
+        "acceptsHateCrimeOffenders",
+        siteSurveyPremise.willAcceptPeopleWhoHave.beenConvictedOfHateCrimes,
+      ),
+      CharacteristicRequired("isCatered", siteSurveyPremise.cateredOrSelfCatered),
+      CharacteristicRequired("hasWideStepFreeAccess", siteSurveyPremise.stepFreeEntrance),
+      CharacteristicRequired("hasWideAccessToCommunalAreas", siteSurveyPremise.corridorsAtLeast1200CmWide),
+      CharacteristicRequired("hasStepFreeAccessToCommunalAreas", siteSurveyPremise.corridorsHaveStepFreeAccess),
+      CharacteristicRequired(
+        "hasWheelChairAccessibleBathrooms",
+        siteSurveyPremise.bathroomFacilitiesAdaptedForWheelchairUsers,
+      ),
+      CharacteristicRequired("hasLift", siteSurveyPremise.hasALift),
+      CharacteristicRequired("hasTactileFlooring", siteSurveyPremise.hasTactileAndDirectionalFlooring),
+      CharacteristicRequired("hasBrailleSignage", siteSurveyPremise.hasSignsInBraille),
+      CharacteristicRequired("hasHearingLoop", siteSurveyPremise.hasAHearingLoop),
+    ).filter { it.value }
+      .map {
+        premiseCharacteristicsByPropertyName(it.propertyName)
+      }
+
+    return buildList {
+      addAll(specifiedCharacteristics)
+
+      qCodeToCharacteristic[siteSurveyPremise.qCode.uppercase()]?.let {
+        add(premiseCharacteristicsByPropertyName(it))
+      }
     }
+  }
+
+  @SuppressWarnings("TooGenericExceptionThrown")
+  private fun premiseCharacteristicsByPropertyName(propertyName: String) = characteristicRepository.findCas1ByPropertyNameAndScope(
+    propertyName = propertyName,
+    modelName = "premises",
+  ) ?: throw RuntimeException("Characteristic '$propertyName' does not exist for AP premises")
 }

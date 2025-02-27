@@ -14,8 +14,12 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.seed.SeedJob
 import java.time.OffsetDateTime
 import java.util.UUID
 
+/**
+ * This seed job is only used for seed test data
+ *
+ * If seeding actual premises, use [Cas1SeedRoomsFromSiteSurveyXlsxJob]
+ */
 @Component
-@Deprecated("Use Cas1SeedPremisesFromSiteSurveyXlsxJob instead")
 class ApprovedPremisesRoomsSeedJob(
   private val premisesRepository: PremisesRepository,
   private val roomRepository: RoomRepository,
