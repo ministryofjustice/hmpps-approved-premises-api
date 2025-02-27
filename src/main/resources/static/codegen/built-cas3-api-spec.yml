@@ -4743,6 +4743,8 @@ components:
         - isRecoveryFocussed
         - isSemiSpecialistMentalHealth
         - isSingle
+        - isSpecialistPremisesElliotHouse
+        - isSpecialistPremisesStJosephs
         - isStepFreeDesignated
         - isSuitableForVulnerable
         - isSuitedForSexOffenders
