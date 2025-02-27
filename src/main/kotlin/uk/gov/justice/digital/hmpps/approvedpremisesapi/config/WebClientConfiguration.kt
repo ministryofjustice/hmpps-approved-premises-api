@@ -28,15 +28,8 @@ data class WebClientConfig(
 @SuppressWarnings("LongParameterList")
 @Configuration
 class WebClientConfiguration(
-  @Value("\${upstream-timeout-ms}") private val upstreamTimeoutMs: Long,
-  @Value("\${ap-and-oasys-upstream-timeout-ms}") private val apAndOasysUpstreamTimeoutMs: Long,
-  @Value("\${nomis-user-roles-api-upstream-timeout-ms}") private val nomisUserRolesUpstreamTimeoutMs: Long,
-  @Value("\${case-notes-service-upstream-timeout-ms}") private val caseNotesServiceUpstreamTimeoutMs: Long,
-  @Value("\${tier-api-upstream-timeout-ms}") private val tierApiUpstreamTimeoutMs: Long,
-  @Value("\${web-clients.max-response-in-memory-size-bytes}") private val defaultMaxResponseInMemorySizeBytes: Int,
-  @Value("\${web-clients.prison-api-max-response-in-memory-size-bytes}") private val prisonApiMaxResponseInMemorySizeBytes: Int,
-  @Value("\${web-clients.prisoner-alerts-api-max-response-in-memory-size-bytes}") private val prisonerAlertsApiMaxResponseInMemorySizeBytes: Int,
-  @Value("\${web-clients.probation-offender-search-api-max-response-in-memory-size-bytes}") private val probationOffenderSearchApiMaxResponseInMemorySizeBytes: Int,
+  @Value("\${services.default.timeout-ms}") private val defaultUpstreamTimeoutMs: Long,
+  @Value("\${services.default.max-response-in-memory-size-bytes}") private val defaultMaxResponseInMemorySizeBytes: Int,
 ) {
 
   private val log = LoggerFactory.getLogger(this::class.java)
@@ -71,8 +64,8 @@ class WebClientConfiguration(
           ReactorClientHttpConnector(
             HttpClient
               .create()
-              .responseTimeout(Duration.ofMillis(upstreamTimeoutMs))
-              .option(ChannelOption.CONNECT_TIMEOUT_MILLIS, Duration.ofMillis(upstreamTimeoutMs).toMillis().toInt()),
+              .responseTimeout(Duration.ofMillis(defaultUpstreamTimeoutMs))
+              .option(ChannelOption.CONNECT_TIMEOUT_MILLIS, Duration.ofMillis(defaultUpstreamTimeoutMs).toMillis().toInt()),
           ),
         )
         .exchangeStrategies(
@@ -89,6 +82,7 @@ class WebClientConfiguration(
     clientRegistrations: ClientRegistrationRepository,
     authorizedClientManager: OAuth2AuthorizedClientManager,
     @Value("\${services.hmpps-tier.base-url}") hmppsTierApiBaseUrl: String,
+    @Value("\${services.hmpps-tier.timeout-ms}") tierApiUpstreamTimeoutMs: Long,
   ): WebClientConfig {
     val oauth2Client = ServletOAuth2AuthorizedClientExchangeFilterFunction(authorizedClientManager)
 
@@ -117,6 +111,7 @@ class WebClientConfiguration(
     authorizedClients: OAuth2AuthorizedClientRepository,
     authorizedClientManager: OAuth2AuthorizedClientManager,
     @Value("\${services.prisons-api.base-url}") prisonsApiBaseUrl: String,
+    @Value("\${services.prisons-api.max-response-in-memory-size-bytes}") prisonApiMaxResponseInMemorySizeBytes: Int,
   ): WebClientConfig {
     val oauth2Client = ServletOAuth2AuthorizedClientExchangeFilterFunction(authorizedClientManager)
 
@@ -131,8 +126,8 @@ class WebClientConfiguration(
           ReactorClientHttpConnector(
             HttpClient
               .create()
-              .responseTimeout(Duration.ofMillis(upstreamTimeoutMs))
-              .option(ChannelOption.CONNECT_TIMEOUT_MILLIS, Duration.ofMillis(upstreamTimeoutMs).toMillis().toInt()),
+              .responseTimeout(Duration.ofMillis(defaultUpstreamTimeoutMs))
+              .option(ChannelOption.CONNECT_TIMEOUT_MILLIS, Duration.ofMillis(defaultUpstreamTimeoutMs).toMillis().toInt()),
           ),
         )
         .exchangeStrategies(
@@ -151,6 +146,7 @@ class WebClientConfiguration(
     authorizedClients: OAuth2AuthorizedClientRepository,
     authorizedClientManager: OAuth2AuthorizedClientManager,
     @Value("\${services.prisoner-alerts-api.base-url}") prisonerAlertsApiBaseUrl: String,
+    @Value("\${services.prisoner-alerts-api.max-response-in-memory-size-bytes}") prisonerAlertsApiMaxResponseInMemorySizeBytes: Int,
   ): WebClientConfig {
     val oauth2Client = ServletOAuth2AuthorizedClientExchangeFilterFunction(authorizedClientManager)
 
@@ -165,8 +161,8 @@ class WebClientConfiguration(
           ReactorClientHttpConnector(
             HttpClient
               .create()
-              .responseTimeout(Duration.ofMillis(upstreamTimeoutMs))
-              .option(ChannelOption.CONNECT_TIMEOUT_MILLIS, Duration.ofMillis(upstreamTimeoutMs).toMillis().toInt()),
+              .responseTimeout(Duration.ofMillis(defaultUpstreamTimeoutMs))
+              .option(ChannelOption.CONNECT_TIMEOUT_MILLIS, Duration.ofMillis(defaultUpstreamTimeoutMs).toMillis().toInt()),
           ),
         )
         .exchangeStrategies(
@@ -184,6 +180,7 @@ class WebClientConfiguration(
     clientRegistrations: ClientRegistrationRepository,
     authorizedClients: OAuth2AuthorizedClientRepository,
     @Value("\${services.case-notes.base-url}") caseNotesBaseUrl: String,
+    @Value("\${services.case-notes.timeout-ms}") caseNotesServiceUpstreamTimeoutMs: Long,
   ): WebClientConfig {
     val oauth2Client = ServletOAuth2AuthorizedClientExchangeFilterFunction(clientRegistrations, authorizedClients)
 
@@ -211,6 +208,7 @@ class WebClientConfiguration(
     authorizedClients: OAuth2AuthorizedClientRepository,
     authorizedClientManager: OAuth2AuthorizedClientManager,
     @Value("\${services.ap-oasys-context-api.base-url}") apOASysContextApiBaseUrl: String,
+    @Value("\${services.ap-oasys-context-api.timeout-ms}") apAndOasysUpstreamTimeoutMs: Long,
   ): WebClientConfig {
     val oauth2Client = ServletOAuth2AuthorizedClientExchangeFilterFunction(authorizedClientManager)
 
@@ -243,8 +241,8 @@ class WebClientConfiguration(
         ReactorClientHttpConnector(
           HttpClient
             .create()
-            .responseTimeout(Duration.ofMillis(upstreamTimeoutMs))
-            .option(ChannelOption.CONNECT_TIMEOUT_MILLIS, Duration.ofMillis(upstreamTimeoutMs).toMillis().toInt()),
+            .responseTimeout(Duration.ofMillis(defaultUpstreamTimeoutMs))
+            .option(ChannelOption.CONNECT_TIMEOUT_MILLIS, Duration.ofMillis(defaultUpstreamTimeoutMs).toMillis().toInt()),
         ),
       )
       .build(),
@@ -253,6 +251,7 @@ class WebClientConfiguration(
   @Bean(name = ["nomisUserRolesApiWebClient"])
   fun nomisUserRolesApiClient(
     @Value("\${services.nomis-user-roles-api.base-url}") nomisUserRolesBaseUrl: String,
+    @Value("\${services.nomis-user-roles-api.timeout-ms}") nomisUserRolesUpstreamTimeoutMs: Long,
   ): WebClientConfig = WebClientConfig(
     WebClient.builder()
       .baseUrl(nomisUserRolesBaseUrl)
@@ -278,8 +277,8 @@ class WebClientConfiguration(
         ReactorClientHttpConnector(
           HttpClient
             .create()
-            .responseTimeout(Duration.ofMillis(upstreamTimeoutMs))
-            .option(ChannelOption.CONNECT_TIMEOUT_MILLIS, Duration.ofMillis(upstreamTimeoutMs).toMillis().toInt()),
+            .responseTimeout(Duration.ofMillis(defaultUpstreamTimeoutMs))
+            .option(ChannelOption.CONNECT_TIMEOUT_MILLIS, Duration.ofMillis(defaultUpstreamTimeoutMs).toMillis().toInt()),
         ),
       )
       .build(),
@@ -290,6 +289,7 @@ class WebClientConfiguration(
     clientRegistrations: ClientRegistrationRepository,
     authorizedClients: OAuth2AuthorizedClientRepository,
     @Value("\${services.probation-offender-search-api.base-url}") probationOffenderSearchBaseUrl: String,
+    @Value("\${services.probation-offender-search-api.max-response-in-memory-size-bytes}") probationOffenderSearchApiMaxResponseInMemorySizeBytes: Int,
   ): WebClientConfig {
     val oauth2Client = ServletOAuth2AuthorizedClientExchangeFilterFunction(clientRegistrations, authorizedClients)
 
@@ -302,8 +302,8 @@ class WebClientConfiguration(
           ReactorClientHttpConnector(
             HttpClient
               .create()
-              .responseTimeout(Duration.ofMillis(upstreamTimeoutMs))
-              .option(ChannelOption.CONNECT_TIMEOUT_MILLIS, Duration.ofMillis(upstreamTimeoutMs).toMillis().toInt()),
+              .responseTimeout(Duration.ofMillis(defaultUpstreamTimeoutMs))
+              .option(ChannelOption.CONNECT_TIMEOUT_MILLIS, Duration.ofMillis(defaultUpstreamTimeoutMs).toMillis().toInt()),
           ),
         )
         .filter(oauth2Client)

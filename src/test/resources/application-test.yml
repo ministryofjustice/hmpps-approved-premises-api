@@ -90,6 +90,8 @@ hmpps:
     client-secret: secret
 
 services:
+  default:
+    timeout-ms: 500
   hmpps-tier:
     base-url: http://localhost:#WIREMOCK_PORT
   prisons-api:
@@ -98,6 +100,7 @@ services:
     base-url: http://localhost:#WIREMOCK_PORT
   nomis-user-roles-api:
     base-url: http://localhost:#WIREMOCK_PORT
+    timeout-ms: 500
   manage-users-api:
     base-url: http://localhost:#WIREMOCK_PORT
   probation-offender-search-api:
@@ -182,9 +185,6 @@ preemptive-cache-enabled: false
 
 arrived-departed-domain-events-disabled: false
 manual-bookings-domain-events-disabled: false
-
-upstream-timeout-ms: 500
-nomis-user-roles-api-upstream-timeout-ms: 500
 
 pagination:
   default-page-size: 10
