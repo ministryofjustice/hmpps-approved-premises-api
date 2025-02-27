@@ -5,7 +5,6 @@ import org.slf4j.LoggerFactory
 import org.springframework.http.HttpStatus
 import org.springframework.stereotype.Service
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.ApDeliusContextApiClient
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.ApOASysContextApiClient
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.CaseNotesClient
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.ClientResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.PrisonerAlertsApiClient
@@ -29,11 +28,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.deliuscontext.Case
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.deliuscontext.CaseDetail
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.deliuscontext.CaseSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.deliuscontext.UserOffenderAccess
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.oasyscontext.NeedsDetails
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.oasyscontext.OffenceDetails
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.oasyscontext.RiskManagementPlan
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.oasyscontext.RisksToTheIndividual
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.oasyscontext.RoshSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.prisonsapi.Adjudication
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.prisonsapi.AdjudicationsPage
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.prisonsapi.Agency
@@ -42,7 +36,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.prisonsapi.CaseNot
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.prisonsapi.CaseNotesPage
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.prisonsapi.InmateDetail
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.InternalServerErrorProblem
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.NotFoundProblem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.AuthorisableActionResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.CasResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.OffenderService.LimitedAccessStrategy
@@ -57,7 +50,6 @@ class OffenderService(
   private val prisonsApiClient: PrisonsApiClient,
   private val prisionerAlertsApiClient: PrisonerAlertsApiClient,
   private val caseNotesClient: CaseNotesClient,
-  private val apOASysContextApiClient: ApOASysContextApiClient,
   private val apDeliusContextApiClient: ApDeliusContextApiClient,
   private val offenderDetailsDataSource: OffenderDetailsDataSource,
   private val offenderRisksDataSource: OffenderRisksDataSource,
@@ -584,93 +576,6 @@ class OffenderService(
     }
 
     return CasResult.Success(alerts.content)
-  }
-
-  fun getOASysNeeds(crn: String): AuthorisableActionResult<NeedsDetails> {
-    val needsResult = apOASysContextApiClient.getNeedsDetails(crn)
-
-    val needs = when (needsResult) {
-      is ClientResult.Success -> needsResult.body
-      is ClientResult.Failure.StatusCode -> when (needsResult.status) {
-        HttpStatus.NOT_FOUND -> return AuthorisableActionResult.NotFound()
-        HttpStatus.FORBIDDEN -> return AuthorisableActionResult.Unauthorised()
-        else -> {
-          log.warn("Failed to fetch OASys needs details - got response status ${needsResult.status}, returning 404")
-          throw NotFoundProblem(crn, "OASys")
-        }
-      }
-      is ClientResult.Failure.Other -> {
-        log.warn("Failed to fetch OASys needs details, returning 404", needsResult.exception)
-        throw NotFoundProblem(crn, "OASys")
-      }
-      is ClientResult.Failure -> needsResult.throwException()
-    }
-
-    return AuthorisableActionResult.Success(needs)
-  }
-
-  fun getOASysOffenceDetails(crn: String): AuthorisableActionResult<OffenceDetails> {
-    val offenceDetailsResult = apOASysContextApiClient.getOffenceDetails(crn)
-
-    val offenceDetails = when (offenceDetailsResult) {
-      is ClientResult.Success -> offenceDetailsResult.body
-      is ClientResult.Failure.StatusCode -> when (offenceDetailsResult.status) {
-        HttpStatus.NOT_FOUND -> return AuthorisableActionResult.NotFound()
-        HttpStatus.FORBIDDEN -> return AuthorisableActionResult.Unauthorised()
-        else -> offenceDetailsResult.throwException()
-      }
-      is ClientResult.Failure -> offenceDetailsResult.throwException()
-    }
-
-    return AuthorisableActionResult.Success(offenceDetails)
-  }
-
-  fun getOASysRiskManagementPlan(crn: String): AuthorisableActionResult<RiskManagementPlan> {
-    val riskManagementPlanResult = apOASysContextApiClient.getRiskManagementPlan(crn)
-
-    val riskManagement = when (riskManagementPlanResult) {
-      is ClientResult.Success -> riskManagementPlanResult.body
-      is ClientResult.Failure.StatusCode -> when (riskManagementPlanResult.status) {
-        HttpStatus.NOT_FOUND -> return AuthorisableActionResult.NotFound()
-        HttpStatus.FORBIDDEN -> return AuthorisableActionResult.Unauthorised()
-        else -> riskManagementPlanResult.throwException()
-      }
-      is ClientResult.Failure -> riskManagementPlanResult.throwException()
-    }
-
-    return AuthorisableActionResult.Success(riskManagement)
-  }
-
-  fun getOASysRoshSummary(crn: String): AuthorisableActionResult<RoshSummary> {
-    val roshSummaryResult = apOASysContextApiClient.getRoshSummary(crn)
-
-    val roshSummary = when (roshSummaryResult) {
-      is ClientResult.Success -> roshSummaryResult.body
-      is ClientResult.Failure.StatusCode -> when (roshSummaryResult.status) {
-        HttpStatus.NOT_FOUND -> return AuthorisableActionResult.NotFound()
-        HttpStatus.FORBIDDEN -> return AuthorisableActionResult.Unauthorised()
-        else -> roshSummaryResult.throwException()
-      }
-      is ClientResult.Failure -> roshSummaryResult.throwException()
-    }
-
-    return AuthorisableActionResult.Success(roshSummary)
-  }
-
-  fun getOASysRiskToTheIndividual(crn: String): AuthorisableActionResult<RisksToTheIndividual> {
-    val risksToTheIndividualResult = apOASysContextApiClient.getRiskToTheIndividual(crn)
-
-    val riskToTheIndividual = when (risksToTheIndividualResult) {
-      is ClientResult.Success -> risksToTheIndividualResult.body
-      is ClientResult.Failure.StatusCode -> when (risksToTheIndividualResult.status) {
-        HttpStatus.NOT_FOUND -> return AuthorisableActionResult.NotFound()
-        HttpStatus.FORBIDDEN -> return AuthorisableActionResult.Unauthorised()
-        else -> risksToTheIndividualResult.throwException()
-      }
-      is ClientResult.Failure -> risksToTheIndividualResult.throwException()
-    }
-
-    return AuthorisableActionResult.Success(riskToTheIndividual)
   }
 
   fun getCaseDetail(crn: String): CasResult<CaseDetail> {
