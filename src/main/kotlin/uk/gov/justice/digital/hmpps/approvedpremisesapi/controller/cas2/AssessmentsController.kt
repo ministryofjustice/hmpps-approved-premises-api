@@ -19,7 +19,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.NotFoundProblem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.AuthorisableActionResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.ValidatableActionResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.ExternalUserService
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas2.Cas2ApplicationNoteService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas2.Cas2AssessmentNoteService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas2.Cas2AssessmentService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas2.StatusUpdateService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.cas2.ApplicationNotesTransformer
@@ -30,7 +30,7 @@ import java.util.UUID
 @Service("Cas2AssessmentsController")
 class AssessmentsController(
   private val assessmentService: Cas2AssessmentService,
-  private val assessmentNoteService: Cas2ApplicationNoteService,
+  private val assessmentNoteService: Cas2AssessmentNoteService,
   private val assessmentsTransformer: AssessmentsTransformer,
   private val applicationNotesTransformer: ApplicationNotesTransformer,
   private val statusUpdateService: StatusUpdateService,

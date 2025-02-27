@@ -36,7 +36,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.toCas2UiFormattedHo
 import java.time.OffsetDateTime
 import java.util.UUID
 
-class Cas2ApplicationNoteServiceTest {
+class Cas2AssessmentNoteServiceTest {
   private val mockApplicationRepository = mockk<Cas2ApplicationRepository>()
   private val mockAssessmentRepository = mockk<Cas2AssessmentRepository>()
   private val mockApplicationNoteRepository = mockk<Cas2ApplicationNoteRepository>()
@@ -47,7 +47,7 @@ class Cas2ApplicationNoteServiceTest {
   private val mockUserAccessService = mockk<Cas2UserAccessService>()
   private val mockNotifyConfig = mockk<NotifyConfig>()
 
-  private val assessmentNoteService = uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas2.Cas2ApplicationNoteService(
+  private val assessmentNoteService = uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas2.Cas2AssessmentNoteService(
     mockApplicationRepository,
     mockAssessmentRepository,
     mockApplicationNoteRepository,

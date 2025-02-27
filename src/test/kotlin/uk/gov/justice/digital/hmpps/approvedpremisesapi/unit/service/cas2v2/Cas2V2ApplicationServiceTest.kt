@@ -55,7 +55,7 @@ import java.time.OffsetDateTime
 import java.time.format.DateTimeFormatter
 import java.util.UUID
 
-class Cas2V2Cas2ApplicationServiceTest {
+class Cas2V2ApplicationServiceTest {
   private val mockCas2v2ApplicationRepository = mockk<Cas2v2ApplicationRepository>()
   private val mockCas2v2LockableApplicationRepository = mockk<Cas2v2LockableApplicationRepository>()
   private val mockCas2v2ApplicationSummaryRepository = mockk<Cas2v2ApplicationSummaryRepository>()
