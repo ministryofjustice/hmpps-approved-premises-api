@@ -51,6 +51,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.AppealService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.ApplicationService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.ApplicationTimelineNoteService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.AssessmentService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.DocumentService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.HttpAuthService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.OffenderService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.UserService
@@ -89,6 +90,7 @@ class ApplicationsController(
   private val applicationTimelineNoteService: ApplicationTimelineNoteService,
   private val applicationTimelineNoteTransformer: ApplicationTimelineNoteTransformer,
   private val cas1TimelineService: Cas1TimelineService,
+  private val documentService: DocumentService,
 ) : ApplicationsApiDelegate {
 
   override fun applicationsGet(xServiceName: ServiceName?): ResponseEntity<List<ApplicationSummary>> {
@@ -389,11 +391,9 @@ class ApplicationsController(
     return ResponseEntity(apiDocuments, HttpStatus.OK)
   }
 
-  private fun getDocuments(crn: String): List<APDeliusDocument> = when (val result = offenderService.getDocumentsFromApDeliusApi(crn)) {
-    is AuthorisableActionResult.NotFound -> throw NotFoundProblem(crn, "Documents")
-    is AuthorisableActionResult.Unauthorised -> throw ForbiddenProblem()
-    is AuthorisableActionResult.Success -> result.entity
-  }
+  private fun getDocuments(crn: String): List<APDeliusDocument> = extractEntityFromCasResult(
+    documentService.getDocumentsFromApDeliusApi(crn),
+  )
 
   override fun applicationsApplicationIdAppealsAppealIdGet(
     applicationId: UUID,

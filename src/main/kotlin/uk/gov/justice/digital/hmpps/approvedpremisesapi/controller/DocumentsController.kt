@@ -12,8 +12,10 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.deliuscontext.APDe
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.ForbiddenProblem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.NotFoundProblem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.AuthorisableActionResult
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.DocumentService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.OffenderService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.UserService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.extractEntityFromCasResult
 import java.io.OutputStream
 import java.util.UUID
 
@@ -21,6 +23,7 @@ import java.util.UUID
 class DocumentsController(
   private val userService: UserService,
   private val offenderService: OffenderService,
+  private val documentService: DocumentService,
 ) : DocumentsApiDelegate {
 
   override fun documentsCrnDocumentIdGet(crn: String, documentId: UUID): ResponseEntity<StreamingResponseBody> {
@@ -54,14 +57,12 @@ class DocumentsController(
   }
 
   private fun getDocument(crn: String, documentId: UUID, outputStream: OutputStream) {
-    offenderService.getDocumentFromDelius(crn, documentId.toString(), outputStream)
+    documentService.getDocumentFromDelius(crn, documentId.toString(), outputStream)
   }
 
-  private fun getDocuments(crn: String): List<APDeliusDocument> = when (val result = offenderService.getDocumentsFromApDeliusApi(crn)) {
-    is AuthorisableActionResult.NotFound -> throw NotFoundProblem(crn, "Documents")
-    is AuthorisableActionResult.Unauthorised -> throw ForbiddenProblem()
-    is AuthorisableActionResult.Success -> result.entity
-  }
+  private fun getDocuments(crn: String): List<APDeliusDocument> = extractEntityFromCasResult(
+    documentService.getDocumentsFromApDeliusApi(crn),
+  )
 
   private fun getDocumentFileName(documentsMetaData: List<APDeliusDocument>, documentId: UUID): String {
     val document = documentsMetaData.firstOrNull { it.id == documentId.toString() } ?: throw NotFoundProblem(documentId, "Document")
