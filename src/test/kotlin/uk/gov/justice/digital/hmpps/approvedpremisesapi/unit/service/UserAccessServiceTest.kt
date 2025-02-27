@@ -43,7 +43,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.unit.util.addRoleForUnit
 import java.time.OffsetDateTime
 import java.util.UUID
 
-class Cas2UserAccessServiceTest {
+class UserAccessServiceTest {
   private val userService = mockk<UserService>()
   private val offenderService = mockk<OffenderService>()
   private val requestContextService = mockk<RequestContextService>()
