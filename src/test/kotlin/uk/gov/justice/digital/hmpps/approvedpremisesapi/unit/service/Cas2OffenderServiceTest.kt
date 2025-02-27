@@ -59,7 +59,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomNumberChars
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomStringMultiCaseWithNumbers
 import java.time.LocalDate
 
-class OffenderServiceTest {
+class Cas2OffenderServiceTest {
   private val mockPrisonsApiClient = mockk<PrisonsApiClient>()
   private val mockPrisonerAlertsApiClient = mockk<PrisonerAlertsApiClient>()
   private val mockCaseNotesClient = mockk<CaseNotesClient>()

@@ -36,17 +36,18 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.getPageableOrAllPag
 import java.time.OffsetDateTime
 import java.util.UUID
 
-@Service("Cas2ApplicationService")
-class ApplicationService(
+@SuppressWarnings("TooGenericExceptionThrown", "UnusedParameter")
+@Service
+class Cas2ApplicationService(
   private val applicationRepository: Cas2ApplicationRepository,
   private val lockableApplicationRepository: Cas2LockableApplicationRepository,
   private val applicationSummaryRepository: ApplicationSummaryRepository,
-  private val jsonSchemaService: JsonSchemaService,
-  private val offenderService: OffenderService,
-  private val userAccessService: UserAccessService,
-  private val domainEventService: DomainEventService,
+  private val jsonSchemaService: Cas2JsonSchemaService,
+  private val offenderService: Cas2OffenderService,
+  private val userAccessService: Cas2UserAccessService,
+  private val domainEventService: Cas2DomainEventService,
   private val emailNotificationService: EmailNotificationService,
-  private val assessmentService: AssessmentService,
+  private val assessmentService: Cas2AssessmentService,
   private val notifyConfig: NotifyConfig,
   private val objectMapper: ObjectMapper,
   @Value("\${url-templates.frontend.cas2.application}") private val applicationUrlTemplate: String,
@@ -213,7 +214,7 @@ class ApplicationService(
     return CasResult.Success(savedApplication)
   }
 
-  @SuppressWarnings("ReturnCount")
+  @SuppressWarnings("ReturnCount", "UnusedPrivateProperty")
   @Transactional
   fun submitApplication(
     submitApplication: SubmitCas2Application,

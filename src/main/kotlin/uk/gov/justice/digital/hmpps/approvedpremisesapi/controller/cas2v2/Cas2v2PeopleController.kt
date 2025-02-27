@@ -23,7 +23,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.OASysSection
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.PersonTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.RisksTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.OffenderService as DeliusOffenderService
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas2.OffenderService as NomsOffenderService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas2.Cas2OffenderService as NomsOffenderService
 
 @Service("Cas2v2PeopleController")
 class Cas2v2PeopleController(

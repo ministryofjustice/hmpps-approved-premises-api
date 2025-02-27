@@ -18,7 +18,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.reference.Cas2Pers
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.reference.Cas2PersistedApplicationStatusFinder
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.seed.SeedJob
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.seed.insertHdcDates
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas2.JsonSchemaService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas2.Cas2JsonSchemaService
 import java.io.IOException
 import java.io.InputStreamReader
 import java.time.LocalDate
@@ -33,7 +33,7 @@ class Cas2ApplicationsSeedJob(
   private val externalUserRepository: ExternalUserRepository,
   private val statusUpdateRepository: Cas2StatusUpdateRepository,
   private val assessmentRepository: Cas2AssessmentRepository,
-  private val jsonSchemaService: JsonSchemaService,
+  private val jsonSchemaService: Cas2JsonSchemaService,
   private val statusFinder: Cas2PersistedApplicationStatusFinder,
 ) : SeedJob<Cas2ApplicationSeedCsvRow>(
   requiredHeaders = setOf("id", "nomsNumber", "crn", "state", "createdBy", "createdAt", "submittedAt", "statusUpdates", "location"),

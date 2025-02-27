@@ -106,7 +106,7 @@ import java.time.LocalDate
 import java.time.OffsetDateTime
 import java.util.UUID
 
-class AssessmentServiceTest {
+class Cas2AssessmentServiceTest {
   private val userServiceMock = mockk<UserService>()
   private val userAccessServiceMock = mockk<UserAccessService>()
   private val assessmentRepositoryMock = mockk<AssessmentRepository>()

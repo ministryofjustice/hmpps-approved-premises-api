@@ -29,8 +29,8 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.AuthorisableActi
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.CasResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.EmailNotificationService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.UpstreamApiException
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas2.DomainEventService
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas2.OffenderService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas2.Cas2DomainEventService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas2.Cas2OffenderService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.PageCriteria
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.getMetadata
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.getPageableOrAllPages
@@ -44,9 +44,9 @@ class Cas2v2ApplicationService(
   private val cas2v2LockableApplicationRepository: Cas2v2LockableApplicationRepository,
   private val cas2v2ApplicationSummaryRepository: Cas2v2ApplicationSummaryRepository,
   private val cas2v2JsonSchemaService: Cas2v2JsonSchemaService,
-  private val cas2v2OffenderService: OffenderService,
+  private val cas2v2OffenderService: Cas2OffenderService,
   private val cas2v2UserAccessService: Cas2v2UserAccessService,
-  private val domainEventService: DomainEventService,
+  private val domainEventService: Cas2DomainEventService,
   private val emailNotificationService: EmailNotificationService,
   private val cas2v2AssessmentService: Cas2v2AssessmentService,
   private val notifyConfig: NotifyConfig,

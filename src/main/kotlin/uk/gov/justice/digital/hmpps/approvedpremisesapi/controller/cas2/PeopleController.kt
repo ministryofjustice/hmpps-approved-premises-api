@@ -17,7 +17,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.ForbiddenProblem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.NotFoundProblem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.AuthorisableActionResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.NomisUserService
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas2.OffenderService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas2.Cas2OffenderService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.OASysSectionsTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.PersonTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.RisksTransformer
@@ -25,7 +25,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.OffenderService 
 
 @Service("Cas2PeopleController")
 class PeopleController(
-  private val offenderService: OffenderService,
+  private val offenderService: Cas2OffenderService,
   private val oaSysOffenderService: OASysOffenderService,
   private val oaSysSectionsTransformer: OASysSectionsTransformer,
   private val personTransformer: PersonTransformer,

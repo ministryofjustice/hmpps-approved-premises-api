@@ -11,15 +11,16 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas2Applicati
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas2ApplicationJsonSchemaEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas2ApplicationRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.JsonSchemaRepository
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas2.JsonSchemaService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas2.Cas2JsonSchemaService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.unit.util.ObjectMapperFactory
 import java.util.UUID
 
-class JsonSchemaServiceTest {
+@SuppressWarnings("UnusedPrivateProperty")
+class Cas2JsonSchemaServiceTest {
   private val mockJsonSchemaRepository = mockk<JsonSchemaRepository>()
   private val mockApplicationRepository = mockk<Cas2ApplicationRepository>()
 
-  private val jsonSchemaService = JsonSchemaService(
+  private val jsonSchemaService = Cas2JsonSchemaService(
     objectMapper = ObjectMapperFactory.createRuntimeLikeObjectMapper(),
     jsonSchemaRepository = mockJsonSchemaRepository,
     applicationRepository = mockApplicationRepository,

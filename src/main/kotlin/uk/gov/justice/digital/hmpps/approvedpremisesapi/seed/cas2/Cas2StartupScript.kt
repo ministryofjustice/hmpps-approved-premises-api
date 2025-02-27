@@ -18,8 +18,8 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.reference.Cas2Pers
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.reference.Cas2PersistedApplicationStatusFinder
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.seed.SeedLogger
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.seed.insertHdcDates
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas2.ApplicationService
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas2.JsonSchemaService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas2.Cas2ApplicationService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas2.Cas2JsonSchemaService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas2.StatusUpdateService
 import java.io.IOException
 import java.io.InputStreamReader
@@ -46,8 +46,8 @@ class Cas2StartupScript(
   private val externalUserRepository: ExternalUserRepository,
   private val statusUpdateRepository: Cas2StatusUpdateRepository,
   private val assessmentRepository: Cas2AssessmentRepository,
-  private val jsonSchemaService: JsonSchemaService,
-  private val applicationService: ApplicationService,
+  private val jsonSchemaService: Cas2JsonSchemaService,
+  private val applicationService: Cas2ApplicationService,
   private val statusUpdateService: StatusUpdateService,
   private val statusFinder: Cas2PersistedApplicationStatusFinder,
 ) {

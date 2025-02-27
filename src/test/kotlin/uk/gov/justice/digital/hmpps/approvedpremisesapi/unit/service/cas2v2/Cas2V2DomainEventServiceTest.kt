@@ -17,7 +17,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DomainEventRe
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DomainEventType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.DomainEvent
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.domainevent.SnsEvent
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas2.DomainEventService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas2.Cas2DomainEventService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.unit.util.ObjectMapperFactory
 import uk.gov.justice.hmpps.sqs.HmppsQueueService
 import uk.gov.justice.hmpps.sqs.HmppsTopic
@@ -26,7 +26,7 @@ import java.util.UUID
 import java.util.concurrent.CompletableFuture
 
 @SuppressWarnings("CyclomaticComplexMethod")
-class Cas2v2DomainEventServiceTest {
+class Cas2V2DomainEventServiceTest {
 
   private val domainEventRepositoryMock = mockk<DomainEventRepository>()
   private val hmppsQueueServiceMock = mockk<HmppsQueueService>()
@@ -36,7 +36,7 @@ class Cas2v2DomainEventServiceTest {
 
   private val detailUrl = "https://example.com/123"
 
-  private val domainEventService = DomainEventService(
+  private val domainEventService = Cas2DomainEventService(
     objectMapper = objectMapper,
     domainEventRepository = domainEventRepositoryMock,
     hmppsQueueService = hmppsQueueServiceMock,

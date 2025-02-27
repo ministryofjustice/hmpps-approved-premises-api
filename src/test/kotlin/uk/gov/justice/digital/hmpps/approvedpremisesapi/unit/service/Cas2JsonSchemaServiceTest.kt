@@ -22,7 +22,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.JsonSchemaServic
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.unit.util.ObjectMapperFactory
 import java.util.UUID
 
-class JsonSchemaServiceTest {
+class Cas2JsonSchemaServiceTest {
   private val mockJsonSchemaRepository = mockk<JsonSchemaRepository>()
   private val mockApplicationRepository = mockk<ApplicationRepository>()
 

@@ -14,8 +14,9 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas2v2.Cas2v2
 import java.util.Collections.synchronizedMap
 import java.util.UUID
 
-@Service("Cas2JsonSchemaService")
-class JsonSchemaService(
+@SuppressWarnings("UnusedPrivateProperty")
+@Service
+class Cas2JsonSchemaService(
   private val objectMapper: ObjectMapper,
   private val jsonSchemaRepository: JsonSchemaRepository,
   private val applicationRepository: Cas2ApplicationRepository,

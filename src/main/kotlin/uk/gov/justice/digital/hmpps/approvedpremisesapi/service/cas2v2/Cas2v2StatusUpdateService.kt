@@ -28,8 +28,8 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.reference.Cas2Pers
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.reference.Cas2PersistedApplicationStatusFinder
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.CasResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.EmailNotificationService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas2.Cas2DomainEventService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas2.Constants.HDC_APPLICATION_TYPE
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas2.DomainEventService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.cas2.ApplicationStatusTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.toCas2UiFormat
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.toCas2UiFormattedHourOfDay
@@ -41,7 +41,7 @@ class Cas2v2StatusUpdateService(
   private val cas2v2AssessmentRepository: Cas2v2AssessmentRepository,
   private val cas2v2StatusUpdateRepository: Cas2v2StatusUpdateRepository,
   private val cas2v2StatusUpdateDetailRepository: Cas2v2StatusUpdateDetailRepository,
-  private val domainEventService: DomainEventService,
+  private val domainEventService: Cas2DomainEventService,
   private val emailNotificationService: EmailNotificationService,
   private val notifyConfig: NotifyConfig,
   private val statusFinder: Cas2PersistedApplicationStatusFinder,

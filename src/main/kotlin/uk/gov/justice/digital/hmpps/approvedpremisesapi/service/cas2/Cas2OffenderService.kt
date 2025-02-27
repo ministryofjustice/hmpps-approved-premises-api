@@ -26,11 +26,11 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.AuthorisableActi
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.CasResult
 import java.util.stream.Collectors
 
-@Service("CAS2OffenderService")
+@Service
 @Suppress(
   "ReturnCount",
 )
-class OffenderService(
+class Cas2OffenderService(
   private val prisonsApiClient: PrisonsApiClient,
   private val probationOffenderSearchApiClient: ProbationOffenderSearchApiClient,
   private val apOASysContextApiClient: ApOASysContextApiClient,
