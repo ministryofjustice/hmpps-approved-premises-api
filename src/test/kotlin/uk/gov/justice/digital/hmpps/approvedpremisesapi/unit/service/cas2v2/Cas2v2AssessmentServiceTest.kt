@@ -7,7 +7,7 @@ import org.assertj.core.api.Assertions
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 import org.springframework.data.repository.findByIdOrNull
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.UpdateCas2Assessment
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.UpdateCas2v2Assessment
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.cas2v2.Cas2v2ApplicationEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.cas2v2.Cas2v2UserEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas2v2.Cas2v2AssessmentEntity
@@ -76,7 +76,7 @@ class Cas2v2AssessmentServiceTest {
         createdAt = OffsetDateTime.now(),
       )
 
-      val newAssessmentData = UpdateCas2Assessment(
+      val newAssessmentData = UpdateCas2v2Assessment(
         nacroReferralId = "1234OH",
         assessorName = "Anne Assessor",
       )
@@ -115,7 +115,7 @@ class Cas2v2AssessmentServiceTest {
     @Test
     fun `returns NotFound if entity is not found`() {
       val assessmentId = UUID.randomUUID()
-      val newAssessmentData = UpdateCas2Assessment(
+      val newAssessmentData = UpdateCas2v2Assessment(
         nacroReferralId = "1234OH",
         assessorName = "Anne Assessor",
       )
