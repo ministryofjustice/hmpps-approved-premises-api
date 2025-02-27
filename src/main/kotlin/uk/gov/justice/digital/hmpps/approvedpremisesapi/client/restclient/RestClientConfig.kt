@@ -20,15 +20,14 @@ import java.time.Duration
 class RestClientConfig(
   private val restClientBuilder: Builder,
   private val clientManager: OAuth2AuthorizedClientManager,
-  @Value("\${services.manage-pom-cases.connection-timeout}") private val managePomCasesConnectionTimeout: String,
-  @Value("\${services.manage-pom-cases.read-timeout}") private val managePomCasesReadTimeout: String,
-  @Value("\${services.prisoner-search.connection-timeout}") private val prisonerSearchConnectionTimeout: String,
-  @Value("\${services.prisoner-search.read-timeout}") private val prisonerSearchReadTimeout: String,
 
 ) {
 
   @Bean
-  fun managePomCasesClient() = createClient<ManagePomCasesClient>(
+  fun managePomCasesClient(
+    @Value("\${services.manage-pom-cases.connection-timeout}") managePomCasesConnectionTimeout: String,
+    @Value("\${services.manage-pom-cases.read-timeout}") managePomCasesReadTimeout: String,
+  ) = createClient<ManagePomCasesClient>(
     restClientBuilder
       .requestFactory(
         withTimeouts(
@@ -42,7 +41,10 @@ class RestClientConfig(
   )
 
   @Bean
-  fun prisonerSearchClient() = createClient<PrisonerSearchClient>(
+  fun prisonerSearchClient(
+    @Value("\${services.prisoner-search.connection-timeout}") prisonerSearchConnectionTimeout: String,
+    @Value("\${services.prisoner-search.read-timeout}") prisonerSearchReadTimeout: String,
+  ) = createClient<PrisonerSearchClient>(
     restClientBuilder
       .requestFactory(
         withTimeouts(
