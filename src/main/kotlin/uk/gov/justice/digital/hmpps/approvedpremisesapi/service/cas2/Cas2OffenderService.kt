@@ -19,6 +19,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.RiskStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.RiskWithStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.RoshRisks
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.community.OffenderDetailSummary
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.deliuscontext.CaseDetail
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.prisonsapi.InmateDetail
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.probationoffendersearchapi.ProbationOffenderDetail
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.ForbiddenProblem
@@ -42,7 +43,10 @@ class Cas2OffenderService(
 
   private val log = LoggerFactory.getLogger(this::class.java)
 
-  fun getPersonByNomsNumberAndActiveCaseLoadId(nomsNumber: String, activeCaseLoadId: String): ProbationOffenderSearchResult {
+  fun getPersonByNomsNumberAndActiveCaseLoadId(
+    nomsNumber: String,
+    activeCaseLoadId: String,
+  ): ProbationOffenderSearchResult {
     fun logFailedResponse(probationResponse: ClientResult.Failure<List<ProbationOffenderDetail>>) = log.warn("Could not get inmate details for $nomsNumber", probationResponse.toException())
 
     val probationResponse = probationOffenderSearchApiClient.searchOffenderByNomsNumber(nomsNumber)
@@ -51,7 +55,11 @@ class Cas2OffenderService(
       is ClientResult.Success -> probationResponse.body
       is ClientResult.Failure.StatusCode -> when (probationResponse.status) {
         HttpStatus.NOT_FOUND -> return ProbationOffenderSearchResult.NotFound(nomsNumber)
-        HttpStatus.FORBIDDEN -> return ProbationOffenderSearchResult.Forbidden(nomsNumber, probationResponse.toException())
+        HttpStatus.FORBIDDEN -> return ProbationOffenderSearchResult.Forbidden(
+          nomsNumber,
+          probationResponse.toException(),
+        )
+
         else -> {
           logFailedResponse(probationResponse)
           return ProbationOffenderSearchResult.Unknown(nomsNumber, probationResponse.toException())
@@ -197,8 +205,15 @@ class Cas2OffenderService(
     }
 
     fun logFailedResponse(inmateDetailResponse: ClientResult.Failure<InmateDetail>) = when (hasCacheTimedOut) {
-      true -> log.warn("Could not get inmate details for $crn after cache timed out", inmateDetailResponse.toException())
-      false -> log.warn("Could not get inmate details for $crn as an unsuccessful response was cached", inmateDetailResponse.toException())
+      true -> log.warn(
+        "Could not get inmate details for $crn after cache timed out",
+        inmateDetailResponse.toException(),
+      )
+
+      false -> log.warn(
+        "Could not get inmate details for $crn as an unsuccessful response was cached",
+        inmateDetailResponse.toException(),
+      )
     }
 
     val inmateDetail = when (inmateDetailResponse) {
@@ -213,11 +228,13 @@ class Cas2OffenderService(
           logFailedResponse(inmateDetailResponse)
           return AuthorisableActionResult.Unauthorised()
         }
+
         else -> {
           logFailedResponse(inmateDetailResponse)
           null
         }
       }
+
       is ClientResult.Failure -> {
         logFailedResponse(inmateDetailResponse)
         null
@@ -238,7 +255,17 @@ class Cas2OffenderService(
     return AuthorisableActionResult.Success(offender)
   }
 
-  fun getCaseDetail(crn: String) = apDeliusContextApiClient.getCaseDetail(crn)
+  fun getCaseDetail(crn: String): CasResult<CaseDetail> {
+    return when (val caseDetailResponse = apDeliusContextApiClient.getCaseDetail(crn)) {
+      is ClientResult.Success -> CasResult.Success(caseDetailResponse.body)
+      is ClientResult.Failure.StatusCode -> when (caseDetailResponse.status) {
+        HttpStatus.NOT_FOUND -> return CasResult.NotFound("CaseDetail", crn)
+        HttpStatus.FORBIDDEN -> return CasResult.Unauthorised()
+        else -> caseDetailResponse.throwException()
+      }
+      is ClientResult.Failure -> caseDetailResponse.throwException()
+    }
+  }
 
   fun getOffenderByCrn(crn: String): CasResult<OffenderDetailSummary> {
     when (val offenderResponse = offenderDetailsDataSource.getOffenderDetailSummary(crn)) {

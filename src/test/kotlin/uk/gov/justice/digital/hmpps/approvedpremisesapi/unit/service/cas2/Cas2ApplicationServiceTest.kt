@@ -18,11 +18,8 @@ import org.springframework.data.domain.Page
 import org.springframework.data.domain.PageRequest
 import org.springframework.data.domain.Sort
 import org.springframework.data.repository.findByIdOrNull
-import org.springframework.http.HttpMethod
-import org.springframework.http.HttpStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.SortDirection
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.SubmitCas2Application
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.ClientResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.config.NotifyConfig
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.Cas2ApplicationEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.Cas2ApplicationJsonSchemaEntityFactory
@@ -38,6 +35,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas2LockableA
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas2LockableApplicationRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.prisonsapi.AssignedLivingUnit
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.AuthorisableActionResult
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.CasResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.EmailNotificationService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas2.Cas2AssessmentService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas2.Cas2DomainEventService
@@ -371,13 +369,7 @@ class Cas2ApplicationServiceTest {
       val crn = "CRN345"
       val username = "SOMEPERSON"
 
-      every { mockOffenderService.getCaseDetail(crn) } returns ClientResult.Failure.StatusCode(
-        method = HttpMethod.GET,
-        path = "/probation-cases/$crn/details",
-        status = HttpStatus.NOT_FOUND,
-        body = null,
-        isPreemptivelyCachedResponse = false,
-      )
+      every { mockOffenderService.getCaseDetail(crn) } returns CasResult.NotFound("CaseDetail", crn)
 
       val user = userWithUsername(username)
 
@@ -391,13 +383,7 @@ class Cas2ApplicationServiceTest {
       val crn = "CRN345"
       val username = "SOMEPERSON"
 
-      every { mockOffenderService.getCaseDetail(crn) } returns ClientResult.Failure.StatusCode(
-        method = HttpMethod.GET,
-        path = "/probation-cases/$crn/details",
-        status = HttpStatus.FORBIDDEN,
-        body = null,
-        isPreemptivelyCachedResponse = false,
-      )
+      every { mockOffenderService.getCaseDetail(crn) } returns CasResult.Unauthorised()
 
       val user = userWithUsername(username)
 
@@ -415,7 +401,7 @@ class Cas2ApplicationServiceTest {
 
       val user = userWithUsername(username)
 
-      every { mockOffenderService.getCaseDetail(crn) } returns ClientResult.Success(HttpStatus.OK, CaseDetailFactory().produce())
+      every { mockOffenderService.getCaseDetail(crn) } returns CasResult.Success(CaseDetailFactory().produce())
 
       every { mockJsonSchemaService.getNewestSchema(Cas2ApplicationJsonSchemaEntity::class.java) } returns schema
       every { mockApplicationRepository.save(any()) } answers {
