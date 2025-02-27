@@ -6501,32 +6501,11 @@ components:
         fullAddress:
           description: Full address, excluding postcode
           type: string
-        addressLine1:
-          description: Deprecated, use fullAddress
-          deprecated: true
-          type: string
-          example: 1 The Street
-        addressLine2:
-          description: Deprecated, use fullAddress
-          deprecated: true
-          type: string
-          example: Blackmore End
-        town:
-          description: Deprecated, use fullAddress
-          deprecated: true
-          type: string
-          example: Braintree
         postcode:
           type: string
           example: LS1 3AD
         apArea:
           $ref: '#/components/schemas/NamedId'
-        premisesCharacteristics:
-          type: array
-          deprecated: true
-          description: "This is not populated. Instead, use 'characteristics'"
-          items:
-            $ref: '#/components/schemas/CharacteristicPair'
         characteristics:
           type: array
           description: "Room and premise characteristics"
@@ -6733,8 +6712,6 @@ components:
     Cas1SpaceSearchResults:
       type: object
       properties:
-        searchCriteria:
-          $ref: '#/components/schemas/Cas1SpaceSearchParameters'
         resultsCount:
           type: integer
           example: 4
@@ -6753,26 +6730,9 @@ components:
         distanceInMiles:
           type: number
           example: 2.1
-        spacesAvailable:
-          type: array
-          deprecated: true
-          description: "This is not populated and will be removed in the future"
-          items:
-            $ref: '#/components/schemas/Cas1SpaceAvailability'
       required:
         - premises
         - distanceInMiles
-    Cas1SpaceAvailability:
-      type: object
-      deprecated: true
-      properties:
-        spaceCharacteristics:
-          type: array
-          items:
-            $ref: '#/components/schemas/Cas1SpaceCharacteristic'
-        durationInDays:
-          type: integer
-          example: 77
     Cas1SpaceCategory:
       type: string
       example: arson

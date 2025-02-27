@@ -21,6 +21,6 @@ class Cas1SpaceSearchController(
 
     val results = spaceSearchService.findSpaces(cas1SpaceSearchParameters)
 
-    return ResponseEntity.ok(spaceSearchResultTransformer.transformDomainToApi(cas1SpaceSearchParameters, results))
+    return ResponseEntity.ok(spaceSearchResultTransformer.transformDomainToApi(results))
   }
 }
