@@ -15,7 +15,6 @@ import org.junit.jupiter.params.provider.CsvSource
 import org.springframework.http.HttpMethod
 import org.springframework.http.HttpStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.ApDeliusContextApiClient
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.ApOASysContextApiClient
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.CaseNotesClient
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.ClientResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.ClientResult.Failure.StatusCode
@@ -63,7 +62,6 @@ class OffenderServiceTest {
   private val mockPrisonsApiClient = mockk<PrisonsApiClient>()
   private val mockPrisonerAlertsApiClient = mockk<PrisonerAlertsApiClient>()
   private val mockCaseNotesClient = mockk<CaseNotesClient>()
-  private val mockApOASysContextApiClient = mockk<ApOASysContextApiClient>()
   private val mockApDeliusContextApiClient = mockk<ApDeliusContextApiClient>()
   private val mockOffenderDetailsDataSource = mockk<OffenderDetailsDataSource>()
   private val mockOffenderRisksDataSource = mockk<OffenderRisksDataSource>()
@@ -93,7 +91,6 @@ class OffenderServiceTest {
     mockPrisonsApiClient,
     mockPrisonerAlertsApiClient,
     mockCaseNotesClient,
-    mockApOASysContextApiClient,
     mockApDeliusContextApiClient,
     mockOffenderDetailsDataSource,
     mockOffenderRisksDataSource,

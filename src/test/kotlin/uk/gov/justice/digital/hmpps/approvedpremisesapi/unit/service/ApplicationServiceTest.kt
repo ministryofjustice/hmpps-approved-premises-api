@@ -35,7 +35,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApprovedPremises
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApprovedPremisesAssessmentEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.Cas1ApplicationUserDetailsEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.InmateDetailFactory
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.NeedsDetailsFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.OffenderDetailsSummaryFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.OfflineApplicationEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.PersonRisksFactory
@@ -354,10 +353,6 @@ class ApplicationServiceTest {
     val schema = ApprovedPremisesApplicationJsonSchemaEntityFactory().produce()
 
     val user = userWithUsername(username)
-
-    every { mockOffenderService.getOASysNeeds(crn) } returns AuthorisableActionResult.Success(
-      NeedsDetailsFactory().produce(),
-    )
 
     every { mockApDeliusContextApiClient.getTeamsManagingCase(crn) } returns ClientResult.Success(
       HttpStatus.OK,
