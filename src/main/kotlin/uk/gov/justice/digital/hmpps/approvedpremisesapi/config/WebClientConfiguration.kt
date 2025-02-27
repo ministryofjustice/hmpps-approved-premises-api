@@ -30,9 +30,6 @@ data class WebClientConfig(
 class WebClientConfiguration(
   @Value("\${services.default.timeout-ms}") private val defaultUpstreamTimeoutMs: Long,
   @Value("\${services.default.max-response-in-memory-size-bytes}") private val defaultMaxResponseInMemorySizeBytes: Int,
-  @Value("\${services.prisons-api.max-response-in-memory-size-bytes}") private val prisonApiMaxResponseInMemorySizeBytes: Int,
-  @Value("\${services.prisoner-alerts-api.max-response-in-memory-size-bytes}") private val prisonerAlertsApiMaxResponseInMemorySizeBytes: Int,
-  @Value("\${services.probation-offender-search-api.max-response-in-memory-size-bytes}") private val probationOffenderSearchApiMaxResponseInMemorySizeBytes: Int,
 ) {
 
   private val log = LoggerFactory.getLogger(this::class.java)
@@ -114,6 +111,7 @@ class WebClientConfiguration(
     authorizedClients: OAuth2AuthorizedClientRepository,
     authorizedClientManager: OAuth2AuthorizedClientManager,
     @Value("\${services.prisons-api.base-url}") prisonsApiBaseUrl: String,
+    @Value("\${services.prisons-api.max-response-in-memory-size-bytes}") prisonApiMaxResponseInMemorySizeBytes: Int,
   ): WebClientConfig {
     val oauth2Client = ServletOAuth2AuthorizedClientExchangeFilterFunction(authorizedClientManager)
 
@@ -148,6 +146,7 @@ class WebClientConfiguration(
     authorizedClients: OAuth2AuthorizedClientRepository,
     authorizedClientManager: OAuth2AuthorizedClientManager,
     @Value("\${services.prisoner-alerts-api.base-url}") prisonerAlertsApiBaseUrl: String,
+    @Value("\${services.prisoner-alerts-api.max-response-in-memory-size-bytes}") prisonerAlertsApiMaxResponseInMemorySizeBytes: Int,
   ): WebClientConfig {
     val oauth2Client = ServletOAuth2AuthorizedClientExchangeFilterFunction(authorizedClientManager)
 
@@ -290,6 +289,7 @@ class WebClientConfiguration(
     clientRegistrations: ClientRegistrationRepository,
     authorizedClients: OAuth2AuthorizedClientRepository,
     @Value("\${services.probation-offender-search-api.base-url}") probationOffenderSearchBaseUrl: String,
+    @Value("\${services.probation-offender-search-api.max-response-in-memory-size-bytes}") probationOffenderSearchApiMaxResponseInMemorySizeBytes: Int,
   ): WebClientConfig {
     val oauth2Client = ServletOAuth2AuthorizedClientExchangeFilterFunction(clientRegistrations, authorizedClients)
 
