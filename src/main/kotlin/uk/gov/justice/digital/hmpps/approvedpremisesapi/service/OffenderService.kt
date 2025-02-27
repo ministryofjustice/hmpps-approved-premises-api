@@ -25,7 +25,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PersonInfoResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PersonRisks
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PersonSummaryInfoResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.community.OffenderDetailSummary
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.deliuscontext.APDeliusDocument
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.deliuscontext.CaseAccess
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.deliuscontext.CaseDetail
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.deliuscontext.CaseSummary
@@ -49,7 +48,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.CasResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.OffenderService.LimitedAccessStrategy
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.PersonTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.asCaseSummary
-import java.io.OutputStream
 import java.time.LocalDate
 import java.util.stream.Collectors
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.prisoneralertsapi.Alert as PrisionerAlert
@@ -688,28 +686,6 @@ class OffenderService(
     }
     return CasResult.Success(caseDetail)
   }
-
-  fun getDocumentsFromApDeliusApi(crn: String): AuthorisableActionResult<List<APDeliusDocument>> {
-    val documentsResult = apDeliusContextApiClient.getDocuments(crn)
-
-    val documents = when (documentsResult) {
-      is ClientResult.Success -> documentsResult.body
-      is ClientResult.Failure.StatusCode -> when (documentsResult.status) {
-        HttpStatus.NOT_FOUND -> return AuthorisableActionResult.NotFound()
-        HttpStatus.FORBIDDEN -> return AuthorisableActionResult.Unauthorised()
-        else -> documentsResult.throwException()
-      }
-
-      is ClientResult.Failure -> documentsResult.throwException()
-    }
-    return AuthorisableActionResult.Success(documents)
-  }
-
-  fun getDocumentFromDelius(
-    crn: String,
-    documentId: String,
-    outputStream: OutputStream,
-  ) = apDeliusContextApiClient.getDocument(crn, documentId, outputStream)
 
   fun getPersonInfoResult(
     crn: String,
