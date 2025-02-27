@@ -58,6 +58,7 @@ class Cas1SpaceSearchTest : InitialiseDatabasePerClassTestBase() {
         startDate = LocalDate.now(),
         durationInDays = 14,
         targetPostcodeDistrict = "SE1",
+        spaceCharacteristics = null,
         requirements = Cas1SpaceSearchRequirements(
           apTypes = null,
           spaceCharacteristics = null,
@@ -136,6 +137,7 @@ class Cas1SpaceSearchTest : InitialiseDatabasePerClassTestBase() {
         startDate = LocalDate.now(),
         durationInDays = 14,
         targetPostcodeDistrict = "SE1",
+        spaceCharacteristics = null,
         requirements = Cas1SpaceSearchRequirements(
           apTypes = null,
           spaceCharacteristics = null,
@@ -212,6 +214,7 @@ class Cas1SpaceSearchTest : InitialiseDatabasePerClassTestBase() {
         startDate = LocalDate.now(),
         durationInDays = 14,
         targetPostcodeDistrict = "SE1",
+        spaceCharacteristics = null,
         requirements = Cas1SpaceSearchRequirements(
           apTypes = null,
           spaceCharacteristics = null,
@@ -278,6 +281,7 @@ class Cas1SpaceSearchTest : InitialiseDatabasePerClassTestBase() {
         startDate = LocalDate.now(),
         durationInDays = 14,
         targetPostcodeDistrict = "SE1",
+        spaceCharacteristics = null,
         requirements = Cas1SpaceSearchRequirements(
           apTypes = emptyList(),
           apType = apType,
@@ -339,6 +343,7 @@ class Cas1SpaceSearchTest : InitialiseDatabasePerClassTestBase() {
         startDate = LocalDate.now(),
         durationInDays = 14,
         targetPostcodeDistrict = "SE1",
+        spaceCharacteristics = null,
         requirements = Cas1SpaceSearchRequirements(
           apTypes = emptyList(),
           apType = ApType.normal,
@@ -403,6 +408,7 @@ class Cas1SpaceSearchTest : InitialiseDatabasePerClassTestBase() {
         startDate = LocalDate.now(),
         durationInDays = 14,
         targetPostcodeDistrict = "SE1",
+        spaceCharacteristics = null,
         requirements = Cas1SpaceSearchRequirements(
           apTypes = listOf(apType),
           apType = null,
@@ -474,10 +480,11 @@ class Cas1SpaceSearchTest : InitialiseDatabasePerClassTestBase() {
         startDate = LocalDate.now(),
         durationInDays = 14,
         targetPostcodeDistrict = "SE1",
+        spaceCharacteristics = listOf(Cas1SpaceCharacteristic.isPIPE),
         requirements = Cas1SpaceSearchRequirements(
           apTypes = null,
           apType = null,
-          spaceCharacteristics = listOf(Cas1SpaceCharacteristic.isPIPE),
+          spaceCharacteristics = null,
         ),
       )
 
@@ -580,9 +587,10 @@ class Cas1SpaceSearchTest : InitialiseDatabasePerClassTestBase() {
         startDate = LocalDate.now(),
         durationInDays = 14,
         targetPostcodeDistrict = "SE1",
+        spaceCharacteristics = listOf(characteristic),
         requirements = Cas1SpaceSearchRequirements(
           apTypes = null,
-          spaceCharacteristics = listOf(characteristic),
+          spaceCharacteristics = null,
         ),
       )
 
@@ -665,9 +673,10 @@ class Cas1SpaceSearchTest : InitialiseDatabasePerClassTestBase() {
         startDate = LocalDate.now(),
         durationInDays = 14,
         targetPostcodeDistrict = "SE1",
+        spaceCharacteristics = Cas1SpaceCharacteristic.entries.slice(1..2),
         requirements = Cas1SpaceSearchRequirements(
           apTypes = null,
-          spaceCharacteristics = Cas1SpaceCharacteristic.entries.slice(1..3),
+          spaceCharacteristics = listOf(Cas1SpaceCharacteristic.entries[3]),
         ),
       )
 
