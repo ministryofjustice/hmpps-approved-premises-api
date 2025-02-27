@@ -10,7 +10,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.cas2v2.Cas2v2Use
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas2v2.Cas2v2UserAccessService
 import java.time.OffsetDateTime
 
-class Cas2V2UserAccessServiceTest {
+class Cas2v2UserAccessServiceTest {
 
   @Nested
   inner class UserCanViewApplication {
