@@ -5,7 +5,7 @@ import org.springframework.stereotype.Service
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.domainevent.HmppsDomainEvent
 
 @Service
-class PrisonerLocationService {
+class Cas2PrisonerLocationService {
 
   private val log = LoggerFactory.getLogger(this::class.java)
 

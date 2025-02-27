@@ -13,7 +13,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.model.cas2.Uns
 import java.io.OutputStream
 
 @Service
-class ReportsService(
+class Cas2ReportsService(
   private val submittedApplicationReportRepository: Cas2SubmittedApplicationReportRepository,
   private val applicationStatusUpdatesReportRepository: Cas2ApplicationStatusUpdatesReportRepository,
   private val unsubmittedApplicationsReportRepository: Cas2UnsubmittedApplicationsReportRepository,

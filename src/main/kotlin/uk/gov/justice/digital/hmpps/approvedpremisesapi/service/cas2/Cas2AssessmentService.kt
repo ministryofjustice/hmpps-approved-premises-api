@@ -12,8 +12,8 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.ValidatableActio
 import java.time.OffsetDateTime
 import java.util.UUID
 
-@Service("Cas2AssessmentService")
-class AssessmentService(
+@Service
+class Cas2AssessmentService(
   private val assessmentRepository: Cas2AssessmentRepository,
 ) {
 

@@ -17,10 +17,10 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.ValidatableActio
 import java.time.OffsetDateTime
 import java.util.UUID
 
-class AssessmentServiceTest {
+class Cas2AssessmentServiceTest {
   private val mockAssessmentRepository = mockk<Cas2AssessmentRepository>()
 
-  private val assessmentService = uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas2.AssessmentService(
+  private val assessmentService = uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas2.Cas2AssessmentService(
     mockAssessmentRepository,
   )
 

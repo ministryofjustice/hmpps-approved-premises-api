@@ -6,15 +6,15 @@ import org.junit.jupiter.api.Test
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.Cas2ApplicationEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.Cas2ApplicationJsonSchemaEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.NomisUserEntityFactory
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas2.UserAccessService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas2.Cas2UserAccessService
 import java.time.OffsetDateTime
 
-class UserAccessServiceTest {
+class Cas2UserAccessServiceTest {
 
   @Nested
   inner class UserCanViewApplication {
 
-    private val userAccessService = UserAccessService()
+    private val userAccessService = Cas2UserAccessService()
     val newestJsonSchema = Cas2ApplicationJsonSchemaEntityFactory()
       .withSchema("{}")
       .produce()

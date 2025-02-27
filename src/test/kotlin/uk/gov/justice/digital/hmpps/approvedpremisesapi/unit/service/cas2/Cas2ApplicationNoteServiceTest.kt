@@ -29,14 +29,14 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.EmailNotificatio
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.ExternalUserService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.HttpAuthService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.NomisUserService
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas2.UserAccessService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas2.Cas2UserAccessService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomDateTimeBefore
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.toCas2UiFormat
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.toCas2UiFormattedHourOfDay
 import java.time.OffsetDateTime
 import java.util.UUID
 
-class AssessmentNoteServiceTest {
+class Cas2ApplicationNoteServiceTest {
   private val mockApplicationRepository = mockk<Cas2ApplicationRepository>()
   private val mockAssessmentRepository = mockk<Cas2AssessmentRepository>()
   private val mockApplicationNoteRepository = mockk<Cas2ApplicationNoteRepository>()
@@ -44,10 +44,10 @@ class AssessmentNoteServiceTest {
   private val mockExternalUserService = mockk<ExternalUserService>()
   private val mockHttpAuthService = mockk<HttpAuthService>()
   private val mockEmailNotificationService = mockk<EmailNotificationService>()
-  private val mockUserAccessService = mockk<UserAccessService>()
+  private val mockUserAccessService = mockk<Cas2UserAccessService>()
   private val mockNotifyConfig = mockk<NotifyConfig>()
 
-  private val assessmentNoteService = uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas2.AssessmentNoteService(
+  private val assessmentNoteService = uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas2.Cas2ApplicationNoteService(
     mockApplicationRepository,
     mockAssessmentRepository,
     mockApplicationNoteRepository,

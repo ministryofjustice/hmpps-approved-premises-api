@@ -41,12 +41,12 @@ object Constants {
   const val HDC_APPLICATION_TYPE = "Home Detention Curfew (HDC)"
 }
 
-@Service("Cas2StatusUpdateService")
+@Service
 class StatusUpdateService(
   private val assessmentRepository: Cas2AssessmentRepository,
   private val statusUpdateRepository: Cas2StatusUpdateRepository,
   private val statusUpdateDetailRepository: Cas2StatusUpdateDetailRepository,
-  private val domainEventService: DomainEventService,
+  private val domainEventService: Cas2DomainEventService,
   private val emailNotificationService: EmailNotificationService,
   private val notifyConfig: NotifyConfig,
   private val statusFinder: Cas2PersistedApplicationStatusFinder,

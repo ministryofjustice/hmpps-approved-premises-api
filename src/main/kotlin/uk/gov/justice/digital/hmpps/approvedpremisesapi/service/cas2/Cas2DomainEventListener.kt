@@ -13,7 +13,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.domainevent.HmppsD
 @Service
 class Cas2DomainEventListener(
   private val objectMapper: ObjectMapper,
-  private val prisonerLocationService: PrisonerLocationService,
+  private val prisonerLocationService: Cas2PrisonerLocationService,
 ) {
 
   private val log = LoggerFactory.getLogger(this::class.java)

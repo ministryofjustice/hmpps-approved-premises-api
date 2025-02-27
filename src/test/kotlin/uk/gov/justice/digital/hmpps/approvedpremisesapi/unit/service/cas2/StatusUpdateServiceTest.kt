@@ -32,7 +32,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.reference.Cas2Pers
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.reference.Cas2PersistedApplicationStatusDetail
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.reference.Cas2PersistedApplicationStatusFinder
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.EmailNotificationService
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas2.DomainEventService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas2.Cas2DomainEventService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas2.StatusUpdateService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.cas2.ApplicationStatusTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomDateTimeBefore
@@ -52,7 +52,7 @@ class StatusUpdateServiceTest {
     .withOrigin("NACRO")
     .produce()
 
-  private val mockDomainEventService = mockk<DomainEventService>()
+  private val mockDomainEventService = mockk<Cas2DomainEventService>()
   private val mockStatusTransformer = mockk<ApplicationStatusTransformer>()
   private val mockEmailNotificationService = mockk<EmailNotificationService>()
   private val mockNotifyConfig = mockk<NotifyConfig>()

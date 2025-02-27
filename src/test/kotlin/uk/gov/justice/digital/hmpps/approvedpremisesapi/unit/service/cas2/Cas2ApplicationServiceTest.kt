@@ -37,11 +37,11 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.prisonsapi.Assigne
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.AuthorisableActionResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.CasResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.EmailNotificationService
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas2.AssessmentService
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas2.DomainEventService
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas2.JsonSchemaService
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas2.OffenderService
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas2.UserAccessService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas2.Cas2AssessmentService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas2.Cas2DomainEventService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas2.Cas2JsonSchemaService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas2.Cas2OffenderService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas2.Cas2UserAccessService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.unit.util.assertThatCasResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.PageCriteria
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.PaginationConfig
@@ -51,20 +51,20 @@ import java.time.LocalDate
 import java.time.OffsetDateTime
 import java.util.UUID
 
-class ApplicationServiceTest {
+class Cas2ApplicationServiceTest {
   private val mockApplicationRepository = mockk<Cas2ApplicationRepository>()
   private val mockLockableApplicationRepository = mockk<Cas2LockableApplicationRepository>()
   private val mockApplicationSummaryRepository = mockk<ApplicationSummaryRepository>()
-  private val mockJsonSchemaService = mockk<JsonSchemaService>()
-  private val mockOffenderService = mockk<OffenderService>()
-  private val mockUserAccessService = mockk<UserAccessService>()
-  private val mockDomainEventService = mockk<DomainEventService>()
+  private val mockJsonSchemaService = mockk<Cas2JsonSchemaService>()
+  private val mockOffenderService = mockk<Cas2OffenderService>()
+  private val mockUserAccessService = mockk<Cas2UserAccessService>()
+  private val mockDomainEventService = mockk<Cas2DomainEventService>()
   private val mockEmailNotificationService = mockk<EmailNotificationService>()
-  private val mockAssessmentService = mockk<AssessmentService>()
+  private val mockAssessmentService = mockk<Cas2AssessmentService>()
   private val mockObjectMapper = mockk<ObjectMapper>()
   private val mockNotifyConfig = mockk<NotifyConfig>()
 
-  private val applicationService = uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas2.ApplicationService(
+  private val applicationService = uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas2.Cas2ApplicationService(
     mockApplicationRepository,
     mockLockableApplicationRepository,
     mockApplicationSummaryRepository,

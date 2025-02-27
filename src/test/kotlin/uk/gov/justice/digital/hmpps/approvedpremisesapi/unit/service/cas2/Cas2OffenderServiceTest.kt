@@ -35,11 +35,11 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.prisonsapi.InmateS
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.probationoffendersearchapi.IDs
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.NotFoundProblem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.AuthorisableActionResult
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas2.OffenderService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas2.Cas2OffenderService
 import java.time.LocalDate
 import java.time.OffsetDateTime
 
-class OffenderServiceTest {
+class Cas2OffenderServiceTest {
   private val mockPrisonsApiClient = mockk<PrisonsApiClient>()
   private val mockApOASysContextApiClient = mockk<ApOASysContextApiClient>()
   private val mockProbationOffenderSearchClient = mockk<ProbationOffenderSearchApiClient>()
@@ -51,7 +51,7 @@ class OffenderServiceTest {
     registerKotlinModule()
   }
 
-  private val offenderService = OffenderService(
+  private val offenderService = Cas2OffenderService(
     mockPrisonsApiClient,
     mockProbationOffenderSearchClient,
     mockApOASysContextApiClient,

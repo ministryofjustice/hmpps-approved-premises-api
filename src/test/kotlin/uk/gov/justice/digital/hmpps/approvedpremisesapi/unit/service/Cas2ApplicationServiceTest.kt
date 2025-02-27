@@ -103,7 +103,7 @@ import java.time.ZoneOffset
 import java.util.UUID
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas3.DomainEventService as Cas3DomainEventService
 
-class ApplicationServiceTest {
+class Cas2ApplicationServiceTest {
   private val mockUserRepository = mockk<UserRepository>()
   private val mockApplicationRepository = mockk<ApplicationRepository>()
   private val mockJsonSchemaService = mockk<JsonSchemaService>()

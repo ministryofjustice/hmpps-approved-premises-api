@@ -26,8 +26,8 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.toCas2UiFormattedHo
 import java.time.OffsetDateTime
 import java.util.UUID
 
-@Service("Cas2ApplicationNoteService")
-class AssessmentNoteService(
+@Service
+class Cas2ApplicationNoteService(
   private val applicationRepository: Cas2ApplicationRepository,
   private val assessmentRepository: Cas2AssessmentRepository,
   private val applicationNoteRepository: Cas2ApplicationNoteRepository,
@@ -35,7 +35,7 @@ class AssessmentNoteService(
   private val externalUserService: ExternalUserService,
   private val httpAuthService: HttpAuthService,
   private val emailNotificationService: EmailNotificationService,
-  private val userAccessService: UserAccessService,
+  private val userAccessService: Cas2UserAccessService,
   private val notifyConfig: NotifyConfig,
   @Value("\${url-templates.frontend.cas2.application-overview}") private val applicationUrlTemplate: String,
   @Value("\${url-templates.frontend.cas2.submitted-application-overview}") private val assessmentUrlTemplate: String,

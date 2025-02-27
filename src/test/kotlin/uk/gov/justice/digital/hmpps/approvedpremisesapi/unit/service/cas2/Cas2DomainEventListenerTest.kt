@@ -5,12 +5,12 @@ import io.mockk.mockk
 import io.mockk.verify
 import org.junit.jupiter.api.Test
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas2.Cas2DomainEventListener
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas2.PrisonerLocationService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas2.Cas2PrisonerLocationService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.unit.util.ObjectMapperFactory
 
 class Cas2DomainEventListenerTest {
 
-  private val mockPrisonerLocationService = mockk<PrisonerLocationService>()
+  private val mockPrisonerLocationService = mockk<Cas2PrisonerLocationService>()
   private val objectMapper = ObjectMapperFactory.createRuntimeLikeObjectMapper()
 
   private val cas2DomainEventListener: Cas2DomainEventListener = Cas2DomainEventListener(

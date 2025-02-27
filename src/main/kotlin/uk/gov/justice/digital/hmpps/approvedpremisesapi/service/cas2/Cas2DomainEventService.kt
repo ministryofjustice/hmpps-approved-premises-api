@@ -28,10 +28,8 @@ import java.time.ZoneOffset
 import java.util.UUID
 import kotlin.reflect.KClass
 
-@Service(
-  "uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas2.DomainEventService",
-)
-class DomainEventService(
+@Service
+class Cas2DomainEventService(
   private val objectMapper: ObjectMapper,
   private val domainEventRepository: DomainEventRepository,
   private val hmppsQueueService: HmppsQueueService,

@@ -14,8 +14,8 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas2Applicati
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.ExternalUserService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.HttpAuthService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.NomisUserService
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas2.ApplicationService
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas2.OffenderService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas2.Cas2ApplicationService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas2.Cas2OffenderService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.cas2.SubmissionsTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.PageCriteria
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.extractEntityFromCasResult
@@ -24,9 +24,9 @@ import java.util.UUID
 @Service("Cas2SubmissionsController")
 class SubmissionsController(
   private val httpAuthService: HttpAuthService,
-  private val applicationService: ApplicationService,
+  private val applicationService: Cas2ApplicationService,
   private val submissionsTransformer: SubmissionsTransformer,
-  private val offenderService: OffenderService,
+  private val offenderService: Cas2OffenderService,
   private val externalUserService: ExternalUserService,
   private val nomisUserService: NomisUserService,
 ) : SubmissionsCas2Delegate {

@@ -23,8 +23,8 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.reference.Cas2Pers
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.seed.SeedLogger
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.seed.cas2.Cas2StartupScript
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.seed.insertHdcDates
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas2.ApplicationService
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas2.JsonSchemaService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas2.Cas2ApplicationService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas2.Cas2JsonSchemaService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas2.StatusUpdateService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.LogEntry
 import java.time.OffsetDateTime
@@ -49,10 +49,10 @@ class Cas2StartupScriptConfigTest {
   private val mockAssessmentRepository = mockk<Cas2AssessmentRepository>()
   private val mockAssessmentEntity = mockk<Cas2AssessmentEntity>()
 
-  private val mockJsonSchemaService = mockk<JsonSchemaService>()
+  private val mockJsonSchemaService = mockk<Cas2JsonSchemaService>()
   private val mockJsonSchemaEntity = mockk<JsonSchemaEntity>()
 
-  private val mockApplicationService = mockk<ApplicationService>()
+  private val mockApplicationService = mockk<Cas2ApplicationService>()
   private val mockStatusUpdateService = mockk<StatusUpdateService>()
   private val statusFinder = Cas2PersistedApplicationStatusFinder()
 

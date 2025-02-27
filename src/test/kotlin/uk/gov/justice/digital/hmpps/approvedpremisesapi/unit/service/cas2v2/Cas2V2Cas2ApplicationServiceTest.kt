@@ -39,8 +39,8 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.AuthorisableActi
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.CasResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.ValidatableActionResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.EmailNotificationService
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas2.DomainEventService
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas2.OffenderService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas2.Cas2DomainEventService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas2.Cas2OffenderService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas2v2.Cas2v2ApplicationService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas2v2.Cas2v2AssessmentService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas2v2.Cas2v2JsonSchemaService
@@ -55,14 +55,14 @@ import java.time.OffsetDateTime
 import java.time.format.DateTimeFormatter
 import java.util.UUID
 
-class Cas2v2ApplicationServiceTest {
+class Cas2V2Cas2ApplicationServiceTest {
   private val mockCas2v2ApplicationRepository = mockk<Cas2v2ApplicationRepository>()
   private val mockCas2v2LockableApplicationRepository = mockk<Cas2v2LockableApplicationRepository>()
   private val mockCas2v2ApplicationSummaryRepository = mockk<Cas2v2ApplicationSummaryRepository>()
   private val mockCas2v2JsonSchemaService = mockk<Cas2v2JsonSchemaService>()
-  private val mockOffenderService = mockk<OffenderService>()
+  private val mockOffenderService = mockk<Cas2OffenderService>()
   private val mockCas2v2UserAccessService = mockk<Cas2v2UserAccessService>()
-  private val mockDomainEventService = mockk<DomainEventService>()
+  private val mockDomainEventService = mockk<Cas2DomainEventService>()
   private val mockEmailNotificationService = mockk<EmailNotificationService>()
   private val mockCas2v2AssessmentService = mockk<Cas2v2AssessmentService>()
   private val mockObjectMapper = mockk<ObjectMapper>()
