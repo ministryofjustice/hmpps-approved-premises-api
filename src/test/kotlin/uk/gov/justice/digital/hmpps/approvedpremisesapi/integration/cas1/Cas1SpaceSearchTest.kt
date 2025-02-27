@@ -154,7 +154,6 @@ class Cas1SpaceSearchTest : InitialiseDatabasePerClassTestBase() {
       val results = response.responseBody.blockFirst()!!
 
       assertThat(results.resultsCount).isEqualTo(6)
-      assertThat(results.searchCriteria).isEqualTo(searchParameters)
 
       assertThatResultMatches(results.results[0], premises[0], expectedCharacteristics = emptyList())
       assertThatResultMatches(results.results[1], premises[1], expectedCharacteristics = emptyList())
@@ -231,7 +230,6 @@ class Cas1SpaceSearchTest : InitialiseDatabasePerClassTestBase() {
       val results = response.responseBody.blockFirst()!!
 
       assertThat(results.resultsCount).isEqualTo(5)
-      assertThat(results.searchCriteria).isEqualTo(searchParameters)
 
       assertThatResultMatches(results.results[0], expectedPremises[0])
       assertThatResultMatches(results.results[1], expectedPremises[1])
@@ -299,7 +297,6 @@ class Cas1SpaceSearchTest : InitialiseDatabasePerClassTestBase() {
       val results = response.responseBody.blockFirst()!!
 
       assertThat(results.resultsCount).isEqualTo(5)
-      assertThat(results.searchCriteria).isEqualTo(searchParameters)
 
       val expectedApType = if (apType == ApType.mhapElliottHouse) {
         ApType.mhapStJosephs
@@ -361,7 +358,6 @@ class Cas1SpaceSearchTest : InitialiseDatabasePerClassTestBase() {
       val results = response.responseBody.blockFirst()!!
 
       assertThat(results.resultsCount).isEqualTo(onePremiseOfEachType.size)
-      assertThat(results.searchCriteria).isEqualTo(searchParameters)
 
       assertThat(results.results.map { it.premises.id })
         .containsExactlyInAnyOrder(*onePremiseOfEachType.map { it.id }.toTypedArray())
@@ -426,7 +422,6 @@ class Cas1SpaceSearchTest : InitialiseDatabasePerClassTestBase() {
       val results = response.responseBody.blockFirst()!!
 
       assertThat(results.resultsCount).isEqualTo(5)
-      assertThat(results.searchCriteria).isEqualTo(searchParameters)
 
       val expectedApType = if (apType == ApType.mhapElliottHouse) {
         ApType.mhapStJosephs
@@ -510,7 +505,6 @@ class Cas1SpaceSearchTest : InitialiseDatabasePerClassTestBase() {
     expectedApType: ApType = ApType.normal,
     expectedCharacteristics: List<Cas1SpaceCharacteristic>? = null,
   ) {
-    assertThat(actual.spacesAvailable).isEmpty()
     assertThat(actual.distanceInMiles).isGreaterThan(0f.toBigDecimal())
     assertThat(actual.premises).isNotNull
     val premises = actual.premises
@@ -518,11 +512,7 @@ class Cas1SpaceSearchTest : InitialiseDatabasePerClassTestBase() {
     assertThat(premises.apType).isEqualTo(expectedApType)
     assertThat(premises.name).isEqualTo(expected.name)
     assertThat(premises.fullAddress).isEqualTo(expected.fullAddress)
-    assertThat(premises.addressLine1).isEqualTo(expected.addressLine1)
-    assertThat(premises.addressLine2).isEqualTo(expected.addressLine2)
-    assertThat(premises.town).isEqualTo(expected.town)
     assertThat(premises.postcode).isEqualTo(expected.postcode)
-    assertThat(premises.premisesCharacteristics).isEmpty()
 
     if (expectedCharacteristics != null) {
       assertThat(premises.characteristics).containsExactlyInAnyOrder(*expectedCharacteristics.toTypedArray())
@@ -608,7 +598,6 @@ class Cas1SpaceSearchTest : InitialiseDatabasePerClassTestBase() {
       val results = response.responseBody.blockFirst()!!
 
       assertThat(results.resultsCount).isEqualTo(5)
-      assertThat(results.searchCriteria).isEqualTo(searchParameters)
 
       assertThat(results.results[0].premises.id).isEqualTo(expectedPremises[0].id)
       assertThat(results.results[1].premises.id).isEqualTo(expectedPremises[1].id)
@@ -694,7 +683,6 @@ class Cas1SpaceSearchTest : InitialiseDatabasePerClassTestBase() {
       val results = response.responseBody.blockFirst()!!
 
       assertThat(results.resultsCount).isEqualTo(5)
-      assertThat(results.searchCriteria).isEqualTo(searchParameters)
 
       assertThatResultMatches(results.results[0], expectedPremises[0])
       assertThatResultMatches(results.results[1], expectedPremises[1])
