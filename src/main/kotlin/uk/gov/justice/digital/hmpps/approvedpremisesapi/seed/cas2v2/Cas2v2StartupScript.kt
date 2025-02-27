@@ -73,12 +73,12 @@ class Cas2v2StartupScript(
     val application = cas2v2applicationRepository.save(
       Cas2v2ApplicationEntity(
         id = UUID.randomUUID(),
-        crn = "X320741",
+        crn = "DO16821",
         nomsNumber = seedConfig.onStartup.script.noms,
         createdAt = createdAt,
         createdByUser = cas2v2UserEntity,
-        data = dataFor(state = state, nomsNumber = "A1234AI"),
-        document = documentFor(state = state, nomsNumber = "A1234AI"),
+        data = dataFor(state = state, nomsNumber = "A1234AX"),
+        document = documentFor(state = state, nomsNumber = "A1234AX"),
         submittedAt = submittedAt,
         schemaVersion = jsonSchemaService.getNewestSchema(Cas2ApplicationJsonSchemaEntity::class.java),
         applicationOrigin = applicationOrigin,
@@ -102,7 +102,7 @@ class Cas2v2StartupScript(
   private fun applyFirstClassProperties(application: Cas2v2ApplicationEntity): Cas2v2ApplicationEntity = cas2v2applicationRepository.saveAndFlush(
     application.apply {
       referringPrisonCode = seedConfig.onStartup.script.prisonCode
-      preferredAreas = "Luton | Hertford"
+      preferredAreas = "Happisburgh | Norfolk"
       hdcEligibilityDate = LocalDate.now()
       conditionalReleaseDate = LocalDate.now().plusMonths(2)
       telephoneNumber = "0800 123 456"
@@ -170,7 +170,7 @@ class Cas2v2StartupScript(
   private fun documentFixtureFor(nomsNumber: String): String = loadFixtureAsResource("document_$nomsNumber.json")
 
   private fun loadFixtureAsResource(filename: String): String {
-    val path = "db/seed/local+dev+test/cas2_application_data/$filename"
+    val path = "db/seed/local+dev+test/cas2v2_application_data/$filename"
     val loader = DefaultResourceLoader()
     return try {
       val resource = loader.getResource(path)

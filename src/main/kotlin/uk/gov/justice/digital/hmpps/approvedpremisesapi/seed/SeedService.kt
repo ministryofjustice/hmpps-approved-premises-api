@@ -30,7 +30,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.seed.cas1.Cas1UpdateSpac
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.seed.cas1.Cas1UsersSeedJob
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.seed.cas1.Cas1WithdrawPlacementRequestSeedJob
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.seed.cas2.Cas2ApplicationsSeedJob
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.seed.cas2.Cas2v2UsersSeedJob
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.seed.cas2.ExternalUsersSeedJob
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.seed.cas2v2.Cas2v2ApplicationsSeedJob
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.seed.cas3.Cas3ReferralRejectionSeedJob
@@ -44,6 +43,8 @@ import java.time.temporal.ChronoUnit
 import java.util.concurrent.Semaphore
 import kotlin.io.path.absolutePathString
 import kotlin.reflect.KClass
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.seed.cas2.NomisUsersSeedJob
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.seed.cas2v2.Cas2v2UsersSeedJob
 
 @Service
 class SeedService(
@@ -72,7 +73,7 @@ class SeedService(
         SeedFileType.approvedPremisesRooms -> getBean(ApprovedPremisesRoomsSeedJob::class)
         SeedFileType.user -> getBean(UsersSeedJob::class)
         SeedFileType.usersBasic -> getBean(UsersBasicSeedJob::class)
-        SeedFileType.nomisUsers -> getBean(Cas2v2UsersSeedJob::class)
+        SeedFileType.nomisUsers -> getBean(NomisUsersSeedJob::class)
         SeedFileType.externalUsers -> getBean(ExternalUsersSeedJob::class)
         SeedFileType.cas2Applications -> getBean(Cas2ApplicationsSeedJob::class)
         SeedFileType.cas2v2Applications -> getBean(Cas2v2ApplicationsSeedJob::class)

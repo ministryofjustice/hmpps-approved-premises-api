@@ -103,7 +103,7 @@ class Cas2v2ApplicationsSeedJob(
     repository.saveAndFlush(
       application.apply {
         referringPrisonCode = row.referringPrisonCode
-        preferredAreas = "Bristol | Newcastle"
+        preferredAreas = "Happisburgh | Norfolk"
         hdcEligibilityDate = LocalDate.now()
         conditionalReleaseDate = LocalDate.now().plusMonths(2)
         telephoneNumber = "0800 123 456"
@@ -163,7 +163,7 @@ class Cas2v2ApplicationsSeedJob(
   private fun documentFixtureFor(nomsNumber: String): String = loadFixtureAsResource("document_$nomsNumber.json")
 
   private fun loadFixtureAsResource(filename: String): String {
-    val path = "db/seed/local+dev+test/cas2_application_data/$filename"
+    val path = "db/seed/local+dev+test/cas2v2_application_data/$filename"
     val loader = DefaultResourceLoader()
     return try {
       val resource = loader.getResource(path)
