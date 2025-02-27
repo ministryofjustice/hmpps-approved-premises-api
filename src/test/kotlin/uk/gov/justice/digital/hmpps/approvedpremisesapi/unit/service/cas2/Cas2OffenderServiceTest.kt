@@ -39,6 +39,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas2.Cas2Offende
 import java.time.LocalDate
 import java.time.OffsetDateTime
 
+@SuppressWarnings("UnusedPrivateProperty")
 class Cas2OffenderServiceTest {
   private val mockPrisonsApiClient = mockk<PrisonsApiClient>()
   private val mockApOASysContextApiClient = mockk<ApOASysContextApiClient>()

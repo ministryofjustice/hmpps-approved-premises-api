@@ -28,6 +28,7 @@ import java.time.ZoneOffset
 import java.util.UUID
 import kotlin.reflect.KClass
 
+@SuppressWarnings("TooGenericExceptionThrown")
 @Service
 class Cas2DomainEventService(
   private val objectMapper: ObjectMapper,

@@ -36,6 +36,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.getPageableOrAllPag
 import java.time.OffsetDateTime
 import java.util.UUID
 
+@SuppressWarnings("TooGenericExceptionThrown", "UnusedParameter")
 @Service
 class Cas2ApplicationService(
   private val applicationRepository: Cas2ApplicationRepository,
@@ -213,7 +214,7 @@ class Cas2ApplicationService(
     return CasResult.Success(savedApplication)
   }
 
-  @SuppressWarnings("ReturnCount")
+  @SuppressWarnings("ReturnCount", "UnusedPrivateProperty")
   @Transactional
   fun submitApplication(
     submitApplication: SubmitCas2Application,

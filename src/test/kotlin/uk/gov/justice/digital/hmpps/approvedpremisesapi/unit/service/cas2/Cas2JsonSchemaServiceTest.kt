@@ -15,6 +15,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas2.Cas2JsonSch
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.unit.util.ObjectMapperFactory
 import java.util.UUID
 
+@SuppressWarnings("UnusedPrivateProperty")
 class Cas2JsonSchemaServiceTest {
   private val mockJsonSchemaRepository = mockk<JsonSchemaRepository>()
   private val mockApplicationRepository = mockk<Cas2ApplicationRepository>()
