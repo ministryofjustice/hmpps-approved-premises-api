@@ -20,7 +20,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserQualifica
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas2v2.Cas2v2UserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas2v2.Cas2v2UserType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PersonInfoResult
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PersonRisks
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PersonSummaryInfoResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.community.OffenderDetailSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.deliuscontext.CaseAccess
@@ -51,7 +50,6 @@ class OffenderService(
   private val caseNotesClient: CaseNotesClient,
   private val apDeliusContextApiClient: ApDeliusContextApiClient,
   private val offenderDetailsDataSource: OffenderDetailsDataSource,
-  private val offenderRisksService: OffenderRisksService,
   private val personTransformer: PersonTransformer,
   prisonCaseNotesConfigBindingModel: PrisonCaseNotesConfigBindingModel,
   adjudicationsConfigBindingModel: PrisonAdjudicationsConfigBindingModel,
@@ -131,6 +129,11 @@ class OffenderService(
       .collect(Collectors.toList())
   }
 
+  fun getPersonSummaryInfoResult(
+    crn: String,
+    limitedAccessStrategy: LimitedAccessStrategy,
+  ) = getPersonSummaryInfoResults(setOf(crn), limitedAccessStrategy).first()
+
   fun getPersonSummaryInfoResults(
     crns: Set<String>,
     limitedAccessStrategy: LimitedAccessStrategy,
@@ -156,7 +159,11 @@ class OffenderService(
    /*
     * this could be more efficient by only retrieving access information for CRNs where
     * the corresponding [CaseSummary.hasLimitedAccess()] is true. A similar short-circuit
-    * was implemented in the new deprecated [getOffender()] function
+    * was implemented in the new deprecated [getOffender()] function.
+    *
+    * It could also be more efficient if ignoring offenders that can't be found on calls to
+    * [apDeliusContextApiClient.getSummariesForCrns(crnsList)] (although that shouldn't
+    * happen often)
     */
     val caseAccessByCrn = when (limitedAccessStrategy) {
       is LimitedAccessStrategy.IgnoreLimitedAccess -> emptyMap()
@@ -406,15 +413,6 @@ class OffenderService(
     }
 
     return AuthorisableActionResult.Success(inmateDetail)
-  }
-
-  @Deprecated("Use [OffenderRisksService] directly")
-  fun getRiskByCrn(crn: String, deliusUsername: String): AuthorisableActionResult<PersonRisks> = when (getOffenderByCrn(crn, deliusUsername)) {
-    is AuthorisableActionResult.NotFound -> AuthorisableActionResult.NotFound()
-    is AuthorisableActionResult.Unauthorised -> AuthorisableActionResult.Unauthorised()
-    is AuthorisableActionResult.Success -> AuthorisableActionResult.Success(
-      offenderRisksService.getPersonRisks(crn),
-    )
   }
 
   fun getFilteredPrisonCaseNotesByNomsNumber(nomsNumber: String, getCas1SpecificNoteTypes: Boolean): CasResult<List<CaseNote>> {

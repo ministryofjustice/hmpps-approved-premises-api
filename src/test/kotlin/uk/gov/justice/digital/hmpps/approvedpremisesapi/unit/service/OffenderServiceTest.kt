@@ -32,7 +32,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.CaseNoteFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.CaseSummaryFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.InmateDetailFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.OffenderDetailsSummaryFactory
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.PersonRisksFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.UserEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PersonInfoResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PersonSummaryInfoResult
@@ -46,7 +45,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.prisonsapi.InmateS
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.InternalServerErrorProblem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.AuthorisableActionResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.CasResult
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.OffenderRisksService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.OffenderService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.OffenderService.LimitedAccessStrategy
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.OffenderService.LimitedAccessStrategy.ReturnRestrictedIfLimitedAccess
@@ -64,7 +62,6 @@ class OffenderServiceTest {
   private val mockCaseNotesClient = mockk<CaseNotesClient>()
   private val mockApDeliusContextApiClient = mockk<ApDeliusContextApiClient>()
   private val mockOffenderDetailsDataSource = mockk<OffenderDetailsDataSource>()
-  private val mockOffenderRisksService = mockk<OffenderRisksService>()
   private val mockPersonTransformer = mockk<PersonTransformer>()
 
   private val prisonCaseNotesConfigBindingModel = PrisonCaseNotesConfigBindingModel().apply {
@@ -93,7 +90,6 @@ class OffenderServiceTest {
     mockCaseNotesClient,
     mockApDeliusContextApiClient,
     mockOffenderDetailsDataSource,
-    mockOffenderRisksService,
     mockPersonTransformer,
     prisonCaseNotesConfigBindingModel,
     adjudicationsConfigBindingModel,
@@ -250,64 +246,6 @@ class OffenderServiceTest {
     assertThat(result.entity.otherIds.crn).isEqualTo("a-crn")
     assertThat(result.entity.firstName).isEqualTo("Bob")
     assertThat(result.entity.surname).isEqualTo("Doe")
-  }
-
-  @Test
-  fun `getRisksByCrn returns NotFound result when Community API Client returns 404`() {
-    every { mockOffenderDetailsDataSource.getOffenderDetailSummary("a-crn") } returns StatusCode(HttpMethod.GET, "/secure/offenders/crn/a-crn", HttpStatus.NOT_FOUND, null)
-
-    assertThat(offenderService.getRiskByCrn("a-crn", "distinguished.name") is AuthorisableActionResult.NotFound).isTrue
-  }
-
-  @Test
-  fun `getRisksByCrn throws when Community API Client returns other non-2xx status code`() {
-    every { mockOffenderDetailsDataSource.getOffenderDetailSummary("a-crn") } returns StatusCode(HttpMethod.GET, "/secure/offenders/crn/a-crn", HttpStatus.BAD_REQUEST, null)
-
-    val exception = assertThrows<RuntimeException> { offenderService.getRiskByCrn("a-crn", "distinguished.name") }
-    assertThat(exception.message).isEqualTo("Unable to complete GET request to /secure/offenders/crn/a-crn: 400 BAD_REQUEST")
-  }
-
-  @Test
-  fun `getRisksByCrn returns Unauthorised result when distinguished name is excluded from viewing`() {
-    val resultBody = OffenderDetailsSummaryFactory()
-      .withCrn("a-crn")
-      .withFirstName("Bob")
-      .withLastName("Doe")
-      .withCurrentExclusion(true)
-      .produce()
-
-    val accessBody = UserOffenderAccess(userRestricted = false, userExcluded = true, restrictionMessage = null)
-
-    every { mockOffenderDetailsDataSource.getOffenderDetailSummary("a-crn") } returns ClientResult.Success(HttpStatus.OK, resultBody)
-    every { mockOffenderDetailsDataSource.getUserAccessForOffenderCrn("distinguished.name", "a-crn") } returns ClientResult.Success(HttpStatus.OK, accessBody)
-
-    assertThat(offenderService.getRiskByCrn("a-crn", "distinguished.name") is AuthorisableActionResult.Unauthorised).isTrue
-  }
-
-  @Test
-  fun `getRisksByCrn returns Success result with information from offender risks data source`() {
-    val crn = "a-crn"
-    val deliusUsername = "SOME-USER"
-
-    val expectedRisks = PersonRisksFactory().produce()
-    every { mockOffenderDetailsDataSource.getOffenderDetailSummary(crn) } returns
-      ClientResult.Success(
-        HttpStatus.OK,
-        OffenderDetailsSummaryFactory().produce(),
-      )
-
-    every { mockOffenderDetailsDataSource.getUserAccessForOffenderCrn(crn, deliusUsername) } returns
-      ClientResult.Success(
-        HttpStatus.OK,
-        UserOffenderAccess(userRestricted = false, userExcluded = false, restrictionMessage = null),
-      )
-
-    every { mockOffenderRisksService.getPersonRisks(crn) } returns expectedRisks
-
-    val result = offenderService.getRiskByCrn(crn, deliusUsername)
-    assertThat(result is AuthorisableActionResult.Success).isTrue
-    result as AuthorisableActionResult.Success
-    assertThat(result.entity).isEqualTo(expectedRisks)
   }
 
   @Nested
