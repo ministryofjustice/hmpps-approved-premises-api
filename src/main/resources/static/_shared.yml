@@ -647,30 +647,6 @@ components:
       required:
         - id
         - name
-    ExtendedPremisesSummary:
-      type: object
-      properties:
-        id:
-          type: string
-          format: uuid
-        name:
-          type: string
-        apCode:
-          type: string
-        postcode:
-          type: string
-        bedCount:
-          type: integer
-        availableBedsForToday:
-          type: integer
-        bookings:
-          type: array
-          items:
-            $ref: '#/components/schemas/PremisesBooking'
-        dateCapacities:
-          type: array
-          items:
-            $ref: '#/components/schemas/DateCapacity'
     PremisesBooking:
       type: object
       properties:

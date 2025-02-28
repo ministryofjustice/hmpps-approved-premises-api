@@ -256,57 +256,6 @@ class OffenderService(
   }
 
   @Deprecated(
-    """
-      This function uses the now deprecated [OffenderDetailsDataSource]. 
-      It also throws an exception if an offender isn't found, instead of returning PersonSummaryInfoResult.NotFound
-    """,
-    ReplaceWith("getPersonSummaryInfoResults(crns, limitedAccessStrategy)"),
-  )
-  @SuppressWarnings("CyclomaticComplexMethod")
-  fun getOffenderSummariesByCrns(crns: List<String>, userDistinguishedName: String, ignoreLaoRestrictions: Boolean = false): List<PersonSummaryInfoResult> {
-    if (crns.isEmpty()) {
-      return emptyList()
-    }
-
-    if (crns.size > MAX_OFFENDER_REQUEST_COUNT) {
-      throw InternalServerErrorProblem("Cannot request more than $MAX_OFFENDER_REQUEST_COUNT CRNs. ${crns.size} have been provided.")
-    }
-
-    val offenders = when (val response = apDeliusContextApiClient.getSummariesForCrns(crns)) {
-      is ClientResult.Success -> response.body
-      is ClientResult.Failure.StatusCode -> response.throwException()
-      is ClientResult.Failure -> response.throwException()
-    }
-
-    val laoResponse = if (!ignoreLaoRestrictions) {
-      when (val response = apDeliusContextApiClient.getUserAccessForCrns(userDistinguishedName, crns)) {
-        is ClientResult.Success -> response.body
-        is ClientResult.Failure.StatusCode -> response.throwException()
-        is ClientResult.Failure -> response.throwException()
-      }
-    } else {
-      null
-    }
-
-    return crns.map { crn ->
-      val caseSummary = offenders.cases.find { it.crn == crn } ?: return@map PersonSummaryInfoResult.NotFound(crn)
-
-      val isLao = laoResponse?.let {
-        laoResponse.access.find { caseAccess ->
-          caseAccess.crn == crn &&
-            (caseAccess.userExcluded || caseAccess.userRestricted)
-        } != null
-      } ?: false
-
-      if (isLao) {
-        PersonSummaryInfoResult.Success.Restricted(crn, caseSummary.nomsId)
-      } else {
-        PersonSummaryInfoResult.Success.Full(crn, caseSummary)
-      }
-    }
-  }
-
-  @Deprecated(
     " This function returns the now deprecated [OffenderDetailSummary], which is the community-api data model",
     ReplaceWith("getPersonSummaryInfoResults(crns, limitedAccessStrategy)"),
   )

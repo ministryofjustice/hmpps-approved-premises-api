@@ -74,9 +74,6 @@ interface BookingRepository : JpaRepository<BookingEntity, UUID> {
   @Query("SELECT b FROM BookingEntity b WHERE b.arrivalDate <= :endDate AND b.departureDate >= :startDate AND b.bed = :bed")
   fun findAllByOverlappingDateForBed(startDate: LocalDate, endDate: LocalDate, bed: BedEntity): List<BookingEntity>
 
-  @Query("SELECT MAX(b.departureDate) FROM BookingEntity b WHERE b.premises.id = :premisesId")
-  fun getHighestBookingDate(premisesId: UUID): LocalDate?
-
   @Modifying
   @Query(
     """
