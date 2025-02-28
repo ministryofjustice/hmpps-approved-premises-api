@@ -16,7 +16,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cancellation
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Confirmation
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.DateChange
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Departure
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ExtendedPremisesSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Extension
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.LostBed
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.LostBedCancellation
@@ -49,7 +48,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PremisesEntit
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TemporaryAccommodationPremisesEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserQualification
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PersonInfoResult
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PersonSummaryInfoResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.BadRequestProblem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.ConflictProblem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.ForbiddenProblem
@@ -981,56 +979,6 @@ class PremisesController(
     }
 
     return ResponseEntity.ok(bedDetailTransformer.transformToApi(validationResult))
-  }
-
-  override fun premisesPremisesIdSummaryGet(premisesId: UUID): ResponseEntity<ExtendedPremisesSummary> = runBlocking {
-    val premises = premisesService.getPremises(premisesId)
-      ?: throw NotFoundProblem(premisesId, "Premises")
-
-    val user = usersService.getUserForRequest()
-
-    if (!userAccessService.userCanManagePremisesBookings(user, premises)) {
-      throw ForbiddenProblem()
-    }
-
-    val bookingsSummary = premisesService.getPremisesSummary(premisesId)
-    val crns = bookingsSummary.map { it.getCrn() }
-    val personSummary = offenderService.getOffenderSummariesByCrns(
-      crns,
-      user.deliusUsername,
-      user.hasQualification(UserQualification.LAO),
-    )
-    val totalBeds = premisesService.getBedCount(premises)
-
-    val bookingsSummaryMapped = bookingsSummary.map {
-      val personInfo = personSummary.find { personSummary -> personSummary.crn == it.getCrn() }
-        ?: PersonSummaryInfoResult.NotFound(it.getCrn())
-      bookingTransformer.transformBookingSummary(it, personInfo)
-    }
-
-    val availableBedsForToday =
-      premisesService.getAvailabilityForRange(premises, LocalDate.now(), LocalDate.now().plusDays(1))
-        .values.first().getFreeCapacity(totalBeds)
-
-    val dateCapacities = premisesService.getDateCapacities(premises)
-
-    var apCode: String? = null
-    if (premises is ApprovedPremisesEntity) {
-      apCode = premises.apCode
-    }
-
-    return@runBlocking ResponseEntity.ok(
-      ExtendedPremisesSummary(
-        id = premisesId,
-        name = premises.name,
-        apCode = apCode,
-        postcode = premises.postcode,
-        bedCount = totalBeds,
-        availableBedsForToday = availableBedsForToday,
-        bookings = bookingsSummaryMapped,
-        dateCapacities = dateCapacities,
-      ),
-    )
   }
 
   @SuppressWarnings("ThrowsCount")

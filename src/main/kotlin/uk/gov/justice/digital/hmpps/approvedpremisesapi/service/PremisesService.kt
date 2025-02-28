@@ -4,14 +4,12 @@ import arrow.core.Either
 import jakarta.transaction.Transactional
 import org.springframework.data.repository.findByIdOrNull
 import org.springframework.stereotype.Service
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.DateCapacity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PropertyStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.BedRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.BookingRepository
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.BookingSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.LocalAuthorityAreaRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PremisesEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PremisesRepository
@@ -42,7 +40,6 @@ class PremisesService(
   private val characteristicService: CharacteristicService,
   private val roomRepository: RoomRepository,
   private val bedRepository: BedRepository,
-  private val timeService: TimeService,
 ) {
   private val serviceNameToEntityType = mapOf(
     ServiceName.approvedPremises to ApprovedPremisesEntity::class.java,
@@ -67,11 +64,6 @@ class PremisesService(
   } ?: listOf()
 
   fun getPremises(premisesId: UUID): PremisesEntity? = premisesRepository.findByIdOrNull(premisesId)
-
-  fun getPremisesSummary(premisesId: UUID): List<BookingSummary> = premisesRepository.getBookingSummariesForPremisesId(premisesId)
-
-  fun getLastBookingDate(premises: PremisesEntity) = bookingRepository.getHighestBookingDate(premises.id)
-  fun getLastLostBedsDate(premises: PremisesEntity) = cas3VoidBedspacesRepository.getHighestBookingDate(premises.id)
 
   fun getAvailabilityForRange(
     premises: PremisesEntity,
@@ -352,39 +344,6 @@ class PremisesService(
     }
 
     return probationDeliveryUnit
-  }
-
-  fun getDateCapacities(premises: PremisesEntity): List<DateCapacity> {
-    val now = timeService.nowAsLocalDate()
-
-    val oneYearsTime = now.plusYears(1)
-    val lastBookingDate = minOf(
-      getLastBookingDate(premises) ?: now,
-      oneYearsTime,
-    )
-    val lastLostBedsDate = minOf(
-      getLastLostBedsDate(premises) ?: now,
-      oneYearsTime,
-    )
-
-    val capacityForPeriod = getAvailabilityForRange(
-      premises,
-      now,
-      maxOf(
-        now,
-        lastBookingDate ?: now,
-        lastLostBedsDate ?: now,
-      ),
-    )
-
-    val totalBeds = getBedCount(premises)
-
-    return capacityForPeriod.map {
-      DateCapacity(
-        date = it.key,
-        availableBeds = it.value.getFreeCapacity(totalBeds),
-      )
-    }
   }
 
   fun getBedCount(premises: PremisesEntity): Int = premisesRepository.getBedCount(premises)

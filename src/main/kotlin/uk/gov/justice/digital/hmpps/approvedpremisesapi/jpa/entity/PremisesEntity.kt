@@ -135,45 +135,6 @@ interface PremisesRepository : JpaRepository<PremisesEntity, UUID> {
 
   @Query("SELECT CAST(COUNT(b) as int) FROM PremisesEntity p JOIN p.rooms r JOIN r.beds b on (b.endDate IS NULL OR b.endDate >= CURRENT_DATE) WHERE r.premises = :premises")
   fun getBedCount(premises: PremisesEntity): Int
-
-  @Query(
-    """
-  SELECT
-  cast(booking.id as TEXT) as id,
-  booking.arrival_date as arrivalDate,
-  booking.departure_date as departureDate,
-  booking.crn as crn,
-  cast(bed.id as TEXT) as bedId,
-  bed.name as bedName,
-  bed.code as bedCode,
-  case
-  	when (SELECT count(id) from non_arrivals where booking_id = booking.id) > 0 then 'notMinusArrived'
-    when (
-    	(SELECT count(id) from arrivals where booking_id = booking.id) > 0 
-      AND
-      (SELECT count(id) from departures where booking_id = booking.id) = 0
-    ) then 'arrived'
-    when (
-    	(SELECT count(id) from departures where booking_id = booking.id) > 0
-    ) then 'departed'
-    when (
-    	(SELECT count(id) from cancellations where booking_id = booking.id) > 0
-    ) then 'cancelled'
-    when (
-    	(SELECT count(id) from arrivals where booking_id = booking.id) = 0 
-      AND
-      (SELECT count(id) from non_arrivals where booking_id = booking.id) = 0
-    ) then 'awaitingMinusArrival'
-  end status
-FROM
-  bookings booking
-  LEFT JOIN beds bed ON booking.bed_id = bed.id
-where
-  booking.premises_id = :premisesId
-  """,
-    nativeQuery = true,
-  )
-  fun getBookingSummariesForPremisesId(premisesId: UUID): List<BookingSummary>
 }
 
 @Repository

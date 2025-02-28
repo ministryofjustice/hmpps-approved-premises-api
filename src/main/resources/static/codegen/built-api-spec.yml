@@ -314,39 +314,6 @@ paths:
         500:
           $ref: '#/components/responses/500Response'
       x-codegen-request-body-name: body
-  /premises/{premisesId}/summary:
-    get:
-      tags:
-        - Operations on premises
-      summary: Returns a summary of bookings for an approved premises
-      operationId: premisesPremisesIdSummaryGet
-      parameters:
-        - name: premisesId
-          in: path
-          description: ID of the premises to get bookings for
-          required: true
-          schema:
-            type: string
-            format: uuid
-      responses:
-        200:
-          description: successful operation
-          content:
-            'application/json':
-              schema:
-                $ref: '#/components/schemas/ExtendedPremisesSummary'
-        401:
-          $ref: '#/components/responses/401Response'
-        403:
-          $ref: '#/components/responses/403Response'
-        404:
-          description: invalid premises ID
-          content:
-            'application/json':
-              schema:
-                $ref: '#/components/schemas/Problem'
-        500:
-          $ref: '#/components/responses/500Response'
   /premises/{premisesId}/bookings/{bookingId}:
     get:
       tags:
@@ -5010,30 +4977,6 @@ components:
       required:
         - id
         - name
-    ExtendedPremisesSummary:
-      type: object
-      properties:
-        id:
-          type: string
-          format: uuid
-        name:
-          type: string
-        apCode:
-          type: string
-        postcode:
-          type: string
-        bedCount:
-          type: integer
-        availableBedsForToday:
-          type: integer
-        bookings:
-          type: array
-          items:
-            $ref: '#/components/schemas/PremisesBooking'
-        dateCapacities:
-          type: array
-          items:
-            $ref: '#/components/schemas/DateCapacity'
     PremisesBooking:
       type: object
       properties:
