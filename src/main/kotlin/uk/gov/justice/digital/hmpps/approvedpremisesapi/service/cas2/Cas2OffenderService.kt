@@ -174,6 +174,10 @@ class Cas2OffenderService(
       }
     }
 
+    if (offender.currentExclusion || offender.currentRestriction) {
+      return PersonInfoResult.Success.Restricted(crn, offender.otherIds.nomsNumber)
+    }
+
     return PersonInfoResult.Success.Full(
       crn = crn,
       offenderDetailSummary = offender,
@@ -185,7 +189,7 @@ class Cas2OffenderService(
     val personInfo = getInfoForPerson(crn)
     when (personInfo) {
       is PersonInfoResult.NotFound, is PersonInfoResult.Unknown -> throw NotFoundProblem(crn, "Offender")
-      is PersonInfoResult.Success.Restricted -> throw ForbiddenProblem()
+      is PersonInfoResult.Success.Restricted -> throw ForbiddenProblem("Offender $crn is Restricted.")
       is PersonInfoResult.Success.Full -> return personInfo
     }
   }
