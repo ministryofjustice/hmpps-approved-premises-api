@@ -359,6 +359,7 @@ class Cas1SpaceBookingTransformerTest {
           .withKeyworkerAssignedAt(LocalDateTime.of(2023, 12, 12, 0, 0, 0).toInstant(ZoneOffset.UTC))
           .withKeyworkerName("the keyworker name")
           .withCriteria(mutableListOf())
+          .withDeliusEventNumber("event8")
           .produce(),
         personSummaryInfo,
       )
@@ -374,6 +375,7 @@ class Cas1SpaceBookingTransformerTest {
       assertThat(result.keyWorkerAllocation!!.keyWorker.name).isEqualTo("the keyworker name")
       assertThat(result.keyWorkerAllocation!!.keyWorker.code).isEqualTo("the staff code")
       assertThat(result.status).isEqualTo(Cas1SpaceBookingSummaryStatus.departed)
+      assertThat(result.deliusEventNumber).isEqualTo("event8")
     }
   }
 
@@ -413,6 +415,7 @@ class Cas1SpaceBookingTransformerTest {
           keyWorkerAssignedAt = LocalDateTime.of(2023, 12, 12, 0, 0, 0).toInstant(ZoneOffset.UTC),
           keyWorkerName = "the keyworker name",
           characteristicsPropertyNames = null,
+          deliusEventNumber = "event8",
         ),
         premises,
         personSummaryInfo,
@@ -429,6 +432,7 @@ class Cas1SpaceBookingTransformerTest {
       assertThat(result.keyWorkerAllocation!!.keyWorker.name).isEqualTo("the keyworker name")
       assertThat(result.keyWorkerAllocation!!.keyWorker.code).isEqualTo("the staff code")
       assertThat(result.status).isEqualTo(Cas1SpaceBookingSummaryStatus.departed)
+      assertThat(result.deliusEventNumber).isEqualTo("event8")
     }
 
     @Test
@@ -462,6 +466,7 @@ class Cas1SpaceBookingTransformerTest {
           keyWorkerAssignedAt = null,
           keyWorkerName = null,
           characteristicsPropertyNames = null,
+          deliusEventNumber = "event8",
         ),
         premises = ApprovedPremisesEntityFactory().withDefaults().produce(),
         personSummaryInfo,
@@ -490,6 +495,7 @@ data class Cas1SpaceBookingSearchResultImpl(
   override val keyWorkerAssignedAt: Instant?,
   override val keyWorkerName: String?,
   override val characteristicsPropertyNames: String?,
+  override val deliusEventNumber: String?,
 ) : Cas1SpaceBookingSearchResult
 
 data class Cas1SpaceBookingAtPremisesImpl(

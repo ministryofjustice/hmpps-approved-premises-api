@@ -187,6 +187,7 @@ class Cas1SpaceBookingTransformer(
     characteristics = spaceBooking.criteria.mapNotNull { criteria ->
       Cas1SpaceCharacteristic.entries.find { it.name == criteria.propertyName }
     },
+    deliusEventNumber = spaceBooking.deliusEventNumber,
   )
 
   fun transformSearchResultToSummary(
@@ -232,6 +233,7 @@ class Cas1SpaceBookingTransformer(
     characteristics = searchResult.characteristicsPropertyNames?.split(",")?.mapNotNull { propertyName ->
       Cas1SpaceCharacteristic.entries.find { it.name == propertyName }
     } ?: listOf(),
+    deliusEventNumber = searchResult.deliusEventNumber,
 
   )
 

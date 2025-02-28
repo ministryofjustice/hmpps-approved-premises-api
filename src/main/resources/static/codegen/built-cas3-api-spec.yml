@@ -4779,6 +4779,9 @@ components:
           items:
             $ref: '#/components/schemas/Cas1SpaceCharacteristic'
           default: []
+        deliusEventNumber:
+          description: Delius event number
+          type: string
       required:
         - id
         - person
