@@ -23,6 +23,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.community.Offender
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.deliuscontext.CaseDetail
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.deliuscontext.StaffDetail
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.AuthorisableActionResult
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.OffenderRisksService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.OffenderService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.DomainEventTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.UrlTemplate
@@ -38,6 +39,7 @@ import java.util.UUID
 class Cas1ApplicationDomainEventService(
   private val domainEventService: Cas1DomainEventService,
   private val offenderService: OffenderService,
+  private val offenderRisksService: OffenderRisksService,
   private val apDeliusContextApiClient: ApDeliusContextApiClient,
   private val domainEventTransformer: DomainEventTransformer,
   @Value("\${url-templates.frontend.application}") private val applicationUrlTemplate: UrlTemplate,
@@ -69,15 +71,7 @@ class Cas1ApplicationDomainEventService(
           )
       }
 
-    val risks =
-      when (val riskResult = offenderService.getRiskByCrn(application.crn, username)) {
-        is AuthorisableActionResult.Success -> riskResult.entity
-        is AuthorisableActionResult.Unauthorised ->
-          throw RuntimeException("Unable to get Risks when creating Application Submitted Domain Event: Unauthorised")
-
-        is AuthorisableActionResult.NotFound ->
-          throw RuntimeException("Unable to get Risks when creating Application Submitted Domain Event: Not Found")
-      }
+    val risks = offenderRisksService.getPersonRisks(application.crn)
 
     val mappaLevel = risks.mappa.value?.level
 

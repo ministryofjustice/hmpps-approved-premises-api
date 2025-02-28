@@ -10,12 +10,15 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.RiskTier
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.RiskTierEnvelope
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.RoshRisks
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.RoshRisksEnvelope
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.CaseAccessFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.CaseDetailFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.RoshRatingsFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.from
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAUser
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAnOffender
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.apDeliusContextAddSingleResponseToUserAccessCall
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.apDeliusContextMockSuccessfulCaseDetailCall
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.apDeliusContextNoCaseSummariesToBulkResponse
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.apOASysContextMockSuccessfulRoshRatingsCall
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.hmppsTierMockSuccessfulTierCall
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.deliuscontext.MappaDetail
@@ -72,7 +75,16 @@ class PersonRisksTest : InitialiseDatabasePerClassTestBase() {
   @Test
   fun `Getting risks for a CRN that does not exist returns 404`() {
     givenAUser { _, jwt ->
+
       val crn = "CRN123"
+      apDeliusContextNoCaseSummariesToBulkResponse(crn)
+      apDeliusContextAddSingleResponseToUserAccessCall(
+        caseAccess = CaseAccessFactory()
+          .withUserExcluded(true)
+          .withUserRestricted(true)
+          .withCrn("CRN123")
+          .produce(),
+      )
 
       webTestClient.get()
         .uri("/people/$crn/risks")

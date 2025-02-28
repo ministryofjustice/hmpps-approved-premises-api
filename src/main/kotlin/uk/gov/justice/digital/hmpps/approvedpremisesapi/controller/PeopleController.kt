@@ -23,6 +23,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremi
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.OfflineApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserQualification
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PersonInfoResult
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PersonSummaryInfoResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.community.OffenderDetailSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.ForbiddenProblem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.NotFoundProblem
@@ -31,7 +32,9 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.ApplicationServi
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.FeatureFlagService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.HttpAuthService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.OASysService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.OffenderRisksService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.OffenderService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.OffenderService.LimitedAccessStrategy
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.UserService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.AdjudicationTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.AlertTransformer
@@ -66,6 +69,7 @@ class PeopleController(
   private val cas1TimelineService: Cas1TimelineService,
   private val featureFlagService: FeatureFlagService,
   private val oasysService: OASysService,
+  private val offenderRisksService: OffenderRisksService,
 ) : PeopleApiDelegate {
 
   override fun peopleSearchGet(crn: String): ResponseEntity<Person> {
@@ -85,11 +89,14 @@ class PeopleController(
   override fun peopleCrnRisksGet(crn: String): ResponseEntity<PersonRisks> {
     val principal = httpAuthService.getDeliusPrincipalOrThrow()
 
-    val risks = when (val risksResult = offenderService.getRiskByCrn(crn, principal.name)) {
-      is AuthorisableActionResult.Unauthorised -> throw ForbiddenProblem()
-      is AuthorisableActionResult.NotFound -> throw NotFoundProblem(crn, "Person")
-      is AuthorisableActionResult.Success -> risksResult.entity
+    when (offenderService.getPersonSummaryInfoResult(crn, LimitedAccessStrategy.ReturnRestrictedIfLimitedAccess(principal.name))) {
+      is PersonSummaryInfoResult.NotFound -> throw NotFoundProblem(crn, "Person")
+      is PersonSummaryInfoResult.Success.Restricted -> throw ForbiddenProblem()
+      is PersonSummaryInfoResult.Unknown -> throw NotFoundProblem(crn, "Person")
+      is PersonSummaryInfoResult.Success.Full -> Unit
     }
+
+    val risks = offenderRisksService.getPersonRisks(crn)
 
     return ResponseEntity.ok(risksTransformer.transformDomainToApi(risks, crn))
   }
