@@ -545,8 +545,13 @@ class OffenderService(
   fun getPersonInfoResult(
     crn: String,
     limitedAccessStrategy: LimitedAccessStrategy,
+  ) = getPersonInfoResults(setOf(crn), limitedAccessStrategy).first()
+
+  fun getPersonInfoResults(
+    crns: Set<String>,
+    limitedAccessStrategy: LimitedAccessStrategy,
   ) = getPersonInfoResults(
-    crns = setOf(crn),
+    crns = crns,
     deliusUsername = when (limitedAccessStrategy) {
       is LimitedAccessStrategy.IgnoreLimitedAccess -> null
       is LimitedAccessStrategy.ReturnRestrictedIfLimitedAccess -> limitedAccessStrategy.deliusUsername
@@ -555,7 +560,7 @@ class OffenderService(
       is LimitedAccessStrategy.IgnoreLimitedAccess -> true
       is LimitedAccessStrategy.ReturnRestrictedIfLimitedAccess -> false
     },
-  ).first()
+  )
 
   @Deprecated(
     """Use version that takes limitedAccessStrategy, derive from [UserEntity.cas1LimitedAccessStrategy()] 
@@ -570,7 +575,7 @@ class OffenderService(
     return getPersonInfoResults(setOf(crn), deliusUsername, ignoreLaoRestrictions).first()
   }
 
-  fun getPersonInfoResults(
+  private fun getPersonInfoResults(
     crns: Set<String>,
     deliusUsername: String?,
     ignoreLaoRestrictions: Boolean,
