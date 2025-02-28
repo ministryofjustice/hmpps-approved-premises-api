@@ -608,6 +608,12 @@ class OffenderService(
   }
 }
 
+/**
+ * If the user has the `LAO` qualification, they can always view LAO offenders
+ *
+ * Note that there are some cases in CAS1 where this strategy should not be used
+ * (e.g. when creating applications the LAO qualification should be ignored)
+ */
 fun UserEntity.cas1LimitedAccessStrategy() = if (this.hasQualification(UserQualification.LAO)) {
   LimitedAccessStrategy.IgnoreLimitedAccess
 } else {
