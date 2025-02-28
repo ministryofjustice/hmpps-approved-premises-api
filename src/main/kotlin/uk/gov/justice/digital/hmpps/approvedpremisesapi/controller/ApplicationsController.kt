@@ -54,10 +54,12 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.AssessmentServic
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.DocumentService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.HttpAuthService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.OffenderService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.OffenderService.LimitedAccessStrategy.ReturnRestrictedIfLimitedAccess
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.UserService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1RequestForPlacementService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1WithdrawableService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.WithdrawableEntitiesWithNotes
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1LimitedAccessStrategy
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.AppealTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.ApplicationTimelineNoteTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.ApplicationsTransformer
@@ -100,7 +102,12 @@ class ApplicationsController(
 
     val applications = applicationService.getAllApplicationsForUsername(user, serviceName)
 
-    return ResponseEntity.ok(getPersonDetailAndTransformToSummary(applications, user))
+    return ResponseEntity.ok(
+      getPersonDetailAndTransformToSummary(
+        applications = applications,
+        limitedAccessStrategy = ReturnRestrictedIfLimitedAccess(user.deliusUsername),
+      ),
+    )
   }
 
   override fun applicationsAllGet(
@@ -134,9 +141,8 @@ class ApplicationsController(
       metadata?.toHeaders(),
     ).body(
       getPersonDetailAndTransformToSummary(
-        applications,
-        user = user,
-        ignoreLaoRestrictions = user.hasQualification(UserQualification.LAO),
+        applications = applications,
+        limitedAccessStrategy = user.cas1LimitedAccessStrategy(),
       ),
     )
   }
@@ -523,11 +529,10 @@ class ApplicationsController(
 
   private fun getPersonDetailAndTransformToSummary(
     applications: List<JPAApplicationSummary>,
-    user: UserEntity,
-    ignoreLaoRestrictions: Boolean = false,
+    limitedAccessStrategy: OffenderService.LimitedAccessStrategy,
   ): List<ApplicationSummary> {
     val crns = applications.map { it.getCrn() }
-    val personInfoResults = offenderService.getPersonInfoResults(crns.toSet(), user.deliusUsername, ignoreLaoRestrictions)
+    val personInfoResults = offenderService.getPersonInfoResults(crns.toSet(), limitedAccessStrategy)
 
     return applications.map {
       val crn = it.getCrn()
