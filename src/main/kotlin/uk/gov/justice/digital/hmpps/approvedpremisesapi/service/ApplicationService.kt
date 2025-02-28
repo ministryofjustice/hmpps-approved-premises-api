@@ -79,6 +79,7 @@ class ApplicationService(
   private val applicationRepository: ApplicationRepository,
   private val jsonSchemaService: JsonSchemaService,
   private val offenderService: OffenderService,
+  private val offenderRisksService: OffenderRisksService,
   private val userService: UserService,
   private val assessmentService: AssessmentService,
   private val offlineApplicationRepository: OfflineApplicationRepository,
@@ -222,16 +223,10 @@ class ApplicationService(
       return fieldValidationError
     }
 
-    var riskRatings: PersonRisks? = null
-
-    if (createWithRisks == true) {
-      val riskRatingsResult = offenderService.getRiskByCrn(crn, user.deliusUsername)
-
-      riskRatings = when (riskRatingsResult) {
-        is AuthorisableActionResult.NotFound -> return "$.crn" hasSingleValidationError "doesNotExist"
-        is AuthorisableActionResult.Unauthorised -> return "$.crn" hasSingleValidationError "userPermission"
-        is AuthorisableActionResult.Success -> riskRatingsResult.entity
-      }
+    val riskRatings = if (createWithRisks == true) {
+      offenderRisksService.getPersonRisks(crn)
+    } else {
+      null
     }
 
     val createdApplication = applicationRepository.saveAndFlush(

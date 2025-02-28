@@ -86,6 +86,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.ApplicationServi
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.ApplicationService.Cas1ApplicationUpdateFields
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.AssessmentService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.JsonSchemaService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.OffenderRisksService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.OffenderService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.UserAccessService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.UserService
@@ -108,6 +109,7 @@ class ApplicationServiceTest {
   private val mockApplicationRepository = mockk<ApplicationRepository>()
   private val mockJsonSchemaService = mockk<JsonSchemaService>()
   private val mockOffenderService = mockk<OffenderService>()
+  private val mockOffenderRisksService = mockk<OffenderRisksService>()
   private val mockUserService = mockk<UserService>()
   private val mockAssessmentService = mockk<AssessmentService>()
   private val mockOfflineApplicationRepository = mockk<OfflineApplicationRepository>()
@@ -132,6 +134,7 @@ class ApplicationServiceTest {
     mockApplicationRepository,
     mockJsonSchemaService,
     mockOffenderService,
+    mockOffenderRisksService,
     mockUserService,
     mockAssessmentService,
     mockOfflineApplicationRepository,
@@ -401,14 +404,12 @@ class ApplicationServiceTest {
       )
       .produce()
 
-    every { mockOffenderService.getRiskByCrn(crn, username) } returns AuthorisableActionResult.Success(
-      riskRatings,
-    )
+    every { mockOffenderRisksService.getPersonRisks(crn) } returns riskRatings
 
     val result = applicationService.createApprovedPremisesApplication(offenderDetails, user, 123, "1", "A12HI")
 
     assertThatCasResult(result).isSuccess().with {
-      val approvedPremisesApplication = it as ApprovedPremisesApplicationEntity
+      val approvedPremisesApplication = it
       assertThat(approvedPremisesApplication.riskRatings).isEqualTo(riskRatings)
       assertThat(approvedPremisesApplication.name).isEqualTo("${offenderDetails.firstName.uppercase()} ${offenderDetails.surname.uppercase()}")
     }
