@@ -233,6 +233,7 @@ class Cas1SpaceBookingTransformer(
     characteristics = searchResult.characteristicsPropertyNames?.split(",")?.mapNotNull { propertyName ->
       Cas1SpaceCharacteristic.entries.find { it.name == propertyName }
     } ?: listOf(),
+    deliusEventNumber = searchResult.deliusEventNumber,
 
   )
 
