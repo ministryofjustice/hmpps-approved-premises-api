@@ -348,20 +348,10 @@ class ApplicationService(
         return@validatedCasResult fieldValidationError
       }
 
-      var riskRatings: PersonRisks? = null
-
-      if (createWithRisks == true) {
-        val riskRatingsResult = offenderService.getRiskByCrn(crn, user.deliusUsername)
-
-        riskRatings = when (riskRatingsResult) {
-          is AuthorisableActionResult.NotFound ->
-            return@validatedCasResult "$.crn" hasSingleValidationError "doesNotExist"
-
-          is AuthorisableActionResult.Unauthorised ->
-            return@validatedCasResult "$.crn" hasSingleValidationError "userPermission"
-
-          is AuthorisableActionResult.Success -> riskRatingsResult.entity
-        }
+      val riskRatings: PersonRisks? = if (createWithRisks == true) {
+        offenderRisksService.getPersonRisks(crn)
+      } else {
+        null
       }
 
       val prisonName = getPrisonName(personInfo)

@@ -618,9 +618,7 @@ class ApplicationServiceTest {
       )
       .produce()
 
-    every { mockOffenderService.getRiskByCrn(crn, username) } returns AuthorisableActionResult.Success(
-      riskRatings,
-    )
+    every { mockOffenderRisksService.getPersonRisks(crn) } returns riskRatings
 
     val result = applicationService.createTemporaryAccommodationApplication(
       crn,
@@ -699,9 +697,7 @@ class ApplicationServiceTest {
       )
       .produce()
 
-    every { mockOffenderService.getRiskByCrn(crn, username) } returns AuthorisableActionResult.Success(
-      riskRatings,
-    )
+    every { mockOffenderRisksService.getPersonRisks(crn) } returns riskRatings
 
     val result = applicationService.createTemporaryAccommodationApplication(
       crn,
@@ -779,9 +775,7 @@ class ApplicationServiceTest {
       )
       .produce()
 
-    every { mockOffenderService.getRiskByCrn(crn, username) } returns AuthorisableActionResult.Success(
-      riskRatings,
-    )
+    every { mockOffenderRisksService.getPersonRisks(crn) } returns riskRatings
 
     val result = applicationService.createTemporaryAccommodationApplication(
       crn,
@@ -793,7 +787,7 @@ class ApplicationServiceTest {
     )
 
     assertThatCasResult(result).isSuccess().with {
-      val temporaryAccommodationApplication = it as TemporaryAccommodationApplicationEntity
+      val temporaryAccommodationApplication = it
       assertThat(temporaryAccommodationApplication.riskRatings).isEqualTo(riskRatings)
       assertThat(temporaryAccommodationApplication.prisonNameOnCreation).isNull()
     }
@@ -859,9 +853,7 @@ class ApplicationServiceTest {
       )
       .produce()
 
-    every { mockOffenderService.getRiskByCrn(crn, username) } returns AuthorisableActionResult.Success(
-      riskRatings,
-    )
+    every { mockOffenderRisksService.getPersonRisks(crn) } returns riskRatings
 
     val result = applicationService.createTemporaryAccommodationApplication(
       crn,
