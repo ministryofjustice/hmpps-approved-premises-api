@@ -359,6 +359,7 @@ class Cas1SpaceBookingTransformerTest {
           .withKeyworkerAssignedAt(LocalDateTime.of(2023, 12, 12, 0, 0, 0).toInstant(ZoneOffset.UTC))
           .withKeyworkerName("the keyworker name")
           .withCriteria(mutableListOf())
+          .withDeliusEventNumber("event8")
           .produce(),
         personSummaryInfo,
       )
@@ -374,6 +375,7 @@ class Cas1SpaceBookingTransformerTest {
       assertThat(result.keyWorkerAllocation!!.keyWorker.name).isEqualTo("the keyworker name")
       assertThat(result.keyWorkerAllocation!!.keyWorker.code).isEqualTo("the staff code")
       assertThat(result.status).isEqualTo(Cas1SpaceBookingSummaryStatus.departed)
+      assertThat(result.deliusEventNumber).isEqualTo("event8")
     }
   }
 
