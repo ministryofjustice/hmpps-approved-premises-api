@@ -131,6 +131,7 @@ interface Cas1SpaceBookingRepository : JpaRepository<Cas1SpaceBookingEntity, UUI
           WHEN apa.id IS NOT NULL THEN apa.name
           ELSE offline_app.name
         END AS personName,
+        b.delius_event_number AS deliusEventNumber,
         $SPACE_BOOKING_SUMMARY_CHARACTERISTICS_SUBQUERY
         $SPACE_BOOKING_SUMMARY_JOIN_CLAUSE
         $SPACE_BOOKING_SUMMARY_WHERE_CLAUSE
@@ -297,6 +298,7 @@ interface Cas1SpaceBookingSearchResult {
   val keyWorkerAssignedAt: Instant?
   val keyWorkerName: String?
   val characteristicsPropertyNames: String?
+  val deliusEventNumber: String?
 }
 
 interface Cas1SpaceBookingAtPremises {
