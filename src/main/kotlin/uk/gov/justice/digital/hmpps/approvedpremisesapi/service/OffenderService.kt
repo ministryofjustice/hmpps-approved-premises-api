@@ -408,6 +408,7 @@ class OffenderService(
     return AuthorisableActionResult.Success(inmateDetail)
   }
 
+  @Deprecated("Use [OffenderRisksService] directly")
   fun getRiskByCrn(crn: String, deliusUsername: String): AuthorisableActionResult<PersonRisks> = when (getOffenderByCrn(crn, deliusUsername)) {
     is AuthorisableActionResult.NotFound -> AuthorisableActionResult.NotFound()
     is AuthorisableActionResult.Unauthorised -> AuthorisableActionResult.Unauthorised()

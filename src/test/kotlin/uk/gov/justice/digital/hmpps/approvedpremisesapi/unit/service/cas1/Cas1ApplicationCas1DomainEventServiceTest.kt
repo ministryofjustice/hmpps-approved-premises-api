@@ -42,6 +42,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.RiskStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.RiskWithStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.asApiType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.AuthorisableActionResult
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.OffenderRisksService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.OffenderService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1ApplicationDomainEventService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1DomainEventService
@@ -55,6 +56,7 @@ import java.util.UUID
 
 class Cas1ApplicationCas1DomainEventServiceTest {
   private val mockOffenderService = mockk<OffenderService>()
+  private val mockOffenderRisksService = mockk<OffenderRisksService>()
   private val mockDomainEventService = mockk<Cas1DomainEventService>()
   private val mockApDeliusContextApiClient = mockk<ApDeliusContextApiClient>()
   private val mockDomainEventTransformer = mockk<DomainEventTransformer>()
@@ -62,6 +64,7 @@ class Cas1ApplicationCas1DomainEventServiceTest {
   private val service = Cas1ApplicationDomainEventService(
     mockDomainEventService,
     mockOffenderService,
+    mockOffenderRisksService,
     mockApDeliusContextApiClient,
     mockDomainEventTransformer,
     UrlTemplate("http://frontend/applications/#id"),
@@ -131,13 +134,8 @@ class Cas1ApplicationCas1DomainEventServiceTest {
         .produce()
 
       every {
-        mockOffenderService.getRiskByCrn(
-          application.crn,
-          user.deliusUsername,
-        )
-      } returns AuthorisableActionResult.Success(
-        risks,
-      )
+        mockOffenderRisksService.getPersonRisks(application.crn)
+      } returns risks
 
       every { mockApDeliusContextApiClient.getCaseDetail(application.crn) } returns ClientResult.Success(
         status = HttpStatus.OK,
