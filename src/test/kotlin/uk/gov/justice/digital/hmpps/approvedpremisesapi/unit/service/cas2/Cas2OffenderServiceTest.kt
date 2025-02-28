@@ -13,7 +13,6 @@ import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
 import org.springframework.http.HttpMethod
 import org.springframework.http.HttpStatus
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.ApDeliusContextApiClient
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.ApOASysContextApiClient
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.ClientResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.ClientResult.Failure.StatusCode
@@ -46,7 +45,6 @@ class Cas2OffenderServiceTest {
   private val mockApOASysContextApiClient = mockk<ApOASysContextApiClient>()
   private val mockProbationOffenderSearchClient = mockk<ProbationOffenderSearchApiClient>()
   private val mockOffenderDetailsDataSource = mockk<OffenderDetailsDataSource>()
-  private val apDeliusContextApiClient = mockk<ApDeliusContextApiClient>()
 
   private val objectMapper = ObjectMapper().apply {
     registerModule(Jdk8Module())
