@@ -1,7 +1,7 @@
 import org.apache.commons.io.FileUtils
 
 plugins {
-  id("uk.gov.justice.hmpps.gradle-spring-boot") version "7.1.2"
+  id("uk.gov.justice.hmpps.gradle-spring-boot") version "7.1.3"
   kotlin("plugin.spring") version "2.1.10"
   kotlin("plugin.jpa") version "2.1.10"
   id("org.openapi.generator") version "7.11.0"
@@ -82,7 +82,7 @@ dependencies {
 
   testImplementation("com.ninja-squad:springmockk:4.0.2")
 
-  implementation("uk.gov.justice.service.hmpps:hmpps-sqs-spring-boot-starter:3.1.3")
+  implementation("uk.gov.justice.service.hmpps:hmpps-sqs-spring-boot-starter:5.3.2")
 
   implementation("uk.gov.service.notify:notifications-java-client:5.2.1-RELEASE")
 
