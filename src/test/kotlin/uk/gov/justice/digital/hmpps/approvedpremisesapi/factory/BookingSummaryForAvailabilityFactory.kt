@@ -2,7 +2,7 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.factory
 
 import io.github.bluegroundltd.kfactory.Factory
 import io.github.bluegroundltd.kfactory.Yielded
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.BookingSummaryForAvailability
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.BookingSummaryForAvailability
 import java.time.LocalDate
 
 class BookingSummaryForAvailabilityFactory : Factory<BookingSummaryForAvailabilityImpl> {

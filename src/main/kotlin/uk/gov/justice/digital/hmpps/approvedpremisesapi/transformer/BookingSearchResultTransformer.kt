@@ -9,7 +9,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.BookingSearchR
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.BookingSearchResults
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.BookingStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.BookingSearchResult as ApiBookingSearchResult
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.BookingSearchResultDto as DomainBookingSearchResult
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.BookingSearchResultDto as DomainBookingSearchResult
 
 @Component
 class BookingSearchResultTransformer {

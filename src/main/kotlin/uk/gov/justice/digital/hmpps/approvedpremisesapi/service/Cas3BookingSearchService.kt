@@ -11,13 +11,15 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.SortOrder
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.BookingSearchResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas3BookingRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserEntity
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.BookingSearchResultDto
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PaginationMetadata
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PersonSummaryInfoResult
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.BookingSearchResultDto
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.getMetadataWithSize
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.getPageableOrAllPages
+import java.time.LocalDate
 import java.time.OffsetDateTime
 import java.time.ZoneOffset
+import java.util.UUID
 
 @Service
 class Cas3BookingSearchService(
@@ -136,3 +138,23 @@ class Cas3BookingSearchService(
     return results.sortedWith(comparator)
   }
 }
+
+data class BookingSearchResultDto(
+  var personName: String?,
+  val personCrn: String,
+  val bookingId: UUID,
+  val bookingStatus: String,
+  val bookingStartDate: LocalDate,
+  val bookingEndDate: LocalDate,
+  val bookingCreatedAt: OffsetDateTime,
+  val premisesId: UUID,
+  val premisesName: String,
+  val premisesAddressLine1: String,
+  val premisesAddressLine2: String?,
+  val premisesTown: String?,
+  val premisesPostcode: String,
+  val roomId: UUID,
+  val roomName: String,
+  val bedId: UUID,
+  val bedName: String,
+)

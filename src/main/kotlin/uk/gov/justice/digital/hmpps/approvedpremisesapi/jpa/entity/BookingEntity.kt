@@ -20,8 +20,8 @@ import org.springframework.data.jpa.repository.Modifying
 import org.springframework.data.jpa.repository.Query
 import org.springframework.stereotype.Repository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.BookingStatus
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.BookingSummaryForAvailability
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas1.Cas1ApplicationFacade
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.BookingSummaryForAvailability
 import java.time.Instant
 import java.time.LocalDate
 import java.time.OffsetDateTime
@@ -424,4 +424,12 @@ interface OverlapBookingsSearchResult {
   val roomId: UUID
   val assessmentId: UUID
   val sexualRisk: Boolean
+}
+
+interface BookingSummaryForAvailability {
+  fun getArrivalDate(): LocalDate
+  fun getDepartureDate(): LocalDate
+  fun getArrived(): Boolean
+  fun getIsNotArrived(): Boolean
+  fun getCancelled(): Boolean
 }

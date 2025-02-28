@@ -21,13 +21,12 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TaskRepositor
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PaginationMetadata
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.TypedTask
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.UserWorkload
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.NotAllowedProblem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.CasResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.UserTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.PageCriteria
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.getMetadata
+import java.time.OffsetDateTime
 import java.util.UUID
 
 @Service
@@ -223,3 +222,18 @@ class TaskService(
     )
   }
 }
+
+sealed class TypedTask(
+  val id: UUID,
+  val createdAt: OffsetDateTime,
+  val crn: String,
+) {
+  data class Assessment(val entity: ApprovedPremisesAssessmentEntity) : TypedTask(entity.id, entity.createdAt, entity.application.crn)
+  data class PlacementApplication(val entity: PlacementApplicationEntity) : TypedTask(entity.id, entity.createdAt, entity.application.crn)
+}
+
+data class UserWorkload(
+  var numTasksPending: Int,
+  var numTasksCompleted7Days: Int,
+  var numTasksCompleted30Days: Int,
+)
