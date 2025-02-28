@@ -11,6 +11,7 @@ sealed interface PersonInfoResult {
 
   sealed interface Success : PersonInfoResult {
     data class Full(override val crn: String, val offenderDetailSummary: OffenderDetailSummary, val inmateDetail: InmateDetail?) : Success
+
     /**
      * Indicates that the person is a Limited Access Offender, and the calling user
      * does not have access to their record

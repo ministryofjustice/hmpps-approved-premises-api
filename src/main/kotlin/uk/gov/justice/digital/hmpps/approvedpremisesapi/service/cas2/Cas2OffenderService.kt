@@ -13,7 +13,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.datasource.OffenderDetai
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.NomisUserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PersonInfoResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PersonRisks
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.ProbationOffenderSearchResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.RiskStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.RiskWithStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.RoshRisks
@@ -24,6 +23,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.ForbiddenProblem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.NotFoundProblem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.AuthorisableActionResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.CasResult
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas2.ProbationOffenderSearchResult
 import java.util.stream.Collectors
 
 @Service
@@ -313,4 +313,16 @@ class Cas2OffenderService(
       )
     }
   }
+}
+
+sealed interface ProbationOffenderSearchResult {
+  val nomsNumber: String
+
+  sealed interface Success : ProbationOffenderSearchResult {
+    data class Full(override val nomsNumber: String, val probationOffenderDetail: ProbationOffenderDetail, val inmateDetail: InmateDetail?) : Success
+  }
+
+  data class NotFound(override val nomsNumber: String) : ProbationOffenderSearchResult
+  data class Unknown(override val nomsNumber: String, val throwable: Throwable? = null) : ProbationOffenderSearchResult
+  data class Forbidden(override val nomsNumber: String, val throwable: Throwable? = null) : ProbationOffenderSearchResult
 }
