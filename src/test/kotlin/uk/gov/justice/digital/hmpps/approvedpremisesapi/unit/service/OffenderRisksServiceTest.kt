@@ -1,4 +1,4 @@
-package uk.gov.justice.digital.hmpps.approvedpremisesapi.unit.datasource
+package uk.gov.justice.digital.hmpps.approvedpremisesapi.unit.service
 
 import io.mockk.Called
 import io.mockk.every
@@ -12,7 +12,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.ApDeliusContextAp
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.ApOASysContextApiClient
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.ClientResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.HMPPSTierApiClient
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.datasource.OffenderRisksDataSource
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.CaseDetailFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.RoshRatingsFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.RiskStatus
@@ -22,6 +21,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.deliuscontext.Regi
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.hmppstier.Tier
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.oasyscontext.RiskLevel
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.oasyscontext.RoshRatings
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.OffenderRisksService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.SentryService
 import java.time.LocalDate
 import java.time.LocalDateTime
@@ -29,13 +29,13 @@ import java.time.OffsetDateTime
 import java.time.ZonedDateTime
 import java.util.UUID
 
-class OffenderRisksDataSourceTest {
+class OffenderRisksServiceTest {
   private val mockApDeliusContextApiClient = mockk<ApDeliusContextApiClient>()
   private val mockApOASysContextApiClient = mockk<ApOASysContextApiClient>()
   private val mockHMPPSTierApiClient = mockk<HMPPSTierApiClient>()
   private val mockSentryService = mockk<SentryService>()
 
-  private val apDeliusContextApiOffenderRisksDataSource = OffenderRisksDataSource(
+  private val apDeliusContextApiOffenderRisksService = OffenderRisksService(
     mockApDeliusContextApiClient,
     mockApOASysContextApiClient,
     mockHMPPSTierApiClient,
@@ -50,7 +50,7 @@ class OffenderRisksDataSourceTest {
     mock404Tier(crn)
     mock404CaseDetail(crn)
 
-    val result = apDeliusContextApiOffenderRisksDataSource.getPersonRisks(crn)
+    val result = apDeliusContextApiOffenderRisksService.getPersonRisks(crn)
     assertThat(result.roshRisks.status).isEqualTo(RiskStatus.NotFound)
     assertThat(result.tier.status).isEqualTo(RiskStatus.NotFound)
     assertThat(result.mappa.status).isEqualTo(RiskStatus.NotFound)
@@ -68,7 +68,7 @@ class OffenderRisksDataSourceTest {
     mock500CaseDetail(crn)
     mockSentry()
 
-    val result = apDeliusContextApiOffenderRisksDataSource.getPersonRisks(crn)
+    val result = apDeliusContextApiOffenderRisksService.getPersonRisks(crn)
     assertThat(result.roshRisks.status).isEqualTo(RiskStatus.Error)
     assertThat(result.tier.status).isEqualTo(RiskStatus.Error)
     assertThat(result.mappa.status).isEqualTo(RiskStatus.Error)
@@ -97,7 +97,7 @@ class OffenderRisksDataSourceTest {
     mock500CaseDetail(crn)
     mockSentry()
 
-    val result = apDeliusContextApiOffenderRisksDataSource.getPersonRisks(crn)
+    val result = apDeliusContextApiOffenderRisksService.getPersonRisks(crn)
     assertThat(result.roshRisks.status).isEqualTo(RiskStatus.Error)
     assertThat(result.tier.status).isEqualTo(RiskStatus.Error)
     assertThat(result.mappa.status).isEqualTo(RiskStatus.Error)
@@ -165,7 +165,7 @@ class OffenderRisksDataSourceTest {
         .produce(),
     )
 
-    val result = apDeliusContextApiOffenderRisksDataSource.getPersonRisks(crn)
+    val result = apDeliusContextApiOffenderRisksService.getPersonRisks(crn)
 
     assertThat(result.roshRisks.status).isEqualTo(RiskStatus.Retrieved)
     result.roshRisks.value!!.let {
@@ -250,7 +250,7 @@ class OffenderRisksDataSourceTest {
         .produce(),
     )
 
-    val result = apDeliusContextApiOffenderRisksDataSource.getPersonRisks(crn)
+    val result = apDeliusContextApiOffenderRisksService.getPersonRisks(crn)
 
     assertThat(result.roshRisks.status).isEqualTo(RiskStatus.Retrieved)
     result.roshRisks.value!!.let {

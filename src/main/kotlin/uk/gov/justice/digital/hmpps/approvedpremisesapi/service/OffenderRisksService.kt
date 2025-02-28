@@ -1,4 +1,4 @@
-package uk.gov.justice.digital.hmpps.approvedpremisesapi.datasource
+package uk.gov.justice.digital.hmpps.approvedpremisesapi.service
 
 import org.springframework.http.HttpStatus
 import org.springframework.stereotype.Component
@@ -14,10 +14,9 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.RiskWithStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.RoshRisks
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.deliuscontext.CaseDetail
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.deliuscontext.MappaDetail
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.SentryService
 
 @Component
-class OffenderRisksDataSource(
+class OffenderRisksService(
   private val apDeliusContextApiClient: ApDeliusContextApiClient,
   private val apOASysContextApiClient: ApOASysContextApiClient,
   private val hmppsTierApiClient: HMPPSTierApiClient,

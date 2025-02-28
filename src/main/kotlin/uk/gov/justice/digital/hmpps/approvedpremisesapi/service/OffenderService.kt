@@ -15,7 +15,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.config.PrisonAdjudicatio
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.config.PrisonCaseNotesConfig
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.config.PrisonCaseNotesConfigBindingModel
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.datasource.OffenderDetailsDataSource
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.datasource.OffenderRisksDataSource
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserQualification
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas2v2.Cas2v2UserEntity
@@ -52,7 +51,7 @@ class OffenderService(
   private val caseNotesClient: CaseNotesClient,
   private val apDeliusContextApiClient: ApDeliusContextApiClient,
   private val offenderDetailsDataSource: OffenderDetailsDataSource,
-  private val offenderRisksDataSource: OffenderRisksDataSource,
+  private val offenderRisksService: OffenderRisksService,
   private val personTransformer: PersonTransformer,
   prisonCaseNotesConfigBindingModel: PrisonCaseNotesConfigBindingModel,
   adjudicationsConfigBindingModel: PrisonAdjudicationsConfigBindingModel,
@@ -265,6 +264,9 @@ class OffenderService(
     { offenderDetailsDataSource.getUserAccessForOffenderCrn(userDistinguishedName, crn) },
   )
 
+  /**
+   * Returns CasResult.Unauthorised if offender is LAO and user can't access them
+   */
   @Deprecated(
     """
       This function returns the now deprecated [OffenderDetailSummary], which is the community-api data model
@@ -410,7 +412,7 @@ class OffenderService(
     is AuthorisableActionResult.NotFound -> AuthorisableActionResult.NotFound()
     is AuthorisableActionResult.Unauthorised -> AuthorisableActionResult.Unauthorised()
     is AuthorisableActionResult.Success -> AuthorisableActionResult.Success(
-      offenderRisksDataSource.getPersonRisks(crn),
+      offenderRisksService.getPersonRisks(crn),
     )
   }
 

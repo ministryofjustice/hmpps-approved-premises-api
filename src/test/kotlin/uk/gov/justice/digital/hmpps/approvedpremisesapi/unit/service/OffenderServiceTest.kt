@@ -24,7 +24,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.config.ExcludedCategoryB
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.config.PrisonAdjudicationsConfigBindingModel
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.config.PrisonCaseNotesConfigBindingModel
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.datasource.OffenderDetailsDataSource
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.datasource.OffenderRisksDataSource
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.AdjudicationFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.AdjudicationsPageFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.AgencyFactory
@@ -47,6 +46,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.prisonsapi.InmateS
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.InternalServerErrorProblem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.AuthorisableActionResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.CasResult
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.OffenderRisksService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.OffenderService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.OffenderService.LimitedAccessStrategy
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.OffenderService.LimitedAccessStrategy.ReturnRestrictedIfLimitedAccess
@@ -64,7 +64,7 @@ class OffenderServiceTest {
   private val mockCaseNotesClient = mockk<CaseNotesClient>()
   private val mockApDeliusContextApiClient = mockk<ApDeliusContextApiClient>()
   private val mockOffenderDetailsDataSource = mockk<OffenderDetailsDataSource>()
-  private val mockOffenderRisksDataSource = mockk<OffenderRisksDataSource>()
+  private val mockOffenderRisksService = mockk<OffenderRisksService>()
   private val mockPersonTransformer = mockk<PersonTransformer>()
 
   private val prisonCaseNotesConfigBindingModel = PrisonCaseNotesConfigBindingModel().apply {
@@ -93,7 +93,7 @@ class OffenderServiceTest {
     mockCaseNotesClient,
     mockApDeliusContextApiClient,
     mockOffenderDetailsDataSource,
-    mockOffenderRisksDataSource,
+    mockOffenderRisksService,
     mockPersonTransformer,
     prisonCaseNotesConfigBindingModel,
     adjudicationsConfigBindingModel,
@@ -302,7 +302,7 @@ class OffenderServiceTest {
         UserOffenderAccess(userRestricted = false, userExcluded = false, restrictionMessage = null),
       )
 
-    every { mockOffenderRisksDataSource.getPersonRisks(crn) } returns expectedRisks
+    every { mockOffenderRisksService.getPersonRisks(crn) } returns expectedRisks
 
     val result = offenderService.getRiskByCrn(crn, deliusUsername)
     assertThat(result is AuthorisableActionResult.Success).isTrue
