@@ -71,7 +71,7 @@ class PersonRisksTest : InitialiseDatabasePerClassTestBase() {
 
   @Test
   fun `Getting risks for a CRN that does not exist returns 404`() {
-    givenAUser { userEntity, jwt ->
+    givenAUser { _, jwt ->
       val crn = "CRN123"
 
       webTestClient.get()
@@ -80,6 +80,25 @@ class PersonRisksTest : InitialiseDatabasePerClassTestBase() {
         .exchange()
         .expectStatus()
         .isNotFound
+    }
+  }
+
+  @Test
+  fun `Getting risks for an LAO without access returns 403`() {
+    givenAUser { _, jwt ->
+      givenAnOffender(
+        offenderDetailsConfigBlock = {
+          withCurrentRestriction(true)
+        },
+      ) { offenderDetails, _ ->
+
+        webTestClient.get()
+          .uri("/people/${offenderDetails.otherIds.crn}/risks")
+          .header("Authorization", "Bearer $jwt")
+          .exchange()
+          .expectStatus()
+          .isForbidden
+      }
     }
   }
 
