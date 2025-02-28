@@ -12,7 +12,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.UpdateCas2Appl
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas2ApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas2ApplicationSummaryEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.ForbiddenProblem
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.HttpAuthService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.NomisUserService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas2.Cas2ApplicationService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas2.Cas2OffenderService
@@ -23,12 +22,8 @@ import java.net.URI
 import java.util.UUID
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas2ApplicationSummary as ModelCas2ApplicationSummary
 
-@Service(
-  "uk.gov.justice.digital.hmpps.approvedpremisesapi.controller.cas2" +
-    ".ApplicationsController",
-)
+@Service
 class Cas2ApplicationsController(
-  private val httpAuthService: HttpAuthService,
   private val applicationService: Cas2ApplicationService,
   private val applicationsTransformer: ApplicationsTransformer,
   private val objectMapper: ObjectMapper,
@@ -62,16 +57,9 @@ class Cas2ApplicationsController(
 
   @Transactional
   override fun createCas2Application(body: NewApplication): ResponseEntity<Cas2Application> {
-    val nomisPrincipal = httpAuthService.getNomisPrincipalOrThrow()
     val user = userService.getUserForRequest()
-
     val personInfo = offenderService.getFullInfoForPersonOrThrow(body.crn)
-
-    val applicationResult = applicationService.createApplication(
-      body.crn,
-      user,
-      nomisPrincipal.token.tokenValue,
-    )
+    val applicationResult = applicationService.createApplication(personInfo, user)
 
     val application = extractEntityFromCasResult(applicationResult)
 
