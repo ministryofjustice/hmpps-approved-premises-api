@@ -18,7 +18,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.reference.Cas2Pers
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.reference.Cas2PersistedApplicationStatusFinder
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.seed.SeedLogger
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.seed.insertHdcDates
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas2.JsonSchemaService
+
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas2v2.Cas2v2ApplicationService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas2v2.Cas2v2StatusUpdateService
 import java.io.IOException
@@ -28,6 +28,7 @@ import java.time.OffsetDateTime
 import java.time.temporal.ChronoUnit
 import java.util.UUID
 import kotlin.random.Random
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.JsonSchemaService
 
 const val EARLIEST_CREATION = 45
 const val LATEST_CREATION = 15
