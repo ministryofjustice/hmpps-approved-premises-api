@@ -241,7 +241,7 @@ class SeedCas1PremisesFromSiteSurveyXlsxTest : SeedTestBase() {
     assertCharacteristics(
       createdPremise,
       listOf(
-        "isSpecialistPremisesElliotHouse",
+        "isMHAPElliottHouse",
         "hasLift",
       ),
     )
@@ -299,7 +299,7 @@ class SeedCas1PremisesFromSiteSurveyXlsxTest : SeedTestBase() {
     assertCharacteristics(
       createdPremise,
       listOf(
-        "isSpecialistPremisesStJosephs",
+        "isMHAPStJosephs",
         "isCatered",
       ),
     )

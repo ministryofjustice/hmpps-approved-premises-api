@@ -8910,12 +8910,12 @@ components:
         - isGroundFloor
         - isGroundFloorNrOffice
         - isIAP
+        - isMHAPElliottHouse
+        - isMHAPStJosephs
         - isPIPE
         - isRecoveryFocussed
         - isSemiSpecialistMentalHealth
         - isSingle
-        - isSpecialistPremisesElliotHouse
-        - isSpecialistPremisesStJosephs
         - isStepFreeDesignated
         - isSuitableForVulnerable
         - isSuitedForSexOffenders

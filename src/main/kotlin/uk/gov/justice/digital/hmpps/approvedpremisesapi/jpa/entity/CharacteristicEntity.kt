@@ -22,8 +22,8 @@ interface CharacteristicRepository : JpaRepository<CharacteristicEntity, UUID> {
     const val CAS1_PROPERTY_NAME_PREMISES_ACCEPTS_SEX_OFFENDERS = "acceptsSexOffenders"
     const val CAS1_PROPERTY_NAME_PREMISES_CATERED = "isCatered"
     const val CAS1_PROPERTY_NAME_PREMISES_SUITABLE_FOR_VULNERABLE = "isSuitableForVulnerable"
-    const val CAS1_PROPERTY_NAME_PREMISES_ELLIOT_HOUSE = "isSpecialistPremisesElliotHouse"
-    const val CAS1_PROPERTY_NAME_PREMISES_ST_JOSEPHS = "isSpecialistPremisesStJosephs"
+    const val CAS1_PROPERTY_NAME_PREMISES_ELLIOT_HOUSE = "isMHAPElliottHouse"
+    const val CAS1_PROPERTY_NAME_PREMISES_ST_JOSEPHS = "isMHAPStJosephs"
 
     const val CAS1_PROPERTY_NAME_ARSON_SUITABLE = "isArsonSuitable"
     const val CAS1_PROPERTY_NAME_ENSUITE = "hasEnSuite"
