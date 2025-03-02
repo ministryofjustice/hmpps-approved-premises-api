@@ -19,6 +19,7 @@ class SeedOnStartupConfig {
 class StartupScriptConfig {
   var cas1Enabled: Boolean = false
   var cas2Enabled: Boolean = false
+  var cas2v2Enabled: Boolean = false
   var noms: String = "A1234AI"
   var prisonCode: String = "LEI"
 }
