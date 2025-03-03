@@ -49,6 +49,7 @@ class Cas2ApplicationService(
   private val assessmentService: Cas2AssessmentService,
   private val notifyConfig: NotifyConfig,
   private val objectMapper: ObjectMapper,
+  private val prisonerLocationService: Cas2PrisonerLocationService,
   @Value("\${url-templates.frontend.cas2.application}") private val applicationUrlTemplate: String,
   @Value("\${url-templates.frontend.cas2.submitted-application-overview}") private val submittedApplicationUrlTemplate: String,
 ) {
@@ -265,6 +266,8 @@ class Cas2ApplicationService(
     createCas2ApplicationSubmittedEvent(application)
 
     createAssessment(application)
+
+    prisonerLocationService.createPrisonerLocation(application)
 
     sendEmailApplicationSubmitted(user, application)
 

@@ -31,6 +31,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas2Applicati
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas2ApplicationJsonSchemaEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas2ApplicationRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas2AssessmentRepository
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas2PrisonerLocationRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas2StatusUpdateDetailEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas2StatusUpdateDetailRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas2StatusUpdateRepository
@@ -60,6 +61,9 @@ class Cas2SubmissionTest(
 
   @Autowired
   lateinit var nomisUserTransformer: NomisUserTransformer
+
+  @Autowired
+  lateinit var prisonerLocationRepository: Cas2PrisonerLocationRepository
 
   val schema = """
        {
@@ -671,7 +675,7 @@ class Cas2SubmissionTest(
   inner class PostToSubmit {
 
     @Test
-    fun `Submit Cas2 application returns 200`() {
+    fun `Submit Cas2 application creates prisoner location and returns 200`() {
       val applicationId = UUID.fromString("22ceda56-98b2-411d-91cc-ace0ab8be872")
       val telephoneNumber = "123 456 7891"
 
@@ -733,6 +737,9 @@ class Cas2SubmissionTest(
             .expectStatus()
             .isOk
         }
+
+        val createdLocations = prisonerLocationRepository.findAllByStaffIdOrderByOccurredAtDesc(submittingUser.id).first()
+        Assertions.assertThat(createdLocations.staffId).isEqualTo(submittingUser.id)
 
         // verify that generated 'application.submitted' domain event links to the CAS2 domain
         val expectedFrontEndUrl = applicationUrlTemplate.replace("#id", applicationId.toString())

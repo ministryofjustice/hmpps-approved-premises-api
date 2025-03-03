@@ -6,7 +6,6 @@ import jakarta.persistence.JoinColumn
 import jakarta.persistence.ManyToOne
 import jakarta.persistence.Table
 import org.springframework.data.jpa.repository.JpaRepository
-import org.springframework.data.jpa.repository.Query
 import org.springframework.stereotype.Repository
 import java.time.OffsetDateTime
 import java.util.UUID
@@ -14,8 +13,7 @@ import java.util.UUID
 @Repository
 interface Cas2PrisonerLocationRepository : JpaRepository<Cas2PrisonerLocationEntity, UUID> {
 
-  @Query("SELECT p FROM Cas2PrisonerLocationEntity p WHERE p.application.id = :applicationId and p.endDate is NULL")
-  fun findPrisonerLocation(applicationId: UUID): Cas2PrisonerLocationEntity?
+  fun findAllByStaffIdOrderByOccurredAtDesc(staffId: UUID): List<Cas2PrisonerLocationEntity>
 }
 
 @Entity
