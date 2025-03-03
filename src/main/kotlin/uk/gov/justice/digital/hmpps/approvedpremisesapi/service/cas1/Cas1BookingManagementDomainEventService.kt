@@ -27,6 +27,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.DomainEvent
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PersonSummaryInfoResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.deliuscontext.CaseSummary
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.LaoStrategy
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.OffenderService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.UrlTemplate
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.toInstant
@@ -287,7 +288,7 @@ class Cas1SpaceBookingManagementDomainEventService(
         val offenderDetailsResult =
           offenderService.getPersonSummaryInfoResults(
             setOf(offenderCrn),
-            OffenderService.LimitedAccessStrategy.IgnoreLimitedAccess,
+            LaoStrategy.NeverRestricted,
           )
             .firstOrNull()
       ) {

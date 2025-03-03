@@ -20,7 +20,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.OffenderService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.PlacementApplicationService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.UserService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1WithdrawableService
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1LimitedAccessStrategy
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1LaoStrategy
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.PlacementApplicationTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.extractEntityFromCasResult
 import java.util.UUID
@@ -61,7 +61,7 @@ class Cas1PlacementApplicationsController(
     val result = placementApplicationService.getApplication(id)
     val placementApplication = extractEntityFromCasResult(result)
 
-    if (!offenderService.canAccessOffender(placementApplication.application.crn, user.cas1LimitedAccessStrategy())) {
+    if (!offenderService.canAccessOffender(placementApplication.application.crn, user.cas1LaoStrategy())) {
       throw ForbiddenProblem()
     }
 

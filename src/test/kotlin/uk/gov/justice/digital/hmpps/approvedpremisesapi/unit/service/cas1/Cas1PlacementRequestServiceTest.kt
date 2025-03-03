@@ -64,7 +64,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Withdrawabl
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.WithdrawalContext
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.WithdrawalTriggeredBySeedJob
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.WithdrawalTriggeredByUser
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1LimitedAccessStrategy
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1LaoStrategy
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.unit.util.assertThatCasResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.PageCriteria
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.PaginationConfig
@@ -217,7 +217,7 @@ class Cas1PlacementRequestServiceTest {
       val mockCancellations = mockk<List<CancellationEntity>>()
 
       every {
-        offenderService.canAccessOffender(application.crn, requestingUser.cas1LimitedAccessStrategy())
+        offenderService.canAccessOffender(application.crn, requestingUser.cas1LaoStrategy())
       } returns true
       every { placementRequestRepository.findByIdOrNull(placementRequest.id) } returns placementRequest
       every { cancellationRepository.getCancellationsForApplicationId(application.id) } returns mockCancellations
@@ -272,7 +272,7 @@ class Cas1PlacementRequestServiceTest {
       val mockCancellations = mockk<List<CancellationEntity>>()
 
       every {
-        offenderService.canAccessOffender(application.crn, requestingUser.cas1LimitedAccessStrategy())
+        offenderService.canAccessOffender(application.crn, requestingUser.cas1LaoStrategy())
       } returns true
       every { placementRequestRepository.findByIdOrNull(placementRequest.id) } returns placementRequest
       every { cancellationRepository.getCancellationsForApplicationId(application.id) } returns mockCancellations

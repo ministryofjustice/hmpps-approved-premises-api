@@ -26,11 +26,12 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserQualifica
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PersonInfoResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.BadRequestProblem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.AssessmentService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.LaoStrategy
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.OffenderService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.UserService
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1LimitedAccessStrategy
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1LaoStrategy
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas3.Cas3AssessmentService
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas3LimitedAccessStrategy
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas3LaoStrategy
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.AssessmentClarificationNoteTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.AssessmentReferralHistoryNoteTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.AssessmentTransformer
@@ -78,15 +79,15 @@ class AssessmentController(
         )
         val transformSummaries = when (sortBy) {
           AssessmentSortField.assessmentDueAt -> throw BadRequestProblem(errorDetail = "Sorting by due date is not supported for CAS3")
-          AssessmentSortField.personName -> transformDomainToApi(summaries, user.cas3LimitedAccessStrategy()).sortByName(resolvedSortDirection)
-          else -> transformDomainToApi(summaries, user.cas3LimitedAccessStrategy())
+          AssessmentSortField.personName -> transformDomainToApi(summaries, user.cas3LaoStrategy()).sortByName(resolvedSortDirection)
+          else -> transformDomainToApi(summaries, user.cas3LaoStrategy())
         }
         Pair(transformSummaries, metadata)
       }
 
       else -> {
         val (summaries, metadata) = assessmentService.getVisibleAssessmentSummariesForUserCAS1(user, domainSummaryStatuses, PageCriteria(resolvedSortBy, resolvedSortDirection, page, perPage))
-        Pair(transformDomainToApi(summaries, user.cas1LimitedAccessStrategy()), metadata)
+        Pair(transformDomainToApi(summaries, user.cas1LaoStrategy()), metadata)
       }
     }
 
@@ -97,10 +98,10 @@ class AssessmentController(
 
   private fun transformDomainToApi(
     summaries: List<DomainAssessmentSummary>,
-    limitedAccessStrategy: OffenderService.LimitedAccessStrategy,
+    laoStrategy: LaoStrategy,
   ): List<AssessmentSummary> {
     val crns = summaries.map { it.crn }
-    val personInfoResults = offenderService.getPersonInfoResults(crns.toSet(), limitedAccessStrategy)
+    val personInfoResults = offenderService.getPersonInfoResults(crns.toSet(), laoStrategy)
 
     return summaries.map {
       val crn = it.crn

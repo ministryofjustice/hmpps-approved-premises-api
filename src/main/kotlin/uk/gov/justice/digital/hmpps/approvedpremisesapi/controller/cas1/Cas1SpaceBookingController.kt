@@ -34,7 +34,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1SpaceBo
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1SpaceBookingService.SpaceBookingFilterCriteria
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1SpaceBookingService.UpdateSpaceBookingDetails
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1WithdrawableService
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1LimitedAccessStrategy
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1LaoStrategy
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.cas1.Cas1SpaceBookingTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.PageCriteria
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.ensureEntityFromCasResultIsSuccess
@@ -129,7 +129,7 @@ class Cas1SpaceBookingController(
     val user = userService.getUserForRequest()
     val offenderSummaries = offenderService.getPersonSummaryInfoResults(
       crns = searchResultsContainer.results.map { it.crn }.toSet(),
-      limitedAccessStrategy = user.cas1LimitedAccessStrategy(),
+      laoStrategy = user.cas1LaoStrategy(),
     )
 
     val summaries = searchResultsContainer.results.map {
@@ -333,7 +333,7 @@ class Cas1SpaceBookingController(
 
     val person = offenderService.getPersonInfoResult(
       booking.crn,
-      user.cas1LimitedAccessStrategy(),
+      user.cas1LaoStrategy(),
     )
 
     val otherBookingsInPremiseForCrn = spaceBookingService.getBookingsForPremisesAndCrn(

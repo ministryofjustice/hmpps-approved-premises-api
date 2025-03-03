@@ -16,6 +16,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas1.Cas1Deli
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PersonSummaryInfoResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.seed.SeedJob
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.EnvironmentService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.LaoStrategy
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.OffenderService
 import java.time.LocalDate
 import java.time.OffsetDateTime
@@ -81,7 +82,7 @@ class Cas1BackfillActiveSpaceBookingsCreatedInDelius(
 
     val crnToName = offenderService.getPersonSummaryInfoResultsInBatches(
       crns = referrals.map { it.crn }.toSet(),
-      limitedAccessStrategy = OffenderService.LimitedAccessStrategy.IgnoreLimitedAccess,
+      laoStrategy = LaoStrategy.NeverRestricted,
     ).associate { personSummaryInfoResult ->
       val crn = personSummaryInfoResult.crn
       when (personSummaryInfoResult) {
