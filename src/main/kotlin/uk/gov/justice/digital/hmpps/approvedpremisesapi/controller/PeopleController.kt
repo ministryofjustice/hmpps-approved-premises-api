@@ -31,10 +31,10 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.AuthorisableActi
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.ApplicationService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.FeatureFlagService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.HttpAuthService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.LaoStrategy
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.OASysService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.OffenderRisksService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.OffenderService
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.OffenderService.LimitedAccessStrategy
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.UserService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.AdjudicationTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.AlertTransformer
@@ -89,7 +89,7 @@ class PeopleController(
   override fun peopleCrnRisksGet(crn: String): ResponseEntity<PersonRisks> {
     val principal = httpAuthService.getDeliusPrincipalOrThrow()
 
-    when (offenderService.getPersonSummaryInfoResult(crn, LimitedAccessStrategy.ReturnRestrictedIfLimitedAccess(principal.name))) {
+    when (offenderService.getPersonSummaryInfoResult(crn, LaoStrategy.CheckUserAccess(principal.name))) {
       is PersonSummaryInfoResult.NotFound -> throw NotFoundProblem(crn, "Person")
       is PersonSummaryInfoResult.Success.Restricted -> throw ForbiddenProblem()
       is PersonSummaryInfoResult.Unknown -> throw NotFoundProblem(crn, "Person")

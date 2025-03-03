@@ -76,7 +76,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.WorkingDayServic
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas3.Cas3BookingService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas3.Cas3PremisesService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas3.GetBookingForPremisesResult
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas3LimitedAccessStrategy
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas3LaoStrategy
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.unit.util.assertThatCasResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomStringMultiCaseWithNumbers
 import java.time.Instant
@@ -295,7 +295,7 @@ class Cas3BookingServiceTest {
       every {
         mockOffenderService.getPersonSummaryInfoResults(
           setOf(fullPersonOffenderCaseSummary.crn, restrictedPersonSummaryInfo.crn),
-          user.cas3LimitedAccessStrategy(),
+          user.cas3LaoStrategy(),
         )
       } returns listOf(fullPersonSummaryInfo, restrictedPersonSummaryInfo)
       every { mockUserAccessService.userCanManagePremisesBookings(user, premises) } returns true

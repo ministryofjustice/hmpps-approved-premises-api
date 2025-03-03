@@ -15,10 +15,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.config.PrisonAdjudicatio
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.config.PrisonCaseNotesConfig
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.config.PrisonCaseNotesConfigBindingModel
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.datasource.OffenderDetailsDataSource
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserEntity
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserQualification
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas2v2.Cas2v2UserEntity
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas2v2.Cas2v2UserType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PersonInfoResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PersonSummaryInfoResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.community.OffenderDetailSummary
@@ -36,7 +32,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.prisonsapi.InmateD
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.InternalServerErrorProblem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.AuthorisableActionResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.CasResult
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.OffenderService.LimitedAccessStrategy
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.PersonTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.asCaseSummary
 import java.time.LocalDate
@@ -83,26 +78,6 @@ class OffenderService(
     )
   }
 
-  sealed interface LimitedAccessStrategy {
-    /**
-     * Even if the calling user has exclusions or restrictions for a given offender,
-     * return [PersonSummaryInfoResult.Success.Full] regardless.
-     *
-     * This strategy should be used with care, typically when the calling user
-     * has a specific qualification that indicates they can always view limited
-     * access offender information
-     */
-    data object IgnoreLimitedAccess : LimitedAccessStrategy
-
-    /**
-     * If the offender has restrictions or exclusions (i.e. limited access), retrieve
-     * the access information for the calling user. If the calling user has limited
-     * access to this offender (either restricted or excluded), return
-     * [PersonSummaryInfoResult.Success.Restricted]
-     */
-    data class ReturnRestrictedIfLimitedAccess(val deliusUsername: String) : LimitedAccessStrategy
-  }
-
   /**
    * The [getPersonSummaryInfoResults] function is limited to providing information for up to 500 CRNs
    *
@@ -113,7 +88,7 @@ class OffenderService(
    */
   fun getPersonSummaryInfoResultsInBatches(
     crns: Set<String>,
-    limitedAccessStrategy: LimitedAccessStrategy,
+    laoStrategy: LaoStrategy,
     batchSize: Int = 500,
   ): List<PersonSummaryInfoResult> {
     if (batchSize > MAX_OFFENDER_REQUEST_COUNT) {
@@ -123,7 +98,7 @@ class OffenderService(
     return ListUtils.partition(crns.toList(), batchSize)
       .stream()
       .map { crnSubset ->
-        getPersonSummaryInfoResults(crnSubset.toSet(), limitedAccessStrategy)
+        getPersonSummaryInfoResults(crnSubset.toSet(), laoStrategy)
       }
       .flatMap { it.stream() }
       .collect(Collectors.toList())
@@ -131,12 +106,12 @@ class OffenderService(
 
   fun getPersonSummaryInfoResult(
     crn: String,
-    limitedAccessStrategy: LimitedAccessStrategy,
-  ) = getPersonSummaryInfoResults(setOf(crn), limitedAccessStrategy).first()
+    laoStrategy: LaoStrategy,
+  ) = getPersonSummaryInfoResults(setOf(crn), laoStrategy).first()
 
   fun getPersonSummaryInfoResults(
     crns: Set<String>,
-    limitedAccessStrategy: LimitedAccessStrategy,
+    laoStrategy: LaoStrategy,
   ): List<PersonSummaryInfoResult> {
     if (crns.isEmpty()) {
       return emptyList()
@@ -165,10 +140,10 @@ class OffenderService(
     * [apDeliusContextApiClient.getSummariesForCrns(crnsList)] (although that shouldn't
     * happen often)
     */
-    val caseAccessByCrn = when (limitedAccessStrategy) {
-      is LimitedAccessStrategy.IgnoreLimitedAccess -> emptyMap()
-      is LimitedAccessStrategy.ReturnRestrictedIfLimitedAccess ->
-        when (val result = apDeliusContextApiClient.getUserAccessForCrns(limitedAccessStrategy.deliusUsername, crnsList)) {
+    val caseAccessByCrn = when (laoStrategy) {
+      is LaoStrategy.NeverRestricted -> emptyMap()
+      is LaoStrategy.CheckUserAccess ->
+        when (val result = apDeliusContextApiClient.getUserAccessForCrns(laoStrategy.deliusUsername, crnsList)) {
           is ClientResult.Success -> result.body
           is ClientResult.Failure -> result.throwException()
         }.access.associateBy(
@@ -182,7 +157,7 @@ class OffenderService(
         crn,
         caseSummariesByCrn[crn],
         caseAccessByCrn[crn],
-        limitedAccessStrategy,
+        laoStrategy,
       )
     }
   }
@@ -191,14 +166,14 @@ class OffenderService(
     crn: String,
     caseSummary: CaseSummary?,
     caseAccess: CaseAccess?,
-    limitedAccessStrategy: LimitedAccessStrategy,
+    laoStrategy: LaoStrategy,
   ): PersonSummaryInfoResult {
     if (caseSummary == null) {
       log.debug("Could not find case summary for '$crn'. Returning not found")
       return PersonSummaryInfoResult.NotFound(crn)
     }
 
-    if (!caseSummary.hasLimitedAccess() || limitedAccessStrategy is LimitedAccessStrategy.IgnoreLimitedAccess) {
+    if (!caseSummary.hasLimitedAccess() || laoStrategy is LaoStrategy.NeverRestricted) {
       log.debug("No restrictions apply, or the caller has indicated to ignore restrictions for '$crn'. Returning full details")
       return PersonSummaryInfoResult.Success.Full(crn, caseSummary)
     }
@@ -345,11 +320,11 @@ class OffenderService(
 
   fun canAccessOffender(
     crn: String,
-    limitedAccessStrategy: LimitedAccessStrategy,
-  ) = when (limitedAccessStrategy) {
-    is LimitedAccessStrategy.IgnoreLimitedAccess -> true
-    is LimitedAccessStrategy.ReturnRestrictedIfLimitedAccess -> canAccessOffender(
-      username = limitedAccessStrategy.deliusUsername,
+    laoStrategy: LaoStrategy,
+  ) = when (laoStrategy) {
+    is LaoStrategy.NeverRestricted -> true
+    is LaoStrategy.CheckUserAccess -> canAccessOffender(
+      username = laoStrategy.deliusUsername,
       crn = crn,
     )
   }
@@ -544,21 +519,21 @@ class OffenderService(
 
   fun getPersonInfoResult(
     crn: String,
-    limitedAccessStrategy: LimitedAccessStrategy,
-  ) = getPersonInfoResults(setOf(crn), limitedAccessStrategy).first()
+    laoStrategy: LaoStrategy,
+  ) = getPersonInfoResults(setOf(crn), laoStrategy).first()
 
   fun getPersonInfoResults(
     crns: Set<String>,
-    limitedAccessStrategy: LimitedAccessStrategy,
+    laoStrategy: LaoStrategy,
   ) = getPersonInfoResults(
     crns = crns,
-    deliusUsername = when (limitedAccessStrategy) {
-      is LimitedAccessStrategy.IgnoreLimitedAccess -> null
-      is LimitedAccessStrategy.ReturnRestrictedIfLimitedAccess -> limitedAccessStrategy.deliusUsername
+    deliusUsername = when (laoStrategy) {
+      is LaoStrategy.NeverRestricted -> null
+      is LaoStrategy.CheckUserAccess -> laoStrategy.deliusUsername
     },
-    ignoreLaoRestrictions = when (limitedAccessStrategy) {
-      is LimitedAccessStrategy.IgnoreLimitedAccess -> true
-      is LimitedAccessStrategy.ReturnRestrictedIfLimitedAccess -> false
+    ignoreLaoRestrictions = when (laoStrategy) {
+      is LaoStrategy.NeverRestricted -> true
+      is LaoStrategy.CheckUserAccess -> false
     },
   )
 
@@ -606,23 +581,4 @@ class OffenderService(
       }
     }
   }
-}
-
-/**
- * If the user has the `LAO` qualification, they can always view LAO offenders
- *
- * Note that there are some cases in CAS1 where this strategy should not be used
- * (e.g. when creating applications the LAO qualification should be ignored)
- */
-fun UserEntity.cas1LimitedAccessStrategy() = if (this.hasQualification(UserQualification.LAO)) {
-  LimitedAccessStrategy.IgnoreLimitedAccess
-} else {
-  LimitedAccessStrategy.ReturnRestrictedIfLimitedAccess(this.deliusUsername)
-}
-
-fun UserEntity.cas3LimitedAccessStrategy() = LimitedAccessStrategy.ReturnRestrictedIfLimitedAccess(this.deliusUsername)
-
-fun Cas2v2UserEntity.limitedAccessStrategy() = when (userType) {
-  Cas2v2UserType.DELIUS -> LimitedAccessStrategy.ReturnRestrictedIfLimitedAccess(this.username)
-  else -> error("Can't provide strategy for users of type $userType")
 }

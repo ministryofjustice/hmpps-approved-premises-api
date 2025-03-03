@@ -18,8 +18,8 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.NotFoundProblem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.AuthorisableActionResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.OASysService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas2.ProbationOffenderSearchResult
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas2DeliusUserLaoStrategy
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas2v2.Cas2v2UserService
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.limitedAccessStrategy
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.OASysSectionsTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.PersonTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.RisksTransformer
@@ -40,7 +40,7 @@ class Cas2v2PeopleController(
 
   override fun searchByCrnGet(crn: String): ResponseEntity<Person> {
     val deliusUser = cas2v2UserService.getUserForRequest()
-    val personInfo = deliusOffenderService.getPersonInfoResult(crn, deliusUser.limitedAccessStrategy())
+    val personInfo = deliusOffenderService.getPersonInfoResult(crn, deliusUser.cas2DeliusUserLaoStrategy())
 
     when (personInfo) {
       is PersonInfoResult.NotFound -> throw NotFoundProblem(crn, "Offender")

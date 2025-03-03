@@ -16,7 +16,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.CharacteristicSe
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.OffenderService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.UserAccessService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.UserService
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1LimitedAccessStrategy
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1LaoStrategy
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.PersonTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.cas1.Cas1SpaceBookingDaySummaryTransformer
 import java.time.LocalDate
@@ -86,7 +86,7 @@ class Cas1SpaceBookingDaySummaryService(
     val user = userService.getUserForRequest()
     return offenderService.getPersonSummaryInfoResults(
       crns = spaceBookings.map { it.crn }.toSet(),
-      limitedAccessStrategy = user.cas1LimitedAccessStrategy(),
+      laoStrategy = user.cas1LaoStrategy(),
     )
   }
 }

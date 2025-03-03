@@ -124,7 +124,7 @@ class UserAccessService(
   private fun userCanViewApprovedPremisesApplicationCreatedBySomeoneElse(
     user: UserEntity,
     application: ApprovedPremisesApplicationEntity,
-  ) = offenderService.canAccessOffender(application.crn, user.cas1LimitedAccessStrategy())
+  ) = offenderService.canAccessOffender(application.crn, user.cas1LaoStrategy())
 
   private fun userCanViewTemporaryAccommodationApplicationCreatedBySomeoneElse(
     user: UserEntity,

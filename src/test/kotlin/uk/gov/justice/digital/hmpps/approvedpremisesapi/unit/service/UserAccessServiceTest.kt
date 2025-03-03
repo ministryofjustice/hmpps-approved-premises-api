@@ -34,8 +34,8 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRole.CAS1
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRole.CAS1_WORKFLOW_MANAGER
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRole.CAS3_REFERRER
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRole.CAS3_REPORTER
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.LaoStrategy
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.OffenderService
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.OffenderService.LimitedAccessStrategy
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.RequestContextService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.UserAccessService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.UserService
@@ -804,7 +804,7 @@ class UserAccessServiceTest {
         .produce(),
     )
 
-    every { offenderService.canAccessOffender(application.crn, LimitedAccessStrategy.ReturnRestrictedIfLimitedAccess(user.deliusUsername)) } returns true
+    every { offenderService.canAccessOffender(application.crn, LaoStrategy.CheckUserAccess(user.deliusUsername)) } returns true
 
     assertThat(userAccessService.userCanViewApplication(user, application)).isTrue
   }
@@ -828,7 +828,7 @@ class UserAccessServiceTest {
         .produce(),
     )
 
-    every { offenderService.canAccessOffender(application.crn, LimitedAccessStrategy.ReturnRestrictedIfLimitedAccess(user.deliusUsername)) } returns false
+    every { offenderService.canAccessOffender(application.crn, LaoStrategy.CheckUserAccess(user.deliusUsername)) } returns false
 
     assertThat(userAccessService.userCanViewApplication(user, application)).isFalse
   }

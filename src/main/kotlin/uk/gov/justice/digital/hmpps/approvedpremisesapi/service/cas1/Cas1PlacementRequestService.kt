@@ -32,7 +32,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.ApplicationServi
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.OffenderService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.TaskDeadlineService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.UserAccessService
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1LimitedAccessStrategy
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1LaoStrategy
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.PageCriteria
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.getMetadata
 import java.time.Clock
@@ -133,7 +133,7 @@ class PlacementRequestService(
     val placementRequest = placementRequestRepository.findByIdOrNull(id)
       ?: return CasResult.NotFound("PlacementRequest", id.toString())
 
-    if (!offenderService.canAccessOffender(placementRequest.application.crn, user.cas1LimitedAccessStrategy())) {
+    if (!offenderService.canAccessOffender(placementRequest.application.crn, user.cas1LaoStrategy())) {
       return CasResult.Unauthorised()
     }
 

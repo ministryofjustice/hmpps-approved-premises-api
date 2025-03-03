@@ -13,7 +13,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.ApplicationServi
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.OffenderService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.SentryService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.UserService
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1LimitedAccessStrategy
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1LaoStrategy
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.cas1.BoxedApplication
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.cas1.Cas1ApplicationTimelineModel
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.cas1.Cas1PersonalTimelineTransformer
@@ -30,7 +30,7 @@ class Cas1PeopleController(
 
   override fun getPeopleApplicationsTimeline(crn: String): ResponseEntity<Cas1PersonalTimeline> {
     val user = userService.getUserForRequest()
-    val personInfo = offenderService.getPersonInfoResult(crn, user.cas1LimitedAccessStrategy())
+    val personInfo = offenderService.getPersonInfoResult(crn, user.cas1LaoStrategy())
     return ResponseEntity.ok(transformPersonInfo(personInfo, crn))
   }
 

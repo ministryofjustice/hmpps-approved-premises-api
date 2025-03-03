@@ -23,8 +23,19 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.ForbiddenProblem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.NotFoundProblem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.AuthorisableActionResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.CasResult
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.OffenderService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas2.ProbationOffenderSearchResult
 import java.util.stream.Collectors
 
+/**
+ * This class duplicates functionality from  [OffenderService], noting that there
+ * is a key difference for how Limited Access Offenders are handled
+ *
+ * For information on this see the documentation on [OffenderService.LaoStrategy]
+ *
+ * In time we should consider merging the two services by introducing a CAS2 specific
+ * [LaoStrategy] that considers handling for NOMIS, External and Delius users
+ */
 @Service
 @Suppress(
   "ReturnCount",

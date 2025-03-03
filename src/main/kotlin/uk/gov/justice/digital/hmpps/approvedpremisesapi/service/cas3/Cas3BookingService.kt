@@ -43,7 +43,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.AssessmentServic
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.OffenderService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.UserAccessService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.WorkingDayService
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas3LimitedAccessStrategy
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas3LaoStrategy
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.extractEntityFromCasResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.toLocalDateTime
 import java.time.LocalDate
@@ -470,7 +470,7 @@ class Cas3BookingService(
 
     val offenderSummaries = offenderService.getPersonSummaryInfoResults(
       crns = futureBookings.map { it.crn }.toSet(),
-      limitedAccessStrategy = user.cas3LimitedAccessStrategy(),
+      laoStrategy = user.cas3LaoStrategy(),
     )
 
     return CasResult.Success(

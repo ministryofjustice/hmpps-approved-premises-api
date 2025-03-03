@@ -34,7 +34,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.UserService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1WithdrawableService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.PlacementRequestService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.PlacementRequestService.PlacementRequestAndCancellations
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1LimitedAccessStrategy
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1LaoStrategy
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.BookingNotMadeTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.NewPlacementRequestBookingConfirmationTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.PlacementRequestDetailTransformer
@@ -190,7 +190,7 @@ class PlacementRequestsController(
   ): PlacementRequestDetail {
     val personInfo = offenderService.getPersonInfoResult(
       placementRequestAndCancellations.placementRequest.application.crn,
-      forUser.cas1LimitedAccessStrategy(),
+      forUser.cas1LaoStrategy(),
     )
 
     return placementRequestDetailTransformer.transformJpaToApi(
@@ -201,7 +201,7 @@ class PlacementRequestsController(
   }
 
   private fun mapPersonDetailOntoPlacementRequests(placementRequests: List<PlacementRequestEntity>, user: UserEntity): List<PlacementRequest> = placementRequests.map {
-    val personInfo = offenderService.getPersonInfoResult(it.application.crn, user.cas1LimitedAccessStrategy())
+    val personInfo = offenderService.getPersonInfoResult(it.application.crn, user.cas1LaoStrategy())
 
     placementRequestTransformer.transformJpaToApi(it, personInfo)
   }

@@ -38,7 +38,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.repository.TransitionalA
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.OffenderService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.UserService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.WorkingDayService
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas3LimitedAccessStrategy
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas3LaoStrategy
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.BookingTransformer
 import java.io.OutputStream
 
@@ -273,7 +273,7 @@ class Cas3ReportService(
 
     return offenderService.getPersonSummaryInfoResultsInBatches(
       crns = crns,
-      limitedAccessStrategy = user.cas3LimitedAccessStrategy(),
+      laoStrategy = user.cas3LaoStrategy(),
       batchSize = numberOfCrn,
     ).associate {
       when (it) {
@@ -301,7 +301,7 @@ class Cas3ReportService(
 
     return offenderService.getPersonSummaryInfoResultsInBatches(
       crns = crns.toSet(),
-      limitedAccessStrategy = user.cas3LimitedAccessStrategy(),
+      laoStrategy = user.cas3LaoStrategy(),
       batchSize = numberOfCrn,
     ).associateBy { it.crn }
   }

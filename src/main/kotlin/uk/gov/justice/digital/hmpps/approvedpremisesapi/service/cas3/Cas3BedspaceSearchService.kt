@@ -18,7 +18,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.CasResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.CharacteristicService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.OffenderService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.WorkingDayService
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas3LimitedAccessStrategy
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas3LaoStrategy
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.containsNone
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.countOverlappingDays
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.getNameFromPersonSummaryInfoResult
@@ -95,7 +95,7 @@ class Cas3BedspaceSearchService(
     val crns = overlappedBookings.map { it.crn }.distinct().toSet()
     val offenderSummaries = offenderService.getPersonSummaryInfoResults(
       crns = crns.toSet(),
-      limitedAccessStrategy = user.cas3LimitedAccessStrategy(),
+      laoStrategy = user.cas3LaoStrategy(),
     )
 
     val groupedOverlappedBookings = overlappedBookings
