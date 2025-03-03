@@ -25,7 +25,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.Cas2ApplicationE
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.Cas2ApplicationJsonSchemaEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.InmateDetailFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.NomisUserEntityFactory
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.OffenderDetailsSummaryFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApplicationSummaryRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas2ApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas2ApplicationJsonSchemaEntity
@@ -33,9 +32,9 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas2Applicati
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas2ApplicationSummaryEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas2LockableApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas2LockableApplicationRepository
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PersonInfoResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.prisonsapi.AssignedLivingUnit
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.AuthorisableActionResult
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.CasResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.EmailNotificationService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas2.Cas2AssessmentService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas2.Cas2DomainEventService
@@ -365,45 +364,17 @@ class Cas2ApplicationServiceTest {
   @Nested
   inner class CreateApplication {
     @Test
-    fun `returns FieldValidationError when Offender is not found`() {
-      val crn = "CRN345"
-      val username = "SOMEPERSON"
-
-      every { mockOffenderService.getOffenderByCrn(crn) } returns CasResult.NotFound("Offender", crn)
-
-      val user = userWithUsername(username)
-
-      val result = applicationService.createApplication(crn, user, "jwt")
-
-      assertThatCasResult(result).isFieldValidationError().hasMessage("$.crn", "doesNotExist")
-    }
-
-    @Test
-    fun `returns FieldValidationError when user is not authorised to view CRN`() {
-      val crn = "CRN345"
-      val username = "SOMEPERSON"
-
-      every { mockOffenderService.getOffenderByCrn(crn) } returns CasResult.Unauthorised()
-
-      val user = userWithUsername(username)
-
-      val result = applicationService.createApplication(crn, user, "jwt")
-
-      assertThatCasResult(result).isFieldValidationError().hasMessage("$.crn", "userPermission")
-    }
-
-    @Test
     fun `returns Success with created Application`() {
       val crn = "CRN345"
       val username = "SOMEPERSON"
+      val personInfoResult = mockk<PersonInfoResult.Success.Full>()
+
+      every { personInfoResult.crn } returns crn
+      every { personInfoResult.offenderDetailSummary.otherIds.nomsNumber } returns "NOMS123"
 
       val schema = Cas2ApplicationJsonSchemaEntityFactory().produce()
 
       val user = userWithUsername(username)
-
-      every { mockOffenderService.getOffenderByCrn(crn) } returns CasResult.Success(
-        OffenderDetailsSummaryFactory().produce(),
-      )
 
       every { mockJsonSchemaService.getNewestSchema(Cas2ApplicationJsonSchemaEntity::class.java) } returns schema
       every { mockApplicationRepository.save(any()) } answers {
@@ -411,7 +382,7 @@ class Cas2ApplicationServiceTest {
           Cas2ApplicationEntity
       }
 
-      val result = applicationService.createApplication(crn, user, "jwt")
+      val result = applicationService.createApplication(personInfoResult, user)
 
       assertThatCasResult(result).isSuccess().with {
         assertThat(it.crn).isEqualTo(crn)

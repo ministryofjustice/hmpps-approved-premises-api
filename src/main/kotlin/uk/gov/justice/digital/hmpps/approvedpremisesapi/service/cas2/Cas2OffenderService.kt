@@ -23,7 +23,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.ForbiddenProblem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.NotFoundProblem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.AuthorisableActionResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.CasResult
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas2.ProbationOffenderSearchResult
 import java.util.stream.Collectors
 
 @Service
@@ -40,7 +39,10 @@ class Cas2OffenderService(
 
   private val log = LoggerFactory.getLogger(this::class.java)
 
-  fun getPersonByNomsNumberAndActiveCaseLoadId(nomsNumber: String, activeCaseLoadId: String): ProbationOffenderSearchResult {
+  fun getPersonByNomsNumberAndActiveCaseLoadId(
+    nomsNumber: String,
+    activeCaseLoadId: String,
+  ): ProbationOffenderSearchResult {
     fun logFailedResponse(probationResponse: ClientResult.Failure<List<ProbationOffenderDetail>>) = log.warn("Could not get inmate details for $nomsNumber", probationResponse.toException())
 
     val probationResponse = probationOffenderSearchApiClient.searchOffenderByNomsNumber(nomsNumber)
@@ -49,7 +51,11 @@ class Cas2OffenderService(
       is ClientResult.Success -> probationResponse.body
       is ClientResult.Failure.StatusCode -> when (probationResponse.status) {
         HttpStatus.NOT_FOUND -> return ProbationOffenderSearchResult.NotFound(nomsNumber)
-        HttpStatus.FORBIDDEN -> return ProbationOffenderSearchResult.Forbidden(nomsNumber, probationResponse.toException())
+        HttpStatus.FORBIDDEN -> return ProbationOffenderSearchResult.Forbidden(
+          nomsNumber,
+          probationResponse.toException(),
+        )
+
         else -> {
           logFailedResponse(probationResponse)
           return ProbationOffenderSearchResult.Unknown(nomsNumber, probationResponse.toException())
@@ -149,9 +155,7 @@ class Cas2OffenderService(
   }
 
   private fun getInfoForPerson(crn: String): PersonInfoResult {
-    var offenderResponse = offenderDetailsDataSource.getOffenderDetailSummary(crn)
-
-    val offender = when (offenderResponse) {
+    val offender = when (val offenderResponse = offenderDetailsDataSource.getOffenderDetailSummary(crn)) {
       is ClientResult.Success -> offenderResponse.body
 
       is ClientResult.Failure.StatusCode -> if (offenderResponse.status.value() == HttpStatus.NOT_FOUND.value()) {
@@ -170,6 +174,10 @@ class Cas2OffenderService(
       }
     }
 
+    if (offender.currentExclusion || offender.currentRestriction) {
+      return PersonInfoResult.Success.Restricted(crn, offender.otherIds.nomsNumber)
+    }
+
     return PersonInfoResult.Success.Full(
       crn = crn,
       offenderDetailSummary = offender,
@@ -181,7 +189,7 @@ class Cas2OffenderService(
     val personInfo = getInfoForPerson(crn)
     when (personInfo) {
       is PersonInfoResult.NotFound, is PersonInfoResult.Unknown -> throw NotFoundProblem(crn, "Offender")
-      is PersonInfoResult.Success.Restricted -> throw ForbiddenProblem()
+      is PersonInfoResult.Success.Restricted -> throw ForbiddenProblem("Offender $crn is Restricted.")
       is PersonInfoResult.Success.Full -> return personInfo
     }
   }
@@ -195,8 +203,15 @@ class Cas2OffenderService(
     }
 
     fun logFailedResponse(inmateDetailResponse: ClientResult.Failure<InmateDetail>) = when (hasCacheTimedOut) {
-      true -> log.warn("Could not get inmate details for $crn after cache timed out", inmateDetailResponse.toException())
-      false -> log.warn("Could not get inmate details for $crn as an unsuccessful response was cached", inmateDetailResponse.toException())
+      true -> log.warn(
+        "Could not get inmate details for $crn after cache timed out",
+        inmateDetailResponse.toException(),
+      )
+
+      false -> log.warn(
+        "Could not get inmate details for $crn as an unsuccessful response was cached",
+        inmateDetailResponse.toException(),
+      )
     }
 
     val inmateDetail = when (inmateDetailResponse) {
@@ -211,11 +226,13 @@ class Cas2OffenderService(
           logFailedResponse(inmateDetailResponse)
           return AuthorisableActionResult.Unauthorised()
         }
+
         else -> {
           logFailedResponse(inmateDetailResponse)
           null
         }
       }
+
       is ClientResult.Failure -> {
         logFailedResponse(inmateDetailResponse)
         null
