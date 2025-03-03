@@ -82,15 +82,16 @@ paths:
           $ref: '_shared.yml#/components/responses/500Response'
   /spaces/search:
     post:
+      deprecated: true
       tags:
         - space searches
-      summary: Search for accommodation "spaces" which are available and match the given requirements
+      summary: Use /cas1/premises/search
       operationId: spaceSearch
       requestBody:
         content:
           'application/json':
             schema:
-              $ref: 'cas1-schemas.yml#/components/schemas/Cas1SpaceSearchParameters'
+              $ref: 'cas1-schemas.yml#/components/schemas/Cas1PremisesSearchParameters'
         required: true
       responses:
         200:
@@ -98,7 +99,7 @@ paths:
           content:
             'application/json':
               schema:
-                $ref: 'cas1-schemas.yml#/components/schemas/Cas1SpaceSearchResults'
+                $ref: 'cas1-schemas.yml#/components/schemas/Cas1PremisesSearchResults'
         400:
           description: invalid params
           content:
@@ -449,6 +450,37 @@ paths:
               $ref: '_shared.yml#/components/headers/X-Pagination-TotalResults'
             X-Pagination-PageSize:
               $ref: '_shared.yml#/components/headers/X-Pagination-TotalResults'
+        401:
+          $ref: '_shared.yml#/components/responses/401Response'
+        403:
+          $ref: '_shared.yml#/components/responses/403Response'
+        500:
+          $ref: '_shared.yml#/components/responses/500Response'
+  /premises/search:
+    post:
+      tags:
+        - premises
+      summary: Search for premises
+      operationId: "premisesSearch"
+      requestBody:
+        content:
+          'application/json':
+            schema:
+              $ref: 'cas1-schemas.yml#/components/schemas/Cas1PremisesSearchParameters'
+        required: true
+      responses:
+        200:
+          description: successful operation
+          content:
+            'application/json':
+              schema:
+                $ref: 'cas1-schemas.yml#/components/schemas/Cas1PremisesSearchResults'
+        400:
+          description: invalid params
+          content:
+            'application/problem+json':
+              schema:
+                $ref: '_shared.yml#/components/schemas/ValidationError'
         401:
           $ref: '_shared.yml#/components/responses/401Response'
         403:

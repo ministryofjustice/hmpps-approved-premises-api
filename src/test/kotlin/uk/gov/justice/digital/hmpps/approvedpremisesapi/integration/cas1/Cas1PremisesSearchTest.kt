@@ -7,11 +7,11 @@ import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.EnumSource
 import org.springframework.beans.factory.annotation.Autowired
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApType
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1PremisesSearchParameters
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1PremisesSearchResult
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1PremisesSearchResults
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1SpaceCharacteristic
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1SpaceSearchParameters
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1SpaceSearchRequirements
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1SpaceSearchResult
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1SpaceSearchResults
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.InitialiseDatabasePerClassTestBase
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAProbationRegion
@@ -25,14 +25,14 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Characteristi
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.CharacteristicRepository.Constants.CAS1_PROPERTY_NAME_PREMISES_RECOVERY_FOCUSSED
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.CharacteristicRepository.Constants.CAS1_PROPERTY_NAME_PREMISES_SEMI_SPECIALIST_MENTAL_HEALTH
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRole
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.cas1.Cas1SpaceSearchResultsTransformer
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.cas1.Cas1PremisesSearchResultsTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomInt
 import java.time.LocalDate
 import java.util.UUID
 
-class Cas1SpaceSearchTest : InitialiseDatabasePerClassTestBase() {
+class Cas1PremisesSearchTest : InitialiseDatabasePerClassTestBase() {
   @Autowired
-  lateinit var transformer: Cas1SpaceSearchResultsTransformer
+  lateinit var transformer: Cas1PremisesSearchResultsTransformer
 
   @BeforeEach
   fun setup() {
@@ -44,7 +44,7 @@ class Cas1SpaceSearchTest : InitialiseDatabasePerClassTestBase() {
   @Test
   fun `Search for Spaces without JWT returns 401`() {
     webTestClient.post()
-      .uri("/cas1/spaces/search")
+      .uri("/cas1/premises/search")
       .exchange()
       .expectStatus()
       .isUnauthorized
@@ -53,7 +53,7 @@ class Cas1SpaceSearchTest : InitialiseDatabasePerClassTestBase() {
   @Test
   fun `Requires CAS1_SPACE_BOOKING_CREATE permission`() {
     givenAUser(roles = listOf(UserRole.CAS1_FUTURE_MANAGER)) { _, jwt ->
-      val searchParameters = Cas1SpaceSearchParameters(
+      val searchParameters = Cas1PremisesSearchParameters(
         applicationId = UUID.randomUUID(),
         startDate = LocalDate.now(),
         durationInDays = 14,
@@ -66,7 +66,7 @@ class Cas1SpaceSearchTest : InitialiseDatabasePerClassTestBase() {
       )
 
       webTestClient.post()
-        .uri("/cas1/spaces/search")
+        .uri("/cas1/premises/search")
         .header("Authorization", "Bearer $jwt")
         .bodyValue(searchParameters)
         .exchange()
@@ -132,7 +132,7 @@ class Cas1SpaceSearchTest : InitialiseDatabasePerClassTestBase() {
         withSupportsSpaceBookings(false)
       }
 
-      val searchParameters = Cas1SpaceSearchParameters(
+      val searchParameters = Cas1PremisesSearchParameters(
         applicationId = application.id,
         startDate = LocalDate.now(),
         durationInDays = 14,
@@ -145,13 +145,13 @@ class Cas1SpaceSearchTest : InitialiseDatabasePerClassTestBase() {
       )
 
       val response = webTestClient.post()
-        .uri("/cas1/spaces/search")
+        .uri("/cas1/premises/search")
         .header("Authorization", "Bearer $jwt")
         .bodyValue(searchParameters)
         .exchange()
         .expectStatus()
         .isOk
-        .returnResult(Cas1SpaceSearchResults::class.java)
+        .returnResult(Cas1PremisesSearchResults::class.java)
 
       val results = response.responseBody.blockFirst()!!
 
@@ -209,7 +209,7 @@ class Cas1SpaceSearchTest : InitialiseDatabasePerClassTestBase() {
         withGender(ApprovedPremisesGender.entries.first { it != gender })
       }
 
-      val searchParameters = Cas1SpaceSearchParameters(
+      val searchParameters = Cas1PremisesSearchParameters(
         applicationId = application.id,
         startDate = LocalDate.now(),
         durationInDays = 14,
@@ -222,13 +222,13 @@ class Cas1SpaceSearchTest : InitialiseDatabasePerClassTestBase() {
       )
 
       val response = webTestClient.post()
-        .uri("/cas1/spaces/search")
+        .uri("/cas1/premises/search")
         .header("Authorization", "Bearer $jwt")
         .bodyValue(searchParameters)
         .exchange()
         .expectStatus()
         .isOk
-        .returnResult(Cas1SpaceSearchResults::class.java)
+        .returnResult(Cas1PremisesSearchResults::class.java)
 
       val results = response.responseBody.blockFirst()!!
 
@@ -276,7 +276,7 @@ class Cas1SpaceSearchTest : InitialiseDatabasePerClassTestBase() {
         withSupportsSpaceBookings(true)
       }
 
-      val searchParameters = Cas1SpaceSearchParameters(
+      val searchParameters = Cas1PremisesSearchParameters(
         applicationId = application.id,
         startDate = LocalDate.now(),
         durationInDays = 14,
@@ -290,13 +290,13 @@ class Cas1SpaceSearchTest : InitialiseDatabasePerClassTestBase() {
       )
 
       val response = webTestClient.post()
-        .uri("/cas1/spaces/search")
+        .uri("/cas1/premises/search")
         .header("Authorization", "Bearer $jwt")
         .bodyValue(searchParameters)
         .exchange()
         .expectStatus()
         .isOk
-        .returnResult(Cas1SpaceSearchResults::class.java)
+        .returnResult(Cas1PremisesSearchResults::class.java)
 
       val results = response.responseBody.blockFirst()!!
 
@@ -338,7 +338,7 @@ class Cas1SpaceSearchTest : InitialiseDatabasePerClassTestBase() {
         }
       }
 
-      val searchParameters = Cas1SpaceSearchParameters(
+      val searchParameters = Cas1PremisesSearchParameters(
         applicationId = application.id,
         startDate = LocalDate.now(),
         durationInDays = 14,
@@ -352,13 +352,13 @@ class Cas1SpaceSearchTest : InitialiseDatabasePerClassTestBase() {
       )
 
       val response = webTestClient.post()
-        .uri("/cas1/spaces/search")
+        .uri("/cas1/premises/search")
         .header("Authorization", "Bearer $jwt")
         .bodyValue(searchParameters)
         .exchange()
         .expectStatus()
         .isOk
-        .returnResult(Cas1SpaceSearchResults::class.java)
+        .returnResult(Cas1PremisesSearchResults::class.java)
 
       val results = response.responseBody.blockFirst()!!
 
@@ -403,7 +403,7 @@ class Cas1SpaceSearchTest : InitialiseDatabasePerClassTestBase() {
         withSupportsSpaceBookings(true)
       }
 
-      val searchParameters = Cas1SpaceSearchParameters(
+      val searchParameters = Cas1PremisesSearchParameters(
         applicationId = application.id,
         startDate = LocalDate.now(),
         durationInDays = 14,
@@ -417,13 +417,13 @@ class Cas1SpaceSearchTest : InitialiseDatabasePerClassTestBase() {
       )
 
       val response = webTestClient.post()
-        .uri("/cas1/spaces/search")
+        .uri("/cas1/premises/search")
         .header("Authorization", "Bearer $jwt")
         .bodyValue(searchParameters)
         .exchange()
         .expectStatus()
         .isOk
-        .returnResult(Cas1SpaceSearchResults::class.java)
+        .returnResult(Cas1PremisesSearchResults::class.java)
 
       val results = response.responseBody.blockFirst()!!
 
@@ -475,7 +475,7 @@ class Cas1SpaceSearchTest : InitialiseDatabasePerClassTestBase() {
       createAp(getCharacteristics(CAS1_PROPERTY_NAME_PREMISES_RECOVERY_FOCUSSED))
       createAp(emptyList())
 
-      val searchParameters = Cas1SpaceSearchParameters(
+      val searchParameters = Cas1PremisesSearchParameters(
         applicationId = application.id,
         startDate = LocalDate.now(),
         durationInDays = 14,
@@ -489,13 +489,13 @@ class Cas1SpaceSearchTest : InitialiseDatabasePerClassTestBase() {
       )
 
       val response = webTestClient.post()
-        .uri("/cas1/spaces/search")
+        .uri("/cas1/premises/search")
         .header("Authorization", "Bearer $jwt")
         .bodyValue(searchParameters)
         .exchange()
         .expectStatus()
         .isOk
-        .returnResult(Cas1SpaceSearchResults::class.java)
+        .returnResult(Cas1PremisesSearchResults::class.java)
 
       val results = response.responseBody.blockFirst()!!
 
@@ -507,7 +507,7 @@ class Cas1SpaceSearchTest : InitialiseDatabasePerClassTestBase() {
   }
 
   private fun assertThatResultMatches(
-    actual: Cas1SpaceSearchResult,
+    actual: Cas1PremisesSearchResult,
     expected: ApprovedPremisesEntity,
     expectedApType: ApType = ApType.normal,
     expectedCharacteristics: List<Cas1SpaceCharacteristic>? = null,
@@ -582,7 +582,7 @@ class Cas1SpaceSearchTest : InitialiseDatabasePerClassTestBase() {
         }
       }
 
-      val searchParameters = Cas1SpaceSearchParameters(
+      val searchParameters = Cas1PremisesSearchParameters(
         applicationId = application.id,
         startDate = LocalDate.now(),
         durationInDays = 14,
@@ -595,13 +595,13 @@ class Cas1SpaceSearchTest : InitialiseDatabasePerClassTestBase() {
       )
 
       val response = webTestClient.post()
-        .uri("/cas1/spaces/search")
+        .uri("/cas1/premises/search")
         .header("Authorization", "Bearer $jwt")
         .bodyValue(searchParameters)
         .exchange()
         .expectStatus()
         .isOk
-        .returnResult(Cas1SpaceSearchResults::class.java)
+        .returnResult(Cas1PremisesSearchResults::class.java)
 
       val results = response.responseBody.blockFirst()!!
 
@@ -668,7 +668,7 @@ class Cas1SpaceSearchTest : InitialiseDatabasePerClassTestBase() {
         }
       }
 
-      val searchParameters = Cas1SpaceSearchParameters(
+      val searchParameters = Cas1PremisesSearchParameters(
         applicationId = application.id,
         startDate = LocalDate.now(),
         durationInDays = 14,
@@ -681,13 +681,13 @@ class Cas1SpaceSearchTest : InitialiseDatabasePerClassTestBase() {
       )
 
       val response = webTestClient.post()
-        .uri("/cas1/spaces/search")
+        .uri("/cas1/premises/search")
         .header("Authorization", "Bearer $jwt")
         .bodyValue(searchParameters)
         .exchange()
         .expectStatus()
         .isOk
-        .returnResult(Cas1SpaceSearchResults::class.java)
+        .returnResult(Cas1PremisesSearchResults::class.java)
 
       val results = response.responseBody.blockFirst()!!
 

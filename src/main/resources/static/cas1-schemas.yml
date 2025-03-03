@@ -218,7 +218,7 @@ components:
           $ref: '_shared.yml#/components/schemas/ApType'
         spaceCharacteristics:
           deprecated: true
-          description: use Cas1SpaceSearchParameters.spaceCharacteristics
+          description: use Cas1PremisesSearchParameters.spaceCharacteristics
           type: array
           items:
             $ref: '_shared.yml#/components/schemas/Cas1SpaceCharacteristic'
@@ -230,7 +230,7 @@ components:
             $ref: '_shared.yml#/components/schemas/Gender'
       required:
         - gender
-    Cas1SpaceSearchParameters:
+    Cas1PremisesSearchParameters:
       type: object
       properties:
         applicationId:
@@ -262,7 +262,7 @@ components:
         - durationInDays
         - targetPostcodeDistrict
         - requirements
-    Cas1SpaceSearchResults:
+    Cas1PremisesSearchResults:
       type: object
       properties:
         resultsCount:
@@ -271,11 +271,11 @@ components:
         results:
           type: array
           items:
-            $ref: '#/components/schemas/Cas1SpaceSearchResult'
+            $ref: '#/components/schemas/Cas1PremisesSearchResult'
       required:
         - resultsCount
         - results
-    Cas1SpaceSearchResult:
+    Cas1PremisesSearchResult:
       type: object
       properties:
         premises:
