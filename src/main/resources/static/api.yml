@@ -734,6 +734,8 @@ paths:
           $ref: '_shared.yml#/components/responses/500Response'
   /premises/{premisesId}/beds/{bedId}:
     get:
+      description: Deprecated, use /cas1/premises/{premisesId}/beds/{bedId} instead
+      deprecated: true
       tags:
         - Rooms
       summary: Gets a given bed for a given premises
