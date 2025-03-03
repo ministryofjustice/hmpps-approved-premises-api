@@ -40,6 +40,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas2.Cas2Assessm
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas2.Cas2DomainEventService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas2.Cas2JsonSchemaService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas2.Cas2OffenderService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas2.Cas2PrisonerLocationService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas2.Cas2UserAccessService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.unit.util.assertThatCasResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.PageCriteria
@@ -62,6 +63,7 @@ class Cas2ApplicationServiceTest {
   private val mockAssessmentService = mockk<Cas2AssessmentService>()
   private val mockObjectMapper = mockk<ObjectMapper>()
   private val mockNotifyConfig = mockk<NotifyConfig>()
+  private val prisonerLocationService = mockk<Cas2PrisonerLocationService>()
 
   private val applicationService = uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas2.Cas2ApplicationService(
     mockApplicationRepository,
@@ -75,6 +77,7 @@ class Cas2ApplicationServiceTest {
     mockAssessmentService,
     mockNotifyConfig,
     mockObjectMapper,
+    prisonerLocationService,
     "http://frontend/applications/#id",
     "http://frontend/assess/applications/#applicationId/overview",
   )
@@ -767,6 +770,8 @@ class Cas2ApplicationServiceTest {
         every { mockLockableApplicationRepository.acquirePessimisticLock(any()) } returns Cas2LockableApplicationEntity(
           UUID.randomUUID(),
         )
+        every { prisonerLocationService.createPrisonerLocation(any()) } just Runs
+
         every { mockObjectMapper.writeValueAsString(submitCas2Application.translatedDocument) } returns "{}"
         every { mockDomainEventService.saveCas2ApplicationSubmittedDomainEvent(any()) } just Runs
       }
@@ -1049,6 +1054,8 @@ class Cas2ApplicationServiceTest {
             },
           )
         }
+
+        verify { prisonerLocationService.createPrisonerLocation(application) }
 
         verify(exactly = 1) {
           mockEmailNotificationService.sendEmail(

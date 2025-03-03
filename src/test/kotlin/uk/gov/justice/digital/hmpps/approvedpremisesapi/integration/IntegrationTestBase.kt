@@ -145,6 +145,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas2Applicati
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas2ApplicationJsonSchemaEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas2ApplicationNoteEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas2ApplicationNoteRepository
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas2ApplicationRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas2AssessmentEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas2AssessmentRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas2StatusUpdateDetailEntity
@@ -222,7 +223,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.repository.Cas1OutOfServ
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.repository.Cas1OutOfServiceBedReasonTestRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.repository.Cas1OutOfServiceBedTestRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.repository.Cas2ApplicationJsonSchemaTestRepository
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.repository.Cas2ApplicationTestRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.repository.Cas2StatusUpdateTestRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.repository.Cas3VoidBedspaceCancellationTestRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.repository.Cas3VoidBedspaceReasonTestRepository
@@ -376,7 +376,7 @@ abstract class IntegrationTestBase {
   lateinit var approvedPremisesApplicationRepository: ApprovedPremisesApplicationTestRepository
 
   @Autowired
-  lateinit var cas2ApplicationRepository: Cas2ApplicationTestRepository
+  lateinit var cas2ApplicationRepository: Cas2ApplicationRepository
 
   @Autowired
   lateinit var cas2AssessmentRepository: Cas2AssessmentRepository
