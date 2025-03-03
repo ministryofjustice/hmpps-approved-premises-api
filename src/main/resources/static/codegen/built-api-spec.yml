@@ -2196,6 +2196,7 @@ paths:
           $ref: '#/components/responses/500Response'
   /beds/search:
     post:
+      description: deprecated, use /cas3/bedspaces/search
       summary: Searches for available Beds within the given parameters
       operationId: bedsSearchPost
       requestBody:

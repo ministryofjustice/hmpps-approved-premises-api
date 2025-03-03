@@ -76,7 +76,7 @@ class BedSearchRepository(private val namedParameterJdbcTemplate: NamedParameter
     startDate: LocalDate,
     endDate: LocalDate,
     probationRegionId: UUID,
-  ): List<Cas3BedSearchResult> {
+  ): List<Cas3BedspaceSearchResult> {
     val params = MapSqlParameterSource().apply {
       addValue("probation_region_id", probationRegionId)
       addValue("probation_delivery_unit_ids", probationDeliveryUnits)
@@ -88,7 +88,7 @@ class BedSearchRepository(private val namedParameterJdbcTemplate: NamedParameter
       temporaryAccommodationSearchQuery,
       params,
       ResultSetExtractor { resultSet ->
-        val beds = mutableMapOf<UUID, Cas3BedSearchResult>()
+        val beds = mutableMapOf<UUID, Cas3BedspaceSearchResult>()
 
         while (resultSet.next()) {
           val premisesId = UUID.fromString(resultSet.getString("premises_id"))
@@ -113,7 +113,7 @@ class BedSearchRepository(private val namedParameterJdbcTemplate: NamedParameter
           if (bedId == null) continue
 
           if (!beds.containsKey(bedId)) {
-            beds[bedId] = Cas3BedSearchResult(
+            beds[bedId] = Cas3BedspaceSearchResult(
               premisesId = premisesId,
               premisesName = premisesName,
               premisesAddressLine1 = premisesAddressLine1,
@@ -170,7 +170,7 @@ private inline fun <reified T> MutableList<T>.addIfNoneMatch(entry: T, matcher: 
 }
 
 @SuppressWarnings("LongParameterList")
-class Cas3BedSearchResult(
+class Cas3BedspaceSearchResult(
   val premisesId: UUID,
   val premisesName: String,
   val premisesAddressLine1: String,
