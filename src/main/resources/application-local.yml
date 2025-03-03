@@ -70,7 +70,6 @@ user-allocations:
 
 feature-flags:
   cas1-disable-overbooking-summary: true
-  cas1-enable-scheduled-job-refresh-inmate-details: true
 
 logging:
   level:
