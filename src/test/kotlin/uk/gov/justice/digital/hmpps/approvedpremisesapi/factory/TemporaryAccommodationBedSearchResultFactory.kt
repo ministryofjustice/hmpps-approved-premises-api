@@ -2,7 +2,7 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.factory
 
 import io.github.bluegroundltd.kfactory.Factory
 import io.github.bluegroundltd.kfactory.Yielded
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.repository.Cas3BedSearchResult
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.repository.Cas3BedspaceSearchResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.repository.CharacteristicNames
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.repository.TemporaryAccommodationBedSearchResultOverlap
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomInt
@@ -10,7 +10,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomStringMultiCa
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomStringUpperCase
 import java.util.UUID
 
-class TemporaryAccommodationBedSearchResultFactory : Factory<Cas3BedSearchResult> {
+class TemporaryAccommodationBedSearchResultFactory : Factory<Cas3BedspaceSearchResult> {
   private var premisesId: Yielded<UUID> = { UUID.randomUUID() }
   private var premisesName: Yielded<String> = { randomStringMultiCaseWithNumbers(6) }
   private var premisesAddressLine1: Yielded<String> = { randomStringUpperCase(12) }
@@ -97,7 +97,7 @@ class TemporaryAccommodationBedSearchResultFactory : Factory<Cas3BedSearchResult
     this.overlaps = { overlaps }
   }
 
-  override fun produce() = Cas3BedSearchResult(
+  override fun produce() = Cas3BedspaceSearchResult(
     premisesId = this.premisesId(),
     premisesName = this.premisesName(),
     premisesAddressLine1 = this.premisesAddressLine1(),

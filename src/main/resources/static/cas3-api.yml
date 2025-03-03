@@ -131,3 +131,32 @@ paths:
           $ref: '_shared.yml#/components/responses/403Response'
         500:
           $ref: '_shared.yml#/components/responses/500Response'
+  /bedspaces/search:
+    post:
+      summary: Searches for available Beds within the given parameters
+      operationId: bedspaceSearchPost
+      requestBody:
+        content:
+          'application/json':
+            schema:
+              $ref: '_shared.yml#/components/schemas/TemporaryAccommodationBedSearchParameters'
+        required: true
+      responses:
+        200:
+          description: successful operation
+          content:
+            'application/json':
+              schema:
+                $ref: 'cas3-schemas.yml#/components/schemas/Cas3BedspaceSearchResults'
+        400:
+          description: invalid params
+          content:
+            'application/problem+json':
+              schema:
+                $ref: '_shared.yml#/components/schemas/ValidationError'
+        401:
+          $ref: '_shared.yml#/components/responses/401Response'
+        403:
+          $ref: '_shared.yml#/components/responses/403Response'
+        500:
+          $ref: '_shared.yml#/components/responses/500Response'

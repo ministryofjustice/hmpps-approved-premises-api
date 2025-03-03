@@ -1,12 +1,11 @@
-package uk.gov.justice.digital.hmpps.approvedpremisesapi.integration
+package uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.cas3
 
 import org.assertj.core.api.Assertions.assertThat
 import org.hamcrest.Matchers
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Nested
-import org.junit.jupiter.api.Test
 import org.junit.jupiter.params.ParameterizedTest
-import org.junit.jupiter.params.provider.ValueSource
+import org.junit.jupiter.params.provider.CsvSource
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.BedSearchAttributes
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.BedSearchResultBedSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.BedSearchResultPremisesSummary
@@ -25,6 +24,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.TemporaryAccom
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.CaseAccessFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.CaseSummaryFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.CharacteristicEntityFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.IntegrationTestBase
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAProbationRegion
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAUser
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAnOffender
@@ -50,7 +50,7 @@ import java.time.OffsetDateTime
 import java.util.UUID
 
 @SuppressWarnings("LargeClass")
-class BedSearchTest : IntegrationTestBase() {
+class Cas3BedspaceSearchTest : IntegrationTestBase() {
 
   lateinit var probationRegion: ProbationRegionEntity
 
@@ -61,10 +61,11 @@ class BedSearchTest : IntegrationTestBase() {
 
   @Nested
   inner class BedSearchForTemporaryAccommodationPremises {
-    @Test
-    fun `Searching for a Bed without JWT returns 401`() {
+    @ParameterizedTest
+    @CsvSource("/beds/search", "cas3/bedspaces/search")
+    fun `Searching for a Bed without JWT returns 401`(baseUrl: String) {
       webTestClient.post()
-        .uri("/beds/search")
+        .uri(baseUrl)
         .bodyValue(
           TemporaryAccommodationBedSearchParameters(
             startDate = LocalDate.parse("2023-03-23"),
@@ -78,8 +79,9 @@ class BedSearchTest : IntegrationTestBase() {
         .isUnauthorized
     }
 
-    @Test
-    fun `Searching for a Temporary Accommodation Bed returns 200 with correct body`() {
+    @ParameterizedTest
+    @CsvSource("/beds/search", "cas3/bedspaces/search")
+    fun `Searching for a Temporary Accommodation Bed returns 200 with correct body`(baseUrl: String) {
       val searchPdu = probationDeliveryUnitFactory.produceAndPersist {
         withProbationRegion(probationRegion)
       }
@@ -108,7 +110,7 @@ class BedSearchTest : IntegrationTestBase() {
         }
 
         webTestClient.post()
-          .uri("/beds/search")
+          .uri(baseUrl)
           .header("Authorization", "Bearer $jwt")
           .bodyValue(
             TemporaryAccommodationBedSearchParameters(
@@ -147,8 +149,9 @@ class BedSearchTest : IntegrationTestBase() {
       }
     }
 
-    @Test
-    fun `Searching for a Temporary Accommodation Bed returns results that do not include beds with current turnarounds`() {
+    @ParameterizedTest
+    @CsvSource("/beds/search", "cas3/bedspaces/search")
+    fun `Searching for a Temporary Accommodation Bed returns results that do not include beds with current turnarounds`(baseUrl: String) {
       val searchPdu = probationDeliveryUnitFactory.produceAndPersist {
         withProbationRegion(probationRegion)
       }
@@ -194,6 +197,7 @@ class BedSearchTest : IntegrationTestBase() {
 
         searchTemporaryAccommodationBedSpaceAndAssertNoAvailability(
           jwt,
+          baseUrl,
           LocalDate.parse("2023-03-23"),
           7,
           searchPdu.id,
@@ -201,8 +205,9 @@ class BedSearchTest : IntegrationTestBase() {
       }
     }
 
-    @Test
-    fun `Searching for a Temporary Accommodation Bed returns results when existing booking departure-date is same as search start-date`() {
+    @ParameterizedTest
+    @CsvSource("/beds/search", "cas3/bedspaces/search")
+    fun `Searching for a Temporary Accommodation Bed returns results when existing booking departure-date is same as search start-date`(baseUrl: String) {
       val searchPdu = probationDeliveryUnitFactory.produceAndPersist {
         withProbationRegion(probationRegion)
       }
@@ -248,6 +253,7 @@ class BedSearchTest : IntegrationTestBase() {
 
         searchTemporaryAccommodationBedSpaceAndAssertNoAvailability(
           jwt,
+          baseUrl,
           LocalDate.parse("2023-03-21"),
           7,
           searchPdu.id,
@@ -256,8 +262,8 @@ class BedSearchTest : IntegrationTestBase() {
     }
 
     @ParameterizedTest
-    @ValueSource(booleans = [true, false])
-    fun `Searching for a Temporary Accommodation Bed returns results which include overlapping bookings for rooms in the same premises`(sexualRisk: Boolean) {
+    @CsvSource("true,beds/search", "false,beds/search", "true,cas3/bedspaces/search", "false,cas3/bedspaces/search")
+    fun `Searching for a Temporary Accommodation Bed returns results which include overlapping bookings for rooms in the same premises`(sexualRisk: Boolean, baseUrl: String) {
       val searchPdu = probationDeliveryUnitFactory.produceAndPersist {
         withProbationRegion(probationRegion)
       }
@@ -402,7 +408,7 @@ class BedSearchTest : IntegrationTestBase() {
           )
 
           webTestClient.post()
-            .uri("/beds/search")
+            .uri(baseUrl)
             .header("Authorization", "Bearer $jwt")
             .bodyValue(
               TemporaryAccommodationBedSearchParameters(
@@ -474,8 +480,9 @@ class BedSearchTest : IntegrationTestBase() {
       }
     }
 
-    @Test
-    fun `Searching for a Temporary Accommodation Bed returns results which include overlapping bookings across multiple premises`() {
+    @ParameterizedTest
+    @CsvSource("/beds/search", "cas3/bedspaces/search")
+    fun `Searching for a Temporary Accommodation Bed returns results which include overlapping bookings across multiple premises`(baseUrl: String) {
       val searchPdu = probationDeliveryUnitFactory.produceAndPersist {
         withProbationRegion(probationRegion)
       }
@@ -587,7 +594,7 @@ class BedSearchTest : IntegrationTestBase() {
           )
 
           webTestClient.post()
-            .uri("/beds/search")
+            .uri(baseUrl)
             .header("Authorization", "Bearer $jwt")
             .bodyValue(
               TemporaryAccommodationBedSearchParameters(
@@ -663,8 +670,9 @@ class BedSearchTest : IntegrationTestBase() {
       }
     }
 
-    @Test
-    fun `Searching for a Temporary Accommodation Bed returns results which do not include non-overlapping bookings`() {
+    @ParameterizedTest
+    @CsvSource("/beds/search", "cas3/bedspaces/search")
+    fun `Searching for a Temporary Accommodation Bed returns results which do not include non-overlapping bookings`(baseUrl: String) {
       val searchPdu = probationDeliveryUnitFactory.produceAndPersist {
         withProbationRegion(probationRegion)
       }
@@ -707,7 +715,7 @@ class BedSearchTest : IntegrationTestBase() {
         }
 
         webTestClient.post()
-          .uri("/beds/search")
+          .uri(baseUrl)
           .header("Authorization", "Bearer $jwt")
           .bodyValue(
             TemporaryAccommodationBedSearchParameters(
@@ -760,8 +768,9 @@ class BedSearchTest : IntegrationTestBase() {
       }
     }
 
-    @Test
-    fun `Searching for a Temporary Accommodation Bed returns results which do not consider cancelled bookings as overlapping`() {
+    @ParameterizedTest
+    @CsvSource("/beds/search", "cas3/bedspaces/search")
+    fun `Searching for a Temporary Accommodation Bed returns results which do not consider cancelled bookings as overlapping`(baseUrl: String) {
       givenAUser(
         probationRegion = probationRegion,
       ) { user, jwt ->
@@ -824,7 +833,7 @@ class BedSearchTest : IntegrationTestBase() {
           )
 
           webTestClient.post()
-            .uri("/beds/search")
+            .uri(baseUrl)
             .header("Authorization", "Bearer $jwt")
             .bodyValue(
               TemporaryAccommodationBedSearchParameters(
@@ -878,8 +887,9 @@ class BedSearchTest : IntegrationTestBase() {
       }
     }
 
-    @Test
-    fun `Searching for a Temporary Accommodation Bedspace in a Shared Property returns only bedspaces in shared properties`() {
+    @ParameterizedTest
+    @CsvSource("/beds/search", "cas3/bedspaces/search")
+    fun `Searching for a Temporary Accommodation Bedspace in a Shared Property returns only bedspaces in shared properties`(baseUrl: String) {
       val searchPdu = probationDeliveryUnitFactory.produceAndPersist {
         withProbationRegion(probationRegion)
       }
@@ -902,7 +912,7 @@ class BedSearchTest : IntegrationTestBase() {
         val expextedPremisesThreeRoomOne = expextedPremisesThreeBedOne.room
 
         webTestClient.post()
-          .uri("/beds/search")
+          .uri(baseUrl)
           .header("Authorization", "Bearer $jwt")
           .bodyValue(
             TemporaryAccommodationBedSearchParameters(
@@ -989,8 +999,9 @@ class BedSearchTest : IntegrationTestBase() {
       }
     }
 
-    @Test
-    fun `Bed Search filter only returns included premises filters`() {
+    @ParameterizedTest
+    @CsvSource("/beds/search", "cas3/bedspaces/search")
+    fun `Bed Search filter only returns included premises filters`(baseUrl: String) {
       val searchPdu = probationDeliveryUnitFactory.produceAndPersist {
         withProbationRegion(probationRegion)
       }
@@ -1024,6 +1035,7 @@ class BedSearchTest : IntegrationTestBase() {
 
         val result = getResponseForRequest(
           jwt,
+          baseUrl,
           TemporaryAccommodationBedSearchParameters(
             startDate = LocalDate.parse("2024-08-27"),
             durationDays = 84,
@@ -1042,8 +1054,9 @@ class BedSearchTest : IntegrationTestBase() {
       }
     }
 
-    @Test
-    fun `Bed Search filter does not return excluded premises filters`() {
+    @ParameterizedTest
+    @CsvSource("/beds/search", "cas3/bedspaces/search")
+    fun `Bed Search filter does not return excluded premises filters`(baseUrl: String) {
       val searchPdu = probationDeliveryUnitFactory.produceAndPersist {
         withProbationRegion(probationRegion)
       }
@@ -1077,6 +1090,7 @@ class BedSearchTest : IntegrationTestBase() {
 
         val result = getResponseForRequest(
           jwt,
+          baseUrl,
           TemporaryAccommodationBedSearchParameters(
             startDate = LocalDate.parse("2024-08-27"),
             durationDays = 84,
@@ -1095,8 +1109,9 @@ class BedSearchTest : IntegrationTestBase() {
       }
     }
 
-    @Test
-    fun `Bed Search filter only returns included bedspace filters`() {
+    @ParameterizedTest
+    @CsvSource("/beds/search", "cas3/bedspaces/search")
+    fun `Bed Search filter only returns included bedspace filters`(baseUrl: String) {
       val searchPdu = probationDeliveryUnitFactory.produceAndPersist {
         withProbationRegion(probationRegion)
       }
@@ -1122,6 +1137,7 @@ class BedSearchTest : IntegrationTestBase() {
 
         val result = getResponseForRequest(
           jwt,
+          baseUrl,
           TemporaryAccommodationBedSearchParameters(
             startDate = LocalDate.parse("2024-08-27"),
             durationDays = 84,
@@ -1139,8 +1155,9 @@ class BedSearchTest : IntegrationTestBase() {
       }
     }
 
-    @Test
-    fun `Bed Search filter does not return excluded bedspace filters`() {
+    @ParameterizedTest
+    @CsvSource("/beds/search", "cas3/bedspaces/search")
+    fun `Bed Search filter does not return excluded bedspace filters`(baseUrl: String) {
       val searchPdu = probationDeliveryUnitFactory.produceAndPersist {
         withProbationRegion(probationRegion)
       }
@@ -1167,6 +1184,7 @@ class BedSearchTest : IntegrationTestBase() {
 
         val result = getResponseForRequest(
           jwt,
+          baseUrl,
           TemporaryAccommodationBedSearchParameters(
             startDate = LocalDate.parse("2024-08-27"),
             durationDays = 84,
@@ -1184,8 +1202,9 @@ class BedSearchTest : IntegrationTestBase() {
       }
     }
 
-    @Test
-    fun `Bed Search filter returns correct results with multiple bedspace filters`() {
+    @ParameterizedTest
+    @CsvSource("/beds/search", "cas3/bedspaces/search")
+    fun `Bed Search filter returns correct results with multiple bedspace filters`(baseUrl: String) {
       val searchPdu = probationDeliveryUnitFactory.produceAndPersist {
         withProbationRegion(probationRegion)
       }
@@ -1245,6 +1264,7 @@ class BedSearchTest : IntegrationTestBase() {
 
         val result = getResponseForRequest(
           jwt,
+          baseUrl,
           TemporaryAccommodationBedSearchParameters(
             startDate = LocalDate.parse("2024-08-27"),
             durationDays = 84,
@@ -1290,8 +1310,8 @@ class BedSearchTest : IntegrationTestBase() {
       return characteristicTwo
     }
 
-    private fun getResponseForRequest(jwt: String, searchParameters: TemporaryAccommodationBedSearchParameters) = webTestClient.post()
-      .uri("/beds/search")
+    private fun getResponseForRequest(jwt: String, baseUrl: String, searchParameters: TemporaryAccommodationBedSearchParameters) = webTestClient.post()
+      .uri(baseUrl)
       .header("Authorization", "Bearer $jwt")
       .bodyValue(searchParameters)
       .exchange()
@@ -1301,8 +1321,9 @@ class BedSearchTest : IntegrationTestBase() {
       .returnResult()
       .responseBody!!
 
-    @Test
-    fun `Searching for a Temporary Accommodation Bedspace in a Single Occupancy Property returns only bedspaces in properties with single occupancy`() {
+    @ParameterizedTest
+    @CsvSource("/beds/search", "cas3/bedspaces/search")
+    fun `Searching for a Temporary Accommodation Bedspace in a Single Occupancy Property returns only bedspaces in properties with single occupancy`(baseUrl: String) {
       val searchPdu = probationDeliveryUnitFactory.produceAndPersist {
         withProbationRegion(probationRegion)
       }
@@ -1325,7 +1346,7 @@ class BedSearchTest : IntegrationTestBase() {
         val expextedPremisesThreeRoomOne = expextedPremisesThreeBedOne.room
 
         webTestClient.post()
-          .uri("/beds/search")
+          .uri(baseUrl)
           .header("Authorization", "Bearer $jwt")
           .bodyValue(
             TemporaryAccommodationBedSearchParameters(
@@ -1412,8 +1433,9 @@ class BedSearchTest : IntegrationTestBase() {
       }
     }
 
-    @Test
-    fun `Searching for a Temporary Accommodation with wheelchair accessible returns only bedspaces with wheelchair accessible`() {
+    @ParameterizedTest
+    @CsvSource("/beds/search", "cas3/bedspaces/search")
+    fun `Searching for a Temporary Accommodation with wheelchair accessible returns only bedspaces with wheelchair accessible`(baseUrl: String) {
       val searchPdu = probationDeliveryUnitFactory.produceAndPersist {
         withProbationRegion(probationRegion)
       }
@@ -1434,7 +1456,7 @@ class BedSearchTest : IntegrationTestBase() {
         val expextedPremisesTwoRoomOne = expextedPremisesTwoBedOne.room
 
         webTestClient.post()
-          .uri("/beds/search")
+          .uri(baseUrl)
           .header("Authorization", "Bearer $jwt")
           .bodyValue(
             TemporaryAccommodationBedSearchParameters(
@@ -1506,55 +1528,60 @@ class BedSearchTest : IntegrationTestBase() {
       }
     }
 
-    @Test
-    fun `Searching for a Temporary Accommodation Bed should not return bed when given premises bedspace endDate is same as search start date`() {
+    @ParameterizedTest
+    @CsvSource("/beds/search", "cas3/bedspaces/search")
+    fun `Searching for a Temporary Accommodation Bed should not return bed when given premises bedspace endDate is same as search start date`(baseUrl: String) {
       givenAUser { _, jwt ->
         val durationDays = 7L
         val searchStartDate = LocalDate.parse("2023-03-23")
         val searchPdu = createTemporaryAccommodationWithBedSpaceEndDate(searchStartDate, searchStartDate)
 
-        searchTemporaryAccommodationBedSpaceAndAssertNoAvailability(jwt, searchStartDate, durationDays, searchPdu.id)
+        searchTemporaryAccommodationBedSpaceAndAssertNoAvailability(jwt, baseUrl, searchStartDate, durationDays, searchPdu.id)
       }
     }
 
-    @Test
-    fun `Searching for a Temporary Accommodation Bed should not return bed when given premises bedspace endDate is between search start date and end date`() {
+    @ParameterizedTest
+    @CsvSource("/beds/search", "cas3/bedspaces/search")
+    fun `Searching for a Temporary Accommodation Bed should not return bed when given premises bedspace endDate is between search start date and end date`(baseUrl: String) {
       givenAUser { _, jwt ->
         val durationDays = 7L
         val searchStartDate = LocalDate.parse("2023-03-23")
         val bedEndDate = searchStartDate.plusDays(2)
         val searchPdu = createTemporaryAccommodationWithBedSpaceEndDate(searchStartDate, bedEndDate)
 
-        searchTemporaryAccommodationBedSpaceAndAssertNoAvailability(jwt, searchStartDate, durationDays, searchPdu.id)
+        searchTemporaryAccommodationBedSpaceAndAssertNoAvailability(jwt, baseUrl, searchStartDate, durationDays, searchPdu.id)
       }
     }
 
-    @Test
-    fun `Searching for a Temporary Accommodation Bed should not return bed when given premises bedspace endDate is same as search end date`() {
+    @ParameterizedTest
+    @CsvSource("/beds/search", "cas3/bedspaces/search")
+    fun `Searching for a Temporary Accommodation Bed should not return bed when given premises bedspace endDate is same as search end date`(baseUrl: String) {
       givenAUser { _, jwt ->
         val durationDays = 7L
         val searchStartDate = LocalDate.parse("2023-03-23")
         val bedEndDate = searchStartDate.plusDays(durationDays.toLong() - 1)
         val searchPdu = createTemporaryAccommodationWithBedSpaceEndDate(searchStartDate, bedEndDate)
 
-        searchTemporaryAccommodationBedSpaceAndAssertNoAvailability(jwt, searchStartDate, durationDays, searchPdu.id)
+        searchTemporaryAccommodationBedSpaceAndAssertNoAvailability(jwt, baseUrl, searchStartDate, durationDays, searchPdu.id)
       }
     }
 
-    @Test
-    fun `Searching for a Temporary Accommodation Bed should not return bed when given premises bedspace endDate less than than search start date`() {
+    @ParameterizedTest
+    @CsvSource("/beds/search", "cas3/bedspaces/search")
+    fun `Searching for a Temporary Accommodation Bed should not return bed when given premises bedspace endDate less than than search start date`(baseUrl: String) {
       givenAUser { _, jwt ->
         val durationDays = 7L
         val searchStartDate = LocalDate.parse("2023-03-23")
         val bedEndDate = searchStartDate.minusDays(1)
         val searchPdu = createTemporaryAccommodationWithBedSpaceEndDate(searchStartDate, bedEndDate)
 
-        searchTemporaryAccommodationBedSpaceAndAssertNoAvailability(jwt, searchStartDate, durationDays, searchPdu.id)
+        searchTemporaryAccommodationBedSpaceAndAssertNoAvailability(jwt, baseUrl, searchStartDate, durationDays, searchPdu.id)
       }
     }
 
-    @Test
-    fun `Searching for a Temporary Accommodation Bed should return single bed when given premises has got 2 rooms where one with endDate and another room without enddate`() {
+    @ParameterizedTest
+    @CsvSource("/beds/search", "cas3/bedspaces/search")
+    fun `Searching for a Temporary Accommodation Bed should return single bed when given premises has got 2 rooms where one with endDate and another room without enddate`(baseUrl: String) {
       val searchPdu = probationDeliveryUnitFactory.produceAndPersist {
         withProbationRegion(probationRegion)
       }
@@ -1594,7 +1621,7 @@ class BedSearchTest : IntegrationTestBase() {
         }
 
         webTestClient.post()
-          .uri("/beds/search")
+          .uri(baseUrl)
           .header("Authorization", "Bearer $jwt")
           .bodyValue(
             TemporaryAccommodationBedSearchParameters(
@@ -1633,8 +1660,9 @@ class BedSearchTest : IntegrationTestBase() {
       }
     }
 
-    @Test
-    fun `Searching for a Temporary Accommodation Bed should return bed when given premises bedspace endDate after search end date`() {
+    @ParameterizedTest
+    @CsvSource("/beds/search", "cas3/bedspaces/search")
+    fun `Searching for a Temporary Accommodation Bed should return bed when given premises bedspace endDate after search end date`(baseUrl: String) {
       val searchPdu = probationDeliveryUnitFactory.produceAndPersist {
         withProbationRegion(probationRegion)
       }
@@ -1665,7 +1693,7 @@ class BedSearchTest : IntegrationTestBase() {
         }
 
         webTestClient.post()
-          .uri("/beds/search")
+          .uri(baseUrl)
           .header("Authorization", "Bearer $jwt")
           .bodyValue(
             TemporaryAccommodationBedSearchParameters(
@@ -1704,20 +1732,22 @@ class BedSearchTest : IntegrationTestBase() {
       }
     }
 
-    @Test
-    fun `Searching for a Temporary Accommodation Bed should return no bed when given premises has got 2 rooms where one with endDate in the passed and another room with matching end date`() {
+    @ParameterizedTest
+    @CsvSource("/beds/search", "cas3/bedspaces/search")
+    fun `Searching for a Temporary Accommodation Bed should return no bed when given premises has got 2 rooms where one with endDate in the passed and another room with matching end date`(baseUrl: String) {
       givenAUser { _, jwt ->
         val durationDays = 7L
         val searchStartDate = LocalDate.parse("2023-03-23")
         val bedEndDate = searchStartDate.plusDays(1)
         val searchPdu = createTemporaryAccommodationWithBedSpaceEndDate(searchStartDate, bedEndDate)
 
-        searchTemporaryAccommodationBedSpaceAndAssertNoAvailability(jwt, searchStartDate, durationDays, searchPdu.id)
+        searchTemporaryAccommodationBedSpaceAndAssertNoAvailability(jwt, baseUrl, searchStartDate, durationDays, searchPdu.id)
       }
     }
 
-    @Test
-    fun `Searching for a Temporary Accommodation Bed should return bed matches searching pdu`() {
+    @ParameterizedTest
+    @CsvSource("/beds/search", "cas3/bedspaces/search")
+    fun `Searching for a Temporary Accommodation Bed should return bed matches searching pdu`(baseUrl: String) {
       val searchPdu = probationDeliveryUnitFactory.produceAndPersist {
         withName(randomStringLowerCase(8))
         withProbationRegion(probationRegion)
@@ -1794,7 +1824,7 @@ class BedSearchTest : IntegrationTestBase() {
         }
 
         webTestClient.post()
-          .uri("/beds/search")
+          .uri(baseUrl)
           .header("Authorization", "Bearer $jwt")
           .bodyValue(
             TemporaryAccommodationBedSearchParameters(
@@ -1845,8 +1875,9 @@ class BedSearchTest : IntegrationTestBase() {
       }
     }
 
-    @Test
-    fun `Searching for a Temporary Accommodation Bed in multiple pdus should return bed matches searching pdus`() {
+    @ParameterizedTest
+    @CsvSource("/beds/search", "cas3/bedspaces/search")
+    fun `Searching for a Temporary Accommodation Bed in multiple pdus should return bed matches searching pdus`(baseUrl: String) {
       val pduOne = probationDeliveryUnitFactory.produceAndPersist {
         withName("Probation Delivery Unit One")
         withProbationRegion(probationRegion)
@@ -1904,7 +1935,7 @@ class BedSearchTest : IntegrationTestBase() {
         val (roomOnePremisesThree, bedOnePremisesThree) = createBedspace(premisesThree, "Room One", listOf())
 
         webTestClient.post()
-          .uri("/beds/search")
+          .uri(baseUrl)
           .header("Authorization", "Bearer $jwt")
           .bodyValue(
             TemporaryAccommodationBedSearchParameters(
@@ -1968,12 +1999,13 @@ class BedSearchTest : IntegrationTestBase() {
 
     private fun searchTemporaryAccommodationBedSpaceAndAssertNoAvailability(
       jwt: String,
+      baseUrl: String,
       searchStartDate: LocalDate,
       durationDays: Long,
       pduId: UUID,
     ) {
       webTestClient.post()
-        .uri("/beds/search")
+        .uri(baseUrl)
         .header("Authorization", "Bearer $jwt")
         .bodyValue(
           TemporaryAccommodationBedSearchParameters(
