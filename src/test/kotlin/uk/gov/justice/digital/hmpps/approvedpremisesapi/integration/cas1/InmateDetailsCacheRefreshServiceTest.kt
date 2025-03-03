@@ -26,14 +26,7 @@ class InmateDetailsCacheRefreshServiceTest : IntegrationTestBase() {
   lateinit var domainEventService: Cas1DomainEventService
 
   @Test
-  fun `should not refresh inmate details cache when feature flag off`() {
-    mockFeatureFlagService.setFlag("cas1-enable-scheduled-job-refresh-inmate-details", false)
-    assertThat(inmateDetailsCacheRefreshService.refreshInmateDetailsCache()).isNull()
-  }
-
-  @Test
   fun `successfully updates 1 cache entry`() {
-    mockFeatureFlagService.setFlag("cas1-enable-scheduled-job-refresh-inmate-details", true)
     givenAProbationRegion { probationRegion ->
       givenAUser(probationRegion = probationRegion) { user, _ ->
         val inmateDetail = createInmateDetailAndApplication(user)
@@ -52,7 +45,6 @@ class InmateDetailsCacheRefreshServiceTest : IntegrationTestBase() {
 
   @Test
   fun `fails update of 1 cache entry as inmate details not found in PrisonApi`() {
-    mockFeatureFlagService.setFlag("cas1-enable-scheduled-job-refresh-inmate-details", true)
     givenAProbationRegion { probationRegion ->
       givenAUser(probationRegion = probationRegion) { user, _ ->
         createInmateDetailAndApplication(user)
@@ -68,7 +60,6 @@ class InmateDetailsCacheRefreshServiceTest : IntegrationTestBase() {
 
   @Test
   fun `successfully updates 4 cache entries and fails 1 cache entry`() {
-    mockFeatureFlagService.setFlag("cas1-enable-scheduled-job-refresh-inmate-details", true)
     givenAProbationRegion { probationRegion ->
       givenAUser(probationRegion = probationRegion) { user, _ ->
         for (x in 1..5) {
