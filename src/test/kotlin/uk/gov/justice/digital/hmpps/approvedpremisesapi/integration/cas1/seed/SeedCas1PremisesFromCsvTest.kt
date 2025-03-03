@@ -202,7 +202,7 @@ class Cas1SeedPremisesFromCsvTest : SeedTestBase() {
       "acceptsNonSexualChildOffenders, acceptsHateCrimeOffenders, isCatered, hasWideStepFreeAccess, " +
       "hasWideAccessToCommunalAreas, hasStepFreeAccessToCommunalAreas, hasWheelChairAccessibleBathrooms, " +
       "hasLift, hasTactileFlooring, hasBrailleSignage, hasHearingLoop, status, latitude, longitude, gender, " +
-      "supportsSpaceBookings, managerDetails, fullAddress, isSpecialistPremisesElliotHouse, isSpecialistPremisesStJosephs]"
+      "supportsSpaceBookings, managerDetails, fullAddress, isMHAPElliottHouse, isMHAPStJosephs]"
 
     assertThat(logEntries)
       .withFailMessage("-> logEntries actually contains: $logEntries")
@@ -375,8 +375,8 @@ class Cas1SeedPremisesFromCsvTest : SeedTestBase() {
         "supportsSpaceBookings",
         "managerDetails",
         "fullAddress",
-        "isSpecialistPremisesElliotHouse",
-        "isSpecialistPremisesStJosephs",
+        "isMHAPElliottHouse",
+        "isMHAPStJosephs",
       )
       .newRow()
 
@@ -419,8 +419,8 @@ class Cas1SeedPremisesFromCsvTest : SeedTestBase() {
         .withQuotedField(it.supportsSpaceBookings)
         .withQuotedField(it.managerDetails)
         .withQuotedField(it.fullAddress ?: "")
-        .withQuotedField(it.isSpecialistPremisesElliotHouse ?: "")
-        .withQuotedField(it.isSpecialistPremisesStJosephs ?: "")
+        .withQuotedField(it.isMHAPElliottHouse)
+        .withQuotedField(it.isMHAPStJosephs)
         .newRow()
     }
 
@@ -466,8 +466,8 @@ class ApprovedPremisesSeedCsvRowFactory : Factory<ApprovedPremisesSeedCsvRow> {
   private var gender: Yielded<ApprovedPremisesGender> = { ApprovedPremisesGender.MAN }
   private var supportsSpaceBookings: Yielded<String> = { "no" }
   private var managerDetails: Yielded<String> = { "no" }
-  private var isSpecialistPremisesElliotHouse: Yielded<String> = { "no" }
-  private var isSpecialistPremisesStJosephs: Yielded<String> = { "no" }
+  private var isMHAPElliottHouse: Yielded<String> = { "no" }
+  private var isMHAPStJosephs: Yielded<String> = { "no" }
 
   fun withName(name: String) = apply {
     this.name = { name }
@@ -536,12 +536,12 @@ class ApprovedPremisesSeedCsvRowFactory : Factory<ApprovedPremisesSeedCsvRow> {
     this.managerDetails = { managerDetails }
   }
 
-  fun withIsSpecialistPremisesElliotHouse(value: String) = apply {
-    this.isSpecialistPremisesElliotHouse = { value }
+  fun withIsMHAPElliottHouse(value: String) = apply {
+    this.isMHAPElliottHouse = { value }
   }
 
-  fun withIsSpecialistPremisesStJosephs(value: String) = apply {
-    this.isSpecialistPremisesStJosephs = { value }
+  fun withIsMHAPStJosephs(value: String) = apply {
+    this.isMHAPStJosephs = { value }
   }
 
   override fun produce() = ApprovedPremisesSeedCsvRow(
@@ -582,7 +582,7 @@ class ApprovedPremisesSeedCsvRowFactory : Factory<ApprovedPremisesSeedCsvRow> {
     gender = this.gender(),
     supportsSpaceBookings = this.supportsSpaceBookings(),
     managerDetails = this.managerDetails(),
-    isSpecialistPremisesElliotHouse = this.isSpecialistPremisesElliotHouse(),
-    isSpecialistPremisesStJosephs = this.isSpecialistPremisesStJosephs(),
+    isMHAPElliottHouse = this.isMHAPElliottHouse(),
+    isMHAPStJosephs = this.isMHAPStJosephs(),
   )
 }
