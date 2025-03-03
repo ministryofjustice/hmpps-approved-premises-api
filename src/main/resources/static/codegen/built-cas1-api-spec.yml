@@ -92,7 +92,7 @@ paths:
         content:
           'application/json':
             schema:
-              $ref: '#/components/schemas/Cas1SpaceSearchParameters'
+              $ref: '#/components/schemas/Cas1PremisesSearchParameters'
         required: true
       responses:
         200:
@@ -100,7 +100,7 @@ paths:
           content:
             'application/json':
               schema:
-                $ref: '#/components/schemas/Cas1SpaceSearchResults'
+                $ref: '#/components/schemas/Cas1PremisesSearchResults'
         400:
           description: invalid params
           content:
@@ -451,6 +451,37 @@ paths:
               $ref: '#/components/headers/X-Pagination-TotalResults'
             X-Pagination-PageSize:
               $ref: '#/components/headers/X-Pagination-TotalResults'
+        401:
+          $ref: '#/components/responses/401Response'
+        403:
+          $ref: '#/components/responses/403Response'
+        500:
+          $ref: '#/components/responses/500Response'
+  /premises/search:
+    post:
+      tags:
+        - premises
+      summary: Search for premises
+      operationId: "premisesSearch"
+      requestBody:
+        content:
+          'application/json':
+            schema:
+              $ref: '#/components/schemas/Cas1PremisesSearchParameters'
+        required: true
+      responses:
+        200:
+          description: successful operation
+          content:
+            'application/json':
+              schema:
+                $ref: '#/components/schemas/Cas1PremisesSearchResults'
+        400:
+          description: invalid params
+          content:
+            'application/problem+json':
+              schema:
+                $ref: '#/components/schemas/ValidationError'
         401:
           $ref: '#/components/responses/401Response'
         403:
@@ -6553,7 +6584,7 @@ components:
           $ref: '#/components/schemas/ApType'
         spaceCharacteristics:
           deprecated: true
-          description: use Cas1SpaceSearchParameters.spaceCharacteristics
+          description: use Cas1PremisesSearchParameters.spaceCharacteristics
           type: array
           items:
             $ref: '#/components/schemas/Cas1SpaceCharacteristic'
@@ -6565,7 +6596,7 @@ components:
             $ref: '#/components/schemas/Gender'
       required:
         - gender
-    Cas1SpaceSearchParameters:
+    Cas1PremisesSearchParameters:
       type: object
       properties:
         applicationId:
@@ -6597,7 +6628,7 @@ components:
         - durationInDays
         - targetPostcodeDistrict
         - requirements
-    Cas1SpaceSearchResults:
+    Cas1PremisesSearchResults:
       type: object
       properties:
         resultsCount:
@@ -6606,11 +6637,11 @@ components:
         results:
           type: array
           items:
-            $ref: '#/components/schemas/Cas1SpaceSearchResult'
+            $ref: '#/components/schemas/Cas1PremisesSearchResult'
       required:
         - resultsCount
         - results
-    Cas1SpaceSearchResult:
+    Cas1PremisesSearchResult:
       type: object
       properties:
         premises:

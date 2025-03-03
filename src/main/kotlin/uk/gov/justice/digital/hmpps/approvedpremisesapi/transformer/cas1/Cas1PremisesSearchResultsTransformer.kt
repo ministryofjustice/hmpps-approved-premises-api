@@ -3,24 +3,24 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.cas1
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Component
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1PremisesSearchResultSummary
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1PremisesSearchResults
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1SpaceCharacteristic
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1SpaceSearchResults
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NamedId
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas1.CandidatePremises
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.asApiType
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1SpaceSearchResult as ApiSpaceSearchResult
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1PremisesSearchResult as ApiPremisesSearchResult
 
 @Component
-class Cas1SpaceSearchResultsTransformer {
+class Cas1PremisesSearchResultsTransformer {
 
   private val log = LoggerFactory.getLogger(this::class.java)
 
   @SuppressWarnings("SwallowedException")
-  fun transformDomainToApi(results: List<CandidatePremises>) = Cas1SpaceSearchResults(
+  fun transformDomainToApi(results: List<CandidatePremises>) = Cas1PremisesSearchResults(
     resultsCount = results.size,
     results = results.map { candidatePremises ->
-      ApiSpaceSearchResult(
+      ApiPremisesSearchResult(
         premises = Cas1PremisesSearchResultSummary(
           id = candidatePremises.premisesId,
           apType = candidatePremises.apType.asApiType(),

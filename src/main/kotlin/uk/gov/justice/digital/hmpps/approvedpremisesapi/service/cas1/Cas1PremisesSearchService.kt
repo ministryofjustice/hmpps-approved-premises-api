@@ -2,7 +2,7 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1
 
 import org.springframework.data.repository.findByIdOrNull
 import org.springframework.stereotype.Service
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1SpaceSearchParameters
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1PremisesSearchParameters
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesApplicationRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.CharacteristicEntity
@@ -15,12 +15,12 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.CharacteristicSe
 import java.util.UUID
 
 @Service
-class Cas1SpaceSearchService(
+class Cas1PremisesSearchService(
   private val characteristicService: CharacteristicService,
   private val spaceSearchRepository: Cas1SpaceSearchRepository,
   private val applicationRepository: ApprovedPremisesApplicationRepository,
 ) {
-  fun findSpaces(searchParameters: Cas1SpaceSearchParameters): List<CandidatePremises> {
+  fun findSpaces(searchParameters: Cas1PremisesSearchParameters): List<CandidatePremises> {
     val applicationId = searchParameters.applicationId
     val application = applicationRepository.findByIdOrNull(searchParameters.applicationId)
       ?: throw NotFoundProblem(applicationId, "Application")
@@ -36,7 +36,7 @@ class Cas1SpaceSearchService(
     )
   }
 
-  private fun getRequiredCharacteristics(parameters: Cas1SpaceSearchParameters): RequiredCharacteristics {
+  private fun getRequiredCharacteristics(parameters: Cas1PremisesSearchParameters): RequiredCharacteristics {
     val requirements = parameters.requirements
     val apType = requirements.apType
     return RequiredCharacteristics(
@@ -49,7 +49,7 @@ class Cas1SpaceSearchService(
     )
   }
 
-  private fun getSpaceCharacteristics(parameters: Cas1SpaceSearchParameters): GroupedCharacteristics {
+  private fun getSpaceCharacteristics(parameters: Cas1PremisesSearchParameters): GroupedCharacteristics {
     val requirements = parameters.requirements
     val propertyNames =
       (
