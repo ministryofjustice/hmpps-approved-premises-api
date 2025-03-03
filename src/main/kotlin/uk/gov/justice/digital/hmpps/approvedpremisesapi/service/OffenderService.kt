@@ -545,8 +545,13 @@ class OffenderService(
   fun getPersonInfoResult(
     crn: String,
     limitedAccessStrategy: LimitedAccessStrategy,
+  ) = getPersonInfoResults(setOf(crn), limitedAccessStrategy).first()
+
+  fun getPersonInfoResults(
+    crns: Set<String>,
+    limitedAccessStrategy: LimitedAccessStrategy,
   ) = getPersonInfoResults(
-    crns = setOf(crn),
+    crns = crns,
     deliusUsername = when (limitedAccessStrategy) {
       is LimitedAccessStrategy.IgnoreLimitedAccess -> null
       is LimitedAccessStrategy.ReturnRestrictedIfLimitedAccess -> limitedAccessStrategy.deliusUsername
@@ -555,7 +560,7 @@ class OffenderService(
       is LimitedAccessStrategy.IgnoreLimitedAccess -> true
       is LimitedAccessStrategy.ReturnRestrictedIfLimitedAccess -> false
     },
-  ).first()
+  )
 
   @Deprecated(
     """Use version that takes limitedAccessStrategy, derive from [UserEntity.cas1LimitedAccessStrategy()] 
@@ -570,7 +575,7 @@ class OffenderService(
     return getPersonInfoResults(setOf(crn), deliusUsername, ignoreLaoRestrictions).first()
   }
 
-  fun getPersonInfoResults(
+  private fun getPersonInfoResults(
     crns: Set<String>,
     deliusUsername: String?,
     ignoreLaoRestrictions: Boolean,
@@ -603,6 +608,12 @@ class OffenderService(
   }
 }
 
+/**
+ * If the user has the `LAO` qualification, they can always view LAO offenders
+ *
+ * Note that there are some cases in CAS1 where this strategy should not be used
+ * (e.g. when creating applications the LAO qualification should be ignored)
+ */
 fun UserEntity.cas1LimitedAccessStrategy() = if (this.hasQualification(UserQualification.LAO)) {
   LimitedAccessStrategy.IgnoreLimitedAccess
 } else {
