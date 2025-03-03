@@ -19,7 +19,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.OverlapBookin
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ProbationDeliveryUnitRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PersonSummaryInfoResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.repository.BedSearchRepository
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.repository.Cas3BedSearchResult
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.repository.Cas3BedspaceSearchResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.repository.CharacteristicNames
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.repository.TemporaryAccommodationBedSearchResultOverlap
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.CharacteristicService
@@ -165,7 +165,7 @@ class Cas3BedSearchServiceTest {
     )
 
     val repositorySearchResults = listOf(
-      Cas3BedSearchResult(
+      Cas3BedspaceSearchResult(
         premisesId = overlapBookingsSearchResult.premisesId,
         premisesName = "Premises Name",
         premisesAddressLine1 = "1 Someplace",
@@ -253,7 +253,7 @@ class Cas3BedSearchServiceTest {
       .produce()
 
     val expectedResults = listOf(
-      Cas3BedSearchResult(
+      Cas3BedspaceSearchResult(
         premisesId = UUID.randomUUID(),
         premisesName = "Premises Name",
         premisesAddressLine1 = "1 Someplace",
@@ -286,7 +286,7 @@ class Cas3BedSearchServiceTest {
 
     // This bed is in a turnaround
     val unexpectedResults = listOf(
-      Cas3BedSearchResult(
+      Cas3BedspaceSearchResult(
         premisesId = UUID.randomUUID(),
         premisesName = "Another Premises Name",
         premisesAddressLine1 = "2 Someplace",

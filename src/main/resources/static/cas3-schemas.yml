@@ -21,3 +21,74 @@ components:
         - person
         - arrivalDate
         - departureDate
+    Cas3BedspaceSearchResults:
+      type: object
+      properties:
+        resultsRoomCount:
+          type: integer
+          description: How many distinct Rooms the Beds in the results belong to
+        resultsPremisesCount:
+          type: integer
+          description: How many distinct Premises the Beds in the results belong to
+        resultsBedCount:
+          type: integer
+          description: How many Beds are in the results
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/Cas3BedspaceSearchResult'
+      required:
+        - resultsRoomCount
+        - resultsPremisesCount
+        - resultsBedCount
+        - results
+    Cas3BedspaceSearchResult:
+      type: object
+      properties:
+        premises:
+          $ref: '_shared.yml#/components/schemas/BedSearchResultPremisesSummary'
+        room:
+          $ref: '_shared.yml#/components/schemas/BedSearchResultRoomSummary'
+        bed:
+          $ref: '_shared.yml#/components/schemas/BedSearchResultBedSummary'
+        overlaps:
+          type: array
+          items:
+            $ref: '#/components/schemas/Cas3BedspaceSearchResultOverlap'
+      required:
+        - premises
+        - room
+        - bed
+        - overlaps
+    Cas3BedspaceSearchResultOverlap:
+      type: object
+      properties:
+        name:
+          type: string
+        crn:
+          type: string
+        sex:
+          type: string
+        personType:
+          $ref: '_shared.yml#/components/schemas/PersonType'
+        days:
+          type: integer
+        bookingId:
+          type: string
+          format: uuid
+        roomId:
+          type: string
+          format: uuid
+        assessmentId:
+          type: string
+          format: uuid
+        isSexualRisk:
+          type: boolean
+      required:
+        - name
+        - crn
+        - personType
+        - days
+        - bookingId
+        - roomId
+        - isSexualRisk

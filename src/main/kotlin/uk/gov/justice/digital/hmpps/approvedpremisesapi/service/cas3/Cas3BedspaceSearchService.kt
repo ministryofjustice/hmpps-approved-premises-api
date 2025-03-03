@@ -12,7 +12,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PersonSummaryInfoR
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.forCrn
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.validatedCasResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.repository.BedSearchRepository
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.repository.Cas3BedSearchResult
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.repository.Cas3BedspaceSearchResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.repository.TemporaryAccommodationBedSearchResultOverlap
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.CasResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.CharacteristicService
@@ -43,7 +43,7 @@ class Cas3BedspaceSearchService(
   fun findBedspaces(
     user: UserEntity,
     searchParams: TemporaryAccommodationBedSearchParameters,
-  ): CasResult<List<Cas3BedSearchResult>> = validatedCasResult {
+  ): CasResult<List<Cas3BedspaceSearchResult>> = validatedCasResult {
     val probationDeliveryUnitIds = mutableListOf<UUID>()
 
     if (searchParams.durationDays < 1) {
@@ -116,8 +116,8 @@ class Cas3BedspaceSearchService(
    */
   private fun applySearchFilters(
     searchParams: TemporaryAccommodationBedSearchParameters,
-    results: List<Cas3BedSearchResult>,
-  ): List<Cas3BedSearchResult> {
+    results: List<Cas3BedspaceSearchResult>,
+  ): List<Cas3BedspaceSearchResult> {
     // use the legacy filters until the UI switches over.
     val attributes = searchParams.attributes
     if (attributes != null) {
@@ -156,8 +156,8 @@ class Cas3BedspaceSearchService(
   @Deprecated("adding to maintain functionality until the UI switches to use search filters")
   private fun applyLegacyFilters(
     attributes: List<BedSearchAttributes>,
-    results: List<Cas3BedSearchResult>,
-  ): List<Cas3BedSearchResult> = results
+    results: List<Cas3BedspaceSearchResult>,
+  ): List<Cas3BedspaceSearchResult> = results
     .filter { bedspace ->
       !attributes.contains(BedSearchAttributes.WHEELCHAIR_ACCESSIBLE) ||
         bedspace.roomCharacteristics.any { it.propertyName == BedSearchAttributes.WHEELCHAIR_ACCESSIBLE.value }
