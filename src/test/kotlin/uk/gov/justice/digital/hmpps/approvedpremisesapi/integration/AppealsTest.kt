@@ -9,12 +9,12 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Appeal
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.AppealDecision
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApprovedPremisesApplication
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApprovedPremisesApplicationStatus
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1TimelineEvent
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1TimelineEventAssociatedUrl
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1TimelineEventType
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1TimelineEventUrlType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewAppeal
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.TimelineEvent
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.TimelineEventAssociatedUrl
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.TimelineEventType
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.TimelineEventUrlType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAUser
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAnApplication
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAnAssessmentForApprovedPremises
@@ -454,7 +454,7 @@ class AppealsTest : InitialiseDatabasePerClassTestBase() {
           val appeal = appealTestRepository.findByApplicationId(application.id)!!
 
           val timelineResult = webTestClient.get()
-            .uri("/applications/${application.id}/timeline")
+            .uri("/cas1/applications/${application.id}/timeline")
             .header("Authorization", "Bearer $jwt")
             .header("X-Service-Name", ServiceName.approvedPremises.value)
             .exchange()
@@ -462,12 +462,12 @@ class AppealsTest : InitialiseDatabasePerClassTestBase() {
             .isOk
             .returnResult(String::class.java)
 
-          val timeline = objectMapper.readValue<List<TimelineEvent>>(timelineResult.responseBody.blockFirst()!!)
+          val timeline = objectMapper.readValue<List<Cas1TimelineEvent>>(timelineResult.responseBody.blockFirst()!!)
 
           assertThat(timeline).anyMatch {
-            it.type == TimelineEventType.approvedPremisesAssessmentAppealed &&
+            it.type == Cas1TimelineEventType.assessmentAppealed &&
               it.associatedUrls?.contains(
-                TimelineEventAssociatedUrl(TimelineEventUrlType.assessmentAppeal, "http://frontend/applications/${application.id}/appeals/${appeal.id}"),
+                Cas1TimelineEventAssociatedUrl(Cas1TimelineEventUrlType.assessmentAppeal, "http://frontend/applications/${application.id}/appeals/${appeal.id}"),
               ) == true
           }
         }
@@ -519,7 +519,7 @@ class AppealsTest : InitialiseDatabasePerClassTestBase() {
             .isCreated
 
           val timelineResult = webTestClient.get()
-            .uri("/applications/${application.id}/timeline")
+            .uri("/cas1/applications/${application.id}/timeline")
             .header("Authorization", "Bearer $jwt")
             .header("X-Service-Name", ServiceName.approvedPremises.value)
             .exchange()
@@ -527,7 +527,7 @@ class AppealsTest : InitialiseDatabasePerClassTestBase() {
             .isOk
             .returnResult(String::class.java)
 
-          val timeline = objectMapper.readValue<List<TimelineEvent>>(timelineResult.responseBody.blockFirst()!!)
+          val timeline = objectMapper.readValue<List<Cas1TimelineEvent>>(timelineResult.responseBody.blockFirst()!!)
 
           assertThat(timeline.size).isEqualTo(2)
         }
