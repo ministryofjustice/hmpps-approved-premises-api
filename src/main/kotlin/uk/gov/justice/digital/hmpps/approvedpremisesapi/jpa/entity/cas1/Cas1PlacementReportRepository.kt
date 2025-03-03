@@ -13,41 +13,59 @@ class Cas1PlacementReportRepository(
 
   companion object {
     private const val SELECT_DATASET_QUERY = """
-          SELECT csb.id AS placement_id,
-                 p.name AS premises_name,
-                 pr.name AS premises_region,
-                 csb.expected_arrival_date,
-                 COALESCE(csb.expected_departure_date - csb.expected_arrival_date, 0) AS expected_duration_nights,
-                 csb.expected_departure_date,
-                 (csb.actual_arrival_date + csb.actual_arrival_time) AS actual_arrival_date_time,
-                 COALESCE(csb.actual_departure_date - csb.actual_arrival_date, 0) AS actual_duration_nights,
-                 (csb.actual_departure_date + csb.actual_departure_time) AS actual_departure_date_time,
-                 dr.name AS departure_reason,
-                 moc.name AS departure_move_on_category,
-                 csb.non_arrival_confirmed_at AS non_arrival_recorded_date_time,
-                 nar.name AS non_arrival_reason,
-                 csb.cancellation_occurred_at AS placement_withdrawn_date,
-                 csb.cancellation_recorded_at AS placement_withdrawal_recorded_date_time,
-                 cr.name AS placement_withdrawn_reason,
-                 (SELECT STRING_AGG(c.property_name, ', ' ORDER BY csb.expected_arrival_date)
-                     FROM cas1_space_bookings_criteria criteria
-                     LEFT JOIN "characteristics" c ON c.id = criteria.characteristic_id
-                     WHERE criteria.space_booking_id = csb.id) AS criteria,
-                 matching.*
-          FROM cas1_space_bookings csb
-          INNER JOIN placement_matching_outcomes matching ON matching.placement_request_id = csb.placement_request_id
-          LEFT JOIN premises p ON p.id = csb.premises_id
-          LEFT JOIN probation_regions pr ON pr.id = p.probation_region_id
-          LEFT JOIN departure_reasons dr ON dr.id = csb.departure_reason_id
-          LEFT JOIN move_on_categories moc ON moc.id = csb.departure_move_on_category_id
-          LEFT JOIN non_arrival_reasons nar ON nar.id = csb.non_arrival_reason_id
-          LEFT JOIN cancellation_reasons cr ON cr.id =  csb.cancellation_reason_id
-          WHERE
-              (csb.canonical_arrival_date >= :startDateTimeInclusive AND csb.canonical_arrival_date <= :endDateTimeInclusive) OR
-              (csb.canonical_departure_date >= :startDateTimeInclusive AND csb.canonical_departure_date <= :endDateTimeInclusive) OR
-              (csb.non_arrival_confirmed_at >= :startDateTimeInclusive AND csb.non_arrival_confirmed_at <= :endDateTimeInclusive) OR
-             (csb.cancellation_occurred_at >= :startDateTimeInclusive AND csb.cancellation_occurred_at <= :endDateTimeInclusive) 
-          ORDER BY csb.expected_arrival_date ASC
+      SELECT 
+            csb.id AS placement_id,
+            p.name AS premises_name,
+            pr.name AS premises_region,
+            csb.expected_arrival_date,
+            COALESCE(csb.expected_departure_date - csb.expected_arrival_date, 0) AS expected_duration_nights,
+            csb.expected_departure_date,
+            csb.actual_arrival_date,
+            csb.actual_arrival_time,
+            COALESCE(csb.actual_departure_date - csb.actual_arrival_date, 0) AS actual_duration_nights,
+            csb.actual_departure_date,
+            csb.actual_departure_time,
+            dr.name AS departure_reason,
+            moc.name AS departure_move_on_category,
+            csb.non_arrival_confirmed_at AS non_arrival_recorded_date_time,
+            nar.name AS non_arrival_reason,
+            csb.cancellation_occurred_at AS placement_withdrawn_date,
+            csb.cancellation_recorded_at AS placement_withdrawal_recorded_date_time,
+            cr.name AS placement_withdrawn_reason,
+            criteria_grouped.criteria AS criteria,
+            matching.*
+        FROM cas1_space_bookings csb
+        INNER JOIN placement_matching_outcomes matching ON matching.placement_request_id = csb.placement_request_id
+        LEFT JOIN premises p ON p.id = csb.premises_id
+        LEFT JOIN probation_regions pr ON pr.id = p.probation_region_id
+        LEFT JOIN departure_reasons dr ON dr.id = csb.departure_reason_id
+        LEFT JOIN move_on_categories moc ON moc.id = csb.departure_move_on_category_id
+        LEFT JOIN non_arrival_reasons nar ON nar.id = csb.non_arrival_reason_id
+        LEFT JOIN cancellation_reasons cr ON cr.id = csb.cancellation_reason_id
+        LEFT JOIN (
+            SELECT 
+                criteria.space_booking_id,
+                STRING_AGG(c.property_name, ', ' ORDER BY c.property_name) AS criteria
+            FROM cas1_space_bookings_criteria criteria
+            LEFT JOIN "characteristics" c ON c.id = criteria.characteristic_id
+            GROUP BY criteria.space_booking_id
+        ) criteria_grouped ON criteria_grouped.space_booking_id = csb.id
+        WHERE 
+            (
+                csb.canonical_arrival_date >= :startDateTimeInclusive 
+                AND csb.canonical_arrival_date <= :endDateTimeInclusive
+            ) OR (
+                csb.canonical_departure_date >= :startDateTimeInclusive 
+                AND csb.canonical_departure_date <= :endDateTimeInclusive
+            ) OR (
+                csb.non_arrival_confirmed_at >= :startDateTimeInclusive 
+                AND csb.non_arrival_confirmed_at <= :endDateTimeInclusive
+            ) OR (
+                csb.cancellation_occurred_at >= :startDateTimeInclusive 
+                AND csb.cancellation_occurred_at <= :endDateTimeInclusive
+            )
+        ORDER BY csb.expected_arrival_date ASC
+
       """
   }
 

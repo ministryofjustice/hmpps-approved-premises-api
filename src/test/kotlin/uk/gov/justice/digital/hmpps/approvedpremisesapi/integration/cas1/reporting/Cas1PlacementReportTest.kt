@@ -316,8 +316,10 @@ class Cas1PlacementReportTest : InitialiseDatabasePerClassTestBase() {
       assertThat(row.placement_id).isEqualTo(booking.id.toString())
       assertThat(row.expected_arrival_date).isEqualTo("07-Feb-2024")
       assertThat(row.expected_departure_date).isEqualTo("10-May-2024")
-      assertThat(row.actual_arrival_date_time).isEqualTo("07-Feb-2024 11:00:00")
-      assertThat(row.actual_departure_date_time).isEqualTo("10-May-2024 23:00:00")
+      assertThat(row.actual_arrival_date).isEqualTo("07-Feb-2024")
+      assertThat(row.actual_arrival_time).isEqualTo("11:00")
+      assertThat(row.actual_departure_date).isEqualTo("10-May-2024")
+      assertThat(row.actual_departure_time).isEqualTo("23:00")
       assertThat(row.premises_name).isEqualTo("premisesName")
       assertThat(row.premises_region).isEqualTo("southWest")
       assertThat(row.actual_duration_nights).isEqualTo("93")
@@ -391,8 +393,10 @@ class Cas1PlacementReportTest : InitialiseDatabasePerClassTestBase() {
       assertThat(row.placement_id).isEqualTo(booking.id.toString())
       assertThat(row.expected_arrival_date).isEqualTo("07-Jan-2024")
       assertThat(row.expected_departure_date).isEqualTo("01-Feb-2024")
-      assertThat(row.actual_arrival_date_time).isEqualTo("07-Jan-2024 11:00:00")
-      assertThat(row.actual_departure_date_time).isEqualTo("01-Feb-2024 23:00:00")
+      assertThat(row.actual_arrival_date).isEqualTo("07-Jan-2024")
+      assertThat(row.actual_arrival_time).isEqualTo("11:00")
+      assertThat(row.actual_departure_date).isEqualTo("01-Feb-2024")
+      assertThat(row.actual_departure_time).isEqualTo("23:00")
       assertThat(row.premises_name).isEqualTo("premisesName")
       assertThat(row.premises_region).isEqualTo("southWest")
       assertThat(row.actual_duration_nights).isEqualTo("25")
@@ -460,8 +464,10 @@ class Cas1PlacementReportTest : InitialiseDatabasePerClassTestBase() {
       assertThat(row.placement_id).isEqualTo(booking.id.toString())
       assertThat(row.expected_arrival_date).isEqualTo("15-Jan-2024")
       assertThat(row.expected_departure_date).isEqualTo("01-May-2024")
-      assertThat(row.actual_arrival_date_time).isEqualTo(null)
-      assertThat(row.actual_departure_date_time).isEqualTo(null)
+      assertThat(row.actual_arrival_date).isEqualTo(null)
+      assertThat(row.actual_arrival_time).isEqualTo(null)
+      assertThat(row.actual_departure_date).isEqualTo(null)
+      assertThat(row.actual_departure_time).isEqualTo(null)
       assertThat(row.premises_name).isEqualTo("premisesName")
       assertThat(row.premises_region).isEqualTo("southWest")
       assertThat(row.actual_duration_nights).isEqualTo("0")
@@ -534,8 +540,10 @@ class Cas1PlacementReportTest : InitialiseDatabasePerClassTestBase() {
       assertThat(row.placement_id).isEqualTo(booking.id.toString())
       assertThat(row.expected_arrival_date).isEqualTo("20-May-2024")
       assertThat(row.expected_departure_date).isEqualTo("01-Aug-2024")
-      assertThat(row.actual_arrival_date_time).isEqualTo(null)
-      assertThat(row.actual_departure_date_time).isEqualTo(null)
+      assertThat(row.actual_arrival_date).isEqualTo(null)
+      assertThat(row.actual_arrival_time).isEqualTo(null)
+      assertThat(row.actual_departure_date).isEqualTo(null)
+      assertThat(row.actual_departure_time).isEqualTo(null)
       assertThat(row.premises_name).isEqualTo("premisesName")
       assertThat(row.premises_region).isEqualTo("southWest")
       assertThat(row.actual_duration_nights).isEqualTo("0")
@@ -766,8 +774,10 @@ data class PlacementReportRow(
   val expected_arrival_date: String?,
   val expected_duration_nights: String?,
   val expected_departure_date: String?,
-  val actual_arrival_date_time: String?,
-  val actual_departure_date_time: String?,
+  val actual_arrival_date: String?,
+  val actual_arrival_time: String?,
+  val actual_departure_date: String?,
+  val actual_departure_time: String?,
   val actual_duration_nights: String?,
   val departure_reason: String?,
   val departure_move_on_category: String?,
