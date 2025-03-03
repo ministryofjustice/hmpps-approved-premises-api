@@ -780,6 +780,40 @@ paths:
           $ref: '_shared.yml#/components/responses/403Response'
         500:
           $ref: '_shared.yml#/components/responses/500Response'
+  /premises/{premisesId}/beds/{bedId}:
+    get:
+      tags:
+        - Premises
+      summary: Gets a given bed for a given premises
+      operationId: getBed
+      parameters:
+        - name: premisesId
+          in: path
+          description: ID of the premises that the bed is in
+          required: true
+          schema:
+            type: string
+            format: uuid
+        - name: bedId
+          in: path
+          description: ID of the bed to return
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        200:
+          description: successful operation
+          content:
+            'application/json':
+              schema:
+                $ref: 'cas1-schemas.yml#/components/schemas/Cas1BedDetail'
+        401:
+          $ref: '_shared.yml#/components/responses/401Response'
+        403:
+          $ref: '_shared.yml#/components/responses/403Response'
+        500:
+          $ref: '_shared.yml#/components/responses/500Response'
   /premises/{premisesId}/capacity:
     get:
       tags:

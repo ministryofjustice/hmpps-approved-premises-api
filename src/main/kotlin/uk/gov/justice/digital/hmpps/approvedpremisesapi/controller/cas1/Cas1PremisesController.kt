@@ -4,6 +4,7 @@ import org.springframework.http.ResponseEntity
 import org.springframework.stereotype.Service
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.cas1.PremisesCas1Delegate
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1ApprovedPremisesGender
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1BedDetail
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1PremiseCapacity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1Premises
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1PremisesBasicSummary
@@ -16,10 +17,13 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremi
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserPermission
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.ForbiddenProblem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.NotFoundProblem
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.AuthorisableActionResult
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.BedService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.UserAccessService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1OutOfServiceBedSummaryService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1PremisesService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1SpaceBookingDaySummaryService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.cas1.Cas1BedDetailTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.cas1.Cas1BedSummaryTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.cas1.Cas1OutOfServiceBedSummaryTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.cas1.Cas1PremiseCapacitySummaryTransformer
@@ -35,7 +39,9 @@ class Cas1PremisesController(
   val cas1PremisesService: Cas1PremisesService,
   val cas1PremisesTransformer: Cas1PremisesTransformer,
   val cas1PremiseCapacityTransformer: Cas1PremiseCapacitySummaryTransformer,
+  private val bedService: BedService,
   private val cas1BedSummaryTransformer: Cas1BedSummaryTransformer,
+  private val cas1BedDetailTransformer: Cas1BedDetailTransformer,
   private val cas1PremisesDayTransformer: Cas1PremisesDayTransformer,
   private val cas1SpaceBookingDaySummaryService: Cas1SpaceBookingDaySummaryService,
   private val cas1OutOfServiceBedSummaryService: Cas1OutOfServiceBedSummaryService,
@@ -51,6 +57,23 @@ class Cas1PremisesController(
     }
 
     return ResponseEntity.ok(cas1PremisesService.getBeds(premisesId).map(cas1BedSummaryTransformer::transformJpaToApi))
+  }
+
+  override fun getBed(premisesId: UUID, bedId: UUID): ResponseEntity<Cas1BedDetail> {
+    val premises = cas1PremisesService.findPremiseById(premisesId)
+      ?: throw NotFoundProblem(premisesId, "Premises")
+
+    if (!userAccessService.currentUserCanViewPremises(premises)) {
+      throw ForbiddenProblem()
+    }
+
+    val bedAndCharacteristics = when (val bedResult = bedService.getBedAndRoomCharacteristics(bedId)) {
+      is AuthorisableActionResult.Unauthorised -> throw ForbiddenProblem()
+      is AuthorisableActionResult.NotFound -> throw NotFoundProblem(bedResult.id!!, bedResult.entityType!!)
+      is AuthorisableActionResult.Success -> bedResult.entity
+    }
+
+    return ResponseEntity.ok(cas1BedDetailTransformer.transformToApi(bedAndCharacteristics))
   }
 
   override fun getPremisesById(premisesId: UUID): ResponseEntity<Cas1Premises> {
