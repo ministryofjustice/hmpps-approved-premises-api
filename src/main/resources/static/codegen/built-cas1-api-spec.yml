@@ -782,6 +782,40 @@ paths:
           $ref: '#/components/responses/403Response'
         500:
           $ref: '#/components/responses/500Response'
+  /premises/{premisesId}/beds/{bedId}:
+    get:
+      tags:
+        - Premises
+      summary: Gets a given bed for a given premises
+      operationId: getBed
+      parameters:
+        - name: premisesId
+          in: path
+          description: ID of the premises that the bed is in
+          required: true
+          schema:
+            type: string
+            format: uuid
+        - name: bedId
+          in: path
+          description: ID of the bed to return
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        200:
+          description: successful operation
+          content:
+            'application/json':
+              schema:
+                $ref: '#/components/schemas/Cas1BedDetail'
+        401:
+          $ref: '#/components/responses/401Response'
+        403:
+          $ref: '#/components/responses/403Response'
+        500:
+          $ref: '#/components/responses/500Response'
   /premises/{premisesId}/capacity:
     get:
       tags:
@@ -7054,6 +7088,28 @@ components:
         - requestsForPlacementWithPii
         - placements
         - placementsWithPii
+    Cas1BedDetail:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        name:
+          type: string
+        roomName:
+          type: string
+        status:
+          $ref: '#/components/schemas/BedStatus'
+        characteristics:
+          type: array
+          items:
+            $ref: '#/components/schemas/Cas1SpaceCharacteristic'
+      required:
+        - id
+        - name
+        - roomName
+        - status
+        - characteristics
     Cas1OutOfServiceBedSummary:
       type: object
       properties:

@@ -57,7 +57,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.NotImplementedPr
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.AuthorisableActionResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.CasResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.ValidatableActionResult
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.BedService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.BookingService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.GetBookingForPremisesResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.OffenderService
@@ -66,6 +65,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.RoomService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.StaffMemberService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.UserAccessService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.UserService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1BedService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1WithdrawableService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas3.Cas3BookingService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas3.Cas3PremisesService
@@ -105,7 +105,7 @@ class PremisesController(
   private val bookingService: BookingService,
   private val cas3BookingService: Cas3BookingService,
   private val cas3VoidBedspaceService: Cas3VoidBedspaceService,
-  private val bedService: BedService,
+  private val cas1BedService: Cas1BedService,
   private val premisesTransformer: PremisesTransformer,
   private val cas3PremisesSummaryTransformer: Cas3PremisesSummaryTransformer,
   private val bookingTransformer: BookingTransformer,
@@ -938,13 +938,7 @@ class PremisesController(
       throw ForbiddenProblem()
     }
 
-    val validationResult = when (val bedResult = bedService.getBedAndRoomCharacteristics(bedId)) {
-      is AuthorisableActionResult.NotFound -> throw NotFoundProblem(bedId, "Bed")
-      is AuthorisableActionResult.Success -> bedResult.entity
-      is AuthorisableActionResult.Unauthorised -> throw ForbiddenProblem()
-    }
-
-    return ResponseEntity.ok(bedDetailTransformer.transformToApi(validationResult))
+    return ResponseEntity.ok(bedDetailTransformer.transformToApi(extractEntityFromCasResult(cas1BedService.getBedAndRoomCharacteristics(bedId))))
   }
 
   @SuppressWarnings("ThrowsCount")

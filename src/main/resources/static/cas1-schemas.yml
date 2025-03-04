@@ -719,6 +719,28 @@ components:
         - requestsForPlacementWithPii
         - placements
         - placementsWithPii
+    Cas1BedDetail:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        name:
+          type: string
+        roomName:
+          type: string
+        status:
+          $ref: '_shared.yml#/components/schemas/BedStatus'
+        characteristics:
+          type: array
+          items:
+            $ref: '_shared.yml#/components/schemas/Cas1SpaceCharacteristic'
+      required:
+        - id
+        - name
+        - roomName
+        - status
+        - characteristics
     Cas1OutOfServiceBedSummary:
       type: object
       properties:
