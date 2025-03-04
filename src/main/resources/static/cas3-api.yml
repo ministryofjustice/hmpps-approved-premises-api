@@ -94,6 +94,27 @@ paths:
             'application/problem+json':
               schema:
                 $ref: '_shared.yml#/components/schemas/ValidationError'
+  /premises/summary:
+    get:
+      tags:
+        - Premises
+      summary: Returns a list of premises
+      operationId: getPremisesSummary
+      responses:
+        200:
+          description: successful operation
+          content:
+            'application/json':
+              schema:
+                type: array
+                items:
+                  $ref: 'cas3-schemas.yml#/components/schemas/Cas3PremisesSummary'
+        401:
+          $ref: '_shared.yml#/components/responses/401Response'
+        403:
+          $ref: '_shared.yml#/components/responses/403Response'
+        500:
+          $ref: '_shared.yml#/components/responses/500Response'
   /premises/{premisesId}/future-bookings:
     get:
       tags:

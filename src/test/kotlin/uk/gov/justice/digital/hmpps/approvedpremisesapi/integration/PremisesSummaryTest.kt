@@ -1,6 +1,8 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.integration
 
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.params.ParameterizedTest
+import org.junit.jupiter.params.provider.CsvSource
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PropertyStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAProbationRegion
@@ -8,8 +10,9 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.given
 import java.time.LocalDate
 import java.util.UUID
 class PremisesSummaryTest : IntegrationTestBase() {
-  @Test
-  fun `Get all CAS3 Premises returns OK with correct body`() {
+  @ParameterizedTest
+  @CsvSource("/premises/summary", "/cas3/premises/summary")
+  fun `Get all CAS3 Premises returns OK with correct body`(baseUrl: String) {
     givenAUser { user, jwt ->
       val uuid = UUID.randomUUID()
 
@@ -44,7 +47,7 @@ class PremisesSummaryTest : IntegrationTestBase() {
       }
 
       webTestClient.get()
-        .uri("/premises/summary")
+        .uri(baseUrl)
         .header("Authorization", "Bearer $jwt")
         .header("X-Service-Name", ServiceName.temporaryAccommodation.value)
         .exchange()
@@ -63,8 +66,9 @@ class PremisesSummaryTest : IntegrationTestBase() {
     }
   }
 
-  @Test
-  fun `Get all CAS3 Premises returns premises with all bedspaces are archived`() {
+  @ParameterizedTest
+  @CsvSource("/premises/summary", "/cas3/premises/summary")
+  fun `Get all CAS3 Premises returns premises with all bedspaces are archived`(baseUrl: String) {
     givenAUser { user, jwt ->
       val uuidPremises = UUID.randomUUID()
       val expectedCas3Premises = temporaryAccommodationPremisesEntityFactory.produceAndPersist {
@@ -102,7 +106,7 @@ class PremisesSummaryTest : IntegrationTestBase() {
       }
 
       webTestClient.get()
-        .uri("/premises/summary")
+        .uri(baseUrl)
         .header("Authorization", "Bearer $jwt")
         .header("X-Service-Name", ServiceName.temporaryAccommodation.value)
         .exchange()
@@ -120,8 +124,9 @@ class PremisesSummaryTest : IntegrationTestBase() {
     }
   }
 
-  @Test
-  fun `Get all CAS3 Premises returns premises without bedspaces`() {
+  @ParameterizedTest
+  @CsvSource("/premises/summary", "/cas3/premises/summary")
+  fun `Get all CAS3 Premises returns premises without bedspaces`(baseUrl: String) {
     givenAUser { user, jwt ->
       val uuidPremises = UUID.randomUUID()
       val expectedCas3Premises = temporaryAccommodationPremisesEntityFactory.produceAndPersist {
@@ -141,7 +146,7 @@ class PremisesSummaryTest : IntegrationTestBase() {
       }
 
       webTestClient.get()
-        .uri("/premises/summary")
+        .uri(baseUrl)
         .header("Authorization", "Bearer $jwt")
         .header("X-Service-Name", ServiceName.temporaryAccommodation.value)
         .exchange()
@@ -160,8 +165,9 @@ class PremisesSummaryTest : IntegrationTestBase() {
     }
   }
 
-  @Test
-  fun `Get all CAS3 Premises returns bedspace count as expected when there is an archived bedspace`() {
+  @ParameterizedTest
+  @CsvSource("/premises/summary", "/cas3/premises/summary")
+  fun `Get all CAS3 Premises returns bedspace count as expected when there is an archived bedspace`(baseUrl: String) {
     givenAUser { user, jwt ->
       val uuid = UUID.randomUUID()
 
@@ -195,7 +201,7 @@ class PremisesSummaryTest : IntegrationTestBase() {
       }
 
       webTestClient.get()
-        .uri("/premises/summary")
+        .uri(baseUrl)
         .header("Authorization", "Bearer $jwt")
         .header("X-Service-Name", ServiceName.temporaryAccommodation.value)
         .exchange()
@@ -213,8 +219,9 @@ class PremisesSummaryTest : IntegrationTestBase() {
     }
   }
 
-  @Test
-  fun `Get all CAS3 Premises returns a bedspace count as expected when beds are active`() {
+  @ParameterizedTest
+  @CsvSource("/premises/summary", "/cas3/premises/summary")
+  fun `Get all CAS3 Premises returns a bedspace count as expected when beds are active`(baseUrl: String) {
     givenAUser { user, jwt ->
       val uuid = UUID.randomUUID()
 
@@ -248,7 +255,7 @@ class PremisesSummaryTest : IntegrationTestBase() {
       }
 
       webTestClient.get()
-        .uri("/premises/summary")
+        .uri(baseUrl)
         .header("Authorization", "Bearer $jwt")
         .header("X-Service-Name", ServiceName.temporaryAccommodation.value)
         .exchange()
