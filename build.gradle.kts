@@ -458,3 +458,7 @@ detekt {
   ignoreFailures = false
   baseline = file("./detekt-baseline.xml")
 }
+
+dependencyCheck {
+  suppressionFile = ".dependencycheckignore"
+}
