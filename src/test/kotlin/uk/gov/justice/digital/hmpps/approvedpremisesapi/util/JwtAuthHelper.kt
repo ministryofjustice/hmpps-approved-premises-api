@@ -7,8 +7,6 @@ import org.springframework.context.annotation.Primary
 import org.springframework.security.oauth2.jwt.JwtDecoder
 import org.springframework.security.oauth2.jwt.NimbusJwtDecoder
 import org.springframework.stereotype.Component
-import java.security.KeyPair
-import java.security.KeyPairGenerator
 import java.security.interfaces.RSAPublicKey
 import java.time.Duration
 import java.util.Date
@@ -16,13 +14,7 @@ import java.util.UUID
 
 @Component
 class JwtAuthHelper {
-  private val keyPair: KeyPair
-
-  init {
-    val gen = KeyPairGenerator.getInstance("RSA")
-    gen.initialize(2048)
-    keyPair = gen.generateKeyPair()
-  }
+  private val keyPair = Jwts.SIG.RS256.keyPair().build()
 
   @Bean
   @Primary
@@ -54,11 +46,11 @@ class JwtAuthHelper {
     .also { scope?.let { scope -> it["scope"] = scope } }
     .let {
       Jwts.builder()
-        .setId(jwtId)
-        .setSubject(username ?: "integration-test-client-id")
-        .addClaims(it.toMap())
-        .setExpiration(Date(System.currentTimeMillis() + expiryTime.toMillis()))
-        .signWith(SignatureAlgorithm.RS256, keyPair.private)
+        .id(jwtId)
+        .subject(username ?: "integration-test-client-id")
+        .claims(it.toMap())
+        .expiration(Date(System.currentTimeMillis() + expiryTime.toMillis()))
+        .signWith(keyPair.private, Jwts.SIG.RS256)
         .compact()
     }
 
