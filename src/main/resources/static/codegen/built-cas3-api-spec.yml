@@ -157,12 +157,12 @@ paths:
   /bedspaces/search:
     post:
       summary: Searches for available Beds within the given parameters
-      operationId: bedspaceSearchPost
+      operationId: postBedspaceSearch
       requestBody:
         content:
           'application/json':
             schema:
-              $ref: '#/components/schemas/TemporaryAccommodationBedSearchParameters'
+              $ref: '#/components/schemas/Cas3BedspaceSearchParameters'
         required: true
       responses:
         200:
@@ -4785,6 +4785,45 @@ components:
         - person
         - arrivalDate
         - departureDate
+    Cas3BedspaceSearchParameters:
+      type: object
+      properties:
+        startDate:
+          type: string
+          format: date
+        durationDays:
+          type: integer
+          format: int64
+          description: The number of days the Bed will need to be free from the start_date until
+        probationDeliveryUnits:
+          type: array
+          description: The list of pdus Ids to search within
+          items:
+            type: string
+            format: uuid
+        premisesFilters:
+          $ref: '#/components/schemas/PremisesFilters'
+        bedspaceFilters:
+          $ref: '#/components/schemas/BedspaceFilters'
+        attributes:
+          type: array
+          description: Bedspace and property attributes to filter on
+          items:
+            $ref: "#/components/schemas/BedspaceSearchAttributes"
+      required:
+        - probationDeliveryUnits
+        - startDate
+        - durationDays
+    BedspaceSearchAttributes:
+      type: string
+      enum:
+        - isSharedProperty
+        - isSingleOccupancy
+        - isWheelchairAccessible
+      x-enum-varnames:
+        - SHARED_PROPERTY
+        - SINGLE_OCCUPANCY
+        - WHEELCHAIR_ACCESSIBLE
     Cas3BedspaceSearchResults:
       type: object
       properties:
