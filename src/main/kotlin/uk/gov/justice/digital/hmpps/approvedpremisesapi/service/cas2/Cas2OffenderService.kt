@@ -11,6 +11,8 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.PrisonsApiClient
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.ProbationOffenderSearchApiClient
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.datasource.OffenderDetailsDataSource
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.NomisUserEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas2.Cas2OffenderEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas2.Cas2OffenderRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PersonInfoResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PersonRisks
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.RiskStatus
@@ -24,7 +26,8 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.NotFoundProblem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.AuthorisableActionResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.CasResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.OffenderService
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas2.ProbationOffenderSearchResult
+import java.time.OffsetDateTime
+import java.util.UUID
 import java.util.stream.Collectors
 
 /**
@@ -45,10 +48,22 @@ class Cas2OffenderService(
   private val probationOffenderSearchApiClient: ProbationOffenderSearchApiClient,
   private val apOASysContextApiClient: ApOASysContextApiClient,
   private val offenderDetailsDataSource: OffenderDetailsDataSource,
+  private val cas2OffenderRepository: Cas2OffenderRepository,
   @Value("\${cas2.crn-search-limit:400}") private val numberOfCrn: Int,
 ) {
 
   private val log = LoggerFactory.getLogger(this::class.java)
+
+  fun findByNomsNumber(nomsNumber: String): Cas2OffenderEntity? = cas2OffenderRepository.findByNomsNumber(nomsNumber)
+  fun createCas2Offender(nomsNumber: String, crn: String): Cas2OffenderEntity = cas2OffenderRepository.save(
+    Cas2OffenderEntity(
+      id = UUID.randomUUID(),
+      nomsNumber = nomsNumber,
+      crn = crn,
+      createdAt = OffsetDateTime.now(),
+      updatedAt = OffsetDateTime.now(),
+    ),
+  )
 
   fun getPersonByNomsNumberAndActiveCaseLoadId(
     nomsNumber: String,
