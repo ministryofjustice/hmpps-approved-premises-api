@@ -172,6 +172,8 @@ class Cas1SpaceBookingTransformer(
     canonicalDepartureDate = spaceBooking.canonicalDepartureDate,
     expectedArrivalDate = spaceBooking.expectedArrivalDate,
     expectedDepartureDate = spaceBooking.expectedDepartureDate,
+    actualArrivalDate = spaceBooking.actualArrivalDate,
+    actualDepartureDate = spaceBooking.actualDepartureDate,
     isNonArrival = spaceBooking.hasNonArrival(),
     tier = spaceBooking.application?.riskRatings?.tier?.value?.level,
     keyWorkerAllocation = spaceBooking.extractKeyWorkerAllocation(),
