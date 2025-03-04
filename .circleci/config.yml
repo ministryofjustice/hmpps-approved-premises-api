@@ -22,7 +22,7 @@ executors:
     resource_class: medium+
     docker:
       - image: cimg/openjdk:21.0.2
-      - image: "postgis/postgis"
+      - image: "postgis/postgis:14-3.5"
         environment:
           - POSTGRES_USER=api_user
           - POSTGRES_PASSWORD=api_user_password
