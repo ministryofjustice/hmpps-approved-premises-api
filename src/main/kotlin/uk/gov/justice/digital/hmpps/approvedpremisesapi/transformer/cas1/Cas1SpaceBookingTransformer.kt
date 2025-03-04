@@ -207,6 +207,8 @@ class Cas1SpaceBookingTransformer(
     canonicalDepartureDate = searchResult.canonicalDepartureDate,
     expectedArrivalDate = searchResult.expectedArrivalDate,
     expectedDepartureDate = searchResult.expectedDepartureDate,
+    actualArrivalDate = searchResult.actualArrivalDate,
+    actualDepartureDate = searchResult.actualDepartureDate,
     isNonArrival = when {
       searchResult.nonArrivalConfirmedAtDateTime != null -> true
       searchResult.actualArrivalDate != null -> false
