@@ -21,6 +21,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas2Applicati
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas2ApplicationSummaryEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas2LockableApplicationRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.NomisUserEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas2.Cas2OffenderEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.DomainEvent
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PaginationMetadata
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PersonInfoResult
@@ -267,7 +268,18 @@ class Cas2ApplicationService(
 
     createAssessment(application)
 
-    prisonerLocationService.createPrisonerLocation(application)
+    // This to be moved earlier in the process of creating an application, when the applications table is updated to use offenderId.
+    // added this here as the call to get the offender prison details happens immediately before in `retrievePrisonCode()`.
+    val prisonCode = application.referringPrisonCode!!
+    val offender: Cas2OffenderEntity =
+      offenderService.findByNomsNumber(application.nomsNumber!!) ?: offenderService.createCas2Offender(
+        nomsNumber = application.nomsNumber!!,
+        crn = application.crn,
+      )
+
+    if (!offender.hasCorrectCurrentLocation(prisonCode, user.id)) {
+      prisonerLocationService.createPrisonerLocation(prisonCode, user.id, OffsetDateTime.now(), offender)
+    }
 
     sendEmailApplicationSubmitted(user, application)
 

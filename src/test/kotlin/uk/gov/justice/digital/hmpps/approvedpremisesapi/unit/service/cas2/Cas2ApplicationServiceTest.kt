@@ -32,10 +32,13 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas2Applicati
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas2ApplicationSummaryEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas2LockableApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas2LockableApplicationRepository
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas2PrisonerLocationEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas2.Cas2OffenderEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PersonInfoResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.prisonsapi.AssignedLivingUnit
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.AuthorisableActionResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.EmailNotificationService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas2.Cas2ApplicationService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas2.Cas2AssessmentService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas2.Cas2DomainEventService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas2.Cas2JsonSchemaService
@@ -56,7 +59,7 @@ class Cas2ApplicationServiceTest {
   private val mockLockableApplicationRepository = mockk<Cas2LockableApplicationRepository>()
   private val mockApplicationSummaryRepository = mockk<ApplicationSummaryRepository>()
   private val mockJsonSchemaService = mockk<Cas2JsonSchemaService>()
-  private val mockOffenderService = mockk<Cas2OffenderService>()
+  private val cas2OffenderService = mockk<Cas2OffenderService>()
   private val mockUserAccessService = mockk<Cas2UserAccessService>()
   private val mockDomainEventService = mockk<Cas2DomainEventService>()
   private val mockEmailNotificationService = mockk<EmailNotificationService>()
@@ -65,12 +68,12 @@ class Cas2ApplicationServiceTest {
   private val mockNotifyConfig = mockk<NotifyConfig>()
   private val prisonerLocationService = mockk<Cas2PrisonerLocationService>()
 
-  private val applicationService = uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas2.Cas2ApplicationService(
+  private val applicationService = Cas2ApplicationService(
     mockApplicationRepository,
     mockLockableApplicationRepository,
     mockApplicationSummaryRepository,
     mockJsonSchemaService,
-    mockOffenderService,
+    cas2OffenderService,
     mockUserAccessService,
     mockDomainEventService,
     mockEmailNotificationService,
@@ -770,7 +773,6 @@ class Cas2ApplicationServiceTest {
         every { mockLockableApplicationRepository.acquirePessimisticLock(any()) } returns Cas2LockableApplicationEntity(
           UUID.randomUUID(),
         )
-        every { prisonerLocationService.createPrisonerLocation(any()) } just Runs
 
         every { mockObjectMapper.writeValueAsString(submitCas2Application.translatedDocument) } returns "{}"
         every { mockDomainEventService.saveCas2ApplicationSubmittedDomainEvent(any()) } just Runs
@@ -915,7 +917,7 @@ class Cas2ApplicationServiceTest {
         // If there is a problem with accessing the Prison API, we fail hard and
         // abort our attempt to submit the application.
         every {
-          mockOffenderService.getInmateDetailByNomsNumber(any(), any())
+          cas2OffenderService.getInmateDetailByNomsNumber(any(), any())
         } returns AuthorisableActionResult.NotFound()
 
         assertGeneralValidationError("Inmate Detail not found")
@@ -955,7 +957,7 @@ class Cas2ApplicationServiceTest {
         // If there is a problem with accessing the Prison API, we fail hard and
         // abort our attempt to submit the application and return a validation message.
         every {
-          mockOffenderService.getInmateDetailByNomsNumber(any(), any())
+          cas2OffenderService.getInmateDetailByNomsNumber(any(), any())
         } returns AuthorisableActionResult.Success(InmateDetailFactory().produce())
 
         assertGeneralValidationError("No prison code available")
@@ -981,6 +983,7 @@ class Cas2ApplicationServiceTest {
         val application = Cas2ApplicationEntityFactory()
           .withApplicationSchema(newestSchema)
           .withId(applicationId)
+          .withReferringPrisonCode("CODE1")
           .withCreatedByUser(user)
           .withSubmittedAt(null)
           .produce()
@@ -1007,7 +1010,7 @@ class Cas2ApplicationServiceTest {
           .produce()
 
         every {
-          mockOffenderService.getInmateDetailByNomsNumber(
+          cas2OffenderService.getInmateDetailByNomsNumber(
             application.crn,
             application.nomsNumber.toString(),
           )
@@ -1024,6 +1027,27 @@ class Cas2ApplicationServiceTest {
         }
 
         every { mockAssessmentService.createCas2Assessment(any()) } returns any()
+
+        every { cas2OffenderService.findByNomsNumber(any()) } returns null
+
+        val cas2OffenderEntity = Cas2OffenderEntity(
+          id = UUID.randomUUID(),
+          nomsNumber = application.nomsNumber!!,
+          crn = application.crn,
+          createdAt = application.createdAt,
+          updatedAt = application.createdAt,
+        )
+
+        every { cas2OffenderService.createCas2Offender(any(), any()) } returns cas2OffenderEntity
+
+        every { prisonerLocationService.createPrisonerLocation(any(), any(), any(), any()) } returns
+          Cas2PrisonerLocationEntity(
+            id = UUID.randomUUID(),
+            prisonCode = application.referringPrisonCode!!,
+            allocatedPomUserId = application.createdByUser.id,
+            createdAt = application.createdAt,
+            offender = cas2OffenderEntity,
+          )
 
         val result = applicationService.submitApplication(submitCas2Application, user)
 
@@ -1055,7 +1079,16 @@ class Cas2ApplicationServiceTest {
           )
         }
 
-        verify { prisonerLocationService.createPrisonerLocation(application) }
+        verify { cas2OffenderService.findByNomsNumber(application.nomsNumber!!) }
+        verify { cas2OffenderService.createCas2Offender(any(), any()) }
+        verify {
+          prisonerLocationService.createPrisonerLocation(
+            application.referringPrisonCode!!,
+            application.createdByUser.id,
+            any(),
+            any(),
+          )
+        }
 
         verify(exactly = 1) {
           mockEmailNotificationService.sendEmail(

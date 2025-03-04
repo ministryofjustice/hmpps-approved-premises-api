@@ -24,6 +24,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.NomisUserEntityF
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.OffenderDetailsSummaryFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ProbationOffenderDetailFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.RoshRatingsFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas2.Cas2OffenderRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PersonInfoResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.RiskStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.oasyscontext.RiskLevel
@@ -45,6 +46,7 @@ class Cas2OffenderServiceTest {
   private val mockApOASysContextApiClient = mockk<ApOASysContextApiClient>()
   private val mockProbationOffenderSearchClient = mockk<ProbationOffenderSearchApiClient>()
   private val mockOffenderDetailsDataSource = mockk<OffenderDetailsDataSource>()
+  private val cas2OffenderRepository = mockk<Cas2OffenderRepository>()
 
   private val objectMapper = ObjectMapper().apply {
     registerModule(Jdk8Module())
@@ -57,6 +59,7 @@ class Cas2OffenderServiceTest {
     mockProbationOffenderSearchClient,
     mockApOASysContextApiClient,
     mockOffenderDetailsDataSource,
+    cas2OffenderRepository,
     2,
   )
 

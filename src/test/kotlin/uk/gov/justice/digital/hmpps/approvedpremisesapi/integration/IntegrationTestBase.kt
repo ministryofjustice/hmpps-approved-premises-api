@@ -148,6 +148,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas2Applicati
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas2ApplicationRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas2AssessmentEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas2AssessmentRepository
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas2PrisonerLocationRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas2StatusUpdateDetailEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas2StatusUpdateDetailRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas2StatusUpdateEntity
@@ -193,6 +194,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TurnaroundEnt
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserQualificationAssignmentEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRoleAssignmentEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas2.Cas2OffenderRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas3.Cas3VoidBedspaceCancellationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas3.Cas3VoidBedspaceEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas3.Cas3VoidBedspaceReasonEntity
@@ -256,6 +258,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.repository.TurnaroundTes
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.repository.UserQualificationAssignmentTestRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.repository.UserRoleAssignmentTestRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.repository.UserTestRepository
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas2.Cas2OffenderService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.JwtAuthHelper
 import java.time.Duration
 import java.util.TimeZone
@@ -388,6 +391,18 @@ abstract class IntegrationTestBase {
   lateinit var cas2NoteRepository: Cas2ApplicationNoteRepository
 
   @Autowired
+  lateinit var cas2prisonerLocationRepository: Cas2PrisonerLocationRepository
+
+  @Autowired
+  lateinit var cas2OffenderRepository: Cas2OffenderRepository
+
+  @Autowired
+  lateinit var cas2OffenderService: Cas2OffenderService
+
+  @Autowired
+  lateinit var cas2ApplicationJsonSchemaRepository: Cas2ApplicationJsonSchemaTestRepository
+
+  @Autowired
   lateinit var temporaryAccommodationApplicationRepository: TemporaryAccommodationApplicationTestRepository
 
   @Autowired
@@ -395,9 +410,6 @@ abstract class IntegrationTestBase {
 
   @Autowired
   lateinit var approvedPremisesApplicationJsonSchemaRepository: ApprovedPremisesApplicationJsonSchemaTestRepository
-
-  @Autowired
-  lateinit var cas2ApplicationJsonSchemaRepository: Cas2ApplicationJsonSchemaTestRepository
 
   @Autowired
   lateinit var temporaryAccommodationApplicationJsonSchemaRepository: TemporaryAccommodationApplicationJsonSchemaTestRepository

@@ -31,7 +31,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas2Applicati
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas2ApplicationJsonSchemaEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas2ApplicationRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas2AssessmentRepository
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas2PrisonerLocationRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas2StatusUpdateDetailEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas2StatusUpdateDetailRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas2StatusUpdateRepository
@@ -43,10 +42,14 @@ import java.time.LocalDate
 import java.time.OffsetDateTime
 import java.util.UUID
 
-class Cas2SubmissionTest(
-  @Value("\${url-templates.frontend.cas2.application}") private val applicationUrlTemplate: String,
-  @Value("\${url-templates.frontend.cas2.submitted-application-overview}") private val submittedApplicationUrlTemplate: String,
-) : IntegrationTestBase() {
+class Cas2SubmissionTest : IntegrationTestBase() {
+
+  @Value("\${url-templates.frontend.cas2.application}")
+  lateinit var applicationUrlTemplate: String
+
+  @Value("\${url-templates.frontend.cas2.submitted-application-overview}")
+  lateinit var submittedApplicationUrlTemplate: String
+
   @SpykBean
   lateinit var realApplicationRepository: Cas2ApplicationRepository
 
@@ -61,9 +64,6 @@ class Cas2SubmissionTest(
 
   @Autowired
   lateinit var nomisUserTransformer: NomisUserTransformer
-
-  @Autowired
-  lateinit var prisonerLocationRepository: Cas2PrisonerLocationRepository
 
   val schema = """
        {
@@ -736,10 +736,12 @@ class Cas2SubmissionTest(
             .exchange()
             .expectStatus()
             .isOk
-        }
 
-        val createdLocations = prisonerLocationRepository.findAllByStaffIdOrderByOccurredAtDesc(submittingUser.id).first()
-        Assertions.assertThat(createdLocations.staffId).isEqualTo(submittingUser.id)
+          val offender = cas2OffenderRepository.findByNomsNumber(offenderDetails.otherIds.nomsNumber.toString())
+          Assertions.assertThat(offender!!.nomsNumber).isNotNull
+
+          Assertions.assertThat(offender.currentLocation()!!.allocatedPomUserId).isEqualTo(submittingUser.id)
+        }
 
         // verify that generated 'application.submitted' domain event links to the CAS2 domain
         val expectedFrontEndUrl = applicationUrlTemplate.replace("#id", applicationId.toString())
