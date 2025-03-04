@@ -18,8 +18,8 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserPermissio
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.ForbiddenProblem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.NotFoundProblem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.AuthorisableActionResult
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.BedService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.UserAccessService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1BedService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1OutOfServiceBedSummaryService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1PremisesService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1SpaceBookingDaySummaryService
@@ -39,7 +39,7 @@ class Cas1PremisesController(
   val cas1PremisesService: Cas1PremisesService,
   val cas1PremisesTransformer: Cas1PremisesTransformer,
   val cas1PremiseCapacityTransformer: Cas1PremiseCapacitySummaryTransformer,
-  private val bedService: BedService,
+  private val cas1BedService: Cas1BedService,
   private val cas1BedSummaryTransformer: Cas1BedSummaryTransformer,
   private val cas1BedDetailTransformer: Cas1BedDetailTransformer,
   private val cas1PremisesDayTransformer: Cas1PremisesDayTransformer,
@@ -67,7 +67,7 @@ class Cas1PremisesController(
       throw ForbiddenProblem()
     }
 
-    val bedAndCharacteristics = when (val bedResult = bedService.getBedAndRoomCharacteristics(bedId)) {
+    val bedAndCharacteristics = when (val bedResult = cas1BedService.getBedAndRoomCharacteristics(bedId)) {
       is AuthorisableActionResult.Unauthorised -> throw ForbiddenProblem()
       is AuthorisableActionResult.NotFound -> throw NotFoundProblem(bedResult.id!!, bedResult.entityType!!)
       is AuthorisableActionResult.Success -> bedResult.entity
