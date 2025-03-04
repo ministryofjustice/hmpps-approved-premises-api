@@ -7,13 +7,14 @@ import jakarta.persistence.ManyToOne
 import jakarta.persistence.Table
 import org.springframework.data.jpa.repository.JpaRepository
 import org.springframework.stereotype.Repository
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas2.Cas2OffenderEntity
 import java.time.OffsetDateTime
 import java.util.UUID
 
 @Repository
 interface Cas2PrisonerLocationRepository : JpaRepository<Cas2PrisonerLocationEntity, UUID> {
 
-  fun findAllByStaffIdOrderByOccurredAtDesc(staffId: UUID): List<Cas2PrisonerLocationEntity>
+  fun findAllByAllocatedPomUserIdOrderByCreatedAtDesc(userId: UUID): List<Cas2PrisonerLocationEntity>
 }
 
 @Entity
@@ -21,11 +22,11 @@ interface Cas2PrisonerLocationRepository : JpaRepository<Cas2PrisonerLocationEnt
 data class Cas2PrisonerLocationEntity(
   @Id
   val id: UUID,
-  @ManyToOne
-  @JoinColumn(name = "application_id")
-  val application: Cas2ApplicationEntity,
   val prisonCode: String,
-  val staffId: UUID?,
-  val occurredAt: OffsetDateTime,
-  val endDate: OffsetDateTime?,
+  val allocatedPomUserId: UUID?,
+  val createdAt: OffsetDateTime,
+
+  @ManyToOne
+  @JoinColumn(name = "offender_id", nullable = false)
+  val offender: Cas2OffenderEntity,
 )

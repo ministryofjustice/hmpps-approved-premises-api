@@ -267,7 +267,17 @@ class Cas2ApplicationService(
 
     createAssessment(application)
 
-    prisonerLocationService.createPrisonerLocation(application)
+    // This to be moved earlier in the process of creating an application, when the applications table is updated to use offenderId
+    val offender = offenderService.findByNomsNumber(application.nomsNumber!!) ?: offenderService.createCas2Offender(
+      nomsNumber = application.nomsNumber!!,
+      crn = application.crn,
+    )
+    prisonerLocationService.createPrisonerLocation(
+      prisonCode = application.referringPrisonCode!!,
+      pomUserId = application.createdByUser.id,
+      occurredAt = application.submittedAt!!,
+      offender = offender,
+    )
 
     sendEmailApplicationSubmitted(user, application)
 
