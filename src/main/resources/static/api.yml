@@ -49,6 +49,7 @@ paths:
       tags:
         - Premises
       summary: Returns a list of premises
+      description: deprecated, use /cas3/premises/summary
       operationId: premisesSummaryGet
       parameters:
         - name: X-Service-Name

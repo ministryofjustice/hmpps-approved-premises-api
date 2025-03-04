@@ -96,6 +96,27 @@ paths:
             'application/problem+json':
               schema:
                 $ref: '#/components/schemas/ValidationError'
+  /premises/summary:
+    get:
+      tags:
+        - Premises
+      summary: Returns a list of premises
+      operationId: getPremisesSummary
+      responses:
+        200:
+          description: successful operation
+          content:
+            'application/json':
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Cas3PremisesSummary'
+        401:
+          $ref: '#/components/responses/401Response'
+        403:
+          $ref: '#/components/responses/403Response'
+        500:
+          $ref: '#/components/responses/500Response'
   /premises/{premisesId}/future-bookings:
     get:
       tags:
@@ -4835,3 +4856,38 @@ components:
         - bookingId
         - roomId
         - isSexualRisk
+    Cas3PremisesSummary:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        name:
+          type: string
+          example: Hope House
+        addressLine1:
+          type: string
+          example: one something street
+        addressLine2:
+          type: string
+          example: Blackmore End
+        postcode:
+          type: string
+          example: LS1 3AD
+        pdu:
+          type: string
+        localAuthorityAreaName:
+          type: string
+        bedCount:
+          type: integer
+          example: 22
+        status:
+          $ref: '#/components/schemas/PropertyStatus'
+      required:
+        - id
+        - name
+        - addressLine1
+        - postcode
+        - pdu
+        - bedCount
+        - status

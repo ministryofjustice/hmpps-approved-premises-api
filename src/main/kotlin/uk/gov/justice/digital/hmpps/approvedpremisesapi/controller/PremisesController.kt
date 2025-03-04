@@ -80,11 +80,11 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.Confirmation
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.DateChangeTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.DepartureTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.ExtensionTransformer
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.PremisesSummaryTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.PremisesTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.RoomTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.StaffMemberTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.TurnaroundTransformer
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.cas3.Cas3PremisesSummaryTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.cas3.Cas3VoidBedspaceCancellationTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.cas3.Cas3VoidBedspacesTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.extractEntityFromAuthorisableActionResult
@@ -107,7 +107,7 @@ class PremisesController(
   private val cas3VoidBedspaceService: Cas3VoidBedspaceService,
   private val bedService: BedService,
   private val premisesTransformer: PremisesTransformer,
-  private val premisesSummaryTransformer: PremisesSummaryTransformer,
+  private val cas3PremisesSummaryTransformer: Cas3PremisesSummaryTransformer,
   private val bookingTransformer: BookingTransformer,
   private val cas3VoidBedspacesTransformer: Cas3VoidBedspacesTransformer,
   private val arrivalTransformer: ArrivalTransformer,
@@ -142,7 +142,7 @@ class PremisesController(
         val user = usersService.getUserForRequest()
         val summaries = cas3PremisesService.getAllPremisesSummaries(user.probationRegion.id)
 
-        summaries.map(premisesSummaryTransformer::transformDomainToApi)
+        summaries.map(cas3PremisesSummaryTransformer::transformDomainToApi)
       }
     }
 
