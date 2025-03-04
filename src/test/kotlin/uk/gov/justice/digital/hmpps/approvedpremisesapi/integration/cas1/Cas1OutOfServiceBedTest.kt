@@ -1212,56 +1212,6 @@ class Cas1OutOfServiceBedTest : InitialiseDatabasePerClassTestBase() {
     }
 
     @Test
-    fun `Create Out-Of-Service Beds for current day does not break GET all Premises endpoint`() {
-      givenAUser(roles = listOf(UserRole.CAS1_FUTURE_MANAGER)) { user, jwt ->
-        val premises = approvedPremisesEntityFactory.produceAndPersist {
-          withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
-          withYieldedProbationRegion { givenAProbationRegion() }
-        }
-
-        bedEntityFactory.produceAndPersistMultiple(2) {
-          withYieldedRoom { roomEntityFactory.produceAndPersist { withPremises(premises) } }
-        }
-
-        cas1OutOfServiceBedEntityFactory.produceAndPersist {
-          withBed(
-            bedEntityFactory.produceAndPersist {
-              withYieldedRoom {
-                roomEntityFactory.produceAndPersist {
-                  withYieldedPremises { premises }
-                }
-              }
-            },
-          )
-        }.apply {
-          this.revisionHistory += cas1OutOfServiceBedRevisionEntityFactory.produceAndPersist {
-            withCreatedAt(OffsetDateTime.now().roundNanosToMillisToAccountForLossOfPrecisionInPostgres())
-            withCreatedBy(user)
-            withOutOfServiceBed(this@apply)
-            withStartDate(LocalDate.now().minusDays(2))
-            withEndDate(LocalDate.now().plusDays(2))
-            withReason(cas1OutOfServiceBedReasonEntityFactory.produceAndPersist())
-          }
-        }
-
-        bookingEntityFactory.produceAndPersist {
-          withPremises(premises)
-          withOriginalArrivalDate(LocalDate.now().minusDays(4))
-          withArrivalDate(LocalDate.now().minusDays(4))
-          withOriginalDepartureDate(LocalDate.now().plusDays(6))
-          withDepartureDate(LocalDate.now().plusDays(6))
-        }
-
-        webTestClient.get()
-          .uri("/premises")
-          .header("Authorization", "Bearer $jwt")
-          .exchange()
-          .expectStatus()
-          .isOk
-      }
-    }
-
-    @Test
     fun `Create Out-Of-Service Bed returns 409 Conflict when An out-of-service bed for the same bed overlaps`() {
       givenAUser(roles = listOf(UserRole.CAS1_FUTURE_MANAGER)) { user, jwt ->
         givenAnOffender { _, _ ->

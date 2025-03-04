@@ -134,12 +134,7 @@ class PremisesController(
     apAreaId: UUID?,
   ): ResponseEntity<List<PremisesSummary>> {
     val transformedSummaries = when (xServiceName) {
-      ServiceName.approvedPremises -> {
-        val summaries = premisesService.getAllApprovedPremisesSummaries(probationRegionId, apAreaId)
-
-        summaries.map(premisesSummaryTransformer::transformDomainToApi)
-      }
-
+      ServiceName.approvedPremises -> throw RuntimeException("CAS1 not supported")
       ServiceName.cas2 -> throw RuntimeException("CAS2 not supported")
       ServiceName.cas2v2 -> throw RuntimeException("CAS2v2 not supported")
 
@@ -234,35 +229,6 @@ class PremisesController(
         totalBeds = totalBeds,
         availableBedsForToday = totalBeds,
       ),
-    )
-  }
-
-  override fun premisesGet(xServiceName: ServiceName?, xUserRegion: UUID?): ResponseEntity<List<Premises>> {
-    if (!userAccessService.currentUserCanAccessRegion(xUserRegion)) {
-      throw ForbiddenProblem()
-    }
-
-    val premisesWithRoomCounts = when {
-      xServiceName == null && xUserRegion == null -> premisesService.getAllPremises()
-      xServiceName != null && xUserRegion != null -> premisesService.getAllPremisesInRegionForService(
-        xUserRegion,
-        xServiceName,
-      )
-
-      xServiceName != null -> premisesService.getAllPremisesForService(xServiceName)
-      else -> premisesService.getAllPremisesInRegion(xUserRegion!!)
-    }
-
-    return ResponseEntity.ok(
-      premisesWithRoomCounts.map {
-        val premises = it.getPremises()
-        val totalBeds = it.getBedCount()
-        val availableBedsForToday =
-          premisesService.getAvailabilityForRange(premises, LocalDate.now(), LocalDate.now().plusDays(1))
-            .values.first().getFreeCapacity(totalBeds)
-
-        premisesTransformer.transformJpaToApi(premises, totalBeds, availableBedsForToday)
-      },
     )
   }
 
