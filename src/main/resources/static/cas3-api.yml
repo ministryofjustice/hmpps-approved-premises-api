@@ -155,12 +155,12 @@ paths:
   /bedspaces/search:
     post:
       summary: Searches for available Beds within the given parameters
-      operationId: bedspaceSearchPost
+      operationId: postBedspaceSearch
       requestBody:
         content:
           'application/json':
             schema:
-              $ref: '_shared.yml#/components/schemas/TemporaryAccommodationBedSearchParameters'
+              $ref: 'cas3-schemas.yml#/components/schemas/Cas3BedspaceSearchParameters'
         required: true
       responses:
         200:
