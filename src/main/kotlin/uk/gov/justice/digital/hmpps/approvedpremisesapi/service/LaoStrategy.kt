@@ -66,6 +66,7 @@ fun UserEntity.cas1LaoStrategy() = if (this.hasQualification(UserQualification.L
 
 fun Cas2v2UserEntity.cas2DeliusUserLaoStrategy() = when (userType) {
   Cas2v2UserType.DELIUS -> LaoStrategy.CheckUserAccess(this.username)
+  Cas2v2UserType.NOMIS -> LaoStrategy.CheckUserAccess(this.username)
   else -> error("Can't provide strategy for users of type $userType")
 }
 

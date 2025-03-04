@@ -85,8 +85,8 @@ class OAuth2ResourceServerSecurityConfiguration {
         authorize(HttpMethod.POST, "/cas2v2/submissions/*/status-updates", hasRole("CAS2_ASSESSOR"))
         authorize(HttpMethod.GET, "/cas2v2/reference-data/**", hasAnyRole("CAS2_ASSESSOR", "POM"))
         authorize(HttpMethod.GET, "/cas2v2/reports/**", hasRole("CAS2_MI"))
-        authorize(HttpMethod.GET, "/cas2v2/people/search-by-crn/**", hasAnyAuthority("ROLE_PROBATION", "CAS2_COURT_BAIL_REFERRER", "CAS2_PRISON_BAIL_REFERRER", "CAS2_COURT_BAIL", "CAS2_PRISON_BAIL"))
-        authorize(HttpMethod.GET, "/cas2v2/people/search-by-noms/**", hasAnyAuthority("ROLE_POM", "ROLE_LICENCE_CA", "ROLE_PROBATION", "CAS2_COURT_BAIL_REFERRER", "CAS2_PRISON_BAIL_REFERRER", "CAS2_COURT_BAIL", "CAS2_PRISON_BAIL"))
+        authorize(HttpMethod.GET, "/cas2v2/people/search-by-crn/**", hasAnyAuthority("ROLE_PROBATION", "ROLE_CAS2_COURT_BAIL_REFERRER", "ROLE_CAS2_PRISON_BAIL_REFERRER", "ROLE_CAS2_COURT_BAIL", "ROLE_CAS2_PRISON_BAIL"))
+        authorize(HttpMethod.GET, "/cas2v2/people/search-by-noms/**", hasAnyAuthority("ROLE_POM", "ROLE_LICENCE_CA", "ROLE_PROBATION", "ROLE_CAS2_COURT_BAIL_REFERRER", "ROLE_CAS2_PRISON_BAIL_REFERRER", "ROLE_CAS2_COURT_BAIL", "ROLE_CAS2_PRISON_BAIL"))
         authorize("/cas2v2/applications/**", hasAnyAuthority("ROLE_PROBATION", "ROLE_POM", "ROLE_LICENCE_CA", "ROLE_COURT_BAIL", "ROLE_PRISON_BAIL", "CAS2_COURT_BAIL_REFERRER", "CAS2_PRISON_BAIL_REFERRER", "CAS2_COURT_BAIL", "CAS2_PRISON_BAIL"))
         authorize("/cas2v2/**", hasAnyAuthority("ROLE_POM", "ROLE_LICENCE_CA", "CAS2_COURT_BAIL_REFERRER", "CAS2_PRISON_BAIL_REFERRER", "CAS2_COURT_BAIL", "CAS2_PRISON_BAIL"))
 
