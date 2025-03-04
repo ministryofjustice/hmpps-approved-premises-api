@@ -57,33 +57,6 @@ interface PremisesRepository : JpaRepository<PremisesEntity, UUID> {
   )
   fun findAllTemporaryAccommodationSummary(regionId: UUID): List<TemporaryAccommodationPremisesSummary>
 
-  @Query(
-    """
-    SELECT 
-        new uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesSummary(
-            p.id, 
-            p.name, 
-            p.addressLine1, 
-            p.addressLine2, 
-            p.postcode, 
-            p.status, 
-            CAST(COUNT(b) as int),
-            p.apCode, 
-            region.name,
-            apArea.name
-        ) 
-        FROM ApprovedPremisesEntity p 
-        LEFT JOIN p.rooms r 
-        LEFT JOIN r.beds b on (b.endDate IS NULL OR b.endDate > CURRENT_DATE) 
-        LEFT JOIN p.probationRegion region
-        LEFT JOIN region.apArea apArea
-        WHERE(cast(:probationRegionId as text) IS NULL OR region.id = :probationRegionId)
-        AND(cast(:apAreaId as text) IS NULL OR apArea.id = :apAreaId)
-        GROUP BY p.id, p.name, p.addressLine1, p.addressLine2, p.postcode, p.apCode, p.status, region.name, apArea.name
-  """,
-  )
-  fun findAllApprovedPremisesSummary(probationRegionId: UUID?, apAreaId: UUID?): List<ApprovedPremisesSummary>
-
   @Query("SELECT COUNT(p) = 0 FROM PremisesEntity p WHERE name = :name AND TYPE(p) = :type")
   fun <T : PremisesEntity> nameIsUniqueForType(name: String, type: Class<T>): Boolean
 

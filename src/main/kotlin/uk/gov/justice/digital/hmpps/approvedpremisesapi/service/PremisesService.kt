@@ -7,7 +7,6 @@ import org.springframework.stereotype.Service
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PropertyStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesEntity
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.BedRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.BookingRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.LocalAuthorityAreaRepository
@@ -40,8 +39,6 @@ class PremisesService(
   private val roomRepository: RoomRepository,
   private val bedRepository: BedRepository,
 ) {
-  fun getAllApprovedPremisesSummaries(probationRegionId: UUID?, apAreaId: UUID?): List<ApprovedPremisesSummary> = premisesRepository.findAllApprovedPremisesSummary(probationRegionId, apAreaId)
-
   fun getPremises(premisesId: UUID): PremisesEntity? = premisesRepository.findByIdOrNull(premisesId)
 
   fun getAvailabilityForRange(

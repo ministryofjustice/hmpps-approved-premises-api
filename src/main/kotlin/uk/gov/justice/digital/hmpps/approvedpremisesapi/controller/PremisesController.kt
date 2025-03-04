@@ -134,12 +134,7 @@ class PremisesController(
     apAreaId: UUID?,
   ): ResponseEntity<List<PremisesSummary>> {
     val transformedSummaries = when (xServiceName) {
-      ServiceName.approvedPremises -> {
-        val summaries = premisesService.getAllApprovedPremisesSummaries(probationRegionId, apAreaId)
-
-        summaries.map(premisesSummaryTransformer::transformDomainToApi)
-      }
-
+      ServiceName.approvedPremises -> throw RuntimeException("CAS1 not supported")
       ServiceName.cas2 -> throw RuntimeException("CAS2 not supported")
       ServiceName.cas2v2 -> throw RuntimeException("CAS2v2 not supported")
 
