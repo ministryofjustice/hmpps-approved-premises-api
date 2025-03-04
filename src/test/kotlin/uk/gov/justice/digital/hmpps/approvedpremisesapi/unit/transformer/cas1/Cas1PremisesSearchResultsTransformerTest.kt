@@ -5,12 +5,12 @@ import org.junit.jupiter.api.Test
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas1.CandidatePremises
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.ApprovedPremisesType
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.cas1.Cas1SpaceSearchResultsTransformer
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.cas1.Cas1PremisesSearchResultsTransformer
 import java.math.BigDecimal
 import java.util.UUID
 
-class Cas1SpaceSearchResultsTransformerTest {
-  private val transformer = Cas1SpaceSearchResultsTransformer()
+class Cas1PremisesSearchResultsTransformerTest {
+  private val transformer = Cas1PremisesSearchResultsTransformer()
 
   @Test
   fun `transformDomainToApi transforms correctly`() {

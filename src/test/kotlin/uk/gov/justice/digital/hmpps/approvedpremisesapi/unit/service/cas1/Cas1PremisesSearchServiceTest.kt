@@ -18,8 +18,8 @@ import org.junit.jupiter.params.provider.CsvSource
 import org.junit.jupiter.params.provider.MethodSource
 import org.springframework.data.repository.findByIdOrNull
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApType
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1PremisesSearchParameters
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1SpaceCharacteristic
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1SpaceSearchParameters
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1SpaceSearchRequirements
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApprovedPremisesApplicationEntityFactory
@@ -30,14 +30,14 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas1.Cas1Spac
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.ApprovedPremisesType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.asApprovedPremisesType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.CharacteristicService
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1SpaceSearchService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1PremisesSearchService
 import java.time.LocalDate
 import java.util.UUID
 import java.util.stream.Stream
 import kotlin.enums.enumEntries
 
 @ExtendWith(MockKExtension::class)
-class Cas1SpaceSearchServiceTest {
+class Cas1PremisesSearchServiceTest {
   @MockK
   private lateinit var characteristicService: CharacteristicService
 
@@ -48,7 +48,7 @@ class Cas1SpaceSearchServiceTest {
   private lateinit var applicationRepository: ApprovedPremisesApplicationRepository
 
   @InjectMockKs
-  private lateinit var service: Cas1SpaceSearchService
+  private lateinit var service: Cas1PremisesSearchService
 
   @Test
   fun `findSpaces throws error if the associated application cannot be found`() {
@@ -58,7 +58,7 @@ class Cas1SpaceSearchServiceTest {
 
     assertThatThrownBy {
       service.findSpaces(
-        Cas1SpaceSearchParameters(
+        Cas1PremisesSearchParameters(
           applicationId,
           startDate = LocalDate.parse("2024-08-01"),
           durationInDays = 14,
@@ -147,7 +147,7 @@ class Cas1SpaceSearchServiceTest {
     every { applicationRepository.findByIdOrNull(application.id) } returns application
 
     val result = service.findSpaces(
-      Cas1SpaceSearchParameters(
+      Cas1PremisesSearchParameters(
         applicationId = application.id,
         startDate = LocalDate.parse("2024-08-01"),
         durationInDays = 14,
@@ -260,7 +260,7 @@ class Cas1SpaceSearchServiceTest {
     } returns listOf(candidatePremises1, candidatePremises2, candidatePremises3)
 
     service.findSpaces(
-      Cas1SpaceSearchParameters(
+      Cas1PremisesSearchParameters(
         applicationId = application.id,
         startDate = LocalDate.parse("2024-08-01"),
         durationInDays = 14,
@@ -365,7 +365,7 @@ class Cas1SpaceSearchServiceTest {
     } returns listOf(candidatePremises1, candidatePremises2, candidatePremises3)
 
     service.findSpaces(
-      Cas1SpaceSearchParameters(
+      Cas1PremisesSearchParameters(
         applicationId = application.id,
         startDate = LocalDate.parse("2024-08-01"),
         durationInDays = 14,
@@ -469,7 +469,7 @@ class Cas1SpaceSearchServiceTest {
     } returns listOf(candidatePremises1, candidatePremises2, candidatePremises3)
 
     service.findSpaces(
-      Cas1SpaceSearchParameters(
+      Cas1PremisesSearchParameters(
         applicationId = application.id,
         startDate = LocalDate.parse("2024-08-01"),
         durationInDays = 14,

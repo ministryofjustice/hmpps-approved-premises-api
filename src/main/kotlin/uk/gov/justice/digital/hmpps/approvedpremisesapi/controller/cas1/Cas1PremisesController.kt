@@ -9,6 +9,8 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1Premises
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1PremisesBasicSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1PremisesBedSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1PremisesDaySummary
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1PremisesSearchParameters
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1PremisesSearchResults
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1SpaceBookingCharacteristic
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1SpaceBookingDaySummarySortField
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.SortDirection
@@ -18,12 +20,14 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.ForbiddenProblem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.NotFoundProblem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.UserAccessService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1OutOfServiceBedSummaryService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1PremisesSearchService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1PremisesService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1SpaceBookingDaySummaryService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.cas1.Cas1BedSummaryTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.cas1.Cas1OutOfServiceBedSummaryTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.cas1.Cas1PremiseCapacitySummaryTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.cas1.Cas1PremisesDayTransformer
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.cas1.Cas1PremisesSearchResultsTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.cas1.Cas1PremisesTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.extractEntityFromCasResult
 import java.time.LocalDate
@@ -31,16 +35,26 @@ import java.util.UUID
 
 @Service
 class Cas1PremisesController(
-  val userAccessService: UserAccessService,
-  val cas1PremisesService: Cas1PremisesService,
-  val cas1PremisesTransformer: Cas1PremisesTransformer,
-  val cas1PremiseCapacityTransformer: Cas1PremiseCapacitySummaryTransformer,
+  private val userAccessService: UserAccessService,
+  private val cas1PremisesService: Cas1PremisesService,
+  private val cas1PremisesTransformer: Cas1PremisesTransformer,
+  private val cas1PremiseCapacityTransformer: Cas1PremiseCapacitySummaryTransformer,
   private val cas1BedSummaryTransformer: Cas1BedSummaryTransformer,
   private val cas1PremisesDayTransformer: Cas1PremisesDayTransformer,
   private val cas1SpaceBookingDaySummaryService: Cas1SpaceBookingDaySummaryService,
   private val cas1OutOfServiceBedSummaryService: Cas1OutOfServiceBedSummaryService,
   private val cas1OutOfServiceBedSummaryTransformer: Cas1OutOfServiceBedSummaryTransformer,
+  private val cas1PremisesSearchService: Cas1PremisesSearchService,
+  private val cas1PremisesSearchResultsTransformer: Cas1PremisesSearchResultsTransformer,
 ) : PremisesCas1Delegate {
+
+  override fun premisesSearch(Cas1PremisesSearchParameters: Cas1PremisesSearchParameters): ResponseEntity<Cas1PremisesSearchResults> {
+    userAccessService.ensureCurrentUserHasPermission(UserPermission.CAS1_SPACE_BOOKING_CREATE)
+
+    val results = cas1PremisesSearchService.findSpaces(Cas1PremisesSearchParameters)
+
+    return ResponseEntity.ok(cas1PremisesSearchResultsTransformer.transformDomainToApi(results))
+  }
 
   override fun getBeds(premisesId: UUID): ResponseEntity<List<Cas1PremisesBedSummary>> {
     val premises = cas1PremisesService.findPremiseById(premisesId)
