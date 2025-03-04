@@ -19,35 +19,12 @@ import org.locationtech.jts.geom.Point
 import org.springframework.data.jpa.repository.JpaRepository
 import org.springframework.data.jpa.repository.Query
 import org.springframework.stereotype.Repository
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.BookingStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PropertyStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas3.Cas3VoidBedspaceEntity
-import java.time.LocalDate
 import java.util.UUID
 
 @Repository
 interface PremisesRepository : JpaRepository<PremisesEntity, UUID> {
-  companion object {
-    private const val BED_COUNT_QUERY = """
-     (
-        SELECT CAST(COUNT(b.id) as int) 
-        FROM BedEntity b
-          JOIN b.room r
-        WHERE 
-            r.premises = p 
-            AND b.endDate IS NULL OR b.endDate > CURRENT_DATE
-    )
-    """
-  }
-
-  @Query("SELECT p as premises, $BED_COUNT_QUERY as bedCount FROM PremisesEntity p")
-  fun findAllWithBedCount(): List<PremisesWithBedCount>
-
-  @Query(
-    "SELECT p as premises, $BED_COUNT_QUERY as bedCount FROM PremisesEntity p WHERE p.probationRegion.id = :probationRegionId",
-  )
-  fun findAllByProbationRegion(probationRegionId: UUID): List<PremisesWithBedCount>
-
   @Query(
     """
         SELECT
@@ -106,20 +83,6 @@ interface PremisesRepository : JpaRepository<PremisesEntity, UUID> {
   """,
   )
   fun findAllApprovedPremisesSummary(probationRegionId: UUID?, apAreaId: UUID?): List<ApprovedPremisesSummary>
-
-  @Query("SELECT p as premises, $BED_COUNT_QUERY as bedCount FROM PremisesEntity p WHERE TYPE(p) = :type")
-  fun <T : PremisesEntity> findAllByType(type: Class<T>): List<PremisesWithBedCount>
-
-  @Query(
-    """
-        SELECT 
-          p as premises, 
-          $BED_COUNT_QUERY as bedCount 
-        FROM PremisesEntity p 
-        WHERE p.probationRegion.id = :probationRegionId AND TYPE(p) = :type
-    """,
-  )
-  fun <T : PremisesEntity> findAllByProbationRegionAndType(probationRegionId: UUID, type: Class<T>): List<PremisesWithBedCount>
 
   @Query("SELECT COUNT(p) = 0 FROM PremisesEntity p WHERE name = :name AND TYPE(p) = :type")
   fun <T : PremisesEntity> nameIsUniqueForType(name: String, type: Class<T>): Boolean
@@ -392,19 +355,3 @@ data class ApprovedPremisesBasicSummary(
   val town: String?,
   val postcode: String,
 )
-
-interface BookingSummary {
-  fun getID(): UUID
-  fun getArrivalDate(): LocalDate
-  fun getDepartureDate(): LocalDate
-  fun getCrn(): String
-  fun getBedId(): UUID?
-  fun getBedName(): String?
-  fun getBedCode(): String?
-  fun getStatus(): BookingStatus
-}
-
-interface PremisesWithBedCount {
-  fun getPremises(): PremisesEntity
-  fun getBedCount(): Int
-}

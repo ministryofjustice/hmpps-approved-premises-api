@@ -13,7 +13,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.BookingReposi
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.LocalAuthorityAreaRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PremisesEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PremisesRepository
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PremisesWithBedCount
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ProbationDeliveryUnitEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ProbationDeliveryUnitRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ProbationRegionRepository
@@ -41,27 +40,7 @@ class PremisesService(
   private val roomRepository: RoomRepository,
   private val bedRepository: BedRepository,
 ) {
-  private val serviceNameToEntityType = mapOf(
-    ServiceName.approvedPremises to ApprovedPremisesEntity::class.java,
-    ServiceName.temporaryAccommodation to TemporaryAccommodationPremisesEntity::class.java,
-  )
-
-  fun getAllPremises(): List<PremisesWithBedCount> = premisesRepository.findAllWithBedCount()
-
   fun getAllApprovedPremisesSummaries(probationRegionId: UUID?, apAreaId: UUID?): List<ApprovedPremisesSummary> = premisesRepository.findAllApprovedPremisesSummary(probationRegionId, apAreaId)
-
-  fun getAllPremisesInRegion(probationRegionId: UUID): List<PremisesWithBedCount> = premisesRepository.findAllByProbationRegion(probationRegionId)
-
-  fun getAllPremisesForService(service: ServiceName): List<PremisesWithBedCount> = serviceNameToEntityType[service]?.let {
-    premisesRepository.findAllByType(it)
-  } ?: listOf()
-
-  fun getAllPremisesInRegionForService(
-    probationRegionId: UUID,
-    service: ServiceName,
-  ): List<PremisesWithBedCount> = serviceNameToEntityType[service]?.let {
-    premisesRepository.findAllByProbationRegionAndType(probationRegionId, it)
-  } ?: listOf()
 
   fun getPremises(premisesId: UUID): PremisesEntity? = premisesRepository.findByIdOrNull(premisesId)
 

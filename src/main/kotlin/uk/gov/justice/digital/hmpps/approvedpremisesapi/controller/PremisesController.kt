@@ -237,35 +237,6 @@ class PremisesController(
     )
   }
 
-  override fun premisesGet(xServiceName: ServiceName?, xUserRegion: UUID?): ResponseEntity<List<Premises>> {
-    if (!userAccessService.currentUserCanAccessRegion(xUserRegion)) {
-      throw ForbiddenProblem()
-    }
-
-    val premisesWithRoomCounts = when {
-      xServiceName == null && xUserRegion == null -> premisesService.getAllPremises()
-      xServiceName != null && xUserRegion != null -> premisesService.getAllPremisesInRegionForService(
-        xUserRegion,
-        xServiceName,
-      )
-
-      xServiceName != null -> premisesService.getAllPremisesForService(xServiceName)
-      else -> premisesService.getAllPremisesInRegion(xUserRegion!!)
-    }
-
-    return ResponseEntity.ok(
-      premisesWithRoomCounts.map {
-        val premises = it.getPremises()
-        val totalBeds = it.getBedCount()
-        val availableBedsForToday =
-          premisesService.getAvailabilityForRange(premises, LocalDate.now(), LocalDate.now().plusDays(1))
-            .values.first().getFreeCapacity(totalBeds)
-
-        premisesTransformer.transformJpaToApi(premises, totalBeds, availableBedsForToday)
-      },
-    )
-  }
-
   override fun premisesPost(body: NewPremises, xServiceName: ServiceName?): ResponseEntity<Premises> {
     if (!userAccessService.currentUserCanAccessRegion(body.probationRegionId)) {
       throw ForbiddenProblem()
