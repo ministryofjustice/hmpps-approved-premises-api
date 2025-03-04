@@ -938,13 +938,7 @@ class PremisesController(
       throw ForbiddenProblem()
     }
 
-    val validationResult = when (val bedResult = cas1BedService.getBedAndRoomCharacteristics(bedId)) {
-      is AuthorisableActionResult.NotFound -> throw NotFoundProblem(bedId, "Bed")
-      is AuthorisableActionResult.Success -> bedResult.entity
-      is AuthorisableActionResult.Unauthorised -> throw ForbiddenProblem()
-    }
-
-    return ResponseEntity.ok(bedDetailTransformer.transformToApi(validationResult))
+    return ResponseEntity.ok(bedDetailTransformer.transformToApi(extractEntityFromCasResult(cas1BedService.getBedAndRoomCharacteristics(bedId))))
   }
 
   @SuppressWarnings("ThrowsCount")

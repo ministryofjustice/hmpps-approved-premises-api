@@ -5,7 +5,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.BedRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.CharacteristicEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.CharacteristicRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DomainBedSummary
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.AuthorisableActionResult
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.CasResult
 import java.util.UUID
 
 @Service
@@ -14,11 +14,11 @@ class Cas1BedService(
   private val characteristicRepository: CharacteristicRepository,
 ) {
 
-  fun getBedAndRoomCharacteristics(id: UUID): AuthorisableActionResult<Pair<DomainBedSummary, List<CharacteristicEntity>>> {
-    val bedDetail = bedRepository.getDetailById(id) ?: return AuthorisableActionResult.NotFound()
+  fun getBedAndRoomCharacteristics(id: UUID): CasResult<Pair<DomainBedSummary, List<CharacteristicEntity>>> {
+    val bedDetail = bedRepository.getDetailById(id) ?: return CasResult.NotFound("Bed", id.toString())
     val characteristics = characteristicRepository.findAllForRoomId(bedDetail.roomId)
 
-    return AuthorisableActionResult.Success(
+    return CasResult.Success(
       Pair(bedDetail, characteristics),
     )
   }

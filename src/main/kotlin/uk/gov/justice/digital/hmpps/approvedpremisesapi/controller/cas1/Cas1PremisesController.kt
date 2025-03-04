@@ -17,7 +17,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremi
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserPermission
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.ForbiddenProblem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.NotFoundProblem
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.AuthorisableActionResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.UserAccessService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1BedService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1OutOfServiceBedSummaryService
@@ -67,13 +66,7 @@ class Cas1PremisesController(
       throw ForbiddenProblem()
     }
 
-    val bedAndCharacteristics = when (val bedResult = cas1BedService.getBedAndRoomCharacteristics(bedId)) {
-      is AuthorisableActionResult.Unauthorised -> throw ForbiddenProblem()
-      is AuthorisableActionResult.NotFound -> throw NotFoundProblem(bedResult.id!!, bedResult.entityType!!)
-      is AuthorisableActionResult.Success -> bedResult.entity
-    }
-
-    return ResponseEntity.ok(cas1BedDetailTransformer.transformToApi(bedAndCharacteristics))
+    return ResponseEntity.ok(cas1BedDetailTransformer.transformToApi(extractEntityFromCasResult(cas1BedService.getBedAndRoomCharacteristics(bedId))))
   }
 
   override fun getPremisesById(premisesId: UUID): ResponseEntity<Cas1Premises> {
