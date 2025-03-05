@@ -418,18 +418,18 @@ class Cas1SpaceBookingTransformerTest {
           crn = "the crn",
           canonicalArrivalDate = LocalDate.parse("2023-12-13"),
           canonicalDepartureDate = LocalDate.parse("2023-01-02"),
-          expectedArrivalDate = LocalDate.parse("2023-12-13"),
-          expectedDepartureDate = LocalDate.parse("2023-01-02"),
-          actualArrivalDate = null,
+          expectedArrivalDate = LocalDate.parse("2022-12-13"),
+          expectedDepartureDate = LocalDate.parse("2022-01-02"),
+          actualArrivalDate = LocalDate.parse("2024-12-13"),
           actualArrivalTime = null,
-          actualDepartureDate = null,
+          actualDepartureDate = LocalDate.parse("2024-01-02"),
           actualDepartureTime = null,
           nonArrivalConfirmedAtDateTime = null,
           tier = "A",
           keyWorkerStaffCode = "the staff code",
           keyWorkerAssignedAt = LocalDateTime.of(2023, 12, 12, 0, 0, 0).toInstant(ZoneOffset.UTC),
           keyWorkerName = "the keyworker name",
-          characteristicsPropertyNames = null,
+          characteristicsPropertyNames = "hasTurningSpace,isCatered",
           deliusEventNumber = "event8",
         ),
         premises,
@@ -442,6 +442,15 @@ class Cas1SpaceBookingTransformerTest {
       assertThat(result.premises.name).isEqualTo(premises.name)
       assertThat(result.canonicalArrivalDate).isEqualTo(LocalDate.parse("2023-12-13"))
       assertThat(result.canonicalDepartureDate).isEqualTo(LocalDate.parse("2023-01-02"))
+      assertThat(result.expectedArrivalDate).isEqualTo(LocalDate.parse("2022-12-13"))
+      assertThat(result.expectedDepartureDate).isEqualTo(LocalDate.parse("2022-01-02"))
+      assertThat(result.characteristics).containsExactlyInAnyOrder(
+        Cas1SpaceCharacteristic.hasTurningSpace,
+        Cas1SpaceCharacteristic.isCatered,
+      )
+      assertThat(result.actualArrivalDate).isEqualTo(LocalDate.parse("2024-12-13"))
+      assertThat(result.actualDepartureDate).isEqualTo(LocalDate.parse("2024-01-02"))
+      assertThat(result.isNonArrival).isEqualTo(false)
       assertThat(result.tier).isEqualTo("A")
       assertThat(result.keyWorkerAllocation!!.allocatedAt).isEqualTo(LocalDate.parse("2023-12-12"))
       assertThat(result.keyWorkerAllocation!!.keyWorker.name).isEqualTo("the keyworker name")
