@@ -1,0 +1,1 @@
+UPDATE characteristics SET model_scope = 'room' WHERE property_name = 'arsonOffences' and service_scope = 'approved-premises';
