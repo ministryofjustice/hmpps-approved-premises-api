@@ -39,6 +39,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TemporaryAcco
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRole
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas1.Cas1OffenderEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.listeners.ApplicationListener
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.ApprovedPremisesApplicationStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.ApprovedPremisesType
@@ -56,7 +57,9 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.CasResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.ValidatableActionResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1ApplicationDomainEventService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1ApplicationEmailService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1OffenderService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.WithdrawableState
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.asCaseSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.getMetadata
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.getPageable
 import java.time.Clock
@@ -98,6 +101,7 @@ class ApplicationService(
   private val lockableApplicationRepository: LockableApplicationRepository,
   private val probationDeliveryUnitRepository: ProbationDeliveryUnitRepository,
   private val cas1CruManagementAreaRepository: Cas1CruManagementAreaRepository,
+  private val cas1OffenderService: Cas1OffenderService,
 ) {
   fun getApplication(applicationId: UUID) = applicationRepository.findByIdOrNull(applicationId)
 
@@ -237,6 +241,7 @@ class ApplicationService(
         deliusEventNumber,
         offenceId,
         riskRatings,
+        cas1OffenderEntity = cas1OffenderService.getOrCreateOffender(offenderDetails.asCaseSummary(), riskRatings),
         offenderDetails,
       ),
     )
@@ -261,6 +266,7 @@ class ApplicationService(
     deliusEventNumber: String?,
     offenceId: String?,
     riskRatings: PersonRisks?,
+    cas1OffenderEntity: Cas1OffenderEntity,
     offenderDetails: OffenderDetailSummary,
   ): ApprovedPremisesApplicationEntity = ApprovedPremisesApplicationEntity(
     id = UUID.randomUUID(),
@@ -303,6 +309,7 @@ class ApplicationService(
     caseManagerUserDetails = null,
     noticeType = null,
     licenceExpiryDate = null,
+    cas1OffenderEntity = cas1OffenderEntity,
   )
 
   fun createOfflineApplication(offlineApplication: OfflineApplicationEntity) = offlineApplicationRepository.save(offlineApplication)
