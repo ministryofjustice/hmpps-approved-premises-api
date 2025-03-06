@@ -11,36 +11,52 @@ data class Cas1SiteSurveyDataFrame(
   val sheetName: String,
 ) {
 
-  fun resolveAnswer(question: String, answerCol: Int = 1): String = resolveAnswerOptional(question, answerCol) ?: error("Answer for question '$question' on sheet $sheetName cannot be blank")
+  sealed interface QuestionToMatch {
+    data class Exact(val label: String) : QuestionToMatch
+    data class StartsWith(val label: String) : QuestionToMatch
+  }
 
-  fun resolveAnswerOptional(question: String, answerCol: Int = 1): String? {
+  fun resolveAnswer(question: QuestionToMatch, answerCol: Int = 1): String = resolveAnswerOptional(question, answerCol) ?: error("Answer for question '$question' on sheet $sheetName cannot be blank")
+
+  fun resolveAnswerOptional(question: QuestionToMatch, answerCol: Int = 1): String? {
     val questions = dataFrame.getColumn(0).toListIncludingHeader()
     val answers = dataFrame.getColumn(answerCol).toListIncludingHeader()
+    val questionsAndAnswers = questions.zip(answers)
 
-    val questionIndex = questions.indexOf(question)
+    val answer = when (question) {
+      is QuestionToMatch.Exact -> {
+        questionsAndAnswers.firstOrNull { it.first.toString() == question.label }?.second
+          ?: error("Couldn't find a single answer for question '$question' on sheet $sheetName")
+      }
+      is QuestionToMatch.StartsWith -> {
+        val matchingEntries = questionsAndAnswers.filter { it.first.toString().startsWith(question.label) }
+        if (matchingEntries.size != 1) {
+          error("Couldn't find a single answer for question '$question' on sheet $sheetName")
+        }
+        matchingEntries[0].second
+      }
+    }
 
-    if (questionIndex == -1) error("Question '$question' not found on sheet $sheetName.")
-
-    fun removeDecimalPlaces() = answers[questionIndex].let {
+    fun removeDecimalPlaces() = answer.let {
       if (it is Double) it.toNumberWithNoRedundantDecimalPlaces() else it
     }.toString().trim()
 
-    val answer = removeDecimalPlaces()
+    val normalisedAnswer = removeDecimalPlaces()
 
-    if (answer.isBlank()) {
+    if (normalisedAnswer.isBlank()) {
       return null
     }
 
-    return answer
+    return normalisedAnswer
   }
 
-  fun resolveAnswerYesNoDropDown(question: String, answerCol: Int = 1): Boolean = when (val answer = resolveAnswer(question, answerCol).uppercase()) {
+  fun resolveAnswerYesNoDropDown(question: QuestionToMatch, answerCol: Int = 1): Boolean = when (val answer = resolveAnswer(question, answerCol).uppercase()) {
     "YES" -> true
     "NO" -> false
     else -> error("Invalid value for Yes/No dropdown: $answer on sheet $sheetName. Question is $question")
   }
 
-  fun resolveAnswerYesNoNaDropDown(question: String, answerCol: Int = 1): Boolean {
+  fun resolveAnswerYesNoNaDropDown(question: QuestionToMatch, answerCol: Int = 1): Boolean {
     val answer = resolveAnswer(question, answerCol).uppercase()
     return when (answer) {
       "YES" -> true
