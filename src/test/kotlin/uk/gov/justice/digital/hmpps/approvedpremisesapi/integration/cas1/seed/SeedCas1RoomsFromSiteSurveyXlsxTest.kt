@@ -21,7 +21,6 @@ class SeedCas1RoomsFromSiteSurveyXlsxTest : SeedTestBase() {
     "Is the room close to the admin/staff office on the ground floor with at least one external wall and not located directly next to a fire exit or a protected stairway?",
     "is there a water mist extinguisher in close proximity to this room?",
     "Is this room suitable for people who pose an arson risk? (Must answer yes to Q; 6 & 7, and 9 or  10)",
-    "Is this room currently a designated arson room?",
     "If IAP - Is there any insurance conditions that prevent a person with arson convictions being placed?",
     "Is this room suitable for people convicted of sexual offences?",
     "Does this room have en-suite bathroom facilities?",

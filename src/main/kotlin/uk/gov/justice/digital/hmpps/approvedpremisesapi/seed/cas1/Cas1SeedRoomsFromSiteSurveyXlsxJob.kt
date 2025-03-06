@@ -120,7 +120,6 @@ class Cas1SeedRoomsFromSiteSurveyXlsxJob(
     CharacteristicRequired("isGroundFloorNrOffice", bed.isGroundFloorNrOffice),
     CharacteristicRequired("hasNearbySprinkler", bed.hasNearbySprinkler),
     CharacteristicRequired("isArsonSuitable", bed.isArsonSuitable),
-    CharacteristicRequired("isArsonDesignated", bed.isArsonDesignated),
     CharacteristicRequired("hasArsonInsuranceConditions", bed.hasArsonInsuranceConditions),
     CharacteristicRequired("isSuitedForSexOffenders", bed.isSuitedForSexOffenders),
     CharacteristicRequired("hasEnSuite", bed.hasEnSuite),
