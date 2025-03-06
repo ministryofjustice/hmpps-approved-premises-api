@@ -47,7 +47,10 @@ class Cas3PremisesService(
 ) {
   fun getPremises(premisesId: UUID): TemporaryAccommodationPremisesEntity? = premisesRepository.findTemporaryAccommodationPremisesByIdOrNull(premisesId)
 
-  fun getAllPremisesSummaries(regionId: UUID): List<TemporaryAccommodationPremisesSummary> = premisesRepository.findAllTemporaryAccommodationSummary(regionId)
+  fun getAllPremisesSummaries(regionId: UUID, postcodeOrAddress: String?): List<TemporaryAccommodationPremisesSummary> {
+    val postcodeOrAddressWithoutWhitespace = postcodeOrAddress?.filter { !it.isWhitespace() }
+    return premisesRepository.findAllCas3PremisesSummary(regionId, postcodeOrAddress, postcodeOrAddressWithoutWhitespace)
+  }
 
   @SuppressWarnings("CyclomaticComplexMethod")
   fun createNewPremises(

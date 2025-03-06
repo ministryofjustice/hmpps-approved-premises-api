@@ -32,6 +32,9 @@ fun randomNumberChars(length: Int) = randomWithCharPool(charPoolNumbers, length)
 fun randomPostCode() = randomStringUpperCase(2) + randomNumberChars(1) + " " +
   randomStringUpperCase(2) + randomNumberChars(1)
 
+fun randomPremisesAddress() = randomNumberChars(2) + " " + randomStringLowerCase(6) + " " +
+  randomStringLowerCase(8)
+
 fun randomInt(min: Int, max: Int) = Random.nextInt(min, max)
 fun randomLong() = Random.nextLong(Long.MIN_VALUE, Long.MAX_VALUE)
 fun randomDouble(min: Double, max: Double) = Random.nextDouble(min, max)

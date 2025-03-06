@@ -1,9 +1,13 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.cas3
 
+import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.test.web.reactive.server.WebTestClient
+import org.springframework.test.web.reactive.server.returnResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.BookingStatus
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas3PremisesSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.FutureBooking
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.CaseAccessFactory
@@ -12,6 +16,8 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.IntegrationT
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAUser
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.apDeliusContextAddCaseSummaryToBulkResponse
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.apDeliusContextAddResponseToUserAccessCall
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ProbationRegionEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TemporaryAccommodationPremisesEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRole
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PersonSummaryInfoResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.cas3.Cas3FutureBookingTransformer
@@ -226,5 +232,174 @@ class Cas3PremisesTest : IntegrationTestBase() {
           .json(expectedJson)
       }
     }
+  }
+
+  @Nested
+  inner class GetPremisesSummary {
+    @Test
+    fun `Get all Premises returns OK with correct body`() {
+      givenAUser(roles = listOf(UserRole.CAS3_ASSESSOR)) { user, jwt ->
+        val premises = getPremises(user.probationRegion)
+
+        val expectedPremisesSummaries = premises.map { premisesSummaryTransformer(it) }.sortedBy { it.id.toString() }
+
+        assertUrlReturnsPremises(
+          jwt,
+          "/cas3/premises/summary",
+          expectedPremisesSummaries,
+        )
+      }
+    }
+
+    @Test
+    fun `Get all premises filters correctly when a postcode is passed in the query parameter`() {
+      givenAUser(roles = listOf(UserRole.CAS3_ASSESSOR)) { user, jwt ->
+        val premises = getPremises(user.probationRegion)
+
+        // filter premises with full postcode
+        val expectedPremisesPostcode = premises.take(2).first()
+
+        val expectedPremisesSummaryPostcode = premisesSummaryTransformer(expectedPremisesPostcode)
+
+        assertUrlReturnsPremises(
+          jwt,
+          "/cas3/premises/summary?postcodeOrAddress=${expectedPremisesPostcode.postcode}",
+          listOf(expectedPremisesSummaryPostcode),
+        )
+
+        // filter premises with full postcode without whitespaces
+        val expectedPremisesPostcodeWithoutSpaces = premises.take(3).first()
+
+        val expectedPremisesSummaryWithoutSpaces = premisesSummaryTransformer(expectedPremisesPostcode)
+
+        assertUrlReturnsPremises(
+          jwt,
+          "/cas3/premises/summary?postcodeOrAddress=${expectedPremisesPostcodeWithoutSpaces.postcode.replace(" ", "")}",
+          listOf(expectedPremisesSummaryWithoutSpaces),
+        )
+
+        // filter premises with partial postcode
+        val expectedPremisesPartialPostcode = premises.take(5).first()
+
+        val expectedPremisesSummaryPartialPostcode = premisesSummaryTransformer(expectedPremisesPartialPostcode)
+
+        assertUrlReturnsPremises(
+          jwt,
+          "/cas3/premises/summary?postcodeOrAddress=${expectedPremisesPartialPostcode.postcode.split(" ").first()}",
+          listOf(expectedPremisesSummaryPartialPostcode),
+        )
+
+        // filter premises with partial postcode without whitespaces
+        val expectedPremisesPartialPostcodeWithoutSpaces = premises.take(8).first()
+
+        val expectedPremisesSummaryPartialPostcodeWithoutSpaces = premisesSummaryTransformer(expectedPremisesPartialPostcodeWithoutSpaces)
+
+        assertUrlReturnsPremises(
+          jwt,
+          "/cas3/premises/summary?postcodeOrAddress=${expectedPremisesSummaryPartialPostcodeWithoutSpaces.postcode.replace(" ", "").substring(0, 5)}",
+          listOf(expectedPremisesSummaryPartialPostcodeWithoutSpaces),
+        )
+      }
+    }
+
+    @Test
+    fun `Get all premises filters correctly when a premises address is passed in the query parameter`() {
+      givenAUser(roles = listOf(UserRole.CAS3_ASSESSOR)) { user, jwt ->
+        val premises = getPremises(user.probationRegion)
+
+        // filter premises with the full premises address
+        val expectedPremisesAddress = premises.take(6).first()
+
+        val expectedPremisesSummaryAddress = premisesSummaryTransformer(expectedPremisesAddress)
+
+        assertUrlReturnsPremises(
+          jwt,
+          "/cas3/premises/summary?postcodeOrAddress=${expectedPremisesAddress.addressLine1}",
+          listOf(expectedPremisesSummaryAddress),
+        )
+
+        // filter premises with the partial premises address
+        val expectedPremisesPartialAddress = premises.take(6).first()
+
+        val expectedPremisesSummaryPartialAddress = premisesSummaryTransformer(expectedPremisesPartialAddress)
+
+        assertUrlReturnsPremises(
+          jwt,
+          "/cas3/premises/summary?postcodeOrAddress=${expectedPremisesPartialAddress.addressLine1.split(" ").last()}",
+          listOf(expectedPremisesSummaryPartialAddress),
+        )
+      }
+    }
+
+    @Test
+    fun `Get all premises returns successfully with no premises when a postcode or address is passed in the query parameter and doesn't match any premises`() {
+      givenAUser(roles = listOf(UserRole.CAS3_ASSESSOR)) { user, jwt ->
+        assertUrlReturnsPremises(
+          jwt,
+          "/cas3/premises/summary?postcodeOrAddress=${randomStringMultiCaseWithNumbers(10)}",
+          emptyList(),
+        )
+      }
+    }
+
+    private fun assertUrlReturnsPremises(
+      jwt: String,
+      url: String,
+      expectedPremisesSummaries: List<Cas3PremisesSummary>,
+    ): WebTestClient.ResponseSpec {
+      val response = webTestClient.get()
+        .uri(url)
+        .header("Authorization", "Bearer $jwt")
+        .exchange()
+        .expectStatus()
+        .isOk
+
+      val responseBody = response
+        .returnResult<String>()
+        .responseBody
+        .blockFirst()
+
+      assertThat(responseBody).isEqualTo(objectMapper.writeValueAsString(expectedPremisesSummaries))
+
+      return response
+    }
+
+    private fun getPremises(probationRegion: ProbationRegionEntity): List<TemporaryAccommodationPremisesEntity> {
+      val localAuthorityArea = localAuthorityEntityFactory.produceAndPersist()
+      val probationDeliveryUnit = probationDeliveryUnitFactory.produceAndPersist {
+        withProbationRegion(probationRegion)
+      }
+
+      val premises = temporaryAccommodationPremisesEntityFactory.produceAndPersistMultiple(10) {
+        withProbationRegion(probationRegion)
+        withProbationDeliveryUnit(probationDeliveryUnit)
+        withLocalAuthorityArea(localAuthorityArea)
+      }
+
+      premises.forEach { premises ->
+        val room = roomEntityFactory.produceAndPersist {
+          withPremises(premises)
+          withBeds()
+        }.apply { premises.rooms.add(this) }
+
+        bedEntityFactory.produceAndPersist {
+          withRoom(room)
+        }.apply { premises.rooms.first().beds.add(this) }
+      }
+
+      return premises
+    }
+
+    private fun premisesSummaryTransformer(premises: TemporaryAccommodationPremisesEntity) = Cas3PremisesSummary(
+      id = premises.id,
+      name = premises.name,
+      addressLine1 = premises.addressLine1,
+      addressLine2 = premises.addressLine2,
+      postcode = premises.postcode,
+      pdu = premises.probationDeliveryUnit?.name!!,
+      status = premises.status,
+      bedspaceCount = premises.rooms.flatMap { it.beds }.size,
+      localAuthorityAreaName = premises.localAuthorityArea?.name!!,
+    )
   }
 }

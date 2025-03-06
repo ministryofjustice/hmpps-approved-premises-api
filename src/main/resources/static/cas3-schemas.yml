@@ -153,7 +153,7 @@ components:
           type: string
         localAuthorityAreaName:
           type: string
-        bedCount:
+        bedspaceCount:
           type: integer
           example: 22
         status:

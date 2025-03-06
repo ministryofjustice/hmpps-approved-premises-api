@@ -22,9 +22,9 @@ class Cas3PremisesController(
   private val cas3FutureBookingTransformer: Cas3FutureBookingTransformer,
   private val cas3PremisesSummaryTransformer: Cas3PremisesSummaryTransformer,
 ) : PremisesCas3Delegate {
-  override fun getPremisesSummary(): ResponseEntity<List<Cas3PremisesSummary>> {
+  override fun getPremisesSummary(postcodeOrAddress: String?): ResponseEntity<List<Cas3PremisesSummary>> {
     val user = userService.getUserForRequest()
-    val summaries = cas3PremisesService.getAllPremisesSummaries(user.probationRegion.id)
+    val summaries = cas3PremisesService.getAllPremisesSummaries(user.probationRegion.id, postcodeOrAddress)
     val transformedSummaries = summaries.map(cas3PremisesSummaryTransformer::transformDomainToCas3PremisesSummary)
 
     return ResponseEntity.ok(transformedSummaries)
