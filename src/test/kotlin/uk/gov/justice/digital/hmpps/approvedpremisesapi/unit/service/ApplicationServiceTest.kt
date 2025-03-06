@@ -65,6 +65,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TemporaryAcco
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TemporaryAccommodationApplicationJsonSchemaEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRole
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas1.Cas1OffenderEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.listeners.ApplicationListener
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.Mappa
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PersonInfoResult
@@ -93,6 +94,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.UserService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1ApplicationDomainEventService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1ApplicationEmailService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1DomainEventService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1OffenderService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.unit.util.assertThatCasResult
 import java.time.Clock
 import java.time.Instant
@@ -128,6 +130,7 @@ class ApplicationServiceTest {
   private val mockLockableApplicationRepository = mockk<LockableApplicationRepository>()
   private val mockProbationDeliveryUnitRepository = mockk<ProbationDeliveryUnitRepository>()
   private val mockCas1CruManagementAreaRepository = mockk<Cas1CruManagementAreaRepository>()
+  private val mockCas1OffenderService = mockk<Cas1OffenderService>()
 
   private val applicationService = ApplicationService(
     mockUserRepository,
@@ -153,6 +156,7 @@ class ApplicationServiceTest {
     mockLockableApplicationRepository,
     mockProbationDeliveryUnitRepository,
     mockCas1CruManagementAreaRepository,
+    mockCas1OffenderService,
   )
 
   @Test
@@ -368,10 +372,23 @@ class ApplicationServiceTest {
       .withCrn(crn)
       .produce()
 
+    val cas1OffenderEntityId = UUID.randomUUID()
+
+    val cas1OffenderEntity = Cas1OffenderEntity(
+      crn = "CRN345",
+      name = "name",
+      nomsNumber = "nomsNo",
+      tier = "level",
+      id = cas1OffenderEntityId,
+      createdAt = OffsetDateTime.of(2025, 3, 5, 10, 30, 0, 0, ZoneOffset.UTC),
+      lastUpdatedAt = OffsetDateTime.of(2025, 3, 5, 10, 30, 0, 0, ZoneOffset.UTC),
+    )
+
     every { mockUserService.getUserForRequest() } returns user
     every { mockJsonSchemaService.getNewestSchema(ApprovedPremisesApplicationJsonSchemaEntity::class.java) } returns schema
     every { mockApplicationRepository.saveAndFlush(any()) } answers { it.invocation.args[0] as ApplicationEntity }
     every { mockApplicationTeamCodeRepository.save(any()) } answers { it.invocation.args[0] as ApplicationTeamCodeEntity }
+    every { mockCas1OffenderService.getOrCreateOffender(any(), any()) } returns cas1OffenderEntity
 
     val riskRatings = PersonRisksFactory()
       .withRoshRisks(
@@ -412,6 +429,7 @@ class ApplicationServiceTest {
       val approvedPremisesApplication = it
       assertThat(approvedPremisesApplication.riskRatings).isEqualTo(riskRatings)
       assertThat(approvedPremisesApplication.name).isEqualTo("${offenderDetails.firstName.uppercase()} ${offenderDetails.surname.uppercase()}")
+      assertThat(approvedPremisesApplication.cas1OffenderEntity).isEqualTo(cas1OffenderEntity)
     }
   }
 
