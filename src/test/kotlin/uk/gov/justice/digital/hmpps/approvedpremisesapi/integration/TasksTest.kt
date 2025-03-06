@@ -2163,7 +2163,7 @@ class TasksTest {
 
     @Test
     fun `Assessment Task UserWithWorkload for an accepted application only returns users with ASSESSOR role`() {
-      givenAUser(roles = listOf(UserRole.CAS1_APPEALS_MANAGER)) { _, jwt ->
+      givenAUser(roles = listOf(UserRole.CAS1_FUTURE_MANAGER)) { _, jwt ->
         givenAUser(
           roles = listOf(UserRole.CAS1_REPORT_VIEWER),
         ) { user, _ ->

@@ -132,7 +132,6 @@ class UserTransformer(
       UserPermission.CAS1_ASSESS_APPEALED_APPLICATION -> ApiUserPermission.assessAppealedApplication
       UserPermission.CAS1_ASSESS_APPLICATION -> ApiUserPermission.assessApplication
       UserPermission.CAS1_ASSESS_PLACEMENT_APPLICATION -> ApiUserPermission.assessPlacementApplication
-      UserPermission.CAS1_ASSESS_PLACEMENT_REQUEST -> ApiUserPermission.assessPlacementRequest
       UserPermission.CAS1_BOOKING_CREATE -> ApiUserPermission.bookingCreate
       UserPermission.CAS1_BOOKING_CHANGE_DATES -> ApiUserPermission.bookingChangeDates
       UserPermission.CAS1_BOOKING_WITHDRAW -> ApiUserPermission.bookingWithdraw
