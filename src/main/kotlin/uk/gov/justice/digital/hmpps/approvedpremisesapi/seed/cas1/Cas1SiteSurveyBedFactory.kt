@@ -44,7 +44,7 @@ class Cas1SiteSurveyBedFactory {
             i,
           ),
           hasNearbySprinkler = resolveAnswerYesNoDropDown(Exact("is there a water mist extinguisher in close proximity to this room?"), i),
-          isArsonSuitable = resolveAnswerYesNoDropDown(Exact("Is this room suitable for people who pose an arson risk? (Must answer yes to Q; 6 & 7, and 9 or  10)"), i),
+          isArsonSuitable = resolveAnswerYesNoDropDown(Cas1SiteSurveyDataFrame.QuestionToMatch.StartsWith("Is this room suitable for people who pose an arson risk?"), i),
           hasArsonInsuranceConditions = resolveAnswerYesNoNaDropDown(Exact("If IAP - Is there any insurance conditions that prevent a person with arson convictions being placed?"), i),
           isSuitedForSexOffenders = resolveAnswerYesNoDropDown(Exact("Is this room suitable for people convicted of sexual offences?"), i),
           hasEnSuite = resolveAnswerYesNoDropDown(Exact("Does this room have en-suite bathroom facilities?"), i),
