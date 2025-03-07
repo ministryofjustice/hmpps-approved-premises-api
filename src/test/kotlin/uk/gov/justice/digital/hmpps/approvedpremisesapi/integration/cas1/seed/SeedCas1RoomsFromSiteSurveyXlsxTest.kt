@@ -20,8 +20,7 @@ class SeedCas1RoomsFromSiteSurveyXlsxTest : SeedTestBase() {
     "Is this room on the top floor with at least one external wall and not located directly next to a fire exit or a protected stairway?",
     "Is the room close to the admin/staff office on the ground floor with at least one external wall and not located directly next to a fire exit or a protected stairway?",
     "is there a water mist extinguisher in close proximity to this room?",
-    "Is this room suitable for people who pose an arson risk? (Must answer yes to Q; 6 & 7, and 9 or  10)",
-    "Is this room currently a designated arson room?",
+    "Is this room suitable for people who pose an arson risk? (Must answer yes to Q; 4, 6 & 7, and 9 or  10)",
     "If IAP - Is there any insurance conditions that prevent a person with arson convictions being placed?",
     "Is this room suitable for people convicted of sexual offences?",
     "Does this room have en-suite bathroom facilities?",
@@ -623,9 +622,7 @@ class SeedCas1RoomsFromSiteSurveyXlsxTest : SeedTestBase() {
     assertThat(logEntries)
       .anyMatch {
         it.level == "error" &&
-          it.message == "Unable to complete Excel seed job for 'example.xlsx' with message 'Question 'Is this room located on the ground floor?' not found on sheet Sheet3.'" &&
-          it.throwable != null &&
-          it.throwable.message == "Question 'Is this room located on the ground floor?' not found on sheet Sheet3."
+          it.message == "Unable to complete Excel seed job for 'example.xlsx' with message 'Couldn't find a single answer for question 'Exact(label=Is this room located on the ground floor?)' on sheet Sheet3'"
       }
   }
 
@@ -668,9 +665,8 @@ class SeedCas1RoomsFromSiteSurveyXlsxTest : SeedTestBase() {
     assertThat(logEntries)
       .anyMatch {
         it.level == "error" &&
-          it.message == "Unable to complete Excel seed job for 'example.xlsx' with message 'Invalid value for Yes/No dropdown: BAD ANSWER on sheet Sheet3. Question is Is this room located on the ground floor?'" &&
-          it.throwable != null &&
-          it.throwable.message == "Invalid value for Yes/No dropdown: BAD ANSWER on sheet Sheet3. Question is Is this room located on the ground floor?"
+          it.message == "Unable to complete Excel seed job for 'example.xlsx' with message 'Invalid value for Yes/No dropdown:" +
+          " BAD ANSWER on sheet Sheet3. Question is Exact(label=Is this room located on the ground floor?)'"
       }
   }
 

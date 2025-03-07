@@ -2,6 +2,7 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.seed.cas1
 
 import org.jetbrains.kotlinx.dataframe.DataFrame
 import org.jetbrains.kotlinx.dataframe.io.readExcel
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.seed.cas1.Cas1SiteSurveyDataFrame.QuestionToMatch.Exact
 import java.io.File
 
 class Cas1SiteSurveyPremiseFactory {
@@ -18,47 +19,47 @@ class Cas1SiteSurveyPremiseFactory {
   private fun Cas1SiteSurveyDataFrame.getQCode(): String {
     ensureCorrectColumnCount()
 
-    return resolveAnswer("AP Identifier (Q No.)")
+    return resolveAnswer(Exact("AP Identifier (Q No.)"))
   }
 
   private fun Cas1SiteSurveyDataFrame.toInternalModel(): Cas1SiteSurveyPremise {
     ensureCorrectColumnCount()
 
     return Cas1SiteSurveyPremise(
-      name = resolveAnswer("Name of AP"),
-      qCode = resolveAnswer("AP Identifier (Q No.)"),
-      apArea = resolveAnswer("AP Area"),
-      probationDeliveryUnit = resolveAnswer("Probation Delivery Unit"),
-      probationRegion = resolveAnswer("Probation Region").dropDownToSiteSurveyProbationRegion(),
-      localAuthorityArea = resolveAnswer("Local Authority Area"),
-      townCity = resolveAnswer("Town / City"),
-      address = resolveAnswer("Address"),
-      postcode = resolveAnswer("Postcode"),
-      maleFemale = resolveAnswer("Male / Female AP?").dropDownToMaleFemale(),
-      iap = resolveAnswer("Is this an IAP?").dropDownYesNoToBoolean(),
-      pipe = resolveAnswer("Is this AP a PIPE?").dropDownYesNoToBoolean(),
-      enhancedSecuritySite = resolveAnswer("Is this AP an Enhanced Security Site?").dropDownYesNoToBoolean(),
-      mentalHealth = resolveAnswer("Is this AP semi specialist - Mental Health?").dropDownYesNoToBoolean(),
-      recoveryFocussed = resolveAnswer("Is this a Recovery Focussed AP?").dropDownYesNoToBoolean(),
+      name = resolveAnswer(Exact("Name of AP")),
+      qCode = resolveAnswer(Exact("AP Identifier (Q No.)")),
+      apArea = resolveAnswer(Exact("AP Area")),
+      probationDeliveryUnit = resolveAnswer(Exact("Probation Delivery Unit")),
+      probationRegion = resolveAnswer(Exact("Probation Region")).dropDownToSiteSurveyProbationRegion(),
+      localAuthorityArea = resolveAnswer(Exact("Local Authority Area")),
+      townCity = resolveAnswer(Exact("Town / City")),
+      address = resolveAnswer(Exact("Address")),
+      postcode = resolveAnswer(Exact("Postcode")),
+      maleFemale = resolveAnswer(Exact("Male / Female AP?")).dropDownToMaleFemale(),
+      iap = resolveAnswer(Exact("Is this an IAP?")).dropDownYesNoToBoolean(),
+      pipe = resolveAnswer(Exact("Is this AP a PIPE?")).dropDownYesNoToBoolean(),
+      enhancedSecuritySite = resolveAnswer(Exact("Is this AP an Enhanced Security Site?")).dropDownYesNoToBoolean(),
+      mentalHealth = resolveAnswer(Exact("Is this AP semi specialist - Mental Health?")).dropDownYesNoToBoolean(),
+      recoveryFocussed = resolveAnswer(Exact("Is this a Recovery Focussed AP?")).dropDownYesNoToBoolean(),
       suitableForPeopleAtRiskOfCriminalExploitation =
-      resolveAnswer("Is this AP suitable for people at risk of criminal exploitation? N.B Enhanced Security sites answer No, other AP's answer Yes.")
+      resolveAnswer(Exact("Is this AP suitable for people at risk of criminal exploitation? N.B Enhanced Security sites answer No, other AP's answer Yes."))
         .dropDownYesNoToBoolean(),
       willAcceptPeopleWhoHave = WillAcceptPeopleWhoHave(
-        committedSexualOffencesAgainstAdults = resolveAnswer("Does this AP accept people who have committed sexual offences against adults?").dropDownYesNoToBoolean(),
-        committedSexualOffencesAgainstChildren = resolveAnswer("Does this AP accept people who have committed sexual offences against children?").dropDownYesNoToBoolean(),
-        committedNonSexualOffencesAgainstChildren = resolveAnswer("Does this AP accept people who have committed non-sexual offences against children?").dropDownYesNoToBoolean(),
-        beenConvictedOfHateCrimes = resolveAnswer("Does this AP accept people who have been convicted of hate crimes?").dropDownYesNoToBoolean(),
+        committedSexualOffencesAgainstAdults = resolveAnswer(Exact("Does this AP accept people who have committed sexual offences against adults?")).dropDownYesNoToBoolean(),
+        committedSexualOffencesAgainstChildren = resolveAnswer(Exact("Does this AP accept people who have committed sexual offences against children?")).dropDownYesNoToBoolean(),
+        committedNonSexualOffencesAgainstChildren = resolveAnswer(Exact("Does this AP accept people who have committed non-sexual offences against children?")).dropDownYesNoToBoolean(),
+        beenConvictedOfHateCrimes = resolveAnswer(Exact("Does this AP accept people who have been convicted of hate crimes?")).dropDownYesNoToBoolean(),
       ),
-      cateredOrSelfCatered = resolveAnswer("Is this AP Catered? Self catering AP's answer 'No'").dropDownYesNoToBoolean(),
-      stepFreeEntrance = resolveAnswer("Is there a step free entrance to the AP at least 900mm wide?").dropDownYesNoToBoolean(),
-      corridorsAtLeast1200CmWide = resolveAnswer("Are corridors leading to communal areas at least 1.2m wide?").dropDownYesNoToBoolean(),
-      corridorsHaveStepFreeAccess = resolveAnswer("Do corridors leading to communal areas have step free access?").dropDownYesNoToBoolean(),
-      bathroomFacilitiesAdaptedForWheelchairUsers = resolveAnswer("Does this AP have bathroom facilities that have been adapted for wheelchair users?").dropDownYesNoToBoolean(),
-      hasALift = resolveAnswer("Is there a lift at this AP?").dropDownYesNoToBoolean(),
-      hasTactileAndDirectionalFlooring = resolveAnswer("Does this AP have tactile & directional flooring?").dropDownYesNoToBoolean(),
-      hasSignsInBraille = resolveAnswer("Does this AP have signs in braille?").dropDownYesNoToBoolean(),
-      hasAHearingLoop = resolveAnswer("Does this AP have or has access to a hearing loop?").dropDownYesNoToBoolean(),
-      additionalRestrictions = resolveAnswerOptional("Are there any additional restrictions on people that this AP can accommodate?"),
+      cateredOrSelfCatered = resolveAnswer(Exact("Is this AP Catered? Self catering AP's answer 'No'")).dropDownYesNoToBoolean(),
+      stepFreeEntrance = resolveAnswer(Exact("Is there a step free entrance to the AP at least 900mm wide?")).dropDownYesNoToBoolean(),
+      corridorsAtLeast1200CmWide = resolveAnswer(Exact("Are corridors leading to communal areas at least 1.2m wide?")).dropDownYesNoToBoolean(),
+      corridorsHaveStepFreeAccess = resolveAnswer(Exact("Do corridors leading to communal areas have step free access?")).dropDownYesNoToBoolean(),
+      bathroomFacilitiesAdaptedForWheelchairUsers = resolveAnswer(Exact("Does this AP have bathroom facilities that have been adapted for wheelchair users?")).dropDownYesNoToBoolean(),
+      hasALift = resolveAnswer(Exact("Is there a lift at this AP?")).dropDownYesNoToBoolean(),
+      hasTactileAndDirectionalFlooring = resolveAnswer(Exact("Does this AP have tactile & directional flooring?")).dropDownYesNoToBoolean(),
+      hasSignsInBraille = resolveAnswer(Exact("Does this AP have signs in braille?")).dropDownYesNoToBoolean(),
+      hasAHearingLoop = resolveAnswer(Exact("Does this AP have or has access to a hearing loop?")).dropDownYesNoToBoolean(),
+      additionalRestrictions = resolveAnswerOptional(Exact("Are there any additional restrictions on people that this AP can accommodate?")),
     )
   }
 
