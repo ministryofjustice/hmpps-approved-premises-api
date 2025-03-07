@@ -66,15 +66,20 @@ class Cas1SeedRoomsFromSiteSurveyXlsxJob(
       }
     }
 
+    val bedErrors = mutableListOf<String>()
     beds.forEach {
       val existingBed = bedRepository.findByCode(it.bedCode)
       if (existingBed == null) {
         createBed(it)
       } else {
         if (existingBed.room.code != it.roomCode) {
-          error("Bed ${it.bedCode} already exists in room ${existingBed.room.code} but is being added to room ${it.roomCode}.")
+          bedErrors.add("Bed ${it.bedCode} already exists in room ${existingBed.room.code} but is being added to room ${it.roomCode}.")
         }
       }
+    }
+
+    if (bedErrors.isNotEmpty()) {
+      error(bedErrors.joinToString(","))
     }
   }
 
