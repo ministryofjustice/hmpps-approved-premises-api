@@ -28,7 +28,7 @@ class Cas3PremisesSummaryTransformer {
     addressLine2 = domain.addressLine2,
     postcode = domain.postcode,
     status = domain.status,
-    bedCount = domain.bedCount,
+    bedspaceCount = domain.bedCount,
     pdu = domain.pdu,
     localAuthorityAreaName = domain.localAuthorityAreaName,
   )

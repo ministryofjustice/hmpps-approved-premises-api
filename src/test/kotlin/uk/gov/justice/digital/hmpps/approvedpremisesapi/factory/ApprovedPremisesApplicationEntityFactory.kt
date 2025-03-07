@@ -12,6 +12,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas1CruManage
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.JsonSchemaEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementRequestEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas1.Cas1OffenderEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.ApprovedPremisesApplicationStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.ApprovedPremisesType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PersonRisks
@@ -71,6 +72,7 @@ class ApprovedPremisesApplicationEntityFactory : Factory<ApprovedPremisesApplica
   private var caseManagerUserDetails: Yielded<Cas1ApplicationUserDetailsEntity?> = { null }
   private var noticeType: Yielded<Cas1ApplicationTimelinessCategory?> = { null }
   private var licenseExpiryDate: Yielded<LocalDate?> = { null }
+  private var cas1OffenderEntity: Yielded<Cas1OffenderEntity?> = { null }
 
   fun withDefaults() = apply {
     withCreatedByUser(UserEntityFactory().withDefaults().produce())
@@ -236,6 +238,10 @@ class ApprovedPremisesApplicationEntityFactory : Factory<ApprovedPremisesApplica
     this.licenseExpiryDate = { licenseExpiredDate }
   }
 
+  fun withCas1OffenderEntity(cas1OffenderEntity: Cas1OffenderEntity?) = apply {
+    this.cas1OffenderEntity = { cas1OffenderEntity }
+  }
+
   override fun produce(): ApprovedPremisesApplicationEntity = ApprovedPremisesApplicationEntity(
     id = this.id(),
     crn = this.crn(),
@@ -277,5 +283,6 @@ class ApprovedPremisesApplicationEntityFactory : Factory<ApprovedPremisesApplica
     caseManagerUserDetails = this.caseManagerUserDetails(),
     noticeType = this.noticeType(),
     licenceExpiryDate = this.licenseExpiryDate(),
+    cas1OffenderEntity = this.cas1OffenderEntity(),
   )
 }

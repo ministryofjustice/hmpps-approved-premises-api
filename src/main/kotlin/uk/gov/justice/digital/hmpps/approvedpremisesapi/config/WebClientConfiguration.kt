@@ -74,6 +74,7 @@ class WebClientConfiguration(
           }.build(),
         )
         .build(),
+      retryOnReadTimeout = true,
     )
   }
 

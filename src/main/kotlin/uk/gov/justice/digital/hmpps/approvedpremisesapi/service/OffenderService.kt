@@ -252,6 +252,9 @@ class OffenderService(
   @Deprecated(
     """
       This function returns the now deprecated [OffenderDetailSummary], which is the community-api data model
+      
+      Note that whilst this function returns CasResult.Unauthorised if offender is LAO and user can't access
+      them, the non-deprecated functions will instead return PersonSummaryInfoResult.Full.Restricted
     """,
     ReplaceWith("getPersonSummaryInfoResults(crns, limitedAccessStrategy)"),
   )

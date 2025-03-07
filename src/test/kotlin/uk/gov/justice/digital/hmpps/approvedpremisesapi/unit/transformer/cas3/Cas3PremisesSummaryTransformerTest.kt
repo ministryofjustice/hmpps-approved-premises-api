@@ -15,7 +15,7 @@ class Cas3PremisesSummaryTransformerTest {
   @Test
   fun `transformDomainToApi transforms the DomainTemporaryAccommodationPremisesSummary into a TemporaryAccommodationPremisesSummary`() {
     val uuid = UUID.randomUUID()
-    val domainPremisesSummary = DomainTemporaryAccommodationPremisesSummary(
+    val domainPremisesSummary = TemporaryAccommodationPremisesSummaryData(
       id = uuid,
       name = "bob",
       addressLine1 = "address",
@@ -48,7 +48,7 @@ class Cas3PremisesSummaryTransformerTest {
   @Test
   fun `transformDomainToApi transforms the DomainTemporaryAccommodationPremisesSummary into a Cas3PremisesSummary`() {
     val uuid = UUID.randomUUID()
-    val domainPremisesSummary = DomainTemporaryAccommodationPremisesSummary(
+    val domainPremisesSummary = TemporaryAccommodationPremisesSummaryData(
       id = uuid,
       name = "bob",
       addressLine1 = "address",
@@ -71,7 +71,7 @@ class Cas3PremisesSummaryTransformerTest {
         postcode = "123ABC",
         pdu = "North east",
         status = PropertyStatus.active,
-        bedCount = 1,
+        bedspaceCount = 1,
         localAuthorityAreaName = "Rochford",
       ),
     )
@@ -80,7 +80,7 @@ class Cas3PremisesSummaryTransformerTest {
   @Test
   fun `transformDomainToApi transforms the DomainTemporaryAccommodationPremisesSummary into a TemporaryAccommodationPremisesSummary without optional elements`() {
     val uuid = UUID.randomUUID()
-    val domainPremisesSummary = DomainTemporaryAccommodationPremisesSummary(
+    val domainPremisesSummary = TemporaryAccommodationPremisesSummaryData(
       id = uuid,
       name = "bob",
       addressLine1 = "address",
@@ -113,7 +113,7 @@ class Cas3PremisesSummaryTransformerTest {
   @Test
   fun `transformDomainToApi transforms the DomainTemporaryAccommodationPremisesSummary into a Cas3PremisesSummary without optional elements`() {
     val uuid = UUID.randomUUID()
-    val domainPremisesSummary = DomainTemporaryAccommodationPremisesSummary(
+    val domainPremisesSummary = TemporaryAccommodationPremisesSummaryData(
       id = uuid,
       name = "bob",
       addressLine1 = "address",
@@ -136,9 +136,22 @@ class Cas3PremisesSummaryTransformerTest {
         postcode = "123ABC",
         pdu = "North east",
         status = PropertyStatus.active,
-        bedCount = 1,
+        bedspaceCount = 1,
         localAuthorityAreaName = null,
       ),
     )
   }
+
+  @SuppressWarnings("LongParameterList")
+  class TemporaryAccommodationPremisesSummaryData(
+    override val id: UUID,
+    override val name: String,
+    override val addressLine1: String,
+    override val addressLine2: String?,
+    override val postcode: String,
+    override val pdu: String,
+    override val status: PropertyStatus,
+    override val bedCount: Int,
+    override val localAuthorityAreaName: String?,
+  ) : DomainTemporaryAccommodationPremisesSummary
 }

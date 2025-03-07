@@ -298,7 +298,7 @@ class Cas1PlacementReportTest : InitialiseDatabasePerClassTestBase() {
         withCanonicalArrivalDate(LocalDate.of(REPORT_YEAR, REPORT_MONTH, 7))
         withCanonicalDepartureDate(LocalDate.of(2024, 5, 10))
         withActualArrivalDate(LocalDate.of(2024, 2, 7))
-        withActualArrivalTime(LocalTime.of(11, 0, 0, 0))
+        withActualArrivalTime(LocalTime.of(11, 0, 2, 0))
         withActualDepartureDate(LocalDate.of(2024, 5, 10))
         withActualDepartureTime(LocalTime.of(23, 0, 0, 0))
         withExpectedArrivalDate(LocalDate.of(2024, 2, 7))
@@ -314,11 +314,11 @@ class Cas1PlacementReportTest : InitialiseDatabasePerClassTestBase() {
 
     fun assertRow(row: PlacementReportRow) {
       assertThat(row.placement_id).isEqualTo(booking.id.toString())
-      assertThat(row.expected_arrival_date).isEqualTo("07-Feb-2024")
-      assertThat(row.expected_departure_date).isEqualTo("10-May-2024")
-      assertThat(row.actual_arrival_date).isEqualTo("07-Feb-2024")
-      assertThat(row.actual_arrival_time).isEqualTo("11:00")
-      assertThat(row.actual_departure_date).isEqualTo("10-May-2024")
+      assertThat(row.expected_arrival_date).isEqualTo("2024-02-07")
+      assertThat(row.expected_departure_date).isEqualTo("2024-05-10")
+      assertThat(row.actual_arrival_date).isEqualTo("2024-02-07")
+      assertThat(row.actual_arrival_time).isEqualTo("11:00:02")
+      assertThat(row.actual_departure_date).isEqualTo("2024-05-10")
       assertThat(row.actual_departure_time).isEqualTo("23:00")
       assertThat(row.premises_name).isEqualTo("premisesName")
       assertThat(row.premises_region).isEqualTo("southWest")
@@ -375,7 +375,7 @@ class Cas1PlacementReportTest : InitialiseDatabasePerClassTestBase() {
         withCanonicalArrivalDate(LocalDate.of(2024, 1, 7))
         withCanonicalDepartureDate(LocalDate.of(REPORT_YEAR, REPORT_MONTH, 1))
         withActualArrivalDate(LocalDate.of(2024, 1, 7))
-        withActualArrivalTime(LocalTime.of(11, 0, 0, 0))
+        withActualArrivalTime(LocalTime.of(11, 0, 2, 0))
         withActualDepartureDate(LocalDate.of(2024, 2, 1))
         withActualDepartureTime(LocalTime.of(23, 0, 0, 0))
         withExpectedArrivalDate(LocalDate.of(2024, 1, 7))
@@ -391,11 +391,11 @@ class Cas1PlacementReportTest : InitialiseDatabasePerClassTestBase() {
 
     fun assertRow(row: PlacementReportRow) {
       assertThat(row.placement_id).isEqualTo(booking.id.toString())
-      assertThat(row.expected_arrival_date).isEqualTo("07-Jan-2024")
-      assertThat(row.expected_departure_date).isEqualTo("01-Feb-2024")
-      assertThat(row.actual_arrival_date).isEqualTo("07-Jan-2024")
-      assertThat(row.actual_arrival_time).isEqualTo("11:00")
-      assertThat(row.actual_departure_date).isEqualTo("01-Feb-2024")
+      assertThat(row.expected_arrival_date).isEqualTo("2024-01-07")
+      assertThat(row.expected_departure_date).isEqualTo("2024-02-01")
+      assertThat(row.actual_arrival_date).isEqualTo("2024-01-07")
+      assertThat(row.actual_arrival_time).isEqualTo("11:00:02")
+      assertThat(row.actual_departure_date).isEqualTo("2024-02-01")
       assertThat(row.actual_departure_time).isEqualTo("23:00")
       assertThat(row.premises_name).isEqualTo("premisesName")
       assertThat(row.premises_region).isEqualTo("southWest")
@@ -462,8 +462,8 @@ class Cas1PlacementReportTest : InitialiseDatabasePerClassTestBase() {
 
     fun assertRow(row: PlacementReportRow) {
       assertThat(row.placement_id).isEqualTo(booking.id.toString())
-      assertThat(row.expected_arrival_date).isEqualTo("15-Jan-2024")
-      assertThat(row.expected_departure_date).isEqualTo("01-May-2024")
+      assertThat(row.expected_arrival_date).isEqualTo("2024-01-15")
+      assertThat(row.expected_departure_date).isEqualTo("2024-05-01")
       assertThat(row.actual_arrival_date).isEqualTo(null)
       assertThat(row.actual_arrival_time).isEqualTo(null)
       assertThat(row.actual_departure_date).isEqualTo(null)
@@ -476,7 +476,7 @@ class Cas1PlacementReportTest : InitialiseDatabasePerClassTestBase() {
       assertThat(row.departure_move_on_category).isNull()
       assertThat(row.departure_reason).isNull()
       assertThat(row.non_arrival_reason).isEqualTo(nonArrivalReason.name)
-      assertThat(row.non_arrival_recorded_date_time).isEqualTo("02-Feb-2024 00:00:00")
+      assertThat(row.non_arrival_recorded_date_time).isEqualTo("2024-02-02T00:00:00Z")
       assertThat(row.placement_withdrawn_date).isNull()
       assertThat(row.placement_withdrawal_recorded_date_time).isNull()
       assertThat(row.placement_withdrawn_reason).isNull()
@@ -538,8 +538,8 @@ class Cas1PlacementReportTest : InitialiseDatabasePerClassTestBase() {
 
     fun assertRow(row: PlacementReportRow) {
       assertThat(row.placement_id).isEqualTo(booking.id.toString())
-      assertThat(row.expected_arrival_date).isEqualTo("20-May-2024")
-      assertThat(row.expected_departure_date).isEqualTo("01-Aug-2024")
+      assertThat(row.expected_arrival_date).isEqualTo("2024-05-20")
+      assertThat(row.expected_departure_date).isEqualTo("2024-08-01")
       assertThat(row.actual_arrival_date).isEqualTo(null)
       assertThat(row.actual_arrival_time).isEqualTo(null)
       assertThat(row.actual_departure_date).isEqualTo(null)
@@ -553,8 +553,8 @@ class Cas1PlacementReportTest : InitialiseDatabasePerClassTestBase() {
       assertThat(row.departure_reason).isNull()
       assertThat(row.non_arrival_reason).isNull()
       assertThat(row.non_arrival_recorded_date_time).isNull()
-      assertThat(row.placement_withdrawn_date).isEqualTo("05-Feb-2024")
-      assertThat(row.placement_withdrawal_recorded_date_time).isEqualTo("05-Feb-2024 00:00:00")
+      assertThat(row.placement_withdrawn_date).isEqualTo("2024-02-05")
+      assertThat(row.placement_withdrawal_recorded_date_time).isEqualTo("2024-02-05T00:00:00Z")
       assertThat(row.placement_withdrawn_reason).isEqualTo("Cancelled")
     }
   }

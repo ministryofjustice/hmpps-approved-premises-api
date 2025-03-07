@@ -29,6 +29,7 @@ import org.springframework.data.jpa.repository.Modifying
 import org.springframework.data.jpa.repository.Query
 import org.springframework.stereotype.Repository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1ApplicationTimelinessCategory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas1.Cas1OffenderEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.ApprovedPremisesApplicationStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.ApprovedPremisesType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PersonRisks
@@ -393,6 +394,7 @@ class ApprovedPremisesApplicationEntity(
    * If returning the offender name to the user, use the [OffenderService], which
    * will consider any LAO restrictions
    */
+  @Deprecated("To be replaced by [Cas1OffenderEntity]")
   var name: String,
   var targetLocation: String?,
   @Enumerated(value = EnumType.STRING)
@@ -420,6 +422,9 @@ class ApprovedPremisesApplicationEntity(
   @Enumerated(value = EnumType.STRING)
   var noticeType: Cas1ApplicationTimelinessCategory?,
   var licenceExpiryDate: LocalDate?,
+  @ManyToOne(fetch = FetchType.LAZY)
+  @JoinColumn(name = "cas1_offender_id", referencedColumnName = "id")
+  val cas1OffenderEntity: Cas1OffenderEntity?,
 ) : ApplicationEntity(
   id,
   crn,

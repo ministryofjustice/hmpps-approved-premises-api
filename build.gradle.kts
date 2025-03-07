@@ -7,6 +7,7 @@ plugins {
   id("org.openapi.generator") version "7.11.0"
   id("io.gatling.gradle") version "3.13.1"
   id("io.gitlab.arturbosch.detekt") version "1.23.7"
+  id("org.owasp.dependencycheck") version "12.1.0"
 }
 
 configurations {
@@ -70,10 +71,10 @@ dependencies {
 
   testImplementation("io.github.bluegroundltd:kfactory:1.0.0")
   testImplementation("io.mockk:mockk:1.13.17")
-  testImplementation("io.jsonwebtoken:jjwt-api:0.11.5")
   testImplementation("com.github.tomakehurst:wiremock-standalone:3.0.1")
-  testRuntimeOnly("io.jsonwebtoken:jjwt-impl:0.11.5")
-  testRuntimeOnly("io.jsonwebtoken:jjwt-jackson:0.11.5")
+  testImplementation("io.jsonwebtoken:jjwt-api:0.12.6")
+  testRuntimeOnly("io.jsonwebtoken:jjwt-impl:0.12.6")
+  testRuntimeOnly("io.jsonwebtoken:jjwt-jackson:0.12.6")
 
   testImplementation("org.springframework.boot:spring-boot-starter-test") {
     exclude(module = "mockito-core")
