@@ -7,17 +7,13 @@ info:
 servers:
   - url: /cas1
 paths:
-  /change-requests:
+  /placement-request/change-requests:
     get:
       tags:
         - change requests
-      operationId: find
+      operationId: findOpen
+      description: Return open change requests
       parameters:
-        - name: status
-          in: query
-          description: filter by status of a change request
-          schema:
-            $ref: '#/components/schemas/Cas1ChangeRequestStatus'
         - name: page
           in: query
           description: Page number of results to return. If blank, returns all results
@@ -57,10 +53,18 @@ paths:
           $ref: '#/components/responses/403Response'
         500:
           $ref: '#/components/responses/500Response'
+  /placement-request/{placementRequestId}/change-request:
     post:
       tags:
         - change requests
       operationId: create
+      parameters:
+        - name: placementRequestId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
       requestBody:
         content:
           'application/json':
@@ -82,6 +86,80 @@ paths:
           $ref: '#/components/responses/403Response'
         500:
           $ref: '#/components/responses/500Response'
+
+  /placement-request/{placementRequestId}/change-requests/{changeRequestId}:
+    get:
+      tags:
+        - change requests
+      operationId: get
+      parameters:
+        - name: placementRequestId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+        - name: changeRequestId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        200:
+          description: successfully retrieved change request
+          content:
+            'application/json':
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Cas1ChangeRequest'
+        401:
+          $ref: '#/components/responses/401Response'
+        403:
+          $ref: '#/components/responses/403Response'
+        500:
+          $ref: '#/components/responses/500Response'
+    patch:
+      tags:
+        - change requests
+      operationId: reject
+      parameters:
+        - name: placementRequestId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+        - name: changeRequestId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        content:
+          'application/json':
+            schema:
+              $ref: '#/components/schemas/Cas1RejectChangeRequest'
+        required: true
+      responses:
+        200:
+          description: successfully retrieved change request
+          content:
+            'application/json':
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Cas1ChangeRequest'
+        401:
+          $ref: '#/components/responses/401Response'
+        403:
+          $ref: '#/components/responses/403Response'
+        500:
+          $ref: '#/components/responses/500Response'
+
+
   /spaces/search:
     post:
       tags:
@@ -1383,6 +1461,58 @@ paths:
           $ref: '#/components/responses/403Response'
         500:
           $ref: '#/components/responses/500Response'
+  /reference-data/change-request-reasons/{changeRequestType}:
+    get:
+      tags:
+        - Reference Data
+      operationId: getChangeRequestReasons
+      parameters:
+        - name: changeRequestType
+          in: path
+          required: true
+          schema:
+            $ref: '#/components/schemas/Cas1ChangeRequestType'
+      responses:
+        200:
+          description: successful operation
+          content:
+            'application/json':
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/NamedId'
+        401:
+          $ref: '#/components/responses/401Response'
+        403:
+          $ref: '#/components/responses/403Response'
+        500:
+          $ref: '#/components/responses/500Response'
+  /reference-data/change-request-rejection-reasons/{changeRequestType}:
+    get:
+      tags:
+        - Reference Data
+      operationId: getChangeRequestRejectionReasons
+      parameters:
+        - name: changeRequestType
+          in: path
+          required: true
+          schema:
+            $ref: '#/components/schemas/Cas1ChangeRequestType'
+      responses:
+        200:
+          description: successful operation
+          content:
+            'application/json':
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/NamedId'
+        401:
+          $ref: '#/components/responses/401Response'
+        403:
+          $ref: '#/components/responses/403Response'
+        500:
+          $ref: '#/components/responses/500Response'
   /reference-data/move-on-categories:
     get:
       tags:
@@ -1425,7 +1555,6 @@ paths:
           $ref: '#/components/responses/403Response'
         500:
           $ref: '#/components/responses/500Response'
-
   /reference-data/out-of-service-bed-reasons:
     get:
       tags:
@@ -7549,25 +7678,31 @@ components:
     Cas1NewChangeRequest:
       type: object
       properties:
-        space_booking_id:
+        spaceBookingId:
           type: string
           format: uuid
         type:
           $ref: '#/components/schemas/Cas1ChangeRequestType'
-        requester_notes:
+        requestJson:
+          type: object
+          additionalProperties:
+            $ref: '#/components/schemas/Unit'
+        reasonId:
           type: string
+          format: uuid
       required:
         - space_booking_id
         - type
-        - requester_notes
-    Cas1ChangeRequestStatus:
+        - requestJson
+        - reasonId
+    Cas1ChangeRequestDecision:
       type: string
       enum:
-        - resolved
-        - unresolved
+        - approved
+        - rejected
       x-enum-varnames:
-        - RESOLVED
-        - UNRESOLVED
+        - APPROVED
+        - REJECTED
     Cas1ChangeRequestType:
       type: string
       enum:
@@ -7578,39 +7713,106 @@ components:
         - APPEAL
         - EXTENSION
         - PLANNED_TRANSFER
+    Cas1ChangeRequest:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        person:
+          $ref: "#/components/schemas/PersonSummary"
+        type:
+          $ref: '#/components/schemas/Cas1ChangeRequestType'
+        createdAt:
+          type: string
+          format: date-time
+        tier:
+          type: string
+        expectedArrivalDate:
+          type: string
+          format: date
+        actualArrivalDate:
+          type: string
+          format: date
+        lengthOfStayDays:
+          type: integer
+        requestReason:
+          $ref: '#/components/schemas/NamedId'
+        decision:
+          $ref: '#/components/schemas/Cas1ChangeRequestDecision'
+        decisionJson:
+          type: object
+          additionalProperties:
+            $ref: '#/components/schemas/Unit'
+        rejectionReason:
+          $ref: '#/components/schemas/NamedId'
+        updatedAt:
+          type: string
+          format: date-time
+      required:
+        - id
+        - person
+        - type
+        - createdAt
+        - requestedArrivalDate
+        - lengthOfStayDays
+        - requestReason
+        - updatedAt
+    Cas1RejectChangeRequest:
+      type: object
+      properties:
+        rejectionReasonId:
+          type: string
+          format: uuid
+        decisionJson:
+          type: object
+          additionalProperties:
+            $ref: '#/components/schemas/Unit'
+      required:
+        - rejectionReasonId
+        - decisionJson
     Cas1ChangeRequestSummary:
       type: object
       properties:
+        id:
+          type: string
+          format: uuid
+        person:
+          $ref: "#/components/schemas/PersonSummary"
         type:
           $ref: '#/components/schemas/Cas1ChangeRequestType'
-        created_at:
+        createdAt:
           type: string
           format: date-time
-        resolution:
+        tier:
           type: string
-          enum:
-            - approved
-            - rejected
-          x-enum-varnames:
-            - APPROVED
-            - REJECTED
-        resolved_at:
+        expectedArrivalDate:
           type: string
-          format: date-time
-        crn:
+          format: date
+        actualArrivalDate:
           type: string
+          format: date
+        lengthOfStayDays:
+          type: integer
       required:
+        - id
+        - person
         - type
-        - created_at
-        - crn
+        - createdAt
+        - requestedArrivalDate
+        - lengthOfStayDays
     Cas1ChangeRequestSortField:
       type: string
       enum:
-        - created_at
-        - type
+        - name
+        - tier
+        - canonicalArrivalDate
+        - lengthOfStay
       x-enum-varnames:
-        - CREATED_AT
-        - TYPE
+        - NAME
+        - TIER
+        - CANONICAL_ARRIVAL_DATE
+        - LENGTH_OF_STAY
     Cas1PremisesBedSummary:
       type: object
       properties:
