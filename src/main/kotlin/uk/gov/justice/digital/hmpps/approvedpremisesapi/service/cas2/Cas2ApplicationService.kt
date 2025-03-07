@@ -15,6 +15,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApplicationOri
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.SubmitCas2Application
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.config.NotifyConfig
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApplicationSummaryRepository
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas2ApplicationAssignmentEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas2ApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas2ApplicationJsonSchemaEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas2ApplicationRepository
@@ -49,7 +50,6 @@ class Cas2ApplicationService(
   private val assessmentService: Cas2AssessmentService,
   private val notifyConfig: NotifyConfig,
   private val objectMapper: ObjectMapper,
-  private val prisonerLocationService: Cas2PrisonerLocationService,
   @Value("\${url-templates.frontend.cas2.application}") private val applicationUrlTemplate: String,
   @Value("\${url-templates.frontend.cas2.submitted-application-overview}") private val submittedApplicationUrlTemplate: String,
 ) {
@@ -80,6 +80,8 @@ class Cas2ApplicationService(
     val metadata = getMetadata(response, pageCriteria)
     return Pair(response.content, metadata)
   }
+
+  fun findMostRecentApplication(nomsNumber: String): Cas2ApplicationEntity? = applicationRepository.findFirstByNomsNumberAndSubmittedAtIsNotNullOrderBySubmittedAtDesc(nomsNumber)
 
   fun getAllSubmittedApplicationsForAssessor(pageCriteria: PageCriteria<String>): Pair<List<Cas2ApplicationSummaryEntity>, PaginationMetadata?> {
     val pageable = getPageableOrAllPages(pageCriteria)
@@ -249,13 +251,23 @@ class Cas2ApplicationService(
 
     try {
       application.apply {
+        val prisonCode = retrievePrisonCode(application)
         submittedAt = OffsetDateTime.now()
         document = serializedTranslatedDocument
-        referringPrisonCode = retrievePrisonCode(application)
+        referringPrisonCode = prisonCode
         preferredAreas = submitApplication.preferredAreas
         hdcEligibilityDate = submitApplication.hdcEligibilityDate
         conditionalReleaseDate = submitApplication.conditionalReleaseDate
         telephoneNumber = submitApplication.telephoneNumber
+        applicationAssignments.add(
+          Cas2ApplicationAssignmentEntity(
+            id = UUID.randomUUID(),
+            application = this,
+            prisonCode = prisonCode,
+            allocatedPomUserId = user.id,
+            createdAt = OffsetDateTime.now(),
+          ),
+        )
       }
     } catch (error: UpstreamApiException) {
       return CasResult.GeneralValidationError(error.message.toString())
@@ -266,8 +278,6 @@ class Cas2ApplicationService(
     createCas2ApplicationSubmittedEvent(application)
 
     createAssessment(application)
-
-    prisonerLocationService.createPrisonerLocation(application)
 
     sendEmailApplicationSubmitted(user, application)
 
