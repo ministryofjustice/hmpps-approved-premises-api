@@ -40,7 +40,6 @@ enum class UserRole(val service: ServiceName, val cas1ApiValue: ApprovedPremises
     ApprovedPremisesUserRole.matcher,
     listOf(
       UserPermission.CAS1_ASSESS_PLACEMENT_APPLICATION,
-      UserPermission.CAS1_ASSESS_PLACEMENT_REQUEST,
     ),
   ),
 
@@ -141,6 +140,7 @@ enum class UserRole(val service: ServiceName, val cas1ApiValue: ApprovedPremises
     ApprovedPremisesUserRole.appealsManager,
     listOf(
       UserPermission.CAS1_ASSESS_APPEALED_APPLICATION,
+      UserPermission.CAS1_ASSESS_APPLICATION,
       UserPermission.CAS1_PROCESS_AN_APPEAL,
       UserPermission.CAS1_VIEW_ASSIGNED_ASSESSMENTS,
     ),
