@@ -140,7 +140,7 @@ class PremisesController(
 
       ServiceName.temporaryAccommodation -> {
         val user = usersService.getUserForRequest()
-        val summaries = cas3PremisesService.getAllPremisesSummaries(user.probationRegion.id)
+        val summaries = cas3PremisesService.getAllPremisesSummaries(user.probationRegion.id, postcodeOrAddress = null)
 
         summaries.map(cas3PremisesSummaryTransformer::transformDomainToApi)
       }

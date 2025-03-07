@@ -61,7 +61,7 @@ class PremisesSummaryTest : IntegrationTestBase() {
         .jsonPath("$[0].status").isEqualTo("active")
         .jsonPath("$[0].pdu").isEqualTo(expectedCas3Premises.probationDeliveryUnit!!.name)
         .jsonPath("$[0].localAuthorityAreaName").isEqualTo(expectedCas3Premises.localAuthorityArea!!.name)
-        .jsonPath("$[0].bedCount").isEqualTo(5)
+        .jsonPath("$[0].${getBedspaceCountPropertyName(baseUrl)}").isEqualTo(5)
         .jsonPath("$.length()").isEqualTo(1)
     }
   }
@@ -119,7 +119,7 @@ class PremisesSummaryTest : IntegrationTestBase() {
         .jsonPath("$[0].status").isEqualTo("archived")
         .jsonPath("$[0].pdu").isEqualTo(expectedCas3Premises.probationDeliveryUnit!!.name)
         .jsonPath("$[0].localAuthorityAreaName").isEqualTo(expectedCas3Premises.localAuthorityArea!!.name)
-        .jsonPath("$[0].bedCount").isEqualTo(0)
+        .jsonPath("$[0].${getBedspaceCountPropertyName(baseUrl)}").isEqualTo(0)
         .jsonPath("$.length()").isEqualTo(1)
     }
   }
@@ -160,7 +160,7 @@ class PremisesSummaryTest : IntegrationTestBase() {
         .jsonPath("$[0].status").isEqualTo("active")
         .jsonPath("$[0].pdu").isEqualTo(expectedCas3Premises.probationDeliveryUnit!!.name)
         .jsonPath("$[0].localAuthorityAreaName").isEqualTo(expectedCas3Premises.localAuthorityArea!!.name)
-        .jsonPath("$[0].bedCount").isEqualTo(0)
+        .jsonPath("$[0].${getBedspaceCountPropertyName(baseUrl)}").isEqualTo(0)
         .jsonPath("$.length()").isEqualTo(1)
     }
   }
@@ -214,7 +214,7 @@ class PremisesSummaryTest : IntegrationTestBase() {
         .jsonPath("$[0].postcode").isEqualTo("NW1 6XE")
         .jsonPath("$[0].status").isEqualTo("active")
         .jsonPath("$[0].pdu").isEqualTo(expectedCas3Premises.probationDeliveryUnit!!.name)
-        .jsonPath("$[0].bedCount").isEqualTo(3)
+        .jsonPath("$[0].${getBedspaceCountPropertyName(baseUrl)}").isEqualTo(3)
         .jsonPath("$.length()").isEqualTo(1)
     }
   }
@@ -268,7 +268,7 @@ class PremisesSummaryTest : IntegrationTestBase() {
         .jsonPath("$[0].postcode").isEqualTo("NW1 6XE")
         .jsonPath("$[0].status").isEqualTo("active")
         .jsonPath("$[0].pdu").isEqualTo(expectedCas3Premises.probationDeliveryUnit!!.name)
-        .jsonPath("$[0].bedCount").isEqualTo(4)
+        .jsonPath("$[0].${getBedspaceCountPropertyName(baseUrl)}").isEqualTo(4)
         .jsonPath("$.length()").isEqualTo(1)
     }
   }
@@ -284,5 +284,11 @@ class PremisesSummaryTest : IntegrationTestBase() {
         .expectStatus()
         .is4xxClientError
     }
+  }
+
+  private fun getBedspaceCountPropertyName(baseUrl: String) = if (baseUrl == "/premises/summary") {
+    "bedCount"
+  } else {
+    "bedspaceCount"
   }
 }

@@ -27,35 +27,41 @@ import java.util.UUID
 interface PremisesRepository : JpaRepository<PremisesEntity, UUID> {
   @Query(
     """
-        SELECT
-          new uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TemporaryAccommodationPremisesSummary(
-            p.id, 
-            p.name, 
-            p.addressLine1, 
-            p.addressLine2, 
-            p.postcode, 
-            pdu.name, 
-            p.status,
-            CAST(COALESCE((SELECT count(beds.id)
-             FROM TemporaryAccommodationPremisesEntity tap
-             INNER JOIN tap.rooms room 
-             INNER JOIN room.beds beds 
-             WHERE tap.id = p.id AND (beds.endDate IS NULL OR beds.endDate > CURRENT_DATE)
-             GROUP BY tap.id
-            ),0) as int),   
-            la.name)
-        FROM
-          TemporaryAccommodationPremisesEntity p
-          LEFT JOIN p.rooms r 
-          LEFT JOIN r.beds b
-          LEFT JOIN p.probationRegion pr
-          LEFT JOIN p.probationDeliveryUnit pdu
-          LEFT JOIN p.localAuthorityArea la
-        WHERE pr.id = :regionId
-        GROUP BY p.id, p.name, p.addressLine1, p.addressLine2, p.postcode, pdu.name, p.status, la.name
+      SELECT
+          p.id as id,
+          p.name as name,
+          p.address_line1 as addressLine1,
+          p.address_line2 as addressLine2,
+          p.postcode as postcode,
+          pdu.name as pdu,
+          p.status as status,
+          CAST(COALESCE((SELECT count(beds.id)
+           FROM temporary_accommodation_premises ap
+           INNER JOIN rooms room ON ap.premises_id = room.premises_id
+           INNER JOIN beds beds ON room.id = beds.room_id
+           WHERE ap.premises_id = p.id AND (beds.end_date IS NULL OR beds.end_date > CURRENT_DATE)
+           GROUP BY ap.premises_id
+          ),0) as int) as bedCount,
+          la.name as localAuthorityAreaName
+      FROM
+          temporary_accommodation_premises tap
+          INNER JOIN premises p on tap.premises_id = p.id
+          LEFT JOIN rooms r ON tap.premises_id = r.premises_id
+          LEFT JOIN beds b ON r.id = b.room_id
+          LEFT JOIN probation_regions pr ON p.probation_region_id = pr.id
+          LEFT JOIN probation_delivery_units pdu ON pr.id = pdu.probation_region_id
+          LEFT JOIN local_authority_areas la ON p.local_authority_area_id = la.id
+      WHERE pr.id = :regionId
+        AND (:postcodeOrAddress is null
+          OR lower(p.postcode) LIKE CONCAT('%',lower(:postcodeOrAddress),'%')
+          OR lower(p.address_line1) LIKE CONCAT('%',lower(:postcodeOrAddress),'%')
+          OR lower(replace(p.postcode, ' ', '')) LIKE CONCAT('%',lower(:postcodeOrAddressWithoutWhitespace),'%')
+          )
+      GROUP BY p.id, p.name, p.address_line1, p.address_line2, p.postcode, pdu.name, p.status, la.name
       """,
+    nativeQuery = true,
   )
-  fun findAllTemporaryAccommodationSummary(regionId: UUID): List<TemporaryAccommodationPremisesSummary>
+  fun findAllCas3PremisesSummary(regionId: UUID, postcodeOrAddress: String?, postcodeOrAddressWithoutWhitespace: String?): List<TemporaryAccommodationPremisesSummary>
 
   @Query("SELECT COUNT(p) = 0 FROM PremisesEntity p WHERE name = :name AND TYPE(p) = :type")
   fun <T : PremisesEntity> nameIsUniqueForType(name: String, type: Class<T>): Boolean
@@ -289,17 +295,17 @@ class TemporaryAccommodationPremisesEntity(
   status,
 )
 
-data class TemporaryAccommodationPremisesSummary(
-  val id: UUID,
-  val name: String,
-  val addressLine1: String,
-  val addressLine2: String?,
-  val postcode: String,
-  val pdu: String,
-  val status: PropertyStatus,
-  val bedCount: Int,
-  val localAuthorityAreaName: String?,
-)
+interface TemporaryAccommodationPremisesSummary {
+  val id: UUID
+  val name: String
+  val addressLine1: String
+  val addressLine2: String?
+  val postcode: String
+  val pdu: String
+  val status: PropertyStatus
+  val bedCount: Int
+  val localAuthorityAreaName: String?
+}
 
 data class ApprovedPremisesBasicSummary(
   val id: UUID,

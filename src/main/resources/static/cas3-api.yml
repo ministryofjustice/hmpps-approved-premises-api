@@ -100,6 +100,12 @@ paths:
         - Premises
       summary: Returns a list of premises
       operationId: getPremisesSummary
+      parameters:
+        - name: postcodeOrAddress
+          in: query
+          description: postcode Or address to filter premises
+          schema:
+            type: string
       responses:
         200:
           description: successful operation
