@@ -48,10 +48,10 @@ class Cas2v2UsersSeedJob(
 
     val users = repository.findAll()
     users.map { user ->
-      log.info(user.username);
-      log.info(user.userType.toString());
-      log.info(user.email);
-      log.info(user.name);
+      log.info(user.username)
+      log.info(user.userType.toString())
+      log.info(user.email)
+      log.info(user.name)
     }
 
     if (repository.findByUsername(row.username) !== null) {
