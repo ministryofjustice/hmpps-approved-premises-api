@@ -7,6 +7,7 @@ import org.junit.jupiter.api.TestInstance
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.SeedFromExcelFileType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.seed.SeedTestBase
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.DataFrameUtils.createNameValueDataFrame
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.DataFrameUtils.dataFrameForHeadersAndRows
 
 @TestInstance(TestInstance.Lifecycle.PER_METHOD)
 class SeedCas1RoomsFromSiteSurveyXlsxTest : SeedTestBase() {
@@ -39,19 +40,24 @@ class SeedCas1RoomsFromSiteSurveyXlsxTest : SeedTestBase() {
     val answersForEachRoom: List<String>,
   )
 
-  fun MutableList<Any>.addQuestionsAndAnswers(
-    numberOfRooms: Int = 1,
-    answerOverrides: List<Answers> = emptyList(),
-  ) {
+  fun MutableList<List<Any>>.addQuestionsAndAnswers(
+    vararg answerOverrides: List<String>,
+  ): MutableList<List<Any>> {
+    assert(this.size == 3) { "List must have the initial 3 rows added" }
+
+    // the first column is label with a subsequent column per bed
+    val numberOfBeds = (this[0].size - 1)
+
     questions.forEach { question ->
-      this.add(question)
-      val answers = if(answerOverrides.any { it.question == question }) {
-        answerOverrides.first { it.question == question }.answersForEachRoom
+      val answers = if (answerOverrides.any { it[0] == question }) {
+        val overrides = answerOverrides.first { it[0] == question }
+        overrides.subList(1, overrides.size)
       } else {
-        MutableList(numberOfRooms) { "No" }
+        MutableList(numberOfBeds) { "No" }
       }
-      this.addAll(answers)
+      this.add(listOf(question) + answers)
     }
+    return this
   }
 
   @Test
@@ -65,19 +71,13 @@ class SeedCas1RoomsFromSiteSurveyXlsxTest : SeedTestBase() {
       withQCode(qCode)
     }
 
-    val header = listOf("Unique Reference Number for Bed", "SWABI01NEW")
-    val rows: MutableList<Any> = mutableListOf(
-      "Room Number / Name",
-      1,
-      "Bed Number (in this room i.e if this is a single room insert 1.  If this is a shared room separate entries will need to be made for bed 1 and bed 2)",
-      1,
-    )
-    rows.addQuestionsAndAnswers(
-      numberOfRooms = 1,
-      answerOverrides = listOf(Answers("Is this room located on the ground floor?" , listOf("Yes")))
-    )
+    val values = mutableListOf<List<Any>>(
+      listOf("Unique Reference Number for Bed", "SWABI01NEW"),
+      listOf("Room Number / Name", 1),
+      listOf("Bed Number (in this room i.e if this is a single room insert 1.  If this is a shared room separate entries will need to be made for bed 1 and bed 2)", 1),
+    ).addQuestionsAndAnswers(listOf("Is this room located on the ground floor?", "Yes"))
 
-    val roomsSheet = dataFrameOf(header, rows)
+    val roomsSheet = dataFrameForHeadersAndRows(values)
 
     withXlsx(
       xlsxName = "example",
@@ -116,19 +116,13 @@ class SeedCas1RoomsFromSiteSurveyXlsxTest : SeedTestBase() {
       withQCode(qCode)
     }
 
-    val header = listOf("Unique Reference Number for Bed", "SWABI01NEW")
-    val rows: MutableList<Any> = mutableListOf(
-      "Room Number / Name",
-      1.1,
-      "Bed Number (in this room i.e if this is a single room insert 1.  If this is a shared room separate entries will need to be made for bed 1 and bed 2)",
-      1.2,
-    )
-    rows.addQuestionsAndAnswers(
-      numberOfRooms = 1,
-      answerOverrides = listOf(Answers("Is this room located on the ground floor?" , listOf("Yes")))
-    )
+    val values = mutableListOf<List<Any>>(
+      listOf("Unique Reference Number for Bed", "SWABI01NEW"),
+      listOf("Room Number / Name", 1.1),
+      listOf("Bed Number (in this room i.e if this is a single room insert 1.  If this is a shared room separate entries will need to be made for bed 1 and bed 2)", 1.2),
+    ).addQuestionsAndAnswers(listOf("Is this room located on the ground floor?", "Yes"))
 
-    val roomsSheet = dataFrameOf(header, rows)
+    val roomsSheet = dataFrameForHeadersAndRows(values)
 
     withXlsx(
       xlsxName = "example",
@@ -167,23 +161,23 @@ class SeedCas1RoomsFromSiteSurveyXlsxTest : SeedTestBase() {
       withQCode(qCode)
     }
 
-    val header = listOf("Unique Reference Number for Bed", "SWABI01NEW", "SWABI02NEW", "SWABI03NEW")
-    val rows: MutableList<Any> = mutableListOf(
-      "Room Number / Name",
-      1.0,
-      2.0,
-      3.0,
-      "Bed Number (in this room i.e if this is a single room insert 1.  If this is a shared room separate entries will need to be made for bed 1 and bed 2)",
-      1.0,
-      1.0,
-      1.0,
-    )
-    rows.addQuestionsAndAnswers(
-      numberOfRooms = 3,
-      answerOverrides = listOf(Answers("Is this room located on the ground floor?" , listOf("No", "Yes", "No")))
-    )
+    val values = mutableListOf<List<Any>>(
+      listOf("Unique Reference Number for Bed", "SWABI01NEW", "SWABI02NEW", "SWABI03NEW"),
+      listOf(
+        "Room Number / Name",
+        1.0,
+        2.0,
+        3.0,
+      ),
+      listOf(
+        "Bed Number (in this room i.e if this is a single room insert 1.  If this is a shared room separate entries will need to be made for bed 1 and bed 2)",
+        1.0,
+        1.0,
+        1.0,
+      ),
+    ).addQuestionsAndAnswers(listOf("Is this room located on the ground floor?", "No", "Yes", "No"))
 
-    val roomsSheet = dataFrameOf(header, rows)
+    val roomsSheet = dataFrameForHeadersAndRows(values)
 
     createXlsxForSeeding(
       fileName = "example.xlsx",
@@ -243,21 +237,21 @@ class SeedCas1RoomsFromSiteSurveyXlsxTest : SeedTestBase() {
       withQCode(qCode)
     }
 
-    val header = listOf("Unique Reference Number for Bed", "SWABI01NEW", "SWABI02NEW")
-    val rows: MutableList<Any> = mutableListOf(
-      "Room Number / Name",
-      1.0,
-      1.0,
-      "Bed Number (in this room i.e if this is a single room insert 1.  If this is a shared room separate entries will need to be made for bed 1 and bed 2)",
-      1.0,
-      2.0,
-    )
-    rows.addQuestionsAndAnswers(
-      numberOfRooms = 2,
-      answerOverrides = listOf(Answers("Is this room located on the ground floor?" , listOf("No", "Yes")))
-    )
+    val values = mutableListOf<List<Any>>(
+      listOf("Unique Reference Number for Bed", "SWABI01NEW", "SWABI02NEW"),
+      listOf(
+        "Room Number / Name",
+        1.0,
+        1.0,
+      ),
+      listOf(
+        "Bed Number (in this room i.e if this is a single room insert 1.  If this is a shared room separate entries will need to be made for bed 1 and bed 2)",
+        1.0,
+        2.0,
+      ),
+    ).addQuestionsAndAnswers(listOf("Is this room located on the ground floor?", "No", "Yes"))
 
-    val roomsSheet = dataFrameOf(header, rows)
+    val roomsSheet = dataFrameForHeadersAndRows(values)
 
     createXlsxForSeeding(
       fileName = "example.xlsx",
@@ -289,23 +283,24 @@ class SeedCas1RoomsFromSiteSurveyXlsxTest : SeedTestBase() {
       withProbationRegion(probationRegion)
       withQCode(qCode)
     }
-    val header = listOf("Unique Reference Number for Bed", "SWABI01NEW", "SWABI02NEW", "SWABI03NEW")
-    val rows: MutableList<Any> = mutableListOf(
-      "Room Number / Name",
-      "1",
-      "2",
-      "2",
-      "Bed Number (in this room i.e if this is a single room insert 1.  If this is a shared room separate entries will need to be made for bed 1 and bed 2)",
-      "1",
-      "1",
-      "2",
-    )
-    rows.addQuestionsAndAnswers(
-      numberOfRooms = 3,
-      answerOverrides = listOf(Answers("Is this room located on the ground floor?" , listOf("No", "Yes", "Yes")))
-    )
 
-    val roomsSheet = dataFrameOf(header, rows)
+    val values = mutableListOf<List<Any>>(
+      listOf("Unique Reference Number for Bed", "SWABI01NEW", "SWABI02NEW", "SWABI03NEW"),
+      listOf(
+        "Room Number / Name",
+        "1",
+        "2",
+        "2",
+      ),
+      listOf(
+        "Bed Number (in this room i.e if this is a single room insert 1.  If this is a shared room separate entries will need to be made for bed 1 and bed 2)",
+        "1",
+        "1",
+        "2",
+      ),
+    ).addQuestionsAndAnswers(listOf("Is this room located on the ground floor?", "No", "Yes", "Yes"))
+
+    val roomsSheet = dataFrameForHeadersAndRows(values)
 
     createXlsxForSeeding(
       fileName = "example.xlsx",
@@ -362,16 +357,19 @@ class SeedCas1RoomsFromSiteSurveyXlsxTest : SeedTestBase() {
       withQCode(qCode)
     }
 
-    val header = listOf("Unique Reference Number for Bed", "SWABI01NEW")
-    val rows: MutableList<Any> = mutableListOf(
-      "Room Number / Name",
-      "1",
-      "Bed Number (in this room i.e if this is a single room insert 1.  If this is a shared room separate entries will need to be made for bed 1 and bed 2)",
-      "1",
-    )
-    rows.addQuestionsAndAnswers(1)
+    val values = mutableListOf<List<Any>>(
+      listOf("Unique Reference Number for Bed", "SWABI01NEW"),
+      listOf(
+        "Room Number / Name",
+        "1",
+      ),
+      listOf(
+        "Bed Number (in this room i.e if this is a single room insert 1.  If this is a shared room separate entries will need to be made for bed 1 and bed 2)",
+        "1",
+      ),
+    ).addQuestionsAndAnswers()
 
-    val roomsSheet = dataFrameOf(header, rows)
+    val roomsSheet = dataFrameForHeadersAndRows(values)
 
     createXlsxForSeeding(
       fileName = "example.xlsx",
@@ -413,19 +411,19 @@ class SeedCas1RoomsFromSiteSurveyXlsxTest : SeedTestBase() {
       withCode(roomCode)
     }
 
-    val header = listOf("Unique Reference Number for Bed", "SWABI01")
-    val rows: MutableList<Any> = mutableListOf(
-      "Room Number / Name",
-      "1",
-      "Bed Number (in this room i.e if this is a single room insert 1.  If this is a shared room separate entries will need to be made for bed 1 and bed 2)",
-      "1",
-    )
-    rows.addQuestionsAndAnswers(
-      numberOfRooms = 1,
-      answerOverrides = listOf(Answers("Is this room located on the ground floor?" , listOf("Yes", "No", "No"))),
-    )
+    val values = mutableListOf<List<Any>>(
+      listOf("Unique Reference Number for Bed", "SWABI01"),
+      listOf(
+        "Room Number / Name",
+        "1",
+      ),
+      listOf(
+        "Bed Number (in this room i.e if this is a single room insert 1.  If this is a shared room separate entries will need to be made for bed 1 and bed 2)",
+        "1",
+      ),
+    ).addQuestionsAndAnswers(listOf("Is this room located on the ground floor?", "Yes", "No", "No"))
 
-    val roomsSheet = dataFrameOf(header, rows)
+    val roomsSheet = dataFrameForHeadersAndRows(values)
 
     createXlsxForSeeding(
       fileName = "example.xlsx",
@@ -475,19 +473,19 @@ class SeedCas1RoomsFromSiteSurveyXlsxTest : SeedTestBase() {
       withName("1 - 1")
     }
 
-    val header = listOf("Unique Reference Number for Bed", "SWABI01")
-    val rows: MutableList<Any> = mutableListOf(
-      "Room Number / Name",
-      "1",
-      "Bed Number (in this room i.e if this is a single room insert 1.  If this is a shared room separate entries will need to be made for bed 1 and bed 2)",
-      "1",
-    )
-    rows.addQuestionsAndAnswers(
-      numberOfRooms = 1,
-      answerOverrides = listOf(Answers("Is this room located on the ground floor?" , listOf("Yes", "No", "No"))),
-    )
+    val values = mutableListOf<List<Any>>(
+      listOf("Unique Reference Number for Bed", "SWABI01"),
+      listOf(
+        "Room Number / Name",
+        "1",
+      ),
+      listOf(
+        "Bed Number (in this room i.e if this is a single room insert 1.  If this is a shared room separate entries will need to be made for bed 1 and bed 2)",
+        "1",
+      ),
+    ).addQuestionsAndAnswers(listOf("Is this room located on the ground floor?", "Yes", "No", "No"))
 
-    val roomsSheet = dataFrameOf(header, rows)
+    val roomsSheet = dataFrameForHeadersAndRows(values)
 
     createXlsxForSeeding(
       fileName = "example.xlsx",
@@ -532,18 +530,21 @@ class SeedCas1RoomsFromSiteSurveyXlsxTest : SeedTestBase() {
       withCode(roomCode)
     }
 
-    val header = listOf("Unique Reference Number for Bed", "SWABI02a", "SWABI02b")
-    val rows: MutableList<Any> = mutableListOf(
-      "Room Number / Name",
-      "2",
-      "2",
-      "Bed Number (in this room i.e if this is a single room insert 1.  If this is a shared room separate entries will need to be made for bed 1 and bed 2)",
-      "1",
-      "1",
-    )
-    rows.addQuestionsAndAnswers(2)
+    val values = mutableListOf<List<Any>>(
+      listOf("Unique Reference Number for Bed", "SWABI02a", "SWABI02b"),
+      listOf(
+        "Room Number / Name",
+        "2",
+        "2",
+      ),
+      listOf(
+        "Bed Number (in this room i.e if this is a single room insert 1.  If this is a shared room separate entries will need to be made for bed 1 and bed 2)",
+        "1",
+        "1",
+      ),
+    ).addQuestionsAndAnswers()
 
-    val roomsSheet = dataFrameOf(header, rows)
+    val roomsSheet = dataFrameForHeadersAndRows(values)
 
     createXlsxForSeeding(
       fileName = "example.xlsx",
@@ -586,16 +587,19 @@ class SeedCas1RoomsFromSiteSurveyXlsxTest : SeedTestBase() {
       withName("1")
     }
 
-    val header = listOf("Unique Reference Number for Bed", "SWABI02")
-    val rows: MutableList<Any> = mutableListOf(
-      "Room Number / Name",
-      "2",
-      "Bed Number (in this room i.e if this is a single room insert 1.  If this is a shared room separate entries will need to be made for bed 1 and bed 2)",
-      "1",
-    )
-    rows.addQuestionsAndAnswers(1)
+    val values = mutableListOf<List<Any>>(
+      listOf("Unique Reference Number for Bed", "SWABI02"),
+      listOf(
+        "Room Number / Name",
+        "2",
+      ),
+      listOf(
+        "Bed Number (in this room i.e if this is a single room insert 1.  If this is a shared room separate entries will need to be made for bed 1 and bed 2)",
+        "1",
+      ),
+    ).addQuestionsAndAnswers()
 
-    val roomsSheet = dataFrameOf(header, rows)
+    val roomsSheet = dataFrameForHeadersAndRows(values)
 
     createXlsxForSeeding(
       fileName = "example.xlsx",
@@ -628,17 +632,27 @@ class SeedCas1RoomsFromSiteSurveyXlsxTest : SeedTestBase() {
       withQCode("Q999")
     }
 
-    val header = listOf("Unique Reference Number for Bed", "SWABI01NEW")
-    val rows: MutableList<Any> = mutableListOf(
-      "Room Number / Name",
-      "1",
-      "Bed Number (in this room i.e if this is a single room insert 1.  If this is a shared room separate entries will need to be made for bed 1 and bed 2)",
-      "1",
-    )
-    rows.addQuestionsAndAnswers(1)
-    rows.replaceAll { if (it == "Is this room located on the ground floor?") "Bad question" else it }
+    val values = mutableListOf<List<Any>>(
+      listOf("Unique Reference Number for Bed", "SWABI01NEW"),
+      listOf(
+        "Room Number / Name",
+        "1",
+      ),
+      listOf(
+        "Bed Number (in this room i.e if this is a single room insert 1.  If this is a shared room separate entries will need to be made for bed 1 and bed 2)",
+        "1",
+      ),
+    ).addQuestionsAndAnswers()
 
-    val roomsSheet = dataFrameOf(header, rows)
+    values.replaceAll {
+      if (it[0] == "Is this room located on the ground floor?") {
+        listOf("Bad question") + it.subList(1, it.size)
+      } else {
+        it
+      }
+    }
+
+    val roomsSheet = dataFrameForHeadersAndRows(values)
 
     createXlsxForSeeding(
       fileName = "example.xlsx",
@@ -671,20 +685,19 @@ class SeedCas1RoomsFromSiteSurveyXlsxTest : SeedTestBase() {
       withQCode("Q999")
     }
 
-    val header = listOf("Unique Reference Number for Bed", "SWABI01NEW")
-    val rows: MutableList<Any> = mutableListOf(
-      "Room Number / Name",
-      "1",
-      "Bed Number (in this room i.e if this is a single room insert 1.  If this is a shared room separate entries will need to be made for bed 1 and bed 2)",
-      "1",
-    )
-    rows.addQuestionsAndAnswers(
-      numberOfRooms = 1,
-      answerOverrides = listOf(Answers("Is this room located on the ground floor?" , listOf("Yes", "No", "No"))),
-    )
-    rows.replaceAll { if (it == "Yes") "Bad answer" else it }
+    val values = mutableListOf<List<Any>>(
+      listOf("Unique Reference Number for Bed", "SWABI01NEW"),
+      listOf(
+        "Room Number / Name",
+        "2",
+      ),
+      listOf(
+        "Bed Number (in this room i.e if this is a single room insert 1.  If this is a shared room separate entries will need to be made for bed 1 and bed 2)",
+        "1",
+      ),
+    ).addQuestionsAndAnswers(listOf("Is this room located on the ground floor?", "Bad answer", "No", "No"))
 
-    val roomsSheet = dataFrameOf(header, rows)
+    val roomsSheet = dataFrameForHeadersAndRows(values)
 
     createXlsxForSeeding(
       fileName = "example.xlsx",
