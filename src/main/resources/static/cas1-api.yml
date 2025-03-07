@@ -5,17 +5,13 @@ info:
 servers:
   - url: /cas1
 paths:
-  /change-requests:
+  /placement-request/change-requests:
     get:
       tags:
         - change requests
-      operationId: find
+      operationId: findOpen
+      description: Return open change requests
       parameters:
-        - name: status
-          in: query
-          description: filter by status of a change request
-          schema:
-            $ref: 'cas1-schemas.yml#/components/schemas/Cas1ChangeRequestStatus'
         - name: page
           in: query
           description: Page number of results to return. If blank, returns all results
@@ -55,10 +51,18 @@ paths:
           $ref: '_shared.yml#/components/responses/403Response'
         500:
           $ref: '_shared.yml#/components/responses/500Response'
+  /placement-request/{placementRequestId}/change-request:
     post:
       tags:
         - change requests
       operationId: create
+      parameters:
+        - name: placementRequestId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
       requestBody:
         content:
           'application/json':
@@ -80,6 +84,80 @@ paths:
           $ref: '_shared.yml#/components/responses/403Response'
         500:
           $ref: '_shared.yml#/components/responses/500Response'
+
+  /placement-request/{placementRequestId}/change-requests/{changeRequestId}:
+    get:
+      tags:
+        - change requests
+      operationId: get
+      parameters:
+        - name: placementRequestId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+        - name: changeRequestId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        200:
+          description: successfully retrieved change request
+          content:
+            'application/json':
+              schema:
+                type: array
+                items:
+                  $ref: 'cas1-schemas.yml#/components/schemas/Cas1ChangeRequest'
+        401:
+          $ref: '_shared.yml#/components/responses/401Response'
+        403:
+          $ref: '_shared.yml#/components/responses/403Response'
+        500:
+          $ref: '_shared.yml#/components/responses/500Response'
+    patch:
+      tags:
+        - change requests
+      operationId: reject
+      parameters:
+        - name: placementRequestId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+        - name: changeRequestId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        content:
+          'application/json':
+            schema:
+              $ref: 'cas1-schemas.yml#/components/schemas/Cas1RejectChangeRequest'
+        required: true
+      responses:
+        200:
+          description: successfully retrieved change request
+          content:
+            'application/json':
+              schema:
+                type: array
+                items:
+                  $ref: 'cas1-schemas.yml#/components/schemas/Cas1ChangeRequest'
+        401:
+          $ref: '_shared.yml#/components/responses/401Response'
+        403:
+          $ref: '_shared.yml#/components/responses/403Response'
+        500:
+          $ref: '_shared.yml#/components/responses/500Response'
+
+
   /spaces/search:
     post:
       tags:
@@ -1381,6 +1459,58 @@ paths:
           $ref: '_shared.yml#/components/responses/403Response'
         500:
           $ref: '_shared.yml#/components/responses/500Response'
+  /reference-data/change-request-reasons/{changeRequestType}:
+    get:
+      tags:
+        - Reference Data
+      operationId: getChangeRequestReasons
+      parameters:
+        - name: changeRequestType
+          in: path
+          required: true
+          schema:
+            $ref: 'cas1-schemas.yml#/components/schemas/Cas1ChangeRequestType'
+      responses:
+        200:
+          description: successful operation
+          content:
+            'application/json':
+              schema:
+                type: array
+                items:
+                  $ref: '_shared.yml#/components/schemas/NamedId'
+        401:
+          $ref: '_shared.yml#/components/responses/401Response'
+        403:
+          $ref: '_shared.yml#/components/responses/403Response'
+        500:
+          $ref: '_shared.yml#/components/responses/500Response'
+  /reference-data/change-request-rejection-reasons/{changeRequestType}:
+    get:
+      tags:
+        - Reference Data
+      operationId: getChangeRequestRejectionReasons
+      parameters:
+        - name: changeRequestType
+          in: path
+          required: true
+          schema:
+            $ref: 'cas1-schemas.yml#/components/schemas/Cas1ChangeRequestType'
+      responses:
+        200:
+          description: successful operation
+          content:
+            'application/json':
+              schema:
+                type: array
+                items:
+                  $ref: '_shared.yml#/components/schemas/NamedId'
+        401:
+          $ref: '_shared.yml#/components/responses/401Response'
+        403:
+          $ref: '_shared.yml#/components/responses/403Response'
+        500:
+          $ref: '_shared.yml#/components/responses/500Response'
   /reference-data/move-on-categories:
     get:
       tags:
@@ -1423,7 +1553,6 @@ paths:
           $ref: '_shared.yml#/components/responses/403Response'
         500:
           $ref: '_shared.yml#/components/responses/500Response'
-
   /reference-data/out-of-service-bed-reasons:
     get:
       tags:
