@@ -622,6 +622,69 @@ class SeedCas1RoomsFromSiteSurveyXlsxTest : SeedTestBase() {
   }
 
   @Test
+  fun `Creating a new room and new beds using existing bed codes fails`() {
+    val localAuthorityArea = localAuthorityEntityFactory.produceAndPersist()
+    val probationRegion = probationRegionEntityFactory.produceAndPersist()
+    val qCode = "Q999"
+    val premises = approvedPremisesEntityFactory.produceAndPersist {
+      withLocalAuthorityArea(localAuthorityArea)
+      withProbationRegion(probationRegion)
+      withQCode(qCode)
+    }
+    val roomCode = "$qCode-1"
+    val room1 = roomEntityFactory.produceAndPersist {
+      withPremises(premises)
+      withCode(roomCode)
+    }
+    bedEntityFactory.produceAndPersist {
+      withRoom(room1)
+      withCode("SWABI01")
+      withName("1")
+    }
+    bedEntityFactory.produceAndPersist {
+      withRoom(room1)
+      withCode("SWABI02")
+      withName("2")
+    }
+
+    val values = mutableListOf<List<Any>>(
+      listOf("Unique Reference Number for Bed", "SWABI01", "SWABI02"),
+      listOf(
+        "Room Number / Name",
+        "2",
+        "2",
+      ),
+      listOf(
+        "Bed Number (in this room i.e if this is a single room insert 1.  If this is a shared room separate entries will need to be made for bed 1 and bed 2)",
+        "1",
+        "2",
+      ),
+    ).addQuestionsAndAnswers()
+
+    val roomsSheet = dataFrameForHeadersAndRows(values)
+
+    createXlsxForSeeding(
+      fileName = "example.xlsx",
+      sheets = mapOf(
+        "Sheet2" to createNameValueDataFrame("AP Identifier (Q No.)", qCode),
+        "Sheet3" to roomsSheet,
+      ),
+    )
+
+    seedXlsxService.seedFile(
+      SeedFromExcelFileType.CAS1_IMPORT_SITE_SURVEY_ROOMS,
+      "example.xlsx",
+    )
+
+    assertThat(logEntries)
+      .anyMatch {
+        it.level == "error" &&
+          it.message == "Unable to complete Excel seed job for 'example.xlsx' with message 'Bed SWABI01 already exists in room Q999-1 but is being added to room Q999-2.," +
+          "Bed SWABI02 already exists in room Q999-1 but is being added to room Q999-2.'"
+      }
+  }
+
+  @Test
   fun `Invalid questions throws exception, fails to process xlsx, rolls back transaction and logs an error`() {
     val localAuthorityArea = localAuthorityEntityFactory.produceAndPersist()
     val probationRegion = probationRegionEntityFactory.produceAndPersist()
