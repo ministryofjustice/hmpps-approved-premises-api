@@ -30,6 +30,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.seed.cas1.ApprovedPremis
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.seed.cas1.Cas1SeedPremisesFromCsvJob
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.seed.cas1.Cas1StartupScript
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.seed.cas2.Cas2StartupScript
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.seed.cas2v2.Cas2v2StartupScript
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.EnvironmentService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.SentryService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.LogEntry
@@ -41,6 +42,7 @@ class SeedOnStartupServiceTest {
   private val mockSeedLogger = mockk<SeedLogger>()
   private val mockCas1StartupScript = mockk<Cas1StartupScript>()
   private val mockCas2StartupScript = mockk<Cas2StartupScript>()
+  private val mockCas2v2StartupScript = mockk<Cas2v2StartupScript>()
   private val mockSeedService = mockk<SeedService>()
   private val mockEnvironmentService = mockk<EnvironmentService>()
   private val mockSentryService = mockk<SentryService>()
@@ -50,6 +52,7 @@ class SeedOnStartupServiceTest {
     seedConfig,
     mockCas1StartupScript,
     mockCas2StartupScript,
+    mockCas2v2StartupScript,
     mockSeedService,
     mockSeedLogger,
     mockEnvironmentService,
