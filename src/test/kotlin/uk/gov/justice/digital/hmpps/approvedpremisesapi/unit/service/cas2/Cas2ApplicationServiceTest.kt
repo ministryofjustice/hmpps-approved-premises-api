@@ -13,7 +13,6 @@ import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.ValueSource
-import org.mockito.kotlin.any
 import org.springframework.data.domain.Page
 import org.springframework.data.domain.PageRequest
 import org.springframework.data.domain.Sort
@@ -23,6 +22,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.SubmitCas2Appl
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.config.NotifyConfig
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.Cas2ApplicationEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.Cas2ApplicationJsonSchemaEntityFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.Cas2AssessmentEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.InmateDetailFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.NomisUserEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApplicationSummaryRepository
@@ -36,11 +36,11 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PersonInfoResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.prisonsapi.AssignedLivingUnit
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.AuthorisableActionResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.EmailNotificationService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas2.Cas2ApplicationAssignmentService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas2.Cas2AssessmentService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas2.Cas2DomainEventService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas2.Cas2JsonSchemaService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas2.Cas2OffenderService
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas2.Cas2PrisonerLocationService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas2.Cas2UserAccessService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.unit.util.assertThatCasResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.PageCriteria
@@ -63,7 +63,7 @@ class Cas2ApplicationServiceTest {
   private val mockAssessmentService = mockk<Cas2AssessmentService>()
   private val mockObjectMapper = mockk<ObjectMapper>()
   private val mockNotifyConfig = mockk<NotifyConfig>()
-  private val prisonerLocationService = mockk<Cas2PrisonerLocationService>()
+  private val applicationAssignmentService = mockk<Cas2ApplicationAssignmentService>()
 
   private val applicationService = uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas2.Cas2ApplicationService(
     mockApplicationRepository,
@@ -77,7 +77,6 @@ class Cas2ApplicationServiceTest {
     mockAssessmentService,
     mockNotifyConfig,
     mockObjectMapper,
-    prisonerLocationService,
     "http://frontend/applications/#id",
     "http://frontend/assess/applications/#applicationId/overview",
   )
@@ -770,7 +769,7 @@ class Cas2ApplicationServiceTest {
         every { mockLockableApplicationRepository.acquirePessimisticLock(any()) } returns Cas2LockableApplicationEntity(
           UUID.randomUUID(),
         )
-        every { prisonerLocationService.createPrisonerLocation(any()) } just Runs
+        every { applicationAssignmentService.createApplicationAssignment(any(), any(), any()) } just Runs
 
         every { mockObjectMapper.writeValueAsString(submitCas2Application.translatedDocument) } returns "{}"
         every { mockDomainEventService.saveCas2ApplicationSubmittedDomainEvent(any()) } just Runs
@@ -988,6 +987,8 @@ class Cas2ApplicationServiceTest {
             schemaUpToDate = true
           }
 
+        val assessment = Cas2AssessmentEntityFactory().withApplication(application).produce()
+
         every {
           mockApplicationRepository.findByIdOrNull(applicationId)
         } returns application
@@ -1023,16 +1024,16 @@ class Cas2ApplicationServiceTest {
             as Cas2ApplicationEntity
         }
 
-        every { mockAssessmentService.createCas2Assessment(any()) } returns any()
+        every { mockAssessmentService.createCas2Assessment(any()) } returns assessment
 
         val result = applicationService.submitApplication(submitCas2Application, user)
 
-        assertThatCasResult(result).isSuccess().with {
-          assertThat(it.crn).isEqualTo(application.crn)
-          assertThat(it.preferredAreas).isEqualTo("Leeds | Bradford")
-          assertThat(it.hdcEligibilityDate).isEqualTo(hdcEligibilityDate)
-          assertThat(it.conditionalReleaseDate).isEqualTo(conditionalReleaseDate)
-          verify(exactly = 1) { mockAssessmentService.createCas2Assessment(it) }
+        assertThatCasResult(result).isSuccess().with { entity ->
+          assertThat(entity.crn).isEqualTo(application.crn)
+          assertThat(entity.preferredAreas).isEqualTo("Leeds | Bradford")
+          assertThat(entity.hdcEligibilityDate).isEqualTo(hdcEligibilityDate)
+          assertThat(entity.conditionalReleaseDate).isEqualTo(conditionalReleaseDate)
+          verify(exactly = 1) { mockAssessmentService.createCas2Assessment(match { it.id == applicationId }) }
         }
 
         verify { mockApplicationRepository.save(any()) }
@@ -1054,8 +1055,6 @@ class Cas2ApplicationServiceTest {
             },
           )
         }
-
-        verify { prisonerLocationService.createPrisonerLocation(application) }
 
         verify(exactly = 1) {
           mockEmailNotificationService.sendEmail(

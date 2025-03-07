@@ -1,6 +1,7 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity
 
 import jakarta.persistence.Entity
+import jakarta.persistence.FetchType
 import jakarta.persistence.Id
 import jakarta.persistence.JoinColumn
 import jakarta.persistence.ManyToOne
@@ -11,21 +12,20 @@ import java.time.OffsetDateTime
 import java.util.UUID
 
 @Repository
-interface Cas2PrisonerLocationRepository : JpaRepository<Cas2PrisonerLocationEntity, UUID> {
+interface Cas2ApplicationAssignmentRepository : JpaRepository<Cas2ApplicationAssignmentEntity, UUID> {
 
-  fun findAllByStaffIdOrderByOccurredAtDesc(staffId: UUID): List<Cas2PrisonerLocationEntity>
+  fun findFirstByApplicationIdOrderByCreatedAtDesc(applicationId: UUID): Cas2ApplicationAssignmentEntity?
 }
 
 @Entity
-@Table(name = "cas_2_prisoner_locations")
-data class Cas2PrisonerLocationEntity(
+@Table(name = "cas_2_application_assignments")
+data class Cas2ApplicationAssignmentEntity(
   @Id
   val id: UUID,
-  @ManyToOne
+  @ManyToOne(fetch = FetchType.LAZY)
   @JoinColumn(name = "application_id")
   val application: Cas2ApplicationEntity,
   val prisonCode: String,
-  val staffId: UUID?,
-  val occurredAt: OffsetDateTime,
-  val endDate: OffsetDateTime?,
+  val allocatedPomUserId: UUID?,
+  val createdAt: OffsetDateTime,
 )
