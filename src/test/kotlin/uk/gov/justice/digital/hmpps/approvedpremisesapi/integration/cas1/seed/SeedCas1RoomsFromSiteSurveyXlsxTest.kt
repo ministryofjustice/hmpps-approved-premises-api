@@ -34,10 +34,23 @@ class SeedCas1RoomsFromSiteSurveyXlsxTest : SeedTestBase() {
     "Can this room be designated as suitable for people requiring step free access? (Must answer yes to Q23 and 25 on previous sheet and Q19 on this sheet)",
   )
 
-  fun MutableList<Any>.addCharacteristics(numberOfRooms: Int = 1, activeCharacteristics: Map<String, List<String>> = emptyMap()) {
+  data class Answers(
+    val question: String,
+    val answersForEachRoom: List<String>,
+  )
+
+  fun MutableList<Any>.addQuestionsAndAnswers(
+    numberOfRooms: Int = 1,
+    answerOverrides: List<Answers> = emptyList(),
+  ) {
     questions.forEach { question ->
       this.add(question)
-      this.addAll(activeCharacteristics.getOrDefault(question, MutableList(numberOfRooms) { "No" }))
+      val answers = if(answerOverrides.any { it.question == question }) {
+        answerOverrides.first { it.question == question }.answersForEachRoom
+      } else {
+        MutableList(numberOfRooms) { "No" }
+      }
+      this.addAll(answers)
     }
   }
 
@@ -59,7 +72,10 @@ class SeedCas1RoomsFromSiteSurveyXlsxTest : SeedTestBase() {
       "Bed Number (in this room i.e if this is a single room insert 1.  If this is a shared room separate entries will need to be made for bed 1 and bed 2)",
       1,
     )
-    rows.addCharacteristics(1, mapOf("Is this room located on the ground floor?" to listOf("Yes")))
+    rows.addQuestionsAndAnswers(
+      numberOfRooms = 1,
+      answerOverrides = listOf(Answers("Is this room located on the ground floor?" , listOf("Yes")))
+    )
 
     val roomsSheet = dataFrameOf(header, rows)
 
@@ -107,7 +123,10 @@ class SeedCas1RoomsFromSiteSurveyXlsxTest : SeedTestBase() {
       "Bed Number (in this room i.e if this is a single room insert 1.  If this is a shared room separate entries will need to be made for bed 1 and bed 2)",
       1.2,
     )
-    rows.addCharacteristics(1, mapOf("Is this room located on the ground floor?" to listOf("Yes")))
+    rows.addQuestionsAndAnswers(
+      numberOfRooms = 1,
+      answerOverrides = listOf(Answers("Is this room located on the ground floor?" , listOf("Yes")))
+    )
 
     val roomsSheet = dataFrameOf(header, rows)
 
@@ -159,7 +178,10 @@ class SeedCas1RoomsFromSiteSurveyXlsxTest : SeedTestBase() {
       1.0,
       1.0,
     )
-    rows.addCharacteristics(3, mapOf("Is this room located on the ground floor?" to listOf("No", "Yes", "No")))
+    rows.addQuestionsAndAnswers(
+      numberOfRooms = 3,
+      answerOverrides = listOf(Answers("Is this room located on the ground floor?" , listOf("No", "Yes", "No")))
+    )
 
     val roomsSheet = dataFrameOf(header, rows)
 
@@ -230,7 +252,10 @@ class SeedCas1RoomsFromSiteSurveyXlsxTest : SeedTestBase() {
       1.0,
       2.0,
     )
-    rows.addCharacteristics(2, mapOf("Is this room located on the ground floor?" to listOf("No", "Yes")))
+    rows.addQuestionsAndAnswers(
+      numberOfRooms = 2,
+      answerOverrides = listOf(Answers("Is this room located on the ground floor?" , listOf("No", "Yes")))
+    )
 
     val roomsSheet = dataFrameOf(header, rows)
 
@@ -275,7 +300,10 @@ class SeedCas1RoomsFromSiteSurveyXlsxTest : SeedTestBase() {
       "1",
       "2",
     )
-    rows.addCharacteristics(3, mapOf("Is this room located on the ground floor?" to listOf("No", "Yes", "Yes")))
+    rows.addQuestionsAndAnswers(
+      numberOfRooms = 3,
+      answerOverrides = listOf(Answers("Is this room located on the ground floor?" , listOf("No", "Yes", "Yes")))
+    )
 
     val roomsSheet = dataFrameOf(header, rows)
 
@@ -341,7 +369,7 @@ class SeedCas1RoomsFromSiteSurveyXlsxTest : SeedTestBase() {
       "Bed Number (in this room i.e if this is a single room insert 1.  If this is a shared room separate entries will need to be made for bed 1 and bed 2)",
       "1",
     )
-    rows.addCharacteristics(1)
+    rows.addQuestionsAndAnswers(1)
 
     val roomsSheet = dataFrameOf(header, rows)
 
@@ -392,7 +420,10 @@ class SeedCas1RoomsFromSiteSurveyXlsxTest : SeedTestBase() {
       "Bed Number (in this room i.e if this is a single room insert 1.  If this is a shared room separate entries will need to be made for bed 1 and bed 2)",
       "1",
     )
-    rows.addCharacteristics(1, mapOf("Is this room located on the ground floor?" to listOf("Yes", "No", "No")))
+    rows.addQuestionsAndAnswers(
+      numberOfRooms = 1,
+      answerOverrides = listOf(Answers("Is this room located on the ground floor?" , listOf("Yes", "No", "No"))),
+    )
 
     val roomsSheet = dataFrameOf(header, rows)
 
@@ -451,7 +482,10 @@ class SeedCas1RoomsFromSiteSurveyXlsxTest : SeedTestBase() {
       "Bed Number (in this room i.e if this is a single room insert 1.  If this is a shared room separate entries will need to be made for bed 1 and bed 2)",
       "1",
     )
-    rows.addCharacteristics(1, mapOf("Is this room located on the ground floor?" to listOf("Yes", "No", "No")))
+    rows.addQuestionsAndAnswers(
+      numberOfRooms = 1,
+      answerOverrides = listOf(Answers("Is this room located on the ground floor?" , listOf("Yes", "No", "No"))),
+    )
 
     val roomsSheet = dataFrameOf(header, rows)
 
@@ -507,7 +541,7 @@ class SeedCas1RoomsFromSiteSurveyXlsxTest : SeedTestBase() {
       "1",
       "1",
     )
-    rows.addCharacteristics(2)
+    rows.addQuestionsAndAnswers(2)
 
     val roomsSheet = dataFrameOf(header, rows)
 
@@ -559,7 +593,7 @@ class SeedCas1RoomsFromSiteSurveyXlsxTest : SeedTestBase() {
       "Bed Number (in this room i.e if this is a single room insert 1.  If this is a shared room separate entries will need to be made for bed 1 and bed 2)",
       "1",
     )
-    rows.addCharacteristics(1)
+    rows.addQuestionsAndAnswers(1)
 
     val roomsSheet = dataFrameOf(header, rows)
 
@@ -601,7 +635,7 @@ class SeedCas1RoomsFromSiteSurveyXlsxTest : SeedTestBase() {
       "Bed Number (in this room i.e if this is a single room insert 1.  If this is a shared room separate entries will need to be made for bed 1 and bed 2)",
       "1",
     )
-    rows.addCharacteristics(1)
+    rows.addQuestionsAndAnswers(1)
     rows.replaceAll { if (it == "Is this room located on the ground floor?") "Bad question" else it }
 
     val roomsSheet = dataFrameOf(header, rows)
@@ -644,7 +678,10 @@ class SeedCas1RoomsFromSiteSurveyXlsxTest : SeedTestBase() {
       "Bed Number (in this room i.e if this is a single room insert 1.  If this is a shared room separate entries will need to be made for bed 1 and bed 2)",
       "1",
     )
-    rows.addCharacteristics(1, mapOf("Is this room located on the ground floor?" to listOf("Yes", "No", "No")))
+    rows.addQuestionsAndAnswers(
+      numberOfRooms = 1,
+      answerOverrides = listOf(Answers("Is this room located on the ground floor?" , listOf("Yes", "No", "No"))),
+    )
     rows.replaceAll { if (it == "Yes") "Bad answer" else it }
 
     val roomsSheet = dataFrameOf(header, rows)
