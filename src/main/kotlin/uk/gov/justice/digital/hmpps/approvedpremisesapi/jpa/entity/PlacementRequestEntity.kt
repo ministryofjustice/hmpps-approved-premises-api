@@ -134,7 +134,12 @@ interface PlacementRequestRepository : JpaRepository<PlacementRequestEntity, UUI
 
   @Query(
     """
-    WITH UNFILTERED AS (
+    WITH RANKED_SPACE_BOOKINGS AS (
+        SELECT *,
+            ROW_NUMBER() OVER (PARTITION BY placement_request_id ORDER BY canonical_arrival_date ASC) AS rn
+        FROM cas1_space_bookings),
+    EARLIEST_SPACE_BOOKINGS AS (SELECT * FROM RANKED_SPACE_BOOKINGS WHERE rn = 1),
+    UNFILTERED AS (
       SELECT
       pq.duration AS requestedPlacementDuration,
       pq.expected_arrival AS requestedPlacementArrivalDate,
@@ -166,7 +171,7 @@ interface PlacementRequestRepository : JpaRepository<PlacementRequestEntity, UUI
       LEFT JOIN applications application ON application.id = pq.application_id
       LEFT JOIN bookings legacyBookings ON pq.booking_id = legacyBookings.id
       LEFT JOIN premises legacyBookingPremises ON legacyBookings.premises_id = legacyBookingPremises.id
-      LEFT JOIN cas1_space_bookings spaceBookings ON spaceBookings.placement_request_id = pq.id AND spaceBookings.cancellation_occurred_at IS NULL
+      LEFT JOIN EARLIEST_SPACE_BOOKINGS spaceBookings ON spaceBookings.placement_request_id = pq.id AND spaceBookings.cancellation_occurred_at IS NULL
       LEFT JOIN premises spaceBookingPremises ON spaceBookings.premises_id = spaceBookingPremises.id
       LEFT JOIN cancellations legacyBookingCancellations ON legacyBookingCancellations.booking_id = legacyBookings.id
       WHERE
