@@ -14,6 +14,7 @@ import java.util.UUID
 class Cas2ApplicationAssignmentService(
   private val cas2ApplicationService: Cas2ApplicationService,
   private val cas2ApplicationAssignmentRepository: Cas2ApplicationAssignmentRepository,
+  private val locationChangedService: Cas2LocationChangedService,
 ) {
 
   private val log = LoggerFactory.getLogger(this::class.java)
@@ -24,7 +25,7 @@ class Cas2ApplicationAssignmentService(
 
   fun handlePrisonerUpdatedEvent(event: HmppsDomainEvent) {
     if (event.additionalInformation.categoriesChanged.contains("LOCATION")) {
-      log.info("Handle location changed event at ${event.occurredAt}")
+      locationChangedService.handleLocationChangedEvent(event)
     }
   }
 

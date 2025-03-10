@@ -21,6 +21,7 @@ import kotlin.io.path.pathString
 
 @TestInstance(TestInstance.Lifecycle.PER_METHOD)
 abstract class SeedTestBase : IntegrationTestBase() {
+
   @Autowired
   lateinit var seedService: SeedService
 

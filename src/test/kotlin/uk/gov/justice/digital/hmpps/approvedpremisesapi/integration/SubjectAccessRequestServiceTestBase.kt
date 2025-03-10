@@ -44,6 +44,7 @@ open class SubjectAccessRequestServiceTestBase : IntegrationTestBase() {
   @Autowired
   lateinit var sarService: SubjectAccessRequestService
   lateinit var premises: ApprovedPremisesEntity
+
   companion object {
 
     const val CREATED_AT = "2021-09-18T16:00:00+00:00"

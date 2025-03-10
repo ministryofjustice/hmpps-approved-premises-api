@@ -17,6 +17,7 @@ import java.time.OffsetDateTime
 import java.util.UUID
 
 class AssessmentStateTest : IntegrationTestBase() {
+
   @Test
   fun `A Temporary Accommodation assessment can transition between all assessment states correctly`() {
     givenAUser(roles = listOf(UserRole.CAS3_ASSESSOR)) { userEntity, jwt ->
