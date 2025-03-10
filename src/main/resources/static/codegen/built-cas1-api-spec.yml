@@ -19,20 +19,14 @@ paths:
           description: Page number of results to return. If blank, returns all results
           schema:
             type: integer
-        - name: cruManagementAreaId
-          in: query
-          description: Limits change requests to applications within the cru management area
-          schema:
-            type: string
-            format: uuid
         - name: sortBy
           in: query
-          description: Which field to sort the results by. If blank, will sort by name
+          description: Which field to sort the results by. If blank, will sort by createdAt
           schema:
             $ref: '#/components/schemas/Cas1ChangeRequestSortField'
         - name: sortDirection
           in: query
-          description: The direction to sort the results by. If blank, will sort in ascending order
+          description: The direction to sort the results by. If blank, will sort in descending order
           schema:
             $ref: '#/components/schemas/SortDirection'
       responses:
@@ -53,12 +47,17 @@ paths:
               $ref: '#/components/headers/X-Pagination-TotalResults'
             X-Pagination-PageSize:
               $ref: '#/components/headers/X-Pagination-TotalResults'
-
-  /placement-request/{placementRequestId}/planned-transfer:
+        401:
+          $ref: '#/components/responses/401Response'
+        403:
+          $ref: '#/components/responses/403Response'
+        500:
+          $ref: '#/components/responses/500Response'
+  /placement-request/{placementRequestId}/change-request:
     post:
       tags:
         - change requests
-      operationId: createPlannedTransfer
+      operationId: create
       parameters:
         - name: placementRequestId
           in: path
@@ -81,62 +80,12 @@ paths:
             'application/problem+json':
               schema:
                 $ref: '#/components/schemas/ValidationError'
-
-  /placement-request/{placementRequestId}/appeal:
-    post:
-      tags:
-        - change requests
-      operationId: createPlacementAppeal
-      parameters:
-        - name: placementRequestId
-          in: path
-          required: true
-          schema:
-            type: string
-            format: uuid
-      requestBody:
-        content:
-          'application/json':
-            schema:
-              $ref: '#/components/schemas/Cas1NewChangeRequest'
-        required: true
-      responses:
-        200:
-          description: successful operation
-        400:
-          description: invalid params
-          content:
-            'application/problem+json':
-              schema:
-                $ref: '#/components/schemas/ValidationError'
-
-  /placement-request/{placementRequestId}/extension:
-    post:
-      tags:
-        - change requests
-      operationId: createPlacementExtension
-      parameters:
-        - name: placementRequestId
-          in: path
-          required: true
-          schema:
-            type: string
-            format: uuid
-      requestBody:
-        content:
-          'application/json':
-            schema:
-              $ref: '#/components/schemas/Cas1NewChangeRequest'
-        required: true
-      responses:
-        200:
-          description: successful operation
-        400:
-          description: invalid params
-          content:
-            'application/problem+json':
-              schema:
-                $ref: '#/components/schemas/ValidationError'
+        401:
+          $ref: '#/components/responses/401Response'
+        403:
+          $ref: '#/components/responses/403Response'
+        500:
+          $ref: '#/components/responses/500Response'
 
   /placement-request/{placementRequestId}/change-requests/{changeRequestId}:
     get:
@@ -162,7 +111,15 @@ paths:
           content:
             'application/json':
               schema:
-                $ref: '#/components/schemas/Cas1ChangeRequest'
+                type: array
+                items:
+                  $ref: '#/components/schemas/Cas1ChangeRequest'
+        401:
+          $ref: '#/components/responses/401Response'
+        403:
+          $ref: '#/components/responses/403Response'
+        500:
+          $ref: '#/components/responses/500Response'
     patch:
       tags:
         - change requests
@@ -188,8 +145,19 @@ paths:
         required: true
       responses:
         200:
-          description: successfully rejected a change request
-
+          description: successfully retrieved change request
+          content:
+            'application/json':
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Cas1ChangeRequest'
+        401:
+          $ref: '#/components/responses/401Response'
+        403:
+          $ref: '#/components/responses/403Response'
+        500:
+          $ref: '#/components/responses/500Response'
 
 
   /spaces/search:
@@ -217,7 +185,12 @@ paths:
             'application/problem+json':
               schema:
                 $ref: '#/components/schemas/ValidationError'
-
+        401:
+          $ref: '#/components/responses/401Response'
+        403:
+          $ref: '#/components/responses/403Response'
+        500:
+          $ref: '#/components/responses/500Response'
   /placement-requests/{placementRequestId}/space-bookings:
     post:
       tags:
@@ -252,12 +225,18 @@ paths:
             'application/problem+json':
               schema:
                 $ref: '#/components/schemas/ValidationError'
+        401:
+          $ref: '#/components/responses/401Response'
+        403:
+          $ref: '#/components/responses/403Response'
         404:
           description: invalid premises ID or booking ID
           content:
             'application/json':
               schema:
                 $ref: '#/components/schemas/Problem'
+        500:
+          $ref: '#/components/responses/500Response'
       x-codegen-request-body-name: body
   /placement-applications:
     post:
@@ -280,7 +259,12 @@ paths:
             'application/json':
               schema:
                 $ref: '#/components/schemas/PlacementApplication'
-
+        401:
+          $ref: '#/components/responses/401Response'
+        403:
+          $ref: '#/components/responses/403Response'
+        500:
+          $ref: '#/components/responses/500Response'
   /placement-applications/{id}:
     get:
       deprecated: true
@@ -303,7 +287,12 @@ paths:
             'application/json':
               schema:
                 $ref: '#/components/schemas/PlacementApplication'
-
+        401:
+          $ref: '#/components/responses/401Response'
+        403:
+          $ref: '#/components/responses/403Response'
+        500:
+          $ref: '#/components/responses/500Response'
     put:
       tags:
         - Placement applications
@@ -331,7 +320,12 @@ paths:
             'application/json':
               schema:
                 $ref: '#/components/schemas/PlacementApplication'
-
+        401:
+          $ref: '#/components/responses/401Response'
+        403:
+          $ref: '#/components/responses/403Response'
+        500:
+          $ref: '#/components/responses/500Response'
   /placement-applications/{id}/submission:
     post:
       deprecated: true
@@ -369,7 +363,12 @@ paths:
             'application/problem+json':
               schema:
                 $ref: '#/components/schemas/ValidationError'
-
+        401:
+          $ref: '#/components/responses/401Response'
+        403:
+          $ref: '#/components/responses/403Response'
+        500:
+          $ref: '#/components/responses/500Response'
   /placement-applications/{id}/decision:
     post:
       deprecated: true
@@ -405,7 +404,12 @@ paths:
             'application/problem+json':
               schema:
                 $ref: '#/components/schemas/ValidationError'
-
+        401:
+          $ref: '#/components/responses/401Response'
+        403:
+          $ref: '#/components/responses/403Response'
+        500:
+          $ref: '#/components/responses/500Response'
   /placement-applications/{id}/withdraw:
     post:
       deprecated: true
@@ -440,7 +444,12 @@ paths:
             'application/problem+json':
               schema:
                 $ref: '#/components/schemas/ValidationError'
-
+        401:
+          $ref: '#/components/responses/401Response'
+        403:
+          $ref: '#/components/responses/403Response'
+        500:
+          $ref: '#/components/responses/500Response'
   /placement-requests:
     get:
       tags:
@@ -520,22 +529,12 @@ paths:
               $ref: '#/components/headers/X-Pagination-TotalResults'
             X-Pagination-PageSize:
               $ref: '#/components/headers/X-Pagination-TotalResults'
-
-
-  /premises/occupancy-report:
-    get:
-      tags:
-        - premises
-      summary: Returns a CSV showing premises occupancy for the next 30 days. This does not consider characteristics.
-      operationId: getOccupancyReport
-      responses:
-        200:
-          description: Successfully retrieved the report
-          content:
-            'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet':
-              schema:
-                type: string
-                format: binary
+        401:
+          $ref: '#/components/responses/401Response'
+        403:
+          $ref: '#/components/responses/403Response'
+        500:
+          $ref: '#/components/responses/500Response'
   /premises/summary:
     get:
       description: Provide a summary of all premises, with optional filtering
@@ -570,7 +569,12 @@ paths:
             'application/problem+json':
               schema:
                 $ref: '#/components/schemas/ValidationError'
-
+        401:
+          $ref: '#/components/responses/401Response'
+        403:
+          $ref: '#/components/responses/403Response'
+        500:
+          $ref: '#/components/responses/500Response'
 
   /premises/{premisesId}/out-of-service-beds:
     post:
@@ -606,12 +610,18 @@ paths:
             'application/problem+json':
               schema:
                 $ref: '#/components/schemas/ValidationError'
+        401:
+          $ref: '#/components/responses/401Response'
+        403:
+          $ref: '#/components/responses/403Response'
         404:
           description: invalid premises ID or booking ID
           content:
             'application/json':
               schema:
                 $ref: '#/components/schemas/Problem'
+        500:
+          $ref: '#/components/responses/500Response'
       x-codegen-request-body-name: body
     get:
       tags:
@@ -635,7 +645,12 @@ paths:
                 type: array
                 items:
                   $ref: '#/components/schemas/Cas1OutOfServiceBed'
-
+        401:
+          $ref: '#/components/responses/401Response'
+        403:
+          $ref: '#/components/responses/403Response'
+        500:
+          $ref: '#/components/responses/500Response'
   /premises/{premisesId}/out-of-service-beds/{outOfServiceBedId}:
     get:
       tags:
@@ -664,12 +679,18 @@ paths:
             'application/json':
               schema:
                 $ref: '#/components/schemas/Cas1OutOfServiceBed'
+        401:
+          $ref: '#/components/responses/401Response'
+        403:
+          $ref: '#/components/responses/403Response'
         404:
           description: invalid premises or out-of-service bed ID
           content:
             'application/json':
               schema:
                 $ref: '#/components/schemas/Problem'
+        500:
+          $ref: '#/components/responses/500Response'
     put:
       tags:
         - out-of-service beds
@@ -710,12 +731,18 @@ paths:
             'application/problem+json':
               schema:
                 $ref: '#/components/schemas/ValidationError'
+        401:
+          $ref: '#/components/responses/401Response'
+        403:
+          $ref: '#/components/responses/403Response'
         404:
           description: invalid premises ID or booking ID
           content:
             'application/json':
               schema:
                 $ref: '#/components/schemas/Problem'
+        500:
+          $ref: '#/components/responses/500Response'
       x-codegen-request-body-name: body
   /premises/{premisesId}/out-of-service-beds/{outOfServiceBedId}/cancellations:
     post:
@@ -758,12 +785,18 @@ paths:
             'application/problem+json':
               schema:
                 $ref: '#/components/schemas/ValidationError'
+        401:
+          $ref: '#/components/responses/401Response'
+        403:
+          $ref: '#/components/responses/403Response'
         404:
           description: invalid premises ID or out-of-service bed ID
           content:
             'application/json':
               schema:
                 $ref: '#/components/schemas/Problem'
+        500:
+          $ref: '#/components/responses/500Response'
       x-codegen-request-body-name: body
 
   /premises/{premisesId}:
@@ -786,12 +819,18 @@ paths:
             'application/json':
               schema:
                 $ref: '#/components/schemas/Cas1Premises'
+        401:
+          $ref: '#/components/responses/401Response'
+        403:
+          $ref: '#/components/responses/403Response'
         404:
           description: invalid premises ID
           content:
             'application/json':
               schema:
                 $ref: '#/components/schemas/Problem'
+        500:
+          $ref: '#/components/responses/500Response'
   /premises/{premisesId}/beds:
     get:
       tags:
@@ -815,7 +854,12 @@ paths:
                 type: array
                 items:
                   $ref: '#/components/schemas/Cas1PremisesBedSummary'
-
+        401:
+          $ref: '#/components/responses/401Response'
+        403:
+          $ref: '#/components/responses/403Response'
+        500:
+          $ref: '#/components/responses/500Response'
   /premises/{premisesId}/beds/{bedId}:
     get:
       tags:
@@ -844,7 +888,12 @@ paths:
             'application/json':
               schema:
                 $ref: '#/components/schemas/Cas1BedDetail'
-
+        401:
+          $ref: '#/components/responses/401Response'
+        403:
+          $ref: '#/components/responses/403Response'
+        500:
+          $ref: '#/components/responses/500Response'
   /premises/{premisesId}/capacity:
     get:
       tags:
@@ -893,43 +942,19 @@ paths:
             'application/problem+json':
               schema:
                 $ref: '#/components/schemas/ValidationError'
+        401:
+          $ref: '#/components/responses/401Response'
+        403:
+          $ref: '#/components/responses/403Response'
         404:
           description: invalid premises ID or booking ID
           content:
             'application/json':
               schema:
                 $ref: '#/components/schemas/Problem'
+        500:
+          $ref: '#/components/responses/500Response'
       x-codegen-request-body-name: body
-
-  /premises/{premisesId}/staff:
-    get:
-      tags:
-        - Premises
-      summary: Returns the staff that work at an approved premises
-      operationId: getStaff
-      parameters:
-        - name: premisesId
-          in: path
-          description: ID of the premises to return staff for
-          required: true
-          schema:
-            type: string
-            format: uuid
-      responses:
-        200:
-          description: successful operation
-          content:
-            'application/json':
-              schema:
-                type: array
-                items:
-                  $ref: '#/components/schemas/StaffMember'
-        404:
-          description: invalid premises ID
-          content:
-            'application/json':
-              schema:
-                $ref: '#/components/schemas/Problem'
 
   /premises/{premisesId}/space-bookings:
     get:
@@ -1004,7 +1029,12 @@ paths:
               $ref: '#/components/headers/X-Pagination-TotalResults'
             X-Pagination-PageSize:
               $ref: '#/components/headers/X-Pagination-PageSize'
-
+        401:
+          $ref: '#/components/responses/401Response'
+        403:
+          $ref: '#/components/responses/403Response'
+        500:
+          $ref: '#/components/responses/500Response'
 
   /premises/{premisesId}/space-bookings/{bookingId}:
     get:
@@ -1034,7 +1064,12 @@ paths:
             'application/json':
               schema:
                 $ref: '#/components/schemas/Cas1SpaceBooking'
-
+        401:
+          $ref: '#/components/responses/401Response'
+        403:
+          $ref: '#/components/responses/403Response'
+        500:
+          $ref: '#/components/responses/500Response'
     patch:
       tags:
         - space bookings
@@ -1063,7 +1098,12 @@ paths:
       responses:
         200:
           description: successful operation
-
+        401:
+          $ref: '#/components/responses/401Response'
+        403:
+          $ref: '#/components/responses/403Response'
+        500:
+          $ref: '#/components/responses/500Response'
 
   /premises/{premisesId}/space-bookings/{bookingId}/timeline:
     get:
@@ -1095,7 +1135,12 @@ paths:
                 type: array
                 items:
                   $ref: '#/components/schemas/Cas1TimelineEvent'
-
+        401:
+          $ref: '#/components/responses/401Response'
+        403:
+          $ref: '#/components/responses/403Response'
+        500:
+          $ref: '#/components/responses/500Response'
 
   /premises/{premisesId}/space-bookings/{bookingId}/arrival:
     post:
@@ -1133,12 +1178,18 @@ paths:
             'application/problem+json':
               schema:
                 $ref: '#/components/schemas/ValidationError'
+        401:
+          $ref: '#/components/responses/401Response'
+        403:
+          $ref: '#/components/responses/403Response'
         404:
           description: invalid premises ID or booking ID
           content:
             'application/json':
               schema:
                 $ref: '#/components/schemas/Problem'
+        500:
+          $ref: '#/components/responses/500Response'
 
 
   /premises/{premisesId}/space-bookings/{bookingId}/keyworker:
@@ -1177,12 +1228,18 @@ paths:
             'application/problem+json':
               schema:
                 $ref: '#/components/schemas/ValidationError'
+        401:
+          $ref: '#/components/responses/401Response'
+        403:
+          $ref: '#/components/responses/403Response'
         404:
           description: invalid premises ID or booking ID
           content:
             'application/json':
               schema:
                 $ref: '#/components/schemas/Problem'
+        500:
+          $ref: '#/components/responses/500Response'
 
   /premises/{premisesId}/space-bookings/{bookingId}/departure:
     post:
@@ -1220,12 +1277,18 @@ paths:
             'application/problem+json':
               schema:
                 $ref: '#/components/schemas/ValidationError'
+        401:
+          $ref: '#/components/responses/401Response'
+        403:
+          $ref: '#/components/responses/403Response'
         404:
           description: invalid premises ID or booking ID
           content:
             'application/json':
               schema:
                 $ref: '#/components/schemas/Problem'
+        500:
+          $ref: '#/components/responses/500Response'
 
   /premises/{premisesId}/space-bookings/{bookingId}/cancellations:
     post:
@@ -1264,12 +1327,18 @@ paths:
             'application/problem+json':
               schema:
                 $ref: '#/components/schemas/ValidationError'
+        401:
+          $ref: '#/components/responses/401Response'
+        403:
+          $ref: '#/components/responses/403Response'
         404:
           description: invalid premises ID or booking ID
           content:
             'application/json':
               schema:
                 $ref: '#/components/schemas/Problem'
+        500:
+          $ref: '#/components/responses/500Response'
       x-codegen-request-body-name: body
 
 
@@ -1309,143 +1378,18 @@ paths:
             'application/problem+json':
               schema:
                 $ref: '#/components/schemas/ValidationError'
+        401:
+          $ref: '#/components/responses/401Response'
+        403:
+          $ref: '#/components/responses/403Response'
         404:
           description: invalid premises ID or booking ID
           content:
             'application/json':
               schema:
                 $ref: '#/components/schemas/Problem'
-
-  /premises/{premisesId}/space-bookings/{bookingId}/emergency-transfer:
-    post:
-      tags:
-        - space bookings
-      summary: Creates a space booking without a change request and truncates the departure date of the existing space booking
-      operationId: emergencyTransfer
-      parameters:
-        - name: premisesId
-          in: path
-          description: ID of the corresponding premises
-          required: true
-          schema:
-            type: string
-            format: uuid
-        - name: bookingId
-          in: path
-          description: ID of the space booking
-          required: true
-          schema:
-            type: string
-            format: uuid
-      requestBody:
-        content:
-          'application/json':
-            schema:
-              $ref: '#/components/schemas/Cas1NewEmergencyTransfer'
-        required: true
-      responses:
-        200:
-          description: successful operation
-        400:
-          description: invalid params
-          content:
-            'application/problem+json':
-              schema:
-                $ref: '#/components/schemas/ValidationError'
-        404:
-          description: invalid premises ID or booking ID
-          content:
-            'application/json':
-              schema:
-                $ref: '#/components/schemas/Problem'
-
-  /premises/{premisesId}/space-bookings/{bookingId}/planned-transfer:
-    post:
-      tags:
-        - space bookings
-      summary: Creates a space booking for a planned transfer change request and truncates the departure date of the existing space booking. Will close the planned transfer change request.
-      operationId: plannedTransfer
-      parameters:
-        - name: premisesId
-          in: path
-          description: ID of the corresponding premises
-          required: true
-          schema:
-            type: string
-            format: uuid
-        - name: bookingId
-          in: path
-          description: ID of the space booking
-          required: true
-          schema:
-            type: string
-            format: uuid
-      requestBody:
-        content:
-          'application/json':
-            schema:
-              $ref: '#/components/schemas/Cas1NewPlannedTransfer'
-        required: true
-      responses:
-        200:
-          description: successful operation
-        400:
-          description: invalid params
-          content:
-            'application/problem+json':
-              schema:
-                $ref: '#/components/schemas/ValidationError'
-        404:
-          description: invalid premises ID or booking ID
-          content:
-            'application/json':
-              schema:
-                $ref: '#/components/schemas/Problem'
-
-  /premises/{premisesId}/space-bookings/{bookingId}/appeal:
-    post:
-      tags:
-        - space bookings
-      summary: Cancels a space booking and approves the appeal change request
-      operationId: "appeal"
-      parameters:
-        - name: premisesId
-          in: path
-          description: ID of the premises the space booking is related to
-          required: true
-          schema:
-            type: string
-            format: uuid
-        - name: bookingId
-          in: path
-          description: space booking id
-          required: true
-          schema:
-            type: string
-            format: uuid
-      requestBody:
-        description: details of the cancellation
-        content:
-          'application/json':
-            schema:
-              $ref: '#/components/schemas/Cas1ApprovedPlacementAppeal'
-        required: true
-      responses:
-        200:
-          description: successful operation
-        400:
-          description: invalid params
-          content:
-            'application/problem+json':
-              schema:
-                $ref: '#/components/schemas/ValidationError'
-        404:
-          description: invalid premises ID or booking ID
-          content:
-            'application/json':
-              schema:
-                $ref: '#/components/schemas/Problem'
-      x-codegen-request-body-name: body
+        500:
+          $ref: '#/components/responses/500Response'
 
   /premises/{premisesId}/day-summary/{date}:
     get:
@@ -1511,7 +1455,12 @@ paths:
               $ref: '#/components/headers/X-Pagination-TotalResults'
             X-Pagination-PageSize:
               $ref: '#/components/headers/X-Pagination-PageSize'
-
+        401:
+          $ref: '#/components/responses/401Response'
+        403:
+          $ref: '#/components/responses/403Response'
+        500:
+          $ref: '#/components/responses/500Response'
   /reference-data/change-request-reasons/{changeRequestType}:
     get:
       tags:
@@ -1532,7 +1481,12 @@ paths:
                 type: array
                 items:
                   $ref: '#/components/schemas/NamedId'
-
+        401:
+          $ref: '#/components/responses/401Response'
+        403:
+          $ref: '#/components/responses/403Response'
+        500:
+          $ref: '#/components/responses/500Response'
   /reference-data/change-request-rejection-reasons/{changeRequestType}:
     get:
       tags:
@@ -1553,7 +1507,12 @@ paths:
                 type: array
                 items:
                   $ref: '#/components/schemas/NamedId'
-
+        401:
+          $ref: '#/components/responses/401Response'
+        403:
+          $ref: '#/components/responses/403Response'
+        500:
+          $ref: '#/components/responses/500Response'
   /reference-data/move-on-categories:
     get:
       tags:
@@ -1569,7 +1528,12 @@ paths:
                 type: array
                 items:
                   $ref: '#/components/schemas/MoveOnCategory'
-
+        401:
+          $ref: '#/components/responses/401Response'
+        403:
+          $ref: '#/components/responses/403Response'
+        500:
+          $ref: '#/components/responses/500Response'
   /reference-data/non-arrival-reasons:
     get:
       tags:
@@ -1585,7 +1549,12 @@ paths:
                 type: array
                 items:
                   $ref: '#/components/schemas/NonArrivalReason'
-
+        401:
+          $ref: '#/components/responses/401Response'
+        403:
+          $ref: '#/components/responses/403Response'
+        500:
+          $ref: '#/components/responses/500Response'
   /reference-data/out-of-service-bed-reasons:
     get:
       tags:
@@ -1601,7 +1570,12 @@ paths:
                 type: array
                 items:
                   $ref: '#/components/schemas/Cas1OutOfServiceBedReason'
-
+        401:
+          $ref: '#/components/responses/401Response'
+        403:
+          $ref: '#/components/responses/403Response'
+        500:
+          $ref: '#/components/responses/500Response'
 
   /reference-data/cru-management-areas:
     get:
@@ -1618,7 +1592,12 @@ paths:
                 type: array
                 items:
                   $ref: '#/components/schemas/Cas1CruManagementArea'
-
+        401:
+          $ref: '#/components/responses/401Response'
+        403:
+          $ref: '#/components/responses/403Response'
+        500:
+          $ref: '#/components/responses/500Response'
 
   /reference-data/departure-reasons:
     get:
@@ -1635,7 +1614,12 @@ paths:
                 type: array
                 items:
                   $ref: '#/components/schemas/DepartureReason'
-
+        401:
+          $ref: '#/components/responses/401Response'
+        403:
+          $ref: '#/components/responses/403Response'
+        500:
+          $ref: '#/components/responses/500Response'
 
   /reports/{reportName}:
     get:
@@ -1699,7 +1683,12 @@ paths:
             'application/json':
               schema:
                 $ref: '#/components/schemas/Cas1SpaceBooking'
-
+        401:
+          $ref: '#/components/responses/401Response'
+        403:
+          $ref: '#/components/responses/403Response'
+        500:
+          $ref: '#/components/responses/500Response'
 
   /out-of-service-beds:
     get:
@@ -1766,7 +1755,12 @@ paths:
               $ref: '#/components/headers/X-Pagination-TotalResults'
             X-Pagination-PageSize:
               $ref: '#/components/headers/X-Pagination-PageSize'
-
+        401:
+          $ref: '#/components/responses/401Response'
+        403:
+          $ref: '#/components/responses/403Response'
+        500:
+          $ref: '#/components/responses/500Response'
   /users/{id}:
     get:
       summary: Get information about a specific user
@@ -1788,7 +1782,12 @@ paths:
             'application/json':
               schema:
                 $ref: '#/components/schemas/ApprovedPremisesUser'
-
+        401:
+          $ref: '#/components/responses/401Response'
+        403:
+          $ref: '#/components/responses/403Response'
+        500:
+          $ref: '#/components/responses/500Response'
     put:
       summary: Update a user
       operationId: updateUser
@@ -1815,7 +1814,12 @@ paths:
             'application/json':
               schema:
                 $ref: '#/components/schemas/User'
-
+        401:
+          $ref: '#/components/responses/401Response'
+        403:
+          $ref: '#/components/responses/403Response'
+        500:
+          $ref: '#/components/responses/500Response'
     delete:
       summary: Deletes the user
       operationId: deleteUser
@@ -1838,7 +1842,12 @@ paths:
             'application/problem+json':
               schema:
                 $ref: '#/components/schemas/ValidationError'
-
+        401:
+          $ref: '#/components/responses/401Response'
+        403:
+          $ref: '#/components/responses/403Response'
+        500:
+          $ref: '#/components/responses/500Response'
   /applications/{applicationId}/timeline:
     get:
       tags:
@@ -1862,94 +1871,18 @@ paths:
                 type: array
                 items:
                   $ref: '#/components/schemas/Cas1TimelineEvent'
+        401:
+          $ref: '#/components/responses/401Response'
+        403:
+          $ref: '#/components/responses/403Response'
         404:
           description: invalid CRN
           content:
             'application/json':
               schema:
                 $ref: '#/components/schemas/Problem'
-  /applications/all:
-    get:
-      tags:
-        - Applications
-      summary: Lists all applications that any user has created
-      operationId: getAllApplications
-      parameters:
-        - name: page
-          in: query
-          description: Page number of results to return. If blank, returns all results
-          schema:
-            type: integer
-        - name: crnOrName
-          in: query
-          description: CRN of applications
-          schema:
-            type: string
-        - name: sortDirection
-          in: query
-          description: The direction to sort the results by. If blank, will sort in descending order
-          schema:
-            $ref: '#/components/schemas/SortDirection'
-        - name: status
-          in: query
-          description: Application statuses to filter on. If none provided, all will be returned
-          schema:
-            type: array
-            items:
-              $ref: '#/components/schemas/ApprovedPremisesApplicationStatus'
-        - name: sortBy
-          in: query
-          description: The field to sort the results by.
-          schema:
-            $ref: '#/components/schemas/ApplicationSortField'
-        - name: apAreaId
-          in: query
-          required: false
-          description: Approved Premises Area ID to filter results by
-          schema:
-            type: string
-            format: uuid
-        - name: releaseType
-          in: query
-          required: false
-          description: If provided, restricts the results to only those with the given release type.
-          schema:
-            $ref: '#/components/schemas/ReleaseTypeOption'
-      responses:
-        200:
-          description: successful operation
-          content:
-            'application/json':
-              schema:
-                type: array
-                items:
-                  $ref: '#/components/schemas/Cas1ApplicationSummary'
-          headers:
-            X-Pagination-CurrentPage:
-              $ref: '#/components/headers/X-Pagination-CurrentPage'
-            X-Pagination-TotalPages:
-              $ref: '#/components/headers/X-Pagination-TotalPages'
-            X-Pagination-TotalResults:
-              $ref: '#/components/headers/X-Pagination-TotalResults'
-            X-Pagination-PageSize:
-              $ref: '#/components/headers/X-Pagination-TotalResults'
-
-  /applications:
-    get:
-      tags:
-        - Applications
-      summary: Lists all applications that the user has created
-      operationId: getApplicationsForUser
-      responses:
-        200:
-          description: successful operation
-          content:
-            'application/json':
-              schema:
-                type: array
-                items:
-                  $ref: '#/components/schemas/Cas1ApplicationSummary'
-
+        500:
+          $ref: '#/components/responses/500Response'
   /people/{crn}/timeline:
     get:
       tags:
@@ -1970,251 +1903,40 @@ paths:
             'application/json':
               schema:
                 $ref: '#/components/schemas/Cas1PersonalTimeline'
+        401:
+          $ref: '#/components/responses/401Response'
+        403:
+          $ref: '#/components/responses/403Response'
         404:
           description: invalid CRN
           content:
             'application/json':
               schema:
                 $ref: '#/components/schemas/Problem'
-  /assessments:
-    get:
-      tags:
-        - Assessments
-      summary: Gets assessments the user is authorised to view
-      operationId: getAssessmentsForUser
-      parameters:
-        - name: sortDirection
-          in: query
-          description: If provided, return results in the given order
-          required: false
-          schema:
-            $ref: "#/components/schemas/SortDirection"
-        - name: sortBy
-          in: query
-          description: If provided, return results ordered by the given field name
-          required: false
-          schema:
-            $ref: "#/components/schemas/Cas1AssessmentSortField"
-        - name: statuses
-          in: query
-          description: If provided, return only results with the given statuses
-          required: false
-          schema:
-            type: array
-            items:
-              $ref: "#/components/schemas/Cas1AssessmentStatus"
-        - name: crnOrName
-          in: query
-          description: Filters results using an exact match or CRN, or partial match on name
-          required: false
-          schema:
-            type: string
-        - name: page
-          in: query
-          description: Page number of results to return. If blank, returns all results
-          schema:
-            type: integer
-        - name: perPage
-          in: query
-          description: Number of items to return per page (defaults to 10)
-          schema:
-            type: integer
-      responses:
-        200:
-          description: successfully retrieved assessments
-          content:
-            'application/json':
-              schema:
-                type: array
-                items:
-                  $ref: '#/components/schemas/Cas1AssessmentSummary'
-          headers:
-            X-Pagination-CurrentPage:
-              schema:
-                type: integer
-              description: The current page number
-            X-Pagination-TotalPages:
-              schema:
-                type: integer
-              description: The total number of pages
-            X-Pagination-TotalResults:
-              schema:
-                type: integer
-              description: The total number of results
-            X-Pagination-PageSize:
-              schema:
-                type: integer
-              description: The size of each page
-
-  /assessments/{assessmentId}:
-    get:
-      tags:
-        - Assessments
-      summary: Gets a single assessment by its id
-      operationId: getAssessment
-      parameters:
-        - in: path
-          name: assessmentId
-          required: true
-          description: Id of the assessment
-          schema:
-            type: string
-            format: uuid
-      responses:
-        200:
-          description: successfully retrieved assessment
-          content:
-            'application/json':
-              schema:
-                $ref: '#/components/schemas/Cas1Assessment'
-
-    put:
-      tags:
-        - Assessments
-      summary: Updates an assessment
-      operationId: updateAssessment
-      parameters:
-        - in: path
-          name: assessmentId
-          required: true
-          description: Id of the assessment
-          schema:
-            type: string
-            format: uuid
-      requestBody:
-        description: Updated assessment
-        content:
-          'application/json':
-            schema:
-              $ref: '#/components/schemas/Cas1UpdateAssessment'
-        required: true
-      responses:
-        200:
-          description: successfully updated assessment
-          content:
-            'application/json':
-              schema:
-                $ref: '#/components/schemas/Cas1Assessment'
-
-  /assessments/{assessmentId}/notes:
-    post:
-      tags:
-        - Assessments
-      summary: Adds a clarification note to an assessment
-      operationId: addClarificationNoteToAssessment
-      parameters:
-        - in: path
-          name: assessmentId
-          required: true
-          description: Id of the assessment
-          schema:
-            type: string
-            format: uuid
-      requestBody:
-        description: Clarification note
-        content:
-          'application/json':
-            schema:
-              $ref: '#/components/schemas/Cas1NewClarificationNote'
-        required: true
-      responses:
-        201:
-          description: successfully created a clarification note
-          content:
-            'application/json':
-              schema:
-                $ref: '#/components/schemas/Cas1ClarificationNote'
-
-  /assessments/{assessmentId}/notes/{noteId}:
-    put:
-      tags:
-        - Assessments
-      summary: Updates an assessment's clarification note
-      operationId: updateAssessmentClarificationNote
-      parameters:
-        - in: path
-          name: assessmentId
-          required: true
-          description: Id of the assessment
-          schema:
-            type: string
-            format: uuid
-        - in: path
-          name: noteId
-          required: true
-          description: Id of the clarification note
-          schema:
-            type: string
-            format: uuid
-      requestBody:
-        description: Clarification note
-        content:
-          'application/json':
-            schema:
-              $ref: '#/components/schemas/Cas1UpdatedClarificationNote'
-        required: true
-      responses:
-        201:
-          description: successfully updated a clarification note
-          content:
-            'application/json':
-              schema:
-                $ref: '#/components/schemas/Cas1ClarificationNote'
-
-  /assessments/{assessmentId}/acceptance:
-    post:
-      tags:
-        - Assessments
-      summary: Accepts an Assessment
-      operationId: acceptAssessment
-      parameters:
-        - in: path
-          name: assessmentId
-          required: true
-          description: Id of the assessment
-          schema:
-            type: string
-            format: uuid
-      requestBody:
-        description: Information needed to accept an assessment
-        content:
-          'application/json':
-            schema:
-              $ref: '#/components/schemas/Cas1AssessmentAcceptance'
-        required: true
-      responses:
-        200:
-          description: successfully accepted the assessment
-
-  /assessments/{assessmentId}/rejection:
-    post:
-      tags:
-        - Assessments
-      summary: Rejects an Assessment
-      operationId: rejectAssessment
-      parameters:
-        - in: path
-          name: assessmentId
-          required: true
-          description: Id of the assessment
-          schema:
-            type: string
-            format: uuid
-      requestBody:
-        description: Rejection info
-        content:
-          'application/json':
-            schema:
-              $ref: '#/components/schemas/Cas1AssessmentRejection'
-        required: true
-      responses:
-        200:
-          description: successfully rejected the assessment
-
-
+        500:
+          $ref: '#/components/responses/500Response'
 
 
 components:
+  responses:
+    401Response:
+      description: not authenticated
+      content:
+        'application/json':
+          schema:
+            $ref: '#/components/schemas/Problem'
+    403Response:
+      description: unauthorised
+      content:
+        'application/json':
+          schema:
+            $ref: '#/components/schemas/Problem'
+    500Response:
+      description: unexpected error
+      content:
+        'application/json':
+          schema:
+            $ref: '#/components/schemas/Problem'
   headers:
     X-Pagination-CurrentPage:
       schema:
@@ -2468,9 +2190,6 @@ components:
         dueAt:
           type: string
           format: date-time
-        expectedArrivalDate:
-          type: string
-          format: date
         allocatedToStaffMember:
           $ref: '#/components/schemas/ApprovedPremisesUser'
         status:
@@ -2514,7 +2233,6 @@ components:
         - completedAt
         - taskType
         - decision
-        - expectedArrivalDate
     AssessmentTask:
       allOf:
         - $ref: '#/components/schemas/Task'
@@ -4014,8 +3732,6 @@ components:
       allOf:
         - $ref: '#/components/schemas/ApplicationSummary'
     ApprovedPremisesApplicationSummary:
-      deprecated: true
-      description: Use Cas1ApplicationSummary
       allOf:
         - $ref: '#/components/schemas/ApplicationSummary'
         - type: object
@@ -4535,8 +4251,6 @@ components:
               $ref: '#/components/schemas/ApprovedPremisesAssessmentStatus'
             createdFromAppeal:
               type: boolean
-            document:
-              $ref: '#/components/schemas/Unit'
           required:
             - application
             - createdFromAppeal
@@ -4601,8 +4315,6 @@ components:
           CAS1: '#/components/schemas/ApprovedPremisesAssessmentSummary'
           CAS3: '#/components/schemas/TemporaryAccommodationAssessmentSummary'
     ApprovedPremisesAssessmentSummary:
-      deprecated: true
-      description: Please use the Cas1AssessmentSummary endpoint instead
       allOf:
         - $ref: '#/components/schemas/AssessmentSummary'
         - type: object
@@ -4734,11 +4446,9 @@ components:
         rejectionRationale:
           type: string
         referralRejectionReasonId:
-          description: Only used by CAS3
           type: string
           format: uuid
         referralRejectionReasonDetail:
-          description: Only used by CAS3
           type: string
         isWithdrawn:
           type: boolean
@@ -5081,7 +4791,6 @@ components:
         - matcher
         - future_manager
         - workflow_manager
-        - change_request_dev
         - cru_member
         - cru_member_find_and_book_beta
         - cru_member_enable_out_of_service_beds
@@ -5103,19 +4812,11 @@ components:
         - cas1_assess_application
         - cas1_assess_placement_application
         - cas1_assess_placement_request
-        - cas1_planned_transfer_create
-        - cas1_planned_transfer_assess
         - cas1_booking_create
         - cas1_booking_change_dates
         - cas1_booking_withdraw
-        - cas1_change_request_list
-        - cas1_change_request_view
         - cas1_out_of_service_bed_create
-        - cas1_out_of_service_bed_create_bed_on_hold
         - cas1_out_of_service_bed_cancel
-        - cas1_placement_appeal_create
-        - cas1_placement_appeal_assess
-        - cas1_placement_request_record_unable_to_match
         - cas1_process_an_appeal
         - cas1_user_list
         - cas1_user_management
@@ -5132,12 +4833,11 @@ components:
         - cas1_space_booking_record_keyworker
         - cas1_space_booking_view
         - cas1_space_booking_withdraw
-        - cas1_premises_capacity_report_view
+        - cas1_tasks_list
         - cas1_premises_view
         - cas1_premises_manage
         - cas1_reports_view
         - cas1_reports_view_with_pii
-        - cas1_emergency_transfer_perform
     TemporaryAccommodationUserRole:
       type: string
       enum:
@@ -5265,6 +4965,17 @@ components:
         - name
         - roomName
         - status
+    BedDetail:
+      allOf:
+        - $ref: '#/components/schemas/BedSummary'
+        - type: object
+          properties:
+            characteristics:
+              type: array
+              items:
+                $ref: '#/components/schemas/CharacteristicPair'
+          required:
+            - characteristics
     BedStatus:
       type: string
       enum:
@@ -5483,8 +5194,6 @@ components:
         - cas2_application_submitted
         - cas2_note
         - cas2_status_update
-        - cas2_prison_transfer
-        - cas2_new_pom_assigned
     Cas2TimelineEvent:
       type: object
       properties:
@@ -5503,6 +5212,7 @@ components:
         - type
         - occurredAt
         - label
+        - createdByName
     SeedRequest:
       type: object
       properties:
@@ -5571,9 +5281,6 @@ components:
         - approved_premises_create_test_applications
         - approved_premises_delete_application_timeline_notes
         - temporary_accommodation_referral_rejection
-        - approved_premises_remap_bed_codes
-        - short_term_accommodation_create_omus
-        - temporary_accommodation_assign_application_to_pdu
     SeedFromExcelFileType:
       type: string
       enum:
@@ -5609,7 +5316,6 @@ components:
         - update_cas1_backfill_arson_suitable
         - update_cas1_approved_premises_assessment_report_properties
         - update_cas1_room_codes
-        - update_cas1_applications_with_offender
     PlacementDates:
       type: object
       properties:
@@ -5984,6 +5690,134 @@ components:
         - rfap
         - mhapStJosephs
         - mhapElliottHouse
+    TemporaryAccommodationBedSearchParameters:
+      type: object
+      properties:
+        serviceName:
+          type: string
+        startDate:
+          type: string
+          format: date
+        durationDays:
+          type: integer
+          format: int64
+          description: The number of days the Bed will need to be free from the start_date until
+        probationDeliveryUnits:
+          type: array
+          description: The list of pdus Ids to search within
+          items:
+            type: string
+            format: uuid
+        premisesFilters:
+          $ref: '#/components/schemas/PremisesFilters'
+        bedspaceFilters:
+          $ref: '#/components/schemas/BedspaceFilters'
+        attributes:
+          type: array
+          description: Bedspace and property attributes to filter on
+          items:
+            $ref: "#/components/schemas/BedSearchAttributes"
+      required:
+        - probationDeliveryUnits
+        - startDate
+        - durationDays
+    PremisesFilters:
+      type: object
+      properties:
+        includedCharacteristicIds:
+          type: array
+          items:
+            type: string
+            format: uuid
+        excludedCharacteristicIds:
+          type: array
+          items:
+            type: string
+            format: uuid
+    BedspaceFilters:
+      type: object
+      properties:
+        includedCharacteristicIds:
+          type: array
+          items:
+            type: string
+            format: uuid
+        excludedCharacteristicIds:
+          type: array
+          items:
+            type: string
+            format: uuid
+    BedSearchResults:
+      type: object
+      properties:
+        resultsRoomCount:
+          type: integer
+          description: How many distinct Rooms the Beds in the results belong to
+        resultsPremisesCount:
+          type: integer
+          description: How many distinct Premises the Beds in the results belong to
+        resultsBedCount:
+          type: integer
+          description: How many Beds are in the results
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/TemporaryAccommodationBedSearchResult'
+      required:
+        - resultsRoomCount
+        - resultsPremisesCount
+        - resultsBedCount
+        - results
+    TemporaryAccommodationBedSearchResult:
+      type: object
+      properties:
+        premises:
+          $ref: '#/components/schemas/BedSearchResultPremisesSummary'
+        room:
+          $ref: '#/components/schemas/BedSearchResultRoomSummary'
+        bed:
+          $ref: '#/components/schemas/BedSearchResultBedSummary'
+        overlaps:
+          type: array
+          items:
+            $ref: '#/components/schemas/TemporaryAccommodationBedSearchResultOverlap'
+      required:
+        - premises
+        - room
+        - bed
+        - overlaps
+    TemporaryAccommodationBedSearchResultOverlap:
+      type: object
+      properties:
+        name:
+          type: string
+        crn:
+          type: string
+        sex:
+          type: string
+        personType:
+          $ref: '#/components/schemas/PersonType'
+        days:
+          type: integer
+        bookingId:
+          type: string
+          format: uuid
+        roomId:
+          type: string
+          format: uuid
+        assessmentId:
+          type: string
+          format: uuid
+        isSexualRisk:
+          type: boolean
+      required:
+        - name
+        - crn
+        - personType
+        - days
+        - bookingId
+        - roomId
+        - isSexualRisk
     BedSearchResultPremisesSummary:
       type: object
       properties:
@@ -6281,7 +6115,6 @@ components:
         - teamsManagingCase
         - ukBankHolidays
         - inmateDetails
-        - crnGetCaseDetailCache
     PersonType:
       type: string
       enum:
@@ -6497,6 +6330,16 @@ components:
           type: string
       required:
         - name
+    Cas3ReportType:
+      type: string
+      enum:
+        - referral
+        - booking
+        - bedUsage
+        - bedOccupancy
+        - futureBookings
+        - futureBookingsCsv
+        - bookingGap
     NamedId:
       type: object
       description: A generic stub for an object with a name and an ID.
@@ -6626,12 +6469,6 @@ components:
           default: []
         deliusEventNumber:
           type: string
-        isCancelled:
-          type: boolean
-        plannedTransferRequested:
-          type: boolean
-        appealRequested:
-          type: boolean
       required:
         - id
         - person
@@ -6641,9 +6478,6 @@ components:
         - characteristics
         - expectedArrivalDate
         - expectedDepartureDate
-        - isCancelled
-        - plannedTransferRequested
-        - appealRequested
     Cas1KeyWorkerAllocation:
       type: object
       properties:
@@ -6856,19 +6690,17 @@ components:
         - essentialCharacteristics
     Cas1UpdateSpaceBooking:
       type: object
+      description: Only provide values when a change is required
       properties:
         arrivalDate:
-          description: Only provided if the arrival date has changed
           type: string
           format: date
           example: 2022-07-28
         departureDate:
-          description: Only provided if the departure date has changed
           type: string
           format: date
           example: 2022-09-30
         characteristics:
-          description: Only provided if characteristics have changed
           type: array
           items:
             $ref: '#/components/schemas/Cas1SpaceBookingCharacteristic'
@@ -7252,8 +7084,6 @@ components:
       type: object
       properties:
         departureDateTime:
-          deprecated: true
-          description: use seperate date/time fields
           type: string
           format: date-time
         departureDate:
@@ -7273,51 +7103,6 @@ components:
           type: string
       required:
         - reasonId
-    Cas1NewEmergencyTransfer:
-      type: object
-      properties:
-        destinationPremisesId:
-          type: string
-          format: uuid
-        arrivalDate:
-          description: The expected arrival date for the new space booking. The existing space booking will be updated to end on this date
-          type: string
-          format: date
-        departureDate:
-          description: The expected departure date for the new space booking
-          type: string
-          format: date
-      required:
-        - destinationPremisesId
-        - arrivalDate
-        - departureDate
-    Cas1NewPlannedTransfer:
-      type: object
-      properties:
-        destinationPremisesId:
-          type: string
-          format: uuid
-        arrivalDate:
-          description: The expected arrival date for the new space booking. The existing space booking will be updated to end on this date
-          type: string
-          format: date
-        departureDate:
-          description: The expected departure date for the new space booking
-          type: string
-          format: date
-        changeRequestId:
-          type: string
-          format: uuid
-        characteristics:
-          description: If not provided, it is assumed that no characteristics are required
-          type: array
-          items:
-            $ref: '#/components/schemas/Cas1SpaceCharacteristic'
-      required:
-        - destinationPremisesId
-        - arrivalDate
-        - departureDate
-        - changeRequestId
     Cas1AssignKeyWorker:
       type: object
       properties:
@@ -7361,20 +7146,6 @@ components:
       required:
         - occurredAt
         - reasonId
-    Cas1ApprovedPlacementAppeal:
-      type: object
-      properties:
-        occurredAt:
-          type: string
-          format: date
-        reasonNotes:
-          type: string
-        placementAppealChangeRequestId:
-          type: string
-          format: uuid
-      required:
-        - occurredAt
-        - placementAppealChangeRequestId
     Cas1PremiseCapacity:
       type: object
       properties:
@@ -7436,10 +7207,14 @@ components:
     Cas1ReportName:
       type: string
       enum:
+        - applications
         - applicationsV2
         - applicationsV2WithPii
         - dailyMetrics
+        - lostBeds
         - outOfServiceBeds
+        - placementApplications
+        - placementMatchingOutcomes
         - placementMatchingOutcomesV2
         - placementMatchingOutcomesV2WithPii
         - requestsForPlacement
@@ -7483,7 +7258,6 @@ components:
           type: string
           format: date
         endDate:
-          description: This date is inclusive. The bed will be unavailable for the whole of the day
           type: string
           format: date
         reason:
@@ -7512,7 +7286,6 @@ components:
           type: string
           format: date
         endDate:
-          description: This date is inclusive. The bed will be unavailable for the whole of the day
           type: string
           format: date
         bed:
@@ -7745,9 +7518,6 @@ components:
         - information_request
         - assessment_appealed
         - assessment_allocated
-        - placement_appeal_accepted
-        - placement_appeal_created
-        - placement_appeal_rejected
         - placement_application_withdrawn
         - placement_application_allocated
         - match_request_withdrawn
@@ -7825,24 +7595,23 @@ components:
       properties:
         type:
           $ref: '#/components/schemas/Cas1TimelineEventType'
+        premises:
+          $ref: '#/components/schemas/NamedId'
         schemaVersion:
           type: integer
       required:
         - type
+        - premises
+        - schemaVersion
       discriminator:
         propertyName: "type"
         mapping:
           booking_changed: '#/components/schemas/Cas1BookingChangedContentPayload'
-          placement_appeal_accepted: '#/components/schemas/Cas1PlacementAppealAcceptedPayload'
-          placement_appeal_created: '#/components/schemas/Cas1PlacementAppealCreatedPayload'
-          placement_appeal_rejected: '#/components/schemas/Cas1PlacementAppealRejectedPayload'
     Cas1BookingChangedContentPayload:
       type: object
       allOf:
         - $ref: "#/components/schemas/Cas1TimelineEventContentPayload"
       properties:
-        premises:
-          $ref: '#/components/schemas/NamedId'
         expectedArrival:
           type: string
           format: date
@@ -7867,66 +7636,8 @@ components:
           items:
             $ref: '#/components/schemas/Cas1SpaceCharacteristic'
       required:
-        - premises
         - expectedArrival
         - expectedDeparture
-    Cas1PlacementAppealCreatedPayload:
-      type: object
-      allOf:
-        - $ref: "#/components/schemas/Cas1TimelineEventContentPayload"
-      properties:
-        premises:
-          $ref: '#/components/schemas/NamedId'
-        expectedArrival:
-          type: string
-          format: date
-        expectedDeparture:
-          type: string
-          format: date
-        appealReason:
-          $ref: '#/components/schemas/NamedId'
-      required:
-        - premises
-        - expectedArrival
-        - expectedDeparture
-        - appealReason
-    Cas1PlacementAppealAcceptedPayload:
-      type: object
-      allOf:
-        - $ref: "#/components/schemas/Cas1TimelineEventContentPayload"
-      properties:
-        premises:
-          $ref: '#/components/schemas/NamedId'
-        expectedArrival:
-          type: string
-          format: date
-        expectedDeparture:
-          type: string
-          format: date
-      required:
-        - premises
-        - expectedArrival
-        - expectedDeparture
-    Cas1PlacementAppealRejectedPayload:
-      type: object
-      allOf:
-        - $ref: "#/components/schemas/Cas1TimelineEventContentPayload"
-      properties:
-        premises:
-          $ref: '#/components/schemas/NamedId'
-        expectedArrival:
-          type: string
-          format: date
-        expectedDeparture:
-          type: string
-          format: date
-        rejectionReason:
-          $ref: '#/components/schemas/NamedId'
-      required:
-        - premises
-        - expectedArrival
-        - expectedDeparture
-        - rejectionReason
     Cas1PlacementRequestSummary:
       type: object
       properties:
@@ -7978,12 +7689,13 @@ components:
           $ref: '#/components/schemas/Cas1ChangeRequestType'
         requestJson:
           type: object
-          $ref: '#/components/schemas/Unit'
+          additionalProperties:
+            $ref: '#/components/schemas/Unit'
         reasonId:
           type: string
           format: uuid
       required:
-        - spaceBookingId
+        - space_booking_id
         - type
         - requestJson
         - reasonId
@@ -7998,12 +7710,12 @@ components:
     Cas1ChangeRequestType:
       type: string
       enum:
-        - placementAppeal
-        - placementExtension
+        - appeal
+        - extension
         - plannedTransfer
       x-enum-varnames:
-        - PLACEMENT_APPEAL
-        - PLACEMENT_EXTENSION
+        - APPEAL
+        - EXTENSION
         - PLANNED_TRANSFER
     Cas1ChangeRequest:
       type: object
@@ -8011,16 +7723,30 @@ components:
         id:
           type: string
           format: uuid
+        person:
+          $ref: "#/components/schemas/PersonSummary"
         type:
           $ref: '#/components/schemas/Cas1ChangeRequestType'
         createdAt:
           type: string
           format: date-time
+        tier:
+          type: string
+        expectedArrivalDate:
+          type: string
+          format: date
+        actualArrivalDate:
+          type: string
+          format: date
+        lengthOfStayDays:
+          type: integer
         requestReason:
           $ref: '#/components/schemas/NamedId'
         decision:
           $ref: '#/components/schemas/Cas1ChangeRequestDecision'
         decisionJson:
+          type: object
+          additionalProperties:
             $ref: '#/components/schemas/Unit'
         rejectionReason:
           $ref: '#/components/schemas/NamedId'
@@ -8029,8 +7755,11 @@ components:
           format: date-time
       required:
         - id
+        - person
         - type
         - createdAt
+        - requestedArrivalDate
+        - lengthOfStayDays
         - requestReason
         - updatedAt
     Cas1RejectChangeRequest:
@@ -8068,7 +7797,6 @@ components:
           type: string
           format: date
         lengthOfStayDays:
-          description: Current placement's length of stay, using canonical arrival date
           type: integer
       required:
         - id
@@ -8083,12 +7811,12 @@ components:
         - name
         - tier
         - canonicalArrivalDate
-        - lengthOfStayDays
+        - lengthOfStay
       x-enum-varnames:
         - NAME
         - TIER
         - CANONICAL_ARRIVAL_DATE
-        - LENGTH_OF_STAY_DAYS
+        - LENGTH_OF_STAY
     Cas1PremisesBedSummary:
       type: object
       properties:
@@ -8103,336 +7831,3 @@ components:
         - id
         - roomName
         - bedName
-    Cas1ApplicationSummary:
-      type: object
-      properties:
-        id:
-          type: string
-          format: uuid
-        person:
-          $ref: '#/components/schemas/Person'
-        createdAt:
-          type: string
-          format: date-time
-        submittedAt:
-          type: string
-          format: date-time
-        isWomensApplication:
-            type: boolean
-        isPipeApplication:
-            type: boolean
-        isEmergencyApplication:
-          type: boolean
-        isEsapApplication:
-          type: boolean
-        arrivalDate:
-          type: string
-          format: date-time
-        risks:
-          $ref: '#/components/schemas/PersonRisks'
-        createdByUserId:
-          type: string
-          format: uuid
-        status:
-          $ref: '#/components/schemas/ApprovedPremisesApplicationStatus'
-        tier:
-          type: string
-        isWithdrawn:
-          type: boolean
-        releaseType:
-          $ref: '#/components/schemas/ReleaseTypeOption'
-        hasRequestsForPlacement:
-          type: boolean
-      required:
-        - id
-        - person
-        - createdAt
-        - createdByUserId
-        - status
-        - isWithdrawn
-        - hasRequestsForPlacement
-    Cas1AssessmentSummary:
-      type: object
-      properties:
-        id:
-          type: string
-          format: uuid
-        applicationId:
-          type: string
-          format: uuid
-        arrivalDate:
-          type: string
-          format: date-time
-        createdAt:
-          type: string
-          format: date-time
-        dateOfInfoRequest:
-          type: string
-          format: date-time
-        decision:
-          $ref: '#/components/schemas/AssessmentDecision'
-        risks:
-          $ref: '#/components/schemas/PersonRisks'
-        person:
-          $ref: '#/components/schemas/Person'
-        status:
-          $ref: '#/components/schemas/Cas1AssessmentStatus'
-        dueAt:
-              type: string
-              format: date-time
-      required:
-        - id
-        - applicationId
-        - createdAt
-        - person
-        - status
-        - dueAt
-    Cas1AssessmentStatus:
-      type: string
-      enum:
-        - awaiting_response
-        - completed
-        - reallocated
-        - in_progress
-        - not_started
-    Cas1AssessmentSortField:
-      type: string
-      enum:
-        - name
-        - crn
-        - arrivalDate
-        - status
-        - createdAt
-        - dueAt
-        - probationDeliveryUnitName
-      x-enum-varnames:
-        - personName
-        - personCrn
-        - assessmentArrivalDate
-        - assessmentStatus
-        - assessmentCreatedAt
-        - assessmentDueAt
-        - applicationProbationDeliveryUnitName
-    Cas1Assessment:
-      type: object
-      properties:
-        id:
-          type: string
-          format: uuid
-        schemaVersion:
-          type: string
-          format: uuid
-        outdatedSchema:
-          type: boolean
-        createdAt:
-          type: string
-          format: date-time
-        allocatedAt:
-          type: string
-          format: date-time
-        submittedAt:
-          type: string
-          format: date-time
-        decision:
-          $ref: '#/components/schemas/AssessmentDecision'
-        rejectionRationale:
-          type: string
-        data:
-          $ref: '#/components/schemas/Unit'
-        clarificationNotes:
-          type: array
-          items:
-            $ref: '#/components/schemas/Cas1ClarificationNote'
-        application:
-          $ref: '#/components/schemas/Cas1Application'
-        allocatedToStaffMember:
-          $ref: '#/components/schemas/ApprovedPremisesUser'
-        status:
-          $ref: '#/components/schemas/Cas1AssessmentStatus'
-        createdFromAppeal:
-          type: boolean
-        document:
-          $ref: '#/components/schemas/Unit'
-      required:
-        - service
-        - id
-        - allocatedToUser
-        - schemaVersion
-        - outdatedSchema
-        - createdAt
-        - clarificationNotes
-        - application
-        - createdFromAppeal
-    Cas1Application:
-          properties:
-            id:
-              type: string
-              format: uuid
-            person:
-              $ref: '#/components/schemas/Person'
-            createdAt:
-              type: string
-              format: date-time
-            isWomensApplication:
-              type: boolean
-            isPipeApplication:
-              deprecated: true
-              description: Use apType
-              type: boolean
-            isEmergencyApplication:
-              type: boolean
-            isEsapApplication:
-              deprecated: true
-              description: Use apType
-              type: boolean
-            apType:
-              $ref: '#/components/schemas/ApType'
-            arrivalDate:
-              type: string
-              format: date-time
-            risks:
-              $ref: '#/components/schemas/PersonRisks'
-            createdByUserId:
-              type: string
-              format: uuid
-            schemaVersion:
-              type: string
-              format: uuid
-            outdatedSchema:
-              type: boolean
-            data:
-              $ref: '#/components/schemas/Unit'
-            document:
-              $ref: '#/components/schemas/Unit'
-            status:
-              $ref: '#/components/schemas/ApprovedPremisesApplicationStatus'
-            assessmentId:
-              type: string
-              format: uuid
-            assessmentDecision:
-              $ref: '#/components/schemas/AssessmentDecision'
-            assessmentDecisionDate:
-              type: string
-              format: date
-            submittedAt:
-              type: string
-              format: date-time
-            personStatusOnSubmission:
-              $ref: '#/components/schemas/PersonStatus'
-            apArea:
-              $ref: '#/components/schemas/ApArea'
-            cruManagementArea:
-              $ref: '#/components/schemas/Cas1CruManagementArea'
-            applicantUserDetails:
-              $ref: '#/components/schemas/Cas1ApplicationUserDetails'
-            caseManagerIsNotApplicant:
-              description: "If true, caseManagerUserDetails will provide case manager details. Otherwise, applicantUserDetails can be used for case manager details"
-              type: boolean
-            caseManagerUserDetails:
-              $ref: '#/components/schemas/Cas1ApplicationUserDetails'
-            licenceExpiryDate:
-              type: string
-              format: date
-          required:
-            - id
-            - person
-            - createdAt
-            - createdByUserId
-            - schemaVersion
-            - outdatedSchema
-            - status
-    Cas1UpdateAssessment:
-      type: object
-      properties:
-        data:
-          type: object
-          additionalProperties:
-            $ref: '#/components/schemas/Unit'
-      required:
-        - data
-    Cas1ClarificationNote:
-      type: object
-      properties:
-        id:
-          type: string
-          format: uuid
-        createdAt:
-          type: string
-          format: date-time
-        responseReceivedOn:
-          type: string
-          format: date
-        createdByStaffMemberId:
-          type: string
-          format: uuid
-        query:
-          type: string
-        response:
-          type: string
-      required:
-        - id
-        - createdAt
-        - createdByStaffMemberId
-        - query
-    Cas1UpdatedClarificationNote:
-      type: object
-      properties:
-        response:
-          type: string
-        responseReceivedOn:
-          type: string
-          format: date
-          example: 2022-07-28
-      required:
-        - response
-        - responseReceivedOn
-    Cas1NewClarificationNote:
-      type: object
-      properties:
-        query:
-          type: string
-      required:
-        - query
-    Cas1AssessmentAcceptance:
-      type: object
-      properties:
-        document:
-          $ref: '#/components/schemas/Unit'
-        requirements:
-          $ref: '#/components/schemas/PlacementRequirements'
-        placementDates:
-          $ref: '#/components/schemas/PlacementDates'
-        apType:
-          $ref: '#/components/schemas/ApType'
-        notes:
-          type: string
-        agreeWithShortNoticeReason:
-          type: boolean
-        agreeWithShortNoticeReasonComments:
-          type: string
-        reasonForLateApplication:
-          type: string
-      required:
-        - document
-    Cas1AssessmentRejection:
-      type: object
-      properties:
-        document:
-          $ref: '#/components/schemas/Unit'
-        rejectionRationale:
-          type: string
-        agreeWithShortNoticeReason:
-          type: boolean
-        agreeWithShortNoticeReasonComments:
-          type: string
-        reasonForLateApplication:
-          type: string
-      required:
-        - document
-        - rejectionRationale
-
-
-
-
-
-

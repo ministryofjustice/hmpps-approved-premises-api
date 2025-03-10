@@ -67,6 +67,8 @@ enum class UserPermission(val cas1ApiValue: ApprovedPremisesUserPermission?) {
   CAS1_PREMISES_VIEW(ApprovedPremisesUserPermission.premisesView),
   CAS1_PREMISES_MANAGE(ApprovedPremisesUserPermission.premisesManage),
 
+  CAS1_TASKS_LIST(ApprovedPremisesUserPermission.tasksList),
+
   CAS1_APPLICATION_WITHDRAW_OTHERS(ApprovedPremisesUserPermission.applicationWithdrawOthers),
   CAS1_EMERGENCY_TRANSFER_PERFORM(ApprovedPremisesUserPermission.emergencyTransferPerform),
 
