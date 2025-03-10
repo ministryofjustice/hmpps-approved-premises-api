@@ -5,6 +5,7 @@ import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.params.ParameterizedTest
+import org.junit.jupiter.params.provider.CsvSource
 import org.junit.jupiter.params.provider.EnumSource
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.data.repository.findByIdOrNull
@@ -2266,211 +2267,217 @@ class BookingTest : IntegrationTestBase() {
     }
   }
 
-  @Test
-  fun `Create Departure updates the departure date for a Temporary Accommodation booking`() {
-    givenAUser(roles = listOf(UserRole.CAS3_ASSESSOR)) { userEntity, jwt ->
-      givenAnOffender { offenderDetails, inmateDetails ->
-        val booking = bookingEntityFactory.produceAndPersist {
-          withCrn(offenderDetails.otherIds.crn)
-          withYieldedPremises {
-            temporaryAccommodationPremisesEntityFactory.produceAndPersist {
-              withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
-              withYieldedProbationRegion { probationRegion }
+  @Nested
+  inner class CreateDeparture {
+    @ParameterizedTest
+    @CsvSource("/premises", "cas3/premises")
+    fun `Create Departure updates the departure date for a Temporary Accommodation booking`(baseUrl: String) {
+      givenAUser(roles = listOf(UserRole.CAS3_ASSESSOR)) { userEntity, jwt ->
+        givenAnOffender { offenderDetails, inmateDetails ->
+          val booking = bookingEntityFactory.produceAndPersist {
+            withCrn(offenderDetails.otherIds.crn)
+            withYieldedPremises {
+              temporaryAccommodationPremisesEntityFactory.produceAndPersist {
+                withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
+                withYieldedProbationRegion { probationRegion }
+              }
             }
+            withServiceName(ServiceName.temporaryAccommodation)
+            withArrivalDate(LocalDate.parse("2022-08-10"))
+            withDepartureDate(LocalDate.parse("2022-08-30"))
+            withCreatedAt(OffsetDateTime.parse("2022-07-01T12:34:56.789Z"))
           }
-          withServiceName(ServiceName.temporaryAccommodation)
-          withArrivalDate(LocalDate.parse("2022-08-10"))
-          withDepartureDate(LocalDate.parse("2022-08-30"))
-          withCreatedAt(OffsetDateTime.parse("2022-07-01T12:34:56.789Z"))
-        }
 
-        val reason = departureReasonEntityFactory.produceAndPersist {
-          withServiceScope("temporary-accommodation")
-        }
-        val moveOnCategory = moveOnCategoryEntityFactory.produceAndPersist {
-          withServiceScope("temporary-accommodation")
-        }
+          val reason = departureReasonEntityFactory.produceAndPersist {
+            withServiceScope("temporary-accommodation")
+          }
+          val moveOnCategory = moveOnCategoryEntityFactory.produceAndPersist {
+            withServiceScope("temporary-accommodation")
+          }
 
-        webTestClient.post()
-          .uri("/premises/${booking.premises.id}/bookings/${booking.id}/departures")
-          .header("Authorization", "Bearer $jwt")
-          .bodyValue(
-            NewDeparture(
-              dateTime = Instant.parse("2022-09-01T12:34:56.789Z"),
-              reasonId = reason.id,
-              moveOnCategoryId = moveOnCategory.id,
-              destinationProviderId = null,
-              notes = "Hello",
-            ),
-          )
-          .exchange()
-          .expectStatus()
-          .isOk
+          webTestClient.post()
+            .uri("$baseUrl/${booking.premises.id}/bookings/${booking.id}/departures")
+            .header("Authorization", "Bearer $jwt")
+            .bodyValue(
+              NewDeparture(
+                dateTime = Instant.parse("2022-09-01T12:34:56.789Z"),
+                reasonId = reason.id,
+                moveOnCategoryId = moveOnCategory.id,
+                destinationProviderId = null,
+                notes = "Hello",
+              ),
+            )
+            .exchange()
+            .expectStatus()
+            .isOk
 
-        webTestClient.get()
-          .uri("/premises/${booking.premises.id}/bookings/${booking.id}")
-          .header("Authorization", "Bearer $jwt")
-          .exchange()
-          .expectStatus()
-          .isOk
-          .expectBody()
-          .jsonPath("$.arrivalDate").isEqualTo("2022-08-10")
-          .jsonPath("$.departureDate").isEqualTo("2022-09-01")
-          .jsonPath("$.originalArrivalDate").isEqualTo("2022-08-10")
-          .jsonPath("$.originalDepartureDate").isEqualTo("2022-08-30")
-          .jsonPath("$.createdAt").isEqualTo("2022-07-01T12:34:56.789Z")
+          webTestClient.get()
+            .uri("/premises/${booking.premises.id}/bookings/${booking.id}")
+            .header("Authorization", "Bearer $jwt")
+            .exchange()
+            .expectStatus()
+            .isOk
+            .expectBody()
+            .jsonPath("$.arrivalDate").isEqualTo("2022-08-10")
+            .jsonPath("$.departureDate").isEqualTo("2022-09-01")
+            .jsonPath("$.originalArrivalDate").isEqualTo("2022-08-10")
+            .jsonPath("$.originalDepartureDate").isEqualTo("2022-08-30")
+            .jsonPath("$.createdAt").isEqualTo("2022-07-01T12:34:56.789Z")
+        }
       }
     }
-  }
 
-  @Test
-  fun `Create Departure on Temporary Accommodation Booking when a departure already exists returns OK with correct body`() {
-    givenAUser(roles = listOf(UserRole.CAS3_ASSESSOR)) { userEntity, jwt ->
-      givenAnOffender { offenderDetails, inmateDetails ->
-        val booking = bookingEntityFactory.produceAndPersist {
-          withCrn(offenderDetails.otherIds.crn)
-          withYieldedPremises {
-            temporaryAccommodationPremisesEntityFactory.produceAndPersist {
-              withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
-              withYieldedProbationRegion { probationRegion }
+    @Test
+    fun `Create Departure on Temporary Accommodation Booking when a departure already exists returns OK with correct body`() {
+      givenAUser(roles = listOf(UserRole.CAS3_ASSESSOR)) { userEntity, jwt ->
+        givenAnOffender { offenderDetails, inmateDetails ->
+          val booking = bookingEntityFactory.produceAndPersist {
+            withCrn(offenderDetails.otherIds.crn)
+            withYieldedPremises {
+              temporaryAccommodationPremisesEntityFactory.produceAndPersist {
+                withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
+                withYieldedProbationRegion { probationRegion }
+              }
             }
+            withServiceName(ServiceName.temporaryAccommodation)
+            withArrivalDate(LocalDate.parse("2022-08-10"))
+            withDepartureDate(LocalDate.parse("2022-08-30"))
+            withCreatedAt(OffsetDateTime.parse("2022-07-01T12:34:56.789Z"))
           }
-          withServiceName(ServiceName.temporaryAccommodation)
-          withArrivalDate(LocalDate.parse("2022-08-10"))
-          withDepartureDate(LocalDate.parse("2022-08-30"))
-          withCreatedAt(OffsetDateTime.parse("2022-07-01T12:34:56.789Z"))
-        }
 
-        val reason = departureReasonEntityFactory.produceAndPersist {
-          withServiceScope("temporary-accommodation")
-        }
-        val moveOnCategory = moveOnCategoryEntityFactory.produceAndPersist {
-          withServiceScope("temporary-accommodation")
-        }
+          val reason = departureReasonEntityFactory.produceAndPersist {
+            withServiceScope("temporary-accommodation")
+          }
+          val moveOnCategory = moveOnCategoryEntityFactory.produceAndPersist {
+            withServiceScope("temporary-accommodation")
+          }
 
-        val departure = departureEntityFactory.produceAndPersist {
-          withBooking(booking)
-          withReason(reason)
-          withMoveOnCategory(moveOnCategory)
-        }
-        booking.departures = mutableListOf(departure)
+          val departure = departureEntityFactory.produceAndPersist {
+            withBooking(booking)
+            withReason(reason)
+            withMoveOnCategory(moveOnCategory)
+          }
+          booking.departures = mutableListOf(departure)
 
-        webTestClient.post()
-          .uri("/premises/${booking.premises.id}/bookings/${booking.id}/departures")
-          .header("Authorization", "Bearer $jwt")
-          .bodyValue(
-            NewDeparture(
-              dateTime = Instant.parse("2022-09-01T12:34:56.789Z"),
-              reasonId = reason.id,
-              moveOnCategoryId = moveOnCategory.id,
-              destinationProviderId = null,
-              notes = "Corrected date",
-            ),
-          )
-          .exchange()
-          .expectStatus()
-          .isOk
-          .expectBody()
-          .jsonPath("$.dateTime").isEqualTo("2022-09-01T12:34:56.789Z")
-          .jsonPath("$.reason.id").isEqualTo(reason.id.toString())
-          .jsonPath("$.moveOnCategory.id").isEqualTo(moveOnCategory.id.toString())
-          .jsonPath("$.destinationProvider").isEqualTo(null)
-          .jsonPath("$.notes").isEqualTo("Corrected date")
-          .jsonPath("$.createdAt").value(withinSeconds(5L), OffsetDateTime::class.java)
+          webTestClient.post()
+            .uri("/premises/${booking.premises.id}/bookings/${booking.id}/departures")
+            .header("Authorization", "Bearer $jwt")
+            .bodyValue(
+              NewDeparture(
+                dateTime = Instant.parse("2022-09-01T12:34:56.789Z"),
+                reasonId = reason.id,
+                moveOnCategoryId = moveOnCategory.id,
+                destinationProviderId = null,
+                notes = "Corrected date",
+              ),
+            )
+            .exchange()
+            .expectStatus()
+            .isOk
+            .expectBody()
+            .jsonPath("$.dateTime").isEqualTo("2022-09-01T12:34:56.789Z")
+            .jsonPath("$.reason.id").isEqualTo(reason.id.toString())
+            .jsonPath("$.moveOnCategory.id").isEqualTo(moveOnCategory.id.toString())
+            .jsonPath("$.destinationProvider").isEqualTo(null)
+            .jsonPath("$.notes").isEqualTo("Corrected date")
+            .jsonPath("$.createdAt").value(withinSeconds(5L), OffsetDateTime::class.java)
+        }
       }
     }
-  }
 
-  @Test
-  fun `Create Departure for a Temporary Accommodation booking on a premises that's not in the user's region returns 403 Forbidden`() {
-    givenAUser { userEntity, jwt ->
-      givenAnOffender { offenderDetails, inmateDetails ->
-        val booking = bookingEntityFactory.produceAndPersist {
-          withCrn(offenderDetails.otherIds.crn)
-          withYieldedPremises {
-            temporaryAccommodationPremisesEntityFactory.produceAndPersist {
-              withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
-              withYieldedProbationRegion { probationRegion }
+    @ParameterizedTest
+    @CsvSource("/premises", "cas3/premises")
+    fun `Create Departure for a Temporary Accommodation booking on a premises that's not in the user's region returns 403 Forbidden`(baseUrl: String) {
+      givenAUser { userEntity, jwt ->
+        givenAnOffender { offenderDetails, inmateDetails ->
+          val booking = bookingEntityFactory.produceAndPersist {
+            withCrn(offenderDetails.otherIds.crn)
+            withYieldedPremises {
+              temporaryAccommodationPremisesEntityFactory.produceAndPersist {
+                withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
+                withYieldedProbationRegion { probationRegion }
+              }
             }
+            withServiceName(ServiceName.temporaryAccommodation)
+            withArrivalDate(LocalDate.parse("2022-08-10"))
+            withDepartureDate(LocalDate.parse("2022-08-30"))
+            withCreatedAt(OffsetDateTime.parse("2022-07-01T12:34:56.789Z"))
           }
-          withServiceName(ServiceName.temporaryAccommodation)
-          withArrivalDate(LocalDate.parse("2022-08-10"))
-          withDepartureDate(LocalDate.parse("2022-08-30"))
-          withCreatedAt(OffsetDateTime.parse("2022-07-01T12:34:56.789Z"))
-        }
 
-        val reason = departureReasonEntityFactory.produceAndPersist {
-          withServiceScope("temporary-accommodation")
-        }
-        val moveOnCategory = moveOnCategoryEntityFactory.produceAndPersist {
-          withServiceScope("temporary-accommodation")
-        }
+          val reason = departureReasonEntityFactory.produceAndPersist {
+            withServiceScope("temporary-accommodation")
+          }
+          val moveOnCategory = moveOnCategoryEntityFactory.produceAndPersist {
+            withServiceScope("temporary-accommodation")
+          }
 
-        webTestClient.post()
-          .uri("/premises/${booking.premises.id}/bookings/${booking.id}/departures")
-          .header("Authorization", "Bearer $jwt")
-          .header("X-Service-Name", ServiceName.temporaryAccommodation.value)
-          .bodyValue(
-            NewDeparture(
-              dateTime = Instant.parse("2022-09-01T12:34:56.789Z"),
-              reasonId = reason.id,
-              moveOnCategoryId = moveOnCategory.id,
-              destinationProviderId = null,
-              notes = "Hello",
-            ),
-          )
-          .exchange()
-          .expectStatus()
-          .isForbidden
+          webTestClient.post()
+            .uri("$baseUrl/${booking.premises.id}/bookings/${booking.id}/departures")
+            .header("Authorization", "Bearer $jwt")
+            .header("X-Service-Name", ServiceName.temporaryAccommodation.value)
+            .bodyValue(
+              NewDeparture(
+                dateTime = Instant.parse("2022-09-01T12:34:56.789Z"),
+                reasonId = reason.id,
+                moveOnCategoryId = moveOnCategory.id,
+                destinationProviderId = null,
+                notes = "Hello",
+              ),
+            )
+            .exchange()
+            .expectStatus()
+            .isForbidden
+        }
       }
     }
-  }
 
-  @Test
-  fun `Create Departure for a Temporary Accommodation booking on a premises that does not exist returns 404 Not Found`() {
-    givenAUser { userEntity, jwt ->
-      givenAnOffender { offenderDetails, inmateDetails ->
-        val booking = bookingEntityFactory.produceAndPersist {
-          withCrn(offenderDetails.otherIds.crn)
-          withYieldedPremises {
-            temporaryAccommodationPremisesEntityFactory.produceAndPersist {
-              withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
-              withYieldedProbationRegion { probationRegion }
+    @ParameterizedTest
+    @CsvSource("/premises", "cas3/premises")
+    fun `Create Departure for a Temporary Accommodation booking on a premises that does not exist returns 404 Not Found`(baseUrl: String) {
+      givenAUser { userEntity, jwt ->
+        givenAnOffender { offenderDetails, inmateDetails ->
+          val booking = bookingEntityFactory.produceAndPersist {
+            withCrn(offenderDetails.otherIds.crn)
+            withYieldedPremises {
+              temporaryAccommodationPremisesEntityFactory.produceAndPersist {
+                withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
+                withYieldedProbationRegion { probationRegion }
+              }
             }
+            withServiceName(ServiceName.temporaryAccommodation)
+            withArrivalDate(LocalDate.now().plusDays(5))
+            withDepartureDate(LocalDate.now().plusDays(63))
+            withCreatedAt(OffsetDateTime.now())
           }
-          withServiceName(ServiceName.temporaryAccommodation)
-          withArrivalDate(LocalDate.now().plusDays(5))
-          withDepartureDate(LocalDate.now().plusDays(63))
-          withCreatedAt(OffsetDateTime.now())
-        }
 
-        val reason = departureReasonEntityFactory.produceAndPersist {
-          withServiceScope("temporary-accommodation")
-        }
-        val moveOnCategory = moveOnCategoryEntityFactory.produceAndPersist {
-          withServiceScope("temporary-accommodation")
-        }
+          val reason = departureReasonEntityFactory.produceAndPersist {
+            withServiceScope("temporary-accommodation")
+          }
+          val moveOnCategory = moveOnCategoryEntityFactory.produceAndPersist {
+            withServiceScope("temporary-accommodation")
+          }
 
-        val premisesId = UUID.randomUUID()
+          val premisesId = UUID.randomUUID()
 
-        webTestClient.post()
-          .uri("/premises/$premisesId/bookings/${booking.id}/departures")
-          .header("Authorization", "Bearer $jwt")
-          .header("X-Service-Name", ServiceName.temporaryAccommodation.value)
-          .bodyValue(
-            NewDeparture(
-              dateTime = Instant.now().plus(10, ChronoUnit.DAYS),
-              reasonId = reason.id,
-              moveOnCategoryId = moveOnCategory.id,
-              destinationProviderId = null,
-              notes = "Some notes",
-            ),
-          )
-          .exchange()
-          .expectStatus()
-          .isNotFound
-          .expectBody()
-          .jsonPath("$.detail").isEqualTo("No Premises with an ID of $premisesId could be found")
+          webTestClient.post()
+            .uri("$baseUrl/$premisesId/bookings/${booking.id}/departures")
+            .header("Authorization", "Bearer $jwt")
+            .header("X-Service-Name", ServiceName.temporaryAccommodation.value)
+            .bodyValue(
+              NewDeparture(
+                dateTime = Instant.now().plus(10, ChronoUnit.DAYS),
+                reasonId = reason.id,
+                moveOnCategoryId = moveOnCategory.id,
+                destinationProviderId = null,
+                notes = "Some notes",
+              ),
+            )
+            .exchange()
+            .expectStatus()
+            .isNotFound
+            .expectBody()
+            .jsonPath("$.detail").isEqualTo("No Premises with an ID of $premisesId could be found")
+        }
       }
     }
   }

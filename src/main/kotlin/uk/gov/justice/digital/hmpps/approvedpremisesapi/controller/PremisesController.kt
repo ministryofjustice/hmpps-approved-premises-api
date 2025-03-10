@@ -593,7 +593,7 @@ class PremisesController(
           notes = body.notes,
         )
 
-        val departure = extractResultEntityOrThrow(result)
+        val departure = extractEntityFromCasResult(result)
 
         return ResponseEntity.ok(departureTransformer.transformJpaToApi(departure))
       }

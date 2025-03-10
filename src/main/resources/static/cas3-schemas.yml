@@ -166,3 +166,49 @@ components:
         - pdu
         - bedCount
         - status
+    Cas3Departure:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        bookingId:
+          type: string
+          format: uuid
+        dateTime:
+          type: string
+          format: date-time
+        reason:
+          $ref: '_shared.yml#/components/schemas/DepartureReason'
+        notes:
+          type: string
+        moveOnCategory:
+          $ref: '_shared.yml#/components/schemas/MoveOnCategory'
+        createdAt:
+          type: string
+          format: date-time
+      required:
+        - id
+        - bookingId
+        - dateTime
+        - reason
+        - moveOnCategory
+        - createdAt
+    Cas3NewDeparture:
+      type: object
+      properties:
+        dateTime:
+          type: string
+          format: date-time
+        reasonId:
+          type: string
+          format: uuid
+        notes:
+          type: string
+        moveOnCategoryId:
+          type: string
+          format: uuid
+      required:
+        - dateTime
+        - reasonId
+        - moveOnCategoryId
