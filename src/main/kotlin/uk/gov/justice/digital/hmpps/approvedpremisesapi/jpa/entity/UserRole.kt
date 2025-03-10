@@ -89,7 +89,10 @@ enum class UserRole(val service: ServiceName, val cas1ApiValue: ApprovedPremises
   CAS1_CRU_MEMBER_FIND_AND_BOOK_BETA(
     ServiceName.approvedPremises,
     ApprovedPremisesUserRole.cruMemberFindAndBookBeta,
-    permissions = commonCruMemberPermissions + listOf(UserPermission.CAS1_SPACE_BOOKING_CREATE),
+    permissions = commonCruMemberPermissions + listOf(
+      UserPermission.CAS1_SPACE_BOOKING_CREATE,
+      UserPermission.CAS1_OUT_OF_SERVICE_BED_CANCEL,
+    ),
   ),
 
   /**

@@ -2091,7 +2091,7 @@ class Cas1OutOfServiceBedTest : InitialiseDatabasePerClassTestBase() {
 
     @Test
     fun `Cancel Out-Of-Service Bed for non-existent premises returns 404`() {
-      givenAUser(roles = listOf(UserRole.CAS1_FUTURE_MANAGER)) { _, jwt ->
+      givenAUser(roles = listOf(UserRole.CAS1_CRU_MEMBER_FIND_AND_BOOK_BETA)) { _, jwt ->
         webTestClient.post()
           .uri("/cas1/premises/9054b6a8-65ad-4d55-91ee-26ba65e05488/out-of-service-beds/9054b6a8-65ad-4d55-91ee-26ba65e05488/cancellations")
           .header("Authorization", "Bearer $jwt")
@@ -2113,7 +2113,7 @@ class Cas1OutOfServiceBedTest : InitialiseDatabasePerClassTestBase() {
         withYieldedProbationRegion { givenAProbationRegion() }
       }
 
-      givenAUser(roles = listOf(UserRole.CAS1_FUTURE_MANAGER)) { _, jwt ->
+      givenAUser(roles = listOf(UserRole.CAS1_CRU_MEMBER_FIND_AND_BOOK_BETA)) { _, jwt ->
         webTestClient.post()
           .uri("/cas1/premises/${premises.id}/out-of-service-beds/9054b6a8-65ad-4d55-91ee-26ba65e05488/cancellations")
           .header("Authorization", "Bearer $jwt")
@@ -2154,7 +2154,7 @@ class Cas1OutOfServiceBedTest : InitialiseDatabasePerClassTestBase() {
     @ParameterizedTest
     @EnumSource(
       value = UserRole::class,
-      names = [ "CAS1_FUTURE_MANAGER", "CAS1_CRU_MEMBER_ENABLE_OUT_OF_SERVICE_BEDS", "CAS1_JANITOR" ],
+      names = [ "CAS1_CRU_MEMBER_FIND_AND_BOOK_BETA", "CAS1_JANITOR" ],
     )
     fun `Cancel Out-Of-Service Bed returns OK with correct body when user has the correct roles`(role: UserRole) {
       givenAUser(roles = listOf(role)) { user, jwt ->

@@ -78,7 +78,7 @@ class Cas1OutOfServiceBedsController(
     outOfServiceBedId: UUID,
     body: Cas1NewOutOfServiceBedCancellation,
   ): ResponseEntity<Cas1OutOfServiceBedCancellation> {
-    userAccessService.ensureCurrentUserHasPermission(UserPermission.CAS1_OUT_OF_SERVICE_BED_CREATE)
+    userAccessService.ensureCurrentUserHasPermission(UserPermission.CAS1_OUT_OF_SERVICE_BED_CANCEL)
 
     val premises = tryGetApprovedPremises(premisesId)
 
