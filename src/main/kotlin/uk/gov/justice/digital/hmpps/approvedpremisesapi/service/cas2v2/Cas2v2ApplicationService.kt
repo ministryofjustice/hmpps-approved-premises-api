@@ -369,13 +369,22 @@ class Cas2v2ApplicationService(
   }
 
   private fun sendEmailApplicationSubmitted(user: Cas2v2UserEntity, application: Cas2v2ApplicationEntity) {
+    val applicationOrigin = application.applicationOrigin.toString()
+
+    val templateId = when (applicationOrigin) {
+      ApplicationOrigin.courtBail.toString() -> notifyConfig.templates.cas2v2ApplicationSubmittedCourtBail
+      ApplicationOrigin.prisonBail.toString() -> notifyConfig.templates.cas2v2ApplicationSubmittedPrisonBail
+      else -> notifyConfig.templates.cas2ApplicationSubmitted
+    }
+
     emailNotificationService.sendEmail(
       recipientEmailAddress = notifyConfig.emailAddresses.cas2Assessors,
-      templateId = notifyConfig.templates.cas2ApplicationSubmitted,
+      templateId = templateId,
       personalisation = mapOf(
         "name" to user.name,
         "email" to user.email,
         "prisonNumber" to application.nomsNumber,
+        "crn" to application.crn,
         "telephoneNumber" to application.telephoneNumber,
         "applicationUrl" to submittedApplicationUrlTemplate.replace("#applicationId", application.id.toString()),
       ),
