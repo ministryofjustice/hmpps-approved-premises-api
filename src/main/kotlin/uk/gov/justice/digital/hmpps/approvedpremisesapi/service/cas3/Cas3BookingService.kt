@@ -35,6 +35,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.serviceScopeM
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PersonSummaryInfoResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.forCrn
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.validated
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.validatedCasResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.InternalServerErrorProblem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.AuthorisableActionResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.CasResult
@@ -312,7 +313,7 @@ class Cas3BookingService(
     moveOnCategoryId: UUID,
     notes: String?,
     user: UserEntity,
-  ) = validated<DepartureEntity> {
+  ) = validatedCasResult<DepartureEntity> {
     if (booking.arrivalDate.toLocalDateTime().isAfter(dateTime)) {
       "$.dateTime" hasValidationError "beforeBookingArrivalDate"
     }
@@ -359,7 +360,7 @@ class Cas3BookingService(
       else -> cas3DomainEventService.savePersonDepartureUpdatedEvent(booking, user)
     }
 
-    return success(departureEntity)
+    return CasResult.Success(departureEntity)
   }
 
   @Transactional

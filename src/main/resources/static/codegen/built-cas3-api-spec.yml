@@ -123,6 +123,60 @@ paths:
           $ref: '#/components/responses/403Response'
         500:
           $ref: '#/components/responses/500Response'
+  /premises/{premisesId}/bookings/{bookingId}/departures:
+    post:
+      tags:
+        - Operations on bookings
+      summary: Posts a departure to a specified booking
+      operationId: postPremisesBookingDeparture
+      parameters:
+        - name: premisesId
+          in: path
+          description: ID of the premises the booking is related to
+          required: true
+          schema:
+            type: string
+            format: uuid
+        - name: bookingId
+          in: path
+          description: ID of the booking
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        description: details of the departure
+        content:
+          'application/json':
+            schema:
+              $ref: '#/components/schemas/Cas3NewDeparture'
+        required: true
+      responses:
+        200:
+          description: successful operation
+          content:
+            'application/json':
+              schema:
+                $ref: '#/components/schemas/Cas3Departure'
+        400:
+          description: invalid params
+          content:
+            'application/problem+json':
+              schema:
+                $ref: '#/components/schemas/ValidationError'
+        401:
+          $ref: '#/components/responses/401Response'
+        403:
+          $ref: '#/components/responses/403Response'
+        404:
+          description: invalid premises ID or booking ID
+          content:
+            'application/json':
+              schema:
+                $ref: '#/components/schemas/Problem'
+        500:
+          $ref: '#/components/responses/500Response'
+      x-codegen-request-body-name: body
   /premises/{premisesId}/future-bookings:
     get:
       tags:
@@ -4939,3 +4993,49 @@ components:
         - pdu
         - bedCount
         - status
+    Cas3Departure:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        bookingId:
+          type: string
+          format: uuid
+        dateTime:
+          type: string
+          format: date-time
+        reason:
+          $ref: '#/components/schemas/DepartureReason'
+        notes:
+          type: string
+        moveOnCategory:
+          $ref: '#/components/schemas/MoveOnCategory'
+        createdAt:
+          type: string
+          format: date-time
+      required:
+        - id
+        - bookingId
+        - dateTime
+        - reason
+        - moveOnCategory
+        - createdAt
+    Cas3NewDeparture:
+      type: object
+      properties:
+        dateTime:
+          type: string
+          format: date-time
+        reasonId:
+          type: string
+          format: uuid
+        notes:
+          type: string
+        moveOnCategoryId:
+          type: string
+          format: uuid
+      required:
+        - dateTime
+        - reasonId
+        - moveOnCategoryId

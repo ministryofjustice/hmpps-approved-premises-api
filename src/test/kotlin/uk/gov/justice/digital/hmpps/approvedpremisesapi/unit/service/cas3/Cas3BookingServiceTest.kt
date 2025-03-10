@@ -390,8 +390,8 @@ class Cas3BookingServiceTest {
           .produce(),
       )
 
-      assertThat(result).isInstanceOf(ValidatableActionResult.FieldValidationError::class.java)
-      assertThat((result as ValidatableActionResult.FieldValidationError).validationMessages).contains(
+      assertThat(result).isInstanceOf(CasResult.FieldValidationError::class.java)
+      assertThat((result as CasResult.FieldValidationError).validationMessages).contains(
         entry("$.dateTime", "beforeBookingArrivalDate"),
       )
     }
@@ -411,8 +411,8 @@ class Cas3BookingServiceTest {
           .produce(),
       )
 
-      assertThat(result).isInstanceOf(ValidatableActionResult.FieldValidationError::class.java)
-      assertThat((result as ValidatableActionResult.FieldValidationError).validationMessages).contains(
+      assertThat(result).isInstanceOf(CasResult.FieldValidationError::class.java)
+      assertThat((result as CasResult.FieldValidationError).validationMessages).contains(
         entry("$.reasonId", "doesNotExist"),
       )
     }
@@ -434,8 +434,8 @@ class Cas3BookingServiceTest {
           .produce(),
       )
 
-      assertThat(result).isInstanceOf(ValidatableActionResult.FieldValidationError::class.java)
-      assertThat((result as ValidatableActionResult.FieldValidationError).validationMessages).contains(
+      assertThat(result).isInstanceOf(CasResult.FieldValidationError::class.java)
+      assertThat((result as CasResult.FieldValidationError).validationMessages).contains(
         entry("$.reasonId", "incorrectDepartureReasonServiceScope"),
       )
     }
@@ -455,8 +455,8 @@ class Cas3BookingServiceTest {
           .produce(),
       )
 
-      assertThat(result).isInstanceOf(ValidatableActionResult.FieldValidationError::class.java)
-      assertThat((result as ValidatableActionResult.FieldValidationError).validationMessages).contains(
+      assertThat(result).isInstanceOf(CasResult.FieldValidationError::class.java)
+      assertThat((result as CasResult.FieldValidationError).validationMessages).contains(
         entry("$.moveOnCategoryId", "doesNotExist"),
       )
     }
@@ -482,8 +482,8 @@ class Cas3BookingServiceTest {
           .produce(),
       )
 
-      assertThat(result).isInstanceOf(ValidatableActionResult.FieldValidationError::class.java)
-      assertThat((result as ValidatableActionResult.FieldValidationError).validationMessages).contains(
+      assertThat(result).isInstanceOf(CasResult.FieldValidationError::class.java)
+      assertThat((result as CasResult.FieldValidationError).validationMessages).contains(
         entry("$.moveOnCategoryId", "incorrectMoveOnCategoryServiceScope"),
       )
     }
@@ -535,16 +535,16 @@ class Cas3BookingServiceTest {
         user = user,
       )
 
-      assertThat(result).isInstanceOf(ValidatableActionResult.Success::class.java)
-      result as ValidatableActionResult.Success
-      assertThat(result.entity.booking).isEqualTo(bookingEntity)
-      assertThat(result.entity.dateTime).isEqualTo(OffsetDateTime.parse("2022-08-24T15:00:00+01:00"))
-      assertThat(result.entity.reason).isEqualTo(reasonEntity)
-      assertThat(result.entity.moveOnCategory).isEqualTo(moveOnCategoryEntity)
-      assertThat(result.entity.destinationProvider).isEqualTo(null)
-      assertThat(result.entity.reason).isEqualTo(reasonEntity)
-      assertThat(result.entity.notes).isEqualTo("notes")
-      assertThat(result.entity.booking.status).isEqualTo(BookingStatus.departed)
+      assertThat(result).isInstanceOf(CasResult.Success::class.java)
+      result as CasResult.Success
+      assertThat(result.value.booking).isEqualTo(bookingEntity)
+      assertThat(result.value.dateTime).isEqualTo(OffsetDateTime.parse("2022-08-24T15:00:00+01:00"))
+      assertThat(result.value.reason).isEqualTo(reasonEntity)
+      assertThat(result.value.moveOnCategory).isEqualTo(moveOnCategoryEntity)
+      assertThat(result.value.destinationProvider).isEqualTo(null)
+      assertThat(result.value.reason).isEqualTo(reasonEntity)
+      assertThat(result.value.notes).isEqualTo("notes")
+      assertThat(result.value.booking.status).isEqualTo(BookingStatus.departed)
 
       verify(exactly = 1) {
         mockCas3DomainEventService.savePersonDepartedEvent(bookingEntity, user)
@@ -610,16 +610,16 @@ class Cas3BookingServiceTest {
         user = user,
       )
 
-      assertThat(result).isInstanceOf(ValidatableActionResult.Success::class.java)
-      result as ValidatableActionResult.Success
-      assertThat(result.entity.booking).isEqualTo(bookingEntity)
-      assertThat(result.entity.dateTime).isEqualTo(departureDateTime)
-      assertThat(result.entity.reason).isEqualTo(reasonEntity)
-      assertThat(result.entity.moveOnCategory).isEqualTo(moveOnCategoryEntity)
-      assertThat(result.entity.destinationProvider).isEqualTo(null)
-      assertThat(result.entity.reason).isEqualTo(reasonEntity)
-      assertThat(result.entity.notes).isEqualTo(notes)
-      assertThat(result.entity.booking.status).isEqualTo(BookingStatus.departed)
+      assertThat(result).isInstanceOf(CasResult.Success::class.java)
+      result as CasResult.Success
+      assertThat(result.value.booking).isEqualTo(bookingEntity)
+      assertThat(result.value.dateTime).isEqualTo(departureDateTime)
+      assertThat(result.value.reason).isEqualTo(reasonEntity)
+      assertThat(result.value.moveOnCategory).isEqualTo(moveOnCategoryEntity)
+      assertThat(result.value.destinationProvider).isEqualTo(null)
+      assertThat(result.value.reason).isEqualTo(reasonEntity)
+      assertThat(result.value.notes).isEqualTo(notes)
+      assertThat(result.value.booking.status).isEqualTo(BookingStatus.departed)
 
       verify(exactly = 1) {
         mockCas3DomainEventService.savePersonDepartureUpdatedEvent(any(), user)
