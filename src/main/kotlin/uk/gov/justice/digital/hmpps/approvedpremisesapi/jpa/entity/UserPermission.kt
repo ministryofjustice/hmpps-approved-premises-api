@@ -23,6 +23,7 @@ enum class UserPermission {
   CAS1_BOOKING_WITHDRAW,
   CAS1_BOOKING_CHANGE_DATES,
   CAS1_OUT_OF_SERVICE_BED_CREATE,
+  CAS1_OUT_OF_SERVICE_BED_CANCEL,
 
   /**
    * If the user can record an appeal against a rejected application
