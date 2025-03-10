@@ -22,7 +22,11 @@ You can then run tests in intellij or via the command line e.g.
 
 ## Running the Application
 
-To run the application locally, use [ap-tools README](https://github.com/ministryofjustice/hmpps-approved-premises-tools/blob/main/README.md) as this will manage starting all the required dependencies
+To run the application locally, use [ap-tools README](https://github.com/ministryofjustice/hmpps-approved-premises-tools/blob/main/README.md) as this will manage starting all the required dependencies. To use delius users in cas2v2 add the CLI flag `--enable_manage_users_api` to the AP Tools start script:
+
+```
+ap-tools server start --local-ui --local-api --enable_manage_users_api
+```
 
 ## Making requests to the application
 
