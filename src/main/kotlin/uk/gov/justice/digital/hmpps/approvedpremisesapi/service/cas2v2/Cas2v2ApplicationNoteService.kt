@@ -17,7 +17,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas2v2.Cas2v2
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas2v2.Cas2v2UserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.CasResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.EmailNotificationService
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas2.Constants.HDC_APPLICATION_TYPE
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.Cas2v2ApplicationUtils
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.toCas2UiFormat
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.toCas2UiFormattedHourOfDay
@@ -85,7 +84,7 @@ class Cas2v2ApplicationNoteService(
 
       val templateId = when (applicationOrigin) {
         ApplicationOrigin.courtBail -> notifyConfig.templates.cas2v2NoteAddedForReferrerCourtBail
-        ApplicationOrigin.prisonBail-> notifyConfig.templates.cas2v2NoteAddedForReferrerPrisonBail
+        ApplicationOrigin.prisonBail -> notifyConfig.templates.cas2v2NoteAddedForReferrerPrisonBail
         ApplicationOrigin.homeDetentionCurfew -> notifyConfig.templates.cas2NoteAddedForReferrer
       }
       emailNotificationService.sendCas2Email(
@@ -110,13 +109,12 @@ class Cas2v2ApplicationNoteService(
     application: Cas2v2ApplicationEntity,
     savedNote: Cas2v2ApplicationNoteEntity,
   ) {
-
     val applicationOrigin = application.applicationOrigin
     val applicationType = Cas2v2ApplicationUtils().getApplicationTypeFromApplicationOrigin(applicationOrigin)
 
     val templateId = when (applicationOrigin) {
       ApplicationOrigin.courtBail -> notifyConfig.templates.cas2v2NoteAddedForAssessorCourtBail
-      ApplicationOrigin.prisonBail-> notifyConfig.templates.cas2v2NoteAddedForAssessorPrisonBail
+      ApplicationOrigin.prisonBail -> notifyConfig.templates.cas2v2NoteAddedForAssessorPrisonBail
       ApplicationOrigin.homeDetentionCurfew -> notifyConfig.templates.cas2NoteAddedForAssessor
     }
 

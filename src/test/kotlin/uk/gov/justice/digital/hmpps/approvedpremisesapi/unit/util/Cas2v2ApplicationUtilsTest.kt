@@ -24,6 +24,5 @@ class Cas2v2ApplicationUtilsTest {
     Assertions.assertThat(applicationType1.equals(CAS2_COURT_BAIL_APPLICATION_TYPE)).isTrue
     Assertions.assertThat(applicationType2.equals(CAS2_PRISON_BAIL_APPLICATION_TYPE)).isTrue
     Assertions.assertThat(applicationType3.equals(HDC_APPLICATION_TYPE)).isTrue
-
   }
 }

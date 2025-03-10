@@ -30,7 +30,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.reference.Cas2Pers
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.CasResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.EmailNotificationService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas2.Cas2DomainEventService
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas2.Constants.HDC_APPLICATION_TYPE
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.cas2.ApplicationStatusTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.Cas2v2ApplicationUtils
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.toCas2UiFormat
@@ -166,13 +165,12 @@ class Cas2v2StatusUpdateService(
 
   private fun sendEmailStatusUpdated(user: Cas2v2UserEntity, application: Cas2v2ApplicationEntity, status: Cas2v2StatusUpdateEntity) {
     if (application.createdByUser.email != null) {
-
       val applicationOrigin = application.applicationOrigin
       val applicationType = Cas2v2ApplicationUtils().getApplicationTypeFromApplicationOrigin(applicationOrigin)
 
       val templateId = when (applicationOrigin) {
         ApplicationOrigin.courtBail -> notifyConfig.templates.cas2v2ApplicationStatusUpdatedCourtBail
-        ApplicationOrigin.prisonBail-> notifyConfig.templates.cas2v2ApplicationStatusUpdatedPrisonBail
+        ApplicationOrigin.prisonBail -> notifyConfig.templates.cas2v2ApplicationStatusUpdatedPrisonBail
         ApplicationOrigin.homeDetentionCurfew -> notifyConfig.templates.cas2ApplicationStatusUpdated
       }
 
