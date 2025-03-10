@@ -166,7 +166,13 @@ interface PlacementRequestRepository : JpaRepository<PlacementRequestEntity, UUI
       LEFT JOIN applications application ON application.id = pq.application_id
       LEFT JOIN bookings legacyBookings ON pq.booking_id = legacyBookings.id
       LEFT JOIN premises legacyBookingPremises ON legacyBookings.premises_id = legacyBookingPremises.id
-      LEFT JOIN cas1_space_bookings spaceBookings ON spaceBookings.placement_request_id = pq.id AND spaceBookings.cancellation_occurred_at IS NULL
+      LEFT OUTER JOIN LATERAL (
+        SELECT id, premises_id, canonical_arrival_date
+        FROM cas1_space_bookings b
+        WHERE b.placement_request_id = pq.id AND b.cancellation_occurred_at IS NULL
+        ORDER BY b.canonical_arrival_date ASC
+        LIMIT 1
+      ) spaceBookings ON TRUE
       LEFT JOIN premises spaceBookingPremises ON spaceBookings.premises_id = spaceBookingPremises.id
       LEFT JOIN cancellations legacyBookingCancellations ON legacyBookingCancellations.booking_id = legacyBookings.id
       WHERE
