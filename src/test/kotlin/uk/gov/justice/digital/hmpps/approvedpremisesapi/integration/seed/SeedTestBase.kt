@@ -9,6 +9,7 @@ import org.junit.jupiter.api.TestInstance
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.PrisonerSearchClient
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.IntegrationTestBase
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.seed.SeedLogger
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.seed.SeedService
@@ -21,6 +22,10 @@ import kotlin.io.path.pathString
 
 @TestInstance(TestInstance.Lifecycle.PER_METHOD)
 abstract class SeedTestBase : IntegrationTestBase() {
+
+  @MockkBean
+  lateinit var prisonerSearchClient: PrisonerSearchClient
+
   @Autowired
   lateinit var seedService: SeedService
 

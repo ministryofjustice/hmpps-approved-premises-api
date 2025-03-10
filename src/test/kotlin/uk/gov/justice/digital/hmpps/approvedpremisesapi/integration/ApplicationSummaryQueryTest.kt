@@ -1,8 +1,10 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.integration
 
+import com.ninjasquad.springmockk.MockkBean
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.PrisonerSearchClient
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAProbationRegion
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAUser
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAnOffender
@@ -14,6 +16,9 @@ import java.time.OffsetDateTime
 class ApplicationSummaryQueryTest : IntegrationTestBase() {
   @Autowired
   lateinit var realApplicationRepository: ApplicationRepository
+
+  @MockkBean
+  lateinit var prisonerSearchClient: PrisonerSearchClient
 
   @Test
   fun `findNonWithdrawnApprovedPremisesSummariesForUser query works as described`() {

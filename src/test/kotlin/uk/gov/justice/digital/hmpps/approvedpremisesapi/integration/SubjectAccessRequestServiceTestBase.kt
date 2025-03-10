@@ -1,8 +1,10 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.integration
 
+import com.ninjasquad.springmockk.MockkBean
 import org.springframework.beans.factory.annotation.Autowired
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.BookingStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.PrisonerSearchClient
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.PersonRisksFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAPlacementRequest
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAProbationRegion
@@ -44,6 +46,10 @@ open class SubjectAccessRequestServiceTestBase : IntegrationTestBase() {
   @Autowired
   lateinit var sarService: SubjectAccessRequestService
   lateinit var premises: ApprovedPremisesEntity
+
+  @MockkBean
+  lateinit var prisonerSearchClient: PrisonerSearchClient
+
   companion object {
 
     const val CREATED_AT = "2021-09-18T16:00:00+00:00"
