@@ -46,10 +46,8 @@ interface PremisesRepository : JpaRepository<PremisesEntity, UUID> {
       FROM
           temporary_accommodation_premises tap
           INNER JOIN premises p on tap.premises_id = p.id
-          LEFT JOIN rooms r ON tap.premises_id = r.premises_id
-          LEFT JOIN beds b ON r.id = b.room_id
-          LEFT JOIN probation_regions pr ON p.probation_region_id = pr.id
-          LEFT JOIN probation_delivery_units pdu ON pr.id = pdu.probation_region_id
+          INNER JOIN probation_regions pr ON p.probation_region_id = pr.id
+          INNER JOIN probation_delivery_units pdu ON tap.probation_delivery_unit_id = pdu.id
           LEFT JOIN local_authority_areas la ON p.local_authority_area_id = la.id
       WHERE pr.id = :regionId
         AND (:postcodeOrAddress is null
