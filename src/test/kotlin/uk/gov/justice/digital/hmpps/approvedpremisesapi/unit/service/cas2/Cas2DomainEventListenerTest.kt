@@ -1,68 +1,45 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.unit.service.cas2
 
+import com.ninjasquad.springmockk.SpykBean
+import io.mockk.Runs
 import io.mockk.every
-import io.mockk.mockk
+import io.mockk.impl.annotations.InjectMockKs
+import io.mockk.impl.annotations.MockK
+import io.mockk.junit5.MockKExtension
+import io.mockk.just
 import io.mockk.verify
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.extension.ExtendWith
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas2.Cas2ApplicationAssignmentService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas2.Cas2DomainEventListener
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas2.Cas2PrisonerLocationService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.unit.util.ObjectMapperFactory
 
+@ExtendWith(MockKExtension::class)
 class Cas2DomainEventListenerTest {
 
-  private val mockPrisonerLocationService = mockk<Cas2PrisonerLocationService>()
-  private val objectMapper = ObjectMapperFactory.createRuntimeLikeObjectMapper()
+  @MockK
+  lateinit var cas2ApplicationAssignmentService: Cas2ApplicationAssignmentService
 
-  private val cas2DomainEventListener: Cas2DomainEventListener = Cas2DomainEventListener(
-    objectMapper,
-    mockPrisonerLocationService,
-  )
+  @SpykBean
+  var objectMapper = ObjectMapperFactory.createRuntimeLikeObjectMapper()
+
+  @InjectMockKs
+  lateinit var cas2DomainEventListener: Cas2DomainEventListener
 
   @Test
-  fun `Handle Allocation Changed Message on Domain Events Topic`() {
-    every { mockPrisonerLocationService.handleAllocationChangedEvent(any()) } returns Unit
-
-    val msg = """{"Message": "{\"eventType\":\"offender-management.allocation.changed\",\"version\":\"1\"}"}"""
-
+  fun `POM Allocation changed message is processed`() {
+    every { cas2ApplicationAssignmentService.handleAllocationChangedEvent(any()) } just Runs
+    val msg = """{"Message": "{\"eventType\":\"offender-management.allocation.changed\",\"additionalInformation\":{\"staffCode\":123456,\"prisonId\":\"PPP\"}}"}"""
     cas2DomainEventListener.processMessage(msg)
-
-    verify(exactly = 1) { mockPrisonerLocationService.handleAllocationChangedEvent(any()) }
+    verify(exactly = 1) { cas2ApplicationAssignmentService.handleAllocationChangedEvent(any()) }
   }
 
   @Test
-  fun `Handle Unwanted Message on Domain Events Topic`() {
-    every { mockPrisonerLocationService.handleLocationChangedEvent(any()) } returns Unit
-    every { mockPrisonerLocationService.handleAllocationChangedEvent(any()) } returns Unit
-
-    val msg = """{"Message": "{\"eventType\":\"unwanted\",\"version\":\"1\"}"}"""
-
-    cas2DomainEventListener.processMessage(msg)
-
-    verify(exactly = 0) { mockPrisonerLocationService.handleLocationChangedEvent(any()) }
-    verify(exactly = 0) { mockPrisonerLocationService.handleAllocationChangedEvent(any()) }
-  }
-
-  @Test
-  fun `Handle Location Changed Message on Domain Events Topic`() {
-    every { mockPrisonerLocationService.handleLocationChangedEvent(any()) } returns Unit
-
+  fun `Prisoner updated message is processed`() {
+    every { cas2ApplicationAssignmentService.handlePrisonerUpdatedEvent(any()) } just Runs
     val msg =
       """{"Message": "{\"eventType\":\"prisoner-offender-search.prisoner.updated\",\"additionalInformation\":{\"categoriesChanged\": [\"LOCATION\"]},\"version\":\"1\"}"}"""
-
     cas2DomainEventListener.processMessage(msg)
-
-    verify(exactly = 1) { mockPrisonerLocationService.handleLocationChangedEvent(any()) }
-  }
-
-  @Test
-  fun `Reject Location Changed Message on Domain Events Topic without location`() {
-    every { mockPrisonerLocationService.handleLocationChangedEvent(any()) } returns Unit
-
-    val msg =
-      """{"Message": "{\"eventType\":\"prisoner-offender-search.prisoner.updated\",\"additionalInformation\":{\"categoriesChanged\": [\"NOT_LOCATION\"]},\"version\":\"1\"}"}"""
-
-    cas2DomainEventListener.processMessage(msg)
-
-    verify(exactly = 0) { mockPrisonerLocationService.handleLocationChangedEvent(any()) }
+    verify(exactly = 1) { cas2ApplicationAssignmentService.handlePrisonerUpdatedEvent(any()) }
   }
 }

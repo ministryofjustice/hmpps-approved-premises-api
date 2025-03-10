@@ -27,11 +27,11 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.given
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenACas2PomUser
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAnOffender
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.manageUsersMockSuccessfulExternalUsersCall
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas2ApplicationAssignmentRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas2ApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas2ApplicationJsonSchemaEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas2ApplicationRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas2AssessmentRepository
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas2PrisonerLocationRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas2StatusUpdateDetailEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas2StatusUpdateDetailRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas2StatusUpdateRepository
@@ -63,7 +63,7 @@ class Cas2SubmissionTest(
   lateinit var nomisUserTransformer: NomisUserTransformer
 
   @Autowired
-  lateinit var prisonerLocationRepository: Cas2PrisonerLocationRepository
+  lateinit var applicationAssignmentRepository: Cas2ApplicationAssignmentRepository
 
   val schema = """
        {
@@ -738,8 +738,9 @@ class Cas2SubmissionTest(
             .isOk
         }
 
-        val createdLocations = prisonerLocationRepository.findAllByStaffIdOrderByOccurredAtDesc(submittingUser.id).first()
-        Assertions.assertThat(createdLocations.staffId).isEqualTo(submittingUser.id)
+        val applicationAssignment =
+          applicationAssignmentRepository.findFirstByApplicationIdOrderByCreatedAtDesc(applicationId)
+        Assertions.assertThat(applicationAssignment!!.allocatedPomUserId).isEqualTo(submittingUser.id)
 
         // verify that generated 'application.submitted' domain event links to the CAS2 domain
         val expectedFrontEndUrl = applicationUrlTemplate.replace("#id", applicationId.toString())
