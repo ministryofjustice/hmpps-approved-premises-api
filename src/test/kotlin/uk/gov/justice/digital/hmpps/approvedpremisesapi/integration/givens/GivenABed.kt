@@ -4,9 +4,11 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.IntegrationT
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.BedEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.CharacteristicEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomStringMultiCaseWithNumbers
 
 fun IntegrationTestBase.givenAnApprovedPremisesBed(
   premises: ApprovedPremisesEntity? = null,
+  bedCode: String = randomStringMultiCaseWithNumbers(6),
   characteristics: List<CharacteristicEntity> = emptyList(),
   block: ((bed: BedEntity) -> Unit)? = null,
 ): BedEntity {
@@ -22,6 +24,7 @@ fun IntegrationTestBase.givenAnApprovedPremisesBed(
 
   val bed = bedEntityFactory.produceAndPersist {
     withRoom(room)
+    withCode(bedCode)
   }
 
   if (block != null) {
