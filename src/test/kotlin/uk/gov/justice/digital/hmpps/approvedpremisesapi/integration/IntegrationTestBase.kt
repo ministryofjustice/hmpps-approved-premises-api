@@ -29,7 +29,6 @@ import org.springframework.jdbc.core.JdbcTemplate
 import org.springframework.test.context.ActiveProfiles
 import org.springframework.test.context.ContextConfiguration
 import org.springframework.test.web.reactive.server.WebTestClient
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.ManagePomCasesClient
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.PrisonerSearchClient
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.PrisonsApiClient
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.config.NotifyConfig
@@ -308,9 +307,6 @@ abstract class IntegrationTestBase {
 
   @Autowired
   private lateinit var prisonsApiClient: PrisonsApiClient
-
-  @MockkBean
-  lateinit var managePomCasesClient: ManagePomCasesClient
 
   @MockkBean
   lateinit var prisonerSearchClient: PrisonerSearchClient
