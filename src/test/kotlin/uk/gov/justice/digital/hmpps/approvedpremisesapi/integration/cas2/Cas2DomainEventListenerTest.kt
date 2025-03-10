@@ -34,6 +34,7 @@ class Cas2DomainEventListenerTest : IntegrationTestBase() {
   @Autowired
   private lateinit var hmppsQueueService: HmppsQueueService
 
+  @SuppressWarnings("UnusedPrivateProperty")
   @MockkBean
   private lateinit var managePomCasesClient: ManagePomCasesClient
 
