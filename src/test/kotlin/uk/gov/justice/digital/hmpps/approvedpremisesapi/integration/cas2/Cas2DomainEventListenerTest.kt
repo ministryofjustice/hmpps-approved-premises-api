@@ -9,6 +9,7 @@ import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
 import software.amazon.awssdk.services.sns.model.MessageAttributeValue
 import software.amazon.awssdk.services.sns.model.PublishRequest
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.ManagePomCasesClient
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.Prisoner
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.PrisonerSearchClient
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.IntegrationTestBase
@@ -20,6 +21,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas2PrisonerL
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.NomisUserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.community.OffenderDetailSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas2.Cas2DomainEventListener
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas2.PrisonerLocationService
 import uk.gov.justice.hmpps.sqs.HmppsQueueService
 import uk.gov.justice.hmpps.sqs.MissingQueueException
 import java.time.Instant
@@ -32,6 +34,9 @@ class Cas2DomainEventListenerTest : IntegrationTestBase() {
 
   @Autowired
   private lateinit var hmppsQueueService: HmppsQueueService
+
+  @MockkBean
+  private lateinit var managePomCasesClient: ManagePomCasesClient
 
   @MockkBean
   private lateinit var prisonerSearchClient: PrisonerSearchClient
