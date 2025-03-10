@@ -60,6 +60,14 @@ class Cas1OutOfServiceBedsReportTest : IntegrationTestBase() {
           )
         }
 
+        val bed4 = bedEntityFactory.produceAndPersist {
+          withRoom(
+            roomEntityFactory.produceAndPersist {
+              withPremises(premises)
+            },
+          )
+        }
+
         cas1OutOfServiceBedEntityFactory.produceAndPersist {
           withCreatedAt(OffsetDateTime.now().roundNanosToMillisToAccountForLossOfPrecisionInPostgres())
           withBed(bed1)
@@ -104,6 +112,20 @@ class Cas1OutOfServiceBedsReportTest : IntegrationTestBase() {
             withEndDate(LocalDate.of(2023, 7, 5))
             withYieldedReason {
               cas1OutOfServiceBedReasonEntityFactory.produceAndPersist()
+            }
+          }
+
+          cas1OutOfServiceBedEntityFactory.produceAndPersist {
+            withCreatedAt(OffsetDateTime.now().roundNanosToMillisToAccountForLossOfPrecisionInPostgres())
+            withBed(bed4)
+          }.apply {
+            this.revisionHistory += cas1OutOfServiceBedRevisionEntityFactory.produceAndPersist {
+              withCreatedAt(OffsetDateTime.now().roundNanosToMillisToAccountForLossOfPrecisionInPostgres())
+              withCreatedBy(userEntity)
+              withOutOfServiceBed(this@apply)
+              withStartDate(LocalDate.of(2023, 4, 1))
+              withEndDate(LocalDate.of(2023, 7, 5))
+              withReason(cas1OutOfServiceBedReasonTestRepository.getReferenceById(Cas1OutOfServiceBedRepository.BED_ON_HOLD_CANCELLATION_REASON_ID))
             }
           }
 

@@ -26,7 +26,7 @@ class Cas1OutOfServiceBedsReportGenerator(
 
     val outOfServiceBedIds = outOfServiceBedRepository.findByBedIdAndOverlappingDate(this.id, startOfMonth, endOfMonth, null)
 
-    val outOfServiceBeds = outOfServiceBedRepository.findAllById(outOfServiceBedIds.map(UUID::fromString))
+    val outOfServiceBeds = outOfServiceBedRepository.findAllById(outOfServiceBedIds.map(UUID::fromString)).filter { it.reason.id != Cas1OutOfServiceBedRepository.BED_ON_HOLD_CANCELLATION_REASON_ID }
 
     outOfServiceBeds.map {
       val bed = it.bed
