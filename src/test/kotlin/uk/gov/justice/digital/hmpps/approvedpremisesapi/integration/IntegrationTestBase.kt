@@ -546,7 +546,7 @@ abstract class IntegrationTestBase {
   @Autowired
   lateinit var mockFeatureFlagService: MockFeatureFlagService
 
-  @MockkBean
+  @Autowired
   lateinit var prisonerSearchClient: PrisonerSearchClient
 
   lateinit var probationRegionEntityFactory: PersistedFactory<ProbationRegionEntity, UUID, ProbationRegionEntityFactory>
