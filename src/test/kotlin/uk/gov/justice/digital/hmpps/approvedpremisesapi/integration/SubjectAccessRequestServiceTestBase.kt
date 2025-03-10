@@ -47,9 +47,6 @@ open class SubjectAccessRequestServiceTestBase : IntegrationTestBase() {
   lateinit var sarService: SubjectAccessRequestService
   lateinit var premises: ApprovedPremisesEntity
 
-  @MockkBean
-  lateinit var prisonerSearchClient: PrisonerSearchClient
-
   companion object {
 
     const val CREATED_AT = "2021-09-18T16:00:00+00:00"

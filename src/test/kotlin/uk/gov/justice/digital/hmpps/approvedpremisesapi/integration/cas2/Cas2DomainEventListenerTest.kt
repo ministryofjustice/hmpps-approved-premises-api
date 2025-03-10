@@ -18,9 +18,6 @@ class Cas2DomainEventListenerTest : IntegrationTestBase() {
   @Autowired
   private lateinit var hmppsQueueService: HmppsQueueService
 
-  @MockkBean
-  lateinit var prisonerSearchClient: PrisonerSearchClient
-
   @SpykBean
   private lateinit var mockCas2DomainEventListener: Cas2DomainEventListener
 

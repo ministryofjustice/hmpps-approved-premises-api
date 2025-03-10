@@ -28,9 +28,6 @@ class VoidBedspacesTest : IntegrationTestBase() {
 
   lateinit var probationRegion: ProbationRegionEntity
 
-  @MockkBean
-  lateinit var prisonerSearchClient: PrisonerSearchClient
-
   @BeforeEach
   fun before() {
     probationRegion = givenAProbationRegion()

@@ -96,9 +96,6 @@ class AssessmentTest : IntegrationTestBase() {
   @Autowired
   lateinit var assessmentTransformer: AssessmentTransformer
 
-  @MockkBean
-  lateinit var prisonerSearchClient: PrisonerSearchClient
-
   @SuppressWarnings("LargeClass")
   @Nested
   inner class AllAssessments {

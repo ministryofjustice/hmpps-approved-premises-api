@@ -17,9 +17,6 @@ class ApplicationSummaryQueryTest : IntegrationTestBase() {
   @Autowired
   lateinit var realApplicationRepository: ApplicationRepository
 
-  @MockkBean
-  lateinit var prisonerSearchClient: PrisonerSearchClient
-
   @Test
   fun `findNonWithdrawnApprovedPremisesSummariesForUser query works as described`() {
     givenAUser { user, _ ->
