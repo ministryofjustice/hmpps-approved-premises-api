@@ -39,6 +39,8 @@ import java.util.UUID
 
 object Constants {
   const val HDC_APPLICATION_TYPE = "Home Detention Curfew (HDC)"
+  const val CAS2_COURT_BAIL_APPLICATION_TYPE = "Cas2 Court Bail"
+  const val CAS2_PRISON_BAIL_APPLICATION_TYPE = "Cas2 Prison Bail"
 }
 
 @Service

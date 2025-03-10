@@ -12,6 +12,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas2.model.Ca
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas2.model.EventType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas2.model.ExternalUser
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas2.model.PersonReference
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApplicationOrigin
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas2v2AssessmentStatusUpdate
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.config.NotifyConfig
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas2v2.Cas2v2ApplicationEntity
@@ -31,6 +32,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.EmailNotificatio
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas2.Cas2DomainEventService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas2.Constants.HDC_APPLICATION_TYPE
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.cas2.ApplicationStatusTransformer
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.Cas2v2ApplicationUtils
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.toCas2UiFormat
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.toCas2UiFormattedHourOfDay
 import java.time.OffsetDateTime
@@ -164,15 +166,26 @@ class Cas2v2StatusUpdateService(
 
   private fun sendEmailStatusUpdated(user: Cas2v2UserEntity, application: Cas2v2ApplicationEntity, status: Cas2v2StatusUpdateEntity) {
     if (application.createdByUser.email != null) {
+
+      val applicationOrigin = application.applicationOrigin
+      val applicationType = Cas2v2ApplicationUtils().getApplicationTypeFromApplicationOrigin(applicationOrigin)
+
+      val templateId = when (applicationOrigin) {
+        ApplicationOrigin.courtBail -> notifyConfig.templates.cas2v2ApplicationStatusUpdatedCourtBail
+        ApplicationOrigin.prisonBail-> notifyConfig.templates.cas2v2ApplicationStatusUpdatedPrisonBail
+        ApplicationOrigin.homeDetentionCurfew -> notifyConfig.templates.cas2ApplicationStatusUpdated
+      }
+
       emailNotificationService.sendCas2Email(
         recipientEmailAddress = user.email!!,
-        templateId = notifyConfig.templates.cas2ApplicationStatusUpdated,
+        templateId = templateId,
         personalisation = mapOf(
           "applicationStatus" to status.label,
           "dateStatusChanged" to status.createdAt.toLocalDate().toCas2UiFormat(),
           "timeStatusChanged" to status.createdAt.toCas2UiFormattedHourOfDay(),
-          "applicationType" to HDC_APPLICATION_TYPE,
+          "applicationType" to applicationType,
           "nomsNumber" to application.nomsNumber,
+          "crn" to application.crn,
           "applicationUrl" to applicationOverviewUrlTemplate.replace("#id", application.id.toString()),
         ),
       )

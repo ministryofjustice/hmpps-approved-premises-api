@@ -5,6 +5,7 @@ import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.data.repository.findByIdOrNull
 import org.springframework.stereotype.Service
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApplicationOrigin
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewCas2v2ApplicationNote
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.config.NotifyConfig
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas2v2.Cas2v2ApplicationEntity
@@ -16,6 +17,8 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas2v2.Cas2v2
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas2v2.Cas2v2UserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.CasResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.EmailNotificationService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas2.Constants.HDC_APPLICATION_TYPE
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.Cas2v2ApplicationUtils
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.toCas2UiFormat
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.toCas2UiFormattedHourOfDay
 import java.time.OffsetDateTime
@@ -77,14 +80,23 @@ class Cas2v2ApplicationNoteService(
     savedNote: Cas2v2ApplicationNoteEntity,
   ) {
     if (application.createdByUser.email != null) {
+      val applicationOrigin = application.applicationOrigin
+      val applicationType = Cas2v2ApplicationUtils().getApplicationTypeFromApplicationOrigin(applicationOrigin)
+
+      val templateId = when (applicationOrigin) {
+        ApplicationOrigin.courtBail -> notifyConfig.templates.cas2v2NoteAddedForReferrerCourtBail
+        ApplicationOrigin.prisonBail-> notifyConfig.templates.cas2v2NoteAddedForReferrerPrisonBail
+        ApplicationOrigin.homeDetentionCurfew -> notifyConfig.templates.cas2NoteAddedForReferrer
+      }
       emailNotificationService.sendCas2Email(
         recipientEmailAddress = application.createdByUser.email!!,
-        templateId = notifyConfig.templates.cas2NoteAddedForReferrer,
+        templateId = templateId,
         personalisation = mapOf(
           "dateNoteAdded" to savedNote.createdAt.toLocalDate().toCas2UiFormat(),
           "timeNoteAdded" to savedNote.createdAt.toCas2UiFormattedHourOfDay(),
           "nomsNumber" to application.nomsNumber,
-          "applicationType" to "Home Detention Curfew (HDC)",
+          "crn" to application.crn,
+          "applicationType" to applicationType,
           "applicationUrl" to applicationUrlTemplate.replace("#id", application.id.toString()),
         ),
       )
@@ -98,16 +110,28 @@ class Cas2v2ApplicationNoteService(
     application: Cas2v2ApplicationEntity,
     savedNote: Cas2v2ApplicationNoteEntity,
   ) {
+
+    val applicationOrigin = application.applicationOrigin
+    val applicationType = Cas2v2ApplicationUtils().getApplicationTypeFromApplicationOrigin(applicationOrigin)
+
+    val templateId = when (applicationOrigin) {
+      ApplicationOrigin.courtBail -> notifyConfig.templates.cas2v2NoteAddedForAssessorCourtBail
+      ApplicationOrigin.prisonBail-> notifyConfig.templates.cas2v2NoteAddedForAssessorPrisonBail
+      ApplicationOrigin.homeDetentionCurfew -> notifyConfig.templates.cas2NoteAddedForAssessor
+    }
+
     emailNotificationService.sendCas2Email(
       recipientEmailAddress = notifyConfig.emailAddresses.cas2Assessors,
-      templateId = notifyConfig.templates.cas2NoteAddedForAssessor,
+      templateId = templateId,
       personalisation = mapOf(
         "nacroReferenceId" to getNacroReferenceIdOrPlaceholder(application.assessment!!),
         "nacroReferenceIdInSubject" to getSubjectLineReferenceIdOrPlaceholder(application.assessment!!),
         "dateNoteAdded" to savedNote.createdAt.toLocalDate().toCas2UiFormat(),
         "timeNoteAdded" to savedNote.createdAt.toCas2UiFormattedHourOfDay(),
         "assessorName" to getAssessorNameOrPlaceholder(application.assessment!!),
-        "applicationType" to "Home Detention Curfew (HDC)",
+        "nomsNumber" to application.nomsNumber,
+        "crn" to application.crn,
+        "applicationType" to applicationType,
         "applicationUrl" to assessmentUrlTemplate.replace("#applicationId", application.id.toString()),
       ),
     )
