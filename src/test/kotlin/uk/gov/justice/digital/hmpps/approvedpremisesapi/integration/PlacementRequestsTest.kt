@@ -1352,6 +1352,72 @@ class PlacementRequestsTest : IntegrationTestBase() {
     }
 
     @Test
+    fun `should return a placement request with the earliest space booking`() {
+      givenAUser(roles = listOf(UserRole.CAS1_WORKFLOW_MANAGER)) { user, jwt ->
+        givenAnOffender { unmatchedOffender, unmatchedInmate ->
+          givenAPlacementRequest(
+            placementRequestAllocatedTo = user,
+            assessmentAllocatedTo = user,
+            createdByUser = user,
+            crn = unmatchedOffender.otherIds.crn,
+          ) { placementRequest, _ ->
+
+            // create a cancelled booking
+            val booking = createBooking(placementRequest)
+
+            cancellationEntityFactory.produceAndPersist {
+              withBooking(booking)
+              withReason(cancellationReasonEntityFactory.produceAndPersist())
+            }
+
+            // create a cancelled space booking
+            createBookingNotMadeRecord(placementRequest)
+            val spaceBooking = createSpaceBooking(placementRequest)
+            spaceBooking.cancellationOccurredAt = LocalDate.now()
+            cas1SpaceBookingRepository.save(spaceBooking)
+
+            // create a space booking
+            createSpaceBooking(
+              placementRequest,
+              premises = givenAnApprovedPremises("space_booking_premises"),
+              canonicalArrivalDate = LocalDate.parse("2025-01-02"),
+            )
+
+            // create an earlier space booking
+            createSpaceBooking(
+              placementRequest,
+              premises = givenAnApprovedPremises("earlier_space_booking_premises"),
+              canonicalArrivalDate = LocalDate.parse("2025-01-01"),
+            )
+
+            // should return 1 placement request from GET /cas1/placement-requests
+            val summaries = webTestClient.get()
+              .uri("/cas1/placement-requests")
+              .header("Authorization", "Bearer $jwt")
+              .exchange()
+              .expectStatus()
+              .isOk
+              .bodyAsListOfObjects<Cas1PlacementRequestSummary>()
+
+            assertThat(summaries).hasSize(1)
+
+            assertThat(summaries[0].id).isEqualTo(placementRequest.id)
+            assertThat(summaries[0].person.crn).isEqualTo(unmatchedOffender.otherIds.crn)
+            assertThat(summaries[0].placementRequestStatus).isEqualTo(Cas1PlacementRequestSummary.PlacementRequestStatus.matched)
+            assertThat(summaries[0].isParole).isEqualTo(placementRequest.isParole)
+            assertThat(summaries[0].requestedPlacementDuration).isEqualTo(placementRequest.duration)
+            assertThat(summaries[0].requestedPlacementArrivalDate).isEqualTo(placementRequest.expectedArrival)
+            assertThat(summaries[0].personTier).isEqualTo(placementRequest.application.riskRatings?.tier?.value?.level)
+            assertThat(summaries[0].applicationId).isEqualTo(placementRequest.application.id)
+            assertThat(summaries[0].applicationSubmittedDate).isEqualTo(placementRequest.application.submittedAt!!.toLocalDate())
+            assertThat(summaries[0].firstBookingPremisesName).isEqualTo("earlier_space_booking_premises")
+            assertThat(summaries[0].firstBookingArrivalDate).isEqualTo(LocalDate.parse("2025-01-01"))
+          }
+        }
+      }
+    }
+
+    @Test
     fun `If status filter is not defined, returns the unmatched placement requests and withdrawn placement requests`() {
       givenAUser(roles = listOf(UserRole.CAS1_WORKFLOW_MANAGER)) { user, jwt ->
         givenAnOffender { unmatchedOffender, unmatchedInmate ->
