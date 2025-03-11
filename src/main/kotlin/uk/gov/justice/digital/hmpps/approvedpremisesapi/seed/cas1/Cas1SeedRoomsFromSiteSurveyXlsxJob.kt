@@ -188,7 +188,6 @@ class Cas1SeedRoomsFromSiteSurveyXlsxJob(
   }
 
   private fun updateRoom(existingRoom: RoomEntity, newRoom: RoomInfo) {
-
     val beforeChange = ApprovedPremisesRoomForComparison.fromEntity(existingRoom)
 
     existingRoom.characteristics.clear()
