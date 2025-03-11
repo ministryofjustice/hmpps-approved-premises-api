@@ -208,7 +208,7 @@ fun Cas2v2IntegrationTestBase.givenACas2v2NomisUser(
     withActiveNomisCaseloadId(nomisUserDetails.activeCaseloadId!!)
   }
 
-  val jwt = jwtAuthHelper.createValidNomisAuthorisationCodeJwt(nomisUserDetails.username)
+  val jwt = jwtAuthHelper.createValidCas2v2NomisAuthorisationCodeJwt(nomisUserDetails.username)
 
   nomisUserRolesMockSuccessfulGetUserDetailsCall(jwt, nomisUserDetails)
 
