@@ -15,8 +15,8 @@ class SeedExternalUsersTest : SeedTestBase() {
   fun `Attempting to seed a fake currently unknown user succeeds`() {
     externalUserRepository.deleteAll()
 
-    withCsv(
-      "unknown-external-user",
+    seed(
+      SeedFileType.externalUsers,
       externalUserSeedCsvRowsToCsv(
         listOf(
           ExternalUsersSeedCsvRowFactory()
@@ -27,8 +27,6 @@ class SeedExternalUsersTest : SeedTestBase() {
         ),
       ),
     )
-
-    seedService.seedData(SeedFileType.externalUsers, "unknown-external-user.csv")
 
     val persistedUser = externalUserRepository.findByUsername("CAS2_ASSESSOR_FAKE")
 
@@ -47,8 +45,8 @@ class SeedExternalUsersTest : SeedTestBase() {
       withEmail("chas.ash@example.com")
     }
 
-    withCsv(
-      "existing-external-user",
+    seed(
+      SeedFileType.externalUsers,
       externalUserSeedCsvRowsToCsv(
         listOf(
           ExternalUsersSeedCsvRowFactory()
@@ -59,8 +57,6 @@ class SeedExternalUsersTest : SeedTestBase() {
         ),
       ),
     )
-
-    seedService.seedData(SeedFileType.externalUsers, "existing-external-user.csv")
 
     val persistedUser = externalUserRepository.findByUsername("CAS2_ASSESSOR_FAKE")
 

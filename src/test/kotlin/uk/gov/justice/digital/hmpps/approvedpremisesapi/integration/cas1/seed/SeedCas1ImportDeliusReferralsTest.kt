@@ -20,8 +20,8 @@ class SeedCas1ImportDeliusReferralsTest : SeedTestBase() {
 
   @Test
   fun `Row with no expected arrival date is ignored`() {
-    withCsv(
-      csvName = "valid-csv",
+    seed(
+      SeedFileType.approvedPremisesImportDeliusReferrals,
       contents = listOf(
         Cas1DeliusImportDeliusReferralRowRaw(
           crn = "CRN1",
@@ -31,15 +31,13 @@ class SeedCas1ImportDeliusReferralsTest : SeedTestBase() {
       ).toCsv(),
     )
 
-    seedService.seedData(SeedFileType.approvedPremisesImportDeliusReferrals, "valid-csv.csv")
-
     assertThat(cas1DeliusBookingImportRepository.findAll()).isEmpty()
   }
 
   @Test
   fun `Row with only mandatory fields can be processed`() {
-    withCsv(
-      csvName = "valid-csv",
+    seed(
+      SeedFileType.approvedPremisesImportDeliusReferrals,
       contents = listOf(
         Cas1DeliusImportDeliusReferralRowRaw(
           crn = "CRN1",
@@ -52,8 +50,6 @@ class SeedCas1ImportDeliusReferralsTest : SeedTestBase() {
         ),
       ).toCsv(),
     )
-
-    seedService.seedData(SeedFileType.approvedPremisesImportDeliusReferrals, "valid-csv.csv")
 
     val bookingImport = cas1DeliusBookingImportRepository.findAll()[0]
 
@@ -84,8 +80,8 @@ class SeedCas1ImportDeliusReferralsTest : SeedTestBase() {
   fun `Row with all available fields can be processed`() {
     val bookingId = UUID.randomUUID()
 
-    withCsv(
-      csvName = "valid-csv",
+    seed(
+      SeedFileType.approvedPremisesImportDeliusReferrals,
       contents = listOf(
         Cas1DeliusImportDeliusReferralRowRaw(
           bookingId = bookingId.toString(),
@@ -115,8 +111,6 @@ class SeedCas1ImportDeliusReferralsTest : SeedTestBase() {
         ),
       ).toCsv(),
     )
-
-    seedService.seedData(SeedFileType.approvedPremisesImportDeliusReferrals, "valid-csv.csv")
 
     val bookingImport = cas1DeliusBookingImportRepository.findAll()[0]
 
@@ -151,8 +145,8 @@ class SeedCas1ImportDeliusReferralsTest : SeedTestBase() {
       "DP", "DR", "IR", "2", "3", "1", "8", "RJ", "9", "4", "6", "7", "5",
     )
 
-    withCsv(
-      csvName = "valid-csv",
+    seed(
+      SeedFileType.approvedPremisesImportDeliusReferrals,
       contents =
       allDecisionCodes.map { decisionCode ->
         Cas1DeliusImportDeliusReferralRowRaw(
@@ -167,8 +161,6 @@ class SeedCas1ImportDeliusReferralsTest : SeedTestBase() {
       }.toCsv(),
     )
 
-    seedService.seedData(SeedFileType.approvedPremisesImportDeliusReferrals, "valid-csv.csv")
-
     val bookingImport = cas1DeliusBookingImportRepository.findAll()
 
     assertThat(bookingImport.map { it.crn }).containsExactlyInAnyOrder("AD", "ADA1", "ASA2", "ADA3", "AI", "A10", "AR")
@@ -178,8 +170,8 @@ class SeedCas1ImportDeliusReferralsTest : SeedTestBase() {
   fun `Fields containing data known to be unusable are set to null`() {
     val bookingId = UUID.randomUUID()
 
-    withCsv(
-      csvName = "valid-csv",
+    seed(
+      SeedFileType.approvedPremisesImportDeliusReferrals,
       contents = listOf(
         Cas1DeliusImportDeliusReferralRowRaw(
           bookingId = bookingId.toString(),
@@ -200,8 +192,6 @@ class SeedCas1ImportDeliusReferralsTest : SeedTestBase() {
         ),
       ).toCsv(),
     )
-
-    seedService.seedData(SeedFileType.approvedPremisesImportDeliusReferrals, "valid-csv.csv")
 
     val bookingImport = cas1DeliusBookingImportRepository.findAll()[0]
 

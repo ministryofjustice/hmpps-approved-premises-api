@@ -25,8 +25,8 @@ class SeedCas1UpdateSpaceBookingTest : SeedTestBase() {
       ),
     )
 
-    withCsv(
-      "valid-csv",
+    seed(
+      SeedFileType.approvedPremisesUpdateSpaceBooking,
       rowsToCsv(
         listOf(
           Cas1UpdateSpaceBookingSeedJobCsvRow(
@@ -42,8 +42,6 @@ class SeedCas1UpdateSpaceBookingTest : SeedTestBase() {
         ),
       ),
     )
-
-    seedService.seedData(SeedFileType.approvedPremisesUpdateSpaceBooking, "valid-csv.csv")
 
     val updatedSpaceBooking = cas1SpaceBookingRepository.findById(spaceBooking.id).get()
     assertThat(updatedSpaceBooking.deliusEventNumber).isEqualTo("999")

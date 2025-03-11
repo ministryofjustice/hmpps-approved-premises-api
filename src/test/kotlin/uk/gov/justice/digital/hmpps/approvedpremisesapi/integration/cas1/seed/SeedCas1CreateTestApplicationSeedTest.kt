@@ -34,8 +34,8 @@ class SeedCas1CreateTestApplicationSeedTest : SeedTestBase() {
 
     postCodeDistrictFactory.produceAndPersist()
 
-    withCsv(
-      csvName = "valid-csv",
+    seed(
+      SeedFileType.approvedPremisesCreateTestApplications,
       contents = listOf(
         Cas1CreateTestApplicationsSeedCsvRow(
           creatorUsername = user.deliusUsername,
@@ -46,8 +46,6 @@ class SeedCas1CreateTestApplicationSeedTest : SeedTestBase() {
         ),
       ).toCsv(),
     )
-
-    seedService.seedData(SeedFileType.approvedPremisesCreateTestApplications, "valid-csv.csv")
 
     val applications = approvedPremisesApplicationRepository.findAll()
     assertThat(applications).hasSize(1)

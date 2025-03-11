@@ -71,7 +71,7 @@ abstract class SeedTestBase : IntegrationTestBase() {
       contents,
     )
 
-    seedService.seedData(SeedFileType.approvedPremisesRemapBedCodes, "$fileName.csv")
+    seedService.seedData(seedFileType, "$fileName.csv")
   }
 
   protected fun generateCsvFile(fileName: String, contents: String) {
@@ -82,11 +82,6 @@ abstract class SeedTestBase : IntegrationTestBase() {
       Path("$seedFilePrefix/$fileName.csv"),
       contents,
     )
-  }
-
-  @Deprecated(message = "Use generateCsvFile", replaceWith = ReplaceWith("[createCsv]"))
-  protected fun withCsv(csvName: String, contents: String) {
-    generateCsvFile(csvName, contents)
   }
 
   protected fun createXlsxForSeeding(fileName: String, sheets: Map<String, DataFrame<*>>) {

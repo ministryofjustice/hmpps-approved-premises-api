@@ -25,8 +25,8 @@ class UsersBasicSeedJobTest : SeedTestBase() {
   fun `Seeding a non existent user logs an error`() {
     apDeliusContextMockNotFoundStaffDetailCall("INVALID-USER")
 
-    withCsv(
-      "invalid-user",
+    seed(
+      SeedFileType.usersBasic,
       apStaffUserSeedCsvRowsToCsv(
         listOf(
           ApStaffUserSeedCsvRowFactory()
@@ -35,8 +35,6 @@ class UsersBasicSeedJobTest : SeedTestBase() {
         ),
       ),
     )
-
-    seedService.seedData(SeedFileType.usersBasic, "invalid-user.csv")
 
     assertThat(logEntries).anyMatch {
       it.level == "error" &&
@@ -65,8 +63,8 @@ class UsersBasicSeedJobTest : SeedTestBase() {
       ),
     )
 
-    withCsv(
-      "unknown-user",
+    seed(
+      SeedFileType.usersBasic,
       apStaffUserSeedCsvRowsToCsv(
         listOf(
           ApStaffUserSeedCsvRowFactory()
@@ -75,8 +73,6 @@ class UsersBasicSeedJobTest : SeedTestBase() {
         ),
       ),
     )
-
-    seedService.seedData(SeedFileType.usersBasic, "unknown-user.csv")
 
     val persistedUser = userRepository.findByDeliusUsername("UNKNOWN-USER")
 
@@ -111,8 +107,8 @@ class UsersBasicSeedJobTest : SeedTestBase() {
     }
     user.qualifications.addAll(qualificationEntities)
 
-    withCsv(
-      "pre-existing-user",
+    seed(
+      SeedFileType.usersBasic,
       apStaffUserSeedCsvRowsToCsv(
         listOf(
           ApStaffUserSeedCsvRowFactory()
@@ -121,8 +117,6 @@ class UsersBasicSeedJobTest : SeedTestBase() {
         ),
       ),
     )
-
-    seedService.seedData(SeedFileType.usersBasic, "pre-existing-user.csv")
 
     val persistedUser = userRepository.findByDeliusUsername("PRE-EXISTING-USER")
 

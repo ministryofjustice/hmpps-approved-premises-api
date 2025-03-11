@@ -29,20 +29,19 @@ class SeedUpdateUsersFromApiTest : SeedTestBase() {
 
     apDeliusContextAddStaffDetailResponse(staffUserDetails)
 
-    val csv = CsvBuilder()
-      .withUnquotedFields(
-        "delius_username",
-        "service_name",
-      )
-      .newRow()
-      .withQuotedField(USERNAME)
-      .withQuotedField(ServiceName.approvedPremises)
-      .newRow()
-      .build()
-
-    withCsv("known-user-csv", csv)
-
-    seedService.seedData(SeedFileType.updateUsersFromApi, "known-user-csv.csv")
+    seed(
+      SeedFileType.updateUsersFromApi,
+      CsvBuilder()
+        .withUnquotedFields(
+          "delius_username",
+          "service_name",
+        )
+        .newRow()
+        .withQuotedField(USERNAME)
+        .withQuotedField(ServiceName.approvedPremises)
+        .newRow()
+        .build(),
+    )
 
     val persistedUser = userRepository.findByDeliusUsername(USERNAME)
 

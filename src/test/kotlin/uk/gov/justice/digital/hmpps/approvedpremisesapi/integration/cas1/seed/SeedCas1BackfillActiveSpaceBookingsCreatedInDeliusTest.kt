@@ -172,12 +172,10 @@ class SeedCas1BackfillActiveSpaceBookingsCreatedInDeliusTest : SeedTestBase() {
       ),
     )
 
-    withCsv(
-      "valid-csv",
+    seed(
+      SeedFileType.approvedPremisesBackfillActiveSpaceBookingsCreatedInDelius,
       rowsToCsv(listOf(Cas1CreateMissingReferralsSeedCsvRow(premises.qCode))),
     )
-
-    seedService.seedData(SeedFileType.approvedPremisesBackfillActiveSpaceBookingsCreatedInDelius, "valid-csv.csv")
 
     val premiseSpaceBookings = cas1SpaceBookingTestRepository.findByPremisesId(premises.id)
     assertThat(premiseSpaceBookings).hasSize(1)
