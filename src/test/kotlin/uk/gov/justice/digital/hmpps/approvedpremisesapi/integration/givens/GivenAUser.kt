@@ -22,7 +22,7 @@ import java.util.UUID
 fun IntegrationTestBase.givenAUser(
   id: UUID = UUID.randomUUID(),
   staffDetail: StaffDetail = StaffDetailFactory.staffDetail(),
-  roles: List<UserRole> = listOf(),
+  roles: List<UserRole> = emptyList(),
   qualifications: List<UserQualification> = emptyList(),
   probationRegion: ProbationRegionEntity? = null,
   isActive: Boolean = true,
@@ -144,6 +144,7 @@ fun Cas2v2IntegrationTestBase.givenACas2v2DeliusUser(
     isActive,
     mockStaffUserDetailsCall = mockStaffUserDetailsCall,
   )
+//  val nomisUserDetailsFactory = NomisUserDetailFactory()
 
   val user = cas2v2UserEntityFactory.produceAndPersist {
     withId(id)
@@ -186,6 +187,7 @@ fun Cas2v2IntegrationTestBase.givenACas2v2PomUser(
 
   block(user, jwt)
 }
+
 fun Cas2v2IntegrationTestBase.givenACas2v2NomisUser(
   id: UUID = UUID.randomUUID(),
   nomisUserDetailsConfigBlock: (NomisUserDetailFactory.() -> Unit)? = null,
