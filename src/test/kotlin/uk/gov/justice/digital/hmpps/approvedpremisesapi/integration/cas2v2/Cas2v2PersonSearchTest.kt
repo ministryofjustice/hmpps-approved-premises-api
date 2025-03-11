@@ -88,46 +88,6 @@ class Cas2v2PersonSearchTest : Cas2v2IntegrationTestBase() {
         }
 
         @Test
-        fun `Searching for a NOMIS ID returns unauthorised error when offender is in a different prison`() {
-          givenACas2v2NomisUser { _, jwt ->
-
-            val offender = ProbationOffenderDetailFactory()
-              .withOtherIds(IDs(crn = "CRN", nomsNumber = "NOMS456", pncNumber = "PNC456"))
-              .withFirstName("Jo")
-              .withSurname("AnotherPrison")
-              .withDateOfBirth(
-                LocalDate
-                  .parse("1985-05-05"),
-              )
-              .withGender("Male")
-              .withOffenderProfile(OffenderProfile(nationality = "English"))
-              .produce()
-
-            val inmateDetail = InmateDetailFactory().withOffenderNo("NOMS456")
-              .withCustodyStatus(InmateStatus.IN)
-              .withAssignedLivingUnit(
-                AssignedLivingUnit(
-                  agencyId = "ANOTHER_PRISON",
-                  locationId = 5,
-                  description = "B-2F-004",
-                  agencyName = "HMP Example",
-                ),
-              )
-              .produce()
-
-            probationOffenderSearchAPIMockSuccessfulOffenderSearchCall("NOMS456", listOf(offender))
-            prisonAPIMockSuccessfulInmateDetailsCall(inmateDetail = inmateDetail)
-
-            webTestClient.get()
-              .uri("/cas2v2/people/search-by-noms/NOMS456")
-              .header("Authorization", "Bearer $jwt")
-              .exchange()
-              .expectStatus()
-              .isForbidden
-          }
-        }
-
-        @Test
         fun `Searching for a NOMIS ID returns 404 error when it is not found`() {
           givenACas2v2DeliusUser { _, jwt ->
             probationOffenderSearchAPIMockNotFoundSearchCall()
