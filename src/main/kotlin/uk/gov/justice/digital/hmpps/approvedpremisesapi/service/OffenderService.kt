@@ -307,14 +307,9 @@ class OffenderService(
     return AuthorisableActionResult.Success(offender)
   }
 
-  /*
-   * This should call apDeliusContextApiClient.getSummariesForCrns(crns) directly
-   */
   fun isLao(crn: String): Boolean {
-    val offenderResponse = offenderDetailsDataSource.getOffenderDetailSummary(crn)
-
-    val offender = when (offenderResponse) {
-      is ClientResult.Success -> offenderResponse.body
+    val offender = when (val offenderResponse = apDeliusContextApiClient.getSummariesForCrns(listOf(crn))) {
+      is ClientResult.Success -> offenderResponse.body.cases.first()
       is ClientResult.Failure -> offenderResponse.throwException()
     }
 
