@@ -22,7 +22,7 @@ import java.util.UUID
 fun IntegrationTestBase.givenAUser(
   id: UUID = UUID.randomUUID(),
   staffDetail: StaffDetail = StaffDetailFactory.staffDetail(),
-  roles: List<UserRole> = emptyList(),
+  roles: List<UserRole> = listOf(),
   qualifications: List<UserQualification> = emptyList(),
   probationRegion: ProbationRegionEntity? = null,
   isActive: Boolean = true,
@@ -135,7 +135,7 @@ fun Cas2v2IntegrationTestBase.givenACas2v2DeliusUser(
   mockStaffUserDetailsCall: Boolean = true,
   block: (userEntity: Cas2v2UserEntity, jwt: String) -> Unit,
 ) {
-  val (deliusUser, jwt) = givenAUser(
+  val (deliusUser, _) = givenAUser(
     id,
     staffDetail,
     roles,
@@ -144,7 +144,6 @@ fun Cas2v2IntegrationTestBase.givenACas2v2DeliusUser(
     isActive,
     mockStaffUserDetailsCall = mockStaffUserDetailsCall,
   )
-//  val nomisUserDetailsFactory = NomisUserDetailFactory()
 
   val user = cas2v2UserEntityFactory.produceAndPersist {
     withId(id)
@@ -154,13 +153,40 @@ fun Cas2v2IntegrationTestBase.givenACas2v2DeliusUser(
     withUserType(Cas2v2UserType.DELIUS)
   }
 
-//  val jwt = jwtAuthHelper.createValidDeliusAuthorisationCodeJwt(deliusUser.deliusUsername)
-//  nomisUserRolesMockSuccessfulGetUserDetailsCall(jwt, nomisUserDetails)
+  val jwt = jwtAuthHelper.createValidDeliusAuthorisationCodeJwt(deliusUser.deliusUsername)
 
   block(user, jwt)
 }
 
 fun Cas2v2IntegrationTestBase.givenACas2v2PomUser(
+  id: UUID = UUID.randomUUID(),
+  nomisUserDetailsConfigBlock: (NomisUserDetailFactory.() -> Unit)? = null,
+  block: (userEntity: Cas2v2UserEntity, jwt: String) -> Unit,
+) {
+  val nomisUserDetailsFactory = NomisUserDetailFactory()
+
+  if (nomisUserDetailsConfigBlock != null) {
+    nomisUserDetailsConfigBlock(nomisUserDetailsFactory)
+  }
+
+  val nomisUserDetails = nomisUserDetailsFactory.produce()
+
+  val user = cas2v2UserEntityFactory.produceAndPersist {
+    withId(id)
+    withUsername(nomisUserDetails.username)
+    withEmail(nomisUserDetails.primaryEmail)
+    withName("${nomisUserDetails.firstName} ${nomisUserDetails.lastName}")
+    withUserType(Cas2v2UserType.NOMIS)
+    withActiveNomisCaseloadId(nomisUserDetails.activeCaseloadId!!)
+  }
+
+  val jwt = jwtAuthHelper.createValidNomisAuthorisationCodeJwt(nomisUserDetails.username)
+
+  nomisUserRolesMockSuccessfulGetUserDetailsCall(jwt, nomisUserDetails)
+
+  block(user, jwt)
+}
+fun Cas2v2IntegrationTestBase.givenACas2v2NomisUser(
   id: UUID = UUID.randomUUID(),
   nomisUserDetailsConfigBlock: (NomisUserDetailFactory.() -> Unit)? = null,
   block: (userEntity: Cas2v2UserEntity, jwt: String) -> Unit,
