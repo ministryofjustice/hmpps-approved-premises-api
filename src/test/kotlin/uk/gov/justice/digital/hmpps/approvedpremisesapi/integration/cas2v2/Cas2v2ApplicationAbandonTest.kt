@@ -9,8 +9,7 @@ import org.junit.jupiter.api.Test
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.ValueSource
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.Cas2v2IntegrationTestBase
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenACas2v2LicenceCaseAdminUser
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenACas2v2PomUser
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenACas2v2DeliusUser
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAnOffender
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas2v2.Cas2v2ApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas2v2.Cas2v2ApplicationRepository
@@ -88,31 +87,10 @@ class Cas2v2ApplicationAbandonTest : Cas2v2IntegrationTestBase() {
   inner class PutToAbandon {
 
     @Nested
-    inner class PomUsers {
+    inner class DeliusUsers {
       @Test
       fun `Abandon existing cas2v2 application returns 200 with correct body`() {
-        givenACas2v2PomUser { submittingUser, jwt ->
-          givenAnOffender { offenderDetails, _ ->
-            val application = produceAndPersistBasicApplication(offenderDetails.otherIds.crn, submittingUser)
-
-            webTestClient.put()
-              .uri("/cas2v2/applications/${application.id}/abandon")
-              .header("Authorization", "Bearer $jwt")
-              .exchange()
-              .expectStatus()
-              .isOk
-
-            Assertions.assertNotNull(realApplicationRepository.findById(application.id).get().abandonedAt)
-          }
-        }
-      }
-    }
-
-    @Nested
-    inner class LicenceCaseAdminUsers {
-      @Test
-      fun `Abandon existing cas2v2 application returns 200 with correct body`() {
-        givenACas2v2LicenceCaseAdminUser { submittingUser, jwt ->
+        givenACas2v2DeliusUser { submittingUser, jwt ->
           givenAnOffender { offenderDetails, _ ->
             val application = produceAndPersistBasicApplication(offenderDetails.otherIds.crn, submittingUser)
 

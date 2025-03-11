@@ -25,6 +25,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ExternalUserDeta
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.Cas2v2IntegrationTestBase
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenACas2Admin
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenACas2v2Assessor
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenACas2v2DeliusUser
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenACas2v2PomUser
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAnOffender
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.manageUsersMockSuccessfulExternalUsersCall
@@ -676,7 +677,7 @@ class Cas2v2SubmissionTest(
       val applicationId = UUID.fromString("22ceda56-98b2-411d-91cc-ace0ab8be872")
       val telephoneNumber = "123 456 7891"
 
-      givenACas2v2PomUser { submittingUser, jwt ->
+      givenACas2v2DeliusUser { submittingUser, jwt ->
         givenAnOffender(
           inmateDetailsConfigBlock = {
             withAssignedLivingUnit(
@@ -768,7 +769,7 @@ class Cas2v2SubmissionTest(
 
     @Test
     fun `When several concurrent submit application requests occur, only one is successful, all others return 400`() {
-      givenACas2v2PomUser { submittingUser, jwt ->
+      givenACas2v2DeliusUser { submittingUser, jwt ->
         givenAnOffender(
           inmateDetailsConfigBlock = {
             withAssignedLivingUnit(
@@ -849,7 +850,7 @@ class Cas2v2SubmissionTest(
 
     @Test
     fun `When there's an error fetching the referred person's prison code, the application is not saved`() {
-      givenACas2v2PomUser { submittingUser, jwt ->
+      givenACas2v2DeliusUser { submittingUser, jwt ->
         givenAnOffender(mockNotFoundErrorForPrisonApi = true) { offenderDetails, _ ->
           val applicationId = UUID.fromString("22ceda56-98b2-411d-91cc-ace0ab8be872")
 
