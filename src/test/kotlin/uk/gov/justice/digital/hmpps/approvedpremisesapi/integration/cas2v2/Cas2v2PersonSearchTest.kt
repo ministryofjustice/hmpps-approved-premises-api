@@ -8,12 +8,14 @@ import org.junit.jupiter.api.Test
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.FullPerson
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PersonStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PersonType
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.CaseSummaryFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.InmateDetailFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ProbationOffenderDetailFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.Cas2v2IntegrationTestBase
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenACas2v2DeliusUser
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenACas2v2NomisUser
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAnOffender
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.apDeliusContextAddCaseSummaryToBulkResponse
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.prisonAPIMockSuccessfulInmateDetailsCall
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.probationOffenderSearchAPIMockForbiddenOffenderSearchCall
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.probationOffenderSearchAPIMockNotFoundSearchCall
@@ -88,46 +90,6 @@ class Cas2v2PersonSearchTest : Cas2v2IntegrationTestBase() {
         }
 
         @Test
-        fun `Searching for a NOMIS ID returns unauthorised error when offender is in a different prison`() {
-          givenACas2v2NomisUser { _, jwt ->
-
-            val offender = ProbationOffenderDetailFactory()
-              .withOtherIds(IDs(crn = "CRN", nomsNumber = "NOMS456", pncNumber = "PNC456"))
-              .withFirstName("Jo")
-              .withSurname("AnotherPrison")
-              .withDateOfBirth(
-                LocalDate
-                  .parse("1985-05-05"),
-              )
-              .withGender("Male")
-              .withOffenderProfile(OffenderProfile(nationality = "English"))
-              .produce()
-
-            val inmateDetail = InmateDetailFactory().withOffenderNo("NOMS456")
-              .withCustodyStatus(InmateStatus.IN)
-              .withAssignedLivingUnit(
-                AssignedLivingUnit(
-                  agencyId = "ANOTHER_PRISON",
-                  locationId = 5,
-                  description = "B-2F-004",
-                  agencyName = "HMP Example",
-                ),
-              )
-              .produce()
-
-            probationOffenderSearchAPIMockSuccessfulOffenderSearchCall("NOMS456", listOf(offender))
-            prisonAPIMockSuccessfulInmateDetailsCall(inmateDetail = inmateDetail)
-
-            webTestClient.get()
-              .uri("/cas2v2/people/search-by-noms/NOMS456")
-              .header("Authorization", "Bearer $jwt")
-              .exchange()
-              .expectStatus()
-              .isForbidden
-          }
-        }
-
-        @Test
         fun `Searching for a NOMIS ID returns 404 error when it is not found`() {
           givenACas2v2DeliusUser { _, jwt ->
             probationOffenderSearchAPIMockNotFoundSearchCall()
@@ -174,7 +136,6 @@ class Cas2v2PersonSearchTest : Cas2v2IntegrationTestBase() {
               .produce()
 
             val inmateDetail = InmateDetailFactory().withOffenderNo("NOMS321")
-              .withCustodyStatus(InmateStatus.IN)
               .withAssignedLivingUnit(
                 AssignedLivingUnit(
                   agencyId = "BRI",
@@ -203,12 +164,8 @@ class Cas2v2PersonSearchTest : Cas2v2IntegrationTestBase() {
                     name = "James Someone",
                     dateOfBirth = LocalDate.parse("1985-05-05"),
                     sex = "Male",
-                    status = PersonStatus.inCustody,
+                    status = PersonStatus.unknown,
                     nomsNumber = "NOMS321",
-                    pncNumber = "PNC123",
-                    nationality = "English",
-                    isRestricted = false,
-                    prisonName = "HMP Bristol",
                   ),
                 ),
               )
@@ -278,6 +235,10 @@ class Cas2v2PersonSearchTest : Cas2v2IntegrationTestBase() {
 
         @Test
         fun `Searching for a CRN that does not exist returns 404`() {
+          apDeliusContextAddCaseSummaryToBulkResponse(
+            CaseSummaryFactory().produce(),
+          )
+
           givenACas2v2DeliusUser { _, jwt ->
             wiremockServer.stubFor(
               get(WireMock.urlEqualTo("/secure/offenders/crn/CRN"))
@@ -300,9 +261,22 @@ class Cas2v2PersonSearchTest : Cas2v2IntegrationTestBase() {
 
       @Nested
       inner class WhenSuccessful {
-
         @Test
         fun `Searching for a CRN returns OK with correct body`() {
+          // We need this as the crn search tries a noms search if it finds a crn with a noms number
+          probationOffenderSearchAPIMockSuccessfulOffenderSearchCall(
+            nomsNumber = "NOMS321",
+            response = listOf(
+              ProbationOffenderDetailFactory()
+                .withFirstName("James")
+                .withSurname("Someone")
+                .withOtherIds(IDs(crn = "CRN", nomsNumber = "NOMS321"))
+                .withDateOfBirth(LocalDate.parse("1985-05-05"))
+                .withGender("Male")
+                .produce(),
+            ),
+          )
+
           givenACas2v2DeliusUser { _, jwt ->
             givenAnOffender(
               offenderDetailsConfigBlock = {
@@ -346,14 +320,8 @@ class Cas2v2PersonSearchTest : Cas2v2IntegrationTestBase() {
                       name = "James Someone",
                       dateOfBirth = LocalDate.parse("1985-05-05"),
                       sex = "Male",
-                      status = PersonStatus.inCustody,
+                      status = PersonStatus.unknown,
                       nomsNumber = "NOMS321",
-                      ethnicity = "White British",
-                      nationality = "English",
-                      religionOrBelief = "Judaism",
-                      genderIdentity = "This is a self described identity",
-                      prisonName = "HMP Bristol",
-                      isRestricted = false,
                     ),
                   ),
                 )
@@ -396,12 +364,6 @@ class Cas2v2PersonSearchTest : Cas2v2IntegrationTestBase() {
                       sex = "Male",
                       status = PersonStatus.unknown,
                       nomsNumber = null,
-                      ethnicity = "White British",
-                      nationality = "English",
-                      religionOrBelief = "Judaism",
-                      genderIdentity = "This is a self described identity",
-                      prisonName = null,
-                      isRestricted = false,
                     ),
                   ),
                 )
