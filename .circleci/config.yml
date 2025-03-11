@@ -360,7 +360,7 @@ jobs:
       - run:
           name: Clone E2E repo
           command: |
-            git clone -b feature/CAS-1470_temp_download_logging https://github.com/ministryofjustice/hmpps-temporary-accommodation-ui.git .
+            git clone https://github.com/ministryofjustice/hmpps-temporary-accommodation-ui.git .
       - run:
           name: Update npm
           command: 'npm install -g npm@10.1.0'
