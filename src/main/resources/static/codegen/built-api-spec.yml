@@ -7069,6 +7069,7 @@ components:
         - matcher
         - future_manager
         - workflow_manager
+        - change_request_dev
         - cru_member
         - cru_member_find_and_book_beta
         - cru_member_enable_out_of_service_beds
@@ -7086,10 +7087,12 @@ components:
       enum:
         - cas1_adhoc_booking_create
         - cas1_application_withdraw_others
+        - cas1_appeal_create
         - cas1_assess_appealed_application
         - cas1_assess_application
         - cas1_assess_placement_application
         - cas1_assess_placement_request
+        - cas1_planned_transfer_create
         - cas1_booking_create
         - cas1_booking_change_dates
         - cas1_booking_withdraw
