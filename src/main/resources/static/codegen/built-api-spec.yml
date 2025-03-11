@@ -7586,6 +7586,7 @@ components:
         - approved_premises_create_test_applications
         - approved_premises_delete_application_timeline_notes
         - temporary_accommodation_referral_rejection
+        - approved_premises_remap_bed_codes
     SeedFromExcelFileType:
       type: string
       enum:

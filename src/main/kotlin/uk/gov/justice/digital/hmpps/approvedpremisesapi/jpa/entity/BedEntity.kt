@@ -11,6 +11,7 @@ import jakarta.persistence.SqlResultSetMapping
 import jakarta.persistence.Table
 import org.hibernate.annotations.CreationTimestamp
 import org.springframework.data.jpa.repository.JpaRepository
+import org.springframework.data.jpa.repository.Modifying
 import org.springframework.data.jpa.repository.Query
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate
 import org.springframework.stereotype.Repository
@@ -53,6 +54,10 @@ interface BedRepository : JpaRepository<BedEntity, UUID> {
     nativeQuery = true,
   )
   fun findAllCas1BedSummariesForPremises(premisesId: UUID): List<Cas1PremisesBedSummary>
+
+  @Modifying
+  @Query("UPDATE BedEntity b SET b.code = :code WHERE b.id = :id")
+  fun updateCode(id: UUID, code: String)
 }
 
 @Repository
