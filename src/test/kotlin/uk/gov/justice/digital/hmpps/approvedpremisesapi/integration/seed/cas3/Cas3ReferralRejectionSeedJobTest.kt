@@ -41,12 +41,10 @@ class Cas3ReferralRejectionSeedJobTest : SeedTestBase() {
     val rejectedReason = "Another reason (please add)"
     val rejectedReasonDetail = randomStringLowerCase(30)
 
-    withCsv(
-      "cas3-referral-rejection-csv",
+    seed(
+      SeedFileType.temporaryAccommodationReferralRejection,
       rowsToCsv(listOf(Cas3ReferralRejectionSeedCsvRow(assessment.id, rejectedReason, rejectedReasonDetail, false, user.deliusUsername))),
     )
-
-    seedService.seedData(SeedFileType.temporaryAccommodationReferralRejection, "cas3-referral-rejection-csv.csv")
 
     val persistedAssessment = temporaryAccommodationAssessmentRepository.findByIdOrNull(assessment.id)!!
     assertThat(persistedAssessment).isNotNull

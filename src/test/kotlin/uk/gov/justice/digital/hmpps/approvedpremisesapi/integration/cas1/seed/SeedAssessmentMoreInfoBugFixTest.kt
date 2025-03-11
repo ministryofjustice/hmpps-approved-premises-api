@@ -33,8 +33,8 @@ class SeedAssessmentMoreInfoBugFixTest : SeedTestBase() {
     val assessment3Unmodified = createAssessment(data = sampleJson)
     val assessment4FlatJson = createAssessment(data = removeLineBreaks(sampleJson))
 
-    withCsv(
-      "valid-csv",
+    seed(
+      SeedFileType.approvedPremisesAssessmentMoreInfoBugFix,
       rowsToCsv(
         listOf(
           Cas1FurtherInfoBugFixSeedCsvRow(assessment1NoJson.id.toString()),
@@ -43,8 +43,6 @@ class SeedAssessmentMoreInfoBugFixTest : SeedTestBase() {
         ),
       ),
     )
-
-    seedService.seedData(SeedFileType.approvedPremisesAssessmentMoreInfoBugFix, "valid-csv.csv")
 
     val expectedJson = """{
       "sufficient-information-confirm":{"confirm":"yes"},
