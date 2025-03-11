@@ -475,52 +475,6 @@ class Cas2OffenderServiceTest {
   }
 
   @Nested
-  inner class GetOffenderNameOrPlaceholder {
-    @Test
-    fun `returns Not Found when offender is PersonInfoResult-NotFound, status 404`() {
-      every { mockOffenderDetailsDataSource.getOffenderDetailSummary("NOTFOUND") } returns StatusCode(
-        HttpMethod.GET,
-        "/secure/offenders/crn/ABC123",
-        HttpStatus.NOT_FOUND,
-        null,
-        true,
-      )
-
-      val result = offenderService.getOffenderNameOrPlaceholder("NOTFOUND")
-      assertThat(result).isEqualTo("Person Not Found")
-    }
-
-    @Test
-    fun `returns Unknown when offender returns any other code except 404`() {
-      every { mockOffenderDetailsDataSource.getOffenderDetailSummary("UNKNOWN") } returns StatusCode(
-        HttpMethod.GET,
-        "/secure/offenders/crn/ABC123",
-        HttpStatus.FORBIDDEN,
-        null,
-        true,
-      )
-
-      val result = offenderService.getOffenderNameOrPlaceholder("UNKNOWN")
-      assertThat(result).isEqualTo("Unknown")
-    }
-
-    @Test
-    fun `returns the person's full name when offender is PersonInfoResult-Full`() {
-      val offenderDetailSummary = OffenderDetailsSummaryFactory()
-        .withFirstName("ExampleFirst")
-        .withLastName("ExampleLast")
-        .produce()
-      every { mockOffenderDetailsDataSource.getOffenderDetailSummary("FULL") } returns ClientResult.Success(
-        status = HttpStatus.OK,
-        body = offenderDetailSummary,
-      )
-
-      val result = offenderService.getOffenderNameOrPlaceholder("FULL")
-      assertThat(result).isEqualTo("ExampleFirst ExampleLast")
-    }
-  }
-
-  @Nested
   inner class GetMapOfPersonsNamesAndCrns {
     val offenderDetailSummary = OffenderDetailsSummaryFactory()
       .withFirstName("ExampleFirst")

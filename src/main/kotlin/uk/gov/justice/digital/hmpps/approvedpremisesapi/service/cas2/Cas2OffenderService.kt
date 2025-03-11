@@ -24,7 +24,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.NotFoundProblem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.AuthorisableActionResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.CasResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.OffenderService
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas2.ProbationOffenderSearchResult
 import java.util.stream.Collectors
 
 /**
@@ -109,22 +108,6 @@ class Cas2OffenderService(
     when (val inmateDetailsResult = getInmateDetailByNomsNumber(probationOffenderDetail.otherIds.crn, nomsNumber)) {
       is AuthorisableActionResult.Success -> inmateDetailsResult.entity
       else -> null
-    }
-  }
-
-  fun getOffenderNameOrPlaceholder(crn: String): String {
-    return when (val offenderResponse = offenderDetailsDataSource.getOffenderDetailSummary(crn)) {
-      is ClientResult.Success ->
-        "${offenderResponse.body.firstName} ${offenderResponse.body.surname}"
-
-      is ClientResult.Failure.StatusCode ->
-        if (offenderResponse.status.value() == HttpStatus.NOT_FOUND.value()) {
-          return "Person Not Found"
-        } else {
-          return "Unknown"
-        }
-
-      is ClientResult.Failure -> return "Unknown"
     }
   }
 
