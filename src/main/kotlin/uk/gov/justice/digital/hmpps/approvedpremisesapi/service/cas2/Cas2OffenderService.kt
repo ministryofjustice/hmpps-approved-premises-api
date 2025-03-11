@@ -5,6 +5,7 @@ import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.http.HttpStatus
 import org.springframework.stereotype.Service
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.ApDeliusContextApiClient
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.ApOASysContextApiClient
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.ClientResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.PrisonsApiClient
@@ -24,7 +25,8 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.NotFoundProblem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.AuthorisableActionResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.CasResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.OffenderService
-import java.util.stream.Collectors
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.UpstreamApiException
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.asOffenderDetailSummary
 
 /**
  * This class duplicates functionality from  [OffenderService], noting that there
@@ -44,6 +46,7 @@ class Cas2OffenderService(
   private val probationOffenderSearchApiClient: ProbationOffenderSearchApiClient,
   private val apOASysContextApiClient: ApOASysContextApiClient,
   private val offenderDetailsDataSource: OffenderDetailsDataSource,
+  private val apdeliusContextApiClient: ApDeliusContextApiClient,
   @Value("\${cas2.crn-search-limit:400}") private val numberOfCrn: Int,
 ) {
 
@@ -106,7 +109,7 @@ class Cas2OffenderService(
 
   private fun getInmateDetailsForProbationOffender(probationOffenderDetail: ProbationOffenderDetail): InmateDetail? = probationOffenderDetail.otherIds.nomsNumber?.let { nomsNumber ->
     when (val inmateDetailsResult = getInmateDetailByNomsNumber(probationOffenderDetail.otherIds.crn, nomsNumber)) {
-      is AuthorisableActionResult.Success -> inmateDetailsResult.entity
+      is CasResult.Success -> inmateDetailsResult.value
       else -> null
     }
   }
@@ -123,7 +126,7 @@ class Cas2OffenderService(
     val personNamesListOfMaps = ListUtils.partition(crns.toList(), numberOfCrn).stream()
       .map { partitionedCrns ->
         getOffenderNamesOrPlaceholder(partitionedCrns.toSet())
-      }.collect(Collectors.toList())
+      }.toList()
 
     return personNamesListOfMaps.flatMap { it.toList() }.toMap()
   }
@@ -149,10 +152,10 @@ class Cas2OffenderService(
   }
 
   private fun getInfoForPerson(crn: String): PersonInfoResult {
-    val offender = when (val offenderResponse = offenderDetailsDataSource.getOffenderDetailSummary(crn)) {
+    val offender = when (val offenderResponse = apdeliusContextApiClient.getCaseDetail(crn)) {
       is ClientResult.Success -> offenderResponse.body
 
-      is ClientResult.Failure.StatusCode -> if (offenderResponse.status.value() == HttpStatus.NOT_FOUND.value()) {
+      is ClientResult.Failure.StatusCode -> if (offenderResponse.status == HttpStatus.NOT_FOUND) {
         return PersonInfoResult.NotFound(crn)
       } else {
         return PersonInfoResult.Unknown(crn, offenderResponse.toException())
@@ -161,34 +164,33 @@ class Cas2OffenderService(
       is ClientResult.Failure -> return PersonInfoResult.Unknown(crn, offenderResponse.toException())
     }
 
-    val inmateDetails = offender.otherIds.nomsNumber?.let { nomsNumber ->
-      when (val inmateDetailsResult = getInmateDetailByNomsNumber(offender.otherIds.crn, nomsNumber)) {
-        is AuthorisableActionResult.Success -> inmateDetailsResult.entity
+    val inmateDetails = offender.case.nomsId?.let { nomsNumber ->
+      when (val inmateDetailsResult = getInmateDetailByNomsNumber(offender.case.crn, nomsNumber)) {
+        is CasResult.Success -> inmateDetailsResult.value
         else -> null
       }
     }
 
-    if (offender.currentExclusion || offender.currentRestriction) {
-      return PersonInfoResult.Success.Restricted(crn, offender.otherIds.nomsNumber)
+    if (offender.case.currentExclusion || offender.case.currentRestriction) {
+      return PersonInfoResult.Success.Restricted(crn, offender.case.nomsId)
     }
 
     return PersonInfoResult.Success.Full(
       crn = crn,
-      offenderDetailSummary = offender,
+      offenderDetailSummary = offender.case.asOffenderDetailSummary(),
       inmateDetail = inmateDetails,
     )
   }
 
   fun getFullInfoForPersonOrThrow(crn: String): PersonInfoResult.Success.Full {
-    val personInfo = getInfoForPerson(crn)
-    when (personInfo) {
+    when (val personInfo = getInfoForPerson(crn)) {
       is PersonInfoResult.NotFound, is PersonInfoResult.Unknown -> throw NotFoundProblem(crn, "Offender")
       is PersonInfoResult.Success.Restricted -> throw ForbiddenProblem("Offender $crn is Restricted.")
       is PersonInfoResult.Success.Full -> return personInfo
     }
   }
 
-  fun getInmateDetailByNomsNumber(crn: String, nomsNumber: String): AuthorisableActionResult<InmateDetail?> {
+  fun getInmateDetailByNomsNumber(crn: String, nomsNumber: String): CasResult<InmateDetail?> {
     var inmateDetailResponse = prisonsApiClient.getInmateDetailsWithWait(nomsNumber)
 
     val hasCacheTimedOut = inmateDetailResponse is ClientResult.Failure.PreemptiveCacheTimeout
@@ -213,12 +215,12 @@ class Cas2OffenderService(
       is ClientResult.Failure.StatusCode -> when (inmateDetailResponse.status) {
         HttpStatus.NOT_FOUND -> {
           logFailedResponse(inmateDetailResponse)
-          return AuthorisableActionResult.NotFound()
+          return CasResult.NotFound("InmateDetail", nomsNumber)
         }
 
         HttpStatus.FORBIDDEN -> {
           logFailedResponse(inmateDetailResponse)
-          return AuthorisableActionResult.Unauthorised()
+          return CasResult.Unauthorised()
         }
 
         else -> {
@@ -233,7 +235,21 @@ class Cas2OffenderService(
       }
     }
 
-    return AuthorisableActionResult.Success(inmateDetail)
+    return CasResult.Success(inmateDetail)
+  }
+
+  fun findPrisonCode(crn: String, nomsId: String): String {
+    fun throwWithMessage(message: String): Nothing = throw UpstreamApiException(message)
+    when (val result = getInmateDetailByNomsNumber(crn, nomsId)) {
+      is CasResult.Success ->
+        return result.value?.assignedLivingUnit?.agencyId
+          ?: throw UpstreamApiException("No prison code available")
+
+      is CasResult.NotFound -> throwWithMessage("Inmate Detail not found")
+      is CasResult.Unauthorised -> throwWithMessage("Inmate Detail unauthorised")
+
+      else -> throwWithMessage("Error retrieving inmate detail")
+    }
   }
 
   @Deprecated(message = "Use getOffenderByCrn to return a CasResult")

@@ -26,7 +26,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.DomainEvent
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PaginationMetadata
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PersonInfoResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.ValidationErrors
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.AuthorisableActionResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.CasResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.EmailNotificationService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.UpstreamApiException
@@ -251,7 +250,7 @@ class Cas2ApplicationService(
 
     try {
       application.apply {
-        val prisonCode = retrievePrisonCode(application)
+        val prisonCode = offenderService.findPrisonCode(application.crn, application.nomsNumber!!)
         submittedAt = OffsetDateTime.now()
         document = serializedTranslatedDocument
         referringPrisonCode = prisonCode
@@ -329,21 +328,6 @@ class Cas2ApplicationService(
 
   fun createAssessment(application: Cas2ApplicationEntity) {
     assessmentService.createCas2Assessment(application)
-  }
-
-  @SuppressWarnings("ThrowsCount")
-  private fun retrievePrisonCode(application: Cas2ApplicationEntity): String {
-    val inmateDetailResult = offenderService.getInmateDetailByNomsNumber(
-      crn = application.crn,
-      nomsNumber = application.nomsNumber.toString(),
-    )
-    val inmateDetail = when (inmateDetailResult) {
-      is AuthorisableActionResult.NotFound -> throw UpstreamApiException("Inmate Detail not found")
-      is AuthorisableActionResult.Unauthorised -> throw UpstreamApiException("Inmate Detail unauthorised")
-      is AuthorisableActionResult.Success -> inmateDetailResult.entity
-    }
-
-    return inmateDetail?.assignedLivingUnit?.agencyId ?: throw UpstreamApiException("No prison code available")
   }
 
   private fun sendEmailApplicationSubmitted(user: NomisUserEntity, application: Cas2ApplicationEntity) {

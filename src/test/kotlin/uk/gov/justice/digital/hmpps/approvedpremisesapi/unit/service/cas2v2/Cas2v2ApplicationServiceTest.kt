@@ -769,6 +769,7 @@ class Cas2v2ApplicationServiceTest {
 
     @BeforeEach
     fun setup() {
+      every { mockOffenderService.findPrisonCode(any(), any()) } answers { callOriginal() }
       every { mockCas2v2LockableApplicationRepository.acquirePessimisticLock(any()) } returns Cas2v2LockableApplicationEntity(UUID.randomUUID())
       every { mockObjectMapper.writeValueAsString(submitCas2v2Application.translatedDocument) } returns "{}"
       every { mockDomainEventService.saveCas2ApplicationSubmittedDomainEvent(any()) } just Runs
@@ -926,7 +927,7 @@ class Cas2v2ApplicationServiceTest {
       // abort our attempt to submit the application.
       every {
         mockOffenderService.getInmateDetailByNomsNumber(any(), any())
-      } returns AuthorisableActionResult.NotFound()
+      } returns CasResult.NotFound("InmateDetail", offenderDetails.otherIds.nomsNumber!!)
 
       assertGeneralValidationError("Inmate Detail not found")
 
@@ -974,7 +975,7 @@ class Cas2v2ApplicationServiceTest {
       // abort our attempt to submit the application and return a validation message.
       every {
         mockOffenderService.getInmateDetailByNomsNumber(any(), any())
-      } returns AuthorisableActionResult.Success(InmateDetailFactory().produce())
+      } returns CasResult.Success(InmateDetailFactory().produce())
 
       assertGeneralValidationError("No prison code available")
 
@@ -1031,7 +1032,7 @@ class Cas2v2ApplicationServiceTest {
           cas2v2Application.crn,
           cas2v2Application.nomsNumber.toString(),
         )
-      } returns AuthorisableActionResult.Success(inmateDetail)
+      } returns CasResult.Success(inmateDetail)
 
       every { mockNotifyConfig.templates.cas2ApplicationSubmitted } returns "abc123"
       every { mockNotifyConfig.emailAddresses.cas2Assessors } returns "exampleAssessorInbox@example.com"
