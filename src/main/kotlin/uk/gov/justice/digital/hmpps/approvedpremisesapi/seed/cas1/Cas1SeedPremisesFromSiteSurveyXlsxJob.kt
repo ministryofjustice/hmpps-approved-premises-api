@@ -104,6 +104,7 @@ class Cas1SeedPremisesFromSiteSurveyXlsxJob(
       "Hull" -> "Kingston upon Hull, City of"
       "Islington (London)" -> "Islington"
       "Lewisham (London)" -> "Lewisham"
+      "Newcastle" -> "Newcastle upon Tyne"
       "Newham (London)" -> "Newham"
       "Richmond (London)" -> "Richmond upon Thames"
       "Southwark (London)" -> "Southwark"
@@ -158,7 +159,7 @@ class Cas1SeedPremisesFromSiteSurveyXlsxJob(
       ApprovedPremisesEntity(
         id = UUID.randomUUID(),
         name = siteSurvey.name,
-        fullAddress = premisesInfo.siteSurveyPremise.address,
+        fullAddress = siteSurvey.address,
         // note that the site survey provides a full address in this field
         // so callers should retrieve fullAddress instead
         addressLine1 = siteSurvey.address,
@@ -244,6 +245,7 @@ class Cas1SeedPremisesFromSiteSurveyXlsxJob(
   private data class ApprovedPremisesForComparison(
     val id: UUID,
     val name: String,
+    val fullAddress: String?,
     val addressLine1: String,
     val addressLine2: String?,
     val town: String?,
@@ -267,6 +269,7 @@ class Cas1SeedPremisesFromSiteSurveyXlsxJob(
       fun fromEntity(entity: ApprovedPremisesEntity) = ApprovedPremisesForComparison(
         id = entity.id,
         name = entity.name,
+        fullAddress = entity.fullAddress,
         addressLine1 = entity.addressLine1,
         addressLine2 = entity.addressLine2,
         town = entity.town,
