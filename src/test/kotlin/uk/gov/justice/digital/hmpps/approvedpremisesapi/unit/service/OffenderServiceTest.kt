@@ -809,49 +809,53 @@ class OffenderServiceTest {
     )
   }
 
-  @Test
-  fun `isLao returns true for Offender with current restriction`() {
-    val offenderDetails = OffenderDetailsSummaryFactory()
-      .withCurrentRestriction(true)
-      .withCurrentExclusion(false)
-      .produce()
+  @Nested
+  inner class IsLao {
 
-    every { mockOffenderDetailsDataSource.getOffenderDetailSummary(offenderDetails.otherIds.crn) } returns ClientResult.Success(
-      HttpStatus.OK,
-      offenderDetails,
-    )
+    @Test
+    fun `returns true for Offender with current restriction`() {
+      val offenderDetails = OffenderDetailsSummaryFactory()
+        .withCurrentRestriction(true)
+        .withCurrentExclusion(false)
+        .produce()
 
-    assertThat(offenderService.isLao(offenderDetails.otherIds.crn)).isTrue
-  }
+      every { mockOffenderDetailsDataSource.getOffenderDetailSummary(offenderDetails.otherIds.crn) } returns ClientResult.Success(
+        HttpStatus.OK,
+        offenderDetails,
+      )
 
-  @Test
-  fun `isLao returns true for Offender with current exclusion`() {
-    val offenderDetails = OffenderDetailsSummaryFactory()
-      .withCurrentRestriction(false)
-      .withCurrentExclusion(true)
-      .produce()
+      assertThat(offenderService.isLao(offenderDetails.otherIds.crn)).isTrue
+    }
 
-    every { mockOffenderDetailsDataSource.getOffenderDetailSummary(offenderDetails.otherIds.crn) } returns ClientResult.Success(
-      HttpStatus.OK,
-      offenderDetails,
-    )
+    @Test
+    fun `returns true for Offender with current exclusion`() {
+      val offenderDetails = OffenderDetailsSummaryFactory()
+        .withCurrentRestriction(false)
+        .withCurrentExclusion(true)
+        .produce()
 
-    assertThat(offenderService.isLao(offenderDetails.otherIds.crn)).isTrue
-  }
+      every { mockOffenderDetailsDataSource.getOffenderDetailSummary(offenderDetails.otherIds.crn) } returns ClientResult.Success(
+        HttpStatus.OK,
+        offenderDetails,
+      )
 
-  @Test
-  fun `isLao returns false for Offender without current exclusion or restriction`() {
-    val offenderDetails = OffenderDetailsSummaryFactory()
-      .withCurrentRestriction(false)
-      .withCurrentExclusion(false)
-      .produce()
+      assertThat(offenderService.isLao(offenderDetails.otherIds.crn)).isTrue
+    }
 
-    every { mockOffenderDetailsDataSource.getOffenderDetailSummary(offenderDetails.otherIds.crn) } returns ClientResult.Success(
-      HttpStatus.OK,
-      offenderDetails,
-    )
+    @Test
+    fun `returns false for Offender without current exclusion or restriction`() {
+      val offenderDetails = OffenderDetailsSummaryFactory()
+        .withCurrentRestriction(false)
+        .withCurrentExclusion(false)
+        .produce()
 
-    assertThat(offenderService.isLao(offenderDetails.otherIds.crn)).isFalse
+      every { mockOffenderDetailsDataSource.getOffenderDetailSummary(offenderDetails.otherIds.crn) } returns ClientResult.Success(
+        HttpStatus.OK,
+        offenderDetails,
+      )
+
+      assertThat(offenderService.isLao(offenderDetails.otherIds.crn)).isFalse
+    }
   }
 
   @Nested
