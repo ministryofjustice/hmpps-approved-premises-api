@@ -11,8 +11,8 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PersonType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.InmateDetailFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ProbationOffenderDetailFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.Cas2v2IntegrationTestBase
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenACas2PomUser
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAUser
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenACas2v2DeliusUser
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenACas2v2NomisUser
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAnOffender
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.prisonAPIMockSuccessfulInmateDetailsCall
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.probationOffenderSearchAPIMockForbiddenOffenderSearchCall
@@ -75,7 +75,7 @@ class Cas2v2PersonSearchTest : Cas2v2IntegrationTestBase() {
 
         @Test
         fun `Searching for a NOMIS ID returns Unauthorised error when it is unauthorized by the API`() {
-          givenACas2PomUser { _, jwt ->
+          givenACas2v2NomisUser { _, jwt ->
             probationOffenderSearchAPIMockForbiddenOffenderSearchCall()
 
             webTestClient.get()
@@ -89,7 +89,7 @@ class Cas2v2PersonSearchTest : Cas2v2IntegrationTestBase() {
 
         @Test
         fun `Searching for a NOMIS ID returns unauthorised error when offender is in a different prison`() {
-          givenACas2PomUser { _, jwt ->
+          givenACas2v2NomisUser { _, jwt ->
 
             val offender = ProbationOffenderDetailFactory()
               .withOtherIds(IDs(crn = "CRN", nomsNumber = "NOMS456", pncNumber = "PNC456"))
@@ -129,7 +129,7 @@ class Cas2v2PersonSearchTest : Cas2v2IntegrationTestBase() {
 
         @Test
         fun `Searching for a NOMIS ID returns 404 error when it is not found`() {
-          givenACas2PomUser { _, jwt ->
+          givenACas2v2DeliusUser { _, jwt ->
             probationOffenderSearchAPIMockNotFoundSearchCall()
 
             webTestClient.get()
@@ -143,7 +143,7 @@ class Cas2v2PersonSearchTest : Cas2v2IntegrationTestBase() {
 
         @Test
         fun `Searching for a NOMIS ID returns server error when there is a server error`() {
-          givenACas2PomUser { _, jwt ->
+          givenACas2v2NomisUser { _, jwt ->
             probationOffenderSearchAPIMockServerErrorSearchCall()
 
             webTestClient.get()
@@ -160,7 +160,7 @@ class Cas2v2PersonSearchTest : Cas2v2IntegrationTestBase() {
       inner class WhenSuccessful {
         @Test
         fun `Searching for a NOMIS ID returns OK with correct body`() {
-          givenACas2PomUser(nomisUserDetailsConfigBlock = { withActiveCaseloadId("BRI") }) { _, jwt ->
+          givenACas2v2NomisUser(nomisUserDetailsConfigBlock = { withActiveCaseloadId("BRI") }) { _, jwt ->
             val offender = ProbationOffenderDetailFactory()
               .withOtherIds(IDs(crn = "CRN", nomsNumber = "NOMS321", pncNumber = "PNC123"))
               .withFirstName("James")
@@ -278,7 +278,7 @@ class Cas2v2PersonSearchTest : Cas2v2IntegrationTestBase() {
 
         @Test
         fun `Searching for a CRN that does not exist returns 404`() {
-          givenAUser { _, jwt ->
+          givenACas2v2DeliusUser { _, jwt ->
             wiremockServer.stubFor(
               get(WireMock.urlEqualTo("/secure/offenders/crn/CRN"))
                 .willReturn(
@@ -303,7 +303,7 @@ class Cas2v2PersonSearchTest : Cas2v2IntegrationTestBase() {
 
         @Test
         fun `Searching for a CRN returns OK with correct body`() {
-          givenAUser { _, jwt ->
+          givenACas2v2DeliusUser { _, jwt ->
             givenAnOffender(
               offenderDetailsConfigBlock = {
                 withCrn("CRN")
@@ -363,7 +363,7 @@ class Cas2v2PersonSearchTest : Cas2v2IntegrationTestBase() {
 
         @Test
         fun `Searching for a CRN without a NomsNumber returns OK with correct body`() {
-          givenAUser { _, jwt ->
+          givenACas2v2DeliusUser { _, jwt ->
             givenAnOffender(
               offenderDetailsConfigBlock = {
                 withCrn("CRN")
