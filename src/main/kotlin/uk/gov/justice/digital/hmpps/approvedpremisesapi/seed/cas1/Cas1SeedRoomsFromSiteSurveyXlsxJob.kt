@@ -188,7 +188,6 @@ class Cas1SeedRoomsFromSiteSurveyXlsxJob(
   }
 
   private fun updateRoom(existingRoom: RoomEntity, newRoom: RoomInfo) {
-    log.info("Updating room ${existingRoom.name} with room code ${existingRoom.code}.")
 
     val beforeChange = ApprovedPremisesRoomForComparison.fromEntity(existingRoom)
 
@@ -200,7 +199,9 @@ class Cas1SeedRoomsFromSiteSurveyXlsxJob(
 
     val diff = javers.compare(beforeChange, afterChange)
     if (diff.hasChanges()) {
-      log.info("Changes for import of room with code ${existingRoom.code} are ${diff.prettyPrint()}")
+      log.info("Changes for existing room ${existingRoom.name} with code ${existingRoom.code}: ${diff.prettyPrint()}")
+    } else {
+      log.info("No changes for existing room ${existingRoom.name} with code ${existingRoom.code}.")
     }
   }
 
