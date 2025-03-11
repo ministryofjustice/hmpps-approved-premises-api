@@ -41,6 +41,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.AuthorisableActi
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.CasResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.ValidatableActionResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.AssessmentService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.FeatureFlagService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.OffenderService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.UserAccessService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.WorkingDayService
@@ -72,6 +73,7 @@ class Cas3BookingService(
   private val offenderService: OffenderService,
   private val workingDayService: WorkingDayService,
   private val cas3DomainEventService: DomainEventService,
+  private val featureFlagService: FeatureFlagService,
 ) {
   private val log = LoggerFactory.getLogger(this::class.java)
 
@@ -316,6 +318,10 @@ class Cas3BookingService(
   ) = validatedCasResult<DepartureEntity> {
     if (booking.arrivalDate.toLocalDateTime().isAfter(dateTime)) {
       "$.dateTime" hasValidationError "beforeBookingArrivalDate"
+    }
+
+    if (featureFlagService.getBooleanFlag("cas3-validate-booking-departure-in-future") && dateTime.isAfter(OffsetDateTime.now())) {
+      validationErrors["$.dateTime"] = "departureDateInFuture"
     }
 
     val reason = departureReasonRepository.findByIdOrNull(reasonId)
