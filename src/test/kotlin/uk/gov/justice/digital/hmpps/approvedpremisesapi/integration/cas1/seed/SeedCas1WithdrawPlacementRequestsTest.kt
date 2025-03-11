@@ -1,6 +1,5 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.cas1.seed
 
-import org.assertj.core.api.Assertions
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
@@ -39,8 +38,9 @@ class SeedCas1WithdrawPlacementRequestsTest : SeedTestBase() {
         val (application, _) = createApplicationAndAssessment(applicant, applicant, offenderDetails)
 
         val placementRequest = createPlacementRequest(application)
-        withCsv(
-          "valid-csv",
+
+        seed(
+          SeedFileType.approvedPremisesWithdrawPlacementRequest,
           rowsToCsv(
             listOf(
               Cas1WithdrawPlacementRequestSeedSeedCsvRow(
@@ -50,8 +50,6 @@ class SeedCas1WithdrawPlacementRequestsTest : SeedTestBase() {
             ),
           ),
         )
-
-        seedService.seedData(SeedFileType.approvedPremisesWithdrawPlacementRequest, "valid-csv.csv")
 
         assertThat(logEntries).anyMatch {
           it.level == "error" &&
@@ -83,8 +81,8 @@ class SeedCas1WithdrawPlacementRequestsTest : SeedTestBase() {
           withPlacementApplication(placementApplication)
         }
 
-        withCsv(
-          "valid-csv",
+        seed(
+          SeedFileType.approvedPremisesWithdrawPlacementRequest,
           rowsToCsv(
             listOf(
               Cas1WithdrawPlacementRequestSeedSeedCsvRow(
@@ -98,8 +96,6 @@ class SeedCas1WithdrawPlacementRequestsTest : SeedTestBase() {
             ),
           ),
         )
-
-        seedService.seedData(SeedFileType.approvedPremisesWithdrawPlacementRequest, "valid-csv.csv")
 
         assertPlacementApplicationNotWithdrawn(placementApplication)
 
@@ -138,19 +134,19 @@ class SeedCas1WithdrawPlacementRequestsTest : SeedTestBase() {
 
   private fun assertPlacementApplicationNotWithdrawn(placementApplication: PlacementApplicationEntity) {
     val updatedPlacementApplication = placementApplicationRepository.findByIdOrNull(placementApplication.id)!!
-    Assertions.assertThat(updatedPlacementApplication.isWithdrawn).isFalse()
-    Assertions.assertThat(updatedPlacementApplication.withdrawalReason).isNull()
+    assertThat(updatedPlacementApplication.isWithdrawn).isFalse()
+    assertThat(updatedPlacementApplication.withdrawalReason).isNull()
   }
 
   private fun assertPlacementRequestWithdrawn(placementRequest: PlacementRequestEntity, reason: PlacementRequestWithdrawalReason) {
     val updatedPlacementRequest = placementRequestRepository.findByIdOrNull(placementRequest.id)!!
-    Assertions.assertThat(updatedPlacementRequest.isWithdrawn).isEqualTo(true)
-    Assertions.assertThat(updatedPlacementRequest.withdrawalReason).isEqualTo(reason)
+    assertThat(updatedPlacementRequest.isWithdrawn).isEqualTo(true)
+    assertThat(updatedPlacementRequest.withdrawalReason).isEqualTo(reason)
   }
 
   private fun assertPlacementRequestNotWithdrawn(placementRequest: PlacementRequestEntity) {
     val updatedPlacementRequest = placementRequestRepository.findByIdOrNull(placementRequest.id)!!
-    Assertions.assertThat(updatedPlacementRequest.isWithdrawn).isEqualTo(false)
+    assertThat(updatedPlacementRequest.isWithdrawn).isEqualTo(false)
   }
 
   @SuppressWarnings("LongParameterList")

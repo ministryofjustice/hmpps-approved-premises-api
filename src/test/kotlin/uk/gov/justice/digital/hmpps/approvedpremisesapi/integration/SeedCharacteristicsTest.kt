@@ -17,14 +17,12 @@ class SeedCharacteristicsTest : SeedTestBase() {
 
   @Test
   fun `Attempting to seed characteristic with missing characteristic_name field fails and logs error`() {
-    withCsv(
-      "invalid-characteristics-missing-name",
+    seed(
+      SeedFileType.characteristics,
       "characteristic_property_name,characteristic_name,service_scope,model_scope\n" +
         "hasWideDoor,Is the door to this room at least 900mm wide?,approved-premises,room\n" +
         "hasWideDoor,,temporary-accommodation,room\n",
     )
-
-    seedService.seedData(SeedFileType.characteristics, "invalid-characteristics-missing-name.csv")
 
     assertThat(characteristicRepository.count()).isEqualTo(0)
 
@@ -38,14 +36,12 @@ class SeedCharacteristicsTest : SeedTestBase() {
 
   @Test
   fun `Attempting to seed characteristic with unknown scope field fails and logs error`() {
-    withCsv(
-      "invalid-characteristics-unknown-scope",
+    seed(
+      SeedFileType.characteristics,
       "characteristic_property_name,characteristic_name,service_scope,model_scope\n" +
         "hasWideDoor,Is the door to this room at least 900mm wide?,foo,room\n" +
         "hasWideDoor,Is the entrance wide?,temporary-accommodation,bar\n",
     )
-
-    seedService.seedData(SeedFileType.characteristics, "invalid-characteristics-unknown-scope.csv")
 
     assertThat(characteristicRepository.count()).isEqualTo(0)
 
@@ -59,14 +55,12 @@ class SeedCharacteristicsTest : SeedTestBase() {
 
   @Test
   fun `Attempting to seed characteristic missing either scope field fails and logs error`() {
-    withCsv(
-      "invalid-characteristics-missing-scope",
+    seed(
+      SeedFileType.characteristics,
       "characteristic_property_name,characteristic_name,service_scope,model_scope\n" +
         "hasWideDoor,Is the door to this room at least 900mm wide?,,room\n" +
         "hasWideDoor,Is the entrance wide?,temporary-accommodation,\n",
     )
-
-    seedService.seedData(SeedFileType.characteristics, "invalid-characteristics-missing-scope.csv")
 
     assertThat(characteristicRepository.count()).isEqualTo(0)
 
@@ -80,16 +74,13 @@ class SeedCharacteristicsTest : SeedTestBase() {
 
   @Test
   fun `Seeding new characteristics twice (unique propertyName, serviceScope and modelScope) succeeds without dupes`() {
-    withCsv(
-      "valid-characteristics",
-      "characteristic_property_name,characteristic_name,service_scope,model_scope\n" +
-        "hasWideDoor,Is the door to this room at least 900mm wide?,approved-premises,room\n" +
-        "hasWideDoor,Is the room entrance wide?,temporary-accommodation,room\n" +
-        "isIap,Is this an IAP?,approved-premises,premises\n",
-    )
+    val csv = "characteristic_property_name,characteristic_name,service_scope,model_scope\n" +
+      "hasWideDoor,Is the door to this room at least 900mm wide?,approved-premises,room\n" +
+      "hasWideDoor,Is the room entrance wide?,temporary-accommodation,room\n" +
+      "isIap,Is this an IAP?,approved-premises,premises\n"
 
-    seedService.seedData(SeedFileType.characteristics, "valid-characteristics.csv")
-    seedService.seedData(SeedFileType.characteristics, "valid-characteristics.csv")
+    seed(SeedFileType.characteristics, csv)
+    seed(SeedFileType.characteristics, csv)
 
     val apWideDoorRoom = characteristicRepository.findByPropertyNameAndScopes(
       propertyName = "hasWideDoor",
@@ -132,13 +123,11 @@ class SeedCharacteristicsTest : SeedTestBase() {
     assertThat(characteristicRepository.count()).isEqualTo(1)
     assertThat(characteristic!!.name).isEqualTo("Is the door wide?")
 
-    withCsv(
-      "valid-characteristics-update",
+    seed(
+      SeedFileType.characteristics,
       "characteristic_property_name,characteristic_name,service_scope,model_scope\n" +
         "hasWideDoor,Is the DOOR wide?,approved-premises,room\n",
     )
-
-    seedService.seedData(SeedFileType.characteristics, "valid-characteristics-update.csv")
 
     val updatedCharacteristic = characteristicRepository.findByPropertyNameAndScopes(
       propertyName = "hasWideDoor",

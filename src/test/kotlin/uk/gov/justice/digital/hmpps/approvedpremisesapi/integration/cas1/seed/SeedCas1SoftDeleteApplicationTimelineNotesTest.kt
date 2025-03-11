@@ -22,8 +22,8 @@ class SeedCas1SoftDeleteApplicationTimelineNotesTest : SeedTestBase() {
       withApplicationId(application.id)
     }.map { it.id }
 
-    withCsv(
-      csvName = "timeline_notes",
+    seed(
+      SeedFileType.approvedPremisesDeleteApplicationTimelineNotes,
       contents = listOf(
         ApprovedPremisesApplicationIdNoteIdCsvRow(
           applicationId = application.id.toString(),
@@ -35,8 +35,6 @@ class SeedCas1SoftDeleteApplicationTimelineNotesTest : SeedTestBase() {
         ),
       ).toCsv(),
     )
-
-    seedService.seedData(SeedFileType.approvedPremisesDeleteApplicationTimelineNotes, "timeline_notes.csv")
 
     assertThat(applicationTimelineNoteRepository.getReferenceById(noteIds[0]).deletedAt).isNull()
     assertThat(applicationTimelineNoteRepository.getReferenceById(noteIds[1]).deletedAt).isNotNull()
@@ -54,8 +52,8 @@ class SeedCas1SoftDeleteApplicationTimelineNotesTest : SeedTestBase() {
       withApplicationId(application.id)
     }.id
 
-    withCsv(
-      csvName = "timeline_notes",
+    seed(
+      SeedFileType.approvedPremisesDeleteApplicationTimelineNotes,
       contents = listOf(
         ApprovedPremisesApplicationIdNoteIdCsvRow(
           applicationId = application.id.toString(),
@@ -67,8 +65,6 @@ class SeedCas1SoftDeleteApplicationTimelineNotesTest : SeedTestBase() {
         ),
       ).toCsv(),
     )
-
-    seedService.seedData(SeedFileType.approvedPremisesDeleteApplicationTimelineNotes, "timeline_notes.csv")
 
     assertThat(logEntries)
       .anyMatch {
@@ -98,8 +94,8 @@ class SeedCas1SoftDeleteApplicationTimelineNotesTest : SeedTestBase() {
       withApplicationId(anotherApplication.id)
     }.id
 
-    withCsv(
-      csvName = "timeline_notes",
+    seed(
+      SeedFileType.approvedPremisesDeleteApplicationTimelineNotes,
       contents = listOf(
         ApprovedPremisesApplicationIdNoteIdCsvRow(
           applicationId = application.id.toString(),
@@ -111,8 +107,6 @@ class SeedCas1SoftDeleteApplicationTimelineNotesTest : SeedTestBase() {
         ),
       ).toCsv(),
     )
-
-    seedService.seedData(SeedFileType.approvedPremisesDeleteApplicationTimelineNotes, "timeline_notes.csv")
 
     assertThat(logEntries)
       .anyMatch {

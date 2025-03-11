@@ -38,8 +38,8 @@ class SeedApprovedPremisesRoomsTest : SeedTestBase() {
       withServiceScope("temporary-accommodation")
     }
 
-    withCsv(
-      "invalid-ap-rooms-service-scope",
+    seed(
+      SeedFileType.approvedPremisesRooms,
       approvedPremisesRoomsSeedCsvRowsToCsv(
         listOf(
           ApprovedPremisesRoomsSeedCsvRowFactory()
@@ -49,8 +49,6 @@ class SeedApprovedPremisesRoomsTest : SeedTestBase() {
         ),
       ),
     )
-
-    seedService.seedData(SeedFileType.approvedPremisesRooms, "invalid-ap-rooms-service-scope.csv")
 
     assertThat(logEntries)
       .withFailMessage("-> logEntries actually contains: $logEntries")
@@ -77,8 +75,8 @@ class SeedApprovedPremisesRoomsTest : SeedTestBase() {
       withServiceScope("approved-premises")
     }
 
-    withCsv(
-      "invalid-ap-rooms-model-scope",
+    seed(
+      SeedFileType.approvedPremisesRooms,
       approvedPremisesRoomsSeedCsvRowsToCsv(
         listOf(
           ApprovedPremisesRoomsSeedCsvRowFactory()
@@ -88,8 +86,6 @@ class SeedApprovedPremisesRoomsTest : SeedTestBase() {
         ),
       ),
     )
-
-    seedService.seedData(SeedFileType.approvedPremisesRooms, "invalid-ap-rooms-model-scope.csv")
 
     assertThat(logEntries)
       .withFailMessage("-> logEntries actually contains: $logEntries")
@@ -103,8 +99,8 @@ class SeedApprovedPremisesRoomsTest : SeedTestBase() {
 
   @Test
   fun `Attempting to create an AP room without an associated premises logs an error`() {
-    withCsv(
-      "invalid-ap-rooms-missing-premises",
+    seed(
+      SeedFileType.approvedPremisesRooms,
       approvedPremisesRoomsSeedCsvRowsToCsv(
         listOf(
           ApprovedPremisesRoomsSeedCsvRowFactory()
@@ -113,8 +109,6 @@ class SeedApprovedPremisesRoomsTest : SeedTestBase() {
         ),
       ),
     )
-
-    seedService.seedData(SeedFileType.approvedPremisesRooms, "invalid-ap-rooms-missing-premises.csv")
 
     assertThat(logEntries)
       .withFailMessage("-> logEntries actually contains: $logEntries")
@@ -135,16 +129,14 @@ class SeedApprovedPremisesRoomsTest : SeedTestBase() {
       .withIsArsonSuitable("false")
       .produce()
 
-    withCsv(
-      "new-ap-room-invalid-boolean",
+    seed(
+      SeedFileType.approvedPremisesRooms,
       approvedPremisesRoomsSeedCsvRowsToCsv(
         listOf(
           csvRow,
         ),
       ),
     )
-
-    seedService.seedData(SeedFileType.approvedPremisesRooms, "new-ap-room-invalid-boolean.csv")
 
     assertThat(logEntries)
       .withFailMessage("-> logEntries actually contains: $logEntries")
@@ -158,13 +150,11 @@ class SeedApprovedPremisesRoomsTest : SeedTestBase() {
 
   @Test
   fun `Attempting to create an AP Room missing required headers lists missing fields`() {
-    withCsv(
-      "new-ap-room-missing-headers",
+    seed(
+      SeedFileType.approvedPremisesRooms,
       "apCode,bedCode,roomNumber,bedCount,isSingle,isGroundFloor,isFullyFm,hasCrib7Bedding\n" +
         "HOPE,NESPU01,1,1,yes,yes,no,no",
     )
-
-    seedService.seedData(SeedFileType.approvedPremisesRooms, "new-ap-room-missing-headers.csv")
 
     val expectedErrorMessage = "The headers provided: " +
       "[apCode, bedCode, roomNumber, bedCount, isSingle, isGroundFloor, isFullyFm, hasCrib7Bedding] " +
@@ -219,8 +209,8 @@ class SeedApprovedPremisesRoomsTest : SeedTestBase() {
       .withNotes("This room is very small")
       .produce()
 
-    withCsv(
-      "new-ap-rooms",
+    seed(
+      SeedFileType.approvedPremisesRooms,
       approvedPremisesRoomsSeedCsvRowsToCsv(
         listOf(
           rowRoom4A,
@@ -229,8 +219,6 @@ class SeedApprovedPremisesRoomsTest : SeedTestBase() {
         ),
       ),
     )
-
-    seedService.seedData(SeedFileType.approvedPremisesRooms, "new-ap-rooms.csv")
 
     val persistedRoom5 = roomRepository.findByCode("NEABC-5")
     val persistedRoom4 = roomRepository.findByCode("NEABC-4")
@@ -312,8 +300,8 @@ class SeedApprovedPremisesRoomsTest : SeedTestBase() {
       .withNotes("This is large")
       .produce()
 
-    withCsv(
-      "updated-ap-rooms",
+    seed(
+      SeedFileType.approvedPremisesRooms,
       approvedPremisesRoomsSeedCsvRowsToCsv(
         listOf(
           rowRoom4A,
@@ -321,8 +309,6 @@ class SeedApprovedPremisesRoomsTest : SeedTestBase() {
         ),
       ),
     )
-
-    seedService.seedData(SeedFileType.approvedPremisesRooms, "updated-ap-rooms.csv")
 
     val updatedRoom = roomRepository.findByCode("NEABC-4")
 

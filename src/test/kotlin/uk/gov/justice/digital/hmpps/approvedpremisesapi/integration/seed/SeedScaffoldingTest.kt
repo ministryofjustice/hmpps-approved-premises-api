@@ -67,16 +67,14 @@ class SeedScaffoldingTest : SeedTestBase() {
 
   @Test
   fun `Attempting to process a malformed file logs an error`() {
-    withCsv(
-      "malformed",
+    seed(
+      SeedFileType.user,
       """
 delius_username,roles,qualifications,remove_existing_roles_and_qualifications
 RogerSmith,CAS1_FUTURE_MANAGER,,false
 ,
       """.trimIndent(),
     )
-
-    seedService.seedData(SeedFileType.user, "malformed.csv")
 
     assertThat(logEntries).anyMatch {
       it.level == "error" &&

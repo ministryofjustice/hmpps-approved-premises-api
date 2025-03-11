@@ -27,8 +27,8 @@ class SeedCas1DomainEventReplayTest : SeedTestBase() {
         .produce(),
     )
 
-    withCsv(
-      "valid-csv",
+    seed(
+      SeedFileType.approvedPremisesReplayDomainEvents,
       rowsToCsv(
         listOf(
           Cas1DomainEventReplaySeedCsvRow(
@@ -37,8 +37,6 @@ class SeedCas1DomainEventReplayTest : SeedTestBase() {
         ),
       ),
     )
-
-    seedService.seedData(SeedFileType.approvedPremisesReplayDomainEvents, "valid-csv.csv")
 
     val message = snsDomainEventListener.blockForMessage(DomainEventType.APPROVED_PREMISES_APPLICATION_WITHDRAWN)
 
