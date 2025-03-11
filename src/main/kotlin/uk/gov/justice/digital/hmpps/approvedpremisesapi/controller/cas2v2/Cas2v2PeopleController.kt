@@ -19,6 +19,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.AuthorisableActi
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.OASysService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas2.ProbationOffenderSearchResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas2DeliusUserLaoStrategy
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas2v2.Cas2v2OffenderService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas2v2.Cas2v2UserService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.OASysSectionsTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.PersonTransformer
@@ -36,6 +37,7 @@ class Cas2v2PeopleController(
   private val risksTransformer: RisksTransformer,
   private val cas2v2UserService: Cas2v2UserService,
   private val oasysService: OASysService,
+  private val cas2v2OffenderService: Cas2v2OffenderService,
 ) : PeopleCas2v2Delegate {
 
   override fun searchByCrnGet(crn: String): ResponseEntity<Person> {
@@ -52,9 +54,7 @@ class Cas2v2PeopleController(
   }
 
   override fun searchByNomisIdGet(nomsNumber: String): ResponseEntity<Person> {
-    val currentUser = cas2v2UserService.getUserForRequest()
-    val caseLoadId = currentUser.activeNomisCaseloadId ?: return ResponseEntity.notFound().build()
-    val probationOffenderResult = nomsOffenderService.getPersonByNomsNumberAndActiveCaseLoadId(nomsNumber, caseLoadId)
+    val probationOffenderResult = cas2v2OffenderService.getPersonByNomsNumber(nomsNumber)
 
     when (probationOffenderResult) {
       is ProbationOffenderSearchResult.NotFound -> throw NotFoundProblem(nomsNumber, "Offender")
