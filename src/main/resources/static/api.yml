@@ -2161,36 +2161,6 @@ paths:
                 $ref: '_shared.yml#/components/schemas/Problem'
         500:
           $ref: '_shared.yml#/components/responses/500Response'
-  /beds/search:
-    post:
-      description: deprecated, use /cas3/bedspaces/search
-      summary: Searches for available Beds within the given parameters
-      operationId: bedsSearchPost
-      requestBody:
-        content:
-          'application/json':
-            schema:
-              $ref: '_shared.yml#/components/schemas/TemporaryAccommodationBedSearchParameters'
-        required: true
-      responses:
-        200:
-          description: successful operation
-          content:
-            'application/json':
-              schema:
-                $ref: '_shared.yml#/components/schemas/BedSearchResults'
-        400:
-          description: invalid params
-          content:
-            'application/problem+json':
-              schema:
-                $ref: '_shared.yml#/components/schemas/ValidationError'
-        401:
-          $ref: '_shared.yml#/components/responses/401Response'
-        403:
-          $ref: '_shared.yml#/components/responses/403Response'
-        500:
-          $ref: '_shared.yml#/components/responses/500Response'
   /bookings/{bookingId}:
     get:
       summary: Gets a booking

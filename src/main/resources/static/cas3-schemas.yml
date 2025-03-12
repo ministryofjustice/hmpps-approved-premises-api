@@ -38,9 +38,9 @@ components:
             type: string
             format: uuid
         premisesFilters:
-          $ref: '_shared.yml#/components/schemas/PremisesFilters'
+          $ref: '#/components/schemas/PremisesFilters'
         bedspaceFilters:
-          $ref: '_shared.yml#/components/schemas/BedspaceFilters'
+          $ref: '#/components/schemas/BedspaceFilters'
         attributes:
           type: array
           description: Bedspace and property attributes to filter on
@@ -60,6 +60,32 @@ components:
         - SHARED_PROPERTY
         - SINGLE_OCCUPANCY
         - WHEELCHAIR_ACCESSIBLE
+    PremisesFilters:
+      type: object
+      properties:
+        includedCharacteristicIds:
+          type: array
+          items:
+            type: string
+            format: uuid
+        excludedCharacteristicIds:
+          type: array
+          items:
+            type: string
+            format: uuid
+    BedspaceFilters:
+      type: object
+      properties:
+        includedCharacteristicIds:
+          type: array
+          items:
+            type: string
+            format: uuid
+        excludedCharacteristicIds:
+          type: array
+          items:
+            type: string
+            format: uuid
     Cas3BedspaceSearchResults:
       type: object
       properties:

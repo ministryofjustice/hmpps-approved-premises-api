@@ -1,9 +1,9 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas3
 
 import org.springframework.stereotype.Service
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.BedSearchAttributes
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.BedspaceSearchAttributes
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas3BedspaceSearchParameters
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PersonType
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.TemporaryAccommodationBedSearchParameters
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas3BookingRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.OverlapBookingsSearchResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ProbationDeliveryUnitRepository
@@ -12,8 +12,8 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PersonSummaryInfoR
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.forCrn
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.validatedCasResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.repository.BedSearchRepository
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.repository.Cas3BedspaceSearchResult
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.repository.TemporaryAccommodationBedSearchResultOverlap
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.repository.Cas3CandidateBedspace
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.repository.Cas3CandidateBedspaceOverlap
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.CasResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.CharacteristicService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.OffenderService
@@ -42,8 +42,8 @@ class Cas3BedspaceSearchService(
   @Suppress("detekt:CyclomaticComplexMethod")
   fun findBedspaces(
     user: UserEntity,
-    searchParams: TemporaryAccommodationBedSearchParameters,
-  ): CasResult<List<Cas3BedspaceSearchResult>> = validatedCasResult {
+    searchParams: Cas3BedspaceSearchParameters,
+  ): CasResult<List<Cas3CandidateBedspace>> = validatedCasResult {
     val probationDeliveryUnitIds = mutableListOf<UUID>()
 
     if (searchParams.durationDays < 1) {
@@ -115,9 +115,9 @@ class Cas3BedspaceSearchService(
   bed search should work. This will be removed and be added to the query added earlier in the search process to improve performance.
    */
   private fun applySearchFilters(
-    searchParams: TemporaryAccommodationBedSearchParameters,
-    results: List<Cas3BedspaceSearchResult>,
-  ): List<Cas3BedspaceSearchResult> {
+    searchParams: Cas3BedspaceSearchParameters,
+    results: List<Cas3CandidateBedspace>,
+  ): List<Cas3CandidateBedspace> {
     // use the legacy filters until the UI switches over.
     val attributes = searchParams.attributes
     if (attributes != null) {
@@ -155,20 +155,20 @@ class Cas3BedspaceSearchService(
 
   @Deprecated("adding to maintain functionality until the UI switches to use search filters")
   private fun applyLegacyFilters(
-    attributes: List<BedSearchAttributes>,
-    results: List<Cas3BedspaceSearchResult>,
-  ): List<Cas3BedspaceSearchResult> = results
+    attributes: List<BedspaceSearchAttributes>,
+    results: List<Cas3CandidateBedspace>,
+  ): List<Cas3CandidateBedspace> = results
     .filter { bedspace ->
-      !attributes.contains(BedSearchAttributes.WHEELCHAIR_ACCESSIBLE) ||
-        bedspace.roomCharacteristics.any { it.propertyName == BedSearchAttributes.WHEELCHAIR_ACCESSIBLE.value }
+      !attributes.contains(BedspaceSearchAttributes.WHEELCHAIR_ACCESSIBLE) ||
+        bedspace.roomCharacteristics.any { it.propertyName == BedspaceSearchAttributes.WHEELCHAIR_ACCESSIBLE.value }
     }
     .filter { premises ->
-      !attributes.contains(BedSearchAttributes.SINGLE_OCCUPANCY) ||
-        premises.premisesCharacteristics.any { it.propertyName == BedSearchAttributes.SINGLE_OCCUPANCY.value }
+      !attributes.contains(BedspaceSearchAttributes.SINGLE_OCCUPANCY) ||
+        premises.premisesCharacteristics.any { it.propertyName == BedspaceSearchAttributes.SINGLE_OCCUPANCY.value }
     }
     .filter { premises ->
-      !attributes.contains(BedSearchAttributes.SHARED_PROPERTY) ||
-        premises.premisesCharacteristics.any { it.propertyName == BedSearchAttributes.SHARED_PROPERTY.value }
+      !attributes.contains(BedspaceSearchAttributes.SHARED_PROPERTY) ||
+        premises.premisesCharacteristics.any { it.propertyName == BedspaceSearchAttributes.SHARED_PROPERTY.value }
     }
 
   fun transformBookingToOverlap(
@@ -176,11 +176,11 @@ class Cas3BedspaceSearchService(
     startDate: LocalDate,
     endDate: LocalDate,
     personSummaryInfo: PersonSummaryInfoResult,
-  ): TemporaryAccommodationBedSearchResultOverlap {
+  ): Cas3CandidateBedspaceOverlap {
     val queryDuration = startDate..endDate
     val bookingDuration = overlappedBooking.arrivalDate..overlappedBooking.departureDate
 
-    return TemporaryAccommodationBedSearchResultOverlap(
+    return Cas3CandidateBedspaceOverlap(
       name = getNameFromPersonSummaryInfoResult(personSummaryInfo),
       crn = overlappedBooking.crn,
       personType = getPersonType(personSummaryInfo),
@@ -202,7 +202,7 @@ class Cas3BedspaceSearchService(
     is PersonSummaryInfoResult.NotFound, is PersonSummaryInfoResult.Unknown -> PersonType.unknownPerson
   }
 
-  private fun TemporaryAccommodationBedSearchParameters.calculateEndDate(): LocalDate {
+  private fun Cas3BedspaceSearchParameters.calculateEndDate(): LocalDate {
     // Adjust to include the start date in the duration, e.g. 1st January for 1 day should end on the 1st January
     val adjustedDuration = durationDays - 1
     return startDate.plusDays(adjustedDuration)
