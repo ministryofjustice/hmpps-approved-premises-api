@@ -809,49 +809,59 @@ class OffenderServiceTest {
     )
   }
 
-  @Test
-  fun `isLao returns true for Offender with current restriction`() {
-    val offenderDetails = OffenderDetailsSummaryFactory()
-      .withCurrentRestriction(true)
-      .withCurrentExclusion(false)
-      .produce()
+  @Nested
+  inner class IsLao {
 
-    every { mockOffenderDetailsDataSource.getOffenderDetailSummary(offenderDetails.otherIds.crn) } returns ClientResult.Success(
-      HttpStatus.OK,
-      offenderDetails,
-    )
+    @Test
+    fun `returns true for Offender with current restriction`() {
+      every { mockApDeliusContextApiClient.getSummariesForCrns(listOf("CRN123")) } returns ClientResult.Success(
+        HttpStatus.OK,
+        CaseSummaries(
+          listOf(
+            CaseSummaryFactory()
+              .withCurrentRestriction(true)
+              .withCurrentExclusion(false)
+              .produce(),
+          ),
+        ),
+      )
 
-    assertThat(offenderService.isLao(offenderDetails.otherIds.crn)).isTrue
-  }
+      assertThat(offenderService.isLao("CRN123")).isTrue
+    }
 
-  @Test
-  fun `isLao returns true for Offender with current exclusion`() {
-    val offenderDetails = OffenderDetailsSummaryFactory()
-      .withCurrentRestriction(false)
-      .withCurrentExclusion(true)
-      .produce()
+    @Test
+    fun `returns true for Offender with current exclusion`() {
+      every { mockApDeliusContextApiClient.getSummariesForCrns(listOf("CRN123")) } returns ClientResult.Success(
+        HttpStatus.OK,
+        CaseSummaries(
+          listOf(
+            CaseSummaryFactory()
+              .withCurrentRestriction(false)
+              .withCurrentExclusion(true)
+              .produce(),
+          ),
+        ),
+      )
 
-    every { mockOffenderDetailsDataSource.getOffenderDetailSummary(offenderDetails.otherIds.crn) } returns ClientResult.Success(
-      HttpStatus.OK,
-      offenderDetails,
-    )
+      assertThat(offenderService.isLao("CRN123")).isTrue
+    }
 
-    assertThat(offenderService.isLao(offenderDetails.otherIds.crn)).isTrue
-  }
+    @Test
+    fun `returns false for Offender without current exclusion or restriction`() {
+      every { mockApDeliusContextApiClient.getSummariesForCrns(listOf("CRN123")) } returns ClientResult.Success(
+        HttpStatus.OK,
+        CaseSummaries(
+          listOf(
+            CaseSummaryFactory()
+              .withCurrentRestriction(false)
+              .withCurrentExclusion(false)
+              .produce(),
+          ),
+        ),
+      )
 
-  @Test
-  fun `isLao returns false for Offender without current exclusion or restriction`() {
-    val offenderDetails = OffenderDetailsSummaryFactory()
-      .withCurrentRestriction(false)
-      .withCurrentExclusion(false)
-      .produce()
-
-    every { mockOffenderDetailsDataSource.getOffenderDetailSummary(offenderDetails.otherIds.crn) } returns ClientResult.Success(
-      HttpStatus.OK,
-      offenderDetails,
-    )
-
-    assertThat(offenderService.isLao(offenderDetails.otherIds.crn)).isFalse
+      assertThat(offenderService.isLao("CRN123")).isFalse
+    }
   }
 
   @Nested
