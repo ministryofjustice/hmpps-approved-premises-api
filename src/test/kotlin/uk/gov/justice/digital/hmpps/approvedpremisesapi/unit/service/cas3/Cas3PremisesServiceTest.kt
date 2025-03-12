@@ -589,7 +589,7 @@ class Cas3PremisesServiceTest {
     assertThat(result.entity).isInstanceOf(ValidatableActionResult.FieldValidationError::class.java)
     val resultEntity = result.entity as ValidatableActionResult.FieldValidationError
     assertThat(resultEntity.validationMessages).contains(
-      entry("$.bookings", "existingBookings"),
+      entry("$.status", "existingBookings"),
     )
   }
 }
