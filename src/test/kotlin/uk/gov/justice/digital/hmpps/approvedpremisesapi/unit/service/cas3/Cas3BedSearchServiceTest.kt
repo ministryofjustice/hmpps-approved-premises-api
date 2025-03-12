@@ -3,8 +3,8 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.unit.service.cas3
 import io.mockk.every
 import io.mockk.mockk
 import org.junit.jupiter.api.Test
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas3BedspaceSearchParameters
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PersonType
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.TemporaryAccommodationBedSearchParameters
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.BedEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.BookingEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.CaseSummaryFactory
@@ -19,9 +19,9 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.OverlapBookin
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ProbationDeliveryUnitRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PersonSummaryInfoResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.repository.BedSearchRepository
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.repository.Cas3BedspaceSearchResult
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.repository.Cas3CandidateBedspace
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.repository.Cas3CandidateBedspaceOverlap
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.repository.CharacteristicNames
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.repository.TemporaryAccommodationBedSearchResultOverlap
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.CharacteristicService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.OffenderService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.WorkingDayService
@@ -65,7 +65,7 @@ class Cas3BedSearchServiceTest {
 
     val result = bedSearchService.findBedspaces(
       user = user,
-      TemporaryAccommodationBedSearchParameters(
+      Cas3BedspaceSearchParameters(
         startDate = LocalDate.parse("2023-03-22"),
         durationDays = 0,
         probationDeliveryUnits = listOf(probationDeliveryUnit.id),
@@ -92,7 +92,7 @@ class Cas3BedSearchServiceTest {
 
     val result = bedSearchService.findBedspaces(
       user = user,
-      TemporaryAccommodationBedSearchParameters(
+      Cas3BedspaceSearchParameters(
         startDate = LocalDate.parse("2024-08-22"),
         durationDays = 30,
         probationDeliveryUnits = probationDeliveryUnitIds,
@@ -129,7 +129,7 @@ class Cas3BedSearchServiceTest {
 
     val result = bedSearchService.findBedspaces(
       user = user,
-      TemporaryAccommodationBedSearchParameters(
+      Cas3BedspaceSearchParameters(
         startDate = LocalDate.parse("2024-08-28"),
         durationDays = 84,
         probationDeliveryUnits = probationDeliveryUnitIds,
@@ -164,8 +164,8 @@ class Cas3BedSearchServiceTest {
       sexualRisk = false,
     )
 
-    val repositorySearchResults = listOf(
-      Cas3BedspaceSearchResult(
+    val candidateBedspaces = listOf(
+      Cas3CandidateBedspace(
         premisesId = overlapBookingsSearchResult.premisesId,
         premisesName = "Premises Name",
         premisesAddressLine1 = "1 Someplace",
@@ -193,7 +193,7 @@ class Cas3BedSearchServiceTest {
           ),
         ),
         overlaps = mutableListOf(
-          TemporaryAccommodationBedSearchResultOverlap(
+          Cas3CandidateBedspaceOverlap(
             name = caseSummary.name.forename,
             sex = caseSummary.gender,
             personType = PersonType.fullPerson,
@@ -216,7 +216,7 @@ class Cas3BedSearchServiceTest {
         probationDeliveryUnits = listOf(probationDeliveryUnit.id),
         probationRegionId = user.probationRegion.id,
       )
-    } returns repositorySearchResults
+    } returns candidateBedspaces
 
     every { mockBookingRepository.findClosestBookingBeforeDateForBeds(any(), any()) } returns listOf()
     every { mockWorkingDayService.addWorkingDays(any(), any()) } answers { it.invocation.args[0] as LocalDate }
@@ -230,7 +230,7 @@ class Cas3BedSearchServiceTest {
 
     val result = bedSearchService.findBedspaces(
       user = user,
-      TemporaryAccommodationBedSearchParameters(
+      Cas3BedspaceSearchParameters(
         probationDeliveryUnits = listOf(probationDeliveryUnit.id),
         startDate = LocalDate.parse("2023-03-22"),
         durationDays = 7,
@@ -238,7 +238,7 @@ class Cas3BedSearchServiceTest {
       ),
     )
 
-    assertThat(result).isSuccess().hasValueEqualTo(repositorySearchResults)
+    assertThat(result).isSuccess().hasValueEqualTo(candidateBedspaces)
   }
 
   @Test
@@ -253,7 +253,7 @@ class Cas3BedSearchServiceTest {
       .produce()
 
     val expectedResults = listOf(
-      Cas3BedspaceSearchResult(
+      Cas3CandidateBedspace(
         premisesId = UUID.randomUUID(),
         premisesName = "Premises Name",
         premisesAddressLine1 = "1 Someplace",
@@ -286,7 +286,7 @@ class Cas3BedSearchServiceTest {
 
     // This bed is in a turnaround
     val unexpectedResults = listOf(
-      Cas3BedspaceSearchResult(
+      Cas3CandidateBedspace(
         premisesId = UUID.randomUUID(),
         premisesName = "Another Premises Name",
         premisesAddressLine1 = "2 Someplace",
@@ -422,7 +422,7 @@ class Cas3BedSearchServiceTest {
 
     val result = bedSearchService.findBedspaces(
       user = user,
-      TemporaryAccommodationBedSearchParameters(
+      Cas3BedspaceSearchParameters(
         startDate = LocalDate.parse("2023-03-22"),
         durationDays = 7,
         probationDeliveryUnits = listOf(probationDeliveryUnit.id),

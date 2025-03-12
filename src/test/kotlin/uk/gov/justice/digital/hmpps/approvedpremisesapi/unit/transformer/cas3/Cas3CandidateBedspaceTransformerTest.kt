@@ -2,13 +2,13 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.unit.transformer.cas3
 
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.TemporaryAccommodationBedSearchResultFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.cas3.Cas3CandidateBedspaceFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.repository.CharacteristicNames
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.cas3.Cas3BedspaceSearchResultTransformer
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.cas3.Cas3BedspaceSearchResultsTransformer
 import java.util.UUID
 
-class Cas3BedspaceSearchResultTransformerTest {
-  private val cas3BedspaceSearchResultTransformer = Cas3BedspaceSearchResultTransformer()
+class Cas3CandidateBedspaceTransformerTest {
+  private val cas3BedspaceSearchResultsTransformer = Cas3BedspaceSearchResultsTransformer()
 
   @Test
   fun `transformDomainToApi transforms correctly for Temporary Accommodation results`() {
@@ -20,29 +20,29 @@ class Cas3BedspaceSearchResultTransformerTest {
     val roomThree = UUID.fromString("3b805d1f-5632-4e77-87e3-34938cf9ade2")
 
     val domainResults = listOf(
-      TemporaryAccommodationBedSearchResultFactory()
+      Cas3CandidateBedspaceFactory()
         .withPremisesId(premisesOne)
         .withRoomId(roomOne)
         .withPremisesBedCount(6)
         .produce(),
-      TemporaryAccommodationBedSearchResultFactory()
+      Cas3CandidateBedspaceFactory()
         .withPremisesId(premisesOne)
         .withRoomId(roomTwo)
         .withPremisesBedCount(6)
         .produce(),
-      TemporaryAccommodationBedSearchResultFactory()
+      Cas3CandidateBedspaceFactory()
         .withPremisesId(premisesTwo)
         .withRoomId(roomThree)
         .withPremisesBedCount(6)
         .produce(),
-      TemporaryAccommodationBedSearchResultFactory()
+      Cas3CandidateBedspaceFactory()
         .withPremisesId(premisesTwo)
         .withRoomId(roomThree)
         .withPremisesBedCount(6)
         .produce(),
     )
 
-    val searchResults = cas3BedspaceSearchResultTransformer.transformDomainToApi(domainResults)
+    val searchResults = cas3BedspaceSearchResultsTransformer.transformDomainToApi(domainResults)
 
     assertThat(searchResults.resultsBedCount).isEqualTo(4)
     assertThat(searchResults.resultsPremisesCount).isEqualTo(2)
@@ -92,29 +92,29 @@ class Cas3BedspaceSearchResultTransformerTest {
     val roomThree = UUID.fromString("3b805d1f-5632-4e77-87e3-34938cf9ade2")
 
     val domainResults = listOf(
-      TemporaryAccommodationBedSearchResultFactory()
+      Cas3CandidateBedspaceFactory()
         .withPremisesId(premisesOne)
         .withRoomId(roomOne)
         .withPremisesBedCount(6)
         .produce(),
-      TemporaryAccommodationBedSearchResultFactory()
+      Cas3CandidateBedspaceFactory()
         .withPremisesId(premisesOne)
         .withRoomId(roomTwo)
         .withPremisesBedCount(6)
         .produce(),
-      TemporaryAccommodationBedSearchResultFactory()
+      Cas3CandidateBedspaceFactory()
         .withPremisesId(premisesTwo)
         .withRoomId(roomThree)
         .withPremisesBedCount(6)
         .produce(),
-      TemporaryAccommodationBedSearchResultFactory()
+      Cas3CandidateBedspaceFactory()
         .withPremisesId(premisesTwo)
         .withRoomId(roomThree)
         .withPremisesBedCount(6)
         .produce(),
     )
 
-    val searchResults = cas3BedspaceSearchResultTransformer.transformDomainToCas3BedspaceSearchResults(domainResults)
+    val searchResults = cas3BedspaceSearchResultsTransformer.transformDomainToApi(domainResults)
 
     assertThat(searchResults.resultsBedCount).isEqualTo(4)
     assertThat(searchResults.resultsPremisesCount).isEqualTo(2)

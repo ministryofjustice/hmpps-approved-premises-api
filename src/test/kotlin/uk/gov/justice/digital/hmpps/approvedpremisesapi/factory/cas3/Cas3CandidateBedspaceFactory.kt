@@ -1,16 +1,16 @@
-package uk.gov.justice.digital.hmpps.approvedpremisesapi.factory
+package uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.cas3
 
 import io.github.bluegroundltd.kfactory.Factory
 import io.github.bluegroundltd.kfactory.Yielded
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.repository.Cas3BedspaceSearchResult
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.repository.Cas3CandidateBedspace
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.repository.Cas3CandidateBedspaceOverlap
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.repository.CharacteristicNames
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.repository.TemporaryAccommodationBedSearchResultOverlap
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomInt
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomStringMultiCaseWithNumbers
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomStringUpperCase
 import java.util.UUID
 
-class TemporaryAccommodationBedSearchResultFactory : Factory<Cas3BedspaceSearchResult> {
+class Cas3CandidateBedspaceFactory : Factory<Cas3CandidateBedspace> {
   private var premisesId: Yielded<UUID> = { UUID.randomUUID() }
   private var premisesName: Yielded<String> = { randomStringMultiCaseWithNumbers(6) }
   private var premisesAddressLine1: Yielded<String> = { randomStringUpperCase(12) }
@@ -27,7 +27,7 @@ class TemporaryAccommodationBedSearchResultFactory : Factory<Cas3BedspaceSearchR
   private var roomCharacteristics: Yielded<MutableList<CharacteristicNames>> = { mutableListOf() }
   private var premisesBedCount: Yielded<Int> = { randomInt(1, 10) }
   private var bookedBedCount: Yielded<Int> = { randomInt(1, 5) }
-  private var overlaps: Yielded<MutableList<TemporaryAccommodationBedSearchResultOverlap>> = { mutableListOf() }
+  private var overlaps: Yielded<MutableList<Cas3CandidateBedspaceOverlap>> = { mutableListOf() }
 
   fun withPremisesId(premisesId: UUID) = apply {
     this.premisesId = { premisesId }
@@ -93,11 +93,11 @@ class TemporaryAccommodationBedSearchResultFactory : Factory<Cas3BedspaceSearchR
     this.bookedBedCount = { bookedBedCount }
   }
 
-  fun withOverlaps(overlaps: MutableList<TemporaryAccommodationBedSearchResultOverlap>) = apply {
+  fun withOverlaps(overlaps: MutableList<Cas3CandidateBedspaceOverlap>) = apply {
     this.overlaps = { overlaps }
   }
 
-  override fun produce() = Cas3BedspaceSearchResult(
+  override fun produce() = Cas3CandidateBedspace(
     premisesId = this.premisesId(),
     premisesName = this.premisesName(),
     premisesAddressLine1 = this.premisesAddressLine1(),
