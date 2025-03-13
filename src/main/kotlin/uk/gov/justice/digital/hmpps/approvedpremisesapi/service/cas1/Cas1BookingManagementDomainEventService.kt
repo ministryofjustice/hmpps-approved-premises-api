@@ -122,7 +122,6 @@ class Cas1SpaceBookingManagementDomainEventService(
     val eventNumber = updatedCas1SpaceBooking.deliusEventNumber!!
 
     domainEventService.savePersonNotArrivedEvent(
-      emit = false,
       domainEvent = DomainEvent(
         id = domainEventId,
         applicationId = applicationId,

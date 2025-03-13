@@ -153,10 +153,9 @@ class Cas1DomainEventService(
   )
 
   @Transactional
-  fun savePersonNotArrivedEvent(domainEvent: DomainEvent<PersonNotArrivedEnvelope>, emit: Boolean) = saveAndEmit(
+  fun savePersonNotArrivedEvent(domainEvent: DomainEvent<PersonNotArrivedEnvelope>) = saveAndEmit(
     domainEvent = domainEvent,
     eventType = DomainEventType.APPROVED_PREMISES_PERSON_NOT_ARRIVED,
-    emit = emit,
   )
 
   @Transactional

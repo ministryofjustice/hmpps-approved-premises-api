@@ -550,9 +550,8 @@ class Cas1DomainEventServiceTest {
       }
     }
 
-    @ParameterizedTest
-    @ValueSource(booleans = [true, false])
-    fun `savePersonNotArrivedEvent sends correct arguments to saveAndEmit`(emit: Boolean) {
+    @Test
+    fun `savePersonNotArrivedEvent sends correct arguments to saveAndEmit`() {
       val id = UUID.randomUUID()
 
       val eventDetails = PersonNotArrivedFactory().produce()
@@ -565,15 +564,15 @@ class Cas1DomainEventServiceTest {
 
       val domainEventServiceSpy = spyk(domainEventService)
 
-      every { domainEventServiceSpy.saveAndEmit(any(), any(), emit) } returns Unit
+      every { domainEventServiceSpy.saveAndEmit(any(), any(), any()) } returns Unit
 
-      domainEventServiceSpy.savePersonNotArrivedEvent(domainEvent, emit)
+      domainEventServiceSpy.savePersonNotArrivedEvent(domainEvent)
 
       verify {
         domainEventServiceSpy.saveAndEmit(
           domainEvent = domainEvent,
           eventType = DomainEventType.APPROVED_PREMISES_PERSON_NOT_ARRIVED,
-          emit,
+          emit = true,
         )
       }
     }
