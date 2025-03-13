@@ -22,6 +22,12 @@ springdoc:
 
 hmpps.sqs:
   provider: localstack
+  queues:
+    castwodomaineventslistenerqueue:
+      queueName: cas-2-domain-events-listener-queue
+      dlqName: cas-2-domain-events-listener-dlq
+      subscribeTopicId: domainevents
+      subscribeFilter: '{"eventType":["offender-management.allocation.changed", "prisoner-offender-search.prisoner.updated"]}'
   topics:
     domainevents:
       arn: arn:aws:sns:eu-west-2:000000000000:domainevents
@@ -48,11 +54,16 @@ seed:
     script:
       cas1-enabled: true
       cas2-enabled: true
+      cas2v2-enabled: false
       noms: A1234AI
+      noms-cas2v2: A1234AX
 
 assign-default-region-to-users-with-unknown-region: true
 preemptive-cache-logging-enabled: true
 preemptive-cache-lock-duration-ms: 60000
+
+refresh-inmate-details-cache:
+  logging-enabled: true
 
 user-allocations:
   rules:
@@ -60,6 +71,7 @@ user-allocations:
       allocate-to-user: JIMSNOWLDAP
 
 feature-flags:
+  cas1-disable-overbooking-summary: true
 
 logging:
   level:

@@ -12,6 +12,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas2.model.Ca
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas2.model.EventType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas2.model.ExternalUser
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas2.model.PersonReference
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApplicationOrigin
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas2v2AssessmentStatusUpdate
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.config.NotifyConfig
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas2v2.Cas2v2ApplicationEntity
@@ -28,9 +29,9 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.reference.Cas2Pers
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.reference.Cas2PersistedApplicationStatusFinder
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.CasResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.EmailNotificationService
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas2.Constants.HDC_APPLICATION_TYPE
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas2.DomainEventService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas2.Cas2DomainEventService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.cas2.ApplicationStatusTransformer
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.Cas2v2ApplicationUtils
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.toCas2UiFormat
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.toCas2UiFormattedHourOfDay
 import java.time.OffsetDateTime
@@ -41,7 +42,7 @@ class Cas2v2StatusUpdateService(
   private val cas2v2AssessmentRepository: Cas2v2AssessmentRepository,
   private val cas2v2StatusUpdateRepository: Cas2v2StatusUpdateRepository,
   private val cas2v2StatusUpdateDetailRepository: Cas2v2StatusUpdateDetailRepository,
-  private val domainEventService: DomainEventService,
+  private val domainEventService: Cas2DomainEventService,
   private val emailNotificationService: EmailNotificationService,
   private val notifyConfig: NotifyConfig,
   private val statusFinder: Cas2PersistedApplicationStatusFinder,
@@ -52,9 +53,7 @@ class Cas2v2StatusUpdateService(
 
   private val log = LoggerFactory.getLogger(this::class.java)
 
-  fun isValidStatus(statusUpdate: Cas2v2AssessmentStatusUpdate): Boolean {
-    return findActiveStatusByName(statusUpdate.newStatus) != null
-  }
+  fun isValidStatus(statusUpdate: Cas2v2AssessmentStatusUpdate): Boolean = findActiveStatusByName(statusUpdate.newStatus) != null
 
   @Transactional
   @SuppressWarnings("ReturnCount")
@@ -114,10 +113,8 @@ class Cas2v2StatusUpdateService(
     return CasResult.Success(createdStatusUpdate)
   }
 
-  private fun findActiveStatusByName(statusName: String): Cas2PersistedApplicationStatus? {
-    return statusFinder.active()
-      .find { status -> status.name == statusName }
-  }
+  private fun findActiveStatusByName(statusName: String): Cas2PersistedApplicationStatus? = statusFinder.active()
+    .find { status -> status.name == statusName }
 
   fun createStatusUpdatedDomainEvent(
     statusUpdate: Cas2v2StatusUpdateEntity,
@@ -168,15 +165,25 @@ class Cas2v2StatusUpdateService(
 
   private fun sendEmailStatusUpdated(user: Cas2v2UserEntity, application: Cas2v2ApplicationEntity, status: Cas2v2StatusUpdateEntity) {
     if (application.createdByUser.email != null) {
+      val applicationOrigin = application.applicationOrigin
+      val applicationType = Cas2v2ApplicationUtils().getApplicationTypeFromApplicationOrigin(applicationOrigin)
+
+      val templateId = when (applicationOrigin) {
+        ApplicationOrigin.courtBail -> notifyConfig.templates.cas2v2ApplicationStatusUpdatedCourtBail
+        ApplicationOrigin.prisonBail -> notifyConfig.templates.cas2v2ApplicationStatusUpdatedPrisonBail
+        ApplicationOrigin.homeDetentionCurfew -> notifyConfig.templates.cas2ApplicationStatusUpdated
+      }
+
       emailNotificationService.sendCas2Email(
         recipientEmailAddress = user.email!!,
-        templateId = notifyConfig.templates.cas2ApplicationStatusUpdated,
+        templateId = templateId,
         personalisation = mapOf(
           "applicationStatus" to status.label,
           "dateStatusChanged" to status.createdAt.toLocalDate().toCas2UiFormat(),
           "timeStatusChanged" to status.createdAt.toCas2UiFormattedHourOfDay(),
-          "applicationType" to HDC_APPLICATION_TYPE,
+          "applicationType" to applicationType,
           "nomsNumber" to application.nomsNumber,
+          "crn" to application.crn,
           "applicationUrl" to applicationOverviewUrlTemplate.replace("#id", application.id.toString()),
         ),
       )

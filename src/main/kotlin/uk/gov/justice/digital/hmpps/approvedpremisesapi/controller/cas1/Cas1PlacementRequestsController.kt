@@ -15,7 +15,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.ForbiddenProblem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.OffenderService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.UserService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.PlacementRequestService
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1LimitedAccessStrategy
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1LaoStrategy
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.cas1.Cas1PlacementRequestSummaryTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.PageCriteria
 import java.time.LocalDate
@@ -74,12 +74,10 @@ class Cas1PlacementRequestsController(
   private fun mapPersonDetailOntoPlacementRequests(
     placementRequests: List<uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas1PlacementRequestSummary>,
     user: UserEntity,
-  ): List<Cas1PlacementRequestSummary> {
-    return placementRequests.map {
-      cas1PlacementRequestSummaryTransformer.transformCas1PlacementRequestSummaryJpaToApi(
-        it,
-        offenderService.getPersonInfoResult(it.getPersonCrn(), user.cas1LimitedAccessStrategy()),
-      )
-    }
+  ): List<Cas1PlacementRequestSummary> = placementRequests.map {
+    cas1PlacementRequestSummaryTransformer.transformCas1PlacementRequestSummaryJpaToApi(
+      it,
+      offenderService.getPersonInfoResult(it.getPersonCrn(), user.cas1LaoStrategy()),
+    )
   }
 }

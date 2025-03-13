@@ -3,7 +3,6 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.controller.cas2
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
 import kotlinx.coroutines.runBlocking
-import org.slf4j.LoggerFactory
 import org.springframework.http.ResponseEntity
 import org.springframework.stereotype.Service
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.cas2.PeopleCas2Delegate
@@ -11,28 +10,28 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.OASysRiskOfSer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.OASysRiskToSelf
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Person
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PersonRisks
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.ProbationOffenderSearchResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.community.OffenderDetailSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.ForbiddenProblem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.NotFoundProblem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.AuthorisableActionResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.NomisUserService
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas2.OffenderService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.OASysService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas2.Cas2OffenderService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas2.ProbationOffenderSearchResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.OASysSectionsTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.PersonTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.RisksTransformer
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.OffenderService as OASysOffenderService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.extractEntityFromCasResult
 
 @Service("Cas2PeopleController")
 class PeopleController(
-  private val offenderService: OffenderService,
-  private val oaSysOffenderService: OASysOffenderService,
+  private val offenderService: Cas2OffenderService,
+  private val oasysService: OASysService,
   private val oaSysSectionsTransformer: OASysSectionsTransformer,
   private val personTransformer: PersonTransformer,
   private val risksTransformer: RisksTransformer,
   private val nomisUserService: NomisUserService,
 ) : PeopleCas2Delegate {
-  private val log = LoggerFactory.getLogger(this::class.java)
 
   @SuppressWarnings("TooGenericExceptionThrown")
   override fun peopleSearchGet(nomsNumber: String): ResponseEntity<Person> {
@@ -60,15 +59,15 @@ class PeopleController(
 
     return runBlocking(context = Dispatchers.IO) {
       val offenceDetailsResult = async {
-        oaSysOffenderService.getOASysOffenceDetails(crn)
+        oasysService.getOASysOffenceDetails(crn)
       }
 
       val riskToTheIndividualResult = async {
-        oaSysOffenderService.getOASysRiskToTheIndividual(crn)
+        oasysService.getOASysRiskToTheIndividual(crn)
       }
 
-      val offenceDetails = getSuccessEntityOrThrow(crn, offenceDetailsResult.await())
-      val riskToTheIndividual = getSuccessEntityOrThrow(crn, riskToTheIndividualResult.await())
+      val offenceDetails = extractEntityFromCasResult(offenceDetailsResult.await())
+      val riskToTheIndividual = extractEntityFromCasResult(riskToTheIndividualResult.await())
 
       ResponseEntity.ok(
         oaSysSectionsTransformer.transformRiskToIndividual(offenceDetails, riskToTheIndividual),
@@ -81,15 +80,15 @@ class PeopleController(
 
     return runBlocking(context = Dispatchers.IO) {
       val offenceDetailsResult = async {
-        oaSysOffenderService.getOASysOffenceDetails(crn)
+        oasysService.getOASysOffenceDetails(crn)
       }
 
       val roshResult = async {
-        oaSysOffenderService.getOASysRoshSummary(crn)
+        oasysService.getOASysRoshSummary(crn)
       }
 
-      val offenceDetails = getSuccessEntityOrThrow(crn, offenceDetailsResult.await())
-      val rosh = getSuccessEntityOrThrow(crn, roshResult.await())
+      val offenceDetails = extractEntityFromCasResult(offenceDetailsResult.await())
+      val rosh = extractEntityFromCasResult(roshResult.await())
 
       ResponseEntity.ok(
         oaSysSectionsTransformer.transformRiskOfSeriousHarm(offenceDetails, rosh),
@@ -108,18 +107,12 @@ class PeopleController(
   }
 
   private fun getOffenderDetails(crn: String): OffenderDetailSummary {
-    val offenderDetails = when (val offenderDetailsResult = offenderService.getOffenderByCrn(crn)) {
+    val offenderDetails = when (val offenderDetailsResult = offenderService.getOffenderByCrnDeprecated(crn)) {
       is AuthorisableActionResult.NotFound -> throw NotFoundProblem(crn, "Person")
       is AuthorisableActionResult.Unauthorised -> throw ForbiddenProblem()
       is AuthorisableActionResult.Success -> offenderDetailsResult.entity
     }
 
     return offenderDetails
-  }
-
-  private fun <T> getSuccessEntityOrThrow(crn: String, authorisableActionResult: AuthorisableActionResult<T>): T = when (authorisableActionResult) {
-    is AuthorisableActionResult.NotFound -> throw NotFoundProblem(crn, "Person")
-    is AuthorisableActionResult.Unauthorised -> throw ForbiddenProblem()
-    is AuthorisableActionResult.Success -> authorisableActionResult.entity
   }
 }

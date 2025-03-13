@@ -13,6 +13,8 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremi
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.CharacteristicEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.CharacteristicRepository
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.CharacteristicRepository.Constants.CAS1_PROPERTY_NAME_PREMISES_ELLIOT_HOUSE
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.CharacteristicRepository.Constants.CAS1_PROPERTY_NAME_PREMISES_ST_JOSEPHS
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.LocalAuthorityAreaEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.LocalAuthorityAreaRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PostCodeDistrictEntity
@@ -42,8 +44,12 @@ class Cas1SeedPremisesFromSiteSurveyXlsxJob(
   private val entityManager: EntityManager,
 ) : ExcelSeedJob {
 
-  companion object {
+  private companion object {
     val javers: Javers = JaversBuilder.javers().withListCompareAlgorithm(ListCompareAlgorithm.AS_SET).build()
+    val qCodeToCharacteristic = mapOf(
+      "Q091" to CAS1_PROPERTY_NAME_PREMISES_ELLIOT_HOUSE,
+      "Q035" to CAS1_PROPERTY_NAME_PREMISES_ST_JOSEPHS,
+    )
   }
 
   private val log = LoggerFactory.getLogger(this::class.java)
@@ -86,15 +92,28 @@ class Cas1SeedPremisesFromSiteSurveyXlsxJob(
     return postcodeDistrict
   }
 
+  @SuppressWarnings("CyclomaticComplexMethod")
   private fun resolveLocalAuthorityArea(siteSurveyPremise: Cas1SiteSurveyPremise): LocalAuthorityAreaEntity {
     val localAuthorityAreaName = when (siteSurveyPremise.localAuthorityArea) {
-      "Bournemouth" -> "Bournemouth, Christchurch and Poole"
+      "Brent (London)" -> "Brent"
+      "Brighton & Hove" -> "Brighton and Hove"
       "Bristol" -> "Bristol, City of"
+      "Bournemouth" -> "Bournemouth, Christchurch and Poole"
+      "Camden (London)" -> "Camden"
+      "Cheshire West" -> "Cheshire West and Chester"
+      "Hull" -> "Kingston upon Hull, City of"
+      "Islington (London)" -> "Islington"
+      "Lewisham (London)" -> "Lewisham"
+      "Newcastle" -> "Newcastle upon Tyne"
+      "Newham (London)" -> "Newham"
+      "Richmond (London)" -> "Richmond upon Thames"
+      "Southwark (London)" -> "Southwark"
+      "Wandsworth (London)" -> "Wandsworth"
       "Windsor & Maidenhead" -> "Windsor and Maidenhead"
       else -> siteSurveyPremise.localAuthorityArea
     }
 
-    return localAuthorityAreaRepository.findByName(localAuthorityAreaName)
+    return localAuthorityAreaRepository.findByNameIgnoringCase(localAuthorityAreaName)
       ?: error("Local Authority Area '$localAuthorityAreaName' does not exist")
   }
 
@@ -140,7 +159,7 @@ class Cas1SeedPremisesFromSiteSurveyXlsxJob(
       ApprovedPremisesEntity(
         id = UUID.randomUUID(),
         name = siteSurvey.name,
-        fullAddress = premisesInfo.siteSurveyPremise.address,
+        fullAddress = siteSurvey.address,
         // note that the site survey provides a full address in this field
         // so callers should retrieve fullAddress instead
         addressLine1 = siteSurvey.address,
@@ -226,6 +245,7 @@ class Cas1SeedPremisesFromSiteSurveyXlsxJob(
   private data class ApprovedPremisesForComparison(
     val id: UUID,
     val name: String,
+    val fullAddress: String?,
     val addressLine1: String,
     val addressLine2: String?,
     val town: String?,
@@ -249,6 +269,7 @@ class Cas1SeedPremisesFromSiteSurveyXlsxJob(
       fun fromEntity(entity: ApprovedPremisesEntity) = ApprovedPremisesForComparison(
         id = entity.id,
         name = entity.name,
+        fullAddress = entity.fullAddress,
         addressLine1 = entity.addressLine1,
         addressLine2 = entity.addressLine2,
         town = entity.town,
@@ -273,30 +294,61 @@ class Cas1SeedPremisesFromSiteSurveyXlsxJob(
 
   @SuppressWarnings("TooGenericExceptionThrown")
   private fun resolveCharacteristics(siteSurveyPremise: Cas1SiteSurveyPremise): List<CharacteristicEntity> {
-    return listOf(
+    val specifiedCharacteristics = listOf(
       CharacteristicRequired("isIAP", siteSurveyPremise.iap),
       CharacteristicRequired("isPIPE", siteSurveyPremise.pipe),
       CharacteristicRequired("isESAP", siteSurveyPremise.enhancedSecuritySite),
       CharacteristicRequired("isSemiSpecialistMentalHealth", siteSurveyPremise.mentalHealth),
       CharacteristicRequired("isRecoveryFocussed", siteSurveyPremise.recoveryFocussed),
-      CharacteristicRequired("isSuitableForVulnerable", siteSurveyPremise.suitableForPeopleAtRiskOfCriminalExploitation),
-      CharacteristicRequired("acceptsSexOffenders", siteSurveyPremise.willAcceptPeopleWhoHave.committedSexualOffencesAgainstAdults),
-      CharacteristicRequired("acceptsChildSexOffenders", siteSurveyPremise.willAcceptPeopleWhoHave.committedSexualOffencesAgainstChildren),
-      CharacteristicRequired("acceptsNonSexualChildOffenders", siteSurveyPremise.willAcceptPeopleWhoHave.committedNonSexualOffencesAgainstChildren),
-      CharacteristicRequired("acceptsHateCrimeOffenders", siteSurveyPremise.willAcceptPeopleWhoHave.beenConvictedOfHateCrimes),
+      CharacteristicRequired(
+        "isSuitableForVulnerable",
+        siteSurveyPremise.suitableForPeopleAtRiskOfCriminalExploitation,
+      ),
+      CharacteristicRequired(
+        "acceptsSexOffenders",
+        siteSurveyPremise.willAcceptPeopleWhoHave.committedSexualOffencesAgainstAdults,
+      ),
+      CharacteristicRequired(
+        "acceptsChildSexOffenders",
+        siteSurveyPremise.willAcceptPeopleWhoHave.committedSexualOffencesAgainstChildren,
+      ),
+      CharacteristicRequired(
+        "acceptsNonSexualChildOffenders",
+        siteSurveyPremise.willAcceptPeopleWhoHave.committedNonSexualOffencesAgainstChildren,
+      ),
+      CharacteristicRequired(
+        "acceptsHateCrimeOffenders",
+        siteSurveyPremise.willAcceptPeopleWhoHave.beenConvictedOfHateCrimes,
+      ),
       CharacteristicRequired("isCatered", siteSurveyPremise.cateredOrSelfCatered),
       CharacteristicRequired("hasWideStepFreeAccess", siteSurveyPremise.stepFreeEntrance),
       CharacteristicRequired("hasWideAccessToCommunalAreas", siteSurveyPremise.corridorsAtLeast1200CmWide),
       CharacteristicRequired("hasStepFreeAccessToCommunalAreas", siteSurveyPremise.corridorsHaveStepFreeAccess),
-      CharacteristicRequired("hasWheelChairAccessibleBathrooms", siteSurveyPremise.bathroomFacilitiesAdaptedForWheelchairUsers),
+      CharacteristicRequired(
+        "hasWheelChairAccessibleBathrooms",
+        siteSurveyPremise.bathroomFacilitiesAdaptedForWheelchairUsers,
+      ),
       CharacteristicRequired("hasLift", siteSurveyPremise.hasALift),
       CharacteristicRequired("hasTactileFlooring", siteSurveyPremise.hasTactileAndDirectionalFlooring),
       CharacteristicRequired("hasBrailleSignage", siteSurveyPremise.hasSignsInBraille),
       CharacteristicRequired("hasHearingLoop", siteSurveyPremise.hasAHearingLoop),
     ).filter { it.value }
       .map {
-        characteristicRepository.findByPropertyNameAndScopes(propertyName = it.propertyName, serviceName = "approved-premises", modelName = "premises")
-          ?: throw RuntimeException("Characteristic '${it.propertyName}' does not exist for AP premises")
+        premiseCharacteristicsByPropertyName(it.propertyName)
       }
+
+    return buildList {
+      addAll(specifiedCharacteristics)
+
+      qCodeToCharacteristic[siteSurveyPremise.qCode.uppercase()]?.let {
+        add(premiseCharacteristicsByPropertyName(it))
+      }
+    }
   }
+
+  @SuppressWarnings("TooGenericExceptionThrown")
+  private fun premiseCharacteristicsByPropertyName(propertyName: String) = characteristicRepository.findCas1ByPropertyNameAndScope(
+    propertyName = propertyName,
+    modelName = "premises",
+  ) ?: throw RuntimeException("Characteristic '$propertyName' does not exist for AP premises")
 }

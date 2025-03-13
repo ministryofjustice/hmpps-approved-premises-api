@@ -23,19 +23,24 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PersonStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.UpdateApplicationType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.UpdateCas2Application
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.OffenderDetailsSummaryFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.IntegrationTestBase
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenACas2Assessor
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenACas2LicenceCaseAdminUser
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenACas2PomUser
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAnOffender
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.apDeliusContextEmptyCaseSummaryToBulkResponse
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.apDeliusContextMockCaseSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.prisonAPIMockNotFoundInmateDetailsCall
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApplicationRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas2ApplicationEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas2ApplicationRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas2StatusUpdateEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ExternalUserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.NomisUserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.community.OffenderDetailSummary
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.prisonsapi.InmateDetail
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.prisonsapi.InmateStatus
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.asCaseSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomDateAfter
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomDateBefore
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomDateTimeBefore
@@ -46,7 +51,7 @@ import kotlin.math.sign
 
 class Cas2ApplicationTest : IntegrationTestBase() {
   @SpykBean
-  lateinit var realApplicationRepository: ApplicationRepository
+  lateinit var realApplicationRepository: Cas2ApplicationRepository
 
   val schema = """
         {
@@ -205,23 +210,19 @@ class Cas2ApplicationTest : IntegrationTestBase() {
         withId(UUID.randomUUID())
       }
 
-      fun createApplication(userEntity: NomisUserEntity, offenderDetails: OffenderDetailSummary): Cas2ApplicationEntity {
-        return cas2ApplicationEntityFactory.produceAndPersist {
-          withApplicationSchema(applicationSchema)
-          withCreatedByUser(userEntity)
-          withCrn(offenderDetails.otherIds.crn)
-          withCreatedAt(OffsetDateTime.now().minusDays(28))
-          withConditionalReleaseDate(LocalDate.now().plusDays(1))
-        }
+      fun createApplication(userEntity: NomisUserEntity, offenderDetails: OffenderDetailSummary): Cas2ApplicationEntity = cas2ApplicationEntityFactory.produceAndPersist {
+        withApplicationSchema(applicationSchema)
+        withCreatedByUser(userEntity)
+        withCrn(offenderDetails.otherIds.crn)
+        withCreatedAt(OffsetDateTime.now().minusDays(28))
+        withConditionalReleaseDate(LocalDate.now().plusDays(1))
       }
 
-      fun createStatusUpdate(status: Pair<String, UUID>, application: Cas2ApplicationEntity): Cas2StatusUpdateEntity {
-        return cas2StatusUpdateEntityFactory.produceAndPersist {
-          withLabel(status.first)
-          withStatusId(status.second)
-          withApplication(application)
-          withAssessor(externalUserEntityFactory.produceAndPersist())
-        }
+      fun createStatusUpdate(status: Pair<String, UUID>, application: Cas2ApplicationEntity): Cas2StatusUpdateEntity = cas2StatusUpdateEntityFactory.produceAndPersist {
+        withLabel(status.first)
+        withStatusId(status.second)
+        withApplication(application)
+        withAssessor(externalUserEntityFactory.produceAndPersist())
       }
 
       fun unexpiredDateTime() = OffsetDateTime.now().randomDateTimeBefore(32)
@@ -1197,7 +1198,8 @@ class Cas2ApplicationTest : IntegrationTestBase() {
                 applicationEntity.createdByUser.id == it.createdBy.id &&
                 applicationEntity.submittedAt?.toInstant() == it.submittedAt &&
                 serializableToJsonNode(applicationEntity.data) == serializableToJsonNode(it.data) &&
-                newestJsonSchema.id == it.schemaVersion && !it.outdatedSchema
+                newestJsonSchema.id == it.schemaVersion &&
+                !it.outdatedSchema
             }
           }
         }
@@ -1499,6 +1501,44 @@ class Cas2ApplicationTest : IntegrationTestBase() {
             .isNotFound
             .expectBody()
             .jsonPath("$.detail").isEqualTo("No Offender with an ID of $crn could be found")
+        }
+      }
+
+      @Test
+      fun `Create new application returns 403 when a person is restricted`() {
+        givenACas2PomUser { userEntity, jwt ->
+
+          val crn = "CRNRESTRICTED"
+          val noms = "NOMSRESTRICTED"
+          val offenderDetails =
+            OffenderDetailsSummaryFactory()
+              .withCrn(crn)
+              .withNomsNumber(noms)
+              .withCurrentRestriction(true)
+              .withCurrentExclusion(true).produce()
+
+          val caseDetail = offenderDetails.asCaseSummary()
+          apDeliusContextMockCaseSummary(caseDetail)
+          mockInmateDetailPrisonsApiCall(InmateDetail(caseDetail.nomsId!!, InmateStatus.IN, null))
+
+          cas2ApplicationJsonSchemaEntityFactory.produceAndPersist {
+            withAddedAt(OffsetDateTime.now())
+            withId(UUID.randomUUID())
+          }
+
+          webTestClient.post()
+            .uri("/cas2/applications")
+            .header("Authorization", "Bearer $jwt")
+            .bodyValue(
+              NewApplication(
+                crn = caseDetail.crn,
+              ),
+            )
+            .exchange()
+            .expectStatus()
+            .isForbidden
+            .expectBody()
+            .jsonPath("$.detail").isEqualTo("Offender $crn is Restricted.")
         }
       }
     }

@@ -56,62 +56,7 @@ components:
         - applicationId
         - telephoneNumber
         - applicationOrigin
-    Cas2v2Assessment:
-      type: object
-      properties:
-        id:
-          type: string
-          format: uuid
-        nacroReferralId:
-          type: string
-        assessorName:
-          type: string
-        statusUpdates:
-          type: array
-          items:
-            $ref: '#/components/schemas/Cas2v2StatusUpdate'
-      required:
-        - id
-    Cas2v2Application:
-      allOf:
-        - $ref: '_shared.yml#/components/schemas/Application'
-        - type: object
-          properties:
-            createdBy:
-              $ref: '#/components/schemas/Cas2v2User'
-            schemaVersion:
-              type: string
-              format: uuid
-            outdatedSchema:
-              type: boolean
-            data:
-              $ref: '_shared.yml#/components/schemas/Unit'
-            document:
-              $ref: '_shared.yml#/components/schemas/Unit'
-            status:
-              $ref: '_shared.yml#/components/schemas/ApplicationStatus'
-            submittedAt:
-              type: string
-              format: date-time
-            telephoneNumber:
-              type: string
-            assessment:
-              $ref: '#/components/schemas/Cas2v2Assessment'
-            timelineEvents:
-              type: array
-              items:
-                $ref: '_shared.yml#/components/schemas/Cas2TimelineEvent'
-            applicationOrigin:
-              $ref: "_shared.yml#/components/schemas/ApplicationOrigin"
-            bailHearingDate:
-              type: string
-              format: date
-          required:
-            - createdBy
-            - schemaVersion
-            - outdatedSchema
-            - status
-            - applicationOrigin
+
     Cas2v2SubmittedApplication:
       type: object
       properties:
@@ -124,7 +69,7 @@ components:
           type: string
           format: date-time
         submittedBy:
-          $ref: '#/components/schemas/Cas2v2User'
+          $ref: '_shared.yml#/components/schemas/Cas2v2User'
         schemaVersion:
           type: string
           format: uuid
@@ -144,7 +89,7 @@ components:
           items:
             $ref: '_shared.yml#/components/schemas/Cas2TimelineEvent'
         assessment:
-          $ref: '#/components/schemas/Cas2v2Assessment'
+          $ref: '_shared.yml#/components/schemas/Cas2v2Assessment'
         bailHearingDate:
           type: string
           format: date
@@ -266,36 +211,7 @@ components:
         - body
         - createdAt
       description: Notes added to a Cas2v2Application
-    Cas2v2User:
-      type: object
-      properties:
-        id:
-          type: string
-          format: uuid
-        name:
-          type: string
-          example: 'Roger Smith'
-        username:
-          type: string
-          example: 'SMITHR_GEN'
-        authSource:
-          type: string
-          enum:
-            - nomis
-            - delius
-            - auth
-        email:
-          type: string
-          example: 'Roger.Smith@justice.gov.uk'
-        isActive:
-          type: boolean
-          example: true
-      required:
-        - id
-        - name
-        - username
-        - authSource
-        - isActive
+
     Cas2v2AssessmentStatusUpdate:
       type: object
       properties:
@@ -311,51 +227,7 @@ components:
             description: 'The "name" of the new detail belonging to the new status'
       required:
         - newStatus
-    Cas2v2StatusUpdate:
-      type: object
-      properties:
-        id:
-          type: string
-          format: uuid
-        name:
-          type: string
-          example: 'moreInfoRequested'
-        label:
-          type: string
-          example: 'More information requested'
-        description:
-          type: string
-          example: 'More information about the application has been requested from the HMPPS user.'
-        updatedBy:
-          $ref: '#/components/schemas/Cas2v2User'
-        updatedAt:
-          type: string
-          format: date-time
-        statusUpdateDetails:
-          type: array
-          items:
-            $ref: '#/components/schemas/Cas2v2StatusUpdateDetail'
-      required:
-        - id
-        - name
-        - label
-        - description
-    Cas2v2StatusUpdateDetail:
-      type: object
-      properties:
-        id:
-          type: string
-          format: uuid
-        name:
-          type: string
-          example: 'moreInfoRequested'
-        label:
-          type: string
-          example: 'More information requested'
-      required:
-        - id
-        - name
-        - label
+
     LatestCas2v2StatusUpdate:
       type: object
       properties:
@@ -409,3 +281,24 @@ components:
         - id
         - name
         - label
+    NewCas2v2ApplicationNote:
+      type: object
+      properties:
+        note:
+          type: string
+      required:
+        - note
+      description: A note to add to an application
+    UpdateCas2v2Assessment:
+      type: object
+      properties:
+        nacroReferralId:
+          type: string
+        assessorName:
+          type: string
+    Cas2v2ReportName:
+      type: string
+      enum:
+        - submitted-applications
+        - application-status-updates
+        - unsubmitted-applications

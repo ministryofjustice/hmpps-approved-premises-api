@@ -25,23 +25,27 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DepartureRepo
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ExtensionEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ExtensionRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.MoveOnCategoryRepository
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PremisesEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TemporaryAccommodationPremisesEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TurnaroundEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TurnaroundRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserEntity
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserQualification
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas3.Cas3VoidBedspacesRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.serviceScopeMatches
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PersonInfoResult
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PersonSummaryInfoResult
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.forCrn
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.validated
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.validatedCasResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.InternalServerErrorProblem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.AuthorisableActionResult
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.CasResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.ValidatableActionResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.AssessmentService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.FeatureFlagService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.OffenderService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.UserAccessService
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.UserService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.WorkingDayService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas3LaoStrategy
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.extractEntityFromCasResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.toLocalDateTime
 import java.time.LocalDate
@@ -65,11 +69,11 @@ class Cas3BookingService(
   private val extensionRepository: ExtensionRepository,
   private val cas3PremisesService: Cas3PremisesService,
   private val assessmentService: AssessmentService,
-  private val userService: UserService,
   private val userAccessService: UserAccessService,
   private val offenderService: OffenderService,
   private val workingDayService: WorkingDayService,
   private val cas3DomainEventService: DomainEventService,
+  private val featureFlagService: FeatureFlagService,
 ) {
   private val log = LoggerFactory.getLogger(this::class.java)
 
@@ -185,10 +189,7 @@ class Cas3BookingService(
 
   fun updateBooking(bookingEntity: BookingEntity): BookingEntity = bookingRepository.save(bookingEntity)
 
-  fun getBookingForPremises(premisesId: UUID, bookingId: UUID): GetBookingForPremisesResult {
-    val premises = cas3PremisesService.getPremises(premisesId)
-      ?: return GetBookingForPremisesResult.PremisesNotFound
-
+  fun getBookingForPremises(premises: PremisesEntity, bookingId: UUID): GetBookingForPremisesResult {
     val booking = bookingRepository.findByIdOrNull(bookingId)
       ?: return GetBookingForPremisesResult.BookingNotFound
 
@@ -314,9 +315,13 @@ class Cas3BookingService(
     moveOnCategoryId: UUID,
     notes: String?,
     user: UserEntity,
-  ) = validated<DepartureEntity> {
+  ) = validatedCasResult<DepartureEntity> {
     if (booking.arrivalDate.toLocalDateTime().isAfter(dateTime)) {
       "$.dateTime" hasValidationError "beforeBookingArrivalDate"
+    }
+
+    if (featureFlagService.getBooleanFlag("cas3-validate-booking-departure-in-future") && dateTime.isAfter(OffsetDateTime.now())) {
+      validationErrors["$.dateTime"] = "departureDateInFuture"
     }
 
     val reason = departureReasonRepository.findByIdOrNull(reasonId)
@@ -361,7 +366,7 @@ class Cas3BookingService(
       else -> cas3DomainEventService.savePersonDepartureUpdatedEvent(booking, user)
     }
 
-    return success(departureEntity)
+    return CasResult.Success(departureEntity)
   }
 
   @Transactional
@@ -451,28 +456,37 @@ class Cas3BookingService(
     return success(extensionEntity)
   }
 
-  @SuppressWarnings("ThrowsCount")
-  fun getBooking(id: UUID): AuthorisableActionResult<BookingAndPersons> {
-    val booking = bookingRepository.findByIdOrNull(id)
-      ?: return AuthorisableActionResult.NotFound("Booking", id.toString())
+  fun findFutureBookingsForPremises(
+    premisesId: UUID,
+    statuses: List<BookingStatus>,
+    user: UserEntity,
+  ): CasResult<List<BookingAndPersons>> {
+    val premises = cas3PremisesService.getPremises(premisesId)
+      ?: return CasResult.NotFound("Premises", premisesId.toString())
 
-    val user = userService.getUserForRequest()
-
-    if (!userAccessService.userCanViewBooking(user, booking)) {
-      return AuthorisableActionResult.Unauthorised()
+    if (!userAccessService.userCanManagePremisesBookings(user, premises)) {
+      return CasResult.Unauthorised()
     }
 
-    val personInfo = offenderService.getPersonInfoResult(
-      booking.crn,
-      user.deliusUsername,
-      user.hasQualification(UserQualification.LAO),
+    val futureBookings = bookingRepository.findFutureBookingsByPremisesIdAndStatus(
+      ServiceName.temporaryAccommodation.value,
+      premisesId,
+      LocalDate.now(),
+      statuses,
     )
 
-    return AuthorisableActionResult.Success(
-      BookingAndPersons(
-        booking,
-        personInfo,
-      ),
+    val offenderSummaries = offenderService.getPersonSummaryInfoResults(
+      crns = futureBookings.map { it.crn }.toSet(),
+      laoStrategy = user.cas3LaoStrategy(),
+    )
+
+    return CasResult.Success(
+      futureBookings.map { booking ->
+        BookingAndPersons(
+          booking,
+          offenderSummaries.forCrn(booking.crn),
+        )
+      },
     )
   }
 
@@ -557,12 +571,11 @@ class Cas3BookingService(
 
   data class BookingAndPersons(
     val booking: BookingEntity,
-    val personInfo: PersonInfoResult,
+    val personInfo: PersonSummaryInfoResult,
   )
 }
 
 sealed interface GetBookingForPremisesResult {
   data class Success(val booking: BookingEntity) : GetBookingForPremisesResult
-  object PremisesNotFound : GetBookingForPremisesResult
   object BookingNotFound : GetBookingForPremisesResult
 }

@@ -18,7 +18,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.reference.Cas2Pers
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.reference.Cas2PersistedApplicationStatusFinder
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.seed.SeedJob
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.seed.insertHdcDates
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas2.JsonSchemaService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas2.Cas2JsonSchemaService
 import java.io.IOException
 import java.io.InputStreamReader
 import java.time.LocalDate
@@ -33,7 +33,7 @@ class Cas2ApplicationsSeedJob(
   private val externalUserRepository: ExternalUserRepository,
   private val statusUpdateRepository: Cas2StatusUpdateRepository,
   private val assessmentRepository: Cas2AssessmentRepository,
-  private val jsonSchemaService: JsonSchemaService,
+  private val jsonSchemaService: Cas2JsonSchemaService,
   private val statusFinder: Cas2PersistedApplicationStatusFinder,
 ) : SeedJob<Cas2ApplicationSeedCsvRow>(
   requiredHeaders = setOf("id", "nomsNumber", "crn", "state", "createdBy", "createdAt", "submittedAt", "statusUpdates", "location"),
@@ -136,9 +136,7 @@ class Cas2ApplicationsSeedJob(
     application.assessment = assessment
   }
 
-  private fun findStatusAtPosition(idx: Int): Cas2PersistedApplicationStatus {
-    return statusFinder.active()[idx]
-  }
+  private fun findStatusAtPosition(idx: Int): Cas2PersistedApplicationStatus = statusFinder.active()[idx]
 
   private fun dataFor(state: String, nomsNumber: String): String {
     if (state != "NOT_STARTED") {
@@ -154,13 +152,9 @@ class Cas2ApplicationsSeedJob(
     return "{}"
   }
 
-  private fun dataFixtureFor(nomsNumber: String): String {
-    return loadFixtureAsResource("data_$nomsNumber.json")
-  }
+  private fun dataFixtureFor(nomsNumber: String): String = loadFixtureAsResource("data_$nomsNumber.json")
 
-  private fun documentFixtureFor(nomsNumber: String): String {
-    return loadFixtureAsResource("document_$nomsNumber.json")
-  }
+  private fun documentFixtureFor(nomsNumber: String): String = loadFixtureAsResource("document_$nomsNumber.json")
 
   private fun loadFixtureAsResource(filename: String): String {
     val path = "db/seed/local+dev+test/cas2_application_data/$filename"

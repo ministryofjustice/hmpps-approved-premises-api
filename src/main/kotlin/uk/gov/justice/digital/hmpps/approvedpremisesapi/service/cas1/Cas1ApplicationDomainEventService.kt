@@ -23,6 +23,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.community.Offender
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.deliuscontext.CaseDetail
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.deliuscontext.StaffDetail
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.AuthorisableActionResult
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.OffenderRisksService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.OffenderService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.DomainEventTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.UrlTemplate
@@ -38,6 +39,7 @@ import java.util.UUID
 class Cas1ApplicationDomainEventService(
   private val domainEventService: Cas1DomainEventService,
   private val offenderService: OffenderService,
+  private val offenderRisksService: OffenderRisksService,
   private val apDeliusContextApiClient: ApDeliusContextApiClient,
   private val domainEventTransformer: DomainEventTransformer,
   @Value("\${url-templates.frontend.application}") private val applicationUrlTemplate: UrlTemplate,
@@ -69,15 +71,7 @@ class Cas1ApplicationDomainEventService(
           )
       }
 
-    val risks =
-      when (val riskResult = offenderService.getRiskByCrn(application.crn, username)) {
-        is AuthorisableActionResult.Success -> riskResult.entity
-        is AuthorisableActionResult.Unauthorised ->
-          throw RuntimeException("Unable to get Risks when creating Application Submitted Domain Event: Unauthorised")
-
-        is AuthorisableActionResult.NotFound ->
-          throw RuntimeException("Unable to get Risks when creating Application Submitted Domain Event: Not Found")
-      }
+    val risks = offenderRisksService.getPersonRisks(application.crn)
 
     val mappaLevel = risks.mappa.value?.level
 
@@ -149,21 +143,19 @@ class Cas1ApplicationDomainEventService(
     application: ApprovedPremisesApplicationEntity,
     user: UserEntity,
     eventOccurredAt: Instant,
-  ): ApplicationWithdrawn {
-    return ApplicationWithdrawn(
-      applicationId = application.id,
-      applicationUrl = applicationUrlTemplate.resolve("id", application.id.toString()),
-      personReference = PersonReference(
-        crn = application.crn,
-        noms = application.nomsNumber ?: "Unknown NOMS Number",
-      ),
-      deliusEventNumber = application.eventNumber,
-      withdrawnAt = eventOccurredAt,
-      withdrawnBy = domainEventTransformer.toWithdrawnBy(user),
-      withdrawalReason = application.withdrawalReason!!,
-      otherWithdrawalReason = application.otherWithdrawalReason,
-    )
-  }
+  ): ApplicationWithdrawn = ApplicationWithdrawn(
+    applicationId = application.id,
+    applicationUrl = applicationUrlTemplate.resolve("id", application.id.toString()),
+    personReference = PersonReference(
+      crn = application.crn,
+      noms = application.nomsNumber ?: "Unknown NOMS Number",
+    ),
+    deliusEventNumber = application.eventNumber,
+    withdrawnAt = eventOccurredAt,
+    withdrawnBy = domainEventTransformer.toWithdrawnBy(user),
+    withdrawalReason = application.withdrawalReason!!,
+    otherWithdrawalReason = application.otherWithdrawalReason,
+  )
 
   @SuppressWarnings("TooGenericExceptionThrown")
   private fun getApplicationSubmittedForDomainEvent(
@@ -173,62 +165,52 @@ class Cas1ApplicationDomainEventService(
     submitApplication: SubmitApprovedPremisesApplication,
     staffDetails: StaffDetail,
     caseDetail: CaseDetail,
-  ): ApplicationSubmitted {
-    return ApplicationSubmitted(
-      applicationId = application.id,
-      applicationUrl = applicationUrlTemplate.resolve("id", application.id.toString()),
-      personReference = PersonReference(
-        crn = application.crn,
-        noms = offenderDetails.otherIds.nomsNumber ?: "Unknown NOMS Number",
-      ),
-      deliusEventNumber = application.eventNumber,
-      mappa = mappaLevel,
-      offenceId = application.offenceId,
-      releaseType = submitApplication.releaseType.toString(),
-      age = Period.between(offenderDetails.dateOfBirth, LocalDate.now()).years,
-      gender = when (offenderDetails.gender.lowercase()) {
-        "male" -> ApplicationSubmitted.Gender.male
-        "female" -> ApplicationSubmitted.Gender.female
-        else -> throw RuntimeException("Unknown gender: ${offenderDetails.gender}")
-      },
-      targetLocation = submitApplication.targetLocation,
-      submittedAt = Instant.now(clock),
-      submittedBy = getApplicationSubmittedSubmittedBy(staffDetails, caseDetail),
-      sentenceLengthInMonths = null,
-    )
-  }
+  ): ApplicationSubmitted = ApplicationSubmitted(
+    applicationId = application.id,
+    applicationUrl = applicationUrlTemplate.resolve("id", application.id.toString()),
+    personReference = PersonReference(
+      crn = application.crn,
+      noms = offenderDetails.otherIds.nomsNumber ?: "Unknown NOMS Number",
+    ),
+    deliusEventNumber = application.eventNumber,
+    mappa = mappaLevel,
+    offenceId = application.offenceId,
+    releaseType = submitApplication.releaseType.toString(),
+    age = Period.between(offenderDetails.dateOfBirth, LocalDate.now()).years,
+    gender = when (offenderDetails.gender.lowercase()) {
+      "male" -> ApplicationSubmitted.Gender.male
+      "female" -> ApplicationSubmitted.Gender.female
+      else -> throw RuntimeException("Unknown gender: ${offenderDetails.gender}")
+    },
+    targetLocation = submitApplication.targetLocation,
+    submittedAt = Instant.now(clock),
+    submittedBy = getApplicationSubmittedSubmittedBy(staffDetails, caseDetail),
+    sentenceLengthInMonths = null,
+  )
 
   private fun getApplicationSubmittedSubmittedBy(
     staffDetails: StaffDetail,
     caseDetail: CaseDetail,
-  ): ApplicationSubmittedSubmittedBy {
-    return ApplicationSubmittedSubmittedBy(
-      staffMember = staffDetails.toStaffMember(),
-      probationArea = domainEventTransformer.toProbationArea(staffDetails),
-      team = getTeamFromCaseDetail(caseDetail),
-      ldu = getLduFromCaseDetail(caseDetail),
-      region = getRegionFromStaffDetails(staffDetails),
-    )
-  }
+  ): ApplicationSubmittedSubmittedBy = ApplicationSubmittedSubmittedBy(
+    staffMember = staffDetails.toStaffMember(),
+    probationArea = domainEventTransformer.toProbationArea(staffDetails),
+    team = getTeamFromCaseDetail(caseDetail),
+    ldu = getLduFromCaseDetail(caseDetail),
+    region = getRegionFromStaffDetails(staffDetails),
+  )
 
-  private fun getLduFromCaseDetail(caseDetail: CaseDetail): Ldu {
-    return Ldu(
-      code = caseDetail.case.manager.team.ldu.code,
-      name = caseDetail.case.manager.team.ldu.name,
-    )
-  }
+  private fun getLduFromCaseDetail(caseDetail: CaseDetail): Ldu = Ldu(
+    code = caseDetail.case.manager.team.ldu.code,
+    name = caseDetail.case.manager.team.ldu.name,
+  )
 
-  private fun getTeamFromCaseDetail(caseDetail: CaseDetail): Team {
-    return Team(
-      code = caseDetail.case.manager.team.code,
-      name = caseDetail.case.manager.team.name,
-    )
-  }
+  private fun getTeamFromCaseDetail(caseDetail: CaseDetail): Team = Team(
+    code = caseDetail.case.manager.team.code,
+    name = caseDetail.case.manager.team.name,
+  )
 
-  private fun getRegionFromStaffDetails(staffDetails: StaffDetail): Region {
-    return Region(
-      code = staffDetails.probationArea.code,
-      name = staffDetails.probationArea.description,
-    )
-  }
+  private fun getRegionFromStaffDetails(staffDetails: StaffDetail): Region = Region(
+    code = staffDetails.probationArea.code,
+    name = staffDetails.probationArea.description,
+  )
 }

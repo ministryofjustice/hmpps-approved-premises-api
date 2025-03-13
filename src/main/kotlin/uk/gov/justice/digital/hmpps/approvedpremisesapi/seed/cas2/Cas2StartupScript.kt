@@ -18,8 +18,8 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.reference.Cas2Pers
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.reference.Cas2PersistedApplicationStatusFinder
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.seed.SeedLogger
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.seed.insertHdcDates
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas2.ApplicationService
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas2.JsonSchemaService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas2.Cas2ApplicationService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas2.Cas2JsonSchemaService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas2.StatusUpdateService
 import java.io.IOException
 import java.io.InputStreamReader
@@ -46,8 +46,8 @@ class Cas2StartupScript(
   private val externalUserRepository: ExternalUserRepository,
   private val statusUpdateRepository: Cas2StatusUpdateRepository,
   private val assessmentRepository: Cas2AssessmentRepository,
-  private val jsonSchemaService: JsonSchemaService,
-  private val applicationService: ApplicationService,
+  private val jsonSchemaService: Cas2JsonSchemaService,
+  private val applicationService: Cas2ApplicationService,
   private val statusUpdateService: StatusUpdateService,
   private val statusFinder: Cas2PersistedApplicationStatusFinder,
 ) {
@@ -97,17 +97,15 @@ class Cas2StartupScript(
     }
   }
 
-  private fun applyFirstClassProperties(application: Cas2ApplicationEntity): Cas2ApplicationEntity {
-    return applicationRepository.saveAndFlush(
-      application.apply {
-        referringPrisonCode = seedConfig.onStartup.script.prisonCode
-        preferredAreas = "Luton | Hertford"
-        hdcEligibilityDate = LocalDate.now()
-        conditionalReleaseDate = LocalDate.now().plusMonths(2)
-        telephoneNumber = "0800 123 456"
-      },
-    )
-  }
+  private fun applyFirstClassProperties(application: Cas2ApplicationEntity): Cas2ApplicationEntity = applicationRepository.saveAndFlush(
+    application.apply {
+      referringPrisonCode = seedConfig.onStartup.script.prisonCode
+      preferredAreas = "Luton | Hertford"
+      hdcEligibilityDate = LocalDate.now()
+      conditionalReleaseDate = LocalDate.now().plusMonths(2)
+      telephoneNumber = "0800 123 456"
+    },
+  )
   private fun createStatusUpdate(idx: Int, application: Cas2ApplicationEntity) {
     seedLogger.info("Auto-scripting status update $idx for application ${application.id}")
     val assessor = externalUserRepository.findAll().random()
@@ -129,9 +127,7 @@ class Cas2StartupScript(
     statusUpdateService.createStatusUpdatedDomainEvent(update)
   }
 
-  private fun findStatusAtPosition(idx: Int): Cas2PersistedApplicationStatus {
-    return statusFinder.active()[idx]
-  }
+  private fun findStatusAtPosition(idx: Int): Cas2PersistedApplicationStatus = statusFinder.active()[idx]
 
   private fun createAssessment(application: Cas2ApplicationEntity) {
     val id = UUID.randomUUID()
@@ -146,11 +142,9 @@ class Cas2StartupScript(
     application.assessment = assessment
   }
 
-  private fun randomDateTime(minDays: Int = LATEST_CREATION, maxDays: Int = EARLIEST_CREATION): OffsetDateTime {
-    return OffsetDateTime.now()
-      .minusMinutes(randomInt(MINUTES_PER_DAY * minDays, MINUTES_PER_DAY * maxDays).toLong())
-      .truncatedTo(ChronoUnit.SECONDS)
-  }
+  private fun randomDateTime(minDays: Int = LATEST_CREATION, maxDays: Int = EARLIEST_CREATION): OffsetDateTime = OffsetDateTime.now()
+    .minusMinutes(randomInt(MINUTES_PER_DAY * minDays, MINUTES_PER_DAY * maxDays).toLong())
+    .truncatedTo(ChronoUnit.SECONDS)
 
   private fun randomInt(min: Int, max: Int) = Random.nextInt(min, max)
 
@@ -168,13 +162,9 @@ class Cas2StartupScript(
     return "{}"
   }
 
-  private fun dataFixtureFor(nomsNumber: String): String {
-    return loadFixtureAsResource("data_$nomsNumber.json")
-  }
+  private fun dataFixtureFor(nomsNumber: String): String = loadFixtureAsResource("data_$nomsNumber.json")
 
-  private fun documentFixtureFor(nomsNumber: String): String {
-    return loadFixtureAsResource("document_$nomsNumber.json")
-  }
+  private fun documentFixtureFor(nomsNumber: String): String = loadFixtureAsResource("document_$nomsNumber.json")
 
   private fun loadFixtureAsResource(filename: String): String {
     val path = "db/seed/local+dev+test/cas2_application_data/$filename"

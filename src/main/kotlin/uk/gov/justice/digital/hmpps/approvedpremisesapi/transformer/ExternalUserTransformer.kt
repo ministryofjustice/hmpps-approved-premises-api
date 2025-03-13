@@ -7,13 +7,11 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ExternalUserE
 @Component
 class ExternalUserTransformer {
 
-  fun transformJpaToApi(externalUserEntity: ExternalUserEntity): ExternalUser {
-    return ExternalUser(
-      id = externalUserEntity.id,
-      username = externalUserEntity.username,
-      origin = externalUserEntity.origin,
-      name = externalUserEntity.name,
-      email = externalUserEntity.email,
-    )
-  }
+  fun transformJpaToApi(externalUserEntity: ExternalUserEntity): ExternalUser = ExternalUser(
+    id = externalUserEntity.id,
+    username = externalUserEntity.username,
+    origin = externalUserEntity.origin,
+    name = externalUserEntity.name,
+    email = externalUserEntity.email,
+  )
 }

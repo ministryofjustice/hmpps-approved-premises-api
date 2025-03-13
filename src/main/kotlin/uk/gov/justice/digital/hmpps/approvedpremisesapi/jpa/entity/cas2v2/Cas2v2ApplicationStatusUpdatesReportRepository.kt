@@ -3,6 +3,7 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas2v2
 import org.springframework.data.jpa.repository.JpaRepository
 import org.springframework.data.jpa.repository.Query
 import org.springframework.stereotype.Repository
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApplicationOrigin
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DomainEventEntity
 import java.util.UUID
 
@@ -13,6 +14,7 @@ interface Cas2v2ApplicationStatusUpdatesReportRepository : JpaRepository<DomainE
       SELECT
         CAST(events.id AS TEXT) AS id,
         CAST(events.application_id AS TEXT) AS applicationId,
+        applications.application_origin as applicationOrigin,
         events.data -> 'eventDetails' -> 'personReference' ->> 'noms' AS personNoms,
         events.data -> 'eventDetails' -> 'personReference' ->> 'crn' AS personCrn,
         events.data -> 'eventDetails' -> 'newStatus' ->> 'name' AS newStatus,
@@ -24,10 +26,13 @@ interface Cas2v2ApplicationStatusUpdatesReportRepository : JpaRepository<DomainE
          ) AS updatedAt
 
       FROM domain_events events
+      LEFT JOIN cas_2_v2_applications applications ON events.application_id = applications.id
       LEFT JOIN LATERAL jsonb_array_elements(events.data -> 'eventDetails' -> 'newStatus' -> 'statusDetails') as details ON true
       WHERE events.type = 'CAS2_APPLICATION_STATUS_UPDATED'
         AND events.occurred_at  > CURRENT_DATE - 365
-      GROUP BY events.id  
+      GROUP BY 
+        events.id,
+        applications.application_origin
       ORDER BY updatedAt DESC;
     """,
     nativeQuery = true,
@@ -38,6 +43,7 @@ interface Cas2v2ApplicationStatusUpdatesReportRepository : JpaRepository<DomainE
 interface Cas2v2ApplicationStatusUpdatedReportRow {
   fun getId(): String
   fun getApplicationId(): String
+  fun getApplicationOrigin(): ApplicationOrigin
   fun getUpdatedBy(): String
   fun getUpdatedAt(): String
   fun getPersonNoms(): String

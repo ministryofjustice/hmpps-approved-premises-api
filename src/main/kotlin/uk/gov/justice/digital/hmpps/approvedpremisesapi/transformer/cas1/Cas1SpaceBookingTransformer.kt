@@ -13,13 +13,13 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1SpaceChara
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NamedId
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.StaffMember
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas1SpaceBookingAtPremises
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas1SpaceBookingEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas1SpaceBookingSearchResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.CharacteristicEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PersonInfoResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PersonSummaryInfoResult
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.SpaceBookingDates
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.CancellationReasonTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.PersonTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.UserTransformer
@@ -30,7 +30,6 @@ import java.time.format.DateTimeFormatter
 @Component
 class Cas1SpaceBookingTransformer(
   private val personTransformer: PersonTransformer,
-  private val spaceBookingRequirementsTransformer: Cas1SpaceBookingRequirementsTransformer,
   private val cancellationReasonTransformer: CancellationReasonTransformer,
   private val userTransformer: UserTransformer,
   private val spaceBookingStatusTransformer: Cas1SpaceBookingStatusTransformer,
@@ -57,9 +56,6 @@ class Cas1SpaceBookingTransformer(
       applicationId = applicationId,
       assessmentId = placementRequest?.assessment?.id,
       person = personTransformer.transformModelToPersonApi(person),
-      requirements = spaceBookingRequirementsTransformer.transformJpaToApi(
-        cas1SpaceBookingEntity = jpa,
-      ),
       premises = NamedId(
         id = jpa.premises.id,
         name = jpa.premises.name,
@@ -76,17 +72,18 @@ class Cas1SpaceBookingTransformer(
       createdAt = jpa.createdAt.toInstant(),
       tier = application?.riskRatings?.tier?.value?.level,
       keyWorkerAllocation = jpa.extractKeyWorkerAllocation(),
-      actualArrivalDate = jpa.actualArrivalAsDateTime(),
+      actualArrivalDate = jpa.actualArrivalDate,
       actualArrivalDateOnly = jpa.actualArrivalDate,
       actualArrivalTime = jpa.actualArrivalTime?.format(DateTimeFormatter.ofPattern("HH:mm")),
-      actualDepartureDate = jpa.actualDepartureAsDateTime(),
+      actualDepartureDate = jpa.actualDepartureDate,
       actualDepartureDateOnly = jpa.actualDepartureDate,
       actualDepartureTime = jpa.actualDepartureTime?.format(DateTimeFormatter.ofPattern("HH:mm")),
       canonicalArrivalDate = jpa.canonicalArrivalDate,
       canonicalDepartureDate = jpa.canonicalDepartureDate,
       otherBookingsInPremisesForCrn = otherBookingsAtPremiseForCrn.map { it.toSpaceBookingDate() },
       cancellation = jpa.extractCancellation(),
-      requestForPlacementId = jpa.placementRequest?.placementApplication?.id ?: jpa.placementRequest?.id,
+      requestForPlacementId = jpa.placementRequest?.id,
+      placementRequestId = jpa.placementRequest?.id,
       nonArrival = jpa.extractNonArrival(),
       deliusEventNumber = jpa.deliusEventNumber,
       departure = jpa.extractDeparture(),
@@ -95,12 +92,11 @@ class Cas1SpaceBookingTransformer(
     )
   }
 
-  private fun Cas1SpaceBookingAtPremises.toSpaceBookingDate() =
-    Cas1SpaceBookingDates(
-      id = this.id,
-      canonicalArrivalDate = this.canonicalArrivalDate,
-      canonicalDepartureDate = this.canonicalDepartureDate,
-    )
+  private fun Cas1SpaceBookingAtPremises.toSpaceBookingDate() = Cas1SpaceBookingDates(
+    id = this.id,
+    canonicalArrivalDate = this.canonicalArrivalDate,
+    canonicalDepartureDate = this.canonicalDepartureDate,
+  )
 
   private fun Cas1SpaceBookingEntity.extractKeyWorkerAllocation(): Cas1KeyWorkerAllocation? {
     val staffCode = keyWorkerStaffCode
@@ -136,44 +132,88 @@ class Cas1SpaceBookingTransformer(
     }
   }
 
-  private fun Cas1SpaceBookingEntity.extractNonArrival(): Cas1SpaceBookingNonArrival? {
-    return if (hasNonArrival()) {
-      Cas1SpaceBookingNonArrival(
-        confirmedAt = nonArrivalConfirmedAt,
-        reason = nonArrivalReason!!.let {
-          NamedId(
-            id = it.id,
-            name = it.name,
-          )
-        },
-        notes = nonArrivalNotes,
-      )
-    } else {
-      null
-    }
+  private fun Cas1SpaceBookingEntity.extractNonArrival(): Cas1SpaceBookingNonArrival? = if (hasNonArrival()) {
+    Cas1SpaceBookingNonArrival(
+      confirmedAt = nonArrivalConfirmedAt,
+      reason = nonArrivalReason!!.let {
+        NamedId(
+          id = it.id,
+          name = it.name,
+        )
+      },
+      notes = nonArrivalNotes,
+    )
+  } else {
+    null
   }
 
-  private fun Cas1SpaceBookingEntity.extractDeparture(): Cas1SpaceBookingDeparture? {
-    return if (hasDeparted()) {
-      Cas1SpaceBookingDeparture(
-        reason = NamedId(departureReason!!.id, departureReason!!.name),
-        parentReason = departureReason!!.parentReasonId?.let { NamedId(it.id, it.name) },
-        moveOnCategory = departureMoveOnCategory?.let { NamedId(it.id, it.name) },
-        notes = departureNotes,
-      )
-    } else {
-      null
-    }
+  private fun Cas1SpaceBookingEntity.extractDeparture(): Cas1SpaceBookingDeparture? = if (hasDeparted()) {
+    Cas1SpaceBookingDeparture(
+      reason = NamedId(departureReason!!.id, departureReason!!.name),
+      parentReason = departureReason!!.parentReasonId?.let { NamedId(it.id, it.name) },
+      moveOnCategory = departureMoveOnCategory?.let { NamedId(it.id, it.name) },
+      notes = departureNotes,
+    )
+  } else {
+    null
   }
+
+  fun transformToSummary(
+    spaceBooking: Cas1SpaceBookingEntity,
+    personSummaryInfo: PersonSummaryInfoResult,
+  ) = Cas1SpaceBookingSummary(
+    id = spaceBooking.id,
+    person = personTransformer.personSummaryInfoToPersonSummary(personSummaryInfo),
+    premises = NamedId(
+      spaceBooking.premises.id,
+      spaceBooking.premises.name,
+    ),
+    canonicalArrivalDate = spaceBooking.canonicalArrivalDate,
+    canonicalDepartureDate = spaceBooking.canonicalDepartureDate,
+    expectedArrivalDate = spaceBooking.expectedArrivalDate,
+    expectedDepartureDate = spaceBooking.expectedDepartureDate,
+    actualArrivalDate = spaceBooking.actualArrivalDate,
+    actualDepartureDate = spaceBooking.actualDepartureDate,
+    isNonArrival = spaceBooking.hasNonArrival(),
+    tier = spaceBooking.application?.riskRatings?.tier?.value?.level,
+    keyWorkerAllocation = spaceBooking.extractKeyWorkerAllocation(),
+    status = spaceBookingStatusTransformer.transformToSpaceBookingSummaryStatus(
+      SpaceBookingDates(
+        spaceBooking.expectedArrivalDate,
+        spaceBooking.expectedDepartureDate,
+        spaceBooking.actualArrivalDate,
+        spaceBooking.actualDepartureDate,
+        spaceBooking.nonArrivalConfirmedAt?.toLocalDateTime(),
+      ),
+    ),
+    characteristics = spaceBooking.criteria.mapNotNull { criteria ->
+      Cas1SpaceCharacteristic.entries.find { it.name == criteria.propertyName }
+    },
+    deliusEventNumber = spaceBooking.deliusEventNumber,
+  )
 
   fun transformSearchResultToSummary(
     searchResult: Cas1SpaceBookingSearchResult,
+    premises: ApprovedPremisesEntity,
     personSummaryInfo: PersonSummaryInfoResult,
   ) = Cas1SpaceBookingSummary(
     id = searchResult.id,
     person = personTransformer.personSummaryInfoToPersonSummary(personSummaryInfo),
+    premises = NamedId(
+      id = premises.id,
+      name = premises.name,
+    ),
     canonicalArrivalDate = searchResult.canonicalArrivalDate,
     canonicalDepartureDate = searchResult.canonicalDepartureDate,
+    expectedArrivalDate = searchResult.expectedArrivalDate,
+    expectedDepartureDate = searchResult.expectedDepartureDate,
+    actualArrivalDate = searchResult.actualArrivalDate,
+    actualDepartureDate = searchResult.actualDepartureDate,
+    isNonArrival = when {
+      searchResult.nonArrivalConfirmedAtDateTime != null -> true
+      searchResult.actualArrivalDate != null -> false
+      else -> null
+    },
     tier = searchResult.tier,
     keyWorkerAllocation = searchResult.keyWorkerStaffCode?.let { staffCode ->
       Cas1KeyWorkerAllocation(
@@ -194,18 +234,21 @@ class Cas1SpaceBookingTransformer(
         searchResult.nonArrivalConfirmedAtDateTime,
       ),
     ),
+    characteristics = searchResult.characteristicsPropertyNames?.split(",")?.mapNotNull { propertyName ->
+      Cas1SpaceCharacteristic.entries.find { it.name == propertyName }
+    } ?: listOf(),
+    deliusEventNumber = searchResult.deliusEventNumber,
+
   )
 
   companion object {
     private val log = LoggerFactory.getLogger(this::class.java)
 
-    fun List<CharacteristicEntity>.toCas1SpaceCharacteristics() =
-      this.mapNotNull { it.toCas1SpaceCharacteristicOrNull() }
+    fun List<CharacteristicEntity>.toCas1SpaceCharacteristics() = this.mapNotNull { it.toCas1SpaceCharacteristicOrNull() }
 
-    fun CharacteristicEntity.toCas1SpaceCharacteristicOrNull() =
-      Cas1SpaceCharacteristic.entries.find { it.name == propertyName } ?: run {
-        log.warn("Couldn't find a Cas1SpaceCharacteristic enum entry for propertyName $propertyName")
-        null
-      }
+    fun CharacteristicEntity.toCas1SpaceCharacteristicOrNull() = Cas1SpaceCharacteristic.entries.find { it.name == propertyName } ?: run {
+      log.warn("Couldn't find a Cas1SpaceCharacteristic enum entry for propertyName $propertyName")
+      null
+    }
   }
 }

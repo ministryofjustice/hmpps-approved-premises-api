@@ -602,10 +602,9 @@ class DomainEventBuilderTest {
     .withLegacyDeliusCategoryCode(moveOnCategoryLabel)
     .produce()
 
-  private fun departureReasonEntity(reasonName: String) =
-    DepartureReasonEntityFactory()
-      .withName(reasonName)
-      .produce()
+  private fun departureReasonEntity(reasonName: String) = DepartureReasonEntityFactory()
+    .withName(reasonName)
+    .produce()
 
   private fun arrivalEntity(
     booking: BookingEntity,
@@ -635,28 +634,24 @@ class DomainEventBuilderTest {
     .withProbationRegion(probationRegion)
     .produce()
 
-  private fun userEntity(probationRegion: ProbationRegionEntity) =
-    UserEntityFactory()
-      .withProbationRegion(probationRegion)
-      .produce()
+  private fun userEntity(probationRegion: ProbationRegionEntity) = UserEntityFactory()
+    .withProbationRegion(probationRegion)
+    .produce()
 
-  private fun temporaryAccommodationPremisesEntity(probationRegion: ProbationRegionEntity) =
-    TemporaryAccommodationPremisesEntityFactory()
-      .withProbationRegion(probationRegion)
-      .withLocalAuthorityArea(
-        LocalAuthorityEntityFactory().produce(),
-      ).produce()
+  private fun temporaryAccommodationPremisesEntity(probationRegion: ProbationRegionEntity) = TemporaryAccommodationPremisesEntityFactory()
+    .withProbationRegion(probationRegion)
+    .withLocalAuthorityArea(
+      LocalAuthorityEntityFactory().produce(),
+    ).produce()
 
-  private fun probationRegionEntity() =
-    ProbationRegionEntityFactory()
-      .withApArea(
-        ApAreaEntityFactory().produce(),
-      ).produce()
+  private fun probationRegionEntity() = ProbationRegionEntityFactory()
+    .withApArea(
+      ApAreaEntityFactory().produce(),
+    ).produce()
 
-  private fun cancellationReasonEntity(cancellationReasonName: String) =
-    CancellationReasonEntityFactory()
-      .withName(cancellationReasonName)
-      .produce()
+  private fun cancellationReasonEntity(cancellationReasonName: String) = CancellationReasonEntityFactory()
+    .withName(cancellationReasonName)
+    .produce()
 
   private fun cancellationEntity(
     booking: BookingEntity,
@@ -683,10 +678,9 @@ class DomainEventBuilderTest {
   private fun assertStaffDetails(
     staffMember: StaffMember?,
     user: UserEntity?,
-  ): Boolean =
-    staffMember!!.staffCode == user!!.deliusStaffCode &&
-      staffMember.username == user.deliusUsername &&
-      staffMember.probationRegionCode == user.probationRegion.deliusCode
+  ): Boolean = staffMember!!.staffCode == user!!.deliusStaffCode &&
+    staffMember.username == user.deliusUsername &&
+    staffMember.probationRegionCode == user.probationRegion.deliusCode
 
   private fun assertBookingEventData(
     eventData: DomainEvent<CAS3PersonDepartureUpdatedEvent>,

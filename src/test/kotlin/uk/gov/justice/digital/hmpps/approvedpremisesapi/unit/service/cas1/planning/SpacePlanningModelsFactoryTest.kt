@@ -3,24 +3,23 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.unit.service.cas1.plann
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApprovedPremisesEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.BedEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.Cas1OutOfServiceBedEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.Cas1OutOfServiceBedRevisionEntityFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.Cas1PlanningBedSummaryFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.Cas1SpaceBookingEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.CharacteristicEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.RoomEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas1OutOfServiceBedRevisionType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.CharacteristicRepository.Constants.CAS1_PROPERTY_NAME_ARSON_SUITABLE
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.CharacteristicRepository.Constants.CAS1_PROPERTY_NAME_ENSUITE
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.CharacteristicRepository.Constants.CAS1_PROPERTY_NAME_SINGLE_ROOM
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.CharacteristicRepository.Constants.CAS1_PROPERTY_NAME_STEP_FREE_DESIGNATED
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.CharacteristicRepository.Constants.CAS1_PROPERTY_NAME_WHEELCHAIR_DESIGNATED
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.planning.BedEnded
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.planning.BedOutOfService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.planning.Characteristic
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.planning.SpaceBooking
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.planning.SpacePlanningModelsFactory
+import java.time.Instant
 import java.time.LocalDate
 
 class SpacePlanningModelsFactoryTest {
@@ -32,40 +31,28 @@ class SpacePlanningModelsFactoryTest {
 
     @Test
     fun `all room and bed properties including active characteristics are correctly mapped`() {
-      val characteristic1 = CharacteristicEntityFactory().withPropertyName(CAS1_PROPERTY_NAME_STEP_FREE_DESIGNATED).withIsActive(true).withModelScope("room").produce()
-      val characteristic2 = CharacteristicEntityFactory().withPropertyName(CAS1_PROPERTY_NAME_ARSON_SUITABLE).withIsActive(true).withModelScope("room").produce()
-      val characteristicSingleRoom = CharacteristicEntityFactory().withPropertyName(CAS1_PROPERTY_NAME_SINGLE_ROOM).withIsActive(true).withModelScope("room").produce()
-      val characteristicDisabled = CharacteristicEntityFactory().withPropertyName(CAS1_PROPERTY_NAME_ENSUITE).withIsActive(false).withModelScope("room").produce()
-      val characteristicNotAllowed = CharacteristicEntityFactory().withPropertyName("not in allow list").withIsActive(true).withModelScope("room").produce()
-      val characteristicPremise = CharacteristicEntityFactory().withPropertyName(CAS1_PROPERTY_NAME_WHEELCHAIR_DESIGNATED).withIsActive(true).withModelScope("premises").produce()
+      val bedSummary = Cas1PlanningBedSummaryFactory()
+        .withBedName("the bed name")
+        .withRoomName("the room name")
+        .withCharacteristicsPropertyNames(
+          listOf(
+            CAS1_PROPERTY_NAME_STEP_FREE_DESIGNATED,
+            CAS1_PROPERTY_NAME_ARSON_SUITABLE,
+            CAS1_PROPERTY_NAME_SINGLE_ROOM,
+            "not in allow list",
+          ),
+        ).produce()
 
-      val roomEntity = RoomEntityFactory()
-        .withDefaults()
-        .withName("the room name")
-        .withCharacteristics(characteristic1, characteristicDisabled, characteristic2, characteristicSingleRoom, characteristicPremise, characteristicNotAllowed)
-        .produce()
-
-      val bedEntity = BedEntityFactory()
-        .withDefaults()
-        .withName("the bed name")
-        .withRoom(roomEntity)
-        .produce().apply { roomEntity.beds.add(this) }
-
-      val result = factory.allBeds(
-        premises = ApprovedPremisesEntityFactory()
-          .withDefaults()
-          .withRooms(roomEntity)
-          .produce(),
-      )
+      val result = factory.allBeds(listOf(bedSummary))
 
       assertThat(result).hasSize(1)
 
       val bed = result[0]
-      assertThat(bed.id).isEqualTo(bedEntity.id)
+      assertThat(bed.id).isEqualTo(bedSummary.bedId)
       assertThat(bed.label).isEqualTo("the bed name")
 
       val room = result[0].room
-      assertThat(room.id).isEqualTo(roomEntity.id)
+      assertThat(room.id).isEqualTo(bedSummary.roomId)
       assertThat(room.label).isEqualTo("the room name")
 
       val characteristics = room.characteristics
@@ -73,20 +60,20 @@ class SpacePlanningModelsFactoryTest {
 
       assertThat(characteristics).containsOnly(
         Characteristic(
-          label = characteristic1.propertyName!!,
-          propertyName = characteristic1.propertyName!!,
+          label = CAS1_PROPERTY_NAME_STEP_FREE_DESIGNATED,
+          propertyName = CAS1_PROPERTY_NAME_STEP_FREE_DESIGNATED,
           weighting = 100,
           singleRoom = false,
         ),
         Characteristic(
-          label = characteristic2.propertyName!!,
-          propertyName = characteristic2.propertyName!!,
+          label = CAS1_PROPERTY_NAME_ARSON_SUITABLE,
+          propertyName = CAS1_PROPERTY_NAME_ARSON_SUITABLE,
           weighting = 100,
           singleRoom = false,
         ),
         Characteristic(
-          label = characteristicSingleRoom.propertyName!!,
-          propertyName = characteristicSingleRoom.propertyName!!,
+          label = CAS1_PROPERTY_NAME_SINGLE_ROOM,
+          propertyName = CAS1_PROPERTY_NAME_SINGLE_ROOM,
           weighting = 100,
           singleRoom = true,
         ),
@@ -98,27 +85,10 @@ class SpacePlanningModelsFactoryTest {
   inner class AllBedsDayState {
 
     @Test
-    fun `no rooms defined, return empty list`() {
-      val result = factory.allBedsDayState(
-        day = LocalDate.of(2020, 1, 1),
-        premises = ApprovedPremisesEntityFactory()
-          .withDefaults()
-          .withRooms(mutableListOf())
-          .produce(),
-        outOfServiceBedRecordsToConsider = emptyList(),
-      )
-
-      assertThat(result).isEmpty()
-    }
-
-    @Test
     fun `no beds defined, return empty list`() {
       val result = factory.allBedsDayState(
         day = LocalDate.of(2020, 1, 1),
-        premises = ApprovedPremisesEntityFactory()
-          .withDefaults()
-          .withRooms(RoomEntityFactory().withDefaults().produce())
-          .produce(),
+        beds = emptyList(),
         outOfServiceBedRecordsToConsider = emptyList(),
       )
 
@@ -127,31 +97,21 @@ class SpacePlanningModelsFactoryTest {
 
     @Test
     fun `all room and bed properties including active characteristics are correctly mapped`() {
-      val characteristic1 = CharacteristicEntityFactory().withPropertyName(CAS1_PROPERTY_NAME_STEP_FREE_DESIGNATED).withIsActive(true).withModelScope("room").produce()
-      val characteristic2 = CharacteristicEntityFactory().withPropertyName(CAS1_PROPERTY_NAME_ARSON_SUITABLE).withIsActive(true).withModelScope("room").produce()
-      val characteristicSingleRoom = CharacteristicEntityFactory().withPropertyName(CAS1_PROPERTY_NAME_SINGLE_ROOM).withIsActive(true).withModelScope("room").produce()
-      val characteristicNotAllowed = CharacteristicEntityFactory().withPropertyName("not in allow list").withIsActive(true).withModelScope("room").produce()
-      val characteristicDisabled = CharacteristicEntityFactory().withPropertyName(CAS1_PROPERTY_NAME_ENSUITE).withIsActive(false).withModelScope("room").produce()
-      val characteristicPremise = CharacteristicEntityFactory().withPropertyName(CAS1_PROPERTY_NAME_WHEELCHAIR_DESIGNATED).withIsActive(true).withModelScope("premises").produce()
-
-      val roomEntity = RoomEntityFactory()
-        .withDefaults()
-        .withName("the room name")
-        .withCharacteristics(characteristic1, characteristicDisabled, characteristic2, characteristicSingleRoom, characteristicPremise, characteristicNotAllowed)
-        .produce()
-
-      val bedEntity = BedEntityFactory()
-        .withDefaults()
-        .withName("the bed name")
-        .withRoom(roomEntity)
-        .produce().apply { roomEntity.beds.add(this) }
+      val bedSummary = Cas1PlanningBedSummaryFactory()
+        .withBedName("the bed name")
+        .withRoomName("the room name")
+        .withCharacteristicsPropertyNames(
+          listOf(
+            CAS1_PROPERTY_NAME_STEP_FREE_DESIGNATED,
+            CAS1_PROPERTY_NAME_ARSON_SUITABLE,
+            CAS1_PROPERTY_NAME_SINGLE_ROOM,
+            "not in allow list",
+          ),
+        ).produce()
 
       val result = factory.allBedsDayState(
         day = LocalDate.of(2020, 1, 1),
-        premises = ApprovedPremisesEntityFactory()
-          .withDefaults()
-          .withRooms(roomEntity)
-          .produce(),
+        beds = listOf(bedSummary),
         outOfServiceBedRecordsToConsider = emptyList(),
       )
 
@@ -162,11 +122,11 @@ class SpacePlanningModelsFactoryTest {
       assertThat(bedDayState.inactiveReason).isNull()
 
       val bed = bedDayState.bed
-      assertThat(bed.id).isEqualTo(bedEntity.id)
+      assertThat(bed.id).isEqualTo(bedSummary.bedId)
       assertThat(bed.label).isEqualTo("the bed name")
 
       val room = bed.room
-      assertThat(room.id).isEqualTo(roomEntity.id)
+      assertThat(room.id).isEqualTo(bedSummary.roomId)
       assertThat(room.label).isEqualTo("the room name")
 
       val characteristics = room.characteristics
@@ -174,20 +134,20 @@ class SpacePlanningModelsFactoryTest {
 
       assertThat(characteristics).containsOnly(
         Characteristic(
-          label = characteristic1.propertyName!!,
-          propertyName = characteristic1.propertyName!!,
+          label = CAS1_PROPERTY_NAME_STEP_FREE_DESIGNATED,
+          propertyName = CAS1_PROPERTY_NAME_STEP_FREE_DESIGNATED,
           weighting = 100,
           singleRoom = false,
         ),
         Characteristic(
-          label = characteristic2.propertyName!!,
-          propertyName = characteristic2.propertyName!!,
+          label = CAS1_PROPERTY_NAME_ARSON_SUITABLE,
+          propertyName = CAS1_PROPERTY_NAME_ARSON_SUITABLE,
           weighting = 100,
           singleRoom = false,
         ),
         Characteristic(
-          label = characteristicSingleRoom.propertyName!!,
-          propertyName = characteristicSingleRoom.propertyName!!,
+          label = CAS1_PROPERTY_NAME_SINGLE_ROOM,
+          propertyName = CAS1_PROPERTY_NAME_SINGLE_ROOM,
           weighting = 100,
           singleRoom = true,
         ),
@@ -196,33 +156,21 @@ class SpacePlanningModelsFactoryTest {
 
     @Test
     fun `mark beds with end date in the past as inactive`() {
-      val roomEntity = RoomEntityFactory()
-        .withDefaults()
-        .withName("the room name")
+      val bed1Active = Cas1PlanningBedSummaryFactory()
+        .withBedName("the active bed name")
+        .withRoomName("the room name")
+        .withBedEndDate(LocalDate.of(2020, 4, 5))
         .produce()
 
-      val bed1EntityActive = BedEntityFactory()
-        .withDefaults()
-        .withName("the active bed name")
-        .withEndDate(LocalDate.of(2020, 4, 5))
-        .produce().apply {
-          roomEntity.beds.add(this)
-        }
-
-      val bed2EntityEndedYesterday = BedEntityFactory()
-        .withDefaults()
-        .withName("the ended bed name")
-        .withEndDate(LocalDate.of(2020, 4, 3))
-        .produce().apply {
-          roomEntity.beds.add(this)
-        }
+      val bed2EndedYesterday = Cas1PlanningBedSummaryFactory()
+        .withBedName("the ended bed name")
+        .withRoomName("the room name")
+        .withBedEndDate(LocalDate.of(2020, 4, 3))
+        .produce()
 
       val result = factory.allBedsDayState(
         day = LocalDate.of(2020, 4, 4),
-        premises = ApprovedPremisesEntityFactory()
-          .withDefaults()
-          .withRooms(roomEntity)
-          .produce(),
+        beds = listOf(bed1Active, bed2EndedYesterday),
         outOfServiceBedRecordsToConsider = emptyList(),
       )
 
@@ -230,12 +178,12 @@ class SpacePlanningModelsFactoryTest {
 
       val activeBedDayState = result[0]
       assertThat(activeBedDayState.inactiveReason).isNull()
-      assertThat(activeBedDayState.bed.id).isEqualTo(bed1EntityActive.id)
+      assertThat(activeBedDayState.bed.id).isEqualTo(bed1Active.bedId)
       assertThat(activeBedDayState.bed.label).isEqualTo("the active bed name")
 
       val inactiveBedDayState = result[1]
       assertThat(inactiveBedDayState.inactiveReason).isInstanceOf(BedEnded::class.java)
-      assertThat(inactiveBedDayState.bed.id).isEqualTo(bed2EntityEndedYesterday.id)
+      assertThat(inactiveBedDayState.bed.id).isEqualTo(bed2EndedYesterday.bedId)
       assertThat(inactiveBedDayState.bed.label).isEqualTo("the ended bed name")
     }
 
@@ -260,12 +208,23 @@ class SpacePlanningModelsFactoryTest {
           roomEntity.beds.add(this)
         }
 
+      val bed1ActiveSummary = Cas1PlanningBedSummaryFactory()
+        .withBedId(bed1EntityActive.id)
+        .withBedName("the active bed name")
+        .withRoomName("the room name")
+        .withBedEndDate(LocalDate.of(2020, 4, 5))
+        .produce()
+
+      val bed2EndedYesterdaySummary = Cas1PlanningBedSummaryFactory()
+        .withBedId(bed2EntityOutOfService.id)
+        .withBedName("the oosb bed name")
+        .withRoomName("the room name")
+        .withBedEndDate(LocalDate.of(2020, 4, 3))
+        .produce()
+
       val result = factory.allBedsDayState(
         day = LocalDate.of(2020, 4, 4),
-        premises = ApprovedPremisesEntityFactory()
-          .withDefaults()
-          .withRooms(roomEntity)
-          .produce(),
+        beds = listOf(bed1ActiveSummary, bed2EndedYesterdaySummary),
         outOfServiceBedRecordsToConsider = listOf(
           Cas1OutOfServiceBedEntityFactory()
             .withBed(bed1EntityActive)
@@ -318,26 +277,24 @@ class SpacePlanningModelsFactoryTest {
     }
 
     @Test
-    fun `all booking properties including active room characteristics are correctly mapped`() {
+    fun `all booking properties are correctly mapped`() {
       val characteristic1 = CharacteristicEntityFactory().withPropertyName(CAS1_PROPERTY_NAME_STEP_FREE_DESIGNATED).withIsActive(true).withModelScope("room").produce()
       val characteristic2 = CharacteristicEntityFactory().withPropertyName(CAS1_PROPERTY_NAME_ARSON_SUITABLE).withIsActive(true).withModelScope("room").produce()
       val characteristicSingleRoom = CharacteristicEntityFactory().withPropertyName(CAS1_PROPERTY_NAME_SINGLE_ROOM).withModelScope("room").withIsActive(true).produce()
       val characteristicNotAllowed = CharacteristicEntityFactory().withPropertyName("not in allow list").withIsActive(true).withModelScope("room").produce()
-      val characteristicDisabled = CharacteristicEntityFactory().withPropertyName(CAS1_PROPERTY_NAME_ENSUITE).withIsActive(false).withModelScope("room").produce()
-      val characteristicPremise = CharacteristicEntityFactory().withPropertyName(CAS1_PROPERTY_NAME_WHEELCHAIR_DESIGNATED).withIsActive(true).withModelScope("premises").produce()
 
       val booking1 = Cas1SpaceBookingEntityFactory()
         .withCrn("booking1")
         .withCanonicalArrivalDate(LocalDate.of(2020, 4, 4))
         .withCanonicalDepartureDate(LocalDate.of(2020, 4, 5))
-        .withCriteria(mutableListOf(characteristic1, characteristic2, characteristicPremise))
+        .withCriteria(mutableListOf(characteristic1, characteristic2))
         .produce()
 
       val booking2 = Cas1SpaceBookingEntityFactory()
         .withCrn("booking2")
         .withCanonicalArrivalDate(LocalDate.of(2020, 4, 4))
         .withCanonicalDepartureDate(LocalDate.of(2020, 4, 5))
-        .withCriteria(mutableListOf(characteristicSingleRoom, characteristicDisabled, characteristicPremise, characteristicNotAllowed))
+        .withCriteria(mutableListOf(characteristicSingleRoom, characteristicNotAllowed))
         .produce()
 
       val result = factory.spaceBookingsForDay(
@@ -378,6 +335,98 @@ class SpacePlanningModelsFactoryTest {
           ),
         ),
       )
+    }
+
+    @Test
+    fun `include bookings arriving today`() {
+      val booking1 = Cas1SpaceBookingEntityFactory()
+        .withCanonicalArrivalDate(LocalDate.of(2020, 4, 4))
+        .withCanonicalDepartureDate(LocalDate.of(2020, 4, 5))
+        .produce()
+
+      val result = factory.spaceBookingsForDay(
+        day = LocalDate.of(2020, 4, 4),
+        spaceBookingsToConsider = listOf(booking1),
+      )
+
+      assertThat(result.map { it.id }).containsExactly(booking1.id)
+    }
+
+    @Test
+    fun `exclude bookings arriving after today`() {
+      val booking1 = Cas1SpaceBookingEntityFactory()
+        .withCanonicalArrivalDate(LocalDate.of(2020, 4, 5))
+        .withCanonicalDepartureDate(LocalDate.of(2020, 4, 6))
+        .produce()
+
+      val result = factory.spaceBookingsForDay(
+        day = LocalDate.of(2020, 4, 4),
+        spaceBookingsToConsider = listOf(booking1),
+      )
+
+      assertThat(result).isEmpty()
+    }
+
+    @Test
+    fun `exclude bookings departing before today`() {
+      val booking1 = Cas1SpaceBookingEntityFactory()
+        .withCanonicalArrivalDate(LocalDate.of(2020, 4, 1))
+        .withCanonicalDepartureDate(LocalDate.of(2020, 4, 3))
+        .produce()
+
+      val result = factory.spaceBookingsForDay(
+        day = LocalDate.of(2020, 4, 4),
+        spaceBookingsToConsider = listOf(booking1),
+      )
+
+      assertThat(result).isEmpty()
+    }
+
+    @Test
+    fun `exclude bookings departing today`() {
+      val booking1 = Cas1SpaceBookingEntityFactory()
+        .withCanonicalArrivalDate(LocalDate.of(2020, 4, 1))
+        .withCanonicalDepartureDate(LocalDate.of(2020, 4, 4))
+        .produce()
+
+      val result = factory.spaceBookingsForDay(
+        day = LocalDate.of(2020, 4, 4),
+        spaceBookingsToConsider = listOf(booking1),
+      )
+
+      assertThat(result).isEmpty()
+    }
+
+    @Test
+    fun `exclude cancelled bookings`() {
+      val booking1 = Cas1SpaceBookingEntityFactory()
+        .withCanonicalArrivalDate(LocalDate.of(2020, 4, 4))
+        .withCanonicalDepartureDate(LocalDate.of(2020, 4, 5))
+        .withCancellationOccurredAt(LocalDate.now())
+        .produce()
+
+      val result = factory.spaceBookingsForDay(
+        day = LocalDate.of(2020, 4, 4),
+        spaceBookingsToConsider = listOf(booking1),
+      )
+
+      assertThat(result).isEmpty()
+    }
+
+    @Test
+    fun `exclude non arrivals`() {
+      val booking1 = Cas1SpaceBookingEntityFactory()
+        .withCanonicalArrivalDate(LocalDate.of(2020, 4, 4))
+        .withCanonicalDepartureDate(LocalDate.of(2020, 4, 5))
+        .withNonArrivalConfirmedAt(Instant.now())
+        .produce()
+
+      val result = factory.spaceBookingsForDay(
+        day = LocalDate.of(2020, 4, 4),
+        spaceBookingsToConsider = listOf(booking1),
+      )
+
+      assertThat(result).isEmpty()
     }
   }
 }

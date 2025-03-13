@@ -6,40 +6,6 @@ servers:
   - url: /
 paths:
   /premises:
-    get:
-      tags:
-        - Premises
-      summary: Lists all approved premises, optionally for the given service
-      operationId: premisesGet
-      parameters:
-        - name: X-Service-Name
-          in: header
-          required: false
-          description: If given, only premises for this service will be returned
-          schema:
-            $ref: '_shared.yml#/components/schemas/ServiceName'
-        - name: X-User-Region
-          in: header
-          required: false
-          description: If given, only premises within this region will be returned
-          schema:
-            type: string
-            format: uuid
-      responses:
-        200:
-          description: successful operation
-          content:
-            'application/json':
-              schema:
-                type: array
-                items:
-                  $ref: '_shared.yml#/components/schemas/Premises'
-        401:
-          $ref: '_shared.yml#/components/responses/401Response'
-        403:
-          $ref: '_shared.yml#/components/responses/403Response'
-        500:
-          $ref: '_shared.yml#/components/responses/500Response'
     post:
       tags:
         - Premises
@@ -83,6 +49,7 @@ paths:
       tags:
         - Premises
       summary: Returns a list of premises
+      description: deprecated, use /cas3/premises/summary
       operationId: premisesSummaryGet
       parameters:
         - name: X-Service-Name
@@ -312,39 +279,6 @@ paths:
         500:
           $ref: '_shared.yml#/components/responses/500Response'
       x-codegen-request-body-name: body
-  /premises/{premisesId}/summary:
-    get:
-      tags:
-        - Operations on premises
-      summary: Returns a summary of bookings for an approved premises
-      operationId: premisesPremisesIdSummaryGet
-      parameters:
-        - name: premisesId
-          in: path
-          description: ID of the premises to get bookings for
-          required: true
-          schema:
-            type: string
-            format: uuid
-      responses:
-        200:
-          description: successful operation
-          content:
-            'application/json':
-              schema:
-                $ref: '_shared.yml#/components/schemas/ExtendedPremisesSummary'
-        401:
-          $ref: '_shared.yml#/components/responses/401Response'
-        403:
-          $ref: '_shared.yml#/components/responses/403Response'
-        404:
-          description: invalid premises ID
-          content:
-            'application/json':
-              schema:
-                $ref: '_shared.yml#/components/schemas/Problem'
-        500:
-          $ref: '_shared.yml#/components/responses/500Response'
   /premises/{premisesId}/bookings/{bookingId}:
     get:
       tags:
@@ -800,6 +734,8 @@ paths:
           $ref: '_shared.yml#/components/responses/500Response'
   /premises/{premisesId}/beds/{bedId}:
     get:
+      description: Deprecated, use /cas1/premises/{premisesId}/beds/{bedId} instead
+      deprecated: true
       tags:
         - Rooms
       summary: Gets a given bed for a given premises
@@ -1344,38 +1280,6 @@ paths:
                 $ref: '_shared.yml#/components/schemas/Problem'
         500:
           $ref: '_shared.yml#/components/responses/500Response'
-  /people/{crn}/timeline:
-    get:
-      description: deprecated, use /cas1/people/{crn}/timeline
-      deprecated: false
-      summary: Returns a timeline of all applications for a Person.
-      operationId: peopleCrnTimelineGet
-      parameters:
-        - name: crn
-          in: path
-          description: CRN of the Person to fetch the timeline for
-          required: true
-          schema:
-            type: string
-      responses:
-        200:
-          description: successful operation
-          content:
-            'application/json':
-              schema:
-                $ref: '_shared.yml#/components/schemas/PersonalTimeline'
-        401:
-          $ref: '_shared.yml#/components/responses/401Response'
-        403:
-          $ref: '_shared.yml#/components/responses/403Response'
-        404:
-          description: invalid CRN
-          content:
-            'application/json':
-              schema:
-                $ref: '_shared.yml#/components/schemas/Problem'
-        500:
-          $ref: '_shared.yml#/components/responses/500Response'
   /premises/{premisesId}/lost-beds:
     post:
       tags:
@@ -1899,49 +1803,6 @@ paths:
         500:
           $ref: '_shared.yml#/components/responses/500Response'
       x-codegen-request-body-name: body
-  /applications/{applicationId}/timeline:
-    get:
-      description: deprecated, use /cas1/applications/{applicationId}/timeline
-      deprecated: true
-      tags:
-        - Application data timeline
-      summary: Returns domain event summary
-      operationId: applicationsApplicationIdTimelineGet
-      parameters:
-        - name: applicationId
-          in: path
-          description: ID of the application
-          required: true
-          schema:
-            type: string
-            format: uuid
-        - name: X-Service-Name
-          in: header
-          required: true
-          description: If given, only users for this service will be returned
-          schema:
-            $ref: '_shared.yml#/components/schemas/ServiceName'
-      responses:
-        200:
-          description: successful operation
-          content:
-            'application/json':
-              schema:
-                type: array
-                items:
-                  $ref: '_shared.yml#/components/schemas/TimelineEvent'
-        401:
-          $ref: '_shared.yml#/components/responses/401Response'
-        403:
-          $ref: '_shared.yml#/components/responses/403Response'
-        404:
-          description: invalid CRN
-          content:
-            'application/json':
-              schema:
-                $ref: '_shared.yml#/components/schemas/Problem'
-        500:
-          $ref: '_shared.yml#/components/responses/500Response'
   /applications/{applicationId}/documents:
     get:
       tags:
@@ -2300,35 +2161,6 @@ paths:
                 $ref: '_shared.yml#/components/schemas/Problem'
         500:
           $ref: '_shared.yml#/components/responses/500Response'
-  /beds/search:
-    post:
-      summary: Searches for available Beds within the given parameters
-      operationId: bedsSearchPost
-      requestBody:
-        content:
-          'application/json':
-            schema:
-              $ref: '_shared.yml#/components/schemas/TemporaryAccommodationBedSearchParameters'
-        required: true
-      responses:
-        200:
-          description: successful operation
-          content:
-            'application/json':
-              schema:
-                $ref: '_shared.yml#/components/schemas/BedSearchResults'
-        400:
-          description: invalid params
-          content:
-            'application/problem+json':
-              schema:
-                $ref: '_shared.yml#/components/schemas/ValidationError'
-        401:
-          $ref: '_shared.yml#/components/responses/401Response'
-        403:
-          $ref: '_shared.yml#/components/responses/403Response'
-        500:
-          $ref: '_shared.yml#/components/responses/500Response'
   /bookings/{bookingId}:
     get:
       summary: Gets a booking
@@ -2505,48 +2337,6 @@ paths:
           $ref: '_shared.yml#/components/responses/403Response'
         500:
           $ref: '_shared.yml#/components/responses/500Response'
-  /reference-data/supervising-providers:
-    get:
-      tags:
-        - Reference Data
-      summary: Lists all supervising providers for arrivals
-      operationId: reference_dataSupervisingProvidersGet
-      responses:
-        200:
-          description: successful operation
-          content:
-            'application/json':
-              schema:
-                type: array
-                items:
-                  $ref: '_shared.yml#/components/schemas/SupervisingProvider'
-        401:
-          $ref: '_shared.yml#/components/responses/401Response'
-        403:
-          $ref: '_shared.yml#/components/responses/403Response'
-        500:
-          $ref: '_shared.yml#/components/responses/500Response'
-  /reference-data/supervising-teams:
-    get:
-      tags:
-        - Reference Data
-      summary: Lists all supervising teams for arrivals
-      operationId: reference_dataSupervisingTeamsGet
-      responses:
-        200:
-          description: successful operation
-          content:
-            'application/json':
-              schema:
-                type: array
-                items:
-                  $ref: '_shared.yml#/components/schemas/SupervisingTeam'
-        401:
-          $ref: '_shared.yml#/components/responses/401Response'
-        403:
-          $ref: '_shared.yml#/components/responses/403Response'
-        500:
-          $ref: '_shared.yml#/components/responses/500Response'
   /reference-data/non-arrival-reasons:
     get:
       description: deprecated, use /cas1/reference-data/non-arrival-reasons
@@ -2564,27 +2354,6 @@ paths:
                 type: array
                 items:
                   $ref: '_shared.yml#/components/schemas/NonArrivalReason'
-        401:
-          $ref: '_shared.yml#/components/responses/401Response'
-        403:
-          $ref: '_shared.yml#/components/responses/403Response'
-        500:
-          $ref: '_shared.yml#/components/responses/500Response'
-  /reference-data/supervising-officers:
-    get:
-      tags:
-        - Reference Data
-      summary: Lists all supervising officers for arrivals
-      operationId: reference_dataSupervisingOfficersGet
-      responses:
-        200:
-          description: successful operation
-          content:
-            'application/json':
-              schema:
-                type: array
-                items:
-                  $ref: '_shared.yml#/components/schemas/SupervisingOfficer'
         401:
           $ref: '_shared.yml#/components/responses/401Response'
         403:
@@ -3027,27 +2796,6 @@ paths:
             'application/problem+json':
               schema:
                 $ref: '_shared.yml#/components/schemas/ValidationError'
-        401:
-          $ref: '_shared.yml#/components/responses/401Response'
-        403:
-          $ref: '_shared.yml#/components/responses/403Response'
-        500:
-          $ref: '_shared.yml#/components/responses/500Response'
-  /placement-requests:
-    get:
-      tags:
-        - Placement requests
-      summary: Gets placement requests for a given user
-      operationId: placement_requestsGet
-      responses:
-        200:
-          description: successfully retrieved placement requests
-          content:
-            'application/json':
-              schema:
-                type: array
-                items:
-                  $ref: '_shared.yml#/components/schemas/PlacementRequest'
         401:
           $ref: '_shared.yml#/components/responses/401Response'
         403:
@@ -4243,15 +3991,38 @@ paths:
           $ref: '_shared.yml#/components/responses/403Response'
         500:
           $ref: '_shared.yml#/components/responses/500Response'
-  /seedFromExcel:
+  /seedFromExcel/file:
     post:
+      tags:
+        - Seed excel
       summary: Starts the data seeding from Excel process, can only be called from a local connection
-      operationId: seedFromExcelPost
+      operationId: seedFromExcelFile
       requestBody:
         content:
           'application/json':
             schema:
-              $ref: '_shared.yml#/components/schemas/SeedFromExcelRequest'
+              $ref: '_shared.yml#/components/schemas/SeedFromExcelFileRequest'
+        required: true
+      responses:
+        202:
+          description: successfully requested task
+        401:
+          $ref: '_shared.yml#/components/responses/401Response'
+        403:
+          $ref: '_shared.yml#/components/responses/403Response'
+        500:
+          $ref: '_shared.yml#/components/responses/500Response'
+  /seedFromExcel/directory:
+    post:
+      tags:
+        - Seed excel
+      summary: Starts the data seeding from Excel process for a directory, can only be called from a local connection
+      operationId: seedFromExcelDirectory
+      requestBody:
+        content:
+          'application/json':
+            schema:
+              $ref: '_shared.yml#/components/schemas/SeedFromExcelDirectoryRequest'
         required: true
       responses:
         202:

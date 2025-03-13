@@ -31,12 +31,12 @@ class Cas1ReportsController(
     val TIMESTAMP_FORMAT: DateTimeFormatter = DateTimeFormatter.ofPattern("uuuuMMdd_HHmm")
   }
 
+  @SuppressWarnings("CyclomaticComplexMethod")
   override fun reportsReportNameGet(
     xServiceName: ServiceName,
     reportName: Cas1ReportName,
     year: Int,
     month: Int,
-    includePii: Boolean?,
   ): ResponseEntity<StreamingResponseBody> {
     if (xServiceName !== ServiceName.approvedPremises) {
       throw NotAllowedProblem("This endpoint only supports CAS1")
@@ -49,7 +49,6 @@ class Cas1ReportsController(
     val monthSpecificReportParams = MonthSpecificReportParams(
       year = year,
       month = month,
-      includePii = includePii ?: false,
     )
 
     return when (reportName) {
@@ -63,7 +62,14 @@ class Cas1ReportsController(
         contentType = ContentType.CSV,
         fileName = createCas1ReportName("applications", year, month, ContentType.CSV),
       ) { outputStream ->
-        cas1ReportService.createApplicationReportV2(monthSpecificReportParams, outputStream)
+        cas1ReportService.createApplicationReportV2(monthSpecificReportParams, includePii = false, outputStream)
+      }
+      Cas1ReportName.applicationsV2WithPii -> generateStreamingResponse(
+        contentType = ContentType.CSV,
+        fileName = createCas1ReportName("applications-with-pii", year, month, ContentType.CSV),
+      ) { outputStream ->
+        userAccessService.ensureCurrentUserHasPermission(UserPermission.CAS1_REPORTS_VIEW_WITH_PII)
+        cas1ReportService.createApplicationReportV2(monthSpecificReportParams, includePii = true, outputStream)
       }
       Cas1ReportName.dailyMetrics -> generateStreamingResponse(
         contentType = ContentType.XLSX,
@@ -99,14 +105,40 @@ class Cas1ReportsController(
         contentType = ContentType.CSV,
         fileName = createCas1ReportName("requests-for-placement", year, month, ContentType.CSV),
       ) { outputStream ->
-        cas1ReportService.createRequestForPlacementReport(monthSpecificReportParams, outputStream)
+        cas1ReportService.createRequestForPlacementReport(monthSpecificReportParams, includePii = false, outputStream)
       }
-
+      Cas1ReportName.requestsForPlacementWithPii -> generateStreamingResponse(
+        contentType = ContentType.CSV,
+        fileName = createCas1ReportName("requests-for-placement-with-pii", year, month, ContentType.CSV),
+      ) { outputStream ->
+        userAccessService.ensureCurrentUserHasPermission(UserPermission.CAS1_REPORTS_VIEW_WITH_PII)
+        cas1ReportService.createRequestForPlacementReport(monthSpecificReportParams, includePii = true, outputStream)
+      }
       Cas1ReportName.placementMatchingOutcomesV2 -> generateStreamingResponse(
         contentType = ContentType.CSV,
         fileName = createCas1ReportName("placement-matching-outcomes", year, month, ContentType.CSV),
       ) { outputStream ->
-        cas1ReportService.createPlacementMatchingOutcomesV2Report(monthSpecificReportParams, outputStream)
+        cas1ReportService.createPlacementMatchingOutcomesV2Report(monthSpecificReportParams, includePii = false, outputStream)
+      }
+      Cas1ReportName.placementMatchingOutcomesV2WithPii -> generateStreamingResponse(
+        contentType = ContentType.CSV,
+        fileName = createCas1ReportName("placement-matching-outcomes-with-pii", year, month, ContentType.CSV),
+      ) { outputStream ->
+        userAccessService.ensureCurrentUserHasPermission(UserPermission.CAS1_REPORTS_VIEW_WITH_PII)
+        cas1ReportService.createPlacementMatchingOutcomesV2Report(monthSpecificReportParams, includePii = true, outputStream)
+      }
+      Cas1ReportName.placements -> generateStreamingResponse(
+        contentType = ContentType.CSV,
+        fileName = createCas1ReportName("placements", year, month, ContentType.CSV),
+      ) { outputStream ->
+        cas1ReportService.createPlacementReport(monthSpecificReportParams, includePii = false, outputStream)
+      }
+      Cas1ReportName.placementsWithPii -> generateStreamingResponse(
+        contentType = ContentType.CSV,
+        fileName = createCas1ReportName("placements-with-pii", year, month, ContentType.CSV),
+      ) { outputStream ->
+        userAccessService.ensureCurrentUserHasPermission(UserPermission.CAS1_REPORTS_VIEW_WITH_PII)
+        cas1ReportService.createPlacementReport(monthSpecificReportParams, includePii = true, outputStream)
       }
     }
   }
@@ -117,6 +149,8 @@ class Cas1ReportsController(
     }
   }
 
-  private fun createCas1ReportName(name: String, year: Int, month: Int, contentType: ContentType) =
-    "$name-$year-${month.toString().padStart(2, '0')}-${LocalDateTime.now().format(TIMESTAMP_FORMAT)}.${contentType.extension}"
+  private fun createCas1ReportName(name: String, year: Int, month: Int, contentType: ContentType): String {
+    val timestamp = LocalDateTime.now().format(TIMESTAMP_FORMAT)
+    return "$name-$year-${month.toString().padStart(2, '0')}-$timestamp.${contentType.extension}"
+  }
 }

@@ -15,37 +15,33 @@ class Cas1PlacementRequestSummaryTransformer(
   fun transformCas1PlacementRequestSummaryJpaToApi(
     jpa: uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas1PlacementRequestSummary,
     personInfo: PersonInfoResult,
-  ): Cas1PlacementRequestSummary {
-    return Cas1PlacementRequestSummary(
-      requestedPlacementDuration = jpa.getRequestedPlacementDuration(),
-      requestedPlacementArrivalDate = jpa.getRequestedPlacementArrivalDate(),
-      id = jpa.getId(),
-      person = personTransformer.transformModelToPersonApi(personInfo),
-      placementRequestStatus = jpa.getPlacementRequestStatus(),
-      isParole = jpa.getIsParole(),
-      personTier = jpa.getPersonTier(),
-      applicationId = jpa.getApplicationId(),
-      applicationSubmittedDate = jpa.getApplicationSubmittedDate(),
-      firstBookingPremisesName = jpa.getBookingPremisesName(),
-      firstBookingArrivalDate = jpa.getBookingArrivalDate(),
-    )
-  }
+  ): Cas1PlacementRequestSummary = Cas1PlacementRequestSummary(
+    requestedPlacementDuration = jpa.getRequestedPlacementDuration(),
+    requestedPlacementArrivalDate = jpa.getRequestedPlacementArrivalDate(),
+    id = jpa.getId(),
+    person = personTransformer.transformModelToPersonApi(personInfo),
+    placementRequestStatus = jpa.getPlacementRequestStatus(),
+    isParole = jpa.getIsParole(),
+    personTier = jpa.getPersonTier(),
+    applicationId = jpa.getApplicationId(),
+    applicationSubmittedDate = jpa.getApplicationSubmittedDate(),
+    firstBookingPremisesName = jpa.getBookingPremisesName(),
+    firstBookingArrivalDate = jpa.getBookingArrivalDate(),
+  )
 
-  fun transformPlacementRequestJpaToApi(jpa: PlacementRequestEntity, personInfo: PersonInfoResult): Cas1PlacementRequestSummary {
-    return Cas1PlacementRequestSummary(
-      requestedPlacementDuration = jpa.duration,
-      requestedPlacementArrivalDate = jpa.expectedArrival,
-      id = jpa.id,
-      person = personTransformer.transformModelToPersonApi(personInfo),
-      placementRequestStatus = getStatus(jpa),
-      isParole = jpa.isParole,
-      personTier = jpa.application.riskRatings?.tier?.value?.level,
-      applicationId = jpa.application.id,
-      applicationSubmittedDate = jpa.application.submittedAt?.toLocalDate(),
-      firstBookingPremisesName = jpa.booking?.premises?.name,
-      firstBookingArrivalDate = jpa.booking?.arrivalDate,
-    )
-  }
+  fun transformPlacementRequestJpaToApi(jpa: PlacementRequestEntity, personInfo: PersonInfoResult): Cas1PlacementRequestSummary = Cas1PlacementRequestSummary(
+    requestedPlacementDuration = jpa.duration,
+    requestedPlacementArrivalDate = jpa.expectedArrival,
+    id = jpa.id,
+    person = personTransformer.transformModelToPersonApi(personInfo),
+    placementRequestStatus = getStatus(jpa),
+    isParole = jpa.isParole,
+    personTier = jpa.application.riskRatings?.tier?.value?.level,
+    applicationId = jpa.application.id,
+    applicationSubmittedDate = jpa.application.submittedAt?.toLocalDate(),
+    firstBookingPremisesName = jpa.booking?.premises?.name,
+    firstBookingArrivalDate = jpa.booking?.arrivalDate,
+  )
 
   fun getStatus(placementRequest: PlacementRequestEntity): PlacementRequestStatus {
     if (placementRequest.hasActiveBooking()) {

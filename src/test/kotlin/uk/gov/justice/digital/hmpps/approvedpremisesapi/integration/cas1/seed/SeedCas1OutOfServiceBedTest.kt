@@ -20,7 +20,7 @@ import java.util.UUID
 class SeedCas1OutOfServiceBedTest : SeedTestBase() {
   @Test
   fun `Logs an error if the premises ID is not provided`() {
-    seedWithCsv("no-premises-id") {
+    seedWithCsv {
       withRow(
         bedId = UUID.randomUUID(),
         startDate = LocalDate.now(),
@@ -43,7 +43,7 @@ class SeedCas1OutOfServiceBedTest : SeedTestBase() {
   fun `Logs an error if no premises exists with the given ID`() {
     val row = Cas1OutOfServiceBedSeedCsvRowFactory().produce()
 
-    seedWithCsv("no-premises") {
+    seedWithCsv {
       withRow(row)
     }
 
@@ -57,7 +57,7 @@ class SeedCas1OutOfServiceBedTest : SeedTestBase() {
 
   @Test
   fun `Logs an error if the bed ID is not provided`() {
-    seedWithCsv("no-bed-id") {
+    seedWithCsv {
       withRow(
         premisesId = UUID.randomUUID(),
         startDate = LocalDate.now(),
@@ -92,7 +92,7 @@ class SeedCas1OutOfServiceBedTest : SeedTestBase() {
       .withReasonId(reason.id)
       .produce()
 
-    seedWithCsv("no-bed") {
+    seedWithCsv {
       withRow(row)
     }
 
@@ -106,7 +106,7 @@ class SeedCas1OutOfServiceBedTest : SeedTestBase() {
 
   @Test
   fun `Logs an error if the start date is not provided`() {
-    seedWithCsv("no-start-date") {
+    seedWithCsv {
       withRow(
         premisesId = UUID.randomUUID(),
         bedId = UUID.randomUUID(),
@@ -127,7 +127,7 @@ class SeedCas1OutOfServiceBedTest : SeedTestBase() {
 
   @Test
   fun `Logs an error if the end date is not provided`() {
-    seedWithCsv("no-end-date") {
+    seedWithCsv {
       withRow(
         premisesId = UUID.randomUUID(),
         bedId = UUID.randomUUID(),
@@ -148,7 +148,7 @@ class SeedCas1OutOfServiceBedTest : SeedTestBase() {
 
   @Test
   fun `Logs an error if the reason ID is not provided`() {
-    seedWithCsv("no-reason-id") {
+    seedWithCsv {
       withRow(
         premisesId = UUID.randomUUID(),
         bedId = UUID.randomUUID(),
@@ -175,7 +175,7 @@ class SeedCas1OutOfServiceBedTest : SeedTestBase() {
         .withBedId(bed.id)
         .produce()
 
-      seedWithCsv("no-reason") {
+      seedWithCsv {
         withRow(row)
       }
 
@@ -205,7 +205,7 @@ class SeedCas1OutOfServiceBedTest : SeedTestBase() {
         .withCancellationNotes(null)
         .produce()
 
-      seedWithCsv("valid-out-of-service-bed") {
+      seedWithCsv {
         withRow(row)
       }
 
@@ -243,7 +243,7 @@ class SeedCas1OutOfServiceBedTest : SeedTestBase() {
         .withCancellationNotes("Some cancellation notes")
         .produce()
 
-      seedWithCsv("cancelled-out-of-service-bed") {
+      seedWithCsv {
         withRow(row)
       }
 
@@ -289,7 +289,7 @@ class SeedCas1OutOfServiceBedTest : SeedTestBase() {
         .withNotes("Updated notes")
         .produce()
 
-      seedWithCsv("updated-out-of-service-bed") {
+      seedWithCsv {
         withRow(firstRow)
         withRow(secondRow)
       }
@@ -349,7 +349,7 @@ class SeedCas1OutOfServiceBedTest : SeedTestBase() {
           .withCancellationNotes("Some cancellation notes")
           .produce()
 
-        seedWithCsv("multiple-out-of-service-beds") {
+        seedWithCsv {
           withRow(firstRow)
           withRow(secondRow)
           withRow(thirdRow)
@@ -385,14 +385,11 @@ class SeedCas1OutOfServiceBedTest : SeedTestBase() {
     }
   }
 
-  private fun seedWithCsv(name: String? = null, config: CsvBuilder.() -> Unit) {
-    val fileName = (name ?: randomStringMultiCaseWithNumbers(64))
-    generateCsvFile(
-      fileName,
+  private fun seedWithCsv(config: CsvBuilder.() -> Unit) {
+    seed(
+      SeedFileType.approvedPremisesOutOfServiceBeds,
       csv(config),
     )
-
-    seedService.seedData(SeedFileType.approvedPremisesOutOfServiceBeds, fileName + ".csv")
   }
 
   private fun csv(config: CsvBuilder.() -> Unit) = CsvBuilder()

@@ -52,9 +52,7 @@ class NomisUsersSeedJob(
     )
   }
 
-  private fun randomId(): Long {
-    return Random.nextInt(100000, 900000).toLong()
-  }
+  private fun randomId(): Long = Random.nextInt(100000, 900000).toLong()
 }
 
 data class NomisUserSeedCsvRow(

@@ -12,6 +12,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementAppl
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas1.Cas1ApplicationV2ReportRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas1.Cas1PlacementMatchingOutcomesReportRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas1.Cas1PlacementMatchingOutcomesV2ReportRepository
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas1.Cas1PlacementReportRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas1.Cas1RequestForPlacementReportRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas3.Cas3VoidBedspacesRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.generator.ApplicationReportGenerator
@@ -43,6 +44,7 @@ class Cas1ReportService(
   private val cas1OutOfServiceBedRepository: Cas1OutOfServiceBedRepository,
   private val domainEventService: Cas1DomainEventService,
   private val placementApplicationEntityReportRowRepository: PlacementApplicationEntityReportRowRepository,
+  private val cas1PlacementReportRepository: Cas1PlacementReportRepository,
 ) {
 
   companion object {
@@ -58,6 +60,7 @@ class Cas1ReportService(
     )
   }
 
+  @Deprecated("This report is no longer supported and should be removed for CAS1 once we confirmed all users have migrated to new reports")
   fun createApplicationReport(properties: MonthSpecificReportParams, outputStream: OutputStream) {
     ApplicationReportGenerator()
       .createReport(applicationEntityReportRowRepository.generateApprovedPremisesReportRowsForCalendarMonth(properties.month, properties.year), properties)
@@ -67,8 +70,12 @@ class Cas1ReportService(
       )
   }
 
-  fun createApplicationReportV2(properties: MonthSpecificReportParams, outputStream: OutputStream) {
-    val columnsToExclude = if (properties.includePii) {
+  fun createApplicationReportV2(
+    properties: MonthSpecificReportParams,
+    includePii: Boolean,
+    outputStream: OutputStream,
+  ) {
+    val columnsToExclude = if (includePii) {
       emptyList()
     } else {
       PII_COLUMN_NAMES
@@ -108,6 +115,7 @@ class Cas1ReportService(
       )
   }
 
+  @Deprecated("This report is no longer supported and should be removed for CAS1 once we confirmed all users have migrated to new reports")
   fun createLostBedReport(properties: VoidBedspaceReportProperties, outputStream: OutputStream) {
     VoidBedspacesReportGenerator(cas3VoidBedspacesRepository)
       .createReport(bedRepository.findAll(), properties)
@@ -126,6 +134,7 @@ class Cas1ReportService(
       )
   }
 
+  @Deprecated("This report is no longer supported and should be removed for CAS1 once we confirmed all users have migrated to new reports")
   fun createPlacementApplicationReport(properties: MonthSpecificReportParams, outputStream: OutputStream) {
     PlacementApplicationReportGenerator()
       .createReport(placementApplicationEntityReportRowRepository.generatePlacementApplicationEntityReportRowsForCalendarMonth(properties.month, properties.year), properties)
@@ -135,8 +144,12 @@ class Cas1ReportService(
       )
   }
 
-  fun createRequestForPlacementReport(properties: MonthSpecificReportParams, outputStream: OutputStream) {
-    val columnsToExclude = if (properties.includePii) {
+  fun createRequestForPlacementReport(
+    properties: MonthSpecificReportParams,
+    includePii: Boolean,
+    outputStream: OutputStream,
+  ) {
+    val columnsToExclude = if (includePii) {
       emptyList()
     } else {
       PII_COLUMN_NAMES
@@ -154,7 +167,11 @@ class Cas1ReportService(
     }
   }
 
-  fun createPlacementMatchingOutcomesReport(properties: MonthSpecificReportParams, outputStream: OutputStream) {
+  @Deprecated("This report is no longer supported and should be removed for CAS1 once we confirmed all users have migrated to new reports")
+  fun createPlacementMatchingOutcomesReport(
+    properties: MonthSpecificReportParams,
+    outputStream: OutputStream,
+  ) {
     ExcelJdbcResultSetConsumer().use { consumer ->
       cas1PlacementMatchingOutcomesReportRepository.generateReportRowsForExpectedArrivalMonth(
         properties.month,
@@ -166,9 +183,12 @@ class Cas1ReportService(
     }
   }
 
-  @Deprecated("This report is not currently in use and will be superseded by the space bookings placement report")
-  fun createPlacementMatchingOutcomesV2Report(properties: MonthSpecificReportParams, outputStream: OutputStream) {
-    val columnsToExclude = if (properties.includePii) {
+  fun createPlacementMatchingOutcomesV2Report(
+    properties: MonthSpecificReportParams,
+    includePii: Boolean,
+    outputStream: OutputStream,
+  ) {
+    val columnsToExclude = if (includePii) {
       emptyList()
     } else {
       PII_COLUMN_NAMES
@@ -186,10 +206,32 @@ class Cas1ReportService(
     }
   }
 
+  fun createPlacementReport(
+    properties: MonthSpecificReportParams,
+    includePii: Boolean,
+    outputStream: OutputStream,
+  ) {
+    val columnsToExclude = if (includePii) {
+      emptyList()
+    } else {
+      PII_COLUMN_NAMES
+    }
+
+    CsvJdbcResultSetConsumer(
+      outputStream = outputStream,
+      columnsToExclude = columnsToExclude,
+    ).use { consumer ->
+      cas1PlacementReportRepository.generatePlacementReport(
+        startDateTimeInclusive = getFirstSecondOfMonth(properties.year, properties.month),
+        endDateTimeInclusive = getLastSecondOfMonth(properties.year, properties.month),
+        consumer,
+      )
+    }
+  }
+
   data class MonthSpecificReportParams(
     val year: Int,
     val month: Int,
-    val includePii: Boolean = false,
   )
 
   @SuppressWarnings("MagicNumber")

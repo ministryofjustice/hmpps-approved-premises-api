@@ -15,8 +15,8 @@ class SeedNomisUsersTest : SeedTestBase() {
   fun `Attempting to seed a fake currently unknown user succeeds`() {
     nomisUserRepository.deleteAll()
 
-    withCsv(
-      "unknown-nomis-user",
+    seed(
+      SeedFileType.nomisUsers,
       nomisUserSeedCsvRowsToCsv(
         listOf(
           NomisUsersSeedCsvRowFactory()
@@ -27,8 +27,6 @@ class SeedNomisUsersTest : SeedTestBase() {
         ),
       ),
     )
-
-    seedService.seedData(SeedFileType.nomisUsers, "unknown-nomis-user.csv")
 
     val persistedUser = nomisUserRepository.findByNomisUsername("ROGER_SMITH_FAKE")
 
@@ -47,8 +45,8 @@ class SeedNomisUsersTest : SeedTestBase() {
       withEmail("roger.smith@example.com")
     }
 
-    withCsv(
-      "existing-nomis-user",
+    seed(
+      SeedFileType.nomisUsers,
       nomisUserSeedCsvRowsToCsv(
         listOf(
           NomisUsersSeedCsvRowFactory()
@@ -59,8 +57,6 @@ class SeedNomisUsersTest : SeedTestBase() {
         ),
       ),
     )
-
-    seedService.seedData(SeedFileType.nomisUsers, "existing-nomis-user.csv")
 
     val persistedUser = nomisUserRepository.findByNomisUsername("ROGER_SMITH_FAKE")
 

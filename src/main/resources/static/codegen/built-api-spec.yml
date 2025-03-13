@@ -8,40 +8,6 @@ servers:
   - url: /
 paths:
   /premises:
-    get:
-      tags:
-        - Premises
-      summary: Lists all approved premises, optionally for the given service
-      operationId: premisesGet
-      parameters:
-        - name: X-Service-Name
-          in: header
-          required: false
-          description: If given, only premises for this service will be returned
-          schema:
-            $ref: '#/components/schemas/ServiceName'
-        - name: X-User-Region
-          in: header
-          required: false
-          description: If given, only premises within this region will be returned
-          schema:
-            type: string
-            format: uuid
-      responses:
-        200:
-          description: successful operation
-          content:
-            'application/json':
-              schema:
-                type: array
-                items:
-                  $ref: '#/components/schemas/Premises'
-        401:
-          $ref: '#/components/responses/401Response'
-        403:
-          $ref: '#/components/responses/403Response'
-        500:
-          $ref: '#/components/responses/500Response'
     post:
       tags:
         - Premises
@@ -85,6 +51,7 @@ paths:
       tags:
         - Premises
       summary: Returns a list of premises
+      description: deprecated, use /cas3/premises/summary
       operationId: premisesSummaryGet
       parameters:
         - name: X-Service-Name
@@ -314,39 +281,6 @@ paths:
         500:
           $ref: '#/components/responses/500Response'
       x-codegen-request-body-name: body
-  /premises/{premisesId}/summary:
-    get:
-      tags:
-        - Operations on premises
-      summary: Returns a summary of bookings for an approved premises
-      operationId: premisesPremisesIdSummaryGet
-      parameters:
-        - name: premisesId
-          in: path
-          description: ID of the premises to get bookings for
-          required: true
-          schema:
-            type: string
-            format: uuid
-      responses:
-        200:
-          description: successful operation
-          content:
-            'application/json':
-              schema:
-                $ref: '#/components/schemas/ExtendedPremisesSummary'
-        401:
-          $ref: '#/components/responses/401Response'
-        403:
-          $ref: '#/components/responses/403Response'
-        404:
-          description: invalid premises ID
-          content:
-            'application/json':
-              schema:
-                $ref: '#/components/schemas/Problem'
-        500:
-          $ref: '#/components/responses/500Response'
   /premises/{premisesId}/bookings/{bookingId}:
     get:
       tags:
@@ -802,6 +736,8 @@ paths:
           $ref: '#/components/responses/500Response'
   /premises/{premisesId}/beds/{bedId}:
     get:
+      description: Deprecated, use /cas1/premises/{premisesId}/beds/{bedId} instead
+      deprecated: true
       tags:
         - Rooms
       summary: Gets a given bed for a given premises
@@ -1346,38 +1282,6 @@ paths:
                 $ref: '#/components/schemas/Problem'
         500:
           $ref: '#/components/responses/500Response'
-  /people/{crn}/timeline:
-    get:
-      description: deprecated, use /cas1/people/{crn}/timeline
-      deprecated: false
-      summary: Returns a timeline of all applications for a Person.
-      operationId: peopleCrnTimelineGet
-      parameters:
-        - name: crn
-          in: path
-          description: CRN of the Person to fetch the timeline for
-          required: true
-          schema:
-            type: string
-      responses:
-        200:
-          description: successful operation
-          content:
-            'application/json':
-              schema:
-                $ref: '#/components/schemas/PersonalTimeline'
-        401:
-          $ref: '#/components/responses/401Response'
-        403:
-          $ref: '#/components/responses/403Response'
-        404:
-          description: invalid CRN
-          content:
-            'application/json':
-              schema:
-                $ref: '#/components/schemas/Problem'
-        500:
-          $ref: '#/components/responses/500Response'
   /premises/{premisesId}/lost-beds:
     post:
       tags:
@@ -1901,49 +1805,6 @@ paths:
         500:
           $ref: '#/components/responses/500Response'
       x-codegen-request-body-name: body
-  /applications/{applicationId}/timeline:
-    get:
-      description: deprecated, use /cas1/applications/{applicationId}/timeline
-      deprecated: true
-      tags:
-        - Application data timeline
-      summary: Returns domain event summary
-      operationId: applicationsApplicationIdTimelineGet
-      parameters:
-        - name: applicationId
-          in: path
-          description: ID of the application
-          required: true
-          schema:
-            type: string
-            format: uuid
-        - name: X-Service-Name
-          in: header
-          required: true
-          description: If given, only users for this service will be returned
-          schema:
-            $ref: '#/components/schemas/ServiceName'
-      responses:
-        200:
-          description: successful operation
-          content:
-            'application/json':
-              schema:
-                type: array
-                items:
-                  $ref: '#/components/schemas/TimelineEvent'
-        401:
-          $ref: '#/components/responses/401Response'
-        403:
-          $ref: '#/components/responses/403Response'
-        404:
-          description: invalid CRN
-          content:
-            'application/json':
-              schema:
-                $ref: '#/components/schemas/Problem'
-        500:
-          $ref: '#/components/responses/500Response'
   /applications/{applicationId}/documents:
     get:
       tags:
@@ -2302,35 +2163,6 @@ paths:
                 $ref: '#/components/schemas/Problem'
         500:
           $ref: '#/components/responses/500Response'
-  /beds/search:
-    post:
-      summary: Searches for available Beds within the given parameters
-      operationId: bedsSearchPost
-      requestBody:
-        content:
-          'application/json':
-            schema:
-              $ref: '#/components/schemas/TemporaryAccommodationBedSearchParameters'
-        required: true
-      responses:
-        200:
-          description: successful operation
-          content:
-            'application/json':
-              schema:
-                $ref: '#/components/schemas/BedSearchResults'
-        400:
-          description: invalid params
-          content:
-            'application/problem+json':
-              schema:
-                $ref: '#/components/schemas/ValidationError'
-        401:
-          $ref: '#/components/responses/401Response'
-        403:
-          $ref: '#/components/responses/403Response'
-        500:
-          $ref: '#/components/responses/500Response'
   /bookings/{bookingId}:
     get:
       summary: Gets a booking
@@ -2507,48 +2339,6 @@ paths:
           $ref: '#/components/responses/403Response'
         500:
           $ref: '#/components/responses/500Response'
-  /reference-data/supervising-providers:
-    get:
-      tags:
-        - Reference Data
-      summary: Lists all supervising providers for arrivals
-      operationId: reference_dataSupervisingProvidersGet
-      responses:
-        200:
-          description: successful operation
-          content:
-            'application/json':
-              schema:
-                type: array
-                items:
-                  $ref: '#/components/schemas/SupervisingProvider'
-        401:
-          $ref: '#/components/responses/401Response'
-        403:
-          $ref: '#/components/responses/403Response'
-        500:
-          $ref: '#/components/responses/500Response'
-  /reference-data/supervising-teams:
-    get:
-      tags:
-        - Reference Data
-      summary: Lists all supervising teams for arrivals
-      operationId: reference_dataSupervisingTeamsGet
-      responses:
-        200:
-          description: successful operation
-          content:
-            'application/json':
-              schema:
-                type: array
-                items:
-                  $ref: '#/components/schemas/SupervisingTeam'
-        401:
-          $ref: '#/components/responses/401Response'
-        403:
-          $ref: '#/components/responses/403Response'
-        500:
-          $ref: '#/components/responses/500Response'
   /reference-data/non-arrival-reasons:
     get:
       description: deprecated, use /cas1/reference-data/non-arrival-reasons
@@ -2566,27 +2356,6 @@ paths:
                 type: array
                 items:
                   $ref: '#/components/schemas/NonArrivalReason'
-        401:
-          $ref: '#/components/responses/401Response'
-        403:
-          $ref: '#/components/responses/403Response'
-        500:
-          $ref: '#/components/responses/500Response'
-  /reference-data/supervising-officers:
-    get:
-      tags:
-        - Reference Data
-      summary: Lists all supervising officers for arrivals
-      operationId: reference_dataSupervisingOfficersGet
-      responses:
-        200:
-          description: successful operation
-          content:
-            'application/json':
-              schema:
-                type: array
-                items:
-                  $ref: '#/components/schemas/SupervisingOfficer'
         401:
           $ref: '#/components/responses/401Response'
         403:
@@ -3029,27 +2798,6 @@ paths:
             'application/problem+json':
               schema:
                 $ref: '#/components/schemas/ValidationError'
-        401:
-          $ref: '#/components/responses/401Response'
-        403:
-          $ref: '#/components/responses/403Response'
-        500:
-          $ref: '#/components/responses/500Response'
-  /placement-requests:
-    get:
-      tags:
-        - Placement requests
-      summary: Gets placement requests for a given user
-      operationId: placement_requestsGet
-      responses:
-        200:
-          description: successfully retrieved placement requests
-          content:
-            'application/json':
-              schema:
-                type: array
-                items:
-                  $ref: '#/components/schemas/PlacementRequest'
         401:
           $ref: '#/components/responses/401Response'
         403:
@@ -4245,15 +3993,38 @@ paths:
           $ref: '#/components/responses/403Response'
         500:
           $ref: '#/components/responses/500Response'
-  /seedFromExcel:
+  /seedFromExcel/file:
     post:
+      tags:
+        - Seed excel
       summary: Starts the data seeding from Excel process, can only be called from a local connection
-      operationId: seedFromExcelPost
+      operationId: seedFromExcelFile
       requestBody:
         content:
           'application/json':
             schema:
-              $ref: '#/components/schemas/SeedFromExcelRequest'
+              $ref: '#/components/schemas/SeedFromExcelFileRequest'
+        required: true
+      responses:
+        202:
+          description: successfully requested task
+        401:
+          $ref: '#/components/responses/401Response'
+        403:
+          $ref: '#/components/responses/403Response'
+        500:
+          $ref: '#/components/responses/500Response'
+  /seedFromExcel/directory:
+    post:
+      tags:
+        - Seed excel
+      summary: Starts the data seeding from Excel process for a directory, can only be called from a local connection
+      operationId: seedFromExcelDirectory
+      requestBody:
+        content:
+          'application/json':
+            schema:
+              $ref: '#/components/schemas/SeedFromExcelDirectoryRequest'
         required: true
       responses:
         202:
@@ -4710,9 +4481,7 @@ components:
         propertyName: taskType
         mapping:
           Assessment: '#/components/schemas/AssessmentTask'
-          PlacementRequest: '#/components/schemas/PlacementRequestTask'
           PlacementApplication: '#/components/schemas/PlacementApplicationTask'
-          BookingAppeal: '#/components/schemas/BookingAppealTask'
       required:
         - id
         - taskType
@@ -4751,24 +4520,6 @@ components:
               $ref: '#/components/schemas/AssessmentDecision'
           required:
             - createdFromAppeal
-    PlacementRequestTask:
-      allOf:
-        - $ref: '#/components/schemas/Task'
-        - $ref: '#/components/schemas/PlacementDates'
-        - type: object
-          properties:
-            tier:
-              $ref: '#/components/schemas/RiskTierEnvelope'
-            releaseType:
-              $ref: '#/components/schemas/ReleaseTypeOption'
-            placementRequestStatus:
-              $ref: '#/components/schemas/PlacementRequestStatus'
-            outcome:
-              $ref: '#/components/schemas/PlacementRequestTaskOutcome'
-          required:
-            - tier
-            - releaseType
-            - placementRequestStatus
     PlacementApplicationTask:
       allOf:
         - $ref: '#/components/schemas/Task'
@@ -4791,14 +4542,6 @@ components:
             - tier
             - releaseType
             - placementType
-    PlacementRequestTaskOutcome:
-      type: string
-      enum:
-        - matched
-        - unable_to_match
-    BookingAppealTask:
-      allOf:
-        - $ref: '#/components/schemas/Task'
     TaskType:
       type: string
       enum:
@@ -5099,30 +4842,6 @@ components:
       required:
         - id
         - name
-    ExtendedPremisesSummary:
-      type: object
-      properties:
-        id:
-          type: string
-          format: uuid
-        name:
-          type: string
-        apCode:
-          type: string
-        postcode:
-          type: string
-        bedCount:
-          type: integer
-        availableBedsForToday:
-          type: integer
-        bookings:
-          type: array
-          items:
-            $ref: '#/components/schemas/PremisesBooking'
-        dateCapacities:
-          type: array
-          items:
-            $ref: '#/components/schemas/DateCapacity'
     PremisesBooking:
       type: object
       properties:
@@ -5785,51 +5504,6 @@ components:
         - id
         - name
         - isActive
-    SupervisingProvider:
-      type: object
-      properties:
-        id:
-          type: string
-          format: uuid
-        name:
-          type: string
-          example: North East Region
-        isActive:
-          type: boolean
-      required:
-        - id
-        - name
-        - isActive
-    SupervisingTeam:
-      type: object
-      properties:
-        id:
-          type: string
-          format: uuid
-        name:
-          type: string
-          example: CP - Sheffield
-        isActive:
-          type: boolean
-      required:
-        - id
-        - name
-        - isActive
-    SupervisingOfficer:
-      type: object
-      properties:
-        id:
-          type: string
-          format: uuid
-        name:
-          type: string
-          example: Smith, John (PS - PO)
-        isActive:
-          type: boolean
-      required:
-        - id
-        - name
-        - isActive
     StaffMember:
       type: object
       properties:
@@ -6060,6 +5734,137 @@ components:
         - id
         - person
         - createdAt
+    Cas2v2Application:
+      allOf:
+        - $ref: '#/components/schemas/Application'
+        - type: object
+          properties:
+            createdBy:
+              $ref: '#/components/schemas/Cas2v2User'
+            schemaVersion:
+              type: string
+              format: uuid
+            outdatedSchema:
+              type: boolean
+            data:
+              $ref: '#/components/schemas/Unit'
+            document:
+              $ref: '#/components/schemas/Unit'
+            status:
+              $ref: '#/components/schemas/ApplicationStatus'
+            submittedAt:
+              type: string
+              format: date-time
+            telephoneNumber:
+              type: string
+            assessment:
+              $ref: '#/components/schemas/Cas2v2Assessment'
+            timelineEvents:
+              type: array
+              items:
+                $ref: '#/components/schemas/Cas2TimelineEvent'
+            applicationOrigin:
+              $ref: "#/components/schemas/ApplicationOrigin"
+            bailHearingDate:
+              type: string
+              format: date
+          required:
+            - createdBy
+            - schemaVersion
+            - outdatedSchema
+            - status
+            - applicationOrigin
+    Cas2v2Assessment:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        nacroReferralId:
+          type: string
+        assessorName:
+          type: string
+        statusUpdates:
+          type: array
+          items:
+            $ref: '#/components/schemas/Cas2v2StatusUpdate'
+      required:
+        - id
+    Cas2v2User:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        name:
+          type: string
+          example: 'Roger Smith'
+        username:
+          type: string
+          example: 'SMITHR_GEN'
+        authSource:
+          type: string
+          enum:
+            - nomis
+            - delius
+            - auth
+        email:
+          type: string
+          example: 'Roger.Smith@justice.gov.uk'
+        isActive:
+          type: boolean
+          example: true
+      required:
+        - id
+        - name
+        - username
+        - authSource
+        - isActive
+    Cas2v2StatusUpdate:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        name:
+          type: string
+          example: 'moreInfoRequested'
+        label:
+          type: string
+          example: 'More information requested'
+        description:
+          type: string
+          example: 'More information about the application has been requested from the HMPPS user.'
+        updatedBy:
+          $ref: '#/components/schemas/Cas2v2User'
+        updatedAt:
+          type: string
+          format: date-time
+        statusUpdateDetails:
+          type: array
+          items:
+            $ref: '#/components/schemas/Cas2v2StatusUpdateDetail'
+      required:
+        - id
+        - name
+        - label
+        - description
+    Cas2v2StatusUpdateDetail:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        name:
+          type: string
+          example: 'moreInfoRequested'
+        label:
+          type: string
+          example: 'More information requested'
+      required:
+        - id
+        - name
+        - label
     OfflineApplication:
       allOf:
         - $ref: '#/components/schemas/Application'
@@ -6133,81 +5938,6 @@ components:
             - schemaVersion
             - outdatedSchema
             - status
-    Cas2Application:
-      allOf:
-        - $ref: '#/components/schemas/Application'
-        - type: object
-          properties:
-            createdBy:
-              $ref: '#/components/schemas/NomisUser'
-            schemaVersion:
-              type: string
-              format: uuid
-            outdatedSchema:
-              type: boolean
-            data:
-              $ref: '#/components/schemas/Unit'
-            document:
-              $ref: '#/components/schemas/Unit'
-            status:
-              $ref: '#/components/schemas/ApplicationStatus'
-            submittedAt:
-              type: string
-              format: date-time
-            telephoneNumber:
-              type: string
-            assessment:
-              $ref: '#/components/schemas/Cas2Assessment'
-            timelineEvents:
-              type: array
-              items:
-                $ref: '#/components/schemas/Cas2TimelineEvent'
-          required:
-            - createdBy
-            - schemaVersion
-            - outdatedSchema
-            - status
-    Cas2SubmittedApplication:
-      type: object
-      properties:
-        id:
-          type: string
-          format: uuid
-        person:
-          $ref: '#/components/schemas/Person'
-        createdAt:
-          type: string
-          format: date-time
-        submittedBy:
-          $ref: '#/components/schemas/NomisUser'
-        schemaVersion:
-          type: string
-          format: uuid
-        outdatedSchema:
-          type: boolean
-        document:
-          $ref: '#/components/schemas/Unit'
-        submittedAt:
-          type: string
-          format: date-time
-        telephoneNumber:
-          type: string
-        timelineEvents:
-          type: array
-          items:
-            $ref: '#/components/schemas/Cas2TimelineEvent'
-        assessment:
-          $ref: '#/components/schemas/Cas2Assessment'
-      required:
-        - id
-        - person
-        - createdAt
-        - createdBy
-        - schemaVersion
-        - outdatedSchema
-        - status
-        - timelineEvents
-        - assessment
     TemporaryAccommodationApplication:
       allOf:
         - $ref: '#/components/schemas/Application'
@@ -6328,224 +6058,6 @@ components:
           required:
             - createdByUserId
             - status
-    Cas2ApplicationSummary:
-      type: object
-      properties:
-        type:
-          type: string
-        id:
-          type: string
-          format: uuid
-        createdAt:
-          type: string
-          format: date-time
-        submittedAt:
-          type: string
-          format: date-time
-        createdByUserId:
-          type: string
-          format: uuid
-        createdByUserName:
-          type: string
-        status:
-          $ref: '#/components/schemas/ApplicationStatus'
-        latestStatusUpdate:
-          $ref: '#/components/schemas/LatestCas2StatusUpdate'
-        risks:
-          $ref: '#/components/schemas/PersonRisks'
-        hdcEligibilityDate:
-          type: string
-          format: date
-        personName:
-          type: string
-        crn:
-          type: string
-        nomsNumber:
-          type: string
-      required:
-        - type
-        - id
-        - createdAt
-        - createdByUserId
-        - status
-        - personName
-        - crn
-        - nomsNumber
-    NewCas2ApplicationNote:
-      type: object
-      properties:
-        note:
-          type: string
-      required:
-        - note
-      description: A note to add to an application
-    Cas2ApplicationNote:
-      type: object
-      properties:
-        id:
-          type: string
-          format: uuid
-        email:
-          type: string
-          example: 'roger@example.com'
-        name:
-          type: string
-          example: 'Roger Smith'
-        body:
-          type: string
-        createdAt:
-          type: string
-          format: date-time
-      required:
-        - username
-        - email
-        - name
-        - body
-        - createdAt
-      description: Notes added to an application
-    Cas2ApplicationStatus:
-      type: object
-      properties:
-        id:
-          type: string
-          format: uuid
-        name:
-          type: string
-          example: 'moreInfoRequested'
-        label:
-          type: string
-          example: 'More information requested'
-        description:
-          type: string
-          example: 'More information about the application has been requested from the POM (Prison Offender Manager).'
-        statusDetails:
-          type: array
-          items:
-            $ref: '#/components/schemas/Cas2ApplicationStatusDetail'
-      required:
-        - id
-        - name
-        - label
-        - description
-        - statusDetails
-    Cas2ApplicationStatusDetail:
-      type: object
-      properties:
-        id:
-          type: string
-          format: uuid
-        name:
-          type: string
-          example: 'changeOfCircumstances'
-        label:
-          type: string
-          example: 'Change of Circumstances'
-      required:
-        - id
-        - name
-        - label
-    Cas2AssessmentStatusUpdate:
-      type: object
-      properties:
-        newStatus:
-          type: string
-          example: 'moreInfoRequired'
-          description: 'The "name" of the new status to be applied'
-        newStatusDetails:
-          type: array
-          items:
-            type: string
-            example: 'changeOfCircumstances'
-            description: 'The "name" of the new detail belonging to the new status'
-      required:
-        - newStatus
-    Cas2SubmittedApplicationSummary:
-      type: object
-      properties:
-        id:
-          type: string
-          format: uuid
-        createdByUserId:
-          type: string
-          format: uuid
-        crn:
-          type: string
-        nomsNumber:
-          type: string
-        personName:
-          type: string
-        createdAt:
-          type: string
-          format: date-time
-        submittedAt:
-          type: string
-          format: date-time
-      required:
-        - createdByUserId
-        - status
-        - id
-        - person
-        - createdAt
-        - personName
-        - crn
-        - nomsNumber
-    Cas2StatusUpdate:
-      type: object
-      properties:
-        id:
-          type: string
-          format: uuid
-        name:
-          type: string
-          example: 'moreInfoRequested'
-        label:
-          type: string
-          example: 'More information requested'
-        description:
-          type: string
-          example: 'More information about the application has been requested from the POM (Prison Offender Manager).'
-        updatedBy:
-          $ref: '#/components/schemas/ExternalUser'
-        updatedAt:
-          type: string
-          format: date-time
-        statusUpdateDetails:
-          type: array
-          items:
-            $ref: '#/components/schemas/Cas2StatusUpdateDetail'
-      required:
-        - id
-        - name
-        - label
-        - description
-    Cas2StatusUpdateDetail:
-      type: object
-      properties:
-        id:
-          type: string
-          format: uuid
-        name:
-          type: string
-          example: 'moreInfoRequested'
-        label:
-          type: string
-          example: 'More information requested'
-      required:
-        - id
-        - name
-        - label
-    LatestCas2StatusUpdate:
-      type: object
-      properties:
-        statusId:
-          type: string
-          format: uuid
-        label:
-          type: string
-          example: 'More information requested'
-      required:
-        - statusId
-        - label
     ApplicationStatus:
       type: string
       enum:
@@ -6657,9 +6169,6 @@ components:
       required:
         - type
         - data
-    UpdateCas2Application:
-      allOf:
-        - $ref: '#/components/schemas/UpdateApplication'
     UpdateCas2v2Application:
       allOf:
         - $ref: '#/components/schemas/UpdateApplication'
@@ -6777,33 +6286,6 @@ components:
             - targetLocation
             - releaseType
             - sentenceType
-    SubmitCas2Application:
-      type: object
-      properties:
-        translatedDocument:
-          $ref: '#/components/schemas/Unit'
-        applicationId:
-          type: string
-          format: uuid
-          description: Id of the application being submitted
-        preferredAreas:
-          type: string
-          description: First and second preferences for where the accommodation should be located, pipe-separated
-          example: 'Leeds | Bradford'
-        hdcEligibilityDate:
-          type: string
-          example: '2023-03-30'
-          format: date
-        conditionalReleaseDate:
-          type: string
-          example: '2023-04-30'
-          format: date
-        telephoneNumber:
-          type: string
-      required:
-        - translatedDocument
-        - applicationId
-        - telephoneNumber
     SubmitTemporaryAccommodationApplication:
       allOf:
         - $ref: '#/components/schemas/SubmitApplication'
@@ -7071,29 +6553,6 @@ components:
           required:
             - application
             - summaryData
-    Cas2Assessment:
-      type: object
-      properties:
-        id:
-          type: string
-          format: uuid
-        nacroReferralId:
-          type: string
-        assessorName:
-          type: string
-        statusUpdates:
-          type: array
-          items:
-            $ref: '#/components/schemas/Cas2StatusUpdate'
-      required:
-        - id
-    UpdateCas2Assessment:
-      type: object
-      properties:
-        nacroReferralId:
-          type: string
-        assessorName:
-          type: string
     AssessmentSummary:
       type: object
       properties:
@@ -7247,6 +6706,12 @@ components:
           $ref: '#/components/schemas/ApType'
         notes:
           type: string
+        agreeWithShortNoticeReason:
+          type: boolean
+        agreeWithShortNoticeReasonComments:
+          type: string
+        reasonForLateApplication:
+          type: string
       required:
         - document
     AssessmentRejection:
@@ -7257,12 +6722,20 @@ components:
         rejectionRationale:
           type: string
         referralRejectionReasonId:
+          description: Only used by CAS3
           type: string
           format: uuid
         referralRejectionReasonDetail:
+          description: Only used by CAS3
           type: string
         isWithdrawn:
           type: boolean
+        agreeWithShortNoticeReason:
+          type: boolean
+        agreeWithShortNoticeReasonComments:
+          type: string
+        reasonForLateApplication:
+          type: string
       required:
         - document
         - rejectionRationale
@@ -7601,6 +7074,7 @@ components:
         - cru_member_enable_out_of_service_beds
         - applicant
         - report_viewer
+        - report_viewer_with_pii
         - excluded_from_assess_allocation
         - excluded_from_match_allocation
         - excluded_from_placement_application_allocation
@@ -7620,6 +7094,7 @@ components:
         - cas1_booking_change_dates
         - cas1_booking_withdraw
         - cas1_out_of_service_bed_create
+        - cas1_out_of_service_bed_cancel
         - cas1_process_an_appeal
         - cas1_user_list
         - cas1_user_management
@@ -7639,6 +7114,7 @@ components:
         - cas1_premises_view
         - cas1_premises_manage
         - cas1_reports_view
+        - cas1_reports_view_with_pii
     TemporaryAccommodationUserRole:
       type: string
       enum:
@@ -7986,115 +7462,15 @@ components:
         - createdAt
         - typeCode
         - typeDescription
-    PersonalTimeline:
-      type: object
-      properties:
-        person:
-          $ref: '#/components/schemas/Person'
-        applications:
-          type: array
-          items:
-            $ref: '#/components/schemas/ApplicationTimeline'
-      required:
-        - person
-        - applications
-    ApplicationTimeline:
-      type: object
-      properties:
-        id:
-          type: string
-          format: uuid
-        createdAt:
-          type: string
-          format: date-time
-        isOfflineApplication:
-          type: boolean
-        status:
-          $ref: '#/components/schemas/ApprovedPremisesApplicationStatus'
-        createdBy:
-          $ref: '#/components/schemas/User'
-        timelineEvents:
-          type: array
-          items:
-            $ref: '#/components/schemas/TimelineEvent'
-      required:
-        - id
-        - createdAt
-        - isOfflineApplication
-        - timelineEvents
-    TimelineEvent:
-      type: object
-      properties:
-        type:
-          $ref: '#/components/schemas/TimelineEventType'
-        id:
-          type: string
-        occurredAt:
-          type: string
-          format: date-time
-        content:
-          type: string
-        createdBy:
-          $ref: '#/components/schemas/User'
-        associatedUrls:
-          type: array
-          items:
-            $ref: '#/components/schemas/TimelineEventAssociatedUrl'
-        triggerSource:
-          type: string
-          $ref: '#/components/schemas/TriggerSourceType'
-    TimelineEventAssociatedUrl:
-      type: object
-      properties:
-        type:
-          $ref: '#/components/schemas/TimelineEventUrlType'
-        url:
-          type: string
-      required:
-        - type
-        - url
     TimelineEventType:
       type: string
       enum:
-        - approved_premises_application_submitted
-        - approved_premises_application_assessed
-        - approved_premises_booking_made
-        - approved_premises_person_arrived
-        - approved_premises_person_not_arrived
-        - approved_premises_person_departed
-        - approved_premises_booking_not_made
-        - approved_premises_booking_cancelled
-        - approved_premises_booking_changed
-        - approved_premises_booking_keyworker_assigned
-        - approved_premises_application_withdrawn
-        - approved_premises_application_expired
-        - approved_premises_information_request
-        - approved_premises_assessment_appealed
-        - approved_premises_assessment_allocated
-        - approved_premises_placement_application_withdrawn
-        - approved_premises_placement_application_allocated
-        - approved_premises_match_request_withdrawn
-        - approved_premises_request_for_placement_created
-        - approved_premises_request_for_placement_assessed
         - cas3_person_arrived
         - cas3_person_departed
         - application_timeline_note
         - cas2_application_submitted
         - cas2_note
         - cas2_status_update
-    TriggerSourceType:
-      type: string
-      enum:
-        - user
-        - system
-    TimelineEventUrlType:
-      type: string
-      enum:
-        - application
-        - booking
-        - assessment
-        - assessmentAppeal
-        - cas1SpaceBooking
     Cas2TimelineEvent:
       type: object
       properties:
@@ -8124,17 +7500,28 @@ components:
       required:
         - seedType
         - fileName
-    SeedFromExcelRequest:
+    SeedFromExcelFileRequest:
       type: object
       properties:
         seedType:
           $ref: '#/components/schemas/SeedFromExcelFileType'
         fileName:
+          description: File within the pre-configured seed directory
           type: string
       required:
         - seedType
-        - premisesId
         - fileName
+    SeedFromExcelDirectoryRequest:
+      type: object
+      properties:
+        seedType:
+          $ref: '#/components/schemas/SeedFromExcelFileType'
+        directoryName:
+          description: Directory within the pre-configured seed directory
+          type: string
+      required:
+        - seedType
+        - directoryName
     SeedFileType:
       type: string
       enum:
@@ -8146,13 +7533,14 @@ components:
         - nomis_users
         - external_users
         - cas2_applications
+        - cas2v2_applications
+        - cas2v2_users
         - temporary_accommodation_users
         - approved_premises_users
         - characteristics
         - update_noms_number
         - update_users_from_api
         - users_basic
-        - approved_premises_cancel_bookings
         - approved_premises_assessment_more_info_bug_fix
         - approved_premises_redact_assessment_details
         - approved_premises_booking_to_space_booking
@@ -8170,6 +7558,7 @@ components:
         - approved_premises_create_test_applications
         - approved_premises_delete_application_timeline_notes
         - temporary_accommodation_referral_rejection
+        - approved_premises_remap_bed_codes
     SeedFromExcelFileType:
       type: string
       enum:
@@ -8196,14 +7585,16 @@ components:
         - update_cas2_applications_with_assessments
         - update_cas2_status_updates_with_assessments
         - update_cas2_notes_with_assessments
-        - update_cas1_fix_placement_app_links
-        - update_cas1_notice_types
         - update_cas1_backfill_user_ap_area
         - update_cas3_application_offender_name
         - update_cas3_domain_event_type_for_person_departed_updated
         - update_cas1_applications_licence_expiry_date
         - update_cas1_backfill_offline_application_name
         - update_cas1_arson_suitable_to_arson_offences
+        - update_cas1_backfill_arson_suitable
+        - update_cas1_approved_premises_assessment_report_properties
+        - update_cas1_room_codes
+        - update_cas1_applications_with_offender
     PlacementDates:
       type: object
       properties:
@@ -8440,6 +7831,7 @@ components:
         - person_not_arrived
         - person_departed
     PlacementRequest:
+      description: This type is to broad for use in search results, and as such we're moving towards using Cas1PlacementRequestSummary instead for that purpose.
       allOf:
         - $ref: '#/components/schemas/PlacementRequirements'
         - $ref: '#/components/schemas/PlacementDates'
@@ -8478,6 +7870,7 @@ components:
               description: Notes from the assessor for the CRU Manager
               type: string
             booking:
+              description: Information about the legacy booking or space booking associated with the placement request
               $ref: '#/components/schemas/PlacementRequestBookingSummary'
             requestType:
               $ref: '#/components/schemas/PlacementRequestRequestType'
@@ -8517,9 +7910,18 @@ components:
                 $ref: '#/components/schemas/Cancellation'
             application:
               $ref: '#/components/schemas/Application'
+            legacyBooking:
+              description: The legacy booking associated with this placement request
+              $ref: '#/components/schemas/PlacementRequestBookingSummary'
+            spaceBookings:
+              description: The space bookings associated with this placement request
+              type: array
+              items:
+                $ref: '#/components/schemas/Cas1SpaceBookingSummary'
           required:
             - cancellations
             - application
+            - spaceBookings
     PlacementRequestStatus:
       type: string
       enum:
@@ -8567,131 +7969,6 @@ components:
         - rfap
         - mhapStJosephs
         - mhapElliottHouse
-    TemporaryAccommodationBedSearchParameters:
-      type: object
-      properties:
-        serviceName:
-          type: string
-        startDate:
-          type: string
-          format: date
-        durationDays:
-          type: integer
-          format: int64
-          description: The number of days the Bed will need to be free from the start_date until
-        probationDeliveryUnits:
-          type: array
-          description: The list of pdus Ids to search within
-          items:
-            type: string
-            format: uuid
-        premisesFilters:
-          $ref: '#/components/schemas/PremisesFilters'
-        bedspaceFilters:
-          $ref: '#/components/schemas/BedspaceFilters'
-        attributes:
-          type: array
-          description: Bedspace and property attributes to filter on
-          items:
-            $ref: "#/components/schemas/BedSearchAttributes"
-      required:
-        - probationDeliveryUnits
-        - startDate
-        - durationDays
-    PremisesFilters:
-      type: object
-      properties:
-        includedCharacteristicIds:
-          type: array
-          items:
-            type: string
-            format: uuid
-        excludedCharacteristicIds:
-          type: array
-          items:
-            type: string
-            format: uuid
-    BedspaceFilters:
-      type: object
-      properties:
-        includedCharacteristicIds:
-          type: array
-          items:
-            type: string
-            format: uuid
-        excludedCharacteristicIds:
-          type: array
-          items:
-            type: string
-            format: uuid
-    BedSearchResults:
-      type: object
-      properties:
-        resultsRoomCount:
-          type: integer
-          description: How many distinct Rooms the Beds in the results belong to
-        resultsPremisesCount:
-          type: integer
-          description: How many distinct Premises the Beds in the results belong to
-        resultsBedCount:
-          type: integer
-          description: How many Beds are in the results
-        results:
-          type: array
-          items:
-            $ref: '#/components/schemas/TemporaryAccommodationBedSearchResult'
-      required:
-        - resultsRoomCount
-        - resultsPremisesCount
-        - resultsBedCount
-        - results
-    TemporaryAccommodationBedSearchResult:
-      type: object
-      properties:
-        premises:
-          $ref: '#/components/schemas/BedSearchResultPremisesSummary'
-        room:
-          $ref: '#/components/schemas/BedSearchResultRoomSummary'
-        bed:
-          $ref: '#/components/schemas/BedSearchResultBedSummary'
-        overlaps:
-          type: array
-          items:
-            $ref: '#/components/schemas/TemporaryAccommodationBedSearchResultOverlap'
-      required:
-        - premises
-        - room
-        - bed
-        - overlaps
-    TemporaryAccommodationBedSearchResultOverlap:
-      type: object
-      properties:
-        name:
-          type: string
-        crn:
-          type: string
-        sex:
-          type: string
-        personType:
-          $ref: '#/components/schemas/PersonType'
-        days:
-          type: integer
-        bookingId:
-          type: string
-          format: uuid
-        roomId:
-          type: string
-          format: uuid
-        assessmentId:
-          type: string
-          format: uuid
-      required:
-        - name
-        - crn
-        - personType
-        - days
-        - bookingId
-        - roomId
     BedSearchResultPremisesSummary:
       type: object
       properties:
@@ -9214,12 +8491,6 @@ components:
         - futureBookings
         - futureBookingsCsv
         - bookingGap
-    Cas2ReportName:
-      type: string
-      enum:
-        - submitted-applications
-        - application-status-updates
-        - unsubmitted-applications
     NamedId:
       type: object
       description: A generic stub for an object with a name and an ID.
@@ -9283,6 +8554,8 @@ components:
         - isGroundFloor
         - isGroundFloorNrOffice
         - isIAP
+        - isMHAPElliottHouse
+        - isMHAPStJosephs
         - isPIPE
         - isRecoveryFocussed
         - isSemiSpecialistMentalHealth
@@ -9293,3 +8566,90 @@ components:
         - isTopFloorVulnerable
         - isWheelchairAccessible
         - isWheelchairDesignated
+        - arsonOffences
+    Cas1SpaceBookingSummary:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        person:
+          $ref: "#/components/schemas/PersonSummary"
+        premises:
+          $ref: "#/components/schemas/NamedId"
+        canonicalArrivalDate:
+          deprecated: true
+          description: actual arrival date or, if not known, the expected arrival date
+          type: string
+          format: date
+        canonicalDepartureDate:
+          deprecated: true
+          description: actual departure date or, if not known, the expected departure date
+          type: string
+          format: date
+        expectedArrivalDate:
+          description: expected arrival date
+          type: string
+          format: date
+        actualArrivalDate:
+          description: actual arrival date if known
+          type: string
+          format: date
+        expectedDepartureDate:
+          description: expected departure date
+          type: string
+          format: date
+        actualDepartureDate:
+          description: actual departure date if known
+          type: string
+          format: date
+        isNonArrival:
+          type: boolean
+        tier:
+          description: Risk rating tier level of corresponding application
+          type: string
+        keyWorkerAllocation:
+          $ref: '#/components/schemas/Cas1KeyWorkerAllocation'
+        status:
+          $ref: '#/components/schemas/Cas1SpaceBookingSummaryStatus'
+        characteristics:
+          description: "Room and premise characteristics"
+          type: array
+          items:
+            $ref: '#/components/schemas/Cas1SpaceCharacteristic'
+          default: []
+        deliusEventNumber:
+          type: string
+      required:
+        - id
+        - person
+        - premises
+        - canonicalArrivalDate
+        - canonicalDepartureDate
+        - characteristics
+        - expectedArrivalDate
+        - expectedDepartureDate
+    Cas1KeyWorkerAllocation:
+      type: object
+      properties:
+        keyWorker:
+          $ref: '#/components/schemas/StaffMember'
+        allocatedAt:
+          type: string
+          format: date
+      required:
+        - keyWorker
+    Cas1SpaceBookingSummaryStatus:
+      deprecated: true
+      type: string
+      enum:
+        - arrivingWithin6Weeks
+        - arrivingWithin2Weeks
+        - arrivingToday
+        - overdueArrival
+        - arrived
+        - notArrived
+        - departingWithin2Weeks
+        - departingToday
+        - overdueDeparture
+        - departed

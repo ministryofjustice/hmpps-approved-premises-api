@@ -5,7 +5,5 @@ import org.zalando.problem.Exceptional
 import org.zalando.problem.Status
 
 class NotAllowedProblem(detail: String) : AbstractThrowableProblem(null, "Not Allowed", Status.METHOD_NOT_ALLOWED, detail) {
-  override fun getCause(): Exceptional? {
-    return null
-  }
+  override fun getCause(): Exceptional? = null
 }

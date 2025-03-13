@@ -15,30 +15,26 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.OASysSections
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Person
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PersonAcctAlert
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PersonRisks
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PersonalTimeline
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PrisonCaseNote
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.controller.cas1.Cas1TimelineService
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesApplicationEntity
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.OfflineApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserQualification
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PersonInfoResult
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PersonSummaryInfoResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.community.OffenderDetailSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.ForbiddenProblem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.NotFoundProblem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.AuthorisableActionResult
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.ApplicationService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.HttpAuthService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.LaoStrategy
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.OASysService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.OffenderRisksService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.OffenderService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.UserService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.AdjudicationTransformer
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.ApplicationTimelineModel
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.BoxedApplication
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.NeedsDetailsTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.OASysSectionsTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.OffenceTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.PersonTransformer
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.PersonalTimelineTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.PrisonCaseNoteTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.PrisonerAlertTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.RisksTransformer
@@ -57,9 +53,8 @@ class PeopleController(
   private val oaSysSectionsTransformer: OASysSectionsTransformer,
   private val offenceTransformer: OffenceTransformer,
   private val userService: UserService,
-  private val applicationService: ApplicationService,
-  private val personalTimelineTransformer: PersonalTimelineTransformer,
-  private val cas1TimelineService: Cas1TimelineService,
+  private val oasysService: OASysService,
+  private val offenderRisksService: OffenderRisksService,
 ) : PeopleApiDelegate {
 
   override fun peopleSearchGet(crn: String): ResponseEntity<Person> {
@@ -79,11 +74,14 @@ class PeopleController(
   override fun peopleCrnRisksGet(crn: String): ResponseEntity<PersonRisks> {
     val principal = httpAuthService.getDeliusPrincipalOrThrow()
 
-    val risks = when (val risksResult = offenderService.getRiskByCrn(crn, principal.name)) {
-      is AuthorisableActionResult.Unauthorised -> throw ForbiddenProblem()
-      is AuthorisableActionResult.NotFound -> throw NotFoundProblem(crn, "Person")
-      is AuthorisableActionResult.Success -> risksResult.entity
+    when (offenderService.getPersonSummaryInfoResult(crn, LaoStrategy.CheckUserAccess(principal.name))) {
+      is PersonSummaryInfoResult.NotFound -> throw NotFoundProblem(crn, "Person")
+      is PersonSummaryInfoResult.Success.Restricted -> throw ForbiddenProblem()
+      is PersonSummaryInfoResult.Unknown -> throw NotFoundProblem(crn, "Person")
+      is PersonSummaryInfoResult.Success.Full -> Unit
     }
+
+    val risks = offenderRisksService.getPersonRisks(crn)
 
     return ResponseEntity.ok(risksTransformer.transformDomainToApi(risks, crn))
   }
@@ -149,40 +147,36 @@ class PeopleController(
   override fun peopleCrnOasysSelectionGet(crn: String): ResponseEntity<List<OASysSection>> {
     ensureUserCanAccessOffenderInfo(crn)
 
-    val needsResult = offenderService.getOASysNeeds(crn)
-
-    val needs = when (needsResult) {
-      is AuthorisableActionResult.NotFound -> throw NotFoundProblem(crn, "Person")
-      is AuthorisableActionResult.Unauthorised -> throw ForbiddenProblem()
-      is AuthorisableActionResult.Success -> needsResult.entity
-    }
-
-    return ResponseEntity.ok(needsDetailsTransformer.transformToApi(needs))
+    return ResponseEntity.ok(
+      needsDetailsTransformer.transformToApi(
+        extractEntityFromCasResult(oasysService.getOASysNeeds(crn)),
+      ),
+    )
   }
 
   override fun peopleCrnOasysSectionsGet(crn: String, selectedSections: List<Int>?): ResponseEntity<OASysSections> {
     ensureUserCanAccessOffenderInfo(crn)
 
-    val needs = getSuccessEntityOrThrow(crn, offenderService.getOASysNeeds(crn))
+    val needs = extractEntityFromCasResult(oasysService.getOASysNeeds(crn))
 
     return runBlocking(context = Dispatchers.IO) {
       val offenceDetailsResult = async {
-        offenderService.getOASysOffenceDetails(crn)
+        oasysService.getOASysOffenceDetails(crn)
       }
       val roshSummaryResult = async {
-        offenderService.getOASysRoshSummary(crn)
+        oasysService.getOASysRoshSummary(crn)
       }
       val riskToTheIndividualResult = async {
-        offenderService.getOASysRiskToTheIndividual(crn)
+        oasysService.getOASysRiskToTheIndividual(crn)
       }
       val riskManagementPlanResult = async {
-        offenderService.getOASysRiskManagementPlan(crn)
+        oasysService.getOASysRiskManagementPlan(crn)
       }
 
-      val offenceDetails = getSuccessEntityOrThrow(crn, offenceDetailsResult.await())
-      val roshSummary = getSuccessEntityOrThrow(crn, roshSummaryResult.await())
-      val riskToTheIndividual = getSuccessEntityOrThrow(crn, riskToTheIndividualResult.await())
-      val riskManagementPlan = getSuccessEntityOrThrow(crn, riskManagementPlanResult.await())
+      val offenceDetails = extractEntityFromCasResult(offenceDetailsResult.await())
+      val roshSummary = extractEntityFromCasResult(roshSummaryResult.await())
+      val riskToTheIndividual = extractEntityFromCasResult(riskToTheIndividualResult.await())
+      val riskManagementPlan = extractEntityFromCasResult(riskManagementPlanResult.await())
 
       ResponseEntity.ok(
         oaSysSectionsTransformer.transformToApi(
@@ -202,15 +196,15 @@ class PeopleController(
 
     return runBlocking(context = Dispatchers.IO) {
       val offenceDetailsResult = async {
-        offenderService.getOASysOffenceDetails(crn)
+        oasysService.getOASysOffenceDetails(crn)
       }
 
       val riskToTheIndividualResult = async {
-        offenderService.getOASysRiskToTheIndividual(crn)
+        oasysService.getOASysRiskToTheIndividual(crn)
       }
 
-      val offenceDetails = getSuccessEntityOrThrow(crn, offenceDetailsResult.await())
-      val riskToTheIndividual = getSuccessEntityOrThrow(crn, riskToTheIndividualResult.await())
+      val offenceDetails = extractEntityFromCasResult(offenceDetailsResult.await())
+      val riskToTheIndividual = extractEntityFromCasResult(riskToTheIndividualResult.await())
 
       ResponseEntity.ok(
         oaSysSectionsTransformer.transformRiskToIndividual(offenceDetails, riskToTheIndividual),
@@ -223,15 +217,15 @@ class PeopleController(
 
     return runBlocking(context = Dispatchers.IO) {
       val offenceDetailsResult = async {
-        offenderService.getOASysOffenceDetails(crn)
+        oasysService.getOASysOffenceDetails(crn)
       }
 
       val roshResult = async {
-        offenderService.getOASysRoshSummary(crn)
+        oasysService.getOASysRoshSummary(crn)
       }
 
-      val offenceDetails = getSuccessEntityOrThrow(crn, offenceDetailsResult.await())
-      val rosh = getSuccessEntityOrThrow(crn, roshResult.await())
+      val offenceDetails = extractEntityFromCasResult(offenceDetailsResult.await())
+      val rosh = extractEntityFromCasResult(roshResult.await())
 
       ResponseEntity.ok(
         oaSysSectionsTransformer.transformRiskOfSeriousHarm(offenceDetails, rosh),
@@ -246,53 +240,6 @@ class PeopleController(
     return ResponseEntity.ok(
       offenceTransformer.transformToApi(extractEntityFromCasResult(caseDetail)),
     )
-  }
-
-  override fun peopleCrnTimelineGet(crn: String): ResponseEntity<PersonalTimeline> {
-    val user = userService.getUserForRequest()
-    val personInfo = offenderService.getPersonInfoResult(crn, user.deliusUsername, user.hasQualification(UserQualification.LAO))
-    return ResponseEntity.ok(transformPersonInfo(personInfo, crn))
-  }
-
-  private fun transformPersonInfo(personInfoResult: PersonInfoResult, crn: String): PersonalTimeline = when (personInfoResult) {
-    is PersonInfoResult.NotFound -> throw NotFoundProblem(crn, "Offender")
-    is PersonInfoResult.Unknown -> throw personInfoResult.throwable ?: RuntimeException("Could not retrieve person info for CRN: $crn")
-    is PersonInfoResult.Success.Full -> buildPersonInfoWithTimeline(personInfoResult, crn)
-    is PersonInfoResult.Success.Restricted -> buildPersonInfoWithoutTimeline(personInfoResult)
-  }
-
-  private fun buildPersonInfoWithoutTimeline(personInfo: PersonInfoResult.Success.Restricted): PersonalTimeline =
-    personalTimelineTransformer.transformApplicationTimelineModels(personInfo, emptyList())
-
-  private fun buildPersonInfoWithTimeline(personInfo: PersonInfoResult.Success.Full, crn: String): PersonalTimeline {
-    val regularApplications = getRegularApplications(crn)
-    val offlineApplications = getOfflineApplications(crn)
-    val combinedApplications = regularApplications + offlineApplications
-
-    val applicationTimelineModels = combinedApplications.map { application ->
-      val applicationId = application.map(
-        ApprovedPremisesApplicationEntity::id,
-        OfflineApplicationEntity::id,
-      )
-      val timelineEvents = cas1TimelineService.getApplicationTimeline(applicationId)
-      ApplicationTimelineModel(application, timelineEvents)
-    }
-
-    return personalTimelineTransformer.transformApplicationTimelineModels(personInfo, applicationTimelineModels)
-  }
-
-  private fun getRegularApplications(crn: String) = applicationService
-    .getApplicationsForCrn(crn, ServiceName.approvedPremises)
-    .map { BoxedApplication.of(it as ApprovedPremisesApplicationEntity) }
-
-  private fun getOfflineApplications(crn: String) = applicationService
-    .getOfflineApplicationsForCrn(crn, ServiceName.approvedPremises)
-    .map { BoxedApplication.of(it) }
-
-  private fun <T> getSuccessEntityOrThrow(crn: String, authorisableActionResult: AuthorisableActionResult<T>): T = when (authorisableActionResult) {
-    is AuthorisableActionResult.NotFound -> throw NotFoundProblem(crn, "Person")
-    is AuthorisableActionResult.Unauthorised -> throw ForbiddenProblem()
-    is AuthorisableActionResult.Success -> authorisableActionResult.entity
   }
 
   private fun ensureUserCanAccessOffenderInfo(crn: String) {

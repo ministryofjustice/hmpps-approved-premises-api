@@ -4,6 +4,7 @@ import org.springframework.stereotype.Component
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApArea
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApprovedPremisesUser
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.AssessmentTask
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PersonSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PlacementApplicationTask
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PlacementDates
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
@@ -84,8 +85,9 @@ class TaskTransformer(
     },
   )
 
-  private fun getPersonSummary(application: ApplicationEntity, offenderSummaries: List<PersonSummaryInfoResult>) =
-    personTransformer.personSummaryInfoToPersonSummary(offenderSummaries.first { it.crn == application.crn })
+  private fun getPersonSummary(application: ApplicationEntity, offenderSummaries: List<PersonSummaryInfoResult>): PersonSummary = personTransformer.personSummaryInfoToPersonSummary(
+    offenderSummaries.first { it.crn == application.crn },
+  )
 
   private fun getPersonNameFromApplication(
     application: ApplicationEntity,
@@ -96,9 +98,7 @@ class TaskTransformer(
     return getNameFromPersonSummaryInfoResult(offenderSummary)
   }
 
-  private fun getApArea(application: ApplicationEntity): ApArea? {
-    return (application as ApprovedPremisesApplicationEntity).apArea?.let { apAreaTransformer.transformJpaToApi(it) }
-  }
+  private fun getApArea(application: ApplicationEntity): ApArea? = (application as ApprovedPremisesApplicationEntity).apArea?.let { apAreaTransformer.transformJpaToApi(it) }
 
   private fun getPlacementType(placementType: JpaPlacementType): ApiPlacementType = when (placementType) {
     JpaPlacementType.ROTL -> ApiPlacementType.rotl
@@ -119,12 +119,10 @@ class TaskTransformer(
     else -> TaskStatus.inProgress
   }
 
-  private fun transformUserOrNull(userEntity: UserEntity?): ApprovedPremisesUser? {
-    return if (userEntity == null) {
-      null
-    } else {
-      userTransformer.transformJpaToApi(userEntity, ServiceName.approvedPremises) as ApprovedPremisesUser
-    }
+  private fun transformUserOrNull(userEntity: UserEntity?): ApprovedPremisesUser? = if (userEntity == null) {
+    null
+  } else {
+    userTransformer.transformJpaToApi(userEntity, ServiceName.approvedPremises) as ApprovedPremisesUser
   }
 
   // Use the sure operator here as entities will definitely have a `dueAt` value by the time they're surfaced as tasks

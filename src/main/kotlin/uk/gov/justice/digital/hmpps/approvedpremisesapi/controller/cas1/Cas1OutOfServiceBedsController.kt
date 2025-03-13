@@ -78,7 +78,7 @@ class Cas1OutOfServiceBedsController(
     outOfServiceBedId: UUID,
     body: Cas1NewOutOfServiceBedCancellation,
   ): ResponseEntity<Cas1OutOfServiceBedCancellation> {
-    userAccessService.ensureCurrentUserHasPermission(UserPermission.CAS1_OUT_OF_SERVICE_BED_CREATE)
+    userAccessService.ensureCurrentUserHasPermission(UserPermission.CAS1_OUT_OF_SERVICE_BED_CANCEL)
 
     val premises = tryGetApprovedPremises(premisesId)
 
@@ -166,8 +166,7 @@ class Cas1OutOfServiceBedsController(
     return ResponseEntity.ok(outOfServiceBedTransformer.transformJpaToApi(outOfServiceBed))
   }
 
-  private fun tryGetApprovedPremises(premisesId: UUID): ApprovedPremisesEntity =
-    premisesService.getPremises(premisesId) as? ApprovedPremisesEntity ?: throw NotFoundProblem(premisesId, "Premises")
+  private fun tryGetApprovedPremises(premisesId: UUID): ApprovedPremisesEntity = premisesService.getPremises(premisesId) as? ApprovedPremisesEntity ?: throw NotFoundProblem(premisesId, "Premises")
 
   private val ApprovedPremisesEntity.outOfServiceBeds: List<Cas1OutOfServiceBedEntity>
     get() = outOfServiceBedService.getActiveOutOfServiceBedsForPremisesId(this.id)

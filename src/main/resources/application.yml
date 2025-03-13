@@ -46,6 +46,11 @@ spring:
         dialect: org.hibernate.dialect.PostgreSQLDialect
         cache:
           use_second_level_cache: true
+      jakarta:
+        persistence:
+          query:
+            # ensure that wait on locks will eventually error, aiding investigations
+            timeout: 60000
       javax.cache:
         provider: org.ehcache.jsr107.EhcacheCachingProvider
         uri: hibernate-ehcache.xml
@@ -67,6 +72,16 @@ spring:
           jwk-set-uri: ${hmpps.auth.url}/.well-known/jwks.json
       client:
         registration:
+          manage-pom-cases:
+            provider: hmpps-auth
+            client-id: approved-premises-api
+            client-secret: clientsecret
+            authorization-grant-type: client_credentials
+          prisoner-search:
+            provider: hmpps-auth
+            client-id: approved-premises-api
+            client-secret: clientsecret
+            authorization-grant-type: client_credentials
           delius-backed-apis:
             provider: hmpps-auth
             client-id: approved-premises-api
@@ -151,26 +166,46 @@ management:
         time-to-live: 2000ms
 
 services:
+  default:
+    # 0.7MB
+    max-response-in-memory-size-bytes: 750000
+    timeout-ms: 10000
   hmpps-tier:
     base-url: http://localhost:9004
+    timeout-ms: 2000
   prisons-api:
     base-url: http://localhost:9570
+    # 3 MB
+    max-response-in-memory-size-bytes: 3145728
   prisoner-alerts-api:
     base-url: http://localhost:9580
+    # 2.5 MB
+    max-response-in-memory-size-bytes: 2621440
   nomis-user-roles-api:
     base-url: http://localhost:9575
+    timeout-ms: 2000
   manage-users-api:
     base-url: http://localhost:9560
   probation-offender-search-api:
     base-url: http://localhost:9004
+    # 1.5MB
+    max-response-in-memory-size-bytes: 1572864
   case-notes:
     base-url: http://localhost:9004
+    timeout-ms: 25000
   ap-delius-context-api:
     base-url: http://localhost:8181
   ap-oasys-context-api:
     base-url: http://localhost:9004
+    timeout-ms: 4000
   gov-uk-bank-holidays-api:
     base-url: https://www.gov.uk
+  manage-pom-cases:
+    connection-timeout: 1000
+    read-timeout: 5000
+  prisoner-search:
+    connection-timeout: 1000
+    read-timeout: 5000
 
 hmpps:
   auth:
@@ -278,23 +313,12 @@ preemptive-cache-delay-ms: 10000
 # 90 minutes
 preemptive-cache-lock-duration-ms: 5400000
 
+refresh-inmate-details-cache:
+  lock-at-least-for: 1m
+  lock-at-most-for: 110m
+  logging-enabled: false
+
 arrived-departed-domain-events-disabled: true
-
-upstream-timeout-ms: 10000
-ap-and-oasys-upstream-timeout-ms: 4000
-nomis-user-roles-api-upstream-timeout-ms: 2000
-tier-api-upstream-timeout-ms: 2000
-case-notes-service-upstream-timeout-ms: 25000
-
-web-clients:
-  # 0.7MB
-  max-response-in-memory-size-bytes: 750000
-  # 1.5MB
-  probation-offender-search-api-max-response-in-memory-size-bytes: 1572864
-  # 3 MB
-  prison-api-max-response-in-memory-size-bytes: 3145728
-  # 2.5 MB
-  prisoner-alerts-api-max-response-in-memory-size-bytes: 2621440
 
 pagination:
   default-page-size: 10
@@ -308,4 +332,4 @@ scheduling:
   enabled: true
 
 feature-flags:
-
+  cas2-sqs-listener-enabled: false

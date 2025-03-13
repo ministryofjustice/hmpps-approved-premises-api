@@ -27,6 +27,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.given
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenACas2PomUser
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAnOffender
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.manageUsersMockSuccessfulExternalUsersCall
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas2ApplicationAssignmentRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas2ApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas2ApplicationJsonSchemaEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas2ApplicationRepository
@@ -60,6 +61,9 @@ class Cas2SubmissionTest(
 
   @Autowired
   lateinit var nomisUserTransformer: NomisUserTransformer
+
+  @Autowired
+  lateinit var applicationAssignmentRepository: Cas2ApplicationAssignmentRepository
 
   val schema = """
        {
@@ -466,7 +470,8 @@ class Cas2SubmissionTest(
                 applicant == it.submittedBy &&
                 applicationEntity.submittedAt?.toInstant() == it.submittedAt &&
                 serializableToJsonNode(applicationEntity.document) == serializableToJsonNode(it.document) &&
-                newestJsonSchema.id == it.schemaVersion && !it.outdatedSchema &&
+                newestJsonSchema.id == it.schemaVersion &&
+                !it.outdatedSchema &&
                 assessmentEntity.assessorName == it.assessment.assessorName &&
                 assessmentEntity.nacroReferralId == it.assessment.nacroReferralId
             }
@@ -617,7 +622,8 @@ class Cas2SubmissionTest(
                     applicant == it.submittedBy &&
                     applicationEntity.submittedAt?.toInstant() == it.submittedAt &&
                     serializableToJsonNode(applicationEntity.document) == serializableToJsonNode(it.document) &&
-                    newestJsonSchema.id == it.schemaVersion && !it.outdatedSchema
+                    newestJsonSchema.id == it.schemaVersion &&
+                    !it.outdatedSchema
                 }
 
                 Assertions.assertThat(responseBody.assessment.statusUpdates!!.map { update -> update.label })
@@ -669,7 +675,7 @@ class Cas2SubmissionTest(
   inner class PostToSubmit {
 
     @Test
-    fun `Submit Cas2 application returns 200`() {
+    fun `Submit Cas2 application creates prisoner location and returns 200`() {
       val applicationId = UUID.fromString("22ceda56-98b2-411d-91cc-ace0ab8be872")
       val telephoneNumber = "123 456 7891"
 
@@ -731,6 +737,10 @@ class Cas2SubmissionTest(
             .expectStatus()
             .isOk
         }
+
+        val applicationAssignment =
+          applicationAssignmentRepository.findFirstByApplicationIdOrderByCreatedAtDesc(applicationId)
+        Assertions.assertThat(applicationAssignment!!.allocatedPomUserId).isEqualTo(submittingUser.id)
 
         // verify that generated 'application.submitted' domain event links to the CAS2 domain
         val expectedFrontEndUrl = applicationUrlTemplate.replace("#id", applicationId.toString())

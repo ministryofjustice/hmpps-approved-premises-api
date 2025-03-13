@@ -27,6 +27,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.DomainEvent
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PersonSummaryInfoResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.deliuscontext.CaseSummary
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.LaoStrategy
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.OffenderService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.UrlTemplate
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.toInstant
@@ -121,7 +122,6 @@ class Cas1SpaceBookingManagementDomainEventService(
     val eventNumber = updatedCas1SpaceBooking.deliusEventNumber!!
 
     domainEventService.savePersonNotArrivedEvent(
-      emit = false,
       domainEvent = DomainEvent(
         id = domainEventId,
         applicationId = applicationId,
@@ -269,18 +269,15 @@ class Cas1SpaceBookingManagementDomainEventService(
     )
   }
 
-  private fun getStaffDetailsByUsername(deliusUsername: String) =
-    when (val staffDetailsResult = apDeliusContextApiClient.getStaffDetail(deliusUsername)) {
-      is ClientResult.Success -> staffDetailsResult.body
-      is ClientResult.Failure -> staffDetailsResult.throwException()
-    }
+  private fun getStaffDetailsByUsername(deliusUsername: String) = when (val staffDetailsResult = apDeliusContextApiClient.getStaffDetail(deliusUsername)) {
+    is ClientResult.Success -> staffDetailsResult.body
+    is ClientResult.Failure -> staffDetailsResult.throwException()
+  }
 
-  private fun getStaffDetailsByStaffCode(staffCode: String?): StaffMember? {
-    return staffCode?.let {
-      when (val staffDetailResponse = apDeliusContextApiClient.getStaffDetailByStaffCode(staffCode)) {
-        is ClientResult.Success -> staffDetailResponse.body.toStaffMember()
-        is ClientResult.Failure -> staffDetailResponse.throwException()
-      }
+  private fun getStaffDetailsByStaffCode(staffCode: String?): StaffMember? = staffCode?.let {
+    when (val staffDetailResponse = apDeliusContextApiClient.getStaffDetailByStaffCode(staffCode)) {
+      is ClientResult.Success -> staffDetailResponse.body.toStaffMember()
+      is ClientResult.Failure -> staffDetailResponse.throwException()
     }
   }
 
@@ -290,7 +287,7 @@ class Cas1SpaceBookingManagementDomainEventService(
         val offenderDetailsResult =
           offenderService.getPersonSummaryInfoResults(
             setOf(offenderCrn),
-            OffenderService.LimitedAccessStrategy.IgnoreLimitedAccess,
+            LaoStrategy.NeverRestricted,
           )
             .firstOrNull()
       ) {
@@ -300,12 +297,11 @@ class Cas1SpaceBookingManagementDomainEventService(
     return offenderDetails
   }
 
-  private fun mapApprovedPremisesEntityToPremises(aPEntity: ApprovedPremisesEntity) =
-    Premises(
-      id = aPEntity.id,
-      name = aPEntity.name,
-      apCode = aPEntity.apCode,
-      legacyApCode = aPEntity.qCode,
-      localAuthorityAreaName = aPEntity.localAuthorityArea!!.name,
-    )
+  private fun mapApprovedPremisesEntityToPremises(aPEntity: ApprovedPremisesEntity) = Premises(
+    id = aPEntity.id,
+    name = aPEntity.name,
+    apCode = aPEntity.apCode,
+    legacyApCode = aPEntity.qCode,
+    localAuthorityAreaName = aPEntity.localAuthorityArea!!.name,
+  )
 }

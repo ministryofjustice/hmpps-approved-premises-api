@@ -287,20 +287,19 @@ class Cas1BookingDomainEventService(
     spaceBooking: Cas1SpaceBookingEntity,
     user: UserEntity,
     reason: CancellationReasonEntity,
-  ) =
-    bookingCancelled(
-      CancellationInfo(
-        bookingId = spaceBooking.id,
-        applicationFacade = spaceBooking.applicationFacade,
-        cancellationId = null,
-        crn = spaceBooking.crn,
-        cancelledAt = spaceBooking.cancellationOccurredAt!!,
-        reason = reason,
-        cancelledBy = user,
-        premises = spaceBooking.premises,
-        isSpaceBooking = true,
-      ),
-    )
+  ) = bookingCancelled(
+    CancellationInfo(
+      bookingId = spaceBooking.id,
+      applicationFacade = spaceBooking.applicationFacade,
+      cancellationId = null,
+      crn = spaceBooking.crn,
+      cancelledAt = spaceBooking.cancellationOccurredAt!!,
+      reason = reason,
+      cancelledBy = user,
+      premises = spaceBooking.premises,
+      isSpaceBooking = true,
+    ),
+  )
 
   private fun bookingMade(
     applicationId: UUID,
@@ -473,11 +472,10 @@ class Cas1BookingDomainEventService(
     else -> null
   }
 
-  private fun getStaffDetails(deliusUsername: String) =
-    when (val staffDetailsResult = apDeliusContextApiClient.getStaffDetail(deliusUsername)) {
-      is ClientResult.Success -> staffDetailsResult.body
-      is ClientResult.Failure -> staffDetailsResult.throwException()
-    }
+  private fun getStaffDetails(deliusUsername: String) = when (val staffDetailsResult = apDeliusContextApiClient.getStaffDetail(deliusUsername)) {
+    is ClientResult.Success -> staffDetailsResult.body
+    is ClientResult.Failure -> staffDetailsResult.throwException()
+  }
 
   private data class BookingInfo(
     val id: UUID,
@@ -539,9 +537,7 @@ class Cas1BookingDomainEventService(
     val previousCharacteristics: List<SpaceCharacteristic>? = null,
   )
 
-  private fun List<CharacteristicEntity>.toSpaceCharacteristics(): List<SpaceCharacteristic> =
-    this.map { it.asSpaceCharacteristic() }
+  private fun List<CharacteristicEntity>.toSpaceCharacteristics(): List<SpaceCharacteristic> = this.map { it.asSpaceCharacteristic() }
 
-  private fun CharacteristicEntity.asSpaceCharacteristic() =
-    SpaceCharacteristic.entries.first { it.value == this.propertyName }
+  private fun CharacteristicEntity.asSpaceCharacteristic() = SpaceCharacteristic.entries.first { it.value == this.propertyName }
 }

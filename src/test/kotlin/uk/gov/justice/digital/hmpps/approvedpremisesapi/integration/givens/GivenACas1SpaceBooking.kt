@@ -7,6 +7,8 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas1SpaceBook
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.CharacteristicEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.OfflineApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementRequestEntity
+import java.time.Instant
+import java.time.LocalDate
 
 @SuppressWarnings("LongParameterList")
 fun IntegrationTestBase.givenACas1SpaceBooking(
@@ -17,6 +19,11 @@ fun IntegrationTestBase.givenACas1SpaceBooking(
   offlineApplication: OfflineApplicationEntity? = null,
   criteria: List<CharacteristicEntity>? = null,
   placementRequest: PlacementRequestEntity? = null,
+  expectedArrivalDate: LocalDate = LocalDate.now(),
+  canonicalArrivalDate: LocalDate = expectedArrivalDate,
+  expectedDepartureDate: LocalDate = LocalDate.now(),
+  nonArrivalConfirmedAt: Instant? = null,
+  cancellationOccurredAt: LocalDate? = null,
 ): Cas1SpaceBookingEntity {
   val (user) = givenAUser()
   val placementRequestToUse = placementRequest ?: if (offlineApplication == null) {
@@ -32,6 +39,10 @@ fun IntegrationTestBase.givenACas1SpaceBooking(
 
   return cas1SpaceBookingEntityFactory.produceAndPersist {
     withCrn(crn)
+    withExpectedArrivalDate(expectedArrivalDate)
+    withCanonicalArrivalDate(canonicalArrivalDate)
+    withExpectedDepartureDate(expectedDepartureDate)
+    withCanonicalDepartureDate(expectedDepartureDate)
     withPlacementRequest(placementRequestToUse)
     withApplication(placementRequestToUse?.application)
     withOfflineApplication(offlineApplication)
@@ -39,5 +50,7 @@ fun IntegrationTestBase.givenACas1SpaceBooking(
     withDeliusEventNumber(deliusEventNumber)
     withPremises(premises ?: givenAnApprovedPremises())
     withCriteria(criteria?.toMutableList() ?: emptyList<CharacteristicEntity>().toMutableList())
+    withNonArrivalConfirmedAt(nonArrivalConfirmedAt)
+    withCancellationOccurredAt(cancellationOccurredAt)
   }
 }

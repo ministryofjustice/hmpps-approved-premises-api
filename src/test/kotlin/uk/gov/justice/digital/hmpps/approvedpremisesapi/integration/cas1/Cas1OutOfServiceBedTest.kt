@@ -47,53 +47,51 @@ class Cas1OutOfServiceBedTest : InitialiseDatabasePerClassTestBase() {
 
   companion object {
     @JvmStatic
-    fun temporalityArgs(): Stream<Arguments> {
-      return Stream.of(
-        Arguments.of(
-          emptyList<Temporality>(),
+    fun temporalityArgs(): Stream<Arguments> = Stream.of(
+      Arguments.of(
+        emptyList<Temporality>(),
+      ),
+      Arguments.of(
+        listOf(
+          Temporality.past,
         ),
-        Arguments.of(
-          listOf(
-            Temporality.past,
-          ),
+      ),
+      Arguments.of(
+        listOf(
+          Temporality.current,
         ),
-        Arguments.of(
-          listOf(
-            Temporality.current,
-          ),
+      ),
+      Arguments.of(
+        listOf(
+          Temporality.future,
         ),
-        Arguments.of(
-          listOf(
-            Temporality.future,
-          ),
+      ),
+      Arguments.of(
+        listOf(
+          Temporality.past,
+          Temporality.current,
         ),
-        Arguments.of(
-          listOf(
-            Temporality.past,
-            Temporality.current,
-          ),
+      ),
+      Arguments.of(
+        listOf(
+          Temporality.past,
+          Temporality.future,
         ),
-        Arguments.of(
-          listOf(
-            Temporality.past,
-            Temporality.future,
-          ),
+      ),
+      Arguments.of(
+        listOf(
+          Temporality.current,
+          Temporality.future,
         ),
-        Arguments.of(
-          listOf(
-            Temporality.current,
-            Temporality.future,
-          ),
+      ),
+      Arguments.of(
+        listOf(
+          Temporality.past,
+          Temporality.current,
+          Temporality.future,
         ),
-        Arguments.of(
-          listOf(
-            Temporality.past,
-            Temporality.current,
-            Temporality.future,
-          ),
-        ),
-      )
-    }
+      ),
+    )
   }
 
   @Nested
@@ -1214,56 +1212,6 @@ class Cas1OutOfServiceBedTest : InitialiseDatabasePerClassTestBase() {
     }
 
     @Test
-    fun `Create Out-Of-Service Beds for current day does not break GET all Premises endpoint`() {
-      givenAUser(roles = listOf(UserRole.CAS1_FUTURE_MANAGER)) { user, jwt ->
-        val premises = approvedPremisesEntityFactory.produceAndPersist {
-          withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
-          withYieldedProbationRegion { givenAProbationRegion() }
-        }
-
-        bedEntityFactory.produceAndPersistMultiple(2) {
-          withYieldedRoom { roomEntityFactory.produceAndPersist { withPremises(premises) } }
-        }
-
-        cas1OutOfServiceBedEntityFactory.produceAndPersist {
-          withBed(
-            bedEntityFactory.produceAndPersist {
-              withYieldedRoom {
-                roomEntityFactory.produceAndPersist {
-                  withYieldedPremises { premises }
-                }
-              }
-            },
-          )
-        }.apply {
-          this.revisionHistory += cas1OutOfServiceBedRevisionEntityFactory.produceAndPersist {
-            withCreatedAt(OffsetDateTime.now().roundNanosToMillisToAccountForLossOfPrecisionInPostgres())
-            withCreatedBy(user)
-            withOutOfServiceBed(this@apply)
-            withStartDate(LocalDate.now().minusDays(2))
-            withEndDate(LocalDate.now().plusDays(2))
-            withReason(cas1OutOfServiceBedReasonEntityFactory.produceAndPersist())
-          }
-        }
-
-        bookingEntityFactory.produceAndPersist {
-          withPremises(premises)
-          withOriginalArrivalDate(LocalDate.now().minusDays(4))
-          withArrivalDate(LocalDate.now().minusDays(4))
-          withOriginalDepartureDate(LocalDate.now().plusDays(6))
-          withDepartureDate(LocalDate.now().plusDays(6))
-        }
-
-        webTestClient.get()
-          .uri("/premises")
-          .header("Authorization", "Bearer $jwt")
-          .exchange()
-          .expectStatus()
-          .isOk
-      }
-    }
-
-    @Test
     fun `Create Out-Of-Service Bed returns 409 Conflict when An out-of-service bed for the same bed overlaps`() {
       givenAUser(roles = listOf(UserRole.CAS1_FUTURE_MANAGER)) { user, jwt ->
         givenAnOffender { _, _ ->
@@ -2143,7 +2091,7 @@ class Cas1OutOfServiceBedTest : InitialiseDatabasePerClassTestBase() {
 
     @Test
     fun `Cancel Out-Of-Service Bed for non-existent premises returns 404`() {
-      givenAUser(roles = listOf(UserRole.CAS1_FUTURE_MANAGER)) { _, jwt ->
+      givenAUser(roles = listOf(UserRole.CAS1_CRU_MEMBER_FIND_AND_BOOK_BETA)) { _, jwt ->
         webTestClient.post()
           .uri("/cas1/premises/9054b6a8-65ad-4d55-91ee-26ba65e05488/out-of-service-beds/9054b6a8-65ad-4d55-91ee-26ba65e05488/cancellations")
           .header("Authorization", "Bearer $jwt")
@@ -2165,7 +2113,7 @@ class Cas1OutOfServiceBedTest : InitialiseDatabasePerClassTestBase() {
         withYieldedProbationRegion { givenAProbationRegion() }
       }
 
-      givenAUser(roles = listOf(UserRole.CAS1_FUTURE_MANAGER)) { _, jwt ->
+      givenAUser(roles = listOf(UserRole.CAS1_CRU_MEMBER_FIND_AND_BOOK_BETA)) { _, jwt ->
         webTestClient.post()
           .uri("/cas1/premises/${premises.id}/out-of-service-beds/9054b6a8-65ad-4d55-91ee-26ba65e05488/cancellations")
           .header("Authorization", "Bearer $jwt")
@@ -2206,7 +2154,7 @@ class Cas1OutOfServiceBedTest : InitialiseDatabasePerClassTestBase() {
     @ParameterizedTest
     @EnumSource(
       value = UserRole::class,
-      names = [ "CAS1_FUTURE_MANAGER", "CAS1_CRU_MEMBER_ENABLE_OUT_OF_SERVICE_BEDS", "CAS1_JANITOR" ],
+      names = [ "CAS1_CRU_MEMBER_FIND_AND_BOOK_BETA", "CAS1_JANITOR" ],
     )
     fun `Cancel Out-Of-Service Bed returns OK with correct body when user has the correct roles`(role: UserRole) {
       givenAUser(roles = listOf(role)) { user, jwt ->

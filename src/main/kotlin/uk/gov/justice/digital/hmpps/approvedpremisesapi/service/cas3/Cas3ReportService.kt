@@ -2,6 +2,8 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas3
 
 import org.apache.poi.ss.usermodel.WorkbookFactory
 import org.jetbrains.kotlinx.dataframe.io.writeExcel
+import org.slf4j.Logger
+import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
@@ -36,7 +38,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.repository.TransitionalA
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.OffenderService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.UserService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.WorkingDayService
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas3LimitedAccessStrategy
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas3LaoStrategy
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.BookingTransformer
 import java.io.OutputStream
 
@@ -57,22 +59,30 @@ class Cas3ReportService(
   @Value("\${cas3-report.crn-search-limit:500}") private val numberOfCrn: Int,
 ) {
 
+  var log: Logger = LoggerFactory.getLogger(this::class.java)
+
   fun createCas3ApplicationReferralsReport(
     properties: TransitionalAccommodationReferralReportProperties,
     outputStream: OutputStream,
   ) {
+    log.info("Beginning CAS3 Application Referrals Report")
     val referralsInScope = transitionalAccommodationReferralReportRowRepository.findAllReferrals(
       startDate = properties.startDate,
       endDate = properties.endDate,
       probationRegionId = properties.probationRegionId,
     )
 
+    log.info("${referralsInScope.size} referrals found.")
+
     val crns = referralsInScope.map { it.crn }.sorted().toSet()
+    log.info("Getting person info for ${crns.size} CRNs")
     val personInfos = splitAndRetrievePersonInfo(crns)
+    log.info("Person info retrieved")
     val reportData = referralsInScope.map {
       val personInfo = personInfos[it.crn] ?: PersonSummaryInfoResult.Unknown(it.crn)
       TransitionalAccommodationReferralReportDataAndPersonInfo(it, personInfo)
     }
+    log.info("Creating report")
 
     TransitionalAccommodationReferralReportGenerator()
       .createReport(reportData, properties)
@@ -83,6 +93,7 @@ class Cas3ReportService(
   }
 
   fun createBookingsReport(properties: BookingsReportProperties, outputStream: OutputStream) {
+    log.info("Beginning CAS3 Bookings Report")
     val bookingsInScope = bookingsReportRepository.findAllByOverlappingDate(
       properties.startDate,
       properties.endDate,
@@ -91,12 +102,14 @@ class Cas3ReportService(
     )
 
     val crns = bookingsInScope.map { it.crn }.distinct().sorted()
-
+    log.info("Getting person info for ${crns.size} CRNs")
     val personInfos = splitAndRetrievePersonInfoReportData(crns.toSet())
-
+    log.info("Person info retrieved")
     val reportData = bookingsInScope.map {
       BookingsReportDataAndPersonInfo(it, personInfos[it.crn]!!)
     }
+
+    log.info("Creating report")
 
     BookingsReportGenerator()
       .createReport(
@@ -115,10 +128,12 @@ class Cas3ReportService(
   }
 
   fun createBedUsageReport(properties: BedUsageReportProperties, outputStream: OutputStream) {
+    log.info("Beginning CAS3 Bed Usage Report")
     val bedspacesInScope = bedUsageRepository.findAllBedspaces(
       probationRegionId = properties.probationRegionId,
     )
 
+    log.info("Creating report")
     BedUsageReportGenerator(bookingTransformer, bookingRepository, cas3VoidBedspacesRepository, workingDayService)
       .createReport(bedspacesInScope, properties)
       .writeExcel(
@@ -128,15 +143,18 @@ class Cas3ReportService(
   }
 
   fun createBedUtilisationReport(properties: BedUtilisationReportProperties, outputStream: OutputStream) {
+    log.info("Beginning CAS3 Bed Utilisation Report")
     val bedspacesInScope = bedUtilisationReportRepository.findAllBedspaces(
       probationRegionId = properties.probationRegionId,
     )
+    log.info("${bedspacesInScope.size} bedspaces found.")
 
     val bedspaceBookingsInScope = bedUtilisationReportRepository.findAllBookingsByOverlappingDate(
       probationRegionId = properties.probationRegionId,
       properties.startDate,
       properties.endDate,
     )
+    log.info("${bedspaceBookingsInScope.size} bedspace bookings found.")
 
     val bedspaceBookingsCancellationInScope =
       bedUtilisationReportRepository.findAllBookingCancellationsByOverlappingDate(
@@ -145,11 +163,15 @@ class Cas3ReportService(
         properties.endDate,
       )
 
+    log.info("${bedspaceBookingsCancellationInScope.size} bedspace booking cancellation found.")
+
     val bedspaceBookingsTurnaroundInScope = bedUtilisationReportRepository.findAllBookingTurnaroundByOverlappingDate(
       probationRegionId = properties.probationRegionId,
       properties.startDate,
       properties.endDate,
     )
+
+    log.info("${bedspaceBookingsTurnaroundInScope.size} bedspace booking in turnaround found.")
 
     val voidBedspaceInScope = bedUtilisationReportRepository.findAllVoidBedspaceByOverlappingDate(
       probationRegionId = properties.probationRegionId,
@@ -157,20 +179,25 @@ class Cas3ReportService(
       properties.endDate,
     )
 
-    val reportData = bedspacesInScope.map {
-      val bedId = it.bedId
+    log.info("${voidBedspaceInScope.size} void bedspace found.")
+
+    val reportData = bedspacesInScope.map { bedspace ->
+      val bedId = bedspace.bedId
       val bedspaceBookings = bedspaceBookingsInScope.filter { it.bedId == bedId }
       val bedspaceBookingsCancellation = bedspaceBookingsCancellationInScope.filter { it.bedId == bedId }
       val bedspaceBookingsTurnaround = bedspaceBookingsTurnaroundInScope.filter { it.bedId == bedId }
       val voidBedspace = voidBedspaceInScope.filter { it.bedId == bedId }
+
       BedUtilisationReportData(
-        it,
+        bedspace,
         bedspaceBookings,
         bedspaceBookingsCancellation,
         bedspaceBookingsTurnaround,
         voidBedspace,
       )
     }
+
+    log.info("Creating report")
 
     BedUtilisationReportGenerator(workingDayService)
       .createReport(reportData, properties)
@@ -181,6 +208,8 @@ class Cas3ReportService(
   }
 
   fun createBookingGapReport(properties: BookingGapReportProperties, outputStream: OutputStream) {
+    log.info("Beginning CAS3 Booking Gap Report")
+
     CsvJdbcResultSetConsumer(
       outputStream = outputStream,
     ).use { consumer ->
@@ -193,6 +222,7 @@ class Cas3ReportService(
   }
 
   fun createFutureBookingReport(properties: FutureBookingsReportProperties, outputStream: OutputStream) {
+    log.info("Beginning CAS3 Future Booking Report")
     val bookingsInScope = cas3FutureBookingsReportRepository.findAllFutureBookings(
       properties.startDate,
       properties.endDate,
@@ -206,6 +236,8 @@ class Cas3ReportService(
       FutureBookingsReportDataAndPersonInfo(it, personInfo)
     }
 
+    log.info("Creating report")
+
     FutureBookingsReportGenerator()
       .createReport(reportData, properties)
       .writeExcel(
@@ -215,6 +247,7 @@ class Cas3ReportService(
   }
 
   fun createFutureBookingCsvReport(properties: FutureBookingsReportProperties, outputStream: OutputStream) {
+    log.info("Beginning CAS3 Future Booking CSV Report")
     val bookingsInScope = cas3FutureBookingsReportRepository.findAllFutureBookings(
       properties.startDate,
       properties.endDate,
@@ -228,6 +261,8 @@ class Cas3ReportService(
       FutureBookingsCsvReportGenerator().convert(it, personInfo)
     }
 
+    log.info("Creating report")
+
     CsvObjectListConsumer(
       outputStream = outputStream,
     ).consume(reportData)
@@ -238,7 +273,7 @@ class Cas3ReportService(
 
     return offenderService.getPersonSummaryInfoResultsInBatches(
       crns = crns,
-      limitedAccessStrategy = user.cas3LimitedAccessStrategy(),
+      laoStrategy = user.cas3LaoStrategy(),
       batchSize = numberOfCrn,
     ).associate {
       when (it) {
@@ -266,7 +301,7 @@ class Cas3ReportService(
 
     return offenderService.getPersonSummaryInfoResultsInBatches(
       crns = crns.toSet(),
-      limitedAccessStrategy = user.cas3LimitedAccessStrategy(),
+      laoStrategy = user.cas3LaoStrategy(),
       batchSize = numberOfCrn,
     ).associateBy { it.crn }
   }

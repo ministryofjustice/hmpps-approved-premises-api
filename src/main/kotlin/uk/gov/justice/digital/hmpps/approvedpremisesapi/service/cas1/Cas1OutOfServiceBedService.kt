@@ -68,61 +68,60 @@ class Cas1OutOfServiceBedService(
     notes: String?,
     bedId: UUID,
     createdBy: UserEntity?,
-  ): CasResult<Cas1OutOfServiceBedEntity> =
-    validatedCasResult {
-      if (endDate.isBefore(startDate)) {
-        "$.endDate" hasValidationError "beforeStartDate"
-      }
+  ): CasResult<Cas1OutOfServiceBedEntity> = validatedCasResult {
+    if (endDate.isBefore(startDate)) {
+      "$.endDate" hasValidationError "beforeStartDate"
+    }
 
-      val bed = premises.rooms.flatMap { it.beds }.firstOrNull { it.id == bedId }
-      if (bed == null) {
-        "$.bedId" hasValidationError "doesNotExist"
-      }
+    val bed = premises.rooms.flatMap { it.beds }.firstOrNull { it.id == bedId }
+    if (bed == null) {
+      "$.bedId" hasValidationError "doesNotExist"
+    }
 
-      val reason = outOfServiceBedReasonRepository.findByIdOrNull(reasonId)
-      if (reason == null) {
-        "$.reason" hasValidationError "doesNotExist"
-      }
+    val reason = outOfServiceBedReasonRepository.findByIdOrNull(reasonId)
+    if (reason == null) {
+      "$.reason" hasValidationError "doesNotExist"
+    }
 
-      if (notes.isNullOrEmpty()) {
-        "$.notes" hasValidationError "empty"
-      }
+    if (notes.isNullOrEmpty()) {
+      "$.notes" hasValidationError "empty"
+    }
 
-      if (validationErrors.any()) {
-        return fieldValidationError
-      }
+    if (validationErrors.any()) {
+      return fieldValidationError
+    }
 
-      val outOfServiceBed = outOfServiceBedRepository.saveAndFlush(
-        Cas1OutOfServiceBedEntity(
+    val outOfServiceBed = outOfServiceBedRepository.saveAndFlush(
+      Cas1OutOfServiceBedEntity(
+        id = UUID.randomUUID(),
+        premises = premises,
+        bed = bed!!,
+        createdAt = OffsetDateTime.now(),
+        cancellation = null,
+        revisionHistory = mutableListOf(),
+      ),
+    )
+
+    outOfServiceBed.apply {
+      revisionHistory += outOfServiceBedDetailsRepository.saveAndFlush(
+        Cas1OutOfServiceBedRevisionEntity(
           id = UUID.randomUUID(),
-          premises = premises,
-          bed = bed!!,
-          createdAt = OffsetDateTime.now(),
-          cancellation = null,
-          revisionHistory = mutableListOf(),
+          createdAt = this.createdAt,
+          revisionType = Cas1OutOfServiceBedRevisionType.INITIAL,
+          startDate = startDate,
+          endDate = endDate,
+          referenceNumber = referenceNumber,
+          notes = notes,
+          reason = reason!!,
+          outOfServiceBed = this,
+          createdBy = createdBy,
+          changeTypePacked = Cas1OutOfServiceBedRevisionChangeType.NO_CHANGE,
         ),
       )
-
-      outOfServiceBed.apply {
-        revisionHistory += outOfServiceBedDetailsRepository.saveAndFlush(
-          Cas1OutOfServiceBedRevisionEntity(
-            id = UUID.randomUUID(),
-            createdAt = this.createdAt,
-            revisionType = Cas1OutOfServiceBedRevisionType.INITIAL,
-            startDate = startDate,
-            endDate = endDate,
-            referenceNumber = referenceNumber,
-            notes = notes,
-            reason = reason!!,
-            outOfServiceBed = this,
-            createdBy = createdBy,
-            changeTypePacked = Cas1OutOfServiceBedRevisionChangeType.NO_CHANGE,
-          ),
-        )
-      }
-
-      return success(outOfServiceBedRepository.saveAndFlush(outOfServiceBed))
     }
+
+    return success(outOfServiceBedRepository.saveAndFlush(outOfServiceBed))
+  }
 
   fun updateOutOfServiceBed(
     outOfServiceBedId: UUID,
@@ -298,28 +297,25 @@ class Cas1OutOfServiceBedService(
     premisesId: UUID?,
     apAreaId: UUID?,
     pageCriteria: PageCriteria<Cas1OutOfServiceBedSortField>,
-  ): Pair<List<Cas1OutOfServiceBedEntity>, PaginationMetadata?> =
-    getOutOfServiceBedsForDate(
-      temporality = temporality,
-      premisesId = premisesId,
-      apAreaId = apAreaId,
-      date = LocalDate.now(),
-      pageCriteria = pageCriteria,
-    )
+  ): Pair<List<Cas1OutOfServiceBedEntity>, PaginationMetadata?> = getOutOfServiceBedsForDate(
+    temporality = temporality,
+    premisesId = premisesId,
+    apAreaId = apAreaId,
+    date = LocalDate.now(),
+    pageCriteria = pageCriteria,
+  )
 
   fun getActiveOutOfServiceBedsForPremisesId(premisesId: UUID) = outOfServiceBedRepository.findAllActiveForPremisesId(premisesId)
 
-  fun getCurrentOutOfServiceBedsCountForPremisesId(premisesId: UUID): Int {
-    return outOfServiceBedRepository.findOutOfServiceBedIdsForDate(
-      premisesId = premisesId,
-      apAreaId = null,
-      excludePast = true,
-      excludeCurrent = false,
-      excludeFuture = true,
-      date = LocalDate.now(),
-      pageable = Pageable.unpaged(),
-    ).size
-  }
+  fun getCurrentOutOfServiceBedsCountForPremisesId(premisesId: UUID): Int = outOfServiceBedRepository.findOutOfServiceBedIdsForDate(
+    premisesId = premisesId,
+    apAreaId = null,
+    excludePast = true,
+    excludeCurrent = false,
+    excludeFuture = true,
+    date = LocalDate.now(),
+    pageable = Pageable.unpaged(),
+  ).size
 
   fun getOutOfServiceBedWithConflictingDates(
     startDate: LocalDate,

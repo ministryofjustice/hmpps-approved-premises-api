@@ -25,8 +25,8 @@ class SeedCas1UpdateSpaceBookingTest : SeedTestBase() {
       ),
     )
 
-    withCsv(
-      "valid-csv",
+    seed(
+      SeedFileType.approvedPremisesUpdateSpaceBooking,
       rowsToCsv(
         listOf(
           Cas1UpdateSpaceBookingSeedJobCsvRow(
@@ -43,8 +43,6 @@ class SeedCas1UpdateSpaceBookingTest : SeedTestBase() {
       ),
     )
 
-    seedService.seedData(SeedFileType.approvedPremisesUpdateSpaceBooking, "valid-csv.csv")
-
     val updatedSpaceBooking = cas1SpaceBookingRepository.findById(spaceBooking.id).get()
     assertThat(updatedSpaceBooking.deliusEventNumber).isEqualTo("999")
     assertThat(updatedSpaceBooking.criteria).containsExactlyInAnyOrder(
@@ -53,8 +51,7 @@ class SeedCas1UpdateSpaceBookingTest : SeedTestBase() {
     )
   }
 
-  private fun getCharacteristic(propertyName: String) =
-    characteristicRepository.findByPropertyName(propertyName, ServiceName.approvedPremises.value)!!
+  private fun getCharacteristic(propertyName: String) = characteristicRepository.findByPropertyName(propertyName, ServiceName.approvedPremises.value)!!
 
   private fun rowsToCsv(rows: List<Cas1UpdateSpaceBookingSeedJobCsvRow>): String {
     val builder = CsvBuilder()

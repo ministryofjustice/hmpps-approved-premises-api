@@ -19,8 +19,6 @@ import java.io.File
 import java.util.UUID
 import kotlin.Boolean
 
-class SiteSurveyImportException(message: String) : Exception(message)
-
 /**
  * This job seeds rooms and beds from a site survey xlsx Excel file.
  * The xlsx file should have two sheets:
@@ -41,6 +39,7 @@ class Cas1SeedRoomsFromSiteSurveyXlsxJob(
 
   companion object {
     val javers: Javers = JaversBuilder.javers().withListCompareAlgorithm(ListCompareAlgorithm.AS_SET).build()
+    fun buildRoomCode(qCode: String, roomNumber: String) = "$qCode-$roomNumber"
   }
 
   private val log = LoggerFactory.getLogger(this::class.java)
@@ -67,19 +66,22 @@ class Cas1SeedRoomsFromSiteSurveyXlsxJob(
       }
     }
 
+    val bedErrors = mutableListOf<String>()
     beds.forEach {
       val existingBed = bedRepository.findByCode(it.bedCode)
       if (existingBed == null) {
         createBed(it)
       } else {
         if (existingBed.room.code != it.roomCode) {
-          error("Bed ${it.bedCode} already exists in room ${existingBed.room.code} but is being added to room ${it.roomCode}.")
+          bedErrors.add("Bed ${it.bedCode} already exists in room ${existingBed.room.code} but is being added to room ${it.roomCode}.")
         }
       }
     }
-  }
 
-  private fun buildRoomCode(qCode: String, roomNumber: String) = "$qCode-$roomNumber"
+    if (bedErrors.isNotEmpty()) {
+      error(bedErrors.joinToString(","))
+    }
+  }
 
   private data class RoomInfo(
     val roomCode: String,
@@ -87,19 +89,17 @@ class Cas1SeedRoomsFromSiteSurveyXlsxJob(
     val characteristics: List<CharacteristicEntity>,
   )
 
-  private fun resolveRooms(qCode: String, siteSurveyBeds: List<Cas1SiteSurveyBed>): List<RoomInfo> {
-    return siteSurveyBeds.map {
-      RoomInfo(
-        roomCode = buildRoomCode(qCode, it.roomNumber),
-        roomName = it.roomNumber,
-        characteristics = resolveCharacteristics(it),
-      )
-    }
+  private fun resolveRooms(qCode: String, siteSurveyBeds: List<Cas1SiteSurveyBed>): List<RoomInfo> = siteSurveyBeds.map {
+    RoomInfo(
+      roomCode = buildRoomCode(qCode, it.roomNumber),
+      roomName = it.roomNumber,
+      characteristics = resolveCharacteristics(it),
+    )
   }
 
   private fun checkRoomCharacteristics(rooms: List<RoomInfo>) {
     rooms.groupBy { room -> room.roomCode }.forEach { (roomCode, rooms) ->
-      rooms.all { it.characteristics == rooms.first().characteristics } || error("Room $roomCode has different characteristics.")
+      rooms.all { it.characteristics == rooms.first().characteristics } || error("1 or more beds in room '$roomCode' have different characteristics.")
     }
   }
 
@@ -115,35 +115,32 @@ class Cas1SeedRoomsFromSiteSurveyXlsxJob(
   )
 
   @Suppress("TooGenericExceptionThrown")
-  private fun resolveCharacteristics(bed: Cas1SiteSurveyBed): List<CharacteristicEntity> {
-    return listOf(
-      CharacteristicRequired("isSingle", bed.isSingle),
-      CharacteristicRequired("isGroundFloor", bed.isGroundFloor),
-      CharacteristicRequired("isFullyFm", bed.isFullyFm),
-      CharacteristicRequired("hasCrib7Bedding", bed.hasCrib7Bedding),
-      CharacteristicRequired("hasSmokeDetector", bed.hasSmokeDetector),
-      CharacteristicRequired("isTopFloorVulnerable", bed.isTopFloorVulnerable),
-      CharacteristicRequired("isGroundFloorNrOffice", bed.isGroundFloorNrOffice),
-      CharacteristicRequired("hasNearbySprinkler", bed.hasNearbySprinkler),
-      CharacteristicRequired("isArsonSuitable", bed.isArsonSuitable),
-      CharacteristicRequired("isArsonDesignated", bed.isArsonDesignated),
-      CharacteristicRequired("hasArsonInsuranceConditions", bed.hasArsonInsuranceConditions),
-      CharacteristicRequired("isSuitedForSexOffenders", bed.isSuitedForSexOffenders),
-      CharacteristicRequired("hasEnSuite", bed.hasEnSuite),
-      CharacteristicRequired("isWheelchairAccessible", bed.isWheelchairAccessible),
-      CharacteristicRequired("hasWideDoor", bed.hasWideDoor),
-      CharacteristicRequired("hasStepFreeAccess", bed.hasStepFreeAccess),
-      CharacteristicRequired("hasFixedMobilityAids", bed.hasFixedMobilityAids),
-      CharacteristicRequired("hasTurningSpace", bed.hasTurningSpace),
-      CharacteristicRequired("hasCallForAssistance", bed.hasCallForAssistance),
-      CharacteristicRequired("isWheelchairDesignated", bed.isWheelchairDesignated),
-      CharacteristicRequired("isStepFreeDesignated", bed.isStepFreeDesignated),
-    ).filter { it.value }
-      .map {
-        characteristicRepository.findByPropertyNameAndScopes(propertyName = it.propertyName, serviceName = "approved-premises", modelName = "room")
-          ?: throw RuntimeException("Characteristic '${it.propertyName}' does not exist for AP room")
-      }
-  }
+  private fun resolveCharacteristics(bed: Cas1SiteSurveyBed): List<CharacteristicEntity> = listOf(
+    CharacteristicRequired("isSingle", bed.isSingle),
+    CharacteristicRequired("isGroundFloor", bed.isGroundFloor),
+    CharacteristicRequired("isFullyFm", bed.isFullyFm),
+    CharacteristicRequired("hasCrib7Bedding", bed.hasCrib7Bedding),
+    CharacteristicRequired("hasSmokeDetector", bed.hasSmokeDetector),
+    CharacteristicRequired("isTopFloorVulnerable", bed.isTopFloorVulnerable),
+    CharacteristicRequired("isGroundFloorNrOffice", bed.isGroundFloorNrOffice),
+    CharacteristicRequired("hasNearbySprinkler", bed.hasNearbySprinkler),
+    CharacteristicRequired("isArsonSuitable", bed.isArsonSuitable),
+    CharacteristicRequired("hasArsonInsuranceConditions", bed.hasArsonInsuranceConditions),
+    CharacteristicRequired("isSuitedForSexOffenders", bed.isSuitedForSexOffenders),
+    CharacteristicRequired("hasEnSuite", bed.hasEnSuite),
+    CharacteristicRequired("isWheelchairAccessible", bed.isWheelchairAccessible),
+    CharacteristicRequired("hasWideDoor", bed.hasWideDoor),
+    CharacteristicRequired("hasStepFreeAccess", bed.hasStepFreeAccess),
+    CharacteristicRequired("hasFixedMobilityAids", bed.hasFixedMobilityAids),
+    CharacteristicRequired("hasTurningSpace", bed.hasTurningSpace),
+    CharacteristicRequired("hasCallForAssistance", bed.hasCallForAssistance),
+    CharacteristicRequired("isWheelchairDesignated", bed.isWheelchairDesignated),
+    CharacteristicRequired("isStepFreeDesignated", bed.isStepFreeDesignated),
+  ).filter { it.value }
+    .map {
+      characteristicRepository.findByPropertyNameAndScopes(propertyName = it.propertyName, serviceName = "approved-premises", modelName = "room")
+        ?: throw RuntimeException("Characteristic '${it.propertyName}' does not exist for AP room")
+    }
 
   private data class BedInfo(
     val bedName: String,
@@ -151,14 +148,12 @@ class Cas1SeedRoomsFromSiteSurveyXlsxJob(
     val roomCode: String,
   )
 
-  private fun resolveBeds(qCode: String, siteSurveyBeds: List<Cas1SiteSurveyBed>): List<BedInfo> {
-    return siteSurveyBeds.map {
-      BedInfo(
-        bedName = "${it.roomNumber} - ${it.bedNumber}",
-        bedCode = it.uniqueBedRef,
-        roomCode = buildRoomCode(qCode, it.roomNumber),
-      )
-    }
+  private fun resolveBeds(qCode: String, siteSurveyBeds: List<Cas1SiteSurveyBed>): List<BedInfo> = siteSurveyBeds.map {
+    BedInfo(
+      bedName = "${it.roomNumber} - ${it.bedNumber}",
+      bedCode = it.uniqueBedRef,
+      roomCode = buildRoomCode(qCode, it.roomNumber),
+    )
   }
 
   private fun createRoom(premises: ApprovedPremisesEntity, room: RoomInfo) {
@@ -170,7 +165,7 @@ class Cas1SeedRoomsFromSiteSurveyXlsxJob(
         premises = premises,
         characteristics = room.characteristics.toMutableList(),
         notes = null,
-        beds = mutableListOf<BedEntity>(),
+        beds = mutableListOf(),
       ),
     )
     log.info("Created new room with code ${room.roomCode} and name ${room.roomName} in premise ${premises.name}.")
@@ -183,20 +178,16 @@ class Cas1SeedRoomsFromSiteSurveyXlsxJob(
     val characteristicNames: List<String>,
   ) {
     companion object {
-      fun fromEntity(entity: RoomEntity): ApprovedPremisesRoomForComparison {
-        return ApprovedPremisesRoomForComparison(
-          id = entity.id,
-          name = entity.name,
-          code = entity.code,
-          characteristicNames = entity.characteristics.map { it.name }.sorted(),
-        )
-      }
+      fun fromEntity(entity: RoomEntity): ApprovedPremisesRoomForComparison = ApprovedPremisesRoomForComparison(
+        id = entity.id,
+        name = entity.name,
+        code = entity.code,
+        characteristicNames = entity.characteristics.map { it.name }.sorted(),
+      )
     }
   }
 
   private fun updateRoom(existingRoom: RoomEntity, newRoom: RoomInfo) {
-    log.info("Updating room ${existingRoom.name} with room code ${existingRoom.code}.")
-
     val beforeChange = ApprovedPremisesRoomForComparison.fromEntity(existingRoom)
 
     existingRoom.characteristics.clear()
@@ -207,7 +198,9 @@ class Cas1SeedRoomsFromSiteSurveyXlsxJob(
 
     val diff = javers.compare(beforeChange, afterChange)
     if (diff.hasChanges()) {
-      log.info("Changes for import of room with code ${existingRoom.code} are ${diff.prettyPrint()}")
+      log.info("Changes for existing room ${existingRoom.name} with code ${existingRoom.code}: ${diff.prettyPrint()}")
+    } else {
+      log.info("No changes for existing room ${existingRoom.name} with code ${existingRoom.code}.")
     }
   }
 
@@ -227,8 +220,6 @@ class Cas1SeedRoomsFromSiteSurveyXlsxJob(
     log.info("Created new bed with code ${bed.bedCode} and name ${bed.bedName} in room code ${bed.roomCode}.")
   }
 
-  private fun findExistingPremisesByQCodeOrThrow(qCode: String): ApprovedPremisesEntity {
-    return approvedPremisesRepository.findByQCode(qCode)
-      ?: throw SiteSurveyImportException("No premises with qcode '$qCode' found.")
-  }
+  private fun findExistingPremisesByQCodeOrThrow(qCode: String): ApprovedPremisesEntity = approvedPremisesRepository.findByQCode(qCode)
+    ?: error("No premises with qcode '$qCode' found.")
 }

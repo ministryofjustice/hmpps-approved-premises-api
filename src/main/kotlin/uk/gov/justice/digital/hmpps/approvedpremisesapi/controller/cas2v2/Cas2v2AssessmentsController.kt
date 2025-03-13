@@ -7,8 +7,8 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.cas2v2.AssessmentsCa
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas2v2ApplicationNote
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas2v2Assessment
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas2v2AssessmentStatusUpdate
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewCas2ApplicationNote
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.UpdateCas2Assessment
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewCas2v2ApplicationNote
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.UpdateCas2v2Assessment
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.CasResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas2v2.Cas2v2ApplicationNoteService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas2v2.Cas2v2AssessmentService
@@ -38,7 +38,7 @@ class Cas2v2AssessmentsController(
 
   override fun assessmentsAssessmentIdPut(
     assessmentId: UUID,
-    updateCas2Assessment: UpdateCas2Assessment,
+    updateCas2Assessment: UpdateCas2v2Assessment,
   ): ResponseEntity<Cas2v2Assessment> {
     val assessmentResult = cas2v2AssessmentService.updateAssessment(assessmentId, updateCas2Assessment)
 
@@ -65,7 +65,7 @@ class Cas2v2AssessmentsController(
 
   override fun assessmentsAssessmentIdNotesPost(
     assessmentId: UUID,
-    body: NewCas2ApplicationNote,
+    body: NewCas2v2ApplicationNote,
   ): ResponseEntity<Cas2v2ApplicationNote> {
     val noteResult = cas2v2ApplicationNoteService.createAssessmentNote(assessmentId, body)
 
@@ -78,11 +78,7 @@ class Cas2v2AssessmentsController(
 
   private fun <EntityType> processAuthorisationFor(
     result: CasResult<EntityType>,
-  ): Any? {
-    return extractEntityFromCasResult(result)
-  }
+  ): Any? = extractEntityFromCasResult(result)
 
-  private fun <EntityType : Any> processValidation(casResult: CasResult<EntityType>): Any {
-    return extractEntityFromCasResult(casResult)
-  }
+  private fun <EntityType : Any> processValidation(casResult: CasResult<EntityType>): Any = extractEntityFromCasResult(casResult)
 }

@@ -20,9 +20,6 @@ interface Cas3VoidBedspacesRepository : JpaRepository<Cas3VoidBedspaceEntity, UU
   @Query("SELECT lb FROM Cas3VoidBedspaceEntity lb WHERE lb.premises.id = :premisesId AND lb.startDate <= :endDate AND lb.endDate >= :startDate")
   fun findAllByPremisesIdAndOverlappingDate(premisesId: UUID, startDate: LocalDate, endDate: LocalDate): List<Cas3VoidBedspaceEntity>
 
-  @Query("SELECT MAX(lb.endDate) FROM Cas3VoidBedspaceEntity lb WHERE lb.premises.id = :premisesId")
-  fun getHighestBookingDate(premisesId: UUID): LocalDate?
-
   @Query("SELECT lb FROM Cas3VoidBedspaceEntity lb WHERE lb.bed.id IN :voidBedspaceIds")
   fun findByBedIds(voidBedspaceIds: List<UUID>): List<Cas3VoidBedspaceEntity>
 

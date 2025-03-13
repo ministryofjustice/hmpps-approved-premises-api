@@ -5,7 +5,6 @@ import org.slf4j.LoggerFactory
 import org.springframework.http.HttpStatus
 import org.springframework.stereotype.Service
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.ApDeliusContextApiClient
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.ApOASysContextApiClient
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.CaseNotesClient
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.ClientResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.PrisonerAlertsApiClient
@@ -16,25 +15,13 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.config.PrisonAdjudicatio
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.config.PrisonCaseNotesConfig
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.config.PrisonCaseNotesConfigBindingModel
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.datasource.OffenderDetailsDataSource
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.datasource.OffenderRisksDataSource
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserEntity
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserQualification
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas2v2.Cas2v2UserEntity
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas2v2.Cas2v2UserType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PersonInfoResult
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PersonRisks
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PersonSummaryInfoResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.community.OffenderDetailSummary
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.deliuscontext.APDeliusDocument
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.deliuscontext.CaseAccess
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.deliuscontext.CaseDetail
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.deliuscontext.CaseSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.deliuscontext.UserOffenderAccess
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.oasyscontext.NeedsDetails
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.oasyscontext.OffenceDetails
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.oasyscontext.RiskManagementPlan
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.oasyscontext.RisksToTheIndividual
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.oasyscontext.RoshSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.prisonsapi.Adjudication
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.prisonsapi.AdjudicationsPage
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.prisonsapi.Agency
@@ -42,13 +29,10 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.prisonsapi.CaseNot
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.prisonsapi.CaseNotesPage
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.prisonsapi.InmateDetail
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.InternalServerErrorProblem
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.NotFoundProblem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.AuthorisableActionResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.CasResult
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.OffenderService.LimitedAccessStrategy
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.PersonTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.asCaseSummary
-import java.io.OutputStream
 import java.time.LocalDate
 import java.util.stream.Collectors
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.prisoneralertsapi.Alert as PrisionerAlert
@@ -58,10 +42,8 @@ class OffenderService(
   private val prisonsApiClient: PrisonsApiClient,
   private val prisionerAlertsApiClient: PrisonerAlertsApiClient,
   private val caseNotesClient: CaseNotesClient,
-  private val apOASysContextApiClient: ApOASysContextApiClient,
   private val apDeliusContextApiClient: ApDeliusContextApiClient,
   private val offenderDetailsDataSource: OffenderDetailsDataSource,
-  private val offenderRisksDataSource: OffenderRisksDataSource,
   private val personTransformer: PersonTransformer,
   prisonCaseNotesConfigBindingModel: PrisonCaseNotesConfigBindingModel,
   adjudicationsConfigBindingModel: PrisonAdjudicationsConfigBindingModel,
@@ -95,26 +77,6 @@ class OffenderService(
     )
   }
 
-  sealed interface LimitedAccessStrategy {
-    /**
-     * Even if the calling user has exclusions or restrictions for a given offender,
-     * return [PersonSummaryInfoResult.Success.Full] regardless.
-     *
-     * This strategy should be used with care, typically when the calling user
-     * has a specific qualification that indicates they can always view limited
-     * access offender information
-     */
-    data object IgnoreLimitedAccess : LimitedAccessStrategy
-
-    /**
-     * If the offender has restrictions or exclusions (i.e. limited access), retrieve
-     * the access information for the calling user. If the calling user has limited
-     * access to this offender (either restricted or excluded), return
-     * [PersonSummaryInfoResult.Success.Restricted]
-     */
-    data class ReturnRestrictedIfLimitedAccess(val deliusUsername: String) : LimitedAccessStrategy
-  }
-
   /**
    * The [getPersonSummaryInfoResults] function is limited to providing information for up to 500 CRNs
    *
@@ -125,7 +87,7 @@ class OffenderService(
    */
   fun getPersonSummaryInfoResultsInBatches(
     crns: Set<String>,
-    limitedAccessStrategy: LimitedAccessStrategy,
+    laoStrategy: LaoStrategy,
     batchSize: Int = 500,
   ): List<PersonSummaryInfoResult> {
     if (batchSize > MAX_OFFENDER_REQUEST_COUNT) {
@@ -135,15 +97,20 @@ class OffenderService(
     return ListUtils.partition(crns.toList(), batchSize)
       .stream()
       .map { crnSubset ->
-        getPersonSummaryInfoResults(crnSubset.toSet(), limitedAccessStrategy)
+        getPersonSummaryInfoResults(crnSubset.toSet(), laoStrategy)
       }
       .flatMap { it.stream() }
       .collect(Collectors.toList())
   }
 
+  fun getPersonSummaryInfoResult(
+    crn: String,
+    laoStrategy: LaoStrategy,
+  ) = getPersonSummaryInfoResults(setOf(crn), laoStrategy).first()
+
   fun getPersonSummaryInfoResults(
     crns: Set<String>,
-    limitedAccessStrategy: LimitedAccessStrategy,
+    laoStrategy: LaoStrategy,
   ): List<PersonSummaryInfoResult> {
     if (crns.isEmpty()) {
       return emptyList()
@@ -166,12 +133,16 @@ class OffenderService(
    /*
     * this could be more efficient by only retrieving access information for CRNs where
     * the corresponding [CaseSummary.hasLimitedAccess()] is true. A similar short-circuit
-    * was implemented in the new deprecated [getOffender()] function
+    * was implemented in the new deprecated [getOffender()] function.
+    *
+    * It could also be more efficient if ignoring offenders that can't be found on calls to
+    * [apDeliusContextApiClient.getSummariesForCrns(crnsList)] (although that shouldn't
+    * happen often)
     */
-    val caseAccessByCrn = when (limitedAccessStrategy) {
-      is LimitedAccessStrategy.IgnoreLimitedAccess -> emptyMap()
-      is LimitedAccessStrategy.ReturnRestrictedIfLimitedAccess ->
-        when (val result = apDeliusContextApiClient.getUserAccessForCrns(limitedAccessStrategy.deliusUsername, crnsList)) {
+    val caseAccessByCrn = when (laoStrategy) {
+      is LaoStrategy.NeverRestricted -> emptyMap()
+      is LaoStrategy.CheckUserAccess ->
+        when (val result = apDeliusContextApiClient.getUserAccessForCrns(laoStrategy.deliusUsername, crnsList)) {
           is ClientResult.Success -> result.body
           is ClientResult.Failure -> result.throwException()
         }.access.associateBy(
@@ -185,7 +156,7 @@ class OffenderService(
         crn,
         caseSummariesByCrn[crn],
         caseAccessByCrn[crn],
-        limitedAccessStrategy,
+        laoStrategy,
       )
     }
   }
@@ -194,14 +165,14 @@ class OffenderService(
     crn: String,
     caseSummary: CaseSummary?,
     caseAccess: CaseAccess?,
-    limitedAccessStrategy: LimitedAccessStrategy,
+    laoStrategy: LaoStrategy,
   ): PersonSummaryInfoResult {
     if (caseSummary == null) {
       log.debug("Could not find case summary for '$crn'. Returning not found")
       return PersonSummaryInfoResult.NotFound(crn)
     }
 
-    if (!caseSummary.hasLimitedAccess() || limitedAccessStrategy is LimitedAccessStrategy.IgnoreLimitedAccess) {
+    if (!caseSummary.hasLimitedAccess() || laoStrategy is LaoStrategy.NeverRestricted) {
       log.debug("No restrictions apply, or the caller has indicated to ignore restrictions for '$crn'. Returning full details")
       return PersonSummaryInfoResult.Success.Full(crn, caseSummary)
     }
@@ -265,71 +236,24 @@ class OffenderService(
   }
 
   @Deprecated(
-    """
-      This function uses the now deprecated [OffenderDetailsDataSource]. 
-      It also throws an exception if an offender isn't found, instead of returning PersonSummaryInfoResult.NotFound
-    """,
-    ReplaceWith("getPersonSummaryInfoResults(crns, limitedAccessStrategy)"),
-  )
-  @SuppressWarnings("CyclomaticComplexMethod")
-  fun getOffenderSummariesByCrns(crns: List<String>, userDistinguishedName: String, ignoreLaoRestrictions: Boolean = false): List<PersonSummaryInfoResult> {
-    if (crns.isEmpty()) {
-      return emptyList()
-    }
-
-    if (crns.size > MAX_OFFENDER_REQUEST_COUNT) {
-      throw InternalServerErrorProblem("Cannot request more than $MAX_OFFENDER_REQUEST_COUNT CRNs. ${crns.size} have been provided.")
-    }
-
-    val offenders = when (val response = apDeliusContextApiClient.getSummariesForCrns(crns)) {
-      is ClientResult.Success -> response.body
-      is ClientResult.Failure.StatusCode -> response.throwException()
-      is ClientResult.Failure -> response.throwException()
-    }
-
-    val laoResponse = if (!ignoreLaoRestrictions) {
-      when (val response = apDeliusContextApiClient.getUserAccessForCrns(userDistinguishedName, crns)) {
-        is ClientResult.Success -> response.body
-        is ClientResult.Failure.StatusCode -> response.throwException()
-        is ClientResult.Failure -> response.throwException()
-      }
-    } else {
-      null
-    }
-
-    return crns.map { crn ->
-      val caseSummary = offenders.cases.find { it.crn == crn } ?: return@map PersonSummaryInfoResult.NotFound(crn)
-
-      val isLao = laoResponse?.let {
-        laoResponse.access.find { caseAccess ->
-          caseAccess.crn == crn &&
-            (caseAccess.userExcluded || caseAccess.userRestricted)
-        } != null
-      } ?: false
-
-      if (isLao) {
-        PersonSummaryInfoResult.Success.Restricted(crn, caseSummary.nomsId)
-      } else {
-        PersonSummaryInfoResult.Success.Full(crn, caseSummary)
-      }
-    }
-  }
-
-  @Deprecated(
     " This function returns the now deprecated [OffenderDetailSummary], which is the community-api data model",
     ReplaceWith("getPersonSummaryInfoResults(crns, limitedAccessStrategy)"),
   )
-  fun getOffenderByCrn(crn: String, userDistinguishedName: String, ignoreLaoRestrictions: Boolean = false): AuthorisableActionResult<OffenderDetailSummary> {
-    return getOffender(
-      ignoreLaoRestrictions,
-      { offenderDetailsDataSource.getOffenderDetailSummary(crn) },
-      { offenderDetailsDataSource.getUserAccessForOffenderCrn(userDistinguishedName, crn) },
-    )
-  }
+  fun getOffenderByCrn(crn: String, userDistinguishedName: String, ignoreLaoRestrictions: Boolean = false): AuthorisableActionResult<OffenderDetailSummary> = getOffender(
+    ignoreLaoRestrictions,
+    { offenderDetailsDataSource.getOffenderDetailSummary(crn) },
+    { offenderDetailsDataSource.getUserAccessForOffenderCrn(userDistinguishedName, crn) },
+  )
 
+  /**
+   * Returns CasResult.Unauthorised if offender is LAO and user can't access them
+   */
   @Deprecated(
     """
       This function returns the now deprecated [OffenderDetailSummary], which is the community-api data model
+      
+      Note that whilst this function returns CasResult.Unauthorised if offender is LAO and user can't access
+      them, the non-deprecated functions will instead return PersonSummaryInfoResult.Full.Restricted
     """,
     ReplaceWith("getPersonSummaryInfoResults(crns, limitedAccessStrategy)"),
   )
@@ -382,14 +306,9 @@ class OffenderService(
     return AuthorisableActionResult.Success(offender)
   }
 
-  /*
-   * This should call apDeliusContextApiClient.getSummariesForCrns(crns) directly
-   */
   fun isLao(crn: String): Boolean {
-    val offenderResponse = offenderDetailsDataSource.getOffenderDetailSummary(crn)
-
-    val offender = when (offenderResponse) {
-      is ClientResult.Success -> offenderResponse.body
+    val offender = when (val offenderResponse = apDeliusContextApiClient.getSummariesForCrns(listOf(crn))) {
+      is ClientResult.Success -> offenderResponse.body.cases.first()
       is ClientResult.Failure -> offenderResponse.throwException()
     }
 
@@ -398,11 +317,11 @@ class OffenderService(
 
   fun canAccessOffender(
     crn: String,
-    limitedAccessStrategy: LimitedAccessStrategy,
-  ) = when (limitedAccessStrategy) {
-    is LimitedAccessStrategy.IgnoreLimitedAccess -> true
-    is LimitedAccessStrategy.ReturnRestrictedIfLimitedAccess -> canAccessOffender(
-      username = limitedAccessStrategy.deliusUsername,
+    laoStrategy: LaoStrategy,
+  ) = when (laoStrategy) {
+    is LaoStrategy.NeverRestricted -> true
+    is LaoStrategy.CheckUserAccess -> canAccessOffender(
+      username = laoStrategy.deliusUsername,
       crn = crn,
     )
   }
@@ -466,16 +385,6 @@ class OffenderService(
     }
 
     return AuthorisableActionResult.Success(inmateDetail)
-  }
-
-  fun getRiskByCrn(crn: String, deliusUsername: String): AuthorisableActionResult<PersonRisks> {
-    return when (getOffenderByCrn(crn, deliusUsername)) {
-      is AuthorisableActionResult.NotFound -> AuthorisableActionResult.NotFound()
-      is AuthorisableActionResult.Unauthorised -> AuthorisableActionResult.Unauthorised()
-      is AuthorisableActionResult.Success -> AuthorisableActionResult.Success(
-        offenderRisksDataSource.getPersonRisks(crn),
-      )
-    }
   }
 
   fun getFilteredPrisonCaseNotesByNomsNumber(nomsNumber: String, getCas1SpecificNoteTypes: Boolean): CasResult<List<CaseNote>> {
@@ -575,93 +484,6 @@ class OffenderService(
     return CasResult.Success(alerts.content)
   }
 
-  fun getOASysNeeds(crn: String): AuthorisableActionResult<NeedsDetails> {
-    val needsResult = apOASysContextApiClient.getNeedsDetails(crn)
-
-    val needs = when (needsResult) {
-      is ClientResult.Success -> needsResult.body
-      is ClientResult.Failure.StatusCode -> when (needsResult.status) {
-        HttpStatus.NOT_FOUND -> return AuthorisableActionResult.NotFound()
-        HttpStatus.FORBIDDEN -> return AuthorisableActionResult.Unauthorised()
-        else -> {
-          log.warn("Failed to fetch OASys needs details - got response status ${needsResult.status}, returning 404")
-          throw NotFoundProblem(crn, "OASys")
-        }
-      }
-      is ClientResult.Failure.Other -> {
-        log.warn("Failed to fetch OASys needs details, returning 404", needsResult.exception)
-        throw NotFoundProblem(crn, "OASys")
-      }
-      is ClientResult.Failure -> needsResult.throwException()
-    }
-
-    return AuthorisableActionResult.Success(needs)
-  }
-
-  fun getOASysOffenceDetails(crn: String): AuthorisableActionResult<OffenceDetails> {
-    val offenceDetailsResult = apOASysContextApiClient.getOffenceDetails(crn)
-
-    val offenceDetails = when (offenceDetailsResult) {
-      is ClientResult.Success -> offenceDetailsResult.body
-      is ClientResult.Failure.StatusCode -> when (offenceDetailsResult.status) {
-        HttpStatus.NOT_FOUND -> return AuthorisableActionResult.NotFound()
-        HttpStatus.FORBIDDEN -> return AuthorisableActionResult.Unauthorised()
-        else -> offenceDetailsResult.throwException()
-      }
-      is ClientResult.Failure -> offenceDetailsResult.throwException()
-    }
-
-    return AuthorisableActionResult.Success(offenceDetails)
-  }
-
-  fun getOASysRiskManagementPlan(crn: String): AuthorisableActionResult<RiskManagementPlan> {
-    val riskManagementPlanResult = apOASysContextApiClient.getRiskManagementPlan(crn)
-
-    val riskManagement = when (riskManagementPlanResult) {
-      is ClientResult.Success -> riskManagementPlanResult.body
-      is ClientResult.Failure.StatusCode -> when (riskManagementPlanResult.status) {
-        HttpStatus.NOT_FOUND -> return AuthorisableActionResult.NotFound()
-        HttpStatus.FORBIDDEN -> return AuthorisableActionResult.Unauthorised()
-        else -> riskManagementPlanResult.throwException()
-      }
-      is ClientResult.Failure -> riskManagementPlanResult.throwException()
-    }
-
-    return AuthorisableActionResult.Success(riskManagement)
-  }
-
-  fun getOASysRoshSummary(crn: String): AuthorisableActionResult<RoshSummary> {
-    val roshSummaryResult = apOASysContextApiClient.getRoshSummary(crn)
-
-    val roshSummary = when (roshSummaryResult) {
-      is ClientResult.Success -> roshSummaryResult.body
-      is ClientResult.Failure.StatusCode -> when (roshSummaryResult.status) {
-        HttpStatus.NOT_FOUND -> return AuthorisableActionResult.NotFound()
-        HttpStatus.FORBIDDEN -> return AuthorisableActionResult.Unauthorised()
-        else -> roshSummaryResult.throwException()
-      }
-      is ClientResult.Failure -> roshSummaryResult.throwException()
-    }
-
-    return AuthorisableActionResult.Success(roshSummary)
-  }
-
-  fun getOASysRiskToTheIndividual(crn: String): AuthorisableActionResult<RisksToTheIndividual> {
-    val risksToTheIndividualResult = apOASysContextApiClient.getRiskToTheIndividual(crn)
-
-    val riskToTheIndividual = when (risksToTheIndividualResult) {
-      is ClientResult.Success -> risksToTheIndividualResult.body
-      is ClientResult.Failure.StatusCode -> when (risksToTheIndividualResult.status) {
-        HttpStatus.NOT_FOUND -> return AuthorisableActionResult.NotFound()
-        HttpStatus.FORBIDDEN -> return AuthorisableActionResult.Unauthorised()
-        else -> risksToTheIndividualResult.throwException()
-      }
-      is ClientResult.Failure -> risksToTheIndividualResult.throwException()
-    }
-
-    return AuthorisableActionResult.Success(riskToTheIndividual)
-  }
-
   fun getCaseDetail(crn: String): CasResult<CaseDetail> {
     val caseDetail = when (val caseDetailResult = apDeliusContextApiClient.getCaseDetail(crn)) {
       is ClientResult.Success -> caseDetailResult.body
@@ -676,42 +498,25 @@ class OffenderService(
     return CasResult.Success(caseDetail)
   }
 
-  fun getDocumentsFromApDeliusApi(crn: String): AuthorisableActionResult<List<APDeliusDocument>> {
-    val documentsResult = apDeliusContextApiClient.getDocuments(crn)
-
-    val documents = when (documentsResult) {
-      is ClientResult.Success -> documentsResult.body
-      is ClientResult.Failure.StatusCode -> when (documentsResult.status) {
-        HttpStatus.NOT_FOUND -> return AuthorisableActionResult.NotFound()
-        HttpStatus.FORBIDDEN -> return AuthorisableActionResult.Unauthorised()
-        else -> documentsResult.throwException()
-      }
-
-      is ClientResult.Failure -> documentsResult.throwException()
-    }
-    return AuthorisableActionResult.Success(documents)
-  }
-
-  fun getDocumentFromDelius(
-    crn: String,
-    documentId: String,
-    outputStream: OutputStream,
-  ) = apDeliusContextApiClient.getDocument(crn, documentId, outputStream)
-
   fun getPersonInfoResult(
     crn: String,
-    limitedAccessStrategy: LimitedAccessStrategy,
+    laoStrategy: LaoStrategy,
+  ) = getPersonInfoResults(setOf(crn), laoStrategy).first()
+
+  fun getPersonInfoResults(
+    crns: Set<String>,
+    laoStrategy: LaoStrategy,
   ) = getPersonInfoResults(
-    crns = setOf(crn),
-    deliusUsername = when (limitedAccessStrategy) {
-      is LimitedAccessStrategy.IgnoreLimitedAccess -> null
-      is LimitedAccessStrategy.ReturnRestrictedIfLimitedAccess -> limitedAccessStrategy.deliusUsername
+    crns = crns,
+    deliusUsername = when (laoStrategy) {
+      is LaoStrategy.NeverRestricted -> null
+      is LaoStrategy.CheckUserAccess -> laoStrategy.deliusUsername
     },
-    ignoreLaoRestrictions = when (limitedAccessStrategy) {
-      is LimitedAccessStrategy.IgnoreLimitedAccess -> true
-      is LimitedAccessStrategy.ReturnRestrictedIfLimitedAccess -> false
+    ignoreLaoRestrictions = when (laoStrategy) {
+      is LaoStrategy.NeverRestricted -> true
+      is LaoStrategy.CheckUserAccess -> false
     },
-  ).first()
+  )
 
   @Deprecated(
     """Use version that takes limitedAccessStrategy, derive from [UserEntity.cas1LimitedAccessStrategy()] 
@@ -726,7 +531,7 @@ class OffenderService(
     return getPersonInfoResults(setOf(crn), deliusUsername, ignoreLaoRestrictions).first()
   }
 
-  fun getPersonInfoResults(
+  private fun getPersonInfoResults(
     crns: Set<String>,
     deliusUsername: String?,
     ignoreLaoRestrictions: Boolean,
@@ -757,17 +562,4 @@ class OffenderService(
       }
     }
   }
-}
-
-fun UserEntity.cas1LimitedAccessStrategy() = if (this.hasQualification(UserQualification.LAO)) {
-  LimitedAccessStrategy.IgnoreLimitedAccess
-} else {
-  LimitedAccessStrategy.ReturnRestrictedIfLimitedAccess(this.deliusUsername)
-}
-
-fun UserEntity.cas3LimitedAccessStrategy() = LimitedAccessStrategy.ReturnRestrictedIfLimitedAccess(this.deliusUsername)
-
-fun Cas2v2UserEntity.limitedAccessStrategy() = when (userType) {
-  Cas2v2UserType.DELIUS -> LimitedAccessStrategy.ReturnRestrictedIfLimitedAccess(this.username)
-  else -> error("Can't provide strategy for users of type $userType")
 }

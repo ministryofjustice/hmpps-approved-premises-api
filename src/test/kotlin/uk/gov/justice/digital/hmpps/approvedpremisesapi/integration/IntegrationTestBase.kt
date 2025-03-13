@@ -145,6 +145,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas2Applicati
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas2ApplicationJsonSchemaEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas2ApplicationNoteEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas2ApplicationNoteRepository
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas2ApplicationRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas2AssessmentEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas2AssessmentRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas2StatusUpdateDetailEntity
@@ -192,6 +193,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TurnaroundEnt
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserQualificationAssignmentEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRoleAssignmentEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas1.Cas1OffenderRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas3.Cas3VoidBedspaceCancellationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas3.Cas3VoidBedspaceEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas3.Cas3VoidBedspaceReasonEntity
@@ -222,7 +224,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.repository.Cas1OutOfServ
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.repository.Cas1OutOfServiceBedReasonTestRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.repository.Cas1OutOfServiceBedTestRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.repository.Cas2ApplicationJsonSchemaTestRepository
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.repository.Cas2ApplicationTestRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.repository.Cas2StatusUpdateTestRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.repository.Cas3VoidBedspaceCancellationTestRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.repository.Cas3VoidBedspaceReasonTestRepository
@@ -376,7 +377,7 @@ abstract class IntegrationTestBase {
   lateinit var approvedPremisesApplicationRepository: ApprovedPremisesApplicationTestRepository
 
   @Autowired
-  lateinit var cas2ApplicationRepository: Cas2ApplicationTestRepository
+  lateinit var cas2ApplicationRepository: Cas2ApplicationRepository
 
   @Autowired
   lateinit var cas2AssessmentRepository: Cas2AssessmentRepository
@@ -521,6 +522,9 @@ abstract class IntegrationTestBase {
 
   @Autowired
   lateinit var cas1CruManagementAreaRepository: Cas1CruManagementAreaRepository
+
+  @Autowired
+  lateinit var cas1OffenderRepository: Cas1OffenderRepository
 
   @Autowired
   lateinit var emailAsserter: EmailNotificationAsserter
@@ -787,36 +791,34 @@ abstract class IntegrationTestBase {
       ),
   )
 
-  fun mockSuccessfulGetCallWithJsonResponse(url: String, responseBody: Any, responseStatus: Int = 200) =
-    mockOAuth2ClientCredentialsCallIfRequired {
-      wiremockServer.stubFor(
-        WireMock.get(urlEqualTo(url))
-          .willReturn(
-            aResponse()
-              .withHeader("Content-Type", "application/json")
-              .withStatus(responseStatus)
-              .withBody(
-                objectMapper.writeValueAsString(responseBody),
-              ),
-          ),
-      )
-    }
+  fun mockSuccessfulGetCallWithJsonResponse(url: String, responseBody: Any, responseStatus: Int = 200) = mockOAuth2ClientCredentialsCallIfRequired {
+    wiremockServer.stubFor(
+      WireMock.get(urlEqualTo(url))
+        .willReturn(
+          aResponse()
+            .withHeader("Content-Type", "application/json")
+            .withStatus(responseStatus)
+            .withBody(
+              objectMapper.writeValueAsString(responseBody),
+            ),
+        ),
+    )
+  }
 
-  fun mockSuccessfulPostCallWithJsonResponse(url: String, requestBody: StringValuePattern, responseBody: Any, responseStatus: Int = 200) =
-    mockOAuth2ClientCredentialsCallIfRequired {
-      wiremockServer.stubFor(
-        post(urlEqualTo(url))
-          .withRequestBody(requestBody)
-          .willReturn(
-            aResponse()
-              .withHeader("Content-Type", "application/json")
-              .withStatus(responseStatus)
-              .withBody(
-                objectMapper.writeValueAsString(responseBody),
-              ),
-          ),
-      )
-    }
+  fun mockSuccessfulPostCallWithJsonResponse(url: String, requestBody: StringValuePattern, responseBody: Any, responseStatus: Int = 200) = mockOAuth2ClientCredentialsCallIfRequired {
+    wiremockServer.stubFor(
+      post(urlEqualTo(url))
+        .withRequestBody(requestBody)
+        .willReturn(
+          aResponse()
+            .withHeader("Content-Type", "application/json")
+            .withStatus(responseStatus)
+            .withBody(
+              objectMapper.writeValueAsString(responseBody),
+            ),
+        ),
+    )
+  }
 
   fun mockSuccessfulGetCallWithBodyAndJsonResponse(
     url: String,
@@ -824,22 +826,21 @@ abstract class IntegrationTestBase {
     responseBody: Any,
     responseStatus: Int = 200,
     additionalConfig: MappingBuilder.() -> Unit = { },
-  ) =
-    mockOAuth2ClientCredentialsCallIfRequired {
-      wiremockServer.stubFor(
-        WireMock.get(urlPathEqualTo(url))
-          .withRequestBody(requestBody)
-          .willReturn(
-            aResponse()
-              .withHeader("Content-Type", "application/json")
-              .withStatus(responseStatus)
-              .withBody(
-                objectMapper.writeValueAsString(responseBody),
-              ),
-          )
-          .apply(additionalConfig),
-      )
-    }
+  ) = mockOAuth2ClientCredentialsCallIfRequired {
+    wiremockServer.stubFor(
+      WireMock.get(urlPathEqualTo(url))
+        .withRequestBody(requestBody)
+        .willReturn(
+          aResponse()
+            .withHeader("Content-Type", "application/json")
+            .withStatus(responseStatus)
+            .withBody(
+              objectMapper.writeValueAsString(responseBody),
+            ),
+        )
+        .apply(additionalConfig),
+    )
+  }
 
   fun editGetStubWithBodyAndJsonResponse(
     url: String,
@@ -861,39 +862,36 @@ abstract class IntegrationTestBase {
       .apply(additionalConfig),
   )
 
-  fun mockUnsuccessfulGetCall(url: String, responseStatus: Int) =
-    mockOAuth2ClientCredentialsCallIfRequired {
-      wiremockServer.stubFor(
-        WireMock.get(urlEqualTo(url))
-          .willReturn(
-            aResponse()
-              .withStatus(responseStatus),
-          ),
-      )
-    }
+  fun mockUnsuccessfulGetCall(url: String, responseStatus: Int) = mockOAuth2ClientCredentialsCallIfRequired {
+    wiremockServer.stubFor(
+      WireMock.get(urlEqualTo(url))
+        .willReturn(
+          aResponse()
+            .withStatus(responseStatus),
+        ),
+    )
+  }
 
-  fun mockUnsuccessfulPostCall(url: String, responseStatus: Int) =
-    mockOAuth2ClientCredentialsCallIfRequired {
-      wiremockServer.stubFor(
-        post(urlEqualTo(url))
-          .willReturn(
-            aResponse()
-              .withStatus(responseStatus),
-          ),
-      )
-    }
+  fun mockUnsuccessfulPostCall(url: String, responseStatus: Int) = mockOAuth2ClientCredentialsCallIfRequired {
+    wiremockServer.stubFor(
+      post(urlEqualTo(url))
+        .willReturn(
+          aResponse()
+            .withStatus(responseStatus),
+        ),
+    )
+  }
 
-  fun mockUnsuccessfulGetCallWithDelayedResponse(url: String, responseStatus: Int, delayMs: Int) =
-    mockOAuth2ClientCredentialsCallIfRequired {
-      wiremockServer.stubFor(
-        WireMock.get(urlEqualTo(url))
-          .willReturn(
-            aResponse()
-              .withFixedDelay(delayMs)
-              .withStatus(responseStatus),
-          ),
-      )
-    }
+  fun mockUnsuccessfulGetCallWithDelayedResponse(url: String, responseStatus: Int, delayMs: Int) = mockOAuth2ClientCredentialsCallIfRequired {
+    wiremockServer.stubFor(
+      WireMock.get(urlEqualTo(url))
+        .willReturn(
+          aResponse()
+            .withFixedDelay(delayMs)
+            .withStatus(responseStatus),
+        ),
+    )
+  }
 
   fun mockOAuth2ClientCredentialsCallIfRequired(block: () -> Unit = {}) {
     if (!clientCredentialsCallMocked) {

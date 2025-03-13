@@ -14,7 +14,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1Applicatio
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1NewSpaceBooking
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1NewSpaceBookingCancellation
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1SpaceBooking
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1SpaceBookingRequirements
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Gender
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewApplication
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewCancellation
@@ -432,7 +431,7 @@ class ApplicationStateTest : InitialiseDatabasePerClassTestBase() {
           arrivalDate = LocalDate.parse("2023-03-29"),
           departureDate = LocalDate.parse("2023-04-01"),
           premisesId = premises.id,
-          requirements = Cas1SpaceBookingRequirements(emptyList()),
+          characteristics = emptyList(),
         ),
       )
       .exchange()

@@ -39,6 +39,7 @@ import java.util.Base64
 @EnableWebSecurity
 class OAuth2ResourceServerSecurityConfiguration {
   @Bean
+  @Suppress("MaxLineLength")
   @Throws(Exception::class)
   fun securityFilterChain(http: HttpSecurity, @Autowired objectMapper: ObjectMapper): SecurityFilterChain {
     http {
@@ -59,7 +60,7 @@ class OAuth2ResourceServerSecurityConfiguration {
         authorize(HttpMethod.GET, "/favicon.ico", permitAll)
         authorize(HttpMethod.GET, "/info", permitAll)
         authorize(HttpMethod.POST, "/seed", permitAll)
-        authorize(HttpMethod.POST, "/seedFromExcel", permitAll)
+        authorize(HttpMethod.POST, "/seedFromExcel/*", permitAll)
         authorize(HttpMethod.DELETE, "/cache/*", permitAll)
         authorize(HttpMethod.POST, "/migration-job", permitAll)
         authorize(HttpMethod.DELETE, "/internal/premises/*", permitAll)
@@ -76,17 +77,18 @@ class OAuth2ResourceServerSecurityConfiguration {
         authorize(HttpMethod.GET, "/cas2/reports/**", hasRole("CAS2_MI"))
         authorize("/cas2/**", hasAnyAuthority("ROLE_POM", "ROLE_LICENCE_CA"))
 
-        authorize(HttpMethod.PUT, "/cas2v2/assessments/**", hasRole("CAS2_ASSESSOR"))
-        authorize(HttpMethod.GET, "/cas2v2/assessments/**", hasAnyRole("CAS2_ASSESSOR", "CAS2_ADMIN"))
-        authorize(HttpMethod.POST, "/cas2v2/assessments/*/status-updates", hasRole("CAS2_ASSESSOR"))
-        authorize(HttpMethod.POST, "/cas2v2/assessments/*/notes", hasAnyRole("LICENCE_CA", "POM", "CAS2_ASSESSOR"))
-        authorize(HttpMethod.GET, "/cas2v2/submissions/**", hasAnyRole("CAS2_ASSESSOR", "CAS2_ADMIN"))
-        authorize(HttpMethod.POST, "/cas2v2/submissions/*/status-updates", hasRole("CAS2_ASSESSOR"))
-        authorize(HttpMethod.GET, "/cas2v2/reference-data/**", hasAnyRole("CAS2_ASSESSOR", "POM"))
-        authorize(HttpMethod.GET, "/cas2v2/reports/**", hasRole("CAS2_MI"))
-        authorize(HttpMethod.GET, "/cas2v2/people/search-by-crn/**", hasAnyAuthority("ROLE_PROBATION"))
-        authorize(HttpMethod.GET, "/cas2v2/people/search-by-noms/**", hasAnyAuthority("ROLE_POM", "ROLE_LICENCE_CA", "ROLE_PROBATION"))
-        authorize("/cas2v2/**", hasAnyAuthority("ROLE_POM", "ROLE_LICENCE_CA"))
+        authorize(HttpMethod.PUT, "/cas2v2/assessments/**", hasAuthority("ROLE_CAS2_ASSESSOR"))
+        authorize(HttpMethod.GET, "/cas2v2/assessments/**", hasAnyAuthority("ROLE_CAS2_ASSESSOR", "ROLE_CAS2_ADMIN", "ROLE_CAS2_COURT_BAIL_REFERRER", "ROLE_CAS2_PRISON_BAIL_REFERRER", "ROLE_CAS2_COURT_BAIL", "ROLE_CAS2_PRISON_BAIL"))
+        authorize(HttpMethod.POST, "/cas2v2/assessments/*/status-updates", hasAuthority("ROLE_CAS2_ASSESSOR"))
+        authorize(HttpMethod.POST, "/cas2v2/assessments/*/notes", hasAnyAuthority("ROLE_CAS2_ASSESSOR", "ROLE_CAS2_COURT_BAIL_REFERRER", "ROLE_CAS2_PRISON_BAIL_REFERRER", "ROLE_CAS2_COURT_BAIL", "ROLE_CAS2_PRISON_BAIL"))
+        authorize(HttpMethod.GET, "/cas2v2/submissions/**", hasAnyAuthority("ROLE_CAS2_ASSESSOR", "ROLE_CAS2_ADMIN", "ROLE_CAS2_COURT_BAIL_REFERRER", "ROLE_CAS2_PRISON_BAIL_REFERRER", "ROLE_CAS2_COURT_BAIL", "ROLE_CAS2_PRISON_BAIL"))
+        authorize(HttpMethod.POST, "/cas2v2/submissions/*/status-updates", hasAnyAuthority("ROLE_CAS2_ASSESSOR", "ROLE_CAS2_COURT_BAIL_REFERRER", "ROLE_CAS2_PRISON_BAIL_REFERRER", "ROLE_CAS2_COURT_BAIL", "ROLE_CAS2_PRISON_BAIL"))
+        authorize(HttpMethod.GET, "/cas2v2/reference-data/**", hasAuthority("ROLE_CAS2_ASSESSOR"))
+        authorize(HttpMethod.GET, "/cas2v2/reports/**", hasAuthority("ROLE_CAS2_MI"))
+        authorize(HttpMethod.GET, "/cas2v2/people/search-by-crn/**", hasAnyAuthority("ROLE_CAS2_COURT_BAIL_REFERRER", "ROLE_CAS2_PRISON_BAIL_REFERRER", "ROLE_CAS2_COURT_BAIL", "ROLE_CAS2_PRISON_BAIL"))
+        authorize(HttpMethod.GET, "/cas2v2/people/search-by-noms/**", hasAnyAuthority("ROLE_CAS2_COURT_BAIL_REFERRER", "ROLE_CAS2_PRISON_BAIL_REFERRER", "ROLE_CAS2_COURT_BAIL", "ROLE_CAS2_PRISON_BAIL"))
+        authorize("/cas2v2/applications/**", hasAnyAuthority("ROLE_CAS2_COURT_BAIL_REFERRER", "ROLE_CAS2_PRISON_BAIL_REFERRER", "ROLE_CAS2_COURT_BAIL", "ROLE_CAS2_PRISON_BAIL"))
+        authorize("/cas2v2/**", hasAnyAuthority("ROLE_CAS2_COURT_BAIL_REFERRER", "ROLE_CAS2_PRISON_BAIL_REFERRER", "ROLE_CAS2_COURT_BAIL", "ROLE_CAS2_PRISON_BAIL"))
 
         authorize(HttpMethod.GET, "/cas3-api.yml", permitAll)
         authorize(HttpMethod.GET, "/subject-access-request", hasAnyRole("SAR_DATA_ACCESS"))
@@ -136,20 +138,16 @@ class AuthAwareTokenConverter : Converter<Jwt, AbstractAuthenticationToken> {
     return AuthAwareAuthenticationToken(jwt, principal, authorities)
   }
 
-  private fun extractAuthSource(claims: Map<String, Any?>): String {
-    return claims[CLAIM_AUTH_SOURCE] as String
-  }
+  private fun extractAuthSource(claims: Map<String, Any?>): String = claims[CLAIM_AUTH_SOURCE] as String
 
-  private fun findPrincipal(claims: Map<String, Any?>): String {
-    return if (claims.containsKey(CLAIM_USERNAME)) {
-      claims[CLAIM_USERNAME] as String
-    } else if (claims.containsKey(CLAIM_USER_ID)) {
-      claims[CLAIM_USER_ID] as String
-    } else if (claims.containsKey(CLAIM_CLIENT_ID)) {
-      claims[CLAIM_CLIENT_ID] as String
-    } else {
-      throw RuntimeException("Unable to find a claim to identify Subject by")
-    }
+  private fun findPrincipal(claims: Map<String, Any?>): String = if (claims.containsKey(CLAIM_USERNAME)) {
+    claims[CLAIM_USERNAME] as String
+  } else if (claims.containsKey(CLAIM_USER_ID)) {
+    claims[CLAIM_USER_ID] as String
+  } else if (claims.containsKey(CLAIM_CLIENT_ID)) {
+    claims[CLAIM_CLIENT_ID] as String
+  } else {
+    throw RuntimeException("Unable to find a claim to identify Subject by")
   }
 
   private fun extractAuthorities(jwt: Jwt): Collection<GrantedAuthority> {
@@ -183,15 +181,11 @@ class AuthAwareAuthenticationToken(
 
   private val jwt = jwt
 
-  override fun getPrincipal(): String {
-    return aPrincipal
-  }
+  override fun getPrincipal(): String = aPrincipal
 
   fun authenticationSource(): String = jwt.claims["auth_source"] as String
 
-  fun isExternalUser(): Boolean {
-    return jwt.claims["auth_source"] == "auth"
-  }
+  fun isExternalUser(): Boolean = jwt.claims["auth_source"] == "auth"
 }
 
 @Configuration

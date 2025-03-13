@@ -277,8 +277,8 @@ class SeedCasUpdateEventNumberTest : SeedTestBase() {
   }
 
   private fun callSeedJob(application: ApprovedPremisesApplicationEntity) {
-    withCsv(
-      "valid-csv",
+    seed(
+      SeedFileType.approvedPremisesUpdateEventNumber,
       rowsToCsv(
         listOf(
           Cas1UpdateEventNumberSeedJobCsvRow(
@@ -290,8 +290,6 @@ class SeedCasUpdateEventNumberTest : SeedTestBase() {
         ),
       ),
     )
-
-    seedService.seedData(SeedFileType.approvedPremisesUpdateEventNumber, "valid-csv.csv")
   }
 
   private fun createApplication(): Pair<ApprovedPremisesApplicationEntity, OffenderDetailSummary> {

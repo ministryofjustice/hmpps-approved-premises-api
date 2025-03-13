@@ -25,9 +25,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.asUserOffenderAcces
 class OffenderDetailsDataSource(
   val apDeliusContextApiClient: ApDeliusContextApiClient,
 ) {
-  fun getOffenderDetailSummary(crn: String): ClientResult<OffenderDetailSummary> {
-    return getOffenderDetailSummaries(listOf(crn)).values.first()
-  }
+  fun getOffenderDetailSummary(crn: String): ClientResult<OffenderDetailSummary> = getOffenderDetailSummaries(listOf(crn)).values.first()
 
   @Suppress("UNCHECKED_CAST", "MagicNumber") // Safe as we only do this for non-success types
   fun getOffenderDetailSummaries(crns: List<String>): Map<String, ClientResult<OffenderDetailSummary>> {
@@ -67,9 +65,7 @@ class OffenderDetailsDataSource(
   fun getUserAccessForOffenderCrn(
     deliusUsername: String,
     crn: String,
-  ): ClientResult<UserOffenderAccess> {
-    return getUserAccessForOffenderCrns(deliusUsername, listOf(crn)).values.first()
-  }
+  ): ClientResult<UserOffenderAccess> = getUserAccessForOffenderCrns(deliusUsername, listOf(crn)).values.first()
 
   @Suppress("UNCHECKED_CAST", "MagicNumber") // Safe as we only do this for non-success types
   fun getUserAccessForOffenderCrns(

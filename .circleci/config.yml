@@ -22,7 +22,7 @@ executors:
     resource_class: medium+
     docker:
       - image: cimg/openjdk:21.0.2
-      - image: "postgis/postgis"
+      - image: "postgis/postgis:14-3.5"
         environment:
           - POSTGRES_USER=api_user
           - POSTGRES_PASSWORD=api_user_password
@@ -316,7 +316,7 @@ jobs:
     environment:
       CYPRESS_SKIP_AXE: 1
     docker:
-      - image: cypress/browsers:node16.14.2-slim-chrome100-ff99-edge
+      - image: cypress/browsers:node-22.14.0-chrome-133.0.6943.53-1-ff-135.0-edge-133.0.3065.59-1
     parameters:
       environment:
         type: string
@@ -329,9 +329,6 @@ jobs:
       - run:
           name: install
           command: apt-get install xz-utils
-      - run:
-          name: Update npm
-          command: 'npm install -g npm@9.8.1'
       - node/install-packages
       - run:
           name: E2E Check - << parameters.environment >>
@@ -347,6 +344,45 @@ jobs:
       - store_artifacts:
           path: e2e/videos
           destination: videos
+      - slack/notify:
+          event: fail
+          channel: << pipeline.parameters.alerts-slack-channel >>
+          template: basic_fail_1
+  cas3_e2e_playwright_tests:
+    docker:
+      - image: mcr.microsoft.com/playwright:v1.40.0-focal
+    circleci_ip_ranges: true # opt-in to jobs running on a restricted set of IPs
+    parameters:
+      environment:
+        type: string
+        default: dev
+    steps:
+      - run:
+          name: Clone E2E repo
+          command: |
+            git clone https://github.com/ministryofjustice/hmpps-temporary-accommodation-ui.git .
+      - run:
+          name: Update npm
+          command: 'npm install -g npm@10.1.0'
+      - node/install-packages
+      - run:
+          name: Install Playwright
+          command: npx playwright install
+      - run:
+          name: Run E2E tests
+          command: |
+            export ASSESSOR_USERNAME=${CYPRESS_ASSESSOR_USERNAME_<< parameters.environment >>} ASSESSOR_PASSWORD=${CYPRESS_ASSESSOR_PASSWORD_<< parameters.environment >>} REFERRER_USERNAME=${CYPRESS_REFERRER_USERNAME_<< parameters.environment >>} REFERRER_PASSWORD=${CYPRESS_REFERRER_PASSWORD_<< parameters.environment >>} ACTING_USER_PROBATION_REGION_ID=${CYPRESS_ACTING_USER_PROBATION_REGION_ID_<< parameters.environment >>} ACTING_USER_PROBATION_REGION_NAME=${ACTING_USER_PROBATION_REGION_NAME_<< parameters.environment >>} ENVIRONMENT=${CYPRESS_ENVIRONMENT_<< parameters.environment >>} DEV_PLAYWRIGHT_BASE_URL=https://transitional-accommodation-<< parameters.environment >>.hmpps.service.justice.gov.uk
+            npm run test:playwright:e2e:ci
+      - store_artifacts:
+          path: e2e_playwright/playwright-report
+          destination: e2e_playwright/playwright-report
+      - store_artifacts:
+          path: e2e_playwright/test-results
+          destination: e2e_playwright/test-results
+      - slack/notify:
+          event: fail
+          channel: << pipeline.parameters.alerts-slack-channel >>
+          template: basic_fail_1
   trigger_ui_github_action:
     machine:
       image: ubuntu-2204:current
@@ -471,6 +507,12 @@ workflows:
           requires:
             - deploy_dev
       - cas3_e2e_tests:
+          context:
+            - hmpps-common-vars
+            - hmpps-community-accommodation
+          requires:
+            - deploy_dev
+      - cas3_e2e_playwright_tests:
           context:
             - hmpps-common-vars
             - hmpps-community-accommodation

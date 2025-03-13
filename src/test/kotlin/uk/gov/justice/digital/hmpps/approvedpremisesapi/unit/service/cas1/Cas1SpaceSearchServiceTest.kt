@@ -24,7 +24,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1SpaceSearc
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApprovedPremisesApplicationEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.CharacteristicEntityFactory
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremiseApplicationRepository
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesApplicationRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas1.CandidatePremises
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas1.Cas1SpaceSearchRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.ApprovedPremisesType
@@ -45,7 +45,7 @@ class Cas1SpaceSearchServiceTest {
   private lateinit var spaceSearchRepository: Cas1SpaceSearchRepository
 
   @MockK
-  private lateinit var applicationRepository: ApprovedPremiseApplicationRepository
+  private lateinit var applicationRepository: ApprovedPremisesApplicationRepository
 
   @InjectMockKs
   private lateinit var service: Cas1SpaceSearchService
@@ -63,9 +63,9 @@ class Cas1SpaceSearchServiceTest {
           startDate = LocalDate.parse("2024-08-01"),
           durationInDays = 14,
           targetPostcodeDistrict = "TB1",
+          spaceCharacteristics = Cas1SpaceCharacteristic.entries,
           requirements = Cas1SpaceSearchRequirements(
             apTypes = ApType.entries,
-            spaceCharacteristics = Cas1SpaceCharacteristic.entries,
           ),
         ),
       )
@@ -474,9 +474,9 @@ class Cas1SpaceSearchServiceTest {
         startDate = LocalDate.parse("2024-08-01"),
         durationInDays = 14,
         targetPostcodeDistrict = "TB1",
+        spaceCharacteristics = spaceCharacteristics,
         requirements = Cas1SpaceSearchRequirements(
           apTypes = ApType.entries,
-          spaceCharacteristics = spaceCharacteristics,
         ),
       ),
     )

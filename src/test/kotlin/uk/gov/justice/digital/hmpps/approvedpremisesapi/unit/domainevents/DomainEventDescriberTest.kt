@@ -34,6 +34,8 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.Re
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.RequestForPlacementCreatedEnvelope
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.RequestForPlacementType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.SpaceCharacteristic
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1BookingChangedContentPayload
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1SpaceCharacteristic
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.domainevents.DomainEventDescriber
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApAreaEntityFactory
@@ -530,7 +532,7 @@ class DomainEventDescriberTest {
   inner class BookingChanged {
 
     @Test
-    fun `Returns expected description for booking changed event when schema version is null`() {
+    fun `Schema version is null`() {
       val domainEventSummary = DomainEventSummaryImpl.ofType(DomainEventType.APPROVED_PREMISES_BOOKING_CHANGED)
 
       val arrivalDate = LocalDate.of(2024, 1, 1)
@@ -560,7 +562,7 @@ class DomainEventDescriberTest {
     }
 
     @Test
-    fun `Returns expected description for booking changed event when schema version is 2 and only previous arrival date is present`() {
+    fun `Schema version is 2 and only previous arrival date is present`() {
       val domainEventSummary = DomainEventSummaryImpl.ofType(DomainEventType.APPROVED_PREMISES_BOOKING_CHANGED)
 
       val arrivalDate = LocalDate.of(2025, 4, 5)
@@ -576,6 +578,7 @@ class DomainEventDescriberTest {
             eventType = EventType.bookingChanged,
             eventDetails = BookingChangedFactory()
               .withArrivalOn(arrivalDate)
+              .withPreviousArrivalOn(null)
               .withDepartureOn(departureDate)
               .withPreviousArrivalOn(previousArrivalOn)
               .withPremises(
@@ -583,6 +586,8 @@ class DomainEventDescriberTest {
                   .withName("The Premises Name")
                   .produce(),
               )
+              .withCharacteristics(listOf(SpaceCharacteristic.hasEnSuite))
+              .withPreviousCharacteristics(null)
               .produce(),
           )
         },
@@ -592,10 +597,19 @@ class DomainEventDescriberTest {
       val result = domainEventDescriber.getContentPayload(domainEventSummary)
 
       assertThat(result.first).isEqualTo("A placement at The Premises Name had its arrival date changed from Tuesday 1 April 2025 to Saturday 5 April 2025")
+
+      val contentPayload = result.second as Cas1BookingChangedContentPayload
+      assertThat(contentPayload.premises.name).isEqualTo("The Premises Name")
+      assertThat(contentPayload.expectedArrival).isEqualTo(arrivalDate)
+      assertThat(contentPayload.previousExpectedArrival).isEqualTo(previousArrivalOn)
+      assertThat(contentPayload.expectedDeparture).isEqualTo(departureDate)
+      assertThat(contentPayload.previousExpectedDeparture).isNull()
+      assertThat(contentPayload.characteristics).isEqualTo(listOf(Cas1SpaceCharacteristic.hasEnSuite))
+      assertThat(contentPayload.previousCharacteristics).isNull()
     }
 
     @Test
-    fun `Returns expected description for booking changed event when schema version is 2 and only previous departure date is present`() {
+    fun `Schema version is 2 and only previous departure date is present`() {
       val domainEventSummary = DomainEventSummaryImpl.ofType(DomainEventType.APPROVED_PREMISES_BOOKING_CHANGED)
 
       val arrivalDate = LocalDate.of(2025, 4, 5)
@@ -611,6 +625,7 @@ class DomainEventDescriberTest {
             eventType = EventType.bookingChanged,
             eventDetails = BookingChangedFactory()
               .withArrivalOn(arrivalDate)
+              .withPreviousArrivalOn(null)
               .withDepartureOn(departureDate)
               .withPreviousDepartureOn(previousDepartureOn)
               .withPremises(
@@ -618,6 +633,8 @@ class DomainEventDescriberTest {
                   .withName("The Premises Name")
                   .produce(),
               )
+              .withCharacteristics(listOf(SpaceCharacteristic.hasEnSuite))
+              .withPreviousCharacteristics(null)
               .produce(),
           )
         },
@@ -627,10 +644,19 @@ class DomainEventDescriberTest {
       val result = domainEventDescriber.getContentPayload(domainEventSummary)
 
       assertThat(result.first).isEqualTo("A placement at The Premises Name had its departure date changed from Sunday 1 June 2025 to Tuesday 10 June 2025")
+
+      val contentPayload = result.second as Cas1BookingChangedContentPayload
+      assertThat(contentPayload.premises.name).isEqualTo("The Premises Name")
+      assertThat(contentPayload.expectedArrival).isEqualTo(arrivalDate)
+      assertThat(contentPayload.previousExpectedArrival).isNull()
+      assertThat(contentPayload.expectedDeparture).isEqualTo(departureDate)
+      assertThat(contentPayload.previousExpectedDeparture).isEqualTo(previousDepartureOn)
+      assertThat(contentPayload.characteristics).containsExactly(Cas1SpaceCharacteristic.hasEnSuite)
+      assertThat(contentPayload.previousCharacteristics).isNull()
     }
 
     @Test
-    fun `Returns expected description for booking changed event when schema version is 2 and both previous arrival and departure dates are present`() {
+    fun `Schema version is 2 and previous arrival, departure dates and characteristics are present`() {
       val domainEventSummary = DomainEventSummaryImpl.ofType(DomainEventType.APPROVED_PREMISES_BOOKING_CHANGED)
 
       val arrivalDate = LocalDate.of(2025, 4, 5)
@@ -666,6 +692,15 @@ class DomainEventDescriberTest {
       val result = domainEventDescriber.getContentPayload(domainEventSummary)
 
       assertThat(result.first).isEqualTo("A placement at The Premises Name had its arrival date changed from Tuesday 1 April 2025 to Saturday 5 April 2025, its departure date changed from Sunday 1 June 2025 to Tuesday 10 June 2025")
+
+      val contentPayload = result.second as Cas1BookingChangedContentPayload
+      assertThat(contentPayload.premises.name).isEqualTo("The Premises Name")
+      assertThat(contentPayload.expectedArrival).isEqualTo(arrivalDate)
+      assertThat(contentPayload.previousExpectedArrival).isEqualTo(previousArrivalOn)
+      assertThat(contentPayload.expectedDeparture).isEqualTo(departureDate)
+      assertThat(contentPayload.previousExpectedDeparture).isEqualTo(previousDepartureOn)
+      assertThat(contentPayload.characteristics).containsExactly(Cas1SpaceCharacteristic.hasEnSuite)
+      assertThat(contentPayload.previousCharacteristics).containsExactly(Cas1SpaceCharacteristic.isArsonSuitable)
     }
   }
 
@@ -1158,9 +1193,7 @@ class DomainEventDescriberTest {
     )
   }
 
-  private fun <T> buildDomainEvent(builder: (UUID) -> T): DomainEvent<T> {
-    return buildDomainEvent(builder, null)
-  }
+  private fun <T> buildDomainEvent(builder: (UUID) -> T): DomainEvent<T> = buildDomainEvent(builder, null)
 }
 
 data class DomainEventSummaryImpl(

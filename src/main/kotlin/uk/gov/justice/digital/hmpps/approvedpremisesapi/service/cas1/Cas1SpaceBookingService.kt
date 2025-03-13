@@ -34,6 +34,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.UserService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.PageCriteria
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.extractEntityFromCasResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.getMetadata
+import java.time.Clock
 import java.time.Instant
 import java.time.LocalDate
 import java.time.LocalTime
@@ -57,6 +58,7 @@ class Cas1SpaceBookingService(
   private val nonArrivalReasonRepository: NonArrivalReasonRepository,
   private val lockablePlacementRequestRepository: LockablePlacementRequestRepository,
   private val userService: UserService,
+  private val clock: Clock,
 ) {
   @Transactional
   fun createNewBooking(
@@ -111,7 +113,7 @@ class Cas1SpaceBookingService(
         offlineApplication = null,
         placementRequest = placementRequest,
         createdBy = createdBy,
-        createdAt = OffsetDateTime.now(),
+        createdAt = OffsetDateTime.now(clock),
         expectedArrivalDate = arrivalDate,
         expectedDepartureDate = departureDate,
         actualArrivalDate = null,
@@ -412,19 +414,18 @@ class Cas1SpaceBookingService(
   private fun hasExactDepartureDataAlreadyBeenRecorded(
     existingCas1SpaceBooking: Cas1SpaceBookingEntity,
     departureInfo: DepartureInfo,
-  ): Boolean {
-    return departureInfo.departureDate == existingCas1SpaceBooking.actualDepartureDate &&
-      departureInfo.departureTime == existingCas1SpaceBooking.actualDepartureTime &&
-      departureInfo.reasonId == existingCas1SpaceBooking.departureReason?.id &&
-      departureInfo.moveOnCategoryId == existingCas1SpaceBooking.departureMoveOnCategory?.id
-  }
+  ): Boolean = departureInfo.departureDate == existingCas1SpaceBooking.actualDepartureDate &&
+    departureInfo.departureTime == existingCas1SpaceBooking.actualDepartureTime &&
+    departureInfo.reasonId == existingCas1SpaceBooking.departureReason?.id &&
+    departureInfo.moveOnCategoryId == existingCas1SpaceBooking.departureMoveOnCategory?.id
 
   fun search(
     premisesId: UUID,
     filterCriteria: SpaceBookingFilterCriteria,
     pageCriteria: PageCriteria<Cas1SpaceBookingSummarySortField>,
-  ): CasResult<Pair<List<Cas1SpaceBookingSearchResult>, PaginationMetadata?>> {
-    if (cas1PremisesService.findPremiseById(premisesId) == null) return CasResult.NotFound("premises", premisesId.toString())
+  ): CasResult<SearchResultContainer> {
+    val premises = cas1PremisesService.findPremiseById(premisesId)
+      ?: return CasResult.NotFound("premises", premisesId.toString())
 
     val page = cas1SpaceBookingRepository.search(
       filterCriteria.residency?.name,
@@ -443,15 +444,22 @@ class Cas1SpaceBookingService(
     )
 
     return CasResult.Success(
-      Pair(
-        page.toList(),
-        getMetadata(page, pageCriteria),
+      SearchResultContainer(
+        results = page.toList(),
+        paginationMetadata = getMetadata(page, pageCriteria),
+        premises = premises,
       ),
     )
   }
 
+  data class SearchResultContainer(
+    val results: List<Cas1SpaceBookingSearchResult>,
+    val paginationMetadata: PaginationMetadata?,
+    val premises: ApprovedPremisesEntity,
+  )
+
   fun getBooking(premisesId: UUID, bookingId: UUID): CasResult<Cas1SpaceBookingEntity> {
-    if (cas1PremisesService.findPremiseById(premisesId) !is ApprovedPremisesEntity) return CasResult.NotFound("premises", premisesId.toString())
+    if (!cas1PremisesService.premiseExistsById(premisesId)) return CasResult.NotFound("premises", premisesId.toString())
 
     return getBooking(bookingId)
   }
@@ -467,18 +475,16 @@ class Cas1SpaceBookingService(
     crn = crn,
   )
 
-  fun getWithdrawableState(spaceBooking: Cas1SpaceBookingEntity, user: UserEntity): WithdrawableState {
-    return WithdrawableState(
-      withdrawable = !spaceBooking.isCancelled() && !spaceBooking.hasArrival(),
-      withdrawn = spaceBooking.isCancelled(),
-      userMayDirectlyWithdraw = user.hasPermission(UserPermission.CAS1_SPACE_BOOKING_WITHDRAW),
-      blockingReason = if (spaceBooking.hasArrival()) {
-        BlockingReason.ArrivalRecordedInCas1
-      } else {
-        null
-      },
-    )
-  }
+  fun getWithdrawableState(spaceBooking: Cas1SpaceBookingEntity, user: UserEntity): WithdrawableState = WithdrawableState(
+    withdrawable = !spaceBooking.isCancelled() && !spaceBooking.hasArrival(),
+    withdrawn = spaceBooking.isCancelled(),
+    userMayDirectlyWithdraw = user.hasPermission(UserPermission.CAS1_SPACE_BOOKING_WITHDRAW),
+    blockingReason = if (spaceBooking.hasArrival()) {
+      BlockingReason.ArrivalRecordedInCas1
+    } else {
+      null
+    },
+  )
 
   fun withdraw(
     spaceBooking: Cas1SpaceBookingEntity,
@@ -560,14 +566,27 @@ class Cas1SpaceBookingService(
 
     val updatedBooking = updateExistingSpaceBooking(bookingToUpdate, updateSpaceBookingDetails)
 
+    val previousArrivalDateIfChanged = if (previousArrivalDate != updatedBooking.expectedArrivalDate) previousArrivalDate else null
+    val previousDepartureDateIfChanged = if (previousDepartureDate != updatedBooking.expectedDepartureDate) previousDepartureDate else null
+    val previousCharacteristicsIfChanged = if (previousCharacteristics.sortedBy { it.id } != updatedBooking.criteria.sortedBy { it.id }) previousCharacteristics else null
+
     cas1BookingDomainEventService.spaceBookingChanged(
       booking = updatedBooking,
       changedBy = updateSpaceBookingDetails.updatedBy,
       bookingChangedAt = OffsetDateTime.now(),
-      previousArrivalDateIfChanged = if (previousArrivalDate != updatedBooking.expectedArrivalDate) previousArrivalDate else null,
-      previousDepartureDateIfChanged = if (previousDepartureDate != updatedBooking.expectedDepartureDate) previousDepartureDate else null,
-      previousCharacteristicsIfChanged = if (previousCharacteristics.sortedBy { it.id } != updatedBooking.criteria.sortedBy { it.id }) previousCharacteristics else null,
+      previousArrivalDateIfChanged = previousArrivalDateIfChanged,
+      previousDepartureDateIfChanged = previousDepartureDateIfChanged,
+      previousCharacteristicsIfChanged = previousCharacteristicsIfChanged,
     )
+
+    updatedBooking.application?.let {
+      if (previousArrivalDateIfChanged != null || previousDepartureDateIfChanged != null) {
+        cas1BookingEmailService.spaceBookingAmended(
+          spaceBooking = updatedBooking,
+          application = updatedBooking.application!!,
+        )
+      }
+    }
 
     success(updatedBooking)
   }
@@ -615,7 +634,7 @@ class Cas1SpaceBookingService(
       updateFullBookingDates(bookingToUpdate, newArrivalDate, newDepartureDate)
     }
 
-    if (updateSpaceBookingDetails.characteristics?.isNotEmpty() == true) {
+    if (updateSpaceBookingDetails.characteristics != null) {
       updateRoomCharacteristics(bookingToUpdate, updateSpaceBookingDetails.characteristics)
     }
 

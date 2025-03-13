@@ -9,6 +9,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApplicationEn
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AssessmentDecision
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.BookingEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas1ApplicationUserDetailsEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas1CruManagementAreaEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.CharacteristicEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementApplicationEntity
@@ -54,6 +55,7 @@ fun IntegrationTestBase.givenAPlacementRequest(
   noticeType: Cas1ApplicationTimelinessCategory? = null,
   application: ApprovedPremisesApplicationEntity? = null,
   essentialCriteria: List<CharacteristicEntity>? = null,
+  caseManager: Cas1ApplicationUserDetailsEntity? = null,
 ): Pair<PlacementRequestEntity, ApprovedPremisesApplicationEntity> {
   val applicationSchema = approvedPremisesApplicationJsonSchemaEntityFactory.produceAndPersist {
     withPermissiveSchema()
@@ -95,6 +97,8 @@ fun IntegrationTestBase.givenAPlacementRequest(
     withCruManagementArea(cruManagementArea)
     applyQualification(requiredQualification)
     withNoticeType(noticeType)
+    withCaseManagerUserDetails(caseManager)
+    withCaseManagerIsNotApplicant(caseManager != null)
   }
 
   val assessmentSchema = approvedPremisesAssessmentJsonSchemaEntityFactory.produceAndPersist {
@@ -184,6 +188,7 @@ fun IntegrationTestBase.givenAPlacementRequest(
   applicationSubmittedAt: OffsetDateTime = OffsetDateTime.now(),
   assessmentSubmittedAt: OffsetDateTime = OffsetDateTime.now(),
   placementApplication: PlacementApplicationEntity? = null,
+  caseManager: Cas1ApplicationUserDetailsEntity? = null,
   block: (placementRequest: PlacementRequestEntity, application: ApplicationEntity) -> Unit,
 ): Pair<PlacementRequestEntity, ApprovedPremisesApplicationEntity> {
   val result = givenAPlacementRequest(
@@ -203,6 +208,7 @@ fun IntegrationTestBase.givenAPlacementRequest(
     applicationSubmittedAt = applicationSubmittedAt,
     assessmentSubmittedAt = assessmentSubmittedAt,
     placementApplication = placementApplication,
+    caseManager = caseManager,
   )
 
   block(result.first, result.second)

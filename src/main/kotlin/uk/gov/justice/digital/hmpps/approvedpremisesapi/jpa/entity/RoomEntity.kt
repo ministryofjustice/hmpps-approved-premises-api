@@ -9,6 +9,7 @@ import jakarta.persistence.ManyToOne
 import jakarta.persistence.OneToMany
 import jakarta.persistence.Table
 import org.springframework.data.jpa.repository.JpaRepository
+import org.springframework.data.jpa.repository.Modifying
 import org.springframework.data.jpa.repository.Query
 import org.springframework.stereotype.Repository
 import java.util.UUID
@@ -17,10 +18,12 @@ import java.util.UUID
 interface RoomRepository : JpaRepository<RoomEntity, UUID> {
   fun findByCode(roomCode: String): RoomEntity?
 
-  fun findByCodeAndPremisesId(roomCode: String, premisesId: UUID): RoomEntity?
-
   @Query("SELECT COUNT(r) = 0 FROM RoomEntity r WHERE r.name = :name AND r.premises.id = :premisesId")
   fun nameIsUniqueForPremises(name: String, premisesId: UUID): Boolean
+
+  @Modifying
+  @Query("UPDATE RoomEntity r SET r.code = :code WHERE r.id = :id")
+  fun updateCode(id: UUID, code: String)
 }
 
 @Entity

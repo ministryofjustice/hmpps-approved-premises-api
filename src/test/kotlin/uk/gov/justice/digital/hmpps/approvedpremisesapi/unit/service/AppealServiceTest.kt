@@ -362,14 +362,13 @@ class AppealServiceTest {
       }
     }
 
-    private fun AppealEntity.matches(now: LocalDate) =
-      this.id == appealId &&
-        this.appealDate == now &&
-        this.appealDetail == "Some information about why the appeal is being made" &&
-        this.decision == AppealDecision.accepted.value &&
-        this.decisionDetail == "Some information about the decision made" &&
-        this.application == application &&
-        this.assessment == assessment &&
-        this.createdBy == createdByUser
+    private fun AppealEntity.matches(now: LocalDate) = this.id == appealId &&
+      this.appealDate == now &&
+      this.appealDetail == "Some information about why the appeal is being made" &&
+      this.decision == AppealDecision.accepted.value &&
+      this.decisionDetail == "Some information about the decision made" &&
+      this.application == application &&
+      this.assessment == assessment &&
+      this.createdBy == createdByUser
   }
 }

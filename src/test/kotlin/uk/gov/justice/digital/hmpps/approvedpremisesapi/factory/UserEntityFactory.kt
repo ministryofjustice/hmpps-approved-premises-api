@@ -114,12 +114,11 @@ class UserEntityFactory : Factory<UserEntity> {
   }
 
   fun withDefaults() = withDefaultProbationRegion()
-  fun withDefaultProbationRegion() =
-    withYieldedProbationRegion {
-      ProbationRegionEntityFactory()
-        .withYieldedApArea { ApAreaEntityFactory().produce() }
-        .produce()
-    }
+  fun withDefaultProbationRegion() = withYieldedProbationRegion {
+    ProbationRegionEntityFactory()
+      .withYieldedApArea { ApAreaEntityFactory().produce() }
+      .produce()
+  }
 
   fun withIsActive(isActive: Boolean) = apply {
     this.isActive = { isActive }

@@ -8,21 +8,20 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.deliuscontext.APDe
 @Component
 class DocumentTransformer {
 
-  fun transformToApi(documents: List<APDeliusDocument>): List<Document> =
-    documents
-      .filter { it.id != null }
-      .map {
-        Document(
-          id = it.id!!,
-          level = when (it.level) {
-            "Conviction" -> DocumentLevel.conviction
-            else -> DocumentLevel.offender
-          },
-          fileName = it.filename,
-          createdAt = it.dateCreated.toInstant(),
-          typeCode = it.typeCode,
-          typeDescription = it.typeDescription,
-          description = it.description,
-        )
-      }
+  fun transformToApi(documents: List<APDeliusDocument>): List<Document> = documents
+    .filter { it.id != null }
+    .map {
+      Document(
+        id = it.id!!,
+        level = when (it.level) {
+          "Conviction" -> DocumentLevel.conviction
+          else -> DocumentLevel.offender
+        },
+        fileName = it.filename,
+        createdAt = it.dateCreated.toInstant(),
+        typeCode = it.typeCode,
+        typeDescription = it.typeDescription,
+        description = it.description,
+      )
+    }
 }

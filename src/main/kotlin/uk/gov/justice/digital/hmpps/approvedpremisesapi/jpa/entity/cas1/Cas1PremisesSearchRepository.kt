@@ -6,8 +6,9 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Characteristi
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.CharacteristicRepository.Constants.CAS1_PROPERTY_NAME_PREMISES_PIPE
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.CharacteristicRepository.Constants.CAS1_PROPERTY_NAME_PREMISES_RECOVERY_FOCUSSED
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.CharacteristicRepository.Constants.CAS1_PROPERTY_NAME_PREMISES_SEMI_SPECIALIST_MENTAL_HEALTH
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.SqlUtil
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.SqlUtil.getUUID
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.ApprovedPremisesType
-import java.sql.ResultSet
 import java.util.UUID
 
 private const val AP_TYPE_FILTER = """
@@ -120,22 +121,8 @@ class Cas1SpaceSearchRepository(
         rs.getString("postcode"),
         rs.getUUID("ap_area_id"),
         rs.getString("ap_area_name"),
-        toStringList(rs.getArray("characteristics")),
+        SqlUtil.toStringList(rs.getArray("characteristics")),
       )
-    }
-  }
-
-  private fun toStringList(array: java.sql.Array?): List<String> {
-    if (array == null) {
-      return emptyList()
-    }
-
-    val result = (array.array as Array<String>).toList()
-
-    return if (result.size == 1 && result[0] == null) {
-      emptyList()
-    } else {
-      result
     }
   }
 
@@ -199,8 +186,6 @@ class Cas1SpaceSearchRepository(
 
     return query to params
   }
-
-  private fun ResultSet.getUUID(columnLabel: String) = UUID.fromString(this.getString(columnLabel))
 }
 
 data class CandidatePremises(

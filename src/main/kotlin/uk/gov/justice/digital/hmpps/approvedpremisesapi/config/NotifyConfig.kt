@@ -41,12 +41,24 @@ class NotifyTemplates {
   val placementRequestSubmitted = "deb11bc6-d424-4370-bbe5-41f6a823d292"
   val placementRequestSubmittedV2 = "e7e5b481-aca8-4930-bf4e-b3098834e840"
   val placementRequestWithdrawnV2 = "58bda3a6-c091-4d78-a533-de5991777300"
+
   val cas2ApplicationSubmitted = "a0823218-91dd-4cf0-9835-4b90024f62c8"
   val cas2NoteAddedForReferrer = "debe17a2-9f79-4d26-88a0-690dd73e2a5b"
   val cas2NoteAddedForAssessor = "0d646bf0-d40f-4fe7-aa74-dd28b10d04f1"
   val cas2ApplicationStatusUpdated = "ef4dc5e3-b1f1-4448-a545-7a936c50fc3a"
+
+  val cas2v2ApplicationSubmittedCourtBail = "e181a9d5-7ca2-491f-a563-ac9f3fac8777"
+  val cas2v2ApplicationSubmittedPrisonBail = "f0faefb9-f300-4b67-ac0d-4b41c0b3f7bc"
+  val cas2v2ApplicationStatusUpdatedCourtBail = "cec7e570-b3e3-4dd4-9a99-d03c1cc34655"
+  val cas2v2ApplicationStatusUpdatedPrisonBail = "51a71a7a-a427-41bc-8fdd-77a73861880c"
+  val cas2v2NoteAddedForReferrerCourtBail = "6a258c9b-cc0e-402e-af05-e52d94a45298"
+  val cas2v2NoteAddedForReferrerPrisonBail = "b277e84a-c72b-4afa-a388-72a70e588fb2"
+  val cas2v2NoteAddedForAssessorCourtBail = "df58e948-6672-4b0b-b6ab-2940b0c6ef22"
+  val cas2v2NoteAddedForAssessorPrisonBail = "9a37fb66-5215-40f2-8fa4-210e2e27d693"
+
   val appealSuccess = "ae21f3ae-3a4a-4df8-a1b8-2640ea80d101"
   val appealReject = "32c9c282-198d-4d43-960e-89c97f1bcf81"
+  val bookingAmended = "da50a791-fe7c-4bc3-b31f-62b88b62f2d6"
 }
 
 enum class NotifyMode {

@@ -7,8 +7,6 @@ import org.springframework.context.annotation.Primary
 import org.springframework.security.oauth2.jwt.JwtDecoder
 import org.springframework.security.oauth2.jwt.NimbusJwtDecoder
 import org.springframework.stereotype.Component
-import java.security.KeyPair
-import java.security.KeyPairGenerator
 import java.security.interfaces.RSAPublicKey
 import java.time.Duration
 import java.util.Date
@@ -16,13 +14,7 @@ import java.util.UUID
 
 @Component
 class JwtAuthHelper {
-  private val keyPair: KeyPair
-
-  init {
-    val gen = KeyPairGenerator.getInstance("RSA")
-    gen.initialize(2048)
-    keyPair = gen.generateKeyPair()
-  }
+  private val keyPair = Jwts.SIG.RS256.keyPair().build()
 
   @Bean
   @Primary
@@ -45,44 +37,52 @@ class JwtAuthHelper {
     authSource: String = if (username == null) "none" else "delius",
     expiryTime: Duration = Duration.ofHours(1),
     jwtId: String = UUID.randomUUID().toString(),
-  ): String =
-    mutableMapOf<String, Any>()
-      .also { it["user_name"] = username ?: "integration-test-client-id" }
-      .also { it["client_id"] = "integration-test-client-id" }
-      .also { it["grant_type"] = "client_credentials" }
-      .also { it["auth_source"] = authSource }
-      .also { roles?.let { roles -> it["authorities"] = roles } }
-      .also { scope?.let { scope -> it["scope"] = scope } }
-      .let {
-        Jwts.builder()
-          .setId(jwtId)
-          .setSubject(username ?: "integration-test-client-id")
-          .addClaims(it.toMap())
-          .setExpiration(Date(System.currentTimeMillis() + expiryTime.toMillis()))
-          .signWith(SignatureAlgorithm.RS256, keyPair.private)
-          .compact()
-      }
+  ): String = mutableMapOf<String, Any>()
+    .also { it["user_name"] = username ?: "integration-test-client-id" }
+    .also { it["client_id"] = "integration-test-client-id" }
+    .also { it["grant_type"] = "client_credentials" }
+    .also { it["auth_source"] = authSource }
+    .also { roles?.let { roles -> it["authorities"] = roles } }
+    .also { scope?.let { scope -> it["scope"] = scope } }
+    .let {
+      Jwts.builder()
+        .id(jwtId)
+        .subject(username ?: "integration-test-client-id")
+        .claims(it.toMap())
+        .expiration(Date(System.currentTimeMillis() + expiryTime.toMillis()))
+        .signWith(keyPair.private, Jwts.SIG.RS256)
+        .compact()
+    }
 
-  internal fun createValidNomisAuthorisationCodeJwt(username: String = "username", roles: List<String>? = listOf("ROLE_POM")) =
-    createAuthorizationCodeJwt(
-      subject = username,
-      authSource = "nomis",
-      roles = roles,
-    )
+  internal fun createValidNomisAuthorisationCodeJwt(username: String = "username", roles: List<String>? = listOf("ROLE_POM")) = createAuthorizationCodeJwt(
+    subject = username,
+    authSource = "nomis",
+    roles = roles,
+  )
 
-  internal fun createValidExternalAuthorisationCodeJwt(username: String = "username") =
-    createAuthorizationCodeJwt(
-      subject = username,
-      authSource = "auth",
-      roles = listOf("ROLE_CAS2_ASSESSOR"),
-    )
+  internal fun createValidCas2v2NomisAuthorisationCodeJwt(username: String = "username", roles: List<String>? = listOf("ROLE_CAS2_PRISON_BAIL_REFERRER")) = createAuthorizationCodeJwt(
+    subject = username,
+    authSource = "nomis",
+    roles = roles,
+  )
 
-  internal fun createValidAdminAuthorisationCodeJwt(username: String = "username") =
-    createAuthorizationCodeJwt(
-      subject = username,
-      authSource = "nomis",
-      roles = listOf("ROLE_CAS2_ADMIN"),
-    )
+  internal fun createValidDeliusAuthorisationCodeJwt(username: String = "username", roles: List<String>? = listOf("ROLE_CAS2_COURT_BAIL")) = createAuthorizationCodeJwt(
+    subject = username,
+    authSource = "delius",
+    roles = roles,
+  )
+
+  internal fun createValidExternalAuthorisationCodeJwt(username: String = "username") = createAuthorizationCodeJwt(
+    subject = username,
+    authSource = "auth",
+    roles = listOf("ROLE_CAS2_ASSESSOR"),
+  )
+
+  internal fun createValidAdminAuthorisationCodeJwt(username: String = "username") = createAuthorizationCodeJwt(
+    subject = username,
+    authSource = "nomis",
+    roles = listOf("ROLE_CAS2_ADMIN"),
+  )
 
   internal fun createValidAuthorizationCodeJwt(username: String = "username") = createAuthorizationCodeJwt(
     subject = username,
@@ -97,19 +97,18 @@ class JwtAuthHelper {
     authSource: String = "delius",
     expiryTime: Duration = Duration.ofHours(1),
     jwtId: String = UUID.randomUUID().toString(),
-  ): String =
-    mutableMapOf<String, Any>()
-      .also { it["auth_source"] = authSource }
-      .also { it["user_id"] = UUID.randomUUID().toString() }
-      .also { roles?.let { roles -> it["authorities"] = roles } }
-      .also { scope?.let { scope -> it["scope"] = scope } }
-      .let {
-        Jwts.builder()
-          .setId(jwtId)
-          .setSubject(subject)
-          .addClaims(it.toMap())
-          .setExpiration(Date(System.currentTimeMillis() + expiryTime.toMillis()))
-          .signWith(SignatureAlgorithm.RS256, keyPair.private)
-          .compact()
-      }
+  ): String = mutableMapOf<String, Any>()
+    .also { it["auth_source"] = authSource }
+    .also { it["user_id"] = UUID.randomUUID().toString() }
+    .also { roles?.let { roles -> it["authorities"] = roles } }
+    .also { scope?.let { scope -> it["scope"] = scope } }
+    .let {
+      Jwts.builder()
+        .setId(jwtId)
+        .setSubject(subject)
+        .addClaims(it.toMap())
+        .setExpiration(Date(System.currentTimeMillis() + expiryTime.toMillis()))
+        .signWith(SignatureAlgorithm.RS256, keyPair.private)
+        .compact()
+    }
 }

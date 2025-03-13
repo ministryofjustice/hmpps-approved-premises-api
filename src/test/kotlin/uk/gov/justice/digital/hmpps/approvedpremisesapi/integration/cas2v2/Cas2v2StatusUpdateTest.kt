@@ -55,7 +55,7 @@ class Cas2v2StatusUpdateTest(
       )
 
       webTestClient.post()
-        .uri("/cas2v2/assessments/de6512fc-a225-4109-bdcd-86c6307a5237/status-updates")
+        .uri("/cas2v2/assessments/de6512fc-a225-4109-b2cd-86c6307a5237/status-updates")
         .header("Authorization", "Bearer $jwt")
         .exchange()
         .expectStatus()
@@ -68,7 +68,7 @@ class Cas2v2StatusUpdateTest(
     @Test
     fun `creating a cas2v2 status update without JWT returns 401`() {
       webTestClient.post()
-        .uri("/cas2v2/assessments/de6512fc-a225-4109-bdcd-86c6307a5237/status-updates")
+        .uri("/cas2v2/assessments/de6512fc-a225-4109-b2cd-86c6307a5237/status-updates")
         .exchange()
         .expectStatus()
         .isUnauthorized
@@ -159,12 +159,12 @@ class Cas2v2StatusUpdateTest(
             withSubmittedAt(OffsetDateTime.now())
           }
 
-          val assessmemt = cas2v2AssessmentEntityFactory.produceAndPersist {
+          val assessment = cas2v2AssessmentEntityFactory.produceAndPersist {
             withApplication(application)
           }
 
           webTestClient.post()
-            .uri("/cas2v2/assessments/${assessmemt.id}/status-updates")
+            .uri("/cas2v2/assessments/${assessment.id}/status-updates")
             .header("Authorization", "Bearer $jwt")
             .bodyValue(
               Cas2AssessmentStatusUpdate(newStatus = "invalidStatus"),
@@ -228,7 +228,7 @@ class Cas2v2StatusUpdateTest(
               assertThat(persistedStatusUpdate!!.assessment!!.id).isEqualTo(assessmentId)
 
               val persistedStatusDetailUpdate =
-                realCas2v2StatusUpdateDetailRepository.findFirstByStatusUpdateIdOrderByCreatedAtDesc(persistedStatusUpdate!!.id)
+                realCas2v2StatusUpdateDetailRepository.findFirstByStatusUpdateIdOrderByCreatedAtDesc(persistedStatusUpdate.id)
               assertThat(persistedStatusDetailUpdate).isNotNull
 
               val appliedStatus = Cas2ApplicationStatusSeeding.statusList()
@@ -242,7 +242,7 @@ class Cas2v2StatusUpdateTest(
 
               emailAsserter.assertEmailsRequestedCount(1)
 
-              val email = emailAsserter.assertEmailRequested(
+              emailAsserter.assertEmailRequested(
                 toEmailAddress = applicant.email!!,
                 templateId = "ef4dc5e3-b1f1-4448-a545-7a936c50fc3a",
                 personalisation = mapOf(

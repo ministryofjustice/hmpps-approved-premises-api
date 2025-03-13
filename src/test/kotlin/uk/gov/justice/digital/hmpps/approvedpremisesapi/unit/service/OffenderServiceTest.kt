@@ -15,7 +15,6 @@ import org.junit.jupiter.params.provider.CsvSource
 import org.springframework.http.HttpMethod
 import org.springframework.http.HttpStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.ApDeliusContextApiClient
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.ApOASysContextApiClient
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.CaseNotesClient
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.ClientResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.ClientResult.Failure.StatusCode
@@ -25,7 +24,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.config.ExcludedCategoryB
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.config.PrisonAdjudicationsConfigBindingModel
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.config.PrisonCaseNotesConfigBindingModel
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.datasource.OffenderDetailsDataSource
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.datasource.OffenderRisksDataSource
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.AdjudicationFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.AdjudicationsPageFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.AgencyFactory
@@ -34,7 +32,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.CaseNoteFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.CaseSummaryFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.InmateDetailFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.OffenderDetailsSummaryFactory
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.PersonRisksFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.UserEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PersonInfoResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PersonSummaryInfoResult
@@ -48,9 +45,9 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.prisonsapi.InmateS
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.InternalServerErrorProblem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.AuthorisableActionResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.CasResult
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.LaoStrategy
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.LaoStrategy.CheckUserAccess
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.OffenderService
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.OffenderService.LimitedAccessStrategy
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.OffenderService.LimitedAccessStrategy.ReturnRestrictedIfLimitedAccess
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.PersonTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.unit.util.ObjectMapperFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.ClientResultFailureArgumentsProvider
@@ -63,10 +60,8 @@ class OffenderServiceTest {
   private val mockPrisonsApiClient = mockk<PrisonsApiClient>()
   private val mockPrisonerAlertsApiClient = mockk<PrisonerAlertsApiClient>()
   private val mockCaseNotesClient = mockk<CaseNotesClient>()
-  private val mockApOASysContextApiClient = mockk<ApOASysContextApiClient>()
   private val mockApDeliusContextApiClient = mockk<ApDeliusContextApiClient>()
   private val mockOffenderDetailsDataSource = mockk<OffenderDetailsDataSource>()
-  private val mockOffenderRisksDataSource = mockk<OffenderRisksDataSource>()
   private val mockPersonTransformer = mockk<PersonTransformer>()
 
   private val prisonCaseNotesConfigBindingModel = PrisonCaseNotesConfigBindingModel().apply {
@@ -93,10 +88,8 @@ class OffenderServiceTest {
     mockPrisonsApiClient,
     mockPrisonerAlertsApiClient,
     mockCaseNotesClient,
-    mockApOASysContextApiClient,
     mockApDeliusContextApiClient,
     mockOffenderDetailsDataSource,
-    mockOffenderRisksDataSource,
     mockPersonTransformer,
     prisonCaseNotesConfigBindingModel,
     adjudicationsConfigBindingModel,
@@ -255,64 +248,6 @@ class OffenderServiceTest {
     assertThat(result.entity.surname).isEqualTo("Doe")
   }
 
-  @Test
-  fun `getRisksByCrn returns NotFound result when Community API Client returns 404`() {
-    every { mockOffenderDetailsDataSource.getOffenderDetailSummary("a-crn") } returns StatusCode(HttpMethod.GET, "/secure/offenders/crn/a-crn", HttpStatus.NOT_FOUND, null)
-
-    assertThat(offenderService.getRiskByCrn("a-crn", "distinguished.name") is AuthorisableActionResult.NotFound).isTrue
-  }
-
-  @Test
-  fun `getRisksByCrn throws when Community API Client returns other non-2xx status code`() {
-    every { mockOffenderDetailsDataSource.getOffenderDetailSummary("a-crn") } returns StatusCode(HttpMethod.GET, "/secure/offenders/crn/a-crn", HttpStatus.BAD_REQUEST, null)
-
-    val exception = assertThrows<RuntimeException> { offenderService.getRiskByCrn("a-crn", "distinguished.name") }
-    assertThat(exception.message).isEqualTo("Unable to complete GET request to /secure/offenders/crn/a-crn: 400 BAD_REQUEST")
-  }
-
-  @Test
-  fun `getRisksByCrn returns Unauthorised result when distinguished name is excluded from viewing`() {
-    val resultBody = OffenderDetailsSummaryFactory()
-      .withCrn("a-crn")
-      .withFirstName("Bob")
-      .withLastName("Doe")
-      .withCurrentExclusion(true)
-      .produce()
-
-    val accessBody = UserOffenderAccess(userRestricted = false, userExcluded = true, restrictionMessage = null)
-
-    every { mockOffenderDetailsDataSource.getOffenderDetailSummary("a-crn") } returns ClientResult.Success(HttpStatus.OK, resultBody)
-    every { mockOffenderDetailsDataSource.getUserAccessForOffenderCrn("distinguished.name", "a-crn") } returns ClientResult.Success(HttpStatus.OK, accessBody)
-
-    assertThat(offenderService.getRiskByCrn("a-crn", "distinguished.name") is AuthorisableActionResult.Unauthorised).isTrue
-  }
-
-  @Test
-  fun `getRisksByCrn returns Success result with information from offender risks data source`() {
-    val crn = "a-crn"
-    val deliusUsername = "SOME-USER"
-
-    val expectedRisks = PersonRisksFactory().produce()
-    every { mockOffenderDetailsDataSource.getOffenderDetailSummary(crn) } returns
-      ClientResult.Success(
-        HttpStatus.OK,
-        OffenderDetailsSummaryFactory().produce(),
-      )
-
-    every { mockOffenderDetailsDataSource.getUserAccessForOffenderCrn(crn, deliusUsername) } returns
-      ClientResult.Success(
-        HttpStatus.OK,
-        UserOffenderAccess(userRestricted = false, userExcluded = false, restrictionMessage = null),
-      )
-
-    every { mockOffenderRisksDataSource.getPersonRisks(crn) } returns expectedRisks
-
-    val result = offenderService.getRiskByCrn(crn, deliusUsername)
-    assertThat(result is AuthorisableActionResult.Success).isTrue
-    result as AuthorisableActionResult.Success
-    assertThat(result.entity).isEqualTo(expectedRisks)
-  }
-
   @Nested
   inner class CanAccessOffender {
 
@@ -320,7 +255,7 @@ class OffenderServiceTest {
     fun `return true and dont make any external calls if IgnoreLimitedAccess strategy`() {
       val crn = randomNumberChars(8)
 
-      val result = offenderService.canAccessOffender(crn, LimitedAccessStrategy.IgnoreLimitedAccess)
+      val result = offenderService.canAccessOffender(crn, LaoStrategy.NeverRestricted)
       assertThat(result).isTrue()
 
       verify { mockApDeliusContextApiClient wasNot Called }
@@ -341,7 +276,7 @@ class OffenderServiceTest {
         )
       } returns ClientResult.Success(HttpStatus.OK, UserAccess(listOf(caseAccess)))
 
-      val result = offenderService.canAccessOffender(crn, ReturnRestrictedIfLimitedAccess("distinguished.name"))
+      val result = offenderService.canAccessOffender(crn, CheckUserAccess("distinguished.name"))
       assertThat(result).isFalse()
     }
 
@@ -360,7 +295,7 @@ class OffenderServiceTest {
         )
       } returns ClientResult.Success(HttpStatus.OK, UserAccess(listOf(caseAccess)))
 
-      val result = offenderService.canAccessOffender(crn, ReturnRestrictedIfLimitedAccess("distinguished.name"))
+      val result = offenderService.canAccessOffender(crn, CheckUserAccess("distinguished.name"))
       assertThat(result).isFalse()
     }
 
@@ -375,7 +310,7 @@ class OffenderServiceTest {
         )
       } returns ClientResult.Success(HttpStatus.OK, UserAccess(emptyList()))
 
-      val result = offenderService.canAccessOffender(crn, ReturnRestrictedIfLimitedAccess("distinguished.name"))
+      val result = offenderService.canAccessOffender(crn, CheckUserAccess("distinguished.name"))
       assertThat(result).isFalse()
     }
 
@@ -395,7 +330,7 @@ class OffenderServiceTest {
         )
       } returns ClientResult.Success(HttpStatus.OK, UserAccess(listOf(caseAccess)))
 
-      val result = offenderService.canAccessOffender(crn, ReturnRestrictedIfLimitedAccess("distinguished.name"))
+      val result = offenderService.canAccessOffender(crn, CheckUserAccess("distinguished.name"))
       assertThat(result).isTrue()
     }
 
@@ -406,7 +341,7 @@ class OffenderServiceTest {
 
       every { mockApDeliusContextApiClient.getUserAccessForCrns("distinguished.name", listOf(crn)) } returns response
 
-      assertThrows<Throwable> { offenderService.canAccessOffender(crn, ReturnRestrictedIfLimitedAccess("distinguished.name")) }
+      assertThrows<Throwable> { offenderService.canAccessOffender(crn, CheckUserAccess("distinguished.name")) }
     }
   }
 
@@ -874,49 +809,59 @@ class OffenderServiceTest {
     )
   }
 
-  @Test
-  fun `isLao returns true for Offender with current restriction`() {
-    val offenderDetails = OffenderDetailsSummaryFactory()
-      .withCurrentRestriction(true)
-      .withCurrentExclusion(false)
-      .produce()
+  @Nested
+  inner class IsLao {
 
-    every { mockOffenderDetailsDataSource.getOffenderDetailSummary(offenderDetails.otherIds.crn) } returns ClientResult.Success(
-      HttpStatus.OK,
-      offenderDetails,
-    )
+    @Test
+    fun `returns true for Offender with current restriction`() {
+      every { mockApDeliusContextApiClient.getSummariesForCrns(listOf("CRN123")) } returns ClientResult.Success(
+        HttpStatus.OK,
+        CaseSummaries(
+          listOf(
+            CaseSummaryFactory()
+              .withCurrentRestriction(true)
+              .withCurrentExclusion(false)
+              .produce(),
+          ),
+        ),
+      )
 
-    assertThat(offenderService.isLao(offenderDetails.otherIds.crn)).isTrue
-  }
+      assertThat(offenderService.isLao("CRN123")).isTrue
+    }
 
-  @Test
-  fun `isLao returns true for Offender with current exclusion`() {
-    val offenderDetails = OffenderDetailsSummaryFactory()
-      .withCurrentRestriction(false)
-      .withCurrentExclusion(true)
-      .produce()
+    @Test
+    fun `returns true for Offender with current exclusion`() {
+      every { mockApDeliusContextApiClient.getSummariesForCrns(listOf("CRN123")) } returns ClientResult.Success(
+        HttpStatus.OK,
+        CaseSummaries(
+          listOf(
+            CaseSummaryFactory()
+              .withCurrentRestriction(false)
+              .withCurrentExclusion(true)
+              .produce(),
+          ),
+        ),
+      )
 
-    every { mockOffenderDetailsDataSource.getOffenderDetailSummary(offenderDetails.otherIds.crn) } returns ClientResult.Success(
-      HttpStatus.OK,
-      offenderDetails,
-    )
+      assertThat(offenderService.isLao("CRN123")).isTrue
+    }
 
-    assertThat(offenderService.isLao(offenderDetails.otherIds.crn)).isTrue
-  }
+    @Test
+    fun `returns false for Offender without current exclusion or restriction`() {
+      every { mockApDeliusContextApiClient.getSummariesForCrns(listOf("CRN123")) } returns ClientResult.Success(
+        HttpStatus.OK,
+        CaseSummaries(
+          listOf(
+            CaseSummaryFactory()
+              .withCurrentRestriction(false)
+              .withCurrentExclusion(false)
+              .produce(),
+          ),
+        ),
+      )
 
-  @Test
-  fun `isLao returns false for Offender without current exclusion or restriction`() {
-    val offenderDetails = OffenderDetailsSummaryFactory()
-      .withCurrentRestriction(false)
-      .withCurrentExclusion(false)
-      .produce()
-
-    every { mockOffenderDetailsDataSource.getOffenderDetailSummary(offenderDetails.otherIds.crn) } returns ClientResult.Success(
-      HttpStatus.OK,
-      offenderDetails,
-    )
-
-    assertThat(offenderService.isLao(offenderDetails.otherIds.crn)).isFalse
+      assertThat(offenderService.isLao("CRN123")).isFalse
+    }
   }
 
   @Nested
@@ -952,7 +897,7 @@ class OffenderServiceTest {
 
       val result = offenderService.getPersonInfoResult(
         crn = crn,
-        limitedAccessStrategy = ReturnRestrictedIfLimitedAccess(deliusUsername),
+        laoStrategy = CheckUserAccess(deliusUsername),
       )
       assertThat(result is PersonInfoResult.NotFound).isTrue
     }
@@ -989,7 +934,7 @@ class OffenderServiceTest {
       val exception = assertThrows<RuntimeException> {
         offenderService.getPersonInfoResult(
           crn = crn,
-          limitedAccessStrategy = ReturnRestrictedIfLimitedAccess(deliusUsername),
+          laoStrategy = CheckUserAccess(deliusUsername),
         )
       }
       assertThat(exception.message).isEqualTo("Unable to complete GET request to /secure/offenders/crn/ABC123: 500 INTERNAL_SERVER_ERROR")
@@ -1026,7 +971,7 @@ class OffenderServiceTest {
       val exception = assertThrows<RuntimeException> {
         offenderService.getPersonInfoResult(
           crn = crn,
-          limitedAccessStrategy = ReturnRestrictedIfLimitedAccess(deliusUsername),
+          laoStrategy = CheckUserAccess(deliusUsername),
         )
       }
       assertThat(exception.message).isEqualTo("Unable to complete GET request to /secure/offenders/crn/ABC123/user/USER/userAccess: 403 FORBIDDEN")
@@ -1058,7 +1003,7 @@ class OffenderServiceTest {
       assertThrows<RuntimeException> {
         offenderService.getPersonInfoResult(
           crn = crn,
-          limitedAccessStrategy = ReturnRestrictedIfLimitedAccess(deliusUsername),
+          laoStrategy = CheckUserAccess(deliusUsername),
         )
       }
     }
@@ -1105,7 +1050,7 @@ class OffenderServiceTest {
 
       val result = offenderService.getPersonInfoResult(
         crn = crn,
-        limitedAccessStrategy = ReturnRestrictedIfLimitedAccess(deliusUsername),
+        laoStrategy = CheckUserAccess(deliusUsername),
       )
 
       assertThat(result is PersonInfoResult.Success.Restricted).isTrue
@@ -1149,7 +1094,7 @@ class OffenderServiceTest {
 
       val result = offenderService.getPersonInfoResult(
         crn = crn,
-        limitedAccessStrategy = ReturnRestrictedIfLimitedAccess(deliusUsername),
+        laoStrategy = CheckUserAccess(deliusUsername),
       )
 
       assertThat(result is PersonInfoResult.Success.Full).isTrue
@@ -1206,7 +1151,7 @@ class OffenderServiceTest {
 
       val result = offenderService.getPersonInfoResult(
         crn = crn,
-        limitedAccessStrategy = LimitedAccessStrategy.IgnoreLimitedAccess,
+        laoStrategy = LaoStrategy.NeverRestricted,
       )
 
       assertThat(result is PersonInfoResult.Success.Full).isTrue
@@ -1259,7 +1204,7 @@ class OffenderServiceTest {
 
       val result = offenderService.getPersonInfoResult(
         crn = crn,
-        limitedAccessStrategy = LimitedAccessStrategy.ReturnRestrictedIfLimitedAccess(deliusUsername),
+        laoStrategy = LaoStrategy.CheckUserAccess(deliusUsername),
       )
 
       assertThat(result is PersonInfoResult.Success.Full).isTrue
@@ -1770,7 +1715,7 @@ class OffenderServiceTest {
     fun `if no crns provided immediately return empty list`() {
       val result = offenderService.getPersonSummaryInfoResults(
         crns = emptySet(),
-        limitedAccessStrategy = ReturnRestrictedIfLimitedAccess(USERNAME),
+        laoStrategy = CheckUserAccess(USERNAME),
       )
 
       assertThat(result).isEmpty()
@@ -1786,7 +1731,7 @@ class OffenderServiceTest {
       assertThrows<Throwable> {
         offenderService.getPersonSummaryInfoResults(
           crns = setOf(OFFENDER_1_CRN),
-          limitedAccessStrategy = ReturnRestrictedIfLimitedAccess(USERNAME),
+          laoStrategy = CheckUserAccess(USERNAME),
         )
       }
     }
@@ -1805,7 +1750,7 @@ class OffenderServiceTest {
       assertThrows<Throwable> {
         offenderService.getPersonSummaryInfoResults(
           crns = setOf(OFFENDER_1_CRN),
-          limitedAccessStrategy = ReturnRestrictedIfLimitedAccess(USERNAME),
+          laoStrategy = CheckUserAccess(USERNAME),
         )
       }
     }
@@ -1822,7 +1767,7 @@ class OffenderServiceTest {
 
       val results = offenderService.getPersonSummaryInfoResults(
         crns = setOf(OFFENDER_1_CRN),
-        limitedAccessStrategy = ReturnRestrictedIfLimitedAccess(USERNAME),
+        laoStrategy = CheckUserAccess(USERNAME),
       )
 
       assertThat(results).hasSize(1)
@@ -1850,7 +1795,7 @@ class OffenderServiceTest {
 
       val results = offenderService.getPersonSummaryInfoResults(
         crns = setOf(OFFENDER_1_CRN),
-        limitedAccessStrategy = ReturnRestrictedIfLimitedAccess(USERNAME),
+        laoStrategy = CheckUserAccess(USERNAME),
       )
 
       assertThat(results).hasSize(1)
@@ -1886,7 +1831,7 @@ class OffenderServiceTest {
 
       val results = offenderService.getPersonSummaryInfoResults(
         crns = setOf(OFFENDER_1_CRN),
-        limitedAccessStrategy = ReturnRestrictedIfLimitedAccess(USERNAME),
+        laoStrategy = CheckUserAccess(USERNAME),
       )
 
       assertThat(results).hasSize(1)
@@ -1933,7 +1878,7 @@ class OffenderServiceTest {
 
       val results = offenderService.getPersonSummaryInfoResults(
         crns = setOf(OFFENDER_1_CRN),
-        limitedAccessStrategy = ReturnRestrictedIfLimitedAccess(USERNAME),
+        laoStrategy = CheckUserAccess(USERNAME),
       )
 
       assertThat(results).hasSize(1)
@@ -1981,7 +1926,7 @@ class OffenderServiceTest {
 
       val results = offenderService.getPersonSummaryInfoResults(
         crns = setOf(OFFENDER_1_CRN),
-        limitedAccessStrategy = ReturnRestrictedIfLimitedAccess(USERNAME),
+        laoStrategy = CheckUserAccess(USERNAME),
       )
 
       assertThat(results).hasSize(1)
@@ -2014,7 +1959,7 @@ class OffenderServiceTest {
 
       val results = offenderService.getPersonSummaryInfoResults(
         crns = setOf(OFFENDER_1_CRN),
-        limitedAccessStrategy = LimitedAccessStrategy.IgnoreLimitedAccess,
+        laoStrategy = LaoStrategy.NeverRestricted,
       )
 
       verify(exactly = 0) { mockApDeliusContextApiClient.getUserAccessForCrns(any(), any()) }
@@ -2080,7 +2025,7 @@ class OffenderServiceTest {
 
       val results = offenderService.getPersonSummaryInfoResults(
         crns = setOf(OFFENDER_1_CRN, OFFENDER_2_CRN, OFFENDER_3_CRN),
-        limitedAccessStrategy = ReturnRestrictedIfLimitedAccess(USERNAME),
+        laoStrategy = CheckUserAccess(USERNAME),
       )
 
       assertThat(results).hasSize(3)
@@ -2110,7 +2055,7 @@ class OffenderServiceTest {
         offenderService.getPersonSummaryInfoResultsInBatches(
           crns = emptySet(),
           batchSize = 501,
-          limitedAccessStrategy = LimitedAccessStrategy.IgnoreLimitedAccess,
+          laoStrategy = LaoStrategy.NeverRestricted,
         )
       }.isInstanceOf(InternalServerErrorProblem::class.java)
         .hasMessage("Internal Server Error: Cannot request more than 500 CRNs. A batch size of 501 has been requested.")
@@ -2140,7 +2085,7 @@ class OffenderServiceTest {
 
       val results = offenderService.getPersonSummaryInfoResultsInBatches(
         crns = crns.toSet(),
-        limitedAccessStrategy = ReturnRestrictedIfLimitedAccess(USERNAME),
+        laoStrategy = CheckUserAccess(USERNAME),
         batchSize = 400,
       )
 

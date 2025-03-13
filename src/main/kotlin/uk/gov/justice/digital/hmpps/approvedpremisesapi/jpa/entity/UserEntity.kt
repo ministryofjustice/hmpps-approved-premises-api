@@ -22,7 +22,9 @@ import java.util.UUID
 
 @SuppressWarnings("TooManyFunctions")
 @Repository
-interface UserRepository : JpaRepository<UserEntity, UUID>, JpaSpecificationExecutor<UserEntity> {
+interface UserRepository :
+  JpaRepository<UserEntity, UUID>,
+  JpaSpecificationExecutor<UserEntity> {
   @Query(
     """
     SELECT u.* FROM users u WHERE u.name ILIKE '%' || :str || '%' AND u.is_active IS TRUE
@@ -126,36 +128,6 @@ interface UserRepository : JpaRepository<UserEntity, UUID>, JpaSpecificationExec
 
   @Query(
     """
-    SELECT u.*,
-    RANK() OVER (
-      ORDER BY
-        (
-          SELECT COUNT(1)
-            FROM placement_requests pr
-            WHERE pr.allocated_to_user_id = u.id
-            AND 
-              (
-                pr.booking_id IS NULL
-                OR (
-                  pr.booking_id IS NOT NULL
-                    AND pr.created_at BETWEEN 
-                      (CURRENT_TIMESTAMP - interval '1 week') AND
-                  		CURRENT_TIMESTAMP
-                )
-            )
-        ) ASC
-     ) as score
-    FROM "users"  u
-    WHERE u.id IN (:userIds)
-    ORDER BY score ASC 
-    LIMIT 1
-    """,
-    nativeQuery = true,
-  )
-  fun findUserWithLeastPlacementRequestsPendingOrCompletedInLastWeek(userIds: List<UUID>): UserEntity?
-
-  @Query(
-    """
     SELECT
       CAST(u.id as TEXT) as userId,
       (
@@ -219,42 +191,7 @@ interface UserRepository : JpaRepository<UserEntity, UUID>, JpaSpecificationExec
           placement_application.allocated_to_user_id = u.id
           and placement_application.reallocated_at is null
           and placement_application.submitted_at > current_date - interval '30' day
-      ) as completedPlacementApplicationsInTheLastThirtyDays,
-      (
-        SELECT
-          count(*)
-        from
-          placement_requests placement_request
-        where
-          placement_request.allocated_to_user_id = u.id
-          and placement_request.booking_id is null
-          and placement_request.reallocated_at is null
-          and placement_request.is_withdrawn != true
-      ) as pendingPlacementRequests,
-      (
-        SELECT
-          count(*)
-        from
-          placement_requests placement_request
-          left join bookings booking on booking.id = placement_request.booking_id
-        where
-          placement_request.allocated_to_user_id = u.id
-          and placement_request.booking_id is not null
-          and placement_request.reallocated_at is null
-          and booking.created_at > current_date - interval '7' day
-      ) as completedPlacementRequestsInTheLastSevenDays,
-      (
-        SELECT
-          count(*)
-        from
-          placement_requests placement_request
-          left join bookings booking on booking.id = placement_request.booking_id
-        where
-          placement_request.allocated_to_user_id = u.id
-          and placement_request.booking_id is not null
-          and placement_request.reallocated_at is null
-          and booking.created_at > current_date - interval '30' day
-      ) as completedPlacementRequestsInTheLastThirtyDays
+      ) as completedPlacementApplicationsInTheLastThirtyDays
     FROM
       users u
     WHERE
@@ -311,11 +248,9 @@ data class UserEntity(
 ) {
   fun hasRole(userRole: UserRole) = roles.any { it.role == userRole }
   fun hasAnyRole(vararg userRoles: UserRole) = userRoles.any(::hasRole)
-  fun hasQualification(userQualification: UserQualification) =
-    qualifications.any { it.qualification === userQualification }
+  fun hasQualification(userQualification: UserQualification) = qualifications.any { it.qualification === userQualification }
 
-  fun hasAllQualifications(requiredQualifications: List<UserQualification>) =
-    requiredQualifications.all(::hasQualification)
+  fun hasAllQualifications(requiredQualifications: List<UserQualification>) = requiredQualifications.all(::hasQualification)
   fun hasPermission(permission: UserPermission) = roles.any { it.role.hasPermission(permission) }
 
   override fun toString() = "User $id"
@@ -397,9 +332,6 @@ interface UserWorkload {
   fun getPendingAssessments(): Int
   fun getCompletedAssessmentsInTheLastSevenDays(): Int
   fun getCompletedAssessmentsInTheLastThirtyDays(): Int
-  fun getPendingPlacementRequests(): Int
-  fun getCompletedPlacementRequestsInTheLastSevenDays(): Int
-  fun getCompletedPlacementRequestsInTheLastThirtyDays(): Int
   fun getPendingPlacementApplications(): Int
   fun getCompletedPlacementApplicationsInTheLastSevenDays(): Int
   fun getCompletedPlacementApplicationsInTheLastThirtyDays(): Int

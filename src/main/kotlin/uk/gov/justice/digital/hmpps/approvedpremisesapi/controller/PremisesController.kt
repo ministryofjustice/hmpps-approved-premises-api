@@ -16,7 +16,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cancellation
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Confirmation
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.DateChange
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Departure
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ExtendedPremisesSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Extension
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.LostBed
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.LostBedCancellation
@@ -44,11 +43,11 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.UpdateLostBed
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.UpdatePremises
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.UpdateRoom
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.BookingEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PremisesEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TemporaryAccommodationPremisesEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserQualification
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PersonInfoResult
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PersonSummaryInfoResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.BadRequestProblem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.ConflictProblem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.ForbiddenProblem
@@ -58,7 +57,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.NotImplementedPr
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.AuthorisableActionResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.CasResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.ValidatableActionResult
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.BedService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.BookingService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.GetBookingForPremisesResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.OffenderService
@@ -67,10 +65,12 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.RoomService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.StaffMemberService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.UserAccessService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.UserService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1BedService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1WithdrawableService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas3.Cas3BookingService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas3.Cas3PremisesService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas3.Cas3VoidBedspaceService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas3LaoStrategy
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.ArrivalTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.BedDetailTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.BedSummaryTransformer
@@ -80,11 +80,11 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.Confirmation
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.DateChangeTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.DepartureTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.ExtensionTransformer
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.PremisesSummaryTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.PremisesTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.RoomTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.StaffMemberTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.TurnaroundTransformer
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.cas3.Cas3PremisesSummaryTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.cas3.Cas3VoidBedspaceCancellationTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.cas3.Cas3VoidBedspacesTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.extractEntityFromAuthorisableActionResult
@@ -93,6 +93,7 @@ import java.time.LocalDate
 import java.time.OffsetDateTime
 import java.time.ZoneOffset
 import java.util.UUID
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas3.GetBookingForPremisesResult as cas3GetBookingForPremisesResult
 
 @Service
 class PremisesController(
@@ -104,9 +105,9 @@ class PremisesController(
   private val bookingService: BookingService,
   private val cas3BookingService: Cas3BookingService,
   private val cas3VoidBedspaceService: Cas3VoidBedspaceService,
-  private val bedService: BedService,
+  private val cas1BedService: Cas1BedService,
   private val premisesTransformer: PremisesTransformer,
-  private val premisesSummaryTransformer: PremisesSummaryTransformer,
+  private val cas3PremisesSummaryTransformer: Cas3PremisesSummaryTransformer,
   private val bookingTransformer: BookingTransformer,
   private val cas3VoidBedspacesTransformer: Cas3VoidBedspacesTransformer,
   private val arrivalTransformer: ArrivalTransformer,
@@ -133,20 +134,15 @@ class PremisesController(
     apAreaId: UUID?,
   ): ResponseEntity<List<PremisesSummary>> {
     val transformedSummaries = when (xServiceName) {
-      ServiceName.approvedPremises -> {
-        val summaries = premisesService.getAllApprovedPremisesSummaries(probationRegionId, apAreaId)
-
-        summaries.map(premisesSummaryTransformer::transformDomainToApi)
-      }
-
+      ServiceName.approvedPremises -> throw RuntimeException("CAS1 not supported")
       ServiceName.cas2 -> throw RuntimeException("CAS2 not supported")
       ServiceName.cas2v2 -> throw RuntimeException("CAS2v2 not supported")
 
       ServiceName.temporaryAccommodation -> {
         val user = usersService.getUserForRequest()
-        val summaries = cas3PremisesService.getAllPremisesSummaries(user.probationRegion.id)
+        val summaries = cas3PremisesService.getAllPremisesSummaries(user.probationRegion.id, postcodeOrAddress = null)
 
-        summaries.map(premisesSummaryTransformer::transformDomainToApi)
+        summaries.map(cas3PremisesSummaryTransformer::transformDomainToApi)
       }
     }
 
@@ -233,35 +229,6 @@ class PremisesController(
         totalBeds = totalBeds,
         availableBedsForToday = totalBeds,
       ),
-    )
-  }
-
-  override fun premisesGet(xServiceName: ServiceName?, xUserRegion: UUID?): ResponseEntity<List<Premises>> {
-    if (!userAccessService.currentUserCanAccessRegion(xUserRegion)) {
-      throw ForbiddenProblem()
-    }
-
-    val premisesWithRoomCounts = when {
-      xServiceName == null && xUserRegion == null -> premisesService.getAllPremises()
-      xServiceName != null && xUserRegion != null -> premisesService.getAllPremisesInRegionForService(
-        xUserRegion,
-        xServiceName,
-      )
-
-      xServiceName != null -> premisesService.getAllPremisesForService(xServiceName)
-      else -> premisesService.getAllPremisesInRegion(xUserRegion!!)
-    }
-
-    return ResponseEntity.ok(
-      premisesWithRoomCounts.map {
-        val premises = it.getPremises()
-        val totalBeds = it.getBedCount()
-        val availableBedsForToday =
-          premisesService.getAvailabilityForRange(premises, LocalDate.now(), LocalDate.now().plusDays(1))
-            .values.first().getFreeCapacity(totalBeds)
-
-        premisesTransformer.transformJpaToApi(premises, totalBeds, availableBedsForToday)
-      },
     )
   }
 
@@ -377,8 +344,7 @@ class PremisesController(
     val personInfoResults = async {
       offenderService.getPersonInfoResults(
         crns.toSet(),
-        user.deliusUsername,
-        user.hasQualification(UserQualification.LAO),
+        user.cas3LaoStrategy(),
       )
     }.await()
 
@@ -627,7 +593,7 @@ class PremisesController(
           notes = body.notes,
         )
 
-        val departure = extractResultEntityOrThrow(result)
+        val departure = extractEntityFromCasResult(result)
 
         return ResponseEntity.ok(departureTransformer.transformJpaToApi(departure))
       }
@@ -972,71 +938,29 @@ class PremisesController(
       throw ForbiddenProblem()
     }
 
-    val validationResult = when (val bedResult = bedService.getBedAndRoomCharacteristics(bedId)) {
-      is AuthorisableActionResult.NotFound -> throw NotFoundProblem(bedId, "Bed")
-      is AuthorisableActionResult.Success -> bedResult.entity
-      is AuthorisableActionResult.Unauthorised -> throw ForbiddenProblem()
-    }
-
-    return ResponseEntity.ok(bedDetailTransformer.transformToApi(validationResult))
+    return ResponseEntity.ok(bedDetailTransformer.transformToApi(extractEntityFromCasResult(cas1BedService.getBedAndRoomCharacteristics(bedId))))
   }
 
-  override fun premisesPremisesIdSummaryGet(premisesId: UUID): ResponseEntity<ExtendedPremisesSummary> = runBlocking {
+  @SuppressWarnings("ThrowsCount")
+  private fun getBookingForPremisesOrThrow(premisesId: UUID, bookingId: UUID): BookingEntity {
     val premises = premisesService.getPremises(premisesId)
       ?: throw NotFoundProblem(premisesId, "Premises")
 
-    val user = usersService.getUserForRequest()
-
-    if (!userAccessService.userCanManagePremisesBookings(user, premises)) {
-      throw ForbiddenProblem()
+    return when (premises) {
+      is TemporaryAccommodationPremisesEntity -> {
+        when (val result = cas3BookingService.getBookingForPremises(premises, bookingId)) {
+          is cas3GetBookingForPremisesResult.Success -> result.booking
+          is cas3GetBookingForPremisesResult.BookingNotFound -> throw NotFoundProblem(bookingId, "Booking")
+        }
+      }
+      else -> {
+        when (val result = bookingService.getBookingForPremises(premises, bookingId)) {
+          is GetBookingForPremisesResult.Success -> result.booking
+          is GetBookingForPremisesResult.BookingNotFound -> throw NotFoundProblem(bookingId, "Booking")
+        }
+      }
     }
-
-    val bookingsSummary = premisesService.getPremisesSummary(premisesId)
-    val crns = bookingsSummary.map { it.getCrn() }
-    val personSummary = offenderService.getOffenderSummariesByCrns(
-      crns,
-      user.deliusUsername,
-      user.hasQualification(UserQualification.LAO),
-    )
-    val totalBeds = premisesService.getBedCount(premises)
-
-    val bookingsSummaryMapped = bookingsSummary.map {
-      val personInfo = personSummary.find { personSummary -> personSummary.crn == it.getCrn() }
-        ?: PersonSummaryInfoResult.NotFound(it.getCrn())
-      bookingTransformer.transformBookingSummary(it, personInfo)
-    }
-
-    val availableBedsForToday =
-      premisesService.getAvailabilityForRange(premises, LocalDate.now(), LocalDate.now().plusDays(1))
-        .values.first().getFreeCapacity(totalBeds)
-
-    val dateCapacities = premisesService.getDateCapacities(premises)
-
-    var apCode: String? = null
-    if (premises is ApprovedPremisesEntity) {
-      apCode = premises.apCode
-    }
-
-    return@runBlocking ResponseEntity.ok(
-      ExtendedPremisesSummary(
-        id = premisesId,
-        name = premises.name,
-        apCode = apCode,
-        postcode = premises.postcode,
-        bedCount = totalBeds,
-        availableBedsForToday = availableBedsForToday,
-        bookings = bookingsSummaryMapped,
-        dateCapacities = dateCapacities,
-      ),
-    )
   }
-
-  private fun getBookingForPremisesOrThrow(premisesId: UUID, bookingId: UUID) =
-    when (val result = bookingService.getBookingForPremises(premisesId, bookingId)) {
-      is GetBookingForPremisesResult.Success -> result.booking
-      is GetBookingForPremisesResult.PremisesNotFound -> throw NotFoundProblem(premisesId, "Premises")
-      is GetBookingForPremisesResult.BookingNotFound -> throw NotFoundProblem(bookingId, "Booking")
-    }
 
   private fun <EntityType> extractResultEntityOrThrow(result: ValidatableActionResult<EntityType>) = when (result) {
     is ValidatableActionResult.Success -> result.entity

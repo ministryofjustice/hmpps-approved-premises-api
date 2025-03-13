@@ -61,11 +61,17 @@ hmpps.sqs:
     domainevents:
       arn: "dynamically set per test"
   queues:
+    castwodomaineventslistenerqueue:
+      dlqName: ${random.uuid}
+      queueName: ${random.uuid}
+      subscribeTopicId: domainevents
+      subscribeFilter: '{"eventType":["offender-management.allocation.changed", "prisoner-offender-search.prisoner.updated"]}'
+      dlqMaxReceiveCount: 1
+      errorVisibilityTimeout: 0
     domaineventsqueue:
       dlqName: ${random.uuid}
       queueName: ${random.uuid}
       subscribeTopicId: domainevents
-
 domain-events:
   cas1:
     emit-enabled: true
@@ -84,6 +90,8 @@ hmpps:
     client-secret: secret
 
 services:
+  default:
+    timeout-ms: 500
   hmpps-tier:
     base-url: http://localhost:#WIREMOCK_PORT
   prisons-api:
@@ -92,6 +100,7 @@ services:
     base-url: http://localhost:#WIREMOCK_PORT
   nomis-user-roles-api:
     base-url: http://localhost:#WIREMOCK_PORT
+    timeout-ms: 500
   manage-users-api:
     base-url: http://localhost:#WIREMOCK_PORT
   probation-offender-search-api:
@@ -177,9 +186,6 @@ preemptive-cache-enabled: false
 arrived-departed-domain-events-disabled: false
 manual-bookings-domain-events-disabled: false
 
-upstream-timeout-ms: 500
-nomis-user-roles-api-upstream-timeout-ms: 500
-
 pagination:
   default-page-size: 10
   cas3:
@@ -207,4 +213,10 @@ scheduling:
 
 logging.level.org.springframework.jdbc.core.JdbcTemplate: debug
 
+refresh-inmate-details-cache:
+  lock-at-least-for: 1s
+  lock-at-most-for: 1s
+  logging-enabled: false
+
 feature-flags:
+  cas1-disable-overbooking-summary: false

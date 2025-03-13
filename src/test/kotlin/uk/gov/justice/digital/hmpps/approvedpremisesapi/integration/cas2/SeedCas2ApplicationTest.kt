@@ -30,8 +30,8 @@ class SeedCas2ApplicationTest : SeedTestBase() {
     val applicationId = "6a1551ea-cdb7-4f5e-beac-aee9ad73339c"
     val creationTimestamp = OffsetDateTime.parse("2022-12-13T15:00:00+01:00")
 
-    withCsv(
-      "unknown-cas2-application",
+    seed(
+      SeedFileType.cas2Applications,
       cas2ApplicationSeedCsvRowsToCsv(
         listOf(
           Cas2ApplicationSeedCsvRowFactory()
@@ -48,8 +48,6 @@ class SeedCas2ApplicationTest : SeedTestBase() {
         ),
       ),
     )
-
-    seedService.seedData(SeedFileType.cas2Applications, "unknown-cas2-application.csv")
 
     val persistedApplication = cas2ApplicationRepository.getReferenceById(UUID.fromString(applicationId))
 
@@ -72,8 +70,8 @@ class SeedCas2ApplicationTest : SeedTestBase() {
     val applicationId = "6a1551ea-cdb7-4f5e-beac-aee9ad73339c"
     val creationTimestamp = OffsetDateTime.parse("2022-12-13T15:00:00+01:00")
 
-    withCsv(
-      "in-progress-cas2-application",
+    seed(
+      SeedFileType.cas2Applications,
       cas2ApplicationSeedCsvRowsToCsv(
         listOf(
           Cas2ApplicationSeedCsvRowFactory()
@@ -90,8 +88,6 @@ class SeedCas2ApplicationTest : SeedTestBase() {
         ),
       ),
     )
-
-    seedService.seedData(SeedFileType.cas2Applications, "in-progress-cas2-application.csv")
 
     val persistedApplication = cas2ApplicationRepository.getReferenceById(UUID.fromString(applicationId))
 
@@ -121,8 +117,8 @@ class SeedCas2ApplicationTest : SeedTestBase() {
     val creationTimestamp = OffsetDateTime.parse("2022-12-13T15:00:00+01:00")
     val submissionTimestamp = OffsetDateTime.parse("2022-12-15T12:00:00+01:00")
 
-    withCsv(
-      "submitted-cas2-application",
+    seed(
+      SeedFileType.cas2Applications,
       cas2ApplicationSeedCsvRowsToCsv(
         listOf(
           Cas2ApplicationSeedCsvRowFactory()
@@ -140,8 +136,6 @@ class SeedCas2ApplicationTest : SeedTestBase() {
         ),
       ),
     )
-
-    seedService.seedData(SeedFileType.cas2Applications, "submitted-cas2-application.csv")
 
     val persistedApplication = cas2ApplicationRepository.getReferenceById(UUID.fromString(applicationId))
 
@@ -173,8 +167,8 @@ class SeedCas2ApplicationTest : SeedTestBase() {
     val creationTimestamp = OffsetDateTime.parse("2022-12-13T15:00:00+01:00")
     val submissionTimestamp = OffsetDateTime.parse("2022-12-15T12:00:00+01:00")
 
-    withCsv(
-      "in-review-cas2-application",
+    seed(
+      SeedFileType.cas2Applications,
       cas2ApplicationSeedCsvRowsToCsv(
         listOf(
           Cas2ApplicationSeedCsvRowFactory()
@@ -191,8 +185,6 @@ class SeedCas2ApplicationTest : SeedTestBase() {
         ),
       ),
     )
-
-    seedService.seedData(SeedFileType.cas2Applications, "in-review-cas2-application.csv")
 
     val persistedApplication = cas2ApplicationRepository.getReferenceById(UUID.fromString(applicationId))
 

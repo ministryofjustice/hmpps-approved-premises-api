@@ -28,8 +28,8 @@ class SeedUsersTest : SeedTestBase() {
 
     @Test
     fun `Seeding a user who doesn't exist in delius errors`() {
-      withCsv(
-        "invalid-user",
+      seed(
+        SeedFileType.user,
         usersSeedRowToCsv(
           listOf(
             UserRoleAssignmentsSeedCsvRowFactory()
@@ -38,8 +38,6 @@ class SeedUsersTest : SeedTestBase() {
           ),
         ),
       )
-
-      seedService.seedData(SeedFileType.user, "invalid-user.csv")
 
       assertThat(logEntries).anyMatch {
         it.level == "error" &&
@@ -70,8 +68,8 @@ class SeedUsersTest : SeedTestBase() {
 
       )
 
-      withCsv(
-        "unknown-user",
+      seed(
+        SeedFileType.user,
         usersSeedRowToCsv(
           listOf(
             UserRoleAssignmentsSeedCsvRowFactory()
@@ -83,8 +81,6 @@ class SeedUsersTest : SeedTestBase() {
           ),
         ),
       )
-
-      seedService.seedData(SeedFileType.user, "unknown-user.csv")
 
       val persistedUser = userRepository.findByDeliusUsername("UNKNOWN-USER")
 
@@ -105,8 +101,8 @@ class SeedUsersTest : SeedTestBase() {
         roles = emptyList(),
       )
 
-      withCsv(
-        "known-user",
+      seed(
+        SeedFileType.user,
         usersSeedRowToCsv(
           listOf(
             UserRoleAssignmentsSeedCsvRowFactory()
@@ -118,8 +114,6 @@ class SeedUsersTest : SeedTestBase() {
           ),
         ),
       )
-
-      seedService.seedData(SeedFileType.user, "known-user.csv")
 
       val persistedUser = userRepository.findByDeliusUsername("KNOWN-USER")
 
@@ -141,8 +135,8 @@ class SeedUsersTest : SeedTestBase() {
         qualifications = listOf(UserQualification.EMERGENCY),
       )
 
-      withCsv(
-        "known-user",
+      seed(
+        SeedFileType.user,
         usersSeedRowToCsv(
           listOf(
             UserRoleAssignmentsSeedCsvRowFactory()
@@ -154,8 +148,6 @@ class SeedUsersTest : SeedTestBase() {
           ),
         ),
       )
-
-      seedService.seedData(SeedFileType.user, "known-user.csv")
 
       val persistedUser = userRepository.findByDeliusUsername("KNOWN-USER")
 
@@ -179,8 +171,8 @@ class SeedUsersTest : SeedTestBase() {
         qualifications = listOf(UserQualification.EMERGENCY),
       )
 
-      withCsv(
-        "known-user",
+      seed(
+        SeedFileType.user,
         usersSeedRowToCsv(
           listOf(
             UserRoleAssignmentsSeedCsvRowFactory()
@@ -192,8 +184,6 @@ class SeedUsersTest : SeedTestBase() {
           ),
         ),
       )
-
-      seedService.seedData(SeedFileType.user, "known-user.csv")
 
       val persistedUser = userRepository.findByDeliusUsername("KNOWN-USER")
 
@@ -214,8 +204,8 @@ class SeedUsersTest : SeedTestBase() {
         roles = emptyList(),
       )
 
-      withCsv(
-        "unknown-role",
+      seed(
+        SeedFileType.user,
         usersSeedRowToCsv(
           listOf(
             UserRoleAssignmentsSeedCsvRowFactory()
@@ -227,8 +217,6 @@ class SeedUsersTest : SeedTestBase() {
           ),
         ),
       )
-
-      seedService.seedData(SeedFileType.user, "unknown-role.csv")
 
       assertThat(logEntries).anyMatch {
         it.level == "error" &&
@@ -246,8 +234,8 @@ class SeedUsersTest : SeedTestBase() {
         roles = emptyList(),
       )
 
-      withCsv(
-        "unknown-qualification",
+      seed(
+        SeedFileType.user,
         usersSeedRowToCsv(
           listOf(
             UserRoleAssignmentsSeedCsvRowFactory()
@@ -258,8 +246,6 @@ class SeedUsersTest : SeedTestBase() {
           ),
         ),
       )
-
-      seedService.seedData(SeedFileType.user, "unknown-qualification.csv")
 
       assertThat(logEntries).anyMatch {
         it.level == "error" &&
@@ -329,23 +315,19 @@ class SeedUsersTest : SeedTestBase() {
         )
       }
 
-      withCsv(
-        "users-many-times-base-job",
-        usersSeedRowToCsv(
-          seedInfos.map {
-            UserRoleAssignmentsSeedCsvRowFactory()
-              .withDeliusUsername(it.staffUserDetails.username!!)
-              .withRoles(it.roles.map { it.name })
-              .withQualifications(it.qualifications.map { it.name })
-              .withRemoveExistingRowsAndQualifications(true)
-              .produce()
-          },
-        ),
+      val csv = usersSeedRowToCsv(
+        seedInfos.map {
+          UserRoleAssignmentsSeedCsvRowFactory()
+            .withDeliusUsername(it.staffUserDetails.username!!)
+            .withRoles(it.roles.map { it.name })
+            .withQualifications(it.qualifications.map { it.name })
+            .withRemoveExistingRowsAndQualifications(true)
+            .produce()
+        },
       )
-
       var iteration = 1
       repeat(20) {
-        seedService.seedData(SeedFileType.user, "users-many-times-base-job.csv")
+        seed(SeedFileType.user, csv)
 
         seedInfos.forEach {
           val persistedUser = userRepository.findByDeliusUsername(it.staffUserDetails.username!!.uppercase())!!
@@ -425,23 +407,20 @@ class SeedUsersTest : SeedTestBase() {
         )
       }
 
-      withCsv(
-        "users-many-times-ap-job",
-        usersSeedRowToCsv(
-          seedInfos.map {
-            UserRoleAssignmentsSeedCsvRowFactory()
-              .withDeliusUsername(it.staffUserDetails.username!!)
-              .withRoles(it.roles.map { it.name })
-              .withQualifications(it.qualifications.map { it.name })
-              .withRemoveExistingRowsAndQualifications(true)
-              .produce()
-          },
-        ),
+      val csv = usersSeedRowToCsv(
+        seedInfos.map {
+          UserRoleAssignmentsSeedCsvRowFactory()
+            .withDeliusUsername(it.staffUserDetails.username!!)
+            .withRoles(it.roles.map { it.name })
+            .withQualifications(it.qualifications.map { it.name })
+            .withRemoveExistingRowsAndQualifications(true)
+            .produce()
+        },
       )
 
       var iteration = 1
       repeat(20) {
-        seedService.seedData(SeedFileType.approvedPremisesUsers, "users-many-times-ap-job.csv")
+        seed(SeedFileType.approvedPremisesUsers, csv)
 
         seedInfos.forEach {
           val persistedUser = userRepository.findByDeliusUsername(it.staffUserDetails.username!!.uppercase())!!
@@ -480,8 +459,8 @@ class SeedUsersTest : SeedTestBase() {
         roles = emptyList(),
       )
 
-      withCsv(
-        "known-user",
+      seed(
+        SeedFileType.user,
         usersSeedRowToCsv(
           listOf(
             UserRoleAssignmentsSeedCsvRowFactory()
@@ -493,8 +472,6 @@ class SeedUsersTest : SeedTestBase() {
           ),
         ),
       )
-
-      seedService.seedData(SeedFileType.user, "known-user.csv")
 
       val persistedUser = userRepository.findByDeliusUsername("KNOWN-USER")
 
@@ -518,8 +495,8 @@ class SeedUsersTest : SeedTestBase() {
         roles = listOf(UserRole.CAS1_ASSESSOR, UserRole.CAS1_FUTURE_MANAGER, UserRole.CAS3_ASSESSOR),
       )
 
-      withCsv(
-        "multi-service-user",
+      seed(
+        SeedFileType.approvedPremisesUsers,
         usersSeedRowToCsv(
           listOf(
             UserRoleAssignmentsSeedCsvRowFactory()
@@ -530,8 +507,6 @@ class SeedUsersTest : SeedTestBase() {
           ),
         ),
       )
-
-      seedService.seedData(SeedFileType.approvedPremisesUsers, "multi-service-user.csv")
 
       val persistedUser = userRepository.findByDeliusUsername("MULTI-SERVICE-USER")
 
@@ -553,8 +528,8 @@ class SeedUsersTest : SeedTestBase() {
         roles = listOf(UserRole.CAS1_ASSESSOR, UserRole.CAS3_REPORTER, UserRole.CAS3_ASSESSOR),
       )
 
-      withCsv(
-        "multi-service-user",
+      seed(
+        SeedFileType.temporaryAccommodationUsers,
         usersSeedRowToCsv(
           listOf(
             UserRoleAssignmentsSeedCsvRowFactory()
@@ -565,8 +540,6 @@ class SeedUsersTest : SeedTestBase() {
           ),
         ),
       )
-
-      seedService.seedData(SeedFileType.temporaryAccommodationUsers, "multi-service-user.csv")
 
       val persistedUser = userRepository.findByDeliusUsername("MULTI-SERVICE-USER")
 

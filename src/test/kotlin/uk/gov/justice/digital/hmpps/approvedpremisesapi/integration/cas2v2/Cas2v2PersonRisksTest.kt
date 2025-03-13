@@ -10,7 +10,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.RoshRisks
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.RoshRisksEnvelope
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.RoshRatingsFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.Cas2v2IntegrationTestBase
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenACas2PomUser
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenACas2v2DeliusUser
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAnOffender
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.apDeliusContextEmptyCaseSummaryToBulkResponse
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.apOASysContextMockSuccessfulRoshRatingsCall
@@ -61,7 +61,7 @@ class Cas2v2PersonRisksTest : Cas2v2IntegrationTestBase() {
 
   @Test
   fun `Getting cas2v2 risks for a CRN that does not exist returns 404`() {
-    givenACas2PomUser { userEntity, jwt ->
+    givenACas2v2DeliusUser { userEntity, jwt ->
       val crn = "CRN123"
 
       apDeliusContextEmptyCaseSummaryToBulkResponse(crn)
@@ -77,7 +77,7 @@ class Cas2v2PersonRisksTest : Cas2v2IntegrationTestBase() {
 
   @Test
   fun `Getting cas2v2 risks for a CRN returns OK with correct body`() {
-    givenACas2PomUser { userEntity, jwt ->
+    givenACas2v2DeliusUser { userEntity, jwt ->
       givenAnOffender { offenderDetails, inmateDetails ->
         apOASysContextMockSuccessfulRoshRatingsCall(
           offenderDetails.otherIds.crn,

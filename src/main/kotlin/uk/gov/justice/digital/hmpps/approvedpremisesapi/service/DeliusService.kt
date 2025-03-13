@@ -10,15 +10,14 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.BookingEntity
 class DeliusService(
   private val apDeliusContextApiClient: ApDeliusContextApiClient,
 ) {
-  fun getReferralDetails(booking: BookingEntity) =
-    when (val clientResult = apDeliusContextApiClient.getReferralDetails(booking.crn, booking.id.toString())) {
-      is ClientResult.Success -> clientResult.body
-      is ClientResult.Failure.StatusCode -> when (clientResult.status) {
-        HttpStatus.NOT_FOUND -> null
-        else -> clientResult.throwException()
-      }
-      is ClientResult.Failure -> clientResult.throwException()
+  fun getReferralDetails(booking: BookingEntity) = when (val clientResult = apDeliusContextApiClient.getReferralDetails(booking.crn, booking.id.toString())) {
+    is ClientResult.Success -> clientResult.body
+    is ClientResult.Failure.StatusCode -> when (clientResult.status) {
+      HttpStatus.NOT_FOUND -> null
+      else -> clientResult.throwException()
     }
+    is ClientResult.Failure -> clientResult.throwException()
+  }
 
   fun referralHasArrival(booking: BookingEntity) = (getReferralDetails(booking)?.arrivedAt != null)
 }

@@ -23,7 +23,9 @@ import java.sql.Types
  * Given (2), it's recommended that the SQL is written to covert any non string types into a string in
  * the required format (e.g. format date/timestamps in the SQL as they should appear in the XLSX)
  */
-class ExcelJdbcResultSetConsumer : JdbcResultSetConsumer, AutoCloseable {
+class ExcelJdbcResultSetConsumer :
+  JdbcResultSetConsumer,
+  AutoCloseable {
   private val workbook = WorkbookFactory.create(true)
   private val sheet = workbook.createSheet("sheet0")
   private var currentRow = 1

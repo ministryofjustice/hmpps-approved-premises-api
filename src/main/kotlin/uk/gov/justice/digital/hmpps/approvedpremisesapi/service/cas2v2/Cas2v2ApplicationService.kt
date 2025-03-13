@@ -29,8 +29,8 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.AuthorisableActi
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.CasResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.EmailNotificationService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.UpstreamApiException
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas2.DomainEventService
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas2.OffenderService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas2.Cas2DomainEventService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas2.Cas2OffenderService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.PageCriteria
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.getMetadata
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.getPageableOrAllPages
@@ -44,9 +44,9 @@ class Cas2v2ApplicationService(
   private val cas2v2LockableApplicationRepository: Cas2v2LockableApplicationRepository,
   private val cas2v2ApplicationSummaryRepository: Cas2v2ApplicationSummaryRepository,
   private val cas2v2JsonSchemaService: Cas2v2JsonSchemaService,
-  private val cas2v2OffenderService: OffenderService,
+  private val cas2v2OffenderService: Cas2OffenderService,
   private val cas2v2UserAccessService: Cas2v2UserAccessService,
-  private val domainEventService: DomainEventService,
+  private val domainEventService: Cas2DomainEventService,
   private val emailNotificationService: EmailNotificationService,
   private val cas2v2AssessmentService: Cas2v2AssessmentService,
   private val notifyConfig: NotifyConfig,
@@ -125,7 +125,7 @@ class Cas2v2ApplicationService(
     applicationOrigin: ApplicationOrigin = ApplicationOrigin.homeDetentionCurfew,
     bailHearingDate: LocalDate? = null,
   ) = validated<Cas2v2ApplicationEntity> {
-    val offenderDetailsResult = cas2v2OffenderService.getOffenderByCrn(crn)
+    val offenderDetailsResult = cas2v2OffenderService.getOffenderByCrnDeprecated(crn)
 
     val offenderDetails = when (offenderDetailsResult) {
       is AuthorisableActionResult.NotFound -> return "$.crn" hasSingleValidationError "doesNotExist"
@@ -342,7 +342,7 @@ class Cas2v2ApplicationService(
                 usertype = Cas2StaffMember.Usertype.valueOf(application.createdByUser.userType.authSource),
               ),
             ),
-            cas2v2ApplicationOrigin = application.applicationOrigin.toString(),
+            applicationOrigin = application.applicationOrigin.toString(),
           ),
         ),
       ),
@@ -369,13 +369,22 @@ class Cas2v2ApplicationService(
   }
 
   private fun sendEmailApplicationSubmitted(user: Cas2v2UserEntity, application: Cas2v2ApplicationEntity) {
+    val applicationOrigin = application.applicationOrigin.toString()
+
+    val templateId = when (applicationOrigin) {
+      ApplicationOrigin.courtBail.toString() -> notifyConfig.templates.cas2v2ApplicationSubmittedCourtBail
+      ApplicationOrigin.prisonBail.toString() -> notifyConfig.templates.cas2v2ApplicationSubmittedPrisonBail
+      else -> notifyConfig.templates.cas2ApplicationSubmitted
+    }
+
     emailNotificationService.sendEmail(
       recipientEmailAddress = notifyConfig.emailAddresses.cas2Assessors,
-      templateId = notifyConfig.templates.cas2ApplicationSubmitted,
+      templateId = templateId,
       personalisation = mapOf(
         "name" to user.name,
         "email" to user.email,
         "prisonNumber" to application.nomsNumber,
+        "crn" to application.crn,
         "telephoneNumber" to application.telephoneNumber,
         "applicationUrl" to submittedApplicationUrlTemplate.replace("#applicationId", application.id.toString()),
       ),

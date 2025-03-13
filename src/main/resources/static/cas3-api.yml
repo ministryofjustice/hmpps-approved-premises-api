@@ -94,5 +94,150 @@ paths:
             'application/problem+json':
               schema:
                 $ref: '_shared.yml#/components/schemas/ValidationError'
-
-
+  /premises/summary:
+    get:
+      tags:
+        - Premises
+      summary: Returns a list of premises
+      operationId: getPremisesSummary
+      parameters:
+        - name: postcodeOrAddress
+          in: query
+          description: postcode Or address to filter premises
+          schema:
+            type: string
+      responses:
+        200:
+          description: successful operation
+          content:
+            'application/json':
+              schema:
+                type: array
+                items:
+                  $ref: 'cas3-schemas.yml#/components/schemas/Cas3PremisesSummary'
+        401:
+          $ref: '_shared.yml#/components/responses/401Response'
+        403:
+          $ref: '_shared.yml#/components/responses/403Response'
+        500:
+          $ref: '_shared.yml#/components/responses/500Response'
+  /premises/{premisesId}/bookings/{bookingId}/departures:
+    post:
+      tags:
+        - Operations on bookings
+      summary: Posts a departure to a specified booking
+      operationId: postPremisesBookingDeparture
+      parameters:
+        - name: premisesId
+          in: path
+          description: ID of the premises the booking is related to
+          required: true
+          schema:
+            type: string
+            format: uuid
+        - name: bookingId
+          in: path
+          description: ID of the booking
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        description: details of the departure
+        content:
+          'application/json':
+            schema:
+              $ref: 'cas3-schemas.yml#/components/schemas/Cas3NewDeparture'
+        required: true
+      responses:
+        200:
+          description: successful operation
+          content:
+            'application/json':
+              schema:
+                $ref: 'cas3-schemas.yml#/components/schemas/Cas3Departure'
+        400:
+          description: invalid params
+          content:
+            'application/problem+json':
+              schema:
+                $ref: '_shared.yml#/components/schemas/ValidationError'
+        401:
+          $ref: '_shared.yml#/components/responses/401Response'
+        403:
+          $ref: '_shared.yml#/components/responses/403Response'
+        404:
+          description: invalid premises ID or booking ID
+          content:
+            'application/json':
+              schema:
+                $ref: '_shared.yml#/components/schemas/Problem'
+        500:
+          $ref: '_shared.yml#/components/responses/500Response'
+      x-codegen-request-body-name: body
+  /premises/{premisesId}/future-bookings:
+    get:
+      tags:
+        - Operations on premises
+      summary: Returns all future bookings for a premises for a given statuses
+      operationId: getPremisesFutureBookings
+      parameters:
+        - name: premisesId
+          in: path
+          description: ID of the premises to get bookings for
+          required: true
+          schema:
+            type: string
+            format: uuid
+        - name: statuses
+          in: query
+          description: Only return bookings with these statuses
+          required: true
+          schema:
+            type: array
+            items:
+              $ref: '_shared.yml#/components/schemas/BookingStatus'
+      responses:
+        200:
+          description: successful operation
+          content:
+            'application/json':
+              schema:
+                type: array
+                items:
+                  $ref: 'cas3-schemas.yml#/components/schemas/FutureBooking'
+        401:
+          $ref: '_shared.yml#/components/responses/401Response'
+        403:
+          $ref: '_shared.yml#/components/responses/403Response'
+        500:
+          $ref: '_shared.yml#/components/responses/500Response'
+  /bedspaces/search:
+    post:
+      summary: Searches for available Beds within the given parameters
+      operationId: postBedspaceSearch
+      requestBody:
+        content:
+          'application/json':
+            schema:
+              $ref: 'cas3-schemas.yml#/components/schemas/Cas3BedspaceSearchParameters'
+        required: true
+      responses:
+        200:
+          description: successful operation
+          content:
+            'application/json':
+              schema:
+                $ref: 'cas3-schemas.yml#/components/schemas/Cas3BedspaceSearchResults'
+        400:
+          description: invalid params
+          content:
+            'application/problem+json':
+              schema:
+                $ref: '_shared.yml#/components/schemas/ValidationError'
+        401:
+          $ref: '_shared.yml#/components/responses/401Response'
+        403:
+          $ref: '_shared.yml#/components/responses/403Response'
+        500:
+          $ref: '_shared.yml#/components/responses/500Response'

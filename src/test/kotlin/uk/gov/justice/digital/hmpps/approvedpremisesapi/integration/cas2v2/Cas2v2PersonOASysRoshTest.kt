@@ -5,7 +5,7 @@ import org.springframework.beans.factory.annotation.Autowired
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.OffenceDetailsFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.RoshSummaryFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.Cas2v2IntegrationTestBase
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenACas2PomUser
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenACas2v2DeliusUser
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAnOffender
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.apDeliusContextEmptyCaseSummaryToBulkResponse
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.apOASysContextMockSuccessfulOffenceDetailsCall
@@ -59,7 +59,7 @@ class Cas2v2PersonOASysRoshTest : Cas2v2IntegrationTestBase() {
 
   @Test
   fun `Getting cas2v2 Rosh for a CRN that does not exist returns 404`() {
-    givenACas2PomUser { userEntity, jwt ->
+    givenACas2v2DeliusUser { userEntity, jwt ->
       val crn = "CRN123"
 
       apDeliusContextEmptyCaseSummaryToBulkResponse(crn)
@@ -75,7 +75,7 @@ class Cas2v2PersonOASysRoshTest : Cas2v2IntegrationTestBase() {
 
   @Test
   fun `Getting cas2v2 RoSH for a CRN returns OK with correct body`() {
-    givenACas2PomUser { userEntity, jwt ->
+    givenACas2v2DeliusUser { userEntity, jwt ->
       givenAnOffender { offenderDetails, inmateDetails ->
         val offenceDetails = OffenceDetailsFactory().produce()
         apOASysContextMockSuccessfulOffenceDetailsCall(offenderDetails.otherIds.crn, offenceDetails)
@@ -104,7 +104,7 @@ class Cas2v2PersonOASysRoshTest : Cas2v2IntegrationTestBase() {
 
   @Test
   fun `Getting cas2v2 RoSH when upstream times out returns 404`() {
-    givenACas2PomUser { userEntity, jwt ->
+    givenACas2v2DeliusUser { userEntity, jwt ->
       givenAnOffender { offenderDetails, inmateDetails ->
         val rosh = RoshSummaryFactory().produce()
         apOASysContextMockUnsuccessfulRoshCallWithDelay(offenderDetails.otherIds.crn, rosh, 2500)

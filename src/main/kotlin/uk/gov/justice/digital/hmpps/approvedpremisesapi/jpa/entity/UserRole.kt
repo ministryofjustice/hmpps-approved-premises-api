@@ -40,7 +40,6 @@ enum class UserRole(val service: ServiceName, val cas1ApiValue: ApprovedPremises
     ApprovedPremisesUserRole.matcher,
     listOf(
       UserPermission.CAS1_ASSESS_PLACEMENT_APPLICATION,
-      UserPermission.CAS1_ASSESS_PLACEMENT_REQUEST,
     ),
   ),
 
@@ -90,7 +89,10 @@ enum class UserRole(val service: ServiceName, val cas1ApiValue: ApprovedPremises
   CAS1_CRU_MEMBER_FIND_AND_BOOK_BETA(
     ServiceName.approvedPremises,
     ApprovedPremisesUserRole.cruMemberFindAndBookBeta,
-    permissions = commonCruMemberPermissions + listOf(UserPermission.CAS1_SPACE_BOOKING_CREATE),
+    permissions = commonCruMemberPermissions + listOf(
+      UserPermission.CAS1_SPACE_BOOKING_CREATE,
+      UserPermission.CAS1_OUT_OF_SERVICE_BED_CANCEL,
+    ),
   ),
 
   /**
@@ -114,6 +116,16 @@ enum class UserRole(val service: ServiceName, val cas1ApiValue: ApprovedPremises
       UserPermission.CAS1_REPORTS_VIEW,
     ),
   ),
+
+  CAS1_REPORT_VIEWER_WITH_PII(
+    ServiceName.approvedPremises,
+    ApprovedPremisesUserRole.reportViewerWithPii,
+    listOf(
+      UserPermission.CAS1_REPORTS_VIEW,
+      UserPermission.CAS1_REPORTS_VIEW_WITH_PII,
+    ),
+  ),
+
   CAS1_EXCLUDED_FROM_ASSESS_ALLOCATION(
     ServiceName.approvedPremises,
     ApprovedPremisesUserRole.excludedFromAssessAllocation,
@@ -131,6 +143,7 @@ enum class UserRole(val service: ServiceName, val cas1ApiValue: ApprovedPremises
     ApprovedPremisesUserRole.appealsManager,
     listOf(
       UserPermission.CAS1_ASSESS_APPEALED_APPLICATION,
+      UserPermission.CAS1_ASSESS_APPLICATION,
       UserPermission.CAS1_PROCESS_AN_APPEAL,
       UserPermission.CAS1_VIEW_ASSIGNED_ASSESSMENTS,
     ),

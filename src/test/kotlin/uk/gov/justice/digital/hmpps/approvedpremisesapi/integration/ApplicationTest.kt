@@ -1488,6 +1488,7 @@ class ApplicationTest : IntegrationTestBase() {
           assertThat(result.responseBody.blockFirst()).matches {
             it.person.crn == offenderDetails.otherIds.crn &&
               it.schemaVersion == applicationSchema.id
+            cas1OffenderRepository.findByCrn(it.person.crn) != null
           }
         }
       }
@@ -1537,6 +1538,7 @@ class ApplicationTest : IntegrationTestBase() {
           assertThat(result.responseBody.blockFirst()).matches {
             it.person.crn == offenderDetails.otherIds.crn &&
               it.schemaVersion == applicationSchema.id
+            cas1OffenderRepository.findByCrn(it.person.crn) != null
           }
         }
       }
@@ -1582,6 +1584,7 @@ class ApplicationTest : IntegrationTestBase() {
 
           assertThat(result.responseBody.blockFirst()).matches {
             it.person.crn == offenderDetails.otherIds.crn
+            cas1OffenderRepository.findByCrn(it.person.crn) != null
           }
         }
       }
@@ -1624,6 +1627,7 @@ class ApplicationTest : IntegrationTestBase() {
 
           assertThat(result.responseBody.blockFirst()).matches {
             it.person.crn == offenderDetails.otherIds.crn
+            cas1OffenderRepository.findByCrn(it.person.crn) != null
           }
         }
       }

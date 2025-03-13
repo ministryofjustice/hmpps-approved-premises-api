@@ -19,7 +19,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.AssessmentTask
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1ApplicationTimelinessCategory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewReallocation
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PlacementApplicationTask
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PlacementRequestTask
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Reallocation
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.SortDirection
@@ -53,8 +52,8 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserQualification
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRole
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PersonSummaryInfoResult
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.UserWorkload
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.community.OffenderDetailSummary
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.UserWorkload
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.TaskTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.UserTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomDateTimeBefore
@@ -1795,63 +1794,53 @@ class TasksTest {
           )
       }
 
-      private fun tasksSortedByCreatedAt(sortDirection: SortDirection = SortDirection.asc) =
-        sortTasks(sortDirection) { id: UUID ->
-          val createdAt = when (val task = tasks[id]!!) {
-            is AssessmentTask -> assessments[id]!!.createdAt
-            is PlacementRequestTask -> placementRequests[id]!!.createdAt
-            is PlacementApplicationTask -> placementApplications[id]!!.createdAt
-            else -> fail("Unexpected task type ${task::class.qualifiedName}")
+      private fun tasksSortedByCreatedAt(sortDirection: SortDirection = SortDirection.asc) = sortTasks(sortDirection) { id: UUID ->
+        val createdAt = when (val task = tasks[id]!!) {
+          is AssessmentTask -> assessments[id]!!.createdAt
+          is PlacementApplicationTask -> placementApplications[id]!!.createdAt
+          else -> fail("Unexpected task type ${task::class.qualifiedName}")
+        }
+
+        createdAt.toInstant()
+      }
+
+      private fun tasksSortedByDueAt(sortDirection: SortDirection = SortDirection.asc) = sortTasks(sortDirection) { id: UUID ->
+        tasks[id]!!.dueAt
+      }
+
+      private fun tasksSortedByPerson(sortDirection: SortDirection = SortDirection.asc) = sortTasks(sortDirection) { id: UUID ->
+        tasks[id]!!.personName
+      }
+
+      private fun tasksSortedByAllocatedTo(sortDirection: SortDirection = SortDirection.asc) = sortTasks(sortDirection) { id: UUID ->
+        tasks[id]!!.allocatedToStaffMember!!.name
+      }
+
+      private fun tasksSortedByCompletedAt(sortDirection: SortDirection = SortDirection.asc) = sortTasks(sortDirection) { id: UUID ->
+        tasks[id]!!.outcomeRecordedAt
+      }
+
+      private fun tasksSortedByTaskType(sortDirection: SortDirection = SortDirection.asc) = sortTasks(sortDirection) { id: UUID ->
+        tasks[id]!!.taskType
+      }
+
+      private fun tasksSortedByDecision(sortDirection: SortDirection = SortDirection.asc) = sortTasks(sortDirection) { id: UUID ->
+        when (val task = tasks[id]!!) {
+          is AssessmentTask -> task.outcome?.value
+          is PlacementApplicationTask -> task.outcome?.value
+          else -> fail("Unexpected task type ${task::class.qualifiedName}")
+        }
+      }
+
+      private fun <T : Comparable<T>> sortTasks(sortDirection: SortDirection, sortFunc: (UUID) -> T?) = tasks
+        .keys
+        .apply {
+          when (sortDirection) {
+            SortDirection.asc -> sortedBy(sortFunc)
+            SortDirection.desc -> sortedByDescending(sortFunc)
           }
-
-          createdAt.toInstant()
         }
-
-      private fun tasksSortedByDueAt(sortDirection: SortDirection = SortDirection.asc) =
-        sortTasks(sortDirection) { id: UUID ->
-          tasks[id]!!.dueAt
-        }
-
-      private fun tasksSortedByPerson(sortDirection: SortDirection = SortDirection.asc) =
-        sortTasks(sortDirection) { id: UUID ->
-          tasks[id]!!.personName
-        }
-
-      private fun tasksSortedByAllocatedTo(sortDirection: SortDirection = SortDirection.asc) =
-        sortTasks(sortDirection) { id: UUID ->
-          tasks[id]!!.allocatedToStaffMember!!.name
-        }
-
-      private fun tasksSortedByCompletedAt(sortDirection: SortDirection = SortDirection.asc) =
-        sortTasks(sortDirection) { id: UUID ->
-          tasks[id]!!.outcomeRecordedAt
-        }
-
-      private fun tasksSortedByTaskType(sortDirection: SortDirection = SortDirection.asc) =
-        sortTasks(sortDirection) { id: UUID ->
-          tasks[id]!!.taskType
-        }
-
-      private fun tasksSortedByDecision(sortDirection: SortDirection = SortDirection.asc) =
-        sortTasks(sortDirection) { id: UUID ->
-          when (val task = tasks[id]!!) {
-            is AssessmentTask -> task.outcome?.value
-            is PlacementRequestTask -> task.outcome?.value
-            is PlacementApplicationTask -> task.outcome?.value
-            else -> fail("Unexpected task type ${task::class.qualifiedName}")
-          }
-        }
-
-      private fun <T : Comparable<T>> sortTasks(sortDirection: SortDirection, sortFunc: (UUID) -> T?) =
-        tasks
-          .keys
-          .apply {
-            when (sortDirection) {
-              SortDirection.asc -> sortedBy(sortFunc)
-              SortDirection.desc -> sortedByDescending(sortFunc)
-            }
-          }
-          .map { tasks[it]!! }
+        .map { tasks[it]!! }
     }
   }
 
@@ -2174,7 +2163,7 @@ class TasksTest {
 
     @Test
     fun `Assessment Task UserWithWorkload for an accepted application only returns users with ASSESSOR role`() {
-      givenAUser(roles = listOf(UserRole.CAS1_APPEALS_MANAGER)) { _, jwt ->
+      givenAUser(roles = listOf(UserRole.CAS1_FUTURE_MANAGER)) { _, jwt ->
         givenAUser(
           roles = listOf(UserRole.CAS1_REPORT_VIEWER),
         ) { user, _ ->
@@ -2260,12 +2249,6 @@ class TasksTest {
                   createPlacementApplication(null, allocatableUser, user, crn, decision = WITHDRAW)
                   createPlacementApplication(null, allocatableUser, user, crn, decision = WITHDRAWN_BY_PP)
 
-                  val numPlacementRequestsPending = 2
-                  repeat(numPlacementRequestsPending) {
-                    createPlacementRequest(null, allocatableUser, user, crn)
-                  }
-                  createPlacementRequest(null, allocatableUser, user, crn, isWithdrawn = true)
-
                   val numAssessmentsCompletedBetween1And7DaysAgo = 4
                   repeat(numAssessmentsCompletedBetween1And7DaysAgo) {
                     val days = kotlin.random.Random.nextInt(1, 7).toLong()
@@ -2276,12 +2259,6 @@ class TasksTest {
                   repeat(numPlacementApplicationsCompletedBetween1And7DaysAgo) {
                     val days = kotlin.random.Random.nextInt(1, 7).toLong()
                     createPlacementApplication(OffsetDateTime.now().minusDays(days), allocatableUser, user, crn)
-                  }
-
-                  val numPlacementRequestsCompletedBetween1And7DaysAgo = 1
-                  repeat(numPlacementRequestsCompletedBetween1And7DaysAgo) {
-                    val days = kotlin.random.Random.nextInt(1, 7).toLong()
-                    createPlacementRequest(OffsetDateTime.now().minusDays(days), allocatableUser, user, crn)
                   }
 
                   val numAssessmentsCompletedBetween8And30DaysAgo = 4
@@ -2296,27 +2273,18 @@ class TasksTest {
                     createPlacementApplication(OffsetDateTime.now().minusDays(days), allocatableUser, user, crn)
                   }
 
-                  val numPlacementRequestsCompletedBetween8And30DaysAgo = 2
-                  repeat(numPlacementRequestsCompletedBetween8And30DaysAgo) {
-                    val days = kotlin.random.Random.nextInt(8, 30).toLong()
-                    createPlacementRequest(OffsetDateTime.now().minusDays(days), allocatableUser, user, crn)
-                  }
-
                   val numPendingTasks = listOf(
                     numAssessmentsPending,
-                    numPlacementRequestsPending,
                     numPlacementApplicationsPending,
                   ).sum()
                   val numTasksCompletedInTheLast7Days = listOf(
                     numAssessmentsCompletedBetween1And7DaysAgo,
                     numPlacementApplicationsCompletedBetween1And7DaysAgo,
-                    numPlacementRequestsCompletedBetween1And7DaysAgo,
                   ).sum()
                   val numTasksCompletedInTheLast30Days = listOf(
                     numTasksCompletedInTheLast7Days,
                     numAssessmentsCompletedBetween8And30DaysAgo,
                     numPlacementApplicationsCompletedBetween8And30DaysAgo,
-                    numPlacementRequestsCompletedBetween8And30DaysAgo,
                   ).sum()
 
                   webTestClient.get()
@@ -2368,36 +2336,6 @@ class TasksTest {
         decision = null,
         reallocated = false,
         submittedAt = completedAt,
-        isWithdrawn = isWithdrawn,
-      )
-    }
-
-    private fun createPlacementRequest(
-      completedAt: OffsetDateTime?,
-      allocatedUser: UserEntity,
-      createdByUser: UserEntity,
-      crn: String,
-      isWithdrawn: Boolean = false,
-    ) {
-      val booking = if (completedAt != null) {
-        val premises = approvedPremisesEntityFactory.produceAndPersist {
-          withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
-          withProbationRegion(createdByUser.probationRegion)
-        }
-        bookingEntityFactory.produceAndPersist {
-          withPremises(premises)
-          withCreatedAt(completedAt)
-        }
-      } else {
-        null
-      }
-
-      givenAPlacementRequest(
-        placementRequestAllocatedTo = allocatedUser,
-        assessmentAllocatedTo = createdByUser,
-        createdByUser = createdByUser,
-        crn = crn,
-        booking = booking,
         isWithdrawn = isWithdrawn,
       )
     }
@@ -2729,18 +2667,16 @@ class TasksTest {
     }
   }
 
-  fun getOffenderSummaries(offenderDetails: OffenderDetailSummary): List<PersonSummaryInfoResult> {
-    return listOf(
-      PersonSummaryInfoResult.Success.Full(
-        offenderDetails.otherIds.crn,
-        CaseSummaryFactory().withName(
-          NameFactory()
-            .withForename(offenderDetails.firstName)
-            .withSurname(offenderDetails.surname)
-            .produce(),
-        )
+  fun getOffenderSummaries(offenderDetails: OffenderDetailSummary): List<PersonSummaryInfoResult> = listOf(
+    PersonSummaryInfoResult.Success.Full(
+      offenderDetails.otherIds.crn,
+      CaseSummaryFactory().withName(
+        NameFactory()
+          .withForename(offenderDetails.firstName)
+          .withSurname(offenderDetails.surname)
           .produce(),
-      ),
-    )
-  }
+      )
+        .produce(),
+    ),
+  )
 }

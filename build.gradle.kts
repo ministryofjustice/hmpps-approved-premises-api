@@ -1,12 +1,13 @@
 import org.apache.commons.io.FileUtils
 
 plugins {
-  id("uk.gov.justice.hmpps.gradle-spring-boot") version "6.1.2"
-  kotlin("plugin.spring") version "2.0.21"
+  id("uk.gov.justice.hmpps.gradle-spring-boot") version "7.1.3"
+  kotlin("plugin.spring") version "2.1.10"
+  kotlin("plugin.jpa") version "2.1.10"
   id("org.openapi.generator") version "7.11.0"
-  id("org.jetbrains.kotlin.plugin.jpa") version "1.9.22"
   id("io.gatling.gradle") version "3.13.1"
   id("io.gitlab.arturbosch.detekt") version "1.23.7"
+  id("org.owasp.dependencycheck") version "12.1.0"
 }
 
 configurations {
@@ -22,7 +23,7 @@ configurations.matching { it.name == "detekt" }.all {
 }
 
 dependencies {
-  implementation("uk.gov.justice.service.hmpps:hmpps-kotlin-spring-boot-starter:1.1.0")
+  implementation("uk.gov.justice.service.hmpps:hmpps-kotlin-spring-boot-starter:1.2.0")
   implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.7.3")
   implementation("org.springframework.boot:spring-boot-starter-webflux")
   implementation("org.springframework.boot:spring-boot-starter-data-jpa")
@@ -38,7 +39,7 @@ dependencies {
   implementation("org.postgresql:postgresql:42.7.4")
   implementation("org.javers:javers-core:7.7.0")
 
-  implementation("org.springdoc:springdoc-openapi-starter-webmvc-ui:2.7.0")
+  implementation("org.springdoc:springdoc-openapi-starter-webmvc-ui:2.8.4")
 
   implementation("org.zalando:problem-spring-web-starter:0.29.1")
 
@@ -61,7 +62,6 @@ dependencies {
   }
 
   implementation("io.arrow-kt:arrow-core:1.2.4")
-  implementation("io.github.s-sathish:redlock-java:1.0.4")
 
   implementation("com.opencsv:opencsv:5.9")
 
@@ -70,11 +70,11 @@ dependencies {
   implementation("org.jetbrains.kotlinx:dataframe-excel:0.13.1")
 
   testImplementation("io.github.bluegroundltd:kfactory:1.0.0")
-  testImplementation("io.mockk:mockk:1.13.13")
-  testImplementation("io.jsonwebtoken:jjwt-api:0.11.5")
+  testImplementation("io.mockk:mockk:1.13.17")
   testImplementation("com.github.tomakehurst:wiremock-standalone:3.0.1")
-  testRuntimeOnly("io.jsonwebtoken:jjwt-impl:0.11.5")
-  testRuntimeOnly("io.jsonwebtoken:jjwt-jackson:0.11.5")
+  testImplementation("io.jsonwebtoken:jjwt-api:0.12.6")
+  testRuntimeOnly("io.jsonwebtoken:jjwt-impl:0.12.6")
+  testRuntimeOnly("io.jsonwebtoken:jjwt-jackson:0.12.6")
 
   testImplementation("org.springframework.boot:spring-boot-starter-test") {
     exclude(module = "mockito-core")
@@ -82,7 +82,7 @@ dependencies {
 
   testImplementation("com.ninja-squad:springmockk:4.0.2")
 
-  implementation("uk.gov.justice.service.hmpps:hmpps-sqs-spring-boot-starter:3.1.3")
+  implementation("uk.gov.justice.service.hmpps:hmpps-sqs-spring-boot-starter:5.3.2")
 
   implementation("uk.gov.service.notify:notifications-java-client:5.2.1-RELEASE")
 
@@ -338,7 +338,9 @@ tasks.register("openApiPreCompilation") {
       .readFileToString(file, "UTF-8")
       .replace("_shared.yml#/components", "#/components")
       .replace("cas1-schemas.yml#/components", "#/components")
+      .replace("cas2-schemas.yml#/components", "#/components")
       .replace("cas2v2-schemas.yml#/components", "#/components")
+      .replace("cas3-schemas.yml#/components", "#/components")
     FileUtils.writeStringToFile(file, updatedContents, "UTF-8")
   }
 
@@ -390,6 +392,7 @@ tasks.register("openApiPreCompilation") {
   buildSpecWithSharedComponentsAppended(
     outputFileName = "built-cas2-api-spec.yml",
     inputSpec = "cas2-api.yml",
+    inputSchemas = "cas2-schemas.yml",
   )
   buildSpecWithSharedComponentsAppended(
     outputFileName = "built-cas2v2-api-spec.yml",
@@ -399,6 +402,7 @@ tasks.register("openApiPreCompilation") {
   buildSpecWithSharedComponentsAppended(
     outputFileName = "built-cas3-api-spec.yml",
     inputSpec = "cas3-api.yml",
+    inputSchemas = "cas3-schemas.yml",
   )
 }
 
@@ -454,4 +458,8 @@ detekt {
   buildUponDefaultConfig = true
   ignoreFailures = false
   baseline = file("./detekt-baseline.xml")
+}
+
+dependencyCheck {
+  suppressionFile = ".dependencycheckignore"
 }

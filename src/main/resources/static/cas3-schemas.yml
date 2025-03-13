@@ -1,0 +1,240 @@
+components:
+  schemas:
+    FutureBooking:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        person:
+          $ref: '_shared.yml#/components/schemas/Person'
+        arrivalDate:
+          type: string
+          format: date
+        departureDate:
+          type: string
+          format: date
+        bed:
+          $ref: '_shared.yml#/components/schemas/Bed'
+      required:
+        - id
+        - person
+        - arrivalDate
+        - departureDate
+    Cas3BedspaceSearchParameters:
+      type: object
+      properties:
+        startDate:
+          type: string
+          format: date
+        durationDays:
+          type: integer
+          format: int64
+          description: The number of days the Bed will need to be free from the start_date until
+        probationDeliveryUnits:
+          type: array
+          description: The list of pdus Ids to search within
+          items:
+            type: string
+            format: uuid
+        premisesFilters:
+          $ref: '#/components/schemas/PremisesFilters'
+        bedspaceFilters:
+          $ref: '#/components/schemas/BedspaceFilters'
+        attributes:
+          type: array
+          description: Bedspace and property attributes to filter on
+          items:
+            $ref: "#/components/schemas/BedspaceSearchAttributes"
+      required:
+        - probationDeliveryUnits
+        - startDate
+        - durationDays
+    BedspaceSearchAttributes:
+      type: string
+      enum:
+        - isSharedProperty
+        - isSingleOccupancy
+        - isWheelchairAccessible
+      x-enum-varnames:
+        - SHARED_PROPERTY
+        - SINGLE_OCCUPANCY
+        - WHEELCHAIR_ACCESSIBLE
+    PremisesFilters:
+      type: object
+      properties:
+        includedCharacteristicIds:
+          type: array
+          items:
+            type: string
+            format: uuid
+        excludedCharacteristicIds:
+          type: array
+          items:
+            type: string
+            format: uuid
+    BedspaceFilters:
+      type: object
+      properties:
+        includedCharacteristicIds:
+          type: array
+          items:
+            type: string
+            format: uuid
+        excludedCharacteristicIds:
+          type: array
+          items:
+            type: string
+            format: uuid
+    Cas3BedspaceSearchResults:
+      type: object
+      properties:
+        resultsRoomCount:
+          type: integer
+          description: How many distinct Rooms the Beds in the results belong to
+        resultsPremisesCount:
+          type: integer
+          description: How many distinct Premises the Beds in the results belong to
+        resultsBedCount:
+          type: integer
+          description: How many Beds are in the results
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/Cas3BedspaceSearchResult'
+      required:
+        - resultsRoomCount
+        - resultsPremisesCount
+        - resultsBedCount
+        - results
+    Cas3BedspaceSearchResult:
+      type: object
+      properties:
+        premises:
+          $ref: '_shared.yml#/components/schemas/BedSearchResultPremisesSummary'
+        room:
+          $ref: '_shared.yml#/components/schemas/BedSearchResultRoomSummary'
+        bed:
+          $ref: '_shared.yml#/components/schemas/BedSearchResultBedSummary'
+        overlaps:
+          type: array
+          items:
+            $ref: '#/components/schemas/Cas3BedspaceSearchResultOverlap'
+      required:
+        - premises
+        - room
+        - bed
+        - overlaps
+    Cas3BedspaceSearchResultOverlap:
+      type: object
+      properties:
+        name:
+          type: string
+        crn:
+          type: string
+        sex:
+          type: string
+        personType:
+          $ref: '_shared.yml#/components/schemas/PersonType'
+        days:
+          type: integer
+        bookingId:
+          type: string
+          format: uuid
+        roomId:
+          type: string
+          format: uuid
+        assessmentId:
+          type: string
+          format: uuid
+        isSexualRisk:
+          type: boolean
+      required:
+        - name
+        - crn
+        - personType
+        - days
+        - bookingId
+        - roomId
+        - isSexualRisk
+    Cas3PremisesSummary:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        name:
+          type: string
+          example: Hope House
+        addressLine1:
+          type: string
+          example: one something street
+        addressLine2:
+          type: string
+          example: Blackmore End
+        postcode:
+          type: string
+          example: LS1 3AD
+        pdu:
+          type: string
+        localAuthorityAreaName:
+          type: string
+        bedspaceCount:
+          type: integer
+          example: 22
+        status:
+          $ref: '_shared.yml#/components/schemas/PropertyStatus'
+      required:
+        - id
+        - name
+        - addressLine1
+        - postcode
+        - pdu
+        - bedCount
+        - status
+    Cas3Departure:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        bookingId:
+          type: string
+          format: uuid
+        dateTime:
+          type: string
+          format: date-time
+        reason:
+          $ref: '_shared.yml#/components/schemas/DepartureReason'
+        notes:
+          type: string
+        moveOnCategory:
+          $ref: '_shared.yml#/components/schemas/MoveOnCategory'
+        createdAt:
+          type: string
+          format: date-time
+      required:
+        - id
+        - bookingId
+        - dateTime
+        - reason
+        - moveOnCategory
+        - createdAt
+    Cas3NewDeparture:
+      type: object
+      properties:
+        dateTime:
+          type: string
+          format: date-time
+        reasonId:
+          type: string
+          format: uuid
+        notes:
+          type: string
+        moveOnCategoryId:
+          type: string
+          format: uuid
+      required:
+        - dateTime
+        - reasonId
+        - moveOnCategoryId

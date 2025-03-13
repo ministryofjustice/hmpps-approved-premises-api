@@ -25,13 +25,11 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.SortDirection
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.SubmitApplication
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.SubmitApprovedPremisesApplication
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.SubmitTemporaryAccommodationApplication
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.TimelineEvent
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.UpdateApplication
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.UpdateApprovedPremisesApplication
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.UpdateTemporaryAccommodationApplication
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Withdrawable
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Withdrawables
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.controller.cas1.Cas1TimelineService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.OfflineApplicationEntity
@@ -43,7 +41,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.BadRequestProble
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.ConflictProblem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.ForbiddenProblem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.NotFoundProblem
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.NotImplementedProblem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.AuthorisableActionResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.CasResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.ValidatableActionResult
@@ -51,12 +48,16 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.AppealService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.ApplicationService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.ApplicationTimelineNoteService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.AssessmentService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.DocumentService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.HttpAuthService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.LaoStrategy
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.LaoStrategy.CheckUserAccess
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.OffenderService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.UserService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1RequestForPlacementService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1WithdrawableService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.WithdrawableEntitiesWithNotes
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1LaoStrategy
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.AppealTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.ApplicationTimelineNoteTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.ApplicationsTransformer
@@ -88,7 +89,7 @@ class ApplicationsController(
   private val withdrawableTransformer: WithdrawableTransformer,
   private val applicationTimelineNoteService: ApplicationTimelineNoteService,
   private val applicationTimelineNoteTransformer: ApplicationTimelineNoteTransformer,
-  private val cas1TimelineService: Cas1TimelineService,
+  private val documentService: DocumentService,
 ) : ApplicationsApiDelegate {
 
   override fun applicationsGet(xServiceName: ServiceName?): ResponseEntity<List<ApplicationSummary>> {
@@ -98,7 +99,12 @@ class ApplicationsController(
 
     val applications = applicationService.getAllApplicationsForUsername(user, serviceName)
 
-    return ResponseEntity.ok(getPersonDetailAndTransformToSummary(applications, user))
+    return ResponseEntity.ok(
+      getPersonDetailAndTransformToSummary(
+        applications = applications,
+        laoStrategy = CheckUserAccess(user.deliusUsername),
+      ),
+    )
   }
 
   override fun applicationsAllGet(
@@ -132,9 +138,8 @@ class ApplicationsController(
       metadata?.toHeaders(),
     ).body(
       getPersonDetailAndTransformToSummary(
-        applications,
-        user = user,
-        ignoreLaoRestrictions = user.hasQualification(UserQualification.LAO),
+        applications = applications,
+        laoStrategy = user.cas1LaoStrategy(),
       ),
     )
   }
@@ -150,9 +155,10 @@ class ApplicationsController(
         getPersonDetailAndTransform(
           application = application,
           user = user,
-          ignoreLaoRestrictions = application is ApprovedPremisesApplicationEntity && user.hasQualification(
-            UserQualification.LAO,
-          ),
+          ignoreLaoRestrictions = application is ApprovedPremisesApplicationEntity &&
+            user.hasQualification(
+              UserQualification.LAO,
+            ),
         ),
       )
     } else {
@@ -303,19 +309,9 @@ class ApplicationsController(
     )
   }
 
-  override fun applicationsApplicationIdTimelineGet(applicationId: UUID, xServiceName: ServiceName): ResponseEntity<List<TimelineEvent>> {
-    if (xServiceName != ServiceName.approvedPremises) {
-      throw NotImplementedProblem("Timeline is only supported for Approved Premises applications")
-    }
-    val events = cas1TimelineService.getApplicationTimeline(applicationId)
-    return ResponseEntity(events, HttpStatus.OK)
-  }
-
-  override fun applicationsApplicationIdRequestsForPlacementGet(applicationId: UUID): ResponseEntity<List<RequestForPlacement>> {
-    return ResponseEntity.ok(
-      extractEntityFromCasResult(cas1RequestForPlacementService.getRequestsForPlacementByApplication(applicationId, userService.getUserForRequest())),
-    )
-  }
+  override fun applicationsApplicationIdRequestsForPlacementGet(applicationId: UUID): ResponseEntity<List<RequestForPlacement>> = ResponseEntity.ok(
+    extractEntityFromCasResult(cas1RequestForPlacementService.getRequestsForPlacementByApplication(applicationId, userService.getUserForRequest())),
+  )
 
   override fun applicationsApplicationIdRequestsForPlacementRequestForPlacementIdGet(
     applicationId: UUID,
@@ -390,13 +386,9 @@ class ApplicationsController(
     return ResponseEntity(apiDocuments, HttpStatus.OK)
   }
 
-  private fun getDocuments(crn: String): List<APDeliusDocument> {
-    return when (val result = offenderService.getDocumentsFromApDeliusApi(crn)) {
-      is AuthorisableActionResult.NotFound -> throw NotFoundProblem(crn, "Documents")
-      is AuthorisableActionResult.Unauthorised -> throw ForbiddenProblem()
-      is AuthorisableActionResult.Success -> result.entity
-    }
-  }
+  private fun getDocuments(crn: String): List<APDeliusDocument> = extractEntityFromCasResult(
+    documentService.getDocumentsFromApDeliusApi(crn),
+  )
 
   override fun applicationsApplicationIdAppealsAppealIdGet(
     applicationId: UUID,
@@ -526,11 +518,10 @@ class ApplicationsController(
 
   private fun getPersonDetailAndTransformToSummary(
     applications: List<JPAApplicationSummary>,
-    user: UserEntity,
-    ignoreLaoRestrictions: Boolean = false,
+    laoStrategy: LaoStrategy,
   ): List<ApplicationSummary> {
     val crns = applications.map { it.getCrn() }
-    val personInfoResults = offenderService.getPersonInfoResults(crns.toSet(), user.deliusUsername, ignoreLaoRestrictions)
+    val personInfoResults = offenderService.getPersonInfoResults(crns.toSet(), laoStrategy)
 
     return applications.map {
       val crn = it.getCrn()

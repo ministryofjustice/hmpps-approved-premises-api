@@ -30,8 +30,8 @@ class Cas1SeedPremisesFromCsvTest : SeedTestBase() {
 
   @Test
   fun `Attempting to create an Approved Premises with an invalid Probation Region logs an error`() {
-    withCsv(
-      "invalid-probation",
+    seed(
+      SeedFileType.approvedPremises,
       approvedPremisesSeedCsvRowsToCsv(
         listOf(
           ApprovedPremisesSeedCsvRowFactory()
@@ -40,8 +40,6 @@ class Cas1SeedPremisesFromCsvTest : SeedTestBase() {
         ),
       ),
     )
-
-    seedService.seedData(SeedFileType.approvedPremises, "invalid-probation.csv")
 
     assertThat(logEntries)
       .withFailMessage("-> logEntries actually contains: $logEntries")
@@ -57,8 +55,8 @@ class Cas1SeedPremisesFromCsvTest : SeedTestBase() {
   fun `Attempting to create an Approved Premises with an invalid Local Authority Area logs an error`() {
     val probationRegion = givenAProbationRegion()
 
-    withCsv(
-      "invalid-local-authority",
+    seed(
+      SeedFileType.approvedPremises,
       approvedPremisesSeedCsvRowsToCsv(
         listOf(
           ApprovedPremisesSeedCsvRowFactory()
@@ -68,8 +66,6 @@ class Cas1SeedPremisesFromCsvTest : SeedTestBase() {
         ),
       ),
     )
-
-    seedService.seedData(SeedFileType.approvedPremises, "invalid-local-authority.csv")
 
     assertThat(logEntries)
       .withFailMessage("-> logEntries actually contains: $logEntries")
@@ -94,8 +90,8 @@ class Cas1SeedPremisesFromCsvTest : SeedTestBase() {
       withServiceScope("temporary-accommodation")
     }
 
-    withCsv(
-      "invalid-service-scope",
+    seed(
+      SeedFileType.approvedPremises,
       approvedPremisesSeedCsvRowsToCsv(
         listOf(
           ApprovedPremisesSeedCsvRowFactory()
@@ -106,8 +102,6 @@ class Cas1SeedPremisesFromCsvTest : SeedTestBase() {
         ),
       ),
     )
-
-    seedService.seedData(SeedFileType.approvedPremises, "invalid-service-scope.csv")
 
     assertThat(logEntries)
       .withFailMessage("-> logEntries actually contains: $logEntries")
@@ -132,8 +126,8 @@ class Cas1SeedPremisesFromCsvTest : SeedTestBase() {
       withModelScope("room")
     }
 
-    withCsv(
-      "invalid-model-scope",
+    seed(
+      SeedFileType.approvedPremises,
       approvedPremisesSeedCsvRowsToCsv(
         listOf(
           ApprovedPremisesSeedCsvRowFactory()
@@ -144,8 +138,6 @@ class Cas1SeedPremisesFromCsvTest : SeedTestBase() {
         ),
       ),
     )
-
-    seedService.seedData(SeedFileType.approvedPremises, "invalid-model-scope.csv")
 
     assertThat(logEntries)
       .withFailMessage("-> logEntries actually contains: $logEntries")
@@ -163,16 +155,14 @@ class Cas1SeedPremisesFromCsvTest : SeedTestBase() {
       .withIsCatered("Catered")
       .produce()
 
-    withCsv(
-      "new-ap-invalid-boolean",
+    seed(
+      SeedFileType.approvedPremises,
       approvedPremisesSeedCsvRowsToCsv(
         listOf(
           csvRow,
         ),
       ),
     )
-
-    seedService.seedData(SeedFileType.approvedPremises, "new-ap-invalid-boolean.csv")
 
     assertThat(logEntries)
       .withFailMessage("-> logEntries actually contains: $logEntries")
@@ -186,13 +176,11 @@ class Cas1SeedPremisesFromCsvTest : SeedTestBase() {
 
   @Test
   fun `Attempting to create an Approved Premises missing required headers lists missing fields`() {
-    withCsv(
-      "new-ap-missing-headers",
+    seed(
+      SeedFileType.approvedPremises,
       "name,apCode,qCode,apArea,pdu,probationRegion,localAuthorityArea,town,addressLine1\n" +
         "HOPE,Q00,North East,Leeds,Yorkshire & The Humber,Leeds,Leeds,1 The Street, Leeds",
     )
-
-    seedService.seedData(SeedFileType.approvedPremises, "new-ap-missing-headers.csv")
 
     val expectedErrorMessage = "The headers provided: " +
       "[name, apCode, qCode, apArea, pdu, probationRegion, localAuthorityArea, town, addressLine1] " +
@@ -202,7 +190,7 @@ class Cas1SeedPremisesFromCsvTest : SeedTestBase() {
       "acceptsNonSexualChildOffenders, acceptsHateCrimeOffenders, isCatered, hasWideStepFreeAccess, " +
       "hasWideAccessToCommunalAreas, hasStepFreeAccessToCommunalAreas, hasWheelChairAccessibleBathrooms, " +
       "hasLift, hasTactileFlooring, hasBrailleSignage, hasHearingLoop, status, latitude, longitude, gender, " +
-      "supportsSpaceBookings, managerDetails, fullAddress]"
+      "supportsSpaceBookings, managerDetails, fullAddress, isMHAPElliottHouse, isMHAPStJosephs]"
 
     assertThat(logEntries)
       .withFailMessage("-> logEntries actually contains: $logEntries")
@@ -246,16 +234,14 @@ class Cas1SeedPremisesFromCsvTest : SeedTestBase() {
       .withManagerDetails("manager details")
       .produce()
 
-    withCsv(
-      "new-ap",
+    seed(
+      SeedFileType.approvedPremises,
       approvedPremisesSeedCsvRowsToCsv(
         listOf(
           csvRow,
         ),
       ),
     )
-
-    seedService.seedData(SeedFileType.approvedPremises, "new-ap.csv")
 
     val persistedApprovedPremises = approvedPremisesRepository.findByApCode(csvRow.apCode)
     assertThat(persistedApprovedPremises).isNotNull
@@ -304,16 +290,14 @@ class Cas1SeedPremisesFromCsvTest : SeedTestBase() {
       .withSupportsSpaceBookings("no")
       .produce()
 
-    withCsv(
-      "update-ap",
+    seed(
+      SeedFileType.approvedPremises,
       approvedPremisesSeedCsvRowsToCsv(
         listOf(
           csvRow,
         ),
       ),
     )
-
-    seedService.seedData(SeedFileType.approvedPremises, "update-ap.csv")
 
     val persistedApprovedPremises = approvedPremisesRepository.findByApCode(csvRow.apCode)
     assertThat(persistedApprovedPremises).isNotNull
@@ -375,6 +359,8 @@ class Cas1SeedPremisesFromCsvTest : SeedTestBase() {
         "supportsSpaceBookings",
         "managerDetails",
         "fullAddress",
+        "isMHAPElliottHouse",
+        "isMHAPStJosephs",
       )
       .newRow()
 
@@ -417,6 +403,8 @@ class Cas1SeedPremisesFromCsvTest : SeedTestBase() {
         .withQuotedField(it.supportsSpaceBookings)
         .withQuotedField(it.managerDetails)
         .withQuotedField(it.fullAddress ?: "")
+        .withQuotedField(it.isMHAPElliottHouse)
+        .withQuotedField(it.isMHAPStJosephs)
         .newRow()
     }
 
@@ -462,6 +450,8 @@ class ApprovedPremisesSeedCsvRowFactory : Factory<ApprovedPremisesSeedCsvRow> {
   private var gender: Yielded<ApprovedPremisesGender> = { ApprovedPremisesGender.MAN }
   private var supportsSpaceBookings: Yielded<String> = { "no" }
   private var managerDetails: Yielded<String> = { "no" }
+  private var isMHAPElliottHouse: Yielded<String> = { "no" }
+  private var isMHAPStJosephs: Yielded<String> = { "no" }
 
   fun withName(name: String) = apply {
     this.name = { name }
@@ -530,6 +520,14 @@ class ApprovedPremisesSeedCsvRowFactory : Factory<ApprovedPremisesSeedCsvRow> {
     this.managerDetails = { managerDetails }
   }
 
+  fun withIsMHAPElliottHouse(value: String) = apply {
+    this.isMHAPElliottHouse = { value }
+  }
+
+  fun withIsMHAPStJosephs(value: String) = apply {
+    this.isMHAPStJosephs = { value }
+  }
+
   override fun produce() = ApprovedPremisesSeedCsvRow(
     name = this.name(),
     fullAddress = this.fullAddress(),
@@ -568,5 +566,7 @@ class ApprovedPremisesSeedCsvRowFactory : Factory<ApprovedPremisesSeedCsvRow> {
     gender = this.gender(),
     supportsSpaceBookings = this.supportsSpaceBookings(),
     managerDetails = this.managerDetails(),
+    isMHAPElliottHouse = this.isMHAPElliottHouse(),
+    isMHAPStJosephs = this.isMHAPStJosephs(),
   )
 }

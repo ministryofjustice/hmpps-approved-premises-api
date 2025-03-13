@@ -6,6 +6,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.OfflineApplic
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.OfflineApplicationRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.migration.MigrationJob
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PersonSummaryInfoResult
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.LaoStrategy
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.OffenderService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.tryGetDetails
 
@@ -34,7 +35,7 @@ class Cas1BackfillOfflineApplicationName(
 
   private fun getPersonInfoResultsFromApplications(applications: List<OfflineApplicationEntity>): List<PersonSummaryInfoResult> = offenderService.getPersonSummaryInfoResultsInBatches(
     applications.map { it.crn }.toSet(),
-    OffenderService.LimitedAccessStrategy.IgnoreLimitedAccess,
+    LaoStrategy.NeverRestricted,
   )
 
   private fun buildCrnToNameMap(personInfoResults: List<PersonSummaryInfoResult>): Map<String, String?> = personInfoResults.associate {

@@ -31,8 +31,8 @@ class Cas1RedactAssessmentDetailsTest : SeedTestBase() {
     val assessment2HasJson = createAssessment(data = sampleJson)
     val assessment3Unmodified = createAssessment(data = sampleJson)
 
-    withCsv(
-      "valid-csv",
+    seed(
+      SeedFileType.approvedPremisesRedactAssessmentDetails,
       rowsToCsv(
         listOf(
           Cas1RemoveAssessmentDetailsSeedCsvRow(assessment1NoJson.id.toString()),
@@ -40,8 +40,6 @@ class Cas1RedactAssessmentDetailsTest : SeedTestBase() {
         ),
       ),
     )
-
-    seedService.seedData(SeedFileType.approvedPremisesRedactAssessmentDetails, "valid-csv.csv")
 
     val expectedJson = """{"sufficient-information":{"sufficient-information":{"sufficientInformation":"yes","query":""}}}"""
 

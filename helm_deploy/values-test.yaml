@@ -3,12 +3,20 @@
 
 generic-service:
 
+  resources:
+    limits:
+      memory: 3Gi
+    requests:
+      memory: 2.5Gi
+
   ingress:
     host: approved-premises-api-test.hmpps.service.justice.gov.uk
     tlsSecretName: hmpps-approved-premises-api-test-cert
 
   env:
+    JAVA_OPTS: "-Xmx2000m"
     SPRING_PROFILES_ACTIVE: dev
+    APPLICATIONINSIGHTS_ROLE_NAME: approved-premises-api-test
     APPLICATIONINSIGHTS_CONFIGURATION_FILE: applicationinsights.nonprod.json
     HMPPS_AUTH_URL: https://sign-in-dev.hmpps.service.justice.gov.uk/auth
     SERVICES_AP-DELIUS-CONTEXT-API_BASE-URL: https://approved-premises-and-delius-dev.hmpps.service.justice.gov.uk
@@ -88,12 +96,16 @@ generic-service:
     NOTIFY_MODE: DISABLED
     CAS3-REPORT_END-DATE-OVERRIDE: 3
 
+    FEATURE-FLAGS_CAS2-SQS-LISTENER-ENABLED: true
+    FEATURE-FLAGS_ARCHIVE-PROPERTY-VALIDATE-EXISTING-BOOKINGS: false
+    FEATURE-FLAGS_CAS1-DISABLE-OVERBOOKING-SUMMARY: true
+    FEATURE-FLAGS_CAS3-VALIDATE-BOOKING-DEPARTURE-IN-FUTURE: false
+
   namespace_secrets:
     hmpps-approved-premises-api:
       NOTIFY_APIKEY: "NOTIFY_APIKEY"
       NOTIFY_GUESTLISTAPIKEY: "NOTIFY_GUESTLISTAPIKEY"
       NOTIFY_EMAILADDRESSES_CAS2ASSESSORS: "NOTIFY_EMAILADDRESSES_CAS2ASSESSORS"
-
 
   allowlist:
     unilink-aovpn1: "194.75.210.216/29"

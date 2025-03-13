@@ -35,7 +35,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApprovedPremises
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApprovedPremisesAssessmentEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.Cas1ApplicationUserDetailsEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.InmateDetailFactory
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.NeedsDetailsFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.OffenderDetailsSummaryFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.OfflineApplicationEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.PersonRisksFactory
@@ -66,6 +65,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TemporaryAcco
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TemporaryAccommodationApplicationJsonSchemaEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRole
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas1.Cas1OffenderEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.listeners.ApplicationListener
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.Mappa
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PersonInfoResult
@@ -87,12 +87,14 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.ApplicationServi
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.ApplicationService.Cas1ApplicationUpdateFields
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.AssessmentService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.JsonSchemaService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.OffenderRisksService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.OffenderService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.UserAccessService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.UserService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1ApplicationDomainEventService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1ApplicationEmailService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1DomainEventService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1OffenderService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.unit.util.assertThatCasResult
 import java.time.Clock
 import java.time.Instant
@@ -103,11 +105,13 @@ import java.time.ZoneOffset
 import java.util.UUID
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas3.DomainEventService as Cas3DomainEventService
 
+@SuppressWarnings("LargeClass")
 class ApplicationServiceTest {
   private val mockUserRepository = mockk<UserRepository>()
   private val mockApplicationRepository = mockk<ApplicationRepository>()
   private val mockJsonSchemaService = mockk<JsonSchemaService>()
   private val mockOffenderService = mockk<OffenderService>()
+  private val mockOffenderRisksService = mockk<OffenderRisksService>()
   private val mockUserService = mockk<UserService>()
   private val mockAssessmentService = mockk<AssessmentService>()
   private val mockOfflineApplicationRepository = mockk<OfflineApplicationRepository>()
@@ -126,12 +130,14 @@ class ApplicationServiceTest {
   private val mockLockableApplicationRepository = mockk<LockableApplicationRepository>()
   private val mockProbationDeliveryUnitRepository = mockk<ProbationDeliveryUnitRepository>()
   private val mockCas1CruManagementAreaRepository = mockk<Cas1CruManagementAreaRepository>()
+  private val mockCas1OffenderService = mockk<Cas1OffenderService>()
 
   private val applicationService = ApplicationService(
     mockUserRepository,
     mockApplicationRepository,
     mockJsonSchemaService,
     mockOffenderService,
+    mockOffenderRisksService,
     mockUserService,
     mockAssessmentService,
     mockOfflineApplicationRepository,
@@ -150,6 +156,7 @@ class ApplicationServiceTest {
     mockLockableApplicationRepository,
     mockProbationDeliveryUnitRepository,
     mockCas1CruManagementAreaRepository,
+    mockCas1OffenderService,
   )
 
   @Test
@@ -354,10 +361,6 @@ class ApplicationServiceTest {
 
     val user = userWithUsername(username)
 
-    every { mockOffenderService.getOASysNeeds(crn) } returns AuthorisableActionResult.Success(
-      NeedsDetailsFactory().produce(),
-    )
-
     every { mockApDeliusContextApiClient.getTeamsManagingCase(crn) } returns ClientResult.Success(
       HttpStatus.OK,
       ManagingTeamsResponse(
@@ -369,10 +372,23 @@ class ApplicationServiceTest {
       .withCrn(crn)
       .produce()
 
+    val cas1OffenderEntityId = UUID.randomUUID()
+
+    val cas1OffenderEntity = Cas1OffenderEntity(
+      crn = "CRN345",
+      name = "name",
+      nomsNumber = "nomsNo",
+      tier = "level",
+      id = cas1OffenderEntityId,
+      createdAt = OffsetDateTime.of(2025, 3, 5, 10, 30, 0, 0, ZoneOffset.UTC),
+      lastUpdatedAt = OffsetDateTime.of(2025, 3, 5, 10, 30, 0, 0, ZoneOffset.UTC),
+    )
+
     every { mockUserService.getUserForRequest() } returns user
     every { mockJsonSchemaService.getNewestSchema(ApprovedPremisesApplicationJsonSchemaEntity::class.java) } returns schema
     every { mockApplicationRepository.saveAndFlush(any()) } answers { it.invocation.args[0] as ApplicationEntity }
     every { mockApplicationTeamCodeRepository.save(any()) } answers { it.invocation.args[0] as ApplicationTeamCodeEntity }
+    every { mockCas1OffenderService.getOrCreateOffender(any(), any()) } returns cas1OffenderEntity
 
     val riskRatings = PersonRisksFactory()
       .withRoshRisks(
@@ -405,16 +421,15 @@ class ApplicationServiceTest {
       )
       .produce()
 
-    every { mockOffenderService.getRiskByCrn(crn, username) } returns AuthorisableActionResult.Success(
-      riskRatings,
-    )
+    every { mockOffenderRisksService.getPersonRisks(crn) } returns riskRatings
 
     val result = applicationService.createApprovedPremisesApplication(offenderDetails, user, 123, "1", "A12HI")
 
     assertThatCasResult(result).isSuccess().with {
-      val approvedPremisesApplication = it as ApprovedPremisesApplicationEntity
+      val approvedPremisesApplication = it
       assertThat(approvedPremisesApplication.riskRatings).isEqualTo(riskRatings)
       assertThat(approvedPremisesApplication.name).isEqualTo("${offenderDetails.firstName.uppercase()} ${offenderDetails.surname.uppercase()}")
+      assertThat(approvedPremisesApplication.cas1OffenderEntity).isEqualTo(cas1OffenderEntity)
     }
   }
 
@@ -621,9 +636,7 @@ class ApplicationServiceTest {
       )
       .produce()
 
-    every { mockOffenderService.getRiskByCrn(crn, username) } returns AuthorisableActionResult.Success(
-      riskRatings,
-    )
+    every { mockOffenderRisksService.getPersonRisks(crn) } returns riskRatings
 
     val result = applicationService.createTemporaryAccommodationApplication(
       crn,
@@ -702,9 +715,7 @@ class ApplicationServiceTest {
       )
       .produce()
 
-    every { mockOffenderService.getRiskByCrn(crn, username) } returns AuthorisableActionResult.Success(
-      riskRatings,
-    )
+    every { mockOffenderRisksService.getPersonRisks(crn) } returns riskRatings
 
     val result = applicationService.createTemporaryAccommodationApplication(
       crn,
@@ -782,9 +793,7 @@ class ApplicationServiceTest {
       )
       .produce()
 
-    every { mockOffenderService.getRiskByCrn(crn, username) } returns AuthorisableActionResult.Success(
-      riskRatings,
-    )
+    every { mockOffenderRisksService.getPersonRisks(crn) } returns riskRatings
 
     val result = applicationService.createTemporaryAccommodationApplication(
       crn,
@@ -796,7 +805,7 @@ class ApplicationServiceTest {
     )
 
     assertThatCasResult(result).isSuccess().with {
-      val temporaryAccommodationApplication = it as TemporaryAccommodationApplicationEntity
+      val temporaryAccommodationApplication = it
       assertThat(temporaryAccommodationApplication.riskRatings).isEqualTo(riskRatings)
       assertThat(temporaryAccommodationApplication.prisonNameOnCreation).isNull()
     }
@@ -862,9 +871,7 @@ class ApplicationServiceTest {
       )
       .produce()
 
-    every { mockOffenderService.getRiskByCrn(crn, username) } returns AuthorisableActionResult.Success(
-      riskRatings,
-    )
+    every { mockOffenderRisksService.getPersonRisks(crn) } returns riskRatings
 
     val result = applicationService.createTemporaryAccommodationApplication(
       crn,

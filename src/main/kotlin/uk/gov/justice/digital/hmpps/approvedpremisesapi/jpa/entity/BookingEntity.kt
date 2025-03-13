@@ -20,8 +20,8 @@ import org.springframework.data.jpa.repository.Modifying
 import org.springframework.data.jpa.repository.Query
 import org.springframework.stereotype.Repository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.BookingStatus
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.BookingSummaryForAvailability
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas1.Cas1ApplicationFacade
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.BookingSummaryForAvailability
 import java.time.Instant
 import java.time.LocalDate
 import java.time.OffsetDateTime
@@ -71,38 +71,8 @@ interface BookingRepository : JpaRepository<BookingEntity, UUID> {
     endDate: LocalDate,
   ): List<BookingSummaryForAvailability>
 
-  @Query(
-    """
-    SELECT
-        bk.id as bookingId,
-        bk.crn as crn,
-        bk.arrival_date as arrivalDate,
-        bk.departure_date as departureDate,
-        bk.premises_id as premisesId,
-        r.id as roomId,
-        a.id as assessmentId
-    FROM bookings bk
-             INNER JOIN premises p ON bk.premises_id = p.id
-             INNER JOIN beds b ON bk.bed_id = b.id
-             INNER JOIN rooms r ON b.room_id = r.id
-             LEFT JOIN applications ap ON bk.application_id = ap.id
-             LEFT JOIN assessments a ON ap.id = a.application_id
-             LEFT JOIN cancellations c ON bk.id = c.booking_id
-    WHERE bk.premises_id IN (:premisesIds) AND bk.arrival_date <= :endDate AND bk.departure_date >= :startDate AND c.id IS NULL
-    """,
-    nativeQuery = true,
-  )
-  fun findAllNotCancelledByPremisesIdsAndOverlappingDate(
-    premisesIds: List<UUID>,
-    startDate: LocalDate,
-    endDate: LocalDate,
-  ): List<OverlapBookingsSearchResult>
-
   @Query("SELECT b FROM BookingEntity b WHERE b.arrivalDate <= :endDate AND b.departureDate >= :startDate AND b.bed = :bed")
   fun findAllByOverlappingDateForBed(startDate: LocalDate, endDate: LocalDate, bed: BedEntity): List<BookingEntity>
-
-  @Query("SELECT MAX(b.departureDate) FROM BookingEntity b WHERE b.premises.id = :premisesId")
-  fun getHighestBookingDate(premisesId: UUID): LocalDate?
 
   @Modifying
   @Query(
@@ -140,9 +110,85 @@ interface BookingRepository : JpaRepository<BookingEntity, UUID> {
   )
   fun findByBedIdAndArrivingBeforeDate(bedId: UUID, date: LocalDate, thisEntityId: UUID?): List<BookingEntity>
 
+  @Query(
+    "SELECT b From BookingEntity b WHERE b.application = :application AND (b.adhoc IS TRUE or b.adhoc IS NULL)",
+  )
+  fun findAllAdhocOrUnknownByApplication(application: ApplicationEntity): List<BookingEntity>
+
+  fun findAllByApplication(application: ApplicationEntity): List<BookingEntity>
+
+  @Modifying
+  @Query("UPDATE BookingEntity b set b.status = :status where b.id = :bookingId")
+  fun updateBookingStatus(bookingId: UUID, status: BookingStatus)
+
+  @Query(
+    "SELECT * FROM bookings WHERE status IS NULL AND service='temporary-accommodation' ",
+    nativeQuery = true,
+  )
+  fun findAllCas3bookingsWithNullStatus(pageable: Pageable?): Slice<BookingEntity>
+
+  @Query(
+    "SELECT b FROM BookingEntity b " +
+      "WHERE b.bed.id = :bedId " +
+      "AND NOT EXISTS (SELECT na FROM NonArrivalEntity na WHERE na.booking = b ) " +
+      "AND b.departureDate >= :date " +
+      "AND SIZE(b.cancellations) = 0 ",
+  )
+  fun findActiveOverlappingBookingByBed(bedId: UUID, date: LocalDate): List<BookingEntity>
+
+  @Query(
+    """
+      SELECT id from bookings where premises_id = :premisesId 
+    """,
+    nativeQuery = true,
+  )
+  fun findAllIdsByPremisesId(premisesId: UUID): List<UUID>
+
+  @Query(
+    "SELECT b FROM BookingEntity b WHERE b.service = :serviceName AND b.premises.id = :premisesId AND b.departureDate >= :date AND b.status in :statuses",
+  )
+  fun findFutureBookingsByPremisesIdAndStatus(serviceName: String, premisesId: UUID, date: LocalDate, statuses: List<BookingStatus>): List<BookingEntity>
+}
+
+@Repository
+interface Cas3BookingRepository : JpaRepository<BookingEntity, UUID> {
+  @Query(
+    """
+    SELECT
+        bk.id as bookingId,
+        bk.crn as crn,
+        bk.arrival_date as arrivalDate,
+        bk.departure_date as departureDate,
+        bk.premises_id as premisesId,
+        r.id as roomId,
+        a.id as assessmentId, 
+        CASE 
+            WHEN ap.is_registered_sex_offender = TRUE 
+            OR ap.is_concerning_sexual_behaviour = TRUE
+            OR ap.is_history_of_sexual_offence = TRUE 
+         THEN TRUE 
+        ELSE FALSE 
+        END as sexualRisk
+    FROM bookings bk
+             INNER JOIN premises p ON bk.premises_id = p.id
+             INNER JOIN beds b ON bk.bed_id = b.id
+             INNER JOIN rooms r ON b.room_id = r.id
+             LEFT JOIN temporary_accommodation_applications ap ON bk.application_id = ap.id
+             LEFT JOIN assessments a ON ap.id = a.application_id
+             LEFT JOIN cancellations c ON bk.id = c.booking_id
+    WHERE bk.premises_id IN (:premisesIds) AND bk.arrival_date <= :endDate AND bk.departure_date >= :startDate AND c.id IS NULL
+    """,
+    nativeQuery = true,
+  )
+  fun findAllNotCancelledByPremisesIdsAndOverlappingDate(
+    premisesIds: List<UUID>,
+    startDate: LocalDate,
+    endDate: LocalDate,
+  ): List<OverlapBookingsSearchResult>
+
   /*
-    This query is to find the closest booking to the start date for the current bedspace search
-    The ClosestBooking is to get the closest booking to the bedspace search start date that is not cancelled
+  This query is to find the closest booking to the start date for the current bedspace search
+  The ClosestBooking is to get the closest booking to the bedspace search start date that is not cancelled
    */
   @Query(
     """
@@ -168,15 +214,6 @@ interface BookingRepository : JpaRepository<BookingEntity, UUID> {
     nativeQuery = true,
   )
   fun findClosestBookingBeforeDateForBeds(date: LocalDate, bedIds: List<UUID>): List<BookingEntity>
-
-  fun findAllByCrn(crn: String): List<BookingEntity>
-
-  @Query(
-    "SELECT b From BookingEntity b WHERE b.application = :application AND (b.adhoc IS TRUE or b.adhoc IS NULL)",
-  )
-  fun findAllAdhocOrUnknownByApplication(application: ApplicationEntity): List<BookingEntity>
-
-  fun findAllByApplication(application: ApplicationEntity): List<BookingEntity>
 
   companion object {
     private const val OFFENDERS_QUERY = """
@@ -242,33 +279,6 @@ interface BookingRepository : JpaRepository<BookingEntity, UUID> {
     crnOrName: String?,
     pageable: Pageable?,
   ): Page<BookingSearchResult>
-
-  @Modifying
-  @Query("UPDATE BookingEntity b set b.status = :status where b.id = :bookingId")
-  fun updateBookingStatus(bookingId: UUID, status: BookingStatus)
-
-  @Query(
-    "SELECT * FROM bookings WHERE status IS NULL AND service='temporary-accommodation' ",
-    nativeQuery = true,
-  )
-  fun findAllCas3bookingsWithNullStatus(pageable: Pageable?): Slice<BookingEntity>
-
-  @Query(
-    "SELECT b FROM BookingEntity b " +
-      "WHERE b.bed.id = :bedId " +
-      "AND NOT EXISTS (SELECT na FROM NonArrivalEntity na WHERE na.booking = b ) " +
-      "AND b.departureDate >= :date " +
-      "AND SIZE(b.cancellations) = 0 ",
-  )
-  fun findActiveOverlappingBookingByBed(bedId: UUID, date: LocalDate): List<BookingEntity>
-
-  @Query(
-    """
-      SELECT id from bookings where premises_id = :premisesId 
-    """,
-    nativeQuery = true,
-  )
-  fun findAllIdsByPremisesId(premisesId: UUID): List<UUID>
 }
 
 @Entity
@@ -413,4 +423,13 @@ interface OverlapBookingsSearchResult {
   val premisesId: UUID
   val roomId: UUID
   val assessmentId: UUID
+  val sexualRisk: Boolean
+}
+
+interface BookingSummaryForAvailability {
+  fun getArrivalDate(): LocalDate
+  fun getDepartureDate(): LocalDate
+  fun getArrived(): Boolean
+  fun getIsNotArrived(): Boolean
+  fun getCancelled(): Boolean
 }

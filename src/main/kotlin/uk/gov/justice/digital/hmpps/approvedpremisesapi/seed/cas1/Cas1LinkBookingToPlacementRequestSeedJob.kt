@@ -11,7 +11,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.toUiFormat
 import java.util.UUID
 
 @Component
-class Cas1LinkedBookingToPlacementRequestSeedJob(
+class Cas1LinkBookingToPlacementRequestSeedJob(
   private val placementRequestRepository: PlacementRequestRepository,
   private val bookingRepository: BookingRepository,
   private val applicationTimelineNoteService: ApplicationTimelineNoteService,

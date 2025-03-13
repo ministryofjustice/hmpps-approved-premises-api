@@ -16,7 +16,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.CharacteristicSe
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.OffenderService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.UserAccessService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.UserService
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1LimitedAccessStrategy
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1LaoStrategy
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.PersonTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.cas1.Cas1SpaceBookingDaySummaryTransformer
 import java.time.LocalDate
@@ -39,6 +39,7 @@ class Cas1SpaceBookingDaySummaryService(
     bookingsCriteriaFilter: List<Cas1SpaceBookingCharacteristic>?,
     bookingsSortBy: Cas1SpaceBookingDaySummarySortField,
     bookingsSortDirection: SortDirection,
+    excludeSpaceBookingId: UUID? = null,
   ): CasResult<List<Cas1SpaceBookingDaySummary>> {
     if (cas1PremisesService.findPremiseById(premisesId) == null) return CasResult.NotFound("premises", premisesId.toString())
 
@@ -50,11 +51,12 @@ class Cas1SpaceBookingDaySummaryService(
       bookingsSortBy.value,
     )
 
-    val spaceBookingsForDate = cas1SpaceBookingRepository.findAllPremisesBookingsForDate(
+    val spaceBookingsForDate = cas1SpaceBookingRepository.findByPremisesIdAndCriteriaForDate(
       premisesId = premisesId,
-      daySummaryDate = date,
-      bookingsCriteriaFilter = getBookingCharacteristicIds(bookingsCriteriaFilter),
+      date = date,
+      criteria = getBookingCharacteristicIds(bookingsCriteriaFilter),
       sort = sort,
+      excludeSpaceBookingId = excludeSpaceBookingId,
     )
 
     val offenderSummaries = getOffenderSummariesForBookings(spaceBookingsForDate)
@@ -74,18 +76,17 @@ class Cas1SpaceBookingDaySummaryService(
     )
   }
 
-  private fun getBookingCharacteristicIds(bookingsCriteriaFilter: List<Cas1SpaceBookingCharacteristic>?) =
-    bookingsCriteriaFilter?.let { bookingCriteria ->
-      val characteristics = bookingCriteria.map { it.value }
-      characteristicService.getCharacteristicsByPropertyNames(characteristics, ServiceName.approvedPremises)
-        .map { characteristic -> characteristic.id }
-    }
+  private fun getBookingCharacteristicIds(bookingsCriteriaFilter: List<Cas1SpaceBookingCharacteristic>?) = bookingsCriteriaFilter?.let { bookingCriteria ->
+    val characteristics = bookingCriteria.map { it.value }
+    characteristicService.getCharacteristicsByPropertyNames(characteristics, ServiceName.approvedPremises)
+      .map { characteristic -> characteristic.id }
+  }
 
   private fun getOffenderSummariesForBookings(spaceBookings: List<Cas1SpaceBookingDaySummarySearchResult>): List<PersonSummaryInfoResult> {
     val user = userService.getUserForRequest()
     return offenderService.getPersonSummaryInfoResults(
       crns = spaceBookings.map { it.crn }.toSet(),
-      limitedAccessStrategy = user.cas1LimitedAccessStrategy(),
+      laoStrategy = user.cas1LaoStrategy(),
     )
   }
 }

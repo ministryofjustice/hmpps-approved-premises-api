@@ -3,10 +3,12 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.controller.cas1
 import org.springframework.http.ResponseEntity
 import org.springframework.stereotype.Service
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.cas1.ReferenceDataCas1Delegate
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1ChangeRequestType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1CruManagementArea
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1OutOfServiceBedReason
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.DepartureReason
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.MoveOnCategory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NamedId
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NonArrivalReason
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas1CruManagementAreaRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas1OutOfServiceBedReasonRepository
@@ -33,40 +35,33 @@ class Cas1ReferenceDataController(
   private val moveOnCategoryTransformer: MoveOnCategoryTransformer,
 ) : ReferenceDataCas1Delegate {
 
-  override fun getOutOfServiceBedReasons(): ResponseEntity<List<Cas1OutOfServiceBedReason>> {
-    return ResponseEntity.ok(
-      cas1OutOfServiceBedReasonRepository.findActive().map {
-          reason ->
-        cas1OutOfServiceBedReasonTransformer.transformJpaToApi(reason)
-      },
-    )
-  }
+  override fun getChangeRequestReasons(changeRequestType: Cas1ChangeRequestType): ResponseEntity<List<NamedId>> = super.getChangeRequestReasons(changeRequestType)
 
-  override fun getCruManagementAreas(): ResponseEntity<List<Cas1CruManagementArea>> {
-    return ResponseEntity.ok(
-      cas1CruManagementAreaRepository.findAll()
-        .map { cas1CruManagementAreaTransformer.transformJpaToApi(it) },
-    )
-  }
+  override fun getChangeRequestRejectionReasons(changeRequestType: Cas1ChangeRequestType): ResponseEntity<List<NamedId>> = super.getChangeRequestRejectionReasons(changeRequestType)
 
-  override fun getDepartureReasons(): ResponseEntity<List<DepartureReason>> {
-    return ResponseEntity.ok(
-      departureReasonRepository.findActiveForCas1()
-        .map { departureReasonTransformer.transformJpaToApi(it) },
-    )
-  }
+  override fun getOutOfServiceBedReasons(): ResponseEntity<List<Cas1OutOfServiceBedReason>> = ResponseEntity.ok(
+    cas1OutOfServiceBedReasonRepository.findActive().map { reason ->
+      cas1OutOfServiceBedReasonTransformer.transformJpaToApi(reason)
+    },
+  )
 
-  override fun getMoveOnCategories(): ResponseEntity<List<MoveOnCategory>> {
-    return ResponseEntity.ok(
-      moveOnCategoryRepository.findActiveForCas1()
-        .map(moveOnCategoryTransformer::transformJpaToApi),
-    )
-  }
+  override fun getCruManagementAreas(): ResponseEntity<List<Cas1CruManagementArea>> = ResponseEntity.ok(
+    cas1CruManagementAreaRepository.findAll()
+      .map { cas1CruManagementAreaTransformer.transformJpaToApi(it) },
+  )
 
-  override fun getNonArrivalReasons(): ResponseEntity<List<NonArrivalReason>> {
-    return ResponseEntity.ok(
-      nonArrivalReasonRepository.findAllActiveReasons()
-        .map(nonArrivalReasonTransformer::transformJpaToApi),
-    )
-  }
+  override fun getDepartureReasons(): ResponseEntity<List<DepartureReason>> = ResponseEntity.ok(
+    departureReasonRepository.findActiveForCas1()
+      .map { departureReasonTransformer.transformJpaToApi(it) },
+  )
+
+  override fun getMoveOnCategories(): ResponseEntity<List<MoveOnCategory>> = ResponseEntity.ok(
+    moveOnCategoryRepository.findActiveForCas1()
+      .map(moveOnCategoryTransformer::transformJpaToApi),
+  )
+
+  override fun getNonArrivalReasons(): ResponseEntity<List<NonArrivalReason>> = ResponseEntity.ok(
+    nonArrivalReasonRepository.findAllActiveReasons()
+      .map(nonArrivalReasonTransformer::transformJpaToApi),
+  )
 }

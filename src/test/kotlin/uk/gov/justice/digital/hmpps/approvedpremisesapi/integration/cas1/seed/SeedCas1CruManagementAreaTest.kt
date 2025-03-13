@@ -32,8 +32,9 @@ class SeedCas1CruManagementAreaTest : SeedTestBase() {
   @Test
   fun `Attempting to seed using an invalid id logs an error`() {
     val invalidId = UUID.randomUUID()
-    withCsv(
-      csvName = "invalid-id",
+
+    seed(
+      SeedFileType.approvedPremisesCruManagementAreas,
       contents = listOf(
         CruManagementAreaSeedCsvRow(
           id = invalidId,
@@ -43,8 +44,6 @@ class SeedCas1CruManagementAreaTest : SeedTestBase() {
         ),
       ).toCsv(),
     )
-
-    seedService.seedData(SeedFileType.approvedPremisesCruManagementAreas, "invalid-id.csv")
 
     assertThat(logEntries)
       .withFailMessage("-> logEntries actually contains: $logEntries")
@@ -58,8 +57,8 @@ class SeedCas1CruManagementAreaTest : SeedTestBase() {
 
   @Test
   fun `Attempting to seed using an invalid name logs an error`() {
-    withCsv(
-      csvName = "invalid-name",
+    seed(
+      SeedFileType.approvedPremisesCruManagementAreas,
       contents = listOf(
         CruManagementAreaSeedCsvRow(
           id = areaId,
@@ -69,8 +68,6 @@ class SeedCas1CruManagementAreaTest : SeedTestBase() {
         ),
       ).toCsv(),
     )
-
-    seedService.seedData(SeedFileType.approvedPremisesCruManagementAreas, "invalid-name.csv")
 
     assertThat(logEntries)
       .withFailMessage("-> logEntries actually contains: $logEntries")
@@ -84,8 +81,8 @@ class SeedCas1CruManagementAreaTest : SeedTestBase() {
 
   @Test
   fun `Updating cru management area persists correctly`() {
-    withCsv(
-      csvName = "valid-csv",
+    seed(
+      SeedFileType.approvedPremisesCruManagementAreas,
       contents = listOf(
         CruManagementAreaSeedCsvRow(
           id = areaId,
@@ -96,8 +93,6 @@ class SeedCas1CruManagementAreaTest : SeedTestBase() {
       ).toCsv(),
     )
 
-    seedService.seedData(SeedFileType.approvedPremisesCruManagementAreas, "valid-csv.csv")
-
     val updatedArea = cas1CruManagementAreaRepository.findByIdOrNull(areaId)!!
 
     assertThat(updatedArea.emailAddress).isEqualTo("updated@test.com")
@@ -106,8 +101,8 @@ class SeedCas1CruManagementAreaTest : SeedTestBase() {
 
   @Test
   fun `Updating cru management area with null values correctly`() {
-    withCsv(
-      csvName = "valid-csv",
+    seed(
+      SeedFileType.approvedPremisesCruManagementAreas,
       contents = listOf(
         CruManagementAreaSeedCsvRow(
           id = areaId,
@@ -117,8 +112,6 @@ class SeedCas1CruManagementAreaTest : SeedTestBase() {
         ),
       ).toCsv(),
     )
-
-    seedService.seedData(SeedFileType.approvedPremisesCruManagementAreas, "valid-csv.csv")
 
     val updatedArea = cas1CruManagementAreaRepository.findByIdOrNull(areaId)!!
 

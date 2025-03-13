@@ -89,6 +89,11 @@ generic-service:
 
     USER-ALLOCATIONS_RULES_ESAP-ASSESSMENTS_ALLOCATE-TO-USER: KATHRYNHALL1NPS
 
+    FEATURE-FLAGS_CAS2-SQS-LISTENER-ENABLED: false
+    FEATURE-FLAGS_ARCHIVE-PROPERTY-VALIDATE-EXISTING-BOOKINGS: false
+    FEATURE-FLAGS_CAS1-DISABLE-OVERBOOKING-SUMMARY: true
+    FEATURE-FLAGS_CAS3-VALIDATE-BOOKING-DEPARTURE-IN-FUTURE: false
+
   namespace_secrets:
     hmpps-domain-events-topic:
       HMPPS_SQS_TOPICS_DOMAINEVENTS_ARN: "topic_arn"
@@ -100,7 +105,7 @@ generic-service:
 # CloudPlatform AlertManager receiver to route prometheus alerts to slack
 # See https://user-guide.cloud-platform.service.justice.gov.uk/documentation/monitoring-an-app/how-to-create-alarms.html#creating-your-own-custom-alerts
 generic-prometheus-alerts:
-  alertSeverity: digital-prison-service-dev
+  alertSeverity: hmpps-approved-premises
 
 env_details:
   production_env: false

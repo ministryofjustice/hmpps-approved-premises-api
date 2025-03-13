@@ -7,9 +7,9 @@ import org.springframework.stereotype.Service
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas2v2.Cas2v2ApplicationStatusUpdatesReportRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas2v2.Cas2v2SubmittedApplicationReportRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas2v2.Cas2v2UnsubmittedApplicationsReportRepository
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.model.cas2.ApplicationStatusUpdatesReportRow
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.model.cas2.SubmittedApplicationReportRow
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.model.cas2.UnsubmittedApplicationsReportRow
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.model.cas2v2.ApplicationStatusUpdatesReportRow
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.model.cas2v2.SubmittedApplicationReportRow
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.model.cas2v2.UnsubmittedApplicationsReportRow
 import java.io.OutputStream
 
 @Service
@@ -24,6 +24,7 @@ class Cas2v2ReportsService(
       SubmittedApplicationReportRow(
         eventId = row.getId(),
         applicationId = row.getApplicationId(),
+        applicationOrigin = row.getApplicationOrigin(),
         personCrn = row.getPersonCrn(),
         personNoms = row.getPersonNoms(),
         referringPrisonCode = row.getReferringPrisonCode(),
@@ -68,6 +69,7 @@ class Cas2v2ReportsService(
     val reportData = cas2v2UnsubmittedApplicationsReportRepository.generateUnsubmittedApplicationsReportRows().map { row ->
       UnsubmittedApplicationsReportRow(
         applicationId = row.getApplicationId(),
+        applicationOrigin = row.getApplicationOrigin(),
         personCrn = row.getPersonCrn(),
         personNoms = row.getPersonNoms(),
         startedBy = row.getStartedBy(),

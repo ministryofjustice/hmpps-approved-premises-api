@@ -46,32 +46,11 @@ components:
         fullAddress:
           description: Full address, excluding postcode
           type: string
-        addressLine1:
-          description: Deprecated, use fullAddress
-          deprecated: true
-          type: string
-          example: 1 The Street
-        addressLine2:
-          description: Deprecated, use fullAddress
-          deprecated: true
-          type: string
-          example: Blackmore End
-        town:
-          description: Deprecated, use fullAddress
-          deprecated: true
-          type: string
-          example: Braintree
         postcode:
           type: string
           example: LS1 3AD
         apArea:
           $ref: '_shared.yml#/components/schemas/NamedId'
-        premisesCharacteristics:
-          type: array
-          deprecated: true
-          description: "This is not populated. Instead, use 'characteristics'"
-          items:
-            $ref: '_shared.yml#/components/schemas/CharacteristicPair'
         characteristics:
           type: array
           description: "Room and premise characteristics"
@@ -185,13 +164,20 @@ components:
           format: uuid
           example: 290fa58c-77b2-47e2-b729-4cd6b2ed1a78
         requirements:
+          deprecated: true
+          description: use characteristics
           $ref: '#/components/schemas/Cas1SpaceBookingRequirements'
+        characteristics:
+          type: array
+          items:
+            $ref: '_shared.yml#/components/schemas/Cas1SpaceCharacteristic'
       required:
         - arrivalDate
         - departureDate
         - premisesId
-        - requirements
     Cas1SpaceBookingRequirements:
+      deprecated: true
+      description: this is only used by deprecated fields
       type: object
       properties:
         essentialCharacteristics:
@@ -217,6 +203,7 @@ components:
           items:
             $ref: '#/components/schemas/Cas1SpaceBookingCharacteristic'
     Cas1SpaceSearchRequirements:
+      deprecated: true
       type: object
       properties:
         apTypes:
@@ -230,6 +217,8 @@ components:
           description: "Use 'spaceCharacteristics' to filter on premise types"
           $ref: '_shared.yml#/components/schemas/ApType'
         spaceCharacteristics:
+          deprecated: true
+          description: use Cas1SpaceSearchParameters.spaceCharacteristics
           type: array
           items:
             $ref: '_shared.yml#/components/schemas/Cas1SpaceCharacteristic'
@@ -261,7 +250,12 @@ components:
           description: The 'target' location, in the form of a postcode district
           example: SE5
         requirements:
+          deprecated: true
           $ref: '#/components/schemas/Cas1SpaceSearchRequirements'
+        spaceCharacteristics:
+          type: array
+          items:
+            $ref: '_shared.yml#/components/schemas/Cas1SpaceCharacteristic'
       required:
         - applicationId
         - startDate
@@ -271,8 +265,6 @@ components:
     Cas1SpaceSearchResults:
       type: object
       properties:
-        searchCriteria:
-          $ref: '#/components/schemas/Cas1SpaceSearchParameters'
         resultsCount:
           type: integer
           example: 4
@@ -291,26 +283,9 @@ components:
         distanceInMiles:
           type: number
           example: 2.1
-        spacesAvailable:
-          type: array
-          deprecated: true
-          description: "This is not populated and will be removed in the future"
-          items:
-            $ref: '#/components/schemas/Cas1SpaceAvailability'
       required:
         - premises
         - distanceInMiles
-    Cas1SpaceAvailability:
-      type: object
-      deprecated: true
-      properties:
-        spaceCharacteristics:
-          type: array
-          items:
-            $ref: '_shared.yml#/components/schemas/Cas1SpaceCharacteristic'
-        durationInDays:
-          type: integer
-          example: 77
     Cas1SpaceCategory:
       type: string
       example: arson
@@ -338,8 +313,6 @@ components:
           $ref: '_shared.yml#/components/schemas/Person'
         tier:
           type: string
-        requirements:
-          $ref: '#/components/schemas/Cas1SpaceBookingRequirements'
         premises:
           $ref: '_shared.yml#/components/schemas/NamedId'
         apArea:
@@ -347,6 +320,11 @@ components:
         bookedBy:
           $ref: '_shared.yml#/components/schemas/User'
         requestForPlacementId:
+          deprecated: true
+          description: use the better named 'placementRequestId'
+          type: string
+          format: uuid
+        placementRequestId:
           type: string
           format: uuid
         expectedArrivalDate:
@@ -356,11 +334,11 @@ components:
           type: string
           format: date
         actualArrivalDate:
-          description: Use actualArrivalDateOnly and actualArrivalTime
-          deprecated: true
           type: string
-          format: date-time
+          format: date
         actualArrivalDateOnly:
+          description: Use actualArrivalDate
+          deprecated: true
           type: string
           format: date
         actualArrivalTime:
@@ -369,11 +347,11 @@ components:
           pattern: '^([01][0-9]|2[0-3]):([0-5][0-9])$'
           example: '23:15'
         actualDepartureDate:
-          description: Use actualDepartureDateOnly and actualDepartureTime
-          deprecated: true
           type: string
-          format: date-time
+          format: date
         actualDepartureDateOnly:
+          description: Use actualDepartureDate
+          deprecated: true
           type: string
           format: date
         actualDepartureTime:
@@ -382,10 +360,12 @@ components:
           pattern: '^([01][0-9]|2[0-3]):([0-5][0-9])$'
           example: '23:15'
         canonicalArrivalDate:
-          description: actual arrival date or, if not known, the expected arrival date
+          deprecated: true
+          description: actual arrival date or, if not known, the expected arrival date.
           type: string
           format: date
         canonicalDepartureDate:
+          deprecated: true
           description: actual departure date or, if not known, the expected departure date
           type: string
           format: date
@@ -395,7 +375,7 @@ components:
           type: string
           format: date-time
         keyWorkerAllocation:
-          $ref: '#/components/schemas/Cas1KeyWorkerAllocation'
+          $ref: '_shared.yml#/components/schemas/Cas1KeyWorkerAllocation'
         otherBookingsInPremisesForCrn:
           type: array
           items:
@@ -407,7 +387,7 @@ components:
         deliusEventNumber:
           type: string
         status:
-          $ref: '#/components/schemas/Cas1SpaceBookingSummaryStatus'
+          $ref: '_shared.yml#/components/schemas/Cas1SpaceBookingSummaryStatus'
         characteristics:
           type: array
           items:
@@ -416,7 +396,6 @@ components:
         - id
         - applicationId
         - person
-        - requirements
         - premises
         - apArea
         - expectedArrivalDate
@@ -442,34 +421,6 @@ components:
           format: date
       required:
         - id
-        - canonicalArrivalDate
-        - canonicalDepartureDate
-    Cas1SpaceBookingSummary:
-      type: object
-      properties:
-        id:
-          type: string
-          format: uuid
-        person:
-          $ref: "_shared.yml#/components/schemas/PersonSummary"
-        canonicalArrivalDate:
-          description: actual arrival date or, if not known, the expected arrival date
-          type: string
-          format: date
-        canonicalDepartureDate:
-          description: actual departure date or, if not known, the expected departure date
-          type: string
-          format: date
-        tier:
-          description: Risk rating tier level of corresponding application
-          type: string
-        keyWorkerAllocation:
-          $ref: '#/components/schemas/Cas1KeyWorkerAllocation'
-        status:
-          $ref: '#/components/schemas/Cas1SpaceBookingSummaryStatus'
-      required:
-        - id
-        - person
         - canonicalArrivalDate
         - canonicalDepartureDate
     Cas1SpaceBookingSummarySortField:
@@ -556,35 +507,12 @@ components:
         - canonicalDepartureDate
         - spaceType
         - essentialCharacteristics
-    Cas1SpaceBookingSummaryStatus:
-      type: string
-      enum:
-        - arrivingWithin6Weeks
-        - arrivingWithin2Weeks
-        - arrivingToday
-        - overdueArrival
-        - arrived
-        - notArrived
-        - departingWithin2Weeks
-        - departingToday
-        - overdueDeparture
-        - departed
     Cas1SpaceBookingResidency:
       type: string
       enum:
         - upcoming
         - current
         - historic
-    Cas1KeyWorkerAllocation:
-      type: object
-      properties:
-        keyWorker:
-          $ref: '_shared.yml#/components/schemas/StaffMember'
-        allocatedAt:
-          type: string
-          format: date
-      required:
-        - keyWorker
     Cas1SpaceBookingDeparture:
       type: object
       properties:
@@ -779,13 +707,40 @@ components:
       enum:
         - applications
         - applicationsV2
+        - applicationsV2WithPii
         - dailyMetrics
         - lostBeds
         - outOfServiceBeds
         - placementApplications
         - placementMatchingOutcomes
         - placementMatchingOutcomesV2
+        - placementMatchingOutcomesV2WithPii
         - requestsForPlacement
+        - requestsForPlacementWithPii
+        - placements
+        - placementsWithPii
+    Cas1BedDetail:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        name:
+          type: string
+        roomName:
+          type: string
+        status:
+          $ref: '_shared.yml#/components/schemas/BedStatus'
+        characteristics:
+          type: array
+          items:
+            $ref: '_shared.yml#/components/schemas/Cas1SpaceCharacteristic'
+      required:
+        - id
+        - name
+        - roomName
+        - status
+        - characteristics
     Cas1OutOfServiceBedSummary:
       type: object
       properties:
@@ -1222,3 +1177,155 @@ components:
         - person
         - isParole
         - id
+    Cas1NewChangeRequest:
+      type: object
+      properties:
+        spaceBookingId:
+          type: string
+          format: uuid
+        type:
+          $ref: '#/components/schemas/Cas1ChangeRequestType'
+        requestJson:
+          type: object
+          additionalProperties:
+            $ref: '_shared.yml#/components/schemas/Unit'
+        reasonId:
+          type: string
+          format: uuid
+      required:
+        - space_booking_id
+        - type
+        - requestJson
+        - reasonId
+    Cas1ChangeRequestDecision:
+      type: string
+      enum:
+        - approved
+        - rejected
+      x-enum-varnames:
+        - APPROVED
+        - REJECTED
+    Cas1ChangeRequestType:
+      type: string
+      enum:
+        - appeal
+        - extension
+        - plannedTransfer
+      x-enum-varnames:
+        - APPEAL
+        - EXTENSION
+        - PLANNED_TRANSFER
+    Cas1ChangeRequest:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        person:
+          $ref: "_shared.yml#/components/schemas/PersonSummary"
+        type:
+          $ref: '#/components/schemas/Cas1ChangeRequestType'
+        createdAt:
+          type: string
+          format: date-time
+        tier:
+          type: string
+        expectedArrivalDate:
+          type: string
+          format: date
+        actualArrivalDate:
+          type: string
+          format: date
+        lengthOfStayDays:
+          type: integer
+        requestReason:
+          $ref: '_shared.yml#/components/schemas/NamedId'
+        decision:
+          $ref: '#/components/schemas/Cas1ChangeRequestDecision'
+        decisionJson:
+          type: object
+          additionalProperties:
+            $ref: '_shared.yml#/components/schemas/Unit'
+        rejectionReason:
+          $ref: '_shared.yml#/components/schemas/NamedId'
+        updatedAt:
+          type: string
+          format: date-time
+      required:
+        - id
+        - person
+        - type
+        - createdAt
+        - requestedArrivalDate
+        - lengthOfStayDays
+        - requestReason
+        - updatedAt
+    Cas1RejectChangeRequest:
+      type: object
+      properties:
+        rejectionReasonId:
+          type: string
+          format: uuid
+        decisionJson:
+          type: object
+          additionalProperties:
+            $ref: '_shared.yml#/components/schemas/Unit'
+      required:
+        - rejectionReasonId
+        - decisionJson
+    Cas1ChangeRequestSummary:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        person:
+          $ref: "_shared.yml#/components/schemas/PersonSummary"
+        type:
+          $ref: '#/components/schemas/Cas1ChangeRequestType'
+        createdAt:
+          type: string
+          format: date-time
+        tier:
+          type: string
+        expectedArrivalDate:
+          type: string
+          format: date
+        actualArrivalDate:
+          type: string
+          format: date
+        lengthOfStayDays:
+          type: integer
+      required:
+        - id
+        - person
+        - type
+        - createdAt
+        - requestedArrivalDate
+        - lengthOfStayDays
+    Cas1ChangeRequestSortField:
+      type: string
+      enum:
+        - name
+        - tier
+        - canonicalArrivalDate
+        - lengthOfStay
+      x-enum-varnames:
+        - NAME
+        - TIER
+        - CANONICAL_ARRIVAL_DATE
+        - LENGTH_OF_STAY
+    Cas1PremisesBedSummary:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        roomName:
+          type: string
+        bedName:
+          type: string
+      required:
+        - id
+        - roomName
+        - bedName

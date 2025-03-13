@@ -1,7 +1,9 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity
 
 import io.hypersistence.utils.hibernate.type.json.JsonType
+import jakarta.persistence.CascadeType
 import jakarta.persistence.Entity
+import jakarta.persistence.FetchType
 import jakarta.persistence.Id
 import jakarta.persistence.JoinColumn
 import jakarta.persistence.LockModeType
@@ -10,7 +12,7 @@ import jakarta.persistence.OneToMany
 import jakarta.persistence.OneToOne
 import jakarta.persistence.Table
 import org.hibernate.annotations.Immutable
-import org.hibernate.annotations.OrderBy
+import org.hibernate.annotations.SQLOrder
 import org.hibernate.annotations.Type
 import org.springframework.data.domain.Slice
 import org.springframework.data.jpa.repository.JpaRepository
@@ -24,6 +26,9 @@ import java.util.UUID
 @Suppress("TooManyFunctions")
 @Repository
 interface Cas2ApplicationRepository : JpaRepository<Cas2ApplicationEntity, UUID> {
+
+  fun findFirstByNomsNumberAndSubmittedAtIsNotNullOrderBySubmittedAtDesc(nomsNumber: String): Cas2ApplicationEntity?
+
   @Query(
     "SELECT a FROM Cas2ApplicationEntity a WHERE a.id = :id AND " +
       "a.submittedAt IS NOT NULL",
@@ -73,15 +78,19 @@ data class Cas2ApplicationEntity(
   var abandonedAt: OffsetDateTime? = null,
 
   @OneToMany(mappedBy = "application")
-  @OrderBy(clause = "createdAt DESC")
+  @SQLOrder("createdAt DESC")
   var statusUpdates: MutableList<Cas2StatusUpdateEntity>? = null,
 
   @OneToMany(mappedBy = "application")
-  @OrderBy(clause = "createdAt DESC")
+  @SQLOrder("createdAt DESC")
   var notes: MutableList<Cas2ApplicationNoteEntity>? = null,
 
   @OneToOne(mappedBy = "application")
   var assessment: Cas2AssessmentEntity? = null,
+
+  @OneToMany(mappedBy = "application", fetch = FetchType.LAZY, cascade = [CascadeType.ALL])
+  @SQLOrder("createdAt DESC")
+  val applicationAssignments: MutableList<Cas2ApplicationAssignmentEntity> = mutableListOf(),
 
   @Transient
   var schemaUpToDate: Boolean,

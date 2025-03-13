@@ -5,8 +5,8 @@ import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.Arguments
 import org.junit.jupiter.params.provider.MethodSource
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1SpaceBookingSummaryStatus
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.SpaceBookingDates
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.cas1.Cas1SpaceBookingStatusTransformer
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.cas1.SpaceBookingDates
 import java.util.stream.Stream
 
 class Cas1SpaceBookingStatusTransformerTest {
@@ -33,8 +33,6 @@ class Cas1SpaceBookingStatusTransformerTest {
 
   companion object {
     @JvmStatic
-    fun spaceBookingSummaryStatusCases(): Stream<Arguments> {
-      return Cas1SpaceBookingSummaryStatusTestHelper().spaceBookingSummaryStatusCases()
-    }
+    fun spaceBookingSummaryStatusCases(): Stream<Arguments> = Cas1SpaceBookingSummaryStatusTestHelper().spaceBookingSummaryStatusCases()
   }
 }

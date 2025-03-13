@@ -1,6 +1,5 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.integration
 
-import com.fasterxml.jackson.core.type.TypeReference
 import com.github.tomakehurst.wiremock.client.WireMock
 import com.github.tomakehurst.wiremock.client.WireMock.exactly
 import com.github.tomakehurst.wiremock.client.WireMock.getRequestedFor
@@ -16,10 +15,7 @@ import org.junit.jupiter.params.provider.EnumSource
 import org.junit.jupiter.params.provider.ValueSource
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.http.HttpStatus
-import org.springframework.test.web.reactive.server.returnResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.BookingStatus
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.DateCapacity
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ExtendedPremisesSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewPremises
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewRoom
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PropertyStatus
@@ -27,26 +23,18 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.StaffMember
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.UpdatePremises
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.UpdateRoom
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.CaseAccessFactory
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.CaseSummaryFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ContextStaffMemberFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAProbationRegion
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAUser
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.apDeliusContextAddCaseSummaryToBulkResponse
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.apDeliusContextAddResponseToUserAccessCall
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.apDeliusContextMockSuccessfulStaffMembersCall
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesEntity
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.BookingEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PremisesEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ProbationDeliveryUnitEntity
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ProbationRegionEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.RoomEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TemporaryAccommodationPremisesEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRole
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas3.Cas3VoidBedspaceEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.deliuscontext.StaffMembersPage
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.BookingTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.PremisesTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.RoomTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.StaffMemberTransformer
@@ -1407,186 +1395,6 @@ class PremisesTest {
   }
 
   @Nested
-  inner class GetAllPremises : InitialiseDatabasePerClassTestBase() {
-    @Autowired
-    lateinit var premisesTransformer: PremisesTransformer
-
-    private lateinit var user: UserEntity
-    private lateinit var region: ProbationRegionEntity
-    private lateinit var jwt: String
-    private lateinit var cas1Premises: MutableMap<ProbationRegionEntity, List<ApprovedPremisesEntity>>
-    private lateinit var cas3Premises: MutableMap<ProbationRegionEntity, List<TemporaryAccommodationPremisesEntity>>
-
-    @BeforeAll
-    fun setup() {
-      val userArgs = givenAUser()
-
-      user = userArgs.first
-      jwt = userArgs.second
-      region = user.probationRegion
-
-      cas1Premises = mutableMapOf()
-      cas3Premises = mutableMapOf()
-
-      cas3Premises[region] = temporaryAccommodationPremisesEntityFactory.produceAndPersistMultiple(5) {
-        withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
-        withYieldedProbationRegion { region }
-        withService("CAS3")
-        withYieldedProbationDeliveryUnit {
-          probationDeliveryUnitFactory.produceAndPersist {
-            withProbationRegion(region)
-          }
-        }
-      }.onEach {
-        addRoomsAndBeds(it, roomCount = 2, bedsPerRoom = 10)
-        addRoomsAndBeds(it, roomCount = 1, bedsPerRoom = 1, isActive = false)
-      }
-
-      cas1Premises[region] = approvedPremisesEntityFactory.produceAndPersistMultiple(5) {
-        withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
-        withYieldedProbationRegion { region }
-        withService("CAS1")
-      }.onEach {
-        addRoomsAndBeds(it, roomCount = 2, 10)
-        addRoomsAndBeds(it, roomCount = 1, bedsPerRoom = 1, isActive = false)
-      }
-
-      // Add some extra premises in both services for other regions that shouldn't be returned
-      val otherRegion = givenAProbationRegion()
-
-      cas3Premises[otherRegion] = temporaryAccommodationPremisesEntityFactory.produceAndPersistMultiple(5) {
-        withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
-        withYieldedProbationRegion { otherRegion }
-        withService("CAS3")
-        withYieldedProbationDeliveryUnit {
-          probationDeliveryUnitFactory.produceAndPersist {
-            withProbationRegion(otherRegion)
-          }
-        }
-      }.onEach {
-        addRoomsAndBeds(it, roomCount = 2, 10)
-        addRoomsAndBeds(it, roomCount = 1, bedsPerRoom = 1, isActive = false)
-      }
-
-      cas1Premises[otherRegion] = approvedPremisesEntityFactory.produceAndPersistMultiple(5) {
-        withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
-        withYieldedProbationRegion { otherRegion }
-        withService("CAS1")
-      }.onEach {
-        addRoomsAndBeds(it, roomCount = 1, 20)
-        addRoomsAndBeds(it, roomCount = 1, bedsPerRoom = 1, isActive = false)
-      }
-    }
-
-    @Test
-    fun `Get all Premises returns OK with correct body`() {
-      val premises = mutableListOf<PremisesEntity>()
-      premises.addAll(cas1Premises.values.flatten())
-      premises.addAll(cas3Premises.values.flatten())
-
-      val expectedJson = objectMapper.writeValueAsString(
-        premises.map {
-          premisesTransformer.transformJpaToApi(it, 20, 20)
-        },
-      )
-
-      webTestClient.get()
-        .uri("/premises")
-        .header("Authorization", "Bearer $jwt")
-        .exchange()
-        .expectStatus()
-        .isOk
-        .expectBody()
-        .json(expectedJson)
-    }
-
-    @Test
-    fun `Get Premises for CAS1 returns OK with correct body`() {
-      val expectedJson = objectMapper.writeValueAsString(
-        cas1Premises.values.flatten().map {
-          premisesTransformer.transformJpaToApi(it, 20, 20)
-        },
-      )
-
-      webTestClient.get()
-        .uri("/premises")
-        .header("Authorization", "Bearer $jwt")
-        .header("X-Service-Name", "approved-premises")
-        .exchange()
-        .expectStatus()
-        .isOk
-        .expectBody()
-        .json(expectedJson)
-    }
-
-    @Test
-    fun `Get Premises for all regions in CAS3 returns 403 Forbidden`() {
-      webTestClient.get()
-        .uri("/premises")
-        .header("Authorization", "Bearer $jwt")
-        .header("X-Service-Name", "temporary-accommodation")
-        .exchange()
-        .expectStatus()
-        .isForbidden
-    }
-
-    @Test
-    fun `Get Premises in CAS3 for a region that's not the user's region returns 403 Forbidden`() {
-      webTestClient.get()
-        .uri("/premises")
-        .header("Authorization", "Bearer $jwt")
-        .header("X-Service-Name", "temporary-accommodation")
-        .header("X-User-Region", UUID.randomUUID().toString())
-        .exchange()
-        .expectStatus()
-        .isForbidden
-    }
-
-    @Test
-    fun `Get Premises for a single region returns OK with correct body`() {
-      val premises = mutableListOf<PremisesEntity>()
-      premises.addAll(cas1Premises[region]!!.toList())
-      premises.addAll(cas3Premises[region]!!.toList())
-
-      val expectedJson = objectMapper.writeValueAsString(
-        premises.map {
-          premisesTransformer.transformJpaToApi(it, 20, 20)
-        },
-      )
-
-      webTestClient.get()
-        .uri("/premises")
-        .header("Authorization", "Bearer $jwt")
-        .header("X-User-Region", "${region.id}")
-        .exchange()
-        .expectStatus()
-        .isOk
-        .expectBody()
-        .json(expectedJson)
-    }
-
-    @Test
-    fun `Get Premises for a single region and particular service returns OK with correct body`() {
-      val expectedJson = objectMapper.writeValueAsString(
-        cas3Premises[region]!!.map {
-          premisesTransformer.transformJpaToApi(it, 20, 20)
-        },
-      )
-
-      webTestClient.get()
-        .uri("/premises")
-        .header("Authorization", "Bearer $jwt")
-        .header("X-Service-Name", "temporary-accommodation")
-        .header("X-User-Region", "${user.probationRegion.id}")
-        .exchange()
-        .expectStatus()
-        .isOk
-        .expectBody()
-        .json(expectedJson)
-    }
-  }
-
-  @Nested
   inner class GetPremisesById : IntegrationTestBase() {
     @Autowired
     lateinit var premisesTransformer: PremisesTransformer
@@ -1903,268 +1711,6 @@ class PremisesTest {
         }
 
         wiremockServer.verify(exactly(1), getRequestedFor(urlEqualTo("/approved-premises/$qCode/staff")))
-      }
-    }
-  }
-
-  @Nested
-  inner class GetPremisesSummary : InitialiseDatabasePerClassTestBase() {
-    @Autowired
-    lateinit var bookingTransformer: BookingTransformer
-
-    private lateinit var premises: ApprovedPremisesEntity
-    private lateinit var voidBedspaces: List<Cas3VoidBedspaceEntity>
-    private lateinit var rooms: List<RoomEntity>
-    private lateinit var bookings: List<BookingEntity>
-
-    private var totalBeds = 20
-    private var startDate = LocalDate.now()
-
-    @BeforeAll
-    fun setup() {
-      premises = approvedPremisesEntityFactory.produceAndPersist {
-        withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
-        withYieldedProbationRegion { givenAProbationRegion() }
-      }
-
-      rooms = addRoomsAndBeds(premises, roomCount = 4, 5)
-      addRoomsAndBeds(premises, roomCount = 1, bedsPerRoom = 1, isActive = false)
-
-      val pendingBookingEntity = bookingEntityFactory.produceAndPersist {
-        withPremises(premises)
-        withArrivalDate(startDate.plusDays(1))
-        withDepartureDate(startDate.plusDays(3))
-        withStaffKeyWorkerCode(null)
-      }
-
-      voidBedspaces = mutableListOf(
-        cas3VoidBedspaceEntityFactory.produceAndPersist {
-          withPremises(premises)
-          withStartDate(startDate.plusDays(1))
-          withEndDate(startDate.plusDays(2))
-          withYieldedReason { cas3VoidBedspaceReasonEntityFactory.produceAndPersist() }
-          withBed(rooms[0].beds[0])
-        },
-        cas3VoidBedspaceEntityFactory.produceAndPersist {
-          withPremises(premises)
-          withStartDate(startDate.plusDays(1))
-          withEndDate(startDate.plusDays(2))
-          withYieldedReason { cas3VoidBedspaceReasonEntityFactory.produceAndPersist() }
-          withBed(rooms[1].beds[0])
-        },
-      )
-
-      val cancelledLostBed = cas3VoidBedspaceEntityFactory.produceAndPersist {
-        withPremises(premises)
-        withStartDate(startDate.plusDays(1))
-        withEndDate(startDate.plusDays(2))
-        withYieldedReason { cas3VoidBedspaceReasonEntityFactory.produceAndPersist() }
-        withBed(rooms[2].beds[0])
-      }
-
-      cancelledLostBed.cancellation = cas3VoidBedspaceCancellationEntityFactory.produceAndPersist {
-        withVoidBedspace(cancelledLostBed)
-      }
-
-      voidBedspaces += cancelledLostBed
-
-      val arrivedBookingEntity = bookingEntityFactory.produceAndPersist {
-        withPremises(premises)
-        withArrivalDate(startDate)
-        withDepartureDate(startDate.plusDays(2))
-        withStaffKeyWorkerCode(null)
-        withBed(rooms.first().beds.first())
-      }
-
-      arrivedBookingEntity.arrivals = mutableListOf(
-        arrivalEntityFactory.produceAndPersist {
-          withBooking(arrivedBookingEntity)
-        },
-      )
-
-      val nonArrivedBookingEntity = bookingEntityFactory.produceAndPersist {
-        withPremises(premises)
-        withArrivalDate(startDate.plusDays(3))
-        withDepartureDate(startDate.plusDays(5))
-        withStaffKeyWorkerCode(null)
-        withBed(rooms.first().beds.first())
-      }
-
-      nonArrivedBookingEntity.nonArrival = nonArrivalEntityFactory.produceAndPersist {
-        withBooking(nonArrivedBookingEntity)
-        withYieldedReason { nonArrivalReasonEntityFactory.produceAndPersist() }
-      }
-
-      val cancelledBookingEntity = bookingEntityFactory.produceAndPersist {
-        withPremises(premises)
-        withArrivalDate(startDate.plusDays(4))
-        withDepartureDate(startDate.plusDays(6))
-        withStaffKeyWorkerCode(null)
-        withBed(rooms.first().beds.first())
-      }
-
-      cancelledBookingEntity.cancellations = mutableListOf(
-        cancellationEntityFactory.produceAndPersist {
-          withYieldedReason { cancellationReasonEntityFactory.produceAndPersist() }
-          withBooking(cancelledBookingEntity)
-        },
-      )
-
-      bookings = listOf(
-        pendingBookingEntity,
-        arrivedBookingEntity,
-        nonArrivedBookingEntity,
-        cancelledBookingEntity,
-      )
-    }
-
-    @Test
-    fun `Get Premises Summary without JWT returns 401`() {
-      webTestClient.get()
-        .uri("/premises/e0f03aa2-1468-441c-aa98-0b98d86b67f9/summary")
-        .exchange()
-        .expectStatus()
-        .isUnauthorized
-    }
-
-    @ParameterizedTest
-    @EnumSource(value = UserRole::class, names = [ "CAS1_FUTURE_MANAGER" ])
-    fun `Get Premises Summary by ID that does not exist returns 404`(role: UserRole) {
-      givenAUser(roles = listOf(role)) { _, jwt ->
-        val id = UUID.randomUUID()
-        webTestClient.get()
-          .uri("/premises/$id/summary")
-          .header("Authorization", "Bearer $jwt")
-          .exchange()
-          .expectStatus()
-          .isNotFound
-      }
-    }
-
-    @ParameterizedTest
-    @EnumSource(value = UserRole::class, names = ["CAS1_FUTURE_MANAGER", "CAS1_MATCHER", "CAS1_WORKFLOW_MANAGER"])
-    fun `Get Premises Summary by ID returns OK with correct body`(role: UserRole) {
-      givenAUser(roles = listOf(role)) { user, jwt ->
-        bookings.forEach {
-          apDeliusContextAddCaseSummaryToBulkResponse(
-            CaseSummaryFactory()
-              .withCrn(it.crn)
-              .produce(),
-          )
-          apDeliusContextAddResponseToUserAccessCall(
-            listOf(
-              CaseAccessFactory()
-                .withCrn(it.crn)
-                .produce(),
-            ),
-            user.deliusUsername,
-          )
-        }
-
-        webTestClient.get()
-          .uri("/premises/${premises.id}/summary")
-          .header("Authorization", "Bearer $jwt")
-          .exchange()
-          .expectStatus()
-          .isOk
-          .expectBody()
-          .jsonPath("$.id").isEqualTo("${premises.id}")
-          .jsonPath("$.name").isEqualTo(premises.name)
-          .jsonPath("$.apCode").isEqualTo(premises.apCode)
-          .jsonPath("$.postcode").isEqualTo(premises.postcode)
-          .jsonPath("$.bedCount").isEqualTo("20")
-          .jsonPath("$.availableBedsForToday").isEqualTo("19")
-          .jsonPath("$.bookings").isArray
-          .jsonPath("$.bookings[0].id").isEqualTo(bookings[0].id.toString())
-          .jsonPath("$.bookings[0].arrivalDate").isEqualTo(bookings[0].arrivalDate.toString())
-          .jsonPath("$.bookings[0].departureDate").isEqualTo(bookings[0].departureDate.toString())
-          .jsonPath("$.bookings[0].person.crn").isEqualTo(bookings[0].crn)
-          .jsonPath("$.bookings[0].bed").isEmpty()
-          .jsonPath("$.bookings[0].status").isEqualTo(BookingStatus.awaitingMinusArrival.value)
-          .jsonPath("$.bookings[1].id").isEqualTo(bookings[1].id.toString())
-          .jsonPath("$.bookings[1].arrivalDate").isEqualTo(bookings[1].arrivalDate.toString())
-          .jsonPath("$.bookings[1].departureDate").isEqualTo(bookings[1].departureDate.toString())
-          .jsonPath("$.bookings[1].person.crn").isEqualTo(bookings[1].crn)
-          .jsonPath("$.bookings[1].bed.id").isEqualTo(bookings[1].bed!!.id.toString())
-          .jsonPath("$.bookings[1].status").isEqualTo(BookingStatus.arrived.value)
-          .jsonPath("$.bookings[2].id").isEqualTo(bookings[2].id.toString())
-          .jsonPath("$.bookings[2].arrivalDate").isEqualTo(bookings[2].arrivalDate.toString())
-          .jsonPath("$.bookings[2].departureDate").isEqualTo(bookings[2].departureDate.toString())
-          .jsonPath("$.bookings[2].person.crn").isEqualTo(bookings[2].crn)
-          .jsonPath("$.bookings[2].bed.id").isEqualTo(bookings[2].bed!!.id.toString())
-          .jsonPath("$.bookings[2].status").isEqualTo(BookingStatus.notMinusArrived.value)
-          .jsonPath("$.bookings[3].id").isEqualTo(bookings[3].id.toString())
-          .jsonPath("$.bookings[3].arrivalDate").isEqualTo(bookings[3].arrivalDate.toString())
-          .jsonPath("$.bookings[3].departureDate").isEqualTo(bookings[3].departureDate.toString())
-          .jsonPath("$.bookings[3].person.crn").isEqualTo(bookings[3].crn)
-          .jsonPath("$.bookings[3].bed.id").isEqualTo(bookings[3].bed!!.id.toString())
-          .jsonPath("$.bookings[3].status").isEqualTo(BookingStatus.cancelled.value)
-          .jsonPath("$.dateCapacities").isArray
-          .jsonPath("$.dateCapacities[0]").isNotEmpty
-      }
-    }
-
-    @Test
-    fun `Get Premises Summary by ID returns the correct capacity data`() {
-      givenAUser(roles = listOf(UserRole.CAS1_WORKFLOW_MANAGER)) { user, jwt ->
-        bookings.forEach {
-          apDeliusContextAddCaseSummaryToBulkResponse(
-            CaseSummaryFactory()
-              .withCrn(it.crn)
-              .produce(),
-          )
-          apDeliusContextAddResponseToUserAccessCall(
-            listOf(
-              CaseAccessFactory()
-                .withCrn(it.crn)
-                .produce(),
-            ),
-            user.deliusUsername,
-          )
-        }
-
-        val rawResponseBody = webTestClient.get()
-          .uri("/premises/${premises.id}/summary")
-          .header("Authorization", "Bearer $jwt")
-          .exchange()
-          .expectStatus()
-          .isOk()
-          .returnResult<String>()
-          .responseBody
-          .blockFirst()
-
-        val responseBody =
-          objectMapper.readValue(
-            rawResponseBody,
-            object : TypeReference<ExtendedPremisesSummary>() {},
-          )
-
-        val getTotalBedsForDate = { date: LocalDate ->
-          val voidBedspacesForToday = voidBedspaces.filter { it.startDate <= date && it.endDate > date && it.cancellation == null }
-          val bookingsForToday = bookings
-            .filter { it.cancellation == null && it.nonArrival == null }
-            .filter { it.arrivalDate <= date && it.departureDate > date }
-          (totalBeds - bookingsForToday.count()) - voidBedspacesForToday.count()
-        }
-
-        assertThat(responseBody.dateCapacities?.get(0)).isEqualTo(
-          DateCapacity(date = startDate, getTotalBedsForDate(startDate)),
-        )
-        assertThat(responseBody.dateCapacities?.get(1)).isEqualTo(
-          DateCapacity(date = startDate.plusDays(1), getTotalBedsForDate(startDate.plusDays(1))),
-        )
-        assertThat(responseBody.dateCapacities?.get(2)).isEqualTo(
-          DateCapacity(date = startDate.plusDays(2), getTotalBedsForDate(startDate.plusDays(2))),
-        )
-        assertThat(responseBody.dateCapacities?.get(3)).isEqualTo(
-          DateCapacity(date = startDate.plusDays(3), getTotalBedsForDate(startDate.plusDays(3))),
-        )
-        assertThat(responseBody.dateCapacities?.get(4)).isEqualTo(
-          DateCapacity(date = startDate.plusDays(4), getTotalBedsForDate(startDate.plusDays(4))),
-        )
-        assertThat(responseBody.dateCapacities?.get(5)).isEqualTo(
-          DateCapacity(date = startDate.plusDays(5), getTotalBedsForDate(startDate.plusDays(5))),
-        )
       }
     }
   }
@@ -3481,6 +3027,117 @@ class PremisesTest {
           .isEqualTo("Bedspace end date cannot be prior to the Bedspace creation date: ${bed.createdAt!!.toLocalDate()}")
       }
     }
+
+    @ParameterizedTest
+    @CsvSource(
+      value = [
+        "provisional",
+        "confirmed",
+        "arrived",
+      ],
+    )
+    fun `Archive Temporary Accommodation Premises with provisional, confirmed or arrived bookings throws bad request error`(bookingStatus: BookingStatus) {
+      givenAUser(roles = listOf(UserRole.CAS3_ASSESSOR)) { _, jwt ->
+
+        val region = givenAProbationRegion()
+        val premises = temporaryAccommodationPremisesEntityFactory.produceAndPersist {
+          withService(ServiceName.temporaryAccommodation.value)
+          withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
+          withYieldedProbationRegion { region }
+          withYieldedProbationDeliveryUnit {
+            probationDeliveryUnitFactory.produceAndPersist {
+              withProbationRegion(region)
+            }
+          }
+        }
+
+        bookingEntityFactory.produceAndPersist {
+          withServiceName(ServiceName.temporaryAccommodation)
+          withPremises(premises)
+          withStatus(bookingStatus)
+          withArrivalDate(LocalDate.now().plusDays(5))
+        }
+
+        mockFeatureFlagService.setFlag("archive-property-validate-existing-bookings", true)
+
+        webTestClient.put()
+          .uri("/premises/${premises.id}")
+          .header("Authorization", "Bearer $jwt")
+          .bodyValue(
+            UpdatePremises(
+              addressLine1 = premises.addressLine1,
+              addressLine2 = premises.addressLine2,
+              town = premises.town,
+              postcode = premises.postcode,
+              notes = "some arbitrary notes updated",
+              localAuthorityAreaId = premises.localAuthorityArea?.id,
+              probationRegionId = premises.probationRegion.id,
+              characteristicIds = mutableListOf(),
+              status = PropertyStatus.archived,
+              pdu = null,
+              probationDeliveryUnitId = premises.probationDeliveryUnit?.id,
+            ),
+          )
+          .exchange()
+          .expectStatus()
+          .is4xxClientError
+          .expectBody()
+          .jsonPath("title").isEqualTo("Bad Request")
+          .jsonPath("invalid-params[0].propertyName").isEqualTo("$.status")
+          .jsonPath("invalid-params[0].errorType").isEqualTo("existingBookings")
+      }
+    }
+
+    @Test
+    fun `Archive Temporary Accommodation Premises with cancelled booking returns OK with correct body`() {
+      givenAUser(roles = listOf(UserRole.CAS3_ASSESSOR)) { _, jwt ->
+
+        val region = givenAProbationRegion()
+        val premises = temporaryAccommodationPremisesEntityFactory.produceAndPersist {
+          withService(ServiceName.temporaryAccommodation.value)
+          withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
+          withYieldedProbationRegion { region }
+          withYieldedProbationDeliveryUnit {
+            probationDeliveryUnitFactory.produceAndPersist {
+              withProbationRegion(region)
+            }
+          }
+        }
+
+        bookingEntityFactory.produceAndPersist {
+          withServiceName(ServiceName.temporaryAccommodation)
+          withPremises(premises)
+          withStatus(BookingStatus.cancelled)
+          withArrivalDate(LocalDate.now().plusDays(12))
+        }
+
+        mockFeatureFlagService.setFlag("archive-property-validate-existing-bookings", true)
+
+        webTestClient.put()
+          .uri("/premises/${premises.id}")
+          .header("Authorization", "Bearer $jwt")
+          .bodyValue(
+            UpdatePremises(
+              addressLine1 = premises.addressLine1,
+              addressLine2 = premises.addressLine2,
+              town = premises.town,
+              postcode = premises.postcode,
+              notes = "some arbitrary notes updated",
+              localAuthorityAreaId = premises.localAuthorityArea?.id,
+              probationRegionId = premises.probationRegion.id,
+              characteristicIds = mutableListOf(),
+              status = PropertyStatus.archived,
+              pdu = null,
+              probationDeliveryUnitId = premises.probationDeliveryUnit?.id,
+            ),
+          )
+          .exchange()
+          .expectStatus()
+          .isOk
+          .expectBody()
+          .jsonPath("status").isEqualTo("archived")
+      }
+    }
   }
 
   @Nested
@@ -3653,17 +3310,15 @@ class PremisesTest {
   }
 }
 
-fun IntegrationTestBase.addRoomsAndBeds(premises: PremisesEntity, roomCount: Int, bedsPerRoom: Int, isActive: Boolean = true): List<RoomEntity> {
-  return roomEntityFactory.produceAndPersistMultiple(roomCount) {
-    withYieldedPremises { premises }
-  }.onEach {
-    bedEntityFactory.produceAndPersistMultiple(bedsPerRoom) {
-      withYieldedRoom { it }
-      if (!isActive) {
-        withEndDate { LocalDate.now().minusDays(Random.nextLong(1, 10)) }
-      }
+fun IntegrationTestBase.addRoomsAndBeds(premises: PremisesEntity, roomCount: Int, bedsPerRoom: Int, isActive: Boolean = true): List<RoomEntity> = roomEntityFactory.produceAndPersistMultiple(roomCount) {
+  withYieldedPremises { premises }
+}.onEach {
+  bedEntityFactory.produceAndPersistMultiple(bedsPerRoom) {
+    withYieldedRoom { it }
+    if (!isActive) {
+      withEndDate { LocalDate.now().minusDays(Random.nextLong(1, 10)) }
     }
-  }.map {
-    roomTestRepository.getReferenceById(it.id)
   }
+}.map {
+  roomTestRepository.getReferenceById(it.id)
 }

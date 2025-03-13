@@ -5,7 +5,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.DateChange
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DateChangeEntity
 
 @Component
-class DateChangeTransformer() {
+class DateChangeTransformer {
   fun transformJpaToApi(jpa: DateChangeEntity) = DateChange(
     id = jpa.id,
     bookingId = jpa.booking.id,

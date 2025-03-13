@@ -39,8 +39,8 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.AuthorisableActi
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.CasResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.ValidatableActionResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.EmailNotificationService
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas2.DomainEventService
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas2.OffenderService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas2.Cas2DomainEventService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas2.Cas2OffenderService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas2v2.Cas2v2ApplicationService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas2v2.Cas2v2AssessmentService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas2v2.Cas2v2JsonSchemaService
@@ -60,9 +60,9 @@ class Cas2v2ApplicationServiceTest {
   private val mockCas2v2LockableApplicationRepository = mockk<Cas2v2LockableApplicationRepository>()
   private val mockCas2v2ApplicationSummaryRepository = mockk<Cas2v2ApplicationSummaryRepository>()
   private val mockCas2v2JsonSchemaService = mockk<Cas2v2JsonSchemaService>()
-  private val mockOffenderService = mockk<OffenderService>()
+  private val mockOffenderService = mockk<Cas2OffenderService>()
   private val mockCas2v2UserAccessService = mockk<Cas2v2UserAccessService>()
-  private val mockDomainEventService = mockk<DomainEventService>()
+  private val mockDomainEventService = mockk<Cas2DomainEventService>()
   private val mockEmailNotificationService = mockk<EmailNotificationService>()
   private val mockCas2v2AssessmentService = mockk<Cas2v2AssessmentService>()
   private val mockObjectMapper = mockk<ObjectMapper>()
@@ -136,7 +136,7 @@ class Cas2v2ApplicationServiceTest {
 
   @Nested
   inner class GetCas2v2ApplicationsWithPrisonCode {
-    val cas2v2ApplicationSummary = Cas2v2ApplicationSummaryEntity(
+    private val cas2v2ApplicationSummary = Cas2v2ApplicationSummaryEntity(
       id = UUID.fromString("2f838a8c-dffc-48a3-9536-f0e95985e809"),
       crn = randomStringMultiCaseWithNumbers(6),
       nomsNumber = randomStringMultiCaseWithNumbers(6),
@@ -149,10 +149,10 @@ class Cas2v2ApplicationServiceTest {
       latestStatusUpdateStatusId = null,
       prisonCode = "BRI",
     )
-    val page = mockk<Page<Cas2v2ApplicationSummaryEntity>>()
-    val pageCriteria = PageCriteria(sortBy = "submitted_at", sortDirection = SortDirection.asc, page = 3)
-    val user = Cas2v2UserEntityFactory().produce()
-    val prisonCode = "BRI"
+    private val page = mockk<Page<Cas2v2ApplicationSummaryEntity>>()
+    private val pageCriteria = PageCriteria(sortBy = "submitted_at", sortDirection = SortDirection.asc, page = 3)
+    private val user = Cas2v2UserEntityFactory().produce()
+    private val prisonCode = "BRI"
 
     private fun testPrisonCodeWithIsSubmitted(isSubmitted: Boolean?) {
       every { page.content } returns listOf(cas2v2ApplicationSummary)
@@ -257,7 +257,7 @@ class Cas2v2ApplicationServiceTest {
 
     @Test
     fun `where user can access the cas2v2 application returns Success result with entity from db`() {
-      val distinguishedName = "SOMEPERSON"
+      val distinguishedName = "SOME PERSON"
       val userId = UUID.fromString("239b5e41-f83e-409e-8fc0-8f1e058d417e")
       val applicationId = UUID.fromString("c1750938-19fc-48a1-9ae9-f2e119ffc1f4")
 
@@ -296,9 +296,9 @@ class Cas2v2ApplicationServiceTest {
     @Test
     fun `returns FieldValidationError when Offender is not found`() {
       val crn = "CRN345"
-      val username = "SOMEPERSON"
+      val username = "SOME_PERSON"
 
-      every { mockOffenderService.getOffenderByCrn(crn) } returns AuthorisableActionResult.NotFound()
+      every { mockOffenderService.getOffenderByCrnDeprecated(crn) } returns AuthorisableActionResult.NotFound()
 
       val user = userWithUsername(username)
 
@@ -312,9 +312,9 @@ class Cas2v2ApplicationServiceTest {
     @Test
     fun `returns FieldValidationError when user is not authorised to view CRN`() {
       val crn = "CRN345"
-      val username = "SOMEPERSON"
+      val username = "SOME PERSON"
 
-      every { mockOffenderService.getOffenderByCrn(crn) } returns AuthorisableActionResult.Unauthorised()
+      every { mockOffenderService.getOffenderByCrnDeprecated(crn) } returns AuthorisableActionResult.Unauthorised()
 
       val user = userWithUsername(username)
 
@@ -328,14 +328,14 @@ class Cas2v2ApplicationServiceTest {
     @Test
     fun `returns Success with created Application`() {
       val crn = "CRN345"
-      val username = "SOMEPERSON"
+      val username = "SOME-PERSON"
       val bailHearingDate = LocalDate.of(2024, 12, 18)
 
       val cas2v2ApplicationSchema = Cas2v2ApplicationJsonSchemaEntityFactory().produce()
 
       val user = userWithUsername(username)
 
-      every { mockOffenderService.getOffenderByCrn(crn) } returns AuthorisableActionResult.Success(
+      every { mockOffenderService.getOffenderByCrnDeprecated(crn) } returns AuthorisableActionResult.Success(
         OffenderDetailsSummaryFactory().produce(),
       )
 
@@ -556,7 +556,7 @@ class Cas2v2ApplicationServiceTest {
       val applicationId = UUID.fromString("fa6e97ce-7b9e-473c-883c-83b1c2af773d")
 
       val bailHearingDate = LocalDate.of(2030, 12, 18)
-      var formatter = DateTimeFormatter.ofPattern("dd-MM-yyyy")
+      val formatter = DateTimeFormatter.ofPattern("dd-MM-yyyy")
 
       val newestSchema = Cas2v2ApplicationJsonSchemaEntityFactory().produce()
       val updatedData = """
@@ -751,7 +751,7 @@ class Cas2v2ApplicationServiceTest {
   @Nested
   inner class SubmitApplication {
     val applicationId: UUID = UUID.fromString("fa6e97ce-7b9e-473c-883c-83b1c2af773d")
-    val username = "SOMEPERSON"
+    val username = "SOME-PERSON"
     val user = Cas2v2UserEntityFactory()
       .withUsername(this.username)
       .produce()
@@ -915,7 +915,7 @@ class Cas2v2ApplicationServiceTest {
         .withCrn(cas2v2Application.crn)
         .produce()
 
-      every { mockOffenderService.getOffenderByCrn(any()) } returns AuthorisableActionResult.Success(
+      every { mockOffenderService.getOffenderByCrnDeprecated(any()) } returns AuthorisableActionResult.Success(
         offenderDetails,
       )
 
@@ -963,7 +963,7 @@ class Cas2v2ApplicationServiceTest {
         .withCrn(cas2v2Application.crn)
         .produce()
 
-      every { mockOffenderService.getOffenderByCrn(any()) } returns AuthorisableActionResult.Success(
+      every { mockOffenderService.getOffenderByCrnDeprecated(any()) } returns AuthorisableActionResult.Success(
         offenderDetails,
       )
 
@@ -1048,7 +1048,7 @@ class Cas2v2ApplicationServiceTest {
         .withCrn(cas2v2Application.crn)
         .produce()
 
-      every { mockOffenderService.getOffenderByCrn(cas2v2Application.crn) } returns AuthorisableActionResult.Success(
+      every { mockOffenderService.getOffenderByCrnDeprecated(cas2v2Application.crn) } returns AuthorisableActionResult.Success(
         offenderDetails,
       )
 

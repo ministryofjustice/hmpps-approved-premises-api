@@ -40,8 +40,8 @@ class SeedCas1LinkBookingToPlacementRequestTest : SeedTestBase() {
     val placementRequest = createPlacementRequest(application, user)
     val booking = createBooking(application)
 
-    generateCsvFile(
-      "valid-csv",
+    seed(
+      SeedFileType.approvedPremisesLinkBookingToPlacementRequest,
       CsvBuilder()
         .withUnquotedFields("booking_id")
         .withUnquotedFields("placement_request_id")
@@ -51,8 +51,6 @@ class SeedCas1LinkBookingToPlacementRequestTest : SeedTestBase() {
         .newRow()
         .build(),
     )
-
-    seedService.seedData(SeedFileType.approvedPremisesLinkBookingToPlacementRequest, "valid-csv.csv")
 
     val updatedPlacementRequest = placementRequestRepository.findByIdOrNull(placementRequest.id)!!
     assertThat(updatedPlacementRequest.booking!!.id).isEqualTo(booking.id)

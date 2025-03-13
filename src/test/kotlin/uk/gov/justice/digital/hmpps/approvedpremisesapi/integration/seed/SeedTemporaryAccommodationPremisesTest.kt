@@ -15,8 +15,8 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomStringMultiCa
 class SeedTemporaryAccommodationPremisesTest : SeedTestBase() {
   @Test
   fun `Attempting to create a Temporary Accommodation Premises with an invalid Probation Region logs an error`() {
-    withCsv(
-      "invalid-probation-ta",
+    seed(
+      SeedFileType.temporaryAccommodationPremises,
       temporaryAccommodationPremisesSeedCsvRowsToCsv(
         listOf(
           TemporaryAccommodationPremisesSeedCsvRowFactory()
@@ -25,8 +25,6 @@ class SeedTemporaryAccommodationPremisesTest : SeedTestBase() {
         ),
       ),
     )
-
-    seedService.seedData(SeedFileType.temporaryAccommodationPremises, "invalid-probation-ta.csv")
 
     assertThat(logEntries).anyMatch {
       it.level == "error" &&
@@ -40,8 +38,8 @@ class SeedTemporaryAccommodationPremisesTest : SeedTestBase() {
   fun `Attempting to create a Temporary Accommodation Premises with an invalid Local Authority Area logs an error`() {
     val probationRegion = givenAProbationRegion()
 
-    withCsv(
-      "invalid-local-authority-ta",
+    seed(
+      SeedFileType.temporaryAccommodationPremises,
       temporaryAccommodationPremisesSeedCsvRowsToCsv(
         listOf(
           TemporaryAccommodationPremisesSeedCsvRowFactory()
@@ -51,8 +49,6 @@ class SeedTemporaryAccommodationPremisesTest : SeedTestBase() {
         ),
       ),
     )
-
-    seedService.seedData(SeedFileType.temporaryAccommodationPremises, "invalid-local-authority-ta.csv")
 
     assertThat(logEntries).anyMatch {
       it.level == "error" &&
@@ -79,16 +75,14 @@ class SeedTemporaryAccommodationPremisesTest : SeedTestBase() {
       .withCharacteristics(listOf("Park nearby", "Pub nearby"))
       .produce()
 
-    withCsv(
-      "new-ta-premises",
+    seed(
+      SeedFileType.temporaryAccommodationPremises,
       temporaryAccommodationPremisesSeedCsvRowsToCsv(
         listOf(
           csvRow,
         ),
       ),
     )
-
-    seedService.seedData(SeedFileType.temporaryAccommodationPremises, "new-ta-premises.csv")
 
     val persistedPremises = temporaryAccommodationPremisesRepository.findByName(csvRow.name)
     assertThat(persistedPremises).isNotNull
@@ -136,16 +130,14 @@ class SeedTemporaryAccommodationPremisesTest : SeedTestBase() {
       .withCharacteristics(listOf("Park nearby"))
       .produce()
 
-    withCsv(
-      "update-ta-premises",
+    seed(
+      SeedFileType.temporaryAccommodationPremises,
       temporaryAccommodationPremisesSeedCsvRowsToCsv(
         listOf(
           csvRow,
         ),
       ),
     )
-
-    seedService.seedData(SeedFileType.temporaryAccommodationPremises, "update-ta-premises.csv")
 
     val persistedPremises = temporaryAccommodationPremisesRepository.findByName(csvRow.name)
     assertThat(persistedPremises).isNotNull

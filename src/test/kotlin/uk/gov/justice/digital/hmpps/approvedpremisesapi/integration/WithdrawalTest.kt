@@ -1448,59 +1448,52 @@ class WithdrawalTest : IntegrationTestBase() {
       }
     }
 
-    private fun assertAssessmentWithdrawnEmail(emailAddress: String) =
-      emailAsserter.assertEmailRequested(
-        emailAddress,
-        notifyConfig.templates.assessmentWithdrawnV2,
-      )
+    private fun assertAssessmentWithdrawnEmail(emailAddress: String) = emailAsserter.assertEmailRequested(
+      emailAddress,
+      notifyConfig.templates.assessmentWithdrawnV2,
+    )
 
-    private fun assertApplicationWithdrawnEmail(emailAddress: String, application: ApplicationEntity) =
-      emailAsserter.assertEmailRequested(
-        emailAddress,
-        notifyConfig.templates.applicationWithdrawnV2,
-        mapOf("crn" to application.crn),
-      )
+    private fun assertApplicationWithdrawnEmail(emailAddress: String, application: ApplicationEntity) = emailAsserter.assertEmailRequested(
+      emailAddress,
+      notifyConfig.templates.applicationWithdrawnV2,
+      mapOf("crn" to application.crn),
+    )
 
-    private fun assertBookingWithdrawnEmail(emailAddress: String, booking: BookingEntity) =
-      emailAsserter.assertEmailRequested(
-        emailAddress,
-        notifyConfig.templates.bookingWithdrawnV2,
-        mapOf(
-          "startDate" to booking.arrivalDate.toString(),
-          "endDate" to booking.departureDate.toString(),
-        ),
-      )
+    private fun assertBookingWithdrawnEmail(emailAddress: String, booking: BookingEntity) = emailAsserter.assertEmailRequested(
+      emailAddress,
+      notifyConfig.templates.bookingWithdrawnV2,
+      mapOf(
+        "startDate" to booking.arrivalDate.toString(),
+        "endDate" to booking.departureDate.toString(),
+      ),
+    )
 
-    private fun assertSpaceBookingWithdrawnEmail(emailAddress: String, booking: Cas1SpaceBookingEntity) =
-      emailAsserter.assertEmailRequested(
-        emailAddress,
-        notifyConfig.templates.bookingWithdrawnV2,
-        mapOf(
-          "startDate" to booking.canonicalArrivalDate.toString(),
-          "endDate" to booking.canonicalDepartureDate.toString(),
-        ),
-      )
+    private fun assertSpaceBookingWithdrawnEmail(emailAddress: String, booking: Cas1SpaceBookingEntity) = emailAsserter.assertEmailRequested(
+      emailAddress,
+      notifyConfig.templates.bookingWithdrawnV2,
+      mapOf(
+        "startDate" to booking.canonicalArrivalDate.toString(),
+        "endDate" to booking.canonicalDepartureDate.toString(),
+      ),
+    )
 
-    private fun assertPlacementRequestWithdrawnEmail(emailAddress: String, placementApplication: PlacementApplicationEntity) =
-      emailAsserter.assertEmailRequested(
-        emailAddress,
-        notifyConfig.templates.placementRequestWithdrawnV2,
-        mapOf("startDate" to placementApplication.placementDates[0].expectedArrival.toString()),
-      )
+    private fun assertPlacementRequestWithdrawnEmail(emailAddress: String, placementApplication: PlacementApplicationEntity) = emailAsserter.assertEmailRequested(
+      emailAddress,
+      notifyConfig.templates.placementRequestWithdrawnV2,
+      mapOf("startDate" to placementApplication.placementDates[0].expectedArrival.toString()),
+    )
 
-    private fun assertPlacementRequestWithdrawnEmail(emailAddress: String, placementRequest: PlacementRequestEntity) =
-      emailAsserter.assertEmailRequested(
-        emailAddress,
-        notifyConfig.templates.placementRequestWithdrawnV2,
-        mapOf("startDate" to placementRequest.expectedArrival.toString()),
-      )
+    private fun assertPlacementRequestWithdrawnEmail(emailAddress: String, placementRequest: PlacementRequestEntity) = emailAsserter.assertEmailRequested(
+      emailAddress,
+      notifyConfig.templates.placementRequestWithdrawnV2,
+      mapOf("startDate" to placementRequest.expectedArrival.toString()),
+    )
 
-    private fun assertMatchRequestWithdrawnEmail(emailAddress: String, placementRequest: PlacementRequestEntity) =
-      emailAsserter.assertEmailRequested(
-        emailAddress,
-        notifyConfig.templates.matchRequestWithdrawnV2,
-        mapOf("startDate" to placementRequest.expectedArrival.toString()),
-      )
+    private fun assertMatchRequestWithdrawnEmail(emailAddress: String, placementRequest: PlacementRequestEntity) = emailAsserter.assertEmailRequested(
+      emailAddress,
+      notifyConfig.templates.matchRequestWithdrawnV2,
+      mapOf("startDate" to placementRequest.expectedArrival.toString()),
+    )
   }
 
   private fun addBookingToPlacementRequest(placementRequest: PlacementRequestEntity, booking: BookingEntity) {
@@ -1766,30 +1759,29 @@ class WithdrawalTest : IntegrationTestBase() {
     reallocatedAt: OffsetDateTime? = null,
     isWithdrawn: Boolean = false,
     placementApplication: PlacementApplicationEntity? = null,
-  ) =
-    placementRequestFactory.produceAndPersist {
-      val assessment = application.assessments[0] as ApprovedPremisesAssessmentEntity
+  ) = placementRequestFactory.produceAndPersist {
+    val assessment = application.assessments[0] as ApprovedPremisesAssessmentEntity
 
-      val placementRequirements = placementRequirementsFactory.produceAndPersist {
-        withApplication(application)
-        withAssessment(assessment)
-        withPostcodeDistrict(postCodeDistrictFactory.produceAndPersist())
-        withDesirableCriteria(
-          characteristicEntityFactory.produceAndPersistMultiple(5),
-        )
-        withEssentialCriteria(
-          characteristicEntityFactory.produceAndPersistMultiple(3),
-        )
-      }
-
-      withAllocatedToUser(application.createdByUser)
+    val placementRequirements = placementRequirementsFactory.produceAndPersist {
       withApplication(application)
       withAssessment(assessment)
-      withPlacementRequirements(placementRequirements)
-      withReallocatedAt(reallocatedAt)
-      withIsWithdrawn(isWithdrawn)
-      withPlacementApplication(placementApplication)
+      withPostcodeDistrict(postCodeDistrictFactory.produceAndPersist())
+      withDesirableCriteria(
+        characteristicEntityFactory.produceAndPersistMultiple(5),
+      )
+      withEssentialCriteria(
+        characteristicEntityFactory.produceAndPersistMultiple(3),
+      )
     }
+
+    withAllocatedToUser(application.createdByUser)
+    withApplication(application)
+    withAssessment(assessment)
+    withPlacementRequirements(placementRequirements)
+    withReallocatedAt(reallocatedAt)
+    withIsWithdrawn(isWithdrawn)
+    withPlacementApplication(placementApplication)
+  }
 
   private fun createBooking(
     application: ApprovedPremisesApplicationEntity,
@@ -1879,24 +1871,21 @@ class WithdrawalTest : IntegrationTestBase() {
     listOf(toDatePeriod(placementRequest.expectedArrival, placementRequest.duration)),
   )
 
-  fun toWithdrawable(placementApplication: PlacementApplicationEntity) =
-    Withdrawable(
-      placementApplication.id,
-      WithdrawableType.placementApplication,
-      placementApplication.placementDates.map { toDatePeriod(it.expectedArrival, it.duration) },
-    )
+  fun toWithdrawable(placementApplication: PlacementApplicationEntity) = Withdrawable(
+    placementApplication.id,
+    WithdrawableType.placementApplication,
+    placementApplication.placementDates.map { toDatePeriod(it.expectedArrival, it.duration) },
+  )
 
-  fun toWithdrawable(booking: BookingEntity) =
-    Withdrawable(
-      booking.id,
-      WithdrawableType.booking,
-      listOf(DatePeriod(booking.arrivalDate, booking.departureDate)),
-    )
+  fun toWithdrawable(booking: BookingEntity) = Withdrawable(
+    booking.id,
+    WithdrawableType.booking,
+    listOf(DatePeriod(booking.arrivalDate, booking.departureDate)),
+  )
 
-  fun toWithdrawable(spaceBooking: Cas1SpaceBookingEntity) =
-    Withdrawable(
-      spaceBooking.id,
-      WithdrawableType.spaceBooking,
-      listOf(DatePeriod(spaceBooking.canonicalArrivalDate, spaceBooking.canonicalDepartureDate)),
-    )
+  fun toWithdrawable(spaceBooking: Cas1SpaceBookingEntity) = Withdrawable(
+    spaceBooking.id,
+    WithdrawableType.spaceBooking,
+    listOf(DatePeriod(spaceBooking.canonicalArrivalDate, spaceBooking.canonicalDepartureDate)),
+  )
 }

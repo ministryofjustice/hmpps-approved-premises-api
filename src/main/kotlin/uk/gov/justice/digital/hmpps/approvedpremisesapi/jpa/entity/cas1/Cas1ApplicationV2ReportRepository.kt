@@ -47,18 +47,20 @@ SELECT DISTINCT ON (application.submitted_at, application.id)
   apa.notice_type AS application_timeliness_status,
   reason_for_short_notice_metadata.value AS applicant_reason_for_late_application,
   reason_for_short_notice_other_metadata.value AS applicant_reason_for_late_application_detail,
-  initial_assessment.data -> 'suitability-assessment' -> 'application-timeliness' ->> 'agreeWithShortNoticeReason' AS initial_assessor_agree_with_short_notice_reason,
-  initial_assessment.data -> 'suitability-assessment' -> 'application-timeliness' ->> 'agreeWithShortNoticeReasonComments' AS initial_assessor_reason_for_late_application,
-  initial_assessment.data -> 'suitability-assessment' -> 'application-timeliness' ->> 'reasonForLateApplication' AS initial_assessor_reason_for_late_application_detail,
+  
+  CASE 
+  	WHEN initial_ap_assessment.agree_with_short_notice_reason IS TRUE THEN 'yes' 
+  	WHEN initial_ap_assessment.agree_with_short_notice_reason IS FALSE THEN 'no'
+  	ELSE null
+  END AS initial_assessor_agree_with_short_notice_reason,
+  initial_ap_assessment.agree_with_short_notice_reason_comments AS initial_assessor_reason_for_late_application,
+  initial_ap_assessment.reason_for_late_application AS initial_assessor_reason_for_late_application_detail,
+  
   initial_assessment_ap_type_metadata.value AS initial_assessor_premises_type,
   to_char(initial_assessment.allocated_at, 'YYYY-MM-DD"T"HH24:MI:SS"Z"') AS last_allocated_to_initial_assessor_date,
-  initial_assessment_event.data -> 'eventDetails' -> 'assessedBy' -> 'cru' ->> 'name' AS initial_assessor_cru,
-  initial_assessment_event.data -> 'eventDetails' -> 'assessedBy' -> 'staffMember' ->> 'username' AS initial_assessor_username,
-  concat(
-    initial_assessment_event.data -> 'eventDetails' -> 'assessedBy' -> 'staffMember' ->> 'forenames', 
-    ' ',
-    initial_assessment_event.data -> 'eventDetails' -> 'assessedBy' -> 'staffMember' ->> 'surname'
-  ) AS initial_assessor_name,
+  initial_assessor_area.name as initial_assessor_cru,
+  initial_assessor.delius_username as initial_assessor_username,
+  initial_assessor.name as initial_assessor_name,
   to_char(initial_assessment_clarification_notes.created_at, 'YYYY-MM-DD"T"HH24:MI:SS"Z"') AS initial_assessment_further_information_requested_on,
   to_char(initial_assessment_clarification_notes.response_received_on, 'YYYY-MM-DD') AS initial_assessment_further_information_received_at,
   to_char(cast(initial_assessment_event.data -> 'eventDetails' ->> 'assessedAt' as timestamp), 'YYYY-MM-DD"T"HH24:MI:SS"Z"') AS initial_assessment_decision_date,
@@ -73,6 +75,7 @@ SELECT DISTINCT ON (application.submitted_at, application.id)
   to_char(withdrawal_event.occurred_at, 'YYYY-MM-DD"T"HH24:MI:SS"Z"') AS application_withdrawal_date,
   withdrawal_event.data -> 'eventDetails' ->> 'withdrawalReason' AS application_withdrawal_reason
   
+
 FROM approved_premises_applications apa
 
 INNER JOIN applications application on application.id = apa.id
@@ -89,13 +92,17 @@ LEFT OUTER JOIN domain_events_metadata reason_for_short_notice_other_metadata ON
 LEFT JOIN domain_events withdrawal_event on withdrawal_event.type = 'APPROVED_PREMISES_APPLICATION_WITHDRAWN'
   AND application.id = withdrawal_event.application_id
  
-LEFT JOIN (
-  SELECT DISTINCT ON (application_id)
-    assessments.*
+LEFT OUTER JOIN LATERAL (
+  SELECT assessments.*
   FROM assessments
-  WHERE reallocated_at IS NULL
-  ORDER BY application_id, created_at asc
-) initial_assessment ON initial_assessment.application_id = application.id
+  WHERE reallocated_at IS NULL AND application_id = application.id
+  ORDER BY created_at ASC
+  LIMIT 1
+) initial_assessment ON TRUE -- ON condition is mandatory with LEFT OUTER JOIN, but satisfied already in lateral join subquery
+LEFT OUTER JOIN approved_premises_assessments initial_ap_assessment ON initial_ap_assessment.assessment_id = initial_assessment.id
+
+LEFT JOIN users initial_assessor ON initial_assessor.id = initial_assessment.allocated_to_user_id
+LEFT JOIN ap_areas initial_assessor_area ON initial_assessor_area.id = initial_assessor.ap_area_id
 
 LEFT JOIN domain_events AS initial_assessment_event ON 
   initial_assessment_event.type = 'APPROVED_PREMISES_APPLICATION_ASSESSED' AND
@@ -103,27 +110,30 @@ LEFT JOIN domain_events AS initial_assessment_event ON
 LEFT JOIN domain_events_metadata initial_assessment_ap_type_metadata on initial_assessment_ap_type_metadata.domain_event_id = initial_assessment_event.id 
   AND initial_assessment_ap_type_metadata.name = 'CAS1_REQUESTED_AP_TYPE' 
  
-LEFT JOIN (
-  SELECT DISTINCT ON (assessment_id)
-    assessment_clarification_notes.*
+LEFT OUTER JOIN LATERAL (
+  SELECT assessment_clarification_notes.*
   FROM assessment_clarification_notes
-  ORDER BY assessment_id, created_at ASC
-) initial_assessment_clarification_notes ON initial_assessment_clarification_notes.assessment_id = initial_assessment.id
+  WHERE assessment_id = initial_assessment.id
+  ORDER BY created_at ASC
+  LIMIT 1
+) initial_assessment_clarification_notes ON TRUE -- ON condition is mandatory with LEFT OUTER JOIN, but satisfied already in lateral join subquery
 
-LEFT JOIN (
-  SELECT DISTINCT ON (application_id)
-    appeals.*
+LEFT OUTER JOIN LATERAL (
+  SELECT appeals.*
   FROM appeals
-  ORDER BY application_id, created_at DESC
-) latest_appeal ON latest_appeal.application_id = application.id
+  WHERE application_id = application.id
+  ORDER BY created_at DESC
+  LIMIT 1
+) latest_appeal ON TRUE -- ON condition is mandatory with LEFT OUTER JOIN, but satisfied already in lateral join subquery
 
-LEFT JOIN (
-  SELECT DISTINCT ON (application_id)
-    assess.*
+LEFT OUTER JOIN LATERAL (
+  SELECT assess.*
   FROM assessments assess INNER JOIN approved_premises_assessments apa_assess ON assess.id = apa_assess.assessment_id
-  WHERE assess.reallocated_at IS NULL AND apa_assess.created_from_appeal is TRUE
-  ORDER by assess.application_id, assess.created_at DESC
-) latest_appeal_assessment ON latest_appeal_assessment.application_id = application.id
+  WHERE assess.application_id = application.id AND assess.reallocated_at IS NULL AND apa_assess.created_from_appeal is TRUE
+  ORDER by assess.created_at DESC
+  LIMIT 1
+) latest_appeal_assessment ON TRUE -- ON condition is mandatory with LEFT OUTER JOIN, but satisfied already in lateral join subquery
+
 
 LEFT JOIN domain_events as latest_appeal_assessment_event ON 
   latest_appeal_assessment_event.type = 'APPROVED_PREMISES_APPLICATION_ASSESSED' AND
@@ -134,8 +144,7 @@ LEFT JOIN domain_events_metadata latest_appeal_assessment_ap_type_metadata ON la
 LEFT JOIN users as latest_appeal_assessment_assessor on latest_appeal_assessment_assessor.id = latest_appeal_assessment.allocated_to_user_id
 LEFT JOIN ap_areas as ap_area on ap_area.id = apa.ap_area_id
 
-WHERE application.service = 'approved-premises' AND
-      application.submitted_at IS NOT NULL
+WHERE application.submitted_at IS NOT NULL
     """
 
     const val QUERY =
@@ -154,13 +163,12 @@ ORDER BY application.submitted_at ASC, application.id ASC
     startDateTimeInclusive: LocalDateTime,
     endDateTimeInclusive: LocalDateTime,
     jbdcResultSetConsumer: JdbcResultSetConsumer,
-  ) =
-    reportJdbcTemplate.query(
-      QUERY,
-      mapOf<String, Any>(
-        "startDateTimeInclusive" to startDateTimeInclusive,
-        "endDateTimeInclusive" to endDateTimeInclusive,
-      ),
-      jbdcResultSetConsumer,
-    )
+  ) = reportJdbcTemplate.query(
+    QUERY,
+    mapOf<String, Any>(
+      "startDateTimeInclusive" to startDateTimeInclusive,
+      "endDateTimeInclusive" to endDateTimeInclusive,
+    ),
+    jbdcResultSetConsumer,
+  )
 }

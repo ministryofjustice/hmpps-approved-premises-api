@@ -24,12 +24,12 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.BedEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.BookingEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.CancellationEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.CancellationReasonEntityFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.CaseSummaryFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ConfirmationEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ContextStaffMemberFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.DepartureEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.DepartureReasonEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.DestinationProviderEntityFactory
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.InmateDetailFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.LocalAuthorityEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.MoveOnCategoryEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.OffenderDetailsSummaryFactory
@@ -58,25 +58,28 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DestinationPr
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ExtensionEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ExtensionRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.MoveOnCategoryRepository
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PremisesEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ProbationRegionEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TemporaryAccommodationApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TurnaroundEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TurnaroundRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserEntity
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserQualification
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas3.Cas3VoidBedspacesRepository
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PersonInfoResult
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PersonSummaryInfoResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.AuthorisableActionResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.CasResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.ValidatableActionResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.AssessmentService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.FeatureFlagService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.OffenderService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.UserAccessService
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.UserService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.WorkingDayService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas3.Cas3BookingService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas3.Cas3PremisesService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas3.GetBookingForPremisesResult
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas3LaoStrategy
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.unit.util.assertThatCasResult
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomStringMultiCaseWithNumbers
 import java.time.Instant
 import java.time.LocalDate
 import java.time.OffsetDateTime
@@ -103,34 +106,32 @@ class Cas3BookingServiceTest {
   private val mockCas3VoidBedspacesRepository = mockk<Cas3VoidBedspacesRepository>()
   private val mockTurnaroundRepository = mockk<TurnaroundRepository>()
   private val mockAssessmentRepository = mockk<AssessmentRepository>()
-  private val mockUserService = mockk<UserService>()
   private val mockUserAccessService = mockk<UserAccessService>()
   private val mockAssessmentService = mockk<AssessmentService>()
+  private val mockFeatureFlagService = mockk<FeatureFlagService>()
 
-  fun createCas3BookingService(): Cas3BookingService {
-    return Cas3BookingService(
-      bookingRepository = mockBookingRepository,
-      bedRepository = mockBedRepository,
-      confirmationRepository = mockConfirmationRepository,
-      assessmentRepository = mockAssessmentRepository,
-      arrivalRepository = mockArrivalRepository,
-      departureRepository = mockDepartureRepository,
-      departureReasonRepository = mockDepartureReasonRepository,
-      moveOnCategoryRepository = mockMoveOnCategoryRepository,
-      cancellationRepository = mockCancellationRepository,
-      cancellationReasonRepository = mockCancellationReasonRepository,
-      cas3VoidBedspacesRepository = mockCas3VoidBedspacesRepository,
-      turnaroundRepository = mockTurnaroundRepository,
-      extensionRepository = mockExtensionRepository,
-      cas3PremisesService = mockCas3PremisesService,
-      assessmentService = mockAssessmentService,
-      userService = mockUserService,
-      userAccessService = mockUserAccessService,
-      offenderService = mockOffenderService,
-      workingDayService = mockWorkingDayService,
-      cas3DomainEventService = mockCas3DomainEventService,
-    )
-  }
+  fun createCas3BookingService(): Cas3BookingService = Cas3BookingService(
+    bookingRepository = mockBookingRepository,
+    bedRepository = mockBedRepository,
+    confirmationRepository = mockConfirmationRepository,
+    assessmentRepository = mockAssessmentRepository,
+    arrivalRepository = mockArrivalRepository,
+    departureRepository = mockDepartureRepository,
+    departureReasonRepository = mockDepartureReasonRepository,
+    moveOnCategoryRepository = mockMoveOnCategoryRepository,
+    cancellationRepository = mockCancellationRepository,
+    cancellationReasonRepository = mockCancellationReasonRepository,
+    cas3VoidBedspacesRepository = mockCas3VoidBedspacesRepository,
+    turnaroundRepository = mockTurnaroundRepository,
+    extensionRepository = mockExtensionRepository,
+    cas3PremisesService = mockCas3PremisesService,
+    assessmentService = mockAssessmentService,
+    userAccessService = mockUserAccessService,
+    offenderService = mockOffenderService,
+    workingDayService = mockWorkingDayService,
+    cas3DomainEventService = mockCas3DomainEventService,
+    featureFlagService = mockFeatureFlagService,
+  )
 
   private val cas3BookingService = createCas3BookingService()
 
@@ -141,23 +142,10 @@ class Cas3BookingServiceTest {
   @Nested
   inner class GetBookingPremises {
     @Test
-    fun `getBookingForPremises returns PremisesNotFound when premises with provided ID does not exist`() {
-      val premisesId = UUID.fromString("8461d08b-0e3f-426a-a941-0ada4160e6db")
-      val bookingId = UUID.fromString("75ed7091-1767-4901-8c2b-371dd0f5864c")
-
-      every { mockCas3PremisesService.getPremises(premisesId) } returns null
-
-      assertThat(cas3BookingService.getBookingForPremises(premisesId, bookingId))
-        .isEqualTo(GetBookingForPremisesResult.PremisesNotFound)
-    }
-
-    @Test
     fun `getBookingForPremises returns BookingNotFound when booking with provided ID does not exist`() {
-      val premisesId = UUID.fromString("8461d08b-0e3f-426a-a941-0ada4160e6db")
-      val bookingId = UUID.fromString("75ed7091-1767-4901-8c2b-371dd0f5864c")
-
-      every { mockCas3PremisesService.getPremises(premisesId) } returns TemporaryAccommodationPremisesEntityFactory()
-        .withId(premisesId)
+      val bookingId = UUID.randomUUID()
+      val premises = TemporaryAccommodationPremisesEntityFactory()
+        .withId(UUID.randomUUID())
         .withYieldedProbationRegion {
           ProbationRegionEntityFactory()
             .withYieldedApArea { ApAreaEntityFactory().produce() }
@@ -168,25 +156,22 @@ class Cas3BookingServiceTest {
 
       every { mockBookingRepository.findByIdOrNull(bookingId) } returns null
 
-      assertThat(cas3BookingService.getBookingForPremises(premisesId, bookingId))
+      assertThat(cas3BookingService.getBookingForPremises(premises, bookingId))
         .isEqualTo(GetBookingForPremisesResult.BookingNotFound)
     }
 
     @Test
     fun `getBookingForPremises returns BookingNotFound when booking does not belong to Premises`() {
-      val premisesId = UUID.fromString("8461d08b-0e3f-426a-a941-0ada4160e6db")
       val bookingId = UUID.fromString("75ed7091-1767-4901-8c2b-371dd0f5864c")
 
       val premisesEntityFactory = TemporaryAccommodationPremisesEntityFactory()
-        .withId(premisesId)
+        .withId(UUID.randomUUID())
         .withYieldedProbationRegion {
           ProbationRegionEntityFactory()
             .withYieldedApArea { ApAreaEntityFactory().produce() }
             .produce()
         }
         .withYieldedLocalAuthorityArea { LocalAuthorityEntityFactory().produce() }
-
-      every { mockCas3PremisesService.getPremises(premisesId) } returns premisesEntityFactory.produce()
 
       val keyWorker = ContextStaffMemberFactory().produce()
 
@@ -196,7 +181,7 @@ class Cas3BookingServiceTest {
         .withStaffKeyWorkerCode(keyWorker.code)
         .produce()
 
-      assertThat(cas3BookingService.getBookingForPremises(premisesId, bookingId))
+      assertThat(cas3BookingService.getBookingForPremises(premisesEntityFactory.withId(UUID.randomUUID()).produce(), bookingId))
         .isEqualTo(GetBookingForPremisesResult.BookingNotFound)
     }
 
@@ -215,8 +200,6 @@ class Cas3BookingServiceTest {
         .withYieldedLocalAuthorityArea { LocalAuthorityEntityFactory().produce() }
         .produce()
 
-      every { mockCas3PremisesService.getPremises(premisesId) } returns premisesEntity
-
       val keyWorker = ContextStaffMemberFactory().produce()
 
       val bookingEntity = BookingEntityFactory()
@@ -227,13 +210,13 @@ class Cas3BookingServiceTest {
 
       every { mockBookingRepository.findByIdOrNull(bookingId) } returns bookingEntity
 
-      assertThat(cas3BookingService.getBookingForPremises(premisesId, bookingId))
+      assertThat(cas3BookingService.getBookingForPremises(premisesEntity, bookingId))
         .isEqualTo(GetBookingForPremisesResult.Success(bookingEntity))
     }
   }
 
   @Nested
-  inner class GetBooking {
+  inner class FindFutureBookingsForPremises {
     val premises = TemporaryAccommodationPremisesEntityFactory()
       .withYieldedProbationRegion {
         ProbationRegionEntityFactory()
@@ -243,55 +226,117 @@ class Cas3BookingServiceTest {
       .withYieldedLocalAuthorityArea { LocalAuthorityEntityFactory().produce() }
       .produce()
 
-    private val bookingEntity = BookingEntityFactory()
-      .withArrivalDate(LocalDate.parse("2022-08-25"))
-      .withPremises(premises)
-      .produce()
+    val fullPersonOffenderCaseSummary = CaseSummaryFactory().produce()
+    private val fullPersonSummaryInfo = PersonSummaryInfoResult.Success.Full(
+      crn = fullPersonOffenderCaseSummary.crn,
+      summary = fullPersonOffenderCaseSummary,
+    )
 
-    private val personInfo = PersonInfoResult.Success.Full(
-      crn = bookingEntity.crn,
-      offenderDetailSummary = OffenderDetailsSummaryFactory().produce(),
-      inmateDetail = InmateDetailFactory().produce(),
+    private val restrictedPersonSummaryInfo = PersonSummaryInfoResult.Success.Restricted(
+      randomStringMultiCaseWithNumbers(8),
+      randomStringMultiCaseWithNumbers(10),
     )
 
     @Test
-    fun `returns a booking`() {
-      every { mockBookingRepository.findByIdOrNull(bookingEntity.id) } returns bookingEntity
-      every { mockUserService.getUserForRequest() } returns user
-      every { mockUserAccessService.userCanViewBooking(user, bookingEntity) } returns true
-      every { mockOffenderService.getPersonInfoResult(bookingEntity.crn, user.deliusUsername, user.hasQualification(UserQualification.LAO)) } returns personInfo
+    fun `findFutureBookingsForPremises returns NotFound when premises with provided ID does not exist`() {
+      val premisesId = UUID.randomUUID()
 
-      val result = cas3BookingService.getBooking(bookingEntity.id)
+      every { mockCas3PremisesService.getPremises(premisesId) } returns null
 
-      assertThat(result is AuthorisableActionResult.Success).isTrue()
-      result as AuthorisableActionResult.Success
+      val result = cas3BookingService.findFutureBookingsForPremises(premisesId, listOf(BookingStatus.provisional), user)
 
-      assertThat(result.entity).isEqualTo(Cas3BookingService.BookingAndPersons(bookingEntity, personInfo))
+      assertThatCasResult(result).isNotFound("Premises", premisesId.toString())
     }
 
     @Test
-    fun `returns NotFound if the booking cannot be found`() {
-      every { mockBookingRepository.findByIdOrNull(bookingEntity.id) } returns null
+    fun `findFutureBookingsForPremises returns Unauthorised if the user cannot view the bookings`() {
+      every { mockCas3PremisesService.getPremises(premises.id) } returns premises
+      every { mockUserAccessService.userCanManagePremisesBookings(user, premises) } returns false
 
-      val result = cas3BookingService.getBooking(bookingEntity.id)
+      val result = cas3BookingService.findFutureBookingsForPremises(premises.id, listOf(BookingStatus.provisional), user)
 
-      assertThat(result is AuthorisableActionResult.NotFound).isTrue()
-      result as AuthorisableActionResult.NotFound
-
-      assertThat(result.id).isEqualTo(bookingEntity.id.toString())
-      assertThat(result.entityType).isEqualTo("Booking")
+      assertThat(result is CasResult.Unauthorised).isTrue()
     }
 
     @Test
-    fun `returns Unauthorised if the user cannot view the booking`() {
-      every { mockBookingRepository.findByIdOrNull(bookingEntity.id) } returns bookingEntity
-      every { mockUserService.getUserForRequest() } returns user
-      every { mockUserAccessService.userCanViewBooking(user, bookingEntity) } returns false
+    fun `findFutureBookingsForPremises returns Success when there are current or future bookings belong to Premises`() {
+      val bookingStatuses = listOf(BookingStatus.provisional, BookingStatus.confirmed, BookingStatus.arrived)
 
-      val result = cas3BookingService.getBooking(bookingEntity.id)
+      val provisionalBookingEntity = createBooking(
+        premises,
+        fullPersonOffenderCaseSummary.crn,
+        BookingStatus.provisional,
+        LocalDate.now().plusDays(3),
+        LocalDate.now().plusDays(31),
+      )
 
-      assertThat(result is AuthorisableActionResult.Unauthorised).isTrue()
+      val confirmedBookingEntity = createBooking(
+        premises,
+        fullPersonOffenderCaseSummary.crn,
+        BookingStatus.confirmed,
+        LocalDate.now().plusDays(21),
+        LocalDate.now().plusDays(76),
+      )
+
+      val arrivedBookingEntity = createBooking(
+        premises,
+        fullPersonOffenderCaseSummary.crn,
+        BookingStatus.arrived,
+        LocalDate.now().minusDays(3),
+        LocalDate.now().plusDays(22),
+      )
+
+      val restrictedOffenderBooking = createBooking(
+        premises,
+        restrictedPersonSummaryInfo.crn,
+        BookingStatus.arrived,
+        LocalDate.now().minusDays(17),
+        LocalDate.now().plusDays(31),
+      )
+
+      every { mockCas3PremisesService.getPremises(premises.id) } returns premises
+      every {
+        mockOffenderService.getPersonSummaryInfoResults(
+          setOf(fullPersonOffenderCaseSummary.crn, restrictedPersonSummaryInfo.crn),
+          user.cas3LaoStrategy(),
+        )
+      } returns listOf(fullPersonSummaryInfo, restrictedPersonSummaryInfo)
+      every { mockUserAccessService.userCanManagePremisesBookings(user, premises) } returns true
+      every {
+        mockBookingRepository.findFutureBookingsByPremisesIdAndStatus(
+          ServiceName.temporaryAccommodation.value,
+          premises.id,
+          LocalDate.now(),
+          bookingStatuses,
+        )
+      } returns listOf(provisionalBookingEntity, confirmedBookingEntity, arrivedBookingEntity, restrictedOffenderBooking)
+
+      assertThat(cas3BookingService.findFutureBookingsForPremises(premises.id, bookingStatuses, user))
+        .isEqualTo(
+          CasResult.Success(
+            listOf(
+              Cas3BookingService.BookingAndPersons(provisionalBookingEntity, fullPersonSummaryInfo),
+              Cas3BookingService.BookingAndPersons(confirmedBookingEntity, fullPersonSummaryInfo),
+              Cas3BookingService.BookingAndPersons(arrivedBookingEntity, fullPersonSummaryInfo),
+              Cas3BookingService.BookingAndPersons(restrictedOffenderBooking, restrictedPersonSummaryInfo),
+            ),
+          ),
+        )
     }
+
+    private fun createBooking(
+      premises: PremisesEntity,
+      crn: String,
+      status: BookingStatus,
+      arrivalDate: LocalDate,
+      departureDate: LocalDate,
+    ): BookingEntity = BookingEntityFactory()
+      .withPremises(premises)
+      .withCrn(crn)
+      .withStatus(status)
+      .withArrivalDate(arrivalDate)
+      .withDepartureDate(departureDate)
+      .produce()
   }
 
   @Nested
@@ -337,6 +382,8 @@ class Cas3BookingServiceTest {
 
     @Test
     fun `createDeparture returns FieldValidationError with correct param to message map when dateTime in past supplied`() {
+      every { mockFeatureFlagService.getBooleanFlag("cas3-validate-booking-departure-in-future") } returns false
+
       val result = cas3BookingService.createDeparture(
         booking = bookingEntity,
         dateTime = OffsetDateTime.parse("2022-08-24T15:00:00+01:00"),
@@ -348,15 +395,37 @@ class Cas3BookingServiceTest {
           .produce(),
       )
 
-      assertThat(result).isInstanceOf(ValidatableActionResult.FieldValidationError::class.java)
-      assertThat((result as ValidatableActionResult.FieldValidationError).validationMessages).contains(
+      assertThat(result).isInstanceOf(CasResult.FieldValidationError::class.java)
+      assertThat((result as CasResult.FieldValidationError).validationMessages).contains(
         entry("$.dateTime", "beforeBookingArrivalDate"),
+      )
+    }
+
+    @Test
+    fun `createDeparture returns FieldValidationError with correct param to message map when departure date is in the future`() {
+      every { mockFeatureFlagService.getBooleanFlag("cas3-validate-booking-departure-in-future") } returns true
+
+      val result = cas3BookingService.createDeparture(
+        booking = bookingEntity,
+        dateTime = OffsetDateTime.now().plusDays(1),
+        reasonId = departureReasonId,
+        moveOnCategoryId = moveOnCategoryId,
+        notes = "notes",
+        user = UserEntityFactory()
+          .withUnitTestControlProbationRegion()
+          .produce(),
+      )
+
+      assertThat(result).isInstanceOf(CasResult.FieldValidationError::class.java)
+      assertThat((result as CasResult.FieldValidationError).validationMessages).contains(
+        entry("$.dateTime", "departureDateInFuture"),
       )
     }
 
     @Test
     fun `createDeparture returns FieldValidationError with correct param to message map when invalid departure reason supplied`() {
       every { mockDepartureReasonRepository.findByIdOrNull(any()) } returns null
+      every { mockFeatureFlagService.getBooleanFlag("cas3-validate-booking-departure-in-future") } returns false
 
       val result = cas3BookingService.createDeparture(
         booking = bookingEntity,
@@ -369,8 +438,8 @@ class Cas3BookingServiceTest {
           .produce(),
       )
 
-      assertThat(result).isInstanceOf(ValidatableActionResult.FieldValidationError::class.java)
-      assertThat((result as ValidatableActionResult.FieldValidationError).validationMessages).contains(
+      assertThat(result).isInstanceOf(CasResult.FieldValidationError::class.java)
+      assertThat((result as CasResult.FieldValidationError).validationMessages).contains(
         entry("$.reasonId", "doesNotExist"),
       )
     }
@@ -380,6 +449,7 @@ class Cas3BookingServiceTest {
       every { mockDepartureReasonRepository.findByIdOrNull(any()) } returns DepartureReasonEntityFactory()
         .withServiceScope(ServiceName.temporaryAccommodation.value)
         .produce()
+      every { mockFeatureFlagService.getBooleanFlag("cas3-validate-booking-departure-in-future") } returns false
 
       val result = cas3BookingService.createDeparture(
         booking = bookingEntity,
@@ -392,8 +462,8 @@ class Cas3BookingServiceTest {
           .produce(),
       )
 
-      assertThat(result).isInstanceOf(ValidatableActionResult.FieldValidationError::class.java)
-      assertThat((result as ValidatableActionResult.FieldValidationError).validationMessages).contains(
+      assertThat(result).isInstanceOf(CasResult.FieldValidationError::class.java)
+      assertThat((result as CasResult.FieldValidationError).validationMessages).contains(
         entry("$.reasonId", "incorrectDepartureReasonServiceScope"),
       )
     }
@@ -401,6 +471,7 @@ class Cas3BookingServiceTest {
     @Test
     fun `createDeparture returns FieldValidationError with correct param to message map when invalid move on category supplied`() {
       every { mockMoveOnCategoryRepository.findByIdOrNull(any()) } returns null
+      every { mockFeatureFlagService.getBooleanFlag("cas3-validate-booking-departure-in-future") } returns false
 
       val result = cas3BookingService.createDeparture(
         booking = bookingEntity,
@@ -413,8 +484,8 @@ class Cas3BookingServiceTest {
           .produce(),
       )
 
-      assertThat(result).isInstanceOf(ValidatableActionResult.FieldValidationError::class.java)
-      assertThat((result as ValidatableActionResult.FieldValidationError).validationMessages).contains(
+      assertThat(result).isInstanceOf(CasResult.FieldValidationError::class.java)
+      assertThat((result as CasResult.FieldValidationError).validationMessages).contains(
         entry("$.moveOnCategoryId", "doesNotExist"),
       )
     }
@@ -428,6 +499,7 @@ class Cas3BookingServiceTest {
         .withServiceScope(ServiceName.temporaryAccommodation.value)
         .produce()
       every { mockDestinationProviderRepository.findByIdOrNull(destinationProviderId) } returns DestinationProviderEntityFactory().produce()
+      every { mockFeatureFlagService.getBooleanFlag("cas3-validate-booking-departure-in-future") } returns false
 
       val result = cas3BookingService.createDeparture(
         booking = bookingEntity,
@@ -440,8 +512,8 @@ class Cas3BookingServiceTest {
           .produce(),
       )
 
-      assertThat(result).isInstanceOf(ValidatableActionResult.FieldValidationError::class.java)
-      assertThat((result as ValidatableActionResult.FieldValidationError).validationMessages).contains(
+      assertThat(result).isInstanceOf(CasResult.FieldValidationError::class.java)
+      assertThat((result as CasResult.FieldValidationError).validationMessages).contains(
         entry("$.moveOnCategoryId", "incorrectMoveOnCategoryServiceScope"),
       )
     }
@@ -472,6 +544,8 @@ class Cas3BookingServiceTest {
       every { mockArrivalRepository.save(any()) } answers { it.invocation.args[0] as ArrivalEntity }
       every { mockBookingRepository.save(any()) } answers { it.invocation.args[0] as BookingEntity }
 
+      every { mockFeatureFlagService.getBooleanFlag("cas3-validate-booking-departure-in-future") } returns false
+
       val user = UserEntityFactory()
         .withProbationRegion(probationRegion)
         .produce()
@@ -493,16 +567,16 @@ class Cas3BookingServiceTest {
         user = user,
       )
 
-      assertThat(result).isInstanceOf(ValidatableActionResult.Success::class.java)
-      result as ValidatableActionResult.Success
-      assertThat(result.entity.booking).isEqualTo(bookingEntity)
-      assertThat(result.entity.dateTime).isEqualTo(OffsetDateTime.parse("2022-08-24T15:00:00+01:00"))
-      assertThat(result.entity.reason).isEqualTo(reasonEntity)
-      assertThat(result.entity.moveOnCategory).isEqualTo(moveOnCategoryEntity)
-      assertThat(result.entity.destinationProvider).isEqualTo(null)
-      assertThat(result.entity.reason).isEqualTo(reasonEntity)
-      assertThat(result.entity.notes).isEqualTo("notes")
-      assertThat(result.entity.booking.status).isEqualTo(BookingStatus.departed)
+      assertThat(result).isInstanceOf(CasResult.Success::class.java)
+      result as CasResult.Success
+      assertThat(result.value.booking).isEqualTo(bookingEntity)
+      assertThat(result.value.dateTime).isEqualTo(OffsetDateTime.parse("2022-08-24T15:00:00+01:00"))
+      assertThat(result.value.reason).isEqualTo(reasonEntity)
+      assertThat(result.value.moveOnCategory).isEqualTo(moveOnCategoryEntity)
+      assertThat(result.value.destinationProvider).isEqualTo(null)
+      assertThat(result.value.reason).isEqualTo(reasonEntity)
+      assertThat(result.value.notes).isEqualTo("notes")
+      assertThat(result.value.booking.status).isEqualTo(BookingStatus.departed)
 
       verify(exactly = 1) {
         mockCas3DomainEventService.savePersonDepartedEvent(bookingEntity, user)
@@ -558,6 +632,7 @@ class Cas3BookingServiceTest {
       every { mockBookingRepository.save(any()) } answers { it.invocation.args[0] as BookingEntity }
       every { mockOffenderService.getOffenderByCrn(bookingEntity.crn, user.deliusUsername) } returns AuthorisableActionResult.Success(offenderDetails)
       every { mockCas3DomainEventService.savePersonDepartureUpdatedEvent(any(), user) } just Runs
+      every { mockFeatureFlagService.getBooleanFlag("cas3-validate-booking-departure-in-future") } returns false
 
       val result = cas3BookingService.createDeparture(
         booking = bookingEntity,
@@ -568,16 +643,16 @@ class Cas3BookingServiceTest {
         user = user,
       )
 
-      assertThat(result).isInstanceOf(ValidatableActionResult.Success::class.java)
-      result as ValidatableActionResult.Success
-      assertThat(result.entity.booking).isEqualTo(bookingEntity)
-      assertThat(result.entity.dateTime).isEqualTo(departureDateTime)
-      assertThat(result.entity.reason).isEqualTo(reasonEntity)
-      assertThat(result.entity.moveOnCategory).isEqualTo(moveOnCategoryEntity)
-      assertThat(result.entity.destinationProvider).isEqualTo(null)
-      assertThat(result.entity.reason).isEqualTo(reasonEntity)
-      assertThat(result.entity.notes).isEqualTo(notes)
-      assertThat(result.entity.booking.status).isEqualTo(BookingStatus.departed)
+      assertThat(result).isInstanceOf(CasResult.Success::class.java)
+      result as CasResult.Success
+      assertThat(result.value.booking).isEqualTo(bookingEntity)
+      assertThat(result.value.dateTime).isEqualTo(departureDateTime)
+      assertThat(result.value.reason).isEqualTo(reasonEntity)
+      assertThat(result.value.moveOnCategory).isEqualTo(moveOnCategoryEntity)
+      assertThat(result.value.destinationProvider).isEqualTo(null)
+      assertThat(result.value.reason).isEqualTo(reasonEntity)
+      assertThat(result.value.notes).isEqualTo(notes)
+      assertThat(result.value.booking.status).isEqualTo(BookingStatus.departed)
 
       verify(exactly = 1) {
         mockCas3DomainEventService.savePersonDepartureUpdatedEvent(any(), user)
@@ -1542,21 +1617,20 @@ class Cas3BookingServiceTest {
       }
     }
 
-    private fun createBooking(application: TemporaryAccommodationApplicationEntity?) =
-      BookingEntityFactory()
-        .withYieldedPremises {
-          TemporaryAccommodationPremisesEntityFactory()
-            .withYieldedProbationRegion {
-              ProbationRegionEntityFactory()
-                .withYieldedApArea { ApAreaEntityFactory().produce() }
-                .produce()
-            }
-            .withService(ServiceName.temporaryAccommodation.value)
-            .withYieldedLocalAuthorityArea { LocalAuthorityEntityFactory().produce() }
-            .produce()
-        }
-        .withApplication(application.let { application })
-        .produce()
+    private fun createBooking(application: TemporaryAccommodationApplicationEntity?) = BookingEntityFactory()
+      .withYieldedPremises {
+        TemporaryAccommodationPremisesEntityFactory()
+          .withYieldedProbationRegion {
+            ProbationRegionEntityFactory()
+              .withYieldedApArea { ApAreaEntityFactory().produce() }
+              .produce()
+          }
+          .withService(ServiceName.temporaryAccommodation.value)
+          .withYieldedLocalAuthorityArea { LocalAuthorityEntityFactory().produce() }
+          .produce()
+      }
+      .withApplication(application.let { application })
+      .produce()
   }
 
   @Nested

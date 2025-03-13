@@ -46,17 +46,15 @@ class Cas1BookingEmailService(
     val application = bookingInfo.application
     val placementApplication = bookingInfo.placementApplication
 
-    val applicationSubmittedByUser = application.createdByUser
-
     val emailPersonalisation = buildCommonPersonalisation(bookingInfo)
 
-    val applicants = setOfNotNull(
-      applicationSubmittedByUser.email,
-      placementApplication?.createdByUser?.email,
-    )
+    val recipientEmailAddresses = (
+      application.interestedPartiesEmailAddresses() +
+        setOfNotNull(placementApplication?.createdByUser?.email)
+      ).toSet()
 
     emailNotifier.sendEmails(
-      recipientEmailAddresses = applicants,
+      recipientEmailAddresses = recipientEmailAddresses,
       templateId = notifyConfig.templates.bookingMade,
       personalisation = emailPersonalisation,
       application = application,
@@ -119,17 +117,49 @@ class Cas1BookingEmailService(
     )
   }
 
+  fun spaceBookingAmended(
+    spaceBooking: Cas1SpaceBookingEntity,
+    application: ApprovedPremisesApplicationEntity,
+  ) = bookingAmended(
+    spaceBooking.toBookingInfo(application),
+  )
+
+  fun bookingAmended(
+    application: ApprovedPremisesApplicationEntity,
+    booking: BookingEntity,
+    placementApplication: PlacementApplicationEntity?,
+  ) = bookingAmended(
+    booking.toBookingInfo(application, placementApplication),
+  )
+
+  private fun bookingAmended(bookingInfo: BookingInfo) {
+    val application = bookingInfo.application
+    val emailPersonalisation = buildCommonPersonalisation(bookingInfo)
+
+    val interestedParties =
+      (
+        application.interestedPartiesEmailAddresses() +
+          setOfNotNull(bookingInfo.premises.emailAddress)
+        ).toSet()
+
+    emailNotifier.sendEmails(
+      recipientEmailAddresses = interestedParties,
+      templateId = notifyConfig.templates.bookingAmended,
+      personalisation = emailPersonalisation,
+      application = application,
+    )
+  }
+
   private fun Cas1SpaceBookingEntity.toBookingInfo(
     application: ApprovedPremisesApplicationEntity,
-  ) =
-    BookingInfo(
-      bookingId = id,
-      arrivalDate = canonicalArrivalDate,
-      departureDate = canonicalDepartureDate,
-      premises = premises,
-      application = application,
-      placementApplication = placementRequest?.placementApplication,
-    )
+  ) = BookingInfo(
+    bookingId = id,
+    arrivalDate = canonicalArrivalDate,
+    departureDate = canonicalDepartureDate,
+    premises = premises,
+    application = application,
+    placementApplication = placementRequest?.placementApplication,
+  )
 
   private fun BookingEntity.toBookingInfo(
     application: ApprovedPremisesApplicationEntity,

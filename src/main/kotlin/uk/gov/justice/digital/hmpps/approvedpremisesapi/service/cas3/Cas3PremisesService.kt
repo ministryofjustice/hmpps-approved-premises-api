@@ -3,6 +3,7 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas3
 import arrow.core.Either
 import org.springframework.data.repository.findByIdOrNull
 import org.springframework.stereotype.Service
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.BookingStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PropertyStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.BookingRepository
@@ -25,6 +26,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.validated
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.AuthorisableActionResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.ValidatableActionResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.CharacteristicService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.FeatureFlagService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.getDaysUntilExclusiveEnd
 import java.time.LocalDate
 import java.time.OffsetDateTime
@@ -41,11 +43,13 @@ class Cas3PremisesService(
   private val probationRegionRepository: ProbationRegionRepository,
   private val probationDeliveryUnitRepository: ProbationDeliveryUnitRepository,
   private val characteristicService: CharacteristicService,
+  private val featureFlagService: FeatureFlagService,
 ) {
   fun getPremises(premisesId: UUID): TemporaryAccommodationPremisesEntity? = premisesRepository.findTemporaryAccommodationPremisesByIdOrNull(premisesId)
 
-  fun getAllPremisesSummaries(regionId: UUID): List<TemporaryAccommodationPremisesSummary> {
-    return premisesRepository.findAllTemporaryAccommodationSummary(regionId)
+  fun getAllPremisesSummaries(regionId: UUID, postcodeOrAddress: String?): List<TemporaryAccommodationPremisesSummary> {
+    val postcodeOrAddressWithoutWhitespace = postcodeOrAddress?.filter { !it.isWhitespace() }
+    return premisesRepository.findAllCas3PremisesSummary(regionId, postcodeOrAddress, postcodeOrAddressWithoutWhitespace)
   }
 
   @SuppressWarnings("CyclomaticComplexMethod")
@@ -219,6 +223,19 @@ class Cas3PremisesService(
       validationErrors["$.turnaroundWorkingDayCount"] = "isNotAPositiveInteger"
     }
 
+    if (featureFlagService.getBooleanFlag("archive-property-validate-existing-bookings") && status == PropertyStatus.archived) {
+      val futureBookings = bookingRepository.findFutureBookingsByPremisesIdAndStatus(
+        ServiceName.temporaryAccommodation.value,
+        premisesId,
+        LocalDate.now(),
+        listOf(BookingStatus.arrived, BookingStatus.confirmed, BookingStatus.provisional),
+      )
+
+      if (futureBookings.any()) {
+        validationErrors["$.status"] = "existingBookings"
+      }
+    }
+
     if (validationErrors.any()) {
       return AuthorisableActionResult.Success(
         ValidatableActionResult.FieldValidationError(validationErrors),
@@ -279,9 +296,7 @@ class Cas3PremisesService(
     )
   }
 
-  fun getBedspaceCount(premises: PremisesEntity): Int {
-    return premisesRepository.getBedCount(premises)
-  }
+  fun getBedspaceCount(premises: PremisesEntity): Int = premisesRepository.getBedCount(premises)
 
   @SuppressWarnings("TooGenericExceptionThrown")
   fun getAvailabilityForRange(
@@ -317,42 +332,41 @@ class Cas3PremisesService(
     referenceNumber: String?,
     notes: String?,
     bedId: UUID,
-  ): ValidatableActionResult<Cas3VoidBedspaceEntity> =
-    validated {
-      if (endDate.isBefore(startDate)) {
-        "$.endDate" hasValidationError "beforeStartDate"
-      }
-
-      val bed = premises.rooms.flatMap { it.beds }.firstOrNull { it.id == bedId }
-      if (bed == null) {
-        "$.bedId" hasValidationError "doesNotExist"
-      }
-
-      val reason = cas3VoidBedspaceReasonRepository.findByIdOrNull(reasonId)
-      if (reason == null) {
-        "$.reason" hasValidationError "doesNotExist"
-      }
-
-      if (validationErrors.any()) {
-        return fieldValidationError
-      }
-
-      val voidBedspacesEntity = cas3VoidBedspacesRepository.save(
-        Cas3VoidBedspaceEntity(
-          id = UUID.randomUUID(),
-          premises = premises,
-          startDate = startDate,
-          endDate = endDate,
-          bed = bed!!,
-          reason = reason!!,
-          referenceNumber = referenceNumber,
-          notes = notes,
-          cancellation = null,
-        ),
-      )
-
-      return success(voidBedspacesEntity)
+  ): ValidatableActionResult<Cas3VoidBedspaceEntity> = validated {
+    if (endDate.isBefore(startDate)) {
+      "$.endDate" hasValidationError "beforeStartDate"
     }
+
+    val bed = premises.rooms.flatMap { it.beds }.firstOrNull { it.id == bedId }
+    if (bed == null) {
+      "$.bedId" hasValidationError "doesNotExist"
+    }
+
+    val reason = cas3VoidBedspaceReasonRepository.findByIdOrNull(reasonId)
+    if (reason == null) {
+      "$.reason" hasValidationError "doesNotExist"
+    }
+
+    if (validationErrors.any()) {
+      return fieldValidationError
+    }
+
+    val voidBedspacesEntity = cas3VoidBedspacesRepository.save(
+      Cas3VoidBedspaceEntity(
+        id = UUID.randomUUID(),
+        premises = premises,
+        startDate = startDate,
+        endDate = endDate,
+        bed = bed!!,
+        reason = reason!!,
+        referenceNumber = referenceNumber,
+        notes = notes,
+        cancellation = null,
+      ),
+    )
+
+    return success(voidBedspacesEntity)
+  }
 
   fun updateVoidBedspaces(
     voidBedspaceId: UUID,

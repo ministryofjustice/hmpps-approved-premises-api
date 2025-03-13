@@ -68,12 +68,10 @@ data class Cas2ApplicationNoteEntity(
     }
   }
 
-  fun getUser(): Cas2User {
-    return if (this.createdByNomisUser != null) {
-      this.createdByNomisUser!!
-    } else {
-      this.createdByExternalUser!!
-    }
+  fun getUser(): Cas2User = if (this.createdByNomisUser != null) {
+    this.createdByNomisUser!!
+  } else {
+    this.createdByExternalUser!!
   }
 
   override fun toString() = "Cas2ApplicationNoteEntity: $id"

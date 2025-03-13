@@ -23,7 +23,6 @@ import org.springframework.data.jpa.repository.Query
 import org.springframework.stereotype.Repository
 import org.springframework.stereotype.Service
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1PlacementRequestSummary.PlacementRequestStatus
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PlacementRequestTaskOutcome
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.WithdrawPlacementRequestReason
 import java.time.LocalDate
 import java.time.OffsetDateTime
@@ -36,24 +35,6 @@ interface PlacementRequestRepository : JpaRepository<PlacementRequestEntity, UUI
   fun findByApplicationId(applicationId: UUID): List<PlacementRequestEntity>
 
   fun findByApplication(application: ApprovedPremisesApplicationEntity): List<PlacementRequestEntity>
-
-  @Query(
-    """
-      SELECT p FROM PlacementRequestEntity p
-      JOIN p.application a
-      LEFT OUTER JOIN a.apArea apArea
-      WHERE
-        p.allocatedToUser.id = :userId AND
-        ((cast(:apAreaId as org.hibernate.type.UUIDCharType) IS NULL) OR apArea.id = :apAreaId) AND
-        p.reallocatedAt IS NULL AND 
-        p.isWithdrawn = FALSE
-    """,
-  )
-  fun findOpenRequestsAssignedToUser(
-    userId: UUID,
-    apAreaId: UUID?,
-    pageable: Pageable?,
-  ): Page<PlacementRequestEntity>
 
   @Query(
     """
@@ -153,6 +134,7 @@ interface PlacementRequestRepository : JpaRepository<PlacementRequestEntity, UUI
 
   @Query(
     """
+    WITH UNFILTERED AS (
       SELECT
       pq.duration AS requestedPlacementDuration,
       pq.expected_arrival AS requestedPlacementArrivalDate,
@@ -161,108 +143,63 @@ interface PlacementRequestRepository : JpaRepository<PlacementRequestEntity, UUI
       apa.risk_ratings -> 'tier' -> 'value' ->> 'level' AS personTier,
       pq.application_id AS applicationId,
       apa.name as personName,
-      CASE
-        WHEN (pq.is_parole) THEN 'parole'
-        ELSE 'standardRequest'
-      END as requestType,      
-      CASE
-        WHEN EXISTS (
-          SELECT
-            1
-          FROM
-            cancellations c
-            right join bookings booking on c.booking_id = booking.id
-          WHERE
-            booking.id = pq.booking_id
-            AND c.id IS NULL
-        ) THEN 'matched'
-        WHEN EXISTS (
-          SELECT 
-              1 
-          FROM 
-              cas1_space_bookings sb 
-          WHERE
-              sb.placement_request_id = pq.id AND
-              sb.cancellation_occurred_at IS NULL
-        ) THEN 'matched'   
-        WHEN EXISTS (
-          SELECT
-            1
-          FROM
-            booking_not_mades bnm
-          WHERE
-            bnm.placement_request_id = pq.id
-        ) THEN 'unableToMatch' 
-        ELSE 'notMatched'
-      END AS placementRequestStatus,
+      pq.reallocated_at as reallocatedAt,
+      pq.is_withdrawn as isWithdrawn,
+      pq.booking_id as bookingId,
+      pq.is_parole as isParole,
+      area.id as apAreaId,
+      pq.created_at as created_at,
+      apa.cas1_cru_management_area_id as cruManagementAreaId,
+      CASE WHEN (pq.is_parole) THEN 'parole' ELSE 'standardRelease' END AS requestType,      
+      (SELECT EXISTS (SELECT 1 FROM cancellations c right join bookings booking on c.booking_id = booking.id WHERE booking.id = pq.booking_id AND c.id IS NULL)) AS hasLegacyBooking,
+      (SELECT EXISTS (SELECT 1 FROM cas1_space_bookings sb WHERE sb.placement_request_id = pq.id AND sb.cancellation_occurred_at IS NULL)) AS hasSpaceBooking,   
+      (SELECT EXISTS (SELECT 1 FROM booking_not_mades bnm WHERE bnm.placement_request_id = pq.id)) AS hasBookingNotMade,
       application.submitted_at::date AS applicationSubmittedDate,
-      pq.is_parole AS isParole,
-      premises.name AS bookingPremisesName,
-      bookings.arrival_date AS bookingArrivalDate
+      CASE WHEN legacyBookingCancellations.id IS NULL THEN legacyBookingPremises.name ELSE NULL END AS legacyBookingPremisesName,
+      CASE WHEN legacyBookingCancellations.id IS NULL THEN legacyBookings.arrival_date ELSE NULL END AS legacyBookingArrivalDate,
+      spaceBookingPremises.name AS spaceBookingPremisesName,
+      spaceBookings.canonical_arrival_date AS spaceBookingArrivalDate
       FROM
       placement_requests pq
       LEFT JOIN approved_premises_applications apa ON apa.id = pq.application_id
       LEFT JOIN ap_areas area ON area.id = apa.ap_area_id
       LEFT JOIN applications application ON application.id = pq.application_id
-      LEFT JOIN bookings ON pq.booking_id = bookings.id
-      LEFT JOIN premises ON bookings.premises_id = premises.id
+      LEFT JOIN bookings legacyBookings ON pq.booking_id = legacyBookings.id
+      LEFT JOIN premises legacyBookingPremises ON legacyBookings.premises_id = legacyBookingPremises.id
+      LEFT OUTER JOIN LATERAL (
+        SELECT id, premises_id, canonical_arrival_date
+        FROM cas1_space_bookings b
+        WHERE b.placement_request_id = pq.id AND b.cancellation_occurred_at IS NULL
+        ORDER BY b.canonical_arrival_date ASC
+        LIMIT 1
+      ) spaceBookings ON TRUE
+      LEFT JOIN premises spaceBookingPremises ON spaceBookings.premises_id = spaceBookingPremises.id
+      LEFT JOIN cancellations legacyBookingCancellations ON legacyBookingCancellations.booking_id = legacyBookings.id
+      WHERE
+      (:crn IS NULL OR (SELECT EXISTS (SELECT 1 FROM applications a WHERE a.id = pq.application_id AND a.crn = UPPER(:crn))) IS TRUE)
+      AND (:crnOrName IS NULL OR (
+       (SELECT EXISTS (SELECT 1 FROM applications a WHERE a.id = pq.application_id AND a.crn = UPPER(:crnOrName))) IS TRUE OR 
+       (SELECT EXISTS (SELECT 1 FROM approved_premises_applications apa WHERE apa.id = pq.application_id AND apa.name LIKE UPPER('%' || :crnOrName || '%'))) IS TRUE))
+    ),
+    EXC_STATUS AS (
+      SELECT *,
+      COALESCE (legacyBookingPremisesName, spaceBookingPremisesName) AS bookingPremisesName,
+      COALESCE (legacyBookingArrivalDate, spaceBookingArrivalDate) AS bookingArrivalDate,
+      CASE WHEN hasLegacyBooking THEN 'matched' WHEN hasSpaceBooking THEN 'matched' WHEN hasBookingNotMade THEN 'unableToMatch' ELSE 'notMatched' END AS placementRequestStatus
+      FROM UNFILTERED
+      WHERE
+      reallocatedAt IS NULL
+      AND (:tier IS NULL OR personTier = :tier)
+      AND (CAST(:arrivalDateFrom AS DATE) IS NULL OR requestedPlacementArrivalDate >= :arrivalDateFrom) 
+      AND (CAST(:arrivalDateTo AS DATE) IS NULL OR requestedPlacementArrivalDate <= :arrivalDateTo)
+      AND (:requestType IS NULL OR requestType = :requestType)
+      AND (:apAreaId IS NULL OR apAreaId = :apAreaId)
+      AND (:cruManagementAreaId IS NULL OR cruManagementAreaId = :cruManagementAreaId)
+    )
+    SELECT * FROM EXC_STATUS
     WHERE
-      pq.reallocated_at IS NULL 
-      AND (:status IS NULL OR pq.is_withdrawn IS FALSE)
-      AND (:status IS NULL OR (
-        CASE
-          WHEN EXISTS (
-            SELECT
-              1
-            from
-              cancellations c
-              right join bookings booking on c.booking_id = booking.id
-            WHERE
-              booking.id = pq.booking_id
-              AND c.id IS NULL
-          ) THEN 'matched'
-          WHEN EXISTS (
-            SELECT 
-                1 
-            FROM 
-                cas1_space_bookings sb 
-            WHERE
-                sb.placement_request_id = pq.id AND
-                sb.cancellation_occurred_at IS NULL
-          ) THEN 'matched'   
-          WHEN EXISTS (
-            SELECT
-              1
-            from
-              booking_not_mades bnm
-            WHERE
-              bnm.placement_request_id = pq.id
-          ) THEN 'unableToMatch' 
-          ELSE 'notMatched'
-        END
-      ) = :status)
-      AND (:crn IS NULL OR EXISTS (SELECT 1 FROM applications a WHERE a.id = pq.application_id AND a.crn = UPPER(:crn)))
-      AND (
-        :crnOrName IS NULL OR 
-        (
-            (EXISTS (SELECT 1 FROM applications a WHERE a.id = pq.application_id AND a.crn = UPPER(:crnOrName)))
-            OR
-            (EXISTS (SELECT 1 FROM approved_premises_applications apa WHERE apa.id = pq.application_id AND apa.name LIKE UPPER('%' || :crnOrName || '%')))
-        )
-      )
-      AND (:tier IS NULL OR EXISTS (SELECT 1 FROM approved_premises_applications apa WHERE apa.id = pq.application_id AND apa.risk_ratings -> 'tier' -> 'value' ->> 'level' = :tier)) 
-      AND (CAST(:arrivalDateFrom AS date) IS NULL OR pq.expected_arrival >= :arrivalDateFrom) 
-      AND (CAST(:arrivalDateTo AS date) IS NULL OR pq.expected_arrival <= :arrivalDateTo)
-      AND (
-        :requestType IS NULL OR 
-        (
-            (:requestType = 'parole' AND pq.is_parole IS TRUE)
-            OR
-            (:requestType = 'standardRelease' AND pq.is_parole IS FALSE)
-        )
-      )
-      AND ((CAST(:apAreaId AS pg_catalog.uuid) IS NULL) OR area.id = :apAreaId)
-      AND ((CAST(:cruManagementAreaId AS pg_catalog.uuid) IS NULL) OR apa.cas1_cru_management_area_id = :cruManagementAreaId)    
+    (:status IS NULL OR isWithdrawn IS FALSE)
+    AND (:status IS NULL OR placementRequestStatus = :status)    
     """,
     nativeQuery = true,
   )
@@ -322,6 +259,7 @@ data class PlacementRequestEntity(
   @OneToMany(mappedBy = "placementRequest", fetch = FetchType.LAZY)
   var spaceBookings: MutableList<Cas1SpaceBookingEntity>,
 
+  @Deprecated("Placement requests are no longer allocated to users")
   @ManyToOne
   @JoinColumn(name = "allocated_to_user_id")
   var allocatedToUser: UserEntity?,
@@ -329,6 +267,15 @@ data class PlacementRequestEntity(
   @OneToMany(mappedBy = "placementRequest", fetch = FetchType.LAZY)
   var bookingNotMades: MutableList<BookingNotMadeEntity>,
 
+  @Deprecated(
+    """
+    Placement requests are no longer allocated to users
+    
+    Note that because placement requests with a value in this field are excluded from
+    lists of active placement requests, we need to be careful if/when removing this
+    column to ensure such placement requests are still not shown
+    """,
+  )
   var reallocatedAt: OffsetDateTime?,
 
   @ManyToOne(fetch = FetchType.LAZY)
@@ -341,6 +288,7 @@ data class PlacementRequestEntity(
   @Enumerated(value = EnumType.STRING)
   var withdrawalReason: PlacementRequestWithdrawalReason?,
 
+  @Deprecated("Placement requests are no longer allocated to users and don't have a due at concept")
   var dueAt: OffsetDateTime?,
 
   @Version
@@ -348,9 +296,8 @@ data class PlacementRequestEntity(
 ) {
   fun isInWithdrawableState() = isActive()
 
-  fun hasActiveBooking() =
-    (booking != null && booking?.cancellations.isNullOrEmpty()) ||
-      (spaceBookings.any { it.isActive() })
+  fun hasActiveBooking() = (booking != null && booking?.cancellations.isNullOrEmpty()) ||
+    (spaceBookings.any { it.isActive() })
 
   fun expectedDeparture(): LocalDate = expectedArrival.plusDays(duration.toLong())
 
@@ -390,20 +337,6 @@ data class PlacementRequestEntity(
    * This property is used to identify such instances.
    */
   fun isForApplicationsArrivalDate() = placementApplication == null
-
-  fun getOutcomeDetails(): Pair<OffsetDateTime?, PlacementRequestTaskOutcome?> {
-    val bookingNotMades = this.bookingNotMades
-
-    if (bookingNotMades.size > 0) {
-      return Pair(bookingNotMades.last().createdAt, PlacementRequestTaskOutcome.unableToMatch)
-    }
-
-    if (this.hasActiveBooking()) {
-      return Pair(this.booking!!.createdAt, PlacementRequestTaskOutcome.matched)
-    }
-
-    return Pair(null, null)
-  }
 }
 
 @Repository
@@ -441,8 +374,7 @@ enum class PlacementRequestWithdrawalReason(val apiValue: WithdrawPlacementReque
   ;
 
   companion object {
-    fun valueOf(apiValue: WithdrawPlacementRequestReason): PlacementRequestWithdrawalReason? =
-      PlacementRequestWithdrawalReason.entries.firstOrNull { it.apiValue == apiValue }
+    fun valueOf(apiValue: WithdrawPlacementRequestReason): PlacementRequestWithdrawalReason? = PlacementRequestWithdrawalReason.entries.firstOrNull { it.apiValue == apiValue }
   }
 }
 

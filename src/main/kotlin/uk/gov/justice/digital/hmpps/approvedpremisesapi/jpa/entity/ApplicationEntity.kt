@@ -29,6 +29,7 @@ import org.springframework.data.jpa.repository.Modifying
 import org.springframework.data.jpa.repository.Query
 import org.springframework.stereotype.Repository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1ApplicationTimelinessCategory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas1.Cas1OffenderEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.ApprovedPremisesApplicationStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.ApprovedPremisesType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PersonRisks
@@ -292,7 +293,18 @@ WHERE taa.probation_region_id = :probationRegionId AND a.submitted_at IS NOT NUL
 }
 
 @Repository
-interface ApprovedPremiseApplicationRepository : JpaRepository<ApprovedPremisesApplicationEntity, UUID>
+interface ApprovedPremisesApplicationRepository : JpaRepository<ApprovedPremisesApplicationEntity, UUID> {
+  fun existsApprovedPremisesApplicationEntityByCrn(crn: String): Boolean
+
+  @Query(
+    """
+      SELECT e.id FROM ApprovedPremisesApplicationEntity e WHERE e.cas1OffenderEntity IS NULL order by e.createdAt desc
+    """,
+  )
+  fun findAllIdsByCas1OffenderEntityIsNull(): List<UUID>
+
+  fun findByIdIn(applicationIds: List<UUID>): List<ApprovedPremisesApplicationEntity>
+}
 
 @Repository
 interface LockableApplicationRepository : JpaRepository<LockableApplicationEntity, UUID> {
@@ -322,7 +334,7 @@ abstract class ApplicationEntity(
   @Type(JsonType::class)
   var document: String?,
 
-  @ManyToOne
+  @ManyToOne(fetch = FetchType.LAZY)
   @JoinColumn(name = "schema_version")
   var schemaVersion: JsonSchemaEntity,
   val createdAt: OffsetDateTime,
@@ -391,6 +403,7 @@ class ApprovedPremisesApplicationEntity(
    * If returning the offender name to the user, use the [OffenderService], which
    * will consider any LAO restrictions
    */
+  @Deprecated("To be replaced by [Cas1OffenderEntity]")
   var name: String,
   var targetLocation: String?,
   @Enumerated(value = EnumType.STRING)
@@ -418,6 +431,9 @@ class ApprovedPremisesApplicationEntity(
   @Enumerated(value = EnumType.STRING)
   var noticeType: Cas1ApplicationTimelinessCategory?,
   var licenceExpiryDate: LocalDate?,
+  @ManyToOne(fetch = FetchType.LAZY)
+  @JoinColumn(name = "cas1_offender_id", referencedColumnName = "id")
+  var cas1OffenderEntity: Cas1OffenderEntity?,
 ) : ApplicationEntity(
   id,
   crn,

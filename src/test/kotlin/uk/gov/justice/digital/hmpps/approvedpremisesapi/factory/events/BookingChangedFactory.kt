@@ -25,8 +25,8 @@ class BookingChangedFactory : Factory<BookingChanged> {
   private var departureOn: Yielded<LocalDate> = { LocalDate.now() }
   private var previousArrivalOn: Yielded<LocalDate?> = { null }
   private var previousDepartureOn: Yielded<LocalDate?> = { null }
-  private var characteristics: Yielded<List<SpaceCharacteristic>> = { emptyList() }
-  private var previousCharacteristics: Yielded<List<SpaceCharacteristic>> = { emptyList() }
+  private var characteristics: Yielded<List<SpaceCharacteristic>?> = { null }
+  private var previousCharacteristics: Yielded<List<SpaceCharacteristic>?> = { null }
 
   fun withApplicationId(applicationId: UUID) = apply {
     this.applicationId = { applicationId }
@@ -68,7 +68,7 @@ class BookingChangedFactory : Factory<BookingChanged> {
     this.departureOn = { departureOn }
   }
 
-  fun withPreviousArrivalOn(previousArrivalOn: LocalDate) = apply {
+  fun withPreviousArrivalOn(previousArrivalOn: LocalDate?) = apply {
     this.previousArrivalOn = { previousArrivalOn }
   }
 
@@ -80,7 +80,7 @@ class BookingChangedFactory : Factory<BookingChanged> {
     this.characteristics = { characteristics }
   }
 
-  fun withPreviousCharacteristics(previousCharacteristics: List<SpaceCharacteristic>) = apply {
+  fun withPreviousCharacteristics(previousCharacteristics: List<SpaceCharacteristic>?) = apply {
     this.previousCharacteristics = { previousCharacteristics }
   }
 

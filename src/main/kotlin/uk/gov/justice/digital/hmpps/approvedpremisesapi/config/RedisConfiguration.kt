@@ -16,7 +16,6 @@ import org.springframework.data.redis.serializer.RedisSerializationContext.Seria
 import org.springframework.data.redis.serializer.RedisSerializer
 import org.springframework.data.redis.serializer.StringRedisSerializer
 import org.springframework.http.HttpStatus
-import redis.lock.redlock.RedLock
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.ClientResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.MarshallableHttpMethod
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.bankholidaysapi.UKBankHolidays
@@ -42,15 +41,46 @@ class RedisConfiguration {
     @Value("\${caches.ukBankHolidays.expiry-seconds}") ukBankHolidaysExpirySeconds: Long,
     @Value("21600") crnGetCaseDetailExpirySeconds: Long,
   ): RedisCacheManagerBuilderCustomizer? {
-    val time = buildProperties.time.epochSecond.toString()
+    val uniqueBuildId = buildProperties.time.epochSecond.toString()
 
     return RedisCacheManagerBuilderCustomizer { builder: RedisCacheManagerBuilder ->
-      builder.clientCacheFor<StaffMembersPage>("qCodeStaffMembersCache", Duration.ofSeconds(staffMembersExpirySeconds), time, objectMapper)
-        .clientCacheFor<UserOffenderAccess>("userAccessCache", Duration.ofSeconds(userAccessExpirySeconds), time, objectMapper)
-        .clientCacheFor<StaffDetail>("staffDetailsCache", Duration.ofSeconds(staffDetailsExpirySeconds), time, objectMapper)
-        .clientCacheFor<ManagingTeamsResponse>("teamsManagingCaseCache", Duration.ofSeconds(teamManagingCasesExpirySeconds), time, objectMapper)
-        .clientCacheFor<CaseDetail>("crnGetCaseDetailCache", Duration.ofSeconds(crnGetCaseDetailExpirySeconds), time, objectMapper)
-        .clientCacheFor<UKBankHolidays>("ukBankHolidaysCache", Duration.ofSeconds(ukBankHolidaysExpirySeconds), time, objectMapper)
+      builder
+        .clientCacheFor<StaffMembersPage>(
+          cacheName = "qCodeStaffMembersCache",
+          duration = Duration.ofSeconds(staffMembersExpirySeconds),
+          cacheNamePrefix = uniqueBuildId,
+          objectMapper = objectMapper,
+        )
+        .clientCacheFor<UserOffenderAccess>(
+          cacheName = "userAccessCache",
+          duration = Duration.ofSeconds(userAccessExpirySeconds),
+          cacheNamePrefix = uniqueBuildId,
+          objectMapper = objectMapper,
+        )
+        .clientCacheFor<StaffDetail>(
+          cacheName = "staffDetailsCache",
+          duration = Duration.ofSeconds(staffDetailsExpirySeconds),
+          cacheNamePrefix = uniqueBuildId,
+          objectMapper = objectMapper,
+        )
+        .clientCacheFor<ManagingTeamsResponse>(
+          cacheName = "teamsManagingCaseCache",
+          duration = Duration.ofSeconds(teamManagingCasesExpirySeconds),
+          cacheNamePrefix = uniqueBuildId,
+          objectMapper = objectMapper,
+        )
+        .clientCacheFor<CaseDetail>(
+          cacheName = "crnGetCaseDetailCache",
+          duration = Duration.ofSeconds(crnGetCaseDetailExpirySeconds),
+          cacheNamePrefix = uniqueBuildId,
+          objectMapper = objectMapper,
+        )
+        .clientCacheFor<UKBankHolidays>(
+          cacheName = "ukBankHolidaysCache",
+          duration = Duration.ofSeconds(ukBankHolidaysExpirySeconds),
+          cacheNamePrefix = uniqueBuildId,
+          objectMapper = objectMapper,
+        )
     }
   }
 
@@ -62,27 +92,18 @@ class RedisConfiguration {
     return template
   }
 
-  @Bean
-  fun redLock(
-    @Value("\${spring.data.redis.host}") host: String,
-    @Value("\${spring.data.redis.port}") port: Int,
-    @Value("\${spring.data.redis.password}") password: String,
-    @Value("\${spring.data.redis.database}") database: Int,
-    @Value("\${spring.data.redis.ssl.enabled}") ssl: Boolean,
-  ): RedLock {
-    val scheme = if (ssl) "rediss" else "redis"
-    val passwordString = if (password.isNotEmpty()) ":$password@" else ""
-    return RedLock(arrayOf("$scheme://$passwordString$host:$port/$database"))
-  }
-
-  private inline fun <reified T> RedisCacheManagerBuilder.clientCacheFor(cacheName: String, duration: Duration, version: String, objectMapper: ObjectMapper) =
-    this.withCacheConfiguration(
-      cacheName,
-      RedisCacheConfiguration.defaultCacheConfig()
-        .entryTtl(duration)
-        .serializeValuesWith(SerializationPair.fromSerializer(ClientResultRedisSerializer(objectMapper, object : TypeReference<T>() {})))
-        .prefixCacheNameWith(version),
-    )
+  private inline fun <reified T> RedisCacheManagerBuilder.clientCacheFor(
+    cacheName: String,
+    duration: Duration,
+    cacheNamePrefix: String,
+    objectMapper: ObjectMapper,
+  ) = this.withCacheConfiguration(
+    cacheName,
+    RedisCacheConfiguration.defaultCacheConfig()
+      .entryTtl(duration)
+      .serializeValuesWith(SerializationPair.fromSerializer(ClientResultRedisSerializer(objectMapper, object : TypeReference<T>() {})))
+      .prefixCacheNameWith(cacheNamePrefix),
+  )
 }
 
 class ClientResultRedisSerializer(

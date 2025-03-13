@@ -395,10 +395,9 @@ class CAS3SubjectAccessRequestServiceTest : SubjectAccessRequestServiceTestBase(
     }
   }
 
-  private fun temporaryAccommodationAssessmentJsonSchemaEntity(): JsonSchemaEntity =
-    temporaryAccommodationAssessmentJsonSchemaEntityFactory.produceAndPersist {
-      withPermissiveSchema()
-    }
+  private fun temporaryAccommodationAssessmentJsonSchemaEntity(): JsonSchemaEntity = temporaryAccommodationAssessmentJsonSchemaEntityFactory.produceAndPersist {
+    withPermissiveSchema()
+  }
 
   private fun temporaryAccommodationApplicationEntity(
     offenderDetails: OffenderDetailSummary,
@@ -440,8 +439,7 @@ class CAS3SubjectAccessRequestServiceTest : SubjectAccessRequestServiceTestBase(
     }
   }
 
-  private fun temporaryAccommodationApplicationJsonSchemaEntity() =
-    temporaryAccommodationApplicationJsonSchemaEntityFactory.produceAndPersist {
-      withPermissiveSchema()
-    }
+  private fun temporaryAccommodationApplicationJsonSchemaEntity() = temporaryAccommodationApplicationJsonSchemaEntityFactory.produceAndPersist {
+    withPermissiveSchema()
+  }
 }

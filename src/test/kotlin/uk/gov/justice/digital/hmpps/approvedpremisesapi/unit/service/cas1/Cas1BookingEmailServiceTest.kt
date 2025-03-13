@@ -122,7 +122,7 @@ class Cas1BookingEmailServiceTest {
 
     @SuppressWarnings("CyclomaticComplexMethod")
     @Test
-    fun `bookingMade sends email to applicant, premises email addresses when defined, when length of stay whole number of weeks`() {
+    fun `bookingMade sends email to applicant, premises and case manager email addresses when defined, when length of stay whole number of weeks`() {
       val applicant = UserEntityFactory()
         .withUnitTestControlProbationRegion()
         .withEmail(APPLICANT_EMAIL)
@@ -133,6 +133,7 @@ class Cas1BookingEmailServiceTest {
         premises,
         arrivalDate = LocalDate.of(2023, 2, 1),
         departureDate = LocalDate.of(2023, 2, 14),
+        caseManagerNotApplicant = true,
       )
 
       service.bookingMade(
@@ -141,7 +142,7 @@ class Cas1BookingEmailServiceTest {
         placementApplication = null,
       )
 
-      mockEmailNotificationService.assertEmailRequestCount(2)
+      mockEmailNotificationService.assertEmailRequestCount(3)
 
       val personalisation = mapOf(
         "apName" to PREMISES_NAME,
@@ -156,6 +157,13 @@ class Cas1BookingEmailServiceTest {
 
       mockEmailNotificationService.assertEmailRequested(
         APPLICANT_EMAIL,
+        notifyConfig.templates.bookingMade,
+        personalisation,
+        application,
+      )
+
+      mockEmailNotificationService.assertEmailRequested(
+        CASE_MANAGER_EMAIL,
         notifyConfig.templates.bookingMade,
         personalisation,
         application,
@@ -626,6 +634,132 @@ class Cas1BookingEmailServiceTest {
       mockEmailNotificationService.assertEmailRequested(
         CRU_MANAGEMENT_AREA_EMAIL,
         notifyConfig.templates.bookingWithdrawnV2,
+        expectedPersonalisation,
+        application,
+      )
+    }
+  }
+
+  @Nested
+  inner class SpaceBookingAmended {
+    @Test
+    fun `spaceBookingAmended sends email to applicant, premises, case manager when emails are defined`() {
+      val applicant = UserEntityFactory()
+        .withUnitTestControlProbationRegion()
+        .withEmail(APPLICANT_EMAIL)
+        .produce()
+
+      val application = createApplication(
+        applicant = applicant,
+        caseManagerNotApplicant = true,
+        cruManagementArea = Cas1CruManagementAreaEntityFactory()
+          .withEmailAddress(CRU_MANAGEMENT_AREA_EMAIL)
+          .produce(),
+      )
+
+      val booking = createSpaceBooking(
+        application,
+        premises,
+        arrivalDate = LocalDate.of(2023, 2, 1),
+        departureDate = LocalDate.of(2023, 2, 14),
+      )
+
+      service.spaceBookingAmended(
+        spaceBooking = booking,
+        application = application,
+      )
+
+      val expectedPersonalisation = mapOf(
+        "apName" to PREMISES_NAME,
+        "applicationUrl" to "http://frontend/applications/${application.id}",
+        "applicationTimelineUrl" to "http://frontend/applications/${application.id}?tab=timeline",
+        "crn" to CRN,
+        "startDate" to "2023-02-01",
+        "endDate" to "2023-02-14",
+        "lengthStay" to 2,
+        "lengthStayUnit" to "weeks",
+      )
+
+      mockEmailNotificationService.assertEmailRequestCount(3)
+      mockEmailNotificationService.assertEmailRequested(
+        APPLICANT_EMAIL,
+        notifyConfig.templates.bookingAmended,
+        expectedPersonalisation,
+        application,
+      )
+
+      mockEmailNotificationService.assertEmailRequested(
+        CASE_MANAGER_EMAIL,
+        notifyConfig.templates.bookingAmended,
+        expectedPersonalisation,
+        application,
+      )
+
+      mockEmailNotificationService.assertEmailRequested(
+        PREMISES_EMAIL,
+        notifyConfig.templates.bookingAmended,
+        expectedPersonalisation,
+        application,
+      )
+    }
+  }
+
+  @Nested
+  inner class BookingAmended {
+    @Test
+    fun `bookingAmended sends email to applicant and premises email addresses when defined`() {
+      val applicant = UserEntityFactory()
+        .withUnitTestControlProbationRegion()
+        .withEmail(APPLICANT_EMAIL)
+        .produce()
+
+      val (application, booking) = createApplicationAndBooking(
+        applicant,
+        premises,
+        arrivalDate = LocalDate.of(2023, 2, 1),
+        departureDate = LocalDate.of(2023, 2, 14),
+        caseManagerNotApplicant = true,
+        cruManagementArea = Cas1CruManagementAreaEntityFactory()
+          .withEmailAddress(CRU_MANAGEMENT_AREA_EMAIL)
+          .produce(),
+      )
+
+      service.bookingAmended(
+        application = application,
+        booking = booking,
+        placementApplication = null,
+      )
+
+      mockEmailNotificationService.assertEmailRequestCount(3)
+
+      val expectedPersonalisation = mapOf(
+        "apName" to PREMISES_NAME,
+        "applicationUrl" to "http://frontend/applications/${application.id}",
+        "applicationTimelineUrl" to "http://frontend/applications/${application.id}?tab=timeline",
+        "crn" to CRN,
+        "startDate" to "2023-02-01",
+        "endDate" to "2023-02-14",
+        "lengthStay" to 2,
+        "lengthStayUnit" to "weeks",
+      )
+
+      mockEmailNotificationService.assertEmailRequested(
+        APPLICANT_EMAIL,
+        notifyConfig.templates.bookingAmended,
+        expectedPersonalisation,
+        application,
+      )
+
+      mockEmailNotificationService.assertEmailRequested(
+        CASE_MANAGER_EMAIL,
+        notifyConfig.templates.bookingAmended,
+        expectedPersonalisation,
+        application,
+      )
+
+      mockEmailNotificationService.assertEmailRequested(
+        PREMISES_EMAIL,
+        notifyConfig.templates.bookingAmended,
         expectedPersonalisation,
         application,
       )

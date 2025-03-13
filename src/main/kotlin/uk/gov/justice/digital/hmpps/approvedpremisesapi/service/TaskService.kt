@@ -15,20 +15,18 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AssessmentEnt
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AssessmentRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementApplicationRepository
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementRequestEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Task
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TaskEntityType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TaskRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PaginationMetadata
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.TypedTask
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.UserWorkload
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.NotAllowedProblem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.CasResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.UserTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.PageCriteria
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.getMetadata
+import java.time.OffsetDateTime
 import java.util.UUID
 
 @Service
@@ -166,9 +164,6 @@ class TaskService(
       TaskType.placementApplication -> {
         placementApplicationService.reallocateApplication(assigneeUser, taskId)
       }
-      else -> {
-        throw NotAllowedProblem(detail = "The Task Type $taskType is not currently supported")
-      }
     }
 
     return when (result) {
@@ -197,31 +192,25 @@ class TaskService(
     }
   }
 
-  fun getUserWorkloads(userIds: List<UUID>): Map<UUID, UserWorkload> {
-    return userRepository.findWorkloadForUserIds(userIds).associate {
-      it.getUserId() to UserWorkload(
-        numTasksPending = listOf(
-          it.getPendingAssessments(),
-          it.getPendingPlacementRequests(),
-          it.getPendingPlacementApplications(),
-        ).sum(),
-        numTasksCompleted7Days = listOf(
-          it.getCompletedAssessmentsInTheLastSevenDays(),
-          it.getCompletedPlacementApplicationsInTheLastSevenDays(),
-          it.getCompletedPlacementRequestsInTheLastSevenDays(),
-        ).sum(),
-        numTasksCompleted30Days = listOf(
-          it.getCompletedAssessmentsInTheLastThirtyDays(),
-          it.getCompletedPlacementApplicationsInTheLastThirtyDays(),
-          it.getCompletedPlacementRequestsInTheLastThirtyDays(),
-        ).sum(),
-      )
-    }
+  fun getUserWorkloads(userIds: List<UUID>): Map<UUID, UserWorkload> = userRepository.findWorkloadForUserIds(userIds).associate {
+    it.getUserId() to UserWorkload(
+      numTasksPending = listOf(
+        it.getPendingAssessments(),
+        it.getPendingPlacementApplications(),
+      ).sum(),
+      numTasksCompleted7Days = listOf(
+        it.getCompletedAssessmentsInTheLastSevenDays(),
+        it.getCompletedPlacementApplicationsInTheLastSevenDays(),
+      ).sum(),
+      numTasksCompleted30Days = listOf(
+        it.getCompletedAssessmentsInTheLastThirtyDays(),
+        it.getCompletedPlacementApplicationsInTheLastThirtyDays(),
+      ).sum(),
+    )
   }
 
   private fun entityToReallocation(entity: Any, taskType: TaskType): Reallocation {
     val allocatedToUser = when (entity) {
-      is PlacementRequestEntity -> entity.allocatedToUser
       is AssessmentEntity -> entity.allocatedToUser
       is PlacementApplicationEntity -> entity.allocatedToUser!!
       else -> throw RuntimeException("Unexpected type")
@@ -233,3 +222,18 @@ class TaskService(
     )
   }
 }
+
+sealed class TypedTask(
+  val id: UUID,
+  val createdAt: OffsetDateTime,
+  val crn: String,
+) {
+  data class Assessment(val entity: ApprovedPremisesAssessmentEntity) : TypedTask(entity.id, entity.createdAt, entity.application.crn)
+  data class PlacementApplication(val entity: PlacementApplicationEntity) : TypedTask(entity.id, entity.createdAt, entity.application.crn)
+}
+
+data class UserWorkload(
+  var numTasksPending: Int,
+  var numTasksCompleted7Days: Int,
+  var numTasksCompleted30Days: Int,
+)

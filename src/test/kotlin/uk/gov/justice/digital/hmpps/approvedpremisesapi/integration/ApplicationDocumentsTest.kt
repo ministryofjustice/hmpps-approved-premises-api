@@ -116,30 +116,28 @@ class ApplicationDocumentsTest : InitialiseDatabasePerClassTestBase() {
     }
   }
 
-  private fun stubDocumentsFromDelius(convictionLevelDocId: UUID): List<APDeliusDocument> {
-    return listOf(
-      DocumentFromDeliusApiFactory()
-        .withId(UUID.randomUUID().toString())
-        .withDescription("Offender level doc description")
-        .withLevel("LEVEL-1")
-        .withEventNumber("2")
-        .withFilename("offender_level_doc.pdf")
-        .withTypeCode("TYPE-1")
-        .withTypeDescription("Type 1 Description")
-        .withDateSaved(LocalDateTime.parse("2024-03-18T06:00:00").atZone(ZoneId.systemDefault()))
-        .withDateCreated(LocalDateTime.parse("2024-03-02T15:20:00").atZone(ZoneId.systemDefault()))
-        .produce(),
-      DocumentFromDeliusApiFactory()
-        .withId(convictionLevelDocId.toString())
-        .withDescription("Conviction level doc description")
-        .withLevel("LEVEL-2")
-        .withEventNumber("1")
-        .withFilename("conviction_level_doc.pdf")
-        .withTypeCode("TYPE-2")
-        .withTypeDescription("Type 2 Description")
-        .withDateSaved(LocalDateTime.parse("2024-10-05T13:12:00").atZone(ZoneId.systemDefault()))
-        .withDateCreated(LocalDateTime.parse("2024-10-02T10:40:00").atZone(ZoneId.systemDefault()))
-        .produce(),
-    )
-  }
+  private fun stubDocumentsFromDelius(convictionLevelDocId: UUID): List<APDeliusDocument> = listOf(
+    DocumentFromDeliusApiFactory()
+      .withId(UUID.randomUUID().toString())
+      .withDescription("Offender level doc description")
+      .withLevel("LEVEL-1")
+      .withEventNumber("2")
+      .withFilename("offender_level_doc.pdf")
+      .withTypeCode("TYPE-1")
+      .withTypeDescription("Type 1 Description")
+      .withDateSaved(LocalDateTime.parse("2024-03-18T06:00:00").atZone(ZoneId.systemDefault()))
+      .withDateCreated(LocalDateTime.parse("2024-03-02T15:20:00").atZone(ZoneId.systemDefault()))
+      .produce(),
+    DocumentFromDeliusApiFactory()
+      .withId(convictionLevelDocId.toString())
+      .withDescription("Conviction level doc description")
+      .withLevel("LEVEL-2")
+      .withEventNumber("1")
+      .withFilename("conviction_level_doc.pdf")
+      .withTypeCode("TYPE-2")
+      .withTypeDescription("Type 2 Description")
+      .withDateSaved(LocalDateTime.parse("2024-10-05T13:12:00").atZone(ZoneId.systemDefault()))
+      .withDateCreated(LocalDateTime.parse("2024-10-02T10:40:00").atZone(ZoneId.systemDefault()))
+      .produce(),
+  )
 }

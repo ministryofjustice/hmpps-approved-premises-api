@@ -11,8 +11,9 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PersonInfoResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.NotFoundProblem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.ApplicationService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.OffenderService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.SentryService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.UserService
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1LimitedAccessStrategy
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1LaoStrategy
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.cas1.BoxedApplication
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.cas1.Cas1ApplicationTimelineModel
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.cas1.Cas1PersonalTimelineTransformer
@@ -24,11 +25,12 @@ class Cas1PeopleController(
   private val applicationService: ApplicationService,
   private val cas1PersonalTimelineTransformer: Cas1PersonalTimelineTransformer,
   private val cas1TimelineService: Cas1TimelineService,
+  private val sentryService: SentryService,
 ) : PeopleCas1Delegate {
 
   override fun getPeopleApplicationsTimeline(crn: String): ResponseEntity<Cas1PersonalTimeline> {
     val user = userService.getUserForRequest()
-    val personInfo = offenderService.getPersonInfoResult(crn, user.cas1LimitedAccessStrategy())
+    val personInfo = offenderService.getPersonInfoResult(crn, user.cas1LaoStrategy())
     return ResponseEntity.ok(transformPersonInfo(personInfo, crn))
   }
 
@@ -39,13 +41,19 @@ class Cas1PeopleController(
     is PersonInfoResult.Success.Restricted -> buildPersonInfoWithoutTimeline(personInfoResult)
   }
 
-  private fun buildPersonInfoWithoutTimeline(personInfo: PersonInfoResult.Success.Restricted): Cas1PersonalTimeline =
-    cas1PersonalTimelineTransformer.transformApplicationTimelineModels(personInfo, emptyList())
+  private fun buildPersonInfoWithoutTimeline(personInfo: PersonInfoResult.Success.Restricted): Cas1PersonalTimeline = cas1PersonalTimelineTransformer.transformApplicationTimelineModels(personInfo, emptyList())
 
+  @SuppressWarnings("MagicNumber")
   private fun buildPersonInfoWithTimeline(personInfo: PersonInfoResult.Success.Full, crn: String): Cas1PersonalTimeline {
     val regularApplications = getRegularApplications(crn)
     val offlineApplications = getOfflineApplications(crn)
-    val combinedApplications = regularApplications + offlineApplications
+    val combinedApplications = (regularApplications + offlineApplications).take(50)
+
+    if (combinedApplications.size == 50) {
+      sentryService.captureErrorMessage(
+        "Person Timeline results truncated to 50 applications. CRN: $crn. Regular: ${regularApplications.size}, Offline: ${offlineApplications.size}. Consider adding paging.",
+      )
+    }
 
     val applicationTimelineModels = combinedApplications.map { application ->
       val applicationId = application.map(

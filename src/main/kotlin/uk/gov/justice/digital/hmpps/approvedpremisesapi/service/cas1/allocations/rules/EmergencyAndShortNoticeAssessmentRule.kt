@@ -32,9 +32,8 @@ class EmergencyAndShortNoticeAssessmentRule : UserAllocatorRule {
     }
   }
 
-  private fun allocateByCruManagementArea(cruManagementArea: Cas1CruManagementAreaEntity) =
-    when (val userName = cruManagementArea.assessmentAutoAllocationUsername) {
-      null -> UserAllocatorRuleOutcome.Skip
-      else -> UserAllocatorRuleOutcome.AllocateToUser(userName)
-    }
+  private fun allocateByCruManagementArea(cruManagementArea: Cas1CruManagementAreaEntity) = when (val userName = cruManagementArea.assessmentAutoAllocationUsername) {
+    null -> UserAllocatorRuleOutcome.Skip
+    else -> UserAllocatorRuleOutcome.AllocateToUser(userName)
+  }
 }

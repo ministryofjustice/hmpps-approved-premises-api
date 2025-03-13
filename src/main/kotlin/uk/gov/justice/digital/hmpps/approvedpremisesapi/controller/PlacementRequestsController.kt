@@ -34,7 +34,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.UserService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1WithdrawableService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.PlacementRequestService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.PlacementRequestService.PlacementRequestAndCancellations
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1LimitedAccessStrategy
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1LaoStrategy
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.BookingNotMadeTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.NewPlacementRequestBookingConfirmationTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.PlacementRequestDetailTransformer
@@ -56,20 +56,6 @@ class PlacementRequestsController(
   private val bookingNotMadeTransformer: BookingNotMadeTransformer,
   private val cas1WithdrawableService: Cas1WithdrawableService,
 ) : PlacementRequestsApiDelegate {
-
-  override fun placementRequestsGet(): ResponseEntity<List<PlacementRequest>> {
-    val user = userService.getUserForRequest()
-
-    val requests = placementRequestService.getVisiblePlacementRequestsForUser(user, null, null)
-
-    return ResponseEntity.ok(
-      requests.first.map {
-        val personInfo = offenderService.getPersonInfoResult(it.application.crn, user.cas1LimitedAccessStrategy())
-
-        placementRequestTransformer.transformJpaToApi(it, personInfo)
-      },
-    )
-  }
 
   @Deprecated("Use Cas1PlacementRequestsController.search instead")
   override fun placementRequestsDashboardGet(
@@ -204,7 +190,7 @@ class PlacementRequestsController(
   ): PlacementRequestDetail {
     val personInfo = offenderService.getPersonInfoResult(
       placementRequestAndCancellations.placementRequest.application.crn,
-      forUser.cas1LimitedAccessStrategy(),
+      forUser.cas1LaoStrategy(),
     )
 
     return placementRequestDetailTransformer.transformJpaToApi(
@@ -214,11 +200,9 @@ class PlacementRequestsController(
     )
   }
 
-  private fun mapPersonDetailOntoPlacementRequests(placementRequests: List<PlacementRequestEntity>, user: UserEntity): List<PlacementRequest> {
-    return placementRequests.map {
-      val personInfo = offenderService.getPersonInfoResult(it.application.crn, user.cas1LimitedAccessStrategy())
+  private fun mapPersonDetailOntoPlacementRequests(placementRequests: List<PlacementRequestEntity>, user: UserEntity): List<PlacementRequest> = placementRequests.map {
+    val personInfo = offenderService.getPersonInfoResult(it.application.crn, user.cas1LaoStrategy())
 
-      placementRequestTransformer.transformJpaToApi(it, personInfo)
-    }
+    placementRequestTransformer.transformJpaToApi(it, personInfo)
   }
 }

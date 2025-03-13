@@ -2,6 +2,7 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.seed
 
 import com.ninjasquad.springmockk.MockkBean
 import io.mockk.every
+import org.assertj.core.api.Assertions.assertThat
 import org.jetbrains.kotlinx.dataframe.DataFrame
 import org.jetbrains.kotlinx.dataframe.io.writeExcel
 import org.junit.jupiter.api.BeforeEach
@@ -9,6 +10,7 @@ import org.junit.jupiter.api.TestInstance
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.SeedFileType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.IntegrationTestBase
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.seed.SeedLogger
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.seed.SeedService
@@ -16,7 +18,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.seed.SeedXlsxService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.LogEntry
 import java.io.File
 import java.nio.file.Files
-import java.nio.file.StandardOpenOption
 import kotlin.io.path.Path
 import kotlin.io.path.pathString
 
@@ -33,6 +34,7 @@ abstract class SeedTestBase : IntegrationTestBase() {
 
   @MockkBean
   lateinit var mockSeedLogger: SeedLogger
+
   protected val logEntries = mutableListOf<LogEntry>()
 
   private val log = LoggerFactory.getLogger(this::class.java)
@@ -53,19 +55,32 @@ abstract class SeedTestBase : IntegrationTestBase() {
     }
   }
 
-  protected fun generateCsvFile(fileName: String, contents: String) {
-    withCsv(fileName, contents)
+  protected fun assertError(row: Int, message: String) {
+    assertThat(logEntries).anyMatch {
+      it.level == "error" &&
+        it.message == "Error on row $row:" &&
+        it.throwable != null &&
+        it.throwable.message == message
+    }
   }
 
-  protected fun withCsv(csvName: String, contents: String) {
+  protected fun seed(seedFileType: SeedFileType, contents: String) {
+    val fileName = seedFileType.name
+    generateCsvFile(
+      fileName,
+      contents,
+    )
+
+    seedService.seedData(seedFileType, "$fileName.csv")
+  }
+
+  protected fun generateCsvFile(fileName: String, contents: String) {
     if (!Files.isDirectory(Path(seedFilePrefix))) {
       Files.createDirectory(Path(seedFilePrefix))
     }
     Files.writeString(
-      Path("$seedFilePrefix/$csvName.csv"),
+      Path("$seedFilePrefix/$fileName.csv"),
       contents,
-      StandardOpenOption.CREATE,
-      StandardOpenOption.TRUNCATE_EXISTING,
     )
   }
 

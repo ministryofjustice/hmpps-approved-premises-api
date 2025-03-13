@@ -1,0 +1,1 @@
+CREATE INDEX cas1_space_bookings_crn_idx ON cas1_space_bookings (crn,premises_id);

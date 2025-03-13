@@ -1127,7 +1127,7 @@ class AssessmentServiceTest {
     fun `general validation error for Assessment where schema is outdated`() {
       val assessment = ApprovedPremisesAssessmentEntityFactory()
         .withApplication(application)
-        .withSubmittedAt(OffsetDateTime.now())
+        .withSubmittedAt(null)
         .withDecision(AssessmentDecision.ACCEPTED)
         .withAllocatedToUser(user)
         .produce()

@@ -26,7 +26,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserPermissio
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserQualification
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRole
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PersonSummaryInfoResult
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.TypedTask
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.ValidationErrors
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.BadRequestProblem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.ForbiddenProblem
@@ -35,6 +34,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.AssessmentServic
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.OffenderService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.PlacementApplicationService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.TaskService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.TypedTask
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.UserService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.TaskTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.UserTransformer
@@ -236,30 +236,24 @@ class TasksController(
   private fun getAssessmentTask(
     assessment: AssessmentEntity,
     offenderSummaries: List<PersonSummaryInfoResult>,
-  ): AssessmentTask {
-    return taskTransformer.transformAssessmentToTask(
-      assessment = assessment,
-      offenderSummaries = offenderSummaries,
-    )
-  }
+  ): AssessmentTask = taskTransformer.transformAssessmentToTask(
+    assessment = assessment,
+    offenderSummaries = offenderSummaries,
+  )
 
   private fun getPlacementApplicationTask(
     placementApplication: PlacementApplicationEntity,
     offenderSummaries: List<PersonSummaryInfoResult>,
-  ): PlacementApplicationTask {
-    return taskTransformer.transformPlacementApplicationToTask(
-      placementApplication = placementApplication,
-      offenderSummaries = offenderSummaries,
-    )
-  }
+  ): PlacementApplicationTask = taskTransformer.transformPlacementApplicationToTask(
+    placementApplication = placementApplication,
+    offenderSummaries = offenderSummaries,
+  )
 
-  private fun getOffenderSummariesForCrns(crns: List<String>, user: UserEntity): List<PersonSummaryInfoResult> {
-    return offenderService.getOffenderSummariesByCrns(
-      crns.toSet(),
-      user.deliusUsername,
-      user.hasQualification(UserQualification.LAO),
-    )
-  }
+  private fun getOffenderSummariesForCrns(crns: List<String>, user: UserEntity): List<PersonSummaryInfoResult> = offenderService.getOffenderSummariesByCrns(
+    crns.toSet(),
+    user.deliusUsername,
+    user.hasQualification(UserQualification.LAO),
+  )
 
   private fun toTaskType(type: String) = enumConverterFactory.getConverter(TaskType::class.java).convert(
     type.kebabCaseToPascalCase(),

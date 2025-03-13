@@ -15,8 +15,8 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomStringMultiCa
 class SeedTemporaryAccommodationBedspaceTest : SeedTestBase() {
   @Test
   fun `Attempting to create a Temporary Accommodation Bedspace with an invalid premises logs an error`() {
-    withCsv(
-      "invalid-ta-bedspace-premises-name",
+    seed(
+      SeedFileType.temporaryAccommodationBedspace,
       temporaryAccommodationBedspaceSeedCsvRowsToCsv(
         listOf(
           TemporaryAccommodationBedspaceSeedCsvRowFactory()
@@ -25,8 +25,6 @@ class SeedTemporaryAccommodationBedspaceTest : SeedTestBase() {
         ),
       ),
     )
-
-    seedService.seedData(SeedFileType.temporaryAccommodationBedspace, "invalid-ta-bedspace-premises-name.csv")
 
     assertThat(logEntries).anyMatch {
       it.level == "error" &&
@@ -52,16 +50,14 @@ class SeedTemporaryAccommodationBedspaceTest : SeedTestBase() {
       .withCharacteristics(listOf("Shared bathroom", "Shared kitchen"))
       .produce()
 
-    withCsv(
-      "new-ta-bedspace",
+    seed(
+      SeedFileType.temporaryAccommodationBedspace,
       temporaryAccommodationBedspaceSeedCsvRowsToCsv(
         listOf(
           csvRow,
         ),
       ),
     )
-
-    seedService.seedData(SeedFileType.temporaryAccommodationBedspace, "new-ta-bedspace.csv")
 
     val persistedPremises = temporaryAccommodationPremisesRepository.findByName(premises.name)
     assertThat(persistedPremises).isNotNull
@@ -100,16 +96,14 @@ class SeedTemporaryAccommodationBedspaceTest : SeedTestBase() {
       .withCharacteristics(listOf("Shared kitchen"))
       .produce()
 
-    withCsv(
-      "update-ta-bedspace",
+    seed(
+      SeedFileType.temporaryAccommodationBedspace,
       temporaryAccommodationBedspaceSeedCsvRowsToCsv(
         listOf(
           csvRow,
         ),
       ),
     )
-
-    seedService.seedData(SeedFileType.temporaryAccommodationBedspace, "update-ta-bedspace.csv")
 
     val persistedPremises = temporaryAccommodationPremisesRepository.findByName(premises.name)
     assertThat(persistedPremises).isNotNull

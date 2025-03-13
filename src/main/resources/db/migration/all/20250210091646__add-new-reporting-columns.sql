@@ -1,0 +1,3 @@
+ALTER TABLE approved_premises_assessments ADD COLUMN agree_with_short_notice_reason BOOLEAN NULL;
+ALTER TABLE approved_premises_assessments ADD COLUMN agree_with_short_notice_reason_comments TEXT NULL;
+ALTER TABLE approved_premises_assessments ADD COLUMN reason_for_late_application TEXT NULL;

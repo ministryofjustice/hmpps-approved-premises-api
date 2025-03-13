@@ -14,10 +14,10 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1SpaceBooki
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1SpaceBookingResidency
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1SpaceBookingSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1SpaceBookingSummarySortField
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1TimelineEvent
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1UpdateSpaceBooking
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.SortDirection
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.TimelineEvent
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas1SpaceBookingEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserPermission
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserPermission.CAS1_SPACE_BOOKING_LIST
@@ -34,7 +34,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1SpaceBo
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1SpaceBookingService.SpaceBookingFilterCriteria
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1SpaceBookingService.UpdateSpaceBookingDetails
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1WithdrawableService
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1LimitedAccessStrategy
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1LaoStrategy
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.cas1.Cas1SpaceBookingTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.PageCriteria
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.ensureEntityFromCasResultIsSuccess
@@ -59,9 +59,9 @@ class Cas1SpaceBookingController(
   private val cas1TimelineService: Cas1TimelineService,
 ) : SpaceBookingsCas1Delegate {
 
-  override fun getSpaceBookingTimeline(premisesId: UUID, bookingId: UUID): ResponseEntity<List<TimelineEvent>> {
+  override fun getSpaceBookingTimeline(premisesId: UUID, bookingId: UUID): ResponseEntity<List<Cas1TimelineEvent>> {
     val events = cas1TimelineService.getSpaceBookingTimeline(bookingId)
-    return ResponseEntity(events, HttpStatus.OK)
+    return ResponseEntity.ok(events)
   }
 
   override fun createSpaceBooking(
@@ -72,8 +72,14 @@ class Cas1SpaceBookingController(
 
     val user = userService.getUserForRequest()
 
+    val requestedCharacteristics =
+      (
+        (body.requirements?.essentialCharacteristics ?: emptyList()) +
+          ((body.characteristics) ?: emptyList())
+        ).toSet()
+
     val characteristics = characteristicService.getCharacteristicsByPropertyNames(
-      body.requirements.essentialCharacteristics.map { it.value },
+      requestedCharacteristics.map { it.value },
       ServiceName.approvedPremises,
     )
 
@@ -118,23 +124,24 @@ class Cas1SpaceBookingController(
       ),
     )
 
-    val (searchResults, metadata) = extractEntityFromCasResult(result)
+    val searchResultsContainer = extractEntityFromCasResult(result)
 
     val user = userService.getUserForRequest()
     val offenderSummaries = offenderService.getPersonSummaryInfoResults(
-      crns = searchResults.map { it.crn }.toSet(),
-      limitedAccessStrategy = user.cas1LimitedAccessStrategy(),
+      crns = searchResultsContainer.results.map { it.crn }.toSet(),
+      laoStrategy = user.cas1LaoStrategy(),
     )
 
-    val summaries = searchResults.map {
+    val summaries = searchResultsContainer.results.map {
       spaceBookingTransformer.transformSearchResultToSummary(
-        it,
-        offenderSummaries.forCrn(it.crn),
+        searchResult = it,
+        premises = searchResultsContainer.premises,
+        personSummaryInfo = offenderSummaries.forCrn(it.crn),
       )
     }
 
     return ResponseEntity.ok()
-      .headers(metadata?.toHeaders())
+      .headers(searchResultsContainer.paginationMetadata?.toHeaders())
       .body(summaries)
   }
 
@@ -326,13 +333,14 @@ class Cas1SpaceBookingController(
 
     val person = offenderService.getPersonInfoResult(
       booking.crn,
-      user.cas1LimitedAccessStrategy(),
+      user.cas1LaoStrategy(),
     )
 
     val otherBookingsInPremiseForCrn = spaceBookingService.getBookingsForPremisesAndCrn(
       premisesId = booking.premises.id,
       crn = booking.crn,
     ).filter { it.id != booking.id }
+      .sortedBy { it.canonicalArrivalDate }
 
     return spaceBookingTransformer.transformJpaToApi(person, booking, otherBookingsInPremiseForCrn)
   }

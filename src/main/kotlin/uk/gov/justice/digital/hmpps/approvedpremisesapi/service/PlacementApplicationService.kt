@@ -21,11 +21,12 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserPermission
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.ApprovedPremisesApplicationStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.ValidationErrors
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.validated
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.validatedCasResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.InternalServerErrorProblem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.CasResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1PlacementApplicationDomainEventService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1PlacementApplicationEmailService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1WithdrawableService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.PlacementRequestService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.WithdrawableEntityType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.WithdrawableState
@@ -58,14 +59,12 @@ class PlacementApplicationService(
 
   var log: Logger = LoggerFactory.getLogger(this::class.java)
 
-  fun getAllSubmittedNonReallocatedApplications(applicationId: UUID): List<PlacementApplicationEntity> {
-    return placementApplicationRepository.findAllSubmittedNonReallocatedApplicationsForApplicationId(applicationId)
-  }
+  fun getAllSubmittedNonReallocatedApplications(applicationId: UUID): List<PlacementApplicationEntity> = placementApplicationRepository.findAllSubmittedNonReallocatedApplicationsForApplicationId(applicationId)
 
   fun createPlacementApplication(
     application: ApprovedPremisesApplicationEntity,
     user: UserEntity,
-  ) = validated<PlacementApplicationEntity> {
+  ) = validatedCasResult<PlacementApplicationEntity> {
     val assessment = application.getLatestAssessment()
 
     if (assessment?.decision !== AssessmentDecision.ACCEPTED) {
@@ -192,16 +191,14 @@ class PlacementApplicationService(
     return CasResult.Success(newPlacementApplication)
   }
 
-  fun getWithdrawableState(placementApplication: PlacementApplicationEntity, user: UserEntity): WithdrawableState {
-    return WithdrawableState(
-      withdrawable = placementApplication.isInWithdrawableState(),
-      withdrawn = placementApplication.isWithdrawn,
-      userMayDirectlyWithdraw = userAccessService.userMayWithdrawPlacementApplication(user, placementApplication),
-    )
-  }
+  fun getWithdrawableState(placementApplication: PlacementApplicationEntity, user: UserEntity): WithdrawableState = WithdrawableState(
+    withdrawable = placementApplication.isInWithdrawableState(),
+    withdrawn = placementApplication.isWithdrawn,
+    userMayDirectlyWithdraw = userAccessService.userMayWithdrawPlacementApplication(user, placementApplication),
+  )
 
   /**
-   * This function should not be called directly. Instead, use [WithdrawableService.withdrawPlacementApplication] that
+   * This function should not be called directly. Instead, use [Cas1WithdrawableService.withdrawPlacementApplication] that
    * will indirectly invoke this function. It will also ensure that:
    *
    * 1. The entity is withdrawable, and error if not
@@ -419,12 +416,10 @@ class PlacementApplicationService(
     return CasResult.Success(savedApplication)
   }
 
-  private fun getPlacementType(apiPlacementType: ApiPlacementType): PlacementType {
-    return when (apiPlacementType) {
-      ApiPlacementType.additionalPlacement -> PlacementType.ADDITIONAL_PLACEMENT
-      ApiPlacementType.rotl -> PlacementType.ROTL
-      ApiPlacementType.releaseFollowingDecision -> PlacementType.RELEASE_FOLLOWING_DECISION
-    }
+  private fun getPlacementType(apiPlacementType: ApiPlacementType): PlacementType = when (apiPlacementType) {
+    ApiPlacementType.additionalPlacement -> PlacementType.ADDITIONAL_PLACEMENT
+    ApiPlacementType.rotl -> PlacementType.ROTL
+    ApiPlacementType.releaseFollowingDecision -> PlacementType.RELEASE_FOLLOWING_DECISION
   }
 
   private fun setSchemaUpToDate(placementApplicationEntity: PlacementApplicationEntity): PlacementApplicationEntity {

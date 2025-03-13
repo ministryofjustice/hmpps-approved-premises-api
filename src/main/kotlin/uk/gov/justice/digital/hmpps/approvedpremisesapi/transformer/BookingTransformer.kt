@@ -1,20 +1,16 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer
 
 import org.springframework.stereotype.Component
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Bed
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Booking
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.BookingPremisesSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.BookingStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.DatePeriod
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PremisesBooking
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Withdrawable
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.WithdrawableType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.convert.EnumConverterFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.BookingEntity
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.BookingSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PersonInfoResult
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PersonSummaryInfoResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.InternalServerErrorProblem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.WorkingDayService
 import java.time.LocalDate
@@ -33,23 +29,6 @@ class BookingTransformer(
   private val enumConverterFactory: EnumConverterFactory,
   private val workingDayService: WorkingDayService,
 ) {
-
-  fun transformBookingSummary(jpa: BookingSummary, personInfo: PersonSummaryInfoResult): PremisesBooking {
-    return PremisesBooking(
-      id = jpa.getID(),
-      arrivalDate = jpa.getArrivalDate(),
-      departureDate = jpa.getDepartureDate(),
-      person = personTransformer.transformSummaryToPersonApi(personInfo),
-      bed = jpa.getBedId()?.let {
-        Bed(
-          id = jpa.getBedId()!!,
-          name = jpa.getBedName()!!,
-          code = jpa.getBedCode(),
-        )
-      },
-      status = jpa.getStatus(),
-    )
-  }
 
   fun transformJpaToApi(jpa: BookingEntity, personInfo: PersonInfoResult): Booking {
     val hasNonZeroDayTurnaround = jpa.turnaround != null && jpa.turnaround!!.workingDayCount != 0
