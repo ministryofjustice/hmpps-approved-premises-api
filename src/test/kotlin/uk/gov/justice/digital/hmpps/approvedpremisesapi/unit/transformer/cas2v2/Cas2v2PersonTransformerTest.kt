@@ -6,10 +6,8 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.FullPerson
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PersonStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PersonType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.CaseSummaryFactory
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.InmateDetailFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ProbationOffenderDetailFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.deliuscontext.Name
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.prisonsapi.AssignedLivingUnit
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.probationoffendersearchapi.IDs
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.cas2v2.Cas2v2PersonTransformer
 
@@ -22,25 +20,13 @@ class Cas2v2PersonTransformerTest {
 
   @Test
   fun `transformProbationOffenderDetailAndInmateDetailToFullPerson transforms correctly for a full person info`() {
-    val inmateDetails = InmateDetailFactory()
-      .withOffenderNo(nomsNumber)
-      .withAssignedLivingUnit(
-        AssignedLivingUnit(
-          agencyId = "not-my-prison",
-          agencyName = "Not My Prison",
-          locationId = 5,
-          description = "",
-        ),
-      )
-      .produce()
-
     val probationOffenderDetails = ProbationOffenderDetailFactory()
       .withOtherIds(otherIds = IDs(crn = crn, nomsNumber = nomsNumber))
       .withFirstName("John")
       .withSurname("Smith")
       .produce()
 
-    val fullPerson: FullPerson = cas2v2PersonTransformer.transformProbationOffenderDetailAndInmateDetailToFullPerson(probationOffenderDetails, inmateDetails)
+    val fullPerson: FullPerson = cas2v2PersonTransformer.transformProbationOffenderDetailAndInmateDetailToFullPerson(probationOffenderDetails)
     assertThat(fullPerson.crn).isEqualTo(probationOffenderDetails.otherIds.crn)
     assertThat(fullPerson.nomsNumber).isEqualTo(probationOffenderDetails.otherIds.nomsNumber)
     assertThat(fullPerson.status).isEqualTo(PersonStatus.unknown)
