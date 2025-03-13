@@ -1550,7 +1550,9 @@ class Cas1SpaceBookingTest {
         .exchange()
         .expectStatus()
         .isOk
+
       domainEventAsserter.assertDomainEventOfTypeStored(spaceBooking.application!!.id, DomainEventType.APPROVED_PREMISES_PERSON_NOT_ARRIVED)
+      snsDomainEventListener.blockForMessage(DomainEventType.APPROVED_PREMISES_PERSON_NOT_ARRIVED)
 
       val updatedSpaceBooking = cas1SpaceBookingRepository.findByIdOrNull(spaceBooking.id)!!
       assertThat(updatedSpaceBooking.nonArrivalNotes).isEqualTo("non arrival reason notes")
