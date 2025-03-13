@@ -1513,7 +1513,7 @@ class Cas1SpaceBookingTest {
     }
 
     @Test
-    fun `Recording non-arrival returns OK and creates a domain event`() {
+    fun `Recording non-arrival returns OK, creates and emits a domain event`() {
       val (_, jwt) = givenAUser(roles = listOf(CAS1_FUTURE_MANAGER))
 
       val (user) = givenAUser()
@@ -1550,7 +1550,9 @@ class Cas1SpaceBookingTest {
         .exchange()
         .expectStatus()
         .isOk
+
       domainEventAsserter.assertDomainEventOfTypeStored(spaceBooking.application!!.id, DomainEventType.APPROVED_PREMISES_PERSON_NOT_ARRIVED)
+      snsDomainEventListener.blockForMessage(DomainEventType.APPROVED_PREMISES_PERSON_NOT_ARRIVED)
 
       val updatedSpaceBooking = cas1SpaceBookingRepository.findByIdOrNull(spaceBooking.id)!!
       assertThat(updatedSpaceBooking.nonArrivalNotes).isEqualTo("non arrival reason notes")

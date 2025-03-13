@@ -565,9 +565,9 @@ class Cas1DomainEventServiceTest {
 
       val domainEventServiceSpy = spyk(domainEventService)
 
-      every { domainEventServiceSpy.saveAndEmit(any(), any(), emit) } returns Unit
+      every { domainEventServiceSpy.saveAndEmit(any(), any(), true) } returns Unit
 
-      domainEventServiceSpy.savePersonNotArrivedEvent(domainEvent, emit)
+      domainEventServiceSpy.savePersonNotArrivedEvent(domainEvent)
 
       verify {
         domainEventServiceSpy.saveAndEmit(
