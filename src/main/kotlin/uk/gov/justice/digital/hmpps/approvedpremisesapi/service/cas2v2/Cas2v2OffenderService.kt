@@ -56,7 +56,7 @@ class Cas2v2OffenderService(
     val probationOffenderDetail = probationOffenderDetailList[0]
 
     val exclusionRestriction = hasExclusionRestriction(
-      probationOffenderDetail.currentExclusion ?: true,
+      probationOffenderDetail.currentExclusion ?: false,
       probationOffenderDetail.currentRestriction ?: true,
       cas2v2User,
     )
@@ -160,9 +160,9 @@ class Cas2v2OffenderService(
     hasRestriction -> true
     hasExclusion &&
       cas2v2User.userType !in setOf(
-      Cas2v2UserType.NOMIS,
-      Cas2v2UserType.DELIUS,
-    ) -> true
+        Cas2v2UserType.NOMIS,
+        Cas2v2UserType.DELIUS,
+      ) -> true
     else -> false
   }
 }
