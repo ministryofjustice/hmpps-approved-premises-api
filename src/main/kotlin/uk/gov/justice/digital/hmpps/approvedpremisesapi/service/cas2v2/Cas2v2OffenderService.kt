@@ -54,28 +54,22 @@ class Cas2v2OffenderService(
     }
 
     val probationOffenderDetail = probationOffenderDetailList[0]
-    val inmateDetails = getInmateDetailsForProbationOffender(probationOffenderDetail)
-      ?: return Cas2v2OffenderSearchResult.NotFound(nomisIdOrCrn = nomsNumber)
 
-    return when {
-      probationOffenderDetail.currentRestriction == true ->
-        Cas2v2OffenderSearchResult.Forbidden(nomisIdOrCrn = nomsNumber)
+    val exclusionRestriction = hasExclusionRestriction(
+      probationOffenderDetail.currentExclusion ?: true,
+      probationOffenderDetail.currentRestriction ?: true,
+      cas2v2User,
+    )
 
-      probationOffenderDetail.currentExclusion == true && cas2v2User.userType !in setOf(Cas2v2UserType.NOMIS, Cas2v2UserType.DELIUS) ->
-        Cas2v2OffenderSearchResult.Forbidden(nomisIdOrCrn = nomsNumber)
+    return when (exclusionRestriction) {
+      false -> Cas2v2OffenderSearchResult.Success.Full(
+        nomisIdOrCrn = nomsNumber,
+        person = cas2v2PersonTransformer.transformProbationOffenderDetailAndInmateDetailToFullPerson(
+          probationOffenderDetail,
+        ),
+      )
 
-      else ->
-        Cas2v2OffenderSearchResult.Success.Full(
-          nomisIdOrCrn = nomsNumber,
-          person = cas2v2PersonTransformer.transformProbationOffenderDetailAndInmateDetailToFullPerson(probationOffenderDetail, inmateDetails),
-        )
-    }
-  }
-
-  private fun getInmateDetailsForProbationOffender(probationOffenderDetail: ProbationOffenderDetail): InmateDetail? = probationOffenderDetail.otherIds.nomsNumber?.let { nomsNumber ->
-    when (val inmateDetailsResult = getInmateDetailByNomsNumber(probationOffenderDetail.otherIds.crn, nomsNumber)) {
-      is AuthorisableActionResult.Success -> inmateDetailsResult.entity
-      else -> null
+      else -> Cas2v2OffenderSearchResult.Forbidden(nomsNumber)
     }
   }
 
@@ -141,13 +135,35 @@ class Cas2v2OffenderService(
     val nomsNumber = caseSummary.nomsId
 
     if (nomsNumber.isNullOrEmpty()) {
-      return Cas2v2OffenderSearchResult.Success.Full(
-        nomisIdOrCrn = crn,
-        cas2v2PersonTransformer.transformCaseSummaryToFullPerson(caseSummary),
+      val exclusionRestriction = hasExclusionRestriction(
+        caseSummary.currentExclusion,
+        caseSummary.currentRestriction,
+        cas2v2User,
       )
+      return when (exclusionRestriction) {
+        false -> Cas2v2OffenderSearchResult.Success.Full(
+          nomisIdOrCrn = crn,
+          person = cas2v2PersonTransformer.transformCaseSummaryToFullPerson(caseSummary),
+        )
+        else -> Cas2v2OffenderSearchResult.Forbidden(crn)
+      }
     }
 
     return getPersonByNomsNumber(nomsNumber, cas2v2User)
+  }
+
+  private fun hasExclusionRestriction(
+    hasExclusion: Boolean,
+    hasRestriction: Boolean,
+    cas2v2User: Cas2v2UserEntity,
+  ): Boolean = when {
+    hasRestriction -> true
+    hasExclusion &&
+      cas2v2User.userType !in setOf(
+        Cas2v2UserType.NOMIS,
+        Cas2v2UserType.DELIUS,
+      ) -> true
+    else -> false
   }
 }
 

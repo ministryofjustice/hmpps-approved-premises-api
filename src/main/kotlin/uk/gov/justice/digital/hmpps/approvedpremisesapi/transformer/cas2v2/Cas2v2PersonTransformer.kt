@@ -14,7 +14,7 @@ class Cas2v2PersonTransformer {
     probationOffenderDetail: ProbationOffenderDetail,
   ): FullPerson = FullPerson(
     name = "${probationOffenderDetail.firstName} ${probationOffenderDetail.surname}",
-    dateOfBirth = probationOffenderDetail.dateOfBirth!!, // see https://github.com/ministryofjustice/hmpps-approved-premises-api/blob/48fffe10a0284a6165eb6096cce9cbd632ecc135/src/main/kotlin/uk/gov/justice/digital/hmpps/approvedpremisesapi/transformer/PersonTransformer.kt#L157
+    dateOfBirth = probationOffenderDetail.dateOfBirth!!,
     sex = probationOffenderDetail.gender ?: "Unknown",
     status = PersonStatus.unknown,
     crn = probationOffenderDetail.otherIds.crn,

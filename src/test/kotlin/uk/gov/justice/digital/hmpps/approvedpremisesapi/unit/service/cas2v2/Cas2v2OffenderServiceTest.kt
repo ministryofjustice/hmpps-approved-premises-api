@@ -126,9 +126,11 @@ class Cas2v2OffenderServiceTest {
         .withOtherIds(otherIds = IDs(crn = crn, nomsNumber = nomsNumber))
         .produce()
 
-      every { mockProbationOffenderSearchClient.searchOffenderByNomsNumber(nomsNumber) } returns ClientResult.Success(
-        status = HttpStatus.OK,
-        body = listOf(offenderDetails),
+      every { mockProbationOffenderSearchClient.searchOffenderByNomsNumber(nomsNumber) } returns StatusCode(
+        HttpMethod.GET,
+        "/search",
+        HttpStatus.NOT_FOUND,
+        null,
       )
 
       every { mockPrisonsApiClient.getInmateDetailsWithWait(nomsNumber) } returns StatusCode(

@@ -263,7 +263,6 @@ class Cas2v2PersonSearchTest : Cas2v2IntegrationTestBase() {
       inner class WhenSuccessful {
         @Test
         fun `Searching for a CRN returns OK with correct body`() {
-          // We need this as the crn search tries a noms search if it finds a crn with a noms number
           probationOffenderSearchAPIMockSuccessfulOffenderSearchCall(
             nomsNumber = "NOMS321",
             response = listOf(
@@ -341,6 +340,8 @@ class Cas2v2PersonSearchTest : Cas2v2IntegrationTestBase() {
                 withLastName("Someone")
                 withGender("Male")
                 withEthnicity("White British")
+                withCurrentRestriction(false)
+                withCurrentExclusion(false)
                 withNationality("English")
                 withReligionOrBelief("Judaism")
                 withGenderIdentity("Prefer to self-describe")
