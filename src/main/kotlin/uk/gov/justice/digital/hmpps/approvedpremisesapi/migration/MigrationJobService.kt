@@ -12,6 +12,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.migration.cas1.Cas1Backf
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.migration.cas1.Cas1IsArsonSuitableBackfillJob
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.migration.cas1.Cas1TaskDueMigrationJob
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.migration.cas1.Cas1UpdateApplicationLicenceExpiryDateJob
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.migration.cas1.Cas1UpdateApprovedPremisesApplicationWithOffenderJob
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.migration.cas1.Cas1UpdateAssessmentReportPropertiesJob
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.migration.cas1.Cas1UpdateRoomCodesJob
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.migration.cas2.Cas2AssessmentMigrationJob
@@ -53,6 +54,7 @@ class MigrationJobService(
         MigrationJobType.cas1BackfillArsonSuitable -> getBean(Cas1IsArsonSuitableBackfillJob::class)
         MigrationJobType.cas1ApprovedPremisesAssessmentReportProperties -> getBean(Cas1UpdateAssessmentReportPropertiesJob::class)
         MigrationJobType.cas1RoomCodes -> getBean(Cas1UpdateRoomCodesJob::class)
+        MigrationJobType.cas1ApplicationsWithOffender -> getBean(Cas1UpdateApprovedPremisesApplicationWithOffenderJob::class)
       }
 
       if (job.shouldRunInTransaction) {
