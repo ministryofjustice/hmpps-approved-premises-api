@@ -1,7 +1,6 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.migration.cas3
 
 import jakarta.persistence.EntityManager
-import org.apache.commons.collections4.ListUtils
 import org.springframework.data.domain.PageRequest
 import org.springframework.data.domain.Slice
 import org.springframework.stereotype.Component
@@ -10,8 +9,8 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TemporaryAcco
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.migration.MigrationJob
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.migration.MigrationLogger
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PersonSummaryInfoResult
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.LaoStrategy
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.OffenderService
-import java.util.stream.Collectors
 
 @Component
 class Cas3UpdateApplicationOffenderNameJob(
@@ -38,7 +37,7 @@ class Cas3UpdateApplicationOffenderNameJob(
 
         migrationLogger.info("Updating offenders name with crn ${offendersCrn.map { it }}")
 
-        val personInfos = splitAndRetrievePersonInfo(pageSize, offendersCrn, "")
+        val personInfos = splitAndRetrievePersonInfo(pageSize, offendersCrn)
 
         slice.content.forEach {
           val personInfo = personInfos[it.crn] ?: PersonSummaryInfoResult.Unknown(it.crn)
@@ -70,12 +69,9 @@ class Cas3UpdateApplicationOffenderNameJob(
     }
   }
 
-  private fun splitAndRetrievePersonInfo(pageSize: Int, crns: Set<String>, deliusUsername: String): Map<String, PersonSummaryInfoResult> {
-    val crnMap = ListUtils.partition(crns.toList(), pageSize)
-      .stream().map { crns ->
-        offenderService.getOffenderSummariesByCrns(crns.toSet(), deliusUsername, ignoreLaoRestrictions = true).associateBy { it.crn }
-      }.collect(Collectors.toList())
-
-    return crnMap.flatMap { it.toList() }.toMap()
-  }
+  private fun splitAndRetrievePersonInfo(pageSize: Int, crns: Set<String>): Map<String, PersonSummaryInfoResult> = offenderService.getPersonSummaryInfoResultsInBatches(
+    crns = crns,
+    laoStrategy = LaoStrategy.NeverRestricted,
+    batchSize = pageSize,
+  ).associateBy { it.crn }
 }
