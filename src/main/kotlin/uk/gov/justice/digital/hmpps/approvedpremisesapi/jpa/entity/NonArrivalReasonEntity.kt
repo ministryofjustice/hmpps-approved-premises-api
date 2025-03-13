@@ -11,6 +11,11 @@ import java.util.UUID
 
 @Repository
 interface NonArrivalReasonRepository : JpaRepository<NonArrivalReasonEntity, UUID> {
+
+  companion object {
+    val NON_ARRIVAL_REASON_CUSTODIAL_DISPOSAL_RIC: UUID = UUID.fromString("9d3b1f8e-9fa6-45b7-84ac-2d5fe34ff935")
+  }
+
   @Query("SELECT r FROM NonArrivalReasonEntity r WHERE r.isActive = true")
   fun findAllActiveReasons(): List<NonArrivalReasonEntity>
   fun findByLegacyDeliusReasonCode(it: String): NonArrivalReasonEntity?
