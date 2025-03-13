@@ -1,5 +1,6 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.seed.cas1
 
+import org.springframework.data.repository.findByIdOrNull
 import org.springframework.stereotype.Service
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.BookingEntity
@@ -10,6 +11,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.MoveOnCategor
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.MoveOnCategoryRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.NonArrivalReasonEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.NonArrivalReasonRepository
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.NonArrivalReasonRepository.Companion.NON_ARRIVAL_REASON_CUSTODIAL_DISPOSAL_RIC
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas1.Cas1DeliusBookingImportEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.toLocalDate
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.toLocalDateTime
@@ -21,7 +23,7 @@ import java.time.OffsetDateTime
 class Cas1BookingManagementInfoService(
   private val departureReasonRepository: DepartureReasonRepository,
   private val moveOnCategoryRepository: MoveOnCategoryRepository,
-  private val nonArrivalReasonReasonEntity: NonArrivalReasonRepository,
+  private val nonArrivalReasonRepository: NonArrivalReasonRepository,
 ) {
 
   fun fromBooking(booking: BookingEntity) = ManagementInfo(
@@ -65,10 +67,16 @@ class Cas1BookingManagementInfoService(
     departureNotes = null,
     nonArrivalConfirmedAt = import.nonArrivalContactDatetime,
     nonArrivalReason = import.nonArrivalReasonCode?.let {
-      nonArrivalReasonReasonEntity.findByLegacyDeliusReasonCode(it) ?: error("Could not resolve NonArrivalReason for code $it")
+      getNonArrivalReason(it)
     },
     nonArrivalNotes = import.nonArrivalNotes,
   )
+
+  fun getNonArrivalReason(code: String): NonArrivalReasonEntity = if (code == "1H") {
+    nonArrivalReasonRepository.findByIdOrNull(NON_ARRIVAL_REASON_CUSTODIAL_DISPOSAL_RIC)!!
+  } else {
+    nonArrivalReasonRepository.findByLegacyDeliusReasonCode(code) ?: error("Could not resolve NonArrivalReason for code $code")
+  }
 }
 
 data class ManagementInfo(
