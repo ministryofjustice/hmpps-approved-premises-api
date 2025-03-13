@@ -3157,9 +3157,11 @@ components:
         rejectionRationale:
           type: string
         referralRejectionReasonId:
+          description: Only used by CAS3
           type: string
           format: uuid
         referralRejectionReasonDetail:
+          description: Only used by CAS3
           type: string
         isWithdrawn:
           type: boolean
