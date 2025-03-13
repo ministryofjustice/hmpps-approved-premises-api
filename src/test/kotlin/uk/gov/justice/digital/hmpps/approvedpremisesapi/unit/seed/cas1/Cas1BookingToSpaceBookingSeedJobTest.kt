@@ -16,7 +16,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas1.Cas1Deli
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.seed.cas1.Cas1BookingManagementInfoService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.seed.cas1.Cas1BookingToSpaceBookingSeedCsvRow
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.seed.cas1.Cas1BookingToSpaceBookingSeedJob
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.EnvironmentService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1DomainEventService
 
 class Cas1BookingToSpaceBookingSeedJobTest {
@@ -33,7 +32,6 @@ class Cas1BookingToSpaceBookingSeedJobTest {
     transactionTemplate = mockk<TransactionTemplate>(),
     cas1DeliusBookingImportRepository = mockk<Cas1DeliusBookingImportRepository>(),
     cas1BookingManagementInfoService = mockk<Cas1BookingManagementInfoService>(),
-    environmentService = mockk<EnvironmentService>(),
     placementRequestRepository = mockk<PlacementRequestRepository>(),
   )
 

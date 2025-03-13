@@ -20,7 +20,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRepositor
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas1.Cas1DeliusBookingImportRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.DomainEvent
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.seed.SeedJob
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.EnvironmentService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1DomainEventService
 import java.util.UUID
 
@@ -36,7 +35,6 @@ class Cas1BookingToSpaceBookingSeedJob(
   private val transactionTemplate: TransactionTemplate,
   private val cas1DeliusBookingImportRepository: Cas1DeliusBookingImportRepository,
   private val cas1BookingManagementInfoService: Cas1BookingManagementInfoService,
-  private val environmentService: EnvironmentService,
   private val placementRequestRepository: PlacementRequestRepository,
 ) : SeedJob<Cas1BookingToSpaceBookingSeedCsvRow>(
   requiredHeaders = setOf(
@@ -49,12 +47,6 @@ class Cas1BookingToSpaceBookingSeedJob(
   override fun deserializeRow(columns: Map<String, String>) = Cas1BookingToSpaceBookingSeedCsvRow(
     qCode = columns["q_code"]!!.trim(),
   )
-
-  override fun preSeed() {
-    if (environmentService.isProd()) {
-      error("Cannot run seed job in prod")
-    }
-  }
 
   override fun processRow(row: Cas1BookingToSpaceBookingSeedCsvRow) {
     transactionTemplate.executeWithoutResult {
