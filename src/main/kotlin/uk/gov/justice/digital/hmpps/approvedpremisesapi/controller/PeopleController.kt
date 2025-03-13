@@ -24,7 +24,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.community.Offender
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.ForbiddenProblem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.NotFoundProblem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.AuthorisableActionResult
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.FeatureFlagService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.HttpAuthService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.LaoStrategy
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.OASysService
@@ -32,7 +31,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.OffenderRisksSer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.OffenderService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.UserService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.AdjudicationTransformer
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.AlertTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.NeedsDetailsTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.OASysSectionsTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.OffenceTransformer
@@ -50,13 +48,11 @@ class PeopleController(
   private val risksTransformer: RisksTransformer,
   private val prisonCaseNoteTransformer: PrisonCaseNoteTransformer,
   private val adjudicationTransformer: AdjudicationTransformer,
-  private val alertTransformer: AlertTransformer,
   private val prisonerAlertTransformer: PrisonerAlertTransformer,
   private val needsDetailsTransformer: NeedsDetailsTransformer,
   private val oaSysSectionsTransformer: OASysSectionsTransformer,
   private val offenceTransformer: OffenceTransformer,
   private val userService: UserService,
-  private val featureFlagService: FeatureFlagService,
   private val oasysService: OASysService,
   private val offenderRisksService: OffenderRisksService,
 ) : PeopleApiDelegate {
@@ -143,17 +139,9 @@ class PeopleController(
 
     val nomsNumber = offenderDetails.otherIds.nomsNumber
 
-    val usePrisonerAlertsApi = featureFlagService.getBooleanFlag("get-alerts-from-prisoner-alerts-api")
+    val acctAlertsResult = offenderService.getAcctPrisonerAlertsByNomsNumber(nomsNumber)
 
-    if (usePrisonerAlertsApi) {
-      val acctAlertsResult = offenderService.getAcctPrisonerAlertsByNomsNumber(nomsNumber)
-
-      return ResponseEntity.ok(extractEntityFromCasResult(acctAlertsResult).map(prisonerAlertTransformer::transformToApi))
-    } else {
-      val acctAlertsResult = offenderService.getAcctAlertsByNomsNumber(nomsNumber)
-
-      return ResponseEntity.ok(extractEntityFromCasResult(acctAlertsResult).map(alertTransformer::transformToApi))
-    }
+    return ResponseEntity.ok(extractEntityFromCasResult(acctAlertsResult).map(prisonerAlertTransformer::transformToApi))
   }
 
   override fun peopleCrnOasysSelectionGet(crn: String): ResponseEntity<List<OASysSection>> {
