@@ -35,6 +35,7 @@ class Cas2ApplicationsController(
     isSubmitted: Boolean?,
     page: Int?,
     prisonCode: String?,
+    assignmentType: String?,
   ): ResponseEntity<List<ModelCas2ApplicationSummary>> {
     val user = userService.getUserForRequest()
 
