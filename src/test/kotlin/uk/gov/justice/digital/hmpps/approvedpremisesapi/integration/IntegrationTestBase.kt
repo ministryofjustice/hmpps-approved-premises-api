@@ -97,6 +97,8 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.TurnaroundEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.UserEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.UserQualificationAssignmentEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.UserRoleAssignmentEntityFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.cas1.Cas1ChangeRequestReasonEntityFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.cas1.Cas1ChangeRequestRejectionReasonEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.cas1.Cas1CruManagementAreaEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.cas3.Cas3VoidBedspaceCancellationEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.cas3.Cas3VoidBedspaceEntityFactory
@@ -193,6 +195,10 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TurnaroundEnt
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserQualificationAssignmentEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRoleAssignmentEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas1.Cas1ChangeRequestReasonEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas1.Cas1ChangeRequestReasonRepository
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas1.Cas1ChangeRequestRejectionReasonEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas1.Cas1ChangeRequestRejectionReasonRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas1.Cas1OffenderRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas3.Cas3VoidBedspaceCancellationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas3.Cas3VoidBedspaceEntity
@@ -527,6 +533,12 @@ abstract class IntegrationTestBase {
   lateinit var cas1OffenderRepository: Cas1OffenderRepository
 
   @Autowired
+  lateinit var cas1ChangeRequestReasonRepository: Cas1ChangeRequestReasonRepository
+
+  @Autowired
+  lateinit var cas1ChangeRequestRejectionReasonRepository: Cas1ChangeRequestRejectionReasonRepository
+
+  @Autowired
   lateinit var emailAsserter: EmailNotificationAsserter
 
   @Autowired
@@ -616,6 +628,8 @@ abstract class IntegrationTestBase {
   lateinit var cas1OutOfServiceBedRevisionEntityFactory: PersistedFactory<Cas1OutOfServiceBedRevisionEntity, UUID, Cas1OutOfServiceBedRevisionEntityFactory>
   lateinit var cas1SpaceBookingEntityFactory: PersistedFactory<Cas1SpaceBookingEntity, UUID, Cas1SpaceBookingEntityFactory>
   lateinit var cas1CruManagementAreaEntityFactory: PersistedFactory<Cas1CruManagementAreaEntity, UUID, Cas1CruManagementAreaEntityFactory>
+  lateinit var cas1ChangeRequestReasonEntityFactory: PersistedFactory<Cas1ChangeRequestReasonEntity, UUID, Cas1ChangeRequestReasonEntityFactory>
+  lateinit var cas1ChangeRequestRejectionReasonEntityFactory: PersistedFactory<Cas1ChangeRequestRejectionReasonEntity, UUID, Cas1ChangeRequestRejectionReasonEntityFactory>
 
   lateinit var bedMoveEntityFactory: PersistedFactory<BedMoveEntity, UUID, BedMoveEntityFactory>
   private var clientCredentialsCallMocked = false
@@ -728,6 +742,8 @@ abstract class IntegrationTestBase {
     bedMoveEntityFactory = PersistedFactory({ BedMoveEntityFactory() }, bedMoveRepository)
     cas1SpaceBookingEntityFactory = PersistedFactory({ Cas1SpaceBookingEntityFactory() }, cas1SpaceBookingRepository)
     cas1CruManagementAreaEntityFactory = PersistedFactory({ Cas1CruManagementAreaEntityFactory() }, cas1CruManagementAreaRepository)
+    cas1ChangeRequestReasonEntityFactory = PersistedFactory({ Cas1ChangeRequestReasonEntityFactory() }, cas1ChangeRequestReasonRepository)
+    cas1ChangeRequestRejectionReasonEntityFactory = PersistedFactory({ Cas1ChangeRequestRejectionReasonEntityFactory() }, cas1ChangeRequestRejectionReasonRepository)
   }
 
   fun mockClientCredentialsJwtRequest(
