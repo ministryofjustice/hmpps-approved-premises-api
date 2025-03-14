@@ -13,7 +13,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas1.Cas1Deli
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.seed.cas1.Cas1BackfillActiveSpaceBookingsCreatedInDelius
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.seed.cas1.Cas1BookingManagementInfoService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.seed.cas1.Cas1CreateMissingReferralsSeedCsvRow
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.EnvironmentService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.OffenderService
 
 class Cas1BackfillActiveSpaceBookingsCreatedInDeliusTest {
@@ -24,7 +23,6 @@ class Cas1BackfillActiveSpaceBookingsCreatedInDeliusTest {
     approvedPremisesRepository = approvedPremisesRepository,
     cas1DeliusBookingImportRepository = mockk<Cas1DeliusBookingImportRepository>(),
     cas1BookingManagementInfoService = mockk<Cas1BookingManagementInfoService>(),
-    environmentService = mockk<EnvironmentService>(),
     offenderService = mockk<OffenderService>(),
     offlineApplicationRepository = mockk<OfflineApplicationRepository>(),
     spaceBookingRepository = mockk<Cas1SpaceBookingRepository>(),
