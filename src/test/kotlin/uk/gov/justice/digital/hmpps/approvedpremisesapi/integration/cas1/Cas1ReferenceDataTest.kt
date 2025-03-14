@@ -38,6 +38,8 @@ class Cas1ReferenceDataTest : IntegrationTestBase() {
 
     @BeforeEach
     fun setup() {
+      cas1ChangeRequestReasonRepository.deleteAll()
+
       cas1ChangeRequestReasonEntityFactory.produceAndPersist {
         withCode("appeal_reason_1")
         withChangeRequestType(ChangeRequestType.APPEAL)
@@ -144,6 +146,8 @@ class Cas1ReferenceDataTest : IntegrationTestBase() {
 
     @BeforeEach
     fun setup() {
+      cas1ChangeRequestRejectionReasonRepository.deleteAll()
+
       cas1ChangeRequestRejectionReasonEntityFactory.produceAndPersist {
         withCode("appeal_reason_1")
         withChangeRequestType(ChangeRequestType.APPEAL)
