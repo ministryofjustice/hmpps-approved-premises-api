@@ -15,6 +15,8 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas1OutOfServ
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DepartureReasonRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.MoveOnCategoryRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.NonArrivalReasonRepository
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas1.Cas1ChangeRequestReasonRepository
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas1.ChangeRequestType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.DepartureReasonTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.MoveOnCategoryTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.NonArrivalReasonTransformer
@@ -33,9 +35,18 @@ class Cas1ReferenceDataController(
   private val nonArrivalReasonTransformer: NonArrivalReasonTransformer,
   private val moveOnCategoryRepository: MoveOnCategoryRepository,
   private val moveOnCategoryTransformer: MoveOnCategoryTransformer,
+  private val changeRequestReasonRepository: Cas1ChangeRequestReasonRepository,
 ) : ReferenceDataCas1Delegate {
 
-  override fun getChangeRequestReasons(changeRequestType: Cas1ChangeRequestType): ResponseEntity<List<NamedId>> = super.getChangeRequestReasons(changeRequestType)
+  override fun getChangeRequestReasons(changeRequestType: Cas1ChangeRequestType): ResponseEntity<List<NamedId>> = ResponseEntity.ok(
+    changeRequestReasonRepository.findByChangeRequestTypeAndArchivedIsFalse(
+      when (changeRequestType) {
+        Cas1ChangeRequestType.APPEAL -> ChangeRequestType.APPEAL
+        Cas1ChangeRequestType.EXTENSION -> ChangeRequestType.EXTENSION
+        Cas1ChangeRequestType.PLANNED_TRANSFER -> ChangeRequestType.PLANNED_TRANSFER
+      },
+    ).map { NamedId(it.id, it.code) },
+  )
 
   override fun getChangeRequestRejectionReasons(changeRequestType: Cas1ChangeRequestType): ResponseEntity<List<NamedId>> = super.getChangeRequestRejectionReasons(changeRequestType)
 

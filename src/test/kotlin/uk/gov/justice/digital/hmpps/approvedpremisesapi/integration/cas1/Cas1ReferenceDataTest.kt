@@ -2,14 +2,17 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.cas1
 
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.BeforeAll
+import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1CruManagementArea
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NamedId
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.InitialiseDatabasePerClassTestBase
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.IntegrationTestBase
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas1CruManagementAreaEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DepartureReasonEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas1.ChangeRequestType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.DepartureReasonTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.MoveOnCategoryTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.NonArrivalReasonTransformer
@@ -29,6 +32,112 @@ class Cas1ReferenceDataTest : IntegrationTestBase() {
 
   @Autowired
   lateinit var moveOnCategoryTransformer: MoveOnCategoryTransformer
+
+  @Nested
+  inner class GetChangeRequestReasons {
+
+    @BeforeEach
+    fun setup() {
+      cas1ChangeRequestReasonEntityFactory.produceAndPersist {
+        withCode("appeal_reason_1")
+        withChangeRequestType(ChangeRequestType.APPEAL)
+        withArchived(false)
+      }
+
+      cas1ChangeRequestReasonEntityFactory.produceAndPersist {
+        withCode("appeal_reason_2_archived")
+        withChangeRequestType(ChangeRequestType.APPEAL)
+        withArchived(true)
+      }
+
+      cas1ChangeRequestReasonEntityFactory.produceAndPersist {
+        withCode("appeal_reason_3")
+        withChangeRequestType(ChangeRequestType.APPEAL)
+        withArchived(false)
+      }
+
+      cas1ChangeRequestReasonEntityFactory.produceAndPersist {
+        withCode("extension_reason_1")
+        withChangeRequestType(ChangeRequestType.EXTENSION)
+        withArchived(false)
+      }
+
+      cas1ChangeRequestReasonEntityFactory.produceAndPersist {
+        withCode("extension_reason_2")
+        withChangeRequestType(ChangeRequestType.EXTENSION)
+        withArchived(false)
+      }
+
+      cas1ChangeRequestReasonEntityFactory.produceAndPersist {
+        withCode("extension_reason_3_archived")
+        withChangeRequestType(ChangeRequestType.EXTENSION)
+        withArchived(true)
+      }
+
+      cas1ChangeRequestReasonEntityFactory.produceAndPersist {
+        withCode("planned_transfer_reason_1_archived")
+        withChangeRequestType(ChangeRequestType.PLANNED_TRANSFER)
+        withArchived(true)
+      }
+
+      cas1ChangeRequestReasonEntityFactory.produceAndPersist {
+        withCode("planned_transfer_reason_2")
+        withChangeRequestType(ChangeRequestType.PLANNED_TRANSFER)
+        withArchived(false)
+      }
+
+      cas1ChangeRequestReasonEntityFactory.produceAndPersist {
+        withCode("planned_transfer_reason_3")
+        withChangeRequestType(ChangeRequestType.PLANNED_TRANSFER)
+        withArchived(false)
+      }
+    }
+
+    @Test
+    fun `for appeal`() {
+      val jwt = jwtAuthHelper.createValidAuthorizationCodeJwt()
+
+      val result = webTestClient.get()
+        .uri("/cas1/reference-data/change-request-reasons/appeal")
+        .header("Authorization", "Bearer $jwt")
+        .exchange()
+        .expectStatus()
+        .isOk
+        .bodyAsListOfObjects<NamedId>()
+
+      assertThat(result.map { it.name }).containsExactlyInAnyOrder("appeal_reason_1", "appeal_reason_3")
+    }
+
+    @Test
+    fun `for extension`() {
+      val jwt = jwtAuthHelper.createValidAuthorizationCodeJwt()
+
+      val result = webTestClient.get()
+        .uri("/cas1/reference-data/change-request-reasons/extension")
+        .header("Authorization", "Bearer $jwt")
+        .exchange()
+        .expectStatus()
+        .isOk
+        .bodyAsListOfObjects<NamedId>()
+
+      assertThat(result.map { it.name }).containsExactlyInAnyOrder("extension_reason_1", "extension_reason_2")
+    }
+
+    @Test
+    fun `for planned transfer`() {
+      val jwt = jwtAuthHelper.createValidAuthorizationCodeJwt()
+
+      val result = webTestClient.get()
+        .uri("/cas1/reference-data/change-request-reasons/plannedTransfer")
+        .header("Authorization", "Bearer $jwt")
+        .exchange()
+        .expectStatus()
+        .isOk
+        .bodyAsListOfObjects<NamedId>()
+
+      assertThat(result.map { it.name }).containsExactlyInAnyOrder("planned_transfer_reason_2", "planned_transfer_reason_3")
+    }
+  }
 
   @Nested
   inner class GetOutOfServiceBedReasons {
