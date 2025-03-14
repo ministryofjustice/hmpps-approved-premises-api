@@ -30,18 +30,18 @@ class Cas2DomainEventListenerTest {
 
   @Test
   fun `POM Allocation changed message is processed`() {
-    every { cas2AllocationChangedService.handleAllocationChangedEvent(any()) } returns Unit
+    every { cas2AllocationChangedService.process(any()) } returns Unit
     val msg = """{"Message": "{\"eventType\":\"offender-management.allocation.changed\",\"additionalInformation\":{\"staffCode\":123456,\"prisonId\":\"PPP\"}}"}"""
     cas2DomainEventListener.processMessage(msg)
-    verify(exactly = 1) { cas2AllocationChangedService.handleAllocationChangedEvent(any()) }
+    verify(exactly = 1) { cas2AllocationChangedService.process(any()) }
   }
 
   @Test
   fun `Prisoner updated message is processed`() {
-    every { cas2LocationChangedService.handleLocationChangedEvent(any()) } returns Unit
+    every { cas2LocationChangedService.process(any()) } returns Unit
     val msg =
       """{"Message": "{\"eventType\":\"prisoner-offender-search.prisoner.updated\",\"additionalInformation\":{\"categoriesChanged\": [\"LOCATION\"]},\"version\":\"1\"}"}"""
     cas2DomainEventListener.processMessage(msg)
-    verify(exactly = 1) { cas2LocationChangedService.handleLocationChangedEvent(any()) }
+    verify(exactly = 1) { cas2LocationChangedService.process(any()) }
   }
 }

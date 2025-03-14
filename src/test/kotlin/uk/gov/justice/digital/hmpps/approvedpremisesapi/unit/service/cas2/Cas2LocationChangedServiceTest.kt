@@ -1,14 +1,13 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.unit.service.cas2
 
 import io.mockk.every
-import io.mockk.mockk
-import io.mockk.mockkStatic
-import io.mockk.slot
+import io.mockk.impl.annotations.InjectMockKs
+import io.mockk.impl.annotations.MockK
+import io.mockk.junit5.MockKExtension
 import io.mockk.verify
-import io.sentry.Sentry
-import io.sentry.protocol.SentryId
-import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.assertThrows
+import org.junit.jupiter.api.extension.ExtendWith
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.Prisoner
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.PrisonerSearchClient
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.Cas2ApplicationEntityFactory
@@ -18,23 +17,26 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.domainevent.Additi
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.domainevent.HmppsDomainEvent
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.domainevent.PersonIdentifier
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.domainevent.PersonReference
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.IgnorableMessageException
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.InvalidDomainEventException
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas2.Cas2ApplicationService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas2.Cas2LocationChangedService
 import java.time.Instant
 import java.time.ZoneId
 
+@ExtendWith(MockKExtension::class)
 class Cas2LocationChangedServiceTest {
 
-  private val mockApplicationRepository = mockk<Cas2ApplicationRepository>()
-  private val mockApplicationService = mockk<Cas2ApplicationService>()
-  private val mockPrisonerSearchClient = mockk<PrisonerSearchClient>()
+  @MockK
+  lateinit var applicationRepository: Cas2ApplicationRepository
 
-  private val locationChangedService: Cas2LocationChangedService = Cas2LocationChangedService(
-    mockPrisonerSearchClient,
-    mockApplicationService,
-    mockApplicationRepository,
-  )
+  @MockK
+  lateinit var applicationService: Cas2ApplicationService
+
+  @MockK
+  lateinit var prisonerSearchClient: PrisonerSearchClient
+
+  @InjectMockKs
+  lateinit var locationChangedService: Cas2LocationChangedService
 
   private val prisoner = Prisoner(prisonId = "A1234AB")
   private val eventType = "prisoner-offender-search.prisoner.updated"
@@ -51,7 +53,7 @@ class Cas2LocationChangedServiceTest {
     detailUrl = detailUrl,
     occurredAt = occurredAt,
     description = "anything",
-    additionalInformation = AdditionalInformation(),
+    additionalInformation = AdditionalInformation(mutableMapOf("categoriesChanged" to listOf("LOCATION"))),
     personReference = PersonReference(listOf(PersonIdentifier("NOMS", nomsNumber))),
   )
 
@@ -59,103 +61,48 @@ class Cas2LocationChangedServiceTest {
   fun `handle Location Changed Event and save new location to table`() {
     val application = Cas2ApplicationEntityFactory().withNomsNumber(nomsNumber).withCreatedByUser(user).produce()
 
-    every { mockPrisonerSearchClient.getPrisoner(any()) } returns prisoner
-    every { mockApplicationService.findMostRecentApplication(eq(nomsNumber)) } returns application
-    every { mockApplicationRepository.save(any()) } returns null
+    every { prisonerSearchClient.getPrisoner(any()) } returns prisoner
+    every { applicationService.findMostRecentApplication(eq(nomsNumber)) } returns application
+    every { applicationRepository.save(any()) } returns application
 
-    locationChangedService.handleLocationChangedEvent(locationEvent)
+    locationChangedService.process(locationEvent)
 
-    verify(exactly = 1) { mockPrisonerSearchClient.getPrisoner(any()) }
-    verify(exactly = 1) { mockApplicationService.findMostRecentApplication(eq(nomsNumber)) }
-    verify(exactly = 1) { mockApplicationRepository.save(any()) }
+    verify(exactly = 1) { prisonerSearchClient.getPrisoner(any()) }
+    verify(exactly = 1) { applicationService.findMostRecentApplication(eq(nomsNumber)) }
+    verify(exactly = 1) { applicationRepository.save(any()) }
   }
 
   @Test
   fun `handle Location Changed Event and throw error when prisoner not found from event detailUrl`() {
     val application = Cas2ApplicationEntityFactory().withNomsNumber(nomsNumber).withCreatedByUser(user).produce()
 
-    every { mockPrisonerSearchClient.getPrisoner(any()) } returns null
-    every { mockApplicationService.findMostRecentApplication(eq(nomsNumber)) } returns application
+    every { prisonerSearchClient.getPrisoner(any()) } returns null
+    every { applicationService.findMostRecentApplication(eq(nomsNumber)) } returns application
 
-    val slot = slot<Throwable>()
-    mockkStatic(Sentry::class)
-    every { Sentry.captureException(capture(slot)) } returns SentryId.EMPTY_ID
-
-    val errorMessage = "No prisoner found for detailUrl $detailUrl"
-
-    locationChangedService.handleLocationChangedEvent(locationEvent)
-
-    verify(exactly = 1) { mockPrisonerSearchClient.getPrisoner(any()) }
-    verify(exactly = 1) { mockApplicationService.findMostRecentApplication(eq(nomsNumber)) }
-    verify(exactly = 1) { Sentry.captureException(any()) }
-
-    assertTrue(slot.isCaptured)
-    assertTrue(slot.captured is IgnorableMessageException)
-    assertTrue(slot.captured.message == errorMessage)
+    assertThrows<NullPointerException> { locationChangedService.process(locationEvent) }
   }
 
   @Test
   fun `handle Location Changed Event and throw error when there is no detailUrl in the event`() {
-    val eventWithNoDetailUrl = HmppsDomainEvent(
-      eventType = eventType,
-      version = 1,
-      detailUrl = null,
-      occurredAt = occurredAt,
-      description = "anything",
-      additionalInformation = AdditionalInformation(),
-      personReference = PersonReference(listOf(PersonIdentifier("NOMS", nomsNumber))),
-    )
+    val eventWithNoDetailUrl = locationEvent.copy(detailUrl = null)
 
-    val slot = slot<Throwable>()
-    mockkStatic(Sentry::class)
-    every { Sentry.captureException(capture(slot)) } returns SentryId.EMPTY_ID
-
-    val errorMessage = "No detail URL found"
-
-    locationChangedService.handleLocationChangedEvent(eventWithNoDetailUrl)
-
-    verify(exactly = 1) { Sentry.captureException(any()) }
-
-    assertTrue(slot.isCaptured)
-    assertTrue(slot.captured is IgnorableMessageException)
-    assertTrue(slot.captured.message == errorMessage)
+    assertThrows<InvalidDomainEventException> { locationChangedService.process(eventWithNoDetailUrl) }
   }
 
   @Test
   fun `handle Location Changed Event and throw error when there is no nomsNumber in the event`() {
-    val eventWithNoNomsNumber = HmppsDomainEvent(
-      eventType = eventType,
-      version = 1,
-      detailUrl = detailUrl,
-      occurredAt = occurredAt,
-      description = "anything",
-      additionalInformation = AdditionalInformation(),
-      personReference = PersonReference(listOf()),
-    )
-
-    val slot = slot<Throwable>()
-    mockkStatic(Sentry::class)
-    every { Sentry.captureException(capture(slot)) } returns SentryId.EMPTY_ID
-
-    val errorMessage = "No nomsNumber found"
-
-    locationChangedService.handleLocationChangedEvent(eventWithNoNomsNumber)
-
-    verify(exactly = 1) { Sentry.captureException(any()) }
-
-    assertTrue(slot.isCaptured)
-    assertTrue(slot.captured is IgnorableMessageException)
-    assertTrue(slot.captured.message == errorMessage)
+    val eventWithNoNomsNumber = locationEvent.copy(personReference = PersonReference())
+    assertThrows<InvalidDomainEventException> { locationChangedService.process(eventWithNoNomsNumber) }
   }
 
   @Test
   fun `handle Location Changed Event and do nothing if there is no application associated with the event`() {
-    every { mockPrisonerSearchClient.getPrisoner(any()) } returns null
-    every { mockApplicationService.findMostRecentApplication(eq(nomsNumber)) } returns null
+    every { prisonerSearchClient.getPrisoner(any()) } returns null
+    every { applicationService.findMostRecentApplication(eq(nomsNumber)) } returns null
 
-    locationChangedService.handleLocationChangedEvent(locationEvent)
+    locationChangedService.process(locationEvent)
 
-    verify(exactly = 0) { mockPrisonerSearchClient.getPrisoner(any()) }
-    verify(exactly = 1) { mockApplicationService.findMostRecentApplication(eq(nomsNumber)) }
+    verify(exactly = 0) { prisonerSearchClient.getPrisoner(any()) }
+    verify(exactly = 1) { applicationService.findMostRecentApplication(eq(nomsNumber)) }
   }
 }
