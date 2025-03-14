@@ -140,7 +140,10 @@ class CaseSummaryFactory : Factory<CaseSummary> {
   var manager: Yielded<Manager> = { ManagerFactory().produce() }
   var currentExclusion: Yielded<Boolean> = { false }
   var currentRestriction: Yielded<Boolean> = { false }
-
+  fun withNoLimitedAccess() = apply {
+    withCurrentExclusion(false)
+    withCurrentRestriction(false)
+  }
   fun withCrn(crn: String) = apply {
     this.crn = { crn }
   }
