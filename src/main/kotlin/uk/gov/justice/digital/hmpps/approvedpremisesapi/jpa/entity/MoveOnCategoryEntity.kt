@@ -12,7 +12,8 @@ import java.util.UUID
 @Repository
 interface MoveOnCategoryRepository : JpaRepository<MoveOnCategoryEntity, UUID> {
   companion object Constants {
-    val NOT_APPLICABLE_MOVE_ON_CATEGORY_ID: UUID = UUID.fromString("ea3d79b0-1ee5-47ff-a7ae-b0d964ca7626")
+    val MOVE_ON_CATEGORY_NOT_APPLICABLE_ID: UUID = UUID.fromString("ea3d79b0-1ee5-47ff-a7ae-b0d964ca7626")
+    val MOVE_ON_CATEGORY_LOCAL_AUTHORITY_RENTED_ID: UUID = UUID.fromString("5387c2ed-b57f-4c31-8fd9-fee30ef32197")
   }
 
   @Query("SELECT d FROM MoveOnCategoryEntity d WHERE d.serviceScope = 'approved-premises' AND d.isActive = true")

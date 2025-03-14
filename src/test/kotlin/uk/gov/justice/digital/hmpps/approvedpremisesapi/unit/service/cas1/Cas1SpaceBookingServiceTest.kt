@@ -52,7 +52,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.LockablePlace
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.LockablePlacementRequestRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.MoveOnCategoryEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.MoveOnCategoryRepository
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.MoveOnCategoryRepository.Constants.NOT_APPLICABLE_MOVE_ON_CATEGORY_ID
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.MoveOnCategoryRepository.Constants.MOVE_ON_CATEGORY_NOT_APPLICABLE_ID
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.NonArrivalReasonRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserPermission
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.CasResult
@@ -942,7 +942,7 @@ class Cas1SpaceBookingServiceTest {
       legacyDeliusCategoryCode = "legacyDeliusReasonCode",
     )
     private val departureNotApplicableMoveOnCategory = MoveOnCategoryEntity(
-      id = NOT_APPLICABLE_MOVE_ON_CATEGORY_ID,
+      id = MOVE_ON_CATEGORY_NOT_APPLICABLE_ID,
       name = "notApplicableMoveOnCategory",
       isActive = true,
       serviceScope = "approved-premises",
@@ -1302,7 +1302,7 @@ class Cas1SpaceBookingServiceTest {
       val updatedSpaceBookingCaptor = slot<Cas1SpaceBookingEntity>()
 
       every { spaceBookingRepository.findByIdOrNull(any()) } returns existingSpaceBooking2
-      every { moveOnCategoryRepository.findByIdOrNull(NOT_APPLICABLE_MOVE_ON_CATEGORY_ID) } returns departureNotApplicableMoveOnCategory
+      every { moveOnCategoryRepository.findByIdOrNull(MOVE_ON_CATEGORY_NOT_APPLICABLE_ID) } returns departureNotApplicableMoveOnCategory
       every { spaceBookingRepository.save(capture(updatedSpaceBookingCaptor)) } returnsArgument 0
       every { cas1SpaceBookingManagementDomainEventService.departureRecorded(any()) } returns Unit
 
