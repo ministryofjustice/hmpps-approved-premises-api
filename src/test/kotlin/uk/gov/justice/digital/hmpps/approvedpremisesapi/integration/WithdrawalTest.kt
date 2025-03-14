@@ -345,12 +345,12 @@ class WithdrawalTest : IntegrationTestBase() {
      * | ---> Match request 2             | -            |
      * | -> Request for placement 2       | YES          |
      * | -> Match request 3               | BLOCKED      |
-     * | ---> Booking 2 has arrival       | BLOCKING     |
+     * | ---> Space Booking 2 has arrival | BLOCKING     |
      * | -> Adhoc Booking                 | YES          |
      * ```
      */
     @Test
-    fun `Returns all possible types when a user can manage bookings, with booking arrivals in CAS1 blocking bookings`() {
+    fun `Returns all possible types when a user can manage bookings, with space booking arrivals in CAS1 blocking bookings`() {
       givenAUser { applicant, _ ->
         givenAUser(roles = listOf(UserRole.CAS1_WORKFLOW_MANAGER)) { _, jwt ->
           givenAUser { requestForPlacementAssessor, _ ->
@@ -385,7 +385,15 @@ class WithdrawalTest : IntegrationTestBase() {
                 startDate = LocalDate.now(),
                 endDate = nowPlusDays(1),
               )
-              addBookingToPlacementRequest(placementRequest3, booking2HasArrival)
+              // spaceBooking2HasNonArrival
+              givenACas1SpaceBooking(
+                crn = application.crn,
+                expectedArrivalDate = LocalDate.now(),
+                expectedDepartureDate = nowPlusDays(1),
+                actualArrivalDate = LocalDate.now(),
+                nonArrivalConfirmedAt = null,
+                placementRequest = placementRequest3,
+              )
 
               val adhocBooking = createBooking(
                 application = application,
@@ -458,7 +466,7 @@ class WithdrawalTest : IntegrationTestBase() {
      * | -> Request for placement 2        | YES          |
      * | -> Match request 3                | BLOCKED      |
      * | ---> Space Booking 2 non arrival  | BLOCKING     |
-     * | -> Adhoc Booking                 | YES          |
+     * | -> Adhoc Booking                  | YES          |
      * ```
      */
     @Test
