@@ -13,12 +13,15 @@ import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
 import org.springframework.http.HttpMethod
 import org.springframework.http.HttpStatus
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.ApDeliusContextApiClient
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.ApOASysContextApiClient
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.ClientResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.ClientResult.Failure.StatusCode
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.PrisonsApiClient
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.ProbationOffenderSearchApiClient
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.datasource.OffenderDetailsDataSource
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.CaseDetailFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.CaseSummaryFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.InmateDetailFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.NomisUserEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.OffenderDetailsSummaryFactory
@@ -36,6 +39,8 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.NotFoundProblem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.AuthorisableActionResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas2.Cas2OffenderService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas2.ProbationOffenderSearchResult
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.unit.util.assertThatCasResult
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.asOffenderDetailSummary
 import java.time.LocalDate
 import java.time.OffsetDateTime
 
@@ -45,6 +50,7 @@ class Cas2OffenderServiceTest {
   private val mockApOASysContextApiClient = mockk<ApOASysContextApiClient>()
   private val mockProbationOffenderSearchClient = mockk<ProbationOffenderSearchApiClient>()
   private val mockOffenderDetailsDataSource = mockk<OffenderDetailsDataSource>()
+  private val apDeliusContextApiClient = mockk<ApDeliusContextApiClient>()
 
   private val objectMapper = ObjectMapper().apply {
     registerModule(Jdk8Module())
@@ -57,6 +63,7 @@ class Cas2OffenderServiceTest {
     mockProbationOffenderSearchClient,
     mockApOASysContextApiClient,
     mockOffenderDetailsDataSource,
+    apDeliusContextApiClient,
     2,
   )
 
@@ -334,7 +341,7 @@ class Cas2OffenderServiceTest {
 
       val result = offenderService.getInmateDetailByNomsNumber(crn, nomsNumber)
 
-      assertThat(result is AuthorisableActionResult.NotFound).isTrue
+      assertThatCasResult(result).isNotFound("InmateDetail", nomsNumber)
     }
 
     @Test
@@ -346,7 +353,7 @@ class Cas2OffenderServiceTest {
 
       val result = offenderService.getInmateDetailByNomsNumber(crn, nomsNumber)
 
-      assertThat(result is AuthorisableActionResult.NotFound).isTrue
+      assertThatCasResult(result).isNotFound("InmateDetail", nomsNumber)
     }
 
     @Test
@@ -358,7 +365,7 @@ class Cas2OffenderServiceTest {
 
       val result = offenderService.getInmateDetailByNomsNumber(crn, nomsNumber)
 
-      assertThat(result is AuthorisableActionResult.Unauthorised).isTrue
+      assertThatCasResult(result).isUnauthorised()
     }
 
     @Test
@@ -382,19 +389,19 @@ class Cas2OffenderServiceTest {
 
       val result = offenderService.getInmateDetailByNomsNumber(crn, nomsNumber)
 
-      assertThat(result is AuthorisableActionResult.Success)
-      result as AuthorisableActionResult.Success
-      assertThat(result.entity).isNotNull
-      assertThat(result.entity!!.offenderNo).isEqualTo(nomsNumber)
-      assertThat(result.entity!!.custodyStatus).isEqualTo(InmateStatus.IN)
-      assertThat(result.entity!!.assignedLivingUnit).isEqualTo(
-        AssignedLivingUnit(
-          agencyId = "AGY",
-          locationId = 89,
-          description = "AGENCY DESCRIPTION",
-          agencyName = "AGENCY NAME",
-        ),
-      )
+      assertThatCasResult(result).isSuccess().with {
+        assertThat(it).isNotNull
+        assertThat(it!!.offenderNo).isEqualTo(nomsNumber)
+        assertThat(it!!.custodyStatus).isEqualTo(InmateStatus.IN)
+        assertThat(it!!.assignedLivingUnit).isEqualTo(
+          AssignedLivingUnit(
+            agencyId = "AGY",
+            locationId = 89,
+            description = "AGENCY DESCRIPTION",
+            agencyName = "AGENCY NAME",
+          ),
+        )
+      }
     }
   }
 
@@ -418,7 +425,7 @@ class Cas2OffenderServiceTest {
     @Test
     fun `throws NotFoundProblem when offender is PersonInfoResult-NotFound, status 404`() {
       val crn = "ABC123"
-      every { mockOffenderDetailsDataSource.getOffenderDetailSummary(crn) } returns StatusCode(
+      every { apDeliusContextApiClient.getCaseDetail(crn) } returns StatusCode(
         HttpMethod.GET,
         "/secure/offenders/crn/ABC123",
         HttpStatus.NOT_FOUND,
@@ -431,7 +438,7 @@ class Cas2OffenderServiceTest {
     @Test
     fun `throws NotFoundProblem exception when offender is PersonInfoResult-Unknown, status 500`() {
       val crn = "ABC123"
-      every { mockOffenderDetailsDataSource.getOffenderDetailSummary(crn) } returns StatusCode(
+      every { apDeliusContextApiClient.getCaseDetail(crn) } returns StatusCode(
         HttpMethod.GET,
         "/secure/offenders/crn/ABC123",
         HttpStatus.INTERNAL_SERVER_ERROR,
@@ -446,14 +453,17 @@ class Cas2OffenderServiceTest {
       val crn = "ABC123"
       val nomsNumber = "NOMSABC"
 
-      val offenderDetails = OffenderDetailsSummaryFactory()
-        .withCrn(crn)
-        .withNomsNumber(nomsNumber)
-        .produce()
+      val caseDetail = CaseDetailFactory()
+        .withCase(
+          CaseSummaryFactory()
+            .withCrn(crn)
+            .withNomsId(nomsNumber)
+            .produce(),
+        ).produce()
 
-      every { mockOffenderDetailsDataSource.getOffenderDetailSummary(crn) } returns ClientResult.Success(
+      every { apDeliusContextApiClient.getCaseDetail(crn) } returns ClientResult.Success(
         status = HttpStatus.OK,
-        body = offenderDetails,
+        body = caseDetail,
       )
 
       val inmateDetail = InmateDetailFactory()
@@ -469,7 +479,7 @@ class Cas2OffenderServiceTest {
 
       assertThat(result is PersonInfoResult.Success.Full).isTrue
       assertThat(result.crn).isEqualTo(crn)
-      assertThat(result.offenderDetailSummary).isEqualTo(offenderDetails)
+      assertThat(result.offenderDetailSummary).isEqualTo(caseDetail.case.asOffenderDetailSummary())
       assertThat(result.inmateDetail).isEqualTo(inmateDetail)
     }
   }

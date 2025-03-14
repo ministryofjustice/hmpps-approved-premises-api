@@ -34,7 +34,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas2LockableA
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas2LockableApplicationRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PersonInfoResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.prisonsapi.AssignedLivingUnit
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.AuthorisableActionResult
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.CasResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.EmailNotificationService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas2.Cas2ApplicationAssignmentService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas2.Cas2AssessmentService
@@ -773,6 +773,7 @@ class Cas2ApplicationServiceTest {
 
         every { mockObjectMapper.writeValueAsString(submitCas2Application.translatedDocument) } returns "{}"
         every { mockDomainEventService.saveCas2ApplicationSubmittedDomainEvent(any()) } just Runs
+        every { mockOffenderService.findPrisonCode(any(), any()) } answers { callOriginal() }
       }
 
       @Test
@@ -891,6 +892,7 @@ class Cas2ApplicationServiceTest {
           .withId(applicationId)
           .withCreatedByUser(user)
           .withSubmittedAt(null)
+          .withNomsNumber("NOMS123")
           .produce()
           .apply {
             schemaUpToDate = true
@@ -915,7 +917,7 @@ class Cas2ApplicationServiceTest {
         // abort our attempt to submit the application.
         every {
           mockOffenderService.getInmateDetailByNomsNumber(any(), any())
-        } returns AuthorisableActionResult.NotFound()
+        } returns CasResult.NotFound("InmateDetails", "NOMS123")
 
         assertGeneralValidationError("Inmate Detail not found")
 
@@ -955,7 +957,7 @@ class Cas2ApplicationServiceTest {
         // abort our attempt to submit the application and return a validation message.
         every {
           mockOffenderService.getInmateDetailByNomsNumber(any(), any())
-        } returns AuthorisableActionResult.Success(InmateDetailFactory().produce())
+        } returns CasResult.Success(InmateDetailFactory().produce())
 
         assertGeneralValidationError("No prison code available")
 
@@ -1012,7 +1014,7 @@ class Cas2ApplicationServiceTest {
             application.crn,
             application.nomsNumber.toString(),
           )
-        } returns AuthorisableActionResult.Success(inmateDetail)
+        } returns CasResult.Success(inmateDetail)
 
         every { mockNotifyConfig.templates.cas2ApplicationSubmitted } returns "abc123"
         every { mockNotifyConfig.emailAddresses.cas2Assessors } returns "exampleAssessorInbox@example.com"

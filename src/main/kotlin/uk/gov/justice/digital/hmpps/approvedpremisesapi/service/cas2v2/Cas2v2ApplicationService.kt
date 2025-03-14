@@ -44,7 +44,7 @@ class Cas2v2ApplicationService(
   private val cas2v2LockableApplicationRepository: Cas2v2LockableApplicationRepository,
   private val cas2v2ApplicationSummaryRepository: Cas2v2ApplicationSummaryRepository,
   private val cas2v2JsonSchemaService: Cas2v2JsonSchemaService,
-  private val cas2v2OffenderService: Cas2OffenderService,
+  private val cas2OffenderService: Cas2OffenderService,
   private val cas2v2UserAccessService: Cas2v2UserAccessService,
   private val domainEventService: Cas2DomainEventService,
   private val emailNotificationService: EmailNotificationService,
@@ -125,7 +125,7 @@ class Cas2v2ApplicationService(
     applicationOrigin: ApplicationOrigin = ApplicationOrigin.homeDetentionCurfew,
     bailHearingDate: LocalDate? = null,
   ) = validated<Cas2v2ApplicationEntity> {
-    val offenderDetailsResult = cas2v2OffenderService.getOffenderByCrnDeprecated(crn)
+    val offenderDetailsResult = cas2OffenderService.getOffenderByCrnDeprecated(crn)
 
     val offenderDetails = when (offenderDetailsResult) {
       is AuthorisableActionResult.NotFound -> return "$.crn" hasSingleValidationError "doesNotExist"
@@ -282,7 +282,7 @@ class Cas2v2ApplicationService(
       application.apply {
         submittedAt = OffsetDateTime.now()
         document = serializedTranslatedDocument
-        referringPrisonCode = retrievePrisonCode(application)
+        referringPrisonCode = cas2OffenderService.findPrisonCode(application.crn, application.nomsNumber!!)
         preferredAreas = submitCas2v2Application.preferredAreas
         hdcEligibilityDate = submitCas2v2Application.hdcEligibilityDate
         conditionalReleaseDate = submitCas2v2Application.conditionalReleaseDate
@@ -351,21 +351,6 @@ class Cas2v2ApplicationService(
 
   fun createAssessment(application: Cas2v2ApplicationEntity) {
     cas2v2AssessmentService.createCas2v2Assessment(application)
-  }
-
-  @SuppressWarnings("ThrowsCount")
-  private fun retrievePrisonCode(application: Cas2v2ApplicationEntity): String {
-    val inmateDetailResult = cas2v2OffenderService.getInmateDetailByNomsNumber(
-      crn = application.crn,
-      nomsNumber = application.nomsNumber.toString(),
-    )
-    val inmateDetail = when (inmateDetailResult) {
-      is AuthorisableActionResult.NotFound -> throw UpstreamApiException("Inmate Detail not found")
-      is AuthorisableActionResult.Unauthorised -> throw UpstreamApiException("Inmate Detail unauthorised")
-      is AuthorisableActionResult.Success -> inmateDetailResult.entity
-    }
-
-    return inmateDetail?.assignedLivingUnit?.agencyId ?: throw UpstreamApiException("No prison code available")
   }
 
   private fun sendEmailApplicationSubmitted(user: Cas2v2UserEntity, application: Cas2v2ApplicationEntity) {
