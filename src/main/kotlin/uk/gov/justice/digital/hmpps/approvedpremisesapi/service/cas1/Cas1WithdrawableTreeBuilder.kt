@@ -142,6 +142,10 @@ data class WithdrawableTree(
       notes.add("1 or more placements cannot be withdrawn as they have an arrival")
     }
 
+    if (blockedReasons.contains(BlockingReason.NonArrivalRecordedInCas1)) {
+      notes.add("1 or more placements cannot be withdrawn as they have a non-arrival")
+    }
+
     if (blockedReasons.contains(BlockingReason.ArrivalRecordedInDelius)) {
       notes.add("1 or more placements cannot be withdrawn as they have an arrival recorded in Delius")
     }
