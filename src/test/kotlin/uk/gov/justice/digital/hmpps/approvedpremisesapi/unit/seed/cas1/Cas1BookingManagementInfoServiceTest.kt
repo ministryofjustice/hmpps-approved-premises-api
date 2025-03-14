@@ -5,6 +5,7 @@ import io.mockk.impl.annotations.InjectMockKs
 import io.mockk.impl.annotations.MockK
 import io.mockk.junit5.MockKExtension
 import org.assertj.core.api.Assertions.assertThat
+import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.extension.ExtendWith
 import org.springframework.data.repository.findByIdOrNull
@@ -31,25 +32,29 @@ class Cas1BookingManagementInfoServiceTest {
   @InjectMockKs
   private lateinit var service: Cas1BookingManagementInfoService
 
-  @Test
-  fun `use hardcoded non arrival reason for 1H`() {
-    val reason = NonArrivalReasonEntityFactory().produce()
+  @Nested
+  inner class GetNonArrivalReason {
 
-    every { nonArrivalReasonRepository.findByIdOrNull(NON_ARRIVAL_REASON_CUSTODIAL_DISPOSAL_RIC) } returns reason
+    @Test
+    fun `use hardcoded non arrival reason for 1H`() {
+      val reason = NonArrivalReasonEntityFactory().produce()
 
-    val result = service.getNonArrivalReason("1H")
+      every { nonArrivalReasonRepository.findByIdOrNull(NON_ARRIVAL_REASON_CUSTODIAL_DISPOSAL_RIC) } returns reason
 
-    assertThat(result).isEqualTo(reason)
-  }
+      val result = service.getNonArrivalReason("1H")
 
-  @Test
-  fun `use mapped non arrival reason if not 1H`() {
-    val reason = NonArrivalReasonEntityFactory().produce()
+      assertThat(result).isEqualTo(reason)
+    }
 
-    every { nonArrivalReasonRepository.findByLegacyDeliusReasonCode("NOT1H") } returns reason
+    @Test
+    fun `use mapped non arrival reason if not 1H`() {
+      val reason = NonArrivalReasonEntityFactory().produce()
 
-    val result = service.getNonArrivalReason("NOT1H")
+      every { nonArrivalReasonRepository.findByLegacyDeliusReasonCode("NOT1H") } returns reason
 
-    assertThat(result).isEqualTo(reason)
+      val result = service.getNonArrivalReason("NOT1H")
+
+      assertThat(result).isEqualTo(reason)
+    }
   }
 }
