@@ -17,8 +17,8 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.from
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAUser
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAnOffender
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.apDeliusContextAddSingleResponseToUserAccessCall
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.apDeliusContextEmptyCaseSummaryToBulkResponse
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.apDeliusContextMockSuccessfulCaseDetailCall
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.apDeliusContextNoCaseSummariesToBulkResponse
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.apOASysContextMockSuccessfulRoshRatingsCall
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.hmppsTierMockSuccessfulTierCall
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.deliuscontext.MappaDetail
@@ -77,7 +77,7 @@ class PersonRisksTest : InitialiseDatabasePerClassTestBase() {
     givenAUser { _, jwt ->
 
       val crn = "CRN123"
-      apDeliusContextNoCaseSummariesToBulkResponse(crn)
+      apDeliusContextEmptyCaseSummaryToBulkResponse(crn)
       apDeliusContextAddSingleResponseToUserAccessCall(
         caseAccess = CaseAccessFactory()
           .withUserExcluded(true)

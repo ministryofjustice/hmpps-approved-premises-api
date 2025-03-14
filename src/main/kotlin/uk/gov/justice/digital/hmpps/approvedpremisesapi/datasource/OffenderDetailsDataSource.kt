@@ -27,6 +27,7 @@ class OffenderDetailsDataSource(
 ) {
   fun getOffenderDetailSummary(crn: String): ClientResult<OffenderDetailSummary> = getOffenderDetailSummaries(listOf(crn)).values.first()
 
+  @Deprecated("Use [OffenderService]")
   @Suppress("UNCHECKED_CAST", "MagicNumber") // Safe as we only do this for non-success types
   fun getOffenderDetailSummaries(crns: List<String>): Map<String, ClientResult<OffenderDetailSummary>> {
     if (crns.size > 500) {
@@ -58,15 +59,23 @@ class OffenderDetailsDataSource(
           },
         )
       }
+      /*
+      Note - this behaviour is not correct. It means if a 404 is returned from the endpoint,
+      we return 'offender not found' for each requested CRN. This is incorrect because we
+      don't know if the offender exists or not (this would be indicated by an empty list
+      being returned in a 200 response)
+       */
       else -> return crns.associateWith { clientResult as ClientResult<OffenderDetailSummary> }
     }
   }
 
+  @Deprecated("Use [OffenderService]")
   fun getUserAccessForOffenderCrn(
     deliusUsername: String,
     crn: String,
   ): ClientResult<UserOffenderAccess> = getUserAccessForOffenderCrns(deliusUsername, listOf(crn)).values.first()
 
+  @Deprecated("Use [OffenderService]")
   @Suppress("UNCHECKED_CAST", "MagicNumber") // Safe as we only do this for non-success types
   fun getUserAccessForOffenderCrns(
     deliusUsername: String,
