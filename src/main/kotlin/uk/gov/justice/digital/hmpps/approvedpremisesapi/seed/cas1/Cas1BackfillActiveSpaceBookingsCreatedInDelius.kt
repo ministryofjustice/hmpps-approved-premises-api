@@ -15,7 +15,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas1.Cas1Deli
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas1.Cas1DeliusBookingImportRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PersonSummaryInfoResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.seed.SeedJob
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.EnvironmentService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.LaoStrategy
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.OffenderService
 import java.time.LocalDate
@@ -31,7 +30,6 @@ class Cas1BackfillActiveSpaceBookingsCreatedInDelius(
   private val approvedPremisesRepository: ApprovedPremisesRepository,
   private val cas1DeliusBookingImportRepository: Cas1DeliusBookingImportRepository,
   private val cas1BookingManagementInfoService: Cas1BookingManagementInfoService,
-  private val environmentService: EnvironmentService,
   private val offenderService: OffenderService,
   private val offlineApplicationRepository: OfflineApplicationRepository,
   private val spaceBookingRepository: Cas1SpaceBookingRepository,
@@ -47,12 +45,6 @@ class Cas1BackfillActiveSpaceBookingsCreatedInDelius(
   override fun deserializeRow(columns: Map<String, String>) = Cas1CreateMissingReferralsSeedCsvRow(
     qCode = columns["q_code"]!!.trim(),
   )
-
-  override fun preSeed() {
-    if (environmentService.isProd()) {
-      error("Cannot run seed job in prod")
-    }
-  }
 
   override fun processRow(row: Cas1CreateMissingReferralsSeedCsvRow) {
     transactionTemplate.executeWithoutResult {
