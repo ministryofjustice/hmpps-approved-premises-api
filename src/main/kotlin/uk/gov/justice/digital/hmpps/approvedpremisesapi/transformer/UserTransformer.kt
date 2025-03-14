@@ -12,7 +12,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.UserSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.UserWithWorkload
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas1CruManagementAreaEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserEntity
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserPermission
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserQualification
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserQualificationAssignmentEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRole
@@ -126,38 +125,6 @@ class UserTransformer(
   }
 
   @SuppressWarnings("CyclomaticComplexMethod")
-  private fun transformApprovedPremisesRoleToPermissionApi(userRole: UserRoleAssignmentEntity): List<ApiUserPermission> = userRole.role.permissions.map {
-    when (it) {
-      UserPermission.CAS1_ADHOC_BOOKING_CREATE -> ApiUserPermission.adhocBookingCreate
-      UserPermission.CAS1_ASSESS_APPEALED_APPLICATION -> ApiUserPermission.assessAppealedApplication
-      UserPermission.CAS1_ASSESS_APPLICATION -> ApiUserPermission.assessApplication
-      UserPermission.CAS1_ASSESS_PLACEMENT_APPLICATION -> ApiUserPermission.assessPlacementApplication
-      UserPermission.CAS1_BOOKING_CREATE -> ApiUserPermission.bookingCreate
-      UserPermission.CAS1_BOOKING_CHANGE_DATES -> ApiUserPermission.bookingChangeDates
-      UserPermission.CAS1_BOOKING_WITHDRAW -> ApiUserPermission.bookingWithdraw
-      UserPermission.CAS1_OUT_OF_SERVICE_BED_CREATE -> ApiUserPermission.outOfServiceBedCreate
-      UserPermission.CAS1_OUT_OF_SERVICE_BED_CANCEL -> ApiUserPermission.outOfServiceBedCancel
-      UserPermission.CAS1_PROCESS_AN_APPEAL -> ApiUserPermission.processAnAppeal
-      UserPermission.CAS1_USER_LIST -> ApiUserPermission.userList
-      UserPermission.CAS1_USER_MANAGEMENT -> ApiUserPermission.userManagement
-      UserPermission.CAS1_VIEW_ASSIGNED_ASSESSMENTS -> ApiUserPermission.viewAssignedAssessments
-      UserPermission.CAS1_VIEW_CRU_DASHBOARD -> ApiUserPermission.viewCruDashboard
-      UserPermission.CAS1_VIEW_MANAGE_TASKS -> ApiUserPermission.viewManageTasks
-      UserPermission.CAS1_VIEW_OUT_OF_SERVICE_BEDS -> ApiUserPermission.viewOutOfServiceBeds
-      UserPermission.CAS1_SPACE_BOOKING_CREATE -> ApiUserPermission.spaceBookingCreate
-      UserPermission.CAS1_SPACE_BOOKING_LIST -> ApiUserPermission.spaceBookingList
-      UserPermission.CAS1_SPACE_BOOKING_RECORD_ARRIVAL -> ApiUserPermission.spaceBookingRecordArrival
-      UserPermission.CAS1_SPACE_BOOKING_RECORD_DEPARTURE -> ApiUserPermission.spaceBookingRecordDeparture
-      UserPermission.CAS1_SPACE_BOOKING_RECORD_NON_ARRIVAL -> ApiUserPermission.spaceBookingRecordNonArrival
-      UserPermission.CAS1_SPACE_BOOKING_RECORD_KEYWORKER -> ApiUserPermission.spaceBookingRecordKeyworker
-      UserPermission.CAS1_SPACE_BOOKING_VIEW -> ApiUserPermission.spaceBookingView
-      UserPermission.CAS1_SPACE_BOOKING_WITHDRAW -> ApiUserPermission.spaceBookingWithdraw
-      UserPermission.CAS1_PREMISES_VIEW -> ApiUserPermission.premisesView
-      UserPermission.CAS1_PREMISES_MANAGE -> ApiUserPermission.premisesManage
-      UserPermission.CAS1_APPLICATION_WITHDRAW_OTHERS -> ApiUserPermission.applicationWithdrawOthers
-      UserPermission.CAS1_REQUEST_FOR_PLACEMENT_WITHDRAW_OTHERS -> ApiUserPermission.requestForPlacementWithdrawOthers
-      UserPermission.CAS1_REPORTS_VIEW -> ApiUserPermission.reportsView
-      UserPermission.CAS1_REPORTS_VIEW_WITH_PII -> ApiUserPermission.reportsViewWithPii
-    }
-  }
+  private fun transformApprovedPremisesRoleToPermissionApi(userRole: UserRoleAssignmentEntity): List<ApiUserPermission> = userRole.role.permissions
+    .mapNotNull { it.cas1ApiValue }
 }
