@@ -9,6 +9,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DepartureReas
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ManagementInfoSource
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.MoveOnCategoryEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.MoveOnCategoryRepository
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.MoveOnCategoryRepository.Constants.MOVE_ON_CATEGORY_LOCAL_AUTHORITY_RENTED_ID
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.NonArrivalReasonEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.NonArrivalReasonRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.NonArrivalReasonRepository.Companion.NON_ARRIVAL_REASON_CUSTODIAL_DISPOSAL_RIC
@@ -59,10 +60,8 @@ class Cas1BookingManagementInfoService(
         .maxByOrNull { it.isActive }
         ?: error("Could not resolve DepartureReason for code $reasonCode")
     },
-    departureMoveOnCategory = import.moveOnCategoryCode?.let { reasonCode ->
-      moveOnCategoryRepository
-        .findAllByServiceScope(ServiceName.approvedPremises.value)
-        .firstOrNull { it.legacyDeliusCategoryCode == reasonCode } ?: error("Could not resolve MoveOnCategory for code $reasonCode")
+    departureMoveOnCategory = import.moveOnCategoryCode?.let {
+      getMoveOnCategory(it)
     },
     departureNotes = null,
     nonArrivalConfirmedAt = import.nonArrivalContactDatetime,
@@ -71,6 +70,13 @@ class Cas1BookingManagementInfoService(
     },
     nonArrivalNotes = import.nonArrivalNotes,
   )
+
+  fun getMoveOnCategory(code: String): MoveOnCategoryEntity = if (code == "MC02") {
+    moveOnCategoryRepository.findByIdOrNull(MOVE_ON_CATEGORY_LOCAL_AUTHORITY_RENTED_ID)!!
+  } else {
+    moveOnCategoryRepository.findAllByServiceScope(ServiceName.approvedPremises.value)
+      .firstOrNull { it.legacyDeliusCategoryCode == code } ?: error("Could not resolve MoveOnCategory for code $code")
+  }
 
   fun getNonArrivalReason(code: String): NonArrivalReasonEntity = if (code == "1H") {
     nonArrivalReasonRepository.findByIdOrNull(NON_ARRIVAL_REASON_CUSTODIAL_DISPOSAL_RIC)!!
