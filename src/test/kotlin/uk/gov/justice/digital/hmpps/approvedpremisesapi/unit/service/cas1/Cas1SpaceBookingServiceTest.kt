@@ -1484,6 +1484,7 @@ class Cas1SpaceBookingServiceTest {
         Cas1SpaceBookingEntityFactory()
           .withActualArrivalDate(null)
           .withCancellationOccurredAt(null)
+          .withNonArrivalConfirmedAt(null)
           .produce(),
         UserEntityFactory().withDefaults().produce(),
       )
@@ -1499,6 +1500,7 @@ class Cas1SpaceBookingServiceTest {
         Cas1SpaceBookingEntityFactory()
           .withActualArrivalDate(LocalDate.now())
           .withCancellationOccurredAt(null)
+          .withNonArrivalConfirmedAt(null)
           .produce(),
         UserEntityFactory().withDefaults().produce(),
       )
@@ -1509,11 +1511,28 @@ class Cas1SpaceBookingServiceTest {
     }
 
     @Test
+    fun `is not withdrawable if has a non-arrival`() {
+      val result = service.getWithdrawableState(
+        Cas1SpaceBookingEntityFactory()
+          .withActualArrivalDate(null)
+          .withCancellationOccurredAt(null)
+          .withNonArrivalConfirmedAt(Instant.now())
+          .produce(),
+        UserEntityFactory().withDefaults().produce(),
+      )
+
+      assertThat(result.withdrawable).isEqualTo(false)
+      assertThat(result.withdrawn).isEqualTo(false)
+      assertThat(result.blockingReason).isEqualTo(BlockingReason.NonArrivalRecordedInCas1)
+    }
+
+    @Test
     fun `is not withdrawable if already cancelled`() {
       val result = service.getWithdrawableState(
         Cas1SpaceBookingEntityFactory()
           .withActualArrivalDate(null)
           .withCancellationOccurredAt(LocalDate.now())
+          .withNonArrivalConfirmedAt(null)
           .produce(),
         UserEntityFactory().withDefaults().produce(),
       )

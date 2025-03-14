@@ -15,6 +15,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.WithdrawableTy
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Withdrawables
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.WithdrawalReason
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenACas1CruManagementArea
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenACas1SpaceBooking
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAProbationRegion
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAUser
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAnApArea
@@ -39,6 +40,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRole
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.ApprovedPremisesApplicationStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.community.OffenderDetailSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.jsonForObject
+import java.time.Instant
 import java.time.LocalDate
 import java.time.LocalDateTime
 import java.time.OffsetDateTime
@@ -343,12 +345,12 @@ class WithdrawalTest : IntegrationTestBase() {
      * | ---> Match request 2             | -            |
      * | -> Request for placement 2       | YES          |
      * | -> Match request 3               | BLOCKED      |
-     * | ---> Booking 2 has arrival       | BLOCKING     |
+     * | ---> Space Booking 2 has arrival | BLOCKING     |
      * | -> Adhoc Booking                 | YES          |
      * ```
      */
     @Test
-    fun `Returns all possible types when a user can manage bookings, with booking arrivals in CAS1 blocking bookings`() {
+    fun `Returns all possible types when a user can manage bookings, with space booking arrivals in CAS1 blocking bookings`() {
       givenAUser { applicant, _ ->
         givenAUser(roles = listOf(UserRole.CAS1_WORKFLOW_MANAGER)) { _, jwt ->
           givenAUser { requestForPlacementAssessor, _ ->
@@ -383,7 +385,15 @@ class WithdrawalTest : IntegrationTestBase() {
                 startDate = LocalDate.now(),
                 endDate = nowPlusDays(1),
               )
-              addBookingToPlacementRequest(placementRequest3, booking2HasArrival)
+              // spaceBooking2HasNonArrival
+              givenACas1SpaceBooking(
+                crn = application.crn,
+                expectedArrivalDate = LocalDate.now(),
+                expectedDepartureDate = nowPlusDays(1),
+                actualArrivalDate = LocalDate.now(),
+                nonArrivalConfirmedAt = null,
+                placementRequest = placementRequest3,
+              )
 
               val adhocBooking = createBooking(
                 application = application,
@@ -411,6 +421,119 @@ class WithdrawalTest : IntegrationTestBase() {
 
               val expected = Withdrawables(
                 notes = listOf("1 or more placements cannot be withdrawn as they have an arrival"),
+                withdrawables = listOf(
+                  toWithdrawable(placementApplication1),
+                  toWithdrawable(booking1NoArrival),
+                  toWithdrawable(placementApplication2),
+                  toWithdrawable(adhocBooking),
+                ),
+              )
+
+              webTestClient.get()
+                .uri("/applications/${application.id}/withdrawables")
+                .header("Authorization", "Bearer $jwt")
+                .header("X-Service-Name", ServiceName.approvedPremises.value)
+                .exchange()
+                .expectStatus()
+                .isOk
+                .expectBody()
+                .jsonForObject(expected.withdrawables)
+
+              webTestClient.get()
+                .uri("/applications/${application.id}/withdrawablesWithNotes")
+                .header("Authorization", "Bearer $jwt")
+                .header("X-Service-Name", ServiceName.approvedPremises.value)
+                .exchange()
+                .expectStatus()
+                .isOk
+                .expectBody()
+                .jsonForObject(expected)
+            }
+          }
+        }
+      }
+    }
+
+    /**
+     * ```
+     * | Entities                          | Withdrawable |
+     * | --------------------------------- | ------------ |
+     * | Application                       | BLOCKED      |
+     * | -> Request for placement 1        | YES          |
+     * | ---> Match request 1              | -            |
+     * | -----> Booking 1 arrival pending  | YES          |
+     * | ---> Match request 2              | -            |
+     * | -> Request for placement 2        | YES          |
+     * | -> Match request 3                | BLOCKED      |
+     * | ---> Space Booking 2 non arrival  | BLOCKING     |
+     * | -> Adhoc Booking                  | YES          |
+     * ```
+     */
+    @Test
+    fun `Returns all possible types when a user can manage bookings, with space booking non arrivals blocking bookings`() {
+      givenAUser { applicant, _ ->
+        givenAUser(roles = listOf(UserRole.CAS1_WORKFLOW_MANAGER)) { _, jwt ->
+          givenAUser { requestForPlacementAssessor, _ ->
+            givenAnOffender { offenderDetails, _ ->
+              val (application, _) = createApplicationAndAssessment(applicant, applicant, offenderDetails)
+              val (otherApplication, _) = createApplicationAndAssessment(applicant, applicant, offenderDetails)
+
+              val placementApplication1 = createPlacementApplication(application, DateSpan(now(), duration = 2))
+              val placementRequest1 = createPlacementRequest(application, placementApplication = placementApplication1)
+              val booking1NoArrival = createBooking(
+                application = application,
+                hasArrivalInCas1 = false,
+                hasArrivalInDelius = false,
+                adhoc = false,
+                startDate = nowPlusDays(1),
+                endDate = nowPlusDays(6),
+              )
+              addBookingToPlacementRequest(placementRequest1, booking1NoArrival)
+
+              createPlacementRequest(application, placementApplication = placementApplication1)
+
+              val placementApplication2 = createPlacementApplication(
+                application,
+                DateSpan(now(), duration = 2),
+                allocatedTo = requestForPlacementAssessor,
+              )
+
+              val placementRequest3 = createPlacementRequest(application)
+              // spaceBooking2HasNonArrival
+              givenACas1SpaceBooking(
+                crn = application.crn,
+                expectedArrivalDate = LocalDate.now(),
+                expectedDepartureDate = nowPlusDays(1),
+                nonArrivalConfirmedAt = Instant.now(),
+                placementRequest = placementRequest3,
+              )
+
+              val adhocBooking = createBooking(
+                application = application,
+                adhoc = true,
+                hasArrivalInCas1 = false,
+                hasArrivalInDelius = false,
+                startDate = nowPlusDays(20),
+                endDate = nowPlusDays(26),
+              )
+
+              createBooking(
+                application = otherApplication,
+                adhoc = true,
+                hasArrivalInCas1 = false,
+                startDate = nowPlusDays(20),
+                endDate = nowPlusDays(26),
+              )
+              createBooking(
+                application = otherApplication,
+                adhoc = null,
+                hasArrivalInCas1 = false,
+                startDate = nowPlusDays(20),
+                endDate = nowPlusDays(26),
+              )
+
+              val expected = Withdrawables(
+                notes = listOf("1 or more placements cannot be withdrawn as they have a non-arrival"),
                 withdrawables = listOf(
                   toWithdrawable(placementApplication1),
                   toWithdrawable(booking1NoArrival),

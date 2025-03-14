@@ -24,6 +24,7 @@ fun IntegrationTestBase.givenACas1SpaceBooking(
   expectedDepartureDate: LocalDate = LocalDate.now(),
   nonArrivalConfirmedAt: Instant? = null,
   cancellationOccurredAt: LocalDate? = null,
+  actualArrivalDate: LocalDate? = null,
 ): Cas1SpaceBookingEntity {
   val (user) = givenAUser()
   val placementRequestToUse = placementRequest ?: if (offlineApplication == null) {
@@ -40,6 +41,7 @@ fun IntegrationTestBase.givenACas1SpaceBooking(
   return cas1SpaceBookingEntityFactory.produceAndPersist {
     withCrn(crn)
     withExpectedArrivalDate(expectedArrivalDate)
+    withActualArrivalDate(actualArrivalDate)
     withCanonicalArrivalDate(canonicalArrivalDate)
     withExpectedDepartureDate(expectedDepartureDate)
     withCanonicalDepartureDate(expectedDepartureDate)

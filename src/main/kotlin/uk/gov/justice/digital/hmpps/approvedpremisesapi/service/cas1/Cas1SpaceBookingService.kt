@@ -476,11 +476,13 @@ class Cas1SpaceBookingService(
   )
 
   fun getWithdrawableState(spaceBooking: Cas1SpaceBookingEntity, user: UserEntity): WithdrawableState = WithdrawableState(
-    withdrawable = !spaceBooking.isCancelled() && !spaceBooking.hasArrival(),
+    withdrawable = !spaceBooking.isCancelled() && !spaceBooking.hasArrival() && !spaceBooking.hasNonArrival(),
     withdrawn = spaceBooking.isCancelled(),
     userMayDirectlyWithdraw = user.hasPermission(UserPermission.CAS1_SPACE_BOOKING_WITHDRAW),
     blockingReason = if (spaceBooking.hasArrival()) {
       BlockingReason.ArrivalRecordedInCas1
+    } else if (spaceBooking.hasNonArrival()) {
+      BlockingReason.NonArrivalRecordedInCas1
     } else {
       null
     },
