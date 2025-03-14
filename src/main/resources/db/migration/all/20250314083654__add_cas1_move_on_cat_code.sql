@@ -1,0 +1,1 @@
+UPDATE move_on_categories SET legacy_delius_category_code = 'MC02' WHERE service_scope = 'approved-premises' AND name = 'Local Authority / Housing Association - Rented';
