@@ -76,12 +76,12 @@ class Cas2v2StartupScript(
     val application = cas2v2applicationRepository.save(
       Cas2v2ApplicationEntity(
         id = UUID.randomUUID(),
-        crn = "DO16821",
+        crn = "X320742",
         nomsNumber = seedConfig.onStartup.script.noms,
         createdAt = createdAt,
         createdByUser = cas2v2UserEntity,
-        data = dataFor(state = state, nomsNumber = "A1234AX"),
-        document = documentFor(state = state, nomsNumber = "A1234AX"),
+        data = dataFor(state = state, nomsNumber = "DO16821"),
+        document = documentFor(state = state, nomsNumber = "DO16821"),
         submittedAt = submittedAt,
         schemaVersion = jsonSchemaService.getNewestSchema(Cas2ApplicationJsonSchemaEntity::class.java),
         applicationOrigin = applicationOrigin,
