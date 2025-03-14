@@ -13,6 +13,7 @@ import java.util.UUID
 @Repository
 interface NomisUserRepository : JpaRepository<NomisUserEntity, UUID> {
   fun findByNomisUsername(nomisUserName: String): NomisUserEntity?
+  fun findByNomisStaffId(nomisStaffId: Long): NomisUserEntity?
 }
 
 @Entity

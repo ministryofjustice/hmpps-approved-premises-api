@@ -232,7 +232,7 @@ class Cas3PremisesService(
       )
 
       if (futureBookings.any()) {
-        validationErrors["$.bookings"] = "existingBookings"
+        validationErrors["$.status"] = "existingBookings"
       }
     }
 

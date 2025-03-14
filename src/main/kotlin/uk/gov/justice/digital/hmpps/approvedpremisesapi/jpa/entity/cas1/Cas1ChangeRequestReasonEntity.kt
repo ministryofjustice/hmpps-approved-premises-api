@@ -6,8 +6,14 @@ import jakarta.persistence.Enumerated
 import jakarta.persistence.Id
 import jakarta.persistence.Table
 import org.hibernate.annotations.CacheConcurrencyStrategy
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1ChangeRequestType
+import org.springframework.data.jpa.repository.JpaRepository
+import org.springframework.stereotype.Repository
 import java.util.UUID
+
+@Repository
+interface Cas1ChangeRequestReasonRepository : JpaRepository<Cas1ChangeRequestReasonEntity, UUID> {
+  fun findByChangeRequestTypeAndArchivedIsFalse(type: ChangeRequestType): List<Cas1ChangeRequestReasonEntity>
+}
 
 @Entity
 @Table(name = "cas1_change_request_reasons")
@@ -17,6 +23,6 @@ data class Cas1ChangeRequestReasonEntity(
   val id: UUID,
   val code: String,
   @Enumerated(EnumType.STRING)
-  val changeRequestType: Cas1ChangeRequestType,
+  val changeRequestType: ChangeRequestType,
   val archived: Boolean,
 )

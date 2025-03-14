@@ -42,6 +42,10 @@ generic-service:
   #     [name of environment variable as seen by app]: [key of kubernetes secret to load]
 
   namespace_secrets:
+    cas-2-domain-events-listener-queue:
+      HMPPS_SQS_QUEUES_CASTWODOMAINEVENTSLISTENERQUEUE_QUEUENAME: "QUEUE_NAME"
+    cas-2-domain-events-listener-dlq:
+      HMPPS_SQS_QUEUES_CASTWODOMAINEVENTSLISTENERQUEUE_DLQNAME: "QUEUE_NAME"
     hmpps-approved-premises-api:
       APPINSIGHTS_INSTRUMENTATIONKEY: "APPINSIGHTS_INSTRUMENTATIONKEY"
       SPRING_SECURITY_OAUTH2_CLIENT_REGISTRATION_DELIUS-BACKED-APIS_CLIENT-ID: "SYSTEM_CLIENT_DELIUS_ID"

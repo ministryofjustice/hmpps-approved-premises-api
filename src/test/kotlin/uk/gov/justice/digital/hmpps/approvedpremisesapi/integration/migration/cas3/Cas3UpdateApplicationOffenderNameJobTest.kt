@@ -9,6 +9,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.NameFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAProbationRegion
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAnOffender
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.apDeliusContextAddListCaseSummaryToBulkResponse
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.apDeliusContextEmptyCaseSummaryToBulkResponse
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.migration.MigrationJobTestBase
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApplicationRepository
 
@@ -135,13 +136,16 @@ class Cas3UpdateApplicationOffenderNameJobTest : MigrationJobTestBase() {
         withProbationRegion(probationRegion)
       }
 
+      val crn = offenderDetails.otherIds.crn
+
       val temporaryAccommodationApplication = temporaryAccommodationApplicationEntityFactory.produceAndPersist {
         withApplicationSchema(applicationSchema)
         withProbationRegion(probationRegion)
         withCreatedByUser(user)
+        withCrn(crn)
       }
 
-      apDeliusContextAddListCaseSummaryToBulkResponse(listOf())
+      apDeliusContextEmptyCaseSummaryToBulkResponse(offenderDetails.otherIds.crn)
 
       migrationJobService.runMigrationJob(MigrationJobType.cas3ApplicationOffenderName, 10)
 

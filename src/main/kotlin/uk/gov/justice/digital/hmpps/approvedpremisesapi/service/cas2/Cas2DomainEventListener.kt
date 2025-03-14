@@ -7,12 +7,14 @@ import io.awspring.cloud.sqs.annotation.SqsListener
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty
 import org.springframework.stereotype.Service
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.domainevent.HmppsDomainEvent
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.domainevent.categoriesChanged
 
 @ConditionalOnProperty(prefix = "feature-flags", name = ["cas2-sqs-listener-enabled"], havingValue = "true")
 @Service
 class Cas2DomainEventListener(
   private val objectMapper: ObjectMapper,
-  private val cas2ApplicationAssignmentService: Cas2ApplicationAssignmentService,
+  private val locationChangedService: Cas2LocationChangedService,
+  private val allocationChangedService: Cas2AllocationChangedService,
 ) {
 
   @SqsListener("castwodomaineventslistenerqueue", factory = "hmppsQueueContainerFactoryProxy")
@@ -24,8 +26,13 @@ class Cas2DomainEventListener(
 
   private fun handleEvent(event: HmppsDomainEvent) {
     when (event.eventType) {
-      "prisoner-offender-search.prisoner.updated" -> cas2ApplicationAssignmentService.handlePrisonerUpdatedEvent(event)
-      "offender-management.allocation.changed" -> cas2ApplicationAssignmentService.handleAllocationChangedEvent(event)
+      "prisoner-offender-search.prisoner.updated" -> {
+        if (event.additionalInformation.categoriesChanged.contains("LOCATION")) {
+          locationChangedService.handleLocationChangedEvent(event)
+        }
+      }
+
+      "offender-management.allocation.changed" -> allocationChangedService.handleAllocationChangedEvent(event)
     }
   }
 

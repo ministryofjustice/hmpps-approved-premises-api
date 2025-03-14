@@ -25,7 +25,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.deliuscontext.User
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.prisonsapi.Adjudication
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.prisonsapi.AdjudicationsPage
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.prisonsapi.Agency
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.prisonsapi.Alert
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.prisonsapi.CaseNote
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.prisonsapi.CaseNotesPage
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.prisonsapi.InmateDetail
@@ -237,7 +236,10 @@ class OffenderService(
   }
 
   @Deprecated(
-    " This function returns the now deprecated [OffenderDetailSummary], which is the community-api data model",
+    """ This function returns the now deprecated [OffenderDetailSummary], which is the community-api data model
+     
+      Note that whilst this function returns CasResult.Unauthorised if offender is LAO and user can't access
+      them, the non-deprecated functions will instead return PersonSummaryInfoResult.Full.Restricted""",
     ReplaceWith("getPersonSummaryInfoResults(crns, limitedAccessStrategy)"),
   )
   fun getOffenderByCrn(crn: String, userDistinguishedName: String, ignoreLaoRestrictions: Boolean = false): AuthorisableActionResult<OffenderDetailSummary> = getOffender(
@@ -307,14 +309,9 @@ class OffenderService(
     return AuthorisableActionResult.Success(offender)
   }
 
-  /*
-   * This should call apDeliusContextApiClient.getSummariesForCrns(crns) directly
-   */
   fun isLao(crn: String): Boolean {
-    val offenderResponse = offenderDetailsDataSource.getOffenderDetailSummary(crn)
-
-    val offender = when (offenderResponse) {
-      is ClientResult.Success -> offenderResponse.body
+    val offender = when (val offenderResponse = apDeliusContextApiClient.getSummariesForCrns(listOf(crn))) {
+      is ClientResult.Success -> offenderResponse.body.cases.first()
       is ClientResult.Failure -> offenderResponse.throwException()
     }
 
@@ -472,22 +469,6 @@ class OffenderService(
         agencies = allAgencies,
       ),
     )
-  }
-
-  fun getAcctAlertsByNomsNumber(nomsNumber: String): CasResult<List<Alert>> {
-    val alertsResult = prisonsApiClient.getAlerts(nomsNumber, "HA")
-
-    val alerts = when (alertsResult) {
-      is ClientResult.Success -> alertsResult.body
-      is ClientResult.Failure.StatusCode -> when (alertsResult.status) {
-        HttpStatus.NOT_FOUND -> return CasResult.NotFound(entityType = "Alert", id = nomsNumber)
-        HttpStatus.FORBIDDEN -> return CasResult.Unauthorised()
-        else -> alertsResult.throwException()
-      }
-      is ClientResult.Failure -> alertsResult.throwException()
-    }
-
-    return CasResult.Success(alerts)
   }
 
   fun getAcctPrisonerAlertsByNomsNumber(nomsNumber: String): CasResult<List<PrisionerAlert>> {

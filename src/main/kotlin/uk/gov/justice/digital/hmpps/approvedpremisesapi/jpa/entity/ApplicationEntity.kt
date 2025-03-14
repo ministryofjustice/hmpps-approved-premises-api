@@ -295,6 +295,15 @@ WHERE taa.probation_region_id = :probationRegionId AND a.submitted_at IS NOT NUL
 @Repository
 interface ApprovedPremisesApplicationRepository : JpaRepository<ApprovedPremisesApplicationEntity, UUID> {
   fun existsApprovedPremisesApplicationEntityByCrn(crn: String): Boolean
+
+  @Query(
+    """
+      SELECT e.id FROM ApprovedPremisesApplicationEntity e WHERE e.cas1OffenderEntity IS NULL order by e.createdAt desc
+    """,
+  )
+  fun findAllIdsByCas1OffenderEntityIsNull(): List<UUID>
+
+  fun findByIdIn(applicationIds: List<UUID>): List<ApprovedPremisesApplicationEntity>
 }
 
 @Repository
@@ -424,7 +433,7 @@ class ApprovedPremisesApplicationEntity(
   var licenceExpiryDate: LocalDate?,
   @ManyToOne(fetch = FetchType.LAZY)
   @JoinColumn(name = "cas1_offender_id", referencedColumnName = "id")
-  val cas1OffenderEntity: Cas1OffenderEntity?,
+  var cas1OffenderEntity: Cas1OffenderEntity?,
 ) : ApplicationEntity(
   id,
   crn,

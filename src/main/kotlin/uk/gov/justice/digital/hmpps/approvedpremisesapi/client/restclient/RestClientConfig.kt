@@ -1,7 +1,6 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.client.restclient
 
 import org.springframework.beans.factory.annotation.Value
-import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
 import org.springframework.http.client.JdkClientHttpRequestFactory
@@ -15,7 +14,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.PrisonerSearchCli
 import java.net.http.HttpClient
 import java.time.Duration
 
-@ConditionalOnProperty(prefix = "feature-flags", name = ["cas2-sqs-listener-enabled"], havingValue = "true")
 @Configuration
 class RestClientConfig(
   private val restClientBuilder: Builder,

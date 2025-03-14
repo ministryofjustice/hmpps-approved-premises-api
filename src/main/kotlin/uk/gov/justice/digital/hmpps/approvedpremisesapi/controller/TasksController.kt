@@ -36,6 +36,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.PlacementApplica
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.TaskService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.TypedTask
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.UserService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1LaoStrategy
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.TaskTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.UserTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.PageCriteria
@@ -249,10 +250,9 @@ class TasksController(
     offenderSummaries = offenderSummaries,
   )
 
-  private fun getOffenderSummariesForCrns(crns: List<String>, user: UserEntity): List<PersonSummaryInfoResult> = offenderService.getOffenderSummariesByCrns(
+  private fun getOffenderSummariesForCrns(crns: List<String>, user: UserEntity): List<PersonSummaryInfoResult> = offenderService.getPersonSummaryInfoResults(
     crns.toSet(),
-    user.deliusUsername,
-    user.hasQualification(UserQualification.LAO),
+    user.cas1LaoStrategy(),
   )
 
   private fun toTaskType(type: String) = enumConverterFactory.getConverter(TaskType::class.java).convert(

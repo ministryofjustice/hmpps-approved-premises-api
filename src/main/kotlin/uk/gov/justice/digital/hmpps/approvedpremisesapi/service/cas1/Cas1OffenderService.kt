@@ -15,13 +15,13 @@ class Cas1OffenderService(
 
   fun getOrCreateOffender(caseSummary: CaseSummary, riskRatings: PersonRisks?): Cas1OffenderEntity {
     val offender = cas1OffenderRepository.findByCrn(caseSummary.crn)?.apply {
-      name = "${caseSummary.name.forename.uppercase()} ${caseSummary.name.surname.uppercase()}"
+      name = "${caseSummary.name.forename.uppercase()} ${caseSummary.name.surname.uppercase()}".trim()
       tier = riskRatings?.tier?.value?.level
       nomsNumber = caseSummary.nomsId
     } ?: Cas1OffenderEntity(
       id = UUID.randomUUID(),
       crn = caseSummary.crn,
-      name = "${caseSummary.name.forename.uppercase()} ${caseSummary.name.surname.uppercase()}",
+      name = "${caseSummary.name.forename.uppercase()} ${caseSummary.name.surname.uppercase()}".trim(),
       tier = riskRatings?.tier?.value?.level,
       nomsNumber = caseSummary.nomsId,
       createdAt = OffsetDateTime.now(),

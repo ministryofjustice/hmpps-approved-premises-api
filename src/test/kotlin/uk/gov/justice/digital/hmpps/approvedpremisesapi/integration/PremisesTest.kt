@@ -3083,7 +3083,7 @@ class PremisesTest {
           .is4xxClientError
           .expectBody()
           .jsonPath("title").isEqualTo("Bad Request")
-          .jsonPath("invalid-params[0].propertyName").isEqualTo("$.bookings")
+          .jsonPath("invalid-params[0].propertyName").isEqualTo("$.status")
           .jsonPath("invalid-params[0].errorType").isEqualTo("existingBookings")
       }
     }

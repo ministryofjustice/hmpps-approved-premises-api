@@ -76,7 +76,7 @@ class BedSearchRepository(private val namedParameterJdbcTemplate: NamedParameter
     startDate: LocalDate,
     endDate: LocalDate,
     probationRegionId: UUID,
-  ): List<Cas3BedspaceSearchResult> {
+  ): List<Cas3CandidateBedspace> {
     val params = MapSqlParameterSource().apply {
       addValue("probation_region_id", probationRegionId)
       addValue("probation_delivery_unit_ids", probationDeliveryUnits)
@@ -88,7 +88,7 @@ class BedSearchRepository(private val namedParameterJdbcTemplate: NamedParameter
       temporaryAccommodationSearchQuery,
       params,
       ResultSetExtractor { resultSet ->
-        val beds = mutableMapOf<UUID, Cas3BedspaceSearchResult>()
+        val bedspaces = mutableMapOf<UUID, Cas3CandidateBedspace>()
 
         while (resultSet.next()) {
           val premisesId = UUID.fromString(resultSet.getString("premises_id"))
@@ -112,8 +112,8 @@ class BedSearchRepository(private val namedParameterJdbcTemplate: NamedParameter
 
           if (bedId == null) continue
 
-          if (!beds.containsKey(bedId)) {
-            beds[bedId] = Cas3BedspaceSearchResult(
+          if (!bedspaces.containsKey(bedId)) {
+            bedspaces[bedId] = Cas3CandidateBedspace(
               premisesId = premisesId,
               premisesName = premisesName,
               premisesAddressLine1 = premisesAddressLine1,
@@ -134,7 +134,7 @@ class BedSearchRepository(private val namedParameterJdbcTemplate: NamedParameter
             )
           }
 
-          beds[bedId]!!.apply {
+          bedspaces[bedId]!!.apply {
             if (premisesCharacteristicName != null) {
               premisesCharacteristics.addIfNoneMatch(CharacteristicNames(premisesCharacteristicPropertyName, premisesCharacteristicName)) {
                 it.name == premisesCharacteristicName
@@ -149,7 +149,7 @@ class BedSearchRepository(private val namedParameterJdbcTemplate: NamedParameter
           }
         }
 
-        beds.values.toList()
+        bedspaces.values.toList()
       },
     )
 
@@ -170,7 +170,7 @@ private inline fun <reified T> MutableList<T>.addIfNoneMatch(entry: T, matcher: 
 }
 
 @SuppressWarnings("LongParameterList")
-class Cas3BedspaceSearchResult(
+class Cas3CandidateBedspace(
   val premisesId: UUID,
   val premisesName: String,
   val premisesAddressLine1: String,
@@ -187,7 +187,7 @@ class Cas3BedspaceSearchResult(
   val probationDeliveryUnitName: String,
   val premisesNotes: String?,
   val bookedBedCount: Int,
-  val overlaps: MutableList<TemporaryAccommodationBedSearchResultOverlap>,
+  val overlaps: MutableList<Cas3CandidateBedspaceOverlap>,
 )
 
 data class CharacteristicNames(
@@ -195,7 +195,7 @@ data class CharacteristicNames(
   val name: String,
 )
 
-data class TemporaryAccommodationBedSearchResultOverlap(
+data class Cas3CandidateBedspaceOverlap(
   val name: String,
   val crn: String,
   val personType: PersonType,
