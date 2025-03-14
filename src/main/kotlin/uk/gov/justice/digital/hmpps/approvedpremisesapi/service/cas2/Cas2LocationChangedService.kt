@@ -1,13 +1,14 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas2
 
-import io.sentry.Sentry
+import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.PrisonerSearchClient
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas2ApplicationAssignmentEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas2ApplicationRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.domainevent.HmppsDomainEvent
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.IgnorableMessageException
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.domainevent.categoriesChanged
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.InvalidDomainEventException
 import java.net.URI
 import java.time.OffsetDateTime
 import java.util.UUID
@@ -18,29 +19,35 @@ class Cas2LocationChangedService(
   private val applicationService: Cas2ApplicationService,
   private val applicationRepository: Cas2ApplicationRepository,
 ) {
+  private val log = LoggerFactory.getLogger(this::class.java)
 
   @Transactional
-  @SuppressWarnings("ThrowsCount")
-  fun handleLocationChangedEvent(event: HmppsDomainEvent) = try {
-    val nomsNumber = event.personReference.findNomsNumber() ?: throw IgnorableMessageException("No nomsNumber found")
-    val detailUrl = event.detailUrl ?: throw IgnorableMessageException("No detail URL found")
+  fun process(event: HmppsDomainEvent) {
+    if (event.additionalInformation.categoriesChanged.contains("LOCATION")) {
+      val nomsNumber = event.personReference.findNomsNumber()
+      val detailUrl = event.detailUrl
+      if (nomsNumber == null || detailUrl == null) {
+        throw InvalidDomainEventException(event)
+      }
 
-    applicationService.findMostRecentApplication(nomsNumber)?.apply {
-      val prisoner = prisonerSearchClient.getPrisoner(URI.create(detailUrl))
-        ?: throw IgnorableMessageException("No prisoner found for detailUrl $detailUrl")
+      applicationService.findMostRecentApplication(nomsNumber)?.let { application ->
+        log.info("Received location change event of interest: \n{}", event)
 
-      this.applicationAssignments.add(
-        Cas2ApplicationAssignmentEntity(
-          id = UUID.randomUUID(),
-          application = this,
-          prisonCode = prisoner.prisonId,
-          createdAt = OffsetDateTime.now(),
-          allocatedPomUserId = null,
-        ),
-      )
-      applicationRepository.save(this)
+        val prisoner = prisonerSearchClient.getPrisoner(URI.create(detailUrl))!!
+
+        application.applicationAssignments.add(
+          Cas2ApplicationAssignmentEntity(
+            id = UUID.randomUUID(),
+            application = application,
+            prisonCode = prisoner.prisonId,
+            createdAt = OffsetDateTime.now(),
+            allocatedPomUserId = null,
+          ),
+        )
+
+        applicationRepository.save(application)
+        log.info("Added application assignment for prisoner: {}", nomsNumber)
+      }
     }
-  } catch (ime: IgnorableMessageException) {
-    Sentry.captureException(ime)
   }
 }
