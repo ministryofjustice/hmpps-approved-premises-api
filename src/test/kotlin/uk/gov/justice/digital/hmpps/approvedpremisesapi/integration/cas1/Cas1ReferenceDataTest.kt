@@ -140,6 +140,112 @@ class Cas1ReferenceDataTest : IntegrationTestBase() {
   }
 
   @Nested
+  inner class GetChangeRequestRejectionReasons {
+
+    @BeforeEach
+    fun setup() {
+      cas1ChangeRequestRejectionReasonEntityFactory.produceAndPersist {
+        withCode("appeal_reason_1")
+        withChangeRequestType(ChangeRequestType.APPEAL)
+        withArchived(false)
+      }
+
+      cas1ChangeRequestRejectionReasonEntityFactory.produceAndPersist {
+        withCode("appeal_reason_2_archived")
+        withChangeRequestType(ChangeRequestType.APPEAL)
+        withArchived(true)
+      }
+
+      cas1ChangeRequestRejectionReasonEntityFactory.produceAndPersist {
+        withCode("appeal_reason_3")
+        withChangeRequestType(ChangeRequestType.APPEAL)
+        withArchived(false)
+      }
+
+      cas1ChangeRequestRejectionReasonEntityFactory.produceAndPersist {
+        withCode("extension_reason_1")
+        withChangeRequestType(ChangeRequestType.EXTENSION)
+        withArchived(false)
+      }
+
+      cas1ChangeRequestRejectionReasonEntityFactory.produceAndPersist {
+        withCode("extension_reason_2")
+        withChangeRequestType(ChangeRequestType.EXTENSION)
+        withArchived(false)
+      }
+
+      cas1ChangeRequestRejectionReasonEntityFactory.produceAndPersist {
+        withCode("extension_reason_3_archived")
+        withChangeRequestType(ChangeRequestType.EXTENSION)
+        withArchived(true)
+      }
+
+      cas1ChangeRequestRejectionReasonEntityFactory.produceAndPersist {
+        withCode("planned_transfer_reason_1_archived")
+        withChangeRequestType(ChangeRequestType.PLANNED_TRANSFER)
+        withArchived(true)
+      }
+
+      cas1ChangeRequestRejectionReasonEntityFactory.produceAndPersist {
+        withCode("planned_transfer_reason_2")
+        withChangeRequestType(ChangeRequestType.PLANNED_TRANSFER)
+        withArchived(false)
+      }
+
+      cas1ChangeRequestRejectionReasonEntityFactory.produceAndPersist {
+        withCode("planned_transfer_reason_3")
+        withChangeRequestType(ChangeRequestType.PLANNED_TRANSFER)
+        withArchived(false)
+      }
+    }
+
+    @Test
+    fun `for appeal`() {
+      val jwt = jwtAuthHelper.createValidAuthorizationCodeJwt()
+
+      val result = webTestClient.get()
+        .uri("/cas1/reference-data/change-request-rejection-reasons/appeal")
+        .header("Authorization", "Bearer $jwt")
+        .exchange()
+        .expectStatus()
+        .isOk
+        .bodyAsListOfObjects<NamedId>()
+
+      assertThat(result.map { it.name }).containsExactlyInAnyOrder("appeal_reason_1", "appeal_reason_3")
+    }
+
+    @Test
+    fun `for extension`() {
+      val jwt = jwtAuthHelper.createValidAuthorizationCodeJwt()
+
+      val result = webTestClient.get()
+        .uri("/cas1/reference-data/change-request-rejection-reasons/extension")
+        .header("Authorization", "Bearer $jwt")
+        .exchange()
+        .expectStatus()
+        .isOk
+        .bodyAsListOfObjects<NamedId>()
+
+      assertThat(result.map { it.name }).containsExactlyInAnyOrder("extension_reason_1", "extension_reason_2")
+    }
+
+    @Test
+    fun `for planned transfer`() {
+      val jwt = jwtAuthHelper.createValidAuthorizationCodeJwt()
+
+      val result = webTestClient.get()
+        .uri("/cas1/reference-data/change-request-rejection-reasons/plannedTransfer")
+        .header("Authorization", "Bearer $jwt")
+        .exchange()
+        .expectStatus()
+        .isOk
+        .bodyAsListOfObjects<NamedId>()
+
+      assertThat(result.map { it.name }).containsExactlyInAnyOrder("planned_transfer_reason_2", "planned_transfer_reason_3")
+    }
+  }
+
+  @Nested
   inner class GetOutOfServiceBedReasons {
 
     @Test
