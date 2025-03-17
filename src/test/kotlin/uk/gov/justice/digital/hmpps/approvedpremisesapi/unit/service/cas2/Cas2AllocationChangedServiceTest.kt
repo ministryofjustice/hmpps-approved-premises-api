@@ -1,14 +1,13 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.unit.service.cas2
 
 import io.mockk.every
-import io.mockk.mockk
-import io.mockk.mockkStatic
-import io.mockk.slot
+import io.mockk.impl.annotations.InjectMockKs
+import io.mockk.impl.annotations.MockK
+import io.mockk.junit5.MockKExtension
 import io.mockk.verify
-import io.sentry.Sentry
-import io.sentry.protocol.SentryId
-import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.assertThrows
+import org.junit.jupiter.api.extension.ExtendWith
 import org.springframework.http.HttpStatus
 import org.springframework.web.client.HttpClientErrorException
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.ManagePomCasesClient
@@ -23,25 +22,29 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.domainevent.Additi
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.domainevent.HmppsDomainEvent
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.domainevent.PersonIdentifier
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.domainevent.PersonReference
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.IgnorableMessageException
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.InvalidDomainEventException
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas2.Cas2AllocationChangedService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas2.Cas2ApplicationService
 import java.time.Instant
 import java.time.ZoneId
 
+@ExtendWith(MockKExtension::class)
 class Cas2AllocationChangedServiceTest {
 
-  private val mockApplicationRepository = mockk<Cas2ApplicationRepository>()
-  private val mockApplicationService = mockk<Cas2ApplicationService>()
-  private val mockManagePomCasesClient = mockk<ManagePomCasesClient>()
-  private val mockNomisUserRepository = mockk<NomisUserRepository>()
+  @MockK
+  lateinit var mockApplicationRepository: Cas2ApplicationRepository
 
-  private val allocationChangedService: Cas2AllocationChangedService = Cas2AllocationChangedService(
-    mockManagePomCasesClient,
-    mockApplicationService,
-    mockApplicationRepository,
-    mockNomisUserRepository,
-  )
+  @MockK
+  lateinit var applicationService: Cas2ApplicationService
+
+  @MockK
+  lateinit var managePomCasesClient: ManagePomCasesClient
+
+  @MockK
+  lateinit var nomisUserRepository: NomisUserRepository
+
+  @InjectMockKs
+  lateinit var allocationChangedService: Cas2AllocationChangedService
 
   private val pomAllocation = PomAllocation(Manager(1234), Prison("NEW"))
   private val eventType = "offender-management.allocation.changed"
@@ -66,16 +69,16 @@ class Cas2AllocationChangedServiceTest {
   fun `handle Allocation Changed Event and save new allocation to table`() {
     val application = Cas2ApplicationEntityFactory().withNomsNumber(nomsNumber).withCreatedByUser(user).produce()
 
-    every { mockManagePomCasesClient.getPomAllocation(any()) } returns pomAllocation
-    every { mockApplicationService.findMostRecentApplication(eq(nomsNumber)) } returns application
+    every { managePomCasesClient.getPomAllocation(any()) } returns pomAllocation
+    every { applicationService.findMostRecentApplication(eq(nomsNumber)) } returns application
     every { mockApplicationRepository.save(any()) } returns null
-    every { mockNomisUserRepository.findByNomisStaffId(eq(pomAllocation.manager.code)) } returns user
+    every { nomisUserRepository.findByNomisStaffId(eq(pomAllocation.manager.code)) } returns user
 
-    allocationChangedService.handleAllocationChangedEvent(allocationEvent)
+    allocationChangedService.process(allocationEvent)
 
-    verify(exactly = 1) { mockManagePomCasesClient.getPomAllocation(any()) }
-    verify(exactly = 1) { mockApplicationService.findMostRecentApplication(eq(nomsNumber)) }
-    verify(exactly = 1) { mockNomisUserRepository.findByNomisStaffId(eq(pomAllocation.manager.code)) }
+    verify(exactly = 1) { managePomCasesClient.getPomAllocation(any()) }
+    verify(exactly = 1) { applicationService.findMostRecentApplication(eq(nomsNumber)) }
+    verify(exactly = 1) { nomisUserRepository.findByNomisStaffId(eq(pomAllocation.manager.code)) }
     verify(exactly = 1) { mockApplicationRepository.save(any()) }
   }
 
@@ -83,76 +86,28 @@ class Cas2AllocationChangedServiceTest {
   fun `handle Allocation Changed Event and throw error when no nomis user is found`() {
     val application = Cas2ApplicationEntityFactory().withNomsNumber(nomsNumber).withCreatedByUser(user).produce()
 
-    every { mockManagePomCasesClient.getPomAllocation(any()) } returns pomAllocation
-    every { mockApplicationService.findMostRecentApplication(eq(nomsNumber)) } returns application
-    every { mockNomisUserRepository.findByNomisStaffId(eq(pomAllocation.manager.code)) } returns null
+    every { managePomCasesClient.getPomAllocation(any()) } returns pomAllocation
+    every { applicationService.findMostRecentApplication(eq(nomsNumber)) } returns application
+    every { nomisUserRepository.findByNomisStaffId(eq(pomAllocation.manager.code)) } returns null
 
-    val slot = slot<Throwable>()
-    mockkStatic(Sentry::class)
-    every { Sentry.captureException(capture(slot)) } returns SentryId.EMPTY_ID
-
-    val errorMessage = "No user found for staffCode ${pomAllocation.manager.code}"
-
-    allocationChangedService.handleAllocationChangedEvent(allocationEvent)
-
-    verify(exactly = 1) { mockManagePomCasesClient.getPomAllocation(any()) }
-    verify(exactly = 1) { mockApplicationService.findMostRecentApplication(eq(nomsNumber)) }
-    verify(exactly = 1) { mockNomisUserRepository.findByNomisStaffId(eq(pomAllocation.manager.code)) }
-    verify(exactly = 1) { Sentry.captureException(any()) }
-
-    assertTrue(slot.isCaptured)
-    assertTrue(slot.captured is IgnorableMessageException)
-    assertTrue(slot.captured.message == errorMessage)
+    assertThrows<RuntimeException> { allocationChangedService.process(allocationEvent) }
   }
 
   @Test
   fun `handle Allocation Changed Event and throw error when pomAllocation not found from event detailUrl`() {
     val application = Cas2ApplicationEntityFactory().withNomsNumber(nomsNumber).withCreatedByUser(user).produce()
 
-    every { mockManagePomCasesClient.getPomAllocation(any()) } throws HttpClientErrorException(
+    every { managePomCasesClient.getPomAllocation(any()) } throws HttpClientErrorException(
       HttpStatus.NOT_FOUND,
       "Not allocated",
     )
 
-    every { mockApplicationService.findMostRecentApplication(eq(nomsNumber)) } returns application
+    every { applicationService.findMostRecentApplication(eq(nomsNumber)) } returns application
 
-    val slot = slot<String>()
-    mockkStatic(Sentry::class)
-    every { Sentry.captureMessage(capture(slot)) } returns SentryId.EMPTY_ID
+    allocationChangedService.process(allocationEvent)
 
-    val errorMessage = "Pom deallocated for $nomsNumber, no action required"
-
-    allocationChangedService.handleAllocationChangedEvent(allocationEvent)
-
-    verify(exactly = 1) { mockManagePomCasesClient.getPomAllocation(any()) }
-    verify(exactly = 1) { mockApplicationService.findMostRecentApplication(eq(nomsNumber)) }
-    verify(exactly = 1) { Sentry.captureMessage(any()) }
-
-    assertTrue(slot.isCaptured)
-    assertTrue(slot.captured == errorMessage)
-  }
-
-  @Test
-  fun `handle Allocation Changed Event and throw error when pomAllocation is null from event detailUrl`() {
-    val application = Cas2ApplicationEntityFactory().withNomsNumber(nomsNumber).withCreatedByUser(user).produce()
-
-    every { mockManagePomCasesClient.getPomAllocation(any()) } returns null
-    every { mockApplicationService.findMostRecentApplication(eq(nomsNumber)) } returns application
-
-    val slot = slot<String>()
-    mockkStatic(Sentry::class)
-    every { Sentry.captureMessage(capture(slot)) } returns SentryId.EMPTY_ID
-
-    val errorMessage = "Pom not allocated for $nomsNumber, no action required"
-
-    allocationChangedService.handleAllocationChangedEvent(allocationEvent)
-
-    verify(exactly = 1) { mockManagePomCasesClient.getPomAllocation(any()) }
-    verify(exactly = 1) { mockApplicationService.findMostRecentApplication(eq(nomsNumber)) }
-    verify(exactly = 1) { Sentry.captureMessage(any()) }
-
-    assertTrue(slot.isCaptured)
-    assertTrue(slot.captured == errorMessage)
+    verify(exactly = 1) { managePomCasesClient.getPomAllocation(any()) }
+    verify(exactly = 1) { applicationService.findMostRecentApplication(eq(nomsNumber)) }
   }
 
   @Test
@@ -166,20 +121,7 @@ class Cas2AllocationChangedServiceTest {
       additionalInformation = AdditionalInformation(),
       personReference = PersonReference(listOf(PersonIdentifier("NOMS", nomsNumber))),
     )
-
-    val slot = slot<Throwable>()
-    mockkStatic(Sentry::class)
-    every { Sentry.captureException(capture(slot)) } returns SentryId.EMPTY_ID
-
-    val errorMessage = "No detail URL found"
-
-    allocationChangedService.handleAllocationChangedEvent(eventWithNoDetailUrl)
-
-    verify(exactly = 1) { Sentry.captureException(any()) }
-
-    assertTrue(slot.isCaptured)
-    assertTrue(slot.captured is IgnorableMessageException)
-    assertTrue(slot.captured.message == errorMessage)
+    assertThrows<InvalidDomainEventException> { allocationChangedService.process(eventWithNoDetailUrl) }
   }
 
   @Test
@@ -193,30 +135,17 @@ class Cas2AllocationChangedServiceTest {
       additionalInformation = AdditionalInformation(),
       personReference = PersonReference(listOf()),
     )
-
-    val slot = slot<Throwable>()
-    mockkStatic(Sentry::class)
-    every { Sentry.captureException(capture(slot)) } returns SentryId.EMPTY_ID
-
-    val errorMessage = "No nomsNumber found"
-
-    allocationChangedService.handleAllocationChangedEvent(eventWithNoNomsNumber)
-
-    verify(exactly = 1) { Sentry.captureException(any()) }
-
-    assertTrue(slot.isCaptured)
-    assertTrue(slot.captured is IgnorableMessageException)
-    assertTrue(slot.captured.message == errorMessage)
+    assertThrows<InvalidDomainEventException> { allocationChangedService.process(eventWithNoNomsNumber) }
   }
 
   @Test
   fun `handle Allocation Changed Event and do nothing if there is no application associated with the event`() {
-    every { mockManagePomCasesClient.getPomAllocation(any()) } returns null
-    every { mockApplicationService.findMostRecentApplication(eq(nomsNumber)) } returns null
+    every { managePomCasesClient.getPomAllocation(any()) } returns null
+    every { applicationService.findMostRecentApplication(eq(nomsNumber)) } returns null
 
-    allocationChangedService.handleAllocationChangedEvent(allocationEvent)
+    allocationChangedService.process(allocationEvent)
 
-    verify(exactly = 0) { mockManagePomCasesClient.getPomAllocation(any()) }
-    verify(exactly = 1) { mockApplicationService.findMostRecentApplication(eq(nomsNumber)) }
+    verify(exactly = 0) { managePomCasesClient.getPomAllocation(any()) }
+    verify(exactly = 1) { applicationService.findMostRecentApplication(eq(nomsNumber)) }
   }
 }
