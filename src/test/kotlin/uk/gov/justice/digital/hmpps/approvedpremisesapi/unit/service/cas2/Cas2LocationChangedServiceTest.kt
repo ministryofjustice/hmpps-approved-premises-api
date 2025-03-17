@@ -5,6 +5,8 @@ import io.mockk.impl.annotations.InjectMockKs
 import io.mockk.impl.annotations.MockK
 import io.mockk.junit5.MockKExtension
 import io.mockk.verify
+import java.time.Instant
+import java.time.ZoneId
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
 import org.junit.jupiter.api.extension.ExtendWith
@@ -20,8 +22,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.domainevent.Person
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.InvalidDomainEventException
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas2.Cas2ApplicationService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas2.Cas2LocationChangedService
-import java.time.Instant
-import java.time.ZoneId
 
 @ExtendWith(MockKExtension::class)
 class Cas2LocationChangedServiceTest {
