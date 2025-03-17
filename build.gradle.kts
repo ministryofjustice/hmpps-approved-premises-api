@@ -1,4 +1,5 @@
 import org.apache.commons.io.FileUtils
+import java.io.File
 
 plugins {
   id("uk.gov.justice.hmpps.gradle-spring-boot") version "7.1.4"
@@ -87,6 +88,10 @@ dependencies {
   implementation("uk.gov.service.notify:notifications-java-client:5.2.1-RELEASE")
 
   gatlingImplementation("org.springframework.boot:spring-boot-starter-webflux")
+}
+
+springBoot {
+  mainClass.set("uk.gov.justice.digital.hmpps.approvedpremisesapi.ApplicationKt")
 }
 
 java {
@@ -188,6 +193,20 @@ tasks.register<Test>("unitTest") {
   useJUnitPlatform {
     excludeTags("integration")
   }
+}
+tasks.register<JavaExec>("generateCas1Roles") {
+  group = "build"
+  description = "Generates the built-cas1-roles.json file using Cas1RolesFileGenerator."
+
+  mainClass.set("uk.gov.justice.digital.hmpps.approvedpremisesapi.util.Cas1UserRoleJsonFileGenerator")
+
+  classpath = sourceSets["main"].runtimeClasspath
+
+  outputs.file(file("built-cas1-roles.json"))
+}
+
+tasks.named("openApiGenerate") {
+  finalizedBy("generateCas1Roles")
 }
 
 // Skip OpenAPI generation if running tests from intellij
