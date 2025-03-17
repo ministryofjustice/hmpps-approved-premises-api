@@ -623,7 +623,7 @@ class Cas2v2ApplicationTest : Cas2v2IntegrationTestBase() {
 
         val jwt = jwtAuthHelper.createValidNomisAuthorisationCodeJwt(
           "MY USERNAME",
-          listOf("ROLE_CAS2_COURT_BAIL"),
+          listOf("ROLE_CAS2_COURT_BAIL_REFERRER"),
         )
         webTestClient
           .get()
@@ -642,7 +642,7 @@ class Cas2v2ApplicationTest : Cas2v2IntegrationTestBase() {
 
         val jwt = jwtAuthHelper.createValidNomisAuthorisationCodeJwt(
           "MY USERNAME",
-          listOf("ROLE_CAS2_PRISON_BAIL"),
+          listOf("ROLE_CAS2_PRISON_BAIL_REFERRER"),
         )
         webTestClient
           .get()
