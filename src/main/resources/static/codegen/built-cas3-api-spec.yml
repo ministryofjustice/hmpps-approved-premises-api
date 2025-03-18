@@ -4535,16 +4535,6 @@ components:
           type: string
       required:
         - name
-    Cas3ReportType:
-      type: string
-      enum:
-        - referral
-        - booking
-        - bedUsage
-        - bedOccupancy
-        - futureBookings
-        - futureBookingsCsv
-        - bookingGap
     NamedId:
       type: object
       description: A generic stub for an object with a name and an ID.
@@ -4945,3 +4935,13 @@ components:
         - dateTime
         - reasonId
         - moveOnCategoryId
+    Cas3ReportType:
+      type: string
+      enum:
+        - referral
+        - booking
+        - bedUsage
+        - bedOccupancy
+        - futureBookings
+        - futureBookingsCsv
+        - bookingGap
