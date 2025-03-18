@@ -5,7 +5,6 @@ import org.jetbrains.kotlinx.dataframe.io.writeExcel
 import org.springframework.stereotype.Service
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApplicationEntityReportRowRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApplicationRepository
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.BedRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas1OutOfServiceBedRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DomainEventRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementApplicationEntityReportRowRepository
@@ -32,7 +31,6 @@ import java.time.temporal.TemporalAdjusters
 class Cas1ReportService(
   private val applicationRepository: ApplicationRepository,
   private val applicationEntityReportRowRepository: ApplicationEntityReportRowRepository,
-  private val bedRepository: BedRepository,
   private val cas1PlacementMatchingOutcomesReportRepository: Cas1PlacementMatchingOutcomesReportRepository,
   private val cas1PlacementMatchingOutcomesV2ReportRepository: Cas1PlacementMatchingOutcomesV2ReportRepository,
   private val cas1ApplicationV2ReportRepository: Cas1ApplicationV2ReportRepository,
@@ -114,7 +112,7 @@ class Cas1ReportService(
 
   fun createOutOfServiceBedReport(properties: MonthSpecificReportParams, outputStream: OutputStream) {
     Cas1OutOfServiceBedsReportGenerator(cas1OutOfServiceBedRepository)
-      .createReport(bedRepository.allCas1BedIds().map { Cas1BedIdentifier(it) }, properties)
+      .createReport(cas1OutOfServiceBedRepository.findBedIdsWithAtLeastOneOutOfServiceBedRecord().map { Cas1BedIdentifier(it) }, properties)
       .writeExcel(
         outputStream = outputStream,
         factory = WorkbookFactory.create(true),
