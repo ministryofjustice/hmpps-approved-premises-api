@@ -12,12 +12,15 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NamedId
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NonArrivalReason
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas1CruManagementAreaRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas1OutOfServiceBedReasonRepository
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas1OutOfServiceBedReasonRepository.Companion.BED_ON_HOLD_REASON_ID
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DepartureReasonRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.MoveOnCategoryRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.NonArrivalReasonRepository
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserPermission
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas1.Cas1ChangeRequestReasonRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas1.Cas1ChangeRequestRejectionReasonRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas1.ChangeRequestType
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.UserService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.DepartureReasonTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.MoveOnCategoryTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.NonArrivalReasonTransformer
@@ -38,6 +41,7 @@ class Cas1ReferenceDataController(
   private val moveOnCategoryTransformer: MoveOnCategoryTransformer,
   private val changeRequestReasonRepository: Cas1ChangeRequestReasonRepository,
   private val changeRequestRejectionReasonRepository: Cas1ChangeRequestRejectionReasonRepository,
+  private val userService: UserService,
 ) : ReferenceDataCas1Delegate {
 
   override fun getChangeRequestReasons(changeRequestType: Cas1ChangeRequestType): ResponseEntity<List<NamedId>> = ResponseEntity.ok(
@@ -60,11 +64,17 @@ class Cas1ReferenceDataController(
     ).map { NamedId(it.id, it.code) },
   )
 
-  override fun getOutOfServiceBedReasons(): ResponseEntity<List<Cas1OutOfServiceBedReason>> = ResponseEntity.ok(
-    cas1OutOfServiceBedReasonRepository.findActive().map { reason ->
-      cas1OutOfServiceBedReasonTransformer.transformJpaToApi(reason)
-    },
-  )
+  override fun getOutOfServiceBedReasons(): ResponseEntity<List<Cas1OutOfServiceBedReason>> {
+    val user = userService.getUserForRequest()
+
+    return ResponseEntity.ok(
+      cas1OutOfServiceBedReasonRepository.findActive()
+        .filter { it.id != BED_ON_HOLD_REASON_ID || user.hasPermission(UserPermission.CAS1_OUT_OF_SERVICE_BED_CREATE_BED_ON_HOLD) }
+        .map { reason ->
+          cas1OutOfServiceBedReasonTransformer.transformJpaToApi(reason)
+        },
+    )
+  }
 
   override fun getCruManagementAreas(): ResponseEntity<List<Cas1CruManagementArea>> = ResponseEntity.ok(
     cas1CruManagementAreaRepository.findAll()
