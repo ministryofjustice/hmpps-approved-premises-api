@@ -30,7 +30,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.given
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenACas2PomUser
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAnOffender
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.apDeliusContextEmptyCaseSummaryToBulkResponse
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.apDeliusContextMockCaseSummary
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.apDeliusContextMockSuccessfulCaseDetailCall
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.prisonAPIMockNotFoundInmateDetailsCall
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas2ApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas2ApplicationRepository
@@ -40,7 +40,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.NomisUserEnti
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.community.OffenderDetailSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.prisonsapi.InmateDetail
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.prisonsapi.InmateStatus
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.asCaseSummary
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.asCaseDetail
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomDateAfter
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomDateBefore
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomDateTimeBefore
@@ -1517,9 +1517,10 @@ class Cas2ApplicationTest : IntegrationTestBase() {
               .withCurrentRestriction(true)
               .withCurrentExclusion(true).produce()
 
-          val caseDetail = offenderDetails.asCaseSummary()
-          apDeliusContextMockCaseSummary(caseDetail)
-          mockInmateDetailPrisonsApiCall(InmateDetail(caseDetail.nomsId!!, InmateStatus.IN, null))
+          val caseDetail = offenderDetails.asCaseDetail()
+
+          apDeliusContextMockSuccessfulCaseDetailCall(crn, offenderDetails.asCaseDetail())
+          mockInmateDetailPrisonsApiCall(InmateDetail(caseDetail.case.nomsId!!, InmateStatus.IN, null))
 
           cas2ApplicationJsonSchemaEntityFactory.produceAndPersist {
             withAddedAt(OffsetDateTime.now())
@@ -1531,7 +1532,7 @@ class Cas2ApplicationTest : IntegrationTestBase() {
             .header("Authorization", "Bearer $jwt")
             .bodyValue(
               NewApplication(
-                crn = caseDetail.crn,
+                crn = caseDetail.case.crn,
               ),
             )
             .exchange()
