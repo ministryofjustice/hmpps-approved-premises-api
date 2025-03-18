@@ -18,6 +18,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas1OutOfServ
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas1OutOfServiceBedRevisionRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas1OutOfServiceBedRevisionType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserPermission
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PaginationMetadata
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.validatedCasResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.CasResult
@@ -81,6 +82,11 @@ class Cas1OutOfServiceBedService(
     val reason = outOfServiceBedReasonRepository.findByIdOrNull(reasonId)
     if (reason == null) {
       "$.reason" hasValidationError "doesNotExist"
+    } else if (reason.id == Cas1OutOfServiceBedReasonRepository.BED_ON_HOLD_REASON_ID &&
+      createdBy != null &&
+      !createdBy.hasPermission(UserPermission.CAS1_OUT_OF_SERVICE_BED_CREATE_BED_ON_HOLD)
+    ) {
+      "$.reason" hasValidationError "onHoldNotAllowedForUser"
     }
 
     if (notes.isNullOrEmpty()) {
@@ -160,6 +166,11 @@ class Cas1OutOfServiceBedService(
       val reason = outOfServiceBedReasonRepository.findByIdOrNull(reasonId)
       if (reason == null) {
         "$.reason" hasValidationError "doesNotExist"
+      } else if (reason.id == Cas1OutOfServiceBedReasonRepository.BED_ON_HOLD_REASON_ID &&
+        createdBy != null &&
+        !createdBy.hasPermission(UserPermission.CAS1_OUT_OF_SERVICE_BED_CREATE_BED_ON_HOLD)
+      ) {
+        "$.reason" hasValidationError "onHoldNotAllowedForUser"
       }
 
       if (notes.isNullOrEmpty()) {

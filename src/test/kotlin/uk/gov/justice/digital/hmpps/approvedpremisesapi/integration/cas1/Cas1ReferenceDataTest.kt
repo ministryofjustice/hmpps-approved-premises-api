@@ -10,8 +10,12 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1CruManagem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NamedId
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.InitialiseDatabasePerClassTestBase
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.IntegrationTestBase
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAUser
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas1CruManagementAreaEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas1OutOfServiceBedReasonEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas1OutOfServiceBedReasonRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DepartureReasonEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRole
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas1.ChangeRequestType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.DepartureReasonTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.MoveOnCategoryTransformer
@@ -252,30 +256,62 @@ class Cas1ReferenceDataTest : IntegrationTestBase() {
   @Nested
   inner class GetOutOfServiceBedReasons {
 
-    @Test
-    fun success() {
-      cas1OutOfServiceBedReasonTestRepository.deleteAll()
+    lateinit var activeReason1: Cas1OutOfServiceBedReasonEntity
+    lateinit var activeReason2: Cas1OutOfServiceBedReasonEntity
+    lateinit var onHoldReason: Cas1OutOfServiceBedReasonEntity
 
-      val activeReason1 = cas1OutOfServiceBedReasonEntityFactory.produceAndPersist {
+    @BeforeEach
+    fun setup() {
+      cas1OutOfServiceBedReasonTestRepository.deleteAll()
+      cas1OutOfServiceBedReasonTestRepository.flush()
+
+      activeReason1 = cas1OutOfServiceBedReasonEntityFactory.produceAndPersist {
         withIsActive(true)
         withName("Active reason 1")
       }
 
-      val activeReason2 = cas1OutOfServiceBedReasonEntityFactory.produceAndPersist {
+      activeReason2 = cas1OutOfServiceBedReasonEntityFactory.produceAndPersist {
         withIsActive(true)
         withName("Active reason 2")
+      }
+
+      onHoldReason = cas1OutOfServiceBedReasonEntityFactory.produceAndPersist {
+        withId(Cas1OutOfServiceBedReasonRepository.BED_ON_HOLD_REASON_ID)
+        withIsActive(true)
+        withName("On hold reason")
       }
 
       cas1OutOfServiceBedReasonEntityFactory.produceAndPersist {
         withIsActive(false)
         withName("Inactive reason")
       }
+    }
 
+    @Test
+    fun `Returns all reasons if user has Find and Book Beta Role`() {
+      val expectedReasons = objectMapper.writeValueAsString(
+        listOf(activeReason1, activeReason2, onHoldReason).map { reason -> reasonTransformer.transformJpaToApi(reason) },
+      )
+
+      val (_, jwt) = givenAUser(roles = listOf(UserRole.CAS1_CRU_MEMBER_FIND_AND_BOOK_BETA))
+
+      webTestClient.get()
+        .uri("/cas1/reference-data/out-of-service-bed-reasons")
+        .header("Authorization", "Bearer $jwt")
+        .exchange()
+        .expectStatus()
+        .isOk
+        .expectBody()
+        .json(expectedReasons)
+    }
+
+    @Test
+    fun `Doesn't return 'on hold' if user doesn't have Find and Book Beta Role`() {
       val expectedReasons = objectMapper.writeValueAsString(
         listOf(activeReason1, activeReason2).map { reason -> reasonTransformer.transformJpaToApi(reason) },
       )
 
-      val jwt = jwtAuthHelper.createValidAuthorizationCodeJwt()
+      val (_, jwt) = givenAUser(roles = emptyList())
 
       webTestClient.get()
         .uri("/cas1/reference-data/out-of-service-bed-reasons")

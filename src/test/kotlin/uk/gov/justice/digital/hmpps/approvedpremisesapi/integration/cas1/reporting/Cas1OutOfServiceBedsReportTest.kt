@@ -12,6 +12,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.IntegrationTestBase
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAUser
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAnOffender
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas1OutOfServiceBedReasonRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas1OutOfServiceBedRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRole.CAS1_REPORT_VIEWER
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.generator.Cas1OutOfServiceBedsReportGenerator
@@ -125,7 +126,7 @@ class Cas1OutOfServiceBedsReportTest : IntegrationTestBase() {
               withOutOfServiceBed(this@apply)
               withStartDate(LocalDate.of(2023, 4, 1))
               withEndDate(LocalDate.of(2023, 7, 5))
-              withReason(cas1OutOfServiceBedReasonTestRepository.getReferenceById(Cas1OutOfServiceBedRepository.BED_ON_HOLD_CANCELLATION_REASON_ID))
+              withReason(cas1OutOfServiceBedReasonTestRepository.getReferenceById(Cas1OutOfServiceBedReasonRepository.BED_ON_HOLD_REASON_ID))
             }
           }
 
