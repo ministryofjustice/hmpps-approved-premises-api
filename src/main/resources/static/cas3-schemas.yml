@@ -238,3 +238,13 @@ components:
         - dateTime
         - reasonId
         - moveOnCategoryId
+    Cas3ReportType:
+      type: string
+      enum:
+        - referral
+        - booking
+        - bedUsage
+        - bedOccupancy
+        - futureBookings
+        - futureBookingsCsv
+        - bookingGap
