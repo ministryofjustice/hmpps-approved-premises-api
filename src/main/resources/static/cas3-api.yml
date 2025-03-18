@@ -17,7 +17,7 @@ paths:
           description: Name of the report to download
           required: true
           schema:
-            $ref: '_shared.yml#/components/schemas/Cas3ReportType'
+            $ref: 'cas3-schemas.yml#/components/schemas/Cas3ReportType'
         - name: probationRegionId
           in: query
           required: false
