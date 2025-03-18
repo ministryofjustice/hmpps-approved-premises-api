@@ -15,7 +15,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ProbationRegionE
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.RoomEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas1OutOfServiceBedRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.generator.Cas1OutOfServiceBedsReportGenerator
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.model.VoidBedspaceReportRow
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.model.Cas1OutOfServiceBedReportRow
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1ReportService
 import java.time.LocalDate
 
@@ -123,8 +123,8 @@ class Cas1OutOfServiceBedReportGeneratorTest {
     )
 
     assertThat(result.count()).isEqualTo(2)
-    assertThat(result[0][VoidBedspaceReportRow::ap]).isEqualTo(premisesInProbationRegion.name)
-    assertThat(result[1][VoidBedspaceReportRow::ap]).isEqualTo(premisesOutsideProbationRegion.name)
+    assertThat(result[0][Cas1OutOfServiceBedReportRow::ap]).isEqualTo(premisesInProbationRegion.name)
+    assertThat(result[1][Cas1OutOfServiceBedReportRow::ap]).isEqualTo(premisesOutsideProbationRegion.name)
   }
 
   @Test
@@ -171,16 +171,16 @@ class Cas1OutOfServiceBedReportGeneratorTest {
     )
 
     assertThat(result.count()).isEqualTo(1)
-    assertThat(result[0][VoidBedspaceReportRow::roomName]).isEqualTo(room.name)
-    assertThat(result[0][VoidBedspaceReportRow::bedName]).isEqualTo(bed.name)
-    assertThat(result[0][VoidBedspaceReportRow::id]).isEqualTo(outOfServiceBed.id.toString())
-    assertThat(result[0][VoidBedspaceReportRow::workOrderId]).isEqualTo(outOfServiceBed.referenceNumber)
-    assertThat(result[0][VoidBedspaceReportRow::region]).isEqualTo(premises.probationRegion.name)
-    assertThat(result[0][VoidBedspaceReportRow::ap]).isEqualTo(premises.name)
-    assertThat(result[0][VoidBedspaceReportRow::reason]).isEqualTo(outOfServiceBed.reason.name)
-    assertThat(result[0][VoidBedspaceReportRow::startDate]).isEqualTo(outOfServiceBed.startDate)
-    assertThat(result[0][VoidBedspaceReportRow::endDate]).isEqualTo(outOfServiceBed.endDate)
-    assertThat(result[0][VoidBedspaceReportRow::lengthDays]).isEqualTo(3)
+    assertThat(result[0][Cas1OutOfServiceBedReportRow::roomName]).isEqualTo(room.name)
+    assertThat(result[0][Cas1OutOfServiceBedReportRow::bedName]).isEqualTo(bed.name)
+    assertThat(result[0][Cas1OutOfServiceBedReportRow::id]).isEqualTo(outOfServiceBed.id.toString())
+    assertThat(result[0][Cas1OutOfServiceBedReportRow::workOrderId]).isEqualTo(outOfServiceBed.referenceNumber)
+    assertThat(result[0][Cas1OutOfServiceBedReportRow::region]).isEqualTo(premises.probationRegion.name)
+    assertThat(result[0][Cas1OutOfServiceBedReportRow::ap]).isEqualTo(premises.name)
+    assertThat(result[0][Cas1OutOfServiceBedReportRow::reason]).isEqualTo(outOfServiceBed.reason.name)
+    assertThat(result[0][Cas1OutOfServiceBedReportRow::startDate]).isEqualTo(outOfServiceBed.startDate)
+    assertThat(result[0][Cas1OutOfServiceBedReportRow::endDate]).isEqualTo(outOfServiceBed.endDate)
+    assertThat(result[0][Cas1OutOfServiceBedReportRow::lengthDays]).isEqualTo(3)
   }
 
   @Test
@@ -227,15 +227,15 @@ class Cas1OutOfServiceBedReportGeneratorTest {
     )
 
     assertThat(result.count()).isEqualTo(1)
-    assertThat(result[0][VoidBedspaceReportRow::roomName]).isEqualTo(room.name)
-    assertThat(result[0][VoidBedspaceReportRow::bedName]).isEqualTo(bed.name)
-    assertThat(result[0][VoidBedspaceReportRow::id]).isEqualTo(outOfServiceBed.id.toString())
-    assertThat(result[0][VoidBedspaceReportRow::workOrderId]).isEqualTo(outOfServiceBed.referenceNumber)
-    assertThat(result[0][VoidBedspaceReportRow::region]).isEqualTo(premises.probationRegion.name)
-    assertThat(result[0][VoidBedspaceReportRow::ap]).isEqualTo(premises.name)
-    assertThat(result[0][VoidBedspaceReportRow::reason]).isEqualTo(outOfServiceBed.reason.name)
-    assertThat(result[0][VoidBedspaceReportRow::startDate]).isEqualTo(outOfServiceBed.startDate)
-    assertThat(result[0][VoidBedspaceReportRow::endDate]).isEqualTo(outOfServiceBed.endDate)
-    assertThat(result[0][VoidBedspaceReportRow::lengthDays]).isEqualTo(7)
+    assertThat(result[0][Cas1OutOfServiceBedReportRow::roomName]).isEqualTo(room.name)
+    assertThat(result[0][Cas1OutOfServiceBedReportRow::bedName]).isEqualTo(bed.name)
+    assertThat(result[0][Cas1OutOfServiceBedReportRow::id]).isEqualTo(outOfServiceBed.id.toString())
+    assertThat(result[0][Cas1OutOfServiceBedReportRow::workOrderId]).isEqualTo(outOfServiceBed.referenceNumber)
+    assertThat(result[0][Cas1OutOfServiceBedReportRow::region]).isEqualTo(premises.probationRegion.name)
+    assertThat(result[0][Cas1OutOfServiceBedReportRow::ap]).isEqualTo(premises.name)
+    assertThat(result[0][Cas1OutOfServiceBedReportRow::reason]).isEqualTo(outOfServiceBed.reason.name)
+    assertThat(result[0][Cas1OutOfServiceBedReportRow::startDate]).isEqualTo(outOfServiceBed.startDate)
+    assertThat(result[0][Cas1OutOfServiceBedReportRow::endDate]).isEqualTo(outOfServiceBed.endDate)
+    assertThat(result[0][Cas1OutOfServiceBedReportRow::lengthDays]).isEqualTo(7)
   }
 }

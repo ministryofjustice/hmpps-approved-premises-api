@@ -11,7 +11,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRole.CAS1
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRole.CAS1_REPORT_VIEWER
 
 class Cas1ReportsTest : IntegrationTestBase() {
-  val cas1Report: String = Cas1ReportName.lostBeds.value
+  val cas1Report: String = Cas1ReportName.outOfServiceBeds.value
   val approvedPremisesServiceName: String = ServiceName.approvedPremises.value
 
   @Test

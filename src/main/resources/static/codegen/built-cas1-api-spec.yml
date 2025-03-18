@@ -7089,7 +7089,6 @@ components:
         - applicationsV2
         - applicationsV2WithPii
         - dailyMetrics
-        - lostBeds
         - outOfServiceBeds
         - placementApplications
         - placementMatchingOutcomes

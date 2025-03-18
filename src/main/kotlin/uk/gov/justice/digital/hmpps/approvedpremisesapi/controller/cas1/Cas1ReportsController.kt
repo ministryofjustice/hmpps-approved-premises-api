@@ -11,7 +11,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.controller.generateStrea
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserPermission
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.BadRequestProblem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.NotAllowedProblem
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.properties.VoidBedspaceReportProperties
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.UserAccessService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1ReportService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1ReportService.MonthSpecificReportParams
@@ -76,12 +75,6 @@ class Cas1ReportsController(
         fileName = createCas1ReportName("daily-metrics", year, month, ContentType.XLSX),
       ) { outputStream ->
         cas1ReportService.createDailyMetricsReport(monthSpecificReportParams, outputStream)
-      }
-      Cas1ReportName.lostBeds -> generateStreamingResponse(
-        contentType = ContentType.XLSX,
-        fileName = createCas1ReportName("lost-beds", year, month, ContentType.XLSX),
-      ) { outputStream ->
-        cas1ReportService.createLostBedReport(VoidBedspaceReportProperties(xServiceName, null, year, month), outputStream)
       }
       Cas1ReportName.outOfServiceBeds -> return generateStreamingResponse(
         contentType = ContentType.XLSX,
