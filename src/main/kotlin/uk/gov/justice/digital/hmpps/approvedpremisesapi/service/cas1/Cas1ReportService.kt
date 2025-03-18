@@ -14,14 +14,11 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas1.Cas1Plac
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas1.Cas1PlacementMatchingOutcomesV2ReportRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas1.Cas1PlacementReportRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas1.Cas1RequestForPlacementReportRepository
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas3.Cas3VoidBedspacesRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.generator.ApplicationReportGenerator
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.generator.Cas1OutOfServiceBedsReportGenerator
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.generator.DailyMetricsReportGenerator
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.generator.PlacementApplicationReportGenerator
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.generator.VoidBedspacesReportGenerator
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.model.ApprovedPremisesApplicationMetricsSummaryDto
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.properties.VoidBedspaceReportProperties
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.util.CsvJdbcResultSetConsumer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.util.ExcelJdbcResultSetConsumer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.toLocalDate
@@ -40,7 +37,6 @@ class Cas1ReportService(
   private val cas1ApplicationV2ReportRepository: Cas1ApplicationV2ReportRepository,
   private val cas1PlacementRequestReportRepository: Cas1RequestForPlacementReportRepository,
   private val domainEventRepository: DomainEventRepository,
-  private val cas3VoidBedspacesRepository: Cas3VoidBedspacesRepository,
   private val cas1OutOfServiceBedRepository: Cas1OutOfServiceBedRepository,
   private val domainEventService: Cas1DomainEventService,
   private val placementApplicationEntityReportRowRepository: PlacementApplicationEntityReportRowRepository,
@@ -109,16 +105,6 @@ class Cas1ReportService(
 
     DailyMetricsReportGenerator(domainEvents, applications, domainEventService)
       .createReport(dates, properties)
-      .writeExcel(
-        outputStream = outputStream,
-        factory = WorkbookFactory.create(true),
-      )
-  }
-
-  @Deprecated("This report is no longer supported and should be removed for CAS1 once we confirmed all users have migrated to new reports")
-  fun createLostBedReport(properties: VoidBedspaceReportProperties, outputStream: OutputStream) {
-    VoidBedspacesReportGenerator(cas3VoidBedspacesRepository)
-      .createReport(bedRepository.findAll(), properties)
       .writeExcel(
         outputStream = outputStream,
         factory = WorkbookFactory.create(true),
