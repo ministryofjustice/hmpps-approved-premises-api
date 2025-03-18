@@ -64,4 +64,7 @@ enum class UserPermission(val cas1ApiValue: ApprovedPremisesUserPermission?) {
   CAS1_REPORTS_VIEW(ApprovedPremisesUserPermission.reportsView),
   CAS1_REPORTS_VIEW_WITH_PII(ApprovedPremisesUserPermission.reportsViewWithPii),
   CAS1_REQUEST_FOR_PLACEMENT_WITHDRAW_OTHERS(ApprovedPremisesUserPermission.requestForPlacementWithdrawOthers),
+
+  CAS1_APPEAL_CREATE(ApprovedPremisesUserPermission.appealCreate),
+  CAS1_PLANNED_TRANSFER_CREATE(ApprovedPremisesUserPermission.plannedTransferCreate),
 }

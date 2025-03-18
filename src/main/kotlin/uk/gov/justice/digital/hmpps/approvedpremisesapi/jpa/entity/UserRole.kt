@@ -107,6 +107,15 @@ enum class UserRole(val service: ServiceName, val cas1ApiValue: ApprovedPremises
     ),
   ),
 
+  /**
+   * A temporary role used while rolling out change request functionality
+   */
+  CAS1_CHANGE_REQUEST_DEV(
+    ServiceName.approvedPremises,
+    ApprovedPremisesUserRole.changeRequestDev,
+    permissions = listOf(UserPermission.CAS1_APPEAL_CREATE, UserPermission.CAS1_PLANNED_TRANSFER_CREATE),
+  ),
+
   CAS1_APPLICANT(ServiceName.approvedPremises, ApprovedPremisesUserRole.applicant),
 
   CAS1_REPORT_VIEWER(
