@@ -162,6 +162,8 @@ paths:
       x-codegen-request-body-name: body
   /premises/{premisesId}/staff:
     get:
+      deprecated: true
+      description: Use /cas1/premises/{premisesId}/staff
       tags:
         - Premises
       summary: Returns the staff that work at an approved premises

@@ -13,15 +13,19 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1PremisesDa
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1SpaceBookingCharacteristic
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1SpaceBookingDaySummarySortField
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.SortDirection
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.StaffMember
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesGender
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserPermission
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.ForbiddenProblem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.NotFoundProblem
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.CasResult
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.StaffMemberService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.UserAccessService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1BedService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1OutOfServiceBedSummaryService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1PremisesService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1SpaceBookingDaySummaryService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.StaffMemberTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.cas1.Cas1BedDetailTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.cas1.Cas1BedSummaryTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.cas1.Cas1OutOfServiceBedSummaryTransformer
@@ -45,6 +49,8 @@ class Cas1PremisesController(
   private val cas1SpaceBookingDaySummaryService: Cas1SpaceBookingDaySummaryService,
   private val cas1OutOfServiceBedSummaryService: Cas1OutOfServiceBedSummaryService,
   private val cas1OutOfServiceBedSummaryTransformer: Cas1OutOfServiceBedSummaryTransformer,
+  private val staffMemberService: StaffMemberService,
+  private val staffMemberTransformer: StaffMemberTransformer,
 ) : PremisesCas1Delegate {
 
   override fun getBeds(premisesId: UUID): ResponseEntity<List<Cas1PremisesBedSummary>> {
@@ -163,6 +169,25 @@ class Cas1PremisesController(
           ),
         ).map(cas1OutOfServiceBedSummaryTransformer::toCas1OutOfServiceBedSummary),
       ),
+    )
+  }
+
+  override fun getStaff(premisesId: UUID): ResponseEntity<List<StaffMember>> {
+    userAccessService.ensureCurrentUserHasPermission(UserPermission.CAS1_PREMISES_VIEW)
+
+    val premises = cas1PremisesService.findPremiseById(premisesId)
+      ?: throw NotFoundProblem(premisesId, "Premises")
+
+    val staffMembersResult = staffMemberService.getStaffMembersForQCode(premises.qCode)
+
+    if (staffMembersResult is CasResult.NotFound) {
+      return ResponseEntity.ok(emptyList())
+    }
+
+    return ResponseEntity.ok(
+      extractEntityFromCasResult(staffMembersResult)
+        .content
+        .map(staffMemberTransformer::transformDomainToApi),
     )
   }
 }
