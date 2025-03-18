@@ -16,6 +16,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas1.Cas1Plac
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas1.Cas1RequestForPlacementReportRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.generator.ApplicationReportGenerator
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.generator.Cas1OutOfServiceBedsReportGenerator
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.generator.Cas1OutOfServiceBedsReportGenerator.Cas1BedIdentifier
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.generator.DailyMetricsReportGenerator
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.generator.PlacementApplicationReportGenerator
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.model.ApprovedPremisesApplicationMetricsSummaryDto
@@ -113,7 +114,7 @@ class Cas1ReportService(
 
   fun createOutOfServiceBedReport(properties: MonthSpecificReportParams, outputStream: OutputStream) {
     Cas1OutOfServiceBedsReportGenerator(cas1OutOfServiceBedRepository)
-      .createReport(bedRepository.findAll(), properties)
+      .createReport(bedRepository.allCas1BedIds().map { Cas1BedIdentifier(it) }, properties)
       .writeExcel(
         outputStream = outputStream,
         factory = WorkbookFactory.create(true),

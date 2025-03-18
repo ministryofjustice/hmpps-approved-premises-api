@@ -58,13 +58,22 @@ interface BedRepository : JpaRepository<BedEntity, UUID> {
   @Modifying
   @Query("UPDATE BedEntity b SET b.code = :code WHERE b.id = :id")
   fun updateCode(id: UUID, code: String)
+
+  @Query(
+    """
+      SELECT b.id FROM beds b
+      INNER JOIN rooms r ON r.id = b.room_id
+      INNER JOIN approved_premises p ON r.premises_id = p.premises_id
+    """,
+    nativeQuery = true,
+  )
+  fun allCas1BedIds(): List<UUID>
 }
 
 @Repository
 class Cas1BedsRepository(
   private val jdbcTemplate: NamedParameterJdbcTemplate,
 ) {
-
   fun bedSummary(premisesId: UUID): List<Cas1PlanningBedSummary> {
     val params = mutableMapOf<String, Any>(
       "premisesId" to premisesId,

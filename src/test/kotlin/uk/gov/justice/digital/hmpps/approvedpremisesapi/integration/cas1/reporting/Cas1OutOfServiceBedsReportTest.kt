@@ -16,6 +16,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas1OutOfServ
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas1OutOfServiceBedRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRole.CAS1_REPORT_VIEWER
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.generator.Cas1OutOfServiceBedsReportGenerator
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.generator.Cas1OutOfServiceBedsReportGenerator.Cas1BedIdentifier
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.model.Cas1OutOfServiceBedReportRow
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1ReportService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.roundNanosToMillisToAccountForLossOfPrecisionInPostgres
@@ -136,9 +137,17 @@ class Cas1OutOfServiceBedsReportTest : IntegrationTestBase() {
           }
         }
 
+        /*
+        Note - this test is mostly redundant because it calls the report generator directly to determine
+        what the endpoint should be returning. So it's only checking that the controller is calling
+        the report generator, not that it returns an expected result
+
+        This is better tested by [Cas1OutOfServiceBedReportGeneratorTest] which could be merged
+        with this test
+         */
         val expectedDataFrame = Cas1OutOfServiceBedsReportGenerator(realOutOfServiceBedRepository)
           .createReport(
-            listOf(bed1, bed2),
+            listOf(Cas1BedIdentifier(bed1.id), Cas1BedIdentifier(bed2.id)),
             Cas1ReportService.MonthSpecificReportParams(2023, 4),
           )
 
