@@ -11,6 +11,10 @@ import java.util.UUID
 
 @Repository
 interface Cas1OutOfServiceBedReasonRepository : JpaRepository<Cas1OutOfServiceBedReasonEntity, UUID> {
+  companion object {
+    val BED_ON_HOLD_REASON_ID: UUID = UUID.fromString("199bef2d-0839-40c0-85e2-00b84fde7fde")
+  }
+
   @Query("SELECT r FROM Cas1OutOfServiceBedReasonEntity r WHERE r.isActive = true")
   fun findActive(): List<Cas1OutOfServiceBedReasonEntity>
 }

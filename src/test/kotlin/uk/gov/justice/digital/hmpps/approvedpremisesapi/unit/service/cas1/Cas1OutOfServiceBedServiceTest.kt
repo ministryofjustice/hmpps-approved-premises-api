@@ -30,9 +30,12 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas1OutOfServ
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas1OutOfServiceBedRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas1OutOfServiceBedRevisionRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas1OutOfServiceBedRevisionType
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRole
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRoleAssignmentEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.CasResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.UserService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1OutOfServiceBedService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.unit.util.assertThatCasResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.PageCriteria
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.getPageableOrAllPages
 import java.time.LocalDate
@@ -137,6 +140,45 @@ class Cas1OutOfServiceBedServiceTest {
         entry("$.reason", "doesNotExist"),
         entry("$.notes", "empty"),
       )
+    }
+
+    @Test
+    fun `Returns FieldValidationError if user can't create on hold record`() {
+      val premisesEntity = approvedPremisesFactory.produce()
+
+      val room = RoomEntityFactory()
+        .withPremises(premisesEntity)
+        .produce()
+
+      val bed = BedEntityFactory()
+        .withYieldedRoom { room }
+        .produce()
+
+      premisesEntity.rooms += room
+      room.beds += bed
+
+      val outOfServiceBedReason = Cas1OutOfServiceBedReasonEntityFactory()
+        .withId(Cas1OutOfServiceBedReasonRepository.BED_ON_HOLD_REASON_ID)
+        .produce()
+
+      val user = UserEntityFactory()
+        .withDefaults()
+        .produce()
+
+      every { outOfServiceBedReasonRepository.findByIdOrNull(outOfServiceBedReason.id) } returns outOfServiceBedReason
+      every { userService.getUserForRequest() } returns user
+
+      val result = outOfServiceBedService.createOutOfServiceBed(
+        premises = premisesEntity,
+        startDate = LocalDate.parse("2022-08-25"),
+        endDate = LocalDate.parse("2022-08-28"),
+        reasonId = outOfServiceBedReason.id,
+        referenceNumber = "12345",
+        notes = "notes",
+        bedId = bed.id,
+      )
+
+      assertThatCasResult(result).isFieldValidationError().hasMessage("$.reason", "onHoldNotAllowedForUser")
     }
 
     @Test
@@ -291,6 +333,52 @@ class Cas1OutOfServiceBedServiceTest {
         userService.getUserForRequest()
       }
     }
+
+    @Test
+    fun `Returns Success with correct result when creating on hold bed reason and has correct role`() {
+      val premisesEntity = approvedPremisesFactory.produce()
+
+      val room = RoomEntityFactory()
+        .withPremises(premisesEntity)
+        .produce()
+
+      val bed = BedEntityFactory()
+        .withYieldedRoom { room }
+        .produce()
+
+      premisesEntity.rooms += room
+      room.beds += bed
+
+      val outOfServiceBedReason = Cas1OutOfServiceBedReasonEntityFactory()
+        .withId(Cas1OutOfServiceBedReasonRepository.BED_ON_HOLD_REASON_ID)
+        .produce()
+
+      val user = UserEntityFactory()
+        .withDefaults()
+        .produce()
+        .apply {
+          roles.add(UserRoleAssignmentEntity(UUID.randomUUID(), this, UserRole.CAS1_CRU_MEMBER_FIND_AND_BOOK_BETA))
+        }
+
+      every { outOfServiceBedReasonRepository.findByIdOrNull(outOfServiceBedReason.id) } returns outOfServiceBedReason
+
+      every { outOfServiceBedRepository.saveAndFlush(any()) } returnsArgument 0
+      every { outOfServiceBedDetailsRepository.saveAndFlush(any()) } returnsArgument 0
+
+      every { userService.getUserForRequest() } returns user
+
+      val result = outOfServiceBedService.createOutOfServiceBed(
+        premises = premisesEntity,
+        startDate = LocalDate.parse("2022-08-25"),
+        endDate = LocalDate.parse("2022-08-28"),
+        reasonId = outOfServiceBedReason.id,
+        referenceNumber = "12345",
+        notes = "notes",
+        bedId = bed.id,
+      )
+
+      assertThatCasResult(result).isSuccess()
+    }
   }
 
   @Nested
@@ -381,6 +469,47 @@ class Cas1OutOfServiceBedServiceTest {
       assertThat(result.value.endDate).isEqualTo(LocalDate.parse("2022-08-28"))
       assertThat(result.value.referenceNumber).isEqualTo("12345")
       assertThat(result.value.notes).isEqualTo("notes")
+    }
+
+    @Test
+    fun `Returns FieldValidationError if user can't create on hold record`() {
+      val premisesEntity = approvedPremisesFactory.produce()
+
+      val outOfServiceBedReason = Cas1OutOfServiceBedReasonEntityFactory()
+        .withId(Cas1OutOfServiceBedReasonRepository.BED_ON_HOLD_REASON_ID)
+        .produce()
+
+      val outOfServiceBed = Cas1OutOfServiceBedEntityFactory()
+        .withBed {
+          withRoom {
+            withPremises(premisesEntity)
+          }
+        }
+        .produce()
+
+      outOfServiceBed.revisionHistory += Cas1OutOfServiceBedRevisionEntityFactory()
+        .withDetailType(Cas1OutOfServiceBedRevisionType.INITIAL)
+        .withOutOfServiceBed(outOfServiceBed)
+        .produce()
+
+      every { outOfServiceBedRepository.findByIdOrNull(outOfServiceBed.id) } returns outOfServiceBed
+      every { outOfServiceBedReasonRepository.findByIdOrNull(outOfServiceBedReason.id) } returns outOfServiceBedReason
+
+      val user = UserEntityFactory()
+        .withDefaults()
+        .produce()
+
+      val result = outOfServiceBedService.updateOutOfServiceBed(
+        outOfServiceBedId = outOfServiceBed.id,
+        startDate = LocalDate.parse("2022-08-25"),
+        endDate = LocalDate.parse("2022-08-28"),
+        reasonId = outOfServiceBedReason.id,
+        referenceNumber = "12345",
+        notes = "notes",
+        createdBy = user,
+      )
+
+      assertThatCasResult(result).isFieldValidationError().hasMessage("$.reason", "onHoldNotAllowedForUser")
     }
 
     @Test
@@ -489,6 +618,52 @@ class Cas1OutOfServiceBedServiceTest {
       verify(exactly = 0) {
         userService.getUserForRequest()
       }
+    }
+
+    @Test
+    fun `Returns Success with correct result when using on hold bed reason and has correct role`() {
+      val premisesEntity = approvedPremisesFactory.produce()
+
+      val outOfServiceBedReason = Cas1OutOfServiceBedReasonEntityFactory()
+        .withId(Cas1OutOfServiceBedReasonRepository.BED_ON_HOLD_REASON_ID)
+        .produce()
+
+      val outOfServiceBed = Cas1OutOfServiceBedEntityFactory()
+        .withBed {
+          withRoom {
+            withPremises(premisesEntity)
+          }
+        }
+        .produce()
+
+      outOfServiceBed.revisionHistory += Cas1OutOfServiceBedRevisionEntityFactory()
+        .withDetailType(Cas1OutOfServiceBedRevisionType.INITIAL)
+        .withOutOfServiceBed(outOfServiceBed)
+        .produce()
+
+      val user = UserEntityFactory()
+        .withDefaults()
+        .produce().apply {
+          roles.add(UserRoleAssignmentEntity(UUID.randomUUID(), this, UserRole.CAS1_CRU_MEMBER_FIND_AND_BOOK_BETA))
+        }
+
+      every { outOfServiceBedRepository.findByIdOrNull(outOfServiceBed.id) } returns outOfServiceBed
+      every { outOfServiceBedReasonRepository.findByIdOrNull(outOfServiceBedReason.id) } returns outOfServiceBedReason
+
+      every { outOfServiceBedRepository.save(any()) } returnsArgument 0
+      every { outOfServiceBedDetailsRepository.saveAndFlush(any()) } returnsArgument 0
+
+      val result = outOfServiceBedService.updateOutOfServiceBed(
+        outOfServiceBedId = outOfServiceBed.id,
+        startDate = LocalDate.parse("2022-08-25"),
+        endDate = LocalDate.parse("2022-08-28"),
+        reasonId = outOfServiceBedReason.id,
+        referenceNumber = "12345",
+        notes = "notes",
+        createdBy = user,
+      )
+
+      assertThatCasResult(result).isSuccess()
     }
   }
 

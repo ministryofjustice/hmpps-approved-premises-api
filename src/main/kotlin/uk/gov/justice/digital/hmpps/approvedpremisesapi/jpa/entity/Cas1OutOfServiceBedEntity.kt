@@ -57,7 +57,6 @@ interface Cas1OutOfServiceBedRepository : JpaRepository<Cas1OutOfServiceBedEntit
       (FALSE = :excludeFuture OR dd.start_date <= :date) AND 
       (oosb_cancellations IS NULL)
     """
-    val BED_ON_HOLD_CANCELLATION_REASON_ID: UUID = UUID.fromString("199bef2d-0839-40c0-85e2-00b84fde7fde")
   }
 
   @Query(
