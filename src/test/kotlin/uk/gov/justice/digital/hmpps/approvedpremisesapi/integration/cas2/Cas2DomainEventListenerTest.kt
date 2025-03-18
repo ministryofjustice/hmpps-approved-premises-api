@@ -186,4 +186,56 @@ class Cas2DomainEventListenerTest : IntegrationTestBase() {
       }
     }
   }
+
+  @Test
+  fun `Save new location in assignment table and send email to referring POM`() {
+    val prisoner = Prisoner(prisonId = "A1234AB", firstName = "Bloggs", lastName = "Cas", prisonName = "HM LONDON")
+    val eventType = "prisoner-offender-search.prisoner.updated"
+    val occurredAt = Instant.now().atZone(ZoneId.systemDefault())
+
+    val applicationSchema = cas2ApplicationJsonSchemaEntityFactory.produceAndPersist {
+      withAddedAt(OffsetDateTime.now())
+      withId(UUID.randomUUID())
+    }
+
+    givenACas2PomUser { userEntity, jwt ->
+      givenAnOffender { offenderDetails, _ ->
+        val application = cas2ApplicationEntityFactory.produceAndPersist {
+          withApplicationSchema(applicationSchema)
+          withCreatedByUser(userEntity)
+          withSubmittedAt(OffsetDateTime.now())
+          withCrn(offenderDetails.otherIds.crn)
+          withCreatedAt(OffsetDateTime.now().minusDays(28))
+          withConditionalReleaseDate(LocalDate.now().plusDays(1))
+        }
+
+        val detailUrl = "http://localhost:8080/api/pom-allocation/${application.nomsNumber}/3"
+
+        val oldApplicationAssignment = Cas2ApplicationAssignmentEntity(
+          id = UUID.randomUUID(),
+          application = application,
+          prisonCode = "LON",
+          allocatedPomUserId = application.createdByUser.id,
+          createdAt = occurredAt.toOffsetDateTime(),
+        )
+        applicationAssignmentRepository.deleteAll()
+        applicationAssignmentRepository.save(
+          oldApplicationAssignment,
+        )
+
+        every { prisonerSearchClient.getPrisoner(any()) } returns prisoner
+
+        @SuppressWarnings("MaxLineLength")
+        val event =
+          "{\"eventType\":\"$eventType\",\"detailUrl\":\"$detailUrl\",\"occurredAt\":\"$occurredAt\",\"additionalInformation\": {\"categoriesChanged\": [\"LOCATION\"]},\"personReference\":{\"identifiers\":[{\"type\":\"NOMS\",\"value\":\"${application.nomsNumber}\"}]}}"
+        publishMessageToTopic(eventType, event)
+
+        await().until { applicationAssignmentRepository.count().toInt() == 2 }
+
+        val locations = applicationAssignmentRepository.findAll()
+
+        assert(locations.last().prisonCode == prisoner.prisonId)
+      }
+    }
+  }
 }

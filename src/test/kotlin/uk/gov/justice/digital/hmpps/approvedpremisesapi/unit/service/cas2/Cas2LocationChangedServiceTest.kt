@@ -19,6 +19,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.domainevent.Person
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.domainevent.PersonReference
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.InvalidDomainEventException
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas2.Cas2ApplicationService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas2.Cas2EmailService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas2.Cas2LocationChangedService
 import java.time.Instant
 import java.time.ZoneId
@@ -31,6 +32,9 @@ class Cas2LocationChangedServiceTest {
 
   @MockK
   lateinit var applicationService: Cas2ApplicationService
+
+  @MockK
+  lateinit var emailService: Cas2EmailService
 
   @MockK
   lateinit var prisonerSearchClient: PrisonerSearchClient
@@ -64,6 +68,7 @@ class Cas2LocationChangedServiceTest {
     every { prisonerSearchClient.getPrisoner(any()) } returns prisoner
     every { applicationService.findMostRecentApplication(eq(nomsNumber)) } returns application
     every { applicationRepository.save(any()) } returns application
+    every { emailService.sendLocationChangedEmailToTransferringPom(any(), any(), any()) } returns Unit
 
     locationChangedService.process(locationEvent)
 
