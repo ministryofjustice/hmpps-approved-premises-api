@@ -11,7 +11,6 @@ import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.BookingStatus
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1ReportName
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.CaseAccessFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.CaseSummaryFactory
@@ -27,15 +26,12 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRole
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas3.Cas3VoidBedspacesRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.community.OffenderDetailSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.generator.BookingsReportGenerator
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.generator.VoidBedspacesReportGenerator
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.model.BedUsageReportRow
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.model.BedUsageType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.model.BedUtilisationReportRow
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.model.BookingsReportRow
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.model.PersonInformationReportData
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.model.VoidBedspaceReportRow
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.properties.BookingsReportProperties
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.properties.VoidBedspaceReportProperties
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.util.toShortBase58
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.BookingTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomDateBefore
@@ -1267,102 +1263,6 @@ class ReportsTest : IntegrationTestBase() {
               val actual = DataFrame
                 .readExcel(it.responseBody!!.inputStream())
                 .convertTo<BedUtilisationReportRow>(ExcessiveColumns.Remove)
-              Assertions.assertThat(actual).isEqualTo(expectedDataFrame)
-            }
-        }
-      }
-    }
-  }
-
-  @Nested
-  inner class GetVoidBedspacesReport {
-    private val voidBedspacesEndpoint = "/cas1/reports/${Cas1ReportName.lostBeds.value}"
-
-    @Test
-    fun `Get void bedspaces report returns OK with correct body`() {
-      givenAUser(roles = listOf(UserRole.CAS1_REPORT_VIEWER)) { userEntity, jwt ->
-        givenAnOffender { offenderDetails, inmateDetails ->
-          val premises = approvedPremisesEntityFactory.produceAndPersist {
-            withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
-            withProbationRegion(userEntity.probationRegion)
-          }
-
-          val bed1 = bedEntityFactory.produceAndPersist {
-            withRoom(
-              roomEntityFactory.produceAndPersist {
-                withPremises(premises)
-              },
-            )
-          }
-
-          val bed2 = bedEntityFactory.produceAndPersist {
-            withRoom(
-              roomEntityFactory.produceAndPersist {
-                withPremises(premises)
-              },
-            )
-          }
-
-          val bed3 = bedEntityFactory.produceAndPersist {
-            withRoom(
-              roomEntityFactory.produceAndPersist {
-                withPremises(premises)
-              },
-            )
-          }
-
-          cas3VoidBedspaceEntityFactory.produceAndPersist {
-            withPremises(premises)
-            withBed(bed1)
-            withStartDate(LocalDate.of(2023, 4, 5))
-            withEndDate(LocalDate.of(2023, 7, 8))
-            withYieldedReason {
-              cas3VoidBedspaceReasonEntityFactory.produceAndPersist()
-            }
-          }
-
-          cas3VoidBedspaceEntityFactory.produceAndPersist {
-            withPremises(premises)
-            withBed(bed2)
-            withStartDate(LocalDate.of(2023, 4, 12))
-            withEndDate(LocalDate.of(2023, 7, 5))
-            withYieldedReason {
-              cas3VoidBedspaceReasonEntityFactory.produceAndPersist()
-            }
-          }
-
-          val voidBedspace3 = cas3VoidBedspaceEntityFactory.produceAndPersist {
-            withPremises(premises)
-            withBed(bed3)
-            withStartDate(LocalDate.of(2023, 4, 1))
-            withEndDate(LocalDate.of(2023, 7, 5))
-            withYieldedReason {
-              cas3VoidBedspaceReasonEntityFactory.produceAndPersist()
-            }
-          }
-
-          cas3VoidBedspaceCancellationEntityFactory.produceAndPersist {
-            withVoidBedspace(voidBedspace3)
-          }
-
-          val expectedDataFrame = VoidBedspacesReportGenerator(realLostBedsRepository)
-            .createReport(
-              listOf(bed1, bed2),
-              VoidBedspaceReportProperties(ServiceName.approvedPremises, null, 2023, 4),
-            )
-
-          webTestClient.get()
-            .uri("$voidBedspacesEndpoint?year=2023&month=4")
-            .header("Authorization", "Bearer $jwt")
-            .header("X-Service-Name", ServiceName.approvedPremises.value)
-            .exchange()
-            .expectStatus()
-            .isOk
-            .expectBody()
-            .consumeWith {
-              val actual = DataFrame
-                .readExcel(it.responseBody!!.inputStream())
-                .convertTo<VoidBedspaceReportRow>(ExcessiveColumns.Remove)
               Assertions.assertThat(actual).isEqualTo(expectedDataFrame)
             }
         }
