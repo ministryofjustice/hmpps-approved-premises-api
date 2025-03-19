@@ -95,7 +95,7 @@ class TaskTransformerTest {
         .produce(),
     )
 
-  private val application = applicationFactory.produce()
+  private val application = applicationFactory.withArrivalDate(OffsetDateTime.now()).produce()
 
   private val assessmentFactory = ApprovedPremisesAssessmentEntityFactory()
     .withApplication(application)
@@ -157,6 +157,7 @@ class TaskTransformerTest {
       assertThat(result.personSummary.crn).isEqualTo(assessment.application.crn)
       assertThat((result.personSummary as FullPersonSummary).name).isEqualTo("First Last")
       assertThat(result.probationDeliveryUnit!!.name).isEqualTo("thePduName")
+      assertThat(result.expectedArrivalDate).isEqualTo(application.arrivalDate!!.toLocalDate())
     }
 
     @Test
@@ -291,8 +292,15 @@ class TaskTransformerTest {
         PlacementDateEntity(
           id = UUID.randomUUID(),
           createdAt = OffsetDateTime.now(),
-          expectedArrival = LocalDate.now(),
+          expectedArrival = LocalDate.of(2024, 5, 1),
           duration = 12,
+          placementApplication = placementApplication,
+        ),
+        PlacementDateEntity(
+          id = UUID.randomUUID(),
+          createdAt = OffsetDateTime.now(),
+          expectedArrival = LocalDate.of(2024, 3, 23),
+          duration = 15,
           placementApplication = placementApplication,
         ),
       )
@@ -313,11 +321,16 @@ class TaskTransformerTest {
             placementApplication.placementDates[0].expectedArrival,
             placementApplication.placementDates[0].duration,
           ),
+          PlacementDates(
+            placementApplication.placementDates[1].expectedArrival,
+            placementApplication.placementDates[1].duration,
+          ),
         ),
       )
       assertThat(result.dueDate).isEqualTo(placementApplication.dueAt!!.toLocalDate())
       assertThat(result.dueAt).isEqualTo(placementApplication.dueAt!!.toInstant())
       assertThat(result.probationDeliveryUnit!!.name).isEqualTo("thePduName")
+      assertThat(result.expectedArrivalDate).isEqualTo(LocalDate.of(2024, 3, 23))
     }
 
     @ParameterizedTest
