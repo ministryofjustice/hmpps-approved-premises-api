@@ -136,7 +136,7 @@ class Cas2v2StatusUpdateService(
         data = Cas2ApplicationStatusUpdatedEvent(
           id = domainEventId,
           timestamp = eventOccurredAt.toInstant(),
-          eventType = EventType.applicationStatusUpdated,
+          eventType = EventType.cas2v2ApplicationStatusUpdated,
           eventDetails = Cas2ApplicationStatusUpdatedEventDetails(
             applicationId = application.id,
             applicationUrl = applicationUrlTemplate.replace("#id", application.id.toString()),
