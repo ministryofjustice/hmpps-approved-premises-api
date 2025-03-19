@@ -17,9 +17,18 @@ class Cas1SiteSurveyBedFactory {
   private fun Cas1SiteSurveyDataFrame.toInternalModel(): List<Cas1SiteSurveyBed> {
     val beds = mutableListOf<Cas1SiteSurveyBed>()
     for (i in 1..<dataFrame.columnsCount()) {
+      val uniqueBedRef = resolveAnswer(Exact("Unique Reference Number for Bed"), i)
+
+      // excel can have 'phantom' columns that aren't populated with any values
+      // but are presented via dataframe regardless. Dataframe labels these columns
+      // with the header 'untitled'
+      if (uniqueBedRef == "untitled") {
+        continue
+      }
+
       beds.add(
         Cas1SiteSurveyBed(
-          uniqueBedRef = resolveAnswer(Exact("Unique Reference Number for Bed"), i),
+          uniqueBedRef = uniqueBedRef,
           roomNumber = this.resolveAnswer(Exact("Room Number / Name"), i),
           bedNumber = this.resolveAnswer(
             Exact(

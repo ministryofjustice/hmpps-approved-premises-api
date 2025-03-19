@@ -35,11 +35,6 @@ class SeedCas1RoomsFromSiteSurveyXlsxTest : SeedTestBase() {
     "Can this room be designated as suitable for people requiring step free access? (Must answer yes to Q23 and 25 on previous sheet and Q19 on this sheet)",
   )
 
-  data class Answers(
-    val question: String,
-    val answersForEachRoom: List<String>,
-  )
-
   fun MutableList<List<Any>>.addQuestionsAndAnswers(
     vararg answerOverrides: List<String>,
   ): MutableList<List<Any>> {
