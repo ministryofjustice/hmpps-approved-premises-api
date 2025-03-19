@@ -880,6 +880,9 @@ components:
         dueAt:
           type: string
           format: date-time
+        expectedArrivalDate:
+          type: string
+          format: date
         allocatedToStaffMember:
           $ref: '#/components/schemas/ApprovedPremisesUser'
         status:

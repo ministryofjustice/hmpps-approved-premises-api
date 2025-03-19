@@ -55,6 +55,10 @@ class TaskTransformer(
     probationDeliveryUnit = assessment.application.createdByUser.probationDeliveryUnit?.let {
       probationDeliveryUnitTransformer.transformJpaToApi(it)
     },
+    expectedArrivalDate = when (val application = assessment.application) {
+      is ApprovedPremisesApplicationEntity -> application.arrivalDate?.toLocalDate()
+      else -> null
+    },
   )
 
   fun transformPlacementApplicationToTask(placementApplication: PlacementApplicationEntity, offenderSummaries: List<PersonSummaryInfoResult>) = PlacementApplicationTask(
@@ -83,6 +87,9 @@ class TaskTransformer(
     probationDeliveryUnit = placementApplication.application.createdByUser.probationDeliveryUnit?.let {
       probationDeliveryUnitTransformer.transformJpaToApi(it)
     },
+    expectedArrivalDate = placementApplication.placementDates
+      .map { it.expectedArrival }
+      .minByOrNull { it },
   )
 
   private fun getPersonSummary(application: ApplicationEntity, offenderSummaries: List<PersonSummaryInfoResult>): PersonSummary = personTransformer.personSummaryInfoToPersonSummary(
