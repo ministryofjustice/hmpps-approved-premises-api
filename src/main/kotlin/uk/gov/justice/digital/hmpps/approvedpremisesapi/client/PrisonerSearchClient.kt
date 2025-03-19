@@ -13,9 +13,5 @@ interface PrisonerSearchClient {
 
 data class Prisoner(
   val prisonId: String,
-  val firstName: String,
-  val lastName: String,
   val prisonName: String,
-) {
-  val name: String = "$firstName $lastName"
-}
+)

@@ -41,13 +41,12 @@ class Cas2EmailServiceTest {
   @InjectMockKs
   lateinit var emailService: Cas2EmailService
 
-  private val prisoner = Prisoner(prisonId = "A1234AB", firstName = "Joe", lastName = "Blogs", prisonName = "HM LONDON")
+  private val prisoner = Prisoner(prisonId = "A1234AB", prisonName = "HM LONDON")
   private val nomsNumber = "NOMSABC"
   private val templateId = "SOME ID"
   private val user = NomisUserEntityFactory().produce()
   private val personalisation = mapOf(
     "nomsNumber" to nomsNumber,
-    "prisonerName" to prisoner.name,
     "receivingPrisonName" to prisoner.prisonName,
   )
   private val application = Cas2ApplicationEntityFactory().withNomsNumber(nomsNumber).withCreatedByUser(user).produce()
@@ -58,6 +57,89 @@ class Cas2EmailServiceTest {
     createdAt = OffsetDateTime.now(),
     allocatedPomUserId = user.id,
   )
+
+  @Test
+  fun `send email to Nacro when location changes`() {
+    application.applicationAssignments.add(applicationAssignment)
+    val personalisationForNacro = mapOf(
+      "receivingPrisonName" to prisoner.prisonName,
+      "transferringPrisonName" to "tbc",
+      "link" to nomsNumber,
+    )
+    every {
+      emailNotificationService.sendCas2Email(
+        eq("tbc"),
+        eq(templateId),
+        eq(personalisationForNacro),
+      )
+    } returns Unit
+    every { notifyConfig.templates.toNacroApplicationTransferredToAnotherPrison } returns templateId
+
+    emailService.sendLocationChangedEmailToNacro(application, prisoner)
+
+    verify(exactly = 1) {
+      emailNotificationService.sendCas2Email(
+        eq("tbc"),
+        eq(templateId),
+        eq(personalisationForNacro),
+      )
+    }
+    verify(exactly = 1) { notifyConfig.templates.toNacroApplicationTransferredToAnotherPrison }
+  }
+
+  @Test
+  fun `send email to receiving POM Unit when location changes`() {
+    application.applicationAssignments.add(applicationAssignment)
+    val personalisationWithLink = mapOf(
+      "nomsNumber" to nomsNumber,
+      "receivingPrisonName" to prisoner.prisonName,
+      "link" to "NOMSABC",
+    )
+    every {
+      emailNotificationService.sendCas2Email(
+        eq("tbc"),
+        eq(templateId),
+        eq(personalisationWithLink),
+      )
+    } returns Unit
+    every { notifyConfig.templates.toReceivingPomUnitApplicationTransferredToAnotherPrison } returns templateId
+
+    emailService.sendLocationChangedEmailToReceivingPomUnit(application.id, nomsNumber, prisoner)
+
+    verify(exactly = 1) {
+      emailNotificationService.sendCas2Email(
+        eq("tbc"),
+        eq(templateId),
+        eq(personalisationWithLink),
+      )
+    }
+    verify(exactly = 1) { notifyConfig.templates.toReceivingPomUnitApplicationTransferredToAnotherPrison }
+  }
+
+  @Test
+  fun `send email to transferring POM Unit when location changes`() {
+    application.applicationAssignments.add(applicationAssignment)
+
+    every {
+      emailNotificationService.sendCas2Email(
+        eq("tbc"),
+        eq(templateId),
+        eq(personalisation),
+      )
+    } returns Unit
+    every { notifyConfig.templates.toTransferringPomUnitApplicationTransferredToAnotherPrison } returns templateId
+
+    emailService.sendLocationChangedEmailToTransferringPomUnit(application.id, nomsNumber, prisoner)
+
+    verify(exactly = 1) {
+      emailNotificationService.sendCas2Email(
+        eq("tbc"),
+        eq(templateId),
+        eq(personalisation),
+      )
+    }
+    verify(exactly = 1) { notifyConfig.templates.toTransferringPomUnitApplicationTransferredToAnotherPrison }
+  }
 
   @Test
   fun `send email to referring POM when location changes`() {
@@ -115,7 +197,7 @@ class Cas2EmailServiceTest {
     emailService.sendLocationChangedEmailToTransferringPom(applicationWithNoEmail, nomsNumber, prisoner)
 
     verify(exactly = 0) { emailNotificationService.sendCas2Email(any(), any(), any()) }
-    verify(exactly = 0) { notifyConfig.templates.toTransferringPomApplicationTransferredToAnotherPrison }
+    verify(exactly = 1) { notifyConfig.templates.toTransferringPomApplicationTransferredToAnotherPrison }
     verify(exactly = 1) { nomisUserRepository.findById(eq(userWithNoEmail.id)) }
     verify(exactly = 1) { Sentry.captureMessage(any()) }
 

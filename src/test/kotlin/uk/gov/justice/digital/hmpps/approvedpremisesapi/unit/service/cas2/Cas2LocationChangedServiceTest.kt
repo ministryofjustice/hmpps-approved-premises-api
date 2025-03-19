@@ -42,7 +42,7 @@ class Cas2LocationChangedServiceTest {
   @InjectMockKs
   lateinit var locationChangedService: Cas2LocationChangedService
 
-  private val prisoner = Prisoner(prisonId = "A1234AB", firstName = "Joe", lastName = "Blogs", prisonName = "HM LONDON")
+  private val prisoner = Prisoner(prisonId = "A1234AB", prisonName = "HM LONDON")
   private val eventType = "prisoner-offender-search.prisoner.updated"
   private val nomsNumber = "NOMSABC"
   private val detailUrl = "some/url"
@@ -68,12 +68,31 @@ class Cas2LocationChangedServiceTest {
     every { prisonerSearchClient.getPrisoner(any()) } returns prisoner
     every { applicationService.findMostRecentApplication(eq(nomsNumber)) } returns application
     every { applicationRepository.save(any()) } returns application
-    every { emailService.sendLocationChangedEmailToTransferringPom(any(), any(), any()) } returns Unit
+    every { emailService.sendLocationChangedEmailToTransferringPom(any(), eq(nomsNumber), eq(prisoner)) } returns Unit
+    every { emailService.sendLocationChangedEmailToReceivingPomUnit(any(), eq(nomsNumber), eq(prisoner)) } returns Unit
+    every {
+      emailService.sendLocationChangedEmailToTransferringPomUnit(
+        any(),
+        eq(nomsNumber),
+        eq(prisoner),
+      )
+    } returns Unit
+    every { emailService.sendLocationChangedEmailToNacro(any(), eq(prisoner)) } returns Unit
 
     locationChangedService.process(locationEvent)
 
     verify(exactly = 1) { prisonerSearchClient.getPrisoner(any()) }
     verify(exactly = 1) { applicationService.findMostRecentApplication(eq(nomsNumber)) }
+    verify(exactly = 1) { emailService.sendLocationChangedEmailToTransferringPom(any(), eq(nomsNumber), eq(prisoner)) }
+    verify(exactly = 1) { emailService.sendLocationChangedEmailToReceivingPomUnit(any(), eq(nomsNumber), eq(prisoner)) }
+    verify(exactly = 1) {
+      emailService.sendLocationChangedEmailToTransferringPomUnit(
+        any(),
+        eq(nomsNumber),
+        eq(prisoner),
+      )
+    }
+    verify(exactly = 1) { emailService.sendLocationChangedEmailToNacro(any(), eq(prisoner)) }
     verify(exactly = 1) { applicationRepository.save(any()) }
   }
 

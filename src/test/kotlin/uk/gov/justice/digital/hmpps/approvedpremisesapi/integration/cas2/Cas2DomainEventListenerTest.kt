@@ -1,25 +1,23 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.cas2
 
-import com.ninjasquad.springmockk.MockkBean
 import com.ninjasquad.springmockk.SpykBean
-import io.mockk.every
 import io.mockk.verify
 import org.awaitility.Awaitility.await
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.beans.factory.annotation.Value
 import software.amazon.awssdk.services.sns.model.MessageAttributeValue
 import software.amazon.awssdk.services.sns.model.PublishRequest
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.ManagePomCasesClient
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.Manager
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.PomAllocation
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.Prison
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.Prisoner
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.PrisonerSearchClient
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.IntegrationTestBase
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenACas2PomUser
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAnOffender
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas2ApplicationAssignmentEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas2ApplicationAssignmentRepository
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.prisonsapi.Agency
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas2.Cas2DomainEventListener
 import uk.gov.justice.hmpps.sqs.HmppsQueueService
 import uk.gov.justice.hmpps.sqs.MissingQueueException
@@ -34,11 +32,11 @@ class Cas2DomainEventListenerTest : IntegrationTestBase() {
   @Autowired
   private lateinit var hmppsQueueService: HmppsQueueService
 
-  @MockkBean
-  private lateinit var prisonerSearchClient: PrisonerSearchClient
+  @Value("\${services.manage-pom-cases-api.base-url}")
+  lateinit var managePomCasesBaseUrl: String
 
-  @MockkBean
-  private lateinit var managePomCasesClient: ManagePomCasesClient
+  @Value("\${services.prisoner-search-api.base-url}")
+  lateinit var prisonerSearchBaseUrl: String
 
   @SpykBean
   private lateinit var domainEventListener: Cas2DomainEventListener
@@ -86,7 +84,7 @@ class Cas2DomainEventListenerTest : IntegrationTestBase() {
 
   @Test
   fun `Save new location in assignment table`() {
-    val prisoner = Prisoner(prisonId = "A1234AB", firstName = "Bloggs", lastName = "Cas", prisonName = "HM LONDON")
+    val prisoner = Prisoner(prisonId = "A1234AB", prisonName = "HM LONDON")
     val eventType = "prisoner-offender-search.prisoner.updated"
     val occurredAt = Instant.now().atZone(ZoneId.systemDefault())
 
@@ -105,7 +103,7 @@ class Cas2DomainEventListenerTest : IntegrationTestBase() {
           withCreatedAt(OffsetDateTime.now().minusDays(28))
           withConditionalReleaseDate(LocalDate.now().plusDays(1))
         }
-        val detailUrl = "http://localhost:8080/api/pom-allocation/${application.nomsNumber}/3"
+        val detailUrl = "$prisonerSearchBaseUrl/prisoner/${application.nomsNumber}"
 
         val oldApplicationAssignment = Cas2ApplicationAssignmentEntity(
           id = UUID.randomUUID(),
@@ -119,7 +117,10 @@ class Cas2DomainEventListenerTest : IntegrationTestBase() {
           oldApplicationAssignment,
         )
 
-        every { prisonerSearchClient.getPrisoner(any()) } returns prisoner
+        mockSuccessfulGetCallWithJsonResponse(
+          url = "/prisoner/${application.nomsNumber}",
+          responseBody = prisoner,
+        )
 
         @SuppressWarnings("MaxLineLength")
         val event =
@@ -157,7 +158,7 @@ class Cas2DomainEventListenerTest : IntegrationTestBase() {
         }
         val pomAllocation = PomAllocation(Manager(userEntity.nomisStaffId), Prison("A1234AB"))
 
-        val detailUrl = "/api/allocation/${application.nomsNumber}/primary_pom"
+        val detailUrl = "$managePomCasesBaseUrl/allocation/${application.nomsNumber}/primary_pom"
 
         val oldApplicationAssignment = Cas2ApplicationAssignmentEntity(
           id = UUID.randomUUID(),
@@ -171,7 +172,15 @@ class Cas2DomainEventListenerTest : IntegrationTestBase() {
           oldApplicationAssignment,
         )
 
-        every { managePomCasesClient.getPomAllocation(any()) } returns pomAllocation
+        mockSuccessfulGetCallWithJsonResponse(
+          url = "/allocation/${application.nomsNumber}/primary_pom",
+          responseBody = pomAllocation,
+        )
+
+        mockSuccessfulGetCallWithJsonResponse(
+          url = "/api/agencies/${oldApplicationAssignment.prisonCode}",
+          responseBody = Agency(oldApplicationAssignment.prisonCode, "HMS LONDON", "PRISON"),
+        )
 
         @SuppressWarnings("MaxLineLength")
         val event =

@@ -48,9 +48,12 @@ class Cas2LocationChangedService(
         )
 
         applicationRepository.save(application)
-        emailService.sendLocationChangedEmailToTransferringPom(application, nomsNumber, prisoner)
-
         log.info("Added application assignment for prisoner: {}", nomsNumber)
+
+        emailService.sendLocationChangedEmailToTransferringPom(application, nomsNumber, prisoner)
+        emailService.sendLocationChangedEmailToTransferringPomUnit(application.id, nomsNumber, prisoner)
+        emailService.sendLocationChangedEmailToReceivingPomUnit(application.id, nomsNumber, prisoner)
+        emailService.sendLocationChangedEmailToNacro(application, prisoner)
       }
     }
   }
