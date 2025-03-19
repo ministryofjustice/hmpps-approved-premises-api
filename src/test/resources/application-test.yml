@@ -113,6 +113,10 @@ services:
     base-url: http://localhost:#WIREMOCK_PORT
   gov-uk-bank-holidays-api:
     base-url: http://localhost:#WIREMOCK_PORT
+  manage-pom-cases-api:
+    base-url: http://localhost:#WIREMOCK_PORT
+  prisoner-search-api:
+    base-url: http://localhost:#WIREMOCK_PORT
 
 prison-case-notes:
   lookback-days: 365

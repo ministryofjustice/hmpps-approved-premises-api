@@ -23,6 +23,7 @@ class Cas2AllocationChangedService(
   private val applicationService: Cas2ApplicationService,
   private val applicationRepository: Cas2ApplicationRepository,
   private val nomisUserRepository: NomisUserRepository,
+  private val emailService: Cas2EmailService,
 ) {
   private val log = LoggerFactory.getLogger(this::class.java)
   private fun getAllocationResponse(detailUrl: String) = try {
@@ -64,6 +65,8 @@ class Cas2AllocationChangedService(
 
         application.applicationAssignments.add(newAssignment)
         applicationRepository.save(application)
+
+        emailService.sendAllocationChangedEmailToReceivingPom(application, nomsNumber, pomAllocation)
       } else {
         log.info("POM not allocated. No action taken: {}", pomAllocation)
       }

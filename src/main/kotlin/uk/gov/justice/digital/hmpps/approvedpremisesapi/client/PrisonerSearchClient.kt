@@ -13,4 +13,5 @@ interface PrisonerSearchClient {
 
 data class Prisoner(
   val prisonId: String,
+  val prisonName: String,
 )

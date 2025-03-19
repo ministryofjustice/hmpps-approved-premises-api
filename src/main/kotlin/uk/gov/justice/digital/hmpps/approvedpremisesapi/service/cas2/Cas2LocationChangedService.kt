@@ -18,10 +18,12 @@ class Cas2LocationChangedService(
   private val prisonerSearchClient: PrisonerSearchClient,
   private val applicationService: Cas2ApplicationService,
   private val applicationRepository: Cas2ApplicationRepository,
+  private val emailService: Cas2EmailService,
 ) {
   private val log = LoggerFactory.getLogger(this::class.java)
 
   @Transactional
+  @Suppress("TooGenericExceptionThrown")
   fun process(event: HmppsDomainEvent) {
     if (event.additionalInformation.categoriesChanged.contains("LOCATION")) {
       val nomsNumber = event.personReference.findNomsNumber()
@@ -47,6 +49,11 @@ class Cas2LocationChangedService(
 
         applicationRepository.save(application)
         log.info("Added application assignment for prisoner: {}", nomsNumber)
+
+        emailService.sendLocationChangedEmailToTransferringPom(application, nomsNumber, prisoner)
+        emailService.sendLocationChangedEmailToTransferringPomUnit(application.id, nomsNumber, prisoner)
+        emailService.sendLocationChangedEmailToReceivingPomUnit(application.id, nomsNumber, prisoner)
+        emailService.sendLocationChangedEmailToNacro(application, prisoner)
       }
     }
   }
