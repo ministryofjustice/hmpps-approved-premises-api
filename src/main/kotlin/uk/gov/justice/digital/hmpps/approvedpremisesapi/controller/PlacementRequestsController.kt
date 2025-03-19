@@ -30,6 +30,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.AuthorisableActi
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.ValidatableActionResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.BookingService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.OffenderService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.UserAccessService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.UserService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1WithdrawableService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.PlacementRequestService
@@ -55,6 +56,7 @@ class PlacementRequestsController(
   private val bookingConfirmationTransformer: NewPlacementRequestBookingConfirmationTransformer,
   private val bookingNotMadeTransformer: BookingNotMadeTransformer,
   private val cas1WithdrawableService: Cas1WithdrawableService,
+  private val userAccessService: UserAccessService,
 ) : PlacementRequestsApiDelegate {
 
   @Deprecated("Use Cas1PlacementRequestsController.search instead")
@@ -141,6 +143,8 @@ class PlacementRequestsController(
   }
 
   override fun placementRequestsIdBookingNotMadePost(id: UUID, newBookingNotMade: NewBookingNotMade): ResponseEntity<BookingNotMade> {
+    userAccessService.ensureCurrentUserHasPermission(UserPermission.CAS1_PLACEMENT_REQUEST_RECORD_UNABLE_TO_MATCH)
+
     val user = userService.getUserForRequest()
 
     val result = placementRequestService.createBookingNotMade(

@@ -2866,9 +2866,10 @@ class PlacementRequestsTest : IntegrationTestBase() {
         .isUnauthorized
     }
 
-    @Test
-    fun `Create a Booking Not Made from a Placement Request returns 200 and creates a domain event`() {
-      givenAUser { _, jwt ->
+    @ParameterizedTest
+    @EnumSource(value = UserRole::class, names = ["CAS1_CRU_MEMBER", "CAS1_CRU_MEMBER_FIND_AND_BOOK_BETA"], mode = EnumSource.Mode.INCLUDE)
+    fun `Create a Booking Not Made from a Placement Request returns 200 and creates a domain event`(role: UserRole) {
+      givenAUser(roles = listOf(role)) { _, jwt ->
         givenAUser { otherUser, _ ->
           givenAnOffender { offenderDetails, _ ->
             givenAnApplication(createdByUser = otherUser) {

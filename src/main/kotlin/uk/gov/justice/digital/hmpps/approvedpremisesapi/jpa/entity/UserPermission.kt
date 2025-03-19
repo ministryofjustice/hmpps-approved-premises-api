@@ -3,6 +3,7 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApprovedPremisesUserPermission
 
 enum class UserPermission(val cas1ApiValue: ApprovedPremisesUserPermission?) {
+  @Deprecated("This should no longer be used on the UI or API")
   CAS1_ADHOC_BOOKING_CREATE(ApprovedPremisesUserPermission.adhocBookingCreate),
 
   /**
@@ -27,6 +28,8 @@ enum class UserPermission(val cas1ApiValue: ApprovedPremisesUserPermission?) {
   CAS1_OUT_OF_SERVICE_BED_CREATE(ApprovedPremisesUserPermission.outOfServiceBedCreate),
   CAS1_OUT_OF_SERVICE_BED_CREATE_BED_ON_HOLD(ApprovedPremisesUserPermission.outOfServiceBedCreateBedOnHold),
   CAS1_OUT_OF_SERVICE_BED_CANCEL(ApprovedPremisesUserPermission.outOfServiceBedCancel),
+
+  CAS1_PLACEMENT_REQUEST_RECORD_UNABLE_TO_MATCH(ApprovedPremisesUserPermission.placementRequestRecordUnableToMatch),
 
   /**
    * If the user can record an appeal against a rejected application
