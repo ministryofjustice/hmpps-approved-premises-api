@@ -94,8 +94,10 @@ class UserAccessService(
     else -> false
   }
 
+  @Deprecated("Use a permission")
   fun currentUserCanViewPremisesStaff(premises: PremisesEntity) = userCanViewPremisesStaff(userService.getUserForRequest(), premises)
 
+  @Deprecated("Use a permission")
   fun userCanViewPremisesStaff(user: UserEntity, premises: PremisesEntity) = when (premises) {
     is ApprovedPremisesEntity -> user.hasAnyRole(UserRole.CAS1_FUTURE_MANAGER, UserRole.CAS1_MATCHER)
     is TemporaryAccommodationPremisesEntity -> userCanAccessRegion(user, premises.probationRegion.id) && user.hasRole(UserRole.CAS3_ASSESSOR)

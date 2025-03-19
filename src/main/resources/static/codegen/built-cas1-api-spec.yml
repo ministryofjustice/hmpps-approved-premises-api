@@ -956,6 +956,42 @@ paths:
           $ref: '#/components/responses/500Response'
       x-codegen-request-body-name: body
 
+  /premises/{premisesId}/staff:
+    get:
+      tags:
+        - Premises
+      summary: Returns the staff that work at an approved premises
+      operationId: getStaff
+      parameters:
+        - name: premisesId
+          in: path
+          description: ID of the premises to return staff for
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        200:
+          description: successful operation
+          content:
+            'application/json':
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/StaffMember'
+        401:
+          $ref: '#/components/responses/401Response'
+        403:
+          $ref: '#/components/responses/403Response'
+        404:
+          description: invalid premises ID
+          content:
+            'application/json':
+              schema:
+                $ref: '#/components/schemas/Problem'
+        500:
+          $ref: '#/components/responses/500Response'
+
   /premises/{premisesId}/space-bookings:
     get:
       tags:
