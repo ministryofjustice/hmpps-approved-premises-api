@@ -104,6 +104,11 @@ data class Cas2ApplicationEntity(
   var telephoneNumber: String? = null,
 ) {
   override fun toString() = "Cas2ApplicationEntity: $id"
+
+  val allocatedPomUserId: UUID
+    get() = applicationAssignments.firstOrNull()?.allocatedPomUserId ?: createdByUser.id
+
+  fun isSubmitted() = submittedAt != null
 }
 
 /**

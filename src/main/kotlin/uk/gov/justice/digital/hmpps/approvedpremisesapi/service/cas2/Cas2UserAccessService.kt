@@ -6,17 +6,21 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.NomisUserEnti
 
 @Service
 class Cas2UserAccessService {
-  fun userCanViewApplication(user: NomisUserEntity, application: Cas2ApplicationEntity): Boolean = if (user.id == application.createdByUser.id) {
-    true
-  } else if (application.submittedAt == null) {
-    false
-  } else {
-    offenderIsFromSamePrisonAsUser(application.referringPrisonCode, user.activeCaseloadId)
-  }
+  fun userCanViewApplication(user: NomisUserEntity, application: Cas2ApplicationEntity) = isCreatedByUser(user, application) ||
+    (
+      application.isSubmitted() &&
+        (
+          isAssignedUser(user, application) ||
+            offenderIsFromSamePrisonAsUser(
+              application.referringPrisonCode,
+              user.activeCaseloadId,
+            )
+          )
+      )
 
-  fun offenderIsFromSamePrisonAsUser(referringPrisonCode: String?, activeCaseloadId: String?): Boolean = if (referringPrisonCode !== null && activeCaseloadId !== null) {
-    activeCaseloadId == referringPrisonCode
-  } else {
-    false
-  }
+  fun isCreatedByUser(user: NomisUserEntity, application: Cas2ApplicationEntity): Boolean = user.id == application.createdByUser.id
+
+  fun isAssignedUser(user: NomisUserEntity, application: Cas2ApplicationEntity): Boolean = user.id == application.allocatedPomUserId
+
+  fun offenderIsFromSamePrisonAsUser(referringPrisonCode: String?, activeCaseloadId: String?): Boolean = referringPrisonCode?.let { it == activeCaseloadId } ?: false
 }
