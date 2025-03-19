@@ -26,14 +26,9 @@ data class Cas1SiteSurveyDataFrame(
     val answer = when (question) {
       is QuestionToMatch.Exact -> {
         questionsAndAnswers.firstOrNull { it.first.toString() == question.label }?.second
-          ?: error("Couldn't find a single answer for question '$question' on sheet $sheetName")
       }
       is QuestionToMatch.StartsWith -> {
-        val matchingEntries = questionsAndAnswers.filter { it.first.toString().startsWith(question.label) }
-        if (matchingEntries.size != 1) {
-          error("Couldn't find a single answer for question '$question' on sheet $sheetName")
-        }
-        matchingEntries[0].second
+        questionsAndAnswers.firstOrNull { it.first.toString().startsWith(question.label) }?.second
       }
     }
 
@@ -53,7 +48,7 @@ data class Cas1SiteSurveyDataFrame(
   fun resolveAnswerYesNoDropDown(question: QuestionToMatch, answerCol: Int = 1): Boolean = when (val answer = resolveAnswer(question, answerCol).uppercase()) {
     "YES" -> true
     "NO" -> false
-    else -> error("Invalid value for Yes/No dropdown: $answer on sheet $sheetName. Question is $question")
+    else -> error("Invalid value for Yes/No dropdown: $answer on sheet $sheetName column ${answerCol + 1}. Question is $question")
   }
 
   fun resolveAnswerYesNoNaDropDown(question: QuestionToMatch, answerCol: Int = 1): Boolean {
@@ -62,7 +57,7 @@ data class Cas1SiteSurveyDataFrame(
       "YES" -> true
       "NO" -> false
       "N/A" -> false
-      else -> error("Invalid value for Yes/No/N/A dropdown: $answer on sheet $sheetName. Question is $question")
+      else -> error("Invalid value for Yes/No/N/A dropdown: $answer on sheet $sheetName column ${answerCol + 1}. Question is $question")
     }
   }
 

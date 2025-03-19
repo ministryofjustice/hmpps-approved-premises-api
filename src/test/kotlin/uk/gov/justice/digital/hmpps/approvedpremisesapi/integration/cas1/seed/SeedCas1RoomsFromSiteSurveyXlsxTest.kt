@@ -269,7 +269,7 @@ class SeedCas1RoomsFromSiteSurveyXlsxTest : SeedTestBase() {
     assertThat(logEntries)
       .anyMatch {
         it.level == "error" &&
-          it.message == "Unable to complete Excel seed job for 'example.xlsx' with message '1 or more beds in room 'Q999-1' have different characteristics.'"
+          it.message == "Unable to complete Excel seed job for 'example.xlsx' with message '1 or more beds in room '1' have different characteristics.'"
       }
   }
 
@@ -733,7 +733,8 @@ class SeedCas1RoomsFromSiteSurveyXlsxTest : SeedTestBase() {
     assertThat(logEntries)
       .anyMatch {
         it.level == "error" &&
-          it.message == "Unable to complete Excel seed job for 'example.xlsx' with message 'Couldn't find a single answer for question 'Exact(label=Is this room located on the ground floor?)' on sheet Sheet3'"
+          it.message == "Unable to complete Excel seed job for 'example.xlsx' with message 'Invalid value for Yes/No dropdown: " +
+          "NULL on sheet Sheet3 column 2. Question is Exact(label=Is this room located on the ground floor?)'"
       }
   }
 
@@ -779,7 +780,7 @@ class SeedCas1RoomsFromSiteSurveyXlsxTest : SeedTestBase() {
       .anyMatch {
         it.level == "error" &&
           it.message == "Unable to complete Excel seed job for 'example.xlsx' with message 'Invalid value for Yes/No dropdown:" +
-          " BAD ANSWER on sheet Sheet3. Question is Exact(label=Is this room located on the ground floor?)'"
+          " BAD ANSWER on sheet Sheet3 column 2. Question is Exact(label=Is this room located on the ground floor?)'"
       }
   }
 
