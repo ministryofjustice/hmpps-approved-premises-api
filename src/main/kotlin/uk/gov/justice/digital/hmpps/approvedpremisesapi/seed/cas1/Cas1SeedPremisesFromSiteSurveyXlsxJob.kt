@@ -95,6 +95,7 @@ class Cas1SeedPremisesFromSiteSurveyXlsxJob(
   @SuppressWarnings("CyclomaticComplexMethod")
   private fun resolveLocalAuthorityArea(siteSurveyPremise: Cas1SiteSurveyPremise): LocalAuthorityAreaEntity {
     val localAuthorityAreaName = when (siteSurveyPremise.localAuthorityArea) {
+      "Blackburn" -> "Blackburn with Darwen"
       "Brent (London)" -> "Brent"
       "Brighton & Hove" -> "Brighton and Hove"
       "Bristol" -> "Bristol, City of"
@@ -106,6 +107,7 @@ class Cas1SeedPremisesFromSiteSurveyXlsxJob(
       "Lewisham (London)" -> "Lewisham"
       "Newcastle" -> "Newcastle upon Tyne"
       "Newham (London)" -> "Newham"
+      "Redcar & Cleveland" -> "Redcar and Cleveland"
       "Richmond (London)" -> "Richmond upon Thames"
       "Southwark (London)" -> "Southwark"
       "Wandsworth (London)" -> "Wandsworth"
