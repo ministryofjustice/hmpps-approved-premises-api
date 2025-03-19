@@ -25,10 +25,10 @@ data class Cas1SiteSurveyDataFrame(
 
     val answer = when (question) {
       is QuestionToMatch.Exact -> {
-        questionsAndAnswers.firstOrNull { it.first.toString() == question.label }?.second
+        questionsAndAnswers.firstOrNull { it.first.toString().uppercase() == question.label.uppercase() }?.second
       }
       is QuestionToMatch.StartsWith -> {
-        questionsAndAnswers.firstOrNull { it.first.toString().startsWith(question.label) }?.second
+        questionsAndAnswers.firstOrNull { it.first.toString().uppercase().startsWith(question.label.uppercase()) }?.second
       }
     }
 
