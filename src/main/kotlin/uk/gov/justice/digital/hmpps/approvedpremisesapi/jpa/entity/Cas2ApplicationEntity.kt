@@ -104,6 +104,10 @@ data class Cas2ApplicationEntity(
   var telephoneNumber: String? = null,
 ) {
   override fun toString() = "Cas2ApplicationEntity: $id"
+  val currentPrisonCode: String
+    get() = applicationAssignments.first().prisonCode
+  val currentPomUserId: UUID?
+    get() = applicationAssignments.first().allocatedPomUserId
 }
 
 /**
