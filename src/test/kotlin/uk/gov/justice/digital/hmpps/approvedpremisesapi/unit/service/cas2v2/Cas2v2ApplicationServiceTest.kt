@@ -19,12 +19,14 @@ import org.springframework.data.domain.PageRequest
 import org.springframework.data.domain.Sort
 import org.springframework.data.repository.findByIdOrNull
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApplicationOrigin
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.FullPerson
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PersonStatus
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PersonType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.SortDirection
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.SubmitCas2v2Application
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.config.NotifyConfig
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.Cas2v2ApplicationJsonSchemaEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.InmateDetailFactory
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.OffenderDetailsSummaryFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.cas2v2.Cas2v2ApplicationEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.cas2v2.Cas2v2UserEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas2v2ApplicationJsonSchemaEntity
@@ -34,21 +36,24 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas2v2.Cas2v2
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas2v2.Cas2v2ApplicationSummaryRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas2v2.Cas2v2LockableApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas2v2.Cas2v2LockableApplicationRepository
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas2v2.Cas2v2UserType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.prisonsapi.AssignedLivingUnit
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.AuthorisableActionResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.CasResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.ValidatableActionResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.EmailNotificationService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas2.Cas2DomainEventService
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas2.Cas2OffenderService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas2v2.Cas2v2ApplicationService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas2v2.Cas2v2AssessmentService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas2v2.Cas2v2JsonSchemaService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas2v2.Cas2v2OffenderSearchResult
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas2v2.Cas2v2OffenderService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas2v2.Cas2v2UserAccessService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.PageCriteria
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.PaginationConfig
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.extractEntityFromCasResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.getPageableOrAllPages
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomDateBefore
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomStringMultiCaseWithNumbers
 import java.time.LocalDate
 import java.time.OffsetDateTime
@@ -60,7 +65,7 @@ class Cas2v2ApplicationServiceTest {
   private val mockCas2v2LockableApplicationRepository = mockk<Cas2v2LockableApplicationRepository>()
   private val mockCas2v2ApplicationSummaryRepository = mockk<Cas2v2ApplicationSummaryRepository>()
   private val mockCas2v2JsonSchemaService = mockk<Cas2v2JsonSchemaService>()
-  private val mockOffenderService = mockk<Cas2OffenderService>()
+  private val mockCas2v2OffenderService = mockk<Cas2v2OffenderService>()
   private val mockCas2v2UserAccessService = mockk<Cas2v2UserAccessService>()
   private val mockDomainEventService = mockk<Cas2DomainEventService>()
   private val mockEmailNotificationService = mockk<EmailNotificationService>()
@@ -73,7 +78,7 @@ class Cas2v2ApplicationServiceTest {
     mockCas2v2LockableApplicationRepository,
     mockCas2v2ApplicationSummaryRepository,
     mockCas2v2JsonSchemaService,
-    mockOffenderService,
+    mockCas2v2OffenderService,
     mockCas2v2UserAccessService,
     mockDomainEventService,
     mockEmailNotificationService,
@@ -293,12 +298,17 @@ class Cas2v2ApplicationServiceTest {
 
   @Nested
   inner class CreateApplication {
+
+    val user = Cas2v2UserEntityFactory()
+      .withUserType(Cas2v2UserType.DELIUS)
+      .produce()
+
     @Test
     fun `returns FieldValidationError when Offender is not found`() {
       val crn = "CRN345"
       val username = "SOME_PERSON"
 
-      every { mockOffenderService.getOffenderByCrnDeprecated(crn) } returns AuthorisableActionResult.NotFound()
+      every { mockCas2v2OffenderService.getPersonByCrn(any(), any()) } returns Cas2v2OffenderSearchResult.NotFound(crn)
 
       val user = userWithUsername(username)
 
@@ -314,7 +324,7 @@ class Cas2v2ApplicationServiceTest {
       val crn = "CRN345"
       val username = "SOME PERSON"
 
-      every { mockOffenderService.getOffenderByCrnDeprecated(crn) } returns AuthorisableActionResult.Unauthorised()
+      every { mockCas2v2OffenderService.getPersonByCrn(any(), any()) } returns Cas2v2OffenderSearchResult.Forbidden(crn)
 
       val user = userWithUsername(username)
 
@@ -335,8 +345,18 @@ class Cas2v2ApplicationServiceTest {
 
       val user = userWithUsername(username)
 
-      every { mockOffenderService.getOffenderByCrnDeprecated(crn) } returns AuthorisableActionResult.Success(
-        OffenderDetailsSummaryFactory().produce(),
+      every { mockCas2v2OffenderService.getPersonByCrn(crn, user) } returns Cas2v2OffenderSearchResult.Success.Full(
+        crn,
+        FullPerson(
+          name = "",
+          dateOfBirth = LocalDate.now().minusYears(20).randomDateBefore(14),
+          sex = "Male",
+          status = PersonStatus.unknown,
+          crn = crn,
+          type = PersonType.fullPerson,
+          isRestricted = false,
+          nomsNumber = "12345",
+        ),
       )
 
       every { mockCas2v2JsonSchemaService.getNewestSchema(Cas2v2ApplicationJsonSchemaEntity::class.java) } returns cas2v2ApplicationSchema
@@ -911,12 +931,17 @@ class Cas2v2ApplicationServiceTest {
           as Cas2v2ApplicationEntity
       }
 
-      val offenderDetails = OffenderDetailsSummaryFactory()
-        .withCrn(cas2v2Application.crn)
-        .produce()
-
-      every { mockOffenderService.getOffenderByCrnDeprecated(any()) } returns AuthorisableActionResult.Success(
-        offenderDetails,
+      every { mockCas2v2OffenderService.getPersonByCrn(any(), user) } returns Cas2v2OffenderSearchResult.Success.Full(
+        "crn",
+        FullPerson(
+          name = "",
+          dateOfBirth = LocalDate.now().minusYears(20).randomDateBefore(14),
+          sex = "Male",
+          status = PersonStatus.unknown,
+          crn = "crn",
+          type = PersonType.fullPerson,
+          isRestricted = false,
+        ),
       )
 
       // this call to the Prison API to find the referringPrisonCode when saving
@@ -925,7 +950,7 @@ class Cas2v2ApplicationServiceTest {
       // If there is a problem with accessing the Prison API, we fail hard and
       // abort our attempt to submit the application.
       every {
-        mockOffenderService.getInmateDetailByNomsNumber(any(), any())
+        mockCas2v2OffenderService.getInmateDetailByNomsNumber(any(), any())
       } returns AuthorisableActionResult.NotFound()
 
       assertGeneralValidationError("Inmate Detail not found")
@@ -959,12 +984,17 @@ class Cas2v2ApplicationServiceTest {
           as Cas2v2ApplicationEntity
       }
 
-      val offenderDetails = OffenderDetailsSummaryFactory()
-        .withCrn(cas2v2Application.crn)
-        .produce()
-
-      every { mockOffenderService.getOffenderByCrnDeprecated(any()) } returns AuthorisableActionResult.Success(
-        offenderDetails,
+      every { mockCas2v2OffenderService.getPersonByCrn(cas2v2Application.crn, user) } returns Cas2v2OffenderSearchResult.Success.Full(
+        cas2v2Application.crn,
+        FullPerson(
+          name = "",
+          dateOfBirth = LocalDate.now().minusYears(20).randomDateBefore(14),
+          sex = "Male",
+          status = PersonStatus.unknown,
+          crn = cas2v2Application.crn,
+          type = PersonType.fullPerson,
+          isRestricted = false,
+        ),
       )
 
       // this call to the Prison API to find the referringPrisonCode when saving
@@ -973,7 +1003,7 @@ class Cas2v2ApplicationServiceTest {
       // If there is a problem with accessing the Prison API, we fail hard and
       // abort our attempt to submit the application and return a validation message.
       every {
-        mockOffenderService.getInmateDetailByNomsNumber(any(), any())
+        mockCas2v2OffenderService.getInmateDetailByNomsNumber(any(), any())
       } returns AuthorisableActionResult.Success(InmateDetailFactory().produce())
 
       assertGeneralValidationError("No prison code available")
@@ -1027,7 +1057,7 @@ class Cas2v2ApplicationServiceTest {
         .produce()
 
       every {
-        mockOffenderService.getInmateDetailByNomsNumber(
+        mockCas2v2OffenderService.getInmateDetailByNomsNumber(
           cas2v2Application.crn,
           cas2v2Application.nomsNumber.toString(),
         )
@@ -1043,13 +1073,17 @@ class Cas2v2ApplicationServiceTest {
           as Cas2v2ApplicationEntity
       }
 
-      val offenderDetails = OffenderDetailsSummaryFactory()
-        .withGender("male")
-        .withCrn(cas2v2Application.crn)
-        .produce()
-
-      every { mockOffenderService.getOffenderByCrnDeprecated(cas2v2Application.crn) } returns AuthorisableActionResult.Success(
-        offenderDetails,
+      every { mockCas2v2OffenderService.getPersonByCrn(cas2v2Application.crn, user) } returns Cas2v2OffenderSearchResult.Success.Full(
+        cas2v2Application.crn,
+        FullPerson(
+          name = "",
+          dateOfBirth = LocalDate.now().minusYears(20).randomDateBefore(14),
+          sex = "Male",
+          status = PersonStatus.unknown,
+          crn = cas2v2Application.crn,
+          type = PersonType.fullPerson,
+          isRestricted = false,
+        ),
       )
 
       every { mockCas2v2AssessmentService.createCas2v2Assessment(any()) } returns any()
