@@ -3,6 +3,7 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.seed.cas1
 import org.jetbrains.kotlinx.dataframe.DataFrame
 import org.jetbrains.kotlinx.dataframe.io.readExcel
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.seed.cas1.Cas1SiteSurveyDataFrame.QuestionToMatch.Exact
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.seed.cas1.Cas1SiteSurveyDataFrame.QuestionToMatch.StartsWith
 import java.io.File
 
 class Cas1SiteSurveyBedFactory {
@@ -16,9 +17,18 @@ class Cas1SiteSurveyBedFactory {
   private fun Cas1SiteSurveyDataFrame.toInternalModel(): List<Cas1SiteSurveyBed> {
     val beds = mutableListOf<Cas1SiteSurveyBed>()
     for (i in 1..<dataFrame.columnsCount()) {
+      val uniqueBedRef = resolveAnswer(Exact("Unique Reference Number for Bed"), i)
+
+      // excel can have 'phantom' columns that aren't populated with any values
+      // but are presented via dataframe regardless. Dataframe labels these columns
+      // with the header 'untitled'
+      if (uniqueBedRef == "untitled") {
+        continue
+      }
+
       beds.add(
         Cas1SiteSurveyBed(
-          uniqueBedRef = resolveAnswer(Exact("Unique Reference Number for Bed"), i),
+          uniqueBedRef = uniqueBedRef,
           roomNumber = this.resolveAnswer(Exact("Room Number / Name"), i),
           bedNumber = this.resolveAnswer(
             Exact(
@@ -44,7 +54,7 @@ class Cas1SiteSurveyBedFactory {
             i,
           ),
           hasNearbySprinkler = resolveAnswerYesNoDropDown(Exact("is there a water mist extinguisher in close proximity to this room?"), i),
-          isArsonSuitable = resolveAnswerYesNoDropDown(Cas1SiteSurveyDataFrame.QuestionToMatch.StartsWith("Is this room suitable for people who pose an arson risk?"), i),
+          isArsonSuitable = resolveAnswerYesNoDropDown(StartsWith("Is this room suitable for people who pose an arson risk?"), i),
           hasArsonInsuranceConditions = resolveAnswerYesNoNaDropDown(Exact("If IAP - Is there any insurance conditions that prevent a person with arson convictions being placed?"), i),
           isSuitedForSexOffenders = resolveAnswerYesNoDropDown(Exact("Is this room suitable for people convicted of sexual offences?"), i),
           hasEnSuite = resolveAnswerYesNoDropDown(Exact("Does this room have en-suite bathroom facilities?"), i),
@@ -54,18 +64,8 @@ class Cas1SiteSurveyBedFactory {
           hasFixedMobilityAids = resolveAnswerYesNoDropDown(Exact("Are there fixed mobility aids in this room?"), i),
           hasTurningSpace = resolveAnswerYesNoDropDown(Exact("Does this room have at least a 1500mmx1500mm turning space?"), i),
           hasCallForAssistance = resolveAnswerYesNoDropDown(Exact("Is there provision for people to call for assistance from this room?"), i),
-          isWheelchairDesignated = resolveAnswerYesNoDropDown(
-            Exact(
-              "Can this room be designated as suitable for wheelchair users?   Must answer yes to Q23-26 on previous sheet and Q17-19 & 21 on this sheet)",
-            ),
-            i,
-          ),
-          isStepFreeDesignated = this.resolveAnswerYesNoDropDown(
-            Exact(
-              "Can this room be designated as suitable for people requiring step free access? (Must answer yes to Q23 and 25 on previous sheet and Q19 on this sheet)",
-            ),
-            i,
-          ),
+          isWheelchairDesignated = resolveAnswerYesNoDropDown(StartsWith("Can this room be designated as suitable for wheelchair users?"), i),
+          isStepFreeDesignated = this.resolveAnswerYesNoDropDown(StartsWith("Can this room be designated as suitable for people requiring step free access?"), i),
         ),
       )
     }
