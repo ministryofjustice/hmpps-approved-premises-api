@@ -131,7 +131,7 @@ generic-service:
     ncc-tsc-team-9: "195.95.131.0/24"
     ncc-mvss-team-1: "5.148.8.192/26"
     dxw-vpn: "54.76.254.148/32"
-    cyberlab: "51.38.77.66"
+    cyberlab: "51.38.77.66/32"
 
 # CloudPlatform AlertManager receiver to route prometheus alerts to slack
 # See https://user-guide.cloud-platform.service.justice.gov.uk/documentation/monitoring-an-app/how-to-create-alarms.html#creating-your-own-custom-alerts
