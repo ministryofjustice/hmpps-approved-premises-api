@@ -59,6 +59,12 @@ class NotifyTemplates {
   val appealSuccess = "ae21f3ae-3a4a-4df8-a1b8-2640ea80d101"
   val appealReject = "32c9c282-198d-4d43-960e-89c97f1bcf81"
   val bookingAmended = "da50a791-fe7c-4bc3-b31f-62b88b62f2d6"
+
+  val toTransferringPomApplicationTransferredToAnotherPrison = "5adb6390-0c95-4458-a8b5-3e61ff780715"
+  val toTransferringPomUnitApplicationTransferredToAnotherPrison = "6b427e8a-eb21-43a3-89c3-f6a147b20c39"
+  val toReceivingPomUnitApplicationTransferredToAnotherPrison = "1e5d98e4-efdf-428e-bca9-fd5daadd27aa"
+  val toReceivingPomApplicationTransferredToAnotherPrison = "289d4004-3c95-4c23-b0fa-9187d9da8eaf"
+  val toNacroApplicationTransferredToAnotherPrison = "e292b246-0d4e-4636-81f0-933bcf4dadd0"
 }
 
 enum class NotifyMode {

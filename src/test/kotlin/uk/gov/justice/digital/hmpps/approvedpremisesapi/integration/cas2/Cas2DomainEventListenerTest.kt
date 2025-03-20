@@ -87,7 +87,7 @@ class Cas2DomainEventListenerTest : IntegrationTestBase() {
 
   @Test
   fun `Save new location in assignment table`() {
-    val prisoner = Prisoner(prisonId = "A1234AB")
+    val prisoner = Prisoner(prisonId = "A1234AB", prisonName = "LONDON")
     val eventType = "prisoner-offender-search.prisoner.updated"
     val occurredAt = Instant.now().atZone(ZoneId.systemDefault())
 
