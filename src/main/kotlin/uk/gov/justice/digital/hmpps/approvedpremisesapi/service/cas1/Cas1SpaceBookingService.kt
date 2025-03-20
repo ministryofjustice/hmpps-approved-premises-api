@@ -616,8 +616,9 @@ class Cas1SpaceBookingService(
     if (bookingToUpdate.premises.id != updateSpaceBookingDetails.premisesId) {
       "$.premisesId" hasValidationError "premisesMismatch"
     }
-    val (effectiveArrivalDate, effectiveDepartureDate) =
-      updateSpaceBookingDetails.calculateEffectiveDates(bookingToUpdate)
+
+    val effectiveArrivalDate = updateSpaceBookingDetails.arrivalDate ?: bookingToUpdate.expectedArrivalDate
+    val effectiveDepartureDate = updateSpaceBookingDetails.departureDate ?: bookingToUpdate.expectedDepartureDate
 
     if (effectiveDepartureDate.isBefore(effectiveArrivalDate)) {
       "$.departureDate" hasValidationError "The departure date is before the arrival date."
@@ -628,13 +629,11 @@ class Cas1SpaceBookingService(
     bookingToUpdate: Cas1SpaceBookingEntity,
     updateSpaceBookingDetails: UpdateSpaceBookingDetails,
   ): Cas1SpaceBookingEntity {
-    val (newArrivalDate, newDepartureDate) = updateSpaceBookingDetails.calculateEffectiveDates(bookingToUpdate)
-
     if (bookingToUpdate.hasArrival()) {
-      bookingToUpdate.updateDepartureDates(newDepartureDate)
+      bookingToUpdate.updateDepartureDates(updateSpaceBookingDetails)
     } else {
-      bookingToUpdate.updateArrivalDates(newArrivalDate)
-      bookingToUpdate.updateDepartureDates(newDepartureDate)
+      bookingToUpdate.updateArrivalDates(updateSpaceBookingDetails)
+      bookingToUpdate.updateDepartureDates(updateSpaceBookingDetails)
     }
 
     if (updateSpaceBookingDetails.characteristics != null) {
@@ -654,14 +653,18 @@ class Cas1SpaceBookingService(
     }
   }
 
-  private fun Cas1SpaceBookingEntity.updateDepartureDates(newDepartureDate: LocalDate) {
-    this.expectedDepartureDate = newDepartureDate
-    this.canonicalDepartureDate = newDepartureDate
+  private fun Cas1SpaceBookingEntity.updateDepartureDates(updateSpaceBookingDetails: UpdateSpaceBookingDetails) {
+    if (updateSpaceBookingDetails.departureDate != null) {
+      this.expectedDepartureDate = updateSpaceBookingDetails.departureDate
+      this.canonicalDepartureDate = updateSpaceBookingDetails.departureDate
+    }
   }
 
-  private fun Cas1SpaceBookingEntity.updateArrivalDates(newArrivalDate: LocalDate) {
-    this.expectedArrivalDate = newArrivalDate
-    this.canonicalArrivalDate = newArrivalDate
+  private fun Cas1SpaceBookingEntity.updateArrivalDates(updateSpaceBookingDetails: UpdateSpaceBookingDetails) {
+    if (updateSpaceBookingDetails.arrivalDate != null) {
+      this.expectedArrivalDate = updateSpaceBookingDetails.arrivalDate
+      this.canonicalArrivalDate = updateSpaceBookingDetails.arrivalDate
+    }
   }
 
   data class UpdateSpaceBookingDetails(
@@ -672,12 +675,4 @@ class Cas1SpaceBookingService(
     val characteristics: List<CharacteristicEntity>?,
     val updatedBy: UserEntity,
   )
-
-  private fun UpdateSpaceBookingDetails.calculateEffectiveDates(
-    bookingToUpdate: Cas1SpaceBookingEntity,
-  ): Pair<LocalDate, LocalDate> {
-    val newArrivalDate = this.arrivalDate ?: bookingToUpdate.expectedArrivalDate
-    val newDepartureDate = this.departureDate ?: bookingToUpdate.expectedDepartureDate
-    return Pair(newArrivalDate, newDepartureDate)
-  }
 }
