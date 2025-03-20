@@ -42,7 +42,7 @@ class Cas2LocationChangedServiceTest {
   @InjectMockKs
   lateinit var locationChangedService: Cas2LocationChangedService
 
-  private val prisoner = Prisoner(prisonId = "A1234AB")
+  private val prisoner = Prisoner(prisonId = "A1234AB", prisonName = "LONDON")
   private val eventType = "prisoner-offender-search.prisoner.updated"
   private val nomsNumber = "NOMSABC"
   private val detailUrl = "some/url"
