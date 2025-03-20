@@ -464,13 +464,12 @@ class PlacementApplicationServiceTest {
       ),
     )
 
-    @CsvSource("CAS1_MATCHER,CAS1_ASSESSOR")
-    @ParameterizedTest
-    fun `Reallocating an allocated application returns successfully`(role: UserRole) {
+    @Test
+    fun `Reallocating an allocated application returns successfully`() {
       assigneeUser.apply {
         roles += UserRoleAssignmentEntityFactory()
           .withUser(this)
-          .withRole(role)
+          .withRole(UserRole.CAS1_ASSESSOR)
           .produce()
       }
 
@@ -541,7 +540,7 @@ class PlacementApplicationServiceTest {
       assigneeUser.apply {
         roles += UserRoleAssignmentEntityFactory()
           .withUser(this)
-          .withRole(UserRole.CAS1_MATCHER)
+          .withRole(UserRole.CAS1_ASSESSOR)
           .produce()
       }
 

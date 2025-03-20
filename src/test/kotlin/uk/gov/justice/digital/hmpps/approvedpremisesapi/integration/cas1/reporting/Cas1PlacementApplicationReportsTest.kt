@@ -109,7 +109,6 @@ class Cas1PlacementApplicationReportsTest : IntegrationTestBase() {
   lateinit var assessorDetails: Pair<UserEntity, String>
   lateinit var futureManagerDetails: Pair<UserEntity, String>
   lateinit var workflowManagerDetails: Pair<UserEntity, String>
-  lateinit var matcherDetails: Pair<UserEntity, String>
   lateinit var appealManagerDetails: Pair<UserEntity, String>
 
   lateinit var applicationSchema: ApprovedPremisesApplicationJsonSchemaEntity
@@ -140,7 +139,6 @@ class Cas1PlacementApplicationReportsTest : IntegrationTestBase() {
     )
     futureManagerDetails = givenAUser(roles = listOf(UserRole.CAS1_FUTURE_MANAGER))
     workflowManagerDetails = givenAUser(roles = listOf(UserRole.CAS1_WORKFLOW_MANAGER))
-    matcherDetails = givenAUser(roles = listOf(UserRole.CAS1_MATCHER))
     appealManagerDetails = givenAUser(roles = listOf(UserRole.CAS1_APPEALS_MANAGER))
 
     applicationSchema = approvedPremisesApplicationJsonSchemaEntityFactory.produceAndPersist {
@@ -640,13 +638,13 @@ class Cas1PlacementApplicationReportsTest : IntegrationTestBase() {
   private fun createAndAcceptPlacementApplication(application: ApprovedPremisesApplicationEntity, placementDates: List<PlacementDates>): List<PlacementApplicationEntity> {
     val placementApplications = createAndSubmitPlacementApplication(application, placementDates)
     return placementApplications.map { placementApplication ->
-      val (matcher, _) = matcherDetails
+      val (assessor, _) = assessorDetails
 
       cas1SimpleApiClient.placementApplicationReallocate(
         integrationTestBase = this,
         placementApplicationId = placementApplication.id,
         NewReallocation(
-          userId = matcher.id,
+          userId = assessor.id,
         ),
       )
 
@@ -728,11 +726,11 @@ class Cas1PlacementApplicationReportsTest : IntegrationTestBase() {
   }
 
   private fun acceptPlacementApplication(placementApplicationId: UUID) {
-    val (_, matcherJwt) = matcherDetails
+    val (_, assessorJwt) = assessorDetails
 
     webTestClient.post()
       .uri("/placement-applications/$placementApplicationId/decision")
-      .header("Authorization", "Bearer $matcherJwt")
+      .header("Authorization", "Bearer $assessorJwt")
       .bodyValue(
         PlacementApplicationDecisionEnvelope(
           decision = PlacementApplicationDecision.accepted,
@@ -772,7 +770,7 @@ class Cas1PlacementApplicationReportsTest : IntegrationTestBase() {
 
   private fun reallocatePlacementApplication(placementApplication: PlacementApplication) {
     val (_, jwt) = workflowManagerDetails
-    val (matcherUser, _) = matcherDetails
+    val (assessorUser, _) = assessorDetails
 
     webTestClient.post()
       .uri("/tasks/placement-application/${placementApplication.id}/allocations")
@@ -780,7 +778,7 @@ class Cas1PlacementApplicationReportsTest : IntegrationTestBase() {
       .header("X-Service-Name", ServiceName.approvedPremises.value)
       .bodyValue(
         NewReallocation(
-          userId = matcherUser.id,
+          userId = assessorUser.id,
         ),
       )
       .exchange()
