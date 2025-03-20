@@ -17,9 +17,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApplicationOri
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas2v2Application
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas2v2ApplicationSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas2v2StatusUpdate
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.FullPerson
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewApplication
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PersonStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.UpdateApplicationType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.UpdateCas2v2Application
@@ -33,7 +31,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.given
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAnOffender
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.apDeliusContextAddSingleCaseSummaryToBulkResponse
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.apDeliusContextEmptyCaseSummaryToBulkResponse
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.prisonAPIMockNotFoundInmateDetailsCall
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.probationOffenderSearchAPIMockSuccessfulOffenderSearchCall
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApplicationRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas2v2.Cas2v2ApplicationEntity
@@ -901,12 +898,40 @@ class Cas2v2ApplicationTest : Cas2v2IntegrationTestBase() {
 
     @Nested
     inner class WhenCreatedBySameUser {
+      val crn = "crn123"
+      val nomsNumber = "noms123"
+
       // When the application requested was created by the logged-in user
       @Test
       fun `Get single in progress cas2v2 application returns 200 with correct body`() {
         givenACas2v2DeliusUser { userEntity, jwt ->
-          givenAnOffender { offenderDetails, _ ->
+          givenAnOffender(
+            offenderDetailsConfigBlock = {
+              withCrn(crn)
+              withNomsNumber(nomsNumber)
+            },
+          ) { offenderDetails, _ ->
             cas2v2ApplicationJsonSchemaRepository.deleteAll()
+
+            apDeliusContextAddSingleCaseSummaryToBulkResponse(
+              caseSummary = CaseSummaryFactory()
+                .withCrn(crn)
+                .withNomsId(nomsNumber)
+                .produce(),
+            )
+            probationOffenderSearchAPIMockSuccessfulOffenderSearchCall(
+              nomsNumber = nomsNumber,
+              response = listOf(
+                ProbationOffenderDetailFactory()
+                  .withOtherIds(
+                    IDs(
+                      nomsNumber = nomsNumber,
+                      crn = crn,
+                    ),
+                  )
+                  .produce(),
+              ),
+            )
 
             val newestJsonSchema = cas2v2ApplicationJsonSchemaEntityFactory
               .produceAndPersist {
@@ -955,56 +980,35 @@ class Cas2v2ApplicationTest : Cas2v2IntegrationTestBase() {
       }
 
       @Test
-      fun `Get single cas2v2 application returns successfully when the offender cannot be fetched from the prisons API`() {
+      fun `Get single submitted cas2v2 application returns 200 with timeline events`() {
         givenACas2v2DeliusUser { userEntity, jwt ->
-          val crn = "X5678"
-
           givenAnOffender(
             offenderDetailsConfigBlock = {
               withCrn(crn)
-              withNomsNumber("ABC123")
+              withNomsNumber(nomsNumber)
             },
           ) { offenderDetails, _ ->
-            val application = produceAndPersistBasicApplication(crn, userEntity)
-
-            prisonAPIMockNotFoundInmateDetailsCall(offenderDetails.otherIds.nomsNumber!!)
-            loadPreemptiveCacheForInmateDetails(offenderDetails.otherIds.nomsNumber!!)
-
-            val rawResponseBody = webTestClient.get()
-              .uri("/cas2v2/applications/${application.id}")
-              .header("Authorization", "Bearer $jwt")
-              .exchange()
-              .expectStatus()
-              .isOk
-              .returnResult<String>()
-              .responseBody
-              .blockFirst()
-
-            val responseBody = objectMapper.readValue(
-              rawResponseBody,
-              Cas2v2Application::class.java,
-            )
-
-            Assertions.assertThat(responseBody.person is FullPerson).isTrue
-
-            Assertions.assertThat(responseBody).matches {
-              val person = it.person as FullPerson
-
-              application.id == it.id &&
-                application.crn == person.crn &&
-                person.nomsNumber == null &&
-                person.status == PersonStatus.unknown &&
-                person.prisonName == null
-            }
-          }
-        }
-      }
-
-      @Test
-      fun `Get single submitted cas2v2 application returns 200 with timeline events`() {
-        givenACas2v2DeliusUser { userEntity, jwt ->
-          givenAnOffender { offenderDetails, _ ->
             cas2v2ApplicationJsonSchemaRepository.deleteAll()
+
+            apDeliusContextAddSingleCaseSummaryToBulkResponse(
+              caseSummary = CaseSummaryFactory()
+                .withCrn(crn)
+                .withNomsId(nomsNumber)
+                .produce(),
+            )
+            probationOffenderSearchAPIMockSuccessfulOffenderSearchCall(
+              nomsNumber = nomsNumber,
+              response = listOf(
+                ProbationOffenderDetailFactory()
+                  .withOtherIds(
+                    IDs(
+                      nomsNumber = nomsNumber,
+                      crn = crn,
+                    ),
+                  )
+                  .produce(),
+              ),
+            )
 
             val newestJsonSchema = cas2v2ApplicationJsonSchemaEntityFactory
               .produceAndPersist {
@@ -1095,11 +1099,39 @@ class Cas2v2ApplicationTest : Cas2v2IntegrationTestBase() {
 
       @Nested
       inner class WhenSamePrison {
+        val crn = "crn123"
+        val nomsNumber = "noms123"
+
         @Test
         fun `Get single submitted cas2v2 application returns 200 with timeline events`() {
           givenACas2v2NomisUser { userEntity, jwt ->
-            givenAnOffender { offenderDetails, _ ->
+            givenAnOffender(
+              offenderDetailsConfigBlock = {
+                withCrn(crn)
+                withNomsNumber(nomsNumber)
+              },
+            ) { offenderDetails, _ ->
               cas2v2ApplicationJsonSchemaRepository.deleteAll()
+
+              apDeliusContextAddSingleCaseSummaryToBulkResponse(
+                caseSummary = CaseSummaryFactory()
+                  .withCrn(crn)
+                  .withNomsId(nomsNumber)
+                  .produce(),
+              )
+              probationOffenderSearchAPIMockSuccessfulOffenderSearchCall(
+                nomsNumber = nomsNumber,
+                response = listOf(
+                  ProbationOffenderDetailFactory()
+                    .withOtherIds(
+                      IDs(
+                        nomsNumber = nomsNumber,
+                        crn = crn,
+                      ),
+                    )
+                    .produce(),
+                ),
+              )
 
               val newestJsonSchema = cas2v2ApplicationJsonSchemaEntityFactory
                 .produceAndPersist {
@@ -1302,6 +1334,8 @@ class Cas2v2ApplicationTest : Cas2v2IntegrationTestBase() {
 
   @Nested
   inner class PutToUpdate {
+    val crn = "crn123"
+    val nomsNumber = "noms123"
 
     @Test
     fun `Update existing cas2v2 application given a POM user returns 200 with correct body`() {
@@ -1318,7 +1352,32 @@ class Cas2v2ApplicationTest : Cas2v2IntegrationTestBase() {
     }
 
     private fun updateExistingCas2v2ApplicationReturns200WithCorrectBody(submittingUser: Cas2v2UserEntity, jwt: String) {
-      givenAnOffender { offenderDetails, _ ->
+      givenAnOffender(
+        offenderDetailsConfigBlock = {
+          withCrn(crn)
+          withNomsNumber(nomsNumber)
+        },
+      ) { offenderDetails, _ ->
+
+        apDeliusContextAddSingleCaseSummaryToBulkResponse(
+          caseSummary = CaseSummaryFactory()
+            .withCrn(crn)
+            .withNomsId(nomsNumber)
+            .produce(),
+        )
+        probationOffenderSearchAPIMockSuccessfulOffenderSearchCall(
+          nomsNumber = nomsNumber,
+          response = listOf(
+            ProbationOffenderDetailFactory()
+              .withOtherIds(
+                IDs(
+                  nomsNumber = nomsNumber,
+                  crn = crn,
+                ),
+              )
+              .produce(),
+          ),
+        )
         val applicationId = UUID.fromString("22ceda56-98b2-411d-91cc-ace0ab8be872")
 
         val applicationSchema =
