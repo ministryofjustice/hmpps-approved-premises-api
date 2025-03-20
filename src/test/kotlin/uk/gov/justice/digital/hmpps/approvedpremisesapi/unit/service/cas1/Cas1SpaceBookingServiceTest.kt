@@ -71,6 +71,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.PlacementRe
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.WithdrawableEntityType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.WithdrawalContext
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.WithdrawalTriggeredByUser
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.unit.util.assertThatCasResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.isWithinTheLastMinute
 import java.time.Clock
 import java.time.Instant
@@ -497,7 +498,8 @@ class Cas1SpaceBookingServiceTest {
       inputSortField: Cas1SpaceBookingSummarySortField,
       sqlSortField: String,
     ) {
-      every { cas1PremisesService.findPremiseById(PREMISES_ID) } returns ApprovedPremisesEntityFactory().withDefaults().produce()
+      every { cas1PremisesService.findPremiseById(PREMISES_ID) } returns ApprovedPremisesEntityFactory().withDefaults()
+        .produce()
 
       val results = PageImpl(
         listOf(
@@ -1388,7 +1390,12 @@ class Cas1SpaceBookingServiceTest {
     fun setup() {
       every { cas1PremisesService.findPremiseById(any()) } returns premises
       every { spaceBookingRepository.findByIdOrNull(any()) } returns existingSpaceBooking
-      every { staffMemberService.getStaffMemberByCodeForPremise(keyWorker.code, premises.qCode) } returns CasResult.Success(keyWorker)
+      every {
+        staffMemberService.getStaffMemberByCodeForPremise(
+          keyWorker.code,
+          premises.qCode,
+        )
+      } returns CasResult.Success(keyWorker)
     }
 
     @Test
@@ -1429,7 +1436,12 @@ class Cas1SpaceBookingServiceTest {
 
     @Test
     fun `Returns validation error if no staff record exists with the given staff code`() {
-      every { staffMemberService.getStaffMemberByCodeForPremise(keyWorker.code, premises.qCode) } returns CasResult.NotFound("staff", "qcode")
+      every {
+        staffMemberService.getStaffMemberByCodeForPremise(
+          keyWorker.code,
+          premises.qCode,
+        )
+      } returns CasResult.NotFound("staff", "qcode")
 
       val result = service.recordKeyWorkerAssignedForBooking(
         premisesId = UUID.randomUUID(),
@@ -1678,7 +1690,13 @@ class Cas1SpaceBookingServiceTest {
       val spaceBookingCaptor = slot<Cas1SpaceBookingEntity>()
       every { spaceBookingRepository.save(capture(spaceBookingCaptor)) } returns spaceBooking
 
-      every { cas1BookingEmailService.spaceBookingWithdrawn(spaceBooking, application, WithdrawalTriggeredByUser(user)) } returns Unit
+      every {
+        cas1BookingEmailService.spaceBookingWithdrawn(
+          spaceBooking,
+          application,
+          WithdrawalTriggeredByUser(user),
+        )
+      } returns Unit
       every { cas1BookingDomainEventService.spaceBookingCancelled(spaceBooking, user, reason) } returns Unit
       every { cas1ApplicationStatusService.spaceBookingCancelled(spaceBooking) } returns Unit
 
@@ -1883,7 +1901,10 @@ class Cas1SpaceBookingServiceTest {
     }
 
     @Test
-    fun `should return validation error when departure date is before arrival date`() {
+    fun `should return validation error before arrival when new departure date is before updated arrival date`() {
+      existingSpaceBooking.expectedArrivalDate = LocalDate.of(2025, 6, 5)
+      existingSpaceBooking.expectedDepartureDate = LocalDate.of(2025, 6, 15)
+
       every { cas1PremisesService.findPremiseById(any()) } returns premises
       every { spaceBookingRepository.findByIdOrNull(any()) } returns existingSpaceBooking
 
@@ -1891,19 +1912,64 @@ class Cas1SpaceBookingServiceTest {
         UpdateSpaceBookingDetails(
           bookingId = UUID.randomUUID(),
           premisesId = UUID.randomUUID(),
-          arrivalDate = LocalDate.now(),
-          departureDate = LocalDate.now().minusWeeks(1),
+          arrivalDate = LocalDate.of(2025, 6, 17),
+          departureDate = LocalDate.of(2025, 6, 16),
           updatedBy = user,
           characteristics = null,
         ),
       )
 
-      assertThat(result).isInstanceOf(CasResult.FieldValidationError::class.java)
-      result as CasResult.FieldValidationError
+      assertThatCasResult(result)
+        .isFieldValidationError()
+        .hasMessage("$.departureDate", "The departure date is before the arrival date.")
+    }
 
-      assertThat(result.validationMessages).anySatisfy { key, value ->
-        key == "$.departureDate" && value == "The departure date is before the arrival date."
-      }
+    @Test
+    fun `should return validation error before arrival when new departure date is before existing arrival date`() {
+      existingSpaceBooking.expectedArrivalDate = LocalDate.of(2025, 6, 5)
+      existingSpaceBooking.expectedDepartureDate = LocalDate.of(2025, 6, 15)
+
+      every { cas1PremisesService.findPremiseById(any()) } returns premises
+      every { spaceBookingRepository.findByIdOrNull(any()) } returns existingSpaceBooking
+
+      val result = service.updateSpaceBooking(
+        UpdateSpaceBookingDetails(
+          bookingId = UUID.randomUUID(),
+          premisesId = UUID.randomUUID(),
+          arrivalDate = null,
+          departureDate = LocalDate.of(2025, 6, 4),
+          updatedBy = user,
+          characteristics = null,
+        ),
+      )
+
+      assertThatCasResult(result)
+        .isFieldValidationError()
+        .hasMessage("$.departureDate", "The departure date is before the arrival date.")
+    }
+
+    @Test
+    fun `should return validation error before arrival when existing departure date is before new arrival date`() {
+      existingSpaceBooking.expectedArrivalDate = LocalDate.of(2025, 6, 5)
+      existingSpaceBooking.expectedDepartureDate = LocalDate.of(2025, 6, 15)
+
+      every { cas1PremisesService.findPremiseById(any()) } returns premises
+      every { spaceBookingRepository.findByIdOrNull(any()) } returns existingSpaceBooking
+
+      val result = service.updateSpaceBooking(
+        UpdateSpaceBookingDetails(
+          bookingId = UUID.randomUUID(),
+          premisesId = UUID.randomUUID(),
+          arrivalDate = LocalDate.of(2025, 6, 16),
+          departureDate = null,
+          updatedBy = user,
+          characteristics = null,
+        ),
+      )
+
+      assertThatCasResult(result)
+        .isFieldValidationError()
+        .hasMessage("$.departureDate", "The departure date is before the arrival date.")
     }
 
     @Test

@@ -145,7 +145,7 @@ class CasResultFieldValidationErrorAssertions<T>(actual: CasResult.FieldValidati
     val validationMessages = actual.validationMessages
 
     if (!validationMessages.containsKey(field)) {
-      failWithMessage("Expected field <%s> not found in validation messages", field)
+      failWithMessage("Expected field <%s> not found in validation messages '$validationMessages'", field)
     } else if (validationMessages[field] != expectedMessage) {
       failWithMessage(
         "Expected field <%s> to have message <%s> but was <%s>",
