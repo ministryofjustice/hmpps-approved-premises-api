@@ -11,6 +11,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.config.NotifyConfig
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas2ApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.NomisUserRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.EmailNotificationService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.NomisUserService
 import java.util.UUID
 import kotlin.jvm.optionals.getOrElse
 
@@ -18,7 +19,7 @@ import kotlin.jvm.optionals.getOrElse
 class Cas2EmailService(
   private val emailNotificationService: EmailNotificationService,
   private val notifyConfig: NotifyConfig,
-  private val nomisUserRepository: NomisUserRepository,
+  private val nomisUserService: NomisUserService,
   private val prisonsApiClient: PrisonsApiClient,
 
   @Value("\${url-templates.frontend.cas2.application-overview}") private val applicationUrlTemplate: String,
@@ -36,9 +37,7 @@ class Cas2EmailService(
       application.applicationAssignments.first { it.allocatedPomUserId != null }.allocatedPomUserId!!
 
     // TODO need to check elsewhere when cannot find user
-    val oldPom = nomisUserRepository.findById(oldAllocatedPomUserId).getOrElse {
-      throw RuntimeException("No user for $oldAllocatedPomUserId found")
-    }
+    val oldPom = nomisUserService.getNomisUserByIdAndAddIfMissing(oldAllocatedPomUserId)
     val errorMessage =
       "Email not found for User $oldAllocatedPomUserId. Unable to send email for Location Transfer on Application ${application.id}"
     val personalisation = mapOf(
@@ -145,9 +144,7 @@ class Cas2EmailService(
       application.applicationAssignments.first { it.allocatedPomUserId != null }.allocatedPomUserId!!
 
     // TODO need to check elsewhere when cannot find user
-    val newPom = nomisUserRepository.findById(newAllocatedPomUserId).getOrElse {
-      throw RuntimeException("No user for $newAllocatedPomUserId found")
-    }
+    val newPom = nomisUserService.getNomisUserByIdAndAddIfMissing(newAllocatedPomUserId)
 
     val oldPrisonCode =
       application.applicationAssignments.first { it.allocatedPomUserId == null && it.prisonCode !== pomAllocation.prison.code }.prisonCode
