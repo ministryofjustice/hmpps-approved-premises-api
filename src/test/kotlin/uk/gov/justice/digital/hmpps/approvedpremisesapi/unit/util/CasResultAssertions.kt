@@ -144,16 +144,8 @@ class CasResultFieldValidationErrorAssertions<T>(actual: CasResult.FieldValidati
   fun hasMessage(field: String, expectedMessage: String): CasResultFieldValidationErrorAssertions<T> {
     val validationMessages = actual.validationMessages
 
-    if (!validationMessages.containsKey(field)) {
-      failWithMessage("Expected field <%s> not found in validation messages '$validationMessages'", field)
-    } else if (validationMessages[field] != expectedMessage) {
-      failWithMessage(
-        "Expected field <%s> to have message <%s> but was <%s>",
-        field,
-        expectedMessage,
-        validationMessages[field],
-      )
-    }
+    assertThat(validationMessages).containsEntry(field, expectedMessage)
+
     return this
   }
 }

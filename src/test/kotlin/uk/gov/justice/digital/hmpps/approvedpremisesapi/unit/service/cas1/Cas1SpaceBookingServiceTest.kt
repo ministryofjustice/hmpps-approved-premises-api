@@ -1973,6 +1973,31 @@ class Cas1SpaceBookingServiceTest {
     }
 
     @Test
+    fun `should return validation error after arrival when new departure date is before actual arrival date`() {
+      existingSpaceBooking.expectedArrivalDate = LocalDate.of(2025, 6, 15)
+      existingSpaceBooking.actualArrivalDate = LocalDate.of(2025, 6, 20)
+      existingSpaceBooking.expectedDepartureDate = LocalDate.of(2025, 6, 25)
+
+      every { cas1PremisesService.findPremiseById(any()) } returns premises
+      every { spaceBookingRepository.findByIdOrNull(any()) } returns existingSpaceBooking
+
+      val result = service.updateSpaceBooking(
+        UpdateSpaceBookingDetails(
+          bookingId = UUID.randomUUID(),
+          premisesId = UUID.randomUUID(),
+          arrivalDate = null,
+          departureDate = LocalDate.of(2025, 6, 18),
+          updatedBy = user,
+          characteristics = null,
+        ),
+      )
+
+      assertThatCasResult(result)
+        .isFieldValidationError()
+        .hasMessage("$.departureDate", "The departure date is before the arrival date.")
+    }
+
+    @Test
     fun `should update only departure dates when booking status is hasArrival`() {
       existingSpaceBooking.actualArrivalDate = LocalDate.now()
       existingSpaceBooking.expectedDepartureDate = LocalDate.of(2025, 1, 10)
