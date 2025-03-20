@@ -80,9 +80,6 @@ interface Cas1OutOfServiceBedRepository : JpaRepository<Cas1OutOfServiceBedEntit
     pageable: Pageable?,
   ): Page<String>
 
-  @Query("SELECT oosb FROM Cas1OutOfServiceBedEntity oosb LEFT JOIN oosb.cancellation c WHERE c is NULL")
-  fun findAllActive(): List<Cas1OutOfServiceBedEntity>
-
   @Query("SELECT oosb FROM Cas1OutOfServiceBedEntity oosb LEFT JOIN oosb.cancellation c WHERE oosb.premises.id = :premisesId AND c is NULL")
   fun findAllActiveForPremisesId(premisesId: UUID): List<Cas1OutOfServiceBedEntity>
 
@@ -115,6 +112,12 @@ interface Cas1OutOfServiceBedRepository : JpaRepository<Cas1OutOfServiceBedEntit
     nativeQuery = true,
   )
   fun findByBedIdAndOverlappingDate(bedId: UUID, startDate: LocalDate, endDate: LocalDate, thisEntityId: UUID?): List<String>
+
+  @Query(
+    "SELECT bed_id FROM cas1_out_of_service_beds GROUP by bed_id",
+    nativeQuery = true,
+  )
+  fun findBedIdsWithAtLeastOneOutOfServiceBedRecord(): List<UUID>
 }
 
 @Entity
