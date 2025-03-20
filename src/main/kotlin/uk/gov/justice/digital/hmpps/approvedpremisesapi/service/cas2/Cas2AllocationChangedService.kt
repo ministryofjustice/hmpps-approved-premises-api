@@ -19,6 +19,7 @@ class Cas2AllocationChangedService(
   private val applicationService: Cas2ApplicationService,
   private val applicationRepository: Cas2ApplicationRepository,
   private val nomisUserService: NomisUserService,
+  private val emailService: Cas2EmailService,
 ) {
   private val log = LoggerFactory.getLogger(this::class.java)
 
@@ -44,6 +45,8 @@ class Cas2AllocationChangedService(
               allocatedPomUser = allocatedUser,
             )
             applicationRepository.save(application)
+
+            emailService.sendAllocationChangedEmails(application = application, newPom = allocatedUser, newPrisonCode = pomAllocation.prison.code)
           }
         }
 

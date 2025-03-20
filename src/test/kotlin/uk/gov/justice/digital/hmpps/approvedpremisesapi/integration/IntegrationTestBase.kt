@@ -76,6 +76,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.MoveOnCategoryEn
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.NomisUserEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.NonArrivalEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.NonArrivalReasonEntityFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.OffenderManagementUnitEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.OfflineApplicationEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.PersistedFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.PlacementApplicationEntityFactory
@@ -170,6 +171,8 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.MoveOnCategor
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.NomisUserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.NonArrivalEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.NonArrivalReasonEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.OffenderManagementUnitEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.OffenderManagementUnitRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.OfflineApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementApplicationRepository
@@ -389,6 +392,9 @@ abstract class IntegrationTestBase {
   lateinit var cas2ApplicationRepository: Cas2ApplicationRepository
 
   @Autowired
+  lateinit var offenderManagementUnitRepository: OffenderManagementUnitRepository
+
+  @Autowired
   lateinit var cas2AssessmentRepository: Cas2AssessmentRepository
 
   @Autowired
@@ -565,6 +571,7 @@ abstract class IntegrationTestBase {
   @Autowired
   lateinit var mockFeatureFlagService: MockFeatureFlagService
 
+  lateinit var offenderManagementUnitEntityFactory: PersistedFactory<OffenderManagementUnitEntity, UUID, OffenderManagementUnitEntityFactory>
   lateinit var probationRegionEntityFactory: PersistedFactory<ProbationRegionEntity, UUID, ProbationRegionEntityFactory>
   lateinit var apAreaEntityFactory: PersistedFactory<ApAreaEntity, UUID, ApAreaEntityFactory>
   lateinit var localAuthorityEntityFactory: PersistedFactory<LocalAuthorityAreaEntity, UUID, LocalAuthorityEntityFactory>
@@ -680,6 +687,7 @@ abstract class IntegrationTestBase {
 
   fun setupFactories() {
     probationRegionEntityFactory = PersistedFactory({ ProbationRegionEntityFactory() }, probationRegionRepository)
+    offenderManagementUnitEntityFactory = PersistedFactory({ OffenderManagementUnitEntityFactory() }, offenderManagementUnitRepository)
     apAreaEntityFactory = PersistedFactory({ ApAreaEntityFactory() }, apAreaRepository)
     localAuthorityEntityFactory = PersistedFactory({ LocalAuthorityEntityFactory() }, localAuthorityAreaRepository)
     approvedPremisesEntityFactory = PersistedFactory({ ApprovedPremisesEntityFactory() }, approvedPremisesRepository)
