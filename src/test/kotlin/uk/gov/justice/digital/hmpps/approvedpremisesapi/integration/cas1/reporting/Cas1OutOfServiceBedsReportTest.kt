@@ -4,6 +4,7 @@ import org.assertj.core.api.Assertions
 import org.jetbrains.kotlinx.dataframe.DataFrame
 import org.jetbrains.kotlinx.dataframe.api.ExcessiveColumns
 import org.jetbrains.kotlinx.dataframe.api.convertTo
+import org.jetbrains.kotlinx.dataframe.api.sortBy
 import org.jetbrains.kotlinx.dataframe.io.readExcel
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
@@ -16,6 +17,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas1OutOfServ
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas1OutOfServiceBedRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRole.CAS1_REPORT_VIEWER
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.generator.Cas1OutOfServiceBedsReportGenerator
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.generator.Cas1OutOfServiceBedsReportGenerator.Cas1BedIdentifier
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.model.Cas1OutOfServiceBedReportRow
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1ReportService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.roundNanosToMillisToAccountForLossOfPrecisionInPostgres
@@ -38,32 +40,40 @@ class Cas1OutOfServiceBedsReportTest : IntegrationTestBase() {
         }
 
         val bed1 = bedEntityFactory.produceAndPersist {
+          withName("bed1")
           withRoom(
             roomEntityFactory.produceAndPersist {
+              withName("room1")
               withPremises(premises)
             },
           )
         }
 
         val bed2 = bedEntityFactory.produceAndPersist {
+          withName("bed2")
           withRoom(
             roomEntityFactory.produceAndPersist {
+              withName("room2")
               withPremises(premises)
             },
           )
         }
 
         val bed3 = bedEntityFactory.produceAndPersist {
+          withName("bed3")
           withRoom(
             roomEntityFactory.produceAndPersist {
+              withName("room3")
               withPremises(premises)
             },
           )
         }
 
         val bed4 = bedEntityFactory.produceAndPersist {
+          withName("bed4")
           withRoom(
             roomEntityFactory.produceAndPersist {
+              withName("room4")
               withPremises(premises)
             },
           )
@@ -136,11 +146,19 @@ class Cas1OutOfServiceBedsReportTest : IntegrationTestBase() {
           }
         }
 
+        /*
+        Note - this test is mostly redundant because it calls the report generator directly to determine
+        what the endpoint should be returning. So it's only checking that the controller is calling
+        the report generator, not that it returns an expected result
+
+        This is better tested by [Cas1OutOfServiceBedReportGeneratorTest] which could be merged
+        with this test
+         */
         val expectedDataFrame = Cas1OutOfServiceBedsReportGenerator(realOutOfServiceBedRepository)
           .createReport(
-            listOf(bed1, bed2),
+            listOf(Cas1BedIdentifier(bed1.id), Cas1BedIdentifier(bed2.id)),
             Cas1ReportService.MonthSpecificReportParams(2023, 4),
-          )
+          ).sortBy { row -> row["bedName"] }
 
         webTestClient.get()
           .uri("$outOfServiceBedsEndpoint?year=2023&month=4")
@@ -154,6 +172,8 @@ class Cas1OutOfServiceBedsReportTest : IntegrationTestBase() {
             val actual = DataFrame
               .readExcel(it.responseBody!!.inputStream())
               .convertTo<Cas1OutOfServiceBedReportRow>(ExcessiveColumns.Remove)
+              .sortBy { row -> row["bedName"] }
+
             Assertions.assertThat(actual).isEqualTo(expectedDataFrame)
           }
       }

@@ -30,7 +30,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.CasResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.EmailNotificationService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.UpstreamApiException
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas2.Cas2DomainEventService
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas2.Cas2OffenderService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.PageCriteria
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.getMetadata
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.getPageableOrAllPages
@@ -44,7 +43,7 @@ class Cas2v2ApplicationService(
   private val cas2v2LockableApplicationRepository: Cas2v2LockableApplicationRepository,
   private val cas2v2ApplicationSummaryRepository: Cas2v2ApplicationSummaryRepository,
   private val cas2v2JsonSchemaService: Cas2v2JsonSchemaService,
-  private val cas2v2OffenderService: Cas2OffenderService,
+  private val cas2v2OffenderService: Cas2v2OffenderService,
   private val cas2v2UserAccessService: Cas2v2UserAccessService,
   private val domainEventService: Cas2DomainEventService,
   private val emailNotificationService: EmailNotificationService,
@@ -125,15 +124,16 @@ class Cas2v2ApplicationService(
     applicationOrigin: ApplicationOrigin = ApplicationOrigin.homeDetentionCurfew,
     bailHearingDate: LocalDate? = null,
   ) = validated<Cas2v2ApplicationEntity> {
-    val offenderDetailsResult = cas2v2OffenderService.getOffenderByCrnDeprecated(crn)
+    val offenderDetailsResult = cas2v2OffenderService.getPersonByCrn(crn, user)
 
     val offenderDetails = when (offenderDetailsResult) {
-      is AuthorisableActionResult.NotFound -> return "$.crn" hasSingleValidationError "doesNotExist"
-      is AuthorisableActionResult.Unauthorised -> return "$.crn" hasSingleValidationError "userPermission"
-      is AuthorisableActionResult.Success -> offenderDetailsResult.entity
+      is Cas2v2OffenderSearchResult.NotFound -> return "$.crn" hasSingleValidationError "doesNotExist"
+      is Cas2v2OffenderSearchResult.Forbidden -> return "$.crn" hasSingleValidationError "userPermission"
+      is Cas2v2OffenderSearchResult.Unknown -> return "$.crn" hasSingleValidationError "unknown"
+      is Cas2v2OffenderSearchResult.Success.Full -> offenderDetailsResult.person
     }
 
-    if (offenderDetails.otherIds.nomsNumber == null) {
+    if (offenderDetails.nomsNumber == null) {
       throw RuntimeException("Cannot create an Application for an Offender without a NOMS number")
     }
 
@@ -153,7 +153,7 @@ class Cas2v2ApplicationService(
       createdAt = OffsetDateTime.now(),
       submittedAt = null,
       schemaUpToDate = true,
-      nomsNumber = offenderDetails.otherIds.nomsNumber,
+      nomsNumber = offenderDetails.nomsNumber,
       telephoneNumber = null,
       applicationOrigin = applicationOrigin,
       bailHearingDate = bailHearingDate,

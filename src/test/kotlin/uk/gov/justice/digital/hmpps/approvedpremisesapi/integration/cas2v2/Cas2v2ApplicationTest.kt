@@ -23,20 +23,25 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PersonStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.UpdateApplicationType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.UpdateCas2v2Application
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.CaseSummaryFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ProbationOffenderDetailFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.Cas2v2IntegrationTestBase
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenACas2v2Assessor
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenACas2v2DeliusUser
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenACas2v2NomisUser
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenACas2v2PomUser
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAnOffender
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.apDeliusContextAddSingleCaseSummaryToBulkResponse
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.apDeliusContextEmptyCaseSummaryToBulkResponse
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.prisonAPIMockNotFoundInmateDetailsCall
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.probationOffenderSearchAPIMockSuccessfulOffenderSearchCall
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApplicationRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas2v2.Cas2v2ApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas2v2.Cas2v2StatusUpdateEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas2v2.Cas2v2UserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas2v2.Cas2v2UserType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.community.OffenderDetailSummary
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.probationoffendersearchapi.IDs
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomDateAfter
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomDateBefore
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomDateTimeBefore
@@ -1183,12 +1188,8 @@ class Cas2v2ApplicationTest : Cas2v2IntegrationTestBase() {
 
   @Nested
   inner class PostToCreate {
-    @Test
-    fun `Create new application for cas2v2 as a POM user returns 201 with correct body and Location header`() {
-      givenACas2v2DeliusUser { _, jwt ->
-        createNewApplicationForCas2v2returns201(jwt)
-      }
-    }
+    val nomsNumber = "NOMS123"
+    val crn = "CRN123"
 
     @Test
     fun `Create new cas2v2 application as a POM user returns 404 when a person cannot be found`() {
@@ -1198,15 +1199,34 @@ class Cas2v2ApplicationTest : Cas2v2IntegrationTestBase() {
     }
 
     @Test
-    fun `Create new application for cas2v2 as a Delius user returns 201 with correct body and Location header`() {
-      givenACas2v2DeliusUser { _, jwt ->
+    fun `Create new application for cas2v2 as a Noms user returns 201 with correct body and Location header`() {
+      apDeliusContextAddSingleCaseSummaryToBulkResponse(
+        caseSummary = CaseSummaryFactory()
+          .withCrn(crn)
+          .withNomsId(nomsNumber)
+          .produce(),
+      )
+      probationOffenderSearchAPIMockSuccessfulOffenderSearchCall(
+        nomsNumber = nomsNumber,
+        response = listOf(
+          ProbationOffenderDetailFactory()
+            .withOtherIds(
+              IDs(
+                nomsNumber = nomsNumber,
+                crn = crn,
+              ),
+            )
+            .produce(),
+        ),
+      )
+      givenACas2v2NomisUser { _, jwt ->
         createNewApplicationForCas2v2returns201(jwt)
       }
     }
 
     @Test
-    fun `Create new cas2v2 application as a Delius user returns 404 when a person cannot be found`() {
-      givenACas2v2DeliusUser { _, jwt ->
+    fun `Create new cas2v2 application as a Noms user returns 404 when a person cannot be found`() {
+      givenACas2v2NomisUser { _, jwt ->
         createNewApplicationForCas2v2Returns404WhenAPersonIsNotFound(jwt)
       }
     }
@@ -1219,7 +1239,12 @@ class Cas2v2ApplicationTest : Cas2v2IntegrationTestBase() {
     }
 
     private fun createNewApplicationForCas2v2returns201(jwt: String) {
-      givenAnOffender { offenderDetails, _ ->
+      givenAnOffender(
+        offenderDetailsConfigBlock = {
+          withCrn(crn)
+          withNomsNumber(nomsNumber)
+        },
+      ) { offenderDetails, _ ->
         val applicationSchema =
           cas2v2ApplicationJsonSchemaEntityFactory.produceAndPersist {
             withAddedAt(OffsetDateTime.now())

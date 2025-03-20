@@ -64,7 +64,6 @@ interface BedRepository : JpaRepository<BedEntity, UUID> {
 class Cas1BedsRepository(
   private val jdbcTemplate: NamedParameterJdbcTemplate,
 ) {
-
   fun bedSummary(premisesId: UUID): List<Cas1PlanningBedSummary> {
     val params = mutableMapOf<String, Any>(
       "premisesId" to premisesId,
