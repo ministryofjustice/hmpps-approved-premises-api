@@ -11,9 +11,16 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.SortDirection
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.SubmitCas2v2Application
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas2v2.Cas2v2ApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas2v2.Cas2v2ApplicationSummaryEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas2v2.Cas2v2UserEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.BadRequestProblem
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.ForbiddenProblem
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.NotFoundProblem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas2.Cas2OffenderService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas2v2.Cas2v2ApplicationService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas2v2.Cas2v2OffenderSearchResult
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas2v2.Cas2v2OffenderService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas2v2.Cas2v2UserService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.cas2v2.Cas2v2ApplicationsTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.cas2v2.Cas2v2SubmissionsTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.PageCriteria
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.ensureEntityFromCasResultIsSuccess
@@ -24,6 +31,8 @@ import java.util.UUID
 class Cas2v2SubmissionsController(
   private val cas2v2ApplicationService: Cas2v2ApplicationService,
   private val cas2v2SubmissionsTransformer: Cas2v2SubmissionsTransformer,
+  private val cas2v2ApplicationsTransformer: Cas2v2ApplicationsTransformer,
+  private val cas2v2OffenderService: Cas2v2OffenderService,
   private val offenderService: Cas2OffenderService,
   private val userService: Cas2v2UserService,
 ) : SubmissionsCas2v2Delegate {
@@ -43,11 +52,12 @@ class Cas2v2SubmissionsController(
 
   override fun submissionsApplicationIdGet(applicationId: UUID): ResponseEntity<Cas2v2SubmittedApplication> {
     userService.ensureUserPersisted()
+    val user = userService.getUserForRequest()
 
     val applicationResult = cas2v2ApplicationService.getSubmittedCas2v2ApplicationForAssessor(applicationId)
     val application = extractEntityFromCasResult(applicationResult)
 
-    return ResponseEntity.ok(getPersonDetailAndTransform(application))
+    return ResponseEntity.ok(getPersonDetailAndTransform(application, user))
   }
 
   @Transactional
@@ -73,14 +83,18 @@ class Cas2v2SubmissionsController(
     }
   }
 
+  @SuppressWarnings("ThrowsCount")
   private fun getPersonDetailAndTransform(
     application: Cas2v2ApplicationEntity,
+    user: Cas2v2UserEntity,
   ): Cas2v2SubmittedApplication {
-    val personInfo = offenderService.getFullInfoForPersonOrThrow(application.crn)
+    val personInfo = when (val cas2v2OffenderSearchResult = cas2v2OffenderService.getPersonByCrn(application.crn, user)) {
+      is Cas2v2OffenderSearchResult.NotFound -> throw NotFoundProblem(application.crn, "Offender")
+      is Cas2v2OffenderSearchResult.Forbidden -> throw ForbiddenProblem()
+      is Cas2v2OffenderSearchResult.Unknown -> throw cas2v2OffenderSearchResult.throwable ?: BadRequestProblem(errorDetail = "Could not retrieve person info for Prison Number: ${application.crn}")
+      is Cas2v2OffenderSearchResult.Success.Full -> cas2v2OffenderSearchResult.person
+    }
 
-    return cas2v2SubmissionsTransformer.transformJpaToApiRepresentation(
-      application,
-      personInfo,
-    )
+    return cas2v2ApplicationsTransformer.transformJpaAndFullPersonToApiSubmitted(application, personInfo)
   }
 }

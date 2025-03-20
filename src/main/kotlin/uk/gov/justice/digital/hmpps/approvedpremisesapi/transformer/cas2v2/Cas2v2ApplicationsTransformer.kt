@@ -6,6 +6,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApplicationOri
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApplicationStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas2v2Application
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas2v2ApplicationSummary
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas2v2SubmittedApplication
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Person
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas2v2.Cas2v2ApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas2v2.Cas2v2ApplicationSummaryEntity
@@ -25,24 +26,6 @@ class Cas2v2ApplicationsTransformer(
 
   fun transformJpaToApi(jpa: Cas2v2ApplicationEntity, personInfo: PersonInfoResult): Cas2v2Application = transformJpaAndFullPersonToApi(jpa, personTransformer.transformModelToPersonApi(personInfo))
 
-//  as2v2Application(
-//    id = jpa.id,
-//    person = personTransformer.transformModelToPersonApi(personInfo),
-//    createdBy = cas2v2UserTransformer.transformJpaToApi(jpa.createdByUser),
-//    schemaVersion = jpa.schemaVersion.id,
-//    outdatedSchema = !jpa.schemaUpToDate,
-//    createdAt = jpa.createdAt.toInstant(),
-//    submittedAt = jpa.submittedAt?.toInstant(),
-//    data = if (jpa.data != null) objectMapper.readTree(jpa.data) else null,
-//    document = if (jpa.document != null) objectMapper.readTree(jpa.document) else null,
-//    status = getStatus(jpa),
-//    type = "CAS2V2",
-//    telephoneNumber = jpa.telephoneNumber,
-//    assessment = if (jpa.assessment != null) cas2v2AssessmentsTransformer.transformJpaToApiRepresentation(jpa.assessment!!) else null,
-//    timelineEvents = timelineEventsTransformer.transformApplicationToTimelineEvents(jpa),
-//    applicationOrigin = jpa.applicationOrigin,
-//  )
-
   fun transformJpaAndFullPersonToApi(jpa: Cas2v2ApplicationEntity, fullPerson: Person): Cas2v2Application = Cas2v2Application(
     id = jpa.id,
     person = fullPerson,
@@ -57,6 +40,21 @@ class Cas2v2ApplicationsTransformer(
     type = "CAS2V2",
     telephoneNumber = jpa.telephoneNumber,
     assessment = if (jpa.assessment != null) cas2v2AssessmentsTransformer.transformJpaToApiRepresentation(jpa.assessment!!) else null,
+    timelineEvents = timelineEventsTransformer.transformApplicationToTimelineEvents(jpa),
+    applicationOrigin = jpa.applicationOrigin,
+  )
+
+  fun transformJpaAndFullPersonToApiSubmitted(jpa: Cas2v2ApplicationEntity, fullPerson: Person): Cas2v2SubmittedApplication = Cas2v2SubmittedApplication(
+    id = jpa.id,
+    person = fullPerson,
+    submittedBy = Cas2v2UserTransformer().transformJpaToApi(jpa.createdByUser),
+    schemaVersion = jpa.schemaVersion.id,
+    outdatedSchema = !jpa.schemaUpToDate,
+    createdAt = jpa.createdAt.toInstant(),
+    submittedAt = jpa.submittedAt?.toInstant(),
+    document = if (jpa.document != null) objectMapper.readTree(jpa.document) else null,
+    telephoneNumber = jpa.telephoneNumber,
+    assessment = cas2v2AssessmentsTransformer.transformJpaToApiRepresentation(jpa.assessment!!),
     timelineEvents = timelineEventsTransformer.transformApplicationToTimelineEvents(jpa),
     applicationOrigin = jpa.applicationOrigin,
   )
