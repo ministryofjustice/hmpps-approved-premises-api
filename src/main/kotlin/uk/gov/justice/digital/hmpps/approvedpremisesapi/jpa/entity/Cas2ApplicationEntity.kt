@@ -108,6 +108,8 @@ data class Cas2ApplicationEntity(
     get() = applicationAssignments.first().prisonCode
   val currentPomUserId: UUID?
     get() = applicationAssignments.first().allocatedPomUserId
+  val mostRecentPomUserId: UUID
+    get() = applicationAssignments.first { it.allocatedPomUserId != null }.allocatedPomUserId!!
 
   fun createApplicationAssignment(prisonCode: String, allocatedPomUserId: UUID?) {
     this.applicationAssignments.add(

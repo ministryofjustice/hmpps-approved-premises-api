@@ -22,6 +22,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.domainevent.Person
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.domainevent.PersonReference
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.InvalidDomainEventException
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas2.Cas2ApplicationService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas2.Cas2EmailService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas2.Cas2LocationChangedService
 import java.time.Instant
 import java.time.ZoneId
@@ -39,10 +40,13 @@ class Cas2LocationChangedServiceTest {
   @MockK
   lateinit var prisonerSearchClient: PrisonerSearchClient
 
+  @MockK
+  lateinit var cas2EmailService: Cas2EmailService
+
   @InjectMockKs
   lateinit var locationChangedService: Cas2LocationChangedService
 
-  private val prisoner = Prisoner(prisonId = "A1234AB")
+  private val prisoner = Prisoner(prisonId = "A1234AB", prisonName = "LONDON")
   private val eventType = "prisoner-offender-search.prisoner.updated"
   private val nomsNumber = "NOMSABC"
   private val detailUrl = "some/url"
@@ -70,12 +74,14 @@ class Cas2LocationChangedServiceTest {
     every { prisonerSearchClient.getPrisoner(any()) } returns ClientResult.Success(HttpStatus.OK, prisoner)
     every { applicationService.findMostRecentApplication(eq(nomsNumber)) } returns application
     every { applicationRepository.save(any()) } returns application
+    every { cas2EmailService.sendLocationChangedEmails(any(), any(), any()) } returns Unit
 
     locationChangedService.process(locationEvent)
 
     verify(exactly = 1) { prisonerSearchClient.getPrisoner(any()) }
     verify(exactly = 1) { applicationService.findMostRecentApplication(eq(nomsNumber)) }
     verify(exactly = 1) { applicationRepository.save(any()) }
+    verify(exactly = 1) { cas2EmailService.sendLocationChangedEmails(any(), any(), any()) }
   }
 
   @Test
