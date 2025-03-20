@@ -15,6 +15,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ProbationRegionE
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.RoomEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas1OutOfServiceBedRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.generator.Cas1OutOfServiceBedsReportGenerator
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.generator.Cas1OutOfServiceBedsReportGenerator.Cas1BedIdentifier
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.model.Cas1OutOfServiceBedReportRow
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1ReportService
 import java.time.LocalDate
@@ -118,7 +119,7 @@ class Cas1OutOfServiceBedReportGeneratorTest {
     } returns listOf(outOfServiceBedOutsideProbationArea)
 
     val result = reportGenerator.createReport(
-      listOf(bedInProbationRegion, bedOutsideProbationRegion),
+      listOf(Cas1BedIdentifier(bedInProbationRegion.id), Cas1BedIdentifier(bedOutsideProbationRegion.id)),
       Cas1ReportService.MonthSpecificReportParams(2023, 4),
     )
 
@@ -166,7 +167,7 @@ class Cas1OutOfServiceBedReportGeneratorTest {
     } returns listOf(outOfServiceBed)
 
     val result = reportGenerator.createReport(
-      listOf(bed),
+      listOf(Cas1BedIdentifier(bed.id)),
       Cas1ReportService.MonthSpecificReportParams(2023, 4),
     )
 
@@ -222,7 +223,7 @@ class Cas1OutOfServiceBedReportGeneratorTest {
     } returns listOf(outOfServiceBed)
 
     val result = reportGenerator.createReport(
-      listOf(bed),
+      listOf(Cas1BedIdentifier(bed.id)),
       Cas1ReportService.MonthSpecificReportParams(2023, 4),
     )
 
