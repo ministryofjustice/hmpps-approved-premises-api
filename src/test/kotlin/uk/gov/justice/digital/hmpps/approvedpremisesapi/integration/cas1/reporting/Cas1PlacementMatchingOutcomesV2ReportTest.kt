@@ -592,8 +592,8 @@ class Cas1PlacementMatchingOutcomesV2ReportTest : InitialiseDatabasePerClassTest
     matcherApAreaName: String,
     matcherUsername: String,
   ) {
-    val managerJwt = givenAUser(
-      roles = listOf(UserRole.CAS1_WORKFLOW_MANAGER),
+    val cruMemberJwt = givenAUser(
+      roles = listOf(UserRole.CAS1_CRU_MEMBER),
       staffDetail = StaffDetailFactory.staffDetail(deliusUsername = matcherUsername),
       probationRegion = givenAProbationRegion(apArea = givenAnApArea(name = matcherApAreaName)),
     ).second
@@ -601,7 +601,7 @@ class Cas1PlacementMatchingOutcomesV2ReportTest : InitialiseDatabasePerClassTest
     cas1SimpleApiClient.placementRequestBookingNotMade(
       this,
       placementRequestId,
-      managerJwt,
+      cruMemberJwt,
       NewBookingNotMade(notes = "not this time"),
     )
   }

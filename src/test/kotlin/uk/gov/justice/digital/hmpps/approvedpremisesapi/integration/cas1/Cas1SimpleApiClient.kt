@@ -288,12 +288,12 @@ class Cas1SimpleApiClient {
   fun placementRequestBookingNotMade(
     integrationTestBase: IntegrationTestBase,
     placementRequestId: UUID,
-    managerJwt: String,
+    cruMemberJwt: String,
     body: NewBookingNotMade,
   ) {
     integrationTestBase.webTestClient.post()
       .uri("/placement-requests/$placementRequestId/booking-not-made")
-      .header("Authorization", "Bearer $managerJwt")
+      .header("Authorization", "Bearer $cruMemberJwt")
       .bodyValue(body)
       .exchange()
       .expectStatus()

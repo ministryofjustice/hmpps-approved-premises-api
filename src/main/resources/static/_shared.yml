@@ -2907,6 +2907,7 @@ components:
         - cas1_out_of_service_bed_create
         - cas1_out_of_service_bed_create_bed_on_hold
         - cas1_out_of_service_bed_cancel
+        - cas1_placement_request_record_unable_to_match
         - cas1_process_an_appeal
         - cas1_user_list
         - cas1_user_management
