@@ -83,7 +83,6 @@ import java.io.StringReader
 import java.time.LocalDate
 import java.time.OffsetDateTime
 import java.time.ZoneOffset
-import java.time.temporal.ChronoUnit
 import java.util.UUID
 
 class Cas3ReportsTest : IntegrationTestBase() {
@@ -3071,7 +3070,7 @@ class Cas3ReportsTest : IntegrationTestBase() {
       givenAUser(roles = listOf(CAS3_ASSESSOR)) { user, jwt ->
         givenAnOffender { offenderDetails, inmateDetails ->
           val reportStartDate = LocalDate.of(2024, 4, 1)
-          val reportEndDate = LocalDate.of(2024, 6, 30)
+          val reportEndDate = LocalDate.of(2024, 4, 30)
 
           val yorkshireRegion = probationRegionRepository.findByName("Yorkshire & The Humber")
 
@@ -3085,14 +3084,7 @@ class Cas3ReportsTest : IntegrationTestBase() {
             withProbationDeliveryUnit(probationDeliveryUnit)
           }
 
-          val bedOne = bedEntityFactory.produceAndPersist {
-            withRoom(
-              roomEntityFactory.produceAndPersist {
-                withPremises(premises)
-                withName("room1")
-              },
-            )
-          }
+          val bedOne = createBed(premises, "room1", OffsetDateTime.parse("2024-02-01T14:03:00+00:00"))
 
           val booking1 = createBooking(
             premises,
@@ -3106,20 +3098,13 @@ class Cas3ReportsTest : IntegrationTestBase() {
             withBooking(booking1)
           }
 
-          val bedTwo = bedEntityFactory.produceAndPersist {
-            withRoom(
-              roomEntityFactory.produceAndPersist {
-                withPremises(premises)
-                withName("room2")
-              },
-            )
-          }
+          val bedTwo = createBed(premises, "room2", OffsetDateTime.parse("2024-03-21T17:08:00+00:00"))
 
           val booking2 = createBooking(
             premises,
             bedTwo,
             offenderDetails.otherIds.crn,
-            LocalDate.of(2024, 4, 19),
+            LocalDate.of(2024, 3, 27),
             LocalDate.of(2024, 4, 21),
           )
 
@@ -3127,28 +3112,60 @@ class Cas3ReportsTest : IntegrationTestBase() {
             withBooking(booking2)
           }
 
-          val booking3 = createBooking(
+          val bedTwoVoid = cas3VoidBedspaceEntityFactory.produceAndPersist {
+            withPremises(premises)
+            withBed(bedTwo)
+            withStartDate(LocalDate.of(2024, 4, 25))
+            withEndDate(LocalDate.of(2024, 4, 27))
+            withYieldedReason { cas3VoidBedspaceReasonEntityFactory.produceAndPersist() }
+          }
+
+          val bedThree = createBed(premises, "room3", OffsetDateTime.parse("2024-02-01T13:41:00+00:00"))
+
+          createBooking(
             premises,
-            bedTwo,
+            bedThree,
             offenderDetails.otherIds.crn,
             LocalDate.of(2024, 3, 8),
-            LocalDate.of(2024, 4, 21),
+            LocalDate.of(2024, 6, 21),
+          )
+
+          val bedFour = createBed(premises, "room4", OffsetDateTime.parse("2024-03-22T07:37:00+00:00"))
+
+          val booking4 = createBooking(
+            premises,
+            bedFour,
+            offenderDetails.otherIds.crn,
+            LocalDate.of(2024, 4, 9),
+            LocalDate.of(2024, 4, 19),
           )
 
           cancellationEntityFactory.produceAndPersist {
-            withBooking(booking3)
+            withBooking(booking4)
             withYieldedReason {
               cancellationReasonEntityFactory.produceAndPersist()
             }
           }
 
-          val booking4 = createBooking(
+          val bedFive = createBed(premises, "room5", OffsetDateTime.parse("2024-01-05T09:46:00+00:00"))
+
+          createBooking(
             premises,
-            bedTwo,
+            bedFive,
             offenderDetails.otherIds.crn,
-            LocalDate.of(2024, 5, 12),
+            LocalDate.of(2024, 3, 12),
             LocalDate.of(2024, 7, 17),
           )
+
+          val bedSix = createBed(premises, "room6", OffsetDateTime.parse("2024-03-22T15:41:00+00:00"))
+
+          cas3VoidBedspaceEntityFactory.produceAndPersist {
+            withPremises(premises)
+            withBed(bedSix)
+            withStartDate(LocalDate.of(2024, 3, 16))
+            withEndDate(LocalDate.of(2024, 5, 21))
+            withYieldedReason { cas3VoidBedspaceReasonEntityFactory.produceAndPersist() }
+          }
 
           webTestClient.get()
             .uri("/cas3/reports/bookingGap?startDate=$reportStartDate&endDate=$reportEndDate&probationRegionId=${user.probationRegion.id}")
@@ -3171,7 +3188,7 @@ class Cas3ReportsTest : IntegrationTestBase() {
                 .convertTo<BookingGapReportRow>()
                 .toList()
 
-              assertThat(actual.size).isEqualTo(4)
+              assertThat(actual.size).isEqualTo(5)
 
               assertReportRow(
                 actual[0],
@@ -3181,6 +3198,7 @@ class Cas3ReportsTest : IntegrationTestBase() {
                 bedOne.room.name,
                 reportStartDate,
                 booking1.arrivalDate,
+                4,
               )
 
               assertReportRow(
@@ -3191,6 +3209,7 @@ class Cas3ReportsTest : IntegrationTestBase() {
                 bedOne.room.name,
                 booking1.departureDate.plusDays(1),
                 reportEndDate,
+                18,
               )
 
               assertReportRow(
@@ -3199,8 +3218,9 @@ class Cas3ReportsTest : IntegrationTestBase() {
                 probationDeliveryUnit.name,
                 premises.name,
                 bedTwo.room.name,
-                reportStartDate,
-                booking2.arrivalDate,
+                booking2.departureDate.plusDays(1),
+                bedTwoVoid.startDate,
+                3,
               )
 
               assertReportRow(
@@ -3209,8 +3229,20 @@ class Cas3ReportsTest : IntegrationTestBase() {
                 probationDeliveryUnit.name,
                 premises.name,
                 bedTwo.room.name,
-                booking2.departureDate.plusDays(1),
-                booking4.arrivalDate,
+                bedTwoVoid.endDate.plusDays(1),
+                reportEndDate,
+                3,
+              )
+
+              assertReportRow(
+                actual[4],
+                premises.probationRegion.name,
+                probationDeliveryUnit.name,
+                premises.name,
+                bedFour.room.name,
+                reportStartDate,
+                reportEndDate,
+                30,
               )
             }
         }
@@ -3236,13 +3268,14 @@ class Cas3ReportsTest : IntegrationTestBase() {
       bedName: String,
       gapStartDate: LocalDate,
       gapEndDate: LocalDate,
+      gapDays: Int,
     ) {
       assertThat(row.probation_region).isEqualTo(probationRegionName)
       assertThat(row.pdu_name).isEqualTo(probationDeliveryUnitName)
       assertThat(row.premises_name).isEqualTo(premisesName)
       assertThat(row.bed_name).isEqualTo(bedName)
       assertThat(row.gap).isEqualTo("[$gapStartDate,$gapEndDate)")
-      assertThat(row.gap_days).isEqualTo(ChronoUnit.DAYS.between(gapStartDate, gapEndDate).toString())
+      assertThat(row.gap_days).isEqualTo(gapDays.toString())
     }
   }
 
@@ -4177,6 +4210,22 @@ class Cas3ReportsTest : IntegrationTestBase() {
 
   private fun createBed(room: RoomEntity): BedEntity = bedEntityFactory.produceAndPersist {
     withRoom(room)
+  }
+
+  private fun createBed(premises: PremisesEntity, roomName: String, createDate: OffsetDateTime): BedEntity {
+    val bed = bedEntityFactory.produceAndPersist {
+      withRoom(
+        roomEntityFactory.produceAndPersist {
+          withPremises(premises)
+          withName(roomName)
+        },
+      )
+    }
+
+    bed.createdAt = createDate
+    bedRepository.save(bed)
+
+    return bed
   }
 
   private fun createBooking(
