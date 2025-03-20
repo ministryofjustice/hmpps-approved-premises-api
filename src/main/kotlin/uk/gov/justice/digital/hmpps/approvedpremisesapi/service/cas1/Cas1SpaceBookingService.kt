@@ -581,11 +581,11 @@ class Cas1SpaceBookingService(
       previousCharacteristicsIfChanged = previousCharacteristicsIfChanged,
     )
 
-    updatedBooking.application?.let {
-      if (previousArrivalDateIfChanged != null || previousDepartureDateIfChanged != null) {
+    if (previousArrivalDateIfChanged != null || previousDepartureDateIfChanged != null) {
+      updatedBooking.application?.let { application ->
         cas1BookingEmailService.spaceBookingAmended(
           spaceBooking = updatedBooking,
-          application = updatedBooking.application!!,
+          application = application,
         )
       }
     }
@@ -631,9 +631,10 @@ class Cas1SpaceBookingService(
     val (newArrivalDate, newDepartureDate) = updateSpaceBookingDetails.calculateEffectiveDates(bookingToUpdate)
 
     if (bookingToUpdate.hasArrival()) {
-      updateDepartureDates(bookingToUpdate, newDepartureDate)
+      bookingToUpdate.updateDepartureDates(newDepartureDate)
     } else {
-      updateFullBookingDates(bookingToUpdate, newArrivalDate, newDepartureDate)
+      bookingToUpdate.updateArrivalDates(newArrivalDate)
+      bookingToUpdate.updateDepartureDates(newDepartureDate)
     }
 
     if (updateSpaceBookingDetails.characteristics != null) {
@@ -653,23 +654,14 @@ class Cas1SpaceBookingService(
     }
   }
 
-  private fun updateDepartureDates(booking: Cas1SpaceBookingEntity, newDepartureDate: LocalDate) {
-    booking.expectedDepartureDate = newDepartureDate
-    booking.canonicalDepartureDate = newDepartureDate
+  private fun Cas1SpaceBookingEntity.updateDepartureDates(newDepartureDate: LocalDate) {
+    this.expectedDepartureDate = newDepartureDate
+    this.canonicalDepartureDate = newDepartureDate
   }
 
-  private fun updateArrivalDates(booking: Cas1SpaceBookingEntity, newArrivalDate: LocalDate) {
-    booking.expectedArrivalDate = newArrivalDate
-    booking.canonicalArrivalDate = newArrivalDate
-  }
-
-  private fun updateFullBookingDates(
-    booking: Cas1SpaceBookingEntity,
-    newArrivalDate: LocalDate,
-    newDepartureDate: LocalDate,
-  ) {
-    updateArrivalDates(booking, newArrivalDate)
-    updateDepartureDates(booking, newDepartureDate)
+  private fun Cas1SpaceBookingEntity.updateArrivalDates(newArrivalDate: LocalDate) {
+    this.expectedArrivalDate = newArrivalDate
+    this.canonicalArrivalDate = newArrivalDate
   }
 
   data class UpdateSpaceBookingDetails(
