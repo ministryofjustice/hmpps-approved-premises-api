@@ -98,8 +98,8 @@ class Cas1SeedRoomsFromSiteSurveyXlsxJob(
   }
 
   private fun checkRoomCharacteristics(rooms: List<RoomInfo>) {
-    rooms.groupBy { room -> room.roomCode }.forEach { (roomCode, rooms) ->
-      rooms.all { it.characteristics == rooms.first().characteristics } || error("1 or more beds in room '$roomCode' have different characteristics.")
+    rooms.groupBy { room -> room.roomCode }.forEach { (_, rooms) ->
+      rooms.all { it.characteristics == rooms.first().characteristics } || error("1 or more beds in room '${rooms.first().roomName}' have different characteristics.")
     }
   }
 

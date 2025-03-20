@@ -42,6 +42,7 @@ class SeedXlsxService(
 
     Files.walk(path)
       .filter(Files::isRegularFile)
+      .filter { it.name.endsWith(".xlsx", ignoreCase = true) }
       .forEach {
         seedLogger.info("Seeding file ${it.name} from directory ${it.parent.name}")
         seed(fileType, it.toFile())
