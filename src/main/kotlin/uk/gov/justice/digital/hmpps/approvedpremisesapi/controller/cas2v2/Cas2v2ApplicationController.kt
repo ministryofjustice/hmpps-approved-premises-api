@@ -12,12 +12,16 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.UpdateApplicat
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.UpdateCas2v2Application
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas2v2.Cas2v2ApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas2v2.Cas2v2ApplicationSummaryEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas2v2.Cas2v2UserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.BadRequestProblem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.ConflictProblem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.ForbiddenProblem
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.NotFoundProblem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.ValidatableActionResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas2.Cas2OffenderService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas2v2.Cas2v2ApplicationService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas2v2.Cas2v2OffenderSearchResult
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas2v2.Cas2v2OffenderService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas2v2.Cas2v2UserService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.cas2v2.Cas2v2ApplicationsTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.PageCriteria
@@ -34,6 +38,7 @@ class Cas2v2ApplicationController(
   private val cas2v2ApplicationService: Cas2v2ApplicationService,
   private val cas2v2ApplicationsTransformer: Cas2v2ApplicationsTransformer,
   private val objectMapper: ObjectMapper,
+  private val cas2v2OffenderService: Cas2v2OffenderService,
   private val cas2OffenderService: Cas2OffenderService,
   private val userService: Cas2v2UserService,
 ) : ApplicationsCas2v2Delegate {
@@ -68,14 +73,19 @@ class Cas2v2ApplicationController(
       )
 
     val application = extractEntityFromCasResult(applicationResult)
-    return ResponseEntity.ok(getPersonDetailAndTransform(application))
+    return ResponseEntity.ok(getPersonDetailAndTransform(application, user))
   }
 
   @Transactional
   override fun applicationsPost(body: NewCas2v2Application): ResponseEntity<Application> {
     val user = userService.getUserForRequest()
 
-    val personInfo = cas2OffenderService.getFullInfoForPersonOrThrow(body.crn)
+    val personInfo = when (val cas2v2OffenderSearchResult = cas2v2OffenderService.getPersonByCrn(body.crn, user)) {
+      is Cas2v2OffenderSearchResult.NotFound -> throw NotFoundProblem(body.crn, "Offender")
+      is Cas2v2OffenderSearchResult.Forbidden -> throw ForbiddenProblem()
+      is Cas2v2OffenderSearchResult.Unknown -> throw cas2v2OffenderSearchResult.throwable ?: BadRequestProblem(errorDetail = "Could not retrieve person info for Prison Number: ${body.crn}")
+      is Cas2v2OffenderSearchResult.Success.Full -> cas2v2OffenderSearchResult.person
+    }
 
     val applicationResult = cas2v2ApplicationService.createCas2v2Application(
       body.crn,
@@ -94,7 +104,7 @@ class Cas2v2ApplicationController(
 
     return ResponseEntity
       .created(URI.create("/cas2v2/applications/${application.id}"))
-      .body(cas2v2ApplicationsTransformer.transformJpaToApi(application, personInfo))
+      .body(cas2v2ApplicationsTransformer.transformJpaAndFullPersonToApi(application, personInfo))
   }
 
   @Suppress("TooGenericExceptionThrown")
@@ -119,7 +129,7 @@ class Cas2v2ApplicationController(
     }
 
     val entity = extractEntityFromCasResult(applicationResult)
-    return ResponseEntity.ok(getPersonDetailAndTransform(entity))
+    return ResponseEntity.ok(getPersonDetailAndTransform(entity, user))
   }
 
   @Transactional
@@ -143,11 +153,18 @@ class Cas2v2ApplicationController(
     }
   }
 
+  @SuppressWarnings("ThrowsCount")
   private fun getPersonDetailAndTransform(
     application: Cas2v2ApplicationEntity,
+    user: Cas2v2UserEntity,
   ): Application {
-    val personInfo = cas2OffenderService.getFullInfoForPersonOrThrow(application.crn)
+    val personInfo = when (val cas2v2OffenderSearchResult = cas2v2OffenderService.getPersonByCrn(application.crn, user)) {
+      is Cas2v2OffenderSearchResult.NotFound -> throw NotFoundProblem(application.crn, "Offender")
+      is Cas2v2OffenderSearchResult.Forbidden -> throw ForbiddenProblem()
+      is Cas2v2OffenderSearchResult.Unknown -> throw cas2v2OffenderSearchResult.throwable ?: BadRequestProblem(errorDetail = "Could not retrieve person info for Prison Number: ${application.crn}")
+      is Cas2v2OffenderSearchResult.Success.Full -> cas2v2OffenderSearchResult.person
+    }
 
-    return cas2v2ApplicationsTransformer.transformJpaToApi(application, personInfo)
+    return cas2v2ApplicationsTransformer.transformJpaAndFullPersonToApi(application, personInfo)
   }
 }
