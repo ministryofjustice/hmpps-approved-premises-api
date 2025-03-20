@@ -21,6 +21,8 @@ class Cas2LocationChangedService(
 ) {
   private val log = LoggerFactory.getLogger(this::class.java)
 
+  private fun isNewPrison(currentPrisonCode: String, prisonCodeToCheck: String) = currentPrisonCode != prisonCodeToCheck
+
   @Transactional
   fun process(event: HmppsDomainEvent) {
     if (event.additionalInformation.categoriesChanged.contains("LOCATION")) {
@@ -35,18 +37,22 @@ class Cas2LocationChangedService(
 
         val prisoner = prisonerSearchClient.getPrisoner(URI.create(detailUrl))!!
 
-        application.applicationAssignments.add(
-          Cas2ApplicationAssignmentEntity(
-            id = UUID.randomUUID(),
-            application = application,
-            prisonCode = prisoner.prisonId,
-            createdAt = OffsetDateTime.now(),
-            allocatedPomUserId = null,
-          ),
-        )
+        if (isNewPrison(application.currentPrisonCode, prisoner.prisonId)) {
+          application.applicationAssignments.add(
+            Cas2ApplicationAssignmentEntity(
+              id = UUID.randomUUID(),
+              application = application,
+              prisonCode = prisoner.prisonId,
+              createdAt = OffsetDateTime.now(),
+              allocatedPomUserId = null,
+            ),
+          )
 
-        applicationRepository.save(application)
-        log.info("Added application assignment for prisoner: {}", nomsNumber)
+          applicationRepository.save(application)
+          log.info("Added application assignment for prisoner: {}", nomsNumber)
+        } else {
+          log.info("Prisoner {} prison location not changed, no action required", nomsNumber)
+        }
       }
     }
   }
