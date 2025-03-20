@@ -39,7 +39,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.Availability
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.AuthorisableActionResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.ValidatableActionResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.CharacteristicService
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.FeatureFlagService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas3.Cas3PremisesService
 import java.time.LocalDate
 import java.util.UUID
@@ -54,7 +53,6 @@ class Cas3PremisesServiceTest {
   private val probationRegionRepositoryMock = mockk<ProbationRegionRepository>()
   private val probationDeliveryUnitRepositoryMock = mockk<ProbationDeliveryUnitRepository>()
   private val characteristicServiceMock = mockk<CharacteristicService>()
-  private val featureFlagServiceMock = mockk<FeatureFlagService>()
 
   private val temporaryAccommodationPremisesFactory = TemporaryAccommodationPremisesEntityFactory()
     .withYieldedLocalAuthorityArea { LocalAuthorityEntityFactory().produce() }
@@ -74,7 +72,6 @@ class Cas3PremisesServiceTest {
     probationRegionRepositoryMock,
     probationDeliveryUnitRepositoryMock,
     characteristicServiceMock,
-    featureFlagServiceMock,
   )
 
   @Test
@@ -562,7 +559,6 @@ class Cas3PremisesServiceTest {
       .withArrivalDate(LocalDate.now().plusDays(3))
       .produce()
 
-    every { featureFlagServiceMock.getBooleanFlag("archive-property-validate-existing-bookings") } returns true
     every { premisesRepositoryMock.findTemporaryAccommodationPremisesByIdOrNull(premises.id) } returns premises
     every { localAuthorityAreaRepositoryMock.findByIdOrNull(premises.localAuthorityArea?.id) } returns localAuthority
     every { probationRegionRepositoryMock.findByIdOrNull(premises.probationRegion.id) } returns probationRegion
