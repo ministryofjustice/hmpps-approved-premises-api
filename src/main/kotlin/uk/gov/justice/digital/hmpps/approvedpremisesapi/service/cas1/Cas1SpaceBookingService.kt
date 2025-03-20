@@ -617,7 +617,12 @@ class Cas1SpaceBookingService(
       "$.premisesId" hasValidationError "premisesMismatch"
     }
 
-    val effectiveArrivalDate = updateSpaceBookingDetails.arrivalDate ?: bookingToUpdate.expectedArrivalDate
+    val effectiveArrivalDate = if (bookingToUpdate.hasArrival()) {
+      bookingToUpdate.actualArrivalDate
+    } else {
+      updateSpaceBookingDetails.arrivalDate ?: bookingToUpdate.expectedArrivalDate
+    }
+
     val effectiveDepartureDate = updateSpaceBookingDetails.departureDate ?: bookingToUpdate.expectedDepartureDate
 
     if (effectiveDepartureDate.isBefore(effectiveArrivalDate)) {
