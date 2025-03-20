@@ -14,17 +14,20 @@ import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
 import org.junit.jupiter.api.extension.ExtendWith
+import org.springframework.http.HttpStatus
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.ClientResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.Prisoner
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.PrisonsApiClient
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.config.NotifyConfig
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.Cas2ApplicationEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.NomisUserEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas2ApplicationAssignmentEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.NomisUserRepository
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.prisonsapi.Agency
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.EmailNotificationService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas2.Cas2EmailService
 import java.time.OffsetDateTime
-import java.util.Optional
-import java.util.UUID
+import java.util.*
 
 @ExtendWith(MockKExtension::class)
 class Cas2EmailServiceTest {
@@ -37,6 +40,9 @@ class Cas2EmailServiceTest {
 
   @MockK
   lateinit var nomisUserRepository: NomisUserRepository
+
+  @MockK
+  lateinit var prisonsApiClient: PrisonsApiClient
 
   @InjectMockKs
   lateinit var emailService: Cas2EmailService
@@ -61,9 +67,11 @@ class Cas2EmailServiceTest {
   @Test
   fun `send email to Nacro when location changes`() {
     application.applicationAssignments.add(applicationAssignment)
+    val agency =
+      Agency(agencyId = applicationAssignment.prisonCode, description = "HMS LIVERPOOL", agencyType = "prison")
     val personalisationForNacro = mapOf(
       "receivingPrisonName" to prisoner.prisonName,
-      "transferringPrisonName" to "tbc",
+      "transferringPrisonName" to agency.description,
       "link" to nomsNumber,
     )
     every {
@@ -74,6 +82,10 @@ class Cas2EmailServiceTest {
       )
     } returns Unit
     every { notifyConfig.templates.toNacroApplicationTransferredToAnotherPrison } returns templateId
+    every { prisonsApiClient.getAgencyDetails(eq(applicationAssignment.prisonCode)) } returns ClientResult.Success(
+      HttpStatus.OK,
+      agency,
+    )
 
     emailService.sendLocationChangedEmailToNacro(application, prisoner)
 
