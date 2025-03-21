@@ -55,7 +55,7 @@ import java.time.LocalDate
 import java.time.OffsetDateTime
 import java.util.UUID
 
-class Cas1AssessmentCas1DomainEventServiceTest {
+class Cas1AssessmentDomainEventServiceTest {
 
   private val domainEventService = mockk<Cas1DomainEventService>()
   private val apDeliusContextApiClient = mockk<ApDeliusContextApiClient>()
