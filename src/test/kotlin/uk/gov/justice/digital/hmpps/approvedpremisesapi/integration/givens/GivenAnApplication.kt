@@ -3,6 +3,7 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.IntegrationTestBase
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesApplicationEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas1CruManagementAreaEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomInt
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomStringMultiCaseWithNumbers
@@ -15,8 +16,9 @@ fun IntegrationTestBase.givenACas1Application(
   submittedAt: OffsetDateTime? = null,
   eventNumber: String = randomInt(1, 9).toString(),
   isWomensApplication: Boolean? = null,
+  cruManagementArea: Cas1CruManagementAreaEntity? = null,
   block: (application: ApplicationEntity) -> Unit = {},
-) = givenAnApplication(createdByUser, crn, submittedAt, eventNumber, isWomensApplication, block)
+) = givenAnApplication(createdByUser, crn, submittedAt, eventNumber, isWomensApplication, cruManagementArea, block)
 
 @Suppress("LongParameterList")
 fun IntegrationTestBase.givenAnApplication(
@@ -25,6 +27,7 @@ fun IntegrationTestBase.givenAnApplication(
   submittedAt: OffsetDateTime? = null,
   eventNumber: String = randomInt(1, 9).toString(),
   isWomensApplication: Boolean? = null,
+  cruManagementArea: Cas1CruManagementAreaEntity? = null,
   block: (application: ApplicationEntity) -> Unit = {},
 ): ApprovedPremisesApplicationEntity {
   val applicationSchema = approvedPremisesApplicationJsonSchemaEntityFactory.produceAndPersist {
@@ -37,6 +40,7 @@ fun IntegrationTestBase.givenAnApplication(
     withApplicationSchema(applicationSchema)
     withSubmittedAt(submittedAt)
     withEventNumber(eventNumber)
+    withCruManagementArea(cruManagementArea)
     withIsWomensApplication(isWomensApplication)
   }
 

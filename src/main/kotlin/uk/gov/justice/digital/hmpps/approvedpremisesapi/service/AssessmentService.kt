@@ -87,7 +87,7 @@ class AssessmentService(
     pageCriteria: PageCriteria<AssessmentSortField>,
   ): Pair<List<DomainAssessmentSummary>, PaginationMetadata?> {
     val pageable = pageCriteria.toPageableOrAllPages(
-      sortByConverter = when (pageCriteria.sortBy) {
+      sortBy = when (pageCriteria.sortBy) {
         AssessmentSortField.assessmentStatus -> "status"
         AssessmentSortField.assessmentArrivalDate -> "arrivalDate"
         AssessmentSortField.assessmentCreatedAt -> "createdAt"
