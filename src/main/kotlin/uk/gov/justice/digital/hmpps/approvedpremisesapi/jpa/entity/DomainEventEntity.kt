@@ -195,6 +195,10 @@ enum class DomainEventType(
     Cas1EventType.applicationAssessed.value,
     "An application has been assessed for an Approved Premises placement",
     Cas1TimelineEventType.applicationAssessed,
+    schemaVersions = listOf(
+      DEFAULT_DOMAIN_EVENT_SCHEMA_VERSION,
+      DomainEventSchemaVersion(2, "Added assessmentId field"),
+    ),
   ),
   APPROVED_PREMISES_APPLICATION_EXPIRED(
     DomainEventCas.CAS1,

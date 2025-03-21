@@ -176,6 +176,7 @@ class Cas1AssessmentDomainEventService(
             applicationId = application.id,
             applicationUrl = applicationUrlTemplate
               .resolve("id", application.id.toString()),
+            assessmentId = assessment.id,
             personReference = PersonReference(
               crn = offenderDetails.otherIds.crn,
               noms = offenderDetails.otherIds.nomsNumber ?: "Unknown NOMS Number",
@@ -200,6 +201,7 @@ class Cas1AssessmentDomainEventService(
         metadata = mapOf(
           MetaDataName.CAS1_REQUESTED_AP_TYPE to apType?.asApprovedPremisesType()?.name,
         ),
+        schemaVersion = 2,
       ),
     )
   }
@@ -234,6 +236,7 @@ class Cas1AssessmentDomainEventService(
             applicationId = application.id,
             applicationUrl = applicationUrlTemplate
               .resolve("id", application.id.toString()),
+            assessmentId = assessment.id,
             personReference = PersonReference(
               crn = assessment.application.crn,
               noms = offenderDetails.otherIds.nomsNumber ?: "Unknown NOMS Number",
@@ -255,6 +258,7 @@ class Cas1AssessmentDomainEventService(
             arrivalDate = null,
           ),
         ),
+        schemaVersion = 2,
       ),
     )
   }
