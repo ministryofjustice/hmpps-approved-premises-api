@@ -21,14 +21,18 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas2v2Submitte
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.SubmitCas2v2Application
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.toHttpStatus
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.CaseSummaryFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ExternalUserDetailsFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ProbationOffenderDetailFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.Cas2v2IntegrationTestBase
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenACas2Admin
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenACas2v2Assessor
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenACas2v2DeliusUser
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenACas2v2PomUser
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAnOffender
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.apDeliusContextAddSingleCaseSummaryToBulkResponse
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.manageUsersMockSuccessfulExternalUsersCall
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.probationOffenderSearchAPIMockSuccessfulOffenderSearchCall
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas2v2ApplicationJsonSchemaEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas2v2.Cas2v2ApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas2v2.Cas2v2ApplicationRepository
@@ -39,6 +43,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas2v2.Cas2v2
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas2v2.Cas2v2UserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.community.OffenderDetailSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.prisonsapi.AssignedLivingUnit
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.probationoffendersearchapi.IDs
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.cas2v2.Cas2v2UserTransformer
 import java.time.LocalDate
 import java.time.OffsetDateTime
@@ -367,9 +372,35 @@ class Cas2v2SubmissionTest(
 
     @Test
     fun `Assessor can view single submitted application`() {
+      val crn = "CRN321"
+      val nomsNumber = "NOMS321"
+      apDeliusContextAddSingleCaseSummaryToBulkResponse(
+        caseSummary = CaseSummaryFactory()
+          .withCrn(crn)
+          .withNomsId(nomsNumber)
+          .produce(),
+      )
+      probationOffenderSearchAPIMockSuccessfulOffenderSearchCall(
+        nomsNumber = nomsNumber,
+        response = listOf(
+          ProbationOffenderDetailFactory()
+            .withOtherIds(
+              IDs(
+                nomsNumber = nomsNumber,
+                crn = crn,
+              ),
+            )
+            .produce(),
+        ),
+      )
       givenACas2v2Assessor { assessor, jwt ->
         givenACas2v2PomUser { user, _ ->
-          givenAnOffender { offenderDetails, _ ->
+          givenAnOffender(
+            offenderDetailsConfigBlock = {
+              withCrn(crn)
+              withNomsNumber(nomsNumber)
+            },
+          ) { offenderDetails, _ ->
             cas2v2ApplicationJsonSchemaRepository.deleteAll()
 
             val newestJsonSchema = cas2v2ApplicationJsonSchemaEntityFactory
@@ -529,10 +560,36 @@ class Cas2v2SubmissionTest(
     inner class ControlsOnCas2v2Admin {
       @Test
       fun `Admin can view single submitted application`() {
+        val crn = "CRN321"
+        val nomsNumber = "NOMS321"
+        apDeliusContextAddSingleCaseSummaryToBulkResponse(
+          caseSummary = CaseSummaryFactory()
+            .withCrn(crn)
+            .withNomsId(nomsNumber)
+            .produce(),
+        )
+        probationOffenderSearchAPIMockSuccessfulOffenderSearchCall(
+          nomsNumber = nomsNumber,
+          response = listOf(
+            ProbationOffenderDetailFactory()
+              .withOtherIds(
+                IDs(
+                  nomsNumber = nomsNumber,
+                  crn = crn,
+                ),
+              )
+              .produce(),
+          ),
+        )
         givenACas2v2Assessor { assessor, _ ->
           givenACas2Admin { _, jwt ->
             givenACas2v2PomUser { user, _ ->
-              givenAnOffender { offenderDetails, _ ->
+              givenAnOffender(
+                offenderDetailsConfigBlock = {
+                  withCrn(crn)
+                  withNomsNumber(nomsNumber)
+                },
+              ) { offenderDetails, _ ->
                 cas2v2ApplicationJsonSchemaRepository.deleteAll()
 
                 val newestJsonSchema = cas2v2ApplicationJsonSchemaEntityFactory
