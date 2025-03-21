@@ -4,6 +4,8 @@ import com.ninjasquad.springmockk.SpykBean
 import io.mockk.verify
 import org.awaitility.Awaitility.await
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.params.ParameterizedTest
+import org.junit.jupiter.params.provider.ValueSource
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
 import software.amazon.awssdk.services.sns.model.MessageAttributeValue
@@ -25,6 +27,7 @@ import java.time.LocalDate
 import java.time.OffsetDateTime
 import java.time.ZoneId
 import java.util.UUID
+
 class Cas2DomainEventListenerTest : IntegrationTestBase() {
 
   @Autowired
@@ -124,7 +127,7 @@ class Cas2DomainEventListenerTest : IntegrationTestBase() {
 
         @SuppressWarnings("MaxLineLength")
         val event =
-          "{\"eventType\":\"$eventType\",\"detailUrl\":\"$detailUrl\",\"occurredAt\":\"$occurredAt\",\"additionalInformation\": {\"categoriesChanged\": [\"LOCATION\"]},\"personReference\":{\"identifiers\":[{\"type\":\"NOMS\",\"value\":\"${application.nomsNumber}\"}]}}"
+          "{\"description\":\"$eventType\",\"eventType\":\"$eventType\",\"detailUrl\":\"$detailUrl\",\"occurredAt\":\"$occurredAt\",\"additionalInformation\": {\"categoriesChanged\": [\"LOCATION\"]},\"personReference\":{\"identifiers\":[{\"type\":\"NOMS\",\"value\":\"${application.nomsNumber}\"}]}}"
         publishMessageToTopic(eventType, event)
         await().until { applicationAssignmentRepository.count().toInt() == 2 }
         val locations = applicationAssignmentRepository.findAll()
@@ -133,10 +136,13 @@ class Cas2DomainEventListenerTest : IntegrationTestBase() {
     }
   }
 
-  @Test
-  fun `Save new allocation in assignment table`() {
-    val eventType = "offender-management.allocation.changed"
-    val occurredAt = Instant.now().atZone(ZoneId.systemDefault())
+  fun String.setNoms(value: String) = replace("%NOMS%", value)
+  fun String.setStaffId(value: String) = replace("%STAFFID%", value)
+
+  @ParameterizedTest
+  @ValueSource(strings = ["offender-management.allocation.changed"])
+  fun `Save new allocation in assignment table`(eventType: String) {
+    val occurredAt = OffsetDateTime.now()
     val applicationSchema = cas2ApplicationJsonSchemaEntityFactory.produceAndPersist {
       withAddedAt(OffsetDateTime.now())
       withId(UUID.randomUUID())
@@ -151,25 +157,24 @@ class Cas2DomainEventListenerTest : IntegrationTestBase() {
           withCreatedAt(OffsetDateTime.now().minusDays(28))
           withConditionalReleaseDate(LocalDate.now().plusDays(1))
         }
-        val pomAllocation = PomAllocation(Manager(userEntity.nomisStaffId), Prison("A1234AB"))
+
+        val otherUser = nomisUserEntityFactory.produceAndPersist { withNomisStaffIdentifier(123456L) }
+        val pomAllocation = PomAllocation(Manager(otherUser.nomisStaffId), Prison("LEI"))
+
         val url = "/allocation/${application.nomsNumber}/primary_pom"
         val detailUrl = managePomCasesBaseUrl + url
+
+        mockSuccessfulGetCallWithJsonResponse(url = url, responseBody = pomAllocation)
 
         val oldApplicationAssignment = Cas2ApplicationAssignmentEntity(
           id = UUID.randomUUID(),
           application = application,
           prisonCode = "LON",
           allocatedPomUserId = null,
-          createdAt = occurredAt.toOffsetDateTime(),
+          createdAt = occurredAt,
         )
-        applicationAssignmentRepository.deleteAll()
         applicationAssignmentRepository.save(
           oldApplicationAssignment,
-        )
-
-        mockSuccessfulGetCallWithJsonResponse(
-          url = url,
-          responseBody = pomAllocation,
         )
 
         @SuppressWarnings("MaxLineLength")

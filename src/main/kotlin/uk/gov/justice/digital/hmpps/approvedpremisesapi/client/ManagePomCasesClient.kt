@@ -24,10 +24,6 @@ data class PomAllocation(
   val prison: Prison,
 ) : AllocationResponse
 
-data object PomDeallocated : AllocationResponse
-
-data object PomNotAllocated : AllocationResponse
-
 data class Manager(
   val code: Long,
 )
