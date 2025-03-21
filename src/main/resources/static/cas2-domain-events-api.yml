@@ -100,7 +100,25 @@ components:
               $ref: '#/components/schemas/Cas2ApplicationSubmittedEventDetails'
           required:
             - eventDetails
+    Cas2v2ApplicationSubmittedEvent:
+      allOf:
+        - $ref: '#/components/schemas/Cas2Event'
+        - type: object
+          properties:
+            eventDetails:
+              $ref: '#/components/schemas/Cas2ApplicationSubmittedEventDetails'
+          required:
+            - eventDetails
     Cas2ApplicationStatusUpdatedEvent:
+      allOf:
+        - $ref: '#/components/schemas/Cas2Event'
+        - type: object
+          properties:
+            eventDetails:
+              $ref: '#/components/schemas/Cas2ApplicationStatusUpdatedEventDetails'
+          required:
+            - eventDetails
+    Cas2v2ApplicationStatusUpdatedEvent:
       allOf:
         - $ref: '#/components/schemas/Cas2Event'
         - type: object
