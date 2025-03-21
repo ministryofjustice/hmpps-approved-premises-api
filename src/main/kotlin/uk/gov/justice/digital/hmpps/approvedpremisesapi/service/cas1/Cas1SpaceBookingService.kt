@@ -581,11 +581,11 @@ class Cas1SpaceBookingService(
       previousCharacteristicsIfChanged = previousCharacteristicsIfChanged,
     )
 
-    updatedBooking.application?.let {
-      if (previousArrivalDateIfChanged != null || previousDepartureDateIfChanged != null) {
+    if (previousArrivalDateIfChanged != null || previousDepartureDateIfChanged != null) {
+      updatedBooking.application?.let { application ->
         cas1BookingEmailService.spaceBookingAmended(
           spaceBooking = updatedBooking,
-          application = updatedBooking.application!!,
+          application = application,
         )
       }
     }
@@ -616,8 +616,14 @@ class Cas1SpaceBookingService(
     if (bookingToUpdate.premises.id != updateSpaceBookingDetails.premisesId) {
       "$.premisesId" hasValidationError "premisesMismatch"
     }
-    val (effectiveArrivalDate, effectiveDepartureDate) =
-      updateSpaceBookingDetails.calculateEffectiveDates(bookingToUpdate)
+
+    val effectiveArrivalDate = if (bookingToUpdate.hasArrival()) {
+      bookingToUpdate.actualArrivalDate
+    } else {
+      updateSpaceBookingDetails.arrivalDate ?: bookingToUpdate.expectedArrivalDate
+    }
+
+    val effectiveDepartureDate = updateSpaceBookingDetails.departureDate ?: bookingToUpdate.expectedDepartureDate
 
     if (effectiveDepartureDate.isBefore(effectiveArrivalDate)) {
       "$.departureDate" hasValidationError "The departure date is before the arrival date."
@@ -628,12 +634,11 @@ class Cas1SpaceBookingService(
     bookingToUpdate: Cas1SpaceBookingEntity,
     updateSpaceBookingDetails: UpdateSpaceBookingDetails,
   ): Cas1SpaceBookingEntity {
-    val (newArrivalDate, newDepartureDate) = updateSpaceBookingDetails.calculateEffectiveDates(bookingToUpdate)
-
     if (bookingToUpdate.hasArrival()) {
-      updateDepartureDates(bookingToUpdate, newDepartureDate)
+      bookingToUpdate.updateDepartureDates(updateSpaceBookingDetails)
     } else {
-      updateFullBookingDates(bookingToUpdate, newArrivalDate, newDepartureDate)
+      bookingToUpdate.updateArrivalDates(updateSpaceBookingDetails)
+      bookingToUpdate.updateDepartureDates(updateSpaceBookingDetails)
     }
 
     if (updateSpaceBookingDetails.characteristics != null) {
@@ -653,23 +658,18 @@ class Cas1SpaceBookingService(
     }
   }
 
-  private fun updateDepartureDates(booking: Cas1SpaceBookingEntity, newDepartureDate: LocalDate) {
-    booking.expectedDepartureDate = newDepartureDate
-    booking.canonicalDepartureDate = newDepartureDate
+  private fun Cas1SpaceBookingEntity.updateDepartureDates(updateSpaceBookingDetails: UpdateSpaceBookingDetails) {
+    if (updateSpaceBookingDetails.departureDate != null) {
+      this.expectedDepartureDate = updateSpaceBookingDetails.departureDate
+      this.canonicalDepartureDate = updateSpaceBookingDetails.departureDate
+    }
   }
 
-  private fun updateArrivalDates(booking: Cas1SpaceBookingEntity, newArrivalDate: LocalDate) {
-    booking.expectedArrivalDate = newArrivalDate
-    booking.canonicalArrivalDate = newArrivalDate
-  }
-
-  private fun updateFullBookingDates(
-    booking: Cas1SpaceBookingEntity,
-    newArrivalDate: LocalDate,
-    newDepartureDate: LocalDate,
-  ) {
-    updateArrivalDates(booking, newArrivalDate)
-    updateDepartureDates(booking, newDepartureDate)
+  private fun Cas1SpaceBookingEntity.updateArrivalDates(updateSpaceBookingDetails: UpdateSpaceBookingDetails) {
+    if (updateSpaceBookingDetails.arrivalDate != null) {
+      this.expectedArrivalDate = updateSpaceBookingDetails.arrivalDate
+      this.canonicalArrivalDate = updateSpaceBookingDetails.arrivalDate
+    }
   }
 
   data class UpdateSpaceBookingDetails(
@@ -680,12 +680,4 @@ class Cas1SpaceBookingService(
     val characteristics: List<CharacteristicEntity>?,
     val updatedBy: UserEntity,
   )
-
-  private fun UpdateSpaceBookingDetails.calculateEffectiveDates(
-    bookingToUpdate: Cas1SpaceBookingEntity,
-  ): Pair<LocalDate, LocalDate> {
-    val newArrivalDate = this.arrivalDate ?: bookingToUpdate.expectedArrivalDate
-    val newDepartureDate = this.departureDate ?: bookingToUpdate.expectedDepartureDate
-    return Pair(newArrivalDate, newDepartureDate)
-  }
 }
