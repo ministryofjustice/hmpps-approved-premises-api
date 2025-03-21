@@ -5,6 +5,7 @@ import io.mockk.clearAllMocks
 import io.mockk.every
 import io.mockk.just
 import io.mockk.mockk
+import io.mockk.slot
 import io.mockk.verify
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.BeforeEach
@@ -15,9 +16,9 @@ import org.junit.jupiter.params.provider.NullSource
 import org.junit.jupiter.params.provider.ValueSource
 import org.springframework.http.HttpStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.ApplicationAssessedAssessedBy
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.ApplicationAssessedEnvelope
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.Cru
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.EventType
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.PersonReference
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.ProbationArea
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.StaffMember
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApType
@@ -42,6 +43,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TriggerSource
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserQualification
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRole
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.DomainEvent
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.deliuscontext.StaffDetail
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1AssessmentDomainEventService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1DomainEventService
@@ -240,38 +242,39 @@ class Cas1AssessmentCas1DomainEventServiceTest {
         apDeliusContextApiClient.getStaffDetail(user.deliusUsername)
       }
 
+      val domainEventArgument = slot<DomainEvent<ApplicationAssessedEnvelope>>()
+
       verify(exactly = 1) {
         domainEventService.saveApplicationAssessedDomainEvent(
-          match {
-            val data = it.data.eventDetails
-            val expectedPersonReference = PersonReference(
-              crn = offenderDetails.otherIds.crn,
-              noms = offenderDetails.otherIds.nomsNumber!!,
-            )
-            val expectedAssessor = ApplicationAssessedAssessedBy(
-              staffUserDetails.toStaffMember(),
-              probationArea = ProbationArea(
-                code = staffUserDetails.probationArea.code,
-                name = staffUserDetails.probationArea.description,
-              ),
-              cru = Cru(
-                name = "South West & South Central",
-              ),
-            )
-
-            it.applicationId == assessment.application.id &&
-              it.crn == assessment.application.crn &&
-              data.applicationId == assessment.application.id &&
-              data.applicationUrl == "http://frontend/applications/${assessment.application.id}" &&
-              data.personReference == expectedPersonReference &&
-              data.deliusEventNumber == (assessment.application as ApprovedPremisesApplicationEntity).eventNumber &&
-              data.assessedBy == expectedAssessor &&
-              data.decision == "ACCEPTED" &&
-              data.decisionRationale == null &&
-              it.metadata[MetaDataName.CAS1_REQUESTED_AP_TYPE].equals("NORMAL")
-          },
+          capture(domainEventArgument),
         )
       }
+
+      val domainEvent = domainEventArgument.captured
+
+      assertThat(domainEvent.applicationId).isEqualTo(assessment.application.id)
+      assertThat(domainEvent.crn).isEqualTo(assessment.application.crn)
+
+      val eventDetails = domainEvent.data.eventDetails
+      assertThat(eventDetails.applicationId).isEqualTo(assessment.application.id)
+      assertThat(eventDetails.applicationUrl).isEqualTo("http://frontend/applications/${assessment.application.id}")
+      assertThat(eventDetails.personReference.crn).isEqualTo(offenderDetails.otherIds.crn)
+      assertThat(eventDetails.personReference.noms).isEqualTo(offenderDetails.otherIds.nomsNumber!!)
+      assertThat(eventDetails.deliusEventNumber).isEqualTo((assessment.application as ApprovedPremisesApplicationEntity).eventNumber)
+      val expectedAssessor = ApplicationAssessedAssessedBy(
+        staffUserDetails.toStaffMember(),
+        probationArea = ProbationArea(
+          code = staffUserDetails.probationArea.code,
+          name = staffUserDetails.probationArea.description,
+        ),
+        cru = Cru(
+          name = "South West & South Central",
+        ),
+      )
+      assertThat(eventDetails.assessedBy).isEqualTo(expectedAssessor)
+      assertThat(eventDetails.decision).isEqualTo("ACCEPTED")
+      assertThat(eventDetails.decisionRationale).isNull()
+      assertThat(domainEvent.metadata).containsEntry(MetaDataName.CAS1_REQUESTED_AP_TYPE, "NORMAL")
     }
   }
 
