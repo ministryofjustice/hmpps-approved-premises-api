@@ -4,10 +4,12 @@ import io.mockk.every
 import io.mockk.impl.annotations.InjectMockKs
 import io.mockk.impl.annotations.MockK
 import io.mockk.junit5.MockKExtension
+import io.mockk.mockk
 import io.mockk.verify
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
 import org.junit.jupiter.api.extension.ExtendWith
+import org.mockito.kotlin.any
 import org.springframework.http.HttpStatus
 import org.springframework.web.client.HttpClientErrorException
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.ManagePomCasesClient
@@ -16,6 +18,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.PomAllocation
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.Prison
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.Cas2ApplicationEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.NomisUserEntityFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas2ApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas2ApplicationRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.NomisUserRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.domainevent.AdditionalInformation
@@ -32,7 +35,7 @@ import java.time.ZoneId
 class Cas2AllocationChangedServiceTest {
 
   @MockK
-  lateinit var mockApplicationRepository: Cas2ApplicationRepository
+  lateinit var applicationRepository: Cas2ApplicationRepository
 
   @MockK
   lateinit var applicationService: Cas2ApplicationService
@@ -71,7 +74,7 @@ class Cas2AllocationChangedServiceTest {
 
     every { managePomCasesClient.getPomAllocation(any()) } returns pomAllocation
     every { applicationService.findMostRecentApplication(eq(nomsNumber)) } returns application
-    every { mockApplicationRepository.save(any()) } returns null
+    every { applicationRepository.save(any()) } returns null
     every { nomisUserRepository.findByNomisStaffId(eq(pomAllocation.manager.code)) } returns user
 
     allocationChangedService.process(allocationEvent)
@@ -79,7 +82,7 @@ class Cas2AllocationChangedServiceTest {
     verify(exactly = 1) { managePomCasesClient.getPomAllocation(any()) }
     verify(exactly = 1) { applicationService.findMostRecentApplication(eq(nomsNumber)) }
     verify(exactly = 1) { nomisUserRepository.findByNomisStaffId(eq(pomAllocation.manager.code)) }
-    verify(exactly = 1) { mockApplicationRepository.save(any()) }
+    verify(exactly = 1) { applicationRepository.save(any()) }
   }
 
   @Test
@@ -147,5 +150,18 @@ class Cas2AllocationChangedServiceTest {
 
     verify(exactly = 0) { managePomCasesClient.getPomAllocation(any()) }
     verify(exactly = 1) { applicationService.findMostRecentApplication(eq(nomsNumber)) }
+  }
+
+  @Test
+  fun `application assignment is not created when POM has not changed`() {
+    val app = mockk<Cas2ApplicationEntity>()
+    every { managePomCasesClient.getPomAllocation(any()) } returns pomAllocation.copy(manager = Manager(user.nomisStaffId))
+    every { applicationService.findMostRecentApplication(eq(nomsNumber)) } returns app
+    every { nomisUserRepository.findByNomisStaffId(any()) } returns user
+
+    allocationChangedService.process(allocationEvent)
+
+    verify { managePomCasesClient.getPomAllocation(any()) }
+    verify(exactly = 0) { applicationRepository.save(any()) }
   }
 }
