@@ -104,6 +104,7 @@ class TaskService(
         TaskSortField.completedAt -> "completed_at"
         TaskSortField.taskType -> "type"
         TaskSortField.decision -> "decision"
+        TaskSortField.expectedArrivalDate -> "sorting_date"
       },
     )
 

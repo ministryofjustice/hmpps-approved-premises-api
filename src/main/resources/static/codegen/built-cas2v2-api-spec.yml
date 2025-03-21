@@ -947,6 +947,7 @@ components:
         - completedAt
         - taskType
         - decision
+        - expectedArrivalDate
     AssessmentTask:
       allOf:
         - $ref: '#/components/schemas/Task'
