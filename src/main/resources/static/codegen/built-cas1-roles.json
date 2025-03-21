@@ -3,7 +3,7 @@
   "permissions" : [ "cas1_assess_appealed_application", "cas1_assess_application", "cas1_assess_placement_application", "cas1_view_assigned_assessments" ]
 }, {
   "name" : "matcher",
-  "permissions" : [ "cas1_assess_placement_application" ]
+  "permissions" : [ ]
 }, {
   "name" : "future_manager",
   "permissions" : [ "cas1_out_of_service_bed_create", "cas1_premises_view", "cas1_premises_manage", "cas1_space_booking_list", "cas1_space_booking_record_arrival", "cas1_space_booking_record_departure", "cas1_space_booking_record_non_arrival", "cas1_space_booking_record_keyworker", "cas1_space_booking_view", "cas1_view_out_of_service_beds" ]
@@ -15,7 +15,7 @@
   "permissions" : [ "cas1_adhoc_booking_create", "cas1_application_withdraw_others", "cas1_booking_change_dates", "cas1_booking_withdraw", "cas1_placement_request_record_unable_to_match", "cas1_premises_view", "cas1_request_for_placement_withdraw_others", "cas1_space_booking_list", "cas1_space_booking_view", "cas1_space_booking_withdraw", "cas1_user_list", "cas1_view_cru_dashboard", "cas1_view_manage_tasks", "cas1_booking_create" ]
 }, {
   "name" : "cru_member_find_and_book_beta",
-  "permissions" : [ "cas1_adhoc_booking_create", "cas1_application_withdraw_others", "cas1_booking_change_dates", "cas1_booking_withdraw", "cas1_placement_request_record_unable_to_match", "cas1_premises_view", "cas1_request_for_placement_withdraw_others", "cas1_space_booking_list", "cas1_space_booking_view", "cas1_space_booking_withdraw", "cas1_user_list", "cas1_view_cru_dashboard", "cas1_view_manage_tasks", "cas1_space_booking_create", "cas1_out_of_service_bed_create_bed_on_hold", "cas1_out_of_service_bed_cancel" ]
+  "permissions" : [ "cas1_adhoc_booking_create", "cas1_application_withdraw_others", "cas1_booking_change_dates", "cas1_booking_withdraw", "cas1_placement_request_record_unable_to_match", "cas1_premises_view", "cas1_request_for_placement_withdraw_others", "cas1_space_booking_list", "cas1_space_booking_view", "cas1_space_booking_withdraw", "cas1_user_list", "cas1_view_cru_dashboard", "cas1_view_manage_tasks", "cas1_space_booking_create", "cas1_out_of_service_bed_create", "cas1_out_of_service_bed_create_bed_on_hold", "cas1_out_of_service_bed_cancel", "cas1_view_out_of_service_beds" ]
 }, {
   "name" : "cru_member_enable_out_of_service_beds",
   "permissions" : [ "cas1_out_of_service_bed_create", "cas1_view_out_of_service_beds" ]

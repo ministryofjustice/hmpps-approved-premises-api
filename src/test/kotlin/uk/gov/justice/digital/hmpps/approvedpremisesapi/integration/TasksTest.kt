@@ -1942,7 +1942,7 @@ class TasksTest {
       givenAUser(roles = listOf(UserRole.CAS1_WORKFLOW_MANAGER)) { _, jwt ->
         givenAUser { user, _ ->
           givenAUser(
-            roles = listOf(UserRole.CAS1_MATCHER),
+            roles = listOf(UserRole.CAS1_ASSESSOR),
           ) { allocatableUser, _ ->
             givenAnOffender { offenderDetails, _ ->
               givenAPlacementApplication(
@@ -1985,29 +1985,21 @@ class TasksTest {
     }
 
     @Test
-    fun `Placement Application Task UserWithWorkload only returns users with MATCHER or ASSESSOR roles`() {
+    fun `Placement Application Task UserWithWorkload only returns users with ASSESSOR roles`() {
       givenAUser(roles = listOf(UserRole.CAS1_WORKFLOW_MANAGER)) { _, jwt ->
 
-        val (matcherUser1, _) = givenAUser(
-          roles = listOf(UserRole.CAS1_MATCHER),
-        )
-
-        val (matcherUser2, _) = givenAUser(
-          roles = listOf(UserRole.CAS1_MATCHER),
-        )
-
-        val (assessorUser, _) = givenAUser(
+        val (assessorUser1, _) = givenAUser(
           roles = listOf(UserRole.CAS1_ASSESSOR),
         )
 
-        val (assessorAndMatcherUser, _) = givenAUser(
-          roles = listOf(UserRole.CAS1_ASSESSOR, UserRole.CAS1_MATCHER),
+        val (assessorUser2, _) = givenAUser(
+          roles = listOf(UserRole.CAS1_ASSESSOR),
         )
 
         givenAnOffender { offenderDetails, _ ->
           givenAPlacementApplication(
-            createdByUser = matcherUser1,
-            allocatedToUser = matcherUser1,
+            createdByUser = assessorUser1,
+            allocatedToUser = assessorUser1,
             schema = approvedPremisesPlacementApplicationJsonSchemaEntityFactory.produceAndPersist {
               withPermissiveSchema()
             },
@@ -2030,19 +2022,11 @@ class TasksTest {
                     ),
                     users = listOf(
                       userTransformer.transformJpaToAPIUserWithWorkload(
-                        matcherUser1,
+                        assessorUser1,
                         UserWorkload(1, 0, 0),
                       ),
                       userTransformer.transformJpaToAPIUserWithWorkload(
-                        matcherUser2,
-                        UserWorkload(0, 0, 0),
-                      ),
-                      userTransformer.transformJpaToAPIUserWithWorkload(
-                        assessorUser,
-                        UserWorkload(0, 0, 0),
-                      ),
-                      userTransformer.transformJpaToAPIUserWithWorkload(
-                        assessorAndMatcherUser,
+                        assessorUser2,
                         UserWorkload(0, 0, 0),
                       ),
                     ),
@@ -2217,10 +2201,10 @@ class TasksTest {
       givenAUser(roles = listOf(UserRole.CAS1_WORKFLOW_MANAGER)) { _, jwt ->
         givenAUser { user, _ ->
           givenAUser(
-            roles = listOf(UserRole.CAS1_MATCHER),
+            roles = listOf(UserRole.CAS1_ASSESSOR),
           ) { allocatableUser, _ ->
             givenAUser(
-              roles = listOf(UserRole.CAS1_MATCHER),
+              roles = listOf(UserRole.CAS1_ASSESSOR),
               isActive = false,
             ) { _, _ ->
               givenAnOffender { offenderDetails, _ ->
@@ -2501,7 +2485,7 @@ class TasksTest {
       givenAUser(roles = listOf(UserRole.CAS1_WORKFLOW_MANAGER)) { _, jwt ->
         givenAUser { user, _ ->
           givenAUser(
-            roles = listOf(UserRole.CAS1_MATCHER),
+            roles = listOf(UserRole.CAS1_ASSESSOR),
           ) { assigneeUser, _ ->
             givenAnOffender { offenderDetails, _ ->
               givenAPlacementApplication(

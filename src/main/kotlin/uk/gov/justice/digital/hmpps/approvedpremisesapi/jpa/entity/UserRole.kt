@@ -39,9 +39,7 @@ enum class UserRole(val service: ServiceName, val cas1ApiValue: ApprovedPremises
   CAS1_MATCHER(
     ServiceName.approvedPremises,
     ApprovedPremisesUserRole.matcher,
-    listOf(
-      UserPermission.CAS1_ASSESS_PLACEMENT_APPLICATION,
-    ),
+    permissions = emptyList(),
   ),
 
   CAS1_FUTURE_MANAGER(

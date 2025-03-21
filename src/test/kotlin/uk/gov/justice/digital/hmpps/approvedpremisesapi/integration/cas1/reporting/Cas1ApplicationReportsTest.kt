@@ -105,7 +105,6 @@ class Cas1ApplicationReportsTest : InitialiseDatabasePerClassTestBase() {
   lateinit var assessorDetails: Pair<UserEntity, String>
   lateinit var futureManagerDetails: Pair<UserEntity, String>
   lateinit var workflowManagerDetails: Pair<UserEntity, String>
-  lateinit var matcherDetails: Pair<UserEntity, String>
   lateinit var appealManagerDetails: Pair<UserEntity, String>
 
   lateinit var applicationSchema: ApprovedPremisesApplicationJsonSchemaEntity
@@ -149,7 +148,6 @@ class Cas1ApplicationReportsTest : InitialiseDatabasePerClassTestBase() {
     )
     futureManagerDetails = givenAUser(roles = listOf(UserRole.CAS1_FUTURE_MANAGER))
     workflowManagerDetails = givenAUser(roles = listOf(UserRole.CAS1_WORKFLOW_MANAGER))
-    matcherDetails = givenAUser(roles = listOf(UserRole.CAS1_MATCHER))
     appealManagerDetails = givenAUser(roles = listOf(UserRole.CAS1_APPEALS_MANAGER))
 
     applicationSchema = approvedPremisesApplicationJsonSchemaEntityFactory.produceAndPersist {
@@ -638,13 +636,13 @@ class Cas1ApplicationReportsTest : InitialiseDatabasePerClassTestBase() {
       .expectStatus()
       .isOk
 
-    val (matcher, matcherJwt) = matcherDetails
+    val (assessor, assessorJwt) = assessorDetails
 
     cas1SimpleApiClient.placementApplicationReallocate(
       integrationTestBase = this,
       placementApplicationId = placementApplication.id,
       NewReallocation(
-        userId = matcher.id,
+        userId = assessor.id,
       ),
     )
 
@@ -653,7 +651,7 @@ class Cas1ApplicationReportsTest : InitialiseDatabasePerClassTestBase() {
 
     webTestClient.post()
       .uri("/placement-applications/${reallocatedPlacementApp.id}/decision")
-      .header("Authorization", "Bearer $matcherJwt")
+      .header("Authorization", "Bearer $assessorJwt")
       .bodyValue(
         PlacementApplicationDecisionEnvelope(
           decision = PlacementApplicationDecision.accepted,
