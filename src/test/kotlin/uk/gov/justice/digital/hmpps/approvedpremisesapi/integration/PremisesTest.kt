@@ -3058,8 +3058,6 @@ class PremisesTest {
           withArrivalDate(LocalDate.now().plusDays(5))
         }
 
-        mockFeatureFlagService.setFlag("archive-property-validate-existing-bookings", true)
-
         webTestClient.put()
           .uri("/premises/${premises.id}")
           .header("Authorization", "Bearer $jwt")
@@ -3110,8 +3108,6 @@ class PremisesTest {
           withStatus(BookingStatus.cancelled)
           withArrivalDate(LocalDate.now().plusDays(12))
         }
-
-        mockFeatureFlagService.setFlag("archive-property-validate-existing-bookings", true)
 
         webTestClient.put()
           .uri("/premises/${premises.id}")
