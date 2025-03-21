@@ -2,7 +2,7 @@
 
 ## Definition and Usage
 
-Each domain event type has a JSON schema defined in the domain-events-api.yml file. For example, the 'APPROVED_PREMISES_BOOKING_CANCELLED' type has a 'BookingCancelledEnvelope' defined in the domain-events-api.yml file.
+Each domain event type has a JSON schema defined in the domain-events-api.yml files. For example, the 'APPROVED_PREMISES_BOOKING_CANCELLED' type has a 'BookingCancelledEnvelope' defined in the domain-events-api.yml file.
 
 When a domain event is generated its JSON is persisted to domain_events.data. This JSON is then used for the following:
 
