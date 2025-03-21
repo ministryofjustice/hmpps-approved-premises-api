@@ -1,5 +1,6 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.unit.service.cas2
 
+import com.fasterxml.jackson.core.JsonParseException
 import com.ninjasquad.springmockk.SpykBean
 import io.mockk.Runs
 import io.mockk.every
@@ -9,6 +10,7 @@ import io.mockk.junit5.MockKExtension
 import io.mockk.just
 import io.mockk.verify
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.assertThrows
 import org.junit.jupiter.api.extension.ExtendWith
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.SentryService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas2.Cas2AllocationChangedService
@@ -52,9 +54,9 @@ class Cas2DomainEventListenerTest {
   }
 
   @Test
-  fun `exceptions are captured by sentry`() {
+  fun `exceptions are captured by sentry and still thrown`() {
     every { sentryService.captureException(any()) } just Runs
-    cas2DomainEventListener.processMessage("invalid")
+    assertThrows<JsonParseException> { cas2DomainEventListener.processMessage("invalid") }
     verify { sentryService.captureException(any()) }
   }
 }

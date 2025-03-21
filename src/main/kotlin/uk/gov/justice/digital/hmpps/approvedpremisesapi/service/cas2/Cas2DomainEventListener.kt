@@ -30,6 +30,7 @@ class Cas2DomainEventListener(
     } catch (e: Exception) {
       log.error("Exception caught in Cas2DomainEventListener", e)
       sentryService.captureException(e)
+      throw e
     }
   }
 
