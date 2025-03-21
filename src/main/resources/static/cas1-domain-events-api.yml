@@ -996,6 +996,8 @@ components:
           $ref: '#/components/schemas/ApplicationId'
         applicationUrl:
           $ref: '#/components/schemas/ApplicationUrl'
+        assessmentId:
+          $ref: '#/components/schemas/AssessmentId'
         personReference:
           $ref: '#/components/schemas/PersonReference'
         deliusEventNumber:

@@ -258,10 +258,12 @@ class Cas1AssessmentDomainEventServiceTest {
 
       assertThat(domainEvent.applicationId).isEqualTo(assessment.application.id)
       assertThat(domainEvent.crn).isEqualTo(assessment.application.crn)
+      assertThat(domainEvent.schemaVersion).isEqualTo(2)
 
       val eventDetails = domainEvent.data.eventDetails
       assertThat(eventDetails.applicationId).isEqualTo(assessment.application.id)
       assertThat(eventDetails.applicationUrl).isEqualTo("http://frontend/applications/${assessment.application.id}")
+      assertThat(eventDetails.assessmentId).isEqualTo(assessment.id)
       assertThat(eventDetails.personReference.crn).isEqualTo(offenderDetails.otherIds.crn)
       assertThat(eventDetails.personReference.noms).isEqualTo(offenderDetails.otherIds.nomsNumber!!)
       assertThat(eventDetails.deliusEventNumber).isEqualTo((assessment.application as ApprovedPremisesApplicationEntity).eventNumber)
@@ -358,9 +360,12 @@ class Cas1AssessmentDomainEventServiceTest {
       assertThat(domainEvent.assessmentId).isEqualTo(assessment.id)
       assertThat(domainEvent.crn).isEqualTo(assessment.application.crn)
       assertThat(domainEvent.nomsNumber).isEqualTo(offenderDetails.otherIds.nomsNumber)
+      assertThat(domainEvent.schemaVersion).isEqualTo(2)
+
       val data = domainEvent.data.eventDetails
       assertThat(data.applicationId).isEqualTo(assessment.application.id)
       assertThat(data.applicationUrl).isEqualTo("http://frontend/applications/${assessment.application.id}")
+      assertThat(data.assessmentId).isEqualTo(assessment.id)
       assertThat(
         data.personReference,
       ).isEqualTo(
