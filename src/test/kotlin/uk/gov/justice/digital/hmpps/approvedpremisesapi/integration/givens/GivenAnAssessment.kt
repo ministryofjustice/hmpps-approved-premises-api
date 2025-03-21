@@ -37,6 +37,7 @@ fun IntegrationTestBase.givenAnAssessmentForApprovedPremises(
   requiredQualification: UserQualification? = null,
   noticeType: Cas1ApplicationTimelinessCategory? = null,
   createdFromAppeal: Boolean = false,
+  arrivalDate: OffsetDateTime? = null,
 ): Pair<ApprovedPremisesAssessmentEntity, ApprovedPremisesApplicationEntity> {
   val applicationSchema = approvedPremisesApplicationJsonSchemaEntityFactory.produceAndPersist {
     withPermissiveSchema()
@@ -56,6 +57,7 @@ fun IntegrationTestBase.givenAnAssessmentForApprovedPremises(
     withIsWithdrawn(isWithdrawn)
     withApArea(apArea)
     withCruManagementArea(cruManagementArea)
+    withArrivalDate(arrivalDate)
     if (name !== null) {
       withName(name)
     }

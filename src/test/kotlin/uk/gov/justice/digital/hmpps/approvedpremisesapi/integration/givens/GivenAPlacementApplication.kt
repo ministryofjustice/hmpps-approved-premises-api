@@ -8,6 +8,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AssessmentDec
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas1CruManagementAreaEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementApplicationDecision
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementApplicationEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementDateEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserQualification
@@ -34,6 +35,7 @@ fun IntegrationTestBase.givenAPlacementApplication(
   requiredQualification: UserQualification? = null,
   noticeType: Cas1ApplicationTimelinessCategory? = null,
   isWithdrawn: Boolean = false,
+  placementDates: List<PlacementDateEntity> = mutableListOf(),
 ): PlacementApplicationEntity {
   val userApArea = givenAnApArea()
 
@@ -81,6 +83,7 @@ fun IntegrationTestBase.givenAPlacementApplication(
     }
     withDueAt(dueAt)
     withIsWithdrawn(isWithdrawn)
+    withPlacementDates(placementDates.toMutableList())
   }
 }
 
@@ -96,6 +99,7 @@ fun IntegrationTestBase.givenAPlacementApplication(
   reallocated: Boolean = false,
   placementType: PlacementType? = PlacementType.ADDITIONAL_PLACEMENT,
   dueAt: OffsetDateTime? = OffsetDateTime.now().roundNanosToMillisToAccountForLossOfPrecisionInPostgres(),
+  placementDates: MutableList<PlacementDateEntity> = mutableListOf(),
   block: (placementApplicationEntity: PlacementApplicationEntity) -> Unit,
 ): PlacementApplicationEntity {
   val placementApplication = givenAPlacementApplication(
@@ -111,6 +115,7 @@ fun IntegrationTestBase.givenAPlacementApplication(
     reallocated = reallocated,
     placementType = placementType,
     dueAt = dueAt,
+    placementDates = placementDates,
   )
   block(placementApplication)
   return placementApplication

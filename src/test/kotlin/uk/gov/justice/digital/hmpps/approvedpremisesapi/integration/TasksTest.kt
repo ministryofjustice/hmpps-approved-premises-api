@@ -59,6 +59,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.UserTransfor
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomDateTimeBefore
 import java.text.SimpleDateFormat
 import java.time.Instant
+import java.time.LocalDate
 import java.time.OffsetDateTime
 import java.time.temporal.ChronoUnit
 import java.util.UUID
@@ -1402,6 +1403,7 @@ class TasksTest {
                 createdAt = OffsetDateTime.now().minusDays(14).randomDateTimeBefore(14).truncatedTo(ChronoUnit.MICROS),
                 submittedAt = OffsetDateTime.now().randomDateTimeBefore(14).truncatedTo(ChronoUnit.MICROS),
                 dueAt = OffsetDateTime.now().randomDateTimeBefore(14).truncatedTo(ChronoUnit.MICROS),
+                arrivalDate = OffsetDateTime.now().randomDateTimeBefore(14).truncatedTo(ChronoUnit.MICROS),
               )
 
               val (assessment2, _) = givenAnAssessmentForApprovedPremises(
@@ -1411,6 +1413,7 @@ class TasksTest {
                 createdAt = OffsetDateTime.now().minusDays(14).randomDateTimeBefore(14).truncatedTo(ChronoUnit.MICROS),
                 submittedAt = OffsetDateTime.now().randomDateTimeBefore(14).truncatedTo(ChronoUnit.MICROS),
                 dueAt = OffsetDateTime.now().randomDateTimeBefore(14).truncatedTo(ChronoUnit.MICROS),
+                arrivalDate = OffsetDateTime.now().randomDateTimeBefore(14).truncatedTo(ChronoUnit.MICROS),
               )
 
               val (placementRequest1, _) = givenAPlacementRequest(
@@ -1470,6 +1473,17 @@ class TasksTest {
                 dueAt = OffsetDateTime.now().randomDateTimeBefore(14).truncatedTo(ChronoUnit.MICROS),
                 decision = REJECTED,
               )
+
+              val placementDate1 = placementDateFactory.produceAndPersist {
+                withExpectedArrival(LocalDate.of(2024, 5, 10))
+                withPlacementApplication(placementApplication1)
+              }
+
+              val placementDate2 = placementDateFactory.produceAndPersist {
+                withExpectedArrival(LocalDate.of(2024, 7, 5))
+                withPlacementApplication(placementApplication1)
+              }
+              placementApplication1.placementDates = mutableListOf(placementDate1, placementDate2)
 
               val placementApplication2 = givenAPlacementApplication(
                 createdByUser = otherUser,
@@ -1741,6 +1755,42 @@ class TasksTest {
       }
 
       @Test
+      fun `Get all tasks sorts by expected arrival date in ascending order`() {
+        val url = "/tasks?isCompleted=true&sortBy=expectedArrivalDate&sortDirection=asc"
+
+        webTestClient.get()
+          .uri(url)
+          .header("Authorization", "Bearer $jwt")
+          .exchange()
+          .expectStatus()
+          .isOk
+          .expectBody()
+          .json(
+            objectMapper.writeValueAsString(
+              tasksSortedByExpectedArrivalDate(),
+            ),
+          )
+      }
+
+      @Test
+      fun `Get all tasks sorts by expected arrival date in descending order`() {
+        val url = "/tasks?isCompleted=true&sortBy=expectedArrivalDate&sortDirection=desc"
+
+        webTestClient.get()
+          .uri(url)
+          .header("Authorization", "Bearer $jwt")
+          .exchange()
+          .expectStatus()
+          .isOk
+          .expectBody()
+          .json(
+            objectMapper.writeValueAsString(
+              tasksSortedByExpectedArrivalDate(SortDirection.desc),
+            ),
+          )
+      }
+
+      @Test
       fun `Get all tasks sorts by taskType in descending order`() {
         val url = "/tasks?isCompleted=true&sortBy=taskType&sortDirection=desc"
 
@@ -1802,6 +1852,10 @@ class TasksTest {
         }
 
         createdAt.toInstant()
+      }
+
+      private fun tasksSortedByExpectedArrivalDate(sortDirection: SortDirection = SortDirection.asc) = sortTasks(sortDirection) { id: UUID ->
+        tasks[id]!!.expectedArrivalDate
       }
 
       private fun tasksSortedByDueAt(sortDirection: SortDirection = SortDirection.asc) = sortTasks(sortDirection) { id: UUID ->
