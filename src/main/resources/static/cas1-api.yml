@@ -17,14 +17,20 @@ paths:
           description: Page number of results to return. If blank, returns all results
           schema:
             type: integer
+        - name: cruManagementAreaId
+          in: query
+          description: Limits change requests to applications within the cru management area
+          schema:
+            type: string
+            format: uuid
         - name: sortBy
           in: query
-          description: Which field to sort the results by. If blank, will sort by createdAt
+          description: Which field to sort the results by. If blank, will sort by name
           schema:
             $ref: 'cas1-schemas.yml#/components/schemas/Cas1ChangeRequestSortField'
         - name: sortDirection
           in: query
-          description: The direction to sort the results by. If blank, will sort in descending order
+          description: The direction to sort the results by. If blank, will sort in ascending order
           schema:
             $ref: '_shared.yml#/components/schemas/SortDirection'
       responses:
