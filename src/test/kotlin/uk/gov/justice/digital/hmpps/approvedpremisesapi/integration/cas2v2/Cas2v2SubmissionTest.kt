@@ -14,7 +14,7 @@ import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.http.HttpStatus
 import org.springframework.test.web.reactive.server.returnResult
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas2.model.Cas2ApplicationSubmittedEvent
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas2.model.Cas2v2ApplicationSubmittedEvent
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApplicationOrigin
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas2v2SubmittedApplication
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas2v2SubmittedApplicationSummary
@@ -799,7 +799,7 @@ class Cas2v2SubmissionTest(
         val persistedDomainEvent = domainEventRepository.findFirstByOrderByCreatedAtDesc()
         val domainEventFromJson = objectMapper.readValue(
           persistedDomainEvent!!.data,
-          Cas2ApplicationSubmittedEvent::class.java,
+          Cas2v2ApplicationSubmittedEvent::class.java,
         )
         Assertions.assertThat(domainEventFromJson.eventDetails.applicationUrl)
           .isEqualTo(expectedFrontEndUrl)

@@ -784,6 +784,7 @@ class Cas2v2ApplicationServiceTest {
       preferredAreas = "Leeds | Bradford",
       hdcEligibilityDate = hdcEligibilityDate,
       conditionalReleaseDate = conditionalReleaseDate,
+      applicationOrigin = ApplicationOrigin.prisonBail,
       telephoneNumber = "123",
     )
 
@@ -792,6 +793,7 @@ class Cas2v2ApplicationServiceTest {
       every { mockCas2v2LockableApplicationRepository.acquirePessimisticLock(any()) } returns Cas2v2LockableApplicationEntity(UUID.randomUUID())
       every { mockObjectMapper.writeValueAsString(submitCas2v2Application.translatedDocument) } returns "{}"
       every { mockDomainEventService.saveCas2ApplicationSubmittedDomainEvent(any()) } just Runs
+      every { mockDomainEventService.saveCas2v2ApplicationSubmittedDomainEvent(any()) } just Runs
     }
 
     @Test
@@ -1033,6 +1035,7 @@ class Cas2v2ApplicationServiceTest {
         .withId(applicationId)
         .withCreatedByUser(user)
         .withSubmittedAt(null)
+        .withApplicationOrigin(ApplicationOrigin.prisonBail)
         .produce()
         .apply {
           schemaUpToDate = true
@@ -1063,7 +1066,8 @@ class Cas2v2ApplicationServiceTest {
         )
       } returns AuthorisableActionResult.Success(inmateDetail)
 
-      every { mockNotifyConfig.templates.cas2ApplicationSubmitted } returns "abc123"
+      every { mockNotifyConfig.templates.cas2v2ApplicationSubmittedCourtBail } returns "abc123"
+      every { mockNotifyConfig.templates.cas2v2ApplicationSubmittedPrisonBail } returns "abc123"
       every { mockNotifyConfig.emailAddresses.cas2Assessors } returns "exampleAssessorInbox@example.com"
       every { mockNotifyConfig.emailAddresses.cas2ReplyToId } returns "def456"
       every { mockEmailNotificationService.sendEmail(any(), any(), any(), any()) } just Runs
@@ -1104,7 +1108,7 @@ class Cas2v2ApplicationServiceTest {
       verify { mockCas2v2ApplicationRepository.save(any()) }
 
       verify(exactly = 1) {
-        mockDomainEventService.saveCas2ApplicationSubmittedDomainEvent(
+        mockDomainEventService.saveCas2v2ApplicationSubmittedDomainEvent(
           match {
             val data = it.data.eventDetails
 

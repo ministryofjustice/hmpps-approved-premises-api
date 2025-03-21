@@ -333,10 +333,20 @@ enum class DomainEventType(
     Cas2EventType.applicationSubmitted.value,
     "An application has been submitted for a CAS2 placement",
   ),
+  CAS2V2_APPLICATION_SUBMITTED(
+    DomainEventCas.CAS2,
+    Cas2EventType.cas2v2ApplicationSubmitted.value,
+    "An application has been submitted for a CAS2v2 placement",
+  ),
   CAS2_APPLICATION_STATUS_UPDATED(
     DomainEventCas.CAS2,
     Cas2EventType.applicationStatusUpdated.value,
     "An assessor has updated the status of a CAS2 application",
+  ),
+  CAS2V2_APPLICATION_STATUS_UPDATED(
+    DomainEventCas.CAS2,
+    Cas2EventType.cas2v2ApplicationStatusUpdated.value,
+    "An assessor has updated the status of a CAS2v2 application",
   ),
   CAS3_BOOKING_CANCELLED(
     DomainEventCas.CAS3,
