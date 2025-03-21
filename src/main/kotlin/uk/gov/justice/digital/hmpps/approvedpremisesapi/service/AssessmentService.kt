@@ -2,24 +2,14 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.service
 
 import com.fasterxml.jackson.databind.ObjectMapper
 import org.slf4j.LoggerFactory
-import org.springframework.beans.factory.annotation.Value
 import org.springframework.data.repository.findByIdOrNull
 import org.springframework.stereotype.Service
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.ApplicationAssessed
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.ApplicationAssessedAssessedBy
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.ApplicationAssessedEnvelope
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.Cru
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.EventType
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.PersonReference
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.ProbationArea
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.AssessmentSortField
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1ApplicationTimelinessCategory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PlacementDates
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PlacementRequirements
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.ApDeliusContextApiClient
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.ClientResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesAssessmentEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesAssessmentJsonSchemaEntity
@@ -45,7 +35,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserQualifica
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRole
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.listeners.AssessmentClarificationNoteListener
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.listeners.AssessmentListener
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.DomainEvent
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PaginationMetadata
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.ValidationErrors
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.InternalServerErrorProblem
@@ -53,14 +42,12 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.AuthorisableActi
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.CasResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1AssessmentDomainEventService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1AssessmentEmailService
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1DomainEventService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1PlacementRequestEmailService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1PlacementRequirementsService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.PlacementRequestService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.PlacementRequestSource
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.allocations.UserAllocator
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.PageCriteria
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.UrlTemplate
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.getMetadata
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.getPageableOrAllPages
 import java.time.Clock
@@ -78,14 +65,11 @@ class AssessmentService(
   private val assessmentReferralHistoryNoteRepository: AssessmentReferralHistoryNoteRepository,
   private val referralRejectionReasonRepository: ReferralRejectionReasonRepository,
   private val jsonSchemaService: JsonSchemaService,
-  private val domainEventService: Cas1DomainEventService,
   private val offenderService: OffenderService,
-  private val apDeliusContextApiClient: ApDeliusContextApiClient,
   private val placementRequestService: PlacementRequestService,
   private val cas1PlacementRequirementsService: Cas1PlacementRequirementsService,
   private val userAllocator: UserAllocator,
   private val objectMapper: ObjectMapper,
-  @Value("\${url-templates.frontend.application}") private val applicationUrlTemplate: UrlTemplate,
   private val taskDeadlineService: TaskDeadlineService,
   private val cas1AssessmentEmailService: Cas1AssessmentEmailService,
   private val cas1AssessmentDomainEventService: Cas1AssessmentDomainEventService,
@@ -439,6 +423,7 @@ class AssessmentService(
     return CasResult.Success(savedAssessment)
   }
 
+  @SuppressWarnings("ThrowsCount")
   fun rejectAssessment(
     rejectingUser: UserEntity,
     assessmentId: UUID,
@@ -451,9 +436,6 @@ class AssessmentService(
     agreeWithShortNoticeReasonComments: String? = null,
     reasonForLateApplication: String? = null,
   ): CasResult<AssessmentEntity> {
-    val domainEventId = UUID.randomUUID()
-    val rejectedAt = OffsetDateTime.now(clock)
-
     val assessment = when (val validation = validateAssessment(rejectingUser, assessmentId)) {
       is CasResult.Success -> validation.value
       else -> return validation
@@ -471,7 +453,7 @@ class AssessmentService(
     }
 
     assessment.document = document
-    assessment.submittedAt = rejectedAt
+    assessment.submittedAt = OffsetDateTime.now(clock)
     assessment.decision = AssessmentDecision.REJECTED
     assessment.rejectionRationale = rejectionRationale
 
@@ -494,56 +476,19 @@ class AssessmentService(
 
     val application = savedAssessment.application
 
-    val offenderDetails =
-      when (val offenderDetailsResult = offenderService.getOffenderByCrn(application.crn, rejectingUser.deliusUsername, true)) {
-        is AuthorisableActionResult.Success -> offenderDetailsResult.entity
-        else -> null
-      }
-
-    val staffDetails = when (val staffDetailsResult = apDeliusContextApiClient.getStaffDetail(rejectingUser.deliusUsername)) {
-      is ClientResult.Success -> staffDetailsResult.body
-      is ClientResult.Failure -> staffDetailsResult.throwException()
-    }
-
     if (application is ApprovedPremisesApplicationEntity) {
-      domainEventService.saveApplicationAssessedDomainEvent(
-        DomainEvent(
-          id = domainEventId,
-          applicationId = application.id,
-          assessmentId = assessment.id,
-          crn = application.crn,
-          nomsNumber = offenderDetails?.otherIds?.nomsNumber,
-          occurredAt = rejectedAt.toInstant(),
-          data = ApplicationAssessedEnvelope(
-            id = domainEventId,
-            timestamp = rejectedAt.toInstant(),
-            eventType = EventType.applicationAssessed,
-            eventDetails = ApplicationAssessed(
-              applicationId = application.id,
-              applicationUrl = applicationUrlTemplate
-                .resolve("id", application.id.toString()),
-              personReference = PersonReference(
-                crn = assessment.application.crn,
-                noms = offenderDetails?.otherIds?.nomsNumber ?: "Unknown NOMS Number",
-              ),
-              deliusEventNumber = application.eventNumber,
-              assessedAt = rejectedAt.toInstant(),
-              assessedBy = ApplicationAssessedAssessedBy(
-                staffMember = staffDetails.toStaffMember(),
-                probationArea = ProbationArea(
-                  code = staffDetails.probationArea.code,
-                  name = staffDetails.probationArea.description,
-                ),
-                cru = Cru(
-                  name = rejectingUser.apArea?.name ?: "Unknown CRU",
-                ),
-              ),
-              decision = assessment.decision.toString(),
-              decisionRationale = assessment.rejectionRationale,
-              arrivalDate = null,
-            ),
-          ),
-        ),
+      val offenderDetails =
+        when (val offenderDetailsResult = offenderService.getOffenderByCrn(application.crn, rejectingUser.deliusUsername, true)) {
+          is AuthorisableActionResult.Success -> offenderDetailsResult.entity
+          is AuthorisableActionResult.Unauthorised -> throw RuntimeException("Unable to get Offender Details when creating Application Assessed Domain Event: Unauthorised")
+          is AuthorisableActionResult.NotFound -> throw RuntimeException("Unable to get Offender Details when creating Application Assessed Domain Event: Not Found")
+        }
+
+      cas1AssessmentDomainEventService.assessmentRejected(
+        application = application,
+        assessment = assessment,
+        offenderDetails = offenderDetails,
+        rejectingUser = rejectingUser,
       )
 
       cas1AssessmentEmailService.assessmentRejected(application)

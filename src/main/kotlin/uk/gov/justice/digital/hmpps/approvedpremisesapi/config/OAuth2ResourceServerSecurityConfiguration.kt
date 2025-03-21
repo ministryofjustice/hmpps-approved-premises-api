@@ -55,7 +55,7 @@ class OAuth2ResourceServerSecurityConfiguration {
         authorize(HttpMethod.GET, "/cas1-api.yml", permitAll)
         authorize(HttpMethod.GET, "/cas2-api.yml", permitAll)
         authorize(HttpMethod.GET, "/_shared.yml", permitAll)
-        authorize(HttpMethod.GET, "/domain-events-api.yml", permitAll)
+        authorize(HttpMethod.GET, "/cas1-domain-events-api.yml", permitAll)
         authorize(HttpMethod.GET, "/cas2-domain-events-api.yml", permitAll)
         authorize(HttpMethod.GET, "/favicon.ico", permitAll)
         authorize(HttpMethod.GET, "/info", permitAll)
