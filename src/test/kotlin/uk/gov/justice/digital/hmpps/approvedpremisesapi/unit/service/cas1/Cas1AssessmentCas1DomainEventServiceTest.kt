@@ -19,6 +19,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.Ap
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.ApplicationAssessedEnvelope
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.Cru
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.EventType
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.PersonReference
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.ProbationArea
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.StaffMember
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApType
@@ -38,6 +39,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.UserRoleAssignme
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesAssessmentEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesAssessmentJsonSchemaEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AssessmentDecision
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.MetaDataName
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TriggerSourceType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserEntity
@@ -48,6 +50,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.deliuscontext.Staf
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1AssessmentDomainEventService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1DomainEventService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.UrlTemplate
+import java.time.Clock
 import java.time.LocalDate
 import java.time.OffsetDateTime
 import java.util.UUID
@@ -60,6 +63,7 @@ class Cas1AssessmentCas1DomainEventServiceTest {
   val service = Cas1AssessmentDomainEventService(
     domainEventService,
     apDeliusContextApiClient,
+    Clock.systemDefaultZone(),
     UrlTemplate("http://frontend/applications/#id"),
     UrlTemplate("http://frontend/assessments/#id"),
   )
@@ -275,6 +279,113 @@ class Cas1AssessmentCas1DomainEventServiceTest {
       assertThat(eventDetails.decision).isEqualTo("ACCEPTED")
       assertThat(eventDetails.decisionRationale).isNull()
       assertThat(domainEvent.metadata).containsEntry(MetaDataName.CAS1_REQUESTED_AP_TYPE, "NORMAL")
+    }
+  }
+
+  @Nested
+  inner class AssessmentRejected {
+
+    @Test
+    fun `raise domain event()`() {
+      val user = UserEntityFactory().withYieldedProbationRegion {
+        ProbationRegionEntityFactory().withYieldedApArea { ApAreaEntityFactory().produce() }.produce()
+      }.withYieldedApArea {
+        ApAreaEntityFactory()
+          .withName("South West & South Central").produce()
+      }.produce()
+
+      val assessmentId = UUID.randomUUID()
+
+      val application = ApprovedPremisesApplicationEntityFactory()
+        .withCreatedByUser(
+          UserEntityFactory()
+            .withYieldedProbationRegion {
+              ProbationRegionEntityFactory()
+                .withYieldedApArea { ApAreaEntityFactory().produce() }
+                .produce()
+            }
+            .produce(),
+        )
+        .produce()
+
+      val assessment = ApprovedPremisesAssessmentEntityFactory()
+        .withId(assessmentId)
+        .withApplication(application)
+        .withAllocatedToUser(user)
+        .withAssessmentSchema(
+          ApprovedPremisesAssessmentJsonSchemaEntity(
+            id = UUID.randomUUID(),
+            addedAt = OffsetDateTime.now(),
+            schema = "{}",
+          ),
+        )
+        .withData("{\"test\": \"data\"}")
+        .withDecision(AssessmentDecision.REJECTED)
+        .withRejectionRationale("reasoning")
+        .produce()
+
+      val offenderDetails = OffenderDetailsSummaryFactory()
+        .withCrn(assessment.application.crn)
+        .produce()
+
+      val staffUserDetails = StaffDetailFactory.staffDetail(code = "N26")
+
+      every { apDeliusContextApiClient.getStaffDetail(user.deliusUsername) } returns ClientResult.Success(
+        HttpStatus.OK,
+        staffUserDetails,
+      )
+
+      every { domainEventService.saveApplicationAssessedDomainEvent(any()) } just Runs
+
+      service.assessmentRejected(
+        application,
+        assessment,
+        offenderDetails,
+        user,
+      )
+
+      val domainEventArgument = slot<DomainEvent<ApplicationAssessedEnvelope>>()
+
+      verify(exactly = 1) {
+        domainEventService.saveApplicationAssessedDomainEvent(
+          capture(domainEventArgument),
+        )
+      }
+
+      val domainEvent = domainEventArgument.captured
+
+      assertThat(domainEvent.applicationId).isEqualTo(assessment.application.id)
+      assertThat(domainEvent.assessmentId).isEqualTo(assessment.id)
+      assertThat(domainEvent.crn).isEqualTo(assessment.application.crn)
+      assertThat(domainEvent.nomsNumber).isEqualTo(offenderDetails.otherIds.nomsNumber)
+      val data = domainEvent.data.eventDetails
+      assertThat(data.applicationId).isEqualTo(assessment.application.id)
+      assertThat(data.applicationUrl).isEqualTo("http://frontend/applications/${assessment.application.id}")
+      assertThat(
+        data.personReference,
+      ).isEqualTo(
+        PersonReference(offenderDetails.otherIds.crn, offenderDetails.otherIds.nomsNumber!!),
+      )
+      assertThat(data.deliusEventNumber).isEqualTo((assessment.application as ApprovedPremisesApplicationEntity).eventNumber)
+      assertThat(data.assessedBy).isEqualTo(
+        ApplicationAssessedAssessedBy(
+          staffMember = StaffMember(
+            staffCode = staffUserDetails.code,
+            forenames = staffUserDetails.name.forenames(),
+            surname = staffUserDetails.name.surname,
+            username = staffUserDetails.username,
+          ),
+          probationArea = ProbationArea(
+            code = staffUserDetails.probationArea.code,
+            name = staffUserDetails.probationArea.description,
+          ),
+          cru = Cru(
+            name = "South West & South Central",
+          ),
+        ),
+      )
+      assertThat(data.decision).isEqualTo("REJECTED")
+      assertThat(data.decisionRationale).isEqualTo("reasoning")
     }
   }
 

@@ -6,7 +6,6 @@ import io.mockk.Runs
 import io.mockk.every
 import io.mockk.just
 import io.mockk.mockk
-import io.mockk.slot
 import io.mockk.spyk
 import io.mockk.verify
 import org.assertj.core.api.Assertions.assertThat
@@ -23,13 +22,6 @@ import org.springframework.data.domain.Page
 import org.springframework.data.domain.PageRequest
 import org.springframework.data.domain.Sort
 import org.springframework.data.repository.findByIdOrNull
-import org.springframework.http.HttpStatus
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.ApplicationAssessedAssessedBy
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.ApplicationAssessedEnvelope
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.Cru
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.PersonReference
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.ProbationArea
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.StaffMember
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.AssessmentSortField
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1ApplicationTimelinessCategory
@@ -39,8 +31,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PlacementRequi
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName.temporaryAccommodation
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.SortDirection
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.ApDeliusContextApiClient
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.ClientResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApAreaEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApprovedPremisesApplicationEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApprovedPremisesAssessmentEntityFactory
@@ -51,7 +41,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.PlacementRequest
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.PlacementRequirementsEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ProbationRegionEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ReferralRejectionReasonEntityFactory
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.StaffDetailFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.TemporaryAccommodationApplicationEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.TemporaryAccommodationAssessmentEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.TemporaryAccommodationAssessmentJsonSchemaEntityFactory
@@ -80,7 +69,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRole
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.listeners.AssessmentClarificationNoteListener
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.listeners.AssessmentListener
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.ApprovedPremisesType
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.DomainEvent
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.AuthorisableActionResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.CasResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.AssessmentService
@@ -91,7 +79,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.UserAccessServic
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.UserService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1AssessmentDomainEventService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1AssessmentEmailService
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1DomainEventService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1PlacementRequestEmailService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1PlacementRequirementsService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.PlacementRequestService
@@ -100,7 +87,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.allocations
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.unit.util.assertAssessmentHasSystemNote
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.unit.util.assertThatCasResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.PageCriteria
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.UrlTemplate
 import java.time.Clock
 import java.time.LocalDate
 import java.time.OffsetDateTime
@@ -114,9 +100,7 @@ class AssessmentServiceTest {
   private val assessmentReferralHistoryNoteRepositoryMock = mockk<AssessmentReferralHistoryNoteRepository>()
   private val referralRejectionReasonRepositoryMock = mockk<ReferralRejectionReasonRepository>()
   private val jsonSchemaServiceMock = mockk<JsonSchemaService>()
-  private val domainEventServiceMock = mockk<Cas1DomainEventService>()
   private val offenderServiceMock = mockk<OffenderService>()
-  private val apDeliusContextApiClient = mockk<ApDeliusContextApiClient>()
   private val placementRequestServiceMock = mockk<PlacementRequestService>()
   private val cas1PlacementRequirementsServiceMock = mockk<Cas1PlacementRequirementsService>()
   private val userAllocatorMock = mockk<UserAllocator>()
@@ -137,14 +121,11 @@ class AssessmentServiceTest {
     assessmentReferralHistoryNoteRepositoryMock,
     referralRejectionReasonRepositoryMock,
     jsonSchemaServiceMock,
-    domainEventServiceMock,
     offenderServiceMock,
-    apDeliusContextApiClient,
     placementRequestServiceMock,
     cas1PlacementRequirementsServiceMock,
     userAllocatorMock,
     objectMapperMock,
-    UrlTemplate("http://frontend/applications/#id"),
     taskDeadlineServiceMock,
     cas1AssessmentEmailServiceMock,
     cas1AssessmentDomainEventService,
@@ -1278,7 +1259,7 @@ class AssessmentServiceTest {
     }
 
     @Test
-    fun `success, returns updated assessment, emits domain event, sends email`() {
+    fun `success, returns updated assessment, triggers domain event, sends email`() {
       val assessmentId = UUID.randomUUID()
 
       val assessment = ApprovedPremisesAssessmentEntityFactory()
@@ -1300,6 +1281,7 @@ class AssessmentServiceTest {
       every { assessmentListener.preUpdate(any()) } returns Unit
       every { assessmentRepositoryMock.save(any()) } answers { it.invocation.args[0] as ApprovedPremisesAssessmentEntity }
 
+      every { cas1AssessmentDomainEventService.assessmentRejected(any(), any(), any(), any()) } just Runs
       every { cas1AssessmentEmailServiceMock.assessmentRejected(any()) } just Runs
 
       val offenderDetails = OffenderDetailsSummaryFactory()
@@ -1307,16 +1289,6 @@ class AssessmentServiceTest {
         .produce()
 
       every { offenderServiceMock.getOffenderByCrn(assessment.application.crn, user.deliusUsername, any()) } returns AuthorisableActionResult.Success(offenderDetails)
-
-      val staffUserDetails = StaffDetailFactory.staffDetail(code = "N26")
-
-      every { apDeliusContextApiClient.getStaffDetail(user.deliusUsername) } returns ClientResult.Success(
-        HttpStatus.OK,
-        staffUserDetails,
-      )
-
-      val capturedEvent = slot<DomainEvent<ApplicationAssessedEnvelope>>()
-      every { domainEventServiceMock.saveApplicationAssessedDomainEvent(capture(capturedEvent)) } just Runs
 
       val result = assessmentService.rejectAssessment(user, assessmentId, "{\"test\": \"data\"}", "reasoning")
 
@@ -1328,40 +1300,14 @@ class AssessmentServiceTest {
       assertThat(updatedAssessment.submittedAt).isNotNull()
       assertThat(updatedAssessment.document).isEqualTo("{\"test\": \"data\"}")
 
-      verify(exactly = 1) { domainEventServiceMock.saveApplicationAssessedDomainEvent(any()) }
-      val it = capturedEvent.captured
-      assertThat(it.applicationId).isEqualTo(assessment.application.id)
-      assertThat(it.assessmentId).isEqualTo(assessment.id)
-      assertThat(it.crn).isEqualTo(assessment.application.crn)
-      assertThat(it.nomsNumber).isEqualTo(offenderDetails.otherIds.nomsNumber)
-      val data = it.data.eventDetails
-      assertThat(data.applicationId).isEqualTo(assessment.application.id)
-      assertThat(data.applicationUrl).isEqualTo("http://frontend/applications/${assessment.application.id}")
-      assertThat(
-        data.personReference,
-      ).isEqualTo(
-        PersonReference(offenderDetails.otherIds.crn, offenderDetails.otherIds.nomsNumber!!),
-      )
-      assertThat(data.deliusEventNumber).isEqualTo((assessment.application as ApprovedPremisesApplicationEntity).eventNumber)
-      assertThat(data.assessedBy).isEqualTo(
-        ApplicationAssessedAssessedBy(
-          staffMember = StaffMember(
-            staffCode = staffUserDetails.code,
-            forenames = staffUserDetails.name.forenames(),
-            surname = staffUserDetails.name.surname,
-            username = staffUserDetails.username,
-          ),
-          probationArea = ProbationArea(
-            code = staffUserDetails.probationArea.code,
-            name = staffUserDetails.probationArea.description,
-          ),
-          cru = Cru(
-            name = "South West & South Central",
-          ),
-        ),
-      )
-      assertThat(data.decision).isEqualTo("REJECTED")
-      assertThat(data.decisionRationale).isEqualTo("reasoning")
+      verify(exactly = 1) {
+        cas1AssessmentDomainEventService.assessmentRejected(
+          application,
+          assessment,
+          offenderDetails,
+          user,
+        )
+      }
 
       verify(exactly = 1) {
         cas1AssessmentEmailServiceMock.assessmentRejected(application)
@@ -1421,13 +1367,6 @@ class AssessmentServiceTest {
         .produce()
 
       every { offenderServiceMock.getOffenderByCrn(assessment.application.crn, user.deliusUsername, any()) } returns AuthorisableActionResult.Success(offenderDetails)
-
-      val staffUserDetails = StaffDetailFactory.staffDetail(code = "N26")
-
-      every { apDeliusContextApiClient.getStaffDetail(user.deliusUsername) } returns ClientResult.Success(
-        HttpStatus.OK,
-        staffUserDetails,
-      )
 
       every { userServiceMock.getUserForRequest() } returns user
       every { assessmentReferralHistoryNoteRepositoryMock.save(any()) } returnsArgument 0
@@ -2189,9 +2128,7 @@ class AssessmentServiceTest {
     private val assessmentClarificationNoteRepositoryMock = mockk<AssessmentClarificationNoteRepository>()
     private val assessmentReferralHistoryNoteRepositoryMock = mockk<AssessmentReferralHistoryNoteRepository>()
     private val jsonSchemaServiceMock = mockk<JsonSchemaService>()
-    private val domainEventServiceMock = mockk<Cas1DomainEventService>()
     private val offenderServiceMock = mockk<OffenderService>()
-    private val apDeliusContextApiClient = mockk<ApDeliusContextApiClient>()
     private val placementRequestServiceMock = mockk<PlacementRequestService>()
     private val cas1PlacementRequirementsServiceMock = mockk<Cas1PlacementRequirementsService>()
     private val userAllocatorMock = mockk<UserAllocator>()
@@ -2206,14 +2143,11 @@ class AssessmentServiceTest {
       assessmentReferralHistoryNoteRepositoryMock,
       referralRejectionReasonRepositoryMock,
       jsonSchemaServiceMock,
-      domainEventServiceMock,
       offenderServiceMock,
-      apDeliusContextApiClient,
       placementRequestServiceMock,
       cas1PlacementRequirementsServiceMock,
       userAllocatorMock,
       objectMapperMock,
-      UrlTemplate("http://frontend/applications/#id"),
       taskDeadlineServiceMock,
       cas1AssessmentEmailServiceMock,
       cas1AssessmentDomainEventService,
@@ -3101,8 +3035,6 @@ class AssessmentServiceTest {
 
       every { userServiceMock.getUserForRequest() } returns user
 
-      every { domainEventServiceMock.saveApplicationAssessedDomainEvent(any()) } just Runs
-
       every { cas1AssessmentEmailServiceMock.assessmentAccepted(any()) } just Runs
 
       every { cas1AssessmentDomainEventService.assessmentAccepted(any(), any(), any(), any(), any(), any()) } just Runs
@@ -3166,10 +3098,6 @@ class AssessmentServiceTest {
 
       assertThatCasResult(result).isGeneralValidationError("Couldn't create Placement Requirements")
 
-      verify(exactly = 0) {
-        domainEventServiceMock.saveApplicationAssessedDomainEvent(any())
-      }
-
       verify(exactly = 1) {
         cas1PlacementRequirementsServiceMock.createPlacementRequirements(assessment, placementRequirements)
       }
@@ -3215,18 +3143,6 @@ class AssessmentServiceTest {
       val offenderDetails = OffenderDetailsSummaryFactory().produce()
 
       every { offenderServiceMock.getOffenderByCrn(assessment.application.crn, user.deliusUsername, any()) } returns AuthorisableActionResult.Success(offenderDetails)
-
-      val staffUserDetails = StaffDetailFactory.staffDetail(
-        probationArea = uk.gov.justice.digital.hmpps.approvedpremisesapi.model.deliuscontext.ProbationArea(
-          code = "N26",
-          description = "description",
-        ),
-      )
-
-      every { apDeliusContextApiClient.getStaffDetail(user.deliusUsername) } returns ClientResult.Success(
-        HttpStatus.OK,
-        staffUserDetails,
-      )
 
       every { cas1AssessmentDomainEventService.assessmentAccepted(any(), any(), any(), any(), any(), any()) } just Runs
 

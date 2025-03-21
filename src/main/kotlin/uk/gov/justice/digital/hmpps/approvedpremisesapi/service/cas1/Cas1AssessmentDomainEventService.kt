@@ -28,13 +28,16 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.asApprovedPremises
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.community.OffenderDetailSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.UrlTemplate
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.toLocalDateTime
+import java.time.Clock
 import java.time.Instant
+import java.time.OffsetDateTime
 import java.util.UUID
 
 @Service
 class Cas1AssessmentDomainEventService(
   private val domainEventService: Cas1DomainEventService,
   private val apDeliusContextApiClient: ApDeliusContextApiClient,
+  private val clock: Clock,
   @Value("\${url-templates.frontend.application}") private val applicationUrlTemplate: UrlTemplate,
   @Value("\${url-templates.frontend.assessment}") private val assessmentUrlTemplate: UrlTemplate,
 ) {
@@ -196,6 +199,61 @@ class Cas1AssessmentDomainEventService(
         ),
         metadata = mapOf(
           MetaDataName.CAS1_REQUESTED_AP_TYPE to apType?.asApprovedPremisesType()?.name,
+        ),
+      ),
+    )
+  }
+
+  fun assessmentRejected(
+    application: ApprovedPremisesApplicationEntity,
+    assessment: AssessmentEntity,
+    offenderDetails: OffenderDetailSummary,
+    rejectingUser: UserEntity,
+  ) {
+    val domainEventId = UUID.randomUUID()
+    val rejectedAt = OffsetDateTime.now(clock)
+
+    val staffDetails = when (val staffDetailsResult = apDeliusContextApiClient.getStaffDetail(rejectingUser.deliusUsername)) {
+      is ClientResult.Success -> staffDetailsResult.body
+      is ClientResult.Failure -> staffDetailsResult.throwException()
+    }
+
+    domainEventService.saveApplicationAssessedDomainEvent(
+      DomainEvent(
+        id = domainEventId,
+        applicationId = application.id,
+        assessmentId = assessment.id,
+        crn = application.crn,
+        nomsNumber = offenderDetails.otherIds.nomsNumber,
+        occurredAt = rejectedAt.toInstant(),
+        data = ApplicationAssessedEnvelope(
+          id = domainEventId,
+          timestamp = rejectedAt.toInstant(),
+          eventType = EventType.applicationAssessed,
+          eventDetails = ApplicationAssessed(
+            applicationId = application.id,
+            applicationUrl = applicationUrlTemplate
+              .resolve("id", application.id.toString()),
+            personReference = PersonReference(
+              crn = assessment.application.crn,
+              noms = offenderDetails.otherIds.nomsNumber ?: "Unknown NOMS Number",
+            ),
+            deliusEventNumber = application.eventNumber,
+            assessedAt = rejectedAt.toInstant(),
+            assessedBy = ApplicationAssessedAssessedBy(
+              staffMember = staffDetails.toStaffMember(),
+              probationArea = ProbationArea(
+                code = staffDetails.probationArea.code,
+                name = staffDetails.probationArea.description,
+              ),
+              cru = Cru(
+                name = rejectingUser.apArea?.name ?: "Unknown CRU",
+              ),
+            ),
+            decision = assessment.decision.toString(),
+            decisionRationale = assessment.rejectionRationale,
+            arrivalDate = null,
+          ),
         ),
       ),
     )
