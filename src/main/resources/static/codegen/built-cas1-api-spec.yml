@@ -6994,6 +6994,8 @@ components:
       type: object
       properties:
         departureDateTime:
+          deprecated: true
+          description: use seperate date/time fields
           type: string
           format: date-time
         departureDate:
