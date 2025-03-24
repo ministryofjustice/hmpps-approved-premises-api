@@ -19,14 +19,20 @@ paths:
           description: Page number of results to return. If blank, returns all results
           schema:
             type: integer
+        - name: cruManagementAreaId
+          in: query
+          description: Limits change requests to applications within the cru management area
+          schema:
+            type: string
+            format: uuid
         - name: sortBy
           in: query
-          description: Which field to sort the results by. If blank, will sort by createdAt
+          description: Which field to sort the results by. If blank, will sort by name
           schema:
             $ref: '#/components/schemas/Cas1ChangeRequestSortField'
         - name: sortDirection
           in: query
-          description: The direction to sort the results by. If blank, will sort in descending order
+          description: The direction to sort the results by. If blank, will sort in ascending order
           schema:
             $ref: '#/components/schemas/SortDirection'
       responses:
@@ -4860,6 +4866,7 @@ components:
         - cas1_booking_create
         - cas1_booking_change_dates
         - cas1_booking_withdraw
+        - cas1_change_request_list
         - cas1_out_of_service_bed_create
         - cas1_out_of_service_bed_create_bed_on_hold
         - cas1_out_of_service_bed_cancel
@@ -7646,6 +7653,7 @@ components:
           type: string
           format: date
         lengthOfStayDays:
+          description: Current placement's length of stay, using canonical arrival date
           type: integer
         requestReason:
           $ref: '#/components/schemas/NamedId'
@@ -7704,6 +7712,7 @@ components:
           type: string
           format: date
         lengthOfStayDays:
+          description: Current placement's length of stay, using canonical arrival date
           type: integer
       required:
         - id
@@ -7718,12 +7727,12 @@ components:
         - name
         - tier
         - canonicalArrivalDate
-        - lengthOfStay
+        - lengthOfStayDays
       x-enum-varnames:
         - NAME
         - TIER
         - CANONICAL_ARRIVAL_DATE
-        - LENGTH_OF_STAY
+        - LENGTH_OF_STAY_DAYS
     Cas1PremisesBedSummary:
       type: object
       properties:

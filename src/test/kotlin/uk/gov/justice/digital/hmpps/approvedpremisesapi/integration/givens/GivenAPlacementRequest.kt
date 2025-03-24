@@ -31,8 +31,8 @@ import java.time.OffsetDateTime
   "LongParameterList",
 )
 fun IntegrationTestBase.givenAPlacementRequest(
-  placementRequestAllocatedTo: UserEntity?,
-  assessmentAllocatedTo: UserEntity,
+  placementRequestAllocatedTo: UserEntity? = null,
+  assessmentAllocatedTo: UserEntity? = null,
   createdByUser: UserEntity,
   crn: String? = null,
   name: String? = null,
@@ -173,7 +173,7 @@ private fun ApprovedPremisesApplicationEntityFactory.applyQualification(required
 )
 fun IntegrationTestBase.givenAPlacementRequest(
   placementRequestAllocatedTo: UserEntity?,
-  assessmentAllocatedTo: UserEntity,
+  assessmentAllocatedTo: UserEntity? = null,
   createdByUser: UserEntity,
   crn: String = randomStringMultiCaseWithNumbers(8),
   reallocated: Boolean = false,

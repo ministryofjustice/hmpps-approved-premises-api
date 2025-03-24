@@ -115,7 +115,11 @@ enum class UserRole(val service: ServiceName, val cas1ApiValue: ApprovedPremises
   CAS1_CHANGE_REQUEST_DEV(
     ServiceName.approvedPremises,
     ApprovedPremisesUserRole.changeRequestDev,
-    permissions = listOf(UserPermission.CAS1_APPEAL_CREATE, UserPermission.CAS1_PLANNED_TRANSFER_CREATE),
+    permissions = listOf(
+      UserPermission.CAS1_CHANGE_REQUEST_LIST,
+      UserPermission.CAS1_APPEAL_CREATE,
+      UserPermission.CAS1_PLANNED_TRANSFER_CREATE,
+    ),
   ),
 
   CAS1_APPLICANT(ServiceName.approvedPremises, ApprovedPremisesUserRole.applicant),
