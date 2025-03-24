@@ -6,6 +6,7 @@ data class SubmittedApplicationReportRow(
   val eventId: String,
   val applicationId: String,
   val applicationOrigin: ApplicationOrigin,
+  val bailHearingDate: String?,
   val personCrn: String,
   val personNoms: String,
   val referringPrisonCode: String,
