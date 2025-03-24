@@ -1,9 +1,8 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.unit.service.cas2
 
 import io.mockk.every
-import io.mockk.impl.annotations.InjectMockKs
-import io.mockk.impl.annotations.MockK
 import io.mockk.junit5.MockKExtension
+import io.mockk.mockk
 import io.mockk.mockkStatic
 import io.mockk.slot
 import io.mockk.verify
@@ -25,28 +24,28 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas2Applicati
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.NomisUserRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.prisonsapi.Agency
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.EmailNotificationService
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.NomisUserService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas2.Cas2EmailService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.UrlTemplate
 import java.time.OffsetDateTime
-import java.util.*
+import java.util.Optional
+import java.util.UUID
 
 @ExtendWith(MockKExtension::class)
 class Cas2EmailServiceTest {
 
-  @MockK
-  lateinit var emailNotificationService: EmailNotificationService
+  private val notifyConfig = mockk<NotifyConfig>()
+  private val emailNotificationService = mockk<EmailNotificationService>()
+  private val nomisUserRepository = mockk<NomisUserRepository>()
+  private val prisonsApiClient = mockk<PrisonsApiClient>()
+  private val applicationUrlTemplate = UrlTemplate("/applications/#id/overview").toString()
 
-  @MockK
-  lateinit var notifyConfig: NotifyConfig
-
-  @MockK
-  lateinit var nomisUserRepository: NomisUserRepository
-
-  @MockK
-  lateinit var prisonsApiClient: PrisonsApiClient
-
-  @InjectMockKs
-  lateinit var emailService: Cas2EmailService
+  private val emailService = Cas2EmailService(
+    emailNotificationService,
+    notifyConfig,
+    nomisUserRepository,
+    prisonsApiClient,
+    applicationUrlTemplate,
+  )
 
   private val prisoner = Prisoner(prisonId = "A1234AB", prisonName = "HM LONDON")
   private val nomsNumber = "NOMSABC"
@@ -56,24 +55,38 @@ class Cas2EmailServiceTest {
     "nomsNumber" to nomsNumber,
     "receivingPrisonName" to prisoner.prisonName,
   )
-  private val application = Cas2ApplicationEntityFactory().withNomsNumber(nomsNumber).withCreatedByUser(user).produce()
-  private val applicationAssignment = Cas2ApplicationAssignmentEntity(
+  private val application =
+    Cas2ApplicationEntityFactory().withNomsNumber(nomsNumber)
+      .withCreatedByUser(user).produce()
+  private val link = applicationUrlTemplate.replace("#id", application.id.toString())
+  private val applicationAssignmentOld = Cas2ApplicationAssignmentEntity(
     id = UUID.randomUUID(),
     application = application,
     prisonCode = "OLD PRISON CODE",
     createdAt = OffsetDateTime.now(),
     allocatedPomUserId = user.id,
   )
+  private val applicationAssignmentNew = Cas2ApplicationAssignmentEntity(
+    id = UUID.randomUUID(),
+    application = application,
+    prisonCode = "NEW PRISON CODE",
+    createdAt = OffsetDateTime.now(),
+    allocatedPomUserId = user.id,
+  )
+  private val oldAgency =
+    Agency(agencyId = applicationAssignmentOld.prisonCode, description = "HMS LIVERPOOL", agencyType = "prison")
+  private val newAgency =
+    Agency(agencyId = applicationAssignmentNew.prisonCode, description = "HMS LONDON", agencyType = "prison")
 
   @Test
   fun `send email to Nacro when location changes`() {
-    application.applicationAssignments.add(applicationAssignment)
-    val agency =
-      Agency(agencyId = applicationAssignment.prisonCode, description = "HMS LIVERPOOL", agencyType = "prison")
+    application.applicationAssignments.add(applicationAssignmentNew)
+    application.applicationAssignments.add(applicationAssignmentOld)
     val personalisationForNacro = mapOf(
+      "nomsNumber" to nomsNumber,
       "receivingPrisonName" to prisoner.prisonName,
-      "transferringPrisonName" to agency.description,
-      "link" to nomsNumber,
+      "transferringPrisonName" to oldAgency.description,
+      "link" to link,
     )
     every {
       emailNotificationService.sendEmail(
@@ -83,9 +96,10 @@ class Cas2EmailServiceTest {
       )
     } returns Unit
     every { notifyConfig.templates.toNacroApplicationTransferredToAnotherPrison } returns templateId
-    every { prisonsApiClient.getAgencyDetails(eq(applicationAssignment.prisonCode)) } returns ClientResult.Success(
+
+    every { prisonsApiClient.getAgencyDetails(eq(oldAgency.agencyId)) } returns ClientResult.Success(
       HttpStatus.OK,
-      agency,
+      oldAgency,
     )
 
     emailService.sendLocationChangedEmailToNacro(application, nomsNumber, prisoner)
@@ -98,17 +112,54 @@ class Cas2EmailServiceTest {
       )
     }
     verify(exactly = 1) { notifyConfig.templates.toNacroApplicationTransferredToAnotherPrison }
-    verify(exactly = 1) { prisonsApiClient.getAgencyDetails(eq(applicationAssignment.prisonCode)) }
+    verify(exactly = 1) { prisonsApiClient.getAgencyDetails(eq(oldAgency.agencyId)) }
+  }
 
+  @Test
+  fun `send email to Nacro when allocation changes`() {
+    application.applicationAssignments.add(applicationAssignmentNew)
+    application.applicationAssignments.add(applicationAssignmentOld)
+    val personalisationForNacro = mapOf(
+      "nomsNumber" to nomsNumber,
+      "receivingPrisonName" to newAgency.description,
+      "link" to link,
+    )
+    every {
+      emailNotificationService.sendEmail(
+        eq("tbc"),
+        eq(templateId),
+        eq(personalisationForNacro),
+      )
+    } returns Unit
+    every { notifyConfig.templates.toNacroApplicationTransferredToAnotherPom } returns templateId
+
+    every { prisonsApiClient.getAgencyDetails(eq(newAgency.agencyId)) } returns ClientResult.Success(
+      HttpStatus.OK,
+      newAgency,
+    )
+
+    emailService.sendAllocationChangedEmailToNacro(application, nomsNumber)
+
+    verify(exactly = 1) {
+      emailNotificationService.sendEmail(
+        eq("tbc"),
+        eq(templateId),
+        eq(personalisationForNacro),
+      )
+    }
+    verify(exactly = 1) { notifyConfig.templates.toNacroApplicationTransferredToAnotherPom }
+    verify(exactly = 1) { prisonsApiClient.getAgencyDetails(eq(newAgency.agencyId)) }
   }
 
   @Test
   fun `send email to receiving POM Unit when location changes`() {
-    application.applicationAssignments.add(applicationAssignment)
+    application.applicationAssignments.add(applicationAssignmentNew)
+    application.applicationAssignments.add(applicationAssignmentOld)
     val personalisationWithLink = mapOf(
       "nomsNumber" to nomsNumber,
-      "receivingPrisonName" to prisoner.prisonName,
-      "link" to "NOMSABC",
+      "transferringPrisonName" to oldAgency.description,
+      "link" to link,
+      "applicationStatus" to "PLACEHOLDER",
     )
     every {
       emailNotificationService.sendEmail(
@@ -118,7 +169,10 @@ class Cas2EmailServiceTest {
       )
     } returns Unit
     every { notifyConfig.templates.toReceivingPomUnitApplicationTransferredToAnotherPrison } returns templateId
-
+    every { prisonsApiClient.getAgencyDetails(eq(oldAgency.agencyId)) } returns ClientResult.Success(
+      HttpStatus.OK,
+      oldAgency,
+    )
     emailService.sendLocationChangedEmailToReceivingPomUnit(application, nomsNumber)
 
     verify(exactly = 1) {
@@ -133,7 +187,7 @@ class Cas2EmailServiceTest {
 
   @Test
   fun `send email to transferring POM Unit when location changes`() {
-    application.applicationAssignments.add(applicationAssignment)
+    application.applicationAssignments.add(applicationAssignmentNew)
 
     every {
       emailNotificationService.sendEmail(
@@ -144,7 +198,7 @@ class Cas2EmailServiceTest {
     } returns Unit
     every { notifyConfig.templates.toTransferringPomUnitApplicationTransferredToAnotherPrison } returns templateId
 
-    emailService.sendLocationChangedEmailToTransferringPomUnit(application.id, nomsNumber, prisoner)
+    emailService.sendLocationChangedEmailToTransferringPomUnit(nomsNumber, prisoner)
 
     verify(exactly = 1) {
       emailNotificationService.sendEmail(
@@ -157,8 +211,8 @@ class Cas2EmailServiceTest {
   }
 
   @Test
-  fun `send email to referring POM when location changes`() {
-    application.applicationAssignments.add(applicationAssignment)
+  fun `send email to transferring POM when location changes`() {
+    application.applicationAssignments.add(applicationAssignmentNew)
 
     every {
       emailNotificationService.sendEmail(
@@ -184,6 +238,46 @@ class Cas2EmailServiceTest {
   }
 
   @Test
+  fun `send email to receiving POM when location changes`() {
+    application.applicationAssignments.add(applicationAssignmentNew)
+    application.applicationAssignments.add(applicationAssignmentOld)
+
+    val personalisationForNewPom = mapOf(
+      "nomsNumber" to nomsNumber,
+      "transferringPrisonName" to oldAgency.description,
+      "link" to link,
+      "applicationStatus" to "PLACEHOLDER",
+    )
+
+    every {
+      emailNotificationService.sendEmail(
+        eq(user.email!!),
+        eq(templateId),
+        eq(personalisationForNewPom),
+      )
+    } returns Unit
+    every { notifyConfig.templates.toReceivingPomApplicationTransferredToAnotherPom } returns templateId
+    every { nomisUserRepository.findById(eq(user.id)) } returns Optional.of(user)
+    every { prisonsApiClient.getAgencyDetails(eq(oldAgency.agencyId)) } returns ClientResult.Success(
+      HttpStatus.OK,
+      oldAgency,
+    )
+
+    emailService.sendAllocationChangedEmailToReceivingPom(application, nomsNumber)
+
+    verify(exactly = 1) {
+      emailNotificationService.sendEmail(
+        eq(user.email!!),
+        eq(templateId),
+        eq(personalisationForNewPom),
+      )
+    }
+    verify(exactly = 1) { notifyConfig.templates.toReceivingPomApplicationTransferredToAnotherPom }
+    verify(exactly = 1) { nomisUserRepository.findById(eq(user.id)) }
+    verify(exactly = 1) { prisonsApiClient.getAgencyDetails(eq(oldAgency.agencyId)) }
+  }
+
+  @Test
   fun `do not send email as no email available for old POM`() {
     val userWithNoEmail = NomisUserEntityFactory().withEmail(null).produce()
 
@@ -206,8 +300,7 @@ class Cas2EmailServiceTest {
     mockkStatic(Sentry::class)
     every { Sentry.captureMessage(capture(slot)) } returns SentryId.EMPTY_ID
 
-    val errorMessage =
-      "Email not found for User ${userWithNoEmail.id}. Unable to send email for Location Transfer on Application ${applicationWithNoEmail.id}"
+    val errorMessage = "Email $templateId not sent for NOMS Number ${personalisation["nomsNumber"]}"
 
     emailService.sendLocationChangedEmailToTransferringPom(applicationWithNoEmail, nomsNumber, prisoner)
 
@@ -222,7 +315,7 @@ class Cas2EmailServiceTest {
 
   @Test
   fun `do not send email as old POM is not in NomisUsers Table`() {
-    application.applicationAssignments.add(applicationAssignment)
+    application.applicationAssignments.add(applicationAssignmentNew)
     val errorMessage = "No user for id ${user.id} found"
     every { emailNotificationService.sendEmail(any(), any(), any()) } returns Unit
     every { notifyConfig.templates.toTransferringPomApplicationTransferredToAnotherPrison } returns templateId
@@ -236,7 +329,7 @@ class Cas2EmailServiceTest {
       )
     }
     assertThat(exception.message).isEqualTo(errorMessage)
-    application.applicationAssignments.add(applicationAssignment)
+    application.applicationAssignments.add(applicationAssignmentNew)
 
     verify(exactly = 0) { emailNotificationService.sendEmail(any(), any(), any()) }
     verify(exactly = 0) { notifyConfig.templates.toTransferringPomApplicationTransferredToAnotherPrison }

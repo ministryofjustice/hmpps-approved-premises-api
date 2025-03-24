@@ -4,7 +4,6 @@ import io.sentry.Sentry
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.PomAllocation
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.Prisoner
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.PrisonsApiClient
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.config.NotifyConfig
@@ -19,7 +18,6 @@ class Cas2EmailService(
   private val notifyConfig: NotifyConfig,
   private val nomisUserRepository: NomisUserRepository,
   private val prisonsApiClient: PrisonsApiClient,
-
   @Value("\${url-templates.frontend.cas2.application-overview}") private val applicationUrlTemplate: String,
 ) {
 
@@ -33,7 +31,7 @@ class Cas2EmailService(
     if (recipientEmailAddress != null) {
       emailNotificationService.sendEmail(recipientEmailAddress, templateId, personalisation)
     } else {
-      val errorMessage = "Email not sent to $recipientEmailAddress for NOMS Number ${personalisation["nomsNumber"]}"
+      val errorMessage = "Email $templateId not sent for NOMS Number ${personalisation["nomsNumber"]}"
       log.error(errorMessage)
       Sentry.captureMessage(errorMessage)
     }
@@ -59,7 +57,6 @@ class Cas2EmailService(
   }
 
   fun sendLocationChangedEmailToTransferringPomUnit(
-    applicationId: UUID,
     nomsNumber: String,
     prisoner: Prisoner,
   ) {
@@ -126,7 +123,6 @@ class Cas2EmailService(
   fun sendAllocationChangedEmailToReceivingPom(
     application: Cas2ApplicationEntity,
     nomsNumber: String,
-    pomAllocation: PomAllocation,
   ) {
     // TODO need to check elsewhere when cannot find user
     nomisUserRepository.findById(application.currentPomUserId!!).map { newPom ->
@@ -152,7 +148,6 @@ class Cas2EmailService(
   fun sendAllocationChangedEmailToNacro(
     application: Cas2ApplicationEntity,
     nomsNumber: String,
-    pomAllocation: PomAllocation,
   ) {
     val email = "tbc"
     prisonsApiClient.getAgencyDetails(application.currentPrisonCode).map { agency ->
@@ -169,12 +164,15 @@ class Cas2EmailService(
     }
   }
 
-  private fun getApplicationStatus(application: Cas2ApplicationEntity): String =
-    application.statusUpdates?.last()?.status()?.description
-      ?: throw RuntimeException("No status found for application ${application.id}")
+//  private fun getApplicationStatus(application: Cas2ApplicationEntity): String =
+//    application.statusUpdates?.last()?.status()?.description
+//      ?: throw RuntimeException("No status found for application ${application.id}")
+
+  @Suppress("UnusedParameter", "FunctionOnlyReturningConstant")
+  private fun getApplicationStatus(application: Cas2ApplicationEntity): String = "PLACEHOLDER"
 
   private fun getPreviousPrisonCode(application: Cas2ApplicationEntity): String =
-    application.applicationAssignments.first { it.prisonCode !== application.currentPrisonCode }.prisonCode
+    application.applicationAssignments.first { it.prisonCode != application.currentPrisonCode }.prisonCode
 
   private fun getLink(applicationId: UUID): String = applicationUrlTemplate.replace("#id", applicationId.toString())
 }
