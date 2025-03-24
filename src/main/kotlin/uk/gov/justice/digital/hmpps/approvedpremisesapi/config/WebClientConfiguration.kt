@@ -316,4 +316,38 @@ class WebClientConfiguration(
         .build(),
     )
   }
+
+  @Bean(name = ["managePomCasesWebClient"])
+  fun managePomCasesWebClient(): WebClientConfig = WebClientConfig(
+    WebClient.builder()
+      .clientConnector(
+        ReactorClientHttpConnector(
+          HttpClient
+            .create()
+            .responseTimeout(Duration.ofMillis(defaultUpstreamTimeoutMs))
+            .option(
+              ChannelOption.CONNECT_TIMEOUT_MILLIS,
+              Duration.ofMillis(defaultUpstreamTimeoutMs).toMillis().toInt(),
+            ),
+        ),
+      )
+      .build(),
+  )
+
+  @Bean(name = ["prisonerSearchWebClient"])
+  fun prisonerSearchWebClient(): WebClientConfig = WebClientConfig(
+    WebClient.builder()
+      .clientConnector(
+        ReactorClientHttpConnector(
+          HttpClient
+            .create()
+            .responseTimeout(Duration.ofMillis(defaultUpstreamTimeoutMs))
+            .option(
+              ChannelOption.CONNECT_TIMEOUT_MILLIS,
+              Duration.ofMillis(defaultUpstreamTimeoutMs).toMillis().toInt(),
+            ),
+        ),
+      )
+      .build(),
+  )
 }

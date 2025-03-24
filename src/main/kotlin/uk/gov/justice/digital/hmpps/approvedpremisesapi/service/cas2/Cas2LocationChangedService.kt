@@ -3,13 +3,13 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas2
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.ClientResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.PrisonerSearchClient
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas2ApplicationAssignmentEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas2ApplicationRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.domainevent.HmppsDomainEvent
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.domainevent.categoriesChanged
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.InvalidDomainEventException
-import java.net.URI
 import java.time.OffsetDateTime
 import java.util.UUID
 
@@ -35,7 +35,10 @@ class Cas2LocationChangedService(
       applicationService.findMostRecentApplication(nomsNumber)?.let { application ->
         log.info("Received location change event of interest: \n{}", event)
 
-        val prisoner = prisonerSearchClient.getPrisoner(URI.create(detailUrl))!!
+        val prisoner = when (val result = prisonerSearchClient.getPrisoner(detailUrl)) {
+          is ClientResult.Success -> result.body
+          is ClientResult.Failure -> throw result.toException()
+        }
 
         if (isNewPrison(application.currentPrisonCode, prisoner.prisonId)) {
           application.applicationAssignments.add(
