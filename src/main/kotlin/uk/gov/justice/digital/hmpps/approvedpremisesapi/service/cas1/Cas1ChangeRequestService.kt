@@ -50,7 +50,16 @@ class Cas1ChangeRequestService(
     if (!placementRequest.spaceBookings.contains(spaceBooking)) return CasResult.NotFound("Placement Request with Space Booking", spaceBooking.id.toString())
 
     if (cas1NewChangeRequest.type == Cas1ChangeRequestType.PLANNED_TRANSFER) {
-      spaceBooking.actualArrivalDate ?: return CasResult.GeneralValidationError("Associated space booking does not have an actual arrival date")
+      if (!spaceBooking.hasArrival()) return CasResult.GeneralValidationError("Associated space booking has not been marked as arrived")
+      if (spaceBooking.hasNonArrival()) return CasResult.GeneralValidationError("Associated space booking has been marked as non arrived")
+      if (spaceBooking.hasDeparted()) return CasResult.GeneralValidationError("Associated space booking has been marked as departed")
+      if (spaceBooking.isCancelled()) return CasResult.GeneralValidationError("Associated space booking has been cancelled")
+    }
+
+    if (cas1NewChangeRequest.type == Cas1ChangeRequestType.PLACEMENT_APPEAL) {
+      if (spaceBooking.hasArrival()) return CasResult.GeneralValidationError("Associated space booking has been marked as arrived")
+      if (spaceBooking.hasNonArrival()) return CasResult.GeneralValidationError("Associated space booking has been marked as non arrived")
+      if (spaceBooking.isCancelled()) return CasResult.GeneralValidationError("Associated space booking has been cancelled")
     }
 
     val now = OffsetDateTime.now()
