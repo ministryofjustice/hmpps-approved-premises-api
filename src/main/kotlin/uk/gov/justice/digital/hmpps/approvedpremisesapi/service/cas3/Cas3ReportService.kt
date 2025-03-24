@@ -146,6 +146,8 @@ class Cas3ReportService(
     log.info("Beginning CAS3 Bed Utilisation Report")
     val bedspacesInScope = bedUtilisationReportRepository.findAllBedspaces(
       probationRegionId = properties.probationRegionId,
+      startDate = properties.startDate,
+      endDate = properties.endDate,
     )
     log.info("${bedspacesInScope.size} bedspaces found.")
 
