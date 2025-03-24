@@ -3,6 +3,7 @@
 
 generic-service:
   serviceAccountName: hmpps-community-accommodation-api-service-account
+  replicaCount: 2
 
   resources:
     limits:

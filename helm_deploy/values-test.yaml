@@ -2,6 +2,7 @@
 # Per environment values which override defaults in approved-premises-api/values.yaml
 
 generic-service:
+  replicaCount: 2
 
   resources:
     limits:
