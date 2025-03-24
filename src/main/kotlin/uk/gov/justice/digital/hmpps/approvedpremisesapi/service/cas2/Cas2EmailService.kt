@@ -171,8 +171,7 @@ class Cas2EmailService(
   @Suppress("UnusedParameter", "FunctionOnlyReturningConstant")
   private fun getApplicationStatus(application: Cas2ApplicationEntity): String = "PLACEHOLDER"
 
-  private fun getPreviousPrisonCode(application: Cas2ApplicationEntity): String =
-    application.applicationAssignments.first { it.prisonCode != application.currentPrisonCode }.prisonCode
+  private fun getPreviousPrisonCode(application: Cas2ApplicationEntity): String = application.applicationAssignments.first { it.prisonCode != application.currentPrisonCode }.prisonCode
 
   private fun getLink(applicationId: UUID): String = applicationUrlTemplate.replace("#id", applicationId.toString())
 }
