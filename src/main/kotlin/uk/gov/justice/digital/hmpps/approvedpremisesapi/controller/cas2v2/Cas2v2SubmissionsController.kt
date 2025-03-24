@@ -11,7 +11,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.SortDirection
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.SubmitCas2v2Application
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas2v2.Cas2v2ApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas2v2.Cas2v2ApplicationSummaryEntity
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas2v2.Cas2v2UserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.BadRequestProblem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.ForbiddenProblem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.NotFoundProblem
@@ -57,7 +56,7 @@ class Cas2v2SubmissionsController(
     val applicationResult = cas2v2ApplicationService.getSubmittedCas2v2ApplicationForAssessor(applicationId)
     val application = extractEntityFromCasResult(applicationResult)
 
-    return ResponseEntity.ok(getPersonDetailAndTransform(application, user))
+    return ResponseEntity.ok(getPersonDetailAndTransform(application))
   }
 
   @Transactional
@@ -86,9 +85,8 @@ class Cas2v2SubmissionsController(
   @SuppressWarnings("ThrowsCount")
   private fun getPersonDetailAndTransform(
     application: Cas2v2ApplicationEntity,
-    user: Cas2v2UserEntity,
   ): Cas2v2SubmittedApplication {
-    val personInfo = when (val cas2v2OffenderSearchResult = cas2v2OffenderService.getPersonByCrn(application.crn, user)) {
+    val personInfo = when (val cas2v2OffenderSearchResult = cas2v2OffenderService.getPersonByCrn(application.crn)) {
       is Cas2v2OffenderSearchResult.NotFound -> throw NotFoundProblem(application.crn, "Offender")
       is Cas2v2OffenderSearchResult.Forbidden -> throw ForbiddenProblem()
       is Cas2v2OffenderSearchResult.Unknown -> throw cas2v2OffenderSearchResult.throwable ?: BadRequestProblem(errorDetail = "Could not retrieve person info for Prison Number: ${application.crn}")

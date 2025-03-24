@@ -124,7 +124,7 @@ class Cas2v2ApplicationService(
     applicationOrigin: ApplicationOrigin = ApplicationOrigin.homeDetentionCurfew,
     bailHearingDate: LocalDate? = null,
   ) = validated<Cas2v2ApplicationEntity> {
-    val offenderDetailsResult = cas2v2OffenderService.getPersonByCrn(crn, user)
+    val offenderDetailsResult = cas2v2OffenderService.getPersonByCrn(crn)
 
     val offenderDetails = when (offenderDetailsResult) {
       is Cas2v2OffenderSearchResult.NotFound -> return "$.crn" hasSingleValidationError "doesNotExist"

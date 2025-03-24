@@ -394,11 +394,237 @@ class Cas2v2SubmissionTest(
         ),
       )
       givenACas2v2Assessor { assessor, jwt ->
-        givenACas2v2PomUser { user, _ ->
+        givenACas2v2DeliusUser { user, _ ->
           givenAnOffender(
             offenderDetailsConfigBlock = {
               withCrn(crn)
               withNomsNumber(nomsNumber)
+            },
+          ) { offenderDetails, _ ->
+            cas2v2ApplicationJsonSchemaRepository.deleteAll()
+
+            val newestJsonSchema = cas2v2ApplicationJsonSchemaEntityFactory
+              .produceAndPersist {
+                withAddedAt(OffsetDateTime.parse("2025-01-17T12:45:00+01:00"))
+                withSchema(
+                  schema,
+                )
+              }
+
+            val applicationEntity = cas2v2ApplicationEntityFactory.produceAndPersist {
+              withApplicationSchema(newestJsonSchema)
+              withCrn(offenderDetails.otherIds.crn)
+              withCreatedByUser(user)
+              withSubmittedAt(OffsetDateTime.parse("2022-09-21T12:45:00+01:00"))
+              withData(
+                """
+            {
+               "thingId": 123
+            }
+            """,
+              )
+            }
+
+            val assessmentEntity = cas2v2AssessmentEntityFactory.produceAndPersist {
+              withApplication(applicationEntity)
+              withNacroReferralId("OH123")
+              withAssessorName("Assessor name")
+            }
+
+            val update1 = cas2v2StatusUpdateEntityFactory.produceAndPersist {
+              withApplication(applicationEntity)
+              withAssessment(assessmentEntity)
+              withAssessor(assessor)
+              withLabel("1st update")
+            }
+
+            val update2 = cas2v2StatusUpdateEntityFactory.produceAndPersist {
+              withApplication(applicationEntity)
+              withAssessment(assessmentEntity)
+              withAssessor(assessor)
+              withLabel("2nd update")
+            }
+
+            val update3 = cas2v2StatusUpdateEntityFactory.produceAndPersist {
+              withApplication(applicationEntity)
+              withAssessment(assessmentEntity)
+              withAssessor(assessor)
+              withStatusId(UUID.fromString("9a381bc6-22d3-41d6-804d-4e49f428c1de"))
+              withLabel("3rd update")
+            }
+
+            val statusUpdateDetail = Cas2v2StatusUpdateDetailEntity(
+              id = UUID.fromString("5f89ec4d-1a3e-4ec3-a48b-52959d6fcc6a"),
+              statusUpdate = update3,
+              statusDetailId = UUID.fromString("62645779-242d-4601-a8f8-d2cbf1d41dfa"),
+              label = "Detail on 3rd update",
+            )
+
+            update1.apply { this.createdAt = OffsetDateTime.now().minusDays(20) }
+            cas2v2RealStatusUpdateRepository.save(update1)
+
+            update2.apply { this.createdAt = OffsetDateTime.now().minusDays(15) }
+            cas2v2RealStatusUpdateRepository.save(update2)
+
+            update3.apply { this.createdAt = OffsetDateTime.now().minusDays(1) }
+            cas2v2RealStatusUpdateRepository.save(update3)
+
+            statusUpdateDetail.apply { this.createdAt = OffsetDateTime.now().minusDays(1) }
+            cas2v2RealStatusUpdateDetailRepository.save(statusUpdateDetail)
+
+            val rawResponseBody = webTestClient.get()
+              .uri("/cas2v2/submissions/${applicationEntity.id}")
+              .header("Authorization", "Bearer $jwt")
+              .exchange()
+              .expectStatus()
+              .isOk
+              .returnResult<String>()
+              .responseBody
+              .blockFirst()
+
+            val responseBody = objectMapper.readValue(
+              rawResponseBody,
+              Cas2v2SubmittedApplication::class.java,
+            )
+
+            val applicant = userTransformer.transformJpaToApi(
+              applicationEntity
+                .createdByUser,
+            )
+
+            Assertions.assertThat(responseBody).matches {
+              applicationEntity.id == it.id &&
+                applicationEntity.crn == it.person.crn &&
+                applicationEntity.createdAt.toInstant() == it.createdAt &&
+                applicant == it.submittedBy &&
+                applicationEntity.submittedAt?.toInstant() == it.submittedAt &&
+                serializableToJsonNode(applicationEntity.document) == serializableToJsonNode(it.document) &&
+                newestJsonSchema.id == it.schemaVersion &&
+                !it.outdatedSchema &&
+                assessmentEntity.assessorName == it.assessment.assessorName &&
+                assessmentEntity.nacroReferralId == it.assessment.nacroReferralId
+            }
+
+            Assertions.assertThat(responseBody.assessment.statusUpdates!!.map { update -> update.label })
+              .isEqualTo(listOf("3rd update", "2nd update", "1st update"))
+
+            Assertions.assertThat(responseBody.assessment.statusUpdates!!.map { update -> update.label })
+              .isEqualTo(listOf("3rd update", "2nd update", "1st update"))
+
+            Assertions.assertThat(
+              responseBody.assessment.statusUpdates!!.first().statusUpdateDetails!!
+                .map { detail -> detail.label },
+            )
+              .isEqualTo(listOf("Detail on 3rd update"))
+
+            Assertions.assertThat(responseBody.timelineEvents.map { event -> event.label })
+              .isEqualTo(listOf("3rd update", "2nd update", "1st update", "Application submitted"))
+          }
+        }
+      }
+    }
+
+    @Test
+    fun `Assessor cannot view single submitted application on a restricted offender`() {
+      val crn = "CRN321"
+      val nomsNumber = "NOMS321"
+      apDeliusContextAddSingleCaseSummaryToBulkResponse(
+        caseSummary = CaseSummaryFactory()
+          .withCrn(crn)
+          .withNomsId(nomsNumber)
+          .withCurrentRestriction(true)
+          .produce(),
+      )
+      probationOffenderSearchAPIMockSuccessfulOffenderSearchCall(
+        nomsNumber = nomsNumber,
+        response = listOf(
+          ProbationOffenderDetailFactory()
+            .withOtherIds(
+              IDs(
+                nomsNumber = nomsNumber,
+                crn = crn,
+              ),
+            )
+            .withCurrentRestriction(true)
+            .produce(),
+        ),
+      )
+      givenACas2v2Assessor { assessor, jwt ->
+        givenACas2v2DeliusUser { user, _ ->
+          givenAnOffender(
+            offenderDetailsConfigBlock = {
+              withCrn(crn)
+              withNomsNumber(nomsNumber)
+              withCurrentRestriction(true)
+            },
+          ) { offenderDetails, _ ->
+            cas2v2ApplicationJsonSchemaRepository.deleteAll()
+
+            val newestJsonSchema = cas2v2ApplicationJsonSchemaEntityFactory
+              .produceAndPersist {
+                withAddedAt(OffsetDateTime.parse("2025-01-17T12:45:00+01:00"))
+                withSchema(
+                  schema,
+                )
+              }
+
+            val applicationEntity = cas2v2ApplicationEntityFactory.produceAndPersist {
+              withApplicationSchema(newestJsonSchema)
+              withCrn(offenderDetails.otherIds.crn)
+              withCreatedByUser(user)
+              withSubmittedAt(OffsetDateTime.parse("2022-09-21T12:45:00+01:00"))
+              withData(
+                """
+            {
+               "thingId": 123
+            }
+            """,
+              )
+            }
+
+            webTestClient.get()
+              .uri("/cas2v2/submissions/${applicationEntity.id}")
+              .header("Authorization", "Bearer $jwt")
+              .exchange()
+              .expectStatus()
+              .isForbidden
+          }
+        }
+      }
+    }
+
+    @Test
+    fun `Assessor can view single submitted application on an excluded offender`() {
+      val crn = "CRN321"
+      val nomsNumber = "NOMS321"
+      apDeliusContextAddSingleCaseSummaryToBulkResponse(
+        caseSummary = CaseSummaryFactory()
+          .withCrn(crn)
+          .withNomsId(nomsNumber)
+          .withCurrentExclusion(true)
+          .produce(),
+      )
+      probationOffenderSearchAPIMockSuccessfulOffenderSearchCall(
+        nomsNumber = nomsNumber,
+        response = listOf(
+          ProbationOffenderDetailFactory()
+            .withOtherIds(
+              IDs(
+                nomsNumber = nomsNumber,
+                crn = crn,
+              ),
+            )
+            .withCurrentExclusion(true)
+            .produce(),
+        ),
+      )
+      givenACas2v2Assessor { assessor, jwt ->
+        givenACas2v2DeliusUser { user, _ ->
+          givenAnOffender(
+            offenderDetailsConfigBlock = {
+              withCrn(crn)
+              withNomsNumber(nomsNumber)
+              withCurrentExclusion(true)
             },
           ) { offenderDetails, _ ->
             cas2v2ApplicationJsonSchemaRepository.deleteAll()

@@ -9,17 +9,14 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.ForbiddenProblem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.NotFoundProblem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas2v2.Cas2v2OffenderSearchResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas2v2.Cas2v2OffenderService
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas2v2.Cas2v2UserService
 
 @Service("Cas2v2PeopleController")
 class Cas2v2PeopleController(
-  private val cas2v2UserService: Cas2v2UserService,
   private val cas2v2OffenderService: Cas2v2OffenderService,
 ) : PeopleCas2v2Delegate {
 
   override fun searchByCrnGet(crn: String): ResponseEntity<Person> {
-    val user = cas2v2UserService.getUserForRequest()
-    when (val cas2v2OffenderSearchResult = cas2v2OffenderService.getPersonByCrn(crn, user)) {
+    when (val cas2v2OffenderSearchResult = cas2v2OffenderService.getPersonByCrn(crn)) {
       is Cas2v2OffenderSearchResult.NotFound -> throw NotFoundProblem(crn, "Offender")
       is Cas2v2OffenderSearchResult.Unknown -> throw cas2v2OffenderSearchResult.throwable ?: BadRequestProblem(errorDetail = "Could not retrieve person info for CRN: $crn")
       is Cas2v2OffenderSearchResult.Forbidden -> throw ForbiddenProblem()
@@ -28,8 +25,7 @@ class Cas2v2PeopleController(
   }
 
   override fun searchByNomisIdGet(nomsNumber: String): ResponseEntity<Person> {
-    val user = cas2v2UserService.getUserForRequest()
-    when (val cas2v2OffenderSearchResult = cas2v2OffenderService.getPersonByNomsNumber(nomsNumber, user)) {
+    when (val cas2v2OffenderSearchResult = cas2v2OffenderService.getPersonByNomsNumber(nomsNumber)) {
       is Cas2v2OffenderSearchResult.NotFound -> throw NotFoundProblem(nomsNumber, "Offender")
       is Cas2v2OffenderSearchResult.Forbidden -> throw ForbiddenProblem()
       is Cas2v2OffenderSearchResult.Unknown -> throw cas2v2OffenderSearchResult.throwable ?: BadRequestProblem(errorDetail = "Could not retrieve person info for Prison Number: $nomsNumber")
