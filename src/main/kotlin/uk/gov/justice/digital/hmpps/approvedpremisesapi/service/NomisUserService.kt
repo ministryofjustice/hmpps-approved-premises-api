@@ -7,8 +7,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.NomisUserRolesApi
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.NomisUserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.NomisUserRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.nomisuserroles.NomisUserDetail
-import java.util.*
-import kotlin.jvm.optionals.getOrElse
+import java.util.UUID
 
 @Service
 class NomisUserService(
@@ -22,25 +21,6 @@ class NomisUserService(
     val username = authenticatedPrincipal.name
 
     return getUserForUsername(username, jwt)
-  }
-
-  fun getNomisUserByIdAndAddIfMissing(id: UUID): NomisUserEntity {
-    return userRepository.findById(id).getOrElse {
-      // TODO
-      // this should call the nomis-user-roles api - /users/staff/{staffId} to get the staffDetail
-      // and create a user if the user is found to be missing from this repository.
-      // need to check permissions/roles before implementing
-      throw RuntimeException("No user for id $id found")
-    }
-  }
-
-  fun getNomisUserByStaffIdAndAddIfMissing(staffId: Long): NomisUserEntity {
-    return userRepository.findByNomisStaffId(staffId) ?:
-    // TODO
-    // this should call the nomis-user-roles api - /users/staff/{staffId} to get the staffDetail
-    // and create a user if the user is found to be missing from this repository.
-    // need to check permissions/roles before implementing
-    throw RuntimeException("No user for staffId $staffId found")
   }
 
   @Transactional

@@ -25,6 +25,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas2Applicati
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.NomisUserRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.prisonsapi.Agency
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.EmailNotificationService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.NomisUserService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas2.Cas2EmailService
 import java.time.OffsetDateTime
 import java.util.*
@@ -75,7 +76,7 @@ class Cas2EmailServiceTest {
       "link" to nomsNumber,
     )
     every {
-      emailNotificationService.sendCas2Email(
+      emailNotificationService.sendEmail(
         eq("tbc"),
         eq(templateId),
         eq(personalisationForNacro),
@@ -87,16 +88,18 @@ class Cas2EmailServiceTest {
       agency,
     )
 
-    emailService.sendLocationChangedEmailToNacro(application, prisoner)
+    emailService.sendLocationChangedEmailToNacro(application, nomsNumber, prisoner)
 
     verify(exactly = 1) {
-      emailNotificationService.sendCas2Email(
+      emailNotificationService.sendEmail(
         eq("tbc"),
         eq(templateId),
         eq(personalisationForNacro),
       )
     }
     verify(exactly = 1) { notifyConfig.templates.toNacroApplicationTransferredToAnotherPrison }
+    verify(exactly = 1) { prisonsApiClient.getAgencyDetails(eq(applicationAssignment.prisonCode)) }
+
   }
 
   @Test
@@ -108,7 +111,7 @@ class Cas2EmailServiceTest {
       "link" to "NOMSABC",
     )
     every {
-      emailNotificationService.sendCas2Email(
+      emailNotificationService.sendEmail(
         eq("tbc"),
         eq(templateId),
         eq(personalisationWithLink),
@@ -116,10 +119,10 @@ class Cas2EmailServiceTest {
     } returns Unit
     every { notifyConfig.templates.toReceivingPomUnitApplicationTransferredToAnotherPrison } returns templateId
 
-    emailService.sendLocationChangedEmailToReceivingPomUnit(application.id, nomsNumber, prisoner)
+    emailService.sendLocationChangedEmailToReceivingPomUnit(application, nomsNumber)
 
     verify(exactly = 1) {
-      emailNotificationService.sendCas2Email(
+      emailNotificationService.sendEmail(
         eq("tbc"),
         eq(templateId),
         eq(personalisationWithLink),
@@ -133,7 +136,7 @@ class Cas2EmailServiceTest {
     application.applicationAssignments.add(applicationAssignment)
 
     every {
-      emailNotificationService.sendCas2Email(
+      emailNotificationService.sendEmail(
         eq("tbc"),
         eq(templateId),
         eq(personalisation),
@@ -144,7 +147,7 @@ class Cas2EmailServiceTest {
     emailService.sendLocationChangedEmailToTransferringPomUnit(application.id, nomsNumber, prisoner)
 
     verify(exactly = 1) {
-      emailNotificationService.sendCas2Email(
+      emailNotificationService.sendEmail(
         eq("tbc"),
         eq(templateId),
         eq(personalisation),
@@ -158,7 +161,7 @@ class Cas2EmailServiceTest {
     application.applicationAssignments.add(applicationAssignment)
 
     every {
-      emailNotificationService.sendCas2Email(
+      emailNotificationService.sendEmail(
         eq(user.email!!),
         eq(templateId),
         eq(personalisation),
@@ -170,7 +173,7 @@ class Cas2EmailServiceTest {
     emailService.sendLocationChangedEmailToTransferringPom(application, nomsNumber, prisoner)
 
     verify(exactly = 1) {
-      emailNotificationService.sendCas2Email(
+      emailNotificationService.sendEmail(
         eq(user.email!!),
         eq(templateId),
         eq(personalisation),
@@ -196,7 +199,7 @@ class Cas2EmailServiceTest {
       ),
     )
 
-    every { emailNotificationService.sendCas2Email(any(), any(), any()) } returns Unit
+    every { emailNotificationService.sendEmail(any(), any(), any()) } returns Unit
     every { notifyConfig.templates.toTransferringPomApplicationTransferredToAnotherPrison } returns templateId
     every { nomisUserRepository.findById(eq(userWithNoEmail.id)) } returns Optional.of(userWithNoEmail)
     val slot = slot<String>()
@@ -208,7 +211,7 @@ class Cas2EmailServiceTest {
 
     emailService.sendLocationChangedEmailToTransferringPom(applicationWithNoEmail, nomsNumber, prisoner)
 
-    verify(exactly = 0) { emailNotificationService.sendCas2Email(any(), any(), any()) }
+    verify(exactly = 0) { emailNotificationService.sendEmail(any(), any(), any()) }
     verify(exactly = 1) { notifyConfig.templates.toTransferringPomApplicationTransferredToAnotherPrison }
     verify(exactly = 1) { nomisUserRepository.findById(eq(userWithNoEmail.id)) }
     verify(exactly = 1) { Sentry.captureMessage(any()) }
@@ -220,10 +223,10 @@ class Cas2EmailServiceTest {
   @Test
   fun `do not send email as old POM is not in NomisUsers Table`() {
     application.applicationAssignments.add(applicationAssignment)
-
-    every { emailNotificationService.sendCas2Email(any(), any(), any()) } returns Unit
+    val errorMessage = "No user for id ${user.id} found"
+    every { emailNotificationService.sendEmail(any(), any(), any()) } returns Unit
     every { notifyConfig.templates.toTransferringPomApplicationTransferredToAnotherPrison } returns templateId
-    every { nomisUserRepository.findById(eq(user.id)) } returns Optional.empty()
+    every { nomisUserRepository.findById(eq(user.id)) } throws RuntimeException(errorMessage)
 
     val exception = assertThrows<RuntimeException> {
       emailService.sendLocationChangedEmailToTransferringPom(
@@ -232,16 +235,16 @@ class Cas2EmailServiceTest {
         prisoner,
       )
     }
-    assertThat(exception.message).isEqualTo("No user for ${user.id} found")
+    assertThat(exception.message).isEqualTo(errorMessage)
     application.applicationAssignments.add(applicationAssignment)
 
-    verify(exactly = 0) { emailNotificationService.sendCas2Email(any(), any(), any()) }
+    verify(exactly = 0) { emailNotificationService.sendEmail(any(), any(), any()) }
     verify(exactly = 0) { notifyConfig.templates.toTransferringPomApplicationTransferredToAnotherPrison }
     verify(exactly = 1) { nomisUserRepository.findById(eq(user.id)) }
   }
 
   @Test
-  fun `do not send email as no application assignments allocatedPomUserId as not null`() {
+  fun `do not send email as no application assignments allocatedPomUserId is not null`() {
     val applicationAssignmentWithNullPomUserId = Cas2ApplicationAssignmentEntity(
       id = UUID.randomUUID(),
       application = application,
@@ -251,10 +254,11 @@ class Cas2EmailServiceTest {
     )
 
     application.applicationAssignments.add(applicationAssignmentWithNullPomUserId)
+    val errorMessage = "Collection contains no element matching the predicate."
 
-    every { emailNotificationService.sendCas2Email(any(), any(), any()) } returns Unit
+    every { emailNotificationService.sendEmail(any(), any(), any()) } returns Unit
     every { notifyConfig.templates.toTransferringPomApplicationTransferredToAnotherPrison } returns templateId
-    every { nomisUserRepository.findById(any()) } returns Optional.empty()
+    every { nomisUserRepository.findById(any()) } throws RuntimeException(errorMessage)
 
     val exception = assertThrows<RuntimeException> {
       emailService.sendLocationChangedEmailToTransferringPom(
@@ -263,9 +267,9 @@ class Cas2EmailServiceTest {
         prisoner,
       )
     }
-    assertThat(exception.message).isEqualTo("Collection contains no element matching the predicate.")
+    assertThat(exception.message).isEqualTo(errorMessage)
 
-    verify(exactly = 0) { emailNotificationService.sendCas2Email(any(), any(), any()) }
+    verify(exactly = 0) { emailNotificationService.sendEmail(any(), any(), any()) }
     verify(exactly = 0) { notifyConfig.templates.toTransferringPomApplicationTransferredToAnotherPrison }
     verify(exactly = 0) { nomisUserRepository.findById(any()) }
   }

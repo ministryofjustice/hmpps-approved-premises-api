@@ -63,7 +63,8 @@ class NotifyTemplates {
   val toTransferringPomApplicationTransferredToAnotherPrison = "5adb6390-0c95-4458-a8b5-3e61ff780715"
   val toTransferringPomUnitApplicationTransferredToAnotherPrison = "6b427e8a-eb21-43a3-89c3-f6a147b20c39"
   val toReceivingPomUnitApplicationTransferredToAnotherPrison = "1e5d98e4-efdf-428e-bca9-fd5daadd27aa"
-  val toReceivingPomApplicationTransferredToAnotherPrison = "289d4004-3c95-4c23-b0fa-9187d9da8eaf"
+  val toReceivingPomApplicationTransferredToAnotherPom = "289d4004-3c95-4c23-b0fa-9187d9da8eaf"
+  val toNacroApplicationTransferredToAnotherPom = "e36b226e-99f5-4d1f-83d3-12ef9a814a5b"
   val toNacroApplicationTransferredToAnotherPrison = "e292b246-0d4e-4636-81f0-933bcf4dadd0"
 }
 

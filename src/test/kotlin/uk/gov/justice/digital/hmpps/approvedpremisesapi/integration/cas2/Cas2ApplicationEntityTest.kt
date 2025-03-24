@@ -49,6 +49,63 @@ class Cas2ApplicationEntityTest : IntegrationTestBase() {
         assertThat(assignments[3].prisonCode).isEqualTo("LON1")
         assertThat(retrievedApplication.currentPrisonCode).isEqualTo("LON4")
         assertThat(retrievedApplication.currentPomUserId).isEqualTo(null)
+        assertThat(assignment2.id).isEqualTo(assignments[0].id)
+        assertThat(assignment3.id).isEqualTo(assignments[1].id)
+        assertThat(assignment4.id).isEqualTo(assignments[2].id)
+        assertThat(assignment1.id).isEqualTo(assignments[3].id)
+        assertThat(retrievedApplication.currentPrisonCode).isEqualTo(assignment2.prisonCode)
+        assertThat(retrievedApplication.currentPomUserId).isEqualTo(assignment2.allocatedPomUserId)
+        assertThat(retrievedApplication.mostRecentPomUserId).isEqualTo(assignment2.allocatedPomUserId)
+      }
+    }
+  }
+
+  @Test
+  fun `test that most recent pom id is given`() {
+    val applicationSchema = cas2ApplicationJsonSchemaEntityFactory.produceAndPersist {
+      withAddedAt(OffsetDateTime.now())
+      withId(UUID.randomUUID())
+    }
+
+    givenACas2PomUser { userEntity, jwt ->
+      givenAnOffender { offenderDetails, _ ->
+        val application = cas2ApplicationEntityFactory.produceAndPersist {
+          withApplicationSchema(applicationSchema)
+          withCreatedByUser(userEntity)
+          withSubmittedAt(OffsetDateTime.now())
+          withCrn(offenderDetails.otherIds.crn)
+          withCreatedAt(OffsetDateTime.now().minusDays(28))
+          withConditionalReleaseDate(LocalDate.now().plusDays(1))
+        }
+
+        val assignment1 = Cas2ApplicationAssignmentEntity(
+          id = UUID.randomUUID(),
+          application = application,
+          prisonCode = "LON1",
+          createdAt = OffsetDateTime.now().minusDays(3),
+          allocatedPomUserId = userEntity.id,
+        )
+
+        val assignment2 = Cas2ApplicationAssignmentEntity(
+          id = UUID.randomUUID(),
+          application = application,
+          prisonCode = "LON2",
+          createdAt = OffsetDateTime.now(),
+          allocatedPomUserId = null,
+        )
+
+        application.applicationAssignments.add(assignment1)
+        application.applicationAssignments.add(assignment2)
+
+        cas2ApplicationRepository.save(application)
+
+        val retrievedApplication = cas2ApplicationRepository.findById(application.id).get()
+        val assignments = retrievedApplication.applicationAssignments
+
+        assertThat(assignments.size).isEqualTo(2)
+        assertThat(assignment2.id).isEqualTo(assignments[0].id)
+        assertThat(assignment1.id).isEqualTo(assignments[1].id)
+        assertThat(retrievedApplication.mostRecentPomUserId).isEqualTo(assignment1.allocatedPomUserId)
       }
     }
   }
