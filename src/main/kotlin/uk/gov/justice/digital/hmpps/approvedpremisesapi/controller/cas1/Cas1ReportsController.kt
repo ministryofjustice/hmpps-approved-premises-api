@@ -51,12 +51,6 @@ class Cas1ReportsController(
     )
 
     return when (reportName) {
-      Cas1ReportName.applications -> generateStreamingResponse(
-        contentType = ContentType.XLSX,
-        fileName = createCas1ReportName("applications", year, month, ContentType.XLSX),
-      ) { outputStream ->
-        cas1ReportService.createApplicationReport(monthSpecificReportParams, outputStream)
-      }
       Cas1ReportName.applicationsV2 -> generateStreamingResponse(
         contentType = ContentType.CSV,
         fileName = createCas1ReportName("applications", year, month, ContentType.CSV),
@@ -81,18 +75,6 @@ class Cas1ReportsController(
         fileName = createCas1ReportName("out-of-service-beds", year, month, ContentType.XLSX),
       ) { outputStream ->
         cas1ReportService.createOutOfServiceBedReport(monthSpecificReportParams, outputStream)
-      }
-      Cas1ReportName.placementApplications -> return generateStreamingResponse(
-        contentType = ContentType.XLSX,
-        fileName = createCas1ReportName("placement-applications", year, month, ContentType.XLSX),
-      ) { outputStream ->
-        cas1ReportService.createPlacementApplicationReport(monthSpecificReportParams, outputStream)
-      }
-      Cas1ReportName.placementMatchingOutcomes -> generateStreamingResponse(
-        contentType = ContentType.XLSX,
-        fileName = createCas1ReportName("placement-matching-outcomes", year, month, ContentType.XLSX),
-      ) { outputStream ->
-        cas1ReportService.createPlacementMatchingOutcomesReport(monthSpecificReportParams, outputStream)
       }
       Cas1ReportName.requestsForPlacement -> generateStreamingResponse(
         contentType = ContentType.CSV,

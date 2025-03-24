@@ -707,13 +707,10 @@ components:
     Cas1ReportName:
       type: string
       enum:
-        - applications
         - applicationsV2
         - applicationsV2WithPii
         - dailyMetrics
         - outOfServiceBeds
-        - placementApplications
-        - placementMatchingOutcomes
         - placementMatchingOutcomesV2
         - placementMatchingOutcomesV2WithPii
         - requestsForPlacement
