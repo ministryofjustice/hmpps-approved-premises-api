@@ -3,24 +3,18 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1
 import org.apache.poi.ss.usermodel.WorkbookFactory
 import org.jetbrains.kotlinx.dataframe.io.writeExcel
 import org.springframework.stereotype.Service
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApplicationEntityReportRowRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApplicationRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas1OutOfServiceBedRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DomainEventRepository
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementApplicationEntityReportRowRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas1.Cas1ApplicationV2ReportRepository
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas1.Cas1PlacementMatchingOutcomesReportRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas1.Cas1PlacementMatchingOutcomesV2ReportRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas1.Cas1PlacementReportRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas1.Cas1RequestForPlacementReportRepository
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.generator.ApplicationReportGenerator
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.generator.Cas1OutOfServiceBedsReportGenerator
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.generator.Cas1OutOfServiceBedsReportGenerator.Cas1BedIdentifier
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.generator.DailyMetricsReportGenerator
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.generator.PlacementApplicationReportGenerator
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.model.ApprovedPremisesApplicationMetricsSummaryDto
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.util.CsvJdbcResultSetConsumer
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.util.ExcelJdbcResultSetConsumer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.toLocalDate
 import java.io.OutputStream
 import java.time.LocalDate
@@ -30,15 +24,12 @@ import java.time.temporal.TemporalAdjusters
 @Service
 class Cas1ReportService(
   private val applicationRepository: ApplicationRepository,
-  private val applicationEntityReportRowRepository: ApplicationEntityReportRowRepository,
-  private val cas1PlacementMatchingOutcomesReportRepository: Cas1PlacementMatchingOutcomesReportRepository,
   private val cas1PlacementMatchingOutcomesV2ReportRepository: Cas1PlacementMatchingOutcomesV2ReportRepository,
   private val cas1ApplicationV2ReportRepository: Cas1ApplicationV2ReportRepository,
   private val cas1PlacementRequestReportRepository: Cas1RequestForPlacementReportRepository,
   private val domainEventRepository: DomainEventRepository,
   private val cas1OutOfServiceBedRepository: Cas1OutOfServiceBedRepository,
   private val domainEventService: Cas1DomainEventService,
-  private val placementApplicationEntityReportRowRepository: PlacementApplicationEntityReportRowRepository,
   private val cas1PlacementReportRepository: Cas1PlacementReportRepository,
 ) {
 
@@ -53,16 +44,6 @@ class Cas1ReportService(
       "last_appealed_assessor_username",
       "matcher_username",
     )
-  }
-
-  @Deprecated("This report is no longer supported and should be removed for CAS1 once we confirmed all users have migrated to new reports")
-  fun createApplicationReport(properties: MonthSpecificReportParams, outputStream: OutputStream) {
-    ApplicationReportGenerator()
-      .createReport(applicationEntityReportRowRepository.generateApprovedPremisesReportRowsForCalendarMonth(properties.month, properties.year), properties)
-      .writeExcel(
-        outputStream = outputStream,
-        factory = WorkbookFactory.create(true),
-      )
   }
 
   fun createApplicationReportV2(
@@ -119,16 +100,6 @@ class Cas1ReportService(
       )
   }
 
-  @Deprecated("This report is no longer supported and should be removed for CAS1 once we confirmed all users have migrated to new reports")
-  fun createPlacementApplicationReport(properties: MonthSpecificReportParams, outputStream: OutputStream) {
-    PlacementApplicationReportGenerator()
-      .createReport(placementApplicationEntityReportRowRepository.generatePlacementApplicationEntityReportRowsForCalendarMonth(properties.month, properties.year), properties)
-      .writeExcel(
-        outputStream = outputStream,
-        factory = WorkbookFactory.create(true),
-      )
-  }
-
   fun createRequestForPlacementReport(
     properties: MonthSpecificReportParams,
     includePii: Boolean,
@@ -149,22 +120,6 @@ class Cas1ReportService(
         endDateTimeInclusive = getLastSecondOfMonth(properties.year, properties.month),
         consumer,
       )
-    }
-  }
-
-  @Deprecated("This report is no longer supported and should be removed for CAS1 once we confirmed all users have migrated to new reports")
-  fun createPlacementMatchingOutcomesReport(
-    properties: MonthSpecificReportParams,
-    outputStream: OutputStream,
-  ) {
-    ExcelJdbcResultSetConsumer().use { consumer ->
-      cas1PlacementMatchingOutcomesReportRepository.generateReportRowsForExpectedArrivalMonth(
-        properties.month,
-        properties.year,
-        consumer,
-      )
-
-      consumer.writeBufferedWorkbook(outputStream)
     }
   }
 
