@@ -8,6 +8,7 @@ import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.EnumSource
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApprovedPremisesUser
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.DatePeriod
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Person
@@ -39,6 +40,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.PlacementRequest
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.PlacementRequirementsEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ProbationRegionEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.UserEntityFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.JpaApType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementRequestWithdrawalReason
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PersonInfoResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.AssessmentTransformer
@@ -150,6 +152,7 @@ class PlacementRequestTransformerTest {
             CharacteristicEntityFactory().withPropertyName("somethingElse").produce(),
           ),
         )
+        .withApType(JpaApType.ESAP)
         .produce()
 
       val placementRequestEntity = placementRequestFactory
@@ -166,7 +169,7 @@ class PlacementRequestTransformerTest {
         PlacementRequest(
           id = placementRequestEntity.id,
           gender = placementRequirementsEntity.gender,
-          type = placementRequirementsEntity.apType,
+          type = ApType.esap,
           expectedArrival = placementRequestEntity.expectedArrival,
           duration = placementRequestEntity.duration,
           location = placementRequirementsEntity.postcodeDistrict.outcode,
