@@ -175,27 +175,27 @@ class Cas2v2ReportsTest : Cas2v2IntegrationTestBase() {
       val event1ToSave = Cas2ApplicationSubmittedEvent(
         id = event1Id,
         timestamp = Instant.now(),
-        eventType = EventType.applicationSubmitted,
+        eventType = EventType.cas2v2ApplicationSubmitted,
         eventDetails = event1Details,
       )
 
       val event2ToSave = Cas2ApplicationSubmittedEvent(
         id = event2Id,
         timestamp = Instant.now(),
-        eventType = EventType.applicationSubmitted,
+        eventType = EventType.cas2v2ApplicationSubmitted,
         eventDetails = event2Details,
       )
 
       val event3ToSave = Cas2ApplicationSubmittedEvent(
         id = event3Id,
         timestamp = Instant.now(),
-        eventType = EventType.applicationSubmitted,
+        eventType = EventType.cas2v2ApplicationSubmitted,
         eventDetails = event3Details,
       )
 
       val event1 = domainEventFactory.produceAndPersist {
         withId(event1Id)
-        withType(DomainEventType.CAS2_APPLICATION_SUBMITTED)
+        withType(DomainEventType.CAS2V2_APPLICATION_SUBMITTED)
         withData(objectMapper.writeValueAsString(event1ToSave))
         withOccurredAt(oldSubmitted)
         withApplicationId(applicationId1)
@@ -203,7 +203,7 @@ class Cas2v2ReportsTest : Cas2v2IntegrationTestBase() {
 
       val event2 = domainEventFactory.produceAndPersist {
         withId(event2Id)
-        withType(DomainEventType.CAS2_APPLICATION_SUBMITTED)
+        withType(DomainEventType.CAS2V2_APPLICATION_SUBMITTED)
         withData(objectMapper.writeValueAsString(event2ToSave))
         withOccurredAt(newerSubmitted)
         withApplicationId(applicationId2)
@@ -213,7 +213,7 @@ class Cas2v2ReportsTest : Cas2v2IntegrationTestBase() {
       // outside the time range
       domainEventFactory.produceAndPersist {
         withId(event3Id)
-        withType(DomainEventType.CAS2_APPLICATION_SUBMITTED)
+        withType(DomainEventType.CAS2V2_APPLICATION_SUBMITTED)
         withData(objectMapper.writeValueAsString(event3ToSave))
         withOccurredAt(tooOldSubmitted)
         withApplicationId(applicationId3)
@@ -273,7 +273,7 @@ class Cas2v2ReportsTest : Cas2v2IntegrationTestBase() {
 
     @Test
     fun `streams spreadsheet of cas2v2 Cas2SubmittedApplicationEvents, with application origin`() {
-      seedApplications(DomainEventType.CAS2_APPLICATION_SUBMITTED, EventType.applicationSubmitted)
+      seedApplications(DomainEventType.CAS2V2_APPLICATION_SUBMITTED, EventType.applicationSubmitted)
 
       val jwt = jwtAuthHelper.createClientCredentialsJwt(
         username = "username",
