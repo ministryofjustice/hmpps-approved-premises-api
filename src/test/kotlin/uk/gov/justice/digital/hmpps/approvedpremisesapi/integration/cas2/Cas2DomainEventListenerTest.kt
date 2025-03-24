@@ -19,6 +19,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.given
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAnOffender
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas2ApplicationAssignmentEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas2ApplicationAssignmentRepository
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.prisonsapi.Agency
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas2.Cas2DomainEventListener
 import uk.gov.justice.hmpps.sqs.HmppsQueueService
 import uk.gov.justice.hmpps.sqs.MissingQueueException
@@ -164,26 +165,57 @@ class Cas2DomainEventListenerTest : IntegrationTestBase() {
         val url = "/allocation/${application.nomsNumber}/primary_pom"
         val detailUrl = managePomCasesBaseUrl + url
 
-        mockSuccessfulGetCallWithJsonResponse(url = url, responseBody = pomAllocation)
-
+        val olderApplicationAssignment = Cas2ApplicationAssignmentEntity(
+          id = UUID.randomUUID(),
+          application = application,
+          prisonCode = "NEW",
+          allocatedPomUserId = null,
+          createdAt = occurredAt.toOffsetDateTime(),
+        )
         val oldApplicationAssignment = Cas2ApplicationAssignmentEntity(
           id = UUID.randomUUID(),
           application = application,
           prisonCode = "LON",
-          allocatedPomUserId = null,
-          createdAt = occurredAt,
+          allocatedPomUserId = userEntity.id,
+          createdAt = occurredAt.toOffsetDateTime(),
         )
         applicationAssignmentRepository.save(
           oldApplicationAssignment,
+        )
+        applicationAssignmentRepository.save(
+          olderApplicationAssignment,
+        )
+
+        mockSuccessfulGetCallWithJsonResponse(
+          url = url,
+          responseBody = pomAllocation,
+        )
+
+        val newAgency =
+          Agency(agencyId = oldApplicationAssignment.prisonCode, description = "HMS LONDON", agencyType = "prison")
+
+        mockSuccessfulGetCallWithJsonResponse(
+          url = "/api/agencies/${newAgency.agencyId}",
+          responseBody = newAgency,
+        )
+
+        val oldAgency =
+          Agency(agencyId = olderApplicationAssignment.prisonCode, description = "HMS NEWCASTLE", agencyType = "prison")
+
+        mockSuccessfulGetCallWithJsonResponse(
+          url = "/api/agencies/${oldAgency.agencyId}",
+          responseBody = oldAgency,
         )
 
         @SuppressWarnings("MaxLineLength")
         val event =
           "{\"eventType\":\"$eventType\",\"detailUrl\":\"$detailUrl\",\"occurredAt\":\"$occurredAt\",\"additionalInformation\": {\"categoriesChanged\": [\"LOCATION\"]},\"personReference\":{\"identifiers\":[{\"type\":\"NOMS\",\"value\":\"${application.nomsNumber}\"}]}}"
         publishMessageToTopic(eventType, event)
-        await().until { applicationAssignmentRepository.count().toInt() == 2 }
+        await().until { applicationAssignmentRepository.count().toInt() == 3 }
         val locations = applicationAssignmentRepository.findAll()
         assert(locations.last().prisonCode == pomAllocation.prison.code)
+
+
       }
     }
   }
