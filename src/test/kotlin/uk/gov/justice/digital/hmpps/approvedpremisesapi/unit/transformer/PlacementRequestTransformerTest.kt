@@ -11,6 +11,7 @@ import org.junit.jupiter.params.provider.EnumSource
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApprovedPremisesUser
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.DatePeriod
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Gender
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Person
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PersonRisks
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PlacementCriteria
@@ -41,6 +42,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.PlacementRequire
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ProbationRegionEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.UserEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.JpaApType
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.JpaGender
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementRequestWithdrawalReason
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PersonInfoResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.AssessmentTransformer
@@ -153,6 +155,7 @@ class PlacementRequestTransformerTest {
           ),
         )
         .withApType(JpaApType.ESAP)
+        .withGender(JpaGender.MALE)
         .produce()
 
       val placementRequestEntity = placementRequestFactory
@@ -168,8 +171,8 @@ class PlacementRequestTransformerTest {
       assertThat(result).isEqualTo(
         PlacementRequest(
           id = placementRequestEntity.id,
-          gender = placementRequirementsEntity.gender,
           type = ApType.esap,
+          gender = Gender.male,
           expectedArrival = placementRequestEntity.expectedArrival,
           duration = placementRequestEntity.duration,
           location = placementRequirementsEntity.postcodeDistrict.outcode,

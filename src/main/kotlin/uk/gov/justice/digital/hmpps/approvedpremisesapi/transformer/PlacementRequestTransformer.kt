@@ -32,7 +32,7 @@ class PlacementRequestTransformer(
 
   fun transformJpaToApi(jpa: PlacementRequestEntity, personInfo: PersonInfoResult): PlacementRequest = PlacementRequest(
     id = jpa.id,
-    gender = jpa.placementRequirements.gender,
+    gender = jpa.placementRequirements.gender.apiType,
     type = jpa.placementRequirements.apType.apiType,
     expectedArrival = jpa.expectedArrival,
     duration = jpa.duration,

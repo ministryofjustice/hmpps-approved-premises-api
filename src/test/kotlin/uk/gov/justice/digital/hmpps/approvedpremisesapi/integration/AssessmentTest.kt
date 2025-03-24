@@ -64,6 +64,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DomainAssessm
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DomainAssessmentSummaryStatus.NOT_STARTED
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DomainEventType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.JpaApType
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.JpaGender
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ProbationDeliveryUnitEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TemporaryAccommodationApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TemporaryAccommodationApplicationJsonSchemaEntity
@@ -2101,7 +2102,7 @@ class AssessmentTest : IntegrationTestBase() {
               )
 
               val placementRequirements = PlacementRequirements(
-                gender = Gender.male,
+                gender = Gender.female,
                 type = ApType.normal,
                 location = postcodeDistrict.outcode,
                 radius = 50,
@@ -2167,7 +2168,7 @@ class AssessmentTest : IntegrationTestBase() {
               val persistedPlacementRequirements = persistedPlacementRequest.placementRequirements
 
               assertThat(persistedPlacementRequirements.apType).isEqualTo(JpaApType.NORMAL)
-              assertThat(persistedPlacementRequirements.gender).isEqualTo(placementRequirements.gender)
+              assertThat(persistedPlacementRequirements.gender).isEqualTo(JpaGender.FEMALE)
               assertThat(persistedPlacementRequirements.postcodeDistrict.outcode).isEqualTo(placementRequirements.location)
               assertThat(persistedPlacementRequirements.radius).isEqualTo(placementRequirements.radius)
 
@@ -2279,7 +2280,7 @@ class AssessmentTest : IntegrationTestBase() {
                 placementRequirementsRepository.findTopByApplicationOrderByCreatedAtDesc(application)!!
 
               assertThat(persistedPlacementRequirements.apType).isEqualTo(JpaApType.NORMAL)
-              assertThat(persistedPlacementRequirements.gender).isEqualTo(placementRequirements.gender)
+              assertThat(persistedPlacementRequirements.gender).isEqualTo(JpaGender.MALE)
               assertThat(persistedPlacementRequirements.postcodeDistrict.outcode).isEqualTo(placementRequirements.location)
               assertThat(persistedPlacementRequirements.radius).isEqualTo(placementRequirements.radius)
 

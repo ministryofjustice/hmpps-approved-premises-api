@@ -2,11 +2,11 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.factory
 
 import io.github.bluegroundltd.kfactory.Factory
 import io.github.bluegroundltd.kfactory.Yielded
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Gender
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesAssessmentEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.CharacteristicEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.JpaApType
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.JpaGender
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementRequirementsEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PostCodeDistrictEntity
 import java.time.OffsetDateTime
@@ -15,7 +15,7 @@ import java.util.UUID
 class PlacementRequirementsEntityFactory : Factory<PlacementRequirementsEntity> {
 
   private var id: Yielded<UUID> = { UUID.randomUUID() }
-  private var gender: Yielded<Gender> = { Gender.male }
+  private var gender: Yielded<JpaGender> = { JpaGender.MALE }
   private var apType: Yielded<JpaApType> = { JpaApType.NORMAL }
   private var postcodeDistrict: Yielded<PostCodeDistrictEntity> = { PostCodeDistrictEntityFactory().produce() }
   private var application: Yielded<ApprovedPremisesApplicationEntity>? = null
@@ -64,6 +64,10 @@ class PlacementRequirementsEntityFactory : Factory<PlacementRequirementsEntity> 
 
   fun withCreatedAt(createdAt: OffsetDateTime) = apply {
     this.createdAt = { createdAt }
+  }
+
+  fun withGender(gender: JpaGender) = apply {
+    this.gender = { gender }
   }
 
   override fun produce(): PlacementRequirementsEntity = PlacementRequirementsEntity(

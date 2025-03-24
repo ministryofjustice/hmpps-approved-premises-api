@@ -25,8 +25,7 @@ interface PlacementRequirementsRepository : JpaRepository<PlacementRequirementsE
 data class PlacementRequirementsEntity(
   @Id
   val id: UUID,
-  val gender: Gender,
-
+  val gender: JpaGender,
   val apType: JpaApType,
 
   @ManyToOne
@@ -75,5 +74,17 @@ enum class JpaApType(val apiType: ApType) {
 
   companion object {
     fun fromApiType(apiType: ApType) = entries.first { it.apiType == apiType }
+  }
+}
+
+// Do not re-order these elements as we currently use ordinal enum mapping in hibernate
+// (i.e. they're persisted as index numbers, not enum name strings)
+enum class JpaGender(val apiType: Gender) {
+  MALE(Gender.male),
+  FEMALE(Gender.female),
+  ;
+
+  companion object {
+    fun fromApiType(apiType: Gender) = entries.first { it.apiType == apiType }
   }
 }
