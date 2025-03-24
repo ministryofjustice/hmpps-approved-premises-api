@@ -1,5 +1,6 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas1
 
+import io.hypersistence.utils.hibernate.type.json.JsonType
 import jakarta.persistence.Entity
 import jakarta.persistence.EnumType
 import jakarta.persistence.Enumerated
@@ -9,7 +10,7 @@ import jakarta.persistence.JoinColumn
 import jakarta.persistence.ManyToOne
 import jakarta.persistence.PreUpdate
 import jakarta.persistence.Table
-import jakarta.persistence.Version
+import org.hibernate.annotations.Type
 import org.springframework.data.jpa.repository.JpaRepository
 import org.springframework.stereotype.Repository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas1SpaceBookingEntity
@@ -38,24 +39,23 @@ data class Cas1ChangeRequestEntity(
   val spaceBooking: Cas1SpaceBookingEntity,
   @Enumerated(EnumType.STRING)
   val type: ChangeRequestType,
-  val requestJson: String?,
+  @Type(JsonType::class)
+  val requestJson: String,
   @ManyToOne(fetch = FetchType.LAZY)
   @JoinColumn(name = "cas1_change_request_reason_id")
   val requestReason: Cas1ChangeRequestReasonEntity,
+  @Type(JsonType::class)
   var decisionJson: String?,
   @Enumerated(EnumType.STRING)
-  var decision: ChangeRequestDecision,
+  var decision: ChangeRequestDecision?,
   @ManyToOne(fetch = FetchType.LAZY)
   @JoinColumn(name = "cas1_change_request_rejection_reason_id")
-  val rejectionReason: Cas1ChangeRequestRejectionReasonEntity,
+  val rejectionReason: Cas1ChangeRequestRejectionReasonEntity?,
   @ManyToOne(fetch = FetchType.LAZY)
   @JoinColumn(name = "decision_made_by_user_id")
-  val decisionMadeByUser: UserEntity,
+  val decisionMadeByUser: UserEntity?,
   val createdAt: OffsetDateTime,
   var updatedAt: OffsetDateTime,
-  var resolvedAt: OffsetDateTime?,
-  @Version
-  var version: Long = 1,
 ) {
 
   @PreUpdate

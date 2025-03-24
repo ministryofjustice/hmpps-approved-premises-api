@@ -1188,13 +1188,12 @@ components:
           $ref: '#/components/schemas/Cas1ChangeRequestType'
         requestJson:
           type: object
-          additionalProperties:
-            $ref: '_shared.yml#/components/schemas/Unit'
+          $ref: '_shared.yml#/components/schemas/Unit'
         reasonId:
           type: string
           format: uuid
       required:
-        - space_booking_id
+        - spaceBookingId
         - type
         - requestJson
         - reasonId
