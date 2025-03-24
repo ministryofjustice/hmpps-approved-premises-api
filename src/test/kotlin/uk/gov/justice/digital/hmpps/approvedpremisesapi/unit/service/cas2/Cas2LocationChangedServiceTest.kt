@@ -22,6 +22,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.domainevent.Person
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.domainevent.PersonReference
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.InvalidDomainEventException
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas2.Cas2ApplicationService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas2.Cas2EmailService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas2.Cas2LocationChangedService
 import java.time.Instant
 import java.time.ZoneId
@@ -38,6 +39,9 @@ class Cas2LocationChangedServiceTest {
 
   @MockK
   lateinit var prisonerSearchClient: PrisonerSearchClient
+
+  @MockK
+  lateinit var cas2EmailService: Cas2EmailService
 
   @InjectMockKs
   lateinit var locationChangedService: Cas2LocationChangedService
@@ -70,12 +74,20 @@ class Cas2LocationChangedServiceTest {
     every { prisonerSearchClient.getPrisoner(any()) } returns ClientResult.Success(HttpStatus.OK, prisoner)
     every { applicationService.findMostRecentApplication(eq(nomsNumber)) } returns application
     every { applicationRepository.save(any()) } returns application
+    every { cas2EmailService.sendLocationChangedEmailToNacro(any(), eq(nomsNumber), eq(prisoner)) } returns Unit
+    every { cas2EmailService.sendLocationChangedEmailToReceivingPomUnit(any(), eq(nomsNumber)) } returns Unit
+    every { cas2EmailService.sendLocationChangedEmailToTransferringPom(any(), eq(nomsNumber), eq(prisoner)) } returns Unit
+    every { cas2EmailService.sendLocationChangedEmailToTransferringPomUnit(eq(nomsNumber), eq(prisoner)) } returns Unit
 
     locationChangedService.process(locationEvent)
 
     verify(exactly = 1) { prisonerSearchClient.getPrisoner(any()) }
     verify(exactly = 1) { applicationService.findMostRecentApplication(eq(nomsNumber)) }
     verify(exactly = 1) { applicationRepository.save(any()) }
+    verify(exactly = 1) { cas2EmailService.sendLocationChangedEmailToNacro(any(), eq(nomsNumber), eq(prisoner)) }
+    verify(exactly = 1) { cas2EmailService.sendLocationChangedEmailToReceivingPomUnit(any(), eq(nomsNumber)) }
+    verify(exactly = 1) { cas2EmailService.sendLocationChangedEmailToTransferringPom(any(), eq(nomsNumber), eq(prisoner)) }
+    verify(exactly = 1) { cas2EmailService.sendLocationChangedEmailToTransferringPomUnit(eq(nomsNumber), eq(prisoner)) }
   }
 
   @Test

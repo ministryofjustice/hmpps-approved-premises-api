@@ -27,6 +27,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.domainevent.Person
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.InvalidDomainEventException
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas2.Cas2AllocationChangedService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas2.Cas2ApplicationService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas2.Cas2EmailService
 import java.time.Instant
 import java.time.ZoneId
 import java.util.UUID
@@ -45,6 +46,9 @@ class Cas2AllocationChangedServiceTest {
 
   @MockK
   lateinit var nomisUserRepository: NomisUserRepository
+
+  @MockK
+  lateinit var cas2EmailService: Cas2EmailService
 
   @InjectMockKs
   lateinit var allocationChangedService: Cas2AllocationChangedService
@@ -77,12 +81,17 @@ class Cas2AllocationChangedServiceTest {
     every { applicationService.findMostRecentApplication(eq(nomsNumber)) } returns application
     every { applicationRepository.save(any()) } answers { it.invocation.args[0] as Cas2ApplicationEntity }
     every { nomisUserRepository.findByNomisStaffId(eq(pomAllocation.manager.code)) } returns user
+    every { cas2EmailService.sendAllocationChangedEmailToNacro(any(), eq(nomsNumber)) } returns Unit
+    every { cas2EmailService.sendAllocationChangedEmailToReceivingPom(any(), eq(nomsNumber)) } returns Unit
 
     allocationChangedService.process(allocationEvent)
 
     verify(exactly = 1) { managePomCasesClient.getPomAllocation(any()) }
     verify(exactly = 1) { applicationService.findMostRecentApplication(eq(nomsNumber)) }
     verify(exactly = 1) { nomisUserRepository.findByNomisStaffId(eq(pomAllocation.manager.code)) }
+    verify(exactly = 1) { mockApplicationRepository.save(any()) }
+    verify(exactly = 1) { cas2EmailService.sendAllocationChangedEmailToNacro(any(), eq(nomsNumber)) }
+    verify(exactly = 1) { cas2EmailService.sendAllocationChangedEmailToReceivingPom(any(), eq(nomsNumber)) }
     verify(exactly = 1) { applicationRepository.save(any()) }
   }
 

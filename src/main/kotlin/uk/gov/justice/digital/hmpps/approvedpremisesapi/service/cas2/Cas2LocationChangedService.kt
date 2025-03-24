@@ -15,6 +15,7 @@ class Cas2LocationChangedService(
   private val prisonerSearchClient: PrisonerSearchClient,
   private val applicationService: Cas2ApplicationService,
   private val applicationRepository: Cas2ApplicationRepository,
+  private val emailService: Cas2EmailService,
 ) {
   private val log = LoggerFactory.getLogger(this::class.java)
 
@@ -45,6 +46,11 @@ class Cas2LocationChangedService(
 
           applicationRepository.save(application)
           log.info("Added application assignment for prisoner: {}", nomsNumber)
+
+          emailService.sendLocationChangedEmailToTransferringPom(application, nomsNumber, prisoner)
+          emailService.sendLocationChangedEmailToNacro(application, nomsNumber, prisoner)
+          emailService.sendLocationChangedEmailToReceivingPomUnit(application, nomsNumber)
+          emailService.sendLocationChangedEmailToTransferringPomUnit(nomsNumber, prisoner)
         } else {
           log.info("Prisoner {} prison location not changed, no action required", nomsNumber)
         }
