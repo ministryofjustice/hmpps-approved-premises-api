@@ -30,6 +30,8 @@ generic-service:
     SERVICES_CASE-NOTES_BASE-URL: https://dev.offender-case-notes.service.justice.gov.uk
     SERVICES_AP-OASYS-CONTEXT-API_BASE-URL: https://approved-premises-and-oasys-dev.hmpps.service.justice.gov.uk
     SERVICES_GOV-UK-BANK-HOLIDAYS-API_BASE-URL: https://www.gov.uk
+    SERVICES_MANAGE-POM-CASES_BASE-URL: https://dev.moic.service.justice.gov.uk
+    SERVICES_PRISONER-SEARCH_BASE-URL: https://prisoner-search-dev.prison.service.justice.gov.uk
     SPRING_FLYWAY_LOCATIONS: classpath:db/migration/all,classpath:db/migration/local+dev+test,classpath:db/migration/test,classpath:db/migration/all-except-integration
     LOG-CLIENT-CREDENTIALS-JWT-INFO: true
     ASSIGN-DEFAULT-REGION-TO-USERS-WITH-UNKNOWN-REGION: true
