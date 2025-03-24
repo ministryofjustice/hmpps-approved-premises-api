@@ -6,6 +6,7 @@ import org.springframework.http.ResponseEntity
 import org.springframework.stereotype.Service
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.cas2.ApplicationsCas2Delegate
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas2Application
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas2ApplicationSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewApplication
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.SortDirection
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.UpdateCas2Application
@@ -20,7 +21,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.PageCriteria
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.extractEntityFromCasResult
 import java.net.URI
 import java.util.UUID
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas2ApplicationSummary as ModelCas2ApplicationSummary
 
 @Service
 class Cas2ApplicationsController(
@@ -35,7 +35,8 @@ class Cas2ApplicationsController(
     isSubmitted: Boolean?,
     page: Int?,
     prisonCode: String?,
-  ): ResponseEntity<List<ModelCas2ApplicationSummary>> {
+    assignmentType: String?,
+  ): ResponseEntity<List<Cas2ApplicationSummary>> {
     val user = userService.getUserForRequest()
 
     prisonCode?.let { if (prisonCode != user.activeCaseloadId) throw ForbiddenProblem() }
