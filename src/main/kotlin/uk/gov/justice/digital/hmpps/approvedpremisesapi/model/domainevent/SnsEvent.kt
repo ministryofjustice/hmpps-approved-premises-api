@@ -6,7 +6,7 @@ import java.util.UUID
 data class SnsEvent(
   val eventType: String,
   val version: Int,
-  val description: String,
+  val description: String?,
   val detailUrl: String,
   val occurredAt: OffsetDateTime,
   val additionalInformation: SnsEventAdditionalInformation,
