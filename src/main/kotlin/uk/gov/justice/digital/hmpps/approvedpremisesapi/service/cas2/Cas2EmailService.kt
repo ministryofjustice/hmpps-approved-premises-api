@@ -1,6 +1,7 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas2
 
 import io.sentry.Sentry
+import jakarta.persistence.EntityNotFoundException
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
@@ -8,6 +9,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.Prisoner
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.PrisonsApiClient
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.config.NotifyConfig
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas2ApplicationEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas2StatusUpdateRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.NomisUserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.NomisUserRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.EmailNotificationService
@@ -19,6 +21,7 @@ class Cas2EmailService(
   private val notifyConfig: NotifyConfig,
   private val nomisUserRepository: NomisUserRepository,
   private val prisonsApiClient: PrisonsApiClient,
+  private val statusUpdateRepository: Cas2StatusUpdateRepository,
   @Value("\${url-templates.frontend.cas2.application-overview}") private val applicationUrlTemplate: String,
 ) {
 
@@ -27,6 +30,7 @@ class Cas2EmailService(
   fun sendLocationChangedEmails(applicationId: UUID, oldPomUserId: UUID, oldPrisonCode: String, nomsNumber: String, prisoner: Prisoner) {
     nomisUserRepository.findById(oldPomUserId).map { oldPom ->
       prisonsApiClient.getAgencyDetails(oldPrisonCode).map { agency ->
+        val statusUpdate = statusUpdateRepository.findFirstByApplicationIdOrderByCreatedAtDesc(applicationId) ?: throw EntityNotFoundException("StatusUpdate for $applicationId not found")
         sendLocationOrAllocationChangedEmail(
           oldPom.email,
           notifyConfig.templates.toTransferringPomApplicationTransferredToAnotherPrison,
@@ -50,7 +54,7 @@ class Cas2EmailService(
             "nomsNumber" to nomsNumber,
             "transferringPrisonName" to agency.description,
             "link" to getLink(applicationId),
-            "applicationStatus" to "PLACEHOLDER",
+            "applicationStatus" to statusUpdate.label,
           ),
         )
         sendLocationOrAllocationChangedEmail(
@@ -72,6 +76,8 @@ class Cas2EmailService(
 
     prisonsApiClient.getAgencyDetails(oldPrisonCode).map { oldAgency ->
       prisonsApiClient.getAgencyDetails(newPrisonCode).map { newAgency ->
+        val statusUpdate = statusUpdateRepository.findFirstByApplicationIdOrderByCreatedAtDesc(application.id) ?: throw EntityNotFoundException("StatusUpdate for ${application.id} not found")
+
         sendLocationOrAllocationChangedEmail(
           newPom.email,
           notifyConfig.templates.toReceivingPomApplicationTransferredToAnotherPom,
@@ -79,7 +85,7 @@ class Cas2EmailService(
             "nomsNumber" to nomsNumber,
             "transferringPrisonName" to oldAgency.description,
             "link" to getLink(application.id),
-            "applicationStatus" to "PLACEHOLDER",
+            "applicationStatus" to statusUpdate.label,
           ),
         )
         sendLocationOrAllocationChangedEmail(
