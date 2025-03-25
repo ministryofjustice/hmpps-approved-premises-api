@@ -337,7 +337,6 @@ class Cas2EmailServiceTest {
     verify(exactly = 0) { emailNotificationService.sendCas2Email(any(), any(), any()) }
   }
 
-
   @Test
   fun `should get old prison code`() {
     application.applicationAssignments.add(applicationAssignmentOlder)
