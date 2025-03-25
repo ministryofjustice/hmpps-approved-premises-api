@@ -20,6 +20,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1TimelineEv
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1UpdateSpaceBooking
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.SortDirection
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.CancellationReasonRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas1SpaceBookingEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserPermission
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserPermission.CAS1_SPACE_BOOKING_LIST
@@ -31,6 +32,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.CharacteristicSe
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.OffenderService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.UserAccessService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.UserService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1ChangeRequestService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1SpaceBookingService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1SpaceBookingService.DepartureInfo
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1SpaceBookingService.SpaceBookingFilterCriteria
@@ -59,6 +61,7 @@ class Cas1SpaceBookingController(
   private val cas1WithdrawableService: Cas1WithdrawableService,
   private val characteristicService: CharacteristicService,
   private val cas1TimelineService: Cas1TimelineService,
+  private val cas1ChangeRequestService: Cas1ChangeRequestService,
 ) : SpaceBookingsCas1Delegate {
 
   override fun getSpaceBookingTimeline(premisesId: UUID, bookingId: UUID): ResponseEntity<List<Cas1TimelineEvent>> {
@@ -289,7 +292,12 @@ class Cas1SpaceBookingController(
     bookingId: UUID,
     body: Cas1NewSpaceBookingCancellation,
   ): ResponseEntity<Unit> {
-    userAccessService.ensureCurrentUserHasPermission(UserPermission.CAS1_SPACE_BOOKING_WITHDRAW)
+    body.changeRequestId?.let {
+      userAccessService.ensureCurrentUserHasPermission(UserPermission.CAS1_APPEAL_ASSESS)
+      cas1ChangeRequestService.approveChangeRequest(it, userService.getUserForRequest(), extractEntityFromCasResult(cas1SpaceBookingService.getBooking(premisesId, bookingId)))
+    } ?: run {
+      userAccessService.ensureCurrentUserHasPermission(UserPermission.CAS1_SPACE_BOOKING_WITHDRAW)
+    }
 
     val spaceBooking = extractEntityFromCasResult(
       cas1SpaceBookingService.getBooking(premisesId, bookingId),
@@ -303,8 +311,8 @@ class Cas1SpaceBookingController(
             spaceBooking = spaceBooking,
             user = userService.getUserForRequest(),
             cancelledAt = body.occurredAt,
-            body.reasonId,
-            body.reasonNotes,
+            userProvidedReason = body.changeRequestId?.let { CancellationReasonRepository.CAS1_BOOKING_SUCCESSFULLY_APPEALED_ID } ?: body.reasonId,
+            otherReason = body.reasonNotes,
           ),
         ),
       )

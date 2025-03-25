@@ -43,6 +43,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.ap
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.CancellationReasonEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.CancellationReasonRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas1SpaceBookingEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DomainEventType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.MoveOnCategoryRepository.Constants.MOVE_ON_CATEGORY_NOT_APPLICABLE_ID
@@ -52,6 +53,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRole
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRole.CAS1_ASSESSOR
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRole.CAS1_FUTURE_MANAGER
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas1.ChangeRequestDecision
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.ApprovedPremisesApplicationStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.cas1.Cas1SpaceBookingTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.unit.transformer.cas1.Cas1SpaceBookingSummaryStatusTestHelper
@@ -1989,7 +1991,7 @@ class Cas1SpaceBookingTest {
     @ParameterizedTest
     @EnumSource(
       value = UserRole::class,
-      names = ["CAS1_WORKFLOW_MANAGER", "CAS1_CRU_MEMBER", "CAS1_CRU_MEMBER_FIND_AND_BOOK_BETA", "CAS1_JANITOR"],
+      names = ["CAS1_WORKFLOW_MANAGER", "CAS1_CRU_MEMBER", "CAS1_CRU_MEMBER_FIND_AND_BOOK_BETA", "CAS1_JANITOR", "CAS1_CHANGE_REQUEST_DEV"],
       mode = EnumSource.Mode.EXCLUDE,
     )
     fun `Create Cancellation with invalid role returns 401`(role: UserRole) {
@@ -2036,6 +2038,58 @@ class Cas1SpaceBookingTest {
 
       assertThat(approvedPremisesApplicationRepository.findByIdOrNull(spaceBooking.application!!.id)!!.status)
         .isEqualTo(ApprovedPremisesApplicationStatus.AWAITING_PLACEMENT)
+    }
+
+    @Test
+    fun `Create Cancellation due to appeal on CAS1 Booking returns OK with correct body, updates status and sends emails when user has role CAS1_CHANGE_REQUEST_DEV`() {
+      givenAUser(roles = listOf(UserRole.CAS1_CHANGE_REQUEST_DEV)) { user, jwt ->
+
+        val (placementRequest) = givenAPlacementRequest(
+          placementRequestAllocatedTo = user,
+          assessmentAllocatedTo = user,
+          createdByUser = user,
+        )
+
+        val reason = cas1ChangeRequestReasonEntityFactory.produceAndPersist()
+
+        val spaceBooking = cas1SpaceBookingEntityFactory.produceAndPersist {
+          withPremises(premises)
+          withPlacementRequest(placementRequest)
+          withCreatedBy(user)
+          withApplication(placementRequest.application)
+        }
+
+        val changeRequestId = cas1ChangeRequestEntityFactory
+          .produceAndPersist {
+            withSpaceBooking(spaceBooking)
+            withUser(user)
+            withChangeRequestReason(reason)
+            withPlacementRequest(placementRequest)
+          }.id
+
+        webTestClient.post()
+          .uri("/cas1/premises/${premises.id}/space-bookings/${spaceBooking.id}/cancellations")
+          .header("Authorization", "Bearer $jwt")
+          .bodyValue(
+            Cas1NewSpaceBookingCancellation(
+              occurredAt = LocalDate.parse("2022-08-17"),
+              reasonId = cancellationReason.id,
+              reasonNotes = null,
+              changeRequestId = changeRequestId,
+            ),
+          )
+          .exchange()
+          .expectStatus()
+          .isOk
+
+        assertThat(approvedPremisesApplicationRepository.findByIdOrNull(spaceBooking.application!!.id)!!.status).isEqualTo(ApprovedPremisesApplicationStatus.AWAITING_PLACEMENT)
+
+        val cas1PersistedSpaceBooking = cas1SpaceBookingRepository.findByIdOrNull(spaceBooking.id)!!
+        assertThat(cas1PersistedSpaceBooking.cancellationReason!!.name).isEqualTo("Booking successfully appealed")
+        assertThat(cas1PersistedSpaceBooking.cancellationReason!!.id).isEqualTo(CancellationReasonRepository.CAS1_BOOKING_SUCCESSFULLY_APPEALED_ID)
+
+        assertThat(cas1ChangeRequestRepository.findByIdOrNull(changeRequestId)!!.decision).isEqualTo(ChangeRequestDecision.APPROVED)
+      }
     }
   }
 

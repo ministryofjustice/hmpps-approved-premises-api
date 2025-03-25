@@ -21,7 +21,7 @@
   "permissions" : [ "cas1_out_of_service_bed_create", "cas1_view_out_of_service_beds" ]
 }, {
   "name" : "change_request_dev",
-  "permissions" : [ "cas1_change_request_list", "cas1_appeal_create", "cas1_planned_transfer_create", "cas1_appeal_assess", "cas1_planned_transfer_assess" ]
+  "permissions" : [ "cas1_change_request_list", "cas1_appeal_create", "cas1_planned_transfer_create", "cas1_appeal_assess", "cas1_planned_transfer_assess", "cas1_space_booking_withdraw" ]
 }, {
   "name" : "applicant",
   "permissions" : [ ]
