@@ -11,8 +11,6 @@ import software.amazon.awssdk.services.sns.model.PublishRequest
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas2.model.Cas2ApplicationStatusUpdatedEvent
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas2.model.Cas2ApplicationSubmittedEvent
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas2.model.Cas2Event
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas2.model.Cas2v2ApplicationStatusUpdatedEvent
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas2.model.Cas2v2ApplicationSubmittedEvent
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas2.model.PersonReference
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.config.DomainEventUrlConfig
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DomainEventEntity
@@ -71,12 +69,6 @@ class Cas2DomainEventService(
 
   @Transactional
   fun saveCas2ApplicationSubmittedDomainEvent(domainEvent: DomainEvent<Cas2ApplicationSubmittedEvent>) = saveAndEmit(
-    domainEvent = domainEvent,
-    personReference = domainEvent.data.eventDetails.personReference,
-  )
-
-  @Transactional
-  fun saveCas2v2ApplicationSubmittedDomainEvent(domainEvent: DomainEvent<Cas2v2ApplicationSubmittedEvent>) = saveAndEmit(
     domainEvent = domainEvent,
     personReference = domainEvent.data.eventDetails.personReference,
   )
@@ -156,8 +148,6 @@ class Cas2DomainEventService(
   private fun <T : Cas2Event> enumTypeFromDataType(type: KClass<T>): DomainEventType = when (type) {
     Cas2ApplicationSubmittedEvent::class -> DomainEventType.CAS2_APPLICATION_SUBMITTED
     Cas2ApplicationStatusUpdatedEvent::class -> DomainEventType.CAS2_APPLICATION_STATUS_UPDATED
-    Cas2v2ApplicationSubmittedEvent::class -> DomainEventType.CAS2V2_APPLICATION_SUBMITTED
-    Cas2v2ApplicationStatusUpdatedEvent::class -> DomainEventType.CAS2V2_APPLICATION_STATUS_UPDATED
     else -> throw RuntimeException("Unrecognised domain event type: ${type.qualifiedName}")
   }
 }

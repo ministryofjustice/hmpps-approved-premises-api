@@ -5,10 +5,10 @@ import jakarta.transaction.Transactional
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.data.repository.findByIdOrNull
 import org.springframework.stereotype.Service
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas2.model.Cas2ApplicationSubmittedEvent
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas2.model.Cas2ApplicationSubmittedEventDetails
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas2.model.Cas2ApplicationSubmittedEventDetailsSubmittedBy
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas2.model.Cas2StaffMember
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas2.model.Cas2v2ApplicationSubmittedEvent
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas2.model.EventType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas2.model.PersonReference
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApplicationOrigin
@@ -296,7 +296,7 @@ class Cas2v2ApplicationService(
 
     application = cas2v2ApplicationRepository.save(application)
 
-    createCas2v2ApplicationSubmittedEvent(application)
+    createCas2ApplicationSubmittedEvent(application)
 
     createAssessment(application)
 
@@ -305,21 +305,21 @@ class Cas2v2ApplicationService(
     return CasResult.Success(application)
   }
 
-  fun createCas2v2ApplicationSubmittedEvent(application: Cas2v2ApplicationEntity) {
+  fun createCas2ApplicationSubmittedEvent(application: Cas2v2ApplicationEntity) {
     val domainEventId = UUID.randomUUID()
     val eventOccurredAt = application.submittedAt ?: OffsetDateTime.now()
 
-    domainEventService.saveCas2v2ApplicationSubmittedDomainEvent(
+    domainEventService.saveCas2ApplicationSubmittedDomainEvent(
       DomainEvent(
         id = domainEventId,
         applicationId = application.id,
         crn = application.crn,
         nomsNumber = application.nomsNumber,
         occurredAt = eventOccurredAt.toInstant(),
-        data = Cas2v2ApplicationSubmittedEvent(
+        data = Cas2ApplicationSubmittedEvent(
           id = domainEventId,
           timestamp = eventOccurredAt.toInstant(),
-          eventType = EventType.cas2v2ApplicationSubmitted,
+          eventType = EventType.applicationSubmitted,
           eventDetails = Cas2ApplicationSubmittedEventDetails(
             applicationId = application.id,
             applicationUrl = applicationUrlTemplate
