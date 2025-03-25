@@ -25,8 +25,8 @@ interface Cas2v2SubmittedApplicationReportRepository : JpaRepository<DomainEvent
         TO_CHAR(applications.created_at, 'YYYY-MM-DD"T"HH24:MI:SS') AS startedAt,
         applications.application_origin as applicationOrigin
       FROM domain_events events
-      LEFT JOIN cas_2_v2_applications applications ON events.application_id = applications.id      
-      WHERE applications.submitted_at IS NULL
+      INNER JOIN cas_2_v2_applications applications ON events.application_id = applications.id      
+      WHERE applications.submitted_at IS NOT NULL
         AND events.occurred_at  > CURRENT_DATE - 365
       ORDER BY submittedAt DESC;
     """,
