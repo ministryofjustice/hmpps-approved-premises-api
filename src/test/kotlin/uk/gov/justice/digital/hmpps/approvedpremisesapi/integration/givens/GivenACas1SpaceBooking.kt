@@ -22,6 +22,7 @@ fun IntegrationTestBase.givenACas1SpaceBooking(
   expectedArrivalDate: LocalDate = LocalDate.now(),
   canonicalArrivalDate: LocalDate = expectedArrivalDate,
   expectedDepartureDate: LocalDate = LocalDate.now(),
+  canonicalDepartureDate: LocalDate = expectedDepartureDate,
   nonArrivalConfirmedAt: Instant? = null,
   cancellationOccurredAt: LocalDate? = null,
   actualArrivalDate: LocalDate? = null,
@@ -44,7 +45,7 @@ fun IntegrationTestBase.givenACas1SpaceBooking(
     withActualArrivalDate(actualArrivalDate)
     withCanonicalArrivalDate(canonicalArrivalDate)
     withExpectedDepartureDate(expectedDepartureDate)
-    withCanonicalDepartureDate(expectedDepartureDate)
+    withCanonicalDepartureDate(canonicalDepartureDate)
     withPlacementRequest(placementRequestToUse)
     withApplication(placementRequestToUse?.application)
     withOfflineApplication(offlineApplication)

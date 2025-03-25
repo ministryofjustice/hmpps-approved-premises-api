@@ -1,14 +1,20 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.client
 
+import com.fasterxml.jackson.databind.ObjectMapper
+import org.springframework.beans.factory.annotation.Qualifier
 import org.springframework.stereotype.Component
-import org.springframework.web.service.annotation.GetExchange
-import java.net.URI
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.config.WebClientConfig
 
 @Component
-interface PrisonerSearchClient {
+class PrisonerSearchClient(
+  @Qualifier("prisonerSearchWebClient") webClientConfig: WebClientConfig,
+  objectMapper: ObjectMapper,
+  webClientCache: WebClientCache,
+) : BaseHMPPSClient(webClientConfig, objectMapper, webClientCache) {
 
-  @GetExchange
-  fun getPrisoner(url: URI): Prisoner?
+  fun getPrisoner(detailUrl: String) = getRequest<Prisoner> {
+    path = detailUrl
+  }
 }
 
 data class Prisoner(

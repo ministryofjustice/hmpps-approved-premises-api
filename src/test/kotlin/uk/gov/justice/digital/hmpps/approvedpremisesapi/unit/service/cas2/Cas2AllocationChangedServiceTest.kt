@@ -10,6 +10,7 @@ import org.junit.jupiter.api.assertThrows
 import org.junit.jupiter.api.extension.ExtendWith
 import org.springframework.http.HttpStatus
 import org.springframework.web.client.HttpClientErrorException
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.ClientResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.ManagePomCasesClient
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.Manager
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.PomAllocation
@@ -69,7 +70,7 @@ class Cas2AllocationChangedServiceTest {
   fun `handle Allocation Changed Event and save new allocation to table`() {
     val application = Cas2ApplicationEntityFactory().withNomsNumber(nomsNumber).withCreatedByUser(user).produce()
 
-    every { managePomCasesClient.getPomAllocation(any()) } returns pomAllocation
+    every { managePomCasesClient.getPomAllocation(any()) } returns ClientResult.Success(HttpStatus.OK, pomAllocation)
     every { applicationService.findMostRecentApplication(eq(nomsNumber)) } returns application
     every { mockApplicationRepository.save(any()) } returns null
     every { nomisUserRepository.findByNomisStaffId(eq(pomAllocation.manager.code)) } returns user
@@ -86,7 +87,7 @@ class Cas2AllocationChangedServiceTest {
   fun `handle Allocation Changed Event and throw error when no nomis user is found`() {
     val application = Cas2ApplicationEntityFactory().withNomsNumber(nomsNumber).withCreatedByUser(user).produce()
 
-    every { managePomCasesClient.getPomAllocation(any()) } returns pomAllocation
+    every { managePomCasesClient.getPomAllocation(any()) } returns ClientResult.Success(HttpStatus.OK, pomAllocation)
     every { applicationService.findMostRecentApplication(eq(nomsNumber)) } returns application
     every { nomisUserRepository.findByNomisStaffId(eq(pomAllocation.manager.code)) } returns null
 
@@ -140,7 +141,7 @@ class Cas2AllocationChangedServiceTest {
 
   @Test
   fun `handle Allocation Changed Event and do nothing if there is no application associated with the event`() {
-    every { managePomCasesClient.getPomAllocation(any()) } returns null
+    every { managePomCasesClient.getPomAllocation(any()) } returns ClientResult.Success(HttpStatus.OK, pomAllocation)
     every { applicationService.findMostRecentApplication(eq(nomsNumber)) } returns null
 
     allocationChangedService.process(allocationEvent)

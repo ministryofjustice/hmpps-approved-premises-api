@@ -8,6 +8,9 @@ import io.mockk.verify
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
 import org.junit.jupiter.api.extension.ExtendWith
+import org.springframework.http.HttpMethod
+import org.springframework.http.HttpStatus
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.ClientResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.Prisoner
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.PrisonerSearchClient
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.Cas2ApplicationEntityFactory
@@ -75,7 +78,7 @@ class Cas2LocationChangedServiceTest {
 
     application.applicationAssignments.add(oldAssignment)
 
-    every { prisonerSearchClient.getPrisoner(any()) } returns prisoner
+    every { prisonerSearchClient.getPrisoner(any()) } returns ClientResult.Success(HttpStatus.OK, prisoner)
     every { applicationService.findMostRecentApplication(eq(nomsNumber)) } returns application
     every { applicationRepository.save(any()) } returns application
 
@@ -100,7 +103,7 @@ class Cas2LocationChangedServiceTest {
 
     application.applicationAssignments.add(oldAssignment)
 
-    every { prisonerSearchClient.getPrisoner(any()) } returns prisoner
+    every { prisonerSearchClient.getPrisoner(any()) } returns ClientResult.Success(HttpStatus.OK, prisoner)
     every { applicationService.findMostRecentApplication(eq(nomsNumber)) } returns application
     every { applicationRepository.save(any()) } returns application
 
@@ -115,7 +118,7 @@ class Cas2LocationChangedServiceTest {
   fun `handle Location Changed Event and throw error because no prev applicationAssignments`() {
     val application = Cas2ApplicationEntityFactory().withNomsNumber(nomsNumber).withCreatedByUser(user).produce()
 
-    every { prisonerSearchClient.getPrisoner(any()) } returns prisoner
+    every { prisonerSearchClient.getPrisoner(any()) } returns ClientResult.Success(HttpStatus.OK, prisoner)
     every { applicationService.findMostRecentApplication(eq(nomsNumber)) } returns application
     every { applicationRepository.save(any()) } returns application
 
@@ -130,10 +133,16 @@ class Cas2LocationChangedServiceTest {
   fun `handle Location Changed Event and throw error when prisoner not found from event detailUrl`() {
     val application = Cas2ApplicationEntityFactory().withNomsNumber(nomsNumber).withCreatedByUser(user).produce()
 
-    every { prisonerSearchClient.getPrisoner(any()) } returns null
+    every { prisonerSearchClient.getPrisoner(any()) } returns ClientResult.Failure.StatusCode(
+      HttpMethod.GET,
+      "/",
+      HttpStatus.NOT_FOUND,
+      body = null,
+    )
+
     every { applicationService.findMostRecentApplication(eq(nomsNumber)) } returns application
 
-    assertThrows<NullPointerException> { locationChangedService.process(locationEvent) }
+    assertThrows<RuntimeException> { locationChangedService.process(locationEvent) }
   }
 
   @Test
@@ -151,7 +160,7 @@ class Cas2LocationChangedServiceTest {
 
   @Test
   fun `handle Location Changed Event and do nothing if there is no application associated with the event`() {
-    every { prisonerSearchClient.getPrisoner(any()) } returns null
+    every { prisonerSearchClient.getPrisoner(any()) } returns ClientResult.Success(HttpStatus.OK, prisoner)
     every { applicationService.findMostRecentApplication(eq(nomsNumber)) } returns null
 
     locationChangedService.process(locationEvent)

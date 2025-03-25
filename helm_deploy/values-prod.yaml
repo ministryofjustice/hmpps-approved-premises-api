@@ -18,6 +18,7 @@ generic-service:
   env:
     JAVA_OPTS: "-Xmx2000m"
     SPRING_PROFILES_ACTIVE: prod
+    APPLICATIONINSIGHTS_CONNECTION_STRING: "InstrumentationKey=$(APPINSIGHTS_INSTRUMENTATIONKEY)"
     APPLICATIONINSIGHTS_CONFIGURATION_FILE: applicationinsights.json
     HMPPS_AUTH_URL: https://sign-in.hmpps.service.justice.gov.uk/auth
     SERVICES_AP-DELIUS-CONTEXT-API_BASE-URL: https://approved-premises-and-delius.hmpps.service.justice.gov.uk
@@ -31,6 +32,8 @@ generic-service:
     SERVICES_CASE-NOTES_BASE-URL: https://offender-case-notes.service.justice.gov.uk
     SERVICES_AP-OASYS-CONTEXT-API_BASE-URL: https://approved-premises-and-oasys.hmpps.service.justice.gov.uk
     SERVICES_GOV-UK-BANK-HOLIDAYS-API_BASE-URL: https://www.gov.uk
+    SERVICES_MANAGE-POM-CASES_BASE-URL: https://moic.service.justice.gov.uk
+    SERVICES_PRISONER-SEARCH_BASE-URL: https://prisoner-search.prison.service.justice.gov.uk
     SPRING_FLYWAY_LOCATIONS: classpath:db/migration/all,classpath:db/migration/all-except-integration
     LOG-CLIENT-CREDENTIALS-JWT-INFO: false
     SENTRY_ENVIRONMENT: prod
@@ -99,6 +102,7 @@ generic-service:
     hmpps-domain-events-topic:
       HMPPS_SQS_TOPICS_DOMAINEVENTS_ARN: "topic_arn"
     hmpps-approved-premises-api:
+      APPINSIGHTS_INSTRUMENTATIONKEY: "APPINSIGHTS_INSTRUMENTATIONKEY"
       NOTIFY_APIKEY: "NOTIFY_APIKEY"
       NOTIFY_EMAILADDRESSES_CAS2ASSESSORS: "NOTIFY_EMAILADDRESSES_CAS2ASSESSORS"
 

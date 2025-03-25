@@ -19,14 +19,16 @@ interface Cas2v2SubmittedApplicationReportRepository : JpaRepository<DomainEvent
         events.data -> 'eventDetails' -> 'personReference' ->> 'crn' AS personCrn,
         events.data -> 'eventDetails' ->> 'referringPrisonCode' AS referringPrisonCode,
         events.data -> 'eventDetails' ->> 'preferredAreas' AS preferredAreas,
+        events.data -> 'eventDetails' ->> 'bailHearingDate' AS bailHearingDate,
         CAST(events.data -> 'eventDetails' ->> 'hdcEligibilityDate' as DATE) AS hdcEligibilityDate,
         CAST(events.data -> 'eventDetails' ->> 'conditionalReleaseDate' as DATE) AS conditionalReleaseDate,
         TO_CHAR(events.occurred_at,'YYYY-MM-DD"T"HH24:MI:SS') AS submittedAt,
         TO_CHAR(applications.created_at, 'YYYY-MM-DD"T"HH24:MI:SS') AS startedAt,
-        applications.application_origin as applicationOrigin
+        applications.application_origin as applicationOrigin,
+        CAST(applications.bail_hearing_date as DATE) as bailHearingDate
       FROM domain_events events
       LEFT JOIN cas_2_v2_applications applications ON events.application_id = applications.id      
-      WHERE events.type = 'CAS2V2_APPLICATION_SUBMITTED'
+      WHERE events.type = 'CAS2_APPLICATION_SUBMITTED'
         AND events.occurred_at  > CURRENT_DATE - 365
       ORDER BY submittedAt DESC;
     """,
@@ -40,6 +42,7 @@ interface Cas2v2SubmittedApplicationReportRow {
   fun getId(): String
   fun getApplicationId(): String
   fun getApplicationOrigin(): ApplicationOrigin
+  fun getBailHearingDate(): String?
   fun getSubmittedBy(): String
   fun getSubmittedAt(): String
   fun getPersonNoms(): String

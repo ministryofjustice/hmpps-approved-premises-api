@@ -6,7 +6,7 @@ import org.springframework.stereotype.Component
 import org.springframework.util.FileCopyUtils
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApplicationOrigin
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.config.SeedConfig
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas2v2ApplicationJsonSchemaEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas2ApplicationJsonSchemaEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas2v2.Cas2v2ApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas2v2.Cas2v2ApplicationRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas2v2.Cas2v2AssessmentEntity
@@ -83,7 +83,7 @@ class Cas2v2StartupScript(
         data = dataFor(state = state, nomsNumber = "DO16821"),
         document = documentFor(state = state, nomsNumber = "DO16821"),
         submittedAt = submittedAt,
-        schemaVersion = jsonSchemaService.getNewestSchema(Cas2v2ApplicationJsonSchemaEntity::class.java),
+        schemaVersion = jsonSchemaService.getNewestSchema(Cas2ApplicationJsonSchemaEntity::class.java),
         applicationOrigin = applicationOrigin,
         schemaUpToDate = true,
       ),
@@ -91,7 +91,7 @@ class Cas2v2StartupScript(
 
     if (listOf("SUBMITTED", "IN_REVIEW").contains(state)) {
       val appWithPromotedProperties = applyFirstClassProperties(application)
-      cas2v2applicationService.createCas2v2ApplicationSubmittedEvent(appWithPromotedProperties)
+      cas2v2applicationService.createCas2ApplicationSubmittedEvent(appWithPromotedProperties)
       createAssessment(application)
     }
 

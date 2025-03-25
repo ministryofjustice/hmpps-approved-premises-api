@@ -188,17 +188,19 @@ components:
         - essentialCharacteristics
     Cas1UpdateSpaceBooking:
       type: object
-      description: Only provide values when a change is required
       properties:
         arrivalDate:
+          description: Only provided if the arrival date has changed
           type: string
           format: date
           example: 2022-07-28
         departureDate:
+          description: Only provided if the departure date has changed
           type: string
           format: date
           example: 2022-09-30
         characteristics:
+          description: Only provided if characteristics have changed
           type: array
           items:
             $ref: '#/components/schemas/Cas1SpaceBookingCharacteristic'
@@ -603,6 +605,51 @@ components:
           type: string
       required:
         - reasonId
+    Cas1NewEmergencyTransfer:
+      type: object
+      properties:
+        destinationPremisesId:
+          type: string
+          format: uuid
+        arrivalDate:
+          description: The expected arrival date for the new space booking. The existing space booking will be updated to end on this date
+          type: string
+          format: date
+        departureDate:
+          description: The expected departure date for the new space booking
+          type: string
+          format: date
+      required:
+        - destinationPremisesId
+        - arrivalDate
+        - departureDate
+    Cas1NewPlannedTransfer:
+      type: object
+      properties:
+        destinationPremisesId:
+          type: string
+          format: uuid
+        arrivalDate:
+          description: The expected arrival date for the new space booking. The existing space booking will be updated to end on this date
+          type: string
+          format: date
+        departureDate:
+          description: The expected departure date for the new space booking
+          type: string
+          format: date
+        changeRequestId:
+          type: string
+          format: uuid
+        characteristics:
+          description: If not provided, it is assumed that no characteristics are required
+          type: array
+          items:
+            $ref: '_shared.yml#/components/schemas/Cas1SpaceCharacteristic'
+      required:
+        - destinationPremisesId
+        - arrivalDate
+        - departureDate
+        - changeRequestId
     Cas1AssignKeyWorker:
       type: object
       properties:
@@ -1234,6 +1281,7 @@ components:
           type: string
           format: date
         lengthOfStayDays:
+          description: Current placement's length of stay, using canonical arrival date
           type: integer
         requestReason:
           $ref: '_shared.yml#/components/schemas/NamedId'
@@ -1292,6 +1340,7 @@ components:
           type: string
           format: date
         lengthOfStayDays:
+          description: Current placement's length of stay, using canonical arrival date
           type: integer
       required:
         - id
@@ -1306,12 +1355,12 @@ components:
         - name
         - tier
         - canonicalArrivalDate
-        - lengthOfStay
+        - lengthOfStayDays
       x-enum-varnames:
         - NAME
         - TIER
         - CANONICAL_ARRIVAL_DATE
-        - LENGTH_OF_STAY
+        - LENGTH_OF_STAY_DAYS
     Cas1PremisesBedSummary:
       type: object
       properties:

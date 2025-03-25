@@ -4,6 +4,7 @@ import com.fasterxml.jackson.databind.ObjectMapper
 import jakarta.transaction.Transactional
 import org.springframework.data.repository.findByIdOrNull
 import org.springframework.stereotype.Service
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1ChangeRequestSortField
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1ChangeRequestType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1NewChangeRequest
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas1SpaceBookingRepository
@@ -11,9 +12,11 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementRequ
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas1.Cas1ChangeRequestEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas1.Cas1ChangeRequestReasonRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas1.Cas1ChangeRequestRepository
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas1.Cas1ChangeRequestRepository.FindOpenChangeRequestResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas1.ChangeRequestType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.validatedCasResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.CasResult
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.PageCriteria
 import java.time.OffsetDateTime
 import java.util.UUID
 
@@ -56,6 +59,7 @@ class Cas1ChangeRequestService(
         decision = null,
         rejectionReason = null,
         decisionMadeByUser = null,
+        decisionMadeAt = null,
         createdAt = now,
         updatedAt = now,
       ),
@@ -63,4 +67,19 @@ class Cas1ChangeRequestService(
 
     return success(Unit)
   }
+
+  fun findOpen(
+    cruManagementAreaId: UUID?,
+    pageCriteria: PageCriteria<Cas1ChangeRequestSortField>,
+  ): List<FindOpenChangeRequestResult> = cas1ChangeRequestRepository.findOpen(
+    cruManagementAreaId,
+    pageCriteria.toPageableOrAllPages(
+      sortBy = when (pageCriteria.sortBy) {
+        Cas1ChangeRequestSortField.NAME -> "name"
+        Cas1ChangeRequestSortField.TIER -> "tier"
+        Cas1ChangeRequestSortField.CANONICAL_ARRIVAL_DATE -> "canonicalArrivalDate"
+        Cas1ChangeRequestSortField.LENGTH_OF_STAY_DAYS -> "lengthOfStayDays"
+      },
+    ),
+  )
 }

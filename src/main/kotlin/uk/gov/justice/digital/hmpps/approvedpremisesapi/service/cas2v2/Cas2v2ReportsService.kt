@@ -25,6 +25,7 @@ class Cas2v2ReportsService(
         eventId = row.getId(),
         applicationId = row.getApplicationId(),
         applicationOrigin = row.getApplicationOrigin(),
+        bailHearingDate = row.getBailHearingDate(),
         personCrn = row.getPersonCrn(),
         personNoms = row.getPersonNoms(),
         referringPrisonCode = row.getReferringPrisonCode(),

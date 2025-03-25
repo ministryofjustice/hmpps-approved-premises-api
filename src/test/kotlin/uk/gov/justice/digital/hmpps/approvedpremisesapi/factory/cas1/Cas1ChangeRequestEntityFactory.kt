@@ -1,6 +1,7 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.cas1
 
 import io.github.bluegroundltd.kfactory.Factory
+import io.github.bluegroundltd.kfactory.Yielded
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.Cas1SpaceBookingEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.PlacementRequestEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.UserEntityFactory
@@ -23,11 +24,16 @@ class Cas1ChangeRequestEntityFactory : Factory<Cas1ChangeRequestEntity> {
   private var requestJson = { "{}" }
   private var requestReason = { Cas1ChangeRequestReasonEntityFactory().produce() }
   private var decisionJson = { null }
-  private var decision = { ChangeRequestDecision.APPROVED }
+  private var decision: Yielded<ChangeRequestDecision?> = { ChangeRequestDecision.APPROVED }
   private var rejectionReason = { null }
-  private var decisionMadeByUser = { UserEntityFactory().withDefaults().produce() }
+  private var decisionMadeByUser: Yielded<UserEntity?> = { UserEntityFactory().withDefaults().produce() }
+  private var decisionMadeAt: Yielded<OffsetDateTime?> = { null }
   private var createdAt = { OffsetDateTime.now().minusDays(randomInt(0, 365).toLong()) }
   private var updatedAt = { OffsetDateTime.now() }
+
+  fun withDecisionMadeByUser(user: UserEntity?) = apply {
+    this.decisionMadeByUser = { user }
+  }
 
   fun withUser(user: UserEntity) = apply {
     this.decisionMadeByUser = { user }
@@ -45,6 +51,14 @@ class Cas1ChangeRequestEntityFactory : Factory<Cas1ChangeRequestEntity> {
     this.placementRequest = { placementRequest }
   }
 
+  fun withType(type: ChangeRequestType) = apply {
+    this.type = { type }
+  }
+
+  fun withDecision(decision: ChangeRequestDecision?) = apply {
+    this.decision = { decision }
+  }
+
   override fun produce(): Cas1ChangeRequestEntity {
     val cas1ChangeRequestEntity = Cas1ChangeRequestEntity(
       id = this.id(),
@@ -55,6 +69,7 @@ class Cas1ChangeRequestEntityFactory : Factory<Cas1ChangeRequestEntity> {
       requestReason = this.requestReason(),
       decisionJson = this.decisionJson(),
       decision = this.decision(),
+      decisionMadeAt = this.decisionMadeAt(),
       rejectionReason = this.rejectionReason(),
       decisionMadeByUser = this.decisionMadeByUser(),
       createdAt = this.createdAt(),

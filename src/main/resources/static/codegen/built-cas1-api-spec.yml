@@ -19,14 +19,20 @@ paths:
           description: Page number of results to return. If blank, returns all results
           schema:
             type: integer
+        - name: cruManagementAreaId
+          in: query
+          description: Limits change requests to applications within the cru management area
+          schema:
+            type: string
+            format: uuid
         - name: sortBy
           in: query
-          description: Which field to sort the results by. If blank, will sort by createdAt
+          description: Which field to sort the results by. If blank, will sort by name
           schema:
             $ref: '#/components/schemas/Cas1ChangeRequestSortField'
         - name: sortDirection
           in: query
-          description: The direction to sort the results by. If blank, will sort in descending order
+          description: The direction to sort the results by. If blank, will sort in ascending order
           schema:
             $ref: '#/components/schemas/SortDirection'
       responses:
@@ -1404,6 +1410,104 @@ paths:
           'application/json':
             schema:
               $ref: '#/components/schemas/Cas1NonArrival'
+        required: true
+      responses:
+        200:
+          description: successful operation
+        400:
+          description: invalid params
+          content:
+            'application/problem+json':
+              schema:
+                $ref: '#/components/schemas/ValidationError'
+        401:
+          $ref: '#/components/responses/401Response'
+        403:
+          $ref: '#/components/responses/403Response'
+        404:
+          description: invalid premises ID or booking ID
+          content:
+            'application/json':
+              schema:
+                $ref: '#/components/schemas/Problem'
+        500:
+          $ref: '#/components/responses/500Response'
+
+  /premises/{premisesId}/space-bookings/{bookingId}/emergency-transfer:
+    post:
+      tags:
+        - space bookings
+      summary: Creates a space booking without a change request and truncates the departure date of the existing space booking
+      operationId: emergencyTransfer
+      parameters:
+        - name: premisesId
+          in: path
+          description: ID of the corresponding premises
+          required: true
+          schema:
+            type: string
+            format: uuid
+        - name: bookingId
+          in: path
+          description: ID of the space booking
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        content:
+          'application/json':
+            schema:
+              $ref: '#/components/schemas/Cas1NewEmergencyTransfer'
+        required: true
+      responses:
+        200:
+          description: successful operation
+        400:
+          description: invalid params
+          content:
+            'application/problem+json':
+              schema:
+                $ref: '#/components/schemas/ValidationError'
+        401:
+          $ref: '#/components/responses/401Response'
+        403:
+          $ref: '#/components/responses/403Response'
+        404:
+          description: invalid premises ID or booking ID
+          content:
+            'application/json':
+              schema:
+                $ref: '#/components/schemas/Problem'
+        500:
+          $ref: '#/components/responses/500Response'
+
+  /premises/{premisesId}/space-bookings/{bookingId}/planned-transfer:
+    post:
+      tags:
+        - space bookings
+      summary: Creates a space booking for a planned transfer change request and truncates the departure date of the existing space booking. Will close the planned transfer change request.
+      operationId: plannedTransfer
+      parameters:
+        - name: premisesId
+          in: path
+          description: ID of the corresponding premises
+          required: true
+          schema:
+            type: string
+            format: uuid
+        - name: bookingId
+          in: path
+          description: ID of the space booking
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        content:
+          'application/json':
+            schema:
+              $ref: '#/components/schemas/Cas1NewPlannedTransfer'
         required: true
       responses:
         200:
@@ -4860,6 +4964,7 @@ components:
         - cas1_booking_create
         - cas1_booking_change_dates
         - cas1_booking_withdraw
+        - cas1_change_request_list
         - cas1_out_of_service_bed_create
         - cas1_out_of_service_bed_create_bed_on_hold
         - cas1_out_of_service_bed_cancel
@@ -6600,17 +6705,19 @@ components:
         - essentialCharacteristics
     Cas1UpdateSpaceBooking:
       type: object
-      description: Only provide values when a change is required
       properties:
         arrivalDate:
+          description: Only provided if the arrival date has changed
           type: string
           format: date
           example: 2022-07-28
         departureDate:
+          description: Only provided if the departure date has changed
           type: string
           format: date
           example: 2022-09-30
         characteristics:
+          description: Only provided if characteristics have changed
           type: array
           items:
             $ref: '#/components/schemas/Cas1SpaceBookingCharacteristic'
@@ -7015,6 +7122,51 @@ components:
           type: string
       required:
         - reasonId
+    Cas1NewEmergencyTransfer:
+      type: object
+      properties:
+        destinationPremisesId:
+          type: string
+          format: uuid
+        arrivalDate:
+          description: The expected arrival date for the new space booking. The existing space booking will be updated to end on this date
+          type: string
+          format: date
+        departureDate:
+          description: The expected departure date for the new space booking
+          type: string
+          format: date
+      required:
+        - destinationPremisesId
+        - arrivalDate
+        - departureDate
+    Cas1NewPlannedTransfer:
+      type: object
+      properties:
+        destinationPremisesId:
+          type: string
+          format: uuid
+        arrivalDate:
+          description: The expected arrival date for the new space booking. The existing space booking will be updated to end on this date
+          type: string
+          format: date
+        departureDate:
+          description: The expected departure date for the new space booking
+          type: string
+          format: date
+        changeRequestId:
+          type: string
+          format: uuid
+        characteristics:
+          description: If not provided, it is assumed that no characteristics are required
+          type: array
+          items:
+            $ref: '#/components/schemas/Cas1SpaceCharacteristic'
+      required:
+        - destinationPremisesId
+        - arrivalDate
+        - departureDate
+        - changeRequestId
     Cas1AssignKeyWorker:
       type: object
       properties:
@@ -7646,6 +7798,7 @@ components:
           type: string
           format: date
         lengthOfStayDays:
+          description: Current placement's length of stay, using canonical arrival date
           type: integer
         requestReason:
           $ref: '#/components/schemas/NamedId'
@@ -7704,6 +7857,7 @@ components:
           type: string
           format: date
         lengthOfStayDays:
+          description: Current placement's length of stay, using canonical arrival date
           type: integer
       required:
         - id
@@ -7718,12 +7872,12 @@ components:
         - name
         - tier
         - canonicalArrivalDate
-        - lengthOfStay
+        - lengthOfStayDays
       x-enum-varnames:
         - NAME
         - TIER
         - CANONICAL_ARRIVAL_DATE
-        - LENGTH_OF_STAY
+        - LENGTH_OF_STAY_DAYS
     Cas1PremisesBedSummary:
       type: object
       properties:

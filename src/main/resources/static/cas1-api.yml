@@ -17,14 +17,20 @@ paths:
           description: Page number of results to return. If blank, returns all results
           schema:
             type: integer
+        - name: cruManagementAreaId
+          in: query
+          description: Limits change requests to applications within the cru management area
+          schema:
+            type: string
+            format: uuid
         - name: sortBy
           in: query
-          description: Which field to sort the results by. If blank, will sort by createdAt
+          description: Which field to sort the results by. If blank, will sort by name
           schema:
             $ref: 'cas1-schemas.yml#/components/schemas/Cas1ChangeRequestSortField'
         - name: sortDirection
           in: query
-          description: The direction to sort the results by. If blank, will sort in descending order
+          description: The direction to sort the results by. If blank, will sort in ascending order
           schema:
             $ref: '_shared.yml#/components/schemas/SortDirection'
       responses:
@@ -1402,6 +1408,104 @@ paths:
           'application/json':
             schema:
               $ref: 'cas1-schemas.yml#/components/schemas/Cas1NonArrival'
+        required: true
+      responses:
+        200:
+          description: successful operation
+        400:
+          description: invalid params
+          content:
+            'application/problem+json':
+              schema:
+                $ref: '_shared.yml#/components/schemas/ValidationError'
+        401:
+          $ref: '_shared.yml#/components/responses/401Response'
+        403:
+          $ref: '_shared.yml#/components/responses/403Response'
+        404:
+          description: invalid premises ID or booking ID
+          content:
+            'application/json':
+              schema:
+                $ref: '_shared.yml#/components/schemas/Problem'
+        500:
+          $ref: '_shared.yml#/components/responses/500Response'
+
+  /premises/{premisesId}/space-bookings/{bookingId}/emergency-transfer:
+    post:
+      tags:
+        - space bookings
+      summary: Creates a space booking without a change request and truncates the departure date of the existing space booking
+      operationId: emergencyTransfer
+      parameters:
+        - name: premisesId
+          in: path
+          description: ID of the corresponding premises
+          required: true
+          schema:
+            type: string
+            format: uuid
+        - name: bookingId
+          in: path
+          description: ID of the space booking
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        content:
+          'application/json':
+            schema:
+              $ref: 'cas1-schemas.yml#/components/schemas/Cas1NewEmergencyTransfer'
+        required: true
+      responses:
+        200:
+          description: successful operation
+        400:
+          description: invalid params
+          content:
+            'application/problem+json':
+              schema:
+                $ref: '_shared.yml#/components/schemas/ValidationError'
+        401:
+          $ref: '_shared.yml#/components/responses/401Response'
+        403:
+          $ref: '_shared.yml#/components/responses/403Response'
+        404:
+          description: invalid premises ID or booking ID
+          content:
+            'application/json':
+              schema:
+                $ref: '_shared.yml#/components/schemas/Problem'
+        500:
+          $ref: '_shared.yml#/components/responses/500Response'
+
+  /premises/{premisesId}/space-bookings/{bookingId}/planned-transfer:
+    post:
+      tags:
+        - space bookings
+      summary: Creates a space booking for a planned transfer change request and truncates the departure date of the existing space booking. Will close the planned transfer change request.
+      operationId: plannedTransfer
+      parameters:
+        - name: premisesId
+          in: path
+          description: ID of the corresponding premises
+          required: true
+          schema:
+            type: string
+            format: uuid
+        - name: bookingId
+          in: path
+          description: ID of the space booking
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        content:
+          'application/json':
+            schema:
+              $ref: 'cas1-schemas.yml#/components/schemas/Cas1NewPlannedTransfer'
         required: true
       responses:
         200:

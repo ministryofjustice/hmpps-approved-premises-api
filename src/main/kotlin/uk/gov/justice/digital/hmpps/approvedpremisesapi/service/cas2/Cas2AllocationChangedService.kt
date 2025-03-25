@@ -4,6 +4,7 @@ import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
 import org.springframework.web.client.HttpClientErrorException
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.ClientResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.ManagePomCasesClient
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.PomAllocation
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.PomDeallocated
@@ -13,7 +14,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas2Applicati
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.NomisUserRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.domainevent.HmppsDomainEvent
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.InvalidDomainEventException
-import java.net.URI
 import java.time.OffsetDateTime
 import java.util.UUID
 
@@ -26,7 +26,10 @@ class Cas2AllocationChangedService(
 ) {
   private val log = LoggerFactory.getLogger(this::class.java)
   private fun getAllocationResponse(detailUrl: String) = try {
-    managePomCasesClient.getPomAllocation(URI.create(detailUrl))
+    when (val result = managePomCasesClient.getPomAllocation(detailUrl)) {
+      is ClientResult.Success -> result.body
+      is ClientResult.Failure -> throw result.toException()
+    }
   } catch (e: HttpClientErrorException) {
     when (e.message) {
       "404 Not allocated" -> PomDeallocated
