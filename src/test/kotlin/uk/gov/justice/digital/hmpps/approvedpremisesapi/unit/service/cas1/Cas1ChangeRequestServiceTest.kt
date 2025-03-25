@@ -45,7 +45,6 @@ class Cas1ChangeRequestServiceTest {
     cas1ChangeRequestRepository,
     placementRequestRepository,
     cas1ChangeRequestReasonRepository,
-    objectMapper,
     cas1SpaceBookingRepository,
     lockableCas1ChangeRequestEntityRepository,
     cas1ChangeRequestRejectionReasonRepository,

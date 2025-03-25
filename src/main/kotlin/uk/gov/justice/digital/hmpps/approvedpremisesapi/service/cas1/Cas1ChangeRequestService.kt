@@ -1,6 +1,5 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1
 
-import com.fasterxml.jackson.databind.ObjectMapper
 import jakarta.transaction.Transactional
 import org.springframework.data.repository.findByIdOrNull
 import org.springframework.stereotype.Service
@@ -31,7 +30,6 @@ class Cas1ChangeRequestService(
   private val cas1ChangeRequestRepository: Cas1ChangeRequestRepository,
   private val placementRequestRepository: PlacementRequestRepository,
   private val cas1ChangeRequestReasonRepository: Cas1ChangeRequestReasonRepository,
-  private val objectMapper: ObjectMapper,
   private val cas1SpaceBookingRepository: Cas1SpaceBookingRepository,
   private val lockableCas1ChangeRequestEntityRepository: LockableCas1ChangeRequestRepository,
   private val cas1ChangeRequestRejectionReasonRepository: Cas1ChangeRequestRejectionReasonRepository,
@@ -70,7 +68,7 @@ class Cas1ChangeRequestService(
         placementRequest = placementRequest,
         spaceBooking = spaceBooking,
         type = ChangeRequestType.valueOf(cas1NewChangeRequest.type.name),
-        requestJson = objectMapper.writeValueAsString(cas1NewChangeRequest.requestJson),
+        requestJson = cas1NewChangeRequest.requestJson.toString(),
         requestReason = requestReason,
         decisionJson = null,
         decision = null,
