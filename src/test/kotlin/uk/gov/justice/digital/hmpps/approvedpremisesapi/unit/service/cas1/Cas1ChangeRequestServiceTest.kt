@@ -30,7 +30,6 @@ class Cas1ChangeRequestServiceTest {
     cas1ChangeRequestRepository,
     placementRequestRepository,
     cas1ChangeRequestReasonRepository,
-    objectMapper,
     cas1SpaceBookingRepository,
   )
 
