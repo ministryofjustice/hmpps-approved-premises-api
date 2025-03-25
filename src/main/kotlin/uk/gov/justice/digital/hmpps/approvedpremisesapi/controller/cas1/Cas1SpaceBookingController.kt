@@ -1,9 +1,11 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.controller.cas1
 
+import jakarta.transaction.Transactional
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
 import org.springframework.stereotype.Service
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.cas1.SpaceBookingsCas1Delegate
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1ApprovedPlacementAppeal
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1AssignKeyWorker
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1NewArrival
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1NewDeparture
@@ -20,6 +22,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1TimelineEv
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1UpdateSpaceBooking
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.SortDirection
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.CancellationReasonRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas1SpaceBookingEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserPermission
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserPermission.CAS1_EMERGENCY_TRANSFER_PERFORM
@@ -32,6 +35,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.CharacteristicSe
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.OffenderService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.UserAccessService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.UserService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1ChangeRequestService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1SpaceBookingService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1SpaceBookingService.DepartureInfo
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1SpaceBookingService.SpaceBookingFilterCriteria
@@ -60,6 +64,7 @@ class Cas1SpaceBookingController(
   private val cas1WithdrawableService: Cas1WithdrawableService,
   private val characteristicService: CharacteristicService,
   private val cas1TimelineService: Cas1TimelineService,
+  private val cas1ChangeRequestService: Cas1ChangeRequestService,
 ) : SpaceBookingsCas1Delegate {
 
   override fun getSpaceBookingTimeline(premisesId: UUID, bookingId: UUID): ResponseEntity<List<Cas1TimelineEvent>> {
@@ -306,6 +311,30 @@ class Cas1SpaceBookingController(
             cancelledAt = body.occurredAt,
             body.reasonId,
             body.reasonNotes,
+          ),
+        ),
+      )
+  }
+
+  @Transactional
+  override fun appeal(premisesId: UUID, bookingId: UUID, body: Cas1ApprovedPlacementAppeal): ResponseEntity<Unit> {
+    userAccessService.ensureCurrentUserHasPermission(UserPermission.CAS1_PLACEMENT_APPEAL_ASSESS)
+    val spaceBooking = extractEntityFromCasResult(
+      cas1SpaceBookingService.getBooking(premisesId, bookingId),
+    )
+
+    cas1ChangeRequestService.approvePlacementAppeal(body.placementAppealChangeRequestId, userService.getUserForRequest(), spaceBooking)
+
+    return ResponseEntity
+      .ok()
+      .body(
+        extractEntityFromCasResult(
+          cas1WithdrawableService.withdrawSpaceBooking(
+            spaceBooking = spaceBooking,
+            user = userService.getUserForRequest(),
+            cancelledAt = body.occurredAt,
+            userProvidedReason = CancellationReasonRepository.CAS1_BOOKING_SUCCESSFULLY_APPEALED_ID,
+            otherReason = body.reasonNotes,
           ),
         ),
       )
