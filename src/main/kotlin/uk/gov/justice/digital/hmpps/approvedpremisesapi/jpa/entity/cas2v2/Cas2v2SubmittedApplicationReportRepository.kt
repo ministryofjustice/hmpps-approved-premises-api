@@ -19,7 +19,6 @@ interface Cas2v2SubmittedApplicationReportRepository : JpaRepository<DomainEvent
         events.data -> 'eventDetails' -> 'personReference' ->> 'crn' AS personCrn,
         events.data -> 'eventDetails' ->> 'referringPrisonCode' AS referringPrisonCode,
         events.data -> 'eventDetails' ->> 'preferredAreas' AS preferredAreas,
-        events.data -> 'eventDetails' ->> 'bailHearingDate' AS bailHearingDate,
         CAST(events.data -> 'eventDetails' ->> 'hdcEligibilityDate' as DATE) AS hdcEligibilityDate,
         CAST(events.data -> 'eventDetails' ->> 'conditionalReleaseDate' as DATE) AS conditionalReleaseDate,
         TO_CHAR(events.occurred_at,'YYYY-MM-DD"T"HH24:MI:SS') AS submittedAt,
