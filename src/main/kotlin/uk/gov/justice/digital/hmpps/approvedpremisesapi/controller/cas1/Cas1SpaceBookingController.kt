@@ -7,6 +7,8 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.cas1.SpaceBookingsCa
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1AssignKeyWorker
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1NewArrival
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1NewDeparture
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1NewEmergencyTransfer
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1NewPlannedTransfer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1NewSpaceBooking
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1NewSpaceBookingCancellation
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1NonArrival
@@ -327,6 +329,18 @@ class Cas1SpaceBookingController(
     )
     return ResponseEntity(HttpStatus.OK)
   }
+
+  override fun emergencyTransfer(
+    premisesId: UUID,
+    bookingId: UUID,
+    cas1NewEmergencyTransfer: Cas1NewEmergencyTransfer,
+  ): ResponseEntity<Unit> = super.emergencyTransfer(premisesId, bookingId, cas1NewEmergencyTransfer)
+
+  override fun plannedTransfer(
+    premisesId: UUID,
+    bookingId: UUID,
+    cas1NewPlannedTransfer: Cas1NewPlannedTransfer,
+  ): ResponseEntity<Unit> = super.plannedTransfer(premisesId, bookingId, cas1NewPlannedTransfer)
 
   private fun toCas1SpaceBooking(booking: Cas1SpaceBookingEntity): Cas1SpaceBooking {
     val user = userService.getUserForRequest()
