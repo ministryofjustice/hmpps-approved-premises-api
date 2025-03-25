@@ -66,6 +66,8 @@ generic-service:
     URL-TEMPLATES_FRONTEND_CAS2_APPLICATION: https://community-accommodation-tier-2-dev.hmpps.service.justice.gov.uk/applications/#id
     URL-TEMPLATES_FRONTEND_CAS2_APPLICATION-OVERVIEW: https://community-accommodation-tier-2-dev.hmpps.service.justice.gov.uk/applications/#id/overview
     URL-TEMPLATES_FRONTEND_CAS2_SUBMITTED-APPLICATION-OVERVIEW: https://community-accommodation-tier-2-dev.hmpps.service.justice.gov.uk/assess/applications/#applicationId/overview
+    URL-TEMPLATES_FRONTEND_CAS2V2_APPLICATION-OVERVIEW: https://community-accommodation-tier-2-bail-dev.hmpps.service.justice.gov.uk/applications/#id/overview
+    URL-TEMPLATES_FRONTEND_CAS2V2_SUBMITTED-APPLICATION-OVERVIEW: https://community-accommodation-tier-2-bail-dev.hmpps.service.justice.gov.uk/assess/applications/#applicationId/overview
     URL-TEMPLATES_API_CAS1_APPLICATION-SUBMITTED-EVENT-DETAIL: https://approved-premises-api-dev.hmpps.service.justice.gov.uk/events/application-submitted/#eventId
     URL-TEMPLATES_API_CAS1_APPLICATION-ASSESSED-EVENT-DETAIL: https://approved-premises-api-dev.hmpps.service.justice.gov.uk/events/application-assessed/#eventId
     URL-TEMPLATES_API_CAS1_BOOKING-MADE-EVENT-DETAIL: https://approved-premises-api-dev.hmpps.service.justice.gov.uk/events/booking-made/#eventId
@@ -88,8 +90,6 @@ generic-service:
     URL-TEMPLATES_API_CAS1_ASSESSMENT-INFO-REQUESTED-DETAIL: https://approved-premises-api-dev.hmpps.service.justice.gov.uk/events/further-information-requested/#eventId
     URL-TEMPLATES_API_CAS2_APPLICATION-SUBMITTED-EVENT-DETAIL: https://approved-premises-api-dev.hmpps.service.justice.gov.uk/events/cas2/application-submitted/#eventId
     URL-TEMPLATES_API_CAS2_APPLICATION-STATUS-UPDATED-EVENT-DETAIL: https://approved-premises-api-dev.hmpps.service.justice.gov.uk/events/cas2/application-status-updated/#eventId
-    URL-TEMPLATES_API_CAS2V2_APPLICATION-SUBMITTED-EVENT-DETAIL: https://community-accommodation-tier-2-bail-dev.hmpps.service.justice.gov.uk/applications/#eventId/submission
-    URL-TEMPLATES_API_CAS2V2_APPLICATION-STATUS-UPDATED-EVENT-DETAIL: https://community-accommodation-tier-2-bail-dev.hmpps.service.justice.gov.uk/assess/applications/#eventId/overview
     URL-TEMPLATES_API_CAS3_APPLICATION: https://approved-premises-api-dev.hmpps.service.justice.gov.uk/applications/#applicationId
     URL-TEMPLATES_API_CAS3_BOOKING: https://approved-premises-api-dev.hmpps.service.justice.gov.uk/premises/#premisesId/bookings/#bookingId
     URL-TEMPLATES_API_CAS3_BOOKING-CANCELLED-EVENT-DETAIL: https://approved-premises-api-dev.hmpps.service.justice.gov.uk/events/cas3/booking-cancelled/#eventId
