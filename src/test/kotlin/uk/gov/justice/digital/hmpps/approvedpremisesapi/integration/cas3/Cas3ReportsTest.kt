@@ -1922,6 +1922,7 @@ class Cas3ReportsTest : IntegrationTestBase() {
   }
 
   @Nested
+  @SuppressWarnings("LargeClass")
   inner class GetBedUtilReport {
     @Test
     fun `Get bed utilisation report returns OK with correct body`() {
@@ -1931,17 +1932,33 @@ class Cas3ReportsTest : IntegrationTestBase() {
             withProbationRegion(userEntity.probationRegion)
           }
 
-          val (premises, room) = createPremisesAndRoom(userEntity.probationRegion, probationDeliveryUnit)
-          val bed = createBed(room)
+          val (premisesOne, roomPremisesOne) = createPremisesAndRoom(userEntity.probationRegion, probationDeliveryUnit)
+          val bedPremisesOne = createBed(roomPremisesOne)
 
-          bed.apply { createdAt = OffsetDateTime.parse("2023-02-16T14:03:00+00:00") }
-          bedRepository.save(bed)
+          bedPremisesOne.apply { createdAt = OffsetDateTime.parse("2023-02-16T14:03:00+00:00") }
+          bedRepository.save(bedPremisesOne)
+
+          val (premisesTwo, roomPremisesTwo) = createPremisesAndRoom(userEntity.probationRegion, probationDeliveryUnit)
+          val bedPremisesTwo = createBed(roomPremisesTwo)
+
+          bedPremisesTwo.apply {
+            createdAt = OffsetDateTime.parse("2023-01-09T08:31:00+00:00")
+            endDate = LocalDate.parse("2023-03-27")
+          }
+
+          bedRepository.save(bedPremisesTwo)
+
+          val (premisesThree, roomPremisesThree) = createPremisesAndRoom(userEntity.probationRegion, probationDeliveryUnit)
+          val bedPremisesThree = createBed(roomPremisesThree)
+
+          bedPremisesThree.apply { createdAt = OffsetDateTime.parse("2023-07-11T13:07:00+00:00") }
+          bedRepository.save(bedPremisesThree)
 
           govUKBankHolidaysAPIMockSuccessfullCallWithEmptyResponse()
 
           createBooking(
-            premises,
-            bed,
+            premisesOne,
+            bedPremisesOne,
             offenderDetails.otherIds.crn,
             LocalDate.parse("2023-03-25"),
             LocalDate.parse("2023-04-17"),
@@ -1951,12 +1968,12 @@ class Cas3ReportsTest : IntegrationTestBase() {
             BedUtilisationReportRow(
               probationRegion = userEntity.probationRegion.name,
               pdu = probationDeliveryUnit.name,
-              localAuthority = premises.localAuthorityArea?.name,
-              propertyRef = premises.name,
-              addressLine1 = premises.addressLine1,
-              town = premises.town,
-              postCode = premises.postcode,
-              bedspaceRef = room.name,
+              localAuthority = premisesOne.localAuthorityArea?.name,
+              propertyRef = premisesOne.name,
+              addressLine1 = premisesOne.addressLine1,
+              town = premisesOne.town,
+              postCode = premisesOne.postcode,
+              bedspaceRef = roomPremisesOne.name,
               bookedDaysActiveAndClosed = 0,
               confirmedDays = 0,
               provisionalDays = 17,
@@ -1964,12 +1981,12 @@ class Cas3ReportsTest : IntegrationTestBase() {
               effectiveTurnaroundDays = 0,
               voidDays = 0,
               totalBookedDays = 0,
-              bedspaceStartDate = bed.createdAt?.toLocalDate(),
-              bedspaceEndDate = bed.endDate,
+              bedspaceStartDate = bedPremisesOne.createdAt?.toLocalDate(),
+              bedspaceEndDate = bedPremisesOne.endDate,
               bedspaceOnlineDays = 30,
               occupancyRate = 0.0,
-              uniquePropertyRef = premises.id.toShortBase58(),
-              uniqueBedspaceRef = room.id.toShortBase58(),
+              uniquePropertyRef = premisesOne.id.toShortBase58(),
+              uniqueBedspaceRef = roomPremisesOne.id.toShortBase58(),
             ),
           )
 

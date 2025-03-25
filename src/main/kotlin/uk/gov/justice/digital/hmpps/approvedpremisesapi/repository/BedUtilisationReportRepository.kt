@@ -34,12 +34,15 @@ interface BedUtilisationReportRepository : JpaRepository<BedEntity, UUID> {
     WHERE
       p.service = 'temporary-accommodation'
       AND (CAST(:probationRegionId AS UUID) IS NULL OR p.probation_region_id = :probationRegionId)
+      AND (b.created_at <= :endDate AND (b.end_date IS NULL OR b.end_date >= :startDate))
     ORDER BY b.name      
     """,
     nativeQuery = true,
   )
   fun findAllBedspaces(
     probationRegionId: UUID?,
+    startDate: LocalDate,
+    endDate: LocalDate,
   ): List<BedUtilisationBedspaceReportData>
 
   @Query(
