@@ -249,8 +249,8 @@ class WebClientConfiguration(
       .build(),
   )
 
-  @Bean(name = ["nomisUserRolesApiWebClient"])
-  fun nomisUserRolesApiClient(
+  @Bean(name = ["nomisUserRolesForRequesterApiWebClient"])
+  fun nomisUserRolesForRequesterApiClient(
     @Value("\${services.nomis-user-roles-api.base-url}") nomisUserRolesBaseUrl: String,
     @Value("\${services.nomis-user-roles-api.timeout-ms}") nomisUserRolesUpstreamTimeoutMs: Long,
   ): WebClientConfig = WebClientConfig(
@@ -267,6 +267,41 @@ class WebClientConfiguration(
       .build(),
     retryOnReadTimeout = true,
   )
+
+  @Bean(name = ["nomisUserRolesApiWebClient"])
+  fun nomisUserRolesApiClient(
+    clientRegistrations: ClientRegistrationRepository,
+    authorizedClients: OAuth2AuthorizedClientRepository,
+    authorizedClientManager: OAuth2AuthorizedClientManager,
+    @Value("\${services.nomis-user-roles-api.base-url}") nomisUserRolesBaseUrl: String,
+  ): WebClientConfig {
+    val oauth2Client = ServletOAuth2AuthorizedClientExchangeFilterFunction(authorizedClientManager)
+
+    oauth2Client.setDefaultClientRegistrationId("nomis-user-roles-api")
+
+    return WebClientConfig(
+      WebClient.builder()
+        .baseUrl(nomisUserRolesBaseUrl)
+        .filter(oauth2Client)
+        .clientConnector(
+          ReactorClientHttpConnector(
+            HttpClient
+              .create()
+              .responseTimeout(Duration.ofMillis(defaultUpstreamTimeoutMs))
+              .option(
+                ChannelOption.CONNECT_TIMEOUT_MILLIS,
+                Duration.ofMillis(defaultUpstreamTimeoutMs).toMillis().toInt(),
+              ),
+          ),
+        )
+        .exchangeStrategies(
+          ExchangeStrategies.builder().codecs {
+            it.defaultCodecs().maxInMemorySize(defaultMaxResponseInMemorySizeBytes)
+          }.build(),
+        )
+        .build(),
+    )
+  }
 
   @Bean(name = ["manageUsersApiWebClient"])
   fun manageUsersApiClient(

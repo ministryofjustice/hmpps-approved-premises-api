@@ -19,12 +19,12 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.Cas2ApplicationE
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.NomisUserEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas2ApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas2ApplicationRepository
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.NomisUserRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.domainevent.AdditionalInformation
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.domainevent.HmppsDomainEvent
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.domainevent.PersonIdentifier
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.domainevent.PersonReference
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.InvalidDomainEventException
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.NomisUserService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas2.Cas2AllocationChangedService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas2.Cas2ApplicationService
 import java.time.Instant
@@ -44,7 +44,7 @@ class Cas2AllocationChangedServiceTest {
   lateinit var managePomCasesClient: ManagePomCasesClient
 
   @MockK
-  lateinit var nomisUserRepository: NomisUserRepository
+  lateinit var nomisUserService: NomisUserService
 
   @InjectMockKs
   lateinit var allocationChangedService: Cas2AllocationChangedService
@@ -76,13 +76,13 @@ class Cas2AllocationChangedServiceTest {
     every { managePomCasesClient.getPomAllocation(any()) } returns ClientResult.Success(HttpStatus.OK, pomAllocation)
     every { applicationService.findMostRecentApplication(eq(nomsNumber)) } returns application
     every { applicationRepository.save(any()) } answers { it.invocation.args[0] as Cas2ApplicationEntity }
-    every { nomisUserRepository.findByNomisStaffId(eq(pomAllocation.manager.code)) } returns user
+    every { nomisUserService.getUserByStaffId(eq(pomAllocation.manager.code)) } returns user
 
     allocationChangedService.process(allocationEvent)
 
     verify(exactly = 1) { managePomCasesClient.getPomAllocation(any()) }
     verify(exactly = 1) { applicationService.findMostRecentApplication(eq(nomsNumber)) }
-    verify(exactly = 1) { nomisUserRepository.findByNomisStaffId(eq(pomAllocation.manager.code)) }
+    verify(exactly = 1) { nomisUserService.getUserByStaffId(eq(pomAllocation.manager.code)) }
     verify(exactly = 1) { applicationRepository.save(any()) }
   }
 
@@ -92,7 +92,7 @@ class Cas2AllocationChangedServiceTest {
 
     every { managePomCasesClient.getPomAllocation(any()) } returns ClientResult.Success(HttpStatus.OK, pomAllocation)
     every { applicationService.findMostRecentApplication(eq(nomsNumber)) } returns application
-    every { nomisUserRepository.findByNomisStaffId(eq(pomAllocation.manager.code)) } returns null
+    every { nomisUserService.getUserByStaffId(eq(pomAllocation.manager.code)) } returns user
 
     assertThrows<RuntimeException> { allocationChangedService.process(allocationEvent) }
   }
@@ -166,7 +166,7 @@ class Cas2AllocationChangedServiceTest {
       pomAllocation.copy(manager = Manager(user.nomisStaffId)),
     )
     every { applicationService.findMostRecentApplication(eq(nomsNumber)) } returns application
-    every { nomisUserRepository.findByNomisStaffId(any()) } returns user
+    every { nomisUserService.getUserByStaffId(any()) } returns user
 
     allocationChangedService.process(allocationEvent)
 

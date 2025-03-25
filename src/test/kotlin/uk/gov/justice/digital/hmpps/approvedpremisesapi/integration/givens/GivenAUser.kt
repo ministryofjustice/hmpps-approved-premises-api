@@ -5,7 +5,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.StaffDetailFacto
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.Cas2v2IntegrationTestBase
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.IntegrationTestBase
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.apDeliusContextAddStaffDetailResponse
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.nomisUserRolesMockSuccessfulGetUserDetailsCall
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.nomisUserRolesMockSuccessfulGetMeCall
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas1CruManagementAreaEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ExternalUserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.NomisUserEntity
@@ -119,7 +119,7 @@ fun IntegrationTestBase.givenACas2PomUser(
 
   val jwt = jwtAuthHelper.createValidNomisAuthorisationCodeJwt(nomisUserDetails.username)
 
-  nomisUserRolesMockSuccessfulGetUserDetailsCall(jwt, nomisUserDetails)
+  nomisUserRolesMockSuccessfulGetMeCall(jwt, nomisUserDetails)
 
   block(user, jwt)
 }
@@ -183,7 +183,7 @@ fun Cas2v2IntegrationTestBase.givenACas2v2PomUser(
 
   val jwt = jwtAuthHelper.createValidCas2v2NomisAuthorisationCodeJwt(nomisUserDetails.username)
 
-  nomisUserRolesMockSuccessfulGetUserDetailsCall(jwt, nomisUserDetails)
+  nomisUserRolesMockSuccessfulGetMeCall(jwt, nomisUserDetails)
 
   block(user, jwt)
 }
@@ -212,7 +212,7 @@ fun Cas2v2IntegrationTestBase.givenACas2v2NomisUser(
 
   val jwt = jwtAuthHelper.createValidCas2v2NomisAuthorisationCodeJwt(nomisUserDetails.username)
 
-  nomisUserRolesMockSuccessfulGetUserDetailsCall(jwt, nomisUserDetails)
+  nomisUserRolesMockSuccessfulGetMeCall(jwt, nomisUserDetails)
 
   block(user, jwt)
 }
@@ -241,7 +241,7 @@ fun Cas2v2IntegrationTestBase.givenACas2v2LicenceCaseAdminUser(
 
   val jwt = jwtAuthHelper.createValidNomisAuthorisationCodeJwt(nomisUserDetails.username, listOf("ROLE_LICENCE_CA"))
 
-  nomisUserRolesMockSuccessfulGetUserDetailsCall(jwt, nomisUserDetails)
+  nomisUserRolesMockSuccessfulGetMeCall(jwt, nomisUserDetails)
 
   block(user, jwt)
 }
@@ -269,7 +269,7 @@ fun IntegrationTestBase.givenACas2LicenceCaseAdminUser(
 
   val jwt = jwtAuthHelper.createValidNomisAuthorisationCodeJwt(nomisUserDetails.username, listOf("ROLE_LICENCE_CA"))
 
-  nomisUserRolesMockSuccessfulGetUserDetailsCall(jwt, nomisUserDetails)
+  nomisUserRolesMockSuccessfulGetMeCall(jwt, nomisUserDetails)
 
   block(user, jwt)
 }
@@ -325,7 +325,7 @@ fun IntegrationTestBase.givenACas2Admin(
 
   val jwt = jwtAuthHelper.createValidAdminAuthorisationCodeJwt(nomisUserDetails.username)
 
-  nomisUserRolesMockSuccessfulGetUserDetailsCall(jwt, nomisUserDetails)
+  nomisUserRolesMockSuccessfulGetMeCall(jwt, nomisUserDetails)
 
   block(user, jwt)
 }
