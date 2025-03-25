@@ -4,8 +4,6 @@ import com.ninjasquad.springmockk.SpykBean
 import io.mockk.verify
 import org.awaitility.Awaitility.await
 import org.junit.jupiter.api.Test
-import org.junit.jupiter.params.ParameterizedTest
-import org.junit.jupiter.params.provider.ValueSource
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
 import software.amazon.awssdk.services.sns.model.MessageAttributeValue
@@ -142,7 +140,7 @@ class Cas2DomainEventListenerTest : IntegrationTestBase() {
         )
 
         val agency =
-          Agency(agencyId = "NEW", description = "HMS LONDON", agencyType = "prison")
+          Agency(agencyId = "NEW", description = "NEWCASTLE", agencyType = "prison")
 
         mockSuccessfulGetCallWithJsonResponse(
           url = "/api/agencies/${agency.agencyId}",
@@ -151,7 +149,7 @@ class Cas2DomainEventListenerTest : IntegrationTestBase() {
 
         @SuppressWarnings("MaxLineLength")
         val event =
-          "{\"description\":\"$eventType\",\"eventType\":\"$eventType\",\"detailUrl\":\"$detailUrl\",\"occurredAt\":\"$occurredAt\",\"additionalInformation\": {\"categoriesChanged\": [\"LOCATION\"]},\"personReference\":{\"identifiers\":[{\"type\":\"NOMS\",\"value\":\"${application.nomsNumber}\"}]}}"
+          "{\"eventType\":\"$eventType\",\"detailUrl\":\"$detailUrl\",\"occurredAt\":\"$occurredAt\",\"additionalInformation\": {\"categoriesChanged\": [\"LOCATION\"]},\"personReference\":{\"identifiers\":[{\"type\":\"NOMS\",\"value\":\"${application.nomsNumber}\"}]}}"
         publishMessageToTopic(eventType, event)
         await().until { applicationAssignmentRepository.count().toInt() == 3 }
         val locations = applicationAssignmentRepository.findAll()
@@ -217,13 +215,10 @@ class Cas2DomainEventListenerTest : IntegrationTestBase() {
     }
   }
 
-  fun String.setNoms(value: String) = replace("%NOMS%", value)
-  fun String.setStaffId(value: String) = replace("%STAFFID%", value)
-
-  @ParameterizedTest
-  @ValueSource(strings = ["offender-management.allocation.changed"])
-  fun `Save new allocation in assignment table`(eventType: String) {
-    val occurredAt = OffsetDateTime.now()
+  @Test
+  fun `Save new allocation in assignment table`() {
+    val eventType = "offender-management.allocation.changed"
+    val occurredAt = Instant.now().atZone(ZoneId.systemDefault())
     val applicationSchema = cas2ApplicationJsonSchemaEntityFactory.produceAndPersist {
       withAddedAt(OffsetDateTime.now())
       withId(UUID.randomUUID())
@@ -239,26 +234,29 @@ class Cas2DomainEventListenerTest : IntegrationTestBase() {
           withConditionalReleaseDate(LocalDate.now().plusDays(1))
         }
 
-        val otherUser = nomisUserEntityFactory.produceAndPersist { withNomisStaffIdentifier(123456L) }
-        val pomAllocation = PomAllocation(Manager(otherUser.nomisStaffId), Prison("LEI"))
+        val oldPrisonCode = "LIV"
+        val newPrisonCode = "LON"
 
+        val pomAllocation = PomAllocation(Manager(userEntity.nomisStaffId), Prison(newPrisonCode))
         val url = "/allocation/${application.nomsNumber}/primary_pom"
         val detailUrl = managePomCasesBaseUrl + url
 
         val olderApplicationAssignment = Cas2ApplicationAssignmentEntity(
           id = UUID.randomUUID(),
           application = application,
-          prisonCode = "NEW",
-          allocatedPomUserId = null,
+          prisonCode = oldPrisonCode,
+          allocatedPomUserId = userEntity.id,
           createdAt = occurredAt.toOffsetDateTime(),
         )
         val oldApplicationAssignment = Cas2ApplicationAssignmentEntity(
           id = UUID.randomUUID(),
           application = application,
-          prisonCode = "LON",
-          allocatedPomUserId = userEntity.id,
+          prisonCode = newPrisonCode,
+          allocatedPomUserId = null,
           createdAt = occurredAt.toOffsetDateTime(),
         )
+
+        applicationAssignmentRepository.deleteAll()
         applicationAssignmentRepository.save(
           oldApplicationAssignment,
         )
@@ -272,7 +270,7 @@ class Cas2DomainEventListenerTest : IntegrationTestBase() {
         )
 
         val newAgency =
-          Agency(agencyId = oldApplicationAssignment.prisonCode, description = "HMS LONDON", agencyType = "prison")
+          Agency(agencyId = newPrisonCode, description = "HMS LONDON", agencyType = "prison")
 
         mockSuccessfulGetCallWithJsonResponse(
           url = "/api/agencies/${newAgency.agencyId}",
@@ -280,7 +278,7 @@ class Cas2DomainEventListenerTest : IntegrationTestBase() {
         )
 
         val oldAgency =
-          Agency(agencyId = olderApplicationAssignment.prisonCode, description = "HMS NEWCASTLE", agencyType = "prison")
+          Agency(agencyId = oldPrisonCode, description = "HMS LIVERPOOL", agencyType = "prison")
 
         mockSuccessfulGetCallWithJsonResponse(
           url = "/api/agencies/${oldAgency.agencyId}",
@@ -317,7 +315,7 @@ class Cas2DomainEventListenerTest : IntegrationTestBase() {
             eq(
               mapOf(
                 "nomsNumber" to application.nomsNumber,
-                "transferringPrisonName" to newAgency.description,
+                "transferringPrisonName" to oldAgency.description,
                 "link" to getLink(application.id),
                 "applicationStatus" to "PLACEHOLDER",
               ),

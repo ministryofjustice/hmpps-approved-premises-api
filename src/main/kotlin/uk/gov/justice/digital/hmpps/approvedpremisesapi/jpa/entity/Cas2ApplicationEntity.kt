@@ -106,8 +106,6 @@ data class Cas2ApplicationEntity(
   override fun toString() = "Cas2ApplicationEntity: $id"
   val currentPrisonCode: String
     get() = applicationAssignments.first().prisonCode
-  val currentPomUserId: UUID?
-    get() = applicationAssignments.first().allocatedPomUserId
   val mostRecentPomUserId: UUID
     get() = applicationAssignments.first { it.allocatedPomUserId != null }.allocatedPomUserId!!
 

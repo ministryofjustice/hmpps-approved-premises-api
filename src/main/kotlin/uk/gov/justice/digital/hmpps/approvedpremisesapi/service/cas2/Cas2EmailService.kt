@@ -7,6 +7,7 @@ import org.springframework.stereotype.Service
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.Prisoner
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.PrisonsApiClient
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.config.NotifyConfig
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas2ApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.NomisUserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.NomisUserRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.EmailNotificationService
@@ -66,8 +67,9 @@ class Cas2EmailService(
     }
   }
 
-  fun sendAllocationChangedEmails(newPom: NomisUserEntity, nomsNumber: String, applicationId: UUID, oldPrisonCode: String, newPrisonCode: String) {
-    // TODO need to check elsewhere when cannot find user
+  fun sendAllocationChangedEmails(newPom: NomisUserEntity, nomsNumber: String, application: Cas2ApplicationEntity, newPrisonCode: String) {
+    val oldPrisonCode = application.applicationAssignments.first { it.prisonCode != newPrisonCode }.prisonCode
+
     prisonsApiClient.getAgencyDetails(oldPrisonCode).map { oldAgency ->
       prisonsApiClient.getAgencyDetails(newPrisonCode).map { newAgency ->
         sendLocationOrAllocationChangedEmail(
@@ -76,7 +78,7 @@ class Cas2EmailService(
           mapOf(
             "nomsNumber" to nomsNumber,
             "transferringPrisonName" to oldAgency.description,
-            "link" to getLink(applicationId),
+            "link" to getLink(application.id),
             "applicationStatus" to "PLACEHOLDER",
           ),
         )
@@ -86,7 +88,7 @@ class Cas2EmailService(
           mapOf(
             "nomsNumber" to nomsNumber,
             "receivingPrisonName" to newAgency.description,
-            "link" to getLink(applicationId),
+            "link" to getLink(application.id),
           ),
         )
       }

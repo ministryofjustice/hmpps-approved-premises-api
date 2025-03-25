@@ -49,37 +49,47 @@ class Cas2EmailServiceTest {
   private val prisoner = Prisoner(prisonId = newPrisonCode, prisonName = "HMS LONDON")
   private val nomsNumber = "NOMSABC"
   private val templateId = "SOME ID"
-  private val user = NomisUserEntityFactory().produce()
+  private val oldUser = NomisUserEntityFactory().produce()
+  private val newUser = NomisUserEntityFactory().produce()
 
   private val application =
     Cas2ApplicationEntityFactory().withNomsNumber(nomsNumber)
-      .withCreatedByUser(user).produce()
-  private val pomAllocation = PomAllocation(Manager(user.nomisStaffId), Prison(newPrisonCode))
+      .withCreatedByUser(oldUser).produce()
+  private val pomAllocation = PomAllocation(Manager(newUser.nomisStaffId), Prison(newPrisonCode))
 
   private val link = applicationUrlTemplate.replace("#id", application.id.toString())
-  private val applicationAssignmentOld = Cas2ApplicationAssignmentEntity(
+  private val applicationAssignmentOlder = Cas2ApplicationAssignmentEntity(
     id = UUID.randomUUID(),
     application = application,
     prisonCode = oldPrisonCode,
-    createdAt = OffsetDateTime.now(),
-    allocatedPomUserId = user.id,
+    createdAt = OffsetDateTime.now().minusDays(2),
+    allocatedPomUserId = oldUser.id,
+  )
+  private val applicationAssignmentOld = Cas2ApplicationAssignmentEntity(
+    id = UUID.randomUUID(),
+    application = application,
+    prisonCode = newPrisonCode,
+    createdAt = OffsetDateTime.now().minusDays(1),
+    allocatedPomUserId = null,
   )
   private val applicationAssignmentNew = Cas2ApplicationAssignmentEntity(
     id = UUID.randomUUID(),
     application = application,
     prisonCode = newPrisonCode,
     createdAt = OffsetDateTime.now(),
-    allocatedPomUserId = user.id,
+    allocatedPomUserId = newUser.id,
   )
   private val oldAgency =
-    Agency(agencyId = applicationAssignmentOld.prisonCode, description = "HMS LIVERPOOL", agencyType = "prison")
+    Agency(agencyId = oldPrisonCode, description = "HMS LIVERPOOL", agencyType = "prison")
   private val newAgency =
-    Agency(agencyId = applicationAssignmentNew.prisonCode, description = "HMS LONDON", agencyType = "prison")
+    Agency(agencyId = newPrisonCode, description = prisoner.prisonName, agencyType = "prison")
 
   @Test
   fun `send allocation changed emails`() {
     application.applicationAssignments.add(applicationAssignmentNew)
     application.applicationAssignments.add(applicationAssignmentOld)
+    application.applicationAssignments.add(applicationAssignmentOlder)
+
     every { notifyConfig.templates.toNacroApplicationTransferredToAnotherPom } returns templateId
     every { notifyConfig.templates.toReceivingPomApplicationTransferredToAnotherPom } returns templateId
     every { prisonsApiClient.getAgencyDetails(eq(oldAgency.agencyId)) } returns ClientResult.Success(
@@ -92,7 +102,7 @@ class Cas2EmailServiceTest {
     )
     every {
       emailNotificationService.sendEmail(
-        eq(user.email!!),
+        eq(newUser.email!!),
         eq(templateId),
         eq(
           mapOf(
@@ -118,7 +128,7 @@ class Cas2EmailServiceTest {
       )
     } returns Unit
 
-    emailService.sendAllocationChangedEmails(user, nomsNumber, application.id, oldAgency.agencyId, pomAllocation.prison.code)
+    emailService.sendAllocationChangedEmails(newUser, nomsNumber, application, pomAllocation.prison.code)
 
     verify(exactly = 1) { prisonsApiClient.getAgencyDetails(eq(oldAgency.agencyId)) }
     verify(exactly = 1) { prisonsApiClient.getAgencyDetails(eq(newAgency.agencyId)) }
@@ -129,10 +139,12 @@ class Cas2EmailServiceTest {
   fun `do not send allocation changed emails as no agency found for old Prison Id`() {
     application.applicationAssignments.add(applicationAssignmentNew)
     application.applicationAssignments.add(applicationAssignmentOld)
+    application.applicationAssignments.add(applicationAssignmentOlder)
+
     every { prisonsApiClient.getAgencyDetails(eq(oldAgency.agencyId)) } returns ClientResult.Failure.StatusCode(HttpMethod.GET, "/api/agencies/${oldAgency.agencyId}", HttpStatus.NOT_FOUND, null)
     every { emailNotificationService.sendEmail(any(), any(), any()) } returns Unit
 
-    emailService.sendAllocationChangedEmails(user, nomsNumber, application.id, oldAgency.agencyId, pomAllocation.prison.code)
+    emailService.sendAllocationChangedEmails(newUser, nomsNumber, application, pomAllocation.prison.code)
 
     verify(exactly = 1) { prisonsApiClient.getAgencyDetails(eq(oldAgency.agencyId)) }
     verify(exactly = 0) { emailNotificationService.sendEmail(any(), any(), any()) }
@@ -142,6 +154,8 @@ class Cas2EmailServiceTest {
   fun `do not send allocation changed emails as no agency found for new Prison Id`() {
     application.applicationAssignments.add(applicationAssignmentNew)
     application.applicationAssignments.add(applicationAssignmentOld)
+    application.applicationAssignments.add(applicationAssignmentOlder)
+
     every { prisonsApiClient.getAgencyDetails(eq(newAgency.agencyId)) } returns ClientResult.Failure.StatusCode(HttpMethod.GET, "/api/agencies/${newAgency.agencyId}", HttpStatus.NOT_FOUND, null)
     every { prisonsApiClient.getAgencyDetails(eq(oldAgency.agencyId)) } returns ClientResult.Success(
       HttpStatus.OK,
@@ -149,7 +163,7 @@ class Cas2EmailServiceTest {
     )
     every { emailNotificationService.sendEmail(any(), any(), any()) } returns Unit
 
-    emailService.sendAllocationChangedEmails(user, nomsNumber, application.id, oldAgency.agencyId, pomAllocation.prison.code)
+    emailService.sendAllocationChangedEmails(newUser, nomsNumber, application, pomAllocation.prison.code)
 
     verify(exactly = 1) { prisonsApiClient.getAgencyDetails(eq(oldAgency.agencyId)) }
     verify(exactly = 1) { prisonsApiClient.getAgencyDetails(eq(newAgency.agencyId)) }
@@ -158,13 +172,14 @@ class Cas2EmailServiceTest {
 
   @Test
   fun `send location changed emails`() {
-    application.applicationAssignments.add(applicationAssignmentNew)
     application.applicationAssignments.add(applicationAssignmentOld)
+    application.applicationAssignments.add(applicationAssignmentOlder)
+
     every { notifyConfig.templates.toTransferringPomApplicationTransferredToAnotherPrison } returns templateId
     every { notifyConfig.templates.toTransferringPomUnitApplicationTransferredToAnotherPrison } returns templateId
     every { notifyConfig.templates.toReceivingPomUnitApplicationTransferredToAnotherPrison } returns templateId
     every { notifyConfig.templates.toNacroApplicationTransferredToAnotherPrison } returns templateId
-    every { nomisUserRepository.findById(eq(user.id)) } returns Optional.of(user)
+    every { nomisUserRepository.findById(eq(oldUser.id)) } returns Optional.of(oldUser)
     every { prisonsApiClient.getAgencyDetails(eq(oldAgency.agencyId)) } returns ClientResult.Success(
       HttpStatus.OK,
       oldAgency,
@@ -172,7 +187,7 @@ class Cas2EmailServiceTest {
 
     every {
       emailNotificationService.sendEmail(
-        eq(user.email!!),
+        eq(oldUser.email!!),
         eq(templateId),
         eq(
           mapOf(
@@ -223,37 +238,39 @@ class Cas2EmailServiceTest {
       )
     } returns Unit
 
-    emailService.sendLocationChangedEmails(application.id, user.id, applicationAssignmentOld.prisonCode, nomsNumber, prisoner)
+    emailService.sendLocationChangedEmails(application.id, oldUser.id, oldPrisonCode, nomsNumber, prisoner)
 
-    verify(exactly = 1) { nomisUserRepository.findById(eq(user.id)) }
+    verify(exactly = 1) { nomisUserRepository.findById(eq(oldUser.id)) }
     verify(exactly = 1) { prisonsApiClient.getAgencyDetails(eq(oldAgency.agencyId)) }
     verify(exactly = 4) { emailNotificationService.sendEmail(any(), any(), any()) }
   }
 
   @Test
   fun `do not send location changed emails as no nomis user found for old POM`() {
-    application.applicationAssignments.add(applicationAssignmentNew)
+    application.applicationAssignments.add(applicationAssignmentOlder)
     application.applicationAssignments.add(applicationAssignmentOld)
-    every { nomisUserRepository.findById(eq(user.id)) } returns Optional.empty()
+
+    every { nomisUserRepository.findById(eq(oldUser.id)) } returns Optional.empty()
     every { emailNotificationService.sendEmail(any(), any(), any()) } returns Unit
 
-    emailService.sendLocationChangedEmails(application.id, user.id, applicationAssignmentOld.prisonCode, nomsNumber, prisoner)
+    emailService.sendLocationChangedEmails(application.id, oldUser.id, oldPrisonCode, nomsNumber, prisoner)
 
-    verify(exactly = 1) { nomisUserRepository.findById(eq(user.id)) }
+    verify(exactly = 1) { nomisUserRepository.findById(eq(oldUser.id)) }
     verify(exactly = 0) { emailNotificationService.sendEmail(any(), any(), any()) }
   }
 
   @Test
   fun `do not send location changed emails as no agency found for old Prison Id`() {
-    application.applicationAssignments.add(applicationAssignmentNew)
+    application.applicationAssignments.add(applicationAssignmentOlder)
     application.applicationAssignments.add(applicationAssignmentOld)
-    every { nomisUserRepository.findById(eq(user.id)) } returns Optional.of(user)
+
+    every { nomisUserRepository.findById(eq(oldUser.id)) } returns Optional.of(oldUser)
     every { prisonsApiClient.getAgencyDetails(eq(oldAgency.agencyId)) } returns ClientResult.Failure.StatusCode(HttpMethod.GET, "/api/agencies/${oldAgency.agencyId}", HttpStatus.NOT_FOUND, null)
     every { emailNotificationService.sendEmail(any(), any(), any()) } returns Unit
 
-    emailService.sendLocationChangedEmails(application.id, user.id, applicationAssignmentOld.prisonCode, nomsNumber, prisoner)
+    emailService.sendLocationChangedEmails(application.id, oldUser.id, oldPrisonCode, nomsNumber, prisoner)
 
-    verify(exactly = 1) { nomisUserRepository.findById(eq(user.id)) }
+    verify(exactly = 1) { nomisUserRepository.findById(eq(oldUser.id)) }
     verify(exactly = 1) { prisonsApiClient.getAgencyDetails(eq(oldAgency.agencyId)) }
     verify(exactly = 0) { emailNotificationService.sendEmail(any(), any(), any()) }
   }
