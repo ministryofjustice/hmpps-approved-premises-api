@@ -211,7 +211,7 @@ class Cas2DomainEventListenerTest : IntegrationTestBase() {
           }
           verify(exactly = 1, timeout = 5000) {
             emailNotificationService.sendEmail(
-              eq("tbc"),
+              eq("referrals@nacrocas2.org.uk"),
               eq("e292b246-0d4e-4636-81f0-933bcf4dadd0"),
               eq(
                 mapOf(
@@ -315,7 +315,7 @@ class Cas2DomainEventListenerTest : IntegrationTestBase() {
 
           verify(exactly = 1, timeout = 5000) {
             emailNotificationService.sendEmail(
-              eq("tbc"),
+              eq("referrals@nacrocas2.org.uk"),
               eq("e36b226e-99f5-4d1f-83d3-12ef9a814a5b"),
               eq(
                 mapOf(

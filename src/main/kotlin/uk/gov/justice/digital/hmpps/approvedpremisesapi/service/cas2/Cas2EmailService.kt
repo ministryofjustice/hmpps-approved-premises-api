@@ -23,6 +23,7 @@ class Cas2EmailService(
   private val prisonsApiClient: PrisonsApiClient,
   private val statusUpdateRepository: Cas2StatusUpdateRepository,
   @Value("\${url-templates.frontend.cas2.application-overview}") private val applicationUrlTemplate: String,
+  @Value("\${notify.emailaddresses.nacro}") private val nacroEmail: String,
 ) {
 
   private val log = LoggerFactory.getLogger(this::class.java)
@@ -58,7 +59,7 @@ class Cas2EmailService(
           ),
         )
         sendLocationOrAllocationChangedEmail(
-          "tbc",
+          nacroEmail,
           notifyConfig.templates.toNacroApplicationTransferredToAnotherPrison,
           mapOf(
             "nomsNumber" to nomsNumber,
@@ -89,7 +90,7 @@ class Cas2EmailService(
           ),
         )
         sendLocationOrAllocationChangedEmail(
-          "tbc",
+          nacroEmail,
           notifyConfig.templates.toNacroApplicationTransferredToAnotherPom,
           mapOf(
             "nomsNumber" to nomsNumber,

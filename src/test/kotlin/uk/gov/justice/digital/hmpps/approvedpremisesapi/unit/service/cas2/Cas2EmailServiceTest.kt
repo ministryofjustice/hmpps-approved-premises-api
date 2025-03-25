@@ -40,6 +40,8 @@ class Cas2EmailServiceTest {
   private val prisonsApiClient = mockk<PrisonsApiClient>()
   private val statusUpdateRepository = mockk<Cas2StatusUpdateRepository>()
   private val applicationUrlTemplate = UrlTemplate("/applications/#id/overview").toString()
+  private val nacroEmail = "nacro@test.co.uk"
+
   private val emailService = Cas2EmailService(
     emailNotificationService,
     notifyConfig,
@@ -47,6 +49,7 @@ class Cas2EmailServiceTest {
     prisonsApiClient,
     statusUpdateRepository,
     applicationUrlTemplate,
+    nacroEmail
   )
   private val newPrisonCode = "LON"
   private val oldPrisonCode = "LIV"
@@ -127,7 +130,7 @@ class Cas2EmailServiceTest {
     } returns Unit
     every {
       emailNotificationService.sendEmail(
-        eq("tbc"),
+        eq(nacroEmail),
         eq(templateId),
         eq(
           mapOf(
@@ -262,7 +265,7 @@ class Cas2EmailServiceTest {
     } returns Unit
     every {
       emailNotificationService.sendEmail(
-        eq("tbc"),
+        eq(nacroEmail),
         eq(templateId),
         eq(
           mapOf(
