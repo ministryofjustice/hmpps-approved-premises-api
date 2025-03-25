@@ -318,36 +318,68 @@ class WebClientConfiguration(
   }
 
   @Bean(name = ["managePomCasesWebClient"])
-  fun managePomCasesWebClient(): WebClientConfig = WebClientConfig(
-    WebClient.builder()
-      .clientConnector(
-        ReactorClientHttpConnector(
-          HttpClient
-            .create()
-            .responseTimeout(Duration.ofMillis(defaultUpstreamTimeoutMs))
-            .option(
-              ChannelOption.CONNECT_TIMEOUT_MILLIS,
-              Duration.ofMillis(defaultUpstreamTimeoutMs).toMillis().toInt(),
-            ),
-        ),
-      )
-      .build(),
-  )
+  fun managePomCasesWebClient(
+    clientRegistrations: ClientRegistrationRepository,
+    authorizedClients: OAuth2AuthorizedClientRepository,
+    authorizedClientManager: OAuth2AuthorizedClientManager,
+  ): WebClientConfig {
+    val oauth2Client = ServletOAuth2AuthorizedClientExchangeFilterFunction(authorizedClientManager)
+
+    oauth2Client.setDefaultClientRegistrationId("manage-pom-cases")
+
+    return WebClientConfig(
+      WebClient.builder()
+        .filter(oauth2Client)
+        .clientConnector(
+          ReactorClientHttpConnector(
+            HttpClient
+              .create()
+              .responseTimeout(Duration.ofMillis(defaultUpstreamTimeoutMs))
+              .option(
+                ChannelOption.CONNECT_TIMEOUT_MILLIS,
+                Duration.ofMillis(defaultUpstreamTimeoutMs).toMillis().toInt(),
+              ),
+          ),
+        )
+        .exchangeStrategies(
+          ExchangeStrategies.builder().codecs {
+            it.defaultCodecs().maxInMemorySize(defaultMaxResponseInMemorySizeBytes)
+          }.build(),
+        )
+        .build(),
+    )
+  }
 
   @Bean(name = ["prisonerSearchWebClient"])
-  fun prisonerSearchWebClient(): WebClientConfig = WebClientConfig(
-    WebClient.builder()
-      .clientConnector(
-        ReactorClientHttpConnector(
-          HttpClient
-            .create()
-            .responseTimeout(Duration.ofMillis(defaultUpstreamTimeoutMs))
-            .option(
-              ChannelOption.CONNECT_TIMEOUT_MILLIS,
-              Duration.ofMillis(defaultUpstreamTimeoutMs).toMillis().toInt(),
-            ),
-        ),
-      )
-      .build(),
-  )
+  fun prisonerSearchWebClient(
+    clientRegistrations: ClientRegistrationRepository,
+    authorizedClients: OAuth2AuthorizedClientRepository,
+    authorizedClientManager: OAuth2AuthorizedClientManager,
+  ): WebClientConfig {
+    val oauth2Client = ServletOAuth2AuthorizedClientExchangeFilterFunction(authorizedClientManager)
+
+    oauth2Client.setDefaultClientRegistrationId("prisoner-search")
+
+    return WebClientConfig(
+      WebClient.builder()
+        .filter(oauth2Client)
+        .clientConnector(
+          ReactorClientHttpConnector(
+            HttpClient
+              .create()
+              .responseTimeout(Duration.ofMillis(defaultUpstreamTimeoutMs))
+              .option(
+                ChannelOption.CONNECT_TIMEOUT_MILLIS,
+                Duration.ofMillis(defaultUpstreamTimeoutMs).toMillis().toInt(),
+              ),
+          ),
+        )
+        .exchangeStrategies(
+          ExchangeStrategies.builder().codecs {
+            it.defaultCodecs().maxInMemorySize(defaultMaxResponseInMemorySizeBytes)
+          }.build(),
+        )
+        .build(),
+    )
+  }
 }
