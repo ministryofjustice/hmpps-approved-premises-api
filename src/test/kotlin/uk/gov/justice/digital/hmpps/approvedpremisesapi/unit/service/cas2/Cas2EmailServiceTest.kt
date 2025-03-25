@@ -115,7 +115,7 @@ class Cas2EmailServiceTest {
       newAgency,
     )
     every {
-      emailNotificationService.sendEmail(
+      emailNotificationService.sendCas2Email(
         eq(newUser.email!!),
         eq(templateId),
         eq(
@@ -129,7 +129,7 @@ class Cas2EmailServiceTest {
       )
     } returns Unit
     every {
-      emailNotificationService.sendEmail(
+      emailNotificationService.sendCas2Email(
         eq(nacroEmail),
         eq(templateId),
         eq(
@@ -147,7 +147,7 @@ class Cas2EmailServiceTest {
     verify(exactly = 1) { prisonsApiClient.getAgencyDetails(eq(oldAgency.agencyId)) }
     verify(exactly = 1) { prisonsApiClient.getAgencyDetails(eq(newAgency.agencyId)) }
     verify(exactly = 1) { statusUpdateRepository.findFirstByApplicationIdOrderByCreatedAtDesc(application.id) }
-    verify(exactly = 2) { emailNotificationService.sendEmail(any(), any(), any()) }
+    verify(exactly = 2) { emailNotificationService.sendCas2Email(any(), any(), any()) }
   }
 
   @Test
@@ -157,7 +157,7 @@ class Cas2EmailServiceTest {
     application.applicationAssignments.add(applicationAssignmentOlder)
 
     every { statusUpdateRepository.findFirstByApplicationIdOrderByCreatedAtDesc(application.id) } returns null
-    every { emailNotificationService.sendEmail(any(), any(), any()) } returns Unit
+    every { emailNotificationService.sendCas2Email(any(), any(), any()) } returns Unit
     every { prisonsApiClient.getAgencyDetails(eq(oldAgency.agencyId)) } returns ClientResult.Success(
       HttpStatus.OK,
       oldAgency,
@@ -172,7 +172,7 @@ class Cas2EmailServiceTest {
     verify(exactly = 1) { prisonsApiClient.getAgencyDetails(eq(oldAgency.agencyId)) }
     verify(exactly = 1) { prisonsApiClient.getAgencyDetails(eq(newAgency.agencyId)) }
     verify(exactly = 1) { statusUpdateRepository.findFirstByApplicationIdOrderByCreatedAtDesc(application.id) }
-    verify(exactly = 0) { emailNotificationService.sendEmail(any(), any(), any()) }
+    verify(exactly = 0) { emailNotificationService.sendCas2Email(any(), any(), any()) }
   }
 
   @Test
@@ -182,12 +182,12 @@ class Cas2EmailServiceTest {
     application.applicationAssignments.add(applicationAssignmentOlder)
 
     every { prisonsApiClient.getAgencyDetails(eq(oldAgency.agencyId)) } returns ClientResult.Failure.StatusCode(HttpMethod.GET, "/api/agencies/${oldAgency.agencyId}", HttpStatus.NOT_FOUND, null)
-    every { emailNotificationService.sendEmail(any(), any(), any()) } returns Unit
+    every { emailNotificationService.sendCas2Email(any(), any(), any()) } returns Unit
 
     emailService.sendAllocationChangedEmails(newUser, nomsNumber, application, pomAllocation.prison.code)
 
     verify(exactly = 1) { prisonsApiClient.getAgencyDetails(eq(oldAgency.agencyId)) }
-    verify(exactly = 0) { emailNotificationService.sendEmail(any(), any(), any()) }
+    verify(exactly = 0) { emailNotificationService.sendCas2Email(any(), any(), any()) }
   }
 
   @Test
@@ -201,13 +201,13 @@ class Cas2EmailServiceTest {
       HttpStatus.OK,
       oldAgency,
     )
-    every { emailNotificationService.sendEmail(any(), any(), any()) } returns Unit
+    every { emailNotificationService.sendCas2Email(any(), any(), any()) } returns Unit
 
     emailService.sendAllocationChangedEmails(newUser, nomsNumber, application, pomAllocation.prison.code)
 
     verify(exactly = 1) { prisonsApiClient.getAgencyDetails(eq(oldAgency.agencyId)) }
     verify(exactly = 1) { prisonsApiClient.getAgencyDetails(eq(newAgency.agencyId)) }
-    verify(exactly = 0) { emailNotificationService.sendEmail(any(), any(), any()) }
+    verify(exactly = 0) { emailNotificationService.sendCas2Email(any(), any(), any()) }
   }
 
   @Test
@@ -226,7 +226,7 @@ class Cas2EmailServiceTest {
     )
 
     every {
-      emailNotificationService.sendEmail(
+      emailNotificationService.sendCas2Email(
         eq(oldUser.email!!),
         eq(templateId),
         eq(
@@ -238,7 +238,7 @@ class Cas2EmailServiceTest {
       )
     } returns Unit
     every {
-      emailNotificationService.sendEmail(
+      emailNotificationService.sendCas2Email(
         eq("tbc"),
         eq(templateId),
         eq(
@@ -250,7 +250,7 @@ class Cas2EmailServiceTest {
       )
     } returns Unit
     every {
-      emailNotificationService.sendEmail(
+      emailNotificationService.sendCas2Email(
         eq("tbc"),
         eq(templateId),
         eq(
@@ -264,7 +264,7 @@ class Cas2EmailServiceTest {
       )
     } returns Unit
     every {
-      emailNotificationService.sendEmail(
+      emailNotificationService.sendCas2Email(
         eq(nacroEmail),
         eq(templateId),
         eq(
@@ -282,7 +282,7 @@ class Cas2EmailServiceTest {
 
     verify(exactly = 1) { nomisUserRepository.findById(eq(oldUser.id)) }
     verify(exactly = 1) { prisonsApiClient.getAgencyDetails(eq(oldAgency.agencyId)) }
-    verify(exactly = 4) { emailNotificationService.sendEmail(any(), any(), any()) }
+    verify(exactly = 4) { emailNotificationService.sendCas2Email(any(), any(), any()) }
     verify(exactly = 1) { statusUpdateRepository.findFirstByApplicationIdOrderByCreatedAtDesc(application.id) }
   }
 
@@ -296,13 +296,13 @@ class Cas2EmailServiceTest {
       HttpStatus.OK,
       oldAgency,
     )
-    every { emailNotificationService.sendEmail(any(), any(), any()) } returns Unit
+    every { emailNotificationService.sendCas2Email(any(), any(), any()) } returns Unit
 
     assertThrows<EntityNotFoundException> { emailService.sendLocationChangedEmails(application.id, oldUser.id, oldPrisonCode, nomsNumber, prisoner) }
 
     verify(exactly = 1) { nomisUserRepository.findById(eq(oldUser.id)) }
     verify(exactly = 1) { prisonsApiClient.getAgencyDetails(eq(oldAgency.agencyId)) }
-    verify(exactly = 0) { emailNotificationService.sendEmail(any(), any(), any()) }
+    verify(exactly = 0) { emailNotificationService.sendCas2Email(any(), any(), any()) }
     verify(exactly = 1) { statusUpdateRepository.findFirstByApplicationIdOrderByCreatedAtDesc(application.id) }
   }
 
@@ -312,12 +312,12 @@ class Cas2EmailServiceTest {
     application.applicationAssignments.add(applicationAssignmentOld)
 
     every { nomisUserRepository.findById(eq(oldUser.id)) } returns Optional.empty()
-    every { emailNotificationService.sendEmail(any(), any(), any()) } returns Unit
+    every { emailNotificationService.sendCas2Email(any(), any(), any()) } returns Unit
 
     emailService.sendLocationChangedEmails(application.id, oldUser.id, oldPrisonCode, nomsNumber, prisoner)
 
     verify(exactly = 1) { nomisUserRepository.findById(eq(oldUser.id)) }
-    verify(exactly = 0) { emailNotificationService.sendEmail(any(), any(), any()) }
+    verify(exactly = 0) { emailNotificationService.sendCas2Email(any(), any(), any()) }
   }
 
   @Test
@@ -327,12 +327,12 @@ class Cas2EmailServiceTest {
 
     every { nomisUserRepository.findById(eq(oldUser.id)) } returns Optional.of(oldUser)
     every { prisonsApiClient.getAgencyDetails(eq(oldAgency.agencyId)) } returns ClientResult.Failure.StatusCode(HttpMethod.GET, "/api/agencies/${oldAgency.agencyId}", HttpStatus.NOT_FOUND, null)
-    every { emailNotificationService.sendEmail(any(), any(), any()) } returns Unit
+    every { emailNotificationService.sendCas2Email(any(), any(), any()) } returns Unit
 
     emailService.sendLocationChangedEmails(application.id, oldUser.id, oldPrisonCode, nomsNumber, prisoner)
 
     verify(exactly = 1) { nomisUserRepository.findById(eq(oldUser.id)) }
     verify(exactly = 1) { prisonsApiClient.getAgencyDetails(eq(oldAgency.agencyId)) }
-    verify(exactly = 0) { emailNotificationService.sendEmail(any(), any(), any()) }
+    verify(exactly = 0) { emailNotificationService.sendCas2Email(any(), any(), any()) }
   }
 }

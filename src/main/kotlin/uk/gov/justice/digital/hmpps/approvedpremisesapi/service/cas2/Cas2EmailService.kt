@@ -108,7 +108,7 @@ class Cas2EmailService(
     personalisation: Map<String, String>,
   ) {
     if (recipientEmailAddress != null) {
-      emailNotificationService.sendEmail(recipientEmailAddress, templateId, personalisation)
+      emailNotificationService.sendCas2Email(recipientEmailAddress, templateId, personalisation)
       log.info("Email $templateId ready to send to $recipientEmailAddress for NOMS Number ${personalisation["nomsNumber"]}")
     } else {
       val errorMessage = "Email $templateId not sent for NOMS Number ${personalisation["nomsNumber"]}"
