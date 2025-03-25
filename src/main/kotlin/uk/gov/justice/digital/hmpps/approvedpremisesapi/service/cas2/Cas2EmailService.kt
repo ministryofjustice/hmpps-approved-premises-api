@@ -34,7 +34,7 @@ class Cas2EmailService(
     nomisUserRepository.findById(oldPomUserId).map { oldPom ->
       prisonsApiClient.getAgencyDetails(oldPrisonCode).map { agency ->
         val statusUpdate = statusUpdateRepository.findFirstByApplicationIdOrderByCreatedAtDesc(application.id) ?: throw EntityNotFoundException("StatusUpdate for ${application.id} not found")
-        sendLocationOrAllocationChangedEmail(
+        sendEmail(
           oldPom.email,
           notifyConfig.templates.cas2ToTransferringPomApplicationTransferredToAnotherPrison,
           mapOf(
@@ -42,7 +42,7 @@ class Cas2EmailService(
             "receivingPrisonName" to prisoner.prisonName,
           ),
         )
-        sendLocationOrAllocationChangedEmail(
+        sendEmail(
           "tbc",
           notifyConfig.templates.cas2ToTransferringPomUnitApplicationTransferredToAnotherPrison,
           mapOf(
@@ -50,7 +50,7 @@ class Cas2EmailService(
             "receivingPrisonName" to prisoner.prisonName,
           ),
         )
-        sendLocationOrAllocationChangedEmail(
+        sendEmail(
           "tbc",
           notifyConfig.templates.cas2ToReceivingPomUnitApplicationTransferredToAnotherPrison,
           mapOf(
@@ -60,7 +60,7 @@ class Cas2EmailService(
             "applicationStatus" to statusUpdate.label,
           ),
         )
-        sendLocationOrAllocationChangedEmail(
+        sendEmail(
           nacroEmail,
           notifyConfig.templates.cas2ToNacroApplicationTransferredToAnotherPrison,
           mapOf(
@@ -81,7 +81,7 @@ class Cas2EmailService(
       prisonsApiClient.getAgencyDetails(newPrisonCode).map { newAgency ->
         val statusUpdate = statusUpdateRepository.findFirstByApplicationIdOrderByCreatedAtDesc(application.id) ?: throw EntityNotFoundException("StatusUpdate for ${application.id} not found")
 
-        sendLocationOrAllocationChangedEmail(
+        sendEmail(
           newPom.email,
           notifyConfig.templates.cas2ToReceivingPomApplicationTransferredToAnotherPom,
           mapOf(
@@ -91,7 +91,7 @@ class Cas2EmailService(
             "applicationStatus" to statusUpdate.label,
           ),
         )
-        sendLocationOrAllocationChangedEmail(
+        sendEmail(
           nacroEmail,
           notifyConfig.templates.cas2ToNacroApplicationTransferredToAnotherPom,
           mapOf(
@@ -104,7 +104,7 @@ class Cas2EmailService(
     }
   }
 
-  private fun sendLocationOrAllocationChangedEmail(
+  private fun sendEmail(
     recipientEmailAddress: String?,
     templateId: String,
     personalisation: Map<String, String>,
