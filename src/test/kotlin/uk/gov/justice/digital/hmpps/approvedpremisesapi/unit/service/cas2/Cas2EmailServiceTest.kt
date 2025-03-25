@@ -49,7 +49,7 @@ class Cas2EmailServiceTest {
     prisonsApiClient,
     statusUpdateRepository,
     applicationUrlTemplate,
-    nacroEmail
+    nacroEmail,
   )
   private val newPrisonCode = "LON"
   private val oldPrisonCode = "LIV"
