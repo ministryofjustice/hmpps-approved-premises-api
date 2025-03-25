@@ -29,6 +29,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas2v2.Cas2v2
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.model.cas2.ApplicationStatusUpdatesReportRow
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.model.cas2.SubmittedApplicationReportRow
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.model.cas2.UnsubmittedApplicationsReportRow
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomDateTimeBefore
 import java.io.ByteArrayInputStream
 import java.time.Instant
 import java.time.OffsetDateTime
@@ -645,6 +646,7 @@ class Cas2v2ReportsTest : Cas2v2IntegrationTestBase() {
         withCrn("CRN_2")
         withNomsNumber("NOMS_2")
         withData("{}")
+        withSubmittedAt(OffsetDateTime.now().randomDateTimeBefore(30))
       }
     } else {
       return cas2v2ApplicationEntityFactory.produceAndPersist {
@@ -655,6 +657,7 @@ class Cas2v2ReportsTest : Cas2v2IntegrationTestBase() {
         withCrn("CRN_2")
         withNomsNumber("NOMS_2")
         withData("{}")
+        withSubmittedAt(OffsetDateTime.now().randomDateTimeBefore(30))
       }
     }
   }
