@@ -175,27 +175,27 @@ class Cas2v2ReportsTest : Cas2v2IntegrationTestBase() {
       val event1ToSave = Cas2ApplicationSubmittedEvent(
         id = event1Id,
         timestamp = Instant.now(),
-        eventType = EventType.cas2v2ApplicationSubmitted,
+        eventType = EventType.applicationSubmitted,
         eventDetails = event1Details,
       )
 
       val event2ToSave = Cas2ApplicationSubmittedEvent(
         id = event2Id,
         timestamp = Instant.now(),
-        eventType = EventType.cas2v2ApplicationSubmitted,
+        eventType = EventType.applicationSubmitted,
         eventDetails = event2Details,
       )
 
       val event3ToSave = Cas2ApplicationSubmittedEvent(
         id = event3Id,
         timestamp = Instant.now(),
-        eventType = EventType.cas2v2ApplicationSubmitted,
+        eventType = EventType.applicationSubmitted,
         eventDetails = event3Details,
       )
 
       val event1 = domainEventFactory.produceAndPersist {
         withId(event1Id)
-        withType(DomainEventType.CAS2V2_APPLICATION_SUBMITTED)
+        withType(DomainEventType.CAS2_APPLICATION_SUBMITTED)
         withData(objectMapper.writeValueAsString(event1ToSave))
         withOccurredAt(oldSubmitted)
         withApplicationId(applicationId1)
@@ -203,7 +203,7 @@ class Cas2v2ReportsTest : Cas2v2IntegrationTestBase() {
 
       val event2 = domainEventFactory.produceAndPersist {
         withId(event2Id)
-        withType(DomainEventType.CAS2V2_APPLICATION_SUBMITTED)
+        withType(DomainEventType.CAS2_APPLICATION_SUBMITTED)
         withData(objectMapper.writeValueAsString(event2ToSave))
         withOccurredAt(newerSubmitted)
         withApplicationId(applicationId2)
@@ -213,7 +213,7 @@ class Cas2v2ReportsTest : Cas2v2IntegrationTestBase() {
       // outside the time range
       domainEventFactory.produceAndPersist {
         withId(event3Id)
-        withType(DomainEventType.CAS2V2_APPLICATION_SUBMITTED)
+        withType(DomainEventType.CAS2_APPLICATION_SUBMITTED)
         withData(objectMapper.writeValueAsString(event3ToSave))
         withOccurredAt(tooOldSubmitted)
         withApplicationId(applicationId3)
@@ -273,7 +273,7 @@ class Cas2v2ReportsTest : Cas2v2IntegrationTestBase() {
 
     @Test
     fun `streams spreadsheet of cas2v2 Cas2SubmittedApplicationEvents, with application origin`() {
-      seedApplications(DomainEventType.CAS2V2_APPLICATION_SUBMITTED, EventType.applicationSubmitted)
+      seedApplications(DomainEventType.CAS2_APPLICATION_SUBMITTED, EventType.applicationSubmitted)
 
       val jwt = jwtAuthHelper.createClientCredentialsJwt(
         username = "username",
@@ -296,22 +296,23 @@ class Cas2v2ReportsTest : Cas2v2IntegrationTestBase() {
       val inputStream = ByteArrayInputStream(responseBody)
       val dataFrame = DataFrame.readExcel(inputStream)
 
-      Assertions.assertThat(dataFrame.columnsCount()).isEqualTo(12)
+      Assertions.assertThat(dataFrame.columnsCount()).isEqualTo(13)
       Assertions.assertThat(dataFrame.rowsCount()).isEqualTo(40)
 
       val headers = dataFrame.columns()
       Assertions.assertThat(headers[0].name()).isEqualTo("eventId")
       Assertions.assertThat(headers[1].name()).isEqualTo("applicationId")
       Assertions.assertThat(headers[2].name()).isEqualTo("applicationOrigin")
-      Assertions.assertThat(headers[3].name()).isEqualTo("personCrn")
-      Assertions.assertThat(headers[4].name()).isEqualTo("personNoms")
-      Assertions.assertThat(headers[5].name()).isEqualTo("referringPrisonCode")
-      Assertions.assertThat(headers[6].name()).isEqualTo("preferredAreas")
-      Assertions.assertThat(headers[7].name()).isEqualTo("hdcEligibilityDate")
-      Assertions.assertThat(headers[8].name()).isEqualTo("conditionalReleaseDate")
-      Assertions.assertThat(headers[9].name()).isEqualTo("submittedAt")
-      Assertions.assertThat(headers[10].name()).isEqualTo("submittedBy")
-      Assertions.assertThat(headers[11].name()).isEqualTo("startedAt")
+      Assertions.assertThat(headers[3].name()).isEqualTo("bailHearingDate")
+      Assertions.assertThat(headers[4].name()).isEqualTo("personCrn")
+      Assertions.assertThat(headers[5].name()).isEqualTo("personNoms")
+      Assertions.assertThat(headers[6].name()).isEqualTo("referringPrisonCode")
+      Assertions.assertThat(headers[7].name()).isEqualTo("preferredAreas")
+      Assertions.assertThat(headers[8].name()).isEqualTo("hdcEligibilityDate")
+      Assertions.assertThat(headers[9].name()).isEqualTo("conditionalReleaseDate")
+      Assertions.assertThat(headers[10].name()).isEqualTo("submittedAt")
+      Assertions.assertThat(headers[11].name()).isEqualTo("submittedBy")
+      Assertions.assertThat(headers[12].name()).isEqualTo("startedAt")
 
       val prisonBailCount = dataFrame.filter { row -> row["applicationOrigin"] == "prisonBail" }
         .rowsCount()

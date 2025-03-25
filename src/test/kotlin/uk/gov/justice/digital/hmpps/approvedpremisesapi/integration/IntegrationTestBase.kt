@@ -542,7 +542,7 @@ abstract class IntegrationTestBase {
   lateinit var cas1ChangeRequestRejectionReasonRepository: Cas1ChangeRequestRejectionReasonRepository
 
   @Autowired
-  private lateinit var cas1ChangeRequestRepository: Cas1ChangeRequestRepository
+  lateinit var cas1ChangeRequestRepository: Cas1ChangeRequestRepository
 
   @Autowired
   lateinit var emailAsserter: EmailNotificationAsserter

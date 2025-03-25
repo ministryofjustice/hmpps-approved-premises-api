@@ -1,7 +1,6 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.integration
 
 import org.junit.jupiter.api.Test
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.AppealDecision
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1ApplicationTimelinessCategory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Characteristic
@@ -21,6 +20,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.BookingEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.BookingNotMadeEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas1ApplicationUserDetailsEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas1SpaceBookingEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.JpaApType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementApplicationDecision
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementApplicationWithdrawalReason
@@ -747,8 +747,8 @@ class CAS1SubjectAccessRequestServiceTest : SubjectAccessRequestServiceTestBase(
         "application_id": "${placementRequirement.application.id}",
         "assessment_id": "${placementRequirement.assessment.id}",
         "placement_requirements_id": "${placementRequirement.id}",
-        "gender": "${placementRequirement.gender.value.uppercase()}",
-        "ap_type": "${placementRequirement.apType.value.uppercase()}",
+        "gender": "${placementRequirement.gender.name}",
+        "ap_type": "${placementRequirement.apType.name}",
         "outcode": "${placementRequirement.postcodeDistrict.outcode}",
         "radius": ${placementRequirement.radius},
         "created_at": "$CREATED_AT"
@@ -1001,7 +1001,7 @@ class CAS1SubjectAccessRequestServiceTest : SubjectAccessRequestServiceTestBase(
     withApplication(application)
     withAssessment(assessment)
     withCreatedAt(OffsetDateTime.parse(CREATED_AT))
-    withApType(ApType.normal)
+    withApType(JpaApType.NORMAL)
     withDesirableCriteria(listOf(characteristicEntity()))
     withEssentialCriteria(listOf(characteristicEntity()))
     withPostcodeDistrict(postCodeDistrictFactory.produceAndPersist())

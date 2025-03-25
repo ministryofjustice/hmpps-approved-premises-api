@@ -54,7 +54,7 @@ seed:
     script:
       cas1-enabled: true
       cas2-enabled: true
-      cas2v2-enabled: true
+      cas2v2-enabled: false
       noms: A1234AI
       noms-cas2v2: A1234AX
 

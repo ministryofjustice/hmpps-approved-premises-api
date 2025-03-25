@@ -37,8 +37,6 @@ class DomainEventUrlConfig {
       DomainEventType.APPROVED_PREMISES_ASSESSMENT_INFO_REQUESTED -> cas1["assessment-info-requested-detail"]
       DomainEventType.CAS2_APPLICATION_SUBMITTED -> cas2["application-submitted-event-detail"]
       DomainEventType.CAS2_APPLICATION_STATUS_UPDATED -> cas2["application-status-updated-event-detail"]
-      DomainEventType.CAS2V2_APPLICATION_SUBMITTED -> cas2["cas2v2application-submitted-event-detail"]
-      DomainEventType.CAS2V2_APPLICATION_STATUS_UPDATED -> cas2["cas2v2application-status-updated-event-detail"]
       DomainEventType.CAS3_BOOKING_CANCELLED -> cas3["booking-cancelled-event-detail"]
       DomainEventType.CAS3_BOOKING_CONFIRMED -> cas3["booking-confirmed-event-detail"]
       DomainEventType.CAS3_BOOKING_PROVISIONALLY_MADE -> cas3["booking-provisionally-made-event-detail"]
