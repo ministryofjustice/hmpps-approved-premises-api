@@ -23,7 +23,8 @@ interface Cas2v2SubmittedApplicationReportRepository : JpaRepository<DomainEvent
         CAST(events.data -> 'eventDetails' ->> 'conditionalReleaseDate' as DATE) AS conditionalReleaseDate,
         TO_CHAR(events.occurred_at,'YYYY-MM-DD"T"HH24:MI:SS') AS submittedAt,
         TO_CHAR(applications.created_at, 'YYYY-MM-DD"T"HH24:MI:SS') AS startedAt,
-        applications.application_origin as applicationOrigin
+        applications.application_origin as applicationOrigin,
+        CAST(applications.bail_hearing_date as DATE) as bailHearingDate
       FROM domain_events events
       INNER JOIN cas_2_v2_applications applications ON events.application_id = applications.id      
       WHERE applications.submitted_at IS NOT NULL
@@ -40,6 +41,7 @@ interface Cas2v2SubmittedApplicationReportRow {
   fun getId(): String
   fun getApplicationId(): String
   fun getApplicationOrigin(): ApplicationOrigin
+  fun getBailHearingDate(): String?
   fun getSubmittedBy(): String
   fun getSubmittedAt(): String
   fun getPersonNoms(): String
