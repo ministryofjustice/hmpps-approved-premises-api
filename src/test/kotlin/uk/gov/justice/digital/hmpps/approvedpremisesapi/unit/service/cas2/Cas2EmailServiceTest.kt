@@ -5,6 +5,7 @@ import io.mockk.junit5.MockKExtension
 import io.mockk.mockk
 import io.mockk.verify
 import jakarta.persistence.EntityNotFoundException
+import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
 import org.junit.jupiter.api.extension.ExtendWith
@@ -151,7 +152,7 @@ class Cas2EmailServiceTest {
   }
 
   @Test
-  fun `do not send allocation changed emails as no matching status update found`() {
+  fun `do not send allocation changed emails as no matching status update found and throw error`() {
     application.applicationAssignments.add(applicationAssignmentNew)
     application.applicationAssignments.add(applicationAssignmentOld)
     application.applicationAssignments.add(applicationAssignmentOlder)
@@ -287,7 +288,7 @@ class Cas2EmailServiceTest {
   }
 
   @Test
-  fun `do not send location changed emails as no matching status update found`() {
+  fun `do not send location changed emails as no matching status update found and throw error`() {
     application.applicationAssignments.add(applicationAssignmentOld)
     application.applicationAssignments.add(applicationAssignmentOlder)
     every { statusUpdateRepository.findFirstByApplicationIdOrderByCreatedAtDesc(application.id) } returns null
@@ -307,14 +308,14 @@ class Cas2EmailServiceTest {
   }
 
   @Test
-  fun `do not send location changed emails as no nomis user found for old POM`() {
+  fun `do not send location changed emails as no nomis user found for old POM and throw error`() {
     application.applicationAssignments.add(applicationAssignmentOlder)
     application.applicationAssignments.add(applicationAssignmentOld)
 
     every { nomisUserRepository.findById(eq(oldUser.id)) } returns Optional.empty()
     every { emailNotificationService.sendCas2Email(any(), any(), any()) } returns Unit
 
-    emailService.sendLocationChangedEmails(application, oldUser.id, nomsNumber, prisoner)
+    assertThrows<NoSuchElementException> { emailService.sendLocationChangedEmails(application, oldUser.id, nomsNumber, prisoner) }
 
     verify(exactly = 1) { nomisUserRepository.findById(eq(oldUser.id)) }
     verify(exactly = 0) { emailNotificationService.sendCas2Email(any(), any(), any()) }
@@ -334,5 +335,29 @@ class Cas2EmailServiceTest {
     verify(exactly = 1) { nomisUserRepository.findById(eq(oldUser.id)) }
     verify(exactly = 1) { prisonsApiClient.getAgencyDetails(eq(oldAgency.agencyId)) }
     verify(exactly = 0) { emailNotificationService.sendCas2Email(any(), any(), any()) }
+  }
+
+
+  @Test
+  fun `should get old prison code`() {
+    application.applicationAssignments.add(applicationAssignmentOlder)
+    application.applicationAssignments.add(applicationAssignmentOld)
+    application.applicationAssignments.add(applicationAssignmentNew)
+
+    val result = emailService.getOldPrisonCode(application, applicationAssignmentNew.prisonCode)
+
+    assertThat(result).isEqualTo(applicationAssignmentOlder.prisonCode)
+  }
+
+  @Test
+  fun `should not get old prison code and throw error when no applicationAssignments`() {
+    assertThrows<NoSuchElementException> { emailService.getOldPrisonCode(application, applicationAssignmentNew.prisonCode) }
+  }
+
+  @Test
+  fun `should not get old prison code and throw error when applicationAssignments all have new prisonCode`() {
+    application.applicationAssignments.add(applicationAssignmentNew)
+
+    assertThrows<NoSuchElementException> { emailService.getOldPrisonCode(application, applicationAssignmentNew.prisonCode) }
   }
 }

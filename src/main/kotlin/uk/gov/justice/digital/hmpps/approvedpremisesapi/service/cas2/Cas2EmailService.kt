@@ -29,7 +29,7 @@ class Cas2EmailService(
   private val log = LoggerFactory.getLogger(this::class.java)
 
   fun sendLocationChangedEmails(application: Cas2ApplicationEntity, oldPomUserId: UUID, nomsNumber: String, prisoner: Prisoner) {
-    val oldPrisonCode = application.applicationAssignments.first { it.prisonCode != prisoner.prisonId }.prisonCode
+    val oldPrisonCode = getOldPrisonCode(application, prisoner.prisonId)
 
     nomisUserRepository.findById(oldPomUserId).map { oldPom ->
       prisonsApiClient.getAgencyDetails(oldPrisonCode).map { agency ->
@@ -71,11 +71,11 @@ class Cas2EmailService(
           ),
         )
       }
-    }
+    }.orElseThrow()
   }
 
   fun sendAllocationChangedEmails(newPom: NomisUserEntity, nomsNumber: String, application: Cas2ApplicationEntity, newPrisonCode: String) {
-    val oldPrisonCode = application.applicationAssignments.first { it.prisonCode != newPrisonCode }.prisonCode
+    val oldPrisonCode = getOldPrisonCode(application, newPrisonCode)
 
     prisonsApiClient.getAgencyDetails(oldPrisonCode).map { oldAgency ->
       prisonsApiClient.getAgencyDetails(newPrisonCode).map { newAgency ->
@@ -120,4 +120,10 @@ class Cas2EmailService(
   }
 
   private fun getLink(applicationId: UUID): String = applicationUrlTemplate.replace("#id", applicationId.toString())
+
+  fun getOldPrisonCode(application: Cas2ApplicationEntity, newPrisonCode: String): String = try {
+    application.applicationAssignments.first { it.prisonCode != newPrisonCode }.prisonCode
+  } catch (e: NoSuchElementException) {
+    throw NoSuchElementException("Cannot find code that does not match $newPrisonCode", e)
+  }
 }
