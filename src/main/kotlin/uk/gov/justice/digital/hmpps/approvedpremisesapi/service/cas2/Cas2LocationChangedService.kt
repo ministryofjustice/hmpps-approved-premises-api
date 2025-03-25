@@ -43,14 +43,11 @@ class Cas2LocationChangedService(
             prisonCode = prisoner.prisonId,
             allocatedPomUserId = null,
           )
+          val oldPrisonCode = application.currentPrisonCode
 
           applicationRepository.save(application)
           log.info("Added application assignment for prisoner: {}", nomsNumber)
-
-          emailService.sendLocationChangedEmailToTransferringPom(application, nomsNumber, prisoner)
-          emailService.sendLocationChangedEmailToNacro(application, nomsNumber, prisoner)
-          emailService.sendLocationChangedEmailToReceivingPomUnit(application, nomsNumber)
-          emailService.sendLocationChangedEmailToTransferringPomUnit(nomsNumber, prisoner)
+          emailService.sendLocationChangedEmails(application.id, application.mostRecentPomUserId, oldPrisonCode, nomsNumber, prisoner)
         } else {
           log.info("Prisoner {} prison location not changed, no action required", nomsNumber)
         }

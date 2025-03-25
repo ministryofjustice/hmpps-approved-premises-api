@@ -74,20 +74,14 @@ class Cas2LocationChangedServiceTest {
     every { prisonerSearchClient.getPrisoner(any()) } returns ClientResult.Success(HttpStatus.OK, prisoner)
     every { applicationService.findMostRecentApplication(eq(nomsNumber)) } returns application
     every { applicationRepository.save(any()) } returns application
-    every { cas2EmailService.sendLocationChangedEmailToNacro(any(), eq(nomsNumber), eq(prisoner)) } returns Unit
-    every { cas2EmailService.sendLocationChangedEmailToReceivingPomUnit(any(), eq(nomsNumber)) } returns Unit
-    every { cas2EmailService.sendLocationChangedEmailToTransferringPom(any(), eq(nomsNumber), eq(prisoner)) } returns Unit
-    every { cas2EmailService.sendLocationChangedEmailToTransferringPomUnit(eq(nomsNumber), eq(prisoner)) } returns Unit
+    every { cas2EmailService.sendLocationChangedEmails(any(), any(), any(), any(), any()) } returns Unit
 
     locationChangedService.process(locationEvent)
 
     verify(exactly = 1) { prisonerSearchClient.getPrisoner(any()) }
     verify(exactly = 1) { applicationService.findMostRecentApplication(eq(nomsNumber)) }
     verify(exactly = 1) { applicationRepository.save(any()) }
-    verify(exactly = 1) { cas2EmailService.sendLocationChangedEmailToNacro(any(), eq(nomsNumber), eq(prisoner)) }
-    verify(exactly = 1) { cas2EmailService.sendLocationChangedEmailToReceivingPomUnit(any(), eq(nomsNumber)) }
-    verify(exactly = 1) { cas2EmailService.sendLocationChangedEmailToTransferringPom(any(), eq(nomsNumber), eq(prisoner)) }
-    verify(exactly = 1) { cas2EmailService.sendLocationChangedEmailToTransferringPomUnit(eq(nomsNumber), eq(prisoner)) }
+    verify(exactly = 1) { cas2EmailService.sendLocationChangedEmails(any(), any(), any(), any(), any()) }
   }
 
   @Test

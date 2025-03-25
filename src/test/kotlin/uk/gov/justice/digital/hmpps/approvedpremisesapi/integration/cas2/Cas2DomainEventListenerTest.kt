@@ -20,6 +20,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.given
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas2ApplicationAssignmentEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas2ApplicationAssignmentRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.prisonsapi.Agency
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.EmailNotificationService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas2.Cas2DomainEventListener
 import uk.gov.justice.hmpps.sqs.HmppsQueueService
 import uk.gov.justice.hmpps.sqs.MissingQueueException
@@ -44,6 +45,9 @@ class Cas2DomainEventListenerTest : IntegrationTestBase() {
   private lateinit var domainEventListener: Cas2DomainEventListener
 
   @SpykBean
+  private lateinit var emailNotificationService: EmailNotificationService
+
+  @SpykBean
   private lateinit var applicationAssignmentRepository: Cas2ApplicationAssignmentRepository
 
   private val domainEventsTopic by lazy {
@@ -51,6 +55,8 @@ class Cas2DomainEventListenerTest : IntegrationTestBase() {
   }
 
   private val domainEventsClient by lazy { domainEventsTopic.snsClient }
+
+  private fun getLink(applicationId: UUID): String = "http://cas2.frontend/applications/#id/overview".replace("#id", applicationId.toString())
 
   private fun publishMessageToTopic(eventType: String, json: String = "{}") {
     val sendMessageRequest = PublishRequest.builder()
@@ -88,7 +94,7 @@ class Cas2DomainEventListenerTest : IntegrationTestBase() {
 
   @Test
   fun `Save new location in assignment table`() {
-    val prisoner = Prisoner(prisonId = "A1234AB", prisonName = "LONDON")
+    val prisoner = Prisoner(prisonId = "LON", prisonName = "LONDON")
     val eventType = "prisoner-offender-search.prisoner.updated"
     val occurredAt = Instant.now().atZone(ZoneId.systemDefault())
 
@@ -108,15 +114,24 @@ class Cas2DomainEventListenerTest : IntegrationTestBase() {
         }
         val url = "/prisoner/${application.nomsNumber}"
         val detailUrl = prisonerSearchBaseUrl + url
-
+        val olderApplicationAssignment = Cas2ApplicationAssignmentEntity(
+          id = UUID.randomUUID(),
+          application = application,
+          prisonCode = "NEW",
+          allocatedPomUserId = null,
+          createdAt = occurredAt.toOffsetDateTime().minusDays(1),
+        )
         val oldApplicationAssignment = Cas2ApplicationAssignmentEntity(
           id = UUID.randomUUID(),
           application = application,
-          prisonCode = "LON",
-          allocatedPomUserId = application.createdByUser.id,
-          createdAt = occurredAt.toOffsetDateTime(),
+          prisonCode = "NEW",
+          allocatedPomUserId = userEntity.id,
+          createdAt = occurredAt.toOffsetDateTime().minusDays(2),
         )
         applicationAssignmentRepository.deleteAll()
+        applicationAssignmentRepository.save(
+          olderApplicationAssignment,
+        )
         applicationAssignmentRepository.save(
           oldApplicationAssignment,
         )
@@ -126,13 +141,78 @@ class Cas2DomainEventListenerTest : IntegrationTestBase() {
           responseBody = prisoner,
         )
 
+        val agency =
+          Agency(agencyId = "NEW", description = "HMS LONDON", agencyType = "prison")
+
+        mockSuccessfulGetCallWithJsonResponse(
+          url = "/api/agencies/${agency.agencyId}",
+          responseBody = agency,
+        )
+
         @SuppressWarnings("MaxLineLength")
         val event =
           "{\"description\":\"$eventType\",\"eventType\":\"$eventType\",\"detailUrl\":\"$detailUrl\",\"occurredAt\":\"$occurredAt\",\"additionalInformation\": {\"categoriesChanged\": [\"LOCATION\"]},\"personReference\":{\"identifiers\":[{\"type\":\"NOMS\",\"value\":\"${application.nomsNumber}\"}]}}"
         publishMessageToTopic(eventType, event)
-        await().until { applicationAssignmentRepository.count().toInt() == 2 }
+        await().until { applicationAssignmentRepository.count().toInt() == 3 }
         val locations = applicationAssignmentRepository.findAll()
         assert(locations.last().prisonCode == prisoner.prisonId)
+
+        verify(exactly = 1, timeout = 5000) {
+          emailNotificationService.sendEmail(
+            eq(userEntity.email!!),
+            eq("5adb6390-0c95-4458-a8b5-3e61ff780715"),
+            eq(
+              mapOf(
+                "nomsNumber" to application.nomsNumber,
+                "receivingPrisonName" to prisoner.prisonName,
+              ),
+            ),
+            any(),
+          )
+        }
+        verify(exactly = 1, timeout = 5000) {
+          emailNotificationService.sendEmail(
+            eq("tbc"),
+            eq("6b427e8a-eb21-43a3-89c3-f6a147b20c39"),
+            eq(
+              mapOf(
+                "nomsNumber" to application.nomsNumber,
+                "receivingPrisonName" to prisoner.prisonName,
+              ),
+            ),
+            any(),
+          )
+        }
+        verify(exactly = 1, timeout = 5000) {
+          emailNotificationService.sendEmail(
+            eq("tbc"),
+            eq("1e5d98e4-efdf-428e-bca9-fd5daadd27aa"),
+            eq(
+              mapOf(
+                "nomsNumber" to application.nomsNumber,
+                "transferringPrisonName" to agency.description,
+                "link" to getLink(application.id),
+                "applicationStatus" to "PLACEHOLDER",
+              ),
+            ),
+            any(),
+          )
+        }
+        verify(exactly = 1, timeout = 5000) {
+          emailNotificationService.sendEmail(
+            eq("tbc"),
+            eq("e292b246-0d4e-4636-81f0-933bcf4dadd0"),
+            eq(
+              mapOf(
+                "nomsNumber" to application.nomsNumber,
+                "receivingPrisonName" to prisoner.prisonName,
+                "transferringPrisonName" to agency.description,
+                "link" to getLink(application.id),
+              ),
+            ),
+            any(),
+          )
+        }
       }
     }
   }
@@ -215,7 +295,36 @@ class Cas2DomainEventListenerTest : IntegrationTestBase() {
         val locations = applicationAssignmentRepository.findAll()
         assert(locations.last().prisonCode == pomAllocation.prison.code)
 
+        verify(exactly = 1, timeout = 5000) {
+          emailNotificationService.sendEmail(
+            eq("tbc"),
+            eq("e36b226e-99f5-4d1f-83d3-12ef9a814a5b"),
+            eq(
+              mapOf(
+                "nomsNumber" to application.nomsNumber,
+                "receivingPrisonName" to newAgency.description,
+                "link" to getLink(application.id),
+              ),
+            ),
+            any(),
+          )
+        }
 
+        verify(exactly = 1, timeout = 5000) {
+          emailNotificationService.sendEmail(
+            eq(userEntity.email!!),
+            eq("289d4004-3c95-4c23-b0fa-9187d9da8eaf"),
+            eq(
+              mapOf(
+                "nomsNumber" to application.nomsNumber,
+                "transferringPrisonName" to newAgency.description,
+                "link" to getLink(application.id),
+                "applicationStatus" to "PLACEHOLDER",
+              ),
+            ),
+            any(),
+          )
+        }
       }
     }
   }
