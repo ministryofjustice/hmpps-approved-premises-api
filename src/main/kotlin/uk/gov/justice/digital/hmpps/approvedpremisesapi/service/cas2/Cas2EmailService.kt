@@ -34,7 +34,7 @@ class Cas2EmailService(
         val statusUpdate = statusUpdateRepository.findFirstByApplicationIdOrderByCreatedAtDesc(applicationId) ?: throw EntityNotFoundException("StatusUpdate for $applicationId not found")
         sendLocationOrAllocationChangedEmail(
           oldPom.email,
-          notifyConfig.templates.toTransferringPomApplicationTransferredToAnotherPrison,
+          notifyConfig.templates.cas2ToTransferringPomApplicationTransferredToAnotherPrison,
           mapOf(
             "nomsNumber" to nomsNumber,
             "receivingPrisonName" to prisoner.prisonName,
@@ -42,7 +42,7 @@ class Cas2EmailService(
         )
         sendLocationOrAllocationChangedEmail(
           "tbc",
-          notifyConfig.templates.toTransferringPomUnitApplicationTransferredToAnotherPrison,
+          notifyConfig.templates.cas2ToTransferringPomUnitApplicationTransferredToAnotherPrison,
           mapOf(
             "nomsNumber" to nomsNumber,
             "receivingPrisonName" to prisoner.prisonName,
@@ -50,7 +50,7 @@ class Cas2EmailService(
         )
         sendLocationOrAllocationChangedEmail(
           "tbc",
-          notifyConfig.templates.toReceivingPomUnitApplicationTransferredToAnotherPrison,
+          notifyConfig.templates.cas2ToReceivingPomUnitApplicationTransferredToAnotherPrison,
           mapOf(
             "nomsNumber" to nomsNumber,
             "transferringPrisonName" to agency.description,
@@ -60,7 +60,7 @@ class Cas2EmailService(
         )
         sendLocationOrAllocationChangedEmail(
           nacroEmail,
-          notifyConfig.templates.toNacroApplicationTransferredToAnotherPrison,
+          notifyConfig.templates.cas2ToNacroApplicationTransferredToAnotherPrison,
           mapOf(
             "nomsNumber" to nomsNumber,
             "receivingPrisonName" to prisoner.prisonName,
@@ -81,7 +81,7 @@ class Cas2EmailService(
 
         sendLocationOrAllocationChangedEmail(
           newPom.email,
-          notifyConfig.templates.toReceivingPomApplicationTransferredToAnotherPom,
+          notifyConfig.templates.cas2ToReceivingPomApplicationTransferredToAnotherPom,
           mapOf(
             "nomsNumber" to nomsNumber,
             "transferringPrisonName" to oldAgency.description,
@@ -91,7 +91,7 @@ class Cas2EmailService(
         )
         sendLocationOrAllocationChangedEmail(
           nacroEmail,
-          notifyConfig.templates.toNacroApplicationTransferredToAnotherPom,
+          notifyConfig.templates.cas2ToNacroApplicationTransferredToAnotherPom,
           mapOf(
             "nomsNumber" to nomsNumber,
             "receivingPrisonName" to newAgency.description,

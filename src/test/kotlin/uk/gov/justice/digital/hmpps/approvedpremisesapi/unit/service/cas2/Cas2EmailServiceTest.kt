@@ -104,8 +104,8 @@ class Cas2EmailServiceTest {
 
     every { statusUpdateRepository.findFirstByApplicationIdOrderByCreatedAtDesc(application.id) } returns cas2StatusUpdateEntity
 
-    every { notifyConfig.templates.toNacroApplicationTransferredToAnotherPom } returns templateId
-    every { notifyConfig.templates.toReceivingPomApplicationTransferredToAnotherPom } returns templateId
+    every { notifyConfig.templates.cas2ToNacroApplicationTransferredToAnotherPom } returns templateId
+    every { notifyConfig.templates.cas2ToReceivingPomApplicationTransferredToAnotherPom } returns templateId
     every { prisonsApiClient.getAgencyDetails(eq(oldAgency.agencyId)) } returns ClientResult.Success(
       HttpStatus.OK,
       oldAgency,
@@ -215,10 +215,10 @@ class Cas2EmailServiceTest {
     application.applicationAssignments.add(applicationAssignmentOld)
     application.applicationAssignments.add(applicationAssignmentOlder)
     every { statusUpdateRepository.findFirstByApplicationIdOrderByCreatedAtDesc(application.id) } returns cas2StatusUpdateEntity
-    every { notifyConfig.templates.toTransferringPomApplicationTransferredToAnotherPrison } returns templateId
-    every { notifyConfig.templates.toTransferringPomUnitApplicationTransferredToAnotherPrison } returns templateId
-    every { notifyConfig.templates.toReceivingPomUnitApplicationTransferredToAnotherPrison } returns templateId
-    every { notifyConfig.templates.toNacroApplicationTransferredToAnotherPrison } returns templateId
+    every { notifyConfig.templates.cas2ToTransferringPomApplicationTransferredToAnotherPrison } returns templateId
+    every { notifyConfig.templates.cas2ToTransferringPomUnitApplicationTransferredToAnotherPrison } returns templateId
+    every { notifyConfig.templates.cas2ToReceivingPomUnitApplicationTransferredToAnotherPrison } returns templateId
+    every { notifyConfig.templates.cas2ToNacroApplicationTransferredToAnotherPrison } returns templateId
     every { nomisUserRepository.findById(eq(oldUser.id)) } returns Optional.of(oldUser)
     every { prisonsApiClient.getAgencyDetails(eq(oldAgency.agencyId)) } returns ClientResult.Success(
       HttpStatus.OK,
