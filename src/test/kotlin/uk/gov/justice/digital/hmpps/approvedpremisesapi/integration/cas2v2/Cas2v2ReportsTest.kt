@@ -154,6 +154,9 @@ class Cas2v2ReportsTest : Cas2v2IntegrationTestBase() {
         withSubmittedAt(newerSubmitted)
       }
 
+      // JUST FOR DEBUG
+      val apps = cas2v2ApplicationRepository.findAll()
+
       // outside time limit -- should not feature in report
       cas2v2ApplicationEntityFactory.produceAndPersist {
         withId(applicationId3)
