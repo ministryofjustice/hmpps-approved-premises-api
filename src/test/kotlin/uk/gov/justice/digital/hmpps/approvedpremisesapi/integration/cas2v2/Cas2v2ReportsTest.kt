@@ -15,6 +15,7 @@ import org.junit.jupiter.params.provider.ValueSource
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas2.model.Cas2ApplicationStatusUpdatedEvent
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas2.model.Cas2ApplicationSubmittedEvent
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas2.model.Cas2StatusDetail
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas2.model.Cas2v2ApplicationSubmittedEvent
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas2.model.EventType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApplicationOrigin
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas2ReportName
@@ -152,6 +153,9 @@ class Cas2v2ReportsTest : Cas2v2IntegrationTestBase() {
         withSubmittedAt(newerSubmitted)
       }
 
+      // JUST FOR DEBUG
+      val apps = cas2v2ApplicationRepository.findAll()
+
       // outside time limit -- should not feature in report
       cas2v2ApplicationEntityFactory.produceAndPersist {
         withId(applicationId3)
@@ -172,21 +176,21 @@ class Cas2v2ReportsTest : Cas2v2IntegrationTestBase() {
         .withSubmittedAt(tooOldSubmitted.toInstant())
         .produce()
 
-      val event1ToSave = Cas2ApplicationSubmittedEvent(
+      val event1ToSave = Cas2v2ApplicationSubmittedEvent(
         id = event1Id,
         timestamp = Instant.now(),
         eventType = EventType.applicationSubmitted,
         eventDetails = event1Details,
       )
 
-      val event2ToSave = Cas2ApplicationSubmittedEvent(
+      val event2ToSave = Cas2v2ApplicationSubmittedEvent(
         id = event2Id,
         timestamp = Instant.now(),
         eventType = EventType.applicationSubmitted,
         eventDetails = event2Details,
       )
 
-      val event3ToSave = Cas2ApplicationSubmittedEvent(
+      val event3ToSave = Cas2v2ApplicationSubmittedEvent(
         id = event3Id,
         timestamp = Instant.now(),
         eventType = EventType.applicationSubmitted,
