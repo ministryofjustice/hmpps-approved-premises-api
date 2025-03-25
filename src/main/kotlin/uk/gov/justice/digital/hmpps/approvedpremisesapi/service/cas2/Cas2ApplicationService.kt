@@ -15,7 +15,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApplicationOri
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.SubmitCas2Application
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.config.NotifyConfig
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApplicationSummaryRepository
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas2ApplicationAssignmentEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas2ApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas2ApplicationJsonSchemaEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas2ApplicationRepository
@@ -259,15 +258,7 @@ class Cas2ApplicationService(
         hdcEligibilityDate = submitApplication.hdcEligibilityDate
         conditionalReleaseDate = submitApplication.conditionalReleaseDate
         telephoneNumber = submitApplication.telephoneNumber
-        applicationAssignments.add(
-          Cas2ApplicationAssignmentEntity(
-            id = UUID.randomUUID(),
-            application = this,
-            prisonCode = prisonCode,
-            allocatedPomUserId = user.id,
-            createdAt = OffsetDateTime.now(),
-          ),
-        )
+        this.createApplicationAssignment(prisonCode = prisonCode, allocatedPomUserId = user.id)
       }
     } catch (error: UpstreamApiException) {
       return CasResult.GeneralValidationError(error.message.toString())
