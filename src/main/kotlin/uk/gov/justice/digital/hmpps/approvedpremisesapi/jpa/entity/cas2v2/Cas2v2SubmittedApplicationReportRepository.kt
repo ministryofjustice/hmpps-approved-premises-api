@@ -27,7 +27,7 @@ interface Cas2v2SubmittedApplicationReportRepository : JpaRepository<DomainEvent
         CAST(applications.bail_hearing_date as DATE) as bailHearingDate
       FROM domain_events events
       LEFT JOIN cas_2_v2_applications applications ON events.application_id = applications.id      
-      WHERE events.type = 'CAS2_APPLICATION_SUBMITTED'
+      WHERE applications.submitted_at IS NULL
         AND events.occurred_at  > CURRENT_DATE - 365
       ORDER BY submittedAt DESC;
     """,
