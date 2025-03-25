@@ -278,7 +278,7 @@ class Cas2EmailServiceTest {
       )
     } returns Unit
 
-    emailService.sendLocationChangedEmails(application.id, oldUser.id, oldPrisonCode, nomsNumber, prisoner)
+    emailService.sendLocationChangedEmails(application, oldUser.id, nomsNumber, prisoner)
 
     verify(exactly = 1) { nomisUserRepository.findById(eq(oldUser.id)) }
     verify(exactly = 1) { prisonsApiClient.getAgencyDetails(eq(oldAgency.agencyId)) }
@@ -298,7 +298,7 @@ class Cas2EmailServiceTest {
     )
     every { emailNotificationService.sendCas2Email(any(), any(), any()) } returns Unit
 
-    assertThrows<EntityNotFoundException> { emailService.sendLocationChangedEmails(application.id, oldUser.id, oldPrisonCode, nomsNumber, prisoner) }
+    assertThrows<EntityNotFoundException> { emailService.sendLocationChangedEmails(application, oldUser.id, nomsNumber, prisoner) }
 
     verify(exactly = 1) { nomisUserRepository.findById(eq(oldUser.id)) }
     verify(exactly = 1) { prisonsApiClient.getAgencyDetails(eq(oldAgency.agencyId)) }
@@ -314,7 +314,7 @@ class Cas2EmailServiceTest {
     every { nomisUserRepository.findById(eq(oldUser.id)) } returns Optional.empty()
     every { emailNotificationService.sendCas2Email(any(), any(), any()) } returns Unit
 
-    emailService.sendLocationChangedEmails(application.id, oldUser.id, oldPrisonCode, nomsNumber, prisoner)
+    emailService.sendLocationChangedEmails(application, oldUser.id, nomsNumber, prisoner)
 
     verify(exactly = 1) { nomisUserRepository.findById(eq(oldUser.id)) }
     verify(exactly = 0) { emailNotificationService.sendCas2Email(any(), any(), any()) }
@@ -329,7 +329,7 @@ class Cas2EmailServiceTest {
     every { prisonsApiClient.getAgencyDetails(eq(oldAgency.agencyId)) } returns ClientResult.Failure.StatusCode(HttpMethod.GET, "/api/agencies/${oldAgency.agencyId}", HttpStatus.NOT_FOUND, null)
     every { emailNotificationService.sendCas2Email(any(), any(), any()) } returns Unit
 
-    emailService.sendLocationChangedEmails(application.id, oldUser.id, oldPrisonCode, nomsNumber, prisoner)
+    emailService.sendLocationChangedEmails(application, oldUser.id, nomsNumber, prisoner)
 
     verify(exactly = 1) { nomisUserRepository.findById(eq(oldUser.id)) }
     verify(exactly = 1) { prisonsApiClient.getAgencyDetails(eq(oldAgency.agencyId)) }

@@ -28,10 +28,12 @@ class Cas2EmailService(
 
   private val log = LoggerFactory.getLogger(this::class.java)
 
-  fun sendLocationChangedEmails(applicationId: UUID, oldPomUserId: UUID, oldPrisonCode: String, nomsNumber: String, prisoner: Prisoner) {
+  fun sendLocationChangedEmails(application: Cas2ApplicationEntity, oldPomUserId: UUID, nomsNumber: String, prisoner: Prisoner) {
+    val oldPrisonCode = application.applicationAssignments.first { it.prisonCode != prisoner.prisonId }.prisonCode
+
     nomisUserRepository.findById(oldPomUserId).map { oldPom ->
       prisonsApiClient.getAgencyDetails(oldPrisonCode).map { agency ->
-        val statusUpdate = statusUpdateRepository.findFirstByApplicationIdOrderByCreatedAtDesc(applicationId) ?: throw EntityNotFoundException("StatusUpdate for $applicationId not found")
+        val statusUpdate = statusUpdateRepository.findFirstByApplicationIdOrderByCreatedAtDesc(application.id) ?: throw EntityNotFoundException("StatusUpdate for ${application.id} not found")
         sendLocationOrAllocationChangedEmail(
           oldPom.email,
           notifyConfig.templates.cas2ToTransferringPomApplicationTransferredToAnotherPrison,
@@ -54,7 +56,7 @@ class Cas2EmailService(
           mapOf(
             "nomsNumber" to nomsNumber,
             "transferringPrisonName" to agency.description,
-            "link" to getLink(applicationId),
+            "link" to getLink(application.id),
             "applicationStatus" to statusUpdate.label,
           ),
         )
@@ -65,7 +67,7 @@ class Cas2EmailService(
             "nomsNumber" to nomsNumber,
             "receivingPrisonName" to prisoner.prisonName,
             "transferringPrisonName" to agency.description,
-            "link" to getLink(applicationId),
+            "link" to getLink(application.id),
           ),
         )
       }
