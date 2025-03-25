@@ -113,7 +113,7 @@ class Cas2EmailService(
       emailNotificationService.sendCas2Email(recipientEmailAddress, templateId, personalisation)
       log.info("Email $templateId ready to send to $recipientEmailAddress for NOMS Number ${personalisation["nomsNumber"]}")
     } else {
-      val errorMessage = "Email $templateId not sent for NOMS Number ${personalisation["nomsNumber"]}"
+      val errorMessage = "Email $templateId not sent for NOMS Number ${personalisation["nomsNumber"]} as email address was not found."
       log.error(errorMessage)
       Sentry.captureMessage(errorMessage)
     }
