@@ -10,10 +10,9 @@ import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Value
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas2.model.Cas2ApplicationStatusUpdatedEvent
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas2.model.Cas2StatusDetail
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas2.model.Cas2v2ApplicationStatusUpdatedEvent
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas2AssessmentStatusUpdate
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas2v2AssessmentStatusUpdate
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.Cas2v2IntegrationTestBase
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenACas2v2Assessor
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenACas2v2PomUser
@@ -126,7 +125,7 @@ class Cas2v2StatusUpdateTest(
           val persistedDomainEvent = domainEventRepository.findFirstByOrderByCreatedAtDesc()
           val domainEventFromJson = objectMapper.readValue(
             persistedDomainEvent!!.data,
-            Cas2v2ApplicationStatusUpdatedEvent::class.java,
+            Cas2ApplicationStatusUpdatedEvent::class.java,
           )
           assertThat(domainEventFromJson.eventDetails.applicationUrl)
             .isEqualTo(expectedFrontEndUrl)
@@ -212,7 +211,7 @@ class Cas2v2StatusUpdateTest(
                 .uri("/cas2v2/assessments/$assessmentId/status-updates")
                 .header("Authorization", "Bearer $jwt")
                 .bodyValue(
-                  Cas2v2AssessmentStatusUpdate(
+                  Cas2AssessmentStatusUpdate(
                     newStatus = "offerDeclined",
                     newStatusDetails = listOf("changeOfCircumstances"),
                   ),
@@ -264,7 +263,7 @@ class Cas2v2StatusUpdateTest(
 
               val domainEventFromJson = objectMapper.readValue(
                 persistedDomainEvent!!.data,
-                Cas2v2ApplicationStatusUpdatedEvent::class.java,
+                Cas2ApplicationStatusUpdatedEvent::class.java,
               )
               assertThat(domainEventFromJson.eventDetails.applicationUrl)
                 .isEqualTo(expectedFrontEndUrl)

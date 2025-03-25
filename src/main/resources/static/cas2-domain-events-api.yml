@@ -89,8 +89,6 @@ components:
         mapping:
           applications.cas2.application.submitted: '#/components/schemas/Cas2ApplicationSubmittedEvent'
           applications.cas2.application.status-updated: '#/components/schemas/Cas2ApplicationStatusUpdatedEvent'
-          applications.cas2v2.application.submitted: '#/components/schemas/Cas2v2ApplicationSubmittedEvent'
-          applications.cas2v2.application.status-updated: '#/components/schemas/Cas2v2ApplicationStatusUpdatedEvent'
     Cas2ApplicationSubmittedEvent:
       allOf:
         - $ref: '#/components/schemas/Cas2Event'
@@ -100,25 +98,7 @@ components:
               $ref: '#/components/schemas/Cas2ApplicationSubmittedEventDetails'
           required:
             - eventDetails
-    Cas2v2ApplicationSubmittedEvent:
-      allOf:
-        - $ref: '#/components/schemas/Cas2Event'
-        - type: object
-          properties:
-            eventDetails:
-              $ref: '#/components/schemas/Cas2ApplicationSubmittedEventDetails'
-          required:
-            - eventDetails
     Cas2ApplicationStatusUpdatedEvent:
-      allOf:
-        - $ref: '#/components/schemas/Cas2Event'
-        - type: object
-          properties:
-            eventDetails:
-              $ref: '#/components/schemas/Cas2ApplicationStatusUpdatedEventDetails'
-          required:
-            - eventDetails
-    Cas2v2ApplicationStatusUpdatedEvent:
       allOf:
         - $ref: '#/components/schemas/Cas2Event'
         - type: object
@@ -299,13 +279,9 @@ components:
       enum:
         - applications.cas2.application.submitted
         - applications.cas2.application.status-updated
-        - applications.cas2v2.application.submitted
-        - applications.cas2v2.application.status-updated
       x-enum-varnames:
         - applicationSubmitted
         - applicationStatusUpdated
-        - cas2v2ApplicationSubmitted
-        - cas2v2ApplicationStatusUpdated
     Problem:
       type: object
       properties:
