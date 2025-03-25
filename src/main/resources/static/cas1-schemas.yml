@@ -690,6 +690,9 @@ components:
           format: uuid
         reasonNotes:
           type: string
+        changeRequestId:
+          type: string
+          format: uuid
       required:
         - occurredAt
         - reasonId
