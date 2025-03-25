@@ -68,7 +68,7 @@ class Cas2EmailService(
           ),
         )
       }
-    }.orElseThrow()
+    }
   }
 
   fun sendAllocationChangedEmails(newPom: NomisUserEntity, nomsNumber: String, application: Cas2ApplicationEntity, newPrisonCode: String) {
