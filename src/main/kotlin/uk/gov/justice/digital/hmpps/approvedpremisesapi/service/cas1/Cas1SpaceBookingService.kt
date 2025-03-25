@@ -433,7 +433,7 @@ class Cas1SpaceBookingService(
       filterCriteria.keyWorkerStaffCode,
       premisesId,
       pageCriteria.toPageableOrAllPages(
-        sortByConverter = when (pageCriteria.sortBy) {
+        sortBy = when (pageCriteria.sortBy) {
           Cas1SpaceBookingSummarySortField.personName -> "personName"
           Cas1SpaceBookingSummarySortField.canonicalArrivalDate -> "canonicalArrivalDate"
           Cas1SpaceBookingSummarySortField.canonicalDepartureDate -> "canonicalDepartureDate"

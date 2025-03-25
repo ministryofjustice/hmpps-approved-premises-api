@@ -1,30 +1,38 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.cas1
 
 import org.assertj.core.api.Assertions.assertThat
+import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.EnumSource
-import org.springframework.beans.factory.annotation.Autowired
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1ChangeRequestSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1ChangeRequestType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1NewChangeRequest
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.InitialiseDatabasePerClassTestBase
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.IntegrationTestBase
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenACas1Application
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenACas1ChangeRequest
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenACas1CruManagementArea
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenACas1SpaceBooking
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAPlacementRequest
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAUser
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAnOffender
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas1CruManagementAreaEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRole
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas1.Cas1ChangeRequestRepository
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRole.CAS1_CHANGE_REQUEST_DEV
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas1.Cas1ChangeRequestEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas1.ChangeRequestDecision
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas1.ChangeRequestType
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.asCaseSummary
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.bodyAsListOfObjects
 import java.time.LocalDate
 import java.util.UUID
 
-class Cas1ChangeRequestTest : InitialiseDatabasePerClassTestBase() {
-
-  @Autowired
-  lateinit var cas1ChangeRequestRepository: Cas1ChangeRequestRepository
+class Cas1ChangeRequestTest {
 
   @Nested
-  inner class CreateChangeRequest {
+  inner class CreateChangeRequest : IntegrationTestBase() {
 
     @Test
     fun `Without JWT returns 401`() {
@@ -203,6 +211,345 @@ class Cas1ChangeRequestTest : InitialiseDatabasePerClassTestBase() {
           assertThat(persistedChangeRequest.spaceBooking.id).isEqualTo(spaceBooking.id)
         }
       }
+    }
+  }
+
+  @Nested
+  inner class FindOpen : InitialiseDatabasePerClassTestBase() {
+
+    lateinit var cruManagementArea1: Cas1CruManagementAreaEntity
+    lateinit var cruManagementArea1ChangeRequest1: Cas1ChangeRequestEntity
+
+    lateinit var cruManagementArea2: Cas1CruManagementAreaEntity
+    lateinit var cruManagementArea2ChangeRequest1: Cas1ChangeRequestEntity
+    lateinit var cruManagementArea2ChangeRequest2: Cas1ChangeRequestEntity
+
+    @BeforeAll
+    fun setupChangeRequests() {
+      val user = givenAUser().first
+
+      cruManagementArea1 = givenACas1CruManagementArea()
+
+      val placementRequest1 = givenAPlacementRequest(
+        createdByUser = user,
+        application = givenACas1Application(
+          createdByUser = user,
+          offender = givenAnOffender(
+            offenderDetailsConfigBlock = {
+              withFirstName("Aaron")
+              withLastName("Atkins")
+            },
+          ).first.asCaseSummary(),
+          cruManagementArea = cruManagementArea1,
+          tier = "B1",
+        ),
+      ).first
+
+      cruManagementArea1ChangeRequest1 = givenACas1ChangeRequest(
+        type = ChangeRequestType.APPEAL,
+        decision = null,
+        spaceBooking = givenACas1SpaceBooking(
+          crn = placementRequest1.application.crn,
+          application = placementRequest1.application,
+          placementRequest = placementRequest1,
+          canonicalArrivalDate = LocalDate.of(2024, 6, 1),
+          canonicalDepartureDate = LocalDate.of(2024, 6, 15),
+        ),
+      )
+
+      // has decision, will be ignored
+      givenACas1ChangeRequest(
+        type = ChangeRequestType.APPEAL,
+        decision = ChangeRequestDecision.APPROVED,
+        spaceBooking = givenACas1SpaceBooking(
+          crn = placementRequest1.application.crn,
+          application = placementRequest1.application,
+          placementRequest = placementRequest1,
+        ),
+      )
+
+      cruManagementArea2 = givenACas1CruManagementArea()
+
+      val placementRequest2 = givenAPlacementRequest(
+        createdByUser = user,
+        application = givenACas1Application(
+          createdByUser = user,
+          offender = givenAnOffender(
+            offenderDetailsConfigBlock = {
+              withFirstName("Berty")
+              withLastName("Bats")
+            },
+          ).first.asCaseSummary(),
+          cruManagementArea = cruManagementArea2,
+          tier = "A1",
+        ),
+      ).first
+
+      cruManagementArea2ChangeRequest1 = givenACas1ChangeRequest(
+        type = ChangeRequestType.EXTENSION,
+        decision = null,
+        spaceBooking = givenACas1SpaceBooking(
+          crn = placementRequest2.application.crn,
+          application = placementRequest2.application,
+          placementRequest = placementRequest2,
+          canonicalArrivalDate = LocalDate.of(2024, 3, 1),
+          canonicalDepartureDate = LocalDate.of(2024, 3, 10),
+        ),
+      )
+
+      val placementRequest3 = givenAPlacementRequest(
+        createdByUser = user,
+        application = givenACas1Application(
+          createdByUser = user,
+          offender = givenAnOffender(
+            offenderDetailsConfigBlock = {
+              withFirstName("Chris")
+              withLastName("Chaplin")
+            },
+          ).first.asCaseSummary(),
+          cruManagementArea = cruManagementArea2,
+          tier = "C1",
+        ),
+      ).first
+
+      cruManagementArea2ChangeRequest2 = givenACas1ChangeRequest(
+        type = ChangeRequestType.PLANNED_TRANSFER,
+        decision = null,
+        spaceBooking = givenACas1SpaceBooking(
+          crn = placementRequest3.application.crn,
+          application = placementRequest3.application,
+          placementRequest = placementRequest3,
+          canonicalArrivalDate = LocalDate.of(2024, 1, 1),
+          canonicalDepartureDate = LocalDate.of(2024, 1, 5),
+        ),
+      )
+    }
+
+    @Test
+    fun `Getting change requests without JWT returns 401`() {
+      webTestClient.get()
+        .uri("/cas1/placement-request/change-requests")
+        .exchange()
+        .expectStatus()
+        .isUnauthorized
+    }
+
+    @ParameterizedTest
+    @EnumSource(mode = EnumSource.Mode.EXCLUDE, names = ["CAS1_CHANGE_REQUEST_DEV", "CAS1_JANITOR"])
+    fun `Getting change requests without a valid role returns 403`(role: UserRole) {
+      val (_, jwt) = givenAUser(roles = listOf(role))
+
+      webTestClient.get()
+        .uri("/cas1/placement-request/change-requests")
+        .header("Authorization", "Bearer $jwt")
+        .exchange()
+        .expectStatus()
+        .isForbidden
+    }
+
+    @Test
+    fun `no results return empty`() {
+      val (_, jwt) = givenAUser(roles = listOf(CAS1_CHANGE_REQUEST_DEV))
+
+      val emptyCruManagementArea = givenACas1CruManagementArea()
+
+      val response = webTestClient.get()
+        .uri("/cas1/placement-request/change-requests?cruManagementAreaId=${emptyCruManagementArea.id}")
+        .header("Authorization", "Bearer $jwt")
+        .exchange()
+        .expectStatus()
+        .isOk
+        .bodyAsListOfObjects<Cas1ChangeRequestSummary>()
+
+      assertThat(response).isEmpty()
+    }
+
+    @Test
+    fun `ensure fields correctly populated`() {
+      val (_, jwt) = givenAUser(roles = listOf(CAS1_CHANGE_REQUEST_DEV))
+
+      val response = webTestClient.get()
+        .uri("/cas1/placement-request/change-requests")
+        .header("Authorization", "Bearer $jwt")
+        .exchange()
+        .expectStatus()
+        .isOk
+        .bodyAsListOfObjects<Cas1ChangeRequestSummary>()
+    }
+
+    @Test
+    fun `no filtering returns all open change requests`() {
+      val (_, jwt) = givenAUser(roles = listOf(CAS1_CHANGE_REQUEST_DEV))
+
+      val response = webTestClient.get()
+        .uri("/cas1/placement-request/change-requests")
+        .header("Authorization", "Bearer $jwt")
+        .exchange()
+        .expectStatus()
+        .isOk
+        .bodyAsListOfObjects<Cas1ChangeRequestSummary>()
+
+      assertThat(response.map { it.id })
+        .containsExactlyInAnyOrder(
+          cruManagementArea1ChangeRequest1.id,
+          cruManagementArea2ChangeRequest1.id,
+          cruManagementArea2ChangeRequest2.id,
+        )
+    }
+
+    @Test
+    fun `filter by cru management area`() {
+      val (_, jwt) = givenAUser(roles = listOf(CAS1_CHANGE_REQUEST_DEV))
+
+      val response = webTestClient.get()
+        .uri("/cas1/placement-request/change-requests?cruManagementAreaId=${cruManagementArea1.id}")
+        .header("Authorization", "Bearer $jwt")
+        .exchange()
+        .expectStatus()
+        .isOk
+        .bodyAsListOfObjects<Cas1ChangeRequestSummary>()
+
+      assertThat(response.map { it.id }).containsExactly(cruManagementArea1ChangeRequest1.id)
+    }
+
+    @Test
+    fun `sort by name`() {
+      val (_, jwt) = givenAUser(roles = listOf(CAS1_CHANGE_REQUEST_DEV))
+
+      webTestClient.get()
+        .uri("/cas1/placement-request/change-requests?sortBy=name&sortDirection=asc")
+        .header("Authorization", "Bearer $jwt")
+        .exchange()
+        .expectStatus()
+        .isOk
+        .bodyAsListOfObjects<Cas1ChangeRequestSummary>().let { response ->
+          assertThat(response.map { it.id })
+            .containsExactly(
+              cruManagementArea1ChangeRequest1.id,
+              cruManagementArea2ChangeRequest1.id,
+              cruManagementArea2ChangeRequest2.id,
+            )
+        }
+
+      webTestClient.get()
+        .uri("/cas1/placement-request/change-requests?sortBy=name&sortDirection=desc")
+        .header("Authorization", "Bearer $jwt")
+        .exchange()
+        .expectStatus()
+        .isOk
+        .bodyAsListOfObjects<Cas1ChangeRequestSummary>().let { response ->
+          assertThat(response.map { it.id })
+            .containsExactly(
+              cruManagementArea2ChangeRequest2.id,
+              cruManagementArea2ChangeRequest1.id,
+              cruManagementArea1ChangeRequest1.id,
+            )
+        }
+    }
+
+    @Test
+    fun `sort by tier`() {
+      val (_, jwt) = givenAUser(roles = listOf(CAS1_CHANGE_REQUEST_DEV))
+
+      webTestClient.get()
+        .uri("/cas1/placement-request/change-requests?sortBy=tier&sortDirection=asc")
+        .header("Authorization", "Bearer $jwt")
+        .exchange()
+        .expectStatus()
+        .isOk
+        .bodyAsListOfObjects<Cas1ChangeRequestSummary>().let { response ->
+          assertThat(response.map { it.id })
+            .containsExactly(
+              cruManagementArea2ChangeRequest1.id,
+              cruManagementArea1ChangeRequest1.id,
+              cruManagementArea2ChangeRequest2.id,
+            )
+        }
+
+      webTestClient.get()
+        .uri("/cas1/placement-request/change-requests?sortBy=tier&sortDirection=desc")
+        .header("Authorization", "Bearer $jwt")
+        .exchange()
+        .expectStatus()
+        .isOk
+        .bodyAsListOfObjects<Cas1ChangeRequestSummary>().let { response ->
+          assertThat(response.map { it.id })
+            .containsExactly(
+              cruManagementArea2ChangeRequest2.id,
+              cruManagementArea1ChangeRequest1.id,
+              cruManagementArea2ChangeRequest1.id,
+            )
+        }
+    }
+
+    @Test
+    fun `sort by canonical arrival date`() {
+      val (_, jwt) = givenAUser(roles = listOf(CAS1_CHANGE_REQUEST_DEV))
+
+      webTestClient.get()
+        .uri("/cas1/placement-request/change-requests?sortBy=canonicalArrivalDate&sortDirection=asc")
+        .header("Authorization", "Bearer $jwt")
+        .exchange()
+        .expectStatus()
+        .isOk
+        .bodyAsListOfObjects<Cas1ChangeRequestSummary>().let { response ->
+          assertThat(response.map { it.id })
+            .containsExactly(
+              cruManagementArea2ChangeRequest2.id,
+              cruManagementArea2ChangeRequest1.id,
+              cruManagementArea1ChangeRequest1.id,
+            )
+        }
+
+      webTestClient.get()
+        .uri("/cas1/placement-request/change-requests?sortBy=canonicalArrivalDate&sortDirection=desc")
+        .header("Authorization", "Bearer $jwt")
+        .exchange()
+        .expectStatus()
+        .isOk
+        .bodyAsListOfObjects<Cas1ChangeRequestSummary>().let { response ->
+          assertThat(response.map { it.id })
+            .containsExactly(
+              cruManagementArea1ChangeRequest1.id,
+              cruManagementArea2ChangeRequest1.id,
+              cruManagementArea2ChangeRequest2.id,
+            )
+        }
+    }
+
+    @Test
+    fun `sort by length of stay days`() {
+      val (_, jwt) = givenAUser(roles = listOf(CAS1_CHANGE_REQUEST_DEV))
+
+      webTestClient.get()
+        .uri("/cas1/placement-request/change-requests?sortBy=lengthOfStayDays&sortDirection=asc")
+        .header("Authorization", "Bearer $jwt")
+        .exchange()
+        .expectStatus()
+        .isOk
+        .bodyAsListOfObjects<Cas1ChangeRequestSummary>().let { response ->
+          assertThat(response.map { it.type })
+            .containsExactly(
+              Cas1ChangeRequestType.PLANNED_TRANSFER,
+              Cas1ChangeRequestType.EXTENSION,
+              Cas1ChangeRequestType.APPEAL,
+            )
+        }
+
+      webTestClient.get()
+        .uri("/cas1/placement-request/change-requests?sortBy=lengthOfStayDays&sortDirection=desc")
+        .header("Authorization", "Bearer $jwt")
+        .exchange()
+        .expectStatus()
+        .isOk
+        .bodyAsListOfObjects<Cas1ChangeRequestSummary>().let { response ->
+          assertThat(response.map { it.type })
+            .containsExactly(
+              Cas1ChangeRequestType.APPEAL,
+              Cas1ChangeRequestType.EXTENSION,
+              Cas1ChangeRequestType.PLANNED_TRANSFER,
+            )
+        }
     }
   }
 }

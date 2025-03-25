@@ -33,15 +33,15 @@ data class PageCriteria<S>(
   fun <S2> withSortBy(sortBy: S2): PageCriteria<S2> = PageCriteria(sortBy, this.sortDirection, this.page, this.perPage)
 
   @Deprecated("This function will ignore sorting if no page is defined. This is most likely not the expected behaviour", ReplaceWith("getPageableOrAllPages"))
-  fun toPageable(sortByConverter: String) = getPageable(
-    sortByConverter,
+  fun toPageable(sortBy: String) = getPageable(
+    sortBy,
     this.sortDirection,
     this.page,
     this.perPage,
   )
 
-  fun toPageableOrAllPages(unsafe: Boolean = false, sortByConverter: String) = getPageableOrAllPages(
-    sortByConverter,
+  fun toPageableOrAllPages(unsafe: Boolean = false, sortBy: String) = getPageableOrAllPages(
+    sortBy,
     this.sortDirection,
     this.page,
     this.perPage,
