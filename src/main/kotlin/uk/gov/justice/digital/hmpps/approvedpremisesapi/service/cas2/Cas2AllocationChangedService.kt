@@ -45,7 +45,7 @@ class Cas2AllocationChangedService(
           if (isNewAllocation(application.currentPomUserId, allocatedUser.id)) {
             application.createApplicationAssignment(
               prisonCode = pomAllocation.prison.code,
-              allocatedPomUserId = allocatedUser.id,
+              allocatedPomUser = allocatedUser,
             )
             applicationRepository.save(application)
           }

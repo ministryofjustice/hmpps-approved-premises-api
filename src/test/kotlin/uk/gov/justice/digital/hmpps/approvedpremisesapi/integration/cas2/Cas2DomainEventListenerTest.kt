@@ -112,7 +112,7 @@ class Cas2DomainEventListenerTest : IntegrationTestBase() {
           id = UUID.randomUUID(),
           application = application,
           prisonCode = "LON",
-          allocatedPomUserId = application.createdByUser.id,
+          allocatedPomUser = application.createdByUser,
           createdAt = occurredAt.toOffsetDateTime(),
         )
         applicationAssignmentRepository.deleteAll()
@@ -170,7 +170,7 @@ class Cas2DomainEventListenerTest : IntegrationTestBase() {
           id = UUID.randomUUID(),
           application = application,
           prisonCode = "LON",
-          allocatedPomUserId = null,
+          allocatedPomUser = null,
           createdAt = occurredAt,
         )
         applicationAssignmentRepository.save(

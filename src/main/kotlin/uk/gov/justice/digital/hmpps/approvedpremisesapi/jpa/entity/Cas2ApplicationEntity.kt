@@ -107,15 +107,15 @@ data class Cas2ApplicationEntity(
   val currentPrisonCode: String
     get() = applicationAssignments.first().prisonCode
   val currentPomUserId: UUID?
-    get() = applicationAssignments.first().allocatedPomUserId
+    get() = applicationAssignments.first().allocatedPomUser?.id
 
-  fun createApplicationAssignment(prisonCode: String, allocatedPomUserId: UUID?) {
+  fun createApplicationAssignment(prisonCode: String, allocatedPomUser: NomisUserEntity?) {
     this.applicationAssignments.add(
       Cas2ApplicationAssignmentEntity(
         id = UUID.randomUUID(),
         application = this,
         prisonCode = prisonCode,
-        allocatedPomUserId = allocatedPomUserId,
+        allocatedPomUser = allocatedPomUser,
         createdAt = OffsetDateTime.now(),
       ),
     )

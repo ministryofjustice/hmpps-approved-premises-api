@@ -1,12 +1,19 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.cas2
 
+import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Component
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas2TimelineEvent
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.TimelineEventType
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.ClientResult
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.PrisonsApiClient
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas2ApplicationEntity
 
 @Component("Cas2TimelineEventsTransformer")
-class TimelineEventsTransformer {
+class TimelineEventsTransformer(
+  private val prisonsApiClient: PrisonsApiClient,
+) {
+  private val log = LoggerFactory.getLogger(this::class.java)
+
   fun transformApplicationToTimelineEvents(jpa: Cas2ApplicationEntity): List<Cas2TimelineEvent> {
     val timelineEvents: MutableList<Cas2TimelineEvent> = mutableListOf()
 
@@ -15,6 +22,8 @@ class TimelineEventsTransformer {
     addStatusUpdateEvents(jpa, timelineEvents)
 
     addNoteEvents(jpa, timelineEvents)
+
+    addPrisonAndPomEvents(jpa, timelineEvents)
 
     return timelineEvents.sortedByDescending { it.occurredAt }
   }
@@ -52,6 +61,43 @@ class TimelineEventsTransformer {
         createdByName = jpa.createdByUser.name,
       )
       timelineEvents += submittedAtEvent
+    }
+  }
+
+  private fun addPrisonAndPomEvents(cas2Application: Cas2ApplicationEntity, timelineEvents: MutableList<Cas2TimelineEvent>) {
+    val applicationAssignments = cas2Application.applicationAssignments.sortedBy { a -> a.createdAt }
+    val prisonNames = mutableMapOf<String, String>()
+
+    for (index in 1..<applicationAssignments.size) {
+      val applicationAssignment = applicationAssignments[index]
+      timelineEvents += when (applicationAssignment.allocatedPomUser) {
+        null -> {
+          val transferringPrisonName = getPrisonName(applicationAssignments[index - 1].prisonCode, prisonNames)
+          val receivingPrisonName = getPrisonName(applicationAssignment.prisonCode, prisonNames)
+          Cas2TimelineEvent(
+            type = TimelineEventType.cas2PrisonTransfer,
+            occurredAt = applicationAssignment.createdAt.toInstant(),
+            label = "Prison transfer from $transferringPrisonName to $receivingPrisonName",
+            createdByName = null,
+          )
+        }
+
+        else ->
+          Cas2TimelineEvent(
+            type = TimelineEventType.cas2NewPomAssigned,
+            occurredAt = applicationAssignment.createdAt.toInstant(),
+            label = "New Prison offender manager ${applicationAssignment.allocatedPomUser?.name} allocated",
+            createdByName = null,
+          )
+      }
+    }
+  }
+
+  private fun getPrisonName(prisonCode: String, prisonNames: MutableMap<String, String>) = prisonNames[prisonCode] ?: when (val agency = prisonsApiClient.getAgencyDetails(prisonCode)) {
+    is ClientResult.Success -> agency.body.description.also { prisonNames[prisonCode] = it }
+    else -> {
+      log.warn("Unknown prison name for prison code '$prisonCode'.")
+      prisonCode
     }
   }
 }

@@ -26,6 +26,8 @@ data class Cas2ApplicationAssignmentEntity(
   @JoinColumn(name = "application_id")
   val application: Cas2ApplicationEntity,
   val prisonCode: String,
-  val allocatedPomUserId: UUID?,
+  @ManyToOne
+  @JoinColumn(name = "allocated_pom_user_id")
+  val allocatedPomUser: NomisUserEntity? = null,
   val createdAt: OffsetDateTime,
 )
