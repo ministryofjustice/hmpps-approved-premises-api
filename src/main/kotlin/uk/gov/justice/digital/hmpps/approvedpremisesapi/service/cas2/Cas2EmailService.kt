@@ -1,6 +1,5 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas2
 
-import io.sentry.Sentry
 import jakarta.persistence.EntityNotFoundException
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Value
@@ -13,6 +12,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas2StatusUpd
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.NomisUserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.NomisUserRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.EmailNotificationService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.SentryService
 import java.util.UUID
 
 @Service
@@ -22,6 +22,7 @@ class Cas2EmailService(
   private val nomisUserRepository: NomisUserRepository,
   private val prisonsApiClient: PrisonsApiClient,
   private val statusUpdateRepository: Cas2StatusUpdateRepository,
+  private val sentryService: SentryService,
   @Value("\${url-templates.frontend.cas2.application-overview}") private val applicationUrlTemplate: String,
   @Value("\${notify.emailaddresses.nacro}") private val nacroEmail: String,
 ) {
@@ -29,7 +30,7 @@ class Cas2EmailService(
   private val log = LoggerFactory.getLogger(this::class.java)
 
   fun sendLocationChangedEmails(application: Cas2ApplicationEntity, oldPomUserId: UUID, nomsNumber: String, prisoner: Prisoner) {
-    val oldPrisonCode = getOldPrisonCode(application, prisoner.prisonId)
+    val oldPrisonCode = getOldPrisonCode(application, prisoner.prisonId) ?: error("Old prison code not found.")
 
     nomisUserRepository.findById(oldPomUserId).map { oldPom ->
       prisonsApiClient.getAgencyDetails(oldPrisonCode).map { agency ->
@@ -75,7 +76,7 @@ class Cas2EmailService(
   }
 
   fun sendAllocationChangedEmails(newPom: NomisUserEntity, nomsNumber: String, application: Cas2ApplicationEntity, newPrisonCode: String) {
-    val oldPrisonCode = getOldPrisonCode(application, newPrisonCode)
+    val oldPrisonCode = getOldPrisonCode(application, newPrisonCode) ?: error("Old prison code not found.")
 
     prisonsApiClient.getAgencyDetails(oldPrisonCode).map { oldAgency ->
       prisonsApiClient.getAgencyDetails(newPrisonCode).map { newAgency ->
@@ -115,15 +116,11 @@ class Cas2EmailService(
     } else {
       val errorMessage = "Email $templateId not sent for NOMS Number ${personalisation["nomsNumber"]} as email address was not found."
       log.error(errorMessage)
-      Sentry.captureMessage(errorMessage)
+      sentryService.captureErrorMessage(errorMessage)
     }
   }
 
   private fun getLink(applicationId: UUID): String = applicationUrlTemplate.replace("#id", applicationId.toString())
 
-  fun getOldPrisonCode(application: Cas2ApplicationEntity, newPrisonCode: String): String = try {
-    application.applicationAssignments.first { it.prisonCode != newPrisonCode }.prisonCode
-  } catch (e: NoSuchElementException) {
-    throw NoSuchElementException("Cannot find code that does not match $newPrisonCode", e)
-  }
+  fun getOldPrisonCode(application: Cas2ApplicationEntity, newPrisonCode: String): String? = application.applicationAssignments.firstOrNull { it.prisonCode != newPrisonCode }?.prisonCode
 }

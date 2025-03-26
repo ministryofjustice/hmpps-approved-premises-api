@@ -26,6 +26,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas2StatusUpd
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.NomisUserRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.prisonsapi.Agency
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.EmailNotificationService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.SentryService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas2.Cas2EmailService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.UrlTemplate
 import java.time.OffsetDateTime
@@ -40,6 +41,7 @@ class Cas2EmailServiceTest {
   private val nomisUserRepository = mockk<NomisUserRepository>()
   private val prisonsApiClient = mockk<PrisonsApiClient>()
   private val statusUpdateRepository = mockk<Cas2StatusUpdateRepository>()
+  private val sentryService = mockk<SentryService>()
   private val applicationUrlTemplate = UrlTemplate("/applications/#id/overview").toString()
   private val nacroEmail = "nacro@test.co.uk"
 
@@ -49,6 +51,7 @@ class Cas2EmailServiceTest {
     nomisUserRepository,
     prisonsApiClient,
     statusUpdateRepository,
+    sentryService,
     applicationUrlTemplate,
     nacroEmail,
   )
@@ -350,13 +353,15 @@ class Cas2EmailServiceTest {
 
   @Test
   fun `should not get old prison code and throw error when no applicationAssignments`() {
-    assertThrows<NoSuchElementException> { emailService.getOldPrisonCode(application, applicationAssignmentNew.prisonCode) }
+    val result = emailService.getOldPrisonCode(application, applicationAssignmentNew.prisonCode)
+    assertThat(result).isNull()
   }
 
   @Test
   fun `should not get old prison code and throw error when applicationAssignments all have new prisonCode`() {
     application.applicationAssignments.add(applicationAssignmentNew)
 
-    assertThrows<NoSuchElementException> { emailService.getOldPrisonCode(application, applicationAssignmentNew.prisonCode) }
+    val result = emailService.getOldPrisonCode(application, applicationAssignmentNew.prisonCode)
+    assertThat(result).isNull()
   }
 }
