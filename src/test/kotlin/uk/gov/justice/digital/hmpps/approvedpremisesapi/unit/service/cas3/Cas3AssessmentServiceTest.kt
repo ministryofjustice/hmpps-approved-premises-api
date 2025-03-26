@@ -24,8 +24,8 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.CasResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.UserAccessService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas3.Cas3AssessmentService
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas3.DomainEventBuilder
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas3.DomainEventService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas3.Cas3DomainEventBuilder
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas3.Cas3DomainEventService
 import java.time.LocalDate
 import java.util.Optional
 import java.util.UUID
@@ -39,10 +39,10 @@ class Cas3AssessmentServiceTest {
   lateinit var userAccessService: UserAccessService
 
   @MockK
-  lateinit var domainEventService: DomainEventService
+  lateinit var cas3DomainEventService: Cas3DomainEventService
 
   @MockK
-  lateinit var domainEventBuilder: DomainEventBuilder
+  lateinit var cas3DomainEventBuilder: Cas3DomainEventBuilder
 
   @InjectMockKs
   lateinit var assessmentService: Cas3AssessmentService
@@ -108,7 +108,7 @@ class Cas3AssessmentServiceTest {
 
     val result = assessmentService.updateAssessment(user, assessmentId, updateAssessment) as CasResult.GeneralValidationError<TemporaryAccommodationAssessmentEntity>
     assertThat(result.message).isEqualTo("Cannot update both dates")
-    verify { domainEventService wasNot called }
+    verify { cas3DomainEventService wasNot called }
   }
 
   @Test
@@ -129,7 +129,7 @@ class Cas3AssessmentServiceTest {
 
     val result = assessmentService.updateAssessment(user, assessmentId, updateAssessment) as CasResult.GeneralValidationError<TemporaryAccommodationAssessmentEntity>
     assertThat(result.message).isEqualTo("Accommodation required from date cannot be before release date: ${assessment.releaseDate}")
-    verify { domainEventService wasNot called }
+    verify { cas3DomainEventService wasNot called }
   }
 
   @Test
@@ -148,7 +148,7 @@ class Cas3AssessmentServiceTest {
 
     val result = assessmentService.updateAssessment(user, assessmentId, updateAssessment) as CasResult.GeneralValidationError<TemporaryAccommodationAssessmentEntity>
     assertThat(result.message).isEqualTo("Release date cannot be after accommodation required from date: ${assessment.accommodationRequiredFromDate}")
-    verify { domainEventService wasNot called }
+    verify { cas3DomainEventService wasNot called }
   }
 
   @ParameterizedTest
@@ -179,15 +179,15 @@ class Cas3AssessmentServiceTest {
     every { assessmentRepository.findById(assessmentId) } returns Optional.of(assessment)
     every { userAccessService.userCanViewAssessment(any(), any()) } returns true
     every { assessmentRepository.save(any()) } returnsArgument 0
-    every { domainEventBuilder.buildAssessmentUpdatedDomainEvent(any(), any()) } answers { callOriginal() }
-    every { domainEventService.saveAssessmentUpdatedEvent(any()) } just Runs
+    every { cas3DomainEventBuilder.buildAssessmentUpdatedDomainEvent(any(), any()) } answers { callOriginal() }
+    every { cas3DomainEventService.saveAssessmentUpdatedEvent(any()) } just Runs
 
     val result = assessmentService.updateAssessment(user, assessmentId, updateAssessment)
     assertThat(result is CasResult.Success).isTrue
     val entity = (result as CasResult.Success).value
     assertThat(entity).isNotNull()
     assertThat(entity.releaseDate).isBefore(entity.accommodationRequiredFromDate)
-    verify(exactly = 1) { domainEventService.saveAssessmentUpdatedEvent(any()) }
+    verify(exactly = 1) { cas3DomainEventService.saveAssessmentUpdatedEvent(any()) }
   }
 
   private fun updateAssessmentEntity(

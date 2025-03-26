@@ -17,7 +17,7 @@ class Cas3ApplicationService(
   private val applicationRepository: ApplicationRepository,
   private val userService: UserService,
   private val userAccessService: UserAccessService,
-  private val cas3DomainEventService: uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas3.DomainEventService,
+  private val cas3DomainEventService: uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas3.Cas3DomainEventService,
 ) {
   @Transactional
   fun markApplicationAsDeleted(applicationId: UUID): CasResult<Unit> {

@@ -40,7 +40,7 @@ import java.time.ZoneOffset
 import java.util.UUID
 
 @Component
-class DomainEventBuilder(
+class Cas3DomainEventBuilder(
   @Value("\${url-templates.api.cas3.application}") private val applicationUrlTemplate: String,
   @Value("\${url-templates.api.cas3.booking}") private val bookingUrlTemplate: String,
 ) {

@@ -32,7 +32,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TemporaryAcco
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TemporaryAccommodationPremisesEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.DomainEvent
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas3.DomainEventBuilder
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas3.Cas3DomainEventBuilder
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.isWithinTheLastMinute
 import java.time.Instant
 import java.time.LocalDate
@@ -41,9 +41,9 @@ import java.time.ZoneOffset
 import java.util.UUID
 
 @SuppressWarnings("CyclomaticComplexMethod")
-class DomainEventBuilderTest {
-  private val domainEventBuilder =
-    DomainEventBuilder(
+class Cas3DomainEventBuilderTest {
+  private val cas3DomainEventBuilder =
+    Cas3DomainEventBuilder(
       applicationUrlTemplate = "http://api/applications/#applicationId",
       bookingUrlTemplate = "http://api/premises/#premisesId/bookings/#bookingId",
     )
@@ -54,7 +54,7 @@ class DomainEventBuilderTest {
     val application = TemporaryAccommodationApplicationEntityFactory().withDefaults().withCrn("A123456").produce()
     val assessment = TemporaryAccommodationAssessmentEntityFactory().withApplication(application).withId(id).produce()
     val updatedField = CAS3AssessmentUpdatedField("TESTFIELD", "A", "B")
-    val event = domainEventBuilder.buildAssessmentUpdatedDomainEvent(assessment, listOf(updatedField))
+    val event = cas3DomainEventBuilder.buildAssessmentUpdatedDomainEvent(assessment, listOf(updatedField))
 
     assertThat(event.applicationId).isNull()
     assertThat(event.assessmentId).isEqualTo(assessment.id)
@@ -94,7 +94,7 @@ class DomainEventBuilderTest {
 
     booking.cancellations += cancellationEntity(booking, cancellationReason, cancellationNotes)
 
-    val event = domainEventBuilder.getBookingCancelledDomainEvent(booking, user)
+    val event = cas3DomainEventBuilder.getBookingCancelledDomainEvent(booking, user)
 
     assertThat(event).matches {
       val data = it.data.eventDetails
@@ -138,7 +138,7 @@ class DomainEventBuilderTest {
         .withArrivalDate(expectedArrivalDateTime.atZone(ZoneOffset.UTC).toLocalDate())
         .produce()
 
-    val event = domainEventBuilder.getBookingConfirmedDomainEvent(booking, user)
+    val event = cas3DomainEventBuilder.getBookingConfirmedDomainEvent(booking, user)
 
     assertThat(event).matches {
       val data = it.data.eventDetails
@@ -181,7 +181,7 @@ class DomainEventBuilderTest {
         .withArrivalDate(expectedArrivalDateTime.atZone(ZoneOffset.UTC).toLocalDate())
         .produce()
 
-    val event = domainEventBuilder.getBookingProvisionallyMadeDomainEvent(booking, user)
+    val event = cas3DomainEventBuilder.getBookingProvisionallyMadeDomainEvent(booking, user)
 
     assertThat(event).matches {
       val data = it.data.eventDetails
@@ -223,7 +223,7 @@ class DomainEventBuilderTest {
 
     booking.arrivals += arrivalEntity(booking, arrivalDateTime, expectedDepartureDate, notes)
 
-    val event = domainEventBuilder.getPersonArrivedDomainEvent(booking, user)
+    val event = cas3DomainEventBuilder.getPersonArrivedDomainEvent(booking, user)
 
     assertThat(event).matches {
       val data = it.data.eventDetails
@@ -272,7 +272,7 @@ class DomainEventBuilderTest {
 
     booking.arrivals += arrivalEntity(booking, arrivalDateTime, expectedDepartureDate, notes)
 
-    val event = domainEventBuilder.getPersonArrivedDomainEvent(booking, null)
+    val event = cas3DomainEventBuilder.getPersonArrivedDomainEvent(booking, null)
 
     assertThat(event).matches {
       val data = it.data.eventDetails
@@ -318,7 +318,7 @@ class DomainEventBuilderTest {
 
     booking.departures += departureEntity(booking, departureDateTime, reason, moveOnCategory, notes)
 
-    val event = domainEventBuilder.getPersonDepartedDomainEvent(booking, user)
+    val event = cas3DomainEventBuilder.getPersonDepartedDomainEvent(booking, user)
 
     assertThat(event).matches {
       val data = it.data.eventDetails
@@ -371,7 +371,7 @@ class DomainEventBuilderTest {
 
     booking.departures += departureEntity(booking, departureDateTime, reason, moveOnCategory, notes)
 
-    val event = domainEventBuilder.getPersonDepartedDomainEvent(booking, null)
+    val event = cas3DomainEventBuilder.getPersonDepartedDomainEvent(booking, null)
 
     assertThat(event).matches {
       val data = it.data.eventDetails
@@ -401,7 +401,7 @@ class DomainEventBuilderTest {
 
     val application = temporaryAccommodationApplicationEntity(user, probationRegion)
 
-    val event = domainEventBuilder.getReferralSubmittedDomainEvent(application)
+    val event = cas3DomainEventBuilder.getReferralSubmittedDomainEvent(application)
 
     assertThat(event).matches {
       val data = it.data.eventDetails
@@ -442,7 +442,7 @@ class DomainEventBuilderTest {
 
     booking.departures += departureEntity(booking, departureDateTime, reason, moveOnCategory, notes)
 
-    val event = domainEventBuilder.buildDepartureUpdatedDomainEvent(booking, user)
+    val event = cas3DomainEventBuilder.buildDepartureUpdatedDomainEvent(booking, user)
 
     assertThat(event).matches {
       val data = it.data.eventDetails
@@ -475,7 +475,7 @@ class DomainEventBuilderTest {
 
     booking.cancellations += cancellationEntity(booking, cancellationReason, cancellationNotes)
 
-    val event = domainEventBuilder.getBookingCancelledUpdatedDomainEvent(booking, user)
+    val event = cas3DomainEventBuilder.getBookingCancelledUpdatedDomainEvent(booking, user)
 
     assertThat(event).matches {
       val data = it.data.eventDetails
@@ -515,7 +515,7 @@ class DomainEventBuilderTest {
 
     booking.arrivals += arrivalEntity(booking, arrivalDateTime, expectedDepartureDate, notes)
 
-    val event = domainEventBuilder.buildPersonArrivedUpdatedDomainEvent(booking, user)
+    val event = cas3DomainEventBuilder.buildPersonArrivedUpdatedDomainEvent(booking, user)
 
     assertThat(event).matches {
       val data = it.data.eventDetails
@@ -557,7 +557,7 @@ class DomainEventBuilderTest {
 
     booking.arrivals += arrivalEntity(booking, arrivalDateTime, expectedDepartureDate, notes)
 
-    val event = domainEventBuilder.buildPersonArrivedUpdatedDomainEvent(booking, null)
+    val event = cas3DomainEventBuilder.buildPersonArrivedUpdatedDomainEvent(booking, null)
 
     assertThat(event).matches {
       val data = it.data.eventDetails
