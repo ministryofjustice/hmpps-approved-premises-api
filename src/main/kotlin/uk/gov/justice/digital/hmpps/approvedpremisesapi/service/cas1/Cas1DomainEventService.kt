@@ -245,10 +245,9 @@ class Cas1DomainEventService(
   )
 
   @Transactional
-  fun saveFurtherInformationRequestedEvent(domainEvent: DomainEvent<FurtherInformationRequestedEnvelope>, emit: Boolean = true) = saveAndEmit(
+  fun saveFurtherInformationRequestedEvent(domainEvent: DomainEvent<FurtherInformationRequestedEnvelope>) = saveAndEmit(
     domainEvent = domainEvent,
     eventType = DomainEventType.APPROVED_PREMISES_ASSESSMENT_INFO_REQUESTED,
-    emit = emit,
   )
 
   @Transactional

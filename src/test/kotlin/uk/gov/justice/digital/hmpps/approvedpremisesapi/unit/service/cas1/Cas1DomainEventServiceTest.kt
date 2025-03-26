@@ -1006,9 +1006,8 @@ class Cas1DomainEventServiceTest {
       }
     }
 
-    @ParameterizedTest
-    @ValueSource(booleans = [true, false])
-    fun `saveFurtherInformationRequestedEvent sends correct arguments to saveAndEmit`(emit: Boolean) {
+    @Test
+    fun `saveFurtherInformationRequestedEvent sends correct arguments to saveAndEmit`() {
       val id = UUID.randomUUID()
 
       val eventDetails = FurtherInformationRequestedFactory().produce()
@@ -1021,15 +1020,14 @@ class Cas1DomainEventServiceTest {
 
       val domainEventServiceSpy = spyk(domainEventService)
 
-      every { domainEventServiceSpy.saveAndEmit(any(), any(), emit) } returns Unit
+      every { domainEventServiceSpy.saveAndEmit(any(), any()) } returns Unit
 
-      domainEventServiceSpy.saveFurtherInformationRequestedEvent(domainEvent, emit)
+      domainEventServiceSpy.saveFurtherInformationRequestedEvent(domainEvent)
 
       verify {
         domainEventServiceSpy.saveAndEmit(
           domainEvent = domainEvent,
           eventType = DomainEventType.APPROVED_PREMISES_ASSESSMENT_INFO_REQUESTED,
-          emit = emit,
         )
       }
     }
