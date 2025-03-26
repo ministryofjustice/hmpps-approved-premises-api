@@ -342,6 +342,3 @@ scheduling:
 feature-flags:
   cas2-sqs-listener-enabled: false
 
-notify:
-  emailaddresses:
-    nacro: "referrals@nacrocas2.org.uk"

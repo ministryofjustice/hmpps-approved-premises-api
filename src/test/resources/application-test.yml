@@ -213,6 +213,7 @@ user-allocations:
 notify:
   emailaddresses:
     cas2assessors: "assessors@example.com"
+    nacro: "nacro@example.com"
 
 scheduling:
   enable: false
