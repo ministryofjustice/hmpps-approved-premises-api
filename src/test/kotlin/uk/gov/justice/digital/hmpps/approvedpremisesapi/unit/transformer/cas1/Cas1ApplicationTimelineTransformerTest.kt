@@ -18,6 +18,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1TimelineEv
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NamedId
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.domainevents.DomainEventDescriber
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.domainevents.DomainEventDescriber.EventDescriptionAndPayload
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.UserEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DomainEventType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TriggerSourceType
@@ -79,7 +80,7 @@ class Cas1ApplicationTimelineTransformerTest {
 
     val userApi = mockk<ApprovedPremisesUser>()
     every { mockUserTransformer.transformJpaToApi(userJpa, ServiceName.approvedPremises) } returns userApi
-    every { mockDomainEventDescriber.getContentPayload(domainEvent) } returns Pair("Some event", null)
+    every { mockDomainEventDescriber.getDescriptionAndPayload(domainEvent) } returns EventDescriptionAndPayload("Some event", null)
 
     val result = applicationTimelineTransformer.transformDomainEventSummaryToTimelineEvent(domainEvent)
 
@@ -108,7 +109,7 @@ class Cas1ApplicationTimelineTransformerTest {
       triggerSource = null,
       triggeredByUser = userJpa,
     )
-    every { mockDomainEventDescriber.getContentPayload(domainEvent) } returns Pair("Some event", null)
+    every { mockDomainEventDescriber.getDescriptionAndPayload(domainEvent) } returns EventDescriptionAndPayload("Some event", null)
 
     val exception = assertThrows<RuntimeException> {
       applicationTimelineTransformer.transformDomainEventSummaryToTimelineEvent(domainEvent)
@@ -133,7 +134,7 @@ class Cas1ApplicationTimelineTransformerTest {
       triggeredByUser = null,
     )
 
-    every { mockDomainEventDescriber.getContentPayload(domainEvent) } returns Pair("Some event", null)
+    every { mockDomainEventDescriber.getDescriptionAndPayload(domainEvent) } returns EventDescriptionAndPayload("Some event", null)
 
     assertThat(applicationTimelineTransformer.transformDomainEventSummaryToTimelineEvent(domainEvent)).isEqualTo(
       Cas1TimelineEvent(
@@ -167,7 +168,7 @@ class Cas1ApplicationTimelineTransformerTest {
       triggeredByUser = null,
     )
 
-    every { mockDomainEventDescriber.getContentPayload(domainEvent) } returns Pair("Some event", null)
+    every { mockDomainEventDescriber.getDescriptionAndPayload(domainEvent) } returns EventDescriptionAndPayload("Some event", null)
 
     assertThat(applicationTimelineTransformer.transformDomainEventSummaryToTimelineEvent(domainEvent)).isEqualTo(
       Cas1TimelineEvent(
@@ -206,7 +207,7 @@ class Cas1ApplicationTimelineTransformerTest {
       triggeredByUser = null,
     )
 
-    every { mockDomainEventDescriber.getContentPayload(domainEvent) } returns Pair("Some event", null)
+    every { mockDomainEventDescriber.getDescriptionAndPayload(domainEvent) } returns EventDescriptionAndPayload("Some event", null)
 
     assertThat(applicationTimelineTransformer.transformDomainEventSummaryToTimelineEvent(domainEvent)).isEqualTo(
       Cas1TimelineEvent(
@@ -239,7 +240,7 @@ class Cas1ApplicationTimelineTransformerTest {
       triggeredByUser = null,
     )
 
-    every { mockDomainEventDescriber.getContentPayload(domainEvent) } returns Pair("Some event", null)
+    every { mockDomainEventDescriber.getDescriptionAndPayload(domainEvent) } returns EventDescriptionAndPayload("Some event", null)
 
     assertThat(applicationTimelineTransformer.transformDomainEventSummaryToTimelineEvent(domainEvent)).isEqualTo(
       Cas1TimelineEvent(
@@ -271,7 +272,7 @@ class Cas1ApplicationTimelineTransformerTest {
       triggeredByUser = null,
     )
 
-    every { mockDomainEventDescriber.getContentPayload(domainEvent) } returns Pair("Some event", null)
+    every { mockDomainEventDescriber.getDescriptionAndPayload(domainEvent) } returns EventDescriptionAndPayload("Some event", null)
 
     assertThat(applicationTimelineTransformer.transformDomainEventSummaryToTimelineEvent(domainEvent)).isEqualTo(
       Cas1TimelineEvent(
@@ -305,7 +306,7 @@ class Cas1ApplicationTimelineTransformerTest {
       triggeredByUser = null,
     )
 
-    every { mockDomainEventDescriber.getContentPayload(domainEvent) } returns Pair("Some event", null)
+    every { mockDomainEventDescriber.getDescriptionAndPayload(domainEvent) } returns EventDescriptionAndPayload("Some event", null)
 
     assertThat(applicationTimelineTransformer.transformDomainEventSummaryToTimelineEvent(domainEvent)).isEqualTo(
       Cas1TimelineEvent(
@@ -339,7 +340,7 @@ class Cas1ApplicationTimelineTransformerTest {
       triggeredByUser = null,
     )
 
-    every { mockDomainEventDescriber.getContentPayload(domainEvent) } returns Pair("Some event", null)
+    every { mockDomainEventDescriber.getDescriptionAndPayload(domainEvent) } returns EventDescriptionAndPayload("Some event", null)
 
     assertThat(applicationTimelineTransformer.transformDomainEventSummaryToTimelineEvent(domainEvent).associatedUrls)
       .containsOnly(
@@ -380,7 +381,7 @@ class Cas1ApplicationTimelineTransformerTest {
       triggeredByUser = null,
     )
 
-    every { mockDomainEventDescriber.getContentPayload(domainEvent) } returns Pair("Some event", null)
+    every { mockDomainEventDescriber.getDescriptionAndPayload(domainEvent) } returns EventDescriptionAndPayload("Some event", null)
 
     assertThat(applicationTimelineTransformer.transformDomainEventSummaryToTimelineEvent(domainEvent)).isEqualTo(
       Cas1TimelineEvent(
@@ -415,7 +416,7 @@ class Cas1ApplicationTimelineTransformerTest {
       triggeredByUser = null,
     )
 
-    every { mockDomainEventDescriber.getContentPayload(domainEvent) } returns Pair("Some event", null)
+    every { mockDomainEventDescriber.getDescriptionAndPayload(domainEvent) } returns EventDescriptionAndPayload("Some event", null)
 
     assertThat(
       applicationTimelineTransformer.transformDomainEventSummaryToTimelineEvent(domainEvent)
@@ -455,7 +456,7 @@ class Cas1ApplicationTimelineTransformerTest {
     )
 
     every { mockUserTransformer.transformJpaToApi(userJpa, ServiceName.approvedPremises) } returns userApi
-    every { mockDomainEventDescriber.getContentPayload(domainEvent) } returns Pair("Some event", payload)
+    every { mockDomainEventDescriber.getDescriptionAndPayload(domainEvent) } returns EventDescriptionAndPayload("Some event", payload)
 
     val result = applicationTimelineTransformer.transformDomainEventSummaryToTimelineEvent(domainEvent)
 

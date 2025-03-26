@@ -26,15 +26,15 @@ class Cas1ApplicationTimelineTransformer(
 
   fun transformDomainEventSummaryToTimelineEvent(domainEventSummary: DomainEventSummary): Cas1TimelineEvent {
     val associatedUrls = generateUrlsForTimelineEventType(domainEventSummary)
-    val contentAndPayload = domainEventDescriber.getContentPayload(domainEventSummary)
+    val descriptionAndPayload = domainEventDescriber.getDescriptionAndPayload(domainEventSummary)
 
     return Cas1TimelineEvent(
       id = domainEventSummary.id,
       type = domainEventSummary.type.cas1TimelineEventType ?: throw IllegalArgumentException("Cannot map ${domainEventSummary.type}, only CAS1 is currently supported"),
       occurredAt = domainEventSummary.occurredAt.toInstant(),
       associatedUrls = associatedUrls,
-      content = contentAndPayload.first,
-      payload = contentAndPayload.second,
+      content = descriptionAndPayload.description,
+      payload = descriptionAndPayload.payload,
       createdBy = domainEventSummary.triggeredByUser?.let { userTransformer.transformJpaToApi(it, ServiceName.approvedPremises) },
       triggerSource = when (domainEventSummary.triggerSource) {
         uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TriggerSourceType.USER -> Cas1TriggerSourceType.user

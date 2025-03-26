@@ -109,9 +109,9 @@ class DomainEventDescriberTest {
   fun `Returns expected description for application submitted event`() {
     val domainEventSummary = DomainEventSummaryImpl.ofType(DomainEventType.APPROVED_PREMISES_APPLICATION_SUBMITTED)
 
-    val result = domainEventDescriber.getContentPayload(domainEventSummary)
+    val result = domainEventDescriber.getDescriptionAndPayload(domainEventSummary)
 
-    assertThat(result.first).isEqualTo("The application was submitted")
+    assertThat(result.description).isEqualTo("The application was submitted")
   }
 
   @ParameterizedTest
@@ -130,9 +130,9 @@ class DomainEventDescriberTest {
       )
     }
 
-    val result = domainEventDescriber.getContentPayload(domainEventSummary)
+    val result = domainEventDescriber.getDescriptionAndPayload(domainEventSummary)
 
-    assertThat(result.first).isEqualTo("The application was assessed and $decision")
+    assertThat(result.description).isEqualTo("The application was assessed and $decision")
   }
 
   @Test
@@ -159,9 +159,9 @@ class DomainEventDescriberTest {
       )
     }
 
-    val result = domainEventDescriber.getContentPayload(domainEventSummary)
+    val result = domainEventDescriber.getDescriptionAndPayload(domainEventSummary)
 
-    assertThat(result.first).isEqualTo("A placement at The Premises Name was booked for Monday 1 January 2024 to Monday 1 April 2024 against Delius Event Number 989")
+    assertThat(result.description).isEqualTo("A placement at The Premises Name was booked for Monday 1 January 2024 to Monday 1 April 2024 against Delius Event Number 989")
   }
 
   @ParameterizedTest
@@ -180,9 +180,9 @@ class DomainEventDescriberTest {
       )
     }
 
-    val result = domainEventDescriber.getContentPayload(domainEventSummary)
+    val result = domainEventDescriber.getDescriptionAndPayload(domainEventSummary)
 
-    assertThat(result.first).isEqualTo("The person moved into the premises on ${arrivalDate.toUiDateTimeFormat()}")
+    assertThat(result.description).isEqualTo("The person moved into the premises on ${arrivalDate.toUiDateTimeFormat()}")
   }
 
   @ParameterizedTest
@@ -201,9 +201,9 @@ class DomainEventDescriberTest {
       )
     }
 
-    val result = domainEventDescriber.getContentPayload(domainEventSummary)
+    val result = domainEventDescriber.getDescriptionAndPayload(domainEventSummary)
 
-    assertThat(result.first).isEqualTo("The person was due to move into the premises on ${expectedArrivalDate.toUiFormat()} but did not arrive")
+    assertThat(result.description).isEqualTo("The person was due to move into the premises on ${expectedArrivalDate.toUiFormat()} but did not arrive")
   }
 
   @ParameterizedTest
@@ -222,9 +222,9 @@ class DomainEventDescriberTest {
       )
     }
 
-    val result = domainEventDescriber.getContentPayload(domainEventSummary)
+    val result = domainEventDescriber.getDescriptionAndPayload(domainEventSummary)
 
-    assertThat(result.first).isEqualTo("The person moved out of the premises on ${departureDate.toUiDateTimeFormat()}")
+    assertThat(result.description).isEqualTo("The person moved out of the premises on ${departureDate.toUiDateTimeFormat()}")
   }
 
   @ParameterizedTest
@@ -243,9 +243,9 @@ class DomainEventDescriberTest {
       )
     }
 
-    val result = domainEventDescriber.getContentPayload(domainEventSummary)
+    val result = domainEventDescriber.getDescriptionAndPayload(domainEventSummary)
 
-    assertThat(result.first).isEqualTo("A placement was not made for the placement request. The reason was: $reason")
+    assertThat(result.description).isEqualTo("A placement was not made for the placement request. The reason was: $reason")
   }
 
   @Test
@@ -261,9 +261,9 @@ class DomainEventDescriberTest {
         eventDetails = bookingNotMade,
       )
     }
-    val result = domainEventDescriber.getContentPayload(domainEventSummary)
+    val result = domainEventDescriber.getDescriptionAndPayload(domainEventSummary)
 
-    assertThat(result.first).isEqualTo("A placement was not made for the placement request.")
+    assertThat(result.description).isEqualTo("A placement was not made for the placement request.")
   }
 
   @Test
@@ -284,7 +284,7 @@ class DomainEventDescriberTest {
     every { mockBookingRepository.findByIdOrNull(any()) } returns null
 
     val exception = assertThrows<RuntimeException> {
-      domainEventDescriber.getContentPayload(domainEventSummary)
+      domainEventDescriber.getDescriptionAndPayload(domainEventSummary)
     }
     assertThat(exception.message).isEqualTo("Booking ID $bookingId with cancellation not found")
   }
@@ -308,7 +308,7 @@ class DomainEventDescriberTest {
     every { mockBookingRepository.findByIdOrNull(any()) } returns bookingEntity
 
     val exception = assertThrows<RuntimeException> {
-      domainEventDescriber.getContentPayload(domainEventSummary)
+      domainEventDescriber.getDescriptionAndPayload(domainEventSummary)
     }
     assertThat(exception.message).isEqualTo("Booking ID ${bookingEntity.id} does not have one cancellation")
   }
@@ -338,9 +338,9 @@ class DomainEventDescriberTest {
     }
     every { mockBookingRepository.findByIdOrNull(bookingEntity.id) } returns bookingEntity
 
-    val result = domainEventDescriber.getContentPayload(domainEventSummary)
+    val result = domainEventDescriber.getDescriptionAndPayload(domainEventSummary)
 
-    assertThat(result.first).isEqualTo("A placement at ${bookingEntity.premises.name} booked for Thursday 15 August 2024 to Sunday 18 August 2024 was cancelled. The reason was: '$reason'")
+    assertThat(result.description).isEqualTo("A placement at ${bookingEntity.premises.name} booked for Thursday 15 August 2024 to Sunday 18 August 2024 was cancelled. The reason was: '$reason'")
   }
 
   @ParameterizedTest
@@ -375,9 +375,9 @@ class DomainEventDescriberTest {
     }
     every { mockBookingRepository.findByIdOrNull(bookingEntity.id) } returns bookingEntity
 
-    val result = domainEventDescriber.getContentPayload(domainEventSummary)
+    val result = domainEventDescriber.getDescriptionAndPayload(domainEventSummary)
 
-    assertThat(result.first).isEqualTo("A placement at ${bookingEntity.premises.name} booked for Thursday 15 August 2024 to Sunday 18 August 2024 was cancelled. The reason was: 'Other': $otherReasonText.")
+    assertThat(result.description).isEqualTo("A placement at ${bookingEntity.premises.name} booked for Thursday 15 August 2024 to Sunday 18 August 2024 was cancelled. The reason was: 'Other': $otherReasonText.")
   }
 
   @Test
@@ -409,9 +409,9 @@ class DomainEventDescriberTest {
     }
     every { mockBookingRepository.findByIdOrNull(bookingEntity.id) } returns bookingEntity
 
-    val result = domainEventDescriber.getContentPayload(domainEventSummary)
+    val result = domainEventDescriber.getDescriptionAndPayload(domainEventSummary)
 
-    assertThat(result.first).isEqualTo("A placement at ${bookingEntity.premises.name} booked for Thursday 15 August 2024 to Sunday 18 August 2024 was cancelled. The reason was: 'Other'")
+    assertThat(result.description).isEqualTo("A placement at ${bookingEntity.premises.name} booked for Thursday 15 August 2024 to Sunday 18 August 2024 was cancelled. The reason was: 'Other'")
   }
 
   @Test
@@ -454,8 +454,8 @@ class DomainEventDescriberTest {
       )
     }
 
-    val result = domainEventDescriber.getContentPayload(domainEventSummary)
-    assertThat(result.first).isEqualTo(
+    val result = domainEventDescriber.getDescriptionAndPayload(domainEventSummary)
+    assertThat(result.description).isEqualTo(
       "A placement at ${premises.name} booked for ${spaceBooking.canonicalArrivalDate.toUiFormat()} " +
         "to ${spaceBooking.canonicalDepartureDate.toUiFormat()} was cancelled. The reason was: '$cancellationReason'",
     )
@@ -482,7 +482,7 @@ class DomainEventDescriberTest {
       )
     }
     val exception = assertThrows<RuntimeException> {
-      domainEventDescriber.getContentPayload(domainEventSummary)
+      domainEventDescriber.getDescriptionAndPayload(domainEventSummary)
     }
     assertThat(exception.message).isEqualTo("Space Booking ID $spaceBookingId with cancellation not found")
   }
@@ -523,7 +523,7 @@ class DomainEventDescriberTest {
     }
 
     val exception = assertThrows<RuntimeException> {
-      domainEventDescriber.getContentPayload(domainEventSummary)
+      domainEventDescriber.getDescriptionAndPayload(domainEventSummary)
     }
     assertThat(exception.message).isEqualTo("Space Booking ID $spaceBookingId does not have a cancellation")
   }
@@ -555,10 +555,10 @@ class DomainEventDescriberTest {
         )
       }
 
-      val result = domainEventDescriber.getContentPayload(domainEventSummary)
+      val result = domainEventDescriber.getDescriptionAndPayload(domainEventSummary)
 
-      assertThat(result.first).isEqualTo("A placement at The Premises Name had its arrival and/or departure date changed to Monday 1 January 2024 to Monday 1 April 2024")
-      assertThat(result.second).isNull()
+      assertThat(result.description).isEqualTo("A placement at The Premises Name had its arrival and/or departure date changed to Monday 1 January 2024 to Monday 1 April 2024")
+      assertThat(result.payload).isNull()
     }
 
     @Test
@@ -594,11 +594,11 @@ class DomainEventDescriberTest {
         schemaVersion = 2,
       )
 
-      val result = domainEventDescriber.getContentPayload(domainEventSummary)
+      val result = domainEventDescriber.getDescriptionAndPayload(domainEventSummary)
 
-      assertThat(result.first).isEqualTo("A placement at The Premises Name had its arrival date changed from Tuesday 1 April 2025 to Saturday 5 April 2025")
+      assertThat(result.description).isEqualTo("A placement at The Premises Name had its arrival date changed from Tuesday 1 April 2025 to Saturday 5 April 2025")
 
-      val contentPayload = result.second as Cas1BookingChangedContentPayload
+      val contentPayload = result.payload as Cas1BookingChangedContentPayload
       assertThat(contentPayload.premises.name).isEqualTo("The Premises Name")
       assertThat(contentPayload.expectedArrival).isEqualTo(arrivalDate)
       assertThat(contentPayload.previousExpectedArrival).isEqualTo(previousArrivalOn)
@@ -641,11 +641,11 @@ class DomainEventDescriberTest {
         schemaVersion = 2,
       )
 
-      val result = domainEventDescriber.getContentPayload(domainEventSummary)
+      val result = domainEventDescriber.getDescriptionAndPayload(domainEventSummary)
 
-      assertThat(result.first).isEqualTo("A placement at The Premises Name had its departure date changed from Sunday 1 June 2025 to Tuesday 10 June 2025")
+      assertThat(result.description).isEqualTo("A placement at The Premises Name had its departure date changed from Sunday 1 June 2025 to Tuesday 10 June 2025")
 
-      val contentPayload = result.second as Cas1BookingChangedContentPayload
+      val contentPayload = result.payload as Cas1BookingChangedContentPayload
       assertThat(contentPayload.premises.name).isEqualTo("The Premises Name")
       assertThat(contentPayload.expectedArrival).isEqualTo(arrivalDate)
       assertThat(contentPayload.previousExpectedArrival).isNull()
@@ -689,11 +689,11 @@ class DomainEventDescriberTest {
         schemaVersion = 2,
       )
 
-      val result = domainEventDescriber.getContentPayload(domainEventSummary)
+      val result = domainEventDescriber.getDescriptionAndPayload(domainEventSummary)
 
-      assertThat(result.first).isEqualTo("A placement at The Premises Name had its arrival date changed from Tuesday 1 April 2025 to Saturday 5 April 2025, its departure date changed from Sunday 1 June 2025 to Tuesday 10 June 2025")
+      assertThat(result.description).isEqualTo("A placement at The Premises Name had its arrival date changed from Tuesday 1 April 2025 to Saturday 5 April 2025, its departure date changed from Sunday 1 June 2025 to Tuesday 10 June 2025")
 
-      val contentPayload = result.second as Cas1BookingChangedContentPayload
+      val contentPayload = result.payload as Cas1BookingChangedContentPayload
       assertThat(contentPayload.premises.name).isEqualTo("The Premises Name")
       assertThat(contentPayload.expectedArrival).isEqualTo(arrivalDate)
       assertThat(contentPayload.previousExpectedArrival).isEqualTo(previousArrivalOn)
@@ -729,9 +729,9 @@ class DomainEventDescriberTest {
       )
     }
 
-    val result = domainEventDescriber.getContentPayload(domainEventSummary)
+    val result = domainEventDescriber.getDescriptionAndPayload(domainEventSummary)
 
-    assertThat(result.first).isEqualTo("Keyworker for placement at The Premises Name for Monday 1 January 2024 to Monday 1 April 2024 set to assigned keyWorker")
+    assertThat(result.description).isEqualTo("Keyworker for placement at The Premises Name for Monday 1 January 2024 to Monday 1 April 2024 set to assigned keyWorker")
   }
 
   @Test
@@ -760,9 +760,9 @@ class DomainEventDescriberTest {
       )
     }
 
-    val result = domainEventDescriber.getContentPayload(domainEventSummary)
+    val result = domainEventDescriber.getDescriptionAndPayload(domainEventSummary)
 
-    assertThat(result.first).isEqualTo("Keyworker for placement at The Premises Name for Monday 1 January 2024 to Monday 1 April 2024 changes from previous keyWorker to assigned keyWorker")
+    assertThat(result.description).isEqualTo("Keyworker for placement at The Premises Name for Monday 1 January 2024 to Monday 1 April 2024 changes from previous keyWorker to assigned keyWorker")
   }
 
   @Test
@@ -781,9 +781,9 @@ class DomainEventDescriberTest {
       )
     }
 
-    val result = domainEventDescriber.getContentPayload(domainEventSummary)
+    val result = domainEventDescriber.getDescriptionAndPayload(domainEventSummary)
 
-    assertThat(result.first).isEqualTo("The application was withdrawn. The reason was: 'change in circumstances new application to be submitted'")
+    assertThat(result.description).isEqualTo("The application was withdrawn. The reason was: 'change in circumstances new application to be submitted'")
   }
 
   @Test
@@ -802,9 +802,9 @@ class DomainEventDescriberTest {
       )
     }
 
-    val result = domainEventDescriber.getContentPayload(domainEventSummary)
+    val result = domainEventDescriber.getDescriptionAndPayload(domainEventSummary)
 
-    assertThat(result.first).isEqualTo("The application was withdrawn. The reason was: 'the main withdrawal reason' (additional reason)")
+    assertThat(result.description).isEqualTo("The application was withdrawn. The reason was: 'the main withdrawal reason' (additional reason)")
   }
 
   @ParameterizedTest
@@ -824,9 +824,9 @@ class DomainEventDescriberTest {
       )
     }
 
-    val result = domainEventDescriber.getContentPayload(domainEventSummary)
+    val result = domainEventDescriber.getDescriptionAndPayload(domainEventSummary)
 
-    assertThat(result.first).isEqualTo("The assessment was appealed and $decision. The reason was: $reason")
+    assertThat(result.description).isEqualTo("The assessment was appealed and $decision. The reason was: $reason")
   }
 
   @ParameterizedTest
@@ -871,9 +871,9 @@ class DomainEventDescriberTest {
       )
     }
 
-    val result = domainEventDescriber.getContentPayload(domainEventSummary)
+    val result = domainEventDescriber.getDescriptionAndPayload(domainEventSummary)
 
-    assertThat(result.first).isEqualTo(expectedDescription)
+    assertThat(result.description).isEqualTo(expectedDescription)
   }
 
   @Test
@@ -891,9 +891,9 @@ class DomainEventDescriberTest {
       )
     }
 
-    val result = domainEventDescriber.getContentPayload(domainEventSummary)
+    val result = domainEventDescriber.getDescriptionAndPayload(domainEventSummary)
 
-    assertThat(result.first).isEqualTo("A request for placement was withdrawn. The reason was: 'Related application withdrawn'")
+    assertThat(result.description).isEqualTo("A request for placement was withdrawn. The reason was: 'Related application withdrawn'")
   }
 
   @Test
@@ -917,9 +917,9 @@ class DomainEventDescriberTest {
       )
     }
 
-    val result = domainEventDescriber.getContentPayload(domainEventSummary)
+    val result = domainEventDescriber.getDescriptionAndPayload(domainEventSummary)
 
-    assertThat(result.first).isEqualTo(
+    assertThat(result.description).isEqualTo(
       "A request for placement was withdrawn for dates Tuesday 2 January 2024 to Monday 4 March 2024, Monday 6 May 2024 to Monday 8 July 2024. " +
         "The reason was: 'Duplicate placement request'",
     )
@@ -941,9 +941,9 @@ class DomainEventDescriberTest {
       )
     }
 
-    val result = domainEventDescriber.getContentPayload(domainEventSummary)
+    val result = domainEventDescriber.getDescriptionAndPayload(domainEventSummary)
 
-    assertThat(result.first).isEqualTo(
+    assertThat(result.description).isEqualTo(
       "A request for placement was withdrawn for dates Tuesday 2 January 2024 to Monday 4 March 2024. " +
         "The reason was: 'No capacity due to placement prioritisation'",
     )
@@ -971,9 +971,9 @@ class DomainEventDescriberTest {
       )
     }
 
-    val result = domainEventDescriber.getContentPayload(domainEventSummary)
+    val result = domainEventDescriber.getDescriptionAndPayload(domainEventSummary)
 
-    assertThat(result.first).isEqualTo(
+    assertThat(result.description).isEqualTo(
       "A placement was requested with the reason '$expectedTypeDescription'. " +
         "The placement request is for Wednesday 12 March 2025 to Thursday 20 March 2025 (1 week and 1 day)",
     )
@@ -996,9 +996,9 @@ class DomainEventDescriberTest {
       )
     }
 
-    val result = domainEventDescriber.getContentPayload(domainEventSummary)
+    val result = domainEventDescriber.getDescriptionAndPayload(domainEventSummary)
 
-    assertThat(result.first).isEqualTo(
+    assertThat(result.description).isEqualTo(
       "A placement was automatically requested after the application was assessed. " +
         "The placement request is for Wednesday 12 March 2025 to Friday 28 March 2025 (2 weeks and 2 days)",
     )
@@ -1024,9 +1024,9 @@ class DomainEventDescriberTest {
       )
     }
 
-    val result = domainEventDescriber.getContentPayload(domainEventSummary)
+    val result = domainEventDescriber.getDescriptionAndPayload(domainEventSummary)
 
-    assertThat(result.first).isEqualTo(
+    assertThat(result.description).isEqualTo(
       "A request for placement assessment was $decision. The placement request $expectedTermUsed for Friday 3 May 2024 to Friday 10 May 2024 (1 week). The reason was: Request was $decision.",
     )
   }
@@ -1051,9 +1051,9 @@ class DomainEventDescriberTest {
       )
     }
 
-    val result = domainEventDescriber.getContentPayload(domainEventSummary)
+    val result = domainEventDescriber.getDescriptionAndPayload(domainEventSummary)
 
-    assertThat(result.first).isEqualTo(
+    assertThat(result.description).isEqualTo(
       "A request for placement assessment was $decision. The placement request $expectedTermUsed for Friday 3 May 2024 to Friday 10 May 2024 (1 week).",
     )
   }
@@ -1108,9 +1108,9 @@ class DomainEventDescriberTest {
       )
     }
 
-    val result = domainEventDescriber.getContentPayload(domainEventSummary)
+    val result = domainEventDescriber.getDescriptionAndPayload(domainEventSummary)
 
-    assertThat(result.first).isEqualTo("$expectedAllocationDescription. The placement request is for Wednesday 12 March 2025 to Thursday 20 March 2025 (1 week and 1 day)")
+    assertThat(result.description).isEqualTo("$expectedAllocationDescription. The placement request is for Wednesday 12 March 2025 to Thursday 20 March 2025 (1 week and 1 day)")
   }
 
   @Test
@@ -1139,9 +1139,9 @@ class DomainEventDescriberTest {
 
     every { mockAssessmentClarificationNoteRepository.findByIdOrNull(requestId) } returns assessmentClarificationNote
 
-    val result = domainEventDescriber.getContentPayload(domainEventSummary)
+    val result = domainEventDescriber.getDescriptionAndPayload(domainEventSummary)
 
-    assertThat(result.first).isEqualTo(
+    assertThat(result.description).isEqualTo(
       """
       A further information request was made to the applicant:
       "$query"
