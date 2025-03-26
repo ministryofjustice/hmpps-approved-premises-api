@@ -16,8 +16,8 @@ import java.util.UUID
 class Cas3AssessmentService(
   private val assessmentRepository: AssessmentRepository,
   private val userAccessService: UserAccessService,
-  private val domainEventService: DomainEventService,
-  private val domainEventBuilder: DomainEventBuilder,
+  private val cas3DomainEventService: Cas3DomainEventService,
+  private val cas3DomainEventBuilder: Cas3DomainEventBuilder,
 ) {
   @Suppress("ReturnCount")
   fun updateAssessment(
@@ -46,7 +46,7 @@ class Cas3AssessmentService(
       }
 
       val domainEvent =
-        domainEventBuilder.buildAssessmentUpdatedDomainEvent(
+        cas3DomainEventBuilder.buildAssessmentUpdatedDomainEvent(
           assessment = assessment,
           listOf(
             CAS3AssessmentUpdatedField(
@@ -56,7 +56,7 @@ class Cas3AssessmentService(
             ),
           ),
         )
-      domainEventService.saveAssessmentUpdatedEvent(domainEvent)
+      cas3DomainEventService.saveAssessmentUpdatedEvent(domainEvent)
       assessment.releaseDate = newReleaseDate
     }
 
@@ -68,7 +68,7 @@ class Cas3AssessmentService(
       }
 
       val domainEvent =
-        domainEventBuilder.buildAssessmentUpdatedDomainEvent(
+        cas3DomainEventBuilder.buildAssessmentUpdatedDomainEvent(
           assessment = assessment,
           listOf(
             CAS3AssessmentUpdatedField(
@@ -78,7 +78,7 @@ class Cas3AssessmentService(
             ),
           ),
         )
-      domainEventService.saveAssessmentUpdatedEvent(domainEvent)
+      cas3DomainEventService.saveAssessmentUpdatedEvent(domainEvent)
       assessment.accommodationRequiredFromDate = newAccommodationRequiredFromDate
     }
 

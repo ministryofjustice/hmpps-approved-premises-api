@@ -7,9 +7,9 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1TimelineEv
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1TimelineEventUrlType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1TriggerSourceType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.domainevents.DomainEventDescriber
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DomainEventType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.DomainEventSummary
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1DomainEventDescriber
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.UserTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.UrlTemplate
 
@@ -20,21 +20,21 @@ class Cas1ApplicationTimelineTransformer(
   @Value("\${url-templates.frontend.booking}") private val bookingUrlTemplate: UrlTemplate,
   @Value("\${url-templates.frontend.cas1.space-booking}") private val cas1SpaceBookingUrlTemplate: UrlTemplate,
   @Value("\${url-templates.frontend.application-appeal}") private val appealUrlTemplate: UrlTemplate,
-  private val domainEventDescriber: DomainEventDescriber,
+  private val cas1DomainEventDescriber: Cas1DomainEventDescriber,
   private val userTransformer: UserTransformer,
 ) {
 
   fun transformDomainEventSummaryToTimelineEvent(domainEventSummary: DomainEventSummary): Cas1TimelineEvent {
     val associatedUrls = generateUrlsForTimelineEventType(domainEventSummary)
-    val contentAndPayload = domainEventDescriber.getContentPayload(domainEventSummary)
+    val descriptionAndPayload = cas1DomainEventDescriber.getDescriptionAndPayload(domainEventSummary)
 
     return Cas1TimelineEvent(
       id = domainEventSummary.id,
       type = domainEventSummary.type.cas1TimelineEventType ?: throw IllegalArgumentException("Cannot map ${domainEventSummary.type}, only CAS1 is currently supported"),
       occurredAt = domainEventSummary.occurredAt.toInstant(),
       associatedUrls = associatedUrls,
-      content = contentAndPayload.first,
-      payload = contentAndPayload.second,
+      content = descriptionAndPayload.description,
+      payload = descriptionAndPayload.payload,
       createdBy = domainEventSummary.triggeredByUser?.let { userTransformer.transformJpaToApi(it, ServiceName.approvedPremises) },
       triggerSource = when (domainEventSummary.triggerSource) {
         uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TriggerSourceType.USER -> Cas1TriggerSourceType.user

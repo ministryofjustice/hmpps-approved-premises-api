@@ -84,7 +84,7 @@ import java.time.Instant
 import java.time.LocalDate
 import java.time.OffsetDateTime
 import java.util.UUID
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas3.DomainEventService as Cas3DomainEventService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas3.Cas3DomainEventService as Cas3DomainEventService
 
 class Cas3BookingServiceTest {
   private val mockCas3PremisesService = mockk<Cas3PremisesService>()

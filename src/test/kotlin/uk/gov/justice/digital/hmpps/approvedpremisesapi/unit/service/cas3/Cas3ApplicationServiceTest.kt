@@ -27,9 +27,9 @@ class Cas3ApplicationServiceTest {
 
   private val mockUserService = mockk<UserService>()
 
-  private val mockCas3DomainEventService = mockk<uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas3.DomainEventService>()
+  private val mockCas3Cas3DomainEventService = mockk<uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas3.Cas3DomainEventService>()
 
-  private val cas3ApplicationService = Cas3ApplicationService(mockApplicationRepository, mockUserService, mockUserAccessService, mockCas3DomainEventService)
+  private val cas3ApplicationService = Cas3ApplicationService(mockApplicationRepository, mockUserService, mockUserAccessService, mockCas3Cas3DomainEventService)
 
   val user = UserEntityFactory()
     .withUnitTestControlProbationRegion()
@@ -64,7 +64,7 @@ class Cas3ApplicationServiceTest {
       assertThat(result is CasResult.NotFound).isTrue
 
       verify(exactly = 0) {
-        mockCas3DomainEventService.saveDraftReferralDeletedEvent(inProgressApplication, user)
+        mockCas3Cas3DomainEventService.saveDraftReferralDeletedEvent(inProgressApplication, user)
       }
     }
 
@@ -82,7 +82,7 @@ class Cas3ApplicationServiceTest {
       assertThat(generalValidationError).isEqualTo("Cannot mark as deleted: temporary accommodation application already submitted.")
 
       verify(exactly = 0) {
-        mockCas3DomainEventService.saveDraftReferralDeletedEvent(inProgressApplication, user)
+        mockCas3Cas3DomainEventService.saveDraftReferralDeletedEvent(inProgressApplication, user)
       }
     }
 
@@ -93,7 +93,7 @@ class Cas3ApplicationServiceTest {
       every { mockUserAccessService.userCanAccessTemporaryAccommodationApplication(user, inProgressApplication) } returns true
       every { mockApplicationRepository.saveAndFlush(any()) } answers { it.invocation.args[0] as ApplicationEntity }
 
-      every { mockCas3DomainEventService.saveDraftReferralDeletedEvent(inProgressApplication, user) } just Runs
+      every { mockCas3Cas3DomainEventService.saveDraftReferralDeletedEvent(inProgressApplication, user) } just Runs
 
       val result = cas3ApplicationService.markApplicationAsDeleted(inProgressApplication.id)
 
@@ -108,7 +108,7 @@ class Cas3ApplicationServiceTest {
       }
 
       verify(exactly = 1) {
-        mockCas3DomainEventService.saveDraftReferralDeletedEvent(inProgressApplication, user)
+        mockCas3Cas3DomainEventService.saveDraftReferralDeletedEvent(inProgressApplication, user)
       }
     }
   }

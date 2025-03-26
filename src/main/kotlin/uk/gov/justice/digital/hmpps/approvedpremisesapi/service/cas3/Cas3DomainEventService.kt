@@ -44,19 +44,20 @@ import java.util.UUID
 import kotlin.reflect.KClass
 
 @Service("uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas3.DomainEventServiceConfig")
-class DomainEventServiceConfig(
+class Cas3DomainEventServiceConfig(
   @Value("\${domain-events.cas3.emit-enabled}") val domainEventsWithEmitEnabled: List<EventType>,
 ) {
   fun emitForEvent(eventType: EventType) = domainEventsWithEmitEnabled.contains(eventType)
 }
 
+@SuppressWarnings("TooManyFunctions", "TooGenericExceptionThrown", "")
 @Service("uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas3.DomainEventService")
-class DomainEventService(
+class Cas3DomainEventService(
   private val objectMapper: ObjectMapper,
   private val domainEventRepository: DomainEventRepository,
-  private val domainEventBuilder: DomainEventBuilder,
+  private val cas3DomainEventBuilder: Cas3DomainEventBuilder,
   private val hmppsQueueService: HmppsQueueService,
-  private val domainEventServiceConfig: DomainEventServiceConfig,
+  private val cas3DomainEventServiceConfig: Cas3DomainEventServiceConfig,
   private val domainEventUrlConfig: DomainEventUrlConfig,
   private val userService: UserService,
 ) {
@@ -108,7 +109,7 @@ class DomainEventService(
 
   @Transactional
   fun saveBookingCancelledEvent(booking: BookingEntity, user: UserEntity) {
-    val domainEvent = domainEventBuilder.getBookingCancelledDomainEvent(booking, user)
+    val domainEvent = cas3DomainEventBuilder.getBookingCancelledDomainEvent(booking, user)
 
     saveAndEmit(
       domainEvent = domainEvent,
@@ -120,7 +121,7 @@ class DomainEventService(
 
   @Transactional
   fun saveBookingConfirmedEvent(booking: BookingEntity, user: UserEntity) {
-    val domainEvent = domainEventBuilder.getBookingConfirmedDomainEvent(booking, user)
+    val domainEvent = cas3DomainEventBuilder.getBookingConfirmedDomainEvent(booking, user)
 
     saveAndEmit(
       domainEvent = domainEvent,
@@ -132,7 +133,7 @@ class DomainEventService(
 
   @Transactional
   fun saveBookingProvisionallyMadeEvent(booking: BookingEntity, user: UserEntity) {
-    val domainEvent = domainEventBuilder.getBookingProvisionallyMadeDomainEvent(booking, user)
+    val domainEvent = cas3DomainEventBuilder.getBookingProvisionallyMadeDomainEvent(booking, user)
 
     saveAndEmit(
       domainEvent = domainEvent,
@@ -144,7 +145,7 @@ class DomainEventService(
 
   @Transactional
   fun savePersonArrivedEvent(booking: BookingEntity, user: UserEntity) {
-    val domainEvent = domainEventBuilder.getPersonArrivedDomainEvent(booking, user)
+    val domainEvent = cas3DomainEventBuilder.getPersonArrivedDomainEvent(booking, user)
 
     saveAndEmit(
       domainEvent = domainEvent,
@@ -156,7 +157,7 @@ class DomainEventService(
 
   @Transactional
   fun savePersonArrivedUpdatedEvent(booking: BookingEntity, user: UserEntity) {
-    val domainEvent = domainEventBuilder.buildPersonArrivedUpdatedDomainEvent(booking, user)
+    val domainEvent = cas3DomainEventBuilder.buildPersonArrivedUpdatedDomainEvent(booking, user)
 
     saveAndEmit(
       domainEvent = domainEvent,
@@ -168,7 +169,7 @@ class DomainEventService(
 
   @Transactional
   fun savePersonDepartedEvent(booking: BookingEntity, user: UserEntity) {
-    val domainEvent = domainEventBuilder.getPersonDepartedDomainEvent(booking, user)
+    val domainEvent = cas3DomainEventBuilder.getPersonDepartedDomainEvent(booking, user)
 
     saveAndEmit(
       domainEvent = domainEvent,
@@ -180,7 +181,7 @@ class DomainEventService(
 
   @Transactional
   fun saveReferralSubmittedEvent(application: TemporaryAccommodationApplicationEntity) {
-    val domainEvent = domainEventBuilder.getReferralSubmittedDomainEvent(application)
+    val domainEvent = cas3DomainEventBuilder.getReferralSubmittedDomainEvent(application)
 
     saveAndEmit(
       domainEvent = domainEvent,
@@ -192,7 +193,7 @@ class DomainEventService(
 
   @Transactional
   fun savePersonDepartureUpdatedEvent(booking: BookingEntity, user: UserEntity) {
-    val domainEvent = domainEventBuilder.buildDepartureUpdatedDomainEvent(booking, user)
+    val domainEvent = cas3DomainEventBuilder.buildDepartureUpdatedDomainEvent(booking, user)
 
     saveAndEmit(
       domainEvent = domainEvent,
@@ -207,7 +208,7 @@ class DomainEventService(
     crn: String,
     nomsNumber: String?,
     triggerSourceType: TriggerSourceType,
-    emit: Boolean = domainEventServiceConfig.emitForEvent(domainEvent.data.eventType),
+    emit: Boolean = cas3DomainEventServiceConfig.emitForEvent(domainEvent.data.eventType),
   ) {
     val enumType = enumTypeFromDataType(domainEvent.data::class)
     val typeName = enumType.typeName
@@ -296,7 +297,7 @@ class DomainEventService(
   }
 
   fun saveBookingCancelledUpdatedEvent(booking: BookingEntity, user: UserEntity) {
-    val domainEvent = domainEventBuilder.getBookingCancelledUpdatedDomainEvent(booking, user)
+    val domainEvent = cas3DomainEventBuilder.getBookingCancelledUpdatedDomainEvent(booking, user)
 
     saveAndEmit(
       domainEvent = domainEvent,
@@ -318,7 +319,7 @@ class DomainEventService(
 
   @Transactional
   fun saveDraftReferralDeletedEvent(application: ApplicationEntity, user: UserEntity) {
-    val domainEvent = domainEventBuilder.getDraftReferralDeletedEvent(application, user)
+    val domainEvent = cas3DomainEventBuilder.getDraftReferralDeletedEvent(application, user)
 
     saveAndEmit(
       domainEvent = domainEvent,

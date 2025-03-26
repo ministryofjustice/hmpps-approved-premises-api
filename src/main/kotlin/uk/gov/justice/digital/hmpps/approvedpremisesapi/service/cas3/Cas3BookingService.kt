@@ -72,7 +72,7 @@ class Cas3BookingService(
   private val userAccessService: UserAccessService,
   private val offenderService: OffenderService,
   private val workingDayService: WorkingDayService,
-  private val cas3DomainEventService: DomainEventService,
+  private val cas3DomainEventService: Cas3DomainEventService,
   private val featureFlagService: FeatureFlagService,
 ) {
   private val log = LoggerFactory.getLogger(this::class.java)
