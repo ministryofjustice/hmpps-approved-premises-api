@@ -30,6 +30,9 @@ data class Cas1OutOfServiceBedRevisionEntity(
   @Enumerated(EnumType.STRING)
   val revisionType: DomainRevisionType,
   var startDate: LocalDate,
+  /**
+   * This date is inclusive. The bed will be unavailable for the whole of the day
+   */
   var endDate: LocalDate,
   var referenceNumber: String?,
   var notes: String?,
