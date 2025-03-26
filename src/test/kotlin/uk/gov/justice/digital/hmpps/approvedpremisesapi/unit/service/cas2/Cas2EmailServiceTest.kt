@@ -24,9 +24,10 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.NomisUserEntityF
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas2ApplicationAssignmentEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas2StatusUpdateRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.NomisUserRepository
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.OffenderManagementUnitEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.OffenderManagementUnitRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.prisonsapi.Agency
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.EmailNotificationService
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.SentryService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas2.Cas2EmailService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.UrlTemplate
 import java.time.OffsetDateTime
@@ -41,7 +42,7 @@ class Cas2EmailServiceTest {
   private val nomisUserRepository = mockk<NomisUserRepository>()
   private val prisonsApiClient = mockk<PrisonsApiClient>()
   private val statusUpdateRepository = mockk<Cas2StatusUpdateRepository>()
-  private val sentryService = mockk<SentryService>()
+  private val offenderManagementUnitRepository = mockk<OffenderManagementUnitRepository>()
   private val applicationUrlTemplate = UrlTemplate("/applications/#id/overview").toString()
   private val nacroEmail = "nacro@test.co.uk"
 
@@ -51,7 +52,7 @@ class Cas2EmailServiceTest {
     nomisUserRepository,
     prisonsApiClient,
     statusUpdateRepository,
-    sentryService,
+    offenderManagementUnitRepository,
     applicationUrlTemplate,
     nacroEmail,
   )
@@ -95,6 +96,10 @@ class Cas2EmailServiceTest {
     Agency(agencyId = oldPrisonCode, description = "HMS LIVERPOOL", agencyType = "prison")
   private val newAgency =
     Agency(agencyId = newPrisonCode, description = prisoner.prisonName, agencyType = "prison")
+
+  private val oldOmuEmail = OffenderManagementUnitEntity(UUID.randomUUID(), oldPrisonCode, "old@digital.justice.gov")
+  private val newOmuEmail = OffenderManagementUnitEntity(UUID.randomUUID(), newPrisonCode, "new@digital.justice.gov")
+
   private val cas2StatusUpdateEntity = Cas2StatusUpdateEntityFactory()
     .withApplication(application)
     .withLabel("Status Update")
@@ -107,7 +112,6 @@ class Cas2EmailServiceTest {
     application.applicationAssignments.add(applicationAssignmentOlder)
 
     every { statusUpdateRepository.findFirstByApplicationIdOrderByCreatedAtDesc(application.id) } returns cas2StatusUpdateEntity
-
     every { notifyConfig.templates.cas2ToNacroApplicationTransferredToAnotherPom } returns templateId
     every { notifyConfig.templates.cas2ToReceivingPomApplicationTransferredToAnotherPom } returns templateId
     every { prisonsApiClient.getAgencyDetails(eq(oldAgency.agencyId)) } returns ClientResult.Success(
@@ -218,6 +222,8 @@ class Cas2EmailServiceTest {
   fun `send location changed emails`() {
     application.applicationAssignments.add(applicationAssignmentOld)
     application.applicationAssignments.add(applicationAssignmentOlder)
+    every { offenderManagementUnitRepository.findByPrisonCode(newPrisonCode) } returns newOmuEmail
+    every { offenderManagementUnitRepository.findByPrisonCode(oldPrisonCode) } returns oldOmuEmail
     every { statusUpdateRepository.findFirstByApplicationIdOrderByCreatedAtDesc(application.id) } returns cas2StatusUpdateEntity
     every { notifyConfig.templates.cas2ToTransferringPomApplicationTransferredToAnotherPrison } returns templateId
     every { notifyConfig.templates.cas2ToTransferringPomUnitApplicationTransferredToAnotherPrison } returns templateId
@@ -243,7 +249,7 @@ class Cas2EmailServiceTest {
     } returns Unit
     every {
       emailNotificationService.sendCas2Email(
-        eq("tbc"),
+        eq(oldOmuEmail.email),
         eq(templateId),
         eq(
           mapOf(
@@ -255,7 +261,7 @@ class Cas2EmailServiceTest {
     } returns Unit
     every {
       emailNotificationService.sendCas2Email(
-        eq("tbc"),
+        eq(newOmuEmail.email),
         eq(templateId),
         eq(
           mapOf(
@@ -288,12 +294,15 @@ class Cas2EmailServiceTest {
     verify(exactly = 1) { prisonsApiClient.getAgencyDetails(eq(oldAgency.agencyId)) }
     verify(exactly = 4) { emailNotificationService.sendCas2Email(any(), any(), any()) }
     verify(exactly = 1) { statusUpdateRepository.findFirstByApplicationIdOrderByCreatedAtDesc(application.id) }
+    verify(exactly = 2) { offenderManagementUnitRepository.findByPrisonCode(any()) }
   }
 
   @Test
   fun `do not send location changed emails as no matching status update found and throw error`() {
     application.applicationAssignments.add(applicationAssignmentOld)
     application.applicationAssignments.add(applicationAssignmentOlder)
+    every { offenderManagementUnitRepository.findByPrisonCode(newPrisonCode) } returns newOmuEmail
+    every { offenderManagementUnitRepository.findByPrisonCode(oldPrisonCode) } returns oldOmuEmail
     every { statusUpdateRepository.findFirstByApplicationIdOrderByCreatedAtDesc(application.id) } returns null
     every { nomisUserRepository.findById(eq(oldUser.id)) } returns Optional.of(oldUser)
     every { prisonsApiClient.getAgencyDetails(eq(oldAgency.agencyId)) } returns ClientResult.Success(
@@ -308,6 +317,7 @@ class Cas2EmailServiceTest {
     verify(exactly = 1) { prisonsApiClient.getAgencyDetails(eq(oldAgency.agencyId)) }
     verify(exactly = 0) { emailNotificationService.sendCas2Email(any(), any(), any()) }
     verify(exactly = 1) { statusUpdateRepository.findFirstByApplicationIdOrderByCreatedAtDesc(application.id) }
+    verify(exactly = 2) { offenderManagementUnitRepository.findByPrisonCode(any()) }
   }
 
   @Test

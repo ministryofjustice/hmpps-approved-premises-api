@@ -1,7 +1,6 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas2
 
 import jakarta.persistence.EntityNotFoundException
-import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.Prisoner
@@ -11,8 +10,8 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas2Applicati
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas2StatusUpdateRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.NomisUserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.NomisUserRepository
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.OffenderManagementUnitRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.EmailNotificationService
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.SentryService
 import java.util.UUID
 
 @Service
@@ -22,37 +21,39 @@ class Cas2EmailService(
   private val nomisUserRepository: NomisUserRepository,
   private val prisonsApiClient: PrisonsApiClient,
   private val statusUpdateRepository: Cas2StatusUpdateRepository,
-  private val sentryService: SentryService,
+  private val offenderManagementUnitRepository: OffenderManagementUnitRepository,
   @Value("\${url-templates.frontend.cas2.application-overview}") private val applicationUrlTemplate: String,
   @Value("\${notify.emailaddresses.nacro}") private val nacroEmail: String,
 ) {
 
-  private val log = LoggerFactory.getLogger(this::class.java)
-
   fun sendLocationChangedEmails(application: Cas2ApplicationEntity, oldPomUserId: UUID, nomsNumber: String, prisoner: Prisoner) {
-    val oldPrisonCode = getOldPrisonCode(application, prisoner.prisonId) ?: error("Old prison code not found.")
+    val oldPrisonCode = getOldPrisonCode(application, prisoner.prisonId) ?: error("Old prison code ${prisoner.prisonId} not found.")
 
     nomisUserRepository.findById(oldPomUserId).map { oldPom ->
       prisonsApiClient.getAgencyDetails(oldPrisonCode).map { agency ->
+
+        val oldOmuEmail = offenderManagementUnitRepository.findByPrisonCode(oldPrisonCode)?.email ?: error("No OMU email found for old prison code $oldPrisonCode.")
+        val newOmuEmail = offenderManagementUnitRepository.findByPrisonCode(prisoner.prisonId)?.email ?: error("No OMU email found for new prison code ${prisoner.prisonId}.")
+
         val statusUpdate = statusUpdateRepository.findFirstByApplicationIdOrderByCreatedAtDesc(application.id) ?: throw EntityNotFoundException("StatusUpdate for ${application.id} not found")
-        sendEmail(
-          oldPom.email,
+        emailNotificationService.sendCas2Email(
+          oldPom.email!!,
           notifyConfig.templates.cas2ToTransferringPomApplicationTransferredToAnotherPrison,
           mapOf(
             "nomsNumber" to nomsNumber,
             "receivingPrisonName" to prisoner.prisonName,
           ),
         )
-        sendEmail(
-          "tbc",
+        emailNotificationService.sendCas2Email(
+          oldOmuEmail,
           notifyConfig.templates.cas2ToTransferringPomUnitApplicationTransferredToAnotherPrison,
           mapOf(
             "nomsNumber" to nomsNumber,
             "receivingPrisonName" to prisoner.prisonName,
           ),
         )
-        sendEmail(
-          "tbc",
+        emailNotificationService.sendCas2Email(
+          newOmuEmail,
           notifyConfig.templates.cas2ToReceivingPomUnitApplicationTransferredToAnotherPrison,
           mapOf(
             "nomsNumber" to nomsNumber,
@@ -61,7 +62,7 @@ class Cas2EmailService(
             "applicationStatus" to statusUpdate.label,
           ),
         )
-        sendEmail(
+        emailNotificationService.sendCas2Email(
           nacroEmail,
           notifyConfig.templates.cas2ToNacroApplicationTransferredToAnotherPrison,
           mapOf(
@@ -82,8 +83,8 @@ class Cas2EmailService(
       prisonsApiClient.getAgencyDetails(newPrisonCode).map { newAgency ->
         val statusUpdate = statusUpdateRepository.findFirstByApplicationIdOrderByCreatedAtDesc(application.id) ?: throw EntityNotFoundException("StatusUpdate for ${application.id} not found")
 
-        sendEmail(
-          newPom.email,
+        emailNotificationService.sendCas2Email(
+          newPom.email!!,
           notifyConfig.templates.cas2ToReceivingPomApplicationTransferredToAnotherPom,
           mapOf(
             "nomsNumber" to nomsNumber,
@@ -92,7 +93,7 @@ class Cas2EmailService(
             "applicationStatus" to statusUpdate.label,
           ),
         )
-        sendEmail(
+        emailNotificationService.sendCas2Email(
           nacroEmail,
           notifyConfig.templates.cas2ToNacroApplicationTransferredToAnotherPom,
           mapOf(
@@ -102,21 +103,6 @@ class Cas2EmailService(
           ),
         )
       }
-    }
-  }
-
-  private fun sendEmail(
-    recipientEmailAddress: String?,
-    templateId: String,
-    personalisation: Map<String, String>,
-  ) {
-    if (recipientEmailAddress != null) {
-      emailNotificationService.sendCas2Email(recipientEmailAddress, templateId, personalisation)
-      log.info("Email $templateId ready to send to $recipientEmailAddress for NOMS Number ${personalisation["nomsNumber"]}")
-    } else {
-      val errorMessage = "Email $templateId not sent for NOMS Number ${personalisation["nomsNumber"]} as email address was not found."
-      log.error(errorMessage)
-      sentryService.captureErrorMessage(errorMessage)
     }
   }
 
