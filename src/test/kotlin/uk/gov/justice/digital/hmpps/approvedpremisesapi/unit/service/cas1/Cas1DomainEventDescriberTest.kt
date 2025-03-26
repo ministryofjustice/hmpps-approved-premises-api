@@ -1,4 +1,4 @@
-package uk.gov.justice.digital.hmpps.approvedpremisesapi.unit.domainevents
+package uk.gov.justice.digital.hmpps.approvedpremisesapi.unit.service.cas1
 
 import io.mockk.every
 import io.mockk.mockk
@@ -37,7 +37,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.Sp
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1BookingChangedContentPayload
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1SpaceCharacteristic
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.domainevents.DomainEventDescriber
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApAreaEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApprovedPremisesEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.AssessmentClarificationNoteEntityFactory
@@ -81,6 +80,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TriggerSource
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.DomainEvent
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.DomainEventSummary
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1DomainEventDescriber
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1DomainEventService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.toInstant
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.toUiDateTimeFormat
@@ -92,13 +92,13 @@ import java.time.OffsetDateTime
 import java.util.UUID
 
 @SuppressWarnings("MaxLineLength")
-class DomainEventDescriberTest {
+class Cas1DomainEventDescriberTest {
   private val mockDomainEventService = mockk<Cas1DomainEventService>()
   private val mockAssessmentClarificationNoteRepository = mockk<AssessmentClarificationNoteRepository>()
   private val mockBookingRepository = mockk<BookingRepository>()
   private val mockSpaceBookingRepository = mockk<Cas1SpaceBookingRepository>()
 
-  private val domainEventDescriber = DomainEventDescriber(
+  private val cas1DomainEventDescriber = Cas1DomainEventDescriber(
     mockDomainEventService,
     mockAssessmentClarificationNoteRepository,
     mockBookingRepository,
@@ -109,7 +109,7 @@ class DomainEventDescriberTest {
   fun `Returns expected description for application submitted event`() {
     val domainEventSummary = DomainEventSummaryImpl.ofType(DomainEventType.APPROVED_PREMISES_APPLICATION_SUBMITTED)
 
-    val result = domainEventDescriber.getDescriptionAndPayload(domainEventSummary)
+    val result = cas1DomainEventDescriber.getDescriptionAndPayload(domainEventSummary)
 
     assertThat(result.description).isEqualTo("The application was submitted")
   }
@@ -130,7 +130,7 @@ class DomainEventDescriberTest {
       )
     }
 
-    val result = domainEventDescriber.getDescriptionAndPayload(domainEventSummary)
+    val result = cas1DomainEventDescriber.getDescriptionAndPayload(domainEventSummary)
 
     assertThat(result.description).isEqualTo("The application was assessed and $decision")
   }
@@ -159,7 +159,7 @@ class DomainEventDescriberTest {
       )
     }
 
-    val result = domainEventDescriber.getDescriptionAndPayload(domainEventSummary)
+    val result = cas1DomainEventDescriber.getDescriptionAndPayload(domainEventSummary)
 
     assertThat(result.description).isEqualTo("A placement at The Premises Name was booked for Monday 1 January 2024 to Monday 1 April 2024 against Delius Event Number 989")
   }
@@ -180,7 +180,7 @@ class DomainEventDescriberTest {
       )
     }
 
-    val result = domainEventDescriber.getDescriptionAndPayload(domainEventSummary)
+    val result = cas1DomainEventDescriber.getDescriptionAndPayload(domainEventSummary)
 
     assertThat(result.description).isEqualTo("The person moved into the premises on ${arrivalDate.toUiDateTimeFormat()}")
   }
@@ -201,7 +201,7 @@ class DomainEventDescriberTest {
       )
     }
 
-    val result = domainEventDescriber.getDescriptionAndPayload(domainEventSummary)
+    val result = cas1DomainEventDescriber.getDescriptionAndPayload(domainEventSummary)
 
     assertThat(result.description).isEqualTo("The person was due to move into the premises on ${expectedArrivalDate.toUiFormat()} but did not arrive")
   }
@@ -222,7 +222,7 @@ class DomainEventDescriberTest {
       )
     }
 
-    val result = domainEventDescriber.getDescriptionAndPayload(domainEventSummary)
+    val result = cas1DomainEventDescriber.getDescriptionAndPayload(domainEventSummary)
 
     assertThat(result.description).isEqualTo("The person moved out of the premises on ${departureDate.toUiDateTimeFormat()}")
   }
@@ -243,7 +243,7 @@ class DomainEventDescriberTest {
       )
     }
 
-    val result = domainEventDescriber.getDescriptionAndPayload(domainEventSummary)
+    val result = cas1DomainEventDescriber.getDescriptionAndPayload(domainEventSummary)
 
     assertThat(result.description).isEqualTo("A placement was not made for the placement request. The reason was: $reason")
   }
@@ -261,7 +261,7 @@ class DomainEventDescriberTest {
         eventDetails = bookingNotMade,
       )
     }
-    val result = domainEventDescriber.getDescriptionAndPayload(domainEventSummary)
+    val result = cas1DomainEventDescriber.getDescriptionAndPayload(domainEventSummary)
 
     assertThat(result.description).isEqualTo("A placement was not made for the placement request.")
   }
@@ -284,7 +284,7 @@ class DomainEventDescriberTest {
     every { mockBookingRepository.findByIdOrNull(any()) } returns null
 
     val exception = assertThrows<RuntimeException> {
-      domainEventDescriber.getDescriptionAndPayload(domainEventSummary)
+      cas1DomainEventDescriber.getDescriptionAndPayload(domainEventSummary)
     }
     assertThat(exception.message).isEqualTo("Booking ID $bookingId with cancellation not found")
   }
@@ -308,7 +308,7 @@ class DomainEventDescriberTest {
     every { mockBookingRepository.findByIdOrNull(any()) } returns bookingEntity
 
     val exception = assertThrows<RuntimeException> {
-      domainEventDescriber.getDescriptionAndPayload(domainEventSummary)
+      cas1DomainEventDescriber.getDescriptionAndPayload(domainEventSummary)
     }
     assertThat(exception.message).isEqualTo("Booking ID ${bookingEntity.id} does not have one cancellation")
   }
@@ -338,7 +338,7 @@ class DomainEventDescriberTest {
     }
     every { mockBookingRepository.findByIdOrNull(bookingEntity.id) } returns bookingEntity
 
-    val result = domainEventDescriber.getDescriptionAndPayload(domainEventSummary)
+    val result = cas1DomainEventDescriber.getDescriptionAndPayload(domainEventSummary)
 
     assertThat(result.description).isEqualTo("A placement at ${bookingEntity.premises.name} booked for Thursday 15 August 2024 to Sunday 18 August 2024 was cancelled. The reason was: '$reason'")
   }
@@ -375,7 +375,7 @@ class DomainEventDescriberTest {
     }
     every { mockBookingRepository.findByIdOrNull(bookingEntity.id) } returns bookingEntity
 
-    val result = domainEventDescriber.getDescriptionAndPayload(domainEventSummary)
+    val result = cas1DomainEventDescriber.getDescriptionAndPayload(domainEventSummary)
 
     assertThat(result.description).isEqualTo("A placement at ${bookingEntity.premises.name} booked for Thursday 15 August 2024 to Sunday 18 August 2024 was cancelled. The reason was: 'Other': $otherReasonText.")
   }
@@ -409,7 +409,7 @@ class DomainEventDescriberTest {
     }
     every { mockBookingRepository.findByIdOrNull(bookingEntity.id) } returns bookingEntity
 
-    val result = domainEventDescriber.getDescriptionAndPayload(domainEventSummary)
+    val result = cas1DomainEventDescriber.getDescriptionAndPayload(domainEventSummary)
 
     assertThat(result.description).isEqualTo("A placement at ${bookingEntity.premises.name} booked for Thursday 15 August 2024 to Sunday 18 August 2024 was cancelled. The reason was: 'Other'")
   }
@@ -428,8 +428,7 @@ class DomainEventDescriberTest {
 
     val cancellationReason = "reason for cancellation"
 
-    val domainEventSummary = DomainEventSummaryImpl
-      .ofType(DomainEventType.APPROVED_PREMISES_BOOKING_CANCELLED)
+    val domainEventSummary = DomainEventSummaryImpl.ofType(DomainEventType.APPROVED_PREMISES_BOOKING_CANCELLED)
       .copy(cas1SpaceBookingId = spaceBookingId)
 
     val spaceBooking = Cas1SpaceBookingEntityFactory()
@@ -454,7 +453,7 @@ class DomainEventDescriberTest {
       )
     }
 
-    val result = domainEventDescriber.getDescriptionAndPayload(domainEventSummary)
+    val result = cas1DomainEventDescriber.getDescriptionAndPayload(domainEventSummary)
     assertThat(result.description).isEqualTo(
       "A placement at ${premises.name} booked for ${spaceBooking.canonicalArrivalDate.toUiFormat()} " +
         "to ${spaceBooking.canonicalDepartureDate.toUiFormat()} was cancelled. The reason was: '$cancellationReason'",
@@ -465,8 +464,7 @@ class DomainEventDescriberTest {
   fun `Throws exception for space booking cancelled event when space booking is not found`() {
     val spaceBookingId = UUID.randomUUID()
 
-    val domainEventSummary = DomainEventSummaryImpl
-      .ofType(DomainEventType.APPROVED_PREMISES_BOOKING_CANCELLED)
+    val domainEventSummary = DomainEventSummaryImpl.ofType(DomainEventType.APPROVED_PREMISES_BOOKING_CANCELLED)
       .copy(cas1SpaceBookingId = spaceBookingId)
 
     every { mockSpaceBookingRepository.findByIdOrNull(any()) } returns null
@@ -482,7 +480,7 @@ class DomainEventDescriberTest {
       )
     }
     val exception = assertThrows<RuntimeException> {
-      domainEventDescriber.getDescriptionAndPayload(domainEventSummary)
+      cas1DomainEventDescriber.getDescriptionAndPayload(domainEventSummary)
     }
     assertThat(exception.message).isEqualTo("Space Booking ID $spaceBookingId with cancellation not found")
   }
@@ -499,8 +497,7 @@ class DomainEventDescriberTest {
       .withYieldedLocalAuthorityArea { LocalAuthorityEntityFactory().produce() }
       .produce()
 
-    val domainEventSummary = DomainEventSummaryImpl
-      .ofType(DomainEventType.APPROVED_PREMISES_BOOKING_CANCELLED)
+    val domainEventSummary = DomainEventSummaryImpl.ofType(DomainEventType.APPROVED_PREMISES_BOOKING_CANCELLED)
       .copy(cas1SpaceBookingId = spaceBookingId)
 
     every { mockSpaceBookingRepository.findByIdOrNull(any()) } returns
@@ -523,7 +520,7 @@ class DomainEventDescriberTest {
     }
 
     val exception = assertThrows<RuntimeException> {
-      domainEventDescriber.getDescriptionAndPayload(domainEventSummary)
+      cas1DomainEventDescriber.getDescriptionAndPayload(domainEventSummary)
     }
     assertThat(exception.message).isEqualTo("Space Booking ID $spaceBookingId does not have a cancellation")
   }
@@ -555,7 +552,7 @@ class DomainEventDescriberTest {
         )
       }
 
-      val result = domainEventDescriber.getDescriptionAndPayload(domainEventSummary)
+      val result = cas1DomainEventDescriber.getDescriptionAndPayload(domainEventSummary)
 
       assertThat(result.description).isEqualTo("A placement at The Premises Name had its arrival and/or departure date changed to Monday 1 January 2024 to Monday 1 April 2024")
       assertThat(result.payload).isNull()
@@ -594,7 +591,7 @@ class DomainEventDescriberTest {
         schemaVersion = 2,
       )
 
-      val result = domainEventDescriber.getDescriptionAndPayload(domainEventSummary)
+      val result = cas1DomainEventDescriber.getDescriptionAndPayload(domainEventSummary)
 
       assertThat(result.description).isEqualTo("A placement at The Premises Name had its arrival date changed from Tuesday 1 April 2025 to Saturday 5 April 2025")
 
@@ -641,7 +638,7 @@ class DomainEventDescriberTest {
         schemaVersion = 2,
       )
 
-      val result = domainEventDescriber.getDescriptionAndPayload(domainEventSummary)
+      val result = cas1DomainEventDescriber.getDescriptionAndPayload(domainEventSummary)
 
       assertThat(result.description).isEqualTo("A placement at The Premises Name had its departure date changed from Sunday 1 June 2025 to Tuesday 10 June 2025")
 
@@ -689,7 +686,7 @@ class DomainEventDescriberTest {
         schemaVersion = 2,
       )
 
-      val result = domainEventDescriber.getDescriptionAndPayload(domainEventSummary)
+      val result = cas1DomainEventDescriber.getDescriptionAndPayload(domainEventSummary)
 
       assertThat(result.description).isEqualTo("A placement at The Premises Name had its arrival date changed from Tuesday 1 April 2025 to Saturday 5 April 2025, its departure date changed from Sunday 1 June 2025 to Tuesday 10 June 2025")
 
@@ -729,7 +726,7 @@ class DomainEventDescriberTest {
       )
     }
 
-    val result = domainEventDescriber.getDescriptionAndPayload(domainEventSummary)
+    val result = cas1DomainEventDescriber.getDescriptionAndPayload(domainEventSummary)
 
     assertThat(result.description).isEqualTo("Keyworker for placement at The Premises Name for Monday 1 January 2024 to Monday 1 April 2024 set to assigned keyWorker")
   }
@@ -760,7 +757,7 @@ class DomainEventDescriberTest {
       )
     }
 
-    val result = domainEventDescriber.getDescriptionAndPayload(domainEventSummary)
+    val result = cas1DomainEventDescriber.getDescriptionAndPayload(domainEventSummary)
 
     assertThat(result.description).isEqualTo("Keyworker for placement at The Premises Name for Monday 1 January 2024 to Monday 1 April 2024 changes from previous keyWorker to assigned keyWorker")
   }
@@ -781,7 +778,7 @@ class DomainEventDescriberTest {
       )
     }
 
-    val result = domainEventDescriber.getDescriptionAndPayload(domainEventSummary)
+    val result = cas1DomainEventDescriber.getDescriptionAndPayload(domainEventSummary)
 
     assertThat(result.description).isEqualTo("The application was withdrawn. The reason was: 'change in circumstances new application to be submitted'")
   }
@@ -802,7 +799,7 @@ class DomainEventDescriberTest {
       )
     }
 
-    val result = domainEventDescriber.getDescriptionAndPayload(domainEventSummary)
+    val result = cas1DomainEventDescriber.getDescriptionAndPayload(domainEventSummary)
 
     assertThat(result.description).isEqualTo("The application was withdrawn. The reason was: 'the main withdrawal reason' (additional reason)")
   }
@@ -824,7 +821,7 @@ class DomainEventDescriberTest {
       )
     }
 
-    val result = domainEventDescriber.getDescriptionAndPayload(domainEventSummary)
+    val result = cas1DomainEventDescriber.getDescriptionAndPayload(domainEventSummary)
 
     assertThat(result.description).isEqualTo("The assessment was appealed and $decision. The reason was: $reason")
   }
@@ -871,14 +868,15 @@ class DomainEventDescriberTest {
       )
     }
 
-    val result = domainEventDescriber.getDescriptionAndPayload(domainEventSummary)
+    val result = cas1DomainEventDescriber.getDescriptionAndPayload(domainEventSummary)
 
     assertThat(result.description).isEqualTo(expectedDescription)
   }
 
   @Test
   fun `Returns expected description for placement application withdrawn event with no dates`() {
-    val domainEventSummary = DomainEventSummaryImpl.ofType(DomainEventType.APPROVED_PREMISES_PLACEMENT_APPLICATION_WITHDRAWN)
+    val domainEventSummary =
+      DomainEventSummaryImpl.ofType(DomainEventType.APPROVED_PREMISES_PLACEMENT_APPLICATION_WITHDRAWN)
 
     every { mockDomainEventService.getPlacementApplicationWithdrawnEvent(UUID.fromString(domainEventSummary.id)) } returns buildDomainEvent {
       PlacementApplicationWithdrawnEnvelope(
@@ -891,14 +889,15 @@ class DomainEventDescriberTest {
       )
     }
 
-    val result = domainEventDescriber.getDescriptionAndPayload(domainEventSummary)
+    val result = cas1DomainEventDescriber.getDescriptionAndPayload(domainEventSummary)
 
     assertThat(result.description).isEqualTo("A request for placement was withdrawn. The reason was: 'Related application withdrawn'")
   }
 
   @Test
   fun `Returns expected description for placement application withdrawn event with placement dates`() {
-    val domainEventSummary = DomainEventSummaryImpl.ofType(DomainEventType.APPROVED_PREMISES_PLACEMENT_APPLICATION_WITHDRAWN)
+    val domainEventSummary =
+      DomainEventSummaryImpl.ofType(DomainEventType.APPROVED_PREMISES_PLACEMENT_APPLICATION_WITHDRAWN)
 
     every { mockDomainEventService.getPlacementApplicationWithdrawnEvent(UUID.fromString(domainEventSummary.id)) } returns buildDomainEvent {
       PlacementApplicationWithdrawnEnvelope(
@@ -917,7 +916,7 @@ class DomainEventDescriberTest {
       )
     }
 
-    val result = domainEventDescriber.getDescriptionAndPayload(domainEventSummary)
+    val result = cas1DomainEventDescriber.getDescriptionAndPayload(domainEventSummary)
 
     assertThat(result.description).isEqualTo(
       "A request for placement was withdrawn for dates Tuesday 2 January 2024 to Monday 4 March 2024, Monday 6 May 2024 to Monday 8 July 2024. " +
@@ -941,7 +940,7 @@ class DomainEventDescriberTest {
       )
     }
 
-    val result = domainEventDescriber.getDescriptionAndPayload(domainEventSummary)
+    val result = cas1DomainEventDescriber.getDescriptionAndPayload(domainEventSummary)
 
     assertThat(result.description).isEqualTo(
       "A request for placement was withdrawn for dates Tuesday 2 January 2024 to Monday 4 March 2024. " +
@@ -956,7 +955,8 @@ class DomainEventDescriberTest {
     "additionalPlacement,An additional placement on an existing application",
   )
   fun `Returns expected description for request for placement created event, for additional requests`(type: RequestForPlacementType, expectedTypeDescription: String) {
-    val domainEventSummary = DomainEventSummaryImpl.ofType(DomainEventType.APPROVED_PREMISES_REQUEST_FOR_PLACEMENT_CREATED)
+    val domainEventSummary =
+      DomainEventSummaryImpl.ofType(DomainEventType.APPROVED_PREMISES_REQUEST_FOR_PLACEMENT_CREATED)
 
     every { mockDomainEventService.getRequestForPlacementCreatedEvent(UUID.fromString(domainEventSummary.id)) } returns buildDomainEvent {
       RequestForPlacementCreatedEnvelope(
@@ -971,7 +971,7 @@ class DomainEventDescriberTest {
       )
     }
 
-    val result = domainEventDescriber.getDescriptionAndPayload(domainEventSummary)
+    val result = cas1DomainEventDescriber.getDescriptionAndPayload(domainEventSummary)
 
     assertThat(result.description).isEqualTo(
       "A placement was requested with the reason '$expectedTypeDescription'. " +
@@ -981,7 +981,8 @@ class DomainEventDescriberTest {
 
   @Test
   fun `Returns expected description for request for placement created event, for initial request`() {
-    val domainEventSummary = DomainEventSummaryImpl.ofType(DomainEventType.APPROVED_PREMISES_REQUEST_FOR_PLACEMENT_CREATED)
+    val domainEventSummary =
+      DomainEventSummaryImpl.ofType(DomainEventType.APPROVED_PREMISES_REQUEST_FOR_PLACEMENT_CREATED)
 
     every { mockDomainEventService.getRequestForPlacementCreatedEvent(UUID.fromString(domainEventSummary.id)) } returns buildDomainEvent {
       RequestForPlacementCreatedEnvelope(
@@ -996,7 +997,7 @@ class DomainEventDescriberTest {
       )
     }
 
-    val result = domainEventDescriber.getDescriptionAndPayload(domainEventSummary)
+    val result = cas1DomainEventDescriber.getDescriptionAndPayload(domainEventSummary)
 
     assertThat(result.description).isEqualTo(
       "A placement was automatically requested after the application was assessed. " +
@@ -1007,7 +1008,8 @@ class DomainEventDescriberTest {
   @ParameterizedTest
   @EnumSource(value = RequestForPlacementAssessed.Decision::class)
   fun `Returns expected description for request for placement assessed event with summary`(decision: RequestForPlacementAssessed.Decision) {
-    val domainEventSummary = DomainEventSummaryImpl.ofType(DomainEventType.APPROVED_PREMISES_REQUEST_FOR_PLACEMENT_ASSESSED)
+    val domainEventSummary =
+      DomainEventSummaryImpl.ofType(DomainEventType.APPROVED_PREMISES_REQUEST_FOR_PLACEMENT_ASSESSED)
     val expectedTermUsed = if (decision == RequestForPlacementAssessed.Decision.rejected) "was" else "is"
 
     every { mockDomainEventService.getRequestForPlacementAssessedEvent(UUID.fromString(domainEventSummary.id)) } returns buildDomainEvent {
@@ -1024,7 +1026,7 @@ class DomainEventDescriberTest {
       )
     }
 
-    val result = domainEventDescriber.getDescriptionAndPayload(domainEventSummary)
+    val result = cas1DomainEventDescriber.getDescriptionAndPayload(domainEventSummary)
 
     assertThat(result.description).isEqualTo(
       "A request for placement assessment was $decision. The placement request $expectedTermUsed for Friday 3 May 2024 to Friday 10 May 2024 (1 week). The reason was: Request was $decision.",
@@ -1034,7 +1036,8 @@ class DomainEventDescriberTest {
   @ParameterizedTest
   @EnumSource(value = RequestForPlacementAssessed.Decision::class)
   fun `Returns expected description for request for placement assessed event without summary`(decision: RequestForPlacementAssessed.Decision) {
-    val domainEventSummary = DomainEventSummaryImpl.ofType(DomainEventType.APPROVED_PREMISES_REQUEST_FOR_PLACEMENT_ASSESSED)
+    val domainEventSummary =
+      DomainEventSummaryImpl.ofType(DomainEventType.APPROVED_PREMISES_REQUEST_FOR_PLACEMENT_ASSESSED)
     val expectedTermUsed = if (decision == RequestForPlacementAssessed.Decision.rejected) "was" else "is"
 
     every { mockDomainEventService.getRequestForPlacementAssessedEvent(UUID.fromString(domainEventSummary.id)) } returns buildDomainEvent {
@@ -1051,7 +1054,7 @@ class DomainEventDescriberTest {
       )
     }
 
-    val result = domainEventDescriber.getDescriptionAndPayload(domainEventSummary)
+    val result = cas1DomainEventDescriber.getDescriptionAndPayload(domainEventSummary)
 
     assertThat(result.description).isEqualTo(
       "A request for placement assessment was $decision. The placement request $expectedTermUsed for Friday 3 May 2024 to Friday 10 May 2024 (1 week).",
@@ -1072,7 +1075,8 @@ class DomainEventDescriberTest {
     allocatedBy: String?,
     expectedAllocationDescription: String,
   ) {
-    val domainEventSummary = DomainEventSummaryImpl.ofType(DomainEventType.APPROVED_PREMISES_PLACEMENT_APPLICATION_ALLOCATED)
+    val domainEventSummary =
+      DomainEventSummaryImpl.ofType(DomainEventType.APPROVED_PREMISES_PLACEMENT_APPLICATION_ALLOCATED)
 
     every { mockDomainEventService.getPlacementApplicationAllocatedEvent(UUID.fromString(domainEventSummary.id)) } returns buildDomainEvent {
       PlacementApplicationAllocatedEnvelope(
@@ -1108,7 +1112,7 @@ class DomainEventDescriberTest {
       )
     }
 
-    val result = domainEventDescriber.getDescriptionAndPayload(domainEventSummary)
+    val result = cas1DomainEventDescriber.getDescriptionAndPayload(domainEventSummary)
 
     assertThat(result.description).isEqualTo("$expectedAllocationDescription. The placement request is for Wednesday 12 March 2025 to Thursday 20 March 2025 (1 week and 1 day)")
   }
@@ -1139,7 +1143,7 @@ class DomainEventDescriberTest {
 
     every { mockAssessmentClarificationNoteRepository.findByIdOrNull(requestId) } returns assessmentClarificationNote
 
-    val result = domainEventDescriber.getDescriptionAndPayload(domainEventSummary)
+    val result = cas1DomainEventDescriber.getDescriptionAndPayload(domainEventSummary)
 
     assertThat(result.description).isEqualTo(
       """
