@@ -15,7 +15,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.Prisoner
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.PrisonerSearchClient
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.Cas2ApplicationEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.NomisUserEntityFactory
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas2ApplicationAssignmentEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas2ApplicationRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.domainevent.AdditionalInformation
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.domainevent.HmppsDomainEvent
@@ -25,9 +24,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.InvalidDomainEve
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas2.Cas2ApplicationService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas2.Cas2LocationChangedService
 import java.time.Instant
-import java.time.OffsetDateTime
 import java.time.ZoneId
-import java.util.UUID
 import kotlin.NoSuchElementException
 
 @ExtendWith(MockKExtension::class)
@@ -68,15 +65,7 @@ class Cas2LocationChangedServiceTest {
   fun `handle Location Changed Event and save assignment`() {
     val application = Cas2ApplicationEntityFactory().withNomsNumber(nomsNumber).withCreatedByUser(user).produce()
 
-    val oldAssignment = Cas2ApplicationAssignmentEntity(
-      id = UUID.randomUUID(),
-      application = application,
-      prisonCode = "OLDID",
-      allocatedPomUserId = user.id,
-      createdAt = OffsetDateTime.now(),
-    )
-
-    application.applicationAssignments.add(oldAssignment)
+    application.createApplicationAssignment(prisonCode = "OLDID", allocatedPomUserId = user.id)
 
     every { prisonerSearchClient.getPrisoner(any()) } returns ClientResult.Success(HttpStatus.OK, prisoner)
     every { applicationService.findMostRecentApplication(eq(nomsNumber)) } returns application
@@ -92,16 +81,7 @@ class Cas2LocationChangedServiceTest {
   @Test
   fun `handle Location Changed Event and no further action as prison location not changed`() {
     val application = Cas2ApplicationEntityFactory().withNomsNumber(nomsNumber).withCreatedByUser(user).produce()
-
-    val oldAssignment = Cas2ApplicationAssignmentEntity(
-      id = UUID.randomUUID(),
-      application = application,
-      prisonCode = prisoner.prisonId,
-      allocatedPomUserId = user.id,
-      createdAt = OffsetDateTime.now(),
-    )
-
-    application.applicationAssignments.add(oldAssignment)
+    application.createApplicationAssignment(prisonCode = prisoner.prisonId, allocatedPomUserId = user.id)
 
     every { prisonerSearchClient.getPrisoner(any()) } returns ClientResult.Success(HttpStatus.OK, prisoner)
     every { applicationService.findMostRecentApplication(eq(nomsNumber)) } returns application

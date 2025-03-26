@@ -5,13 +5,10 @@ import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.ClientResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.PrisonerSearchClient
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas2ApplicationAssignmentEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas2ApplicationRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.domainevent.HmppsDomainEvent
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.domainevent.categoriesChanged
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.InvalidDomainEventException
-import java.time.OffsetDateTime
-import java.util.UUID
 
 @Service
 class Cas2LocationChangedService(
@@ -41,14 +38,9 @@ class Cas2LocationChangedService(
         }
 
         if (isNewPrison(application.currentPrisonCode, prisoner.prisonId)) {
-          application.applicationAssignments.add(
-            Cas2ApplicationAssignmentEntity(
-              id = UUID.randomUUID(),
-              application = application,
-              prisonCode = prisoner.prisonId,
-              createdAt = OffsetDateTime.now(),
-              allocatedPomUserId = null,
-            ),
+          application.createApplicationAssignment(
+            prisonCode = prisoner.prisonId,
+            allocatedPomUserId = null,
           )
 
           applicationRepository.save(application)

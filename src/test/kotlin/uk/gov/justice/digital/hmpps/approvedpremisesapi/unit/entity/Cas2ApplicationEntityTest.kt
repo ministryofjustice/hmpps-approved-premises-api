@@ -5,9 +5,6 @@ import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.Cas2ApplicationEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.NomisUserEntityFactory
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas2ApplicationAssignmentEntity
-import java.time.OffsetDateTime
-import java.util.UUID
 
 class Cas2ApplicationEntityTest {
 
@@ -19,16 +16,7 @@ class Cas2ApplicationEntityTest {
     val prisonCode = "A1234AB"
 
     val application = Cas2ApplicationEntityFactory().withNomsNumber(nomsNumber).withCreatedByUser(user).produce()
-    val oldAssignment = Cas2ApplicationAssignmentEntity(
-      id = UUID.randomUUID(),
-      application = application,
-      prisonCode = prisonCode,
-      allocatedPomUserId = user.id,
-      createdAt = OffsetDateTime.now(),
-    )
-
-    application.applicationAssignments.add(oldAssignment)
-
+    application.createApplicationAssignment(prisonCode = prisonCode, allocatedPomUserId = user.id)
     assertThat(application.currentPrisonCode).isEqualTo(prisonCode)
   }
 

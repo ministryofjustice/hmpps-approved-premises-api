@@ -7,12 +7,10 @@ import org.springframework.transaction.annotation.Transactional
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.ClientResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.ManagePomCasesClient
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.PomAllocation
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas2ApplicationAssignmentEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas2ApplicationRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.NomisUserRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.domainevent.HmppsDomainEvent
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.InvalidDomainEventException
-import java.time.OffsetDateTime
 import java.util.UUID
 
 @Service
@@ -45,15 +43,10 @@ class Cas2AllocationChangedService(
             ?: throw RuntimeException("No NOMIS user details found")
 
           if (isNewAllocation(application.currentPomUserId, allocatedUser.id)) {
-            val newAssignment = Cas2ApplicationAssignmentEntity(
-              id = UUID.randomUUID(),
-              application = application,
+            application.createApplicationAssignment(
               prisonCode = pomAllocation.prison.code,
               allocatedPomUserId = allocatedUser.id,
-              createdAt = OffsetDateTime.now(),
             )
-
-            application.applicationAssignments.add(newAssignment)
             applicationRepository.save(application)
           }
         }
