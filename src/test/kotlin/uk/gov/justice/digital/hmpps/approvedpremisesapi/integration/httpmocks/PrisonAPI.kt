@@ -3,6 +3,7 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.IntegrationTestBase
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.prisoneralertsapi.AlertsPage
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.prisonsapi.AdjudicationsPage
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.prisonsapi.Agency
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.prisonsapi.InmateDetail
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.prisonsapi.PrisonerInPrisonSummary
 
@@ -44,4 +45,9 @@ fun IntegrationTestBase.prisonAPIMockServerErrorPrisonTimeLineCall(nomsNumber: S
 fun IntegrationTestBase.prisonAPIMockSuccessfulAdjudicationsCall(nomsNumber: String, response: AdjudicationsPage) = mockSuccessfulGetCallWithJsonResponse(
   url = "/api/offenders/$nomsNumber/adjudications",
   responseBody = response,
+)
+
+fun IntegrationTestBase.prisonAPIMockSuccessfulAgencyDetailsCall(agency: Agency) = mockSuccessfulGetCallWithJsonResponse(
+  url = "/api/agencies/${agency.agencyId}",
+  responseBody = agency,
 )

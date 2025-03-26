@@ -29,7 +29,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas2.Cas2Allocat
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas2.Cas2ApplicationService
 import java.time.Instant
 import java.time.ZoneId
-import java.util.UUID
 
 @ExtendWith(MockKExtension::class)
 class Cas2AllocationChangedServiceTest {
@@ -71,12 +70,13 @@ class Cas2AllocationChangedServiceTest {
   @Test
   fun `handle Allocation Changed Event and save new allocation to table`() {
     val application = Cas2ApplicationEntityFactory().withNomsNumber(nomsNumber).withCreatedByUser(user).produce()
-    application.createApplicationAssignment(prisonCode = "CODE123", allocatedPomUserId = UUID.randomUUID())
+    val user = NomisUserEntityFactory().produce()
+    application.createApplicationAssignment(prisonCode = "CODE123", allocatedPomUser = user)
 
     every { managePomCasesClient.getPomAllocation(any()) } returns ClientResult.Success(HttpStatus.OK, pomAllocation)
     every { applicationService.findMostRecentApplication(eq(nomsNumber)) } returns application
     every { applicationRepository.save(any()) } answers { it.invocation.args[0] as Cas2ApplicationEntity }
-    every { nomisUserRepository.findByNomisStaffId(eq(pomAllocation.manager.code)) } returns user
+    every { nomisUserRepository.findByNomisStaffId(eq(pomAllocation.manager.code)) } returns NomisUserEntityFactory().produce()
 
     allocationChangedService.process(allocationEvent)
 
@@ -159,7 +159,7 @@ class Cas2AllocationChangedServiceTest {
   @Test
   fun `application assignment is not created when POM has not changed`() {
     val application = Cas2ApplicationEntityFactory().withNomsNumber(nomsNumber).withCreatedByUser(user).produce()
-    application.createApplicationAssignment(prisonCode = "CODE123", allocatedPomUserId = user.id)
+    application.createApplicationAssignment(prisonCode = "CODE123", allocatedPomUser = user)
 
     every { managePomCasesClient.getPomAllocation(any()) } returns ClientResult.Success(
       HttpStatus.OK,

@@ -7384,6 +7384,8 @@ components:
         - cas2_application_submitted
         - cas2_note
         - cas2_status_update
+        - cas2_prison_transfer
+        - cas2_new_pom_assigned
     Cas2TimelineEvent:
       type: object
       properties:
@@ -7402,7 +7404,6 @@ components:
         - type
         - occurredAt
         - label
-        - createdByName
     SeedRequest:
       type: object
       properties:

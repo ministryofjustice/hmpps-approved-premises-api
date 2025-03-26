@@ -258,7 +258,7 @@ class Cas2ApplicationService(
         hdcEligibilityDate = submitApplication.hdcEligibilityDate
         conditionalReleaseDate = submitApplication.conditionalReleaseDate
         telephoneNumber = submitApplication.telephoneNumber
-        this.createApplicationAssignment(prisonCode = prisonCode, allocatedPomUserId = user.id)
+        this.createApplicationAssignment(prisonCode = prisonCode, allocatedPomUser = user)
       }
     } catch (error: UpstreamApiException) {
       return CasResult.GeneralValidationError(error.message.toString())
