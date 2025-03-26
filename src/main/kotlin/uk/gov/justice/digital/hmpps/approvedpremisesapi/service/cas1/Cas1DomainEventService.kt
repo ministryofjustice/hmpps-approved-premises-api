@@ -38,6 +38,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.domainevent.SnsEve
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.domainevent.SnsEventPersonReferenceCollection
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.NotFoundProblem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.ConfiguredDomainEventWorker
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.SentryService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.UserService
 import java.time.OffsetDateTime
 import java.time.ZoneOffset
@@ -54,6 +55,7 @@ class Cas1DomainEventService(
   @Value("\${domain-events.cas1.emit-enabled}") private val emitDomainEventsEnabled: Boolean,
   private val domainEventUrlConfig: DomainEventUrlConfig,
   private val cas1DomainEventMigrationService: Cas1DomainEventMigrationService,
+  private val sentryService: SentryService,
 ) {
   private val log = LoggerFactory.getLogger(this::class.java)
 
@@ -214,10 +216,9 @@ class Cas1DomainEventService(
   )
 
   @Transactional
-  fun saveRequestForPlacementCreatedEvent(domainEvent: DomainEvent<RequestForPlacementCreatedEnvelope>, emit: Boolean) = saveAndEmit(
+  fun saveRequestForPlacementCreatedEvent(domainEvent: DomainEvent<RequestForPlacementCreatedEnvelope>) = saveAndEmit(
     domainEvent = domainEvent,
     eventType = DomainEventType.APPROVED_PREMISES_REQUEST_FOR_PLACEMENT_CREATED,
-    emit = emit,
   )
 
   @Transactional
@@ -293,7 +294,7 @@ class Cas1DomainEventService(
       ),
     )
 
-    if (emit) {
+    if (eventType.emittable && emit) {
       emit(domainEventEntity)
     }
   }
@@ -315,6 +316,12 @@ class Cas1DomainEventService(
 
     val eventType = domainEvent.type
     val typeName = eventType.typeName
+
+    if (!eventType.emittable) {
+      sentryService.captureErrorMessage("An attempt was made to emit domain event ${domainEvent.id} of type $typeName which is not emittable")
+      return
+    }
+
     val typeDescription = eventType.typeDescription
     val crn = domainEvent.crn
     val nomsNumber = domainEvent.nomsNumber ?: "Unknown NOMS Number"

@@ -65,6 +65,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.MetaDataName
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TriggerSourceType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.DomainEvent
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.ConfiguredDomainEventWorker
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.SentryService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.UserService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1DomainEventMigrationService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1DomainEventService
@@ -82,6 +83,7 @@ class Cas1DomainEventServiceTest {
   private val userService = mockk<UserService>()
   private val user = UserEntityFactory().withDefaultProbationRegion().produce()
   private val mockDomainEventUrlConfig = mockk<DomainEventUrlConfig>()
+  private val sentryService = mockk<SentryService>()
   private val domainEventsFactory = Cas1DomainEventsFactory(objectMapper)
 
   private val domainEventService = buildService(emitDomainEventsEnabled = true)
@@ -95,6 +97,7 @@ class Cas1DomainEventServiceTest {
     emitDomainEventsEnabled = emitDomainEventsEnabled,
     mockDomainEventUrlConfig,
     Cas1DomainEventMigrationService(objectMapper, userService),
+    sentryService,
   )
 
   private val detailUrl = "http://example.com/1234"
@@ -103,7 +106,17 @@ class Cas1DomainEventServiceTest {
     @JvmStatic
     fun allCas1DomainEventTypes() = DomainEventType
       .entries
-      .filter { it.cas == DomainEventCas.CAS1 }
+      .filter { it.cas == DomainEventCas.CAS1 && it.emittable }
+
+    @JvmStatic
+    fun allEmittableCas1DomainEventTypes() = DomainEventType
+      .entries
+      .filter { it.cas == DomainEventCas.CAS1 && it.emittable }
+
+    @JvmStatic
+    fun allNonEmittableCas1DomainEventTypes() = DomainEventType
+      .entries
+      .filter { it.cas == DomainEventCas.CAS1 && !it.emittable }
   }
 
   @BeforeEach
@@ -196,7 +209,7 @@ class Cas1DomainEventServiceTest {
 
     @ParameterizedTest
     @MethodSource("uk.gov.justice.digital.hmpps.approvedpremisesapi.unit.service.cas1.Cas1DomainEventServiceTest#allCas1DomainEventTypes")
-    fun `saveAndEmit persists event and emits event to SNS`(type: DomainEventType) {
+    fun `saveAndEmit persists event and emits event to SNS if emittable`(type: DomainEventType) {
       val id = UUID.randomUUID()
       val applicationId = UUID.randomUUID()
       val bookingId = UUID.randomUUID()
@@ -286,6 +299,52 @@ class Cas1DomainEventServiceTest {
       )
 
       domainEventService.saveAndEmit(domainEventToSave, type, false)
+
+      verify(exactly = 1) {
+        domainEventRepositoryMock.save(
+          withArg {
+            assertThat(it.id).isEqualTo(id)
+            assertThat(it.type).isEqualTo(type)
+            assertThat(it.crn).isEqualTo(crn)
+            assertThat(it.nomsNumber).isEqualTo(nomsNumber)
+            assertThat(it.occurredAt.toInstant()).isEqualTo(occurredAt)
+            assertThat(it.data).isEqualTo(domainEventAndJson.persistedJson)
+            assertThat(it.triggeredByUserId).isEqualTo(user.id)
+            assertThat(it.bookingId).isEqualTo(bookingId)
+          },
+        )
+      }
+
+      verify(exactly = 0) {
+        domainEventWorkerMock.emitEvent(any(), any())
+      }
+    }
+
+    @ParameterizedTest
+    @MethodSource("uk.gov.justice.digital.hmpps.approvedpremisesapi.unit.service.cas1.Cas1DomainEventServiceTest#allNonEmittableCas1DomainEventTypes")
+    fun `saveAndEmit does not emit event to SNS if event type not emittable`(type: DomainEventType) {
+      val id = UUID.randomUUID()
+      val applicationId = UUID.randomUUID()
+      val bookingId = UUID.randomUUID()
+      val crn = "CRN"
+      val nomsNumber = "123"
+      val occurredAt = Instant.now()
+      val domainEventAndJson = domainEventsFactory.createEnvelopeLatestVersion(type)
+
+      every { domainEventRepositoryMock.save(any()) } answers { it.invocation.args[0] as DomainEventEntity }
+
+      val domainEventToSave = DomainEvent(
+        id = id,
+        applicationId = applicationId,
+        crn = crn,
+        nomsNumber = nomsNumber,
+        occurredAt = occurredAt,
+        data = domainEventAndJson.envelope,
+        bookingId = bookingId,
+        schemaVersion = domainEventAndJson.schemaVersion.versionNo,
+      )
+
+      domainEventService.saveAndEmit(domainEventToSave, type)
 
       verify(exactly = 1) {
         domainEventRepositoryMock.save(
@@ -897,9 +956,8 @@ class Cas1DomainEventServiceTest {
       }
     }
 
-    @ParameterizedTest
-    @ValueSource(booleans = [true, false])
-    fun `saveRequestForPlacementCreatedEvent sends correct arguments to saveAndEmit`(emit: Boolean) {
+    @Test
+    fun `saveRequestForPlacementCreatedEvent sends correct arguments to saveAndEmit`() {
       val id = UUID.randomUUID()
 
       val eventDetails = RequestForPlacementCreatedFactory().produce()
@@ -912,15 +970,14 @@ class Cas1DomainEventServiceTest {
 
       val domainEventServiceSpy = spyk(domainEventService)
 
-      every { domainEventServiceSpy.saveAndEmit(any(), any(), emit) } returns Unit
+      every { domainEventServiceSpy.saveAndEmit(any(), any()) } returns Unit
 
-      domainEventServiceSpy.saveRequestForPlacementCreatedEvent(domainEvent, emit)
+      domainEventServiceSpy.saveRequestForPlacementCreatedEvent(domainEvent)
 
       verify {
         domainEventServiceSpy.saveAndEmit(
           domainEvent = domainEvent,
           eventType = DomainEventType.APPROVED_PREMISES_REQUEST_FOR_PLACEMENT_CREATED,
-          emit,
         )
       }
     }

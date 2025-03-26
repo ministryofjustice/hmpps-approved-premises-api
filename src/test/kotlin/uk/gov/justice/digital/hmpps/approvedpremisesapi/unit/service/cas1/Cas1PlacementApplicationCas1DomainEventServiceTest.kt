@@ -105,7 +105,7 @@ class Cas1PlacementApplicationCas1DomainEventServiceTest {
       )
 
       val staffMember = staffUserDetails.toStaffMember()
-      every { domainEventService.saveRequestForPlacementCreatedEvent(any(), any()) } returns Unit
+      every { domainEventService.saveRequestForPlacementCreatedEvent(any()) } returns Unit
 
       service.placementApplicationSubmitted(placementApplication, USERNAME)
 
@@ -131,7 +131,6 @@ class Cas1PlacementApplicationCas1DomainEventServiceTest {
             assertThat(eventDetails.duration).isEqualTo(7)
             assertThat(eventDetails.requestForPlacementType).isEqualTo(expectedRequestForPlacementType)
           },
-          emit = false,
         )
       }
     }
