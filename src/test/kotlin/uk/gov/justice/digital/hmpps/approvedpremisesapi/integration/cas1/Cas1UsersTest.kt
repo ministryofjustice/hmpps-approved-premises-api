@@ -397,4 +397,62 @@ class Cas1UsersTest : InitialiseDatabasePerClassTestBase() {
       }
     }
   }
+
+  @Nested
+  inner class Cas1UserHeaders {
+
+    @Test
+    fun `Return CAS1 User Headers if CAS1 request and user has no roles`() {
+      val (user, jwt) = givenAUser()
+
+      val headers = webTestClient.get()
+        .uri("/applications")
+        .header("Authorization", "Bearer $jwt")
+        .header("X-Service-Name", ServiceName.approvedPremises.value)
+        .exchange()
+        .expectStatus()
+        .isOk
+        .returnResult(ApprovedPremisesUser::class.java)
+        .responseHeaders
+
+      assertThat(headers["X-CAS-User-ID"]!![0]).isEqualTo(user.id.toString())
+      assertThat(headers["X-CAS-User-Version"]!![0]).isEqualTo("993")
+    }
+
+    @Test
+    fun `Return CAS1 User Headers if CAS1 request and user roles`() {
+      val (user, jwt) = givenAUser(roles = listOf(UserRole.CAS1_REPORT_VIEWER))
+
+      val headers = webTestClient.get()
+        .uri("/applications")
+        .header("Authorization", "Bearer $jwt")
+        .header("X-Service-Name", ServiceName.approvedPremises.value)
+        .exchange()
+        .expectStatus()
+        .isOk
+        .returnResult(ApprovedPremisesUser::class.java)
+        .responseHeaders
+
+      assertThat(headers["X-CAS-User-ID"]!![0]).isEqualTo(user.id.toString())
+      assertThat(headers["X-CAS-User-Version"]!![0]).isEqualTo("1173003502")
+    }
+
+    @Test
+    fun `Don't return CAS1 User headers if not a CAS1 request`() {
+      val (_, jwt) = givenAUser()
+
+      val headers = webTestClient.get()
+        .uri("/applications")
+        .header("Authorization", "Bearer $jwt")
+        .header("X-Service-Name", ServiceName.temporaryAccommodation.value)
+        .exchange()
+        .expectStatus()
+        .isOk
+        .returnResult(ApprovedPremisesUser::class.java)
+        .responseHeaders
+
+      assertThat(headers.containsKey("X-CAS-User-ID")).isFalse()
+      assertThat(headers.containsKey("X-CAS-User-Version")).isFalse()
+    }
+  }
 }

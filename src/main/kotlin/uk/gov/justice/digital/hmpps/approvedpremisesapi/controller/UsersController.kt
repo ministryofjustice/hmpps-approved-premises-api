@@ -1,6 +1,5 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.controller
 
-import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
 import org.springframework.stereotype.Service
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.UsersApiDelegate
@@ -9,7 +8,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.SortDirection
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.User
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.UserQualification
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.UserRolesAndQualifications
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.UserSortField
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRole
@@ -18,7 +16,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.NotFoundProblem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.UserAccessService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.UserService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.UserTransformer
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.extractEntityFromCasResult
 import java.util.UUID
 
 @Service
@@ -27,11 +24,6 @@ class UsersController(
   private val userTransformer: UserTransformer,
   private val userAccessService: UserAccessService,
 ) : UsersApiDelegate {
-
-  override fun usersIdGet(id: UUID, xServiceName: ServiceName): ResponseEntity<User> = when (val getUserResponse = extractEntityFromCasResult(userService.updateUserFromDelius(id, xServiceName))) {
-    UserService.GetUserResponse.StaffRecordNotFound -> throw NotFoundProblem(id, "Staff")
-    is UserService.GetUserResponse.Success -> ResponseEntity(userTransformer.transformJpaToApi(getUserResponse.user, xServiceName), HttpStatus.OK)
-  }
 
   override fun usersGet(
     xServiceName: ServiceName,
@@ -110,36 +102,6 @@ class UsersController(
       metadata?.toHeaders(),
     ).body(
       users.map { resultTransformer(it) },
-    )
-  }
-
-  override fun usersIdPut(
-    xServiceName: ServiceName,
-    id: UUID,
-    userRolesAndQualifications: UserRolesAndQualifications,
-  ): ResponseEntity<User> {
-    if (!userAccessService.currentUserCanManageUsers(xServiceName)) {
-      throw ForbiddenProblem()
-    }
-
-    val userEntity = extractEntityFromCasResult(
-      userService.updateUser(
-        id = id,
-        roles = userRolesAndQualifications.roles,
-        qualifications = userRolesAndQualifications.qualifications,
-        cruManagementAreaOverrideId = null,
-      ),
-    )
-
-    return ResponseEntity(userTransformer.transformJpaToApi(userEntity, ServiceName.approvedPremises), HttpStatus.OK)
-  }
-
-  override fun usersIdDelete(id: UUID, xServiceName: ServiceName): ResponseEntity<Unit> {
-    if (!userAccessService.currentUserCanManageUsers(xServiceName)) {
-      throw ForbiddenProblem()
-    }
-    return ResponseEntity.ok(
-      userService.deleteUser(id),
     )
   }
 
