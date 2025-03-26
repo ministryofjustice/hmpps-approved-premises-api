@@ -18,7 +18,7 @@ generic-service:
   env:
     JAVA_OPTS: "-Xmx1000m"
     SPRING_PROFILES_ACTIVE: dev
-    APPLICATIONINSIGHTS_CONNECTION_STRING: "InstrumentationKey=$(APPINSIGHTS_INSTRUMENTATIONKEY)"
+    APPLICATIONINSIGHTS_CONNECTION_STRING: "APPLICATIONINSIGHTS_CONNECTION_STRING"
     APPLICATIONINSIGHTS_CONFIGURATION_FILE: applicationinsights.nonprod.json
     HMPPS_AUTH_URL: https://sign-in-dev.hmpps.service.justice.gov.uk/auth
     SERVICES_AP-DELIUS-CONTEXT-API_BASE-URL: https://approved-premises-and-delius-dev.hmpps.service.justice.gov.uk
