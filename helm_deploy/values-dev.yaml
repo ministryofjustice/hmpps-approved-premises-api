@@ -18,7 +18,6 @@ generic-service:
   env:
     JAVA_OPTS: "-Xmx1000m"
     SPRING_PROFILES_ACTIVE: dev
-    APPLICATIONINSIGHTS_CONNECTION_STRING: "APPLICATIONINSIGHTS_CONNECTION_STRING"
     APPLICATIONINSIGHTS_CONFIGURATION_FILE: applicationinsights.nonprod.json
     HMPPS_AUTH_URL: https://sign-in-dev.hmpps.service.justice.gov.uk/auth
     SERVICES_AP-DELIUS-CONTEXT-API_BASE-URL: https://approved-premises-and-delius-dev.hmpps.service.justice.gov.uk
@@ -117,6 +116,7 @@ generic-service:
     hmpps-domain-events-topic:
       HMPPS_SQS_TOPICS_DOMAINEVENTS_ARN: "topic_arn"
     hmpps-approved-premises-api:
+      APPLICATIONINSIGHTS_CONNECTION_STRING: "APPLICATIONINSIGHTS_CONNECTION_STRING"
       APPINSIGHTS_INSTRUMENTATIONKEY: "APPINSIGHTS_INSTRUMENTATIONKEY"
       NOTIFY_APIKEY: "NOTIFY_APIKEY"
       NOTIFY_GUESTLISTAPIKEY: "NOTIFY_GUESTLISTAPIKEY"
