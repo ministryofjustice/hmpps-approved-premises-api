@@ -305,16 +305,16 @@ class Cas1DomainEventService(
   private fun emit(
     domainEvent: DomainEventEntity,
   ) {
-    if (!emitDomainEventsEnabled) {
-      log.info("Not emitting SNS event for domain event because domain-events.cas1.emit-enabled is not enabled")
-      return
-    }
-
     val eventType = domainEvent.type
     val typeName = eventType.typeName
 
     if (!eventType.emittable) {
       sentryService.captureErrorMessage("An attempt was made to emit domain event ${domainEvent.id} of type $typeName which is not emittable")
+      return
+    }
+
+    if (!emitDomainEventsEnabled) {
+      log.info("Not emitting SNS event for domain event because domain-events.cas1.emit-enabled is not enabled")
       return
     }
 
