@@ -155,7 +155,7 @@ class Cas1ChangeRequestTest {
             .bodyValue(
               Cas1NewChangeRequest(
                 type = Cas1ChangeRequestType.APPEAL,
-                requestJson = "{test: 1}",
+                requestJson = "{}",
                 reasonId = changeRequestReason.id,
                 spaceBookingId = spaceBooking.id,
               ),
@@ -166,7 +166,7 @@ class Cas1ChangeRequestTest {
 
           val persistedChangeRequest = cas1ChangeRequestRepository.findAll()[0]
           assertThat(persistedChangeRequest.type).isEqualTo(ChangeRequestType.APPEAL)
-          assertThat(persistedChangeRequest.requestJson).isEqualTo("\"{test: 1}\"")
+          assertThat(persistedChangeRequest.requestJson).isEqualTo("{}")
           assertThat(persistedChangeRequest.requestReason).isEqualTo(changeRequestReason)
           assertThat(persistedChangeRequest.spaceBooking.id).isEqualTo(spaceBooking.id)
         }
@@ -195,7 +195,7 @@ class Cas1ChangeRequestTest {
             .bodyValue(
               Cas1NewChangeRequest(
                 type = Cas1ChangeRequestType.PLANNED_TRANSFER,
-                requestJson = "{test: 1}",
+                requestJson = "{}",
                 reasonId = changeRequestReason.id,
                 spaceBookingId = spaceBooking.id,
               ),
@@ -206,7 +206,7 @@ class Cas1ChangeRequestTest {
 
           val persistedChangeRequest = cas1ChangeRequestRepository.findAll()[0]
           assertThat(persistedChangeRequest.type).isEqualTo(ChangeRequestType.PLANNED_TRANSFER)
-          assertThat(persistedChangeRequest.requestJson).isEqualTo("\"{test: 1}\"")
+          assertThat(persistedChangeRequest.requestJson).isEqualTo("{}")
           assertThat(persistedChangeRequest.requestReason).isEqualTo(changeRequestReason)
           assertThat(persistedChangeRequest.spaceBooking.id).isEqualTo(spaceBooking.id)
         }
