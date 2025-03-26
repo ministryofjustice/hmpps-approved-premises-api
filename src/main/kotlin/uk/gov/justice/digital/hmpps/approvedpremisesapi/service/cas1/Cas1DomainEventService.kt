@@ -231,12 +231,10 @@ class Cas1DomainEventService(
   fun saveApplicationExpiredEvent(
     domainEvent: DomainEvent<ApplicationExpiredEnvelope>,
     triggerSource: TriggerSourceType,
-    emit: Boolean,
   ) = saveAndEmit(
     domainEvent = domainEvent,
     eventType = DomainEventType.APPROVED_PREMISES_APPLICATION_EXPIRED,
     triggerSource = triggerSource,
-    emit = emit,
   )
 
   @Transactional

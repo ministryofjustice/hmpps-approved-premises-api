@@ -211,6 +211,7 @@ enum class DomainEventType(
     Cas1EventType.applicationExpired.value,
     "An Approved Premises application has expired",
     Cas1TimelineEventType.applicationExpired,
+    emittable = false,
   ),
   APPROVED_PREMISES_BOOKING_MADE(
     DomainEventCas.CAS1,

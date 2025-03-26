@@ -812,16 +812,13 @@ class Cas1DomainEventServiceTest {
 
       every { domainEventServiceSpy.saveAndEmit(any(), any(), any(), any()) } returns Unit
 
-      val emit = false
-
-      domainEventServiceSpy.saveApplicationExpiredEvent(domainEvent, TriggerSourceType.SYSTEM, emit)
+      domainEventServiceSpy.saveApplicationExpiredEvent(domainEvent, TriggerSourceType.SYSTEM)
 
       verify {
         domainEventServiceSpy.saveAndEmit(
           domainEvent = domainEvent,
           eventType = DomainEventType.APPROVED_PREMISES_APPLICATION_EXPIRED,
           triggerSource = TriggerSourceType.SYSTEM,
-          emit = emit,
         )
       }
     }
