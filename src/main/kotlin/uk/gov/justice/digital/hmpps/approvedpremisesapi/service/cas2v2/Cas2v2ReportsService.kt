@@ -50,6 +50,7 @@ class Cas2v2ReportsService(
       ApplicationStatusUpdatesReportRow(
         eventId = row.getId(),
         applicationId = row.getApplicationId(),
+        applicationOrigin = row.getApplicationOrigin().toString(),
         personCrn = row.getPersonCrn(),
         personNoms = row.getPersonNoms(),
         newStatus = row.getNewStatus(),

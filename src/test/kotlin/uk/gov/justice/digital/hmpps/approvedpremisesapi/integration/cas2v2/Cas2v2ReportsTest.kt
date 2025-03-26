@@ -26,9 +26,9 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas2v2Applica
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DomainEventType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas2v2.Cas2v2ApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas2v2.Cas2v2UserEntity
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.model.cas2.ApplicationStatusUpdatesReportRow
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.model.cas2.SubmittedApplicationReportRow
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.model.cas2.UnsubmittedApplicationsReportRow
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.model.cas2v2.ApplicationStatusUpdatesReportRow
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomDateTimeBefore
 import java.io.ByteArrayInputStream
 import java.time.Instant
@@ -332,6 +332,27 @@ class Cas2v2ReportsTest : Cas2v2IntegrationTestBase() {
   inner class ApplicationStatusUpdates {
     @Test
     fun `streams spreadsheet of cas2v2 Cas2ApplicationStatusUpdatedEvents, last 12 months only`() {
+      // create applications and then
+
+      val applicationSchema = cas2v2ApplicationJsonSchemaEntityFactory.produceAndPersist {
+        withAddedAt(OffsetDateTime.now())
+        withId(UUID.randomUUID())
+      }
+
+      val user = cas2v2UserEntityFactory.produceAndPersist()
+      val application1 = cas2v2ApplicationEntityFactory.produceAndPersist {
+        withApplicationSchema(applicationSchema)
+        withCreatedByUser(user)
+      }
+      val application1ID = application1.id
+
+      val application2 = cas2v2ApplicationEntityFactory.produceAndPersist {
+        withApplicationSchema(applicationSchema)
+        withApplicationOrigin(ApplicationOrigin.courtBail)
+        withCreatedByUser(user)
+      }
+      val application2ID = application2.id
+
       val event1Id = UUID.randomUUID()
       val event2Id = UUID.randomUUID()
       val event3Id = UUID.randomUUID()
@@ -392,6 +413,7 @@ class Cas2v2ReportsTest : Cas2v2IntegrationTestBase() {
 
       val event1 = domainEventFactory.produceAndPersist {
         withId(event1Id)
+        withApplicationId(application1ID)
         withType(DomainEventType.CAS2_APPLICATION_STATUS_UPDATED)
         withOccurredAt(old.atOffset(ZoneOffset.ofHoursMinutes(0, 0)))
         withData(objectMapper.writeValueAsString(event1ToSave))
@@ -399,6 +421,7 @@ class Cas2v2ReportsTest : Cas2v2IntegrationTestBase() {
 
       val event2 = domainEventFactory.produceAndPersist {
         withId(event2Id)
+        withApplicationId(application2ID)
         withType(DomainEventType.CAS2_APPLICATION_STATUS_UPDATED)
         withOccurredAt(newer.atOffset(ZoneOffset.ofHoursMinutes(0, 0)))
         withData(objectMapper.writeValueAsString(event2ToSave))
@@ -417,6 +440,7 @@ class Cas2v2ReportsTest : Cas2v2IntegrationTestBase() {
         ApplicationStatusUpdatesReportRow(
           eventId = event2Id.toString(),
           applicationId = event2.applicationId.toString(),
+          applicationOrigin = ApplicationOrigin.courtBail.toString(),
           personCrn = event2Details.personReference.crn.toString(),
           personNoms = event2Details.personReference.noms,
           newStatus = event2Details.newStatus.name,
@@ -427,6 +451,7 @@ class Cas2v2ReportsTest : Cas2v2IntegrationTestBase() {
         ApplicationStatusUpdatesReportRow(
           eventId = event1Id.toString(),
           applicationId = event1.applicationId.toString(),
+          applicationOrigin = ApplicationOrigin.homeDetentionCurfew.toString(),
           personCrn = event1Details.personReference.crn.toString(),
           personNoms = event1Details.personReference.noms,
           newStatus = event1Details.newStatus.name,
