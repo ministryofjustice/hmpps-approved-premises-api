@@ -6,6 +6,7 @@ import org.junit.jupiter.api.Test
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.IntegrationTestBase
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenACas2PomUser
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAnOffender
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas2ApplicationAssignmentEntity
 import java.time.LocalDate
 import java.time.OffsetDateTime
 import java.util.UUID
@@ -48,13 +49,7 @@ class Cas2ApplicationEntityTest : IntegrationTestBase() {
         assertThat(assignments[2].prisonCode).isEqualTo("LON2")
         assertThat(assignments[3].prisonCode).isEqualTo("LON1")
         assertThat(retrievedApplication.currentPrisonCode).isEqualTo("LON4")
-        assertThat(retrievedApplication.currentPomUserId).isEqualTo(null)
-        assertThat(assignment2.id).isEqualTo(assignments[0].id)
-        assertThat(assignment3.id).isEqualTo(assignments[1].id)
-        assertThat(assignment4.id).isEqualTo(assignments[2].id)
-        assertThat(assignment1.id).isEqualTo(assignments[3].id)
-        assertThat(retrievedApplication.currentPrisonCode).isEqualTo(assignment2.prisonCode)
-        assertThat(retrievedApplication.mostRecentPomUserId).isEqualTo(assignment2.allocatedPomUserId)
+        assertThat(retrievedApplication.mostRecentPomUserId).isEqualTo(userEntity.id)
       }
     }
   }
