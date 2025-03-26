@@ -74,4 +74,6 @@ enum class UserPermission(val cas1ApiValue: ApprovedPremisesUserPermission?) {
 
   CAS1_APPEAL_CREATE(ApprovedPremisesUserPermission.appealCreate),
   CAS1_PLANNED_TRANSFER_CREATE(ApprovedPremisesUserPermission.plannedTransferCreate),
+  CAS1_APPEAL_ASSESS(ApprovedPremisesUserPermission.appealAssess),
+  CAS1_PLANNED_TRANSFER_ASSESS(ApprovedPremisesUserPermission.plannedTransferAssess),
 }

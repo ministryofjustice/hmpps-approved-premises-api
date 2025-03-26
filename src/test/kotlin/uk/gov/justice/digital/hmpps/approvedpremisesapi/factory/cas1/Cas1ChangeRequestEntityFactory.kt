@@ -10,6 +10,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementRequ
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas1.Cas1ChangeRequestEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas1.Cas1ChangeRequestReasonEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas1.Cas1ChangeRequestRejectionReasonEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas1.ChangeRequestDecision
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas1.ChangeRequestType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomInt
@@ -25,7 +26,7 @@ class Cas1ChangeRequestEntityFactory : Factory<Cas1ChangeRequestEntity> {
   private var requestReason = { Cas1ChangeRequestReasonEntityFactory().produce() }
   private var decisionJson = { null }
   private var decision: Yielded<ChangeRequestDecision?> = { ChangeRequestDecision.APPROVED }
-  private var rejectionReason = { null }
+  private var rejectionReason: Yielded<Cas1ChangeRequestRejectionReasonEntity?> = { null }
   private var decisionMadeByUser: Yielded<UserEntity?> = { UserEntityFactory().withDefaults().produce() }
   private var decisionMadeAt: Yielded<OffsetDateTime?> = { null }
   private var createdAt = { OffsetDateTime.now().minusDays(randomInt(0, 365).toLong()) }
@@ -57,6 +58,14 @@ class Cas1ChangeRequestEntityFactory : Factory<Cas1ChangeRequestEntity> {
 
   fun withDecision(decision: ChangeRequestDecision?) = apply {
     this.decision = { decision }
+  }
+
+  fun withDecisionMadeAt(decisionMadeAt: OffsetDateTime?) = apply {
+    this.decisionMadeAt = { decisionMadeAt }
+  }
+
+  fun withRejectionReason(rejectionReason: Cas1ChangeRequestRejectionReasonEntity?) = apply {
+    this.rejectionReason = { rejectionReason }
   }
 
   override fun produce(): Cas1ChangeRequestEntity {

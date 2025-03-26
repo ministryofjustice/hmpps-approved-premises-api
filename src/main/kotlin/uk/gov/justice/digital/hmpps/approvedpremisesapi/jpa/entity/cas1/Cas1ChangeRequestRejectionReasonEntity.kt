@@ -13,6 +13,8 @@ import java.util.UUID
 @Repository
 interface Cas1ChangeRequestRejectionReasonRepository : JpaRepository<Cas1ChangeRequestRejectionReasonEntity, UUID> {
   fun findByChangeRequestTypeAndArchivedIsFalse(type: ChangeRequestType): List<Cas1ChangeRequestRejectionReasonEntity>
+
+  fun findByIdAndArchivedIsFalse(id: UUID): Cas1ChangeRequestRejectionReasonEntity?
 }
 
 @Entity

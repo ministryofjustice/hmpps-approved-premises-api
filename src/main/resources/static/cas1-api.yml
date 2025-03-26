@@ -149,13 +149,7 @@ paths:
         required: true
       responses:
         200:
-          description: successfully retrieved change request
-          content:
-            'application/json':
-              schema:
-                type: array
-                items:
-                  $ref: 'cas1-schemas.yml#/components/schemas/Cas1ChangeRequest'
+          description: successfully rejected a change request
         401:
           $ref: '_shared.yml#/components/responses/401Response'
         403:

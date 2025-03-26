@@ -7,13 +7,16 @@ import jakarta.persistence.Enumerated
 import jakarta.persistence.FetchType
 import jakarta.persistence.Id
 import jakarta.persistence.JoinColumn
+import jakarta.persistence.LockModeType
 import jakarta.persistence.ManyToOne
 import jakarta.persistence.PreUpdate
 import jakarta.persistence.Table
 import jakarta.persistence.Version
+import org.hibernate.annotations.Immutable
 import org.hibernate.annotations.Type
 import org.springframework.data.domain.Pageable
 import org.springframework.data.jpa.repository.JpaRepository
+import org.springframework.data.jpa.repository.Lock
 import org.springframework.data.jpa.repository.Query
 import org.springframework.stereotype.Repository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas1SpaceBookingEntity
@@ -97,11 +100,11 @@ data class Cas1ChangeRequestEntity(
   var decision: ChangeRequestDecision?,
   @ManyToOne(fetch = FetchType.LAZY)
   @JoinColumn(name = "cas1_change_request_rejection_reason_id")
-  val rejectionReason: Cas1ChangeRequestRejectionReasonEntity?,
+  var rejectionReason: Cas1ChangeRequestRejectionReasonEntity?,
   @ManyToOne(fetch = FetchType.LAZY)
   @JoinColumn(name = "decision_made_by_user_id")
   val decisionMadeByUser: UserEntity?,
-  val decisionMadeAt: OffsetDateTime?,
+  var decisionMadeAt: OffsetDateTime?,
   val createdAt: OffsetDateTime,
   var updatedAt: OffsetDateTime,
   @Version
@@ -113,6 +116,21 @@ data class Cas1ChangeRequestEntity(
     updatedAt = OffsetDateTime.now()
   }
 }
+
+@Repository
+interface LockableCas1ChangeRequestRepository : JpaRepository<LockableCas1ChangeRequestEntity, UUID> {
+  @Query("select lcr from LockableCas1ChangeRequestEntity lcr where lcr.id = :id")
+  @Lock(LockModeType.PESSIMISTIC_WRITE)
+  fun acquirePessimisticLock(id: UUID): LockableCas1ChangeRequestEntity?
+}
+
+@Entity
+@Table(name = "cas1_change_requests")
+@Immutable
+class LockableCas1ChangeRequestEntity(
+  @Id
+  val id: UUID,
+)
 
 enum class ChangeRequestDecision {
   APPROVED,

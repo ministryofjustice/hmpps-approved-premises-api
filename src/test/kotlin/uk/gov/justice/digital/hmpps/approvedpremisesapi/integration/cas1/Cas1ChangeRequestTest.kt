@@ -9,6 +9,7 @@ import org.junit.jupiter.params.provider.EnumSource
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1ChangeRequestSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1ChangeRequestType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1NewChangeRequest
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1RejectChangeRequest
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.InitialiseDatabasePerClassTestBase
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.IntegrationTestBase
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenACas1Application
@@ -19,14 +20,18 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.given
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAUser
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAnOffender
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas1CruManagementAreaEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementRequestEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRole
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRole.CAS1_CHANGE_REQUEST_DEV
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas1.Cas1ChangeRequestEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas1.Cas1ChangeRequestRejectionReasonEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas1.ChangeRequestDecision
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas1.ChangeRequestType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.asCaseSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.bodyAsListOfObjects
 import java.time.LocalDate
+import java.time.LocalDateTime
+import java.time.ZoneOffset
 import java.util.UUID
 
 class Cas1ChangeRequestTest {
@@ -550,6 +555,171 @@ class Cas1ChangeRequestTest {
               Cas1ChangeRequestType.PLANNED_TRANSFER,
             )
         }
+    }
+  }
+
+  @Nested
+  inner class RejectChangeRequest : InitialiseDatabasePerClassTestBase() {
+
+    lateinit var cruManagementArea: Cas1CruManagementAreaEntity
+    lateinit var changeRequest: Cas1ChangeRequestEntity
+
+    lateinit var cruManagementArea2: Cas1CruManagementAreaEntity
+    lateinit var changeRequest1: Cas1ChangeRequestEntity
+
+    lateinit var placementRequest1: PlacementRequestEntity
+    lateinit var placementRequest2: PlacementRequestEntity
+
+    lateinit var extensionRejectionReason: Cas1ChangeRequestRejectionReasonEntity
+    lateinit var appealRejectionReason: Cas1ChangeRequestRejectionReasonEntity
+
+    @BeforeAll
+    fun setupChangeRequests() {
+      val user = givenAUser().first
+
+      cruManagementArea = givenACas1CruManagementArea()
+
+      placementRequest1 = givenAPlacementRequest(
+        createdByUser = user,
+        application = givenACas1Application(
+          createdByUser = user,
+          offender = givenAnOffender(
+            offenderDetailsConfigBlock = {
+              withFirstName("Allan")
+              withLastName("Banks")
+            },
+          ).first.asCaseSummary(),
+          cruManagementArea = cruManagementArea,
+          tier = "A1",
+        ),
+      ).first
+
+      changeRequest = givenACas1ChangeRequest(
+        type = ChangeRequestType.APPEAL,
+        decision = null,
+        spaceBooking = givenACas1SpaceBooking(
+          crn = placementRequest1.application.crn,
+          application = placementRequest1.application,
+          placementRequest = placementRequest1,
+          canonicalArrivalDate = LocalDate.of(2024, 6, 1),
+          canonicalDepartureDate = LocalDate.of(2024, 6, 15),
+        ),
+      )
+
+      cruManagementArea2 = givenACas1CruManagementArea()
+
+      placementRequest2 = givenAPlacementRequest(
+        createdByUser = user,
+        application = givenACas1Application(
+          createdByUser = user,
+          offender = givenAnOffender(
+            offenderDetailsConfigBlock = {
+              withFirstName("Roger")
+              withLastName("Moor")
+            },
+          ).first.asCaseSummary(),
+          cruManagementArea = cruManagementArea2,
+          tier = "A2",
+        ),
+      ).first
+
+      extensionRejectionReason = cas1ChangeRequestRejectionReasonEntityFactory
+        .produceAndPersist {
+          withChangeRequestType(ChangeRequestType.EXTENSION)
+        }
+
+      appealRejectionReason = cas1ChangeRequestRejectionReasonEntityFactory
+        .produceAndPersist {
+          withChangeRequestType(ChangeRequestType.APPEAL)
+        }
+
+      changeRequest1 = givenACas1ChangeRequest(
+        type = ChangeRequestType.EXTENSION,
+        decision = ChangeRequestDecision.REJECTED,
+        rejectReason = extensionRejectionReason,
+        decisionMadeAt = LocalDateTime.of(2025, 3, 1, 15, 30).atOffset(ZoneOffset.UTC),
+        spaceBooking = givenACas1SpaceBooking(
+          crn = placementRequest2.application.crn,
+          application = placementRequest2.application,
+          placementRequest = placementRequest2,
+          canonicalArrivalDate = LocalDate.of(2024, 3, 1),
+          canonicalDepartureDate = LocalDate.of(2024, 3, 10),
+        ),
+      )
+    }
+
+    @ParameterizedTest
+    @EnumSource(mode = EnumSource.Mode.EXCLUDE, names = ["CAS1_CHANGE_REQUEST_DEV", "CAS1_JANITOR"])
+    fun `Reject change request without a valid role returns 403`(role: UserRole) {
+      val (_, jwt) = givenAUser(roles = listOf(role))
+
+      webTestClient.patch()
+        .uri("/cas1/placement-request/${placementRequest1.id}/change-requests/${changeRequest.id}")
+        .header("Authorization", "Bearer $jwt")
+        .bodyValue(
+          Cas1RejectChangeRequest(
+            rejectionReasonId = appealRejectionReason.id,
+            decisionJson = emptyMap(),
+          ),
+        )
+        .exchange()
+        .expectStatus()
+        .isForbidden
+    }
+
+    @Test
+    fun `reject change request without JWT returns 401`() {
+      webTestClient.patch()
+        .uri("/cas1/placement-request/${placementRequest1.id}/change-requests/${changeRequest.id}")
+        .exchange()
+        .expectStatus()
+        .isUnauthorized
+    }
+
+    @Test
+    fun `return 200 when successfully reject change request`() {
+      val (_, jwt) = givenAUser(roles = listOf(CAS1_CHANGE_REQUEST_DEV))
+
+      val changeRequestBefore = cas1ChangeRequestRepository.findById(changeRequest.id).get()
+      assertThat(changeRequestBefore.rejectionReason).isNull()
+
+      webTestClient.patch()
+        .uri("/cas1/placement-request/${placementRequest1.id}/change-requests/${changeRequest.id}")
+        .header("Authorization", "Bearer $jwt")
+        .bodyValue(
+          Cas1RejectChangeRequest(
+            rejectionReasonId = appealRejectionReason.id,
+            decisionJson = emptyMap(),
+          ),
+        )
+        .exchange()
+        .expectStatus()
+        .isOk
+
+      val changeRequestAfter = cas1ChangeRequestRepository.findById(changeRequest.id).get()
+      assertThat(changeRequestAfter.rejectionReason).isNotNull()
+      assertThat(changeRequestAfter.rejectionReason?.changeRequestType).isEqualTo(ChangeRequestType.APPEAL)
+    }
+
+    @Test
+    fun `return 200 without update anything when change request already rejected`() {
+      val (_, jwt) = givenAUser(roles = listOf(CAS1_CHANGE_REQUEST_DEV))
+
+      webTestClient.patch()
+        .uri("/cas1/placement-request/${placementRequest2.id}/change-requests/${changeRequest1.id}")
+        .header("Authorization", "Bearer $jwt")
+        .bodyValue(
+          Cas1RejectChangeRequest(
+            rejectionReasonId = extensionRejectionReason.id,
+            decisionJson = emptyMap(),
+          ),
+        )
+        .exchange()
+        .expectStatus()
+        .isOk
+
+      val changeRequestAfter = cas1ChangeRequestRepository.findById(changeRequest1.id).get()
+      assertThat(changeRequestAfter.decisionMadeAt).isEqualTo(changeRequest1.decisionMadeAt)
     }
   }
 }
