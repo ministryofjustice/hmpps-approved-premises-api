@@ -237,111 +237,113 @@ class Cas2DomainEventListenerTest : IntegrationTestBase() {
       withAddedAt(OffsetDateTime.now())
       withId(UUID.randomUUID())
     }
-    givenACas2PomUser { userEntity, jwt ->
-      givenACas2Assessor { assessor, _ ->
-        givenAnOffender { offenderDetails, _ ->
-          val application = cas2ApplicationEntityFactory.produceAndPersist {
-            withApplicationSchema(applicationSchema)
-            withCreatedByUser(userEntity)
-            withSubmittedAt(OffsetDateTime.now())
-            withCrn(offenderDetails.otherIds.crn)
-            withCreatedAt(OffsetDateTime.now().minusDays(28))
-            withConditionalReleaseDate(LocalDate.now().plusDays(1))
-          }
-          val cas2StatusUpdateEntity = cas2StatusUpdateEntityFactory.produceAndPersist {
-            withApplication(application)
-            withLabel("Status Update")
-            withAssessor(assessor)
-          }
-          statusUpdateRepository.save(cas2StatusUpdateEntity)
+    givenACas2PomUser { oldUserEntity, _ ->
+      givenACas2PomUser { newUserEntity, _ ->
+        givenACas2Assessor { assessor, _ ->
+          givenAnOffender { offenderDetails, _ ->
+            val application = cas2ApplicationEntityFactory.produceAndPersist {
+              withApplicationSchema(applicationSchema)
+              withCreatedByUser(oldUserEntity)
+              withSubmittedAt(OffsetDateTime.now())
+              withCrn(offenderDetails.otherIds.crn)
+              withCreatedAt(OffsetDateTime.now().minusDays(28))
+              withConditionalReleaseDate(LocalDate.now().plusDays(1))
+            }
+            val cas2StatusUpdateEntity = cas2StatusUpdateEntityFactory.produceAndPersist {
+              withApplication(application)
+              withLabel("Status Update")
+              withAssessor(assessor)
+            }
+            statusUpdateRepository.save(cas2StatusUpdateEntity)
 
-          val oldPrisonCode = "LIV"
-          val newPrisonCode = "LON"
+            val oldPrisonCode = "LIV"
+            val newPrisonCode = "LON"
 
-          val pomAllocation = PomAllocation(Manager(userEntity.nomisStaffId), Prison(newPrisonCode))
-          val url = "/allocation/${application.nomsNumber}/primary_pom"
-          val detailUrl = managePomCasesBaseUrl + url
+            val pomAllocation = PomAllocation(Manager(newUserEntity.nomisStaffId), Prison(newPrisonCode))
+            val url = "/allocation/${application.nomsNumber}/primary_pom"
+            val detailUrl = managePomCasesBaseUrl + url
 
-          val olderApplicationAssignment = Cas2ApplicationAssignmentEntity(
-            id = UUID.randomUUID(),
-            application = application,
-            prisonCode = oldPrisonCode,
-            allocatedPomUserId = userEntity.id,
-            createdAt = occurredAt.toOffsetDateTime(),
-          )
-          val oldApplicationAssignment = Cas2ApplicationAssignmentEntity(
-            id = UUID.randomUUID(),
-            application = application,
-            prisonCode = newPrisonCode,
-            allocatedPomUserId = null,
-            createdAt = occurredAt.toOffsetDateTime(),
-          )
-
-          applicationAssignmentRepository.save(
-            oldApplicationAssignment,
-          )
-          applicationAssignmentRepository.save(
-            olderApplicationAssignment,
-          )
-
-          mockSuccessfulGetCallWithJsonResponse(
-            url = url,
-            responseBody = pomAllocation,
-          )
-
-          val newAgency =
-            Agency(agencyId = newPrisonCode, description = "HMS LONDON", agencyType = "prison")
-
-          mockSuccessfulGetCallWithJsonResponse(
-            url = "/api/agencies/${newAgency.agencyId}",
-            responseBody = newAgency,
-          )
-
-          val oldAgency =
-            Agency(agencyId = oldPrisonCode, description = "HMS LIVERPOOL", agencyType = "prison")
-
-          mockSuccessfulGetCallWithJsonResponse(
-            url = "/api/agencies/${oldAgency.agencyId}",
-            responseBody = oldAgency,
-          )
-
-          @SuppressWarnings("MaxLineLength")
-          val event =
-            "{\"eventType\":\"$eventType\",\"detailUrl\":\"$detailUrl\",\"occurredAt\":\"$occurredAt\",\"additionalInformation\": {\"categoriesChanged\": [\"LOCATION\"]},\"personReference\":{\"identifiers\":[{\"type\":\"NOMS\",\"value\":\"${application.nomsNumber}\"}]}}"
-          publishMessageToTopic(eventType, event)
-          await().until { applicationAssignmentRepository.count().toInt() == 3 }
-          val locations = applicationAssignmentRepository.findAll()
-          assert(locations.last().prisonCode == pomAllocation.prison.code)
-
-          verify(exactly = 1, timeout = 5000) {
-            emailNotificationService.sendEmail(
-              eq("referrals@nacrocas2.org.uk"),
-              eq("e36b226e-99f5-4d1f-83d3-12ef9a814a5b"),
-              eq(
-                mapOf(
-                  "nomsNumber" to application.nomsNumber,
-                  "receivingPrisonName" to newAgency.description,
-                  "link" to getLink(application.id),
-                ),
-              ),
-              any(),
+            val olderApplicationAssignment = Cas2ApplicationAssignmentEntity(
+              id = UUID.randomUUID(),
+              application = application,
+              prisonCode = oldPrisonCode,
+              allocatedPomUserId = oldUserEntity.id,
+              createdAt = occurredAt.toOffsetDateTime(),
             )
-          }
-
-          verify(exactly = 1, timeout = 5000) {
-            emailNotificationService.sendEmail(
-              eq(userEntity.email!!),
-              eq("289d4004-3c95-4c23-b0fa-9187d9da8eaf"),
-              eq(
-                mapOf(
-                  "nomsNumber" to application.nomsNumber,
-                  "transferringPrisonName" to oldAgency.description,
-                  "link" to getLink(application.id),
-                  "applicationStatus" to "Status Update",
-                ),
-              ),
-              any(),
+            val oldApplicationAssignment = Cas2ApplicationAssignmentEntity(
+              id = UUID.randomUUID(),
+              application = application,
+              prisonCode = newPrisonCode,
+              allocatedPomUserId = null,
+              createdAt = occurredAt.toOffsetDateTime(),
             )
+
+            applicationAssignmentRepository.save(
+              oldApplicationAssignment,
+            )
+            applicationAssignmentRepository.save(
+              olderApplicationAssignment,
+            )
+
+            mockSuccessfulGetCallWithJsonResponse(
+              url = url,
+              responseBody = pomAllocation,
+            )
+
+            val newAgency =
+              Agency(agencyId = newPrisonCode, description = "HMS LONDON", agencyType = "prison")
+
+            mockSuccessfulGetCallWithJsonResponse(
+              url = "/api/agencies/${newAgency.agencyId}",
+              responseBody = newAgency,
+            )
+
+            val oldAgency =
+              Agency(agencyId = oldPrisonCode, description = "HMS LIVERPOOL", agencyType = "prison")
+
+            mockSuccessfulGetCallWithJsonResponse(
+              url = "/api/agencies/${oldAgency.agencyId}",
+              responseBody = oldAgency,
+            )
+
+            @SuppressWarnings("MaxLineLength")
+            val event =
+              "{\"eventType\":\"$eventType\",\"detailUrl\":\"$detailUrl\",\"occurredAt\":\"$occurredAt\",\"additionalInformation\": {\"categoriesChanged\": [\"LOCATION\"]},\"personReference\":{\"identifiers\":[{\"type\":\"NOMS\",\"value\":\"${application.nomsNumber}\"}]}}"
+            publishMessageToTopic(eventType, event)
+            await().until { applicationAssignmentRepository.count().toInt() == 3 }
+            val locations = applicationAssignmentRepository.findAll()
+            assert(locations.last().prisonCode == pomAllocation.prison.code)
+
+            verify(exactly = 1, timeout = 5000) {
+              emailNotificationService.sendEmail(
+                eq("referrals@nacrocas2.org.uk"),
+                eq("e36b226e-99f5-4d1f-83d3-12ef9a814a5b"),
+                eq(
+                  mapOf(
+                    "nomsNumber" to application.nomsNumber,
+                    "receivingPrisonName" to newAgency.description,
+                    "link" to getLink(application.id),
+                  ),
+                ),
+                any(),
+              )
+            }
+
+            verify(exactly = 1, timeout = 5000) {
+              emailNotificationService.sendEmail(
+                eq(newUserEntity.email!!),
+                eq("289d4004-3c95-4c23-b0fa-9187d9da8eaf"),
+                eq(
+                  mapOf(
+                    "nomsNumber" to application.nomsNumber,
+                    "transferringPrisonName" to oldAgency.description,
+                    "link" to getLink(application.id),
+                    "applicationStatus" to "Status Update",
+                  ),
+                ),
+                any(),
+              )
+            }
           }
         }
       }
