@@ -12,7 +12,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.UpdateApplicat
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.UpdateCas2v2Application
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas2v2.Cas2v2ApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas2v2.Cas2v2ApplicationSummaryEntity
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas2v2.Cas2v2UserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.BadRequestProblem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.ConflictProblem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.ForbiddenProblem
@@ -73,14 +72,14 @@ class Cas2v2ApplicationController(
       )
 
     val application = extractEntityFromCasResult(applicationResult)
-    return ResponseEntity.ok(getPersonDetailAndTransform(application, user))
+    return ResponseEntity.ok(getPersonDetailAndTransform(application))
   }
 
   @Transactional
   override fun applicationsPost(body: NewCas2v2Application): ResponseEntity<Application> {
     val user = userService.getUserForRequest()
 
-    val personInfo = when (val cas2v2OffenderSearchResult = cas2v2OffenderService.getPersonByCrn(body.crn, user)) {
+    val personInfo = when (val cas2v2OffenderSearchResult = cas2v2OffenderService.getPersonByCrn(body.crn)) {
       is Cas2v2OffenderSearchResult.NotFound -> throw NotFoundProblem(body.crn, "Offender")
       is Cas2v2OffenderSearchResult.Forbidden -> throw ForbiddenProblem()
       is Cas2v2OffenderSearchResult.Unknown -> throw cas2v2OffenderSearchResult.throwable ?: BadRequestProblem(errorDetail = "Could not retrieve person info for Prison Number: ${body.crn}")
@@ -129,7 +128,7 @@ class Cas2v2ApplicationController(
     }
 
     val entity = extractEntityFromCasResult(applicationResult)
-    return ResponseEntity.ok(getPersonDetailAndTransform(entity, user))
+    return ResponseEntity.ok(getPersonDetailAndTransform(entity))
   }
 
   @Transactional
@@ -156,9 +155,8 @@ class Cas2v2ApplicationController(
   @SuppressWarnings("ThrowsCount")
   private fun getPersonDetailAndTransform(
     application: Cas2v2ApplicationEntity,
-    user: Cas2v2UserEntity,
   ): Application {
-    val personInfo = when (val cas2v2OffenderSearchResult = cas2v2OffenderService.getPersonByCrn(application.crn, user)) {
+    val personInfo = when (val cas2v2OffenderSearchResult = cas2v2OffenderService.getPersonByCrn(application.crn)) {
       is Cas2v2OffenderSearchResult.NotFound -> throw NotFoundProblem(application.crn, "Offender")
       is Cas2v2OffenderSearchResult.Forbidden -> throw ForbiddenProblem()
       is Cas2v2OffenderSearchResult.Unknown -> throw cas2v2OffenderSearchResult.throwable ?: BadRequestProblem(errorDetail = "Could not retrieve person info for Prison Number: ${application.crn}")

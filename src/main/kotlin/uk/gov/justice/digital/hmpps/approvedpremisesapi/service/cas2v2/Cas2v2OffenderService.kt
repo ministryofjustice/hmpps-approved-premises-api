@@ -8,8 +8,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.ApDeliusContextAp
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.ClientResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.PrisonsApiClient
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.ProbationOffenderSearchApiClient
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas2v2.Cas2v2UserEntity
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas2v2.Cas2v2UserType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.prisonsapi.InmateDetail
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.probationoffendersearchapi.ProbationOffenderDetail
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.AuthorisableActionResult
@@ -28,7 +26,7 @@ class Cas2v2OffenderService(
 
   private val log = LoggerFactory.getLogger(this::class.java)
 
-  fun getPersonByNomsNumber(nomsNumber: String, cas2v2User: Cas2v2UserEntity): Cas2v2OffenderSearchResult {
+  fun getPersonByNomsNumber(nomsNumber: String): Cas2v2OffenderSearchResult {
     fun logFailedResponse(probationResponse: ClientResult.Failure<List<ProbationOffenderDetail>>) = log.warn("Could not get inmate details for $nomsNumber", probationResponse.toException())
 
     val probationResponse = probationOffenderSearchApiClient.searchOffenderByNomsNumber(nomsNumber)
@@ -55,13 +53,7 @@ class Cas2v2OffenderService(
 
     val probationOffenderDetail = probationOffenderDetailList[0]
 
-    val exclusionRestriction = hasExclusionRestriction(
-      probationOffenderDetail.currentExclusion ?: false,
-      probationOffenderDetail.currentRestriction ?: true,
-      cas2v2User,
-    )
-
-    return when (exclusionRestriction) {
+    return when (probationOffenderDetail.currentRestriction) {
       false -> Cas2v2OffenderSearchResult.Success.Full(
         nomisIdOrCrn = nomsNumber,
         person = cas2v2PersonTransformer.transformProbationOffenderDetailAndInmateDetailToFullPerson(
@@ -121,7 +113,7 @@ class Cas2v2OffenderService(
     return AuthorisableActionResult.Success(inmateDetail)
   }
 
-  fun getPersonByCrn(crn: String, cas2v2User: Cas2v2UserEntity): Cas2v2OffenderSearchResult {
+  fun getPersonByCrn(crn: String): Cas2v2OffenderSearchResult {
     val caseSummariesByCrn = when (val result = apDeliusContextApiClient.getSummariesForCrns(listOf(crn))) {
       is ClientResult.Success -> result.body
       is ClientResult.Failure -> return Cas2v2OffenderSearchResult.NotFound(crn)
@@ -135,12 +127,7 @@ class Cas2v2OffenderService(
     val nomsNumber = caseSummary.nomsId
 
     if (nomsNumber.isNullOrEmpty()) {
-      val exclusionRestriction = hasExclusionRestriction(
-        caseSummary.currentExclusion,
-        caseSummary.currentRestriction,
-        cas2v2User,
-      )
-      return when (exclusionRestriction) {
+      return when (caseSummary.currentRestriction) {
         false -> Cas2v2OffenderSearchResult.Success.Full(
           nomisIdOrCrn = crn,
           person = cas2v2PersonTransformer.transformCaseSummaryToFullPerson(caseSummary),
@@ -149,21 +136,7 @@ class Cas2v2OffenderService(
       }
     }
 
-    return getPersonByNomsNumber(nomsNumber, cas2v2User)
-  }
-
-  private fun hasExclusionRestriction(
-    hasExclusion: Boolean,
-    hasRestriction: Boolean,
-    cas2v2User: Cas2v2UserEntity,
-  ): Boolean = when {
-    hasRestriction -> true
-    hasExclusion &&
-      cas2v2User.userType !in setOf(
-        Cas2v2UserType.NOMIS,
-        Cas2v2UserType.DELIUS,
-      ) -> true
-    else -> false
+    return getPersonByNomsNumber(nomsNumber)
   }
 }
 

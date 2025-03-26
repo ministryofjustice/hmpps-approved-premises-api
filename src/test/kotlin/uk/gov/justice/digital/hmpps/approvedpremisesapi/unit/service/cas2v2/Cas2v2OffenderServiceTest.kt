@@ -61,7 +61,7 @@ class Cas2v2OffenderServiceTest {
     fun `returns NotFound result when Probation Offender Search returns 404`() {
       every { mockProbationOffenderSearchClient.searchOffenderByNomsNumber(nomsNumber) } returns StatusCode(HttpMethod.POST, "/search", HttpStatus.NOT_FOUND, null)
 
-      assertThat(cas2v2OffenderService.getPersonByNomsNumber(nomsNumber, nomisUser) is Cas2v2OffenderSearchResult.NotFound).isTrue
+      assertThat(cas2v2OffenderService.getPersonByNomsNumber(nomsNumber) is Cas2v2OffenderSearchResult.NotFound).isTrue
     }
 
     @Test
@@ -71,7 +71,7 @@ class Cas2v2OffenderServiceTest {
         emptyList(),
       )
 
-      assertThat(cas2v2OffenderService.getPersonByNomsNumber(nomsNumber, nomisUser) is Cas2v2OffenderSearchResult.NotFound).isTrue
+      assertThat(cas2v2OffenderService.getPersonByNomsNumber(nomsNumber) is Cas2v2OffenderSearchResult.NotFound).isTrue
     }
 
     @Test
@@ -104,14 +104,14 @@ class Cas2v2OffenderServiceTest {
         body = inmateDetail,
       )
 
-      assertThat(cas2v2OffenderService.getPersonByNomsNumber(nomsNumber, nomisUser) is Cas2v2OffenderSearchResult.Success).isTrue
+      assertThat(cas2v2OffenderService.getPersonByNomsNumber(nomsNumber) is Cas2v2OffenderSearchResult.Success).isTrue
     }
 
     @Test
     fun `returns Unknown if Probation Offender Search responds with a 500`() {
       every { mockProbationOffenderSearchClient.searchOffenderByNomsNumber(nomsNumber) } returns StatusCode(HttpMethod.GET, "/search", HttpStatus.INTERNAL_SERVER_ERROR, null, true)
 
-      val result = cas2v2OffenderService.getPersonByNomsNumber(nomsNumber, nomisUser)
+      val result = cas2v2OffenderService.getPersonByNomsNumber(nomsNumber)
 
       assertThat(result is Cas2v2OffenderSearchResult.Unknown).isTrue
       result as Cas2v2OffenderSearchResult.Unknown
@@ -140,7 +140,7 @@ class Cas2v2OffenderServiceTest {
         null,
       )
 
-      val result = cas2v2OffenderService.getPersonByNomsNumber(nomsNumber, nomisUser)
+      val result = cas2v2OffenderService.getPersonByNomsNumber(nomsNumber)
 
       assertThat(result is Cas2v2OffenderSearchResult.NotFound).isTrue
     }
@@ -175,7 +175,7 @@ class Cas2v2OffenderServiceTest {
         body = inmateDetail,
       )
 
-      val result = cas2v2OffenderService.getPersonByNomsNumber(nomsNumber, nomisUser)
+      val result = cas2v2OffenderService.getPersonByNomsNumber(nomsNumber)
 
       assertThat(result is Cas2v2OffenderSearchResult.Success.Full).isTrue
       result as Cas2v2OffenderSearchResult.Success.Full
@@ -326,23 +326,13 @@ class Cas2v2OffenderServiceTest {
     }
 
     @Test
-    fun `Check a nomis user searching by crn cannot view an offender with a currentRestriction`() {
-      assertThat(cas2v2OffenderService.getPersonByCrn(crn, nomisUser) is Cas2v2OffenderSearchResult.Forbidden).isTrue
+    fun `Check searching by crn cannot view an offender with a currentRestriction`() {
+      assertThat(cas2v2OffenderService.getPersonByCrn(crn) is Cas2v2OffenderSearchResult.Forbidden).isTrue
     }
 
     @Test
-    fun `Check a nomis user searching by nomis cannot view an offender with a currentRestriction`() {
-      assertThat(cas2v2OffenderService.getPersonByNomsNumber(nomsNumber, nomisUser) is Cas2v2OffenderSearchResult.Forbidden).isTrue
-    }
-
-    @Test
-    fun `Check a delius user searching by crn cannot view an offender with a currentRestriction`() {
-      assertThat(cas2v2OffenderService.getPersonByCrn(crn, deliusUser) is Cas2v2OffenderSearchResult.Forbidden).isTrue
-    }
-
-    @Test
-    fun `Check a delius user searching by nomis cannot view an offender with a currentRestriction`() {
-      assertThat(cas2v2OffenderService.getPersonByNomsNumber(nomsNumber, deliusUser) is Cas2v2OffenderSearchResult.Forbidden).isTrue
+    fun `Check searching by nomis cannot view an offender with a currentRestriction`() {
+      assertThat(cas2v2OffenderService.getPersonByNomsNumber(nomsNumber) is Cas2v2OffenderSearchResult.Forbidden).isTrue
     }
   }
 
@@ -399,23 +389,13 @@ class Cas2v2OffenderServiceTest {
     }
 
     @Test
-    fun `Check a nomis user searching by crn can view an offender with a currentExclusion`() {
-      assertThat(cas2v2OffenderService.getPersonByCrn(crn, nomisUser) is Cas2v2OffenderSearchResult.Success.Full).isTrue
+    fun `Check searching by crn can view an offender with a currentExclusion`() {
+      assertThat(cas2v2OffenderService.getPersonByCrn(crn) is Cas2v2OffenderSearchResult.Success.Full).isTrue
     }
 
     @Test
-    fun `Check a nomis user searching by nomis can view an offender with a currentExclusion`() {
-      assertThat(cas2v2OffenderService.getPersonByNomsNumber(nomsNumber, nomisUser) is Cas2v2OffenderSearchResult.Success.Full).isTrue
-    }
-
-    @Test
-    fun `Check a delius user searching by crn can view an offender with a currentExclusion`() {
-      assertThat(cas2v2OffenderService.getPersonByCrn(crn, deliusUser) is Cas2v2OffenderSearchResult.Success.Full).isTrue
-    }
-
-    @Test
-    fun `Check a delius user searching by nomis can view an offender with a currentExclusion`() {
-      assertThat(cas2v2OffenderService.getPersonByNomsNumber(nomsNumber, deliusUser) is Cas2v2OffenderSearchResult.Success.Full).isTrue
+    fun `Check searching by nomis can view an offender with a currentExclusion`() {
+      assertThat(cas2v2OffenderService.getPersonByNomsNumber(nomsNumber) is Cas2v2OffenderSearchResult.Success.Full).isTrue
     }
   }
 }
