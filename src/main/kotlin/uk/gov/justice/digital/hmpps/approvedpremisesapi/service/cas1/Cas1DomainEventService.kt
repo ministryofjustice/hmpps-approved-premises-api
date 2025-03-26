@@ -251,10 +251,9 @@ class Cas1DomainEventService(
   )
 
   @Transactional
-  fun saveKeyWorkerAssignedEvent(domainEvent: DomainEvent<BookingKeyWorkerAssignedEnvelope>, emit: Boolean) = saveAndEmit(
+  fun saveKeyWorkerAssignedEvent(domainEvent: DomainEvent<BookingKeyWorkerAssignedEnvelope>) = saveAndEmit(
     domainEvent = domainEvent,
     eventType = DomainEventType.APPROVED_PREMISES_BOOKING_KEYWORKER_ASSIGNED,
-    emit = emit,
   )
 
   fun getAllDomainEventsForApplication(applicationId: UUID) = getAllDomainEventsById(applicationId = applicationId)

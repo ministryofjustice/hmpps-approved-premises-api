@@ -280,6 +280,7 @@ enum class DomainEventType(
     Cas1EventType.bookingKeyWorkerAssigned.value,
     "A keyworker has been assigned to the booking",
     Cas1TimelineEventType.bookingKeyworkerAssigned,
+    emittable = false,
   ),
   APPROVED_PREMISES_APPLICATION_WITHDRAWN(
     DomainEventCas.CAS1,

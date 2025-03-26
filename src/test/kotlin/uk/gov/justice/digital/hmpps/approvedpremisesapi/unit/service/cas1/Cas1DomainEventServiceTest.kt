@@ -740,9 +740,8 @@ class Cas1DomainEventServiceTest {
       }
     }
 
-    @ParameterizedTest
-    @ValueSource(booleans = [true, false])
-    fun `saveBookingKeyWorkerAssignedEvent sends correct arguments to saveAndEmit`(emit: Boolean) {
+    @Test
+    fun `saveBookingKeyWorkerAssignedEvent sends correct arguments to saveAndEmit`() {
       val id = UUID.randomUUID()
 
       val eventDetails = BookingKeyWorkerAssignedFactory().produce()
@@ -757,13 +756,12 @@ class Cas1DomainEventServiceTest {
 
       every { domainEventServiceSpy.saveAndEmit(any(), any(), any()) } returns Unit
 
-      domainEventServiceSpy.saveKeyWorkerAssignedEvent(domainEvent, emit)
+      domainEventServiceSpy.saveKeyWorkerAssignedEvent(domainEvent)
 
       verify {
         domainEventServiceSpy.saveAndEmit(
           domainEvent = domainEvent,
           eventType = DomainEventType.APPROVED_PREMISES_BOOKING_KEYWORKER_ASSIGNED,
-          emit,
         )
       }
     }
