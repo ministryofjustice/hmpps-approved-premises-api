@@ -7318,6 +7318,7 @@ components:
           type: string
           format: date
         endDate:
+          description: This date is inclusive. The bed will be unavailable for the whole of the day
           type: string
           format: date
         reason:
@@ -7346,6 +7347,7 @@ components:
           type: string
           format: date
         endDate:
+          description: This date is inclusive. The bed will be unavailable for the whole of the day
           type: string
           format: date
         bed:
