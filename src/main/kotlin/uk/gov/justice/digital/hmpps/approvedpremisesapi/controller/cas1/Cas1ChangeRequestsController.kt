@@ -13,7 +13,9 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1RejectChan
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.SortDirection
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserPermission
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserPermission.CAS1_CHANGE_REQUEST_LIST
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas1.ChangeRequestType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.BadRequestProblem
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.NotFoundProblem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.OffenderService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.UserAccessService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.UserService
@@ -81,13 +83,28 @@ class Cas1ChangeRequestsController(
   }
 
   override fun get(
-    placementRequestId: java.util.UUID,
-    changeRequestId: java.util.UUID,
+    placementRequestId: UUID,
+    changeRequestId: UUID,
   ): ResponseEntity<List<Cas1ChangeRequest>> = super.get(placementRequestId, changeRequestId)
 
   override fun reject(
-    placementRequestId: java.util.UUID,
-    changeRequestId: java.util.UUID,
+    placementRequestId: UUID,
+    changeRequestId: UUID,
     cas1RejectChangeRequest: Cas1RejectChangeRequest,
-  ): ResponseEntity<List<Cas1ChangeRequest>> = super.reject(placementRequestId, changeRequestId, cas1RejectChangeRequest)
+  ): ResponseEntity<Unit> {
+    val changeRequest = cas1ChangeRequestService.getChangeRequest(changeRequestId)
+      ?: throw NotFoundProblem(changeRequestId, "ChangeRequest")
+
+    when (changeRequest.type) {
+      ChangeRequestType.APPEAL -> userAccessService.ensureCurrentUserHasPermission(UserPermission.CAS1_APPEAL_ASSESS)
+      ChangeRequestType.EXTENSION -> userAccessService.ensureCurrentUserHasPermission(UserPermission.CAS1_PLANNED_TRANSFER_ASSESS)
+      ChangeRequestType.PLANNED_TRANSFER -> throw BadRequestProblem(errorDetail = "Change request type is not ${Cas1ChangeRequestType.PLANNED_TRANSFER} or ${Cas1ChangeRequestType.APPEAL}")
+    }
+
+    val result = cas1ChangeRequestService.rejectChangeRequest(placementRequestId, changeRequestId, cas1RejectChangeRequest)
+
+    ensureEntityFromCasResultIsSuccess(result)
+
+    return ResponseEntity(HttpStatus.OK)
+  }
 }

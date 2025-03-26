@@ -7,15 +7,20 @@ import org.springframework.stereotype.Service
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1ChangeRequestSortField
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1ChangeRequestType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1NewChangeRequest
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1RejectChangeRequest
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas1SpaceBookingRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementRequestRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas1.Cas1ChangeRequestEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas1.Cas1ChangeRequestReasonRepository
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas1.Cas1ChangeRequestRejectionReasonRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas1.Cas1ChangeRequestRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas1.Cas1ChangeRequestRepository.FindOpenChangeRequestResult
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas1.ChangeRequestDecision
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas1.ChangeRequestType
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas1.LockableCas1ChangeRequestRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.validatedCasResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.CasResult
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.CasResult.Success
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.PageCriteria
 import java.time.OffsetDateTime
 import java.util.UUID
@@ -27,6 +32,8 @@ class Cas1ChangeRequestService(
   private val cas1ChangeRequestReasonRepository: Cas1ChangeRequestReasonRepository,
   private val objectMapper: ObjectMapper,
   private val cas1SpaceBookingRepository: Cas1SpaceBookingRepository,
+  private val lockableCas1ChangeRequestEntityRepository: LockableCas1ChangeRequestRepository,
+  private val cas1ChangeRequestRejectionReasonRepository: Cas1ChangeRequestRejectionReasonRepository,
 ) {
   @Transactional
   fun createChangeRequest(placementRequestId: UUID, cas1NewChangeRequest: Cas1NewChangeRequest): CasResult<Unit> = validatedCasResult {
@@ -82,4 +89,38 @@ class Cas1ChangeRequestService(
       },
     ),
   )
+
+  @Transactional
+  fun rejectChangeRequest(
+    placementRequestId: UUID,
+    changeRequestId: UUID,
+    cas1RejectChangeRequest: Cas1RejectChangeRequest,
+  ): CasResult<Unit> = validatedCasResult {
+    lockableCas1ChangeRequestEntityRepository.acquirePessimisticLock(changeRequestId)
+
+    val changeRequestWithLock = getChangeRequest(changeRequestId)!!
+
+    if (changeRequestWithLock.placementRequest.id != placementRequestId) {
+      return CasResult.GeneralValidationError("The change request does not belong to the specified placement request")
+    }
+
+    if (changeRequestWithLock.decision != null) {
+      return if (changeRequestWithLock.decision == ChangeRequestDecision.REJECTED) {
+        Success(Unit)
+      } else {
+        CasResult.GeneralValidationError("A decision has already been made for the change request")
+      }
+    }
+
+    val changeRequestRejectReason = cas1ChangeRequestRejectionReasonRepository.findByIdAndArchivedIsFalse(cas1RejectChangeRequest.rejectionReasonId)
+      ?: return CasResult.GeneralValidationError("The change request reject reason not found")
+
+    changeRequestWithLock.rejectionReason = changeRequestRejectReason
+    changeRequestWithLock.decisionMadeAt = OffsetDateTime.now()
+    cas1ChangeRequestRepository.saveAndFlush(changeRequestWithLock)
+
+    return Success(Unit)
+  }
+
+  fun getChangeRequest(changeRequestId: UUID): Cas1ChangeRequestEntity? = cas1ChangeRequestRepository.findByIdOrNull(changeRequestId)
 }
