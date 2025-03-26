@@ -81,14 +81,14 @@ class Cas2AllocationChangedServiceTest {
     every { applicationService.findMostRecentApplication(eq(nomsNumber)) } returns application
     every { applicationRepository.save(any()) } answers { it.invocation.args[0] as Cas2ApplicationEntity }
     every { nomisUserRepository.findByNomisStaffId(eq(pomAllocation.manager.code)) } returns user
-    every { cas2EmailService.sendAllocationChangedEmails(any(), eq(nomsNumber), any(), any()) } returns Unit
+    every { cas2EmailService.sendAllocationChangedEmails(any(), any(), any()) } returns Unit
 
     allocationChangedService.process(allocationEvent)
 
     verify(exactly = 1) { managePomCasesClient.getPomAllocation(any()) }
     verify(exactly = 1) { applicationService.findMostRecentApplication(eq(nomsNumber)) }
     verify(exactly = 1) { nomisUserRepository.findByNomisStaffId(eq(pomAllocation.manager.code)) }
-    verify(exactly = 1) { cas2EmailService.sendAllocationChangedEmails(any(), eq(nomsNumber), any(), any()) }
+    verify(exactly = 1) { cas2EmailService.sendAllocationChangedEmails(any(), any(), any()) }
     verify(exactly = 1) { applicationRepository.save(any()) }
   }
 

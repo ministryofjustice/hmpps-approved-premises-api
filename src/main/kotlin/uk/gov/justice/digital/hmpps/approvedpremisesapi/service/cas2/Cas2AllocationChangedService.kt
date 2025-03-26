@@ -50,7 +50,7 @@ class Cas2AllocationChangedService(
             )
             applicationRepository.save(application)
 
-            emailService.sendAllocationChangedEmails(allocatedUser, nomsNumber, application, pomAllocation.prison.code)
+            emailService.sendAllocationChangedEmails(application, allocatedUser, pomAllocation.prison.code)
           }
         }
 

@@ -4,19 +4,10 @@ import io.mockk.every
 import io.mockk.junit5.MockKExtension
 import io.mockk.mockk
 import io.mockk.verify
-import jakarta.persistence.EntityNotFoundException
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
 import org.junit.jupiter.api.extension.ExtendWith
-import org.springframework.http.HttpMethod
-import org.springframework.http.HttpStatus
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.ClientResult
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.Manager
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.PomAllocation
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.Prison
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.Prisoner
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.PrisonsApiClient
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.config.NotifyConfig
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.Cas2ApplicationEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.Cas2StatusUpdateEntityFactory
@@ -26,7 +17,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas2StatusUpd
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.NomisUserRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.OffenderManagementUnitEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.OffenderManagementUnitRepository
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.prisonsapi.Agency
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.EmailNotificationService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas2.Cas2EmailService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.UrlTemplate
@@ -40,7 +30,6 @@ class Cas2EmailServiceTest {
   private val notifyConfig = mockk<NotifyConfig>()
   private val emailNotificationService = mockk<EmailNotificationService>()
   private val nomisUserRepository = mockk<NomisUserRepository>()
-  private val prisonsApiClient = mockk<PrisonsApiClient>()
   private val statusUpdateRepository = mockk<Cas2StatusUpdateRepository>()
   private val offenderManagementUnitRepository = mockk<OffenderManagementUnitRepository>()
   private val applicationUrlTemplate = UrlTemplate("/applications/#id/overview").toString()
@@ -50,16 +39,16 @@ class Cas2EmailServiceTest {
     emailNotificationService,
     notifyConfig,
     nomisUserRepository,
-    prisonsApiClient,
     statusUpdateRepository,
     offenderManagementUnitRepository,
     applicationUrlTemplate,
     nacroEmail,
   )
+
   private val newPrisonCode = "LON"
   private val oldPrisonCode = "LIV"
-
-  private val prisoner = Prisoner(prisonId = newPrisonCode, prisonName = "HMS LONDON")
+  private val oldOmu = OffenderManagementUnitEntity(UUID.randomUUID(), oldPrisonCode, "HMS LIVERPOOL", "old@digital.justice.gov")
+  private val newOmu = OffenderManagementUnitEntity(UUID.randomUUID(), newPrisonCode, "HMS LONDON", "new@digital.justice.gov")
   private val nomsNumber = "NOMSABC"
   private val templateId = "SOME ID"
   private val oldUser = NomisUserEntityFactory().produce()
@@ -68,7 +57,6 @@ class Cas2EmailServiceTest {
   private val application =
     Cas2ApplicationEntityFactory().withNomsNumber(nomsNumber)
       .withCreatedByUser(oldUser).produce()
-  private val pomAllocation = PomAllocation(Manager(newUser.nomisStaffId), Prison(newPrisonCode))
 
   private val link = applicationUrlTemplate.replace("#id", application.id.toString())
   private val applicationAssignmentOlder = Cas2ApplicationAssignmentEntity(
@@ -92,13 +80,6 @@ class Cas2EmailServiceTest {
     createdAt = OffsetDateTime.now(),
     allocatedPomUserId = newUser.id,
   )
-  private val oldAgency =
-    Agency(agencyId = oldPrisonCode, description = "HMS LIVERPOOL", agencyType = "prison")
-  private val newAgency =
-    Agency(agencyId = newPrisonCode, description = prisoner.prisonName, agencyType = "prison")
-
-  private val oldOmuEmail = OffenderManagementUnitEntity(UUID.randomUUID(), oldPrisonCode, "old@digital.justice.gov")
-  private val newOmuEmail = OffenderManagementUnitEntity(UUID.randomUUID(), newPrisonCode, "new@digital.justice.gov")
 
   private val cas2StatusUpdateEntity = Cas2StatusUpdateEntityFactory()
     .withApplication(application)
@@ -114,14 +95,8 @@ class Cas2EmailServiceTest {
     every { statusUpdateRepository.findFirstByApplicationIdOrderByCreatedAtDesc(application.id) } returns cas2StatusUpdateEntity
     every { notifyConfig.templates.cas2ToNacroApplicationTransferredToAnotherPom } returns templateId
     every { notifyConfig.templates.cas2ToReceivingPomApplicationTransferredToAnotherPom } returns templateId
-    every { prisonsApiClient.getAgencyDetails(eq(oldAgency.agencyId)) } returns ClientResult.Success(
-      HttpStatus.OK,
-      oldAgency,
-    )
-    every { prisonsApiClient.getAgencyDetails(eq(newAgency.agencyId)) } returns ClientResult.Success(
-      HttpStatus.OK,
-      newAgency,
-    )
+    every { offenderManagementUnitRepository.findByPrisonCode(eq(oldPrisonCode)) } returns oldOmu
+    every { offenderManagementUnitRepository.findByPrisonCode(eq(newPrisonCode)) } returns newOmu
     every {
       emailNotificationService.sendCas2Email(
         eq(newUser.email!!),
@@ -129,7 +104,7 @@ class Cas2EmailServiceTest {
         eq(
           mapOf(
             "nomsNumber" to nomsNumber,
-            "transferringPrisonName" to oldAgency.description,
+            "transferringPrisonName" to oldOmu.prisonName,
             "link" to link,
             "applicationStatus" to cas2StatusUpdateEntity.label,
           ),
@@ -143,97 +118,78 @@ class Cas2EmailServiceTest {
         eq(
           mapOf(
             "nomsNumber" to nomsNumber,
-            "receivingPrisonName" to newAgency.description,
+            "receivingPrisonName" to newOmu.prisonName,
             "link" to link,
           ),
         ),
       )
     } returns Unit
 
-    emailService.sendAllocationChangedEmails(newUser, nomsNumber, application, pomAllocation.prison.code)
+    emailService.sendAllocationChangedEmails(application, newUser, newPrisonCode)
 
-    verify(exactly = 1) { prisonsApiClient.getAgencyDetails(eq(oldAgency.agencyId)) }
-    verify(exactly = 1) { prisonsApiClient.getAgencyDetails(eq(newAgency.agencyId)) }
-    verify(exactly = 1) { statusUpdateRepository.findFirstByApplicationIdOrderByCreatedAtDesc(application.id) }
     verify(exactly = 2) { emailNotificationService.sendCas2Email(any(), any(), any()) }
   }
 
   @Test
-  fun `do not send allocation changed emails as no matching status update found and throw error`() {
+  fun `do not send allocation changed emails and throw error as no application status found`() {
     application.applicationAssignments.add(applicationAssignmentNew)
     application.applicationAssignments.add(applicationAssignmentOld)
     application.applicationAssignments.add(applicationAssignmentOlder)
 
+    every { offenderManagementUnitRepository.findByPrisonCode(eq(oldPrisonCode)) } returns oldOmu
+    every { offenderManagementUnitRepository.findByPrisonCode(eq(newPrisonCode)) } returns newOmu
     every { statusUpdateRepository.findFirstByApplicationIdOrderByCreatedAtDesc(application.id) } returns null
-    every { emailNotificationService.sendCas2Email(any(), any(), any()) } returns Unit
-    every { prisonsApiClient.getAgencyDetails(eq(oldAgency.agencyId)) } returns ClientResult.Success(
-      HttpStatus.OK,
-      oldAgency,
-    )
-    every { prisonsApiClient.getAgencyDetails(eq(newAgency.agencyId)) } returns ClientResult.Success(
-      HttpStatus.OK,
-      newAgency,
-    )
 
-    assertThrows<EntityNotFoundException> { emailService.sendAllocationChangedEmails(newUser, nomsNumber, application, pomAllocation.prison.code) }
-
-    verify(exactly = 1) { prisonsApiClient.getAgencyDetails(eq(oldAgency.agencyId)) }
-    verify(exactly = 1) { prisonsApiClient.getAgencyDetails(eq(newAgency.agencyId)) }
-    verify(exactly = 1) { statusUpdateRepository.findFirstByApplicationIdOrderByCreatedAtDesc(application.id) }
-    verify(exactly = 0) { emailNotificationService.sendCas2Email(any(), any(), any()) }
+    val exception = assertThrows<IllegalStateException> { emailService.sendAllocationChangedEmails(application, newUser, newPrisonCode) }
+    assertThat(exception.message).isEqualTo("StatusUpdate for ${application.id} not found")
   }
 
   @Test
-  fun `do not send allocation changed emails as no agency found for old Prison Id`() {
+  fun `do not send allocation changed emails and throw error as new omu not found`() {
     application.applicationAssignments.add(applicationAssignmentNew)
     application.applicationAssignments.add(applicationAssignmentOld)
     application.applicationAssignments.add(applicationAssignmentOlder)
 
-    every { prisonsApiClient.getAgencyDetails(eq(oldAgency.agencyId)) } returns ClientResult.Failure.StatusCode(HttpMethod.GET, "/api/agencies/${oldAgency.agencyId}", HttpStatus.NOT_FOUND, null)
-    every { emailNotificationService.sendCas2Email(any(), any(), any()) } returns Unit
+    every { offenderManagementUnitRepository.findByPrisonCode(eq(oldPrisonCode)) } returns oldOmu
+    every { offenderManagementUnitRepository.findByPrisonCode(eq(newPrisonCode)) } returns null
 
-    emailService.sendAllocationChangedEmails(newUser, nomsNumber, application, pomAllocation.prison.code)
-
-    verify(exactly = 1) { prisonsApiClient.getAgencyDetails(eq(oldAgency.agencyId)) }
-    verify(exactly = 0) { emailNotificationService.sendCas2Email(any(), any(), any()) }
+    val exception = assertThrows<IllegalStateException> { emailService.sendAllocationChangedEmails(application, newUser, newPrisonCode) }
+    assertThat(exception.message).isEqualTo("No OMU found for new prison code $newPrisonCode.")
   }
 
   @Test
-  fun `do not send allocation changed emails as no agency found for new Prison Id`() {
+  fun `do not send allocation changed emails and throw error as old omu not found`() {
     application.applicationAssignments.add(applicationAssignmentNew)
     application.applicationAssignments.add(applicationAssignmentOld)
     application.applicationAssignments.add(applicationAssignmentOlder)
 
-    every { prisonsApiClient.getAgencyDetails(eq(newAgency.agencyId)) } returns ClientResult.Failure.StatusCode(HttpMethod.GET, "/api/agencies/${newAgency.agencyId}", HttpStatus.NOT_FOUND, null)
-    every { prisonsApiClient.getAgencyDetails(eq(oldAgency.agencyId)) } returns ClientResult.Success(
-      HttpStatus.OK,
-      oldAgency,
-    )
-    every { emailNotificationService.sendCas2Email(any(), any(), any()) } returns Unit
+    every { offenderManagementUnitRepository.findByPrisonCode(eq(oldPrisonCode)) } returns null
 
-    emailService.sendAllocationChangedEmails(newUser, nomsNumber, application, pomAllocation.prison.code)
+    val exception = assertThrows<IllegalStateException> { emailService.sendAllocationChangedEmails(application, newUser, newPrisonCode) }
+    assertThat(exception.message).isEqualTo("No OMU found for old prison code $oldPrisonCode.")
+  }
 
-    verify(exactly = 1) { prisonsApiClient.getAgencyDetails(eq(oldAgency.agencyId)) }
-    verify(exactly = 1) { prisonsApiClient.getAgencyDetails(eq(newAgency.agencyId)) }
-    verify(exactly = 0) { emailNotificationService.sendCas2Email(any(), any(), any()) }
+  @Test
+  fun `do not send allocation changed emails and throw error as old prison code not found`() {
+    application.applicationAssignments.add(applicationAssignmentNew)
+    application.applicationAssignments.add(applicationAssignmentOld)
+
+    val exception = assertThrows<IllegalStateException> { emailService.sendAllocationChangedEmails(application, newUser, newPrisonCode) }
+    assertThat(exception.message).isEqualTo("Old prison code not found.")
   }
 
   @Test
   fun `send location changed emails`() {
     application.applicationAssignments.add(applicationAssignmentOld)
     application.applicationAssignments.add(applicationAssignmentOlder)
-    every { offenderManagementUnitRepository.findByPrisonCode(newPrisonCode) } returns newOmuEmail
-    every { offenderManagementUnitRepository.findByPrisonCode(oldPrisonCode) } returns oldOmuEmail
+    every { offenderManagementUnitRepository.findByPrisonCode(newPrisonCode) } returns newOmu
+    every { offenderManagementUnitRepository.findByPrisonCode(oldPrisonCode) } returns oldOmu
     every { statusUpdateRepository.findFirstByApplicationIdOrderByCreatedAtDesc(application.id) } returns cas2StatusUpdateEntity
     every { notifyConfig.templates.cas2ToTransferringPomApplicationTransferredToAnotherPrison } returns templateId
     every { notifyConfig.templates.cas2ToTransferringPomUnitApplicationTransferredToAnotherPrison } returns templateId
     every { notifyConfig.templates.cas2ToReceivingPomUnitApplicationTransferredToAnotherPrison } returns templateId
     every { notifyConfig.templates.cas2ToNacroApplicationTransferredToAnotherPrison } returns templateId
     every { nomisUserRepository.findById(eq(oldUser.id)) } returns Optional.of(oldUser)
-    every { prisonsApiClient.getAgencyDetails(eq(oldAgency.agencyId)) } returns ClientResult.Success(
-      HttpStatus.OK,
-      oldAgency,
-    )
 
     every {
       emailNotificationService.sendCas2Email(
@@ -242,31 +198,31 @@ class Cas2EmailServiceTest {
         eq(
           mapOf(
             "nomsNumber" to nomsNumber,
-            "receivingPrisonName" to prisoner.prisonName,
+            "receivingPrisonName" to newOmu.prisonName,
           ),
         ),
       )
     } returns Unit
     every {
       emailNotificationService.sendCas2Email(
-        eq(oldOmuEmail.email),
+        eq(oldOmu.email),
         eq(templateId),
         eq(
           mapOf(
             "nomsNumber" to nomsNumber,
-            "receivingPrisonName" to prisoner.prisonName,
+            "receivingPrisonName" to newOmu.prisonName,
           ),
         ),
       )
     } returns Unit
     every {
       emailNotificationService.sendCas2Email(
-        eq(newOmuEmail.email),
+        eq(newOmu.email),
         eq(templateId),
         eq(
           mapOf(
             "nomsNumber" to nomsNumber,
-            "transferringPrisonName" to oldAgency.description,
+            "transferringPrisonName" to oldOmu.prisonName,
             "link" to link,
             "applicationStatus" to cas2StatusUpdateEntity.label,
           ),
@@ -280,74 +236,74 @@ class Cas2EmailServiceTest {
         eq(
           mapOf(
             "nomsNumber" to nomsNumber,
-            "receivingPrisonName" to prisoner.prisonName,
-            "transferringPrisonName" to oldAgency.description,
+            "receivingPrisonName" to newOmu.prisonName,
+            "transferringPrisonName" to oldOmu.prisonName,
             "link" to link,
           ),
         ),
       )
     } returns Unit
 
-    emailService.sendLocationChangedEmails(application, oldUser.id, nomsNumber, prisoner)
+    emailService.sendLocationChangedEmails(application, oldUser.id, newPrisonCode)
 
-    verify(exactly = 1) { nomisUserRepository.findById(eq(oldUser.id)) }
-    verify(exactly = 1) { prisonsApiClient.getAgencyDetails(eq(oldAgency.agencyId)) }
     verify(exactly = 4) { emailNotificationService.sendCas2Email(any(), any(), any()) }
-    verify(exactly = 1) { statusUpdateRepository.findFirstByApplicationIdOrderByCreatedAtDesc(application.id) }
-    verify(exactly = 2) { offenderManagementUnitRepository.findByPrisonCode(any()) }
   }
 
   @Test
-  fun `do not send location changed emails as no matching status update found and throw error`() {
+  fun `do not send location changed emails as old prison code not found`() {
+    application.applicationAssignments.add(applicationAssignmentOld)
+
+    val exception = assertThrows<IllegalStateException> { emailService.sendLocationChangedEmails(application, oldUser.id, newPrisonCode) }
+    assertThat(exception.message).isEqualTo("Old prison code not found.")
+  }
+
+  @Test
+  fun `do not send location changed emails and throw error as no application status found`() {
     application.applicationAssignments.add(applicationAssignmentOld)
     application.applicationAssignments.add(applicationAssignmentOlder)
-    every { offenderManagementUnitRepository.findByPrisonCode(newPrisonCode) } returns newOmuEmail
-    every { offenderManagementUnitRepository.findByPrisonCode(oldPrisonCode) } returns oldOmuEmail
+
+    every { offenderManagementUnitRepository.findByPrisonCode(eq(oldPrisonCode)) } returns oldOmu
+    every { offenderManagementUnitRepository.findByPrisonCode(eq(newPrisonCode)) } returns newOmu
     every { statusUpdateRepository.findFirstByApplicationIdOrderByCreatedAtDesc(application.id) } returns null
     every { nomisUserRepository.findById(eq(oldUser.id)) } returns Optional.of(oldUser)
-    every { prisonsApiClient.getAgencyDetails(eq(oldAgency.agencyId)) } returns ClientResult.Success(
-      HttpStatus.OK,
-      oldAgency,
-    )
-    every { emailNotificationService.sendCas2Email(any(), any(), any()) } returns Unit
 
-    assertThrows<EntityNotFoundException> { emailService.sendLocationChangedEmails(application, oldUser.id, nomsNumber, prisoner) }
-
-    verify(exactly = 1) { nomisUserRepository.findById(eq(oldUser.id)) }
-    verify(exactly = 1) { prisonsApiClient.getAgencyDetails(eq(oldAgency.agencyId)) }
-    verify(exactly = 0) { emailNotificationService.sendCas2Email(any(), any(), any()) }
-    verify(exactly = 1) { statusUpdateRepository.findFirstByApplicationIdOrderByCreatedAtDesc(application.id) }
-    verify(exactly = 2) { offenderManagementUnitRepository.findByPrisonCode(any()) }
+    val exception = assertThrows<IllegalStateException> { emailService.sendLocationChangedEmails(application, oldUser.id, newPrisonCode) }
+    assertThat(exception.message).isEqualTo("StatusUpdate for ${application.id} not found")
   }
 
   @Test
-  fun `do not send location changed emails as no nomis user found for old POM and throw error`() {
-    application.applicationAssignments.add(applicationAssignmentOlder)
+  fun `do not send location changed emails and throw error as new omu not found`() {
     application.applicationAssignments.add(applicationAssignmentOld)
+    application.applicationAssignments.add(applicationAssignmentOlder)
 
-    every { nomisUserRepository.findById(eq(oldUser.id)) } returns Optional.empty()
-    every { emailNotificationService.sendCas2Email(any(), any(), any()) } returns Unit
+    every { offenderManagementUnitRepository.findByPrisonCode(eq(oldPrisonCode)) } returns oldOmu
+    every { offenderManagementUnitRepository.findByPrisonCode(eq(newPrisonCode)) } returns null
+    every { nomisUserRepository.findById(eq(oldUser.id)) } returns Optional.of(oldUser)
 
-    assertThrows<NoSuchElementException> { emailService.sendLocationChangedEmails(application, oldUser.id, nomsNumber, prisoner) }
-
-    verify(exactly = 1) { nomisUserRepository.findById(eq(oldUser.id)) }
-    verify(exactly = 0) { emailNotificationService.sendCas2Email(any(), any(), any()) }
+    val exception = assertThrows<IllegalStateException> { emailService.sendLocationChangedEmails(application, oldUser.id, newPrisonCode) }
+    assertThat(exception.message).isEqualTo("No OMU found for new prison code $newPrisonCode.")
   }
 
   @Test
-  fun `do not send location changed emails as no agency found for old Prison Id`() {
-    application.applicationAssignments.add(applicationAssignmentOlder)
+  fun `do not send location changed emails and throw error as old omu not found`() {
     application.applicationAssignments.add(applicationAssignmentOld)
+    application.applicationAssignments.add(applicationAssignmentOlder)
 
     every { nomisUserRepository.findById(eq(oldUser.id)) } returns Optional.of(oldUser)
-    every { prisonsApiClient.getAgencyDetails(eq(oldAgency.agencyId)) } returns ClientResult.Failure.StatusCode(HttpMethod.GET, "/api/agencies/${oldAgency.agencyId}", HttpStatus.NOT_FOUND, null)
-    every { emailNotificationService.sendCas2Email(any(), any(), any()) } returns Unit
+    every { offenderManagementUnitRepository.findByPrisonCode(eq(oldPrisonCode)) } returns null
 
-    emailService.sendLocationChangedEmails(application, oldUser.id, nomsNumber, prisoner)
+    val exception = assertThrows<IllegalStateException> { emailService.sendLocationChangedEmails(application, oldUser.id, newPrisonCode) }
+    assertThat(exception.message).isEqualTo("No OMU found for old prison code $oldPrisonCode.")
+  }
 
-    verify(exactly = 1) { nomisUserRepository.findById(eq(oldUser.id)) }
-    verify(exactly = 1) { prisonsApiClient.getAgencyDetails(eq(oldAgency.agencyId)) }
-    verify(exactly = 0) { emailNotificationService.sendCas2Email(any(), any(), any()) }
+  @Test
+  fun `do not send location changed emails as nomis user not found`() {
+    application.applicationAssignments.add(applicationAssignmentOld)
+    application.applicationAssignments.add(applicationAssignmentOlder)
+
+    every { nomisUserRepository.findById(eq(oldUser.id)) } returns Optional.empty()
+
+    assertThrows<NoSuchElementException> { emailService.sendLocationChangedEmails(application, oldUser.id, newPrisonCode) }
   }
 
   @Test

@@ -46,7 +46,7 @@ class Cas2LocationChangedService(
           applicationRepository.save(application)
           log.info("Added application assignment for prisoner: {}", nomsNumber)
 
-          emailService.sendLocationChangedEmails(application, application.mostRecentPomUserId, nomsNumber, prisoner)
+          emailService.sendLocationChangedEmails(application, application.mostRecentPomUserId, prisoner.prisonId)
         } else {
           log.info("Prisoner {} prison location not changed, no action required", nomsNumber)
         }

@@ -19,7 +19,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.given
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas2ApplicationAssignmentEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas2ApplicationAssignmentRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas2StatusUpdateRepository
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.prisonsapi.Agency
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.OffenderManagementUnitEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.EmailNotificationService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas2.Cas2DomainEventListener
 import uk.gov.justice.hmpps.sqs.HmppsQueueService
@@ -100,6 +100,7 @@ class Cas2DomainEventListenerTest : IntegrationTestBase() {
     val prisoner = Prisoner(prisonId = "LON", prisonName = "LONDON")
     val eventType = "prisoner-offender-search.prisoner.updated"
     val occurredAt = Instant.now().atZone(ZoneId.systemDefault())
+    val oldPrisonCode = "LIV"
 
     val applicationSchema = cas2ApplicationJsonSchemaEntityFactory.produceAndPersist {
       withAddedAt(OffsetDateTime.now())
@@ -129,14 +130,14 @@ class Cas2DomainEventListenerTest : IntegrationTestBase() {
           val olderApplicationAssignment = Cas2ApplicationAssignmentEntity(
             id = UUID.randomUUID(),
             application = application,
-            prisonCode = "NEW",
+            prisonCode = oldPrisonCode,
             allocatedPomUserId = null,
             createdAt = occurredAt.toOffsetDateTime().minusDays(1),
           )
           val oldApplicationAssignment = Cas2ApplicationAssignmentEntity(
             id = UUID.randomUUID(),
             application = application,
-            prisonCode = "NEW",
+            prisonCode = oldPrisonCode,
             allocatedPomUserId = userEntity.id,
             createdAt = occurredAt.toOffsetDateTime().minusDays(2),
           )
@@ -152,13 +153,11 @@ class Cas2DomainEventListenerTest : IntegrationTestBase() {
             responseBody = prisoner,
           )
 
-          val agency =
-            Agency(agencyId = "NEW", description = "NEWCASTLE", agencyType = "prison")
+          val oldOmu = OffenderManagementUnitEntity(UUID.randomUUID(), oldPrisonCode, "HMS LIVERPOOL", "oldOmu@prison.co.uk")
+          val newOmu = OffenderManagementUnitEntity(UUID.randomUUID(), prisoner.prisonId, prisoner.prisonName, "newOmu@prison.co.uk")
 
-          mockSuccessfulGetCallWithJsonResponse(
-            url = "/api/agencies/${agency.agencyId}",
-            responseBody = agency,
-          )
+          offenderManagementUnitRepository.save(oldOmu)
+          offenderManagementUnitRepository.save(newOmu)
 
           @SuppressWarnings("MaxLineLength")
           val event =
@@ -183,7 +182,7 @@ class Cas2DomainEventListenerTest : IntegrationTestBase() {
           }
           verify(exactly = 1, timeout = 5000) {
             emailNotificationService.sendEmail(
-              eq("tbc"),
+              eq(oldOmu.email),
               eq("6b427e8a-eb21-43a3-89c3-f6a147b20c39"),
               eq(
                 mapOf(
@@ -196,12 +195,12 @@ class Cas2DomainEventListenerTest : IntegrationTestBase() {
           }
           verify(exactly = 1, timeout = 5000) {
             emailNotificationService.sendEmail(
-              eq("tbc"),
+              eq(newOmu.email),
               eq("1e5d98e4-efdf-428e-bca9-fd5daadd27aa"),
               eq(
                 mapOf(
                   "nomsNumber" to application.nomsNumber,
-                  "transferringPrisonName" to agency.description,
+                  "transferringPrisonName" to oldOmu.prisonName,
                   "link" to getLink(application.id),
                   "applicationStatus" to "Status Update",
                 ),
@@ -217,7 +216,7 @@ class Cas2DomainEventListenerTest : IntegrationTestBase() {
                 mapOf(
                   "nomsNumber" to application.nomsNumber,
                   "receivingPrisonName" to prisoner.prisonName,
-                  "transferringPrisonName" to agency.description,
+                  "transferringPrisonName" to oldOmu.prisonName,
                   "link" to getLink(application.id),
                 ),
               ),
@@ -290,21 +289,11 @@ class Cas2DomainEventListenerTest : IntegrationTestBase() {
               responseBody = pomAllocation,
             )
 
-            val newAgency =
-              Agency(agencyId = newPrisonCode, description = "HMS LONDON", agencyType = "prison")
+            val oldOmu = OffenderManagementUnitEntity(UUID.randomUUID(), oldPrisonCode, "HMS LIVERPOOL", "oldOmu@prison.co.uk")
+            val newOmu = OffenderManagementUnitEntity(UUID.randomUUID(), newPrisonCode, "HMS LONDON", "newOmu@prison.co.uk")
 
-            mockSuccessfulGetCallWithJsonResponse(
-              url = "/api/agencies/${newAgency.agencyId}",
-              responseBody = newAgency,
-            )
-
-            val oldAgency =
-              Agency(agencyId = oldPrisonCode, description = "HMS LIVERPOOL", agencyType = "prison")
-
-            mockSuccessfulGetCallWithJsonResponse(
-              url = "/api/agencies/${oldAgency.agencyId}",
-              responseBody = oldAgency,
-            )
+            offenderManagementUnitRepository.save(oldOmu)
+            offenderManagementUnitRepository.save(newOmu)
 
             @SuppressWarnings("MaxLineLength")
             val event =
@@ -321,7 +310,7 @@ class Cas2DomainEventListenerTest : IntegrationTestBase() {
                 eq(
                   mapOf(
                     "nomsNumber" to application.nomsNumber,
-                    "receivingPrisonName" to newAgency.description,
+                    "receivingPrisonName" to newOmu.prisonName,
                     "link" to getLink(application.id),
                   ),
                 ),
@@ -336,7 +325,7 @@ class Cas2DomainEventListenerTest : IntegrationTestBase() {
                 eq(
                   mapOf(
                     "nomsNumber" to application.nomsNumber,
-                    "transferringPrisonName" to oldAgency.description,
+                    "transferringPrisonName" to oldOmu.prisonName,
                     "link" to getLink(application.id),
                     "applicationStatus" to "Status Update",
                   ),

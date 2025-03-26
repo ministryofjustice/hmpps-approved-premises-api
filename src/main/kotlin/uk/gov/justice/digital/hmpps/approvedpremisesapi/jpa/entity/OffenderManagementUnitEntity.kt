@@ -19,5 +19,6 @@ data class OffenderManagementUnitEntity(
   @Id
   val id: UUID,
   val prisonCode: String,
+  val prisonName: String,
   val email: String,
 )
