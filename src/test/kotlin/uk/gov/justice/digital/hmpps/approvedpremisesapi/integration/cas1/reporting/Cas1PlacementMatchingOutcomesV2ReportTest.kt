@@ -169,7 +169,6 @@ class Cas1PlacementMatchingOutcomesV2ReportTest : InitialiseDatabasePerClassTest
           assertThat(headers).doesNotContain("matcher_username")
           assertThat(headers).doesNotContain("matcher_name")
 
-
           val actual = DataFrame
             .readCSV(completeCsvString.byteInputStream())
             .convertTo<PlacementMatchingOutcomeReportRow>(ExcessiveColumns.Remove)
