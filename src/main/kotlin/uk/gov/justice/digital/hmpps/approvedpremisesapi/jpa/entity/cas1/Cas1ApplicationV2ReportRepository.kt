@@ -72,6 +72,8 @@ SELECT DISTINCT ON (application.submitted_at, application.id)
   to_char(latest_appeal_assessment.allocated_at, 'YYYY-MM-DD"T"HH24:MI:SS"Z"') AS last_allocated_to_appealed_assessor_date,
   latest_appeal_assessment_ap_type_metadata.value AS last_allocated_to_appealed_assessor_premises_type,
   latest_appeal_assessment_event.data -> 'eventDetails' -> 'assessedBy' -> 'staffMember' ->> 'username' AS last_appealed_assessor_username,
+  (latest_appeal_assessment_event.data -> 'eventDetails' -> 'assessedBy' -> 'staffMember' ->> 'forenames') || ' ' || 
+  (latest_appeal_assessment_event.data -> 'eventDetails' -> 'assessedBy' -> 'staffMember' ->> 'surname') AS last_appealed_assessor_name,
   to_char(withdrawal_event.occurred_at, 'YYYY-MM-DD"T"HH24:MI:SS"Z"') AS application_withdrawal_date,
   withdrawal_event.data -> 'eventDetails' ->> 'withdrawalReason' AS application_withdrawal_reason
   

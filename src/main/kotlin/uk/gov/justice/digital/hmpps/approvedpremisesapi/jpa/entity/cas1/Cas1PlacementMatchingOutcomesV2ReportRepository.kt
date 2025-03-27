@@ -27,6 +27,15 @@ class Cas1PlacementMatchingOutcomesV2ReportRepository(
           ELSE ''
         END as matcher_username,
         CASE
+          WHEN latest_match_attempt_event.type = 'APPROVED_PREMISES_BOOKING_MADE' THEN 
+            (latest_match_attempt_event.data -> 'eventDetails' -> 'bookedBy' -> 'staffMember' ->> 'forenames') || ' ' || 
+            (latest_match_attempt_event.data -> 'eventDetails' -> 'bookedBy' -> 'staffMember' ->> 'surname')
+          WHEN latest_match_attempt_event.type = 'APPROVED_PREMISES_BOOKING_NOT_MADE' THEN 
+            (latest_match_attempt_event.data -> 'eventDetails' -> 'attemptedBy' -> 'staffMember' ->> 'forenames') || ' ' || 
+            (latest_match_attempt_event.data -> 'eventDetails' -> 'attemptedBy' -> 'staffMember' ->> 'surname')
+          ELSE ''
+        END AS matcher_name,
+        CASE
           WHEN latest_match_attempt_event.type = 'APPROVED_PREMISES_BOOKING_MADE' THEN 'Placed'
           WHEN latest_match_attempt_event.type = 'APPROVED_PREMISES_BOOKING_NOT_MADE' THEN 'Not matched'
           ELSE ''

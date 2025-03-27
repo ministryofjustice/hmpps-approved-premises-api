@@ -58,6 +58,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremi
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserQualification
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRole
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.deliuscontext.PersonName
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.asCaseDetail
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomStringMultiCaseWithNumbers
 import java.io.StringReader
@@ -166,6 +167,8 @@ class Cas1PlacementMatchingOutcomesV2ReportTest : InitialiseDatabasePerClassTest
           val headers = csvReader.readNext().toList()
 
           assertThat(headers).doesNotContain("matcher_username")
+          assertThat(headers).doesNotContain("matcher_name")
+
 
           val actual = DataFrame
             .readCSV(completeCsvString.byteInputStream())
@@ -237,6 +240,7 @@ class Cas1PlacementMatchingOutcomesV2ReportTest : InitialiseDatabasePerClassTest
       assertThat(row.placement_request_id).isEqualTo(application.placementRequests[0].id.toString())
       assertThat(row.matcher_cru).isNull()
       assertThat(row.matcher_username).isNull()
+      assertThat(row.matcher_name).isNull()
       assertThat(row.match_outcome).isNull()
 
       assertThat(row.request_for_placement_id).matches("placement_request:[a-f0-9-]+")
@@ -292,6 +296,7 @@ class Cas1PlacementMatchingOutcomesV2ReportTest : InitialiseDatabasePerClassTest
       assertThat(row.placement_request_id).isEqualTo(application.placementRequests[0].id.toString())
       assertThat(row.matcher_cru).isEqualTo("MATCHER1CRU")
       assertThat(row.matcher_username).isEqualTo("MATCHER1")
+      assertThat(row.matcher_name).isEqualTo("Jeff Jefferson")
       assertThat(row.match_outcome).isEqualTo("Placed")
 
       assertThat(row.request_for_placement_id).matches("placement_request:[a-f0-9-]+")
@@ -376,6 +381,7 @@ class Cas1PlacementMatchingOutcomesV2ReportTest : InitialiseDatabasePerClassTest
       assertThat(row.placement_request_id).isEqualTo(application.placementRequests[0].id.toString())
       assertThat(row.matcher_cru).isEqualTo("MATCHER13CRU")
       assertThat(row.matcher_username).isEqualTo("MATCHER13")
+      assertThat(row.matcher_name).isEqualTo("Jeff Jefferson")
       assertThat(row.match_outcome).isEqualTo("Placed")
 
       assertThat(row.request_for_placement_id).matches("placement_request:[a-f0-9-]+")
@@ -563,7 +569,7 @@ class Cas1PlacementMatchingOutcomesV2ReportTest : InitialiseDatabasePerClassTest
   ) {
     val managerJwt = givenAUser(
       roles = listOf(UserRole.CAS1_CRU_MEMBER_FIND_AND_BOOK_BETA),
-      staffDetail = StaffDetailFactory.staffDetail(deliusUsername = matcherUsername),
+      staffDetail = StaffDetailFactory.staffDetail(name = PersonName(forename = "Jeff", surname = "Jefferson"), deliusUsername = matcherUsername),
       probationRegion = givenAProbationRegion(apArea = givenAnApArea(name = matcherApAreaName)),
     ).second
 
@@ -811,6 +817,7 @@ class Cas1PlacementMatchingOutcomesV2ReportTest : InitialiseDatabasePerClassTest
     val placement_request_id: String?,
     val matcher_cru: String?,
     val matcher_username: String?,
+    val matcher_name: String?,
     val match_outcome: String?,
     val crn: String?,
     val request_for_placement_id: String?,

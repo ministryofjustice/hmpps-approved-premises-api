@@ -42,7 +42,9 @@ class Cas1ReportService(
       "initial_assessor_username",
       "initial_assessor_name",
       "last_appealed_assessor_username",
+      "last_appealed_assessor_name",
       "matcher_username",
+      "matcher_name",
     )
   }
 
