@@ -33,6 +33,7 @@ generic-service:
     SERVICES_AP-OASYS-CONTEXT-API_BASE-URL: https://approved-premises-and-oasys-preprod.hmpps.service.justice.gov.uk
     SERVICES_GOV-UK-BANK-HOLIDAYS-API_BASE-URL: https://www.gov.uk
     SERVICES_MANAGE-POM-CASES_BASE-URL: https://preprod.moic.service.justice.gov.uk
+    SERVICES_PRISON-REGISTER_BASE-URL: https://prison-register-preprod.hmpps.service.justice.gov.uk
     SERVICES_PRISONER-SEARCH_BASE-URL: https://prisoner-search-preprod.prison.service.justice.gov.uk
     SPRING_FLYWAY_LOCATIONS: classpath:db/migration/all,classpath:db/migration/all-except-integration
     LOG-CLIENT-CREDENTIALS-JWT-INFO: true
