@@ -117,6 +117,8 @@ services:
     base-url: http://localhost:#WIREMOCK_PORT
   prisoner-search-api:
     base-url: http://localhost:#WIREMOCK_PORT
+  prison-register:
+    base-url: http://localhost:#WIREMOCK_PORT
 
 prison-case-notes:
   lookback-days: 365
