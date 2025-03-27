@@ -10,6 +10,9 @@ parameters:
   alerts-slack-channel:
     type: string
     default: cas-events
+  cas2-bail-alerts-slack-channel:
+    type: string
+    default: cas2-bail-events
   releases-slack-channel:
     type: string
     default: cas-events
@@ -337,7 +340,7 @@ jobs:
           destination: e2e-tests/test_results
       - slack/notify:
           event: fail
-          channel: << pipeline.parameters.alerts-slack-channel >>
+          channel: << pipeline.parameters.cas2-bail-alerts-slack-channel >>
           template: basic_fail_1
   cas3_e2e_tests:
     parallelism: 5
