@@ -2,7 +2,10 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.factory
 
 import io.github.bluegroundltd.kfactory.Factory
 import io.github.bluegroundltd.kfactory.Yielded
-import io.mockk.mockk
+import java.time.LocalDate
+import java.time.OffsetDateTime
+import java.util.UUID
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApprovedPremisesApplicationJsonSchemaEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas2ApplicationAssignmentEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas2ApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas2ApplicationNoteEntity
@@ -148,26 +151,32 @@ class Cas2ApplicationEntityFactory : Factory<Cas2ApplicationEntity> {
     this.conditionalReleaseDate = { conditionalReleaseDate }
   }
 
-  override fun produce(): Cas2ApplicationEntity = Cas2ApplicationEntity(
-    id = this.id(),
-    crn = this.crn(),
-    createdByUser = this.createdByUser?.invoke() ?: throw RuntimeException("Must provide a createdByUser"),
-    data = this.data(),
-    document = this.document(),
-    schemaVersion = this.applicationSchema(),
-    createdAt = this.createdAt(),
-    submittedAt = this.submittedAt(),
-    abandonedAt = this.abandonedAt(),
-    statusUpdates = this.statusUpdates(),
-    schemaUpToDate = false,
-    nomsNumber = this.nomsNumber(),
-    telephoneNumber = this.telephoneNumber(),
-    notes = this.notes(),
-    assessment = this.assessment(),
-    applicationAssignments = this.applicationAssignments(),
-    referringPrisonCode = this.referringPrisonCode(),
-    hdcEligibilityDate = this.hdcEligibilityDate(),
-    conditionalReleaseDate = this.conditionalReleaseDate(),
-    preferredAreas = this.preferredAreas(),
-  )
+  override fun produce(): Cas2ApplicationEntity {
+    val application = Cas2ApplicationEntity(
+      id = this.id(),
+      crn = this.crn(),
+      createdByUser = this.createdByUser?.invoke() ?: throw RuntimeException("Must provide a createdByUser"),
+      data = this.data(),
+      document = this.document(),
+      schemaVersion = this.applicationSchema(),
+      createdAt = this.createdAt(),
+      submittedAt = this.submittedAt(),
+      abandonedAt = this.abandonedAt(),
+      statusUpdates = this.statusUpdates(),
+      schemaUpToDate = false,
+      nomsNumber = this.nomsNumber(),
+      telephoneNumber = this.telephoneNumber(),
+      notes = this.notes(),
+      assessment = this.assessment(),
+      applicationAssignments = this.applicationAssignments(),
+      referringPrisonCode = this.referringPrisonCode(),
+      hdcEligibilityDate = this.hdcEligibilityDate(),
+      conditionalReleaseDate = this.conditionalReleaseDate(),
+      preferredAreas = this.preferredAreas(),
+    )
+    if (application.applicationAssignments.isEmpty()) {
+      application.createApplicationAssignment("PRICODE", null)
+    }
+    return application
+  }
 }

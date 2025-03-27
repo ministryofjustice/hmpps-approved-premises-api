@@ -28,6 +28,10 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.Cas2AssessmentEn
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.Cas2StatusUpdateEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.InmateDetailFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.NomisUserEntityFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.cas2.Cas2ApplicationEntityFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.cas2.Cas2ApplicationJsonSchemaEntityFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.cas2.Cas2ApplicationSummaryEntityFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.cas2.Cas2AssessmentEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApplicationSummaryRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas2ApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas2ApplicationJsonSchemaEntity
@@ -40,6 +44,8 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PersonInfoResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.prisonsapi.AssignedLivingUnit
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.AuthorisableActionResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.EmailNotificationService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas2.Cas2ApplicationAssignmentService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas2.Cas2ApplicationService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas2.Cas2AssessmentService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas2.Cas2DomainEventService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas2.Cas2JsonSchemaService
@@ -49,7 +55,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.unit.util.assertThatCasR
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.PageCriteria
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.PaginationConfig
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.getPageableOrAllPages
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomStringMultiCaseWithNumbers
 import java.time.LocalDate
 import java.time.OffsetDateTime
 import java.util.UUID
@@ -67,7 +72,7 @@ class Cas2ApplicationServiceTest {
   private val mockObjectMapper = mockk<ObjectMapper>()
   private val mockNotifyConfig = mockk<NotifyConfig>()
 
-  private val applicationService = uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas2.Cas2ApplicationService(
+  private val applicationService = Cas2ApplicationService(
     mockApplicationRepository,
     mockLockableApplicationRepository,
     mockApplicationSummaryRepository,
@@ -159,19 +164,7 @@ class Cas2ApplicationServiceTest {
   inner class GetAllSubmittedApplicationsForAssessor {
     @Test
     fun `returns Success result with entity from db`() {
-      val applicationSummary = Cas2ApplicationSummaryEntity(
-        id = UUID.fromString("2f838a8c-dffc-48a3-9536-f0e95985e809"),
-        crn = randomStringMultiCaseWithNumbers(6),
-        nomsNumber = randomStringMultiCaseWithNumbers(6),
-        userId = "836a9460-b177-433a-a0d9-262509092c9f",
-        userName = "first last",
-        createdAt = OffsetDateTime.parse("2023-04-19T13:25:00+01:00"),
-        submittedAt = OffsetDateTime.parse("2023-04-19T13:25:30+01:00"),
-        hdcEligibilityDate = LocalDate.parse("2023-04-29"),
-        latestStatusUpdateLabel = null,
-        latestStatusUpdateStatusId = null,
-        prisonCode = "BRI",
-      )
+      val applicationSummary = Cas2ApplicationSummaryEntityFactory.produce()
 
       PaginationConfig(defaultPageSize = 10).postInit()
       val page = mockk<Page<Cas2ApplicationSummaryEntity>>()
@@ -207,19 +200,7 @@ class Cas2ApplicationServiceTest {
 
   @Nested
   inner class GetApplicationsWithPrisonCode {
-    val applicationSummary = Cas2ApplicationSummaryEntity(
-      id = UUID.fromString("2f838a8c-dffc-48a3-9536-f0e95985e809"),
-      crn = randomStringMultiCaseWithNumbers(6),
-      nomsNumber = randomStringMultiCaseWithNumbers(6),
-      userId = "836a9460-b177-433a-a0d9-262509092c9f",
-      userName = "first last",
-      createdAt = OffsetDateTime.parse("2023-04-19T13:25:00+01:00"),
-      submittedAt = OffsetDateTime.parse("2023-04-19T13:25:30+01:00"),
-      hdcEligibilityDate = LocalDate.parse("2023-04-29"),
-      latestStatusUpdateLabel = null,
-      latestStatusUpdateStatusId = null,
-      prisonCode = "BRI",
-    )
+    val applicationSummary = Cas2ApplicationSummaryEntityFactory.produce()
     val page = mockk<Page<Cas2ApplicationSummaryEntity>>()
     val pageCriteria = PageCriteria(sortBy = "submitted_at", sortDirection = SortDirection.asc, page = 3)
     val user = NomisUserEntityFactory().produce()
@@ -280,19 +261,7 @@ class Cas2ApplicationServiceTest {
 
   @Nested
   inner class GetApplicationsWithoutPrisonCode {
-    val applicationSummary = Cas2ApplicationSummaryEntity(
-      id = UUID.fromString("2f838a8c-dffc-48a3-9536-f0e95985e809"),
-      crn = randomStringMultiCaseWithNumbers(6),
-      nomsNumber = randomStringMultiCaseWithNumbers(6),
-      userId = "836a9460-b177-433a-a0d9-262509092c9f",
-      userName = "first last",
-      createdAt = OffsetDateTime.parse("2023-04-19T13:25:00+01:00"),
-      submittedAt = OffsetDateTime.parse("2023-04-19T13:25:30+01:00"),
-      hdcEligibilityDate = LocalDate.parse("2023-04-29"),
-      latestStatusUpdateLabel = null,
-      latestStatusUpdateStatusId = null,
-      prisonCode = "BRI",
-    )
+    val applicationSummary = Cas2ApplicationSummaryEntityFactory.produce()
     val page = mockk<Page<Cas2ApplicationSummaryEntity>>()
     val pageCriteria = PageCriteria(sortBy = "createdAt", sortDirection = SortDirection.asc, page = 3)
     val user = NomisUserEntityFactory().withId(UUID.fromString(applicationSummary.userId)).produce()

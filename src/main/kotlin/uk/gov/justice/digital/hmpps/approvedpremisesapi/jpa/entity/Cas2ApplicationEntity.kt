@@ -43,6 +43,18 @@ interface Cas2ApplicationRepository : JpaRepository<Cas2ApplicationEntity, UUID>
       "AND a NOT IN (SELECT application FROM Cas2AssessmentEntity)",
   )
   fun findAllSubmittedApplicationsWithoutAssessments(): Slice<Cas2ApplicationEntity>
+
+  @Query(
+    """ SELECT a.id FROM Cas2ApplicationEntity a
+        JOIN a.applicationAssignments aa  
+        WHERE aa.allocatedPomUser.id = :userId
+        AND aa.createdAt != (SELECT MAX(aa2.createdAt)
+                             FROM Cas2ApplicationAssignmentEntity aa2
+                             WHERE aa2.application.id = a.id
+                             GROUP BY aa2.application.id
+                             HAVING COUNT(aa2.application.id) > 1)""",
+  )
+  fun findDeallocatedApplicationIds(userId: UUID): List<UUID>
 }
 
 @Repository

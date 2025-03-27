@@ -12,6 +12,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas2.model.Ca
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas2.model.EventType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas2.model.PersonReference
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApplicationOrigin
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.AssignmentType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.SubmitCas2Application
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.config.NotifyConfig
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApplicationSummaryRepository
@@ -52,6 +53,56 @@ class Cas2ApplicationService(
   @Value("\${url-templates.frontend.cas2.application}") private val applicationUrlTemplate: String,
   @Value("\${url-templates.frontend.cas2.submitted-application-overview}") private val submittedApplicationUrlTemplate: String,
 ) {
+
+  fun getApplicationSummaries(
+    prisonCode: String?,
+    user: NomisUserEntity,
+    pageCriteria: PageCriteria<String>,
+    assignmentType: AssignmentType,
+  ): Pair<MutableList<Cas2ApplicationSummaryEntity>, PaginationMetadata?> {
+    fun findCas2ApplicationSummaryEntities(
+      createdByUserId: UUID? = null,
+      allocatedPomUserId: UUID? = null,
+      prisonCode: String? = null,
+      isSubmitted: Boolean? = true,
+      pageCriteria: PageCriteria<String>,
+    ) = applicationSummaryRepository.findCas2ApplicationSummaryEntities(
+      createdByUserId = createdByUserId,
+      allocatedPomUserId = allocatedPomUserId,
+      prisonCode = prisonCode,
+      isSubmitted = isSubmitted,
+      pageable = getPageableOrAllPages(pageCriteria),
+    )
+
+    val response = when (assignmentType) {
+      AssignmentType.UNALLOCATED -> findCas2ApplicationSummaryEntities(
+        prisonCode = prisonCode,
+        pageCriteria = pageCriteria,
+      )
+
+      AssignmentType.CREATED -> findCas2ApplicationSummaryEntities(
+        createdByUserId = user.id,
+        isSubmitted = null,
+        pageCriteria = pageCriteria,
+      )
+
+      AssignmentType.ALLOCATED -> findCas2ApplicationSummaryEntities(
+        allocatedPomUserId = user.id,
+        pageCriteria = pageCriteria,
+      )
+
+      AssignmentType.DEALLOCATED -> {
+        val deallocatedApplicationIds = applicationRepository.findDeallocatedApplicationIds(user.id)
+        applicationSummaryRepository.findAllByIdIn(
+          deallocatedApplicationIds,
+          getPageableOrAllPages(pageCriteria),
+        )
+      }
+    }
+
+    val metadata = getMetadata(response, pageCriteria)
+    return Pair(response.content, metadata)
+  }
 
   val repositoryUserFunctionMap = mapOf(
     null to applicationSummaryRepository::findByUserId,
