@@ -7,6 +7,7 @@ import jakarta.persistence.Table
 import org.springframework.data.domain.Page
 import org.springframework.data.domain.Pageable
 import org.springframework.data.jpa.repository.JpaRepository
+import org.springframework.data.jpa.repository.Query
 import org.springframework.stereotype.Repository
 import java.time.LocalDate
 import java.time.OffsetDateTime
@@ -14,6 +15,22 @@ import java.util.UUID
 
 @Repository
 interface ApplicationSummaryRepository : JpaRepository<Cas2ApplicationSummaryEntity, String> {
+  @Query(
+    "SELECT ase FROM Cas2ApplicationSummaryEntity ase WHERE (:createdByUserId IS NULL OR  ase.userId = :createdByUserId) " +
+      "AND (:allocatedPomUserId IS NULL OR ase.allocatedPomUserId = :allocatedPomUserId)" +
+      "AND (:prisonCode IS NULL OR ase.prisonCode = :prisonCode) " +
+      "AND (:isSubmitted IS NULL OR (ase.submittedAt IS NULL) = :isSubmitted ) ",
+  )
+  fun findCas2ApplicationSummaryEntities(
+    createdByUserId: UUID?,
+    allocatedPomUserId: UUID?,
+    prisonCode: String?,
+    isSubmitted: Boolean?,
+    pageable: Pageable,
+  ): Page<Cas2ApplicationSummaryEntity>
+
+  fun findAllByApplicationIds(applicationIds: List<UUID>, pageable: Pageable): Page<Cas2ApplicationSummaryEntity>
+
   fun findByUserId(userId: String, pageable: Pageable?): Page<Cas2ApplicationSummaryEntity>
 
   fun findByUserIdAndSubmittedAtIsNotNull(userId: String, pageable: Pageable?): Page<Cas2ApplicationSummaryEntity>
@@ -41,6 +58,10 @@ data class Cas2ApplicationSummaryEntity(
   val userId: String,
   @Column(name = "name")
   val userName: String,
+  @Column(name = "allocatied_pom_user_id")
+  val allocatedPomUserId: UUID,
+  @Column(name = "allocated_pom_name")
+  val allocatedPomName: String,
   @Column(name = "created_at")
   val createdAt: OffsetDateTime,
   @Column(name = "submitted_at")
@@ -55,4 +76,6 @@ data class Cas2ApplicationSummaryEntity(
   var latestStatusUpdateStatusId: String? = null,
   @Column(name = "referring_prison_code")
   val prisonCode: String,
+  @Column(name = "current_prison_code")
+  val currentPrisonCode: String,
 )

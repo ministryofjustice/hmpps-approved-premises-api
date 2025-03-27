@@ -1,5 +1,9 @@
 components:
   schemas:
+    AssignmentType:
+      type: string
+      enum: [ CREATED, ALLOCATED, DEALLOCATED, UNALLOCATED ]
+      x-enum-varnames: [ CREATED, ALLOCATED, DEALLOCATED, UNALLOCATED ]
     SubmitCas2Application:
       type: object
       properties:
