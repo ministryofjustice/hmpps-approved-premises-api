@@ -5,6 +5,7 @@ import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.params.ParameterizedTest
+import org.junit.jupiter.params.provider.CsvSource
 import org.junit.jupiter.params.provider.EnumSource
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1ApplicationTimelinessCategory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApAreaEntityFactory
@@ -15,21 +16,50 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.TemporaryAccommo
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.TemporaryAccommodationAssessmentEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.UserEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.cas1.Cas1CruManagementAreaEntityFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.mocks.MutableClockConfiguration
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AutoAllocationDay
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.allocations.UserAllocatorRuleOutcome
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.allocations.rules.EmergencyAndShortNoticeAssessmentRule
+import java.time.Clock
+import java.time.LocalDate
 import java.time.OffsetDateTime
+import java.time.ZoneOffset
 
 class EmergencyAndShortNoticeAssessmentRuleTest {
-  val assessmentRule = EmergencyAndShortNoticeAssessmentRule()
 
   @Nested
   inner class EvaluateAssessment {
+
     @ParameterizedTest
-    @EnumSource(Cas1ApplicationTimelinessCategory::class, names = ["emergency", "shortNotice"])
+    // 1/7/2024 is a Monday
+    @CsvSource(
+      "emergency,2024-07-01,mr monday",
+      "emergency,2024-07-02,mrs tuesday",
+      "emergency,2024-07-03,ms wed",
+      "emergency,2024-07-04,dr thurs",
+      "emergency,2024-07-05,prof fri",
+      "emergency,2024-07-06,sat snr",
+      "emergency,2024-07-07,miss sunday",
+      "shortNotice,2024-07-01,mr monday",
+      "shortNotice,2024-07-02,mrs tuesday",
+      "shortNotice,2024-07-03,ms wed",
+      "shortNotice,2024-07-04,dr thurs",
+      "shortNotice,2024-07-05,prof fri",
+      "shortNotice,2024-07-06,sat snr",
+      "shortNotice,2024-07-07,miss sunday",
+    )
     fun `Returns AllocateToUser with configured username for the application's cru management area when the application is for CAS1, submitted, and the application is emergency or short notice`(
       noticeType: Cas1ApplicationTimelinessCategory,
+      date: LocalDate,
+      expectedAllocation: String,
     ) {
+      val assessmentRule = EmergencyAndShortNoticeAssessmentRule(
+        MutableClockConfiguration.MutableClock(
+          date.atTime(12, 0, 0).toInstant(ZoneOffset.UTC),
+        ),
+      )
+
       val createdByUser = UserEntityFactory()
         .withDefaults()
         .produce()
@@ -40,7 +70,18 @@ class EmergencyAndShortNoticeAssessmentRuleTest {
         .withNoticeType(noticeType)
         .withCruManagementArea(
           Cas1CruManagementAreaEntityFactory()
-            .withAssessmentAutoAllocationUsername("the cru assessor")
+            .withAssessmentAutoAllocationUsername(null)
+            .withAssessmentAutoAllocations(
+              mutableMapOf(
+                AutoAllocationDay.MONDAY to "mr monday",
+                AutoAllocationDay.TUESDAY to "mrs tuesday",
+                AutoAllocationDay.WEDNESDAY to "ms wed",
+                AutoAllocationDay.THURSDAY to "dr thurs",
+                AutoAllocationDay.FRIDAY to "prof fri",
+                AutoAllocationDay.SATURDAY to "sat snr",
+                AutoAllocationDay.SUNDAY to "miss sunday",
+              ),
+            )
             .produce(),
         )
         .produce()
@@ -51,11 +92,13 @@ class EmergencyAndShortNoticeAssessmentRuleTest {
 
       val result = assessmentRule.evaluateAssessment(assessment)
 
-      assertThat(result).isEqualTo(UserAllocatorRuleOutcome.AllocateToUser("the cru assessor"))
+      assertThat(result).isEqualTo(UserAllocatorRuleOutcome.AllocateToUser(expectedAllocation))
     }
 
     @Test
     fun `Returns Skip if the application is not for CAS1`() {
+      val assessmentRule = EmergencyAndShortNoticeAssessmentRule(Clock.systemUTC())
+
       val apArea = ApAreaEntityFactory()
         .produce()
 
@@ -85,6 +128,8 @@ class EmergencyAndShortNoticeAssessmentRuleTest {
     @ParameterizedTest
     @EnumSource(Cas1ApplicationTimelinessCategory::class, names = ["emergency", "shortNotice"])
     fun `Returns Skip if the application is not submitted`(noticeType: Cas1ApplicationTimelinessCategory) {
+      val assessmentRule = EmergencyAndShortNoticeAssessmentRule(Clock.systemUTC())
+
       val apArea = ApAreaEntityFactory()
         .produce()
 
@@ -102,6 +147,7 @@ class EmergencyAndShortNoticeAssessmentRuleTest {
       val application = ApprovedPremisesApplicationEntityFactory()
         .withCreatedByUser(createdByUser)
         .withSubmittedAt(null)
+        .withCruManagementArea(null)
         .withNoticeType(noticeType)
         .produce()
         .apply {
@@ -119,6 +165,8 @@ class EmergencyAndShortNoticeAssessmentRuleTest {
 
     @Test
     fun `Returns Skip if the application has a standard noticeType`() {
+      val assessmentRule = EmergencyAndShortNoticeAssessmentRule(Clock.systemUTC())
+
       val apArea = ApAreaEntityFactory()
         .produce()
 
@@ -134,6 +182,7 @@ class EmergencyAndShortNoticeAssessmentRuleTest {
         .withCreatedByUser(createdByUser)
         .withSubmittedAt(OffsetDateTime.now())
         .withNoticeType(Cas1ApplicationTimelinessCategory.standard)
+        .withCruManagementArea(null)
         .produce()
         .apply {
           this.apArea = apArea
@@ -150,7 +199,14 @@ class EmergencyAndShortNoticeAssessmentRuleTest {
 
     @ParameterizedTest
     @EnumSource(Cas1ApplicationTimelinessCategory::class, names = ["emergency", "shortNotice"])
-    fun `Returns Skip with when no user is configured for the cru management area`(noticeType: Cas1ApplicationTimelinessCategory) {
+    fun `Returns Skip with when no user is configured for the cru management area on the given day`(noticeType: Cas1ApplicationTimelinessCategory) {
+      val assessmentRule = EmergencyAndShortNoticeAssessmentRule(
+        MutableClockConfiguration.MutableClock(
+          // Wednesday
+          LocalDate.parse("2024-07-03").atTime(12, 0, 0).toInstant(ZoneOffset.UTC),
+        ),
+      )
+
       val createdByUser = UserEntityFactory()
         .withDefaults()
         .produce()
@@ -162,6 +218,16 @@ class EmergencyAndShortNoticeAssessmentRuleTest {
         .withCruManagementArea(
           Cas1CruManagementAreaEntityFactory()
             .withAssessmentAutoAllocationUsername(null)
+            .withAssessmentAutoAllocations(
+              mutableMapOf(
+                AutoAllocationDay.MONDAY to "mr monday",
+                AutoAllocationDay.TUESDAY to "mrs tuesday",
+                AutoAllocationDay.THURSDAY to "dr thurs",
+                AutoAllocationDay.FRIDAY to "prof fri",
+                AutoAllocationDay.SATURDAY to "sat snr",
+                AutoAllocationDay.SUNDAY to "miss sunday",
+              ),
+            )
             .produce(),
         )
         .produce()
@@ -180,6 +246,8 @@ class EmergencyAndShortNoticeAssessmentRuleTest {
   inner class EvaluatePlacementApplication {
     @Test
     fun `Always returns Skip`() {
+      val assessmentRule = EmergencyAndShortNoticeAssessmentRule(Clock.systemUTC())
+
       val result = assessmentRule.evaluatePlacementApplication(mockk<PlacementApplicationEntity>())
 
       assertThat(result).isEqualTo(UserAllocatorRuleOutcome.Skip)

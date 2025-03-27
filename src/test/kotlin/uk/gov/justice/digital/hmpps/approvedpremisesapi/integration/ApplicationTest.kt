@@ -73,6 +73,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApplicationTe
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApplicationTeamCodeRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AssessmentEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AutoAllocationDay
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas1CruManagementAreaEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DomainEventType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ProbationRegionEntity
@@ -94,6 +95,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.prisonsapi.InmateS
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.AssessmentTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.bodyAsListOfObjects
 import java.time.LocalDate
+import java.time.LocalDateTime
 import java.time.OffsetDateTime
 import java.util.UUID
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApprovedPremisesApplicationStatus as ApiApprovedPremisesApplicationStatus
@@ -2185,10 +2187,17 @@ class ApplicationTest : IntegrationTestBase() {
 
     @Test
     fun `Submit emergency application auto allocates the assessment, sends emails and raises domain events`() {
+      // Thursday
+      clock.setNow(LocalDateTime.parse("2025-03-27T10:15:30"))
+
       val (submittingUser, jwt) = givenAUser(
         probationRegion = givenAProbationRegion(
           apArea = givenAnApArea(
-            defaultCruManagementArea = givenACas1CruManagementArea(assessmentAutoAllocationUsername = "DEFAULT_LONDON_ASSESSOR"),
+            defaultCruManagementArea = givenACas1CruManagementArea(
+              assessmentAutoAllocations = mutableMapOf(
+                AutoAllocationDay.THURSDAY to "DEFAULT_LONDON_ASSESSOR",
+              ),
+            ),
           ),
         ),
       )
@@ -2291,6 +2300,9 @@ class ApplicationTest : IntegrationTestBase() {
 
     @Test
     fun `Submit short notice application auto allocates the assessment according to overridden ap area, sends emails and raises domain events`() {
+      // Sunday
+      clock.setNow(LocalDateTime.parse("2025-03-30T10:15:30"))
+
       val (submittingUser, jwt) = givenAUser()
 
       val (assessorUser, _) = givenAUser(
@@ -2320,7 +2332,9 @@ class ApplicationTest : IntegrationTestBase() {
       val overriddenApArea = givenAnApArea(
         name = "wales",
         defaultCruManagementArea = givenACas1CruManagementArea(
-          assessmentAutoAllocationUsername = "DEFAULT_WALES_ASSESSOR",
+          assessmentAutoAllocations = mutableMapOf(
+            AutoAllocationDay.SUNDAY to "DEFAULT_WALES_ASSESSOR",
+          ),
         ),
       )
 
