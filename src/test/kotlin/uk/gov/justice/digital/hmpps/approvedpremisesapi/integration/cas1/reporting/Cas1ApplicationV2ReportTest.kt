@@ -193,6 +193,8 @@ class Cas1ApplicationV2ReportTest : InitialiseDatabasePerClassTestBase() {
           assertThat(headers).doesNotContain("initial_assessor_username")
           assertThat(headers).doesNotContain("initial_assessor_name")
           assertThat(headers).doesNotContain("last_appealed_assessor_username")
+          assertThat(headers).doesNotContain("last_appealed_assessor_name")
+
 
           val actual = DataFrame
             .readCSV(completeCsvString.byteInputStream())
@@ -228,7 +230,7 @@ class Cas1ApplicationV2ReportTest : InitialiseDatabasePerClassTestBase() {
       val (assessor2, assessor2Jwt) = givenAUser(
         roles = listOf(UserRole.CAS1_ASSESSOR),
         qualifications = UserQualification.entries,
-        staffDetail = StaffDetailFactory.staffDetail(deliusUsername = "ASSESSOR2"),
+        staffDetail = StaffDetailFactory.staffDetail(name = PersonName(forename = "Jeff", surname = "Jefferson"), deliusUsername = "ASSESSOR2"),
       )
 
       application = createAndSubmitApplication(
@@ -398,8 +400,10 @@ class Cas1ApplicationV2ReportTest : InitialiseDatabasePerClassTestBase() {
 
       if (shouldIncludePii) {
         assertThat(row.last_appealed_assessor_username).isEqualTo("ASSESSOR2")
+        assertThat(row.last_appealed_assessor_name).isEqualTo("Jeff Jefferson")
       } else {
         assertThat(row.last_appealed_assessor_username).isNull()
+        assertThat(row.last_appealed_assessor_name).isNull()
       }
 
       assertThat(row.application_withdrawal_date).isEqualTo("2021-12-25T02:00:00Z")
@@ -630,6 +634,7 @@ class Cas1ApplicationV2ReportTest : InitialiseDatabasePerClassTestBase() {
       assertThat(row.last_allocated_to_appealed_assessor_date).isNull()
       assertThat(row.last_allocated_to_appealed_assessor_premises_type).isNull()
       assertThat(row.last_appealed_assessor_username).isNull()
+      assertThat(row.last_appealed_assessor_name).isNull()
 
       assertThat(row.application_withdrawal_date).isNull()
       assertThat(row.application_withdrawal_reason).isNull()
@@ -789,6 +794,7 @@ class Cas1ApplicationV2ReportTest : InitialiseDatabasePerClassTestBase() {
     val last_allocated_to_appealed_assessor_date: String?,
     val last_allocated_to_appealed_assessor_premises_type: String?,
     val last_appealed_assessor_username: String?,
+    val last_appealed_assessor_name: String?,
     val application_withdrawal_date: String?,
     val application_withdrawal_reason: String?,
   )
