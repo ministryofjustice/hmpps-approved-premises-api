@@ -43,14 +43,14 @@ class Cas2AllocationChangedService(
           val allocatedUser = nomisUserRepository.findByNomisStaffId(pomAllocation.manager.code)
             ?: throw RuntimeException("No NOMIS user details found")
 
-          if (isNewAllocation(application.mostRecentPomUserId, allocatedUser.id)) {
+          if (isNewAllocation(application.currentPomUserId, allocatedUser.id)) {
             application.createApplicationAssignment(
               prisonCode = pomAllocation.prison.code,
               allocatedPomUserId = allocatedUser.id,
             )
             applicationRepository.save(application)
 
-            emailService.sendAllocationChangedEmails(application, allocatedUser, pomAllocation.prison.code)
+            emailService.sendAllocationChangedEmails(application = application, newPom = allocatedUser, newPrisonCode = pomAllocation.prison.code)
           }
         }
 

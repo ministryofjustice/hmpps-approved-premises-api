@@ -49,6 +49,7 @@ class Cas2ApplicationEntityTest : IntegrationTestBase() {
         assertThat(assignments[2].prisonCode).isEqualTo("LON2")
         assertThat(assignments[3].prisonCode).isEqualTo("LON1")
         assertThat(retrievedApplication.currentPrisonCode).isEqualTo("LON4")
+        assertThat(retrievedApplication.currentPomUserId).isEqualTo(null)
         assertThat(retrievedApplication.mostRecentPomUserId).isEqualTo(userEntity.id)
       }
     }

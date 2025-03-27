@@ -41,10 +41,6 @@ class PrisonsApiClient(
     preemptiveCacheKey = nomsNumber
   }
 
-  fun getAgencyDetails(agencyId: String) = getRequest<Agency> {
-    path = "/api/agencies/$agencyId"
-  }
-
   fun getInmateDetailsCacheEntryStatus(nomsNumber: String) = checkPreemptiveCacheStatus(inmateDetailsCacheConfig, nomsNumber)
 
   fun getAdjudicationsPage(nomsNumber: String, offset: Int?, pageSize: Int) = getRequest<AdjudicationsPage> {
