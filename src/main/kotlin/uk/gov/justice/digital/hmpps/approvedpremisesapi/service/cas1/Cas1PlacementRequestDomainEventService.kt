@@ -76,7 +76,6 @@ class Cas1PlacementRequestDomainEventService(
           eventDetails = eventDetails,
         ),
       ),
-      emit = false,
     )
   }
 

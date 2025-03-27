@@ -103,7 +103,7 @@ class Cas1PlacementRequestCas1DomainEventServiceTest {
 
     @Test
     fun `if source is application assessment, create a domain event`() {
-      every { domainEventService.saveRequestForPlacementCreatedEvent(any(), any()) } returns Unit
+      every { domainEventService.saveRequestForPlacementCreatedEvent(any()) } returns Unit
 
       service.placementRequestCreated(
         placementRequest = placementRequest,
@@ -132,7 +132,6 @@ class Cas1PlacementRequestCas1DomainEventServiceTest {
             assertThat(eventDetails.duration).isEqualTo(7)
             assertThat(eventDetails.requestForPlacementType).isEqualTo(RequestForPlacementType.initial)
           },
-          emit = false,
         )
       }
     }

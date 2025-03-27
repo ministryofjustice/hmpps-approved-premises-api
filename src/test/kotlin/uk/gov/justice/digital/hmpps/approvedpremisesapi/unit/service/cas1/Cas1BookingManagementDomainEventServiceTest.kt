@@ -426,7 +426,7 @@ class Cas1BookingManagementDomainEventServiceTest {
 
     @BeforeEach
     fun before() {
-      every { domainEventService.saveKeyWorkerAssignedEvent(any(), any()) } just Runs
+      every { domainEventService.saveKeyWorkerAssignedEvent(any()) } just Runs
 
       every { offenderService.getPersonSummaryInfoResults(any(), any()) } returns
         listOf(PersonSummaryInfoResult.Success.Full("THEBOOKINGCRN", caseSummary))
@@ -453,7 +453,6 @@ class Cas1BookingManagementDomainEventServiceTest {
       verify(exactly = 1) {
         domainEventService.saveKeyWorkerAssignedEvent(
           capture(domainEventArgument),
-          emit = false,
         )
       }
 
@@ -485,7 +484,6 @@ class Cas1BookingManagementDomainEventServiceTest {
       verify(exactly = 1) {
         domainEventService.saveKeyWorkerAssignedEvent(
           capture(domainEventArgument),
-          emit = false,
         )
       }
 
@@ -515,7 +513,6 @@ class Cas1BookingManagementDomainEventServiceTest {
       verify(exactly = 1) {
         domainEventService.saveKeyWorkerAssignedEvent(
           capture(domainEventArgument),
-          emit = false,
         )
       }
 

@@ -97,7 +97,7 @@ class Cas1AssessmentDomainEventService(
     )
   }
 
-  fun furtherInformationRequested(assessment: AssessmentEntity, clarificationNoteEntity: AssessmentClarificationNoteEntity, emit: Boolean = true) {
+  fun furtherInformationRequested(assessment: AssessmentEntity, clarificationNoteEntity: AssessmentClarificationNoteEntity) {
     val requesterStaffDetails = when (val result = apDeliusContextApiClient.getStaffDetail(clarificationNoteEntity.createdByUser.deliusUsername)) {
       is ClientResult.Success -> result.body
       is ClientResult.Failure -> result.throwException()
@@ -141,7 +141,7 @@ class Cas1AssessmentDomainEventService(
       data = data,
     )
 
-    domainEventService.saveFurtherInformationRequestedEvent(domainEvent, emit)
+    domainEventService.saveFurtherInformationRequestedEvent(domainEvent)
   }
 
   fun assessmentAccepted(

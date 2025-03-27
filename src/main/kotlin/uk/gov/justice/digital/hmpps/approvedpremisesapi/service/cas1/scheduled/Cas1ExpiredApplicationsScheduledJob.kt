@@ -68,7 +68,6 @@ class Cas1ExpiredApplicationsScheduledJob(
             ),
           ),
           triggerSource = TriggerSourceType.SYSTEM,
-          emit = false,
         )
         log.info("Domain event id $domainEventId emitted for application $applicationId.")
       }

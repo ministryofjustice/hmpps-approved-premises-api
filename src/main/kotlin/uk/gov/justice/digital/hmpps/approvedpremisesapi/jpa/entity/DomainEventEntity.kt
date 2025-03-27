@@ -183,6 +183,12 @@ enum class DomainEventType(
   val typeDescription: String,
   val cas1TimelineEventType: Cas1TimelineEventType? = null,
   val schemaVersions: List<DomainEventSchemaVersion> = listOf(DEFAULT_DOMAIN_EVENT_SCHEMA_VERSION),
+  /**
+   * If this domain event can be considered to be emitted.
+   *
+   * Logic around emitting domain events is different for each CAS. This field is currently only used by CAS1
+   */
+  val emittable: Boolean = true,
 ) {
   APPROVED_PREMISES_APPLICATION_SUBMITTED(
     DomainEventCas.CAS1,
@@ -205,6 +211,7 @@ enum class DomainEventType(
     Cas1EventType.applicationExpired.value,
     "An Approved Premises application has expired",
     Cas1TimelineEventType.applicationExpired,
+    emittable = false,
   ),
   APPROVED_PREMISES_BOOKING_MADE(
     DomainEventCas.CAS1,
@@ -273,6 +280,7 @@ enum class DomainEventType(
     Cas1EventType.bookingKeyWorkerAssigned.value,
     "A keyworker has been assigned to the booking",
     Cas1TimelineEventType.bookingKeyworkerAssigned,
+    emittable = false,
   ),
   APPROVED_PREMISES_APPLICATION_WITHDRAWN(
     DomainEventCas.CAS1,
@@ -321,6 +329,7 @@ enum class DomainEventType(
     Cas1EventType.requestForPlacementCreated.value,
     "An Approved Premises Request for Placement has been created",
     Cas1TimelineEventType.requestForPlacementCreated,
+    emittable = false,
   ),
   APPROVED_PREMISES_REQUEST_FOR_PLACEMENT_ASSESSED(
     DomainEventCas.CAS1,

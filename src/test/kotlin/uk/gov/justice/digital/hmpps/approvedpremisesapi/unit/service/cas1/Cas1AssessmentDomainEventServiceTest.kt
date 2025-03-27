@@ -11,9 +11,6 @@ import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
-import org.junit.jupiter.params.ParameterizedTest
-import org.junit.jupiter.params.provider.NullSource
-import org.junit.jupiter.params.provider.ValueSource
 import org.springframework.http.HttpStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.ApplicationAssessedAssessedBy
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.ApplicationAssessedEnvelope
@@ -401,10 +398,8 @@ class Cas1AssessmentDomainEventServiceTest {
       clearAllMocks()
     }
 
-    @ParameterizedTest
-    @NullSource
-    @ValueSource(booleans = [true, false])
-    fun `it raises a Further Information Requested Domain Event`(emit: Boolean?) {
+    @Test
+    fun `it raises a Further Information Requested Domain Event`() {
       val assessment = createAssessment()
       val clarificationNoteEntity = AssessmentClarificationNoteEntityFactory()
         .withAssessment(assessment)
@@ -427,17 +422,8 @@ class Cas1AssessmentDomainEventServiceTest {
         recipientStaffDetails,
       )
 
-      val emitValue: Boolean
-
-      if (emit !== null) {
-        emitValue = emit
-        every { domainEventService.saveFurtherInformationRequestedEvent(any(), emit) } just Runs
-        service.furtherInformationRequested(assessment, clarificationNoteEntity, emit)
-      } else {
-        emitValue = true
-        every { domainEventService.saveFurtherInformationRequestedEvent(any(), true) } just Runs
-        service.furtherInformationRequested(assessment, clarificationNoteEntity)
-      }
+      every { domainEventService.saveFurtherInformationRequestedEvent(any()) } just Runs
+      service.furtherInformationRequested(assessment, clarificationNoteEntity)
 
       verify(exactly = 1) {
         domainEventService.saveFurtherInformationRequestedEvent(
@@ -470,7 +456,6 @@ class Cas1AssessmentDomainEventServiceTest {
 
             rootDomainEventDataMatches && envelopeMatches && eventDetailsMatch && requesterUserDetailsMatch && recipientUserDetailsMatch
           },
-          emitValue,
         )
       }
     }

@@ -235,7 +235,6 @@ class Cas1SpaceBookingManagementDomainEventService(
     val eventNumber = updatedCas1SpaceBooking.deliusEventNumber!!
 
     domainEventService.saveKeyWorkerAssignedEvent(
-      emit = false,
       domainEvent = DomainEvent(
         id = domainEventId,
         applicationId = applicationId,
