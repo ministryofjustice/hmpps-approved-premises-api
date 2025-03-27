@@ -179,6 +179,10 @@ class Cas1SpaceBookingService(
 
     existingCas1SpaceBooking!!
 
+    if (existingCas1SpaceBooking.isCancelled()) {
+      return existingCas1SpaceBooking.id hasConflictError "The booking has already been cancelled"
+    }
+
     if (existingCas1SpaceBooking.hasArrival()) {
       return if (existingCas1SpaceBooking.hasSameActualArrivalDateTime(arrivalDate, arrivalTime)) {
         success(existingCas1SpaceBooking)
@@ -237,6 +241,10 @@ class Cas1SpaceBookingService(
 
     existingCas1SpaceBooking!!
 
+    if (existingCas1SpaceBooking.isCancelled()) {
+      return existingCas1SpaceBooking.id hasConflictError "The booking has already been cancelled"
+    }
+
     if (existingCas1SpaceBooking.nonArrivalConfirmedAt != null) {
       return if (existingCas1SpaceBooking.nonArrivalReason != reason || existingCas1SpaceBooking.nonArrivalNotes != cas1NonArrival.notes) {
         existingCas1SpaceBooking.id hasConflictError "A non-arrival is already recorded for this Space Booking"
@@ -282,6 +290,12 @@ class Cas1SpaceBookingService(
       return fieldValidationError
     }
 
+    existingCas1SpaceBooking!!
+
+    if (existingCas1SpaceBooking.isCancelled()) {
+      return existingCas1SpaceBooking.id hasConflictError "The booking has already been cancelled"
+    }
+
     val staffMemberResponse = staffMemberService.getStaffMemberByCodeForPremise(keyWorker.staffCode, premises!!.qCode)
     if (staffMemberResponse !is CasResult.Success) {
       return "$.keyWorker.staffCode" hasSingleValidationError "notFound"
@@ -293,8 +307,6 @@ class Cas1SpaceBookingService(
       surname = assignedKeyWorker.name.surname,
     )
     val assignedKeyWorkerName = "${assignedKeyWorker.name.forenames()} ${assignedKeyWorker.name.surname}"
-
-    existingCas1SpaceBooking!!
 
     val previousKeyWorkerName = existingCas1SpaceBooking.keyWorkerName
 
@@ -352,6 +364,10 @@ class Cas1SpaceBookingService(
     }
 
     existingSpaceBooking!!
+
+    if (existingSpaceBooking.isCancelled()) {
+      return existingSpaceBooking.id hasConflictError "The booking has already been cancelled"
+    }
 
     if (!existingSpaceBooking.hasArrival()) {
       return existingSpaceBooking.id hasConflictError "An arrival is not recorded for this Space Booking."

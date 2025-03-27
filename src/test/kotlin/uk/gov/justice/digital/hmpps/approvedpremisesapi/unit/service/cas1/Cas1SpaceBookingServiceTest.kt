@@ -687,6 +687,30 @@ class Cas1SpaceBookingServiceTest {
     }
 
     @Test
+    fun `Returns conflict error if the space booking has already been cancelled`() {
+      val existingSpaceBookingWithArrivalDate = existingSpaceBooking.copy(
+        cancellationOccurredAt = LocalDate.now().minusDays(10),
+      )
+
+      every { cas1PremisesService.findPremiseById(any()) } returns premises
+      every { spaceBookingRepository.findByIdOrNull(any()) } returns existingSpaceBookingWithArrivalDate
+
+      val result = service.recordArrivalForBooking(
+        premisesId = UUID.randomUUID(),
+        bookingId = UUID.randomUUID(),
+        arrivalDate = arrivalDate,
+        arrivalTime = arrivalTime,
+      )
+
+      assertThat(result).isInstanceOf(CasResult.ConflictError::class.java)
+      result as CasResult.ConflictError
+
+      uk.gov.justice.digital.hmpps.approvedpremisesapi.unit.util.assertThat(result)
+        .isConflictError()
+        .hasMessageContaining("The booking has already been cancelled")
+    }
+
+    @Test
     fun `Returns success without updates if the space booking record already has the exact same arrival date and time recorded`() {
       val existingSpaceBookingWithArrivalDate = existingSpaceBooking.copy(
         actualArrivalDate = existingArrivalDate,
@@ -861,6 +885,33 @@ class Cas1SpaceBookingServiceTest {
       result as CasResult.ConflictError
 
       assertThat(result.message).isEqualTo("A non-arrival is already recorded for this Space Booking")
+    }
+
+    @Test
+    fun `Returns conflict error if the space booking has already been cancelled`() {
+      val existingSpaceBookingWithNonArrivalDate =
+        existingSpaceBooking.copy(
+          cancellationOccurredAt = LocalDate.now().minusDays(10),
+
+        )
+
+      every { cas1PremisesService.findPremiseById(any()) } returns premises
+      every { spaceBookingRepository.findByIdOrNull(any()) } returns existingSpaceBookingWithNonArrivalDate
+      every { nonArrivalReasonRepository.findByIdOrNull(any()) } returns nonArrivalReason
+
+      val result = service.recordNonArrivalForBooking(
+        premisesId = UUID.randomUUID(),
+        bookingId = UUID.randomUUID(),
+        cas1NonArrival = cas1NonArrival,
+        recordedBy = recordedBy,
+      )
+
+      assertThat(result).isInstanceOf(CasResult.ConflictError::class.java)
+      result as CasResult.ConflictError
+
+      uk.gov.justice.digital.hmpps.approvedpremisesapi.unit.util.assertThat(result)
+        .isConflictError()
+        .hasMessageContaining("The booking has already been cancelled")
     }
 
     @Test
@@ -1219,6 +1270,30 @@ class Cas1SpaceBookingServiceTest {
       result as CasResult.ConflictError
 
       assertThat(result.message).isEqualTo("A departure is already recorded for this Space Booking.")
+    }
+
+    @Test
+    fun `Returns conflict error if the space booking has already been cancelled`() {
+      val existingSpaceBookingWithArrivalDate = existingSpaceBooking.copy(cancellationOccurredAt = LocalDate.now().minusDays(10))
+
+      every { spaceBookingRepository.findByIdOrNull(any()) } returns existingSpaceBookingWithArrivalDate
+
+      val result = service.recordDepartureForBooking(
+        premisesId = UUID.randomUUID(),
+        bookingId = UUID.randomUUID(),
+        departureInfo = DepartureInfo(
+          actualDepartureDate,
+          actualDepartureTime,
+          UUID.randomUUID(),
+        ),
+      )
+
+      assertThat(result).isInstanceOf(CasResult.ConflictError::class.java)
+      result as CasResult.ConflictError
+
+      uk.gov.justice.digital.hmpps.approvedpremisesapi.unit.util.assertThat(result)
+        .isConflictError()
+        .hasMessageContaining("The booking has already been cancelled")
     }
 
     @Test
