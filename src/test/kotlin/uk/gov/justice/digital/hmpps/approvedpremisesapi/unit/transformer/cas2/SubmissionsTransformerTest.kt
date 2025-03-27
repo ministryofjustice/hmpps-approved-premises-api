@@ -16,17 +16,15 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas2SubmittedA
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas2TimelineEvent
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NomisUser
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Person
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.Cas2ApplicationEntityFactory
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.Cas2AssessmentEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.NomisUserEntityFactory
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas2ApplicationSummaryEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.cas2.Cas2ApplicationEntityFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.cas2.Cas2ApplicationSummaryEntityFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.cas2.Cas2AssessmentEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.NomisUserTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.PersonTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.cas2.AssessmentsTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.cas2.SubmissionsTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.cas2.TimelineEventsTransformer
-import java.time.Instant
-import java.time.LocalDate
 import java.time.OffsetDateTime
 import java.util.UUID
 
@@ -119,27 +117,15 @@ class SubmissionsTransformerTest {
   inner class TransformJpaSummaryToCas2SubmittedSummary {
     @Test
     fun `transforms submitted summary application to API summary representation `() {
-      val applicationSummary = Cas2ApplicationSummaryEntity(
-        id = UUID.fromString("2f838a8c-dffc-48a3-9536-f0e95985e809"),
-        crn = "CRN123",
-        nomsNumber = "NOMS456",
-        userId = "836a9460-b177-433a-a0d9-262509092c9f",
-        userName = "first last",
-        createdAt = OffsetDateTime.parse("2023-04-19T13:25:00+01:00"),
-        submittedAt = OffsetDateTime.parse("2023-04-19T13:25:30+01:00"),
-        hdcEligibilityDate = LocalDate.parse("2023-04-29"),
-        latestStatusUpdateLabel = null,
-        latestStatusUpdateStatusId = null,
-        prisonCode = "BRI",
-      )
+      val applicationSummary = Cas2ApplicationSummaryEntityFactory.produce()
 
       val expectedSubmittedApplicationSummary = Cas2SubmittedApplicationSummary(
-        id = UUID.fromString("2f838a8c-dffc-48a3-9536-f0e95985e809"),
-        crn = "CRN123",
-        nomsNumber = "NOMS456",
-        createdByUserId = UUID.fromString("836a9460-b177-433a-a0d9-262509092c9f"),
-        createdAt = Instant.parse("2023-04-19T13:25:00+01:00"),
-        submittedAt = Instant.parse("2023-04-19T13:25:30+01:00"),
+        id = applicationSummary.id,
+        crn = applicationSummary.crn,
+        nomsNumber = applicationSummary.nomsNumber,
+        createdByUserId = UUID.fromString(applicationSummary.userId),
+        createdAt = applicationSummary.createdAt.toInstant(),
+        submittedAt = applicationSummary.submittedAt!!.toInstant(),
         personName = "Example Offender",
       )
 

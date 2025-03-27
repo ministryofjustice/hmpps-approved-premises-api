@@ -43,6 +43,24 @@ interface Cas2ApplicationRepository : JpaRepository<Cas2ApplicationEntity, UUID>
       "AND a NOT IN (SELECT application FROM Cas2AssessmentEntity)",
   )
   fun findAllSubmittedApplicationsWithoutAssessments(): Slice<Cas2ApplicationEntity>
+
+  @Query(
+    """with assignments_ordered as (select aa.*,
+                                   row_number() over (partition by application_id order by created_at desc) as rn
+                            from cas_2_application_assignments aa),
+     latest_assignments as (select application_id, prison_code as latest_prison_code
+                            from assignments_ordered
+                            where rn = 1)
+select a.id
+from cas_2_applications a
+         join assignments_ordered aa on a.id = aa.application_id
+         join latest_assignments la on aa.application_id = la.application_id
+where aa.allocated_pom_user_id = :userId
+  and aa.rn > 1 --find rows where the POM has been assigned, but not currently
+  and la.latest_prison_code <> :prisonCode --and where the new pom is not in the same prison;""",
+    nativeQuery = true,
+  )
+  fun findDeallocatedApplicationIds(userId: UUID, prisonCode: String): List<UUID>
 }
 
 @Repository
@@ -105,9 +123,9 @@ data class Cas2ApplicationEntity(
 ) {
   override fun toString() = "Cas2ApplicationEntity: $id"
   val currentPrisonCode: String?
-    get() = applicationAssignments.firstOrNull()?.prisonCode
+    get() = applicationAssignments.maxByOrNull { it.createdAt }?.prisonCode
   val currentPomUserId: UUID?
-    get() = applicationAssignments.firstOrNull()?.allocatedPomUser?.id
+    get() = applicationAssignments.maxByOrNull { it.createdAt }?.allocatedPomUser?.id
   val currentAssignmentDate: LocalDate?
     get() = applicationAssignments.maxByOrNull { it.createdAt }?.createdAt?.toLocalDate()
   val mostRecentPomUserId: UUID

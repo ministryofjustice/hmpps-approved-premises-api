@@ -4,6 +4,7 @@ import com.fasterxml.jackson.databind.ObjectMapper
 import org.springframework.stereotype.Component
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApplicationStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas2Application
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas2ApplicationSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas2ApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas2ApplicationSummaryEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.OffenderManagementUnitRepository
@@ -52,21 +53,25 @@ class ApplicationsTransformer(
   fun transformJpaSummaryToSummary(
     jpaSummary: Cas2ApplicationSummaryEntity,
     personName: String,
-  ): uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas2ApplicationSummary = uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model
-    .Cas2ApplicationSummary(
-      id = jpaSummary.id,
-      createdByUserId = UUID.fromString(jpaSummary.userId),
-      createdByUserName = jpaSummary.userName,
-      createdAt = jpaSummary.createdAt.toInstant(),
-      submittedAt = jpaSummary.submittedAt?.toInstant(),
-      status = getStatusFromSummary(jpaSummary),
-      latestStatusUpdate = statusUpdateTransformer.transformJpaSummaryToLatestStatusUpdateApi(jpaSummary),
-      type = "CAS2",
-      hdcEligibilityDate = jpaSummary.hdcEligibilityDate,
-      crn = jpaSummary.crn,
-      nomsNumber = jpaSummary.nomsNumber,
-      personName = personName,
-    )
+  ): Cas2ApplicationSummary = Cas2ApplicationSummary(
+    id = jpaSummary.id,
+    createdByUserId = UUID.fromString(jpaSummary.userId),
+    createdByUserName = jpaSummary.userName,
+    allocatedPomUserId = jpaSummary.allocatedPomUserId ?: UUID.fromString(jpaSummary.userId),
+    allocatedPomName = jpaSummary.allocatedPomName ?: jpaSummary.userName,
+    currentPrisonName = jpaSummary.currentPrisonCode?.let { offenderManagementUnitRepository.findByPrisonCode(it)?.prisonName }
+      ?: jpaSummary.prisonCode,
+    assignmentDate = jpaSummary.assignmentDate?.toLocalDate() ?: jpaSummary.createdAt.toLocalDate(),
+    createdAt = jpaSummary.createdAt.toInstant(),
+    submittedAt = jpaSummary.submittedAt?.toInstant(),
+    status = getStatusFromSummary(jpaSummary),
+    latestStatusUpdate = statusUpdateTransformer.transformJpaSummaryToLatestStatusUpdateApi(jpaSummary),
+    type = "CAS2",
+    hdcEligibilityDate = jpaSummary.hdcEligibilityDate,
+    crn = jpaSummary.crn,
+    nomsNumber = jpaSummary.nomsNumber,
+    personName = personName,
+  )
 
   private fun getStatus(entity: Cas2ApplicationEntity): ApplicationStatus {
     if (entity.submittedAt !== null) {

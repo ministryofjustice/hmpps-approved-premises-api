@@ -366,16 +366,16 @@ class Cas2ApplicationTest : IntegrationTestBase() {
               objectMapper.readValue(rawResponseBody, object : TypeReference<List<Cas2ApplicationSummary>>() {})
 
             // check transformers were able to return all fields
-            Assertions.assertThat(responseBody).anyMatch {
-              firstApplicationEntity.id == it.id &&
-                firstApplicationEntity.crn == it.crn &&
-                firstApplicationEntity.nomsNumber == it.nomsNumber &&
-                "${offenderDetails.firstName} ${offenderDetails.surname}" == it.personName &&
-                firstApplicationEntity.createdAt.toInstant() == it.createdAt &&
-                firstApplicationEntity.createdByUser.id == it.createdByUserId &&
-                firstApplicationEntity.submittedAt?.toInstant() == it.submittedAt &&
-                firstApplicationEntity.hdcEligibilityDate == it.hdcEligibilityDate &&
-                firstApplicationEntity.createdByUser.name == it.createdByUserName
+            Assertions.assertThat(responseBody).anySatisfy {
+              Assertions.assertThat(it.id).isEqualTo(firstApplicationEntity.id)
+              Assertions.assertThat(it.crn).isEqualTo(firstApplicationEntity.crn)
+              Assertions.assertThat(it.nomsNumber).isEqualTo(firstApplicationEntity.nomsNumber)
+              Assertions.assertThat(it.personName).isEqualTo("${offenderDetails.firstName} ${offenderDetails.surname}")
+              Assertions.assertThat(it.createdAt).isEqualTo(firstApplicationEntity.createdAt.toInstant())
+              Assertions.assertThat(it.createdByUserId).isEqualTo(firstApplicationEntity.createdByUser.id)
+              Assertions.assertThat(it.submittedAt).isEqualTo(firstApplicationEntity.submittedAt?.toInstant())
+              Assertions.assertThat(it.hdcEligibilityDate).isEqualTo(firstApplicationEntity.hdcEligibilityDate)
+              Assertions.assertThat(it.createdByUserName).isEqualTo(firstApplicationEntity.createdByUser.name)
             }
 
             Assertions.assertThat(responseBody).noneMatch {

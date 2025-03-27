@@ -71,7 +71,7 @@ paths:
           in: query
           description: The relationship of the application to the user - created by them, allocated to them, deallocated from them, or unallocated & in the same prison. All applications returned are submitted.
           schema:
-            enum: [ CREATED, ALLOCATED, DEALLOCATED, UNALLOCATED ]
+            $ref: '#/components/schemas/AssignmentType'
       responses:
         200:
           description: successful operation
@@ -5084,6 +5084,10 @@ components:
         - departingToday
         - overdueDeparture
         - departed
+    AssignmentType:
+      type: string
+      enum: [ CREATED, ALLOCATED, DEALLOCATED, UNALLOCATED ]
+      x-enum-varnames: [ CREATED, ALLOCATED, DEALLOCATED, UNALLOCATED ]
     SubmitCas2Application:
       type: object
       properties:
@@ -5229,6 +5233,16 @@ components:
           type: string
         nomsNumber:
           type: string
+        allocatedPomUserId:
+          type: string
+          format: uuid
+        allocatedPomName:
+          type: string
+        currentPrisonName:
+          type: string
+        assignmentDate:
+          type: string
+          format: date
       required:
         - type
         - id
@@ -5238,6 +5252,10 @@ components:
         - personName
         - crn
         - nomsNumber
+        - assignmentDate
+        - allocatedPomName
+        - allocatedPomUserId
+        - assignmentDate
     NewCas2ApplicationNote:
       type: object
       properties:
