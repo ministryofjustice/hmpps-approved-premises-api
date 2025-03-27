@@ -24,8 +24,8 @@ class MutableClockConfiguration {
     clock.reset()
   }
 
-  class MutableClock : Clock() {
-    var fixedTime: Instant? = null
+  class MutableClock(time: Instant? = null) : Clock() {
+    var fixedTime: Instant? = time
 
     fun reset() = run { fixedTime = null }
 
