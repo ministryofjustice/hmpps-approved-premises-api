@@ -9,9 +9,10 @@
 - [ ] Add a feature flag if needed
 - [ ] Ensure all AC for this PR pass
 - [ ] Rebase on main
-- [ ] Squash all your commits where the first line matches you branch name and the lines after explain what this PR is
+- [ ] Squash all your commits into logical chunks where the first line briefly summaries the change and the lines after
+  explain what this PR is
   for
-- [ ] Copy and paste your commit message into the PR description and include a link to the ticket associated with this
+- [ ] Write a detailed PR description and include a link to the ticket associated with this
   PR
 - [ ] Wait for PR pipeline to complete successfully
 - [ ] Ensure the PR is not in draft mode
