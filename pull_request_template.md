@@ -11,38 +11,31 @@
 - [ ] Rebase on main
 - [ ] Squash all your commits where the first line matches you branch name and the lines after explain what this PR is
   for
+- [ ] Copy and paste your commit message into the PR description and include a link to the ticket associated with this
+  PR
 - [ ] Wait for PR pipeline to complete successfully
 - [ ] Ensure the PR is not in draft mode
 - [ ] Move related ticket (if necessary) into review column
 - [ ] Post on cas-dev Slack channel asking for a review
 
-## During review
+## Reviewer (At least one)
 
-## Reviewer 1
-
-- [ ] Put eyes emoji 👀 on Slack message to let the PR owner know you are checking the code
-- [ ] Complete a thorough code review adding comments if necessary
-- [ ] Approve or reject the review (resolving any comments)
-- [ ] Comment on Slack message to let the PR owner know you have finished your review (✅ or ❌)
-
-## Reviewer 2 (Optional - at request by the PR owner)
-
-- [ ] Put eyes emoji 👀 on Slack message to let the PR owner know you are checking the code
-- [ ] Complete a thorough code review adding comments if necessary
-- [ ] Approve or reject the review (resolving any comments)
-- [ ] Comment on Slack message to let the PR owner know you have finished your review (✅ or ❌)
+1. Put eyes emoji 👀 on Slack message to let the PR owner know you are checking the code
+2. Complete a thorough code review adding comments if necessary
+3. Approve or reject the review (resolving any comments)
+4. Comment on Slack message to let the PR owner know you have finished your review (✅ or ❌)
 
 ## PR owner (if PR rejected)
 
-- [ ] Respond to any comments
-- [ ] Make code changes
-- [ ] Comment on Slack message tagging reviewers to ask for re-review
+1. Respond to any comments
+2. Make code changes
+3. Comment on Slack message tagging reviewers to ask for re-review
 
 ## After review (PR Owner)
 
-- [ ] Rebase on main
-- [ ] Wait for PR pipeline to complete successfully
-- [ ] Merge
+1. Rebase on main
+2. Wait for PR pipeline to complete successfully
+3. Merge
 
 ## After merge (PR Owner)
 
