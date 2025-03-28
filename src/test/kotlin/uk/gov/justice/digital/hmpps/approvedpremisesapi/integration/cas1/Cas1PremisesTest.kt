@@ -5,6 +5,9 @@ import com.github.tomakehurst.wiremock.client.WireMock.exactly
 import com.github.tomakehurst.wiremock.client.WireMock.getRequestedFor
 import com.github.tomakehurst.wiremock.client.WireMock.urlEqualTo
 import org.assertj.core.api.Assertions.assertThat
+import org.jetbrains.kotlinx.dataframe.DataFrame
+import org.jetbrains.kotlinx.dataframe.api.toMap
+import org.jetbrains.kotlinx.dataframe.io.readCSV
 import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.Disabled
 import org.junit.jupiter.api.Nested
@@ -51,6 +54,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRole
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRole.CAS1_ASSESSOR
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRole.CAS1_CRU_MEMBER
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRole.CAS1_CRU_MEMBER_FIND_AND_BOOK_BETA
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRole.CAS1_FUTURE_MANAGER
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.deliuscontext.CaseSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.deliuscontext.StaffMembersPage
@@ -61,6 +65,8 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.bodyAsObject
 import java.net.URLEncoder
 import java.time.Instant
 import java.time.LocalDate
+import java.time.LocalDateTime
+import java.time.OffsetDateTime
 import java.util.UUID
 
 class Cas1PremisesTest : IntegrationTestBase() {
@@ -1271,6 +1277,233 @@ class Cas1PremisesTest : IntegrationTestBase() {
 
         wiremockServer.verify(exactly(1), getRequestedFor(urlEqualTo("/approved-premises/$qCode/staff")))
       }
+    }
+  }
+
+  @Nested
+  inner class CapacityReport : InitialiseDatabasePerClassTestBase() {
+
+    @BeforeAll
+    fun setup() {
+      val premises1 = givenAnApprovedPremises(
+        name = "Premises 1",
+        supportsSpaceBookings = true,
+        region = givenAProbationRegion(
+          apArea = givenAnApArea(name = "Region 1"),
+        ),
+      )
+      val premises2 = givenAnApprovedPremises(
+        name = "Premises 2",
+        supportsSpaceBookings = true,
+        region = givenAProbationRegion(
+          apArea = givenAnApArea(name = "Region 2"),
+        ),
+      )
+      givenAnApprovedPremises(name = "Premises 3 Ignored", supportsSpaceBookings = false)
+
+      val premises1Beds = (1..9).map { givenAnApprovedPremisesBed(premises1) }
+      givenAnApprovedPremisesBed(premises1, endDate = LocalDate.of(2025, 5, 20))
+
+      repeat(35) { givenAnApprovedPremisesBed(premises2) }
+
+      // starting and ending within the month, use latest revision
+      givenAnOutOfServiceBed(
+        bed = premises1Beds[0],
+        startDate = LocalDate.of(2025, 5, 5),
+        endDate = LocalDate.of(2025, 5, 27),
+      ).apply {
+        this.revisionHistory += cas1OutOfServiceBedRevisionEntityFactory.produceAndPersist {
+          withCreatedBy(givenAUser().first)
+          withCreatedAt(OffsetDateTime.now().plusDays(1))
+          withOutOfServiceBed(this@apply)
+          withStartDate(LocalDate.of(2025, 5, 15))
+          withEndDate(LocalDate.of(2025, 5, 25))
+          withReason(cas1OutOfServiceBedReasonEntityFactory.produceAndPersist())
+        }
+      }
+
+      // spanning the month
+      givenAnOutOfServiceBed(
+        bed = premises1Beds[0],
+        startDate = LocalDate.of(2025, 3, 15),
+        endDate = LocalDate.of(2026, 5, 25),
+      )
+
+      // cancelled, so ignored
+      givenAnOutOfServiceBed(
+        bed = premises1Beds[0],
+        startDate = LocalDate.of(2025, 5, 15),
+        endDate = LocalDate.of(2025, 5, 25),
+        cancelled = true,
+      )
+
+      givenACas1SpaceBooking(
+        crn = "bookingSpanningTheWholeMonth",
+        premises = premises1,
+        canonicalArrivalDate = LocalDate.of(2025, 4, 30),
+        canonicalDepartureDate = LocalDate.of(2025, 6, 1),
+      )
+
+      givenACas1SpaceBooking(
+        crn = "bookingStartingInTheMonth",
+        premises = premises1,
+        canonicalArrivalDate = LocalDate.of(2025, 5, 27),
+        canonicalDepartureDate = LocalDate.of(2025, 6, 1),
+      )
+
+      givenACas1SpaceBooking(
+        crn = "bookingEndingInTheMonth",
+        premises = premises1,
+        canonicalArrivalDate = LocalDate.of(2025, 1, 1),
+        canonicalDepartureDate = LocalDate.of(2025, 5, 8),
+      )
+
+      givenACas1SpaceBooking(
+        crn = "bookingStartingAndEndingInTheMonth",
+        premises = premises1,
+        canonicalArrivalDate = LocalDate.of(2025, 5, 5),
+        canonicalDepartureDate = LocalDate.of(2025, 5, 10),
+      )
+
+      givenACas1SpaceBooking(
+        crn = "nonArrivalSoBookingIsIgnored",
+        premises = premises1,
+        canonicalArrivalDate = LocalDate.of(2025, 5, 7),
+        canonicalDepartureDate = LocalDate.of(2025, 5, 29),
+        nonArrivalConfirmedAt = Instant.now(),
+      )
+
+      givenACas1SpaceBooking(
+        crn = "cancelledSoBookingIsIgnored",
+        premises = premises1,
+        canonicalArrivalDate = LocalDate.of(2025, 5, 6),
+        canonicalDepartureDate = LocalDate.of(2025, 5, 28),
+        cancellationOccurredAt = LocalDate.now(),
+      )
+    }
+
+    @Test
+    fun `Returns 403 Forbidden if user does not have correct role`() {
+      val (_, jwt) = givenAUser(roles = listOf(CAS1_ASSESSOR))
+
+      webTestClient.get()
+        .uri("/cas1/premises/occupancy-report")
+        .header("Authorization", "Bearer $jwt")
+        .exchange()
+        .expectStatus()
+        .isForbidden
+    }
+
+    @Test
+    fun success() {
+      clock.setNow(LocalDateTime.parse("2025-05-01T10:15:30"))
+
+      val (_, jwt) = givenAUser(roles = listOf(CAS1_CRU_MEMBER_FIND_AND_BOOK_BETA))
+
+      webTestClient.get()
+        .uri("/cas1/premises/occupancy-report")
+        .header("Authorization", "Bearer $jwt")
+        .exchange()
+        .expectStatus()
+        .isOk
+        .expectHeader().valuesMatch("content-disposition", "attachment; filename=\"premises-occupancy-20250501_1015.csv\"")
+        .expectBody()
+        .consumeWith { response ->
+          val actual = DataFrame
+            .readCSV(response.responseBody!!.inputStream())
+            .toMap()
+
+          assertThat(actual.size).isEqualTo(31)
+
+          assertThat(actual["row_name"]).isEqualTo(listOf("Region 1 - Premises 1", "Region 2 - Premises 2"))
+
+          fun getDateToOccupancyMap(index: Int) = actual.keys
+            .filter { it != "row_name" }.associateWith { date -> (actual[date]!![index] as Int) }
+
+          val premises1DayValues = getDateToOccupancyMap(0)
+          val premises2DayValues = getDateToOccupancyMap(1)
+
+          assertThat(premises1DayValues).isEqualTo(
+            mapOf(
+              // we have 10 beds in the premise
+              // bookingEndingInTheMonth has already started
+              // bookingSpanningTheWholeMonth has already started
+              // one bed is out of service for the whole month
+              "1/5" to 7,
+              "2/5" to 7,
+              "3/5" to 7,
+              "4/5" to 7,
+              // bookingStartingAndEndingInTheMonth starts
+              "5/5" to 6,
+              "6/5" to 6,
+              "7/5" to 6,
+              // bookingEndingInTheMonth ends
+              "8/5" to 7,
+              "9/5" to 7,
+              // bookingStartingAndEndingInTheMonth ends
+              "10/5" to 8,
+              "11/5" to 8,
+              "12/5" to 8,
+              "13/5" to 8,
+              "14/5" to 8,
+              // OOSB starts
+              "15/5" to 7,
+              "16/5" to 7,
+              "17/5" to 7,
+              "18/5" to 7,
+              "19/5" to 7,
+              // Bed reaches end date
+              "20/5" to 6,
+              "21/5" to 6,
+              "22/5" to 6,
+              "23/5" to 6,
+              "24/5" to 6,
+              "25/5" to 6,
+              // OOSB ends
+              "26/5" to 7,
+              // bookingStartingInTheMonth starts
+              "27/5" to 6,
+              "28/5" to 6,
+              "29/5" to 6,
+              "30/5" to 6,
+            ),
+          )
+
+          assertThat(premises2DayValues).isEqualTo(
+            mapOf(
+              "1/5" to 35,
+              "2/5" to 35,
+              "3/5" to 35,
+              "4/5" to 35,
+              "5/5" to 35,
+              "6/5" to 35,
+              "7/5" to 35,
+              "8/5" to 35,
+              "9/5" to 35,
+              "10/5" to 35,
+              "11/5" to 35,
+              "12/5" to 35,
+              "13/5" to 35,
+              "14/5" to 35,
+              "15/5" to 35,
+              "16/5" to 35,
+              "17/5" to 35,
+              "18/5" to 35,
+              "19/5" to 35,
+              "20/5" to 35,
+              "21/5" to 35,
+              "22/5" to 35,
+              "23/5" to 35,
+              "24/5" to 35,
+              "25/5" to 35,
+              "26/5" to 35,
+              "27/5" to 35,
+              "28/5" to 35,
+              "29/5" to 35,
+              "30/5" to 35,
+            ),
+          )
+        }
     }
   }
 }

@@ -5,7 +5,11 @@ import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate
 import java.sql.ResultSet
 
 data class ReportJdbcTemplate(val namedParameterJdbcTemplate: NamedParameterJdbcTemplate) {
-  fun query(sql: String, paramMap: Map<String, *>, jdbcReportRowConsumer: JdbcResultSetConsumer) {
+  fun query(
+    sql: String,
+    paramMap: Map<String, *>,
+    jdbcReportRowConsumer: JdbcResultSetConsumer,
+  ) {
     namedParameterJdbcTemplate.query(
       sql,
       paramMap,

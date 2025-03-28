@@ -8,12 +8,16 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremi
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.BedRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas1SpaceBookingRepository
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas1.Cas1OccupancyReportRepository
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.util.CsvJdbcResultSetConsumer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.CasResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.FeatureFlagService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.PremisesService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.planning.SpacePlanningService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.Cas1PremiseOverbookingCalculator
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.DateRange
+import java.io.OutputStream
+import java.time.Clock
 import java.time.LocalDate
 import java.util.UUID
 
@@ -26,10 +30,28 @@ class Cas1PremisesService(
   val spacePlanningService: SpacePlanningService,
   val spaceBookingRepository: Cas1SpaceBookingRepository,
   val featureFlagService: FeatureFlagService,
+  val cas1OccupancyReportRepository: Cas1OccupancyReportRepository,
+  private val clock: Clock,
 ) {
   companion object {
     private const val OVERBOOKING_RANGE_DURATION_WEEKS = 12L
   }
+
+  @SuppressWarnings("MagicNumber")
+  fun createOccupancyReport(outputStream: OutputStream) {
+    val now = LocalDate.now(clock)
+
+    CsvJdbcResultSetConsumer(
+      outputStream = outputStream,
+    ).use { consumer ->
+      cas1OccupancyReportRepository.generate(
+        fromInclusive = now,
+        toInclusive = now.plusDays(29),
+        jbdcResultSetConsumer = consumer,
+      )
+    }
+  }
+
   fun getPremisesInfo(premisesId: UUID): CasResult<Cas1PremisesInfo> {
     val premise = premisesRepository.findByIdOrNull(premisesId)
       ?: return CasResult.NotFound("premises", premisesId.toString())

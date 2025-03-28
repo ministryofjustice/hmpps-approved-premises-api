@@ -533,6 +533,21 @@ paths:
           $ref: '_shared.yml#/components/responses/403Response'
         500:
           $ref: '_shared.yml#/components/responses/500Response'
+
+  /premises/occupancy-report:
+    get:
+      tags:
+        - premises
+      summary: Returns a CSV showing premises occupancy for the next 30 days. This does not consider characteristics.
+      operationId: getOccupancyReport
+      responses:
+        200:
+          description: Successfully retrieved the report
+          content:
+            'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet':
+              schema:
+                type: string
+                format: binary
   /premises/summary:
     get:
       description: Provide a summary of all premises, with optional filtering
