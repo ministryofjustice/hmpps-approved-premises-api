@@ -30,7 +30,8 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.config.DomainEventUrlCon
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DomainEventEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DomainEventRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DomainEventType
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.DomainEvent
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.MetaDataName
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TriggerSourceType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.domainevent.SnsEvent
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.domainevent.SnsEventAdditionalInformation
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.domainevent.SnsEventPersonReference
@@ -39,6 +40,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.NotFoundProblem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.ConfiguredDomainEventWorker
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.SentryService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.UserService
+import java.time.Instant
 import java.time.OffsetDateTime
 import java.time.ZoneOffset
 import java.util.UUID
@@ -79,13 +81,13 @@ class Cas1DomainEventService(
   fun getRequestForPlacementAssessedEvent(id: UUID) = get(id, RequestForPlacementAssessedEnvelope::class)
   fun getFurtherInformationRequestMadeEvent(id: UUID) = get(id, FurtherInformationRequestedEnvelope::class)
 
-  private fun <T : Any> get(id: UUID, type: KClass<T>): DomainEvent<T>? {
+  private fun <T : Any> get(id: UUID, type: KClass<T>): Cas1DomainEvent<T>? {
     val entity = domainEventRepository.findByIdOrNull(id) ?: return null
     return toDomainEvent(entity, type)
   }
 
   @SuppressWarnings("CyclomaticComplexMethod", "TooGenericExceptionThrown")
-  fun <T : Any> toDomainEvent(entity: DomainEventEntity, type: KClass<T>): DomainEvent<T> {
+  fun <T : Any> toDomainEvent(entity: DomainEventEntity, type: KClass<T>): Cas1DomainEvent<T> {
     checkNotNull(entity.applicationId) { "application id should not be null" }
 
     val dataJson = when {
@@ -118,7 +120,7 @@ class Cas1DomainEventService(
 
     val data = objectMapper.readValue(dataJson, type.java)
 
-    return DomainEvent(
+    return Cas1DomainEvent(
       id = entity.id,
       applicationId = entity.applicationId,
       crn = entity.crn,
@@ -130,121 +132,121 @@ class Cas1DomainEventService(
   }
 
   @Transactional
-  fun saveApplicationSubmittedDomainEvent(domainEvent: DomainEvent<ApplicationSubmittedEnvelope>) = saveAndEmit(
+  fun saveApplicationSubmittedDomainEvent(domainEvent: Cas1DomainEvent<ApplicationSubmittedEnvelope>) = saveAndEmit(
     domainEvent = domainEvent,
     eventType = DomainEventType.APPROVED_PREMISES_APPLICATION_SUBMITTED,
   )
 
   @Transactional
-  fun saveApplicationAssessedDomainEvent(domainEvent: DomainEvent<ApplicationAssessedEnvelope>) = saveAndEmit(
+  fun saveApplicationAssessedDomainEvent(domainEvent: Cas1DomainEvent<ApplicationAssessedEnvelope>) = saveAndEmit(
     domainEvent = domainEvent,
     eventType = DomainEventType.APPROVED_PREMISES_APPLICATION_ASSESSED,
   )
 
   @Transactional
-  fun saveBookingMadeDomainEvent(domainEvent: DomainEvent<BookingMadeEnvelope>) = saveAndEmit(
+  fun saveBookingMadeDomainEvent(domainEvent: Cas1DomainEvent<BookingMadeEnvelope>) = saveAndEmit(
     domainEvent = domainEvent,
     eventType = DomainEventType.APPROVED_PREMISES_BOOKING_MADE,
   )
 
   @Transactional
-  fun savePersonArrivedEvent(domainEvent: DomainEvent<PersonArrivedEnvelope>) = saveAndEmit(
+  fun savePersonArrivedEvent(domainEvent: Cas1DomainEvent<PersonArrivedEnvelope>) = saveAndEmit(
     domainEvent = domainEvent,
     eventType = DomainEventType.APPROVED_PREMISES_PERSON_ARRIVED,
   )
 
   @Transactional
-  fun savePersonNotArrivedEvent(domainEvent: DomainEvent<PersonNotArrivedEnvelope>) = saveAndEmit(
+  fun savePersonNotArrivedEvent(domainEvent: Cas1DomainEvent<PersonNotArrivedEnvelope>) = saveAndEmit(
     domainEvent = domainEvent,
     eventType = DomainEventType.APPROVED_PREMISES_PERSON_NOT_ARRIVED,
   )
 
   @Transactional
-  fun savePersonDepartedEvent(domainEvent: DomainEvent<PersonDepartedEnvelope>) = saveAndEmit(
+  fun savePersonDepartedEvent(domainEvent: Cas1DomainEvent<PersonDepartedEnvelope>) = saveAndEmit(
     domainEvent = domainEvent,
     eventType = DomainEventType.APPROVED_PREMISES_PERSON_DEPARTED,
   )
 
   @Transactional
-  fun saveBookingNotMadeEvent(domainEvent: DomainEvent<BookingNotMadeEnvelope>) = saveAndEmit(
+  fun saveBookingNotMadeEvent(domainEvent: Cas1DomainEvent<BookingNotMadeEnvelope>) = saveAndEmit(
     domainEvent = domainEvent,
     eventType = DomainEventType.APPROVED_PREMISES_BOOKING_NOT_MADE,
   )
 
   @Transactional
-  fun saveBookingCancelledEvent(domainEvent: DomainEvent<BookingCancelledEnvelope>) = saveAndEmit(
+  fun saveBookingCancelledEvent(domainEvent: Cas1DomainEvent<BookingCancelledEnvelope>) = saveAndEmit(
     domainEvent = domainEvent,
     eventType = DomainEventType.APPROVED_PREMISES_BOOKING_CANCELLED,
   )
 
   @Transactional
-  fun saveBookingChangedEvent(domainEvent: DomainEvent<BookingChangedEnvelope>) = saveAndEmit(
+  fun saveBookingChangedEvent(domainEvent: Cas1DomainEvent<BookingChangedEnvelope>) = saveAndEmit(
     domainEvent = domainEvent,
     eventType = DomainEventType.APPROVED_PREMISES_BOOKING_CHANGED,
   )
 
   @Transactional
-  fun saveApplicationWithdrawnEvent(domainEvent: DomainEvent<ApplicationWithdrawnEnvelope>) = saveAndEmit(
+  fun saveApplicationWithdrawnEvent(domainEvent: Cas1DomainEvent<ApplicationWithdrawnEnvelope>) = saveAndEmit(
     domainEvent = domainEvent,
     eventType = DomainEventType.APPROVED_PREMISES_APPLICATION_WITHDRAWN,
   )
 
   @Transactional
-  fun saveAssessmentAppealedEvent(domainEvent: DomainEvent<AssessmentAppealedEnvelope>) = saveAndEmit(
+  fun saveAssessmentAppealedEvent(domainEvent: Cas1DomainEvent<AssessmentAppealedEnvelope>) = saveAndEmit(
     domainEvent = domainEvent,
     eventType = DomainEventType.APPROVED_PREMISES_ASSESSMENT_APPEALED,
   )
 
   @Transactional
-  fun savePlacementApplicationWithdrawnEvent(domainEvent: DomainEvent<PlacementApplicationWithdrawnEnvelope>) = saveAndEmit(
+  fun savePlacementApplicationWithdrawnEvent(domainEvent: Cas1DomainEvent<PlacementApplicationWithdrawnEnvelope>) = saveAndEmit(
     domainEvent = domainEvent,
     eventType = DomainEventType.APPROVED_PREMISES_PLACEMENT_APPLICATION_WITHDRAWN,
   )
 
   @Transactional
-  fun savePlacementApplicationAllocatedEvent(domainEvent: DomainEvent<PlacementApplicationAllocatedEnvelope>) = saveAndEmit(
+  fun savePlacementApplicationAllocatedEvent(domainEvent: Cas1DomainEvent<PlacementApplicationAllocatedEnvelope>) = saveAndEmit(
     domainEvent = domainEvent,
     eventType = DomainEventType.APPROVED_PREMISES_PLACEMENT_APPLICATION_ALLOCATED,
   )
 
   @Transactional
-  fun saveMatchRequestWithdrawnEvent(domainEvent: DomainEvent<MatchRequestWithdrawnEnvelope>) = saveAndEmit(
+  fun saveMatchRequestWithdrawnEvent(domainEvent: Cas1DomainEvent<MatchRequestWithdrawnEnvelope>) = saveAndEmit(
     domainEvent = domainEvent,
     eventType = DomainEventType.APPROVED_PREMISES_MATCH_REQUEST_WITHDRAWN,
   )
 
   @Transactional
-  fun saveRequestForPlacementCreatedEvent(domainEvent: DomainEvent<RequestForPlacementCreatedEnvelope>) = saveAndEmit(
+  fun saveRequestForPlacementCreatedEvent(domainEvent: Cas1DomainEvent<RequestForPlacementCreatedEnvelope>) = saveAndEmit(
     domainEvent = domainEvent,
     eventType = DomainEventType.APPROVED_PREMISES_REQUEST_FOR_PLACEMENT_CREATED,
   )
 
   @Transactional
-  fun saveRequestForPlacementAssessedEvent(domainEvent: DomainEvent<RequestForPlacementAssessedEnvelope>) = saveAndEmit(
+  fun saveRequestForPlacementAssessedEvent(domainEvent: Cas1DomainEvent<RequestForPlacementAssessedEnvelope>) = saveAndEmit(
     domainEvent = domainEvent,
     eventType = DomainEventType.APPROVED_PREMISES_REQUEST_FOR_PLACEMENT_ASSESSED,
   )
 
   @Transactional
-  fun saveApplicationExpiredEvent(domainEvent: DomainEvent<ApplicationExpiredEnvelope>) = saveAndEmit(
+  fun saveApplicationExpiredEvent(domainEvent: Cas1DomainEvent<ApplicationExpiredEnvelope>) = saveAndEmit(
     domainEvent = domainEvent,
     eventType = DomainEventType.APPROVED_PREMISES_APPLICATION_EXPIRED,
   )
 
   @Transactional
-  fun saveAssessmentAllocatedEvent(domainEvent: DomainEvent<AssessmentAllocatedEnvelope>) = saveAndEmit(
+  fun saveAssessmentAllocatedEvent(domainEvent: Cas1DomainEvent<AssessmentAllocatedEnvelope>) = saveAndEmit(
     domainEvent = domainEvent,
     eventType = DomainEventType.APPROVED_PREMISES_ASSESSMENT_ALLOCATED,
   )
 
   @Transactional
-  fun saveFurtherInformationRequestedEvent(domainEvent: DomainEvent<FurtherInformationRequestedEnvelope>) = saveAndEmit(
+  fun saveFurtherInformationRequestedEvent(domainEvent: Cas1DomainEvent<FurtherInformationRequestedEnvelope>) = saveAndEmit(
     domainEvent = domainEvent,
     eventType = DomainEventType.APPROVED_PREMISES_ASSESSMENT_INFO_REQUESTED,
   )
 
   @Transactional
-  fun saveKeyWorkerAssignedEvent(domainEvent: DomainEvent<BookingKeyWorkerAssignedEnvelope>) = saveAndEmit(
+  fun saveKeyWorkerAssignedEvent(domainEvent: Cas1DomainEvent<BookingKeyWorkerAssignedEnvelope>) = saveAndEmit(
     domainEvent = domainEvent,
     eventType = DomainEventType.APPROVED_PREMISES_BOOKING_KEYWORKER_ASSIGNED,
   )
@@ -257,7 +259,7 @@ class Cas1DomainEventService(
 
   @Transactional
   fun saveAndEmit(
-    domainEvent: DomainEvent<*>,
+    domainEvent: Cas1DomainEvent<*>,
     eventType: DomainEventType,
   ) {
     val domainEventEntity = domainEventRepository.save(
@@ -338,3 +340,20 @@ class Cas1DomainEventService(
     )
   }
 }
+
+data class Cas1DomainEvent<T>(
+  val id: UUID,
+  val applicationId: UUID? = null,
+  val assessmentId: UUID? = null,
+  val bookingId: UUID? = null,
+  val cas1SpaceBookingId: UUID? = null,
+  val cas1PlacementRequestId: UUID? = null,
+  val crn: String,
+  val nomsNumber: String?,
+  val occurredAt: Instant,
+  val data: T,
+  val metadata: Map<MetaDataName, String?> = emptyMap(),
+  val schemaVersion: Int? = null,
+  val triggerSource: TriggerSourceType? = null,
+  val emit: Boolean = true,
+)

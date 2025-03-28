@@ -23,7 +23,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AssessmentEnt
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.MetaDataName
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TriggerSourceType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserEntity
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.DomainEvent
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.asApprovedPremisesType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.community.OffenderDetailSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.UrlTemplate
@@ -65,7 +64,7 @@ class Cas1AssessmentDomainEventService(
     val occurredAt = Instant.now()
 
     domainEventService.saveAssessmentAllocatedEvent(
-      DomainEvent(
+      Cas1DomainEvent(
         id = id,
         applicationId = assessment.application.id,
         assessmentId = assessment.id,
@@ -131,7 +130,7 @@ class Cas1AssessmentDomainEventService(
       ),
     )
 
-    val domainEvent = DomainEvent(
+    val domainEvent = Cas1DomainEvent(
       id = id,
       applicationId = assessment.application.id,
       assessmentId = assessment.id,
@@ -161,7 +160,7 @@ class Cas1AssessmentDomainEventService(
     }
 
     domainEventService.saveApplicationAssessedDomainEvent(
-      DomainEvent(
+      Cas1DomainEvent(
         id = domainEventId,
         applicationId = application.id,
         assessmentId = assessment.id,
@@ -221,7 +220,7 @@ class Cas1AssessmentDomainEventService(
     }
 
     domainEventService.saveApplicationAssessedDomainEvent(
-      DomainEvent(
+      Cas1DomainEvent(
         id = domainEventId,
         applicationId = application.id,
         assessmentId = assessment.id,

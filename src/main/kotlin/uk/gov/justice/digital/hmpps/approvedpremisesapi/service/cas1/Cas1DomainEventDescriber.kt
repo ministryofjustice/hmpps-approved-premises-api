@@ -16,7 +16,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.BookingReposi
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.CancellationReasonRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas1SpaceBookingRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DomainEventType
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.DomainEvent
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.DomainEventSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.javaConstantNameToSentence
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.toUiDateTimeFormat
@@ -367,7 +366,7 @@ class Cas1DomainEventDescriber(
   }
 
   @SuppressWarnings("TooGenericExceptionThrown")
-  private fun getSpaceBookingCancellationDetailForEvent(bookingId: UUID, event: DomainEvent<BookingCancelledEnvelope>): BookingCancellationDetail {
+  private fun getSpaceBookingCancellationDetailForEvent(bookingId: UUID, event: Cas1DomainEvent<BookingCancelledEnvelope>): BookingCancellationDetail {
     val spaceBooking = cas1SpaceBookingRepository.findByIdOrNull(bookingId)
       ?: throw RuntimeException("Space Booking ID $bookingId with cancellation not found")
     if (spaceBooking.cancellationReason == null) {
@@ -382,7 +381,7 @@ class Cas1DomainEventDescriber(
   }
 
   @SuppressWarnings("TooGenericExceptionThrown")
-  private fun getBookingCancellationDetailForEvent(bookingId: UUID, event: DomainEvent<BookingCancelledEnvelope>): BookingCancellationDetail {
+  private fun getBookingCancellationDetailForEvent(bookingId: UUID, event: Cas1DomainEvent<BookingCancelledEnvelope>): BookingCancellationDetail {
     val booking = bookingRepository.findByIdOrNull(bookingId)
       ?: throw RuntimeException("Booking ID $bookingId with cancellation not found")
     if (booking.cancellations.count() != 1) {
@@ -406,7 +405,7 @@ class Cas1DomainEventDescriber(
   }
 
   private fun DomainEventSummary.id(): UUID = UUID.fromString(this.id)
-  private fun <T> DomainEvent<T>?.describe(describe: (T) -> String?): String? = this?.let { describe(it.data) }
+  private fun <T> Cas1DomainEvent<T>?.describe(describe: (T) -> String?): String? = this?.let { describe(it.data) }
   private val StaffMember.name: String
     get() = "${this.forenames} ${this.surname}".trim()
 }

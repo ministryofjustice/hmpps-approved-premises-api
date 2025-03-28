@@ -59,7 +59,6 @@ class Cas3DomainEventBuilderTest {
     assertThat(event.applicationId).isNull()
     assertThat(event.assessmentId).isEqualTo(assessment.id)
     assertThat(event.bookingId).isNull()
-    assertThat(event.cas1SpaceBookingId).isNull()
     assertThat(event.crn).isEqualTo("A123456")
     assertThat(event.nomsNumber).isNull()
     assertThat(event.occurredAt).isWithinTheLastMinute()
