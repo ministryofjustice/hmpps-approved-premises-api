@@ -7,6 +7,7 @@ import java.time.LocalDate
 import java.time.OffsetDateTime
 import java.util.UUID
 
+@Suppress("LongParameterList")
 object Cas2ApplicationSummaryEntityFactory {
   fun produce(
     id: UUID = UUID.randomUUID(),
