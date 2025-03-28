@@ -3,7 +3,9 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.unit.entity
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.Cas2ApplicationEntityFactory
+import org.junit.jupiter.api.assertThrows
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.NomisUserEntityFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.cas2.Cas2ApplicationEntityFactory
 
 class Cas2ApplicationEntityTest {
 

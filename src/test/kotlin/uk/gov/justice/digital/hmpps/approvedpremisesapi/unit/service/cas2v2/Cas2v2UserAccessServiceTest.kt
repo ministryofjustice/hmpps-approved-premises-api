@@ -3,8 +3,8 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.unit.service.cas2v2
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.Cas2ApplicationJsonSchemaEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.Cas2v2ApplicationJsonSchemaEntityFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.cas2.Cas2ApplicationJsonSchemaEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.cas2v2.Cas2v2ApplicationEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.cas2v2.Cas2v2UserEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas2v2.Cas2v2UserAccessService

@@ -1,10 +1,7 @@
-package uk.gov.justice.digital.hmpps.approvedpremisesapi.factory
+package uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.cas2
 
 import io.github.bluegroundltd.kfactory.Factory
 import io.github.bluegroundltd.kfactory.Yielded
-import java.time.LocalDate
-import java.time.OffsetDateTime
-import java.util.UUID
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApprovedPremisesApplicationJsonSchemaEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas2ApplicationAssignmentEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas2ApplicationEntity
