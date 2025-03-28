@@ -2,13 +2,6 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.cas2v2
 
 import io.github.bluegroundltd.kfactory.Factory
 import io.github.bluegroundltd.kfactory.Yielded
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas2v2User
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.NomisUserEntityFactory
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas2ApplicationEntity
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas2ApplicationNoteEntity
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas2AssessmentEntity
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas2User
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.NomisUserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas2v2.Cas2v2ApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas2v2.Cas2v2ApplicationNoteEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas2v2.Cas2v2AssessmentEntity
@@ -19,7 +12,7 @@ import java.util.UUID
 
 class Cas2v2NoteEntityFactory : Factory<Cas2v2ApplicationNoteEntity> {
   private var id: Yielded<UUID> = { UUID.randomUUID() }
-//  private var createdByUser: Yielded<Cas2v2User> = { NomisUserEntityFactory().produce() }
+  private var createdByUser: Yielded<Cas2v2UserEntity> = { Cas2v2UserEntityFactory().produce() }
   private var application: Yielded<Cas2v2ApplicationEntity>? = null
   private var createdAt: Yielded<OffsetDateTime> = { OffsetDateTime.now().randomDateTimeBefore(30) }
   private var body: Yielded<String> = { "Note body" }
@@ -33,9 +26,9 @@ class Cas2v2NoteEntityFactory : Factory<Cas2v2ApplicationNoteEntity> {
     this.assessment = { assessment }
   }
 
-//  fun withCreatedByUser(createdByUser: NomisUserEntity) = apply {
-//    this.createdByUser = { createdByUser }
-//  }
+  fun withCreatedByUser(createdByUser: Cas2v2UserEntity) = apply {
+    this.createdByUser = { createdByUser }
+  }
 
   fun withBody(body: String) = apply {
     this.body = { body }
@@ -47,8 +40,7 @@ class Cas2v2NoteEntityFactory : Factory<Cas2v2ApplicationNoteEntity> {
 
   override fun produce(): Cas2v2ApplicationNoteEntity = Cas2v2ApplicationNoteEntity(
     id = this.id(),
-//    createdByUser = this.createdByUser(),
-    createdByUser = Cas2v2UserEntityFactory().produce(),
+    createdByUser = this.createdByUser(),
     application = this.application?.invoke() ?: error("Must provide an application."),
     createdAt = this.createdAt(),
     body = this.body(),

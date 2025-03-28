@@ -37,10 +37,10 @@ class Cas2v2SubjectAccessRequestRepository(
         	ca.conditional_release_date,
         	ca.abandoned_at,
           ca.application_origin,
-          ca.bail_hearing_date
+          CAST( ca.bail_hearing_date as DATE) 
         from
         	cas_2_v2_applications ca
-        inner join nomis_users nu on
+        inner join cas_2_v2_users nu on
         	nu.id = ca.created_by_user_id
         where 
         	(ca.crn = :crn
@@ -104,7 +104,7 @@ class Cas2v2SubjectAccessRequestRepository(
           inner join cas_2_v2_applications ca on
           	ca.id  = can.application_id 
           left join cas_2_v2_users cu on 
-            cu.id = can.created_by_user_id
+            cu.id = ca.created_by_user_id
           where 
           	(ca.crn = :crn
           		or ca.noms_number = :noms_number )

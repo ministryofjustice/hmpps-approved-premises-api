@@ -141,9 +141,9 @@ class SubjectAccessRequestService(
     val statusUpdateDetailsJson =
       cas2v2SubjectAccessRequestRepository.getStatusUpdateDetails(crn, nomsNumber, startDate, endDate)
     val assessmentsJson = cas2v2SubjectAccessRequestRepository.getAssessments(crn, nomsNumber, startDate, endDate)
-    val domainEventsJson = cas2v2SubjectAccessRequestRepository.domainEvents(crn, nomsNumber, startDate, endDate, "CAS2")
+    val domainEventsJson = cas2v2SubjectAccessRequestRepository.domainEvents(crn, nomsNumber, startDate, endDate, "CAS2v2")
     val domainEventsMetaDataJson =
-      cas2v2SubjectAccessRequestRepository.domainEventMetadata(crn, nomsNumber, startDate, endDate, "CAS2")
+      cas2v2SubjectAccessRequestRepository.domainEventMetadata(crn, nomsNumber, startDate, endDate, "CAS2v2")
 
     val result = """
      {
@@ -156,7 +156,7 @@ class SubjectAccessRequestService(
         "DomainEventsMetadata": $domainEventsMetaDataJson
      }
     """.trimIndent()
-    log.logDebugMessage("CAS2", result)
+    log.logDebugMessage("CAS2v2", result)
 
     return result
   }
