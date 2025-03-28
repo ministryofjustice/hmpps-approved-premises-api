@@ -30,7 +30,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementRequ
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserQualification
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas1.Cas1ApplicationFacade
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.DomainEvent
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.AuthorisableActionResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.OffenderService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.UrlTemplate
@@ -105,7 +104,7 @@ class Cas1BookingDomainEventService(
     val staffDetails = getStaffDetails(user.deliusUsername)
 
     domainEventService.saveBookingNotMadeEvent(
-      DomainEvent(
+      Cas1DomainEvent(
         id = domainEventId,
         applicationId = application.id,
         crn = application.crn,
@@ -214,7 +213,7 @@ class Cas1BookingDomainEventService(
     val approvedPremises = bookingChangedInfo.approvedPremises
 
     domainEventService.saveBookingChangedEvent(
-      DomainEvent(
+      Cas1DomainEvent(
         id = domainEventId,
         applicationId = applicationId,
         crn = crn,
@@ -329,7 +328,7 @@ class Cas1BookingDomainEventService(
     val isSpaceBooking = bookingInfo.isSpaceBooking
 
     domainEventService.saveBookingMadeDomainEvent(
-      DomainEvent(
+      Cas1DomainEvent(
         id = domainEventId,
         applicationId = applicationId,
         crn = crn,
@@ -414,7 +413,7 @@ class Cas1BookingDomainEventService(
     val eventNumber = cancellationInfo.applicationFacade.eventNumber!!
 
     domainEventService.saveBookingCancelledEvent(
-      DomainEvent(
+      Cas1DomainEvent(
         id = domainEventId,
         applicationId = applicationId,
         crn = crn,

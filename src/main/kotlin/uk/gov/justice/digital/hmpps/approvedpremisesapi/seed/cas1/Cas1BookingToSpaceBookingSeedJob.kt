@@ -18,8 +18,8 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementRequ
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas1.Cas1DeliusBookingImportRepository
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.DomainEvent
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.seed.SeedJob
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1DomainEvent
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1DomainEventService
 import java.util.UUID
 
@@ -171,7 +171,7 @@ class Cas1BookingToSpaceBookingSeedJob(
     ?.toList()
     ?: emptyList()
 
-  private fun DomainEvent<BookingMadeEnvelope>.getCreatedByUser(): UserEntity {
+  private fun Cas1DomainEvent<BookingMadeEnvelope>.getCreatedByUser(): UserEntity {
     val createdByUsernameUpper =
       data.eventDetails.bookedBy.staffMember!!.username?.uppercase()
         ?: error("Can't find created by username for booking $bookingId")
