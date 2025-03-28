@@ -5,11 +5,13 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremi
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.BedEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.CharacteristicEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomStringMultiCaseWithNumbers
+import java.time.LocalDate
 
 fun IntegrationTestBase.givenAnApprovedPremisesBed(
   premises: ApprovedPremisesEntity? = null,
   bedCode: String = randomStringMultiCaseWithNumbers(6),
   characteristics: List<CharacteristicEntity> = emptyList(),
+  endDate: LocalDate? = null,
   block: ((bed: BedEntity) -> Unit)? = null,
 ): BedEntity {
   val resolvedPremises = premises ?: approvedPremisesEntityFactory.produceAndPersist {
@@ -25,6 +27,7 @@ fun IntegrationTestBase.givenAnApprovedPremisesBed(
   val bed = bedEntityFactory.produceAndPersist {
     withRoom(room)
     withCode(bedCode)
+    withEndDate(endDate)
   }
 
   if (block != null) {

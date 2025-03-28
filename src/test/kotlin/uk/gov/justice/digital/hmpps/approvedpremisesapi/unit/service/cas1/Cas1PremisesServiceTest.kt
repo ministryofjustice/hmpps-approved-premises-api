@@ -18,6 +18,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremi
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.BedRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas1SpaceBookingRepository
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas1.Cas1OccupancyReportRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.CasResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.FeatureFlagService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.PremisesService
@@ -28,6 +29,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.planning.Sp
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.planning.SpacePlanningService.PremiseCapacitySummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.planning.SpacePlanningService.PremiseCharacteristicAvailability
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.DateRange
+import java.time.Clock
 import java.time.LocalDate
 import java.util.UUID
 
@@ -54,6 +56,12 @@ class Cas1PremisesServiceTest {
 
   @MockK
   lateinit var featureFlagService: FeatureFlagService
+
+  @MockK
+  lateinit var cas1OccupancyReportRepository: Cas1OccupancyReportRepository
+
+  @MockK
+  lateinit var clock: Clock
 
   @InjectMockKs
   lateinit var service: Cas1PremisesService

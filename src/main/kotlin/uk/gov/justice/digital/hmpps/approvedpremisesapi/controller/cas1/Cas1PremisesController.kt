@@ -2,6 +2,7 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.controller.cas1
 
 import org.springframework.http.ResponseEntity
 import org.springframework.stereotype.Service
+import org.springframework.web.servlet.mvc.method.annotation.StreamingResponseBody
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.cas1.PremisesCas1Delegate
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1ApprovedPremisesGender
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1BedDetail
@@ -14,6 +15,9 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1SpaceBooki
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1SpaceBookingDaySummarySortField
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.SortDirection
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.StaffMember
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.controller.ContentType
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.controller.cas1.Cas1ReportsController.Companion.TIMESTAMP_FORMAT
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.controller.generateStreamingResponse
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesGender
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserPermission
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.ForbiddenProblem
@@ -33,15 +37,17 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.cas1.Cas1Pre
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.cas1.Cas1PremisesDayTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.cas1.Cas1PremisesTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.extractEntityFromCasResult
+import java.time.Clock
 import java.time.LocalDate
+import java.time.LocalDateTime
 import java.util.UUID
 
 @Service
 class Cas1PremisesController(
-  val userAccessService: UserAccessService,
-  val cas1PremisesService: Cas1PremisesService,
-  val cas1PremisesTransformer: Cas1PremisesTransformer,
-  val cas1PremiseCapacityTransformer: Cas1PremiseCapacitySummaryTransformer,
+  private val userAccessService: UserAccessService,
+  private val cas1PremisesService: Cas1PremisesService,
+  private val cas1PremisesTransformer: Cas1PremisesTransformer,
+  private val cas1PremiseCapacityTransformer: Cas1PremiseCapacitySummaryTransformer,
   private val cas1BedService: Cas1BedService,
   private val cas1BedSummaryTransformer: Cas1BedSummaryTransformer,
   private val cas1BedDetailTransformer: Cas1BedDetailTransformer,
@@ -51,7 +57,21 @@ class Cas1PremisesController(
   private val cas1OutOfServiceBedSummaryTransformer: Cas1OutOfServiceBedSummaryTransformer,
   private val staffMemberService: StaffMemberService,
   private val staffMemberTransformer: StaffMemberTransformer,
+  private val clock: Clock,
 ) : PremisesCas1Delegate {
+
+  override fun getOccupancyReport(): ResponseEntity<StreamingResponseBody> {
+    userAccessService.ensureCurrentUserHasPermission(UserPermission.CAS1_PREMISES_CAPACITY_REPORT_VIEW)
+
+    val timestamp = LocalDateTime.now(clock).format(TIMESTAMP_FORMAT)
+
+    return generateStreamingResponse(
+      contentType = ContentType.CSV,
+      fileName = "premises-occupancy-$timestamp.csv",
+    ) { outputStream ->
+      cas1PremisesService.createOccupancyReport(outputStream)
+    }
+  }
 
   override fun getBeds(premisesId: UUID): ResponseEntity<List<Cas1PremisesBedSummary>> {
     val premises = cas1PremisesService.findPremiseById(premisesId)

@@ -535,6 +535,21 @@ paths:
           $ref: '#/components/responses/403Response'
         500:
           $ref: '#/components/responses/500Response'
+
+  /premises/occupancy-report:
+    get:
+      tags:
+        - premises
+      summary: Returns a CSV showing premises occupancy for the next 30 days. This does not consider characteristics.
+      operationId: getOccupancyReport
+      responses:
+        200:
+          description: Successfully retrieved the report
+          content:
+            'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet':
+              schema:
+                type: string
+                format: binary
   /premises/summary:
     get:
       description: Provide a summary of all premises, with optional filtering
@@ -4981,6 +4996,7 @@ components:
         - cas1_space_booking_record_keyworker
         - cas1_space_booking_view
         - cas1_space_booking_withdraw
+        - cas1_premises_capacity_report_view
         - cas1_premises_view
         - cas1_premises_manage
         - cas1_reports_view
