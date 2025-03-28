@@ -64,6 +64,7 @@ enum class UserPermission(val cas1ApiValue: ApprovedPremisesUserPermission?) {
   CAS1_PREMISES_VIEW(ApprovedPremisesUserPermission.premisesView),
   CAS1_PREMISES_MANAGE(ApprovedPremisesUserPermission.premisesManage),
   CAS1_APPLICATION_WITHDRAW_OTHERS(ApprovedPremisesUserPermission.applicationWithdrawOthers),
+  CAS1_EMERGENCY_TRANSFER_PERFORM(ApprovedPremisesUserPermission.emergencyTransferPerform),
 
   /**
    * View reports, excluding those containing PII

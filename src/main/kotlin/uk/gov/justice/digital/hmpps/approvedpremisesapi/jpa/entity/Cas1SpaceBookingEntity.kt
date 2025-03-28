@@ -414,6 +414,9 @@ data class Cas1SpaceBookingEntity(
    * purposes
    */
   val deliusId: String?,
+  @OneToOne
+  @JoinColumn(name = "transferred_to", referencedColumnName = "id")
+  val transferredBooking: Cas1SpaceBookingEntity?,
   @Version
   var version: Long = 1,
 ) {
