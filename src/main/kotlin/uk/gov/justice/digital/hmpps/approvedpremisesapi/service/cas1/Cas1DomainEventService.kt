@@ -30,7 +30,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.config.DomainEventUrlCon
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DomainEventEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DomainEventRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DomainEventType
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TriggerSourceType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.DomainEvent
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.domainevent.SnsEvent
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.domainevent.SnsEventAdditionalInformation
@@ -185,10 +184,9 @@ class Cas1DomainEventService(
   )
 
   @Transactional
-  fun saveApplicationWithdrawnEvent(domainEvent: DomainEvent<ApplicationWithdrawnEnvelope>, emit: Boolean) = saveAndEmit(
+  fun saveApplicationWithdrawnEvent(domainEvent: DomainEvent<ApplicationWithdrawnEnvelope>) = saveAndEmit(
     domainEvent = domainEvent,
     eventType = DomainEventType.APPROVED_PREMISES_APPLICATION_WITHDRAWN,
-    emit = emit,
   )
 
   @Transactional
@@ -228,20 +226,15 @@ class Cas1DomainEventService(
   )
 
   @Transactional
-  fun saveApplicationExpiredEvent(
-    domainEvent: DomainEvent<ApplicationExpiredEnvelope>,
-    triggerSource: TriggerSourceType,
-  ) = saveAndEmit(
+  fun saveApplicationExpiredEvent(domainEvent: DomainEvent<ApplicationExpiredEnvelope>) = saveAndEmit(
     domainEvent = domainEvent,
     eventType = DomainEventType.APPROVED_PREMISES_APPLICATION_EXPIRED,
-    triggerSource = triggerSource,
   )
 
   @Transactional
-  fun saveAssessmentAllocatedEvent(domainEvent: DomainEvent<AssessmentAllocatedEnvelope>, triggerSource: TriggerSourceType) = saveAndEmit(
+  fun saveAssessmentAllocatedEvent(domainEvent: DomainEvent<AssessmentAllocatedEnvelope>) = saveAndEmit(
     domainEvent = domainEvent,
     eventType = DomainEventType.APPROVED_PREMISES_ASSESSMENT_ALLOCATED,
-    triggerSource = triggerSource,
   )
 
   @Transactional
@@ -266,8 +259,6 @@ class Cas1DomainEventService(
   fun saveAndEmit(
     domainEvent: DomainEvent<*>,
     eventType: DomainEventType,
-    emit: Boolean = true,
-    triggerSource: TriggerSourceType? = null,
   ) {
     val domainEventEntity = domainEventRepository.save(
       DomainEventEntity(
@@ -283,7 +274,7 @@ class Cas1DomainEventService(
         createdAt = OffsetDateTime.now(),
         data = objectMapper.writeValueAsString(domainEvent.data),
         service = "CAS1",
-        triggerSource = triggerSource,
+        triggerSource = domainEvent.triggerSource,
         triggeredByUserId = userService.getUserForRequestOrNull()?.id,
         nomsNumber = domainEvent.nomsNumber,
         metadata = domainEvent.metadata,
@@ -291,8 +282,10 @@ class Cas1DomainEventService(
       ),
     )
 
-    if (eventType.emittable && emit) {
+    if (eventType.emittable && domainEvent.emit) {
       emit(domainEventEntity)
+    } else {
+      log.debug("Not emitting domain event of type $eventType. Type emittable? ${eventType.emittable}. Emit? ${domainEvent.emit}")
     }
   }
 

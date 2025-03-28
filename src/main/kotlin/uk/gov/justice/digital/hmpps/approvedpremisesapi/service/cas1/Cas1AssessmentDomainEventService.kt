@@ -72,6 +72,7 @@ class Cas1AssessmentDomainEventService(
         crn = assessment.application.crn,
         nomsNumber = assessment.application.nomsNumber,
         occurredAt = occurredAt,
+        triggerSource = triggerSource,
         data = AssessmentAllocatedEnvelope(
           id = id,
           timestamp = occurredAt,
@@ -93,7 +94,6 @@ class Cas1AssessmentDomainEventService(
           ),
         ),
       ),
-      triggerSource,
     )
   }
 
