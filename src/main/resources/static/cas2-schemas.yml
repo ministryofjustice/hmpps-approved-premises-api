@@ -125,6 +125,13 @@ components:
           format: uuid
         createdByUserName:
           type: string
+        allocatedPomUserId:
+          type: string
+          format: uuid
+        allocatedPomName:
+          type: string
+        currentPrisoncode:
+          type: string
         status:
           $ref: '_shared.yml#/components/schemas/ApplicationStatus'
         latestStatusUpdate:
@@ -145,6 +152,8 @@ components:
         - id
         - createdAt
         - createdByUserId
+        - allocatedPomUserId
+        - currentPrisoncode
         - status
         - personName
         - crn
