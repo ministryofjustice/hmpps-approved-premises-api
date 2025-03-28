@@ -30,7 +30,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.config.DomainEventUrlCon
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DomainEventEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DomainEventRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DomainEventType
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TriggerSourceType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.DomainEvent
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.domainevent.SnsEvent
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.domainevent.SnsEventAdditionalInformation
@@ -185,10 +184,9 @@ class Cas1DomainEventService(
   )
 
   @Transactional
-  fun saveApplicationWithdrawnEvent(domainEvent: DomainEvent<ApplicationWithdrawnEnvelope>, emit: Boolean) = saveAndEmit(
+  fun saveApplicationWithdrawnEvent(domainEvent: DomainEvent<ApplicationWithdrawnEnvelope>) = saveAndEmit(
     domainEvent = domainEvent,
     eventType = DomainEventType.APPROVED_PREMISES_APPLICATION_WITHDRAWN,
-    emit = emit,
   )
 
   @Transactional
@@ -261,7 +259,6 @@ class Cas1DomainEventService(
   fun saveAndEmit(
     domainEvent: DomainEvent<*>,
     eventType: DomainEventType,
-    emit: Boolean = true,
   ) {
     val domainEventEntity = domainEventRepository.save(
       DomainEventEntity(
@@ -285,8 +282,10 @@ class Cas1DomainEventService(
       ),
     )
 
-    if (eventType.emittable && emit) {
+    if (eventType.emittable && domainEvent.emit) {
       emit(domainEventEntity)
+    } else {
+      log.debug("Not emitting domain event of type $eventType. Type emittable? ${eventType.emittable}. Emit? ${domainEvent.emit}")
     }
   }
 

@@ -134,8 +134,8 @@ class Cas1ApplicationDomainEventService(
           eventType = EventType.applicationWithdrawn,
           eventDetails = getApplicationWithdrawn(application, withdrawingUser, eventOccurredAt),
         ),
+        emit = application.isSubmitted(),
       ),
-      emit = application.isSubmitted(),
     )
   }
 

@@ -19,4 +19,5 @@ data class DomainEvent<T>(
   val metadata: Map<MetaDataName, String?> = emptyMap(),
   val schemaVersion: Int? = null,
   val triggerSource: TriggerSourceType? = null,
+  val emit: Boolean = true,
 )

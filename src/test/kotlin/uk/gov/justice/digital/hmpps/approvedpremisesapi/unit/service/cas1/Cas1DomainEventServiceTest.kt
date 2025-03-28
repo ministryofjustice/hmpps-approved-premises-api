@@ -12,7 +12,6 @@ import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.MethodSource
-import org.junit.jupiter.params.provider.ValueSource
 import org.springframework.data.repository.findByIdOrNull
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.ApplicationAssessedEnvelope
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.ApplicationExpiredEnvelope
@@ -236,7 +235,7 @@ class Cas1DomainEventServiceTest {
 
       every { domainEventWorkerMock.emitEvent(any(), any()) } returns Unit
 
-      domainEventService.saveAndEmit(domainEventToSave, type, true)
+      domainEventService.saveAndEmit(domainEventToSave, type)
 
       verify(exactly = 1) {
         domainEventRepositoryMock.save(
@@ -278,7 +277,7 @@ class Cas1DomainEventServiceTest {
 
     @ParameterizedTest
     @MethodSource("uk.gov.justice.digital.hmpps.approvedpremisesapi.unit.service.cas1.Cas1DomainEventServiceTest#allCas1DomainEventTypes")
-    fun `saveAndEmit persists event and does not emit event if emit is false`(type: DomainEventType) {
+    fun `saveAndEmit persists event and does not emit event if emit on domain event is false`(type: DomainEventType) {
       val id = UUID.randomUUID()
       val applicationId = UUID.randomUUID()
       val bookingId = UUID.randomUUID()
@@ -302,9 +301,10 @@ class Cas1DomainEventServiceTest {
         cas1SpaceBookingId = cas1SpaceBookingId,
         cas1PlacementRequestId = cas1PlacementRequestId,
         schemaVersion = domainEventAndJson.schemaVersion.versionNo,
+        emit = false,
       )
 
-      domainEventService.saveAndEmit(domainEventToSave, type, false)
+      domainEventService.saveAndEmit(domainEventToSave, type)
 
       verify(exactly = 1) {
         domainEventRepositoryMock.save(
@@ -399,7 +399,7 @@ class Cas1DomainEventServiceTest {
       )
 
       try {
-        domainEventService.saveAndEmit(domainEventToSave, type, true)
+        domainEventService.saveAndEmit(domainEventToSave, type)
       } catch (_: Exception) {
       }
 
@@ -527,7 +527,7 @@ class Cas1DomainEventServiceTest {
 
       val domainEventServiceSpy = spyk(domainEventService)
 
-      every { domainEventServiceSpy.saveAndEmit(any(), any(), any()) } returns Unit
+      every { domainEventServiceSpy.saveAndEmit(any(), any()) } returns Unit
 
       domainEventServiceSpy.saveApplicationSubmittedDomainEvent(domainEvent)
 
@@ -553,7 +553,7 @@ class Cas1DomainEventServiceTest {
 
       val domainEventServiceSpy = spyk(domainEventService)
 
-      every { domainEventServiceSpy.saveAndEmit(any(), any(), any()) } returns Unit
+      every { domainEventServiceSpy.saveAndEmit(any(), any()) } returns Unit
 
       domainEventServiceSpy.saveApplicationAssessedDomainEvent(domainEvent)
 
@@ -579,7 +579,7 @@ class Cas1DomainEventServiceTest {
 
       val domainEventServiceSpy = spyk(domainEventService)
 
-      every { domainEventServiceSpy.saveAndEmit(any(), any(), any()) } returns Unit
+      every { domainEventServiceSpy.saveAndEmit(any(), any()) } returns Unit
 
       domainEventServiceSpy.saveBookingMadeDomainEvent(domainEvent)
 
@@ -631,7 +631,7 @@ class Cas1DomainEventServiceTest {
 
       val domainEventServiceSpy = spyk(domainEventService)
 
-      every { domainEventServiceSpy.saveAndEmit(any(), any(), any()) } returns Unit
+      every { domainEventServiceSpy.saveAndEmit(any(), any()) } returns Unit
 
       domainEventServiceSpy.savePersonNotArrivedEvent(domainEvent)
 
@@ -639,7 +639,6 @@ class Cas1DomainEventServiceTest {
         domainEventServiceSpy.saveAndEmit(
           domainEvent = domainEvent,
           eventType = DomainEventType.APPROVED_PREMISES_PERSON_NOT_ARRIVED,
-          emit = true,
         )
       }
     }
@@ -684,7 +683,7 @@ class Cas1DomainEventServiceTest {
 
       val domainEventServiceSpy = spyk(domainEventService)
 
-      every { domainEventServiceSpy.saveAndEmit(any(), any(), any()) } returns Unit
+      every { domainEventServiceSpy.saveAndEmit(any(), any()) } returns Unit
 
       domainEventServiceSpy.saveBookingNotMadeEvent(domainEvent)
 
@@ -710,7 +709,7 @@ class Cas1DomainEventServiceTest {
 
       val domainEventServiceSpy = spyk(domainEventService)
 
-      every { domainEventServiceSpy.saveAndEmit(any(), any(), any()) } returns Unit
+      every { domainEventServiceSpy.saveAndEmit(any(), any()) } returns Unit
 
       domainEventServiceSpy.saveBookingCancelledEvent(domainEvent)
 
@@ -736,7 +735,7 @@ class Cas1DomainEventServiceTest {
 
       val domainEventServiceSpy = spyk(domainEventService)
 
-      every { domainEventServiceSpy.saveAndEmit(any(), any(), any()) } returns Unit
+      every { domainEventServiceSpy.saveAndEmit(any(), any()) } returns Unit
 
       domainEventServiceSpy.saveBookingChangedEvent(domainEvent)
 
@@ -762,7 +761,7 @@ class Cas1DomainEventServiceTest {
 
       val domainEventServiceSpy = spyk(domainEventService)
 
-      every { domainEventServiceSpy.saveAndEmit(any(), any(), any()) } returns Unit
+      every { domainEventServiceSpy.saveAndEmit(any(), any()) } returns Unit
 
       domainEventServiceSpy.saveKeyWorkerAssignedEvent(domainEvent)
 
@@ -774,9 +773,8 @@ class Cas1DomainEventServiceTest {
       }
     }
 
-    @ParameterizedTest
-    @ValueSource(booleans = [true, false])
-    fun `saveApplicationWithdrawnEvent sends correct arguments to saveAndEmit`(emit: Boolean) {
+    @Test
+    fun `saveApplicationWithdrawnEvent sends correct arguments to saveAndEmit`() {
       val id = UUID.randomUUID()
 
       val eventDetails = ApplicationWithdrawnFactory().produce()
@@ -789,15 +787,14 @@ class Cas1DomainEventServiceTest {
 
       val domainEventServiceSpy = spyk(domainEventService)
 
-      every { domainEventServiceSpy.saveAndEmit(any(), any(), emit) } returns Unit
+      every { domainEventServiceSpy.saveAndEmit(any(), any()) } returns Unit
 
-      domainEventServiceSpy.saveApplicationWithdrawnEvent(domainEvent, emit)
+      domainEventServiceSpy.saveApplicationWithdrawnEvent(domainEvent)
 
       verify {
         domainEventServiceSpy.saveAndEmit(
           domainEvent = domainEvent,
           eventType = DomainEventType.APPROVED_PREMISES_APPLICATION_WITHDRAWN,
-          emit,
         )
       }
     }
@@ -816,7 +813,7 @@ class Cas1DomainEventServiceTest {
 
       val domainEventServiceSpy = spyk(domainEventService)
 
-      every { domainEventServiceSpy.saveAndEmit(any(), any(), any()) } returns Unit
+      every { domainEventServiceSpy.saveAndEmit(any(), any()) } returns Unit
 
       domainEventServiceSpy.saveApplicationExpiredEvent(domainEvent)
 
@@ -998,7 +995,7 @@ class Cas1DomainEventServiceTest {
 
       val domainEventServiceSpy = spyk(domainEventService)
 
-      every { domainEventServiceSpy.saveAndEmit(any(), any(), any()) } returns Unit
+      every { domainEventServiceSpy.saveAndEmit(any(), any()) } returns Unit
 
       domainEventServiceSpy.saveAssessmentAllocatedEvent(domainEvent)
 
