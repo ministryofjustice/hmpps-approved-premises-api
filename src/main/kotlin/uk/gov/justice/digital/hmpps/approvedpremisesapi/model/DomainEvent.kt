@@ -10,6 +10,7 @@ data class DomainEvent<T>(
   val assessmentId: UUID? = null,
   val bookingId: UUID? = null,
   val cas1SpaceBookingId: UUID? = null,
+  val cas1PlacementRequestId: UUID? = null,
   val crn: String,
   val nomsNumber: String?,
   val occurredAt: Instant,
