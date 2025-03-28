@@ -40,7 +40,7 @@ import java.time.OffsetDateTime
 import java.time.format.DateTimeFormatter
 import java.util.UUID
 
-open class SubjectAccessRequestServiceTestBase : IntegrationTestBase() {
+open class SubjectAccessRequestServiceTestBase : Cas2v2IntegrationTestBase() {
   @Autowired
   lateinit var sarService: SubjectAccessRequestService
   lateinit var premises: ApprovedPremisesEntity
