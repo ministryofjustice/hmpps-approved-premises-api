@@ -2932,6 +2932,7 @@ components:
         - cas1_premises_manage
         - cas1_reports_view
         - cas1_reports_view_with_pii
+        - cas1_emergency_transfer_perform
     TemporaryAccommodationUserRole:
       type: string
       enum:

@@ -131,6 +131,7 @@ class Cas1BookingToSpaceBookingSeedJob(
         deliusEventNumber = bookingMadeDomainEvent?.data?.eventDetails?.deliusEventNumber,
         migratedManagementInfoFrom = managementInfo.source,
         deliusId = managementInfo.deliusId,
+        transferredBooking = null,
       ),
     )
 
