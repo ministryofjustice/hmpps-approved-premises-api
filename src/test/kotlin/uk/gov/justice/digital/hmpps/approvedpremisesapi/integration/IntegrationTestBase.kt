@@ -28,6 +28,7 @@ import org.springframework.jdbc.core.JdbcTemplate
 import org.springframework.test.context.ActiveProfiles
 import org.springframework.test.context.ContextConfiguration
 import org.springframework.test.web.reactive.server.WebTestClient
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.PrisonRegisterClient
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.PrisonsApiClient
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.config.NotifyConfig
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApAreaEntityFactory
@@ -315,6 +316,9 @@ abstract class IntegrationTestBase {
 
   @Autowired
   private lateinit var prisonsApiClient: PrisonsApiClient
+
+  @Autowired
+  lateinit var prisonRegisterClient: PrisonRegisterClient
 
   @Autowired
   lateinit var probationRegionRepository: ProbationRegionTestRepository

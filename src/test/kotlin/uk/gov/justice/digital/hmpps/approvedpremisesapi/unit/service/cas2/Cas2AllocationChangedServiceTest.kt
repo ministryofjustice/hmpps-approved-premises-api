@@ -27,6 +27,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.InvalidDomainEve
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.NomisUserService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas2.Cas2AllocationChangedService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas2.Cas2ApplicationService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas2.Cas2EmailService
 import java.time.Instant
 import java.time.ZoneId
 import java.util.UUID
@@ -45,6 +46,9 @@ class Cas2AllocationChangedServiceTest {
 
   @MockK
   lateinit var nomisUserService: NomisUserService
+
+  @MockK
+  lateinit var cas2EmailService: Cas2EmailService
 
   @InjectMockKs
   lateinit var allocationChangedService: Cas2AllocationChangedService
@@ -76,6 +80,7 @@ class Cas2AllocationChangedServiceTest {
     every { managePomCasesClient.getPomAllocation(any()) } returns ClientResult.Success(HttpStatus.OK, pomAllocation)
     every { applicationService.findMostRecentApplication(eq(nomsNumber)) } returns application
     every { applicationRepository.save(any()) } answers { it.invocation.args[0] as Cas2ApplicationEntity }
+    every { cas2EmailService.sendAllocationChangedEmails(any(), any(), any()) } returns Unit
     every { nomisUserService.getUserByStaffId(eq(pomAllocation.manager.code)) } returns user
 
     allocationChangedService.process(allocationEvent)
@@ -83,6 +88,7 @@ class Cas2AllocationChangedServiceTest {
     verify(exactly = 1) { managePomCasesClient.getPomAllocation(any()) }
     verify(exactly = 1) { applicationService.findMostRecentApplication(eq(nomsNumber)) }
     verify(exactly = 1) { nomisUserService.getUserByStaffId(eq(pomAllocation.manager.code)) }
+    verify(exactly = 1) { cas2EmailService.sendAllocationChangedEmails(any(), any(), any()) }
     verify(exactly = 1) { applicationRepository.save(any()) }
   }
 
