@@ -112,7 +112,7 @@ class Cas1AssessmentDomainEventServiceTest {
         allocatingUserStaffDetails,
       )
 
-      every { domainEventService.saveAssessmentAllocatedEvent(any(), any()) } just Runs
+      every { domainEventService.saveAssessmentAllocatedEvent(any()) } just Runs
 
       service.assessmentAllocated(assessment, assigneeUser, allocatingUser)
 
@@ -120,6 +120,8 @@ class Cas1AssessmentDomainEventServiceTest {
         domainEventService.saveAssessmentAllocatedEvent(
           match {
             val envelope = it.data
+            val triggerSourceMatches = it.triggerSource == TriggerSourceType.USER
+
             val eventDetails = envelope.eventDetails
 
             val rootDomainEventDataMatches = (
@@ -145,11 +147,7 @@ class Cas1AssessmentDomainEventServiceTest {
                 allocatedByUserDetailsMatch
               )
 
-            rootDomainEventDataMatches && envelopeMatches && eventDetailsMatch
-          },
-          match {
-            val triggerSource = it
-            triggerSource == TriggerSourceType.USER
+            triggerSourceMatches && rootDomainEventDataMatches && envelopeMatches && eventDetailsMatch
           },
         )
       }
@@ -163,7 +161,7 @@ class Cas1AssessmentDomainEventServiceTest {
         assigneeUserStaffDetails,
       )
 
-      every { domainEventService.saveAssessmentAllocatedEvent(any(), any()) } just Runs
+      every { domainEventService.saveAssessmentAllocatedEvent(any()) } just Runs
 
       service.assessmentAllocated(assessment, assigneeUser, allocatingUser = null)
 
@@ -171,8 +169,8 @@ class Cas1AssessmentDomainEventServiceTest {
         domainEventService.saveAssessmentAllocatedEvent(
           withArg {
             assertThat(it.data.eventDetails.allocatedBy).isNull()
+            assertThat(it.triggerSource).isEqualTo(TriggerSourceType.SYSTEM)
           },
-          TriggerSourceType.SYSTEM,
         )
       }
     }

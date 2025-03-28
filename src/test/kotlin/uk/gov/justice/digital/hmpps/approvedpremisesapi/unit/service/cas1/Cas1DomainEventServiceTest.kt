@@ -231,6 +231,7 @@ class Cas1DomainEventServiceTest {
         bookingId = bookingId,
         metadata = metadata,
         schemaVersion = domainEventAndJson.schemaVersion.versionNo,
+        triggerSource = TriggerSourceType.USER,
       )
 
       every { domainEventWorkerMock.emitEvent(any(), any()) } returns Unit
@@ -249,6 +250,7 @@ class Cas1DomainEventServiceTest {
             assertThat(it.triggeredByUserId).isEqualTo(user.id)
             assertThat(it.bookingId).isEqualTo(bookingId)
             assertThat(it.metadata).isEqualTo(metadata)
+            assertThat(it.triggerSource).isEqualTo(TriggerSourceType.USER)
           },
         )
       }
@@ -814,15 +816,14 @@ class Cas1DomainEventServiceTest {
 
       val domainEventServiceSpy = spyk(domainEventService)
 
-      every { domainEventServiceSpy.saveAndEmit(any(), any(), any(), any()) } returns Unit
+      every { domainEventServiceSpy.saveAndEmit(any(), any(), any()) } returns Unit
 
-      domainEventServiceSpy.saveApplicationExpiredEvent(domainEvent, TriggerSourceType.SYSTEM)
+      domainEventServiceSpy.saveApplicationExpiredEvent(domainEvent)
 
       verify {
         domainEventServiceSpy.saveAndEmit(
           domainEvent = domainEvent,
           eventType = DomainEventType.APPROVED_PREMISES_APPLICATION_EXPIRED,
-          triggerSource = TriggerSourceType.SYSTEM,
         )
       }
     }
@@ -997,15 +998,14 @@ class Cas1DomainEventServiceTest {
 
       val domainEventServiceSpy = spyk(domainEventService)
 
-      every { domainEventServiceSpy.saveAndEmit(any(), any(), any(), any()) } returns Unit
+      every { domainEventServiceSpy.saveAndEmit(any(), any(), any()) } returns Unit
 
-      domainEventServiceSpy.saveAssessmentAllocatedEvent(domainEvent, TriggerSourceType.USER)
+      domainEventServiceSpy.saveAssessmentAllocatedEvent(domainEvent)
 
       verify {
         domainEventServiceSpy.saveAndEmit(
           domainEvent = domainEvent,
           eventType = DomainEventType.APPROVED_PREMISES_ASSESSMENT_ALLOCATED,
-          triggerSource = TriggerSourceType.USER,
         )
       }
     }

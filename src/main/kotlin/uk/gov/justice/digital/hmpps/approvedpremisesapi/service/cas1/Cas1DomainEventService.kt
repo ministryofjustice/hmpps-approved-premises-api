@@ -228,20 +228,15 @@ class Cas1DomainEventService(
   )
 
   @Transactional
-  fun saveApplicationExpiredEvent(
-    domainEvent: DomainEvent<ApplicationExpiredEnvelope>,
-    triggerSource: TriggerSourceType,
-  ) = saveAndEmit(
+  fun saveApplicationExpiredEvent(domainEvent: DomainEvent<ApplicationExpiredEnvelope>) = saveAndEmit(
     domainEvent = domainEvent,
     eventType = DomainEventType.APPROVED_PREMISES_APPLICATION_EXPIRED,
-    triggerSource = triggerSource,
   )
 
   @Transactional
-  fun saveAssessmentAllocatedEvent(domainEvent: DomainEvent<AssessmentAllocatedEnvelope>, triggerSource: TriggerSourceType) = saveAndEmit(
+  fun saveAssessmentAllocatedEvent(domainEvent: DomainEvent<AssessmentAllocatedEnvelope>) = saveAndEmit(
     domainEvent = domainEvent,
     eventType = DomainEventType.APPROVED_PREMISES_ASSESSMENT_ALLOCATED,
-    triggerSource = triggerSource,
   )
 
   @Transactional
@@ -267,7 +262,6 @@ class Cas1DomainEventService(
     domainEvent: DomainEvent<*>,
     eventType: DomainEventType,
     emit: Boolean = true,
-    triggerSource: TriggerSourceType? = null,
   ) {
     val domainEventEntity = domainEventRepository.save(
       DomainEventEntity(
@@ -283,7 +277,7 @@ class Cas1DomainEventService(
         createdAt = OffsetDateTime.now(),
         data = objectMapper.writeValueAsString(domainEvent.data),
         service = "CAS1",
-        triggerSource = triggerSource,
+        triggerSource = domainEvent.triggerSource,
         triggeredByUserId = userService.getUserForRequestOrNull()?.id,
         nomsNumber = domainEvent.nomsNumber,
         metadata = domainEvent.metadata,
