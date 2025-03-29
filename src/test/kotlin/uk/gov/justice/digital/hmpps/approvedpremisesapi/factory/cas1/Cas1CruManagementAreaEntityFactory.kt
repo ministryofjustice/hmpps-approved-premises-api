@@ -32,6 +32,7 @@ class Cas1CruManagementAreaEntityFactory : Factory<Cas1CruManagementAreaEntity> 
     this.notifyReplyToEmailId = { notifyReplyToEmailId }
   }
 
+  @Deprecated("We now use assessmentAutoAllocations")
   fun withAssessmentAutoAllocationUsername(assessmentAutoAllocationUsername: String?) = apply {
     this.assessmentAutoAllocationUsername = { assessmentAutoAllocationUsername }
   }

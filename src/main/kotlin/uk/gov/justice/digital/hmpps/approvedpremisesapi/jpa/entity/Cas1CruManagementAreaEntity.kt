@@ -32,6 +32,7 @@ data class Cas1CruManagementAreaEntity(
   var name: String,
   var emailAddress: String?,
   val notifyReplyToEmailId: String?,
+  @Deprecated("We now us assessmentAutoAllocations")
   var assessmentAutoAllocationUsername: String?,
   @ElementCollection(fetch = FetchType.LAZY)
   @CollectionTable(
