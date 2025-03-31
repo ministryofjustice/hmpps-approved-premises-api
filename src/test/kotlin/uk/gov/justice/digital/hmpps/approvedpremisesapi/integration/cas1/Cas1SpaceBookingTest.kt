@@ -15,6 +15,7 @@ import org.springframework.data.repository.findByIdOrNull
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1AssignKeyWorker
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1NewArrival
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1NewDeparture
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1NewEmergencyTransfer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1NewSpaceBooking
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1NewSpaceBookingCancellation
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1NonArrival
@@ -296,12 +297,18 @@ class Cas1SpaceBookingTest {
           )
           assertThat(result.status).isEqualTo(Cas1SpaceBookingSummaryStatus.arrivingWithin2Weeks)
 
-          domainEventAsserter.assertDomainEventOfTypeStored(placementRequest.application.id, DomainEventType.APPROVED_PREMISES_BOOKING_MADE)
+          domainEventAsserter.assertDomainEventOfTypeStored(
+            placementRequest.application.id,
+            DomainEventType.APPROVED_PREMISES_BOOKING_MADE,
+          )
 
           emailAsserter.assertEmailsRequestedCount(3)
           emailAsserter.assertEmailRequested(applicant.email!!, notifyConfig.templates.bookingMade)
           emailAsserter.assertEmailRequested(premises.emailAddress!!, notifyConfig.templates.bookingMadePremises)
-          emailAsserter.assertEmailRequested(placementRequest.application.caseManagerUserDetails?.email!!, notifyConfig.templates.bookingMade)
+          emailAsserter.assertEmailRequested(
+            placementRequest.application.caseManagerUserDetails?.email!!,
+            notifyConfig.templates.bookingMade,
+          )
 
           assertThat(approvedPremisesApplicationRepository.findByIdOrNull(placementRequest.application.id)!!.status)
             .isEqualTo(ApprovedPremisesApplicationStatus.PLACEMENT_ALLOCATED)
@@ -343,21 +350,26 @@ class Cas1SpaceBookingTest {
         },
       )
 
-      currentSpaceBooking1 = createSpaceBooking(crn = "CRN_CURRENT1", firstName = "curt", lastName = "rent 1", tier = "A") {
-        withPremises(premisesWithBookings)
-        withExpectedArrivalDate(LocalDate.parse("2026-01-02"))
-        withExpectedDepartureDate(LocalDate.parse("2026-02-02"))
-        withActualArrivalDate(LocalDate.parse("2026-01-02"))
-        withActualDepartureDate(null)
-        withCanonicalArrivalDate(LocalDate.parse("2026-01-02"))
-        withCanonicalDepartureDate(LocalDate.parse("2026-02-02"))
-        withKeyworkerName(null)
-        withKeyworkerStaffCode(null)
-        withKeyworkerAssignedAt(Instant.now())
-        withCriteria(criteria)
-      }
+      currentSpaceBooking1 =
+        createSpaceBooking(crn = "CRN_CURRENT1", firstName = "curt", lastName = "rent 1", tier = "A") {
+          withPremises(premisesWithBookings)
+          withExpectedArrivalDate(LocalDate.parse("2026-01-02"))
+          withExpectedDepartureDate(LocalDate.parse("2026-02-02"))
+          withActualArrivalDate(LocalDate.parse("2026-01-02"))
+          withActualDepartureDate(null)
+          withCanonicalArrivalDate(LocalDate.parse("2026-01-02"))
+          withCanonicalDepartureDate(LocalDate.parse("2026-02-02"))
+          withKeyworkerName(null)
+          withKeyworkerStaffCode(null)
+          withKeyworkerAssignedAt(Instant.now())
+          withCriteria(criteria)
+        }
 
-      currentSpaceBooking2OfflineApplication = createSpaceBookingWithOfflineApplication(crn = "CRN_CURRENT2_OFFLINE", firstName = "curt", lastName = "rent 2") {
+      currentSpaceBooking2OfflineApplication = createSpaceBookingWithOfflineApplication(
+        crn = "CRN_CURRENT2_OFFLINE",
+        firstName = "curt",
+        lastName = "rent 2",
+      ) {
         withPremises(premisesWithBookings)
         withExpectedArrivalDate(LocalDate.parse("2026-02-02"))
         withExpectedDepartureDate(LocalDate.parse("2026-09-02"))
@@ -370,18 +382,19 @@ class Cas1SpaceBookingTest {
         withKeyworkerAssignedAt(Instant.now())
       }
 
-      currentSpaceBooking3 = createSpaceBooking(crn = "CRN_CURRENT3", firstName = "curt", lastName = "rent 3", tier = "B") {
-        withPremises(premisesWithBookings)
-        withExpectedArrivalDate(LocalDate.parse("2026-03-02"))
-        withExpectedDepartureDate(LocalDate.parse("2026-04-02"))
-        withActualArrivalDate(LocalDate.parse("2026-01-02"))
-        withActualDepartureDate(null)
-        withCanonicalArrivalDate(LocalDate.parse("2026-04-02"))
-        withCanonicalDepartureDate(LocalDate.parse("2026-05-02"))
-        withKeyworkerName("Clive Keyworker")
-        withKeyworkerStaffCode("clivek")
-        withKeyworkerAssignedAt(Instant.now())
-      }
+      currentSpaceBooking3 =
+        createSpaceBooking(crn = "CRN_CURRENT3", firstName = "curt", lastName = "rent 3", tier = "B") {
+          withPremises(premisesWithBookings)
+          withExpectedArrivalDate(LocalDate.parse("2026-03-02"))
+          withExpectedDepartureDate(LocalDate.parse("2026-04-02"))
+          withActualArrivalDate(LocalDate.parse("2026-01-02"))
+          withActualDepartureDate(null)
+          withCanonicalArrivalDate(LocalDate.parse("2026-04-02"))
+          withCanonicalDepartureDate(LocalDate.parse("2026-05-02"))
+          withKeyworkerName("Clive Keyworker")
+          withKeyworkerStaffCode("clivek")
+          withKeyworkerAssignedAt(Instant.now())
+        }
 
       currentSpaceBooking4Restricted = createSpaceBooking(
         crn = "CRN_CURRENT4",
@@ -402,88 +415,94 @@ class Cas1SpaceBookingTest {
         withKeyworkerAssignedAt(Instant.now())
       }
 
-      departedSpaceBooking = createSpaceBooking(crn = "CRN_DEPARTED", firstName = "de", lastName = "parted", tier = "D") {
-        withPremises(premisesWithBookings)
-        withExpectedArrivalDate(LocalDate.parse("2025-01-03"))
-        withExpectedDepartureDate(LocalDate.parse("2025-02-03"))
-        withActualArrivalDate(LocalDate.parse("2025-01-03"))
-        withActualDepartureDate(LocalDate.parse("2025-02-03"))
-        withCanonicalArrivalDate(LocalDate.parse("2025-01-03"))
-        withCanonicalDepartureDate(LocalDate.parse("2025-02-03"))
-        withKeyworkerName(null)
-        withKeyworkerStaffCode(null)
-        withKeyworkerAssignedAt(null)
-      }
+      departedSpaceBooking =
+        createSpaceBooking(crn = "CRN_DEPARTED", firstName = "de", lastName = "parted", tier = "D") {
+          withPremises(premisesWithBookings)
+          withExpectedArrivalDate(LocalDate.parse("2025-01-03"))
+          withExpectedDepartureDate(LocalDate.parse("2025-02-03"))
+          withActualArrivalDate(LocalDate.parse("2025-01-03"))
+          withActualDepartureDate(LocalDate.parse("2025-02-03"))
+          withCanonicalArrivalDate(LocalDate.parse("2025-01-03"))
+          withCanonicalDepartureDate(LocalDate.parse("2025-02-03"))
+          withKeyworkerName(null)
+          withKeyworkerStaffCode(null)
+          withKeyworkerAssignedAt(null)
+        }
 
-      upcomingSpaceBookingWithKeyWorker = createSpaceBooking(crn = "CRN_UPCOMING", firstName = "up", lastName = "coming senior", tier = "U") {
-        withPremises(premisesWithBookings)
-        withExpectedArrivalDate(LocalDate.parse("2027-01-01"))
-        withExpectedDepartureDate(LocalDate.parse("2027-02-01"))
-        withActualArrivalDate(null)
-        withActualDepartureDate(null)
-        withCanonicalArrivalDate(LocalDate.parse("2027-01-01"))
-        withCanonicalDepartureDate(LocalDate.parse("2027-02-01"))
-        withKeyworkerName(keyWorker.name)
-        withKeyworkerStaffCode(keyWorker.deliusStaffCode)
-        withKeyworkerAssignedAt(Instant.now())
-      }
+      upcomingSpaceBookingWithKeyWorker =
+        createSpaceBooking(crn = "CRN_UPCOMING", firstName = "up", lastName = "coming senior", tier = "U") {
+          withPremises(premisesWithBookings)
+          withExpectedArrivalDate(LocalDate.parse("2027-01-01"))
+          withExpectedDepartureDate(LocalDate.parse("2027-02-01"))
+          withActualArrivalDate(null)
+          withActualDepartureDate(null)
+          withCanonicalArrivalDate(LocalDate.parse("2027-01-01"))
+          withCanonicalDepartureDate(LocalDate.parse("2027-02-01"))
+          withKeyworkerName(keyWorker.name)
+          withKeyworkerStaffCode(keyWorker.deliusStaffCode)
+          withKeyworkerAssignedAt(Instant.now())
+        }
 
-      upcomingCancelledSpaceBooking = createSpaceBooking(crn = "CRN_UPCOMING_CANCELLED", firstName = "up", lastName = "coming", tier = "U") {
-        withPremises(premisesWithBookings)
-        withExpectedArrivalDate(LocalDate.parse("2027-01-01"))
-        withExpectedDepartureDate(LocalDate.parse("2027-02-01"))
-        withActualArrivalDate(null)
-        withActualDepartureDate(null)
-        withCanonicalArrivalDate(LocalDate.parse("2027-01-01"))
-        withCanonicalDepartureDate(LocalDate.parse("2027-02-01"))
-        withKeyworkerName(null)
-        withKeyworkerStaffCode(null)
-        withKeyworkerAssignedAt(null)
-        withCancellationOccurredAt(LocalDate.now())
-      }
+      upcomingCancelledSpaceBooking =
+        createSpaceBooking(crn = "CRN_UPCOMING_CANCELLED", firstName = "up", lastName = "coming", tier = "U") {
+          withPremises(premisesWithBookings)
+          withExpectedArrivalDate(LocalDate.parse("2027-01-01"))
+          withExpectedDepartureDate(LocalDate.parse("2027-02-01"))
+          withActualArrivalDate(null)
+          withActualDepartureDate(null)
+          withCanonicalArrivalDate(LocalDate.parse("2027-01-01"))
+          withCanonicalDepartureDate(LocalDate.parse("2027-02-01"))
+          withKeyworkerName(null)
+          withKeyworkerStaffCode(null)
+          withKeyworkerAssignedAt(null)
+          withCancellationOccurredAt(LocalDate.now())
+        }
 
-      nonArrivedSpaceBooking = createSpaceBooking(crn = "CRN_NONARRIVAL", firstName = "None", lastName = "Arrived", tier = "A") {
-        withPremises(premisesWithBookings)
-        withExpectedArrivalDate(LocalDate.parse("2028-01-02"))
-        withExpectedDepartureDate(LocalDate.parse("2028-02-02"))
-        withActualArrivalDate(null)
-        withActualDepartureDate(null)
-        withCanonicalArrivalDate(LocalDate.parse("2028-01-02"))
-        withCanonicalDepartureDate(LocalDate.parse("2028-02-02"))
-        withKeyworkerName(null)
-        withKeyworkerStaffCode(null)
-        withKeyworkerAssignedAt(Instant.now())
-        withNonArrivalNotes("Non Arrival Notes")
-        withNonArrivalReason(nonArrivalReason)
-        withNonArrivalConfirmedAt(Instant.now())
-      }
+      nonArrivedSpaceBooking =
+        createSpaceBooking(crn = "CRN_NONARRIVAL", firstName = "None", lastName = "Arrived", tier = "A") {
+          withPremises(premisesWithBookings)
+          withExpectedArrivalDate(LocalDate.parse("2028-01-02"))
+          withExpectedDepartureDate(LocalDate.parse("2028-02-02"))
+          withActualArrivalDate(null)
+          withActualDepartureDate(null)
+          withCanonicalArrivalDate(LocalDate.parse("2028-01-02"))
+          withCanonicalDepartureDate(LocalDate.parse("2028-02-02"))
+          withKeyworkerName(null)
+          withKeyworkerStaffCode(null)
+          withKeyworkerAssignedAt(Instant.now())
+          withNonArrivalNotes("Non Arrival Notes")
+          withNonArrivalReason(nonArrivalReason)
+          withNonArrivalConfirmedAt(Instant.now())
+        }
 
-      legacySpaceBookingNoArrival = createSpaceBooking(crn = "CRN_LEGACY_NO_ARRIVAL", firstName = "None", lastName = "Historic", tier = "A") {
-        withPremises(premisesWithBookings)
-        withExpectedArrivalDate(LocalDate.parse("2024-05-02"))
-        withExpectedDepartureDate(LocalDate.parse("2024-05-31"))
-        withActualArrivalDate(null)
-        withActualDepartureDate(null)
-        withCanonicalArrivalDate(LocalDate.parse("2024-05-02"))
-        withCanonicalDepartureDate(LocalDate.parse("2024-05-31"))
-        withKeyworkerName(null)
-        withKeyworkerStaffCode(null)
-        withKeyworkerAssignedAt(Instant.now())
-        withNonArrivalConfirmedAt(Instant.now())
-      }
+      legacySpaceBookingNoArrival =
+        createSpaceBooking(crn = "CRN_LEGACY_NO_ARRIVAL", firstName = "None", lastName = "Historic", tier = "A") {
+          withPremises(premisesWithBookings)
+          withExpectedArrivalDate(LocalDate.parse("2024-05-02"))
+          withExpectedDepartureDate(LocalDate.parse("2024-05-31"))
+          withActualArrivalDate(null)
+          withActualDepartureDate(null)
+          withCanonicalArrivalDate(LocalDate.parse("2024-05-02"))
+          withCanonicalDepartureDate(LocalDate.parse("2024-05-31"))
+          withKeyworkerName(null)
+          withKeyworkerStaffCode(null)
+          withKeyworkerAssignedAt(Instant.now())
+          withNonArrivalConfirmedAt(Instant.now())
+        }
 
-      legacySpaceBookingNoDeparture = createSpaceBooking(crn = "CRN_LEGACY_NO_DEPARTURE", firstName = "None", lastName = "Historic", tier = "Z") {
-        withPremises(premisesWithBookings)
-        withExpectedArrivalDate(LocalDate.parse("2024-05-01"))
-        withExpectedDepartureDate(LocalDate.parse("2024-05-30"))
-        withActualArrivalDate(LocalDate.parse("2024-05-02"))
-        withActualDepartureDate(null)
-        withCanonicalArrivalDate(LocalDate.parse("2024-05-01"))
-        withCanonicalDepartureDate(LocalDate.parse("2024-05-30"))
-        withKeyworkerName(null)
-        withKeyworkerStaffCode(null)
-        withKeyworkerAssignedAt(Instant.now())
-      }
+      legacySpaceBookingNoDeparture =
+        createSpaceBooking(crn = "CRN_LEGACY_NO_DEPARTURE", firstName = "None", lastName = "Historic", tier = "Z") {
+          withPremises(premisesWithBookings)
+          withExpectedArrivalDate(LocalDate.parse("2024-05-01"))
+          withExpectedDepartureDate(LocalDate.parse("2024-05-30"))
+          withActualArrivalDate(LocalDate.parse("2024-05-02"))
+          withActualDepartureDate(null)
+          withCanonicalArrivalDate(LocalDate.parse("2024-05-01"))
+          withCanonicalDepartureDate(LocalDate.parse("2024-05-30"))
+          withKeyworkerName(null)
+          withKeyworkerStaffCode(null)
+          withKeyworkerAssignedAt(Instant.now())
+        }
     }
 
     @Test
@@ -592,7 +611,12 @@ class Cas1SpaceBookingTest {
 
       assertThat(response).hasSize(4)
       assertThat(response[0].person.crn).isEqualTo("CRN_CURRENT1")
-      assertThat(response[0].characteristics).isEqualTo(listOf(Cas1SpaceCharacteristic.isSingle, Cas1SpaceCharacteristic.isWheelchairAccessible))
+      assertThat(response[0].characteristics).isEqualTo(
+        listOf(
+          Cas1SpaceCharacteristic.isSingle,
+          Cas1SpaceCharacteristic.isWheelchairAccessible,
+        ),
+      )
       assertThat(response[1].person.crn).isEqualTo("CRN_CURRENT2_OFFLINE")
       assertThat(response[2].person.crn).isEqualTo("CRN_CURRENT3")
       assertThat(response[3].person.crn).isEqualTo("CRN_CURRENT4")
@@ -826,19 +850,24 @@ class Cas1SpaceBookingTest {
 
       val crnForStatusTest = UUID.randomUUID().toString()
 
-      currentSpaceBooking1 = createSpaceBooking(crn = crnForStatusTest, firstName = "curt", lastName = "rent 1", tier = "A") {
-        withPremises(premisesWithBookings)
-        withExpectedArrivalDate(testCaseForSpaceBookingSummaryStatus.expectedArrivalDate)
-        withExpectedDepartureDate(testCaseForSpaceBookingSummaryStatus.expectedDepartureDate)
-        withActualArrivalDate(testCaseForSpaceBookingSummaryStatus.actualArrivalDate)
-        withActualDepartureDate(testCaseForSpaceBookingSummaryStatus.actualDepartureDate)
-        withCanonicalArrivalDate(testCaseForSpaceBookingSummaryStatus.expectedArrivalDate)
-        withCanonicalDepartureDate(testCaseForSpaceBookingSummaryStatus.expectedDepartureDate)
-        withNonArrivalConfirmedAt(testCaseForSpaceBookingSummaryStatus.nonArrivalConfirmedAtDateTime?.toInstant(ZoneOffset.UTC))
-        withKeyworkerName(null)
-        withKeyworkerStaffCode(null)
-        withKeyworkerAssignedAt(Instant.now())
-      }
+      currentSpaceBooking1 =
+        createSpaceBooking(crn = crnForStatusTest, firstName = "curt", lastName = "rent 1", tier = "A") {
+          withPremises(premisesWithBookings)
+          withExpectedArrivalDate(testCaseForSpaceBookingSummaryStatus.expectedArrivalDate)
+          withExpectedDepartureDate(testCaseForSpaceBookingSummaryStatus.expectedDepartureDate)
+          withActualArrivalDate(testCaseForSpaceBookingSummaryStatus.actualArrivalDate)
+          withActualDepartureDate(testCaseForSpaceBookingSummaryStatus.actualDepartureDate)
+          withCanonicalArrivalDate(testCaseForSpaceBookingSummaryStatus.expectedArrivalDate)
+          withCanonicalDepartureDate(testCaseForSpaceBookingSummaryStatus.expectedDepartureDate)
+          withNonArrivalConfirmedAt(
+            testCaseForSpaceBookingSummaryStatus.nonArrivalConfirmedAtDateTime?.toInstant(
+              ZoneOffset.UTC,
+            ),
+          )
+          withKeyworkerName(null)
+          withKeyworkerStaffCode(null)
+          withKeyworkerAssignedAt(Instant.now())
+        }
 
       val response = webTestClient.get()
         .uri("/cas1/premises/${premisesWithBookings.id}/space-bookings?sortBy=canonicalArrivalDate&sortDirection=asc")
@@ -1286,7 +1315,10 @@ class Cas1SpaceBookingTest {
         .isOk
 
       domainEventAsserter.blockForEmittedDomainEvent(DomainEventType.APPROVED_PREMISES_PERSON_ARRIVED)
-      domainEventAsserter.assertDomainEventOfTypeStored(spaceBooking.application!!.id, DomainEventType.APPROVED_PREMISES_PERSON_ARRIVED)
+      domainEventAsserter.assertDomainEventOfTypeStored(
+        spaceBooking.application!!.id,
+        DomainEventType.APPROVED_PREMISES_PERSON_ARRIVED,
+      )
     }
 
     @Test
@@ -1326,7 +1358,10 @@ class Cas1SpaceBookingTest {
         .exchange()
         .expectStatus()
         .isOk
-      domainEventAsserter.assertDomainEventOfTypeStored(spaceBooking.application!!.id, DomainEventType.APPROVED_PREMISES_PERSON_ARRIVED)
+      domainEventAsserter.assertDomainEventOfTypeStored(
+        spaceBooking.application!!.id,
+        DomainEventType.APPROVED_PREMISES_PERSON_ARRIVED,
+      )
     }
 
     @Test
@@ -1556,7 +1591,10 @@ class Cas1SpaceBookingTest {
         .expectStatus()
         .isOk
 
-      domainEventAsserter.assertDomainEventOfTypeStored(spaceBooking.application!!.id, DomainEventType.APPROVED_PREMISES_PERSON_NOT_ARRIVED)
+      domainEventAsserter.assertDomainEventOfTypeStored(
+        spaceBooking.application!!.id,
+        DomainEventType.APPROVED_PREMISES_PERSON_NOT_ARRIVED,
+      )
       snsDomainEventListener.blockForMessage(DomainEventType.APPROVED_PREMISES_PERSON_NOT_ARRIVED)
 
       val updatedSpaceBooking = cas1SpaceBookingRepository.findByIdOrNull(spaceBooking.id)!!
@@ -1641,7 +1679,10 @@ class Cas1SpaceBookingTest {
         .expectStatus()
         .isOk
 
-      domainEventAsserter.assertDomainEventOfTypeStored(spaceBooking.application!!.id, DomainEventType.APPROVED_PREMISES_BOOKING_KEYWORKER_ASSIGNED)
+      domainEventAsserter.assertDomainEventOfTypeStored(
+        spaceBooking.application!!.id,
+        DomainEventType.APPROVED_PREMISES_BOOKING_KEYWORKER_ASSIGNED,
+      )
 
       val updatedSpaceBooking = cas1SpaceBookingRepository.findByIdOrNull(spaceBooking.id)!!
       assertThat(updatedSpaceBooking.keyWorkerName).isEqualTo("${keyWorker.name.forename} ${keyWorker.name.surname}")
@@ -1848,7 +1889,10 @@ class Cas1SpaceBookingTest {
         .exchange()
         .expectStatus()
         .isOk
-      domainEventAsserter.assertDomainEventOfTypeStored(spaceBooking.application!!.id, DomainEventType.APPROVED_PREMISES_PERSON_DEPARTED)
+      domainEventAsserter.assertDomainEventOfTypeStored(
+        spaceBooking.application!!.id,
+        DomainEventType.APPROVED_PREMISES_PERSON_DEPARTED,
+      )
     }
 
     @Test
@@ -1895,7 +1939,10 @@ class Cas1SpaceBookingTest {
         .isOk
 
       domainEventAsserter.blockForEmittedDomainEvent(DomainEventType.APPROVED_PREMISES_PERSON_DEPARTED)
-      val domainEvent = domainEventAsserter.assertDomainEventOfTypeStored(spaceBooking.application!!.id, DomainEventType.APPROVED_PREMISES_PERSON_DEPARTED)
+      val domainEvent = domainEventAsserter.assertDomainEventOfTypeStored(
+        spaceBooking.application!!.id,
+        DomainEventType.APPROVED_PREMISES_PERSON_DEPARTED,
+      )
       assertThat(domainEvent.data).contains("""moveOnCategory": {"id": "${MOVE_ON_CATEGORY_NOT_APPLICABLE_ID}""")
     }
   }
@@ -2031,8 +2078,14 @@ class Cas1SpaceBookingTest {
 
       emailAsserter.assertEmailRequested(applicant.email!!, notifyConfig.templates.bookingWithdrawnV2)
       emailAsserter.assertEmailRequested(placementApplicationCreator.email!!, notifyConfig.templates.bookingWithdrawnV2)
-      emailAsserter.assertEmailRequested(spaceBooking.premises.emailAddress!!, notifyConfig.templates.bookingWithdrawnV2)
-      emailAsserter.assertEmailRequested(application.cruManagementArea!!.emailAddress!!, notifyConfig.templates.bookingWithdrawnV2)
+      emailAsserter.assertEmailRequested(
+        spaceBooking.premises.emailAddress!!,
+        notifyConfig.templates.bookingWithdrawnV2,
+      )
+      emailAsserter.assertEmailRequested(
+        application.cruManagementArea!!.emailAddress!!,
+        notifyConfig.templates.bookingWithdrawnV2,
+      )
       emailAsserter.assertEmailsRequestedCount(4)
 
       assertThat(approvedPremisesApplicationRepository.findByIdOrNull(spaceBooking.application!!.id)!!.status)
@@ -2139,7 +2192,10 @@ class Cas1SpaceBookingTest {
       assertThat(updatedSpaceBooking.expectedArrivalDate).isEqualTo(LocalDate.parse("2025-03-15"))
       assertThat(updatedSpaceBooking.expectedDepartureDate).isEqualTo(LocalDate.parse("2025-04-05"))
 
-      domainEventAsserter.assertDomainEventOfTypeStored(updatedSpaceBooking.application?.id!!, DomainEventType.APPROVED_PREMISES_BOOKING_CHANGED)
+      domainEventAsserter.assertDomainEventOfTypeStored(
+        updatedSpaceBooking.application?.id!!,
+        DomainEventType.APPROVED_PREMISES_BOOKING_CHANGED,
+      )
 
       emailAsserter.assertEmailsRequestedCount(2)
       emailAsserter.assertEmailRequested(applicant.email!!, notifyConfig.templates.bookingAmended)
@@ -2230,7 +2286,10 @@ class Cas1SpaceBookingTest {
           tuple("premises", "isWheelchairAccessible"),
         )
 
-      domainEventAsserter.assertDomainEventOfTypeStored(updatedSpaceBooking.application?.id!!, DomainEventType.APPROVED_PREMISES_BOOKING_CHANGED)
+      domainEventAsserter.assertDomainEventOfTypeStored(
+        updatedSpaceBooking.application?.id!!,
+        DomainEventType.APPROVED_PREMISES_BOOKING_CHANGED,
+      )
 
       emailAsserter.assertNoEmailsRequested()
     }
@@ -2300,9 +2359,127 @@ class Cas1SpaceBookingTest {
       assertThat(updatedSpaceBooking.criteria.size).isEqualTo(1)
       assertTrue(updatedSpaceBooking.criteria.none { it.modelScope == "room" })
 
-      domainEventAsserter.assertDomainEventOfTypeStored(updatedSpaceBooking.application?.id!!, DomainEventType.APPROVED_PREMISES_BOOKING_CHANGED)
+      domainEventAsserter.assertDomainEventOfTypeStored(
+        updatedSpaceBooking.application?.id!!,
+        DomainEventType.APPROVED_PREMISES_BOOKING_CHANGED,
+      )
 
       emailAsserter.assertNoEmailsRequested()
+    }
+  }
+
+  @Nested
+  inner class EmergencyTransfer : InitialiseDatabasePerClassTestBase() {
+    lateinit var region: ProbationRegionEntity
+    lateinit var premises: ApprovedPremisesEntity
+    lateinit var existingSpaceBooking: Cas1SpaceBookingEntity
+    lateinit var applicant: UserEntity
+    lateinit var application: ApprovedPremisesApplicationEntity
+    lateinit var destinationPremises: ApprovedPremisesEntity
+
+    @BeforeAll
+    fun setupTestData() {
+      characteristicRepository.deleteAll()
+
+      region = givenAProbationRegion()
+
+      val (user) = givenAUser()
+      val (offender) = givenAnOffender()
+
+      premises = approvedPremisesEntityFactory.produceAndPersist {
+        withSupportsSpaceBookings(true)
+        withYieldedProbationRegion { region }
+        withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
+        withEmailAddress("premises@test.com")
+      }
+
+      destinationPremises = approvedPremisesEntityFactory.produceAndPersist {
+        withSupportsSpaceBookings(true)
+        withYieldedProbationRegion { region }
+        withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
+        withEmailAddress("destPremises@test.com")
+      }
+
+      applicant = givenAUser(
+        staffDetail =
+        StaffDetailFactory.staffDetail(email = "applicant@test.com"),
+      ).first
+
+      application = approvedPremisesApplicationEntityFactory.produceAndPersist {
+        withCrn(offender.otherIds.crn)
+        withCreatedByUser(applicant)
+        withApplicationSchema(approvedPremisesApplicationJsonSchemaEntityFactory.produceAndPersist())
+        withApArea(givenAnApArea())
+        withSubmittedAt(OffsetDateTime.now())
+      }
+
+      val (placementRequest) = givenAPlacementRequest(
+        placementRequestAllocatedTo = user,
+        assessmentAllocatedTo = user,
+        createdByUser = user,
+        application = application,
+      )
+
+      existingSpaceBooking = cas1SpaceBookingEntityFactory.produceAndPersist {
+        withCrn(offender.otherIds.crn)
+        withPremises(premises)
+        withPlacementRequest(placementRequest)
+        withApplication(placementRequest.application)
+        withCreatedBy(user)
+        withExpectedArrivalDate(LocalDate.parse("2025-02-05"))
+        withExpectedDepartureDate(LocalDate.parse("2025-06-29"))
+      }
+    }
+
+    @Test
+    fun `Returns 403 Forbidden if user does not have correct permission`() {
+      val (_, jwt) = givenAUser(roles = listOf(CAS1_ASSESSOR))
+
+      webTestClient.post()
+        .uri("/cas1/premises/${premises.id}/space-bookings/${existingSpaceBooking.id}/emergency-transfer")
+        .header("Authorization", "Bearer $jwt")
+        .bodyValue(
+          Cas1NewEmergencyTransfer(
+            arrivalDate = LocalDate.now(),
+            departureDate = LocalDate.now().plusMonths(1),
+            destinationPremisesId = UUID.randomUUID(),
+          ),
+        )
+        .exchange()
+        .expectStatus()
+        .isForbidden
+    }
+
+    @Test
+    fun `Successfully creates an emergency booking and updates the existing booking`() {
+      val (_, jwt) = givenAUser(roles = listOf(UserRole.CAS1_CRU_MEMBER_FIND_AND_BOOK_BETA))
+
+      assertThat(existingSpaceBooking.transferredBooking).isNull()
+
+      webTestClient.post()
+        .uri("/cas1/premises/${premises.id}/space-bookings/${existingSpaceBooking.id}/emergency-transfer")
+        .header("Authorization", "Bearer $jwt")
+        .bodyValue(
+          Cas1NewEmergencyTransfer(
+            arrivalDate = LocalDate.now(),
+            departureDate = LocalDate.now().plusMonths(1),
+            destinationPremisesId = destinationPremises.id,
+          ),
+        )
+        .exchange()
+        .expectStatus()
+        .isOk
+
+      val updatedSpaceBooking = cas1SpaceBookingRepository.findByIdOrNull(existingSpaceBooking.id)!!
+
+      val emergencyTransferredBooking = updatedSpaceBooking.transferredBooking!!
+
+      assertThat(updatedSpaceBooking.expectedDepartureDate).isEqualTo(emergencyTransferredBooking.expectedArrivalDate)
+      assertThat(updatedSpaceBooking.canonicalDepartureDate).isEqualTo(emergencyTransferredBooking.expectedArrivalDate)
+
+      assertThat(emergencyTransferredBooking.premises.id).isEqualTo(destinationPremises.id)
+      assertThat(emergencyTransferredBooking.expectedArrivalDate).isEqualTo(LocalDate.now())
+      assertThat(emergencyTransferredBooking.expectedDepartureDate).isEqualTo(LocalDate.now().plusMonths(1))
     }
   }
 }
