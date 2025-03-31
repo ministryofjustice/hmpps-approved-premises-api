@@ -358,4 +358,14 @@ data class Cas1DomainEvent<T>(
   val schemaVersion: Int? = null,
   val triggerSource: TriggerSourceType? = null,
   val emit: Boolean = true,
-)
+) {
+  // TODO: add the envelope type to the event type enum. use reflection
+  // to ensure correct type is used
+
+  // TODO: reflect on data, get value of data.eventType (of type EventType)
+  // make sure its value matches the value of the enum domainEventType.typeName
+
+  // TODO: document, explaining why we use reflection (combination of enums
+  // not supporting generics, and limited polymorphism options when generating
+  // from yml
+}
