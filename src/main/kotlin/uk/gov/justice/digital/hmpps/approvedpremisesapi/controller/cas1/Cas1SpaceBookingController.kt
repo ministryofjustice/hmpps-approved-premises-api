@@ -22,6 +22,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.SortDirection
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas1SpaceBookingEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserPermission
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserPermission.CAS1_EMERGENCY_TRANSFER_PERFORM
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserPermission.CAS1_SPACE_BOOKING_LIST
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserPermission.CAS1_SPACE_BOOKING_RECORD_NON_ARRIVAL
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserPermission.CAS1_SPACE_BOOKING_VIEW
@@ -334,7 +335,17 @@ class Cas1SpaceBookingController(
     premisesId: UUID,
     bookingId: UUID,
     cas1NewEmergencyTransfer: Cas1NewEmergencyTransfer,
-  ): ResponseEntity<Unit> = super.emergencyTransfer(premisesId, bookingId, cas1NewEmergencyTransfer)
+  ): ResponseEntity<Unit> {
+    userAccessService.ensureCurrentUserHasPermission(CAS1_EMERGENCY_TRANSFER_PERFORM)
+
+    val user = userService.getUserForRequest()
+
+    ensureEntityFromCasResultIsSuccess(
+      cas1SpaceBookingService.emergencyTransfer(premisesId, bookingId, user, cas1NewEmergencyTransfer),
+    )
+
+    return ResponseEntity(HttpStatus.OK)
+  }
 
   override fun plannedTransfer(
     premisesId: UUID,
