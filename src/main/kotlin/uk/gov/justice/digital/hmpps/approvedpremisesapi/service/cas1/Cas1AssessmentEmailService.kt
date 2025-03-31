@@ -133,6 +133,11 @@ class Cas1AssessmentEmailService(
     }
   }
 
+  /*
+  This is partially duplicating logic from TaskDeadlineService. This service
+  should be told the type of deadline, not try and figure it out given the
+  current date
+   */
   private fun deadlineCopy(deadline: OffsetDateTime?, isEmergency: Boolean): String {
     if (deadline == null) {
       return DEFAULT_DEADLINE_COPY

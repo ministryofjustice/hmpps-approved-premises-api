@@ -6,9 +6,9 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremi
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AssessmentEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementRequestEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.DatesConstant
 import java.time.LocalTime
 import java.time.OffsetDateTime
-import java.time.ZoneId
 import java.time.ZoneOffset
 import java.time.ZonedDateTime
 
@@ -68,14 +68,14 @@ class TaskDeadlineService(
   private fun ZonedDateTime.isBeforeSameWorkingDayDeadline() = this.toLocalTime().isBefore(SAME_WORKING_DAY_DEADLINE_TIME)
 
   private fun OffsetDateTime.slewedToWorkingPattern(): OffsetDateTime {
-    val zonedDateTime = this.toZonedDateTime().withZoneSameInstant(GB_LOCAL_TIMEZONE)
+    val zonedDateTime = this.toZonedDateTime().withZoneSameInstant(DatesConstant.DEFAULT_CAS_TIMEZONE)
     return if (zonedDateTime.isWorkingDay() && zonedDateTime.isBeforeSameWorkingDayDeadline()) {
       zonedDateTime.withZoneSameInstant(ZoneOffset.UTC).toOffsetDateTime()
     } else {
       workingDayService
         .nextWorkingDay(zonedDateTime.toLocalDate())
         .atTime(WORKING_DAY_START_TIME)
-        .atZone(GB_LOCAL_TIMEZONE)
+        .atZone(DatesConstant.DEFAULT_CAS_TIMEZONE)
         .withZoneSameInstant(ZoneOffset.UTC)
         .toOffsetDateTime()
     }
@@ -91,7 +91,5 @@ class TaskDeadlineService(
 
     private val SAME_WORKING_DAY_DEADLINE_TIME: LocalTime = LocalTime.of(13, 0)
     private val WORKING_DAY_START_TIME: LocalTime = LocalTime.of(9, 0)
-
-    private val GB_LOCAL_TIMEZONE = ZoneId.of("Europe/London")
   }
 }

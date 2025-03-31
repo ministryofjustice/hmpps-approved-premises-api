@@ -16,7 +16,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.WorkingDayService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1AssessmentEmailService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1AssessmentEmailService.Companion.DEFAULT_DEADLINE_COPY
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1AssessmentEmailService.Companion.NEXT_WORKING_DAY_EMERGENCY_DEADLINE_COPY
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1AssessmentEmailService.Companion.SAME_DAY_EMERGENCY_DEADLINE_COPY
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1AssessmentEmailService.Companion.STANDARD_DEADLINE_COPY
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.unit.service.cas1.Cas1AssessmentEmailServiceTest.Constants.ALLOCATED_EMAIL
@@ -24,8 +23,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.unit.service.cas1.Cas1As
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.unit.service.cas1.Cas1AssessmentEmailServiceTest.Constants.CRN
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.unit.util.MockCas1EmailNotificationService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.UrlTemplate
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.toUiFormat
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.toUiFormattedHourOfDay
 import java.time.OffsetDateTime
 import java.util.UUID
 
@@ -213,13 +210,48 @@ class Cas1AssessmentEmailServiceTest {
     }
 
     @Test
-    fun `assessmentAllocated sends an email to a user if they have an email address and an emergency assessment with a deadline of next working day`() {
-      every { mockWorkingDayService.getCompleteWorkingDaysFromNowUntil(any()) } returns 2
-      val deadline = OffsetDateTime.now().plusDays(2)
+    fun `assessmentAllocated sends an email to a user if they have an email address and an emergency assessment with a deadline of next working day, UTC`() {
+      val deadline = OffsetDateTime.parse("2024-12-04T11:00:00+00:00")
 
-      service.assessmentAllocated(applicant, assessmentID, application, deadline, true)
+      service.assessmentAllocated(
+        applicant,
+        assessmentID,
+        application,
+        deadline,
+        true,
+      )
 
-      val expectedDeadlineCopy = NEXT_WORKING_DAY_EMERGENCY_DEADLINE_COPY.format(deadline.toUiFormattedHourOfDay(), deadline.toLocalDate().toUiFormat())
+      val expectedDeadlineCopy = "As this assessment is an emergency assessment, " +
+        "you have until 11am on Wednesday 4 December 2024 to complete the assessment, including any requests for further information."
+
+      mockEmailNotificationService.assertEmailRequestCount(1)
+      mockEmailNotificationService.assertEmailRequested(
+        ALLOCATED_EMAIL,
+        notifyConfig.templates.assessmentAllocated,
+        expectedAssessmentAllocatedPersonalisation(
+          applicant.name,
+          CRN,
+          assessmentID,
+          expectedDeadlineCopy,
+        ),
+        application,
+      )
+    }
+
+    @Test
+    fun `assessmentAllocated sends an email to a user if they have an email address and an emergency assessment with a deadline of next working day, BST`() {
+      val deadline = OffsetDateTime.parse("2024-04-01T11:00:00+01:00")
+
+      service.assessmentAllocated(
+        applicant,
+        assessmentID,
+        application,
+        deadline,
+        true,
+      )
+
+      val expectedDeadlineCopy = "As this assessment is an emergency assessment, " +
+        "you have until 11am on Monday 1 April 2024 to complete the assessment, including any requests for further information."
 
       mockEmailNotificationService.assertEmailRequestCount(1)
       mockEmailNotificationService.assertEmailRequested(
