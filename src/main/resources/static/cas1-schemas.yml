@@ -695,7 +695,6 @@ components:
           format: uuid
       required:
         - occurredAt
-        - reasonId
     Cas1PremiseCapacity:
       type: object
       properties:
