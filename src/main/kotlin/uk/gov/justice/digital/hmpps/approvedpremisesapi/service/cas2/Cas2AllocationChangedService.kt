@@ -8,9 +8,9 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.ClientResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.ManagePomCasesClient
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.PomAllocation
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas2ApplicationRepository
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.NomisUserRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.domainevent.HmppsDomainEvent
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.InvalidDomainEventException
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.NomisUserService
 import java.util.UUID
 
 @Service
@@ -18,7 +18,7 @@ class Cas2AllocationChangedService(
   private val managePomCasesClient: ManagePomCasesClient,
   private val applicationService: Cas2ApplicationService,
   private val applicationRepository: Cas2ApplicationRepository,
-  private val nomisUserRepository: NomisUserRepository,
+  private val nomisUserService: NomisUserService,
 ) {
   private val log = LoggerFactory.getLogger(this::class.java)
 
@@ -37,11 +37,7 @@ class Cas2AllocationChangedService(
 
       when (val pomAllocation = getAllocationResponse(detailUrl)) {
         is PomAllocation -> {
-          // this should call the nomis-user-roles api - /users/staff/{staffId} to get the staffDetail and create a user.
-          // need to check permissions/roles before implementing
-          val allocatedUser = nomisUserRepository.findByNomisStaffId(pomAllocation.manager.code)
-            ?: throw RuntimeException("No NOMIS user details found")
-
+          val allocatedUser = nomisUserService.getUserByStaffId(staffId = pomAllocation.manager.code)
           if (isNewAllocation(application.currentPomUserId, allocatedUser.id)) {
             application.createApplicationAssignment(
               prisonCode = pomAllocation.prison.code,

@@ -12,7 +12,6 @@ import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.MethodSource
-import org.junit.jupiter.params.provider.ValueSource
 import org.springframework.data.repository.findByIdOrNull
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.ApplicationAssessedEnvelope
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.ApplicationExpiredEnvelope
@@ -63,10 +62,10 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DomainEventRe
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DomainEventType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.MetaDataName
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TriggerSourceType
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.DomainEvent
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.ConfiguredDomainEventWorker
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.SentryService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.UserService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1DomainEvent
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1DomainEventMigrationService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1DomainEventService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.unit.util.ObjectMapperFactory
@@ -168,7 +167,7 @@ class Cas1DomainEventServiceTest {
       val event = method.invoke(id)
 
       assertThat(event).isEqualTo(
-        DomainEvent(
+        Cas1DomainEvent(
           id = id,
           applicationId = applicationId,
           crn = crn,
@@ -180,7 +179,7 @@ class Cas1DomainEventServiceTest {
       )
     }
 
-    private fun fetchGetterForType(type: DomainEventType): (UUID) -> DomainEvent<out Any>? = mapOf(
+    private fun fetchGetterForType(type: DomainEventType): (UUID) -> Cas1DomainEvent<out Any>? = mapOf(
       DomainEventType.APPROVED_PREMISES_APPLICATION_SUBMITTED to domainEventService::getApplicationSubmittedDomainEvent,
       DomainEventType.APPROVED_PREMISES_APPLICATION_ASSESSED to domainEventService::getApplicationAssessedDomainEvent,
       DomainEventType.APPROVED_PREMISES_BOOKING_MADE to domainEventService::getBookingMadeEvent,
@@ -221,7 +220,7 @@ class Cas1DomainEventServiceTest {
 
       every { domainEventRepositoryMock.save(any()) } answers { it.invocation.args[0] as DomainEventEntity }
 
-      val domainEventToSave = DomainEvent(
+      val domainEventToSave = Cas1DomainEvent(
         id = id,
         applicationId = applicationId,
         crn = crn,
@@ -231,11 +230,12 @@ class Cas1DomainEventServiceTest {
         bookingId = bookingId,
         metadata = metadata,
         schemaVersion = domainEventAndJson.schemaVersion.versionNo,
+        triggerSource = TriggerSourceType.USER,
       )
 
       every { domainEventWorkerMock.emitEvent(any(), any()) } returns Unit
 
-      domainEventService.saveAndEmit(domainEventToSave, type, true)
+      domainEventService.saveAndEmit(domainEventToSave, type)
 
       verify(exactly = 1) {
         domainEventRepositoryMock.save(
@@ -249,6 +249,7 @@ class Cas1DomainEventServiceTest {
             assertThat(it.triggeredByUserId).isEqualTo(user.id)
             assertThat(it.bookingId).isEqualTo(bookingId)
             assertThat(it.metadata).isEqualTo(metadata)
+            assertThat(it.triggerSource).isEqualTo(TriggerSourceType.USER)
           },
         )
       }
@@ -276,10 +277,12 @@ class Cas1DomainEventServiceTest {
 
     @ParameterizedTest
     @MethodSource("uk.gov.justice.digital.hmpps.approvedpremisesapi.unit.service.cas1.Cas1DomainEventServiceTest#allCas1DomainEventTypes")
-    fun `saveAndEmit persists event and does not emit event if emit is false`(type: DomainEventType) {
+    fun `saveAndEmit persists event and does not emit event if emit on domain event is false`(type: DomainEventType) {
       val id = UUID.randomUUID()
       val applicationId = UUID.randomUUID()
       val bookingId = UUID.randomUUID()
+      val cas1SpaceBookingId = UUID.randomUUID()
+      val cas1PlacementRequestId = UUID.randomUUID()
       val crn = "CRN"
       val nomsNumber = "123"
       val occurredAt = Instant.now()
@@ -287,7 +290,7 @@ class Cas1DomainEventServiceTest {
 
       every { domainEventRepositoryMock.save(any()) } answers { it.invocation.args[0] as DomainEventEntity }
 
-      val domainEventToSave = DomainEvent(
+      val domainEventToSave = Cas1DomainEvent(
         id = id,
         applicationId = applicationId,
         crn = crn,
@@ -295,10 +298,13 @@ class Cas1DomainEventServiceTest {
         occurredAt = occurredAt,
         data = domainEventAndJson.envelope,
         bookingId = bookingId,
+        cas1SpaceBookingId = cas1SpaceBookingId,
+        cas1PlacementRequestId = cas1PlacementRequestId,
         schemaVersion = domainEventAndJson.schemaVersion.versionNo,
+        emit = false,
       )
 
-      domainEventService.saveAndEmit(domainEventToSave, type, false)
+      domainEventService.saveAndEmit(domainEventToSave, type)
 
       verify(exactly = 1) {
         domainEventRepositoryMock.save(
@@ -311,6 +317,8 @@ class Cas1DomainEventServiceTest {
             assertThat(it.data).isEqualTo(domainEventAndJson.persistedJson)
             assertThat(it.triggeredByUserId).isEqualTo(user.id)
             assertThat(it.bookingId).isEqualTo(bookingId)
+            assertThat(it.cas1SpaceBookingId).isEqualTo(cas1SpaceBookingId)
+            assertThat(it.cas1PlacementRequestId).isEqualTo(cas1PlacementRequestId)
           },
         )
       }
@@ -333,7 +341,7 @@ class Cas1DomainEventServiceTest {
 
       every { domainEventRepositoryMock.save(any()) } answers { it.invocation.args[0] as DomainEventEntity }
 
-      val domainEventToSave = DomainEvent(
+      val domainEventToSave = Cas1DomainEvent(
         id = id,
         applicationId = applicationId,
         crn = crn,
@@ -379,7 +387,7 @@ class Cas1DomainEventServiceTest {
 
       every { domainEventRepositoryMock.save(any()) } throws RuntimeException("A database exception")
 
-      val domainEventToSave = DomainEvent(
+      val domainEventToSave = Cas1DomainEvent(
         id = id,
         applicationId = applicationId,
         crn = crn,
@@ -391,7 +399,7 @@ class Cas1DomainEventServiceTest {
       )
 
       try {
-        domainEventService.saveAndEmit(domainEventToSave, type, true)
+        domainEventService.saveAndEmit(domainEventToSave, type)
       } catch (_: Exception) {
       }
 
@@ -511,7 +519,7 @@ class Cas1DomainEventServiceTest {
 
       val eventDetails = ApplicationSubmittedFactory().produce()
       val domainEventEnvelope = mockk<ApplicationSubmittedEnvelope>()
-      val domainEvent = mockk<DomainEvent<ApplicationSubmittedEnvelope>>()
+      val domainEvent = mockk<Cas1DomainEvent<ApplicationSubmittedEnvelope>>()
 
       every { domainEvent.id } returns id
       every { domainEvent.data } returns domainEventEnvelope
@@ -519,7 +527,7 @@ class Cas1DomainEventServiceTest {
 
       val domainEventServiceSpy = spyk(domainEventService)
 
-      every { domainEventServiceSpy.saveAndEmit(any(), any(), any()) } returns Unit
+      every { domainEventServiceSpy.saveAndEmit(any(), any()) } returns Unit
 
       domainEventServiceSpy.saveApplicationSubmittedDomainEvent(domainEvent)
 
@@ -537,7 +545,7 @@ class Cas1DomainEventServiceTest {
 
       val eventDetails = ApplicationAssessedFactory().produce()
       val domainEventEnvelope = mockk<ApplicationAssessedEnvelope>()
-      val domainEvent = mockk<DomainEvent<ApplicationAssessedEnvelope>>()
+      val domainEvent = mockk<Cas1DomainEvent<ApplicationAssessedEnvelope>>()
 
       every { domainEvent.id } returns id
       every { domainEvent.data } returns domainEventEnvelope
@@ -545,7 +553,7 @@ class Cas1DomainEventServiceTest {
 
       val domainEventServiceSpy = spyk(domainEventService)
 
-      every { domainEventServiceSpy.saveAndEmit(any(), any(), any()) } returns Unit
+      every { domainEventServiceSpy.saveAndEmit(any(), any()) } returns Unit
 
       domainEventServiceSpy.saveApplicationAssessedDomainEvent(domainEvent)
 
@@ -563,7 +571,7 @@ class Cas1DomainEventServiceTest {
 
       val eventDetails = BookingMadeFactory().produce()
       val domainEventEnvelope = mockk<BookingMadeEnvelope>()
-      val domainEvent = mockk<DomainEvent<BookingMadeEnvelope>>()
+      val domainEvent = mockk<Cas1DomainEvent<BookingMadeEnvelope>>()
 
       every { domainEvent.id } returns id
       every { domainEvent.data } returns domainEventEnvelope
@@ -571,7 +579,7 @@ class Cas1DomainEventServiceTest {
 
       val domainEventServiceSpy = spyk(domainEventService)
 
-      every { domainEventServiceSpy.saveAndEmit(any(), any(), any()) } returns Unit
+      every { domainEventServiceSpy.saveAndEmit(any(), any()) } returns Unit
 
       domainEventServiceSpy.saveBookingMadeDomainEvent(domainEvent)
 
@@ -589,7 +597,7 @@ class Cas1DomainEventServiceTest {
 
       val eventDetails = PersonArrivedFactory().produce()
       val domainEventEnvelope = mockk<PersonArrivedEnvelope>()
-      val domainEvent = mockk<DomainEvent<PersonArrivedEnvelope>>()
+      val domainEvent = mockk<Cas1DomainEvent<PersonArrivedEnvelope>>()
 
       every { domainEvent.id } returns id
       every { domainEvent.data } returns domainEventEnvelope
@@ -615,7 +623,7 @@ class Cas1DomainEventServiceTest {
 
       val eventDetails = PersonNotArrivedFactory().produce()
       val domainEventEnvelope = mockk<PersonNotArrivedEnvelope>()
-      val domainEvent = mockk<DomainEvent<PersonNotArrivedEnvelope>>()
+      val domainEvent = mockk<Cas1DomainEvent<PersonNotArrivedEnvelope>>()
 
       every { domainEvent.id } returns id
       every { domainEvent.data } returns domainEventEnvelope
@@ -623,7 +631,7 @@ class Cas1DomainEventServiceTest {
 
       val domainEventServiceSpy = spyk(domainEventService)
 
-      every { domainEventServiceSpy.saveAndEmit(any(), any(), any()) } returns Unit
+      every { domainEventServiceSpy.saveAndEmit(any(), any()) } returns Unit
 
       domainEventServiceSpy.savePersonNotArrivedEvent(domainEvent)
 
@@ -631,7 +639,6 @@ class Cas1DomainEventServiceTest {
         domainEventServiceSpy.saveAndEmit(
           domainEvent = domainEvent,
           eventType = DomainEventType.APPROVED_PREMISES_PERSON_NOT_ARRIVED,
-          emit = true,
         )
       }
     }
@@ -642,7 +649,7 @@ class Cas1DomainEventServiceTest {
 
       val eventDetails = PersonDepartedFactory().produce()
       val domainEventEnvelope = mockk<PersonDepartedEnvelope>()
-      val domainEvent = mockk<DomainEvent<PersonDepartedEnvelope>>()
+      val domainEvent = mockk<Cas1DomainEvent<PersonDepartedEnvelope>>()
 
       every { domainEvent.id } returns id
       every { domainEvent.data } returns domainEventEnvelope
@@ -668,7 +675,7 @@ class Cas1DomainEventServiceTest {
 
       val eventDetails = BookingNotMadeFactory().produce()
       val domainEventEnvelope = mockk<BookingNotMadeEnvelope>()
-      val domainEvent = mockk<DomainEvent<BookingNotMadeEnvelope>>()
+      val domainEvent = mockk<Cas1DomainEvent<BookingNotMadeEnvelope>>()
 
       every { domainEvent.id } returns id
       every { domainEvent.data } returns domainEventEnvelope
@@ -676,7 +683,7 @@ class Cas1DomainEventServiceTest {
 
       val domainEventServiceSpy = spyk(domainEventService)
 
-      every { domainEventServiceSpy.saveAndEmit(any(), any(), any()) } returns Unit
+      every { domainEventServiceSpy.saveAndEmit(any(), any()) } returns Unit
 
       domainEventServiceSpy.saveBookingNotMadeEvent(domainEvent)
 
@@ -694,7 +701,7 @@ class Cas1DomainEventServiceTest {
 
       val eventDetails = BookingCancelledFactory().produce()
       val domainEventEnvelope = mockk<BookingCancelledEnvelope>()
-      val domainEvent = mockk<DomainEvent<BookingCancelledEnvelope>>()
+      val domainEvent = mockk<Cas1DomainEvent<BookingCancelledEnvelope>>()
 
       every { domainEvent.id } returns id
       every { domainEvent.data } returns domainEventEnvelope
@@ -702,7 +709,7 @@ class Cas1DomainEventServiceTest {
 
       val domainEventServiceSpy = spyk(domainEventService)
 
-      every { domainEventServiceSpy.saveAndEmit(any(), any(), any()) } returns Unit
+      every { domainEventServiceSpy.saveAndEmit(any(), any()) } returns Unit
 
       domainEventServiceSpy.saveBookingCancelledEvent(domainEvent)
 
@@ -720,7 +727,7 @@ class Cas1DomainEventServiceTest {
 
       val eventDetails = BookingChangedFactory().produce()
       val domainEventEnvelope = mockk<BookingChangedEnvelope>()
-      val domainEvent = mockk<DomainEvent<BookingChangedEnvelope>>()
+      val domainEvent = mockk<Cas1DomainEvent<BookingChangedEnvelope>>()
 
       every { domainEvent.id } returns id
       every { domainEvent.data } returns domainEventEnvelope
@@ -728,7 +735,7 @@ class Cas1DomainEventServiceTest {
 
       val domainEventServiceSpy = spyk(domainEventService)
 
-      every { domainEventServiceSpy.saveAndEmit(any(), any(), any()) } returns Unit
+      every { domainEventServiceSpy.saveAndEmit(any(), any()) } returns Unit
 
       domainEventServiceSpy.saveBookingChangedEvent(domainEvent)
 
@@ -746,7 +753,7 @@ class Cas1DomainEventServiceTest {
 
       val eventDetails = BookingKeyWorkerAssignedFactory().produce()
       val domainEventEnvelope = mockk<BookingKeyWorkerAssignedEnvelope>()
-      val domainEvent = mockk<DomainEvent<BookingKeyWorkerAssignedEnvelope>>()
+      val domainEvent = mockk<Cas1DomainEvent<BookingKeyWorkerAssignedEnvelope>>()
 
       every { domainEvent.id } returns id
       every { domainEvent.data } returns domainEventEnvelope
@@ -754,7 +761,7 @@ class Cas1DomainEventServiceTest {
 
       val domainEventServiceSpy = spyk(domainEventService)
 
-      every { domainEventServiceSpy.saveAndEmit(any(), any(), any()) } returns Unit
+      every { domainEventServiceSpy.saveAndEmit(any(), any()) } returns Unit
 
       domainEventServiceSpy.saveKeyWorkerAssignedEvent(domainEvent)
 
@@ -766,14 +773,13 @@ class Cas1DomainEventServiceTest {
       }
     }
 
-    @ParameterizedTest
-    @ValueSource(booleans = [true, false])
-    fun `saveApplicationWithdrawnEvent sends correct arguments to saveAndEmit`(emit: Boolean) {
+    @Test
+    fun `saveApplicationWithdrawnEvent sends correct arguments to saveAndEmit`() {
       val id = UUID.randomUUID()
 
       val eventDetails = ApplicationWithdrawnFactory().produce()
       val domainEventEnvelope = mockk<ApplicationWithdrawnEnvelope>()
-      val domainEvent = mockk<DomainEvent<ApplicationWithdrawnEnvelope>>()
+      val domainEvent = mockk<Cas1DomainEvent<ApplicationWithdrawnEnvelope>>()
 
       every { domainEvent.id } returns id
       every { domainEvent.data } returns domainEventEnvelope
@@ -781,15 +787,14 @@ class Cas1DomainEventServiceTest {
 
       val domainEventServiceSpy = spyk(domainEventService)
 
-      every { domainEventServiceSpy.saveAndEmit(any(), any(), emit) } returns Unit
+      every { domainEventServiceSpy.saveAndEmit(any(), any()) } returns Unit
 
-      domainEventServiceSpy.saveApplicationWithdrawnEvent(domainEvent, emit)
+      domainEventServiceSpy.saveApplicationWithdrawnEvent(domainEvent)
 
       verify {
         domainEventServiceSpy.saveAndEmit(
           domainEvent = domainEvent,
           eventType = DomainEventType.APPROVED_PREMISES_APPLICATION_WITHDRAWN,
-          emit,
         )
       }
     }
@@ -800,7 +805,7 @@ class Cas1DomainEventServiceTest {
 
       val eventDetails = ApplicationExpiredFactory().produce()
       val domainEventEnvelope = mockk<ApplicationExpiredEnvelope>()
-      val domainEvent = mockk<DomainEvent<ApplicationExpiredEnvelope>>()
+      val domainEvent = mockk<Cas1DomainEvent<ApplicationExpiredEnvelope>>()
 
       every { domainEvent.id } returns id
       every { domainEvent.data } returns domainEventEnvelope
@@ -808,15 +813,14 @@ class Cas1DomainEventServiceTest {
 
       val domainEventServiceSpy = spyk(domainEventService)
 
-      every { domainEventServiceSpy.saveAndEmit(any(), any(), any(), any()) } returns Unit
+      every { domainEventServiceSpy.saveAndEmit(any(), any()) } returns Unit
 
-      domainEventServiceSpy.saveApplicationExpiredEvent(domainEvent, TriggerSourceType.SYSTEM)
+      domainEventServiceSpy.saveApplicationExpiredEvent(domainEvent)
 
       verify {
         domainEventServiceSpy.saveAndEmit(
           domainEvent = domainEvent,
           eventType = DomainEventType.APPROVED_PREMISES_APPLICATION_EXPIRED,
-          triggerSource = TriggerSourceType.SYSTEM,
         )
       }
     }
@@ -827,7 +831,7 @@ class Cas1DomainEventServiceTest {
 
       val eventDetails = AssessmentAppealedFactory().produce()
       val domainEventEnvelope = mockk<AssessmentAppealedEnvelope>()
-      val domainEvent = mockk<DomainEvent<AssessmentAppealedEnvelope>>()
+      val domainEvent = mockk<Cas1DomainEvent<AssessmentAppealedEnvelope>>()
 
       every { domainEvent.id } returns id
       every { domainEvent.data } returns domainEventEnvelope
@@ -853,7 +857,7 @@ class Cas1DomainEventServiceTest {
 
       val eventDetails = PlacementApplicationWithdrawnFactory().produce()
       val domainEventEnvelope = mockk<PlacementApplicationWithdrawnEnvelope>()
-      val domainEvent = mockk<DomainEvent<PlacementApplicationWithdrawnEnvelope>>()
+      val domainEvent = mockk<Cas1DomainEvent<PlacementApplicationWithdrawnEnvelope>>()
 
       every { domainEvent.id } returns id
       every { domainEvent.data } returns domainEventEnvelope
@@ -879,7 +883,7 @@ class Cas1DomainEventServiceTest {
 
       val eventDetails = PlacementApplicationAllocatedFactory().produce()
       val domainEventEnvelope = mockk<PlacementApplicationAllocatedEnvelope>()
-      val domainEvent = mockk<DomainEvent<PlacementApplicationAllocatedEnvelope>>()
+      val domainEvent = mockk<Cas1DomainEvent<PlacementApplicationAllocatedEnvelope>>()
 
       every { domainEvent.id } returns id
       every { domainEvent.data } returns domainEventEnvelope
@@ -905,7 +909,7 @@ class Cas1DomainEventServiceTest {
 
       val eventDetails = RequestForPlacementAssessedFactory().produce()
       val domainEventEnvelope = mockk<RequestForPlacementAssessedEnvelope>()
-      val domainEvent = mockk<DomainEvent<RequestForPlacementAssessedEnvelope>>()
+      val domainEvent = mockk<Cas1DomainEvent<RequestForPlacementAssessedEnvelope>>()
 
       every { domainEvent.id } returns id
       every { domainEvent.data } returns domainEventEnvelope
@@ -931,7 +935,7 @@ class Cas1DomainEventServiceTest {
 
       val eventDetails = MatchRequestWithdrawnFactory().produce()
       val domainEventEnvelope = mockk<MatchRequestWithdrawnEnvelope>()
-      val domainEvent = mockk<DomainEvent<MatchRequestWithdrawnEnvelope>>()
+      val domainEvent = mockk<Cas1DomainEvent<MatchRequestWithdrawnEnvelope>>()
 
       every { domainEvent.id } returns id
       every { domainEvent.data } returns domainEventEnvelope
@@ -957,7 +961,7 @@ class Cas1DomainEventServiceTest {
 
       val eventDetails = RequestForPlacementCreatedFactory().produce()
       val domainEventEnvelope = mockk<RequestForPlacementCreatedEnvelope>()
-      val domainEvent = mockk<DomainEvent<RequestForPlacementCreatedEnvelope>>()
+      val domainEvent = mockk<Cas1DomainEvent<RequestForPlacementCreatedEnvelope>>()
 
       every { domainEvent.id } returns id
       every { domainEvent.data } returns domainEventEnvelope
@@ -983,7 +987,7 @@ class Cas1DomainEventServiceTest {
 
       val eventDetails = AssessmentAllocatedFactory().produce()
       val domainEventEnvelope = mockk<AssessmentAllocatedEnvelope>()
-      val domainEvent = mockk<DomainEvent<AssessmentAllocatedEnvelope>>()
+      val domainEvent = mockk<Cas1DomainEvent<AssessmentAllocatedEnvelope>>()
 
       every { domainEvent.id } returns id
       every { domainEvent.data } returns domainEventEnvelope
@@ -991,15 +995,14 @@ class Cas1DomainEventServiceTest {
 
       val domainEventServiceSpy = spyk(domainEventService)
 
-      every { domainEventServiceSpy.saveAndEmit(any(), any(), any(), any()) } returns Unit
+      every { domainEventServiceSpy.saveAndEmit(any(), any()) } returns Unit
 
-      domainEventServiceSpy.saveAssessmentAllocatedEvent(domainEvent, TriggerSourceType.USER)
+      domainEventServiceSpy.saveAssessmentAllocatedEvent(domainEvent)
 
       verify {
         domainEventServiceSpy.saveAndEmit(
           domainEvent = domainEvent,
           eventType = DomainEventType.APPROVED_PREMISES_ASSESSMENT_ALLOCATED,
-          triggerSource = TriggerSourceType.USER,
         )
       }
     }
@@ -1010,7 +1013,7 @@ class Cas1DomainEventServiceTest {
 
       val eventDetails = FurtherInformationRequestedFactory().produce()
       val domainEventEnvelope = mockk<FurtherInformationRequestedEnvelope>()
-      val domainEvent = mockk<DomainEvent<FurtherInformationRequestedEnvelope>>()
+      val domainEvent = mockk<Cas1DomainEvent<FurtherInformationRequestedEnvelope>>()
 
       every { domainEvent.id } returns id
       every { domainEvent.data } returns domainEventEnvelope

@@ -30,9 +30,9 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.UserEntityFactor
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas1SpaceBookingEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DepartureReasonEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.MoveOnCategoryEntity
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.DomainEvent
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PersonSummaryInfoResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.OffenderService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1DomainEvent
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1DomainEventService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1SpaceBookingManagementDomainEventService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1SpaceBookingManagementDomainEventServiceConfig
@@ -142,7 +142,7 @@ class Cas1BookingManagementDomainEventServiceTest {
         ),
       )
 
-      val domainEventArgument = slot<DomainEvent<PersonArrivedEnvelope>>()
+      val domainEventArgument = slot<Cas1DomainEvent<PersonArrivedEnvelope>>()
 
       verify(exactly = 1) {
         domainEventService.savePersonArrivedEvent(
@@ -194,7 +194,7 @@ class Cas1BookingManagementDomainEventServiceTest {
         ),
       )
 
-      val domainEventArgument = slot<DomainEvent<PersonArrivedEnvelope>>()
+      val domainEventArgument = slot<Cas1DomainEvent<PersonArrivedEnvelope>>()
 
       verify(exactly = 1) {
         domainEventService.savePersonArrivedEvent(
@@ -299,7 +299,7 @@ class Cas1BookingManagementDomainEventServiceTest {
         ),
       )
 
-      val domainEventArgument = slot<DomainEvent<PersonDepartedEnvelope>>()
+      val domainEventArgument = slot<Cas1DomainEvent<PersonDepartedEnvelope>>()
 
       verify(exactly = 1) {
         domainEventService.savePersonDepartedEvent(capture(domainEventArgument))
@@ -359,7 +359,7 @@ class Cas1BookingManagementDomainEventServiceTest {
         ),
       )
 
-      val domainEventArgument = slot<DomainEvent<PersonDepartedEnvelope>>()
+      val domainEventArgument = slot<Cas1DomainEvent<PersonDepartedEnvelope>>()
 
       verify(exactly = 1) {
         domainEventService.savePersonDepartedEvent(capture(domainEventArgument))
@@ -448,7 +448,7 @@ class Cas1BookingManagementDomainEventServiceTest {
         previousKeyWorkerName = null,
       )
 
-      val domainEventArgument = slot<DomainEvent<BookingKeyWorkerAssignedEnvelope>>()
+      val domainEventArgument = slot<Cas1DomainEvent<BookingKeyWorkerAssignedEnvelope>>()
 
       verify(exactly = 1) {
         domainEventService.saveKeyWorkerAssignedEvent(
@@ -479,7 +479,7 @@ class Cas1BookingManagementDomainEventServiceTest {
         previousKeyWorkerName = previousKeyWorkerName,
       )
 
-      val domainEventArgument = slot<DomainEvent<BookingKeyWorkerAssignedEnvelope>>()
+      val domainEventArgument = slot<Cas1DomainEvent<BookingKeyWorkerAssignedEnvelope>>()
 
       verify(exactly = 1) {
         domainEventService.saveKeyWorkerAssignedEvent(
@@ -508,7 +508,7 @@ class Cas1BookingManagementDomainEventServiceTest {
         previousKeyWorkerName = previousKeyWorkerName,
       )
 
-      val domainEventArgument = slot<DomainEvent<BookingKeyWorkerAssignedEnvelope>>()
+      val domainEventArgument = slot<Cas1DomainEvent<BookingKeyWorkerAssignedEnvelope>>()
 
       verify(exactly = 1) {
         domainEventService.saveKeyWorkerAssignedEvent(
@@ -525,7 +525,7 @@ class Cas1BookingManagementDomainEventServiceTest {
     }
 
     private fun checkDomainEventBookingProperties(
-      domainEvent: DomainEvent<BookingKeyWorkerAssignedEnvelope>,
+      domainEvent: Cas1DomainEvent<BookingKeyWorkerAssignedEnvelope>,
       spaceBooking: Cas1SpaceBookingEntity,
       applicationId: UUID,
     ) {

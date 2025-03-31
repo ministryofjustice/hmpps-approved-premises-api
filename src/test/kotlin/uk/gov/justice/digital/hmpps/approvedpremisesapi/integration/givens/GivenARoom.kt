@@ -9,6 +9,7 @@ fun IntegrationTestBase.givenAnApprovedPremisesRoom(
   premises: ApprovedPremisesEntity? = null,
   code: String = randomStringMultiCaseWithNumbers(6),
   name: String = randomStringMultiCaseWithNumbers(8),
+  bedCount: Int = 0,
 ): RoomEntity {
   val resolvedPremises = premises ?: approvedPremisesEntityFactory.produceAndPersist {
     withProbationRegion(givenAProbationRegion())
@@ -19,6 +20,10 @@ fun IntegrationTestBase.givenAnApprovedPremisesRoom(
     withPremises(resolvedPremises)
     withCode(code)
     withName(name)
+  }
+
+  repeat(bedCount) {
+    givenAnApprovedPremisesBed()
   }
 
   return room

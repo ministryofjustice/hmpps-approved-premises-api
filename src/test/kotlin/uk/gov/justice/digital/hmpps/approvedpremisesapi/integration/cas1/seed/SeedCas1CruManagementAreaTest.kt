@@ -8,6 +8,7 @@ import org.springframework.data.repository.findByIdOrNull
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.SeedFileType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.cas1.Cas1CruManagementAreaEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.seed.SeedTestBase
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AutoAllocationDay
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.seed.CsvBuilder
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.seed.cas1.CruManagementAreaSeedCsvRow
 import java.util.UUID
@@ -25,6 +26,17 @@ class SeedCas1CruManagementAreaTest : SeedTestBase() {
         .withName("Existing Name")
         .withEmailAddress("exisdtingEmail@here.com")
         .withAssessmentAutoAllocationUsername("existingUserName")
+        .withAssessmentAutoAllocations(
+          mutableMapOf(
+            AutoAllocationDay.MONDAY to "old monday",
+            AutoAllocationDay.TUESDAY to "old tuesday",
+            AutoAllocationDay.WEDNESDAY to "old wednesday",
+            AutoAllocationDay.THURSDAY to "old thursday",
+            AutoAllocationDay.FRIDAY to "old friday",
+            AutoAllocationDay.SATURDAY to "old saturday",
+            AutoAllocationDay.SUNDAY to "old sunday",
+          ),
+        )
         .produce(),
     ).id
   }
@@ -41,6 +53,13 @@ class SeedCas1CruManagementAreaTest : SeedTestBase() {
           currentName = "doesnt matter",
           emailAddress = "doesnt matter",
           assessmentAutoAllocationUsername = "doesnt matter",
+          assessmentAutoAllocationMonday = "doesnt matter",
+          assessmentAutoAllocationTuesday = "doesnt matter",
+          assessmentAutoAllocationWednesday = "doesnt matter",
+          assessmentAutoAllocationThursday = "doesnt matter",
+          assessmentAutoAllocationFriday = "doesnt matter",
+          assessmentAutoAllocationSaturday = "doesnt matter",
+          assessmentAutoAllocationSunday = "doesnt matter",
         ),
       ).toCsv(),
     )
@@ -65,6 +84,13 @@ class SeedCas1CruManagementAreaTest : SeedTestBase() {
           currentName = "Wrong Name",
           emailAddress = "doesnt matter",
           assessmentAutoAllocationUsername = "doesnt matter",
+          assessmentAutoAllocationMonday = "doesnt matter",
+          assessmentAutoAllocationTuesday = "doesnt matter",
+          assessmentAutoAllocationWednesday = "doesnt matter",
+          assessmentAutoAllocationThursday = "doesnt matter",
+          assessmentAutoAllocationFriday = "doesnt matter",
+          assessmentAutoAllocationSaturday = "doesnt matter",
+          assessmentAutoAllocationSunday = "doesnt matter",
         ),
       ).toCsv(),
     )
@@ -89,6 +115,13 @@ class SeedCas1CruManagementAreaTest : SeedTestBase() {
           currentName = "Existing Name",
           emailAddress = "updated@test.com",
           assessmentAutoAllocationUsername = "updated delius username",
+          assessmentAutoAllocationMonday = "username mon",
+          assessmentAutoAllocationTuesday = "username tue",
+          assessmentAutoAllocationWednesday = "username wed",
+          assessmentAutoAllocationThursday = "username thu",
+          assessmentAutoAllocationFriday = "username fri",
+          assessmentAutoAllocationSaturday = "username sat",
+          assessmentAutoAllocationSunday = "username sun",
         ),
       ).toCsv(),
     )
@@ -97,10 +130,22 @@ class SeedCas1CruManagementAreaTest : SeedTestBase() {
 
     assertThat(updatedArea.emailAddress).isEqualTo("updated@test.com")
     assertThat(updatedArea.assessmentAutoAllocationUsername).isEqualTo("updated delius username")
+
+    assertThat(updatedArea.assessmentAutoAllocations).isEqualTo(
+      mapOf(
+        AutoAllocationDay.MONDAY to "username mon",
+        AutoAllocationDay.TUESDAY to "username tue",
+        AutoAllocationDay.WEDNESDAY to "username wed",
+        AutoAllocationDay.THURSDAY to "username thu",
+        AutoAllocationDay.FRIDAY to "username fri",
+        AutoAllocationDay.SATURDAY to "username sat",
+        AutoAllocationDay.SUNDAY to "username sun",
+      ),
+    )
   }
 
   @Test
-  fun `Updating cru management area with null values correctly`() {
+  fun `Updating cru management area with null values removes configuration`() {
     seed(
       SeedFileType.approvedPremisesCruManagementAreas,
       contents = listOf(
@@ -109,6 +154,13 @@ class SeedCas1CruManagementAreaTest : SeedTestBase() {
           currentName = "Existing Name",
           emailAddress = "   ",
           assessmentAutoAllocationUsername = "  ",
+          assessmentAutoAllocationMonday = "",
+          assessmentAutoAllocationTuesday = "still something here",
+          assessmentAutoAllocationWednesday = " ",
+          assessmentAutoAllocationThursday = "",
+          assessmentAutoAllocationFriday = "and here",
+          assessmentAutoAllocationSaturday = "",
+          assessmentAutoAllocationSunday = "",
         ),
       ).toCsv(),
     )
@@ -117,6 +169,12 @@ class SeedCas1CruManagementAreaTest : SeedTestBase() {
 
     assertThat(updatedArea.emailAddress).isNull()
     assertThat(updatedArea.assessmentAutoAllocationUsername).isNull()
+    assertThat(updatedArea.assessmentAutoAllocations).isEqualTo(
+      mapOf(
+        AutoAllocationDay.TUESDAY to "still something here",
+        AutoAllocationDay.FRIDAY to "and here",
+      ),
+    )
   }
 
   private fun List<CruManagementAreaSeedCsvRow>.toCsv(): String {
@@ -126,6 +184,13 @@ class SeedCas1CruManagementAreaTest : SeedTestBase() {
         "current_name",
         "email_address",
         "assessment_auto_allocation_username",
+        "assessment_auto_allocation_monday",
+        "assessment_auto_allocation_tuesday",
+        "assessment_auto_allocation_wednesday",
+        "assessment_auto_allocation_thursday",
+        "assessment_auto_allocation_friday",
+        "assessment_auto_allocation_saturday",
+        "assessment_auto_allocation_sunday",
       )
       .newRow()
 
@@ -133,8 +198,15 @@ class SeedCas1CruManagementAreaTest : SeedTestBase() {
       builder
         .withQuotedField(it.id)
         .withQuotedField(it.currentName)
-        .withQuotedField(it.emailAddress)
-        .withQuotedField(it.assessmentAutoAllocationUsername)
+        .withQuotedField(it.emailAddress ?: "")
+        .withQuotedField(it.assessmentAutoAllocationUsername ?: "")
+        .withQuotedField(it.assessmentAutoAllocationMonday ?: "")
+        .withQuotedField(it.assessmentAutoAllocationTuesday ?: "")
+        .withQuotedField(it.assessmentAutoAllocationWednesday ?: "")
+        .withQuotedField(it.assessmentAutoAllocationThursday ?: "")
+        .withQuotedField(it.assessmentAutoAllocationFriday ?: "")
+        .withQuotedField(it.assessmentAutoAllocationSaturday ?: "")
+        .withQuotedField(it.assessmentAutoAllocationSunday ?: "")
         .newRow()
     }
 

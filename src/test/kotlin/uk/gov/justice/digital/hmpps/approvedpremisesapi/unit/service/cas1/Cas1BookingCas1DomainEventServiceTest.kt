@@ -36,10 +36,10 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.PlacementRequest
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.StaffDetailFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.UserEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.MetaDataName
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.DomainEvent
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.AuthorisableActionResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.OffenderService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1BookingDomainEventService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1DomainEvent
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1DomainEventService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.UrlTemplate
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.isWithinTheLastMinute
@@ -134,7 +134,7 @@ class Cas1BookingCas1DomainEventServiceTest {
     fun `bookingMade saves domain event`() {
       service.spaceBookingMade(application, spaceBooking, user, placementRequest)
 
-      val domainEventArgument = slot<DomainEvent<BookingMadeEnvelope>>()
+      val domainEventArgument = slot<Cas1DomainEvent<BookingMadeEnvelope>>()
 
       verify(exactly = 1) {
         domainEventService.saveBookingMadeDomainEvent(
@@ -148,6 +148,7 @@ class Cas1BookingCas1DomainEventServiceTest {
       assertThat(domainEvent.crn).isEqualTo("THEBOOKINGCRN")
       assertThat(domainEvent.bookingId).isNull()
       assertThat(domainEvent.cas1SpaceBookingId).isEqualTo(spaceBooking.id)
+      assertThat(domainEvent.cas1PlacementRequestId).isEqualTo(placementRequest.id)
       assertThat(domainEvent.occurredAt).isEqualTo(createdAt.toInstant())
       assertThat(domainEvent.data.eventType).isEqualTo(EventType.bookingMade)
       assertThat(domainEvent.data.timestamp).isEqualTo(createdAt.toInstant())
@@ -252,7 +253,7 @@ class Cas1BookingCas1DomainEventServiceTest {
     fun `bookingMade saves domain event`() {
       service.bookingMade(application, booking, user, placementRequest)
 
-      val domainEventArgument = slot<DomainEvent<BookingMadeEnvelope>>()
+      val domainEventArgument = slot<Cas1DomainEvent<BookingMadeEnvelope>>()
 
       verify(exactly = 1) {
         domainEventService.saveBookingMadeDomainEvent(
@@ -266,6 +267,7 @@ class Cas1BookingCas1DomainEventServiceTest {
       assertThat(domainEvent.crn).isEqualTo("THEBOOKINGCRN")
       assertThat(domainEvent.bookingId).isEqualTo(booking.id)
       assertThat(domainEvent.cas1SpaceBookingId).isNull()
+      assertThat(domainEvent.cas1PlacementRequestId).isEqualTo(placementRequest.id)
       assertThat(domainEvent.occurredAt).isEqualTo(createdAt.toInstant())
       assertThat(domainEvent.data.eventType).isEqualTo(EventType.bookingMade)
       assertThat(domainEvent.data.timestamp).isEqualTo(createdAt.toInstant())
@@ -353,7 +355,7 @@ class Cas1BookingCas1DomainEventServiceTest {
         previousDepartureDateIfChanged = null,
       )
 
-      val domainEventArgument = slot<DomainEvent<BookingChangedEnvelope>>()
+      val domainEventArgument = slot<Cas1DomainEvent<BookingChangedEnvelope>>()
       verify(exactly = 1) {
         domainEventService.saveBookingChangedEvent(
           capture(domainEventArgument),
@@ -438,7 +440,7 @@ class Cas1BookingCas1DomainEventServiceTest {
         previousDepartureDateIfChanged = LocalDate.of(2099, 11, 10),
       )
 
-      val domainEventArgument = slot<DomainEvent<BookingChangedEnvelope>>()
+      val domainEventArgument = slot<Cas1DomainEvent<BookingChangedEnvelope>>()
       verify(exactly = 1) {
         domainEventService.saveBookingChangedEvent(
           capture(domainEventArgument),
@@ -545,7 +547,7 @@ class Cas1BookingCas1DomainEventServiceTest {
         notes = "the notes",
       )
 
-      val domainEventArgument = slot<DomainEvent<BookingNotMadeEnvelope>>()
+      val domainEventArgument = slot<Cas1DomainEvent<BookingNotMadeEnvelope>>()
 
       verify(exactly = 1) {
         domainEventService.saveBookingNotMadeEvent(
@@ -558,6 +560,7 @@ class Cas1BookingCas1DomainEventServiceTest {
       assertThat(domainEvent.applicationId).isEqualTo(application.id)
       assertThat(domainEvent.crn).isEqualTo("Application CRN")
       assertThat(domainEvent.data.eventType).isEqualTo(EventType.bookingNotMade)
+      assertThat(domainEvent.cas1PlacementRequestId).isEqualTo(placementRequest.id)
 
       val data = domainEvent.data.eventDetails
       assertThat(data.applicationId).isEqualTo(application.id)
@@ -630,7 +633,7 @@ class Cas1BookingCas1DomainEventServiceTest {
           .produce(),
       )
 
-      val domainEventArgument = slot<DomainEvent<BookingCancelledEnvelope>>()
+      val domainEventArgument = slot<Cas1DomainEvent<BookingCancelledEnvelope>>()
       verify(exactly = 1) {
         domainEventService.saveBookingCancelledEvent(
           capture(domainEventArgument),
@@ -720,7 +723,7 @@ class Cas1BookingCas1DomainEventServiceTest {
           .produce(),
       )
 
-      val domainEventArgument = slot<DomainEvent<BookingCancelledEnvelope>>()
+      val domainEventArgument = slot<Cas1DomainEvent<BookingCancelledEnvelope>>()
       verify(exactly = 1) {
         domainEventService.saveBookingCancelledEvent(
           capture(domainEventArgument),
@@ -814,7 +817,7 @@ class Cas1BookingCas1DomainEventServiceTest {
           .produce(),
       )
 
-      val domainEventArgument = slot<DomainEvent<BookingCancelledEnvelope>>()
+      val domainEventArgument = slot<Cas1DomainEvent<BookingCancelledEnvelope>>()
       verify(exactly = 1) {
         domainEventService.saveBookingCancelledEvent(
           capture(domainEventArgument),
@@ -903,7 +906,7 @@ class Cas1BookingCas1DomainEventServiceTest {
           .produce(),
       )
 
-      val domainEventArgument = slot<DomainEvent<BookingCancelledEnvelope>>()
+      val domainEventArgument = slot<Cas1DomainEvent<BookingCancelledEnvelope>>()
       verify(exactly = 1) {
         domainEventService.saveBookingCancelledEvent(
           capture(domainEventArgument),
@@ -971,7 +974,7 @@ class Cas1BookingCas1DomainEventServiceTest {
 
     val staffUserDetails = StaffDetailFactory.staffDetail()
 
-    val domainEventArgument = slot<DomainEvent<BookingChangedEnvelope>>()
+    val domainEventArgument = slot<Cas1DomainEvent<BookingChangedEnvelope>>()
 
     val createdAt = OffsetDateTime.now()
 

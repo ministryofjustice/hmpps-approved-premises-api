@@ -18,7 +18,7 @@ import org.springframework.core.env.get
 import org.springframework.http.HttpStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.ApDeliusContextApiClient
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.ClientResult
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.NomisUserRolesApiClient
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.NomisUserRolesForRequesterApiClient
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.WebClientCache
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.config.WebClientConfig
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.CaseDetailFactory
@@ -74,7 +74,7 @@ class BaseHMPPSClientRetryTest : InitialiseDatabasePerClassTestBase() {
     webClientCache,
   )
 
-  fun setupTestClientWithRetriesEnabled(maxRetries: Long) = NomisUserRolesApiClient(
+  fun setupTestClientWithRetriesEnabled(maxRetries: Long) = NomisUserRolesForRequesterApiClient(
     WebClientConfig(
       nomisUserRolesApiWebClientConfig.webClient,
       maxRetries,
@@ -233,7 +233,7 @@ class BaseHMPPSClientRetryTest : InitialiseDatabasePerClassTestBase() {
     )
 
     val client = setupTestClientWithRetriesEnabled(maxRetries = 1)
-    val clientResponse = client.getUserDetails("token")
+    val clientResponse = client.getUserDetailsForMe("token")
 
     wiremockManager.wiremockServer.verify(2, getRequestedFor(urlEqualTo("/me")))
     assertThat(clientResponse).isInstanceOf(ClientResult.Success::class.java)

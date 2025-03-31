@@ -11,7 +11,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.Re
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.RequestForPlacementCreatedEnvelope
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.RequestForPlacementType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementRequestEntity
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.DomainEvent
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.DomainEventTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.UrlTemplate
 import java.time.Clock
@@ -63,7 +62,7 @@ class Cas1PlacementRequestDomainEventService(
     )
 
     domainEventService.saveRequestForPlacementCreatedEvent(
-      DomainEvent(
+      Cas1DomainEvent(
         id = domainEventId,
         applicationId = application.id,
         crn = application.crn,
@@ -122,7 +121,7 @@ class Cas1PlacementRequestDomainEventService(
     )
 
     domainEventService.saveMatchRequestWithdrawnEvent(
-      DomainEvent(
+      Cas1DomainEvent(
         id = domainEventId,
         applicationId = application.id,
         crn = application.crn,

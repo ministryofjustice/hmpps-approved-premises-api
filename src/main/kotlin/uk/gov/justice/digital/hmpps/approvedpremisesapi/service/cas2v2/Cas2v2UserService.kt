@@ -6,7 +6,7 @@ import org.springframework.stereotype.Service
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.ApDeliusContextApiClient
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.ClientResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.ManageUsersApiClient
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.NomisUserRolesApiClient
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.NomisUserRolesForRequesterApiClient
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas2v2.Cas2v2UserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas2v2.Cas2v2UserRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas2v2.Cas2v2UserType
@@ -20,7 +20,7 @@ class Cas2v2UserService(
   private val httpAuthService: HttpAuthService,
   private val userRepository: Cas2v2UserRepository,
   private val apDeliusContextApiClient: ApDeliusContextApiClient,
-  private val nomisUserRolesApiClient: NomisUserRolesApiClient,
+  private val nomisUserRolesApiClient: NomisUserRolesForRequesterApiClient,
   private val manageUsersApiClient: ManageUsersApiClient,
 ) {
   fun ensureUserPersisted() {
@@ -66,7 +66,7 @@ class Cas2v2UserService(
 
   private fun getEntityForNomisUser(username: String, jwt: String): Cas2v2UserEntity {
     val nomisUserDetails: NomisUserDetail = when (
-      val nomisUserDetailResponse = nomisUserRolesApiClient.getUserDetails(jwt)
+      val nomisUserDetailResponse = nomisUserRolesApiClient.getUserDetailsForMe(jwt)
     ) {
       is ClientResult.Success -> nomisUserDetailResponse.body
       is ClientResult.Failure -> nomisUserDetailResponse.throwException()

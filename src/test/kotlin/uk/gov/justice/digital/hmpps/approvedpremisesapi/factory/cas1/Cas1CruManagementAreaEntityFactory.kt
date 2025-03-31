@@ -2,6 +2,7 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.cas1
 
 import io.github.bluegroundltd.kfactory.Factory
 import io.github.bluegroundltd.kfactory.Yielded
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AutoAllocationDay
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas1CruManagementAreaEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomStringMultiCaseWithNumbers
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomStringUpperCase
@@ -13,6 +14,7 @@ class Cas1CruManagementAreaEntityFactory : Factory<Cas1CruManagementAreaEntity> 
   private var emailAddress: Yielded<String?> = { randomStringUpperCase(10) }
   private var notifyReplyToEmailId: Yielded<String> = { randomStringMultiCaseWithNumbers(8) }
   private var assessmentAutoAllocationUsername: Yielded<String?> = { null }
+  private var assessmentAutoAllocations: Yielded<MutableMap<AutoAllocationDay, String>> = { mutableMapOf() }
 
   fun withId(id: UUID) = apply {
     this.id = { id }
@@ -34,11 +36,16 @@ class Cas1CruManagementAreaEntityFactory : Factory<Cas1CruManagementAreaEntity> 
     this.assessmentAutoAllocationUsername = { assessmentAutoAllocationUsername }
   }
 
+  fun withAssessmentAutoAllocations(assessmentAutoAllocations: MutableMap<AutoAllocationDay, String>) = apply {
+    this.assessmentAutoAllocations = { assessmentAutoAllocations }
+  }
+
   override fun produce() = Cas1CruManagementAreaEntity(
     id = this.id(),
     name = this.name(),
     emailAddress = this.emailAddress(),
     notifyReplyToEmailId = this.notifyReplyToEmailId(),
     assessmentAutoAllocationUsername = this.assessmentAutoAllocationUsername(),
+    assessmentAutoAllocations = this.assessmentAutoAllocations(),
   )
 }

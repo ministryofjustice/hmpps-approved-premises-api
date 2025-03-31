@@ -195,7 +195,6 @@ class Cas1ApplicationV2ReportTest : InitialiseDatabasePerClassTestBase() {
           assertThat(headers).doesNotContain("last_appealed_assessor_username")
           assertThat(headers).doesNotContain("last_appealed_assessor_name")
 
-
           val actual = DataFrame
             .readCSV(completeCsvString.byteInputStream())
             .convertTo<ApplicationReportRow>(ExcessiveColumns.Remove)

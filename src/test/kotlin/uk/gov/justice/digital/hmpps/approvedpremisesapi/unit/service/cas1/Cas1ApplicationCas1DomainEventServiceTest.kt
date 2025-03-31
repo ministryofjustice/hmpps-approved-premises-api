@@ -296,7 +296,7 @@ class Cas1ApplicationCas1DomainEventServiceTest {
     ) {
       val domainEventWithdrawnBy = WithdrawnByFactory().produce()
       every { mockDomainEventTransformer.toWithdrawnBy(user) } returns domainEventWithdrawnBy
-      every { mockDomainEventService.saveApplicationWithdrawnEvent(any(), any()) } just Runs
+      every { mockDomainEventService.saveApplicationWithdrawnEvent(any()) } just Runs
 
       service.applicationWithdrawn(application, user)
 
@@ -305,7 +305,8 @@ class Cas1ApplicationCas1DomainEventServiceTest {
           match {
             val data = it.data.eventDetails
 
-            it.applicationId == application.id &&
+            it.emit == emitted &&
+              it.applicationId == application.id &&
               it.crn == application.crn &&
               it.nomsNumber == application.nomsNumber &&
               data.applicationId == application.id &&
@@ -318,7 +319,6 @@ class Cas1ApplicationCas1DomainEventServiceTest {
               data.withdrawalReason == "alternative_identified_placement_no_longer_required" &&
               data.otherWithdrawalReason == "the other reason"
           },
-          emit = emitted,
         )
       }
     }

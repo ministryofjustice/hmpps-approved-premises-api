@@ -22,7 +22,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementAppl
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserEntity
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.DomainEvent
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.DomainEventTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.UrlTemplate
 import java.time.Instant
@@ -76,7 +75,7 @@ class Cas1PlacementApplicationDomainEventService(
     )
 
     domainEventService.saveRequestForPlacementCreatedEvent(
-      DomainEvent(
+      Cas1DomainEvent(
         id = domainEventId,
         applicationId = application.id,
         crn = application.crn,
@@ -121,7 +120,7 @@ class Cas1PlacementApplicationDomainEventService(
     )
 
     domainEventService.savePlacementApplicationWithdrawnEvent(
-      DomainEvent(
+      Cas1DomainEvent(
         id = domainEventId,
         applicationId = application.id,
         crn = application.crn,
@@ -168,7 +167,7 @@ class Cas1PlacementApplicationDomainEventService(
     )
 
     domainEventService.savePlacementApplicationAllocatedEvent(
-      DomainEvent(
+      Cas1DomainEvent(
         id = domainEventId,
         applicationId = application.id,
         crn = application.crn,
@@ -217,7 +216,7 @@ class Cas1PlacementApplicationDomainEventService(
     )
 
     domainEventService.saveRequestForPlacementAssessedEvent(
-      DomainEvent(
+      Cas1DomainEvent(
         id = domainEventId,
         applicationId = application.id,
         crn = application.crn,

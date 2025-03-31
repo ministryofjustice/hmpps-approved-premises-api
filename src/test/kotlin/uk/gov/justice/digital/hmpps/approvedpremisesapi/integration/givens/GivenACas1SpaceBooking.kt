@@ -7,12 +7,13 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas1SpaceBook
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.CharacteristicEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.OfflineApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementRequestEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomStringUpperCase
 import java.time.Instant
 import java.time.LocalDate
 
 @SuppressWarnings("LongParameterList")
 fun IntegrationTestBase.givenACas1SpaceBooking(
-  crn: String,
+  crn: String = randomStringUpperCase(6),
   premises: ApprovedPremisesEntity? = null,
   application: ApprovedPremisesApplicationEntity? = null,
   deliusEventNumber: String? = null,

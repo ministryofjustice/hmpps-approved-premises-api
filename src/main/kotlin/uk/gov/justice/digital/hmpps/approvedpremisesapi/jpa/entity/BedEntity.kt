@@ -176,6 +176,9 @@ data class BedEntity(
   @ManyToOne
   @JoinColumn(name = "room_id")
   val room: RoomEntity,
+  /**
+   * For CAS1 this is inclusive (i.e. bed is not available on the end date)
+   */
   var endDate: LocalDate?,
   @CreationTimestamp
   var createdAt: OffsetDateTime?,
