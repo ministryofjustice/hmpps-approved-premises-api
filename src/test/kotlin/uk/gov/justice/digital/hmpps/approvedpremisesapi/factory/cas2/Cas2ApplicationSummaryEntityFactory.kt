@@ -25,6 +25,7 @@ object Cas2ApplicationSummaryEntityFactory {
     latestStatusUpdateStatusId: String? = null,
     prisonCode: String = "LON",
     currentPrisonCode: String = prisonCode,
+    assignmentDate: OffsetDateTime = OffsetDateTime.now(),
   ) = Cas2ApplicationSummaryEntity(
     id = id,
     crn = crn,
@@ -41,5 +42,6 @@ object Cas2ApplicationSummaryEntityFactory {
     latestStatusUpdateStatusId = latestStatusUpdateStatusId,
     prisonCode = prisonCode,
     currentPrisonCode = currentPrisonCode,
+    assignmentDate = assignmentDate,
   )
 }

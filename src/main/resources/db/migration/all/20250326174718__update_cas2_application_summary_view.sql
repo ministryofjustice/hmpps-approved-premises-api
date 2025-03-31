@@ -16,7 +16,7 @@ SELECT a.id,
        a.abandoned_at,
        aa.allocated_pom_user_id,
        nu2.name as allocated_pom_name,
-       aa.created_at  as assignment_updated_at,
+       aa.created_at  as assignment_date,
        aa.prison_code as current_prison_code
 FROM cas_2_applications a
          JOIN (SELECT DISTINCT ON (aa.application_id) *
@@ -49,7 +49,7 @@ SELECT a.id,
        a.abandoned_at,
        a.allocated_pom_user_id,
        a.allocated_pom_name,
-       a.assignment_updated_at,
+       a.assignment_date,
        a.current_prison_code
 FROM cas_2_application_summary a
 WHERE (a.conditional_release_date IS NULL OR a.conditional_release_date >= CURRENT_DATE) AND a.abandoned_at IS NULL AND

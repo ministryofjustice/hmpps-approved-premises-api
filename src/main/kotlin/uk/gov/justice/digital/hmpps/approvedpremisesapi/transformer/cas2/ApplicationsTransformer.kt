@@ -60,7 +60,7 @@ class ApplicationsTransformer(
     allocatedPomUserId = jpaSummary.allocatedPomUserId,
     allocatedPomName = jpaSummary.allocatedPomName,
     currentPrisonName = jpaSummary.currentPrisonCode, // this needs to get the full name from the OMU table
-    assignmentUpdatedAt = jpaSummary.assignmentUpdatedAt.toLocalDate(),
+    assignmentDate = jpaSummary.assignmentDate.toLocalDate(),
     createdAt = jpaSummary.createdAt.toInstant(),
     submittedAt = jpaSummary.submittedAt?.toInstant(),
     status = getStatusFromSummary(jpaSummary),

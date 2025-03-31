@@ -233,6 +233,7 @@ class ApplicationsTransformerTest {
         allocatedPomUserId = UUID.randomUUID(),
         allocatedPomName = "${randomStringUpperCase(8)} ${randomStringUpperCase(6)}",
         currentPrisonCode = randomStringUpperCase(6),
+        assignmentDate = OffsetDateTime.parse("2023-04-19T13:25:32+01:00"),
       )
 
       every { mockStatusUpdateTransformer.transformJpaSummaryToLatestStatusUpdateApi(any()) } returns LatestCas2StatusUpdate(
@@ -261,6 +262,7 @@ class ApplicationsTransformerTest {
       assertThat(result.status).isEqualTo(ApplicationStatus.submitted)
       assertThat(result.latestStatusUpdate?.label).isEqualTo(application.latestStatusUpdateLabel)
       assertThat(result.latestStatusUpdate?.statusId).isEqualTo(UUID.fromString(application.latestStatusUpdateStatusId))
+      assertThat(result.assignmentDate).isEqualTo(application.assignmentDate.toLocalDate())
     }
   }
 }

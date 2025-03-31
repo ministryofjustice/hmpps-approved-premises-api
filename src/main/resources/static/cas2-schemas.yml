@@ -156,7 +156,7 @@ components:
           type: string
         currentPrisonName:
           type: string
-        assignmentUpdatedAt:
+        assignmentDate:
           type: string
           format: date
       required:
@@ -169,7 +169,7 @@ components:
         - personName
         - crn
         - nomsNumber
-        - assignmentUpdatedAt
+        - assignmentDate
     NewCas2ApplicationNote:
       type: object
       properties:
