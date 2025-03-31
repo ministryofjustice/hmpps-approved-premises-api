@@ -295,7 +295,7 @@ registerAdditionalOpenApiGenerateTask(
 )
 
 registerAdditionalOpenApiGenerateTask(
-  name = "openApiGenerateDomainEvents",
+  name = "openApiGenerateCas1DomainEvents",
   ymlPath = "$rootDir/src/main/resources/static/cas1-domain-events-api.yml",
   apiPackageName = "uk.gov.justice.digital.hmpps.approvedpremisesapi.api",
   modelPackageName = "uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model",
@@ -426,7 +426,7 @@ tasks.register("openApiPreCompilation") {
 }
 
 tasks.get("openApiGenerate").dependsOn(
-  "openApiGenerateDomainEvents",
+  "openApiGenerateCas1DomainEvents",
   "openApiGenerateCas3DomainEvents",
   "openApiGenerateCas2DomainEvents",
   "openApiPreCompilation",
@@ -466,7 +466,7 @@ tasks {
   }
 }
 
-tasks.getByName("runKtlintCheckOverMainSourceSet").dependsOn("openApiGenerate", "openApiGenerateDomainEvents")
+tasks.getByName("runKtlintCheckOverMainSourceSet").dependsOn("openApiGenerate", "openApiGenerateCas1DomainEvents")
 
 gatling {
   gatlingVersion = "3.12.0"
