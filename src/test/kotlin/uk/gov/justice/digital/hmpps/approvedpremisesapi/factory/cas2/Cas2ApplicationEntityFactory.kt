@@ -3,6 +3,7 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.cas2
 import io.github.bluegroundltd.kfactory.Factory
 import io.github.bluegroundltd.kfactory.Yielded
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApprovedPremisesApplicationJsonSchemaEntityFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.NomisUserEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas2ApplicationAssignmentEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas2ApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas2ApplicationNoteEntity
@@ -152,7 +153,7 @@ class Cas2ApplicationEntityFactory : Factory<Cas2ApplicationEntity> {
     val application = Cas2ApplicationEntity(
       id = this.id(),
       crn = this.crn(),
-      createdByUser = this.createdByUser?.invoke() ?: throw RuntimeException("Must provide a createdByUser"),
+      createdByUser = this.createdByUser?.invoke() ?: NomisUserEntityFactory().produce(),
       data = this.data(),
       document = this.document(),
       schemaVersion = this.applicationSchema(),
