@@ -18,7 +18,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.ClientResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.MetaDataName
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserEntity
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.DomainEvent
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.community.OffenderDetailSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.deliuscontext.CaseDetail
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.deliuscontext.StaffDetail
@@ -86,7 +85,7 @@ class Cas1ApplicationDomainEventService(
     }
 
     domainEventService.saveApplicationSubmittedDomainEvent(
-      DomainEvent(
+      Cas1DomainEvent(
         id = domainEventId,
         applicationId = application.id,
         crn = application.crn,
@@ -122,7 +121,7 @@ class Cas1ApplicationDomainEventService(
     val eventOccurredAt = Instant.now(clock)
 
     domainEventService.saveApplicationWithdrawnEvent(
-      DomainEvent(
+      Cas1DomainEvent(
         id = domainEventId,
         applicationId = application.id,
         crn = application.crn,

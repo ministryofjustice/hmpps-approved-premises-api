@@ -24,7 +24,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DepartureReas
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.MoveOnCategoryEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.NonArrivalReasonEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserEntity
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.DomainEvent
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PersonSummaryInfoResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.deliuscontext.CaseSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.LaoStrategy
@@ -72,7 +71,7 @@ class Cas1SpaceBookingManagementDomainEventService(
     val actualArrivalDateTime = arrivalInfo.actualArrivalDate.atTime(arrivalInfo.actualArrivalTime).toInstant()
 
     domainEventService.savePersonArrivedEvent(
-      domainEvent = DomainEvent(
+      domainEvent = Cas1DomainEvent(
         id = domainEventId,
         applicationId = applicationId,
         crn = updatedCas1SpaceBooking.crn,
@@ -122,7 +121,7 @@ class Cas1SpaceBookingManagementDomainEventService(
     val eventNumber = updatedCas1SpaceBooking.deliusEventNumber!!
 
     domainEventService.savePersonNotArrivedEvent(
-      domainEvent = DomainEvent(
+      domainEvent = Cas1DomainEvent(
         id = domainEventId,
         applicationId = applicationId,
         crn = updatedCas1SpaceBooking.crn,
@@ -180,7 +179,7 @@ class Cas1SpaceBookingManagementDomainEventService(
     val actualDepartureDateTime = departureInfo.actualDepartureDate.atTime(departureInfo.actualDepartureTime).toInstant()
 
     domainEventService.savePersonDepartedEvent(
-      domainEvent = DomainEvent(
+      domainEvent = Cas1DomainEvent(
         id = domainEventId,
         applicationId = applicationId,
         crn = departedCas1SpaceBooking.crn,
@@ -235,7 +234,7 @@ class Cas1SpaceBookingManagementDomainEventService(
     val eventNumber = updatedCas1SpaceBooking.deliusEventNumber!!
 
     domainEventService.saveKeyWorkerAssignedEvent(
-      domainEvent = DomainEvent(
+      domainEvent = Cas1DomainEvent(
         id = domainEventId,
         applicationId = applicationId,
         crn = updatedCas1SpaceBooking.crn,
