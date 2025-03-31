@@ -76,7 +76,7 @@ class Cas2AllocationChangedServiceTest {
     every { managePomCasesClient.getPomAllocation(any()) } returns ClientResult.Success(HttpStatus.OK, pomAllocation)
     every { applicationService.findMostRecentApplication(eq(nomsNumber)) } returns application
     every { applicationRepository.save(any()) } answers { it.invocation.args[0] as Cas2ApplicationEntity }
-    every { nomisUserService.getUserByStaffId(eq(pomAllocation.manager.code)) } returns user
+    every { nomisUserService.getUserByStaffId(eq(pomAllocation.manager.code)) } returns NomisUserEntityFactory().produce()
 
     allocationChangedService.process(allocationEvent)
 

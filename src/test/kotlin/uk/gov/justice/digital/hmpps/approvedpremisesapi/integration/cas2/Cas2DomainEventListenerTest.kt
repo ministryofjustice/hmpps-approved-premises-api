@@ -233,8 +233,8 @@ class Cas2DomainEventListenerTest : IntegrationTestBase() {
       withConditionalReleaseDate(LocalDate.now().plusDays(1))
     }
 
-    val allocatedPomUserId = if (allocateApplicationUserAsAssignmentPomUser) {
-      application.createdByUser.id
+    val allocatedPomUser = if (allocateApplicationUserAsAssignmentPomUser) {
+      application.createdByUser
     } else {
       null
     }
@@ -243,7 +243,7 @@ class Cas2DomainEventListenerTest : IntegrationTestBase() {
       id = UUID.randomUUID(),
       application = application,
       prisonCode = "LON",
-      allocatedPomUserId = allocatedPomUserId,
+      allocatedPomUser = allocatedPomUser,
       createdAt = OffsetDateTime.parse(OCCURRING_AT),
     )
     applicationAssignmentRepository.deleteAll()
