@@ -171,9 +171,6 @@ class Cas2ApplicationEntityFactory : Factory<Cas2ApplicationEntity> {
       conditionalReleaseDate = this.conditionalReleaseDate(),
       preferredAreas = this.preferredAreas(),
     )
-    if (application.applicationAssignments.isEmpty()) {
-      application.createApplicationAssignment("PRICODE", null)
-    }
     return application
   }
 }
