@@ -16,7 +16,7 @@ class Cas2ApplicationEntityTest {
     val prisonCode = "A1234AB"
 
     val application = Cas2ApplicationEntityFactory().withNomsNumber(nomsNumber).withCreatedByUser(user).produce()
-    application.createApplicationAssignment(prisonCode = prisonCode, allocatedPomUserId = user.id)
+    application.createApplicationAssignment(prisonCode = prisonCode, allocatedPomUser = user)
     assertThat(application.currentPrisonCode).isEqualTo(prisonCode)
   }
 

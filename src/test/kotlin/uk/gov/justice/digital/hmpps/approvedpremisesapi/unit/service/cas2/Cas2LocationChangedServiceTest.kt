@@ -65,7 +65,7 @@ class Cas2LocationChangedServiceTest {
   fun `handle Location Changed Event and save assignment`() {
     val application = Cas2ApplicationEntityFactory().withNomsNumber(nomsNumber).withCreatedByUser(user).produce()
 
-    application.createApplicationAssignment(prisonCode = "OLDID", allocatedPomUserId = user.id)
+    application.createApplicationAssignment(prisonCode = "OLDID", allocatedPomUser = user)
 
     every { prisonerSearchClient.getPrisoner(any()) } returns ClientResult.Success(HttpStatus.OK, prisoner)
     every { applicationService.findMostRecentApplication(eq(nomsNumber)) } returns application
@@ -81,7 +81,7 @@ class Cas2LocationChangedServiceTest {
   @Test
   fun `handle Location Changed Event and no further action as prison location not changed`() {
     val application = Cas2ApplicationEntityFactory().withNomsNumber(nomsNumber).withCreatedByUser(user).produce()
-    application.createApplicationAssignment(prisonCode = prisoner.prisonId, allocatedPomUserId = user.id)
+    application.createApplicationAssignment(prisonCode = prisoner.prisonId, allocatedPomUser = user)
 
     every { prisonerSearchClient.getPrisoner(any()) } returns ClientResult.Success(HttpStatus.OK, prisoner)
     every { applicationService.findMostRecentApplication(eq(nomsNumber)) } returns application

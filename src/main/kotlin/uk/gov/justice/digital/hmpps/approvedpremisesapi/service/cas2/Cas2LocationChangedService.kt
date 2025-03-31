@@ -40,7 +40,7 @@ class Cas2LocationChangedService(
         if (isNewPrison(application.currentPrisonCode, prisoner.prisonId)) {
           application.createApplicationAssignment(
             prisonCode = prisoner.prisonId,
-            allocatedPomUserId = null,
+            allocatedPomUser = null,
           )
 
           applicationRepository.save(application)

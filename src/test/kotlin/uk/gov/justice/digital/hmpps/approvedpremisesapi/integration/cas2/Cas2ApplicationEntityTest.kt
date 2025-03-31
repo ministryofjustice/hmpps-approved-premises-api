@@ -30,10 +30,10 @@ class Cas2ApplicationEntityTest : IntegrationTestBase() {
           withConditionalReleaseDate(LocalDate.now().plusDays(1))
         }
 
-        application.createApplicationAssignment(prisonCode = "LON1", allocatedPomUserId = null)
-        application.createApplicationAssignment(prisonCode = "LON2", allocatedPomUserId = userEntity.id)
-        application.createApplicationAssignment(prisonCode = "LON3", allocatedPomUserId = null)
-        application.createApplicationAssignment(prisonCode = "LON4", allocatedPomUserId = null)
+        application.createApplicationAssignment(prisonCode = "LON1", allocatedPomUser = null)
+        application.createApplicationAssignment(prisonCode = "LON2", allocatedPomUser = userEntity)
+        application.createApplicationAssignment(prisonCode = "LON3", allocatedPomUser = null)
+        application.createApplicationAssignment(prisonCode = "LON4", allocatedPomUser = null)
 
         cas2ApplicationRepository.save(application)
 

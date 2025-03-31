@@ -27,6 +27,8 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.given
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenACas2PomUser
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAnOffender
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.manageUsersMockSuccessfulExternalUsersCall
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.prisonAPIMockSuccessfulAgencyDetailsCall
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas2ApplicationAssignmentEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas2ApplicationAssignmentRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas2ApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas2ApplicationJsonSchemaEntity
@@ -37,6 +39,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas2StatusUpd
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas2StatusUpdateRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.NomisUserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.community.OffenderDetailSummary
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.prisonsapi.Agency
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.prisonsapi.AssignedLivingUnit
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.NomisUserTransformer
 import java.time.LocalDate
@@ -434,7 +437,7 @@ class Cas2SubmissionTest(
             update1.apply { this.createdAt = OffsetDateTime.now().minusDays(20) }
             realStatusUpdateRepository.save(update1)
 
-            update2.apply { this.createdAt = OffsetDateTime.now().minusDays(15) }
+            update2.apply { this.createdAt = OffsetDateTime.now().minusDays(14) }
             realStatusUpdateRepository.save(update2)
 
             update3.apply { this.createdAt = OffsetDateTime.now().minusDays(1) }
@@ -442,6 +445,41 @@ class Cas2SubmissionTest(
 
             statusUpdateDetail.apply { this.createdAt = OffsetDateTime.now().minusDays(1) }
             realStatusUpdateDetailRepository.save(statusUpdateDetail)
+
+            val newPom = nomisUserEntityFactory.produceAndPersist()
+            applicationEntity.applicationAssignments.addAll(
+              mutableListOf(
+                Cas2ApplicationAssignmentEntity(
+                  id = UUID.randomUUID(),
+                  application = applicationEntity,
+                  prisonCode = "LON",
+                  allocatedPomUser = user,
+                  createdAt = OffsetDateTime.now().minusDays(18),
+                ),
+                Cas2ApplicationAssignmentEntity(
+                  id = UUID.randomUUID(),
+                  application = applicationEntity,
+                  prisonCode = "PBI",
+                  allocatedPomUser = null,
+                  createdAt = OffsetDateTime.now().minusDays(16),
+                ),
+                Cas2ApplicationAssignmentEntity(
+                  id = UUID.randomUUID(),
+                  application = applicationEntity,
+                  prisonCode = "PBI",
+                  allocatedPomUser = newPom,
+                  createdAt = OffsetDateTime.now().minusDays(5),
+                ),
+              ),
+            )
+
+            realApplicationRepository.save(applicationEntity)
+
+            val prisonLon = Agency(agencyId = "LON", description = "London Prison", agencyType = "prison")
+            prisonAPIMockSuccessfulAgencyDetailsCall(prisonLon)
+
+            val prisonPbi = Agency(agencyId = "PBI", description = "HMP Peterborough (Male)", agencyType = "prison")
+            prisonAPIMockSuccessfulAgencyDetailsCall(prisonPbi)
 
             val rawResponseBody = webTestClient.get()
               .uri("/cas2/submissions/${applicationEntity.id}")
@@ -489,7 +527,16 @@ class Cas2SubmissionTest(
               .isEqualTo(listOf("Detail on 3rd update"))
 
             Assertions.assertThat(responseBody.timelineEvents.map { event -> event.label })
-              .isEqualTo(listOf("3rd update", "2nd update", "1st update", "Application submitted"))
+              .isEqualTo(
+                listOf(
+                  "3rd update",
+                  "New Prison offender manager ${newPom.name} allocated",
+                  "2nd update",
+                  "Prison transfer from London Prison to HMP Peterborough (Male)",
+                  "1st update",
+                  "Application submitted",
+                ),
+              )
           }
         }
       }
@@ -740,7 +787,7 @@ class Cas2SubmissionTest(
 
         val applicationAssignment =
           applicationAssignmentRepository.findFirstByApplicationIdOrderByCreatedAtDesc(applicationId)
-        Assertions.assertThat(applicationAssignment!!.allocatedPomUserId).isEqualTo(submittingUser.id)
+        Assertions.assertThat(applicationAssignment!!.allocatedPomUser?.id).isEqualTo(submittingUser.id)
 
         // verify that generated 'application.submitted' domain event links to the CAS2 domain
         val expectedFrontEndUrl = applicationUrlTemplate.replace("#id", applicationId.toString())

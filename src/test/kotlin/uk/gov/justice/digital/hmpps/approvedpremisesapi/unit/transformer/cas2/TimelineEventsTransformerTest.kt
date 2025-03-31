@@ -1,17 +1,24 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.unit.transformer.cas2
 
+import io.mockk.every
+import io.mockk.mockk
 import org.assertj.core.api.Assertions
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
+import org.springframework.http.HttpStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas2TimelineEvent
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.TimelineEventType
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.ClientResult
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.PrisonsApiClient
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.Cas2ApplicationEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.Cas2AssessmentEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.Cas2StatusUpdateEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ExternalUserEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.NomisUserEntityFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas2ApplicationAssignmentEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas2ApplicationNoteEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas2StatusUpdateDetailEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.prisonsapi.Agency
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.cas2.TimelineEventsTransformer
 import java.time.OffsetDateTime
 import java.util.UUID
@@ -26,7 +33,9 @@ class TimelineEventsTransformerTest {
     .withCreatedByUser(user)
     .withSubmittedAt(OffsetDateTime.now())
 
-  private val timelineEventTransformer = TimelineEventsTransformer()
+  private val mockPrisonsApiClient = mockk<PrisonsApiClient>()
+
+  private val timelineEventTransformer = TimelineEventsTransformer(mockPrisonsApiClient)
 
   @Nested
   inner class WhenThereAreTimelineEvents {
@@ -81,6 +90,39 @@ class TimelineEventsTransformerTest {
         assessment = Cas2AssessmentEntityFactory().produce(),
       )
 
+      val pomUser = NomisUserEntityFactory().withName("Pom User").produce()
+      val application = submittedCas2ApplicationFactory.produce()
+
+      val firstApplicationAssignment = Cas2ApplicationAssignmentEntity(
+        id = UUID.randomUUID(),
+        createdAt = OffsetDateTime.now().minusDays(70),
+        prisonCode = "FEI",
+        allocatedPomUser = nomisUser,
+        application = application,
+      )
+
+      val newPomAssignedApplicationAssignment = Cas2ApplicationAssignmentEntity(
+        id = UUID.randomUUID(),
+        createdAt = OffsetDateTime.now().minusDays(55),
+        prisonCode = "FEI",
+        allocatedPomUser = pomUser,
+        application = application,
+      )
+
+      val prisonTransferApplicationAssignment = Cas2ApplicationAssignmentEntity(
+        id = UUID.randomUUID(),
+        createdAt = OffsetDateTime.now().minusDays(13),
+        prisonCode = "MDI",
+        allocatedPomUser = null,
+        application = application,
+      )
+
+      val applicationAssignments = mutableListOf(
+        firstApplicationAssignment,
+        newPomAssignedApplicationAssignment,
+        prisonTransferApplicationAssignment,
+      )
+
       val submittedAt = OffsetDateTime.now().minusDays(4)
 
       val jpaEntity = submittedCas2ApplicationFactory
@@ -88,7 +130,20 @@ class TimelineEventsTransformerTest {
         .withCreatedByUser(nomisUser)
         .withStatusUpdates(mutableListOf(statusUpdateEntity, statusUpdateWithDetailsEntity))
         .withNotes(mutableListOf(note))
+        .withApplicationAssignments(applicationAssignments)
         .produce()
+
+      val prisonMdi = Agency(agencyId = "MDI", description = "Moorland (HMP & YOI)", agencyType = "prison")
+      every { mockPrisonsApiClient.getAgencyDetails("MDI") } returns ClientResult.Success(
+        HttpStatus.OK,
+        prisonMdi,
+      )
+
+      val prisonFei = Agency(agencyId = "FEI", description = "Fosse Way (HMP)", agencyType = "prison")
+      every { mockPrisonsApiClient.getAgencyDetails("FEI") } returns ClientResult.Success(
+        HttpStatus.OK,
+        prisonFei,
+      )
 
       val transformation = timelineEventTransformer.transformApplicationToTimelineEvents(jpaEntity)
 
@@ -120,6 +175,18 @@ class TimelineEventsTransformerTest {
             occurredAt = submittedAt.toInstant(),
             label = "Application submitted",
             createdByName = "Some Nomis User",
+          ),
+          Cas2TimelineEvent(
+            type = TimelineEventType.cas2PrisonTransfer,
+            occurredAt = prisonTransferApplicationAssignment.createdAt.toInstant(),
+            label = "Prison transfer from Fosse Way (HMP) to Moorland (HMP & YOI)",
+            createdByName = null,
+          ),
+          Cas2TimelineEvent(
+            type = TimelineEventType.cas2NewPomAssigned,
+            occurredAt = newPomAssignedApplicationAssignment.createdAt.toInstant(),
+            label = "New Prison offender manager Pom User allocated",
+            createdByName = null,
           ),
         ),
       )

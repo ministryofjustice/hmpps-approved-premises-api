@@ -2,6 +2,7 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.factory
 
 import io.github.bluegroundltd.kfactory.Factory
 import io.github.bluegroundltd.kfactory.Yielded
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas2ApplicationAssignmentEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas2ApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas2ApplicationNoteEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas2AssessmentEntity
@@ -35,6 +36,7 @@ class Cas2ApplicationEntityFactory : Factory<Cas2ApplicationEntity> {
   private var telephoneNumber: Yielded<String?> = { randomNumberChars(12) }
   private var notes: Yielded<MutableList<Cas2ApplicationNoteEntity>> = { mutableListOf() }
   private var assessment: Yielded<Cas2AssessmentEntity?> = { null }
+  private var applicationAssignments: Yielded<MutableList<Cas2ApplicationAssignmentEntity>> = { mutableListOf() }
   private var referringPrisonCode: Yielded<String?> = { null }
   private var preferredAreas: Yielded<String?> = { null }
   private var hdcEligibilityDate: Yielded<LocalDate?> = { null }
@@ -104,6 +106,10 @@ class Cas2ApplicationEntityFactory : Factory<Cas2ApplicationEntity> {
     this.assessment = { assessmentEntity }
   }
 
+  fun withApplicationAssignments(applicationAssignments: MutableList<Cas2ApplicationAssignmentEntity>) = apply {
+    this.applicationAssignments = { applicationAssignments }
+  }
+
   fun withReferringPrisonCode(referringPrisonCode: String) = apply {
     this.referringPrisonCode = { referringPrisonCode }
   }
@@ -140,6 +146,7 @@ class Cas2ApplicationEntityFactory : Factory<Cas2ApplicationEntity> {
     telephoneNumber = this.telephoneNumber(),
     notes = this.notes(),
     assessment = this.assessment(),
+    applicationAssignments = this.applicationAssignments(),
     referringPrisonCode = this.referringPrisonCode(),
     hdcEligibilityDate = this.hdcEligibilityDate(),
     conditionalReleaseDate = this.conditionalReleaseDate(),
