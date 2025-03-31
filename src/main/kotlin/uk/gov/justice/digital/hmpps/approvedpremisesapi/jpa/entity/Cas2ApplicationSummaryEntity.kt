@@ -59,9 +59,9 @@ data class Cas2ApplicationSummaryEntity(
   @Column(name = "name")
   val userName: String,
   @Column(name = "allocated_pom_user_id")
-  val allocatedPomUserId: UUID,
+  val allocatedPomUserId: UUID?,
   @Column(name = "allocated_pom_name")
-  val allocatedPomName: String,
+  val allocatedPomName: String?,
   @Column(name = "created_at")
   val createdAt: OffsetDateTime,
   @Column(name = "submitted_at")
@@ -77,8 +77,8 @@ data class Cas2ApplicationSummaryEntity(
   @Column(name = "referring_prison_code")
   val prisonCode: String,
   @Column(name = "current_prison_code")
-  val currentPrisonCode: String,
+  val currentPrisonCode: String?,
   @Column(name = "assignment_date")
-  val assignmentDate: OffsetDateTime,
+  val assignmentDate: OffsetDateTime?,
 
 )

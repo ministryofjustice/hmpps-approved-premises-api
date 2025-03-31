@@ -5246,11 +5246,13 @@ components:
         - id
         - createdAt
         - createdByUserId
-        - currentPrisonName
         - status
         - personName
         - crn
         - nomsNumber
+        - assignmentDate
+        - allocatedPomName
+        - allocatedPomUserId
         - assignmentDate
     NewCas2ApplicationNote:
       type: object

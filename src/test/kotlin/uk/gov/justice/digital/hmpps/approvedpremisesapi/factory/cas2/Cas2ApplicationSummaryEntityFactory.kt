@@ -23,8 +23,8 @@ object Cas2ApplicationSummaryEntityFactory {
     hdcEligibilityDate: LocalDate? = null,
     latestStatusUpdateLabel: String? = null,
     latestStatusUpdateStatusId: String? = null,
-    prisonCode: String = "LON",
-    currentPrisonCode: String = prisonCode,
+    referringPrisonCode: String = "LON",
+    currentPrisonCode: String = referringPrisonCode,
     assignmentDate: OffsetDateTime = OffsetDateTime.now(),
   ) = Cas2ApplicationSummaryEntity(
     id = id,
@@ -40,7 +40,7 @@ object Cas2ApplicationSummaryEntityFactory {
     hdcEligibilityDate = hdcEligibilityDate,
     latestStatusUpdateLabel = latestStatusUpdateLabel,
     latestStatusUpdateStatusId = latestStatusUpdateStatusId,
-    prisonCode = prisonCode,
+    prisonCode = referringPrisonCode,
     currentPrisonCode = currentPrisonCode,
     assignmentDate = assignmentDate,
   )

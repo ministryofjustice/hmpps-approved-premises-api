@@ -19,7 +19,7 @@ SELECT a.id,
        aa.created_at  as assignment_date,
        aa.prison_code as current_prison_code
 FROM cas_2_applications a
-         JOIN (SELECT DISTINCT ON (aa.application_id) *
+         LEFT JOIN (SELECT DISTINCT ON (aa.application_id) *
                FROM cas_2_application_assignments aa
                ORDER BY aa.application_id, created_at DESC) aa ON a.id = aa.application_id
 

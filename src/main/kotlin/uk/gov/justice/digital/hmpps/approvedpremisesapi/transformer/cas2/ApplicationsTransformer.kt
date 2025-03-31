@@ -57,10 +57,11 @@ class ApplicationsTransformer(
     id = jpaSummary.id,
     createdByUserId = UUID.fromString(jpaSummary.userId),
     createdByUserName = jpaSummary.userName,
-    allocatedPomUserId = jpaSummary.allocatedPomUserId,
-    allocatedPomName = jpaSummary.allocatedPomName,
-    currentPrisonName = jpaSummary.currentPrisonCode, // this needs to get the full name from the OMU table
-    assignmentDate = jpaSummary.assignmentDate.toLocalDate(),
+    allocatedPomUserId = jpaSummary.allocatedPomUserId ?: UUID.fromString(jpaSummary.userId),
+    allocatedPomName = jpaSummary.allocatedPomName ?: jpaSummary.userName,
+    // this needs to get the full name from the OMU table that will be cre
+    currentPrisonName = jpaSummary.currentPrisonCode ?: jpaSummary.prisonCode,
+    assignmentDate = jpaSummary.assignmentDate?.toLocalDate() ?: jpaSummary.createdAt.toLocalDate(),
     createdAt = jpaSummary.createdAt.toInstant(),
     submittedAt = jpaSummary.submittedAt?.toInstant(),
     status = getStatusFromSummary(jpaSummary),
