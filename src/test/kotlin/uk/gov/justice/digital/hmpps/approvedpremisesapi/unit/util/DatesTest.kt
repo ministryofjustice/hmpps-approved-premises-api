@@ -117,8 +117,22 @@ class DatesTest {
   }
 
   @Test
-  fun `toUiFormattedHourOfDay formats a LocalDate correctly`() {
+  fun `toUiFormattedHourOfDay formats a LocalDate correctly, UTC offset with no DST`() {
     val dateTime = OffsetDateTime.parse("2024-01-01T11:15:00Z")
+
+    assertThat(dateTime.toUiFormattedHourOfDay()).isEqualTo("11am")
+  }
+
+  @Test
+  fun `toUiFormattedHourOfDay formats a LocalDate correctly, UTC offset with DST`() {
+    val dateTime = OffsetDateTime.parse("2024-06-01T13:15:00Z")
+
+    assertThat(dateTime.toUiFormattedHourOfDay()).isEqualTo("2pm")
+  }
+
+  @Test
+  fun `toUiFormattedHourOfDay formats a LocalDate correctly, BST offset`() {
+    val dateTime = OffsetDateTime.parse("2024-05-01T11:15:00+01:00")
 
     assertThat(dateTime.toUiFormattedHourOfDay()).isEqualTo("11am")
   }

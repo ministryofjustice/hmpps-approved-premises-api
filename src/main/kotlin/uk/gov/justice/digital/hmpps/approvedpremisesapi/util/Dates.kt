@@ -3,6 +3,7 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.util
 import io.netty.util.internal.ThreadLocalRandom
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.toJavaZoneId
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.DatesConstant.DEFAULT_CAS_TIMEZONE
 import java.time.Instant
 import java.time.LocalDate
 import java.time.LocalDateTime
@@ -85,13 +86,7 @@ fun LocalDateTime.toUiDateTimeFormat(): String = this.format(cas1UiExtendedDateT
 
 fun LocalDate.toCas2UiFormat(): String = this.format(cas2UiExtendedDateFormat)
 
-fun LocalDate.toUtcOffsetDateTime(): OffsetDateTime = OffsetDateTime.of(
-  this,
-  LocalTime.of(0, 0, 0, 0),
-  ZoneOffset.UTC,
-)
-
-fun OffsetDateTime.toUiFormattedHourOfDay(): String = this.format(cas1UiTimeFormat).lowercase()
+fun OffsetDateTime.toUiFormattedHourOfDay(): String = this.atZoneSameInstant(DEFAULT_CAS_TIMEZONE).format(cas1UiTimeFormat).lowercase()
 
 fun OffsetDateTime.toCas2UiFormattedHourOfDay(): String = this.format(cas2UiTimeFormat).lowercase()
 
@@ -152,3 +147,8 @@ fun Instant.minusRandomSeconds(maxOffset: Long): Instant {
 }
 
 fun LocalDateTime.toInstant(): Instant = this.atZone(ZoneId.systemDefault()).toInstant()
+
+@SuppressWarnings("TooManyFunctions")
+object DatesConstant {
+  val DEFAULT_CAS_TIMEZONE: ZoneId = ZoneId.of("Europe/London")
+}
