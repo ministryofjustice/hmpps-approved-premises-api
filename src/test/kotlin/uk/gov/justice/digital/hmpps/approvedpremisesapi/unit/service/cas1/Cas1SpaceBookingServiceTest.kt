@@ -48,6 +48,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas1SpaceBook
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas1SpaceBookingSearchResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DepartureReasonEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DepartureReasonRepository
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.LockableCas1SpaceBookingEntityRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.LockablePlacementRequestEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.LockablePlacementRequestRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.MoveOnCategoryEntity
@@ -98,6 +99,7 @@ class Cas1SpaceBookingServiceTest {
   private val cancellationReasonRepository = mockk<CancellationReasonRepository>()
   private val nonArrivalReasonRepository = mockk<NonArrivalReasonRepository>()
   private val lockablePlacementRequestRepository = mockk<LockablePlacementRequestRepository>()
+  private val lockableCas1SpaceBookingRepository = mockk<LockableCas1SpaceBookingEntityRepository>()
   private val userService = mockk<UserService>()
 
   private val service = Cas1SpaceBookingService(
@@ -114,6 +116,7 @@ class Cas1SpaceBookingServiceTest {
     cancellationReasonRepository,
     nonArrivalReasonRepository,
     lockablePlacementRequestRepository,
+    lockableCas1SpaceBookingRepository,
     userService,
     Clock.systemDefaultZone(),
   )
