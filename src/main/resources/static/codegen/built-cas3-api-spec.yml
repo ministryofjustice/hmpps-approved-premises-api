@@ -3624,6 +3624,7 @@ components:
         - approved_premises_delete_application_timeline_notes
         - temporary_accommodation_referral_rejection
         - approved_premises_remap_bed_codes
+        - short_term_accommodation_create_omus
     SeedFromExcelFileType:
       type: string
       enum:
