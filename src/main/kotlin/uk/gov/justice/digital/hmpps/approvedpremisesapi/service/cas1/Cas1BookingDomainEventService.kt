@@ -25,6 +25,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.CancellationE
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.CancellationReasonEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas1SpaceBookingEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.CharacteristicEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DomainEventType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.MetaDataName
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementRequestEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserEntity
@@ -106,6 +107,7 @@ class Cas1BookingDomainEventService(
     domainEventService.saveBookingNotMadeEvent(
       Cas1DomainEvent(
         id = domainEventId,
+        type = DomainEventType.APPROVED_PREMISES_BOOKING_NOT_MADE,
         applicationId = application.id,
         crn = application.crn,
         nomsNumber = offenderDetails?.otherIds?.nomsNumber,
@@ -215,6 +217,7 @@ class Cas1BookingDomainEventService(
     domainEventService.saveBookingChangedEvent(
       Cas1DomainEvent(
         id = domainEventId,
+        type = DomainEventType.APPROVED_PREMISES_BOOKING_CHANGED,
         applicationId = applicationId,
         crn = crn,
         nomsNumber = offenderDetails?.otherIds?.nomsNumber,
@@ -330,6 +333,7 @@ class Cas1BookingDomainEventService(
     domainEventService.saveBookingMadeDomainEvent(
       Cas1DomainEvent(
         id = domainEventId,
+        type = DomainEventType.APPROVED_PREMISES_BOOKING_MADE,
         applicationId = applicationId,
         crn = crn,
         nomsNumber = offenderDetails?.otherIds?.nomsNumber,
@@ -415,6 +419,7 @@ class Cas1BookingDomainEventService(
     domainEventService.saveBookingCancelledEvent(
       Cas1DomainEvent(
         id = domainEventId,
+        type = DomainEventType.APPROVED_PREMISES_BOOKING_CANCELLED,
         applicationId = applicationId,
         crn = crn,
         nomsNumber = offenderDetails?.otherIds?.nomsNumber,

@@ -1188,6 +1188,7 @@ class Cas1DomainEventDescriberTest {
     val applicationId = UUID.randomUUID()
     return Cas1DomainEvent(
       id = id,
+      type = DomainEventType.APPROVED_PREMISES_BOOKING_MADE,
       applicationId = applicationId,
       crn = "SOME-CRN",
       nomsNumber = "theNomsNumber",

@@ -17,6 +17,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.Re
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PlacementApplicationDecisionEnvelope
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.ApDeliusContextApiClient
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.ClientResult
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DomainEventType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.MetaDataName
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementApplicationDecision
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementApplicationEntity
@@ -77,6 +78,7 @@ class Cas1PlacementApplicationDomainEventService(
     domainEventService.saveRequestForPlacementCreatedEvent(
       Cas1DomainEvent(
         id = domainEventId,
+        type = DomainEventType.APPROVED_PREMISES_REQUEST_FOR_PLACEMENT_CREATED,
         applicationId = application.id,
         crn = application.crn,
         nomsNumber = application.nomsNumber,
@@ -122,6 +124,7 @@ class Cas1PlacementApplicationDomainEventService(
     domainEventService.savePlacementApplicationWithdrawnEvent(
       Cas1DomainEvent(
         id = domainEventId,
+        type = DomainEventType.APPROVED_PREMISES_PLACEMENT_APPLICATION_WITHDRAWN,
         applicationId = application.id,
         crn = application.crn,
         nomsNumber = application.nomsNumber,
@@ -169,6 +172,7 @@ class Cas1PlacementApplicationDomainEventService(
     domainEventService.savePlacementApplicationAllocatedEvent(
       Cas1DomainEvent(
         id = domainEventId,
+        type = DomainEventType.APPROVED_PREMISES_PLACEMENT_APPLICATION_ALLOCATED,
         applicationId = application.id,
         crn = application.crn,
         nomsNumber = application.nomsNumber,
@@ -218,6 +222,7 @@ class Cas1PlacementApplicationDomainEventService(
     domainEventService.saveRequestForPlacementAssessedEvent(
       Cas1DomainEvent(
         id = domainEventId,
+        type = DomainEventType.APPROVED_PREMISES_REQUEST_FOR_PLACEMENT_ASSESSED,
         applicationId = application.id,
         crn = application.crn,
         nomsNumber = application.nomsNumber,

@@ -20,6 +20,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.ClientResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AssessmentClarificationNoteEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AssessmentEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DomainEventType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.MetaDataName
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TriggerSourceType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserEntity
@@ -66,6 +67,7 @@ class Cas1AssessmentDomainEventService(
     domainEventService.saveAssessmentAllocatedEvent(
       Cas1DomainEvent(
         id = id,
+        type = DomainEventType.APPROVED_PREMISES_ASSESSMENT_ALLOCATED,
         applicationId = assessment.application.id,
         assessmentId = assessment.id,
         crn = assessment.application.crn,
@@ -132,6 +134,7 @@ class Cas1AssessmentDomainEventService(
 
     val domainEvent = Cas1DomainEvent(
       id = id,
+      type = DomainEventType.APPROVED_PREMISES_ASSESSMENT_INFO_REQUESTED,
       applicationId = assessment.application.id,
       assessmentId = assessment.id,
       crn = assessment.application.crn,
@@ -162,6 +165,7 @@ class Cas1AssessmentDomainEventService(
     domainEventService.saveApplicationAssessedDomainEvent(
       Cas1DomainEvent(
         id = domainEventId,
+        type = DomainEventType.APPROVED_PREMISES_APPLICATION_ASSESSED,
         applicationId = application.id,
         assessmentId = assessment.id,
         crn = application.crn,
@@ -222,6 +226,7 @@ class Cas1AssessmentDomainEventService(
     domainEventService.saveApplicationAssessedDomainEvent(
       Cas1DomainEvent(
         id = domainEventId,
+        type = DomainEventType.APPROVED_PREMISES_APPLICATION_ASSESSED,
         applicationId = application.id,
         assessmentId = assessment.id,
         crn = application.crn,

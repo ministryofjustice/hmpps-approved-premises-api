@@ -16,6 +16,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.SubmitApproved
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.ApDeliusContextApiClient
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.ClientResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesApplicationEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DomainEventType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.MetaDataName
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.community.OffenderDetailSummary
@@ -87,6 +88,7 @@ class Cas1ApplicationDomainEventService(
     domainEventService.saveApplicationSubmittedDomainEvent(
       Cas1DomainEvent(
         id = domainEventId,
+        type = DomainEventType.APPROVED_PREMISES_APPLICATION_SUBMITTED,
         applicationId = application.id,
         crn = application.crn,
         nomsNumber = offenderDetails.otherIds.nomsNumber,
@@ -123,6 +125,7 @@ class Cas1ApplicationDomainEventService(
     domainEventService.saveApplicationWithdrawnEvent(
       Cas1DomainEvent(
         id = domainEventId,
+        type = DomainEventType.APPROVED_PREMISES_APPLICATION_WITHDRAWN,
         applicationId = application.id,
         crn = application.crn,
         nomsNumber = application.nomsNumber,

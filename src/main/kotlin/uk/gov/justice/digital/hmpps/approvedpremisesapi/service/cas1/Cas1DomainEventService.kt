@@ -122,6 +122,7 @@ class Cas1DomainEventService(
 
     return Cas1DomainEvent(
       id = entity.id,
+      type = entity.type,
       applicationId = entity.applicationId,
       crn = entity.crn,
       nomsNumber = entity.nomsNumber,
@@ -343,6 +344,7 @@ class Cas1DomainEventService(
 
 data class Cas1DomainEvent<T>(
   val id: UUID,
+  val type: DomainEventType,
   val applicationId: UUID? = null,
   val assessmentId: UUID? = null,
   val bookingId: UUID? = null,
