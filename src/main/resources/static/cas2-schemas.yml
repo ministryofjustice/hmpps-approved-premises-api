@@ -169,6 +169,7 @@ components:
         - personName
         - crn
         - nomsNumber
+        - assignmentUpdatedAt
     NewCas2ApplicationNote:
       type: object
       properties:

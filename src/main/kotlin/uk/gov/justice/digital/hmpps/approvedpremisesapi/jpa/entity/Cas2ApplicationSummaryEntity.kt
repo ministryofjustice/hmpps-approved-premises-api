@@ -78,4 +78,7 @@ data class Cas2ApplicationSummaryEntity(
   val prisonCode: String,
   @Column(name = "current_prison_code")
   val currentPrisonCode: String,
+  @Column(name = "assignment_updated_at")
+  val assignmentUpdatedAt: OffsetDateTime,
+
 )
