@@ -75,9 +75,9 @@ class Cas2ApplicationService(
     )
 
     val response = when (assignmentType) {
-      AssignmentType.UNALLOCATED -> findCas2ApplicationSummaryEntities(
-        prisonCode = prisonCode,
-        pageCriteria = pageCriteria,
+      AssignmentType.UNALLOCATED -> applicationSummaryRepository.findUnallocatedApplicationsForPrison(
+        prisonCode!!,
+        getPageableOrAllPages(pageCriteria),
       )
 
       AssignmentType.CREATED -> findCas2ApplicationSummaryEntities(
@@ -86,9 +86,9 @@ class Cas2ApplicationService(
         pageCriteria = pageCriteria,
       )
 
-      AssignmentType.ALLOCATED -> findCas2ApplicationSummaryEntities(
-        allocatedPomUserId = user.id,
-        pageCriteria = pageCriteria,
+      AssignmentType.ALLOCATED -> applicationSummaryRepository.findAllocatedApplications(
+        user.id,
+        getPageableOrAllPages(pageCriteria),
       )
 
       AssignmentType.DEALLOCATED -> {
