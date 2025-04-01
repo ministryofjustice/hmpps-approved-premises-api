@@ -9,6 +9,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.NomisUserEnti
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.NomisUserRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.nomisuserroles.NomisStaffInformation
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.nomisuserroles.NomisUserDetail
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.NotFoundProblem
 import java.util.UUID
 
 @Service
@@ -25,6 +26,8 @@ class NomisUserService(
 
     return getUserForUsername(username, jwt)
   }
+
+  fun getNomisUserById(id: UUID) = userRepository.findById(id).orElseThrow { NotFoundProblem(id, "NomisUser") }
 
   fun getUserByStaffId(staffId: Long): NomisUserEntity {
     val userDetails = userRepository.findByNomisStaffId(staffId)

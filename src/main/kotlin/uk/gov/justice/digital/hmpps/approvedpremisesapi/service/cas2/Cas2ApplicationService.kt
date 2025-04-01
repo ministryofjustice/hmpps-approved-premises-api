@@ -103,9 +103,8 @@ class Cas2ApplicationService(
 
   fun getApplicationForUser(applicationId: UUID, user: NomisUserEntity): CasResult<Cas2ApplicationEntity> {
     val applicationEntity = applicationRepository.findByIdOrNull(applicationId)
-      ?: return CasResult.NotFound("Application", applicationId.toString())
 
-    if (applicationEntity.abandonedAt != null) {
+    if (applicationEntity == null || applicationEntity.abandonedAt != null) {
       return CasResult.NotFound("Application", applicationId.toString())
     }
 

@@ -2,7 +2,6 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.unit.entity
 
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
-import org.junit.jupiter.api.assertThrows
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.Cas2ApplicationEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.NomisUserEntityFactory
 
@@ -19,12 +18,5 @@ class Cas2ApplicationEntityTest {
     application.createApplicationAssignment(prisonCode = prisonCode, allocatedPomUser = user)
     assertThat(application.currentPrisonCode).isEqualTo(prisonCode)
     assertThat(application.mostRecentPomUserId).isEqualTo(user.id)
-  }
-
-  @Test
-  fun `should throw error when no assignments exists`() {
-    val application = Cas2ApplicationEntityFactory().withNomsNumber(nomsNumber).withCreatedByUser(user).produce()
-    val exception = assertThrows<NoSuchElementException> { application.currentPrisonCode }
-    assertThat(exception.message).isEqualTo("List is empty.")
   }
 }

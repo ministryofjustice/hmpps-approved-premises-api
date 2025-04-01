@@ -69,7 +69,7 @@ class Cas2StartupScript(
     seedLogger.info("Auto-scripting application for ${applicant.nomisUsername}, in state $state")
     val createdAt = randomDateTime()
     val submittedAt = if (state == "IN_PROGRESS") null else createdAt.plusDays(randomInt(EARLIEST_SUBMISSION, LATEST_SUBMISSION).toLong())
-    val application = applicationRepository.save(
+    val application =
       Cas2ApplicationEntity(
         id = UUID.randomUUID(),
         crn = "X320741",
@@ -81,8 +81,14 @@ class Cas2StartupScript(
         submittedAt = submittedAt,
         schemaVersion = jsonSchemaService.getNewestSchema(Cas2ApplicationJsonSchemaEntity::class.java),
         schemaUpToDate = true,
-      ),
-    )
+        referringPrisonCode = if (submittedAt != null) "MDI" else null,
+      )
+
+    // create application assignments for submitted applications
+    if (submittedAt != null) {
+      application.createApplicationAssignment(prisonCode = "MDI", allocatedPomUser = applicant)
+    }
+    applicationRepository.save(application)
 
     if (listOf("SUBMITTED", "IN_REVIEW").contains(state)) {
       val appWithPromotedProperties = applyFirstClassProperties(application)

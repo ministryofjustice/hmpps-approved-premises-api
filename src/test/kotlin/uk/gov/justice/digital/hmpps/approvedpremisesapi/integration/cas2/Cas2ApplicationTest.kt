@@ -6,6 +6,7 @@ import com.fasterxml.jackson.databind.node.NullNode
 import com.ninjasquad.springmockk.SpykBean
 import io.mockk.clearMocks
 import org.assertj.core.api.Assertions
+import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Nested
@@ -1272,6 +1273,11 @@ class Cas2ApplicationTest : IntegrationTestBase() {
               withSubmittedAt(OffsetDateTime.now().minusDays(1))
             }
 
+            val omu = offenderManagementUnitEntityFactory.produceAndPersist()
+
+            applicationEntity.createApplicationAssignment(prisonCode = omu.prisonCode, allocatedPomUser = userEntity)
+            cas2ApplicationRepository.save(applicationEntity)
+
             cas2AssessmentEntityFactory.produceAndPersist {
               withApplication(applicationEntity)
             }
@@ -1292,6 +1298,10 @@ class Cas2ApplicationTest : IntegrationTestBase() {
             )
 
             Assertions.assertThat(responseBody.assessment!!.statusUpdates).isEqualTo(emptyList<Cas2StatusUpdate>())
+            assertThat(responseBody.allocatedPomEmailAddress).isEqualTo(userEntity.email)
+            assertThat(responseBody.allocatedPomName).isEqualTo(userEntity.name)
+            assertThat(responseBody.assignmentDate).isEqualTo(applicationEntity.currentAssignmentDate)
+            assertThat(responseBody.currentPrisonName).isEqualTo(omu.prisonName)
 
             Assertions.assertThat(responseBody.timelineEvents!!.map { event -> event.label })
               .isEqualTo(listOf("Application submitted"))
