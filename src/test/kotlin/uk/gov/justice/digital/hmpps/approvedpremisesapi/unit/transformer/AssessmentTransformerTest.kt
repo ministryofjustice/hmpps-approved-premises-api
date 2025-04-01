@@ -159,7 +159,10 @@ class AssessmentTransformerTest {
 
     @Test
     fun `transformJpaToApi transforms correctly`() {
-      val assessment = approvedPremisesAssessmentFactory.produce()
+      val assessment = approvedPremisesAssessmentFactory
+        .withData("{ \"some\": \"data\" }")
+        .withDocument("{ \"some\": \"doc\" }")
+        .produce()
 
       val result = assessmentTransformer.transformJpaToApi(assessment, mockk()) as ApprovedPremisesAssessment
 
@@ -171,6 +174,8 @@ class AssessmentTransformerTest {
       assertThat(result.submittedAt).isEqualTo(Instant.parse("2022-12-14T12:06:00Z"))
       assertThat(result.allocatedToStaffMember).isEqualTo(approvedPremisesUser)
       assertThat(result.createdFromAppeal).isEqualTo(assessment.createdFromAppeal)
+      assertThat(result.data.toString()).isEqualTo("{\"some\":\"data\"}")
+      assertThat(result.document.toString()).isEqualTo("{\"some\":\"doc\"}")
 
       verify { mockUserTransformer.transformJpaToApi(allocatedToUser, ServiceName.approvedPremises) }
     }
