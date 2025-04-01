@@ -60,39 +60,28 @@ class Cas2ApplicationService(
     pageCriteria: PageCriteria<String>,
     assignmentType: AssignmentType,
   ): Pair<MutableList<Cas2ApplicationSummaryEntity>, PaginationMetadata?> {
-    fun findCas2ApplicationSummaryEntities(
-      createdByUserId: UUID? = null,
-      allocatedPomUserId: UUID? = null,
-      prisonCode: String? = null,
-      isSubmitted: Boolean? = true,
-      pageCriteria: PageCriteria<String>,
-    ) = applicationSummaryRepository.findCas2ApplicationSummaryEntities(
-      createdByUserId = createdByUserId,
-      allocatedPomUserId = allocatedPomUserId,
-      prisonCode = prisonCode,
-      isSubmitted = isSubmitted,
-      pageable = getPageableOrAllPages(pageCriteria),
-    )
-
+    // applications that are in the same prison as the user, but have not been allocated
     val response = when (assignmentType) {
       AssignmentType.UNALLOCATED -> applicationSummaryRepository.findUnallocatedApplicationsForPrison(
         prisonCode!!,
         getPageableOrAllPages(pageCriteria),
       )
 
-      AssignmentType.CREATED -> findCas2ApplicationSummaryEntities(
-        createdByUserId = user.id,
-        isSubmitted = null,
-        pageCriteria = pageCriteria,
+      // applications that are created by the user but unsubmitted (in progress in the UI)
+      AssignmentType.CREATED -> applicationSummaryRepository.findCreatedApplications(
+        user.id,
+        getPageableOrAllPages(pageCriteria),
       )
 
+      // applications that are submitted and assigned to the user (submitted in the UI)
       AssignmentType.ALLOCATED -> applicationSummaryRepository.findAllocatedApplications(
         user.id,
         getPageableOrAllPages(pageCriteria),
       )
 
+      // applications that have been assigned to a user or prison at some point in time, but are not currently
       AssignmentType.DEALLOCATED -> {
-        val deallocatedApplicationIds = applicationRepository.findDeallocatedApplicationIds(user.id)
+        val deallocatedApplicationIds = applicationRepository.findDeallocatedApplicationIds(user.id, prisonCode!!)
         applicationSummaryRepository.findAllByIdIn(
           deallocatedApplicationIds,
           getPageableOrAllPages(pageCriteria),

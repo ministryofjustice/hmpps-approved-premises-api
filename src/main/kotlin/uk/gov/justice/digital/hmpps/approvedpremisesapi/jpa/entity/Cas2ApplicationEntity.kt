@@ -47,14 +47,14 @@ interface Cas2ApplicationRepository : JpaRepository<Cas2ApplicationEntity, UUID>
   @Query(
     """ SELECT a.id FROM Cas2ApplicationEntity a
         JOIN a.applicationAssignments aa  
-        WHERE aa.allocatedPomUser.id = :userId
+        WHERE aa.allocatedPomUser.id = :userId OR aa.prisonCode = :prisonCode
         AND aa.createdAt != (SELECT MAX(aa2.createdAt)
                              FROM Cas2ApplicationAssignmentEntity aa2
                              WHERE aa2.application.id = a.id
                              GROUP BY aa2.application.id
-                             HAVING COUNT(aa2.application.id) > 1)""",
+                             HAVING COUNT(aa2.application.id) > 1) ORDER BY a.createdAt DESC""",
   )
-  fun findDeallocatedApplicationIds(userId: UUID): List<UUID>
+  fun findDeallocatedApplicationIds(userId: UUID, prisonCode: String): List<UUID>
 }
 
 @Repository

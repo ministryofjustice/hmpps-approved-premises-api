@@ -29,6 +29,9 @@ interface ApplicationSummaryRepository : JpaRepository<Cas2ApplicationSummaryEnt
     pageable: Pageable,
   ): Page<Cas2ApplicationSummaryEntity>
 
+  @Query("select ase from Cas2ApplicationSummaryEntity ase where ase.submittedAt is null and ase.userId = :userId")
+  fun findCreatedApplications(userId: UUID, pageable: Pageable): Page<Cas2ApplicationSummaryEntity>
+
   @Query("select ase from Cas2ApplicationSummaryEntity ase where ase.submittedAt is not null and ase.allocatedPomUserId = :allocatedPomUserId")
   fun findAllocatedApplications(userId: UUID?, pageable: Pageable): Page<Cas2ApplicationSummaryEntity>
 
@@ -37,6 +40,9 @@ interface ApplicationSummaryRepository : JpaRepository<Cas2ApplicationSummaryEnt
       "and ase.prisonCode = :prisonCode and ase.allocatedPomUserId is null",
   )
   fun findUnallocatedApplicationsForPrison(prisonCode: String, pageable: Pageable): Page<Cas2ApplicationSummaryEntity>
+
+  @Query("select ase from Cas2ApplicationSummaryEntity ase where ase.submittedAt is null and ase.userId = :userId")
+  fun findInProgressApplications(userId: UUID, pageable: Pageable?): Page<Cas2ApplicationSummaryEntity>
 
   fun findAllByIdIn(ids: List<UUID>, pageable: Pageable): Page<Cas2ApplicationSummaryEntity>
 
