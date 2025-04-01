@@ -53,6 +53,7 @@ class Cas1SeedPremisesFromSiteSurveyXlsxJob(
   }
 
   private val log = LoggerFactory.getLogger(this::class.java)
+  private val changesLog = LoggerFactory.getLogger("${this::class.java}.changes")
 
   override fun processXlsx(file: File) {
     val siteSurveyPremise = Cas1SiteSurveyPremiseFactory().load(file)
@@ -153,7 +154,7 @@ class Cas1SeedPremisesFromSiteSurveyXlsxJob(
     premisesInfo: PremisesInfo,
   ) {
     val qCode = premisesInfo.siteSurveyPremise.qCode
-    log.info("Creating new premise for qcode $qCode (${premisesInfo.siteSurveyPremise.name})")
+    changesLog.info("Creating new premise for qcode $qCode (${premisesInfo.siteSurveyPremise.name})")
 
     val siteSurvey = premisesInfo.siteSurveyPremise
 
@@ -226,7 +227,7 @@ class Cas1SeedPremisesFromSiteSurveyXlsxJob(
 
     val diff = javers.compare(beforeChange, afterChange)
     if (diff.hasChanges()) {
-      log.info("Changes for import of ${siteSurvey.name} are ${diff.prettyPrint()}")
+      changesLog.info("Changes for import of ${siteSurvey.name} are ${diff.prettyPrint()}")
       premisesRepository.save(existingPremise)
     } else {
       entityManager.clear()
