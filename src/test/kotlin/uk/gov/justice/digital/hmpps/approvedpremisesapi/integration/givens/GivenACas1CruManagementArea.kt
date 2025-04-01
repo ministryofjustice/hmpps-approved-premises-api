@@ -8,6 +8,19 @@ fun IntegrationTestBase.givenACas1CruManagementArea(
   assessmentAutoAllocationUsername: String? = null,
   assessmentAutoAllocations: MutableMap<AutoAllocationDay, String> = mutableMapOf(),
 ): Cas1CruManagementAreaEntity = cas1CruManagementAreaEntityFactory.produceAndPersist {
-  withAssessmentAutoAllocationUsername(assessmentAutoAllocationUsername)
-  withAssessmentAutoAllocations(assessmentAutoAllocations)
+  if (assessmentAutoAllocations.isEmpty() && assessmentAutoAllocationUsername != null) {
+    withAssessmentAutoAllocations(
+      mutableMapOf(
+        AutoAllocationDay.MONDAY to assessmentAutoAllocationUsername,
+        AutoAllocationDay.TUESDAY to assessmentAutoAllocationUsername,
+        AutoAllocationDay.WEDNESDAY to assessmentAutoAllocationUsername,
+        AutoAllocationDay.THURSDAY to assessmentAutoAllocationUsername,
+        AutoAllocationDay.FRIDAY to assessmentAutoAllocationUsername,
+        AutoAllocationDay.SATURDAY to assessmentAutoAllocationUsername,
+        AutoAllocationDay.SUNDAY to assessmentAutoAllocationUsername,
+      ),
+    )
+  } else {
+    withAssessmentAutoAllocations(assessmentAutoAllocations)
+  }
 }

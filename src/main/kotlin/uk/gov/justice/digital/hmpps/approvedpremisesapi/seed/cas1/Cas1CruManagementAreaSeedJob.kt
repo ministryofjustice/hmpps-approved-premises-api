@@ -17,7 +17,6 @@ select
 cru.id as id,
 cru.name as current_name,
 cru.email_address as email_address,
-cru.assessment_auto_allocation_username   as assessment_auto_allocation_username,
 mon.delius_username as assessment_auto_allocation_monday,
 tue.delius_username as assessment_auto_allocation_tuesday,
 wed.delius_username as assessment_auto_allocation_wednesday,
@@ -42,7 +41,6 @@ class Cas1CruManagementAreaSeedJob(
     "id",
     "current_name",
     "email_address",
-    "assessment_auto_allocation_username",
     "assessment_auto_allocation_monday",
     "assessment_auto_allocation_tuesday",
     "assessment_auto_allocation_wednesday",
@@ -61,7 +59,6 @@ class Cas1CruManagementAreaSeedJob(
       id = seedColumns.getUuidOrNull("id")!!,
       currentName = seedColumns.getStringOrNull("current_name")!!,
       emailAddress = seedColumns.getStringOrNull("email_address"),
-      assessmentAutoAllocationUsername = seedColumns.getStringOrNull("assessment_auto_allocation_username"),
       assessmentAutoAllocationMonday = seedColumns.getStringOrNull("assessment_auto_allocation_monday"),
       assessmentAutoAllocationTuesday = seedColumns.getStringOrNull("assessment_auto_allocation_tuesday"),
       assessmentAutoAllocationWednesday = seedColumns.getStringOrNull("assessment_auto_allocation_wednesday"),
@@ -83,12 +80,9 @@ class Cas1CruManagementAreaSeedJob(
     }
 
     val emailAddress = row.emailAddress?.ifBlank { null }
-    val autoAlloc = row.assessmentAutoAllocationUsername?.ifBlank { null }
-
     val before = managementArea.copy()
 
     managementArea.emailAddress = emailAddress
-    managementArea.assessmentAutoAllocationUsername = autoAlloc
 
     managementArea.assessmentAutoAllocations.clear()
     managementArea.assessmentAutoAllocations.putAll(
@@ -113,7 +107,6 @@ data class CruManagementAreaSeedCsvRow(
   val id: UUID,
   val currentName: String,
   val emailAddress: String?,
-  val assessmentAutoAllocationUsername: String?,
   val assessmentAutoAllocationMonday: String?,
   val assessmentAutoAllocationTuesday: String?,
   val assessmentAutoAllocationWednesday: String?,

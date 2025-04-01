@@ -2,7 +2,6 @@
 -- the required configuration for assessment_auto_allocation_username currently
 -- differs in local and dev/test
 
-UPDATE cas1_cru_management_areas SET assessment_auto_allocation_username = 'JIMSNOWLDAP';
 INSERT INTO cas1_cru_management_area_auto_allocations
 SELECT area.id,'MONDAY','JIMSNOWLDAP' FROM cas1_cru_management_areas area WHERE id != 'bfb04c2a-1954-4512-803d-164f7fcf252c'
 ON CONFLICT DO NOTHING;
@@ -30,8 +29,6 @@ ON CONFLICT DO NOTHING;
 INSERT INTO cas1_cru_management_area_auto_allocations
 SELECT area.id,'SUNDAY','JIMSNOWLDAP' FROM cas1_cru_management_areas area WHERE id != 'bfb04c2a-1954-4512-803d-164f7fcf252c'
 ON CONFLICT DO NOTHING;
-
-UPDATE cas1_cru_management_areas SET assessment_auto_allocation_username = 'CRUWOMENSESTATE' WHERE id = 'bfb04c2a-1954-4512-803d-164f7fcf252c';
 
 -- women's estate
 INSERT INTO cas1_cru_management_area_auto_allocations VALUES('bfb04c2a-1954-4512-803d-164f7fcf252c','MONDAY','JIMSNOWLDAP') ON CONFLICT DO NOTHING;
