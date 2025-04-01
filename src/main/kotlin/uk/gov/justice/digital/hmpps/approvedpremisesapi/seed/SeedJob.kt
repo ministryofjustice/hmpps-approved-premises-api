@@ -24,7 +24,10 @@ abstract class SeedJob<RowType>(
     // by default do nothing
   }
   abstract fun deserializeRow(columns: Map<String, String>): RowType
-  abstract fun processRow(row: RowType)
+
+  open fun processRow(row: RowType) {
+    // by default do nothing
+  }
 }
 
 @Suppress("TooGenericExceptionThrown")
