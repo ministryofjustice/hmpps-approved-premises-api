@@ -43,6 +43,7 @@ class Cas1SeedRoomsFromSiteSurveyXlsxJob(
   }
 
   private val log = LoggerFactory.getLogger(this::class.java)
+  private val changesLog = LoggerFactory.getLogger("${this::class.java}.changes")
 
   override fun processXlsx(file: File) {
     val qCode = Cas1SiteSurveyPremiseFactory().getQCode(file)
@@ -168,7 +169,7 @@ class Cas1SeedRoomsFromSiteSurveyXlsxJob(
         beds = mutableListOf(),
       ),
     )
-    log.info("Created new room with code ${room.roomCode} and name ${room.roomName} in premise ${premises.name}.")
+    changesLog.info("Created new room with code ${room.roomCode} and name ${room.roomName} in premise ${premises.name}.")
   }
 
   private data class ApprovedPremisesRoomForComparison(
@@ -198,7 +199,7 @@ class Cas1SeedRoomsFromSiteSurveyXlsxJob(
 
     val diff = javers.compare(beforeChange, afterChange)
     if (diff.hasChanges()) {
-      log.info("Changes for existing room ${existingRoom.name} with code ${existingRoom.code}: ${diff.prettyPrint()}")
+      changesLog.info("Changes for existing room ${existingRoom.name} with code ${existingRoom.code}: ${diff.prettyPrint()}")
     } else {
       log.info("No changes for existing room ${existingRoom.name} with code ${existingRoom.code}.")
     }
@@ -217,7 +218,7 @@ class Cas1SeedRoomsFromSiteSurveyXlsxJob(
         createdAt = null,
       ),
     )
-    log.info("Created new bed with code ${bed.bedCode} and name ${bed.bedName} in room code ${bed.roomCode}.")
+    changesLog.info("Created new bed with code ${bed.bedCode} and name ${bed.bedName} in room code ${bed.roomCode}.")
   }
 
   private fun findExistingPremisesByQCodeOrThrow(qCode: String): ApprovedPremisesEntity = approvedPremisesRepository.findByQCode(qCode)
