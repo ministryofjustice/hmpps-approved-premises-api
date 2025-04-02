@@ -13,7 +13,6 @@ class Cas1CruManagementAreaEntityFactory : Factory<Cas1CruManagementAreaEntity> 
   private var name: Yielded<String> = { randomStringMultiCaseWithNumbers(8) }
   private var emailAddress: Yielded<String?> = { randomStringUpperCase(10) }
   private var notifyReplyToEmailId: Yielded<String> = { randomStringMultiCaseWithNumbers(8) }
-  private var assessmentAutoAllocationUsername: Yielded<String?> = { null }
   private var assessmentAutoAllocations: Yielded<MutableMap<AutoAllocationDay, String>> = { mutableMapOf() }
 
   fun withId(id: UUID) = apply {
@@ -32,11 +31,6 @@ class Cas1CruManagementAreaEntityFactory : Factory<Cas1CruManagementAreaEntity> 
     this.notifyReplyToEmailId = { notifyReplyToEmailId }
   }
 
-  @Deprecated("We now use assessmentAutoAllocations")
-  fun withAssessmentAutoAllocationUsername(assessmentAutoAllocationUsername: String?) = apply {
-    this.assessmentAutoAllocationUsername = { assessmentAutoAllocationUsername }
-  }
-
   fun withAssessmentAutoAllocations(assessmentAutoAllocations: MutableMap<AutoAllocationDay, String>) = apply {
     this.assessmentAutoAllocations = { assessmentAutoAllocations }
   }
@@ -46,7 +40,6 @@ class Cas1CruManagementAreaEntityFactory : Factory<Cas1CruManagementAreaEntity> 
     name = this.name(),
     emailAddress = this.emailAddress(),
     notifyReplyToEmailId = this.notifyReplyToEmailId(),
-    assessmentAutoAllocationUsername = this.assessmentAutoAllocationUsername(),
     assessmentAutoAllocations = this.assessmentAutoAllocations(),
   )
 }

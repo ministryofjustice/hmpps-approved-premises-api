@@ -70,7 +70,6 @@ class EmergencyAndShortNoticeAssessmentRuleTest {
         .withNoticeType(noticeType)
         .withCruManagementArea(
           Cas1CruManagementAreaEntityFactory()
-            .withAssessmentAutoAllocationUsername(null)
             .withAssessmentAutoAllocations(
               mutableMapOf(
                 AutoAllocationDay.MONDAY to "mr monday",
@@ -217,7 +216,6 @@ class EmergencyAndShortNoticeAssessmentRuleTest {
         .withNoticeType(noticeType)
         .withCruManagementArea(
           Cas1CruManagementAreaEntityFactory()
-            .withAssessmentAutoAllocationUsername(null)
             .withAssessmentAutoAllocations(
               mutableMapOf(
                 AutoAllocationDay.MONDAY to "mr monday",

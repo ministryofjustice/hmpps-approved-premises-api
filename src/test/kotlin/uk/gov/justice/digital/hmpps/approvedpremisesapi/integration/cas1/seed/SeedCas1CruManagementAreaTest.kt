@@ -25,7 +25,6 @@ class SeedCas1CruManagementAreaTest : SeedTestBase() {
         .withId(UUID.randomUUID())
         .withName("Existing Name")
         .withEmailAddress("exisdtingEmail@here.com")
-        .withAssessmentAutoAllocationUsername("existingUserName")
         .withAssessmentAutoAllocations(
           mutableMapOf(
             AutoAllocationDay.MONDAY to "old monday",
@@ -52,7 +51,6 @@ class SeedCas1CruManagementAreaTest : SeedTestBase() {
           id = invalidId,
           currentName = "doesnt matter",
           emailAddress = "doesnt matter",
-          assessmentAutoAllocationUsername = "doesnt matter",
           assessmentAutoAllocationMonday = "doesnt matter",
           assessmentAutoAllocationTuesday = "doesnt matter",
           assessmentAutoAllocationWednesday = "doesnt matter",
@@ -83,7 +81,6 @@ class SeedCas1CruManagementAreaTest : SeedTestBase() {
           id = areaId,
           currentName = "Wrong Name",
           emailAddress = "doesnt matter",
-          assessmentAutoAllocationUsername = "doesnt matter",
           assessmentAutoAllocationMonday = "doesnt matter",
           assessmentAutoAllocationTuesday = "doesnt matter",
           assessmentAutoAllocationWednesday = "doesnt matter",
@@ -114,7 +111,6 @@ class SeedCas1CruManagementAreaTest : SeedTestBase() {
           id = areaId,
           currentName = "Existing Name",
           emailAddress = "updated@test.com",
-          assessmentAutoAllocationUsername = "updated delius username",
           assessmentAutoAllocationMonday = "username mon",
           assessmentAutoAllocationTuesday = "username tue",
           assessmentAutoAllocationWednesday = "username wed",
@@ -129,7 +125,6 @@ class SeedCas1CruManagementAreaTest : SeedTestBase() {
     val updatedArea = cas1CruManagementAreaRepository.findByIdOrNull(areaId)!!
 
     assertThat(updatedArea.emailAddress).isEqualTo("updated@test.com")
-    assertThat(updatedArea.assessmentAutoAllocationUsername).isEqualTo("updated delius username")
 
     assertThat(updatedArea.assessmentAutoAllocations).isEqualTo(
       mapOf(
@@ -153,7 +148,6 @@ class SeedCas1CruManagementAreaTest : SeedTestBase() {
           id = areaId,
           currentName = "Existing Name",
           emailAddress = "   ",
-          assessmentAutoAllocationUsername = "  ",
           assessmentAutoAllocationMonday = "",
           assessmentAutoAllocationTuesday = "still something here",
           assessmentAutoAllocationWednesday = " ",
@@ -168,7 +162,6 @@ class SeedCas1CruManagementAreaTest : SeedTestBase() {
     val updatedArea = cas1CruManagementAreaRepository.findByIdOrNull(areaId)!!
 
     assertThat(updatedArea.emailAddress).isNull()
-    assertThat(updatedArea.assessmentAutoAllocationUsername).isNull()
     assertThat(updatedArea.assessmentAutoAllocations).isEqualTo(
       mapOf(
         AutoAllocationDay.TUESDAY to "still something here",
@@ -183,7 +176,6 @@ class SeedCas1CruManagementAreaTest : SeedTestBase() {
         "id",
         "current_name",
         "email_address",
-        "assessment_auto_allocation_username",
         "assessment_auto_allocation_monday",
         "assessment_auto_allocation_tuesday",
         "assessment_auto_allocation_wednesday",
@@ -199,7 +191,6 @@ class SeedCas1CruManagementAreaTest : SeedTestBase() {
         .withQuotedField(it.id)
         .withQuotedField(it.currentName)
         .withQuotedField(it.emailAddress ?: "")
-        .withQuotedField(it.assessmentAutoAllocationUsername ?: "")
         .withQuotedField(it.assessmentAutoAllocationMonday ?: "")
         .withQuotedField(it.assessmentAutoAllocationTuesday ?: "")
         .withQuotedField(it.assessmentAutoAllocationWednesday ?: "")

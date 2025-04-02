@@ -1,0 +1,1 @@
+ALTER TABLE cas1_cru_management_areas DROP COLUMN assessment_auto_allocation_username
