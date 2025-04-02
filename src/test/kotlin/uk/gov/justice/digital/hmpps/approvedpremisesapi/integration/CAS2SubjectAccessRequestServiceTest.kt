@@ -42,7 +42,6 @@ class CAS2SubjectAccessRequestServiceTest : SubjectAccessRequestServiceTestBase(
     )
   }
 
-  // not originally called
   @Test
   fun `Get CAS2 Information - null date Check`() {
     val (offenderDetails, _) = givenAnOffender()
