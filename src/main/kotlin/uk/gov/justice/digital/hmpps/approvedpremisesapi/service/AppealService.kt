@@ -11,9 +11,9 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremi
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AssessmentEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRole
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.validated
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.validatedCasResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.AuthorisableActionResult
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.ValidatableActionResult
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.CasResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1AppealDomainEventService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1AppealEmailService
 import java.time.LocalDate
@@ -45,55 +45,53 @@ class AppealService(
     application: ApplicationEntity,
     assessment: AssessmentEntity,
     createdBy: UserEntity,
-  ): AuthorisableActionResult<ValidatableActionResult<AppealEntity>> {
-    if (!createdBy.hasRole(UserRole.CAS1_APPEALS_MANAGER)) return AuthorisableActionResult.Unauthorised()
+  ): CasResult<AppealEntity> {
+    if (!createdBy.hasRole(UserRole.CAS1_APPEALS_MANAGER)) return CasResult.Unauthorised()
 
-    return AuthorisableActionResult.Success(
-      validated {
-        if (appealDate.isAfter(LocalDate.now())) {
-          "$.appealDate" hasValidationError "mustNotBeFuture"
+    return validatedCasResult {
+      if (appealDate.isAfter(LocalDate.now())) {
+        "$.appealDate" hasValidationError "mustNotBeFuture"
+      }
+
+      if (appealDetail.isBlank()) {
+        "$.appealDetail" hasValidationError "empty"
+      }
+
+      if (decisionDetail.isBlank()) {
+        "$.decisionDetail" hasValidationError "empty"
+      }
+
+      if (validationErrors.any()) {
+        return@validatedCasResult fieldValidationError
+      }
+
+      val appeal = appealRepository.save(
+        AppealEntity(
+          id = UUID.randomUUID(),
+          appealDate = appealDate,
+          appealDetail = appealDetail,
+          decision = decision.value,
+          decisionDetail = decisionDetail,
+          createdAt = OffsetDateTime.now(),
+          application = application,
+          assessment = assessment,
+          createdBy = createdBy,
+        ),
+      )
+
+      cas1AppealDomainEventService.appealRecordCreated(appeal)
+
+      when (decision) {
+        AppealDecision.accepted -> {
+          assessmentService.createApprovedPremisesAssessment(application as ApprovedPremisesApplicationEntity, createdFromAppeal = true)
+          cas1AppealEmailService.appealSuccess(application, appeal)
         }
-
-        if (appealDetail.isBlank()) {
-          "$.appealDetail" hasValidationError "empty"
+        AppealDecision.rejected -> {
+          cas1AppealEmailService.appealFailed(application as ApprovedPremisesApplicationEntity)
         }
+      }
 
-        if (decisionDetail.isBlank()) {
-          "$.decisionDetail" hasValidationError "empty"
-        }
-
-        if (validationErrors.any()) {
-          return@validated fieldValidationError
-        }
-
-        val appeal = appealRepository.save(
-          AppealEntity(
-            id = UUID.randomUUID(),
-            appealDate = appealDate,
-            appealDetail = appealDetail,
-            decision = decision.value,
-            decisionDetail = decisionDetail,
-            createdAt = OffsetDateTime.now(),
-            application = application,
-            assessment = assessment,
-            createdBy = createdBy,
-          ),
-        )
-
-        cas1AppealDomainEventService.appealRecordCreated(appeal)
-
-        when (decision) {
-          AppealDecision.accepted -> {
-            assessmentService.createApprovedPremisesAssessment(application as ApprovedPremisesApplicationEntity, createdFromAppeal = true)
-            cas1AppealEmailService.appealSuccess(application, appeal)
-          }
-          AppealDecision.rejected -> {
-            cas1AppealEmailService.appealFailed(application as ApprovedPremisesApplicationEntity)
-          }
-        }
-
-        success(appeal)
-      },
-    )
+      success(appeal)
+    }
   }
 }
