@@ -42,6 +42,7 @@ class Cas2v2ApplicationEntityFactory : Factory<Cas2v2ApplicationEntity> {
   private var hdcEligibilityDate: Yielded<LocalDate?> = { null }
   private var conditionalReleaseDate: Yielded<LocalDate?> = { null }
   private var applicationOrigin: Yielded<ApplicationOrigin> = { ApplicationOrigin.homeDetentionCurfew }
+  private var bailHearingDate: Yielded<LocalDate?> = { null }
 
   fun withId(id: UUID) = apply {
     this.id = { id }
@@ -131,6 +132,10 @@ class Cas2v2ApplicationEntityFactory : Factory<Cas2v2ApplicationEntity> {
     this.applicationOrigin = { applicationOrigin }
   }
 
+  fun withBailHearingDate(bailHearingDate: LocalDate) = apply {
+    this.bailHearingDate = { bailHearingDate }
+  }
+
   @SuppressWarnings("TooGenericExceptionThrown")
   override fun produce(): Cas2v2ApplicationEntity {
     val entity = Cas2v2ApplicationEntity(
@@ -154,6 +159,7 @@ class Cas2v2ApplicationEntityFactory : Factory<Cas2v2ApplicationEntity> {
       conditionalReleaseDate = this.conditionalReleaseDate(),
       preferredAreas = this.preferredAreas(),
       applicationOrigin = this.applicationOrigin(),
+      bailHearingDate = this.bailHearingDate(),
     )
 
     return entity

@@ -9,6 +9,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.CAS1SubjectAccessRequestRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.CAS2SubjectAccessRequestRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.CAS3SubjectAccessRequestRepository
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas2v2.Cas2v2SubjectAccessRequestRepository
 import uk.gov.justice.hmpps.kotlin.sar.HmppsPrisonProbationSubjectAccessRequestService
 import uk.gov.justice.hmpps.kotlin.sar.HmppsSubjectAccessRequestContent
 import java.time.LocalDate
@@ -21,6 +22,7 @@ class SubjectAccessRequestService(
   val cas1SubjectAccessRequestRepository: CAS1SubjectAccessRequestRepository,
   val cas2SubjectAccessRequestRepository: CAS2SubjectAccessRequestRepository,
   val cas3SubjectAccessRequestRepository: CAS3SubjectAccessRequestRepository,
+  val cas2v2SubjectAccessRequestRepository: Cas2v2SubjectAccessRequestRepository,
 ) : HmppsPrisonProbationSubjectAccessRequestService {
 
   private val log = LoggerFactory.getLogger(this::class.java)
@@ -129,12 +131,41 @@ class SubjectAccessRequestService(
     return result
   }
 
+  fun getCAS2v2Result(crn: String?, nomsNumber: String?, startDate: LocalDateTime?, endDate: LocalDateTime?): String {
+    val applicationsJson = cas2v2SubjectAccessRequestRepository.getApplicationsJson(crn, nomsNumber, startDate, endDate)
+    val applicationNotesJson =
+      cas2v2SubjectAccessRequestRepository.getApplicationNotes(crn, nomsNumber, startDate, endDate)
+    val statusUpdatesJson = cas2v2SubjectAccessRequestRepository.getStatusUpdates(crn, nomsNumber, startDate, endDate)
+    val statusUpdateDetailsJson =
+      cas2v2SubjectAccessRequestRepository.getStatusUpdateDetails(crn, nomsNumber, startDate, endDate)
+    val assessmentsJson = cas2v2SubjectAccessRequestRepository.getAssessments(crn, nomsNumber, startDate, endDate)
+    val domainEventsJson = cas2v2SubjectAccessRequestRepository.domainEvents(crn, nomsNumber, startDate, endDate, "CAS2V2")
+    val domainEventsMetaDataJson =
+      cas2v2SubjectAccessRequestRepository.domainEventMetadata(crn, nomsNumber, startDate, endDate, "CAS2V2")
+
+    val result = """
+     {
+        "Applications": $applicationsJson,
+        "ApplicationNotes": $applicationNotesJson,
+        "Assessments": $assessmentsJson,
+        "StatusUpdates": $statusUpdatesJson,
+        "StatusUpdateDetails": $statusUpdateDetailsJson,
+        "DomainEvents": $domainEventsJson,
+        "DomainEventsMetadata": $domainEventsMetaDataJson
+     }
+    """.trimIndent()
+    log.logDebugMessage("CAS2v2", result)
+
+    return result
+  }
+
   fun getSarResult(crn: String?, nomsNumber: String?, startDate: LocalDateTime?, endDate: LocalDateTime?) =
     """
       {
          "ApprovedPremises" : ${getCAS1Result(crn, nomsNumber, startDate, endDate)},
          "TemporaryAccommodation": ${getCAS3Result(crn, nomsNumber, startDate, endDate)},
-         "ShortTermAccommodation": ${getCAS2Result(crn, nomsNumber, startDate, endDate)}
+         "ShortTermAccommodation": ${getCAS2Result(crn, nomsNumber, startDate, endDate)},
+         "BailAccommodation": ${getCAS2v2Result(crn, nomsNumber, startDate, endDate)}
       }
     """.trimIndent()
 
