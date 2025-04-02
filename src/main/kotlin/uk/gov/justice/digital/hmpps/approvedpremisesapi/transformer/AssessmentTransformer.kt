@@ -60,6 +60,7 @@ class AssessmentTransformer(
       createdAt = jpa.createdAt.toInstant(),
       allocatedAt = jpa.allocatedAt?.toInstant(),
       data = if (jpa.data != null) objectMapper.readTree(jpa.data) else null,
+      document = if (jpa.document != null) objectMapper.readTree(jpa.document) else null,
       clarificationNotes = jpa.clarificationNotes.map(assessmentClarificationNoteTransformer::transformJpaToApi),
       allocatedToStaffMember = jpa.allocatedToUser?.let {
         userTransformer.transformJpaToApi(it, ServiceName.approvedPremises) as ApprovedPremisesUser

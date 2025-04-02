@@ -2950,6 +2950,8 @@ components:
               $ref: '#/components/schemas/ApprovedPremisesAssessmentStatus'
             createdFromAppeal:
               type: boolean
+            document:
+              $ref: '#/components/schemas/Unit'
           required:
             - application
             - createdFromAppeal
