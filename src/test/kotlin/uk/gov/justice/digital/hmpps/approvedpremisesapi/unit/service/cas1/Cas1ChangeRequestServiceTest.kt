@@ -10,6 +10,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1ChangeRequ
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1RejectChangeRequest
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.Cas1SpaceBookingEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.PlacementRequestEntityFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.UserEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.cas1.Cas1ChangeRequestEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.cas1.Cas1ChangeRequestReasonEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.cas1.Cas1ChangeRequestRejectionReasonEntityFactory
@@ -25,6 +26,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas1.Lockable
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1ChangeRequestService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.unit.util.assertThatCasResult
 import java.time.LocalDate
+import java.time.OffsetDateTime
 import java.util.UUID
 
 class Cas1ChangeRequestServiceTest {
@@ -270,6 +272,107 @@ class Cas1ChangeRequestServiceTest {
       every { cas1ChangeRequestRepository.saveAndFlush(any()) } returns changeRequest
 
       val result = service.rejectChangeRequest(placementRequest.id, changeRequest.id, cas1RejectChangeRequest)
+
+      assertThatCasResult(result).isSuccess()
+    }
+  }
+
+  @Nested
+  inner class ApproveChangeRequest {
+
+    @Test
+    fun `throw validation error when change request is not found`() {
+      val user = UserEntityFactory()
+        .withDefaultProbationRegion()
+        .produce()
+
+      val spaceBooking = Cas1SpaceBookingEntityFactory()
+        .produce()
+
+      val changeRequestId = UUID.randomUUID()
+
+      every { cas1ChangeRequestRepository.findByIdOrNull(changeRequestId) } returns null
+
+      val result = service.approveChangeRequest(changeRequestId, user, spaceBooking)
+
+      assertThatCasResult(result).isGeneralValidationError("Change request with ID $changeRequestId not found")
+    }
+
+    @Test
+    fun `throw validation error when change request is already approved`() {
+      val user = UserEntityFactory()
+        .withDefaultProbationRegion()
+        .produce()
+
+      val changeRequest = Cas1ChangeRequestEntityFactory()
+        .withDecision(ChangeRequestDecision.APPROVED)
+        .produce()
+
+      val spaceBooking = Cas1SpaceBookingEntityFactory()
+        .produce()
+
+      every { cas1ChangeRequestRepository.findByIdOrNull(changeRequest.id) } returns changeRequest
+
+      val result = service.approveChangeRequest(changeRequest.id, user, spaceBooking)
+
+      assertThatCasResult(result).isGeneralValidationError("Change request with ID ${changeRequest.id} is already approved")
+    }
+
+    @Test
+    fun `throw validation error if booking has been marked as arrived`() {
+      val user = UserEntityFactory()
+        .withDefaultProbationRegion()
+        .produce()
+
+      val changeRequest = Cas1ChangeRequestEntityFactory()
+        .withDecision(ChangeRequestDecision.REJECTED)
+        .produce()
+
+      val spaceBooking = Cas1SpaceBookingEntityFactory()
+        .withActualArrivalDate(LocalDate.now())
+        .produce()
+
+      val result = service.approveChangeRequest(changeRequest.id, user, spaceBooking)
+
+      assertThatCasResult(result).isGeneralValidationError("Space booking with ID ${spaceBooking.id} has been marked as arrived")
+    }
+
+    @Test
+    fun `throw validation error if booking has been marked as non-arrived`() {
+      val user = UserEntityFactory()
+        .withDefaultProbationRegion()
+        .produce()
+
+      val changeRequest = Cas1ChangeRequestEntityFactory()
+        .withDecision(ChangeRequestDecision.REJECTED)
+        .produce()
+
+      val spaceBooking = Cas1SpaceBookingEntityFactory()
+        .withNonArrivalConfirmedAt(OffsetDateTime.now().toInstant())
+        .produce()
+
+      val result = service.approveChangeRequest(changeRequest.id, user, spaceBooking)
+
+      assertThatCasResult(result).isGeneralValidationError("Space booking with ID ${spaceBooking.id} has been marked as non-arrived")
+    }
+
+    @Test
+    fun `return success for valid approval`() {
+      val user = UserEntityFactory()
+        .withDefaultProbationRegion()
+        .produce()
+
+      val changeRequest = Cas1ChangeRequestEntityFactory()
+        .withDecision(ChangeRequestDecision.REJECTED)
+        .produce()
+
+      val spaceBooking = Cas1SpaceBookingEntityFactory()
+        .produce()
+
+      every { cas1ChangeRequestRepository.findByIdOrNull(changeRequest.id) } returns changeRequest
+      every { cas1ChangeRequestRepository.save(any()) } returns null
+
+      val result = service.approveChangeRequest(changeRequest.id, user, spaceBooking)
 
       assertThatCasResult(result).isSuccess()
     }

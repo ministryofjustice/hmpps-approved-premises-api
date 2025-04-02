@@ -8,8 +8,10 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1ChangeRequ
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1ChangeRequestType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1NewChangeRequest
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1RejectChangeRequest
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas1SpaceBookingEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas1SpaceBookingRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementRequestRepository
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas1.Cas1ChangeRequestEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas1.Cas1ChangeRequestReasonRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas1.Cas1ChangeRequestRejectionReasonRepository
@@ -89,6 +91,32 @@ class Cas1ChangeRequestService(
       },
     ),
   )
+
+  @Transactional
+  fun approveChangeRequest(changeRequestId: UUID, user: UserEntity, spaceBooking: Cas1SpaceBookingEntity): CasResult<Unit> = validatedCasResult {
+    if (spaceBooking.hasArrival()) {
+      return CasResult.GeneralValidationError("Space booking with ID ${spaceBooking.id} has been marked as arrived")
+    }
+
+    if (spaceBooking.hasNonArrival()) {
+      return CasResult.GeneralValidationError("Space booking with ID ${spaceBooking.id} has been marked as non-arrived")
+    }
+
+    val changeRequest = getChangeRequest(changeRequestId)
+
+    if (changeRequest == null) {
+      return CasResult.GeneralValidationError("Change request with ID $changeRequestId not found")
+    } else if (changeRequest.decision == ChangeRequestDecision.APPROVED) {
+      return CasResult.GeneralValidationError("Change request with ID $changeRequestId is already approved")
+    } else {
+      changeRequest.decision = ChangeRequestDecision.APPROVED
+      changeRequest.decisionMadeAt = OffsetDateTime.now()
+      changeRequest.decisionMadeByUser = user
+      cas1ChangeRequestRepository.save(changeRequest)
+    }
+
+    return Success(Unit)
+  }
 
   @Transactional
   fun rejectChangeRequest(

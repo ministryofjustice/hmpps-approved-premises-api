@@ -103,7 +103,7 @@ data class Cas1ChangeRequestEntity(
   var rejectionReason: Cas1ChangeRequestRejectionReasonEntity?,
   @ManyToOne(fetch = FetchType.LAZY)
   @JoinColumn(name = "decision_made_by_user_id")
-  val decisionMadeByUser: UserEntity?,
+  var decisionMadeByUser: UserEntity?,
   var decisionMadeAt: OffsetDateTime?,
   val createdAt: OffsetDateTime,
   var updatedAt: OffsetDateTime,
