@@ -5,6 +5,27 @@ info:
 servers:
   - url: /cas3
 paths:
+  /applications:
+    get:
+      tags:
+        - Operations on all applications
+      summary: Lists all applications that the user has created
+      operationId: getApplicationsForUser
+      responses:
+        200:
+          description: successful operation
+          content:
+            'application/json':
+              schema:
+                type: array
+                items:
+                  $ref: 'cas3-schemas.yml#/components/schemas/Cas3ApplicationSummary'
+        401:
+          $ref: '_shared.yml#/components/responses/401Response'
+        403:
+          $ref: '_shared.yml#/components/responses/403Response'
+        500:
+          $ref: '_shared.yml#/components/responses/500Response'
   /reports/{reportName}:
     get:
       tags:

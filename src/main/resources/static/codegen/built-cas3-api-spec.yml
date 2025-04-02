@@ -7,6 +7,27 @@ info:
 servers:
   - url: /cas3
 paths:
+  /applications:
+    get:
+      tags:
+        - Operations on all applications
+      summary: Lists all applications that the user has created
+      operationId: getApplicationsForUser
+      responses:
+        200:
+          description: successful operation
+          content:
+            'application/json':
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Cas3ApplicationSummary'
+        401:
+          $ref: '#/components/responses/401Response'
+        403:
+          $ref: '#/components/responses/403Response'
+        500:
+          $ref: '#/components/responses/500Response'
   /reports/{reportName}:
     get:
       tags:
@@ -4715,6 +4736,33 @@ components:
         - departingToday
         - overdueDeparture
         - departed
+    Cas3ApplicationSummary:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        person:
+          $ref: '#/components/schemas/Person'
+        createdAt:
+          type: string
+          format: date-time
+        submittedAt:
+          type: string
+          format: date-time
+        createdByUserId:
+          type: string
+          format: uuid
+        status:
+          $ref: '#/components/schemas/ApplicationStatus'
+        risks:
+          $ref: '#/components/schemas/PersonRisks'
+      required:
+        - id
+        - person
+        - createdAt
+        - createdByUserId
+        - status
     FutureBooking:
       type: object
       properties:

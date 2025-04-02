@@ -1,5 +1,32 @@
 components:
   schemas:
+    Cas3ApplicationSummary:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        person:
+          $ref: '_shared.yml#/components/schemas/Person'
+        createdAt:
+          type: string
+          format: date-time
+        submittedAt:
+          type: string
+          format: date-time
+        createdByUserId:
+          type: string
+          format: uuid
+        status:
+          $ref: '_shared.yml#/components/schemas/ApplicationStatus'
+        risks:
+          $ref: '_shared.yml#/components/schemas/PersonRisks'
+      required:
+        - id
+        - person
+        - createdAt
+        - createdByUserId
+        - status
     FutureBooking:
       type: object
       properties:
