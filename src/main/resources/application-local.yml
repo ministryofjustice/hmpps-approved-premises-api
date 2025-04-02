@@ -62,6 +62,10 @@ assign-default-region-to-users-with-unknown-region: true
 preemptive-cache-logging-enabled: true
 preemptive-cache-lock-duration-ms: 60000
 
+notify:
+  emailaddresses:
+    nacro: "nacro@example.com"
+
 refresh-inmate-details-cache:
   logging-enabled: true
 
