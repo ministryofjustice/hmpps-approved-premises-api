@@ -12,6 +12,7 @@ import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.EmptySource
+import org.junit.jupiter.params.provider.EnumSource
 import org.junit.jupiter.params.provider.ValueSource
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.AppealDecision
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApAreaEntityFactory
@@ -24,6 +25,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AppealEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AppealRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesAssessmentEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRole
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.ApprovedPremisesApplicationStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.AuthorisableActionResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.AppealService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.AssessmentService
@@ -111,6 +113,12 @@ class AppealServiceTest {
 
   @Nested
   inner class CreateAppeal {
+
+    private val application = ApprovedPremisesApplicationEntityFactory()
+      .withCreatedByUser(createdByUser)
+      .withStatus(ApprovedPremisesApplicationStatus.REJECTED)
+      .produce()
+
     @Test
     fun `Returns Unauthorised if the creating user does not have the CAS1_APPEALS_MANAGER role`() {
       val result = appealService.createAppeal(
@@ -124,6 +132,29 @@ class AppealServiceTest {
       )
 
       assertThatCasResult(result).isUnauthorised()
+
+      verify { cas1AppealEmailService wasNot Called }
+      verify { cas1AppealDomainEventService wasNot Called }
+    }
+
+    @ParameterizedTest
+    @EnumSource(value = ApprovedPremisesApplicationStatus::class, mode = EnumSource.Mode.EXCLUDE, names = ["REJECTED"])
+    fun `Returns General error if the application state isn't rejected`(status: ApprovedPremisesApplicationStatus) {
+      createdByUser.addRoleForUnitTest(UserRole.CAS1_APPEALS_MANAGER)
+
+      application.status = status
+
+      val result = appealService.createAppeal(
+        LocalDate.now().plusDays(1),
+        "Some information about why the appeal is being made",
+        AppealDecision.accepted,
+        "Some information about the decision made",
+        application,
+        assessment,
+        createdByUser,
+      )
+
+      assertThatCasResult(result).isGeneralValidationError("Appeals can only be created for rejected applications")
 
       verify { cas1AppealEmailService wasNot Called }
       verify { cas1AppealDomainEventService wasNot Called }

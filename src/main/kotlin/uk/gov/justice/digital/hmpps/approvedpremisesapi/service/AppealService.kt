@@ -11,6 +11,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremi
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AssessmentEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRole
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.ApprovedPremisesApplicationStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.validatedCasResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.AuthorisableActionResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.CasResult
@@ -42,13 +43,17 @@ class AppealService(
     appealDetail: String,
     decision: AppealDecision,
     decisionDetail: String,
-    application: ApplicationEntity,
+    application: ApprovedPremisesApplicationEntity,
     assessment: AssessmentEntity,
     createdBy: UserEntity,
   ): CasResult<AppealEntity> {
     if (!createdBy.hasRole(UserRole.CAS1_APPEALS_MANAGER)) return CasResult.Unauthorised()
 
     return validatedCasResult {
+      if (application.status != ApprovedPremisesApplicationStatus.REJECTED) {
+        return generalError("Appeals can only be created for rejected applications")
+      }
+
       if (appealDate.isAfter(LocalDate.now())) {
         "$.appealDate" hasValidationError "mustNotBeFuture"
       }

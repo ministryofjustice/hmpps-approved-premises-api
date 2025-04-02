@@ -411,6 +411,10 @@ class ApplicationsController(
     val application =
       extractEntityFromCasResult(applicationService.getApplicationForUsername(applicationId, user.deliusUsername))
 
+    if (application !is ApprovedPremisesApplicationEntity) {
+      throw ConflictProblem(applicationId, "Only CAS1 applications are supported")
+    }
+
     val assessment = application.getLatestAssessment()
       ?: throw ConflictProblem(
         applicationId,
@@ -431,7 +435,7 @@ class ApplicationsController(
 
     return ResponseEntity
       .created(URI.create("/applications/${application.id}/appeals/${appeal.id}"))
-      .body(appealTransformer.transformJpaToApi(extractEntityFromCasResult(createAppealResult)))
+      .body(appealTransformer.transformJpaToApi(appeal))
   }
 
   override fun applicationsApplicationIdAssessmentGet(applicationId: UUID): ResponseEntity<Assessment> {
