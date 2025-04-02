@@ -390,6 +390,7 @@ class WebClientConfiguration(
     clientRegistrations: ClientRegistrationRepository,
     authorizedClients: OAuth2AuthorizedClientRepository,
     authorizedClientManager: OAuth2AuthorizedClientManager,
+    @Value("\${services.prisoner-search.base-url}") prisonSearchBaseUrl: String,
   ): WebClientConfig {
     val oauth2Client = ServletOAuth2AuthorizedClientExchangeFilterFunction(authorizedClientManager)
 
@@ -397,39 +398,7 @@ class WebClientConfiguration(
 
     return WebClientConfig(
       WebClient.builder()
-        .filter(oauth2Client)
-        .clientConnector(
-          ReactorClientHttpConnector(
-            HttpClient
-              .create()
-              .responseTimeout(Duration.ofMillis(defaultUpstreamTimeoutMs))
-              .option(
-                ChannelOption.CONNECT_TIMEOUT_MILLIS,
-                Duration.ofMillis(defaultUpstreamTimeoutMs).toMillis().toInt(),
-              ),
-          ),
-        )
-        .exchangeStrategies(
-          ExchangeStrategies.builder().codecs {
-            it.defaultCodecs().maxInMemorySize(defaultMaxResponseInMemorySizeBytes)
-          }.build(),
-        )
-        .build(),
-    )
-  }
-
-  @Bean(name = ["prisonRegisterWebClient"])
-  fun prisonRegisterWebClient(
-    clientRegistrations: ClientRegistrationRepository,
-    authorizedClients: OAuth2AuthorizedClientRepository,
-    authorizedClientManager: OAuth2AuthorizedClientManager,
-  ): WebClientConfig {
-    val oauth2Client = ServletOAuth2AuthorizedClientExchangeFilterFunction(authorizedClientManager)
-
-    oauth2Client.setDefaultClientRegistrationId("prison-register")
-
-    return WebClientConfig(
-      WebClient.builder()
+        .baseUrl(prisonSearchBaseUrl)
         .filter(oauth2Client)
         .clientConnector(
           ReactorClientHttpConnector(

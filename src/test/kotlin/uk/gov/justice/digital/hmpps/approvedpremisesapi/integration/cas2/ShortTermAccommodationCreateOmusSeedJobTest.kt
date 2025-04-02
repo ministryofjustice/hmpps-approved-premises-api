@@ -15,7 +15,7 @@ import java.util.UUID
 class ShortTermAccommodationCreateOmusSeedJobTest : SeedTestBase() {
 
   @Autowired
-  lateinit var offenderManagementUnitRepository: OffenderManagementUnitRepository
+  override lateinit var offenderManagementUnitRepository: OffenderManagementUnitRepository
 
   @Test
   fun `offenderManagementUnitRepository data is wiped before new upload and new data is processed`() {
