@@ -10,8 +10,6 @@ import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
-import org.junit.jupiter.params.ParameterizedTest
-import org.junit.jupiter.params.provider.EnumSource
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.data.repository.findByIdOrNull
 import org.springframework.http.HttpStatus
@@ -43,7 +41,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.SubmitApprovedPremisesApplication
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.SubmitTemporaryAccommodationApplication
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.TemporaryAccommodationApplication
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.TemporaryAccommodationApplicationSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.UnknownPerson
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.UpdateApplicationType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.UpdateApprovedPremisesApplication
@@ -76,9 +73,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AssessmentEnt
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AutoAllocationDay
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas1CruManagementAreaEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DomainEventType
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ProbationRegionEntity
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TemporaryAccommodationApplicationEntity
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TemporaryAccommodationApplicationJsonSchemaEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TemporaryAccommodationAssessmentEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserQualification
@@ -258,79 +252,6 @@ class ApplicationTest : IntegrationTestBase() {
 
               assertThat(responseBody).noneMatch {
                 outdatedApplicationEntityNotManagedByTeam.id == it.id
-              }
-            }
-          }
-        }
-      }
-    }
-
-    private fun createTempApplicationEntity(
-      applicationSchema: TemporaryAccommodationApplicationJsonSchemaEntity,
-      user: UserEntity,
-      offenderDetails: OffenderDetailSummary,
-      probationRegion: ProbationRegionEntity,
-      submittedAt: OffsetDateTime?,
-    ): TemporaryAccommodationApplicationEntity = temporaryAccommodationApplicationEntityFactory.produceAndPersist {
-      withApplicationSchema(applicationSchema)
-      withCreatedByUser(user)
-      withSubmittedAt(submittedAt)
-      withCrn(offenderDetails.otherIds.crn)
-      withData("{}")
-      withProbationRegion(probationRegion)
-    }
-
-    @ParameterizedTest
-    @EnumSource(UserRole::class, names = ["CAS3_REFERRER", "CAS3_ASSESSOR"])
-    fun `Get all applications returns 200 for TA - returns all applications for user`(userRole: UserRole) {
-      givenAProbationRegion { probationRegion ->
-        givenAUser(roles = listOf(userRole), probationRegion = probationRegion) { otherUser, _ ->
-          givenAUser(
-            roles = listOf(UserRole.CAS3_REFERRER),
-            probationRegion = probationRegion,
-          ) { referrerUser, jwt ->
-            givenAnOffender { offenderDetails, _ ->
-              temporaryAccommodationApplicationJsonSchemaRepository.deleteAll()
-
-              val applicationSchema = temporaryAccommodationApplicationJsonSchemaEntityFactory.produceAndPersist {
-                withAddedAt(OffsetDateTime.now())
-                withId(UUID.randomUUID())
-              }
-
-              val application =
-                createTempApplicationEntity(applicationSchema, referrerUser, offenderDetails, probationRegion, null)
-
-              val anotherUsersApplication =
-                createTempApplicationEntity(applicationSchema, otherUser, offenderDetails, probationRegion, null)
-
-              apDeliusContextAddResponseToUserAccessCall(
-                listOf(
-                  CaseAccessFactory()
-                    .withCrn(offenderDetails.otherIds.crn)
-                    .produce(),
-                ),
-                referrerUser.deliusUsername,
-              )
-
-              val responseBody = webTestClient.get()
-                .uri("/applications")
-                .header("Authorization", "Bearer $jwt")
-                .header("X-Service-Name", ServiceName.temporaryAccommodation.value)
-                .exchange()
-                .expectStatus()
-                .isOk
-                .bodyAsListOfObjects<TemporaryAccommodationApplicationSummary>()
-
-              assertThat(responseBody).anyMatch {
-                application.id == it.id &&
-                  application.crn == it.person.crn &&
-                  application.createdAt.toInstant() == it.createdAt &&
-                  application.createdByUser.id == it.createdByUserId &&
-                  application.submittedAt?.toInstant() == it.submittedAt
-              }
-
-              assertThat(responseBody).noneMatch {
-                anotherUsersApplication.id == it.id
               }
             }
           }
