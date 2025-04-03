@@ -313,17 +313,6 @@ class ApplicationsController(
     extractEntityFromCasResult(cas1RequestForPlacementService.getRequestsForPlacementByApplication(applicationId, userService.getUserForRequest())),
   )
 
-  override fun applicationsApplicationIdRequestsForPlacementRequestForPlacementIdGet(
-    applicationId: UUID,
-    requestForPlacementId: UUID,
-  ): ResponseEntity<RequestForPlacement> {
-    val application = applicationService.getApplication(applicationId) ?: throw NotFoundProblem(applicationId, "Application")
-
-    return ResponseEntity.ok(
-      extractEntityFromCasResult(cas1RequestForPlacementService.getRequestForPlacement(application, requestForPlacementId, userService.getUserForRequest())),
-    )
-  }
-
   override fun applicationsApplicationIdSubmissionPost(
     applicationId: UUID,
     submitApplication: SubmitApplication,
