@@ -28,7 +28,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.SubmitTemporar
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.UpdateApplication
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.UpdateApprovedPremisesApplication
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.UpdateTemporaryAccommodationApplication
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Withdrawable
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Withdrawables
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesApplicationEntity
@@ -313,17 +312,6 @@ class ApplicationsController(
     extractEntityFromCasResult(cas1RequestForPlacementService.getRequestsForPlacementByApplication(applicationId, userService.getUserForRequest())),
   )
 
-  override fun applicationsApplicationIdRequestsForPlacementRequestForPlacementIdGet(
-    applicationId: UUID,
-    requestForPlacementId: UUID,
-  ): ResponseEntity<RequestForPlacement> {
-    val application = applicationService.getApplication(applicationId) ?: throw NotFoundProblem(applicationId, "Application")
-
-    return ResponseEntity.ok(
-      extractEntityFromCasResult(cas1RequestForPlacementService.getRequestForPlacement(application, requestForPlacementId, userService.getUserForRequest())),
-    )
-  }
-
   override fun applicationsApplicationIdSubmissionPost(
     applicationId: UUID,
     submitApplication: SubmitApplication,
@@ -470,15 +458,6 @@ class ApplicationsController(
         withdrawables = result.withdrawables.map { withdrawableTransformer.toApi(it) },
       ),
     )
-  }
-
-  override fun applicationsApplicationIdWithdrawablesGet(
-    applicationId: UUID,
-    xServiceName: ServiceName,
-  ): ResponseEntity<List<Withdrawable>> {
-    val withdrawables = getWithdrawables(applicationId, xServiceName).withdrawables
-
-    return ResponseEntity.ok(withdrawables.map { withdrawableTransformer.toApi(it) })
   }
 
   @SuppressWarnings("ThrowsCount")

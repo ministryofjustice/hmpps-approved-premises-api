@@ -2,7 +2,6 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1
 
 import org.springframework.stereotype.Component
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.RequestForPlacement
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementRequestEntity
@@ -35,37 +34,6 @@ class Cas1RequestForPlacementService(
         placementRequests.map { toRequestForPlacement(it, requestingUser) }
 
     return CasResult.Success(result)
-  }
-
-  fun getRequestForPlacement(application: ApplicationEntity, requestForPlacementId: UUID, requestingUser: UserEntity): CasResult<RequestForPlacement> {
-    check(application is ApprovedPremisesApplicationEntity) { "Unsupported Application type: ${application::class.qualifiedName}" }
-
-    val placementApplication = placementApplicationService.getApplicationOrNull(requestForPlacementId)
-    val placementRequest = placementRequestService.getPlacementRequestOrNull(requestForPlacementId)
-
-    return when {
-      placementApplication == null && placementRequest == null ->
-        CasResult.NotFound("RequestForPlacement", requestForPlacementId.toString())
-
-      placementApplication != null && placementRequest != null ->
-        throw RequestForPlacementServiceException.AmbiguousRequestForPlacementId()
-
-      placementApplication != null -> when (placementApplication.application) {
-        application ->
-          CasResult.Success(toRequestForPlacement(placementApplication, requestingUser))
-
-        else ->
-          CasResult.NotFound("RequestForPlacement", requestForPlacementId.toString())
-      }
-
-      else -> when (placementRequest!!.application) {
-        application ->
-          CasResult.Success(toRequestForPlacement(placementRequest, requestingUser))
-
-        else ->
-          CasResult.NotFound("RequestForPlacement", requestForPlacementId.toString())
-      }
-    }
   }
 
   private fun toRequestForPlacement(placementApplication: PlacementApplicationEntity, user: UserEntity) = requestForPlacementTransformer.transformPlacementApplicationEntityToApi(

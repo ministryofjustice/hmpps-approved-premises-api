@@ -98,16 +98,6 @@ class WithdrawalTest : IntegrationTestBase() {
             )
 
             webTestClient.get()
-              .uri("/applications/${application.id}/withdrawables")
-              .header("Authorization", "Bearer $jwt")
-              .header("X-Service-Name", ServiceName.approvedPremises.value)
-              .exchange()
-              .expectStatus()
-              .isOk
-              .expectBody()
-              .jsonForObject(expected.withdrawables)
-
-            webTestClient.get()
               .uri("/applications/${application.id}/withdrawablesWithNotes")
               .header("Authorization", "Bearer $jwt")
               .header("X-Service-Name", ServiceName.approvedPremises.value)
@@ -138,16 +128,6 @@ class WithdrawalTest : IntegrationTestBase() {
             notes = emptyList(),
             withdrawables = listOf(toWithdrawable(application)),
           )
-
-          webTestClient.get()
-            .uri("/applications/${application.id}/withdrawables")
-            .header("Authorization", "Bearer $jwt")
-            .header("X-Service-Name", ServiceName.approvedPremises.value)
-            .exchange()
-            .expectStatus()
-            .isOk
-            .expectBody()
-            .jsonForObject(expected.withdrawables)
 
           webTestClient.get()
             .uri("/applications/${application.id}/withdrawablesWithNotes")
@@ -208,16 +188,6 @@ class WithdrawalTest : IntegrationTestBase() {
                 toWithdrawable(placementApplication),
               ),
             )
-
-            webTestClient.get()
-              .uri("/applications/${application.id}/withdrawables")
-              .header("Authorization", "Bearer $jwt")
-              .header("X-Service-Name", ServiceName.approvedPremises.value)
-              .exchange()
-              .expectStatus()
-              .isOk
-              .expectBody()
-              .jsonForObject(expected.withdrawables)
 
             webTestClient.get()
               .uri("/applications/${application.id}/withdrawablesWithNotes")
@@ -309,16 +279,6 @@ class WithdrawalTest : IntegrationTestBase() {
                 toWithdrawable(applicationWithRejectedDecision),
               ),
             )
-
-            webTestClient.get()
-              .uri("/applications/${application.id}/withdrawables")
-              .header("Authorization", "Bearer $jwt")
-              .header("X-Service-Name", ServiceName.approvedPremises.value)
-              .exchange()
-              .expectStatus()
-              .isOk
-              .expectBody()
-              .jsonForObject(expected.withdrawables)
 
             webTestClient.get()
               .uri("/applications/${application.id}/withdrawablesWithNotes")
@@ -430,16 +390,6 @@ class WithdrawalTest : IntegrationTestBase() {
               )
 
               webTestClient.get()
-                .uri("/applications/${application.id}/withdrawables")
-                .header("Authorization", "Bearer $jwt")
-                .header("X-Service-Name", ServiceName.approvedPremises.value)
-                .exchange()
-                .expectStatus()
-                .isOk
-                .expectBody()
-                .jsonForObject(expected.withdrawables)
-
-              webTestClient.get()
                 .uri("/applications/${application.id}/withdrawablesWithNotes")
                 .header("Authorization", "Bearer $jwt")
                 .header("X-Service-Name", ServiceName.approvedPremises.value)
@@ -543,16 +493,6 @@ class WithdrawalTest : IntegrationTestBase() {
               )
 
               webTestClient.get()
-                .uri("/applications/${application.id}/withdrawables")
-                .header("Authorization", "Bearer $jwt")
-                .header("X-Service-Name", ServiceName.approvedPremises.value)
-                .exchange()
-                .expectStatus()
-                .isOk
-                .expectBody()
-                .jsonForObject(expected.withdrawables)
-
-              webTestClient.get()
                 .uri("/applications/${application.id}/withdrawablesWithNotes")
                 .header("Authorization", "Bearer $jwt")
                 .header("X-Service-Name", ServiceName.approvedPremises.value)
@@ -652,16 +592,6 @@ class WithdrawalTest : IntegrationTestBase() {
                   toWithdrawable(adhocBooking),
                 ),
               )
-
-              webTestClient.get()
-                .uri("/applications/${application.id}/withdrawables")
-                .header("Authorization", "Bearer $jwt")
-                .header("X-Service-Name", ServiceName.approvedPremises.value)
-                .exchange()
-                .expectStatus()
-                .isOk
-                .expectBody()
-                .jsonForObject(expected.withdrawables)
 
               webTestClient.get()
                 .uri("/applications/${application.id}/withdrawablesWithNotes")
@@ -766,16 +696,6 @@ class WithdrawalTest : IntegrationTestBase() {
                   toWithdrawable(adhocBooking),
                 ),
               )
-
-              webTestClient.get()
-                .uri("/applications/${application.id}/withdrawables")
-                .header("Authorization", "Bearer $jwt")
-                .header("X-Service-Name", ServiceName.approvedPremises.value)
-                .exchange()
-                .expectStatus()
-                .isOk
-                .expectBody()
-                .jsonForObject(expected.withdrawables)
 
               webTestClient.get()
                 .uri("/applications/${application.id}/withdrawablesWithNotes")
