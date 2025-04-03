@@ -26,6 +26,51 @@ paths:
           $ref: '_shared.yml#/components/responses/403Response'
         500:
           $ref: '_shared.yml#/components/responses/500Response'
+    post:
+      tags:
+        - Operations on applications
+      summary: Creates an application
+      operationId: postApplication
+      parameters:
+        - name: createWithRisks
+          in: query
+          required: false
+          description: Instructs the API to create and return risk information from the OASys API (defaults to true)
+          schema:
+            type: boolean
+      requestBody:
+        description: Information to create a blank application with
+        content:
+          'application/json':
+            schema:
+              $ref: 'cas3-schemas.yml#/components/schemas/Cas3NewApplication'
+        required: true
+      responses:
+        201:
+          description: successful operation
+          content:
+            'application/json':
+              schema:
+                $ref: 'cas3-schemas.yml#/components/schemas/Cas3Application'
+        400:
+          description: invalid params
+          content:
+            'application/problem+json':
+              schema:
+                $ref: '_shared.yml#/components/schemas/ValidationError'
+        401:
+          $ref: '_shared.yml#/components/responses/401Response'
+        403:
+          $ref: '_shared.yml#/components/responses/403Response'
+        404:
+          description: invalid CRN
+          content:
+            'application/json':
+              schema:
+                $ref: '_shared.yml#/components/schemas/Problem'
+        500:
+          $ref: '_shared.yml#/components/responses/500Response'
+      x-codegen-request-body-name: body
   /reports/{reportName}:
     get:
       tags:

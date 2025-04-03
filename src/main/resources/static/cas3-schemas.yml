@@ -1,5 +1,69 @@
 components:
   schemas:
+    Cas3NewApplication:
+      type: object
+      properties:
+        crn:
+          type: string
+        convictionId:
+          type: integer
+          format: int64
+          example: 1502724704
+        deliusEventNumber:
+          type: string
+          example: "7"
+        offenceId:
+          type: string
+          example: "M1502750438"
+      required:
+        - crn
+    Cas3Application:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        person:
+          $ref: '_shared.yml#/components/schemas/Person'
+        createdAt:
+          type: string
+          format: date-time
+        createdByUserId:
+          type: string
+          format: uuid
+        schemaVersion:
+          type: string
+          format: uuid
+        outdatedSchema:
+          type: boolean
+        data:
+          $ref: '_shared.yml#/components/schemas/Unit'
+        document:
+          $ref: '_shared.yml#/components/schemas/Unit'
+        status:
+          $ref: '_shared.yml#/components/schemas/ApplicationStatus'
+        risks:
+          $ref: '_shared.yml#/components/schemas/PersonRisks'
+        submittedAt:
+          type: string
+          format: date-time
+        arrivalDate:
+          type: string
+          format: date-time
+        offenceId:
+          type: string
+        assessmentId:
+          type: string
+          format: uuid
+      required:
+        - id
+        - person
+        - createdAt
+        - createdByUserId
+        - schemaVersion
+        - outdatedSchema
+        - status
+        - offenceId
     Cas3ApplicationSummary:
       type: object
       properties:
