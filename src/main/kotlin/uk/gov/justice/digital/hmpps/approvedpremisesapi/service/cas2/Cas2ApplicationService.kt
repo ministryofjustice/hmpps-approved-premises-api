@@ -56,7 +56,7 @@ class Cas2ApplicationService(
 
   fun getApplicationSummaries(
     prisonCode: String?,
-    user: NomisUserEntity,
+    userId: UUID,
     pageCriteria: PageCriteria<String>,
     assignmentType: AssignmentType,
   ): Pair<MutableList<Cas2ApplicationSummaryEntity>, PaginationMetadata?> {
@@ -69,19 +69,26 @@ class Cas2ApplicationService(
 
       // applications that are created by the user but unsubmitted (in progress in the UI)
       AssignmentType.CREATED -> applicationSummaryRepository.findCreatedApplications(
-        user.id,
+        userId,
         getPageableOrAllPages(pageCriteria),
       )
 
       // applications that are submitted and assigned to the user (submitted in the UI)
-      AssignmentType.ALLOCATED -> applicationSummaryRepository.findAllocatedApplications(
-        user.id,
-        getPageableOrAllPages(pageCriteria),
-      )
+      AssignmentType.ALLOCATED -> if (prisonCode != null) {
+        applicationSummaryRepository.findAllocatedApplicationsForUser(
+          userId,
+          getPageableOrAllPages(pageCriteria),
+        )
+      } else {
+        applicationSummaryRepository.findAllocatedApplicationsForPrison(
+          prisonCode!!,
+          getPageableOrAllPages(pageCriteria),
+        )
+      }
 
       // applications that have been assigned to a user or prison at some point in time, but are not currently
       AssignmentType.DEALLOCATED -> {
-        val deallocatedApplicationIds = applicationRepository.findDeallocatedApplicationIds(user.id, prisonCode!!)
+        val deallocatedApplicationIds = applicationRepository.findDeallocatedApplicationIds(userId, prisonCode!!)
         applicationSummaryRepository.findAllByIdIn(
           deallocatedApplicationIds,
           getPageableOrAllPages(pageCriteria),

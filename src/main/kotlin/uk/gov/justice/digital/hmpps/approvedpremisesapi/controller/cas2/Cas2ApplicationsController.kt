@@ -42,7 +42,7 @@ class Cas2ApplicationsController(
   ): ResponseEntity<List<Cas2ApplicationSummary>> {
     val user = userService.getUserForRequest()
 
-    prisonCode?.let { if (prisonCode != user.activeCaseloadId) throw ForbiddenProblem() }
+    prisonCode?.let { if (user.activeCaseloadId == null || prisonCode != user.activeCaseloadId) throw ForbiddenProblem() }
 
     val pageCriteria = PageCriteria("createdAt", SortDirection.desc, page)
 
@@ -50,7 +50,7 @@ class Cas2ApplicationsController(
       assignmentType.let {
         val (results, metadata) = applicationService.getApplicationSummaries(
           prisonCode,
-          user,
+          user.id,
           pageCriteria,
           assignmentType,
         )

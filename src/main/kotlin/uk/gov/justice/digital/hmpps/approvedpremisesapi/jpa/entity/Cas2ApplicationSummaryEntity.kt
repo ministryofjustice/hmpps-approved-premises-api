@@ -33,7 +33,10 @@ interface ApplicationSummaryRepository : JpaRepository<Cas2ApplicationSummaryEnt
   fun findCreatedApplications(userId: UUID, pageable: Pageable): Page<Cas2ApplicationSummaryEntity>
 
   @Query("select ase from Cas2ApplicationSummaryEntity ase where ase.submittedAt is not null and ase.allocatedPomUserId = :allocatedPomUserId")
-  fun findAllocatedApplications(userId: UUID?, pageable: Pageable): Page<Cas2ApplicationSummaryEntity>
+  fun findAllocatedApplicationsForUser(userId: UUID?, pageable: Pageable): Page<Cas2ApplicationSummaryEntity>
+
+  @Query("select ase from Cas2ApplicationSummaryEntity ase where ase.submittedAt is not null and ase.currentPrisonCode = :prisonCode")
+  fun findAllocatedApplicationsForPrison(prisonCode: String, pageable: Pageable): Page<Cas2ApplicationSummaryEntity>
 
   @Query(
     "select ase from Cas2ApplicationSummaryEntity ase where ase.submittedAt is not null " +
