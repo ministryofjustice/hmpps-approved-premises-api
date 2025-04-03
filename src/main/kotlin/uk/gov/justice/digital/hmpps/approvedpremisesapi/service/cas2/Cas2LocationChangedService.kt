@@ -30,7 +30,7 @@ class Cas2LocationChangedService(
         throw InvalidDomainEventException(event)
       }
 
-      applicationService.findMostRecentApplication(nomsNumber)?.let { application ->
+      applicationService.findApplicationToAssign(nomsNumber)?.let { application ->
         log.info("Received location change event of interest: \n{}", event)
 
         val prisoner = when (val result = prisonerSearchClient.getPrisoner(detailUrl)) {

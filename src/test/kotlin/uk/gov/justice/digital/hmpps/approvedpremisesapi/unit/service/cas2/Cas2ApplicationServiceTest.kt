@@ -11,7 +11,9 @@ import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.TestInstance
 import org.junit.jupiter.params.ParameterizedTest
+import org.junit.jupiter.params.provider.EnumSource
 import org.junit.jupiter.params.provider.ValueSource
 import org.springframework.data.domain.Page
 import org.springframework.data.domain.PageRequest
@@ -23,6 +25,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.config.NotifyConfig
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.Cas2ApplicationEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.Cas2ApplicationJsonSchemaEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.Cas2AssessmentEntityFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.Cas2StatusUpdateEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.InmateDetailFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.NomisUserEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApplicationSummaryRepository
@@ -32,11 +35,11 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas2Applicati
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas2ApplicationSummaryEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas2LockableApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas2LockableApplicationRepository
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas2StatusUpdateNonAssignable
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PersonInfoResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.prisonsapi.AssignedLivingUnit
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.AuthorisableActionResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.EmailNotificationService
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas2.Cas2ApplicationAssignmentService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas2.Cas2AssessmentService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas2.Cas2DomainEventService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas2.Cas2JsonSchemaService
@@ -63,7 +66,6 @@ class Cas2ApplicationServiceTest {
   private val mockAssessmentService = mockk<Cas2AssessmentService>()
   private val mockObjectMapper = mockk<ObjectMapper>()
   private val mockNotifyConfig = mockk<NotifyConfig>()
-  private val applicationAssignmentService = mockk<Cas2ApplicationAssignmentService>()
 
   private val applicationService = uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas2.Cas2ApplicationService(
     mockApplicationRepository,
@@ -80,6 +82,78 @@ class Cas2ApplicationServiceTest {
     "http://frontend/applications/#id",
     "http://frontend/assess/applications/#applicationId/overview",
   )
+
+  @TestInstance(TestInstance.Lifecycle.PER_CLASS)
+  @Nested
+  inner class FindApplicationToAssign {
+    private val newestSchema = Cas2ApplicationJsonSchemaEntityFactory().produce()
+    private val user = NomisUserEntityFactory().produce()
+    private val nomsNumber = "ABC123"
+
+    @Test
+    fun `finds assignable application as the latest application's most recent status-update makes it is assignable`() {
+      val application = createApplicationWithStatusUpdateEntity(
+        statusUpdateEntityLabel = "Assignable",
+      )
+      every {
+        mockApplicationRepository.findFirstByNomsNumberAndSubmittedAtIsNotNullOrderBySubmittedAtDesc(application.nomsNumber!!)
+      } returns application
+      assertThat(applicationService.findApplicationToAssign(nomsNumber)).isEqualTo(application)
+    }
+
+    @ParameterizedTest
+    @EnumSource
+    fun `does not find assignable application as the latest application's most recent status-update is not assignable`(
+      statusUpdateNonAssignable: Cas2StatusUpdateNonAssignable,
+    ) {
+      val application = createApplicationWithStatusUpdateEntity(
+        statusUpdateEntityLabel = statusUpdateNonAssignable.label,
+      )
+      every {
+        mockApplicationRepository.findFirstByNomsNumberAndSubmittedAtIsNotNullOrderBySubmittedAtDesc(application.nomsNumber!!)
+      } returns application
+      assertThat(applicationService.findApplicationToAssign(nomsNumber)).isNull()
+    }
+
+    @ParameterizedTest
+    @ValueSource(booleans = [true, false])
+    fun `does not find assignable application as the latest application's status-update list is empty or null`(statusUpdatesListNull: Boolean) {
+      val application = Cas2ApplicationEntityFactory()
+        .withApplicationSchema(newestSchema)
+        .withCreatedByUser(user)
+        .withNomsNumber(nomsNumber)
+        .withStatusUpdates(mutableListOf())
+        .produce()
+
+      if (statusUpdatesListNull) {
+        application.statusUpdates = null
+      }
+
+      every {
+        mockApplicationRepository.findFirstByNomsNumberAndSubmittedAtIsNotNullOrderBySubmittedAtDesc(application.nomsNumber!!)
+      } returns application
+      assertThat(applicationService.findApplicationToAssign(nomsNumber)).isNull()
+    }
+
+    private fun createApplicationWithStatusUpdateEntity(statusUpdateEntityLabel: String): Cas2ApplicationEntity {
+      val application = Cas2ApplicationEntityFactory()
+        .withApplicationSchema(newestSchema)
+        .withCreatedByUser(user)
+        .withNomsNumber(nomsNumber)
+        .produce()
+
+      val nonAssignableStatusUpdateEntity = Cas2StatusUpdateEntityFactory()
+        .withApplication(application)
+        .withLabel(statusUpdateEntityLabel)
+        .withCreatedAt(OffsetDateTime.now())
+        .produce()
+
+      application.statusUpdates!!.clear()
+      application.statusUpdates!!.add(nonAssignableStatusUpdateEntity)
+
+      return application
+    }
+  }
 
   @Nested
   inner class GetAllSubmittedApplicationsForAssessor {
@@ -769,8 +843,6 @@ class Cas2ApplicationServiceTest {
         every { mockLockableApplicationRepository.acquirePessimisticLock(any()) } returns Cas2LockableApplicationEntity(
           UUID.randomUUID(),
         )
-        every { applicationAssignmentService.createApplicationAssignment(any(), any(), any()) } just Runs
-
         every { mockObjectMapper.writeValueAsString(submitCas2Application.translatedDocument) } returns "{}"
         every { mockDomainEventService.saveCas2ApplicationSubmittedDomainEvent(any()) } just Runs
       }

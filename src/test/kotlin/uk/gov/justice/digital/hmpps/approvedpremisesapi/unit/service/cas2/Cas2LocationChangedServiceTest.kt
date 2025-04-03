@@ -71,14 +71,14 @@ class Cas2LocationChangedServiceTest {
     application.createApplicationAssignment(prisonCode = "OLDID", allocatedPomUser = user)
 
     every { prisonerSearchClient.getPrisoner(any()) } returns ClientResult.Success(HttpStatus.OK, prisoner)
-    every { applicationService.findMostRecentApplication(eq(nomsNumber)) } returns application
+    every { applicationService.findApplicationToAssign(eq(nomsNumber)) } returns application
     every { applicationRepository.save(any()) } returns application
     every { cas2EmailService.sendLocationChangedEmails(any(), any(), any()) } returns Unit
 
     locationChangedService.process(locationEvent)
 
     verify(exactly = 1) { prisonerSearchClient.getPrisoner(any()) }
-    verify(exactly = 1) { applicationService.findMostRecentApplication(eq(nomsNumber)) }
+    verify(exactly = 1) { applicationService.findApplicationToAssign(eq(nomsNumber)) }
     verify(exactly = 1) { applicationRepository.save(any()) }
     verify(exactly = 1) { cas2EmailService.sendLocationChangedEmails(any(), any(), any()) }
   }
@@ -89,13 +89,13 @@ class Cas2LocationChangedServiceTest {
     application.createApplicationAssignment(prisonCode = prisoner.prisonId, allocatedPomUser = user)
 
     every { prisonerSearchClient.getPrisoner(any()) } returns ClientResult.Success(HttpStatus.OK, prisoner)
-    every { applicationService.findMostRecentApplication(eq(nomsNumber)) } returns application
+    every { applicationService.findApplicationToAssign(eq(nomsNumber)) } returns application
     every { applicationRepository.save(any()) } returns application
 
     locationChangedService.process(locationEvent)
 
     verify(exactly = 1) { prisonerSearchClient.getPrisoner(any()) }
-    verify(exactly = 1) { applicationService.findMostRecentApplication(eq(nomsNumber)) }
+    verify(exactly = 1) { applicationService.findApplicationToAssign(eq(nomsNumber)) }
     verify(exactly = 0) { applicationRepository.save(any()) }
   }
 
@@ -104,13 +104,13 @@ class Cas2LocationChangedServiceTest {
     val application = Cas2ApplicationEntityFactory().withNomsNumber(nomsNumber).withCreatedByUser(user).produce()
 
     every { prisonerSearchClient.getPrisoner(any()) } returns ClientResult.Success(HttpStatus.OK, prisoner)
-    every { applicationService.findMostRecentApplication(eq(nomsNumber)) } returns application
+    every { applicationService.findApplicationToAssign(eq(nomsNumber)) } returns application
     every { applicationRepository.save(any()) } returns application
 
     assertThrows<NullPointerException> { locationChangedService.process(locationEvent) }
 
     verify(exactly = 1) { prisonerSearchClient.getPrisoner(any()) }
-    verify(exactly = 1) { applicationService.findMostRecentApplication(eq(nomsNumber)) }
+    verify(exactly = 1) { applicationService.findApplicationToAssign(eq(nomsNumber)) }
     verify(exactly = 0) { applicationRepository.save(any()) }
   }
 
@@ -125,7 +125,7 @@ class Cas2LocationChangedServiceTest {
       body = null,
     )
 
-    every { applicationService.findMostRecentApplication(eq(nomsNumber)) } returns application
+    every { applicationService.findApplicationToAssign(eq(nomsNumber)) } returns application
 
     assertThrows<RuntimeException> { locationChangedService.process(locationEvent) }
   }
@@ -146,11 +146,11 @@ class Cas2LocationChangedServiceTest {
   @Test
   fun `handle Location Changed Event and do nothing if there is no application associated with the event`() {
     every { prisonerSearchClient.getPrisoner(any()) } returns ClientResult.Success(HttpStatus.OK, prisoner)
-    every { applicationService.findMostRecentApplication(eq(nomsNumber)) } returns null
+    every { applicationService.findApplicationToAssign(eq(nomsNumber)) } returns null
 
     locationChangedService.process(locationEvent)
 
     verify(exactly = 0) { prisonerSearchClient.getPrisoner(any()) }
-    verify(exactly = 1) { applicationService.findMostRecentApplication(eq(nomsNumber)) }
+    verify(exactly = 1) { applicationService.findApplicationToAssign(eq(nomsNumber)) }
   }
 }
