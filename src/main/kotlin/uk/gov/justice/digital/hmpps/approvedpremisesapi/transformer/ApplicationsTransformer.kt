@@ -6,6 +6,7 @@ import org.springframework.stereotype.Component
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Application
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApplicationStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApprovedPremisesApplication
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1ApplicationSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.OfflineApplication
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ReleaseTypeOption
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.TemporaryAccommodationApplication
@@ -155,6 +156,31 @@ class ApplicationsTransformer(
     }
 
     else -> throw RuntimeException("Unrecognised application type when transforming: ${domain::class.qualifiedName}")
+  }
+
+  fun transformDomainToCas1ApplicationSummary(
+    domain: DomainApprovedPremisesApplicationSummary,
+    personInfo: PersonInfoResult,
+  ): Cas1ApplicationSummary {
+    val riskRatings =
+      if (domain.getRiskRatings() != null) objectMapper.readValue<PersonRisks>(domain.getRiskRatings()!!) else null
+
+    return Cas1ApplicationSummary(
+      id = domain.getId(),
+      person = personTransformer.transformModelToPersonApi(personInfo),
+      createdByUserId = domain.getCreatedByUserId(),
+      createdAt = domain.getCreatedAt(),
+      submittedAt = domain.getSubmittedAt(),
+      isWomensApplication = domain.getIsWomensApplication(),
+      isPipeApplication = domain.getIsPipeApplication(),
+      arrivalDate = domain.getArrivalDate(),
+      risks = if (riskRatings != null) risksTransformer.transformDomainToApi(riskRatings, domain.getCrn()) else null,
+      status = getStatusFromSummary(domain),
+      tier = domain.getTier(),
+      isWithdrawn = domain.getIsWithdrawn(),
+      releaseType = domain.getReleaseType()?.let { ReleaseTypeOption.valueOf(it) },
+      hasRequestsForPlacement = domain.getHasRequestsForPlacement(),
+    )
   }
 
   fun transformJpaToApi(jpa: OfflineApplicationEntity, personInfo: PersonInfoResult) = OfflineApplication(

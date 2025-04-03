@@ -1817,6 +1817,8 @@ components:
       allOf:
         - $ref: '#/components/schemas/ApplicationSummary'
     ApprovedPremisesApplicationSummary:
+      deprecated: true
+      description: Use Cas1ApplicationSummary
       allOf:
         - $ref: '#/components/schemas/ApplicationSummary'
         - type: object

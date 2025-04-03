@@ -2032,6 +2032,77 @@ paths:
                 $ref: '#/components/schemas/Problem'
         500:
           $ref: '#/components/responses/500Response'
+  /applications/all:
+    get:
+      tags:
+        - Applications
+      summary: Lists all applications that any user has created
+      operationId: getAllApplications
+      parameters:
+        - name: page
+          in: query
+          description: Page number of results to return. If blank, returns all results
+          schema:
+            type: integer
+        - name: crnOrName
+          in: query
+          description: CRN of applications
+          schema:
+            type: string
+        - name: sortDirection
+          in: query
+          description: The direction to sort the results by. If blank, will sort in descending order
+          schema:
+            $ref: '#/components/schemas/SortDirection'
+        - name: status
+          in: query
+          description: Application statuses to filter on. If none provided, all will be returned
+          schema:
+            type: array
+            items:
+              $ref: '#/components/schemas/ApprovedPremisesApplicationStatus'
+        - name: sortBy
+          in: query
+          description: The field to sort the results by.
+          schema:
+            $ref: '#/components/schemas/ApplicationSortField'
+        - name: apAreaId
+          in: query
+          required: false
+          description: Approved Premises Area ID to filter results by
+          schema:
+            type: string
+            format: uuid
+        - name: releaseType
+          in: query
+          required: false
+          description: If provided, restricts the results to only those with the given release type.
+          schema:
+            $ref: '#/components/schemas/ReleaseTypeOption'
+      responses:
+        200:
+          description: successful operation
+          content:
+            'application/json':
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Cas1ApplicationSummary'
+          headers:
+            X-Pagination-CurrentPage:
+              $ref: '#/components/headers/X-Pagination-CurrentPage'
+            X-Pagination-TotalPages:
+              $ref: '#/components/headers/X-Pagination-TotalPages'
+            X-Pagination-TotalResults:
+              $ref: '#/components/headers/X-Pagination-TotalResults'
+            X-Pagination-PageSize:
+              $ref: '#/components/headers/X-Pagination-TotalResults'
+        401:
+          $ref: '#/components/responses/401Response'
+        403:
+          $ref: '#/components/responses/403Response'
+        500:
+          $ref: '#/components/responses/500Response'
   /people/{crn}/timeline:
     get:
       tags:
@@ -2064,6 +2135,7 @@ paths:
                 $ref: '#/components/schemas/Problem'
         500:
           $ref: '#/components/responses/500Response'
+
 
 
 components:
@@ -3885,6 +3957,8 @@ components:
       allOf:
         - $ref: '#/components/schemas/ApplicationSummary'
     ApprovedPremisesApplicationSummary:
+      deprecated: true
+      description: Use Cas1ApplicationSummary
       allOf:
         - $ref: '#/components/schemas/ApplicationSummary'
         - type: object
@@ -7911,3 +7985,53 @@ components:
         - id
         - roomName
         - bedName
+    Cas1ApplicationSummary:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        person:
+          $ref: '#/components/schemas/Person'
+        createdAt:
+          type: string
+          format: date-time
+        submittedAt:
+          type: string
+          format: date-time
+        isWomensApplication:
+            type: boolean
+        isPipeApplication:
+            type: boolean
+        isEmergencyApplication:
+          type: boolean
+        isEsapApplication:
+          type: boolean
+        arrivalDate:
+          type: string
+          format: date-time
+        risks:
+          $ref: '#/components/schemas/PersonRisks'
+        createdByUserId:
+          type: string
+          format: uuid
+        status:
+          $ref: '#/components/schemas/ApprovedPremisesApplicationStatus'
+        tier:
+          type: string
+        isWithdrawn:
+          type: boolean
+        releaseType:
+          $ref: '#/components/schemas/ReleaseTypeOption'
+        hasRequestsForPlacement:
+          type: boolean
+      required:
+        - id
+        - person
+        - createdAt
+        - createdByUserId
+        - status
+        - isWithdrawn
+        - hasRequestsForPlacement
+
+

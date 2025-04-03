@@ -1377,3 +1377,53 @@ components:
         - id
         - roomName
         - bedName
+    Cas1ApplicationSummary:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        person:
+          $ref: '_shared.yml#/components/schemas/Person'
+        createdAt:
+          type: string
+          format: date-time
+        submittedAt:
+          type: string
+          format: date-time
+        isWomensApplication:
+            type: boolean
+        isPipeApplication:
+            type: boolean
+        isEmergencyApplication:
+          type: boolean
+        isEsapApplication:
+          type: boolean
+        arrivalDate:
+          type: string
+          format: date-time
+        risks:
+          $ref: '_shared.yml#/components/schemas/PersonRisks'
+        createdByUserId:
+          type: string
+          format: uuid
+        status:
+          $ref: '_shared.yml#/components/schemas/ApprovedPremisesApplicationStatus'
+        tier:
+          type: string
+        isWithdrawn:
+          type: boolean
+        releaseType:
+          $ref: '_shared.yml#/components/schemas/ReleaseTypeOption'
+        hasRequestsForPlacement:
+          type: boolean
+      required:
+        - id
+        - person
+        - createdAt
+        - createdByUserId
+        - status
+        - isWithdrawn
+        - hasRequestsForPlacement
+
+

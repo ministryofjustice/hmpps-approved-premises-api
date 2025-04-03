@@ -486,6 +486,88 @@ class ApplicationsTransformerTest {
     assertThat(result.risks).isNotNull
   }
 
+  @ParameterizedTest
+  @MethodSource("applicationStatusArgs")
+  fun `transformDomainToCas1ApplicationSummary transforms an Approved Premises application correctly`(args: Pair<ApiApprovedPremisesApplicationStatus, ApprovedPremisesApplicationStatus>) {
+    val (apiStatus, jpaStatus) = args
+    val mockPersonInfoResult = mockk<PersonInfoResult>()
+    val mockPerson = mockk<Person>()
+
+    val application = object : DomainApprovedPremisesApplicationSummary {
+      override fun getIsWomensApplication() = false
+      override fun getIsEmergencyApplication() = true
+      override fun getIsEsapApplication() = true
+      override fun getIsPipeApplication() = true
+      override fun getArrivalDate() = Instant.parse("2023-04-19T14:25:00+01:00")
+      override fun getRiskRatings() = objectMapper.writeValueAsString(PersonRisksFactory().produce())
+      override fun getId() = UUID.fromString("2f838a8c-dffc-48a3-9536-f0e95985e809")
+      override fun getCrn() = randomStringMultiCaseWithNumbers(6)
+      override fun getCreatedByUserId() = UUID.fromString("836a9460-b177-433a-a0d9-262509092c9f")
+      override fun getCreatedAt() = Instant.parse("2023-04-19T13:25:00+01:00")
+      override fun getSubmittedAt() = Instant.parse("2023-04-19T13:25:00+01:00")
+      override fun getTier(): String? = null
+      override fun getStatus(): String = jpaStatus.toString()
+      override fun getIsWithdrawn(): Boolean = true
+      override fun getReleaseType(): String = ReleaseTypeOption.licence.toString()
+      override fun getHasRequestsForPlacement(): Boolean = true
+    }
+    every { mockPersonTransformer.transformModelToPersonApi(mockPersonInfoResult) } returns mockPerson
+
+    val result = applicationsTransformer.transformDomainToCas1ApplicationSummary(
+      application,
+      mockPersonInfoResult,
+    )
+
+    assertThat(result.id).isEqualTo(application.getId())
+    assertThat(result.person).isEqualTo(mockPerson)
+    assertThat(result.createdByUserId).isEqualTo(application.getCreatedByUserId())
+    assertThat(result.createdAt).isEqualTo(application.getCreatedAt())
+    assertThat(result.submittedAt).isEqualTo(application.getSubmittedAt())
+    assertThat(result.isWomensApplication).isEqualTo(application.getIsWomensApplication())
+    assertThat(result.isPipeApplication).isEqualTo(application.getIsPipeApplication())
+    assertThat(result.arrivalDate).isEqualTo(application.getArrivalDate())
+    assertThat(result.status).isEqualTo(apiStatus)
+    assertThat(result.tier).isEqualTo(application.getTier())
+    assertThat(result.isWithdrawn).isEqualTo(true)
+    assertThat(result.hasRequestsForPlacement).isEqualTo(true)
+  }
+
+  @ParameterizedTest
+  @EnumSource(ReleaseTypeOption::class)
+  @NullSource
+  fun `transformDomainToCas1ApplicationSummary transforms an Approved Premises application's release type correctly`(releaseTypeOption: ReleaseTypeOption?) {
+    val mockPersonInfoResult = mockk<PersonInfoResult>()
+    val mockPerson = mockk<Person>()
+
+    val application = object : DomainApprovedPremisesApplicationSummary {
+      override fun getIsWomensApplication() = false
+      override fun getIsEmergencyApplication() = true
+      override fun getIsEsapApplication() = true
+      override fun getIsPipeApplication() = true
+      override fun getArrivalDate() = Instant.parse("2023-04-19T14:25:00+01:00")
+      override fun getRiskRatings() = objectMapper.writeValueAsString(PersonRisksFactory().produce())
+      override fun getId() = UUID.fromString("2f838a8c-dffc-48a3-9536-f0e95985e809")
+      override fun getCrn() = randomStringMultiCaseWithNumbers(6)
+      override fun getCreatedByUserId() = UUID.fromString("836a9460-b177-433a-a0d9-262509092c9f")
+      override fun getCreatedAt() = Instant.parse("2023-04-19T13:25:00+01:00")
+      override fun getSubmittedAt() = Instant.parse("2023-04-19T13:25:00+01:00")
+      override fun getTier(): String? = null
+      override fun getStatus(): String = ApprovedPremisesApplicationStatus.SUBMITTED.toString()
+      override fun getIsWithdrawn(): Boolean = true
+      override fun getReleaseType(): String? = releaseTypeOption?.let { releaseTypeOption.toString() }
+      override fun getHasRequestsForPlacement(): Boolean = true
+    }
+
+    every { mockPersonTransformer.transformModelToPersonApi(mockPersonInfoResult) } returns mockPerson
+
+    val result = applicationsTransformer.transformDomainToCas1ApplicationSummary(
+      application,
+      mockPersonInfoResult,
+    )
+
+    assertThat(result.releaseType).isEqualTo(releaseTypeOption)
+  }
+
   private companion object {
     @JvmStatic
     fun applicationStatusArgs() = listOf(
