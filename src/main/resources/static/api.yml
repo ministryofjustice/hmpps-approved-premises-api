@@ -1506,6 +1506,8 @@ paths:
       x-codegen-request-body-name: body
   /applications/all:
     get:
+      description: deprecated, use /cas1/applications/all
+      deprecated: true
       tags:
         - Operations on all applications
       summary: Lists all applications that any user has created

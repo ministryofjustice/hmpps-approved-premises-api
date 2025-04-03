@@ -2030,6 +2030,77 @@ paths:
                 $ref: '_shared.yml#/components/schemas/Problem'
         500:
           $ref: '_shared.yml#/components/responses/500Response'
+  /applications/all:
+    get:
+      tags:
+        - Applications
+      summary: Lists all applications that any user has created
+      operationId: getAllApplications
+      parameters:
+        - name: page
+          in: query
+          description: Page number of results to return. If blank, returns all results
+          schema:
+            type: integer
+        - name: crnOrName
+          in: query
+          description: CRN of applications
+          schema:
+            type: string
+        - name: sortDirection
+          in: query
+          description: The direction to sort the results by. If blank, will sort in descending order
+          schema:
+            $ref: '_shared.yml#/components/schemas/SortDirection'
+        - name: status
+          in: query
+          description: Application statuses to filter on. If none provided, all will be returned
+          schema:
+            type: array
+            items:
+              $ref: '_shared.yml#/components/schemas/ApprovedPremisesApplicationStatus'
+        - name: sortBy
+          in: query
+          description: The field to sort the results by.
+          schema:
+            $ref: '_shared.yml#/components/schemas/ApplicationSortField'
+        - name: apAreaId
+          in: query
+          required: false
+          description: Approved Premises Area ID to filter results by
+          schema:
+            type: string
+            format: uuid
+        - name: releaseType
+          in: query
+          required: false
+          description: If provided, restricts the results to only those with the given release type.
+          schema:
+            $ref: '_shared.yml#/components/schemas/ReleaseTypeOption'
+      responses:
+        200:
+          description: successful operation
+          content:
+            'application/json':
+              schema:
+                type: array
+                items:
+                  $ref: 'cas1-schemas.yml#/components/schemas/Cas1ApplicationSummary'
+          headers:
+            X-Pagination-CurrentPage:
+              $ref: '_shared.yml#/components/headers/X-Pagination-CurrentPage'
+            X-Pagination-TotalPages:
+              $ref: '_shared.yml#/components/headers/X-Pagination-TotalPages'
+            X-Pagination-TotalResults:
+              $ref: '_shared.yml#/components/headers/X-Pagination-TotalResults'
+            X-Pagination-PageSize:
+              $ref: '_shared.yml#/components/headers/X-Pagination-TotalResults'
+        401:
+          $ref: '_shared.yml#/components/responses/401Response'
+        403:
+          $ref: '_shared.yml#/components/responses/403Response'
+        500:
+          $ref: '_shared.yml#/components/responses/500Response'
   /people/{crn}/timeline:
     get:
       tags:
@@ -2062,5 +2133,6 @@ paths:
                 $ref: '_shared.yml#/components/schemas/Problem'
         500:
           $ref: '_shared.yml#/components/responses/500Response'
+
 
 
