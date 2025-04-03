@@ -28,7 +28,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.SubmitTemporar
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.UpdateApplication
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.UpdateApprovedPremisesApplication
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.UpdateTemporaryAccommodationApplication
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Withdrawable
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Withdrawables
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesApplicationEntity
@@ -459,15 +458,6 @@ class ApplicationsController(
         withdrawables = result.withdrawables.map { withdrawableTransformer.toApi(it) },
       ),
     )
-  }
-
-  override fun applicationsApplicationIdWithdrawablesGet(
-    applicationId: UUID,
-    xServiceName: ServiceName,
-  ): ResponseEntity<List<Withdrawable>> {
-    val withdrawables = getWithdrawables(applicationId, xServiceName).withdrawables
-
-    return ResponseEntity.ok(withdrawables.map { withdrawableTransformer.toApi(it) })
   }
 
   @SuppressWarnings("ThrowsCount")
