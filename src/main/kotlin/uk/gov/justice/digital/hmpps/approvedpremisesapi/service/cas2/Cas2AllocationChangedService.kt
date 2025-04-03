@@ -33,7 +33,7 @@ class Cas2AllocationChangedService(
       throw InvalidDomainEventException(event)
     }
 
-    applicationService.findMostRecentApplication(nomsNumber)?.let { application ->
+    applicationService.findApplicationToAssign(nomsNumber)?.let { application ->
       log.info("Received Allocation changed event:\n{}", event)
 
       when (val pomAllocation = getAllocationResponse(detailUrl)) {

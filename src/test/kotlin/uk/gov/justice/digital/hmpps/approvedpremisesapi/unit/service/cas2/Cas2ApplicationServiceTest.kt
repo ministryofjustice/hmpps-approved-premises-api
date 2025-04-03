@@ -11,7 +11,10 @@ import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.TestInstance
 import org.junit.jupiter.params.ParameterizedTest
+import org.junit.jupiter.params.provider.Arguments
+import org.junit.jupiter.params.provider.MethodSource
 import org.junit.jupiter.params.provider.ValueSource
 import org.springframework.data.domain.Page
 import org.springframework.data.domain.PageRequest
@@ -23,6 +26,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.config.NotifyConfig
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.Cas2ApplicationEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.Cas2ApplicationJsonSchemaEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.Cas2AssessmentEntityFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.Cas2StatusUpdateEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.InmateDetailFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.NomisUserEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApplicationSummaryRepository
@@ -32,6 +36,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas2Applicati
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas2ApplicationSummaryEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas2LockableApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas2LockableApplicationRepository
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas2StatusUpdateEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PersonInfoResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.prisonsapi.AssignedLivingUnit
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.AuthorisableActionResult
@@ -50,6 +55,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomStringMultiCa
 import java.time.LocalDate
 import java.time.OffsetDateTime
 import java.util.UUID
+import java.util.stream.Stream
 
 class Cas2ApplicationServiceTest {
   private val mockApplicationRepository = mockk<Cas2ApplicationRepository>()
@@ -80,6 +86,81 @@ class Cas2ApplicationServiceTest {
     "http://frontend/applications/#id",
     "http://frontend/assess/applications/#applicationId/overview",
   )
+
+  @TestInstance(TestInstance.Lifecycle.PER_CLASS)
+  @Nested
+  inner class FindApplicationToAssign {
+    private val newestSchema = Cas2ApplicationJsonSchemaEntityFactory().produce()
+    private val user = NomisUserEntityFactory().produce()
+    private val nomsNumber = "ABC123"
+    private val application = Cas2ApplicationEntityFactory()
+      .withApplicationSchema(newestSchema)
+      .withCreatedByUser(user)
+      .withNomsNumber(nomsNumber)
+      .withSubmittedAt(OffsetDateTime.now())
+      .produce()
+    private val statusAllowed = Cas2StatusUpdateEntityFactory()
+      .withApplication(application)
+      .withLabel("Anything")
+      .withCreatedAt(OffsetDateTime.now())
+      .produce()
+    private val statusIgnorable = Cas2StatusUpdateEntityFactory()
+      .withApplication(application)
+      .withLabel("Referral cancelled")
+      .withCreatedAt(OffsetDateTime.now())
+      .produce()
+    private val statusAllowedOld = Cas2StatusUpdateEntityFactory()
+      .withApplication(application)
+      .withLabel("Anything")
+      .withCreatedAt(OffsetDateTime.now().minusDays(1))
+      .produce()
+    private val statusIgnorableOld = Cas2StatusUpdateEntityFactory()
+      .withApplication(application)
+      .withLabel("Referral cancelled")
+      .withCreatedAt(OffsetDateTime.now().minusDays(1))
+      .produce()
+
+    @ParameterizedTest
+    @MethodSource("isStatusAllowedCases")
+    fun `allow only if statusLabel is not ignorable`(input: Cas2StatusUpdateEntity, output: Boolean) {
+      val result = applicationService.isStatusAllowed(input)
+
+      assertThat(result).isEqualTo(output)
+    }
+
+    @SuppressWarnings("UnusedPrivateMember")
+    private fun isStatusAllowedCases(): Stream<Arguments> = (listOf(Arguments.of(statusAllowed, true)) + getIgnorableArguments()).stream()
+
+    private fun getIgnorableArguments(): List<Arguments> = applicationService.ignorableStatusLabels.map { label ->
+      Arguments.of(
+        Cas2StatusUpdateEntityFactory()
+          .withApplication(application)
+          .withLabel(label)
+          .withCreatedAt(OffsetDateTime.now())
+          .produce(),
+        false,
+      )
+    }
+
+    @ParameterizedTest
+    @MethodSource("findApplicationToAssignCases")
+    fun `allow only application is relevant`(input1: Cas2StatusUpdateEntity, input2: Cas2StatusUpdateEntity, output: UUID?) {
+      application.statusUpdates?.clear()
+      application.statusUpdates?.add(input1)
+      application.statusUpdates?.add(input2)
+
+      every {
+        mockApplicationRepository.findFirstByNomsNumberAndSubmittedAtIsNotNullAndAbandonedAtIsNullOrderBySubmittedAtDesc(application.nomsNumber!!)
+      } returns application
+
+      val result = applicationService.findApplicationToAssign(nomsNumber)
+
+      assertThat(result?.id).isEqualTo(output)
+    }
+
+    @SuppressWarnings("UnusedPrivateMember")
+    private fun findApplicationToAssignCases(): Stream<Arguments> = listOf(Arguments.of(statusAllowed, statusIgnorableOld, application.id), Arguments.of(statusIgnorable, statusAllowedOld, null)).stream()
+  }
 
   @Nested
   inner class GetAllSubmittedApplicationsForAssessor {

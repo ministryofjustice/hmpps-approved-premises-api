@@ -27,7 +27,7 @@ import java.util.UUID
 @Repository
 interface Cas2ApplicationRepository : JpaRepository<Cas2ApplicationEntity, UUID> {
 
-  fun findFirstByNomsNumberAndSubmittedAtIsNotNullOrderBySubmittedAtDesc(nomsNumber: String): Cas2ApplicationEntity?
+  fun findFirstByNomsNumberAndSubmittedAtIsNotNullAndAbandonedAtIsNullOrderBySubmittedAtDesc(nomsNumber: String): Cas2ApplicationEntity?
 
   @Query(
     "SELECT a FROM Cas2ApplicationEntity a WHERE a.id = :id AND " +

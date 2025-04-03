@@ -77,7 +77,7 @@ class Cas2AllocationChangedServiceTest {
     val user = NomisUserEntityFactory().produce()
     application.createApplicationAssignment(prisonCode = "CODE123", allocatedPomUser = user)
     every { managePomCasesClient.getPomAllocation(any()) } returns ClientResult.Success(HttpStatus.OK, pomAllocation)
-    every { applicationService.findMostRecentApplication(eq(nomsNumber)) } returns application
+    every { applicationService.findApplicationToAssign(eq(nomsNumber)) } returns application
     every { applicationRepository.save(any()) } answers { it.invocation.args[0] as Cas2ApplicationEntity }
     every { cas2EmailService.sendAllocationChangedEmails(any(), any(), any()) } returns Unit
     every { nomisUserService.getUserByStaffId(eq(pomAllocation.manager.code)) } returns NomisUserEntityFactory().produce()
@@ -85,7 +85,7 @@ class Cas2AllocationChangedServiceTest {
     allocationChangedService.process(allocationEvent)
 
     verify(exactly = 1) { managePomCasesClient.getPomAllocation(any()) }
-    verify(exactly = 1) { applicationService.findMostRecentApplication(eq(nomsNumber)) }
+    verify(exactly = 1) { applicationService.findApplicationToAssign(eq(nomsNumber)) }
     verify(exactly = 1) { nomisUserService.getUserByStaffId(eq(pomAllocation.manager.code)) }
     verify(exactly = 1) { cas2EmailService.sendAllocationChangedEmails(any(), any(), any()) }
     verify(exactly = 1) { applicationRepository.save(any()) }
@@ -96,7 +96,7 @@ class Cas2AllocationChangedServiceTest {
     val application = Cas2ApplicationEntityFactory().withNomsNumber(nomsNumber).withCreatedByUser(user).produce()
 
     every { managePomCasesClient.getPomAllocation(any()) } returns ClientResult.Success(HttpStatus.OK, pomAllocation)
-    every { applicationService.findMostRecentApplication(eq(nomsNumber)) } returns application
+    every { applicationService.findApplicationToAssign(eq(nomsNumber)) } returns application
     every { nomisUserService.getUserByStaffId(eq(pomAllocation.manager.code)) } returns user
 
     assertThrows<RuntimeException> { allocationChangedService.process(allocationEvent) }
@@ -113,12 +113,12 @@ class Cas2AllocationChangedServiceTest {
       body = null,
     )
 
-    every { applicationService.findMostRecentApplication(eq(nomsNumber)) } returns application
+    every { applicationService.findApplicationToAssign(eq(nomsNumber)) } returns application
 
     allocationChangedService.process(allocationEvent)
 
     verify { managePomCasesClient.getPomAllocation(any()) }
-    verify { applicationService.findMostRecentApplication(eq(nomsNumber)) }
+    verify { applicationService.findApplicationToAssign(eq(nomsNumber)) }
     verify(exactly = 0) { applicationRepository.save(any()) }
   }
 
@@ -153,12 +153,12 @@ class Cas2AllocationChangedServiceTest {
   @Test
   fun `handle Allocation Changed Event and do nothing if there is no application associated with the event`() {
     every { managePomCasesClient.getPomAllocation(any()) } returns ClientResult.Success(HttpStatus.OK, pomAllocation)
-    every { applicationService.findMostRecentApplication(eq(nomsNumber)) } returns null
+    every { applicationService.findApplicationToAssign(eq(nomsNumber)) } returns null
 
     allocationChangedService.process(allocationEvent)
 
     verify(exactly = 0) { managePomCasesClient.getPomAllocation(any()) }
-    verify(exactly = 1) { applicationService.findMostRecentApplication(eq(nomsNumber)) }
+    verify(exactly = 1) { applicationService.findApplicationToAssign(eq(nomsNumber)) }
   }
 
   @Test
@@ -170,7 +170,7 @@ class Cas2AllocationChangedServiceTest {
       HttpStatus.OK,
       pomAllocation.copy(manager = Manager(user.nomisStaffId)),
     )
-    every { applicationService.findMostRecentApplication(eq(nomsNumber)) } returns application
+    every { applicationService.findApplicationToAssign(eq(nomsNumber)) } returns application
     every { nomisUserService.getUserByStaffId(any()) } returns user
 
     allocationChangedService.process(allocationEvent)
