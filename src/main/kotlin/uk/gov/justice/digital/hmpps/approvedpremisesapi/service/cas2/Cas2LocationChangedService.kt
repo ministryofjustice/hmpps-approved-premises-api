@@ -38,7 +38,7 @@ class Cas2LocationChangedService(
           is ClientResult.Failure -> throw result.toException()
         }
 
-        if (isNewPrison(application.currentPrisonCode, prisoner.prisonId)) {
+        if (isNewPrison(application.currentPrisonCode!!, prisoner.prisonId)) {
           application.createApplicationAssignment(
             prisonCode = prisoner.prisonId,
             allocatedPomUser = null,

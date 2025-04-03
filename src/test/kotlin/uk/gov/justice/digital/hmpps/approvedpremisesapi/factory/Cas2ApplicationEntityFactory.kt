@@ -2,6 +2,7 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.factory
 
 import io.github.bluegroundltd.kfactory.Factory
 import io.github.bluegroundltd.kfactory.Yielded
+import io.mockk.mockk
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas2ApplicationAssignmentEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas2ApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas2ApplicationNoteEntity
@@ -108,6 +109,23 @@ class Cas2ApplicationEntityFactory : Factory<Cas2ApplicationEntity> {
 
   fun withApplicationAssignments(applicationAssignments: MutableList<Cas2ApplicationAssignmentEntity>) = apply {
     this.applicationAssignments = { applicationAssignments }
+  }
+
+  fun withApplicationAssignments(
+    prisonCode: String = "PRI",
+    user: NomisUserEntity = NomisUserEntityFactory().produce(),
+  ) = apply {
+    this.applicationAssignments = {
+      mutableListOf(
+        Cas2ApplicationAssignmentEntity(
+          id = UUID.randomUUID(),
+          application = mockk(),
+          prisonCode = prisonCode,
+          allocatedPomUser = user,
+          createdAt = OffsetDateTime.now(),
+        ),
+      )
+    }
   }
 
   fun withReferringPrisonCode(referringPrisonCode: String) = apply {

@@ -56,6 +56,15 @@ components:
               type: array
               items:
                 $ref: '_shared.yml#/components/schemas/Cas2TimelineEvent'
+            allocatedPomName:
+              type: string
+            currentPrisonName:
+              type: string
+            allocatedPomEmailAddress:
+              type: string
+            assignmentDate:
+              type: string
+              format: date
           required:
             - createdBy
             - schemaVersion

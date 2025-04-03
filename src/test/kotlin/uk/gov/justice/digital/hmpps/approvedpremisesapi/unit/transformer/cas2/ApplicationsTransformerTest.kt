@@ -20,9 +20,13 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Person
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.Cas2ApplicationEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.Cas2AssessmentEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.NomisUserEntityFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.OffenderManagementUnitEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas2ApplicationSummaryEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.OffenderManagementUnitRepository
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.NomisUserService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.NomisUserTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.PersonTransformer
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.cas2.ApplicationsTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.cas2.AssessmentsTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.cas2.StatusUpdateTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.cas2.TimelineEventsTransformer
@@ -36,6 +40,8 @@ class ApplicationsTransformerTest {
   private val mockStatusUpdateTransformer = mockk<StatusUpdateTransformer>()
   private val mockTimelineEventsTransformer = mockk<TimelineEventsTransformer>()
   private val mockAssessmentsTransformer = mockk<AssessmentsTransformer>()
+  private val nomisUserService = mockk<NomisUserService>()
+  private val offenderManagementUnitRepository = mockk<OffenderManagementUnitRepository>()
 
   private val objectMapper = ObjectMapper().apply {
     registerModule(Jdk8Module())
@@ -43,15 +49,16 @@ class ApplicationsTransformerTest {
     registerKotlinModule()
   }
 
-  private val applicationsTransformer = uk.gov.justice.digital.hmpps
-    .approvedpremisesapi.transformer.cas2.ApplicationsTransformer(
-      objectMapper,
-      mockPersonTransformer,
-      mockNomisTransformer,
-      mockStatusUpdateTransformer,
-      mockTimelineEventsTransformer,
-      mockAssessmentsTransformer,
-    )
+  private val applicationsTransformer = ApplicationsTransformer(
+    objectMapper,
+    mockPersonTransformer,
+    mockNomisTransformer,
+    mockStatusUpdateTransformer,
+    mockTimelineEventsTransformer,
+    mockAssessmentsTransformer,
+    nomisUserService,
+    offenderManagementUnitRepository,
+  )
 
   private val user = NomisUserEntityFactory().produce()
 
@@ -100,21 +107,36 @@ class ApplicationsTransformerTest {
         "telephoneNumber",
         "assessment",
         "timelineEvents",
+        "allocatedPomEmailAddress",
+        "allocatedPomName",
+        "assignmentDate",
+        "currentPrisonName",
       )
 
       assertThat(result.id).isEqualTo(application.id)
       assertThat(result.createdBy.id).isEqualTo(user.id)
       assertThat(result.status).isEqualTo(ApplicationStatus.inProgress)
       assertThat(result.timelineEvents).isEqualTo(listOf<Cas2TimelineEvent>())
+
+      // these are assigned after an application is submitted
+      assertThat(result.submittedAt).isNull()
+      assertThat(result.allocatedPomEmailAddress).isNull()
+      assertThat(result.allocatedPomName).isNull()
+      assertThat(result.assignmentDate).isNull()
+      assertThat(result.currentPrisonName).isNull()
     }
 
     @Test
     fun `transformJpaToApi transforms a submitted CAS2 application correctly without status updates`() {
       val assessment = Cas2Assessment(id = UUID.fromString("3adc18ec-3d0d-4d0f-8b31-6f08e2591c35"))
       every { mockAssessmentsTransformer.transformJpaToApiRepresentation(any()) } returns assessment
+      every { nomisUserService.getNomisUserById(any()) } returns user
+      val prison = OffenderManagementUnitEntityFactory().produce()
+      every { offenderManagementUnitRepository.findByPrisonCode(any()) } returns prison
 
       val application = submittedCas2ApplicationFactory
-        .withAssessment(Cas2AssessmentEntityFactory().produce()).produce()
+        .withAssessment(Cas2AssessmentEntityFactory().produce())
+        .withApplicationAssignments().produce()
 
       val result = applicationsTransformer.transformJpaToApi(application, mockk())
 
@@ -122,6 +144,13 @@ class ApplicationsTransformerTest {
       assertThat(result.status).isEqualTo(ApplicationStatus.submitted)
       assertThat(result.telephoneNumber).isEqualTo(application.telephoneNumber)
       assertThat(result.assessment!!.id).isEqualTo(assessment.id)
+
+      // these are assigned after an application is submitted
+      assertThat(result.submittedAt).isEqualTo(application.submittedAt!!.toInstant())
+      assertThat(result.allocatedPomEmailAddress).isEqualTo(user.email)
+      assertThat(result.allocatedPomName).isEqualTo(user.name)
+      assertThat(result.assignmentDate).isEqualTo(application.currentAssignmentDate)
+      assertThat(result.currentPrisonName).isEqualTo(prison.prisonName)
     }
 
     @Test
@@ -136,14 +165,27 @@ class ApplicationsTransformerTest {
         id = UUID.fromString("6e631a8c-a013-4bb4-812c-886c8fc25354"),
         statusUpdates = listOf(mockStatusUpdate),
       )
-      every { mockAssessmentsTransformer.transformJpaToApiRepresentation(any()) } returns mockAssessment
 
-      val application = submittedCas2ApplicationFactory.withAssessment(Cas2AssessmentEntityFactory().produce()).produce()
+      val prison = OffenderManagementUnitEntityFactory().produce()
+      every { mockAssessmentsTransformer.transformJpaToApiRepresentation(any()) } returns mockAssessment
+      every { offenderManagementUnitRepository.findByPrisonCode(any()) } returns prison
+      every { nomisUserService.getNomisUserById(any()) } returns user
+
+      val application = submittedCas2ApplicationFactory.withAssessment(Cas2AssessmentEntityFactory().produce())
+        .withApplicationAssignments()
+        .produce()
 
       val result = applicationsTransformer.transformJpaToApi(application, mockk())
 
       assertThat(result.id).isEqualTo(application.id)
       assertThat(result.assessment!!.statusUpdates).hasSize(1).containsExactly(mockStatusUpdate)
+
+      // these are assigned after an application is submitted
+      assertThat(result.submittedAt).isEqualTo(application.submittedAt!!.toInstant())
+      assertThat(result.allocatedPomEmailAddress).isEqualTo(user.email)
+      assertThat(result.allocatedPomName).isEqualTo(user.name)
+      assertThat(result.assignmentDate).isEqualTo(application.currentAssignmentDate)
+      assertThat(result.currentPrisonName).isEqualTo(prison.prisonName)
     }
   }
 

@@ -26,7 +26,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas2.Cas2EmailSe
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas2.Cas2LocationChangedService
 import java.time.Instant
 import java.time.ZoneId
-import kotlin.NoSuchElementException
 
 @ExtendWith(MockKExtension::class)
 class Cas2LocationChangedServiceTest {
@@ -108,7 +107,7 @@ class Cas2LocationChangedServiceTest {
     every { applicationService.findMostRecentApplication(eq(nomsNumber)) } returns application
     every { applicationRepository.save(any()) } returns application
 
-    assertThrows<NoSuchElementException> { locationChangedService.process(locationEvent) }
+    assertThrows<NullPointerException> { locationChangedService.process(locationEvent) }
 
     verify(exactly = 1) { prisonerSearchClient.getPrisoner(any()) }
     verify(exactly = 1) { applicationService.findMostRecentApplication(eq(nomsNumber)) }

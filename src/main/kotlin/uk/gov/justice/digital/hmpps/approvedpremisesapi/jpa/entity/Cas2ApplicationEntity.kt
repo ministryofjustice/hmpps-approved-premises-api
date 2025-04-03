@@ -104,10 +104,12 @@ data class Cas2ApplicationEntity(
   var telephoneNumber: String? = null,
 ) {
   override fun toString() = "Cas2ApplicationEntity: $id"
-  val currentPrisonCode: String
-    get() = applicationAssignments.first().prisonCode
+  val currentPrisonCode: String?
+    get() = applicationAssignments.firstOrNull()?.prisonCode
   val currentPomUserId: UUID?
-    get() = applicationAssignments.first().allocatedPomUser?.id
+    get() = applicationAssignments.firstOrNull()?.allocatedPomUser?.id
+  val currentAssignmentDate: LocalDate?
+    get() = applicationAssignments.maxByOrNull { it.createdAt }?.createdAt?.toLocalDate()
   val mostRecentPomUserId: UUID
     get() = applicationAssignments.first { it.allocatedPomUser?.id != null }.allocatedPomUser?.id!!
 
