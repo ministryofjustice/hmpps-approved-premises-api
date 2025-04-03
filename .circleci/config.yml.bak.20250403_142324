@@ -1,9 +1,11 @@
 version: 2.1
+
 orbs:
   hmpps: ministryofjustice/hmpps@8.2.1
   mem: circleci/rememborb@0.0.2
   node: circleci/node@5.2.0
   slack: circleci/slack@4.12.6
+
 parameters:
   alerts-slack-channel:
     type: string
@@ -17,6 +19,7 @@ parameters:
   run-security-workflow-on-branch:
     type: boolean
     default: false
+
 executors:
   integration-test-gradle:
     resource_class: medium+
@@ -42,6 +45,7 @@ executors:
     resource_class: medium+
     docker:
       - image: cimg/openjdk:21.0.2
+
 jobs:
   generate_trivyignore:
     # Needed to get Trivy to respect the .trivyignore file, as it doesn't use the one that's inside the Docker image.
@@ -552,6 +556,37 @@ workflows:
             - hmpps-community-accommodation
           requires:
             - deploy_dev
+  security:
+    triggers:
+      - schedule:
+          cron: "11 5 * * 1-5"
+          filters:
+            branches:
+              only:
+                - main
+    jobs:
+      - generate_trivyignore:
+          name: generate_trivyignore
+      - hmpps/gradle_owasp_dependency_check:
+          slack_channel: << pipeline.parameters.alerts-slack-channel >>
+          jdk_tag: "21.0"
+          context:
+            - hmpps-common-vars
+      - hmpps/trivy_latest_scan:
+          pre-steps:
+            - attach_workspace:
+                at: ~/trivyetc
+          additional_args: --ignorefile ~/trivyetc/.trivyignore
+          slack_channel: << pipeline.parameters.alerts-slack-channel >>
+          context:
+            - hmpps-common-vars
+          requires:
+            - generate_trivyignore
+      - hmpps/veracode_pipeline_scan:
+          slack_channel: << pipeline.parameters.alerts-slack-channel >>
+          context:
+            - veracode-credentials
+            - hmpps-common-vars
   security-branch:
     # Mimics the 'security' workflow, but can be manually triggered on any branch.
     when: << pipeline.parameters.run-security-workflow-on-branch >>
@@ -572,3 +607,17 @@ workflows:
           requires:
             - build_docker
             - generate_trivyignore
+  security-weekly:
+    triggers:
+      - schedule:
+          cron: "0 5 * * 1"
+          filters:
+            branches:
+              only:
+                - main
+    jobs:
+      - hmpps/veracode_policy_scan:
+          slack_channel: << pipeline.parameters.alerts-slack-channel >>
+          context:
+            - veracode-credentials
+            - hmpps-common-vars
