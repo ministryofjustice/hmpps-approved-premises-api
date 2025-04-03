@@ -411,6 +411,10 @@ class ApplicationsController(
     val application =
       extractEntityFromCasResult(applicationService.getApplicationForUsername(applicationId, user.deliusUsername))
 
+    if (application !is ApprovedPremisesApplicationEntity) {
+      throw ConflictProblem(applicationId, "Only CAS1 applications are supported")
+    }
+
     val assessment = application.getLatestAssessment()
       ?: throw ConflictProblem(
         applicationId,
@@ -427,19 +431,7 @@ class ApplicationsController(
       createdBy = user,
     )
 
-    val validationResult = when (createAppealResult) {
-      is AuthorisableActionResult.NotFound -> throw NotFoundProblem(applicationId, "Application")
-      is AuthorisableActionResult.Unauthorised -> throw ForbiddenProblem()
-      is AuthorisableActionResult.Success -> createAppealResult.entity
-    }
-
-    val appeal = when (validationResult) {
-      is ValidatableActionResult.GeneralValidationError -> throw BadRequestProblem(errorDetail = validationResult.message)
-      is ValidatableActionResult.FieldValidationError -> throw BadRequestProblem(invalidParams = validationResult.validationMessages)
-      is ValidatableActionResult.ConflictError -> throw ConflictProblem(id = validationResult.conflictingEntityId, conflictReason = validationResult.message)
-
-      is ValidatableActionResult.Success -> validationResult.entity
-    }
+    val appeal = extractEntityFromCasResult(createAppealResult)
 
     return ResponseEntity
       .created(URI.create("/applications/${application.id}/appeals/${appeal.id}"))

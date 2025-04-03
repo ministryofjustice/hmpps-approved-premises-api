@@ -12,6 +12,7 @@ import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.EmptySource
+import org.junit.jupiter.params.provider.EnumSource
 import org.junit.jupiter.params.provider.ValueSource
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.AppealDecision
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApAreaEntityFactory
@@ -24,13 +25,14 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AppealEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AppealRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesAssessmentEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRole
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.ApprovedPremisesApplicationStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.AuthorisableActionResult
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.ValidatableActionResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.AppealService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.AssessmentService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1AppealDomainEventService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1AppealEmailService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.unit.util.addRoleForUnitTest
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.unit.util.assertThatCasResult
 import java.time.LocalDate
 import java.util.Optional
 import java.util.UUID
@@ -111,6 +113,12 @@ class AppealServiceTest {
 
   @Nested
   inner class CreateAppeal {
+
+    private val application = ApprovedPremisesApplicationEntityFactory()
+      .withCreatedByUser(createdByUser)
+      .withStatus(ApprovedPremisesApplicationStatus.REJECTED)
+      .produce()
+
     @Test
     fun `Returns Unauthorised if the creating user does not have the CAS1_APPEALS_MANAGER role`() {
       val result = appealService.createAppeal(
@@ -123,7 +131,30 @@ class AppealServiceTest {
         createdByUser,
       )
 
-      assertThat(result).isInstanceOf(AuthorisableActionResult.Unauthorised::class.java)
+      assertThatCasResult(result).isUnauthorised()
+
+      verify { cas1AppealEmailService wasNot Called }
+      verify { cas1AppealDomainEventService wasNot Called }
+    }
+
+    @ParameterizedTest
+    @EnumSource(value = ApprovedPremisesApplicationStatus::class, mode = EnumSource.Mode.EXCLUDE, names = ["REJECTED"])
+    fun `Returns General error if the application state isn't rejected`(status: ApprovedPremisesApplicationStatus) {
+      createdByUser.addRoleForUnitTest(UserRole.CAS1_APPEALS_MANAGER)
+
+      application.status = status
+
+      val result = appealService.createAppeal(
+        LocalDate.now().plusDays(1),
+        "Some information about why the appeal is being made",
+        AppealDecision.accepted,
+        "Some information about the decision made",
+        application,
+        assessment,
+        createdByUser,
+      )
+
+      assertThatCasResult(result).isGeneralValidationError("Appeals can only be created for rejected applications")
 
       verify { cas1AppealEmailService wasNot Called }
       verify { cas1AppealDomainEventService wasNot Called }
@@ -143,11 +174,7 @@ class AppealServiceTest {
         createdByUser,
       )
 
-      assertThat(result).isInstanceOf(AuthorisableActionResult.Success::class.java)
-      result as AuthorisableActionResult.Success
-      assertThat(result.entity).isInstanceOf(ValidatableActionResult.FieldValidationError::class.java)
-      val resultEntity = result.entity as ValidatableActionResult.FieldValidationError
-      assertThat(resultEntity.validationMessages).containsEntry("$.appealDate", "mustNotBeFuture")
+      assertThatCasResult(result).isFieldValidationError().hasMessage("$.appealDate", "mustNotBeFuture")
 
       verify { cas1AppealEmailService wasNot Called }
       verify { cas1AppealDomainEventService wasNot Called }
@@ -169,11 +196,7 @@ class AppealServiceTest {
         createdByUser,
       )
 
-      assertThat(result).isInstanceOf(AuthorisableActionResult.Success::class.java)
-      result as AuthorisableActionResult.Success
-      assertThat(result.entity).isInstanceOf(ValidatableActionResult.FieldValidationError::class.java)
-      val resultEntity = result.entity as ValidatableActionResult.FieldValidationError
-      assertThat(resultEntity.validationMessages).containsEntry("$.appealDetail", "empty")
+      assertThatCasResult(result).isFieldValidationError().hasMessage("$.appealDetail", "empty")
 
       verify { cas1AppealEmailService wasNot Called }
       verify { cas1AppealDomainEventService wasNot Called }
@@ -195,11 +218,7 @@ class AppealServiceTest {
         createdByUser,
       )
 
-      assertThat(result).isInstanceOf(AuthorisableActionResult.Success::class.java)
-      result as AuthorisableActionResult.Success
-      assertThat(result.entity).isInstanceOf(ValidatableActionResult.FieldValidationError::class.java)
-      val resultEntity = result.entity as ValidatableActionResult.FieldValidationError
-      assertThat(resultEntity.validationMessages).containsEntry("$.decisionDetail", "empty")
+      assertThatCasResult(result).isFieldValidationError().hasMessage("$.decisionDetail", "empty")
 
       verify { cas1AppealEmailService wasNot Called }
       verify { cas1AppealDomainEventService wasNot Called }
@@ -229,19 +248,13 @@ class AppealServiceTest {
           createdByUser,
         )
 
-        assertThat(result).isInstanceOf(AuthorisableActionResult.Success::class.java)
-        result as AuthorisableActionResult.Success
-        assertThat(result.entity).isInstanceOf(ValidatableActionResult.Success::class.java)
-        val resultEntity = result.entity as ValidatableActionResult.Success
-        assertThat(resultEntity.entity).matches {
-          it.matches(now)
-        }
-        verify(exactly = 1) {
-          appealRepository.save(
-            match {
-              it.matches(now)
-            },
-          )
+        assertThatCasResult(result).isSuccess().with { appeal ->
+          assertThat(appeal).matches {
+            it.matches(now)
+          }
+          verify(exactly = 1) {
+            appealRepository.save(appeal)
+          }
         }
       }
     }
@@ -270,9 +283,7 @@ class AppealServiceTest {
           createdByUser,
         )
 
-        assertThat(result).isInstanceOf(AuthorisableActionResult.Success::class.java)
-        result as AuthorisableActionResult.Success
-        assertThat(result.entity).isInstanceOf(ValidatableActionResult.Success::class.java)
+        assertThatCasResult(result).isSuccess()
 
         verify { assessmentService wasNot Called }
         verify(exactly = 0) { cas1AppealEmailService.appealSuccess(any(), any()) }
@@ -304,9 +315,7 @@ class AppealServiceTest {
           createdByUser,
         )
 
-        assertThat(result).isInstanceOf(AuthorisableActionResult.Success::class.java)
-        result as AuthorisableActionResult.Success
-        assertThat(result.entity).isInstanceOf(ValidatableActionResult.Success::class.java)
+        assertThatCasResult(result).isSuccess()
 
         verify(exactly = 1) { cas1AppealEmailService.appealFailed(application) }
         verify(exactly = 0) { cas1AppealEmailService.appealSuccess(any(), any()) }
@@ -338,9 +347,7 @@ class AppealServiceTest {
           createdByUser,
         )
 
-        assertThat(result).isInstanceOf(AuthorisableActionResult.Success::class.java)
-        result as AuthorisableActionResult.Success
-        assertThat(result.entity).isInstanceOf(ValidatableActionResult.Success::class.java)
+        assertThatCasResult(result).isSuccess()
 
         verify(exactly = 1) {
           assessmentService.createApprovedPremisesAssessment(application, createdFromAppeal = true)
