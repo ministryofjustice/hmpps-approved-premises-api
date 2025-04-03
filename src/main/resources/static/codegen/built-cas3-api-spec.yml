@@ -28,6 +28,51 @@ paths:
           $ref: '#/components/responses/403Response'
         500:
           $ref: '#/components/responses/500Response'
+    post:
+      tags:
+        - Operations on applications
+      summary: Creates an application
+      operationId: postApplication
+      parameters:
+        - name: createWithRisks
+          in: query
+          required: false
+          description: Instructs the API to create and return risk information from the OASys API (defaults to true)
+          schema:
+            type: boolean
+      requestBody:
+        description: Information to create a blank application with
+        content:
+          'application/json':
+            schema:
+              $ref: '#/components/schemas/Cas3NewApplication'
+        required: true
+      responses:
+        201:
+          description: successful operation
+          content:
+            'application/json':
+              schema:
+                $ref: '#/components/schemas/Cas3Application'
+        400:
+          description: invalid params
+          content:
+            'application/problem+json':
+              schema:
+                $ref: '#/components/schemas/ValidationError'
+        401:
+          $ref: '#/components/responses/401Response'
+        403:
+          $ref: '#/components/responses/403Response'
+        404:
+          description: invalid CRN
+          content:
+            'application/json':
+              schema:
+                $ref: '#/components/schemas/Problem'
+        500:
+          $ref: '#/components/responses/500Response'
+      x-codegen-request-body-name: body
   /reports/{reportName}:
     get:
       tags:
@@ -4736,6 +4781,70 @@ components:
         - departingToday
         - overdueDeparture
         - departed
+    Cas3NewApplication:
+      type: object
+      properties:
+        crn:
+          type: string
+        convictionId:
+          type: integer
+          format: int64
+          example: 1502724704
+        deliusEventNumber:
+          type: string
+          example: "7"
+        offenceId:
+          type: string
+          example: "M1502750438"
+      required:
+        - crn
+    Cas3Application:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        person:
+          $ref: '#/components/schemas/Person'
+        createdAt:
+          type: string
+          format: date-time
+        createdByUserId:
+          type: string
+          format: uuid
+        schemaVersion:
+          type: string
+          format: uuid
+        outdatedSchema:
+          type: boolean
+        data:
+          $ref: '#/components/schemas/Unit'
+        document:
+          $ref: '#/components/schemas/Unit'
+        status:
+          $ref: '#/components/schemas/ApplicationStatus'
+        risks:
+          $ref: '#/components/schemas/PersonRisks'
+        submittedAt:
+          type: string
+          format: date-time
+        arrivalDate:
+          type: string
+          format: date-time
+        offenceId:
+          type: string
+        assessmentId:
+          type: string
+          format: uuid
+      required:
+        - id
+        - person
+        - createdAt
+        - createdByUserId
+        - schemaVersion
+        - outdatedSchema
+        - status
+        - offenceId
     Cas3ApplicationSummary:
       type: object
       properties:
