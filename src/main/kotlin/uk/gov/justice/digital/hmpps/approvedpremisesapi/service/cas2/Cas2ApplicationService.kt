@@ -55,40 +55,42 @@ class Cas2ApplicationService(
 ) {
 
   fun getApplicationSummaries(
-    prisonCode: String?,
-    userId: UUID,
+    user: NomisUserEntity,
     pageCriteria: PageCriteria<String>,
     assignmentType: AssignmentType,
+    forPrison: Boolean = false,
   ): Pair<MutableList<Cas2ApplicationSummaryEntity>, PaginationMetadata?> {
     // applications that are in the same prison as the user, but have not been allocated
     val response = when (assignmentType) {
       AssignmentType.UNALLOCATED -> applicationSummaryRepository.findUnallocatedApplicationsForPrison(
-        prisonCode!!,
+        user.activeCaseloadId!!,
         getPageableOrAllPages(pageCriteria),
       )
 
       // applications that are created by the user but unsubmitted (in progress in the UI)
       AssignmentType.CREATED -> applicationSummaryRepository.findCreatedApplications(
-        userId,
+        user.id.toString(),
         getPageableOrAllPages(pageCriteria),
       )
 
-      // applications that are submitted and assigned to the user (submitted in the UI)
-      AssignmentType.ALLOCATED -> if (prisonCode != null) {
-        applicationSummaryRepository.findAllocatedApplicationsForUser(
-          userId,
+      AssignmentType.ALLOCATED -> if (forPrison) {
+        // applications that are submitted and assigned in the same prison as the user
+        applicationSummaryRepository.findAllocatedApplicationsForPrison(
+          user.activeCaseloadId!!,
           getPageableOrAllPages(pageCriteria),
         )
       } else {
-        applicationSummaryRepository.findAllocatedApplicationsForPrison(
-          prisonCode!!,
+        // applications that are submitted and assigned to the user
+        applicationSummaryRepository.findAllocatedApplicationsForUser(
+          user.id,
           getPageableOrAllPages(pageCriteria),
         )
       }
 
       // applications that have been assigned to a user or prison at some point in time, but are not currently
       AssignmentType.DEALLOCATED -> {
-        val deallocatedApplicationIds = applicationRepository.findDeallocatedApplicationIds(userId, prisonCode!!)
+        val deallocatedApplicationIds =
+          applicationRepository.findDeallocatedApplicationIds(user.id, user.activeCaseloadId!!)
         applicationSummaryRepository.findAllByIdIn(
           deallocatedApplicationIds,
           getPageableOrAllPages(pageCriteria),

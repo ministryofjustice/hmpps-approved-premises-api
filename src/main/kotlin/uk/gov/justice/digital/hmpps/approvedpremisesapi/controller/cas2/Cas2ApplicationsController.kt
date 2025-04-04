@@ -49,10 +49,10 @@ class Cas2ApplicationsController(
     if (featureFlagService.getBooleanFlag("cas2-application-transfers-enabled") && assignmentType != null) {
       assignmentType.let {
         val (results, metadata) = applicationService.getApplicationSummaries(
-          prisonCode,
-          user.id,
+          user,
           pageCriteria,
           assignmentType,
+          forPrison = prisonCode != null,
         )
         return ResponseEntity.ok().headers(
           metadata?.toHeaders(),
