@@ -1,9 +1,11 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.cas3
 
 import com.opencsv.CSVReaderBuilder
+import org.assertj.core.api.Assertions
 import org.assertj.core.api.Assertions.assertThat
 import org.jetbrains.kotlinx.dataframe.DataFrame
 import org.jetbrains.kotlinx.dataframe.DataRow
+import org.jetbrains.kotlinx.dataframe.api.ExcessiveColumns
 import org.jetbrains.kotlinx.dataframe.api.ExcessiveColumns.Remove
 import org.jetbrains.kotlinx.dataframe.api.convertTo
 import org.jetbrains.kotlinx.dataframe.api.sortBy
@@ -1319,6 +1321,32 @@ class Cas3ReportsTest : IntegrationTestBase() {
     }
 
     @Test
+    fun `Get bookings report for all regions returns 403 Forbidden if user does not have all regions access`() {
+      givenAUser(roles = listOf(CAS3_ASSESSOR)) { userEntity, jwt ->
+        webTestClient.get()
+          .uri("/cas3/reports/booking?startDate=2023-04-01&endDate=2023-04-30")
+          .header("Authorization", "Bearer $jwt")
+          .header("X-Service-Name", ServiceName.temporaryAccommodation.value)
+          .exchange()
+          .expectStatus()
+          .isForbidden
+      }
+    }
+
+    @Test
+    fun `Get bookings report returns 403 Forbidden if a user does not have the CAS3_ASSESSOR role`() {
+      givenAUser { user, jwt ->
+        webTestClient.get()
+          .uri("/cas3/reports/booking?startDate=2023-04-01&endDate=2023-04-30&probationRegionId=${user.probationRegion.id}")
+          .header("Authorization", "Bearer $jwt")
+          .header("X-Service-Name", ServiceName.temporaryAccommodation.value)
+          .exchange()
+          .expectStatus()
+          .isForbidden
+      }
+    }
+
+    @Test
     fun `Get bookings report returns OK for CAS3_REPORTER`() {
       givenAUser(roles = listOf(CAS3_REPORTER)) { userEntity, jwt ->
         givenAnOffender { offenderDetails, inmateDetails ->
@@ -1789,10 +1817,147 @@ class Cas3ReportsTest : IntegrationTestBase() {
         }
       }
     }
+
+    @Test
+    fun `Get bookings report returns OK with only bookings from the specified service`() {
+      givenAUser(roles = listOf(UserRole.CAS3_ASSESSOR)) { userEntity, jwt ->
+        givenAnOffender { offenderDetails, inmateDetails ->
+          val startDate = LocalDate.of(2023, 4, 1)
+          val endDate = LocalDate.of(2023, 4, 30)
+          val premises = temporaryAccommodationPremisesEntityFactory.produceAndPersist {
+            withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
+            withProbationRegion(userEntity.probationRegion)
+          }
+
+          val bookings = bookingEntityFactory.produceAndPersistMultiple(5) {
+            withPremises(premises)
+            withServiceName(ServiceName.temporaryAccommodation)
+            withCrn(offenderDetails.otherIds.crn)
+            withArrivalDate(LocalDate.of(2023, 4, 5))
+            withDepartureDate(LocalDate.of(2023, 4, 7))
+          }
+
+          bookings[1].let { it.arrivals = arrivalEntityFactory.produceAndPersistMultiple(1) { withBooking(it) }.toMutableList() }
+          bookings[2].let {
+            it.arrivals = arrivalEntityFactory.produceAndPersistMultiple(1) { withBooking(it) }.toMutableList()
+            it.extensions = extensionEntityFactory.produceAndPersistMultiple(1) { withBooking(it) }.toMutableList()
+            it.departures = departureEntityFactory.produceAndPersistMultiple(1) {
+              withBooking(it)
+              withYieldedDestinationProvider { destinationProviderEntityFactory.produceAndPersist() }
+              withYieldedReason { departureReasonEntityFactory.produceAndPersist() }
+              withYieldedMoveOnCategory { moveOnCategoryEntityFactory.produceAndPersist() }
+            }.toMutableList()
+          }
+          bookings[3].let {
+            it.cancellations = cancellationEntityFactory.produceAndPersistMultiple(1) {
+              withBooking(it)
+              withYieldedReason { cancellationReasonEntityFactory.produceAndPersist() }
+            }.toMutableList()
+          }
+          bookings[4].let {
+            it.nonArrival = nonArrivalEntityFactory.produceAndPersist {
+              withBooking(it)
+              withYieldedReason { nonArrivalReasonEntityFactory.produceAndPersist() }
+            }
+          }
+
+          val unexpectedPremises = approvedPremisesEntityFactory.produceAndPersist {
+            withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
+            withProbationRegion(userEntity.probationRegion)
+          }
+
+          // Unexpected bookings
+          bookingEntityFactory.produceAndPersistMultiple(5) {
+            withPremises(unexpectedPremises)
+            withServiceName(ServiceName.approvedPremises)
+            withCrn(offenderDetails.otherIds.crn)
+            withArrivalDate(LocalDate.of(2023, 4, 5))
+            withDepartureDate(LocalDate.of(2023, 4, 7))
+          }
+
+          val caseSummary = CaseSummaryFactory()
+            .fromOffenderDetails(offenderDetails)
+            .withPnc(offenderDetails.otherIds.pncNumber)
+            .produce()
+
+          apDeliusContextAddResponseToUserAccessCall(
+            listOf(
+              CaseAccessFactory()
+                .withCrn(offenderDetails.otherIds.crn)
+                .produce(),
+            ),
+            userEntity.deliusUsername,
+          )
+
+          val expectedDataFrame = BookingsReportGenerator()
+            .createReport(
+              bookings.toBookingsReportDataAndPersonInfo { crn ->
+                PersonInformationReportData(caseSummary.pnc, caseSummary.name, caseSummary.dateOfBirth, caseSummary.gender, caseSummary.profile?.ethnicity)
+              },
+              BookingsReportProperties(ServiceName.temporaryAccommodation, null, startDate, endDate),
+            )
+
+          webTestClient.get()
+            .uri("/cas3/reports/booking?startDate=2023-04-01&endDate=2023-04-30&probationRegionId=${userEntity.probationRegion.id}")
+            .header("Authorization", "Bearer $jwt")
+            .header("X-Service-Name", ServiceName.temporaryAccommodation.value)
+            .exchange()
+            .expectStatus()
+            .isOk
+            .expectBody()
+            .consumeWith {
+              val actual = DataFrame
+                .readExcel(it.responseBody!!.inputStream())
+                .convertTo<BookingsReportRow>(ExcessiveColumns.Remove)
+                .sortBy(BookingsReportRow::bookingId)
+              Assertions.assertThat(actual).isEqualTo(expectedDataFrame)
+            }
+        }
+      }
+    }
   }
 
   @Nested
   inner class GetBedUsageReport {
+    @Test
+    fun `Get bed usage report for all regions returns 403 Forbidden if user does not have all regions access`() {
+      givenAUser(roles = listOf(CAS3_ASSESSOR)) { _, jwt ->
+        webTestClient.get()
+          .uri("/cas3/reports/bedUsage?startDate=2023-04-01&endDate=2023-04-30")
+          .header("Authorization", "Bearer $jwt")
+          .header("X-Service-Name", ServiceName.temporaryAccommodation.value)
+          .exchange()
+          .expectStatus()
+          .isForbidden
+      }
+    }
+
+    @Test
+    fun `Get bed usage report for a region returns 403 Forbidden if user cannot access the specified region`() {
+      givenAUser(roles = listOf(CAS3_ASSESSOR)) { _, jwt ->
+        webTestClient.get()
+          .uri("/cas3/reports/bedUsage?startDate=2023-04-01&endDate=2023-04-30&probationRegionId=${UUID.randomUUID()}")
+          .header("Authorization", "Bearer $jwt")
+          .header("X-Service-Name", ServiceName.temporaryAccommodation.value)
+          .exchange()
+          .expectStatus()
+          .isForbidden
+      }
+    }
+
+    @Test
+    fun `Get bed usage report returns 403 Forbidden for Temporary Accommodation if a user does not have the CAS3_ASSESSOR role`() {
+      givenAUser { user, jwt ->
+        webTestClient.get()
+          .uri("/cas3/reports/bedUsage?startDate=2023-04-01&endDate=2023-04-30&probationRegionId=${user.probationRegion.id}")
+          .header("Authorization", "Bearer $jwt")
+          .header("X-Service-Name", ServiceName.temporaryAccommodation.value)
+          .exchange()
+          .expectStatus()
+          .isForbidden
+      }
+    }
+
     @Test
     fun `Get bed usage report returns OK with correct body`() {
       givenAUser(roles = listOf(CAS3_ASSESSOR)) { userEntity, jwt ->
@@ -1924,6 +2089,45 @@ class Cas3ReportsTest : IntegrationTestBase() {
   @Nested
   @SuppressWarnings("LargeClass")
   inner class GetBedUtilReport {
+    @Test
+    fun `Get bed utilisation report for all regions returns 403 Forbidden if user does not have all regions access`() {
+      givenAUser(roles = listOf(UserRole.CAS3_ASSESSOR)) { _, jwt ->
+        webTestClient.get()
+          .uri("/cas3/reports/bedOccupancy?startDate=2023-04-01&endDate=2023-04-30")
+          .header("Authorization", "Bearer $jwt")
+          .header("X-Service-Name", ServiceName.temporaryAccommodation.value)
+          .exchange()
+          .expectStatus()
+          .isForbidden
+      }
+    }
+
+    @Test
+    fun `Get bed utilisation report for a region returns 403 Forbidden if user cannot access the specified region`() {
+      givenAUser(roles = listOf(UserRole.CAS3_ASSESSOR)) { _, jwt ->
+        webTestClient.get()
+          .uri("/cas3/reports/bedOccupancy?startDate=2023-04-01&endDate=2023-04-30&probationRegionId=${UUID.randomUUID()}")
+          .header("Authorization", "Bearer $jwt")
+          .header("X-Service-Name", ServiceName.temporaryAccommodation.value)
+          .exchange()
+          .expectStatus()
+          .isForbidden
+      }
+    }
+
+    @Test
+    fun `Get bed utilisation report returns 403 Forbidden for Temporary Accommodation if a user does not have the CAS3_ASSESSOR role`() {
+      givenAUser { user, jwt ->
+        webTestClient.get()
+          .uri("/cas3/reports/bedOccupancy?startDate=2023-04-01&endDate=2023-04-30&probationRegionId=${user.probationRegion.id}")
+          .header("Authorization", "Bearer $jwt")
+          .header("X-Service-Name", ServiceName.temporaryAccommodation.value)
+          .exchange()
+          .expectStatus()
+          .isForbidden
+      }
+    }
+
     @Test
     fun `Get bed utilisation report returns OK with correct body`() {
       givenAUser(roles = listOf(CAS3_ASSESSOR)) { userEntity, jwt ->
