@@ -13,8 +13,7 @@ import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
 import org.junit.jupiter.params.ParameterizedTest
-import org.junit.jupiter.params.provider.Arguments
-import org.junit.jupiter.params.provider.MethodSource
+import org.junit.jupiter.params.provider.EnumSource
 import org.junit.jupiter.params.provider.ValueSource
 import org.springframework.data.domain.Page
 import org.springframework.data.domain.PageRequest
@@ -36,7 +35,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas2Applicati
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas2ApplicationSummaryEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas2LockableApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas2LockableApplicationRepository
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas2StatusUpdateEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas2StatusUpdateNonAssignable
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PersonInfoResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.prisonsapi.AssignedLivingUnit
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.AuthorisableActionResult
@@ -55,7 +54,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomStringMultiCa
 import java.time.LocalDate
 import java.time.OffsetDateTime
 import java.util.UUID
-import java.util.stream.Stream
 
 class Cas2ApplicationServiceTest {
   private val mockApplicationRepository = mockk<Cas2ApplicationRepository>()
@@ -93,73 +91,70 @@ class Cas2ApplicationServiceTest {
     private val newestSchema = Cas2ApplicationJsonSchemaEntityFactory().produce()
     private val user = NomisUserEntityFactory().produce()
     private val nomsNumber = "ABC123"
-    private val application = Cas2ApplicationEntityFactory()
-      .withApplicationSchema(newestSchema)
-      .withCreatedByUser(user)
-      .withNomsNumber(nomsNumber)
-      .withSubmittedAt(OffsetDateTime.now())
-      .produce()
-    private val statusAllowed = Cas2StatusUpdateEntityFactory()
-      .withApplication(application)
-      .withLabel("Anything")
-      .withCreatedAt(OffsetDateTime.now())
-      .produce()
-    private val statusIgnorable = Cas2StatusUpdateEntityFactory()
-      .withApplication(application)
-      .withLabel("Referral cancelled")
-      .withCreatedAt(OffsetDateTime.now())
-      .produce()
-    private val statusAllowedOld = Cas2StatusUpdateEntityFactory()
-      .withApplication(application)
-      .withLabel("Anything")
-      .withCreatedAt(OffsetDateTime.now().minusDays(1))
-      .produce()
-    private val statusIgnorableOld = Cas2StatusUpdateEntityFactory()
-      .withApplication(application)
-      .withLabel("Referral cancelled")
-      .withCreatedAt(OffsetDateTime.now().minusDays(1))
-      .produce()
 
-    @ParameterizedTest
-    @MethodSource("isStatusAllowedCases")
-    fun `allow only if statusLabel is not ignorable`(input: Cas2StatusUpdateEntity, output: Boolean) {
-      val result = applicationService.isStatusAllowed(input)
-
-      assertThat(result).isEqualTo(output)
-    }
-
-    @SuppressWarnings("UnusedPrivateMember")
-    private fun isStatusAllowedCases(): Stream<Arguments> = (listOf(Arguments.of(statusAllowed, true)) + getIgnorableArguments()).stream()
-
-    private fun getIgnorableArguments(): List<Arguments> = applicationService.ignorableStatusLabels.map { label ->
-      Arguments.of(
-        Cas2StatusUpdateEntityFactory()
-          .withApplication(application)
-          .withLabel(label)
-          .withCreatedAt(OffsetDateTime.now())
-          .produce(),
-        false,
+    @Test
+    fun `finds assignable application as the latest application's most recent status-update makes it is assignable`() {
+      val application = createApplicationWithStatusUpdateEntity(
+        statusUpdateEntityLabel = "Assignable",
       )
+      every {
+        mockApplicationRepository.findFirstByNomsNumberAndSubmittedAtIsNotNullOrderBySubmittedAtDesc(application.nomsNumber!!)
+      } returns application
+      assertThat(applicationService.findApplicationToAssign(nomsNumber)).isEqualTo(application)
     }
 
     @ParameterizedTest
-    @MethodSource("findApplicationToAssignCases")
-    fun `allow only application is relevant`(input1: Cas2StatusUpdateEntity, input2: Cas2StatusUpdateEntity, output: UUID?) {
-      application.statusUpdates?.clear()
-      application.statusUpdates?.add(input1)
-      application.statusUpdates?.add(input2)
+    @EnumSource
+    fun `does not find assignable application as the latest application's most recent status-update is not assignable`(
+      statusUpdateNonAssignable: Cas2StatusUpdateNonAssignable,
+    ) {
+      val application = createApplicationWithStatusUpdateEntity(
+        statusUpdateEntityLabel = statusUpdateNonAssignable.label,
+      )
+      every {
+        mockApplicationRepository.findFirstByNomsNumberAndSubmittedAtIsNotNullOrderBySubmittedAtDesc(application.nomsNumber!!)
+      } returns application
+      assertThat(applicationService.findApplicationToAssign(nomsNumber)).isNull()
+    }
+
+    @ParameterizedTest
+    @ValueSource(booleans = [true, false])
+    fun `does not find assignable application as the latest application's status-update list is empty or null`(statusUpdatesListNull: Boolean) {
+      val application = Cas2ApplicationEntityFactory()
+        .withApplicationSchema(newestSchema)
+        .withCreatedByUser(user)
+        .withNomsNumber(nomsNumber)
+        .withStatusUpdates(mutableListOf())
+        .produce()
+
+      if (statusUpdatesListNull) {
+        application.statusUpdates = null
+      }
 
       every {
-        mockApplicationRepository.findFirstByNomsNumberAndSubmittedAtIsNotNullAndAbandonedAtIsNullOrderBySubmittedAtDesc(application.nomsNumber!!)
+        mockApplicationRepository.findFirstByNomsNumberAndSubmittedAtIsNotNullOrderBySubmittedAtDesc(application.nomsNumber!!)
       } returns application
-
-      val result = applicationService.findApplicationToAssign(nomsNumber)
-
-      assertThat(result?.id).isEqualTo(output)
+      assertThat(applicationService.findApplicationToAssign(nomsNumber)).isNull()
     }
 
-    @SuppressWarnings("UnusedPrivateMember")
-    private fun findApplicationToAssignCases(): Stream<Arguments> = listOf(Arguments.of(statusAllowed, statusIgnorableOld, application.id), Arguments.of(statusIgnorable, statusAllowedOld, null)).stream()
+    private fun createApplicationWithStatusUpdateEntity(statusUpdateEntityLabel: String): Cas2ApplicationEntity {
+      val application = Cas2ApplicationEntityFactory()
+        .withApplicationSchema(newestSchema)
+        .withCreatedByUser(user)
+        .withNomsNumber(nomsNumber)
+        .produce()
+
+      val nonAssignableStatusUpdateEntity = Cas2StatusUpdateEntityFactory()
+        .withApplication(application)
+        .withLabel(statusUpdateEntityLabel)
+        .withCreatedAt(OffsetDateTime.now())
+        .produce()
+
+      application.statusUpdates!!.clear()
+      application.statusUpdates!!.add(nonAssignableStatusUpdateEntity)
+
+      return application
+    }
   }
 
   @Nested
