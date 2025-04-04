@@ -27,7 +27,7 @@ import java.util.UUID
 @Repository
 interface Cas2ApplicationRepository : JpaRepository<Cas2ApplicationEntity, UUID> {
 
-  fun findFirstByNomsNumberAndSubmittedAtIsNotNullAndAbandonedAtIsNullOrderBySubmittedAtDesc(nomsNumber: String): Cas2ApplicationEntity?
+  fun findFirstByNomsNumberAndSubmittedAtIsNotNullOrderBySubmittedAtDesc(nomsNumber: String): Cas2ApplicationEntity?
 
   @Query(
     "SELECT a FROM Cas2ApplicationEntity a WHERE a.id = :id AND " +
@@ -124,6 +124,10 @@ data class Cas2ApplicationEntity(
       ),
     )
   }
+
+  fun isMostRecentStatusUpdateANonAssignableStatus() = statusUpdates?.firstOrNull()
+    ?.let { mostRecent -> mostRecent.label in Cas2StatusUpdateNonAssignable.entries.map { it.label } }
+    ?: true
 }
 
 /**

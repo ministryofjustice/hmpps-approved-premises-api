@@ -20,7 +20,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas2Applicati
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas2ApplicationRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas2ApplicationSummaryEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas2LockableApplicationRepository
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas2StatusUpdateEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.NomisUserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.DomainEvent
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PaginationMetadata
@@ -54,8 +53,6 @@ class Cas2ApplicationService(
   @Value("\${url-templates.frontend.cas2.submitted-application-overview}") private val submittedApplicationUrlTemplate: String,
 ) {
 
-  val ignorableStatusLabels = setOf("Awaiting arrival", "Offer declined or withdrawn", "Referral cancelled", "Referral withdrawn")
-
   val repositoryUserFunctionMap = mapOf(
     null to applicationSummaryRepository::findByUserId,
     true to applicationSummaryRepository::findByUserIdAndSubmittedAtIsNotNull,
@@ -83,13 +80,9 @@ class Cas2ApplicationService(
     return Pair(response.content, metadata)
   }
 
-  fun findMostRecentApplication(nomsNumber: String): Cas2ApplicationEntity? = applicationRepository.findFirstByNomsNumberAndSubmittedAtIsNotNullAndAbandonedAtIsNullOrderBySubmittedAtDesc(nomsNumber)
+  fun findMostRecentApplication(nomsNumber: String): Cas2ApplicationEntity? = applicationRepository.findFirstByNomsNumberAndSubmittedAtIsNotNullOrderBySubmittedAtDesc(nomsNumber)
 
-  fun findApplicationToAssign(nomsNumber: String): Cas2ApplicationEntity? = applicationRepository.findFirstByNomsNumberAndSubmittedAtIsNotNullAndAbandonedAtIsNullOrderBySubmittedAtDesc(nomsNumber).takeIf {
-    it?.statusUpdates != null && it.statusUpdates!!.isNotEmpty() && isStatusAllowed(it.statusUpdates!!.first())
-  }
-
-  fun isStatusAllowed(statusUpdate: Cas2StatusUpdateEntity): Boolean = ignorableStatusLabels.find { statusLabel -> statusUpdate.label == statusLabel } == null
+  fun findApplicationToAssign(nomsNumber: String): Cas2ApplicationEntity? = findMostRecentApplication(nomsNumber)?.takeIf { !it.isMostRecentStatusUpdateANonAssignableStatus() }
 
   fun getAllSubmittedApplicationsForAssessor(pageCriteria: PageCriteria<String>): Pair<List<Cas2ApplicationSummaryEntity>, PaginationMetadata?> {
     val pageable = getPageableOrAllPages(pageCriteria)
