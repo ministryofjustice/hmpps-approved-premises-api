@@ -157,8 +157,8 @@ class ReportsController(
 
   private fun validateUserAccessibility(probationRegionId: UUID?) {
     when {
-      probationRegionId == null && !userAccessService.currentUserHasAllRegionsAccess() -> throw ForbiddenProblem()
-      probationRegionId != null && !userAccessService.currentUserCanAccessRegion(probationRegionId) -> throw ForbiddenProblem()
+      probationRegionId == null && !userAccessService.currentUserHasAllRegionsAccess(ServiceName.temporaryAccommodation) -> throw ForbiddenProblem()
+      probationRegionId != null && !userAccessService.currentUserCanAccessRegion(ServiceName.temporaryAccommodation, probationRegionId) -> throw ForbiddenProblem()
     }
   }
 }

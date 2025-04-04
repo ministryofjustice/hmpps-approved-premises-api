@@ -62,7 +62,7 @@ class VoidBedspacesTest : IntegrationTestBase() {
     givenAUser(roles = listOf(UserRole.CAS3_ASSESSOR)) { userEntity, jwt ->
       val premises = temporaryAccommodationPremisesEntityFactory.produceAndPersist {
         withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
-        withYieldedProbationRegion { probationRegion }
+        withYieldedProbationRegion { userEntity.probationRegion }
       }
 
       val voidBedspaces = cas3VoidBedspaceEntityFactory.produceAndPersist {
@@ -99,7 +99,7 @@ class VoidBedspacesTest : IntegrationTestBase() {
     givenAUser { userEntity, jwt ->
       val premises = temporaryAccommodationPremisesEntityFactory.produceAndPersist {
         withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
-        withYieldedProbationRegion { probationRegion }
+        withYieldedProbationRegion { userEntity.probationRegion }
       }
 
       val bed = bedEntityFactory.produceAndPersist {
@@ -175,7 +175,7 @@ class VoidBedspacesTest : IntegrationTestBase() {
     givenAUser(roles = listOf(UserRole.CAS3_ASSESSOR)) { userEntity, jwt ->
       val premises = temporaryAccommodationPremisesEntityFactory.produceAndPersist {
         withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
-        withYieldedProbationRegion { probationRegion }
+        withYieldedProbationRegion { userEntity.probationRegion }
       }
 
       webTestClient.get()
@@ -192,7 +192,7 @@ class VoidBedspacesTest : IntegrationTestBase() {
     givenAUser(roles = listOf(UserRole.CAS3_ASSESSOR)) { userEntity, jwt ->
       val premises = temporaryAccommodationPremisesEntityFactory.produceAndPersist {
         withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
-        withYieldedProbationRegion { probationRegion }
+        withYieldedProbationRegion { userEntity.probationRegion }
       }
 
       val bed = bedEntityFactory.produceAndPersist {
@@ -229,7 +229,7 @@ class VoidBedspacesTest : IntegrationTestBase() {
     givenAUser { userEntity, jwt ->
       val premises = temporaryAccommodationPremisesEntityFactory.produceAndPersist {
         withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
-        withYieldedProbationRegion { probationRegion }
+        withYieldedProbationRegion { userEntity.probationRegion }
       }
 
       val bed = bedEntityFactory.produceAndPersist {
@@ -293,7 +293,7 @@ class VoidBedspacesTest : IntegrationTestBase() {
     givenAUser(roles = listOf(UserRole.CAS3_ASSESSOR)) { userEntity, jwt ->
       val premises = temporaryAccommodationPremisesEntityFactory.produceAndPersist {
         withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
-        withYieldedProbationRegion { probationRegion }
+        withYieldedProbationRegion { userEntity.probationRegion }
       }
 
       val reason = cas3VoidBedspaceReasonEntityFactory.produceAndPersist()
@@ -325,7 +325,7 @@ class VoidBedspacesTest : IntegrationTestBase() {
     givenAUser(roles = listOf(UserRole.CAS3_ASSESSOR)) { userEntity, jwt ->
       val premises = temporaryAccommodationPremisesEntityFactory.produceAndPersist {
         withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
-        withYieldedProbationRegion { probationRegion }
+        withYieldedProbationRegion { userEntity.probationRegion }
       }
 
       val bed = bedEntityFactory.produceAndPersist {
@@ -375,7 +375,7 @@ class VoidBedspacesTest : IntegrationTestBase() {
     givenAUser { userEntity, jwt ->
       val premises = temporaryAccommodationPremisesEntityFactory.produceAndPersist {
         withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
-        withYieldedProbationRegion { probationRegion }
+        withYieldedProbationRegion { userEntity.probationRegion }
       }
 
       val bed = bedEntityFactory.produceAndPersist {
@@ -509,7 +509,7 @@ class VoidBedspacesTest : IntegrationTestBase() {
     givenAUser(roles = listOf(UserRole.CAS3_ASSESSOR)) { userEntity, jwt ->
       val premises = temporaryAccommodationPremisesEntityFactory.produceAndPersist {
         withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
-        withYieldedProbationRegion { probationRegion }
+        withYieldedProbationRegion { userEntity.probationRegion }
       }
 
       val bed = bedEntityFactory.produceAndPersist {
@@ -564,7 +564,7 @@ class VoidBedspacesTest : IntegrationTestBase() {
     givenAUser { userEntity, jwt ->
       val premises = temporaryAccommodationPremisesEntityFactory.produceAndPersist {
         withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
-        withYieldedProbationRegion { probationRegion }
+        withYieldedProbationRegion { userEntity.probationRegion }
       }
 
       val bed = bedEntityFactory.produceAndPersist {
@@ -683,7 +683,7 @@ class VoidBedspacesTest : IntegrationTestBase() {
     givenAUser(roles = listOf(UserRole.CAS3_ASSESSOR)) { userEntity, jwt ->
       val premises = temporaryAccommodationPremisesEntityFactory.produceAndPersist {
         withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
-        withYieldedProbationRegion { probationRegion }
+        withYieldedProbationRegion { userEntity.probationRegion }
       }
 
       val bed = bedEntityFactory.produceAndPersist {
@@ -726,7 +726,7 @@ class VoidBedspacesTest : IntegrationTestBase() {
     givenAUser { userEntity, jwt ->
       val premises = temporaryAccommodationPremisesEntityFactory.produceAndPersist {
         withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
-        withYieldedProbationRegion { probationRegion }
+        withYieldedProbationRegion { userEntity.probationRegion }
       }
 
       val bed = bedEntityFactory.produceAndPersist {
@@ -768,7 +768,7 @@ class VoidBedspacesTest : IntegrationTestBase() {
       givenAnOffender { offenderDetails, inmateDetails ->
         val premises = temporaryAccommodationPremisesEntityFactory.produceAndPersist {
           withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
-          withYieldedProbationRegion { probationRegion }
+          withYieldedProbationRegion { userEntity.probationRegion }
         }
 
         val bed = bedEntityFactory.produceAndPersist {
@@ -822,7 +822,7 @@ class VoidBedspacesTest : IntegrationTestBase() {
       givenAnOffender { offenderDetails, inmateDetails ->
         val premises = temporaryAccommodationPremisesEntityFactory.produceAndPersist {
           withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
-          withYieldedProbationRegion { probationRegion }
+          withYieldedProbationRegion { userEntity.probationRegion }
         }
 
         val bed = bedEntityFactory.produceAndPersist {
@@ -887,7 +887,7 @@ class VoidBedspacesTest : IntegrationTestBase() {
       givenAnOffender { offenderDetails, inmateDetails ->
         val premises = temporaryAccommodationPremisesEntityFactory.produceAndPersist {
           withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
-          withYieldedProbationRegion { probationRegion }
+          withYieldedProbationRegion { userEntity.probationRegion }
         }
 
         val bed = bedEntityFactory.produceAndPersist {
@@ -938,7 +938,7 @@ class VoidBedspacesTest : IntegrationTestBase() {
       givenAnOffender { offenderDetails, inmateDetails ->
         val premises = temporaryAccommodationPremisesEntityFactory.produceAndPersist {
           withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
-          withYieldedProbationRegion { probationRegion }
+          withYieldedProbationRegion { userEntity.probationRegion }
         }
 
         val bed = bedEntityFactory.produceAndPersist {
@@ -1002,7 +1002,7 @@ class VoidBedspacesTest : IntegrationTestBase() {
     givenAUser(roles = listOf(UserRole.CAS3_ASSESSOR)) { userEntity, jwt ->
       val premises = temporaryAccommodationPremisesEntityFactory.produceAndPersist {
         withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
-        withYieldedProbationRegion { probationRegion }
+        withYieldedProbationRegion { userEntity.probationRegion }
       }
 
       val bed = bedEntityFactory.produceAndPersist {
@@ -1062,7 +1062,7 @@ class VoidBedspacesTest : IntegrationTestBase() {
       givenAnOffender { offenderDetails, inmateDetails ->
         val premises = temporaryAccommodationPremisesEntityFactory.produceAndPersist {
           withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
-          withYieldedProbationRegion { probationRegion }
+          withYieldedProbationRegion { userEntity.probationRegion }
         }
 
         val bed = bedEntityFactory.produceAndPersist {
@@ -1134,7 +1134,7 @@ class VoidBedspacesTest : IntegrationTestBase() {
       givenAnOffender { offenderDetails, inmateDetails ->
         val premises = temporaryAccommodationPremisesEntityFactory.produceAndPersist {
           withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
-          withYieldedProbationRegion { probationRegion }
+          withYieldedProbationRegion { userEntity.probationRegion }
         }
 
         val bed = bedEntityFactory.produceAndPersist {
@@ -1192,7 +1192,7 @@ class VoidBedspacesTest : IntegrationTestBase() {
       givenAnOffender { offenderDetails, inmateDetails ->
         val premises = temporaryAccommodationPremisesEntityFactory.produceAndPersist {
           withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
-          withYieldedProbationRegion { probationRegion }
+          withYieldedProbationRegion { userEntity.probationRegion }
         }
 
         val bed = bedEntityFactory.produceAndPersist {

@@ -1030,10 +1030,10 @@ class PremisesTest {
 
     @Test
     fun `Trying to update a Temporary Accommodation Premises without a PDU returns 400`() {
-      givenAUser(roles = listOf(UserRole.CAS3_ASSESSOR)) { _, jwt ->
+      givenAUser(roles = listOf(UserRole.CAS3_ASSESSOR)) { user, jwt ->
         val premises = temporaryAccommodationPremisesEntityFactory.produceAndPersistMultiple(1) {
           withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
-          withYieldedProbationRegion { givenAProbationRegion() }
+          withYieldedProbationRegion { user.probationRegion }
         }
 
         val premisesToGet = premises[0]
@@ -1051,7 +1051,7 @@ class PremisesTest {
               // Allerdale
               localAuthorityAreaId = UUID.fromString("d1bd139b-7b90-4aae-87aa-9f93e183a7ff"),
               // North West
-              probationRegionId = UUID.fromString("a02b7727-63aa-46f2-80f1-e0b05b31903c"),
+              probationRegionId = user.probationRegion.id,
               characteristicIds = mutableListOf(),
               status = PropertyStatus.archived,
               pdu = null,
@@ -1070,10 +1070,10 @@ class PremisesTest {
 
     @Test
     fun `Trying to update a Temporary Accommodation Premises with an invalid PDU name returns 400`() {
-      givenAUser(roles = listOf(UserRole.CAS3_ASSESSOR)) { _, jwt ->
+      givenAUser(roles = listOf(UserRole.CAS3_ASSESSOR)) { user, jwt ->
         val premises = temporaryAccommodationPremisesEntityFactory.produceAndPersistMultiple(1) {
           withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
-          withYieldedProbationRegion { givenAProbationRegion() }
+          withYieldedProbationRegion { user.probationRegion }
         }
 
         val premisesToGet = premises[0]
@@ -1091,7 +1091,7 @@ class PremisesTest {
               // Allerdale
               localAuthorityAreaId = UUID.fromString("d1bd139b-7b90-4aae-87aa-9f93e183a7ff"),
               // North West
-              probationRegionId = UUID.fromString("a02b7727-63aa-46f2-80f1-e0b05b31903c"),
+              probationRegionId = user.probationRegion.id,
               characteristicIds = mutableListOf(),
               status = PropertyStatus.archived,
               pdu = "Non-existent PDU",
@@ -1161,11 +1161,11 @@ class PremisesTest {
 
     @Test
     fun `Trying to update a Temporary Accommodation Premises with an invalid probation delivery unit ID returns 400`() {
-      givenAUser(roles = listOf(UserRole.CAS3_ASSESSOR)) { _, jwt ->
+      givenAUser(roles = listOf(UserRole.CAS3_ASSESSOR)) { user, jwt ->
 
         val premises = temporaryAccommodationPremisesEntityFactory.produceAndPersistMultiple(1) {
           withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
-          withYieldedProbationRegion { givenAProbationRegion() }
+          withYieldedProbationRegion { user.probationRegion }
         }
 
         val premisesToGet = premises[0]
@@ -1183,7 +1183,7 @@ class PremisesTest {
               // Allerdale
               localAuthorityAreaId = UUID.fromString("d1bd139b-7b90-4aae-87aa-9f93e183a7ff"),
               // North West
-              probationRegionId = UUID.fromString("a02b7727-63aa-46f2-80f1-e0b05b31903c"),
+              probationRegionId = user.probationRegion.id,
               characteristicIds = mutableListOf(),
               status = PropertyStatus.archived,
               pdu = null,
@@ -1482,10 +1482,10 @@ class PremisesTest {
 
     @Test
     fun `Get Temporary Accommodation Premises by ID for a premises not in the user's region returns 403 Forbidden`() {
-      givenAUser { _, jwt ->
+      givenAUser { user, jwt ->
         val premises = temporaryAccommodationPremisesEntityFactory.produceAndPersistMultiple(5) {
           withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
-          withYieldedProbationRegion { givenAProbationRegion() }
+          withYieldedProbationRegion { user.probationRegion }
         }
 
         val premisesToGet = premises[2]
@@ -1502,10 +1502,10 @@ class PremisesTest {
 
     @Test
     fun `The total bedspaces on a Temporary Accommodation Premises is equal to the sum of the bedspaces in all Rooms attached to the Premises`() {
-      givenAUser(roles = listOf(UserRole.CAS3_ASSESSOR)) { _, jwt ->
+      givenAUser(roles = listOf(UserRole.CAS3_ASSESSOR)) { user, jwt ->
         val premises = temporaryAccommodationPremisesEntityFactory.produceAndPersist {
           withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
-          withYieldedProbationRegion { givenAProbationRegion() }
+          withYieldedProbationRegion { user.probationRegion }
         }.also {
           addRoomsAndBeds(it, roomCount = 2, bedsPerRoom = 5)
           addRoomsAndBeds(it, roomCount = 1, bedsPerRoom = 1, isActive = false)
@@ -1594,7 +1594,7 @@ class PremisesTest {
       givenAUser { user, jwt ->
         val premises = temporaryAccommodationPremisesEntityFactory.produceAndPersist {
           withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
-          withYieldedProbationRegion { givenAProbationRegion() }
+          withYieldedProbationRegion { user.probationRegion }
         }
 
         webTestClient.get()
@@ -1662,7 +1662,7 @@ class PremisesTest {
     @EnumSource(value = UserRole::class, names = [ "CAS1_FUTURE_MANAGER", "CAS1_MATCHER" ])
     @Disabled
     fun `Get Approved Premises Staff caches response when user has one of roles FUTURE_MANAGER, MATCHER`(role: UserRole) {
-      givenAUser(roles = listOf(role)) { userEntity, jwt ->
+      givenAUser(roles = listOf(role)) { _, jwt ->
         val qCode = "FOUND"
 
         val premises = approvedPremisesEntityFactory.produceAndPersist {
@@ -1722,10 +1722,10 @@ class PremisesTest {
 
     @Test
     fun `Get all Rooms for Premises returns OK with correct body`() {
-      givenAUser(roles = listOf(UserRole.CAS3_ASSESSOR)) { _, jwt ->
+      givenAUser(roles = listOf(UserRole.CAS3_ASSESSOR)) { user, jwt ->
         val premises = temporaryAccommodationPremisesEntityFactory.produceAndPersist {
           withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
-          withYieldedProbationRegion { givenAProbationRegion() }
+          withYieldedProbationRegion { user.probationRegion }
         }
         val rooms = roomEntityFactory.produceAndPersistMultiple(5) {
           withYieldedPremises { premises }
@@ -1750,10 +1750,10 @@ class PremisesTest {
 
     @Test
     fun `Get all Rooms for a Temporary Accommodation Premises that's not in the user's region returns 403 Forbidden`() {
-      givenAUser { _, jwt ->
+      givenAUser { user, jwt ->
         val premises = temporaryAccommodationPremisesEntityFactory.produceAndPersist {
           withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
-          withYieldedProbationRegion { givenAProbationRegion() }
+          withYieldedProbationRegion { user.probationRegion }
         }
         val rooms = roomEntityFactory.produceAndPersistMultiple(5) {
           withYieldedPremises { premises }
@@ -1777,10 +1777,10 @@ class PremisesTest {
 
     @Test
     fun `Get all Rooms for Premises returns OK with correct body with end-date`() {
-      givenAUser(roles = listOf(UserRole.CAS3_ASSESSOR)) { _, jwt ->
+      givenAUser(roles = listOf(UserRole.CAS3_ASSESSOR)) { user, jwt ->
         val premises = temporaryAccommodationPremisesEntityFactory.produceAndPersist {
           withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
-          withYieldedProbationRegion { givenAProbationRegion() }
+          withYieldedProbationRegion { user.probationRegion }
         }
         val rooms = roomEntityFactory.produceAndPersistMultiple(5) {
           withYieldedPremises { premises }
@@ -1820,10 +1820,10 @@ class PremisesTest {
   inner class CreateRoomForPremises : IntegrationTestBase() {
     @Test
     fun `Create new Room for Premises returns 201 Created with correct body when given valid data`() {
-      givenAUser(roles = listOf(UserRole.CAS3_ASSESSOR)) { _, jwt ->
+      givenAUser(roles = listOf(UserRole.CAS3_ASSESSOR)) { user, jwt ->
         val premises = temporaryAccommodationPremisesEntityFactory.produceAndPersist {
           withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
-          withYieldedProbationRegion { givenAProbationRegion() }
+          withYieldedProbationRegion { user.probationRegion }
         }
 
         val characteristicIds = characteristicEntityFactory.produceAndPersistMultiple(5) {
@@ -1857,10 +1857,10 @@ class PremisesTest {
 
     @Test
     fun `When a new room is created with no notes then it defaults to empty`() {
-      givenAUser(roles = listOf(UserRole.CAS3_ASSESSOR)) { _, jwt ->
+      givenAUser(roles = listOf(UserRole.CAS3_ASSESSOR)) { user, jwt ->
         val premises = temporaryAccommodationPremisesEntityFactory.produceAndPersist {
           withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
-          withYieldedProbationRegion { givenAProbationRegion() }
+          withYieldedProbationRegion { user.probationRegion }
         }
 
         webTestClient.post()
@@ -1883,10 +1883,10 @@ class PremisesTest {
 
     @Test
     fun `Create new Room with end date for temporary accommodation Premises returns 201 Created with correct body when given valid data`() {
-      givenAUser(roles = listOf(UserRole.CAS3_ASSESSOR)) { _, jwt ->
+      givenAUser(roles = listOf(UserRole.CAS3_ASSESSOR)) { user, jwt ->
         val premises = temporaryAccommodationPremisesEntityFactory.produceAndPersist {
           withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
-          withYieldedProbationRegion { givenAProbationRegion() }
+          withYieldedProbationRegion { user.probationRegion }
         }
 
         val characteristicIds = characteristicEntityFactory.produceAndPersistMultiple(5) {
@@ -1949,10 +1949,10 @@ class PremisesTest {
 
     @Test
     fun `Trying to create a room with an unknown characteristic returns 400`() {
-      givenAUser(roles = listOf(UserRole.CAS3_ASSESSOR)) { _, jwt ->
+      givenAUser(roles = listOf(UserRole.CAS3_ASSESSOR)) { user, jwt ->
         val premises = temporaryAccommodationPremisesEntityFactory.produceAndPersist {
           withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
-          withYieldedProbationRegion { givenAProbationRegion() }
+          withYieldedProbationRegion { user.probationRegion }
         }
 
         webTestClient.post()
@@ -1976,10 +1976,10 @@ class PremisesTest {
 
     @Test
     fun `Trying to create a room with a characteristic of the wrong service scope returns 400`() {
-      givenAUser(roles = listOf(UserRole.CAS3_ASSESSOR)) { _, jwt ->
+      givenAUser(roles = listOf(UserRole.CAS3_ASSESSOR)) { user, jwt ->
         val premises = temporaryAccommodationPremisesEntityFactory.produceAndPersist {
           withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
-          withYieldedProbationRegion { givenAProbationRegion() }
+          withYieldedProbationRegion { user.probationRegion }
         }
 
         val characteristicId = characteristicEntityFactory.produceAndPersist {
@@ -2040,10 +2040,10 @@ class PremisesTest {
 
     @Test
     fun `Create new Room for Temporary Accommodation Premises that's not in the user's region returns 403 Forbidden`() {
-      givenAUser { _, jwt ->
+      givenAUser { user, jwt ->
         val premises = temporaryAccommodationPremisesEntityFactory.produceAndPersist {
           withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
-          withYieldedProbationRegion { givenAProbationRegion() }
+          withYieldedProbationRegion { user.probationRegion }
         }
 
         val characteristicIds = characteristicEntityFactory.produceAndPersistMultiple(5) {
@@ -2074,10 +2074,10 @@ class PremisesTest {
   inner class UpdateRoom : IntegrationTestBase() {
     @Test
     fun `Updating a Room returns OK with correct body when given valid data`() {
-      givenAUser(roles = listOf(UserRole.CAS3_ASSESSOR)) { _, jwt ->
+      givenAUser(roles = listOf(UserRole.CAS3_ASSESSOR)) { user, jwt ->
         val premises = temporaryAccommodationPremisesEntityFactory.produceAndPersist {
           withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
-          withYieldedProbationRegion { givenAProbationRegion() }
+          withYieldedProbationRegion { user.probationRegion }
         }
 
         val room = roomEntityFactory.produceAndPersist {
@@ -2115,10 +2115,10 @@ class PremisesTest {
 
     @Test
     fun `When a room is updated with no notes then it defaults to empty`() {
-      givenAUser(roles = listOf(UserRole.CAS3_ASSESSOR)) { _, jwt ->
+      givenAUser(roles = listOf(UserRole.CAS3_ASSESSOR)) { user, jwt ->
         val premises = temporaryAccommodationPremisesEntityFactory.produceAndPersist {
           withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
-          withYieldedProbationRegion { givenAProbationRegion() }
+          withYieldedProbationRegion { user.probationRegion }
         }
 
         val room = roomEntityFactory.produceAndPersist {
@@ -2145,10 +2145,10 @@ class PremisesTest {
 
     @Test
     fun `Trying to update a room that does not exist returns 404`() {
-      givenAUser(roles = listOf(UserRole.CAS3_ASSESSOR)) { _, jwt ->
+      givenAUser(roles = listOf(UserRole.CAS3_ASSESSOR)) { user, jwt ->
         val premises = temporaryAccommodationPremisesEntityFactory.produceAndPersist {
           withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
-          withYieldedProbationRegion { givenAProbationRegion() }
+          withYieldedProbationRegion { user.probationRegion }
         }
 
         val id = UUID.randomUUID()
@@ -2174,10 +2174,10 @@ class PremisesTest {
 
     @Test
     fun `Trying to update a room with an unknown characteristic returns 400`() {
-      givenAUser(roles = listOf(UserRole.CAS3_ASSESSOR)) { _, jwt ->
+      givenAUser(roles = listOf(UserRole.CAS3_ASSESSOR)) { user, jwt ->
         val premises = temporaryAccommodationPremisesEntityFactory.produceAndPersist {
           withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
-          withYieldedProbationRegion { givenAProbationRegion() }
+          withYieldedProbationRegion { user.probationRegion }
         }
 
         val room = roomEntityFactory.produceAndPersist {
@@ -2205,10 +2205,10 @@ class PremisesTest {
 
     @Test
     fun `Trying to update a room with a characteristic of the wrong service scope returns 400`() {
-      givenAUser(roles = listOf(UserRole.CAS3_ASSESSOR)) { _, jwt ->
+      givenAUser(roles = listOf(UserRole.CAS3_ASSESSOR)) { user, jwt ->
         val premises = temporaryAccommodationPremisesEntityFactory.produceAndPersist {
           withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
-          withYieldedProbationRegion { givenAProbationRegion() }
+          withYieldedProbationRegion { user.probationRegion }
         }
 
         val room = roomEntityFactory.produceAndPersist {
@@ -2277,10 +2277,10 @@ class PremisesTest {
 
     @Test
     fun `Updating a Room on a Temporary Accommodation premises that's not in the user's region returns 403 Forbidden`() {
-      givenAUser { _, jwt ->
+      givenAUser { user, jwt ->
         val premises = temporaryAccommodationPremisesEntityFactory.produceAndPersist {
           withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
-          withYieldedProbationRegion { givenAProbationRegion() }
+          withYieldedProbationRegion { user.probationRegion }
         }
 
         val room = roomEntityFactory.produceAndPersist {
@@ -2354,10 +2354,10 @@ class PremisesTest {
 
     @Test
     fun `Updating a Temporary Accommodation room does not change the name when it's not provided`() {
-      givenAUser(roles = listOf(UserRole.CAS3_ASSESSOR)) { _, jwt ->
+      givenAUser(roles = listOf(UserRole.CAS3_ASSESSOR)) { user, jwt ->
         val premises = temporaryAccommodationPremisesEntityFactory.produceAndPersist {
           withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
-          withYieldedProbationRegion { givenAProbationRegion() }
+          withYieldedProbationRegion { user.probationRegion }
         }
 
         val room = roomEntityFactory.produceAndPersist {
@@ -2396,10 +2396,10 @@ class PremisesTest {
 
     @Test
     fun `Updating a Temporary Accommodation room changes the name when it's provided`() {
-      givenAUser(roles = listOf(UserRole.CAS3_ASSESSOR)) { _, jwt ->
+      givenAUser(roles = listOf(UserRole.CAS3_ASSESSOR)) { user, jwt ->
         val premises = temporaryAccommodationPremisesEntityFactory.produceAndPersist {
           withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
-          withYieldedProbationRegion { givenAProbationRegion() }
+          withYieldedProbationRegion { user.probationRegion }
         }
 
         val room = roomEntityFactory.produceAndPersist {
@@ -2438,10 +2438,10 @@ class PremisesTest {
 
     @Test
     fun `Updating a Temporary Accommodation room with bedpace end-date when it's provided and no booking exists for the room`() {
-      givenAUser(roles = listOf(UserRole.CAS3_ASSESSOR)) { _, jwt ->
+      givenAUser(roles = listOf(UserRole.CAS3_ASSESSOR)) { user, jwt ->
         val premises = temporaryAccommodationPremisesEntityFactory.produceAndPersist {
           withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
-          withYieldedProbationRegion { givenAProbationRegion() }
+          withYieldedProbationRegion { user.probationRegion }
         }
 
         val room = roomEntityFactory.produceAndPersist {
@@ -2486,11 +2486,11 @@ class PremisesTest {
 
     @Test
     fun `Updating a Temporary Accommodation room with bedspace end-date throw conflict error when active booking's arrival and departure date overlap with bedspace end-date`() {
-      givenAUser(roles = listOf(UserRole.CAS3_ASSESSOR)) { _, jwt ->
+      givenAUser(roles = listOf(UserRole.CAS3_ASSESSOR)) { user, jwt ->
         val bedEndDate = LocalDate.now()
         val premises = temporaryAccommodationPremisesEntityFactory.produceAndPersist {
           withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
-          withYieldedProbationRegion { givenAProbationRegion() }
+          withYieldedProbationRegion { user.probationRegion }
         }
 
         val room = roomEntityFactory.produceAndPersist {
@@ -2538,11 +2538,11 @@ class PremisesTest {
 
     @Test
     fun `Updating a Temporary Accommodation room with bedspace end-date throw conflict error when active booking starts in the future date compare to bedpace end-date`() {
-      givenAUser(roles = listOf(UserRole.CAS3_ASSESSOR)) { _, jwt ->
+      givenAUser(roles = listOf(UserRole.CAS3_ASSESSOR)) { user, jwt ->
         val bedEndDate = LocalDate.now()
         val premises = temporaryAccommodationPremisesEntityFactory.produceAndPersist {
           withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
-          withYieldedProbationRegion { givenAProbationRegion() }
+          withYieldedProbationRegion { user.probationRegion }
         }
 
         val room = roomEntityFactory.produceAndPersist {
@@ -2590,11 +2590,11 @@ class PremisesTest {
 
     @Test
     fun `Updating a Temporary Accommodation room with bedspace end-date throw conflict error when active booking exists with departure date is equal to bedspace end-date`() {
-      givenAUser(roles = listOf(UserRole.CAS3_ASSESSOR)) { _, jwt ->
+      givenAUser(roles = listOf(UserRole.CAS3_ASSESSOR)) { user, jwt ->
         val bedEndDate = LocalDate.now()
         val premises = temporaryAccommodationPremisesEntityFactory.produceAndPersist {
           withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
-          withYieldedProbationRegion { givenAProbationRegion() }
+          withYieldedProbationRegion { user.probationRegion }
         }
 
         val room = roomEntityFactory.produceAndPersist {
@@ -2642,11 +2642,11 @@ class PremisesTest {
 
     @Test
     fun `Updating a Temporary Accommodation room with bedspace end-date throw conflict error when active booking exists with arrival date is equal to bedspace end-date`() {
-      givenAUser(roles = listOf(UserRole.CAS3_ASSESSOR)) { _, jwt ->
+      givenAUser(roles = listOf(UserRole.CAS3_ASSESSOR)) { user, jwt ->
         val bedEndDate = LocalDate.now()
         val premises = temporaryAccommodationPremisesEntityFactory.produceAndPersist {
           withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
-          withYieldedProbationRegion { givenAProbationRegion() }
+          withYieldedProbationRegion { user.probationRegion }
         }
 
         val room = roomEntityFactory.produceAndPersist {
@@ -2694,11 +2694,11 @@ class PremisesTest {
 
     @Test
     fun `Updating a Temporary Accommodation room with bedspace end-date is successful when booking exists but ended before bedspace end-date `() {
-      givenAUser(roles = listOf(UserRole.CAS3_ASSESSOR)) { _, jwt ->
+      givenAUser(roles = listOf(UserRole.CAS3_ASSESSOR)) { user, jwt ->
         val bedEndDate = LocalDate.now()
         val premises = temporaryAccommodationPremisesEntityFactory.produceAndPersist {
           withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
-          withYieldedProbationRegion { givenAProbationRegion() }
+          withYieldedProbationRegion { user.probationRegion }
         }
 
         val room = roomEntityFactory.produceAndPersist {
@@ -2750,11 +2750,11 @@ class PremisesTest {
 
     @Test
     fun `Updating a Temporary Accommodation room with bedspace end-date is successful when active booking exists for different room`() {
-      givenAUser(roles = listOf(UserRole.CAS3_ASSESSOR)) { _, jwt ->
+      givenAUser(roles = listOf(UserRole.CAS3_ASSESSOR)) { user, jwt ->
         val bedEndDate = LocalDate.now()
         val premises = temporaryAccommodationPremisesEntityFactory.produceAndPersist {
           withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
-          withYieldedProbationRegion { givenAProbationRegion() }
+          withYieldedProbationRegion { user.probationRegion }
         }
 
         val room = roomEntityFactory.produceAndPersist {
@@ -2815,11 +2815,11 @@ class PremisesTest {
 
     @Test
     fun `Updating a Temporary Accommodation room with bedspace end-date is successful when booking exists for given bed but its been cancelled`() {
-      givenAUser(roles = listOf(UserRole.CAS3_ASSESSOR)) { _, jwt ->
+      givenAUser(roles = listOf(UserRole.CAS3_ASSESSOR)) { user, jwt ->
         val bedEndDate = LocalDate.now()
         val premises = temporaryAccommodationPremisesEntityFactory.produceAndPersist {
           withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
-          withYieldedProbationRegion { givenAProbationRegion() }
+          withYieldedProbationRegion { user.probationRegion }
         }
 
         val room = roomEntityFactory.produceAndPersist {
@@ -2877,11 +2877,11 @@ class PremisesTest {
 
     @Test
     fun `Updating a Temporary Accommodation room with bedspace end-date is successful when booking exists but non-arrival`() {
-      givenAUser(roles = listOf(UserRole.CAS3_ASSESSOR)) { _, jwt ->
+      givenAUser(roles = listOf(UserRole.CAS3_ASSESSOR)) { user, jwt ->
         val bedEndDate = LocalDate.now()
         val premises = temporaryAccommodationPremisesEntityFactory.produceAndPersist {
           withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
-          withYieldedProbationRegion { givenAProbationRegion() }
+          withYieldedProbationRegion { user.probationRegion }
         }
 
         val room = roomEntityFactory.produceAndPersist {
@@ -2939,10 +2939,10 @@ class PremisesTest {
 
     @Test
     fun `Updating a Temporary Accommodation room with bedspace is not successful when end-date is already exists for the given bed`() {
-      givenAUser(roles = listOf(UserRole.CAS3_ASSESSOR)) { _, jwt ->
+      givenAUser(roles = listOf(UserRole.CAS3_ASSESSOR)) { user, jwt ->
         val premises = temporaryAccommodationPremisesEntityFactory.produceAndPersist {
           withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
-          withYieldedProbationRegion { givenAProbationRegion() }
+          withYieldedProbationRegion { user.probationRegion }
         }
 
         val room = roomEntityFactory.produceAndPersist {
@@ -2983,11 +2983,11 @@ class PremisesTest {
 
     @Test
     fun `Updating a Temporary Accommodation room with bedpace end-date is before bed created date is throws bad request error`() {
-      givenAUser(roles = listOf(UserRole.CAS3_ASSESSOR)) { _, jwt ->
+      givenAUser(roles = listOf(UserRole.CAS3_ASSESSOR)) { user, jwt ->
         val bedEndDate = LocalDate.now()
         val premises = temporaryAccommodationPremisesEntityFactory.produceAndPersist {
           withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
-          withYieldedProbationRegion { givenAProbationRegion() }
+          withYieldedProbationRegion { user.probationRegion }
         }
 
         val room = roomEntityFactory.produceAndPersist {
@@ -3037,16 +3037,14 @@ class PremisesTest {
       ],
     )
     fun `Archive Temporary Accommodation Premises with provisional, confirmed or arrived bookings throws bad request error`(bookingStatus: BookingStatus) {
-      givenAUser(roles = listOf(UserRole.CAS3_ASSESSOR)) { _, jwt ->
-
-        val region = givenAProbationRegion()
+      givenAUser(roles = listOf(UserRole.CAS3_ASSESSOR)) { user, jwt ->
         val premises = temporaryAccommodationPremisesEntityFactory.produceAndPersist {
           withService(ServiceName.temporaryAccommodation.value)
           withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
-          withYieldedProbationRegion { region }
+          withYieldedProbationRegion { user.probationRegion }
           withYieldedProbationDeliveryUnit {
             probationDeliveryUnitFactory.produceAndPersist {
-              withProbationRegion(region)
+              withProbationRegion(user.probationRegion)
             }
           }
         }
@@ -3088,16 +3086,15 @@ class PremisesTest {
 
     @Test
     fun `Archive Temporary Accommodation Premises with cancelled booking returns OK with correct body`() {
-      givenAUser(roles = listOf(UserRole.CAS3_ASSESSOR)) { _, jwt ->
+      givenAUser(roles = listOf(UserRole.CAS3_ASSESSOR)) { user, jwt ->
 
-        val region = givenAProbationRegion()
         val premises = temporaryAccommodationPremisesEntityFactory.produceAndPersist {
           withService(ServiceName.temporaryAccommodation.value)
           withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
-          withYieldedProbationRegion { region }
+          withYieldedProbationRegion { user.probationRegion }
           withYieldedProbationDeliveryUnit {
             probationDeliveryUnitFactory.produceAndPersist {
-              withProbationRegion(region)
+              withProbationRegion(user.probationRegion)
             }
           }
         }
@@ -3224,10 +3221,10 @@ class PremisesTest {
 
     @Test
     fun `Get Room by ID for a room on a Temporary Accommodation premises that's not in the user's region returns 403 Forbidden`() {
-      givenAUser { _, jwt ->
+      givenAUser { user, jwt ->
         val premises = temporaryAccommodationPremisesEntityFactory.produceAndPersist {
           withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
-          withYieldedProbationRegion { givenAProbationRegion() }
+          withYieldedProbationRegion { user.probationRegion }
         }
 
         val room = roomEntityFactory.produceAndPersist {
@@ -3248,10 +3245,10 @@ class PremisesTest {
 
     @Test
     fun `Get Room by ID for temporary accommodation returns OK with correct body`() {
-      givenAUser(roles = listOf(UserRole.CAS3_ASSESSOR)) { _, jwt ->
+      givenAUser(roles = listOf(UserRole.CAS3_ASSESSOR)) { user, jwt ->
         val premises = temporaryAccommodationPremisesEntityFactory.produceAndPersist {
           withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
-          withYieldedProbationRegion { givenAProbationRegion() }
+          withYieldedProbationRegion { user.probationRegion }
         }
 
         val room = roomEntityFactory.produceAndPersist {
@@ -3275,10 +3272,10 @@ class PremisesTest {
 
     @Test
     fun `Get Room by ID for temporary accommodation returns OK with correct body with end date`() {
-      givenAUser(roles = listOf(UserRole.CAS3_ASSESSOR)) { _, jwt ->
+      givenAUser(roles = listOf(UserRole.CAS3_ASSESSOR)) { user, jwt ->
         val premises = temporaryAccommodationPremisesEntityFactory.produceAndPersist {
           withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
-          withYieldedProbationRegion { givenAProbationRegion() }
+          withYieldedProbationRegion { user.probationRegion }
         }
 
         val room = roomEntityFactory.produceAndPersist {
