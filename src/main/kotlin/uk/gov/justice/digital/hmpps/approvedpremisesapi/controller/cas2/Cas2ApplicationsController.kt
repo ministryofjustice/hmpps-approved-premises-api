@@ -5,6 +5,7 @@ import jakarta.transaction.Transactional
 import org.springframework.http.ResponseEntity
 import org.springframework.stereotype.Service
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.cas2.ApplicationsCas2Delegate
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.AssignmentType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas2Application
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas2ApplicationSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewApplication
@@ -13,6 +14,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.UpdateCas2Appl
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas2ApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas2ApplicationSummaryEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.ForbiddenProblem
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.FeatureFlagService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.NomisUserService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas2.Cas2ApplicationService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas2.Cas2OffenderService
@@ -29,19 +31,34 @@ class Cas2ApplicationsController(
   private val objectMapper: ObjectMapper,
   private val offenderService: Cas2OffenderService,
   private val userService: NomisUserService,
+  private val featureFlagService: FeatureFlagService,
 ) : ApplicationsCas2Delegate {
 
   override fun getCas2Applications(
     isSubmitted: Boolean?,
     page: Int?,
     prisonCode: String?,
-    assignmentType: String?,
+    assignmentType: AssignmentType?,
   ): ResponseEntity<List<Cas2ApplicationSummary>> {
     val user = userService.getUserForRequest()
 
-    prisonCode?.let { if (prisonCode != user.activeCaseloadId) throw ForbiddenProblem() }
+    prisonCode?.let { if (user.activeCaseloadId == null || prisonCode != user.activeCaseloadId) throw ForbiddenProblem() }
 
     val pageCriteria = PageCriteria("createdAt", SortDirection.desc, page)
+
+    if (featureFlagService.getBooleanFlag("cas2-application-transfers-enabled") && assignmentType != null) {
+      assignmentType.let {
+        val (results, metadata) = applicationService.getApplicationSummaries(
+          user,
+          pageCriteria,
+          assignmentType,
+          forPrison = prisonCode != null,
+        )
+        return ResponseEntity.ok().headers(
+          metadata?.toHeaders(),
+        ).body(getPersonNamesAndTransformToSummaries(results))
+      }
+    }
 
     val (applications, metadata) = applicationService.getApplications(prisonCode, isSubmitted, user, pageCriteria)
 

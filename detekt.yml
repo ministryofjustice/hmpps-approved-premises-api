@@ -38,4 +38,5 @@ complexity:
       # database design.
       - javax.persistence.Entity
   TooManyFunctions:
+    thresholdInInterfaces: 20
     thresholdInClasses: 20
