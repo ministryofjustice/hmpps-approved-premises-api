@@ -26,7 +26,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.DomainEvent
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.ValidationErrors
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.reference.Cas2PersistedApplicationStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.reference.Cas2PersistedApplicationStatusDetail
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.reference.Cas2PersistedApplicationStatusFinder
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.reference.Cas2v2PersistedApplicationStatusFinder
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.CasResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.EmailNotificationService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas2.Cas2DomainEventService
@@ -45,15 +45,13 @@ class Cas2v2StatusUpdateService(
   private val domainEventService: Cas2DomainEventService,
   private val emailNotificationService: EmailNotificationService,
   private val notifyConfig: NotifyConfig,
-  private val statusFinder: Cas2PersistedApplicationStatusFinder,
+  private val cas2v2PersistedApplicationStatusFinder: Cas2v2PersistedApplicationStatusFinder,
   private val statusTransformer: ApplicationStatusTransformer,
   @Value("\${url-templates.frontend.cas2v2.application}") private val applicationUrlTemplate: String,
   @Value("\${url-templates.frontend.cas2v2.application-overview}") private val applicationOverviewUrlTemplate: String,
 ) {
 
   private val log = LoggerFactory.getLogger(this::class.java)
-
-  fun isValidStatus(statusUpdate: Cas2v2AssessmentStatusUpdate): Boolean = findActiveStatusByName(statusUpdate.newStatus) != null
 
   @Transactional
   @SuppressWarnings("ReturnCount")
@@ -113,7 +111,7 @@ class Cas2v2StatusUpdateService(
     return CasResult.Success(createdStatusUpdate)
   }
 
-  private fun findActiveStatusByName(statusName: String): Cas2PersistedApplicationStatus? = statusFinder.active()
+  private fun findActiveStatusByName(statusName: String): Cas2PersistedApplicationStatus? = cas2v2PersistedApplicationStatusFinder.active()
     .find { status -> status.name == statusName }
 
   fun createStatusUpdatedDomainEvent(

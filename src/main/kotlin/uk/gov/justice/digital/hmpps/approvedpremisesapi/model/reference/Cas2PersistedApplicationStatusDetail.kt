@@ -1,5 +1,6 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.model.reference
 
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
 import java.util.UUID
 
 data class Cas2PersistedApplicationStatusDetail(
@@ -7,4 +8,5 @@ data class Cas2PersistedApplicationStatusDetail(
   val name: String,
   val label: String,
   val isActive: Boolean = true,
+  val applicableToServices: List<ServiceName> = listOf(ServiceName.cas2, ServiceName.cas2v2),
 )
