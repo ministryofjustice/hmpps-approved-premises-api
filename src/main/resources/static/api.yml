@@ -1636,6 +1636,8 @@ paths:
           $ref: '_shared.yml#/components/responses/500Response'
       x-codegen-request-body-name: body
     get:
+      deprecated: true
+      description: deprecated, use either  /cas1/applications or /cas3/applications
       tags:
         - Operations on all applications
       summary: Lists all applications that the user has created

@@ -6,13 +6,29 @@ import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 import org.springframework.test.web.reactive.server.returnResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1ApplicationSummary
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.FlagsEnvelope
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.FullPerson
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.MappaEnvelope
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PersonRisks
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PersonStatus
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PersonType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.RestrictedPerson
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.RiskEnvelopeStatus
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.RiskTierEnvelope
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.RoshRisksEnvelope
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.UnknownPerson
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.CaseAccessFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.PersonRisksFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.StaffDetailFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.TeamFactoryDeliusContext
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.IntegrationTestBase
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAUser
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAnOffender
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.apDeliusContextAddResponseToUserAccessCall
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.apDeliusContextMockUserAccess
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApplicationEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApplicationTeamCodeEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserQualification
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.ApprovedPremisesApplicationStatus
@@ -795,16 +811,321 @@ class Cas1ApplicationTest : IntegrationTestBase() {
         }
       }
     }
+  }
 
-    private fun createTwelveApplications(crn: String, user: UserEntity) {
-      val applicationSchema = approvedPremisesApplicationJsonSchemaEntityFactory.produceAndPersist {
-        withPermissiveSchema()
+  @Nested
+  inner class GetApplications {
+
+    @Test
+    fun `Get all applications without JWT returns 401`() {
+      webTestClient.get()
+        .uri("/cas1/applications")
+        .exchange()
+        .expectStatus()
+        .isUnauthorized
+    }
+
+    @Test
+    fun `Get all applications returns 200 - when user has no roles returns applications managed by their teams`() {
+      givenAUser(
+        staffDetail = StaffDetailFactory.staffDetail(teams = listOf(TeamFactoryDeliusContext.team(code = "TEAM1"))),
+      ) { userEntity, jwt ->
+        givenAUser { otherUser, _ ->
+          givenAnOffender { offenderDetails, _ ->
+            givenAnOffender { otherOffenderDetails, _ ->
+              approvedPremisesApplicationJsonSchemaRepository.deleteAll()
+
+              val newestJsonSchema = approvedPremisesApplicationJsonSchemaEntityFactory.produceAndPersist {
+                withAddedAt(OffsetDateTime.parse("2022-09-21T12:45:00+01:00"))
+                withSchema(
+                  """
+          {
+            "${"\$schema"}": "https://json-schema.org/draft/2020-12/schema",
+            "${"\$id"}": "https://example.com/product.schema.json",
+            "title": "Thing",
+            "description": "A thing",
+            "type": "object",
+            "properties": {
+              "thingId": {
+                "description": "The unique identifier for a thing",
+                "type": "integer"
+              }
+            },
+            "required": [ "thingId" ]
+          }
+          """,
+                )
+              }
+
+              val olderJsonSchema = approvedPremisesApplicationJsonSchemaEntityFactory.produceAndPersist {
+                withAddedAt(OffsetDateTime.parse("2022-09-21T09:45:00+01:00"))
+                withSchema(
+                  """
+              {
+                "${"\$schema"}": "https://json-schema.org/draft/2020-12/schema",
+                "${"\$id"}": "https://example.com/product.schema.json",
+                "title": "Thing",
+                "description": "A thing",
+                "type": "object",
+                "properties": { }
+              }
+            """,
+                )
+              }
+
+              val upToDateApplicationEntityManagedByTeam = approvedPremisesApplicationEntityFactory.produceAndPersist {
+                withApplicationSchema(newestJsonSchema)
+                withCrn(offenderDetails.otherIds.crn)
+                withCreatedByUser(userEntity)
+                withData(
+                  """
+                {
+                   "thingId": 123
+                }
+              """,
+                )
+              }
+
+              upToDateApplicationEntityManagedByTeam.teamCodes += applicationTeamCodeRepository.save(
+                ApplicationTeamCodeEntity(
+                  id = UUID.randomUUID(),
+                  application = upToDateApplicationEntityManagedByTeam,
+                  teamCode = "TEAM1",
+                ),
+              )
+
+              val outdatedApplicationEntityManagedByTeam = approvedPremisesApplicationEntityFactory.produceAndPersist {
+                withApplicationSchema(olderJsonSchema)
+                withCreatedByUser(userEntity)
+                withCrn(offenderDetails.otherIds.crn)
+                withData("{}")
+              }
+
+              outdatedApplicationEntityManagedByTeam.teamCodes += applicationTeamCodeRepository.save(
+                ApplicationTeamCodeEntity(
+                  id = UUID.randomUUID(),
+                  application = outdatedApplicationEntityManagedByTeam,
+                  teamCode = "TEAM1",
+                ),
+              )
+
+              val outdatedApplicationEntityNotManagedByTeam =
+                approvedPremisesApplicationEntityFactory.produceAndPersist {
+                  withApplicationSchema(olderJsonSchema)
+                  withCreatedByUser(otherUser)
+                  withCrn(otherOffenderDetails.otherIds.crn)
+                  withData("{}")
+                }
+
+              apDeliusContextAddResponseToUserAccessCall(
+                listOf(
+                  CaseAccessFactory()
+                    .withCrn(offenderDetails.otherIds.crn)
+                    .produce(),
+                ),
+                userEntity.deliusUsername,
+              )
+
+              val responseBody = webTestClient.get()
+                .uri("/cas1/applications")
+                .header("Authorization", "Bearer $jwt")
+                .exchange()
+                .expectStatus()
+                .isOk
+                .bodyAsListOfObjects<Cas1ApplicationSummary>()
+
+              assertThat(responseBody).anyMatch {
+                outdatedApplicationEntityManagedByTeam.id == it.id &&
+                  outdatedApplicationEntityManagedByTeam.crn == it.person.crn &&
+                  outdatedApplicationEntityManagedByTeam.createdAt.toInstant() == it.createdAt &&
+                  outdatedApplicationEntityManagedByTeam.createdByUser.id == it.createdByUserId &&
+                  outdatedApplicationEntityManagedByTeam.submittedAt?.toInstant() == it.submittedAt
+              }
+
+              assertThat(responseBody).anyMatch {
+                upToDateApplicationEntityManagedByTeam.id == it.id &&
+                  upToDateApplicationEntityManagedByTeam.crn == it.person.crn &&
+                  upToDateApplicationEntityManagedByTeam.createdAt.toInstant() == it.createdAt &&
+                  upToDateApplicationEntityManagedByTeam.createdByUser.id == it.createdByUserId &&
+                  upToDateApplicationEntityManagedByTeam.submittedAt?.toInstant() == it.submittedAt
+              }
+
+              assertThat(responseBody).noneMatch {
+                outdatedApplicationEntityNotManagedByTeam.id == it.id
+              }
+            }
+          }
+        }
       }
+    }
 
-      approvedPremisesApplicationEntityFactory.produceAndPersistMultiple(12) {
-        withApplicationSchema(applicationSchema)
+    @Test
+    fun `Get all applications returns limited information when a person cannot be found`() {
+      givenAUser(
+        staffDetail = StaffDetailFactory.staffDetail(teams = listOf(TeamFactoryDeliusContext.team(code = "TEAM1"))),
+      ) { userEntity, jwt ->
+        val crn = "X1234"
+
+        val application = produceAndPersistBasicApplication(crn, userEntity, "TEAM1")
+
+        apDeliusContextMockUserAccess(
+          CaseAccessFactory()
+            .withCrn(crn)
+            .produce(),
+          userEntity.deliusUsername,
+        )
+
+        webTestClient.get()
+          .uri("/cas1/applications")
+          .header("Authorization", "Bearer $jwt")
+          .exchange()
+          .expectStatus()
+          .isOk
+          .expectBody()
+          .json(
+            objectMapper.writeValueAsString(
+              listOf(
+                Cas1ApplicationSummary(
+                  createdByUserId = userEntity.id,
+                  status = ApiApprovedPremisesApplicationStatus.started,
+                  id = application.id,
+                  person = UnknownPerson(
+                    crn = crn,
+                    type = PersonType.unknownPerson,
+                  ),
+                  createdAt = application.createdAt.toInstant(),
+                  isWomensApplication = null,
+                  isPipeApplication = false,
+                  isEmergencyApplication = null,
+                  isEsapApplication = null,
+                  arrivalDate = null,
+                  risks = PersonRisks(
+                    crn = crn,
+                    roshRisks = RoshRisksEnvelope(RiskEnvelopeStatus.notFound),
+                    tier = RiskTierEnvelope(RiskEnvelopeStatus.notFound),
+                    flags = FlagsEnvelope(RiskEnvelopeStatus.notFound),
+                    mappa = MappaEnvelope(RiskEnvelopeStatus.notFound),
+                  ),
+                  submittedAt = null,
+                  isWithdrawn = false,
+                  hasRequestsForPlacement = false,
+                ),
+              ),
+            ),
+          )
+      }
+    }
+
+    @Test
+    fun `Get all applications returns successfully when a person has no NOMS number`() {
+      givenAUser(
+        staffDetail = StaffDetailFactory.staffDetail(teams = listOf(TeamFactoryDeliusContext.team(code = "TEAM1"))),
+      ) { userEntity, jwt ->
+        givenAnOffender(
+          offenderDetailsConfigBlock = { withoutNomsNumber() },
+        ) { offenderDetails, _ ->
+          val application = produceAndPersistBasicApplication(offenderDetails.otherIds.crn, userEntity, "TEAM1")
+
+          apDeliusContextAddResponseToUserAccessCall(
+            listOf(
+              CaseAccessFactory()
+                .withCrn(offenderDetails.otherIds.crn)
+                .produce(),
+            ),
+            userEntity.deliusUsername,
+          )
+
+          val responseBody = webTestClient.get()
+            .uri("/cas1/applications")
+            .header("Authorization", "Bearer $jwt")
+            .exchange()
+            .expectStatus()
+            .isOk
+            .bodyAsListOfObjects<Cas1ApplicationSummary>()
+
+          assertThat(responseBody).matches {
+            val person = it[0].person as FullPerson
+
+            application.id == it[0].id &&
+              application.crn == person.crn &&
+              person.nomsNumber == null &&
+              person.status == PersonStatus.unknown &&
+              person.prisonName == null
+          }
+        }
+      }
+    }
+
+    @Test
+    fun `Get all applications returns successfully when the person cannot be fetched from the prisons API`() {
+      givenAUser(
+        staffDetail = StaffDetailFactory.staffDetail(teams = listOf(TeamFactoryDeliusContext.team(code = "TEAM1"))),
+      ) { userEntity, jwt ->
+        val crn = "X1234"
+
+        givenAnOffender(
+          offenderDetailsConfigBlock = {
+            withCrn(crn)
+            withNomsNumber("ABC123")
+          },
+        ) { _, _ ->
+          val application = produceAndPersistBasicApplication(crn, userEntity, "TEAM1")
+
+          val responseBody = webTestClient.get()
+            .uri("/cas1/applications")
+            .header("Authorization", "Bearer $jwt")
+            .exchange()
+            .expectStatus()
+            .isOk
+            .bodyAsListOfObjects<Cas1ApplicationSummary>()
+
+          assertThat(responseBody).matches {
+            val person = it[0].person as FullPerson
+
+            application.id == it[0].id &&
+              application.crn == person.crn &&
+              person.nomsNumber == null &&
+              person.status == PersonStatus.unknown &&
+              person.prisonName == null
+          }
+        }
+      }
+    }
+  }
+
+  private fun produceAndPersistBasicApplication(
+    crn: String,
+    userEntity: UserEntity,
+    managingTeamCode: String,
+    submittedAt: OffsetDateTime? = null,
+  ): ApplicationEntity {
+    val jsonSchema = approvedPremisesApplicationJsonSchemaEntityFactory.produceAndPersist {
+      withAddedAt(OffsetDateTime.parse("2022-09-21T12:45:00+01:00"))
+      withSchema(
+        """
+        {
+          "${"\$schema"}": "https://json-schema.org/draft/2020-12/schema",
+          "${"\$id"}": "https://example.com/product.schema.json",
+          "title": "Thing",
+          "description": "A thing",
+          "type": "object",
+          "properties": {
+            "thingId": {
+              "description": "The unique identifier for a thing",
+              "type": "integer"
+            }
+          },
+          "required": [ "thingId" ]
+        }
+        """,
+      )
+    }
+
+    val application =
+      approvedPremisesApplicationEntityFactory.produceAndPersist {
+        withApplicationSchema(jsonSchema)
         withCrn(crn)
-        withCreatedByUser(user)
+        withCreatedByUser(userEntity)
         withData(
           """
           {
@@ -812,7 +1133,36 @@ class Cas1ApplicationTest : IntegrationTestBase() {
           }
           """,
         )
+        withSubmittedAt(submittedAt)
       }
+
+    application.teamCodes += applicationTeamCodeRepository.save(
+      ApplicationTeamCodeEntity(
+        id = UUID.randomUUID(),
+        application = application,
+        teamCode = managingTeamCode,
+      ),
+    )
+
+    return application
+  }
+
+  private fun createTwelveApplications(crn: String, user: UserEntity) {
+    val applicationSchema = approvedPremisesApplicationJsonSchemaEntityFactory.produceAndPersist {
+      withPermissiveSchema()
+    }
+
+    approvedPremisesApplicationEntityFactory.produceAndPersistMultiple(12) {
+      withApplicationSchema(applicationSchema)
+      withCrn(crn)
+      withCreatedByUser(user)
+      withData(
+        """
+          {
+             "thingId": 123
+          }
+          """,
+      )
     }
   }
 }

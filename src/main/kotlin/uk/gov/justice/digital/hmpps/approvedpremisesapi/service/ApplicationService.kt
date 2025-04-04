@@ -145,7 +145,7 @@ class ApplicationService(
     return Pair(response.content, getMetadata(response, page, pageSize))
   }
 
-  private fun getAllApprovedPremisesApplicationsForUser(user: UserEntity) = applicationRepository.findNonWithdrawnApprovedPremisesSummariesForUser(user.id)
+  fun getAllApprovedPremisesApplicationsForUser(user: UserEntity) = applicationRepository.findNonWithdrawnApprovedPremisesSummariesForUser(user.id)
 
   private fun getAllTemporaryAccommodationApplicationsForUser(user: UserEntity): List<ApplicationSummary> = applicationRepository.findAllTemporaryAccommodationSummariesCreatedByUser(user.id)
 
