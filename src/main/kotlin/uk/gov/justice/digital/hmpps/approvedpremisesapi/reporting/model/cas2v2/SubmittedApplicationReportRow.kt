@@ -5,8 +5,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApplicationOri
 data class SubmittedApplicationReportRow(
   val eventId: String,
   val applicationId: String,
-  val applicationOrigin: ApplicationOrigin,
-  val bailHearingDate: String?,
   val personCrn: String,
   val personNoms: String,
   val referringPrisonCode: String,
@@ -16,4 +14,6 @@ data class SubmittedApplicationReportRow(
   val submittedAt: String,
   val submittedBy: String,
   val startedAt: String,
+  val applicationOrigin: ApplicationOrigin,
+  val bailHearingDate: String?,
 )
