@@ -230,7 +230,6 @@ class Cas2v2ReportsTest : Cas2v2IntegrationTestBase() {
         SubmittedApplicationReportRow(
           eventId = event2Id.toString(),
           applicationId = event2.applicationId.toString(),
-          applicationOrigin = ApplicationOrigin.courtBail,
           personCrn = event2Details.personReference.crn.toString(),
           personNoms = event2Details.personReference.noms,
           referringPrisonCode = event2Details.referringPrisonCode.toString(),
@@ -240,12 +239,12 @@ class Cas2v2ReportsTest : Cas2v2IntegrationTestBase() {
           submittedAt = event2.occurredAt.toString().split(".").first(),
           submittedBy = event2Details.submittedBy.staffMember.username.toString(),
           startedAt = application2.createdAt.toString().split(".").first(),
+          applicationOrigin = ApplicationOrigin.courtBail,
           bailHearingDate = application2.bailHearingDate.toString(),
         ),
         SubmittedApplicationReportRow(
           eventId = event1Id.toString(),
           applicationId = event1.applicationId.toString(),
-          applicationOrigin = ApplicationOrigin.courtBail,
           personCrn = event1Details.personReference.crn.toString(),
           personNoms = event1Details.personReference.noms,
           referringPrisonCode = event1Details.referringPrisonCode.toString(),
@@ -255,6 +254,7 @@ class Cas2v2ReportsTest : Cas2v2IntegrationTestBase() {
           submittedAt = event1.occurredAt.toString().split(".").first(),
           submittedBy = event1Details.submittedBy.staffMember.username.toString(),
           startedAt = application1.createdAt.toString().split(".").first(),
+          applicationOrigin = ApplicationOrigin.courtBail,
           bailHearingDate = application2.bailHearingDate.toString(),
         ),
       )
@@ -313,17 +313,17 @@ class Cas2v2ReportsTest : Cas2v2IntegrationTestBase() {
       val headers = dataFrame.columns()
       Assertions.assertThat(headers[0].name()).isEqualTo("eventId")
       Assertions.assertThat(headers[1].name()).isEqualTo("applicationId")
-      Assertions.assertThat(headers[2].name()).isEqualTo("applicationOrigin")
-      Assertions.assertThat(headers[3].name()).isEqualTo("bailHearingDate")
-      Assertions.assertThat(headers[4].name()).isEqualTo("personCrn")
-      Assertions.assertThat(headers[5].name()).isEqualTo("personNoms")
-      Assertions.assertThat(headers[6].name()).isEqualTo("referringPrisonCode")
-      Assertions.assertThat(headers[7].name()).isEqualTo("preferredAreas")
-      Assertions.assertThat(headers[8].name()).isEqualTo("hdcEligibilityDate")
-      Assertions.assertThat(headers[9].name()).isEqualTo("conditionalReleaseDate")
-      Assertions.assertThat(headers[10].name()).isEqualTo("submittedAt")
-      Assertions.assertThat(headers[11].name()).isEqualTo("submittedBy")
-      Assertions.assertThat(headers[12].name()).isEqualTo("startedAt")
+      Assertions.assertThat(headers[2].name()).isEqualTo("personCrn")
+      Assertions.assertThat(headers[3].name()).isEqualTo("personNoms")
+      Assertions.assertThat(headers[4].name()).isEqualTo("referringPrisonCode")
+      Assertions.assertThat(headers[5].name()).isEqualTo("preferredAreas")
+      Assertions.assertThat(headers[6].name()).isEqualTo("hdcEligibilityDate")
+      Assertions.assertThat(headers[7].name()).isEqualTo("conditionalReleaseDate")
+      Assertions.assertThat(headers[8].name()).isEqualTo("submittedAt")
+      Assertions.assertThat(headers[9].name()).isEqualTo("submittedBy")
+      Assertions.assertThat(headers[10].name()).isEqualTo("startedAt")
+      Assertions.assertThat(headers[11].name()).isEqualTo("applicationOrigin")
+      Assertions.assertThat(headers[12].name()).isEqualTo("bailHearingDate")
 
       val prisonBailCount = dataFrame.filter { row -> row["applicationOrigin"] == "prisonBail" }
         .rowsCount()
