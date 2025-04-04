@@ -82,6 +82,8 @@ class Cas2ApplicationService(
 
   fun findMostRecentApplication(nomsNumber: String): Cas2ApplicationEntity? = applicationRepository.findFirstByNomsNumberAndSubmittedAtIsNotNullOrderBySubmittedAtDesc(nomsNumber)
 
+  fun findApplicationToAssign(nomsNumber: String): Cas2ApplicationEntity? = findMostRecentApplication(nomsNumber)?.takeIf { !it.isMostRecentStatusUpdateANonAssignableStatus() }
+
   fun getAllSubmittedApplicationsForAssessor(pageCriteria: PageCriteria<String>): Pair<List<Cas2ApplicationSummaryEntity>, PaginationMetadata?> {
     val pageable = getPageableOrAllPages(pageCriteria)
 

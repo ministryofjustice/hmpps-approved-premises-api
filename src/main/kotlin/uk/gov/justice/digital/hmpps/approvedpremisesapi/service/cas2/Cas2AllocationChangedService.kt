@@ -33,8 +33,8 @@ class Cas2AllocationChangedService(
       throw InvalidDomainEventException(event)
     }
 
-    applicationService.findMostRecentApplication(nomsNumber)?.let { application ->
-      log.info("Received Allocation changed event:\n{}", event)
+    applicationService.findApplicationToAssign(nomsNumber)?.let { application ->
+      log.info("Received Allocation changed event with application to assign:\n {}", event)
 
       when (val pomAllocation = getAllocationResponse(detailUrl)) {
         is PomAllocation -> {
@@ -45,11 +45,9 @@ class Cas2AllocationChangedService(
               allocatedPomUser = allocatedUser,
             )
             applicationRepository.save(application)
-
             emailService.sendAllocationChangedEmails(application = application, newPom = allocatedUser, newPrisonCode = pomAllocation.prison.code)
           }
         }
-
         else -> {
           log.info("No POM allocated.")
         }

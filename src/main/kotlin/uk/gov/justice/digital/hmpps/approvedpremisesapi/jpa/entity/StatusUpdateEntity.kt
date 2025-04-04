@@ -27,6 +27,13 @@ interface Cas2StatusUpdateRepository : JpaRepository<Cas2StatusUpdateEntity, UUI
   fun findAllStatusUpdatesWithoutAssessment(pageable: Pageable?): Slice<Cas2StatusUpdateEntity>
 }
 
+enum class Cas2StatusUpdateNonAssignable(val label: String) {
+  AWAITING_ARRIVAL("Awaiting arrival"),
+  OFFER_DECLINED_OR_WITHDRAWN("Offer declined or withdrawn"),
+  REFERRAL_CANCELLED("Referral cancelled"),
+  REFERRAL_WITHDRAWN("Referral withdrawn"),
+}
+
 @Entity
 @Table(name = "cas_2_status_updates")
 data class Cas2StatusUpdateEntity(
