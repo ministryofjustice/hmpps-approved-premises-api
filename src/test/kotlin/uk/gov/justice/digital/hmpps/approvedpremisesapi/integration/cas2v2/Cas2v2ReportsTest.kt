@@ -26,12 +26,13 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas2v2Applica
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DomainEventType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas2v2.Cas2v2ApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas2v2.Cas2v2UserEntity
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.model.cas2.SubmittedApplicationReportRow
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.model.cas2.UnsubmittedApplicationsReportRow
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.model.cas2v2.ApplicationStatusUpdatesReportRow
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.model.cas2v2.SubmittedApplicationReportRow
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomDateTimeBefore
 import java.io.ByteArrayInputStream
 import java.time.Instant
+import java.time.LocalDate
 import java.time.OffsetDateTime
 import java.time.ZoneOffset
 import java.util.UUID
@@ -134,23 +135,27 @@ class Cas2v2ReportsTest : Cas2v2IntegrationTestBase() {
       val application1 = cas2v2ApplicationEntityFactory.produceAndPersist {
         withId(applicationId1)
         withApplicationSchema(applicationSchema)
+        withApplicationOrigin(ApplicationOrigin.courtBail)
         withCreatedByUser(user1)
         withCrn("CRN_1")
         withNomsNumber("NOMS_1")
         withCreatedAt(oldCreated)
         withData("{}")
         withSubmittedAt(oldSubmitted)
+        withBailHearingDate(LocalDate.now().minusDays(2))
       }
 
       val application2 = cas2v2ApplicationEntityFactory.produceAndPersist {
         withId(applicationId2)
         withApplicationSchema(applicationSchema)
+        withApplicationOrigin(ApplicationOrigin.courtBail)
         withCreatedByUser(user2)
         withCrn("CRN_2")
         withNomsNumber("NOMS_2")
         withCreatedAt(newerCreated)
         withData("{}")
         withSubmittedAt(newerSubmitted)
+        withBailHearingDate(LocalDate.now().minusDays(2))
       }
 
       // outside time limit -- should not feature in report
@@ -161,6 +166,7 @@ class Cas2v2ReportsTest : Cas2v2IntegrationTestBase() {
         withCreatedAt(tooOldCreated)
         withData("{}")
         withSubmittedAt(tooOldSubmitted)
+        withBailHearingDate(LocalDate.now().minusDays(2))
       }
 
       val event1Details = Cas2ApplicationSubmittedEventDetailsFactory()
@@ -224,6 +230,7 @@ class Cas2v2ReportsTest : Cas2v2IntegrationTestBase() {
         SubmittedApplicationReportRow(
           eventId = event2Id.toString(),
           applicationId = event2.applicationId.toString(),
+          applicationOrigin = ApplicationOrigin.courtBail,
           personCrn = event2Details.personReference.crn.toString(),
           personNoms = event2Details.personReference.noms,
           referringPrisonCode = event2Details.referringPrisonCode.toString(),
@@ -233,10 +240,12 @@ class Cas2v2ReportsTest : Cas2v2IntegrationTestBase() {
           submittedAt = event2.occurredAt.toString().split(".").first(),
           submittedBy = event2Details.submittedBy.staffMember.username.toString(),
           startedAt = application2.createdAt.toString().split(".").first(),
+          bailHearingDate = application2.bailHearingDate.toString(),
         ),
         SubmittedApplicationReportRow(
           eventId = event1Id.toString(),
           applicationId = event1.applicationId.toString(),
+          applicationOrigin = ApplicationOrigin.courtBail,
           personCrn = event1Details.personReference.crn.toString(),
           personNoms = event1Details.personReference.noms,
           referringPrisonCode = event1Details.referringPrisonCode.toString(),
@@ -246,6 +255,7 @@ class Cas2v2ReportsTest : Cas2v2IntegrationTestBase() {
           submittedAt = event1.occurredAt.toString().split(".").first(),
           submittedBy = event1Details.submittedBy.staffMember.username.toString(),
           startedAt = application1.createdAt.toString().split(".").first(),
+          bailHearingDate = application2.bailHearingDate.toString(),
         ),
       )
         .toDataFrame()
