@@ -48,6 +48,21 @@ class Cas3ApplicationsController(
     )
   }
 
+  override fun getApplicationById(applicationId: UUID): ResponseEntity<Cas3Application> {
+    val user = userService.getUserForRequest()
+
+    val applicationResult = applicationService.getApplicationForUsername(applicationId, user.deliusUsername)
+
+    val application = extractEntityFromCasResult(applicationResult) as TemporaryAccommodationApplicationEntity
+    return ResponseEntity.ok(
+      getPersonDetailAndTransform(
+        application = application,
+        user = user,
+        ignoreLaoRestrictions = false,
+      ),
+    )
+  }
+
   @Transactional
   override fun postApplication(body: Cas3NewApplication, createWithRisks: Boolean?): ResponseEntity<Cas3Application> {
     val user = userService.getUserForRequest()
@@ -95,6 +110,16 @@ class Cas3ApplicationsController(
     createWithRisks,
     personInfo,
   )
+
+  private fun getPersonDetailAndTransform(
+    application: TemporaryAccommodationApplicationEntity,
+    user: UserEntity,
+    ignoreLaoRestrictions: Boolean,
+  ): Cas3Application {
+    val personInfo = offenderService.getPersonInfoResult(application.crn, user.deliusUsername, ignoreLaoRestrictions)
+
+    return cas3ApplicationTransformer.transformJpaToApi(application, personInfo)
+  }
 
   private fun getPersonDetailAndTransformToSummary(
     applications: List<ApplicationSummary>,

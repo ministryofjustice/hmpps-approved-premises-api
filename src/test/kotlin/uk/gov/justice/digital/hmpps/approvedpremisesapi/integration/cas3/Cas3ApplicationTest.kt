@@ -1,18 +1,22 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.cas3
 
+import com.fasterxml.jackson.databind.JsonNode
+import com.fasterxml.jackson.databind.node.NullNode
 import org.assertj.core.api.Assertions
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
-import org.junit.jupiter.api.TestInstance
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.CsvSource
 import org.springframework.data.repository.findByIdOrNull
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas3Application
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas3ApplicationSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas3NewApplication
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.FullPerson
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewApplication
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PersonType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.SubmitTemporaryAccommodationApplication
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.TemporaryAccommodationApplication
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.TemporaryAccommodationApplicationSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.CaseAccessFactory
@@ -26,6 +30,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ProbationRegi
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TemporaryAccommodationApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TemporaryAccommodationApplicationJsonSchemaEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserQualification
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRole
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.community.OffenderDetailSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.prisonsapi.AssignedLivingUnit
@@ -56,7 +61,7 @@ class Cas3ApplicationTest : InitialiseDatabasePerClassTestBase() {
       "CAS3_REFERRER,/cas3/applications",
       "CAS3_ASSESSOR,/cas3/applications",
     )
-    fun `Get all applications returns 200 for TA - returns all applications for user`(userRole: UserRole, baseUrl: String) {
+    fun `Get all applications returns 200 and returns all applications for user`(userRole: UserRole, baseUrl: String) {
       givenAProbationRegion { probationRegion ->
         givenAUser(roles = listOf(userRole), probationRegion = probationRegion) { otherUser, _ ->
           givenAUser(
@@ -153,9 +158,486 @@ class Cas3ApplicationTest : InitialiseDatabasePerClassTestBase() {
     }
   }
 
-  @TestInstance(TestInstance.Lifecycle.PER_CLASS)
   @Nested
-  inner class Cas3CreateApplication {
+  inner class GetApplication {
+    @Test
+    fun `Get single application returns 200 with correct body when requesting user created application`() {
+      givenAUser { userEntity, jwt ->
+        givenAnOffender { offenderDetails, _ ->
+          temporaryAccommodationApplicationJsonSchemaRepository.deleteAll()
+
+          val newestJsonSchema = temporaryAccommodationApplicationJsonSchemaEntityFactory.produceAndPersist {
+            withAddedAt(OffsetDateTime.parse("2022-09-21T12:45:00+01:00"))
+            withSchema("{}")
+          }
+
+          val applicationEntity = temporaryAccommodationApplicationEntityFactory.produceAndPersist {
+            withApplicationSchema(newestJsonSchema)
+            withCrn(offenderDetails.otherIds.crn)
+            withCreatedByUser(userEntity)
+            withProbationRegion(userEntity.probationRegion)
+            withData(
+              """
+            {
+               "thingId": 123
+            }
+            """,
+            )
+          }
+
+          apDeliusContextAddResponseToUserAccessCall(
+            listOf(
+              CaseAccessFactory()
+                .withCrn(offenderDetails.otherIds.crn)
+                .produce(),
+            ),
+            userEntity.deliusUsername,
+          )
+
+          callCasApiAndAssertApiResponse(jwt, applicationEntity, newestJsonSchema.id)
+          callCas3ApiAndAssertApiResponse(jwt, applicationEntity, newestJsonSchema.id)
+        }
+      }
+    }
+
+    @Test
+    fun `Get single application returns 200 with correct body when a user with the CAS3_ASSESSOR role requests a submitted application in their region`() {
+      givenAUser(roles = listOf(UserRole.CAS3_ASSESSOR)) { userEntity, jwt ->
+        givenAUser(probationRegion = userEntity.probationRegion) { createdByUser, _ ->
+          givenAnOffender { offenderDetails, _ ->
+            temporaryAccommodationApplicationJsonSchemaRepository.deleteAll()
+
+            val newestJsonSchema = temporaryAccommodationApplicationJsonSchemaEntityFactory.produceAndPersist {
+              withAddedAt(OffsetDateTime.parse("2022-09-21T12:45:00+01:00"))
+              withSchema("{}")
+            }
+
+            val applicationEntity = temporaryAccommodationApplicationEntityFactory.produceAndPersist {
+              withApplicationSchema(newestJsonSchema)
+              withCrn(offenderDetails.otherIds.crn)
+              withCreatedByUser(createdByUser)
+              withProbationRegion(createdByUser.probationRegion)
+              withSubmittedAt(OffsetDateTime.parse("2023-06-01T12:34:56.789+01:00"))
+              withData(
+                """
+              {
+                 "thingId": 123
+              }
+              """,
+              )
+            }
+
+            apDeliusContextAddResponseToUserAccessCall(
+              listOf(
+                CaseAccessFactory()
+                  .withCrn(offenderDetails.otherIds.crn)
+                  .produce(),
+              ),
+              userEntity.deliusUsername,
+            )
+
+            callCasApiAndAssertApiResponse(jwt, applicationEntity, newestJsonSchema.id)
+            callCas3ApiAndAssertApiResponse(jwt, applicationEntity, newestJsonSchema.id)
+          }
+        }
+      }
+    }
+
+    @Test
+    fun `Get single LAO application for application creator with LAO access returns 200`() {
+      givenAUser { createdByUser, jwt ->
+        givenAnOffender(
+          offenderDetailsConfigBlock = {
+            withCurrentRestriction(true)
+          },
+        ) { offenderDetails, _ ->
+          temporaryAccommodationApplicationJsonSchemaRepository.deleteAll()
+
+          val newestJsonSchema = temporaryAccommodationApplicationJsonSchemaEntityFactory.produceAndPersist {
+            withAddedAt(OffsetDateTime.parse("2022-09-21T12:45:00+01:00"))
+            withSchema("{}")
+          }
+
+          val applicationEntity = temporaryAccommodationApplicationEntityFactory.produceAndPersist {
+            withApplicationSchema(newestJsonSchema)
+            withCrn(offenderDetails.otherIds.crn)
+            withCreatedByUser(createdByUser)
+            withProbationRegion(createdByUser.probationRegion)
+            withSubmittedAt(OffsetDateTime.parse("2023-06-01T12:34:56.789+01:00"))
+            withData(
+              """
+            {
+               "thingId": 123
+            }
+            """,
+            )
+          }
+
+          apDeliusContextAddResponseToUserAccessCall(
+            listOf(
+              CaseAccessFactory()
+                .withCrn(offenderDetails.otherIds.crn)
+                .produce(),
+            ),
+            createdByUser.deliusUsername,
+          )
+
+          val casApiResponseBody = callCasApi(jwt, applicationEntity.id)
+            .expectStatus()
+            .isOk
+            .expectBody(TemporaryAccommodationApplication::class.java)
+            .returnResult()
+            .responseBody
+
+          assertThat(casApiResponseBody?.person).isInstanceOf(FullPerson::class.java)
+
+          val cas3ApiResponseBody = callCas3Api(jwt, applicationEntity.id)
+            .expectStatus()
+            .isOk
+            .expectBody(Cas3Application::class.java)
+            .returnResult()
+            .responseBody
+
+          assertThat(cas3ApiResponseBody?.person).isInstanceOf(FullPerson::class.java)
+        }
+      }
+    }
+
+    @Test
+    fun `Get single LAO application for user who is not creator but has LAO Qualification returns RestrictedPerson`() {
+      givenAUser(
+        roles = listOf(UserRole.CAS3_ASSESSOR),
+        qualifications = listOf(UserQualification.LAO),
+      ) { otherUser, otherUserJwt ->
+        givenAUser(probationRegion = otherUser.probationRegion) { createdByUser, _ ->
+          givenAnOffender(
+            offenderDetailsConfigBlock = {
+              withCurrentRestriction(true)
+            },
+          ) { offenderDetails, _ ->
+            temporaryAccommodationApplicationJsonSchemaRepository.deleteAll()
+
+            val newestJsonSchema = temporaryAccommodationApplicationJsonSchemaEntityFactory.produceAndPersist {
+              withAddedAt(OffsetDateTime.parse("2022-09-21T12:45:00+01:00"))
+              withSchema("{}")
+            }
+
+            val applicationEntity = temporaryAccommodationApplicationEntityFactory.produceAndPersist {
+              withApplicationSchema(newestJsonSchema)
+              withCrn(offenderDetails.otherIds.crn)
+              withCreatedByUser(createdByUser)
+              withProbationRegion(createdByUser.probationRegion)
+              withSubmittedAt(OffsetDateTime.parse("2023-06-01T12:34:56.789+01:00"))
+              withData(
+                """
+              {
+                 "thingId": 123
+              }
+              """,
+              )
+            }
+
+            val casApiResult = callCasApi(otherUserJwt, applicationEntity.id)
+              .expectStatus()
+              .isOk
+              .expectBody(TemporaryAccommodationApplication::class.java)
+              .returnResult()
+              .responseBody
+
+            assertThat(casApiResult!!.person.type).isEqualTo(PersonType.restrictedPerson)
+
+            val cas3ApiResult = callCas3Api(otherUserJwt, applicationEntity.id)
+              .expectStatus()
+              .isOk
+              .expectBody(Cas3Application::class.java)
+              .returnResult()
+              .responseBody
+
+            assertThat(cas3ApiResult!!.person.type).isEqualTo(PersonType.restrictedPerson)
+          }
+        }
+      }
+    }
+
+    @Test
+    fun `Get single application returns 403 Forbidden when a user with the CAS3_ASSESSOR role requests an application not in their region`() {
+      givenAUser(roles = listOf(UserRole.CAS3_ASSESSOR)) { userEntity, jwt ->
+        givenAUser { createdByUser, _ ->
+          givenAnOffender { offenderDetails, _ ->
+            temporaryAccommodationApplicationJsonSchemaRepository.deleteAll()
+
+            val newestJsonSchema = temporaryAccommodationApplicationJsonSchemaEntityFactory.produceAndPersist {
+              withAddedAt(OffsetDateTime.parse("2022-09-21T12:45:00+01:00"))
+              withSchema("{}")
+            }
+
+            val applicationEntity = temporaryAccommodationApplicationEntityFactory.produceAndPersist {
+              withApplicationSchema(newestJsonSchema)
+              withCrn(offenderDetails.otherIds.crn)
+              withCreatedByUser(createdByUser)
+              withProbationRegion(createdByUser.probationRegion)
+              withSubmittedAt(OffsetDateTime.now())
+              withData(
+                """
+              {
+                 "thingId": 123
+              }
+              """,
+              )
+            }
+
+            apDeliusContextAddResponseToUserAccessCall(
+              listOf(
+                CaseAccessFactory()
+                  .withCrn(offenderDetails.otherIds.crn)
+                  .produce(),
+              ),
+              userEntity.deliusUsername,
+            )
+
+            callCasApi(jwt, applicationEntity.id)
+              .expectStatus()
+              .isForbidden
+
+            callCas3Api(jwt, applicationEntity.id)
+              .expectStatus()
+              .isForbidden
+          }
+        }
+      }
+    }
+
+    @Test
+    fun `Get single application returns 403 Forbidden when a user without the CAS3_ASSESSOR role requests an application not created by them`() {
+      givenAUser { userEntity, jwt ->
+        givenAUser(probationRegion = userEntity.probationRegion) { createdByUser, _ ->
+          givenAnOffender { offenderDetails, _ ->
+            temporaryAccommodationApplicationJsonSchemaRepository.deleteAll()
+
+            val newestJsonSchema = temporaryAccommodationApplicationJsonSchemaEntityFactory.produceAndPersist {
+              withAddedAt(OffsetDateTime.parse("2022-09-21T12:45:00+01:00"))
+              withSchema("{}")
+            }
+
+            val applicationEntity = temporaryAccommodationApplicationEntityFactory.produceAndPersist {
+              withApplicationSchema(newestJsonSchema)
+              withCrn(offenderDetails.otherIds.crn)
+              withCreatedByUser(createdByUser)
+              withProbationRegion(createdByUser.probationRegion)
+              withSubmittedAt(OffsetDateTime.now())
+              withData(
+                """
+              {
+                 "thingId": 123
+              }
+              """,
+              )
+            }
+
+            apDeliusContextAddResponseToUserAccessCall(
+              listOf(
+                CaseAccessFactory()
+                  .withCrn(offenderDetails.otherIds.crn)
+                  .produce(),
+              ),
+              userEntity.deliusUsername,
+            )
+
+            callCasApi(jwt, applicationEntity.id)
+              .expectStatus()
+              .isForbidden
+
+            callCas3Api(jwt, applicationEntity.id)
+              .expectStatus()
+              .isForbidden
+          }
+        }
+      }
+    }
+
+    @Test
+    fun `Get single application returns 404 Not Found when the application was deleted`() {
+      givenAUser { userEntity, jwt ->
+        givenAnOffender { offenderDetails, _ ->
+          temporaryAccommodationApplicationJsonSchemaRepository.deleteAll()
+
+          val newestJsonSchema = temporaryAccommodationApplicationJsonSchemaEntityFactory.produceAndPersist {
+            withAddedAt(OffsetDateTime.parse("2024-12-11T13:21:00+01:00"))
+            withSchema("{}")
+          }
+
+          val applicationEntity = temporaryAccommodationApplicationEntityFactory.produceAndPersist {
+            withApplicationSchema(newestJsonSchema)
+            withCrn(offenderDetails.otherIds.crn)
+            withCreatedByUser(userEntity)
+            withProbationRegion(userEntity.probationRegion)
+            withDeletedAt(OffsetDateTime.now().minusDays(15))
+            withData(
+              """
+            {
+               "thingId": 123
+            }
+            """,
+            )
+          }
+
+          apDeliusContextAddResponseToUserAccessCall(
+            listOf(
+              CaseAccessFactory()
+                .withCrn(offenderDetails.otherIds.crn)
+                .produce(),
+            ),
+            userEntity.deliusUsername,
+          )
+
+          callCasApi(jwt, applicationEntity.id)
+            .expectStatus()
+            .isNotFound
+
+          callCas3Api(jwt, applicationEntity.id)
+            .expectStatus()
+            .isNotFound
+        }
+      }
+    }
+
+    @Test
+    fun `GET submitted CAS3 application includes assessmentId in the response`() {
+      givenAUser { submittingUser, jwt ->
+        givenAnOffender { offenderDetails, _ ->
+          val applicationId = UUID.fromString("22ceda56-98b2-411d-91cc-ace0ab8be872")
+          val offenderName = "${offenderDetails.firstName} ${offenderDetails.surname}"
+
+          val applicationSchema = temporaryAccommodationApplicationJsonSchemaEntityFactory.produceAndPersist {
+            withAddedAt(OffsetDateTime.now())
+            withId(UUID.randomUUID())
+            withSchema(schemaText())
+          }
+
+          temporaryAccommodationApplicationEntityFactory.produceAndPersist {
+            withCrn(offenderDetails.otherIds.crn)
+            withId(applicationId)
+            withApplicationSchema(applicationSchema)
+            withCreatedByUser(submittingUser)
+            withProbationRegion(submittingUser.probationRegion)
+            withName(offenderName)
+            withData("{}")
+          }
+
+          webTestClient.post()
+            .uri("/applications/$applicationId/submission")
+            .header("Authorization", "Bearer $jwt")
+            .header("X-Service-Name", ServiceName.temporaryAccommodation.value)
+            .bodyValue(
+              SubmitTemporaryAccommodationApplication(
+                translatedDocument = {},
+                type = "CAS3",
+                arrivalDate = LocalDate.now(),
+                summaryData = object {
+                  val num = 50
+                  val text = "Hello world!"
+                },
+              ),
+            )
+            .exchange()
+            .expectStatus()
+            .isOk
+
+          val casApiResult = callCasApi(jwt, applicationId)
+            .expectStatus()
+            .isOk
+            .expectBody(TemporaryAccommodationApplication::class.java)
+            .returnResult()
+            .responseBody
+
+          assertThat(casApiResult!!.assessmentId).isNotNull()
+
+          val cas3ApiResult = callCas3Api(jwt, applicationId)
+            .expectStatus()
+            .isOk
+            .expectBody(Cas3Application::class.java)
+            .returnResult()
+            .responseBody
+
+          assertThat(cas3ApiResult!!.assessmentId).isNotNull()
+        }
+      }
+    }
+
+    private fun callCasApi(jwt: String, applicationId: UUID) = webTestClient.get()
+      .uri("/applications/$applicationId")
+      .header("Authorization", "Bearer $jwt")
+      .header("X-Service-Name", ServiceName.temporaryAccommodation.value)
+      .exchange()
+
+    private fun callCas3Api(jwt: String, applicationId: UUID) = webTestClient.get()
+      .uri("/cas3/applications/$applicationId")
+      .header("Authorization", "Bearer $jwt")
+      .exchange()
+
+    private fun callCasApiAndAssertApiResponse(
+      jwt: String,
+      applicationEntity: TemporaryAccommodationApplicationEntity,
+      applicationSchemaId: UUID,
+    ) {
+      val responseBody = callCasApi(jwt, applicationEntity.id)
+        .expectStatus()
+        .isOk
+        .expectBody(TemporaryAccommodationApplication::class.java)
+        .returnResult()
+        .responseBody
+
+      assertThat(responseBody).matches {
+        applicationEntity.id == it.id &&
+          applicationEntity.crn == it.person.crn &&
+          applicationEntity.createdAt.toInstant() == it.createdAt &&
+          applicationEntity.createdByUser.id == it.createdByUserId &&
+          applicationEntity.submittedAt?.toInstant() == it.submittedAt &&
+          serializableToJsonNode(applicationEntity.data) == serializableToJsonNode(it.data) &&
+          applicationSchemaId == it.schemaVersion &&
+          !it.outdatedSchema
+      }
+    }
+
+    private fun callCas3ApiAndAssertApiResponse(
+      jwt: String,
+      applicationEntity: TemporaryAccommodationApplicationEntity,
+      applicationSchemaId: UUID,
+    ) {
+      val responseBody = callCas3Api(jwt, applicationEntity.id)
+        .expectStatus()
+        .isOk
+        .expectBody(Cas3Application::class.java)
+        .returnResult()
+        .responseBody
+
+      assertThat(responseBody).matches {
+        applicationEntity.id == it.id &&
+          applicationEntity.crn == it.person.crn &&
+          applicationEntity.createdAt.toInstant() == it.createdAt &&
+          applicationEntity.createdByUser.id == it.createdByUserId &&
+          applicationEntity.submittedAt?.toInstant() == it.submittedAt &&
+          serializableToJsonNode(applicationEntity.data) == serializableToJsonNode(it.data) &&
+          applicationSchemaId == it.schemaVersion &&
+          !it.outdatedSchema
+      }
+    }
+
+    private fun schemaText(): String = """
+              {
+                "${"\$schema"}": "https://json-schema.org/draft/2020-12/schema",
+                "${"\$id"}": "https://example.com/product.schema.json",
+                "title": "Thing",
+                "description": "A thing",
+                "type": "object",
+                "properties": {},
+                "required": []
+              }
+            """
+  }
+
+  @Nested
+  inner class CreateApplication {
 
     @Test
     fun `Create new application returns 403 when user isn't  CAS3_REFERRER role`() {
@@ -271,12 +753,10 @@ class Cas3ApplicationTest : InitialiseDatabasePerClassTestBase() {
     ) {
       val offenceId = "789"
 
-      val apiResponse = callCasApi(jwt, crn, offenceId)
-      val result =
-        apiResponse
-          .expectStatus()
-          .isCreated
-          .returnResult(TemporaryAccommodationApplication::class.java)
+      val result = callCasApi(jwt, crn, offenceId)
+        .expectStatus()
+        .isCreated
+        .returnResult(TemporaryAccommodationApplication::class.java)
 
       assertThat(result.responseHeaders["Location"]).anyMatch {
         it.matches(Regex("/applications/.+"))
@@ -319,12 +799,10 @@ class Cas3ApplicationTest : InitialiseDatabasePerClassTestBase() {
     ) {
       val offenceId = "789"
 
-      val apiResponse = callCas3Api(jwt, crn, offenceId)
-      val result =
-        apiResponse
-          .expectStatus()
-          .isCreated
-          .returnResult(Cas3Application::class.java)
+      val result = callCas3Api(jwt, crn, offenceId)
+        .expectStatus()
+        .isCreated
+        .returnResult(Cas3Application::class.java)
 
       assertThat(result.responseHeaders["Location"]).anyMatch {
         it.matches(Regex("/applications/.+"))
@@ -413,5 +891,12 @@ class Cas3ApplicationTest : InitialiseDatabasePerClassTestBase() {
     temporaryAccommodationApplicationJsonSchemaEntityFactory.produceAndPersist {
       withPermissiveSchema()
     }
+  }
+
+  private fun serializableToJsonNode(serializable: Any?): JsonNode {
+    if (serializable == null) return NullNode.instance
+    if (serializable is String) return objectMapper.readTree(serializable)
+
+    return objectMapper.readTree(objectMapper.writeValueAsString(serializable))
   }
 }

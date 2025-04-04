@@ -1590,6 +1590,7 @@ paths:
       tags:
         - Operations on applications
       summary: Creates an application
+      description: deprecated for cas3, use /cas3/applications
       operationId: applicationsPost
       parameters:
         - name: X-Service-Name
@@ -1639,7 +1640,7 @@ paths:
       x-codegen-request-body-name: body
     get:
       deprecated: true
-      description: deprecated, use either  /cas1/applications or /cas3/applications
+      description: deprecated, for cas1 use /cas1/applications and for cas3 use /cas3/applications
       tags:
         - Operations on all applications
       summary: Lists all applications that the user has created
@@ -1711,6 +1712,7 @@ paths:
       tags:
         - Operations on applications
       summary: Gets a single application by its ID
+      description: deprecated for cas3, use /cas3/applications/{applicationId}
       operationId: applicationsApplicationIdGet
       parameters:
         - name: applicationId
