@@ -12,6 +12,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.SortDirection
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PersonInfoResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.ApplicationService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.LaoStrategy
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.LaoStrategy.CheckUserAccess
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.OffenderService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.UserService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1LaoStrategy
@@ -65,6 +66,19 @@ class Cas1ApplicationsController(
       getPersonDetailAndTransformToSummary(
         applications = applications,
         laoStrategy = user.cas1LaoStrategy(),
+      ),
+    )
+  }
+
+  override fun getApplicationsForUser(): ResponseEntity<List<Cas1ApplicationSummary>> {
+    val user = userService.getUserForRequest()
+
+    val applications = applicationService.getAllApprovedPremisesApplicationsForUser(user)
+
+    return ResponseEntity.ok(
+      getPersonDetailAndTransformToSummary(
+        applications = applications,
+        laoStrategy = CheckUserAccess(user.deliusUsername),
       ),
     )
   }
