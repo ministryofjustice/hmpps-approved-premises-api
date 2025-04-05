@@ -11,6 +11,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.ApDeliusContextAp
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.ClientResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AppealEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesApplicationEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DomainEventType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.UrlTemplate
 import java.util.UUID
 
@@ -34,6 +35,7 @@ class Cas1AppealDomainEventService(
     domainEventService.saveAssessmentAppealedEvent(
       Cas1DomainEvent(
         id = id,
+        type = DomainEventType.APPROVED_PREMISES_ASSESSMENT_APPEALED,
         applicationId = appeal.application.id,
         assessmentId = null,
         bookingId = null,
