@@ -71,11 +71,11 @@ class Cas2v2ReportsService(
     val reportData = cas2v2UnsubmittedApplicationsReportRepository.generateUnsubmittedApplicationsReportRows().map { row ->
       UnsubmittedApplicationsReportRow(
         applicationId = row.getApplicationId(),
-        applicationOrigin = row.getApplicationOrigin(),
         personCrn = row.getPersonCrn(),
         personNoms = row.getPersonNoms(),
         startedBy = row.getStartedBy(),
         startedAt = row.getStartedAt(),
+        applicationOrigin = row.getApplicationOrigin(),
       )
     }
 
