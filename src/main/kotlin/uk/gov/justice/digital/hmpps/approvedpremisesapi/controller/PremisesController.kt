@@ -154,12 +154,17 @@ class PremisesController(
     val premises = premisesService.getPremises(premisesId)
       ?: throw NotFoundProblem(premisesId, "Premises")
 
-    if (!userAccessService.currentUserCanManagePremises(premises) || !userAccessService.currentUserCanAccessRegion(body.probationRegionId)) {
+    val serviceName = when (premises) {
+      is TemporaryAccommodationPremisesEntity -> ServiceName.temporaryAccommodation
+      else -> ServiceName.approvedPremises
+    }
+
+    if (!userAccessService.currentUserCanManagePremises(premises) || !userAccessService.currentUserCanAccessRegion(serviceName, body.probationRegionId)) {
       throw ForbiddenProblem()
     }
 
-    val updatePremisesResult = when (premises) {
-      is TemporaryAccommodationPremisesEntity ->
+    val updatePremisesResult = when (serviceName) {
+      ServiceName.temporaryAccommodation ->
         cas3PremisesService
           .updatePremises(
             premisesId,
@@ -199,7 +204,7 @@ class PremisesController(
     }
 
     val bodyName = body.name
-    if (bodyName != null && premises is TemporaryAccommodationPremisesEntity) {
+    if (bodyName != null && serviceName == ServiceName.temporaryAccommodation) {
       validationResult = when (val renamePremisesResult = cas3PremisesService.renamePremises(premisesId, bodyName)) {
         is AuthorisableActionResult.NotFound -> throw NotFoundProblem(premisesId, "Premises")
         is AuthorisableActionResult.Success -> renamePremisesResult.entity
@@ -218,8 +223,8 @@ class PremisesController(
       is ValidatableActionResult.Success -> validationResult.entity
     }
 
-    val totalBeds = when (premises) {
-      is TemporaryAccommodationPremisesEntity -> cas3PremisesService.getBedspaceCount(updatedPremises)
+    val totalBeds = when (serviceName) {
+      ServiceName.temporaryAccommodation -> cas3PremisesService.getBedspaceCount(updatedPremises)
       else -> premisesService.getBedCount(updatedPremises)
     }
 
@@ -233,13 +238,13 @@ class PremisesController(
   }
 
   override fun premisesPost(body: NewPremises, xServiceName: ServiceName?): ResponseEntity<Premises> {
-    if (!userAccessService.currentUserCanAccessRegion(body.probationRegionId)) {
-      throw ForbiddenProblem()
+    val serviceName = when (xServiceName == null) {
+      true -> ServiceName.approvedPremises
+      false -> xServiceName
     }
 
-    val serviceName = when (xServiceName == null) {
-      true -> ServiceName.approvedPremises.value
-      false -> xServiceName.value
+    if (!userAccessService.currentUserCanAccessRegion(serviceName, body.probationRegionId)) {
+      throw ForbiddenProblem()
     }
 
     val premises: PremisesEntity
@@ -275,7 +280,7 @@ class PremisesController(
             postcode = body.postcode,
             latitude = null,
             longitude = null,
-            service = serviceName,
+            service = serviceName.value,
             localAuthorityAreaId = body.localAuthorityAreaId,
             probationRegionId = body.probationRegionId,
             name = body.name,
