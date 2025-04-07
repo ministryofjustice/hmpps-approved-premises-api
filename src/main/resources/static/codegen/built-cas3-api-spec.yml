@@ -162,6 +162,42 @@ paths:
             'application/problem+json':
               schema:
                 $ref: '#/components/schemas/ValidationError'
+  /applications/{applicationId}/submission:
+    post:
+      tags:
+        - Application data
+      summary: Submits an Application
+      operationId: postApplicationSubmission
+      parameters:
+        - in: path
+          name: applicationId
+          required: true
+          description: Id of the application
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        description: Information needed to submit an application
+        content:
+          'application/json':
+            schema:
+              $ref: '#/components/schemas/Cas3SubmitApplication'
+        required: true
+      responses:
+        200:
+          description: successfully submitted the application
+        400:
+          description: application has already been submitted
+          content:
+            'application/problem+json':
+              schema:
+                $ref: '#/components/schemas/ValidationError'
+        401:
+          $ref: '#/components/responses/401Response'
+        403:
+          $ref: '#/components/responses/403Response'
+        500:
+          $ref: '#/components/responses/500Response'
   /reports/{reportName}:
     get:
       tags:
@@ -4948,6 +4984,59 @@ components:
       required:
         - type
         - data
+    Cas3SubmitApplication:
+      type: object
+      properties:
+        arrivalDate:
+          type: string
+          format: date
+        isRegisteredSexOffender:
+          type: boolean
+        needsAccessibleProperty:
+          type: boolean
+        hasHistoryOfArson:
+          type: boolean
+        isDutyToReferSubmitted:
+          type: boolean
+        dutyToReferSubmissionDate:
+          type: string
+          format: date
+        dutyToReferOutcome:
+          type: string
+          example: 'Pending'
+        isApplicationEligible:
+          type: boolean
+        eligibilityReason:
+          type: string
+        dutyToReferLocalAuthorityAreaName:
+          type: string
+        personReleaseDate:
+          type: string
+          format: date
+          example: '2024-02-21'
+        pdu:
+          type: string
+        probationDeliveryUnitId:
+          type: string
+          format: uuid
+        isHistoryOfSexualOffence:
+          type: boolean
+        isConcerningSexualBehaviour:
+          type: boolean
+        isConcerningArsonBehaviour:
+          type: boolean
+        prisonReleaseTypes:
+          type: array
+          items:
+            type: string
+            example: 'PSS'
+        summaryData:
+          $ref: '#/components/schemas/Unit'
+        translatedDocument:
+          $ref: '#/components/schemas/Unit'
+      required:
+        - arrivalDate
+        - summaryData
     FutureBooking:
       type: object
       properties:

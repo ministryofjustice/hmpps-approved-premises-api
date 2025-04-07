@@ -2,7 +2,6 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.unit.service
 
 import com.fasterxml.jackson.databind.ObjectMapper
 import io.mockk.Runs
-import io.mockk.called
 import io.mockk.every
 import io.mockk.just
 import io.mockk.mockk
@@ -26,7 +25,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.SentenceTypeOp
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.SituationOption
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.SubmitApprovedPremisesApplication
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.SubmitTemporaryAccommodationApplication
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.ApDeliusContextApiClient
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.ClientResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApAreaEntityFactory
@@ -41,7 +39,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.PersonRisksFacto
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ProbationRegionEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.TemporaryAccommodationApplicationEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.TemporaryAccommodationApplicationJsonSchemaEntityFactory
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.TemporaryAccommodationAssessmentEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.UserEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.UserRoleAssignmentEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApAreaRepository
@@ -60,7 +57,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.LockableAppli
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.OfflineApplicationRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementApplicationAutomaticEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementApplicationAutomaticRepository
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ProbationDeliveryUnitRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TemporaryAccommodationApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TemporaryAccommodationApplicationJsonSchemaEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRepository
@@ -82,7 +78,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.prisonsapi.InmateD
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.prisonsapi.InmateStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.AuthorisableActionResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.CasResult
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.ValidatableActionResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.ApplicationService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.ApplicationService.Cas1ApplicationUpdateFields
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.AssessmentService
@@ -93,14 +88,11 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.UserAccessServic
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.UserService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1ApplicationDomainEventService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1ApplicationEmailService
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1DomainEventService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1OffenderService
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas3.Cas3DomainEventService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.unit.util.assertThatCasResult
 import java.time.Clock
 import java.time.Instant
 import java.time.LocalDate
-import java.time.LocalTime
 import java.time.OffsetDateTime
 import java.time.ZoneOffset
 import java.util.UUID
@@ -115,8 +107,6 @@ class ApplicationServiceTest {
   private val mockUserService = mockk<UserService>()
   private val mockAssessmentService = mockk<AssessmentService>()
   private val mockOfflineApplicationRepository = mockk<OfflineApplicationRepository>()
-  private val mockDomainEventService = mockk<Cas1DomainEventService>()
-  private val mockCas3DomainEventService = mockk<Cas3DomainEventService>()
   private val mockApDeliusContextApiClient = mockk<ApDeliusContextApiClient>()
   private val mockApplicationTeamCodeRepository = mockk<ApplicationTeamCodeRepository>()
   private val mockUserAccessService = mockk<UserAccessService>()
@@ -128,7 +118,6 @@ class ApplicationServiceTest {
   private val mockPlacementApplicationAutomaticRepository = mockk<PlacementApplicationAutomaticRepository>()
   private val mockApplicationListener = mockk<ApplicationListener>()
   private val mockLockableApplicationRepository = mockk<LockableApplicationRepository>()
-  private val mockProbationDeliveryUnitRepository = mockk<ProbationDeliveryUnitRepository>()
   private val mockCas1CruManagementAreaRepository = mockk<Cas1CruManagementAreaRepository>()
   private val mockCas1OffenderService = mockk<Cas1OffenderService>()
 
@@ -141,7 +130,6 @@ class ApplicationServiceTest {
     mockUserService,
     mockAssessmentService,
     mockOfflineApplicationRepository,
-    mockCas3DomainEventService,
     mockApDeliusContextApiClient,
     mockApplicationTeamCodeRepository,
     mockUserAccessService,
@@ -154,7 +142,6 @@ class ApplicationServiceTest {
     mockApplicationListener,
     Clock.systemDefaultZone(),
     mockLockableApplicationRepository,
-    mockProbationDeliveryUnitRepository,
     mockCas1CruManagementAreaRepository,
     mockCas1OffenderService,
   )
@@ -1501,7 +1488,7 @@ class ApplicationServiceTest {
           defaultSubmitApprovedPremisesApplication,
           user,
           apAreaId = UUID.randomUUID(),
-        ) is AuthorisableActionResult.NotFound,
+        ) is CasResult.NotFound,
       ).isTrue
     }
 
@@ -1521,7 +1508,7 @@ class ApplicationServiceTest {
           defaultSubmitApprovedPremisesApplication,
           user,
           apAreaId = UUID.randomUUID(),
-        ) is AuthorisableActionResult.Unauthorised,
+        ) is CasResult.Unauthorised,
       ).isTrue
     }
 
@@ -1546,11 +1533,8 @@ class ApplicationServiceTest {
         apAreaId = UUID.randomUUID(),
       )
 
-      assertThat(result is AuthorisableActionResult.Success).isTrue
-      result as AuthorisableActionResult.Success
-
-      assertThat(result.entity is ValidatableActionResult.GeneralValidationError).isTrue
-      val validatableActionResult = result.entity as ValidatableActionResult.GeneralValidationError
+      assertThat(result is CasResult.GeneralValidationError).isTrue
+      val validatableActionResult = result as CasResult.GeneralValidationError
 
       assertThat(validatableActionResult.message).isEqualTo("The schema version is outdated")
     }
@@ -1579,11 +1563,8 @@ class ApplicationServiceTest {
         apAreaId = UUID.randomUUID(),
       )
 
-      assertThat(result is AuthorisableActionResult.Success).isTrue
-      result as AuthorisableActionResult.Success
-
-      assertThat(result.entity is ValidatableActionResult.GeneralValidationError).isTrue
-      val validatableActionResult = result.entity as ValidatableActionResult.GeneralValidationError
+      assertThat(result is CasResult.GeneralValidationError).isTrue
+      val validatableActionResult = result as CasResult.GeneralValidationError
 
       assertThat(validatableActionResult.message).isEqualTo("This application has already been submitted")
     }
@@ -1628,10 +1609,8 @@ class ApplicationServiceTest {
         apAreaId = UUID.randomUUID(),
       )
 
-      assertThat(result is AuthorisableActionResult.Success).isTrue
-      result as AuthorisableActionResult.Success
-      assertThat(result.entity is ValidatableActionResult.GeneralValidationError).isTrue
-      val validatableActionResult = result.entity as ValidatableActionResult.GeneralValidationError
+      assertThat(result is CasResult.GeneralValidationError).isTrue
+      val validatableActionResult = result as CasResult.GeneralValidationError
 
       assertThat(validatableActionResult.message).isEqualTo("caseManagerUserDetails must be provided if caseManagerIsNotApplicant is true")
     }
@@ -1677,10 +1656,8 @@ class ApplicationServiceTest {
         apAreaId = UUID.randomUUID(),
       )
 
-      assertThat(result is AuthorisableActionResult.Success).isTrue
-      result as AuthorisableActionResult.Success
-      assertThat(result.entity is ValidatableActionResult.GeneralValidationError).isTrue
-      val validatableActionResult = result.entity as ValidatableActionResult.GeneralValidationError
+      assertThat(result is CasResult.GeneralValidationError).isTrue
+      val validatableActionResult = result as CasResult.GeneralValidationError
 
       assertThat(validatableActionResult.message).isEqualTo("`isPipeApplication`/`isEsapApplication` should not be used in conjunction with `apType`")
     }
@@ -1743,12 +1720,9 @@ class ApplicationServiceTest {
           apAreaId = apArea.id,
         )
 
-      assertThat(result is AuthorisableActionResult.Success).isTrue
-      result as AuthorisableActionResult.Success
-
-      assertThat(result.entity is ValidatableActionResult.Success).isTrue
-      val validatableActionResult = result.entity as ValidatableActionResult.Success
-      val persistedApplication = validatableActionResult.entity as ApprovedPremisesApplicationEntity
+      assertThat(result is CasResult.Success).isTrue
+      val validatableActionResult = result as CasResult.Success
+      val persistedApplication = validatableActionResult.value as ApprovedPremisesApplicationEntity
       assertThat(persistedApplication.isPipeApplication).isTrue
       assertThat(persistedApplication.isWomensApplication).isFalse
       assertThat(persistedApplication.releaseType).isEqualTo(defaultSubmitApprovedPremisesApplication.releaseType.toString())
@@ -1841,12 +1815,9 @@ class ApplicationServiceTest {
           apAreaId = apArea.id,
         )
 
-      assertThat(result is AuthorisableActionResult.Success).isTrue
-      result as AuthorisableActionResult.Success
-
-      assertThat(result.entity is ValidatableActionResult.Success).isTrue
-      val validatableActionResult = result.entity as ValidatableActionResult.Success
-      val persistedApplication = validatableActionResult.entity as ApprovedPremisesApplicationEntity
+      assertThat(result is CasResult.Success).isTrue
+      val validatableActionResult = result as CasResult.Success
+      val persistedApplication = validatableActionResult.value as ApprovedPremisesApplicationEntity
       assertThat(persistedApplication.isPipeApplication).isTrue
       assertThat(persistedApplication.isWomensApplication).isFalse
       assertThat(persistedApplication.releaseType).isEqualTo(defaultSubmitApprovedPremisesApplication.releaseType.toString())
@@ -1928,12 +1899,9 @@ class ApplicationServiceTest {
           apAreaId = apArea.id,
         )
 
-      assertThat(result is AuthorisableActionResult.Success).isTrue
-      result as AuthorisableActionResult.Success
-
-      assertThat(result.entity is ValidatableActionResult.Success).isTrue
-      val validatableActionResult = result.entity as ValidatableActionResult.Success
-      val persistedApplication = validatableActionResult.entity as ApprovedPremisesApplicationEntity
+      assertThat(result is CasResult.Success).isTrue
+      val validatableActionResult = result as CasResult.Success
+      val persistedApplication = validatableActionResult.value as ApprovedPremisesApplicationEntity
       assertThat(persistedApplication.isPipeApplication).isEqualTo(apType == ApType.pipe)
       assertThat(persistedApplication.isEsapApplication).isEqualTo(apType == ApType.esap)
       assertThat(persistedApplication.apType).isEqualTo(apType.asApprovedPremisesType())
@@ -2038,9 +2006,8 @@ class ApplicationServiceTest {
           apAreaId = apArea.id,
         )
 
-      result as AuthorisableActionResult.Success
-      val validatableActionResult = result.entity as ValidatableActionResult.Success
-      val persistedApplication = validatableActionResult.entity as ApprovedPremisesApplicationEntity
+      val validatableActionResult = result as CasResult.Success
+      val persistedApplication = validatableActionResult.value as ApprovedPremisesApplicationEntity
 
       assertThat(persistedApplication.applicantUserDetails).isEqualTo(theUpdatedApplicantUserDetailsEntity)
       assertThat(persistedApplication.caseManagerIsNotApplicant).isEqualTo(true)
@@ -2095,7 +2062,7 @@ class ApplicationServiceTest {
         apAreaId = apArea.id,
       )
 
-      assertThat(result is AuthorisableActionResult.Success).isTrue
+      assertThat(result is CasResult.Success).isTrue
 
       verify { mockCas1ApplicationUserDetailsRepository.delete(existingCaseManagerUserDetails) }
     }
@@ -2130,358 +2097,6 @@ class ApplicationServiceTest {
       every {
         mockPlacementApplicationAutomaticRepository.save(any())
       } answers { it.invocation.args[0] as PlacementApplicationAutomaticEntity }
-    }
-  }
-
-  @SuppressWarnings("UnusedPrivateProperty")
-  @Nested
-  inner class SubmitApplicationCas3 {
-    val applicationId: UUID = UUID.fromString("fa6e97ce-7b9e-473c-883c-83b1c2af773d")
-    val username = "SOMEPERSON"
-    val user = UserEntityFactory()
-      .withDeliusUsername(this.username)
-      .withYieldedProbationRegion {
-        ProbationRegionEntityFactory()
-          .withYieldedApArea { ApAreaEntityFactory().produce() }
-          .produce()
-      }
-      .produce()
-
-    private val submitTemporaryAccommodationApplication = SubmitTemporaryAccommodationApplication(
-      translatedDocument = {},
-      type = "CAS3",
-      arrivalDate = LocalDate.now(),
-      summaryData = {
-        val num = 50
-        val text = "Hello world!"
-      },
-    )
-
-    private val submitTemporaryAccommodationApplicationWithMiReportingData = SubmitTemporaryAccommodationApplication(
-      translatedDocument = {},
-      type = "CAS3",
-      arrivalDate = LocalDate.now(),
-      summaryData = {
-        val num = 50
-        val text = "Hello world!"
-      },
-      isRegisteredSexOffender = true,
-      needsAccessibleProperty = true,
-      hasHistoryOfArson = true,
-      isDutyToReferSubmitted = true,
-      dutyToReferSubmissionDate = LocalDate.now().minusDays(7),
-      dutyToReferOutcome = "Accepted – Prevention/ Relief Duty",
-      isApplicationEligible = true,
-      eligibilityReason = "homelessFromApprovedPremises",
-      dutyToReferLocalAuthorityAreaName = "Aberdeen City",
-      personReleaseDate = LocalDate.now().plusDays(1),
-      pdu = "Probation Delivery Unit Test",
-      isHistoryOfSexualOffence = true,
-      isConcerningSexualBehaviour = true,
-      isConcerningArsonBehaviour = true,
-      prisonReleaseTypes = listOf(
-        "Standard recall",
-        "ECSL",
-        "PSS",
-      ),
-    )
-
-    @BeforeEach
-    fun setup() {
-      every { mockLockableApplicationRepository.acquirePessimisticLock(any()) } returns LockableApplicationEntity(UUID.randomUUID())
-      every { mockObjectMapper.writeValueAsString(submitTemporaryAccommodationApplication.translatedDocument) } returns "{}"
-      every { mockObjectMapper.writeValueAsString(submitTemporaryAccommodationApplicationWithMiReportingData.translatedDocument) } returns "{}"
-    }
-
-    @Test
-    fun `submitTemporaryAccommodationApplication returns NotFound when application doesn't exist`() {
-      val applicationId = UUID.fromString("fa6e97ce-7b9e-473c-883c-83b1c2af773d")
-      val username = "SOMEPERSON"
-
-      every { mockApplicationRepository.findByIdOrNull(applicationId) } returns null
-
-      assertThat(
-        applicationService.submitTemporaryAccommodationApplication(
-          applicationId,
-          submitTemporaryAccommodationApplication,
-        ) is AuthorisableActionResult.NotFound,
-      ).isTrue
-    }
-
-    @Test
-    fun `submitTemporaryAccommodationApplication returns Unauthorised when application doesn't belong to request user`() {
-      val user = UserEntityFactory()
-        .withYieldedProbationRegion {
-          ProbationRegionEntityFactory()
-            .withYieldedApArea { ApAreaEntityFactory().produce() }
-            .produce()
-        }
-        .produce()
-
-      val application = TemporaryAccommodationApplicationEntityFactory()
-        .withId(applicationId)
-        .withCreatedByUser(user)
-        .withProbationRegion(user.probationRegion)
-        .produce()
-
-      every { mockUserService.getUserForRequest() } returns UserEntityFactory()
-        .withDeliusUsername(username)
-        .withYieldedProbationRegion {
-          ProbationRegionEntityFactory()
-            .withYieldedApArea { ApAreaEntityFactory().produce() }
-            .produce()
-        }
-        .produce()
-      every { mockApplicationRepository.findByIdOrNull(applicationId) } returns application
-      every { mockJsonSchemaService.checkSchemaOutdated(application) } returns application
-
-      assertThat(
-        applicationService.submitTemporaryAccommodationApplication(
-          applicationId,
-          submitTemporaryAccommodationApplication,
-        ) is AuthorisableActionResult.Unauthorised,
-      ).isTrue
-    }
-
-    @Test
-    fun `submitTemporaryAccommodationApplication returns GeneralValidationError when application schema is outdated`() {
-      val application = TemporaryAccommodationApplicationEntityFactory()
-        .withId(applicationId)
-        .withCreatedByUser(user)
-        .withSubmittedAt(null)
-        .withProbationRegion(user.probationRegion)
-        .produce()
-        .apply {
-          schemaUpToDate = false
-        }
-
-      every { mockUserService.getUserForRequest() } returns user
-      every { mockApplicationRepository.findByIdOrNull(applicationId) } returns application
-      every { mockJsonSchemaService.checkSchemaOutdated(application) } returns application
-
-      val result = applicationService.submitTemporaryAccommodationApplication(
-        applicationId,
-        submitTemporaryAccommodationApplication,
-      )
-
-      assertThat(result is AuthorisableActionResult.Success).isTrue
-      result as AuthorisableActionResult.Success
-
-      assertThat(result.entity is ValidatableActionResult.GeneralValidationError).isTrue
-      val validatableActionResult = result.entity as ValidatableActionResult.GeneralValidationError
-
-      assertThat(validatableActionResult.message).isEqualTo("The schema version is outdated")
-    }
-
-    @Test
-    fun `submitTemporaryAccommodationApplication returns GeneralValidationError when application has already been submitted`() {
-      val newestSchema = TemporaryAccommodationApplicationJsonSchemaEntityFactory().produce()
-
-      val application = TemporaryAccommodationApplicationEntityFactory()
-        .withApplicationSchema(newestSchema)
-        .withId(applicationId)
-        .withCreatedByUser(user)
-        .withSubmittedAt(OffsetDateTime.now())
-        .withProbationRegion(user.probationRegion)
-        .produce()
-        .apply {
-          schemaUpToDate = true
-        }
-
-      every { mockUserService.getUserForRequest() } returns user
-      every { mockApplicationRepository.findByIdOrNull(applicationId) } returns application
-      every { mockJsonSchemaService.checkSchemaOutdated(application) } returns application
-
-      val result = applicationService.submitTemporaryAccommodationApplication(
-        applicationId,
-        submitTemporaryAccommodationApplication,
-      )
-
-      assertThat(result is AuthorisableActionResult.Success).isTrue
-      result as AuthorisableActionResult.Success
-
-      assertThat(result.entity is ValidatableActionResult.GeneralValidationError).isTrue
-      val validatableActionResult = result.entity as ValidatableActionResult.GeneralValidationError
-
-      assertThat(validatableActionResult.message).isEqualTo("This application has already been submitted")
-    }
-
-    @Test
-    fun `submitTemporaryAccommodationApplication returns GeneralValidationError when application has already been deleted`() {
-      val newestSchema = TemporaryAccommodationApplicationJsonSchemaEntityFactory().produce()
-
-      val application = TemporaryAccommodationApplicationEntityFactory()
-        .withApplicationSchema(newestSchema)
-        .withId(applicationId)
-        .withCreatedByUser(user)
-        .withDeletedAt(OffsetDateTime.now().minusDays(22))
-        .withProbationRegion(user.probationRegion)
-        .produce()
-        .apply {
-          schemaUpToDate = true
-        }
-
-      every { mockUserService.getUserForRequest() } returns user
-      every { mockApplicationRepository.findByIdOrNull(applicationId) } returns application
-      every { mockJsonSchemaService.checkSchemaOutdated(application) } returns application
-
-      val result = applicationService.submitTemporaryAccommodationApplication(
-        applicationId,
-        submitTemporaryAccommodationApplication,
-      )
-
-      assertThat(result is AuthorisableActionResult.Success).isTrue
-      result as AuthorisableActionResult.Success
-
-      assertThat(result.entity is ValidatableActionResult.GeneralValidationError).isTrue
-      val validatableActionResult = result.entity as ValidatableActionResult.GeneralValidationError
-
-      assertThat(validatableActionResult.message).isEqualTo("This application has already been deleted")
-    }
-
-    @Test
-    fun `submitTemporaryAccommodationApplication returns Success and creates assessment`() {
-      val newestSchema = TemporaryAccommodationApplicationJsonSchemaEntityFactory().produce()
-
-      val application = TemporaryAccommodationApplicationEntityFactory()
-        .withApplicationSchema(newestSchema)
-        .withId(applicationId)
-        .withCreatedByUser(user)
-        .withSubmittedAt(null)
-        .withProbationRegion(user.probationRegion)
-        .produce()
-        .apply {
-          schemaUpToDate = true
-        }
-
-      every { mockUserService.getUserForRequest() } returns user
-      every { mockApplicationRepository.findByIdOrNull(applicationId) } returns application
-      every { mockJsonSchemaService.checkSchemaOutdated(application) } returns application
-      every { mockJsonSchemaService.validate(newestSchema, application.data!!) } returns true
-      every { mockApplicationRepository.save(any()) } answers { it.invocation.args[0] as ApplicationEntity }
-      every { mockProbationDeliveryUnitRepository.findByIdOrNull(any()) } returns null
-      every {
-        mockAssessmentService.createTemporaryAccommodationAssessment(
-          application,
-          submitTemporaryAccommodationApplication.summaryData!!,
-        )
-      } returns TemporaryAccommodationAssessmentEntityFactory()
-        .withApplication(application)
-        .withSummaryData("{\"num\":50,\"text\":\"Hello world!\"}")
-        .produce()
-
-      every { mockCas3DomainEventService.saveReferralSubmittedEvent(any()) } just Runs
-
-      val result = applicationService.submitTemporaryAccommodationApplication(
-        applicationId,
-        submitTemporaryAccommodationApplication,
-      )
-
-      assertThat(result is AuthorisableActionResult.Success).isTrue
-      result as AuthorisableActionResult.Success
-
-      assertThat(result.entity is ValidatableActionResult.Success).isTrue
-      val validatableActionResult = result.entity as ValidatableActionResult.Success
-      val persistedApplication = validatableActionResult.entity as TemporaryAccommodationApplicationEntity
-      assertThat(persistedApplication.arrivalDate).isEqualTo(
-        OffsetDateTime.of(
-          submitTemporaryAccommodationApplication.arrivalDate,
-          LocalTime.MIDNIGHT,
-          ZoneOffset.UTC,
-        ),
-      )
-
-      verify { mockApplicationRepository.save(any()) }
-      verify(exactly = 1) {
-        mockAssessmentService.createTemporaryAccommodationAssessment(
-          application,
-          submitTemporaryAccommodationApplication.summaryData!!,
-        )
-      }
-      verify { mockDomainEventService wasNot called }
-
-      verify(exactly = 1) {
-        mockCas3DomainEventService.saveReferralSubmittedEvent(application)
-      }
-    }
-
-    @Test
-    fun `submitTemporaryAccommodationApplication records MI reporting data when supplied`() {
-      val newestSchema = TemporaryAccommodationApplicationJsonSchemaEntityFactory().produce()
-
-      val application = TemporaryAccommodationApplicationEntityFactory()
-        .withApplicationSchema(newestSchema)
-        .withId(applicationId)
-        .withCreatedByUser(user)
-        .withSubmittedAt(null)
-        .withProbationRegion(user.probationRegion)
-        .withName(user.name)
-        .produce()
-        .apply {
-          schemaUpToDate = true
-        }
-
-      every { mockUserService.getUserForRequest() } returns user
-      every { mockApplicationRepository.findByIdOrNull(applicationId) } returns application
-      every { mockJsonSchemaService.checkSchemaOutdated(application) } returns application
-      every { mockJsonSchemaService.validate(newestSchema, application.data!!) } returns true
-      every { mockApplicationRepository.save(any()) } answers { it.invocation.args[0] as ApplicationEntity }
-      every { mockProbationDeliveryUnitRepository.findByIdOrNull(any()) } returns null
-      every {
-        mockAssessmentService.createTemporaryAccommodationAssessment(
-          application,
-          submitTemporaryAccommodationApplicationWithMiReportingData.summaryData!!,
-        )
-      } returns TemporaryAccommodationAssessmentEntityFactory()
-        .withApplication(application)
-        .withSummaryData("{\"num\":50,\"text\":\"Hello world!\"}")
-        .produce()
-
-      every { mockCas3DomainEventService.saveReferralSubmittedEvent(any()) } just Runs
-
-      val result = applicationService.submitTemporaryAccommodationApplication(
-        applicationId,
-        submitTemporaryAccommodationApplicationWithMiReportingData,
-      )
-
-      assertThat(result is AuthorisableActionResult.Success).isTrue
-      result as AuthorisableActionResult.Success
-
-      assertThat(result.entity is ValidatableActionResult.Success).isTrue
-      val validatableActionResult = result.entity as ValidatableActionResult.Success
-      val persistedApplication = validatableActionResult.entity as TemporaryAccommodationApplicationEntity
-      assertThat(persistedApplication.arrivalDate).isEqualTo(
-        OffsetDateTime.of(
-          submitTemporaryAccommodationApplication.arrivalDate,
-          LocalTime.MIDNIGHT,
-          ZoneOffset.UTC,
-        ),
-      )
-      assertThat(persistedApplication.isRegisteredSexOffender).isEqualTo(true)
-      assertThat(persistedApplication.needsAccessibleProperty).isEqualTo(true)
-      assertThat(persistedApplication.hasHistoryOfArson).isEqualTo(true)
-      assertThat(persistedApplication.isDutyToReferSubmitted).isEqualTo(true)
-      assertThat(persistedApplication.dutyToReferSubmissionDate).isEqualTo(LocalDate.now().minusDays(7))
-      assertThat(persistedApplication.isEligible).isEqualTo(true)
-      assertThat(persistedApplication.eligibilityReason).isEqualTo("homelessFromApprovedPremises")
-      assertThat(persistedApplication.dutyToReferLocalAuthorityAreaName).isEqualTo("Aberdeen City")
-      assertThat(persistedApplication.personReleaseDate).isEqualTo(submitTemporaryAccommodationApplicationWithMiReportingData.personReleaseDate)
-      assertThat(persistedApplication.pdu).isEqualTo("Probation Delivery Unit Test")
-      assertThat(persistedApplication.name).isEqualTo(user.name)
-      assertThat(persistedApplication.isHistoryOfSexualOffence).isEqualTo(true)
-      assertThat(persistedApplication.isConcerningSexualBehaviour).isEqualTo(true)
-      assertThat(persistedApplication.isConcerningArsonBehaviour).isEqualTo(true)
-      assertThat(persistedApplication.dutyToReferOutcome).isEqualTo("Accepted – Prevention/ Relief Duty")
-      assertThat(persistedApplication.prisonReleaseTypes).isEqualTo("Standard recall,ECSL,PSS")
-
-      verify { mockApplicationRepository.save(any()) }
-      verify(exactly = 1) {
-        mockAssessmentService.createTemporaryAccommodationAssessment(
-          application,
-          submitTemporaryAccommodationApplicationWithMiReportingData.summaryData!!,
-        )
-      }
-      verify { mockDomainEventService wasNot called }
     }
   }
 

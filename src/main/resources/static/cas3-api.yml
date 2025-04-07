@@ -160,6 +160,42 @@ paths:
             'application/problem+json':
               schema:
                 $ref: '_shared.yml#/components/schemas/ValidationError'
+  /applications/{applicationId}/submission:
+    post:
+      tags:
+        - Application data
+      summary: Submits an Application
+      operationId: postApplicationSubmission
+      parameters:
+        - in: path
+          name: applicationId
+          required: true
+          description: Id of the application
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        description: Information needed to submit an application
+        content:
+          'application/json':
+            schema:
+              $ref: 'cas3-schemas.yml#/components/schemas/Cas3SubmitApplication'
+        required: true
+      responses:
+        200:
+          description: successfully submitted the application
+        400:
+          description: application has already been submitted
+          content:
+            'application/problem+json':
+              schema:
+                $ref: '_shared.yml#/components/schemas/ValidationError'
+        401:
+          $ref: '_shared.yml#/components/responses/401Response'
+        403:
+          $ref: '_shared.yml#/components/responses/403Response'
+        500:
+          $ref: '_shared.yml#/components/responses/500Response'
   /reports/{reportName}:
     get:
       tags:

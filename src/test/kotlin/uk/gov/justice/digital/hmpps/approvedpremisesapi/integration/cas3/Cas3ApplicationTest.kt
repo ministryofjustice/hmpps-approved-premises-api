@@ -12,6 +12,7 @@ import org.springframework.data.repository.findByIdOrNull
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas3Application
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas3ApplicationSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas3NewApplication
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas3SubmitApplication
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas3UpdateApplication
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.FullPerson
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewApplication
@@ -32,6 +33,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DomainEventTy
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ProbationRegionEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TemporaryAccommodationApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TemporaryAccommodationApplicationJsonSchemaEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TemporaryAccommodationAssessmentEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserQualification
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRole
@@ -980,6 +982,274 @@ class Cas3ApplicationTest : InitialiseDatabasePerClassTestBase() {
         ),
       )
       .exchange()
+  }
+
+  @Nested
+  inner class SubmitApplication {
+
+    @ParameterizedTest
+    @CsvSource("CAS", "CAS3")
+    fun `Submit Temporary Accommodation application returns 200`(apiEndpoint: String) {
+      givenAUser { submittingUser, jwt ->
+        givenAUser { _, _ ->
+          givenAnOffender { offenderDetails, _ ->
+            val applicationId = UUID.randomUUID()
+            val offenderName = "${offenderDetails.firstName} ${offenderDetails.surname}"
+
+            val applicationSchema = temporaryAccommodationApplicationJsonSchemaEntityFactory.produceAndPersist {
+              withAddedAt(OffsetDateTime.now())
+              withId(UUID.randomUUID())
+              withSchema(schemaText())
+            }
+
+            temporaryAccommodationApplicationEntityFactory.produceAndPersist {
+              withCrn(offenderDetails.otherIds.crn)
+              withId(applicationId)
+              withApplicationSchema(applicationSchema)
+              withCreatedByUser(submittingUser)
+              withProbationRegion(submittingUser.probationRegion)
+              withName(offenderName)
+              withData(
+                """
+                {}
+              """,
+              )
+            }
+
+            if (apiEndpoint == "CAS") {
+              val submitApplication = SubmitTemporaryAccommodationApplication(
+                translatedDocument = {},
+                type = "CAS3",
+                arrivalDate = LocalDate.now(),
+                summaryData = object {
+                  val num = 50
+                  val text = "Hello world!"
+                },
+              )
+
+              callCasApiAndAssertApiResponse(jwt, applicationId, submitApplication)
+                .expectStatus()
+                .isOk
+            } else {
+              val cas3SubmitApplication = Cas3SubmitApplication(
+                translatedDocument = {},
+                arrivalDate = LocalDate.now(),
+                summaryData = object {
+                  val num = 50
+                  val text = "Hello world!"
+                },
+              )
+
+              callCas3ApiAndAssertApiResponse(jwt, applicationId, cas3SubmitApplication)
+                .expectStatus()
+                .isOk
+            }
+
+            val persistedApplication = temporaryAccommodationApplicationRepository.findByIdOrNull(applicationId)!!
+            val persistedAssessment = persistedApplication.getLatestAssessment() as TemporaryAccommodationAssessmentEntity
+
+            assertThat(persistedAssessment.summaryData).isEqualTo("{\"num\":50,\"text\":\"Hello world!\"}")
+            assertThat(persistedApplication.name).isEqualTo(offenderName)
+          }
+        }
+      }
+    }
+
+    @CsvSource("CAS", "CAS3")
+    fun `Submit Temporary Accommodation application returns 200 with optional elements in the request`(apiEndpoint: String) {
+      givenAUser { submittingUser, jwt ->
+        givenAUser { _, _ ->
+          givenAnOffender { offenderDetails, _ ->
+            val applicationId = UUID.fromString("22ceda56-98b2-411d-91cc-ace0ab8be872")
+
+            val applicationSchema = temporaryAccommodationApplicationJsonSchemaEntityFactory.produceAndPersist {
+              withAddedAt(OffsetDateTime.now())
+              withId(UUID.randomUUID())
+              withSchema(schemaText())
+            }
+
+            temporaryAccommodationApplicationEntityFactory.produceAndPersist {
+              withCrn(offenderDetails.otherIds.crn)
+              withId(applicationId)
+              withApplicationSchema(applicationSchema)
+              withCreatedByUser(submittingUser)
+              withProbationRegion(submittingUser.probationRegion)
+              withPdu("Probation Delivery Unit Test")
+              withHasHistoryOfSexualOffence(true)
+              withIsConcerningSexualBehaviour(true)
+              withIsConcerningArsonBehaviour(true)
+              withData(
+                """
+              {}
+            """,
+              )
+            }
+
+            val pdu = probationDeliveryUnitFactory.produceAndPersist {
+              withProbationRegion(
+                probationRegionEntityFactory.produceAndPersist {
+                  withId(submittingUser.probationRegion.id)
+                },
+              )
+            }
+
+            if (apiEndpoint == "CAS") {
+              val submitApplication = SubmitTemporaryAccommodationApplication(
+                translatedDocument = {},
+                type = "CAS3",
+                arrivalDate = LocalDate.now(),
+                summaryData = object {
+                  val num = 50
+                  val text = "Hello world!"
+                },
+                personReleaseDate = LocalDate.now(),
+                pdu = "Probation Delivery Unit Test",
+                isHistoryOfSexualOffence = true,
+                isConcerningSexualBehaviour = true,
+                isConcerningArsonBehaviour = true,
+                dutyToReferOutcome = "Accepted – Prevention/ Relief Duty",
+                prisonReleaseTypes = listOf(
+                  "Parole",
+                  "CRD licence",
+                ),
+                probationDeliveryUnitId = pdu.id,
+              )
+
+              callCasApiAndAssertApiResponse(jwt, applicationId, submitApplication)
+                .expectStatus()
+                .isOk
+            } else {
+              val cas3SubmitApplication = Cas3SubmitApplication(
+                translatedDocument = {},
+                arrivalDate = LocalDate.now(),
+                summaryData = object {
+                  val num = 50
+                  val text = "Hello world!"
+                },
+                personReleaseDate = LocalDate.now(),
+                pdu = "Probation Delivery Unit Test",
+                isHistoryOfSexualOffence = true,
+                isConcerningSexualBehaviour = true,
+                isConcerningArsonBehaviour = true,
+                dutyToReferOutcome = "Accepted – Prevention/ Relief Duty",
+                prisonReleaseTypes = listOf(
+                  "Parole",
+                  "CRD licence",
+                ),
+                probationDeliveryUnitId = pdu.id,
+              )
+
+              callCas3ApiAndAssertApiResponse(jwt, applicationId, cas3SubmitApplication)
+                .expectStatus()
+                .isOk
+            }
+
+            val persistedApplication = temporaryAccommodationApplicationRepository.findByIdOrNull(applicationId)!!
+            val persistedAssessment =
+              persistedApplication.getLatestAssessment() as TemporaryAccommodationAssessmentEntity
+
+            assertThat(persistedAssessment.summaryData).isEqualTo("{\"num\":50,\"text\":\"Hello world!\"}")
+            assertThat(persistedApplication.personReleaseDate).isEqualTo(LocalDate.now())
+            assertThat(persistedApplication.dutyToReferOutcome).isEqualTo("Accepted – Prevention/ Relief Duty")
+            assertThat(persistedApplication.prisonReleaseTypes).isEqualTo("Parole,CRD licence")
+            assertThat(persistedApplication.probationDeliveryUnit!!.id).isEqualTo(pdu.id)
+            assertThat(persistedApplication.probationDeliveryUnit!!.name).isEqualTo(pdu.name)
+          }
+        }
+      }
+    }
+
+    @Test
+    fun `Submit Temporary Accommodation application returns 400 when the application was deleted`() {
+      givenAUser { submittingUser, jwt ->
+        givenAUser { _, _ ->
+          givenAnOffender { offenderDetails, _ ->
+            val applicationId = UUID.fromString("22ceda56-98b2-411d-91cc-ace0ab8be872")
+            val offenderName = "${offenderDetails.firstName} ${offenderDetails.surname}"
+
+            val applicationSchema = temporaryAccommodationApplicationJsonSchemaEntityFactory.produceAndPersist {
+              withAddedAt(OffsetDateTime.now())
+              withId(UUID.randomUUID())
+              withSchema(schemaText())
+            }
+
+            temporaryAccommodationApplicationEntityFactory.produceAndPersist {
+              withCrn(offenderDetails.otherIds.crn)
+              withId(applicationId)
+              withApplicationSchema(applicationSchema)
+              withCreatedByUser(submittingUser)
+              withProbationRegion(submittingUser.probationRegion)
+              withName(offenderName)
+              withDeletedAt(OffsetDateTime.now().minusDays(32))
+              withData(
+                """
+                {}
+              """,
+              )
+            }
+
+            val submitApplication = SubmitTemporaryAccommodationApplication(
+              translatedDocument = {},
+              type = "CAS3",
+              arrivalDate = LocalDate.now(),
+              summaryData = object {
+                val num = 50
+                val text = "Hello world!"
+              },
+            )
+
+            callCasApiAndAssertApiResponse(jwt, applicationId, submitApplication)
+              .expectStatus()
+              .isBadRequest
+              .expectBody()
+              .jsonPath("$.status").isEqualTo("400")
+              .jsonPath("$.detail").isEqualTo("This application has already been deleted")
+
+            val cas3SubmitApplication = Cas3SubmitApplication(
+              translatedDocument = {},
+              arrivalDate = LocalDate.now(),
+              summaryData = object {
+                val num = 50
+                val text = "Hello world!"
+              },
+            )
+
+            callCas3ApiAndAssertApiResponse(jwt, applicationId, cas3SubmitApplication)
+              .expectStatus()
+              .isBadRequest
+              .expectBody()
+              .jsonPath("$.status").isEqualTo("400")
+              .jsonPath("$.detail").isEqualTo("This application has already been deleted")
+          }
+        }
+      }
+    }
+
+    private fun callCasApiAndAssertApiResponse(jwt: String, applicationId: UUID, submitApplication: SubmitTemporaryAccommodationApplication) = webTestClient.post()
+      .uri("/applications/$applicationId/submission")
+      .header("Authorization", "Bearer $jwt")
+      .header("X-Service-Name", ServiceName.temporaryAccommodation.value)
+      .bodyValue(submitApplication)
+      .exchange()
+
+    private fun callCas3ApiAndAssertApiResponse(jwt: String, applicationId: UUID, submitApplication: Cas3SubmitApplication) = webTestClient.post()
+      .uri("/cas3/applications/$applicationId/submission")
+      .header("Authorization", "Bearer $jwt")
+      .header("X-Service-Name", ServiceName.temporaryAccommodation.value)
+      .bodyValue(submitApplication)
+      .exchange()
+
+    private fun schemaText(): String = """
+              {
+                "${"\$schema"}": "https://json-schema.org/draft/2020-12/schema",
+                "${"\$id"}": "https://example.com/product.schema.json",
+                "title": "Thing",
+                "description": "A thing",
+                "type": "object",
+                "properties": {},
+                "required": []
+              }
+            """
   }
 
   @Nested

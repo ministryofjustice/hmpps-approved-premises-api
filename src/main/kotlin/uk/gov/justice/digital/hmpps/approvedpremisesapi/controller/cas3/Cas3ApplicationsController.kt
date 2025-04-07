@@ -2,12 +2,14 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.controller.cas3
 
 import com.fasterxml.jackson.databind.ObjectMapper
 import jakarta.transaction.Transactional
+import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
 import org.springframework.stereotype.Service
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.cas3.ApplicationsCas3Delegate
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas3Application
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas3ApplicationSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas3NewApplication
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas3SubmitApplication
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas3UpdateApplication
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApplicationSummary
@@ -24,6 +26,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.OffenderService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.UserService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas3.Cas3ApplicationService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.cas3.Cas3ApplicationTransformer
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.ensureEntityFromCasResultIsSuccess
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.extractEntityFromCasResult
 import java.net.URI
 import java.util.UUID
@@ -109,6 +112,15 @@ class Cas3ApplicationsController(
     val updatedApplication = extractEntityFromCasResult(applicationResult) as TemporaryAccommodationApplicationEntity
 
     return ResponseEntity.ok(getPersonDetailAndTransform(updatedApplication, user, false))
+  }
+
+  override fun postApplicationSubmission(
+    applicationId: UUID,
+    cas3SubmitApplication: Cas3SubmitApplication,
+  ): ResponseEntity<Unit> {
+    ensureEntityFromCasResultIsSuccess(cas3ApplicationService.submitApplication(applicationId, cas3SubmitApplication))
+
+    return ResponseEntity(HttpStatus.OK)
   }
 
   override fun deleteApplication(applicationId: UUID): ResponseEntity<Unit> = ResponseEntity.ok(

@@ -101,6 +101,59 @@ components:
       required:
         - type
         - data
+    Cas3SubmitApplication:
+      type: object
+      properties:
+        arrivalDate:
+          type: string
+          format: date
+        isRegisteredSexOffender:
+          type: boolean
+        needsAccessibleProperty:
+          type: boolean
+        hasHistoryOfArson:
+          type: boolean
+        isDutyToReferSubmitted:
+          type: boolean
+        dutyToReferSubmissionDate:
+          type: string
+          format: date
+        dutyToReferOutcome:
+          type: string
+          example: 'Pending'
+        isApplicationEligible:
+          type: boolean
+        eligibilityReason:
+          type: string
+        dutyToReferLocalAuthorityAreaName:
+          type: string
+        personReleaseDate:
+          type: string
+          format: date
+          example: '2024-02-21'
+        pdu:
+          type: string
+        probationDeliveryUnitId:
+          type: string
+          format: uuid
+        isHistoryOfSexualOffence:
+          type: boolean
+        isConcerningSexualBehaviour:
+          type: boolean
+        isConcerningArsonBehaviour:
+          type: boolean
+        prisonReleaseTypes:
+          type: array
+          items:
+            type: string
+            example: 'PSS'
+        summaryData:
+          $ref: '_shared.yml#/components/schemas/Unit'
+        translatedDocument:
+          $ref: '_shared.yml#/components/schemas/Unit'
+      required:
+        - arrivalDate
+        - summaryData
     FutureBooking:
       type: object
       properties:
