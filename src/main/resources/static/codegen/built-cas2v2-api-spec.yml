@@ -3034,6 +3034,8 @@ components:
           CAS1: '#/components/schemas/ApprovedPremisesAssessmentSummary'
           CAS3: '#/components/schemas/TemporaryAccommodationAssessmentSummary'
     ApprovedPremisesAssessmentSummary:
+      deprecated: true
+      description: Please use the Cas1AssessmentSummary endpoint instead
       allOf:
         - $ref: '#/components/schemas/AssessmentSummary'
         - type: object

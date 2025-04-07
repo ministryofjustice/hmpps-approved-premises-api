@@ -2154,6 +2154,81 @@ paths:
                 $ref: '_shared.yml#/components/schemas/Problem'
         500:
           $ref: '_shared.yml#/components/responses/500Response'
+  /assessments:
+    get:
+      tags:
+        - Assessments
+      summary: Gets assessments the user is authorised to view
+      operationId: getAssessmentsForUser
+      parameters:
+        - name: sortDirection
+          in: query
+          description: If provided, return results in the given order
+          required: false
+          schema:
+            $ref: "_shared.yml#/components/schemas/SortDirection"
+        - name: sortBy
+          in: query
+          description: If provided, return results ordered by the given field name
+          required: false
+          schema:
+            $ref: "cas1-schemas.yml#/components/schemas/Cas1AssessmentSortField"
+        - name: statuses
+          in: query
+          description: If provided, return only results with the given statuses
+          required: false
+          schema:
+            type: array
+            items:
+              $ref: "cas1-schemas.yml#/components/schemas/Cas1AssessmentStatus"
+        - name: crnOrName
+          in: query
+          description: Filters results using an exact match or CRN, or partial match on name
+          required: false
+          schema:
+            type: string
+        - name: page
+          in: query
+          description: Page number of results to return. If blank, returns all results
+          schema:
+            type: integer
+        - name: perPage
+          in: query
+          description: Number of items to return per page (defaults to 10)
+          schema:
+            type: integer
+      responses:
+        200:
+          description: successfully retrieved assessments
+          content:
+            'application/json':
+              schema:
+                type: array
+                items:
+                  $ref: 'cas1-schemas.yml#/components/schemas/Cas1AssessmentSummary'
+          headers:
+            X-Pagination-CurrentPage:
+              schema:
+                type: integer
+              description: The current page number
+            X-Pagination-TotalPages:
+              schema:
+                type: integer
+              description: The total number of pages
+            X-Pagination-TotalResults:
+              schema:
+                type: integer
+              description: The total number of results
+            X-Pagination-PageSize:
+              schema:
+                type: integer
+              description: The size of each page
+        401:
+          $ref: '_shared.yml#/components/responses/401Response'
+        403:
+          $ref: '_shared.yml#/components/responses/403Response'
+        500:
+          $ref: '_shared.yml#/components/responses/500Response'
 
 
 

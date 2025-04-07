@@ -23,6 +23,8 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApprovedPremis
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApprovedPremisesAssessmentStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApprovedPremisesAssessmentSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApprovedPremisesUser
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1AssessmentStatus
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1AssessmentSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Person
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.TemporaryAccommodationApplication
@@ -495,6 +497,42 @@ class AssessmentTransformerTest {
       } else {
         assertThat(result.size).isEqualTo(1)
       }
+    }
+  }
+
+  @Nested
+  inner class TransformDomainToCas1AssessmentSummary {
+
+    @Test
+    fun `transform domain to Cas1AssessmentSummary  - approved premises`() {
+      val personRisks = PersonRisksFactory().produce()
+      val domainSummary = DomainAssessmentSummaryImpl(
+        type = "approved-premises",
+        id = UUID.randomUUID(),
+        applicationId = UUID.randomUUID(),
+        createdAt = Instant.now(),
+        riskRatings = objectMapper.writeValueAsString(personRisks),
+        arrivalDate = OffsetDateTime.now().randomDateTimeBefore(14).toInstant(),
+        completed = false,
+        decision = "ACCEPTED",
+        crn = randomStringMultiCaseWithNumbers(6),
+        allocated = true,
+        status = DomainAssessmentSummaryStatus.AWAITING_RESPONSE,
+        dueAt = Instant.now(),
+        probationDeliveryUnitName = null,
+      )
+
+      every { mockPersonTransformer.transformModelToPersonApi(any()) } returns mockk<Person>()
+      val apiSummary = assessmentTransformer.transformDomainToCas1AssessmentSummary(domainSummary, mockk())
+
+      assertThat(apiSummary).isInstanceOf(Cas1AssessmentSummary::class.java)
+      assertThat(apiSummary.id).isEqualTo(domainSummary.id)
+      assertThat(apiSummary.applicationId).isEqualTo(domainSummary.applicationId)
+      assertThat(apiSummary.createdAt).isEqualTo(domainSummary.createdAt)
+      assertThat(apiSummary.arrivalDate).isEqualTo(domainSummary.arrivalDate)
+      assertThat(apiSummary.status).isEqualTo(Cas1AssessmentStatus.awaitingResponse)
+      assertThat(apiSummary.risks).isEqualTo(risksTransformer.transformDomainToApi(personRisks, domainSummary.crn))
+      assertThat(apiSummary.person).isNotNull
     }
   }
 

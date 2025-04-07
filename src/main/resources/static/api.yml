@@ -3179,6 +3179,8 @@ paths:
           $ref: '_shared.yml#/components/responses/500Response'
   /assessments:
     get:
+      deprecated: true
+      description: This endpoint is deprecated; please use the CAS-specific endpoint instead
       tags:
         - Assessment data
       summary: Gets assessments the user is authorised to view
