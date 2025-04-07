@@ -29,7 +29,6 @@ interface Cas2StatusUpdateRepository : JpaRepository<Cas2StatusUpdateEntity, UUI
 
 enum class Cas2StatusUpdateNonAssignable(val label: String) {
   AWAITING_ARRIVAL("Awaiting arrival"),
-  OFFER_DECLINED_OR_WITHDRAWN("Offer declined or withdrawn"),
   REFERRAL_CANCELLED("Referral cancelled"),
   REFERRAL_WITHDRAWN("Referral withdrawn"),
 }
