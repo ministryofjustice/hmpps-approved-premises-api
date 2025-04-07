@@ -12,6 +12,7 @@ import org.springframework.data.repository.findByIdOrNull
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas3Application
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas3ApplicationSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas3NewApplication
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas3UpdateApplication
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.FullPerson
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewApplication
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PersonType
@@ -19,6 +20,8 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.SubmitTemporaryAccommodationApplication
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.TemporaryAccommodationApplication
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.TemporaryAccommodationApplicationSummary
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.UpdateApplicationType
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.UpdateTemporaryAccommodationApplication
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.CaseAccessFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.InitialiseDatabasePerClassTestBase
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAProbationRegion
@@ -832,6 +835,148 @@ class Cas3ApplicationTest : InitialiseDatabasePerClassTestBase() {
           convictionId = 123,
           deliusEventNumber = "1",
           offenceId = offenceId,
+        ),
+      )
+      .exchange()
+  }
+
+  @Nested
+  inner class UpdateApplication {
+    @Test
+    fun `Update existing application returns 200 with correct body`() {
+      givenAUser { userEntity, jwt ->
+        givenAUser(
+          roles = listOf(UserRole.CAS3_REFERRER),
+        ) { _, _ ->
+          givenAnOffender { offenderDetails, _ ->
+            temporaryAccommodationApplicationJsonSchemaRepository.deleteAll()
+
+            val newestJsonSchema = temporaryAccommodationApplicationJsonSchemaEntityFactory.produceAndPersist {
+              withAddedAt(OffsetDateTime.parse("2024-12-11T13:21:00+01:00"))
+              withSchema("{}")
+            }
+
+            val applicationEntity = temporaryAccommodationApplicationEntityFactory.produceAndPersist {
+              withApplicationSchema(newestJsonSchema)
+              withCrn(offenderDetails.otherIds.crn)
+              withCreatedByUser(userEntity)
+              withProbationRegion(userEntity.probationRegion)
+              withData(
+                """
+            {
+               "thingId": 123
+            }
+            """,
+              )
+            }
+
+            callCasApiAndAssertResponse(jwt, applicationEntity.id, offenderDetails.otherIds.crn)
+            callCas3ApiAndAssertResponse(jwt, applicationEntity.id, offenderDetails.otherIds.crn)
+          }
+        }
+      }
+    }
+
+    @Test
+    fun `Update existing application which was deleted returns 400`() {
+      givenAUser { userEntity, jwt ->
+        givenAUser(
+          roles = listOf(UserRole.CAS3_REFERRER),
+        ) { _, _ ->
+          givenAnOffender { offenderDetails, _ ->
+            temporaryAccommodationApplicationJsonSchemaRepository.deleteAll()
+
+            val newestJsonSchema = temporaryAccommodationApplicationJsonSchemaEntityFactory.produceAndPersist {
+              withAddedAt(OffsetDateTime.parse("2024-12-11T13:21:00+01:00"))
+              withSchema("{}")
+            }
+
+            val applicationEntity = temporaryAccommodationApplicationEntityFactory.produceAndPersist {
+              withApplicationSchema(newestJsonSchema)
+              withCrn(offenderDetails.otherIds.crn)
+              withCreatedByUser(userEntity)
+              withProbationRegion(userEntity.probationRegion)
+              withDeletedAt(OffsetDateTime.now().minusDays(26))
+              withData(
+                """
+            {
+               "thingId": 123
+            }
+            """,
+              )
+            }
+
+            callCasApi(jwt, applicationEntity.id)
+              .expectStatus()
+              .isBadRequest
+              .expectBody()
+              .jsonPath("$.status").isEqualTo("400")
+              .jsonPath("$.detail").isEqualTo("This application has already been deleted")
+
+            callCas3Api(jwt, applicationEntity.id)
+              .expectStatus()
+              .isBadRequest
+              .expectBody()
+              .jsonPath("$.status").isEqualTo("400")
+              .jsonPath("$.detail").isEqualTo("This application has already been deleted")
+          }
+        }
+      }
+    }
+
+    private fun callCasApiAndAssertResponse(
+      jwt: String,
+      applicationId: UUID,
+      crn: String,
+    ) {
+      val casApiResult = callCasApi(jwt, applicationId)
+        .expectStatus()
+        .isOk
+        .returnResult(String::class.java)
+        .responseBody
+        .blockFirst()
+
+      val result = objectMapper.readValue(casApiResult, TemporaryAccommodationApplication::class.java)
+
+      assertThat(result.person.crn).isEqualTo(crn)
+      assertThat(result.data.toString()).isEqualTo("""{thingId=345}""")
+    }
+
+    private fun callCasApi(jwt: String, applicationId: UUID) = webTestClient.put()
+      .uri("/applications/$applicationId")
+      .header("Authorization", "Bearer $jwt")
+      .bodyValue(
+        UpdateTemporaryAccommodationApplication(
+          data = mapOf("thingId" to 345),
+          type = UpdateApplicationType.CAS3,
+        ),
+      )
+      .exchange()
+
+    private fun callCas3ApiAndAssertResponse(
+      jwt: String,
+      applicationId: UUID,
+      crn: String,
+    ) {
+      val casApiResult = callCas3Api(jwt, applicationId)
+        .expectStatus()
+        .isOk
+        .returnResult(String::class.java)
+        .responseBody
+        .blockFirst()
+
+      val result = objectMapper.readValue(casApiResult, Cas3Application::class.java)
+
+      assertThat(result.person.crn).isEqualTo(crn)
+      assertThat(result.data.toString()).isEqualTo("""{thingId=345}""")
+    }
+
+    private fun callCas3Api(jwt: String, applicationId: UUID) = webTestClient.put()
+      .uri("/cas3/applications/$applicationId")
+      .header("Authorization", "Bearer $jwt")
+      .bodyValue(
+        Cas3UpdateApplication(
+          data = mapOf("thingId" to 345),
         ),
       )
       .exchange()

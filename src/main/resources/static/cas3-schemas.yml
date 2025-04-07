@@ -91,6 +91,16 @@ components:
         - createdAt
         - createdByUserId
         - status
+    Cas3UpdateApplication:
+      type: object
+      properties:
+        data:
+          type: object
+          additionalProperties:
+            $ref: '_shared.yml#/components/schemas/Unit'
+      required:
+        - type
+        - data
     FutureBooking:
       type: object
       properties:

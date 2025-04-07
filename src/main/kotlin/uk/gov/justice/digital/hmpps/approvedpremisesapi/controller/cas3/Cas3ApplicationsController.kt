@@ -1,5 +1,6 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.controller.cas3
 
+import com.fasterxml.jackson.databind.ObjectMapper
 import jakarta.transaction.Transactional
 import org.springframework.http.ResponseEntity
 import org.springframework.stereotype.Service
@@ -7,6 +8,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.cas3.ApplicationsCas
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas3Application
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas3ApplicationSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas3NewApplication
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas3UpdateApplication
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApplicationSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TemporaryAccommodationApplicationEntity
@@ -33,6 +35,7 @@ class Cas3ApplicationsController(
   private val userService: UserService,
   private val offenderService: OffenderService,
   private val cas3ApplicationTransformer: Cas3ApplicationTransformer,
+  private val objectMapper: ObjectMapper,
 ) : ApplicationsCas3Delegate {
 
   override fun getApplicationsForUser(): ResponseEntity<List<Cas3ApplicationSummary>> {
@@ -90,6 +93,22 @@ class Cas3ApplicationsController(
     return ResponseEntity
       .created(URI.create("/applications/${application.id}"))
       .body(cas3ApplicationTransformer.transformJpaToApi(application, personInfo))
+  }
+
+  @Transactional
+  override fun putApplication(applicationId: UUID, body: Cas3UpdateApplication): ResponseEntity<Cas3Application> {
+    val user = userService.getUserForRequest()
+
+    val serializedData = objectMapper.writeValueAsString(body.data)
+
+    val applicationResult = applicationService.updateTemporaryAccommodationApplication(
+      applicationId = applicationId,
+      data = serializedData,
+    )
+
+    val updatedApplication = extractEntityFromCasResult(applicationResult) as TemporaryAccommodationApplicationEntity
+
+    return ResponseEntity.ok(getPersonDetailAndTransform(updatedApplication, user, false))
   }
 
   override fun deleteApplication(applicationId: UUID): ResponseEntity<Unit> = ResponseEntity.ok(
