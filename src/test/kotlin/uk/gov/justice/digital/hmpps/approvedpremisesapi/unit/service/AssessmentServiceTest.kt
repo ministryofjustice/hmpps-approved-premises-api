@@ -25,6 +25,7 @@ import org.springframework.data.repository.findByIdOrNull
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.AssessmentSortField
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1ApplicationTimelinessCategory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1AssessmentSortField
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Gender
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PlacementDates
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PlacementRequirements
@@ -137,6 +138,7 @@ class AssessmentServiceTest {
   )
 
   @Test
+  @Deprecated("This test is no longer needed, we can remove it once the deprecated `getVisibleAssessmentSummariesForUserCAS1` method is removed")
   fun `getVisibleAssessmentSummariesForUserCAS1 only fetches Approved Premises assessments allocated to the user that have not been reallocated`() {
     val user = UserEntityFactory()
       .withYieldedProbationRegion {
@@ -165,6 +167,46 @@ class AssessmentServiceTest {
       user,
       statuses = listOf(DomainAssessmentSummaryStatus.NOT_STARTED, DomainAssessmentSummaryStatus.IN_PROGRESS),
       PageCriteria(sortBy = AssessmentSortField.assessmentStatus, sortDirection = SortDirection.asc, page = 5, perPage = 7),
+    )
+
+    verify(exactly = 1) {
+      assessmentRepositoryMock.findAllApprovedPremisesAssessmentSummariesNotReallocated(
+        user.id.toString(),
+        listOf("NOT_STARTED", "IN_PROGRESS"),
+        PageRequest.of(4, 7, Sort.by("status").ascending()),
+      )
+    }
+  }
+
+  @Test
+  fun `findApprovedPremisesAssessmentSummariesNotReallocatedForUser only fetches Approved Premises assessments allocated to the user that have not been reallocated`() {
+    val user = UserEntityFactory()
+      .withYieldedProbationRegion {
+        ProbationRegionEntityFactory()
+          .withYieldedApArea { ApAreaEntityFactory().produce() }
+          .produce()
+      }
+      .produce()
+
+    user.roles.add(
+      UserRoleAssignmentEntityFactory()
+        .withRole(UserRole.CAS1_ASSESSOR)
+        .withUser(user)
+        .produce(),
+    )
+
+    every {
+      assessmentRepositoryMock.findAllApprovedPremisesAssessmentSummariesNotReallocated(
+        any(),
+        listOf("NOT_STARTED", "IN_PROGRESS"),
+        PageRequest.of(4, 7, Sort.by("status").ascending()),
+      )
+    } returns Page.empty()
+
+    assessmentService.findApprovedPremisesAssessmentSummariesNotReallocatedForUser(
+      user,
+      statuses = listOf(DomainAssessmentSummaryStatus.NOT_STARTED, DomainAssessmentSummaryStatus.IN_PROGRESS),
+      PageCriteria(sortBy = Cas1AssessmentSortField.assessmentStatus, sortDirection = SortDirection.asc, page = 5, perPage = 7),
     )
 
     verify(exactly = 1) {

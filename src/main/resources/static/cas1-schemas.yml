@@ -1425,5 +1425,68 @@ components:
         - status
         - isWithdrawn
         - hasRequestsForPlacement
+    Cas1AssessmentSummary:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        applicationId:
+          type: string
+          format: uuid
+        arrivalDate:
+          type: string
+          format: date-time
+        createdAt:
+          type: string
+          format: date-time
+        dateOfInfoRequest:
+          type: string
+          format: date-time
+        decision:
+          $ref: '_shared.yml#/components/schemas/AssessmentDecision'
+        risks:
+          $ref: '_shared.yml#/components/schemas/PersonRisks'
+        person:
+          $ref: '_shared.yml#/components/schemas/Person'
+        status:
+          $ref: '#/components/schemas/Cas1AssessmentStatus'
+        dueAt:
+              type: string
+              format: date-time
+      required:
+        - id
+        - applicationId
+        - createdAt
+        - person
+        - status
+        - dueAt
+    Cas1AssessmentStatus:
+      type: string
+      enum:
+        - awaiting_response
+        - completed
+        - reallocated
+        - in_progress
+        - not_started
+    Cas1AssessmentSortField:
+      type: string
+      enum:
+        - name
+        - crn
+        - arrivalDate
+        - status
+        - createdAt
+        - dueAt
+        - probationDeliveryUnitName
+      x-enum-varnames:
+        - personName
+        - personCrn
+        - assessmentArrivalDate
+        - assessmentStatus
+        - assessmentCreatedAt
+        - assessmentDueAt
+        - applicationProbationDeliveryUnitName
+
 
 

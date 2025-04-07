@@ -7,6 +7,7 @@ import org.springframework.stereotype.Service
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.AssessmentSortField
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1ApplicationTimelinessCategory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1AssessmentSortField
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PlacementDates
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PlacementRequirements
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
@@ -81,6 +82,7 @@ class AssessmentService(
 ) {
   private val log = LoggerFactory.getLogger(this::class.java)
 
+  @Deprecated("Use getVisibleCas1AssessmentSummariesForUser instead")
   fun getVisibleAssessmentSummariesForUserCAS1(
     user: UserEntity,
     statuses: List<DomainAssessmentSummaryStatus>,
@@ -95,6 +97,32 @@ class AssessmentService(
         AssessmentSortField.personCrn -> "crn"
         AssessmentSortField.personName -> "personName"
         AssessmentSortField.applicationProbationDeliveryUnitName -> error("not supported for CAS1")
+      },
+    )
+
+    val response = assessmentRepository.findAllApprovedPremisesAssessmentSummariesNotReallocated(
+      user.id.toString(),
+      statuses.map { it.name },
+      pageable,
+    )
+
+    return Pair(response.content, getMetadata(response, pageCriteria))
+  }
+
+  fun findApprovedPremisesAssessmentSummariesNotReallocatedForUser(
+    user: UserEntity,
+    statuses: List<DomainAssessmentSummaryStatus>,
+    pageCriteria: PageCriteria<Cas1AssessmentSortField>,
+  ): Pair<List<DomainAssessmentSummary>, PaginationMetadata?> {
+    val pageable = pageCriteria.toPageableOrAllPages(
+      sortBy = when (pageCriteria.sortBy) {
+        Cas1AssessmentSortField.assessmentStatus -> "status"
+        Cas1AssessmentSortField.assessmentArrivalDate -> "arrivalDate"
+        Cas1AssessmentSortField.assessmentCreatedAt -> "createdAt"
+        Cas1AssessmentSortField.assessmentDueAt -> "dueAt"
+        Cas1AssessmentSortField.personCrn -> "crn"
+        Cas1AssessmentSortField.personName -> "personName"
+        Cas1AssessmentSortField.applicationProbationDeliveryUnitName -> error("not supported for CAS1")
       },
     )
 

@@ -10,6 +10,8 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApprovedPremis
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApprovedPremisesUser
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.AssessmentStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.AssessmentSummary
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1AssessmentStatus
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1AssessmentSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ReferralHistoryNote
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.TemporaryAccommodationApplication
@@ -195,6 +197,31 @@ class AssessmentTransformer(
     AssessmentStatus.cas3ReadyToPlace -> DomainAssessmentSummaryStatus.READY_TO_PLACE
   }
 
+  fun transformCas1AssessmentStatusToDomainSummaryState(status: Cas1AssessmentStatus) = when (status) {
+    Cas1AssessmentStatus.awaitingResponse -> DomainAssessmentSummaryStatus.AWAITING_RESPONSE
+    Cas1AssessmentStatus.completed -> DomainAssessmentSummaryStatus.COMPLETED
+    Cas1AssessmentStatus.reallocated -> DomainAssessmentSummaryStatus.REALLOCATED
+    Cas1AssessmentStatus.inProgress -> DomainAssessmentSummaryStatus.IN_PROGRESS
+    Cas1AssessmentStatus.notStarted -> DomainAssessmentSummaryStatus.NOT_STARTED
+  }
+
+  fun transformDomainToCas1AssessmentSummary(ase: DomainAssessmentSummary, personInfo: PersonInfoResult): Cas1AssessmentSummary = Cas1AssessmentSummary(
+    id = ase.id,
+    applicationId = ase.applicationId,
+    createdAt = ase.createdAt,
+    arrivalDate = ase.arrivalDate,
+    status = getStatusForCas1Assessment(ase),
+    decision = transformDomainSummaryDecisionToApi(ase.decision),
+    risks = ase.riskRatings?.let {
+      risksTransformer.transformDomainToApi(
+        objectMapper.readValue<PersonRisks>(it),
+        ase.crn,
+      )
+    },
+    person = personTransformer.transformModelToPersonApi(personInfo),
+    dueAt = ase.dueAt!!,
+  )
+
   private fun transformDomainSummaryDecisionToApi(decision: String?) = when (decision) {
     "ACCEPTED" -> ApiAssessmentDecision.accepted
     "REJECTED" -> ApiAssessmentDecision.rejected
@@ -220,6 +247,14 @@ class AssessmentTransformer(
     DomainAssessmentSummaryStatus.IN_PROGRESS -> ApprovedPremisesAssessmentStatus.inProgress
     DomainAssessmentSummaryStatus.REALLOCATED -> ApprovedPremisesAssessmentStatus.reallocated
     else -> ApprovedPremisesAssessmentStatus.notStarted
+  }
+
+  private fun getStatusForCas1Assessment(ase: DomainAssessmentSummary): Cas1AssessmentStatus = when (ase.status) {
+    DomainAssessmentSummaryStatus.COMPLETED -> Cas1AssessmentStatus.completed
+    DomainAssessmentSummaryStatus.AWAITING_RESPONSE -> Cas1AssessmentStatus.awaitingResponse
+    DomainAssessmentSummaryStatus.IN_PROGRESS -> Cas1AssessmentStatus.inProgress
+    DomainAssessmentSummaryStatus.REALLOCATED -> Cas1AssessmentStatus.reallocated
+    else -> Cas1AssessmentStatus.notStarted
   }
 
   private fun getStatusForTemporaryAccommodationAssessment(entity: AssessmentEntity) = when {
