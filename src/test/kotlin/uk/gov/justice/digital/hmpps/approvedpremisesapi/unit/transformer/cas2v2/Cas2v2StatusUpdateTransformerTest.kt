@@ -7,6 +7,7 @@ import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas2v2StatusUpdate
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas2v2User
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.cas2v2.Cas2v2ApplicationEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.cas2v2.Cas2v2StatusUpdateEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.cas2v2.Cas2v2UserEntityFactory
@@ -33,7 +34,7 @@ class Cas2v2StatusUpdateTransformerTest {
 
   @Test
   fun `transforms JPA Cas2v2StatusUpdate db entity to API representation`() {
-    val status = Cas2ApplicationStatusSeeding.statusList().random()
+    val status = Cas2ApplicationStatusSeeding.statusList(ServiceName.cas2).random()
 
     val jpaEntity = Cas2v2StatusUpdateEntityFactory()
       .withStatusId(status.id)
