@@ -1,6 +1,7 @@
 name: Security trivy dependency check
 on:
   workflow_dispatch:
+  pull_request:
   schedule:
     - cron: "51 3 * * MON-FRI" # Every weekday at 03:51 UTC
 jobs:
