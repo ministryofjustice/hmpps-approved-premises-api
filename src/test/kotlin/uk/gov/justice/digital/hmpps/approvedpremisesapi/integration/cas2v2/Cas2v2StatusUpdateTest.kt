@@ -13,6 +13,7 @@ import org.springframework.beans.factory.annotation.Value
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas2.model.Cas2ApplicationStatusUpdatedEvent
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas2.model.Cas2StatusDetail
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas2AssessmentStatusUpdate
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.Cas2v2IntegrationTestBase
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenACas2v2Assessor
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenACas2v2PomUser
@@ -113,7 +114,7 @@ class Cas2v2StatusUpdateTest(
           val persistedStatusUpdate = realCas2v2StatusUpdateRepository.findFirstByApplicationIdOrderByCreatedAtDesc(application.id)
           assertThat(persistedStatusUpdate!!.assessment!!.id).isEqualTo(assessmentId)
 
-          val appliedStatus = Cas2ApplicationStatusSeeding.statusList()
+          val appliedStatus = Cas2ApplicationStatusSeeding.statusList(ServiceName.cas2)
             .find { status ->
               status.id == persistedStatusUpdate.statusId
             }
@@ -231,7 +232,7 @@ class Cas2v2StatusUpdateTest(
                 realCas2v2StatusUpdateDetailRepository.findFirstByStatusUpdateIdOrderByCreatedAtDesc(persistedStatusUpdate.id)
               assertThat(persistedStatusDetailUpdate).isNotNull
 
-              val appliedStatus = Cas2ApplicationStatusSeeding.statusList()
+              val appliedStatus = Cas2ApplicationStatusSeeding.statusList(ServiceName.cas2)
                 .find { status ->
                   status.id == persistedStatusUpdate.statusId
                 }

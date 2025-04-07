@@ -2,6 +2,7 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.cas2v2
 
 import io.github.bluegroundltd.kfactory.Factory
 import io.github.bluegroundltd.kfactory.Yielded
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas2v2.Cas2v2ApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas2v2.Cas2v2AssessmentEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas2v2.Cas2v2StatusUpdateDetailEntity
@@ -17,7 +18,7 @@ class Cas2v2StatusUpdateEntityFactory : Factory<Cas2v2StatusUpdateEntity> {
   private var assessor: Yielded<Cas2v2UserEntity> = { Cas2v2UserEntityFactory().produce() }
   private var assessment: Yielded<Cas2v2AssessmentEntity?> = { null }
   private var application: Yielded<Cas2v2ApplicationEntity>? = null
-  private var statusId: Yielded<UUID> = { Cas2ApplicationStatusSeeding.statusList().random().id }
+  private var statusId: Yielded<UUID> = { Cas2ApplicationStatusSeeding.statusList(ServiceName.cas2).random().id }
   private var createdAt: Yielded<OffsetDateTime> = { OffsetDateTime.now().randomDateTimeBefore(30) }
   private var label: Yielded<String> = { "More information requested" }
   private var description: Yielded<String> = { "More information about the application has been requested" }

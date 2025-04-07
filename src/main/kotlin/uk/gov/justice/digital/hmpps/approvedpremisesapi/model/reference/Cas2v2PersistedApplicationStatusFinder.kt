@@ -6,7 +6,7 @@ import java.util.UUID
 
 @Component
 class Cas2v2PersistedApplicationStatusFinder(
-  private val statusList: List<Cas2PersistedApplicationStatus> = Cas2ApplicationStatusSeeding.statusList(listOf(ServiceName.cas2v2)),
+  private val statusList: List<Cas2PersistedApplicationStatus> = Cas2ApplicationStatusSeeding.statusList(ServiceName.cas2v2),
 ) {
   fun all(): List<Cas2PersistedApplicationStatus> = statusList
 

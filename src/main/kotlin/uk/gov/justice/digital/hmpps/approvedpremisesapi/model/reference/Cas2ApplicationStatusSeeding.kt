@@ -64,11 +64,13 @@ object Cas2ApplicationStatusSeeding {
           id = UUID.fromString("05669c8a-d65c-48d2-a5e4-0c3f6fc8977b"),
           name = "exclusionZonesAndAreas",
           label = "Exclusion zones and preferred areas",
+          applicableToServices = listOf(ServiceName.cas2, ServiceName.cas2v2),
         ),
         Cas2PersistedApplicationStatusDetail(
           id = UUID.fromString("831c241d-63f3-4d17-b969-b8154d7e4902"),
           name = "healthNeeds",
           label = "Health needs",
+          applicableToServices = listOf(ServiceName.cas2, ServiceName.cas2v2),
         ),
         Cas2PersistedApplicationStatusDetail(
           id = UUID.fromString("7ba5cd7d-8ae3-4fe5-bb27-9367197ea160"),
@@ -104,6 +106,7 @@ object Cas2ApplicationStatusSeeding {
           id = UUID.fromString("94631a70-6c51-43d6-9112-2b6d042b5aa0"),
           name = "other",
           label = "Other",
+          applicableToServices = listOf(ServiceName.cas2, ServiceName.cas2v2),
         ),
       ),
     ),
@@ -155,31 +158,37 @@ object Cas2ApplicationStatusSeeding {
           id = UUID.fromString("62645779-242d-4601-a8f8-d2cbf1d41dfa"),
           name = "areaUnsuitable",
           label = "Area unsuitable",
+          applicableToServices = listOf(ServiceName.cas2, ServiceName.cas2v2),
         ),
         Cas2PersistedApplicationStatusDetail(
           id = UUID.fromString("fc38f750-e9d2-4270-b542-d38286b9855c"),
           name = "changeOfCircumstances",
           label = "Change of circumstances",
+          applicableToServices = listOf(ServiceName.cas2, ServiceName.cas2v2),
         ),
         Cas2PersistedApplicationStatusDetail(
           id = UUID.fromString("31122b89-e087-4b5f-b59a-f7ffa0dd3e0c"),
           name = "noResponse",
           label = "No response",
+          applicableToServices = listOf(ServiceName.cas2, ServiceName.cas2v2),
         ),
         Cas2PersistedApplicationStatusDetail(
           id = UUID.fromString("32e62af3-6ea5-4496-a82c-b7bad67080a5"),
           name = "offerWithdrawnByNacro",
           label = "Offer withdrawn by Nacro",
+          applicableToServices = listOf(ServiceName.cas2, ServiceName.cas2v2),
         ),
         Cas2PersistedApplicationStatusDetail(
           id = UUID.fromString("b5bfbff4-aaa6-4fb0-ba36-5bca58927dc5"),
           name = "propertyUnsuitable",
           label = "Property unsuitable for needs",
+          applicableToServices = listOf(ServiceName.cas2, ServiceName.cas2v2),
         ),
         Cas2PersistedApplicationStatusDetail(
           id = UUID.fromString("f58267b8-f91b-4a4f-9aa2-80089ba111e4"),
           name = "withdrawnByReferrer",
           label = "Withdrawn by referrer",
+          applicableToServices = listOf(ServiceName.cas2, ServiceName.cas2v2),
         ),
         Cas2PersistedApplicationStatusDetail(
           id = UUID.fromString("ed5d529c-d7d1-4f29-a0c0-89fd104cc320"),
@@ -241,11 +250,13 @@ object Cas2ApplicationStatusSeeding {
           id = UUID.fromString("d3c789b8-947d-4e24-9cef-335545d85abe"),
           name = "withdrewOrDeclinedOffer",
           label = "Withdrew or declined offer",
+          applicableToServices = listOf(ServiceName.cas2, ServiceName.cas2v2),
         ),
         Cas2PersistedApplicationStatusDetail(
           id = UUID.fromString("6fc8d3b7-eb53-479d-8903-3880a9ed563f"),
           name = "personTransferredToAnotherPrisonWithdrawal",
           label = "Person transferred to another prison",
+          applicableToServices = listOf(ServiceName.cas2, ServiceName.cas2v2),
         ),
         Cas2PersistedApplicationStatusDetail(
           id = UUID.fromString("3acf6010-820a-458d-ae8d-1d8a937af890"),
@@ -263,6 +274,7 @@ object Cas2ApplicationStatusSeeding {
           id = UUID.fromString("766a1675-b917-4532-8485-6ec0380f4f4c"),
           name = "applicantTransferredToAnotherPrisonWithdrawal",
           label = "Applicant transferred to another prison",
+          applicableToServices = listOf(ServiceName.cas2, ServiceName.cas2v2),
         ),
         Cas2PersistedApplicationStatusDetail(
           id = UUID.fromString("c985337e-b9a7-4609-ac9b-fb8b5ec4a48a"),
@@ -303,61 +315,76 @@ object Cas2ApplicationStatusSeeding {
       description = "The application has been cancelled.",
       statusDetails = listOf(
         Cas2PersistedApplicationStatusDetail(
+          id = UUID.fromString("ba46bbe0-8fb6-4539-cccc-5586e6bfe8b6"),
+          name = "nacroAssessedAsHighRisk",
+          label = "NACRO assessed as high risk",
+          applicableToServices = listOf(ServiceName.cas2v2),
+        ),
+        Cas2PersistedApplicationStatusDetail(
           id = UUID.fromString("ba46bbe0-8fb6-4539-895d-5586e6bfe8b6"),
           name = "assessedAsHighRisk",
           label = "Assessed as high risk",
+          applicableToServices = listOf(ServiceName.cas2),
         ),
         Cas2PersistedApplicationStatusDetail(
           id = UUID.fromString("522bb736-aeb6-480f-a51a-2bf3dcfcd482"),
           name = "notEligible",
           label = "Not eligible",
+          applicableToServices = listOf(ServiceName.cas2, ServiceName.cas2v2),
         ),
         Cas2PersistedApplicationStatusDetail(
           id = UUID.fromString("ccf43af1-359b-4a14-8941-85eefa88f016"),
           name = "noRecourseToPublicFunds",
           label = "No recourse to public funds",
+          applicableToServices = listOf(ServiceName.cas2, ServiceName.cas2v2),
         ),
         Cas2PersistedApplicationStatusDetail(
           id = UUID.fromString("c149a14d-ba06-420a-b844-5edfc02da6b1"),
           name = "noPropertyAvailable",
           label = "No property available",
+          applicableToServices = listOf(ServiceName.cas2, ServiceName.cas2v2),
         ),
         Cas2PersistedApplicationStatusDetail(
           id = UUID.fromString("3fbdccc9-4858-4ae4-abb5-bd2b90d96d96"),
           name = "noFemalePropertyAvailable",
           label = "No female property available",
+          applicableToServices = listOf(ServiceName.cas2, ServiceName.cas2v2),
         ),
         Cas2PersistedApplicationStatusDetail(
           id = UUID.fromString("bc539d6d-c353-49fa-847f-6967a148c527"),
           name = "noAdaptedPropertyAvailable",
           label = "No adapted property available",
+          applicableToServices = listOf(ServiceName.cas2, ServiceName.cas2v2),
         ),
         Cas2PersistedApplicationStatusDetail(
           id = UUID.fromString("78636840-0155-45d4-971e-fe8d2d6c660c"),
           name = "noSuitablePropertyAvailable",
           label = "No suitable property available",
+          applicableToServices = listOf(ServiceName.cas2, ServiceName.cas2v2),
         ),
         Cas2PersistedApplicationStatusDetail(
           id = UUID.fromString("7e8749c9-5254-4dae-90ed-590cf9f59847"),
           name = "incompleteReferral",
           label = "Incomplete referral",
+          applicableToServices = listOf(ServiceName.cas2, ServiceName.cas2v2),
         ),
         Cas2PersistedApplicationStatusDetail(
           id = UUID.fromString("d1d96185-d92a-450b-b47f-bcce50356eed"),
           name = "createdInError",
           label = "Created in error",
+          applicableToServices = listOf(ServiceName.cas2v2),
         ),
         Cas2PersistedApplicationStatusDetail(
           id = UUID.fromString("f38f55c0-fda6-44f8-a3b1-a7c0a990bc51"),
           name = "hdcNotEligible",
           label = "HDC not eligible",
-          applicableToServices = listOf(ServiceName.cas2v2),
+          applicableToServices = listOf(ServiceName.cas2),
         ),
         Cas2PersistedApplicationStatusDetail(
           id = UUID.fromString("4f1033ab-2dea-47ce-8a86-7c47b3ccadd8"),
           name = "personTransferredToAnotherPrison",
           label = "Person transferred to another prison",
-          applicableToServices = listOf(ServiceName.cas2v2),
+          applicableToServices = listOf(ServiceName.cas2),
         ),
       ),
     ),
@@ -368,25 +395,17 @@ object Cas2ApplicationStatusSeeding {
       description = "The accommodation is arranged for the agreed dates.",
     ),
   )
+  fun statusList(service: ServiceName): List<Cas2PersistedApplicationStatus> = statuses
+    .mapNotNull { status ->
+      when {
+        status.statusDetails.isNullOrEmpty() -> status
+        else -> {
+          val filteredDetails = status.statusDetails!!
+            .filter { it.applicableToServices.contains(service) }
+            .takeIf { it.isNotEmpty() }
 
-  @SuppressWarnings("LongMethod")
-  fun statusList(
-    services: List<ServiceName> = listOf(
-      ServiceName.cas2,
-      ServiceName.cas2v2,
-    ),
-  ): List<Cas2PersistedApplicationStatus> {
-    val filteredStatuses = mutableListOf<Cas2PersistedApplicationStatus>()
-    for (status in statuses) {
-      val cas2PersistedApplicationStatus = Cas2PersistedApplicationStatus(
-        id = status.id,
-        name = status.name,
-        label = status.label,
-        description = status.description,
-        statusDetails = status.statusDetails?.filter { detail -> detail.applicableToServices.any { service -> service in services } },
-      )
-      filteredStatuses.add(cas2PersistedApplicationStatus)
+          filteredDetails?.let { status.copy(statusDetails = it) }
+        }
+      }
     }
-    return filteredStatuses
-  }
 }
