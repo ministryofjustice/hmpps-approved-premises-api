@@ -2074,13 +2074,13 @@ class Cas1SpaceBookingServiceTest {
 
     @Test
     fun `should update only departure dates when booking status is hasArrival`() {
-      existingSpaceBooking.actualArrivalDate = LocalDate.now()
+      existingSpaceBooking.actualArrivalDate = LocalDate.of(2025, 3, 5)
       existingSpaceBooking.expectedDepartureDate = LocalDate.of(2025, 1, 10)
       val updateSpaceBookingDetails = UpdateSpaceBookingDetails(
         bookingId = UUID.randomUUID(),
         premisesId = PREMISES_ID,
         arrivalDate = newArrivalDate,
-        departureDate = newDepartureDate,
+        departureDate = LocalDate.of(2025, 4, 26),
         updatedBy = user,
         characteristics = null,
       )
