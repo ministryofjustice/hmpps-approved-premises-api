@@ -1801,7 +1801,7 @@ class Cas1SpaceBookingServiceTest {
   inner class UpdateSpaceBooking {
 
     private val newArrivalDate = LocalDate.of(2025, 1, 2)
-    private val newDepartureDate = LocalDate.of(2025, 4, 5)
+    private val newDepartureDate = LocalDate.now().plusMonths(1)
 
     private val user = UserEntityFactory()
       .withDefaults()

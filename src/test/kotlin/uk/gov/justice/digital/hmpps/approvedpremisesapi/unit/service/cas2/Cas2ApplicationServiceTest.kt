@@ -117,7 +117,7 @@ class Cas2ApplicationServiceTest {
 
     @ParameterizedTest
     @ValueSource(booleans = [true, false])
-    fun `does not find assignable application as the latest application's status-update list is empty or null`(statusUpdatesListNull: Boolean) {
+    fun `finds assignable application as the latest application's status-update list is empty or null`(statusUpdatesListNull: Boolean) {
       val application = Cas2ApplicationEntityFactory()
         .withApplicationSchema(newestSchema)
         .withCreatedByUser(user)
@@ -132,7 +132,7 @@ class Cas2ApplicationServiceTest {
       every {
         mockApplicationRepository.findFirstByNomsNumberAndSubmittedAtIsNotNullOrderBySubmittedAtDesc(application.nomsNumber!!)
       } returns application
-      assertThat(applicationService.findApplicationToAssign(nomsNumber)).isNull()
+      assertThat(applicationService.findApplicationToAssign(nomsNumber)).isEqualTo(application)
     }
 
     private fun createApplicationWithStatusUpdateEntity(statusUpdateEntityLabel: String): Cas2ApplicationEntity {
