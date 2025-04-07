@@ -127,7 +127,7 @@ data class Cas2ApplicationEntity(
 
   fun isMostRecentStatusUpdateANonAssignableStatus() = statusUpdates?.firstOrNull()
     ?.let { mostRecent -> mostRecent.label in Cas2StatusUpdateNonAssignable.entries.map { it.label } }
-    ?: true
+    ?: false
 }
 
 /**
