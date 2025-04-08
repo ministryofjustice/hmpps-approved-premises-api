@@ -19,7 +19,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.MoveOnCategoryEn
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ProbationRegionEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.RoomEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.TemporaryAccommodationPremisesEntityFactory
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.TurnaroundEntityFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.cas3.Cas3TurnaroundEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.cas3.Cas3VoidBedspaceEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.cas3.Cas3VoidBedspaceReasonEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.generator.BedUtilisationReportGenerator
@@ -465,7 +465,7 @@ class BedUtilisationReportGeneratorTest {
     val relevantBookingStraddlingStartOfMonth =
       BookingEntityFactory().withBed(bed).withPremises(premises).withArrivalDate(LocalDate.parse("2023-03-28"))
         .withDepartureDate(LocalDate.parse("2023-04-04")).produce().apply {
-          turnarounds += TurnaroundEntityFactory().withBooking(this).withWorkingDayCount(5).produce()
+          turnarounds += Cas3TurnaroundEntityFactory().withBooking(this).withWorkingDayCount(5).produce()
         }
 
     every {
@@ -485,7 +485,7 @@ class BedUtilisationReportGeneratorTest {
     val relevantBookingStraddlingEndOfMonth =
       BookingEntityFactory().withBed(bed).withPremises(premises).withArrivalDate(LocalDate.parse("2023-04-25"))
         .withDepartureDate(LocalDate.parse("2023-04-27")).produce().apply {
-          turnarounds += TurnaroundEntityFactory().withBooking(this).withWorkingDayCount(3).produce()
+          turnarounds += Cas3TurnaroundEntityFactory().withBooking(this).withWorkingDayCount(3).produce()
         }
 
     every {
@@ -546,7 +546,7 @@ class BedUtilisationReportGeneratorTest {
     val relevantBookingStraddlingStartOfMonth =
       BookingEntityFactory().withBed(bed).withPremises(premises).withArrivalDate(LocalDate.parse("2023-03-28"))
         .withDepartureDate(LocalDate.parse("2023-04-04")).produce().apply {
-          turnarounds += TurnaroundEntityFactory().withBooking(this).withWorkingDayCount(5).produce()
+          turnarounds += Cas3TurnaroundEntityFactory().withBooking(this).withWorkingDayCount(5).produce()
         }
 
     every {
@@ -566,7 +566,7 @@ class BedUtilisationReportGeneratorTest {
     val relevantBookingStraddlingEndOfMonth =
       BookingEntityFactory().withBed(bed).withPremises(premises).withArrivalDate(LocalDate.parse("2023-04-25"))
         .withDepartureDate(LocalDate.parse("2023-04-27")).produce().apply {
-          turnarounds += TurnaroundEntityFactory().withBooking(this).withWorkingDayCount(3).produce()
+          turnarounds += Cas3TurnaroundEntityFactory().withBooking(this).withWorkingDayCount(3).produce()
         }
 
     every {
@@ -678,7 +678,7 @@ class BedUtilisationReportGeneratorTest {
     val relevantBookingStraddlingStartOfMonth =
       BookingEntityFactory().withBed(bed).withPremises(premises).withArrivalDate(LocalDate.parse("2023-03-28"))
         .withDepartureDate(LocalDate.parse("2023-04-04")).produce().apply {
-          turnarounds += TurnaroundEntityFactory().withBooking(this).withWorkingDayCount(5).produce()
+          turnarounds += Cas3TurnaroundEntityFactory().withBooking(this).withWorkingDayCount(5).produce()
           arrivals += ArrivalEntityFactory().withBooking(this).withArrivalDate(LocalDate.parse("2023-03-28")).produce()
           departures += DepartureEntityFactory().withBooking(this)
             .withDateTime(OffsetDateTime.parse("2023-04-04T12:00:00.000Z")).withReason(departureReason)
@@ -702,7 +702,7 @@ class BedUtilisationReportGeneratorTest {
     val relevantBookingStraddlingEndOfMonth =
       BookingEntityFactory().withBed(bed).withPremises(premises).withArrivalDate(LocalDate.parse("2023-04-25"))
         .withDepartureDate(LocalDate.parse("2023-04-27")).produce().apply {
-          turnarounds += TurnaroundEntityFactory().withBooking(this).withWorkingDayCount(4).produce()
+          turnarounds += Cas3TurnaroundEntityFactory().withBooking(this).withWorkingDayCount(4).produce()
           arrivals += ArrivalEntityFactory().withBooking(this).withArrivalDate(LocalDate.parse("2023-04-25")).produce()
           departures += DepartureEntityFactory().withBooking(this)
             .withDateTime(OffsetDateTime.parse("2023-04-27T12:00:00.000Z")).withReason(departureReason)
@@ -937,7 +937,7 @@ class BedUtilisationReportGeneratorTest {
     val relevantBookingStraddlingStartOfMonth =
       BookingEntityFactory().withBed(bed).withPremises(premises).withArrivalDate(LocalDate.parse("2024-02-07"))
         .withDepartureDate(LocalDate.parse("2024-02-12")).produce().apply {
-          turnarounds += TurnaroundEntityFactory().withBooking(this).withWorkingDayCount(2).produce()
+          turnarounds += Cas3TurnaroundEntityFactory().withBooking(this).withWorkingDayCount(2).produce()
           arrivals += ArrivalEntityFactory().withBooking(this).withArrivalDate(LocalDate.parse("2024-02-07")).produce()
           departures += DepartureEntityFactory().withBooking(this)
             .withDateTime(OffsetDateTime.parse("2024-02-12T12:00:00.000Z")).withReason(departureReason)
@@ -961,7 +961,7 @@ class BedUtilisationReportGeneratorTest {
     val relevantBookingStraddlingEndOfMonth =
       BookingEntityFactory().withBed(bed).withPremises(premises).withArrivalDate(LocalDate.parse("2024-02-16"))
         .withDepartureDate(LocalDate.parse("2024-02-22")).produce().apply {
-          turnarounds += TurnaroundEntityFactory().withBooking(this).withWorkingDayCount(3).produce()
+          turnarounds += Cas3TurnaroundEntityFactory().withBooking(this).withWorkingDayCount(3).produce()
           arrivals += ArrivalEntityFactory().withBooking(this).withArrivalDate(LocalDate.parse("2024-02-16")).produce()
           departures += DepartureEntityFactory().withBooking(this)
             .withDateTime(OffsetDateTime.parse("2024-02-22T12:00:00.000Z")).withReason(departureReason)
@@ -1032,7 +1032,7 @@ class BedUtilisationReportGeneratorTest {
     val relevantBookingStraddlingStartOfMonth =
       BookingEntityFactory().withBed(bed).withPremises(premises).withArrivalDate(LocalDate.parse("2024-02-07"))
         .withDepartureDate(LocalDate.parse("2024-02-12")).produce().apply {
-          turnarounds += TurnaroundEntityFactory().withBooking(this).withWorkingDayCount(2).produce()
+          turnarounds += Cas3TurnaroundEntityFactory().withBooking(this).withWorkingDayCount(2).produce()
           arrivals += ArrivalEntityFactory().withBooking(this).withArrivalDate(LocalDate.parse("2024-02-07")).produce()
           departures += DepartureEntityFactory().withBooking(this)
             .withDateTime(OffsetDateTime.parse("2024-02-12T12:00:00.000Z")).withReason(departureReason)
@@ -1056,7 +1056,7 @@ class BedUtilisationReportGeneratorTest {
     val relevantBookingStraddlingEndOfMonth =
       BookingEntityFactory().withBed(bed).withPremises(premises).withArrivalDate(LocalDate.parse("2024-02-16"))
         .withDepartureDate(LocalDate.parse("2024-02-22")).produce().apply {
-          turnarounds += TurnaroundEntityFactory().withBooking(this).withWorkingDayCount(3).produce()
+          turnarounds += Cas3TurnaroundEntityFactory().withBooking(this).withWorkingDayCount(3).produce()
           arrivals += ArrivalEntityFactory().withBooking(this).withArrivalDate(LocalDate.parse("2024-02-16")).produce()
           departures += DepartureEntityFactory().withBooking(this)
             .withDateTime(OffsetDateTime.parse("2024-02-22T12:00:00.000Z")).withReason(departureReason)
@@ -1127,7 +1127,7 @@ class BedUtilisationReportGeneratorTest {
     val relevantBookingStraddlingStartOfMonth =
       BookingEntityFactory().withBed(bed).withPremises(premises).withArrivalDate(LocalDate.parse("2024-02-02"))
         .withDepartureDate(LocalDate.parse("2024-02-07")).produce().apply {
-          turnarounds += TurnaroundEntityFactory().withBooking(this).withWorkingDayCount(2).produce()
+          turnarounds += Cas3TurnaroundEntityFactory().withBooking(this).withWorkingDayCount(2).produce()
           arrivals += ArrivalEntityFactory().withBooking(this).withArrivalDate(LocalDate.parse("2024-02-02")).produce()
           departures += DepartureEntityFactory().withBooking(this)
             .withDateTime(OffsetDateTime.parse("2024-02-07T12:00:00.000Z")).withReason(departureReason)
@@ -1151,7 +1151,7 @@ class BedUtilisationReportGeneratorTest {
     val relevantBookingStraddlingEndOfMonth =
       BookingEntityFactory().withBed(bed).withPremises(premises).withArrivalDate(LocalDate.parse("2024-02-10"))
         .withDepartureDate(LocalDate.parse("2024-02-15")).produce().apply {
-          turnarounds += TurnaroundEntityFactory().withBooking(this).withWorkingDayCount(3).produce()
+          turnarounds += Cas3TurnaroundEntityFactory().withBooking(this).withWorkingDayCount(3).produce()
           arrivals += ArrivalEntityFactory().withBooking(this).withArrivalDate(LocalDate.parse("2024-02-10")).produce()
           departures += DepartureEntityFactory().withBooking(this)
             .withDateTime(OffsetDateTime.parse("2024-02-15T12:00:00.000Z")).withReason(departureReason)
@@ -1222,7 +1222,7 @@ class BedUtilisationReportGeneratorTest {
     val relevantBookingStraddlingStartOfMonth =
       BookingEntityFactory().withBed(bed).withPremises(premises).withArrivalDate(LocalDate.parse("2024-02-02"))
         .withDepartureDate(LocalDate.parse("2024-02-07")).produce().apply {
-          turnarounds += TurnaroundEntityFactory().withBooking(this).withWorkingDayCount(2).produce()
+          turnarounds += Cas3TurnaroundEntityFactory().withBooking(this).withWorkingDayCount(2).produce()
           arrivals += ArrivalEntityFactory().withBooking(this).withArrivalDate(LocalDate.parse("2024-02-02")).produce()
           departures += DepartureEntityFactory().withBooking(this)
             .withDateTime(OffsetDateTime.parse("2024-02-07T12:00:00.000Z")).withReason(departureReason)
@@ -1246,7 +1246,7 @@ class BedUtilisationReportGeneratorTest {
     val relevantBookingStraddlingEndOfMonth =
       BookingEntityFactory().withBed(bed).withPremises(premises).withArrivalDate(LocalDate.parse("2024-02-10"))
         .withDepartureDate(LocalDate.parse("2024-02-15")).produce().apply {
-          turnarounds += TurnaroundEntityFactory().withBooking(this).withWorkingDayCount(3).produce()
+          turnarounds += Cas3TurnaroundEntityFactory().withBooking(this).withWorkingDayCount(3).produce()
           arrivals += ArrivalEntityFactory().withBooking(this).withArrivalDate(LocalDate.parse("2024-02-10")).produce()
           departures += DepartureEntityFactory().withBooking(this)
             .withDateTime(OffsetDateTime.parse("2024-02-15T12:00:00.000Z")).withReason(departureReason)

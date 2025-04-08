@@ -1,4 +1,4 @@
-package uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity
+package uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas3
 
 import jakarta.persistence.Entity
 import jakarta.persistence.Id
@@ -7,15 +7,16 @@ import jakarta.persistence.ManyToOne
 import jakarta.persistence.Table
 import org.springframework.data.jpa.repository.JpaRepository
 import org.springframework.stereotype.Repository
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.BookingEntity
 import java.time.OffsetDateTime
 import java.util.UUID
 
 @Repository
-interface TurnaroundRepository : JpaRepository<TurnaroundEntity, UUID>
+interface Cas3TurnaroundRepository : JpaRepository<Cas3TurnaroundEntity, UUID>
 
 @Entity
-@Table(name = "turnarounds")
-data class TurnaroundEntity(
+@Table(name = "cas3_turnarounds")
+data class Cas3TurnaroundEntity(
   @Id
   val id: UUID,
   val workingDayCount: Int,
