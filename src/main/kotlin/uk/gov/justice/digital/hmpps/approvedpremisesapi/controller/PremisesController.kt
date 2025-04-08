@@ -83,8 +83,8 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.ExtensionTra
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.PremisesTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.RoomTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.StaffMemberTransformer
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.TurnaroundTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.cas3.Cas3PremisesSummaryTransformer
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.cas3.Cas3TurnaroundTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.cas3.Cas3VoidBedspaceCancellationTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.cas3.Cas3VoidBedspacesTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.extractEntityFromAuthorisableActionResult
@@ -120,7 +120,7 @@ class PremisesController(
   private val roomService: RoomService,
   private val roomTransformer: RoomTransformer,
   private val cas3VoidBedspaceCancellationTransformer: Cas3VoidBedspaceCancellationTransformer,
-  private val turnaroundTransformer: TurnaroundTransformer,
+  private val cas3TurnaroundTransformer: Cas3TurnaroundTransformer,
   private val bedSummaryTransformer: BedSummaryTransformer,
   private val bedDetailTransformer: BedDetailTransformer,
   private val dateChangeTransformer: DateChangeTransformer,
@@ -917,7 +917,7 @@ class PremisesController(
         val result = cas3BookingService.createTurnaround(booking, body.workingDays)
         val turnaround = extractResultEntityOrThrow(result)
 
-        return ResponseEntity.ok(turnaroundTransformer.transformJpaToApi(turnaround))
+        return ResponseEntity.ok(cas3TurnaroundTransformer.transformJpaToApi(turnaround))
       }
 
       else -> error("This endpoint does not support create turnarounds for bookings with premise type: ${booking.premises::class.qualifiedName}")

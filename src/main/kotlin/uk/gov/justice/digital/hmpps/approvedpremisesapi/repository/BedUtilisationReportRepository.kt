@@ -99,7 +99,7 @@ interface BedUtilisationReportRepository : JpaRepository<BedEntity, UUID> {
       CAST(booking.id AS VARCHAR) AS bookingId,
       turnaround.created_at AS CreatedAt,
       working_day_count AS workingDayCount
-    From turnarounds turnaround
+    From cas3_turnarounds turnaround
     INNER JOIN bookings booking ON booking.id = turnaround.booking_id
     INNER JOIN beds bed ON bed.id = booking.bed_id
     INNER JOIN premises premises ON booking.premises_id = premises.id

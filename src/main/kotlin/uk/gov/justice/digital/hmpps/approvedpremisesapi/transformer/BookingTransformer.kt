@@ -13,6 +13,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.BookingEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PersonInfoResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.InternalServerErrorProblem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.WorkingDayService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.cas3.Cas3TurnaroundTransformer
 import java.time.LocalDate
 
 @Component
@@ -25,7 +26,7 @@ class BookingTransformer(
   private val confirmationTransformer: ConfirmationTransformer,
   private val extensionTransformer: ExtensionTransformer,
   private val bedTransformer: BedTransformer,
-  private val turnaroundTransformer: TurnaroundTransformer,
+  private val cas3TurnaroundTransformer: Cas3TurnaroundTransformer,
   private val enumConverterFactory: EnumConverterFactory,
   private val workingDayService: WorkingDayService,
 ) {
@@ -54,8 +55,8 @@ class BookingTransformer(
       originalArrivalDate = jpa.originalArrivalDate,
       originalDepartureDate = jpa.originalDepartureDate,
       createdAt = jpa.createdAt.toInstant(),
-      turnaround = jpa.turnaround?.let(turnaroundTransformer::transformJpaToApi),
-      turnarounds = jpa.turnarounds.map(turnaroundTransformer::transformJpaToApi),
+      turnaround = jpa.turnaround?.let(cas3TurnaroundTransformer::transformJpaToApi),
+      turnarounds = jpa.turnarounds.map(cas3TurnaroundTransformer::transformJpaToApi),
       turnaroundStartDate = if (hasNonZeroDayTurnaround) workingDayService.addWorkingDays(jpa.departureDate, 1) else null,
       effectiveEndDate = if (hasNonZeroDayTurnaround) workingDayService.addWorkingDays(jpa.departureDate, jpa.turnaround!!.workingDayCount) else jpa.departureDate,
       applicationId = jpa.application?.id,

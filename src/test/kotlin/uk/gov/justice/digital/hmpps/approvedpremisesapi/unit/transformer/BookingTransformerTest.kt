@@ -51,7 +51,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.NonArrivalEnt
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.NonArrivalReasonEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ProbationRegionEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TemporaryAccommodationPremisesEntity
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TurnaroundEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas3.Cas3TurnaroundEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PersonInfoResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.WorkingDayService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.ArrivalTransformer
@@ -63,7 +63,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.DepartureTra
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.ExtensionTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.NonArrivalTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.PersonTransformer
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.TurnaroundTransformer
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.cas3.Cas3TurnaroundTransformer
 import java.time.Instant
 import java.time.LocalDate
 import java.time.OffsetDateTime
@@ -78,7 +78,7 @@ class BookingTransformerTest {
   private val mockDepartureTransformer = mockk<DepartureTransformer>()
   private val mockExtensionTransformer = mockk<ExtensionTransformer>()
   private val mockBedTransformer = mockk<BedTransformer>()
-  private val mockTurnaroundTransformer = mockk<TurnaroundTransformer>()
+  private val mockCas3TurnaroundTransformer = mockk<Cas3TurnaroundTransformer>()
   private val enumConverterFactory = EnumConverterFactory()
   private val mockWorkingDayService = mockk<WorkingDayService>()
 
@@ -91,7 +91,7 @@ class BookingTransformerTest {
     mockConfirmationTransformer,
     mockExtensionTransformer,
     mockBedTransformer,
-    mockTurnaroundTransformer,
+    mockCas3TurnaroundTransformer,
     enumConverterFactory,
     mockWorkingDayService,
   )
@@ -923,7 +923,7 @@ class BookingTransformerTest {
         ),
       )
 
-      turnarounds += TurnaroundEntity(
+      turnarounds += Cas3TurnaroundEntity(
         id = UUID.fromString("8c87e15d-f236-479e-b9fd-f4c5cc6bef8f"),
         workingDayCount = 0,
         createdAt = OffsetDateTime.parse("2022-07-01T12:34:56.789Z"),
@@ -965,7 +965,7 @@ class BookingTransformerTest {
       createdAt = Instant.parse("2022-07-01T12:34:56.789Z"),
     )
 
-    every { mockTurnaroundTransformer.transformJpaToApi(departedBooking.turnaround!!) } returns Turnaround(
+    every { mockCas3TurnaroundTransformer.transformJpaToApi(departedBooking.turnaround!!) } returns Turnaround(
       id = UUID.fromString("8c87e15d-f236-479e-b9fd-f4c5cc6bef8f"),
       workingDays = 0,
       createdAt = Instant.parse("2022-07-01T12:34:56.789Z"),
@@ -1134,7 +1134,7 @@ class BookingTransformerTest {
         ),
       )
 
-      turnarounds += TurnaroundEntity(
+      turnarounds += Cas3TurnaroundEntity(
         id = UUID.fromString("8c87e15d-f236-479e-b9fd-f4c5cc6bef8f"),
         workingDayCount = 2,
         createdAt = OffsetDateTime.parse("2022-07-01T12:34:56.789Z"),
@@ -1176,7 +1176,7 @@ class BookingTransformerTest {
       createdAt = Instant.parse("2022-07-01T12:34:56.789Z"),
     )
 
-    every { mockTurnaroundTransformer.transformJpaToApi(departedBooking.turnaround!!) } returns Turnaround(
+    every { mockCas3TurnaroundTransformer.transformJpaToApi(departedBooking.turnaround!!) } returns Turnaround(
       id = UUID.fromString("8c87e15d-f236-479e-b9fd-f4c5cc6bef8f"),
       workingDays = 2,
       createdAt = Instant.parse("2022-07-01T12:34:56.789Z"),
@@ -1349,7 +1349,7 @@ class BookingTransformerTest {
         ),
       )
 
-      turnarounds += TurnaroundEntity(
+      turnarounds += Cas3TurnaroundEntity(
         id = UUID.fromString("8c87e15d-f236-479e-b9fd-f4c5cc6bef8f"),
         workingDayCount = 2,
         createdAt = OffsetDateTime.parse("2022-07-01T12:34:56.789Z"),
@@ -1391,7 +1391,7 @@ class BookingTransformerTest {
       createdAt = Instant.parse("2022-07-01T12:34:56.789Z"),
     )
 
-    every { mockTurnaroundTransformer.transformJpaToApi(departedBooking.turnaround!!) } returns Turnaround(
+    every { mockCas3TurnaroundTransformer.transformJpaToApi(departedBooking.turnaround!!) } returns Turnaround(
       id = UUID.fromString("8c87e15d-f236-479e-b9fd-f4c5cc6bef8f"),
       workingDays = 2,
       createdAt = Instant.parse("2022-07-01T12:34:56.789Z"),
@@ -1847,19 +1847,19 @@ class BookingTransformerTest {
       turnarounds = mutableListOf(),
     )
 
-    val turnaround1 = TurnaroundEntity(
+    val turnaround1 = Cas3TurnaroundEntity(
       id = UUID.fromString("34ae3124-cf7a-47d5-86c1-ef9ab4255e30"),
       workingDayCount = 2,
       createdAt = OffsetDateTime.parse("2022-07-01T12:34:56.789Z"),
       booking = awaitingArrivalBooking,
     )
-    val turnaround2 = TurnaroundEntity(
+    val turnaround2 = Cas3TurnaroundEntity(
       id = UUID.fromString("b2af671a-997d-443e-906d-3a1a28c71416"),
       workingDayCount = 3,
       createdAt = OffsetDateTime.parse("2022-07-02T10:11:12.345Z"),
       booking = awaitingArrivalBooking,
     )
-    val turnaround3 = TurnaroundEntity(
+    val turnaround3 = Cas3TurnaroundEntity(
       id = UUID.fromString("146d05f8-ba83-42ae-a6d7-807a16b7946d"),
       workingDayCount = 4,
       createdAt = OffsetDateTime.parse("2022-07-03T09:08:07.654Z"),
@@ -1868,21 +1868,21 @@ class BookingTransformerTest {
 
     awaitingArrivalBooking.turnarounds += listOf(turnaround1, turnaround2, turnaround3)
 
-    every { mockTurnaroundTransformer.transformJpaToApi(turnaround1) } returns Turnaround(
+    every { mockCas3TurnaroundTransformer.transformJpaToApi(turnaround1) } returns Turnaround(
       id = UUID.fromString("34ae3124-cf7a-47d5-86c1-ef9ab4255e30"),
       bookingId = UUID.fromString("5bbe785f-5ff3-46b9-b9fe-d9e6ca7a18e8"),
       workingDays = 2,
       createdAt = Instant.parse("2022-07-01T12:34:56.789Z"),
     )
 
-    every { mockTurnaroundTransformer.transformJpaToApi(turnaround2) } returns Turnaround(
+    every { mockCas3TurnaroundTransformer.transformJpaToApi(turnaround2) } returns Turnaround(
       id = UUID.fromString("b2af671a-997d-443e-906d-3a1a28c71416"),
       bookingId = UUID.fromString("5bbe785f-5ff3-46b9-b9fe-d9e6ca7a18e8"),
       workingDays = 3,
       createdAt = Instant.parse("2022-07-02T10:11:12.345Z"),
     )
 
-    every { mockTurnaroundTransformer.transformJpaToApi(turnaround3) } returns Turnaround(
+    every { mockCas3TurnaroundTransformer.transformJpaToApi(turnaround3) } returns Turnaround(
       id = UUID.fromString("146d05f8-ba83-42ae-a6d7-807a16b7946d"),
       bookingId = UUID.fromString("5bbe785f-5ff3-46b9-b9fe-d9e6ca7a18e8"),
       workingDays = 4,

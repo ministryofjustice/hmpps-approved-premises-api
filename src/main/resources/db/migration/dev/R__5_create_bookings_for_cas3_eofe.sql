@@ -37,7 +37,7 @@ VALUES
 ON CONFLICT(id) DO NOTHING;
 
 INSERT INTO
-  turnarounds (
+  cas3_turnarounds (
     "id",
     "booking_id",
     "working_day_count",
@@ -87,7 +87,7 @@ VALUES
 ON CONFLICT(id) DO NOTHING;
 
 INSERT INTO
-  turnarounds (
+  cas3_turnarounds (
     "id",
     "booking_id",
     "working_day_count",
@@ -155,7 +155,7 @@ VALUES
 ON CONFLICT(id) DO NOTHING;
 
 INSERT INTO
-  turnarounds (
+  cas3_turnarounds (
     "id",
     "booking_id",
     "working_day_count",
@@ -250,7 +250,7 @@ VALUES
 ON CONFLICT(id) DO NOTHING;
 
 INSERT INTO
-  turnarounds (
+  cas3_turnarounds (
     "id",
     "booking_id",
     "working_day_count",
@@ -320,7 +320,7 @@ VALUES
 ON CONFLICT(id) DO NOTHING;
 
 INSERT INTO
-  turnarounds (
+  cas3_turnarounds (
     "id",
     "booking_id",
     "working_day_count",
@@ -390,7 +390,7 @@ VALUES
 ON CONFLICT(id) DO NOTHING;
 
 INSERT INTO
-  turnarounds (
+  cas3_turnarounds (
     "id",
     "booking_id",
     "working_day_count",
