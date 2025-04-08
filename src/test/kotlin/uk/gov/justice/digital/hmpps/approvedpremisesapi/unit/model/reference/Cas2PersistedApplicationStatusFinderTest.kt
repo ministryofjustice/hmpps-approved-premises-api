@@ -95,7 +95,7 @@ class Cas2PersistedApplicationStatusFinderTest {
         0 to 9,
         7 to 7,
         8 to 7,
-        9 to 10,
+        9 to 11,
       )
 
       statuses.forEachIndexed { index, status ->

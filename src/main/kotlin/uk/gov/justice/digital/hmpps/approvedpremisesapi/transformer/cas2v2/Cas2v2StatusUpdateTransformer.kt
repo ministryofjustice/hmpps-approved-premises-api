@@ -26,7 +26,7 @@ class Cas2v2StatusUpdateTransformer(
     statusUpdateDetails = jpa.statusUpdateDetails?.map { detail -> transformStatusUpdateDetailsJpaToApi(detail) },
   )
 
-  private fun transformStatusUpdateDetailsJpaToApi(jpa: Cas2v2StatusUpdateDetailEntity): Cas2v2StatusUpdateDetail = Cas2v2StatusUpdateDetail(
+  fun transformStatusUpdateDetailsJpaToApi(jpa: Cas2v2StatusUpdateDetailEntity): Cas2v2StatusUpdateDetail = Cas2v2StatusUpdateDetail(
     id = jpa.id,
     name = jpa.statusDetail(jpa.statusUpdate.statusId, jpa.statusDetailId).name,
     label = jpa.label,
