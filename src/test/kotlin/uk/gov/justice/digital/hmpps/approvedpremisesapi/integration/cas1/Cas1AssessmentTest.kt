@@ -20,8 +20,10 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.AssessmentStat
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.AssessmentStatus.cas1NotStarted
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.AssessmentStatus.cas1Reallocated
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1AssessmentSummary
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewClarificationNote
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Problem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.UpdateAssessment
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.UpdatedClarificationNote
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApprovedPremisesApplicationEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApprovedPremisesAssessmentEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.CaseAccessFactory
@@ -41,18 +43,21 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DomainAssessm
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DomainAssessmentSummaryStatus.COMPLETED
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DomainAssessmentSummaryStatus.IN_PROGRESS
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DomainAssessmentSummaryStatus.NOT_STARTED
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DomainEventType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserQualification
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRole
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.ApprovedPremisesApplicationStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PersonInfoResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.deliuscontext.CaseSummary
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.domainevent.SnsEventPersonReference
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.prisonsapi.InmateDetail
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.AssessmentTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.asCaseSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.asOffenderDetailSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.roundNanosToMillisToAccountForLossOfPrecisionInPostgres
 import java.time.Instant
+import java.time.LocalDate
 import java.time.OffsetDateTime
 import java.time.temporal.ChronoUnit
 import java.util.UUID
@@ -1012,6 +1017,115 @@ class Cas1AssessmentTest : IntegrationTestBase() {
 
             val persistedAssessment = approvedPremisesAssessmentRepository.findByIdOrNull(assessment.id)!!
             assertThat((persistedAssessment.data).toString()).isEqualTo("{\"some text\":5}")
+          }
+        }
+      }
+    }
+
+    @Nested
+    inner class ClarificationNoteToAssessment {
+
+      @Test
+      fun `Create clarification note returns 200 with correct body and creates and emits a domain event`() {
+        givenAUser { userEntity, jwt ->
+          givenAnOffender { offenderDetails, inmateDetails ->
+            val applicationSchema = approvedPremisesApplicationJsonSchemaEntityFactory.produceAndPersist {
+              withPermissiveSchema()
+            }
+
+            val assessmentSchema = approvedPremisesAssessmentJsonSchemaEntityFactory.produceAndPersist {
+              withPermissiveSchema()
+            }
+
+            val application = approvedPremisesApplicationEntityFactory.produceAndPersist {
+              withCrn(offenderDetails.otherIds.crn)
+              withNomsNumber(offenderDetails.otherIds.nomsNumber)
+              withCreatedByUser(userEntity)
+              withApplicationSchema(applicationSchema)
+            }
+
+            val assessment = approvedPremisesAssessmentEntityFactory.produceAndPersist {
+              withAllocatedToUser(userEntity)
+              withApplication(application)
+              withAssessmentSchema(assessmentSchema)
+            }
+
+            webTestClient.post()
+              .uri("/cas1/assessments/${assessment.id}/notes")
+              .header("Authorization", "Bearer $jwt")
+              .bodyValue(
+                NewClarificationNote(
+                  query = "some text",
+                ),
+              )
+              .exchange()
+              .expectStatus()
+              .isOk
+              .expectBody()
+              .jsonPath("$.query").isEqualTo("some text")
+
+            val emittedMessage =
+              domainEventAsserter.blockForEmittedDomainEvent(DomainEventType.APPROVED_PREMISES_ASSESSMENT_INFO_REQUESTED)
+
+            assertThat(emittedMessage.description).isEqualTo(DomainEventType.APPROVED_PREMISES_ASSESSMENT_INFO_REQUESTED.typeDescription)
+            assertThat(emittedMessage.additionalInformation.applicationId).isEqualTo(assessment.application.id)
+            assertThat(emittedMessage.personReference.identifiers).containsExactlyInAnyOrder(
+              SnsEventPersonReference("CRN", offenderDetails.otherIds.crn),
+              SnsEventPersonReference("NOMS", offenderDetails.otherIds.nomsNumber!!),
+            )
+
+            domainEventAsserter.assertDomainEventOfTypeStored(
+              application.id,
+              DomainEventType.APPROVED_PREMISES_ASSESSMENT_INFO_REQUESTED,
+            )
+          }
+        }
+      }
+
+      @Test
+      fun `Update clarification note returns 201 with correct body`() {
+        givenAUser { userEntity, jwt ->
+          givenAnOffender { offenderDetails, inmateDetails ->
+            val applicationSchema = approvedPremisesApplicationJsonSchemaEntityFactory.produceAndPersist {
+              withPermissiveSchema()
+            }
+
+            val assessmentSchema = approvedPremisesAssessmentJsonSchemaEntityFactory.produceAndPersist {
+              withPermissiveSchema()
+            }
+
+            val application = approvedPremisesApplicationEntityFactory.produceAndPersist {
+              withCrn(offenderDetails.otherIds.crn)
+              withCreatedByUser(userEntity)
+              withApplicationSchema(applicationSchema)
+            }
+
+            val assessment = approvedPremisesAssessmentEntityFactory.produceAndPersist {
+              withAllocatedToUser(userEntity)
+              withApplication(application)
+              withAssessmentSchema(assessmentSchema)
+            }
+
+            val clarificationNote = assessmentClarificationNoteEntityFactory.produceAndPersist {
+              withAssessment(assessment)
+              withCreatedBy(userEntity)
+            }
+
+            webTestClient.put()
+              .uri("/cas1/assessments/${assessment.id}/notes/${clarificationNote.id}")
+              .header("Authorization", "Bearer $jwt")
+              .bodyValue(
+                UpdatedClarificationNote(
+                  response = "some text",
+                  responseReceivedOn = LocalDate.parse("2022-03-04"),
+                ),
+              )
+              .exchange()
+              .expectStatus()
+              .isOk
+              .expectBody()
+              .jsonPath("$.response").isEqualTo("some text")
+              .jsonPath("$.responseReceivedOn").isEqualTo("2022-03-04")
           }
         }
       }

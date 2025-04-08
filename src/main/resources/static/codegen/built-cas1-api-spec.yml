@@ -2262,7 +2262,7 @@ paths:
       tags:
         - Assessments
       summary: Updates an assessment
-      operationId: putAssessment
+      operationId: updateAssessment
       parameters:
         - in: path
           name: assessmentId
@@ -2285,6 +2285,81 @@ paths:
             'application/json':
               schema:
                 $ref: '#/components/schemas/Cas1Assessment'
+        401:
+          $ref: '#/components/responses/401Response'
+        403:
+          $ref: '#/components/responses/403Response'
+        500:
+          $ref: '#/components/responses/500Response'
+  /assessments/{assessmentId}/notes:
+    post:
+      tags:
+        - Assessments
+      summary: Adds a clarification note to an assessment
+      operationId: addClarificationNoteToAssessment
+      parameters:
+        - in: path
+          name: assessmentId
+          required: true
+          description: Id of the assessment
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        description: Clarification note
+        content:
+          'application/json':
+            schema:
+              $ref: '#/components/schemas/Cas1NewClarificationNote'
+        required: true
+      responses:
+        201:
+          description: successfully created a clarification note
+          content:
+            'application/json':
+              schema:
+                $ref: '#/components/schemas/Cas1ClarificationNote'
+        401:
+          $ref: '#/components/responses/401Response'
+        403:
+          $ref: '#/components/responses/403Response'
+        500:
+          $ref: '#/components/responses/500Response'
+  /assessments/{assessmentId}/notes/{noteId}:
+    put:
+      tags:
+        - Assessments
+      summary: Updates an assessment's clarification note
+      operationId: updateAssessmentClarificationNote
+      parameters:
+        - in: path
+          name: assessmentId
+          required: true
+          description: Id of the assessment
+          schema:
+            type: string
+            format: uuid
+        - in: path
+          name: noteId
+          required: true
+          description: Id of the clarification note
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        description: Clarification note
+        content:
+          'application/json':
+            schema:
+              $ref: '#/components/schemas/Cas1UpdatedClarificationNote'
+        required: true
+      responses:
+        201:
+          description: successfully updated a clarification note
+          content:
+            'application/json':
+              schema:
+                $ref: '#/components/schemas/Cas1ClarificationNote'
         401:
           $ref: '#/components/responses/401Response'
         403:
@@ -8388,14 +8463,51 @@ components:
           type: object
           additionalProperties:
             $ref: '#/components/schemas/Unit'
-        releaseDate:
-          type: string
-          format: date
-        accommodationRequiredFromDate:
-          type: string
-          format: date
       required:
         - data
+    Cas1ClarificationNote:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        createdAt:
+          type: string
+          format: date-time
+        responseReceivedOn:
+          type: string
+          format: date
+        createdByStaffMemberId:
+          type: string
+          format: uuid
+        query:
+          type: string
+        response:
+          type: string
+      required:
+        - id
+        - createdAt
+        - createdByStaffMemberId
+        - query
+    Cas1UpdatedClarificationNote:
+      type: object
+      properties:
+        response:
+          type: string
+        responseReceivedOn:
+          type: string
+          format: date
+          example: 2022-07-28
+      required:
+        - response
+        - responseReceivedOn
+    Cas1NewClarificationNote:
+      type: object
+      properties:
+        query:
+          type: string
+      required:
+        - query
 
 
 

@@ -2260,7 +2260,7 @@ paths:
       tags:
         - Assessments
       summary: Updates an assessment
-      operationId: putAssessment
+      operationId: updateAssessment
       parameters:
         - in: path
           name: assessmentId
@@ -2283,6 +2283,81 @@ paths:
             'application/json':
               schema:
                 $ref: 'cas1-schemas.yml#/components/schemas/Cas1Assessment'
+        401:
+          $ref: '_shared.yml#/components/responses/401Response'
+        403:
+          $ref: '_shared.yml#/components/responses/403Response'
+        500:
+          $ref: '_shared.yml#/components/responses/500Response'
+  /assessments/{assessmentId}/notes:
+    post:
+      tags:
+        - Assessments
+      summary: Adds a clarification note to an assessment
+      operationId: addClarificationNoteToAssessment
+      parameters:
+        - in: path
+          name: assessmentId
+          required: true
+          description: Id of the assessment
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        description: Clarification note
+        content:
+          'application/json':
+            schema:
+              $ref: 'cas1-schemas.yml#/components/schemas/Cas1NewClarificationNote'
+        required: true
+      responses:
+        201:
+          description: successfully created a clarification note
+          content:
+            'application/json':
+              schema:
+                $ref: 'cas1-schemas.yml#/components/schemas/Cas1ClarificationNote'
+        401:
+          $ref: '_shared.yml#/components/responses/401Response'
+        403:
+          $ref: '_shared.yml#/components/responses/403Response'
+        500:
+          $ref: '_shared.yml#/components/responses/500Response'
+  /assessments/{assessmentId}/notes/{noteId}:
+    put:
+      tags:
+        - Assessments
+      summary: Updates an assessment's clarification note
+      operationId: updateAssessmentClarificationNote
+      parameters:
+        - in: path
+          name: assessmentId
+          required: true
+          description: Id of the assessment
+          schema:
+            type: string
+            format: uuid
+        - in: path
+          name: noteId
+          required: true
+          description: Id of the clarification note
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        description: Clarification note
+        content:
+          'application/json':
+            schema:
+              $ref: 'cas1-schemas.yml#/components/schemas/Cas1UpdatedClarificationNote'
+        required: true
+      responses:
+        201:
+          description: successfully updated a clarification note
+          content:
+            'application/json':
+              schema:
+                $ref: 'cas1-schemas.yml#/components/schemas/Cas1ClarificationNote'
         401:
           $ref: '_shared.yml#/components/responses/401Response'
         403:
