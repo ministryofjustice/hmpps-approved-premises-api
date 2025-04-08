@@ -1,0 +1,183 @@
+#!/usr/bin/env bash
+
+set -e
+# shellcheck disable=SC3040
+set -o pipefail
+
+cd "$(dirname "$0")"
+cd ..
+root_dir="$(pwd)"
+
+apis_json_file="$root_dir"/build/tmp/apis.json
+output_file="$root_dir"/build/tmp/api_summary.csv
+
+echo "ACTIONS,METHOD,BASE-URL,URL,QUERIES,REQUEST-BODY,RESPONSE,STATUS-CODE,SUMMARY,DESCRIPTION,RESPONSE-DESCRIPTION" > $output_file
+
+curl -s --show-error http://localhost:8080/v3/api-docs > $apis_json_file
+urls=$( jq -c '.paths | keys[]' $apis_json_file )
+
+for url in $urls
+do
+  methods=$( jq -c ".paths.${url} | keys[]" $apis_json_file )
+  echo "Processing ${url}"
+  for method in $methods
+  do
+    methodJson=$( jq -c ".paths.${url}.${method}" $apis_json_file )
+    summary=$( echo $methodJson | jq -c ".summary" )
+    description=$( echo $methodJson | jq -c ".description" )
+    parametersJson=$( echo $methodJson | jq -c ".parameters" )
+    queries=""
+    requestBody=""
+    if [[ $parametersJson != null ]]
+    then
+      parameter=$( echo $parametersJson | jq -c ". | keys[]" )
+      for i in $parameter;
+      do
+        in=$( echo $parametersJson | jq -c ".[${i}].in" )
+        if [[ $in == '"query"' ]]
+        then
+          name=$( echo $parametersJson | jq -c ".[${i}].name" )
+          queries="${queries} ${name}"
+        fi
+      done
+      fi
+    ref=$( echo $methodJson | jq -c '.requestBody.content."application/json".schema."$ref"' )
+    oneOfJson=$( echo $methodJson | jq -c '.requestBody.content."application/json".schema.oneOf' )
+    if [[ $ref == null ]]
+    then
+      if [[ $oneOfJson != null ]]
+      then
+      oneOf=$( echo $oneOfJson | jq -c '. | keys[]' )
+        for i in $oneOf;
+        do
+          oneOfRef=$( echo $methodJson | jq -c '.requestBody.content."application/json".schema.oneOf.['${i}']."$ref"' )
+          [[ $oneOfRef =~ ^.*\/([0-9,a-z,A-Z]+)\"$ ]]
+          requestBody="${requestBody} ${BASH_REMATCH[1]}"
+        done
+      fi
+    else
+      [[ $ref =~ ^.*\/([0-9,a-z,A-Z]+)\"$ ]]
+      requestBody="${BASH_REMATCH[1]}"
+    fi
+    baseUrl="/"
+
+    if [[ $url =~ ^\"(/cas(1|2|3|2v2))(/.*)\"$ ]]
+    then
+      baseUrl="${BASH_REMATCH[1]}"
+      strippedUrl="${BASH_REMATCH[3]}"
+    else
+      [[ $url =~ ^\"(.*)\"$ ]]
+      strippedUrl="${BASH_REMATCH[1]}"
+    fi
+    [[ $method =~ ^\"(.*)\"$ ]]
+    strippedMethod="${BASH_REMATCH[1]}"
+    statusCodes=$( echo $methodJson | jq -c ".responses | keys[]" )
+    for statusCode in $statusCodes
+      do
+        if [[ $statusCode =~ ([1-3]0[0-9]) ]]
+        then
+          strippedStatusCode="${BASH_REMATCH[1]}"
+          statusJson=$( echo $methodJson | jq -c '.responses.'$statusCode )
+          contentJson=$( echo $statusJson | jq -c '.content' )
+          type=$( echo $contentJson | jq -c '."application/json".schema.type' )
+          responseDescription=$( echo $statusJson | jq -c ".description" )
+          response=""
+          if [[ $contentJson != null ]]
+          then
+            applicationType=$( echo $contentJson | jq -c '. | keys[]' )
+            if [[ $applicationType =~ application/json ]]
+            then
+              if [[ $type =~ \"(.*)\" ]]
+              then
+                strippedType="${BASH_REMATCH[1]}"
+                if [[ $type == '"array"' ]]
+                then
+                  ref=$( echo $contentJson | jq -c '."application/json".schema.items."$ref"' )
+                  [[ $ref =~ ^.*\/([0-9,a-z,A-Z]+)\"$ ]]
+                  response="array of ${BASH_REMATCH[1]}"
+                else
+                  response=$strippedType
+                fi
+              else
+                ref=$( echo $contentJson | jq -c '."application/json".schema."$ref"' )
+                [[ $ref =~ ^.*\/([0-9,a-z,A-Z]+)\"$ ]]
+                response="${BASH_REMATCH[1]}"
+              fi
+            else
+              response=$applicationType
+            fi
+          fi
+          action=""
+          if [[ $summary =~ deprecated ]]
+          then
+            action="${action} Possible removal as may be deprecated."
+          fi
+          if [[ $description =~ deprecated ]]
+          then
+            action="${action} Possible removal as may be deprecated."
+          fi
+          if [[ $strippedUrl =~ /all$ ]] || [[ $strippedUrl =~ /all/ ]]
+          then
+            action="${action} Possible merge with another API as url contains 'all'."
+          fi
+          if [[ $strippedUrl =~ /search$ ]] || [[ $strippedUrl =~ /search/ ]]
+          then
+            action="${action} Possible merge with another API as url contains 'search'."
+          fi
+          if [[ $strippedMethod == "get" ]] && [[ $requestBody != "" ]]
+          then
+            action="${action} Change method as get should not have a request body."
+          fi
+          if [[ $strippedMethod == "put" ]] && [[ $requestBody == "" ]]
+          then
+            action="${action} Change method as put should have a request body."
+          fi
+          if [[ $response == "" ]] && [[ $strippedStatusCode != "204" ]]
+          then
+            action="${action} Change status code to 204 as no body returned."
+          fi
+          if [[ $response =~ array.* ]] && ! [[ $response =~ .*Summary ]]
+          then
+            action="${action} Arrays should return summaries."
+          fi
+          if [[ $response =~ .*Detail ]]
+          then
+            action="${action} Instead of using Detail for full object - use Summary for list objects."
+          fi
+          if ! [[ $response =~ array.* ]] && [[ $response =~ .*Summary ]]
+          then
+            action="${action} Singleton response objects should not be of type Summary."
+          fi
+          if [[ $response != "" ]] && [[ $strippedStatusCode == "204" ]]
+          then
+            action="${action} Change status code from 204 as body is returned."
+          fi
+          if [[ $strippedUrl =~ /(cas(1|2|2v2|3)) ]]
+          then
+            action="${action} Unnecessary ${BASH_REMATCH[1]} in url - use base-url to differentiate between cas's."
+          fi
+          if ! [[ $response =~ application/ ]]
+          then
+            if [[ $response =~ (array\ of\ )?(Cas(1|2|2v2|3))?(.+) ]]
+            then
+              strippedResponseType="${BASH_REMATCH[4]}"
+              if [[ $strippedResponseType =~ (.*)(Summary|Detail|Envelope|Event) ]]
+              then
+                strippedResponseType="${BASH_REMATCH[1]}"
+              fi
+              lowerCaseResponseType=$( echo $strippedResponseType | tr '[:upper:]' '[:lower:]' )
+              lowerUrl=$( echo $url | tr '[:upper:]' '[:lower:]' )
+              removedDashUrl=$( echo "${lowerUrl//-}" )
+              if ! [[ $removedDashUrl =~ $lowerCaseResponseType ]]
+              then
+                action="${action} Ensure response type is found in url."
+              fi
+            fi
+          fi
+          echo "${action},${strippedMethod},${baseUrl},${strippedUrl},${queries[*]},${requestBody},${response},${strippedStatusCode},${summary},${description},${responseDescription}" >> $output_file
+        fi
+      done
+  done
+done
+rm $apis_json_file
+echo "done"
