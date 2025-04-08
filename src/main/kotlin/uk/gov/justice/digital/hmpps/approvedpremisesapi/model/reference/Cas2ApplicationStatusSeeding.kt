@@ -372,7 +372,7 @@ object Cas2ApplicationStatusSeeding {
           id = UUID.fromString("d1d96185-d92a-450b-b47f-bcce50356eed"),
           name = "createdInError",
           label = "Created in error",
-          applicableToServices = listOf(ServiceName.cas2v2),
+          applicableToServices = listOf(ServiceName.cas2, ServiceName.cas2v2),
         ),
         Cas2PersistedApplicationStatusDetail(
           id = UUID.fromString("f38f55c0-fda6-44f8-a3b1-a7c0a990bc51"),
@@ -400,7 +400,7 @@ object Cas2ApplicationStatusSeeding {
       when {
         status.statusDetails.isNullOrEmpty() -> status
         else -> {
-          val filteredDetails = status.statusDetails!!
+          val filteredDetails = status.statusDetails
             .filter { it.applicableToServices.contains(service) }
             .takeIf { it.isNotEmpty() }
 
