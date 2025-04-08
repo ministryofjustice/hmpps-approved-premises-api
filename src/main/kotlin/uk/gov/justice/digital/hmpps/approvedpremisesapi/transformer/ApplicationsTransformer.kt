@@ -6,6 +6,7 @@ import org.springframework.stereotype.Component
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Application
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApplicationStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApprovedPremisesApplication
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1Application
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1ApplicationSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.OfflineApplication
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ReleaseTypeOption
@@ -41,6 +42,7 @@ class ApplicationsTransformer(
   private val cas1CruManagementAreaTransformer: Cas1CruManagementAreaTransformer,
 ) {
   @SuppressWarnings("TooGenericExceptionThrown")
+  @Deprecated("This will be removed shortly. Please use the CAS-specific version instead.")
   fun transformJpaToApi(applicationEntity: ApplicationEntity, personInfo: PersonInfoResult): Application {
     val latestAssessment = applicationEntity.getLatestAssessment()
 
@@ -180,6 +182,48 @@ class ApplicationsTransformer(
       isWithdrawn = domain.getIsWithdrawn(),
       releaseType = domain.getReleaseType()?.let { ReleaseTypeOption.valueOf(it) },
       hasRequestsForPlacement = domain.getHasRequestsForPlacement(),
+    )
+  }
+
+  @SuppressWarnings("TooGenericExceptionThrown")
+  fun transformJpaToCas1Application(applicationEntity: ApprovedPremisesApplicationEntity, personInfo: PersonInfoResult): Cas1Application {
+    val latestAssessment = applicationEntity.getLatestAssessment()
+
+    return Cas1Application(
+      id = applicationEntity.id,
+      person = personTransformer.transformModelToPersonApi(personInfo),
+      createdByUserId = applicationEntity.createdByUser.id,
+      schemaVersion = applicationEntity.schemaVersion.id,
+      outdatedSchema = !applicationEntity.schemaUpToDate,
+      createdAt = applicationEntity.createdAt.toInstant(),
+      submittedAt = applicationEntity.submittedAt?.toInstant(),
+      isWomensApplication = applicationEntity.isWomensApplication,
+      isPipeApplication = applicationEntity.isPipeApplication,
+      arrivalDate = applicationEntity.arrivalDate?.toInstant(),
+      data = if (applicationEntity.data != null) objectMapper.readTree(applicationEntity.data) else null,
+      document = if (applicationEntity.document != null) objectMapper.readTree(applicationEntity.document) else null,
+      risks = if (applicationEntity.riskRatings != null) {
+        risksTransformer.transformDomainToApi(
+          applicationEntity.riskRatings!!,
+          applicationEntity.crn,
+        )
+      } else {
+        null
+      },
+      status = applicationEntity.status.apiValue,
+      assessmentDecision = transformJpaDecisionToApi(latestAssessment?.decision),
+      assessmentId = latestAssessment?.id,
+      assessmentDecisionDate = latestAssessment?.submittedAt?.toLocalDate(),
+      personStatusOnSubmission = personTransformer.inmateStatusToPersonInfoApiStatus(
+        InmateStatus.entries.firstOrNull { it.name == applicationEntity.inmateInOutStatusOnSubmission },
+      ),
+      apArea = applicationEntity.apArea?.let { apAreaTransformer.transformJpaToApi(it) },
+      cruManagementArea = applicationEntity.cruManagementArea?. let { cas1CruManagementAreaTransformer.transformJpaToApi(it) },
+      applicantUserDetails = applicationEntity.applicantUserDetails?.let { cas1ApplicationUserDetailsTransformer.transformJpaToApi(it) },
+      caseManagerIsNotApplicant = applicationEntity.caseManagerIsNotApplicant,
+      caseManagerUserDetails = applicationEntity.caseManagerUserDetails?.let { cas1ApplicationUserDetailsTransformer.transformJpaToApi(it) },
+      apType = applicationEntity.apType.asApiType(),
+      licenceExpiryDate = applicationEntity.licenceExpiryDate,
     )
   }
 
