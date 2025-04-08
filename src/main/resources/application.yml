@@ -64,6 +64,8 @@ spring:
       timeout: 60000
       ssl:
         enabled: false
+      repositories:
+        enabled: false
 
   security:
     oauth2:
