@@ -1,5 +1,6 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.controller.cas1
 
+import com.fasterxml.jackson.databind.ObjectMapper
 import org.springframework.http.ResponseEntity
 import org.springframework.stereotype.Service
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.cas1.AssessmentsCas1Delegate
@@ -7,6 +8,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1Assessment
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1AssessmentSortField
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1AssessmentStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1AssessmentSummary
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1UpdateAssessment
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.SortDirection
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesAssessmentEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DomainAssessmentSummary
@@ -27,6 +29,7 @@ class Cas1AssessmentsController(
   private val userService: UserService,
   private val offenderService: OffenderService,
   private val assessmentTransformer: AssessmentTransformer,
+  private val objectMapper: ObjectMapper,
 ) : AssessmentsCas1Delegate {
 
   override fun getAssessmentsForUser(
@@ -65,6 +68,28 @@ class Cas1AssessmentsController(
     val transformedResponse = assessmentTransformer.transformJpaToCas1Assessment(assessment, personInfo)
 
     return ResponseEntity.ok(transformedResponse)
+  }
+
+  override fun putAssessment(
+    assessmentId: UUID,
+    cas1UpdateAssessment: Cas1UpdateAssessment,
+  ): ResponseEntity<Cas1Assessment> {
+    val user = userService.getUserForRequest()
+
+    val assessment = extractEntityFromCasResult(
+      assessmentService
+        .updateAssessment(
+          user,
+          assessmentId,
+          objectMapper.writeValueAsString(cas1UpdateAssessment.data),
+        ),
+    ) as ApprovedPremisesAssessmentEntity
+
+    val personInfo = offenderService.getPersonInfoResult(assessment.application.crn, user.cas1LaoStrategy())
+
+    return ResponseEntity.ok(
+      assessmentTransformer.transformJpaToCas1Assessment(assessment, personInfo),
+    )
   }
 
   private fun transformDomainToApi(

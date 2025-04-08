@@ -1615,6 +1615,21 @@ components:
             - schemaVersion
             - outdatedSchema
             - status
+    Cas1UpdateAssessment:
+      type: object
+      properties:
+        data:
+          type: object
+          additionalProperties:
+            $ref: '_shared.yml#/components/schemas/Unit'
+        releaseDate:
+          type: string
+          format: date
+        accommodationRequiredFromDate:
+          type: string
+          format: date
+      required:
+        - data
 
 
 
