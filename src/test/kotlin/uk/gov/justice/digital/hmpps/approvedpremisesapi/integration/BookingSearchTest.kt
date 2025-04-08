@@ -266,7 +266,7 @@ class BookingSearchTest : IntegrationTestBase() {
                 withStatus(BookingStatus.confirmed)
                 withServiceName(ServiceName.temporaryAccommodation)
               }
-              val confirmation = confirmationEntityFactory.produceAndPersist {
+              val confirmation = cas3ConfirmationEntityFactory.produceAndPersist {
                 withBooking(booking)
               }
 

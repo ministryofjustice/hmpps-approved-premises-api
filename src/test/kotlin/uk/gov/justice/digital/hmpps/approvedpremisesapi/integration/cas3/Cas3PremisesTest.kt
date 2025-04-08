@@ -145,7 +145,7 @@ class Cas3PremisesTest : IntegrationTestBase() {
           withDepartureDate(LocalDate.now().plusDays(43))
         }
 
-        confirmedBooking.confirmation = confirmationEntityFactory.produceAndPersist {
+        confirmedBooking.confirmation = cas3ConfirmationEntityFactory.produceAndPersist {
           withBooking(confirmedBooking)
         }
 

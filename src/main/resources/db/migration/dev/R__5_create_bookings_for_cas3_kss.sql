@@ -101,7 +101,7 @@ VALUES
 ON CONFLICT(id) DO NOTHING;
 
 INSERT INTO
-  confirmations (
+  cas3_confirmations (
     "id",
     "booking_id",
     "date_time",

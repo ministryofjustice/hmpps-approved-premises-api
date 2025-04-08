@@ -11,7 +11,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApprovedPremises
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ArrivalEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.BedEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.BookingEntityFactory
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ConfirmationEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.DepartureEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.DepartureReasonEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.LocalAuthorityEntityFactory
@@ -19,6 +18,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.MoveOnCategoryEn
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ProbationRegionEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.RoomEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.TemporaryAccommodationPremisesEntityFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.cas3.Cas3ConfirmationEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.cas3.Cas3TurnaroundEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.cas3.Cas3VoidBedspaceEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.cas3.Cas3VoidBedspaceReasonEntityFactory
@@ -416,13 +416,13 @@ class BedUtilisationReportGeneratorTest {
     val relevantBookingStraddlingStartOfMonth =
       BookingEntityFactory().withBed(bed).withPremises(premises).withArrivalDate(LocalDate.parse("2023-03-28"))
         .withDepartureDate(LocalDate.parse("2023-04-04")).produce().apply {
-          confirmation = ConfirmationEntityFactory().withBooking(this).produce()
+          confirmation = Cas3ConfirmationEntityFactory().withBooking(this).produce()
         }
 
     val relevantBookingStraddlingEndOfMonth =
       BookingEntityFactory().withBed(bed).withPremises(premises).withArrivalDate(LocalDate.parse("2023-04-28"))
         .withDepartureDate(LocalDate.parse("2023-05-04")).produce().apply {
-          confirmation = ConfirmationEntityFactory().withBooking(this).produce()
+          confirmation = Cas3ConfirmationEntityFactory().withBooking(this).produce()
         }
 
     val bedUtilisationBedspaceReportData = convertToCas3BedUtilisationBedspaceReportData(bed)

@@ -25,7 +25,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.BookingEntityFac
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.CancellationEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.CancellationReasonEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.CaseSummaryFactory
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ConfirmationEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ContextStaffMemberFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.DepartureEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.DepartureReasonEntityFactory
@@ -40,6 +39,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.TemporaryAccommo
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.TemporaryAccommodationAssessmentEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.TemporaryAccommodationPremisesEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.UserEntityFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.cas3.Cas3ConfirmationEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ArrivalEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ArrivalRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AssessmentRepository
@@ -49,8 +49,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.BookingReposi
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.CancellationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.CancellationReasonRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.CancellationRepository
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ConfirmationEntity
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ConfirmationRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DepartureEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DepartureReasonRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DepartureRepository
@@ -62,6 +60,8 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PremisesEntit
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ProbationRegionEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TemporaryAccommodationApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas3.Cas3ConfirmationEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas3.Cas3ConfirmationRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas3.Cas3TurnaroundEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas3.Cas3TurnaroundRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas3.Cas3VoidBedspacesRepository
@@ -95,7 +95,7 @@ class Cas3BookingServiceTest {
   private val mockBookingRepository = mockk<BookingRepository>()
   private val mockArrivalRepository = mockk<ArrivalRepository>()
   private val mockCancellationRepository = mockk<CancellationRepository>()
-  private val mockConfirmationRepository = mockk<ConfirmationRepository>()
+  private val mockCas3ConfirmationRepository = mockk<Cas3ConfirmationRepository>()
   private val mockExtensionRepository = mockk<ExtensionRepository>()
   private val mockDepartureRepository = mockk<DepartureRepository>()
   private val mockDepartureReasonRepository = mockk<DepartureReasonRepository>()
@@ -113,7 +113,7 @@ class Cas3BookingServiceTest {
   fun createCas3BookingService(): Cas3BookingService = Cas3BookingService(
     bookingRepository = mockBookingRepository,
     bedRepository = mockBedRepository,
-    confirmationRepository = mockConfirmationRepository,
+    cas3ConfirmationRepository = mockCas3ConfirmationRepository,
     assessmentRepository = mockAssessmentRepository,
     arrivalRepository = mockArrivalRepository,
     departureRepository = mockDepartureRepository,
@@ -1387,7 +1387,7 @@ class Cas3BookingServiceTest {
         }
         .produce()
 
-      val confirmationEntity = ConfirmationEntityFactory()
+      val confirmationEntity = Cas3ConfirmationEntityFactory()
         .withBooking(bookingEntity)
         .produce()
 
@@ -1408,7 +1408,7 @@ class Cas3BookingServiceTest {
     fun `createConfirmation returns Success with correct result when validation passed and emits domain event`() {
       val bookingEntity = createBooking(null)
 
-      every { mockConfirmationRepository.save(any()) } answers { it.invocation.args[0] as ConfirmationEntity }
+      every { mockCas3ConfirmationRepository.save(any()) } answers { it.invocation.args[0] as Cas3ConfirmationEntity }
       every { mockBookingRepository.save(any()) } answers { it.invocation.args[0] as BookingEntity }
 
       every { mockCas3DomainEventService.saveBookingConfirmedEvent(any(), user) } just Runs
@@ -1439,7 +1439,7 @@ class Cas3BookingServiceTest {
     fun `createConfirmation returns Success with correct result and not closing the referral when booking is done without application`() {
       val bookingEntity = createBooking(null)
 
-      every { mockConfirmationRepository.save(any()) } answers { it.invocation.args[0] as ConfirmationEntity }
+      every { mockCas3ConfirmationRepository.save(any()) } answers { it.invocation.args[0] as Cas3ConfirmationEntity }
       every { mockBookingRepository.save(any()) } answers { it.invocation.args[0] as BookingEntity }
 
       every { mockCas3DomainEventService.saveBookingConfirmedEvent(any(), user) } just Runs
@@ -1485,7 +1485,7 @@ class Cas3BookingServiceTest {
 
       val bookingEntity = createBooking(application)
 
-      every { mockConfirmationRepository.save(any()) } answers { it.invocation.args[0] as ConfirmationEntity }
+      every { mockCas3ConfirmationRepository.save(any()) } answers { it.invocation.args[0] as Cas3ConfirmationEntity }
       every { mockBookingRepository.save(any()) } answers { it.invocation.args[0] as BookingEntity }
 
       every { mockCas3DomainEventService.saveBookingConfirmedEvent(any(), user) } just Runs
@@ -1532,7 +1532,7 @@ class Cas3BookingServiceTest {
         .produce()
       val bookingEntity = createBooking(application)
 
-      every { mockConfirmationRepository.save(any()) } answers { it.invocation.args[0] as ConfirmationEntity }
+      every { mockCas3ConfirmationRepository.save(any()) } answers { it.invocation.args[0] as Cas3ConfirmationEntity }
       every { mockBookingRepository.save(any()) } answers { it.invocation.args[0] as BookingEntity }
       every { mockCas3DomainEventService.saveBookingConfirmedEvent(any(), user) } just Runs
       every { mockAssessmentRepository.findByApplicationIdAndReallocatedAtNull(bookingEntity.application!!.id) } returns null
@@ -1578,7 +1578,7 @@ class Cas3BookingServiceTest {
 
       val bookingEntity = createBooking(application)
 
-      every { mockConfirmationRepository.save(any()) } answers { it.invocation.args[0] as ConfirmationEntity }
+      every { mockCas3ConfirmationRepository.save(any()) } answers { it.invocation.args[0] as Cas3ConfirmationEntity }
       every { mockBookingRepository.save(any()) } answers { it.invocation.args[0] as BookingEntity }
       every { mockCas3DomainEventService.saveBookingConfirmedEvent(any(), user) } just Runs
       every { mockAssessmentRepository.findByApplicationIdAndReallocatedAtNull(bookingEntity.application!!.id) } returns assessment

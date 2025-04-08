@@ -76,13 +76,13 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.BedDetailTra
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.BedSummaryTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.BookingTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.CancellationTransformer
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.ConfirmationTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.DateChangeTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.DepartureTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.ExtensionTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.PremisesTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.RoomTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.StaffMemberTransformer
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.cas3.Cas3ConfirmationTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.cas3.Cas3PremisesSummaryTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.cas3.Cas3TurnaroundTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.cas3.Cas3VoidBedspaceCancellationTransformer
@@ -112,7 +112,7 @@ class PremisesController(
   private val cas3VoidBedspacesTransformer: Cas3VoidBedspacesTransformer,
   private val arrivalTransformer: ArrivalTransformer,
   private val cancellationTransformer: CancellationTransformer,
-  private val confirmationTransformer: ConfirmationTransformer,
+  private val cas3ConfirmationTransformer: Cas3ConfirmationTransformer,
   private val departureTransformer: DepartureTransformer,
   private val extensionTransformer: ExtensionTransformer,
   private val staffMemberTransformer: StaffMemberTransformer,
@@ -571,7 +571,7 @@ class PremisesController(
       }
     val confirmation = extractResultEntityOrThrow(result)
 
-    return ResponseEntity.ok(confirmationTransformer.transformJpaToApi(confirmation))
+    return ResponseEntity.ok(cas3ConfirmationTransformer.transformJpaToApi(confirmation))
   }
 
   override fun premisesPremisesIdBookingsBookingIdDeparturesPost(
