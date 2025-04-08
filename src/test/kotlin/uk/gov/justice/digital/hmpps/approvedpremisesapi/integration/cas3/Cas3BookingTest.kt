@@ -36,7 +36,7 @@ class Cas3BookingTest : IntegrationTestBase() {
             withYieldedPremises {
               temporaryAccommodationPremisesEntityFactory.produceAndPersist {
                 withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
-                withYieldedProbationRegion { probationRegion }
+                withYieldedProbationRegion { userEntity.probationRegion }
               }
             }
             withServiceName(ServiceName.temporaryAccommodation)

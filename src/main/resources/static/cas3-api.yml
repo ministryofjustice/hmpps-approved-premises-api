@@ -5,6 +5,197 @@ info:
 servers:
   - url: /cas3
 paths:
+  /applications:
+    get:
+      tags:
+        - Operations on all applications
+      summary: Lists all applications that the user has created
+      operationId: getApplicationsForUser
+      responses:
+        200:
+          description: successful operation
+          content:
+            'application/json':
+              schema:
+                type: array
+                items:
+                  $ref: 'cas3-schemas.yml#/components/schemas/Cas3ApplicationSummary'
+        401:
+          $ref: '_shared.yml#/components/responses/401Response'
+        403:
+          $ref: '_shared.yml#/components/responses/403Response'
+        500:
+          $ref: '_shared.yml#/components/responses/500Response'
+    post:
+      tags:
+        - Operations on applications
+      summary: Creates an application
+      operationId: postApplication
+      parameters:
+        - name: createWithRisks
+          in: query
+          required: false
+          description: Instructs the API to create and return risk information from the OASys API (defaults to true)
+          schema:
+            type: boolean
+      requestBody:
+        description: Information to create a blank application with
+        content:
+          'application/json':
+            schema:
+              $ref: 'cas3-schemas.yml#/components/schemas/Cas3NewApplication'
+        required: true
+      responses:
+        201:
+          description: successful operation
+          content:
+            'application/json':
+              schema:
+                $ref: 'cas3-schemas.yml#/components/schemas/Cas3Application'
+        400:
+          description: invalid params
+          content:
+            'application/problem+json':
+              schema:
+                $ref: '_shared.yml#/components/schemas/ValidationError'
+        401:
+          $ref: '_shared.yml#/components/responses/401Response'
+        403:
+          $ref: '_shared.yml#/components/responses/403Response'
+        404:
+          description: invalid CRN
+          content:
+            'application/json':
+              schema:
+                $ref: '_shared.yml#/components/schemas/Problem'
+        500:
+          $ref: '_shared.yml#/components/responses/500Response'
+      x-codegen-request-body-name: body
+  /applications/{applicationId}:
+    get:
+      tags:
+        - Operations on applications
+      summary: Gets a single application by its ID
+      operationId: getApplicationById
+      parameters:
+        - name: applicationId
+          in: path
+          description: ID of the application
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        200:
+          description: successful operation
+          content:
+            'application/json':
+              schema:
+                $ref: 'cas3-schemas.yml#/components/schemas/Cas3Application'
+        401:
+          $ref: '_shared.yml#/components/responses/401Response'
+        403:
+          $ref: '_shared.yml#/components/responses/403Response'
+        500:
+          $ref: '_shared.yml#/components/responses/500Response'
+    put:
+      tags:
+        - Operations on applications
+      summary: Updates an application
+      operationId: putApplication
+      parameters:
+        - name: applicationId
+          in: path
+          description: ID of the application
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        description: Information to update the application with
+        content:
+          'application/json':
+            schema:
+              $ref: 'cas3-schemas.yml#/components/schemas/Cas3UpdateApplication'
+        required: true
+      responses:
+        200:
+          description: successful operation
+          content:
+            'application/json':
+              schema:
+                $ref: 'cas3-schemas.yml#/components/schemas/Cas3Application'
+        400:
+          description: invalid params
+          content:
+            'application/problem+json':
+              schema:
+                $ref: '_shared.yml#/components/schemas/ValidationError'
+        401:
+          $ref: '_shared.yml#/components/responses/401Response'
+        403:
+          $ref: '_shared.yml#/components/responses/403Response'
+        500:
+          $ref: '_shared.yml#/components/responses/500Response'
+      x-codegen-request-body-name: body
+    delete:
+      operationId: deleteApplication
+      tags:
+        - Operations on application
+      summary: Soft delete a draft application
+      parameters:
+        - name: applicationId
+          in: path
+          description: Id of the application
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        200:
+          description: successful operation
+        400:
+          description: invalid params
+          content:
+            'application/problem+json':
+              schema:
+                $ref: '_shared.yml#/components/schemas/ValidationError'
+  /applications/{applicationId}/submission:
+    post:
+      tags:
+        - Application data
+      summary: Submits an Application
+      operationId: postApplicationSubmission
+      parameters:
+        - in: path
+          name: applicationId
+          required: true
+          description: Id of the application
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        description: Information needed to submit an application
+        content:
+          'application/json':
+            schema:
+              $ref: 'cas3-schemas.yml#/components/schemas/Cas3SubmitApplication'
+        required: true
+      responses:
+        200:
+          description: successfully submitted the application
+        400:
+          description: application has already been submitted
+          content:
+            'application/problem+json':
+              schema:
+                $ref: '_shared.yml#/components/schemas/ValidationError'
+        401:
+          $ref: '_shared.yml#/components/responses/401Response'
+        403:
+          $ref: '_shared.yml#/components/responses/403Response'
+        500:
+          $ref: '_shared.yml#/components/responses/500Response'
   /reports/{reportName}:
     get:
       tags:
@@ -71,29 +262,6 @@ paths:
                 type: array
                 items:
                   $ref: '_shared.yml#/components/schemas/ReferralHistoryNote'
-  /applications/{applicationId}:
-    delete:
-      operationId: deleteApplication
-      tags:
-        - Operations on application
-      summary: Soft delete a draft application
-      parameters:
-        - name: applicationId
-          in: path
-          description: Id of the application
-          required: true
-          schema:
-            type: string
-            format: uuid
-      responses:
-        200:
-          description: successful operation
-        400:
-          description: invalid params
-          content:
-            'application/problem+json':
-              schema:
-                $ref: '_shared.yml#/components/schemas/ValidationError'
   /premises/summary:
     get:
       tags:

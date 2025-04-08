@@ -1,5 +1,159 @@
 components:
   schemas:
+    Cas3NewApplication:
+      type: object
+      properties:
+        crn:
+          type: string
+        convictionId:
+          type: integer
+          format: int64
+          example: 1502724704
+        deliusEventNumber:
+          type: string
+          example: "7"
+        offenceId:
+          type: string
+          example: "M1502750438"
+      required:
+        - crn
+    Cas3Application:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        person:
+          $ref: '_shared.yml#/components/schemas/Person'
+        createdAt:
+          type: string
+          format: date-time
+        createdByUserId:
+          type: string
+          format: uuid
+        schemaVersion:
+          type: string
+          format: uuid
+        outdatedSchema:
+          type: boolean
+        data:
+          $ref: '_shared.yml#/components/schemas/Unit'
+        document:
+          $ref: '_shared.yml#/components/schemas/Unit'
+        status:
+          $ref: '_shared.yml#/components/schemas/ApplicationStatus'
+        risks:
+          $ref: '_shared.yml#/components/schemas/PersonRisks'
+        submittedAt:
+          type: string
+          format: date-time
+        arrivalDate:
+          type: string
+          format: date-time
+        offenceId:
+          type: string
+        assessmentId:
+          type: string
+          format: uuid
+      required:
+        - id
+        - person
+        - createdAt
+        - createdByUserId
+        - schemaVersion
+        - outdatedSchema
+        - status
+        - offenceId
+    Cas3ApplicationSummary:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        person:
+          $ref: '_shared.yml#/components/schemas/Person'
+        createdAt:
+          type: string
+          format: date-time
+        submittedAt:
+          type: string
+          format: date-time
+        createdByUserId:
+          type: string
+          format: uuid
+        status:
+          $ref: '_shared.yml#/components/schemas/ApplicationStatus'
+        risks:
+          $ref: '_shared.yml#/components/schemas/PersonRisks'
+      required:
+        - id
+        - person
+        - createdAt
+        - createdByUserId
+        - status
+    Cas3UpdateApplication:
+      type: object
+      properties:
+        data:
+          type: object
+          additionalProperties:
+            $ref: '_shared.yml#/components/schemas/Unit'
+      required:
+        - type
+        - data
+    Cas3SubmitApplication:
+      type: object
+      properties:
+        arrivalDate:
+          type: string
+          format: date
+        isRegisteredSexOffender:
+          type: boolean
+        needsAccessibleProperty:
+          type: boolean
+        hasHistoryOfArson:
+          type: boolean
+        isDutyToReferSubmitted:
+          type: boolean
+        dutyToReferSubmissionDate:
+          type: string
+          format: date
+        dutyToReferOutcome:
+          type: string
+          example: 'Pending'
+        isApplicationEligible:
+          type: boolean
+        eligibilityReason:
+          type: string
+        dutyToReferLocalAuthorityAreaName:
+          type: string
+        personReleaseDate:
+          type: string
+          format: date
+          example: '2024-02-21'
+        pdu:
+          type: string
+        probationDeliveryUnitId:
+          type: string
+          format: uuid
+        isHistoryOfSexualOffence:
+          type: boolean
+        isConcerningSexualBehaviour:
+          type: boolean
+        isConcerningArsonBehaviour:
+          type: boolean
+        prisonReleaseTypes:
+          type: array
+          items:
+            type: string
+            example: 'PSS'
+        summaryData:
+          $ref: '_shared.yml#/components/schemas/Unit'
+        translatedDocument:
+          $ref: '_shared.yml#/components/schemas/Unit'
+      required:
+        - arrivalDate
+        - summaryData
     FutureBooking:
       type: object
       properties:

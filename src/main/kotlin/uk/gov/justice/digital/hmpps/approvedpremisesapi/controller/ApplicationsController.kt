@@ -13,6 +13,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApplicationSum
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApplicationTimelineNote
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApprovedPremisesApplicationStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Assessment
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas3SubmitApplication
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Document
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewAppeal
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewApplication
@@ -36,13 +37,11 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserQualification
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PersonInfoResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.deliuscontext.APDeliusDocument
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.BadRequestProblem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.ConflictProblem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.ForbiddenProblem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.NotFoundProblem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.AuthorisableActionResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.CasResult
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.ValidatableActionResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.AppealService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.ApplicationService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.ApplicationTimelineNoteService
@@ -57,12 +56,14 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1Request
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1WithdrawableService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.WithdrawableEntitiesWithNotes
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1LaoStrategy
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas3.Cas3ApplicationService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.AppealTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.ApplicationTimelineNoteTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.ApplicationsTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.AssessmentTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.DocumentTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.WithdrawableTransformer
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.ensureEntityFromCasResultIsSuccess
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.extractEntityFromCasResult
 import java.net.URI
 import java.util.UUID
@@ -74,6 +75,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.ApprovedPremisesAp
 class ApplicationsController(
   private val httpAuthService: HttpAuthService,
   private val applicationService: ApplicationService,
+  private val cas3ApplicationService: Cas3ApplicationService,
   private val applicationsTransformer: ApplicationsTransformer,
   private val assessmentTransformer: AssessmentTransformer,
   private val objectMapper: ObjectMapper,
@@ -335,30 +337,14 @@ class ApplicationsController(
         )
       }
 
-      is SubmitTemporaryAccommodationApplication ->
-        applicationService.submitTemporaryAccommodationApplication(applicationId, submitApplication)
-
+      is SubmitTemporaryAccommodationApplication -> {
+        val cas3SubmitApplication = transformToCas3SubmitApplication(submitApplication)
+        cas3ApplicationService.submitApplication(applicationId, cas3SubmitApplication)
+      }
       else -> throw RuntimeException("Unsupported SubmitApplication type: ${submitApplication::class.qualifiedName}")
     }
 
-    val validationResult = when (submitResult) {
-      is AuthorisableActionResult.NotFound -> throw NotFoundProblem(applicationId, "Application")
-      is AuthorisableActionResult.Unauthorised -> throw ForbiddenProblem()
-      is AuthorisableActionResult.Success -> submitResult.entity
-    }
-
-    when (validationResult) {
-      is ValidatableActionResult.GeneralValidationError ->
-        throw BadRequestProblem(errorDetail = validationResult.message)
-
-      is ValidatableActionResult.FieldValidationError ->
-        throw BadRequestProblem(invalidParams = validationResult.validationMessages)
-
-      is ValidatableActionResult.ConflictError ->
-        throw ConflictProblem(id = validationResult.conflictingEntityId, conflictReason = validationResult.message)
-
-      is ValidatableActionResult.Success -> Unit
-    }
+    ensureEntityFromCasResultIsSuccess(submitResult)
 
     return ResponseEntity(HttpStatus.OK)
   }
@@ -512,4 +498,26 @@ class ApplicationsController(
 
     return applicationsTransformer.transformJpaToApi(offlineApplication, personInfo)
   }
+
+  private fun transformToCas3SubmitApplication(submitApplication: SubmitTemporaryAccommodationApplication) = Cas3SubmitApplication(
+    arrivalDate = submitApplication.arrivalDate,
+    summaryData = submitApplication.summaryData,
+    isRegisteredSexOffender = submitApplication.isRegisteredSexOffender,
+    needsAccessibleProperty = submitApplication.needsAccessibleProperty,
+    hasHistoryOfArson = submitApplication.hasHistoryOfArson,
+    isDutyToReferSubmitted = submitApplication.isDutyToReferSubmitted,
+    dutyToReferSubmissionDate = submitApplication.dutyToReferSubmissionDate,
+    dutyToReferOutcome = submitApplication.dutyToReferOutcome,
+    isApplicationEligible = submitApplication.isApplicationEligible,
+    eligibilityReason = submitApplication.eligibilityReason,
+    dutyToReferLocalAuthorityAreaName = submitApplication.dutyToReferLocalAuthorityAreaName,
+    personReleaseDate = submitApplication.personReleaseDate,
+    pdu = submitApplication.pdu,
+    probationDeliveryUnitId = submitApplication.probationDeliveryUnitId,
+    isHistoryOfSexualOffence = submitApplication.isHistoryOfSexualOffence,
+    isConcerningSexualBehaviour = submitApplication.isConcerningSexualBehaviour,
+    isConcerningArsonBehaviour = submitApplication.isConcerningArsonBehaviour,
+    prisonReleaseTypes = submitApplication.prisonReleaseTypes,
+    translatedDocument = submitApplication.translatedDocument,
+  )
 }

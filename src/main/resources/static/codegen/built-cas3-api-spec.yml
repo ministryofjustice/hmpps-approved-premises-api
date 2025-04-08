@@ -7,6 +7,197 @@ info:
 servers:
   - url: /cas3
 paths:
+  /applications:
+    get:
+      tags:
+        - Operations on all applications
+      summary: Lists all applications that the user has created
+      operationId: getApplicationsForUser
+      responses:
+        200:
+          description: successful operation
+          content:
+            'application/json':
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Cas3ApplicationSummary'
+        401:
+          $ref: '#/components/responses/401Response'
+        403:
+          $ref: '#/components/responses/403Response'
+        500:
+          $ref: '#/components/responses/500Response'
+    post:
+      tags:
+        - Operations on applications
+      summary: Creates an application
+      operationId: postApplication
+      parameters:
+        - name: createWithRisks
+          in: query
+          required: false
+          description: Instructs the API to create and return risk information from the OASys API (defaults to true)
+          schema:
+            type: boolean
+      requestBody:
+        description: Information to create a blank application with
+        content:
+          'application/json':
+            schema:
+              $ref: '#/components/schemas/Cas3NewApplication'
+        required: true
+      responses:
+        201:
+          description: successful operation
+          content:
+            'application/json':
+              schema:
+                $ref: '#/components/schemas/Cas3Application'
+        400:
+          description: invalid params
+          content:
+            'application/problem+json':
+              schema:
+                $ref: '#/components/schemas/ValidationError'
+        401:
+          $ref: '#/components/responses/401Response'
+        403:
+          $ref: '#/components/responses/403Response'
+        404:
+          description: invalid CRN
+          content:
+            'application/json':
+              schema:
+                $ref: '#/components/schemas/Problem'
+        500:
+          $ref: '#/components/responses/500Response'
+      x-codegen-request-body-name: body
+  /applications/{applicationId}:
+    get:
+      tags:
+        - Operations on applications
+      summary: Gets a single application by its ID
+      operationId: getApplicationById
+      parameters:
+        - name: applicationId
+          in: path
+          description: ID of the application
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        200:
+          description: successful operation
+          content:
+            'application/json':
+              schema:
+                $ref: '#/components/schemas/Cas3Application'
+        401:
+          $ref: '#/components/responses/401Response'
+        403:
+          $ref: '#/components/responses/403Response'
+        500:
+          $ref: '#/components/responses/500Response'
+    put:
+      tags:
+        - Operations on applications
+      summary: Updates an application
+      operationId: putApplication
+      parameters:
+        - name: applicationId
+          in: path
+          description: ID of the application
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        description: Information to update the application with
+        content:
+          'application/json':
+            schema:
+              $ref: '#/components/schemas/Cas3UpdateApplication'
+        required: true
+      responses:
+        200:
+          description: successful operation
+          content:
+            'application/json':
+              schema:
+                $ref: '#/components/schemas/Cas3Application'
+        400:
+          description: invalid params
+          content:
+            'application/problem+json':
+              schema:
+                $ref: '#/components/schemas/ValidationError'
+        401:
+          $ref: '#/components/responses/401Response'
+        403:
+          $ref: '#/components/responses/403Response'
+        500:
+          $ref: '#/components/responses/500Response'
+      x-codegen-request-body-name: body
+    delete:
+      operationId: deleteApplication
+      tags:
+        - Operations on application
+      summary: Soft delete a draft application
+      parameters:
+        - name: applicationId
+          in: path
+          description: Id of the application
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        200:
+          description: successful operation
+        400:
+          description: invalid params
+          content:
+            'application/problem+json':
+              schema:
+                $ref: '#/components/schemas/ValidationError'
+  /applications/{applicationId}/submission:
+    post:
+      tags:
+        - Application data
+      summary: Submits an Application
+      operationId: postApplicationSubmission
+      parameters:
+        - in: path
+          name: applicationId
+          required: true
+          description: Id of the application
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        description: Information needed to submit an application
+        content:
+          'application/json':
+            schema:
+              $ref: '#/components/schemas/Cas3SubmitApplication'
+        required: true
+      responses:
+        200:
+          description: successfully submitted the application
+        400:
+          description: application has already been submitted
+          content:
+            'application/problem+json':
+              schema:
+                $ref: '#/components/schemas/ValidationError'
+        401:
+          $ref: '#/components/responses/401Response'
+        403:
+          $ref: '#/components/responses/403Response'
+        500:
+          $ref: '#/components/responses/500Response'
   /reports/{reportName}:
     get:
       tags:
@@ -73,29 +264,6 @@ paths:
                 type: array
                 items:
                   $ref: '#/components/schemas/ReferralHistoryNote'
-  /applications/{applicationId}:
-    delete:
-      operationId: deleteApplication
-      tags:
-        - Operations on application
-      summary: Soft delete a draft application
-      parameters:
-        - name: applicationId
-          in: path
-          description: Id of the application
-          required: true
-          schema:
-            type: string
-            format: uuid
-      responses:
-        200:
-          description: successful operation
-        400:
-          description: invalid params
-          content:
-            'application/problem+json':
-              schema:
-                $ref: '#/components/schemas/ValidationError'
   /premises/summary:
     get:
       tags:
@@ -4715,6 +4883,160 @@ components:
         - departingToday
         - overdueDeparture
         - departed
+    Cas3NewApplication:
+      type: object
+      properties:
+        crn:
+          type: string
+        convictionId:
+          type: integer
+          format: int64
+          example: 1502724704
+        deliusEventNumber:
+          type: string
+          example: "7"
+        offenceId:
+          type: string
+          example: "M1502750438"
+      required:
+        - crn
+    Cas3Application:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        person:
+          $ref: '#/components/schemas/Person'
+        createdAt:
+          type: string
+          format: date-time
+        createdByUserId:
+          type: string
+          format: uuid
+        schemaVersion:
+          type: string
+          format: uuid
+        outdatedSchema:
+          type: boolean
+        data:
+          $ref: '#/components/schemas/Unit'
+        document:
+          $ref: '#/components/schemas/Unit'
+        status:
+          $ref: '#/components/schemas/ApplicationStatus'
+        risks:
+          $ref: '#/components/schemas/PersonRisks'
+        submittedAt:
+          type: string
+          format: date-time
+        arrivalDate:
+          type: string
+          format: date-time
+        offenceId:
+          type: string
+        assessmentId:
+          type: string
+          format: uuid
+      required:
+        - id
+        - person
+        - createdAt
+        - createdByUserId
+        - schemaVersion
+        - outdatedSchema
+        - status
+        - offenceId
+    Cas3ApplicationSummary:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        person:
+          $ref: '#/components/schemas/Person'
+        createdAt:
+          type: string
+          format: date-time
+        submittedAt:
+          type: string
+          format: date-time
+        createdByUserId:
+          type: string
+          format: uuid
+        status:
+          $ref: '#/components/schemas/ApplicationStatus'
+        risks:
+          $ref: '#/components/schemas/PersonRisks'
+      required:
+        - id
+        - person
+        - createdAt
+        - createdByUserId
+        - status
+    Cas3UpdateApplication:
+      type: object
+      properties:
+        data:
+          type: object
+          additionalProperties:
+            $ref: '#/components/schemas/Unit'
+      required:
+        - type
+        - data
+    Cas3SubmitApplication:
+      type: object
+      properties:
+        arrivalDate:
+          type: string
+          format: date
+        isRegisteredSexOffender:
+          type: boolean
+        needsAccessibleProperty:
+          type: boolean
+        hasHistoryOfArson:
+          type: boolean
+        isDutyToReferSubmitted:
+          type: boolean
+        dutyToReferSubmissionDate:
+          type: string
+          format: date
+        dutyToReferOutcome:
+          type: string
+          example: 'Pending'
+        isApplicationEligible:
+          type: boolean
+        eligibilityReason:
+          type: string
+        dutyToReferLocalAuthorityAreaName:
+          type: string
+        personReleaseDate:
+          type: string
+          format: date
+          example: '2024-02-21'
+        pdu:
+          type: string
+        probationDeliveryUnitId:
+          type: string
+          format: uuid
+        isHistoryOfSexualOffence:
+          type: boolean
+        isConcerningSexualBehaviour:
+          type: boolean
+        isConcerningArsonBehaviour:
+          type: boolean
+        prisonReleaseTypes:
+          type: array
+          items:
+            type: string
+            example: 'PSS'
+        summaryData:
+          $ref: '#/components/schemas/Unit'
+        translatedDocument:
+          $ref: '#/components/schemas/Unit'
+      required:
+        - arrivalDate
+        - summaryData
     FutureBooking:
       type: object
       properties:
