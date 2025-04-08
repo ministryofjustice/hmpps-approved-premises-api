@@ -75,8 +75,6 @@ sonar-project.properties
 #Helm
 **/Chart.lock
 
-.trivyignore
-
 nomis-db/
 
 test-seed-csvs/**
