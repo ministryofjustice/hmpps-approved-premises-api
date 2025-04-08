@@ -1622,14 +1622,51 @@ components:
           type: object
           additionalProperties:
             $ref: '_shared.yml#/components/schemas/Unit'
-        releaseDate:
-          type: string
-          format: date
-        accommodationRequiredFromDate:
-          type: string
-          format: date
       required:
         - data
+    Cas1ClarificationNote:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        createdAt:
+          type: string
+          format: date-time
+        responseReceivedOn:
+          type: string
+          format: date
+        createdByStaffMemberId:
+          type: string
+          format: uuid
+        query:
+          type: string
+        response:
+          type: string
+      required:
+        - id
+        - createdAt
+        - createdByStaffMemberId
+        - query
+    Cas1UpdatedClarificationNote:
+      type: object
+      properties:
+        response:
+          type: string
+        responseReceivedOn:
+          type: string
+          format: date
+          example: 2022-07-28
+      required:
+        - response
+        - responseReceivedOn
+    Cas1NewClarificationNote:
+      type: object
+      properties:
+        query:
+          type: string
+      required:
+        - query
 
 
 
