@@ -22,10 +22,12 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1Assessment
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Problem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApprovedPremisesApplicationEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApprovedPremisesAssessmentEntityFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.CaseAccessFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.IntegrationTestBase
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAUser
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAnOffender
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.apDeliusContextAddListCaseSummaryToBulkResponse
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.apDeliusContextMockUserAccess
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesAssessmentEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AssessmentDecision
@@ -37,6 +39,8 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DomainAssessm
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DomainAssessmentSummaryStatus.IN_PROGRESS
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DomainAssessmentSummaryStatus.NOT_STARTED
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserQualification
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRole
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PersonInfoResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.deliuscontext.CaseSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.prisonsapi.InmateDetail
@@ -688,6 +692,221 @@ class Cas1AssessmentTest : IntegrationTestBase() {
             sortBy = AssessmentSortField.assessmentDueAt,
             status = emptyList(),
           )
+        }
+      }
+    }
+
+    @Nested
+    inner class GetAssessment {
+
+      @Test
+      fun `Get assessment by ID without JWT returns 401`() {
+        webTestClient.get()
+          .uri("/cas1/assessments/6966902f-9b7e-4fc7-96c4-b54ec02d16c9")
+          .exchange()
+          .expectStatus()
+          .isUnauthorized
+      }
+
+      @ParameterizedTest
+      @EnumSource(value = UserRole::class)
+      fun `Get assessment by ID returns 200 with correct body for all roles`(role: UserRole) {
+        givenAUser(roles = listOf(role)) { _, jwt ->
+          givenAUser { userEntity, _ ->
+            givenAnOffender { offenderDetails, inmateDetails ->
+              val applicationSchema = approvedPremisesApplicationJsonSchemaEntityFactory.produceAndPersist {
+                withPermissiveSchema()
+              }
+
+              val assessmentSchema = approvedPremisesAssessmentJsonSchemaEntityFactory.produceAndPersist {
+                withPermissiveSchema()
+                withAddedAt(OffsetDateTime.now())
+              }
+
+              val application = approvedPremisesApplicationEntityFactory.produceAndPersist {
+                withCrn(offenderDetails.otherIds.crn)
+                withCreatedByUser(userEntity)
+                withApplicationSchema(applicationSchema)
+              }
+
+              val assessment = approvedPremisesAssessmentEntityFactory.produceAndPersist {
+                withAllocatedToUser(userEntity)
+                withApplication(application)
+                withAssessmentSchema(assessmentSchema)
+              }
+
+              assessment.schemaUpToDate = true
+
+              webTestClient.get()
+                .uri("/cas1/assessments/${assessment.id}")
+                .header("Authorization", "Bearer $jwt")
+                .exchange()
+                .expectStatus()
+                .isOk
+                .expectBody()
+                .json(
+                  objectMapper.writeValueAsString(
+                    assessmentTransformer.transformJpaToCas1Assessment(
+                      assessment,
+                      PersonInfoResult.Success.Full(offenderDetails.otherIds.crn, offenderDetails, inmateDetails),
+                    ),
+                  ),
+                )
+            }
+          }
+        }
+      }
+
+      @Test
+      fun `Get assessment by ID returns 403 when Offender is LAO and user does not have LAO qualification or pass the LAO check`() {
+        givenAUser { userEntity, jwt ->
+          givenAnOffender(
+            offenderDetailsConfigBlock = {
+              withCurrentExclusion(true)
+            },
+          ) { offenderDetails, inmateDetails ->
+
+            val applicationSchema = approvedPremisesApplicationJsonSchemaEntityFactory.produceAndPersist {
+              withPermissiveSchema()
+            }
+
+            val assessmentSchema = approvedPremisesAssessmentJsonSchemaEntityFactory.produceAndPersist {
+              withPermissiveSchema()
+              withAddedAt(OffsetDateTime.now())
+            }
+
+            val application = approvedPremisesApplicationEntityFactory.produceAndPersist {
+              withCrn(offenderDetails.otherIds.crn)
+              withCreatedByUser(userEntity)
+              withApplicationSchema(applicationSchema)
+            }
+
+            val assessment = approvedPremisesAssessmentEntityFactory.produceAndPersist {
+              withAllocatedToUser(userEntity)
+              withApplication(application)
+              withAssessmentSchema(assessmentSchema)
+            }
+
+            assessment.schemaUpToDate = true
+
+            webTestClient.get()
+              .uri("/cas1/assessments/${assessment.id}")
+              .header("Authorization", "Bearer $jwt")
+              .exchange()
+              .expectStatus()
+              .isForbidden
+          }
+        }
+      }
+
+      @Test
+      fun `Get assessment by ID returns 200 when Offender is LAO and user does not have LAO qualification but does pass the LAO check`() {
+        givenAUser { userEntity, jwt ->
+          givenAnOffender(
+            offenderDetailsConfigBlock = {
+              withCurrentExclusion(true)
+            },
+          ) { offenderDetails, inmateDetails ->
+
+            apDeliusContextMockUserAccess(
+              CaseAccessFactory()
+                .withCrn(offenderDetails.otherIds.crn)
+                .withUserExcluded(false)
+                .withUserRestricted(false)
+                .produce(),
+              userEntity.deliusUsername,
+            )
+
+            val applicationSchema = approvedPremisesApplicationJsonSchemaEntityFactory.produceAndPersist {
+              withPermissiveSchema()
+            }
+
+            val assessmentSchema = approvedPremisesAssessmentJsonSchemaEntityFactory.produceAndPersist {
+              withPermissiveSchema()
+              withAddedAt(OffsetDateTime.now())
+            }
+
+            val application = approvedPremisesApplicationEntityFactory.produceAndPersist {
+              withCrn(offenderDetails.otherIds.crn)
+              withCreatedByUser(userEntity)
+              withApplicationSchema(applicationSchema)
+            }
+
+            val assessment = approvedPremisesAssessmentEntityFactory.produceAndPersist {
+              withAllocatedToUser(userEntity)
+              withApplication(application)
+              withAssessmentSchema(assessmentSchema)
+            }
+
+            assessment.schemaUpToDate = true
+
+            webTestClient.get()
+              .uri("/cas1/assessments/${assessment.id}")
+              .header("Authorization", "Bearer $jwt")
+              .exchange()
+              .expectStatus()
+              .isOk
+              .expectBody()
+              .json(
+                objectMapper.writeValueAsString(
+                  assessmentTransformer.transformJpaToCas1Assessment(
+                    assessment,
+                    PersonInfoResult.Success.Full(offenderDetails.otherIds.crn, offenderDetails, inmateDetails),
+                  ),
+                ),
+              )
+          }
+        }
+      }
+
+      @Test
+      fun `Get assessment by ID returns 200 when Offender is LAO and user does have LAO qualification but does not pass the LAO check`() {
+        givenAUser(qualifications = listOf(UserQualification.LAO)) { userEntity, jwt ->
+          givenAnOffender(
+            offenderDetailsConfigBlock = {
+              withCurrentRestriction(true)
+            },
+          ) { offenderDetails, inmateDetails ->
+
+            val applicationSchema = approvedPremisesApplicationJsonSchemaEntityFactory.produceAndPersist {
+              withPermissiveSchema()
+            }
+
+            val assessmentSchema = approvedPremisesAssessmentJsonSchemaEntityFactory.produceAndPersist {
+              withPermissiveSchema()
+              withAddedAt(OffsetDateTime.now())
+            }
+
+            val application = approvedPremisesApplicationEntityFactory.produceAndPersist {
+              withCrn(offenderDetails.otherIds.crn)
+              withCreatedByUser(userEntity)
+              withApplicationSchema(applicationSchema)
+            }
+
+            val assessment = approvedPremisesAssessmentEntityFactory.produceAndPersist {
+              withAllocatedToUser(userEntity)
+              withApplication(application)
+              withAssessmentSchema(assessmentSchema)
+            }
+
+            assessment.schemaUpToDate = true
+
+            webTestClient.get()
+              .uri("/cas1/assessments/${assessment.id}")
+              .header("Authorization", "Bearer $jwt")
+              .exchange()
+              .expectStatus()
+              .isOk
+              .expectBody()
+              .json(
+                objectMapper.writeValueAsString(
+                  assessmentTransformer.transformJpaToCas1Assessment(
+                    assessment,
+                    PersonInfoResult.Success.Full(offenderDetails.otherIds.crn, offenderDetails, inmateDetails),
+                  ),
+                ),
+              )
+          }
         }
       }
     }
