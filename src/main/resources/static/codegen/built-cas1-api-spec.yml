@@ -2258,6 +2258,39 @@ paths:
           $ref: '#/components/responses/403Response'
         500:
           $ref: '#/components/responses/500Response'
+    put:
+      tags:
+        - Assessments
+      summary: Updates an assessment
+      operationId: putAssessment
+      parameters:
+        - in: path
+          name: assessmentId
+          required: true
+          description: Id of the assessment
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        description: Updated assessment
+        content:
+          'application/json':
+            schema:
+              $ref: '#/components/schemas/Cas1UpdateAssessment'
+        required: true
+      responses:
+        200:
+          description: successfully updated assessment
+          content:
+            'application/json':
+              schema:
+                $ref: '#/components/schemas/Cas1Assessment'
+        401:
+          $ref: '#/components/responses/401Response'
+        403:
+          $ref: '#/components/responses/403Response'
+        500:
+          $ref: '#/components/responses/500Response'
 
 
 
@@ -8348,6 +8381,21 @@ components:
             - schemaVersion
             - outdatedSchema
             - status
+    Cas1UpdateAssessment:
+      type: object
+      properties:
+        data:
+          type: object
+          additionalProperties:
+            $ref: '#/components/schemas/Unit'
+        releaseDate:
+          type: string
+          format: date
+        accommodationRequiredFromDate:
+          type: string
+          format: date
+      required:
+        - data
 
 
 
