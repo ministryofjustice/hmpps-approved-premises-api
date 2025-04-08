@@ -12,6 +12,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.reference.Cas2Pers
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.reference.Cas2PersistedApplicationStatusFinder
 import java.time.OffsetDateTime
 import java.util.UUID
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.reference.Cas2v2PersistedApplicationStatusFinder
 
 @Repository
 interface Cas2v2StatusUpdateDetailRepository : JpaRepository<Cas2v2StatusUpdateDetailEntity, UUID> {
@@ -36,7 +37,7 @@ data class Cas2v2StatusUpdateDetailEntity(
 ) {
   override fun toString() = "Cas2v2StatusDetailEntity: $id"
 
-  fun statusDetail(statusId: UUID, detailId: UUID): Cas2PersistedApplicationStatusDetail = Cas2PersistedApplicationStatusFinder().getById(statusId).statusDetails
+  fun statusDetail(statusId: UUID, detailId: UUID): Cas2PersistedApplicationStatusDetail = Cas2v2PersistedApplicationStatusFinder().getById(statusId).statusDetails
     ?.find { detail -> detail.id == detailId }
     ?: error("Status detail with id $detailId not found")
 }

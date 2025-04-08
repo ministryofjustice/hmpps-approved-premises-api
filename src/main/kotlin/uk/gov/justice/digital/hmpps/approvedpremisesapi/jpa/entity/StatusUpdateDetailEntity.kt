@@ -12,6 +12,8 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.reference.Cas2Pers
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.reference.Cas2PersistedApplicationStatusFinder
 import java.time.OffsetDateTime
 import java.util.UUID
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.reference.Cas2v2PersistedApplicationStatusFinder
 
 @Repository
 interface Cas2StatusUpdateDetailRepository : JpaRepository<Cas2StatusUpdateDetailEntity, UUID> {
@@ -36,7 +38,16 @@ data class Cas2StatusUpdateDetailEntity(
 ) {
   override fun toString() = "Cas2StatusDetailEntity: $id"
 
-  fun statusDetail(statusId: UUID, detailId: UUID): Cas2PersistedApplicationStatusDetail = Cas2PersistedApplicationStatusFinder().getById(statusId).statusDetails
-    ?.find { detail -> detail.id == detailId }
-    ?: error("Status detail with id $detailId not found")
+  fun statusDetail(statusId: UUID, detailId: UUID, serviceName: ServiceName = ServiceName.cas2): Cas2PersistedApplicationStatusDetail
+  {
+    return when (serviceName) {
+      ServiceName.cas2v2 -> Cas2v2PersistedApplicationStatusFinder().getById(statusId).statusDetails
+        ?.find { detail -> detail.id == detailId }
+        ?: error("Status detail with id $detailId not found")
+
+      else -> Cas2PersistedApplicationStatusFinder().getById(statusId).statusDetails
+        ?.find { detail -> detail.id == detailId }
+        ?: error("Status detail with id $detailId not found")
+    }
+  }
 }
