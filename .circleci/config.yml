@@ -1,11 +1,9 @@
 version: 2.1
-
 orbs:
   hmpps: ministryofjustice/hmpps@8.2.1
   mem: circleci/rememborb@0.0.2
   node: circleci/node@5.2.0
   slack: circleci/slack@4.12.6
-
 parameters:
   alerts-slack-channel:
     type: string
@@ -16,10 +14,6 @@ parameters:
   releases-slack-channel:
     type: string
     default: cas-events
-  run-security-workflow-on-branch:
-    type: boolean
-    default: false
-
 executors:
   integration-test-gradle:
     resource_class: medium+
@@ -45,86 +39,7 @@ executors:
     resource_class: medium+
     docker:
       - image: cimg/openjdk:21.0.2
-
 jobs:
-  generate_trivyignore:
-    # Needed to get Trivy to respect the .trivyignore file, as it doesn't use the one that's inside the Docker image.
-    docker:
-      - image: cimg/openjdk:21.0.2
-    resource_class: small
-    steps:
-      - checkout
-      - run:
-          name: "Initialise Gradle"
-          # Any Gradle command will cause .trivyignore to be generated.
-          command: |
-            ./gradlew init
-      - persist_to_workspace:
-          root: .
-          paths:
-            - .trivyignore
-  build_multiplatform_docker_without_publish:
-    # Hybrid of the hmpps/build_docker and hmpps/build_multiplatform_docker jobs.
-    # Needed for the 'security_branch' workflow as:
-    # - the hmpps/build_multiplatform_docker job does not allow for building Docker images without also
-    #   publishing to quay.io, which would both clutter the repo with ephemeral builds and set the 'latest' tag to an
-    #   image built from a non-main branch.
-    # - the hmpps/build_docker job does allow for building Docker images and persisting them locally, but uses the
-    #   legacy build system instead of buildx, which would necessitate changes to the Dockerfile, and possibly break
-    #   local builds.
-    docker:
-      - image: cimg/base:stable
-    resource_class: small
-    parameters:
-      image_name:
-        type: string
-        default: "quay.io/hmpps/${CIRCLE_PROJECT_REPONAME}"
-    steps:
-      - checkout
-      - setup_remote_docker:
-          docker_layer_caching: true
-      - hmpps/create_app_version
-      - run:
-          name: Create IMAGE_NAME env var
-          command: |
-            IMAGE_NAME="<< parameters.image_name >>"
-            echo "export IMAGE_NAME=$IMAGE_NAME" >> $BASH_ENV
-      - mem/remember:
-          env_var: IMAGE_NAME
-          value: "${IMAGE_NAME}"
-      - run:
-          name: Setup buildx
-          command: |
-            docker context create multi-arch-build
-            docker run --rm --privileged multiarch/qemu-user-static --reset -p yes
-            docker run --rm --privileged tonistiigi/binfmt --install all
-            docker buildx create --use multi-arch-build --platform linux/arm64,linux/amd64
-      - run:
-          name: Build container image
-          command: |
-            docker buildx build \
-              --platform linux/amd64 --pull \
-              --progress plain \
-              --rm=false . \
-              --build-arg BUILD_NUMBER=$APP_VERSION \
-              --build-arg GIT_REF=$CIRCLE_SHA1 \
-              --tag "${IMAGE_NAME}:${APP_VERSION}" \
-              --label "maintainer=dps-hmpps@digital.justice.gov.uk" \
-              --label "app.version=${APP_VERSION}" \
-              --label "build.version=${APP_VERSION}" \
-              --label "build.number=${CIRCLE_BUILD_NUM}" \
-              --label "build.url=${CIRCLE_BUILD_URL}" \
-              --label "build.gitref=${CIRCLE_SHA1}" \
-              --output=type=docker
-      - run:
-          name: Persist container image to workspace
-          command: |
-            mkdir -p docker_cache
-            docker save ${IMAGE_NAME}:${APP_VERSION} -o docker_cache/build_image.tar
-      - persist_to_workspace:
-          root: .
-          paths:
-            - docker_cache
   build:
     environment:
       _JAVA_OPTIONS: "-Xmx3g"
@@ -556,68 +471,3 @@ workflows:
             - hmpps-community-accommodation
           requires:
             - deploy_dev
-  security:
-    triggers:
-      - schedule:
-          cron: "11 5 * * 1-5"
-          filters:
-            branches:
-              only:
-                - main
-    jobs:
-      - generate_trivyignore:
-          name: generate_trivyignore
-      - hmpps/gradle_owasp_dependency_check:
-          slack_channel: << pipeline.parameters.alerts-slack-channel >>
-          jdk_tag: "21.0"
-          context:
-            - hmpps-common-vars
-      - hmpps/trivy_latest_scan:
-          pre-steps:
-            - attach_workspace:
-                at: ~/trivyetc
-          additional_args: --ignorefile ~/trivyetc/.trivyignore
-          slack_channel: << pipeline.parameters.alerts-slack-channel >>
-          context:
-            - hmpps-common-vars
-          requires:
-            - generate_trivyignore
-      - hmpps/veracode_pipeline_scan:
-          slack_channel: << pipeline.parameters.alerts-slack-channel >>
-          context:
-            - veracode-credentials
-            - hmpps-common-vars
-  security-branch:
-    # Mimics the 'security' workflow, but can be manually triggered on any branch.
-    when: << pipeline.parameters.run-security-workflow-on-branch >>
-    jobs:
-      - generate_trivyignore:
-          name: generate_trivyignore
-      - build_multiplatform_docker_without_publish:
-          name: build_docker
-          image_name: hmpps-approved-premises-api
-      - hmpps/gradle_owasp_dependency_check:
-          slack_channel: << pipeline.parameters.alerts-slack-channel >>
-          jdk_tag: "21.0"
-          context:
-            - hmpps-common-vars
-      - hmpps/trivy_pipeline_scan:
-          context:
-            - hmpps-common-vars
-          requires:
-            - build_docker
-            - generate_trivyignore
-  security-weekly:
-    triggers:
-      - schedule:
-          cron: "0 5 * * 1"
-          filters:
-            branches:
-              only:
-                - main
-    jobs:
-      - hmpps/veracode_policy_scan:
-          slack_channel: << pipeline.parameters.alerts-slack-channel >>
-          context:
-            - veracode-credentials
-            - hmpps-common-vars

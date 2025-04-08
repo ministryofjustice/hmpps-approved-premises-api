@@ -20,8 +20,8 @@ import org.springframework.data.jpa.repository.Modifying
 import org.springframework.data.jpa.repository.Query
 import org.springframework.stereotype.Repository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.BookingStatus
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.BookingSummaryForAvailability
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas1.Cas1ApplicationFacade
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas3.Cas3TurnaroundEntity
 import java.time.Instant
 import java.time.LocalDate
 import java.time.OffsetDateTime
@@ -322,7 +322,7 @@ data class BookingEntity(
   var originalDepartureDate: LocalDate,
   val createdAt: OffsetDateTime,
   @OneToMany(mappedBy = "booking", fetch = FetchType.LAZY)
-  var turnarounds: MutableList<TurnaroundEntity>,
+  var turnarounds: MutableList<Cas3TurnaroundEntity>,
   var nomsNumber: String?,
   @OneToOne(mappedBy = "booking")
   var placementRequest: PlacementRequestEntity?,
@@ -338,7 +338,7 @@ data class BookingEntity(
   val cancellation: CancellationEntity?
     get() = cancellations.maxByOrNull { it.createdAt }
 
-  val turnaround: TurnaroundEntity?
+  val turnaround: Cas3TurnaroundEntity?
     get() = turnarounds.maxByOrNull { it.createdAt }
 
   val isCancelled: Boolean

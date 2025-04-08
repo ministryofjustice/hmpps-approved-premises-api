@@ -27,9 +27,9 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ExtensionRepo
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.MoveOnCategoryRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PremisesEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TemporaryAccommodationPremisesEntity
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TurnaroundEntity
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TurnaroundRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas3.Cas3TurnaroundEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas3.Cas3TurnaroundRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas3.Cas3VoidBedspacesRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.serviceScopeMatches
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PersonSummaryInfoResult
@@ -65,7 +65,7 @@ class Cas3BookingService(
   private val cancellationRepository: CancellationRepository,
   private val cancellationReasonRepository: CancellationReasonRepository,
   private val cas3VoidBedspacesRepository: Cas3VoidBedspacesRepository,
-  private val turnaroundRepository: TurnaroundRepository,
+  private val cas3TurnaroundRepository: Cas3TurnaroundRepository,
   private val extensionRepository: ExtensionRepository,
   private val cas3PremisesService: Cas3PremisesService,
   private val assessmentService: AssessmentService,
@@ -165,8 +165,8 @@ class Cas3BookingService(
         ),
       )
 
-      val turnaround = turnaroundRepository.save(
-        TurnaroundEntity(
+      val turnaround = cas3TurnaroundRepository.save(
+        Cas3TurnaroundEntity(
           id = UUID.randomUUID(),
           workingDayCount = when (enableTurnarounds) {
             true -> premises.turnaroundWorkingDayCount
@@ -257,8 +257,8 @@ class Cas3BookingService(
       return fieldValidationError
     }
 
-    val turnaround = turnaroundRepository.save(
-      TurnaroundEntity(
+    val turnaround = cas3TurnaroundRepository.save(
+      Cas3TurnaroundEntity(
         id = UUID.randomUUID(),
         workingDayCount = workingDays,
         createdAt = OffsetDateTime.now(),

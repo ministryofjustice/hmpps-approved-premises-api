@@ -2231,6 +2231,66 @@ paths:
           $ref: '#/components/responses/403Response'
         500:
           $ref: '#/components/responses/500Response'
+  /assessments/{assessmentId}:
+    get:
+      tags:
+        - Assessments
+      summary: Gets a single assessment by its id
+      operationId: getAssessment
+      parameters:
+        - in: path
+          name: assessmentId
+          required: true
+          description: Id of the assessment
+          schema:
+            type: string
+            format: uuid
+      responses:
+        200:
+          description: successfully retrieved assessment
+          content:
+            'application/json':
+              schema:
+                $ref: '#/components/schemas/Cas1Assessment'
+        401:
+          $ref: '#/components/responses/401Response'
+        403:
+          $ref: '#/components/responses/403Response'
+        500:
+          $ref: '#/components/responses/500Response'
+    put:
+      tags:
+        - Assessments
+      summary: Updates an assessment
+      operationId: putAssessment
+      parameters:
+        - in: path
+          name: assessmentId
+          required: true
+          description: Id of the assessment
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        description: Updated assessment
+        content:
+          'application/json':
+            schema:
+              $ref: '#/components/schemas/Cas1UpdateAssessment'
+        required: true
+      responses:
+        200:
+          description: successfully updated assessment
+          content:
+            'application/json':
+              schema:
+                $ref: '#/components/schemas/Cas1Assessment'
+        401:
+          $ref: '#/components/responses/401Response'
+        403:
+          $ref: '#/components/responses/403Response'
+        500:
+          $ref: '#/components/responses/500Response'
 
 
 
@@ -8193,6 +8253,152 @@ components:
         - assessmentCreatedAt
         - assessmentDueAt
         - applicationProbationDeliveryUnitName
+    Cas1Assessment:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        schemaVersion:
+          type: string
+          format: uuid
+        outdatedSchema:
+          type: boolean
+        createdAt:
+          type: string
+          format: date-time
+        allocatedAt:
+          type: string
+          format: date-time
+        submittedAt:
+          type: string
+          format: date-time
+        decision:
+          $ref: '#/components/schemas/AssessmentDecision'
+        rejectionRationale:
+          type: string
+        data:
+          $ref: '#/components/schemas/Unit'
+        clarificationNotes:
+          type: array
+          items:
+            $ref: '#/components/schemas/ClarificationNote'
+        application:
+          $ref: '#/components/schemas/Cas1Application'
+        allocatedToStaffMember:
+          $ref: '#/components/schemas/ApprovedPremisesUser'
+        status:
+          $ref: '#/components/schemas/Cas1AssessmentStatus'
+        createdFromAppeal:
+          type: boolean
+        document:
+          $ref: '#/components/schemas/Unit'
+      required:
+        - service
+        - id
+        - allocatedToUser
+        - schemaVersion
+        - outdatedSchema
+        - createdAt
+        - clarificationNotes
+        - application
+        - createdFromAppeal
+    Cas1Application:
+          properties:
+            id:
+              type: string
+              format: uuid
+            person:
+              $ref: '#/components/schemas/Person'
+            createdAt:
+              type: string
+              format: date-time
+            isWomensApplication:
+              type: boolean
+            isPipeApplication:
+              deprecated: true
+              description: Use apType
+              type: boolean
+            isEmergencyApplication:
+              type: boolean
+            isEsapApplication:
+              deprecated: true
+              description: Use apType
+              type: boolean
+            apType:
+              $ref: '#/components/schemas/ApType'
+            arrivalDate:
+              type: string
+              format: date-time
+            risks:
+              $ref: '#/components/schemas/PersonRisks'
+            createdByUserId:
+              type: string
+              format: uuid
+            schemaVersion:
+              type: string
+              format: uuid
+            outdatedSchema:
+              type: boolean
+            data:
+              $ref: '#/components/schemas/Unit'
+            document:
+              $ref: '#/components/schemas/Unit'
+            status:
+              $ref: '#/components/schemas/ApprovedPremisesApplicationStatus'
+            assessmentId:
+              type: string
+              format: uuid
+            assessmentDecision:
+              $ref: '#/components/schemas/AssessmentDecision'
+            assessmentDecisionDate:
+              type: string
+              format: date
+            submittedAt:
+              type: string
+              format: date-time
+            personStatusOnSubmission:
+              $ref: '#/components/schemas/PersonStatus'
+            apArea:
+              $ref: '#/components/schemas/ApArea'
+            cruManagementArea:
+              $ref: '#/components/schemas/Cas1CruManagementArea'
+            applicantUserDetails:
+              $ref: '#/components/schemas/Cas1ApplicationUserDetails'
+            caseManagerIsNotApplicant:
+              description: "If true, caseManagerUserDetails will provide case manager details. Otherwise, applicantUserDetails can be used for case manager details"
+              type: boolean
+            caseManagerUserDetails:
+              $ref: '#/components/schemas/Cas1ApplicationUserDetails'
+            licenceExpiryDate:
+              type: string
+              format: date
+          required:
+            - id
+            - person
+            - createdAt
+            - createdByUserId
+            - schemaVersion
+            - outdatedSchema
+            - status
+    Cas1UpdateAssessment:
+      type: object
+      properties:
+        data:
+          type: object
+          additionalProperties:
+            $ref: '#/components/schemas/Unit'
+        releaseDate:
+          type: string
+          format: date
+        accommodationRequiredFromDate:
+          type: string
+          format: date
+      required:
+        - data
+
+
+
 
 
 

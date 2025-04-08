@@ -183,7 +183,7 @@ class Cas3BedspaceSearchTest : IntegrationTestBase() {
           withDepartureDate(LocalDate.parse("2023-03-21"))
         }
 
-        val turnaround = turnaroundFactory.produceAndPersist {
+        val turnaround = cas3TurnaroundFactory.produceAndPersist {
           withBooking(booking)
           withWorkingDayCount(2)
         }
@@ -237,7 +237,7 @@ class Cas3BedspaceSearchTest : IntegrationTestBase() {
           withDepartureDate(LocalDate.parse("2023-03-21"))
         }
 
-        val turnaround = turnaroundFactory.produceAndPersist {
+        val turnaround = cas3TurnaroundFactory.produceAndPersist {
           withBooking(booking)
           withWorkingDayCount(2)
         }

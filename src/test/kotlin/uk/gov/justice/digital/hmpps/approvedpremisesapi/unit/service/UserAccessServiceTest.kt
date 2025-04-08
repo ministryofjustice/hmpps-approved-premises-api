@@ -121,86 +121,62 @@ class UserAccessServiceTest {
 
   @Test
   fun `userHasAllRegionsAccess returns false if the current request has 'X-Service-Name' header with value 'temporary-accommodation'`() {
-    currentRequestIsFor(ServiceName.temporaryAccommodation)
-
-    assertThat(userAccessService.userHasAllRegionsAccess(user)).isFalse
+    assertThat(userAccessService.userHasAllRegionsAccess(user, ServiceName.temporaryAccommodation)).isFalse
   }
 
   @Test
   fun `userHasAllRegionsAccess returns true if the current request has 'X-Service-Name' header with value 'approved-premises'`() {
-    currentRequestIsFor(ServiceName.approvedPremises)
-
-    assertThat(userAccessService.userHasAllRegionsAccess(user)).isTrue
+    assertThat(userAccessService.userHasAllRegionsAccess(user, ServiceName.approvedPremises)).isTrue
   }
 
   @Test
   fun `userHasAllRegionsAccess returns true by default`() {
-    currentRequestIsForArbitraryService()
-
-    assertThat(userAccessService.userHasAllRegionsAccess(user)).isTrue
+    assertThat(userAccessService.userHasAllRegionsAccess(user, ServiceName.cas2)).isTrue
   }
 
   @Test
   fun `currentUserHasAllRegionsAccess returns false if the current request has 'X-Service-Name' header with value 'temporary-accommodation'`() {
-    currentRequestIsFor(ServiceName.temporaryAccommodation)
-
-    assertThat(userAccessService.currentUserHasAllRegionsAccess()).isFalse
+    assertThat(userAccessService.currentUserHasAllRegionsAccess(ServiceName.temporaryAccommodation)).isFalse
   }
 
   @Test
   fun `currentUserHasAllRegionsAccess returns true if the current request has 'X-Service-Name' header with value 'approved-premises'`() {
-    currentRequestIsFor(ServiceName.approvedPremises)
-
-    assertThat(userAccessService.currentUserHasAllRegionsAccess()).isTrue
+    assertThat(userAccessService.currentUserHasAllRegionsAccess(ServiceName.approvedPremises)).isTrue
   }
 
   @Test
   fun `currentUserHasAllRegionsAccess returns true by default`() {
-    currentRequestIsForArbitraryService()
-
-    assertThat(userAccessService.currentUserHasAllRegionsAccess()).isTrue
+    assertThat(userAccessService.currentUserHasAllRegionsAccess(ServiceName.cas2)).isTrue
   }
 
   @Test
   fun `userCanAccessRegion returns false if the current user does not have all regions access and their probation region ID does not equal the specified ID`() {
-    currentRequestIsFor(ServiceName.temporaryAccommodation)
-
-    assertThat(userAccessService.userCanAccessRegion(user, UUID.randomUUID())).isFalse
+    assertThat(userAccessService.userCanAccessRegion(user, ServiceName.temporaryAccommodation, UUID.randomUUID())).isFalse
   }
 
   @Test
   fun `userCanAccessRegion returns true if the current user has all regions access`() {
-    currentRequestIsFor(ServiceName.approvedPremises)
-
-    assertThat(userAccessService.userCanAccessRegion(user, UUID.randomUUID())).isTrue
+    assertThat(userAccessService.userCanAccessRegion(user, ServiceName.approvedPremises, UUID.randomUUID())).isTrue
   }
 
   @Test
   fun `userCanAccessRegion returns true if the current user's probation region ID is equal to the specified ID`() {
-    currentRequestIsFor(ServiceName.temporaryAccommodation)
-
-    assertThat(userAccessService.userCanAccessRegion(user, probationRegionId)).isTrue
+    assertThat(userAccessService.userCanAccessRegion(user, ServiceName.temporaryAccommodation, probationRegionId)).isTrue
   }
 
   @Test
   fun `currentUserCanAccessRegion returns false if the current user does not have all regions access and their probation region ID does not equal the specified ID`() {
-    currentRequestIsFor(ServiceName.temporaryAccommodation)
-
-    assertThat(userAccessService.currentUserCanAccessRegion(UUID.randomUUID())).isFalse
+    assertThat(userAccessService.currentUserCanAccessRegion(ServiceName.temporaryAccommodation, UUID.randomUUID())).isFalse
   }
 
   @Test
   fun `currentUserCanAccessRegion returns true if the current user has all regions access`() {
-    currentRequestIsFor(ServiceName.approvedPremises)
-
-    assertThat(userAccessService.currentUserCanAccessRegion(UUID.randomUUID())).isTrue
+    assertThat(userAccessService.currentUserCanAccessRegion(ServiceName.approvedPremises, UUID.randomUUID())).isTrue
   }
 
   @Test
   fun `currentUserCanAccessRegion returns true if the current user's probation region ID is equal to the specified ID`() {
-    currentRequestIsFor(ServiceName.temporaryAccommodation)
-
-    assertThat(userAccessService.currentUserCanAccessRegion(probationRegionId)).isTrue
+    assertThat(userAccessService.currentUserCanAccessRegion(ServiceName.temporaryAccommodation, probationRegionId)).isTrue
   }
 
   @Test
@@ -1151,18 +1127,16 @@ class UserAccessServiceTest {
 
   @Test
   fun `userHasAllRegionsAccess returns true if the current request has 'X-Service-Name' header with value 'temporary-accommodation' and user role is CAS3_REPORTER`() {
-    currentRequestIsFor(ServiceName.temporaryAccommodation)
     user.addRoleForUnitTest(CAS3_REPORTER)
 
-    assertThat(userAccessService.userHasAllRegionsAccess(user)).isTrue()
+    assertThat(userAccessService.userHasAllRegionsAccess(user, ServiceName.temporaryAccommodation)).isTrue()
   }
 
   @Test
   fun `userHasAllRegionsAccess returns false if the current request has 'X-Service-Name' header with value 'temporary-accommodation' and user role is CAS3_REFERRER`() {
-    currentRequestIsFor(ServiceName.temporaryAccommodation)
     user.addRoleForUnitTest(CAS3_REFERRER)
 
-    assertThat(userAccessService.userHasAllRegionsAccess(user)).isFalse()
+    assertThat(userAccessService.userHasAllRegionsAccess(user, ServiceName.temporaryAccommodation)).isFalse()
   }
 
   @Nested

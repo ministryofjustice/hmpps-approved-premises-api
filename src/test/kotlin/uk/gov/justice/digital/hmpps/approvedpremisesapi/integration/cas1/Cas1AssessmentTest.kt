@@ -8,6 +8,7 @@ import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.EnumSource
 import org.junit.jupiter.params.provider.NullSource
 import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.data.repository.findByIdOrNull
 import org.springframework.http.HttpStatus
 import org.springframework.test.web.reactive.server.WebTestClient
 import org.springframework.test.web.reactive.server.returnResult
@@ -20,12 +21,16 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.AssessmentStat
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.AssessmentStatus.cas1Reallocated
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1AssessmentSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Problem
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.UpdateAssessment
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApprovedPremisesApplicationEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApprovedPremisesAssessmentEntityFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.CaseAccessFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.IntegrationTestBase
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAUser
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAnOffender
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.apDeliusContextAddListCaseSummaryToBulkResponse
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.apDeliusContextMockUserAccess
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.govUKBankHolidaysAPIMockSuccessfullCallWithEmptyResponse
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesAssessmentEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AssessmentDecision
@@ -37,6 +42,9 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DomainAssessm
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DomainAssessmentSummaryStatus.IN_PROGRESS
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DomainAssessmentSummaryStatus.NOT_STARTED
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserQualification
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRole
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.ApprovedPremisesApplicationStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PersonInfoResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.deliuscontext.CaseSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.prisonsapi.InmateDetail
@@ -688,6 +696,323 @@ class Cas1AssessmentTest : IntegrationTestBase() {
             sortBy = AssessmentSortField.assessmentDueAt,
             status = emptyList(),
           )
+        }
+      }
+    }
+
+    @Nested
+    inner class GetAssessment {
+
+      @Test
+      fun `Get assessment by ID without JWT returns 401`() {
+        webTestClient.get()
+          .uri("/cas1/assessments/6966902f-9b7e-4fc7-96c4-b54ec02d16c9")
+          .exchange()
+          .expectStatus()
+          .isUnauthorized
+      }
+
+      @ParameterizedTest
+      @EnumSource(value = UserRole::class)
+      fun `Get assessment by ID returns 200 with correct body for all roles`(role: UserRole) {
+        givenAUser(roles = listOf(role)) { _, jwt ->
+          givenAUser { userEntity, _ ->
+            givenAnOffender { offenderDetails, inmateDetails ->
+              val applicationSchema = approvedPremisesApplicationJsonSchemaEntityFactory.produceAndPersist {
+                withPermissiveSchema()
+              }
+
+              val assessmentSchema = approvedPremisesAssessmentJsonSchemaEntityFactory.produceAndPersist {
+                withPermissiveSchema()
+                withAddedAt(OffsetDateTime.now())
+              }
+
+              val application = approvedPremisesApplicationEntityFactory.produceAndPersist {
+                withCrn(offenderDetails.otherIds.crn)
+                withCreatedByUser(userEntity)
+                withApplicationSchema(applicationSchema)
+              }
+
+              val assessment = approvedPremisesAssessmentEntityFactory.produceAndPersist {
+                withAllocatedToUser(userEntity)
+                withApplication(application)
+                withAssessmentSchema(assessmentSchema)
+              }
+
+              assessment.schemaUpToDate = true
+
+              webTestClient.get()
+                .uri("/cas1/assessments/${assessment.id}")
+                .header("Authorization", "Bearer $jwt")
+                .exchange()
+                .expectStatus()
+                .isOk
+                .expectBody()
+                .json(
+                  objectMapper.writeValueAsString(
+                    assessmentTransformer.transformJpaToCas1Assessment(
+                      assessment,
+                      PersonInfoResult.Success.Full(offenderDetails.otherIds.crn, offenderDetails, inmateDetails),
+                    ),
+                  ),
+                )
+            }
+          }
+        }
+      }
+
+      @Test
+      fun `Get assessment by ID returns 403 when Offender is LAO and user does not have LAO qualification or pass the LAO check`() {
+        givenAUser { userEntity, jwt ->
+          givenAnOffender(
+            offenderDetailsConfigBlock = {
+              withCurrentExclusion(true)
+            },
+          ) { offenderDetails, inmateDetails ->
+
+            val applicationSchema = approvedPremisesApplicationJsonSchemaEntityFactory.produceAndPersist {
+              withPermissiveSchema()
+            }
+
+            val assessmentSchema = approvedPremisesAssessmentJsonSchemaEntityFactory.produceAndPersist {
+              withPermissiveSchema()
+              withAddedAt(OffsetDateTime.now())
+            }
+
+            val application = approvedPremisesApplicationEntityFactory.produceAndPersist {
+              withCrn(offenderDetails.otherIds.crn)
+              withCreatedByUser(userEntity)
+              withApplicationSchema(applicationSchema)
+            }
+
+            val assessment = approvedPremisesAssessmentEntityFactory.produceAndPersist {
+              withAllocatedToUser(userEntity)
+              withApplication(application)
+              withAssessmentSchema(assessmentSchema)
+            }
+
+            assessment.schemaUpToDate = true
+
+            webTestClient.get()
+              .uri("/cas1/assessments/${assessment.id}")
+              .header("Authorization", "Bearer $jwt")
+              .exchange()
+              .expectStatus()
+              .isForbidden
+          }
+        }
+      }
+
+      @Test
+      fun `Get assessment by ID returns 200 when Offender is LAO and user does not have LAO qualification but does pass the LAO check`() {
+        givenAUser { userEntity, jwt ->
+          givenAnOffender(
+            offenderDetailsConfigBlock = {
+              withCurrentExclusion(true)
+            },
+          ) { offenderDetails, inmateDetails ->
+
+            apDeliusContextMockUserAccess(
+              CaseAccessFactory()
+                .withCrn(offenderDetails.otherIds.crn)
+                .withUserExcluded(false)
+                .withUserRestricted(false)
+                .produce(),
+              userEntity.deliusUsername,
+            )
+
+            val applicationSchema = approvedPremisesApplicationJsonSchemaEntityFactory.produceAndPersist {
+              withPermissiveSchema()
+            }
+
+            val assessmentSchema = approvedPremisesAssessmentJsonSchemaEntityFactory.produceAndPersist {
+              withPermissiveSchema()
+              withAddedAt(OffsetDateTime.now())
+            }
+
+            val application = approvedPremisesApplicationEntityFactory.produceAndPersist {
+              withCrn(offenderDetails.otherIds.crn)
+              withCreatedByUser(userEntity)
+              withApplicationSchema(applicationSchema)
+            }
+
+            val assessment = approvedPremisesAssessmentEntityFactory.produceAndPersist {
+              withAllocatedToUser(userEntity)
+              withApplication(application)
+              withAssessmentSchema(assessmentSchema)
+            }
+
+            assessment.schemaUpToDate = true
+
+            webTestClient.get()
+              .uri("/cas1/assessments/${assessment.id}")
+              .header("Authorization", "Bearer $jwt")
+              .exchange()
+              .expectStatus()
+              .isOk
+              .expectBody()
+              .json(
+                objectMapper.writeValueAsString(
+                  assessmentTransformer.transformJpaToCas1Assessment(
+                    assessment,
+                    PersonInfoResult.Success.Full(offenderDetails.otherIds.crn, offenderDetails, inmateDetails),
+                  ),
+                ),
+              )
+          }
+        }
+      }
+
+      @Test
+      fun `Get assessment by ID returns 200 when Offender is LAO and user does have LAO qualification but does not pass the LAO check`() {
+        givenAUser(qualifications = listOf(UserQualification.LAO)) { userEntity, jwt ->
+          givenAnOffender(
+            offenderDetailsConfigBlock = {
+              withCurrentRestriction(true)
+            },
+          ) { offenderDetails, inmateDetails ->
+
+            val applicationSchema = approvedPremisesApplicationJsonSchemaEntityFactory.produceAndPersist {
+              withPermissiveSchema()
+            }
+
+            val assessmentSchema = approvedPremisesAssessmentJsonSchemaEntityFactory.produceAndPersist {
+              withPermissiveSchema()
+              withAddedAt(OffsetDateTime.now())
+            }
+
+            val application = approvedPremisesApplicationEntityFactory.produceAndPersist {
+              withCrn(offenderDetails.otherIds.crn)
+              withCreatedByUser(userEntity)
+              withApplicationSchema(applicationSchema)
+            }
+
+            val assessment = approvedPremisesAssessmentEntityFactory.produceAndPersist {
+              withAllocatedToUser(userEntity)
+              withApplication(application)
+              withAssessmentSchema(assessmentSchema)
+            }
+
+            assessment.schemaUpToDate = true
+
+            webTestClient.get()
+              .uri("/cas1/assessments/${assessment.id}")
+              .header("Authorization", "Bearer $jwt")
+              .exchange()
+              .expectStatus()
+              .isOk
+              .expectBody()
+              .json(
+                objectMapper.writeValueAsString(
+                  assessmentTransformer.transformJpaToCas1Assessment(
+                    assessment,
+                    PersonInfoResult.Success.Full(offenderDetails.otherIds.crn, offenderDetails, inmateDetails),
+                  ),
+                ),
+              )
+          }
+        }
+      }
+    }
+
+    @Nested
+    inner class UpdateAssessment {
+      @Test
+      fun `Update does not let withdrawn assessments be updated`() {
+        givenAUser { userEntity, jwt ->
+          givenAnOffender { offenderDetails, inmateDetails ->
+            val applicationSchema = approvedPremisesApplicationJsonSchemaEntityFactory.produceAndPersist {
+              withPermissiveSchema()
+            }
+
+            val assessmentSchema = approvedPremisesAssessmentJsonSchemaEntityFactory.produceAndPersist {
+              withPermissiveSchema()
+            }
+
+            val application = approvedPremisesApplicationEntityFactory.produceAndPersist {
+              withCrn(offenderDetails.otherIds.crn)
+              withCreatedByUser(userEntity)
+              withApplicationSchema(applicationSchema)
+              withIsWithdrawn(true)
+            }
+
+            val assessment = approvedPremisesAssessmentEntityFactory.produceAndPersist {
+              withAllocatedToUser(userEntity)
+              withApplication(application)
+              withAssessmentSchema(assessmentSchema)
+              withIsWithdrawn(true)
+            }
+
+            webTestClient.put()
+              .uri("/cas1/assessments/${assessment.id}")
+              .header("Authorization", "Bearer $jwt")
+              .bodyValue(
+                UpdateAssessment(
+                  data = mapOf("some text" to 5),
+                ),
+              )
+              .exchange()
+              .expectStatus()
+              .isBadRequest
+          }
+        }
+      }
+
+      @Test
+      fun `Update assessment with an outstanding clarification note does not change the application status`() {
+        givenAUser { userEntity, jwt ->
+          givenAnOffender { offenderDetails, _ ->
+            govUKBankHolidaysAPIMockSuccessfullCallWithEmptyResponse()
+
+            val applicationSchema = approvedPremisesApplicationJsonSchemaEntityFactory.produceAndPersist {
+              withPermissiveSchema()
+            }
+
+            val assessmentSchema = approvedPremisesAssessmentJsonSchemaEntityFactory.produceAndPersist {
+              withPermissiveSchema()
+              withAddedAt(OffsetDateTime.now())
+            }
+
+            val application = approvedPremisesApplicationEntityFactory.produceAndPersist {
+              withCrn(offenderDetails.otherIds.crn)
+              withCreatedByUser(userEntity)
+              withApplicationSchema(applicationSchema)
+              withStatus(ApprovedPremisesApplicationStatus.REQUESTED_FURTHER_INFORMATION)
+            }
+
+            val assessment = approvedPremisesAssessmentEntityFactory.produceAndPersist {
+              withAllocatedToUser(userEntity)
+              withApplication(application)
+              withAssessmentSchema(assessmentSchema)
+              withDecision(null)
+            }.apply {
+              schemaUpToDate = true
+            }
+
+            assessmentClarificationNoteEntityFactory.produceAndPersist {
+              withAssessment(assessment)
+              withResponse(null)
+              withResponseReceivedOn(null)
+              withCreatedBy(userEntity)
+            }.apply {
+              assessment.clarificationNotes = mutableListOf(this)
+            }
+
+            webTestClient.put()
+              .uri("/cas1/assessments/${assessment.id}")
+              .header("Authorization", "Bearer $jwt")
+              .bodyValue(
+                UpdateAssessment(
+                  data = mapOf("some text" to 5),
+                ),
+              )
+              .exchange()
+              .expectStatus()
+              .isOk
+
+            val persistedAssessment = approvedPremisesAssessmentRepository.findByIdOrNull(assessment.id)!!
+            assertThat((persistedAssessment.data).toString()).isEqualTo("{\"some text\":5}")
+          }
         }
       }
     }

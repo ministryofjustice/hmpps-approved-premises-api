@@ -17,7 +17,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.NonArrivalEnt
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.OfflineApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementRequestEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PremisesEntity
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TurnaroundEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas3.Cas3TurnaroundEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomDateAfter
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomDateBefore
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomDateTimeBefore
@@ -48,7 +48,7 @@ class BookingEntityFactory : Factory<BookingEntity> {
   private var createdAt: Yielded<OffsetDateTime> = { OffsetDateTime.now().minusDays(14L).randomDateTimeBefore(14) }
   private var application: Yielded<ApplicationEntity?> = { null }
   private var offlineApplication: Yielded<OfflineApplicationEntity?> = { null }
-  private var turnarounds: Yielded<MutableList<TurnaroundEntity>>? = null
+  private var turnarounds: Yielded<MutableList<Cas3TurnaroundEntity>>? = null
   private var nomsNumber: Yielded<String?> = { randomStringUpperCase(6) }
   private var placementRequest: Yielded<PlacementRequestEntity?> = { null }
   private var status: Yielded<BookingStatus?> = { null }
@@ -177,11 +177,11 @@ class BookingEntityFactory : Factory<BookingEntity> {
     this.offlineApplication = { offlineApplication }
   }
 
-  fun withYieldedTurnarounds(turnarounds: Yielded<MutableList<TurnaroundEntity>>) = apply {
+  fun withYieldedTurnarounds(turnarounds: Yielded<MutableList<Cas3TurnaroundEntity>>) = apply {
     this.turnarounds = turnarounds
   }
 
-  fun withTurnarounds(turnarounds: MutableList<TurnaroundEntity>) = apply {
+  fun withTurnarounds(turnarounds: MutableList<Cas3TurnaroundEntity>) = apply {
     this.turnarounds = { turnarounds }
   }
 
