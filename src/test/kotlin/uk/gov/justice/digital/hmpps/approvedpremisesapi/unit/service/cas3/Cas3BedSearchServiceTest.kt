@@ -12,8 +12,8 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.LocalAuthorityEn
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ProbationDeliveryUnitEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.RoomEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.TemporaryAccommodationPremisesEntityFactory
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.TurnaroundEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.UserEntityFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.cas3.Cas3TurnaroundEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas3BookingRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.OverlapBookingsSearchResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ProbationDeliveryUnitRepository
@@ -358,7 +358,7 @@ class Cas3BedSearchServiceTest {
       .withBed(expectedResultBed)
       .produce()
 
-    val expectedTurnaround = TurnaroundEntityFactory()
+    val expectedTurnaround = Cas3TurnaroundEntityFactory()
       .withBooking(expectedResultBooking)
       .withWorkingDayCount(2)
       .produce()
@@ -391,7 +391,7 @@ class Cas3BedSearchServiceTest {
       .withBed(unexpectedResultBed)
       .produce()
 
-    val unexpectedTurnaround = TurnaroundEntityFactory()
+    val unexpectedTurnaround = Cas3TurnaroundEntityFactory()
       .withBooking(unexpectedResultBooking)
       .withWorkingDayCount(2)
       .produce()

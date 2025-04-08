@@ -27,12 +27,12 @@ with bedspaces as (select
                       arrival_date,
                       departure_date,
                       (select working_day_count
-                       from turnarounds
-                       where turnarounds.id = (
+                       from cas3_turnarounds
+                       where cas3_turnarounds.id = (
                            select id
-                           from turnarounds
-                           where  turnarounds.booking_id = bookings.id
-                           order by turnarounds.created_at desc
+                           from cas3_turnarounds
+                           where  cas3_turnarounds.booking_id = bookings.id
+                           order by cas3_turnarounds.created_at desc
                            limit 1)) turnaround_days
                   from bookings
                   left join cancellations on  cancellations.booking_id = bookings.id

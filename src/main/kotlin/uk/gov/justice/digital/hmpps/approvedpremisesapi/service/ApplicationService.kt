@@ -11,7 +11,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1Applicatio
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.SortDirection
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.SubmitApprovedPremisesApplication
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.SubmitTemporaryAccommodationApplication
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.WithdrawalReason
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.ApDeliusContextApiClient
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.ClientResult
@@ -33,7 +32,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.OfflineApplic
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.OfflineApplicationRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementApplicationAutomaticEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementApplicationAutomaticRepository
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ProbationDeliveryUnitRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TemporaryAccommodationApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TemporaryAccommodationApplicationJsonSchemaEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserEntity
@@ -54,7 +52,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.validatedCasResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.InternalServerErrorProblem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.AuthorisableActionResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.CasResult
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.ValidatableActionResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1ApplicationDomainEventService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1ApplicationEmailService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1OffenderService
@@ -86,7 +83,6 @@ class ApplicationService(
   private val userService: UserService,
   private val assessmentService: AssessmentService,
   private val offlineApplicationRepository: OfflineApplicationRepository,
-  private val cas3DomainEventService: uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas3.Cas3DomainEventService,
   private val apDeliusContextApiClient: ApDeliusContextApiClient,
   private val applicationTeamCodeRepository: ApplicationTeamCodeRepository,
   private val userAccessService: UserAccessService,
@@ -99,7 +95,6 @@ class ApplicationService(
   private val applicationListener: ApplicationListener,
   private val clock: Clock,
   private val lockableApplicationRepository: LockableApplicationRepository,
-  private val probationDeliveryUnitRepository: ProbationDeliveryUnitRepository,
   private val cas1CruManagementAreaRepository: Cas1CruManagementAreaRepository,
   private val cas1OffenderService: Cas1OffenderService,
 ) {
@@ -623,32 +618,26 @@ class ApplicationService(
     submitApplication: SubmitApprovedPremisesApplication,
     user: UserEntity,
     apAreaId: UUID,
-  ): AuthorisableActionResult<ValidatableActionResult<ApplicationEntity>> {
+  ): CasResult<ApplicationEntity> {
     lockableApplicationRepository.acquirePessimisticLock(applicationId)
 
     var application = applicationRepository.findByIdOrNull(
       applicationId,
     )?.let(jsonSchemaService::checkSchemaOutdated)
-      ?: return AuthorisableActionResult.NotFound()
+      ?: return CasResult.NotFound("ApprovedPremisesApplicationEntity", applicationId.toString())
 
     val serializedTranslatedDocument = objectMapper.writeValueAsString(submitApplication.translatedDocument)
 
     if (application.createdByUser != user) {
-      return AuthorisableActionResult.Unauthorised()
+      return CasResult.Unauthorised()
     }
 
     if (application !is ApprovedPremisesApplicationEntity) {
-      return AuthorisableActionResult.Success(
-        ValidatableActionResult.GeneralValidationError("onlyCas1Supported"),
-      )
+      return CasResult.GeneralValidationError("onlyCas1Supported")
     }
 
     if (submitApplication.isUsingLegacyApTypeFields && submitApplication.isUsingNewApTypeField) {
-      return AuthorisableActionResult.Success(
-        ValidatableActionResult.GeneralValidationError(
-          "`isPipeApplication`/`isEsapApplication` should not be used in conjunction with `apType`",
-        ),
-      )
+      return CasResult.GeneralValidationError("`isPipeApplication`/`isEsapApplication` should not be used in conjunction with `apType`")
     }
 
     val apType = when {
@@ -663,21 +652,15 @@ class ApplicationService(
     }
 
     if (application.submittedAt != null) {
-      return AuthorisableActionResult.Success(
-        ValidatableActionResult.GeneralValidationError("This application has already been submitted"),
-      )
+      return CasResult.GeneralValidationError("This application has already been submitted")
     }
 
     if (submitApplication.caseManagerIsNotApplicant == true && submitApplication.caseManagerUserDetails == null) {
-      return AuthorisableActionResult.Success(
-        ValidatableActionResult.GeneralValidationError("caseManagerUserDetails must be provided if caseManagerIsNotApplicant is true"),
-      )
+      return CasResult.GeneralValidationError("caseManagerUserDetails must be provided if caseManagerIsNotApplicant is true")
     }
 
     if (!application.schemaUpToDate) {
-      return AuthorisableActionResult.Success(
-        ValidatableActionResult.GeneralValidationError("The schema version is outdated"),
-      )
+      return CasResult.GeneralValidationError("The schema version is outdated")
     }
 
     val validationErrors = ValidationErrors()
@@ -690,9 +673,7 @@ class ApplicationService(
     }
 
     if (validationErrors.any()) {
-      return AuthorisableActionResult.Success(
-        ValidatableActionResult.FieldValidationError(validationErrors),
-      )
+      return CasResult.FieldValidationError(validationErrors)
     }
 
     val inmateDetails = application.nomsNumber?.let { nomsNumber ->
@@ -757,9 +738,7 @@ class ApplicationService(
       )
     }
 
-    return AuthorisableActionResult.Success(
-      ValidatableActionResult.Success(application),
-    )
+    return CasResult.Success(application)
   }
 
   private fun getNoticeType(noticeType: Cas1ApplicationTimelinessCategory?, isEmergencyApplication: Boolean?, application: ApprovedPremisesApplicationEntity) = noticeType
@@ -776,100 +755,6 @@ class ApplicationService(
       return OffsetDateTime.of(arrivalDate, LocalTime.MIDNIGHT, ZoneOffset.UTC)
     }
     return null
-  }
-
-  @Transactional
-  fun submitTemporaryAccommodationApplication(
-    applicationId: UUID,
-    submitApplication: SubmitTemporaryAccommodationApplication,
-  ): AuthorisableActionResult<ValidatableActionResult<ApplicationEntity>> {
-    lockableApplicationRepository.acquirePessimisticLock(applicationId)
-    var application =
-      applicationRepository.findByIdOrNull(
-        applicationId,
-      )?.let(jsonSchemaService::checkSchemaOutdated)
-        ?: return AuthorisableActionResult.NotFound()
-
-    if (application.deletedAt != null) {
-      return AuthorisableActionResult.Success(
-        ValidatableActionResult.GeneralValidationError("This application has already been deleted"),
-      )
-    }
-
-    val serializedTranslatedDocument = objectMapper.writeValueAsString(submitApplication.translatedDocument)
-
-    val user = userService.getUserForRequest()
-
-    if (application.createdByUser != user) {
-      return AuthorisableActionResult.Unauthorised()
-    }
-
-    if (application !is TemporaryAccommodationApplicationEntity) {
-      return AuthorisableActionResult.Success(
-        ValidatableActionResult.GeneralValidationError("onlyCas3Supported"),
-      )
-    }
-
-    if (application.submittedAt != null) {
-      return AuthorisableActionResult.Success(
-        ValidatableActionResult.GeneralValidationError("This application has already been submitted"),
-      )
-    }
-
-    if (!application.schemaUpToDate) {
-      return AuthorisableActionResult.Success(
-        ValidatableActionResult.GeneralValidationError("The schema version is outdated"),
-      )
-    }
-
-    val validationErrors = ValidationErrors()
-    val applicationData = application.data
-
-    if (applicationData == null) {
-      validationErrors["$.data"] = "empty"
-    } else if (!jsonSchemaService.validate(application.schemaVersion, applicationData)) {
-      validationErrors["$.data"] = "invalid"
-    }
-
-    if (validationErrors.any()) {
-      return AuthorisableActionResult.Success(
-        ValidatableActionResult.FieldValidationError(validationErrors),
-      )
-    }
-
-    application.apply {
-      submittedAt = OffsetDateTime.now()
-      document = serializedTranslatedDocument
-      arrivalDate = OffsetDateTime.of(submitApplication.arrivalDate, LocalTime.MIDNIGHT, ZoneOffset.UTC)
-      isRegisteredSexOffender = submitApplication.isRegisteredSexOffender
-      isHistoryOfSexualOffence = submitApplication.isHistoryOfSexualOffence
-      isConcerningSexualBehaviour = submitApplication.isConcerningSexualBehaviour
-      needsAccessibleProperty = submitApplication.needsAccessibleProperty
-      hasHistoryOfArson = submitApplication.hasHistoryOfArson
-      isConcerningArsonBehaviour = submitApplication.isConcerningArsonBehaviour
-      isDutyToReferSubmitted = submitApplication.isDutyToReferSubmitted
-      dutyToReferSubmissionDate = submitApplication.dutyToReferSubmissionDate
-      dutyToReferOutcome = submitApplication.dutyToReferOutcome
-      isEligible = submitApplication.isApplicationEligible
-      eligibilityReason = submitApplication.eligibilityReason
-      dutyToReferLocalAuthorityAreaName = submitApplication.dutyToReferLocalAuthorityAreaName
-      personReleaseDate = submitApplication.personReleaseDate
-      pdu = submitApplication.pdu
-      prisonReleaseTypes = submitApplication.prisonReleaseTypes?.joinToString(",")
-      probationDeliveryUnit = submitApplication.probationDeliveryUnitId?.let {
-        probationDeliveryUnitRepository.findByIdOrNull(it)
-      }
-    }
-
-    assessmentService.createTemporaryAccommodationAssessment(application, submitApplication.summaryData!!)
-
-    application = applicationRepository.save(application)
-
-    cas3DomainEventService.saveReferralSubmittedEvent(application)
-
-    return AuthorisableActionResult.Success(
-      ValidatableActionResult.Success(application),
-    )
   }
 
   fun getApplicationsForCrn(crn: String, serviceName: ServiceName): List<ApplicationEntity> {

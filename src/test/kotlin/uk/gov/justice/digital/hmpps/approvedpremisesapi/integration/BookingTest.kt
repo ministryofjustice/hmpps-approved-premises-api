@@ -279,11 +279,11 @@ class BookingTest : IntegrationTestBase() {
 
     @Test
     fun `Get a booking for an Temporary Accommodation Premises returns OK with the correct body`() {
-      givenAUser(roles = listOf(UserRole.CAS3_ASSESSOR)) { _, jwt ->
+      givenAUser(roles = listOf(UserRole.CAS3_ASSESSOR)) { userEntity, jwt ->
         givenAnOffender { offenderDetails, inmateDetails ->
           val premises = temporaryAccommodationPremisesEntityFactory.produceAndPersist {
             withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
-            withYieldedProbationRegion { probationRegion }
+            withYieldedProbationRegion { userEntity.probationRegion }
           }
 
           val bed = bedEntityFactory.produceAndPersist {
@@ -629,7 +629,7 @@ class BookingTest : IntegrationTestBase() {
         val premises = temporaryAccommodationPremisesEntityFactory.produceAndPersist {
           withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
           withYieldedProbationRegion {
-            probationRegion
+            userEntity.probationRegion
           }
         }
 
@@ -716,7 +716,7 @@ class BookingTest : IntegrationTestBase() {
         val premises = temporaryAccommodationPremisesEntityFactory.produceAndPersist {
           withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
           withYieldedProbationRegion {
-            probationRegion
+            userEntity.probationRegion
           }
         }
 
@@ -790,7 +790,7 @@ class BookingTest : IntegrationTestBase() {
         val premises = temporaryAccommodationPremisesEntityFactory.produceAndPersist {
           withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
           withYieldedProbationRegion {
-            probationRegion
+            userEntity.probationRegion
           }
         }
 
@@ -864,7 +864,7 @@ class BookingTest : IntegrationTestBase() {
         val premises = temporaryAccommodationPremisesEntityFactory.produceAndPersist {
           withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
           withYieldedProbationRegion {
-            probationRegion
+            userEntity.probationRegion
           }
         }
 
@@ -938,7 +938,7 @@ class BookingTest : IntegrationTestBase() {
         val premises = temporaryAccommodationPremisesEntityFactory.produceAndPersist {
           withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
           withYieldedProbationRegion {
-            probationRegion
+            userEntity.probationRegion
           }
         }
 
@@ -1026,7 +1026,7 @@ class BookingTest : IntegrationTestBase() {
         val premises = temporaryAccommodationPremisesEntityFactory.produceAndPersist {
           withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
           withYieldedProbationRegion {
-            probationRegion
+            userEntity.probationRegion
           }
         }
 
@@ -1111,7 +1111,7 @@ class BookingTest : IntegrationTestBase() {
         val premises = temporaryAccommodationPremisesEntityFactory.produceAndPersist {
           withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
           withYieldedProbationRegion {
-            probationRegion
+            userEntity.probationRegion
           }
         }
 
@@ -1211,7 +1211,7 @@ class BookingTest : IntegrationTestBase() {
         val premises = temporaryAccommodationPremisesEntityFactory.produceAndPersist {
           withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
           withYieldedProbationRegion {
-            probationRegion
+            userEntity.probationRegion
           }
         }
 
@@ -1268,7 +1268,7 @@ class BookingTest : IntegrationTestBase() {
 
   @Test
   fun `Create Temporary Accommodation Booking returns OK with correct body when NOMS number is null`() {
-    givenAUser(roles = listOf(UserRole.CAS3_ASSESSOR)) { _, jwt ->
+    givenAUser(roles = listOf(UserRole.CAS3_ASSESSOR)) { userEntity, jwt ->
       givenAnOffender(
         offenderDetailsConfigBlock = {
           withNomsNumber(null)
@@ -1277,7 +1277,7 @@ class BookingTest : IntegrationTestBase() {
         val premises = temporaryAccommodationPremisesEntityFactory.produceAndPersist {
           withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
           withYieldedProbationRegion {
-            probationRegion
+            userEntity.probationRegion
           }
         }
 
@@ -1337,7 +1337,7 @@ class BookingTest : IntegrationTestBase() {
         val premises = temporaryAccommodationPremisesEntityFactory.produceAndPersist {
           withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
           withYieldedProbationRegion {
-            probationRegion
+            userEntity.probationRegion
           }
         }
 
@@ -1372,7 +1372,7 @@ class BookingTest : IntegrationTestBase() {
         val premises = temporaryAccommodationPremisesEntityFactory.produceAndPersist {
           withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
           withYieldedProbationRegion {
-            probationRegion
+            userEntity.probationRegion
           }
         }
 
@@ -1417,7 +1417,7 @@ class BookingTest : IntegrationTestBase() {
         val premises = temporaryAccommodationPremisesEntityFactory.produceAndPersist {
           withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
           withYieldedProbationRegion {
-            probationRegion
+            userEntity.probationRegion
           }
         }
 
@@ -1473,7 +1473,7 @@ class BookingTest : IntegrationTestBase() {
         val premises = temporaryAccommodationPremisesEntityFactory.produceAndPersist {
           withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
           withYieldedProbationRegion {
-            probationRegion
+            userEntity.probationRegion
           }
         }
 
@@ -1496,7 +1496,7 @@ class BookingTest : IntegrationTestBase() {
           withDepartureDate(LocalDate.parse("2022-08-15"))
         }
 
-        val existingTurnarounds = turnaroundFactory.produceAndPersistMultiple(1) {
+        val existingTurnarounds = cas3TurnaroundFactory.produceAndPersistMultiple(1) {
           withWorkingDayCount(5)
           withCreatedAt(existingBooking.createdAt)
           withBooking(existingBooking)
@@ -1537,7 +1537,7 @@ class BookingTest : IntegrationTestBase() {
         val premises = temporaryAccommodationPremisesEntityFactory.produceAndPersist {
           withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
           withYieldedProbationRegion {
-            probationRegion
+            userEntity.probationRegion
           }
         }
 
@@ -1612,7 +1612,7 @@ class BookingTest : IntegrationTestBase() {
         val premises = temporaryAccommodationPremisesEntityFactory.produceAndPersist {
           withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
           withYieldedProbationRegion {
-            probationRegion
+            userEntity.probationRegion
           }
         }
 
@@ -1667,7 +1667,7 @@ class BookingTest : IntegrationTestBase() {
         val premises = temporaryAccommodationPremisesEntityFactory.produceAndPersist {
           withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
           withYieldedProbationRegion {
-            probationRegion
+            userEntity.probationRegion
           }
           withTurnaroundWorkingDayCount(2)
         }
@@ -1724,7 +1724,7 @@ class BookingTest : IntegrationTestBase() {
         val premises = temporaryAccommodationPremisesEntityFactory.produceAndPersist {
           withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
           withYieldedProbationRegion {
-            probationRegion
+            userEntity.probationRegion
           }
         }
 
@@ -1798,7 +1798,7 @@ class BookingTest : IntegrationTestBase() {
       givenAnOffender { offenderDetails, inmateDetails ->
         val premises = temporaryAccommodationPremisesEntityFactory.produceAndPersist {
           withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
-          withYieldedProbationRegion { probationRegion }
+          withYieldedProbationRegion { userEntity.probationRegion }
         }
 
         val bed = bedEntityFactory.produceAndPersist {
@@ -1856,7 +1856,7 @@ class BookingTest : IntegrationTestBase() {
         val premises = temporaryAccommodationPremisesEntityFactory.produceAndPersist {
           withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
           withYieldedProbationRegion {
-            probationRegion
+            userEntity.probationRegion
           }
         }
 
@@ -1921,7 +1921,7 @@ class BookingTest : IntegrationTestBase() {
         val premises = temporaryAccommodationPremisesEntityFactory.produceAndPersist {
           withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
           withYieldedProbationRegion {
-            probationRegion
+            userEntity.probationRegion
           }
         }
 
@@ -1982,7 +1982,7 @@ class BookingTest : IntegrationTestBase() {
       givenAnOffender { offenderDetails, inmateDetails ->
         val premises = temporaryAccommodationPremisesEntityFactory.produceAndPersist {
           withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
-          withYieldedProbationRegion { probationRegion }
+          withYieldedProbationRegion { userEntity.probationRegion }
         }
 
         val bed = bedEntityFactory.produceAndPersist {
@@ -2041,7 +2041,7 @@ class BookingTest : IntegrationTestBase() {
       givenAnOffender { offenderDetails, inmateDetails ->
         val premises = temporaryAccommodationPremisesEntityFactory.produceAndPersist {
           withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
-          withYieldedProbationRegion { probationRegion }
+          withYieldedProbationRegion { userEntity.probationRegion }
         }
 
         val bed = bedEntityFactory.produceAndPersist {
@@ -2107,7 +2107,7 @@ class BookingTest : IntegrationTestBase() {
       givenAnOffender { offenderDetails, inmateDetails ->
         val premises = temporaryAccommodationPremisesEntityFactory.produceAndPersist {
           withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
-          withYieldedProbationRegion { probationRegion }
+          withYieldedProbationRegion { userEntity.probationRegion }
         }
 
         val bed = bedEntityFactory.produceAndPersist {
@@ -2175,7 +2175,7 @@ class BookingTest : IntegrationTestBase() {
       givenAnOffender { offenderDetails, inmateDetails ->
         val premises = temporaryAccommodationPremisesEntityFactory.produceAndPersist {
           withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
-          withYieldedProbationRegion { probationRegion }
+          withYieldedProbationRegion { userEntity.probationRegion }
         }
 
         val bed = bedEntityFactory.produceAndPersist {
@@ -2222,7 +2222,7 @@ class BookingTest : IntegrationTestBase() {
       givenAnOffender { offenderDetails, inmateDetails ->
         val premises = temporaryAccommodationPremisesEntityFactory.produceAndPersist {
           withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
-          withYieldedProbationRegion { probationRegion }
+          withYieldedProbationRegion { userEntity.probationRegion }
         }
 
         val bed = bedEntityFactory.produceAndPersist {
@@ -2279,7 +2279,7 @@ class BookingTest : IntegrationTestBase() {
             withYieldedPremises {
               temporaryAccommodationPremisesEntityFactory.produceAndPersist {
                 withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
-                withYieldedProbationRegion { probationRegion }
+                withYieldedProbationRegion { userEntity.probationRegion }
               }
             }
             withServiceName(ServiceName.temporaryAccommodation)
@@ -2336,7 +2336,7 @@ class BookingTest : IntegrationTestBase() {
             withYieldedPremises {
               temporaryAccommodationPremisesEntityFactory.produceAndPersist {
                 withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
-                withYieldedProbationRegion { probationRegion }
+                withYieldedProbationRegion { userEntity.probationRegion }
               }
             }
             withServiceName(ServiceName.temporaryAccommodation)
@@ -2395,7 +2395,7 @@ class BookingTest : IntegrationTestBase() {
             withYieldedPremises {
               temporaryAccommodationPremisesEntityFactory.produceAndPersist {
                 withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
-                withYieldedProbationRegion { probationRegion }
+                withYieldedProbationRegion { userEntity.probationRegion }
               }
             }
             withServiceName(ServiceName.temporaryAccommodation)
@@ -2441,7 +2441,7 @@ class BookingTest : IntegrationTestBase() {
             withYieldedPremises {
               temporaryAccommodationPremisesEntityFactory.produceAndPersist {
                 withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
-                withYieldedProbationRegion { probationRegion }
+                withYieldedProbationRegion { userEntity.probationRegion }
               }
             }
             withServiceName(ServiceName.temporaryAccommodation)
@@ -2776,7 +2776,7 @@ class BookingTest : IntegrationTestBase() {
         withYieldedPremises {
           temporaryAccommodationPremisesEntityFactory.produceAndPersist {
             withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
-            withYieldedProbationRegion { probationRegion }
+            withYieldedProbationRegion { userEntity.probationRegion }
           }
         }
       }
@@ -3081,12 +3081,12 @@ class BookingTest : IntegrationTestBase() {
 
     @Test
     fun `Create CAS3 Extension returns 409 Conflict when another booking for the same bed overlaps with the new departure date`() {
-      givenAUser(roles = listOf(UserRole.CAS3_ASSESSOR)) { _, jwt ->
+      givenAUser(roles = listOf(UserRole.CAS3_ASSESSOR)) { userEntity, jwt ->
         givenAnOffender { offenderDetails, _ ->
           val premises = temporaryAccommodationPremisesEntityFactory.produceAndPersist {
             withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
             withYieldedProbationRegion {
-              probationRegion
+              userEntity.probationRegion
             }
           }
 
@@ -3143,12 +3143,12 @@ class BookingTest : IntegrationTestBase() {
 
     @Test
     fun `Create CAS3 Extension returns 409 Conflict when another booking for the same bed overlaps with the updated booking's turnaround time`() {
-      givenAUser(roles = listOf(UserRole.CAS3_ASSESSOR)) { _, jwt ->
+      givenAUser(roles = listOf(UserRole.CAS3_ASSESSOR)) { userEntity, jwt ->
         givenAnOffender { offenderDetails, _ ->
           val premises = temporaryAccommodationPremisesEntityFactory.produceAndPersist {
             withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
             withYieldedProbationRegion {
-              probationRegion
+              userEntity.probationRegion
             }
           }
 
@@ -3180,7 +3180,7 @@ class BookingTest : IntegrationTestBase() {
             withDepartureDate(LocalDate.parse("2022-07-12"))
           }
 
-          val turnarounds = turnaroundFactory.produceAndPersistMultiple(1) {
+          val turnarounds = cas3TurnaroundFactory.produceAndPersistMultiple(1) {
             withWorkingDayCount(2)
             withCreatedAt(booking.createdAt)
             withBooking(booking)
@@ -3213,12 +3213,12 @@ class BookingTest : IntegrationTestBase() {
 
     @Test
     fun `Create CAS3 Extension returns 409 Conflict when a void bedspace for the same bed overlaps with the new departure date`() {
-      givenAUser(roles = listOf(UserRole.CAS3_ASSESSOR)) { _, jwt ->
+      givenAUser(roles = listOf(UserRole.CAS3_ASSESSOR)) { userEntity, jwt ->
         givenAnOffender { offenderDetails, _ ->
           val premises = temporaryAccommodationPremisesEntityFactory.produceAndPersist {
             withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
             withYieldedProbationRegion {
-              probationRegion
+              userEntity.probationRegion
             }
           }
 
@@ -3274,12 +3274,12 @@ class BookingTest : IntegrationTestBase() {
 
     @Test
     fun `Create CAS3 Extension returns 409 Conflict when a void bedspace for the same bed overlaps with the updated booking's turnaround time`() {
-      givenAUser(roles = listOf(UserRole.CAS3_ASSESSOR)) { _, jwt ->
+      givenAUser(roles = listOf(UserRole.CAS3_ASSESSOR)) { userEntity, jwt ->
         givenAnOffender { offenderDetails, _ ->
           val premises = temporaryAccommodationPremisesEntityFactory.produceAndPersist {
             withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
             withYieldedProbationRegion {
-              probationRegion
+              userEntity.probationRegion
             }
           }
 
@@ -3310,7 +3310,7 @@ class BookingTest : IntegrationTestBase() {
             withDepartureDate(LocalDate.parse("2022-07-12"))
           }
 
-          val turnarounds = turnaroundFactory.produceAndPersistMultiple(1) {
+          val turnarounds = cas3TurnaroundFactory.produceAndPersistMultiple(1) {
             withWorkingDayCount(2)
             withCreatedAt(booking.createdAt)
             withBooking(booking)
@@ -3343,11 +3343,11 @@ class BookingTest : IntegrationTestBase() {
 
     @Test
     fun `Create CAS3 Extension returns OK with expected body, updates departureDate on Booking entity when user has one of roles CAS3_ASSESSOR`() {
-      givenAUser(roles = listOf(UserRole.CAS3_ASSESSOR)) { _, jwt ->
+      givenAUser(roles = listOf(UserRole.CAS3_ASSESSOR)) { userEntity, jwt ->
         val premises = temporaryAccommodationPremisesEntityFactory.produceAndPersist {
           withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
           withYieldedProbationRegion {
-            probationRegion
+            userEntity.probationRegion
           }
         }
 
@@ -3607,7 +3607,7 @@ class BookingTest : IntegrationTestBase() {
           temporaryAccommodationPremisesEntityFactory.produceAndPersist {
             withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
             withYieldedProbationRegion {
-              probationRegion
+              userEntity.probationRegion
             }
           }
         }
@@ -3663,7 +3663,7 @@ class BookingTest : IntegrationTestBase() {
             temporaryAccommodationPremisesEntityFactory.produceAndPersist {
               withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
               withYieldedProbationRegion {
-                probationRegion
+                userEntity.probationRegion
               }
             }
           }

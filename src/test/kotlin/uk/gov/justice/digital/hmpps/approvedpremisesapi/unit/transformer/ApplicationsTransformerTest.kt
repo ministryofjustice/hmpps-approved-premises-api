@@ -286,6 +286,38 @@ class ApplicationsTransformerTest {
     assertThat(result.status).isEqualTo(ApplicationStatus.requestedFurtherInformation)
   }
 
+  @ParameterizedTest
+  @MethodSource("applicationStatusArgs")
+  fun `transformJpaToCas1Application transforms an Approved Premises application correctly`(args: Pair<ApiApprovedPremisesApplicationStatus, ApprovedPremisesApplicationStatus>) {
+    val (apiStatus, jpaStatus) = args
+
+    val applicantUserDetails = Cas1ApplicationUserDetailsEntityFactory().produce()
+    val caseManagerUserDetails = Cas1ApplicationUserDetailsEntityFactory().produce()
+
+    val application = approvedPremisesApplicationFactory
+      .withStatus(jpaStatus)
+      .withApArea(null)
+      .withApplicantUserDetails(applicantUserDetails)
+      .withCaseManagerIsNotApplicant(true)
+      .withCaseManagerUserDetails(caseManagerUserDetails)
+      .withLicenseExpiredDate(LocalDate.of(2026, 5, 5))
+      .produce()
+
+    every { mockCas1ApplicationUserDetailsTransformer.transformJpaToApi(applicantUserDetails) } returns Cas1ApplicationUserDetails("applicant", "", "")
+    every { mockCas1ApplicationUserDetailsTransformer.transformJpaToApi(caseManagerUserDetails) } returns Cas1ApplicationUserDetails("caseManager", "", "")
+
+    val result = applicationsTransformer.transformJpaToCas1Application(application, mockk())
+
+    assertThat(result.id).isEqualTo(application.id)
+    assertThat(result.createdByUserId).isEqualTo(user.id)
+    assertThat(result.status).isEqualTo(apiStatus)
+    assertThat(result.apArea).isNull()
+    assertThat(result.applicantUserDetails!!.name).isEqualTo("applicant")
+    assertThat(result.caseManagerIsNotApplicant).isTrue()
+    assertThat(result.caseManagerUserDetails!!.name).isEqualTo("caseManager")
+    assertThat(result.licenceExpiryDate).isEqualTo(LocalDate.of(2026, 5, 5))
+  }
+
   @Test
   fun `transformJpaToApi sets status as 'submitted' when transforming a Temporary Accommodation application with a completed clarification note`() {
     val application = submittedTemporaryAccommodationApplicationFactory
