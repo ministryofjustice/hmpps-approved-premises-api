@@ -19,7 +19,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.seed.SeedJob
 import java.util.UUID
 
 /**
- * This seed job is only used for seed test data
+ * This seed job is only used for seeding test data
  *
  * If seeding actual premises, use [Cas1SeedPremisesFromSiteSurveyXlsxJob]
  */
@@ -71,6 +71,7 @@ class Cas1SeedPremisesFromCsvJob(
     "isMHAPElliottHouse",
     "isMHAPStJosephs",
   ),
+  processRowsConcurrently = true,
 ) {
   private val log = LoggerFactory.getLogger(this::class.java)
 

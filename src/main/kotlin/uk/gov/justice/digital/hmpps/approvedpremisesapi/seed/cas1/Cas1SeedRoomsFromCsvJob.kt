@@ -15,7 +15,7 @@ import java.time.OffsetDateTime
 import java.util.UUID
 
 /**
- * This seed job is only used for seed test data
+ * This seed job is only used for seeding test data
  *
  * If seeding actual premises, use [Cas1SeedRoomsFromSiteSurveyXlsxJob]
  */
@@ -54,6 +54,7 @@ class ApprovedPremisesRoomsSeedJob(
     "isStepFreeDesignated",
     "notes",
   ),
+  processRowsConcurrently = true,
 ) {
   private val log = LoggerFactory.getLogger(this::class.java)
 
