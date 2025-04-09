@@ -17,7 +17,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.UnknownPersonS
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.CaseSummaryFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.InmateDetailFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.OffenderDetailsSummaryFactory
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ProbationOffenderDetailFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PersonInfoResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PersonSummaryInfoResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.community.OffenderDetailSummary
@@ -25,16 +24,15 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.community.Offender
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.community.OffenderLanguages
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.community.OffenderProfile
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.deliuscontext.Name
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.deliuscontext.Profile
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.prisonsapi.AssignedLivingUnit
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.prisonsapi.InmateDetail
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.prisonsapi.InmateStatus
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.probationoffendersearchapi.IDs
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas2.ProbationOffenderSearchResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.PersonTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.asOffenderDetailSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomStringMultiCaseWithNumbers
 import java.time.LocalDate
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.probationoffendersearchapi.OffenderProfile as ProbationOffenderProfile
 
 class PersonTransformerTest {
   private val personTransformer = PersonTransformer()
@@ -678,12 +676,14 @@ class PersonTransformerTest {
         .withCustodyStatus(InmateStatus.IN)
         .withAssignedLivingUnit(assignedLivingUnit = AssignedLivingUnit(agencyId = "1", locationId = 1, description = "description", agencyName = "HMPS Sheffield"))
         .produce()
-      val probationOffenderDetail = ProbationOffenderDetailFactory()
-        .withOtherIds(otherIds = IDs(nomsNumber = nomsNumber, crn = crn, pncNumber = pncNumber))
-        .withOffenderProfile(offenderProfile = ProbationOffenderProfile(nationality = "British", religion = "Atheist"))
+      val caseSummary = CaseSummaryFactory()
+        .withCrn(crn)
+        .withNomsId(nomsNumber)
+        .withPnc(pncNumber)
+        .withProfile(Profile(nationality = "British", religion = "Atheist"))
         .produce()
 
-      val probationOffenderSearchResult = ProbationOffenderSearchResult.Success.Full(nomsNumber, probationOffenderDetail, inmateDetail)
+      val probationOffenderSearchResult = ProbationOffenderSearchResult.Success.Full(nomsNumber, caseSummary, inmateDetail)
 
       val result = personTransformer.transformProbationOffenderToPersonApi(probationOffenderSearchResult, nomsNumber)
 
@@ -693,13 +693,13 @@ class PersonTransformerTest {
         FullPerson(
           type = PersonType.fullPerson,
           crn = crn,
-          name = "${probationOffenderDetail.firstName} ${probationOffenderDetail.surname}",
-          dateOfBirth = probationOffenderDetail.dateOfBirth!!,
-          sex = probationOffenderDetail.gender!!,
+          name = "${caseSummary.name.forename} ${caseSummary.name.surname}",
+          dateOfBirth = caseSummary.dateOfBirth,
+          sex = caseSummary.gender!!,
           status = PersonStatus.inCustody,
           nomsNumber = nomsNumber,
           pncNumber = pncNumber,
-          nationality = probationOffenderDetail.offenderProfile?.nationality!!,
+          nationality = caseSummary.profile?.nationality!!,
           prisonName = inmateDetail.assignedLivingUnit?.agencyName,
           isRestricted = false,
         ),
@@ -713,13 +713,15 @@ class PersonTransformerTest {
       val inmateDetail = InmateDetailFactory()
         .withCustodyStatus(InmateStatus.IN)
         .produce()
-      val probationOffenderDetail = ProbationOffenderDetailFactory()
+      val caseSummary = CaseSummaryFactory()
+        .withCrn(crn)
+        .withNomsId(nomsNumber)
+        .withPnc(null)
         .withGender(null)
-        .withOtherIds(otherIds = IDs(nomsNumber = nomsNumber, crn = crn))
-        .withOffenderProfile(offenderProfile = ProbationOffenderProfile(religion = "Atheist"))
+        .withProfile(Profile(religion = "Atheist"))
         .produce()
 
-      val probationOffenderSearchResult = ProbationOffenderSearchResult.Success.Full(nomsNumber, probationOffenderDetail, inmateDetail)
+      val probationOffenderSearchResult = ProbationOffenderSearchResult.Success.Full(nomsNumber, caseSummary, inmateDetail)
 
       val result = personTransformer.transformProbationOffenderToPersonApi(probationOffenderSearchResult, nomsNumber)
 
@@ -729,8 +731,8 @@ class PersonTransformerTest {
         FullPerson(
           type = PersonType.fullPerson,
           crn = crn,
-          name = "${probationOffenderDetail.firstName} ${probationOffenderDetail.surname}",
-          dateOfBirth = probationOffenderDetail.dateOfBirth!!,
+          name = "${caseSummary.name.forename} ${caseSummary.name.surname}",
+          dateOfBirth = caseSummary.dateOfBirth,
           sex = "Not found",
           status = PersonStatus.inCustody,
           nomsNumber = nomsNumber,

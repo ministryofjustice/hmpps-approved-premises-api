@@ -34,7 +34,7 @@ class OffenderDetailsDataSourceTest {
   fun `getOffenderDetailSummary returns response from AP Delius Context API call`(
     expectedResult: ClientResult<OffenderDetailSummary>,
   ) {
-    every { mockApDeliusContextApiClient.getSummariesForCrns(listOf("SOME-CRN")) } returns
+    every { mockApDeliusContextApiClient.getCaseSummaries(listOf("SOME-CRN")) } returns
       expectedResult.map { CaseSummaries(listOf(it.asCaseSummary())) }
 
     val result = offenderDetailsDataSource.getOffenderDetailSummary("SOME-CRN")
@@ -45,7 +45,7 @@ class OffenderDetailsDataSourceTest {
   @Test
   fun `getOffenderDetailSummary returns not found if CRN not returned in AP Delius Context API call`() {
     every {
-      mockApDeliusContextApiClient.getSummariesForCrns(listOf("SOME-CRN"))
+      mockApDeliusContextApiClient.getCaseSummaries(listOf("SOME-CRN"))
     } returns ClientResult.Success(HttpStatus.OK, CaseSummaries(cases = emptyList()), true)
 
     val result = offenderDetailsDataSource.getOffenderDetailSummary("SOME-CRN")
@@ -66,7 +66,7 @@ class OffenderDetailsDataSourceTest {
 
     val expectedResults = caseSummaries.map { it.crn to ClientResult.Success(HttpStatus.OK, it.asOffenderDetailSummary(), false) }.toMap()
 
-    every { mockApDeliusContextApiClient.getSummariesForCrns(crns) } returns ClientResult.Success(
+    every { mockApDeliusContextApiClient.getCaseSummaries(crns) } returns ClientResult.Success(
       HttpStatus.OK,
       CaseSummaries(caseSummaries),
       false,
@@ -82,7 +82,7 @@ class OffenderDetailsDataSourceTest {
     val crns = listOf("CRN-A", "CRN-B", "CRN-C")
 
     val cacheTimeoutClientResult = cacheTimeoutClientResult<CaseSummaries>()
-    every { mockApDeliusContextApiClient.getSummariesForCrns(crns) } returns cacheTimeoutClientResult
+    every { mockApDeliusContextApiClient.getCaseSummaries(crns) } returns cacheTimeoutClientResult
 
     val results = offenderDetailsDataSource.getOffenderDetailSummaries(crns)
     assertThat(results).hasSize(3)
@@ -99,7 +99,7 @@ class OffenderDetailsDataSourceTest {
 
     val caseSummaries = listOf(crnACaseSummary, crnCCaseSummary)
 
-    every { mockApDeliusContextApiClient.getSummariesForCrns(crns) } returns ClientResult.Success(
+    every { mockApDeliusContextApiClient.getCaseSummaries(crns) } returns ClientResult.Success(
       HttpStatus.OK,
       CaseSummaries(caseSummaries),
       false,
