@@ -85,6 +85,12 @@ class Cas1StartupScript(
   fun scriptDev() {
     seedLogger.info("Running Startup Script for CAS1 dev")
     seedUsers(usersToSeedDev())
+
+    createApplicationPendingSubmission(
+      deliusUserName = "AP_USER_TEST_1",
+      crn = "X320741",
+    )
+    createOfflineApplicationWithBooking(deliusUserName = "AP_USER_TEST_1", crn = "X320741")
   }
 
   private fun seedUsers(usersToSeed: List<SeedUser>) = usersToSeed.forEach { seedUser(it) }
