@@ -10,7 +10,7 @@ object Cas2ApplicationStatusSeeding {
       id = UUID.fromString("f5cd423b-08eb-4efb-96ff-5cc6bb073905"),
       name = "moreInfoRequested",
       label = "More information requested",
-      description = "The prison offender manager (POM) must provide information requested for the application to progress.",
+      description = "The referrer must provide information requested for the application to progress.",
       statusDetails = listOf(
         Cas2PersistedApplicationStatusDetail(
           id = UUID.fromString("fabbb8c0-344e-4a9d-a964-7987b22d09c6"),
