@@ -46,6 +46,9 @@ spring:
         dialect: org.hibernate.dialect.PostgreSQLDialect
         cache:
           use_second_level_cache: true
+        javax:
+          cache:
+            missing_cache_strategy: 'create'
       jakarta:
         persistence:
           query:
