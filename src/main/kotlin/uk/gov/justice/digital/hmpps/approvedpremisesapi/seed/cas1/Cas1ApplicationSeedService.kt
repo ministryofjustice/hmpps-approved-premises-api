@@ -302,8 +302,9 @@ class Cas1ApplicationSeedService(
 
   private fun getAssessmentId(application: ApprovedPremisesApplicationEntity) = assessmentRepository.findByApplicationIdAndReallocatedAtNull(applicationId = application.id)!!.id
 
+  @SuppressWarnings("MagicNumber")
   private fun createOfflineApplicationInternal(deliusUserName: String, crn: String) {
-    if (cas1ApplicationService.getOfflineApplicationsForCrn(crn).isNotEmpty()) {
+    if (cas1ApplicationService.getOfflineApplicationsForCrn(crn, limit = 1).isNotEmpty()) {
       log.info("Already have an offline CAS1 application for $crn, not seeding a new application")
       return
     }

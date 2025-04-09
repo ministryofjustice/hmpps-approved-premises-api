@@ -27,6 +27,10 @@ class Cas1PeopleController(
   private val sentryService: SentryService,
 ) : PeopleCas1Delegate {
 
+  companion object {
+    const val TIMELINE_APPLICATION_LIMIT = 50
+  }
+
   override fun getPeopleApplicationsTimeline(crn: String): ResponseEntity<Cas1PersonalTimeline> {
     val user = userService.getUserForRequest()
 
@@ -46,9 +50,9 @@ class Cas1PeopleController(
   private fun buildPersonInfoWithTimeline(personInfo: PersonInfoResult.Success.Full, crn: String): Cas1PersonalTimeline {
     val regularApplications = getRegularApplications(crn)
     val offlineApplications = getOfflineApplications(crn)
-    val combinedApplications = (regularApplications + offlineApplications).take(50)
+    val combinedApplications = (regularApplications + offlineApplications).take(TIMELINE_APPLICATION_LIMIT)
 
-    if (combinedApplications.size == 50) {
+    if (combinedApplications.size == TIMELINE_APPLICATION_LIMIT) {
       sentryService.captureErrorMessage(
         "Person Timeline results truncated to 50 applications. CRN: $crn. Regular: ${regularApplications.size}, Offline: ${offlineApplications.size}. Consider adding paging.",
       )
@@ -67,10 +71,10 @@ class Cas1PeopleController(
   }
 
   private fun getRegularApplications(crn: String) = cas1ApplicationService
-    .getApplicationsForCrn(crn)
+    .getApplicationsForCrn(crn, limit = TIMELINE_APPLICATION_LIMIT)
     .map { BoxedApplication.of(it) }
 
   private fun getOfflineApplications(crn: String) = cas1ApplicationService
-    .getOfflineApplicationsForCrn(crn)
+    .getOfflineApplicationsForCrn(crn, limit = TIMELINE_APPLICATION_LIMIT)
     .map { BoxedApplication.of(it) }
 }
