@@ -17,10 +17,11 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas2TimelineEv
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.LatestCas2StatusUpdate
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NomisUser
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Person
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.Cas2ApplicationEntityFactory
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.Cas2AssessmentEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.NomisUserEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.OffenderManagementUnitEntityFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.cas2.Cas2ApplicationEntityFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.cas2.Cas2ApplicationSummaryEntityFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.cas2.Cas2AssessmentEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas2ApplicationSummaryEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.OffenderManagementUnitRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.NomisUserService
@@ -30,6 +31,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.cas2.Applica
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.cas2.AssessmentsTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.cas2.StatusUpdateTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.cas2.TimelineEventsTransformer
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomStringUpperCase
 import java.time.LocalDate
 import java.time.OffsetDateTime
 import java.util.UUID
@@ -194,21 +196,12 @@ class ApplicationsTransformerTest {
 
     @Test
     fun `transforms an in progress CAS2 application correctly`() {
-      val application = Cas2ApplicationSummaryEntity(
-        id = UUID.fromString("2f838a8c-dffc-48a3-9536-f0e95985e809"),
-        crn = "CRNNUM",
-        nomsNumber = "NOMNUM",
-        userId = "836a9460-b177-433a-a0d9-262509092c9f",
-        userName = "first last",
-        createdAt = OffsetDateTime.parse("2023-04-19T13:25:00+01:00"),
-        submittedAt = null,
-        hdcEligibilityDate = null,
-        latestStatusUpdateLabel = null,
-        latestStatusUpdateStatusId = null,
-        prisonCode = "BRI",
-      )
+      val application = Cas2ApplicationSummaryEntityFactory.produce()
 
       every { mockStatusUpdateTransformer.transformJpaSummaryToLatestStatusUpdateApi(any()) } returns null
+
+      val prison = OffenderManagementUnitEntityFactory().produce()
+      every { offenderManagementUnitRepository.findByPrisonCode(any()) } returns prison
 
       val result = applicationsTransformer.transformJpaSummaryToSummary(
         application,
@@ -223,11 +216,14 @@ class ApplicationsTransformerTest {
       assertThat(result.nomsNumber).isEqualTo(application.nomsNumber)
       assertThat(result.hdcEligibilityDate).isNull()
       assertThat(result.latestStatusUpdate).isNull()
-      assertThat(result.createdByUserName).isEqualTo("first last")
+      assertThat(result.createdByUserName).isEqualTo(application.userName)
     }
 
     @Test
     fun `transforms a submitted CAS2 application correctly`() {
+      val prison = OffenderManagementUnitEntityFactory().produce()
+      every { offenderManagementUnitRepository.findByPrisonCode(any()) } returns prison
+
       val application = Cas2ApplicationSummaryEntity(
         id = UUID.fromString("2f838a8c-dffc-48a3-9536-f0e95985e809"),
         crn = "CRNNUM",
@@ -240,6 +236,10 @@ class ApplicationsTransformerTest {
         latestStatusUpdateStatusId = "ae544aee-7170-4794-99fb-703090cbc7db",
         latestStatusUpdateLabel = "my latest status update",
         prisonCode = "BRI",
+        allocatedPomUserId = UUID.randomUUID(),
+        allocatedPomName = "${randomStringUpperCase(8)} ${randomStringUpperCase(6)}",
+        currentPrisonCode = prison.prisonCode,
+        assignmentDate = OffsetDateTime.now(),
       )
 
       every { mockStatusUpdateTransformer.transformJpaSummaryToLatestStatusUpdateApi(any()) } returns LatestCas2StatusUpdate(
@@ -253,14 +253,22 @@ class ApplicationsTransformerTest {
       )
 
       assertThat(result.id).isEqualTo(application.id)
-      assertThat(result.status).isEqualTo(ApplicationStatus.submitted)
-      assertThat(result.hdcEligibilityDate).isEqualTo("2023-04-29")
-      assertThat(result.personName).isEqualTo("firstName surname")
+      assertThat(result.createdByUserId).isEqualTo(UUID.fromString(application.userId))
+      assertThat(result.createdByUserName).isEqualTo(application.userName)
+      assertThat(result.allocatedPomUserId).isEqualTo(application.allocatedPomUserId)
+      assertThat(result.allocatedPomName).isEqualTo(application.allocatedPomName)
+      assertThat(result.currentPrisonName).isEqualTo(prison.prisonName)
+      assertThat(result.createdAt).isEqualTo(application.createdAt.toInstant())
+      assertThat(result.submittedAt).isEqualTo(application.submittedAt!!.toInstant())
+      assertThat(result.type).isEqualTo("CAS2")
+      assertThat(result.hdcEligibilityDate).isEqualTo(application.hdcEligibilityDate)
       assertThat(result.crn).isEqualTo(application.crn)
       assertThat(result.nomsNumber).isEqualTo(application.nomsNumber)
-      assertThat(result.latestStatusUpdate?.label).isEqualTo("my latest status update")
-      assertThat(result.latestStatusUpdate?.statusId).isEqualTo(UUID.fromString("ae544aee-7170-4794-99fb-703090cbc7db"))
-      assertThat(result.createdByUserName).isEqualTo("first last")
+      assertThat(result.personName).isEqualTo("firstName surname")
+      assertThat(result.status).isEqualTo(ApplicationStatus.submitted)
+      assertThat(result.latestStatusUpdate?.label).isEqualTo(application.latestStatusUpdateLabel)
+      assertThat(result.latestStatusUpdate?.statusId).isEqualTo(UUID.fromString(application.latestStatusUpdateStatusId))
+      assertThat(result.assignmentDate).isEqualTo(application.assignmentDate!!.toLocalDate())
     }
   }
 }

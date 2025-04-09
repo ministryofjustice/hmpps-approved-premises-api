@@ -43,6 +43,31 @@ interface Cas2ApplicationRepository : JpaRepository<Cas2ApplicationEntity, UUID>
       "AND a NOT IN (SELECT application FROM Cas2AssessmentEntity)",
   )
   fun findAllSubmittedApplicationsWithoutAssessments(): Slice<Cas2ApplicationEntity>
+
+  @Query(
+    """
+        with 
+        assignments_ordered as (
+                                select aa.*,
+                                row_number() over (partition by application_id order by created_at desc) as row_number
+                                from cas_2_application_assignments aa),
+        current_prisons as (
+                                select application_id, 
+                                prison_code as code
+                                from assignments_ordered  where row_number = 1)
+                                
+        select application.id
+        from cas_2_applications application
+                 join assignments_ordered assignment on application.id = assignment.application_id
+                 join current_prisons current_prison on assignment.application_id = current_prison.application_id
+        where assignment.allocated_pom_user_id = :userId
+        --find rows where the POM has been assigned previously, but is not the current POM
+        and assignment.row_number > 1
+        --and where the new POM is NOT in the same prison
+        and current_prison.code <> :userPrisonCode;""",
+    nativeQuery = true,
+  )
+  fun findPreviouslyAssignedApplicationsInDifferentPrisonToUser(userId: UUID, userPrisonCode: String): List<UUID>
 }
 
 @Repository
@@ -105,9 +130,9 @@ data class Cas2ApplicationEntity(
 ) {
   override fun toString() = "Cas2ApplicationEntity: $id"
   val currentPrisonCode: String?
-    get() = applicationAssignments.firstOrNull()?.prisonCode
+    get() = applicationAssignments.maxByOrNull { it.createdAt }?.prisonCode
   val currentPomUserId: UUID?
-    get() = applicationAssignments.firstOrNull()?.allocatedPomUser?.id
+    get() = applicationAssignments.maxByOrNull { it.createdAt }?.allocatedPomUser?.id
   val currentAssignmentDate: LocalDate?
     get() = applicationAssignments.maxByOrNull { it.createdAt }?.createdAt?.toLocalDate()
   val mostRecentPomUserId: UUID

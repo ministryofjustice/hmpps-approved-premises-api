@@ -1,5 +1,9 @@
 components:
   schemas:
+    AssignmentType:
+      type: string
+      enum: [ ALLOCATED, CREATED, DEALLOCATED, IN_PROGRESS, PRISON, UNALLOCATED ]
+      x-enum-varnames: [ ALLOCATED, CREATED, DEALLOCATED, IN_PROGRESS, PRISON, UNALLOCATED ]
     SubmitCas2Application:
       type: object
       properties:
@@ -145,6 +149,16 @@ components:
           type: string
         nomsNumber:
           type: string
+        allocatedPomUserId:
+          type: string
+          format: uuid
+        allocatedPomName:
+          type: string
+        currentPrisonName:
+          type: string
+        assignmentDate:
+          type: string
+          format: date
       required:
         - type
         - id
@@ -154,6 +168,10 @@ components:
         - personName
         - crn
         - nomsNumber
+        - assignmentDate
+        - allocatedPomName
+        - allocatedPomUserId
+        - assignmentDate
     NewCas2ApplicationNote:
       type: object
       properties:

@@ -12,6 +12,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas2.model.Ca
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas2.model.EventType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas2.model.PersonReference
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApplicationOrigin
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.AssignmentType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.SubmitCas2Application
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.config.NotifyConfig
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApplicationSummaryRepository
@@ -53,6 +54,59 @@ class Cas2ApplicationService(
   @Value("\${url-templates.frontend.cas2.submitted-application-overview}") private val submittedApplicationUrlTemplate: String,
 ) {
 
+  fun getApplicationSummaries(
+    user: NomisUserEntity,
+    pageCriteria: PageCriteria<String>,
+    assignmentType: AssignmentType,
+    forPrison: Boolean = false,
+  ): Pair<MutableList<Cas2ApplicationSummaryEntity>, PaginationMetadata?> {
+    val response = when (assignmentType) {
+      AssignmentType.UNALLOCATED -> applicationSummaryRepository.findUnallocatedApplicationsInSamePrisonAsUser(
+        user.activeCaseloadId!!,
+        getPageableOrAllPages(pageCriteria),
+      )
+
+      // CREATED will be removed when the UI is updated.
+      AssignmentType.CREATED, AssignmentType.IN_PROGRESS -> applicationSummaryRepository.findInProgressApplications(
+        user.id.toString(),
+        getPageableOrAllPages(pageCriteria),
+      )
+
+      AssignmentType.PRISON -> {
+        applicationSummaryRepository.findAllocatedApplicationsInSamePrisonAsUser(
+          user.activeCaseloadId!!,
+          getPageableOrAllPages(pageCriteria),
+        )
+      }
+
+      // this will be removed when the UI updatss
+      AssignmentType.ALLOCATED -> if (forPrison) {
+        // applications that are submitted and assigned in the same prison as the user
+        applicationSummaryRepository.findAllocatedApplicationsInSamePrisonAsUser(
+          user.activeCaseloadId!!,
+          getPageableOrAllPages(pageCriteria),
+        )
+      } else {
+        applicationSummaryRepository.findApplicationsAssignedToUser(
+          user.id,
+          getPageableOrAllPages(pageCriteria),
+        )
+      }
+
+      AssignmentType.DEALLOCATED -> {
+        val deallocatedApplicationIds =
+          applicationRepository.findPreviouslyAssignedApplicationsInDifferentPrisonToUser(user.id, user.activeCaseloadId!!)
+        applicationSummaryRepository.findAllByIdIn(
+          deallocatedApplicationIds,
+          getPageableOrAllPages(pageCriteria),
+        )
+      }
+    }
+
+    val metadata = getMetadata(response, pageCriteria)
+    return Pair(response.content, metadata)
+  }
+
   val repositoryUserFunctionMap = mapOf(
     null to applicationSummaryRepository::findByUserId,
     true to applicationSummaryRepository::findByUserIdAndSubmittedAtIsNotNull,
@@ -65,6 +119,7 @@ class Cas2ApplicationService(
     false to applicationSummaryRepository::findByPrisonCodeAndSubmittedAtIsNull,
   )
 
+  @Deprecated(message = "This will be removed when the UI begins passing the assignmentType parameter")
   fun getApplications(
     prisonCode: String?,
     isSubmitted: Boolean?,

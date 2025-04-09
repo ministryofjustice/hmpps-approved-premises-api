@@ -105,6 +105,7 @@ class StartupScriptConfigTest {
 
     every { mockApplicationService.createCas2ApplicationSubmittedEvent(any()) } answers { }
     every { mockStatusUpdateService.createStatusUpdatedDomainEvent(any()) } answers { }
+    every { mockNomisUserEntity.activeCaseloadId } returns "ABC"
     mockkStatic(::insertHdcDates)
   }
 

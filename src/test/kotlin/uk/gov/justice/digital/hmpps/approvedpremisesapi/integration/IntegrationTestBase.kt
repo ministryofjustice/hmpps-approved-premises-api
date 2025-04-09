@@ -56,12 +56,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.Cas1OutOfService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.Cas1OutOfServiceBedReasonEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.Cas1OutOfServiceBedRevisionEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.Cas1SpaceBookingEntityFactory
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.Cas2ApplicationEntityFactory
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.Cas2ApplicationJsonSchemaEntityFactory
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.Cas2AssessmentEntityFactory
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.Cas2NoteEntityFactory
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.Cas2StatusUpdateDetailEntityFactory
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.Cas2StatusUpdateEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.CharacteristicEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.DateChangeEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.DepartureEntityFactory
@@ -100,6 +94,12 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.cas1.Cas1ChangeR
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.cas1.Cas1ChangeRequestReasonEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.cas1.Cas1ChangeRequestRejectionReasonEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.cas1.Cas1CruManagementAreaEntityFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.cas2.Cas2ApplicationEntityFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.cas2.Cas2ApplicationJsonSchemaEntityFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.cas2.Cas2AssessmentEntityFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.cas2.Cas2NoteEntityFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.cas2.Cas2StatusUpdateDetailEntityFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.cas2.Cas2StatusUpdateEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.cas3.Cas3ConfirmationEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.cas3.Cas3TurnaroundEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.cas3.Cas3VoidBedspaceCancellationEntityFactory

@@ -15,8 +15,8 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.ManagePomCasesCli
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.Manager
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.PomAllocation
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.Prison
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.Cas2ApplicationEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.NomisUserEntityFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.cas2.Cas2ApplicationEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas2ApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas2ApplicationRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.domainevent.AdditionalInformation

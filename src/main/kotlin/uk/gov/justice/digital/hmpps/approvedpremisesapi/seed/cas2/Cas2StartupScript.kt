@@ -81,12 +81,12 @@ class Cas2StartupScript(
         submittedAt = submittedAt,
         schemaVersion = jsonSchemaService.getNewestSchema(Cas2ApplicationJsonSchemaEntity::class.java),
         schemaUpToDate = true,
-        referringPrisonCode = if (submittedAt != null) "MDI" else null,
+        referringPrisonCode = if (submittedAt != null) applicant.activeCaseloadId else null,
       )
 
     // create application assignments for submitted applications
-    if (submittedAt != null) {
-      application.createApplicationAssignment(prisonCode = "MDI", allocatedPomUser = applicant)
+    if (submittedAt != null && applicant.activeCaseloadId != null) {
+      application.createApplicationAssignment(prisonCode = applicant.activeCaseloadId!!, allocatedPomUser = applicant)
     }
     applicationRepository.save(application)
 

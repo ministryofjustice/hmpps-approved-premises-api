@@ -51,6 +51,7 @@ paths:
       operationId: getCas2Applications
       parameters:
         - name: isSubmitted
+          deprecated: true
           in: query
           description: Returns submitted applications if true, un submitted applications if false, and all applications if absent
           schema:
@@ -69,7 +70,7 @@ paths:
           in: query
           description: The relationship of the application to the user - created by them, allocated to them, deallocated from them, or unallocated & in the same prison. All applications returned are submitted.
           schema:
-            enum: [ CREATED, ALLOCATED, DEALLOCATED, UNALLOCATED ]
+            $ref: 'cas2-schemas.yml#/components/schemas/AssignmentType'
       responses:
         200:
           description: successful operation

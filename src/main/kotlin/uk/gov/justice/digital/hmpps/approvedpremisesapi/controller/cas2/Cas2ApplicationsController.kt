@@ -5,6 +5,7 @@ import jakarta.transaction.Transactional
 import org.springframework.http.ResponseEntity
 import org.springframework.stereotype.Service
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.cas2.ApplicationsCas2Delegate
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.AssignmentType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas2Application
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas2ApplicationSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewApplication
@@ -35,13 +36,25 @@ class Cas2ApplicationsController(
     isSubmitted: Boolean?,
     page: Int?,
     prisonCode: String?,
-    assignmentType: String?,
+    assignmentType: AssignmentType?,
   ): ResponseEntity<List<Cas2ApplicationSummary>> {
     val user = userService.getUserForRequest()
 
-    prisonCode?.let { if (prisonCode != user.activeCaseloadId) throw ForbiddenProblem() }
+    prisonCode?.let { if (user.activeCaseloadId == null || prisonCode != user.activeCaseloadId) throw ForbiddenProblem() }
 
     val pageCriteria = PageCriteria("createdAt", SortDirection.desc, page)
+
+    if (assignmentType != null) {
+      val (results, metadata) = applicationService.getApplicationSummaries(
+        user,
+        pageCriteria,
+        assignmentType,
+        forPrison = prisonCode != null,
+      )
+      return ResponseEntity.ok().headers(
+        metadata?.toHeaders(),
+      ).body(getPersonNamesAndTransformToSummaries(results))
+    }
 
     val (applications, metadata) = applicationService.getApplications(prisonCode, isSubmitted, user, pageCriteria)
 
