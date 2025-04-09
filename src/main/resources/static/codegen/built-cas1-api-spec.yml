@@ -2366,6 +2366,66 @@ paths:
           $ref: '#/components/responses/403Response'
         500:
           $ref: '#/components/responses/500Response'
+  /assessments/{assessmentId}/acceptance:
+    post:
+      tags:
+        - Assessments
+      summary: Accepts an Assessment
+      operationId: acceptAssessment
+      parameters:
+        - in: path
+          name: assessmentId
+          required: true
+          description: Id of the assessment
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        description: Information needed to accept an assessment
+        content:
+          'application/json':
+            schema:
+              $ref: '#/components/schemas/Cas1AssessmentAcceptance'
+        required: true
+      responses:
+        200:
+          description: successfully accepted the assessment
+        401:
+          $ref: '#/components/responses/401Response'
+        403:
+          $ref: '#/components/responses/403Response'
+        500:
+          $ref: '#/components/responses/500Response'
+  /assessments/{assessmentId}/rejection:
+    post:
+      tags:
+        - Assessments
+      summary: Rejects an Assessment
+      operationId: rejectAssessment
+      parameters:
+        - in: path
+          name: assessmentId
+          required: true
+          description: Id of the assessment
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        description: Rejection info
+        content:
+          'application/json':
+            schema:
+              $ref: '#/components/schemas/Cas1AssessmentRejection'
+        required: true
+      responses:
+        200:
+          description: successfully rejected the assessment
+        401:
+          $ref: '#/components/responses/401Response'
+        403:
+          $ref: '#/components/responses/403Response'
+        500:
+          $ref: '#/components/responses/500Response'
 
 
 
@@ -8508,6 +8568,43 @@ components:
           type: string
       required:
         - query
+    Cas1AssessmentAcceptance:
+      type: object
+      properties:
+        document:
+          $ref: '#/components/schemas/Unit'
+        requirements:
+          $ref: '#/components/schemas/PlacementRequirements'
+        placementDates:
+          $ref: '#/components/schemas/PlacementDates'
+        apType:
+          $ref: '#/components/schemas/ApType'
+        notes:
+          type: string
+        agreeWithShortNoticeReason:
+          type: boolean
+        agreeWithShortNoticeReasonComments:
+          type: string
+        reasonForLateApplication:
+          type: string
+      required:
+        - document
+    Cas1AssessmentRejection:
+      type: object
+      properties:
+        document:
+          $ref: '#/components/schemas/Unit'
+        rejectionRationale:
+          type: string
+        agreeWithShortNoticeReason:
+          type: boolean
+        agreeWithShortNoticeReasonComments:
+          type: string
+        reasonForLateApplication:
+          type: string
+      required:
+        - document
+        - rejectionRationale
 
 
 

@@ -2364,6 +2364,66 @@ paths:
           $ref: '_shared.yml#/components/responses/403Response'
         500:
           $ref: '_shared.yml#/components/responses/500Response'
+  /assessments/{assessmentId}/acceptance:
+    post:
+      tags:
+        - Assessments
+      summary: Accepts an Assessment
+      operationId: acceptAssessment
+      parameters:
+        - in: path
+          name: assessmentId
+          required: true
+          description: Id of the assessment
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        description: Information needed to accept an assessment
+        content:
+          'application/json':
+            schema:
+              $ref: 'cas1-schemas.yml#/components/schemas/Cas1AssessmentAcceptance'
+        required: true
+      responses:
+        200:
+          description: successfully accepted the assessment
+        401:
+          $ref: '_shared.yml#/components/responses/401Response'
+        403:
+          $ref: '_shared.yml#/components/responses/403Response'
+        500:
+          $ref: '_shared.yml#/components/responses/500Response'
+  /assessments/{assessmentId}/rejection:
+    post:
+      tags:
+        - Assessments
+      summary: Rejects an Assessment
+      operationId: rejectAssessment
+      parameters:
+        - in: path
+          name: assessmentId
+          required: true
+          description: Id of the assessment
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        description: Rejection info
+        content:
+          'application/json':
+            schema:
+              $ref: 'cas1-schemas.yml#/components/schemas/Cas1AssessmentRejection'
+        required: true
+      responses:
+        200:
+          description: successfully rejected the assessment
+        401:
+          $ref: '_shared.yml#/components/responses/401Response'
+        403:
+          $ref: '_shared.yml#/components/responses/403Response'
+        500:
+          $ref: '_shared.yml#/components/responses/500Response'
 
 
 

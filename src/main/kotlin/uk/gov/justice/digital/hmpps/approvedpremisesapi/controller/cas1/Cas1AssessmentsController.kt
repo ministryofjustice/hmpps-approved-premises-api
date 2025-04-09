@@ -1,10 +1,14 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.controller.cas1
 
 import com.fasterxml.jackson.databind.ObjectMapper
+import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
 import org.springframework.stereotype.Service
+import org.springframework.transaction.annotation.Transactional
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.cas1.AssessmentsCas1Delegate
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1Assessment
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1AssessmentAcceptance
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1AssessmentRejection
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1AssessmentSortField
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1AssessmentStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1AssessmentSummary
@@ -81,6 +85,7 @@ class Cas1AssessmentsController(
     return ResponseEntity.ok(transformedResponse)
   }
 
+  @Transactional
   override fun updateAssessment(
     assessmentId: UUID,
     cas1UpdateAssessment: Cas1UpdateAssessment,
@@ -103,6 +108,7 @@ class Cas1AssessmentsController(
     )
   }
 
+  @Transactional
   override fun addClarificationNoteToAssessment(
     assessmentId: UUID,
     cas1NewClarificationNote: Cas1NewClarificationNote,
@@ -121,6 +127,7 @@ class Cas1AssessmentsController(
     )
   }
 
+  @Transactional
   override fun updateAssessmentClarificationNote(
     assessmentId: UUID,
     noteId: UUID,
@@ -138,6 +145,58 @@ class Cas1AssessmentsController(
     return ResponseEntity.ok(
       assessmentClarificationNoteTransformer.transformJpaToCas1ClarificationNote(extractEntityFromCasResult(clarificationNoteResult)),
     )
+  }
+
+  @Transactional
+  override fun acceptAssessment(
+    assessmentId: UUID,
+    cas1AssessmentAcceptance: Cas1AssessmentAcceptance,
+  ): ResponseEntity<Unit> {
+    val user = userService.getUserForRequest()
+
+    val serializedData = objectMapper.writeValueAsString(cas1AssessmentAcceptance.document)
+
+    val assessmentAuthResult = assessmentService.acceptCas1Assessment(
+      acceptingUser = user,
+      assessmentId = assessmentId,
+      document = serializedData,
+      placementRequirements = cas1AssessmentAcceptance.requirements,
+      placementDates = cas1AssessmentAcceptance.placementDates,
+      apType = cas1AssessmentAcceptance.apType,
+      notes = cas1AssessmentAcceptance.notes,
+      agreeWithShortNoticeReason = cas1AssessmentAcceptance.agreeWithShortNoticeReason,
+      agreeWithShortNoticeReasonComments = cas1AssessmentAcceptance.agreeWithShortNoticeReasonComments,
+      reasonForLateApplication = cas1AssessmentAcceptance.reasonForLateApplication,
+    )
+
+    extractEntityFromCasResult(assessmentAuthResult)
+
+    return ResponseEntity(HttpStatus.OK)
+  }
+
+  @Transactional
+  override fun rejectAssessment(
+    assessmentId: UUID,
+    cas1AssessmentRejection: Cas1AssessmentRejection,
+  ): ResponseEntity<Unit> {
+    val user = userService.getUserForRequest()
+
+    val serializedData = objectMapper.writeValueAsString(cas1AssessmentRejection.document)
+
+    val assessmentAuthResult =
+      assessmentService.rejectCas1Assessment(
+        user,
+        assessmentId,
+        serializedData,
+        cas1AssessmentRejection.rejectionRationale,
+        cas1AssessmentRejection.agreeWithShortNoticeReason,
+        cas1AssessmentRejection.agreeWithShortNoticeReasonComments,
+        cas1AssessmentRejection.reasonForLateApplication,
+      )
+
+    extractEntityFromCasResult(assessmentAuthResult)
+
+    return ResponseEntity(HttpStatus.OK)
   }
 
   private fun transformDomainToApi(
