@@ -20,6 +20,7 @@ import jakarta.persistence.PrimaryKeyJoinColumn
 import jakarta.persistence.Table
 import org.hibernate.annotations.Immutable
 import org.hibernate.annotations.Type
+import org.springframework.data.domain.Limit
 import org.springframework.data.domain.Page
 import org.springframework.data.domain.Pageable
 import org.springframework.data.domain.Slice
@@ -159,9 +160,6 @@ AND (
     fun getId(): String
     fun getNomsNumber(): String
   }
-
-  @Query("SELECT a FROM ApplicationEntity a WHERE TYPE(a) = :type AND a.crn = :crn")
-  fun <T : ApplicationEntity> findByCrn(crn: String, type: Class<T>): List<ApplicationEntity>
 
   @Query(
     """
@@ -304,6 +302,8 @@ interface ApprovedPremisesApplicationRepository : JpaRepository<ApprovedPremises
   fun findAllIdsByCas1OffenderEntityIsNull(): List<UUID>
 
   fun findByIdIn(applicationIds: List<UUID>): List<ApprovedPremisesApplicationEntity>
+
+  fun findByCrn(crn: String, limit: Limit): List<ApprovedPremisesApplicationEntity>
 }
 
 @Repository

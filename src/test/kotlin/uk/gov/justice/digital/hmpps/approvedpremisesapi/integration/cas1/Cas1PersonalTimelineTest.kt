@@ -3,6 +3,7 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.cas1
 import com.github.tomakehurst.wiremock.client.WireMock
 import com.github.tomakehurst.wiremock.client.WireMock.aResponse
 import com.github.tomakehurst.wiremock.client.WireMock.get
+import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApArea
@@ -23,6 +24,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.given
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserQualification
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PersonInfoResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.PersonTransformer
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.bodyAsObject
 import kotlin.collections.listOf
 
 class Cas1PersonalTimelineTest : InitialiseDatabasePerClassTestBase() {
@@ -223,6 +225,24 @@ class Cas1PersonalTimelineTest : InitialiseDatabasePerClassTestBase() {
         }
       }
     }
+  }
+
+  @Test
+  fun `Getting a personal timeline for a CRN is limited to 50 entries`() {
+    val (user, jwt) = givenAUser()
+    val (offenderDetails, inmateDetails) = givenAnOffender()
+
+    repeat(60) { givenAnApplication(user, crn = offenderDetails.otherIds.crn) }
+
+    val result = webTestClient.get()
+      .uri("/cas1/people/${offenderDetails.otherIds.crn}/timeline")
+      .header("Authorization", "Bearer $jwt")
+      .exchange()
+      .expectStatus()
+      .isOk
+      .bodyAsObject<Cas1PersonalTimeline>()
+
+    assertThat(result.applications).hasSize(50)
   }
 
   @Test

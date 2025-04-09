@@ -43,6 +43,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.EnvironmentServi
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.OffenderService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.UserService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.UserService.GetUserResponse
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1ApplicationService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1SpaceBookingService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.ensureEntityFromCasResultIsSuccess
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.extractEntityFromCasResult
@@ -61,6 +62,7 @@ class Cas1ApplicationSeedService(
   private val applicationTimelineNoteService: ApplicationTimelineNoteService,
   private val spaceBookingRepository: Cas1SpaceBookingRepository,
   private val applicationService: ApplicationService,
+  private val cas1ApplicationService: Cas1ApplicationService,
   private val userService: UserService,
   private val environmentService: EnvironmentService,
   private val assessmentService: AssessmentService,
@@ -300,8 +302,9 @@ class Cas1ApplicationSeedService(
 
   private fun getAssessmentId(application: ApprovedPremisesApplicationEntity) = assessmentRepository.findByApplicationIdAndReallocatedAtNull(applicationId = application.id)!!.id
 
+  @SuppressWarnings("MagicNumber")
   private fun createOfflineApplicationInternal(deliusUserName: String, crn: String) {
-    if (applicationService.getOfflineApplicationsForCrn(crn, ServiceName.approvedPremises).isNotEmpty()) {
+    if (cas1ApplicationService.getOfflineApplicationsForCrn(crn, limit = 1).isNotEmpty()) {
       log.info("Already have an offline CAS1 application for $crn, not seeding a new application")
       return
     }
