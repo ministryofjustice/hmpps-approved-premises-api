@@ -2,6 +2,7 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.seed
 
 import org.slf4j.LoggerFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserQualification
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRole
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.UserService
@@ -10,7 +11,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.UserService.GetU
 @SuppressWarnings("TooGenericExceptionThrown", "TooGenericExceptionCaught")
 abstract class AbstractUsersSeedJob(
   private val useRolesForServices: List<ServiceName>,
-  private val userService: UserService,
+  val userService: UserService,
 ) : SeedJob<UsersSeedCsvRow>(
   requiredHeaders = setOf(
     "delius_username",
@@ -29,6 +30,7 @@ abstract class AbstractUsersSeedJob(
       roles = parseAllRolesOrThrow(seedColumns.getCommaSeparatedValues("roles")),
       qualifications = parseAllQualificationsOrThrow(seedColumns.getCommaSeparatedValues("qualifications")),
       removeExistingRolesAndQualifications = seedColumns.getYesNoBooleanOrNull("remove_existing_roles_and_qualifications")!!,
+      cruManagementAreaOverride = seedColumns.getStringOrNull("cru_management_area_override"),
     )
   }
 
@@ -41,7 +43,8 @@ abstract class AbstractUsersSeedJob(
 
     log.info(
       "Adding/updating $username. Roles $rolesString, Qualifications $qualsString. " +
-        "Remove existing roles and qualifications? $removeExistingRolesAndQualifications",
+        "Remove existing roles and qualifications? $removeExistingRolesAndQualifications. " +
+        "CRU Management Area Override: ${row.cruManagementAreaOverride}",
     )
 
     val user = try {
@@ -64,6 +67,12 @@ abstract class AbstractUsersSeedJob(
     row.qualifications.forEach {
       userService.addQualificationToUser(user, it)
     }
+
+    processRowForCas(row, user)
+  }
+
+  open fun processRowForCas(row: UsersSeedCsvRow, user: UserEntity) {
+    // by default do nothing
   }
 
   private fun parseAllRolesOrThrow(roleNames: List<String>): List<UserRole> {
@@ -110,4 +119,5 @@ data class UsersSeedCsvRow(
   val roles: List<UserRole>,
   val qualifications: List<UserQualification>,
   val removeExistingRolesAndQualifications: Boolean,
+  val cruManagementAreaOverride: String?,
 )

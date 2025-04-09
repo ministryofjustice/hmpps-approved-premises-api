@@ -27,7 +27,8 @@ fun IntegrationTestBase.givenAUser(
   probationRegion: ProbationRegionEntity? = null,
   isActive: Boolean = true,
   mockStaffUserDetailsCall: Boolean = true,
-  cruManagementAreaEntity: Cas1CruManagementAreaEntity? = null,
+  cruManagementArea: Cas1CruManagementAreaEntity? = null,
+  cruManagementAreaOverride: Cas1CruManagementAreaEntity? = null,
 ): Pair<UserEntity, String> {
   val resolvedProbationRegion = probationRegion ?: probationRegionEntityFactory.produceAndPersist {
     withYieldedApArea { givenAnApArea() }
@@ -44,7 +45,8 @@ fun IntegrationTestBase.givenAUser(
     withIsActive(isActive)
     withYieldedProbationRegion { resolvedProbationRegion }
     withYieldedApArea { apArea }
-    withCruManagementArea(cruManagementAreaEntity ?: apArea.defaultCruManagementArea)
+    withCruManagementArea(cruManagementArea ?: apArea.defaultCruManagementArea)
+    withCruManagementAreaOverride(cruManagementAreaOverride)
   }
 
   roles.forEach { role ->
