@@ -757,18 +757,6 @@ class ApplicationService(
     return null
   }
 
-  fun getApplicationsForCrn(crn: String, serviceName: ServiceName): List<ApplicationEntity> {
-    val entityType = if (serviceName == ServiceName.approvedPremises) {
-      ApprovedPremisesApplicationEntity::class.java
-    } else {
-      TemporaryAccommodationApplicationEntity::class.java
-    }
-
-    return applicationRepository.findByCrn(crn, entityType)
-  }
-
-  fun getOfflineApplicationsForCrn(crn: String, serviceName: ServiceName) = offlineApplicationRepository.findAllByServiceAndCrn(serviceName.value, crn)
-
   private fun getPrisonName(personInfo: PersonInfoResult.Success.Full): String? {
     val prisonName = when (personInfo.inmateDetail?.custodyStatus) {
       InmateStatus.IN,

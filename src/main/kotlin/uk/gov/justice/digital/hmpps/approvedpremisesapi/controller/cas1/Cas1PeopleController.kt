@@ -4,15 +4,14 @@ import org.springframework.http.ResponseEntity
 import org.springframework.stereotype.Service
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.cas1.PeopleCas1Delegate
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1PersonalTimeline
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.OfflineApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PersonInfoResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.NotFoundProblem
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.ApplicationService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.OffenderService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.SentryService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.UserService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1ApplicationService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1LaoStrategy
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.cas1.BoxedApplication
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.cas1.Cas1ApplicationTimelineModel
@@ -22,7 +21,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.cas1.Cas1Per
 class Cas1PeopleController(
   private val userService: UserService,
   private val offenderService: OffenderService,
-  private val applicationService: ApplicationService,
+  private val cas1ApplicationService: Cas1ApplicationService,
   private val cas1PersonalTimelineTransformer: Cas1PersonalTimelineTransformer,
   private val cas1TimelineService: Cas1TimelineService,
   private val sentryService: SentryService,
@@ -67,11 +66,11 @@ class Cas1PeopleController(
     return cas1PersonalTimelineTransformer.transformApplicationTimelineModels(personInfo, applicationTimelineModels)
   }
 
-  private fun getRegularApplications(crn: String) = applicationService
-    .getApplicationsForCrn(crn, ServiceName.approvedPremises)
-    .map { BoxedApplication.of(it as ApprovedPremisesApplicationEntity) }
+  private fun getRegularApplications(crn: String) = cas1ApplicationService
+    .getApplicationsForCrn(crn)
+    .map { BoxedApplication.of(it) }
 
-  private fun getOfflineApplications(crn: String) = applicationService
-    .getOfflineApplicationsForCrn(crn, ServiceName.approvedPremises)
+  private fun getOfflineApplications(crn: String) = cas1ApplicationService
+    .getOfflineApplicationsForCrn(crn)
     .map { BoxedApplication.of(it) }
 }

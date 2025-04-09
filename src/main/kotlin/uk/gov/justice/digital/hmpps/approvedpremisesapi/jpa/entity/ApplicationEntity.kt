@@ -160,9 +160,6 @@ AND (
     fun getNomsNumber(): String
   }
 
-  @Query("SELECT a FROM ApplicationEntity a WHERE TYPE(a) = :type AND a.crn = :crn")
-  fun <T : ApplicationEntity> findByCrn(crn: String, type: Class<T>): List<ApplicationEntity>
-
   @Query(
     """
 SELECT
@@ -304,6 +301,9 @@ interface ApprovedPremisesApplicationRepository : JpaRepository<ApprovedPremises
   fun findAllIdsByCas1OffenderEntityIsNull(): List<UUID>
 
   fun findByIdIn(applicationIds: List<UUID>): List<ApprovedPremisesApplicationEntity>
+
+  @Query("SELECT a FROM ApprovedPremisesApplicationEntity a WHERE a.crn = :crn")
+  fun findByCrn(crn: String): List<ApprovedPremisesApplicationEntity>
 }
 
 @Repository

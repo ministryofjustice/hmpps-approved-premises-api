@@ -12,7 +12,7 @@ import java.util.UUID
 
 @Repository
 interface OfflineApplicationRepository : JpaRepository<OfflineApplicationEntity, UUID> {
-  fun findAllByServiceAndCrn(name: String, crn: String): List<OfflineApplicationEntity>
+  fun findAllByCrn(crn: String): List<OfflineApplicationEntity>
 
   @Query("SELECT a FROM OfflineApplicationEntity a where a.name is null")
   fun findByNameIsNull(): List<OfflineApplicationEntity>
