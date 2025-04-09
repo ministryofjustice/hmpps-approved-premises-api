@@ -21,6 +21,7 @@ import org.springframework.data.jpa.repository.Query
 import org.springframework.stereotype.Repository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.BookingStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas1.Cas1ApplicationFacade
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas3.Cas3ConfirmationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas3.Cas3TurnaroundEntity
 import java.time.Instant
 import java.time.LocalDate
@@ -300,7 +301,7 @@ data class BookingEntity(
   @OneToMany(mappedBy = "booking", fetch = FetchType.LAZY, cascade = [ CascadeType.REMOVE ])
   var cancellations: MutableList<CancellationEntity>,
   @OneToOne(mappedBy = "booking")
-  var confirmation: ConfirmationEntity?,
+  var confirmation: Cas3ConfirmationEntity?,
   @OneToOne
   @JoinColumn(name = "application_id")
   var application: ApplicationEntity?,

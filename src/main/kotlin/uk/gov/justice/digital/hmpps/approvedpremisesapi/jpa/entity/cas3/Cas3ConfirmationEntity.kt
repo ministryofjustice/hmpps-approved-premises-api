@@ -1,4 +1,4 @@
-package uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity
+package uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas3
 
 import jakarta.persistence.Entity
 import jakarta.persistence.Id
@@ -7,16 +7,17 @@ import jakarta.persistence.OneToOne
 import jakarta.persistence.Table
 import org.springframework.data.jpa.repository.JpaRepository
 import org.springframework.stereotype.Repository
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.BookingEntity
 import java.time.OffsetDateTime
 import java.util.Objects
 import java.util.UUID
 
 @Repository
-interface ConfirmationRepository : JpaRepository<ConfirmationEntity, UUID>
+interface Cas3ConfirmationRepository : JpaRepository<Cas3ConfirmationEntity, UUID>
 
 @Entity
-@Table(name = "confirmations")
-data class ConfirmationEntity(
+@Table(name = "cas3_confirmations")
+data class Cas3ConfirmationEntity(
   @Id
   val id: UUID,
   val dateTime: OffsetDateTime,
@@ -28,7 +29,7 @@ data class ConfirmationEntity(
 ) {
   override fun equals(other: Any?): Boolean {
     if (this === other) return true
-    if (other !is ConfirmationEntity) return false
+    if (other !is Cas3ConfirmationEntity) return false
 
     if (id != other.id) return false
     if (dateTime != other.dateTime) return false

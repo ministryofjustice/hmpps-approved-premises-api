@@ -52,7 +52,7 @@ interface BookingsReportRepository : JpaRepository<BookingEntity, UUID> {
     LEFT JOIN
       temporary_accommodation_applications cas3_app ON booking.application_id = cas3_app.id
     LEFT JOIN
-      confirmations confirmation ON confirmation.booking_id = booking.id
+      cas3_confirmations confirmation ON confirmation.booking_id = booking.id
     LEFT JOIN
       departures departure ON departure.booking_id = booking.id AND departure.created_at = (SELECT max(d.created_at) FROM departures d WHERE d.booking_id=booking.id)
     LEFT JOIN

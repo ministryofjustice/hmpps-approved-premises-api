@@ -20,8 +20,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.CancellationR
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.CancellationReasonRepository.Constants.CAS1_RELATED_PLACEMENT_APP_WITHDRAWN_ID
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.CancellationReasonRepository.Constants.CAS1_RELATED_PLACEMENT_REQ_WITHDRAWN_ID
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.CancellationRepository
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ConfirmationEntity
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ConfirmationRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DateChangeEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DateChangeRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementRequestRepository
@@ -31,6 +29,8 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TemporaryAcco
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserPermission
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserQualification
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas3.Cas3ConfirmationEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas3.Cas3ConfirmationRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas3.Cas3VoidBedspacesRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.serviceScopeMatches
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PersonInfoResult
@@ -62,7 +62,7 @@ class BookingService(
   private val bookingRepository: BookingRepository,
   private val arrivalRepository: ArrivalRepository,
   private val cancellationRepository: CancellationRepository,
-  private val confirmationRepository: ConfirmationRepository,
+  private val cas3ConfirmationRepository: Cas3ConfirmationRepository,
   private val dateChangeRepository: DateChangeRepository,
   private val cancellationReasonRepository: CancellationReasonRepository,
   private val bedRepository: BedRepository,
@@ -391,13 +391,13 @@ class BookingService(
     booking: BookingEntity,
     dateTime: OffsetDateTime,
     notes: String?,
-  ) = validated<ConfirmationEntity> {
+  ) = validated<Cas3ConfirmationEntity> {
     if (booking.confirmation != null) {
       return generalError("This Booking already has a Confirmation set")
     }
 
-    val confirmationEntity = confirmationRepository.save(
-      ConfirmationEntity(
+    val cas3ConfirmationEntity = cas3ConfirmationRepository.save(
+      Cas3ConfirmationEntity(
         id = UUID.randomUUID(),
         dateTime = dateTime,
         notes = notes,
@@ -407,9 +407,9 @@ class BookingService(
     )
     booking.status = BookingStatus.confirmed
     updateBooking(booking)
-    booking.confirmation = confirmationEntity
+    booking.confirmation = cas3ConfirmationEntity
 
-    return success(confirmationEntity)
+    return success(cas3ConfirmationEntity)
   }
 
   private fun shouldCreateDomainEventForBooking(booking: BookingEntity, user: UserEntity?): Boolean = booking.service == ServiceName.approvedPremises.value &&

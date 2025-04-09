@@ -11,7 +11,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.BookingEntityFac
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.CancellationEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.CancellationReasonEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.CaseSummaryFactory
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ConfirmationEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.DepartureEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.DepartureReasonEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.DestinationProviderEntityFactory
@@ -23,6 +22,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ProfileFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.TemporaryAccommodationApplicationEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.TemporaryAccommodationPremisesEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.UserEntityFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.cas3.Cas3ConfirmationEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.RiskWithStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.RoshRisks
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.generator.BookingsReportGenerator
@@ -109,7 +109,7 @@ class BookingsReportGeneratorTest {
       }
       .produce()
 
-    booking.confirmation = ConfirmationEntityFactory()
+    booking.confirmation = Cas3ConfirmationEntityFactory()
       .withBooking(booking)
       .produce()
 

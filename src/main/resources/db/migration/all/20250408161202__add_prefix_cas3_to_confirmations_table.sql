@@ -1,0 +1,1 @@
+ALTER TABLE confirmations RENAME TO cas3_confirmations;

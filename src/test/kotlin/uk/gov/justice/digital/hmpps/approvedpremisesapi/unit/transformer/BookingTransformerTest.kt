@@ -41,7 +41,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ArrivalEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.BookingEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.CancellationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.CancellationReasonEntity
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ConfirmationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DepartureEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DepartureReasonEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DestinationProviderEntity
@@ -51,6 +50,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.NonArrivalEnt
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.NonArrivalReasonEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ProbationRegionEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TemporaryAccommodationPremisesEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas3.Cas3ConfirmationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas3.Cas3TurnaroundEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PersonInfoResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.WorkingDayService
@@ -58,11 +58,11 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.ArrivalTrans
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.BedTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.BookingTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.CancellationTransformer
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.ConfirmationTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.DepartureTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.ExtensionTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.NonArrivalTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.PersonTransformer
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.cas3.Cas3ConfirmationTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.cas3.Cas3TurnaroundTransformer
 import java.time.Instant
 import java.time.LocalDate
@@ -74,7 +74,7 @@ class BookingTransformerTest {
   private val mockArrivalTransformer = mockk<ArrivalTransformer>()
   private val mockNonArrivalTransformer = mockk<NonArrivalTransformer>()
   private val mockCancellationTransformer = mockk<CancellationTransformer>()
-  private val mockConfirmationTransformer = mockk<ConfirmationTransformer>()
+  private val mockCas3ConfirmationTransformer = mockk<Cas3ConfirmationTransformer>()
   private val mockDepartureTransformer = mockk<DepartureTransformer>()
   private val mockExtensionTransformer = mockk<ExtensionTransformer>()
   private val mockBedTransformer = mockk<BedTransformer>()
@@ -88,7 +88,7 @@ class BookingTransformerTest {
     mockDepartureTransformer,
     mockNonArrivalTransformer,
     mockCancellationTransformer,
-    mockConfirmationTransformer,
+    mockCas3ConfirmationTransformer,
     mockExtensionTransformer,
     mockBedTransformer,
     mockCas3TurnaroundTransformer,
@@ -170,7 +170,7 @@ class BookingTransformerTest {
     every { mockArrivalTransformer.transformJpaToApi(null) } returns null
     every { mockNonArrivalTransformer.transformJpaToApi(null) } returns null
     every { mockCancellationTransformer.transformJpaToApi(null) } returns null
-    every { mockConfirmationTransformer.transformJpaToApi(null) } returns null
+    every { mockCas3ConfirmationTransformer.transformJpaToApi(null) } returns null
     every { mockDepartureTransformer.transformJpaToApi(null) } returns null
 
     every { mockPersonTransformer.transformModelToPersonApi(PersonInfoResult.Success.Full("crn", offenderDetails, inmateDetail)) } returns FullPerson(
@@ -1775,7 +1775,7 @@ class BookingTransformerTest {
       id = UUID.fromString("1c29a729-6059-4939-8641-1caa61a38815"),
       service = ServiceName.temporaryAccommodation.value,
     ).apply {
-      confirmation = ConfirmationEntity(
+      confirmation = Cas3ConfirmationEntity(
         id = UUID.fromString("69fc6350-b2ec-4e99-9a2f-e829e83535e8"),
         dateTime = OffsetDateTime.parse("2022-11-23T12:34:56.789Z"),
         notes = null,
@@ -1784,7 +1784,7 @@ class BookingTransformerTest {
       )
     }
 
-    every { mockConfirmationTransformer.transformJpaToApi(confirmationBooking.confirmation) } returns Confirmation(
+    every { mockCas3ConfirmationTransformer.transformJpaToApi(confirmationBooking.confirmation) } returns Confirmation(
       id = UUID.fromString("69fc6350-b2ec-4e99-9a2f-e829e83535e8"),
       bookingId = UUID.fromString("1c29a729-6059-4939-8641-1caa61a38815"),
       notes = null,

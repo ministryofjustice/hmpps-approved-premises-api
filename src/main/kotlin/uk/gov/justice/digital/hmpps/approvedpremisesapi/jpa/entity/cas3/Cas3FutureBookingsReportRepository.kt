@@ -43,7 +43,7 @@ interface Cas3FutureBookingsReportRepository : JpaRepository<BookingEntity, UUID
     LEFT JOIN temporary_accommodation_applications cas3_app ON booking.application_id = cas3_app.id
     LEFT JOIN assessments assessment ON app.id = assessment.application_id
     LEFT JOIN temporary_accommodation_assessments cas3_assessment on cas3_assessment.assessment_id = assessment.id
-    LEFT JOIN confirmations confirmation ON confirmation.booking_id = booking.id
+    LEFT JOIN cas3_confirmations confirmation ON confirmation.booking_id = booking.id
     LEFT JOIN cancellations cancellation ON cancellation.booking_id = booking.id
     LEFT JOIN arrivals arrival ON arrival.booking_id = booking.id
     INNER JOIN temporary_accommodation_premises cas3_premises ON cas3_premises.premises_id = premises.id

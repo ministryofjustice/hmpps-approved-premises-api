@@ -1,15 +1,15 @@
-package uk.gov.justice.digital.hmpps.approvedpremisesapi.factory
+package uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.cas3
 
 import io.github.bluegroundltd.kfactory.Factory
 import io.github.bluegroundltd.kfactory.Yielded
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.BookingEntity
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ConfirmationEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas3.Cas3ConfirmationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomDateTimeBefore
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomStringMultiCaseWithNumbers
 import java.time.OffsetDateTime
 import java.util.UUID
 
-class ConfirmationEntityFactory : Factory<ConfirmationEntity> {
+class Cas3ConfirmationEntityFactory : Factory<Cas3ConfirmationEntity> {
   private var id: Yielded<UUID> = { UUID.randomUUID() }
   private var dateTime: Yielded<OffsetDateTime> = { OffsetDateTime.now().randomDateTimeBefore(14) }
   private var notes: Yielded<String> = { randomStringMultiCaseWithNumbers(20) }
@@ -40,7 +40,8 @@ class ConfirmationEntityFactory : Factory<ConfirmationEntity> {
     this.createdAt = { createdAt }
   }
 
-  override fun produce(): ConfirmationEntity = ConfirmationEntity(
+  @Suppress("TooGenericExceptionThrown")
+  override fun produce(): Cas3ConfirmationEntity = Cas3ConfirmationEntity(
     id = this.id(),
     notes = this.notes(),
     dateTime = this.dateTime(),

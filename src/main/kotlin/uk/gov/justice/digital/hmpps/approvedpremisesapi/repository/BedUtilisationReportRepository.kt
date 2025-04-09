@@ -60,7 +60,7 @@ interface BedUtilisationReportRepository : JpaRepository<BedEntity, UUID> {
     INNER JOIN premises premises ON booking.premises_id = premises.id
     INNER JOIN probation_regions probation_region ON probation_region.id = premises.probation_region_id
     LEFT JOIN arrivals arrival ON booking.id = arrival.booking_id
-    LEFT JOIN confirmations confirmation ON booking.id = confirmation.booking_id
+    LEFT JOIN cas3_confirmations confirmation ON booking.id = confirmation.booking_id
     WHERE
         premises.service = 'temporary-accommodation'
       AND (CAST(:probationRegionId AS UUID) IS NULL OR premises.probation_region_id = :probationRegionId)

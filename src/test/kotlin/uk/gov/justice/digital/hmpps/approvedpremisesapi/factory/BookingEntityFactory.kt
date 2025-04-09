@@ -9,7 +9,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ArrivalEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.BedEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.BookingEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.CancellationEntity
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ConfirmationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DateChangeEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DepartureEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ExtensionEntity
@@ -17,6 +16,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.NonArrivalEnt
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.OfflineApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementRequestEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PremisesEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas3.Cas3ConfirmationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas3.Cas3TurnaroundEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomDateAfter
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomDateBefore
@@ -39,7 +39,7 @@ class BookingEntityFactory : Factory<BookingEntity> {
   private var departures: Yielded<MutableList<DepartureEntity>>? = null
   private var nonArrival: Yielded<NonArrivalEntity>? = null
   private var cancellations: Yielded<MutableList<CancellationEntity>>? = null
-  private var confirmation: Yielded<ConfirmationEntity>? = null
+  private var confirmation: Yielded<Cas3ConfirmationEntity>? = null
   private var extensions: Yielded<MutableList<ExtensionEntity>>? = null
   private var dateChanges: Yielded<MutableList<DateChangeEntity>>? = null
   private var premises: Yielded<PremisesEntity>? = null
@@ -114,11 +114,11 @@ class BookingEntityFactory : Factory<BookingEntity> {
     this.cancellations = { cancellations }
   }
 
-  fun withYieldedConfirmation(confirmation: Yielded<ConfirmationEntity>) = apply {
+  fun withYieldedConfirmation(confirmation: Yielded<Cas3ConfirmationEntity>) = apply {
     this.confirmation = confirmation
   }
 
-  fun withConfirmation(confirmation: ConfirmationEntity) = apply {
+  fun withConfirmation(confirmation: Cas3ConfirmationEntity) = apply {
     this.confirmation = { confirmation }
   }
 

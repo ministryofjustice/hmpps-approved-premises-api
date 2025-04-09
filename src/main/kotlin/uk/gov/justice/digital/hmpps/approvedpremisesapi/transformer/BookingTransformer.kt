@@ -13,6 +13,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.BookingEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PersonInfoResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.InternalServerErrorProblem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.WorkingDayService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.cas3.Cas3ConfirmationTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.cas3.Cas3TurnaroundTransformer
 import java.time.LocalDate
 
@@ -23,7 +24,7 @@ class BookingTransformer(
   private val departureTransformer: DepartureTransformer,
   private val nonArrivalTransformer: NonArrivalTransformer,
   private val cancellationTransformer: CancellationTransformer,
-  private val confirmationTransformer: ConfirmationTransformer,
+  private val cas3ConfirmationTransformer: Cas3ConfirmationTransformer,
   private val extensionTransformer: ExtensionTransformer,
   private val bedTransformer: BedTransformer,
   private val cas3TurnaroundTransformer: Cas3TurnaroundTransformer,
@@ -49,7 +50,7 @@ class BookingTransformer(
       nonArrival = nonArrivalTransformer.transformJpaToApi(jpa.nonArrival),
       cancellation = cancellationTransformer.transformJpaToApi(jpa.cancellation),
       cancellations = jpa.cancellations.map { cancellationTransformer.transformJpaToApi(it)!! },
-      confirmation = confirmationTransformer.transformJpaToApi(jpa.confirmation),
+      confirmation = cas3ConfirmationTransformer.transformJpaToApi(jpa.confirmation),
       extensions = jpa.extensions.map(extensionTransformer::transformJpaToApi),
       bed = jpa.bed?.let { bedTransformer.transformJpaToApi(it) },
       originalArrivalDate = jpa.originalArrivalDate,
