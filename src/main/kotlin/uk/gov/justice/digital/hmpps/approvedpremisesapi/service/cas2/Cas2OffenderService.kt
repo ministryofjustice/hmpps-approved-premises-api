@@ -5,10 +5,10 @@ import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.http.HttpStatus
 import org.springframework.stereotype.Service
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.ApDeliusContextApiClient
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.ApOASysContextApiClient
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.ClientResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.PrisonsApiClient
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.ProbationOffenderSearchApiClient
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.datasource.OffenderDetailsDataSource
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.NomisUserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PersonInfoResult
@@ -17,8 +17,9 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.RiskStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.RiskWithStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.RoshRisks
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.community.OffenderDetailSummary
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.deliuscontext.CaseSummaries
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.deliuscontext.CaseSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.prisonsapi.InmateDetail
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.probationoffendersearchapi.ProbationOffenderDetail
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.ForbiddenProblem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.NotFoundProblem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.AuthorisableActionResult
@@ -41,7 +42,7 @@ import java.util.stream.Collectors
 )
 class Cas2OffenderService(
   private val prisonsApiClient: PrisonsApiClient,
-  private val probationOffenderSearchApiClient: ProbationOffenderSearchApiClient,
+  private val apDeliusContextApiClient: ApDeliusContextApiClient,
   private val apOASysContextApiClient: ApOASysContextApiClient,
   private val offenderDetailsDataSource: OffenderDetailsDataSource,
   @Value("\${cas2.crn-search-limit:400}") private val numberOfCrn: Int,
@@ -53,47 +54,43 @@ class Cas2OffenderService(
     nomsNumber: String,
     activeCaseLoadId: String,
   ): ProbationOffenderSearchResult {
-    fun logFailedResponse(probationResponse: ClientResult.Failure<List<ProbationOffenderDetail>>) = log.warn("Could not get inmate details for $nomsNumber", probationResponse.toException())
+    fun logFailedResponse(caseSummaries: ClientResult.Failure<CaseSummaries>) = log.warn("Could not get inmate details for $nomsNumber", caseSummaries.toException())
 
-    val probationResponse = probationOffenderSearchApiClient.searchOffenderByNomsNumber(nomsNumber)
-
-    val probationOffenderDetailList = when (probationResponse) {
-      is ClientResult.Success -> probationResponse.body
-      is ClientResult.Failure.StatusCode -> when (probationResponse.status) {
+    val caseSummaries = apDeliusContextApiClient.getCaseSummaries(listOf(nomsNumber))
+    val caseSummaryList = when (caseSummaries) {
+      is ClientResult.Success -> caseSummaries.body.cases
+      is ClientResult.Failure.StatusCode -> when (caseSummaries.status) {
         HttpStatus.NOT_FOUND -> return ProbationOffenderSearchResult.NotFound(nomsNumber)
-        HttpStatus.FORBIDDEN -> return ProbationOffenderSearchResult.Forbidden(
-          nomsNumber,
-          probationResponse.toException(),
-        )
+        HttpStatus.FORBIDDEN -> return ProbationOffenderSearchResult.Forbidden(nomsNumber, caseSummaries.toException())
 
         else -> {
-          logFailedResponse(probationResponse)
-          return ProbationOffenderSearchResult.Unknown(nomsNumber, probationResponse.toException())
+          logFailedResponse(caseSummaries)
+          return ProbationOffenderSearchResult.Unknown(nomsNumber, caseSummaries.toException())
         }
       }
 
       is ClientResult.Failure -> {
-        logFailedResponse(probationResponse)
-        return ProbationOffenderSearchResult.Unknown(nomsNumber, probationResponse.toException())
+        logFailedResponse(caseSummaries)
+        return ProbationOffenderSearchResult.Unknown(nomsNumber, caseSummaries.toException())
       }
     }
 
-    if (probationOffenderDetailList.isEmpty()) {
+    if (caseSummaryList.isEmpty()) {
       return ProbationOffenderSearchResult.NotFound(nomsNumber)
     } else {
-      val probationOffenderDetail = probationOffenderDetailList[0]
+      val caseSummary = caseSummaryList[0]
 
       // check for restrictions or exclusions
-      if (hasRestrictionOrExclusion(probationOffenderDetail)) return ProbationOffenderSearchResult.Forbidden(nomsNumber)
+      if (hasRestrictionOrExclusion(caseSummary)) return ProbationOffenderSearchResult.Forbidden(nomsNumber)
 
       // check inmate details from Prison API
-      val inmateDetails = getInmateDetailsForProbationOffender(probationOffenderDetail)
+      val inmateDetails = getInmateDetailsForProbationOffender(caseSummary)
         ?: return ProbationOffenderSearchResult.NotFound(nomsNumber)
 
       val isOffenderSameAsUser = activeCaseLoadId == inmateDetails.assignedLivingUnit?.agencyId
       // check if same prison
       return if (isOffenderSameAsUser) {
-        ProbationOffenderSearchResult.Success.Full(nomsNumber, probationOffenderDetail, inmateDetails)
+        ProbationOffenderSearchResult.Success.Full(nomsNumber, caseSummary, inmateDetails)
       } else {
         ProbationOffenderSearchResult.Forbidden(nomsNumber)
       }
@@ -102,10 +99,10 @@ class Cas2OffenderService(
 
   fun getPersonByNomsNumber(nomsNumber: String, currentUser: NomisUserEntity) = currentUser.activeCaseloadId?.let { getPersonByNomsNumberAndActiveCaseLoadId(nomsNumber, it) }
 
-  private fun hasRestrictionOrExclusion(probationOffenderDetail: ProbationOffenderDetail): Boolean = probationOffenderDetail.currentExclusion == true || probationOffenderDetail.currentRestriction == true
+  private fun hasRestrictionOrExclusion(caseSummary: CaseSummary): Boolean = caseSummary.currentExclusion == true || caseSummary.currentRestriction == true
 
-  private fun getInmateDetailsForProbationOffender(probationOffenderDetail: ProbationOffenderDetail): InmateDetail? = probationOffenderDetail.otherIds.nomsNumber?.let { nomsNumber ->
-    when (val inmateDetailsResult = getInmateDetailByNomsNumber(probationOffenderDetail.otherIds.crn, nomsNumber)) {
+  private fun getInmateDetailsForProbationOffender(caseSummary: CaseSummary): InmateDetail? = caseSummary.nomsId?.let { nomsNumber ->
+    when (val inmateDetailsResult = getInmateDetailByNomsNumber(caseSummary.crn, nomsNumber)) {
       is AuthorisableActionResult.Success -> inmateDetailsResult.entity
       else -> null
     }
@@ -330,7 +327,7 @@ sealed interface ProbationOffenderSearchResult {
   val nomsNumber: String
 
   sealed interface Success : ProbationOffenderSearchResult {
-    data class Full(override val nomsNumber: String, val probationOffenderDetail: ProbationOffenderDetail, val inmateDetail: InmateDetail?) : Success
+    data class Full(override val nomsNumber: String, val caseSummary: CaseSummary, val inmateDetail: InmateDetail?) : Success
   }
 
   data class NotFound(override val nomsNumber: String) : ProbationOffenderSearchResult
