@@ -29,15 +29,15 @@ class Cas1PeopleController(
 
   override fun getPeopleApplicationsTimeline(crn: String): ResponseEntity<Cas1PersonalTimeline> {
     val user = userService.getUserForRequest()
-    val personInfo = offenderService.getPersonInfoResult(crn, user.cas1LaoStrategy())
-    return ResponseEntity.ok(transformPersonInfo(personInfo, crn))
-  }
 
-  private fun transformPersonInfo(personInfoResult: PersonInfoResult, crn: String): Cas1PersonalTimeline = when (personInfoResult) {
-    is PersonInfoResult.NotFound -> throw NotFoundProblem(crn, "Offender")
-    is PersonInfoResult.Unknown -> throw personInfoResult.throwable ?: RuntimeException("Could not retrieve person info for CRN: $crn")
-    is PersonInfoResult.Success.Full -> buildPersonInfoWithTimeline(personInfoResult, crn)
-    is PersonInfoResult.Success.Restricted -> buildPersonInfoWithoutTimeline(personInfoResult)
+    val timeline = when (val personInfoResult = offenderService.getPersonInfoResult(crn, user.cas1LaoStrategy())) {
+      is PersonInfoResult.NotFound -> throw NotFoundProblem(crn, "Offender")
+      is PersonInfoResult.Unknown -> throw personInfoResult.throwable ?: RuntimeException("Could not retrieve person info for CRN: $crn")
+      is PersonInfoResult.Success.Full -> buildPersonInfoWithTimeline(personInfoResult, crn)
+      is PersonInfoResult.Success.Restricted -> buildPersonInfoWithoutTimeline(personInfoResult)
+    }
+
+    return ResponseEntity.ok(timeline)
   }
 
   private fun buildPersonInfoWithoutTimeline(personInfo: PersonInfoResult.Success.Restricted): Cas1PersonalTimeline = cas1PersonalTimelineTransformer.transformApplicationTimelineModels(personInfo, emptyList())
