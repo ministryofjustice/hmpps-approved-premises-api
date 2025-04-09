@@ -339,5 +339,4 @@ scheduling:
 
 feature-flags:
   cas2-sqs-listener-enabled: false
-  cas2-application-transfers-enabled: true
 

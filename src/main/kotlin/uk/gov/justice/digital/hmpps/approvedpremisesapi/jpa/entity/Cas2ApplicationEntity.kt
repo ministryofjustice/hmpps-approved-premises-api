@@ -45,22 +45,29 @@ interface Cas2ApplicationRepository : JpaRepository<Cas2ApplicationEntity, UUID>
   fun findAllSubmittedApplicationsWithoutAssessments(): Slice<Cas2ApplicationEntity>
 
   @Query(
-    """with assignments_ordered as (select aa.*,
-                                   row_number() over (partition by application_id order by created_at desc) as rn
-                            from cas_2_application_assignments aa),
-     latest_assignments as (select application_id, prison_code as latest_prison_code
-                            from assignments_ordered
-                            where rn = 1)
-select a.id
-from cas_2_applications a
-         join assignments_ordered aa on a.id = aa.application_id
-         join latest_assignments la on aa.application_id = la.application_id
-where aa.allocated_pom_user_id = :userId
-  and aa.rn > 1 --find rows where the POM has been assigned, but not currently
-  and la.latest_prison_code <> :prisonCode --and where the new pom is not in the same prison;""",
+    """
+        with 
+        assignments_ordered as (
+                                select aa.*,
+                                row_number() over (partition by application_id order by created_at desc) as row_number
+                                from cas_2_application_assignments aa),
+        current_prisons as (
+                                select application_id, 
+                                prison_code as code
+                                from assignments_ordered  where row_number = 1)
+                                
+        select application.id
+        from cas_2_applications application
+                 join assignments_ordered assignment on application.id = assignment.application_id
+                 join current_prisons current_prison on assignment.application_id = current_prison.application_id
+        where assignment.allocated_pom_user_id = :userId
+        --find rows where the POM has been assigned previously, but is not the current POM
+        and assignment.row_number > 1
+        --and where the new POM is NOT in the same prison
+        and current_prison.code <> :userPrisonCode;""",
     nativeQuery = true,
   )
-  fun findDeallocatedApplicationIds(userId: UUID, prisonCode: String): List<UUID>
+  fun findPreviouslyAssignedApplicationsInDifferentPrisonToUser(userId: UUID, userPrisonCode: String): List<UUID>
 }
 
 @Repository

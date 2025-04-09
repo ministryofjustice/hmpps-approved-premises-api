@@ -60,37 +60,42 @@ class Cas2ApplicationService(
     assignmentType: AssignmentType,
     forPrison: Boolean = false,
   ): Pair<MutableList<Cas2ApplicationSummaryEntity>, PaginationMetadata?> {
-    // applications that are in the same prison as the user, but have not been allocated
     val response = when (assignmentType) {
-      AssignmentType.UNALLOCATED -> applicationSummaryRepository.findUnallocatedApplicationsForPrison(
+      AssignmentType.UNALLOCATED -> applicationSummaryRepository.findUnallocatedApplicationsInSamePrisonAsUser(
         user.activeCaseloadId!!,
         getPageableOrAllPages(pageCriteria),
       )
 
-      // applications that are created by the user but unsubmitted (in progress in the UI)
-      AssignmentType.CREATED -> applicationSummaryRepository.findCreatedApplications(
+      // CREATED will be removed when the UI is updated.
+      AssignmentType.CREATED, AssignmentType.IN_PROGRESS -> applicationSummaryRepository.findInProgressApplications(
         user.id.toString(),
         getPageableOrAllPages(pageCriteria),
       )
 
+      AssignmentType.PRISON -> {
+        applicationSummaryRepository.findAllocatedApplicationsInSamePrisonAsUser(
+          user.activeCaseloadId!!,
+          getPageableOrAllPages(pageCriteria),
+        )
+      }
+
+      // this will be removed when the UI updatss
       AssignmentType.ALLOCATED -> if (forPrison) {
         // applications that are submitted and assigned in the same prison as the user
-        applicationSummaryRepository.findAllocatedApplicationsForPrison(
+        applicationSummaryRepository.findAllocatedApplicationsInSamePrisonAsUser(
           user.activeCaseloadId!!,
           getPageableOrAllPages(pageCriteria),
         )
       } else {
-        // applications that are submitted and assigned to the user
-        applicationSummaryRepository.findAllocatedApplicationsForUser(
+        applicationSummaryRepository.findApplicationsAssignedToUser(
           user.id,
           getPageableOrAllPages(pageCriteria),
         )
       }
 
-      // applications that have been assigned to a user or prison at some point in time, but are not currently
       AssignmentType.DEALLOCATED -> {
         val deallocatedApplicationIds =
-          applicationRepository.findDeallocatedApplicationIds(user.id, user.activeCaseloadId!!)
+          applicationRepository.findPreviouslyAssignedApplicationsInDifferentPrisonToUser(user.id, user.activeCaseloadId!!)
         applicationSummaryRepository.findAllByIdIn(
           deallocatedApplicationIds,
           getPageableOrAllPages(pageCriteria),
@@ -114,6 +119,7 @@ class Cas2ApplicationService(
     false to applicationSummaryRepository::findByPrisonCodeAndSubmittedAtIsNull,
   )
 
+  @Deprecated(message = "This will be removed when the UI begins passing the assignmentType parameter")
   fun getApplications(
     prisonCode: String?,
     isSubmitted: Boolean?,

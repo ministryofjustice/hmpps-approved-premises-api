@@ -16,25 +16,25 @@ import java.util.UUID
 @Repository
 interface ApplicationSummaryRepository : JpaRepository<Cas2ApplicationSummaryEntity, String> {
   @Query("select ase from Cas2ApplicationSummaryEntity ase where ase.submittedAt is null and ase.userId = :userId")
-  fun findCreatedApplications(userId: String, pageable: Pageable): Page<Cas2ApplicationSummaryEntity>
+  fun findInProgressApplications(userId: String, pageable: Pageable): Page<Cas2ApplicationSummaryEntity>
 
   @Query(
     "select ase from Cas2ApplicationSummaryEntity ase where ase.submittedAt is not null " +
       "and ase.allocatedPomUserId = :userId",
   )
-  fun findAllocatedApplicationsForUser(userId: UUID, pageable: Pageable): Page<Cas2ApplicationSummaryEntity>
+  fun findApplicationsAssignedToUser(userId: UUID, pageable: Pageable): Page<Cas2ApplicationSummaryEntity>
 
   @Query(
     "select ase from Cas2ApplicationSummaryEntity ase where ase.submittedAt is not null " +
       "and ase.currentPrisonCode = :prisonCode and ase.allocatedPomUserId is not null",
   )
-  fun findAllocatedApplicationsForPrison(prisonCode: String, pageable: Pageable): Page<Cas2ApplicationSummaryEntity>
+  fun findAllocatedApplicationsInSamePrisonAsUser(prisonCode: String, pageable: Pageable): Page<Cas2ApplicationSummaryEntity>
 
   @Query(
     "select ase from Cas2ApplicationSummaryEntity ase where ase.submittedAt is not null " +
       "and ase.currentPrisonCode = :prisonCode and ase.allocatedPomUserId is null",
   )
-  fun findUnallocatedApplicationsForPrison(prisonCode: String, pageable: Pageable): Page<Cas2ApplicationSummaryEntity>
+  fun findUnallocatedApplicationsInSamePrisonAsUser(prisonCode: String, pageable: Pageable): Page<Cas2ApplicationSummaryEntity>
 
   fun findAllByIdIn(ids: List<UUID>, pageable: Pageable): Page<Cas2ApplicationSummaryEntity>
 

@@ -49,6 +49,7 @@ paths:
       summary: List summaries of all CAS2 version 2 applications authorised for the logged in user
       parameters:
         - name: isSubmitted
+          deprecated: true
           in: query
           description: Returns submitted applications if true, un submitted applications if false, and all applications if absent
           schema:

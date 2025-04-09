@@ -46,18 +46,16 @@ class Cas2ApplicationsController(
 
     val pageCriteria = PageCriteria("createdAt", SortDirection.desc, page)
 
-    if (featureFlagService.getBooleanFlag("cas2-application-transfers-enabled") && assignmentType != null) {
-      assignmentType.let {
-        val (results, metadata) = applicationService.getApplicationSummaries(
-          user,
-          pageCriteria,
-          assignmentType,
-          forPrison = prisonCode != null,
-        )
-        return ResponseEntity.ok().headers(
-          metadata?.toHeaders(),
-        ).body(getPersonNamesAndTransformToSummaries(results))
-      }
+    if (assignmentType != null) {
+      val (results, metadata) = applicationService.getApplicationSummaries(
+        user,
+        pageCriteria,
+        assignmentType,
+        forPrison = prisonCode != null,
+      )
+      return ResponseEntity.ok().headers(
+        metadata?.toHeaders(),
+      ).body(getPersonNamesAndTransformToSummaries(results))
     }
 
     val (applications, metadata) = applicationService.getApplications(prisonCode, isSubmitted, user, pageCriteria)

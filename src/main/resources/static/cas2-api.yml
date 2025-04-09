@@ -51,6 +51,7 @@ paths:
       operationId: getCas2Applications
       parameters:
         - name: isSubmitted
+          deprecated: true
           in: query
           description: Returns submitted applications if true, un submitted applications if false, and all applications if absent
           schema:

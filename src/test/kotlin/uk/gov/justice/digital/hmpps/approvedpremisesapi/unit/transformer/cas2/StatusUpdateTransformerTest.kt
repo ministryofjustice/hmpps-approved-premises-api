@@ -2,7 +2,6 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.unit.transformer.cas2
 
 import io.mockk.every
 import io.mockk.mockk
-import java.time.OffsetDateTime
 import org.assertj.core.api.Assertions
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
@@ -15,6 +14,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.cas2.Cas2StatusU
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.reference.Cas2ApplicationStatusSeeding
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.ExternalUserTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.cas2.StatusUpdateTransformer
+import java.time.OffsetDateTime
 
 class StatusUpdateTransformerTest {
   private val user = NomisUserEntityFactory().produce()
