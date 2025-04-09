@@ -16,7 +16,9 @@ import org.springframework.stereotype.Repository
 import java.util.UUID
 
 @Repository
-interface Cas1CruManagementAreaRepository : JpaRepository<Cas1CruManagementAreaEntity, UUID>
+interface Cas1CruManagementAreaRepository : JpaRepository<Cas1CruManagementAreaEntity, UUID> {
+  fun findByName(cruManagementAreaOverride: String): Cas1CruManagementAreaEntity?
+}
 
 /**
  * When an application is submitted it will be assigned to
