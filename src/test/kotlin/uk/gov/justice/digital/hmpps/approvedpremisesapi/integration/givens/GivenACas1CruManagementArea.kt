@@ -3,11 +3,14 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.IntegrationTestBase
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AutoAllocationDay
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas1CruManagementAreaEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomStringMultiCaseWithNumbers
 
 fun IntegrationTestBase.givenACas1CruManagementArea(
+  name: String = randomStringMultiCaseWithNumbers(8),
   assessmentAutoAllocationUsername: String? = null,
   assessmentAutoAllocations: MutableMap<AutoAllocationDay, String> = mutableMapOf(),
 ): Cas1CruManagementAreaEntity = cas1CruManagementAreaEntityFactory.produceAndPersist {
+  withName(name)
   if (assessmentAutoAllocations.isEmpty() && assessmentAutoAllocationUsername != null) {
     withAssessmentAutoAllocations(
       mutableMapOf(

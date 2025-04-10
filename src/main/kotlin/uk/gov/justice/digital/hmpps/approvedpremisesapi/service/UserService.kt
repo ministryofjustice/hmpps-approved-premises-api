@@ -12,6 +12,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.SortDirection
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.UserSortField
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.ApDeliusContextApiClient
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.ClientResult
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas1CruManagementAreaEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas1CruManagementAreaRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ProbationAreaProbationRegionMappingRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ProbationDeliveryUnitEntity
@@ -211,15 +212,11 @@ class UserService(
 
     user.isActive = true
 
-    if (cruManagementAreaOverrideId != null) {
-      val override = cas1CruManagementAreaRepository.findByIdOrNull(cruManagementAreaOverrideId)
+    val cruManagementAreaOverride = cruManagementAreaOverrideId?.let {
+      cas1CruManagementAreaRepository.findByIdOrNull(cruManagementAreaOverrideId)
         ?: return CasResult.NotFound(entityType = "Cas1CruManagementArea", id = cruManagementAreaOverrideId.toString())
-      user.cruManagementArea = override
-      user.cruManagementAreaOverride = override
-    } else {
-      user.cruManagementArea = user.apArea!!.defaultCruManagementArea
-      user.cruManagementAreaOverride = null
     }
+    updateCruManagementOverride(user, cruManagementAreaOverride)
 
     userRepository.save(user)
 
@@ -230,6 +227,21 @@ class UserService(
     )
 
     return CasResult.Success(user)
+  }
+
+  fun updateCruManagementOverride(
+    user: UserEntity,
+    override: Cas1CruManagementAreaEntity?,
+  ) {
+    if (override != null) {
+      user.cruManagementArea = override
+      user.cruManagementAreaOverride = override
+    } else {
+      user.cruManagementArea = user.apArea!!.defaultCruManagementArea
+      user.cruManagementAreaOverride = null
+    }
+
+    userRepository.save(user)
   }
 
   private fun updateUserRolesAndQualificationsForUser(

@@ -8,6 +8,7 @@ import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.SeedFileType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.StaffDetailFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenACas1CruManagementArea
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAProbationRegion
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAUser
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.apDeliusContextAddStaffDetailResponse
@@ -516,6 +517,67 @@ class SeedUsersTest : SeedTestBase() {
         UserRole.CAS3_ASSESSOR,
       )
     }
+
+    @Test
+    fun `CAS1 user seed leaves CRU Management Area Override if not specified`() {
+      val area1 = givenACas1CruManagementArea(name = "area1")
+
+      givenAUser(
+        staffDetail = StaffDetailFactory.staffDetail(deliusUsername = "MULTI-SERVICE-USER"),
+        roles = listOf(UserRole.CAS1_ASSESSOR, UserRole.CAS1_FUTURE_MANAGER, UserRole.CAS3_ASSESSOR),
+        cruManagementArea = area1,
+        cruManagementAreaOverride = area1,
+      )
+
+      seed(
+        SeedFileType.approvedPremisesUsers,
+        usersSeedRowToCsv(
+          listOf(
+            UserRoleAssignmentsSeedCsvRowFactory()
+              .withDeliusUsername("MULTI-SERVICE-USER")
+              .withRoles(listOf("CAS1_CRU_MEMBER"))
+              .withRemoveExistingRowsAndQualifications(true)
+              .produce(),
+          ),
+        ),
+      )
+
+      val persistedUser = userRepository.findByDeliusUsername("MULTI-SERVICE-USER")!!
+      assertThat(persistedUser.cruManagementArea).isEqualTo(area1)
+      assertThat(persistedUser.cruManagementAreaOverride).isEqualTo(area1)
+    }
+
+    @Test
+    fun `CAS1 user seed updates CRU Management Area Override if specified`() {
+      val area1 = givenACas1CruManagementArea(name = "area1")
+      val area2 = givenACas1CruManagementArea(name = "area2")
+
+      givenAUser(
+        staffDetail = StaffDetailFactory.staffDetail(deliusUsername = "MULTI-SERVICE-USER"),
+        roles = listOf(UserRole.CAS1_ASSESSOR, UserRole.CAS1_FUTURE_MANAGER, UserRole.CAS3_ASSESSOR),
+        cruManagementArea = area1,
+        cruManagementAreaOverride = area1,
+      )
+
+      seed(
+        SeedFileType.approvedPremisesUsers,
+        usersSeedRowToCsv(
+          listOf(
+            UserRoleAssignmentsSeedCsvRowFactory()
+              .withDeliusUsername("MULTI-SERVICE-USER")
+              .withRoles(listOf("CAS1_CRU_MEMBER"))
+              .withRemoveExistingRowsAndQualifications(true)
+              .withCruManagementAreaOverride("area2")
+              .produce(),
+          ),
+        ),
+      )
+
+      val persistedUser = userRepository.findByDeliusUsername("MULTI-SERVICE-USER")!!
+
+      assertThat(persistedUser.cruManagementArea).isEqualTo(area2)
+      assertThat(persistedUser.cruManagementAreaOverride).isEqualTo(area2)
+    }
   }
 
   @Nested
@@ -557,6 +619,7 @@ private class UserRoleAssignmentsSeedCsvRowFactory : Factory<UsersSeedRow> {
   private var roles: Yielded<List<String>> = { listOf(UserRole.CAS1_ASSESSOR.name) }
   private var qualifications: Yielded<List<String>> = { listOf(UserQualification.PIPE.name) }
   private var removeExistingRowsAndQualifications: Yielded<Boolean> = { false }
+  private var cruManagementAreaOverride: Yielded<String?> = { null }
 
   fun withDeliusUsername(deliusUsername: String) = apply {
     this.deliusUsername = { deliusUsername }
@@ -574,11 +637,16 @@ private class UserRoleAssignmentsSeedCsvRowFactory : Factory<UsersSeedRow> {
     this.removeExistingRowsAndQualifications = { removeExistingRolesAndQualifications }
   }
 
+  fun withCruManagementAreaOverride(cruManagementAreaOverride: String?) = apply {
+    this.cruManagementAreaOverride = { cruManagementAreaOverride }
+  }
+
   override fun produce() = UsersSeedRow(
     deliusUsername = this.deliusUsername(),
     roles = this.roles(),
     qualifications = this.qualifications(),
     removeExistingRolesAndQualifications = this.removeExistingRowsAndQualifications(),
+    cruManagementAreaOverride = this.cruManagementAreaOverride(),
   )
 }
 
@@ -587,6 +655,7 @@ private data class UsersSeedRow(
   val roles: List<String>,
   val qualifications: List<String>,
   val removeExistingRolesAndQualifications: Boolean,
+  val cruManagementAreaOverride: String?,
 )
 
 private data class SeedInfo(
@@ -608,6 +677,7 @@ private fun usersSeedRowToCsv(rows: List<UsersSeedRow>): String {
       "roles",
       "qualifications",
       "remove_existing_roles_and_qualifications",
+      "cru_management_area_override",
     )
     .newRow()
 
@@ -623,6 +693,7 @@ private fun usersSeedRowToCsv(rows: List<UsersSeedRow>): String {
           "NO"
         },
       )
+      .withQuotedField(it.cruManagementAreaOverride ?: "")
       .newRow()
   }
 
