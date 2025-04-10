@@ -5,13 +5,16 @@
 */
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.api
 
-import io.swagger.v3.oas.annotations.*
-import io.swagger.v3.oas.annotations.enums.*
-import io.swagger.v3.oas.annotations.media.*
-import io.swagger.v3.oas.annotations.responses.*
-import io.swagger.v3.oas.annotations.security.*
+import io.swagger.v3.oas.annotations.Operation
+import io.swagger.v3.oas.annotations.Parameter
+import io.swagger.v3.oas.annotations.media.Content
+import io.swagger.v3.oas.annotations.media.Schema
+import io.swagger.v3.oas.annotations.responses.ApiResponse
 import org.springframework.http.ResponseEntity
-import org.springframework.web.bind.annotation.*
+import org.springframework.web.bind.annotation.PathVariable
+import org.springframework.web.bind.annotation.RequestMapping
+import org.springframework.web.bind.annotation.RequestMethod
+import org.springframework.web.bind.annotation.RestController
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.ApplicationAssessedEnvelope
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.ApplicationExpiredEnvelope
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.ApplicationSubmittedEnvelope
@@ -20,7 +23,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.As
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.AssessmentAppealedEnvelope
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.BookingCancelledEnvelope
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.BookingChangedEnvelope
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.BookingExtendedEnvelope
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.BookingKeyWorkerAssignedEnvelope
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.BookingMadeEnvelope
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.BookingNotMadeEnvelope
@@ -34,11 +36,10 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.Pl
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.Problem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.RequestForPlacementAssessedEnvelope
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.RequestForPlacementCreatedEnvelope
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.controller.DomainEventsController
 
 @RestController
-interface EventsApi {
-
-  fun getDelegate(): EventsApiDelegate = object : EventsApiDelegate {}
+class EventsApi(val delegate: DomainEventsController) {
 
   @Operation(
     tags = ["'Apply' events"],
@@ -56,7 +57,7 @@ interface EventsApi {
     value = ["/events/application-assessed/{eventId}"],
     produces = ["application/json"],
   )
-  fun eventsApplicationAssessedEventIdGet(@Parameter(description = "UUID of the event", required = true) @PathVariable("eventId") eventId: java.util.UUID): ResponseEntity<ApplicationAssessedEnvelope> = getDelegate().eventsApplicationAssessedEventIdGet(eventId)
+  fun eventsApplicationAssessedEventIdGet(@Parameter(description = "UUID of the event", required = true) @PathVariable("eventId") eventId: java.util.UUID): ResponseEntity<ApplicationAssessedEnvelope> = delegate.eventsApplicationAssessedEventIdGet(eventId)
 
   @Operation(
     tags = ["'Manage' events"],
@@ -74,7 +75,7 @@ interface EventsApi {
     value = ["/events/application-expired/{eventId}"],
     produces = ["application/json"],
   )
-  fun eventsApplicationExpiredEventIdGet(@Parameter(description = "UUID of the event", required = true) @PathVariable("eventId") eventId: java.util.UUID): ResponseEntity<ApplicationExpiredEnvelope> = getDelegate().eventsApplicationExpiredEventIdGet(eventId)
+  fun eventsApplicationExpiredEventIdGet(@Parameter(description = "UUID of the event", required = true) @PathVariable("eventId") eventId: java.util.UUID): ResponseEntity<ApplicationExpiredEnvelope> = delegate.eventsApplicationExpiredEventIdGet(eventId)
 
   @Operation(
     tags = ["'Apply' events"],
@@ -92,7 +93,7 @@ interface EventsApi {
     value = ["/events/application-submitted/{eventId}"],
     produces = ["application/json"],
   )
-  fun eventsApplicationSubmittedEventIdGet(@Parameter(description = "UUID of the event", required = true) @PathVariable("eventId") eventId: java.util.UUID): ResponseEntity<ApplicationSubmittedEnvelope> = getDelegate().eventsApplicationSubmittedEventIdGet(eventId)
+  fun eventsApplicationSubmittedEventIdGet(@Parameter(description = "UUID of the event", required = true) @PathVariable("eventId") eventId: java.util.UUID): ResponseEntity<ApplicationSubmittedEnvelope> = delegate.eventsApplicationSubmittedEventIdGet(eventId)
 
   @Operation(
     tags = ["'Apply' events"],
@@ -110,7 +111,7 @@ interface EventsApi {
     value = ["/events/application-withdrawn/{eventId}"],
     produces = ["application/json"],
   )
-  fun eventsApplicationWithdrawnEventIdGet(@Parameter(description = "UUID of the event", required = true) @PathVariable("eventId") eventId: java.util.UUID): ResponseEntity<ApplicationWithdrawnEnvelope> = getDelegate().eventsApplicationWithdrawnEventIdGet(eventId)
+  fun eventsApplicationWithdrawnEventIdGet(@Parameter(description = "UUID of the event", required = true) @PathVariable("eventId") eventId: java.util.UUID): ResponseEntity<ApplicationWithdrawnEnvelope> = delegate.eventsApplicationWithdrawnEventIdGet(eventId)
 
   @Operation(
     tags = ["'Apply' events"],
@@ -128,7 +129,7 @@ interface EventsApi {
     value = ["/events/assessment-allocated/{eventId}"],
     produces = ["application/json"],
   )
-  fun eventsAssessmentAllocatedEventIdGet(@Parameter(description = "UUID of the event", required = true) @PathVariable("eventId") eventId: java.util.UUID): ResponseEntity<AssessmentAllocatedEnvelope> = getDelegate().eventsAssessmentAllocatedEventIdGet(eventId)
+  fun eventsAssessmentAllocatedEventIdGet(@Parameter(description = "UUID of the event", required = true) @PathVariable("eventId") eventId: java.util.UUID): ResponseEntity<AssessmentAllocatedEnvelope> = delegate.eventsAssessmentAllocatedEventIdGet(eventId)
 
   @Operation(
     tags = ["'Apply' events"],
@@ -146,7 +147,7 @@ interface EventsApi {
     value = ["/events/assessment-appealed/{eventId}"],
     produces = ["application/json"],
   )
-  fun eventsAssessmentAppealedEventIdGet(@Parameter(description = "UUID of the event", required = true) @PathVariable("eventId") eventId: java.util.UUID): ResponseEntity<AssessmentAppealedEnvelope> = getDelegate().eventsAssessmentAppealedEventIdGet(eventId)
+  fun eventsAssessmentAppealedEventIdGet(@Parameter(description = "UUID of the event", required = true) @PathVariable("eventId") eventId: java.util.UUID): ResponseEntity<AssessmentAppealedEnvelope> = delegate.eventsAssessmentAppealedEventIdGet(eventId)
 
   @Operation(
     tags = ["'Manage' events"],
@@ -164,7 +165,7 @@ interface EventsApi {
     value = ["/events/booking-cancelled/{eventId}"],
     produces = ["application/json"],
   )
-  fun eventsBookingCancelledEventIdGet(@Parameter(description = "UUID of the event", required = true) @PathVariable("eventId") eventId: java.util.UUID): ResponseEntity<BookingCancelledEnvelope> = getDelegate().eventsBookingCancelledEventIdGet(eventId)
+  fun eventsBookingCancelledEventIdGet(@Parameter(description = "UUID of the event", required = true) @PathVariable("eventId") eventId: java.util.UUID): ResponseEntity<BookingCancelledEnvelope> = delegate.eventsBookingCancelledEventIdGet(eventId)
 
   @Operation(
     tags = ["'Manage' events"],
@@ -182,25 +183,7 @@ interface EventsApi {
     value = ["/events/booking-changed/{eventId}"],
     produces = ["application/json"],
   )
-  fun eventsBookingChangedEventIdGet(@Parameter(description = "UUID of the event", required = true) @PathVariable("eventId") eventId: java.util.UUID): ResponseEntity<BookingChangedEnvelope> = getDelegate().eventsBookingChangedEventIdGet(eventId)
-
-  @Operation(
-    tags = ["'Manage' events"],
-    summary = "A 'booking-extended' event",
-    operationId = "eventsBookingExtendedEventIdGet",
-    description = """""",
-    responses = [
-      ApiResponse(responseCode = "200", description = "The 'booking-extended' event corresponding to the provided `eventId`", content = [Content(schema = Schema(implementation = BookingExtendedEnvelope::class))]),
-      ApiResponse(responseCode = "404", description = "No 'booking-extended' event found for the provided `eventId`", content = [Content(schema = Schema(implementation = Problem::class))]),
-      ApiResponse(responseCode = "500", description = "unexpected error", content = [Content(schema = Schema(implementation = Problem::class))]),
-    ],
-  )
-  @RequestMapping(
-    method = [RequestMethod.GET],
-    value = ["/events/booking-extended/{eventId}"],
-    produces = ["application/json"],
-  )
-  fun eventsBookingExtendedEventIdGet(@Parameter(description = "UUID of the event", required = true) @PathVariable("eventId") eventId: java.util.UUID): ResponseEntity<BookingExtendedEnvelope> = getDelegate().eventsBookingExtendedEventIdGet(eventId)
+  fun eventsBookingChangedEventIdGet(@Parameter(description = "UUID of the event", required = true) @PathVariable("eventId") eventId: java.util.UUID): ResponseEntity<BookingChangedEnvelope> = delegate.eventsBookingChangedEventIdGet(eventId)
 
   @Operation(
     tags = ["'Manage' events"],
@@ -218,7 +201,7 @@ interface EventsApi {
     value = ["/events/booking-keyworker-assigned/{eventId}"],
     produces = ["application/json"],
   )
-  fun eventsBookingKeyworkerAssignedEventIdGet(@Parameter(description = "UUID of the event", required = true) @PathVariable("eventId") eventId: java.util.UUID): ResponseEntity<BookingKeyWorkerAssignedEnvelope> = getDelegate().eventsBookingKeyworkerAssignedEventIdGet(eventId)
+  fun eventsBookingKeyworkerAssignedEventIdGet(@Parameter(description = "UUID of the event", required = true) @PathVariable("eventId") eventId: java.util.UUID): ResponseEntity<BookingKeyWorkerAssignedEnvelope> = delegate.eventsBookingKeyworkerAssignedEventIdGet(eventId)
 
   @Operation(
     tags = ["'Match' events"],
@@ -236,7 +219,7 @@ interface EventsApi {
     value = ["/events/booking-made/{eventId}"],
     produces = ["application/json"],
   )
-  fun eventsBookingMadeEventIdGet(@Parameter(description = "UUID of the event", required = true) @PathVariable("eventId") eventId: java.util.UUID): ResponseEntity<BookingMadeEnvelope> = getDelegate().eventsBookingMadeEventIdGet(eventId)
+  fun eventsBookingMadeEventIdGet(@Parameter(description = "UUID of the event", required = true) @PathVariable("eventId") eventId: java.util.UUID): ResponseEntity<BookingMadeEnvelope> = delegate.eventsBookingMadeEventIdGet(eventId)
 
   @Operation(
     tags = ["'Match' events"],
@@ -254,7 +237,7 @@ interface EventsApi {
     value = ["/events/booking-not-made/{eventId}"],
     produces = ["application/json"],
   )
-  fun eventsBookingNotMadeEventIdGet(@Parameter(description = "UUID of the event", required = true) @PathVariable("eventId") eventId: java.util.UUID): ResponseEntity<BookingNotMadeEnvelope> = getDelegate().eventsBookingNotMadeEventIdGet(eventId)
+  fun eventsBookingNotMadeEventIdGet(@Parameter(description = "UUID of the event", required = true) @PathVariable("eventId") eventId: java.util.UUID): ResponseEntity<BookingNotMadeEnvelope> = delegate.eventsBookingNotMadeEventIdGet(eventId)
 
   @Operation(
     tags = ["'Apply' events"],
@@ -272,7 +255,7 @@ interface EventsApi {
     value = ["/events/further-information-requested/{eventId}"],
     produces = ["application/json"],
   )
-  fun eventsFurtherInformationRequestedEventIdGet(@Parameter(description = "UUID of the event", required = true) @PathVariable("eventId") eventId: java.util.UUID): ResponseEntity<FurtherInformationRequestedEnvelope> = getDelegate().eventsFurtherInformationRequestedEventIdGet(eventId)
+  fun eventsFurtherInformationRequestedEventIdGet(@Parameter(description = "UUID of the event", required = true) @PathVariable("eventId") eventId: java.util.UUID): ResponseEntity<FurtherInformationRequestedEnvelope> = delegate.eventsFurtherInformationRequestedEventIdGet(eventId)
 
   @Operation(
     tags = ["'Manage' events"],
@@ -290,7 +273,7 @@ interface EventsApi {
     value = ["/events/match-request-withdrawn/{eventId}"],
     produces = ["application/json"],
   )
-  fun eventsMatchRequestWithdrawnEventIdGet(@Parameter(description = "UUID of the event", required = true) @PathVariable("eventId") eventId: java.util.UUID): ResponseEntity<MatchRequestWithdrawnEnvelope> = getDelegate().eventsMatchRequestWithdrawnEventIdGet(eventId)
+  fun eventsMatchRequestWithdrawnEventIdGet(@Parameter(description = "UUID of the event", required = true) @PathVariable("eventId") eventId: java.util.UUID): ResponseEntity<MatchRequestWithdrawnEnvelope> = delegate.eventsMatchRequestWithdrawnEventIdGet(eventId)
 
   @Operation(
     tags = ["'Manage' events"],
@@ -308,7 +291,7 @@ interface EventsApi {
     value = ["/events/person-arrived/{eventId}"],
     produces = ["application/json"],
   )
-  fun eventsPersonArrivedEventIdGet(@Parameter(description = "UUID of the event", required = true) @PathVariable("eventId") eventId: java.util.UUID): ResponseEntity<PersonArrivedEnvelope> = getDelegate().eventsPersonArrivedEventIdGet(eventId)
+  fun eventsPersonArrivedEventIdGet(@Parameter(description = "UUID of the event", required = true) @PathVariable("eventId") eventId: java.util.UUID): ResponseEntity<PersonArrivedEnvelope> = delegate.eventsPersonArrivedEventIdGet(eventId)
 
   @Operation(
     tags = ["'Manage' events"],
@@ -326,7 +309,7 @@ interface EventsApi {
     value = ["/events/person-departed/{eventId}"],
     produces = ["application/json"],
   )
-  fun eventsPersonDepartedEventIdGet(@Parameter(description = "UUID of the event", required = true) @PathVariable("eventId") eventId: java.util.UUID): ResponseEntity<PersonDepartedEnvelope> = getDelegate().eventsPersonDepartedEventIdGet(eventId)
+  fun eventsPersonDepartedEventIdGet(@Parameter(description = "UUID of the event", required = true) @PathVariable("eventId") eventId: java.util.UUID): ResponseEntity<PersonDepartedEnvelope> = delegate.eventsPersonDepartedEventIdGet(eventId)
 
   @Operation(
     tags = ["'Manage' events"],
@@ -344,7 +327,7 @@ interface EventsApi {
     value = ["/events/person-not-arrived/{eventId}"],
     produces = ["application/json"],
   )
-  fun eventsPersonNotArrivedEventIdGet(@Parameter(description = "UUID of the event", required = true) @PathVariable("eventId") eventId: java.util.UUID): ResponseEntity<PersonNotArrivedEnvelope> = getDelegate().eventsPersonNotArrivedEventIdGet(eventId)
+  fun eventsPersonNotArrivedEventIdGet(@Parameter(description = "UUID of the event", required = true) @PathVariable("eventId") eventId: java.util.UUID): ResponseEntity<PersonNotArrivedEnvelope> = delegate.eventsPersonNotArrivedEventIdGet(eventId)
 
   @Operation(
     tags = ["'Manage' events"],
@@ -362,7 +345,7 @@ interface EventsApi {
     value = ["/events/placement-application-allocated/{eventId}"],
     produces = ["application/json"],
   )
-  fun eventsPlacementApplicationAllocatedEventIdGet(@Parameter(description = "UUID of the event", required = true) @PathVariable("eventId") eventId: java.util.UUID): ResponseEntity<PlacementApplicationAllocatedEnvelope> = getDelegate().eventsPlacementApplicationAllocatedEventIdGet(eventId)
+  fun eventsPlacementApplicationAllocatedEventIdGet(@Parameter(description = "UUID of the event", required = true) @PathVariable("eventId") eventId: java.util.UUID): ResponseEntity<PlacementApplicationAllocatedEnvelope> = delegate.eventsPlacementApplicationAllocatedEventIdGet(eventId)
 
   @Operation(
     tags = ["'Manage' events"],
@@ -380,7 +363,7 @@ interface EventsApi {
     value = ["/events/placement-application-withdrawn/{eventId}"],
     produces = ["application/json"],
   )
-  fun eventsPlacementApplicationWithdrawnEventIdGet(@Parameter(description = "UUID of the event", required = true) @PathVariable("eventId") eventId: java.util.UUID): ResponseEntity<PlacementApplicationWithdrawnEnvelope> = getDelegate().eventsPlacementApplicationWithdrawnEventIdGet(eventId)
+  fun eventsPlacementApplicationWithdrawnEventIdGet(@Parameter(description = "UUID of the event", required = true) @PathVariable("eventId") eventId: java.util.UUID): ResponseEntity<PlacementApplicationWithdrawnEnvelope> = delegate.eventsPlacementApplicationWithdrawnEventIdGet(eventId)
 
   @Operation(
     tags = ["'Manage' events"],
@@ -398,7 +381,7 @@ interface EventsApi {
     value = ["/events/request-for-placement-assessed/{eventId}"],
     produces = ["application/json"],
   )
-  fun eventsRequestForPlacementAssessedEventIdGet(@Parameter(description = "UUID of the event", required = true) @PathVariable("eventId") eventId: java.util.UUID): ResponseEntity<RequestForPlacementAssessedEnvelope> = getDelegate().eventsRequestForPlacementAssessedEventIdGet(eventId)
+  fun eventsRequestForPlacementAssessedEventIdGet(@Parameter(description = "UUID of the event", required = true) @PathVariable("eventId") eventId: java.util.UUID): ResponseEntity<RequestForPlacementAssessedEnvelope> = delegate.eventsRequestForPlacementAssessedEventIdGet(eventId)
 
   @Operation(
     tags = ["'Manage' events"],
@@ -416,5 +399,5 @@ interface EventsApi {
     value = ["/events/request-for-placement-created/{eventId}"],
     produces = ["application/json"],
   )
-  fun eventsRequestForPlacementCreatedEventIdGet(@Parameter(description = "UUID of the event", required = true) @PathVariable("eventId") eventId: java.util.UUID): ResponseEntity<RequestForPlacementCreatedEnvelope> = getDelegate().eventsRequestForPlacementCreatedEventIdGet(eventId)
+  fun eventsRequestForPlacementCreatedEventIdGet(@Parameter(description = "UUID of the event", required = true) @PathVariable("eventId") eventId: java.util.UUID): ResponseEntity<RequestForPlacementCreatedEnvelope> = delegate.eventsRequestForPlacementCreatedEventIdGet(eventId)
 }
