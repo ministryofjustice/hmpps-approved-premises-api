@@ -1667,6 +1667,43 @@ components:
           type: string
       required:
         - query
+    Cas1AssessmentAcceptance:
+      type: object
+      properties:
+        document:
+          $ref: '_shared.yml#/components/schemas/Unit'
+        requirements:
+          $ref: '_shared.yml#/components/schemas/PlacementRequirements'
+        placementDates:
+          $ref: '_shared.yml#/components/schemas/PlacementDates'
+        apType:
+          $ref: '_shared.yml#/components/schemas/ApType'
+        notes:
+          type: string
+        agreeWithShortNoticeReason:
+          type: boolean
+        agreeWithShortNoticeReasonComments:
+          type: string
+        reasonForLateApplication:
+          type: string
+      required:
+        - document
+    Cas1AssessmentRejection:
+      type: object
+      properties:
+        document:
+          $ref: '_shared.yml#/components/schemas/Unit'
+        rejectionRationale:
+          type: string
+        agreeWithShortNoticeReason:
+          type: boolean
+        agreeWithShortNoticeReasonComments:
+          type: string
+        reasonForLateApplication:
+          type: string
+      required:
+        - document
+        - rejectionRationale
 
 
 
