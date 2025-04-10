@@ -35,13 +35,10 @@ hmpps.sqs:
 domain-events:
   cas1:
     emit-enabled: true
-    async-save-enabled: false
   cas2:
     emit-enabled: true
-    async-save-enabled: false
   cas3:
     emit-enabled: bookingCancelled,bookingConfirmed,bookingProvisionallyMade,personArrived,personDeparted,referralSubmitted,personDepartureUpdated,bookingCancelledUpdated,personArrivedUpdated
-    async-save-enabled: false
 
 log-client-credentials-jwt-info: true
 log-request-response: true

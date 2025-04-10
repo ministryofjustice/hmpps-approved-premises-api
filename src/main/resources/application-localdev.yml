@@ -5,13 +5,10 @@
 domain-events:
   cas1:
     emit-enabled: true
-    async-save-enabled: false
   cas2:
     emit-enabled: true
-    async-save-enabled: false
   cas3:
     emit-enabled: referralSubmitted,bookingProvisionallyMade,bookingConfirmed,bookingCancelled,bookingCancelledUpdated,personArrived,personArrivedUpdated,personDeparted,personDepartureUpdated
-    async-save-enabled: false
 
 feature-flags:
   cas1-disable-overbooking-summary: true

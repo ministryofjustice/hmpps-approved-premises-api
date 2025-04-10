@@ -41,9 +41,6 @@ generic-service:
     DOMAIN-EVENTS_CAS1_EMIT-ENABLED: true
     DOMAIN-EVENTS_CAS2_EMIT-ENABLED: true
     DOMAIN-EVENTS_CAS3_EMIT-ENABLED: referralSubmitted,bookingProvisionallyMade,bookingConfirmed,bookingCancelled,bookingCancelledUpdated,personArrived,personArrivedUpdated,personDeparted,personDepartureUpdated
-    DOMAIN-EVENTS_CAS1_ASYNC-SAVE-ENABLED: false
-    DOMAIN-EVENTS_CAS2_ASYNC-SAVE-ENABLED: false
-    DOMAIN-EVENTS_CAS3_ASYNC-SAVE-ENABLED: false
     HMPPS_SQS_USE_WEB_TOKEN: true
     NOTIFY_MODE: TEST_AND_GUEST_LIST
 
