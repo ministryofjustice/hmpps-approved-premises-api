@@ -220,7 +220,7 @@ object Cas2ApplicationStatusSeeding {
       id = UUID.fromString("004e2419-9614-4c1e-a207-a8418009f23d"),
       name = "withdrawn",
       label = "Referral withdrawn",
-      description = "The prison offender manager (POM) withdrew the application.",
+      description = "The referrer withdrew the application.",
       statusDetails = listOf(
         Cas2PersistedApplicationStatusDetail(
           id = UUID.fromString("e4a2391e-e847-427a-a913-51e0b0ad9f52"),
