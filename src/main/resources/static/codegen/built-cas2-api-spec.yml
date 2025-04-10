@@ -5256,7 +5256,6 @@ components:
         - assignmentDate
         - allocatedPomName
         - allocatedPomUserId
-        - assignmentDate
     NewCas2ApplicationNote:
       type: object
       properties:
