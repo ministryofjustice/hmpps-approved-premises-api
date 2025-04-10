@@ -296,7 +296,7 @@ object Cas2ApplicationStatusSeeding {
         ),
         Cas2PersistedApplicationStatusDetail(
           id = UUID.fromString("3440c6c1-b5ff-4b76-ae48-ecf80a3cec49"),
-          name = "applicantGivenCustodialSentence",
+          name = "otherSentence",
           label = "Other sentence",
           applicableToServices = listOf(ServiceName.cas2v2),
         ),
