@@ -2,17 +2,13 @@ import org.apache.commons.io.FileUtils
 import java.io.File
 
 plugins {
-  id("uk.gov.justice.hmpps.gradle-spring-boot") version "7.1.4"
+  id("uk.gov.justice.hmpps.gradle-spring-boot") version "8.0.0"
   kotlin("plugin.spring") version "2.1.10"
   kotlin("plugin.jpa") version "2.1.10"
   id("org.openapi.generator") version "7.11.0"
   id("io.gatling.gradle") version "3.13.1"
   id("io.gitlab.arturbosch.detekt") version "1.23.7"
   id("org.owasp.dependencycheck") version "12.1.0"
-}
-
-configurations {
-  testImplementation { exclude(group = "org.junit.vintage") }
 }
 
 configurations.matching { it.name == "detekt" }.all {
