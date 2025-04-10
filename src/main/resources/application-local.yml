@@ -59,8 +59,6 @@ seed:
       noms-cas2v2: A1234AX
 
 assign-default-region-to-users-with-unknown-region: true
-preemptive-cache-logging-enabled: true
-preemptive-cache-lock-duration-ms: 60000
 
 notify:
   emailaddresses:

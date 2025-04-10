@@ -1,0 +1,86 @@
+# Contains baseline config when deploying in the local development environment (i.e. via ap tools)
+# Additional deployment-specific configuration (e.g. URLs, credentials) is provided by environment
+# variables set by ap-tools. These are defined in `ap-tools/.env.api.template`
+
+domain-events:
+  cas1:
+    emit-enabled: true
+    async-save-enabled: false
+  cas2:
+    emit-enabled: true
+    async-save-enabled: false
+  cas3:
+    emit-enabled: referralSubmitted,bookingProvisionallyMade,bookingConfirmed,bookingCancelled,bookingCancelledUpdated,personArrived,personArrivedUpdated,personDeparted,personDepartureUpdated
+    async-save-enabled: false
+
+feature-flags:
+  cas1-disable-overbooking-summary: true
+
+hmpps.sqs:
+  provider: localstack
+  queues:
+    castwodomaineventslistenerqueue:
+      queueName: cas-2-domain-events-listener-queue
+      dlqName: cas-2-domain-events-listener-dlq
+      subscribeTopicId: domainevents
+      subscribeFilter: '{"eventType":["offender-management.allocation.changed", "prisoner-offender-search.prisoner.updated"]}'
+  topics:
+    domainevents:
+      arn: arn:aws:sns:eu-west-2:000000000000:domainevents
+
+seed:
+  file-prefix: "./seed"
+  on-startup:
+    enabled: true
+    file-prefixes: classpath:db/seed/dev+test,classpath:db/seed/local+dev+test
+    script:
+      cas1-enabled: true
+      cas2-enabled: true
+      cas2v2-enabled: false
+      noms: A5276DZ
+      noms-cas2v2: MDI
+
+spring:
+  datasource:
+    driverClassName: org.postgresql.Driver
+  flyway:
+    locations: classpath:db/migration/all,classpath:db/migration/local+dev+test,classpath:db/migration/dev,classpath:db/migration/all-except-integration
+  jpa:
+    database: postgresql
+  output:
+    ansi:
+      enabled: ALWAYS
+
+springdoc:
+  pre-loading-enabled: false
+
+user-allocations:
+  rules:
+    esap-assessments:
+      allocate-to-user: JIMSNOWLDAP
+
+assign-default-region-to-users-with-unknown-region: true
+
+# Logging
+
+log-client-credentials-jwt-info: true
+log-request-response: true
+
+refresh-inmate-details-cache:
+  logging-enabled: true
+
+logging:
+  level:
+    # Log hibernate queries
+    org.hibernate.SQL: DEBUG
+    # Uncomment the two entries below to see SQL binding
+    #org.hibernate.orm.jdbc.bind: TRACE
+    #org.hibernate.type.descriptor.sql.BasicBinder: TRACE
+    # Log jdbc template queries
+    org.springframework.jdbc.core.JdbcTemplate: debug
+    # allows us to see the JWT token to simplify local API invocation
+    uk.gov.justice.digital.hmpps.approvedpremisesapi.config.RequestResponseLoggingFilter: TRACE
+    # allows us to see the request URL and method for upstream requests
+    reactor.netty.http.client.HttpClientConnect: DEBUG
+
+
