@@ -4,6 +4,7 @@ import jakarta.persistence.Entity
 import jakarta.persistence.Id
 import jakarta.persistence.Table
 import org.hibernate.annotations.CacheConcurrencyStrategy
+import org.hibernate.annotations.Immutable
 import org.springframework.data.jpa.repository.JpaRepository
 import org.springframework.stereotype.Repository
 import java.util.UUID
@@ -16,6 +17,7 @@ interface DestinationProviderRepository : JpaRepository<DestinationProviderEntit
 @Entity
 @Table(name = "destination_providers")
 @org.hibernate.annotations.Cache(usage = CacheConcurrencyStrategy.READ_ONLY)
+@Immutable
 data class DestinationProviderEntity(
   @Id
   val id: UUID,
