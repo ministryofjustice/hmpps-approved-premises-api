@@ -1516,7 +1516,7 @@ components:
         clarificationNotes:
           type: array
           items:
-            $ref: '_shared.yml#/components/schemas/ClarificationNote'
+            $ref: 'cas1-schemas.yml#/components/schemas/Cas1ClarificationNote'
         application:
           $ref: 'cas1-schemas.yml#/components/schemas/Cas1Application'
         allocatedToStaffMember:

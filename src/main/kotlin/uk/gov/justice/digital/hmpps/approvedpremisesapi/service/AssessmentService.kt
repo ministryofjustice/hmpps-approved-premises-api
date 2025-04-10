@@ -7,7 +7,6 @@ import org.springframework.stereotype.Service
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.AssessmentSortField
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1ApplicationTimelinessCategory
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1AssessmentSortField
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PlacementDates
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PlacementRequirements
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
@@ -50,7 +49,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.PlacementRe
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.PlacementRequestSource
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.allocations.UserAllocator
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.PageCriteria
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.asOffenderDetailSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.getMetadata
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.getPageableOrAllPages
 import java.time.Clock
@@ -99,32 +97,6 @@ class AssessmentService(
         AssessmentSortField.personCrn -> "crn"
         AssessmentSortField.personName -> "personName"
         AssessmentSortField.applicationProbationDeliveryUnitName -> error("not supported for CAS1")
-      },
-    )
-
-    val response = assessmentRepository.findAllApprovedPremisesAssessmentSummariesNotReallocated(
-      user.id.toString(),
-      statuses.map { it.name },
-      pageable,
-    )
-
-    return Pair(response.content, getMetadata(response, pageCriteria))
-  }
-
-  fun findApprovedPremisesAssessmentSummariesNotReallocatedForUser(
-    user: UserEntity,
-    statuses: List<DomainAssessmentSummaryStatus>,
-    pageCriteria: PageCriteria<Cas1AssessmentSortField>,
-  ): Pair<List<DomainAssessmentSummary>, PaginationMetadata?> {
-    val pageable = pageCriteria.toPageableOrAllPages(
-      sortBy = when (pageCriteria.sortBy) {
-        Cas1AssessmentSortField.assessmentStatus -> "status"
-        Cas1AssessmentSortField.assessmentArrivalDate -> "arrivalDate"
-        Cas1AssessmentSortField.assessmentCreatedAt -> "createdAt"
-        Cas1AssessmentSortField.assessmentDueAt -> "dueAt"
-        Cas1AssessmentSortField.personCrn -> "crn"
-        Cas1AssessmentSortField.personName -> "personName"
-        Cas1AssessmentSortField.applicationProbationDeliveryUnitName -> error("not supported for CAS1")
       },
     )
 
@@ -586,139 +558,6 @@ class AssessmentService(
 
       else -> throw RuntimeException("Reallocating an assessment of type '${currentAssessment::class.qualifiedName}' has not been implemented.")
     }
-  }
-
-  @SuppressWarnings("TooGenericExceptionThrown")
-  fun acceptCas1Assessment(
-    acceptingUser: UserEntity,
-    assessmentId: UUID,
-    document: String?,
-    placementRequirements: PlacementRequirements?,
-    placementDates: PlacementDates?,
-    apType: ApType?,
-    notes: String?,
-    agreeWithShortNoticeReason: Boolean? = null,
-    agreeWithShortNoticeReasonComments: String? = null,
-    reasonForLateApplication: String? = null,
-  ): CasResult<AssessmentEntity> {
-    val acceptedAt = OffsetDateTime.now(clock)
-    val createPlacementRequest = placementDates != null
-
-    val assessment = when (val validation = validateAssessment(acceptingUser, assessmentId)) {
-      is CasResult.Success -> validation.value as ApprovedPremisesAssessmentEntity
-      else -> return validation
-    }
-
-    val validationErrors = ValidationErrors()
-    if (placementRequirements == null) {
-      validationErrors["$.requirements"] = "empty"
-      return CasResult.FieldValidationError(validationErrors)
-    }
-    when (val dataValidation = validateCas1AssessmentData(assessment)) {
-      is CasResult.Success -> {}
-      is CasResult.Error -> return dataValidation
-    }
-
-    assessment.agreeWithShortNoticeReason = agreeWithShortNoticeReason
-    assessment.agreeWithShortNoticeReasonComments = agreeWithShortNoticeReasonComments
-    assessment.reasonForLateApplication = reasonForLateApplication
-
-    assessment.document = document
-    assessment.submittedAt = acceptedAt
-    assessment.decision = AssessmentDecision.ACCEPTED
-
-    preUpdateAssessment(assessment)
-    val savedAssessment = assessmentRepository.save(assessment)
-
-    val placementRequirementsResult =
-      when (
-        val result =
-          cas1PlacementRequirementsService.createPlacementRequirements(assessment, placementRequirements)
-      ) {
-        is CasResult.Success -> result.value
-        is CasResult.Error -> return result.reviseType()
-      }
-
-    if (createPlacementRequest) {
-      placementRequestService.createPlacementRequest(
-        PlacementRequestSource.ASSESSMENT_OF_APPLICATION,
-        placementRequirementsResult,
-        placementDates,
-        notes,
-        false,
-        null,
-      )
-    }
-
-    val application = savedAssessment.application as ApprovedPremisesApplicationEntity
-
-    val caseSummary = getOffenderDetails(application.crn, acceptingUser.cas1LaoStrategy())
-      ?: throw RuntimeException("Offender details not found for CRN: ${application.crn} when creating Application Assessed Domain Event")
-
-    cas1AssessmentDomainEventService.assessmentAccepted(
-      application = application,
-      assessment = assessment,
-      offenderDetails = caseSummary.asOffenderDetailSummary(),
-      placementDates = placementDates,
-      apType = apType,
-      acceptingUser = acceptingUser,
-    )
-    cas1AssessmentEmailService.assessmentAccepted(application)
-
-    if (createPlacementRequest) {
-      cas1PlacementRequestEmailService.placementRequestSubmitted(application)
-    }
-
-    return CasResult.Success(savedAssessment)
-  }
-
-  @SuppressWarnings("TooGenericExceptionThrown")
-  fun rejectCas1Assessment(
-    rejectingUser: UserEntity,
-    assessmentId: UUID,
-    document: String?,
-    rejectionRationale: String,
-    agreeWithShortNoticeReason: Boolean? = null,
-    agreeWithShortNoticeReasonComments: String? = null,
-    reasonForLateApplication: String? = null,
-  ): CasResult<AssessmentEntity> {
-    val assessment = when (val validation = validateAssessment(rejectingUser, assessmentId)) {
-      is CasResult.Success -> validation.value as ApprovedPremisesAssessmentEntity
-      else -> return validation
-    }
-
-    when (val dataValidation = validateCas1AssessmentData(assessment)) {
-      is CasResult.Success -> {}
-      is CasResult.Error -> return dataValidation
-    }
-
-    assessment.agreeWithShortNoticeReason = agreeWithShortNoticeReason
-    assessment.agreeWithShortNoticeReasonComments = agreeWithShortNoticeReasonComments
-    assessment.reasonForLateApplication = reasonForLateApplication
-
-    assessment.document = document
-    assessment.submittedAt = OffsetDateTime.now(clock)
-    assessment.decision = AssessmentDecision.REJECTED
-    assessment.rejectionRationale = rejectionRationale
-
-    preUpdateAssessment(assessment)
-    val savedAssessment = assessmentRepository.save(assessment)
-
-    val application = savedAssessment.application as ApprovedPremisesApplicationEntity
-
-    val caseSummary = getOffenderDetails(application.crn, rejectingUser.cas1LaoStrategy())
-      ?: throw RuntimeException("Offender details not found for CRN: ${application.crn} when creating Application Assessed Domain Event")
-
-    cas1AssessmentDomainEventService.assessmentRejected(
-      application = application,
-      assessment = assessment,
-      offenderDetails = caseSummary.asOffenderDetailSummary(),
-      rejectingUser = rejectingUser,
-    )
-
-    cas1AssessmentEmailService.assessmentRejected(application)
-
-    return CasResult.Success(savedAssessment)
   }
 
   private fun reallocateApprovedPremisesAssessment(

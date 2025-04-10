@@ -20,25 +20,25 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.SortDirection
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesAssessmentEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DomainAssessmentSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PersonInfoResult
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.AssessmentService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.LaoStrategy
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.OffenderService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.UserService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1AssessmentService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1LaoStrategy
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.AssessmentClarificationNoteTransformer
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.AssessmentTransformer
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.cas1.Cas1AssessmentClarificationNoteTransformer
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.cas1.Cas1AssessmentTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.PageCriteria
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.extractEntityFromCasResult
 import java.util.UUID
 
 @Service
 class Cas1AssessmentsController(
-  private val assessmentService: AssessmentService,
+  private val cas1AssessmentService: Cas1AssessmentService,
   private val userService: UserService,
   private val offenderService: OffenderService,
-  private val assessmentTransformer: AssessmentTransformer,
+  private val cas1AssessmentTransformer: Cas1AssessmentTransformer,
   private val objectMapper: ObjectMapper,
-  private val assessmentClarificationNoteTransformer: AssessmentClarificationNoteTransformer,
+  private val cas1AssessmentClarificationNoteTransformer: Cas1AssessmentClarificationNoteTransformer,
 ) : AssessmentsCas1Delegate {
 
   override fun getAssessmentsForUser(
@@ -54,8 +54,8 @@ class Cas1AssessmentsController(
     val resolvedSortBy = sortBy ?: Cas1AssessmentSortField.assessmentArrivalDate
 
     val domainSummaryStatuses =
-      statuses?.map { assessmentTransformer.transformCas1AssessmentStatusToDomainSummaryState(it) } ?: emptyList()
-    val (summaries, metadata) = assessmentService.findApprovedPremisesAssessmentSummariesNotReallocatedForUser(
+      statuses?.map { cas1AssessmentTransformer.transformCas1AssessmentStatusToDomainSummaryState(it) } ?: emptyList()
+    val (summaries, metadata) = cas1AssessmentService.findApprovedPremisesAssessmentSummariesNotReallocatedForUser(
       user,
       domainSummaryStatuses,
       PageCriteria(resolvedSortBy, resolvedSortDirection, page, perPage),
@@ -72,7 +72,7 @@ class Cas1AssessmentsController(
     val user = userService.getUserForRequest()
 
     val assessment = extractEntityFromCasResult(
-      assessmentService.getAssessmentAndValidate(
+      cas1AssessmentService.getAssessmentAndValidate(
         user,
         assessmentId,
       ),
@@ -80,7 +80,7 @@ class Cas1AssessmentsController(
 
     val personInfo = offenderService.getPersonInfoResult(assessment.application.crn, user.cas1LaoStrategy())
 
-    val transformedResponse = assessmentTransformer.transformJpaToCas1Assessment(assessment, personInfo)
+    val transformedResponse = cas1AssessmentTransformer.transformJpaToCas1Assessment(assessment, personInfo)
 
     return ResponseEntity.ok(transformedResponse)
   }
@@ -93,7 +93,7 @@ class Cas1AssessmentsController(
     val user = userService.getUserForRequest()
 
     val assessment = extractEntityFromCasResult(
-      assessmentService
+      cas1AssessmentService
         .updateAssessment(
           user,
           assessmentId,
@@ -104,7 +104,7 @@ class Cas1AssessmentsController(
     val personInfo = offenderService.getPersonInfoResult(assessment.application.crn, user.cas1LaoStrategy())
 
     return ResponseEntity.ok(
-      assessmentTransformer.transformJpaToCas1Assessment(assessment, personInfo),
+      cas1AssessmentTransformer.transformJpaToCas1Assessment(assessment, personInfo),
     )
   }
 
@@ -116,10 +116,10 @@ class Cas1AssessmentsController(
     val user = userService.getUserForRequest()
 
     val clarificationNoteResult =
-      assessmentService.addAssessmentClarificationNote(user, assessmentId, cas1NewClarificationNote.query)
+      cas1AssessmentService.addAssessmentClarificationNote(user, assessmentId, cas1NewClarificationNote.query)
 
     return ResponseEntity.ok(
-      assessmentClarificationNoteTransformer.transformJpaToCas1ClarificationNote(
+      cas1AssessmentClarificationNoteTransformer.transformJpaToCas1ClarificationNote(
         extractEntityFromCasResult(
           clarificationNoteResult,
         ),
@@ -134,7 +134,7 @@ class Cas1AssessmentsController(
     cas1UpdatedClarificationNote: Cas1UpdatedClarificationNote,
   ): ResponseEntity<Cas1ClarificationNote> {
     val user = userService.getUserForRequest()
-    val clarificationNoteResult = assessmentService.updateAssessmentClarificationNote(
+    val clarificationNoteResult = cas1AssessmentService.updateAssessmentClarificationNote(
       user,
       assessmentId,
       noteId,
@@ -143,7 +143,7 @@ class Cas1AssessmentsController(
     )
 
     return ResponseEntity.ok(
-      assessmentClarificationNoteTransformer.transformJpaToCas1ClarificationNote(extractEntityFromCasResult(clarificationNoteResult)),
+      cas1AssessmentClarificationNoteTransformer.transformJpaToCas1ClarificationNote(extractEntityFromCasResult(clarificationNoteResult)),
     )
   }
 
@@ -156,7 +156,7 @@ class Cas1AssessmentsController(
 
     val serializedData = objectMapper.writeValueAsString(cas1AssessmentAcceptance.document)
 
-    val assessmentAuthResult = assessmentService.acceptCas1Assessment(
+    val assessmentAuthResult = cas1AssessmentService.acceptCas1Assessment(
       acceptingUser = user,
       assessmentId = assessmentId,
       document = serializedData,
@@ -184,7 +184,7 @@ class Cas1AssessmentsController(
     val serializedData = objectMapper.writeValueAsString(cas1AssessmentRejection.document)
 
     val assessmentAuthResult =
-      assessmentService.rejectCas1Assessment(
+      cas1AssessmentService.rejectCas1Assessment(
         user,
         assessmentId,
         serializedData,
@@ -208,7 +208,7 @@ class Cas1AssessmentsController(
 
     return summaries.map {
       val crn = it.crn
-      assessmentTransformer.transformDomainToCas1AssessmentSummary(
+      cas1AssessmentTransformer.transformDomainToCas1AssessmentSummary(
         it,
         personInfoResults.firstOrNull { it.crn == crn } ?: PersonInfoResult.Unknown(crn),
       )

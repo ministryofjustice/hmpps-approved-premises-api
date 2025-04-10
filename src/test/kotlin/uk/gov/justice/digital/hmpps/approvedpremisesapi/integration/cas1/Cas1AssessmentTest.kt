@@ -64,7 +64,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.deliuscontext.Case
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.deliuscontext.ProbationArea
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.domainevent.SnsEventPersonReference
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.prisonsapi.InmateDetail
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.AssessmentTransformer
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.cas1.Cas1AssessmentTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.asCaseSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.asOffenderDetailSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomStringMultiCaseWithNumbers
@@ -77,7 +77,7 @@ import java.util.UUID
 
 class Cas1AssessmentTest : IntegrationTestBase() {
   @Autowired
-  lateinit var assessmentTransformer: AssessmentTransformer
+  lateinit var cas1AssessmentTransformer: Cas1AssessmentTransformer
 
   @Nested
   inner class GetAllAssessments {
@@ -768,7 +768,7 @@ class Cas1AssessmentTest : IntegrationTestBase() {
                 .expectBody()
                 .json(
                   objectMapper.writeValueAsString(
-                    assessmentTransformer.transformJpaToCas1Assessment(
+                    cas1AssessmentTransformer.transformJpaToCas1Assessment(
                       assessment,
                       PersonInfoResult.Success.Full(offenderDetails.otherIds.crn, offenderDetails, inmateDetails),
                     ),
@@ -871,7 +871,7 @@ class Cas1AssessmentTest : IntegrationTestBase() {
               .expectBody()
               .json(
                 objectMapper.writeValueAsString(
-                  assessmentTransformer.transformJpaToCas1Assessment(
+                  cas1AssessmentTransformer.transformJpaToCas1Assessment(
                     assessment,
                     PersonInfoResult.Success.Full(offenderDetails.otherIds.crn, offenderDetails, inmateDetails),
                   ),
@@ -922,7 +922,7 @@ class Cas1AssessmentTest : IntegrationTestBase() {
               .expectBody()
               .json(
                 objectMapper.writeValueAsString(
-                  assessmentTransformer.transformJpaToCas1Assessment(
+                  cas1AssessmentTransformer.transformJpaToCas1Assessment(
                     assessment,
                     PersonInfoResult.Success.Full(offenderDetails.otherIds.crn, offenderDetails, inmateDetails),
                   ),
@@ -1760,10 +1760,10 @@ class Cas1AssessmentTest : IntegrationTestBase() {
     fun assessmentSummaryMapper(
       offenderDetails: CaseSummary,
       inmateDetails: InmateDetail?,
-    ) = AssessmentSummaryMapper(assessmentTransformer, objectMapper, offenderDetails, inmateDetails)
+    ) = AssessmentSummaryMapper(cas1AssessmentTransformer, objectMapper, offenderDetails, inmateDetails)
 
     inner class AssessmentSummaryMapper(
-      private val assessmentTransformer: AssessmentTransformer,
+      private val cas1AssessmentTransformer: Cas1AssessmentTransformer,
       private val objectMapper: ObjectMapper,
       private val offenderDetails: CaseSummary,
       private val inmateDetails: InmateDetail?,
@@ -1774,7 +1774,7 @@ class Cas1AssessmentTest : IntegrationTestBase() {
         status: DomainAssessmentSummaryStatus? = null,
       ): List<Cas1AssessmentSummary> = assessments.map { toSummary(it, status) }
 
-      fun toSummary(assessment: AssessmentEntity, status: DomainAssessmentSummaryStatus? = null): Cas1AssessmentSummary = assessmentTransformer.transformDomainToCas1AssessmentSummary(
+      fun toSummary(assessment: AssessmentEntity, status: DomainAssessmentSummaryStatus? = null): Cas1AssessmentSummary = cas1AssessmentTransformer.transformDomainToCas1AssessmentSummary(
         toAssessmentSummaryEntity(assessment, status),
         PersonInfoResult.Success.Full(offenderDetails.crn, offenderDetails.asOffenderDetailSummary(), inmateDetails),
       )
