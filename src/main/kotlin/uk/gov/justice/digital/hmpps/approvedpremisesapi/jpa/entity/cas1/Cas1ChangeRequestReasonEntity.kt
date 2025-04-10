@@ -6,6 +6,7 @@ import jakarta.persistence.Enumerated
 import jakarta.persistence.Id
 import jakarta.persistence.Table
 import org.hibernate.annotations.CacheConcurrencyStrategy
+import org.hibernate.annotations.Immutable
 import org.springframework.data.jpa.repository.JpaRepository
 import org.springframework.stereotype.Repository
 import java.util.UUID
@@ -18,6 +19,7 @@ interface Cas1ChangeRequestReasonRepository : JpaRepository<Cas1ChangeRequestRea
 @Entity
 @Table(name = "cas1_change_request_reasons")
 @org.hibernate.annotations.Cache(usage = CacheConcurrencyStrategy.READ_ONLY)
+@Immutable
 data class Cas1ChangeRequestReasonEntity(
   @Id
   val id: UUID,

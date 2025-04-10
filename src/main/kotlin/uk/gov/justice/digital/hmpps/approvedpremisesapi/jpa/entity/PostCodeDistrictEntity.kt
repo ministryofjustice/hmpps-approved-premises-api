@@ -4,6 +4,7 @@ import jakarta.persistence.Entity
 import jakarta.persistence.Id
 import jakarta.persistence.Table
 import org.hibernate.annotations.CacheConcurrencyStrategy
+import org.hibernate.annotations.Immutable
 import org.locationtech.jts.geom.Point
 import org.springframework.data.jpa.repository.JpaRepository
 import org.springframework.stereotype.Repository
@@ -18,6 +19,7 @@ interface PostcodeDistrictRepository : JpaRepository<PostCodeDistrictEntity, UUI
 @Entity
 @Table(name = "postcode_districts")
 @org.hibernate.annotations.Cache(usage = CacheConcurrencyStrategy.READ_ONLY)
+@Immutable
 data class PostCodeDistrictEntity(
   @Id
   val id: UUID,
