@@ -50,7 +50,7 @@ seed:
   file-prefix: "./seed"
   on-startup:
     enabled: true
-    file-prefixes: classpath:db/seed/local+dev+test
+    file-prefixes: classpath:db/seed/local,classpath:db/seed/local+dev+test
     script:
       cas1-enabled: true
       cas2-enabled: true

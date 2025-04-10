@@ -40,8 +40,9 @@ class SeedOnStartupService(
       return
     }
 
-    seedLogger.info("Seeding on startup from locations: ${startupConfig.filePrefixes}")
     for (filePrefix in startupConfig.filePrefixes) {
+      seedLogger.info("Seeding on startup from location: $filePrefix")
+
       val csvFiles = try {
         PathMatchingResourcePatternResolver().getResources("$filePrefix/*.csv")
       } catch (e: IOException) {
@@ -51,11 +52,13 @@ class SeedOnStartupService(
 
       csvFiles.sortBy { it.filename }
 
+      seedLogger.info("Will process the following files: $csvFiles")
+
       for (csv in csvFiles) {
         val csvName = csv.filename!!
           .replace("\\.csv$".toRegex(), "")
           .replace("^[0-9]+__".toRegex(), "")
-        val seedFileType = SeedFileType.values().firstOrNull { it.value == csvName }
+        val seedFileType = SeedFileType.entries.firstOrNull { it.value == csvName }
         if (seedFileType == null) {
           seedLogger.warn("Seed file ${csv.file.path} does not have a known job type; skipping.")
         } else {
