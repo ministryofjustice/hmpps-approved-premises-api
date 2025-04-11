@@ -48,9 +48,9 @@ jobs:
       push: ${{ inputs.push || true }}
       docker_multiplatform: false
       additional_docker_build_args: ""
-  deploy_dev:
-    name: Deploy to the dev environment
-    if: github.ref == 'refs/heads/main'
-    needs:
-    - build
-    - helm_lint
+#  deploy_dev:
+#    name: Deploy to the dev environment
+#    if: github.ref == 'refs/heads/main'
+#    needs:
+#    - build
+#    - helm_lint
