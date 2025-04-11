@@ -1,19 +1,18 @@
-package uk.gov.justice.digital.hmpps.approvedpremisesapi.integration
+package uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.cas1
 
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.params.ParameterizedTest
-import org.junit.jupiter.params.provider.EnumSource
 import org.junit.jupiter.params.provider.MethodSource
 import org.springframework.beans.factory.annotation.Autowired
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.BookingCancelledEnvelope
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.PersonArrivedEnvelope
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.PersonDepartedEnvelope
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.config.DomainEventUrlConfig
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.InitialiseDatabasePerClassTestBase
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAUser
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DomainEventCas
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DomainEventSchemaVersion
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DomainEventType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.Cas1DomainEventsFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.bodyAsObject
@@ -37,7 +36,7 @@ class Cas1DomainEventTest : InitialiseDatabasePerClassTestBase() {
   }
 
   @ParameterizedTest
-  @EnumSource(DomainEventType::class, names = ["APPROVED_PREMISES_.+"], mode = EnumSource.Mode.MATCH_ANY)
+  @MethodSource("allEmittableCas1DomainEventTypes")
   fun `Get event without JWT returns 401`(domainEventType: DomainEventType) {
     val url = generateUrlForDomainEventType(domainEventType, UUID.randomUUID())
 
@@ -49,7 +48,7 @@ class Cas1DomainEventTest : InitialiseDatabasePerClassTestBase() {
   }
 
   @ParameterizedTest
-  @EnumSource(DomainEventType::class, names = ["APPROVED_PREMISES_.+"], mode = EnumSource.Mode.MATCH_ANY)
+  @MethodSource("allEmittableCas1DomainEventTypes")
   fun `Get event without ROLE_APPROVED_PREMISES_EVENTS returns 403`(domainEventType: DomainEventType) {
     val url = generateUrlForDomainEventType(domainEventType, UUID.randomUUID())
     val jwt = jwtAuthHelper.createClientCredentialsJwt(
@@ -66,13 +65,13 @@ class Cas1DomainEventTest : InitialiseDatabasePerClassTestBase() {
 
   private companion object {
     @JvmStatic
-    fun allCas1DomainEventTypes() = DomainEventType.values().filter { it.cas == DomainEventCas.CAS1 }
+    fun allEmittableCas1DomainEventTypes() = DomainEventType.entries
+      .filter { it.cas == DomainEventCas.CAS1 }
+      .filter { it.emittable }
   }
 
-  data class DomainEventTypeAndVersion(val type: DomainEventType, val version: DomainEventSchemaVersion)
-
   @ParameterizedTest
-  @MethodSource("allCas1DomainEventTypes")
+  @MethodSource("allEmittableCas1DomainEventTypes")
   fun `Get event returns 200 with correct body for all types and latest schema versions`(type: DomainEventType) {
     val jwt = jwtAuthHelper.createClientCredentialsJwt(
       username = "username",

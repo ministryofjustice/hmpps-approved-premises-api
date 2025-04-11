@@ -172,34 +172,6 @@ paths:
                 $ref: '#/components/schemas/Problem'
         500:
           $ref: '#/components/responses/500Response'
-  /events/booking-extended/{eventId}:
-    parameters:
-      - name: eventId
-        description: UUID of the event
-        in: path
-        required: true
-        schema:
-          $ref: '#/components/schemas/EventId'
-    get:
-      tags:
-        - "'Manage' events"
-      summary: A 'booking-extended' event
-      operationId: eventsBookingExtendedEventIdGet
-      responses:
-        '200':
-          description: The 'booking-extended' event corresponding to the provided `eventId`
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/BookingExtendedEnvelope'
-        404:
-          description: No 'booking-extended' event found for the provided `eventId`
-          content:
-            'application/json':
-              schema:
-                $ref: '#/components/schemas/Problem'
-        500:
-          $ref: '#/components/responses/500Response'
   /events/booking-cancelled/{eventId}:
     parameters:
       - name: eventId
@@ -250,34 +222,6 @@ paths:
                 $ref: '#/components/schemas/BookingChangedEnvelope'
         404:
           description: No 'booking-changed' event found for the provided `eventId`
-          content:
-            'application/json':
-              schema:
-                $ref: '#/components/schemas/Problem'
-        500:
-          $ref: '#/components/responses/500Response'
-  /events/booking-keyworker-assigned/{eventId}:
-    parameters:
-      - name: eventId
-        description: UUID of the event
-        in: path
-        required: true
-        schema:
-          $ref: '#/components/schemas/EventId'
-    get:
-      tags:
-        - "'Manage' events"
-      summary: A 'booking-keyworker-assigned' event
-      operationId: eventsBookingKeyworkerAssignedEventIdGet
-      responses:
-        '200':
-          description: The 'booking-keyworker-assigned' event corresponding to the provided `eventId`
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/BookingKeyWorkerAssignedEnvelope'
-        404:
-          description: No 'booking-keyworker-changed' event found for the provided `eventId`
           content:
             'application/json':
               schema:
@@ -508,34 +452,6 @@ paths:
                 $ref: '#/components/schemas/Problem'
         500:
           $ref: '#/components/responses/500Response'
-  /events/request-for-placement-created/{eventId}:
-    parameters:
-      - name: eventId
-        description: UUID of the event
-        in: path
-        required: true
-        schema:
-          $ref: '#/components/schemas/EventId'
-    get:
-      tags:
-        - "'Manage' events"
-      summary: A 'request-for-placement-created' event
-      operationId: eventsRequestForPlacementCreatedEventIdGet
-      responses:
-        '200':
-          description: The 'request-for-placement-created' event corresponding to the provided `eventId`
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/RequestForPlacementCreatedEnvelope'
-        404:
-          description: No 'request-for-placement-created' event found for the provided `eventId`
-          content:
-            'application/json':
-              schema:
-                $ref: '#/components/schemas/Problem'
-        500:
-          $ref: '#/components/responses/500Response'
   /events/request-for-placement-assessed/{eventId}:
     parameters:
       - name: eventId
@@ -558,34 +474,6 @@ paths:
                 $ref: '#/components/schemas/RequestForPlacementAssessedEnvelope'
         404:
           description: No 'request-for-placement-assessed' event found for the provided `eventId`
-          content:
-            'application/json':
-              schema:
-                $ref: '#/components/schemas/Problem'
-        500:
-          $ref: '#/components/responses/500Response'
-  /events/application-expired/{eventId}:
-    parameters:
-      - name: eventId
-        description: UUID of the event
-        in: path
-        required: true
-        schema:
-          $ref: '#/components/schemas/EventId'
-    get:
-      tags:
-        - "'Manage' events"
-      summary: An 'application-expired' event
-      operationId: eventsApplicationExpiredEventIdGet
-      responses:
-        '200':
-          description: The 'application-expired' event corresponding to the provided `eventId`
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ApplicationExpiredEnvelope'
-        404:
-          description: No 'application-expired' event found for the provided `eventId`
           content:
             'application/json':
               schema:
@@ -1419,59 +1307,6 @@ components:
         - cancelledBy
         - cancellationReason
         - cancellationRecordedAt
-    BookingExtendedEnvelope:
-      allOf:
-        - $ref: '#/components/schemas/Cas1DomainEventEnvelope'
-        - type: object
-          properties:
-            eventDetails:
-              $ref: '#/components/schemas/BookingExtended'
-      required:
-        - eventDetails
-    BookingExtended:
-      type: object
-      properties:
-        personReference:
-          $ref: '#/components/schemas/PersonReference'
-        deliusEventNumber:
-          $ref: '#/components/schemas/DeliusEventNumber'
-        applicationId:
-          $ref: '#/components/schemas/ApplicationId'
-        applicationUrl:
-          $ref: '#/components/schemas/ApplicationUrl'
-        bookingId:
-          $ref: '#/components/schemas/BookingId'
-        premises:
-          $ref: '#/components/schemas/Premises'
-        extendedAt:
-          type: string
-          example: '2022-11-30T14:51:30'
-          format: date-time
-        extendedBy:
-          $ref: '#/components/schemas/StaffMember'
-        extensionReason:
-          type: string
-          example: There has been a flood at the housing association to which Mr Smith is moving
-        previousDepartureOn:
-          type: string
-          example: '2023-01-30'
-          format: date
-        newDepartureOn:
-          type: string
-          example: '2023-02-12'
-          format: date
-      required:
-        - personReference
-        - deliusEventNumber
-        - applicationId
-        - applicationUrl
-        - bookingId
-        - premises
-        - extendedAt
-        - extendedBy
-        - extensionReason
-        - previousDepartureOn
-        - newDepartureOn
     PersonArrivedEnvelope:
       allOf:
         - $ref: '#/components/schemas/Cas1DomainEventEnvelope'
