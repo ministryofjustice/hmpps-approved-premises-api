@@ -4,7 +4,6 @@ import org.springframework.http.ResponseEntity
 import org.springframework.stereotype.Service
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.EventsApiDelegate
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.ApplicationAssessedEnvelope
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.ApplicationExpiredEnvelope
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.ApplicationSubmittedEnvelope
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.ApplicationWithdrawnEnvelope
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.AssessmentAllocatedEnvelope
@@ -54,8 +53,6 @@ class Cas1DomainEventsController(
 
   override fun eventsApplicationWithdrawnEventIdGet(eventId: UUID) = getDomainEvent<ApplicationWithdrawnEnvelope>(eventId)
 
-  override fun eventsApplicationExpiredEventIdGet(eventId: UUID) = getDomainEvent<ApplicationExpiredEnvelope>(eventId)
-
   override fun eventsPlacementApplicationWithdrawnEventIdGet(eventId: UUID) = getDomainEvent<PlacementApplicationWithdrawnEnvelope>(eventId)
 
   override fun eventsPlacementApplicationAllocatedEventIdGet(eventId: UUID) = getDomainEvent<PlacementApplicationAllocatedEnvelope>(eventId)
@@ -79,7 +76,6 @@ class Cas1DomainEventsController(
       AssessmentAppealedEnvelope::class -> domainEventService::getAssessmentAppealedEvent
       MatchRequestWithdrawnEnvelope::class -> domainEventService::getMatchRequestWithdrawnEvent
       ApplicationWithdrawnEnvelope::class -> domainEventService::getApplicationWithdrawnEvent
-      ApplicationExpiredEnvelope::class -> domainEventService::getApplicationExpiredEvent
       ApplicationAssessedEnvelope::class -> domainEventService::getApplicationAssessedDomainEvent
       BookingMadeEnvelope::class -> domainEventService::getBookingMadeEvent
       ApplicationSubmittedEnvelope::class -> domainEventService::getApplicationSubmittedDomainEvent
@@ -95,7 +91,7 @@ class Cas1DomainEventsController(
       FurtherInformationRequestedEnvelope::class -> domainEventService::getFurtherInformationRequestMadeEvent
       RequestForPlacementCreatedEnvelope::class -> domainEventService::getRequestForPlacementCreatedEvent
       RequestForPlacementAssessedEnvelope::class -> domainEventService::getRequestForPlacementAssessedEvent
-      else -> throw RuntimeException("Only CAS1 events are supported")
+      else -> throw RuntimeException("Only emittable CAS1 events are supported")
     }
 
     val event = serviceMethod(eventId) ?: throw NotFoundProblem(eventId, "DomainEvent")
