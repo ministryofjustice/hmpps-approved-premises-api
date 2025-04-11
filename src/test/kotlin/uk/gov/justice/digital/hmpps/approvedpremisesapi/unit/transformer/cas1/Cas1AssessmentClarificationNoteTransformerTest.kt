@@ -1,4 +1,4 @@
-package uk.gov.justice.digital.hmpps.approvedpremisesapi.unit.transformer
+package uk.gov.justice.digital.hmpps.approvedpremisesapi.unit.transformer.cas1
 
 import org.assertj.core.api.Assertions
 import org.junit.jupiter.api.Test
@@ -6,14 +6,14 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1Clarificat
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApprovedPremisesAssessmentEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.AssessmentClarificationNoteEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.UserEntityFactory
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.AssessmentClarificationNoteTransformer
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.cas1.Cas1AssessmentClarificationNoteTransformer
 import java.time.LocalDate
 import java.time.OffsetDateTime
 import java.util.UUID
 
-class AssessmentClarificationNoteTransformerTest {
+class Cas1AssessmentClarificationNoteTransformerTest {
 
-  private val assessmentClarificationNoteTransformer = AssessmentClarificationNoteTransformer()
+  private val cas1AssessmentClarificationNoteTransformer = Cas1AssessmentClarificationNoteTransformer()
 
   private val clarificationNoteEntity = AssessmentClarificationNoteEntityFactory()
     .withAssessment(ApprovedPremisesAssessmentEntityFactory().withDefaults().produce())
@@ -27,7 +27,7 @@ class AssessmentClarificationNoteTransformerTest {
 
   @Test
   fun `transform an clarificationNoteEntity to Cas1ClarificationNote`() {
-    val transformedClarificationNote = assessmentClarificationNoteTransformer.transformJpaToCas1ClarificationNote(clarificationNoteEntity)
+    val transformedClarificationNote = cas1AssessmentClarificationNoteTransformer.transformJpaToCas1ClarificationNote(clarificationNoteEntity)
 
     Assertions.assertThat(transformedClarificationNote).isEqualTo(
       Cas1ClarificationNote(

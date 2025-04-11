@@ -8417,7 +8417,7 @@ components:
         clarificationNotes:
           type: array
           items:
-            $ref: '#/components/schemas/ClarificationNote'
+            $ref: '#/components/schemas/Cas1ClarificationNote'
         application:
           $ref: '#/components/schemas/Cas1Application'
         allocatedToStaffMember:

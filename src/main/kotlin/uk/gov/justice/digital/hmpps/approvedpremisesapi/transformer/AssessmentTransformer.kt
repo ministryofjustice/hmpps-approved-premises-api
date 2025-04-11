@@ -10,7 +10,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApprovedPremis
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApprovedPremisesUser
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.AssessmentStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.AssessmentSummary
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1Assessment
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1AssessmentStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1AssessmentSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ReferralHistoryNote
@@ -20,7 +19,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.TemporaryAccom
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.TemporaryAccommodationAssessmentStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.TemporaryAccommodationAssessmentSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.TemporaryAccommodationUser
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesAssessmentEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AssessmentDecision
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AssessmentEntity
@@ -200,14 +198,6 @@ class AssessmentTransformer(
     AssessmentStatus.cas3ReadyToPlace -> DomainAssessmentSummaryStatus.READY_TO_PLACE
   }
 
-  fun transformCas1AssessmentStatusToDomainSummaryState(status: Cas1AssessmentStatus) = when (status) {
-    Cas1AssessmentStatus.awaitingResponse -> DomainAssessmentSummaryStatus.AWAITING_RESPONSE
-    Cas1AssessmentStatus.completed -> DomainAssessmentSummaryStatus.COMPLETED
-    Cas1AssessmentStatus.reallocated -> DomainAssessmentSummaryStatus.REALLOCATED
-    Cas1AssessmentStatus.inProgress -> DomainAssessmentSummaryStatus.IN_PROGRESS
-    Cas1AssessmentStatus.notStarted -> DomainAssessmentSummaryStatus.NOT_STARTED
-  }
-
   fun transformDomainToCas1AssessmentSummary(ase: DomainAssessmentSummary, personInfo: PersonInfoResult): Cas1AssessmentSummary = Cas1AssessmentSummary(
     id = ase.id,
     applicationId = ase.applicationId,
@@ -223,32 +213,6 @@ class AssessmentTransformer(
     },
     person = personTransformer.transformModelToPersonApi(personInfo),
     dueAt = ase.dueAt!!,
-  )
-
-  fun transformJpaToCas1Assessment(
-    jpa: ApprovedPremisesAssessmentEntity,
-    personInfo: PersonInfoResult,
-  ): Cas1Assessment = Cas1Assessment(
-    id = jpa.id,
-    application = applicationsTransformer.transformJpaToCas1Application(
-      jpa.application as ApprovedPremisesApplicationEntity,
-      personInfo,
-    ),
-    schemaVersion = jpa.schemaVersion.id,
-    outdatedSchema = jpa.schemaUpToDate,
-    createdAt = jpa.createdAt.toInstant(),
-    allocatedAt = jpa.allocatedAt?.toInstant(),
-    data = if (jpa.data != null) objectMapper.readTree(jpa.data) else null,
-    document = if (jpa.document != null) objectMapper.readTree(jpa.document) else null,
-    clarificationNotes = jpa.clarificationNotes.map(assessmentClarificationNoteTransformer::transformJpaToApi),
-    allocatedToStaffMember = jpa.allocatedToUser?.let {
-      userTransformer.transformCas1JpaToApi(it)
-    },
-    submittedAt = jpa.submittedAt?.toInstant(),
-    decision = transformJpaDecisionToApi(jpa.decision),
-    rejectionRationale = jpa.rejectionRationale,
-    status = getStatusForCas1Assessment(jpa),
-    createdFromAppeal = jpa.createdFromAppeal,
   )
 
   private fun transformDomainSummaryDecisionToApi(decision: String?) = when (decision) {
@@ -283,14 +247,6 @@ class AssessmentTransformer(
     DomainAssessmentSummaryStatus.AWAITING_RESPONSE -> Cas1AssessmentStatus.awaitingResponse
     DomainAssessmentSummaryStatus.IN_PROGRESS -> Cas1AssessmentStatus.inProgress
     DomainAssessmentSummaryStatus.REALLOCATED -> Cas1AssessmentStatus.reallocated
-    else -> Cas1AssessmentStatus.notStarted
-  }
-
-  private fun getStatusForCas1Assessment(entity: AssessmentEntity) = when {
-    entity.decision !== null -> Cas1AssessmentStatus.completed
-    entity.clarificationNotes.any { it.response == null } -> Cas1AssessmentStatus.awaitingResponse
-    entity.reallocatedAt != null -> Cas1AssessmentStatus.reallocated
-    entity.data != null -> Cas1AssessmentStatus.inProgress
     else -> Cas1AssessmentStatus.notStarted
   }
 
