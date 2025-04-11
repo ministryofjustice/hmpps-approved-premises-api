@@ -42,6 +42,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.AuthorisableActi
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.CasResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.ValidatableActionResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.EmailNotificationService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.SentryService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas2.Cas2DomainEventService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas2v2.Cas2v2ApplicationService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas2v2.Cas2v2AssessmentService
@@ -72,6 +73,7 @@ class Cas2v2ApplicationServiceTest {
   private val mockCas2v2AssessmentService = mockk<Cas2v2AssessmentService>()
   private val mockObjectMapper = mockk<ObjectMapper>()
   private val mockNotifyConfig = mockk<NotifyConfig>()
+  private val mockSentryService = mockk<SentryService>()
 
   private val cas2v2ApplicationService = Cas2v2ApplicationService(
     mockCas2v2ApplicationRepository,
@@ -85,6 +87,7 @@ class Cas2v2ApplicationServiceTest {
     mockCas2v2AssessmentService,
     mockNotifyConfig,
     mockObjectMapper,
+    mockSentryService,
     "http://frontend/applications/#id",
     "http://frontend/assess/applications/#applicationId/overview",
   )
@@ -903,14 +906,6 @@ class Cas2v2ApplicationServiceTest {
       assertThat(validatableActionResult.message).isEqualTo("This application has already been abandoned")
 
       assertEmailAndAssessmentsWereNotCreated()
-    }
-
-    private fun assertGeneralValidationError(message: String) {
-      val result = cas2v2ApplicationService.submitCas2v2Application(submitCas2v2Application, user)
-      assertThat(result is CasResult.GeneralValidationError).isTrue
-      val error = result as CasResult.GeneralValidationError
-
-      assertThat(error.message).isEqualTo(message)
     }
 
     private fun assertEmailAndAssessmentsWereNotCreated() {
