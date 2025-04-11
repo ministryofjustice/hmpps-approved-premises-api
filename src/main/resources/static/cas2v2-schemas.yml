@@ -150,7 +150,6 @@ components:
         - status
         - personName
         - crn
-        - nomsNumber
         - applicationOrigin
     Cas2v2SubmittedApplicationSummary:
       type: object
@@ -186,7 +185,6 @@ components:
         - createdAt
         - personName
         - crn
-        - nomsNumber
     Cas2v2ApplicationNote:
       type: object
       properties:
