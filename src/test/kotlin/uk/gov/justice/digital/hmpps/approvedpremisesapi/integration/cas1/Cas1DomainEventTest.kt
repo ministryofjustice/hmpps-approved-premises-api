@@ -1,4 +1,4 @@
-package uk.gov.justice.digital.hmpps.approvedpremisesapi.integration
+package uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.cas1
 
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.BeforeEach
@@ -11,6 +11,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.Bo
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.PersonArrivedEnvelope
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.PersonDepartedEnvelope
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.config.DomainEventUrlConfig
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.InitialiseDatabasePerClassTestBase
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAUser
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DomainEventCas
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DomainEventSchemaVersion
