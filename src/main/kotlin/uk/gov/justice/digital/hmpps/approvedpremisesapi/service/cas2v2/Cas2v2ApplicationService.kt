@@ -28,6 +28,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.validated
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.AuthorisableActionResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.CasResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.EmailNotificationService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.SentryService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.UpstreamApiException
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas2.Cas2DomainEventService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.PageCriteria
@@ -50,6 +51,7 @@ class Cas2v2ApplicationService(
   private val cas2v2AssessmentService: Cas2v2AssessmentService,
   private val notifyConfig: NotifyConfig,
   private val objectMapper: ObjectMapper,
+  private val sentryService: SentryService,
   @Value("\${url-templates.frontend.cas2v2.application}") private val applicationUrlTemplate: String,
   @Value("\${url-templates.frontend.cas2v2.submitted-application-overview}") private val submittedApplicationUrlTemplate: String,
 ) {
@@ -274,11 +276,20 @@ class Cas2v2ApplicationService(
     application.schemaVersion as? Cas2v2ApplicationJsonSchemaEntity
       ?: throw RuntimeException("Incorrect type of JSON schema referenced by CAS2 v2 Application")
 
+    var prisonCode: String? = null
+    if (application.nomsNumber != null) {
+      try {
+        prisonCode = retrievePrisonCode(application)
+      } catch (e: UpstreamApiException) {
+        sentryService.captureException(e)
+      }
+    }
+
     try {
       application.apply {
         submittedAt = OffsetDateTime.now()
         document = serializedTranslatedDocument
-        referringPrisonCode = retrievePrisonCode(application)
+        referringPrisonCode = prisonCode
         preferredAreas = submitCas2v2Application.preferredAreas
         hdcEligibilityDate = submitCas2v2Application.hdcEligibilityDate
         conditionalReleaseDate = submitCas2v2Application.conditionalReleaseDate

@@ -42,6 +42,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.AuthorisableActi
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.CasResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.ValidatableActionResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.EmailNotificationService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.SentryService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas2.Cas2DomainEventService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas2v2.Cas2v2ApplicationService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas2v2.Cas2v2AssessmentService
@@ -72,6 +73,7 @@ class Cas2v2ApplicationServiceTest {
   private val mockCas2v2AssessmentService = mockk<Cas2v2AssessmentService>()
   private val mockObjectMapper = mockk<ObjectMapper>()
   private val mockNotifyConfig = mockk<NotifyConfig>()
+  private val mockSentryService = mockk<SentryService>()
 
   private val cas2v2ApplicationService = Cas2v2ApplicationService(
     mockCas2v2ApplicationRepository,
@@ -85,6 +87,7 @@ class Cas2v2ApplicationServiceTest {
     mockCas2v2AssessmentService,
     mockNotifyConfig,
     mockObjectMapper,
+    mockSentryService,
     "http://frontend/applications/#id",
     "http://frontend/assess/applications/#applicationId/overview",
   )
@@ -903,120 +906,6 @@ class Cas2v2ApplicationServiceTest {
       assertThat(validatableActionResult.message).isEqualTo("This application has already been abandoned")
 
       assertEmailAndAssessmentsWereNotCreated()
-    }
-
-    @Test
-    fun `throws a validation error if InmateDetails (for prison code) are not available`() {
-      val newestSchema = Cas2v2ApplicationJsonSchemaEntityFactory().produce()
-
-      val cas2v2Application = Cas2v2ApplicationEntityFactory()
-        .withApplicationSchema(newestSchema)
-        .withId(applicationId)
-        .withCreatedByUser(user)
-        .withSubmittedAt(null)
-        .produce()
-        .apply {
-          schemaUpToDate = true
-        }
-
-      every {
-        mockCas2v2ApplicationRepository.findByIdOrNull(any())
-      } returns cas2v2Application
-      every { mockCas2v2JsonSchemaService.checkCas2v2SchemaOutdated(any()) } returns
-        cas2v2Application
-      every { mockCas2v2JsonSchemaService.validate(any(), any()) } returns true
-
-      every { mockCas2v2ApplicationRepository.save(any()) } answers {
-        it.invocation.args[0]
-          as Cas2v2ApplicationEntity
-      }
-
-      every { mockCas2v2OffenderService.getPersonByCrn(any()) } returns Cas2v2OffenderSearchResult.Success.Full(
-        "crn",
-        FullPerson(
-          name = "",
-          dateOfBirth = LocalDate.now().minusYears(20).randomDateBefore(14),
-          sex = "Male",
-          status = PersonStatus.unknown,
-          crn = "crn",
-          type = PersonType.fullPerson,
-          isRestricted = false,
-        ),
-      )
-
-      // this call to the Prison API to find the referringPrisonCode when saving
-      // the application.submitted domain event *should* never 404 or otherwise fail,
-      // as when creating  the application initially a similar call was made.
-      // If there is a problem with accessing the Prison API, we fail hard and
-      // abort our attempt to submit the application.
-      every {
-        mockCas2v2OffenderService.getInmateDetailByNomsNumber(any(), any())
-      } returns AuthorisableActionResult.NotFound()
-
-      assertGeneralValidationError("Inmate Detail not found")
-
-      assertEmailAndAssessmentsWereNotCreated()
-    }
-
-    @Test
-    fun `throws an UpstreamApiException if prison code is null`() {
-      val newestSchema = Cas2v2ApplicationJsonSchemaEntityFactory().produce()
-
-      val cas2v2Application = Cas2v2ApplicationEntityFactory()
-        .withApplicationSchema(newestSchema)
-        .withId(applicationId)
-        .withCreatedByUser(user)
-        .withSubmittedAt(null)
-        .produce()
-        .apply {
-          schemaUpToDate = true
-        }
-
-      every {
-        mockCas2v2ApplicationRepository.findByIdOrNull(any())
-      } returns cas2v2Application
-      every { mockCas2v2JsonSchemaService.checkCas2v2SchemaOutdated(any()) } returns
-        cas2v2Application
-      every { mockCas2v2JsonSchemaService.validate(any(), any()) } returns true
-
-      every { mockCas2v2ApplicationRepository.save(any()) } answers {
-        it.invocation.args[0]
-          as Cas2v2ApplicationEntity
-      }
-
-      every { mockCas2v2OffenderService.getPersonByCrn(cas2v2Application.crn) } returns Cas2v2OffenderSearchResult.Success.Full(
-        cas2v2Application.crn,
-        FullPerson(
-          name = "",
-          dateOfBirth = LocalDate.now().minusYears(20).randomDateBefore(14),
-          sex = "Male",
-          status = PersonStatus.unknown,
-          crn = cas2v2Application.crn,
-          type = PersonType.fullPerson,
-          isRestricted = false,
-        ),
-      )
-
-      // this call to the Prison API to find the referringPrisonCode when saving
-      // the application.submitted domain event *should* always have a prison code,
-      // but we need to account for possibility it may be missing.
-      // If there is a problem with accessing the Prison API, we fail hard and
-      // abort our attempt to submit the application and return a validation message.
-      every {
-        mockCas2v2OffenderService.getInmateDetailByNomsNumber(any(), any())
-      } returns AuthorisableActionResult.Success(InmateDetailFactory().produce())
-
-      assertGeneralValidationError("No prison code available")
-
-      assertEmailAndAssessmentsWereNotCreated()
-    }
-
-    private fun assertGeneralValidationError(message: String) {
-      val result = cas2v2ApplicationService.submitCas2v2Application(submitCas2v2Application, user)
-      assertThat(result is CasResult.GeneralValidationError).isTrue
-      val error = result as CasResult.GeneralValidationError
-
-      assertThat(error.message).isEqualTo(message)
     }
 
     private fun assertEmailAndAssessmentsWereNotCreated() {
