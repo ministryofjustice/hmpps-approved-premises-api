@@ -320,38 +320,6 @@ class WebClientConfiguration(
       .build(),
   )
 
-  @Bean(name = ["probationOffenderSearchApiWebClient"])
-  fun probationOffenderSearchApiClient(
-    clientRegistrations: ClientRegistrationRepository,
-    authorizedClients: OAuth2AuthorizedClientRepository,
-    @Value("\${services.probation-offender-search-api.base-url}") probationOffenderSearchBaseUrl: String,
-    @Value("\${services.probation-offender-search-api.max-response-in-memory-size-bytes}") probationOffenderSearchApiMaxResponseInMemorySizeBytes: Int,
-  ): WebClientConfig {
-    val oauth2Client = ServletOAuth2AuthorizedClientExchangeFilterFunction(clientRegistrations, authorizedClients)
-
-    oauth2Client.setDefaultClientRegistrationId("delius-backed-apis")
-
-    return WebClientConfig(
-      webClient = WebClient.builder()
-        .baseUrl(probationOffenderSearchBaseUrl)
-        .clientConnector(
-          ReactorClientHttpConnector(
-            HttpClient
-              .create()
-              .responseTimeout(Duration.ofMillis(defaultUpstreamTimeoutMs))
-              .option(ChannelOption.CONNECT_TIMEOUT_MILLIS, Duration.ofMillis(defaultUpstreamTimeoutMs).toMillis().toInt()),
-          ),
-        )
-        .filter(oauth2Client)
-        .exchangeStrategies(
-          ExchangeStrategies.builder().codecs {
-            it.defaultCodecs().maxInMemorySize(probationOffenderSearchApiMaxResponseInMemorySizeBytes)
-          }.build(),
-        )
-        .build(),
-    )
-  }
-
   @Bean(name = ["managePomCasesWebClient"])
   fun managePomCasesWebClient(
     clientRegistrations: ClientRegistrationRepository,

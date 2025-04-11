@@ -308,7 +308,7 @@ class Cas2v2ApplicationServiceTest {
       val crn = "CRN345"
       val username = "SOME_PERSON"
 
-      every { mockCas2v2OffenderService.getPersonByCrn(any()) } returns Cas2v2OffenderSearchResult.NotFound(crn)
+      every { mockCas2v2OffenderService.getPersonByNomisIdOrCrn(any()) } returns Cas2v2OffenderSearchResult.NotFound(crn)
 
       val user = userWithUsername(username)
 
@@ -324,7 +324,7 @@ class Cas2v2ApplicationServiceTest {
       val crn = "CRN345"
       val username = "SOME PERSON"
 
-      every { mockCas2v2OffenderService.getPersonByCrn(any()) } returns Cas2v2OffenderSearchResult.Forbidden(crn)
+      every { mockCas2v2OffenderService.getPersonByNomisIdOrCrn(any()) } returns Cas2v2OffenderSearchResult.Forbidden(crn)
 
       val user = userWithUsername(username)
 
@@ -345,7 +345,7 @@ class Cas2v2ApplicationServiceTest {
 
       val user = userWithUsername(username)
 
-      every { mockCas2v2OffenderService.getPersonByCrn(crn) } returns Cas2v2OffenderSearchResult.Success.Full(
+      every { mockCas2v2OffenderService.getPersonByNomisIdOrCrn(crn) } returns Cas2v2OffenderSearchResult.Success.Full(
         crn,
         FullPerson(
           name = "",
@@ -931,7 +931,7 @@ class Cas2v2ApplicationServiceTest {
           as Cas2v2ApplicationEntity
       }
 
-      every { mockCas2v2OffenderService.getPersonByCrn(any()) } returns Cas2v2OffenderSearchResult.Success.Full(
+      every { mockCas2v2OffenderService.getPersonByNomisIdOrCrn(any()) } returns Cas2v2OffenderSearchResult.Success.Full(
         "crn",
         FullPerson(
           name = "",
@@ -984,7 +984,7 @@ class Cas2v2ApplicationServiceTest {
           as Cas2v2ApplicationEntity
       }
 
-      every { mockCas2v2OffenderService.getPersonByCrn(cas2v2Application.crn) } returns Cas2v2OffenderSearchResult.Success.Full(
+      every { mockCas2v2OffenderService.getPersonByNomisIdOrCrn(cas2v2Application.crn) } returns Cas2v2OffenderSearchResult.Success.Full(
         cas2v2Application.crn,
         FullPerson(
           name = "",
@@ -1073,7 +1073,7 @@ class Cas2v2ApplicationServiceTest {
           as Cas2v2ApplicationEntity
       }
 
-      every { mockCas2v2OffenderService.getPersonByCrn(cas2v2Application.crn) } returns Cas2v2OffenderSearchResult.Success.Full(
+      every { mockCas2v2OffenderService.getPersonByNomisIdOrCrn(cas2v2Application.crn) } returns Cas2v2OffenderSearchResult.Success.Full(
         cas2v2Application.crn,
         FullPerson(
           name = "",
