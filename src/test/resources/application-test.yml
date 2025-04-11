@@ -152,7 +152,6 @@ url-templates:
       placement-application-allocated-event-detail: http://api/events/placement-application-allocated/#eventId
       match-request-withdrawn-event-detail: http://api/events/match-request-withdrawn/#eventId
       assessment-allocated-event-detail: http://api/events/assessment-allocated/#eventId
-      request-for-placement-created-event-detail: http://api/events/request-for-placement-created/#eventId
       request-for-placement-assessed-event-detail: http://api/events/request-for-placement-assessed/#eventId
       assessment-info-requested-detail: http://api/events/further-information-requested/#eventId
     cas2:
