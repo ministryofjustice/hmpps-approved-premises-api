@@ -17,7 +17,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1NewClarifi
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1UpdateAssessment
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1UpdatedClarificationNote
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.SortDirection
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesAssessmentEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DomainAssessmentSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PersonInfoResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.LaoStrategy
@@ -76,7 +75,7 @@ class Cas1AssessmentsController(
         user,
         assessmentId,
       ),
-    ) as ApprovedPremisesAssessmentEntity
+    )
 
     val personInfo = offenderService.getPersonInfoResult(assessment.application.crn, user.cas1LaoStrategy())
 
@@ -99,7 +98,7 @@ class Cas1AssessmentsController(
           assessmentId,
           objectMapper.writeValueAsString(cas1UpdateAssessment.data),
         ),
-    ) as ApprovedPremisesAssessmentEntity
+    )
 
     val personInfo = offenderService.getPersonInfoResult(assessment.application.crn, user.cas1LaoStrategy())
 

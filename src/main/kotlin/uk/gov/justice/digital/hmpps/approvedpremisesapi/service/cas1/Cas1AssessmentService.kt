@@ -9,10 +9,10 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PlacementRequi
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesAssessmentEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesAssessmentJsonSchemaEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesAssessmentRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AssessmentClarificationNoteEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AssessmentClarificationNoteRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AssessmentDecision
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AssessmentEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AssessmentRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DomainAssessmentSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DomainAssessmentSummaryStatus
@@ -51,6 +51,7 @@ class Cas1AssessmentService(
   private val cas1PlacementRequestEmailService: Cas1PlacementRequestEmailService,
   private val assessmentListener: AssessmentListener,
   private val assessmentClarificationNoteListener: AssessmentClarificationNoteListener,
+  private val approvedPremisesAssessmentRepository: ApprovedPremisesAssessmentRepository,
   private val clock: Clock,
 ) {
 
@@ -59,19 +60,17 @@ class Cas1AssessmentService(
     updatingUser: UserEntity,
     assessmentId: UUID,
     data: String?,
-  ): CasResult<AssessmentEntity> {
+  ): CasResult<ApprovedPremisesAssessmentEntity> {
     val assessment = when (val assessmentResult = getAssessmentAndValidate(updatingUser, assessmentId)) {
       is CasResult.Success -> assessmentResult.value
       else -> return assessmentResult
     }
 
-    if (assessment is ApprovedPremisesAssessmentEntity) {
-      val allocatedToUser = assessment.allocatedToUser
-        ?: return CasResult.GeneralValidationError("An assessment must be allocated to a user to be updated")
+    val allocatedToUser = assessment.allocatedToUser
+      ?: return CasResult.GeneralValidationError("An assessment must be allocated to a user to be updated")
 
-      if (allocatedToUser.id != updatingUser.id) {
-        return CasResult.Unauthorised("The assessment can only be updated by the allocated user")
-      }
+    if (allocatedToUser.id != updatingUser.id) {
+      return CasResult.Unauthorised("The assessment can only be updated by the allocated user")
     }
 
     if (assessment.isWithdrawn) {
@@ -93,7 +92,7 @@ class Cas1AssessmentService(
     assessment.data = data
 
     preUpdateAssessment(assessment)
-    val savedAssessment = assessmentRepository.save(assessment)
+    val savedAssessment = approvedPremisesAssessmentRepository.save(assessment)
 
     return CasResult.Success(savedAssessment)
   }
@@ -102,17 +101,13 @@ class Cas1AssessmentService(
   fun getAssessmentAndValidate(
     user: UserEntity,
     assessmentId: UUID,
-  ): CasResult<AssessmentEntity> {
-    val assessment = assessmentRepository.findByIdOrNull(assessmentId)
+  ): CasResult<ApprovedPremisesAssessmentEntity> {
+    val assessment = approvedPremisesAssessmentRepository.findByIdOrNull(assessmentId)
       ?: return CasResult.NotFound("AssessmentEntity", assessmentId.toString())
 
-    val latestSchema = when (assessment) {
-      is ApprovedPremisesAssessmentEntity -> jsonSchemaService.getNewestSchema(
-        ApprovedPremisesAssessmentJsonSchemaEntity::class.java,
-      )
-
-      else -> throw RuntimeException("Assessment type '${assessment::class.qualifiedName}' is not currently supported")
-    }
+    val latestSchema = jsonSchemaService.getNewestSchema(
+      ApprovedPremisesAssessmentJsonSchemaEntity::class.java,
+    )
 
     if (!userAccessService.userCanViewAssessment(user, assessment)) {
       return CasResult.Unauthorised("Not authorised to view the assessment")
@@ -216,9 +211,9 @@ class Cas1AssessmentService(
     preUpdateClarificationNote(clarificationNoteEntity)
     val savedNote = assessmentClarificationNoteRepository.save(clarificationNoteEntity)
 
-    val assessmentToUpdate = clarificationNoteEntity.assessment
+    val assessmentToUpdate = clarificationNoteEntity.assessment as ApprovedPremisesAssessmentEntity
     preUpdateAssessment(assessmentToUpdate)
-    assessmentRepository.save(assessmentToUpdate)
+    approvedPremisesAssessmentRepository.save(assessmentToUpdate)
 
     return CasResult.Success(savedNote)
   }
@@ -235,12 +230,12 @@ class Cas1AssessmentService(
     agreeWithShortNoticeReason: Boolean? = null,
     agreeWithShortNoticeReasonComments: String? = null,
     reasonForLateApplication: String? = null,
-  ): CasResult<AssessmentEntity> {
+  ): CasResult<ApprovedPremisesAssessmentEntity> {
     val acceptedAt = OffsetDateTime.now(clock)
     val createPlacementRequest = placementDates != null
 
     val assessment = when (val validation = validateAssessment(acceptingUser, assessmentId)) {
-      is CasResult.Success -> validation.value as ApprovedPremisesAssessmentEntity
+      is CasResult.Success -> validation.value
       else -> return validation
     }
 
@@ -263,7 +258,7 @@ class Cas1AssessmentService(
     assessment.decision = AssessmentDecision.ACCEPTED
 
     preUpdateAssessment(assessment)
-    val savedAssessment = assessmentRepository.save(assessment)
+    val savedAssessment = approvedPremisesAssessmentRepository.save(assessment)
 
     val placementRequirementsResult =
       when (
@@ -316,9 +311,9 @@ class Cas1AssessmentService(
     agreeWithShortNoticeReason: Boolean? = null,
     agreeWithShortNoticeReasonComments: String? = null,
     reasonForLateApplication: String? = null,
-  ): CasResult<AssessmentEntity> {
+  ): CasResult<ApprovedPremisesAssessmentEntity> {
     val assessment = when (val validation = validateAssessment(rejectingUser, assessmentId)) {
-      is CasResult.Success -> validation.value as ApprovedPremisesAssessmentEntity
+      is CasResult.Success -> validation.value
       else -> return validation
     }
 
@@ -337,7 +332,7 @@ class Cas1AssessmentService(
     assessment.rejectionRationale = rejectionRationale
 
     preUpdateAssessment(assessment)
-    val savedAssessment = assessmentRepository.save(assessment)
+    val savedAssessment = approvedPremisesAssessmentRepository.save(assessment)
 
     val application = savedAssessment.application as ApprovedPremisesApplicationEntity
 
@@ -364,33 +359,29 @@ class Cas1AssessmentService(
     assessmentClarificationNoteListener.preUpdate(note)
   }
 
-  private fun preUpdateAssessment(assessment: AssessmentEntity) {
-    if (assessment is ApprovedPremisesAssessmentEntity) {
-      assessmentListener.preUpdate(assessment)
-    }
+  private fun preUpdateAssessment(assessment: ApprovedPremisesAssessmentEntity) {
+    assessmentListener.preUpdate(assessment)
   }
 
   @SuppressWarnings("ReturnCount")
   private fun validateAssessment(
     user: UserEntity,
     assessmentId: UUID,
-  ): CasResult<AssessmentEntity> {
+  ): CasResult<ApprovedPremisesAssessmentEntity> {
     val assessment = when (val assessmentResult = getAssessmentAndValidate(user, assessmentId)) {
       is CasResult.Success -> assessmentResult.value
       else -> return assessmentResult
     }
 
-    if (assessment is ApprovedPremisesAssessmentEntity) {
-      val allocatedToUser = assessment.allocatedToUser
-        ?: return CasResult.GeneralValidationError("An assessment must be allocated to a user to be updated")
+    val allocatedToUser = assessment.allocatedToUser
+      ?: return CasResult.GeneralValidationError("An assessment must be allocated to a user to be updated")
 
-      if (allocatedToUser.id != user.id) {
-        return CasResult.Unauthorised("The assessment can only be updated by the allocated user")
-      }
+    if (allocatedToUser.id != user.id) {
+      return CasResult.Unauthorised("The assessment can only be updated by the allocated user")
+    }
 
-      if (assessment.submittedAt != null) {
-        return CasResult.GeneralValidationError("A decision has already been taken on this assessment")
-      }
+    if (assessment.submittedAt != null) {
+      return CasResult.GeneralValidationError("A decision has already been taken on this assessment")
     }
 
     if (!assessment.schemaUpToDate) {
@@ -406,7 +397,7 @@ class Cas1AssessmentService(
 
   private fun validateAssessmentData(
     assessment: ApprovedPremisesAssessmentEntity,
-  ): CasResult<AssessmentEntity> {
+  ): CasResult<ApprovedPremisesAssessmentEntity> {
     val validationErrors = ValidationErrors()
     if (assessment.data == null) {
       validationErrors["$.data"] = "empty"

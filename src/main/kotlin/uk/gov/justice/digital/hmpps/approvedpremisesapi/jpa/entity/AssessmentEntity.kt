@@ -270,6 +270,9 @@ class LockableAssessmentEntity(
   val id: UUID,
 )
 
+@Repository
+interface ApprovedPremisesAssessmentRepository : JpaRepository<ApprovedPremisesAssessmentEntity, UUID>
+
 @Entity
 @DiscriminatorValue("approved-premises")
 @Table(name = "approved_premises_assessments")
