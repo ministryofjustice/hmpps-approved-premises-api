@@ -1,0 +1,23 @@
+package uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model
+
+import com.fasterxml.jackson.annotation.JsonProperty
+import io.swagger.v3.oas.annotations.media.Schema
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.EventType
+
+/**
+ *
+ * @param id The UUID of an event
+ * @param timestamp
+ * @param eventType
+ */
+data class Cas1DomainEventEnvelope(
+
+  @Schema(example = "364145f9-0af8-488e-9901-b4c46cd9ba37", required = true, description = "The UUID of an event")
+  @get:JsonProperty("id", required = true) val id: java.util.UUID,
+
+  @Schema(example = "null", required = true, description = "")
+  @get:JsonProperty("timestamp", required = true) val timestamp: java.time.Instant,
+
+  @Schema(example = "null", required = true, description = "")
+  @get:JsonProperty("eventType", required = true) val eventType: EventType,
+)

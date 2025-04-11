@@ -289,13 +289,6 @@ registerAdditionalOpenApiGenerateTask(
 )
 
 registerAdditionalOpenApiGenerateTask(
-  name = "openApiGenerateCas1DomainEvents",
-  ymlPath = "$rootDir/src/main/resources/static/cas1-domain-events-api.yml",
-  apiPackageName = "uk.gov.justice.digital.hmpps.approvedpremisesapi.api",
-  modelPackageName = "uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model",
-)
-
-registerAdditionalOpenApiGenerateTask(
   name = "openApiGenerateCas2DomainEvents",
   ymlPath = "$rootDir/src/main/resources/static/cas2-domain-events-api.yml",
   apiPackageName = "uk.gov.justice.digital.hmpps.approvedpremisesapi.api",
@@ -420,7 +413,6 @@ tasks.register("openApiPreCompilation") {
 }
 
 tasks.get("openApiGenerate").dependsOn(
-  "openApiGenerateCas1DomainEvents",
   "openApiGenerateCas3DomainEvents",
   "openApiGenerateCas2DomainEvents",
   "openApiPreCompilation",
@@ -446,6 +438,7 @@ tasks.get("openApiGenerate").doLast {
 ktlint {
   filter {
     exclude { it.file.path.contains("$buildDir${File.separator}generated${File.separator}") }
+    exclude("**/approvedpremisesapi/api/**")
   }
 }
 
@@ -460,7 +453,7 @@ tasks {
   }
 }
 
-tasks.getByName("runKtlintCheckOverMainSourceSet").dependsOn("openApiGenerate", "openApiGenerateCas1DomainEvents")
+tasks.getByName("runKtlintCheckOverMainSourceSet").dependsOn("openApiGenerate")
 
 detekt {
   config.setFrom("./detekt.yml")
@@ -471,4 +464,10 @@ detekt {
 
 dependencyCheck {
   suppressionFile = ".dependencycheckignore"
+}
+
+tasks.withType<io.gitlab.arturbosch.detekt.Detekt>().configureEach {
+  source = source.asFileTree.matching {
+    exclude("**/uk/gov/justice/digital/hmpps/approvedpremisesapi/api/**")
+  }
 }
