@@ -9,7 +9,6 @@ import org.springframework.http.ResponseEntity
 import org.springframework.stereotype.Service
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.PremisesApiDelegate
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Arrival
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.BedDetail
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.BedSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Booking
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cancellation
@@ -65,14 +64,12 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.RoomService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.StaffMemberService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.UserAccessService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.UserService
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1BedService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1WithdrawableService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas3.Cas3BookingService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas3.Cas3PremisesService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas3.Cas3VoidBedspaceService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas3LaoStrategy
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.ArrivalTransformer
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.BedDetailTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.BedSummaryTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.BookingTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.CancellationTransformer
@@ -105,7 +102,6 @@ class PremisesController(
   private val bookingService: BookingService,
   private val cas3BookingService: Cas3BookingService,
   private val cas3VoidBedspaceService: Cas3VoidBedspaceService,
-  private val cas1BedService: Cas1BedService,
   private val premisesTransformer: PremisesTransformer,
   private val cas3PremisesSummaryTransformer: Cas3PremisesSummaryTransformer,
   private val bookingTransformer: BookingTransformer,
@@ -122,7 +118,6 @@ class PremisesController(
   private val cas3VoidBedspaceCancellationTransformer: Cas3VoidBedspaceCancellationTransformer,
   private val cas3TurnaroundTransformer: Cas3TurnaroundTransformer,
   private val bedSummaryTransformer: BedSummaryTransformer,
-  private val bedDetailTransformer: BedDetailTransformer,
   private val dateChangeTransformer: DateChangeTransformer,
   private val cas1WithdrawableService: Cas1WithdrawableService,
 ) : PremisesApiDelegate {
@@ -933,17 +928,6 @@ class PremisesController(
     }
 
     return ResponseEntity.ok(premisesService.getBeds(premisesId).map(bedSummaryTransformer::transformToApi))
-  }
-
-  override fun premisesPremisesIdBedsBedIdGet(premisesId: UUID, bedId: UUID): ResponseEntity<BedDetail> {
-    val premises = premisesService.getPremises(premisesId)
-      ?: throw NotFoundProblem(premisesId, "Premises")
-
-    if (!userAccessService.currentUserCanViewPremises(premises)) {
-      throw ForbiddenProblem()
-    }
-
-    return ResponseEntity.ok(bedDetailTransformer.transformToApi(extractEntityFromCasResult(cas1BedService.getBedAndRoomCharacteristics(bedId))))
   }
 
   @SuppressWarnings("ThrowsCount")
