@@ -1132,7 +1132,7 @@ class Cas2v2SubmissionTest(
     }
 
     @Test
-    fun `When there's an error fetching the referred person's prison code, the application is not saved`() {
+    fun `When there's an error fetching the referred person's prison code, the application is saved`() {
       givenACas2v2DeliusUser { submittingUser, jwt ->
         givenAnOffender(mockNotFoundErrorForPrisonApi = true) { offenderDetails, _ ->
           val applicationId = UUID.fromString("22ceda56-98b2-411d-91cc-ace0ab8be872")
@@ -1181,11 +1181,11 @@ class Cas2v2SubmissionTest(
             )
             .exchange()
             .expectStatus()
-            .isBadRequest
+            .isOk
 
-          Assertions.assertThat(domainEventRepository.count()).isEqualTo(0)
-          Assertions.assertThat(cas2v2RealAssessmentRepository.count()).isEqualTo(0)
-          Assertions.assertThat(cas2v2RealApplicationRepository.findById(applicationId).get().submittedAt).isNull()
+          Assertions.assertThat(domainEventRepository.count()).isEqualTo(1)
+          Assertions.assertThat(cas2v2RealAssessmentRepository.count()).isEqualTo(1)
+          Assertions.assertThat(cas2v2RealApplicationRepository.findById(applicationId).get().submittedAt).isNotNull()
         }
       }
     }

@@ -274,11 +274,21 @@ class Cas2v2ApplicationService(
     application.schemaVersion as? Cas2v2ApplicationJsonSchemaEntity
       ?: throw RuntimeException("Incorrect type of JSON schema referenced by CAS2 v2 Application")
 
+    var prisonCode:String? = null
+    if (application.nomsNumber != null) {
+      try {
+        prisonCode = retrievePrisonCode(application)
+      }
+     catch (e: Exception) {
+       print("Cas2v2ApplicationSubmission Error: ${e.message}")
+     }
+    }
+
     try {
       application.apply {
         submittedAt = OffsetDateTime.now()
         document = serializedTranslatedDocument
-        referringPrisonCode = retrievePrisonCode(application)
+        referringPrisonCode = prisonCode
         preferredAreas = submitCas2v2Application.preferredAreas
         hdcEligibilityDate = submitCas2v2Application.hdcEligibilityDate
         conditionalReleaseDate = submitCas2v2Application.conditionalReleaseDate
