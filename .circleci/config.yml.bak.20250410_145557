@@ -1,9 +1,9 @@
 version: 2.1
 orbs:
-  hmpps: ministryofjustice/hmpps@8.8.0
+  hmpps: ministryofjustice/hmpps@8.2.1
   mem: circleci/rememborb@0.0.2
   node: circleci/node@5.2.0
-  slack: circleci/slack@4.15.0
+  slack: circleci/slack@4.12.6
 parameters:
   alerts-slack-channel:
     type: string
@@ -66,7 +66,64 @@ jobs:
             - project/**/*
             - .gradle/*
             - .gradle/**/*
-
+  code_linting_check_with_ktlint:
+    environment:
+      _JAVA_OPTIONS: "-Xmx3g"
+      GRADLE_OPTS: "-Dorg.gradle.daemon=false -Dorg.gradle.workers.max=2"
+    docker:
+      - image: cimg/openjdk:21.0.2
+    steps:
+      - attach_workspace:
+          at: ~/
+      - run:
+          name: Run ktlintCheck
+          command: ./gradlew ktlintCheck
+  static_code_analysis_with_detekt:
+    environment:
+      _JAVA_OPTIONS: "-Xmx3g"
+      GRADLE_OPTS: "-Dorg.gradle.daemon=false -Dorg.gradle.workers.max=2"
+    docker:
+      - image: cimg/openjdk:21.0.2
+    steps:
+      - attach_workspace:
+          at: ~/
+      - run:
+          name: Run detekt
+          command: ./gradlew detekt
+  unit_test:
+    parallelism: 6
+    environment:
+      _JAVA_OPTIONS: "-Xmx1g"
+      GRADLE_OPTS: "-Dorg.gradle.daemon=false -Dorg.gradle.workers.max=2"
+    executor:
+      name: unit-test-gradle
+    steps:
+      - attach_workspace:
+          at: ~/
+      - run:
+          name: Run unit tests
+          # Use "./gradlew test" instead if tests are not run in parallel
+          command: |
+            cd src/test/kotlin
+            # Get list of classnames of tests that should run on this node
+            CLASSNAMES=$(circleci tests glob "**/*Test.kt" \
+              | sed '/integration/d' \
+              | cut -c 1- | sed 's@/@.@g' \
+              | sed 's/.\{3\}$//' \
+              | circleci tests split --split-by=timings --timings-type=classname)
+            cd ../../..
+            # Format the arguments to "./gradlew test"
+            GRADLE_ARGS=$(echo $CLASSNAMES | awk '{for (i=1; i<=NF; i++) print "--tests",$i}')
+            echo "Prepared arguments for Gradle: $GRADLE_ARGS"
+            ./gradlew unitTest --build-cache -x openApiGenerate $GRADLE_ARGS
+      - save_cache:
+          paths:
+            - ~/.gradle
+          key: gradle-{{ checksum "build.gradle.kts" }}
+      - store_test_results:
+          path: build/test-results
+      - store_artifacts:
+          path: build/reports/tests
   integration_test:
     parallelism: 6
     environment:
@@ -225,7 +282,7 @@ jobs:
           command: |
             TESTS=$(circleci tests glob "e2e/tests/*.feature" | circleci tests split --split-by=timings | paste -sd ',')
             npm run test:e2e:ci --\
-              --env "assessor_username=${CAS3_E2E_ASSESSOR_USERNAME},assessor_password=${CAS3_E2E_ASSESSOR_PASSWORD},referrer_username=${CAS3_E2E_REFERRER_USERNAME},referrer_password=${CAS3_E2E_REFERRER_PASSWORD},environment=${CYPRESS_ENVIRONMENT_<< parameters.environment >>}"\
+              --env "assessor_username=${CYPRESS_ASSESSOR_USERNAME_<< parameters.environment >>},assessor_password=${CYPRESS_ASSESSOR_PASSWORD_<< parameters.environment >>},referrer_username=${CYPRESS_REFERRER_USERNAME_<< parameters.environment >>},referrer_password=${CYPRESS_REFERRER_PASSWORD_<< parameters.environment >>},acting_user_probation_region_id=${CYPRESS_ACTING_USER_PROBATION_REGION_ID_<< parameters.environment >>},acting_user_probation_region_name=${CYPRESS_ACTING_USER_PROBATION_REGION_NAME_<< parameters.environment >>},environment=${CYPRESS_ENVIRONMENT_<< parameters.environment >>}"\
               --config baseUrl=https://temporary-accommodation-<< parameters.environment >>.hmpps.service.justice.gov.uk \
               --spec $TESTS
       - store_artifacts:
@@ -261,7 +318,7 @@ jobs:
       - run:
           name: Run E2E tests
           command: |
-            export ASSESSOR_USERNAME=${CAS3_E2E_ASSESSOR_USERNAME} ASSESSOR_PASSWORD=${CAS3_E2E_ASSESSOR_PASSWORD} REFERRER_USERNAME=${CAS3_E2E_REFERRER_USERNAME} REFERRER_PASSWORD=${CAS3_E2E_REFERRER_PASSWORD} ENVIRONMENT=${CYPRESS_ENVIRONMENT_<< parameters.environment >>} DEV_PLAYWRIGHT_BASE_URL=https://transitional-accommodation-<< parameters.environment >>.hmpps.service.justice.gov.uk
+            export ASSESSOR_USERNAME=${CYPRESS_ASSESSOR_USERNAME_<< parameters.environment >>} ASSESSOR_PASSWORD=${CYPRESS_ASSESSOR_PASSWORD_<< parameters.environment >>} REFERRER_USERNAME=${CYPRESS_REFERRER_USERNAME_<< parameters.environment >>} REFERRER_PASSWORD=${CYPRESS_REFERRER_PASSWORD_<< parameters.environment >>} ACTING_USER_PROBATION_REGION_ID=${CYPRESS_ACTING_USER_PROBATION_REGION_ID_<< parameters.environment >>} ACTING_USER_PROBATION_REGION_NAME=${ACTING_USER_PROBATION_REGION_NAME_<< parameters.environment >>} ENVIRONMENT=${CYPRESS_ENVIRONMENT_<< parameters.environment >>} DEV_PLAYWRIGHT_BASE_URL=https://transitional-accommodation-<< parameters.environment >>.hmpps.service.justice.gov.uk
             npm run test:playwright:e2e:ci
       - store_artifacts:
           path: e2e_playwright/playwright-report
@@ -280,7 +337,7 @@ jobs:
     steps:
       - run:
           name: Trigger UI GitHub Actions workflow
-          command: "curl -X POST -H \"Authorization: token $GITHUB_TOKEN\" -H \"Accept: application/vnd.github.v3+json\" https://api.github.com/repos/ministryofjustice/hmpps-temporary-accommodation-ui/actions/workflows/generate-types.yml/dispatches -d '{\"ref\":\"main\"}'        \n"
+          command: "curl -X POST \\\n  -H \"Authorization: token $GITHUB_TOKEN\" \\\n  -H \"Accept: application/vnd.github.v3+json\" \\\n  https://api.github.com/repos/ministryofjustice/hmpps-temporary-accommodation-ui/actions/workflows/generate-types.yml/dispatches \\\n  -d '{\"ref\":\"main\"}'        \n"
 workflows:
   version: 2
   build-test-and-deploy:
@@ -347,7 +404,6 @@ workflows:
             - cas1_e2e_tests
             - cas2_e2e_tests
             - cas3_e2e_tests
-            - cas2_bail_e2e_tests
       - hmpps/deploy_env:
           name: deploy_preprod
           env: "preprod"
