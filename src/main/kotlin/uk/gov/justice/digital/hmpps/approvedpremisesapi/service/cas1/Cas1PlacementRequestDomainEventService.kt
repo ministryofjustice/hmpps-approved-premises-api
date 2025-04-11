@@ -10,6 +10,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.Pe
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.RequestForPlacementCreated
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.RequestForPlacementCreatedEnvelope
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.RequestForPlacementType
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DomainEventType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementRequestEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.DomainEventTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.UrlTemplate
@@ -64,6 +65,7 @@ class Cas1PlacementRequestDomainEventService(
     domainEventService.saveRequestForPlacementCreatedEvent(
       Cas1DomainEvent(
         id = domainEventId,
+        type = DomainEventType.APPROVED_PREMISES_REQUEST_FOR_PLACEMENT_CREATED,
         applicationId = application.id,
         crn = application.crn,
         nomsNumber = application.nomsNumber,
@@ -123,6 +125,7 @@ class Cas1PlacementRequestDomainEventService(
     domainEventService.saveMatchRequestWithdrawnEvent(
       Cas1DomainEvent(
         id = domainEventId,
+        type = DomainEventType.APPROVED_PREMISES_MATCH_REQUEST_WITHDRAWN,
         applicationId = application.id,
         crn = application.crn,
         nomsNumber = application.nomsNumber,

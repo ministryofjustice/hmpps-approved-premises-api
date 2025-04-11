@@ -169,6 +169,7 @@ class Cas1DomainEventServiceTest {
       assertThat(event).isEqualTo(
         Cas1DomainEvent(
           id = id,
+          type = type,
           applicationId = applicationId,
           crn = crn,
           nomsNumber = nomsNumber,
@@ -222,6 +223,7 @@ class Cas1DomainEventServiceTest {
 
       val domainEventToSave = Cas1DomainEvent(
         id = id,
+        type = type,
         applicationId = applicationId,
         crn = crn,
         nomsNumber = nomsNumber,
@@ -292,6 +294,7 @@ class Cas1DomainEventServiceTest {
 
       val domainEventToSave = Cas1DomainEvent(
         id = id,
+        type = type,
         applicationId = applicationId,
         crn = crn,
         nomsNumber = nomsNumber,
@@ -343,6 +346,7 @@ class Cas1DomainEventServiceTest {
 
       val domainEventToSave = Cas1DomainEvent(
         id = id,
+        type = type,
         applicationId = applicationId,
         crn = crn,
         nomsNumber = nomsNumber,
@@ -389,6 +393,7 @@ class Cas1DomainEventServiceTest {
 
       val domainEventToSave = Cas1DomainEvent(
         id = id,
+        type = type,
         applicationId = applicationId,
         crn = crn,
         nomsNumber = nomsNumber,
