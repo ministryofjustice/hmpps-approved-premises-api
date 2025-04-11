@@ -1,8 +1,7 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.controller
 
 import org.springframework.http.ResponseEntity
-import org.springframework.stereotype.Service
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.EventsApiDelegate
+import org.springframework.stereotype.Controller
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.ApplicationAssessedEnvelope
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.ApplicationExpiredEnvelope
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.ApplicationSubmittedEnvelope
@@ -28,49 +27,49 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1DomainE
 import java.util.UUID
 
 @SuppressWarnings("TooManyFunctions")
-@Service
+@Controller
 class DomainEventsController(
   private val domainEventService: Cas1DomainEventService,
-) : EventsApiDelegate {
-  override fun eventsApplicationSubmittedEventIdGet(eventId: UUID) = getDomainEvent<ApplicationSubmittedEnvelope>(eventId)
+) {
+  fun eventsApplicationSubmittedEventIdGet(eventId: UUID) = getDomainEvent<ApplicationSubmittedEnvelope>(eventId)
 
-  override fun eventsBookingCancelledEventIdGet(eventId: UUID) = getDomainEvent<BookingCancelledEnvelope>(eventId)
+  fun eventsBookingCancelledEventIdGet(eventId: UUID) = getDomainEvent<BookingCancelledEnvelope>(eventId)
 
-  override fun eventsBookingChangedEventIdGet(eventId: UUID) = getDomainEvent<BookingChangedEnvelope>(eventId)
+  fun eventsBookingChangedEventIdGet(eventId: UUID) = getDomainEvent<BookingChangedEnvelope>(eventId)
 
-  override fun eventsBookingKeyworkerAssignedEventIdGet(eventId: UUID) = getDomainEvent<BookingKeyWorkerAssignedEnvelope>(eventId)
+  fun eventsBookingKeyworkerAssignedEventIdGet(eventId: UUID) = getDomainEvent<BookingKeyWorkerAssignedEnvelope>(eventId)
 
-  override fun eventsApplicationAssessedEventIdGet(eventId: UUID) = getDomainEvent<ApplicationAssessedEnvelope>(eventId)
+  fun eventsApplicationAssessedEventIdGet(eventId: UUID) = getDomainEvent<ApplicationAssessedEnvelope>(eventId)
 
-  override fun eventsBookingMadeEventIdGet(eventId: UUID) = getDomainEvent<BookingMadeEnvelope>(eventId)
+  fun eventsBookingMadeEventIdGet(eventId: UUID) = getDomainEvent<BookingMadeEnvelope>(eventId)
 
-  override fun eventsPersonArrivedEventIdGet(eventId: UUID) = getDomainEvent<PersonArrivedEnvelope>(eventId)
+  fun eventsPersonArrivedEventIdGet(eventId: UUID) = getDomainEvent<PersonArrivedEnvelope>(eventId)
 
-  override fun eventsPersonNotArrivedEventIdGet(eventId: UUID) = getDomainEvent<PersonNotArrivedEnvelope>(eventId)
+  fun eventsPersonNotArrivedEventIdGet(eventId: UUID) = getDomainEvent<PersonNotArrivedEnvelope>(eventId)
 
-  override fun eventsPersonDepartedEventIdGet(eventId: UUID) = getDomainEvent<PersonDepartedEnvelope>(eventId)
+  fun eventsPersonDepartedEventIdGet(eventId: UUID) = getDomainEvent<PersonDepartedEnvelope>(eventId)
 
-  override fun eventsBookingNotMadeEventIdGet(eventId: UUID) = getDomainEvent<BookingNotMadeEnvelope>(eventId)
+  fun eventsBookingNotMadeEventIdGet(eventId: UUID) = getDomainEvent<BookingNotMadeEnvelope>(eventId)
 
-  override fun eventsApplicationWithdrawnEventIdGet(eventId: UUID) = getDomainEvent<ApplicationWithdrawnEnvelope>(eventId)
+  fun eventsApplicationWithdrawnEventIdGet(eventId: UUID) = getDomainEvent<ApplicationWithdrawnEnvelope>(eventId)
 
-  override fun eventsApplicationExpiredEventIdGet(eventId: UUID) = getDomainEvent<ApplicationExpiredEnvelope>(eventId)
+  fun eventsApplicationExpiredEventIdGet(eventId: UUID) = getDomainEvent<ApplicationExpiredEnvelope>(eventId)
 
-  override fun eventsPlacementApplicationWithdrawnEventIdGet(eventId: UUID) = getDomainEvent<PlacementApplicationWithdrawnEnvelope>(eventId)
+  fun eventsPlacementApplicationWithdrawnEventIdGet(eventId: UUID) = getDomainEvent<PlacementApplicationWithdrawnEnvelope>(eventId)
 
-  override fun eventsPlacementApplicationAllocatedEventIdGet(eventId: UUID) = getDomainEvent<PlacementApplicationAllocatedEnvelope>(eventId)
+  fun eventsPlacementApplicationAllocatedEventIdGet(eventId: UUID) = getDomainEvent<PlacementApplicationAllocatedEnvelope>(eventId)
 
-  override fun eventsMatchRequestWithdrawnEventIdGet(eventId: UUID) = getDomainEvent<MatchRequestWithdrawnEnvelope>(eventId)
+  fun eventsMatchRequestWithdrawnEventIdGet(eventId: UUID) = getDomainEvent<MatchRequestWithdrawnEnvelope>(eventId)
 
-  override fun eventsAssessmentAppealedEventIdGet(eventId: UUID) = getDomainEvent<AssessmentAppealedEnvelope>(eventId)
+  fun eventsAssessmentAppealedEventIdGet(eventId: UUID) = getDomainEvent<AssessmentAppealedEnvelope>(eventId)
 
-  override fun eventsAssessmentAllocatedEventIdGet(eventId: UUID) = getDomainEvent<AssessmentAllocatedEnvelope>(eventId)
+  fun eventsAssessmentAllocatedEventIdGet(eventId: UUID) = getDomainEvent<AssessmentAllocatedEnvelope>(eventId)
 
-  override fun eventsFurtherInformationRequestedEventIdGet(eventId: UUID) = getDomainEvent<FurtherInformationRequestedEnvelope>(eventId)
+  fun eventsFurtherInformationRequestedEventIdGet(eventId: UUID) = getDomainEvent<FurtherInformationRequestedEnvelope>(eventId)
 
-  override fun eventsRequestForPlacementCreatedEventIdGet(eventId: UUID) = getDomainEvent<RequestForPlacementCreatedEnvelope>(eventId)
+  fun eventsRequestForPlacementCreatedEventIdGet(eventId: UUID) = getDomainEvent<RequestForPlacementCreatedEnvelope>(eventId)
 
-  override fun eventsRequestForPlacementAssessedEventIdGet(eventId: UUID) = getDomainEvent<RequestForPlacementAssessedEnvelope>(eventId)
+  fun eventsRequestForPlacementAssessedEventIdGet(eventId: UUID) = getDomainEvent<RequestForPlacementAssessedEnvelope>(eventId)
 
   @Suppress("UNCHECKED_CAST") // Safe as the return type is constant and not likely to change at runtime
   private inline fun <reified T> getDomainEvent(eventId: UUID): ResponseEntity<T> {
