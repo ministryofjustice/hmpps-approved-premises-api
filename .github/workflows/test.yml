@@ -1,0 +1,238 @@
+name: Test
+
+on:
+  pull_request:
+    branches:
+      - main
+  workflow_call:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  gradle_build:
+    name: Gradle Build
+    runs-on: ubuntu-latest
+    container:
+      image: cimg/openjdk:21.0.2
+    env:
+      _JAVA_OPTIONS: "-Xmx3g"
+      GRADLE_OPTS: "-Dorg.gradle.daemon=false -Dorg.gradle.workers.max=2"
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      - name: Set up Gradle cache
+        uses: gradle/actions/setup-gradle@v3
+      - name: Gradle Build
+        run: ./gradlew assemble testClasses --build-cache
+
+  codeQL:
+    name: CodeQL
+    runs-on: ubuntu-latest
+    permissions:
+      actions: read
+      contents: read
+      security-events: write
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Java JDK
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: 21
+          cache: 'gradle'
+
+      - name: Initialize CodeQL
+        uses: github/codeql-action/init@v3
+        with:
+          languages: 'java'
+
+      - name: Autobuild
+        uses: github/codeql-action/autobuild@v3
+
+      - name: Perform CodeQL Analysis
+        uses: github/codeql-action/analyze@v3
+        with:
+          category: "/language:${{matrix.language}}"
+
+  helm-lint:
+    name: Helm lint
+    strategy:
+      matrix:
+        environments: ['dev', 'test', 'preprod', 'prod']
+    uses: ministryofjustice/hmpps-github-actions/.github/workflows/test_helm_lint.yml@v2 # WORKFLOW VERSION
+    secrets: inherit
+    with:
+      environment: ${{ matrix.environments }}
+
+  ktlint-check:
+    name: KtLintCheck
+    runs-on: ubuntu-latest
+    container:
+      image: cimg/openjdk:21.0.2
+    env:
+      _JAVA_OPTIONS: "-Xmx3g"
+      GRADLE_OPTS: "-Dorg.gradle.daemon=false -Dorg.gradle.workers.max=2"
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      - name: Set up Gradle cache
+        uses: gradle/actions/setup-gradle@v3
+      - name: Run ktlintCheck
+        run: ./gradlew ktlintCheck
+
+  detekt:
+    name: detekt
+    runs-on: ubuntu-latest
+    container:
+      image: cimg/openjdk:21.0.2
+    env:
+      _JAVA_OPTIONS: "-Xmx3g"
+      GRADLE_OPTS: "-Dorg.gradle.daemon=false -Dorg.gradle.workers.max=2"
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      - name: Set up Gradle cache
+        uses: gradle/actions/setup-gradle@v3
+      - name: Run detekt
+        run: ./gradlew detekt
+
+  unit_test:
+    name: Unit tests
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: refresh cache
+        id: initial-cache
+        uses: actions/cache@v4
+        env:
+          cache-name: kotlin-cache
+        with:
+          path: |
+            - gradle-{{ checksum "build.gradle.kts" }}
+            - gradle-
+          key: ${{ runner.os }}-gradle-${{ env.cache-name }}-${{ hashFiles('build.gradle.kts') }}
+      - uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '21'
+          cache: 'gradle'
+          cache-dependency-path: |
+            *.gradle*
+            **/gradle-wrapper.properties
+      - name: run unit tests
+        shell: bash
+        run: |
+          export JAVA_OPTS="${{ inputs.java_options }}"
+          ./gradlew unitTest
+      - name: upload the artifacts
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: upload kotlin test results
+          path: |
+            build/test-results
+            build/reports/tests
+
+  integration_test:
+    name: Integration Test
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        shard: [ 1, 2, 3, 4, 5, 6 ]
+
+    env:
+      _JAVA_OPTIONS: "-Xmx3g"
+      GRADLE_OPTS: "-Dorg.gradle.daemon=false -Dorg.gradle.workers.max=2"
+      POSTGRES_PORT: 5432
+      SPRING_DATA_REDIS_PORT: 6379
+    services:
+      redis:
+        image: "bitnami/redis:7.2.5"
+        ports:
+          - 6379:6379
+        options: --health-cmd="redis-cli ping" --health-interval=10s --health-timeout=5s --health-retries=5
+        env:
+          ALLOW_EMPTY_PASSWORD: yes
+      postgres:
+        image: "postgis/postgis:14-3.5"
+
+        env:
+          POSTGRES_USER: api_user
+          POSTGRES_PASSWORD: api_user_password
+          POSTGRES_DB: unused
+
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          # Maps tcp port 5432 on service container to the host
+          - 5432:5432
+      localstack:
+        image: localstack/localstack:3.4.0
+        ports:
+          - 4566:4566
+          - 4571:4571
+        env:
+          ES_PORT_EXTERNAL: 4571
+          DOCKER_HOST: 'unix:///var/run/docker.sock'
+          AWS_EXECUTION_ENV: True
+          PERSISTENCE: 1
+          SERVICES: sns,sqs
+          #          DEBUG: "${DEBUG- }"
+          DEFAULT_REGION: eu-west-2
+          DATA_DIR: /tmp/localstack/data
+
+    steps:
+      - uses: actions/checkout@v4
+      - name: refresh cache
+        id: initial-cache
+        uses: actions/cache@v4
+        env:
+          cache-name: kotlin-cache
+        with:
+          path: |
+            - gradle-{{ checksum "build.gradle.kts" }}
+            - gradle-
+          key: ${{ runner.os }}-gradle-${{ env.cache-name }}-${{ hashFiles('build.gradle.kts') }}
+      - uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: 21
+          cache: 'gradle'
+          cache-dependency-path: |
+            *.gradle*
+            **/gradle-wrapper.properties
+
+      - name: Determine tests splitting
+        uses: chaosaffe/split-tests@v1
+        id: split-tests
+        with:
+          glob: src/test/kotlin/**/integration/**/*Test.kt
+          split-index: ${{ strategy.job-index }}
+          split-total: ${{ strategy.job-total }}
+
+      - name: Run integration test
+        run: |
+          # Format the arguments to "./gradlew test"
+          GRADLE_ARGS=$(echo  ${{ steps.split-tests.outputs.test-suite }} | sed 's/src\/test\/kotlin\///g;s/\//./g;s/\.kt / /g' | awk '{for (i=1; i<=NF; i++) print "--tests",$i}')
+          echo "Prepared arguments for Gradle: $GRADLE_ARGS"
+          ./gradlew integrationTest -Dorg.gradle.daemon=false -Dorg.gradle.workers.max=2 $GRADLE_ARGS
+
+      - name: upload the artifacts
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: integration-test-results-${{ matrix.shard }}-of-${{ strategy.job-total }}
+          path: |
+            build/test-results
+            build/reports/tests
+  
+
