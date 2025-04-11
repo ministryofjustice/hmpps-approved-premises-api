@@ -133,10 +133,6 @@ class Cas2v2ApplicationService(
       is Cas2v2OffenderSearchResult.Success.Full -> offenderDetailsResult.person
     }
 
-    if (offenderDetails.nomsNumber == null) {
-      throw RuntimeException("Cannot create an Application for an Offender without a NOMS number")
-    }
-
     if (validationErrors.any()) {
       return fieldValidationError
     }
