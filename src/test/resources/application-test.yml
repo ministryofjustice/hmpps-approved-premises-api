@@ -148,7 +148,6 @@ url-templates:
       booking-changed-event-detail: http://api/events/booking-changed/#eventId
       booking-keyworker-assigned-event-detail: http://api/events/booking-keyworker-assigned/#eventId
       application-withdrawn-event-detail: http://api/events/application-withdrawn/#eventId
-      application-expired-event-detail: http://api/events/application-expired/#eventId
       assessment-appealed-event-detail: http://api/events/assessment-appealed/#eventId
       placement-application-withdrawn-event-detail: http://api/events/placement-application-withdrawn/#eventId
       placement-application-allocated-event-detail: http://api/events/placement-application-allocated/#eventId

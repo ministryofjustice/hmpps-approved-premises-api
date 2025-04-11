@@ -536,34 +536,6 @@ paths:
                 $ref: '#/components/schemas/Problem'
         500:
           $ref: '#/components/responses/500Response'
-  /events/application-expired/{eventId}:
-    parameters:
-      - name: eventId
-        description: UUID of the event
-        in: path
-        required: true
-        schema:
-          $ref: '#/components/schemas/EventId'
-    get:
-      tags:
-        - "'Manage' events"
-      summary: An 'application-expired' event
-      operationId: eventsApplicationExpiredEventIdGet
-      responses:
-        '200':
-          description: The 'application-expired' event corresponding to the provided `eventId`
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ApplicationExpiredEnvelope'
-        404:
-          description: No 'application-expired' event found for the provided `eventId`
-          content:
-            'application/json':
-              schema:
-                $ref: '#/components/schemas/Problem'
-        500:
-          $ref: '#/components/responses/500Response'
 components:
   responses:
     500Response:
