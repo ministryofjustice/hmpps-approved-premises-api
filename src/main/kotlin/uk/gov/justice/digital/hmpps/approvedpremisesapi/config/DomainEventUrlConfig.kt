@@ -30,7 +30,6 @@ class DomainEventUrlConfig {
       DomainEventType.APPROVED_PREMISES_PLACEMENT_APPLICATION_WITHDRAWN -> cas1["placement-application-withdrawn-event-detail"]
       DomainEventType.APPROVED_PREMISES_PLACEMENT_APPLICATION_ALLOCATED -> cas1["placement-application-allocated-event-detail"]
       DomainEventType.APPROVED_PREMISES_MATCH_REQUEST_WITHDRAWN -> cas1["match-request-withdrawn-event-detail"]
-      DomainEventType.APPROVED_PREMISES_REQUEST_FOR_PLACEMENT_CREATED -> cas1["request-for-placement-created-event-detail"]
       DomainEventType.APPROVED_PREMISES_REQUEST_FOR_PLACEMENT_ASSESSED -> cas1["request-for-placement-assessed-event-detail"]
       DomainEventType.APPROVED_PREMISES_ASSESSMENT_INFO_REQUESTED -> cas1["assessment-info-requested-detail"]
       DomainEventType.CAS2_APPLICATION_SUBMITTED -> cas2["application-submitted-event-detail"]
