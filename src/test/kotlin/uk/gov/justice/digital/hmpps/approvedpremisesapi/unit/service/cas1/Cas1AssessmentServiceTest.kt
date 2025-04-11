@@ -867,7 +867,7 @@ class Cas1AssessmentServiceTest {
 
       every { userServiceMock.getUserForRequest() } returns user
 
-      val result = cas1AssessmentService.acceptCas1Assessment(
+      val result = cas1AssessmentService.acceptAssessment(
         user,
         assessmentId,
         "{\"test\": \"data\"}",
@@ -907,7 +907,7 @@ class Cas1AssessmentServiceTest {
 
       every { userServiceMock.getUserForRequest() } returns user
 
-      val result = cas1AssessmentService.acceptCas1Assessment(
+      val result = cas1AssessmentService.acceptAssessment(
         user,
         assessmentId,
         "{\"test\": \"data\"}",
@@ -939,7 +939,7 @@ class Cas1AssessmentServiceTest {
       every { jsonSchemaServiceMock.getNewestSchema(ApprovedPremisesAssessmentJsonSchemaEntity::class.java) } returns ApprovedPremisesAssessmentJsonSchemaEntityFactory().produce()
 
       val result =
-        cas1AssessmentService.acceptCas1Assessment(user, assessmentId, "{}", placementRequirements, null, null, null)
+        cas1AssessmentService.acceptAssessment(user, assessmentId, "{}", placementRequirements, null, null, null)
 
       assertThatCasResult(result).isUnauthorised("Not authorised to view the assessment")
     }
@@ -966,7 +966,7 @@ class Cas1AssessmentServiceTest {
         )
 
       val result =
-        cas1AssessmentService.acceptCas1Assessment(user, assessmentId, "{}", placementRequirements, null, null, null)
+        cas1AssessmentService.acceptAssessment(user, assessmentId, "{}", placementRequirements, null, null, null)
 
       assertThatCasResult(result).isGeneralValidationError("The schema version is outdated")
     }
@@ -996,7 +996,7 @@ class Cas1AssessmentServiceTest {
         )
 
       val result =
-        cas1AssessmentService.acceptCas1Assessment(user, assessmentId, "{}", placementRequirements, null, null, null)
+        cas1AssessmentService.acceptAssessment(user, assessmentId, "{}", placementRequirements, null, null, null)
 
       assertThatCasResult(result).isGeneralValidationError("A decision has already been taken on this assessment")
     }
@@ -1025,7 +1025,7 @@ class Cas1AssessmentServiceTest {
         )
 
       val result =
-        cas1AssessmentService.acceptCas1Assessment(user, assessmentId, "{}", placementRequirements, null, null, null)
+        cas1AssessmentService.acceptAssessment(user, assessmentId, "{}", placementRequirements, null, null, null)
 
       assertThatCasResult(result).isGeneralValidationError("The application has been reallocated, this assessment is read only")
     }
@@ -1057,7 +1057,7 @@ class Cas1AssessmentServiceTest {
           CaseSummaryFactory().withName(NameFactory().withForename("Gregor").withSurname("Samsa").produce()).produce(),
         )
 
-      val result = cas1AssessmentService.acceptCas1Assessment(
+      val result = cas1AssessmentService.acceptAssessment(
         user,
         assessmentId,
         "{\"test\": \"data\"}",
@@ -1091,7 +1091,7 @@ class Cas1AssessmentServiceTest {
         )
       } returns PersonSummaryInfoResult.NotFound(assessment.application.crn)
 
-      val result = cas1AssessmentService.acceptCas1Assessment(
+      val result = cas1AssessmentService.acceptAssessment(
         user,
         assessmentId,
         "{\"test\": \"data\"}",
@@ -1149,7 +1149,7 @@ class Cas1AssessmentServiceTest {
 
       every { cas1AssessmentEmailServiceMock.assessmentAccepted(any()) } just Runs
 
-      val result = cas1AssessmentService.acceptCas1Assessment(
+      val result = cas1AssessmentService.acceptAssessment(
         user,
         assessmentId,
         "{\"test\": \"data\"}",
@@ -1253,7 +1253,7 @@ class Cas1AssessmentServiceTest {
 
       every { cas1PlacementRequestEmailService.placementRequestSubmitted(any()) } just Runs
 
-      val result = cas1AssessmentService.acceptCas1Assessment(
+      val result = cas1AssessmentService.acceptAssessment(
         user,
         assessmentId,
         "{\"test\": \"data\"}",
@@ -1326,7 +1326,7 @@ class Cas1AssessmentServiceTest {
           CaseSummaryFactory().withName(NameFactory().withForename("Gregor").withSurname("Samsa").produce()).produce(),
         )
 
-      val result = cas1AssessmentService.acceptCas1Assessment(
+      val result = cas1AssessmentService.acceptAssessment(
         user,
         assessmentId,
         "{\"test\": \"data\"}",
@@ -1387,7 +1387,7 @@ class Cas1AssessmentServiceTest {
 
       every { jsonSchemaServiceMock.getNewestSchema(ApprovedPremisesAssessmentJsonSchemaEntity::class.java) } returns ApprovedPremisesAssessmentJsonSchemaEntityFactory().produce()
 
-      val result = cas1AssessmentService.rejectCas1Assessment(user, assessmentId, "{}", "reasoning")
+      val result = cas1AssessmentService.rejectAssessment(user, assessmentId, "{}", "reasoning")
 
       assertThat(result is CasResult.Unauthorised).isTrue
     }
@@ -1418,7 +1418,7 @@ class Cas1AssessmentServiceTest {
           CaseSummaryFactory().withName(NameFactory().withForename("Gregor").withSurname("Samsa").produce()).produce(),
         )
 
-      val result = cas1AssessmentService.rejectCas1Assessment(user, assessment.id, "{}", "reasoning")
+      val result = cas1AssessmentService.rejectAssessment(user, assessment.id, "{}", "reasoning")
 
       assertThatCasResult(result).isGeneralValidationError("An assessment must be allocated to a user to be updated")
     }
@@ -1449,7 +1449,7 @@ class Cas1AssessmentServiceTest {
           CaseSummaryFactory().withName(NameFactory().withForename("Gregor").withSurname("Samsa").produce()).produce(),
         )
 
-      val result = cas1AssessmentService.rejectCas1Assessment(user, assessment.id, "{}", "reasoning")
+      val result = cas1AssessmentService.rejectAssessment(user, assessment.id, "{}", "reasoning")
 
       assertThatCasResult(result).isUnauthorised("The assessment can only be updated by the allocated user")
     }
@@ -1480,7 +1480,7 @@ class Cas1AssessmentServiceTest {
           CaseSummaryFactory().withName(NameFactory().withForename("Gregor").withSurname("Samsa").produce()).produce(),
         )
 
-      val result = cas1AssessmentService.rejectCas1Assessment(user, assessment.id, "{}", "reasoning")
+      val result = cas1AssessmentService.rejectAssessment(user, assessment.id, "{}", "reasoning")
 
       assertThat(result is CasResult.GeneralValidationError).isTrue
       result as CasResult.GeneralValidationError
@@ -1514,7 +1514,7 @@ class Cas1AssessmentServiceTest {
           CaseSummaryFactory().withName(NameFactory().withForename("Gregor").withSurname("Samsa").produce()).produce(),
         )
 
-      val result = cas1AssessmentService.rejectCas1Assessment(user, assessment.id, "{}", "reasoning")
+      val result = cas1AssessmentService.rejectAssessment(user, assessment.id, "{}", "reasoning")
 
       assertThat(result is CasResult.GeneralValidationError).isTrue
       result as CasResult.GeneralValidationError
@@ -1549,7 +1549,7 @@ class Cas1AssessmentServiceTest {
           CaseSummaryFactory().withName(NameFactory().withForename("Gregor").withSurname("Samsa").produce()).produce(),
         )
 
-      val result = cas1AssessmentService.rejectCas1Assessment(user, assessment.id, "{}", "reasoning")
+      val result = cas1AssessmentService.rejectAssessment(user, assessment.id, "{}", "reasoning")
 
       assertThat(result is CasResult.GeneralValidationError).isTrue
       result as CasResult.GeneralValidationError
@@ -1592,7 +1592,7 @@ class Cas1AssessmentServiceTest {
           CaseSummaryFactory().withName(NameFactory().withForename("Gregor").withSurname("Samsa").produce()).produce(),
         )
 
-      val result = cas1AssessmentService.rejectCas1Assessment(user, assessment.id, "{\"test\": \"data\"}", "reasoning")
+      val result = cas1AssessmentService.rejectAssessment(user, assessment.id, "{\"test\": \"data\"}", "reasoning")
 
       assertThat(result is CasResult.FieldValidationError).isTrue
       result as CasResult.FieldValidationError
@@ -1635,7 +1635,7 @@ class Cas1AssessmentServiceTest {
           user.cas1LaoStrategy(),
         )
       } returns PersonSummaryInfoResult.NotFound(assessment.application.crn)
-      val result = cas1AssessmentService.rejectCas1Assessment(user, assessmentId, "{\"test\": \"data\"}", "reasoning")
+      val result = cas1AssessmentService.rejectAssessment(user, assessmentId, "{\"test\": \"data\"}", "reasoning")
 
       assertThat(result is CasResult.Unauthorised).isTrue
     }
@@ -1680,7 +1680,7 @@ class Cas1AssessmentServiceTest {
           caseSummary,
         )
 
-      val result = cas1AssessmentService.rejectCas1Assessment(user, assessmentId, "{\"test\": \"data\"}", "reasoning")
+      val result = cas1AssessmentService.rejectAssessment(user, assessmentId, "{\"test\": \"data\"}", "reasoning")
 
       assertThat(result is CasResult.Success).isTrue
       result as CasResult.Success

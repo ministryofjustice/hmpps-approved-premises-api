@@ -156,7 +156,7 @@ class Cas1AssessmentsController(
 
     val serializedData = objectMapper.writeValueAsString(cas1AssessmentAcceptance.document)
 
-    val assessmentAuthResult = cas1AssessmentService.acceptCas1Assessment(
+    val assessmentAuthResult = cas1AssessmentService.acceptAssessment(
       acceptingUser = user,
       assessmentId = assessmentId,
       document = serializedData,
@@ -184,7 +184,7 @@ class Cas1AssessmentsController(
     val serializedData = objectMapper.writeValueAsString(cas1AssessmentRejection.document)
 
     val assessmentAuthResult =
-      cas1AssessmentService.rejectCas1Assessment(
+      cas1AssessmentService.rejectAssessment(
         user,
         assessmentId,
         serializedData,

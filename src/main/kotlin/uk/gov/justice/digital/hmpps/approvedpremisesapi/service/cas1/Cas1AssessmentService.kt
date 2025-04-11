@@ -102,7 +102,6 @@ class Cas1AssessmentService(
   fun getAssessmentAndValidate(
     user: UserEntity,
     assessmentId: UUID,
-    forTimeline: Boolean = false,
   ): CasResult<AssessmentEntity> {
     val assessment = assessmentRepository.findByIdOrNull(assessmentId)
       ?: return CasResult.NotFound("AssessmentEntity", assessmentId.toString())
@@ -115,9 +114,7 @@ class Cas1AssessmentService(
       else -> throw RuntimeException("Assessment type '${assessment::class.qualifiedName}' is not currently supported")
     }
 
-    val isAuthorised = userAccessService.userCanViewAssessment(user, assessment) || (forTimeline && userAccessService.userCanViewApplication(user, assessment.application))
-
-    if (!isAuthorised) {
+    if (!userAccessService.userCanViewAssessment(user, assessment)) {
       return CasResult.Unauthorised("Not authorised to view the assessment")
     }
 
@@ -227,7 +224,7 @@ class Cas1AssessmentService(
   }
 
   @SuppressWarnings("TooGenericExceptionThrown", "ReturnCount")
-  fun acceptCas1Assessment(
+  fun acceptAssessment(
     acceptingUser: UserEntity,
     assessmentId: UUID,
     document: String?,
@@ -252,7 +249,7 @@ class Cas1AssessmentService(
       validationErrors["$.requirements"] = "empty"
       return CasResult.FieldValidationError(validationErrors)
     }
-    when (val dataValidation = validateCas1AssessmentData(assessment)) {
+    when (val dataValidation = validateAssessmentData(assessment)) {
       is CasResult.Success -> {}
       is CasResult.Error -> return dataValidation
     }
@@ -311,7 +308,7 @@ class Cas1AssessmentService(
   }
 
   @SuppressWarnings("TooGenericExceptionThrown")
-  fun rejectCas1Assessment(
+  fun rejectAssessment(
     rejectingUser: UserEntity,
     assessmentId: UUID,
     document: String?,
@@ -325,7 +322,7 @@ class Cas1AssessmentService(
       else -> return validation
     }
 
-    when (val dataValidation = validateCas1AssessmentData(assessment)) {
+    when (val dataValidation = validateAssessmentData(assessment)) {
       is CasResult.Success -> {}
       is CasResult.Error -> return dataValidation
     }
@@ -407,7 +404,7 @@ class Cas1AssessmentService(
     return CasResult.Success(assessment)
   }
 
-  private fun validateCas1AssessmentData(
+  private fun validateAssessmentData(
     assessment: ApprovedPremisesAssessmentEntity,
   ): CasResult<AssessmentEntity> {
     val validationErrors = ValidationErrors()
