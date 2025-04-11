@@ -7,15 +7,18 @@ import jakarta.persistence.FetchType
 import jakarta.persistence.Id
 import jakarta.persistence.JoinColumn
 import jakarta.persistence.JoinTable
+import jakarta.persistence.LockModeType
 import jakarta.persistence.ManyToMany
 import jakarta.persistence.ManyToOne
 import jakarta.persistence.OneToOne
 import jakarta.persistence.Table
 import jakarta.persistence.Version
+import org.hibernate.annotations.Immutable
 import org.springframework.data.domain.Page
 import org.springframework.data.domain.Pageable
 import org.springframework.data.domain.Sort
 import org.springframework.data.jpa.repository.JpaRepository
+import org.springframework.data.jpa.repository.Lock
 import org.springframework.data.jpa.repository.Modifying
 import org.springframework.data.jpa.repository.Query
 import org.springframework.stereotype.Repository
@@ -307,6 +310,22 @@ interface Cas1SpaceBookingAtPremises {
   val canonicalDepartureDate: LocalDate
 }
 
+@Repository
+interface LockableCas1SpaceBookingEntityRepository : JpaRepository<LockableCas1SpaceBookingEntity, UUID> {
+
+  @Query("Select sb from LockableCas1SpaceBookingEntity sb where sb.id = :id")
+  @Lock(LockModeType.PESSIMISTIC_WRITE)
+  fun acquirePessimisticLock(id: UUID): LockableCas1SpaceBookingEntity?
+}
+
+@Entity
+@Table(name = "cas1_space_bookings")
+@Immutable
+class LockableCas1SpaceBookingEntity(
+  @Id
+  val id: UUID,
+)
+
 @Entity
 @Table(name = "cas1_space_bookings")
 data class Cas1SpaceBookingEntity(
@@ -416,7 +435,7 @@ data class Cas1SpaceBookingEntity(
   val deliusId: String?,
   @OneToOne
   @JoinColumn(name = "transferred_to", referencedColumnName = "id")
-  val transferredBooking: Cas1SpaceBookingEntity?,
+  var transferredBooking: Cas1SpaceBookingEntity?,
   @Version
   var version: Long = 1,
 ) {
@@ -446,6 +465,7 @@ data class Cas1SpaceBookingEntity(
     val CHARACTERISTICS_OF_INTEREST = PREMISE_CHARACTERISTICS_OF_INTEREST + ROOM_CHARACTERISTICS_OF_INTEREST
   }
 
+  @Deprecated("The definition of active is ambiguous, use !isCancelled() instead")
   fun isActive() = !isCancelled()
   fun isCancelled() = cancellationOccurredAt != null
   fun hasDeparted() = actualDepartureDate != null
@@ -455,6 +475,13 @@ data class Cas1SpaceBookingEntity(
     !hasNonArrival() &&
     canonicalArrivalDate <= day &&
     canonicalDepartureDate > day
+  fun hasBeenTransferred() = transferredBooking != null
+  fun isEligibleForEmergencyTransfer(): Boolean = !(
+    this.hasDeparted() ||
+      this.hasBeenTransferred() ||
+      this.isCancelled() ||
+      this.hasNonArrival()
+    )
 
   override fun toString() = "Cas1SpaceBookingEntity:$id"
   val applicationFacade: Cas1ApplicationFacade
