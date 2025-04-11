@@ -228,34 +228,6 @@ paths:
                 $ref: '#/components/schemas/Problem'
         500:
           $ref: '#/components/responses/500Response'
-  /events/booking-keyworker-assigned/{eventId}:
-    parameters:
-      - name: eventId
-        description: UUID of the event
-        in: path
-        required: true
-        schema:
-          $ref: '#/components/schemas/EventId'
-    get:
-      tags:
-        - "'Manage' events"
-      summary: A 'booking-keyworker-assigned' event
-      operationId: eventsBookingKeyworkerAssignedEventIdGet
-      responses:
-        '200':
-          description: The 'booking-keyworker-assigned' event corresponding to the provided `eventId`
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/BookingKeyWorkerAssignedEnvelope'
-        404:
-          description: No 'booking-keyworker-changed' event found for the provided `eventId`
-          content:
-            'application/json':
-              schema:
-                $ref: '#/components/schemas/Problem'
-        500:
-          $ref: '#/components/responses/500Response'
   /events/booking-not-made/{eventId}:
     parameters:
       - name: eventId
