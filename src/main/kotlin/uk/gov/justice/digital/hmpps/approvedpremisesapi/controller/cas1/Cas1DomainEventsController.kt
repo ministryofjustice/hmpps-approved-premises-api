@@ -37,8 +37,6 @@ class Cas1DomainEventsController(
 
   override fun eventsBookingChangedEventIdGet(eventId: UUID) = getDomainEvent<BookingChangedEnvelope>(eventId)
 
-  override fun eventsBookingKeyworkerAssignedEventIdGet(eventId: UUID) = getDomainEvent<BookingKeyWorkerAssignedEnvelope>(eventId)
-
   override fun eventsApplicationAssessedEventIdGet(eventId: UUID) = getDomainEvent<ApplicationAssessedEnvelope>(eventId)
 
   override fun eventsBookingMadeEventIdGet(eventId: UUID) = getDomainEvent<BookingMadeEnvelope>(eventId)
@@ -82,7 +80,6 @@ class Cas1DomainEventsController(
       PlacementApplicationWithdrawnEnvelope::class -> domainEventService::getPlacementApplicationWithdrawnEvent
       BookingCancelledEnvelope::class -> domainEventService::getBookingCancelledEvent
       BookingChangedEnvelope::class -> domainEventService::getBookingChangedEvent
-      BookingKeyWorkerAssignedEnvelope::class -> domainEventService::getBookingKeyWorkerAssignedEvent
       BookingNotMadeEnvelope::class -> domainEventService::getBookingNotMadeEvent
       PersonArrivedEnvelope::class -> domainEventService::getPersonArrivedEvent
       PersonDepartedEnvelope::class -> domainEventService::getPersonDepartedEvent
