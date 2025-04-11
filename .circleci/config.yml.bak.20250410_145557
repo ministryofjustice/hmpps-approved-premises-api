@@ -337,7 +337,7 @@ jobs:
     steps:
       - run:
           name: Trigger UI GitHub Actions workflow
-          command: "curl -X POST -H \"Authorization: token $GITHUB_TOKEN\" -H \"Accept: application/vnd.github.v3+json\" https://api.github.com/repos/ministryofjustice/hmpps-temporary-accommodation-ui/actions/workflows/generate-types.yml/dispatches -d '{\"ref\":\"main\"}'        \n"
+          command: "curl -X POST \\\n  -H \"Authorization: token $GITHUB_TOKEN\" \\\n  -H \"Accept: application/vnd.github.v3+json\" \\\n  https://api.github.com/repos/ministryofjustice/hmpps-temporary-accommodation-ui/actions/workflows/generate-types.yml/dispatches \\\n  -d '{\"ref\":\"main\"}'        \n"
 workflows:
   version: 2
   build-test-and-deploy:
