@@ -58,3 +58,18 @@ jobs:
         uses: gradle/actions/setup-gradle@v3
       - name: Run ktlintCheck
         run: ./gradlew ktlintCheck detekt
+  detekt_static_code_analysis:
+    name: Run detekt
+    runs-on: ubuntu-latest
+    container:
+      image: cimg/openjdk:21.0.2
+    env:
+      _JAVA_OPTIONS: "-Xmx3g"
+      GRADLE_OPTS: "-Dorg.gradle.daemon=false -Dorg.gradle.workers.max=2"
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      - name: Set up Gradle cache
+        uses: gradle/actions/setup-gradle@v3
+      - name: Run ktlintCheck
+        run: ./gradlew detekt
