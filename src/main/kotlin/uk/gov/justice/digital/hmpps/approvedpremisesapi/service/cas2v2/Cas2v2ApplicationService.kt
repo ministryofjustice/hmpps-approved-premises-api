@@ -36,6 +36,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.getMetadata
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.getPageableOrAllPages
 import java.time.LocalDate
 import java.time.OffsetDateTime
+import java.time.format.DateTimeFormatter
 import java.util.UUID
 
 @Service("Cas2v2ApplicationService")
@@ -393,6 +394,11 @@ class Cas2v2ApplicationService(
         "prisonNumber" to application.nomsNumber,
         "crn" to application.crn,
         "telephoneNumber" to application.telephoneNumber,
+        "timeApplicationSubmitted" to (application.submittedAt?.format(DateTimeFormatter.ofPattern("HH:mm")) ?: ""),
+        "dateApplicationSubmitted" to (application.submittedAt?.format(DateTimeFormatter.ofPattern("dd/MM/yyyy")) ?: ""),
+        "referrerName" to application.createdByUser.name,
+        "referrerEmail" to application.createdByUser.email,
+        "referrerTelephoneNumber" to application.telephoneNumber,
         "applicationUrl" to submittedApplicationUrlTemplate.replace("#applicationId", application.id.toString()),
       ),
       replyToEmailId = notifyConfig.emailAddresses.cas2ReplyToId,
