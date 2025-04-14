@@ -1,0 +1,51 @@
+name: Test
+
+on:
+  pull_request:
+    branches:
+      - main
+  workflow_call:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  unit_test:
+    name: validate the Kotlin app
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: refresh cache
+        id: initial-cache
+        uses: actions/cache@v4
+        env:
+          cache-name: kotlin-cache
+        with:
+          path: |
+            - gradle-{{ checksum "build.gradle.kts" }}
+            - gradle-
+          key: ${{ runner.os }}-gradle-${{ env.cache-name }}-${{ hashFiles('build.gradle.kts') }}
+      - uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '${{ inputs.java_version }}'
+          cache: 'gradle'
+          cache-dependency-path: |
+            *.gradle*
+            **/gradle-wrapper.properties
+      - name: gradlew test
+        shell: bash
+        run: |
+          export JAVA_OPTS="${{ inputs.java_options }}"
+          ./gradlew test -DexcludeTags=integration
+      - name: upload the artifacts
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: upload kotlin test results
+          path: |
+            build/test-results
+            build/reports/tests
+
+
