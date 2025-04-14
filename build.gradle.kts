@@ -11,6 +11,10 @@ plugins {
   id("org.owasp.dependencycheck") version "12.1.0"
 }
 
+kotlin {
+  jvmToolchain(21)
+}
+
 configurations.matching { it.name == "detekt" }.all {
   resolutionStrategy.eachDependency {
     if (requested.group == "org.jetbrains.kotlin") {
@@ -100,10 +104,7 @@ val buildDir = layout.buildDirectory.asFile.get()
 
 tasks {
   withType<org.jetbrains.kotlin.gradle.tasks.KotlinCompile> {
-    kotlinOptions {
-      jvmTarget = "21"
-    }
-
+    compilerOptions.jvmTarget = org.jetbrains.kotlin.gradle.dsl.JvmTarget.JVM_21
     dependsOn("openApiGenerate")
     getByName("check") {
       dependsOn(":ktlintCheck", "detekt")
@@ -469,7 +470,7 @@ gatling {
 }
 
 detekt {
-  config = files("./detekt.yml")
+  config.setFrom("./detekt.yml")
   buildUponDefaultConfig = true
   ignoreFailures = false
   baseline = file("./detekt-baseline.xml")
