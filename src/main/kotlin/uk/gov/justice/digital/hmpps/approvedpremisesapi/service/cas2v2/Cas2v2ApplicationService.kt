@@ -392,6 +392,7 @@ class Cas2v2ApplicationService(
         "name" to user.name,
         "email" to user.email,
         "prisonNumber" to application.nomsNumber,
+        "nomsNumber" to application.nomsNumber,
         "crn" to application.crn,
         "telephoneNumber" to application.telephoneNumber,
         "timeApplicationSubmitted" to (application.submittedAt?.format(DateTimeFormatter.ofPattern("HH:mm")) ?: ""),
