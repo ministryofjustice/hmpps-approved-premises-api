@@ -57,14 +57,4 @@ jobs:
       - name: Set up Gradle cache
         uses: gradle/actions/setup-gradle@v3
       - name: Run ktlintCheck
-        run: ./gradlew ktlintCheck
-  detekt:
-    name: detekt
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-      - name: Set up Gradle cache
-        uses: gradle/actions/setup-gradle@v3
-      - name: Run detekt
-        run: ./gradlew detekt
+        run: ./gradlew ktlintCheck detekt
