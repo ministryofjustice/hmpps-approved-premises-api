@@ -138,6 +138,7 @@ class Cas2v2StatusUpdateService(
           eventDetails = Cas2ApplicationStatusUpdatedEventDetails(
             applicationId = application.id,
             applicationUrl = applicationUrlTemplate.replace("#id", application.id.toString()),
+            applicationOrigin = application.applicationOrigin.toString(),
             personReference = PersonReference(
               crn = application.crn,
               noms = application.nomsNumber.toString(),
