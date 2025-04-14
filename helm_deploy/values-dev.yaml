@@ -26,7 +26,6 @@ generic-service:
     SERVICES_PRISONER-ALERTS-API_BASE-URL: https://alerts-api-dev.hmpps.service.justice.gov.uk
     SERVICES_NOMIS-USER-ROLES-API_BASE-URL: https://nomis-user-roles-api-dev.prison.service.justice.gov.uk
     SERVICES_MANAGE-USERS-API_BASE-URL: https://manage-users-api-dev.hmpps.service.justice.gov.uk
-    SERVICES_PROBATION-OFFENDER-SEARCH-API_BASE-URL: https://probation-offender-search-dev.hmpps.service.justice.gov.uk
     SERVICES_CASE-NOTES_BASE-URL: https://dev.offender-case-notes.service.justice.gov.uk
     SERVICES_AP-OASYS-CONTEXT-API_BASE-URL: https://approved-premises-and-oasys-dev.hmpps.service.justice.gov.uk
     SERVICES_GOV-UK-BANK-HOLIDAYS-API_BASE-URL: https://www.gov.uk
@@ -100,8 +99,6 @@ generic-service:
     URL-TEMPLATES_API_CAS3_BOOKING-CANCELLED-UPDATED-EVENT-DETAIL: https://approved-premises-api-dev.hmpps.service.justice.gov.uk/events/cas3/booking-cancelled-updated/#eventId
 
     USER-ALLOCATIONS_RULES_ESAP-ASSESSMENTS_ALLOCATE-TO-USER: AP_USER_TEST_2
-
-    SERVICES_PROBATION-OFFENDER-SEARCH-API_MAX-RESPONSE-IN-MEMORY-SIZE-BYTES: "2621440"
 
     FEATURE-FLAGS_CAS2-SQS-LISTENER-ENABLED: true
     FEATURE-FLAGS_CAS1-DISABLE-OVERBOOKING-SUMMARY: true

@@ -34,7 +34,7 @@ class OffenderDetailsDataSource(
       throw InternalServerErrorProblem("Cannot bulk request more than 500 CRNs. ${crns.size} has been provided.")
     }
 
-    return when (val clientResult = apDeliusContextApiClient.getSummariesForCrns(crns)) {
+    return when (val clientResult = apDeliusContextApiClient.getCaseSummaries(crns)) {
       is ClientResult.Success -> {
         val crnToAccessResult = clientResult.body.cases.associateBy(
           keySelector = { it.crn },

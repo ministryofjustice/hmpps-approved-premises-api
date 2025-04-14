@@ -5,19 +5,17 @@ import org.junit.jupiter.api.Test
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.FullPerson
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PersonStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PersonType
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.CaseSummaryFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.InmateDetailFactory
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ProbationOffenderDetailFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.IntegrationTestBase
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenACas2PomUser
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.apDeliusContextMockCaseSummary
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.apDeliusContextMockUnsuccessfulCaseSummaryCall
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.prisonAPIMockSuccessfulInmateDetailsCall
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.probationOffenderSearchAPIMockForbiddenOffenderSearchCall
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.probationOffenderSearchAPIMockNotFoundSearchCall
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.probationOffenderSearchAPIMockServerErrorSearchCall
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.probationOffenderSearchAPIMockSuccessfulOffenderSearchCall
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.deliuscontext.Name
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.deliuscontext.Profile
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.prisonsapi.AssignedLivingUnit
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.prisonsapi.InmateStatus
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.probationoffendersearchapi.IDs
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.probationoffendersearchapi.OffenderProfile
 import java.time.LocalDate
 
 class Cas2PersonSearchTest : IntegrationTestBase() {
@@ -68,7 +66,7 @@ class Cas2PersonSearchTest : IntegrationTestBase() {
       @Test
       fun `Searching for a NOMIS ID returns Unauthorised error when it is unauthorized by the API`() {
         givenACas2PomUser { userEntity, jwt ->
-          probationOffenderSearchAPIMockForbiddenOffenderSearchCall()
+          apDeliusContextMockUnsuccessfulCaseSummaryCall(403)
 
           webTestClient.get()
             .uri("/cas2/people/search?nomsNumber=NOMS321")
@@ -83,16 +81,17 @@ class Cas2PersonSearchTest : IntegrationTestBase() {
       fun `Searching for a NOMIS ID returns unauthorised error when offender is in a different prison`() {
         givenACas2PomUser { userEntity, jwt ->
 
-          val offender = ProbationOffenderDetailFactory()
-            .withOtherIds(IDs(crn = "CRN", nomsNumber = "NOMS456", pncNumber = "PNC456"))
-            .withFirstName("Jo")
-            .withSurname("AnotherPrison")
+          val caseSummary = CaseSummaryFactory()
+            .withCrn("CRN")
+            .withNomsId("NOMS456")
+            .withPnc("PNC456")
+            .withName(Name("Jo", "AnotherPrison"))
             .withDateOfBirth(
               LocalDate
                 .parse("1985-05-05"),
             )
             .withGender("Male")
-            .withOffenderProfile(OffenderProfile(nationality = "English"))
+            .withProfile(Profile(nationality = "English"))
             .produce()
 
           val inmateDetail = InmateDetailFactory().withOffenderNo("NOMS456")
@@ -107,7 +106,7 @@ class Cas2PersonSearchTest : IntegrationTestBase() {
             )
             .produce()
 
-          probationOffenderSearchAPIMockSuccessfulOffenderSearchCall("NOMS456", listOf(offender))
+          apDeliusContextMockCaseSummary(caseSummary)
           prisonAPIMockSuccessfulInmateDetailsCall(inmateDetail = inmateDetail)
 
           webTestClient.get()
@@ -122,7 +121,7 @@ class Cas2PersonSearchTest : IntegrationTestBase() {
       @Test
       fun `Searching for a NOMIS ID returns 404 error when it is not found`() {
         givenACas2PomUser { userEntity, jwt ->
-          probationOffenderSearchAPIMockNotFoundSearchCall()
+          apDeliusContextMockUnsuccessfulCaseSummaryCall(404)
 
           webTestClient.get()
             .uri("/cas2/people/search?nomsNumber=NOMS321")
@@ -136,7 +135,7 @@ class Cas2PersonSearchTest : IntegrationTestBase() {
       @Test
       fun `Searching for a NOMIS ID returns server error when there is a server error`() {
         givenACas2PomUser { userEntity, jwt ->
-          probationOffenderSearchAPIMockServerErrorSearchCall()
+          apDeliusContextMockUnsuccessfulCaseSummaryCall()
 
           webTestClient.get()
             .uri("/cas2/people/search?nomsNumber=NOMS321")
@@ -153,16 +152,17 @@ class Cas2PersonSearchTest : IntegrationTestBase() {
       @Test
       fun `Searching for a NOMIS ID returns OK with correct body`() {
         givenACas2PomUser(nomisUserDetailsConfigBlock = { withActiveCaseloadId("BRI") }) { userEntity, jwt ->
-          val offender = ProbationOffenderDetailFactory()
-            .withOtherIds(IDs(crn = "CRN", nomsNumber = "NOMS321", pncNumber = "PNC123"))
-            .withFirstName("James")
-            .withSurname("Someone")
+          val caseSummary = CaseSummaryFactory()
+            .withCrn("CRN")
+            .withNomsId("NOMS321")
+            .withPnc("PNC123")
+            .withName(Name("James", "Someone"))
             .withDateOfBirth(
               LocalDate
                 .parse("1985-05-05"),
             )
             .withGender("Male")
-            .withOffenderProfile(OffenderProfile(nationality = "English"))
+            .withProfile(Profile(nationality = "English"))
             .produce()
 
           val inmateDetail = InmateDetailFactory().withOffenderNo("NOMS321")
@@ -177,7 +177,7 @@ class Cas2PersonSearchTest : IntegrationTestBase() {
             )
             .produce()
 
-          probationOffenderSearchAPIMockSuccessfulOffenderSearchCall("NOMS321", listOf(offender))
+          apDeliusContextMockCaseSummary(caseSummary)
           prisonAPIMockSuccessfulInmateDetailsCall(inmateDetail = inmateDetail)
 
           webTestClient.get()

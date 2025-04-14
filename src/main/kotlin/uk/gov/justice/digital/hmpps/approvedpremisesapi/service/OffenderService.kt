@@ -122,7 +122,7 @@ class OffenderService(
 
     val crnsList = crns.toList()
 
-    val caseSummariesByCrn = when (val result = apDeliusContextApiClient.getSummariesForCrns(crnsList)) {
+    val caseSummariesByCrn = when (val result = apDeliusContextApiClient.getCaseSummaries(crnsList)) {
       is ClientResult.Success -> result.body
       is ClientResult.Failure -> result.throwException()
     }.cases.associateBy(
@@ -310,7 +310,7 @@ class OffenderService(
   }
 
   fun isLao(crn: String): Boolean {
-    val offender = when (val offenderResponse = apDeliusContextApiClient.getSummariesForCrns(listOf(crn))) {
+    val offender = when (val offenderResponse = apDeliusContextApiClient.getCaseSummaries(listOf(crn))) {
       is ClientResult.Success -> offenderResponse.body.cases.first()
       is ClientResult.Failure -> offenderResponse.throwException()
     }
