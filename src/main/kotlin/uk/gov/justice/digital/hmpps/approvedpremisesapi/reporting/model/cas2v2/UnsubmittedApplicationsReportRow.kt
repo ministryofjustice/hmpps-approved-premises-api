@@ -5,7 +5,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApplicationOri
 class UnsubmittedApplicationsReportRow(
   val applicationId: String,
   val personCrn: String,
-  val personNoms: String,
+  val personNoms: String?,
   val startedAt: String,
   val startedBy: String,
   val applicationOrigin: ApplicationOrigin,
