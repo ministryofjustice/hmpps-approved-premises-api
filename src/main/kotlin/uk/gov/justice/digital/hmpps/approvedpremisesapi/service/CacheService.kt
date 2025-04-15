@@ -23,6 +23,7 @@ class CacheService(
       CacheType.staffDetails -> clearRegularCache("staffDetailsCache")
       CacheType.teamsManagingCase -> clearRegularCache("teamsManagingCaseCache")
       CacheType.ukBankHolidays -> clearRegularCache("ukBankHolidaysCache")
+      CacheType.crnGetCaseDetailCache -> clearRegularCache("crnGetCaseDetailCache")
     }
   }
 
