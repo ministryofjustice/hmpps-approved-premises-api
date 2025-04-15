@@ -26,7 +26,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.prisonsapi.InmateD
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.prisonsapi.InmateStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.probationoffendersearchapi.IDs
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.AuthorisableActionResult
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.SentryService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas2v2.Cas2v2OffenderSearchResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas2v2.Cas2v2OffenderService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.cas2v2.Cas2v2PersonTransformer
@@ -36,7 +35,6 @@ class Cas2v2OffenderServiceTest {
   private val mockProbationOffenderSearchClient = mockk<ProbationOffenderSearchApiClient>()
   private val mockApDeliusContextApiClient = mockk<ApDeliusContextApiClient>()
   private val mockOffenderDetailsDataSource = mockk<OffenderDetailsDataSource>()
-  private val mockSentryService = mockk<SentryService>()
 
   private val cas2v2PersonTransformer = Cas2v2PersonTransformer()
 
@@ -45,7 +43,6 @@ class Cas2v2OffenderServiceTest {
     mockProbationOffenderSearchClient,
     mockApDeliusContextApiClient,
     cas2v2PersonTransformer,
-    mockSentryService,
   )
 
   val deliusUser = Cas2v2UserEntityFactory()
@@ -62,7 +59,6 @@ class Cas2v2OffenderServiceTest {
 
     @Test
     fun `returns NotFound result when Probation Offender Search returns 404`() {
-      every { mockSentryService.captureErrorMessage(any()) } returns Unit
       every { mockProbationOffenderSearchClient.searchOffenderByNomsNumber(nomsNumber) } returns StatusCode(HttpMethod.POST, "/search", HttpStatus.NOT_FOUND, null)
 
       assertThat(cas2v2OffenderService.getPersonByNomsNumber(nomsNumber) is Cas2v2OffenderSearchResult.NotFound).isTrue
@@ -130,7 +126,6 @@ class Cas2v2OffenderServiceTest {
         .withOtherIds(otherIds = IDs(crn = crn, nomsNumber = nomsNumber))
         .produce()
 
-      every { mockSentryService.captureErrorMessage(any()) } returns Unit
       every { mockProbationOffenderSearchClient.searchOffenderByNomsNumber(nomsNumber) } returns StatusCode(
         HttpMethod.GET,
         "/search",
@@ -196,7 +191,6 @@ class Cas2v2OffenderServiceTest {
       val crn = "CRN123"
       val nomsNumber = "NOMS321"
 
-      every { mockSentryService.captureErrorMessage(any()) } returns Unit
       every { mockPrisonsApiClient.getInmateDetailsWithWait(nomsNumber) } returns StatusCode(
         HttpMethod.GET,
         "/api/offenders/$nomsNumber",
@@ -214,7 +208,6 @@ class Cas2v2OffenderServiceTest {
       val crn = "CRN123"
       val nomsNumber = "NOMS321"
 
-      every { mockSentryService.captureErrorMessage(any()) } returns Unit
       every { mockPrisonsApiClient.getInmateDetailsWithWait(nomsNumber) } returns StatusCode(
         HttpMethod.GET,
         "/api/offenders/$nomsNumber",
@@ -232,7 +225,6 @@ class Cas2v2OffenderServiceTest {
       val crn = "CRN123"
       val nomsNumber = "NOMS321"
 
-      every { mockSentryService.captureErrorMessage(any()) } returns Unit
       every { mockPrisonsApiClient.getInmateDetailsWithWait(nomsNumber) } returns StatusCode(
         HttpMethod.GET,
         "/api/offenders/$nomsNumber",

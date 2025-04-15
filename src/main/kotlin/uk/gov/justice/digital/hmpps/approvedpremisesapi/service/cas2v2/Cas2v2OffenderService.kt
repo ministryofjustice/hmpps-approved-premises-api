@@ -11,7 +11,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.ProbationOffender
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.prisonsapi.InmateDetail
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.probationoffendersearchapi.ProbationOffenderDetail
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.AuthorisableActionResult
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.SentryService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.cas2v2.Cas2v2PersonTransformer
 
 @Service
@@ -23,7 +22,6 @@ class Cas2v2OffenderService(
   private val probationOffenderSearchApiClient: ProbationOffenderSearchApiClient,
   private val apDeliusContextApiClient: ApDeliusContextApiClient,
   private val cas2v2PersonTransformer: Cas2v2PersonTransformer,
-  private val sentryService: SentryService,
 ) {
 
   private val log = LoggerFactory.getLogger(this::class.java)
@@ -77,15 +75,11 @@ class Cas2v2OffenderService(
 
     fun logFailedResponse(inmateDetailResponse: ClientResult.Failure<InmateDetail>) = when (hasCacheTimedOut) {
       true -> {
-        val message = "Could not get inmate details for $crn after cache timed out"
-        log.warn(message, inmateDetailResponse.toException())
-        sentryService.captureErrorMessage(message)
+        log.warn("Could not get inmate details for $crn after cache timed out", inmateDetailResponse.toException())
       }
 
       false -> {
-        val message = "Could not get inmate details for $crn as an unsuccessful response was cached"
-        log.warn(message, inmateDetailResponse.toException())
-        sentryService.captureErrorMessage(message)
+        log.warn("Could not get inmate details for $crn as an unsuccessful response was cached", inmateDetailResponse.toException())
       }
     }
 
@@ -145,7 +139,6 @@ class Cas2v2OffenderService(
 
   private fun emitMessageAndCreateNotFound(message: String, nomisIdOrCrn: String): Cas2v2OffenderSearchResult.NotFound {
     log.warn(message)
-    sentryService.captureErrorMessage(message)
     return Cas2v2OffenderSearchResult.NotFound(nomisIdOrCrn)
   }
 }
