@@ -6524,6 +6524,7 @@ components:
         - teamsManagingCase
         - ukBankHolidays
         - inmateDetails
+        - crnGetCaseDetailCache
     PersonType:
       type: string
       enum:
