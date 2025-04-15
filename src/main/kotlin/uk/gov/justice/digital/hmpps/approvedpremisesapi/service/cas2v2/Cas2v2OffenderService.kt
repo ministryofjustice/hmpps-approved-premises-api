@@ -34,7 +34,7 @@ class Cas2v2OffenderService(
     val probationOffenderDetailList = when (probationResponse) {
       is ClientResult.Success -> probationResponse.body
       is ClientResult.Failure.StatusCode -> when (probationResponse.status) {
-        HttpStatus.NOT_FOUND -> return Cas2v2OffenderSearchResult.NotFound(nomisIdOrCrn = nomsNumber)
+        HttpStatus.NOT_FOUND -> return emitMessageAndCreateNotFound("Person not found by nomsNumber ($nomsNumber) via the Probation Offender Search Api", nomsNumber)
         HttpStatus.FORBIDDEN -> return Cas2v2OffenderSearchResult.Forbidden(nomisIdOrCrn = nomsNumber, probationResponse.toException())
         else -> {
           logFailedResponse(probationResponse)
@@ -74,15 +74,13 @@ class Cas2v2OffenderService(
     }
 
     fun logFailedResponse(inmateDetailResponse: ClientResult.Failure<InmateDetail>) = when (hasCacheTimedOut) {
-      true -> log.warn(
-        "Could not get inmate details for $crn after cache timed out",
-        inmateDetailResponse.toException(),
-      )
+      true -> {
+        log.warn("Could not get inmate details for $crn after cache timed out", inmateDetailResponse.toException())
+      }
 
-      false -> log.warn(
-        "Could not get inmate details for $crn as an unsuccessful response was cached",
-        inmateDetailResponse.toException(),
-      )
+      false -> {
+        log.warn("Could not get inmate details for $crn as an unsuccessful response was cached", inmateDetailResponse.toException())
+      }
     }
 
     val inmateDetail = when (inmateDetailResponse) {
@@ -116,11 +114,11 @@ class Cas2v2OffenderService(
   fun getPersonByCrn(crn: String): Cas2v2OffenderSearchResult {
     val caseSummariesByCrn = when (val result = apDeliusContextApiClient.getSummariesForCrns(listOf(crn))) {
       is ClientResult.Success -> result.body
-      is ClientResult.Failure -> return Cas2v2OffenderSearchResult.NotFound(crn)
+      is ClientResult.Failure -> return emitMessageAndCreateNotFound("Person not found by CRN ($crn) via the AP Delius Context Api", crn)
     }
 
     if (caseSummariesByCrn.cases.isEmpty()) {
-      return Cas2v2OffenderSearchResult.NotFound(nomisIdOrCrn = crn)
+      return emitMessageAndCreateNotFound("No summaries can be found for CRN=$crn via the AP Delius Context Api", crn)
     }
 
     val caseSummary = caseSummariesByCrn.cases[0]
@@ -137,6 +135,11 @@ class Cas2v2OffenderService(
     }
 
     return getPersonByNomsNumber(nomsNumber)
+  }
+
+  private fun emitMessageAndCreateNotFound(message: String, nomisIdOrCrn: String): Cas2v2OffenderSearchResult.NotFound {
+    log.warn(message)
+    return Cas2v2OffenderSearchResult.NotFound(nomisIdOrCrn)
   }
 }
 
