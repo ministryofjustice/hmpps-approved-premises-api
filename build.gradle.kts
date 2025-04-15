@@ -164,11 +164,6 @@ tasks.bootRun {
 tasks.withType<Test> {
   jvmArgs("--add-opens", "java.base/java.lang=ALL-UNNAMED", "--add-opens", "java.base/java.lang.reflect=ALL-UNNAMED", "--add-opens", "java.base/java.time=ALL-UNNAMED")
 
-  // exclude the integration tests from by default.
-  useJUnitPlatform {
-    excludeTags("integration")
-  }
-
   afterEvaluate {
     if (environment["CI"] != null) {
       maxParallelForks = Runtime.getRuntime().availableProcessors()

@@ -11,6 +11,7 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
+
   codeQL:
     name: CodeQL
     runs-on: ubuntu-latest
@@ -34,17 +35,19 @@ jobs:
         uses: github/codeql-action/analyze@v3
         with:
           category: '/language:javascript'
+
   helm_lint:
     strategy:
       matrix:
         environments: ['dev', 'test', 'preprod', 'prod']
-    name: helm lint
+    name: Helm lint
     uses: ministryofjustice/hmpps-github-actions/.github/workflows/test_helm_lint.yml@v2 # WORKFLOW VERSION
     secrets: inherit
     with:
       environment: ${{ matrix.environments }}
+
   ktlint-check:
-    name: Run ktlintCheck
+    name: KtLintCheck
     runs-on: ubuntu-latest
     container:
       image: cimg/openjdk:21.0.2
@@ -57,9 +60,10 @@ jobs:
       - name: Set up Gradle cache
         uses: gradle/actions/setup-gradle@v3
       - name: Run ktlintCheck
-        run: ./gradlew ktlintCheck detekt
+        run: ./gradlew ktlintCheck
+
   detekt_static_code_analysis:
-    name: Run detekt
+    name: Detekt
     runs-on: ubuntu-latest
     container:
       image: cimg/openjdk:21.0.2
@@ -71,5 +75,5 @@ jobs:
         uses: actions/checkout@v4
       - name: Set up Gradle cache
         uses: gradle/actions/setup-gradle@v3
-      - name: Run ktlintCheck
+      - name: Run Detekt
         run: ./gradlew detekt
