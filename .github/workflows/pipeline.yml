@@ -24,15 +24,67 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
+
+  gradle_build:
+    name: Gradle Build
+    runs-on: ubuntu-latest
+    container:
+      image: cimg/openjdk:21.0.2
+    env:
+      _JAVA_OPTIONS: "-Xmx3g"
+      GRADLE_OPTS: "-Dorg.gradle.daemon=false -Dorg.gradle.workers.max=2"
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      - name: Set up Gradle cache
+        uses: gradle/actions/setup-gradle@v3
+      - name: Gradle Build
+        run: ./gradlew clean build -x test
+
   code_quality:
     name: Code quality
     uses: ./.github/workflows/code_quality.yml
 
   unit_test:
-    name: Unit test
-    uses: ./.github/workflows/unit_test.yml
+    name: Unit tests
+    runs-on: ubuntu-latest
+    needs: gradle_build
+    steps:
+      - uses: actions/checkout@v4
+      - name: refresh cache
+        id: initial-cache
+        uses: actions/cache@v4
+        env:
+          cache-name: kotlin-cache
+        with:
+          path: |
+            - gradle-{{ checksum "build.gradle.kts" }}
+            - gradle-
+          key: ${{ runner.os }}-gradle-${{ env.cache-name }}-${{ hashFiles('build.gradle.kts') }}
+      - uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '21'
+          cache: 'gradle'
+          cache-dependency-path: |
+            *.gradle*
+            **/gradle-wrapper.properties
+      - name: run unit tests
+        shell: bash
+        run: |
+          export JAVA_OPTS="${{ inputs.java_options }}"
+          ./gradlew test -DexcludeTags=integration
+      - name: upload the artifacts
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: upload kotlin test results
+          path: |
+            build/test-results
+            build/reports/tests
 
-#  integration_test:
+
+  #  integration_test:
 #    name: Integration test
 #    uses: ./.github/workflows/integration_test.yml
 #    with:
@@ -43,6 +95,7 @@ jobs:
     if: github.ref == 'refs/heads/main'
     uses: ministryofjustice/hmpps-github-actions/.github/workflows/docker_build.yml@v2 # WORKFLOW_VERSION
     needs:
+      - gradle_build
       - code_quality
       - unit_test
 #      - integration_test
