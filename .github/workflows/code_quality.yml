@@ -62,8 +62,8 @@ jobs:
       - name: Run ktlintCheck
         run: ./gradlew ktlintCheck
 
-  detekt_static_code_analysis:
-    name: Detekt
+  detekt:
+    name: detekt
     runs-on: ubuntu-latest
     container:
       image: cimg/openjdk:21.0.2
@@ -75,5 +75,5 @@ jobs:
         uses: actions/checkout@v4
       - name: Set up Gradle cache
         uses: gradle/actions/setup-gradle@v3
-      - name: Run Detekt
+      - name: Run detekt
         run: ./gradlew detekt
