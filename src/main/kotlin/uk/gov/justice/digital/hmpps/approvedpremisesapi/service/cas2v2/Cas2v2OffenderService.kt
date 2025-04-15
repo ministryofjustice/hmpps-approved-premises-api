@@ -11,6 +11,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.ProbationOffender
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.prisonsapi.InmateDetail
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.probationoffendersearchapi.ProbationOffenderDetail
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.AuthorisableActionResult
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.SentryService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.cas2v2.Cas2v2PersonTransformer
 
 @Service
@@ -22,6 +23,7 @@ class Cas2v2OffenderService(
   private val probationOffenderSearchApiClient: ProbationOffenderSearchApiClient,
   private val apDeliusContextApiClient: ApDeliusContextApiClient,
   private val cas2v2PersonTransformer: Cas2v2PersonTransformer,
+  private val sentryService: SentryService,
 ) {
 
   private val log = LoggerFactory.getLogger(this::class.java)
@@ -34,7 +36,7 @@ class Cas2v2OffenderService(
     val probationOffenderDetailList = when (probationResponse) {
       is ClientResult.Success -> probationResponse.body
       is ClientResult.Failure.StatusCode -> when (probationResponse.status) {
-        HttpStatus.NOT_FOUND -> return Cas2v2OffenderSearchResult.NotFound(nomisIdOrCrn = nomsNumber)
+        HttpStatus.NOT_FOUND -> return emitMessageAndCreateNotFound("Person not found by nomsNumber ($nomsNumber) via the Probation Offender Search Api", nomsNumber)
         HttpStatus.FORBIDDEN -> return Cas2v2OffenderSearchResult.Forbidden(nomisIdOrCrn = nomsNumber, probationResponse.toException())
         else -> {
           logFailedResponse(probationResponse)
@@ -74,15 +76,17 @@ class Cas2v2OffenderService(
     }
 
     fun logFailedResponse(inmateDetailResponse: ClientResult.Failure<InmateDetail>) = when (hasCacheTimedOut) {
-      true -> log.warn(
-        "Could not get inmate details for $crn after cache timed out",
-        inmateDetailResponse.toException(),
-      )
+      true -> {
+        val message = "Could not get inmate details for $crn after cache timed out"
+        log.warn(message, inmateDetailResponse.toException())
+        sentryService.captureErrorMessage(message)
+      }
 
-      false -> log.warn(
-        "Could not get inmate details for $crn as an unsuccessful response was cached",
-        inmateDetailResponse.toException(),
-      )
+      false -> {
+        val message = "Could not get inmate details for $crn as an unsuccessful response was cached"
+        log.warn(message, inmateDetailResponse.toException())
+        sentryService.captureErrorMessage(message)
+      }
     }
 
     val inmateDetail = when (inmateDetailResponse) {
@@ -116,11 +120,11 @@ class Cas2v2OffenderService(
   fun getPersonByCrn(crn: String): Cas2v2OffenderSearchResult {
     val caseSummariesByCrn = when (val result = apDeliusContextApiClient.getSummariesForCrns(listOf(crn))) {
       is ClientResult.Success -> result.body
-      is ClientResult.Failure -> return Cas2v2OffenderSearchResult.NotFound(crn)
+      is ClientResult.Failure -> return emitMessageAndCreateNotFound("Person not found by CRN ($crn) via the AP Delius Context Api", crn)
     }
 
     if (caseSummariesByCrn.cases.isEmpty()) {
-      return Cas2v2OffenderSearchResult.NotFound(nomisIdOrCrn = crn)
+      return emitMessageAndCreateNotFound("No summaries can be found for CRN=$crn via the AP Delius Context Api", crn)
     }
 
     val caseSummary = caseSummariesByCrn.cases[0]
@@ -137,6 +141,12 @@ class Cas2v2OffenderService(
     }
 
     return getPersonByNomsNumber(nomsNumber)
+  }
+
+  private fun emitMessageAndCreateNotFound(message: String, nomisIdOrCrn: String): Cas2v2OffenderSearchResult.NotFound {
+    log.warn(message)
+    sentryService.captureErrorMessage(message)
+    return Cas2v2OffenderSearchResult.NotFound(nomisIdOrCrn)
   }
 }
 
