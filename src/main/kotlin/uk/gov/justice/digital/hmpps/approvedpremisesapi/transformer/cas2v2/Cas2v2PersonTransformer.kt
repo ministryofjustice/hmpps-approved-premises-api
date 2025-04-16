@@ -20,6 +20,7 @@ class Cas2v2PersonTransformer {
     crn = probationOffenderDetail.otherIds.crn,
     type = PersonType.fullPerson,
     nomsNumber = probationOffenderDetail.otherIds.nomsNumber,
+    pncNumber = probationOffenderDetail.otherIds.pncNumber,
   )
 
   fun transformCaseSummaryToFullPerson(caseSummary: CaseSummary): FullPerson = FullPerson(
@@ -30,5 +31,6 @@ class Cas2v2PersonTransformer {
     crn = caseSummary.crn,
     type = PersonType.fullPerson,
     nomsNumber = caseSummary.nomsId,
+    pncNumber = caseSummary.pnc,
   )
 }
