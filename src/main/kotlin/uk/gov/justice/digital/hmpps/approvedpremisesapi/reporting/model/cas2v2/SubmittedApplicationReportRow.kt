@@ -7,7 +7,7 @@ data class SubmittedApplicationReportRow(
   val applicationId: String,
   val personCrn: String,
   val personNoms: String?,
-  val referringPrisonCode: String,
+  val referringPrisonCode: String?,
   val preferredAreas: String?,
   val hdcEligibilityDate: String?,
   val conditionalReleaseDate: String?,
