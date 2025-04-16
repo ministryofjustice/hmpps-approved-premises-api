@@ -58,6 +58,7 @@ class Cas1SpaceBookingService(
   private val nonArrivalReasonRepository: NonArrivalReasonRepository,
   private val lockablePlacementRequestRepository: LockablePlacementRequestRepository,
   private val userService: UserService,
+  private val cas1ChangeRequestService: Cas1ChangeRequestService,
   private val clock: Clock,
 ) {
   @Transactional
@@ -535,6 +536,8 @@ class Cas1SpaceBookingService(
       is WithdrawalTriggeredByUser -> withdrawalContext.withdrawalTriggeredBy.user
       else -> throw InternalServerErrorProblem("Withdrawal triggered automatically is not supported")
     }
+
+    cas1ChangeRequestService.spaceBookingWithdrawn(spaceBooking)
     cas1BookingDomainEventService.spaceBookingCancelled(spaceBooking, user, reason)
     cas1ApplicationStatusService.spaceBookingCancelled(
       spaceBooking,

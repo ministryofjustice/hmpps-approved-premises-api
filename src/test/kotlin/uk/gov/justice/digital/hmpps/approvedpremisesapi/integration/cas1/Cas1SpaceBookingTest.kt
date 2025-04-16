@@ -32,6 +32,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.StaffDetailFacto
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.UserEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.InitialiseDatabasePerClassTestBase
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenACas1Application
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenACas1ChangeRequest
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenACas1CruManagementArea
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAPlacementRequest
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAProbationRegion
@@ -54,6 +55,8 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRole
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRole.CAS1_ASSESSOR
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRole.CAS1_FUTURE_MANAGER
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas1.Cas1ChangeRequestEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas1.ChangeRequestType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.ApprovedPremisesApplicationStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.cas1.Cas1SpaceBookingTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.unit.transformer.cas1.Cas1SpaceBookingSummaryStatusTestHelper
@@ -1906,6 +1909,7 @@ class Cas1SpaceBookingTest {
     lateinit var premises: ApprovedPremisesEntity
     lateinit var spaceBooking: Cas1SpaceBookingEntity
     lateinit var cancellationReason: CancellationReasonEntity
+    lateinit var changeRequests: List<Cas1ChangeRequestEntity>
 
     @BeforeAll
     fun setupTestData() {
@@ -1956,6 +1960,14 @@ class Cas1SpaceBookingTest {
 
       cancellationReason = cancellationReasonEntityFactory.produceAndPersist {
         withServiceScope("*")
+      }
+
+      changeRequests = (0..3).map {
+        givenACas1ChangeRequest(
+          type = ChangeRequestType.PLACEMENT_APPEAL,
+          spaceBooking = spaceBooking,
+          resolved = false,
+        )
       }
     }
 
@@ -2025,6 +2037,10 @@ class Cas1SpaceBookingTest {
 
       assertThat(approvedPremisesApplicationRepository.findByIdOrNull(spaceBooking.application!!.id)!!.status)
         .isEqualTo(ApprovedPremisesApplicationStatus.AWAITING_PLACEMENT)
+
+      changeRequests.forEach {
+        assertThat(cas1ChangeRequestRepository.findByIdOrNull(it.id)!!.resolved).isTrue()
+      }
     }
   }
 

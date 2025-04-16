@@ -62,6 +62,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.BlockingRea
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1ApplicationStatusService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1BookingDomainEventService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1BookingEmailService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1ChangeRequestService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1PremisesService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1SpaceBookingManagementDomainEventService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1SpaceBookingService
@@ -99,6 +100,7 @@ class Cas1SpaceBookingServiceTest {
   private val nonArrivalReasonRepository = mockk<NonArrivalReasonRepository>()
   private val lockablePlacementRequestRepository = mockk<LockablePlacementRequestRepository>()
   private val userService = mockk<UserService>()
+  private val cas1ChangeRequestService = mockk<Cas1ChangeRequestService>()
 
   private val service = Cas1SpaceBookingService(
     cas1PremisesService,
@@ -115,6 +117,7 @@ class Cas1SpaceBookingServiceTest {
     nonArrivalReasonRepository,
     lockablePlacementRequestRepository,
     userService,
+    cas1ChangeRequestService,
     Clock.systemDefaultZone(),
   )
 
@@ -1747,7 +1750,7 @@ class Cas1SpaceBookingServiceTest {
     }
 
     @Test
-    fun `success`() {
+    fun success() {
       val spaceBooking = Cas1SpaceBookingEntityFactory()
         .withApplication(application)
         .withCancellationOccurredAt(null)
@@ -1765,13 +1768,8 @@ class Cas1SpaceBookingServiceTest {
       val spaceBookingCaptor = slot<Cas1SpaceBookingEntity>()
       every { spaceBookingRepository.save(capture(spaceBookingCaptor)) } returns spaceBooking
 
-      every {
-        cas1BookingEmailService.spaceBookingWithdrawn(
-          spaceBooking,
-          application,
-          WithdrawalTriggeredByUser(user),
-        )
-      } returns Unit
+      every { cas1ChangeRequestService.spaceBookingWithdrawn(spaceBooking) } returns Unit
+      every { cas1BookingEmailService.spaceBookingWithdrawn(spaceBooking, application, WithdrawalTriggeredByUser(user)) } returns Unit
       every { cas1BookingDomainEventService.spaceBookingCancelled(spaceBooking, user, reason) } returns Unit
       every { cas1ApplicationStatusService.spaceBookingCancelled(spaceBooking) } returns Unit
 
@@ -1787,13 +1785,18 @@ class Cas1SpaceBookingServiceTest {
         ),
       )
 
-      assertThat(result).isInstanceOf(CasResult.Success::class.java)
+      assertThatCasResult(result).isSuccess()
 
       val persistedBooking = spaceBookingCaptor.captured
       assertThat(persistedBooking.cancellationOccurredAt).isEqualTo(LocalDate.parse("2022-08-25"))
       assertThat(persistedBooking.cancellationRecordedAt).isWithinTheLastMinute()
       assertThat(persistedBooking.cancellationReason).isEqualTo(reason)
       assertThat(persistedBooking.cancellationReasonNotes).isEqualTo("the user provided notes")
+
+      verify { cas1ChangeRequestService.spaceBookingWithdrawn(spaceBooking) }
+      verify { cas1BookingDomainEventService.spaceBookingCancelled(spaceBooking, user, reason) }
+      verify { cas1ApplicationStatusService.spaceBookingCancelled(spaceBooking) }
+      verify { cas1BookingEmailService.spaceBookingWithdrawn(spaceBooking, application, WithdrawalTriggeredByUser(user)) }
     }
   }
 
