@@ -37,6 +37,8 @@ complexity:
       # the number of arguments is non-trivial and may result in worse performance and an unnecessarily fragmented
       # database design.
       - javax.persistence.Entity
+    excludes:
+      - '**/givens/**'
   TooManyFunctions:
     thresholdInInterfaces: 20
     thresholdInClasses: 20
