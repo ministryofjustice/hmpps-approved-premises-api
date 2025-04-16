@@ -32,18 +32,12 @@ paths:
             'application/problem+json':
               schema:
                 $ref: '#/components/schemas/ValidationError'
-        401:
-          $ref: '#/components/responses/401Response'
-        403:
-          $ref: '#/components/responses/403Response'
         404:
           description: invalid CRN
           content:
             'application/json':
               schema:
                 $ref: '#/components/schemas/Problem'
-        500:
-          $ref: '#/components/responses/500Response'
       x-codegen-request-body-name: body
     get:
       tags:
@@ -84,12 +78,7 @@ paths:
               $ref: '#/components/headers/X-Pagination-TotalResults'
             X-Pagination-PageSize:
               $ref: '#/components/headers/X-Pagination-TotalResults'
-        401:
-          $ref: '#/components/responses/401Response'
-        403:
-          $ref: '#/components/responses/403Response'
-        500:
-          $ref: '#/components/responses/500Response'
+
 
   /applications/{applicationId}:
     put:
@@ -124,12 +113,7 @@ paths:
             'application/problem+json':
               schema:
                 $ref: '#/components/schemas/ValidationError'
-        401:
-          $ref: '#/components/responses/401Response'
-        403:
-          $ref: '#/components/responses/403Response'
-        500:
-          $ref: '#/components/responses/500Response'
+
       x-codegen-request-body-name: body
     get:
       tags:
@@ -150,12 +134,7 @@ paths:
             'application/json':
               schema:
                 $ref: '#/components/schemas/Application'
-        401:
-          $ref: '#/components/responses/401Response'
-        403:
-          $ref: '#/components/responses/403Response'
-        500:
-          $ref: '#/components/responses/500Response'
+
   /applications/{applicationId}/abandon:
     put:
       tags:
@@ -172,16 +151,12 @@ paths:
       responses:
         200:
           description: successful operation
-        401:
-          $ref: '#/components/responses/401Response'
         409:
           description: The application has been submitted
           content:
             'application/json':
               schema:
                 $ref: '#/components/schemas/Problem'
-        500:
-          $ref: '#/components/responses/500Response'
   /assessments/{assessmentId}:
     put:
       tags:
@@ -209,18 +184,12 @@ paths:
             'application/json':
               schema:
                 $ref: '#/components/schemas/Cas2v2Assessment'
-        401:
-          $ref: '#/components/responses/401Response'
-        403:
-          $ref: '#/components/responses/403Response'
         404:
           description: invalid assessmentId
           content:
             'application/json':
               schema:
                 $ref: '#/components/schemas/Problem'
-        500:
-          $ref: '#/components/responses/500Response'
     get:
       tags:
         - Operations on submitted CAS2 version 2 applications (Assessors)
@@ -240,18 +209,12 @@ paths:
             'application/json':
               schema:
                 $ref: '#/components/schemas/Cas2v2Assessment'
-        401:
-          $ref: '#/components/responses/401Response'
-        403:
-          $ref: '#/components/responses/403Response'
         404:
           description: invalid assessmentId
           content:
             'application/json':
               schema:
                 $ref: '#/components/schemas/Problem'
-        500:
-          $ref: '#/components/responses/500Response'
   /assessments/{assessmentId}/status-updates:
     post:
       tags:
@@ -281,12 +244,7 @@ paths:
             'application/problem+json':
               schema:
                 $ref: '#/components/schemas/ValidationError'
-        401:
-          $ref: '#/components/responses/401Response'
-        403:
-          $ref: '#/components/responses/403Response'
-        500:
-          $ref: '#/components/responses/500Response'
+
   /assessments/{assessmentId}/notes:
     post:
       tags:
@@ -314,18 +272,12 @@ paths:
             'application/json':
               schema:
                 $ref: '#/components/schemas/Cas2v2ApplicationNote'
-        401:
-          $ref: '#/components/responses/401Response'
-        403:
-          $ref: '#/components/responses/403Response'
         404:
           description: invalid assessmentId
           content:
             'application/json':
               schema:
                 $ref: '#/components/schemas/Problem'
-        500:
-          $ref: '#/components/responses/500Response'
       x-codegen-request-body-name: body
   /submissions:
     get:
@@ -356,12 +308,7 @@ paths:
               $ref: '#/components/headers/X-Pagination-TotalResults'
             X-Pagination-PageSize:
               $ref: '#/components/headers/X-Pagination-TotalResults'
-        401:
-          $ref: '#/components/responses/401Response'
-        403:
-          $ref: '#/components/responses/403Response'
-        500:
-          $ref: '#/components/responses/500Response'
+
     post:
       tags:
         - Operations on CAS2 version 2 applications
@@ -382,12 +329,7 @@ paths:
             'application/problem+json':
               schema:
                 $ref: '#/components/schemas/ValidationError'
-        401:
-          $ref: '#/components/responses/401Response'
-        403:
-          $ref: '#/components/responses/403Response'
-        500:
-          $ref: '#/components/responses/500Response'
+
   /submissions/{applicationId}:
     get:
       tags:
@@ -408,12 +350,7 @@ paths:
             'application/json':
               schema:
                 $ref: '#/components/schemas/Cas2v2SubmittedApplication'
-        401:
-          $ref: '#/components/responses/401Response'
-        403:
-          $ref: '#/components/responses/403Response'
-        500:
-          $ref: '#/components/responses/500Response'
+
   /people/search-by-crn/{crn}:
     get:
       tags:
@@ -446,12 +383,7 @@ paths:
             'application/json':
               schema:
                 $ref: '#/components/schemas/Problem'
-        401:
-          $ref: '#/components/responses/401Response'
-        403:
-          $ref: '#/components/responses/403Response'
-        500:
-          $ref: '#/components/responses/500Response'
+
   /people/search-by-noms/{nomsNumber}:
     get:
       tags:
@@ -484,12 +416,7 @@ paths:
             'application/json':
               schema:
                 $ref: '#/components/schemas/Problem'
-        401:
-          $ref: '#/components/responses/401Response'
-        403:
-          $ref: '#/components/responses/403Response'
-        500:
-          $ref: '#/components/responses/500Response'
+
   /people/{crn}/oasys/risk-to-self:
     get:
       tags:
@@ -509,18 +436,12 @@ paths:
             'application/json':
               schema:
                 $ref: '#/components/schemas/OASysRiskToSelf'
-        401:
-          $ref: '#/components/responses/401Response'
-        403:
-          $ref: '#/components/responses/403Response'
         404:
           description: invalid CRN
           content:
             'application/json':
               schema:
                 $ref: '#/components/schemas/Problem'
-        500:
-          $ref: '#/components/responses/500Response'
   /people/{crn}/oasys/rosh:
     get:
       tags:
@@ -540,18 +461,12 @@ paths:
             'application/json':
               schema:
                 $ref: '#/components/schemas/OASysRiskOfSeriousHarm'
-        401:
-          $ref: '#/components/responses/401Response'
-        403:
-          $ref: '#/components/responses/403Response'
         404:
           description: invalid CRN
           content:
             'application/json':
               schema:
                 $ref: '#/components/schemas/Problem'
-        500:
-          $ref: '#/components/responses/500Response'
   /people/{crn}/risks:
     get:
       tags:
@@ -577,18 +492,12 @@ paths:
             'application/problem+json':
               schema:
                 $ref: '#/components/schemas/ValidationError'
-        401:
-          $ref: '#/components/responses/401Response'
-        403:
-          $ref: '#/components/responses/403Response'
         404:
           description: invalid CRN
           content:
             'application/json':
               schema:
                 $ref: '#/components/schemas/Problem'
-        500:
-          $ref: '#/components/responses/500Response'
   /reference-data/application-status:
     get:
       tags:
@@ -603,12 +512,7 @@ paths:
                 type: array
                 items:
                   $ref: '#/components/schemas/Cas2v2ApplicationStatus'
-        401:
-          $ref: '#/components/responses/401Response'
-        403:
-          $ref: '#/components/responses/403Response'
-        500:
-          $ref: '#/components/responses/500Response'
+
   /reports/{reportName}:
     get:
       tags:
@@ -630,25 +534,6 @@ paths:
                 type: string
                 format: binary
 components:
-  responses:
-    401Response:
-      description: not authenticated
-      content:
-        'application/json':
-          schema:
-            $ref: '#/components/schemas/Problem'
-    403Response:
-      description: unauthorised
-      content:
-        'application/json':
-          schema:
-            $ref: '#/components/schemas/Problem'
-    500Response:
-      description: unexpected error
-      content:
-        'application/json':
-          schema:
-            $ref: '#/components/schemas/Problem'
   headers:
     X-Pagination-CurrentPage:
       schema:

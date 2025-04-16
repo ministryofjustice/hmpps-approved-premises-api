@@ -31,18 +31,12 @@ paths:
             'application/problem+json':
               schema:
                 $ref: '_shared.yml#/components/schemas/ValidationError'
-        401:
-          $ref: '_shared.yml#/components/responses/401Response'
-        403:
-          $ref: '_shared.yml#/components/responses/403Response'
         404:
           description: invalid CRN
           content:
             'application/json':
               schema:
                 $ref: '_shared.yml#/components/schemas/Problem'
-        500:
-          $ref: '_shared.yml#/components/responses/500Response'
       x-codegen-request-body-name: body
     get:
       tags:
@@ -89,12 +83,7 @@ paths:
               $ref: '_shared.yml#/components/headers/X-Pagination-TotalResults'
             X-Pagination-PageSize:
               $ref: '_shared.yml#/components/headers/X-Pagination-TotalResults'
-        401:
-          $ref: '_shared.yml#/components/responses/401Response'
-        403:
-          $ref: '_shared.yml#/components/responses/403Response'
-        500:
-          $ref: '_shared.yml#/components/responses/500Response'
+
 
   /applications/{applicationId}:
     put:
@@ -130,12 +119,7 @@ paths:
             'application/problem+json':
               schema:
                 $ref: '_shared.yml#/components/schemas/ValidationError'
-        401:
-          $ref: '_shared.yml#/components/responses/401Response'
-        403:
-          $ref: '_shared.yml#/components/responses/403Response'
-        500:
-          $ref: '_shared.yml#/components/responses/500Response'
+
       x-codegen-request-body-name: body
     get:
       tags:
@@ -157,12 +141,7 @@ paths:
             'application/json':
               schema:
                 $ref: 'cas2-schemas.yml#/components/schemas/Cas2Application'
-        401:
-          $ref: '_shared.yml#/components/responses/401Response'
-        403:
-          $ref: '_shared.yml#/components/responses/403Response'
-        500:
-          $ref: '_shared.yml#/components/responses/500Response'
+
   /applications/{applicationId}/abandon:
     put:
       tags:
@@ -180,16 +159,12 @@ paths:
       responses:
         200:
           description: successful operation
-        401:
-          $ref: '_shared.yml#/components/responses/401Response'
         409:
           description: The application has been submitted
           content:
             'application/json':
               schema:
                 $ref: '_shared.yml#/components/schemas/Problem'
-        500:
-          $ref: '_shared.yml#/components/responses/500Response'
   /assessments/{assessmentId}:
     put:
       tags:
@@ -218,18 +193,12 @@ paths:
             'application/json':
               schema:
                 $ref: 'cas2-schemas.yml#/components/schemas/Cas2Assessment'
-        401:
-          $ref: '_shared.yml#/components/responses/401Response'
-        403:
-          $ref: '_shared.yml#/components/responses/403Response'
         404:
           description: invalid assessmentId
           content:
             'application/json':
               schema:
                 $ref: '_shared.yml#/components/schemas/Problem'
-        500:
-          $ref: '_shared.yml#/components/responses/500Response'
     get:
       tags:
         - Operations on submitted CAS2 applications (Assessors)
@@ -250,18 +219,12 @@ paths:
             'application/json':
               schema:
                 $ref: 'cas2-schemas.yml#/components/schemas/Cas2Assessment'
-        401:
-          $ref: '_shared.yml#/components/responses/401Response'
-        403:
-          $ref: '_shared.yml#/components/responses/403Response'
         404:
           description: invalid assessmentId
           content:
             'application/json':
               schema:
                 $ref: '_shared.yml#/components/schemas/Problem'
-        500:
-          $ref: '_shared.yml#/components/responses/500Response'
   /assessments/{assessmentId}/status-updates:
     post:
       tags:
@@ -292,12 +255,7 @@ paths:
             'application/problem+json':
               schema:
                 $ref: '_shared.yml#/components/schemas/ValidationError'
-        401:
-          $ref: '_shared.yml#/components/responses/401Response'
-        403:
-          $ref: '_shared.yml#/components/responses/403Response'
-        500:
-          $ref: '_shared.yml#/components/responses/500Response'
+
   /assessments/{assessmentId}/notes:
     post:
       tags:
@@ -326,18 +284,12 @@ paths:
             'application/json':
               schema:
                 $ref: 'cas2-schemas.yml#/components/schemas/Cas2ApplicationNote'
-        401:
-          $ref: '_shared.yml#/components/responses/401Response'
-        403:
-          $ref: '_shared.yml#/components/responses/403Response'
         404:
           description: invalid assessmentId
           content:
             'application/json':
               schema:
                 $ref: '_shared.yml#/components/schemas/Problem'
-        500:
-          $ref: '_shared.yml#/components/responses/500Response'
       x-codegen-request-body-name: body
   /submissions:
     get:
@@ -369,12 +321,7 @@ paths:
               $ref: '_shared.yml#/components/headers/X-Pagination-TotalResults'
             X-Pagination-PageSize:
               $ref: '_shared.yml#/components/headers/X-Pagination-TotalResults'
-        401:
-          $ref: '_shared.yml#/components/responses/401Response'
-        403:
-          $ref: '_shared.yml#/components/responses/403Response'
-        500:
-          $ref: '_shared.yml#/components/responses/500Response'
+
     post:
       tags:
         - Operations on CAS2 applications
@@ -396,12 +343,7 @@ paths:
             'application/problem+json':
               schema:
                 $ref: '_shared.yml#/components/schemas/ValidationError'
-        401:
-          $ref: '_shared.yml#/components/responses/401Response'
-        403:
-          $ref: '_shared.yml#/components/responses/403Response'
-        500:
-          $ref: '_shared.yml#/components/responses/500Response'
+
   /submissions/{applicationId}:
     get:
       tags:
@@ -423,12 +365,7 @@ paths:
             'application/json':
               schema:
                 $ref: 'cas2-schemas.yml#/components/schemas/Cas2SubmittedApplication'
-        401:
-          $ref: '_shared.yml#/components/responses/401Response'
-        403:
-          $ref: '_shared.yml#/components/responses/403Response'
-        500:
-          $ref: '_shared.yml#/components/responses/500Response'
+
   /people/search:
     get:
       tags:
@@ -461,12 +398,7 @@ paths:
             'application/json':
               schema:
                 $ref: '_shared.yml#/components/schemas/Problem'
-        401:
-          $ref: '_shared.yml#/components/responses/401Response'
-        403:
-          $ref: '_shared.yml#/components/responses/403Response'
-        500:
-          $ref: '_shared.yml#/components/responses/500Response'
+
   /people/{crn}/oasys/risk-to-self:
     get:
       tags:
@@ -487,18 +419,12 @@ paths:
             'application/json':
               schema:
                 $ref: '_shared.yml#/components/schemas/OASysRiskToSelf'
-        401:
-          $ref: '_shared.yml#/components/responses/401Response'
-        403:
-          $ref: '_shared.yml#/components/responses/403Response'
         404:
           description: invalid CRN
           content:
             'application/json':
               schema:
                 $ref: '_shared.yml#/components/schemas/Problem'
-        500:
-          $ref: '_shared.yml#/components/responses/500Response'
   /people/{crn}/oasys/rosh:
     get:
       tags:
@@ -519,18 +445,12 @@ paths:
             'application/json':
               schema:
                 $ref: '_shared.yml#/components/schemas/OASysRiskOfSeriousHarm'
-        401:
-          $ref: '_shared.yml#/components/responses/401Response'
-        403:
-          $ref: '_shared.yml#/components/responses/403Response'
         404:
           description: invalid CRN
           content:
             'application/json':
               schema:
                 $ref: '_shared.yml#/components/schemas/Problem'
-        500:
-          $ref: '_shared.yml#/components/responses/500Response'
   /people/{crn}/risks:
     get:
       tags:
@@ -557,18 +477,12 @@ paths:
             'application/problem+json':
               schema:
                 $ref: '_shared.yml#/components/schemas/ValidationError'
-        401:
-          $ref: '_shared.yml#/components/responses/401Response'
-        403:
-          $ref: '_shared.yml#/components/responses/403Response'
         404:
           description: invalid CRN
           content:
             'application/json':
               schema:
                 $ref: '_shared.yml#/components/schemas/Problem'
-        500:
-          $ref: '_shared.yml#/components/responses/500Response'
   /reference-data/application-status:
     get:
       tags:
@@ -584,12 +498,7 @@ paths:
                 type: array
                 items:
                   $ref: 'cas2-schemas.yml#/components/schemas/Cas2ApplicationStatus'
-        401:
-          $ref: '_shared.yml#/components/responses/401Response'
-        403:
-          $ref: '_shared.yml#/components/responses/403Response'
-        500:
-          $ref: '_shared.yml#/components/responses/500Response'
+
   /reports/{reportName}:
     get:
       tags:
