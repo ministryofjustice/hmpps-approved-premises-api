@@ -11,10 +11,12 @@ fun IntegrationTestBase.givenAnApprovedPremises(
   qCode: String = randomStringUpperCase(4),
   supportsSpaceBookings: Boolean = false,
   region: ProbationRegionEntity? = null,
+  emailAddress: String? = randomStringUpperCase(10),
 ): ApprovedPremisesEntity = approvedPremisesEntityFactory
   .produceAndPersist {
     withName(name)
     withQCode(qCode)
+    withEmailAddress(emailAddress)
     withProbationRegion(region ?: probationRegionEntityFactory.produceAndPersist())
     withLocalAuthorityArea(localAuthorityEntityFactory.produceAndPersist())
     withSupportsSpaceBookings(supportsSpaceBookings)
