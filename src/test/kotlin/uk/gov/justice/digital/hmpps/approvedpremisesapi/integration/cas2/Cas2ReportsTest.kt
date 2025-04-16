@@ -1,5 +1,6 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.cas2
 
+import com.ninjasquad.springmockk.SpykBean
 import org.assertj.core.api.Assertions
 import org.jetbrains.kotlinx.dataframe.DataFrame
 import org.jetbrains.kotlinx.dataframe.api.ExcessiveColumns
@@ -20,6 +21,8 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.events.cas2.Cas2
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.events.cas2.Cas2ApplicationSubmittedEventDetailsFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.events.cas2.Cas2StatusFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.IntegrationTestBase
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas2ApplicationAssignmentEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas2ApplicationAssignmentRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DomainEventType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.model.cas2.ApplicationStatusUpdatesReportRow
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.model.cas2.SubmittedApplicationReportRow
@@ -30,6 +33,9 @@ import java.time.ZoneOffset
 import java.util.UUID
 
 class Cas2ReportsTest : IntegrationTestBase() {
+
+  @SpykBean
+  private lateinit var applicationAssignmentRepository: Cas2ApplicationAssignmentRepository
 
   @Nested
   inner class ControlsOnExternalUsers {
@@ -120,6 +126,10 @@ class Cas2ReportsTest : IntegrationTestBase() {
         withNomisUsername("NOMIS_USER_2")
       }
 
+      val user3 = nomisUserEntityFactory.produceAndPersist {
+        withNomisUsername("NOMIS_USER_3")
+      }
+
       val applicationId1 = UUID.randomUUID()
       val applicationId2 = UUID.randomUUID()
       val applicationId3 = UUID.randomUUID()
@@ -133,6 +143,7 @@ class Cas2ReportsTest : IntegrationTestBase() {
         withCreatedAt(oldCreated)
         withData("{}")
         withSubmittedAt(oldSubmitted)
+        withReferringPrisonCode("NEW")
       }
 
       val application2 = cas2ApplicationEntityFactory.produceAndPersist {
@@ -146,6 +157,35 @@ class Cas2ReportsTest : IntegrationTestBase() {
         withSubmittedAt(newerSubmitted)
       }
 
+      val application1Assignment1 = Cas2ApplicationAssignmentEntity(
+        id = UUID.randomUUID(),
+        application = application1,
+        prisonCode = "LON",
+        allocatedPomUser = null,
+        createdAt = OffsetDateTime.now().minusHours(1),
+      )
+      val application1Assignment2 = Cas2ApplicationAssignmentEntity(
+        id = UUID.randomUUID(),
+        application = application1,
+        prisonCode = "LON",
+        allocatedPomUser = user3,
+        createdAt = OffsetDateTime.now(),
+      )
+      val application1Assignment3 = Cas2ApplicationAssignmentEntity(
+        id = UUID.randomUUID(),
+        application = application1,
+        prisonCode = "NEW",
+        allocatedPomUser = null,
+        createdAt = OffsetDateTime.now().minusHours(3),
+      )
+      val application1Assignment4 = Cas2ApplicationAssignmentEntity(
+        id = UUID.randomUUID(),
+        application = application1,
+        prisonCode = "NEW",
+        allocatedPomUser = user1,
+        createdAt = OffsetDateTime.now().minusHours(4),
+      )
+
       // outside time limit -- should not feature in report
       cas2ApplicationEntityFactory.produceAndPersist {
         withId(applicationId3)
@@ -155,6 +195,11 @@ class Cas2ReportsTest : IntegrationTestBase() {
         withData("{}")
         withSubmittedAt(tooOldSubmitted)
       }
+
+      applicationAssignmentRepository.save(application1Assignment1)
+      applicationAssignmentRepository.save(application1Assignment2)
+      applicationAssignmentRepository.save(application1Assignment3)
+      applicationAssignmentRepository.save(application1Assignment4)
 
       val event1Details = Cas2ApplicationSubmittedEventDetailsFactory()
         .withSubmittedAt(oldSubmitted.toInstant())
@@ -226,6 +271,7 @@ class Cas2ReportsTest : IntegrationTestBase() {
           submittedAt = event2.occurredAt.toString().split(".").first(),
           submittedBy = event2Details.submittedBy.staffMember.username.toString(),
           startedAt = application2.createdAt.toString().split(".").first(),
+          numberOfTransfers = "0",
         ),
         SubmittedApplicationReportRow(
           eventId = event1Id.toString(),
@@ -239,6 +285,7 @@ class Cas2ReportsTest : IntegrationTestBase() {
           submittedAt = event1.occurredAt.toString().split(".").first(),
           submittedBy = event1Details.submittedBy.staffMember.username.toString(),
           startedAt = application1.createdAt.toString().split(".").first(),
+          numberOfTransfers = "1",
         ),
       )
         .toDataFrame()
@@ -351,6 +398,63 @@ class Cas2ReportsTest : IntegrationTestBase() {
         withData(objectMapper.writeValueAsString(event3ToSave))
       }
 
+      val applicationSchema = cas2ApplicationJsonSchemaEntityFactory.produceAndPersist {
+        withAddedAt(OffsetDateTime.now())
+        withId(UUID.randomUUID())
+      }
+
+      val user1 = nomisUserEntityFactory.produceAndPersist {
+        withNomisUsername("NOMIS_USER_1")
+      }
+
+      val application1 = cas2ApplicationEntityFactory.produceAndPersist {
+        withId(event1.applicationId!!)
+        withApplicationSchema(applicationSchema)
+        withCreatedByUser(user1)
+        withCrn(event1Details.personReference.crn.toString())
+        withNomsNumber(event2Details.personReference.noms)
+        withData("{}")
+        withReferringPrisonCode("NEW")
+      }
+
+      val user3 = nomisUserEntityFactory.produceAndPersist {
+        withNomisUsername("NOMIS_USER_3")
+      }
+
+      val application1Assignment1 = Cas2ApplicationAssignmentEntity(
+        id = UUID.randomUUID(),
+        application = application1,
+        prisonCode = "LON",
+        allocatedPomUser = null,
+        createdAt = OffsetDateTime.now().minusHours(1),
+      )
+      val application1Assignment2 = Cas2ApplicationAssignmentEntity(
+        id = UUID.randomUUID(),
+        application = application1,
+        prisonCode = "LON",
+        allocatedPomUser = user3,
+        createdAt = OffsetDateTime.now(),
+      )
+      val application1Assignment3 = Cas2ApplicationAssignmentEntity(
+        id = UUID.randomUUID(),
+        application = application1,
+        prisonCode = "NEW",
+        allocatedPomUser = null,
+        createdAt = OffsetDateTime.now().minusHours(3),
+      )
+      val application1Assignment4 = Cas2ApplicationAssignmentEntity(
+        id = UUID.randomUUID(),
+        application = application1,
+        prisonCode = "NEW",
+        allocatedPomUser = user1,
+        createdAt = OffsetDateTime.now().minusHours(4),
+      )
+
+      applicationAssignmentRepository.save(application1Assignment1)
+      applicationAssignmentRepository.save(application1Assignment2)
+      applicationAssignmentRepository.save(application1Assignment3)
+      applicationAssignmentRepository.save(application1Assignment4)
+
       val expectedDataFrame = listOf(
         ApplicationStatusUpdatesReportRow(
           eventId = event2Id.toString(),
@@ -361,6 +465,7 @@ class Cas2ReportsTest : IntegrationTestBase() {
           updatedAt = event2Details.updatedAt.toString().split(".").first(),
           updatedBy = event2Details.updatedBy.username,
           statusDetails = "",
+          numberOfTransfers = "0",
         ),
         ApplicationStatusUpdatesReportRow(
           eventId = event1Id.toString(),
@@ -370,7 +475,8 @@ class Cas2ReportsTest : IntegrationTestBase() {
           newStatus = event1Details.newStatus.name,
           updatedAt = event1Details.updatedAt.toString().split(".").first(),
           updatedBy = event1Details.updatedBy.username,
-          statusDetails = "personalInformation|riskOfSeriousHarm|hdcAndCpp",
+          statusDetails = "hdcAndCpp|personalInformation|riskOfSeriousHarm",
+          numberOfTransfers = "1",
         ),
       )
         .toDataFrame()

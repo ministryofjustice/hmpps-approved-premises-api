@@ -12,4 +12,5 @@ data class SubmittedApplicationReportRow(
   val submittedAt: String,
   val submittedBy: String,
   val startedAt: String,
+  val numberOfTransfers: String,
 )

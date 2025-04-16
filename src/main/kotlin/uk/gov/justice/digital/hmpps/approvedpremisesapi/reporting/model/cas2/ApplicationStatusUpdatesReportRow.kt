@@ -10,4 +10,5 @@ class ApplicationStatusUpdatesReportRow(
   val updatedAt: String,
   val updatedBy: String,
   val statusDetails: String,
+  val numberOfTransfers: String,
 )
