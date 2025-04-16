@@ -66,7 +66,7 @@ class Cas1ChangeRequestTest {
             .header("Authorization", "Bearer $jwt")
             .bodyValue(
               Cas1NewChangeRequest(
-                type = Cas1ChangeRequestType.APPEAL,
+                type = Cas1ChangeRequestType.PLACEMENT_APPEAL,
                 requestJson = "{}",
                 reasonId = UUID.randomUUID(),
                 spaceBookingId = UUID.randomUUID(),
@@ -128,7 +128,7 @@ class Cas1ChangeRequestTest {
             .header("Authorization", "Bearer $jwt")
             .bodyValue(
               Cas1NewChangeRequest(
-                type = Cas1ChangeRequestType.EXTENSION,
+                type = Cas1ChangeRequestType.PLACEMENT_EXTENSION,
                 requestJson = "{}",
                 reasonId = UUID.randomUUID(),
                 spaceBookingId = UUID.randomUUID(),
@@ -143,7 +143,7 @@ class Cas1ChangeRequestTest {
 
     @Test
     fun `Returns 200 when post new appeal change request is successful`() {
-      givenAUser(roles = listOf(UserRole.CAS1_CHANGE_REQUEST_DEV)) { user, jwt ->
+      givenAUser(roles = listOf(CAS1_CHANGE_REQUEST_DEV)) { user, jwt ->
         givenAPlacementRequest(
           placementRequestAllocatedTo = user,
           assessmentAllocatedTo = user,
@@ -159,7 +159,7 @@ class Cas1ChangeRequestTest {
             .header("Authorization", "Bearer $jwt")
             .bodyValue(
               Cas1NewChangeRequest(
-                type = Cas1ChangeRequestType.APPEAL,
+                type = Cas1ChangeRequestType.PLACEMENT_APPEAL,
                 requestJson = "{test: 1}",
                 reasonId = changeRequestReason.id,
                 spaceBookingId = spaceBooking.id,
@@ -170,7 +170,7 @@ class Cas1ChangeRequestTest {
             .isOk
 
           val persistedChangeRequest = cas1ChangeRequestRepository.findAll()[0]
-          assertThat(persistedChangeRequest.type).isEqualTo(ChangeRequestType.APPEAL)
+          assertThat(persistedChangeRequest.type).isEqualTo(ChangeRequestType.PLACEMENT_APPEAL)
           assertThat(persistedChangeRequest.requestJson).isEqualTo("\"{test: 1}\"")
           assertThat(persistedChangeRequest.requestReason).isEqualTo(changeRequestReason)
           assertThat(persistedChangeRequest.spaceBooking.id).isEqualTo(spaceBooking.id)
@@ -251,7 +251,7 @@ class Cas1ChangeRequestTest {
       ).first
 
       cruManagementArea1ChangeRequest1 = givenACas1ChangeRequest(
-        type = ChangeRequestType.APPEAL,
+        type = ChangeRequestType.PLACEMENT_APPEAL,
         decision = null,
         spaceBooking = givenACas1SpaceBooking(
           crn = placementRequest1.application.crn,
@@ -264,7 +264,7 @@ class Cas1ChangeRequestTest {
 
       // has decision, will be ignored
       givenACas1ChangeRequest(
-        type = ChangeRequestType.APPEAL,
+        type = ChangeRequestType.PLACEMENT_APPEAL,
         decision = ChangeRequestDecision.APPROVED,
         spaceBooking = givenACas1SpaceBooking(
           crn = placementRequest1.application.crn,
@@ -291,7 +291,7 @@ class Cas1ChangeRequestTest {
       ).first
 
       cruManagementArea2ChangeRequest1 = givenACas1ChangeRequest(
-        type = ChangeRequestType.EXTENSION,
+        type = ChangeRequestType.PLACEMENT_EXTENSION,
         decision = null,
         spaceBooking = givenACas1SpaceBooking(
           crn = placementRequest2.application.crn,
@@ -536,8 +536,8 @@ class Cas1ChangeRequestTest {
           assertThat(response.map { it.type })
             .containsExactly(
               Cas1ChangeRequestType.PLANNED_TRANSFER,
-              Cas1ChangeRequestType.EXTENSION,
-              Cas1ChangeRequestType.APPEAL,
+              Cas1ChangeRequestType.PLACEMENT_EXTENSION,
+              Cas1ChangeRequestType.PLACEMENT_APPEAL,
             )
         }
 
@@ -550,8 +550,8 @@ class Cas1ChangeRequestTest {
         .bodyAsListOfObjects<Cas1ChangeRequestSummary>().let { response ->
           assertThat(response.map { it.type })
             .containsExactly(
-              Cas1ChangeRequestType.APPEAL,
-              Cas1ChangeRequestType.EXTENSION,
+              Cas1ChangeRequestType.PLACEMENT_APPEAL,
+              Cas1ChangeRequestType.PLACEMENT_EXTENSION,
               Cas1ChangeRequestType.PLANNED_TRANSFER,
             )
         }
@@ -595,7 +595,7 @@ class Cas1ChangeRequestTest {
       ).first
 
       changeRequest = givenACas1ChangeRequest(
-        type = ChangeRequestType.APPEAL,
+        type = ChangeRequestType.PLACEMENT_APPEAL,
         decision = null,
         spaceBooking = givenACas1SpaceBooking(
           crn = placementRequest1.application.crn,
@@ -625,16 +625,16 @@ class Cas1ChangeRequestTest {
 
       extensionRejectionReason = cas1ChangeRequestRejectionReasonEntityFactory
         .produceAndPersist {
-          withChangeRequestType(ChangeRequestType.EXTENSION)
+          withChangeRequestType(ChangeRequestType.PLACEMENT_EXTENSION)
         }
 
       appealRejectionReason = cas1ChangeRequestRejectionReasonEntityFactory
         .produceAndPersist {
-          withChangeRequestType(ChangeRequestType.APPEAL)
+          withChangeRequestType(ChangeRequestType.PLACEMENT_APPEAL)
         }
 
       changeRequest1 = givenACas1ChangeRequest(
-        type = ChangeRequestType.EXTENSION,
+        type = ChangeRequestType.PLACEMENT_EXTENSION,
         decision = ChangeRequestDecision.REJECTED,
         rejectReason = extensionRejectionReason,
         decisionMadeAt = LocalDateTime.of(2025, 3, 1, 15, 30).atOffset(ZoneOffset.UTC),
@@ -698,7 +698,7 @@ class Cas1ChangeRequestTest {
 
       val changeRequestAfter = cas1ChangeRequestRepository.findById(changeRequest.id).get()
       assertThat(changeRequestAfter.rejectionReason).isNotNull()
-      assertThat(changeRequestAfter.rejectionReason?.changeRequestType).isEqualTo(ChangeRequestType.APPEAL)
+      assertThat(changeRequestAfter.rejectionReason?.changeRequestType).isEqualTo(ChangeRequestType.PLACEMENT_APPEAL)
     }
 
     @Test

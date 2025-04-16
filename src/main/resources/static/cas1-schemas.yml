@@ -1254,12 +1254,12 @@ components:
     Cas1ChangeRequestType:
       type: string
       enum:
-        - appeal
-        - extension
+        - placementAppeal
+        - placementExtension
         - plannedTransfer
       x-enum-varnames:
-        - APPEAL
-        - EXTENSION
+        - PLACEMENT_APPEAL
+        - PLACEMENT_EXTENSION
         - PLANNED_TRANSFER
     Cas1ChangeRequest:
       type: object

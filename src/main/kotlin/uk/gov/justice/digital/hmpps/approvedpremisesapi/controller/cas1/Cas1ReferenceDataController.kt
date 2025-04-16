@@ -47,8 +47,8 @@ class Cas1ReferenceDataController(
   override fun getChangeRequestReasons(changeRequestType: Cas1ChangeRequestType): ResponseEntity<List<NamedId>> = ResponseEntity.ok(
     changeRequestReasonRepository.findByChangeRequestTypeAndArchivedIsFalse(
       when (changeRequestType) {
-        Cas1ChangeRequestType.APPEAL -> ChangeRequestType.APPEAL
-        Cas1ChangeRequestType.EXTENSION -> ChangeRequestType.EXTENSION
+        Cas1ChangeRequestType.PLACEMENT_APPEAL -> ChangeRequestType.PLACEMENT_APPEAL
+        Cas1ChangeRequestType.PLACEMENT_EXTENSION -> ChangeRequestType.PLACEMENT_EXTENSION
         Cas1ChangeRequestType.PLANNED_TRANSFER -> ChangeRequestType.PLANNED_TRANSFER
       },
     ).map { NamedId(it.id, it.code) },
@@ -57,8 +57,8 @@ class Cas1ReferenceDataController(
   override fun getChangeRequestRejectionReasons(changeRequestType: Cas1ChangeRequestType): ResponseEntity<List<NamedId>> = ResponseEntity.ok(
     changeRequestRejectionReasonRepository.findByChangeRequestTypeAndArchivedIsFalse(
       when (changeRequestType) {
-        Cas1ChangeRequestType.APPEAL -> ChangeRequestType.APPEAL
-        Cas1ChangeRequestType.EXTENSION -> ChangeRequestType.EXTENSION
+        Cas1ChangeRequestType.PLACEMENT_APPEAL -> ChangeRequestType.PLACEMENT_APPEAL
+        Cas1ChangeRequestType.PLACEMENT_EXTENSION -> ChangeRequestType.PLACEMENT_EXTENSION
         Cas1ChangeRequestType.PLANNED_TRANSFER -> ChangeRequestType.PLANNED_TRANSFER
       },
     ).map { NamedId(it.id, it.code) },

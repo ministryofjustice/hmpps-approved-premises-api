@@ -8,7 +8,7 @@ import java.util.UUID
 
 class Cas1NewChangeRequestFactory : Factory<Cas1NewChangeRequest> {
   private var spaceBookingId: Yielded<UUID> = { UUID.randomUUID() }
-  private var type = { Cas1ChangeRequestType.APPEAL }
+  private var type = { Cas1ChangeRequestType.PLACEMENT_APPEAL }
   private var requestJson = { "{test: 1}" }
   private var reasonId: Yielded<UUID> = { UUID.randomUUID() }
 

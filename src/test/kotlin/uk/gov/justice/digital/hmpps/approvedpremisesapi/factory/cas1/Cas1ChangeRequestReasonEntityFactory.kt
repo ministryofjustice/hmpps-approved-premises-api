@@ -10,7 +10,7 @@ import java.util.UUID
 class Cas1ChangeRequestReasonEntityFactory : Factory<Cas1ChangeRequestReasonEntity> {
   private var id: Yielded<UUID> = { UUID.randomUUID() }
   private var code: Yielded<String> = { randomStringMultiCaseWithNumbers(4) }
-  private var changeRequestType: Yielded<ChangeRequestType> = { ChangeRequestType.APPEAL }
+  private var changeRequestType: Yielded<ChangeRequestType> = { ChangeRequestType.PLACEMENT_APPEAL }
   private var archived: Yielded<Boolean> = { false }
 
   fun withCode(code: String) = apply {

@@ -120,7 +120,7 @@ class Cas1ChangeRequestServiceTest {
       val cas1ChangeRequestReason = Cas1ChangeRequestReasonEntityFactory().produce()
 
       val cas1NewChangeRequest = Cas1NewChangeRequestFactory()
-        .withType(Cas1ChangeRequestType.APPEAL)
+        .withType(Cas1ChangeRequestType.PLACEMENT_APPEAL)
         .withReasonId(cas1ChangeRequestReason.id)
         .withSpaceBookingId(cas1SpaceBooking.id)
         .produce()
