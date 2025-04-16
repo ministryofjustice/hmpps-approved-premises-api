@@ -138,7 +138,7 @@ enum class ChangeRequestDecision {
 }
 
 enum class ChangeRequestType {
-  APPEAL,
-  EXTENSION,
+  PLACEMENT_APPEAL,
+  PLACEMENT_EXTENSION,
   PLANNED_TRANSFER,
 }

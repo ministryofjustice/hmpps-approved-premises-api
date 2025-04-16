@@ -119,9 +119,9 @@ enum class UserRole(val service: ServiceName, val cas1ApiValue: ApprovedPremises
     ApprovedPremisesUserRole.changeRequestDev,
     permissions = listOf(
       UserPermission.CAS1_CHANGE_REQUEST_LIST,
-      UserPermission.CAS1_APPEAL_CREATE,
+      UserPermission.CAS1_PLACEMENT_APPEAL_CREATE,
       UserPermission.CAS1_PLANNED_TRANSFER_CREATE,
-      UserPermission.CAS1_APPEAL_ASSESS,
+      UserPermission.CAS1_PLACEMENT_APPEAL_ASSESS,
       UserPermission.CAS1_PLANNED_TRANSFER_ASSESS,
     ),
   ),

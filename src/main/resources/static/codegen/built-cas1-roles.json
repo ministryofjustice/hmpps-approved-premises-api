@@ -95,9 +95,9 @@
   {
     "name" : "change_request_dev",
     "permissions" : [
-      "cas1_appeal_assess",
-      "cas1_appeal_create",
       "cas1_change_request_list",
+      "cas1_placement_appeal_assess",
+      "cas1_placement_appeal_create",
       "cas1_planned_transfer_assess",
       "cas1_planned_transfer_create"
     ]
@@ -144,8 +144,6 @@
     "name" : "janitor",
     "permissions" : [
       "cas1_adhoc_booking_create",
-      "cas1_appeal_assess",
-      "cas1_appeal_create",
       "cas1_application_withdraw_others",
       "cas1_assess_appealed_application",
       "cas1_assess_application",
@@ -158,6 +156,8 @@
       "cas1_out_of_service_bed_cancel",
       "cas1_out_of_service_bed_create",
       "cas1_out_of_service_bed_create_bed_on_hold",
+      "cas1_placement_appeal_assess",
+      "cas1_placement_appeal_create",
       "cas1_placement_request_record_unable_to_match",
       "cas1_planned_transfer_assess",
       "cas1_planned_transfer_create",

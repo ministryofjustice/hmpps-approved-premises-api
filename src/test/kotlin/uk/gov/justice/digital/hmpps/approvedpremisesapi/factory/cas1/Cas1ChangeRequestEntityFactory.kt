@@ -21,7 +21,7 @@ class Cas1ChangeRequestEntityFactory : Factory<Cas1ChangeRequestEntity> {
   private var id = { UUID.randomUUID() }
   private var placementRequest = { PlacementRequestEntityFactory().withDefaults().produce() }
   private var spaceBooking = { Cas1SpaceBookingEntityFactory().produce() }
-  private var type = { ChangeRequestType.APPEAL }
+  private var type = { ChangeRequestType.PLACEMENT_APPEAL }
   private var requestJson = { "{}" }
   private var requestReason = { Cas1ChangeRequestReasonEntityFactory().produce() }
   private var decisionJson = { null }

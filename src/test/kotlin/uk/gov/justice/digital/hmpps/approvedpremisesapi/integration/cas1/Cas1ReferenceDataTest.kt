@@ -46,37 +46,37 @@ class Cas1ReferenceDataTest : IntegrationTestBase() {
 
       cas1ChangeRequestReasonEntityFactory.produceAndPersist {
         withCode("appeal_reason_1")
-        withChangeRequestType(ChangeRequestType.APPEAL)
+        withChangeRequestType(ChangeRequestType.PLACEMENT_APPEAL)
         withArchived(false)
       }
 
       cas1ChangeRequestReasonEntityFactory.produceAndPersist {
         withCode("appeal_reason_2_archived")
-        withChangeRequestType(ChangeRequestType.APPEAL)
+        withChangeRequestType(ChangeRequestType.PLACEMENT_APPEAL)
         withArchived(true)
       }
 
       cas1ChangeRequestReasonEntityFactory.produceAndPersist {
         withCode("appeal_reason_3")
-        withChangeRequestType(ChangeRequestType.APPEAL)
+        withChangeRequestType(ChangeRequestType.PLACEMENT_APPEAL)
         withArchived(false)
       }
 
       cas1ChangeRequestReasonEntityFactory.produceAndPersist {
         withCode("extension_reason_1")
-        withChangeRequestType(ChangeRequestType.EXTENSION)
+        withChangeRequestType(ChangeRequestType.PLACEMENT_EXTENSION)
         withArchived(false)
       }
 
       cas1ChangeRequestReasonEntityFactory.produceAndPersist {
         withCode("extension_reason_2")
-        withChangeRequestType(ChangeRequestType.EXTENSION)
+        withChangeRequestType(ChangeRequestType.PLACEMENT_EXTENSION)
         withArchived(false)
       }
 
       cas1ChangeRequestReasonEntityFactory.produceAndPersist {
         withCode("extension_reason_3_archived")
-        withChangeRequestType(ChangeRequestType.EXTENSION)
+        withChangeRequestType(ChangeRequestType.PLACEMENT_EXTENSION)
         withArchived(true)
       }
 
@@ -104,7 +104,7 @@ class Cas1ReferenceDataTest : IntegrationTestBase() {
       val jwt = jwtAuthHelper.createValidAuthorizationCodeJwt()
 
       val result = webTestClient.get()
-        .uri("/cas1/reference-data/change-request-reasons/appeal")
+        .uri("/cas1/reference-data/change-request-reasons/placementAppeal")
         .header("Authorization", "Bearer $jwt")
         .exchange()
         .expectStatus()
@@ -119,7 +119,7 @@ class Cas1ReferenceDataTest : IntegrationTestBase() {
       val jwt = jwtAuthHelper.createValidAuthorizationCodeJwt()
 
       val result = webTestClient.get()
-        .uri("/cas1/reference-data/change-request-reasons/extension")
+        .uri("/cas1/reference-data/change-request-reasons/placementExtension")
         .header("Authorization", "Bearer $jwt")
         .exchange()
         .expectStatus()
@@ -154,37 +154,37 @@ class Cas1ReferenceDataTest : IntegrationTestBase() {
 
       cas1ChangeRequestRejectionReasonEntityFactory.produceAndPersist {
         withCode("appeal_reason_1")
-        withChangeRequestType(ChangeRequestType.APPEAL)
+        withChangeRequestType(ChangeRequestType.PLACEMENT_APPEAL)
         withArchived(false)
       }
 
       cas1ChangeRequestRejectionReasonEntityFactory.produceAndPersist {
         withCode("appeal_reason_2_archived")
-        withChangeRequestType(ChangeRequestType.APPEAL)
+        withChangeRequestType(ChangeRequestType.PLACEMENT_APPEAL)
         withArchived(true)
       }
 
       cas1ChangeRequestRejectionReasonEntityFactory.produceAndPersist {
         withCode("appeal_reason_3")
-        withChangeRequestType(ChangeRequestType.APPEAL)
+        withChangeRequestType(ChangeRequestType.PLACEMENT_APPEAL)
         withArchived(false)
       }
 
       cas1ChangeRequestRejectionReasonEntityFactory.produceAndPersist {
         withCode("extension_reason_1")
-        withChangeRequestType(ChangeRequestType.EXTENSION)
+        withChangeRequestType(ChangeRequestType.PLACEMENT_EXTENSION)
         withArchived(false)
       }
 
       cas1ChangeRequestRejectionReasonEntityFactory.produceAndPersist {
         withCode("extension_reason_2")
-        withChangeRequestType(ChangeRequestType.EXTENSION)
+        withChangeRequestType(ChangeRequestType.PLACEMENT_EXTENSION)
         withArchived(false)
       }
 
       cas1ChangeRequestRejectionReasonEntityFactory.produceAndPersist {
         withCode("extension_reason_3_archived")
-        withChangeRequestType(ChangeRequestType.EXTENSION)
+        withChangeRequestType(ChangeRequestType.PLACEMENT_EXTENSION)
         withArchived(true)
       }
 
@@ -212,7 +212,7 @@ class Cas1ReferenceDataTest : IntegrationTestBase() {
       val jwt = jwtAuthHelper.createValidAuthorizationCodeJwt()
 
       val result = webTestClient.get()
-        .uri("/cas1/reference-data/change-request-rejection-reasons/appeal")
+        .uri("/cas1/reference-data/change-request-rejection-reasons/placementAppeal")
         .header("Authorization", "Bearer $jwt")
         .exchange()
         .expectStatus()
@@ -227,7 +227,7 @@ class Cas1ReferenceDataTest : IntegrationTestBase() {
       val jwt = jwtAuthHelper.createValidAuthorizationCodeJwt()
 
       val result = webTestClient.get()
-        .uri("/cas1/reference-data/change-request-rejection-reasons/extension")
+        .uri("/cas1/reference-data/change-request-rejection-reasons/placementExtension")
         .header("Authorization", "Bearer $jwt")
         .exchange()
         .expectStatus()

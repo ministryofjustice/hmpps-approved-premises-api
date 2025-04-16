@@ -37,9 +37,9 @@ class Cas1ChangeRequestsController(
 
   override fun create(placementRequestId: UUID, cas1NewChangeRequest: Cas1NewChangeRequest): ResponseEntity<Unit> {
     when (cas1NewChangeRequest.type) {
-      Cas1ChangeRequestType.APPEAL -> userAccessService.ensureCurrentUserHasPermission(UserPermission.CAS1_APPEAL_CREATE)
+      Cas1ChangeRequestType.PLACEMENT_APPEAL -> userAccessService.ensureCurrentUserHasPermission(UserPermission.CAS1_PLACEMENT_APPEAL_CREATE)
       Cas1ChangeRequestType.PLANNED_TRANSFER -> userAccessService.ensureCurrentUserHasPermission(UserPermission.CAS1_PLANNED_TRANSFER_CREATE)
-      Cas1ChangeRequestType.EXTENSION -> throw BadRequestProblem(errorDetail = "Change request type is not ${Cas1ChangeRequestType.PLANNED_TRANSFER} or ${Cas1ChangeRequestType.APPEAL}")
+      Cas1ChangeRequestType.PLACEMENT_EXTENSION -> throw BadRequestProblem(errorDetail = "Change request type is not ${Cas1ChangeRequestType.PLANNED_TRANSFER} or ${Cas1ChangeRequestType.PLACEMENT_APPEAL}")
     }
 
     val result = cas1ChangeRequestService.createChangeRequest(placementRequestId, cas1NewChangeRequest)
@@ -96,9 +96,9 @@ class Cas1ChangeRequestsController(
       ?: throw NotFoundProblem(changeRequestId, "ChangeRequest")
 
     when (changeRequest.type) {
-      ChangeRequestType.APPEAL -> userAccessService.ensureCurrentUserHasPermission(UserPermission.CAS1_APPEAL_ASSESS)
-      ChangeRequestType.EXTENSION -> userAccessService.ensureCurrentUserHasPermission(UserPermission.CAS1_PLANNED_TRANSFER_ASSESS)
-      ChangeRequestType.PLANNED_TRANSFER -> throw BadRequestProblem(errorDetail = "Change request type is not ${Cas1ChangeRequestType.PLANNED_TRANSFER} or ${Cas1ChangeRequestType.APPEAL}")
+      ChangeRequestType.PLACEMENT_APPEAL -> userAccessService.ensureCurrentUserHasPermission(UserPermission.CAS1_PLACEMENT_APPEAL_ASSESS)
+      ChangeRequestType.PLACEMENT_EXTENSION -> userAccessService.ensureCurrentUserHasPermission(UserPermission.CAS1_PLANNED_TRANSFER_ASSESS)
+      ChangeRequestType.PLANNED_TRANSFER -> throw BadRequestProblem(errorDetail = "Change request type is not ${Cas1ChangeRequestType.PLANNED_TRANSFER} or ${Cas1ChangeRequestType.PLACEMENT_APPEAL}")
     }
 
     val result = cas1ChangeRequestService.rejectChangeRequest(placementRequestId, changeRequestId, cas1RejectChangeRequest)
