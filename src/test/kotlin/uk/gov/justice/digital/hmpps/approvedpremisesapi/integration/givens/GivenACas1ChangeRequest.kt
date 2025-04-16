@@ -11,9 +11,10 @@ import java.time.OffsetDateTime
 fun IntegrationTestBase.givenACas1ChangeRequest(
   type: ChangeRequestType,
   decision: ChangeRequestDecision? = null,
-  decisionMadeAt: OffsetDateTime = OffsetDateTime.now(),
+  resolvedAt: OffsetDateTime = OffsetDateTime.now(),
   spaceBooking: Cas1SpaceBookingEntity,
   rejectReason: Cas1ChangeRequestRejectionReasonEntity? = null,
+  resolved: Boolean = decision != null,
 ): Cas1ChangeRequestEntity {
   val requestReason = cas1ChangeRequestReasonEntityFactory.produceAndPersist {
     withChangeRequestType(type)
@@ -24,7 +25,8 @@ fun IntegrationTestBase.givenACas1ChangeRequest(
     withType(type)
     withChangeRequestReason(requestReason)
     withDecision(decision)
-    withDecisionMadeAt(decisionMadeAt)
+    withResolved(resolved)
+    withResolvedAt(resolvedAt)
     withSpaceBooking(spaceBooking)
     withPlacementRequest(spaceBooking.placementRequest!!)
     withRejectionReason(rejectReason)

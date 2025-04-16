@@ -71,10 +71,6 @@ class Cas3BedspaceSearchService(
 
     val endDate = searchParams.calculateEndDate()
 
-    if ((searchParams.bedspaceFilters != null || searchParams.premisesFilters != null) && searchParams.attributes != null) {
-      return CasResult.GeneralValidationError("Cannot use both filters and attributes")
-    }
-
     val candidateResults =
       bedSearchRepository.findTemporaryAccommodationBeds(
         probationDeliveryUnits = probationDeliveryUnitIds,
@@ -118,12 +114,6 @@ class Cas3BedspaceSearchService(
     searchParams: Cas3BedspaceSearchParameters,
     results: List<Cas3CandidateBedspace>,
   ): List<Cas3CandidateBedspace> {
-    // use the legacy filters until the UI switches over.
-    val attributes = searchParams.attributes
-    if (attributes != null) {
-      return applyLegacyFilters(attributes, results)
-    }
-
     if (searchParams.bedspaceFilters == null && searchParams.premisesFilters == null) {
       return results
     }

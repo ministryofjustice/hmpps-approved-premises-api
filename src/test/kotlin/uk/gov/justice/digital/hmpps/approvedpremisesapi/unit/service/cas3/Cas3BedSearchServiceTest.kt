@@ -69,7 +69,6 @@ class Cas3BedSearchServiceTest {
         startDate = LocalDate.parse("2023-03-22"),
         durationDays = 0,
         probationDeliveryUnits = listOf(probationDeliveryUnit.id),
-        attributes = null,
       ),
     )
 
@@ -96,7 +95,6 @@ class Cas3BedSearchServiceTest {
         startDate = LocalDate.parse("2024-08-22"),
         durationDays = 30,
         probationDeliveryUnits = probationDeliveryUnitIds,
-        attributes = null,
       ),
     )
     assertThat(result).isFieldValidationError("$.probationDeliveryUnits", "maxNumberProbationDeliveryUnits")
@@ -133,7 +131,6 @@ class Cas3BedSearchServiceTest {
         startDate = LocalDate.parse("2024-08-28"),
         durationDays = 84,
         probationDeliveryUnits = probationDeliveryUnitIds,
-        attributes = null,
       ),
     )
     assertThat(result).isFieldValidationError("$.probationDeliveryUnits[3]", "doesNotExist")
@@ -234,7 +231,6 @@ class Cas3BedSearchServiceTest {
         probationDeliveryUnits = listOf(probationDeliveryUnit.id),
         startDate = LocalDate.parse("2023-03-22"),
         durationDays = 7,
-        attributes = null,
       ),
     )
 
@@ -426,7 +422,6 @@ class Cas3BedSearchServiceTest {
         startDate = LocalDate.parse("2023-03-22"),
         durationDays = 7,
         probationDeliveryUnits = listOf(probationDeliveryUnit.id),
-        attributes = null,
       ),
     )
     assertThat(result).isSuccess().hasValueEqualTo(expectedResults)
