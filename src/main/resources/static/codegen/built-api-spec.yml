@@ -736,42 +736,6 @@ paths:
           $ref: '#/components/responses/403Response'
         500:
           $ref: '#/components/responses/500Response'
-  /premises/{premisesId}/beds/{bedId}:
-    get:
-      description: Deprecated, use /cas1/premises/{premisesId}/beds/{bedId} instead
-      deprecated: true
-      tags:
-        - Rooms
-      summary: Gets a given bed for a given premises
-      operationId: premisesPremisesIdBedsBedIdGet
-      parameters:
-        - name: premisesId
-          in: path
-          description: ID of the premises that the bed is in
-          required: true
-          schema:
-            type: string
-            format: uuid
-        - name: bedId
-          in: path
-          description: ID of the bed to return
-          required: true
-          schema:
-            type: string
-            format: uuid
-      responses:
-        200:
-          description: successful operation
-          content:
-            'application/json':
-              schema:
-                $ref: '#/components/schemas/BedDetail'
-        401:
-          $ref: '#/components/responses/401Response'
-        403:
-          $ref: '#/components/responses/403Response'
-        500:
-          $ref: '#/components/responses/500Response'
   /premises/{premisesId}/rooms:
     get:
       tags:
@@ -6978,17 +6942,6 @@ components:
         - name
         - roomName
         - status
-    BedDetail:
-      allOf:
-        - $ref: '#/components/schemas/BedSummary'
-        - type: object
-          properties:
-            characteristics:
-              type: array
-              items:
-                $ref: '#/components/schemas/CharacteristicPair'
-          required:
-            - characteristics
     BedStatus:
       type: string
       enum:
