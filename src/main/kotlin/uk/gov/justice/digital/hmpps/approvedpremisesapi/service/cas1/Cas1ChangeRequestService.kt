@@ -66,7 +66,8 @@ class Cas1ChangeRequestService(
         decision = null,
         rejectionReason = null,
         decisionMadeByUser = null,
-        decisionMadeAt = null,
+        resolved = false,
+        resolvedAt = null,
         createdAt = now,
         updatedAt = now,
       ),
@@ -115,8 +116,10 @@ class Cas1ChangeRequestService(
     val changeRequestRejectReason = cas1ChangeRequestRejectionReasonRepository.findByIdAndArchivedIsFalse(cas1RejectChangeRequest.rejectionReasonId)
       ?: return CasResult.GeneralValidationError("The change request reject reason not found")
 
+    changeRequestWithLock.decision = ChangeRequestDecision.REJECTED
     changeRequestWithLock.rejectionReason = changeRequestRejectReason
-    changeRequestWithLock.decisionMadeAt = OffsetDateTime.now()
+    changeRequestWithLock.resolved = true
+    changeRequestWithLock.resolvedAt = OffsetDateTime.now()
     cas1ChangeRequestRepository.saveAndFlush(changeRequestWithLock)
 
     return Success(Unit)

@@ -3,6 +3,9 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.unit.service.cas1
 import com.fasterxml.jackson.databind.ObjectMapper
 import io.mockk.every
 import io.mockk.mockk
+import io.mockk.slot
+import io.mockk.verify
+import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 import org.springframework.data.repository.findByIdOrNull
@@ -16,10 +19,12 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.cas1.Cas1ChangeR
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.cas1.Cas1NewChangeRequestFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas1SpaceBookingRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementRequestRepository
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas1.Cas1ChangeRequestEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas1.Cas1ChangeRequestReasonRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas1.Cas1ChangeRequestRejectionReasonRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas1.Cas1ChangeRequestRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas1.ChangeRequestDecision
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas1.ChangeRequestType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas1.LockableCas1ChangeRequestEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas1.LockableCas1ChangeRequestRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1ChangeRequestService
@@ -134,6 +139,17 @@ class Cas1ChangeRequestServiceTest {
       val result = service.createChangeRequest(placementRequest.id, cas1NewChangeRequest)
 
       assertThatCasResult(result).isSuccess()
+
+      val savedChangeRequestCaptor = slot<Cas1ChangeRequestEntity>()
+      verify {
+        cas1ChangeRequestRepository.save(
+          capture(savedChangeRequestCaptor),
+        )
+      }
+
+      val savedChangeRequest = savedChangeRequestCaptor.captured
+      assertThat(savedChangeRequest.type).isEqualTo(ChangeRequestType.PLACEMENT_APPEAL)
+      assertThat(savedChangeRequest.resolved).isEqualTo(false)
     }
 
     @Test
@@ -162,6 +178,17 @@ class Cas1ChangeRequestServiceTest {
       val result = service.createChangeRequest(placementRequest.id, cas1NewChangeRequest)
 
       assertThatCasResult(result).isSuccess()
+
+      val savedChangeRequestCaptor = slot<Cas1ChangeRequestEntity>()
+      verify {
+        cas1ChangeRequestRepository.save(
+          capture(savedChangeRequestCaptor),
+        )
+      }
+
+      val savedChangeRequest = savedChangeRequestCaptor.captured
+      assertThat(savedChangeRequest.type).isEqualTo(ChangeRequestType.PLANNED_TRANSFER)
+      assertThat(savedChangeRequest.resolved).isEqualTo(false)
     }
 
     @Test
@@ -266,12 +293,28 @@ class Cas1ChangeRequestServiceTest {
 
       every { lockableCas1ChangeRequestEntityRepository.acquirePessimisticLock(changeRequest.id) } returns LockableCas1ChangeRequestEntity(id = changeRequest.id)
       every { cas1ChangeRequestRepository.findByIdOrNull(any()) } returns changeRequest
-      every { cas1ChangeRequestRejectionReasonRepository.findByIdAndArchivedIsFalse(any()) } returns Cas1ChangeRequestRejectionReasonEntityFactory().produce()
+
+      val rejectionReason = Cas1ChangeRequestRejectionReasonEntityFactory().produce()
+      every { cas1ChangeRequestRejectionReasonRepository.findByIdAndArchivedIsFalse(any()) } returns rejectionReason
+
       every { cas1ChangeRequestRepository.saveAndFlush(any()) } returns changeRequest
 
       val result = service.rejectChangeRequest(placementRequest.id, changeRequest.id, cas1RejectChangeRequest)
 
       assertThatCasResult(result).isSuccess()
+
+      val savedChangeRequestCaptor = slot<Cas1ChangeRequestEntity>()
+      verify {
+        cas1ChangeRequestRepository.saveAndFlush(
+          capture(savedChangeRequestCaptor),
+        )
+      }
+
+      val savedChangeRequest = savedChangeRequestCaptor.captured
+      assertThat(savedChangeRequest.decision).isEqualTo(ChangeRequestDecision.REJECTED)
+      assertThat(savedChangeRequest.rejectionReason).isEqualTo(rejectionReason)
+      assertThat(savedChangeRequest.resolved).isTrue()
+      assertThat(savedChangeRequest.resolvedAt).isNotNull()
     }
   }
 }
