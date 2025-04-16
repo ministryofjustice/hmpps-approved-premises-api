@@ -22,12 +22,7 @@ paths:
                 type: array
                 items:
                   $ref: '#/components/schemas/Cas3ApplicationSummary'
-        401:
-          $ref: '#/components/responses/401Response'
-        403:
-          $ref: '#/components/responses/403Response'
-        500:
-          $ref: '#/components/responses/500Response'
+
     post:
       tags:
         - Operations on applications
@@ -60,18 +55,12 @@ paths:
             'application/problem+json':
               schema:
                 $ref: '#/components/schemas/ValidationError'
-        401:
-          $ref: '#/components/responses/401Response'
-        403:
-          $ref: '#/components/responses/403Response'
         404:
           description: invalid CRN
           content:
             'application/json':
               schema:
                 $ref: '#/components/schemas/Problem'
-        500:
-          $ref: '#/components/responses/500Response'
       x-codegen-request-body-name: body
   /applications/{applicationId}:
     get:
@@ -94,12 +83,7 @@ paths:
             'application/json':
               schema:
                 $ref: '#/components/schemas/Cas3Application'
-        401:
-          $ref: '#/components/responses/401Response'
-        403:
-          $ref: '#/components/responses/403Response'
-        500:
-          $ref: '#/components/responses/500Response'
+
     put:
       tags:
         - Operations on applications
@@ -133,12 +117,7 @@ paths:
             'application/problem+json':
               schema:
                 $ref: '#/components/schemas/ValidationError'
-        401:
-          $ref: '#/components/responses/401Response'
-        403:
-          $ref: '#/components/responses/403Response'
-        500:
-          $ref: '#/components/responses/500Response'
+
       x-codegen-request-body-name: body
     delete:
       operationId: deleteApplication
@@ -192,12 +171,7 @@ paths:
             'application/problem+json':
               schema:
                 $ref: '#/components/schemas/ValidationError'
-        401:
-          $ref: '#/components/responses/401Response'
-        403:
-          $ref: '#/components/responses/403Response'
-        500:
-          $ref: '#/components/responses/500Response'
+
   /reports/{reportName}:
     get:
       tags:
@@ -285,12 +259,7 @@ paths:
                 type: array
                 items:
                   $ref: '#/components/schemas/Cas3PremisesSummary'
-        401:
-          $ref: '#/components/responses/401Response'
-        403:
-          $ref: '#/components/responses/403Response'
-        500:
-          $ref: '#/components/responses/500Response'
+
   /premises/{premisesId}/bookings/{bookingId}/departures:
     post:
       tags:
@@ -332,18 +301,12 @@ paths:
             'application/problem+json':
               schema:
                 $ref: '#/components/schemas/ValidationError'
-        401:
-          $ref: '#/components/responses/401Response'
-        403:
-          $ref: '#/components/responses/403Response'
         404:
           description: invalid premises ID or booking ID
           content:
             'application/json':
               schema:
                 $ref: '#/components/schemas/Problem'
-        500:
-          $ref: '#/components/responses/500Response'
       x-codegen-request-body-name: body
   /premises/{premisesId}/future-bookings:
     get:
@@ -376,12 +339,7 @@ paths:
                 type: array
                 items:
                   $ref: '#/components/schemas/FutureBooking'
-        401:
-          $ref: '#/components/responses/401Response'
-        403:
-          $ref: '#/components/responses/403Response'
-        500:
-          $ref: '#/components/responses/500Response'
+
   /bedspaces/search:
     post:
       summary: Searches for available Beds within the given parameters
@@ -405,32 +363,8 @@ paths:
             'application/problem+json':
               schema:
                 $ref: '#/components/schemas/ValidationError'
-        401:
-          $ref: '#/components/responses/401Response'
-        403:
-          $ref: '#/components/responses/403Response'
-        500:
-          $ref: '#/components/responses/500Response'
+
 components:
-  responses:
-    401Response:
-      description: not authenticated
-      content:
-        'application/json':
-          schema:
-            $ref: '#/components/schemas/Problem'
-    403Response:
-      description: unauthorised
-      content:
-        'application/json':
-          schema:
-            $ref: '#/components/schemas/Problem'
-    500Response:
-      description: unexpected error
-      content:
-        'application/json':
-          schema:
-            $ref: '#/components/schemas/Problem'
   headers:
     X-Pagination-CurrentPage:
       schema:
