@@ -26,6 +26,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.deliuscontext.Staf
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.deliuscontext.UserOffenderAccess
 import java.time.Duration
 
+@SuppressWarnings("LongParameterList")
 @Configuration
 @EnableCaching
 class RedisConfiguration {
@@ -39,7 +40,7 @@ class RedisConfiguration {
     @Value("\${caches.staffDetails.expiry-seconds}") staffDetailsExpirySeconds: Long,
     @Value("\${caches.teamManagingCases.expiry-seconds}") teamManagingCasesExpirySeconds: Long,
     @Value("\${caches.ukBankHolidays.expiry-seconds}") ukBankHolidaysExpirySeconds: Long,
-    @Value("21600") crnGetCaseDetailExpirySeconds: Long,
+    @Value("600") crnGetCaseDetailExpirySeconds: Long,
   ): RedisCacheManagerBuilderCustomizer? {
     val uniqueBuildId = buildProperties.time.epochSecond.toString()
 
