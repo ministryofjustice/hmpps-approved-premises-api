@@ -14,7 +14,7 @@ interface Cas2v2UnsubmittedApplicationsReportRepository : JpaRepository<Cas2v2Ap
         CAST(applications.id AS TEXT) AS applicationId,
         applications.crn AS personCrn,
         applications.noms_number AS personNoms,
-        to_char(applications.created_at, 'YYYY-MM-DD"T"HH24:MI:SS') AS startedAt,
+        to_char(applications.created_at, 'YYYY-MM-DD"T"HH24:MI:SS"Z"') AS startedAt,
         users.username AS startedBy,
         applications.application_origin AS applicationOrigin
 
