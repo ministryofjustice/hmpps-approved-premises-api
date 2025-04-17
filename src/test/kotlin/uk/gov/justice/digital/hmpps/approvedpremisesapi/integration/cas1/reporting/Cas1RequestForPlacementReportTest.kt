@@ -279,6 +279,7 @@ class Cas1RequestForPlacementReportTest : InitialiseDatabasePerClassTestBase() {
       assertThat(row.requested_duration_days).isEqualTo("8")
       assertThat(row.request_for_placement_submitted_date).isEqualTo("2019-03-15T00:10:00Z")
       assertThat(row.parole_decision_date).isNull()
+      assertThat(row.request_for_placement_last_allocated_to_assessor_date).isEqualTo("2019-03-15T00:11:00Z")
       assertThat(row.request_for_placement_decision).isEqualTo("ACCEPTED")
       assertThat(row.request_for_placement_decision_made_date).isEqualTo("2020-12-01T09:15:45Z")
       assertThat(row.request_for_placement_withdrawal_date).isEqualTo("2021-03-15T00:10:00Z")
@@ -315,6 +316,7 @@ class Cas1RequestForPlacementReportTest : InitialiseDatabasePerClassTestBase() {
       assertThat(row.requested_duration_days).isNull()
       assertThat(row.request_for_placement_submitted_date).isEqualTo("2021-03-01T12:50:00Z")
       assertThat(row.parole_decision_date).isNull()
+      assertThat(row.request_for_placement_last_allocated_to_assessor_date).isEqualTo("2021-03-01T12:51:00Z")
       assertThat(row.request_for_placement_decision).isEqualTo("REJECTED")
       assertThat(row.request_for_placement_decision_made_date).isEqualTo("2020-04-01T09:15:45Z")
       assertThat(row.request_for_placement_withdrawal_date).isNull()
@@ -341,6 +343,7 @@ class Cas1RequestForPlacementReportTest : InitialiseDatabasePerClassTestBase() {
       assertThat(row.requested_duration_days).isNull()
       assertThat(row.request_for_placement_submitted_date).isEqualTo("2021-03-01T15:25:05Z")
       assertThat(row.parole_decision_date).isNull()
+      assertThat(row.request_for_placement_last_allocated_to_assessor_date).isEqualTo("2021-03-01T15:25:05Z")
       assertThat(row.request_for_placement_decision).isNull()
       assertThat(row.request_for_placement_decision_made_date).isNull()
       assertThat(row.request_for_placement_withdrawal_date).isNull()
@@ -560,6 +563,7 @@ class Cas1RequestForPlacementReportTest : InitialiseDatabasePerClassTestBase() {
     val requested_duration_days: String?,
     val request_for_placement_submitted_date: String?,
     val parole_decision_date: String?,
+    val request_for_placement_last_allocated_to_assessor_date: String?,
     val request_for_placement_decision: String?,
     val request_for_placement_decision_made_date: String?,
     val request_for_placement_withdrawal_date: String?,
