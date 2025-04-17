@@ -23,6 +23,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.Ma
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.PersonArrivedEnvelope
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.PersonDepartedEnvelope
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.PersonNotArrivedEnvelope
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.PlacementAppealCreatedEnvelope
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.PlacementApplicationAllocatedEnvelope
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.PlacementApplicationWithdrawnEnvelope
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.RequestForPlacementAssessedEnvelope
@@ -73,6 +74,7 @@ class Cas1DomainEventService(
   fun getBookingKeyWorkerAssignedEvent(id: UUID) = get(id, BookingKeyWorkerAssignedEnvelope::class)
   fun getApplicationWithdrawnEvent(id: UUID) = get(id, ApplicationWithdrawnEnvelope::class)
   fun getApplicationExpiredEvent(id: UUID) = get(id, ApplicationExpiredEnvelope::class)
+  fun getPlacementAppealCreatedEvent(id: UUID) = get(id, PlacementAppealCreatedEnvelope::class)
   fun getPlacementApplicationWithdrawnEvent(id: UUID) = get(id, PlacementApplicationWithdrawnEnvelope::class)
   fun getPlacementApplicationAllocatedEvent(id: UUID) = get(id, PlacementApplicationAllocatedEnvelope::class)
   fun getMatchRequestWithdrawnEvent(id: UUID) = get(id, MatchRequestWithdrawnEnvelope::class)
@@ -182,6 +184,12 @@ class Cas1DomainEventService(
   fun saveAssessmentAppealedEvent(domainEvent: Cas1DomainEvent<AssessmentAppealedEnvelope>) = saveAndEmit(
     domainEvent = domainEvent,
     eventType = DomainEventType.APPROVED_PREMISES_ASSESSMENT_APPEALED,
+  )
+
+  @Transactional
+  fun savePlacementAppealCreated(domainEvent: Cas1DomainEvent<PlacementAppealCreatedEnvelope>) = saveAndEmit(
+    domainEvent = domainEvent,
+    eventType = DomainEventType.APPROVED_PREMISES_PLACEMENT_APPEAL_CREATED,
   )
 
   @Transactional

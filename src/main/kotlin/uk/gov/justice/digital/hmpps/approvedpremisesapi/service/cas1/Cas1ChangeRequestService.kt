@@ -22,6 +22,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas1.Lockable
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.validatedCasResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.CasResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.CasResult.Success
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.UserService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.PageCriteria
 import java.time.OffsetDateTime
 import java.util.UUID
@@ -35,6 +36,8 @@ class Cas1ChangeRequestService(
   private val lockableCas1ChangeRequestEntityRepository: LockableCas1ChangeRequestRepository,
   private val cas1ChangeRequestRejectionReasonRepository: Cas1ChangeRequestRejectionReasonRepository,
   private val cas1ChangeRequestEmailService: Cas1ChangeRequestEmailService,
+  private val cas1ChangeRequestDomainEventService: Cas1ChangeRequestDomainEventService,
+  private val userService: UserService,
 ) {
 
   @SuppressWarnings("CyclomaticComplexMethod")
@@ -68,7 +71,7 @@ class Cas1ChangeRequestService(
 
     val now = OffsetDateTime.now()
 
-    val savedChangeRequest = cas1ChangeRequestRepository.save(
+    val createdChangeRequest = cas1ChangeRequestRepository.save(
       Cas1ChangeRequestEntity(
         id = UUID.randomUUID(),
         placementRequest = placementRequest,
@@ -88,7 +91,13 @@ class Cas1ChangeRequestService(
     )
 
     when (cas1NewChangeRequest.type) {
-      Cas1ChangeRequestType.PLACEMENT_APPEAL -> cas1ChangeRequestEmailService.placementAppealCreated(savedChangeRequest)
+      Cas1ChangeRequestType.PLACEMENT_APPEAL -> {
+        cas1ChangeRequestEmailService.placementAppealCreated(createdChangeRequest)
+        cas1ChangeRequestDomainEventService.placementAppealCreated(
+          changeRequest = createdChangeRequest,
+          requestingUser = userService.getUserForRequest(),
+        )
+      }
       Cas1ChangeRequestType.PLACEMENT_EXTENSION -> Unit
       Cas1ChangeRequestType.PLANNED_TRANSFER -> Unit
     }
