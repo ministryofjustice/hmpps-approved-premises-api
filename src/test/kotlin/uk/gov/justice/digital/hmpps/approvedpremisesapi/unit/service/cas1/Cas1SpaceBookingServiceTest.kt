@@ -10,6 +10,7 @@ import io.mockk.slot
 import io.mockk.verify
 import org.assertj.core.api.Assertions.assertThat
 import org.assertj.core.api.Assertions.entry
+import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
@@ -23,6 +24,7 @@ import org.springframework.data.domain.PageImpl
 import org.springframework.data.domain.Pageable
 import org.springframework.data.repository.findByIdOrNull
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1AssignKeyWorker
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1NewEmergencyTransfer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1NonArrival
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1SpaceBookingResidency
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1SpaceBookingSummarySortField
@@ -48,6 +50,8 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas1SpaceBook
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas1SpaceBookingSearchResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DepartureReasonEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DepartureReasonRepository
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.LockableCas1SpaceBookingEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.LockableCas1SpaceBookingEntityRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.LockablePlacementRequestEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.LockablePlacementRequestRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.MoveOnCategoryEntity
@@ -62,6 +66,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.BlockingRea
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1ApplicationStatusService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1BookingDomainEventService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1BookingEmailService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1ChangeRequestService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1PremisesService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1SpaceBookingManagementDomainEventService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1SpaceBookingService
@@ -98,7 +103,9 @@ class Cas1SpaceBookingServiceTest {
   private val cancellationReasonRepository = mockk<CancellationReasonRepository>()
   private val nonArrivalReasonRepository = mockk<NonArrivalReasonRepository>()
   private val lockablePlacementRequestRepository = mockk<LockablePlacementRequestRepository>()
+  private val lockableCas1SpaceBookingRepository = mockk<LockableCas1SpaceBookingEntityRepository>()
   private val userService = mockk<UserService>()
+  private val cas1ChangeRequestService = mockk<Cas1ChangeRequestService>()
 
   private val service = Cas1SpaceBookingService(
     cas1PremisesService,
@@ -114,12 +121,15 @@ class Cas1SpaceBookingServiceTest {
     cancellationReasonRepository,
     nonArrivalReasonRepository,
     lockablePlacementRequestRepository,
+    lockableCas1SpaceBookingRepository,
     userService,
+    cas1ChangeRequestService,
     Clock.systemDefaultZone(),
   )
 
   companion object CONSTANTS {
     val PREMISES_ID: UUID = UUID.randomUUID()
+    val DESTINATION_PREMISES_ID: UUID = UUID.randomUUID()
   }
 
   @Nested
@@ -342,7 +352,7 @@ class Cas1SpaceBookingServiceTest {
       every { cas1BookingEmailService.spaceBookingMade(any(), any()) } returns Unit
 
       val persistedBookingCaptor = slot<Cas1SpaceBookingEntity>()
-      every { spaceBookingRepository.save(capture(persistedBookingCaptor)) } returnsArgument 0
+      every { spaceBookingRepository.saveAndFlush(capture(persistedBookingCaptor)) } returnsArgument 0
 
       val result = service.createNewBooking(
         premisesId = premises.id,
@@ -443,7 +453,7 @@ class Cas1SpaceBookingServiceTest {
       every { cas1BookingEmailService.spaceBookingMade(any(), any()) } returns Unit
 
       val persistedBookingCaptor = slot<Cas1SpaceBookingEntity>()
-      every { spaceBookingRepository.save(capture(persistedBookingCaptor)) } returnsArgument 0
+      every { spaceBookingRepository.saveAndFlush(capture(persistedBookingCaptor)) } returnsArgument 0
 
       val result = service.createNewBooking(
         premisesId = premises.id,
@@ -1747,7 +1757,7 @@ class Cas1SpaceBookingServiceTest {
     }
 
     @Test
-    fun `success`() {
+    fun success() {
       val spaceBooking = Cas1SpaceBookingEntityFactory()
         .withApplication(application)
         .withCancellationOccurredAt(null)
@@ -1765,13 +1775,8 @@ class Cas1SpaceBookingServiceTest {
       val spaceBookingCaptor = slot<Cas1SpaceBookingEntity>()
       every { spaceBookingRepository.save(capture(spaceBookingCaptor)) } returns spaceBooking
 
-      every {
-        cas1BookingEmailService.spaceBookingWithdrawn(
-          spaceBooking,
-          application,
-          WithdrawalTriggeredByUser(user),
-        )
-      } returns Unit
+      every { cas1ChangeRequestService.spaceBookingWithdrawn(spaceBooking) } returns Unit
+      every { cas1BookingEmailService.spaceBookingWithdrawn(spaceBooking, application, WithdrawalTriggeredByUser(user)) } returns Unit
       every { cas1BookingDomainEventService.spaceBookingCancelled(spaceBooking, user, reason) } returns Unit
       every { cas1ApplicationStatusService.spaceBookingCancelled(spaceBooking) } returns Unit
 
@@ -1787,13 +1792,18 @@ class Cas1SpaceBookingServiceTest {
         ),
       )
 
-      assertThat(result).isInstanceOf(CasResult.Success::class.java)
+      assertThatCasResult(result).isSuccess()
 
       val persistedBooking = spaceBookingCaptor.captured
       assertThat(persistedBooking.cancellationOccurredAt).isEqualTo(LocalDate.parse("2022-08-25"))
       assertThat(persistedBooking.cancellationRecordedAt).isWithinTheLastMinute()
       assertThat(persistedBooking.cancellationReason).isEqualTo(reason)
       assertThat(persistedBooking.cancellationReasonNotes).isEqualTo("the user provided notes")
+
+      verify { cas1ChangeRequestService.spaceBookingWithdrawn(spaceBooking) }
+      verify { cas1BookingDomainEventService.spaceBookingCancelled(spaceBooking, user, reason) }
+      verify { cas1ApplicationStatusService.spaceBookingCancelled(spaceBooking) }
+      verify { cas1BookingEmailService.spaceBookingWithdrawn(spaceBooking, application, WithdrawalTriggeredByUser(user)) }
     }
   }
 
@@ -2327,6 +2337,302 @@ class Cas1SpaceBookingServiceTest {
       }
 
       verify { cas1BookingEmailService wasNot Called }
+    }
+  }
+
+  @Nested
+  inner class EmergencyTransfer {
+
+    private val user = UserEntityFactory()
+      .withDefaults()
+      .produce()
+
+    private val currentPremises = ApprovedPremisesEntityFactory()
+      .withDefaults()
+      .withId(PREMISES_ID)
+      .produce()
+
+    private val destinationPremises = ApprovedPremisesEntityFactory()
+      .withDefaults()
+      .withId(DESTINATION_PREMISES_ID)
+      .produce()
+
+    private var existingSpaceBooking = Cas1SpaceBookingEntityFactory()
+      .withPremises(currentPremises)
+      .produce()
+
+    @Test
+    fun `should throw validation error when destination premises not exist`() {
+      every { cas1PremisesService.findPremiseById(any()) } returns null
+      every { lockableCas1SpaceBookingRepository.acquirePessimisticLock(any()) } returns LockableCas1SpaceBookingEntity(
+        existingSpaceBooking.id,
+      )
+      every { spaceBookingRepository.findByIdOrNull(any()) } returns existingSpaceBooking
+
+      val result = service.emergencyTransfer(
+        PREMISES_ID,
+        existingSpaceBooking.id,
+        user,
+        Cas1NewEmergencyTransfer(
+          destinationPremisesId = UUID.randomUUID(),
+          arrivalDate = LocalDate.now(),
+          departureDate = LocalDate.now().plusMonths(2),
+        ),
+      )
+
+      assertThatCasResult(result)
+        .isFieldValidationError()
+        .hasMessage("$.destinationPremisesId", "doesNotExist")
+    }
+
+    @Test
+    fun `should return validation error if arrivalDate is not today's date`() {
+      every { cas1PremisesService.findPremiseById(any()) } returns destinationPremises
+      every { lockableCas1SpaceBookingRepository.acquirePessimisticLock(any()) } returns LockableCas1SpaceBookingEntity(
+        existingSpaceBooking.id,
+      )
+      every { spaceBookingRepository.findByIdOrNull(any()) } returns existingSpaceBooking
+
+      val result = service.emergencyTransfer(
+        PREMISES_ID,
+        existingSpaceBooking.id,
+        user,
+        Cas1NewEmergencyTransfer(
+          destinationPremisesId = DESTINATION_PREMISES_ID,
+          arrivalDate = LocalDate.now().minusDays(1),
+          departureDate = LocalDate.now().plusMonths(2),
+        ),
+      )
+
+      assertThatCasResult(result)
+        .isFieldValidationError()
+        .hasMessage("$.arrivalDate", "The provided arrival date must be today's date")
+    }
+
+    @Test
+    fun `should return validation error if departureDate is not after arrival date`() {
+      every { cas1PremisesService.findPremiseById(any()) } returns destinationPremises
+      every { lockableCas1SpaceBookingRepository.acquirePessimisticLock(any()) } returns LockableCas1SpaceBookingEntity(
+        existingSpaceBooking.id,
+      )
+      every { spaceBookingRepository.findByIdOrNull(any()) } returns existingSpaceBooking
+
+      val result = service.emergencyTransfer(
+        PREMISES_ID,
+        existingSpaceBooking.id,
+        user,
+        Cas1NewEmergencyTransfer(
+          destinationPremisesId = DESTINATION_PREMISES_ID,
+          arrivalDate = LocalDate.now(),
+          departureDate = LocalDate.now().minusMonths(2),
+        ),
+      )
+
+      assertThatCasResult(result)
+        .isFieldValidationError()
+        .hasMessage("$.departureDate", "shouldBeAfterArrivalDate")
+    }
+
+    @Test
+    fun `should return validation error if booking does not exist`() {
+      every { cas1PremisesService.findPremiseById(any()) } returns destinationPremises
+      every { lockableCas1SpaceBookingRepository.acquirePessimisticLock(any()) } returns LockableCas1SpaceBookingEntity(
+        existingSpaceBooking.id,
+      )
+      every { spaceBookingRepository.findByIdOrNull(any()) } returns null
+
+      val result = service.emergencyTransfer(
+        PREMISES_ID,
+        UUID.randomUUID(),
+        user,
+        Cas1NewEmergencyTransfer(
+          destinationPremisesId = DESTINATION_PREMISES_ID,
+          arrivalDate = LocalDate.now(),
+          departureDate = LocalDate.now().minusMonths(2),
+        ),
+      )
+
+      assertThatCasResult(result)
+        .isFieldValidationError()
+        .hasMessage("$.bookingId", "doesNotExist")
+    }
+
+    @Test
+    fun `Should return a conflict error when attempting an emergency transfer for a booking that does not belong to the given premises`() {
+      val anotherPremisesId = UUID.randomUUID()
+      every { cas1PremisesService.findPremiseById(any()) } returns destinationPremises
+      every { lockableCas1SpaceBookingRepository.acquirePessimisticLock(any()) } returns LockableCas1SpaceBookingEntity(
+        existingSpaceBooking.id,
+      )
+      every { spaceBookingRepository.findByIdOrNull(any()) } returns existingSpaceBooking
+
+      val result = service.emergencyTransfer(
+        anotherPremisesId,
+        existingSpaceBooking.id,
+        user,
+        Cas1NewEmergencyTransfer(
+          destinationPremisesId = DESTINATION_PREMISES_ID,
+          arrivalDate = LocalDate.now(),
+          departureDate = LocalDate.now().plusMonths(2),
+        ),
+      )
+
+      assertThat(result).isInstanceOf(CasResult.ConflictError::class.java)
+      result as CasResult.ConflictError
+
+      assertThat(result.conflictingEntityId).isEqualTo(existingSpaceBooking.premises.id)
+      assertThat(result.message).contains("The booking is not associated with the specified premises $anotherPremisesId")
+    }
+
+    @Test
+    fun `should return a conflict error when attempting an emergency transfer for a person who has already departed the premises`() {
+      existingSpaceBooking.actualDepartureDate = LocalDate.now()
+      every { cas1PremisesService.findPremiseById(any()) } returns destinationPremises
+      every { lockableCas1SpaceBookingRepository.acquirePessimisticLock(any()) } returns LockableCas1SpaceBookingEntity(
+        existingSpaceBooking.id,
+      )
+      every { spaceBookingRepository.findByIdOrNull(any()) } returns existingSpaceBooking
+
+      val result = service.emergencyTransfer(
+        PREMISES_ID,
+        existingSpaceBooking.id,
+        user,
+        Cas1NewEmergencyTransfer(
+          destinationPremisesId = DESTINATION_PREMISES_ID,
+          arrivalDate = LocalDate.now(),
+          departureDate = LocalDate.now().plusMonths(2),
+        ),
+      )
+
+      assertThat(result).isInstanceOf(CasResult.ConflictError::class.java)
+      result as CasResult.ConflictError
+
+      assertThat(result.conflictingEntityId).isEqualTo(existingSpaceBooking.id)
+      assertThat(result.message).contains("The booking is not eligible for an emergency transfer")
+    }
+
+    @Test
+    fun `should return a conflict error when attempting an emergency transfer for a booking that has already transferred`() {
+      existingSpaceBooking.transferredBooking = Cas1SpaceBookingEntityFactory().produce()
+      every { cas1PremisesService.findPremiseById(any()) } returns destinationPremises
+      every { lockableCas1SpaceBookingRepository.acquirePessimisticLock(any()) } returns LockableCas1SpaceBookingEntity(
+        existingSpaceBooking.id,
+      )
+      every { spaceBookingRepository.findByIdOrNull(any()) } returns existingSpaceBooking
+
+      val result = service.emergencyTransfer(
+        PREMISES_ID,
+        existingSpaceBooking.id,
+        user,
+        Cas1NewEmergencyTransfer(
+          destinationPremisesId = DESTINATION_PREMISES_ID,
+          arrivalDate = LocalDate.now(),
+          departureDate = LocalDate.now().plusMonths(2),
+        ),
+      )
+
+      assertThat(result).isInstanceOf(CasResult.ConflictError::class.java)
+      result as CasResult.ConflictError
+
+      assertThat(result.conflictingEntityId).isEqualTo(existingSpaceBooking.id)
+      assertThat(result.message).contains("The booking is not eligible for an emergency transfer")
+    }
+
+    @Test
+    fun `should return a conflict error when attempting an emergency transfer for a booking that has already been canceled`() {
+      existingSpaceBooking.cancellationOccurredAt = LocalDate.now()
+      every { cas1PremisesService.findPremiseById(any()) } returns destinationPremises
+      every { lockableCas1SpaceBookingRepository.acquirePessimisticLock(any()) } returns LockableCas1SpaceBookingEntity(
+        existingSpaceBooking.id,
+      )
+      every { spaceBookingRepository.findByIdOrNull(any()) } returns existingSpaceBooking
+
+      val result = service.emergencyTransfer(
+        PREMISES_ID,
+        existingSpaceBooking.id,
+        user,
+        Cas1NewEmergencyTransfer(
+          destinationPremisesId = DESTINATION_PREMISES_ID,
+          arrivalDate = LocalDate.now(),
+          departureDate = LocalDate.now().plusMonths(2),
+        ),
+      )
+
+      assertThat(result).isInstanceOf(CasResult.ConflictError::class.java)
+      result as CasResult.ConflictError
+
+      assertThat(result.conflictingEntityId).isEqualTo(existingSpaceBooking.id)
+      assertThat(result.message).contains("The booking is not eligible for an emergency transfer")
+    }
+
+    @Test
+    fun `should return a conflict error when attempting an emergency transfer for a booking that has a confirmed non-arrival`() {
+      existingSpaceBooking.nonArrivalConfirmedAt = Instant.now()
+      every { cas1PremisesService.findPremiseById(any()) } returns destinationPremises
+      every { lockableCas1SpaceBookingRepository.acquirePessimisticLock(any()) } returns LockableCas1SpaceBookingEntity(
+        existingSpaceBooking.id,
+      )
+      every { spaceBookingRepository.findByIdOrNull(any()) } returns existingSpaceBooking
+
+      val result = service.emergencyTransfer(
+        PREMISES_ID,
+        existingSpaceBooking.id,
+        user,
+        Cas1NewEmergencyTransfer(
+          destinationPremisesId = DESTINATION_PREMISES_ID,
+          arrivalDate = LocalDate.now(),
+          departureDate = LocalDate.now().plusMonths(2),
+        ),
+      )
+
+      assertThat(result).isInstanceOf(CasResult.ConflictError::class.java)
+      result as CasResult.ConflictError
+
+      assertThat(result.conflictingEntityId).isEqualTo(existingSpaceBooking.id)
+      assertThat(result.message).contains("The booking is not eligible for an emergency transfer")
+    }
+
+    @Test
+    fun `should successfully create an emergency booking and update the existing booking`() {
+      every { cas1PremisesService.findPremiseById(any()) } returns destinationPremises
+      every { lockableCas1SpaceBookingRepository.acquirePessimisticLock(any()) } returns LockableCas1SpaceBookingEntity(
+        existingSpaceBooking.id,
+      )
+      every { spaceBookingRepository.findByIdOrNull(any()) } returns existingSpaceBooking
+
+      val capturedBookings = mutableListOf<Cas1SpaceBookingEntity>()
+
+      every { spaceBookingRepository.saveAndFlush(capture(capturedBookings)) } answers { firstArg() }
+
+      assertThat(existingSpaceBooking.transferredBooking).isNull()
+
+      val result = service.emergencyTransfer(
+        PREMISES_ID,
+        existingSpaceBooking.id,
+        user,
+        Cas1NewEmergencyTransfer(
+          destinationPremisesId = DESTINATION_PREMISES_ID,
+          arrivalDate = LocalDate.now(),
+          departureDate = LocalDate.now().plusMonths(2),
+        ),
+      )
+
+      assertThat(result).isInstanceOf(CasResult.Success::class.java)
+
+      verify(exactly = 2) { spaceBookingRepository.saveAndFlush(any()) }
+
+      assertEquals(2, capturedBookings.size)
+
+      val emergencyBooking = capturedBookings.first()
+      existingSpaceBooking = capturedBookings.last()
+
+      assertThat(existingSpaceBooking.transferredBooking).isEqualTo(emergencyBooking)
+      assertThat(existingSpaceBooking.expectedDepartureDate).isEqualTo(emergencyBooking.expectedArrivalDate)
+      assertThat(existingSpaceBooking.canonicalDepartureDate).isEqualTo(emergencyBooking.expectedArrivalDate)
+
+      assertThat(emergencyBooking.premises.id).isEqualTo(DESTINATION_PREMISES_ID)
+      assertThat(emergencyBooking.expectedArrivalDate).isEqualTo(LocalDate.now())
+      assertThat(emergencyBooking.expectedDepartureDate).isEqualTo(LocalDate.now().plusMonths(2))
     }
   }
 

@@ -41,6 +41,7 @@ class Cas1RequestForPlacementReportRepository(
     pr.duration AS requested_duration_days,
     to_char(CAST(a.submitted_at as timestamp), 'YYYY-MM-DD"T"HH24:MI:SS"Z"') AS request_for_placement_submitted_date,
     null AS parole_decision_date,
+    to_char(CAST(latest_assessment.allocated_at as timestamp), 'YYYY-MM-DD"T"HH24:MI:SS"Z"') AS request_for_placement_last_allocated_to_assessor_date,
     latest_assessment.decision AS request_for_placement_decision,
     to_char(CAST(latest_assessment.submitted_at as timestamp), 'YYYY-MM-DD"T"HH24:MI:SS"Z"') AS request_for_placement_decision_made_date,
     CASE
@@ -97,6 +98,7 @@ UNION ALL
     pa_date.duration AS requested_duration_days,
     to_char(CAST(pa.submitted_at as timestamp), 'YYYY-MM-DD"T"HH24:MI:SS"Z"') AS request_for_placement_submitted_date,
     to_char(CAST(pa.data -> 'request-a-placement' -> 'decision-to-release' ->> 'decisionToReleaseDate' as timestamp), 'YYYY-MM-DD') AS parole_decision_date,
+    to_char(CAST(pa.allocated_at as timestamp), 'YYYY-MM-DD"T"HH24:MI:SS"Z"') AS request_for_placement_last_allocated_to_assessor_date,
     pa.decision AS request_for_placement_decision,
     to_char(CAST(pa.decision_made_at as timestamp), 'YYYY-MM-DD"T"HH24:MI:SS"Z"') AS request_for_placement_decision_made_date,
     to_char(withdrawn_event.occurred_at, 'YYYY-MM-DD"T"HH24:MI:SS"Z"') AS request_for_placement_withdrawal_date,

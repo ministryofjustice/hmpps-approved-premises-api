@@ -28,7 +28,8 @@ class Cas1ChangeRequestEntityFactory : Factory<Cas1ChangeRequestEntity> {
   private var decision: Yielded<ChangeRequestDecision?> = { ChangeRequestDecision.APPROVED }
   private var rejectionReason: Yielded<Cas1ChangeRequestRejectionReasonEntity?> = { null }
   private var decisionMadeByUser: Yielded<UserEntity?> = { UserEntityFactory().withDefaults().produce() }
-  private var decisionMadeAt: Yielded<OffsetDateTime?> = { null }
+  private var resolved: Yielded<Boolean> = { false }
+  private var resolvedAt: Yielded<OffsetDateTime?> = { null }
   private var createdAt = { OffsetDateTime.now().minusDays(randomInt(0, 365).toLong()) }
   private var updatedAt = { OffsetDateTime.now() }
 
@@ -60,8 +61,12 @@ class Cas1ChangeRequestEntityFactory : Factory<Cas1ChangeRequestEntity> {
     this.decision = { decision }
   }
 
-  fun withDecisionMadeAt(decisionMadeAt: OffsetDateTime?) = apply {
-    this.decisionMadeAt = { decisionMadeAt }
+  fun withResolved(resolved: Boolean) = apply {
+    this.resolved = { resolved }
+  }
+
+  fun withResolvedAt(resolvedAt: OffsetDateTime?) = apply {
+    this.resolvedAt = { resolvedAt }
   }
 
   fun withRejectionReason(rejectionReason: Cas1ChangeRequestRejectionReasonEntity?) = apply {
@@ -78,9 +83,10 @@ class Cas1ChangeRequestEntityFactory : Factory<Cas1ChangeRequestEntity> {
       requestReason = this.requestReason(),
       decisionJson = this.decisionJson(),
       decision = this.decision(),
-      decisionMadeAt = this.decisionMadeAt(),
       rejectionReason = this.rejectionReason(),
       decisionMadeByUser = this.decisionMadeByUser(),
+      resolved = this.resolved(),
+      resolvedAt = this.resolvedAt(),
       createdAt = this.createdAt(),
       updatedAt = this.updatedAt(),
     )

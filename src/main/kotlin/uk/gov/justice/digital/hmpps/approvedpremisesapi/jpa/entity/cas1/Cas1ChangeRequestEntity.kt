@@ -48,7 +48,7 @@ interface Cas1ChangeRequestRepository : JpaRepository<Cas1ChangeRequestEntity, U
         INNER JOIN placement_requests pr on cr.placement_request_id = pr.id
         INNER JOIN approved_premises_applications apa on apa.id = pr.application_id
         WHERE
-          cr.decision IS NULL AND
+          cr.resolved IS FALSE AND
           ((CAST(:cruManagementAreaId AS pg_catalog.uuid) IS NULL) OR apa.cas1_cru_management_area_id = :cruManagementAreaId)
       )
       select * from results  
@@ -59,6 +59,8 @@ interface Cas1ChangeRequestRepository : JpaRepository<Cas1ChangeRequestEntity, U
     cruManagementAreaId: UUID?,
     pageable: Pageable,
   ): List<FindOpenChangeRequestResult>
+
+  fun findAllBySpaceBookingAndResolvedIsFalse(spaceBooking: Cas1SpaceBookingEntity): List<Cas1ChangeRequestEntity>
 
   interface FindOpenChangeRequestResult {
     val id: UUID
@@ -104,7 +106,8 @@ data class Cas1ChangeRequestEntity(
   @ManyToOne(fetch = FetchType.LAZY)
   @JoinColumn(name = "decision_made_by_user_id")
   val decisionMadeByUser: UserEntity?,
-  var decisionMadeAt: OffsetDateTime?,
+  var resolved: Boolean,
+  var resolvedAt: OffsetDateTime?,
   val createdAt: OffsetDateTime,
   var updatedAt: OffsetDateTime,
   @Version

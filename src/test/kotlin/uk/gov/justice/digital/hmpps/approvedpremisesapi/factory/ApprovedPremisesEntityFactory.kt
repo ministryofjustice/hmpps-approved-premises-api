@@ -38,7 +38,7 @@ class ApprovedPremisesEntityFactory : Factory<ApprovedPremisesEntity> {
   private var service: Yielded<String> = { "CAS1" }
   private var qCode: Yielded<String> = { randomStringUpperCase(4) }
   private var characteristics: Yielded<MutableList<CharacteristicEntity>> = { mutableListOf() }
-  private var status: Yielded<PropertyStatus> = { randomOf(PropertyStatus.values().asList()) }
+  private var status: Yielded<PropertyStatus> = { randomOf(PropertyStatus.entries) }
   private var point: Yielded<Point>? = null
   private var gender: Yielded<ApprovedPremisesGender> = { ApprovedPremisesGender.MAN }
   private var rooms: Yielded<MutableList<RoomEntity>> = { mutableListOf() }

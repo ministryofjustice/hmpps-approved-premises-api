@@ -253,6 +253,7 @@ class Cas1ChangeRequestTest {
       cruManagementArea1ChangeRequest1 = givenACas1ChangeRequest(
         type = ChangeRequestType.PLACEMENT_APPEAL,
         decision = null,
+        resolved = false,
         spaceBooking = givenACas1SpaceBooking(
           crn = placementRequest1.application.crn,
           application = placementRequest1.application,
@@ -262,10 +263,11 @@ class Cas1ChangeRequestTest {
         ),
       )
 
-      // has decision, will be ignored
+      // is resolved, will be ignored
       givenACas1ChangeRequest(
         type = ChangeRequestType.PLACEMENT_APPEAL,
         decision = ChangeRequestDecision.APPROVED,
+        resolved = true,
         spaceBooking = givenACas1SpaceBooking(
           crn = placementRequest1.application.crn,
           application = placementRequest1.application,
@@ -293,6 +295,7 @@ class Cas1ChangeRequestTest {
       cruManagementArea2ChangeRequest1 = givenACas1ChangeRequest(
         type = ChangeRequestType.PLACEMENT_EXTENSION,
         decision = null,
+        resolved = false,
         spaceBooking = givenACas1SpaceBooking(
           crn = placementRequest2.application.crn,
           application = placementRequest2.application,
@@ -319,7 +322,7 @@ class Cas1ChangeRequestTest {
 
       cruManagementArea2ChangeRequest2 = givenACas1ChangeRequest(
         type = ChangeRequestType.PLANNED_TRANSFER,
-        decision = null,
+        resolved = false,
         spaceBooking = givenACas1SpaceBooking(
           crn = placementRequest3.application.crn,
           application = placementRequest3.application,
@@ -637,7 +640,8 @@ class Cas1ChangeRequestTest {
         type = ChangeRequestType.PLACEMENT_EXTENSION,
         decision = ChangeRequestDecision.REJECTED,
         rejectReason = extensionRejectionReason,
-        decisionMadeAt = LocalDateTime.of(2025, 3, 1, 15, 30).atOffset(ZoneOffset.UTC),
+        resolved = true,
+        resolvedAt = LocalDateTime.of(2025, 3, 1, 15, 30).atOffset(ZoneOffset.UTC),
         spaceBooking = givenACas1SpaceBooking(
           crn = placementRequest2.application.crn,
           application = placementRequest2.application,
@@ -719,7 +723,7 @@ class Cas1ChangeRequestTest {
         .isOk
 
       val changeRequestAfter = cas1ChangeRequestRepository.findById(changeRequest1.id).get()
-      assertThat(changeRequestAfter.decisionMadeAt).isEqualTo(changeRequest1.decisionMadeAt)
+      assertThat(changeRequestAfter.resolvedAt).isEqualTo(changeRequest1.resolvedAt)
     }
   }
 }

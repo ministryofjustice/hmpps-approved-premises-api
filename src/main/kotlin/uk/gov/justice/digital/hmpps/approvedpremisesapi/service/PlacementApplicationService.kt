@@ -150,7 +150,7 @@ class PlacementApplicationService(
     placementApplicationRepository.save(currentPlacementApplication)
 
     // Make the timestamp precision less precise, so we don't have any issues with microsecond resolution in tests
-    val dateTimeNow = OffsetDateTime.now().withNano(0)
+    val dateTimeNow = OffsetDateTime.now(clock).withNano(0)
 
     val newPlacementApplication = currentPlacementApplication.copy(
       id = UUID.randomUUID(),

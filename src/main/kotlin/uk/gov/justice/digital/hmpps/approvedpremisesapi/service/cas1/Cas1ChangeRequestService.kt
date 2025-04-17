@@ -8,6 +8,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1ChangeRequ
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1ChangeRequestType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1NewChangeRequest
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1RejectChangeRequest
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas1SpaceBookingEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas1SpaceBookingRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementRequestRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas1.Cas1ChangeRequestEntity
@@ -66,7 +67,8 @@ class Cas1ChangeRequestService(
         decision = null,
         rejectionReason = null,
         decisionMadeByUser = null,
-        decisionMadeAt = null,
+        resolved = false,
+        resolvedAt = null,
         createdAt = now,
         updatedAt = now,
       ),
@@ -115,11 +117,19 @@ class Cas1ChangeRequestService(
     val changeRequestRejectReason = cas1ChangeRequestRejectionReasonRepository.findByIdAndArchivedIsFalse(cas1RejectChangeRequest.rejectionReasonId)
       ?: return CasResult.GeneralValidationError("The change request reject reason not found")
 
+    changeRequestWithLock.decision = ChangeRequestDecision.REJECTED
     changeRequestWithLock.rejectionReason = changeRequestRejectReason
-    changeRequestWithLock.decisionMadeAt = OffsetDateTime.now()
+    changeRequestWithLock.resolve()
     cas1ChangeRequestRepository.saveAndFlush(changeRequestWithLock)
 
     return Success(Unit)
+  }
+
+  fun spaceBookingWithdrawn(spaceBooking: Cas1SpaceBookingEntity) = cas1ChangeRequestRepository.findAllBySpaceBookingAndResolvedIsFalse(spaceBooking).forEach { it.resolve() }
+
+  private fun Cas1ChangeRequestEntity.resolve() {
+    this.resolved = true
+    this.resolvedAt = OffsetDateTime.now()
   }
 
   fun getChangeRequest(changeRequestId: UUID): Cas1ChangeRequestEntity? = cas1ChangeRequestRepository.findByIdOrNull(changeRequestId)

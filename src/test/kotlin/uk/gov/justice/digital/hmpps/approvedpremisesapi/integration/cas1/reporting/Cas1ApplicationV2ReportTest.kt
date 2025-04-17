@@ -27,6 +27,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PlacementRequi
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ReleaseTypeOption
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.SentenceTypeOption
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.SituationOption
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.SubmitApprovedPremisesApplication
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.UpdateAssessment
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.UpdatedClarificationNote
@@ -104,110 +105,108 @@ class Cas1ApplicationV2ReportTest : InitialiseDatabasePerClassTestBase() {
 
   @Test
   fun `Get application report is empty if no applications`() {
-    givenAUser(roles = listOf(UserRole.CAS1_REPORT_VIEWER)) { _, jwt ->
+    val (_, jwt) = givenAUser(roles = listOf(UserRole.CAS1_REPORT_VIEWER))
 
-      webTestClient.get()
-        .uri(getReportUrl(Cas1ReportName.applicationsV2, year = 2019, month = 2))
-        .header("Authorization", "Bearer $jwt")
-        .header("X-Service-Name", ServiceName.approvedPremises.value)
-        .exchange()
-        .expectStatus()
-        .isOk
-        .expectHeader().valuesMatch("content-disposition", "attachment; filename=\"applications-2019-02-[0-9_]*.csv\"")
-        .expectBody()
-        .consumeWith {
-          val actual = DataFrame
-            .readCSV(it.responseBody!!.inputStream())
-            .convertTo<ApplicationReportRow>(ExcessiveColumns.Remove)
-            .toList()
+    webTestClient.get()
+      .uri(getReportUrl(Cas1ReportName.applicationsV2, year = 2019, month = 2))
+      .header("Authorization", "Bearer $jwt")
+      .header("X-Service-Name", ServiceName.approvedPremises.value)
+      .exchange()
+      .expectStatus()
+      .isOk
+      .expectHeader().valuesMatch("content-disposition", "attachment; filename=\"applications-2019-02-[0-9_]*.csv\"")
+      .expectBody()
+      .consumeWith {
+        val actual = DataFrame
+          .readCSV(it.responseBody!!.inputStream())
+          .convertTo<ApplicationReportRow>(ExcessiveColumns.Remove)
+          .toList()
 
-          assertThat(actual.size).isEqualTo(0)
-        }
-    }
+        assertThat(actual.size).isEqualTo(0)
+      }
   }
 
   @Test
   fun `Permission denied if trying to access report with PII without correct role`() {
-    givenAUser(roles = listOf(UserRole.CAS1_REPORT_VIEWER)) { _, jwt ->
-      webTestClient.get()
-        .uri(getReportUrl(Cas1ReportName.applicationsV2WithPii, year = 2020, month = 2))
-        .header("Authorization", "Bearer $jwt")
-        .header("X-Service-Name", ServiceName.approvedPremises.value)
-        .exchange()
-        .expectStatus()
-        .isForbidden
-    }
+    val (_, jwt) = givenAUser(roles = listOf(UserRole.CAS1_REPORT_VIEWER))
+
+    webTestClient.get()
+      .uri(getReportUrl(Cas1ReportName.applicationsV2WithPii, year = 2020, month = 2))
+      .header("Authorization", "Bearer $jwt")
+      .header("X-Service-Name", ServiceName.approvedPremises.value)
+      .exchange()
+      .expectStatus()
+      .isForbidden
   }
 
   @Test
   fun `Get application report returns OK with correct applications, including PII`() {
-    givenAUser(roles = listOf(UserRole.CAS1_REPORT_VIEWER_WITH_PII)) { _, jwt ->
-      webTestClient.get()
-        .uri(getReportUrl(Cas1ReportName.applicationsV2WithPii, year = 2020, month = 2))
-        .header("Authorization", "Bearer $jwt")
-        .header("X-Service-Name", ServiceName.approvedPremises.value)
-        .exchange()
-        .expectStatus()
-        .isOk
-        .expectHeader().valuesMatch("content-disposition", "attachment; filename=\"applications-with-pii-2020-02-[0-9_]*.csv\"")
-        .expectBody()
-        .consumeWith {
-          val actual = DataFrame
-            .readCSV(it.responseBody!!.inputStream())
-            .convertTo<ApplicationReportRow>(ExcessiveColumns.Remove)
-            .toList()
+    val (_, jwt) = givenAUser(roles = listOf(UserRole.CAS1_REPORT_VIEWER_WITH_PII))
 
-          assertThat(actual.size).isEqualTo(4)
+    webTestClient.get()
+      .uri(getReportUrl(Cas1ReportName.applicationsV2WithPii, year = 2020, month = 2))
+      .header("Authorization", "Bearer $jwt")
+      .header("X-Service-Name", ServiceName.approvedPremises.value)
+      .exchange()
+      .expectStatus()
+      .isOk
+      .expectHeader().valuesMatch("content-disposition", "attachment; filename=\"applications-with-pii-2020-02-[0-9_]*.csv\"")
+      .expectBody()
+      .consumeWith {
+        val actual = DataFrame
+          .readCSV(it.responseBody!!.inputStream())
+          .convertTo<ApplicationReportRow>(ExcessiveColumns.Remove)
+          .toList()
 
-          appWithdrawnDuringReportingPeriod.assertRow(actual[0])
-          appSubmittedWithSuccessfulAppealsClarificationsAndWithdrawn.assertRow(actual[1])
-          appSubmittedWithAssessmentAccepted.assertRow(actual[2])
-          appSubmittedWithAssessmentAllocated.assertRow(actual[3])
-        }
-    }
+        assertThat(actual.size).isEqualTo(4)
+
+        appWithdrawnDuringReportingPeriod.assertRow(actual[0])
+        appSubmittedWithSuccessfulAppealsClarificationsAndWithdrawn.assertRow(actual[1])
+        appSubmittedWithAssessmentAccepted.assertRow(actual[2])
+        appSubmittedWithAssessmentAllocated.assertRow(actual[3])
+      }
   }
 
   @Test
   fun `Get application report returns OK with correct applications, excluding PII`() {
-    givenAUser(roles = listOf(UserRole.CAS1_REPORT_VIEWER)) { _, jwt ->
+    val (_, jwt) = givenAUser(roles = listOf(UserRole.CAS1_REPORT_VIEWER))
 
-      webTestClient.get()
-        .uri(getReportUrl(Cas1ReportName.applicationsV2, year = 2020, month = 2))
-        .header("Authorization", "Bearer $jwt")
-        .header("X-Service-Name", ServiceName.approvedPremises.value)
-        .exchange()
-        .expectStatus()
-        .isOk
-        .expectHeader().valuesMatch("content-disposition", "attachment; filename=\"applications-2020-02-[0-9_]*.csv\"")
-        .expectBody()
-        .consumeWith { response ->
-          val completeCsvString = response.responseBody!!.inputStream().bufferedReader().use { it.readText() }
+    webTestClient.get()
+      .uri(getReportUrl(Cas1ReportName.applicationsV2, year = 2020, month = 2))
+      .header("Authorization", "Bearer $jwt")
+      .header("X-Service-Name", ServiceName.approvedPremises.value)
+      .exchange()
+      .expectStatus()
+      .isOk
+      .expectHeader().valuesMatch("content-disposition", "attachment; filename=\"applications-2020-02-[0-9_]*.csv\"")
+      .expectBody()
+      .consumeWith { response ->
+        val completeCsvString = response.responseBody!!.inputStream().bufferedReader().use { it.readText() }
 
-          val csvReader = CSVReaderBuilder(StringReader(completeCsvString)).build()
-          val headers = csvReader.readNext().toList()
+        val csvReader = CSVReaderBuilder(StringReader(completeCsvString)).build()
+        val headers = csvReader.readNext().toList()
 
-          assertThat(headers).doesNotContain("referrer_username")
-          assertThat(headers).doesNotContain("referrer_name")
-          assertThat(headers).doesNotContain("applicant_reason_for_late_application_detail")
-          assertThat(headers).doesNotContain("initial_assessor_reason_for_late_application")
-          assertThat(headers).doesNotContain("initial_assessor_username")
-          assertThat(headers).doesNotContain("initial_assessor_name")
-          assertThat(headers).doesNotContain("last_appealed_assessor_username")
-          assertThat(headers).doesNotContain("last_appealed_assessor_name")
+        assertThat(headers).doesNotContain("referrer_username")
+        assertThat(headers).doesNotContain("referrer_name")
+        assertThat(headers).doesNotContain("applicant_reason_for_late_application_detail")
+        assertThat(headers).doesNotContain("initial_assessor_reason_for_late_application")
+        assertThat(headers).doesNotContain("initial_assessor_username")
+        assertThat(headers).doesNotContain("initial_assessor_name")
+        assertThat(headers).doesNotContain("last_appealed_assessor_username")
+        assertThat(headers).doesNotContain("last_appealed_assessor_name")
 
-          val actual = DataFrame
-            .readCSV(completeCsvString.byteInputStream())
-            .convertTo<ApplicationReportRow>(ExcessiveColumns.Remove)
-            .toList()
+        val actual = DataFrame
+          .readCSV(completeCsvString.byteInputStream())
+          .convertTo<ApplicationReportRow>(ExcessiveColumns.Remove)
+          .toList()
 
-          assertThat(actual.size).isEqualTo(4)
+        assertThat(actual.size).isEqualTo(4)
 
-          appSubmittedWithSuccessfulAppealsClarificationsAndWithdrawn.assertRow(
-            row = actual[1],
-            shouldIncludePii = false,
-          )
-        }
-    }
+        appSubmittedWithSuccessfulAppealsClarificationsAndWithdrawn.assertRow(
+          row = actual[1],
+          shouldIncludePii = false,
+        )
+      }
   }
 
   inner class AppSubmittedWithSuccessfulAppealsClarificationsAndWithdrawn {
@@ -251,6 +250,7 @@ class Cas1ApplicationV2ReportTest : InitialiseDatabasePerClassTestBase() {
         offenceId = "offenceId1",
         sentenceType = SentenceTypeOption.nonStatutory,
         releaseType = ReleaseTypeOption.licence,
+        situation = null,
         apAreaName = "apArea1",
         lduName = "ldu1",
         teamName = "refTeam1",
@@ -444,7 +444,8 @@ class Cas1ApplicationV2ReportTest : InitialiseDatabasePerClassTestBase() {
         mappaLevel = "level3",
         offenceId = "offenceId3",
         sentenceType = SentenceTypeOption.bailPlacement,
-        releaseType = ReleaseTypeOption.rotl,
+        releaseType = ReleaseTypeOption.inCommunity,
+        situation = SituationOption.bailAssessment,
         apAreaName = "apArea3",
         lduName = "ldu3",
         teamName = "refTeam3",
@@ -492,7 +493,7 @@ class Cas1ApplicationV2ReportTest : InitialiseDatabasePerClassTestBase() {
       assertThat(row.offence_id).isEqualTo("offenceId3")
       assertThat(row.premises_type).isEqualTo("PIPE")
       assertThat(row.sentence_type).isEqualTo("bailPlacement")
-      assertThat(row.release_type).isEqualTo("rotl")
+      assertThat(row.release_type).isEqualTo("bailAssessment")
       assertThat(row.application_origin_cru).isEqualTo("apArea3")
       assertThat(row.referral_ldu).isEqualTo("ldu3")
       assertThat(row.referral_region).isEqualTo("refRegion3")
@@ -566,6 +567,7 @@ class Cas1ApplicationV2ReportTest : InitialiseDatabasePerClassTestBase() {
         offenceId = "offenceId2",
         sentenceType = SentenceTypeOption.ipp,
         releaseType = ReleaseTypeOption.notApplicable,
+        situation = null,
         apAreaName = "apArea2",
         lduName = "ldu2",
         teamName = "refTeam2",
@@ -657,6 +659,7 @@ class Cas1ApplicationV2ReportTest : InitialiseDatabasePerClassTestBase() {
         offenceId = "offenceId2",
         sentenceType = SentenceTypeOption.ipp,
         releaseType = ReleaseTypeOption.notApplicable,
+        situation = null,
         apAreaName = "apArea2",
         lduName = "ldu2",
         teamName = "refTeam2",
@@ -700,6 +703,7 @@ class Cas1ApplicationV2ReportTest : InitialiseDatabasePerClassTestBase() {
         offenceId = "offenceId2",
         sentenceType = SentenceTypeOption.ipp,
         releaseType = ReleaseTypeOption.notApplicable,
+        situation = null,
         apAreaName = "apArea2",
         lduName = "ldu2",
         teamName = "refTeam2",
@@ -730,6 +734,7 @@ class Cas1ApplicationV2ReportTest : InitialiseDatabasePerClassTestBase() {
         offenceId = "offenceId2",
         sentenceType = SentenceTypeOption.ipp,
         releaseType = ReleaseTypeOption.notApplicable,
+        situation = null,
         apAreaName = "apArea2",
         lduName = "ldu2",
         teamName = "refTeam2",
@@ -811,6 +816,7 @@ class Cas1ApplicationV2ReportTest : InitialiseDatabasePerClassTestBase() {
     offenceId: String,
     sentenceType: SentenceTypeOption,
     releaseType: ReleaseTypeOption,
+    situation: SituationOption?,
     apAreaName: String,
     lduName: String,
     teamName: String,
@@ -907,6 +913,7 @@ class Cas1ApplicationV2ReportTest : InitialiseDatabasePerClassTestBase() {
         noticeType = timelinessCategory,
         apAreaId = apArea.id,
         arrivalDate = arrivalDate,
+        situation = situation,
       ),
     )
 

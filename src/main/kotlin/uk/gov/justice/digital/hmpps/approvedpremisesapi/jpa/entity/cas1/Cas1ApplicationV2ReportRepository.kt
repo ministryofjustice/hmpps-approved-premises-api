@@ -30,7 +30,10 @@ SELECT DISTINCT ON (application.submitted_at, application.id)
   submission_event.data -> 'eventDetails' ->> 'offenceId' AS offence_id,
   submission_ap_type_metadata.value AS premises_type,
   apa.sentence_type AS sentence_type,
-  submission_event.data -> 'eventDetails' ->> 'releaseType' AS release_type,
+  CASE 
+    WHEN submission_event.data -> 'eventDetails' ->> 'releaseType' = 'inCommunity' THEN apa.situation
+    ELSE submission_event.data -> 'eventDetails' ->> 'releaseType'
+  END AS release_type,
   ap_area.name AS application_origin_cru,
   submission_event.data -> 'eventDetails' -> 'submittedBy' -> 'ldu' ->> 'name' AS referral_ldu,
   submission_event.data -> 'eventDetails' -> 'submittedBy' -> 'region' ->> 'name' AS referral_region,

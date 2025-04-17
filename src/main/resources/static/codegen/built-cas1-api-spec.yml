@@ -8031,13 +8031,10 @@ components:
       properties:
         type:
           $ref: '#/components/schemas/Cas1TimelineEventType'
-        premises:
-          $ref: '#/components/schemas/NamedId'
         schemaVersion:
           type: integer
       required:
         - type
-        - premises
         - schemaVersion
       discriminator:
         propertyName: "type"
@@ -8048,6 +8045,8 @@ components:
       allOf:
         - $ref: "#/components/schemas/Cas1TimelineEventContentPayload"
       properties:
+        premises:
+          $ref: '#/components/schemas/NamedId'
         expectedArrival:
           type: string
           format: date
@@ -8072,6 +8071,7 @@ components:
           items:
             $ref: '#/components/schemas/Cas1SpaceCharacteristic'
       required:
+        - premises
         - expectedArrival
         - expectedDeparture
     Cas1PlacementRequestSummary:
