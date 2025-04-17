@@ -33,6 +33,7 @@ class Cas2ReportsService(
         submittedBy = row.getSubmittedBy(),
         submittedAt = row.getSubmittedAt(),
         startedAt = row.getStartedAt(),
+        numberOfTransfers = row.getNumberOfTransfers(),
       )
     }
 
@@ -54,6 +55,7 @@ class Cas2ReportsService(
         updatedBy = row.getUpdatedBy(),
         updatedAt = row.getUpdatedAt(),
         statusDetails = row.getStatusDetails(),
+        numberOfTransfers = row.getNumberOfTransfers(),
       )
     }
 
