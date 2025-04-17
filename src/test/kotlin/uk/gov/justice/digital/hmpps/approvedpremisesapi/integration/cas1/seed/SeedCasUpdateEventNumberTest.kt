@@ -35,6 +35,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.given
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAnOffender
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.seed.SeedTestBase
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesApplicationEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DomainEventType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.community.OffenderDetailSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.seed.CsvBuilder
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.seed.cas1.Cas1UpdateEventNumberSeedJobCsvRow
@@ -90,6 +91,7 @@ class SeedCasUpdateEventNumberTest : SeedTestBase() {
     domainEventService.saveApplicationAssessedDomainEvent(
       Cas1DomainEvent(
         id = UUID.randomUUID(),
+        type = DomainEventType.APPROVED_PREMISES_APPLICATION_ASSESSED,
         applicationId = application.id,
         assessmentId = UUID.randomUUID(),
         crn = application.crn,
@@ -147,6 +149,7 @@ class SeedCasUpdateEventNumberTest : SeedTestBase() {
     domainEventService.saveApplicationSubmittedDomainEvent(
       Cas1DomainEvent(
         id = UUID.randomUUID(),
+        type = DomainEventType.APPROVED_PREMISES_APPLICATION_SUBMITTED,
         applicationId = application.id,
         crn = application.crn,
         nomsNumber = offenderDetails.otherIds.nomsNumber,
@@ -205,6 +208,7 @@ class SeedCasUpdateEventNumberTest : SeedTestBase() {
     domainEventService.saveBookingMadeDomainEvent(
       Cas1DomainEvent(
         id = UUID.randomUUID(),
+        type = DomainEventType.APPROVED_PREMISES_BOOKING_MADE,
         applicationId = application.id,
         crn = application.crn,
         nomsNumber = offenderDetails.otherIds.nomsNumber,

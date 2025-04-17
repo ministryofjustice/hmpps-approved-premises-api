@@ -21,6 +21,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.ClientResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas1SpaceBookingEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DepartureReasonEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DomainEventType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.MoveOnCategoryEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.NonArrivalReasonEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserEntity
@@ -73,6 +74,7 @@ class Cas1SpaceBookingManagementDomainEventService(
     domainEventService.savePersonArrivedEvent(
       domainEvent = Cas1DomainEvent(
         id = domainEventId,
+        type = DomainEventType.APPROVED_PREMISES_PERSON_ARRIVED,
         applicationId = applicationId,
         crn = updatedCas1SpaceBooking.crn,
         nomsNumber = offenderDetails?.nomsId,
@@ -123,6 +125,7 @@ class Cas1SpaceBookingManagementDomainEventService(
     domainEventService.savePersonNotArrivedEvent(
       domainEvent = Cas1DomainEvent(
         id = domainEventId,
+        type = DomainEventType.APPROVED_PREMISES_PERSON_NOT_ARRIVED,
         applicationId = applicationId,
         crn = updatedCas1SpaceBooking.crn,
         nomsNumber = offenderDetails?.nomsId,
@@ -181,6 +184,7 @@ class Cas1SpaceBookingManagementDomainEventService(
     domainEventService.savePersonDepartedEvent(
       domainEvent = Cas1DomainEvent(
         id = domainEventId,
+        type = DomainEventType.APPROVED_PREMISES_PERSON_DEPARTED,
         applicationId = applicationId,
         crn = departedCas1SpaceBooking.crn,
         nomsNumber = offenderDetails?.nomsId,
@@ -236,6 +240,7 @@ class Cas1SpaceBookingManagementDomainEventService(
     domainEventService.saveKeyWorkerAssignedEvent(
       domainEvent = Cas1DomainEvent(
         id = domainEventId,
+        type = DomainEventType.APPROVED_PREMISES_BOOKING_KEYWORKER_ASSIGNED,
         applicationId = applicationId,
         crn = updatedCas1SpaceBooking.crn,
         nomsNumber = offenderDetails?.nomsId,
