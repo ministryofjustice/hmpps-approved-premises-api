@@ -31,11 +31,14 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ContextStaffMemb
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.StaffDetailFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.UserEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.InitialiseDatabasePerClassTestBase
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenACas1Application
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenACas1ChangeRequest
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenACas1CruManagementArea
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAPlacementRequest
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAProbationRegion
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAUser
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAnApArea
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAnApprovedPremises
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAnOffender
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAnOfflineApplication
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.apDeliusContextAddSingleResponseToUserAccessCall
@@ -52,6 +55,8 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRole
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRole.CAS1_ASSESSOR
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRole.CAS1_FUTURE_MANAGER
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas1.Cas1ChangeRequestEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas1.ChangeRequestType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.ApprovedPremisesApplicationStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.cas1.Cas1SpaceBookingTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.unit.transformer.cas1.Cas1SpaceBookingSummaryStatusTestHelper
@@ -1901,42 +1906,30 @@ class Cas1SpaceBookingTest {
     lateinit var applicant: UserEntity
     lateinit var placementApplicationCreator: UserEntity
     lateinit var application: ApprovedPremisesApplicationEntity
-    lateinit var region: ProbationRegionEntity
     lateinit var premises: ApprovedPremisesEntity
     lateinit var spaceBooking: Cas1SpaceBookingEntity
     lateinit var cancellationReason: CancellationReasonEntity
+    lateinit var changeRequests: List<Cas1ChangeRequestEntity>
 
     @BeforeAll
     fun setupTestData() {
-      region = givenAProbationRegion()
-
-      premises = approvedPremisesEntityFactory.produceAndPersist {
-        withProbationRegion(region)
-        withSupportsSpaceBookings(true)
-        withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
-        withEmailAddress("premises@test.com")
-      }
+      premises = givenAnApprovedPremises(emailAddress = "premises@test.com")
 
       applicant = givenAUser(
-        staffDetail =
-        StaffDetailFactory.staffDetail(email = "applicant@test.com"),
+        staffDetail = StaffDetailFactory.staffDetail(email = "applicant@test.com"),
       ).first
 
       placementApplicationCreator = givenAUser(
-        staffDetail =
-        StaffDetailFactory.staffDetail(email = "placementApplicant@test.com"),
+        staffDetail = StaffDetailFactory.staffDetail(email = "placementApplicant@test.com"),
       ).first
 
       val (offender) = givenAnOffender()
 
-      application = approvedPremisesApplicationEntityFactory.produceAndPersist {
-        withCrn(offender.otherIds.crn)
-        withCreatedByUser(applicant)
-        withApplicationSchema(approvedPremisesApplicationJsonSchemaEntityFactory.produceAndPersist())
-        withApArea(givenAnApArea())
-        withSubmittedAt(OffsetDateTime.now())
-        withCruManagementArea(givenACas1CruManagementArea())
-      }
+      application = givenACas1Application(
+        crn = offender.otherIds.crn,
+        createdByUser = applicant,
+        cruManagementArea = givenACas1CruManagementArea(),
+      )
 
       val placementApplication = placementApplicationFactory.produceAndPersist {
         withCreatedByUser(placementApplicationCreator)
@@ -1968,10 +1961,18 @@ class Cas1SpaceBookingTest {
       cancellationReason = cancellationReasonEntityFactory.produceAndPersist {
         withServiceScope("*")
       }
+
+      changeRequests = (0..3).map {
+        givenACas1ChangeRequest(
+          type = ChangeRequestType.PLACEMENT_APPEAL,
+          spaceBooking = spaceBooking,
+          resolved = false,
+        )
+      }
     }
 
     @Test
-    fun `Create Cancellation without JWT returns 401`() {
+    fun `Cancellation without JWT returns 401`() {
       webTestClient.post()
         .uri("/cas1/premises/${premises.id}/space-bookings/${spaceBooking.id}/cancellations")
         .bodyValue(
@@ -1992,7 +1993,7 @@ class Cas1SpaceBookingTest {
       names = ["CAS1_WORKFLOW_MANAGER", "CAS1_CRU_MEMBER", "CAS1_CRU_MEMBER_FIND_AND_BOOK_BETA", "CAS1_JANITOR"],
       mode = EnumSource.Mode.EXCLUDE,
     )
-    fun `Create Cancellation with invalid role returns 401`(role: UserRole) {
+    fun `Cancellation with invalid role returns 401`(role: UserRole) {
       givenAUser(roles = listOf(role)) { _, jwt ->
         webTestClient.post()
           .uri("/cas1/premises/${premises.id}/space-bookings/${spaceBooking.id}/cancellations")
@@ -2011,7 +2012,7 @@ class Cas1SpaceBookingTest {
     }
 
     @Test
-    fun `Create Cancellation on CAS1 Booking returns OK with correct body, updates status and sends emails when user has role CRU_MEMBER`() {
+    fun `Cancellation returns OK, updates status and sends emails when user has role CRU_MEMBER`() {
       givenAUser(roles = listOf(UserRole.CAS1_CRU_MEMBER_FIND_AND_BOOK_BETA)) { _, jwt ->
         webTestClient.post()
           .uri("/cas1/premises/${premises.id}/space-bookings/${spaceBooking.id}/cancellations")
@@ -2028,14 +2029,18 @@ class Cas1SpaceBookingTest {
           .isOk
       }
 
-      emailAsserter.assertEmailsRequestedCount(4)
       emailAsserter.assertEmailRequested(applicant.email!!, notifyConfig.templates.bookingWithdrawnV2)
       emailAsserter.assertEmailRequested(placementApplicationCreator.email!!, notifyConfig.templates.bookingWithdrawnV2)
       emailAsserter.assertEmailRequested(spaceBooking.premises.emailAddress!!, notifyConfig.templates.bookingWithdrawnV2)
       emailAsserter.assertEmailRequested(application.cruManagementArea!!.emailAddress!!, notifyConfig.templates.bookingWithdrawnV2)
+      emailAsserter.assertEmailsRequestedCount(4)
 
       assertThat(approvedPremisesApplicationRepository.findByIdOrNull(spaceBooking.application!!.id)!!.status)
         .isEqualTo(ApprovedPremisesApplicationStatus.AWAITING_PLACEMENT)
+
+      changeRequests.forEach {
+        assertThat(cas1ChangeRequestRepository.findByIdOrNull(it.id)!!.resolved).isTrue()
+      }
     }
   }
 
