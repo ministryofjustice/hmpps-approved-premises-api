@@ -59,10 +59,9 @@ class Cas3BookingSearchService(
     bookingSearchResultDtos: List<BookingSearchResultDto>,
     user: UserEntity,
   ): List<BookingSearchResultDto> {
-    val offenderSummaries = offenderService.getOffenderSummariesByCrns(
+    val offenderSummaries = offenderService.getPersonSummaryInfoResults(
       bookingSearchResultDtos.map { it.personCrn }.toSet(),
-      user.deliusUsername,
-      ignoreLaoRestrictions = false,
+      user.cas3LaoStrategy(),
     )
 
     return bookingSearchResultDtos
