@@ -1,0 +1,79 @@
+name: Code Quality
+
+on:
+  pull_request:
+    branches:
+      - main
+  workflow_call:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+jobs:
+
+  codeQL:
+    name: CodeQL
+    runs-on: ubuntu-latest
+    permissions:
+      actions: read
+      contents: read
+      security-events: write
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4.1.7
+
+      - name: Initialize CodeQL
+        uses: github/codeql-action/init@v3
+        with:
+          languages: 'javascript'
+
+      - name: Autobuild
+        uses: github/codeql-action/autobuild@v3
+
+      - name: Perform CodeQL Analysis
+        uses: github/codeql-action/analyze@v3
+        with:
+          category: '/language:javascript'
+
+  helm_lint:
+    strategy:
+      matrix:
+        environments: ['dev', 'test', 'preprod', 'prod']
+    name: Helm lint
+    uses: ministryofjustice/hmpps-github-actions/.github/workflows/test_helm_lint.yml@v2 # WORKFLOW VERSION
+    secrets: inherit
+    with:
+      environment: ${{ matrix.environments }}
+
+  ktlint-check:
+    name: KtLintCheck
+    runs-on: ubuntu-latest
+    container:
+      image: cimg/openjdk:21.0.2
+    env:
+      _JAVA_OPTIONS: "-Xmx3g"
+      GRADLE_OPTS: "-Dorg.gradle.daemon=false -Dorg.gradle.workers.max=2"
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      - name: Set up Gradle cache
+        uses: gradle/actions/setup-gradle@v3
+      - name: Run ktlintCheck
+        run: ./gradlew ktlintCheck
+
+  detekt:
+    name: detekt
+    runs-on: ubuntu-latest
+    container:
+      image: cimg/openjdk:21.0.2
+    env:
+      _JAVA_OPTIONS: "-Xmx3g"
+      GRADLE_OPTS: "-Dorg.gradle.daemon=false -Dorg.gradle.workers.max=2"
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      - name: Set up Gradle cache
+        uses: gradle/actions/setup-gradle@v3
+      - name: Run detekt
+        run: ./gradlew detekt
