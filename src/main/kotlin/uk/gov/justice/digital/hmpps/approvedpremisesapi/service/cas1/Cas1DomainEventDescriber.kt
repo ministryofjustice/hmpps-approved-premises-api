@@ -70,6 +70,7 @@ class Cas1DomainEventDescriber(
     DomainEventType.APPROVED_PREMISES_REQUEST_FOR_PLACEMENT_ASSESSED -> buildRequestForPlacementAssessedDescription(domainEventSummary)
     DomainEventType.APPROVED_PREMISES_PLACEMENT_APPLICATION_ALLOCATED -> buildPlacementApplicationAllocatedDescription(domainEventSummary)
     DomainEventType.APPROVED_PREMISES_ASSESSMENT_INFO_REQUESTED -> buildInfoRequestDescription(domainEventSummary)
+    DomainEventType.APPROVED_PREMISES_PLACEMENT_APPEAL_CREATED -> buildPlacementAppealedDescription(domainEventSummary)
     else -> throw IllegalArgumentException("Cannot map ${domainEventSummary.type}, only CAS1 is currently supported")
   }
 
@@ -363,6 +364,14 @@ class Cas1DomainEventDescriber(
   private fun buildRequestForPlacementDescription(expectedArrival: LocalDate, duration: Int, rejected: Boolean = false): String {
     val endDate = expectedArrival.plusDays(duration.toLong())
     return "The placement request ${if (rejected) "was" else "is"} for ${expectedArrival.toUiFormat()} to ${endDate.toUiFormat()} (${toWeekAndDayDurationString(duration)})"
+  }
+
+  private fun buildPlacementAppealedDescription(domainEventSummary: DomainEventSummary): EventDescriptionAndPayload {
+    // TODO: return Cas1PlacementAppealCreatedPayload
+    return EventDescriptionAndPayload(
+      description = null,
+      payload = null,
+    )
   }
 
   @SuppressWarnings("TooGenericExceptionThrown")
