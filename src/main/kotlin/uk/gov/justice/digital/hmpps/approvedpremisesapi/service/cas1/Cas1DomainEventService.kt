@@ -17,6 +17,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.Bo
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.BookingKeyWorkerAssignedEnvelope
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.BookingMadeEnvelope
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.BookingNotMadeEnvelope
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.Cas1DomainEventEnvelope
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.FurtherInformationRequestedEnvelope
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.MatchRequestWithdrawnEnvelope
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.PersonArrivedEnvelope
@@ -81,44 +82,30 @@ class Cas1DomainEventService(
   fun getRequestForPlacementAssessedEvent(id: UUID) = get(id, RequestForPlacementAssessedEnvelope::class)
   fun getFurtherInformationRequestMadeEvent(id: UUID) = get(id, FurtherInformationRequestedEnvelope::class)
 
-  private fun <T : Any> get(id: UUID, type: KClass<T>): Cas1DomainEvent<T>? {
+  private fun <T : Cas1DomainEventEnvelope<*>> get(id: UUID, envelopeType: KClass<T>): Cas1DomainEvent<T>? {
     val entity = domainEventRepository.findByIdOrNull(id) ?: return null
-    return toDomainEvent(entity, type)
+    return toDomainEvent(entity, envelopeType)
   }
 
   @SuppressWarnings("CyclomaticComplexMethod", "TooGenericExceptionThrown")
-  fun <T : Any> toDomainEvent(entity: DomainEventEntity, type: KClass<T>): Cas1DomainEvent<T> {
+  fun <T : Cas1DomainEventEnvelope<*>> toDomainEvent(entity: DomainEventEntity, envelopeType: KClass<T>): Cas1DomainEvent<T> {
     checkNotNull(entity.applicationId) { "application id should not be null" }
 
-    val dataJson = when {
-      type == BookingCancelledEnvelope::class && entity.type == DomainEventType.APPROVED_PREMISES_BOOKING_CANCELLED ->
-        cas1DomainEventMigrationService.bookingCancelledJson(entity)
-      type == PersonArrivedEnvelope::class && entity.type == DomainEventType.APPROVED_PREMISES_PERSON_ARRIVED ->
-        cas1DomainEventMigrationService.personArrivedJson(entity)
-      type == PersonDepartedEnvelope::class && entity.type == DomainEventType.APPROVED_PREMISES_PERSON_DEPARTED ->
-        cas1DomainEventMigrationService.personDepartedJson(entity)
-      (type == ApplicationSubmittedEnvelope::class && entity.type == DomainEventType.APPROVED_PREMISES_APPLICATION_SUBMITTED) ||
-        (type == ApplicationAssessedEnvelope::class && entity.type == DomainEventType.APPROVED_PREMISES_APPLICATION_ASSESSED) ||
-        (type == BookingMadeEnvelope::class && entity.type == DomainEventType.APPROVED_PREMISES_BOOKING_MADE) ||
-        (type == PersonNotArrivedEnvelope::class && entity.type == DomainEventType.APPROVED_PREMISES_PERSON_NOT_ARRIVED) ||
-        (type == BookingNotMadeEnvelope::class && entity.type == DomainEventType.APPROVED_PREMISES_BOOKING_NOT_MADE) ||
-        (type == BookingChangedEnvelope::class && entity.type == DomainEventType.APPROVED_PREMISES_BOOKING_CHANGED) ||
-        (type == BookingKeyWorkerAssignedEnvelope::class && entity.type == DomainEventType.APPROVED_PREMISES_BOOKING_KEYWORKER_ASSIGNED) ||
-        (type == ApplicationWithdrawnEnvelope::class && entity.type == DomainEventType.APPROVED_PREMISES_APPLICATION_WITHDRAWN) ||
-        (type == ApplicationExpiredEnvelope::class && entity.type == DomainEventType.APPROVED_PREMISES_APPLICATION_EXPIRED) ||
-        (type == AssessmentAppealedEnvelope::class && entity.type == DomainEventType.APPROVED_PREMISES_ASSESSMENT_APPEALED) ||
-        (type == PlacementApplicationWithdrawnEnvelope::class && entity.type == DomainEventType.APPROVED_PREMISES_PLACEMENT_APPLICATION_WITHDRAWN) ||
-        (type == PlacementApplicationAllocatedEnvelope::class && entity.type == DomainEventType.APPROVED_PREMISES_PLACEMENT_APPLICATION_ALLOCATED) ||
-        (type == MatchRequestWithdrawnEnvelope::class && entity.type == DomainEventType.APPROVED_PREMISES_MATCH_REQUEST_WITHDRAWN) ||
-        (type == AssessmentAllocatedEnvelope::class && entity.type == DomainEventType.APPROVED_PREMISES_ASSESSMENT_ALLOCATED) ||
-        (type == RequestForPlacementCreatedEnvelope::class && entity.type == DomainEventType.APPROVED_PREMISES_REQUEST_FOR_PLACEMENT_CREATED) ||
-        (type == RequestForPlacementAssessedEnvelope::class && entity.type == DomainEventType.APPROVED_PREMISES_REQUEST_FOR_PLACEMENT_ASSESSED) ||
-        (type == FurtherInformationRequestedEnvelope::class && entity.type == DomainEventType.APPROVED_PREMISES_ASSESSMENT_INFO_REQUESTED) ->
-        entity.data
-      else -> throw RuntimeException("Unsupported DomainEventData type ${type.qualifiedName}/${entity.type.name}")
+    if (entity.type.cas1EnvelopeType != envelopeType) {
+      error(
+        "Entity with id ${entity.id} has type ${entity.type}, which contains data of type ${entity.type.cas1EnvelopeType}. " +
+          "This is incompatible with the requested data type $envelopeType.",
+      )
     }
 
-    val data = objectMapper.readValue(dataJson, type.java)
+    val dataJson = when (entity.type) {
+      DomainEventType.APPROVED_PREMISES_BOOKING_CANCELLED -> cas1DomainEventMigrationService.bookingCancelledJson(entity)
+      DomainEventType.APPROVED_PREMISES_PERSON_ARRIVED -> cas1DomainEventMigrationService.personArrivedJson(entity)
+      DomainEventType.APPROVED_PREMISES_PERSON_DEPARTED -> cas1DomainEventMigrationService.personDepartedJson(entity)
+      else -> entity.data
+    }
+
+    val data = objectMapper.readValue(dataJson, envelopeType.java)
 
     return Cas1DomainEvent(
       id = entity.id,
