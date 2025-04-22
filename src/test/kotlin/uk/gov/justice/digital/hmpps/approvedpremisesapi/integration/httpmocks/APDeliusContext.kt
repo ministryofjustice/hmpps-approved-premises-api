@@ -188,6 +188,21 @@ fun IntegrationTestBase.apDeliusContextAddSingleCaseSummaryToBulkResponse(caseSu
       cases = listOf(caseSummary),
     ),
   )
+  caseSummary.nomsId?.let {
+    mockSuccessfulGetCallWithBodyAndJsonResponse(
+      url = "/probation-cases/summaries",
+      requestBody = WireMock.equalToJson(
+        objectMapper.writeValueAsString(
+          listOf(caseSummary.nomsId),
+        ),
+        false,
+        false,
+      ),
+      responseBody = CaseSummaries(
+        cases = listOf(caseSummary),
+      ),
+    )
+  }
 }
 
 fun IntegrationTestBase.apDeliusContextAddListCaseSummaryToBulkResponse(casesSummary: List<CaseSummary>) {
@@ -204,6 +219,19 @@ fun IntegrationTestBase.apDeliusContextAddListCaseSummaryToBulkResponse(casesSum
       cases = casesSummary,
     ),
   )
+  casesSummary.mapNotNull { it.nomsId }.takeIf { it.isNotEmpty() }.let {
+    mockSuccessfulGetCallWithBodyAndJsonResponse(
+      url = "/probation-cases/summaries",
+      requestBody = WireMock.equalToJson(
+        objectMapper.writeValueAsString(it),
+        true,
+        false,
+      ),
+      responseBody = CaseSummaries(
+        cases = casesSummary,
+      ),
+    )
+  }
 }
 
 fun IntegrationTestBase.apDeliusContextEmptyCaseSummaryToBulkResponse(crn: String) {
@@ -221,6 +249,11 @@ fun IntegrationTestBase.apDeliusContextEmptyCaseSummaryToBulkResponse(crn: Strin
     ),
   )
 }
+
+fun IntegrationTestBase.apDeliusContextMockUnsuccessfulCaseSummaryCall(responseStatus: Int = 500) = mockUnsuccessfulGetCall(
+  url = "/probation-cases/summaries",
+  responseStatus = responseStatus,
+)
 
 fun IntegrationTestBase.apDeliusContextAddStaffDetailResponse(staffDetail: StaffDetail) {
   mockSuccessfulGetCallWithJsonResponse(

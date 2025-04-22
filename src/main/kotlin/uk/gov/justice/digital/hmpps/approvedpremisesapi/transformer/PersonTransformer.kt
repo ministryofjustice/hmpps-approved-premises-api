@@ -147,25 +147,26 @@ class PersonTransformer {
     is PersonSummaryInfoResult.NotFound -> PersonInfoResult.NotFound(personSummaryInfoResult.crn)
     is PersonSummaryInfoResult.Unknown -> PersonInfoResult.Unknown(personSummaryInfoResult.crn, personSummaryInfoResult.throwable)
   }
-  fun transformProbationOffenderToPersonApi(probationOffenderResult: ProbationOffenderSearchResult.Success.Full, nomsNumber: String): FullPerson {
-    val probationOffenderDetail = probationOffenderResult.probationOffenderDetail
+
+  fun transformProbationOffenderToPersonApi(probationOffenderResult: ProbationOffenderSearchResult.Success.Full): FullPerson {
+    val caseSummary = probationOffenderResult.caseSummary
     val inmateDetail = probationOffenderResult.inmateDetail
     return FullPerson(
       type = PersonType.fullPerson,
-      crn = probationOffenderDetail.otherIds.crn,
-      name = "${probationOffenderDetail.firstName} ${probationOffenderDetail.surname}",
-      dateOfBirth = probationOffenderDetail.dateOfBirth!!,
-      sex = probationOffenderDetail.gender ?: "Not found",
+      crn = caseSummary.crn,
+      name = "${caseSummary.name.forename} ${caseSummary.name.surname}",
+      dateOfBirth = caseSummary.dateOfBirth,
+      sex = caseSummary.gender ?: "Not found",
       status = inmateStatusToPersonInfoApiStatus(inmateDetail?.custodyStatus),
-      nomsNumber = probationOffenderDetail.otherIds.nomsNumber,
-      pncNumber = probationOffenderDetail.otherIds.pncNumber ?: "Not found",
-      nationality = probationOffenderDetail.offenderProfile?.nationality ?: "Not found",
+      nomsNumber = caseSummary.nomsId,
+      pncNumber = caseSummary.pnc ?: "Not found",
+      nationality = caseSummary.profile?.nationality ?: "Not found",
       prisonName = inmateStatusToPersonInfoApiStatus(inmateDetail?.custodyStatus).takeIf { it == PersonStatus.inCustody }
         ?.let {
           inmateDetail?.assignedLivingUnit?.agencyName
             ?: inmateDetail?.assignedLivingUnit?.agencyId
         },
-      isRestricted = (probationOffenderDetail.currentExclusion ?: false || probationOffenderDetail.currentRestriction ?: false),
+      isRestricted = caseSummary.currentExclusion || caseSummary.currentRestriction,
     )
   }
 

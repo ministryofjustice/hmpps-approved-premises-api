@@ -22,7 +22,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.UpdateApplicationType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.UpdateCas2v2Application
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.CaseSummaryFactory
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ProbationOffenderDetailFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.Cas2v2IntegrationTestBase
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenACas2v2Assessor
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenACas2v2DeliusUser
@@ -31,14 +30,13 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.given
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAnOffender
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.apDeliusContextAddSingleCaseSummaryToBulkResponse
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.apDeliusContextEmptyCaseSummaryToBulkResponse
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.probationOffenderSearchAPIMockSuccessfulOffenderSearchCall
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.apDeliusContextMockUnsuccessfulCaseSummaryCall
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApplicationRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas2v2.Cas2v2ApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas2v2.Cas2v2StatusUpdateEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas2v2.Cas2v2UserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas2v2.Cas2v2UserType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.community.OffenderDetailSummary
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.probationoffendersearchapi.IDs
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomDateAfter
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomDateBefore
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomDateTimeBefore
@@ -919,19 +917,6 @@ class Cas2v2ApplicationTest : Cas2v2IntegrationTestBase() {
                 .withNomsId(nomsNumber)
                 .produce(),
             )
-            probationOffenderSearchAPIMockSuccessfulOffenderSearchCall(
-              nomsNumber = nomsNumber,
-              response = listOf(
-                ProbationOffenderDetailFactory()
-                  .withOtherIds(
-                    IDs(
-                      nomsNumber = nomsNumber,
-                      crn = crn,
-                    ),
-                  )
-                  .produce(),
-              ),
-            )
 
             val newestJsonSchema = cas2v2ApplicationJsonSchemaEntityFactory
               .produceAndPersist {
@@ -995,19 +980,6 @@ class Cas2v2ApplicationTest : Cas2v2IntegrationTestBase() {
                 .withCrn(crn)
                 .withNomsId(nomsNumber)
                 .produce(),
-            )
-            probationOffenderSearchAPIMockSuccessfulOffenderSearchCall(
-              nomsNumber = nomsNumber,
-              response = listOf(
-                ProbationOffenderDetailFactory()
-                  .withOtherIds(
-                    IDs(
-                      nomsNumber = nomsNumber,
-                      crn = crn,
-                    ),
-                  )
-                  .produce(),
-              ),
             )
 
             val newestJsonSchema = cas2v2ApplicationJsonSchemaEntityFactory
@@ -1119,19 +1091,6 @@ class Cas2v2ApplicationTest : Cas2v2IntegrationTestBase() {
                   .withNomsId(nomsNumber)
                   .produce(),
               )
-              probationOffenderSearchAPIMockSuccessfulOffenderSearchCall(
-                nomsNumber = nomsNumber,
-                response = listOf(
-                  ProbationOffenderDetailFactory()
-                    .withOtherIds(
-                      IDs(
-                        nomsNumber = nomsNumber,
-                        crn = crn,
-                      ),
-                    )
-                    .produce(),
-                ),
-              )
 
               val newestJsonSchema = cas2v2ApplicationJsonSchemaEntityFactory
                 .produceAndPersist {
@@ -1238,19 +1197,6 @@ class Cas2v2ApplicationTest : Cas2v2IntegrationTestBase() {
           .withNomsId(nomsNumber)
           .produce(),
       )
-      probationOffenderSearchAPIMockSuccessfulOffenderSearchCall(
-        nomsNumber = nomsNumber,
-        response = listOf(
-          ProbationOffenderDetailFactory()
-            .withOtherIds(
-              IDs(
-                nomsNumber = nomsNumber,
-                crn = crn,
-              ),
-            )
-            .produce(),
-        ),
-      )
       givenACas2v2NomisUser { _, jwt ->
         createNewApplicationForCas2v2returns201(jwt)
       }
@@ -1259,6 +1205,7 @@ class Cas2v2ApplicationTest : Cas2v2IntegrationTestBase() {
     @Test
     fun `Create new cas2v2 application as a Noms user returns 404 when a person cannot be found`() {
       givenACas2v2NomisUser { _, jwt ->
+        apDeliusContextMockUnsuccessfulCaseSummaryCall(404)
         createNewApplicationForCas2v2Returns404WhenAPersonIsNotFound(jwt)
       }
     }
@@ -1364,19 +1311,6 @@ class Cas2v2ApplicationTest : Cas2v2IntegrationTestBase() {
             .withCrn(crn)
             .withNomsId(nomsNumber)
             .produce(),
-        )
-        probationOffenderSearchAPIMockSuccessfulOffenderSearchCall(
-          nomsNumber = nomsNumber,
-          response = listOf(
-            ProbationOffenderDetailFactory()
-              .withOtherIds(
-                IDs(
-                  nomsNumber = nomsNumber,
-                  crn = crn,
-                ),
-              )
-              .produce(),
-          ),
         )
         val applicationId = UUID.fromString("22ceda56-98b2-411d-91cc-ace0ab8be872")
 

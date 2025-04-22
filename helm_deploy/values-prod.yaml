@@ -27,7 +27,6 @@ generic-service:
     SERVICES_PRISONER-ALERTS-API_BASE-URL: https://alerts-api.hmpps.service.justice.gov.uk
     SERVICES_NOMIS-USER-ROLES-API_BASE-URL: https://nomis-user-roles-api.prison.service.justice.gov.uk
     SERVICES_MANAGE-USERS-API_BASE-URL: https://manage-users-api.hmpps.service.justice.gov.uk
-    SERVICES_PROBATION-OFFENDER-SEARCH-API_BASE-URL: https://probation-offender-search.hmpps.service.justice.gov.uk
     SERVICES_CASE-NOTES_BASE-URL: https://offender-case-notes.service.justice.gov.uk
     SERVICES_AP-OASYS-CONTEXT-API_BASE-URL: https://approved-premises-and-oasys.hmpps.service.justice.gov.uk
     SERVICES_GOV-UK-BANK-HOLIDAYS-API_BASE-URL: https://www.gov.uk
