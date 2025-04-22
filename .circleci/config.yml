@@ -282,7 +282,7 @@ jobs:
           command: |
             TESTS=$(circleci tests glob "e2e/tests/*.feature" | circleci tests split --split-by=timings | paste -sd ',')
             npm run test:e2e:ci --\
-              --env "assessor_username=${CYPRESS_ASSESSOR_USERNAME_<< parameters.environment >>},assessor_password=${CYPRESS_ASSESSOR_PASSWORD_<< parameters.environment >>},referrer_username=${CYPRESS_REFERRER_USERNAME_<< parameters.environment >>},referrer_password=${CYPRESS_REFERRER_PASSWORD_<< parameters.environment >>},acting_user_probation_region_id=${CYPRESS_ACTING_USER_PROBATION_REGION_ID_<< parameters.environment >>},acting_user_probation_region_name=${CYPRESS_ACTING_USER_PROBATION_REGION_NAME_<< parameters.environment >>},environment=${CYPRESS_ENVIRONMENT_<< parameters.environment >>}"\
+              --env "assessor_username=${CAS3_E2E_ASSESSOR_USERNAME},assessor_password=${CAS3_E2E_ASSESSOR_PASSWORD},referrer_username=${CAS3_E2E_REFERRER_USERNAME},referrer_password=${CAS3_E2E_REFERRER_PASSWORD},environment=${CYPRESS_ENVIRONMENT_<< parameters.environment >>}"\
               --config baseUrl=https://temporary-accommodation-<< parameters.environment >>.hmpps.service.justice.gov.uk \
               --spec $TESTS
       - store_artifacts:
@@ -318,7 +318,7 @@ jobs:
       - run:
           name: Run E2E tests
           command: |
-            export ASSESSOR_USERNAME=${CYPRESS_ASSESSOR_USERNAME_<< parameters.environment >>} ASSESSOR_PASSWORD=${CYPRESS_ASSESSOR_PASSWORD_<< parameters.environment >>} REFERRER_USERNAME=${CYPRESS_REFERRER_USERNAME_<< parameters.environment >>} REFERRER_PASSWORD=${CYPRESS_REFERRER_PASSWORD_<< parameters.environment >>} ACTING_USER_PROBATION_REGION_ID=${CYPRESS_ACTING_USER_PROBATION_REGION_ID_<< parameters.environment >>} ACTING_USER_PROBATION_REGION_NAME=${ACTING_USER_PROBATION_REGION_NAME_<< parameters.environment >>} ENVIRONMENT=${CYPRESS_ENVIRONMENT_<< parameters.environment >>} DEV_PLAYWRIGHT_BASE_URL=https://transitional-accommodation-<< parameters.environment >>.hmpps.service.justice.gov.uk
+            export ASSESSOR_USERNAME=${E2E_USER_CAS3_ASSESSOR_USERNAME} ASSESSOR_PASSWORD=${E2E_USER_CAS3_ASSESSOR_PASSWORD} REFERRER_USERNAME=${E2E_USER_CAS3_REFERRER_USERNAME} REFERRER_PASSWORD=${E2E_USER_CAS3_REFERRER_PASSWORD} ENVIRONMENT=${CYPRESS_ENVIRONMENT_<< parameters.environment >>} DEV_PLAYWRIGHT_BASE_URL=https://transitional-accommodation-<< parameters.environment >>.hmpps.service.justice.gov.uk
             npm run test:playwright:e2e:ci
       - store_artifacts:
           path: e2e_playwright/playwright-report
