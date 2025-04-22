@@ -1077,6 +1077,7 @@ components:
         - information_request
         - assessment_appealed
         - assessment_allocated
+        - placement_appeal_accepted
         - placement_appeal_created
         - placement_application_withdrawn
         - placement_application_allocated
@@ -1163,6 +1164,7 @@ components:
         propertyName: "type"
         mapping:
           booking_changed: '#/components/schemas/Cas1BookingChangedContentPayload'
+          placement_appeal_accepted: '#/components/schemas/Cas1PlacementAppealAcceptedPayload'
           placement_appeal_created: '#/components/schemas/Cas1PlacementAppealCreatedPayload'
     Cas1BookingChangedContentPayload:
       type: object
@@ -1218,6 +1220,23 @@ components:
         - expectedArrival
         - expectedDeparture
         - appealReason
+    Cas1PlacementAppealAcceptedPayload:
+      type: object
+      allOf:
+        - $ref: "#/components/schemas/Cas1TimelineEventContentPayload"
+      properties:
+        premises:
+          $ref: '_shared.yml#/components/schemas/NamedId'
+        expectedArrival:
+          type: string
+          format: date
+        expectedDeparture:
+          type: string
+          format: date
+      required:
+        - premises
+        - expectedArrival
+        - expectedDeparture
     Cas1PlacementRequestSummary:
       type: object
       properties:

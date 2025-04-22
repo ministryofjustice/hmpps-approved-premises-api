@@ -25,6 +25,7 @@ enum class EventType(@get:JsonValue val value: kotlin.String) {
   assessmentAllocated("approved-premises.assessment.allocated"),
   informationRequestMade("approved-premises.assessment.info-requested"),
   placementAppealCreated("approved-premises.placement-appeal.created"),
+  placementAppealAccepted("approved-premises.placement-appeal.accepted"),
   placementApplicationWithdrawn("approved-premises.placement-application.withdrawn"),
   placementApplicationAllocated("approved-premises.placement-application.allocated"),
   matchRequestWithdrawn("approved-premises.match-request.withdrawn"),

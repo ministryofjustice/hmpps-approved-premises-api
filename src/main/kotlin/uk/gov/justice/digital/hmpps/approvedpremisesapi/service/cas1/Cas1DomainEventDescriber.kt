@@ -8,6 +8,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.Re
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.SpaceCharacteristic
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.StaffMember
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1BookingChangedContentPayload
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1PlacementAppealAcceptedPayload
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1PlacementAppealCreatedPayload
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1SpaceCharacteristic
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1TimelineEventContentPayload
@@ -72,6 +73,7 @@ class Cas1DomainEventDescriber(
     DomainEventType.APPROVED_PREMISES_REQUEST_FOR_PLACEMENT_ASSESSED -> buildRequestForPlacementAssessedDescription(domainEventSummary)
     DomainEventType.APPROVED_PREMISES_PLACEMENT_APPLICATION_ALLOCATED -> buildPlacementApplicationAllocatedDescription(domainEventSummary)
     DomainEventType.APPROVED_PREMISES_ASSESSMENT_INFO_REQUESTED -> buildInfoRequestDescription(domainEventSummary)
+    DomainEventType.APPROVED_PREMISES_PLACEMENT_APPEAL_ACCEPTED -> buildPlacementAppealAcceptedDescription(domainEventSummary)
     DomainEventType.APPROVED_PREMISES_PLACEMENT_APPEAL_CREATED -> buildPlacementAppealCreatedDescription(domainEventSummary)
     else -> throw IllegalArgumentException("Cannot map ${domainEventSummary.type}, only CAS1 is currently supported")
   }
@@ -312,6 +314,30 @@ class Cas1DomainEventDescriber(
     }
 
     return EventDescriptionAndPayload(description, null)
+  }
+
+  private fun buildPlacementAppealAcceptedDescription(domainEventSummary: DomainEventSummary): EventDescriptionAndPayload {
+    val event = domainEventService.getPlacementAppealAcceptedEvent(domainEventSummary.id())
+
+    val payload = event.toPayload {
+      val details = it.eventDetails
+
+      Cas1PlacementAppealAcceptedPayload(
+        premises = NamedId(
+          id = details.premises.id,
+          name = details.premises.name,
+        ),
+        expectedArrival = details.arrivalOn,
+        expectedDeparture = details.departureOn,
+        type = Cas1TimelineEventType.placementAppealCreated,
+        schemaVersion = event?.schemaVersion,
+      )
+    }
+
+    return EventDescriptionAndPayload(
+      description = null,
+      payload = payload,
+    )
   }
 
   private fun buildPlacementAppealCreatedDescription(domainEventSummary: DomainEventSummary): EventDescriptionAndPayload {

@@ -3,6 +3,8 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1
 import org.springframework.stereotype.Service
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.Cas1DomainEventCodedId
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.EventType
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.PlacementAppealAccepted
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.PlacementAppealAcceptedEnvelope
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.PlacementAppealCreated
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.PlacementAppealCreatedEnvelope
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.ApDeliusContextApiClient
@@ -18,6 +20,40 @@ class Cas1ChangeRequestDomainEventService(
   private val cas1DomainEventService: Cas1DomainEventService,
   private val apDeliusContextApiClient: ApDeliusContextApiClient,
 ) {
+
+  fun placementAppealAccepted(
+    changeRequest: Cas1ChangeRequestEntity,
+    approvingUser: UserEntity,
+  ) {
+    val domainEventId = UUID.randomUUID()
+
+    val spaceBooking = changeRequest.spaceBooking
+
+    cas1DomainEventService.savePlacementAppealAccepted(
+      domainEvent = Cas1DomainEvent(
+        id = domainEventId,
+        applicationId = changeRequest.placementRequest.application.id,
+        crn = changeRequest.placementRequest.application.crn,
+        nomsNumber = changeRequest.placementRequest.application.nomsNumber,
+        occurredAt = OffsetDateTime.now().toInstant(),
+        cas1SpaceBookingId = spaceBooking.id,
+        bookingId = null,
+        schemaVersion = null,
+        data = PlacementAppealAcceptedEnvelope(
+          id = domainEventId,
+          timestamp = OffsetDateTime.now().toInstant(),
+          eventType = EventType.placementAppealCreated,
+          eventDetails = PlacementAppealAccepted(
+            bookingId = spaceBooking.id,
+            premises = mapApprovedPremisesEntityToPremises(spaceBooking.premises),
+            arrivalOn = spaceBooking.expectedArrivalDate,
+            departureOn = spaceBooking.expectedDepartureDate,
+            acceptedBy = getStaffDetailsByUsername(approvingUser.deliusUsername).toStaffMember(),
+          ),
+        ),
+      ),
+    )
+  }
 
   fun placementAppealCreated(
     changeRequest: Cas1ChangeRequestEntity,

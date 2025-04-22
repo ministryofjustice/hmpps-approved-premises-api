@@ -20,6 +20,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.Ma
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.PersonArrivedEnvelope
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.PersonDepartedEnvelope
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.PersonNotArrivedEnvelope
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.PlacementAppealAcceptedEnvelope
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.PlacementAppealCreatedEnvelope
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.PlacementApplicationAllocatedEnvelope
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.PlacementApplicationWithdrawnEnvelope
@@ -41,6 +42,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.events.MatchRequ
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.events.PersonArrivedFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.events.PersonDepartedFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.events.PersonNotArrivedFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.events.PlacementAppealAcceptedFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.events.PlacementAppealCreatedFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.events.PlacementApplicationAllocatedFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.events.PlacementApplicationWithdrawnFactory
@@ -206,6 +208,12 @@ class Cas1DomainEventsFactory(val objectMapper: ObjectMapper) {
         timestamp = occurredAt,
         eventType = eventType,
         eventDetails = ApplicationExpiredFactory().produce(),
+      )
+      DomainEventType.APPROVED_PREMISES_PLACEMENT_APPEAL_ACCEPTED -> PlacementAppealAcceptedEnvelope(
+        id = id,
+        timestamp = occurredAt,
+        eventType = eventType,
+        eventDetails = PlacementAppealAcceptedFactory().produce(),
       )
       DomainEventType.APPROVED_PREMISES_PLACEMENT_APPEAL_CREATED -> PlacementAppealCreatedEnvelope(
         id = id,

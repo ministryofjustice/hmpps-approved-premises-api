@@ -34,6 +34,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.Ma
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.PersonArrivedEnvelope
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.PersonDepartedEnvelope
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.PersonNotArrivedEnvelope
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.PlacementAppealAcceptedEnvelope
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.PlacementAppealCreatedEnvelope
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.PlacementApplicationAllocatedEnvelope
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.PlacementApplicationWithdrawnEnvelope
@@ -392,6 +393,14 @@ enum class DomainEventType(
     Cas1TimelineEventType.placementAppealCreated,
     emittable = false,
     cas1EnvelopeType = PlacementAppealCreatedEnvelope::class,
+  ),
+  APPROVED_PREMISES_PLACEMENT_APPEAL_ACCEPTED(
+    DomainEventCas.CAS1,
+    Cas1EventType.placementAppealAccepted.value,
+    "A placement appeal has been accepted",
+    Cas1TimelineEventType.placementAppealAccepted,
+    emittable = false,
+    cas1EnvelopeType = PlacementAppealAcceptedEnvelope::class,
   ),
   CAS2_APPLICATION_SUBMITTED(
     DomainEventCas.CAS2,
