@@ -23,7 +23,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.SubmitCas2v2Ap
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.toHttpStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.CaseSummaryFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ExternalUserDetailsFactory
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ProbationOffenderDetailFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.Cas2v2IntegrationTestBase
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenACas2Admin
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenACas2v2Assessor
@@ -32,7 +31,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.given
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAnOffender
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.apDeliusContextAddSingleCaseSummaryToBulkResponse
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.manageUsersMockSuccessfulExternalUsersCall
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.probationOffenderSearchAPIMockSuccessfulOffenderSearchCall
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas2v2ApplicationJsonSchemaEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas2v2.Cas2v2ApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas2v2.Cas2v2ApplicationRepository
@@ -43,11 +41,10 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas2v2.Cas2v2
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas2v2.Cas2v2UserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.community.OffenderDetailSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.prisonsapi.AssignedLivingUnit
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.probationoffendersearchapi.IDs
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.cas2v2.Cas2v2UserTransformer
 import java.time.LocalDate
 import java.time.OffsetDateTime
-import java.util.UUID
+import java.util.*
 
 class Cas2v2SubmissionTest(
   @Value("\${url-templates.frontend.cas2v2.application}") private val applicationUrlTemplate: String,
@@ -380,19 +377,6 @@ class Cas2v2SubmissionTest(
           .withNomsId(nomsNumber)
           .produce(),
       )
-      probationOffenderSearchAPIMockSuccessfulOffenderSearchCall(
-        nomsNumber = nomsNumber,
-        response = listOf(
-          ProbationOffenderDetailFactory()
-            .withOtherIds(
-              IDs(
-                nomsNumber = nomsNumber,
-                crn = crn,
-              ),
-            )
-            .produce(),
-        ),
-      )
       givenACas2v2Assessor { assessor, jwt ->
         givenACas2v2DeliusUser { user, _ ->
           givenAnOffender(
@@ -535,20 +519,6 @@ class Cas2v2SubmissionTest(
           .withCurrentRestriction(true)
           .produce(),
       )
-      probationOffenderSearchAPIMockSuccessfulOffenderSearchCall(
-        nomsNumber = nomsNumber,
-        response = listOf(
-          ProbationOffenderDetailFactory()
-            .withOtherIds(
-              IDs(
-                nomsNumber = nomsNumber,
-                crn = crn,
-              ),
-            )
-            .withCurrentRestriction(true)
-            .produce(),
-        ),
-      )
       givenACas2v2Assessor { assessor, jwt ->
         givenACas2v2DeliusUser { user, _ ->
           givenAnOffender(
@@ -603,20 +573,6 @@ class Cas2v2SubmissionTest(
           .withNomsId(nomsNumber)
           .withCurrentExclusion(true)
           .produce(),
-      )
-      probationOffenderSearchAPIMockSuccessfulOffenderSearchCall(
-        nomsNumber = nomsNumber,
-        response = listOf(
-          ProbationOffenderDetailFactory()
-            .withOtherIds(
-              IDs(
-                nomsNumber = nomsNumber,
-                crn = crn,
-              ),
-            )
-            .withCurrentExclusion(true)
-            .produce(),
-        ),
       )
       givenACas2v2Assessor { assessor, jwt ->
         givenACas2v2DeliusUser { user, _ ->
@@ -793,19 +749,6 @@ class Cas2v2SubmissionTest(
             .withCrn(crn)
             .withNomsId(nomsNumber)
             .produce(),
-        )
-        probationOffenderSearchAPIMockSuccessfulOffenderSearchCall(
-          nomsNumber = nomsNumber,
-          response = listOf(
-            ProbationOffenderDetailFactory()
-              .withOtherIds(
-                IDs(
-                  nomsNumber = nomsNumber,
-                  crn = crn,
-                ),
-              )
-              .produce(),
-          ),
         )
         givenACas2v2Assessor { assessor, _ ->
           givenACas2Admin { _, jwt ->

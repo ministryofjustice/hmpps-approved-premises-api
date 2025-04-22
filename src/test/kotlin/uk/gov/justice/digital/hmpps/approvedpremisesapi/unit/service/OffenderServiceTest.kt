@@ -814,7 +814,7 @@ class OffenderServiceTest {
 
     @Test
     fun `returns true for Offender with current restriction`() {
-      every { mockApDeliusContextApiClient.getSummariesForCrns(listOf("CRN123")) } returns ClientResult.Success(
+      every { mockApDeliusContextApiClient.getCaseSummaries(listOf("CRN123")) } returns ClientResult.Success(
         HttpStatus.OK,
         CaseSummaries(
           listOf(
@@ -831,7 +831,7 @@ class OffenderServiceTest {
 
     @Test
     fun `returns true for Offender with current exclusion`() {
-      every { mockApDeliusContextApiClient.getSummariesForCrns(listOf("CRN123")) } returns ClientResult.Success(
+      every { mockApDeliusContextApiClient.getCaseSummaries(listOf("CRN123")) } returns ClientResult.Success(
         HttpStatus.OK,
         CaseSummaries(
           listOf(
@@ -848,7 +848,7 @@ class OffenderServiceTest {
 
     @Test
     fun `returns false for Offender without current exclusion or restriction`() {
-      every { mockApDeliusContextApiClient.getSummariesForCrns(listOf("CRN123")) } returns ClientResult.Success(
+      every { mockApDeliusContextApiClient.getCaseSummaries(listOf("CRN123")) } returns ClientResult.Success(
         HttpStatus.OK,
         CaseSummaries(
           listOf(
@@ -1725,7 +1725,7 @@ class OffenderServiceTest {
     @ArgumentsSource(ClientResultFailureArgumentsProvider::class)
     fun `any error retrieving case summaries is rethrown`(response: ClientResult.Failure<CaseSummaries>) {
       every {
-        mockApDeliusContextApiClient.getSummariesForCrns(listOf(OFFENDER_1_CRN))
+        mockApDeliusContextApiClient.getCaseSummaries(listOf(OFFENDER_1_CRN))
       } returns response
 
       assertThrows<Throwable> {
@@ -1740,7 +1740,7 @@ class OffenderServiceTest {
     @ArgumentsSource(ClientResultFailureArgumentsProvider::class)
     fun `any error retrieving case access is rethrown`(response: ClientResult.Failure<UserAccess>) {
       every {
-        mockApDeliusContextApiClient.getSummariesForCrns(listOf(OFFENDER_1_CRN))
+        mockApDeliusContextApiClient.getCaseSummaries(listOf(OFFENDER_1_CRN))
       } returns ClientResult.Success(HttpStatus.OK, CaseSummaries(emptyList()))
 
       every {
@@ -1758,7 +1758,7 @@ class OffenderServiceTest {
     @Test
     fun `single crn, case summary not found, return NotFound`() {
       every {
-        mockApDeliusContextApiClient.getSummariesForCrns(listOf(OFFENDER_1_CRN))
+        mockApDeliusContextApiClient.getCaseSummaries(listOf(OFFENDER_1_CRN))
       } returns ClientResult.Success(HttpStatus.OK, CaseSummaries(emptyList()))
 
       every {
@@ -1786,7 +1786,7 @@ class OffenderServiceTest {
         .produce()
 
       every {
-        mockApDeliusContextApiClient.getSummariesForCrns(listOf(OFFENDER_1_CRN))
+        mockApDeliusContextApiClient.getCaseSummaries(listOf(OFFENDER_1_CRN))
       } returns ClientResult.Success(HttpStatus.OK, CaseSummaries(listOf(offender1CaseSummary)))
 
       every {
@@ -1822,7 +1822,7 @@ class OffenderServiceTest {
         .produce()
 
       every {
-        mockApDeliusContextApiClient.getSummariesForCrns(listOf(OFFENDER_1_CRN))
+        mockApDeliusContextApiClient.getCaseSummaries(listOf(OFFENDER_1_CRN))
       } returns ClientResult.Success(HttpStatus.OK, CaseSummaries(listOf(offender1CaseSummary)))
 
       every {
@@ -1858,7 +1858,7 @@ class OffenderServiceTest {
         .produce()
 
       every {
-        mockApDeliusContextApiClient.getSummariesForCrns(listOf(OFFENDER_1_CRN))
+        mockApDeliusContextApiClient.getCaseSummaries(listOf(OFFENDER_1_CRN))
       } returns ClientResult.Success(HttpStatus.OK, CaseSummaries(listOf(offender1CaseSummary)))
 
       every {
@@ -1906,7 +1906,7 @@ class OffenderServiceTest {
         .produce()
 
       every {
-        mockApDeliusContextApiClient.getSummariesForCrns(listOf(OFFENDER_1_CRN))
+        mockApDeliusContextApiClient.getCaseSummaries(listOf(OFFENDER_1_CRN))
       } returns ClientResult.Success(HttpStatus.OK, CaseSummaries(listOf(offender1CaseSummary)))
 
       every {
@@ -1954,7 +1954,7 @@ class OffenderServiceTest {
         .produce()
 
       every {
-        mockApDeliusContextApiClient.getSummariesForCrns(listOf(OFFENDER_1_CRN))
+        mockApDeliusContextApiClient.getCaseSummaries(listOf(OFFENDER_1_CRN))
       } returns ClientResult.Success(HttpStatus.OK, CaseSummaries(listOf(offender1CaseSummary)))
 
       val results = offenderService.getPersonSummaryInfoResults(
@@ -1992,7 +1992,7 @@ class OffenderServiceTest {
         .produce()
 
       every {
-        mockApDeliusContextApiClient.getSummariesForCrns(listOf(OFFENDER_1_CRN, OFFENDER_2_CRN, OFFENDER_3_CRN))
+        mockApDeliusContextApiClient.getCaseSummaries(listOf(OFFENDER_1_CRN, OFFENDER_2_CRN, OFFENDER_3_CRN))
       } returns ClientResult.Success(
         HttpStatus.OK,
         CaseSummaries(
@@ -2068,11 +2068,11 @@ class OffenderServiceTest {
       val caseAccesses = crns.map { CaseAccessFactory().withCrn(it).produce() }
 
       every {
-        mockApDeliusContextApiClient.getSummariesForCrns((1..400).map { "CRN$it" })
+        mockApDeliusContextApiClient.getCaseSummaries((1..400).map { "CRN$it" })
       } returns ClientResult.Success(HttpStatus.OK, CaseSummaries(offenderSummaries.subList(0, 400)))
 
       every {
-        mockApDeliusContextApiClient.getSummariesForCrns((401..750).map { "CRN$it" })
+        mockApDeliusContextApiClient.getCaseSummaries((401..750).map { "CRN$it" })
       } returns ClientResult.Success(HttpStatus.OK, CaseSummaries(offenderSummaries.subList(400, 750)))
 
       every {

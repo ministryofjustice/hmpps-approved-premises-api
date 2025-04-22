@@ -26,7 +26,7 @@ data class CaseSummary(
 data class Name(
   val forename: String,
   val surname: String,
-  val middleNames: List<String>,
+  val middleNames: List<String> = emptyList(),
 )
 
 data class Manager(
@@ -53,12 +53,12 @@ data class Ldu(
 )
 
 data class Profile(
-  val ethnicity: String?,
-  val genderIdentity: String?,
+  val ethnicity: String? = null,
+  val genderIdentity: String? = null,
   @Deprecated("This is not currently populated by ap-delius-context")
-  val selfDescribedGender: String?,
-  val nationality: String?,
-  val religion: String?,
+  val selfDescribedGender: String? = null,
+  val nationality: String? = null,
+  val religion: String? = null,
 )
 
 data class Offence(

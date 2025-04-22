@@ -10,21 +10,18 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PersonStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PersonType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.CaseSummaryFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.InmateDetailFactory
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ProbationOffenderDetailFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.Cas2v2IntegrationTestBase
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenACas2v2DeliusUser
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenACas2v2NomisUser
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAnOffender
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.apDeliusContextAddCaseSummaryToBulkResponse
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.apDeliusContextMockCaseSummary
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.apDeliusContextMockUnsuccessfulCaseSummaryCall
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.prisonAPIMockSuccessfulInmateDetailsCall
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.probationOffenderSearchAPIMockForbiddenOffenderSearchCall
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.probationOffenderSearchAPIMockNotFoundSearchCall
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.probationOffenderSearchAPIMockServerErrorSearchCall
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.probationOffenderSearchAPIMockSuccessfulOffenderSearchCall
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.deliuscontext.Name
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.deliuscontext.Profile
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.prisonsapi.AssignedLivingUnit
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.prisonsapi.InmateStatus
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.probationoffendersearchapi.IDs
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.probationoffendersearchapi.OffenderProfile
 import java.time.LocalDate
 
 class Cas2v2PersonSearchTest : Cas2v2IntegrationTestBase() {
@@ -78,7 +75,7 @@ class Cas2v2PersonSearchTest : Cas2v2IntegrationTestBase() {
         @Test
         fun `Searching for a NOMIS ID returns Unauthorised error when it is unauthorized by the API`() {
           givenACas2v2NomisUser { _, jwt ->
-            probationOffenderSearchAPIMockForbiddenOffenderSearchCall()
+            apDeliusContextMockUnsuccessfulCaseSummaryCall(403)
 
             webTestClient.get()
               .uri("/cas2v2/people/search-by-noms/NOMS321")
@@ -92,7 +89,7 @@ class Cas2v2PersonSearchTest : Cas2v2IntegrationTestBase() {
         @Test
         fun `Searching for a NOMIS ID returns 404 error when it is not found`() {
           givenACas2v2DeliusUser { _, jwt ->
-            probationOffenderSearchAPIMockNotFoundSearchCall()
+            apDeliusContextMockUnsuccessfulCaseSummaryCall(404)
 
             webTestClient.get()
               .uri("/cas2v2/people/search-by-noms/NOMS321")
@@ -106,7 +103,7 @@ class Cas2v2PersonSearchTest : Cas2v2IntegrationTestBase() {
         @Test
         fun `Searching for a NOMIS ID returns server error when there is a server error`() {
           givenACas2v2NomisUser { _, jwt ->
-            probationOffenderSearchAPIMockServerErrorSearchCall()
+            apDeliusContextMockUnsuccessfulCaseSummaryCall()
 
             webTestClient.get()
               .uri("/cas2v2/people/search-by-noms/NOMS321")
@@ -123,16 +120,17 @@ class Cas2v2PersonSearchTest : Cas2v2IntegrationTestBase() {
         @Test
         fun `Searching for a NOMIS ID returns OK with correct body`() {
           givenACas2v2NomisUser(nomisUserDetailsConfigBlock = { withActiveCaseloadId("BRI") }) { _, jwt ->
-            val offender = ProbationOffenderDetailFactory()
-              .withOtherIds(IDs(crn = "CRN", nomsNumber = "NOMS321", pncNumber = "PNC123"))
-              .withFirstName("James")
-              .withSurname("Someone")
+            val caseSummary = CaseSummaryFactory()
+              .withCrn("CRN")
+              .withNomsId("NOMS321")
+              .withPnc("PNC123")
+              .withName(Name("James", "Someone"))
               .withDateOfBirth(
                 LocalDate
                   .parse("1985-05-05"),
               )
               .withGender("Male")
-              .withOffenderProfile(OffenderProfile(nationality = "English"))
+              .withProfile(Profile(nationality = "English"))
               .produce()
 
             val inmateDetail = InmateDetailFactory().withOffenderNo("NOMS321")
@@ -146,7 +144,7 @@ class Cas2v2PersonSearchTest : Cas2v2IntegrationTestBase() {
               )
               .produce()
 
-            probationOffenderSearchAPIMockSuccessfulOffenderSearchCall("NOMS321", listOf(offender))
+            apDeliusContextMockCaseSummary(caseSummary)
             prisonAPIMockSuccessfulInmateDetailsCall(inmateDetail = inmateDetail)
 
             webTestClient.get()
@@ -264,19 +262,6 @@ class Cas2v2PersonSearchTest : Cas2v2IntegrationTestBase() {
       inner class WhenSuccessful {
         @Test
         fun `Searching for a CRN returns OK with correct body`() {
-          probationOffenderSearchAPIMockSuccessfulOffenderSearchCall(
-            nomsNumber = "NOMS321",
-            response = listOf(
-              ProbationOffenderDetailFactory()
-                .withFirstName("James")
-                .withSurname("Someone")
-                .withOtherIds(IDs(crn = "CRN", nomsNumber = "NOMS321"))
-                .withDateOfBirth(LocalDate.parse("1985-05-05"))
-                .withGender("Male")
-                .produce(),
-            ),
-          )
-
           givenACas2v2DeliusUser { _, jwt ->
             givenAnOffender(
               offenderDetailsConfigBlock = {
