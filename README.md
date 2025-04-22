@@ -47,7 +47,8 @@ Authorization: Bearer {the JWT}
 ## Coding Notes
 
 ### Load tests
-* The Gatling load tests in this repository are now deprecated as we have migrated load tests to the new  [hmpps-load-testing-probation](https://github.com/ministryofjustice/hmpps-load-testing-probation) repo
+
+* Load tests are managed in the [hmpps-load-testing-probation](https://github.com/ministryofjustice/hmpps-load-testing-probation) repo
 
 ### Documentation
 
