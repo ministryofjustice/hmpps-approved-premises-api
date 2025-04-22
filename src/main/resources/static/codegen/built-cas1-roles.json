@@ -96,6 +96,7 @@
     "name" : "change_request_dev",
     "permissions" : [
       "cas1_change_request_list",
+      "cas1_change_request_view",
       "cas1_placement_appeal_assess",
       "cas1_placement_appeal_create",
       "cas1_planned_transfer_assess",
@@ -152,6 +153,7 @@
       "cas1_booking_create",
       "cas1_booking_withdraw",
       "cas1_change_request_list",
+      "cas1_change_request_view",
       "cas1_emergency_transfer_perform",
       "cas1_out_of_service_bed_cancel",
       "cas1_out_of_service_bed_create",

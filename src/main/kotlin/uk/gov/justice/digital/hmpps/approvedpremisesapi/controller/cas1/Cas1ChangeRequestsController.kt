@@ -13,6 +13,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1RejectChan
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.SortDirection
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserPermission
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserPermission.CAS1_CHANGE_REQUEST_LIST
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserPermission.CAS1_CHANGE_REQUEST_VIEW
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas1.ChangeRequestType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.BadRequestProblem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.NotFoundProblem
@@ -24,6 +25,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1LaoStrategy
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.cas1.Cas1ChangeRequestTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.PageCriteria
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.ensureEntityFromCasResultIsSuccess
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.extractEntityFromCasResult
 import java.util.UUID
 
 @Service
@@ -85,14 +87,24 @@ class Cas1ChangeRequestsController(
   override fun get(
     placementRequestId: UUID,
     changeRequestId: UUID,
-  ): ResponseEntity<List<Cas1ChangeRequest>> = super.get(placementRequestId, changeRequestId)
+  ): ResponseEntity<Cas1ChangeRequest> {
+    userAccessService.ensureCurrentUserHasPermission(CAS1_CHANGE_REQUEST_VIEW)
+
+    val result = extractEntityFromCasResult(cas1ChangeRequestService.getChangeRequest(placementRequestId, changeRequestId))
+
+    return ResponseEntity.ok(
+      cas1ChangeRequestTransformer.transformEntityToCas1ChangeRequest(
+        result,
+      ),
+    )
+  }
 
   override fun reject(
     placementRequestId: UUID,
     changeRequestId: UUID,
     cas1RejectChangeRequest: Cas1RejectChangeRequest,
   ): ResponseEntity<Unit> {
-    val changeRequest = cas1ChangeRequestService.getChangeRequest(changeRequestId)
+    val changeRequest = cas1ChangeRequestService.findChangeRequest(changeRequestId)
       ?: throw NotFoundProblem(changeRequestId, "ChangeRequest")
 
     when (changeRequest.type) {

@@ -24,7 +24,7 @@ class Cas1ChangeRequestEntityFactory : Factory<Cas1ChangeRequestEntity> {
   private var type = { ChangeRequestType.PLACEMENT_APPEAL }
   private var requestJson = { "{}" }
   private var requestReason = { Cas1ChangeRequestReasonEntityFactory().produce() }
-  private var decisionJson = { null }
+  private var decisionJson: Yielded<String?> = { null }
   private var decision: Yielded<ChangeRequestDecision?> = { ChangeRequestDecision.APPROVED }
   private var rejectionReason: Yielded<Cas1ChangeRequestRejectionReasonEntity?> = { null }
   private var decisionMadeByUser: Yielded<UserEntity?> = { UserEntityFactory().withDefaults().produce() }
@@ -71,6 +71,10 @@ class Cas1ChangeRequestEntityFactory : Factory<Cas1ChangeRequestEntity> {
 
   fun withRejectionReason(rejectionReason: Cas1ChangeRequestRejectionReasonEntity?) = apply {
     this.rejectionReason = { rejectionReason }
+  }
+
+  fun withDecisionJson(decisionJson: String?) = apply {
+    this.decisionJson = { decisionJson }
   }
 
   override fun produce(): Cas1ChangeRequestEntity {

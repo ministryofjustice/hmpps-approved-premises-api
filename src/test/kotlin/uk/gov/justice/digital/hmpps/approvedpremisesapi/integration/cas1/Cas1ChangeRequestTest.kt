@@ -6,10 +6,13 @@ import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.EnumSource
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1ChangeRequest
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1ChangeRequestDecision
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1ChangeRequestSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1ChangeRequestType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1NewChangeRequest
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1RejectChangeRequest
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NamedId
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.InitialiseDatabasePerClassTestBase
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.IntegrationTestBase
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenACas1Application
@@ -252,8 +255,6 @@ class Cas1ChangeRequestTest {
 
       cruManagementArea1ChangeRequest1 = givenACas1ChangeRequest(
         type = ChangeRequestType.PLACEMENT_APPEAL,
-        decision = null,
-        resolved = false,
         spaceBooking = givenACas1SpaceBooking(
           crn = placementRequest1.application.crn,
           application = placementRequest1.application,
@@ -261,18 +262,21 @@ class Cas1ChangeRequestTest {
           canonicalArrivalDate = LocalDate.of(2024, 6, 1),
           canonicalDepartureDate = LocalDate.of(2024, 6, 15),
         ),
+        resolved = false,
+        decisionJson = "{\"test\": 1}",
       )
 
       // is resolved, will be ignored
       givenACas1ChangeRequest(
         type = ChangeRequestType.PLACEMENT_APPEAL,
         decision = ChangeRequestDecision.APPROVED,
-        resolved = true,
         spaceBooking = givenACas1SpaceBooking(
           crn = placementRequest1.application.crn,
           application = placementRequest1.application,
           placementRequest = placementRequest1,
         ),
+        resolved = true,
+        decisionJson = "{\"test\": 1}",
       )
 
       cruManagementArea2 = givenACas1CruManagementArea()
@@ -294,8 +298,6 @@ class Cas1ChangeRequestTest {
 
       cruManagementArea2ChangeRequest1 = givenACas1ChangeRequest(
         type = ChangeRequestType.PLACEMENT_EXTENSION,
-        decision = null,
-        resolved = false,
         spaceBooking = givenACas1SpaceBooking(
           crn = placementRequest2.application.crn,
           application = placementRequest2.application,
@@ -303,6 +305,8 @@ class Cas1ChangeRequestTest {
           canonicalArrivalDate = LocalDate.of(2024, 3, 1),
           canonicalDepartureDate = LocalDate.of(2024, 3, 10),
         ),
+        resolved = false,
+        decisionJson = "{\"test\": 1}",
       )
 
       val placementRequest3 = givenAPlacementRequest(
@@ -322,7 +326,6 @@ class Cas1ChangeRequestTest {
 
       cruManagementArea2ChangeRequest2 = givenACas1ChangeRequest(
         type = ChangeRequestType.PLANNED_TRANSFER,
-        resolved = false,
         spaceBooking = givenACas1SpaceBooking(
           crn = placementRequest3.application.crn,
           application = placementRequest3.application,
@@ -330,6 +333,8 @@ class Cas1ChangeRequestTest {
           canonicalArrivalDate = LocalDate.of(2024, 1, 1),
           canonicalDepartureDate = LocalDate.of(2024, 1, 5),
         ),
+        resolved = false,
+        decisionJson = "{\"test\": 1}",
       )
     }
 
@@ -599,7 +604,6 @@ class Cas1ChangeRequestTest {
 
       changeRequest = givenACas1ChangeRequest(
         type = ChangeRequestType.PLACEMENT_APPEAL,
-        decision = null,
         spaceBooking = givenACas1SpaceBooking(
           crn = placementRequest1.application.crn,
           application = placementRequest1.application,
@@ -607,6 +611,7 @@ class Cas1ChangeRequestTest {
           canonicalArrivalDate = LocalDate.of(2024, 6, 1),
           canonicalDepartureDate = LocalDate.of(2024, 6, 15),
         ),
+        decisionJson = "{\"test\": 1}",
       )
 
       cruManagementArea2 = givenACas1CruManagementArea()
@@ -639,8 +644,6 @@ class Cas1ChangeRequestTest {
       changeRequest1 = givenACas1ChangeRequest(
         type = ChangeRequestType.PLACEMENT_EXTENSION,
         decision = ChangeRequestDecision.REJECTED,
-        rejectReason = extensionRejectionReason,
-        resolved = true,
         resolvedAt = LocalDateTime.of(2025, 3, 1, 15, 30).atOffset(ZoneOffset.UTC),
         spaceBooking = givenACas1SpaceBooking(
           crn = placementRequest2.application.crn,
@@ -649,6 +652,9 @@ class Cas1ChangeRequestTest {
           canonicalArrivalDate = LocalDate.of(2024, 3, 1),
           canonicalDepartureDate = LocalDate.of(2024, 3, 10),
         ),
+        rejectReason = extensionRejectionReason,
+        resolved = true,
+        decisionJson = "{\"test\": 1}",
       )
     }
 
@@ -724,6 +730,94 @@ class Cas1ChangeRequestTest {
 
       val changeRequestAfter = cas1ChangeRequestRepository.findById(changeRequest1.id).get()
       assertThat(changeRequestAfter.resolvedAt).isEqualTo(changeRequest1.resolvedAt)
+    }
+  }
+
+  @Nested
+  inner class GetChangeRequest : InitialiseDatabasePerClassTestBase() {
+
+    lateinit var cruManagementArea: Cas1CruManagementAreaEntity
+    lateinit var changeRequest: Cas1ChangeRequestEntity
+    lateinit var placementRequest1: PlacementRequestEntity
+
+    @BeforeAll
+    fun setupChangeRequests() {
+      val user = givenAUser().first
+
+      cruManagementArea = givenACas1CruManagementArea()
+
+      placementRequest1 = givenAPlacementRequest(
+        createdByUser = user,
+        application = givenACas1Application(
+          createdByUser = user,
+          offender = givenAnOffender(
+            offenderDetailsConfigBlock = {
+              withFirstName("Allan")
+              withLastName("Banks")
+            },
+          ).first.asCaseSummary(),
+          cruManagementArea = cruManagementArea,
+          tier = "A1",
+        ),
+      ).first
+
+      changeRequest = givenACas1ChangeRequest(
+        type = ChangeRequestType.PLACEMENT_APPEAL,
+        decision = ChangeRequestDecision.APPROVED,
+        decisionJson = "{\"test\": 1}",
+        spaceBooking = givenACas1SpaceBooking(
+          crn = placementRequest1.application.crn,
+          application = placementRequest1.application,
+          placementRequest = placementRequest1,
+          canonicalArrivalDate = LocalDate.of(2024, 6, 1),
+          canonicalDepartureDate = LocalDate.of(2024, 6, 15),
+        ),
+      )
+    }
+
+    @ParameterizedTest
+    @EnumSource(mode = EnumSource.Mode.EXCLUDE, names = ["CAS1_CHANGE_REQUEST_DEV", "CAS1_JANITOR"])
+    fun `Get change request without a valid role returns 403`(role: UserRole) {
+      val (_, jwt) = givenAUser(roles = listOf(role))
+
+      webTestClient.get()
+        .uri("/cas1/placement-request/${placementRequest1.id}/change-requests/${changeRequest.id}")
+        .header("Authorization", "Bearer $jwt")
+        .exchange()
+        .expectStatus()
+        .isForbidden
+    }
+
+    @Test
+    fun `get change request without JWT returns 401`() {
+      webTestClient.get()
+        .uri("/cas1/placement-request/${placementRequest1.id}/change-requests/${changeRequest.id}")
+        .exchange()
+        .expectStatus()
+        .isUnauthorized
+    }
+
+    @Test
+    fun `return 200 when successfully get change request`() {
+      val (_, jwt) = givenAUser(roles = listOf(CAS1_CHANGE_REQUEST_DEV))
+
+      val response = webTestClient.get()
+        .uri("/cas1/placement-request/${placementRequest1.id}/change-requests/${changeRequest.id}")
+        .header("Authorization", "Bearer $jwt")
+        .exchange()
+        .expectStatus()
+        .isOk
+        .returnResult(Cas1ChangeRequest::class.java).responseBody.blockFirst()!!
+
+      val changeRequestEntity = cas1ChangeRequestRepository.findById(changeRequest.id).get()
+      assertThat(response.id).isEqualTo(changeRequestEntity.id)
+      assertThat(response.type).isEqualTo(Cas1ChangeRequestType.valueOf(changeRequestEntity.type.name))
+      assertThat(response.requestReason).isEqualTo(NamedId(changeRequestEntity.requestReason.id, changeRequestEntity.requestReason.code))
+      assertThat(response.rejectionReason).isNull()
+      assertThat(response.createdAt).isEqualTo(changeRequestEntity.createdAt.toInstant())
+      assertThat(response.updatedAt).isEqualTo(changeRequestEntity.updatedAt.toInstant())
+      assertThat(response.decision).isEqualTo(Cas1ChangeRequestDecision.APPROVED)
+      assertThat(objectMapper.writeValueAsString(response.decisionJson)).isEqualTo("{\"test\":1}")
     }
   }
 }

@@ -1267,31 +1267,16 @@ components:
         id:
           type: string
           format: uuid
-        person:
-          $ref: "_shared.yml#/components/schemas/PersonSummary"
         type:
           $ref: '#/components/schemas/Cas1ChangeRequestType'
         createdAt:
           type: string
           format: date-time
-        tier:
-          type: string
-        expectedArrivalDate:
-          type: string
-          format: date
-        actualArrivalDate:
-          type: string
-          format: date
-        lengthOfStayDays:
-          description: Current placement's length of stay, using canonical arrival date
-          type: integer
         requestReason:
           $ref: '_shared.yml#/components/schemas/NamedId'
         decision:
           $ref: '#/components/schemas/Cas1ChangeRequestDecision'
         decisionJson:
-          type: object
-          additionalProperties:
             $ref: '_shared.yml#/components/schemas/Unit'
         rejectionReason:
           $ref: '_shared.yml#/components/schemas/NamedId'
@@ -1300,11 +1285,8 @@ components:
           format: date-time
       required:
         - id
-        - person
         - type
         - createdAt
-        - requestedArrivalDate
-        - lengthOfStayDays
         - requestReason
         - updatedAt
     Cas1RejectChangeRequest:
