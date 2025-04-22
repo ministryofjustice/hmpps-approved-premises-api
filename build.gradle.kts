@@ -6,7 +6,6 @@ plugins {
   kotlin("plugin.spring") version "2.1.10"
   kotlin("plugin.jpa") version "2.1.10"
   id("org.openapi.generator") version "7.11.0"
-  id("io.gatling.gradle") version "3.13.1"
   id("io.gitlab.arturbosch.detekt") version "1.23.7"
   id("org.owasp.dependencycheck") version "12.1.0"
 }
@@ -86,8 +85,6 @@ dependencies {
   implementation("uk.gov.justice.service.hmpps:hmpps-sqs-spring-boot-starter:5.3.2")
 
   implementation("uk.gov.service.notify:notifications-java-client:5.2.1-RELEASE")
-
-  gatlingImplementation("org.springframework.boot:spring-boot-starter-webflux")
 }
 
 springBoot {
@@ -464,10 +461,6 @@ tasks {
 }
 
 tasks.getByName("runKtlintCheckOverMainSourceSet").dependsOn("openApiGenerate", "openApiGenerateCas1DomainEvents")
-
-gatling {
-  gatlingVersion = "3.12.0"
-}
 
 detekt {
   config.setFrom("./detekt.yml")
