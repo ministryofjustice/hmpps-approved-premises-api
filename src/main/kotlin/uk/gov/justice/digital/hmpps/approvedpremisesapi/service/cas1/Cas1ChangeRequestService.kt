@@ -1,6 +1,5 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1
 
-import com.fasterxml.jackson.databind.ObjectMapper
 import jakarta.transaction.Transactional
 import org.springframework.data.repository.findByIdOrNull
 import org.springframework.stereotype.Service
@@ -31,7 +30,6 @@ class Cas1ChangeRequestService(
   private val cas1ChangeRequestRepository: Cas1ChangeRequestRepository,
   private val placementRequestRepository: PlacementRequestRepository,
   private val cas1ChangeRequestReasonRepository: Cas1ChangeRequestReasonRepository,
-  private val objectMapper: ObjectMapper,
   private val cas1SpaceBookingRepository: Cas1SpaceBookingRepository,
   private val lockableCas1ChangeRequestEntityRepository: LockableCas1ChangeRequestRepository,
   private val cas1ChangeRequestRejectionReasonRepository: Cas1ChangeRequestRejectionReasonRepository,
@@ -50,7 +48,16 @@ class Cas1ChangeRequestService(
     if (!placementRequest.spaceBookings.contains(spaceBooking)) return CasResult.NotFound("Placement Request with Space Booking", spaceBooking.id.toString())
 
     if (cas1NewChangeRequest.type == Cas1ChangeRequestType.PLANNED_TRANSFER) {
-      spaceBooking.actualArrivalDate ?: return CasResult.GeneralValidationError("Associated space booking does not have an actual arrival date")
+      if (!spaceBooking.hasArrival()) return CasResult.GeneralValidationError("Associated space booking has not been marked as arrived")
+      if (spaceBooking.hasNonArrival()) return CasResult.GeneralValidationError("Associated space booking has been marked as non arrived")
+      if (spaceBooking.hasDeparted()) return CasResult.GeneralValidationError("Associated space booking has been marked as departed")
+      if (spaceBooking.isCancelled()) return CasResult.GeneralValidationError("Associated space booking has been cancelled")
+    }
+
+    if (cas1NewChangeRequest.type == Cas1ChangeRequestType.PLACEMENT_APPEAL) {
+      if (spaceBooking.hasArrival()) return CasResult.GeneralValidationError("Associated space booking has been marked as arrived")
+      if (spaceBooking.hasNonArrival()) return CasResult.GeneralValidationError("Associated space booking has been marked as non arrived")
+      if (spaceBooking.isCancelled()) return CasResult.GeneralValidationError("Associated space booking has been cancelled")
     }
 
     val now = OffsetDateTime.now()
@@ -61,7 +68,7 @@ class Cas1ChangeRequestService(
         placementRequest = placementRequest,
         spaceBooking = spaceBooking,
         type = ChangeRequestType.valueOf(cas1NewChangeRequest.type.name),
-        requestJson = objectMapper.writeValueAsString(cas1NewChangeRequest.requestJson),
+        requestJson = cas1NewChangeRequest.requestJson.toString(),
         requestReason = requestReason,
         decisionJson = null,
         decision = null,
