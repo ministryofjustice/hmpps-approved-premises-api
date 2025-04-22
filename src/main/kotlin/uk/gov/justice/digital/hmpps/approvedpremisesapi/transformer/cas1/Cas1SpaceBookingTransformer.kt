@@ -190,6 +190,7 @@ class Cas1SpaceBookingTransformer(
       Cas1SpaceCharacteristic.entries.find { it.name == criteria.propertyName }
     },
     deliusEventNumber = spaceBooking.deliusEventNumber,
+    isCancelled = spaceBooking.isCancelled(),
   )
 
   fun transformSearchResultToSummary(
@@ -238,7 +239,7 @@ class Cas1SpaceBookingTransformer(
       Cas1SpaceCharacteristic.entries.find { it.name == propertyName }
     } ?: listOf(),
     deliusEventNumber = searchResult.deliusEventNumber,
-
+    isCancelled = searchResult.cancelled,
   )
 
   companion object {
