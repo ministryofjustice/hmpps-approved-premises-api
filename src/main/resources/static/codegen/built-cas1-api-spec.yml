@@ -6858,6 +6858,8 @@ components:
           default: []
         deliusEventNumber:
           type: string
+        isCancelled:
+          type: boolean
       required:
         - id
         - person
@@ -6867,6 +6869,7 @@ components:
         - characteristics
         - expectedArrivalDate
         - expectedDepartureDate
+        - isCancelled
     Cas1KeyWorkerAllocation:
       type: object
       properties:

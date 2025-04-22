@@ -8,6 +8,8 @@ import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.extension.ExtendWith
+import org.junit.jupiter.params.ParameterizedTest
+import org.junit.jupiter.params.provider.CsvSource
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.CancellationReason
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1SpaceBookingSummaryStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1SpaceCharacteristic
@@ -316,8 +318,9 @@ class Cas1SpaceBookingTransformerTest {
   @Nested
   inner class TransformToSummary {
 
-    @Test
-    fun success() {
+    @ParameterizedTest
+    @CsvSource("true,false")
+    fun success(cancelled: Boolean) {
       val id = UUID.randomUUID()
 
       val personSummaryInfo = PersonSummaryInfoResult.Success.Restricted("the crn", "the noms")
@@ -366,6 +369,13 @@ class Cas1SpaceBookingTransformerTest {
           .withKeyworkerAssignedAt(LocalDateTime.of(2023, 12, 12, 0, 0, 0).toInstant(ZoneOffset.UTC))
           .withKeyworkerName("the keyworker name")
           .withDeliusEventNumber("event8")
+          .withCancellationOccurredAt(
+            if (cancelled) {
+              LocalDate.now()
+            } else {
+              null
+            },
+          )
           .produce(),
         personSummaryInfo,
       )
@@ -391,6 +401,7 @@ class Cas1SpaceBookingTransformerTest {
       assertThat(result.keyWorkerAllocation!!.keyWorker.code).isEqualTo("the staff code")
       assertThat(result.status).isEqualTo(Cas1SpaceBookingSummaryStatus.departed)
       assertThat(result.deliusEventNumber).isEqualTo("event8")
+      assertThat(result.isCancelled).isEqualTo(cancelled)
     }
   }
 
@@ -431,6 +442,7 @@ class Cas1SpaceBookingTransformerTest {
           keyWorkerName = "the keyworker name",
           characteristicsPropertyNames = "hasTurningSpace,isCatered",
           deliusEventNumber = "event8",
+          cancelled = true,
         ),
         premises,
         personSummaryInfo,
@@ -457,6 +469,7 @@ class Cas1SpaceBookingTransformerTest {
       assertThat(result.keyWorkerAllocation!!.keyWorker.code).isEqualTo("the staff code")
       assertThat(result.status).isEqualTo(Cas1SpaceBookingSummaryStatus.departed)
       assertThat(result.deliusEventNumber).isEqualTo("event8")
+      assertThat(result.isCancelled).isTrue()
     }
 
     @Test
@@ -491,6 +504,7 @@ class Cas1SpaceBookingTransformerTest {
           keyWorkerName = null,
           characteristicsPropertyNames = null,
           deliusEventNumber = "event8",
+          cancelled = false,
         ),
         premises = ApprovedPremisesEntityFactory().withDefaults().produce(),
         personSummaryInfo,
@@ -498,6 +512,7 @@ class Cas1SpaceBookingTransformerTest {
 
       assertThat(result.id).isEqualTo(id)
       assertThat(result.keyWorkerAllocation).isNull()
+      assertThat(result.isCancelled).isFalse()
     }
   }
 }
@@ -520,6 +535,7 @@ data class Cas1SpaceBookingSearchResultImpl(
   override val keyWorkerName: String?,
   override val characteristicsPropertyNames: String?,
   override val deliusEventNumber: String?,
+  override val cancelled: Boolean,
 ) : Cas1SpaceBookingSearchResult
 
 data class Cas1SpaceBookingAtPremisesImpl(

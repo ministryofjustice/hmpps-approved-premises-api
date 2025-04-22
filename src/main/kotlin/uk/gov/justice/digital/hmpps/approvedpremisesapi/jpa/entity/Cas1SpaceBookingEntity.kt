@@ -135,6 +135,7 @@ interface Cas1SpaceBookingRepository : JpaRepository<Cas1SpaceBookingEntity, UUI
           ELSE offline_app.name
         END AS personName,
         b.delius_event_number AS deliusEventNumber,
+        b.cancellation_occurred_at IS NOT NULL AS cancelled,
         $SPACE_BOOKING_SUMMARY_CHARACTERISTICS_SUBQUERY
         $SPACE_BOOKING_SUMMARY_JOIN_CLAUSE
         $SPACE_BOOKING_SUMMARY_WHERE_CLAUSE
@@ -302,6 +303,7 @@ interface Cas1SpaceBookingSearchResult {
   val keyWorkerName: String?
   val characteristicsPropertyNames: String?
   val deliusEventNumber: String?
+  val cancelled: Boolean
 }
 
 interface Cas1SpaceBookingAtPremises {
