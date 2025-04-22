@@ -318,7 +318,7 @@ jobs:
       - run:
           name: Run E2E tests
           command: |
-            export ASSESSOR_USERNAME=${E2E_USER_CAS3_ASSESSOR_USERNAME} ASSESSOR_PASSWORD=${E2E_USER_CAS3_ASSESSOR_PASSWORD} REFERRER_USERNAME=${E2E_USER_CAS3_REFERRER_USERNAME} REFERRER_PASSWORD=${E2E_USER_CAS3_REFERRER_PASSWORD} ENVIRONMENT=${CYPRESS_ENVIRONMENT_<< parameters.environment >>} DEV_PLAYWRIGHT_BASE_URL=https://transitional-accommodation-<< parameters.environment >>.hmpps.service.justice.gov.uk
+            export ASSESSOR_USERNAME=${CAS3_E2E_ASSESSOR_USERNAME} ASSESSOR_PASSWORD=${CAS3_E2E_ASSESSOR_PASSWORD} REFERRER_USERNAME=${CAS3_E2E_REFERRER_USERNAME} REFERRER_PASSWORD=${CAS3_E2E_REFERRER_PASSWORD} ENVIRONMENT=${CYPRESS_ENVIRONMENT_<< parameters.environment >>} DEV_PLAYWRIGHT_BASE_URL=https://transitional-accommodation-<< parameters.environment >>.hmpps.service.justice.gov.uk
             npm run test:playwright:e2e:ci
       - store_artifacts:
           path: e2e_playwright/playwright-report
