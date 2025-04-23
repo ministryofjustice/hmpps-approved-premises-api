@@ -44,7 +44,7 @@ permissions:
 
 jobs:
   integration_test:
-    name
+    name: Integration Test
     runs-on: ubuntu-latest
     # Label used to access the service container
     services:
