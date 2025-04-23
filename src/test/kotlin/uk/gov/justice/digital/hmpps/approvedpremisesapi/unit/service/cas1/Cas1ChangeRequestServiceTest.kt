@@ -27,6 +27,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas1.ChangeRe
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas1.ChangeRequestType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas1.LockableCas1ChangeRequestEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas1.LockableCas1ChangeRequestRepository
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.CasResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1ChangeRequestService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.unit.util.assertThatCasResult
 import java.time.LocalDate
@@ -486,6 +487,48 @@ class Cas1ChangeRequestServiceTest {
       assertThat(savedChangeRequest.rejectionReason).isEqualTo(rejectionReason)
       assertThat(savedChangeRequest.resolved).isTrue()
       assertThat(savedChangeRequest.resolvedAt).isNotNull()
+    }
+  }
+
+  @Nested
+  inner class GetChangeRequest {
+
+    @Test
+    fun `throw not found error if change request with the given ID doesn't exist`() {
+      val placementRequest = PlacementRequestEntityFactory().withDefaults().produce()
+      every { cas1ChangeRequestRepository.findByIdOrNull(any()) } returns null
+
+      val result = service.getChangeRequest(placementRequest.id, UUID.randomUUID())
+
+      assertThat(result).isInstanceOf(CasResult.NotFound::class.java)
+      assertThat((result as CasResult.NotFound).entityType).isEqualTo("Change Request")
+    }
+
+    @Test
+    fun `throw validation error when change request associated with different placement request`() {
+      val placementRequest = PlacementRequestEntityFactory().withDefaults().produce()
+      val cas1ChangeRequest = Cas1ChangeRequestEntityFactory().withPlacementRequest(placementRequest).produce()
+
+      every { cas1ChangeRequestRepository.findByIdOrNull(any()) } returns cas1ChangeRequest
+
+      val result = service.getChangeRequest(UUID.randomUUID(), cas1ChangeRequest.id)
+
+      assertThat(result).isInstanceOf(CasResult.GeneralValidationError::class.java)
+      assertThatCasResult(result).isGeneralValidationError("The change request does not belong to the specified placement request")
+    }
+
+    @Test
+    fun `returns success for a valid change request id`() {
+      val placementRequest = PlacementRequestEntityFactory().withDefaults().produce()
+      val cas1ChangeRequest = Cas1ChangeRequestEntityFactory().withPlacementRequest(placementRequest).produce()
+
+      every { cas1ChangeRequestRepository.findByIdOrNull(any()) } returns cas1ChangeRequest
+
+      val result = service.getChangeRequest(placementRequest.id, cas1ChangeRequest.id)
+
+      assertThatCasResult(result).isSuccess()
+
+      assertThat((result as CasResult.Success).value).isEqualTo(cas1ChangeRequest)
     }
   }
 }

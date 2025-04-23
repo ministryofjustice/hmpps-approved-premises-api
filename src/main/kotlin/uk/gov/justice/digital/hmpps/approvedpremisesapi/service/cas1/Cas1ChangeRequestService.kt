@@ -107,7 +107,7 @@ class Cas1ChangeRequestService(
   ): CasResult<Unit> = validatedCasResult {
     lockableCas1ChangeRequestEntityRepository.acquirePessimisticLock(changeRequestId)
 
-    val changeRequestWithLock = getChangeRequest(changeRequestId)!!
+    val changeRequestWithLock = findChangeRequest(changeRequestId)!!
 
     if (changeRequestWithLock.placementRequest.id != placementRequestId) {
       return CasResult.GeneralValidationError("The change request does not belong to the specified placement request")
@@ -132,6 +132,19 @@ class Cas1ChangeRequestService(
     return Success(Unit)
   }
 
+  fun getChangeRequest(
+    placementRequestId: UUID,
+    changeRequestId: UUID,
+  ): CasResult<Cas1ChangeRequestEntity> {
+    val changeRequest = findChangeRequest(changeRequestId) ?: return CasResult.NotFound("Change Request", changeRequestId.toString())
+
+    if (changeRequest.placementRequest.id != placementRequestId) {
+      return CasResult.GeneralValidationError("The change request does not belong to the specified placement request")
+    }
+
+    return Success(changeRequest)
+  }
+
   fun spaceBookingWithdrawn(spaceBooking: Cas1SpaceBookingEntity) = cas1ChangeRequestRepository.findAllBySpaceBookingAndResolvedIsFalse(spaceBooking).forEach { it.resolve() }
 
   private fun Cas1ChangeRequestEntity.resolve() {
@@ -139,5 +152,5 @@ class Cas1ChangeRequestService(
     this.resolvedAt = OffsetDateTime.now()
   }
 
-  fun getChangeRequest(changeRequestId: UUID): Cas1ChangeRequestEntity? = cas1ChangeRequestRepository.findByIdOrNull(changeRequestId)
+  fun findChangeRequest(changeRequestId: UUID): Cas1ChangeRequestEntity? = cas1ChangeRequestRepository.findByIdOrNull(changeRequestId)
 }

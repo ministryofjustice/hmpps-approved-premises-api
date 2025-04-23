@@ -2014,6 +2014,7 @@ class Cas1SpaceBookingTest {
           type = ChangeRequestType.PLACEMENT_APPEAL,
           spaceBooking = spaceBooking,
           resolved = false,
+          decisionJson = "{\"test\": 1}",
         )
       }
     }

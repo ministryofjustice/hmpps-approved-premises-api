@@ -117,9 +117,7 @@ paths:
           content:
             'application/json':
               schema:
-                type: array
-                items:
-                  $ref: '#/components/schemas/Cas1ChangeRequest'
+                $ref: '#/components/schemas/Cas1ChangeRequest'
         401:
           $ref: '#/components/responses/401Response'
         403:
@@ -5343,6 +5341,7 @@ components:
         - cas1_booking_change_dates
         - cas1_booking_withdraw
         - cas1_change_request_list
+        - cas1_change_request_view
         - cas1_out_of_service_bed_create
         - cas1_out_of_service_bed_create_bed_on_hold
         - cas1_out_of_service_bed_cancel
@@ -8161,31 +8160,16 @@ components:
         id:
           type: string
           format: uuid
-        person:
-          $ref: "#/components/schemas/PersonSummary"
         type:
           $ref: '#/components/schemas/Cas1ChangeRequestType'
         createdAt:
           type: string
           format: date-time
-        tier:
-          type: string
-        expectedArrivalDate:
-          type: string
-          format: date
-        actualArrivalDate:
-          type: string
-          format: date
-        lengthOfStayDays:
-          description: Current placement's length of stay, using canonical arrival date
-          type: integer
         requestReason:
           $ref: '#/components/schemas/NamedId'
         decision:
           $ref: '#/components/schemas/Cas1ChangeRequestDecision'
         decisionJson:
-          type: object
-          additionalProperties:
             $ref: '#/components/schemas/Unit'
         rejectionReason:
           $ref: '#/components/schemas/NamedId'
@@ -8194,11 +8178,8 @@ components:
           format: date-time
       required:
         - id
-        - person
         - type
         - createdAt
-        - requestedArrivalDate
-        - lengthOfStayDays
         - requestReason
         - updatedAt
     Cas1RejectChangeRequest:
