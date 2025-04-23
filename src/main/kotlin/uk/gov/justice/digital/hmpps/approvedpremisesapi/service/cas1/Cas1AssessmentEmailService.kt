@@ -2,7 +2,7 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1
 
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.config.NotifyConfig
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.config.Cas1NotifyTemplates
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesAssessmentEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserEntity
@@ -17,7 +17,6 @@ import java.util.UUID
 @Service
 class Cas1AssessmentEmailService(
   private val emailNotifier: Cas1EmailNotifier,
-  private val notifyConfig: NotifyConfig,
   private val workingDayService: WorkingDayService,
   @Value("\${url-templates.frontend.assessment}") private val assessmentUrlTemplate: UrlTemplate,
   @Value("\${url-templates.frontend.application}") private val applicationUrlTemplate: UrlTemplate,
@@ -34,7 +33,7 @@ class Cas1AssessmentEmailService(
     allocatedUser.email?.let { email ->
       emailNotifier.sendEmail(
         recipientEmailAddress = email,
-        templateId = notifyConfig.templates.assessmentAllocated,
+        templateId = Cas1NotifyTemplates.ASSESSMENT_ALLOCATED,
         personalisation = mapOf(
           "name" to allocatedUser.name,
           "assessmentUrl" to assessmentUrlTemplate.resolve("id", assessmentId.toString()),
@@ -54,7 +53,7 @@ class Cas1AssessmentEmailService(
     deallocatedUserEntity.email?.let { email ->
       emailNotifier.sendEmail(
         recipientEmailAddress = email,
-        templateId = notifyConfig.templates.assessmentDeallocated,
+        templateId = Cas1NotifyTemplates.ASSESSMENT_DEALLOCATED,
         personalisation = mapOf(
           "name" to deallocatedUserEntity.name,
           "assessmentUrl" to assessmentUrlTemplate.resolve("id", assessmentId.toString()),
@@ -69,7 +68,7 @@ class Cas1AssessmentEmailService(
     application.createdByUser.email?.let { email ->
       emailNotifier.sendEmail(
         recipientEmailAddress = email,
-        templateId = notifyConfig.templates.assessmentAccepted,
+        templateId = Cas1NotifyTemplates.ASSESSMENT_ACCEPTED,
         personalisation = mapOf(
           "name" to application.createdByUser.name,
           "applicationUrl" to applicationUrlTemplate.resolve("id", application.id.toString()),
@@ -84,7 +83,7 @@ class Cas1AssessmentEmailService(
     application.createdByUser.email?.let { email ->
       emailNotifier.sendEmail(
         recipientEmailAddress = email,
-        templateId = notifyConfig.templates.assessmentRejected,
+        templateId = Cas1NotifyTemplates.ASSESSMENT_REJECTED,
         personalisation = mapOf(
           "name" to application.createdByUser.name,
           "applicationUrl" to applicationUrlTemplate.resolve("id", application.id.toString()),
@@ -99,7 +98,7 @@ class Cas1AssessmentEmailService(
     allocatedUser.email?.let { email ->
       emailNotifier.sendEmail(
         recipientEmailAddress = email,
-        templateId = notifyConfig.templates.appealedAssessmentAllocated,
+        templateId = Cas1NotifyTemplates.APPEALED_ASSESSMENT_ALLOCATED,
         personalisation = mapOf(
           "name" to allocatedUser.name,
           "assessmentUrl" to assessmentUrlTemplate.resolve("id", assessmentId.toString()),
@@ -120,7 +119,7 @@ class Cas1AssessmentEmailService(
       assessment.allocatedToUser?.email?.let { email ->
         emailNotifier.sendEmail(
           recipientEmailAddress = email,
-          templateId = notifyConfig.templates.assessmentWithdrawnV2,
+          templateId = Cas1NotifyTemplates.ASSESSMENT_WITHDRAWN_V2,
           personalisation = mapOf(
             "applicationUrl" to applicationUrlTemplate.resolve("id", assessment.application.id.toString()),
             "applicationTimelineUrl" to applicationTimelineUrlTemplate.resolve("applicationId", assessment.application.id.toString()),

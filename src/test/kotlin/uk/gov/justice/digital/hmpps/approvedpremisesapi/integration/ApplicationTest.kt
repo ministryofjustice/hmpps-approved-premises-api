@@ -44,6 +44,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.UpdateApplicat
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.UpdateApprovedPremisesApplication
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.WithdrawalReason
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.toHttpStatus
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.config.Cas1NotifyTemplates
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.CaseAccessFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.CaseDetailFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.NeedsDetailsFactory
@@ -1290,7 +1291,7 @@ class ApplicationTest : IntegrationTestBase() {
       emailAsserter.assertEmailsRequestedCount(1)
       emailAsserter.assertEmailRequested(
         toEmailAddress = submittingUser.email!!,
-        templateId = notifyConfig.templates.applicationSubmitted,
+        templateId = Cas1NotifyTemplates.APPLICATION_SUBMITTED,
         replyToEmailId = persistedApplication.cruManagementArea!!.notifyReplyToEmailId,
       )
     }
@@ -1398,7 +1399,7 @@ class ApplicationTest : IntegrationTestBase() {
       emailAsserter.assertEmailsRequestedCount(1)
       emailAsserter.assertEmailRequested(
         toEmailAddress = submittingUser.email!!,
-        templateId = notifyConfig.templates.applicationSubmitted,
+        templateId = Cas1NotifyTemplates.APPLICATION_SUBMITTED,
         replyToEmailId = persistedApplication.cruManagementArea!!.notifyReplyToEmailId,
       )
     }
@@ -1506,12 +1507,12 @@ class ApplicationTest : IntegrationTestBase() {
       emailAsserter.assertEmailsRequestedCount(2)
       emailAsserter.assertEmailRequested(
         toEmailAddress = createdAssessment.allocatedToUser!!.email!!,
-        templateId = notifyConfig.templates.assessmentAllocated,
+        templateId = Cas1NotifyTemplates.ASSESSMENT_ALLOCATED,
         replyToEmailId = persistedApplication.cruManagementArea!!.notifyReplyToEmailId,
       )
       emailAsserter.assertEmailRequested(
         toEmailAddress = submittingUser.email!!,
-        templateId = notifyConfig.templates.applicationSubmitted,
+        templateId = Cas1NotifyTemplates.APPLICATION_SUBMITTED,
         replyToEmailId = persistedApplication.cruManagementArea!!.notifyReplyToEmailId,
       )
     }
@@ -1602,12 +1603,12 @@ class ApplicationTest : IntegrationTestBase() {
       emailAsserter.assertEmailsRequestedCount(2)
       emailAsserter.assertEmailRequested(
         toEmailAddress = createdAssessment.allocatedToUser!!.email!!,
-        templateId = notifyConfig.templates.assessmentAllocated,
+        templateId = Cas1NotifyTemplates.ASSESSMENT_ALLOCATED,
         replyToEmailId = overriddenApArea.defaultCruManagementArea.notifyReplyToEmailId,
       )
       emailAsserter.assertEmailRequested(
         toEmailAddress = submittingUser.email!!,
-        templateId = notifyConfig.templates.applicationSubmitted,
+        templateId = Cas1NotifyTemplates.APPLICATION_SUBMITTED,
         replyToEmailId = persistedApplication.cruManagementArea!!.notifyReplyToEmailId,
       )
     }
@@ -1686,12 +1687,12 @@ class ApplicationTest : IntegrationTestBase() {
       emailAsserter.assertEmailsRequestedCount(2)
       emailAsserter.assertEmailRequested(
         toEmailAddress = createdAssessment.allocatedToUser!!.email!!,
-        templateId = notifyConfig.templates.assessmentAllocated,
+        templateId = Cas1NotifyTemplates.ASSESSMENT_ALLOCATED,
         replyToEmailId = persistedApplication.cruManagementArea!!.notifyReplyToEmailId,
       )
       emailAsserter.assertEmailRequested(
         toEmailAddress = submittingUser.email!!,
-        templateId = notifyConfig.templates.applicationSubmitted,
+        templateId = Cas1NotifyTemplates.APPLICATION_SUBMITTED,
         replyToEmailId = persistedApplication.cruManagementArea!!.notifyReplyToEmailId,
       )
     }
@@ -1969,7 +1970,7 @@ class ApplicationTest : IntegrationTestBase() {
         emailAsserter.assertEmailsRequestedCount(1)
         emailAsserter.assertEmailRequested(
           user.email!!,
-          notifyConfig.templates.applicationWithdrawnV2,
+          Cas1NotifyTemplates.APPLICATION_WITHDRAWN_V2,
         )
       }
     }
@@ -2011,11 +2012,11 @@ class ApplicationTest : IntegrationTestBase() {
           emailAsserter.assertEmailsRequestedCount(2)
           emailAsserter.assertEmailRequested(
             applicant.email!!,
-            notifyConfig.templates.applicationWithdrawnV2,
+            Cas1NotifyTemplates.APPLICATION_WITHDRAWN_V2,
           )
           emailAsserter.assertEmailRequested(
             assessor.email!!,
-            notifyConfig.templates.assessmentWithdrawnV2,
+            Cas1NotifyTemplates.ASSESSMENT_WITHDRAWN_V2,
           )
         }
       }

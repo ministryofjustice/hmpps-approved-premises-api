@@ -15,6 +15,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1TimelineEv
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1TimelineEventUrlType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewAppeal
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.config.Cas1NotifyTemplates
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAUser
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAnApplication
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAnAssessmentForApprovedPremises
@@ -350,7 +351,7 @@ class AppealsTest : InitialiseDatabasePerClassTestBase() {
           assertThat(applicationBody.assessmentDecisionDate).isEqualTo(assessment.submittedAt!!.toLocalDate())
 
           emailAsserter.assertEmailsRequestedCount(1)
-          emailAsserter.assertEmailRequested(application.createdByUser.email!!, notifyConfig.templates.appealReject)
+          emailAsserter.assertEmailRequested(application.createdByUser.email!!, Cas1NotifyTemplates.APPLICATION_APPEAL_REJECTED)
 
           val assessments = assessmentTestRepository.findAllByApplication(application)
           assertThat(assessments.size).isEqualTo(1)
@@ -414,10 +415,10 @@ class AppealsTest : InitialiseDatabasePerClassTestBase() {
           assertThat(newAssessment.allocatedToUser!!.id).isEqualTo(userEntity.id)
 
           emailAsserter.assertEmailsRequestedCount(3)
-          emailAsserter.assertEmailRequested(userEntity.email!!, notifyConfig.templates.appealSuccess)
-          emailAsserter.assertEmailRequested(application.createdByUser.email!!, notifyConfig.templates.appealSuccess)
+          emailAsserter.assertEmailRequested(userEntity.email!!, Cas1NotifyTemplates.APPLICATION_APPEAL_SUCCESS)
+          emailAsserter.assertEmailRequested(application.createdByUser.email!!, Cas1NotifyTemplates.APPLICATION_APPEAL_SUCCESS)
 
-          emailAsserter.assertEmailRequested(userEntity.email!!, notifyConfig.templates.appealedAssessmentAllocated)
+          emailAsserter.assertEmailRequested(userEntity.email!!, Cas1NotifyTemplates.APPEALED_ASSESSMENT_ALLOCATED)
         }
       }
     }

@@ -2,7 +2,7 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.unit.service.cas1
 
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.config.NotifyConfig
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.config.Cas1NotifyTemplates
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApAreaEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApprovedPremisesApplicationEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.Cas1ApplicationUserDetailsEntityFactory
@@ -23,12 +23,10 @@ class Cas1ApplicationEmailServiceTest {
     const val CRN = "CRN123"
   }
 
-  private val notifyConfig = NotifyConfig()
   private val mockEmailNotificationService = MockCas1EmailNotificationService()
 
   private val service = Cas1ApplicationEmailService(
     emailNotifier = mockEmailNotificationService,
-    notifyConfig = notifyConfig,
     applicationUrlTemplate = UrlTemplate("http://frontend/applications/#id"),
     applicationTimelineUrlTemplate = UrlTemplate("http://frontend/applications/#applicationId?tab=timeline"),
   )
@@ -68,7 +66,7 @@ class Cas1ApplicationEmailServiceTest {
 
       mockEmailNotificationService.assertEmailRequested(
         TestConstants.APPLICANT_EMAIL,
-        notifyConfig.templates.applicationSubmitted,
+        Cas1NotifyTemplates.APPLICATION_SUBMITTED,
         personalisation,
         application,
       )
@@ -121,7 +119,7 @@ class Cas1ApplicationEmailServiceTest {
 
       mockEmailNotificationService.assertEmailRequested(
         TestConstants.APPLICANT_EMAIL,
-        notifyConfig.templates.applicationWithdrawnV2,
+        Cas1NotifyTemplates.APPLICATION_WITHDRAWN_V2,
         personalisation,
         application,
       )
@@ -146,13 +144,13 @@ class Cas1ApplicationEmailServiceTest {
 
       mockEmailNotificationService.assertEmailRequested(
         TestConstants.APPLICANT_EMAIL,
-        notifyConfig.templates.applicationWithdrawnV2,
+        Cas1NotifyTemplates.APPLICATION_WITHDRAWN_V2,
         personalisation,
         application,
       )
       mockEmailNotificationService.assertEmailRequested(
         CASE_MANAGER_EMAIL,
-        notifyConfig.templates.applicationWithdrawnV2,
+        Cas1NotifyTemplates.APPLICATION_WITHDRAWN_V2,
         personalisation,
         application,
       )

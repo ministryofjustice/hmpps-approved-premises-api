@@ -5,6 +5,7 @@ import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
 import org.springframework.data.repository.findByIdOrNull
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.SeedFileType
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.config.Cas1NotifyTemplates
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.PlacementApplicationEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.PlacementRequestEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenACas1CruManagementArea
@@ -128,7 +129,7 @@ class SeedCas1WithdrawPlacementRequestsTest : SeedTestBase() {
 
   private fun assertMatchRequestWithdrawnEmail(emailAddress: String, placementRequest: PlacementRequestEntity) = emailAsserter.assertEmailRequested(
     emailAddress,
-    notifyConfig.templates.matchRequestWithdrawnV2,
+    Cas1NotifyTemplates.MATCH_REQUEST_WITHDRAWN_V2,
     mapOf("startDate" to placementRequest.expectedArrival.toString()),
   )
 

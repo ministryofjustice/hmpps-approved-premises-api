@@ -2,7 +2,7 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1
 
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.config.NotifyConfig
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.config.Cas1NotifyTemplates
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.BookingEntity
@@ -21,7 +21,6 @@ object Constants {
 @Service
 class Cas1BookingEmailService(
   private val emailNotifier: Cas1EmailNotifier,
-  private val notifyConfig: NotifyConfig,
   @Value("\${url-templates.frontend.application}") private val applicationUrlTemplate: UrlTemplate,
   @Value("\${url-templates.frontend.application-timeline}") private val applicationTimelineUrlTemplate: UrlTemplate,
   @Value("\${url-templates.frontend.booking}") private val bookingUrlTemplate: UrlTemplate,
@@ -55,7 +54,7 @@ class Cas1BookingEmailService(
 
     emailNotifier.sendEmails(
       recipientEmailAddresses = recipientEmailAddresses,
-      templateId = notifyConfig.templates.bookingMade,
+      templateId = Cas1NotifyTemplates.BOOKING_MADE,
       personalisation = emailPersonalisation,
       application = application,
     )
@@ -63,7 +62,7 @@ class Cas1BookingEmailService(
     if (bookingInfo.premises.emailAddress != null) {
       emailNotifier.sendEmail(
         recipientEmailAddress = bookingInfo.premises.emailAddress!!,
-        templateId = notifyConfig.templates.bookingMadePremises,
+        templateId = Cas1NotifyTemplates.BOOKING_MADE_FOR_PREMISES,
         personalisation = emailPersonalisation,
         application = application,
       )
@@ -111,7 +110,7 @@ class Cas1BookingEmailService(
 
     emailNotifier.sendEmails(
       recipientEmailAddresses = interestedParties,
-      templateId = notifyConfig.templates.bookingWithdrawnV2,
+      templateId = Cas1NotifyTemplates.BOOKING_WITHDRAWN_V2,
       personalisation = allPersonalisation,
       application = application,
     )
@@ -144,7 +143,7 @@ class Cas1BookingEmailService(
 
     emailNotifier.sendEmails(
       recipientEmailAddresses = interestedParties,
-      templateId = notifyConfig.templates.bookingAmended,
+      templateId = Cas1NotifyTemplates.BOOKING_AMENDED,
       personalisation = emailPersonalisation,
       application = application,
     )

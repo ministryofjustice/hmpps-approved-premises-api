@@ -2,7 +2,7 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1
 
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.config.NotifyConfig
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.config.Cas1NotifyTemplates
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.UrlTemplate
@@ -10,7 +10,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.UrlTemplate
 @Service
 class Cas1PlacementApplicationEmailService(
   private val emailNotifier: Cas1EmailNotifier,
-  private val notifyConfig: NotifyConfig,
   @Value("\${url-templates.frontend.application}") private val applicationUrlTemplate: UrlTemplate,
   @Value("\${url-templates.frontend.application-timeline}") private val applicationTimelineUrlTemplate: UrlTemplate,
 ) {
@@ -20,7 +19,7 @@ class Cas1PlacementApplicationEmailService(
     createdByUser.email?.let { email ->
       emailNotifier.sendEmail(
         recipientEmailAddress = email,
-        templateId = notifyConfig.templates.placementRequestSubmittedV2,
+        templateId = Cas1NotifyTemplates.PLACEMENT_REQUEST_SUBMITTED_V2,
         personalisation = getCommonPersonalisation(placementApplication),
         application = placementApplication.application,
       )
@@ -32,7 +31,7 @@ class Cas1PlacementApplicationEmailService(
     createdByUser.email?.let { email ->
       emailNotifier.sendEmail(
         recipientEmailAddress = email,
-        templateId = notifyConfig.templates.placementRequestAllocatedV2,
+        templateId = Cas1NotifyTemplates.PLACEMENT_REQUEST_ALLOCATED_V2,
         personalisation = getCommonPersonalisation(placementApplication),
         application = placementApplication.application,
       )
@@ -44,7 +43,7 @@ class Cas1PlacementApplicationEmailService(
     createdByUser.email?.let { email ->
       emailNotifier.sendEmail(
         recipientEmailAddress = email,
-        templateId = notifyConfig.templates.placementRequestDecisionAcceptedV2,
+        templateId = Cas1NotifyTemplates.PLACEMENT_REQUEST_DECISION_ACCEPTED_V2,
         personalisation = getCommonPersonalisation(placementApplication),
         application = placementApplication.application,
       )
@@ -56,7 +55,7 @@ class Cas1PlacementApplicationEmailService(
     createdByUser.email?.let { email ->
       emailNotifier.sendEmail(
         recipientEmailAddress = email,
-        templateId = notifyConfig.templates.placementRequestDecisionRejectedV2,
+        templateId = Cas1NotifyTemplates.PLACEMENT_REQUEST_DECISION_REJECTED_V2,
         personalisation = getCommonPersonalisation(placementApplication),
         application = placementApplication.application,
       )
@@ -72,7 +71,7 @@ class Cas1PlacementApplicationEmailService(
 
     personalisation["withdrawnBy"] = withdrawalTriggeredBy.getName()
 
-    val template = notifyConfig.templates.placementRequestWithdrawnV2
+    val template = Cas1NotifyTemplates.PLACEMENT_REQUEST_WITHDRAWN_V2
 
     emailNotifier.sendEmails(
       recipientEmailAddresses = placementApplication.interestedPartiesEmailAddresses(),

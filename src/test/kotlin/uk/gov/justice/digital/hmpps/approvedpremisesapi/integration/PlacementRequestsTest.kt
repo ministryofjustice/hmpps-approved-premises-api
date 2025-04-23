@@ -17,6 +17,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.RiskTierLevel
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.WithdrawPlacementRequest
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.WithdrawPlacementRequestReason
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.config.Cas1NotifyTemplates
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.CaseAccessFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.PersonRisksFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenACas1CruManagementArea
@@ -2605,11 +2606,11 @@ class PlacementRequestsTest : IntegrationTestBase() {
                 emailAsserter.assertEmailsRequestedCount(2)
                 emailAsserter.assertEmailRequested(
                   applicant.email!!,
-                  notifyConfig.templates.bookingMade,
+                  Cas1NotifyTemplates.BOOKING_MADE,
                 )
                 emailAsserter.assertEmailRequested(
                   premises.emailAddress!!,
-                  notifyConfig.templates.bookingMadePremises,
+                  Cas1NotifyTemplates.BOOKING_MADE_FOR_PREMISES,
                 )
               }
             }
@@ -2668,15 +2669,15 @@ class PlacementRequestsTest : IntegrationTestBase() {
                     emailAsserter.assertEmailsRequestedCount(3)
                     emailAsserter.assertEmailRequested(
                       applicant.email!!,
-                      notifyConfig.templates.bookingMade,
+                      Cas1NotifyTemplates.BOOKING_MADE,
                     )
                     emailAsserter.assertEmailRequested(
                       placementApplicationCreator.email!!,
-                      notifyConfig.templates.bookingMade,
+                      Cas1NotifyTemplates.BOOKING_MADE,
                     )
                     emailAsserter.assertEmailRequested(
                       premises.emailAddress!!,
-                      notifyConfig.templates.bookingMadePremises,
+                      Cas1NotifyTemplates.BOOKING_MADE_FOR_PREMISES,
                     )
                   }
                 }
@@ -2987,11 +2988,11 @@ class PlacementRequestsTest : IntegrationTestBase() {
             emailAsserter.assertEmailsRequestedCount(2)
             emailAsserter.assertEmailRequested(
               placementRequest.application.cruManagementArea!!.emailAddress!!,
-              notifyConfig.templates.matchRequestWithdrawnV2,
+              Cas1NotifyTemplates.MATCH_REQUEST_WITHDRAWN_V2,
             )
             emailAsserter.assertEmailRequested(
               placementRequest.application.createdByUser.email!!,
-              notifyConfig.templates.placementRequestWithdrawnV2,
+              Cas1NotifyTemplates.PLACEMENT_REQUEST_WITHDRAWN_V2,
             )
           }
         }

@@ -14,6 +14,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Withdrawable
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.WithdrawableType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Withdrawables
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.WithdrawalReason
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.config.Cas1NotifyTemplates
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenACas1CruManagementArea
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenACas1SpaceBooking
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAProbationRegion
@@ -1493,18 +1494,18 @@ class WithdrawalTest : IntegrationTestBase() {
 
     private fun assertAssessmentWithdrawnEmail(emailAddress: String) = emailAsserter.assertEmailRequested(
       emailAddress,
-      notifyConfig.templates.assessmentWithdrawnV2,
+      Cas1NotifyTemplates.ASSESSMENT_WITHDRAWN_V2,
     )
 
     private fun assertApplicationWithdrawnEmail(emailAddress: String, application: ApplicationEntity) = emailAsserter.assertEmailRequested(
       emailAddress,
-      notifyConfig.templates.applicationWithdrawnV2,
+      Cas1NotifyTemplates.APPLICATION_WITHDRAWN_V2,
       mapOf("crn" to application.crn),
     )
 
     private fun assertBookingWithdrawnEmail(emailAddress: String, booking: BookingEntity) = emailAsserter.assertEmailRequested(
       emailAddress,
-      notifyConfig.templates.bookingWithdrawnV2,
+      Cas1NotifyTemplates.BOOKING_WITHDRAWN_V2,
       mapOf(
         "startDate" to booking.arrivalDate.toString(),
         "endDate" to booking.departureDate.toString(),
@@ -1513,7 +1514,7 @@ class WithdrawalTest : IntegrationTestBase() {
 
     private fun assertSpaceBookingWithdrawnEmail(emailAddress: String, booking: Cas1SpaceBookingEntity) = emailAsserter.assertEmailRequested(
       emailAddress,
-      notifyConfig.templates.bookingWithdrawnV2,
+      Cas1NotifyTemplates.BOOKING_WITHDRAWN_V2,
       mapOf(
         "startDate" to booking.canonicalArrivalDate.toString(),
         "endDate" to booking.canonicalDepartureDate.toString(),
@@ -1522,19 +1523,19 @@ class WithdrawalTest : IntegrationTestBase() {
 
     private fun assertPlacementRequestWithdrawnEmail(emailAddress: String, placementApplication: PlacementApplicationEntity) = emailAsserter.assertEmailRequested(
       emailAddress,
-      notifyConfig.templates.placementRequestWithdrawnV2,
+      Cas1NotifyTemplates.PLACEMENT_REQUEST_WITHDRAWN_V2,
       mapOf("startDate" to placementApplication.placementDates[0].expectedArrival.toString()),
     )
 
     private fun assertPlacementRequestWithdrawnEmail(emailAddress: String, placementRequest: PlacementRequestEntity) = emailAsserter.assertEmailRequested(
       emailAddress,
-      notifyConfig.templates.placementRequestWithdrawnV2,
+      Cas1NotifyTemplates.PLACEMENT_REQUEST_WITHDRAWN_V2,
       mapOf("startDate" to placementRequest.expectedArrival.toString()),
     )
 
     private fun assertMatchRequestWithdrawnEmail(emailAddress: String, placementRequest: PlacementRequestEntity) = emailAsserter.assertEmailRequested(
       emailAddress,
-      notifyConfig.templates.matchRequestWithdrawnV2,
+      Cas1NotifyTemplates.MATCH_REQUEST_WITHDRAWN_V2,
       mapOf("startDate" to placementRequest.expectedArrival.toString()),
     )
   }
