@@ -240,6 +240,8 @@ class Cas1SpaceBookingTransformer(
     } ?: listOf(),
     deliusEventNumber = searchResult.deliusEventNumber,
     isCancelled = searchResult.cancelled,
+    plannedTransferRequested = searchResult.plannedTransferRequested,
+    appealRequested = searchResult.appealRequested,
   )
 
   companion object {

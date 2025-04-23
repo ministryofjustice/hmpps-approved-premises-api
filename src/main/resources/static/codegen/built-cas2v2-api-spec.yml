@@ -4946,6 +4946,10 @@ components:
           type: string
         isCancelled:
           type: boolean
+        plannedTransferRequested:
+          type: boolean
+        appealRequested:
+          type: boolean
       required:
         - id
         - person

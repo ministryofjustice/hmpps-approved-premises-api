@@ -110,7 +110,31 @@ interface Cas1SpaceBookingRepository : JpaRepository<Cas1SpaceBookingEntity, UUI
           LEFT OUTER JOIN characteristics ON characteristics.id = sbc.characteristic_id
           WHERE sbc.space_booking_id = b.id 
           GROUP BY sbc.space_booking_id
-        ) AS characteristicsPropertyNames
+        ) AS characteristicsPropertyNames,
+      """
+
+    private const val CHANGE_REQUESTS_INFO_SUBQUERY =
+      """
+      CASE
+          WHEN EXISTS (
+              SELECT 1
+              FROM cas1_change_requests c1
+              WHERE c1.cas1_space_booking_id = b.id
+                AND c1.type = 'PLANNED_TRANSFER'
+                AND c1.resolved = false
+          ) THEN true
+          ELSE false
+      END AS plannedTransferRequested,
+      CASE
+          WHEN EXISTS (
+              SELECT 1
+              FROM cas1_change_requests c2
+              WHERE c2.cas1_space_booking_id = b.id
+                AND c2.type = 'PLACEMENT_APPEAL'
+                AND c2.resolved = false
+          ) THEN true
+          ELSE false
+      END AS appealRequested
       """
 
     private const val SPACE_BOOKING_SUMMARY_SELECT_QUERY = """
@@ -137,6 +161,7 @@ interface Cas1SpaceBookingRepository : JpaRepository<Cas1SpaceBookingEntity, UUI
         b.delius_event_number AS deliusEventNumber,
         b.cancellation_occurred_at IS NOT NULL AS cancelled,
         $SPACE_BOOKING_SUMMARY_CHARACTERISTICS_SUBQUERY
+        $CHANGE_REQUESTS_INFO_SUBQUERY
         $SPACE_BOOKING_SUMMARY_JOIN_CLAUSE
         $SPACE_BOOKING_SUMMARY_WHERE_CLAUSE
       """
@@ -304,6 +329,8 @@ interface Cas1SpaceBookingSearchResult {
   val characteristicsPropertyNames: String?
   val deliusEventNumber: String?
   val cancelled: Boolean
+  val plannedTransferRequested: Boolean
+  val appealRequested: Boolean
 }
 
 interface Cas1SpaceBookingAtPremises {

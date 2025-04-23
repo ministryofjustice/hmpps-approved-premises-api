@@ -369,6 +369,22 @@ class Cas1SpaceBookingTest {
           withCriteria(criteria)
         }
 
+      givenACas1ChangeRequest(
+        type = ChangeRequestType.PLACEMENT_APPEAL,
+        decision = null,
+        decisionJson = null,
+        spaceBooking = currentSpaceBooking1,
+        resolved = false,
+      )
+
+      givenACas1ChangeRequest(
+        type = ChangeRequestType.PLACEMENT_APPEAL,
+        decision = ChangeRequestDecision.APPROVED,
+        decisionJson = "{\"test\": 1}",
+        spaceBooking = currentSpaceBooking1,
+        resolved = true,
+      )
+
       currentSpaceBooking2OfflineApplication = createSpaceBookingWithOfflineApplication(
         crn = "CRN_CURRENT2_OFFLINE",
         firstName = "curt",
@@ -399,6 +415,22 @@ class Cas1SpaceBookingTest {
           withKeyworkerStaffCode("clivek")
           withKeyworkerAssignedAt(Instant.now())
         }
+
+      givenACas1ChangeRequest(
+        type = ChangeRequestType.PLANNED_TRANSFER,
+        decision = null,
+        decisionJson = null,
+        spaceBooking = currentSpaceBooking3,
+        resolved = false,
+      )
+
+      givenACas1ChangeRequest(
+        type = ChangeRequestType.PLANNED_TRANSFER,
+        decision = ChangeRequestDecision.APPROVED,
+        decisionJson = "{\"test\": 1}",
+        spaceBooking = currentSpaceBooking3,
+        resolved = true,
+      )
 
       currentSpaceBooking4Restricted = createSpaceBooking(
         crn = "CRN_CURRENT4",
@@ -553,9 +585,15 @@ class Cas1SpaceBookingTest {
       assertThat(response[1].person.crn).isEqualTo("CRN_LEGACY_NO_ARRIVAL")
       assertThat(response[2].person.crn).isEqualTo("CRN_DEPARTED")
       assertThat(response[3].person.crn).isEqualTo("CRN_CURRENT1")
+      assertThat(response[3].appealRequested).isTrue
+      assertThat(response[3].plannedTransferRequested).isFalse
       assertThat(response[4].person.crn).isEqualTo("CRN_CURRENT2_OFFLINE")
       assertThat(response[5].person.crn).isEqualTo("CRN_CURRENT3")
+      assertThat(response[5].appealRequested).isFalse
+      assertThat(response[5].plannedTransferRequested).isTrue
       assertThat(response[6].person.crn).isEqualTo("CRN_CURRENT4")
+      assertThat(response[6].appealRequested).isFalse
+      assertThat(response[6].plannedTransferRequested).isFalse
       assertThat(response[7].person.crn).isEqualTo("CRN_UPCOMING")
       assertThat(response[8].person.crn).isEqualTo("CRN_NONARRIVAL")
     }

@@ -15,7 +15,7 @@ fun IntegrationTestBase.givenACas1ChangeRequest(
   spaceBooking: Cas1SpaceBookingEntity,
   rejectReason: Cas1ChangeRequestRejectionReasonEntity? = null,
   resolved: Boolean = decision != null,
-  decisionJson: String,
+  decisionJson: String? = null,
 ): Cas1ChangeRequestEntity {
   val requestReason = cas1ChangeRequestReasonEntityFactory.produceAndPersist {
     withChangeRequestType(type)

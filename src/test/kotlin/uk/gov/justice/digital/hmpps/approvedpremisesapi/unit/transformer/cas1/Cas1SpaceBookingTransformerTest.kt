@@ -443,6 +443,8 @@ class Cas1SpaceBookingTransformerTest {
           characteristicsPropertyNames = "hasTurningSpace,isCatered",
           deliusEventNumber = "event8",
           cancelled = true,
+          plannedTransferRequested = true,
+          appealRequested = false,
         ),
         premises,
         personSummaryInfo,
@@ -470,6 +472,8 @@ class Cas1SpaceBookingTransformerTest {
       assertThat(result.status).isEqualTo(Cas1SpaceBookingSummaryStatus.departed)
       assertThat(result.deliusEventNumber).isEqualTo("event8")
       assertThat(result.isCancelled).isTrue()
+      assertThat(result.plannedTransferRequested).isTrue()
+      assertThat(result.appealRequested).isFalse()
     }
 
     @Test
@@ -505,6 +509,8 @@ class Cas1SpaceBookingTransformerTest {
           characteristicsPropertyNames = null,
           deliusEventNumber = "event8",
           cancelled = false,
+          plannedTransferRequested = false,
+          appealRequested = true,
         ),
         premises = ApprovedPremisesEntityFactory().withDefaults().produce(),
         personSummaryInfo,
@@ -513,6 +519,8 @@ class Cas1SpaceBookingTransformerTest {
       assertThat(result.id).isEqualTo(id)
       assertThat(result.keyWorkerAllocation).isNull()
       assertThat(result.isCancelled).isFalse()
+      assertThat(result.plannedTransferRequested).isFalse()
+      assertThat(result.appealRequested).isTrue()
     }
   }
 }
@@ -536,6 +544,8 @@ data class Cas1SpaceBookingSearchResultImpl(
   override val characteristicsPropertyNames: String?,
   override val deliusEventNumber: String?,
   override val cancelled: Boolean,
+  override val plannedTransferRequested: Boolean,
+  override val appealRequested: Boolean,
 ) : Cas1SpaceBookingSearchResult
 
 data class Cas1SpaceBookingAtPremisesImpl(
