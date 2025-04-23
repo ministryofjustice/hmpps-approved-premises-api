@@ -183,7 +183,13 @@ class Cas1ChangeRequestService(
     cas1ChangeRequestRepository.saveAndFlush(changeRequestWithLock)
 
     when (changeRequestWithLock.type) {
-      ChangeRequestType.PLACEMENT_APPEAL -> cas1ChangeRequestEmailService.placementAppealRejected(changeRequestWithLock)
+      ChangeRequestType.PLACEMENT_APPEAL -> {
+        cas1ChangeRequestEmailService.placementAppealRejected(changeRequestWithLock)
+        cas1ChangeRequestDomainEventService.placementAppealRejected(
+          changeRequestWithLock,
+          userService.getUserForRequest(),
+        )
+      }
       ChangeRequestType.PLACEMENT_EXTENSION -> Unit
       ChangeRequestType.PLANNED_TRANSFER -> Unit
     }

@@ -6,20 +6,20 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.Ca
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomStringUpperCase
 import java.util.UUID
 
-class Cas1DomainEventNamedIdFactory : Factory<Cas1DomainEventCodedId> {
+class Cas1DomainEventCodedIdFactory : Factory<Cas1DomainEventCodedId> {
   private var id: Yielded<UUID> = { UUID.randomUUID() }
-  private var name: Yielded<String> = { randomStringUpperCase(6) }
+  private var code: Yielded<String> = { randomStringUpperCase(6) }
 
   fun withId(id: UUID) = apply {
     this.id = { id }
   }
 
-  fun withName(name: String) = apply {
-    this.name = { name }
+  fun withCode(code: String) = apply {
+    this.code = { code }
   }
 
   override fun produce(): Cas1DomainEventCodedId = Cas1DomainEventCodedId(
     id = id(),
-    code = name(),
+    code = code(),
   )
 }

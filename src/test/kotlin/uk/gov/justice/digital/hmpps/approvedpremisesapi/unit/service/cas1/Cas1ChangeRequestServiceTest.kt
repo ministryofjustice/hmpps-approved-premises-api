@@ -493,7 +493,7 @@ class Cas1ChangeRequestServiceTest {
     }
 
     @Test
-    fun `return success for a valid change request`() {
+    fun `return success for a placement appeal`() {
       val placementRequest = PlacementRequestEntityFactory()
         .withDefaults()
         .produce()
@@ -509,9 +509,11 @@ class Cas1ChangeRequestServiceTest {
 
       val rejectionReason = Cas1ChangeRequestRejectionReasonEntityFactory().produce()
       every { cas1ChangeRequestRejectionReasonRepository.findByIdAndArchivedIsFalse(any()) } returns rejectionReason
-
       every { cas1ChangeRequestRepository.saveAndFlush(any()) } returns changeRequest
       every { cas1ChangeRequestEmailService.placementAppealRejected(any()) } returns Unit
+
+      every { userService.getUserForRequest() } returns UserEntityFactory().withDefaults().produce()
+      every { cas1ChangeRequestDomainEventService.placementAppealRejected(any(), any()) } returns Unit
 
       val result = service.rejectChangeRequest(placementRequest.id, changeRequest.id, cas1RejectChangeRequest)
 
@@ -531,6 +533,13 @@ class Cas1ChangeRequestServiceTest {
       assertThat(savedChangeRequest.resolvedAt).isNotNull()
 
       verify { cas1ChangeRequestEmailService.placementAppealRejected(savedChangeRequest) }
+
+      verify {
+        cas1ChangeRequestDomainEventService.placementAppealRejected(
+          changeRequest = savedChangeRequest,
+          rejectingUser = any(),
+        )
+      }
     }
   }
 

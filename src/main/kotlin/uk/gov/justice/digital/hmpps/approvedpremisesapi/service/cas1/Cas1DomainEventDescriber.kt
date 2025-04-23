@@ -10,6 +10,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.St
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1BookingChangedContentPayload
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1PlacementAppealAcceptedPayload
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1PlacementAppealCreatedPayload
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1PlacementAppealRejectedPayload
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1SpaceCharacteristic
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1TimelineEventContentPayload
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1TimelineEventType
@@ -75,6 +76,7 @@ class Cas1DomainEventDescriber(
     DomainEventType.APPROVED_PREMISES_ASSESSMENT_INFO_REQUESTED -> buildInfoRequestDescription(domainEventSummary)
     DomainEventType.APPROVED_PREMISES_PLACEMENT_APPEAL_ACCEPTED -> buildPlacementAppealAcceptedDescription(domainEventSummary)
     DomainEventType.APPROVED_PREMISES_PLACEMENT_APPEAL_CREATED -> buildPlacementAppealCreatedDescription(domainEventSummary)
+    DomainEventType.APPROVED_PREMISES_PLACEMENT_APPEAL_REJECTED -> buildPlacementAppealRejectedDescription(domainEventSummary)
     else -> throw IllegalArgumentException("Cannot map ${domainEventSummary.type}, only CAS1 is currently supported")
   }
 
@@ -358,6 +360,34 @@ class Cas1DomainEventDescriber(
         appealReason = NamedId(
           id = details.appealReason.id,
           name = details.appealReason.code,
+        ),
+      )
+    }
+
+    return EventDescriptionAndPayload(
+      description = null,
+      payload = payload,
+    )
+  }
+
+  private fun buildPlacementAppealRejectedDescription(domainEventSummary: DomainEventSummary): EventDescriptionAndPayload {
+    val event = domainEventService.getPlacementAppealRejectedEvent(domainEventSummary.id())
+
+    val payload = event.toPayload {
+      val details = it.eventDetails
+
+      Cas1PlacementAppealRejectedPayload(
+        premises = NamedId(
+          id = details.premises.id,
+          name = details.premises.name,
+        ),
+        expectedArrival = details.arrivalOn,
+        expectedDeparture = details.departureOn,
+        type = Cas1TimelineEventType.placementAppealCreated,
+        schemaVersion = event?.schemaVersion,
+        rejectionReason = NamedId(
+          id = details.rejectionReason.id,
+          name = details.rejectionReason.code,
         ),
       )
     }
