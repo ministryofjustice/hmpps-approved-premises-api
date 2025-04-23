@@ -2,7 +2,7 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1
 
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.config.NotifyConfig
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.config.Cas1NotifyTemplates
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementRequestEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.UrlTemplate
@@ -10,7 +10,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.UrlTemplate
 @Service
 class Cas1PlacementRequestEmailService(
   private val emailNotifier: Cas1EmailNotifier,
-  private val notifyConfig: NotifyConfig,
   @Value("\${url-templates.frontend.application}") private val applicationUrlTemplate: UrlTemplate,
   @Value("\${url-templates.frontend.application-timeline}") private val applicationTimelineUrlTemplate: UrlTemplate,
 ) {
@@ -21,7 +20,7 @@ class Cas1PlacementRequestEmailService(
     application.createdByUser.email?.let { email ->
       emailNotifier.sendEmail(
         recipientEmailAddress = email,
-        templateId = notifyConfig.templates.placementRequestSubmitted,
+        templateId = Cas1NotifyTemplates.PLACEMENT_REQUEST_SUBMITTED,
         personalisation = mapOf(
           "crn" to application.crn,
         ),
@@ -54,7 +53,7 @@ class Cas1PlacementRequestEmailService(
        **/
       emailNotifier.sendEmails(
         recipientEmailAddresses = application.interestedPartiesEmailAddresses(),
-        templateId = notifyConfig.templates.placementRequestWithdrawnV2,
+        templateId = Cas1NotifyTemplates.PLACEMENT_REQUEST_WITHDRAWN_V2,
         personalisation = personalisation,
         application = application,
       )
@@ -65,7 +64,7 @@ class Cas1PlacementRequestEmailService(
       area?.emailAddress?.let { cruEmail ->
         emailNotifier.sendEmail(
           recipientEmailAddress = cruEmail,
-          templateId = notifyConfig.templates.matchRequestWithdrawnV2,
+          templateId = Cas1NotifyTemplates.MATCH_REQUEST_WITHDRAWN_V2,
           personalisation = personalisation,
           application = application,
         )

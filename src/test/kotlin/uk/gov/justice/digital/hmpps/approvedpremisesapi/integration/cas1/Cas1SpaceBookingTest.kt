@@ -26,6 +26,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1SpaceBooki
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1SpaceCharacteristic
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1UpdateSpaceBooking
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PersonSummaryDiscriminator
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.config.Cas1NotifyTemplates
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.Cas1SpaceBookingEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.CaseAccessFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ContextStaffMemberFactory
@@ -303,11 +304,11 @@ class Cas1SpaceBookingTest {
           )
 
           emailAsserter.assertEmailsRequestedCount(3)
-          emailAsserter.assertEmailRequested(applicant.email!!, notifyConfig.templates.bookingMade)
-          emailAsserter.assertEmailRequested(premises.emailAddress!!, notifyConfig.templates.bookingMadePremises)
+          emailAsserter.assertEmailRequested(applicant.email!!, Cas1NotifyTemplates.BOOKING_MADE)
+          emailAsserter.assertEmailRequested(premises.emailAddress!!, Cas1NotifyTemplates.BOOKING_MADE_FOR_PREMISES)
           emailAsserter.assertEmailRequested(
             placementRequest.application.caseManagerUserDetails?.email!!,
-            notifyConfig.templates.bookingMade,
+            Cas1NotifyTemplates.BOOKING_MADE,
           )
 
           assertThat(approvedPremisesApplicationRepository.findByIdOrNull(placementRequest.application.id)!!.status)
@@ -2077,15 +2078,15 @@ class Cas1SpaceBookingTest {
           .isOk
       }
 
-      emailAsserter.assertEmailRequested(applicant.email!!, notifyConfig.templates.bookingWithdrawnV2)
-      emailAsserter.assertEmailRequested(placementApplicationCreator.email!!, notifyConfig.templates.bookingWithdrawnV2)
+      emailAsserter.assertEmailRequested(applicant.email!!, Cas1NotifyTemplates.BOOKING_WITHDRAWN_V2)
+      emailAsserter.assertEmailRequested(placementApplicationCreator.email!!, Cas1NotifyTemplates.BOOKING_WITHDRAWN_V2)
       emailAsserter.assertEmailRequested(
         spaceBooking.premises.emailAddress!!,
-        notifyConfig.templates.bookingWithdrawnV2,
+        Cas1NotifyTemplates.BOOKING_WITHDRAWN_V2,
       )
       emailAsserter.assertEmailRequested(
         application.cruManagementArea!!.emailAddress!!,
-        notifyConfig.templates.bookingWithdrawnV2,
+        Cas1NotifyTemplates.BOOKING_WITHDRAWN_V2,
       )
       emailAsserter.assertEmailsRequestedCount(4)
 
@@ -2199,8 +2200,8 @@ class Cas1SpaceBookingTest {
       )
 
       emailAsserter.assertEmailsRequestedCount(2)
-      emailAsserter.assertEmailRequested(applicant.email!!, notifyConfig.templates.bookingAmended)
-      emailAsserter.assertEmailRequested(spaceBooking.premises.emailAddress!!, notifyConfig.templates.bookingAmended)
+      emailAsserter.assertEmailRequested(applicant.email!!, Cas1NotifyTemplates.BOOKING_AMENDED)
+      emailAsserter.assertEmailRequested(spaceBooking.premises.emailAddress!!, Cas1NotifyTemplates.BOOKING_AMENDED)
     }
 
     @Test

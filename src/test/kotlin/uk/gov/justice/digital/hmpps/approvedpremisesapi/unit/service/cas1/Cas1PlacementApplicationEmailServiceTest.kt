@@ -2,7 +2,7 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.unit.service.cas1
 
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.config.NotifyConfig
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.config.Cas1NotifyTemplates
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApAreaEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApprovedPremisesApplicationEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.Cas1ApplicationUserDetailsEntityFactory
@@ -33,12 +33,10 @@ class Cas1PlacementApplicationEmailServiceTest {
     const val CASE_MANAGER_EMAIL = "caseManager@test.com"
   }
 
-  private val notifyConfig = NotifyConfig()
   private val mockEmailNotificationService = MockCas1EmailNotificationService()
 
   private val service = Cas1PlacementApplicationEmailService(
     mockEmailNotificationService,
-    notifyConfig = notifyConfig,
     applicationUrlTemplate = UrlTemplate("http://frontend/applications/#id"),
     applicationTimelineUrlTemplate = UrlTemplate("http://frontend/applications/#applicationId?tab=timeline"),
   )
@@ -114,7 +112,7 @@ class Cas1PlacementApplicationEmailServiceTest {
 
       mockEmailNotificationService.assertEmailRequested(
         CREATOR_EMAIL,
-        notifyConfig.templates.placementRequestSubmittedV2,
+        Cas1NotifyTemplates.PLACEMENT_REQUEST_SUBMITTED_V2,
         personalisation,
         application,
       )
@@ -192,7 +190,7 @@ class Cas1PlacementApplicationEmailServiceTest {
 
       mockEmailNotificationService.assertEmailRequested(
         CREATOR_EMAIL,
-        notifyConfig.templates.placementRequestAllocatedV2,
+        Cas1NotifyTemplates.PLACEMENT_REQUEST_ALLOCATED_V2,
         personalisation,
         application,
       )
@@ -270,7 +268,7 @@ class Cas1PlacementApplicationEmailServiceTest {
 
       mockEmailNotificationService.assertEmailRequested(
         CREATOR_EMAIL,
-        notifyConfig.templates.placementRequestDecisionAcceptedV2,
+        Cas1NotifyTemplates.PLACEMENT_REQUEST_DECISION_ACCEPTED_V2,
         personalisation,
         application,
       )
@@ -343,7 +341,7 @@ class Cas1PlacementApplicationEmailServiceTest {
 
       mockEmailNotificationService.assertEmailRequested(
         CREATOR_EMAIL,
-        notifyConfig.templates.placementRequestDecisionRejectedV2,
+        Cas1NotifyTemplates.PLACEMENT_REQUEST_DECISION_REJECTED_V2,
         personalisation,
         application,
       )
@@ -419,7 +417,7 @@ class Cas1PlacementApplicationEmailServiceTest {
 
       mockEmailNotificationService.assertEmailRequested(
         CREATOR_EMAIL,
-        notifyConfig.templates.placementRequestWithdrawnV2,
+        Cas1NotifyTemplates.PLACEMENT_REQUEST_WITHDRAWN_V2,
         personalisation,
         application,
       )
@@ -465,7 +463,7 @@ class Cas1PlacementApplicationEmailServiceTest {
 
       mockEmailNotificationService.assertEmailRequested(
         APPLICANT_EMAIL,
-        notifyConfig.templates.placementRequestWithdrawnV2,
+        Cas1NotifyTemplates.PLACEMENT_REQUEST_WITHDRAWN_V2,
         personalisation,
         application,
       )
@@ -510,14 +508,14 @@ class Cas1PlacementApplicationEmailServiceTest {
 
       mockEmailNotificationService.assertEmailRequested(
         CREATOR_EMAIL,
-        notifyConfig.templates.placementRequestWithdrawnV2,
+        Cas1NotifyTemplates.PLACEMENT_REQUEST_WITHDRAWN_V2,
         personalisation,
         application,
       )
 
       mockEmailNotificationService.assertEmailRequested(
         CASE_MANAGER_EMAIL,
-        notifyConfig.templates.placementRequestWithdrawnV2,
+        Cas1NotifyTemplates.PLACEMENT_REQUEST_WITHDRAWN_V2,
         personalisation,
         application,
       )
@@ -565,7 +563,7 @@ class Cas1PlacementApplicationEmailServiceTest {
 
       mockEmailNotificationService.assertEmailRequested(
         ASSESSOR_EMAIL,
-        notifyConfig.templates.placementRequestWithdrawnV2,
+        Cas1NotifyTemplates.PLACEMENT_REQUEST_WITHDRAWN_V2,
         personalisation,
         application,
       )
@@ -611,7 +609,7 @@ class Cas1PlacementApplicationEmailServiceTest {
 
       mockEmailNotificationService.assertEmailRequested(
         ASSESSOR_EMAIL,
-        notifyConfig.templates.placementRequestWithdrawnV2,
+        Cas1NotifyTemplates.PLACEMENT_REQUEST_WITHDRAWN_V2,
         personalisation,
         application,
       )
@@ -657,7 +655,7 @@ class Cas1PlacementApplicationEmailServiceTest {
 
       mockEmailNotificationService.assertEmailRequested(
         APPLICANT_EMAIL,
-        notifyConfig.templates.placementRequestWithdrawnV2,
+        Cas1NotifyTemplates.PLACEMENT_REQUEST_WITHDRAWN_V2,
         personalisation,
         application,
       )

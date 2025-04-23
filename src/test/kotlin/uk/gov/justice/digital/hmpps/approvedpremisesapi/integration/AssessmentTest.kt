@@ -37,6 +37,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.UpdateAssessment
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.UpdatedClarificationNote
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.CacheKeySet
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.config.Cas1NotifyTemplates
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApprovedPremisesApplicationEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApprovedPremisesAssessmentEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.CaseAccessFactory
@@ -2180,8 +2181,8 @@ class AssessmentTest : IntegrationTestBase() {
               )
 
               emailAsserter.assertEmailsRequestedCount(2)
-              emailAsserter.assertEmailRequested(application.createdByUser.email!!, notifyConfig.templates.assessmentAccepted)
-              emailAsserter.assertEmailRequested(application.createdByUser.email!!, notifyConfig.templates.placementRequestSubmitted)
+              emailAsserter.assertEmailRequested(application.createdByUser.email!!, Cas1NotifyTemplates.ASSESSMENT_ACCEPTED)
+              emailAsserter.assertEmailRequested(application.createdByUser.email!!, Cas1NotifyTemplates.PLACEMENT_REQUEST_SUBMITTED)
             }
           }
         }
@@ -2292,7 +2293,7 @@ class AssessmentTest : IntegrationTestBase() {
               )
 
               emailAsserter.assertEmailsRequestedCount(1)
-              emailAsserter.assertEmailRequested(application.createdByUser.email!!, notifyConfig.templates.assessmentAccepted)
+              emailAsserter.assertEmailRequested(application.createdByUser.email!!, Cas1NotifyTemplates.ASSESSMENT_ACCEPTED)
             }
           }
         }
@@ -2555,7 +2556,7 @@ class AssessmentTest : IntegrationTestBase() {
         )
 
         emailAsserter.assertEmailsRequestedCount(1)
-        emailAsserter.assertEmailRequested(application.createdByUser.email!!, notifyConfig.templates.assessmentRejected)
+        emailAsserter.assertEmailRequested(application.createdByUser.email!!, Cas1NotifyTemplates.ASSESSMENT_REJECTED)
       }
     }
   }

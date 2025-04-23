@@ -18,6 +18,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewDateChange
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewDeparture
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewExtension
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.config.Cas1NotifyTemplates
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ContextStaffMemberFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenABooking
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenACas1CruManagementArea
@@ -2662,18 +2663,18 @@ class BookingTest : IntegrationTestBase() {
               assertThat(updatedApplication.status).isEqualTo(ApprovedPremisesApplicationStatus.AWAITING_PLACEMENT)
 
               emailAsserter.assertEmailsRequestedCount(4)
-              emailAsserter.assertEmailRequested(applicant.email!!, notifyConfig.templates.bookingWithdrawnV2)
+              emailAsserter.assertEmailRequested(applicant.email!!, Cas1NotifyTemplates.BOOKING_WITHDRAWN_V2)
               emailAsserter.assertEmailRequested(
                 placementApplicationCreator.email!!,
-                notifyConfig.templates.bookingWithdrawnV2,
+                Cas1NotifyTemplates.BOOKING_WITHDRAWN_V2,
               )
               emailAsserter.assertEmailRequested(
                 booking.premises.emailAddress!!,
-                notifyConfig.templates.bookingWithdrawnV2,
+                Cas1NotifyTemplates.BOOKING_WITHDRAWN_V2,
               )
               emailAsserter.assertEmailRequested(
                 application.cruManagementArea!!.emailAddress!!,
-                notifyConfig.templates.bookingWithdrawnV2,
+                Cas1NotifyTemplates.BOOKING_WITHDRAWN_V2,
               )
             }
           }

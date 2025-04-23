@@ -25,6 +25,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.SortDirection
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Task
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.TaskType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.TaskWrapper
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.config.Cas1NotifyTemplates
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.CaseSummaryFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.NameFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenACas1CruManagementArea
@@ -2486,8 +2487,8 @@ class TasksTest {
                   .anyMatch { it.application.id == application.id && it.allocatedToUser!!.id == assigneeUser.id }
 
                 emailAsserter.assertEmailsRequestedCount(2)
-                emailAsserter.assertEmailRequested(currentlyAllocatedUser.email!!, notifyConfig.templates.assessmentDeallocated)
-                emailAsserter.assertEmailRequested(assigneeUser.email!!, notifyConfig.templates.assessmentAllocated)
+                emailAsserter.assertEmailRequested(currentlyAllocatedUser.email!!, Cas1NotifyTemplates.ASSESSMENT_DEALLOCATED)
+                emailAsserter.assertEmailRequested(assigneeUser.email!!, Cas1NotifyTemplates.ASSESSMENT_ALLOCATED)
               }
             }
           }

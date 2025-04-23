@@ -3,7 +3,7 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.unit.service.cas1
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.config.NotifyConfig
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.config.Cas1NotifyTemplates
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.AppealEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApprovedPremisesApplicationEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.UserEntityFactory
@@ -21,12 +21,10 @@ object Cas1AppealEmailServiceTestConstants {
 }
 
 class Cas1AppealEmailServiceTest {
-  private val notifyConfig = NotifyConfig()
   private val mockEmailNotificationService = MockCas1EmailNotificationService()
 
   val service = Cas1AppealEmailService(
     mockEmailNotificationService,
-    notifyConfig,
     applicationUrlTemplate = UrlTemplate("http://frontend/applications/#id"),
   )
 
@@ -55,7 +53,7 @@ class Cas1AppealEmailServiceTest {
       mockEmailNotificationService.assertEmailRequestCount(1)
       mockEmailNotificationService.assertEmailRequested(
         Cas1AppealEmailServiceTestConstants.APPLICANT_EMAIL,
-        notifyConfig.templates.appealSuccess,
+        Cas1NotifyTemplates.APPLICATION_APPEAL_SUCCESS,
         expectedPersonalisationForAppealSuccess(application),
         application,
       )
@@ -70,7 +68,7 @@ class Cas1AppealEmailServiceTest {
       mockEmailNotificationService.assertEmailRequestCount(1)
       mockEmailNotificationService.assertEmailRequested(
         Cas1AppealEmailServiceTestConstants.APPEAL_ARBITRATOR_EMAIL,
-        notifyConfig.templates.appealSuccess,
+        Cas1NotifyTemplates.APPLICATION_APPEAL_SUCCESS,
         expectedPersonalisationForAppealSuccess(application),
         application,
       )
@@ -88,13 +86,13 @@ class Cas1AppealEmailServiceTest {
       mockEmailNotificationService.assertEmailRequestCount(2)
       mockEmailNotificationService.assertEmailRequested(
         Cas1AppealEmailServiceTestConstants.APPLICANT_EMAIL,
-        notifyConfig.templates.appealSuccess,
+        Cas1NotifyTemplates.APPLICATION_APPEAL_SUCCESS,
         expectedPersonalisationForAppealSuccess(application),
         application,
       )
       mockEmailNotificationService.assertEmailRequested(
         Cas1AppealEmailServiceTestConstants.APPEAL_ARBITRATOR_EMAIL,
-        notifyConfig.templates.appealSuccess,
+        Cas1NotifyTemplates.APPLICATION_APPEAL_SUCCESS,
         expectedPersonalisationForAppealSuccess(application),
         application,
       )
@@ -126,7 +124,7 @@ class Cas1AppealEmailServiceTest {
       mockEmailNotificationService.assertEmailRequestCount(1)
       mockEmailNotificationService.assertEmailRequested(
         Cas1AppealEmailServiceTestConstants.APPLICANT_EMAIL,
-        notifyConfig.templates.appealReject,
+        Cas1NotifyTemplates.APPLICATION_APPEAL_REJECTED,
         expectedPersonalisationForAppealFailed(application),
         application,
       )

@@ -21,6 +21,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.SubmitPlacemen
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.UpdatePlacementApplication
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.WithdrawPlacementApplication
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.WithdrawPlacementRequestReason
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.config.Cas1NotifyTemplates
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.CaseAccessFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAPlacementApplication
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAProbationRegion
@@ -823,10 +824,10 @@ class PlacementApplicationsTest : IntegrationTestBase() {
               )
 
               val recipient = placementApplicationEntity.createdByUser.email!!
-              val templates = notifyConfig.templates
+              val templates = Cas1NotifyTemplates
 
               emailAsserter.assertEmailsRequestedCount(1)
-              emailAsserter.assertEmailRequested(recipient, templates.placementRequestSubmittedV2, mapOf("startDate" to "2025-03-10"))
+              emailAsserter.assertEmailRequested(recipient, templates.PLACEMENT_REQUEST_SUBMITTED_V2, mapOf("startDate" to "2025-03-10"))
             }
           }
         }
@@ -913,7 +914,7 @@ class PlacementApplicationsTest : IntegrationTestBase() {
               assertThat(updatedEntity1.allocatedToUser).isNull()
 
               val recipient = placementApplicationEntity.createdByUser.email!!
-              val templates = notifyConfig.templates
+              val templates = Cas1NotifyTemplates
 
               domainEventAsserter.assertDomainEventsOfTypeStored(
                 applicationId = placementApplicationEntity.application.id,
@@ -922,9 +923,9 @@ class PlacementApplicationsTest : IntegrationTestBase() {
               )
 
               emailAsserter.assertEmailsRequestedCount(3)
-              emailAsserter.assertEmailRequested(recipient, templates.placementRequestSubmittedV2, mapOf("startDate" to "2024-01-02"))
-              emailAsserter.assertEmailRequested(recipient, templates.placementRequestSubmittedV2, mapOf("startDate" to "2024-02-03"))
-              emailAsserter.assertEmailRequested(recipient, templates.placementRequestSubmittedV2, mapOf("startDate" to "2024-03-04"))
+              emailAsserter.assertEmailRequested(recipient, templates.PLACEMENT_REQUEST_SUBMITTED_V2, mapOf("startDate" to "2024-01-02"))
+              emailAsserter.assertEmailRequested(recipient, templates.PLACEMENT_REQUEST_SUBMITTED_V2, mapOf("startDate" to "2024-02-03"))
+              emailAsserter.assertEmailRequested(recipient, templates.PLACEMENT_REQUEST_SUBMITTED_V2, mapOf("startDate" to "2024-03-04"))
             }
           }
         }
@@ -1132,7 +1133,7 @@ class PlacementApplicationsTest : IntegrationTestBase() {
                       assertThat(createdPlacementApplication.placementRequirements.id).isEqualTo(placementRequirements.id)
 
                       emailAsserter.assertEmailsRequestedCount(1)
-                      emailAsserter.assertEmailRequested(placementApplicationEntity.createdByUser.email!!, notifyConfig.templates.placementRequestDecisionAcceptedV2)
+                      emailAsserter.assertEmailRequested(placementApplicationEntity.createdByUser.email!!, Cas1NotifyTemplates.PLACEMENT_REQUEST_DECISION_ACCEPTED_V2)
                     }
                   }
                 }
@@ -1180,7 +1181,7 @@ class PlacementApplicationsTest : IntegrationTestBase() {
                       assertThat(createdPlacementRequests).isEmpty()
 
                       emailAsserter.assertEmailsRequestedCount(1)
-                      emailAsserter.assertEmailRequested(placementApplicationEntity.createdByUser.email!!, notifyConfig.templates.placementRequestDecisionRejectedV2)
+                      emailAsserter.assertEmailRequested(placementApplicationEntity.createdByUser.email!!, Cas1NotifyTemplates.PLACEMENT_REQUEST_DECISION_REJECTED_V2)
                     }
                   }
                 }
@@ -1393,15 +1394,15 @@ class PlacementApplicationsTest : IntegrationTestBase() {
             emailAsserter.assertEmailsRequestedCount(3)
             emailAsserter.assertEmailRequested(
               placementApplicationEntity.application.createdByUser.email!!,
-              notifyConfig.templates.placementRequestWithdrawnV2,
+              Cas1NotifyTemplates.PLACEMENT_REQUEST_WITHDRAWN_V2,
             )
             emailAsserter.assertEmailRequested(
               placementApplicationEntity.createdByUser.email!!,
-              notifyConfig.templates.placementRequestWithdrawnV2,
+              Cas1NotifyTemplates.PLACEMENT_REQUEST_WITHDRAWN_V2,
             )
             emailAsserter.assertEmailRequested(
               placementApplicationEntity.allocatedToUser!!.email!!,
-              notifyConfig.templates.placementRequestWithdrawnV2,
+              Cas1NotifyTemplates.PLACEMENT_REQUEST_WITHDRAWN_V2,
             )
           }
         }
@@ -1454,15 +1455,15 @@ class PlacementApplicationsTest : IntegrationTestBase() {
               emailAsserter.assertEmailsRequestedCount(3)
               emailAsserter.assertEmailRequested(
                 placementApplicationEntity.application.createdByUser.email!!,
-                notifyConfig.templates.placementRequestWithdrawnV2,
+                Cas1NotifyTemplates.PLACEMENT_REQUEST_WITHDRAWN_V2,
               )
               emailAsserter.assertEmailRequested(
                 placementApplicationEntity.createdByUser.email!!,
-                notifyConfig.templates.placementRequestWithdrawnV2,
+                Cas1NotifyTemplates.PLACEMENT_REQUEST_WITHDRAWN_V2,
               )
               emailAsserter.assertEmailRequested(
                 placementApplicationEntity.allocatedToUser!!.email!!,
-                notifyConfig.templates.placementRequestWithdrawnV2,
+                Cas1NotifyTemplates.PLACEMENT_REQUEST_WITHDRAWN_V2,
               )
             }
           }

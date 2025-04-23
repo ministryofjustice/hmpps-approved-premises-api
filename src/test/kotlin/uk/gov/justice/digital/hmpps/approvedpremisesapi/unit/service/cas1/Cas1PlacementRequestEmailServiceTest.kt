@@ -2,7 +2,7 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.unit.service.cas1
 
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.config.NotifyConfig
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.config.Cas1NotifyTemplates
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApAreaEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApprovedPremisesApplicationEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApprovedPremisesAssessmentEntityFactory
@@ -40,12 +40,10 @@ class Cas1PlacementRequestEmailServiceTest {
     const val CASE_MANAGER_EMAIL = "caseManager@test.com"
   }
 
-  private val notifyConfig = NotifyConfig()
   private val mockEmailNotificationService = MockCas1EmailNotificationService()
 
   private val service = Cas1PlacementRequestEmailService(
     mockEmailNotificationService,
-    notifyConfig = notifyConfig,
     applicationUrlTemplate = UrlTemplate("http://frontend/applications/#id"),
     applicationTimelineUrlTemplate = UrlTemplate("http://frontend/applications/#applicationId?tab=timeline"),
   )
@@ -71,7 +69,7 @@ class Cas1PlacementRequestEmailServiceTest {
       mockEmailNotificationService.assertEmailRequestCount(1)
       mockEmailNotificationService.assertEmailRequested(
         APPLICANT_EMAIL,
-        notifyConfig.templates.placementRequestSubmitted,
+        Cas1NotifyTemplates.PLACEMENT_REQUEST_SUBMITTED,
         mapOf(
           "crn" to CRN,
         ),
@@ -123,7 +121,7 @@ class Cas1PlacementRequestEmailServiceTest {
 
       mockEmailNotificationService.assertEmailRequested(
         CRU_EMAIL,
-        notifyConfig.templates.matchRequestWithdrawnV2,
+        Cas1NotifyTemplates.MATCH_REQUEST_WITHDRAWN_V2,
         mapOf(
           "applicationUrl" to "http://frontend/applications/${application.id}",
           "applicationTimelineUrl" to "http://frontend/applications/${application.id}?tab=timeline",
@@ -201,7 +199,7 @@ class Cas1PlacementRequestEmailServiceTest {
       mockEmailNotificationService.assertEmailRequestCount(1)
       mockEmailNotificationService.assertEmailRequested(
         APPLICANT_EMAIL,
-        notifyConfig.templates.placementRequestWithdrawnV2,
+        Cas1NotifyTemplates.PLACEMENT_REQUEST_WITHDRAWN_V2,
         mapOf(
           "applicationUrl" to "http://frontend/applications/${application.id}",
           "applicationTimelineUrl" to "http://frontend/applications/${application.id}?tab=timeline",
@@ -238,7 +236,7 @@ class Cas1PlacementRequestEmailServiceTest {
       mockEmailNotificationService.assertEmailRequestCount(2)
       mockEmailNotificationService.assertEmailRequested(
         APPLICANT_EMAIL,
-        notifyConfig.templates.placementRequestWithdrawnV2,
+        Cas1NotifyTemplates.PLACEMENT_REQUEST_WITHDRAWN_V2,
         mapOf(
           "applicationUrl" to "http://frontend/applications/${application.id}",
           "applicationTimelineUrl" to "http://frontend/applications/${application.id}?tab=timeline",
@@ -253,7 +251,7 @@ class Cas1PlacementRequestEmailServiceTest {
       )
       mockEmailNotificationService.assertEmailRequested(
         CASE_MANAGER_EMAIL,
-        notifyConfig.templates.placementRequestWithdrawnV2,
+        Cas1NotifyTemplates.PLACEMENT_REQUEST_WITHDRAWN_V2,
         mapOf(
           "applicationUrl" to "http://frontend/applications/${application.id}",
           "applicationTimelineUrl" to "http://frontend/applications/${application.id}?tab=timeline",
@@ -289,7 +287,7 @@ class Cas1PlacementRequestEmailServiceTest {
       mockEmailNotificationService.assertEmailRequestCount(1)
       mockEmailNotificationService.assertEmailRequested(
         APPLICANT_EMAIL,
-        notifyConfig.templates.placementRequestWithdrawnV2,
+        Cas1NotifyTemplates.PLACEMENT_REQUEST_WITHDRAWN_V2,
         mapOf(
           "applicationUrl" to "http://frontend/applications/${application.id}",
           "applicationTimelineUrl" to "http://frontend/applications/${application.id}?tab=timeline",

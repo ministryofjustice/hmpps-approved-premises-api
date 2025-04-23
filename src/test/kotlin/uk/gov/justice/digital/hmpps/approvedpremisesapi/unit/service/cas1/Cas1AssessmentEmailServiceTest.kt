@@ -5,7 +5,7 @@ import io.mockk.mockk
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.config.NotifyConfig
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.config.Cas1NotifyTemplates
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApprovedPremisesApplicationEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApprovedPremisesAssessmentEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.UserEntityFactory
@@ -34,13 +34,11 @@ class Cas1AssessmentEmailServiceTest {
     const val CRN = "CRN123"
   }
 
-  private val notifyConfig = NotifyConfig()
   private val mockEmailNotificationService = MockCas1EmailNotificationService()
   private val mockWorkingDayService = mockk<WorkingDayService>()
 
   val service = Cas1AssessmentEmailService(
     mockEmailNotificationService,
-    notifyConfig,
     assessmentUrlTemplate = UrlTemplate("http://frontend/assessments/#id"),
     applicationUrlTemplate = UrlTemplate("http://frontend/application/#id"),
     applicationTimelineUrlTemplate = UrlTemplate("http://frontend/application/#applicationId?tab=timeline"),
@@ -94,7 +92,7 @@ class Cas1AssessmentEmailServiceTest {
       mockEmailNotificationService.assertEmailRequestCount(1)
       mockEmailNotificationService.assertEmailRequested(
         APPLICANT_EMAIL,
-        notifyConfig.templates.assessmentAccepted,
+        Cas1NotifyTemplates.ASSESSMENT_ACCEPTED,
         mapOf(
           "name" to "The Applicant Name",
           "applicationUrl" to "http://frontend/application/${application.id}",
@@ -147,7 +145,7 @@ class Cas1AssessmentEmailServiceTest {
       mockEmailNotificationService.assertEmailRequestCount(1)
       mockEmailNotificationService.assertEmailRequested(
         APPLICANT_EMAIL,
-        notifyConfig.templates.assessmentRejected,
+        Cas1NotifyTemplates.ASSESSMENT_REJECTED,
         mapOf(
           "name" to "The Applicant Name",
           "applicationUrl" to "http://frontend/application/${application.id}",
@@ -179,7 +177,7 @@ class Cas1AssessmentEmailServiceTest {
       mockEmailNotificationService.assertEmailRequestCount(1)
       mockEmailNotificationService.assertEmailRequested(
         ALLOCATED_EMAIL,
-        notifyConfig.templates.assessmentAllocated,
+        Cas1NotifyTemplates.ASSESSMENT_ALLOCATED,
         expectedAssessmentAllocatedPersonalisation(
           applicant.name,
           CRN,
@@ -198,7 +196,7 @@ class Cas1AssessmentEmailServiceTest {
       mockEmailNotificationService.assertEmailRequestCount(1)
       mockEmailNotificationService.assertEmailRequested(
         ALLOCATED_EMAIL,
-        notifyConfig.templates.assessmentAllocated,
+        Cas1NotifyTemplates.ASSESSMENT_ALLOCATED,
         expectedAssessmentAllocatedPersonalisation(
           applicant.name,
           CRN,
@@ -227,7 +225,7 @@ class Cas1AssessmentEmailServiceTest {
       mockEmailNotificationService.assertEmailRequestCount(1)
       mockEmailNotificationService.assertEmailRequested(
         ALLOCATED_EMAIL,
-        notifyConfig.templates.assessmentAllocated,
+        Cas1NotifyTemplates.ASSESSMENT_ALLOCATED,
         expectedAssessmentAllocatedPersonalisation(
           applicant.name,
           CRN,
@@ -256,7 +254,7 @@ class Cas1AssessmentEmailServiceTest {
       mockEmailNotificationService.assertEmailRequestCount(1)
       mockEmailNotificationService.assertEmailRequested(
         ALLOCATED_EMAIL,
-        notifyConfig.templates.assessmentAllocated,
+        Cas1NotifyTemplates.ASSESSMENT_ALLOCATED,
         expectedAssessmentAllocatedPersonalisation(
           applicant.name,
           CRN,
@@ -279,7 +277,7 @@ class Cas1AssessmentEmailServiceTest {
       mockEmailNotificationService.assertEmailRequestCount(1)
       mockEmailNotificationService.assertEmailRequested(
         ALLOCATED_EMAIL,
-        notifyConfig.templates.assessmentAllocated,
+        Cas1NotifyTemplates.ASSESSMENT_ALLOCATED,
         expectedAssessmentAllocatedPersonalisation(
           applicant.name,
           CRN,
@@ -337,7 +335,7 @@ class Cas1AssessmentEmailServiceTest {
       mockEmailNotificationService.assertEmailRequestCount(1)
       mockEmailNotificationService.assertEmailRequested(
         ALLOCATED_EMAIL,
-        notifyConfig.templates.assessmentDeallocated,
+        Cas1NotifyTemplates.ASSESSMENT_DEALLOCATED,
         mapOf(
           "name" to applicant.name,
           "crn" to CRN,
@@ -387,7 +385,7 @@ class Cas1AssessmentEmailServiceTest {
       mockEmailNotificationService.assertEmailRequestCount(1)
       mockEmailNotificationService.assertEmailRequested(
         ALLOCATED_EMAIL,
-        notifyConfig.templates.appealedAssessmentAllocated,
+        Cas1NotifyTemplates.APPEALED_ASSESSMENT_ALLOCATED,
         mapOf(
           "name" to applicant.name,
           "crn" to CRN,
@@ -439,7 +437,7 @@ class Cas1AssessmentEmailServiceTest {
       mockEmailNotificationService.assertEmailRequestCount(1)
       mockEmailNotificationService.assertEmailRequested(
         ALLOCATED_EMAIL,
-        notifyConfig.templates.assessmentWithdrawnV2,
+        Cas1NotifyTemplates.ASSESSMENT_WITHDRAWN_V2,
         mapOf(
           "crn" to CRN,
           "applicationUrl" to "http://frontend/application/${assessment.application.id}",

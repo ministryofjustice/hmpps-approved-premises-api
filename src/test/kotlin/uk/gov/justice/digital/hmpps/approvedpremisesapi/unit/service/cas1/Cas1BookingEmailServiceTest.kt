@@ -3,7 +3,7 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.unit.service.cas1
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.config.NotifyConfig
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.config.Cas1NotifyTemplates
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApAreaEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApprovedPremisesApplicationEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApprovedPremisesEntityFactory
@@ -51,12 +51,10 @@ class Cas1BookingEmailServiceTest {
     const val CASE_MANAGER_EMAIL = "caseManager@test.com"
   }
 
-  private val notifyConfig = NotifyConfig()
   private val mockEmailNotificationService = MockCas1EmailNotificationService()
 
   private val service = Cas1BookingEmailService(
     mockEmailNotificationService,
-    notifyConfig = notifyConfig,
     applicationUrlTemplate = UrlTemplate("http://frontend/applications/#id"),
     applicationTimelineUrlTemplate = UrlTemplate("http://frontend/applications/#applicationId?tab=timeline"),
     bookingUrlTemplate = UrlTemplate("http://frontend/premises/#premisesId/bookings/#bookingId"),
@@ -105,7 +103,7 @@ class Cas1BookingEmailServiceTest {
       mockEmailNotificationService.assertEmailRequestCount(1)
       mockEmailNotificationService.assertEmailRequested(
         PREMISES_EMAIL,
-        notifyConfig.templates.bookingMadePremises,
+        Cas1NotifyTemplates.BOOKING_MADE_FOR_PREMISES,
         mapOf(
           "apName" to PREMISES_NAME,
           "applicationUrl" to "http://frontend/applications/${application.id}",
@@ -157,21 +155,21 @@ class Cas1BookingEmailServiceTest {
 
       mockEmailNotificationService.assertEmailRequested(
         APPLICANT_EMAIL,
-        notifyConfig.templates.bookingMade,
+        Cas1NotifyTemplates.BOOKING_MADE,
         personalisation,
         application,
       )
 
       mockEmailNotificationService.assertEmailRequested(
         CASE_MANAGER_EMAIL,
-        notifyConfig.templates.bookingMade,
+        Cas1NotifyTemplates.BOOKING_MADE,
         personalisation,
         application,
       )
 
       mockEmailNotificationService.assertEmailRequested(
         PREMISES_EMAIL,
-        notifyConfig.templates.bookingMadePremises,
+        Cas1NotifyTemplates.BOOKING_MADE_FOR_PREMISES,
         personalisation,
         application,
       )
@@ -206,14 +204,14 @@ class Cas1BookingEmailServiceTest {
 
       mockEmailNotificationService.assertEmailRequested(
         APPLICANT_EMAIL,
-        notifyConfig.templates.bookingMade,
+        Cas1NotifyTemplates.BOOKING_MADE,
         expectedPersonalisation,
         application,
       )
 
       mockEmailNotificationService.assertEmailRequested(
         PREMISES_EMAIL,
-        notifyConfig.templates.bookingMadePremises,
+        Cas1NotifyTemplates.BOOKING_MADE_FOR_PREMISES,
         expectedPersonalisation,
         application,
       )
@@ -269,21 +267,21 @@ class Cas1BookingEmailServiceTest {
 
       mockEmailNotificationService.assertEmailRequested(
         APPLICANT_EMAIL,
-        notifyConfig.templates.bookingMade,
+        Cas1NotifyTemplates.BOOKING_MADE,
         personalisation,
         application,
       )
 
       mockEmailNotificationService.assertEmailRequested(
         PLACEMENT_APPLICATION_CREATOR_EMAIL,
-        notifyConfig.templates.bookingMade,
+        Cas1NotifyTemplates.BOOKING_MADE,
         personalisation,
         application,
       )
 
       mockEmailNotificationService.assertEmailRequested(
         PREMISES_EMAIL,
-        notifyConfig.templates.bookingMadePremises,
+        Cas1NotifyTemplates.BOOKING_MADE_FOR_PREMISES,
         personalisation,
         application,
       )
@@ -332,28 +330,28 @@ class Cas1BookingEmailServiceTest {
       mockEmailNotificationService.assertEmailRequestCount(4)
       mockEmailNotificationService.assertEmailRequested(
         APPLICANT_EMAIL,
-        notifyConfig.templates.bookingWithdrawnV2,
+        Cas1NotifyTemplates.BOOKING_WITHDRAWN_V2,
         expectedPersonalisation,
         application,
       )
 
       mockEmailNotificationService.assertEmailRequested(
         CASE_MANAGER_EMAIL,
-        notifyConfig.templates.bookingWithdrawnV2,
+        Cas1NotifyTemplates.BOOKING_WITHDRAWN_V2,
         expectedPersonalisation,
         application,
       )
 
       mockEmailNotificationService.assertEmailRequested(
         PREMISES_EMAIL,
-        notifyConfig.templates.bookingWithdrawnV2,
+        Cas1NotifyTemplates.BOOKING_WITHDRAWN_V2,
         expectedPersonalisation,
         application,
       )
 
       mockEmailNotificationService.assertEmailRequested(
         CRU_MANAGEMENT_AREA_EMAIL,
-        notifyConfig.templates.bookingWithdrawnV2,
+        Cas1NotifyTemplates.BOOKING_WITHDRAWN_V2,
         expectedPersonalisation,
         application,
       )
@@ -433,28 +431,28 @@ class Cas1BookingEmailServiceTest {
       mockEmailNotificationService.assertEmailRequestCount(4)
       mockEmailNotificationService.assertEmailRequested(
         APPLICANT_EMAIL,
-        notifyConfig.templates.bookingWithdrawnV2,
+        Cas1NotifyTemplates.BOOKING_WITHDRAWN_V2,
         expectedPersonalisation,
         application,
       )
 
       mockEmailNotificationService.assertEmailRequested(
         CASE_MANAGER_EMAIL,
-        notifyConfig.templates.bookingWithdrawnV2,
+        Cas1NotifyTemplates.BOOKING_WITHDRAWN_V2,
         expectedPersonalisation,
         application,
       )
 
       mockEmailNotificationService.assertEmailRequested(
         PREMISES_EMAIL,
-        notifyConfig.templates.bookingWithdrawnV2,
+        Cas1NotifyTemplates.BOOKING_WITHDRAWN_V2,
         expectedPersonalisation,
         application,
       )
 
       mockEmailNotificationService.assertEmailRequested(
         CRU_MANAGEMENT_AREA_EMAIL,
-        notifyConfig.templates.bookingWithdrawnV2,
+        Cas1NotifyTemplates.BOOKING_WITHDRAWN_V2,
         expectedPersonalisation,
         application,
       )
@@ -506,28 +504,28 @@ class Cas1BookingEmailServiceTest {
       mockEmailNotificationService.assertEmailRequestCount(4)
       mockEmailNotificationService.assertEmailRequested(
         APPLICANT_EMAIL,
-        notifyConfig.templates.bookingWithdrawnV2,
+        Cas1NotifyTemplates.BOOKING_WITHDRAWN_V2,
         expectedPersonalisation,
         application,
       )
 
       mockEmailNotificationService.assertEmailRequested(
         CASE_MANAGER_EMAIL,
-        notifyConfig.templates.bookingWithdrawnV2,
+        Cas1NotifyTemplates.BOOKING_WITHDRAWN_V2,
         expectedPersonalisation,
         application,
       )
 
       mockEmailNotificationService.assertEmailRequested(
         PREMISES_EMAIL,
-        notifyConfig.templates.bookingWithdrawnV2,
+        Cas1NotifyTemplates.BOOKING_WITHDRAWN_V2,
         expectedPersonalisation,
         application,
       )
 
       mockEmailNotificationService.assertEmailRequested(
         CRU_MANAGEMENT_AREA_EMAIL,
-        notifyConfig.templates.bookingWithdrawnV2,
+        Cas1NotifyTemplates.BOOKING_WITHDRAWN_V2,
         expectedPersonalisation,
         application,
       )
@@ -612,28 +610,28 @@ class Cas1BookingEmailServiceTest {
       mockEmailNotificationService.assertEmailRequestCount(4)
       mockEmailNotificationService.assertEmailRequested(
         APPLICANT_EMAIL,
-        notifyConfig.templates.bookingWithdrawnV2,
+        Cas1NotifyTemplates.BOOKING_WITHDRAWN_V2,
         expectedPersonalisation,
         application,
       )
 
       mockEmailNotificationService.assertEmailRequested(
         CASE_MANAGER_EMAIL,
-        notifyConfig.templates.bookingWithdrawnV2,
+        Cas1NotifyTemplates.BOOKING_WITHDRAWN_V2,
         expectedPersonalisation,
         application,
       )
 
       mockEmailNotificationService.assertEmailRequested(
         PREMISES_EMAIL,
-        notifyConfig.templates.bookingWithdrawnV2,
+        Cas1NotifyTemplates.BOOKING_WITHDRAWN_V2,
         expectedPersonalisation,
         application,
       )
 
       mockEmailNotificationService.assertEmailRequested(
         CRU_MANAGEMENT_AREA_EMAIL,
-        notifyConfig.templates.bookingWithdrawnV2,
+        Cas1NotifyTemplates.BOOKING_WITHDRAWN_V2,
         expectedPersonalisation,
         application,
       )
@@ -683,21 +681,21 @@ class Cas1BookingEmailServiceTest {
       mockEmailNotificationService.assertEmailRequestCount(3)
       mockEmailNotificationService.assertEmailRequested(
         APPLICANT_EMAIL,
-        notifyConfig.templates.bookingAmended,
+        Cas1NotifyTemplates.BOOKING_AMENDED,
         expectedPersonalisation,
         application,
       )
 
       mockEmailNotificationService.assertEmailRequested(
         CASE_MANAGER_EMAIL,
-        notifyConfig.templates.bookingAmended,
+        Cas1NotifyTemplates.BOOKING_AMENDED,
         expectedPersonalisation,
         application,
       )
 
       mockEmailNotificationService.assertEmailRequested(
         PREMISES_EMAIL,
-        notifyConfig.templates.bookingAmended,
+        Cas1NotifyTemplates.BOOKING_AMENDED,
         expectedPersonalisation,
         application,
       )
@@ -745,21 +743,21 @@ class Cas1BookingEmailServiceTest {
 
       mockEmailNotificationService.assertEmailRequested(
         APPLICANT_EMAIL,
-        notifyConfig.templates.bookingAmended,
+        Cas1NotifyTemplates.BOOKING_AMENDED,
         expectedPersonalisation,
         application,
       )
 
       mockEmailNotificationService.assertEmailRequested(
         CASE_MANAGER_EMAIL,
-        notifyConfig.templates.bookingAmended,
+        Cas1NotifyTemplates.BOOKING_AMENDED,
         expectedPersonalisation,
         application,
       )
 
       mockEmailNotificationService.assertEmailRequested(
         PREMISES_EMAIL,
-        notifyConfig.templates.bookingAmended,
+        Cas1NotifyTemplates.BOOKING_AMENDED,
         expectedPersonalisation,
         application,
       )
