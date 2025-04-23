@@ -17,6 +17,10 @@ jobs:
       POSTGRES_PORT: 5432
       SPRING_DATA_REDIS_PORT: 6379
     services:
+      redis:
+        image: "bitnami/redis:7.2.5"
+        env:
+          ALLOW_EMPTY_PASSWORD: yes
       postgres:
         image: "postgis/postgis:14-3.5"
 
