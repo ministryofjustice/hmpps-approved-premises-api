@@ -66,6 +66,8 @@ components:
               type: string
             allocatedPomEmailAddress:
               type: string
+            isTransferredApplication:
+              type: boolean
             assignmentDate:
               type: string
               format: date
@@ -74,6 +76,7 @@ components:
             - schemaVersion
             - outdatedSchema
             - status
+            - isTransferredApplication
     Cas2SubmittedApplication:
       type: object
       properties:

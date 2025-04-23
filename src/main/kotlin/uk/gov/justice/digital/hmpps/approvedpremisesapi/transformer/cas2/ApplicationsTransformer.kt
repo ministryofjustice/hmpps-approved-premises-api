@@ -46,6 +46,7 @@ class ApplicationsTransformer(
       allocatedPomName = currentUser?.name,
       allocatedPomEmailAddress = currentUser?.email,
       currentPrisonName = jpa.currentPrisonCode?.let { offenderManagementUnitRepository.findByPrisonCode(it)?.prisonName ?: it },
+      isTransferredApplication = jpa.currentPrisonCode != jpa.referringPrisonCode,
       assignmentDate = jpa.currentAssignmentDate,
     )
   }

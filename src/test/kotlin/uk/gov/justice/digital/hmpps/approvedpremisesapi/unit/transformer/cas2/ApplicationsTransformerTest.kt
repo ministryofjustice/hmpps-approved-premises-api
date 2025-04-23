@@ -22,6 +22,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.OffenderManageme
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.cas2.Cas2ApplicationEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.cas2.Cas2ApplicationSummaryEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.cas2.Cas2AssessmentEntityFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas2ApplicationAssignmentEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas2ApplicationSummaryEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.OffenderManagementUnitRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.NomisUserService
@@ -113,6 +114,7 @@ class ApplicationsTransformerTest {
         "allocatedPomName",
         "assignmentDate",
         "currentPrisonName",
+        "isTransferredApplication",
       )
 
       assertThat(result.id).isEqualTo(application.id)
@@ -126,6 +128,7 @@ class ApplicationsTransformerTest {
       assertThat(result.allocatedPomName).isNull()
       assertThat(result.assignmentDate).isNull()
       assertThat(result.currentPrisonName).isNull()
+      assertThat(result.isTransferredApplication).isFalse()
     }
 
     @Test
@@ -138,6 +141,7 @@ class ApplicationsTransformerTest {
 
       val application = submittedCas2ApplicationFactory
         .withAssessment(Cas2AssessmentEntityFactory().produce())
+        .withReferringPrisonCode("PRI")
         .withApplicationAssignments().produce()
 
       val result = applicationsTransformer.transformJpaToApi(application, mockk())
@@ -153,6 +157,7 @@ class ApplicationsTransformerTest {
       assertThat(result.allocatedPomName).isEqualTo(user.name)
       assertThat(result.assignmentDate).isEqualTo(application.currentAssignmentDate)
       assertThat(result.currentPrisonName).isEqualTo(prison.prisonName)
+      assertThat(result.isTransferredApplication).isFalse()
     }
 
     @Test
@@ -174,6 +179,7 @@ class ApplicationsTransformerTest {
       every { nomisUserService.getNomisUserById(any()) } returns user
 
       val application = submittedCas2ApplicationFactory.withAssessment(Cas2AssessmentEntityFactory().produce())
+        .withReferringPrisonCode("PRI")
         .withApplicationAssignments()
         .produce()
 
@@ -188,6 +194,40 @@ class ApplicationsTransformerTest {
       assertThat(result.allocatedPomName).isEqualTo(user.name)
       assertThat(result.assignmentDate).isEqualTo(application.currentAssignmentDate)
       assertThat(result.currentPrisonName).isEqualTo(prison.prisonName)
+      assertThat(result.isTransferredApplication).isFalse()
+    }
+
+    @Test
+    fun `transformJpaToApi transforms a submitted CAS2 application correctly which has been transferred`() {
+      val assessment = Cas2Assessment(id = UUID.fromString("3adc18ec-3d0d-4d0f-8b31-6f08e2591c35"))
+      every { mockAssessmentsTransformer.transformJpaToApiRepresentation(any()) } returns assessment
+      every { nomisUserService.getNomisUserById(any()) } returns user
+      val prison = OffenderManagementUnitEntityFactory().produce()
+      val newPrison = OffenderManagementUnitEntityFactory().withPrisonCode("NEW").withPrisonName("New Prison").withEmail("test@test.co.uk").produce()
+      every { offenderManagementUnitRepository.findByPrisonCode(eq(prison.prisonCode)) } returns prison
+      every { offenderManagementUnitRepository.findByPrisonCode(eq(newPrison.prisonCode)) } returns newPrison
+
+      val application = submittedCas2ApplicationFactory
+        .withAssessment(Cas2AssessmentEntityFactory().produce())
+        .withReferringPrisonCode(prison.prisonCode)
+        .withApplicationAssignments().produce()
+
+      application.applicationAssignments.add(Cas2ApplicationAssignmentEntity(UUID.randomUUID(), application, newPrison.prisonCode, null, OffsetDateTime.now()))
+
+      val result = applicationsTransformer.transformJpaToApi(application, mockk())
+
+      assertThat(result.id).isEqualTo(application.id)
+      assertThat(result.status).isEqualTo(ApplicationStatus.submitted)
+      assertThat(result.telephoneNumber).isEqualTo(application.telephoneNumber)
+      assertThat(result.assessment!!.id).isEqualTo(assessment.id)
+
+      // these are assigned after an application is submitted
+      assertThat(result.submittedAt).isEqualTo(application.submittedAt!!.toInstant())
+      assertThat(result.allocatedPomEmailAddress).isNull()
+      assertThat(result.allocatedPomName).isNull()
+      assertThat(result.assignmentDate).isEqualTo(application.currentAssignmentDate)
+      assertThat(result.currentPrisonName).isEqualTo(newPrison.prisonName)
+      assertThat(result.isTransferredApplication).isTrue()
     }
   }
 
