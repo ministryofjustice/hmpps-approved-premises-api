@@ -100,8 +100,6 @@ services:
     timeout-ms: 500
   manage-users-api:
     base-url: http://localhost:#WIREMOCK_PORT
-  probation-offender-search-api:
-    base-url: http://localhost:#WIREMOCK_PORT
   case-notes:
     base-url: http://localhost:#WIREMOCK_PORT
   ap-delius-context-api:

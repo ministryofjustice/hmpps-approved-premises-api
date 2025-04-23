@@ -47,7 +47,7 @@ class PeopleController(
           ?: RuntimeException("Could not retrieve person info for Prison Number: $nomsNumber")
 
       is ProbationOffenderSearchResult.Success.Full -> return ResponseEntity.ok(
-        personTransformer.transformProbationOffenderToPersonApi(probationOffenderResult, nomsNumber),
+        personTransformer.transformProbationOffenderToPersonApi(probationOffenderResult),
       )
 
       null -> throw NotFoundProblem(nomsNumber, "Offender")

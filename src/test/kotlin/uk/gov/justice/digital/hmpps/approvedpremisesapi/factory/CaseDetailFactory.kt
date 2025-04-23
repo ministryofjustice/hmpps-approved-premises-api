@@ -135,7 +135,7 @@ class CaseSummaryFactory : Factory<CaseSummary> {
   var pnc: Yielded<String?> = { randomStringUpperCase(10) }
   var name: Yielded<Name> = { NameFactory().produce() }
   var dateOfBirth: Yielded<LocalDate> = { LocalDate.now() }
-  var gender: Yielded<String> = { randomStringUpperCase(10) }
+  var gender: Yielded<String?> = { randomStringUpperCase(10) }
   var profile: Yielded<Profile> = { ProfileFactory().produce() }
   var manager: Yielded<Manager> = { ManagerFactory().produce() }
   var currentExclusion: Yielded<Boolean> = { false }
@@ -156,7 +156,7 @@ class CaseSummaryFactory : Factory<CaseSummary> {
   fun withDateOfBirth(dateOfBirth: LocalDate) = apply {
     this.dateOfBirth = { dateOfBirth }
   }
-  fun withGender(gender: String) = apply {
+  fun withGender(gender: String?) = apply {
     this.gender = { gender }
   }
   fun withProfile(profile: Profile) = apply {

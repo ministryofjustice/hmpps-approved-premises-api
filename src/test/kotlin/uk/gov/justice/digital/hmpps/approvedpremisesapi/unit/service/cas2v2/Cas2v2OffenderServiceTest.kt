@@ -12,19 +12,16 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.ApDeliusContextAp
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.ClientResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.ClientResult.Failure.StatusCode
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.PrisonsApiClient
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.ProbationOffenderSearchApiClient
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.datasource.OffenderDetailsDataSource
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.CaseSummaryFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.InmateDetailFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.OffenderDetailsSummaryFactory
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ProbationOffenderDetailFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.cas2v2.Cas2v2UserEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas2v2.Cas2v2UserType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.deliuscontext.CaseSummaries
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.prisonsapi.AssignedLivingUnit
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.prisonsapi.InmateDetail
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.prisonsapi.InmateStatus
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.probationoffendersearchapi.IDs
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.AuthorisableActionResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas2v2.Cas2v2OffenderSearchResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas2v2.Cas2v2OffenderService
@@ -32,7 +29,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.cas2v2.Cas2v
 
 class Cas2v2OffenderServiceTest {
   private val mockPrisonsApiClient = mockk<PrisonsApiClient>()
-  private val mockProbationOffenderSearchClient = mockk<ProbationOffenderSearchApiClient>()
   private val mockApDeliusContextApiClient = mockk<ApDeliusContextApiClient>()
   private val mockOffenderDetailsDataSource = mockk<OffenderDetailsDataSource>()
 
@@ -40,7 +36,6 @@ class Cas2v2OffenderServiceTest {
 
   private val cas2v2OffenderService = Cas2v2OffenderService(
     mockPrisonsApiClient,
-    mockProbationOffenderSearchClient,
     mockApDeliusContextApiClient,
     cas2v2PersonTransformer,
   )
@@ -59,33 +54,28 @@ class Cas2v2OffenderServiceTest {
 
     @Test
     fun `returns NotFound result when Probation Offender Search returns 404`() {
-      every { mockProbationOffenderSearchClient.searchOffenderByNomsNumber(nomsNumber) } returns StatusCode(HttpMethod.POST, "/search", HttpStatus.NOT_FOUND, null)
+      every { mockApDeliusContextApiClient.getCaseSummaries(listOf(nomsNumber)) } returns
+        StatusCode(HttpMethod.POST, "/case-summaries", HttpStatus.NOT_FOUND, null)
 
-      assertThat(cas2v2OffenderService.getPersonByNomsNumber(nomsNumber) is Cas2v2OffenderSearchResult.NotFound).isTrue
+      assertThat(cas2v2OffenderService.getPersonByNomisIdOrCrn(nomsNumber) is Cas2v2OffenderSearchResult.NotFound).isTrue
     }
 
     @Test
     fun `returns NotFound result when Probation Offender Search does not return a matching offender`() {
-      every { mockProbationOffenderSearchClient.searchOffenderByNomsNumber(nomsNumber) } returns ClientResult.Success(
-        HttpStatus.OK,
-        emptyList(),
-      )
+      every { mockApDeliusContextApiClient.getCaseSummaries(listOf(nomsNumber)) } returns
+        ClientResult.Success(HttpStatus.OK, CaseSummaries(emptyList()))
 
-      assertThat(cas2v2OffenderService.getPersonByNomsNumber(nomsNumber) is Cas2v2OffenderSearchResult.NotFound).isTrue
+      assertThat(cas2v2OffenderService.getPersonByNomisIdOrCrn(nomsNumber) is Cas2v2OffenderSearchResult.NotFound).isTrue
     }
 
     @Test
     fun `returns result when the matching offender is not in the same prison as the user`() {
       val crn = "ABC123"
 
-      val offenderDetails = ProbationOffenderDetailFactory()
-        .withOtherIds(otherIds = IDs(crn = crn, nomsNumber = nomsNumber))
-        .produce()
+      val offenderDetails = CaseSummaryFactory().withCrn(crn).withNomsId(nomsNumber).produce()
 
-      every { mockProbationOffenderSearchClient.searchOffenderByNomsNumber(nomsNumber) } returns ClientResult.Success(
-        status = HttpStatus.OK,
-        body = listOf(offenderDetails),
-      )
+      every { mockApDeliusContextApiClient.getCaseSummaries(listOf(nomsNumber)) } returns
+        ClientResult.Success(HttpStatus.OK, CaseSummaries(listOf(offenderDetails)))
 
       val inmateDetail = InmateDetailFactory()
         .withOffenderNo(nomsNumber)
@@ -104,14 +94,15 @@ class Cas2v2OffenderServiceTest {
         body = inmateDetail,
       )
 
-      assertThat(cas2v2OffenderService.getPersonByNomsNumber(nomsNumber) is Cas2v2OffenderSearchResult.Success).isTrue
+      assertThat(cas2v2OffenderService.getPersonByNomisIdOrCrn(nomsNumber) is Cas2v2OffenderSearchResult.Success).isTrue
     }
 
     @Test
     fun `returns Unknown if Probation Offender Search responds with a 500`() {
-      every { mockProbationOffenderSearchClient.searchOffenderByNomsNumber(nomsNumber) } returns StatusCode(HttpMethod.GET, "/search", HttpStatus.INTERNAL_SERVER_ERROR, null, true)
+      every { mockApDeliusContextApiClient.getCaseSummaries(listOf(nomsNumber)) } returns
+        StatusCode(HttpMethod.POST, "/case-summaries", HttpStatus.INTERNAL_SERVER_ERROR, null)
 
-      val result = cas2v2OffenderService.getPersonByNomsNumber(nomsNumber)
+      val result = cas2v2OffenderService.getPersonByNomisIdOrCrn(nomsNumber)
 
       assertThat(result is Cas2v2OffenderSearchResult.Unknown).isTrue
       result as Cas2v2OffenderSearchResult.Unknown
@@ -119,44 +110,13 @@ class Cas2v2OffenderServiceTest {
     }
 
     @Test
-    fun `returns not found if Prison API does not find a matching offender`() {
-      val crn = "ABC123"
-
-      val offenderDetails = ProbationOffenderDetailFactory()
-        .withOtherIds(otherIds = IDs(crn = crn, nomsNumber = nomsNumber))
-        .produce()
-
-      every { mockProbationOffenderSearchClient.searchOffenderByNomsNumber(nomsNumber) } returns StatusCode(
-        HttpMethod.GET,
-        "/search",
-        HttpStatus.NOT_FOUND,
-        null,
-      )
-
-      every { mockPrisonsApiClient.getInmateDetailsWithWait(nomsNumber) } returns StatusCode(
-        HttpMethod.GET,
-        "/api/offenders/$nomsNumber",
-        HttpStatus.NOT_FOUND,
-        null,
-      )
-
-      val result = cas2v2OffenderService.getPersonByNomsNumber(nomsNumber)
-
-      assertThat(result is Cas2v2OffenderSearchResult.NotFound).isTrue
-    }
-
-    @Test
     fun `returns Full Person when Probation Offender Search and Prison API returns a matching offender`() {
       val crn = "ABC123"
 
-      val offenderDetails = ProbationOffenderDetailFactory()
-        .withOtherIds(otherIds = IDs(crn = crn, nomsNumber = nomsNumber))
-        .produce()
+      val offenderDetails = CaseSummaryFactory().withCrn(crn).withNomsId(nomsNumber).produce()
 
-      every { mockProbationOffenderSearchClient.searchOffenderByNomsNumber(nomsNumber) } returns ClientResult.Success(
-        status = HttpStatus.OK,
-        body = listOf(offenderDetails),
-      )
+      every { mockApDeliusContextApiClient.getCaseSummaries(listOf(nomsNumber)) } returns
+        ClientResult.Success(HttpStatus.OK, CaseSummaries(listOf(offenderDetails)))
 
       val inmateDetail = InmateDetailFactory()
         .withOffenderNo(nomsNumber)
@@ -175,12 +135,12 @@ class Cas2v2OffenderServiceTest {
         body = inmateDetail,
       )
 
-      val result = cas2v2OffenderService.getPersonByNomsNumber(nomsNumber)
+      val result = cas2v2OffenderService.getPersonByNomisIdOrCrn(nomsNumber)
 
       assertThat(result is Cas2v2OffenderSearchResult.Success.Full).isTrue
       result as Cas2v2OffenderSearchResult.Success.Full
       assertThat(result.person.crn).isEqualTo(crn)
-      assertThat(result.person.nomsNumber).isEqualTo(offenderDetails.otherIds.nomsNumber)
+      assertThat(result.person.nomsNumber).isEqualTo(offenderDetails.nomsId)
     }
   }
 
@@ -305,19 +265,12 @@ class Cas2v2OffenderServiceTest {
       )
 
       every {
-        mockApDeliusContextApiClient.getSummariesForCrns(listOf(crn))
+        mockApDeliusContextApiClient.getCaseSummaries(listOf(crn))
       } returns ClientResult.Success(HttpStatus.OK, caseSummaries)
 
-      val probationOffenderDetail = ProbationOffenderDetailFactory()
-        .withOtherIds(IDs(crn = crn, nomsNumber = nomsNumber))
-        .withCurrentRestriction(true)
-        .produce()
       every {
-        mockProbationOffenderSearchClient.searchOffenderByNomsNumber(nomsNumber)
-      } returns ClientResult.Success(
-        HttpStatus.OK,
-        listOf(probationOffenderDetail),
-      )
+        mockApDeliusContextApiClient.getCaseSummaries(listOf(nomsNumber))
+      } returns ClientResult.Success(HttpStatus.OK, caseSummaries)
 
       every { mockPrisonsApiClient.getInmateDetailsWithWait(nomsNumber) } returns ClientResult.Success(
         HttpStatus.OK,
@@ -327,12 +280,12 @@ class Cas2v2OffenderServiceTest {
 
     @Test
     fun `Check searching by crn cannot view an offender with a currentRestriction`() {
-      assertThat(cas2v2OffenderService.getPersonByCrn(crn) is Cas2v2OffenderSearchResult.Forbidden).isTrue
+      assertThat(cas2v2OffenderService.getPersonByNomisIdOrCrn(crn) is Cas2v2OffenderSearchResult.Forbidden).isTrue
     }
 
     @Test
     fun `Check searching by nomis cannot view an offender with a currentRestriction`() {
-      assertThat(cas2v2OffenderService.getPersonByNomsNumber(nomsNumber) is Cas2v2OffenderSearchResult.Forbidden).isTrue
+      assertThat(cas2v2OffenderService.getPersonByNomisIdOrCrn(nomsNumber) is Cas2v2OffenderSearchResult.Forbidden).isTrue
     }
   }
 
@@ -360,27 +313,19 @@ class Cas2v2OffenderServiceTest {
           CaseSummaryFactory()
             .withCrn(crn)
             .withNomsId(nomsNumber)
-            .withCurrentRestriction(true)
-            .withCurrentExclusion(false)
+            .withCurrentRestriction(false)
+            .withCurrentExclusion(true)
             .produce(),
         ),
       )
 
       every {
-        mockApDeliusContextApiClient.getSummariesForCrns(listOf(crn))
+        mockApDeliusContextApiClient.getCaseSummaries(listOf(crn))
       } returns ClientResult.Success(HttpStatus.OK, caseSummaries)
 
-      val probationOffenderDetail = ProbationOffenderDetailFactory()
-        .withOtherIds(IDs(crn = crn, nomsNumber = nomsNumber))
-        .withCurrentRestriction(false)
-        .withCurrentExclusion(true)
-        .produce()
       every {
-        mockProbationOffenderSearchClient.searchOffenderByNomsNumber(nomsNumber)
-      } returns ClientResult.Success(
-        HttpStatus.OK,
-        listOf(probationOffenderDetail),
-      )
+        mockApDeliusContextApiClient.getCaseSummaries(listOf(nomsNumber))
+      } returns ClientResult.Success(HttpStatus.OK, caseSummaries)
 
       every { mockPrisonsApiClient.getInmateDetailsWithWait(nomsNumber) } returns ClientResult.Success(
         HttpStatus.OK,
@@ -390,12 +335,12 @@ class Cas2v2OffenderServiceTest {
 
     @Test
     fun `Check searching by crn can view an offender with a currentExclusion`() {
-      assertThat(cas2v2OffenderService.getPersonByCrn(crn) is Cas2v2OffenderSearchResult.Success.Full).isTrue
+      assertThat(cas2v2OffenderService.getPersonByNomisIdOrCrn(crn)).isInstanceOf(Cas2v2OffenderSearchResult.Success.Full::class.java)
     }
 
     @Test
     fun `Check searching by nomis can view an offender with a currentExclusion`() {
-      assertThat(cas2v2OffenderService.getPersonByNomsNumber(nomsNumber) is Cas2v2OffenderSearchResult.Success.Full).isTrue
+      assertThat(cas2v2OffenderService.getPersonByNomisIdOrCrn(nomsNumber)).isInstanceOf(Cas2v2OffenderSearchResult.Success.Full::class.java)
     }
   }
 }

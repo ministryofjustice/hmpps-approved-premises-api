@@ -7,9 +7,8 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.FullPerson
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.ApDeliusContextApiClient
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.ClientResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.PrisonsApiClient
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.ProbationOffenderSearchApiClient
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.deliuscontext.CaseSummaries
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.prisonsapi.InmateDetail
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.probationoffendersearchapi.ProbationOffenderDetail
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.AuthorisableActionResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.cas2v2.Cas2v2PersonTransformer
 
@@ -19,49 +18,45 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.cas2v2.Cas2v
 )
 class Cas2v2OffenderService(
   private val prisonsApiClient: PrisonsApiClient,
-  private val probationOffenderSearchApiClient: ProbationOffenderSearchApiClient,
   private val apDeliusContextApiClient: ApDeliusContextApiClient,
   private val cas2v2PersonTransformer: Cas2v2PersonTransformer,
 ) {
 
   private val log = LoggerFactory.getLogger(this::class.java)
 
-  fun getPersonByNomsNumber(nomsNumber: String): Cas2v2OffenderSearchResult {
-    fun logFailedResponse(probationResponse: ClientResult.Failure<List<ProbationOffenderDetail>>) = log.warn("Could not get inmate details for $nomsNumber", probationResponse.toException())
+  fun getPersonByNomisIdOrCrn(nomisIdOrCrn: String): Cas2v2OffenderSearchResult {
+    fun logFailedResponse(probationResponse: ClientResult.Failure<CaseSummaries>) = log.warn("Could not get inmate details for $nomisIdOrCrn", probationResponse.toException())
 
-    val probationResponse = probationOffenderSearchApiClient.searchOffenderByNomsNumber(nomsNumber)
-
-    val probationOffenderDetailList = when (probationResponse) {
-      is ClientResult.Success -> probationResponse.body
-      is ClientResult.Failure.StatusCode -> when (probationResponse.status) {
-        HttpStatus.NOT_FOUND -> return emitMessageAndCreateNotFound("Person not found by nomsNumber ($nomsNumber) via the Probation Offender Search Api", nomsNumber)
-        HttpStatus.FORBIDDEN -> return Cas2v2OffenderSearchResult.Forbidden(nomisIdOrCrn = nomsNumber, probationResponse.toException())
+    val caseSummaries = apDeliusContextApiClient.getCaseSummaries(listOf(nomisIdOrCrn))
+    val caseSummaryList = when (caseSummaries) {
+      is ClientResult.Success -> caseSummaries.body.cases
+      is ClientResult.Failure.StatusCode -> when (caseSummaries.status) {
+        HttpStatus.NOT_FOUND -> return emitMessageAndCreateNotFound("Person not found ($nomisIdOrCrn) via the Delius Integration Api", nomisIdOrCrn)
+        HttpStatus.FORBIDDEN -> return Cas2v2OffenderSearchResult.Forbidden(nomisIdOrCrn = nomisIdOrCrn, caseSummaries.toException())
         else -> {
-          logFailedResponse(probationResponse)
-          return Cas2v2OffenderSearchResult.Unknown(nomisIdOrCrn = nomsNumber, probationResponse.toException())
+          logFailedResponse(caseSummaries)
+          return Cas2v2OffenderSearchResult.Unknown(nomisIdOrCrn = nomisIdOrCrn, caseSummaries.toException())
         }
       }
       is ClientResult.Failure -> {
-        logFailedResponse(probationResponse)
-        return Cas2v2OffenderSearchResult.Unknown(nomisIdOrCrn = nomsNumber, probationResponse.toException())
+        logFailedResponse(caseSummaries)
+        return Cas2v2OffenderSearchResult.Unknown(nomisIdOrCrn = nomisIdOrCrn, caseSummaries.toException())
       }
     }
 
-    if (probationOffenderDetailList.isEmpty()) {
-      return Cas2v2OffenderSearchResult.NotFound(nomisIdOrCrn = nomsNumber)
+    if (caseSummaryList.isEmpty()) {
+      return Cas2v2OffenderSearchResult.NotFound(nomisIdOrCrn = nomisIdOrCrn)
     }
 
-    val probationOffenderDetail = probationOffenderDetailList[0]
+    val caseSummary = caseSummaryList[0]
 
-    return when (probationOffenderDetail.currentRestriction) {
+    return when (caseSummary.currentRestriction) {
       false -> Cas2v2OffenderSearchResult.Success.Full(
-        nomisIdOrCrn = nomsNumber,
-        person = cas2v2PersonTransformer.transformProbationOffenderDetailAndInmateDetailToFullPerson(
-          probationOffenderDetail,
-        ),
+        nomisIdOrCrn = nomisIdOrCrn,
+        person = cas2v2PersonTransformer.transformCaseSummaryToFullPerson(caseSummary),
       )
 
-      else -> Cas2v2OffenderSearchResult.Forbidden(nomsNumber)
+      else -> Cas2v2OffenderSearchResult.Forbidden(nomisIdOrCrn)
     }
   }
 
@@ -109,32 +104,6 @@ class Cas2v2OffenderService(
     }
 
     return AuthorisableActionResult.Success(inmateDetail)
-  }
-
-  fun getPersonByCrn(crn: String): Cas2v2OffenderSearchResult {
-    val caseSummariesByCrn = when (val result = apDeliusContextApiClient.getSummariesForCrns(listOf(crn))) {
-      is ClientResult.Success -> result.body
-      is ClientResult.Failure -> return emitMessageAndCreateNotFound("Person not found by CRN ($crn) via the AP Delius Context Api", crn)
-    }
-
-    if (caseSummariesByCrn.cases.isEmpty()) {
-      return emitMessageAndCreateNotFound("No summaries can be found for CRN=$crn via the AP Delius Context Api", crn)
-    }
-
-    val caseSummary = caseSummariesByCrn.cases[0]
-    val nomsNumber = caseSummary.nomsId
-
-    if (nomsNumber.isNullOrEmpty()) {
-      return when (caseSummary.currentRestriction) {
-        false -> Cas2v2OffenderSearchResult.Success.Full(
-          nomisIdOrCrn = crn,
-          person = cas2v2PersonTransformer.transformCaseSummaryToFullPerson(caseSummary),
-        )
-        else -> Cas2v2OffenderSearchResult.Forbidden(crn)
-      }
-    }
-
-    return getPersonByNomsNumber(nomsNumber)
   }
 
   private fun emitMessageAndCreateNotFound(message: String, nomisIdOrCrn: String): Cas2v2OffenderSearchResult.NotFound {

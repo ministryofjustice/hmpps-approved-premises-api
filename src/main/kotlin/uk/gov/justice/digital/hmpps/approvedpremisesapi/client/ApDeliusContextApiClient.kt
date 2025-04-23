@@ -42,9 +42,9 @@ class ApDeliusContextApiClient(
     path = "/probation-cases/$crn/details"
   }
 
-  fun getSummariesForCrns(crns: List<String>) = getRequest<CaseSummaries> {
+  fun getCaseSummaries(crnsOrNomsNumbers: List<String>) = getRequest<CaseSummaries> {
     path = "/probation-cases/summaries"
-    body = crns
+    body = crnsOrNomsNumbers
   }
 
   fun getUserAccessForCrns(deliusUsername: String, crns: List<String>) = getRequest<UserAccess> {
