@@ -63,7 +63,7 @@ generic-service:
     URL-TEMPLATES_API_CAS1_APPLICATION-ASSESSED-EVENT-DETAIL: https://approved-premises-api-test.hmpps.service.justice.gov.uk/events/application-assessed/#eventId
     URL-TEMPLATES_API_CAS1_BOOKING-MADE-EVENT-DETAIL: https://approved-premises-api-test.hmpps.service.justice.gov.uk/events/booking-made/#eventId
     URL-TEMPLATES_API_CAS1_PERSON-ARRIVED-EVENT-DETAIL: https://approved-premises-api-test.hmpps.service.justice.gov.uk/events/person-arrived/#eventId
-    URL-TEMPLATES_API_CAS1_PERSON-NOT-ARRIVED-EVENT-DETAIL: https://approved-premises-api.hmpps.service.justice.gov.uk/events/person-not-arrived/#eventId
+    URL-TEMPLATES_API_CAS1_PERSON-NOT-ARRIVED-EVENT-DETAIL: https://approved-premises-api-test.hmpps.service.justice.gov.uk/events/person-not-arrived/#eventId
     URL-TEMPLATES_API_CAS1_PERSON-DEPARTED-EVENT-DETAIL: https://approved-premises-api-test.hmpps.service.justice.gov.uk/events/person-departed/#eventId
     URL-TEMPLATES_API_CAS1_BOOKING-NOT-MADE-EVENT-DETAIL: https://approved-premises-api-test.hmpps.service.justice.gov.uk/events/booking-not-made/#eventId
     URL-TEMPLATES_API_CAS1_BOOKING-CANCELLED-EVENT-DETAIL: https://approved-premises-api-test.hmpps.service.justice.gov.uk/events/booking-cancelled/#eventId
