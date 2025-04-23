@@ -115,26 +115,20 @@ interface Cas1SpaceBookingRepository : JpaRepository<Cas1SpaceBookingEntity, UUI
 
     private const val CHANGE_REQUESTS_INFO_SUBQUERY =
       """
-      CASE
-          WHEN EXISTS (
+      EXISTS (
               SELECT 1
               FROM cas1_change_requests c1
               WHERE c1.cas1_space_booking_id = b.id
                 AND c1.type = 'PLANNED_TRANSFER'
                 AND c1.resolved = false
-          ) THEN true
-          ELSE false
-      END AS plannedTransferRequested,
-      CASE
-          WHEN EXISTS (
+          ) AS plannedTransferRequested,
+       EXISTS (
               SELECT 1
               FROM cas1_change_requests c2
               WHERE c2.cas1_space_booking_id = b.id
                 AND c2.type = 'PLACEMENT_APPEAL'
                 AND c2.resolved = false
-          ) THEN true
-          ELSE false
-      END AS appealRequested
+          ) AS appealRequested
       """
 
     private const val SPACE_BOOKING_SUMMARY_SELECT_QUERY = """

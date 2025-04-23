@@ -6592,6 +6592,8 @@ components:
         - expectedArrivalDate
         - expectedDepartureDate
         - isCancelled
+        - plannedTransferRequested
+        - appealRequested
     Cas1KeyWorkerAllocation:
       type: object
       properties:

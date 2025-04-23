@@ -27,11 +27,14 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.CharacteristicEn
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.NonArrivalReasonEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.PersonRisksFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.PlacementRequestEntityFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.cas1.Cas1ChangeRequestEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.events.ApprovedPremisesUserFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas1SpaceBookingAtPremises
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas1SpaceBookingSearchResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DepartureReasonEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.MoveOnCategoryEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas1.Cas1ChangeRequestRepository
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas1.ChangeRequestType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PersonInfoResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PersonSummaryInfoResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.RiskStatus
@@ -65,6 +68,9 @@ class Cas1SpaceBookingTransformerTest {
 
   @MockK
   private lateinit var spaceBookingStatusTransformer: Cas1SpaceBookingStatusTransformer
+
+  @MockK
+  private lateinit var cas1ChangeRequestRepository: Cas1ChangeRequestRepository
 
   @InjectMockKs
   private lateinit var transformer: Cas1SpaceBookingTransformer
@@ -329,8 +335,11 @@ class Cas1SpaceBookingTransformerTest {
         "the crn",
         PersonSummaryDiscriminator.restrictedPersonSummary,
       )
+
+      val cas1ChangeRequests = listOf(Cas1ChangeRequestEntityFactory().withType(ChangeRequestType.PLACEMENT_APPEAL).produce())
       every { personTransformer.personSummaryInfoToPersonSummary(personSummaryInfo) } returns expectedPersonSummary
       every { spaceBookingStatusTransformer.transformToSpaceBookingSummaryStatus(any()) } returns Cas1SpaceBookingSummaryStatus.departed
+      every { cas1ChangeRequestRepository.findAllBySpaceBookingAndResolvedIsFalse(any()) } returns cas1ChangeRequests
 
       val premises = ApprovedPremisesEntityFactory().withDefaults().withName("The booking's premise").produce()
 
@@ -402,6 +411,8 @@ class Cas1SpaceBookingTransformerTest {
       assertThat(result.status).isEqualTo(Cas1SpaceBookingSummaryStatus.departed)
       assertThat(result.deliusEventNumber).isEqualTo("event8")
       assertThat(result.isCancelled).isEqualTo(cancelled)
+      assertThat(result.plannedTransferRequested).isFalse()
+      assertThat(result.appealRequested).isTrue()
     }
   }
 
