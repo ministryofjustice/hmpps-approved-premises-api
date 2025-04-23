@@ -19,6 +19,9 @@ jobs:
     services:
       redis:
         image: "bitnami/redis:7.2.5"
+        ports:
+          - 6379:6379
+        options: --health-cmd="redis-cli ping" --health-interval=10s --health-timeout=5s --health-retries=5
         env:
           ALLOW_EMPTY_PASSWORD: yes
       postgres:
