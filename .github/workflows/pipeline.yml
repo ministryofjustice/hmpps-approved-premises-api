@@ -3,28 +3,12 @@ on:
   push:
     branches:
       - 'main'
-#  workflow_dispatch:
-#    inputs:
-#      additional_docker_tag:
-#        description: Additional docker tag that can be used to specify stable or testing tags
-#        required: false
-#        default: ''
-#        type: string
-#      push:
-#        description: Push docker image to registry flag
-#        required: true
-#        default: false
-#        type: boolean
+
 permissions:
   contents: read
   packages: write
 
-concurrency:
-  group: ${{ github.workflow }}-${{ github.ref }}
-  cancel-in-progress: true
-
 jobs:
-
   test:
     name: Test
     uses: ./.github/workflows/test.yml
@@ -39,11 +23,7 @@ jobs:
 
   docker_build:
     name: Build docker image from hmpps-github-actions
-    if: github.ref == 'refs/heads/main'
     uses: ministryofjustice/hmpps-github-actions/.github/workflows/docker_build.yml@v2 # WORKFLOW_VERSION
-    needs:
-      - test
-#      - integration_test
     with:
       docker_registry: 'ghcr.io'
       registry_org: 'ministryofjustice'
