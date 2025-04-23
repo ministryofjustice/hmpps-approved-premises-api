@@ -37,12 +37,8 @@ class Cas1ChangeRequestsController(
   private val userAccessService: UserAccessService,
 ) : ChangeRequestsCas1Delegate {
 
-  override fun create(placementRequestId: UUID, cas1NewChangeRequest: Cas1NewChangeRequest): ResponseEntity<Unit> {
-    when (cas1NewChangeRequest.type) {
-      Cas1ChangeRequestType.PLACEMENT_APPEAL -> userAccessService.ensureCurrentUserHasPermission(UserPermission.CAS1_PLACEMENT_APPEAL_CREATE)
-      Cas1ChangeRequestType.PLANNED_TRANSFER -> userAccessService.ensureCurrentUserHasPermission(UserPermission.CAS1_PLANNED_TRANSFER_CREATE)
-      Cas1ChangeRequestType.PLACEMENT_EXTENSION -> throw BadRequestProblem(errorDetail = "Change request type is not ${Cas1ChangeRequestType.PLANNED_TRANSFER} or ${Cas1ChangeRequestType.PLACEMENT_APPEAL}")
-    }
+  override fun createPlacementAppeal(placementRequestId: UUID, cas1NewChangeRequest: Cas1NewChangeRequest): ResponseEntity<Unit> {
+    userAccessService.ensureCurrentUserHasPermission(UserPermission.CAS1_PLACEMENT_APPEAL_CREATE)
 
     val result = cas1ChangeRequestService.createChangeRequest(placementRequestId, cas1NewChangeRequest)
 
@@ -50,6 +46,20 @@ class Cas1ChangeRequestsController(
 
     return ResponseEntity(HttpStatus.OK)
   }
+
+  override fun createPlannedTransfer(placementRequestId: UUID, cas1NewChangeRequest: Cas1NewChangeRequest): ResponseEntity<Unit> {
+    userAccessService.ensureCurrentUserHasPermission(UserPermission.CAS1_PLANNED_TRANSFER_CREATE)
+
+    val result = cas1ChangeRequestService.createChangeRequest(placementRequestId, cas1NewChangeRequest)
+
+    ensureEntityFromCasResultIsSuccess(result)
+
+    return ResponseEntity(HttpStatus.OK)
+  }
+
+  override fun createPlacementExtension(placementRequestId: UUID, cas1NewChangeRequest: Cas1NewChangeRequest): ResponseEntity<Unit> = throw BadRequestProblem(
+    errorDetail = "Change request type is not ${Cas1ChangeRequestType.PLANNED_TRANSFER} or ${Cas1ChangeRequestType.PLACEMENT_APPEAL}",
+  )
 
   override fun findOpen(
     page: Int?,
