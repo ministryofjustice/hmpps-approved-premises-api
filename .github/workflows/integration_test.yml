@@ -2,42 +2,6 @@ name: Integration Test
 
 on:
   workflow_call:
-    inputs:
-      working_directory:
-        type: string
-        required: false
-        default: '~/app'
-      java_version:
-        type: string
-        required: false
-        default: '21'
-      java_options:
-        type: string
-        default: 'default: -Xmx512m -XX:ParallelGCThreads=2 -XX:ConcGCThreads=2 -Djava.util.concurrent.ForkJoinPool.common.parallelism=2 -Dorg.gradle.daemon=false -Dkotlin.compiler.execution.strategy=in-process -Dorg.gradle.workers.max=1'
-        required: false
-      postgres_tag:
-        type: string
-        required: true
-      postgres_password:
-        type: string
-        default: 'dev'
-        required: false
-      postgres_username:
-        type: string
-        default: 'root'
-        required: true
-      postgres_db:
-        type: string
-        default: 'postgres'
-        required: false
-      services:
-        type: string
-        default: 's3,sqs,sns,es,ec2,lambda'
-        required: false
-      localstack_tag:
-        type: string
-        default: 'latest'
-        required: false
 
 permissions:
   contents: read
@@ -47,15 +11,19 @@ jobs:
     name: Integration Test
     runs-on: ubuntu-latest
     # Label used to access the service container
+    env:
+      _JAVA_OPTIONS: "-Xmx3g"
+      GRADLE_OPTS: "-Dorg.gradle.daemon=false -Dorg.gradle.workers.max=2"
+      POSTGRES_PORT: 5432
+      SPRING_DATA_REDIS_PORT: 6379
     services:
       postgres:
-        # Docker Hub PostgreSQL image
-        image: postgres:${{ inputs.postgres_tag }}
-        # Provide the password for postgres
+        image: "postgis/postgis:14-3.5"
+
         env:
-          POSTGRES_USER: ${{ inputs.postgres_username }}
-          POSTGRES_PASSWORD: ${{ inputs.postgres_password }}
-          POSTGRES_DB: ${{ inputs.postgres_db}}
+          POSTGRES_USER: api_user
+          POSTGRES_PASSWORD: api_user_password
+          POSTGRES_DB: unused
 
         options: >-
           --health-cmd pg_isready
@@ -66,7 +34,7 @@ jobs:
           # Maps tcp port 5432 on service container to the host
           - 5432:5432
       localstack:
-        image: localstack/localstack:${{ inputs.localstack_tag }}
+        image: localstack/localstack:3.4.0
         ports:
           - 4566:4566
           - 4571:4571
@@ -75,7 +43,11 @@ jobs:
           DOCKER_HOST: 'unix:///var/run/docker.sock'
           AWS_EXECUTION_ENV: True
           PERSISTENCE: 1
-          SERVICES: "${{ inputs.services }}"
+          SERVICES: sns,sqs
+#          DEBUG: "${DEBUG- }"
+          DEFAULT_REGION: eu-west-2
+          DATA_DIR: /tmp/localstack/data
+
     steps:
       - uses: actions/checkout@v4
       - name: refresh cache
@@ -91,14 +63,13 @@ jobs:
       - uses: actions/setup-java@v4
         with:
           distribution: 'temurin'
-          java-version: '${{ inputs.java_version }}'
+          java-version: 21
           cache: 'gradle'
           cache-dependency-path: |
             *.gradle*
             **/gradle-wrapper.properties
       - name: integration test
         run: |
-          export JAVA_OPTS="${{ inputs.java_options }}"
           ./gradlew integrationTest -Dorg.gradle.daemon=false -Dorg.gradle.workers.max=2
       - name: upload the artifacts
         if: always()

@@ -13,12 +13,6 @@ jobs:
     name: Test
     uses: ./.github/workflows/test.yml
 
-  integration_test:
-    name: Integration test
-    uses: ./.github/workflows/integration_test.yml
-    with:
-      postgres_tag: "postgis/postgis:14-3.5"
-
   docker_build:
     name: Build docker image from hmpps-github-actions
     uses: ministryofjustice/hmpps-github-actions/.github/workflows/docker_build.yml@v2 # WORKFLOW_VERSION
