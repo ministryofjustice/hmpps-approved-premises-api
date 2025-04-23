@@ -1,4 +1,4 @@
-name: Code Quality
+name: Test
 
 on:
   pull_request:
@@ -28,7 +28,7 @@ jobs:
         run: ./gradlew clean build -x test
 
   codeQL:
-    name: Analyze
+    name: CodeQL
     runs-on: ubuntu-latest
     permissions:
       actions: read
@@ -60,10 +60,10 @@ jobs:
           category: "/language:${{matrix.language}}"
 
   helm-lint:
+    name: Helm lint
     strategy:
       matrix:
         environments: ['dev', 'test', 'preprod', 'prod']
-    name: Helm lint
     uses: ministryofjustice/hmpps-github-actions/.github/workflows/test_helm_lint.yml@v2 # WORKFLOW VERSION
     secrets: inherit
     with:

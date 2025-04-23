@@ -43,7 +43,8 @@ permissions:
   contents: read
 
 jobs:
-  template_job:
+  integration_test:
+    name
     runs-on: ubuntu-latest
     # Label used to access the service container
     services:
@@ -98,7 +99,7 @@ jobs:
       - name: integration test
         run: |
           export JAVA_OPTS="${{ inputs.java_options }}"
-          ./gradlew test -DincludeTags=integration -Dorg.gradle.daemon=false -Dorg.gradle.workers.max=2
+          ./gradlew integrationTest -Dorg.gradle.daemon=false -Dorg.gradle.workers.max=2
       - name: upload the artifacts
         if: always()
         uses: actions/upload-artifact@v4
