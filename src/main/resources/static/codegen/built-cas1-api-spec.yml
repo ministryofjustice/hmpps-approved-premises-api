@@ -53,12 +53,7 @@ paths:
               $ref: '#/components/headers/X-Pagination-TotalResults'
             X-Pagination-PageSize:
               $ref: '#/components/headers/X-Pagination-TotalResults'
-        401:
-          $ref: '#/components/responses/401Response'
-        403:
-          $ref: '#/components/responses/403Response'
-        500:
-          $ref: '#/components/responses/500Response'
+
   /placement-request/{placementRequestId}/change-request:
     post:
       tags:
@@ -86,12 +81,7 @@ paths:
             'application/problem+json':
               schema:
                 $ref: '#/components/schemas/ValidationError'
-        401:
-          $ref: '#/components/responses/401Response'
-        403:
-          $ref: '#/components/responses/403Response'
-        500:
-          $ref: '#/components/responses/500Response'
+
 
   /placement-request/{placementRequestId}/change-requests/{changeRequestId}:
     get:
@@ -118,12 +108,6 @@ paths:
             'application/json':
               schema:
                 $ref: '#/components/schemas/Cas1ChangeRequest'
-        401:
-          $ref: '#/components/responses/401Response'
-        403:
-          $ref: '#/components/responses/403Response'
-        500:
-          $ref: '#/components/responses/500Response'
     patch:
       tags:
         - change requests
@@ -150,12 +134,7 @@ paths:
       responses:
         200:
           description: successfully rejected a change request
-        401:
-          $ref: '#/components/responses/401Response'
-        403:
-          $ref: '#/components/responses/403Response'
-        500:
-          $ref: '#/components/responses/500Response'
+
 
 
   /spaces/search:
@@ -183,12 +162,7 @@ paths:
             'application/problem+json':
               schema:
                 $ref: '#/components/schemas/ValidationError'
-        401:
-          $ref: '#/components/responses/401Response'
-        403:
-          $ref: '#/components/responses/403Response'
-        500:
-          $ref: '#/components/responses/500Response'
+
   /placement-requests/{placementRequestId}/space-bookings:
     post:
       tags:
@@ -223,18 +197,12 @@ paths:
             'application/problem+json':
               schema:
                 $ref: '#/components/schemas/ValidationError'
-        401:
-          $ref: '#/components/responses/401Response'
-        403:
-          $ref: '#/components/responses/403Response'
         404:
           description: invalid premises ID or booking ID
           content:
             'application/json':
               schema:
                 $ref: '#/components/schemas/Problem'
-        500:
-          $ref: '#/components/responses/500Response'
       x-codegen-request-body-name: body
   /placement-applications:
     post:
@@ -257,12 +225,7 @@ paths:
             'application/json':
               schema:
                 $ref: '#/components/schemas/PlacementApplication'
-        401:
-          $ref: '#/components/responses/401Response'
-        403:
-          $ref: '#/components/responses/403Response'
-        500:
-          $ref: '#/components/responses/500Response'
+
   /placement-applications/{id}:
     get:
       deprecated: true
@@ -285,12 +248,7 @@ paths:
             'application/json':
               schema:
                 $ref: '#/components/schemas/PlacementApplication'
-        401:
-          $ref: '#/components/responses/401Response'
-        403:
-          $ref: '#/components/responses/403Response'
-        500:
-          $ref: '#/components/responses/500Response'
+
     put:
       tags:
         - Placement applications
@@ -318,12 +276,7 @@ paths:
             'application/json':
               schema:
                 $ref: '#/components/schemas/PlacementApplication'
-        401:
-          $ref: '#/components/responses/401Response'
-        403:
-          $ref: '#/components/responses/403Response'
-        500:
-          $ref: '#/components/responses/500Response'
+
   /placement-applications/{id}/submission:
     post:
       deprecated: true
@@ -361,12 +314,7 @@ paths:
             'application/problem+json':
               schema:
                 $ref: '#/components/schemas/ValidationError'
-        401:
-          $ref: '#/components/responses/401Response'
-        403:
-          $ref: '#/components/responses/403Response'
-        500:
-          $ref: '#/components/responses/500Response'
+
   /placement-applications/{id}/decision:
     post:
       deprecated: true
@@ -402,12 +350,7 @@ paths:
             'application/problem+json':
               schema:
                 $ref: '#/components/schemas/ValidationError'
-        401:
-          $ref: '#/components/responses/401Response'
-        403:
-          $ref: '#/components/responses/403Response'
-        500:
-          $ref: '#/components/responses/500Response'
+
   /placement-applications/{id}/withdraw:
     post:
       deprecated: true
@@ -442,12 +385,7 @@ paths:
             'application/problem+json':
               schema:
                 $ref: '#/components/schemas/ValidationError'
-        401:
-          $ref: '#/components/responses/401Response'
-        403:
-          $ref: '#/components/responses/403Response'
-        500:
-          $ref: '#/components/responses/500Response'
+
   /placement-requests:
     get:
       tags:
@@ -527,12 +465,7 @@ paths:
               $ref: '#/components/headers/X-Pagination-TotalResults'
             X-Pagination-PageSize:
               $ref: '#/components/headers/X-Pagination-TotalResults'
-        401:
-          $ref: '#/components/responses/401Response'
-        403:
-          $ref: '#/components/responses/403Response'
-        500:
-          $ref: '#/components/responses/500Response'
+
 
   /premises/occupancy-report:
     get:
@@ -582,12 +515,7 @@ paths:
             'application/problem+json':
               schema:
                 $ref: '#/components/schemas/ValidationError'
-        401:
-          $ref: '#/components/responses/401Response'
-        403:
-          $ref: '#/components/responses/403Response'
-        500:
-          $ref: '#/components/responses/500Response'
+
 
   /premises/{premisesId}/out-of-service-beds:
     post:
@@ -623,18 +551,12 @@ paths:
             'application/problem+json':
               schema:
                 $ref: '#/components/schemas/ValidationError'
-        401:
-          $ref: '#/components/responses/401Response'
-        403:
-          $ref: '#/components/responses/403Response'
         404:
           description: invalid premises ID or booking ID
           content:
             'application/json':
               schema:
                 $ref: '#/components/schemas/Problem'
-        500:
-          $ref: '#/components/responses/500Response'
       x-codegen-request-body-name: body
     get:
       tags:
@@ -658,12 +580,7 @@ paths:
                 type: array
                 items:
                   $ref: '#/components/schemas/Cas1OutOfServiceBed'
-        401:
-          $ref: '#/components/responses/401Response'
-        403:
-          $ref: '#/components/responses/403Response'
-        500:
-          $ref: '#/components/responses/500Response'
+
   /premises/{premisesId}/out-of-service-beds/{outOfServiceBedId}:
     get:
       tags:
@@ -692,18 +609,12 @@ paths:
             'application/json':
               schema:
                 $ref: '#/components/schemas/Cas1OutOfServiceBed'
-        401:
-          $ref: '#/components/responses/401Response'
-        403:
-          $ref: '#/components/responses/403Response'
         404:
           description: invalid premises or out-of-service bed ID
           content:
             'application/json':
               schema:
                 $ref: '#/components/schemas/Problem'
-        500:
-          $ref: '#/components/responses/500Response'
     put:
       tags:
         - out-of-service beds
@@ -744,18 +655,12 @@ paths:
             'application/problem+json':
               schema:
                 $ref: '#/components/schemas/ValidationError'
-        401:
-          $ref: '#/components/responses/401Response'
-        403:
-          $ref: '#/components/responses/403Response'
         404:
           description: invalid premises ID or booking ID
           content:
             'application/json':
               schema:
                 $ref: '#/components/schemas/Problem'
-        500:
-          $ref: '#/components/responses/500Response'
       x-codegen-request-body-name: body
   /premises/{premisesId}/out-of-service-beds/{outOfServiceBedId}/cancellations:
     post:
@@ -798,18 +703,12 @@ paths:
             'application/problem+json':
               schema:
                 $ref: '#/components/schemas/ValidationError'
-        401:
-          $ref: '#/components/responses/401Response'
-        403:
-          $ref: '#/components/responses/403Response'
         404:
           description: invalid premises ID or out-of-service bed ID
           content:
             'application/json':
               schema:
                 $ref: '#/components/schemas/Problem'
-        500:
-          $ref: '#/components/responses/500Response'
       x-codegen-request-body-name: body
 
   /premises/{premisesId}:
@@ -832,18 +731,12 @@ paths:
             'application/json':
               schema:
                 $ref: '#/components/schemas/Cas1Premises'
-        401:
-          $ref: '#/components/responses/401Response'
-        403:
-          $ref: '#/components/responses/403Response'
         404:
           description: invalid premises ID
           content:
             'application/json':
               schema:
                 $ref: '#/components/schemas/Problem'
-        500:
-          $ref: '#/components/responses/500Response'
   /premises/{premisesId}/beds:
     get:
       tags:
@@ -867,12 +760,7 @@ paths:
                 type: array
                 items:
                   $ref: '#/components/schemas/Cas1PremisesBedSummary'
-        401:
-          $ref: '#/components/responses/401Response'
-        403:
-          $ref: '#/components/responses/403Response'
-        500:
-          $ref: '#/components/responses/500Response'
+
   /premises/{premisesId}/beds/{bedId}:
     get:
       tags:
@@ -901,12 +789,7 @@ paths:
             'application/json':
               schema:
                 $ref: '#/components/schemas/Cas1BedDetail'
-        401:
-          $ref: '#/components/responses/401Response'
-        403:
-          $ref: '#/components/responses/403Response'
-        500:
-          $ref: '#/components/responses/500Response'
+
   /premises/{premisesId}/capacity:
     get:
       tags:
@@ -955,18 +838,12 @@ paths:
             'application/problem+json':
               schema:
                 $ref: '#/components/schemas/ValidationError'
-        401:
-          $ref: '#/components/responses/401Response'
-        403:
-          $ref: '#/components/responses/403Response'
         404:
           description: invalid premises ID or booking ID
           content:
             'application/json':
               schema:
                 $ref: '#/components/schemas/Problem'
-        500:
-          $ref: '#/components/responses/500Response'
       x-codegen-request-body-name: body
 
   /premises/{premisesId}/staff:
@@ -992,18 +869,12 @@ paths:
                 type: array
                 items:
                   $ref: '#/components/schemas/StaffMember'
-        401:
-          $ref: '#/components/responses/401Response'
-        403:
-          $ref: '#/components/responses/403Response'
         404:
           description: invalid premises ID
           content:
             'application/json':
               schema:
                 $ref: '#/components/schemas/Problem'
-        500:
-          $ref: '#/components/responses/500Response'
 
   /premises/{premisesId}/space-bookings:
     get:
@@ -1078,12 +949,7 @@ paths:
               $ref: '#/components/headers/X-Pagination-TotalResults'
             X-Pagination-PageSize:
               $ref: '#/components/headers/X-Pagination-PageSize'
-        401:
-          $ref: '#/components/responses/401Response'
-        403:
-          $ref: '#/components/responses/403Response'
-        500:
-          $ref: '#/components/responses/500Response'
+
 
   /premises/{premisesId}/space-bookings/{bookingId}:
     get:
@@ -1113,12 +979,7 @@ paths:
             'application/json':
               schema:
                 $ref: '#/components/schemas/Cas1SpaceBooking'
-        401:
-          $ref: '#/components/responses/401Response'
-        403:
-          $ref: '#/components/responses/403Response'
-        500:
-          $ref: '#/components/responses/500Response'
+
     patch:
       tags:
         - space bookings
@@ -1147,12 +1008,7 @@ paths:
       responses:
         200:
           description: successful operation
-        401:
-          $ref: '#/components/responses/401Response'
-        403:
-          $ref: '#/components/responses/403Response'
-        500:
-          $ref: '#/components/responses/500Response'
+
 
   /premises/{premisesId}/space-bookings/{bookingId}/timeline:
     get:
@@ -1184,12 +1040,7 @@ paths:
                 type: array
                 items:
                   $ref: '#/components/schemas/Cas1TimelineEvent'
-        401:
-          $ref: '#/components/responses/401Response'
-        403:
-          $ref: '#/components/responses/403Response'
-        500:
-          $ref: '#/components/responses/500Response'
+
 
   /premises/{premisesId}/space-bookings/{bookingId}/arrival:
     post:
@@ -1227,18 +1078,12 @@ paths:
             'application/problem+json':
               schema:
                 $ref: '#/components/schemas/ValidationError'
-        401:
-          $ref: '#/components/responses/401Response'
-        403:
-          $ref: '#/components/responses/403Response'
         404:
           description: invalid premises ID or booking ID
           content:
             'application/json':
               schema:
                 $ref: '#/components/schemas/Problem'
-        500:
-          $ref: '#/components/responses/500Response'
 
 
   /premises/{premisesId}/space-bookings/{bookingId}/keyworker:
@@ -1277,18 +1122,12 @@ paths:
             'application/problem+json':
               schema:
                 $ref: '#/components/schemas/ValidationError'
-        401:
-          $ref: '#/components/responses/401Response'
-        403:
-          $ref: '#/components/responses/403Response'
         404:
           description: invalid premises ID or booking ID
           content:
             'application/json':
               schema:
                 $ref: '#/components/schemas/Problem'
-        500:
-          $ref: '#/components/responses/500Response'
 
   /premises/{premisesId}/space-bookings/{bookingId}/departure:
     post:
@@ -1326,18 +1165,12 @@ paths:
             'application/problem+json':
               schema:
                 $ref: '#/components/schemas/ValidationError'
-        401:
-          $ref: '#/components/responses/401Response'
-        403:
-          $ref: '#/components/responses/403Response'
         404:
           description: invalid premises ID or booking ID
           content:
             'application/json':
               schema:
                 $ref: '#/components/schemas/Problem'
-        500:
-          $ref: '#/components/responses/500Response'
 
   /premises/{premisesId}/space-bookings/{bookingId}/cancellations:
     post:
@@ -1376,18 +1209,12 @@ paths:
             'application/problem+json':
               schema:
                 $ref: '#/components/schemas/ValidationError'
-        401:
-          $ref: '#/components/responses/401Response'
-        403:
-          $ref: '#/components/responses/403Response'
         404:
           description: invalid premises ID or booking ID
           content:
             'application/json':
               schema:
                 $ref: '#/components/schemas/Problem'
-        500:
-          $ref: '#/components/responses/500Response'
       x-codegen-request-body-name: body
 
 
@@ -1427,18 +1254,12 @@ paths:
             'application/problem+json':
               schema:
                 $ref: '#/components/schemas/ValidationError'
-        401:
-          $ref: '#/components/responses/401Response'
-        403:
-          $ref: '#/components/responses/403Response'
         404:
           description: invalid premises ID or booking ID
           content:
             'application/json':
               schema:
                 $ref: '#/components/schemas/Problem'
-        500:
-          $ref: '#/components/responses/500Response'
 
   /premises/{premisesId}/space-bookings/{bookingId}/emergency-transfer:
     post:
@@ -1476,18 +1297,12 @@ paths:
             'application/problem+json':
               schema:
                 $ref: '#/components/schemas/ValidationError'
-        401:
-          $ref: '#/components/responses/401Response'
-        403:
-          $ref: '#/components/responses/403Response'
         404:
           description: invalid premises ID or booking ID
           content:
             'application/json':
               schema:
                 $ref: '#/components/schemas/Problem'
-        500:
-          $ref: '#/components/responses/500Response'
 
   /premises/{premisesId}/space-bookings/{bookingId}/planned-transfer:
     post:
@@ -1525,18 +1340,12 @@ paths:
             'application/problem+json':
               schema:
                 $ref: '#/components/schemas/ValidationError'
-        401:
-          $ref: '#/components/responses/401Response'
-        403:
-          $ref: '#/components/responses/403Response'
         404:
           description: invalid premises ID or booking ID
           content:
             'application/json':
               schema:
                 $ref: '#/components/schemas/Problem'
-        500:
-          $ref: '#/components/responses/500Response'
 
   /premises/{premisesId}/day-summary/{date}:
     get:
@@ -1602,12 +1411,7 @@ paths:
               $ref: '#/components/headers/X-Pagination-TotalResults'
             X-Pagination-PageSize:
               $ref: '#/components/headers/X-Pagination-PageSize'
-        401:
-          $ref: '#/components/responses/401Response'
-        403:
-          $ref: '#/components/responses/403Response'
-        500:
-          $ref: '#/components/responses/500Response'
+
   /reference-data/change-request-reasons/{changeRequestType}:
     get:
       tags:
@@ -1628,12 +1432,7 @@ paths:
                 type: array
                 items:
                   $ref: '#/components/schemas/NamedId'
-        401:
-          $ref: '#/components/responses/401Response'
-        403:
-          $ref: '#/components/responses/403Response'
-        500:
-          $ref: '#/components/responses/500Response'
+
   /reference-data/change-request-rejection-reasons/{changeRequestType}:
     get:
       tags:
@@ -1654,12 +1453,7 @@ paths:
                 type: array
                 items:
                   $ref: '#/components/schemas/NamedId'
-        401:
-          $ref: '#/components/responses/401Response'
-        403:
-          $ref: '#/components/responses/403Response'
-        500:
-          $ref: '#/components/responses/500Response'
+
   /reference-data/move-on-categories:
     get:
       tags:
@@ -1675,12 +1469,7 @@ paths:
                 type: array
                 items:
                   $ref: '#/components/schemas/MoveOnCategory'
-        401:
-          $ref: '#/components/responses/401Response'
-        403:
-          $ref: '#/components/responses/403Response'
-        500:
-          $ref: '#/components/responses/500Response'
+
   /reference-data/non-arrival-reasons:
     get:
       tags:
@@ -1696,12 +1485,7 @@ paths:
                 type: array
                 items:
                   $ref: '#/components/schemas/NonArrivalReason'
-        401:
-          $ref: '#/components/responses/401Response'
-        403:
-          $ref: '#/components/responses/403Response'
-        500:
-          $ref: '#/components/responses/500Response'
+
   /reference-data/out-of-service-bed-reasons:
     get:
       tags:
@@ -1717,12 +1501,7 @@ paths:
                 type: array
                 items:
                   $ref: '#/components/schemas/Cas1OutOfServiceBedReason'
-        401:
-          $ref: '#/components/responses/401Response'
-        403:
-          $ref: '#/components/responses/403Response'
-        500:
-          $ref: '#/components/responses/500Response'
+
 
   /reference-data/cru-management-areas:
     get:
@@ -1739,12 +1518,7 @@ paths:
                 type: array
                 items:
                   $ref: '#/components/schemas/Cas1CruManagementArea'
-        401:
-          $ref: '#/components/responses/401Response'
-        403:
-          $ref: '#/components/responses/403Response'
-        500:
-          $ref: '#/components/responses/500Response'
+
 
   /reference-data/departure-reasons:
     get:
@@ -1761,12 +1535,7 @@ paths:
                 type: array
                 items:
                   $ref: '#/components/schemas/DepartureReason'
-        401:
-          $ref: '#/components/responses/401Response'
-        403:
-          $ref: '#/components/responses/403Response'
-        500:
-          $ref: '#/components/responses/500Response'
+
 
   /reports/{reportName}:
     get:
@@ -1830,12 +1599,7 @@ paths:
             'application/json':
               schema:
                 $ref: '#/components/schemas/Cas1SpaceBooking'
-        401:
-          $ref: '#/components/responses/401Response'
-        403:
-          $ref: '#/components/responses/403Response'
-        500:
-          $ref: '#/components/responses/500Response'
+
 
   /out-of-service-beds:
     get:
@@ -1902,12 +1666,7 @@ paths:
               $ref: '#/components/headers/X-Pagination-TotalResults'
             X-Pagination-PageSize:
               $ref: '#/components/headers/X-Pagination-PageSize'
-        401:
-          $ref: '#/components/responses/401Response'
-        403:
-          $ref: '#/components/responses/403Response'
-        500:
-          $ref: '#/components/responses/500Response'
+
   /users/{id}:
     get:
       summary: Get information about a specific user
@@ -1929,12 +1688,7 @@ paths:
             'application/json':
               schema:
                 $ref: '#/components/schemas/ApprovedPremisesUser'
-        401:
-          $ref: '#/components/responses/401Response'
-        403:
-          $ref: '#/components/responses/403Response'
-        500:
-          $ref: '#/components/responses/500Response'
+
     put:
       summary: Update a user
       operationId: updateUser
@@ -1961,12 +1715,7 @@ paths:
             'application/json':
               schema:
                 $ref: '#/components/schemas/User'
-        401:
-          $ref: '#/components/responses/401Response'
-        403:
-          $ref: '#/components/responses/403Response'
-        500:
-          $ref: '#/components/responses/500Response'
+
     delete:
       summary: Deletes the user
       operationId: deleteUser
@@ -1989,12 +1738,7 @@ paths:
             'application/problem+json':
               schema:
                 $ref: '#/components/schemas/ValidationError'
-        401:
-          $ref: '#/components/responses/401Response'
-        403:
-          $ref: '#/components/responses/403Response'
-        500:
-          $ref: '#/components/responses/500Response'
+
   /applications/{applicationId}/timeline:
     get:
       tags:
@@ -2018,18 +1762,12 @@ paths:
                 type: array
                 items:
                   $ref: '#/components/schemas/Cas1TimelineEvent'
-        401:
-          $ref: '#/components/responses/401Response'
-        403:
-          $ref: '#/components/responses/403Response'
         404:
           description: invalid CRN
           content:
             'application/json':
               schema:
                 $ref: '#/components/schemas/Problem'
-        500:
-          $ref: '#/components/responses/500Response'
   /applications/all:
     get:
       tags:
@@ -2095,12 +1833,7 @@ paths:
               $ref: '#/components/headers/X-Pagination-TotalResults'
             X-Pagination-PageSize:
               $ref: '#/components/headers/X-Pagination-TotalResults'
-        401:
-          $ref: '#/components/responses/401Response'
-        403:
-          $ref: '#/components/responses/403Response'
-        500:
-          $ref: '#/components/responses/500Response'
+
   /applications:
     get:
       tags:
@@ -2116,12 +1849,7 @@ paths:
                 type: array
                 items:
                   $ref: '#/components/schemas/Cas1ApplicationSummary'
-        401:
-          $ref: '#/components/responses/401Response'
-        403:
-          $ref: '#/components/responses/403Response'
-        500:
-          $ref: '#/components/responses/500Response'
+
   /people/{crn}/timeline:
     get:
       tags:
@@ -2142,18 +1870,12 @@ paths:
             'application/json':
               schema:
                 $ref: '#/components/schemas/Cas1PersonalTimeline'
-        401:
-          $ref: '#/components/responses/401Response'
-        403:
-          $ref: '#/components/responses/403Response'
         404:
           description: invalid CRN
           content:
             'application/json':
               schema:
                 $ref: '#/components/schemas/Problem'
-        500:
-          $ref: '#/components/responses/500Response'
   /assessments:
     get:
       tags:
@@ -2223,12 +1945,7 @@ paths:
               schema:
                 type: integer
               description: The size of each page
-        401:
-          $ref: '#/components/responses/401Response'
-        403:
-          $ref: '#/components/responses/403Response'
-        500:
-          $ref: '#/components/responses/500Response'
+
   /assessments/{assessmentId}:
     get:
       tags:
@@ -2250,12 +1967,7 @@ paths:
             'application/json':
               schema:
                 $ref: '#/components/schemas/Cas1Assessment'
-        401:
-          $ref: '#/components/responses/401Response'
-        403:
-          $ref: '#/components/responses/403Response'
-        500:
-          $ref: '#/components/responses/500Response'
+
     put:
       tags:
         - Assessments
@@ -2283,12 +1995,7 @@ paths:
             'application/json':
               schema:
                 $ref: '#/components/schemas/Cas1Assessment'
-        401:
-          $ref: '#/components/responses/401Response'
-        403:
-          $ref: '#/components/responses/403Response'
-        500:
-          $ref: '#/components/responses/500Response'
+
   /assessments/{assessmentId}/notes:
     post:
       tags:
@@ -2317,12 +2024,7 @@ paths:
             'application/json':
               schema:
                 $ref: '#/components/schemas/Cas1ClarificationNote'
-        401:
-          $ref: '#/components/responses/401Response'
-        403:
-          $ref: '#/components/responses/403Response'
-        500:
-          $ref: '#/components/responses/500Response'
+
   /assessments/{assessmentId}/notes/{noteId}:
     put:
       tags:
@@ -2358,12 +2060,7 @@ paths:
             'application/json':
               schema:
                 $ref: '#/components/schemas/Cas1ClarificationNote'
-        401:
-          $ref: '#/components/responses/401Response'
-        403:
-          $ref: '#/components/responses/403Response'
-        500:
-          $ref: '#/components/responses/500Response'
+
   /assessments/{assessmentId}/acceptance:
     post:
       tags:
@@ -2388,12 +2085,7 @@ paths:
       responses:
         200:
           description: successfully accepted the assessment
-        401:
-          $ref: '#/components/responses/401Response'
-        403:
-          $ref: '#/components/responses/403Response'
-        500:
-          $ref: '#/components/responses/500Response'
+
   /assessments/{assessmentId}/rejection:
     post:
       tags:
@@ -2418,35 +2110,11 @@ paths:
       responses:
         200:
           description: successfully rejected the assessment
-        401:
-          $ref: '#/components/responses/401Response'
-        403:
-          $ref: '#/components/responses/403Response'
-        500:
-          $ref: '#/components/responses/500Response'
+
 
 
 
 components:
-  responses:
-    401Response:
-      description: not authenticated
-      content:
-        'application/json':
-          schema:
-            $ref: '#/components/schemas/Problem'
-    403Response:
-      description: unauthorised
-      content:
-        'application/json':
-          schema:
-            $ref: '#/components/schemas/Problem'
-    500Response:
-      description: unexpected error
-      content:
-        'application/json':
-          schema:
-            $ref: '#/components/schemas/Problem'
   headers:
     X-Pagination-CurrentPage:
       schema:

@@ -1,23 +1,4 @@
 components:
-  responses:
-    401Response:
-      description: not authenticated
-      content:
-        'application/json':
-          schema:
-            $ref: '#/components/schemas/Problem'
-    403Response:
-      description: unauthorised
-      content:
-        'application/json':
-          schema:
-            $ref: '#/components/schemas/Problem'
-    500Response:
-      description: unexpected error
-      content:
-        'application/json':
-          schema:
-            $ref: '#/components/schemas/Problem'
   headers:
     X-Pagination-CurrentPage:
       schema:
