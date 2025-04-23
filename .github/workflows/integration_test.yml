@@ -10,7 +10,11 @@ jobs:
   integration_test:
     name: Integration Test
     runs-on: ubuntu-latest
-    # Label used to access the service container
+    strategy:
+      fail-fast: false
+      matrix:
+        shard: [ 1, 2, 3, 4 ]
+
     env:
       _JAVA_OPTIONS: "-Xmx3g"
       GRADLE_OPTS: "-Dorg.gradle.daemon=false -Dorg.gradle.workers.max=2"
@@ -75,14 +79,27 @@ jobs:
           cache-dependency-path: |
             *.gradle*
             **/gradle-wrapper.properties
-      - name: integration test
+
+      - name: Determine tests splitting
+        uses: chaosaffe/split-tests@v1
+        id: split-tests
+        with:
+          glob: src/test/kotlin/**/integration/**/*Test.kt
+          split-index: ${{ strategy.job-index }}
+          split-total: ${{ strategy.job-total }}
+
+      - name: Run integration test
         run: |
-          ./gradlew integrationTest -Dorg.gradle.daemon=false -Dorg.gradle.workers.max=2
+          # Format the arguments to "./gradlew test"
+          GRADLE_ARGS=$(echo  ${{ steps.split-tests.outputs.test-suite }} | sed 's/src\/test\/kotlin\///g;s/\//./g;s/\.kt / /g' | awk '{for (i=1; i<=NF; i++) print "--tests",$i}')
+          echo "Prepared arguments for Gradle: $GRADLE_ARGS"
+          ./gradlew integrationTest -Dorg.gradle.daemon=false -Dorg.gradle.workers.max=2 $GRADLE_ARGS
+
       - name: upload the artifacts
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: upload kotlin valdation results
+          name: integration-test-results-${{ matrix.shard }}-of-${{ strategy.job-total }}
           path: |
             build/test-results
             build/reports/tests
