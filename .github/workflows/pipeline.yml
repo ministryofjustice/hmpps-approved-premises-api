@@ -43,7 +43,7 @@ jobs:
 
   code_quality:
     name: Code quality
-    uses: ./.github/workflows/code_quality.yml
+    uses: ./.github/workflows/test.yml
 
   unit_test:
     name: Unit tests
