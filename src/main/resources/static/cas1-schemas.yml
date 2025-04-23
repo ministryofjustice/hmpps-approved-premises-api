@@ -693,6 +693,20 @@ components:
       required:
         - occurredAt
         - reasonId
+    Cas1ApprovedPlacementAppeal:
+      type: object
+      properties:
+        occurredAt:
+          type: string
+          format: date
+        reasonNotes:
+          type: string
+        placementAppealChangeRequestId:
+          type: string
+          format: uuid
+      required:
+        - occurredAt
+        - placementAppealChangeRequestId
     Cas1PremiseCapacity:
       type: object
       properties:

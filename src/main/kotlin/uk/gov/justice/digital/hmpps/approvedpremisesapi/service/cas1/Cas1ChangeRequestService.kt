@@ -10,6 +10,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1RejectChan
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas1SpaceBookingEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas1SpaceBookingRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementRequestRepository
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas1.Cas1ChangeRequestEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas1.Cas1ChangeRequestReasonRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas1.Cas1ChangeRequestRejectionReasonRepository
@@ -98,6 +99,36 @@ class Cas1ChangeRequestService(
       },
     ),
   )
+
+  @Transactional
+  fun approvePlacementAppeal(changeRequestId: UUID, user: UserEntity, spaceBooking: Cas1SpaceBookingEntity): CasResult<Unit> = validatedCasResult {
+    if (spaceBooking.hasArrival()) {
+      return CasResult.GeneralValidationError("Space booking with ID ${spaceBooking.id} has been marked as arrived")
+    }
+
+    if (spaceBooking.hasNonArrival()) {
+      return CasResult.GeneralValidationError("Space booking with ID ${spaceBooking.id} has been marked as non-arrived")
+    }
+
+    if (spaceBooking.isCancelled()) {
+      return CasResult.GeneralValidationError("Space booking with ID ${spaceBooking.id} has been cancelled")
+    }
+
+    val changeRequest = findChangeRequest(changeRequestId)
+
+    if (changeRequest == null) {
+      return CasResult.NotFound("change request", changeRequestId.toString())
+    } else if (changeRequest.decision == ChangeRequestDecision.APPROVED) {
+      return CasResult.GeneralValidationError("Change request with ID $changeRequestId is already approved")
+    } else {
+      changeRequest.decision = ChangeRequestDecision.APPROVED
+      changeRequest.resolve()
+      changeRequest.decisionMadeByUser = user
+      cas1ChangeRequestRepository.save(changeRequest)
+    }
+
+    return Success(Unit)
+  }
 
   @Transactional
   fun rejectChangeRequest(

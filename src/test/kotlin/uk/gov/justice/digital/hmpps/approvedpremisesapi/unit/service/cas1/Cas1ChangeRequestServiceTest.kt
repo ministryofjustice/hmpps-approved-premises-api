@@ -13,6 +13,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1ChangeRequ
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1RejectChangeRequest
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.Cas1SpaceBookingEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.PlacementRequestEntityFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.UserEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.cas1.Cas1ChangeRequestEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.cas1.Cas1ChangeRequestReasonEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.cas1.Cas1ChangeRequestRejectionReasonEntityFactory
@@ -487,6 +488,126 @@ class Cas1ChangeRequestServiceTest {
       assertThat(savedChangeRequest.rejectionReason).isEqualTo(rejectionReason)
       assertThat(savedChangeRequest.resolved).isTrue()
       assertThat(savedChangeRequest.resolvedAt).isNotNull()
+    }
+  }
+
+  @Nested
+  inner class ApproveChangeRequest {
+
+    @Test
+    fun `throw validation error when change request is not found`() {
+      val user = UserEntityFactory()
+        .withDefaultProbationRegion()
+        .produce()
+
+      val spaceBooking = Cas1SpaceBookingEntityFactory()
+        .produce()
+
+      val changeRequestId = UUID.randomUUID()
+
+      every { cas1ChangeRequestRepository.findByIdOrNull(changeRequestId) } returns null
+
+      val result = service.approvePlacementAppeal(changeRequestId, user, spaceBooking)
+
+      assertThatCasResult(result).isNotFound("change request", changeRequestId)
+    }
+
+    @Test
+    fun `throw validation error when change request is already approved`() {
+      val user = UserEntityFactory()
+        .withDefaultProbationRegion()
+        .produce()
+
+      val changeRequest = Cas1ChangeRequestEntityFactory()
+        .withDecision(ChangeRequestDecision.APPROVED)
+        .produce()
+
+      val spaceBooking = Cas1SpaceBookingEntityFactory()
+        .produce()
+
+      every { cas1ChangeRequestRepository.findByIdOrNull(changeRequest.id) } returns changeRequest
+
+      val result = service.approvePlacementAppeal(changeRequest.id, user, spaceBooking)
+
+      assertThatCasResult(result).isGeneralValidationError("Change request with ID ${changeRequest.id} is already approved")
+    }
+
+    @Test
+    fun `throw validation error if booking has been marked as arrived`() {
+      val user = UserEntityFactory()
+        .withDefaultProbationRegion()
+        .produce()
+
+      val changeRequest = Cas1ChangeRequestEntityFactory()
+        .withDecision(ChangeRequestDecision.REJECTED)
+        .produce()
+
+      val spaceBooking = Cas1SpaceBookingEntityFactory()
+        .withActualArrivalDate(LocalDate.now())
+        .produce()
+
+      val result = service.approvePlacementAppeal(changeRequest.id, user, spaceBooking)
+
+      assertThatCasResult(result).isGeneralValidationError("Space booking with ID ${spaceBooking.id} has been marked as arrived")
+    }
+
+    @Test
+    fun `throw validation error if booking has been marked as non-arrived`() {
+      val user = UserEntityFactory()
+        .withDefaultProbationRegion()
+        .produce()
+
+      val changeRequest = Cas1ChangeRequestEntityFactory()
+        .withDecision(ChangeRequestDecision.REJECTED)
+        .produce()
+
+      val spaceBooking = Cas1SpaceBookingEntityFactory()
+        .withNonArrivalConfirmedAt(OffsetDateTime.now().toInstant())
+        .produce()
+
+      val result = service.approvePlacementAppeal(changeRequest.id, user, spaceBooking)
+
+      assertThatCasResult(result).isGeneralValidationError("Space booking with ID ${spaceBooking.id} has been marked as non-arrived")
+    }
+
+    @Test
+    fun `throw validation error if booking has been cancelled`() {
+      val user = UserEntityFactory()
+        .withDefaultProbationRegion()
+        .produce()
+
+      val changeRequest = Cas1ChangeRequestEntityFactory()
+        .withDecision(ChangeRequestDecision.REJECTED)
+        .produce()
+
+      val spaceBooking = Cas1SpaceBookingEntityFactory()
+        .withCancellationOccurredAt(OffsetDateTime.now().toLocalDate())
+        .produce()
+
+      val result = service.approvePlacementAppeal(changeRequest.id, user, spaceBooking)
+
+      assertThatCasResult(result).isGeneralValidationError("Space booking with ID ${spaceBooking.id} has been cancelled")
+    }
+
+    @Test
+    fun `return success for valid approval`() {
+      val user = UserEntityFactory()
+        .withDefaultProbationRegion()
+        .produce()
+
+      val changeRequest = Cas1ChangeRequestEntityFactory()
+        .withDecision(ChangeRequestDecision.REJECTED)
+        .produce()
+
+      val spaceBooking = Cas1SpaceBookingEntityFactory()
+        .produce()
+
+      every { cas1ChangeRequestRepository.findByIdOrNull(changeRequest.id) } returns changeRequest
+      every { cas1ChangeRequestRepository.save(any()) } returns null
+
+      val result = service.approvePlacementAppeal(changeRequest.id, user, spaceBooking)
+
+      assertThatCasResult(result).isSuccess()
     }
   }
 

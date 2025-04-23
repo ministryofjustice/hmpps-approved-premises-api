@@ -17,6 +17,7 @@ interface CancellationReasonRepository : JpaRepository<CancellationReasonEntity,
     val CAS1_RELATED_PLACEMENT_REQ_WITHDRAWN_ID: UUID = UUID.fromString("0a115fa4-6fd0-4b23-8e31-e6d1769c3985")
     val CAS1_RELATED_APP_WITHDRAWN_ID: UUID = UUID.fromString("bcb90030-b2d3-47d1-b289-a8b8c8898576")
     val CAS1_RELATED_OTHER_ID: UUID = UUID.fromString("1d6f3c6e-3a86-49b4-bfca-2513a078aba3")
+    val CAS1_BOOKING_SUCCESSFULLY_APPEALED_ID: UUID = UUID.fromString("acba3547-ab22-442d-acec-2652e49895f2")
   }
 
   @Query("SELECT c FROM CancellationReasonEntity c WHERE c.serviceScope = :serviceName OR c.serviceScope = '*' ORDER by c.sortOrder ASC, c.name ASC")
