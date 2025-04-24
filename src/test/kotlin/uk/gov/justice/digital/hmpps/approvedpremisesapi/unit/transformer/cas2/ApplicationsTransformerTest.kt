@@ -115,6 +115,7 @@ class ApplicationsTransformerTest {
         "assignmentDate",
         "currentPrisonName",
         "isTransferredApplication",
+        "omuEmailAddress",
       )
 
       assertThat(result.id).isEqualTo(application.id)
@@ -129,6 +130,7 @@ class ApplicationsTransformerTest {
       assertThat(result.assignmentDate).isNull()
       assertThat(result.currentPrisonName).isNull()
       assertThat(result.isTransferredApplication).isFalse()
+      assertThat(result.omuEmailAddress).isNull()
     }
 
     @Test
@@ -158,6 +160,7 @@ class ApplicationsTransformerTest {
       assertThat(result.assignmentDate).isEqualTo(application.currentAssignmentDate)
       assertThat(result.currentPrisonName).isEqualTo(prison.prisonName)
       assertThat(result.isTransferredApplication).isFalse()
+      assertThat(result.omuEmailAddress).isEqualTo(prison.email)
     }
 
     @Test
@@ -195,6 +198,7 @@ class ApplicationsTransformerTest {
       assertThat(result.assignmentDate).isEqualTo(application.currentAssignmentDate)
       assertThat(result.currentPrisonName).isEqualTo(prison.prisonName)
       assertThat(result.isTransferredApplication).isFalse()
+      assertThat(result.omuEmailAddress).isEqualTo(prison.email)
     }
 
     @Test
@@ -228,6 +232,7 @@ class ApplicationsTransformerTest {
       assertThat(result.assignmentDate).isEqualTo(application.currentAssignmentDate)
       assertThat(result.currentPrisonName).isEqualTo(newPrison.prisonName)
       assertThat(result.isTransferredApplication).isTrue()
+      assertThat(result.omuEmailAddress).isEqualTo(newPrison.email)
     }
   }
 
