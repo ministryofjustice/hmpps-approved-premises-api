@@ -252,6 +252,9 @@ data class UserEntity(
 
   fun hasAllQualifications(requiredQualifications: List<UserQualification>) = requiredQualifications.all(::hasQualification)
   fun hasPermission(permission: UserPermission) = roles.any { it.role.hasPermission(permission) }
+  fun hasAtLeastOnePermission(vararg permissions: UserPermission) = roles.any { roleAssignment ->
+    permissions.any { permission -> roleAssignment.role.hasPermission(permission) }
+  }
 
   override fun toString() = "User $id"
 

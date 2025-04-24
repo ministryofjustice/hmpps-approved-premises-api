@@ -124,7 +124,6 @@ enum class UserRole(val service: ServiceName, val cas1ApiValue: ApprovedPremises
       UserPermission.CAS1_PLANNED_TRANSFER_CREATE,
       UserPermission.CAS1_PLACEMENT_APPEAL_ASSESS,
       UserPermission.CAS1_PLANNED_TRANSFER_ASSESS,
-      UserPermission.CAS1_SPACE_BOOKING_WITHDRAW,
     ),
   ),
 

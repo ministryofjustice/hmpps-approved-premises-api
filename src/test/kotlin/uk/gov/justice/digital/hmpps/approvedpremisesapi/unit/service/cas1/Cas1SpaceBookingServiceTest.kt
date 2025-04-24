@@ -1640,10 +1640,10 @@ class Cas1SpaceBookingServiceTest {
     }
 
     @Test
-    fun `user without CAS1_SPACE_BOOKING_WITHDRAW permission cannot directly withdraw`() {
+    fun `user without CAS1_SPACE_BOOKING_WITHDRAW or CAS1_PLACEMENT_APPEAL_ASSESS permission cannot directly withdraw`() {
       val result = service.getWithdrawableState(
         Cas1SpaceBookingEntityFactory().produce(),
-        UserEntityFactory.mockUserWithoutPermission(UserPermission.CAS1_SPACE_BOOKING_WITHDRAW),
+        UserEntityFactory.mockUserWithoutPermission(UserPermission.CAS1_SPACE_BOOKING_WITHDRAW, UserPermission.CAS1_PLACEMENT_APPEAL_ASSESS),
       )
 
       assertThat(result.userMayDirectlyWithdraw).isEqualTo(false)
@@ -1654,6 +1654,16 @@ class Cas1SpaceBookingServiceTest {
       val result = service.getWithdrawableState(
         Cas1SpaceBookingEntityFactory().produce(),
         UserEntityFactory.mockUserWithPermission(UserPermission.CAS1_SPACE_BOOKING_WITHDRAW),
+      )
+
+      assertThat(result.userMayDirectlyWithdraw).isEqualTo(true)
+    }
+
+    @Test
+    fun `user with CAS1_PLACEMENT_APPEAL_ASSESS can directly withdraw`() {
+      val result = service.getWithdrawableState(
+        Cas1SpaceBookingEntityFactory().produce(),
+        UserEntityFactory.mockUserWithPermission(UserPermission.CAS1_PLACEMENT_APPEAL_ASSESS),
       )
 
       assertThat(result.userMayDirectlyWithdraw).isEqualTo(true)
