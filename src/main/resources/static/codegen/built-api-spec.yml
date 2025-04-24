@@ -6704,6 +6704,7 @@ components:
         - temporary_accommodation_referral_rejection
         - approved_premises_remap_bed_codes
         - short_term_accommodation_create_omus
+        - temporary_accommodation_assign_application_to_pdu
     SeedFromExcelFileType:
       type: string
       enum:
