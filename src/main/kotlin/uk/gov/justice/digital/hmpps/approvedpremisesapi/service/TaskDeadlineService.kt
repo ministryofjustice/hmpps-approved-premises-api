@@ -83,11 +83,11 @@ class TaskDeadlineService(
 
   companion object {
     private const val ASSESSMENT_STANDARD_TIMEFRAME_WORKDAYS = 10
-    private const val ASSESSMENT_SHORT_NOTICE_TIMEFRAME_WORKDAYS = 2
+    private const val ASSESSMENT_SHORT_NOTICE_TIMEFRAME_WORKDAYS = 5
     private const val ASSESSMENT_EMERGENCY_TIMEFRAME_HOURS = 2L
     private const val PLACEMENT_REQUEST_STANDARD_TIMEFRAME_WORKDAYS = 5
     private const val PLACEMENT_REQUEST_SHORT_NOTICE_TIMEFRAME_WORKDAYS = 2
-    private const val PLACEMENT_APPLICATION_TIMEFRAME_WORKDAYS = 2
+    private const val PLACEMENT_APPLICATION_TIMEFRAME_WORKDAYS = 5
 
     private val SAME_WORKING_DAY_DEADLINE_TIME: LocalTime = LocalTime.of(13, 0)
     private val WORKING_DAY_START_TIME: LocalTime = LocalTime.of(9, 0)
