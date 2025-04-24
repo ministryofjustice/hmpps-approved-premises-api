@@ -28,6 +28,7 @@ class ApplicationsTransformer(
 
   fun transformJpaToApi(jpa: Cas2ApplicationEntity, personInfo: PersonInfoResult): Cas2Application {
     val currentUser = jpa.currentPomUserId?.let { nomisUserService.getNomisUserById(jpa.currentPomUserId!!) }
+    val omu = jpa.currentPrisonCode?.let { offenderManagementUnitRepository.findByPrisonCode(it) }
     return Cas2Application(
       id = jpa.id,
       person = personTransformer.transformModelToPersonApi(personInfo),
@@ -45,9 +46,10 @@ class ApplicationsTransformer(
       timelineEvents = timelineEventsTransformer.transformApplicationToTimelineEvents(jpa),
       allocatedPomName = currentUser?.name,
       allocatedPomEmailAddress = currentUser?.email,
-      currentPrisonName = jpa.currentPrisonCode?.let { offenderManagementUnitRepository.findByPrisonCode(it)?.prisonName ?: it },
+      currentPrisonName = omu?.prisonName ?: jpa.currentPrisonCode,
       isTransferredApplication = jpa.currentPrisonCode != jpa.referringPrisonCode,
       assignmentDate = jpa.currentAssignmentDate,
+      omuEmailAddress = omu?.email,
     )
   }
 

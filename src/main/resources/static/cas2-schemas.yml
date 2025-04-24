@@ -66,6 +66,8 @@ components:
               type: string
             allocatedPomEmailAddress:
               type: string
+            omuEmailAddress:
+              type: string
             isTransferredApplication:
               type: boolean
             assignmentDate:
