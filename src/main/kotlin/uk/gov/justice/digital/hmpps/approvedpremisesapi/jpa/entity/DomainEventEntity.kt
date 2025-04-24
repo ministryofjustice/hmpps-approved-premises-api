@@ -34,6 +34,9 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.Ma
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.PersonArrivedEnvelope
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.PersonDepartedEnvelope
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.PersonNotArrivedEnvelope
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.PlacementAppealAcceptedEnvelope
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.PlacementAppealCreatedEnvelope
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.PlacementAppealRejectedEnvelope
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.PlacementApplicationAllocatedEnvelope
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.PlacementApplicationWithdrawnEnvelope
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.RequestForPlacementAssessedEnvelope
@@ -383,6 +386,30 @@ enum class DomainEventType(
     "An request for placement has been assessed",
     Cas1TimelineEventType.requestForPlacementAssessed,
     cas1EnvelopeType = RequestForPlacementAssessedEnvelope::class,
+  ),
+  APPROVED_PREMISES_PLACEMENT_APPEAL_CREATED(
+    DomainEventCas.CAS1,
+    Cas1EventType.placementAppealCreated.value,
+    "A placement appeal has been created",
+    Cas1TimelineEventType.placementAppealCreated,
+    emittable = false,
+    cas1EnvelopeType = PlacementAppealCreatedEnvelope::class,
+  ),
+  APPROVED_PREMISES_PLACEMENT_APPEAL_ACCEPTED(
+    DomainEventCas.CAS1,
+    Cas1EventType.placementAppealAccepted.value,
+    "A placement appeal has been accepted",
+    Cas1TimelineEventType.placementAppealAccepted,
+    emittable = false,
+    cas1EnvelopeType = PlacementAppealAcceptedEnvelope::class,
+  ),
+  APPROVED_PREMISES_PLACEMENT_APPEAL_REJECTED(
+    DomainEventCas.CAS1,
+    Cas1EventType.placementAppealRejected.value,
+    "A placement appeal has been rejected",
+    Cas1TimelineEventType.placementAppealRejected,
+    emittable = false,
+    cas1EnvelopeType = PlacementAppealRejectedEnvelope::class,
   ),
   CAS2_APPLICATION_SUBMITTED(
     DomainEventCas.CAS2,

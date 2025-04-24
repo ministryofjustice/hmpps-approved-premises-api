@@ -7745,6 +7745,9 @@ components:
         - information_request
         - assessment_appealed
         - assessment_allocated
+        - placement_appeal_accepted
+        - placement_appeal_created
+        - placement_appeal_rejected
         - placement_application_withdrawn
         - placement_application_allocated
         - match_request_withdrawn
@@ -7826,11 +7829,13 @@ components:
           type: integer
       required:
         - type
-        - schemaVersion
       discriminator:
         propertyName: "type"
         mapping:
           booking_changed: '#/components/schemas/Cas1BookingChangedContentPayload'
+          placement_appeal_accepted: '#/components/schemas/Cas1PlacementAppealAcceptedPayload'
+          placement_appeal_created: '#/components/schemas/Cas1PlacementAppealCreatedPayload'
+          placement_appeal_rejected: '#/components/schemas/Cas1PlacementAppealRejectedPayload'
     Cas1BookingChangedContentPayload:
       type: object
       allOf:
@@ -7865,6 +7870,63 @@ components:
         - premises
         - expectedArrival
         - expectedDeparture
+    Cas1PlacementAppealCreatedPayload:
+      type: object
+      allOf:
+        - $ref: "#/components/schemas/Cas1TimelineEventContentPayload"
+      properties:
+        premises:
+          $ref: '#/components/schemas/NamedId'
+        expectedArrival:
+          type: string
+          format: date
+        expectedDeparture:
+          type: string
+          format: date
+        appealReason:
+          $ref: '#/components/schemas/NamedId'
+      required:
+        - premises
+        - expectedArrival
+        - expectedDeparture
+        - appealReason
+    Cas1PlacementAppealAcceptedPayload:
+      type: object
+      allOf:
+        - $ref: "#/components/schemas/Cas1TimelineEventContentPayload"
+      properties:
+        premises:
+          $ref: '#/components/schemas/NamedId'
+        expectedArrival:
+          type: string
+          format: date
+        expectedDeparture:
+          type: string
+          format: date
+      required:
+        - premises
+        - expectedArrival
+        - expectedDeparture
+    Cas1PlacementAppealRejectedPayload:
+      type: object
+      allOf:
+        - $ref: "#/components/schemas/Cas1TimelineEventContentPayload"
+      properties:
+        premises:
+          $ref: '#/components/schemas/NamedId'
+        expectedArrival:
+          type: string
+          format: date
+        expectedDeparture:
+          type: string
+          format: date
+        rejectionReason:
+          $ref: '#/components/schemas/NamedId'
+      required:
+        - premises
+        - expectedArrival
+        - expectedDeparture
+        - rejectionReason
     Cas1PlacementRequestSummary:
       type: object
       properties:

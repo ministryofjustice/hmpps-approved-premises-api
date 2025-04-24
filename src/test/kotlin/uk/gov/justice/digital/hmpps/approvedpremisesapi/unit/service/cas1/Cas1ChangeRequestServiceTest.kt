@@ -32,6 +32,8 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas1.ChangeRe
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas1.LockableCas1ChangeRequestEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas1.LockableCas1ChangeRequestRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.CasResult
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.UserService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1ChangeRequestDomainEventService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1ChangeRequestEmailService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1ChangeRequestService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.unit.util.assertThatCasResult
@@ -64,6 +66,12 @@ class Cas1ChangeRequestServiceTest {
 
   @MockK
   lateinit var cas1ChangeRequestEmailService: Cas1ChangeRequestEmailService
+
+  @MockK
+  lateinit var cas1ChangeRequestDomainEventService: Cas1ChangeRequestDomainEventService
+
+  @MockK
+  lateinit var userService: UserService
 
   @InjectMockKs
   lateinit var service: Cas1ChangeRequestService
@@ -154,6 +162,8 @@ class Cas1ChangeRequestServiceTest {
       every { objectMapper.writeValueAsString(cas1NewChangeRequest.requestJson) } returns "{test: 1}"
       every { cas1ChangeRequestRepository.save(any()) } returnsArgument 0
       every { cas1ChangeRequestEmailService.placementAppealCreated(any()) } returns Unit
+      every { cas1ChangeRequestDomainEventService.placementAppealCreated(any(), any()) } returns Unit
+      every { userService.getUserForRequest() } returns UserEntityFactory().withDefaults().produce()
 
       val result = service.createChangeRequest(placementRequest.id, cas1NewChangeRequest)
 
@@ -173,6 +183,13 @@ class Cas1ChangeRequestServiceTest {
       verify {
         cas1ChangeRequestEmailService.placementAppealCreated(
           changeRequest = savedChangeRequest,
+        )
+      }
+
+      verify {
+        cas1ChangeRequestDomainEventService.placementAppealCreated(
+          changeRequest = savedChangeRequest,
+          requestingUser = any(),
         )
       }
     }
@@ -476,7 +493,7 @@ class Cas1ChangeRequestServiceTest {
     }
 
     @Test
-    fun `return success for a valid change request`() {
+    fun `return success for a placement appeal`() {
       val placementRequest = PlacementRequestEntityFactory()
         .withDefaults()
         .produce()
@@ -492,9 +509,11 @@ class Cas1ChangeRequestServiceTest {
 
       val rejectionReason = Cas1ChangeRequestRejectionReasonEntityFactory().produce()
       every { cas1ChangeRequestRejectionReasonRepository.findByIdAndArchivedIsFalse(any()) } returns rejectionReason
-
       every { cas1ChangeRequestRepository.saveAndFlush(any()) } returns changeRequest
       every { cas1ChangeRequestEmailService.placementAppealRejected(any()) } returns Unit
+
+      every { userService.getUserForRequest() } returns UserEntityFactory().withDefaults().produce()
+      every { cas1ChangeRequestDomainEventService.placementAppealRejected(any(), any()) } returns Unit
 
       val result = service.rejectChangeRequest(placementRequest.id, changeRequest.id, cas1RejectChangeRequest)
 
@@ -514,6 +533,13 @@ class Cas1ChangeRequestServiceTest {
       assertThat(savedChangeRequest.resolvedAt).isNotNull()
 
       verify { cas1ChangeRequestEmailService.placementAppealRejected(savedChangeRequest) }
+
+      verify {
+        cas1ChangeRequestDomainEventService.placementAppealRejected(
+          changeRequest = savedChangeRequest,
+          rejectingUser = any(),
+        )
+      }
     }
   }
 
@@ -630,6 +656,7 @@ class Cas1ChangeRequestServiceTest {
 
       every { cas1ChangeRequestRepository.findByIdOrNull(changeRequest.id) } returns changeRequest
       every { cas1ChangeRequestRepository.save(any()) } returns null
+      every { cas1ChangeRequestDomainEventService.placementAppealAccepted(any()) } returns Unit
       every { cas1ChangeRequestEmailService.placementAppealAccepted(any()) } returns Unit
 
       val result = service.approvePlacementAppeal(changeRequest.id, user, spaceBooking)

@@ -194,6 +194,8 @@ class Cas1DomainEventServiceTest {
       DomainEventType.APPROVED_PREMISES_APPLICATION_EXPIRED to domainEventService::getApplicationExpiredEvent,
       DomainEventType.APPROVED_PREMISES_ASSESSMENT_APPEALED to domainEventService::getAssessmentAppealedEvent,
       DomainEventType.APPROVED_PREMISES_ASSESSMENT_ALLOCATED to domainEventService::getAssessmentAllocatedEvent,
+      DomainEventType.APPROVED_PREMISES_PLACEMENT_APPEAL_ACCEPTED to domainEventService::getPlacementAppealAcceptedEvent,
+      DomainEventType.APPROVED_PREMISES_PLACEMENT_APPEAL_CREATED to domainEventService::getPlacementAppealCreatedEvent,
       DomainEventType.APPROVED_PREMISES_PLACEMENT_APPLICATION_WITHDRAWN to domainEventService::getPlacementApplicationWithdrawnEvent,
       DomainEventType.APPROVED_PREMISES_PLACEMENT_APPLICATION_ALLOCATED to domainEventService::getPlacementApplicationAllocatedEvent,
       DomainEventType.APPROVED_PREMISES_MATCH_REQUEST_WITHDRAWN to domainEventService::getMatchRequestWithdrawnEvent,
