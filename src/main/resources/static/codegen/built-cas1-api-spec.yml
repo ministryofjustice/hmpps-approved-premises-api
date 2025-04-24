@@ -7735,6 +7735,7 @@ components:
         - application_submitted
         - application_assessed
         - booking_made
+        - emergency_transfer_created
         - person_arrived
         - person_not_arrived
         - person_departed
@@ -7835,6 +7836,7 @@ components:
         propertyName: "type"
         mapping:
           booking_changed: '#/components/schemas/Cas1BookingChangedContentPayload'
+          emergency_transfer_created: '#/components/schemas/Cas1EmergencyTransferCreatedContentPayload'
           placement_appeal_accepted: '#/components/schemas/Cas1PlacementAppealAcceptedPayload'
           placement_appeal_created: '#/components/schemas/Cas1PlacementAppealCreatedPayload'
           placement_appeal_rejected: '#/components/schemas/Cas1PlacementAppealRejectedPayload'
@@ -7929,6 +7931,37 @@ components:
         - expectedArrival
         - expectedDeparture
         - rejectionReason
+    Cas1EmergencyTransferCreatedContentPayload:
+      type: object
+      allOf:
+        - $ref: "#/components/schemas/Cas1TimelineEventContentPayload"
+      properties:
+        from:
+          $ref: '#/components/schemas/Cas1EmergencyTransferCreatedContentPayloadBooking'
+        to:
+          $ref: '#/components/schemas/Cas1EmergencyTransferCreatedContentPayloadBooking'
+      required:
+        - from
+        - to
+    Cas1EmergencyTransferCreatedContentPayloadBooking:
+      type: object
+      properties:
+        bookingId:
+          type: string
+          format: uuid
+        premises:
+          $ref: '#/components/schemas/NamedId'
+        arrivalDate:
+          type: string
+          format: date
+        departureDate:
+          type: string
+          format: date
+      required:
+        - bookingId
+        - premises
+        - arrivalDate
+        - departureDate
     Cas1PlacementRequestSummary:
       type: object
       properties:

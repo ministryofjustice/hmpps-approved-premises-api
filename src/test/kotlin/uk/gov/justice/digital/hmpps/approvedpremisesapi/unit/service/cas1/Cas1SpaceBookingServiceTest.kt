@@ -2613,6 +2613,7 @@ class Cas1SpaceBookingServiceTest {
       val capturedBookings = mutableListOf<Cas1SpaceBookingEntity>()
 
       every { spaceBookingRepository.saveAndFlush(capture(capturedBookings)) } answers { firstArg() }
+      every { cas1SpaceBookingManagementDomainEventService.emergencyTransferCreated(any(), any(), any()) } returns Unit
 
       assertThat(existingSpaceBooking.transferredBooking).isNull()
 
@@ -2643,6 +2644,14 @@ class Cas1SpaceBookingServiceTest {
       assertThat(emergencyBooking.premises.id).isEqualTo(DESTINATION_PREMISES_ID)
       assertThat(emergencyBooking.expectedArrivalDate).isEqualTo(LocalDate.now())
       assertThat(emergencyBooking.expectedDepartureDate).isEqualTo(LocalDate.now().plusMonths(2))
+
+      verify {
+        cas1SpaceBookingManagementDomainEventService.emergencyTransferCreated(
+          createdBy = user,
+          from = existingSpaceBooking,
+          to = emergencyBooking,
+        )
+      }
     }
   }
 

@@ -18,6 +18,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.Bo
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.BookingMadeEnvelope
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.BookingNotMadeEnvelope
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.Cas1DomainEventEnvelope
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.EmergencyTransferCreatedEnvelope
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.FurtherInformationRequestedEnvelope
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.MatchRequestWithdrawnEnvelope
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.PersonArrivedEnvelope
@@ -67,6 +68,7 @@ class Cas1DomainEventService(
   fun getApplicationSubmittedDomainEvent(id: UUID) = get(id, ApplicationSubmittedEnvelope::class)
   fun getApplicationAssessedDomainEvent(id: UUID) = get(id, ApplicationAssessedEnvelope::class)
   fun getBookingMadeEvent(id: UUID) = get(id, BookingMadeEnvelope::class)
+  fun getEmergencyTransferCreatedEvent(id: UUID) = get(id, EmergencyTransferCreatedEnvelope::class)
   fun getPersonArrivedEvent(id: UUID) = get(id, PersonArrivedEnvelope::class)
   fun getPersonNotArrivedEvent(id: UUID) = get(id, PersonNotArrivedEnvelope::class)
   fun getPersonDepartedEvent(id: UUID) = get(id, PersonDepartedEnvelope::class)
@@ -140,6 +142,12 @@ class Cas1DomainEventService(
   fun saveBookingMadeDomainEvent(domainEvent: Cas1DomainEvent<BookingMadeEnvelope>) = saveAndEmit(
     domainEvent = domainEvent,
     eventType = DomainEventType.APPROVED_PREMISES_BOOKING_MADE,
+  )
+
+  @Transactional
+  fun saveEmergencyTransferCreatedEvent(domainEvent: Cas1DomainEvent<EmergencyTransferCreatedEnvelope>) = saveAndEmit(
+    domainEvent = domainEvent,
+    eventType = DomainEventType.APPROVED_PREMISES_EMERGENCY_TRANSFER_CREATED,
   )
 
   @Transactional

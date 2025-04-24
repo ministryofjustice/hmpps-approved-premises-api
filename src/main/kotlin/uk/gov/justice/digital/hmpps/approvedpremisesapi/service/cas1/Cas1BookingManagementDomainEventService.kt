@@ -4,6 +4,8 @@ import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.BookingKeyWorkerAssigned
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.BookingKeyWorkerAssignedEnvelope
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.EmergencyTransferCreated
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.EmergencyTransferCreatedEnvelope
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.EventType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.MoveOnCategory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.PersonArrived
@@ -15,6 +17,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.Pe
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.PersonNotArrivedEnvelope
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.PersonReference
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.StaffMember
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.TransferBooking
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.ApDeliusContextApiClient
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.ClientResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas1SpaceBookingEntity
@@ -260,6 +263,53 @@ class Cas1SpaceBookingManagementDomainEventService(
             assignedKeyWorkerName = assignedKeyWorkerName,
             arrivalDate = updatedCas1SpaceBooking.canonicalArrivalDate.toLocalDateTime().toLocalDate(),
             departureDate = updatedCas1SpaceBooking.canonicalDepartureDate.toLocalDateTime().toLocalDate(),
+          ),
+        ),
+      ),
+    )
+  }
+
+  fun emergencyTransferCreated(
+    createdBy: UserEntity,
+    from: Cas1SpaceBookingEntity,
+    to: Cas1SpaceBookingEntity,
+  ) {
+    val domainEventId = UUID.randomUUID()
+    val eventOccurredAt = OffsetDateTime.now().toInstant()
+    val application = from.application!!
+    val crn = application.crn
+
+    val offenderDetails = getOffenderForCrn(crn)
+
+    domainEventService.saveEmergencyTransferCreatedEvent(
+      domainEvent = Cas1DomainEvent(
+        id = domainEventId,
+        applicationId = application.id,
+        crn = application.crn,
+        nomsNumber = offenderDetails?.nomsId,
+        occurredAt = eventOccurredAt,
+        cas1SpaceBookingId = from.id,
+        bookingId = null,
+        data = EmergencyTransferCreatedEnvelope(
+          id = domainEventId,
+          timestamp = eventOccurredAt,
+          eventType = EventType.emergencyTransferCreated,
+          eventDetails = EmergencyTransferCreated(
+            applicationId = application.id,
+            createdAt = eventOccurredAt,
+            createdBy = getStaffDetailsByUsername(createdBy.deliusUsername).toStaffMember(),
+            from = TransferBooking(
+              bookingId = from.id,
+              premises = mapApprovedPremisesEntityToPremises(from.premises),
+              arrivalOn = from.canonicalArrivalDate,
+              departureOn = from.canonicalDepartureDate,
+            ),
+            to = TransferBooking(
+              bookingId = to.id,
+              premises = mapApprovedPremisesEntityToPremises(to.premises),
+              arrivalOn = to.canonicalArrivalDate,
+              departureOn = to.canonicalDepartureDate,
+            ),
           ),
         ),
       ),

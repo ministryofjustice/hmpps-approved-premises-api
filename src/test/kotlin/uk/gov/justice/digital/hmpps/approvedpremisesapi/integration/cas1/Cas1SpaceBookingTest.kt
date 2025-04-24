@@ -2627,6 +2627,8 @@ class Cas1SpaceBookingTest {
       assertThat(emergencyTransferredBooking.premises.id).isEqualTo(destinationPremises.id)
       assertThat(emergencyTransferredBooking.expectedArrivalDate).isEqualTo(LocalDate.now())
       assertThat(emergencyTransferredBooking.expectedDepartureDate).isEqualTo(LocalDate.now().plusMonths(1))
+
+      domainEventAsserter.assertDomainEventOfTypeStored(application.id, DomainEventType.APPROVED_PREMISES_EMERGENCY_TRANSFER_CREATED)
     }
   }
 }
