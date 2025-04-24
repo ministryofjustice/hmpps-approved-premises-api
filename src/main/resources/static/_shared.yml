@@ -4411,6 +4411,10 @@ components:
           type: string
         isCancelled:
           type: boolean
+        plannedTransferRequested:
+          type: boolean
+        appealRequested:
+          type: boolean
       required:
         - id
         - person
@@ -4421,6 +4425,8 @@ components:
         - expectedArrivalDate
         - expectedDepartureDate
         - isCancelled
+        - plannedTransferRequested
+        - appealRequested
     Cas1KeyWorkerAllocation:
       type: object
       properties:
