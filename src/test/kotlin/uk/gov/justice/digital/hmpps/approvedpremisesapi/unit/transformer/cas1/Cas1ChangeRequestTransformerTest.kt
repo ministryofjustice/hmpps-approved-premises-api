@@ -19,6 +19,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.CaseSummaryFacto
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.OffenderDetailsSummaryFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.cas1.Cas1ChangeRequestEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas1.Cas1ChangeRequestRepository.FindOpenChangeRequestResult
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas1.ChangeRequestDecision
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas1.ChangeRequestType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PersonSummaryInfoResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.deliuscontext.Name
@@ -49,7 +50,9 @@ class Cas1ChangeRequestTransformerTest {
     override val personType = PersonSummaryDiscriminator.fullPersonSummary
   }
 
-  val entity = Cas1ChangeRequestEntityFactory().produce()
+  val entity = Cas1ChangeRequestEntityFactory()
+    .withDecision(ChangeRequestDecision.APPROVED)
+    .produce()
 
   private val cas1ChangeRequestTransformer = Cas1ChangeRequestTransformer(mockPersonTransformer, objectMapper)
 

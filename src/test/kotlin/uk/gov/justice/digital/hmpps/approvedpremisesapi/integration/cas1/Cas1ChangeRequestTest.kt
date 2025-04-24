@@ -13,6 +13,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1ChangeRequ
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1NewChangeRequest
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1RejectChangeRequest
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NamedId
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.config.Cas1NotifyTemplates
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.InitialiseDatabasePerClassTestBase
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.IntegrationTestBase
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenACas1Application
@@ -21,7 +22,9 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.given
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenACas1SpaceBooking
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAPlacementRequest
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAUser
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAnApprovedPremises
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAnOffender
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas1CruManagementAreaEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementRequestEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRole
@@ -145,12 +148,13 @@ class Cas1ChangeRequestTest {
     }
 
     @Test
-    fun `Returns 200 when post new appeal change request is successful`() {
+    fun `Returns 200 when post new placement appeal change request is successful`() {
       givenAUser(roles = listOf(CAS1_CHANGE_REQUEST_DEV)) { user, jwt ->
         givenAPlacementRequest(
           placementRequestAllocatedTo = user,
           assessmentAllocatedTo = user,
           createdByUser = user,
+          cruManagementArea = givenACas1CruManagementArea(),
         ) { placementRequest, _ ->
           val spaceBooking = givenACas1SpaceBooking(
             crn = placementRequest.application.crn,
@@ -177,13 +181,18 @@ class Cas1ChangeRequestTest {
           assertThat(persistedChangeRequest.requestJson).isEqualTo("{}")
           assertThat(persistedChangeRequest.requestReason).isEqualTo(changeRequestReason)
           assertThat(persistedChangeRequest.spaceBooking.id).isEqualTo(spaceBooking.id)
+
+          emailAsserter.assertEmailRequested(
+            placementRequest.application.cruManagementArea!!.emailAddress!!,
+            Cas1NotifyTemplates.PLACEMENT_APPEAL_CREATED,
+          )
         }
       }
     }
 
     @Test
     fun `Returns 200 when post new planned transfer change request is successful`() {
-      givenAUser(roles = listOf(UserRole.CAS1_CHANGE_REQUEST_DEV)) { user, jwt ->
+      givenAUser(roles = listOf(CAS1_CHANGE_REQUEST_DEV)) { user, jwt ->
         givenAPlacementRequest(
           placementRequestAllocatedTo = user,
           assessmentAllocatedTo = user,
@@ -569,6 +578,7 @@ class Cas1ChangeRequestTest {
   @Nested
   inner class RejectChangeRequest : InitialiseDatabasePerClassTestBase() {
 
+    lateinit var application: ApprovedPremisesApplicationEntity
     lateinit var cruManagementArea: Cas1CruManagementAreaEntity
     lateinit var changeRequest: Cas1ChangeRequestEntity
 
@@ -585,31 +595,33 @@ class Cas1ChangeRequestTest {
     fun setupChangeRequests() {
       val user = givenAUser().first
 
-      cruManagementArea = givenACas1CruManagementArea()
+      cruManagementArea = givenACas1CruManagementArea(emailAddress = "cru@test.com")
 
-      placementRequest1 = givenAPlacementRequest(
+      application = givenACas1Application(
         createdByUser = user,
-        application = givenACas1Application(
-          createdByUser = user,
-          offender = givenAnOffender(
-            offenderDetailsConfigBlock = {
-              withFirstName("Allan")
-              withLastName("Banks")
-            },
-          ).first.asCaseSummary(),
-          cruManagementArea = cruManagementArea,
-          tier = "A1",
-        ),
-      ).first
+        offender = givenAnOffender(
+          offenderDetailsConfigBlock = {
+            withFirstName("Allan")
+            withLastName("Banks")
+          },
+        ).first.asCaseSummary(),
+        cruManagementArea = cruManagementArea,
+        tier = "A1",
+      )
+
+      placementRequest1 = givenAPlacementRequest(createdByUser = user, application = application).first
+
+      val premises = givenAnApprovedPremises(emailAddress = "premises@test.com")
 
       changeRequest = givenACas1ChangeRequest(
         type = ChangeRequestType.PLACEMENT_APPEAL,
         spaceBooking = givenACas1SpaceBooking(
-          crn = placementRequest1.application.crn,
-          application = placementRequest1.application,
+          crn = application.crn,
+          application = application,
           placementRequest = placementRequest1,
           canonicalArrivalDate = LocalDate.of(2024, 6, 1),
           canonicalDepartureDate = LocalDate.of(2024, 6, 15),
+          premises = premises,
         ),
         decisionJson = "{\"test\": 1}",
       )
@@ -687,7 +699,7 @@ class Cas1ChangeRequestTest {
     }
 
     @Test
-    fun `return 200 when successfully reject change request`() {
+    fun `return 200 when successfully reject placement appeal change request`() {
       val (_, jwt) = givenAUser(roles = listOf(CAS1_CHANGE_REQUEST_DEV))
 
       val changeRequestBefore = cas1ChangeRequestRepository.findById(changeRequest.id).get()
@@ -709,6 +721,10 @@ class Cas1ChangeRequestTest {
       val changeRequestAfter = cas1ChangeRequestRepository.findById(changeRequest.id).get()
       assertThat(changeRequestAfter.rejectionReason).isNotNull()
       assertThat(changeRequestAfter.rejectionReason?.changeRequestType).isEqualTo(ChangeRequestType.PLACEMENT_APPEAL)
+
+      emailAsserter.assertEmailRequested("premises@test.com", Cas1NotifyTemplates.PLACEMENT_APPEAL_REJECTED)
+      emailAsserter.assertEmailRequested("cru@test.com", Cas1NotifyTemplates.PLACEMENT_APPEAL_REJECTED)
+      emailAsserter.assertEmailsRequestedCount(2)
     }
 
     @Test

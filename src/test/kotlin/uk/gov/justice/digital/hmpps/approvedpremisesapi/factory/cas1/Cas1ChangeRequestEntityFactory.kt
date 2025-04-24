@@ -4,7 +4,6 @@ import io.github.bluegroundltd.kfactory.Factory
 import io.github.bluegroundltd.kfactory.Yielded
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.Cas1SpaceBookingEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.PlacementRequestEntityFactory
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.UserEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas1SpaceBookingEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementRequestEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserEntity
@@ -25,9 +24,9 @@ class Cas1ChangeRequestEntityFactory : Factory<Cas1ChangeRequestEntity> {
   private var requestJson = { "{}" }
   private var requestReason = { Cas1ChangeRequestReasonEntityFactory().produce() }
   private var decisionJson: Yielded<String?> = { null }
-  private var decision: Yielded<ChangeRequestDecision?> = { ChangeRequestDecision.APPROVED }
+  private var decision: Yielded<ChangeRequestDecision?> = { null }
   private var rejectionReason: Yielded<Cas1ChangeRequestRejectionReasonEntity?> = { null }
-  private var decisionMadeByUser: Yielded<UserEntity?> = { UserEntityFactory().withDefaults().produce() }
+  private var decisionMadeByUser: Yielded<UserEntity?> = { null }
   private var resolved: Yielded<Boolean> = { false }
   private var resolvedAt: Yielded<OffsetDateTime?> = { null }
   private var createdAt = { OffsetDateTime.now().minusDays(randomInt(0, 365).toLong()) }
