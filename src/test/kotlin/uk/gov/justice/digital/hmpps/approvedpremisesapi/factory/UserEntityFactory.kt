@@ -12,6 +12,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ProbationRegi
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserPermission
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserQualificationAssignmentEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRole
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRoleAssignmentEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomEmailAddress
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomNumberChars
@@ -28,12 +29,16 @@ class UserEntityFactory : Factory<UserEntity> {
     fun mockUserWithPermission(permission: UserPermission): UserEntity {
       val user = mockk<UserEntity>()
       every { user.hasPermission(permission) } returns true
+      every { user.hasAtLeastOnePermission(*varargAny { it == permission }) } returns true
       return user
     }
 
-    fun mockUserWithoutPermission(permission: UserPermission): UserEntity {
+    fun mockUserWithoutPermission(vararg permissions: UserPermission): UserEntity {
       val user = mockk<UserEntity>()
-      every { user.hasPermission(permission) } returns false
+      permissions.forEach { permission ->
+        every { user.hasPermission(permission) } returns false
+        every { user.hasAtLeastOnePermission(*varargAny { it == permission }) } returns false
+      }
       return user
     }
   }
@@ -45,7 +50,6 @@ class UserEntityFactory : Factory<UserEntity> {
   private var deliusUsername: Yielded<String> = { randomStringUpperCase(12) }
   private var deliusStaffCode: Yielded<String> = { randomStringUpperCase(6) }
   private var applications: Yielded<MutableList<ApplicationEntity>> = { mutableListOf() }
-  private var roles: Yielded<MutableList<UserRoleAssignmentEntity>> = { mutableListOf() }
   private var qualifications: Yielded<MutableList<UserQualificationAssignmentEntity>> = { mutableListOf() }
   private var probationRegion: Yielded<ProbationRegionEntity>? = null
   private var probationDeliveryUnit: Yielded<ProbationDeliveryUnitEntity>? = null
@@ -56,6 +60,8 @@ class UserEntityFactory : Factory<UserEntity> {
   private var teamCodes: Yielded<List<String>?> = { null }
   private var createdAt: Yielded<OffsetDateTime?> = { null }
   private var updatedAt: Yielded<OffsetDateTime?> = { null }
+
+  private var roleEnums: List<UserRole> = emptyList()
 
   fun withId(id: UUID) = apply {
     this.id = { id }
@@ -157,6 +163,10 @@ class UserEntityFactory : Factory<UserEntity> {
     this.teamCodes = { teamCodes }
   }
 
+  fun withRoleEnums(roles: List<UserRole>) = apply {
+    this.roleEnums = roles
+  }
+
   override fun produce(): UserEntity = UserEntity(
     id = this.id(),
     name = this.name(),
@@ -165,7 +175,7 @@ class UserEntityFactory : Factory<UserEntity> {
     deliusUsername = this.deliusUsername(),
     deliusStaffCode = this.deliusStaffCode(),
     applications = this.applications(),
-    roles = this.roles(),
+    roles = mutableListOf(),
     qualifications = this.qualifications(),
     probationRegion = this.probationRegion?.invoke() ?: throw RuntimeException("A probation region must be provided"),
     probationDeliveryUnit = this.probationDeliveryUnit?.invoke(),
@@ -176,5 +186,13 @@ class UserEntityFactory : Factory<UserEntity> {
     teamCodes = this.teamCodes(),
     createdAt = this.createdAt(),
     updatedAt = this.updatedAt(),
-  )
+  ).apply {
+    this.roles = roleEnums.map {
+      UserRoleAssignmentEntity(
+        id = UUID.randomUUID(),
+        user = this,
+        role = it,
+      )
+    }.toMutableList()
+  }
 }
