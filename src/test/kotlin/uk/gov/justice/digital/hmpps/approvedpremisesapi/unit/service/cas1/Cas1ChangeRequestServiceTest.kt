@@ -656,6 +656,7 @@ class Cas1ChangeRequestServiceTest {
 
       every { cas1ChangeRequestRepository.findByIdOrNull(changeRequest.id) } returns changeRequest
       every { cas1ChangeRequestRepository.save(any()) } returns null
+      every { cas1ChangeRequestDomainEventService.placementAppealAccepted(any()) } returns Unit
       every { cas1ChangeRequestEmailService.placementAppealAccepted(any()) } returns Unit
 
       val result = service.approvePlacementAppeal(changeRequest.id, user, spaceBooking)

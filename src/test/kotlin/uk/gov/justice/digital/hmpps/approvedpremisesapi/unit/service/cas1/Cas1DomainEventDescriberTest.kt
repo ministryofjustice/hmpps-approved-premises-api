@@ -42,6 +42,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1PlacementA
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1PlacementAppealCreatedPayload
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1PlacementAppealRejectedPayload
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1SpaceCharacteristic
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1TimelineEventType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApAreaEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApprovedPremisesEntityFactory
@@ -744,9 +745,9 @@ class Cas1DomainEventDescriberTest {
 
       assertThat(result.description).isNull()
 
-      val contentPayload = result.payload as Cas1PlacementAppealCreatedPayload
+      val contentPayload = result.payload as Cas1PlacementAppealAcceptedPayload
+      assertThat(contentPayload.type).isEqualTo(Cas1TimelineEventType.placementAppealAccepted)
       assertThat(contentPayload.premises.name).isEqualTo("The Premises Name")
-      assertThat(contentPayload.appealReason.name).isEqualTo("The appeal name")
       assertThat(contentPayload.expectedArrival).isEqualTo(LocalDate.of(2015, 12, 1))
       assertThat(contentPayload.expectedDeparture).isEqualTo(LocalDate.of(2015, 12, 2))
     }
@@ -790,7 +791,8 @@ class Cas1DomainEventDescriberTest {
 
       assertThat(result.description).isNull()
 
-      val contentPayload = result.payload as Cas1PlacementAppealAcceptedPayload
+      val contentPayload = result.payload as Cas1PlacementAppealCreatedPayload
+      assertThat(contentPayload.type).isEqualTo(Cas1TimelineEventType.placementAppealCreated)
       assertThat(contentPayload.premises.name).isEqualTo("The Premises Name")
       assertThat(contentPayload.expectedArrival).isEqualTo(LocalDate.of(2015, 12, 1))
       assertThat(contentPayload.expectedDeparture).isEqualTo(LocalDate.of(2015, 12, 2))
@@ -832,6 +834,7 @@ class Cas1DomainEventDescriberTest {
       assertThat(result.description).isNull()
 
       val contentPayload = result.payload as Cas1PlacementAppealRejectedPayload
+      assertThat(contentPayload.type).isEqualTo(Cas1TimelineEventType.placementAppealRejected)
       assertThat(contentPayload.premises.name).isEqualTo("The Premises Name")
       assertThat(contentPayload.rejectionReason.name).isEqualTo("The rejection code")
       assertThat(contentPayload.expectedArrival).isEqualTo(LocalDate.of(2015, 12, 1))

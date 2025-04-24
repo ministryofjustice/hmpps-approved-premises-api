@@ -59,10 +59,14 @@ class Cas1ChangeRequestDomainEventServiceTest {
         .withExpectedDepartureDate(LocalDate.of(2021, 12, 1))
         .produce()
 
-      val changeRequest = Cas1ChangeRequestEntityFactory().withSpaceBooking(spaceBooking).produce()
       val acceptingUser = UserEntityFactory().withDefaults().withDeliusUsername("theusername").produce()
 
-      service.placementAppealAccepted(changeRequest, acceptingUser)
+      val changeRequest = Cas1ChangeRequestEntityFactory()
+        .withDecisionMadeByUser(acceptingUser)
+        .withSpaceBooking(spaceBooking)
+        .produce()
+
+      service.placementAppealAccepted(changeRequest)
 
       val domainEventArgument = slot<Cas1DomainEvent<PlacementAppealAcceptedEnvelope>>()
 
@@ -74,7 +78,7 @@ class Cas1ChangeRequestDomainEventServiceTest {
 
       val domainEvent = domainEventArgument.captured
 
-      assertThat(domainEvent.data.eventType).isEqualTo(EventType.placementAppealCreated)
+      assertThat(domainEvent.data.eventType).isEqualTo(EventType.placementAppealAccepted)
       assertThat(domainEvent.data.timestamp).isWithinTheLastMinute()
       assertThat(domainEvent.applicationId).isEqualTo(changeRequest.placementRequest.application.id)
       assertThat(domainEvent.bookingId).isNull()

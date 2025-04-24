@@ -25,7 +25,6 @@ class Cas1ChangeRequestDomainEventService(
 
   fun placementAppealAccepted(
     changeRequest: Cas1ChangeRequestEntity,
-    approvingUser: UserEntity,
   ) {
     val domainEventId = UUID.randomUUID()
 
@@ -44,13 +43,13 @@ class Cas1ChangeRequestDomainEventService(
         data = PlacementAppealAcceptedEnvelope(
           id = domainEventId,
           timestamp = OffsetDateTime.now().toInstant(),
-          eventType = EventType.placementAppealCreated,
+          eventType = EventType.placementAppealAccepted,
           eventDetails = PlacementAppealAccepted(
             bookingId = spaceBooking.id,
             premises = mapApprovedPremisesEntityToPremises(spaceBooking.premises),
             arrivalOn = spaceBooking.expectedArrivalDate,
             departureOn = spaceBooking.expectedDepartureDate,
-            acceptedBy = getStaffDetailsByUsername(approvingUser.deliusUsername).toStaffMember(),
+            acceptedBy = getStaffDetailsByUsername(changeRequest.decisionMadeByUser!!.deliusUsername).toStaffMember(),
           ),
         ),
       ),

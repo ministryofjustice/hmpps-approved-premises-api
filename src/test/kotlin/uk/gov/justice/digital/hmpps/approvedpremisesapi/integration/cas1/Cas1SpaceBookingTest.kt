@@ -2238,6 +2238,8 @@ class Cas1SpaceBookingTest {
         emailAsserter.assertEmailRequested(premises.emailAddress!!, Cas1NotifyTemplates.PLACEMENT_APPEAL_ACCEPTED_FOR_PREMISES)
 
         emailAsserter.assertEmailsRequestedCount(4)
+
+        domainEventAsserter.assertDomainEventOfTypeStored(placementRequest.application.id, DomainEventType.APPROVED_PREMISES_PLACEMENT_APPEAL_ACCEPTED)
       }
     }
   }

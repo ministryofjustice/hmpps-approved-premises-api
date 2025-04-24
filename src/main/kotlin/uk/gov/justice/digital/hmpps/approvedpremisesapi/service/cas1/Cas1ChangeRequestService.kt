@@ -148,6 +148,7 @@ class Cas1ChangeRequestService(
     }
 
     cas1ChangeRequestEmailService.placementAppealAccepted(changeRequest)
+    cas1ChangeRequestDomainEventService.placementAppealAccepted(changeRequest)
 
     return Success(Unit)
   }

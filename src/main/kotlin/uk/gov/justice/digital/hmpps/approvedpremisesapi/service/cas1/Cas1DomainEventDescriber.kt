@@ -331,7 +331,7 @@ class Cas1DomainEventDescriber(
         ),
         expectedArrival = details.arrivalOn,
         expectedDeparture = details.departureOn,
-        type = Cas1TimelineEventType.placementAppealCreated,
+        type = Cas1TimelineEventType.placementAppealAccepted,
         schemaVersion = event?.schemaVersion,
       )
     }
@@ -383,7 +383,7 @@ class Cas1DomainEventDescriber(
         ),
         expectedArrival = details.arrivalOn,
         expectedDeparture = details.departureOn,
-        type = Cas1TimelineEventType.placementAppealCreated,
+        type = Cas1TimelineEventType.placementAppealRejected,
         schemaVersion = event?.schemaVersion,
         rejectionReason = NamedId(
           id = details.rejectionReason.id,
