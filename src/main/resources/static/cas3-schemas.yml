@@ -344,7 +344,7 @@ components:
         - addressLine1
         - postcode
         - pdu
-        - bedCount
+        - bedspaceCount
         - status
     Cas3Departure:
       type: object

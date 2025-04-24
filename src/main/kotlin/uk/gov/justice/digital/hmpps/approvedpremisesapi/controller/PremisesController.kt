@@ -33,7 +33,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewPremises
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewRoom
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewTurnaround
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Premises
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PremisesSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Room
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Turnaround
@@ -76,7 +75,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.ExtensionTra
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.PremisesTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.RoomTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.cas3.Cas3ConfirmationTransformer
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.cas3.Cas3PremisesSummaryTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.cas3.Cas3TurnaroundTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.cas3.Cas3VoidBedspaceCancellationTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.cas3.Cas3VoidBedspacesTransformer
@@ -99,7 +97,6 @@ class PremisesController(
   private val cas3BookingService: Cas3BookingService,
   private val cas3VoidBedspaceService: Cas3VoidBedspaceService,
   private val premisesTransformer: PremisesTransformer,
-  private val cas3PremisesSummaryTransformer: Cas3PremisesSummaryTransformer,
   private val bookingTransformer: BookingTransformer,
   private val cas3VoidBedspacesTransformer: Cas3VoidBedspacesTransformer,
   private val arrivalTransformer: ArrivalTransformer,
@@ -115,29 +112,6 @@ class PremisesController(
   private val dateChangeTransformer: DateChangeTransformer,
   private val cas1WithdrawableService: Cas1WithdrawableService,
 ) : PremisesApiDelegate {
-
-  @Suppress("TooGenericExceptionThrown")
-  override fun premisesSummaryGet(
-    xServiceName: ServiceName,
-    probationRegionId: UUID?,
-    apAreaId: UUID?,
-  ): ResponseEntity<List<PremisesSummary>> {
-    val transformedSummaries = when (xServiceName) {
-      ServiceName.approvedPremises -> throw RuntimeException("CAS1 not supported")
-      ServiceName.cas2 -> throw RuntimeException("CAS2 not supported")
-      ServiceName.cas2v2 -> throw RuntimeException("CAS2v2 not supported")
-
-      ServiceName.temporaryAccommodation -> {
-        val user = usersService.getUserForRequest()
-        val summaries = cas3PremisesService.getAllPremisesSummaries(user.probationRegion.id, postcodeOrAddress = null)
-
-        summaries.map(cas3PremisesSummaryTransformer::transformDomainToApi)
-      }
-    }
-
-    return ResponseEntity.ok(transformedSummaries)
-  }
-
   @Transactional
   override fun premisesPremisesIdPut(premisesId: UUID, body: UpdatePremises): ResponseEntity<Premises> {
     val premises = premisesService.getPremises(premisesId)
