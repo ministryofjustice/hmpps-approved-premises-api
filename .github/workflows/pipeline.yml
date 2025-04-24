@@ -15,11 +15,72 @@ jobs:
 
   docker_build:
     name: Build docker image from hmpps-github-actions
-    uses: ministryofjustice/hmpps-github-actions/.github/workflows/docker_build.yml@v2 # WORKFLOW_VERSION
+    uses: ministryofjustice/hmpps-github-actions/.github/workflows/docker_build.yml@v2
     with:
       docker_registry: 'ghcr.io'
       registry_org: 'ministryofjustice'
-      additional_docker_tag: ""
-      push: ${{ inputs.push || true }}
+      push: true
       docker_multiplatform: false
-      additional_docker_build_args: ""
+
+  deploy_dev:
+    name: Deploy to the development environment
+    needs:
+      - test
+      - docker_build
+    uses: ministryofjustice/hmpps-github-actions/.github/workflows/deploy_env.yml@v2
+    secrets: inherit
+    with:
+      environment: 'development'
+      app_version: '${{ needs.docker_build.outputs.app_version }}'
+
+  cas1_e2e_test:
+    name: "CAS1 E2E"
+    needs:
+      - deploy_dev
+    uses: ministryofjustice/hmpps-approved-premises-ui/.github/workflows/e2e_tests.yml@main
+    secrets: inherit
+
+  cas2_e2e_test:
+    name: "CAS2 E2E"
+    needs:
+      - deploy_dev
+    uses: ministryofjustice/hmpps-community-accommodation-tier-2-ui/.github/workflows/e2e_tests.yml@main
+    secrets: inherit
+
+  cas2_bail_e2e_test:
+    name: "CAS2 Bail E2E"
+    needs:
+      - deploy_dev
+    uses: ministryofjustice/hmpps-community-accommodation-tier-2-bail-ui/.github/workflows/e2e_tests.yml@main
+    secrets: inherit
+
+  cas3_e2e_test:
+    name: "CAS3 E2E"
+    needs:
+      - deploy_dev
+    uses: ministryofjustice/hmpps-temporary-accommodation-ui/.github/workflows/e2e_tests.yml@main
+    secrets: inherit
+
+  deploy_preprod:
+    name: Deploy to pre-production environment
+    needs:
+      - cas1_e2e_test
+      - cas2_e2e_test
+      - cas2_bail_e2e_test
+      - cas3_e2e_test
+    uses: ministryofjustice/hmpps-github-actions/.github/workflows/deploy_env.yml@v2
+    secrets: inherit
+    with:
+      environment: 'preprod'
+      app_version: '${{ needs.docker_build.outputs.app_version }}'
+
+  deploy_prod:
+    name: Deploy to production environment
+    needs:
+      - deploy_preprod
+    uses: ministryofjustice/hmpps-github-actions/.github/workflows/deploy_env.yml@v2
+    secrets: inherit
+    with:
+      environment: 'prod'
+      app_version: '${{ needs.docker_build.outputs.app_version }}'
+      slack_notification: 'true'
