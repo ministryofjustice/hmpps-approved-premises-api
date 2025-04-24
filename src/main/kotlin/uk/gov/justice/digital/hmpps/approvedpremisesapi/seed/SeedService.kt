@@ -36,6 +36,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.seed.cas2.NomisUsersSeed
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.seed.cas2.ShortTermAccommodationCreateOmusSeedJob
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.seed.cas2v2.Cas2v2ApplicationsSeedJob
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.seed.cas2v2.Cas2v2UsersSeedJob
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.seed.cas3.Cas3AssignApplicationToPduSeedJob
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.seed.cas3.Cas3ReferralRejectionSeedJob
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.seed.cas3.Cas3UsersSeedJob
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.seed.cas3.TemporaryAccommodationBedspaceSeedJob
@@ -106,6 +107,7 @@ class SeedService(
         SeedFileType.approvedPremisesDeleteApplicationTimelineNotes -> getBean(Cas1SoftDeleteApplicationTimelineNotes::class)
         SeedFileType.approvedPremisesRemapBedCodes -> getBean(Cas1RemapBedCodesSeedService::class)
         SeedFileType.shortTermAccommodationCreateOmus -> getBean(ShortTermAccommodationCreateOmusSeedJob::class)
+        SeedFileType.temporaryAccommodationAssignApplicationToPdu -> getBean(Cas3AssignApplicationToPduSeedJob::class)
       }
 
       val seedStarted = LocalDateTime.now()
