@@ -53,9 +53,7 @@ jobs:
     name: "CAS2 Bail E2E"
     needs:
       - deploy_dev
-    # TODO: target main branch when CAS2 Bail E2E PR has been merged:
-    # https://github.com/ministryofjustice/hmpps-community-accommodation-tier-2-bail-ui/pull/295
-    uses: ministryofjustice/hmpps-community-accommodation-tier-2-bail-ui/.github/workflows/e2e_tests.yml@CHORE/expose-e2e-for-api
+    uses: ministryofjustice/hmpps-community-accommodation-tier-2-bail-ui/.github/workflows/e2e_tests.yml@main
     secrets: inherit
 
   cas3_e2e_test:
