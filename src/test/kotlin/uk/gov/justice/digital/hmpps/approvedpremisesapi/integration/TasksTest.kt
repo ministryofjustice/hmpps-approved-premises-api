@@ -104,7 +104,7 @@ class TasksTest {
       }
 
       @ParameterizedTest
-      @EnumSource(value = UserRole::class, names = ["CAS1_MATCHER", "CAS1_WORKFLOW_MANAGER", "CAS1_ASSESSOR"])
+      @EnumSource(value = UserRole::class, names = ["CAS1_WORKFLOW_MANAGER", "CAS1_CRU_MEMBER"])
       fun `Get all tasks returns 200 when have CAS1_WORKFLOW_MANAGER, CAS1_MATCHER or CAS1_ASSESSOR roles`(role: UserRole) {
         givenAUser(roles = listOf(role)) { _, jwt ->
           givenAUser { otherUser, _ ->

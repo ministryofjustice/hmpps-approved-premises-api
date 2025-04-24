@@ -130,7 +130,6 @@ class Cas1StartupScript(
         UserRole.CAS1_CRU_MEMBER,
         UserRole.CAS1_CRU_MEMBER_FIND_AND_BOOK_BETA,
         UserRole.CAS1_ASSESSOR,
-        UserRole.CAS1_MATCHER,
         UserRole.CAS1_WORKFLOW_MANAGER,
         UserRole.CAS1_REPORT_VIEWER,
         UserRole.CAS1_APPEALS_MANAGER,
