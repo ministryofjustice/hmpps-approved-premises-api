@@ -36,7 +36,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Premises
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PremisesSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Room
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.StaffMember
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Turnaround
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.UpdateLostBed
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.UpdatePremises
@@ -54,14 +53,12 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.InternalServerEr
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.NotFoundProblem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.NotImplementedProblem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.AuthorisableActionResult
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.CasResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.ValidatableActionResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.BookingService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.GetBookingForPremisesResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.OffenderService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.PremisesService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.RoomService
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.StaffMemberService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.UserAccessService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.UserService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1WithdrawableService
@@ -78,7 +75,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.DepartureTra
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.ExtensionTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.PremisesTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.RoomTransformer
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.StaffMemberTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.cas3.Cas3ConfirmationTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.cas3.Cas3PremisesSummaryTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.cas3.Cas3TurnaroundTransformer
@@ -111,8 +107,6 @@ class PremisesController(
   private val cas3ConfirmationTransformer: Cas3ConfirmationTransformer,
   private val departureTransformer: DepartureTransformer,
   private val extensionTransformer: ExtensionTransformer,
-  private val staffMemberTransformer: StaffMemberTransformer,
-  private val staffMemberService: StaffMemberService,
   private val roomService: RoomService,
   private val roomTransformer: RoomTransformer,
   private val cas3VoidBedspaceCancellationTransformer: Cas3VoidBedspaceCancellationTransformer,
@@ -792,29 +786,6 @@ class PremisesController(
     }
 
     return ResponseEntity.ok(cas3VoidBedspaceCancellationTransformer.transformJpaToApi(cancellation))
-  }
-
-  override fun premisesPremisesIdStaffGet(premisesId: UUID): ResponseEntity<List<StaffMember>> {
-    val premises = premisesService.getPremises(premisesId)
-      ?: throw NotFoundProblem(premisesId, "Premises")
-
-    if (!userAccessService.currentUserCanViewPremisesStaff(premises)) {
-      throw ForbiddenProblem()
-    }
-
-    if (premises !is ApprovedPremisesEntity) {
-      throw NotImplementedProblem("Fetching staff for non-AP Premises is not currently supported")
-    }
-
-    val staffMembersResult = staffMemberService.getStaffMembersForQCode(premises.qCode)
-
-    if (staffMembersResult is CasResult.NotFound) {
-      return ResponseEntity.ok(emptyList())
-    }
-
-    val staffMembers = extractEntityFromCasResult(staffMembersResult)
-
-    return ResponseEntity.ok(staffMembers.content.map(staffMemberTransformer::transformDomainToApi))
   }
 
   override fun premisesPremisesIdRoomsGet(premisesId: UUID): ResponseEntity<List<Room>> {
