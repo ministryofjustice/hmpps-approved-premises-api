@@ -68,7 +68,7 @@ class Cas1ChangeRequestTest {
           createdByUser = user,
         ) { placementRequest, _ ->
           webTestClient.post()
-            .uri("/cas1/placement-request/${placementRequest.id}/change-request")
+            .uri("/cas1/placement-request/${placementRequest.id}/appeal")
             .header("Authorization", "Bearer $jwt")
             .bodyValue(
               Cas1NewChangeRequest(
@@ -99,7 +99,7 @@ class Cas1ChangeRequestTest {
           createdByUser = user,
         ) { placementRequest, _ ->
           webTestClient.post()
-            .uri("/cas1/placement-request/${placementRequest.id}/change-request")
+            .uri("/cas1/placement-request/${placementRequest.id}/planned-transfer")
             .header("Authorization", "Bearer $jwt")
             .bodyValue(
               Cas1NewChangeRequest(
@@ -130,7 +130,7 @@ class Cas1ChangeRequestTest {
           createdByUser = user,
         ) { placementRequest, _ ->
           webTestClient.post()
-            .uri("/cas1/placement-request/${placementRequest.id}/change-request")
+            .uri("/cas1/placement-request/${placementRequest.id}/extension")
             .header("Authorization", "Bearer $jwt")
             .bodyValue(
               Cas1NewChangeRequest(
@@ -162,7 +162,7 @@ class Cas1ChangeRequestTest {
           )
           val changeRequestReason = cas1ChangeRequestReasonEntityFactory.produceAndPersist()
           webTestClient.post()
-            .uri("/cas1/placement-request/${placementRequest.id}/change-request")
+            .uri("/cas1/placement-request/${placementRequest.id}/appeal")
             .header("Authorization", "Bearer $jwt")
             .bodyValue(
               Cas1NewChangeRequest(
@@ -207,7 +207,7 @@ class Cas1ChangeRequestTest {
             withChangeRequestType(ChangeRequestType.PLANNED_TRANSFER)
           }
           webTestClient.post()
-            .uri("/cas1/placement-request/${placementRequest.id}/change-request")
+            .uri("/cas1/placement-request/${placementRequest.id}/planned-transfer")
             .header("Authorization", "Bearer $jwt")
             .bodyValue(
               Cas1NewChangeRequest(
