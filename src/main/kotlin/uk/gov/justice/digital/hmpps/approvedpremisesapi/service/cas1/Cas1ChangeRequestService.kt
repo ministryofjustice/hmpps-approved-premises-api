@@ -34,7 +34,10 @@ class Cas1ChangeRequestService(
   private val cas1SpaceBookingRepository: Cas1SpaceBookingRepository,
   private val lockableCas1ChangeRequestEntityRepository: LockableCas1ChangeRequestRepository,
   private val cas1ChangeRequestRejectionReasonRepository: Cas1ChangeRequestRejectionReasonRepository,
+  private val cas1ChangeRequestEmailService: Cas1ChangeRequestEmailService,
 ) {
+
+  @SuppressWarnings("CyclomaticComplexMethod")
   @Transactional
   fun createChangeRequest(placementRequestId: UUID, cas1NewChangeRequest: Cas1NewChangeRequest): CasResult<Unit> = validatedCasResult {
     val placementRequest = placementRequestRepository.findByIdOrNull(placementRequestId)
@@ -48,22 +51,24 @@ class Cas1ChangeRequestService(
 
     if (!placementRequest.spaceBookings.contains(spaceBooking)) return CasResult.NotFound("Placement Request with Space Booking", spaceBooking.id.toString())
 
-    if (cas1NewChangeRequest.type == Cas1ChangeRequestType.PLANNED_TRANSFER) {
-      if (!spaceBooking.hasArrival()) return CasResult.GeneralValidationError("Associated space booking has not been marked as arrived")
-      if (spaceBooking.hasNonArrival()) return CasResult.GeneralValidationError("Associated space booking has been marked as non arrived")
-      if (spaceBooking.hasDeparted()) return CasResult.GeneralValidationError("Associated space booking has been marked as departed")
-      if (spaceBooking.isCancelled()) return CasResult.GeneralValidationError("Associated space booking has been cancelled")
-    }
-
-    if (cas1NewChangeRequest.type == Cas1ChangeRequestType.PLACEMENT_APPEAL) {
-      if (spaceBooking.hasArrival()) return CasResult.GeneralValidationError("Associated space booking has been marked as arrived")
-      if (spaceBooking.hasNonArrival()) return CasResult.GeneralValidationError("Associated space booking has been marked as non arrived")
-      if (spaceBooking.isCancelled()) return CasResult.GeneralValidationError("Associated space booking has been cancelled")
+    when (cas1NewChangeRequest.type) {
+      Cas1ChangeRequestType.PLACEMENT_APPEAL -> {
+        if (spaceBooking.hasArrival()) return CasResult.GeneralValidationError("Associated space booking has been marked as arrived")
+        if (spaceBooking.hasNonArrival()) return CasResult.GeneralValidationError("Associated space booking has been marked as non arrived")
+        if (spaceBooking.isCancelled()) return CasResult.GeneralValidationError("Associated space booking has been cancelled")
+      }
+      Cas1ChangeRequestType.PLACEMENT_EXTENSION -> Unit
+      Cas1ChangeRequestType.PLANNED_TRANSFER -> {
+        if (!spaceBooking.hasArrival()) return CasResult.GeneralValidationError("Associated space booking has not been marked as arrived")
+        if (spaceBooking.hasNonArrival()) return CasResult.GeneralValidationError("Associated space booking has been marked as non arrived")
+        if (spaceBooking.hasDeparted()) return CasResult.GeneralValidationError("Associated space booking has been marked as departed")
+        if (spaceBooking.isCancelled()) return CasResult.GeneralValidationError("Associated space booking has been cancelled")
+      }
     }
 
     val now = OffsetDateTime.now()
 
-    cas1ChangeRequestRepository.save(
+    val savedChangeRequest = cas1ChangeRequestRepository.save(
       Cas1ChangeRequestEntity(
         id = UUID.randomUUID(),
         placementRequest = placementRequest,
@@ -81,6 +86,12 @@ class Cas1ChangeRequestService(
         updatedAt = now,
       ),
     )
+
+    when (cas1NewChangeRequest.type) {
+      Cas1ChangeRequestType.PLACEMENT_APPEAL -> cas1ChangeRequestEmailService.placementAppealCreated(savedChangeRequest)
+      Cas1ChangeRequestType.PLACEMENT_EXTENSION -> Unit
+      Cas1ChangeRequestType.PLANNED_TRANSFER -> Unit
+    }
 
     return success(Unit)
   }
@@ -127,6 +138,8 @@ class Cas1ChangeRequestService(
       cas1ChangeRequestRepository.save(changeRequest)
     }
 
+    cas1ChangeRequestEmailService.placementAppealAccepted(changeRequest)
+
     return Success(Unit)
   }
 
@@ -159,6 +172,12 @@ class Cas1ChangeRequestService(
     changeRequestWithLock.rejectionReason = changeRequestRejectReason
     changeRequestWithLock.resolve()
     cas1ChangeRequestRepository.saveAndFlush(changeRequestWithLock)
+
+    when (changeRequestWithLock.type) {
+      ChangeRequestType.PLACEMENT_APPEAL -> cas1ChangeRequestEmailService.placementAppealRejected(changeRequestWithLock)
+      ChangeRequestType.PLACEMENT_EXTENSION -> Unit
+      ChangeRequestType.PLANNED_TRANSFER -> Unit
+    }
 
     return Success(Unit)
   }

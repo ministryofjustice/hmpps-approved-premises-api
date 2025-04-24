@@ -2186,7 +2186,7 @@ class Cas1SpaceBookingTest {
         val (placementRequest) = givenAPlacementRequest(
           placementRequestAllocatedTo = user,
           assessmentAllocatedTo = user,
-          createdByUser = user,
+          createdByUser = applicant,
         )
 
         val reason = cas1ChangeRequestReasonEntityFactory.produceAndPersist()
@@ -2194,7 +2194,7 @@ class Cas1SpaceBookingTest {
         val spaceBooking = cas1SpaceBookingEntityFactory.produceAndPersist {
           withPremises(premises)
           withPlacementRequest(placementRequest)
-          withCreatedBy(user)
+          withCreatedBy(applicant)
           withApplication(placementRequest.application)
         }
 
@@ -2231,6 +2231,13 @@ class Cas1SpaceBookingTest {
         assertThat(cas1ChangeRequestRepository.findByIdOrNull(changeRequestId)!!.decision).isEqualTo(
           ChangeRequestDecision.APPROVED,
         )
+
+        emailAsserter.assertEmailRequested(applicant.email!!, Cas1NotifyTemplates.BOOKING_WITHDRAWN_V2)
+        emailAsserter.assertEmailRequested(premises.emailAddress!!, Cas1NotifyTemplates.BOOKING_WITHDRAWN_V2)
+        emailAsserter.assertEmailRequested(applicant.email!!, Cas1NotifyTemplates.PLACEMENT_APPEAL_ACCEPTED_FOR_APPLICANT)
+        emailAsserter.assertEmailRequested(premises.emailAddress!!, Cas1NotifyTemplates.PLACEMENT_APPEAL_ACCEPTED_FOR_PREMISES)
+
+        emailAsserter.assertEmailsRequestedCount(4)
       }
     }
   }

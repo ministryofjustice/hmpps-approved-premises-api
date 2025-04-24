@@ -323,7 +323,13 @@ class Cas1SpaceBookingController(
       cas1SpaceBookingService.getBooking(premisesId, bookingId),
     )
 
-    cas1ChangeRequestService.approvePlacementAppeal(body.placementAppealChangeRequestId, userService.getUserForRequest(), spaceBooking)
+    ensureEntityFromCasResultIsSuccess(
+      cas1ChangeRequestService.approvePlacementAppeal(
+        changeRequestId = body.placementAppealChangeRequestId,
+        user = userService.getUserForRequest(),
+        spaceBooking = spaceBooking,
+      ),
+    )
 
     return ResponseEntity
       .ok()

@@ -9,8 +9,10 @@ fun IntegrationTestBase.givenACas1CruManagementArea(
   name: String = randomStringMultiCaseWithNumbers(8),
   assessmentAutoAllocationUsername: String? = null,
   assessmentAutoAllocations: MutableMap<AutoAllocationDay, String> = mutableMapOf(),
+  emailAddress: String = randomStringMultiCaseWithNumbers(8),
 ): Cas1CruManagementAreaEntity = cas1CruManagementAreaEntityFactory.produceAndPersist {
   withName(name)
+  withEmailAddress(emailAddress)
   if (assessmentAutoAllocations.isEmpty() && assessmentAutoAllocationUsername != null) {
     withAssessmentAutoAllocations(
       mutableMapOf(

@@ -2,12 +2,15 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.unit.service.cas1
 
 import com.fasterxml.jackson.databind.ObjectMapper
 import io.mockk.every
-import io.mockk.mockk
+import io.mockk.impl.annotations.InjectMockKs
+import io.mockk.impl.annotations.MockK
+import io.mockk.junit5.MockKExtension
 import io.mockk.slot
 import io.mockk.verify
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.extension.ExtendWith
 import org.springframework.data.repository.findByIdOrNull
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1ChangeRequestType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1RejectChangeRequest
@@ -29,28 +32,41 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas1.ChangeRe
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas1.LockableCas1ChangeRequestEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas1.LockableCas1ChangeRequestRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.CasResult
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1ChangeRequestEmailService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1ChangeRequestService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.unit.util.assertThatCasResult
 import java.time.LocalDate
 import java.time.OffsetDateTime
 import java.util.UUID
 
+@ExtendWith(MockKExtension::class)
 class Cas1ChangeRequestServiceTest {
-  private val placementRequestRepository = mockk<PlacementRequestRepository>()
-  private val cas1ChangeRequestReasonRepository = mockk<Cas1ChangeRequestReasonRepository>()
-  private val cas1SpaceBookingRepository = mockk<Cas1SpaceBookingRepository>()
-  private val objectMapper = mockk<ObjectMapper>()
-  private val cas1ChangeRequestRepository = mockk<Cas1ChangeRequestRepository>()
-  private val cas1ChangeRequestRejectionReasonRepository = mockk<Cas1ChangeRequestRejectionReasonRepository>()
-  private val lockableCas1ChangeRequestEntityRepository = mockk<LockableCas1ChangeRequestRepository>()
-  private val service = Cas1ChangeRequestService(
-    cas1ChangeRequestRepository,
-    placementRequestRepository,
-    cas1ChangeRequestReasonRepository,
-    cas1SpaceBookingRepository,
-    lockableCas1ChangeRequestEntityRepository,
-    cas1ChangeRequestRejectionReasonRepository,
-  )
+  @MockK
+  lateinit var placementRequestRepository: PlacementRequestRepository
+
+  @MockK
+  lateinit var cas1ChangeRequestReasonRepository: Cas1ChangeRequestReasonRepository
+
+  @MockK
+  lateinit var cas1SpaceBookingRepository: Cas1SpaceBookingRepository
+
+  @MockK
+  lateinit var objectMapper: ObjectMapper
+
+  @MockK
+  lateinit var cas1ChangeRequestRepository: Cas1ChangeRequestRepository
+
+  @MockK
+  lateinit var cas1ChangeRequestRejectionReasonRepository: Cas1ChangeRequestRejectionReasonRepository
+
+  @MockK
+  lateinit var lockableCas1ChangeRequestEntityRepository: LockableCas1ChangeRequestRepository
+
+  @MockK
+  lateinit var cas1ChangeRequestEmailService: Cas1ChangeRequestEmailService
+
+  @InjectMockKs
+  lateinit var service: Cas1ChangeRequestService
 
   @Nested
   inner class CreateChangeRequest {
@@ -118,7 +134,7 @@ class Cas1ChangeRequestServiceTest {
     }
 
     @Test
-    fun `returns success for a valid appeal change request`() {
+    fun `returns success for a valid placement appeal change request`() {
       val cas1SpaceBooking = Cas1SpaceBookingEntityFactory().produce()
       val placementRequest = PlacementRequestEntityFactory()
         .withDefaults()
@@ -136,7 +152,8 @@ class Cas1ChangeRequestServiceTest {
       every { cas1ChangeRequestReasonRepository.findByIdOrNull(cas1ChangeRequestReason.id) } returns cas1ChangeRequestReason
       every { cas1SpaceBookingRepository.findByIdOrNull(cas1SpaceBooking.id) } returns cas1SpaceBooking
       every { objectMapper.writeValueAsString(cas1NewChangeRequest.requestJson) } returns "{test: 1}"
-      every { cas1ChangeRequestRepository.save(any()) } returns null
+      every { cas1ChangeRequestRepository.save(any()) } returnsArgument 0
+      every { cas1ChangeRequestEmailService.placementAppealCreated(any()) } returns Unit
 
       val result = service.createChangeRequest(placementRequest.id, cas1NewChangeRequest)
 
@@ -152,6 +169,12 @@ class Cas1ChangeRequestServiceTest {
       val savedChangeRequest = savedChangeRequestCaptor.captured
       assertThat(savedChangeRequest.type).isEqualTo(ChangeRequestType.PLACEMENT_APPEAL)
       assertThat(savedChangeRequest.resolved).isEqualTo(false)
+
+      verify {
+        cas1ChangeRequestEmailService.placementAppealCreated(
+          changeRequest = savedChangeRequest,
+        )
+      }
     }
 
     @Test
@@ -471,6 +494,7 @@ class Cas1ChangeRequestServiceTest {
       every { cas1ChangeRequestRejectionReasonRepository.findByIdAndArchivedIsFalse(any()) } returns rejectionReason
 
       every { cas1ChangeRequestRepository.saveAndFlush(any()) } returns changeRequest
+      every { cas1ChangeRequestEmailService.placementAppealRejected(any()) } returns Unit
 
       val result = service.rejectChangeRequest(placementRequest.id, changeRequest.id, cas1RejectChangeRequest)
 
@@ -488,11 +512,13 @@ class Cas1ChangeRequestServiceTest {
       assertThat(savedChangeRequest.rejectionReason).isEqualTo(rejectionReason)
       assertThat(savedChangeRequest.resolved).isTrue()
       assertThat(savedChangeRequest.resolvedAt).isNotNull()
+
+      verify { cas1ChangeRequestEmailService.placementAppealRejected(savedChangeRequest) }
     }
   }
 
   @Nested
-  inner class ApproveChangeRequest {
+  inner class ApprovePlacementAppeal {
 
     @Test
     fun `throw validation error when change request is not found`() {
@@ -604,10 +630,13 @@ class Cas1ChangeRequestServiceTest {
 
       every { cas1ChangeRequestRepository.findByIdOrNull(changeRequest.id) } returns changeRequest
       every { cas1ChangeRequestRepository.save(any()) } returns null
+      every { cas1ChangeRequestEmailService.placementAppealAccepted(any()) } returns Unit
 
       val result = service.approvePlacementAppeal(changeRequest.id, user, spaceBooking)
 
       assertThatCasResult(result).isSuccess()
+
+      verify { cas1ChangeRequestEmailService.placementAppealAccepted(changeRequest) }
     }
   }
 
