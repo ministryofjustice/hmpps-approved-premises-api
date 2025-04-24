@@ -1,0 +1,39 @@
+name: Deploy to test
+
+on:
+  workflow_dispatch:
+    inputs:
+      reset_database:
+        description: Force a full reset of the database. Consult with other developers first to ensure the data on the test environment isn't in use by anyone.
+        type: boolean
+        required: false
+        default: false
+
+jobs:
+  docker_build:
+    name: Build docker image from hmpps-github-actions
+    uses: ministryofjustice/hmpps-github-actions/.github/workflows/docker_build.yml@v2
+    with:
+      docker_registry: 'ghcr.io'
+      registry_org: 'ministryofjustice'
+      push: true
+      docker_multiplatform: false
+
+  reset_database:
+    name: Reset the database
+    if: ${{ inputs.reset_database == 'true' }}
+    runs-on: ubuntu-latest
+    steps:
+      # TODO: Actually reset the database using kube
+      - run: |
+          echo "Resetting the database..."
+
+  deploy_test:
+    name: Deploy to the test environment
+    needs:
+      - docker_build
+    uses: ministryofjustice/hmpps-github-actions/.github/workflows/deploy_env.yml@v2
+    secrets: inherit
+    with:
+      environment: 'test'
+      app_version: '${{ needs.docker_build.outputs.app_version }}'
