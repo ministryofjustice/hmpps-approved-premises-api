@@ -17,10 +17,32 @@ import org.springframework.data.jpa.repository.JpaRepository
 import org.springframework.data.jpa.repository.Modifying
 import org.springframework.data.jpa.repository.Query
 import org.springframework.stereotype.Repository
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.ApplicationAssessedEnvelope
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.ApplicationExpiredEnvelope
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.ApplicationSubmittedEnvelope
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.ApplicationWithdrawnEnvelope
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.AssessmentAllocatedEnvelope
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.AssessmentAppealedEnvelope
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.BookingCancelledEnvelope
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.BookingChangedEnvelope
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.BookingKeyWorkerAssignedEnvelope
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.BookingMadeEnvelope
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.BookingNotMadeEnvelope
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.Cas1DomainEventEnvelope
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.FurtherInformationRequestedEnvelope
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.MatchRequestWithdrawnEnvelope
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.PersonArrivedEnvelope
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.PersonDepartedEnvelope
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.PersonNotArrivedEnvelope
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.PlacementApplicationAllocatedEnvelope
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.PlacementApplicationWithdrawnEnvelope
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.RequestForPlacementAssessedEnvelope
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.RequestForPlacementCreatedEnvelope
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1TimelineEventType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.DomainEventSummary
 import java.time.OffsetDateTime
 import java.util.UUID
+import kotlin.reflect.KClass
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.EventType as Cas1EventType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas2.model.EventType as Cas2EventType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas3.model.EventType as Cas3EventType
@@ -179,6 +201,7 @@ val DEFAULT_DOMAIN_EVENT_SCHEMA_VERSION = DomainEventSchemaVersion(
   description = "The initial version of this domain event",
 )
 
+@SuppressWarnings("LongParameterList")
 enum class DomainEventType(
   val cas: DomainEventCas,
   val typeName: String,
@@ -191,12 +214,15 @@ enum class DomainEventType(
    * Logic around emitting domain events is different for each CAS. This field is currently only used by CAS1
    */
   val emittable: Boolean = true,
+  val cas1EnvelopeType: KClass<out Cas1DomainEventEnvelope<*>>? = null,
 ) {
+
   APPROVED_PREMISES_APPLICATION_SUBMITTED(
     DomainEventCas.CAS1,
     Cas1EventType.applicationSubmitted.value,
     "An application has been submitted for an Approved Premises placement",
     Cas1TimelineEventType.applicationSubmitted,
+    cas1EnvelopeType = ApplicationSubmittedEnvelope::class,
   ),
   APPROVED_PREMISES_APPLICATION_ASSESSED(
     DomainEventCas.CAS1,
@@ -207,6 +233,7 @@ enum class DomainEventType(
       DEFAULT_DOMAIN_EVENT_SCHEMA_VERSION,
       DomainEventSchemaVersion(2, "Added assessmentId field"),
     ),
+    cas1EnvelopeType = ApplicationAssessedEnvelope::class,
   ),
   APPROVED_PREMISES_APPLICATION_EXPIRED(
     DomainEventCas.CAS1,
@@ -214,6 +241,7 @@ enum class DomainEventType(
     "An Approved Premises application has expired",
     Cas1TimelineEventType.applicationExpired,
     emittable = false,
+    cas1EnvelopeType = ApplicationExpiredEnvelope::class,
   ),
   APPROVED_PREMISES_BOOKING_MADE(
     DomainEventCas.CAS1,
@@ -224,6 +252,7 @@ enum class DomainEventType(
       DEFAULT_DOMAIN_EVENT_SCHEMA_VERSION,
       DomainEventSchemaVersion(2, "Added characteristics field"),
     ),
+    cas1EnvelopeType = BookingMadeEnvelope::class,
   ),
   APPROVED_PREMISES_PERSON_ARRIVED(
     DomainEventCas.CAS1,
@@ -234,12 +263,14 @@ enum class DomainEventType(
       DEFAULT_DOMAIN_EVENT_SCHEMA_VERSION,
       DomainEventSchemaVersion(2, "Added recordedBy field"),
     ),
+    cas1EnvelopeType = PersonArrivedEnvelope::class,
   ),
   APPROVED_PREMISES_PERSON_NOT_ARRIVED(
     DomainEventCas.CAS1,
     Cas1EventType.personNotArrived.value,
     "Someone has failed to arrive at an Approved Premises for their Booking",
     Cas1TimelineEventType.personNotArrived,
+    cas1EnvelopeType = PersonNotArrivedEnvelope::class,
   ),
   APPROVED_PREMISES_PERSON_DEPARTED(
     DomainEventCas.CAS1,
@@ -250,12 +281,14 @@ enum class DomainEventType(
       DEFAULT_DOMAIN_EVENT_SCHEMA_VERSION,
       DomainEventSchemaVersion(2, "Added recordedBy field"),
     ),
+    cas1EnvelopeType = PersonDepartedEnvelope::class,
   ),
   APPROVED_PREMISES_BOOKING_NOT_MADE(
     DomainEventCas.CAS1,
     Cas1EventType.bookingNotMade.value,
     "It was not possible to create a Booking on this attempt",
     Cas1TimelineEventType.bookingNotMade,
+    cas1EnvelopeType = BookingNotMadeEnvelope::class,
   ),
   APPROVED_PREMISES_BOOKING_CANCELLED(
     DomainEventCas.CAS1,
@@ -266,6 +299,7 @@ enum class DomainEventType(
       DEFAULT_DOMAIN_EVENT_SCHEMA_VERSION,
       DomainEventSchemaVersion(2, "Added mandatory cancelledAtDate and cancellationRecordedAt fields"),
     ),
+    cas1EnvelopeType = BookingCancelledEnvelope::class,
   ),
   APPROVED_PREMISES_BOOKING_CHANGED(
     DomainEventCas.CAS1,
@@ -276,6 +310,7 @@ enum class DomainEventType(
       DEFAULT_DOMAIN_EVENT_SCHEMA_VERSION,
       DomainEventSchemaVersion(2, "Captures previous set values, if changed."),
     ),
+    cas1EnvelopeType = BookingChangedEnvelope::class,
   ),
   APPROVED_PREMISES_BOOKING_KEYWORKER_ASSIGNED(
     DomainEventCas.CAS1,
@@ -283,48 +318,56 @@ enum class DomainEventType(
     "A keyworker has been assigned to the booking",
     Cas1TimelineEventType.bookingKeyworkerAssigned,
     emittable = false,
+    cas1EnvelopeType = BookingKeyWorkerAssignedEnvelope::class,
   ),
   APPROVED_PREMISES_APPLICATION_WITHDRAWN(
     DomainEventCas.CAS1,
     Cas1EventType.applicationWithdrawn.value,
     "An Approved Premises Application has been withdrawn",
     Cas1TimelineEventType.applicationWithdrawn,
+    cas1EnvelopeType = ApplicationWithdrawnEnvelope::class,
   ),
   APPROVED_PREMISES_ASSESSMENT_APPEALED(
     DomainEventCas.CAS1,
     Cas1EventType.assessmentAppealed.value,
     "An Approved Premises Assessment has been appealed",
     Cas1TimelineEventType.assessmentAppealed,
+    cas1EnvelopeType = AssessmentAppealedEnvelope::class,
   ),
   APPROVED_PREMISES_ASSESSMENT_ALLOCATED(
     DomainEventCas.CAS1,
     Cas1EventType.assessmentAllocated.value,
     "An Approved Premises Assessment has been allocated",
     Cas1TimelineEventType.assessmentAllocated,
+    cas1EnvelopeType = AssessmentAllocatedEnvelope::class,
   ),
   APPROVED_PREMISES_ASSESSMENT_INFO_REQUESTED(
     DomainEventCas.CAS1,
     Cas1EventType.informationRequestMade.value,
     "An information request has been made for an Approved Premises Assessment",
     Cas1TimelineEventType.informationRequest,
+    cas1EnvelopeType = FurtherInformationRequestedEnvelope::class,
   ),
   APPROVED_PREMISES_PLACEMENT_APPLICATION_WITHDRAWN(
     DomainEventCas.CAS1,
     Cas1EventType.placementApplicationWithdrawn.value,
     "An Approved Premises Request for Placement has been withdrawn",
     Cas1TimelineEventType.applicationWithdrawn,
+    cas1EnvelopeType = PlacementApplicationWithdrawnEnvelope::class,
   ),
   APPROVED_PREMISES_PLACEMENT_APPLICATION_ALLOCATED(
     DomainEventCas.CAS1,
     Cas1EventType.placementApplicationAllocated.value,
     "An Approved Premises Request for Placement has been allocated",
     Cas1TimelineEventType.placementApplicationAllocated,
+    cas1EnvelopeType = PlacementApplicationAllocatedEnvelope::class,
   ),
   APPROVED_PREMISES_MATCH_REQUEST_WITHDRAWN(
     DomainEventCas.CAS1,
     Cas1EventType.matchRequestWithdrawn.value,
     "An Approved Premises Match Request has been withdrawn",
     Cas1TimelineEventType.matchRequestWithdrawn,
+    cas1EnvelopeType = MatchRequestWithdrawnEnvelope::class,
   ),
   APPROVED_PREMISES_REQUEST_FOR_PLACEMENT_CREATED(
     DomainEventCas.CAS1,
@@ -332,12 +375,14 @@ enum class DomainEventType(
     "An Approved Premises Request for Placement has been created",
     Cas1TimelineEventType.requestForPlacementCreated,
     emittable = false,
+    cas1EnvelopeType = RequestForPlacementCreatedEnvelope::class,
   ),
   APPROVED_PREMISES_REQUEST_FOR_PLACEMENT_ASSESSED(
     DomainEventCas.CAS1,
     Cas1EventType.requestForPlacementAssessed.value,
     "An request for placement has been assessed",
     Cas1TimelineEventType.requestForPlacementAssessed,
+    cas1EnvelopeType = RequestForPlacementAssessedEnvelope::class,
   ),
   CAS2_APPLICATION_SUBMITTED(
     DomainEventCas.CAS2,
