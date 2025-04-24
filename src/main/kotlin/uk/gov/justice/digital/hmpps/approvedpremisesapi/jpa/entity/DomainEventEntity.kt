@@ -29,6 +29,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.Bo
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.BookingMadeEnvelope
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.BookingNotMadeEnvelope
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.Cas1DomainEventEnvelope
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.EmergencyTransferCreatedEnvelope
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.FurtherInformationRequestedEnvelope
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.MatchRequestWithdrawnEnvelope
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.PersonArrivedEnvelope
@@ -386,6 +387,14 @@ enum class DomainEventType(
     "An request for placement has been assessed",
     Cas1TimelineEventType.requestForPlacementAssessed,
     cas1EnvelopeType = RequestForPlacementAssessedEnvelope::class,
+  ),
+  APPROVED_PREMISES_EMERGENCY_TRANSFER_CREATED(
+    DomainEventCas.CAS1,
+    Cas1EventType.emergencyTransferCreated.value,
+    "An emergency transfer has been created",
+    Cas1TimelineEventType.emergencyTransferCreated,
+    cas1EnvelopeType = EmergencyTransferCreatedEnvelope::class,
+    emittable = false,
   ),
   APPROVED_PREMISES_PLACEMENT_APPEAL_CREATED(
     DomainEventCas.CAS1,

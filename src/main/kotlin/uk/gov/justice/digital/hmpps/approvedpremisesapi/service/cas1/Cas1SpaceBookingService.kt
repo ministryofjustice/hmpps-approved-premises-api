@@ -641,6 +641,12 @@ class Cas1SpaceBookingService(
 
     updateSpaceBookingForTransfer(existingCas1SpaceBooking, emergencySpaceBooking, cas1NewEmergencyTransfer.arrivalDate)
 
+    cas1SpaceBookingManagementDomainEventService.emergencyTransferCreated(
+      user,
+      existingCas1SpaceBooking,
+      emergencySpaceBooking,
+    )
+
     return success(emergencySpaceBooking)
   }
 
