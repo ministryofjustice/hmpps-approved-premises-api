@@ -137,37 +137,6 @@ paths:
                 $ref: '_shared.yml#/components/schemas/ValidationError'
 
       x-codegen-request-body-name: body
-  /premises/{premisesId}/staff:
-    get:
-      deprecated: true
-      description: Use /cas1/premises/{premisesId}/staff
-      tags:
-        - Premises
-      summary: Returns the staff that work at an approved premises
-      operationId: premisesPremisesIdStaffGet
-      parameters:
-        - name: premisesId
-          in: path
-          description: ID of the premises to return staff for
-          required: true
-          schema:
-            type: string
-            format: uuid
-      responses:
-        200:
-          description: successful operation
-          content:
-            'application/json':
-              schema:
-                type: array
-                items:
-                  $ref: '_shared.yml#/components/schemas/StaffMember'
-        404:
-          description: invalid premises ID
-          content:
-            'application/json':
-              schema:
-                $ref: '_shared.yml#/components/schemas/Problem'
   /premises/{premisesId}/bookings:
     get:
       tags:
