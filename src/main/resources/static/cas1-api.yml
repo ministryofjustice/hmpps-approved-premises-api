@@ -1382,18 +1382,12 @@ paths:
             'application/problem+json':
               schema:
                 $ref: '_shared.yml#/components/schemas/ValidationError'
-        401:
-          $ref: '_shared.yml#/components/responses/401Response'
-        403:
-          $ref: '_shared.yml#/components/responses/403Response'
         404:
           description: invalid premises ID or booking ID
           content:
             'application/json':
               schema:
                 $ref: '_shared.yml#/components/schemas/Problem'
-        500:
-          $ref: '_shared.yml#/components/responses/500Response'
       x-codegen-request-body-name: body
 
   /premises/{premisesId}/day-summary/{date}:
