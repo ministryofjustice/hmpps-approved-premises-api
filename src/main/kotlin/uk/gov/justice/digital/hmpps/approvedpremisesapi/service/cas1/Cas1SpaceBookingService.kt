@@ -10,6 +10,8 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1NewPlanned
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1NonArrival
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1SpaceBookingResidency
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1SpaceBookingSummarySortField
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1SpaceCharacteristic
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.CancellationReasonRepository
@@ -36,8 +38,10 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PaginationMetadata
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.validatedCasResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.InternalServerErrorProblem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.CasResult
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.CasResult.ConflictError
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.CasResult.GeneralValidationError
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.CasResult.Success
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.CharacteristicService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.StaffMemberService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.UserService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.PageCriteria
@@ -49,6 +53,8 @@ import java.time.LocalDate
 import java.time.LocalTime
 import java.time.OffsetDateTime
 import java.util.UUID
+import kotlin.collections.orEmpty
+import kotlin.collections.toSet
 
 @SuppressWarnings("TooManyFunctions")
 @Service
@@ -69,6 +75,7 @@ class Cas1SpaceBookingService(
   private val lockableCas1SpaceBookingEntityRepository: LockableCas1SpaceBookingEntityRepository,
   private val userService: UserService,
   private val cas1ChangeRequestService: Cas1ChangeRequestService,
+  private val characteristicService: CharacteristicService,
   private val clock: Clock,
 ) {
   @Transactional
@@ -603,7 +610,7 @@ class Cas1SpaceBookingService(
     bookingId: UUID,
     user: UserEntity,
     cas1NewEmergencyTransfer: Cas1NewEmergencyTransfer,
-  ): CasResult<Cas1SpaceBookingEntity> = validatedCasResult {
+  ): CasResult<Cas1SpaceBookingEntity> {
     val destinationPremises = cas1PremisesService.findPremiseById(cas1NewEmergencyTransfer.destinationPremisesId)
       ?: return CasResult.NotFound("Premises", cas1NewEmergencyTransfer.destinationPremisesId.toString())
 
@@ -620,16 +627,16 @@ class Cas1SpaceBookingService(
       ?: return CasResult.NotFound("Space Booking", bookingId.toString())
 
     if (existingCas1SpaceBooking.premises.id != premisesId) {
-      return existingCas1SpaceBooking.premises.id hasConflictError "The booking is not associated with the specified premises $premisesId"
+      return ConflictError(existingCas1SpaceBooking.premises.id, "The booking is not associated with the specified premises $premisesId")
     }
 
     if (!existingCas1SpaceBooking.isEligibleForEmergencyTransfer()) {
-      return existingCas1SpaceBooking.id hasConflictError "The booking is not eligible for an emergency transfer"
+      return ConflictError(existingCas1SpaceBooking.id, "The booking is not eligible for an emergency transfer")
     }
 
     val placementRequest = existingCas1SpaceBooking.placementRequest!!
 
-    val emergencySpaceBooking = createSpaceBookingEntity(
+    val emergencyTransferSpaceBooking = createSpaceBookingEntity(
       premises = destinationPremises,
       application = placementRequest.application,
       placementRequest = placementRequest,
@@ -639,27 +646,24 @@ class Cas1SpaceBookingService(
       characteristics = existingCas1SpaceBooking.criteria,
     )
 
-    updateSpaceBookingForTransfer(existingCas1SpaceBooking, emergencySpaceBooking, cas1NewEmergencyTransfer.arrivalDate)
+    updateSpaceBookingForTransfer(existingCas1SpaceBooking, emergencyTransferSpaceBooking, cas1NewEmergencyTransfer.arrivalDate)
 
+    return Success(emergencyTransferSpaceBooking)
     cas1SpaceBookingManagementDomainEventService.emergencyTransferCreated(
       user,
       existingCas1SpaceBooking,
-      emergencySpaceBooking,
+      emergencyTransferSpaceBooking,
     )
-
-    return success(emergencySpaceBooking)
+    return Success(emergencyTransferSpaceBooking)
   }
 
   @Transactional
   fun plannedTransfer(
     bookingId: UUID,
     user: UserEntity,
-    characteristics: List<CharacteristicEntity>,
     cas1NewPlannedTransfer: Cas1NewPlannedTransfer,
-  ): CasResult<Unit> = validatedCasResult {
+  ): CasResult<Unit> {
     lockableCas1SpaceBookingEntityRepository.acquirePessimisticLock(bookingId)
-    val existingCas1SpaceBooking = cas1SpaceBookingRepository.findByIdOrNull(bookingId)
-      ?: return CasResult.NotFound("Space Booking", bookingId.toString())
 
     val destinationPremises = cas1PremisesService.findPremiseById(cas1NewPlannedTransfer.destinationPremisesId)
       ?: return CasResult.NotFound("Premises", cas1NewPlannedTransfer.destinationPremisesId.toString())
@@ -667,7 +671,10 @@ class Cas1SpaceBookingService(
     val changeRequest = cas1ChangeRequestService.findChangeRequest(cas1NewPlannedTransfer.changeRequestId)
       ?: return CasResult.NotFound("Change Request", cas1NewPlannedTransfer.changeRequestId.toString())
 
-    if (changeRequest.decision != null) {
+    val existingCas1SpaceBooking = cas1SpaceBookingRepository.findByIdOrNull(bookingId)
+      ?: return CasResult.NotFound("Space Booking", bookingId.toString())
+
+    if (changeRequest.resolved) {
       return if (changeRequest.decision == ChangeRequestDecision.APPROVED) {
         Success(Unit)
       } else {
@@ -679,21 +686,21 @@ class Cas1SpaceBookingService(
 
     val placementRequest = existingCas1SpaceBooking.placementRequest!!
 
-    val emergencySpaceBooking = createSpaceBookingEntity(
+    val plannedTransferSpaceBooking = createSpaceBookingEntity(
       premises = destinationPremises,
       application = placementRequest.application,
       placementRequest = placementRequest,
       expectedArrivalDate = cas1NewPlannedTransfer.arrivalDate,
       expectedDepartureDate = cas1NewPlannedTransfer.departureDate,
       createdBy = user,
-      characteristics = characteristics,
+      characteristics = getCharacteristicsEntity(cas1NewPlannedTransfer.characteristics),
     )
 
-    updateSpaceBookingForTransfer(existingCas1SpaceBooking, emergencySpaceBooking, cas1NewPlannedTransfer.arrivalDate)
+    updateSpaceBookingForTransfer(existingCas1SpaceBooking, plannedTransferSpaceBooking, cas1NewPlannedTransfer.arrivalDate)
 
     cas1ChangeRequestService.approveChangeRequest(changeRequest, user)
 
-    return success(Unit)
+    return Success(Unit)
   }
 
   private fun updateSpaceBookingForTransfer(
@@ -728,10 +735,6 @@ class Cas1SpaceBookingService(
 
     if (booking.hasDeparted()) {
       return GeneralValidationError("The associated space booking has already been marked as departed")
-    }
-
-    if (booking.isCancelled()) {
-      return GeneralValidationError("The associated space booking has been marked as canceled")
     }
 
     return null
@@ -815,6 +818,11 @@ class Cas1SpaceBookingService(
       this.canonicalArrivalDate = updateSpaceBookingDetails.arrivalDate
     }
   }
+
+  private fun getCharacteristicsEntity(cas1SpaceCharacteristics: List<Cas1SpaceCharacteristic>?): List<CharacteristicEntity> = characteristicService.getCharacteristicsByPropertyNames(
+    cas1SpaceCharacteristics.orEmpty().toSet().map { it.value },
+    ServiceName.approvedPremises,
+  )
 
   fun createSpaceBookingEntity(
     premises: ApprovedPremisesEntity,

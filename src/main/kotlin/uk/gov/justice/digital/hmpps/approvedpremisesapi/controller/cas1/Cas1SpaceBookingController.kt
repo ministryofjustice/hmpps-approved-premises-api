@@ -392,15 +392,8 @@ class Cas1SpaceBookingController(
 
     val user = userService.getUserForRequest()
 
-    val requestedCharacteristics = cas1NewPlannedTransfer.characteristics.orEmpty().toSet()
-
-    val characteristics = characteristicService.getCharacteristicsByPropertyNames(
-      requestedCharacteristics.map { it.value },
-      ServiceName.approvedPremises,
-    )
-
     ensureEntityFromCasResultIsSuccess(
-      cas1SpaceBookingService.plannedTransfer(bookingId, user, characteristics, cas1NewPlannedTransfer),
+      cas1SpaceBookingService.plannedTransfer(bookingId, user, cas1NewPlannedTransfer),
     )
 
     return ResponseEntity(HttpStatus.OK)
