@@ -211,215 +211,256 @@ enum class DomainEventType(
   val cas: DomainEventCas,
   val typeName: String,
   val typeDescription: String,
-  val cas1TimelineEventType: Cas1TimelineEventType? = null,
-  val schemaVersions: List<DomainEventSchemaVersion> = listOf(DEFAULT_DOMAIN_EVENT_SCHEMA_VERSION),
-  /**
-   * If this domain event can be considered to be emitted.
-   *
-   * Logic around emitting domain events is different for each CAS. This field is currently only used by CAS1
-   */
-  val emittable: Boolean = true,
-  val cas1EnvelopeType: KClass<out Cas1DomainEventEnvelope<*>>? = null,
+  val cas1Info: Cas1DomainEventTypeInfo? = null,
 ) {
 
   APPROVED_PREMISES_APPLICATION_SUBMITTED(
     DomainEventCas.CAS1,
     Cas1EventType.applicationSubmitted.value,
     "An application has been submitted for an Approved Premises placement",
-    Cas1TimelineEventType.applicationSubmitted,
-    cas1EnvelopeType = ApplicationSubmittedEnvelope::class,
+    cas1Info = Cas1DomainEventTypeInfo(
+      timelineEventType = Cas1TimelineEventType.applicationSubmitted,
+      envelopeType = ApplicationSubmittedEnvelope::class,
+    ),
   ),
   APPROVED_PREMISES_APPLICATION_ASSESSED(
     DomainEventCas.CAS1,
     Cas1EventType.applicationAssessed.value,
     "An application has been assessed for an Approved Premises placement",
-    Cas1TimelineEventType.applicationAssessed,
-    schemaVersions = listOf(
-      DEFAULT_DOMAIN_EVENT_SCHEMA_VERSION,
-      DomainEventSchemaVersion(2, "Added assessmentId field"),
+    cas1Info = Cas1DomainEventTypeInfo(
+      Cas1TimelineEventType.applicationAssessed,
+      schemaVersions = listOf(
+        DEFAULT_DOMAIN_EVENT_SCHEMA_VERSION,
+        DomainEventSchemaVersion(2, "Added assessmentId field"),
+      ),
+      envelopeType = ApplicationAssessedEnvelope::class,
     ),
-    cas1EnvelopeType = ApplicationAssessedEnvelope::class,
   ),
   APPROVED_PREMISES_APPLICATION_EXPIRED(
     DomainEventCas.CAS1,
     Cas1EventType.applicationExpired.value,
     "An Approved Premises application has expired",
-    Cas1TimelineEventType.applicationExpired,
-    emittable = false,
-    cas1EnvelopeType = ApplicationExpiredEnvelope::class,
+    cas1Info = Cas1DomainEventTypeInfo(
+      Cas1TimelineEventType.applicationExpired,
+      emittable = false,
+      envelopeType = ApplicationExpiredEnvelope::class,
+    ),
   ),
   APPROVED_PREMISES_BOOKING_MADE(
     DomainEventCas.CAS1,
     Cas1EventType.bookingMade.value,
     "An Approved Premises booking has been made",
-    Cas1TimelineEventType.bookingMade,
-    schemaVersions = listOf(
-      DEFAULT_DOMAIN_EVENT_SCHEMA_VERSION,
-      DomainEventSchemaVersion(2, "Added characteristics field"),
+
+    cas1Info = Cas1DomainEventTypeInfo(
+      Cas1TimelineEventType.bookingMade,
+      schemaVersions = listOf(
+        DEFAULT_DOMAIN_EVENT_SCHEMA_VERSION,
+        DomainEventSchemaVersion(2, "Added characteristics field"),
+      ),
+      envelopeType = BookingMadeEnvelope::class,
     ),
-    cas1EnvelopeType = BookingMadeEnvelope::class,
   ),
   APPROVED_PREMISES_PERSON_ARRIVED(
     DomainEventCas.CAS1,
     Cas1EventType.personArrived.value,
     "Someone has arrived at an Approved Premises for their Booking",
-    Cas1TimelineEventType.personArrived,
-    schemaVersions = listOf(
-      DEFAULT_DOMAIN_EVENT_SCHEMA_VERSION,
-      DomainEventSchemaVersion(2, "Added recordedBy field"),
+    cas1Info = Cas1DomainEventTypeInfo(
+      Cas1TimelineEventType.personArrived,
+      schemaVersions = listOf(
+        DEFAULT_DOMAIN_EVENT_SCHEMA_VERSION,
+        DomainEventSchemaVersion(2, "Added recordedBy field"),
+      ),
+      envelopeType = PersonArrivedEnvelope::class,
     ),
-    cas1EnvelopeType = PersonArrivedEnvelope::class,
   ),
   APPROVED_PREMISES_PERSON_NOT_ARRIVED(
     DomainEventCas.CAS1,
     Cas1EventType.personNotArrived.value,
     "Someone has failed to arrive at an Approved Premises for their Booking",
-    Cas1TimelineEventType.personNotArrived,
-    cas1EnvelopeType = PersonNotArrivedEnvelope::class,
+    cas1Info = Cas1DomainEventTypeInfo(
+      Cas1TimelineEventType.personNotArrived,
+      envelopeType = PersonNotArrivedEnvelope::class,
+    ),
   ),
   APPROVED_PREMISES_PERSON_DEPARTED(
     DomainEventCas.CAS1,
     Cas1EventType.personDeparted.value,
     "Someone has left an Approved Premises",
-    Cas1TimelineEventType.personDeparted,
-    schemaVersions = listOf(
-      DEFAULT_DOMAIN_EVENT_SCHEMA_VERSION,
-      DomainEventSchemaVersion(2, "Added recordedBy field"),
+    cas1Info = Cas1DomainEventTypeInfo(
+      Cas1TimelineEventType.personDeparted,
+      schemaVersions = listOf(
+        DEFAULT_DOMAIN_EVENT_SCHEMA_VERSION,
+        DomainEventSchemaVersion(2, "Added recordedBy field"),
+      ),
+      envelopeType = PersonDepartedEnvelope::class,
     ),
-    cas1EnvelopeType = PersonDepartedEnvelope::class,
   ),
   APPROVED_PREMISES_BOOKING_NOT_MADE(
     DomainEventCas.CAS1,
     Cas1EventType.bookingNotMade.value,
     "It was not possible to create a Booking on this attempt",
-    Cas1TimelineEventType.bookingNotMade,
-    cas1EnvelopeType = BookingNotMadeEnvelope::class,
+    cas1Info = Cas1DomainEventTypeInfo(
+      Cas1TimelineEventType.bookingNotMade,
+      envelopeType = BookingNotMadeEnvelope::class,
+    ),
   ),
   APPROVED_PREMISES_BOOKING_CANCELLED(
     DomainEventCas.CAS1,
     Cas1EventType.bookingCancelled.value,
     "An Approved Premises Booking has been cancelled",
-    Cas1TimelineEventType.bookingCancelled,
-    schemaVersions = listOf(
-      DEFAULT_DOMAIN_EVENT_SCHEMA_VERSION,
-      DomainEventSchemaVersion(2, "Added mandatory cancelledAtDate and cancellationRecordedAt fields"),
+    cas1Info = Cas1DomainEventTypeInfo(
+      Cas1TimelineEventType.bookingCancelled,
+      schemaVersions = listOf(
+        DEFAULT_DOMAIN_EVENT_SCHEMA_VERSION,
+        DomainEventSchemaVersion(2, "Added mandatory cancelledAtDate and cancellationRecordedAt fields"),
+      ),
+      envelopeType = BookingCancelledEnvelope::class,
     ),
-    cas1EnvelopeType = BookingCancelledEnvelope::class,
   ),
   APPROVED_PREMISES_BOOKING_CHANGED(
     DomainEventCas.CAS1,
     Cas1EventType.bookingChanged.value,
     "An Approved Premises Booking has been changed",
-    Cas1TimelineEventType.bookingChanged,
-    schemaVersions = listOf(
-      DEFAULT_DOMAIN_EVENT_SCHEMA_VERSION,
-      DomainEventSchemaVersion(2, "Captures previous set values, if changed."),
+    cas1Info = Cas1DomainEventTypeInfo(
+      Cas1TimelineEventType.bookingChanged,
+      schemaVersions = listOf(
+        DEFAULT_DOMAIN_EVENT_SCHEMA_VERSION,
+        DomainEventSchemaVersion(2, "Captures previous set values, if changed."),
+      ),
+      envelopeType = BookingChangedEnvelope::class,
     ),
-    cas1EnvelopeType = BookingChangedEnvelope::class,
   ),
   APPROVED_PREMISES_BOOKING_KEYWORKER_ASSIGNED(
     DomainEventCas.CAS1,
     Cas1EventType.bookingKeyWorkerAssigned.value,
     "A keyworker has been assigned to the booking",
-    Cas1TimelineEventType.bookingKeyworkerAssigned,
-    emittable = false,
-    cas1EnvelopeType = BookingKeyWorkerAssignedEnvelope::class,
+    cas1Info = Cas1DomainEventTypeInfo(
+      Cas1TimelineEventType.bookingKeyworkerAssigned,
+      emittable = false,
+      envelopeType = BookingKeyWorkerAssignedEnvelope::class,
+    ),
   ),
   APPROVED_PREMISES_APPLICATION_WITHDRAWN(
     DomainEventCas.CAS1,
     Cas1EventType.applicationWithdrawn.value,
     "An Approved Premises Application has been withdrawn",
-    Cas1TimelineEventType.applicationWithdrawn,
-    cas1EnvelopeType = ApplicationWithdrawnEnvelope::class,
+    cas1Info = Cas1DomainEventTypeInfo(
+      Cas1TimelineEventType.applicationWithdrawn,
+      envelopeType = ApplicationWithdrawnEnvelope::class,
+    ),
   ),
   APPROVED_PREMISES_ASSESSMENT_APPEALED(
     DomainEventCas.CAS1,
     Cas1EventType.assessmentAppealed.value,
     "An Approved Premises Assessment has been appealed",
-    Cas1TimelineEventType.assessmentAppealed,
-    cas1EnvelopeType = AssessmentAppealedEnvelope::class,
+    cas1Info = Cas1DomainEventTypeInfo(
+      Cas1TimelineEventType.assessmentAppealed,
+      envelopeType = AssessmentAppealedEnvelope::class,
+    ),
   ),
   APPROVED_PREMISES_ASSESSMENT_ALLOCATED(
     DomainEventCas.CAS1,
     Cas1EventType.assessmentAllocated.value,
     "An Approved Premises Assessment has been allocated",
-    Cas1TimelineEventType.assessmentAllocated,
-    cas1EnvelopeType = AssessmentAllocatedEnvelope::class,
+    cas1Info = Cas1DomainEventTypeInfo(
+      Cas1TimelineEventType.assessmentAllocated,
+      envelopeType = AssessmentAllocatedEnvelope::class,
+    ),
   ),
   APPROVED_PREMISES_ASSESSMENT_INFO_REQUESTED(
     DomainEventCas.CAS1,
     Cas1EventType.informationRequestMade.value,
     "An information request has been made for an Approved Premises Assessment",
-    Cas1TimelineEventType.informationRequest,
-    cas1EnvelopeType = FurtherInformationRequestedEnvelope::class,
+    cas1Info = Cas1DomainEventTypeInfo(
+      Cas1TimelineEventType.informationRequest,
+      envelopeType = FurtherInformationRequestedEnvelope::class,
+    ),
   ),
   APPROVED_PREMISES_PLACEMENT_APPLICATION_WITHDRAWN(
     DomainEventCas.CAS1,
     Cas1EventType.placementApplicationWithdrawn.value,
     "An Approved Premises Request for Placement has been withdrawn",
-    Cas1TimelineEventType.applicationWithdrawn,
-    cas1EnvelopeType = PlacementApplicationWithdrawnEnvelope::class,
+    cas1Info = Cas1DomainEventTypeInfo(
+      Cas1TimelineEventType.applicationWithdrawn,
+      envelopeType = PlacementApplicationWithdrawnEnvelope::class,
+    ),
   ),
   APPROVED_PREMISES_PLACEMENT_APPLICATION_ALLOCATED(
     DomainEventCas.CAS1,
     Cas1EventType.placementApplicationAllocated.value,
     "An Approved Premises Request for Placement has been allocated",
-    Cas1TimelineEventType.placementApplicationAllocated,
-    cas1EnvelopeType = PlacementApplicationAllocatedEnvelope::class,
+    cas1Info = Cas1DomainEventTypeInfo(
+      Cas1TimelineEventType.placementApplicationAllocated,
+      envelopeType = PlacementApplicationAllocatedEnvelope::class,
+    ),
   ),
   APPROVED_PREMISES_MATCH_REQUEST_WITHDRAWN(
     DomainEventCas.CAS1,
     Cas1EventType.matchRequestWithdrawn.value,
     "An Approved Premises Match Request has been withdrawn",
-    Cas1TimelineEventType.matchRequestWithdrawn,
-    cas1EnvelopeType = MatchRequestWithdrawnEnvelope::class,
+    cas1Info = Cas1DomainEventTypeInfo(
+      Cas1TimelineEventType.matchRequestWithdrawn,
+      envelopeType = MatchRequestWithdrawnEnvelope::class,
+    ),
   ),
   APPROVED_PREMISES_REQUEST_FOR_PLACEMENT_CREATED(
     DomainEventCas.CAS1,
     Cas1EventType.requestForPlacementCreated.value,
     "An Approved Premises Request for Placement has been created",
-    Cas1TimelineEventType.requestForPlacementCreated,
-    emittable = false,
-    cas1EnvelopeType = RequestForPlacementCreatedEnvelope::class,
+    cas1Info = Cas1DomainEventTypeInfo(
+      Cas1TimelineEventType.requestForPlacementCreated,
+      emittable = false,
+      envelopeType = RequestForPlacementCreatedEnvelope::class,
+    ),
   ),
   APPROVED_PREMISES_REQUEST_FOR_PLACEMENT_ASSESSED(
     DomainEventCas.CAS1,
     Cas1EventType.requestForPlacementAssessed.value,
     "An request for placement has been assessed",
-    Cas1TimelineEventType.requestForPlacementAssessed,
-    cas1EnvelopeType = RequestForPlacementAssessedEnvelope::class,
+    cas1Info = Cas1DomainEventTypeInfo(
+      Cas1TimelineEventType.requestForPlacementAssessed,
+      envelopeType = RequestForPlacementAssessedEnvelope::class,
+    ),
   ),
   APPROVED_PREMISES_EMERGENCY_TRANSFER_CREATED(
     DomainEventCas.CAS1,
     Cas1EventType.emergencyTransferCreated.value,
     "An emergency transfer has been created",
-    Cas1TimelineEventType.emergencyTransferCreated,
-    cas1EnvelopeType = EmergencyTransferCreatedEnvelope::class,
-    emittable = false,
+    cas1Info = Cas1DomainEventTypeInfo(
+      Cas1TimelineEventType.emergencyTransferCreated,
+      envelopeType = EmergencyTransferCreatedEnvelope::class,
+      emittable = false,
+    ),
   ),
   APPROVED_PREMISES_PLACEMENT_APPEAL_CREATED(
     DomainEventCas.CAS1,
     Cas1EventType.placementAppealCreated.value,
     "A placement appeal has been created",
-    Cas1TimelineEventType.placementAppealCreated,
-    emittable = false,
-    cas1EnvelopeType = PlacementAppealCreatedEnvelope::class,
+    cas1Info = Cas1DomainEventTypeInfo(
+      Cas1TimelineEventType.placementAppealCreated,
+      emittable = false,
+      envelopeType = PlacementAppealCreatedEnvelope::class,
+    ),
   ),
   APPROVED_PREMISES_PLACEMENT_APPEAL_ACCEPTED(
     DomainEventCas.CAS1,
     Cas1EventType.placementAppealAccepted.value,
     "A placement appeal has been accepted",
-    Cas1TimelineEventType.placementAppealAccepted,
-    emittable = false,
-    cas1EnvelopeType = PlacementAppealAcceptedEnvelope::class,
+    cas1Info = Cas1DomainEventTypeInfo(
+      Cas1TimelineEventType.placementAppealAccepted,
+      emittable = false,
+      envelopeType = PlacementAppealAcceptedEnvelope::class,
+    ),
   ),
   APPROVED_PREMISES_PLACEMENT_APPEAL_REJECTED(
     DomainEventCas.CAS1,
     Cas1EventType.placementAppealRejected.value,
     "A placement appeal has been rejected",
-    Cas1TimelineEventType.placementAppealRejected,
-    emittable = false,
-    cas1EnvelopeType = PlacementAppealRejectedEnvelope::class,
+    cas1Info = Cas1DomainEventTypeInfo(
+      Cas1TimelineEventType.placementAppealRejected,
+      emittable = false,
+      envelopeType = PlacementAppealRejectedEnvelope::class,
+    ),
   ),
   CAS2_APPLICATION_SUBMITTED(
     DomainEventCas.CAS2,
@@ -487,3 +528,13 @@ enum class DomainEventType(
     "A draft referral has been deleted",
   ),
 }
+
+data class Cas1DomainEventTypeInfo(
+  val timelineEventType: Cas1TimelineEventType,
+  val schemaVersions: List<DomainEventSchemaVersion> = listOf(DEFAULT_DOMAIN_EVENT_SCHEMA_VERSION),
+  /**
+   * If this domain event can be considered to be emitted.
+   */
+  val emittable: Boolean = true,
+  val envelopeType: KClass<out Cas1DomainEventEnvelope<*>>,
+)
