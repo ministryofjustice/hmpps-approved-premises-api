@@ -39,8 +39,8 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.repository.Cas1SpaceBook
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.seed.CsvBuilder
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.seed.cas1.Cas1BookingToSpaceBookingSeedCsvRow
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1BookingDomainEventService
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1DomainEvent
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1DomainEventService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.SaveCas1DomainEvent
 import java.time.Instant
 import java.time.LocalDate
 import java.time.LocalDateTime
@@ -509,7 +509,7 @@ class SeedCas1BookingToSpaceBookingTest : SeedTestBase() {
     val bookingId = booking.id
 
     cas1DomainEventService.saveBookingMadeDomainEvent(
-      Cas1DomainEvent(
+      SaveCas1DomainEvent(
         id = domainEventId,
         applicationId = applicationId,
         crn = "irrelevant",

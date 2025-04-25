@@ -62,7 +62,7 @@ class Cas1PlacementRequestDomainEventService(
     )
 
     domainEventService.saveRequestForPlacementCreatedEvent(
-      Cas1DomainEvent(
+      SaveCas1DomainEvent(
         id = domainEventId,
         applicationId = application.id,
         crn = application.crn,
@@ -121,7 +121,7 @@ class Cas1PlacementRequestDomainEventService(
     )
 
     domainEventService.saveMatchRequestWithdrawnEvent(
-      Cas1DomainEvent(
+      SaveCas1DomainEvent(
         id = domainEventId,
         applicationId = application.id,
         crn = application.crn,

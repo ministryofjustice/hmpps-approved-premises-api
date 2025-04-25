@@ -38,8 +38,8 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremi
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.community.OffenderDetailSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.seed.CsvBuilder
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.seed.cas1.Cas1UpdateEventNumberSeedJobCsvRow
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1DomainEvent
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1DomainEventService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.SaveCas1DomainEvent
 import java.time.Instant
 import java.time.LocalDate
 import java.time.OffsetDateTime
@@ -88,7 +88,7 @@ class SeedCasUpdateEventNumberTest : SeedTestBase() {
     val staffUserDetails = StaffDetailFactory.staffDetail()
 
     domainEventService.saveApplicationAssessedDomainEvent(
-      Cas1DomainEvent(
+      SaveCas1DomainEvent(
         id = UUID.randomUUID(),
         applicationId = application.id,
         assessmentId = UUID.randomUUID(),
@@ -145,7 +145,7 @@ class SeedCasUpdateEventNumberTest : SeedTestBase() {
     val staffUserDetails = StaffDetailFactory.staffDetail()
 
     domainEventService.saveApplicationSubmittedDomainEvent(
-      Cas1DomainEvent(
+      SaveCas1DomainEvent(
         id = UUID.randomUUID(),
         applicationId = application.id,
         crn = application.crn,
@@ -203,7 +203,7 @@ class SeedCasUpdateEventNumberTest : SeedTestBase() {
     val staffUserDetails = StaffDetailFactory.staffDetail()
 
     domainEventService.saveBookingMadeDomainEvent(
-      Cas1DomainEvent(
+      SaveCas1DomainEvent(
         id = UUID.randomUUID(),
         applicationId = application.id,
         crn = application.crn,

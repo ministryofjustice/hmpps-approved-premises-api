@@ -85,7 +85,7 @@ class Cas1ApplicationDomainEventService(
     }
 
     domainEventService.saveApplicationSubmittedDomainEvent(
-      Cas1DomainEvent(
+      SaveCas1DomainEvent(
         id = domainEventId,
         applicationId = application.id,
         crn = application.crn,
@@ -121,7 +121,7 @@ class Cas1ApplicationDomainEventService(
     val eventOccurredAt = Instant.now(clock)
 
     domainEventService.saveApplicationWithdrawnEvent(
-      Cas1DomainEvent(
+      SaveCas1DomainEvent(
         id = domainEventId,
         applicationId = application.id,
         crn = application.crn,

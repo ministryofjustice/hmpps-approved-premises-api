@@ -13,8 +13,8 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApplicationRe
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TriggerSourceType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.ApprovedPremisesApplicationStatus
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1DomainEvent
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1DomainEventService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.SaveCas1DomainEvent
 import java.time.Instant
 import java.util.UUID
 
@@ -54,7 +54,7 @@ class Cas1ExpiredApplicationsScheduledJob(
         val domainEventId = UUID.randomUUID()
         val eventOccurredAt = Instant.now()
         domainEventService.saveApplicationExpiredEvent(
-          Cas1DomainEvent(
+          SaveCas1DomainEvent(
             id = domainEventId,
             applicationId = application.id,
             crn = application.crn,

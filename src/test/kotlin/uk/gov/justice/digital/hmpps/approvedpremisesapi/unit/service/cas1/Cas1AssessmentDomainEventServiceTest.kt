@@ -44,8 +44,8 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserQualifica
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRole
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.deliuscontext.StaffDetail
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1AssessmentDomainEventService
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1DomainEvent
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1DomainEventService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.SaveCas1DomainEvent
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.UrlTemplate
 import java.time.Clock
 import java.time.LocalDate
@@ -241,7 +241,7 @@ class Cas1AssessmentDomainEventServiceTest {
         apDeliusContextApiClient.getStaffDetail(user.deliusUsername)
       }
 
-      val domainEventArgument = slot<Cas1DomainEvent<ApplicationAssessedEnvelope>>()
+      val domainEventArgument = slot<SaveCas1DomainEvent<ApplicationAssessedEnvelope>>()
 
       verify(exactly = 1) {
         domainEventService.saveApplicationAssessedDomainEvent(
@@ -341,7 +341,7 @@ class Cas1AssessmentDomainEventServiceTest {
         user,
       )
 
-      val domainEventArgument = slot<Cas1DomainEvent<ApplicationAssessedEnvelope>>()
+      val domainEventArgument = slot<SaveCas1DomainEvent<ApplicationAssessedEnvelope>>()
 
       verify(exactly = 1) {
         domainEventService.saveApplicationAssessedDomainEvent(

@@ -73,7 +73,7 @@ class Cas1SpaceBookingManagementDomainEventService(
     val actualArrivalDateTime = arrivalInfo.actualArrivalDate.atTime(arrivalInfo.actualArrivalTime).toInstant()
 
     domainEventService.savePersonArrivedEvent(
-      domainEvent = Cas1DomainEvent(
+      domainEvent = SaveCas1DomainEvent(
         id = domainEventId,
         applicationId = applicationId,
         crn = updatedCas1SpaceBooking.crn,
@@ -123,7 +123,7 @@ class Cas1SpaceBookingManagementDomainEventService(
     val eventNumber = updatedCas1SpaceBooking.deliusEventNumber!!
 
     domainEventService.savePersonNotArrivedEvent(
-      domainEvent = Cas1DomainEvent(
+      domainEvent = SaveCas1DomainEvent(
         id = domainEventId,
         applicationId = applicationId,
         crn = updatedCas1SpaceBooking.crn,
@@ -181,7 +181,7 @@ class Cas1SpaceBookingManagementDomainEventService(
     val actualDepartureDateTime = departureInfo.actualDepartureDate.atTime(departureInfo.actualDepartureTime).toInstant()
 
     domainEventService.savePersonDepartedEvent(
-      domainEvent = Cas1DomainEvent(
+      domainEvent = SaveCas1DomainEvent(
         id = domainEventId,
         applicationId = applicationId,
         crn = departedCas1SpaceBooking.crn,
@@ -236,7 +236,7 @@ class Cas1SpaceBookingManagementDomainEventService(
     val eventNumber = updatedCas1SpaceBooking.deliusEventNumber!!
 
     domainEventService.saveKeyWorkerAssignedEvent(
-      domainEvent = Cas1DomainEvent(
+      domainEvent = SaveCas1DomainEvent(
         id = domainEventId,
         applicationId = applicationId,
         crn = updatedCas1SpaceBooking.crn,
@@ -282,7 +282,7 @@ class Cas1SpaceBookingManagementDomainEventService(
     val offenderDetails = getOffenderForCrn(crn)
 
     domainEventService.saveEmergencyTransferCreatedEvent(
-      domainEvent = Cas1DomainEvent(
+      domainEvent = SaveCas1DomainEvent(
         id = domainEventId,
         applicationId = application.id,
         crn = application.crn,

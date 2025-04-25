@@ -25,8 +25,8 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.UserEntityFactor
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.cas1.Cas1ChangeRequestEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.cas1.Cas1ChangeRequestRejectionReasonEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1ChangeRequestDomainEventService
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1DomainEvent
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1DomainEventService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.SaveCas1DomainEvent
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.isWithinTheLastMinute
 import java.time.LocalDate
 
@@ -68,7 +68,7 @@ class Cas1ChangeRequestDomainEventServiceTest {
 
       service.placementAppealAccepted(changeRequest)
 
-      val domainEventArgument = slot<Cas1DomainEvent<PlacementAppealAcceptedEnvelope>>()
+      val domainEventArgument = slot<SaveCas1DomainEvent<PlacementAppealAcceptedEnvelope>>()
 
       verify(exactly = 1) {
         cas1DomainEventService.savePlacementAppealAccepted(
@@ -119,7 +119,7 @@ class Cas1ChangeRequestDomainEventServiceTest {
 
       service.placementAppealCreated(changeRequest, requestingUser)
 
-      val domainEventArgument = slot<Cas1DomainEvent<PlacementAppealCreatedEnvelope>>()
+      val domainEventArgument = slot<SaveCas1DomainEvent<PlacementAppealCreatedEnvelope>>()
 
       verify(exactly = 1) {
         cas1DomainEventService.savePlacementAppealCreated(
@@ -175,7 +175,7 @@ class Cas1ChangeRequestDomainEventServiceTest {
 
       service.placementAppealRejected(changeRequest, requestingUser)
 
-      val domainEventArgument = slot<Cas1DomainEvent<PlacementAppealRejectedEnvelope>>()
+      val domainEventArgument = slot<SaveCas1DomainEvent<PlacementAppealRejectedEnvelope>>()
 
       verify(exactly = 1) {
         cas1DomainEventService.savePlacementAppealRejected(

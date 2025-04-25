@@ -64,7 +64,7 @@ class Cas1AssessmentDomainEventService(
     val occurredAt = Instant.now()
 
     domainEventService.saveAssessmentAllocatedEvent(
-      Cas1DomainEvent(
+      SaveCas1DomainEvent(
         id = id,
         applicationId = assessment.application.id,
         assessmentId = assessment.id,
@@ -130,7 +130,7 @@ class Cas1AssessmentDomainEventService(
       ),
     )
 
-    val domainEvent = Cas1DomainEvent(
+    val domainEvent = SaveCas1DomainEvent(
       id = id,
       applicationId = assessment.application.id,
       assessmentId = assessment.id,
@@ -160,7 +160,7 @@ class Cas1AssessmentDomainEventService(
     }
 
     domainEventService.saveApplicationAssessedDomainEvent(
-      Cas1DomainEvent(
+      SaveCas1DomainEvent(
         id = domainEventId,
         applicationId = application.id,
         assessmentId = assessment.id,
@@ -220,7 +220,7 @@ class Cas1AssessmentDomainEventService(
     }
 
     domainEventService.saveApplicationAssessedDomainEvent(
-      Cas1DomainEvent(
+      SaveCas1DomainEvent(
         id = domainEventId,
         applicationId = application.id,
         assessmentId = assessment.id,
