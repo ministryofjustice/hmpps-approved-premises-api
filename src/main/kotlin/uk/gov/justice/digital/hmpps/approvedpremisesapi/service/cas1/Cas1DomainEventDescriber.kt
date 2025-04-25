@@ -214,7 +214,7 @@ class Cas1DomainEventDescriber(
     val domainEvent = domainEventService.getBookingChangedEvent(domainEventSummary.id())!!
     val eventDetails = domainEvent.data.eventDetails
     return Cas1BookingChangedContentPayload(
-      type = domainEventSummary.type.cas1TimelineEventType!!,
+      type = domainEventSummary.type.cas1Info!!.timelineEventType,
       premises = NamedId(
         id = eventDetails.premises.id,
         name = eventDetails.premises.name,

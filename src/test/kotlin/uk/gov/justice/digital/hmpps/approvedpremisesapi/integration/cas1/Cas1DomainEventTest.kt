@@ -67,7 +67,7 @@ class Cas1DomainEventTest : InitialiseDatabasePerClassTestBase() {
     @JvmStatic
     fun allEmittableCas1DomainEventTypes() = DomainEventType.entries
       .filter { it.cas == DomainEventCas.CAS1 }
-      .filter { it.emittable }
+      .filter { it.cas1Info!!.emittable }
   }
 
   @ParameterizedTest

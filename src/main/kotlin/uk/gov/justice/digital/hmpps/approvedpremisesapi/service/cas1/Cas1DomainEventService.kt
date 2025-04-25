@@ -99,9 +99,9 @@ class Cas1DomainEventService(
   fun <T : Cas1DomainEventEnvelope<*>> toDomainEvent(entity: DomainEventEntity, envelopeType: KClass<T>): Cas1DomainEvent<T> {
     checkNotNull(entity.applicationId) { "application id should not be null" }
 
-    if (entity.type.cas1EnvelopeType != envelopeType) {
+    if (entity.type.cas1Info!!.envelopeType != envelopeType) {
       error(
-        "Entity with id ${entity.id} has type ${entity.type}, which contains data of type ${entity.type.cas1EnvelopeType}. " +
+        "Entity with id ${entity.id} has type ${entity.type}, which contains data of type ${entity.type.cas1Info!!.envelopeType}. " +
           "This is incompatible with the requested data type $envelopeType.",
       )
     }
@@ -303,10 +303,12 @@ class Cas1DomainEventService(
       ),
     )
 
-    if (eventType.emittable && domainEvent.emit) {
+    val emittable = eventType.cas1Info!!.emittable
+
+    if (emittable && domainEvent.emit) {
       emit(domainEventEntity)
     } else {
-      log.debug("Not emitting domain event of type $eventType. Type emittable? ${eventType.emittable}. Emit? ${domainEvent.emit}")
+      log.debug("Not emitting domain event of type $eventType. Type emittable? $emittable. Emit? ${domainEvent.emit}")
     }
   }
 
@@ -323,7 +325,7 @@ class Cas1DomainEventService(
     val eventType = domainEvent.type
     val typeName = eventType.typeName
 
-    if (!eventType.emittable) {
+    if (!eventType.cas1Info!!.emittable) {
       sentryService.captureErrorMessage("An attempt was made to emit domain event ${domainEvent.id} of type $typeName which is not emittable")
       return
     }
