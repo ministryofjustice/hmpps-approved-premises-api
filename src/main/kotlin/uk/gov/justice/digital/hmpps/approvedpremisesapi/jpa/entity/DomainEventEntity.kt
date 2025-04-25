@@ -190,6 +190,7 @@ enum class MetaDataName {
   CAS1_REQUESTED_AP_TYPE,
   CAS1_PLACEMENT_REQUEST_ID,
   CAS1_CANCELLATION_ID,
+  CAS1_SPACE_BOOKING_ID,
 }
 
 enum class DomainEventCas {
