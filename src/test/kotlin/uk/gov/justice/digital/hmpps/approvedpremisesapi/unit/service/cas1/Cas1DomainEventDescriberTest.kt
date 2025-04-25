@@ -11,31 +11,10 @@ import org.junit.jupiter.params.provider.CsvSource
 import org.junit.jupiter.params.provider.EnumSource
 import org.springframework.data.repository.findByIdOrNull
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.AppealDecision
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.ApplicationAssessedEnvelope
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.ApplicationWithdrawnEnvelope
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.AssessmentAllocatedEnvelope
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.AssessmentAppealedEnvelope
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.BookingCancelledEnvelope
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.BookingChangedEnvelope
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.BookingKeyWorkerAssignedEnvelope
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.BookingMadeEnvelope
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.BookingNotMadeEnvelope
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.Cas1DomainEventEnvelope
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.DatePeriod
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.EmergencyTransferCreatedEnvelope
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.EventType
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.FurtherInformationRequestedEnvelope
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.MatchRequestWithdrawnEnvelope
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.PersonArrivedEnvelope
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.PersonDepartedEnvelope
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.PersonNotArrivedEnvelope
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.PlacementAppealAcceptedEnvelope
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.PlacementAppealCreatedEnvelope
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.PlacementAppealRejectedEnvelope
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.PlacementApplicationAllocatedEnvelope
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.PlacementApplicationWithdrawnEnvelope
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.RequestForPlacementAssessed
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.RequestForPlacementAssessedEnvelope
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.RequestForPlacementCreatedEnvelope
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.RequestForPlacementType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.SpaceCharacteristic
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1BookingChangedContentPayload
@@ -136,7 +115,7 @@ class Cas1DomainEventDescriberTest {
     val domainEventSummary = DomainEventSummaryImpl.ofType(DomainEventType.APPROVED_PREMISES_APPLICATION_ASSESSED)
 
     every { mockDomainEventService.getApplicationAssessedDomainEvent(any()) } returns buildDomainEvent {
-      ApplicationAssessedEnvelope(
+      Cas1DomainEventEnvelope(
         id = it,
         timestamp = Instant.now(),
         eventType = EventType.applicationAssessed,
@@ -158,7 +137,7 @@ class Cas1DomainEventDescriberTest {
     val departureDate = LocalDate.of(2024, 4, 1)
 
     every { mockDomainEventService.getBookingMadeEvent(any()) } returns buildDomainEvent {
-      BookingMadeEnvelope(
+      Cas1DomainEventEnvelope(
         id = it,
         timestamp = Instant.now(),
         eventType = EventType.bookingMade,
@@ -186,7 +165,7 @@ class Cas1DomainEventDescriberTest {
     val domainEventSummary = DomainEventSummaryImpl.ofType(DomainEventType.APPROVED_PREMISES_PERSON_ARRIVED)
 
     every { mockDomainEventService.getPersonArrivedEvent(any()) } returns buildDomainEvent {
-      PersonArrivedEnvelope(
+      Cas1DomainEventEnvelope(
         id = it,
         timestamp = Instant.now(),
         eventType = EventType.personArrived,
@@ -207,7 +186,7 @@ class Cas1DomainEventDescriberTest {
     val domainEventSummary = DomainEventSummaryImpl.ofType(DomainEventType.APPROVED_PREMISES_PERSON_NOT_ARRIVED)
 
     every { mockDomainEventService.getPersonNotArrivedEvent(any()) } returns buildDomainEvent {
-      PersonNotArrivedEnvelope(
+      Cas1DomainEventEnvelope(
         id = it,
         timestamp = Instant.now(),
         eventType = EventType.personNotArrived,
@@ -228,7 +207,7 @@ class Cas1DomainEventDescriberTest {
     val domainEventSummary = DomainEventSummaryImpl.ofType(DomainEventType.APPROVED_PREMISES_PERSON_DEPARTED)
 
     every { mockDomainEventService.getPersonDepartedEvent(any()) } returns buildDomainEvent {
-      PersonDepartedEnvelope(
+      Cas1DomainEventEnvelope(
         id = it,
         timestamp = Instant.now(),
         eventType = EventType.personDeparted,
@@ -249,7 +228,7 @@ class Cas1DomainEventDescriberTest {
     val domainEventSummary = DomainEventSummaryImpl.ofType(DomainEventType.APPROVED_PREMISES_BOOKING_NOT_MADE)
 
     every { mockDomainEventService.getBookingNotMadeEvent(any()) } returns buildDomainEvent {
-      BookingNotMadeEnvelope(
+      Cas1DomainEventEnvelope(
         id = it,
         timestamp = Instant.now(),
         eventType = EventType.bookingNotMade,
@@ -270,7 +249,7 @@ class Cas1DomainEventDescriberTest {
     val bookingNotMade = BookingNotMadeFactory().produce().copy(failureDescription = null)
 
     every { mockDomainEventService.getBookingNotMadeEvent(any()) } returns buildDomainEvent {
-      BookingNotMadeEnvelope(
+      Cas1DomainEventEnvelope(
         id = it,
         timestamp = Instant.now(),
         eventType = EventType.bookingNotMade,
@@ -288,7 +267,7 @@ class Cas1DomainEventDescriberTest {
     val bookingId = UUID.fromString("75ed7091-1767-4901-8c2b-371dd0f5864c")
 
     every { mockDomainEventService.getBookingCancelledEvent(any()) } returns buildDomainEvent {
-      BookingCancelledEnvelope(
+      Cas1DomainEventEnvelope(
         id = it,
         timestamp = Instant.now(),
         eventType = EventType.bookingCancelled,
@@ -311,7 +290,7 @@ class Cas1DomainEventDescriberTest {
     val bookingEntity = getBookingEntity()
 
     every { mockDomainEventService.getBookingCancelledEvent(any()) } returns buildDomainEvent {
-      BookingCancelledEnvelope(
+      Cas1DomainEventEnvelope(
         id = it,
         timestamp = Instant.now(),
         eventType = EventType.bookingCancelled,
@@ -342,7 +321,7 @@ class Cas1DomainEventDescriberTest {
     bookingEntity.cancellations += cancellation
 
     every { mockDomainEventService.getBookingCancelledEvent(any()) } returns buildDomainEvent {
-      BookingCancelledEnvelope(
+      Cas1DomainEventEnvelope(
         id = it,
         timestamp = Instant.now(),
         eventType = EventType.bookingCancelled,
@@ -379,7 +358,7 @@ class Cas1DomainEventDescriberTest {
     bookingEntity.cancellations += cancellation
 
     every { mockDomainEventService.getBookingCancelledEvent(any()) } returns buildDomainEvent {
-      BookingCancelledEnvelope(
+      Cas1DomainEventEnvelope(
         id = it,
         timestamp = Instant.now(),
         eventType = EventType.bookingCancelled,
@@ -413,7 +392,7 @@ class Cas1DomainEventDescriberTest {
     bookingEntity.cancellations += cancellation
 
     every { mockDomainEventService.getBookingCancelledEvent(any()) } returns buildDomainEvent {
-      BookingCancelledEnvelope(
+      Cas1DomainEventEnvelope(
         id = it,
         timestamp = Instant.now(),
         eventType = EventType.bookingCancelled,
@@ -458,7 +437,7 @@ class Cas1DomainEventDescriberTest {
     every { mockSpaceBookingRepository.findByIdOrNull(any()) } returns spaceBooking
 
     every { mockDomainEventService.getBookingCancelledEvent(any()) } returns buildDomainEvent {
-      BookingCancelledEnvelope(
+      Cas1DomainEventEnvelope(
         id = it,
         timestamp = Instant.now(),
         eventType = EventType.bookingCancelled,
@@ -486,7 +465,7 @@ class Cas1DomainEventDescriberTest {
     every { mockSpaceBookingRepository.findByIdOrNull(any()) } returns null
 
     every { mockDomainEventService.getBookingCancelledEvent(any()) } returns buildDomainEvent {
-      BookingCancelledEnvelope(
+      Cas1DomainEventEnvelope(
         id = it,
         timestamp = Instant.now(),
         eventType = EventType.bookingCancelled,
@@ -525,7 +504,7 @@ class Cas1DomainEventDescriberTest {
         .produce()
 
     every { mockDomainEventService.getBookingCancelledEvent(any()) } returns buildDomainEvent {
-      BookingCancelledEnvelope(
+      Cas1DomainEventEnvelope(
         id = it,
         timestamp = Instant.now(),
         eventType = EventType.bookingCancelled,
@@ -552,7 +531,7 @@ class Cas1DomainEventDescriberTest {
       val departureDate = LocalDate.of(2024, 4, 1)
 
       every { mockDomainEventService.getBookingChangedEvent(any()) } returns buildDomainEvent {
-        BookingChangedEnvelope(
+        Cas1DomainEventEnvelope(
           id = it,
           timestamp = Instant.now(),
           eventType = EventType.bookingChanged,
@@ -585,7 +564,7 @@ class Cas1DomainEventDescriberTest {
       every { mockDomainEventService.getBookingChangedEvent(any()) } returns buildDomainEvent(
         builder =
         {
-          BookingChangedEnvelope(
+          Cas1DomainEventEnvelope(
             id = it,
             timestamp = Instant.now(),
             eventType = EventType.bookingChanged,
@@ -632,7 +611,7 @@ class Cas1DomainEventDescriberTest {
       every { mockDomainEventService.getBookingChangedEvent(any()) } returns buildDomainEvent(
         builder =
         {
-          BookingChangedEnvelope(
+          Cas1DomainEventEnvelope(
             id = it,
             timestamp = Instant.now(),
             eventType = EventType.bookingChanged,
@@ -680,7 +659,7 @@ class Cas1DomainEventDescriberTest {
       every { mockDomainEventService.getBookingChangedEvent(any()) } returns buildDomainEvent(
         builder =
         {
-          BookingChangedEnvelope(
+          Cas1DomainEventEnvelope(
             id = it,
             timestamp = Instant.now(),
             eventType = EventType.bookingChanged,
@@ -727,7 +706,7 @@ class Cas1DomainEventDescriberTest {
       every { mockDomainEventService.getPlacementAppealAcceptedEvent(any()) } returns buildDomainEvent(
         builder =
         {
-          PlacementAppealAcceptedEnvelope(
+          Cas1DomainEventEnvelope(
             id = it,
             timestamp = Instant.now(),
             eventType = EventType.placementAppealAccepted,
@@ -768,7 +747,7 @@ class Cas1DomainEventDescriberTest {
       every { mockDomainEventService.getPlacementAppealCreatedEvent(any()) } returns buildDomainEvent(
         builder =
         {
-          PlacementAppealCreatedEnvelope(
+          Cas1DomainEventEnvelope(
             id = it,
             timestamp = Instant.now(),
             eventType = EventType.placementAppealCreated,
@@ -814,7 +793,7 @@ class Cas1DomainEventDescriberTest {
       every { mockDomainEventService.getPlacementAppealRejectedEvent(any()) } returns buildDomainEvent(
         builder =
         {
-          PlacementAppealRejectedEnvelope(
+          Cas1DomainEventEnvelope(
             id = it,
             timestamp = Instant.now(),
             eventType = EventType.placementAppealRejected,
@@ -857,7 +836,7 @@ class Cas1DomainEventDescriberTest {
       every { mockDomainEventService.getEmergencyTransferCreatedEvent(any()) } returns buildDomainEvent(
         builder =
         {
-          EmergencyTransferCreatedEnvelope(
+          Cas1DomainEventEnvelope(
             id = it,
             timestamp = Instant.now(),
             eventType = EventType.emergencyTransferCreated,
@@ -918,7 +897,7 @@ class Cas1DomainEventDescriberTest {
     val departureDate = LocalDate.of(2024, 4, 1)
 
     every { mockDomainEventService.getBookingKeyWorkerAssignedEvent(any()) } returns buildDomainEvent {
-      BookingKeyWorkerAssignedEnvelope(
+      Cas1DomainEventEnvelope(
         id = it,
         timestamp = Instant.now(),
         eventType = EventType.bookingChanged,
@@ -948,7 +927,7 @@ class Cas1DomainEventDescriberTest {
     val departureDate = LocalDate.of(2024, 4, 1)
 
     every { mockDomainEventService.getBookingKeyWorkerAssignedEvent(any()) } returns buildDomainEvent {
-      BookingKeyWorkerAssignedEnvelope(
+      Cas1DomainEventEnvelope(
         id = it,
         timestamp = Instant.now(),
         eventType = EventType.bookingChanged,
@@ -976,7 +955,7 @@ class Cas1DomainEventDescriberTest {
     val domainEventSummary = DomainEventSummaryImpl.ofType(DomainEventType.APPROVED_PREMISES_APPLICATION_WITHDRAWN)
 
     every { mockDomainEventService.getApplicationWithdrawnEvent(any()) } returns buildDomainEvent {
-      ApplicationWithdrawnEnvelope(
+      Cas1DomainEventEnvelope(
         id = it,
         timestamp = Instant.now(),
         eventType = EventType.applicationWithdrawn,
@@ -997,7 +976,7 @@ class Cas1DomainEventDescriberTest {
     val domainEventSummary = DomainEventSummaryImpl.ofType(DomainEventType.APPROVED_PREMISES_APPLICATION_WITHDRAWN)
 
     every { mockDomainEventService.getApplicationWithdrawnEvent(any()) } returns buildDomainEvent {
-      ApplicationWithdrawnEnvelope(
+      Cas1DomainEventEnvelope(
         id = it,
         timestamp = Instant.now(),
         eventType = EventType.applicationWithdrawn,
@@ -1019,7 +998,7 @@ class Cas1DomainEventDescriberTest {
     val domainEventSummary = DomainEventSummaryImpl.ofType(DomainEventType.APPROVED_PREMISES_ASSESSMENT_APPEALED)
 
     every { mockDomainEventService.getAssessmentAppealedEvent(any()) } returns buildDomainEvent {
-      AssessmentAppealedEnvelope(
+      Cas1DomainEventEnvelope(
         id = it,
         timestamp = Instant.now(),
         eventType = EventType.assessmentAppealed,
@@ -1052,7 +1031,7 @@ class Cas1DomainEventDescriberTest {
     val domainEventSummary = DomainEventSummaryImpl.ofType(DomainEventType.APPROVED_PREMISES_ASSESSMENT_ALLOCATED)
 
     every { mockDomainEventService.getAssessmentAllocatedEvent(any()) } returns buildDomainEvent {
-      AssessmentAllocatedEnvelope(
+      Cas1DomainEventEnvelope(
         id = it,
         timestamp = Instant.now(),
         eventType = EventType.assessmentAllocated,
@@ -1088,7 +1067,7 @@ class Cas1DomainEventDescriberTest {
       DomainEventSummaryImpl.ofType(DomainEventType.APPROVED_PREMISES_PLACEMENT_APPLICATION_WITHDRAWN)
 
     every { mockDomainEventService.getPlacementApplicationWithdrawnEvent(UUID.fromString(domainEventSummary.id)) } returns buildDomainEvent {
-      PlacementApplicationWithdrawnEnvelope(
+      Cas1DomainEventEnvelope(
         id = it,
         timestamp = Instant.now(),
         eventType = EventType.placementApplicationWithdrawn,
@@ -1109,7 +1088,7 @@ class Cas1DomainEventDescriberTest {
       DomainEventSummaryImpl.ofType(DomainEventType.APPROVED_PREMISES_PLACEMENT_APPLICATION_WITHDRAWN)
 
     every { mockDomainEventService.getPlacementApplicationWithdrawnEvent(UUID.fromString(domainEventSummary.id)) } returns buildDomainEvent {
-      PlacementApplicationWithdrawnEnvelope(
+      Cas1DomainEventEnvelope(
         id = it,
         timestamp = Instant.now(),
         eventType = EventType.placementApplicationWithdrawn,
@@ -1138,7 +1117,7 @@ class Cas1DomainEventDescriberTest {
     val domainEventSummary = DomainEventSummaryImpl.ofType(DomainEventType.APPROVED_PREMISES_MATCH_REQUEST_WITHDRAWN)
 
     every { mockDomainEventService.getMatchRequestWithdrawnEvent(UUID.fromString(domainEventSummary.id)) } returns buildDomainEvent {
-      MatchRequestWithdrawnEnvelope(
+      Cas1DomainEventEnvelope(
         id = it,
         timestamp = Instant.now(),
         eventType = EventType.matchRequestWithdrawn,
@@ -1168,7 +1147,7 @@ class Cas1DomainEventDescriberTest {
       DomainEventSummaryImpl.ofType(DomainEventType.APPROVED_PREMISES_REQUEST_FOR_PLACEMENT_CREATED)
 
     every { mockDomainEventService.getRequestForPlacementCreatedEvent(UUID.fromString(domainEventSummary.id)) } returns buildDomainEvent {
-      RequestForPlacementCreatedEnvelope(
+      Cas1DomainEventEnvelope(
         id = it,
         timestamp = Instant.now(),
         eventType = EventType.requestForPlacementCreated,
@@ -1194,7 +1173,7 @@ class Cas1DomainEventDescriberTest {
       DomainEventSummaryImpl.ofType(DomainEventType.APPROVED_PREMISES_REQUEST_FOR_PLACEMENT_CREATED)
 
     every { mockDomainEventService.getRequestForPlacementCreatedEvent(UUID.fromString(domainEventSummary.id)) } returns buildDomainEvent {
-      RequestForPlacementCreatedEnvelope(
+      Cas1DomainEventEnvelope(
         id = it,
         timestamp = Instant.now(),
         eventType = EventType.requestForPlacementCreated,
@@ -1222,7 +1201,7 @@ class Cas1DomainEventDescriberTest {
     val expectedTermUsed = if (decision == RequestForPlacementAssessed.Decision.rejected) "was" else "is"
 
     every { mockDomainEventService.getRequestForPlacementAssessedEvent(UUID.fromString(domainEventSummary.id)) } returns buildDomainEvent {
-      RequestForPlacementAssessedEnvelope(
+      Cas1DomainEventEnvelope(
         id = it,
         timestamp = Instant.now(),
         eventType = EventType.requestForPlacementCreated,
@@ -1250,7 +1229,7 @@ class Cas1DomainEventDescriberTest {
     val expectedTermUsed = if (decision == RequestForPlacementAssessed.Decision.rejected) "was" else "is"
 
     every { mockDomainEventService.getRequestForPlacementAssessedEvent(UUID.fromString(domainEventSummary.id)) } returns buildDomainEvent {
-      RequestForPlacementAssessedEnvelope(
+      Cas1DomainEventEnvelope(
         id = it,
         timestamp = Instant.now(),
         eventType = EventType.requestForPlacementCreated,
@@ -1288,7 +1267,7 @@ class Cas1DomainEventDescriberTest {
       DomainEventSummaryImpl.ofType(DomainEventType.APPROVED_PREMISES_PLACEMENT_APPLICATION_ALLOCATED)
 
     every { mockDomainEventService.getPlacementApplicationAllocatedEvent(UUID.fromString(domainEventSummary.id)) } returns buildDomainEvent {
-      PlacementApplicationAllocatedEnvelope(
+      Cas1DomainEventEnvelope(
         id = it,
         timestamp = Instant.now(),
         eventType = EventType.placementApplicationAllocated,
@@ -1332,7 +1311,7 @@ class Cas1DomainEventDescriberTest {
     val requestId = UUID.randomUUID()
 
     every { mockDomainEventService.getFurtherInformationRequestMadeEvent(UUID.fromString(domainEventSummary.id)) } returns buildDomainEvent {
-      FurtherInformationRequestedEnvelope(
+      Cas1DomainEventEnvelope(
         id = it,
         timestamp = Instant.now(),
         eventType = EventType.informationRequestMade,

@@ -128,6 +128,27 @@ class Cas1DomainEventServiceTest {
   @Nested
   inner class GetDomainEvents {
 
+    @Test
+    fun `getDomainEvent returns error for payload mismatch`() {
+      val id = UUID.fromString("0adab8a6-14a6-4c41-a56e-7f0bb76d3d02")
+
+      every { domainEventRepositoryMock.findByIdOrNull(id) } returns DomainEventEntityFactory()
+        .withId(id)
+        .withData(domainEventsFactory.createEnvelopeLatestVersion(DomainEventType.APPROVED_PREMISES_BOOKING_CANCELLED).persistedJson)
+        .produce()
+
+      assertThatThrownBy(
+        {
+          domainEventService.getPlacementAppealRejectedEvent(id)
+        },
+      ).hasMessage(
+        "Entity with id 0adab8a6-14a6-4c41-a56e-7f0bb76d3d02 has type APPROVED_PREMISES_APPLICATION_SUBMITTED, " +
+          "which contains data of type class uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.ApplicationSubmitted. " +
+          "This is incompatible with the requested payload type class " +
+          "uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.PlacementAppealRejected.",
+      )
+    }
+
     @ParameterizedTest
     @MethodSource("uk.gov.justice.digital.hmpps.approvedpremisesapi.unit.service.cas1.Cas1DomainEventServiceTest#allCas1DomainEventTypes")
     fun `getDomainEvent returns null when event not found`(type: DomainEventType) {

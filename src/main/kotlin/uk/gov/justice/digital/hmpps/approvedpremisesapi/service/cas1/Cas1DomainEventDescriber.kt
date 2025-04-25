@@ -2,7 +2,8 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1
 
 import org.springframework.data.repository.findByIdOrNull
 import org.springframework.stereotype.Component
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.BookingCancelledEnvelope
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.BookingCancelled
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.Cas1DomainEventEnvelope
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.RequestForPlacementAssessed
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.RequestForPlacementType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.SpaceCharacteristic
@@ -273,7 +274,7 @@ class Cas1DomainEventDescriber(
     val event = domainEventService.getBookingCancelledEvent(domainEventSummary.id())
     val bookingId = event!!.data.eventDetails.bookingId
 
-    var bookingDetail: BookingCancellationDetail = if (domainEventSummary.cas1SpaceBookingId != null) {
+    val bookingDetail: BookingCancellationDetail = if (domainEventSummary.cas1SpaceBookingId != null) {
       getSpaceBookingCancellationDetailForEvent(bookingId, event)
     } else {
       getBookingCancellationDetailForEvent(bookingId, event)
@@ -486,7 +487,7 @@ class Cas1DomainEventDescriber(
   }
 
   @SuppressWarnings("TooGenericExceptionThrown")
-  private fun getSpaceBookingCancellationDetailForEvent(bookingId: UUID, event: GetCas1DomainEvent<BookingCancelledEnvelope>): BookingCancellationDetail {
+  private fun getSpaceBookingCancellationDetailForEvent(bookingId: UUID, event: GetCas1DomainEvent<Cas1DomainEventEnvelope<BookingCancelled>>): BookingCancellationDetail {
     val spaceBooking = cas1SpaceBookingRepository.findByIdOrNull(bookingId)
       ?: throw RuntimeException("Space Booking ID $bookingId with cancellation not found")
     if (spaceBooking.cancellationReason == null) {
@@ -501,7 +502,7 @@ class Cas1DomainEventDescriber(
   }
 
   @SuppressWarnings("TooGenericExceptionThrown")
-  private fun getBookingCancellationDetailForEvent(bookingId: UUID, event: GetCas1DomainEvent<BookingCancelledEnvelope>): BookingCancellationDetail {
+  private fun getBookingCancellationDetailForEvent(bookingId: UUID, event: GetCas1DomainEvent<Cas1DomainEventEnvelope<BookingCancelled>>): BookingCancellationDetail {
     val booking = bookingRepository.findByIdOrNull(bookingId)
       ?: throw RuntimeException("Booking ID $bookingId with cancellation not found")
     if (booking.cancellations.count() != 1) {

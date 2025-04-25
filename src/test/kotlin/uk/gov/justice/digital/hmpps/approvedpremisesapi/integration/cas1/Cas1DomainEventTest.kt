@@ -6,7 +6,8 @@ import org.junit.jupiter.api.Test
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.MethodSource
 import org.springframework.beans.factory.annotation.Autowired
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.BookingCancelledEnvelope
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.BookingCancelled
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.Cas1DomainEventEnvelope
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.PersonArrivedEnvelope
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.PersonDepartedEnvelope
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.config.DomainEventUrlConfig
@@ -92,16 +93,23 @@ class Cas1DomainEventTest : InitialiseDatabasePerClassTestBase() {
 
     val url = generateUrlForDomainEventType(type, event.id)
 
-    val response = webTestClient.get()
+    val responseJson = webTestClient.get()
       .uri(url)
       .header("Authorization", "Bearer $jwt")
       .exchange()
       .expectStatus()
       .isOk
-      .expectBody(domainEventAndJson.envelope::class.java)
-      .returnResult()
+      .bodyAsObject<String>()
 
-    assertThat(response.responseBody).isEqualTo(domainEventAndJson.envelope)
+    val responseObject = objectMapper.readValue<(Cas1DomainEventEnvelope<*>)>(
+      responseJson,
+      objectMapper.typeFactory.constructParametricType(
+        Cas1DomainEventEnvelope::class.java,
+        type.cas1Info!!.payloadType.java,
+      ),
+    )
+
+    assertThat(responseObject).isEqualTo(domainEventAndJson.envelope)
   }
 
   @Test
@@ -130,15 +138,23 @@ class Cas1DomainEventTest : InitialiseDatabasePerClassTestBase() {
 
     val url = generateUrlForDomainEventType(DomainEventType.APPROVED_PREMISES_BOOKING_CANCELLED, event.id)
 
-    val response = webTestClient.get()
+    val responseJson = webTestClient.get()
       .uri(url)
       .header("Authorization", "Bearer $jwt")
       .exchange()
       .expectStatus()
       .isOk
-      .bodyAsObject<BookingCancelledEnvelope>()
+      .bodyAsObject<String>()
 
-    val expectedEnvelope = (domainEventAndJson.envelope as BookingCancelledEnvelope)
+    val response = objectMapper.readValue<(Cas1DomainEventEnvelope<*>)>(
+      responseJson,
+      objectMapper.typeFactory.constructParametricType(
+        Cas1DomainEventEnvelope::class.java,
+        BookingCancelled::class.java,
+      ),
+    ) as Cas1DomainEventEnvelope<BookingCancelled>
+
+    val expectedEnvelope = (domainEventAndJson.envelope as Cas1DomainEventEnvelope<BookingCancelled>)
     assertThat(response.eventDetails.cancelledAtDate).isEqualTo(expectedEnvelope.eventDetails.cancelledAtDate)
     assertThat(response.eventDetails.cancellationRecordedAt).isEqualTo(expectedEnvelope.eventDetails.cancellationRecordedAt)
   }

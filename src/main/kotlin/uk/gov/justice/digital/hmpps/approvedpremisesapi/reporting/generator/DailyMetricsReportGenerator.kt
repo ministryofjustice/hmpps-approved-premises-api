@@ -1,8 +1,8 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.generator
 
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.ApplicationAssessedEnvelope
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.ApplicationSubmittedEnvelope
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.BookingMadeEnvelope
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.ApplicationAssessed
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.ApplicationSubmitted
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.BookingMade
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DomainEventEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DomainEventType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.model.ApprovedPremisesApplicationMetricsSummaryDto
@@ -31,15 +31,15 @@ class DailyMetricsReportGenerator(
 
     val applicationsSubmittedToday = domainEventsToday.filter { domainEventEntity ->
       domainEventEntity.type == DomainEventType.APPROVED_PREMISES_APPLICATION_SUBMITTED
-    }.map { domainEventService.toDomainEvent(it, ApplicationSubmittedEnvelope::class) }
+    }.map { domainEventService.toDomainEvent(it, ApplicationSubmitted::class) }
 
     val assessmentsCompletedToday = domainEventsToday.filter { domainEventEntity ->
       domainEventEntity.type == DomainEventType.APPROVED_PREMISES_APPLICATION_ASSESSED
-    }.map { domainEventService.toDomainEvent(it, ApplicationAssessedEnvelope::class) }
+    }.map { domainEventService.toDomainEvent(it, ApplicationAssessed::class) }
 
     val bookingsMadeToday = domainEventsToday.filter { domainEventEntity ->
       domainEventEntity.type == DomainEventType.APPROVED_PREMISES_BOOKING_MADE
-    }.map { domainEventService.toDomainEvent(it, BookingMadeEnvelope::class) }
+    }.map { domainEventService.toDomainEvent(it, BookingMade::class) }
 
     listOf(
       DailyMetricReportRow(
