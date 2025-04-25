@@ -15,6 +15,7 @@ import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.extension.ExtendWith
 import org.springframework.http.HttpStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.BookingKeyWorkerAssignedEnvelope
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.EmergencyTransferCreatedEnvelope
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.EventType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.PersonArrivedEnvelope
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.PersonDepartedEnvelope
@@ -552,6 +553,82 @@ class Cas1BookingManagementDomainEventServiceTest {
       assertThat(domainEventPremises.apCode).isEqualTo(premises.apCode)
       assertThat(domainEventPremises.legacyApCode).isEqualTo(premises.qCode)
       assertThat(domainEventPremises.localAuthorityAreaName).isEqualTo(premises.localAuthorityArea!!.name)
+    }
+  }
+
+  @Nested
+  inner class EmergencyTransferCreated {
+
+    @Test
+    fun success() {
+      val application = ApprovedPremisesApplicationEntityFactory()
+        .withDefaults()
+        .withCrn("APPLICATIONCRN")
+        .produce()
+
+      every { offenderService.getPersonSummaryInfoResults(any(), any()) } returns
+        listOf(
+          PersonSummaryInfoResult.Success.Full(
+            "APPLICATIONCRN",
+            CaseSummaryFactory()
+              .produce(),
+          ),
+        )
+
+      every { apDeliusContextApiClient.getStaffDetail("thecreator") } returns ClientResult.Success(
+        HttpStatus.OK,
+        StaffDetailFactory.staffDetail(deliusUsername = "thecreator"),
+      )
+
+      every { domainEventService.saveEmergencyTransferCreatedEvent(any()) } returns Unit
+
+      val from = Cas1SpaceBookingEntityFactory()
+        .withPremises(ApprovedPremisesEntityFactory().withDefaults().withName("frompremises").produce())
+        .withCanonicalArrivalDate(LocalDate.of(2019, 8, 7))
+        .withCanonicalDepartureDate(LocalDate.of(2019, 8, 8))
+        .withApplication(application).produce()
+
+      val to = Cas1SpaceBookingEntityFactory()
+        .withPremises(ApprovedPremisesEntityFactory().withDefaults().withName("topremises").produce())
+        .withCanonicalArrivalDate(LocalDate.of(2019, 8, 8))
+        .withCanonicalDepartureDate(LocalDate.of(2019, 8, 9))
+        .withApplication(application).produce()
+
+      service.emergencyTransferCreated(
+        createdBy = UserEntityFactory().withDefaults().withDeliusUsername("thecreator").produce(),
+        from = from,
+        to = to,
+      )
+
+      val domainEventArgument = slot<Cas1DomainEvent<EmergencyTransferCreatedEnvelope>>()
+
+      verify(exactly = 1) {
+        domainEventService.saveEmergencyTransferCreatedEvent(
+          capture(domainEventArgument),
+        )
+      }
+
+      val domainEvent = domainEventArgument.captured
+
+      assertThat(domainEvent.data.eventType).isEqualTo(EventType.emergencyTransferCreated)
+      assertThat(domainEvent.data.timestamp).isWithinTheLastMinute()
+      assertThat(domainEvent.applicationId).isEqualTo(application.id)
+      assertThat(domainEvent.bookingId).isNull()
+      assertThat(domainEvent.cas1SpaceBookingId).isEqualTo(from.id)
+      assertThat(domainEvent.schemaVersion).isNull()
+      assertThat(domainEvent.crn).isEqualTo("APPLICATIONCRN")
+      assertThat(domainEvent.occurredAt).isWithinTheLastMinute()
+      val data = domainEvent.data.eventDetails
+      assertThat(data.applicationId).isEqualTo(application.id)
+      assertThat(data.createdBy.username).isEqualTo("thecreator")
+      assertThat(data.from.bookingId).isEqualTo(from.id)
+      assertThat(data.from.premises.name).isEqualTo("frompremises")
+      assertThat(data.from.arrivalOn).isEqualTo(LocalDate.of(2019, 8, 7))
+      assertThat(data.from.departureOn).isEqualTo(LocalDate.of(2019, 8, 8))
+      assertThat(data.to.bookingId).isEqualTo(to.id)
+      assertThat(data.to.premises.name).isEqualTo("topremises")
+      assertThat(data.to.arrivalOn).isEqualTo(LocalDate.of(2019, 8, 8))
+      assertThat(data.to.departureOn).isEqualTo(LocalDate.of(2019, 8, 9))
     }
   }
 }

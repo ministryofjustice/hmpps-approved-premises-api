@@ -650,6 +650,12 @@ class Cas1SpaceBookingService(
 
     cas1SpaceBookingRepository.saveAndFlush(existingCas1SpaceBooking)
 
+    cas1SpaceBookingManagementDomainEventService.emergencyTransferCreated(
+      user,
+      existingCas1SpaceBooking,
+      emergencySpaceBooking,
+    )
+
     return success(emergencySpaceBooking)
   }
 

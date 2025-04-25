@@ -12,6 +12,7 @@ enum class EventType(@get:JsonValue val value: kotlin.String) {
   applicationSubmitted("approved-premises.application.submitted"),
   applicationAssessed("approved-premises.application.assessed"),
   bookingMade("approved-premises.booking.made"),
+  emergencyTransferCreated("approved-premises.emergency-transfer.created"),
   personArrived("approved-premises.person.arrived"),
   personNotArrived("approved-premises.person.not-arrived"),
   personDeparted("approved-premises.person.departed"),

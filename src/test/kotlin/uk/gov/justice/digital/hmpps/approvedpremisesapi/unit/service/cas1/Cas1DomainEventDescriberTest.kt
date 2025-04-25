@@ -21,6 +21,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.Bo
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.BookingMadeEnvelope
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.BookingNotMadeEnvelope
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.DatePeriod
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.EmergencyTransferCreatedEnvelope
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.EventType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.FurtherInformationRequestedEnvelope
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.MatchRequestWithdrawnEnvelope
@@ -38,6 +39,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.Re
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.RequestForPlacementType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.SpaceCharacteristic
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1BookingChangedContentPayload
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1EmergencyTransferCreatedContentPayload
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1PlacementAppealAcceptedPayload
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1PlacementAppealCreatedPayload
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1PlacementAppealRejectedPayload
@@ -64,6 +66,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.events.BookingKe
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.events.BookingMadeFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.events.BookingNotMadeFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.events.Cas1DomainEventCodedIdFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.events.EmergencyTransferCreatedFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.events.EventPremisesFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.events.FurtherInformationRequestedFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.events.MatchRequestWithdrawnFactory
@@ -78,6 +81,8 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.events.Placement
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.events.RequestForPlacementAssessedFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.events.RequestForPlacementCreatedFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.events.StaffMemberFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.events.TransferBookingFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.from
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AssessmentClarificationNoteRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AssessmentEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.BookingEntity
@@ -839,6 +844,69 @@ class Cas1DomainEventDescriberTest {
       assertThat(contentPayload.rejectionReason.name).isEqualTo("The rejection code")
       assertThat(contentPayload.expectedArrival).isEqualTo(LocalDate.of(2015, 12, 1))
       assertThat(contentPayload.expectedDeparture).isEqualTo(LocalDate.of(2015, 12, 2))
+    }
+  }
+
+  @Nested
+  inner class EmergencyBookingCreated {
+
+    @Test
+    fun success() {
+      val domainEventSummary = DomainEventSummaryImpl.ofType(DomainEventType.APPROVED_PREMISES_EMERGENCY_TRANSFER_CREATED)
+
+      every { mockDomainEventService.getEmergencyTransferCreatedEvent(any()) } returns buildDomainEvent(
+        builder =
+        {
+          EmergencyTransferCreatedEnvelope(
+            id = it,
+            timestamp = Instant.now(),
+            eventType = EventType.emergencyTransferCreated,
+            eventDetails = EmergencyTransferCreatedFactory()
+              .withFrom(
+                TransferBookingFactory()
+                  .withPremises(
+                    EventPremisesFactory()
+                      .withName("from premises")
+                      .produce(),
+                  )
+                  .withBookingId(UUID.randomUUID())
+                  .withArrivalOn(LocalDate.of(2010, 1, 1))
+                  .withDepartureOn(LocalDate.of(2010, 2, 2))
+                  .produce(),
+              )
+              .withTo(
+                TransferBookingFactory()
+                  .withPremises(
+                    EventPremisesFactory()
+                      .withName("to premises")
+                      .produce(),
+                  )
+                  .withBookingId(UUID.randomUUID())
+                  .withArrivalOn(LocalDate.of(2011, 1, 1))
+                  .withDepartureOn(LocalDate.of(2011, 2, 2))
+                  .produce(),
+              ).produce(),
+          )
+        },
+        schemaVersion = null,
+      )
+
+      val result = cas1DomainEventDescriber.getDescriptionAndPayload(domainEventSummary)
+
+      assertThat(result.description).isNull()
+
+      val contentPayload = result.payload as Cas1EmergencyTransferCreatedContentPayload
+      assertThat(contentPayload.type).isEqualTo(Cas1TimelineEventType.emergencyTransferCreated)
+
+      assertThat(contentPayload.from.bookingId).isNotNull()
+      assertThat(contentPayload.from.premises.name).isEqualTo("from premises")
+      assertThat(contentPayload.from.arrivalDate).isEqualTo(LocalDate.of(2010, 1, 1))
+      assertThat(contentPayload.from.departureDate).isEqualTo(LocalDate.of(2010, 2, 2))
+
+      assertThat(contentPayload.from.bookingId).isNotNull()
+      assertThat(contentPayload.to.premises.name).isEqualTo("to premises")
+      assertThat(contentPayload.to.arrivalDate).isEqualTo(LocalDate.of(2011, 1, 1))
+      assertThat(contentPayload.to.departureDate).isEqualTo(LocalDate.of(2011, 2, 2))
     }
   }
 
