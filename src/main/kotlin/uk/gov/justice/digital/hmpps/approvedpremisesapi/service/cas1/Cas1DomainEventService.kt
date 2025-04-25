@@ -90,13 +90,13 @@ class Cas1DomainEventService(
   fun getRequestForPlacementAssessedEvent(id: UUID) = get(id, RequestForPlacementAssessedEnvelope::class)
   fun getFurtherInformationRequestMadeEvent(id: UUID) = get(id, FurtherInformationRequestedEnvelope::class)
 
-  private fun <T : Cas1DomainEventEnvelopeInterface<*>> get(id: UUID, envelopeType: KClass<T>): Cas1DomainEvent<T>? {
+  private fun <T : Cas1DomainEventEnvelopeInterface<*>> get(id: UUID, envelopeType: KClass<T>): GetCas1DomainEvent<T>? {
     val entity = domainEventRepository.findByIdOrNull(id) ?: return null
     return toDomainEvent(entity, envelopeType)
   }
 
   @SuppressWarnings("CyclomaticComplexMethod", "TooGenericExceptionThrown")
-  fun <T : Cas1DomainEventEnvelopeInterface<*>> toDomainEvent(entity: DomainEventEntity, envelopeType: KClass<T>): Cas1DomainEvent<T> {
+  fun <T : Cas1DomainEventEnvelopeInterface<*>> toDomainEvent(entity: DomainEventEntity, envelopeType: KClass<T>): GetCas1DomainEvent<T> {
     checkNotNull(entity.applicationId) { "application id should not be null" }
 
     if (entity.type.cas1Info!!.envelopeType != envelopeType) {
@@ -115,14 +115,10 @@ class Cas1DomainEventService(
 
     val data = objectMapper.readValue(dataJson, envelopeType.java)
 
-    return Cas1DomainEvent(
+    return GetCas1DomainEvent(
       id = entity.id,
-      applicationId = entity.applicationId,
-      crn = entity.crn,
-      nomsNumber = entity.nomsNumber,
-      occurredAt = entity.occurredAt.toInstant(),
-      schemaVersion = entity.schemaVersion,
       data = data,
+      schemaVersion = entity.schemaVersion,
     )
   }
 
@@ -361,6 +357,12 @@ class Cas1DomainEventService(
     )
   }
 }
+
+data class GetCas1DomainEvent<T>(
+  val id: UUID,
+  val data: T,
+  val schemaVersion: Int? = null,
+)
 
 data class Cas1DomainEvent<T>(
   val id: UUID,

@@ -95,9 +95,9 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementRequ
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TriggerSourceType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.DomainEventSummary
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1DomainEvent
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1DomainEventDescriber
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1DomainEventService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.GetCas1DomainEvent
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.toInstant
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.toUiDateTimeFormat
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.toUiFormat
@@ -1392,21 +1392,16 @@ class Cas1DomainEventDescriberTest {
   private fun <T> buildDomainEvent(
     builder: (UUID) -> T,
     schemaVersion: Int? = null,
-  ): Cas1DomainEvent<T> {
+  ): GetCas1DomainEvent<T> {
     val id = UUID.randomUUID()
-    val applicationId = UUID.randomUUID()
-    return Cas1DomainEvent(
+    return GetCas1DomainEvent(
       id = id,
-      applicationId = applicationId,
-      crn = "SOME-CRN",
-      nomsNumber = "theNomsNumber",
-      occurredAt = Instant.now(),
       data = builder(id),
       schemaVersion = schemaVersion,
     )
   }
 
-  private fun <T> buildDomainEvent(builder: (UUID) -> T): Cas1DomainEvent<T> = buildDomainEvent(builder, null)
+  private fun <T> buildDomainEvent(builder: (UUID) -> T): GetCas1DomainEvent<T> = buildDomainEvent(builder, null)
 }
 
 data class DomainEventSummaryImpl(

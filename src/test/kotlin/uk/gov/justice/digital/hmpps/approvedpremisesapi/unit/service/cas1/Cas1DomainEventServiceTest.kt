@@ -68,6 +68,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.UserService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1DomainEvent
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1DomainEventMigrationService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1DomainEventService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.GetCas1DomainEvent
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.unit.util.ObjectMapperFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.Cas1DomainEventsFactory
 import java.time.Instant
@@ -167,19 +168,15 @@ class Cas1DomainEventServiceTest {
       val event = method.invoke(id)
 
       assertThat(event).isEqualTo(
-        Cas1DomainEvent(
+        GetCas1DomainEvent(
           id = id,
-          applicationId = applicationId,
-          crn = crn,
-          nomsNumber = nomsNumber,
-          occurredAt = occurredAt.toInstant(),
           data = domainEventAndJson.envelope,
           schemaVersion = domainEventAndJson.schemaVersion.versionNo,
         ),
       )
     }
 
-    private fun fetchGetterForType(type: DomainEventType): (UUID) -> Cas1DomainEvent<out Any>? = mapOf(
+    private fun fetchGetterForType(type: DomainEventType): (UUID) -> GetCas1DomainEvent<out Any>? = mapOf(
       DomainEventType.APPROVED_PREMISES_APPLICATION_SUBMITTED to domainEventService::getApplicationSubmittedDomainEvent,
       DomainEventType.APPROVED_PREMISES_APPLICATION_ASSESSED to domainEventService::getApplicationAssessedDomainEvent,
       DomainEventType.APPROVED_PREMISES_BOOKING_MADE to domainEventService::getBookingMadeEvent,
