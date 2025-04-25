@@ -117,7 +117,7 @@ class SubmissionsTransformerTest {
   inner class TransformJpaSummaryToCas2SubmittedSummary {
     @Test
     fun `transforms submitted summary application to API summary representation `() {
-      val applicationSummary = Cas2ApplicationSummaryEntityFactory.produce()
+      val applicationSummary = Cas2ApplicationSummaryEntityFactory().produce()
 
       val expectedSubmittedApplicationSummary = Cas2SubmittedApplicationSummary(
         id = applicationSummary.id,

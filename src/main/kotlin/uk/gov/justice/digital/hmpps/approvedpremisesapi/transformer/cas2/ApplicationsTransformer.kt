@@ -74,6 +74,7 @@ class ApplicationsTransformer(
     crn = jpaSummary.crn,
     nomsNumber = jpaSummary.nomsNumber,
     personName = personName,
+    isTransferredApplication = jpaSummary.currentPrisonCode != jpaSummary.prisonCode,
   )
 
   private fun getStatus(entity: Cas2ApplicationEntity): ApplicationStatus {

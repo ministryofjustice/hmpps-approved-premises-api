@@ -10,6 +10,8 @@ import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.params.ParameterizedTest
+import org.junit.jupiter.params.provider.ValueSource
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApplicationStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas2Assessment
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas2StatusUpdate
@@ -23,7 +25,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.cas2.Cas2Applica
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.cas2.Cas2ApplicationSummaryEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.cas2.Cas2AssessmentEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas2ApplicationAssignmentEntity
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas2ApplicationSummaryEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.OffenderManagementUnitEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.OffenderManagementUnitRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.NomisUserService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.NomisUserTransformer
@@ -32,8 +34,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.cas2.Applica
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.cas2.AssessmentsTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.cas2.StatusUpdateTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.cas2.TimelineEventsTransformer
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomStringUpperCase
-import java.time.LocalDate
 import java.time.OffsetDateTime
 import java.util.UUID
 
@@ -206,8 +206,7 @@ class ApplicationsTransformerTest {
       val assessment = Cas2Assessment(id = UUID.fromString("3adc18ec-3d0d-4d0f-8b31-6f08e2591c35"))
       every { mockAssessmentsTransformer.transformJpaToApiRepresentation(any()) } returns assessment
       every { nomisUserService.getNomisUserById(any()) } returns user
-      val prison = OffenderManagementUnitEntityFactory().produce()
-      val newPrison = OffenderManagementUnitEntityFactory().withPrisonCode("NEW").withPrisonName("New Prison").withEmail("test@test.co.uk").produce()
+      val (prison, newPrison) = stubPrisonAndNewPrison()
       every { offenderManagementUnitRepository.findByPrisonCode(eq(prison.prisonCode)) } returns prison
       every { offenderManagementUnitRepository.findByPrisonCode(eq(newPrison.prisonCode)) } returns newPrison
 
@@ -239,13 +238,23 @@ class ApplicationsTransformerTest {
   @Nested
   inner class TransformJpaSummaryToSummary {
 
-    @Test
-    fun `transforms an in progress CAS2 application correctly`() {
-      val application = Cas2ApplicationSummaryEntityFactory.produce()
+    @ParameterizedTest
+    @ValueSource(booleans = [true, false])
+    fun `transforms an in progress CAS2 application correctly`(isTransferredApplication: Boolean) {
+      val (prison, newPrison) = stubPrisonAndNewPrison()
+      val application = if (isTransferredApplication) {
+        Cas2ApplicationSummaryEntityFactory()
+          .withPrisonCode(prison.prisonCode)
+          .withCurrentPrisonCode(newPrison.prisonCode)
+          .produce()
+      } else {
+        Cas2ApplicationSummaryEntityFactory()
+          .withPrisonCode(prison.prisonCode)
+          .withCurrentPrisonCode(prison.prisonCode)
+          .produce()
+      }
 
       every { mockStatusUpdateTransformer.transformJpaSummaryToLatestStatusUpdateApi(any()) } returns null
-
-      val prison = OffenderManagementUnitEntityFactory().produce()
       every { offenderManagementUnitRepository.findByPrisonCode(any()) } returns prison
 
       val result = applicationsTransformer.transformJpaSummaryToSummary(
@@ -262,30 +271,30 @@ class ApplicationsTransformerTest {
       assertThat(result.hdcEligibilityDate).isNull()
       assertThat(result.latestStatusUpdate).isNull()
       assertThat(result.createdByUserName).isEqualTo(application.userName)
+      assertThat(result.isTransferredApplication).isEqualTo(isTransferredApplication)
     }
 
-    @Test
-    fun `transforms a submitted CAS2 application correctly`() {
-      val prison = OffenderManagementUnitEntityFactory().produce()
+    @ParameterizedTest
+    @ValueSource(booleans = [true, false])
+    fun `transforms a submitted CAS2 application correctly`(isTransferredApplication: Boolean) {
+      val (prison, newPrison) = stubPrisonAndNewPrison()
       every { offenderManagementUnitRepository.findByPrisonCode(any()) } returns prison
 
-      val application = Cas2ApplicationSummaryEntity(
-        id = UUID.fromString("2f838a8c-dffc-48a3-9536-f0e95985e809"),
-        crn = "CRNNUM",
-        nomsNumber = "NOMNUM",
-        userId = "836a9460-b177-433a-a0d9-262509092c9f",
-        userName = "first last",
-        createdAt = OffsetDateTime.parse("2023-04-19T13:25:00+01:00"),
-        submittedAt = OffsetDateTime.parse("2023-04-19T13:25:30+01:00"),
-        hdcEligibilityDate = LocalDate.parse("2023-04-29"),
-        latestStatusUpdateStatusId = "ae544aee-7170-4794-99fb-703090cbc7db",
-        latestStatusUpdateLabel = "my latest status update",
-        prisonCode = "BRI",
-        allocatedPomUserId = UUID.randomUUID(),
-        allocatedPomName = "${randomStringUpperCase(8)} ${randomStringUpperCase(6)}",
-        currentPrisonCode = prison.prisonCode,
-        assignmentDate = OffsetDateTime.now(),
-      )
+      val application = if (isTransferredApplication) {
+        Cas2ApplicationSummaryEntityFactory()
+          .withPrisonCode(prison.prisonCode)
+          .withCurrentPrisonCode(newPrison.prisonCode)
+          .withLatestStatusUpdateStatusId(UUID.randomUUID().toString())
+          .withLatestStatusUpdateLabel("my latest status update")
+          .produce()
+      } else {
+        Cas2ApplicationSummaryEntityFactory()
+          .withPrisonCode(prison.prisonCode)
+          .withCurrentPrisonCode(prison.prisonCode)
+          .withLatestStatusUpdateStatusId(UUID.randomUUID().toString())
+          .withLatestStatusUpdateLabel("my latest status update")
+          .produce()
+      }
 
       every { mockStatusUpdateTransformer.transformJpaSummaryToLatestStatusUpdateApi(any()) } returns LatestCas2StatusUpdate(
         statusId = UUID.fromString(application.latestStatusUpdateStatusId),
@@ -314,6 +323,13 @@ class ApplicationsTransformerTest {
       assertThat(result.latestStatusUpdate?.label).isEqualTo(application.latestStatusUpdateLabel)
       assertThat(result.latestStatusUpdate?.statusId).isEqualTo(UUID.fromString(application.latestStatusUpdateStatusId))
       assertThat(result.assignmentDate).isEqualTo(application.assignmentDate!!.toLocalDate())
+      assertThat(result.isTransferredApplication).isEqualTo(isTransferredApplication)
     }
+  }
+
+  private fun stubPrisonAndNewPrison(): Pair<OffenderManagementUnitEntity, OffenderManagementUnitEntity> {
+    val prison = OffenderManagementUnitEntityFactory().produce()
+    val newPrison = OffenderManagementUnitEntityFactory().withPrisonCode("NEW").withPrisonName("New Prison").withEmail("test@test.co.uk").produce()
+    return prison to newPrison
   }
 }

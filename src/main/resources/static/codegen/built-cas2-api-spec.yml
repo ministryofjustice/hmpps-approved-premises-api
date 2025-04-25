@@ -5142,6 +5142,8 @@ components:
         assignmentDate:
           type: string
           format: date
+        isTransferredApplication:
+          type: boolean
       required:
         - type
         - id
@@ -5154,6 +5156,7 @@ components:
         - assignmentDate
         - allocatedPomName
         - allocatedPomUserId
+        - isTransferredApplication
     NewCas2ApplicationNote:
       type: object
       properties:

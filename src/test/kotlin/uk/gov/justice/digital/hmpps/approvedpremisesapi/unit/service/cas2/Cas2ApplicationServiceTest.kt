@@ -160,7 +160,7 @@ class Cas2ApplicationServiceTest {
   inner class GetAllSubmittedApplicationsForAssessor {
     @Test
     fun `returns Success result with entity from db`() {
-      val applicationSummary = Cas2ApplicationSummaryEntityFactory.produce()
+      val applicationSummary = Cas2ApplicationSummaryEntityFactory().produce()
 
       PaginationConfig(defaultPageSize = 10).postInit()
       val page = mockk<Page<Cas2ApplicationSummaryEntity>>()
@@ -196,7 +196,7 @@ class Cas2ApplicationServiceTest {
 
   @Nested
   inner class GetApplicationsWithPrisonCode {
-    val applicationSummary = Cas2ApplicationSummaryEntityFactory.produce()
+    val applicationSummary = Cas2ApplicationSummaryEntityFactory().produce()
     val page = mockk<Page<Cas2ApplicationSummaryEntity>>()
     val pageCriteria = PageCriteria(sortBy = "submitted_at", sortDirection = SortDirection.asc, page = 3)
     val user = NomisUserEntityFactory().produce()
@@ -257,7 +257,7 @@ class Cas2ApplicationServiceTest {
 
   @Nested
   inner class GetApplicationsWithoutPrisonCode {
-    val applicationSummary = Cas2ApplicationSummaryEntityFactory.produce()
+    val applicationSummary = Cas2ApplicationSummaryEntityFactory().produce()
     val page = mockk<Page<Cas2ApplicationSummaryEntity>>()
     val pageCriteria = PageCriteria(sortBy = "createdAt", sortDirection = SortDirection.asc, page = 3)
     val user = NomisUserEntityFactory().withId(UUID.fromString(applicationSummary.userId)).produce()
