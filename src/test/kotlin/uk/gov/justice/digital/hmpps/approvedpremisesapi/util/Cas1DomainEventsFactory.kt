@@ -73,7 +73,7 @@ class Cas1DomainEventsFactory(val objectMapper: ObjectMapper) {
     return DomainEventEnvelopeAndPersistedJson(
       envelope = envelope,
       persistedJson = objectMapper.writeValueAsString(envelope),
-      schemaVersion = type.schemaVersions.last(),
+      schemaVersion = type.cas1Info!!.schemaVersions.last(),
     )
   }
 

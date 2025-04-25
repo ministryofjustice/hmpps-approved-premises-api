@@ -85,7 +85,7 @@ class Cas1ApplicationTimelineTransformerTest {
     val result = applicationTimelineTransformer.transformDomainEventSummaryToTimelineEvent(domainEvent)
 
     assertThat(result.id).isEqualTo(domainEvent.id)
-    assertThat(result.type).isEqualTo(domainEventType.cas1TimelineEventType)
+    assertThat(result.type).isEqualTo(domainEventType.cas1Info!!.timelineEventType)
     assertThat(result.occurredAt).isEqualTo(domainEvent.occurredAt.toInstant())
     assertThat(result.associatedUrls).isEmpty()
     assertThat(result.content).isEqualTo("Some event")
@@ -173,7 +173,7 @@ class Cas1ApplicationTimelineTransformerTest {
     assertThat(applicationTimelineTransformer.transformDomainEventSummaryToTimelineEvent(domainEvent)).isEqualTo(
       Cas1TimelineEvent(
         id = domainEvent.id,
-        type = domainEventType.cas1TimelineEventType!!,
+        type = domainEventType.cas1Info!!.timelineEventType,
         occurredAt = domainEvent.occurredAt.toInstant(),
         associatedUrls = if (domainEventType == DomainEventType.APPROVED_PREMISES_ASSESSMENT_APPEALED) {
           listOf(
@@ -448,7 +448,7 @@ class Cas1ApplicationTimelineTransformerTest {
     val payload = Cas1BookingChangedContentPayload(
       expectedArrival = LocalDate.now(),
       expectedDeparture = LocalDate.now(),
-      type = domainEventType.cas1TimelineEventType!!,
+      type = domainEventType.cas1Info!!.timelineEventType,
       premises = NamedId(premisesId, "name"),
       schemaVersion = 2,
       characteristics = listOf(Cas1SpaceCharacteristic.isArsonSuitable),
@@ -461,7 +461,7 @@ class Cas1ApplicationTimelineTransformerTest {
     val result = applicationTimelineTransformer.transformDomainEventSummaryToTimelineEvent(domainEvent)
 
     assertThat(result.id).isEqualTo(domainEvent.id)
-    assertThat(result.type).isEqualTo(domainEventType.cas1TimelineEventType)
+    assertThat(result.type).isEqualTo(domainEventType.cas1Info!!.timelineEventType)
     assertThat(result.occurredAt).isEqualTo(domainEvent.occurredAt.toInstant())
     assertThat(result.associatedUrls).isEmpty()
     assertThat(result.content).isEqualTo("Some event")
@@ -470,7 +470,7 @@ class Cas1ApplicationTimelineTransformerTest {
     assertThat(result.payload).isInstanceOf(Cas1BookingChangedContentPayload::class.java)
     assertThat(payload.premises.id).isEqualTo(premisesId)
     assertThat(payload.premises.name).isEqualTo("name")
-    assertThat(payload.type).isEqualTo(domainEventType.cas1TimelineEventType)
+    assertThat(payload.type).isEqualTo(domainEventType.cas1Info!!.timelineEventType)
     assertThat(payload.schemaVersion).isEqualTo(2)
     assertThat(payload.expectedArrival).isEqualTo(payload.expectedArrival)
     assertThat(payload.expectedDeparture).isEqualTo(payload.expectedDeparture)
