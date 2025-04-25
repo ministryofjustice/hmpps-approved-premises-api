@@ -26,6 +26,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.CancellationR
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas1SpaceBookingEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserPermission
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserPermission.CAS1_EMERGENCY_TRANSFER_PERFORM
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserPermission.CAS1_PLANNED_TRANSFER_ASSESS
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserPermission.CAS1_SPACE_BOOKING_LIST
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserPermission.CAS1_SPACE_BOOKING_RECORD_NON_ARRIVAL
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserPermission.CAS1_SPACE_BOOKING_VIEW
@@ -386,7 +387,17 @@ class Cas1SpaceBookingController(
     premisesId: UUID,
     bookingId: UUID,
     cas1NewPlannedTransfer: Cas1NewPlannedTransfer,
-  ): ResponseEntity<Unit> = super.plannedTransfer(premisesId, bookingId, cas1NewPlannedTransfer)
+  ): ResponseEntity<Unit> {
+    userAccessService.ensureCurrentUserHasPermission(CAS1_PLANNED_TRANSFER_ASSESS)
+
+    val user = userService.getUserForRequest()
+
+    ensureEntityFromCasResultIsSuccess(
+      cas1SpaceBookingService.plannedTransfer(bookingId, user, cas1NewPlannedTransfer),
+    )
+
+    return ResponseEntity(HttpStatus.OK)
+  }
 
   private fun toCas1SpaceBooking(booking: Cas1SpaceBookingEntity): Cas1SpaceBooking {
     val user = userService.getUserForRequest()
