@@ -456,9 +456,16 @@ data class Cas1SpaceBookingEntity(
    * purposes
    */
   val deliusId: String?,
-  @OneToOne
+  @OneToOne(fetch = FetchType.LAZY)
   @JoinColumn(name = "transferred_to", referencedColumnName = "id")
   var transferredTo: Cas1SpaceBookingEntity?,
+  @OneToOne(mappedBy = "transferredTo", fetch = FetchType.LAZY)
+  val transferredFrom: Cas1SpaceBookingEntity? = null,
+  /**
+   * If [transferredFrom] is not null, this indicates the type of transfer
+   */
+  @Enumerated(EnumType.STRING)
+  var transferType: TransferType? = null,
   @Version
   var version: Long = 1,
 ) {
@@ -514,4 +521,9 @@ data class Cas1SpaceBookingEntity(
 enum class ManagementInfoSource {
   DELIUS,
   LEGACY_CAS_1,
+}
+
+enum class TransferType {
+  PLANNED,
+  EMERGENCY,
 }

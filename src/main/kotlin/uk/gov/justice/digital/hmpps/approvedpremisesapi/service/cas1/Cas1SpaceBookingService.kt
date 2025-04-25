@@ -29,6 +29,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.MoveOnCategor
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.MoveOnCategoryRepository.Constants.MOVE_ON_CATEGORY_NOT_APPLICABLE_ID
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.NonArrivalReasonRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementRequestEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TransferType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserPermission
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas1.Cas1ChangeRequestEntity
@@ -131,6 +132,7 @@ class Cas1SpaceBookingService(
       expectedDepartureDate = departureDate,
       createdBy = createdBy,
       characteristics = characteristics,
+      transferType = null,
     )
 
     cas1ApplicationStatusService.spaceBookingMade(spaceBooking)
@@ -645,6 +647,7 @@ class Cas1SpaceBookingService(
       expectedDepartureDate = cas1NewEmergencyTransfer.departureDate,
       createdBy = user,
       characteristics = existingCas1SpaceBooking.criteria,
+      transferType = TransferType.EMERGENCY,
     )
 
     updateSpaceBookingForTransfer(existingCas1SpaceBooking, emergencyTransferSpaceBooking, cas1NewEmergencyTransfer.arrivalDate)
@@ -695,6 +698,7 @@ class Cas1SpaceBookingService(
       expectedDepartureDate = cas1NewPlannedTransfer.departureDate,
       createdBy = user,
       characteristics = getCharacteristicsEntity(cas1NewPlannedTransfer.characteristics),
+      transferType = TransferType.PLANNED,
     )
 
     updateSpaceBookingForTransfer(existingCas1SpaceBooking, plannedTransferSpaceBooking, cas1NewPlannedTransfer.arrivalDate)
@@ -837,6 +841,7 @@ class Cas1SpaceBookingService(
     expectedDepartureDate: LocalDate,
     createdBy: UserEntity,
     characteristics: List<CharacteristicEntity>,
+    transferType: TransferType?,
   ): Cas1SpaceBookingEntity = cas1SpaceBookingRepository.saveAndFlush(
     Cas1SpaceBookingEntity(
       id = UUID.randomUUID(),
@@ -872,6 +877,7 @@ class Cas1SpaceBookingService(
       deliusEventNumber = application.eventNumber,
       migratedManagementInfoFrom = null,
       transferredTo = null,
+      transferType = transferType,
       deliusId = null,
     ),
   )

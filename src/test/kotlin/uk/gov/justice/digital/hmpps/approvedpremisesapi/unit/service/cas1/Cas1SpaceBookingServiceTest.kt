@@ -60,6 +60,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.MoveOnCategor
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.MoveOnCategoryRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.MoveOnCategoryRepository.Constants.MOVE_ON_CATEGORY_NOT_APPLICABLE_ID
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.NonArrivalReasonRepository
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TransferType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserPermission
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.CasResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.CharacteristicService
@@ -2649,6 +2650,7 @@ class Cas1SpaceBookingServiceTest {
       assertThat(emergencyBooking.premises.id).isEqualTo(DESTINATION_PREMISES_ID)
       assertThat(emergencyBooking.expectedArrivalDate).isEqualTo(LocalDate.now())
       assertThat(emergencyBooking.expectedDepartureDate).isEqualTo(LocalDate.now().plusMonths(2))
+      assertThat(emergencyBooking.transferType).isEqualTo(TransferType.EMERGENCY)
 
       verify {
         cas1SpaceBookingManagementDomainEventService.emergencyTransferCreated(
@@ -2956,6 +2958,7 @@ class Cas1SpaceBookingServiceTest {
       assertThat(transferredBooking.premises.id).isEqualTo(DESTINATION_PREMISES_ID)
       assertThat(transferredBooking.expectedArrivalDate).isEqualTo(LocalDate.now().plusDays(2))
       assertThat(transferredBooking.expectedDepartureDate).isEqualTo(LocalDate.now().plusMonths(1))
+      assertThat(transferredBooking.transferType).isEqualTo(TransferType.PLANNED)
     }
   }
 
