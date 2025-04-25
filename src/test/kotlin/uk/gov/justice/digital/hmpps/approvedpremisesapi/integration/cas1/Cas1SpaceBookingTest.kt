@@ -2601,7 +2601,7 @@ class Cas1SpaceBookingTest {
     fun `Successfully creates an emergency booking and updates the existing booking`() {
       val (_, jwt) = givenAUser(roles = listOf(UserRole.CAS1_CRU_MEMBER_FIND_AND_BOOK_BETA))
 
-      assertThat(existingSpaceBooking.transferredBooking).isNull()
+      assertThat(existingSpaceBooking.transferredTo).isNull()
 
       webTestClient.post()
         .uri("/cas1/premises/${premises.id}/space-bookings/${existingSpaceBooking.id}/emergency-transfer")
@@ -2619,7 +2619,7 @@ class Cas1SpaceBookingTest {
 
       val updatedSpaceBooking = cas1SpaceBookingRepository.findByIdOrNull(existingSpaceBooking.id)!!
 
-      val emergencyTransferredBooking = updatedSpaceBooking.transferredBooking!!
+      val emergencyTransferredBooking = updatedSpaceBooking.transferredTo!!
 
       assertThat(updatedSpaceBooking.expectedDepartureDate).isEqualTo(emergencyTransferredBooking.expectedArrivalDate)
       assertThat(updatedSpaceBooking.canonicalDepartureDate).isEqualTo(emergencyTransferredBooking.expectedArrivalDate)

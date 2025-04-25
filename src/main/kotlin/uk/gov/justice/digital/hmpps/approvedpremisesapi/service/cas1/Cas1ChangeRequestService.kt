@@ -141,10 +141,7 @@ class Cas1ChangeRequestService(
     } else if (changeRequest.decision == ChangeRequestDecision.APPROVED) {
       return CasResult.GeneralValidationError("Change request with ID $changeRequestId is already approved")
     } else {
-      changeRequest.decision = ChangeRequestDecision.APPROVED
-      changeRequest.resolve()
-      changeRequest.decisionMadeByUser = user
-      cas1ChangeRequestRepository.save(changeRequest)
+      approveChangeRequest(changeRequest, user)
     }
 
     cas1ChangeRequestEmailService.placementAppealAccepted(changeRequest)
@@ -219,4 +216,11 @@ class Cas1ChangeRequestService(
   }
 
   fun findChangeRequest(changeRequestId: UUID): Cas1ChangeRequestEntity? = cas1ChangeRequestRepository.findByIdOrNull(changeRequestId)
+
+  fun approveChangeRequest(changeRequestEntity: Cas1ChangeRequestEntity, user: UserEntity): Cas1ChangeRequestEntity {
+    changeRequestEntity.decision = ChangeRequestDecision.APPROVED
+    changeRequestEntity.resolve()
+    changeRequestEntity.decisionMadeByUser = user
+    return cas1ChangeRequestRepository.saveAndFlush(changeRequestEntity)
+  }
 }

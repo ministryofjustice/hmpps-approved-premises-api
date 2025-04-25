@@ -2523,7 +2523,7 @@ class Cas1SpaceBookingServiceTest {
 
     @Test
     fun `should return a conflict error when attempting an emergency transfer for a booking that has already transferred`() {
-      existingSpaceBooking.transferredBooking = Cas1SpaceBookingEntityFactory().produce()
+      existingSpaceBooking.transferredTo = Cas1SpaceBookingEntityFactory().produce()
       every { cas1PremisesService.findPremiseById(any()) } returns destinationPremises
       every { lockableCas1SpaceBookingRepository.acquirePessimisticLock(any()) } returns LockableCas1SpaceBookingEntity(
         existingSpaceBooking.id,
@@ -2614,7 +2614,7 @@ class Cas1SpaceBookingServiceTest {
 
       every { spaceBookingRepository.saveAndFlush(capture(capturedBookings)) } answers { firstArg() }
 
-      assertThat(existingSpaceBooking.transferredBooking).isNull()
+      assertThat(existingSpaceBooking.transferredTo).isNull()
 
       val result = service.emergencyTransfer(
         PREMISES_ID,
@@ -2636,7 +2636,7 @@ class Cas1SpaceBookingServiceTest {
       val emergencyBooking = capturedBookings.first()
       existingSpaceBooking = capturedBookings.last()
 
-      assertThat(existingSpaceBooking.transferredBooking).isEqualTo(emergencyBooking)
+      assertThat(existingSpaceBooking.transferredTo).isEqualTo(emergencyBooking)
       assertThat(existingSpaceBooking.expectedDepartureDate).isEqualTo(emergencyBooking.expectedArrivalDate)
       assertThat(existingSpaceBooking.canonicalDepartureDate).isEqualTo(emergencyBooking.expectedArrivalDate)
 

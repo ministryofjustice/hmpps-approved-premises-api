@@ -394,7 +394,7 @@ class Cas1ApplicationSeedService(
         nonArrivalReason = null,
         deliusEventNumber = "2",
         migratedManagementInfoFrom = null,
-        transferredBooking = null,
+        transferredTo = null,
         deliusId = null,
       ),
     )

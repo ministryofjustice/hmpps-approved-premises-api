@@ -458,7 +458,7 @@ data class Cas1SpaceBookingEntity(
   val deliusId: String?,
   @OneToOne
   @JoinColumn(name = "transferred_to", referencedColumnName = "id")
-  var transferredBooking: Cas1SpaceBookingEntity?,
+  var transferredTo: Cas1SpaceBookingEntity?,
   @Version
   var version: Long = 1,
 ) {
@@ -498,7 +498,7 @@ data class Cas1SpaceBookingEntity(
     !hasNonArrival() &&
     canonicalArrivalDate <= day &&
     canonicalDepartureDate > day
-  fun hasBeenTransferred() = transferredBooking != null
+  fun hasBeenTransferred() = transferredTo != null
   fun isEligibleForEmergencyTransfer(): Boolean = !(
     this.hasDeparted() ||
       this.hasBeenTransferred() ||
