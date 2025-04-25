@@ -8,4 +8,4 @@ data class EmergencyTransferCreatedEnvelope(
   override val timestamp: Instant,
   override val eventType: EventType,
   override val eventDetails: EmergencyTransferCreated,
-): Cas1DomainEventEnvelope<EmergencyTransferCreated>
+): Cas1DomainEventEnvelopeInterface<EmergencyTransferCreated>
