@@ -2,8 +2,6 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model
 
 import com.fasterxml.jackson.annotation.JsonProperty
 import io.swagger.v3.oas.annotations.media.Schema
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.EventType
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.PersonNotArrived
 
 /**
  *
@@ -25,4 +23,4 @@ data class PersonNotArrivedEnvelope(
 
   @Schema(example = "null", required = true, description = "")
   @get:JsonProperty("eventDetails", required = true) override val eventDetails: PersonNotArrived,
-): Cas1DomainEventEnvelope<PersonNotArrived>
+): Cas1DomainEventEnvelopeInterface<PersonNotArrived>

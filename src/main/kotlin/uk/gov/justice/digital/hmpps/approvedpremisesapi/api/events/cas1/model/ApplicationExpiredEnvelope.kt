@@ -23,4 +23,4 @@ data class ApplicationExpiredEnvelope(
 
   @Schema(example = "null", required = true, description = "")
   @get:JsonProperty("eventDetails", required = true) override val eventDetails: ApplicationExpired,
-): Cas1DomainEventEnvelope<ApplicationExpired>
+): Cas1DomainEventEnvelopeInterface<ApplicationExpired>

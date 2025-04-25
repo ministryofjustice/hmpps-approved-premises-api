@@ -17,7 +17,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.Bo
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.BookingKeyWorkerAssignedEnvelope
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.BookingMadeEnvelope
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.BookingNotMadeEnvelope
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.Cas1DomainEventEnvelope
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.Cas1DomainEventEnvelopeInterface
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.EmergencyTransferCreatedEnvelope
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.FurtherInformationRequestedEnvelope
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.MatchRequestWithdrawnEnvelope
@@ -90,13 +90,13 @@ class Cas1DomainEventService(
   fun getRequestForPlacementAssessedEvent(id: UUID) = get(id, RequestForPlacementAssessedEnvelope::class)
   fun getFurtherInformationRequestMadeEvent(id: UUID) = get(id, FurtherInformationRequestedEnvelope::class)
 
-  private fun <T : Cas1DomainEventEnvelope<*>> get(id: UUID, envelopeType: KClass<T>): Cas1DomainEvent<T>? {
+  private fun <T : Cas1DomainEventEnvelopeInterface<*>> get(id: UUID, envelopeType: KClass<T>): Cas1DomainEvent<T>? {
     val entity = domainEventRepository.findByIdOrNull(id) ?: return null
     return toDomainEvent(entity, envelopeType)
   }
 
   @SuppressWarnings("CyclomaticComplexMethod", "TooGenericExceptionThrown")
-  fun <T : Cas1DomainEventEnvelope<*>> toDomainEvent(entity: DomainEventEntity, envelopeType: KClass<T>): Cas1DomainEvent<T> {
+  fun <T : Cas1DomainEventEnvelopeInterface<*>> toDomainEvent(entity: DomainEventEntity, envelopeType: KClass<T>): Cas1DomainEvent<T> {
     checkNotNull(entity.applicationId) { "application id should not be null" }
 
     if (entity.type.cas1Info!!.envelopeType != envelopeType) {
