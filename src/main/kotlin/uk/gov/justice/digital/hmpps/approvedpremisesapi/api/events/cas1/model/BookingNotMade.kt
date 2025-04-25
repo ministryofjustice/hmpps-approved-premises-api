@@ -37,4 +37,4 @@ data class BookingNotMade(
 
   @Schema(example = "No availability", description = "")
   @get:JsonProperty("failureDescription") val failureDescription: kotlin.String? = null,
-)
+) : Cas1DomainEventPayload

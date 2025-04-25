@@ -19,4 +19,4 @@ data class PlacementAppealCreated(
   @get:JsonProperty("requestedBy") val requestedBy: StaffMember,
 
   @get:JsonProperty("appealReason") val appealReason: Cas1DomainEventCodedId,
-)
+) : Cas1DomainEventPayload

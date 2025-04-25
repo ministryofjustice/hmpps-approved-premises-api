@@ -71,4 +71,4 @@ data class BookingMade(
 
   @Schema(example = "null", description = "")
   @get:JsonProperty("characteristics") val characteristics: kotlin.collections.List<SpaceCharacteristic>? = null,
-)
+) : Cas1DomainEventPayload

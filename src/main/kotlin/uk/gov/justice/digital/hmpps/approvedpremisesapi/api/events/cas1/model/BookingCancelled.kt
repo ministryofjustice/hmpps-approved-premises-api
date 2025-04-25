@@ -54,4 +54,4 @@ data class BookingCancelled(
 
   @Schema(example = "null", required = true, description = "")
   @get:JsonProperty("cancellationRecordedAt", required = true) val cancellationRecordedAt: java.time.Instant,
-)
+) : Cas1DomainEventPayload

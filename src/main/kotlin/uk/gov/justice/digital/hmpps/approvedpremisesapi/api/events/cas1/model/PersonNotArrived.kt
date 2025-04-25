@@ -54,4 +54,4 @@ data class PersonNotArrived(
 
   @Schema(example = "We learnt that Mr Smith is in hospital.", description = "")
   @get:JsonProperty("notes") val notes: kotlin.String? = null,
-)
+) : Cas1DomainEventPayload

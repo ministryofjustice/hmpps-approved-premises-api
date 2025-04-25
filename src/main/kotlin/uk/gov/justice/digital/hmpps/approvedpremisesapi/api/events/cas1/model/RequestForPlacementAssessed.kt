@@ -42,7 +42,7 @@ data class RequestForPlacementAssessed(
 
   @Schema(example = "the decision was to accept", description = "")
   @get:JsonProperty("decisionSummary") val decisionSummary: kotlin.String? = null,
-) {
+) : Cas1DomainEventPayload {
 
   /**
    *

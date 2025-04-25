@@ -67,4 +67,4 @@ data class BookingChanged(
 
   @Schema(example = "null", description = "")
   @get:JsonProperty("previousCharacteristics") val previousCharacteristics: kotlin.collections.List<SpaceCharacteristic>? = null,
-)
+) : Cas1DomainEventPayload

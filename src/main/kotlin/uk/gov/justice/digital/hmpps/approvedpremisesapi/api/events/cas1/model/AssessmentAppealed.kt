@@ -54,4 +54,4 @@ data class AssessmentAppealed(
 
   @Schema(example = "null", required = true, description = "")
   @get:JsonProperty("decisionDetail", required = true) val decisionDetail: kotlin.String,
-)
+) : Cas1DomainEventPayload

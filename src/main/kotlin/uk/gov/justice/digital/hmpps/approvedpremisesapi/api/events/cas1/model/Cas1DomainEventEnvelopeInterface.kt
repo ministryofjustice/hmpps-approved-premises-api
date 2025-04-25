@@ -3,7 +3,7 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model
 import java.time.Instant
 import java.util.UUID
 
-interface Cas1DomainEventEnvelopeInterface<D> {
+interface Cas1DomainEventEnvelopeInterface<D : Cas1DomainEventPayload> {
   val id: UUID
   val timestamp: Instant
   val eventType: EventType

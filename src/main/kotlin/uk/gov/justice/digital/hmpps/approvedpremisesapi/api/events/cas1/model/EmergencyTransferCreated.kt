@@ -9,7 +9,7 @@ data class EmergencyTransferCreated(
   val createdBy: StaffMember,
   val from: TransferBooking,
   val to: TransferBooking,
-)
+) : Cas1DomainEventPayload
 
 data class TransferBooking(
   val bookingId: UUID,

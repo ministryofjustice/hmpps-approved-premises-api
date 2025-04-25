@@ -50,4 +50,4 @@ data class RequestForPlacementCreated(
 
   @Schema(example = "null", description = "")
   @get:JsonProperty("createdBy") val createdBy: StaffMember? = null,
-)
+) : Cas1DomainEventPayload

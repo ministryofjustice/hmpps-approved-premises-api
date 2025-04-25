@@ -63,7 +63,7 @@ data class ApplicationSubmitted(
 
   @Schema(example = "AB43782", description = "")
   @get:JsonProperty("offenceId") val offenceId: kotlin.String? = null,
-) {
+) : Cas1DomainEventPayload {
 
   /**
    *
