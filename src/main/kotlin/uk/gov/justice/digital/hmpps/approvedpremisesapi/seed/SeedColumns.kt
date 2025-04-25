@@ -16,6 +16,11 @@ data class SeedColumns(
 
   fun getLongOrNull(label: String) = columns[label]?.toLongOrNull()
 
+  fun getLocalDateOrNull(label: String): LocalDate? {
+    val rawValue = getStringOrNull(label) ?: return null
+    return LocalDate.parse(rawValue)
+  }
+
   fun getLastDateTimeFromListOrNull(label: String, formatter: DateTimeFormatter): LocalDateTime? {
     val rawValue = getStringOrNull(label) ?: return null
 
