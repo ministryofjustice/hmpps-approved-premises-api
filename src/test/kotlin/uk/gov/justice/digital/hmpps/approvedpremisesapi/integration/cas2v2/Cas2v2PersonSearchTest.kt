@@ -165,6 +165,7 @@ class Cas2v2PersonSearchTest : Cas2v2IntegrationTestBase() {
                     status = PersonStatus.unknown,
                     nomsNumber = "NOMS321",
                     pncNumber = "PNC123",
+                    nationality = "English",
                   ),
                 ),
               )
@@ -307,6 +308,7 @@ class Cas2v2PersonSearchTest : Cas2v2IntegrationTestBase() {
                       sex = "Male",
                       status = PersonStatus.unknown,
                       nomsNumber = "NOMS321",
+                      nationality = "English",
                     ),
                   ),
                 )
@@ -351,6 +353,7 @@ class Cas2v2PersonSearchTest : Cas2v2IntegrationTestBase() {
                       sex = "Male",
                       status = PersonStatus.unknown,
                       nomsNumber = null,
+                      nationality = "English",
                     ),
                   ),
                 )

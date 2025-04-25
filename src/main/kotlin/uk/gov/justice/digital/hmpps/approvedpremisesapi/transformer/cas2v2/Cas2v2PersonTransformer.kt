@@ -18,5 +18,6 @@ class Cas2v2PersonTransformer {
     type = PersonType.fullPerson,
     nomsNumber = caseSummary.nomsId,
     pncNumber = caseSummary.pnc,
+    nationality = caseSummary.profile?.nationality ?: "Unknown",
   )
 }
