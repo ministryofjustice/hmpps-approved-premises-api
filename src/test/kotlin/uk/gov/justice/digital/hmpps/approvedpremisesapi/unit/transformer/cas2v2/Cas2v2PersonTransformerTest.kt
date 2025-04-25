@@ -6,6 +6,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.FullPerson
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PersonStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PersonType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.CaseSummaryFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ProfileFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.deliuscontext.Name
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.cas2v2.Cas2v2PersonTransformer
 
@@ -15,6 +16,7 @@ class Cas2v2PersonTransformerTest {
 
   private val crn = "crn123"
   private val nomsNumber = "noms123"
+  private val nationality = "Martian"
 
   @Test
   fun `transformCaseSummaryToFullPerson transforms correctly for a full person info`() {
@@ -22,6 +24,9 @@ class Cas2v2PersonTransformerTest {
       .withName(Name(forename = "John", surname = "Smith", middleNames = emptyList()))
       .withCrn(crn)
       .withNomsId(nomsNumber)
+      .withProfile(
+        ProfileFactory().withNationality(nationality).produce(),
+      )
       .produce()
 
     val fullPerson: FullPerson = cas2v2PersonTransformer.transformCaseSummaryToFullPerson(caseSummary)
@@ -30,5 +35,6 @@ class Cas2v2PersonTransformerTest {
     assertThat(fullPerson.status).isEqualTo(PersonStatus.unknown)
     assertThat(fullPerson.name).isEqualTo("John Smith")
     assertThat(fullPerson.type).isEqualTo(PersonType.fullPerson)
+    assertThat(fullPerson.nationality).isEqualTo(nationality)
   }
 }
