@@ -618,6 +618,9 @@ class Cas1SpaceBookingServiceTest {
     @Test
     fun `Returns validation error if no premises with the given premisesId exists`() {
       every { cas1PremisesService.findPremiseById(any()) } returns null
+      every { lockableCas1SpaceBookingRepository.acquirePessimisticLock(any()) } returns LockableCas1SpaceBookingEntity(
+        existingSpaceBooking.id,
+      )
       every { spaceBookingRepository.findByIdOrNull(any()) } returns existingSpaceBooking
 
       val result = service.recordArrivalForBooking(
@@ -638,6 +641,10 @@ class Cas1SpaceBookingServiceTest {
     @Test
     fun `Returns validation error if no space booking with the given bookingId exists`() {
       every { cas1PremisesService.findPremiseById(any()) } returns premises
+      every { lockableCas1SpaceBookingRepository.acquirePessimisticLock(any()) } returns LockableCas1SpaceBookingEntity(
+        existingSpaceBooking.id,
+      )
+
       every { spaceBookingRepository.findByIdOrNull(any()) } returns null
 
       val result = service.recordArrivalForBooking(
@@ -663,6 +670,10 @@ class Cas1SpaceBookingServiceTest {
       )
 
       every { cas1PremisesService.findPremiseById(any()) } returns premises
+      every { lockableCas1SpaceBookingRepository.acquirePessimisticLock(any()) } returns LockableCas1SpaceBookingEntity(
+        existingSpaceBooking.id,
+      )
+
       every { spaceBookingRepository.findByIdOrNull(any()) } returns existingSpaceBookingWithArrivalDate
 
       val result = service.recordArrivalForBooking(
@@ -687,6 +698,10 @@ class Cas1SpaceBookingServiceTest {
       )
 
       every { cas1PremisesService.findPremiseById(any()) } returns premises
+      every { lockableCas1SpaceBookingRepository.acquirePessimisticLock(any()) } returns LockableCas1SpaceBookingEntity(
+        existingSpaceBooking.id,
+      )
+
       every { spaceBookingRepository.findByIdOrNull(any()) } returns existingSpaceBookingWithArrivalDate
 
       val result = service.recordArrivalForBooking(
@@ -709,6 +724,10 @@ class Cas1SpaceBookingServiceTest {
       )
 
       every { cas1PremisesService.findPremiseById(any()) } returns premises
+
+      every { lockableCas1SpaceBookingRepository.acquirePessimisticLock(any()) } returns LockableCas1SpaceBookingEntity(
+        existingSpaceBooking.id,
+      )
       every { spaceBookingRepository.findByIdOrNull(any()) } returns existingSpaceBookingWithArrivalDate
 
       val result = service.recordArrivalForBooking(
@@ -735,6 +754,10 @@ class Cas1SpaceBookingServiceTest {
       )
 
       every { cas1PremisesService.findPremiseById(any()) } returns premises
+      every { lockableCas1SpaceBookingRepository.acquirePessimisticLock(any()) } returns LockableCas1SpaceBookingEntity(
+        existingSpaceBooking.id,
+      )
+
       every { spaceBookingRepository.findByIdOrNull(any()) } returns existingSpaceBookingWithArrivalDate
 
       val result = service.recordArrivalForBooking(
@@ -758,12 +781,18 @@ class Cas1SpaceBookingServiceTest {
       val user = UserEntityFactory().withDefaults().produce()
 
       every { cas1PremisesService.findPremiseById(any()) } returns premises
+      every { lockableCas1SpaceBookingRepository.acquirePessimisticLock(any()) } returns LockableCas1SpaceBookingEntity(
+        existingSpaceBooking.id,
+      )
+
       every { spaceBookingRepository.findByIdOrNull(any()) } returns existingSpaceBooking
 
       val updatedSpaceBookingCaptor = slot<Cas1SpaceBookingEntity>()
       every { spaceBookingRepository.save(capture(updatedSpaceBookingCaptor)) } returnsArgument 0
 
       val arrivalInfoCaptor = slot<Cas1SpaceBookingManagementDomainEventService.ArrivalInfo>()
+      every { cas1ChangeRequestService.resolveChangeRequestForSpaceBooking(capture(updatedSpaceBookingCaptor)) } returns Unit
+
       every { cas1SpaceBookingManagementDomainEventService.arrivalRecorded(capture(arrivalInfoCaptor)) } returns Unit
       every { userService.getUserForRequest() } returns user
 
@@ -776,6 +805,8 @@ class Cas1SpaceBookingServiceTest {
 
       assertThat(result).isInstanceOf(CasResult.Success::class.java)
       result as CasResult.Success
+
+      verify { cas1ChangeRequestService.resolveChangeRequestForSpaceBooking(any()) }
 
       val updatedSpaceBooking = updatedSpaceBookingCaptor.captured
       assertThat(updatedSpaceBooking.expectedArrivalDate).isEqualTo(existingSpaceBooking.expectedArrivalDate)
@@ -817,6 +848,9 @@ class Cas1SpaceBookingServiceTest {
     @Test
     fun `Returns validation error if no premises with the given premisesId exists`() {
       every { cas1PremisesService.findPremiseById(any()) } returns null
+      every { lockableCas1SpaceBookingRepository.acquirePessimisticLock(any()) } returns LockableCas1SpaceBookingEntity(
+        existingSpaceBooking.id,
+      )
       every { spaceBookingRepository.findByIdOrNull(any()) } returns existingSpaceBooking
       every { nonArrivalReasonRepository.findByIdOrNull(any()) } returns nonArrivalReason
 
@@ -838,6 +872,9 @@ class Cas1SpaceBookingServiceTest {
     @Test
     fun `Returns validation error if no booking with the given bookingId exists`() {
       every { cas1PremisesService.findPremiseById(any()) } returns premises
+      every { lockableCas1SpaceBookingRepository.acquirePessimisticLock(any()) } returns LockableCas1SpaceBookingEntity(
+        existingSpaceBooking.id,
+      )
       every { spaceBookingRepository.findByIdOrNull(any()) } returns null
       every { nonArrivalReasonRepository.findByIdOrNull(any()) } returns nonArrivalReason
 
@@ -859,6 +896,9 @@ class Cas1SpaceBookingServiceTest {
     @Test
     fun `Returns validation error if no non arrival reason with the given reasonId exists`() {
       every { cas1PremisesService.findPremiseById(any()) } returns premises
+      every { lockableCas1SpaceBookingRepository.acquirePessimisticLock(any()) } returns LockableCas1SpaceBookingEntity(
+        existingSpaceBooking.id,
+      )
       every { spaceBookingRepository.findByIdOrNull(any()) } returns existingSpaceBooking
       every { nonArrivalReasonRepository.findByIdOrNull(any()) } returns null
 
@@ -887,6 +927,9 @@ class Cas1SpaceBookingServiceTest {
         )
 
       every { cas1PremisesService.findPremiseById(any()) } returns premises
+      every { lockableCas1SpaceBookingRepository.acquirePessimisticLock(any()) } returns LockableCas1SpaceBookingEntity(
+        existingSpaceBooking.id,
+      )
       every { spaceBookingRepository.findByIdOrNull(any()) } returns existingSpaceBookingWithNonArrivalDate
       every { nonArrivalReasonRepository.findByIdOrNull(any()) } returns nonArrivalReason
 
@@ -912,6 +955,9 @@ class Cas1SpaceBookingServiceTest {
         )
 
       every { cas1PremisesService.findPremiseById(any()) } returns premises
+      every { lockableCas1SpaceBookingRepository.acquirePessimisticLock(any()) } returns LockableCas1SpaceBookingEntity(
+        existingSpaceBooking.id,
+      )
       every { spaceBookingRepository.findByIdOrNull(any()) } returns existingSpaceBookingWithNonArrivalDate
       every { nonArrivalReasonRepository.findByIdOrNull(any()) } returns nonArrivalReason
 
@@ -940,6 +986,9 @@ class Cas1SpaceBookingServiceTest {
         )
 
       every { cas1PremisesService.findPremiseById(any()) } returns premises
+      every { lockableCas1SpaceBookingRepository.acquirePessimisticLock(any()) } returns LockableCas1SpaceBookingEntity(
+        existingSpaceBooking.id,
+      )
       every { spaceBookingRepository.findByIdOrNull(any()) } returns existingSpaceBookingWithNonArrivalDate
       every { nonArrivalReasonRepository.findByIdOrNull(any()) } returns nonArrivalReason
 
@@ -958,9 +1007,13 @@ class Cas1SpaceBookingServiceTest {
       val updatedSpaceBookingCaptor = slot<Cas1SpaceBookingEntity>()
 
       every { cas1PremisesService.findPremiseById(any()) } returns premises
+      every { lockableCas1SpaceBookingRepository.acquirePessimisticLock(any()) } returns LockableCas1SpaceBookingEntity(
+        existingSpaceBooking.id,
+      )
       every { spaceBookingRepository.findByIdOrNull(any()) } returns existingSpaceBooking
       every { nonArrivalReasonRepository.findByIdOrNull(any()) } returns nonArrivalReason
       every { spaceBookingRepository.save(capture(updatedSpaceBookingCaptor)) } returnsArgument 0
+      every { cas1ChangeRequestService.resolveChangeRequestForSpaceBooking(capture(updatedSpaceBookingCaptor)) } returns Unit
       every { cas1SpaceBookingManagementDomainEventService.nonArrivalRecorded(any(), any(), any(), any()) } returns Unit
 
       val result = service.recordNonArrivalForBooking(
@@ -972,6 +1025,8 @@ class Cas1SpaceBookingServiceTest {
 
       assertThat(result).isInstanceOf(CasResult.Success::class.java)
       result as CasResult.Success
+
+      verify { cas1ChangeRequestService.resolveChangeRequestForSpaceBooking(any()) }
 
       val updatedSpaceBooking = updatedSpaceBookingCaptor.captured
       assertThat(nonArrivalReason).isEqualTo(updatedSpaceBooking.nonArrivalReason)
@@ -1073,6 +1128,9 @@ class Cas1SpaceBookingServiceTest {
 
     @Test
     fun `Returns validation error if no space booking exists with the given bookingId`() {
+      every { lockableCas1SpaceBookingRepository.acquirePessimisticLock(any()) } returns LockableCas1SpaceBookingEntity(
+        existingSpaceBooking.id,
+      )
       every { spaceBookingRepository.findByIdOrNull(any()) } returns null
 
       val result = service.recordDepartureForBooking(
@@ -1210,6 +1268,9 @@ class Cas1SpaceBookingServiceTest {
         actualArrivalTime = null,
       )
 
+      every { lockableCas1SpaceBookingRepository.acquirePessimisticLock(any()) } returns LockableCas1SpaceBookingEntity(
+        existingSpaceBooking.id,
+      )
       every { spaceBookingRepository.findByIdOrNull(any()) } returns existingSpaceBookingWithArrivalDateInFuture
 
       val result = service.recordDepartureForBooking(
@@ -1292,6 +1353,9 @@ class Cas1SpaceBookingServiceTest {
     fun `Returns conflict error if the space booking has already been cancelled`() {
       val existingSpaceBookingWithArrivalDate = existingSpaceBooking.copy(cancellationOccurredAt = LocalDate.now().minusDays(10))
 
+      every { lockableCas1SpaceBookingRepository.acquirePessimisticLock(any()) } returns LockableCas1SpaceBookingEntity(
+        existingSpaceBooking.id,
+      )
       every { spaceBookingRepository.findByIdOrNull(any()) } returns existingSpaceBookingWithArrivalDate
 
       val result = service.recordDepartureForBooking(
@@ -1354,6 +1418,8 @@ class Cas1SpaceBookingServiceTest {
       val updatedSpaceBookingCaptor = slot<Cas1SpaceBookingEntity>()
       every { spaceBookingRepository.save(capture(updatedSpaceBookingCaptor)) } returnsArgument 0
 
+      every { cas1ChangeRequestService.resolveChangeRequestForSpaceBooking(capture(updatedSpaceBookingCaptor)) } returns Unit
+
       val departureInfoCaptor = slot<Cas1SpaceBookingManagementDomainEventService.DepartureInfo>()
       every { cas1SpaceBookingManagementDomainEventService.departureRecorded(capture(departureInfoCaptor)) } returns Unit
       every { userService.getUserForRequest() } returns user
@@ -1372,6 +1438,8 @@ class Cas1SpaceBookingServiceTest {
 
       assertThat(result).isInstanceOf(CasResult.Success::class.java)
       result as CasResult.Success
+
+      verify { cas1ChangeRequestService.resolveChangeRequestForSpaceBooking(any()) }
 
       val updatedSpaceBooking = updatedSpaceBookingCaptor.captured
       assertThat(updatedSpaceBooking.actualDepartureDate).isEqualTo(LocalDate.of(2023, 2, 1))
@@ -1397,6 +1465,7 @@ class Cas1SpaceBookingServiceTest {
       every { spaceBookingRepository.findByIdOrNull(any()) } returns existingSpaceBooking2
       every { moveOnCategoryRepository.findByIdOrNull(MOVE_ON_CATEGORY_NOT_APPLICABLE_ID) } returns departureNotApplicableMoveOnCategory
       every { spaceBookingRepository.save(capture(updatedSpaceBookingCaptor)) } returnsArgument 0
+      every { cas1ChangeRequestService.resolveChangeRequestForSpaceBooking(capture(updatedSpaceBookingCaptor)) } returns Unit
       every { cas1SpaceBookingManagementDomainEventService.departureRecorded(any()) } returns Unit
 
       val result = service.recordDepartureForBooking(
@@ -1412,6 +1481,8 @@ class Cas1SpaceBookingServiceTest {
 
       assertThat(result).isInstanceOf(CasResult.Success::class.java)
       result as CasResult.Success
+
+      verify { cas1ChangeRequestService.resolveChangeRequestForSpaceBooking(any()) }
 
       val updatedSpaceBooking = updatedSpaceBookingCaptor.captured
 
@@ -1791,7 +1862,7 @@ class Cas1SpaceBookingServiceTest {
       val spaceBookingCaptor = slot<Cas1SpaceBookingEntity>()
       every { spaceBookingRepository.save(capture(spaceBookingCaptor)) } returns spaceBooking
 
-      every { cas1ChangeRequestService.spaceBookingWithdrawn(spaceBooking) } returns Unit
+      every { cas1ChangeRequestService.resolveChangeRequestForSpaceBooking(spaceBooking) } returns Unit
       every { cas1BookingEmailService.spaceBookingWithdrawn(spaceBooking, application, WithdrawalTriggeredByUser(user)) } returns Unit
       every { cas1BookingDomainEventService.spaceBookingCancelled(spaceBooking, user, reason) } returns Unit
       every { cas1ApplicationStatusService.spaceBookingCancelled(spaceBooking) } returns Unit
@@ -1816,7 +1887,7 @@ class Cas1SpaceBookingServiceTest {
       assertThat(persistedBooking.cancellationReason).isEqualTo(reason)
       assertThat(persistedBooking.cancellationReasonNotes).isEqualTo("the user provided notes")
 
-      verify { cas1ChangeRequestService.spaceBookingWithdrawn(spaceBooking) }
+      verify { cas1ChangeRequestService.resolveChangeRequestForSpaceBooking(spaceBooking) }
       verify { cas1BookingDomainEventService.spaceBookingCancelled(spaceBooking, user, reason) }
       verify { cas1ApplicationStatusService.spaceBookingCancelled(spaceBooking) }
       verify { cas1BookingEmailService.spaceBookingWithdrawn(spaceBooking, application, WithdrawalTriggeredByUser(user)) }
@@ -2828,14 +2899,15 @@ class Cas1SpaceBookingServiceTest {
     }
 
     @Test
-    fun `Should return validation error when given space booking marked as departed`() {
+    fun `Should return validation error when given change request marked as resolved`() {
       existingSpaceBooking = Cas1SpaceBookingEntityFactory()
         .withPremises(currentPremises)
-        .withActualDepartureDate(LocalDate.now())
+        .withActualArrivalDate(LocalDate.now())
         .produce()
 
       existingChangeRequest = Cas1ChangeRequestEntityFactory()
         .withSpaceBooking(existingSpaceBooking)
+        .withResolved(true)
         .produce()
 
       every { cas1PremisesService.findPremiseById(any()) } returns destinationPremises
@@ -2865,7 +2937,7 @@ class Cas1SpaceBookingServiceTest {
       )
 
       assertThatCasResult(result)
-        .isGeneralValidationError("The associated space booking has already been marked as departed")
+        .isGeneralValidationError("A decision has already been made for the change request")
     }
 
     @Test

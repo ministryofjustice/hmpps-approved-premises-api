@@ -21,6 +21,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas1.ChangeRe
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas1.LockableCas1ChangeRequestRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.validatedCasResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.CasResult
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.CasResult.GeneralValidationError
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.CasResult.Success
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.UserService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.PageCriteria
@@ -121,25 +122,13 @@ class Cas1ChangeRequestService(
   )
 
   @Transactional
-  fun approvePlacementAppeal(changeRequestId: UUID, user: UserEntity, spaceBooking: Cas1SpaceBookingEntity): CasResult<Unit> = validatedCasResult {
-    if (spaceBooking.hasArrival()) {
-      return CasResult.GeneralValidationError("Space booking with ID ${spaceBooking.id} has been marked as arrived")
-    }
-
-    if (spaceBooking.hasNonArrival()) {
-      return CasResult.GeneralValidationError("Space booking with ID ${spaceBooking.id} has been marked as non-arrived")
-    }
-
-    if (spaceBooking.isCancelled()) {
-      return CasResult.GeneralValidationError("Space booking with ID ${spaceBooking.id} has been cancelled")
-    }
-
+  fun approvePlacementAppeal(changeRequestId: UUID, user: UserEntity): CasResult<Unit> = validatedCasResult {
     val changeRequest = findChangeRequest(changeRequestId)
 
     if (changeRequest == null) {
       return CasResult.NotFound("change request", changeRequestId.toString())
-    } else if (changeRequest.decision == ChangeRequestDecision.APPROVED) {
-      return CasResult.GeneralValidationError("Change request with ID $changeRequestId is already approved")
+    } else if (changeRequest.resolved) {
+      return GeneralValidationError("This change request is already resolved")
     } else {
       approveChangeRequest(changeRequest, user)
     }
@@ -208,7 +197,7 @@ class Cas1ChangeRequestService(
     return Success(changeRequest)
   }
 
-  fun spaceBookingWithdrawn(spaceBooking: Cas1SpaceBookingEntity) = cas1ChangeRequestRepository.findAllBySpaceBookingAndResolvedIsFalse(spaceBooking).forEach { it.resolve() }
+  fun resolveChangeRequestForSpaceBooking(spaceBooking: Cas1SpaceBookingEntity) = cas1ChangeRequestRepository.findAllBySpaceBookingAndResolvedIsFalse(spaceBooking).forEach { it.resolve() }
 
   private fun Cas1ChangeRequestEntity.resolve() {
     this.resolved = true

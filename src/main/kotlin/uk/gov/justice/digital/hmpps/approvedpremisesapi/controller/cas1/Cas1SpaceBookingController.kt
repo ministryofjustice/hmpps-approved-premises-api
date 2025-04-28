@@ -328,7 +328,6 @@ class Cas1SpaceBookingController(
       cas1ChangeRequestService.approvePlacementAppeal(
         changeRequestId = body.placementAppealChangeRequestId,
         user = userService.getUserForRequest(),
-        spaceBooking = spaceBooking,
       ),
     )
 
