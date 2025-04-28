@@ -30,6 +30,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.Pr
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.RequestForPlacementAssessedEnvelope
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.NotFoundProblem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1DomainEventService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.GetCas1DomainEvent
 import java.util.UUID
 
 @SuppressWarnings("TooManyFunctions", "CyclomaticComplexMethod", "TooGenericExceptionThrown")
@@ -47,7 +48,6 @@ class Cas1DomainEventsController(
       ApiResponse(
         responseCode = "200",
         description = "The 'application-assessed' event corresponding to the provided `eventId`",
-        content = [Content(schema = Schema(implementation = ApplicationAssessedEnvelope::class))],
       ),
       ApiResponse(
         responseCode = "404",
@@ -69,8 +69,8 @@ class Cas1DomainEventsController(
   fun eventsApplicationAssessedEventIdGet(
     @Parameter(description = "UUID of the event", required = true)
     @PathVariable("eventId")
-    eventId: java.util.UUID,
-  ): ResponseEntity<ApplicationAssessedEnvelope> = getDomainEvent<ApplicationAssessedEnvelope>(eventId)
+    eventId: UUID,
+  ): ResponseEntity<ApplicationAssessedEnvelope> = getDomainEvent(eventId, domainEventService::getApplicationAssessedDomainEvent)
 
   @Operation(
     summary = "An application-submitted event",
@@ -80,7 +80,6 @@ class Cas1DomainEventsController(
       ApiResponse(
         responseCode = "200",
         description = "The application-submitted corresponding to the provided `eventId`",
-        content = [Content(schema = Schema(implementation = ApplicationSubmittedEnvelope::class))],
       ),
       ApiResponse(
         responseCode = "404",
@@ -103,7 +102,7 @@ class Cas1DomainEventsController(
     @Parameter(description = "UUID of the event", required = true)
     @PathVariable("eventId")
     eventId: java.util.UUID,
-  ): ResponseEntity<ApplicationSubmittedEnvelope> = getDomainEvent<ApplicationSubmittedEnvelope>(eventId)
+  ): ResponseEntity<ApplicationSubmittedEnvelope> = getDomainEvent(eventId, domainEventService::getApplicationSubmittedDomainEvent)
 
   @Operation(
     summary = "An application-withdrawn event",
@@ -113,7 +112,6 @@ class Cas1DomainEventsController(
       ApiResponse(
         responseCode = "200",
         description = "The application-withdrawn event corresponding to the provided `eventId`",
-        content = [Content(schema = Schema(implementation = ApplicationWithdrawnEnvelope::class))],
       ),
       ApiResponse(
         responseCode = "404",
@@ -134,8 +132,8 @@ class Cas1DomainEventsController(
   )
   fun eventsApplicationWithdrawnEventIdGet(
     @Parameter(description = "UUID of the event", required = true)
-    @PathVariable("eventId") eventId: java.util.UUID,
-  ): ResponseEntity<ApplicationWithdrawnEnvelope> = getDomainEvent<ApplicationWithdrawnEnvelope>(eventId)
+    @PathVariable("eventId") eventId: UUID,
+  ): ResponseEntity<ApplicationWithdrawnEnvelope> = getDomainEvent(eventId, domainEventService::getApplicationWithdrawnEvent)
 
   @Operation(
     summary = "An assessment-allocated event",
@@ -145,7 +143,6 @@ class Cas1DomainEventsController(
       ApiResponse(
         responseCode = "200",
         description = "The assessment-allocated event corresponding to the provided `eventId`",
-        content = [Content(schema = Schema(implementation = AssessmentAllocatedEnvelope::class))],
       ),
       ApiResponse(
         responseCode = "404",
@@ -166,8 +163,8 @@ class Cas1DomainEventsController(
   )
   fun eventsAssessmentAllocatedEventIdGet(
     @Parameter(description = "UUID of the event", required = true)
-    @PathVariable("eventId") eventId: java.util.UUID,
-  ): ResponseEntity<AssessmentAllocatedEnvelope> = getDomainEvent<AssessmentAllocatedEnvelope>(eventId)
+    @PathVariable("eventId") eventId: UUID,
+  ): ResponseEntity<AssessmentAllocatedEnvelope> = getDomainEvent(eventId, domainEventService::getAssessmentAllocatedEvent)
 
   @Operation(
     summary = "An 'assessment-appealed' event",
@@ -177,7 +174,6 @@ class Cas1DomainEventsController(
       ApiResponse(
         responseCode = "200",
         description = "The 'assessment-appealed' event corresponding to the provided `eventId`",
-        content = [Content(schema = Schema(implementation = AssessmentAppealedEnvelope::class))],
       ),
       ApiResponse(
         responseCode = "404",
@@ -198,8 +194,8 @@ class Cas1DomainEventsController(
   )
   fun eventsAssessmentAppealedEventIdGet(
     @Parameter(description = "UUID of the event", required = true)
-    @PathVariable("eventId") eventId: java.util.UUID,
-  ): ResponseEntity<AssessmentAppealedEnvelope> = getDomainEvent<AssessmentAppealedEnvelope>(eventId)
+    @PathVariable("eventId") eventId: UUID,
+  ): ResponseEntity<AssessmentAppealedEnvelope> = getDomainEvent(eventId, domainEventService::getAssessmentAppealedEvent)
 
   @Operation(
     summary = "A 'booking-cancelled' event",
@@ -209,7 +205,6 @@ class Cas1DomainEventsController(
       ApiResponse(
         responseCode = "200",
         description = "The 'booking-cancelled' event corresponding to the provided `eventId`",
-        content = [Content(schema = Schema(implementation = BookingCancelledEnvelope::class))],
       ),
       ApiResponse(
         responseCode = "404",
@@ -230,8 +225,8 @@ class Cas1DomainEventsController(
   )
   fun eventsBookingCancelledEventIdGet(
     @Parameter(description = "UUID of the event", required = true)
-    @PathVariable("eventId") eventId: java.util.UUID,
-  ): ResponseEntity<BookingCancelledEnvelope> = getDomainEvent<BookingCancelledEnvelope>(eventId)
+    @PathVariable("eventId") eventId: UUID,
+  ): ResponseEntity<BookingCancelledEnvelope> = getDomainEvent(eventId, domainEventService::getBookingCancelledEvent)
 
   @Operation(
     summary = "A 'booking-changed' event",
@@ -241,7 +236,6 @@ class Cas1DomainEventsController(
       ApiResponse(
         responseCode = "200",
         description = "The 'booking-changed' event corresponding to the provided `eventId`",
-        content = [Content(schema = Schema(implementation = BookingChangedEnvelope::class))],
       ),
       ApiResponse(
         responseCode = "404",
@@ -262,8 +256,8 @@ class Cas1DomainEventsController(
   )
   fun eventsBookingChangedEventIdGet(
     @Parameter(description = "UUID of the event", required = true)
-    @PathVariable("eventId") eventId: java.util.UUID,
-  ): ResponseEntity<BookingChangedEnvelope> = getDomainEvent<BookingChangedEnvelope>(eventId)
+    @PathVariable("eventId") eventId: UUID,
+  ): ResponseEntity<BookingChangedEnvelope> = getDomainEvent(eventId, domainEventService::getBookingChangedEvent)
 
   @Operation(
     summary = "A 'booking-made' event",
@@ -273,7 +267,6 @@ class Cas1DomainEventsController(
       ApiResponse(
         responseCode = "200",
         description = "The 'booking-made' event corresponding to the provided `eventId`",
-        content = [Content(schema = Schema(implementation = BookingMadeEnvelope::class))],
       ),
       ApiResponse(
         responseCode = "404",
@@ -294,8 +287,8 @@ class Cas1DomainEventsController(
   )
   fun eventsBookingMadeEventIdGet(
     @Parameter(description = "UUID of the event", required = true)
-    @PathVariable("eventId") eventId: java.util.UUID,
-  ): ResponseEntity<BookingMadeEnvelope> = getDomainEvent<BookingMadeEnvelope>(eventId)
+    @PathVariable("eventId") eventId: UUID,
+  ): ResponseEntity<BookingMadeEnvelope> = getDomainEvent(eventId, domainEventService::getBookingMadeEvent)
 
   @Operation(
     summary = "A 'booking-not-made' event",
@@ -305,7 +298,6 @@ class Cas1DomainEventsController(
       ApiResponse(
         responseCode = "200",
         description = "The 'booking-not-made' event corresponding to the provided `eventId`",
-        content = [Content(schema = Schema(implementation = BookingNotMadeEnvelope::class))],
       ),
       ApiResponse(
         responseCode = "404",
@@ -326,8 +318,8 @@ class Cas1DomainEventsController(
   )
   fun eventsBookingNotMadeEventIdGet(
     @Parameter(description = "UUID of the event", required = true)
-    @PathVariable("eventId") eventId: java.util.UUID,
-  ): ResponseEntity<BookingNotMadeEnvelope> = getDomainEvent<BookingNotMadeEnvelope>(eventId)
+    @PathVariable("eventId") eventId: UUID,
+  ): ResponseEntity<BookingNotMadeEnvelope> = getDomainEvent(eventId, domainEventService::getBookingNotMadeEvent)
 
   @Operation(
     summary = "A 'further-information-requested' event",
@@ -337,7 +329,6 @@ class Cas1DomainEventsController(
       ApiResponse(
         responseCode = "200",
         description = "The 'further-information-requested' event corresponding to the provided `eventId`",
-        content = [Content(schema = Schema(implementation = FurtherInformationRequestedEnvelope::class))],
       ),
       ApiResponse(
         responseCode = "404",
@@ -358,8 +349,8 @@ class Cas1DomainEventsController(
   )
   fun eventsFurtherInformationRequestedEventIdGet(
     @Parameter(description = "UUID of the event", required = true)
-    @PathVariable("eventId") eventId: java.util.UUID,
-  ): ResponseEntity<FurtherInformationRequestedEnvelope> = getDomainEvent<FurtherInformationRequestedEnvelope>(eventId)
+    @PathVariable("eventId") eventId: UUID,
+  ): ResponseEntity<FurtherInformationRequestedEnvelope> = getDomainEvent(eventId, domainEventService::getFurtherInformationRequestMadeEvent)
 
   @Operation(
     summary = "A 'match-request-withdrawn' event",
@@ -369,7 +360,6 @@ class Cas1DomainEventsController(
       ApiResponse(
         responseCode = "200",
         description = "The 'match-request-withdrawn' event corresponding to the provided `eventId`",
-        content = [Content(schema = Schema(implementation = MatchRequestWithdrawnEnvelope::class))],
       ),
       ApiResponse(
         responseCode = "404",
@@ -390,8 +380,8 @@ class Cas1DomainEventsController(
   )
   fun eventsMatchRequestWithdrawnEventIdGet(
     @Parameter(description = "UUID of the event", required = true)
-    @PathVariable("eventId") eventId: java.util.UUID,
-  ): ResponseEntity<MatchRequestWithdrawnEnvelope> = getDomainEvent<MatchRequestWithdrawnEnvelope>(eventId)
+    @PathVariable("eventId") eventId: UUID,
+  ): ResponseEntity<MatchRequestWithdrawnEnvelope> = getDomainEvent(eventId, domainEventService::getMatchRequestWithdrawnEvent)
 
   @Operation(
     summary = "A 'person-arrived' event",
@@ -401,7 +391,6 @@ class Cas1DomainEventsController(
       ApiResponse(
         responseCode = "200",
         description = "The 'person-arrived' event corresponding to the provided `eventId`",
-        content = [Content(schema = Schema(implementation = PersonArrivedEnvelope::class))],
       ),
       ApiResponse(
         responseCode = "404",
@@ -422,8 +411,8 @@ class Cas1DomainEventsController(
   )
   fun eventsPersonArrivedEventIdGet(
     @Parameter(description = "UUID of the event", required = true)
-    @PathVariable("eventId") eventId: java.util.UUID,
-  ): ResponseEntity<PersonArrivedEnvelope> = getDomainEvent<PersonArrivedEnvelope>(eventId)
+    @PathVariable("eventId") eventId: UUID,
+  ): ResponseEntity<PersonArrivedEnvelope> = getDomainEvent(eventId, domainEventService::getPersonArrivedEvent)
 
   @Operation(
     summary = "A 'person-departed' event",
@@ -433,7 +422,6 @@ class Cas1DomainEventsController(
       ApiResponse(
         responseCode = "200",
         description = "The 'person-departed' event corresponding to the provided `eventId`",
-        content = [Content(schema = Schema(implementation = PersonDepartedEnvelope::class))],
       ),
       ApiResponse(
         responseCode = "404",
@@ -454,8 +442,8 @@ class Cas1DomainEventsController(
   )
   fun eventsPersonDepartedEventIdGet(
     @Parameter(description = "UUID of the event", required = true)
-    @PathVariable("eventId") eventId: java.util.UUID,
-  ): ResponseEntity<PersonDepartedEnvelope> = getDomainEvent<PersonDepartedEnvelope>(eventId)
+    @PathVariable("eventId") eventId: UUID,
+  ): ResponseEntity<PersonDepartedEnvelope> = getDomainEvent(eventId, domainEventService::getPersonDepartedEvent)
 
   @Operation(
     summary = "A 'person-not-arrived' event",
@@ -465,7 +453,6 @@ class Cas1DomainEventsController(
       ApiResponse(
         responseCode = "200",
         description = "The 'person-not-arrived' event corresponding to the provided `eventId`",
-        content = [Content(schema = Schema(implementation = PersonNotArrivedEnvelope::class))],
       ),
       ApiResponse(
         responseCode = "404",
@@ -486,8 +473,8 @@ class Cas1DomainEventsController(
   )
   fun eventsPersonNotArrivedEventIdGet(
     @Parameter(description = "UUID of the event", required = true)
-    @PathVariable("eventId") eventId: java.util.UUID,
-  ): ResponseEntity<PersonNotArrivedEnvelope> = getDomainEvent<PersonNotArrivedEnvelope>(eventId)
+    @PathVariable("eventId") eventId: UUID,
+  ): ResponseEntity<PersonNotArrivedEnvelope> = getDomainEvent(eventId, domainEventService::getPersonNotArrivedEvent)
 
   @Operation(
     summary = "A 'placement-application-allocated' event",
@@ -497,7 +484,6 @@ class Cas1DomainEventsController(
       ApiResponse(
         responseCode = "200",
         description = "The 'placement-application-allocated' event corresponding to the provided `eventId`",
-        content = [Content(schema = Schema(implementation = PlacementApplicationAllocatedEnvelope::class))],
       ),
       ApiResponse(
         responseCode = "404",
@@ -518,8 +504,8 @@ class Cas1DomainEventsController(
   )
   fun eventsPlacementApplicationAllocatedEventIdGet(
     @Parameter(description = "UUID of the event", required = true)
-    @PathVariable("eventId") eventId: java.util.UUID,
-  ): ResponseEntity<PlacementApplicationAllocatedEnvelope> = getDomainEvent<PlacementApplicationAllocatedEnvelope>(eventId)
+    @PathVariable("eventId") eventId: UUID,
+  ): ResponseEntity<PlacementApplicationAllocatedEnvelope> = getDomainEvent(eventId, domainEventService::getPlacementApplicationAllocatedEvent)
 
   @Operation(
     summary = "A 'placement-application-withdrawn' event",
@@ -529,7 +515,6 @@ class Cas1DomainEventsController(
       ApiResponse(
         responseCode = "200",
         description = "The 'placement-application-withdrawn' event corresponding to the provided `eventId`",
-        content = [Content(schema = Schema(implementation = PlacementApplicationWithdrawnEnvelope::class))],
       ),
       ApiResponse(
         responseCode = "404",
@@ -550,8 +535,8 @@ class Cas1DomainEventsController(
   )
   fun eventsPlacementApplicationWithdrawnEventIdGet(
     @Parameter(description = "UUID of the event", required = true)
-    @PathVariable("eventId") eventId: java.util.UUID,
-  ): ResponseEntity<PlacementApplicationWithdrawnEnvelope> = getDomainEvent<PlacementApplicationWithdrawnEnvelope>(eventId)
+    @PathVariable("eventId") eventId: UUID,
+  ): ResponseEntity<PlacementApplicationWithdrawnEnvelope> = getDomainEvent(eventId, domainEventService::getPlacementApplicationWithdrawnEvent)
 
   @Operation(
     summary = "A 'request-for-placement-assessed' event",
@@ -561,7 +546,6 @@ class Cas1DomainEventsController(
       ApiResponse(
         responseCode = "200",
         description = "The 'request-for-placement-assessed' event corresponding to the provided `eventId`",
-        content = [Content(schema = Schema(implementation = RequestForPlacementAssessedEnvelope::class))],
       ),
       ApiResponse(
         responseCode = "404",
@@ -582,34 +566,11 @@ class Cas1DomainEventsController(
   )
   fun eventsRequestForPlacementAssessedEventIdGet(
     @Parameter(description = "UUID of the event", required = true)
-    @PathVariable("eventId") eventId: java.util.UUID,
-  ): ResponseEntity<RequestForPlacementAssessedEnvelope> = getDomainEvent<RequestForPlacementAssessedEnvelope>(eventId)
+    @PathVariable("eventId") eventId: UUID,
+  ): ResponseEntity<RequestForPlacementAssessedEnvelope> = getDomainEvent(eventId, domainEventService::getRequestForPlacementAssessedEvent)
 
-  @Suppress("UNCHECKED_CAST") // Safe as the return type is constant and not likely to change at runtime
-  private inline fun <reified T> getDomainEvent(eventId: UUID): ResponseEntity<T> {
-    val serviceMethod = when (T::class) {
-      AssessmentAllocatedEnvelope::class -> domainEventService::getAssessmentAllocatedEvent
-      AssessmentAppealedEnvelope::class -> domainEventService::getAssessmentAppealedEvent
-      MatchRequestWithdrawnEnvelope::class -> domainEventService::getMatchRequestWithdrawnEvent
-      ApplicationWithdrawnEnvelope::class -> domainEventService::getApplicationWithdrawnEvent
-      ApplicationAssessedEnvelope::class -> domainEventService::getApplicationAssessedDomainEvent
-      BookingMadeEnvelope::class -> domainEventService::getBookingMadeEvent
-      ApplicationSubmittedEnvelope::class -> domainEventService::getApplicationSubmittedDomainEvent
-      PlacementApplicationWithdrawnEnvelope::class -> domainEventService::getPlacementApplicationWithdrawnEvent
-      BookingCancelledEnvelope::class -> domainEventService::getBookingCancelledEvent
-      BookingChangedEnvelope::class -> domainEventService::getBookingChangedEvent
-      BookingNotMadeEnvelope::class -> domainEventService::getBookingNotMadeEvent
-      PersonArrivedEnvelope::class -> domainEventService::getPersonArrivedEvent
-      PersonDepartedEnvelope::class -> domainEventService::getPersonDepartedEvent
-      PlacementApplicationAllocatedEnvelope::class -> domainEventService::getPlacementApplicationAllocatedEvent
-      PersonNotArrivedEnvelope::class -> domainEventService::getPersonNotArrivedEvent
-      FurtherInformationRequestedEnvelope::class -> domainEventService::getFurtherInformationRequestMadeEvent
-      RequestForPlacementAssessedEnvelope::class -> domainEventService::getRequestForPlacementAssessedEvent
-      else -> throw RuntimeException("Only emittable CAS1 events are supported")
-    }
-
+  private inline fun <reified T> getDomainEvent(eventId: UUID, serviceMethod: (id: UUID) -> GetCas1DomainEvent<T>?): ResponseEntity<T> {
     val event = serviceMethod(eventId) ?: throw NotFoundProblem(eventId, "DomainEvent")
-
     return ResponseEntity.ok(event.data) as ResponseEntity<T>
   }
 }
