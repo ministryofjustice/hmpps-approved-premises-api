@@ -13,6 +13,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.MoveOnCategor
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.NonArrivalReasonEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.OfflineApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementRequestEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TransferType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomStringUpperCase
 import java.time.Instant
@@ -55,6 +56,8 @@ class Cas1SpaceBookingEntityFactory : Factory<Cas1SpaceBookingEntity> {
   private var migratedManagementInfoFrom: Yielded<ManagementInfoSource?> = { null }
   private var deliusEventNumber: Yielded<String?> = { null }
   private var transferredTo: Yielded<Cas1SpaceBookingEntity?> = { null }
+  private var transferredFrom: Yielded<Cas1SpaceBookingEntity?> = { null }
+  private var transferType: Yielded<TransferType?> = { null }
 
   fun withId(id: UUID) = apply {
     this.id = { id }
@@ -239,5 +242,7 @@ class Cas1SpaceBookingEntityFactory : Factory<Cas1SpaceBookingEntity> {
     migratedManagementInfoFrom = this.migratedManagementInfoFrom(),
     deliusId = null,
     transferredTo = this.transferredTo(),
+    transferredFrom = this.transferredFrom(),
+    transferType = this.transferType(),
   )
 }
