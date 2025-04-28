@@ -190,7 +190,7 @@ class Cas1SpaceBookingService(
 
     val result = cas1SpaceBookingRepository.save(existingCas1SpaceBooking)
 
-    cas1ChangeRequestService.resolveChangeRequestForSpaceBooking(existingCas1SpaceBooking)
+    cas1ChangeRequestService.spaceBookingHasArrival(existingCas1SpaceBooking)
 
     cas1SpaceBookingManagementDomainEventService.arrivalRecorded(
       Cas1SpaceBookingManagementDomainEventService.ArrivalInfo(
@@ -256,7 +256,7 @@ class Cas1SpaceBookingService(
 
     val result = cas1SpaceBookingRepository.save(existingCas1SpaceBooking)
 
-    cas1ChangeRequestService.resolveChangeRequestForSpaceBooking(existingCas1SpaceBooking)
+    cas1ChangeRequestService.spaceBookingMarkedAsNonArrival(existingCas1SpaceBooking)
 
     cas1SpaceBookingManagementDomainEventService.nonArrivalRecorded(
       recordedBy,
@@ -398,7 +398,7 @@ class Cas1SpaceBookingService(
 
     val result = cas1SpaceBookingRepository.save(existingSpaceBooking)
 
-    cas1ChangeRequestService.resolveChangeRequestForSpaceBooking(existingSpaceBooking)
+    cas1ChangeRequestService.spaceBookingMarkedAsDeparted(existingSpaceBooking)
 
     cas1SpaceBookingManagementDomainEventService.departureRecorded(
       Cas1SpaceBookingManagementDomainEventService.DepartureInfo(
@@ -539,7 +539,7 @@ class Cas1SpaceBookingService(
       else -> throw InternalServerErrorProblem("Withdrawal triggered automatically is not supported")
     }
 
-    cas1ChangeRequestService.resolveChangeRequestForSpaceBooking(spaceBooking)
+    cas1ChangeRequestService.spaceBookingWithdrawn(spaceBooking)
     cas1BookingDomainEventService.spaceBookingCancelled(spaceBooking, user, reason)
     cas1ApplicationStatusService.spaceBookingCancelled(
       spaceBooking,

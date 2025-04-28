@@ -791,7 +791,7 @@ class Cas1SpaceBookingServiceTest {
       every { spaceBookingRepository.save(capture(updatedSpaceBookingCaptor)) } returnsArgument 0
 
       val arrivalInfoCaptor = slot<Cas1SpaceBookingManagementDomainEventService.ArrivalInfo>()
-      every { cas1ChangeRequestService.resolveChangeRequestForSpaceBooking(capture(updatedSpaceBookingCaptor)) } returns Unit
+      every { cas1ChangeRequestService.spaceBookingHasArrival(capture(updatedSpaceBookingCaptor)) } returns Unit
 
       every { cas1SpaceBookingManagementDomainEventService.arrivalRecorded(capture(arrivalInfoCaptor)) } returns Unit
       every { userService.getUserForRequest() } returns user
@@ -806,7 +806,7 @@ class Cas1SpaceBookingServiceTest {
       assertThat(result).isInstanceOf(CasResult.Success::class.java)
       result as CasResult.Success
 
-      verify { cas1ChangeRequestService.resolveChangeRequestForSpaceBooking(any()) }
+      verify { cas1ChangeRequestService.spaceBookingHasArrival(any()) }
 
       val updatedSpaceBooking = updatedSpaceBookingCaptor.captured
       assertThat(updatedSpaceBooking.expectedArrivalDate).isEqualTo(existingSpaceBooking.expectedArrivalDate)
@@ -1013,7 +1013,7 @@ class Cas1SpaceBookingServiceTest {
       every { spaceBookingRepository.findByIdOrNull(any()) } returns existingSpaceBooking
       every { nonArrivalReasonRepository.findByIdOrNull(any()) } returns nonArrivalReason
       every { spaceBookingRepository.save(capture(updatedSpaceBookingCaptor)) } returnsArgument 0
-      every { cas1ChangeRequestService.resolveChangeRequestForSpaceBooking(capture(updatedSpaceBookingCaptor)) } returns Unit
+      every { cas1ChangeRequestService.spaceBookingMarkedAsNonArrival(capture(updatedSpaceBookingCaptor)) } returns Unit
       every { cas1SpaceBookingManagementDomainEventService.nonArrivalRecorded(any(), any(), any(), any()) } returns Unit
 
       val result = service.recordNonArrivalForBooking(
@@ -1026,7 +1026,7 @@ class Cas1SpaceBookingServiceTest {
       assertThat(result).isInstanceOf(CasResult.Success::class.java)
       result as CasResult.Success
 
-      verify { cas1ChangeRequestService.resolveChangeRequestForSpaceBooking(any()) }
+      verify { cas1ChangeRequestService.spaceBookingMarkedAsNonArrival(any()) }
 
       val updatedSpaceBooking = updatedSpaceBookingCaptor.captured
       assertThat(nonArrivalReason).isEqualTo(updatedSpaceBooking.nonArrivalReason)
@@ -1418,7 +1418,7 @@ class Cas1SpaceBookingServiceTest {
       val updatedSpaceBookingCaptor = slot<Cas1SpaceBookingEntity>()
       every { spaceBookingRepository.save(capture(updatedSpaceBookingCaptor)) } returnsArgument 0
 
-      every { cas1ChangeRequestService.resolveChangeRequestForSpaceBooking(capture(updatedSpaceBookingCaptor)) } returns Unit
+      every { cas1ChangeRequestService.spaceBookingMarkedAsDeparted(capture(updatedSpaceBookingCaptor)) } returns Unit
 
       val departureInfoCaptor = slot<Cas1SpaceBookingManagementDomainEventService.DepartureInfo>()
       every { cas1SpaceBookingManagementDomainEventService.departureRecorded(capture(departureInfoCaptor)) } returns Unit
@@ -1439,7 +1439,7 @@ class Cas1SpaceBookingServiceTest {
       assertThat(result).isInstanceOf(CasResult.Success::class.java)
       result as CasResult.Success
 
-      verify { cas1ChangeRequestService.resolveChangeRequestForSpaceBooking(any()) }
+      verify { cas1ChangeRequestService.spaceBookingMarkedAsDeparted(any()) }
 
       val updatedSpaceBooking = updatedSpaceBookingCaptor.captured
       assertThat(updatedSpaceBooking.actualDepartureDate).isEqualTo(LocalDate.of(2023, 2, 1))
@@ -1465,7 +1465,7 @@ class Cas1SpaceBookingServiceTest {
       every { spaceBookingRepository.findByIdOrNull(any()) } returns existingSpaceBooking2
       every { moveOnCategoryRepository.findByIdOrNull(MOVE_ON_CATEGORY_NOT_APPLICABLE_ID) } returns departureNotApplicableMoveOnCategory
       every { spaceBookingRepository.save(capture(updatedSpaceBookingCaptor)) } returnsArgument 0
-      every { cas1ChangeRequestService.resolveChangeRequestForSpaceBooking(capture(updatedSpaceBookingCaptor)) } returns Unit
+      every { cas1ChangeRequestService.spaceBookingMarkedAsDeparted(capture(updatedSpaceBookingCaptor)) } returns Unit
       every { cas1SpaceBookingManagementDomainEventService.departureRecorded(any()) } returns Unit
 
       val result = service.recordDepartureForBooking(
@@ -1482,7 +1482,7 @@ class Cas1SpaceBookingServiceTest {
       assertThat(result).isInstanceOf(CasResult.Success::class.java)
       result as CasResult.Success
 
-      verify { cas1ChangeRequestService.resolveChangeRequestForSpaceBooking(any()) }
+      verify { cas1ChangeRequestService.spaceBookingMarkedAsDeparted(any()) }
 
       val updatedSpaceBooking = updatedSpaceBookingCaptor.captured
 
@@ -1862,7 +1862,7 @@ class Cas1SpaceBookingServiceTest {
       val spaceBookingCaptor = slot<Cas1SpaceBookingEntity>()
       every { spaceBookingRepository.save(capture(spaceBookingCaptor)) } returns spaceBooking
 
-      every { cas1ChangeRequestService.resolveChangeRequestForSpaceBooking(spaceBooking) } returns Unit
+      every { cas1ChangeRequestService.spaceBookingWithdrawn(spaceBooking) } returns Unit
       every { cas1BookingEmailService.spaceBookingWithdrawn(spaceBooking, application, WithdrawalTriggeredByUser(user)) } returns Unit
       every { cas1BookingDomainEventService.spaceBookingCancelled(spaceBooking, user, reason) } returns Unit
       every { cas1ApplicationStatusService.spaceBookingCancelled(spaceBooking) } returns Unit
@@ -1887,7 +1887,7 @@ class Cas1SpaceBookingServiceTest {
       assertThat(persistedBooking.cancellationReason).isEqualTo(reason)
       assertThat(persistedBooking.cancellationReasonNotes).isEqualTo("the user provided notes")
 
-      verify { cas1ChangeRequestService.resolveChangeRequestForSpaceBooking(spaceBooking) }
+      verify { cas1ChangeRequestService.spaceBookingWithdrawn(spaceBooking) }
       verify { cas1BookingDomainEventService.spaceBookingCancelled(spaceBooking, user, reason) }
       verify { cas1ApplicationStatusService.spaceBookingCancelled(spaceBooking) }
       verify { cas1BookingEmailService.spaceBookingWithdrawn(spaceBooking, application, WithdrawalTriggeredByUser(user)) }

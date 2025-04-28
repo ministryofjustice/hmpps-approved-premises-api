@@ -197,7 +197,16 @@ class Cas1ChangeRequestService(
     return Success(changeRequest)
   }
 
-  fun resolveChangeRequestForSpaceBooking(spaceBooking: Cas1SpaceBookingEntity) = cas1ChangeRequestRepository.findAllBySpaceBookingAndResolvedIsFalse(spaceBooking).forEach { it.resolve() }
+  @SuppressWarnings("MaxLineLength")
+  private fun resolveAllChangeRequestsForSpaceBookingAndType(spaceBooking: Cas1SpaceBookingEntity, changeRequestTypes: List<ChangeRequestType>) = cas1ChangeRequestRepository.findAllBySpaceBookingAndResolvedIsFalseAndTypeIn(spaceBooking, changeRequestTypes).forEach { it.resolve() }
+
+  fun spaceBookingWithdrawn(spaceBooking: Cas1SpaceBookingEntity) = resolveAllChangeRequestsForSpaceBookingAndType(spaceBooking, ChangeRequestType.entries.toList())
+
+  fun spaceBookingHasArrival(spaceBooking: Cas1SpaceBookingEntity) = resolveAllChangeRequestsForSpaceBookingAndType(spaceBooking, listOf(ChangeRequestType.PLACEMENT_APPEAL))
+
+  fun spaceBookingMarkedAsNonArrival(spaceBooking: Cas1SpaceBookingEntity) = resolveAllChangeRequestsForSpaceBookingAndType(spaceBooking, listOf(ChangeRequestType.PLACEMENT_APPEAL))
+
+  fun spaceBookingMarkedAsDeparted(spaceBooking: Cas1SpaceBookingEntity) = resolveAllChangeRequestsForSpaceBookingAndType(spaceBooking, listOf(ChangeRequestType.PLACEMENT_EXTENSION, ChangeRequestType.PLANNED_TRANSFER))
 
   private fun Cas1ChangeRequestEntity.resolve() {
     this.resolved = true

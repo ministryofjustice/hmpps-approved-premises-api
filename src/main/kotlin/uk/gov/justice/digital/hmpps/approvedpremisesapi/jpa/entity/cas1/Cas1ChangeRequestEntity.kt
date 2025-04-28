@@ -62,6 +62,8 @@ interface Cas1ChangeRequestRepository : JpaRepository<Cas1ChangeRequestEntity, U
 
   fun findAllBySpaceBookingAndResolvedIsFalse(spaceBooking: Cas1SpaceBookingEntity): List<Cas1ChangeRequestEntity>
 
+  fun findAllBySpaceBookingAndResolvedIsFalseAndTypeIn(spaceBooking: Cas1SpaceBookingEntity, changeRequestTypes: List<ChangeRequestType>): List<Cas1ChangeRequestEntity>
+
   interface FindOpenChangeRequestResult {
     val id: UUID
     val crn: String
