@@ -7,6 +7,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.BookingStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PropertyStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.BookingRepository
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.FlatTemporaryAccommodationPremisesSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.LocalAuthorityAreaRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PremisesEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PremisesRepository
@@ -14,7 +15,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ProbationDeli
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ProbationDeliveryUnitRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ProbationRegionRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TemporaryAccommodationPremisesEntity
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TemporaryAccommodationPremisesSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas3.Cas3VoidBedspaceCancellationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas3.Cas3VoidBedspaceCancellationRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas3.Cas3VoidBedspaceEntity
@@ -45,7 +45,12 @@ class Cas3PremisesService(
 ) {
   fun getPremises(premisesId: UUID): TemporaryAccommodationPremisesEntity? = premisesRepository.findTemporaryAccommodationPremisesByIdOrNull(premisesId)
 
-  fun getAllPremisesSummaries(regionId: UUID, postcodeOrAddress: String?): List<TemporaryAccommodationPremisesSummary> {
+  fun getAllFlatPremisesSummaries(regionId: UUID, postcodeOrAddress: String?): List<FlatTemporaryAccommodationPremisesSummary> {
+    val postcodeOrAddressWithoutWhitespace = postcodeOrAddress?.filter { !it.isWhitespace() }
+    return premisesRepository.findFlatAllCas3PremisesSummary(regionId, postcodeOrAddress, postcodeOrAddressWithoutWhitespace)
+  }
+
+  fun getAllPremisesSummaries(regionId: UUID, postcodeOrAddress: String?): List<uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TemporaryAccommodationPremisesSummary> {
     val postcodeOrAddressWithoutWhitespace = postcodeOrAddress?.filter { !it.isWhitespace() }
     return premisesRepository.findAllCas3PremisesSummary(regionId, postcodeOrAddress, postcodeOrAddressWithoutWhitespace)
   }
@@ -443,27 +448,31 @@ class Cas3PremisesService(
         onValidationError("$.probationDeliveryUnitId", "empty")
         null
       }
-      else -> probationDeliveryUnitIdentifier.fold({ name ->
-        if (name.isBlank()) {
-          onValidationError("$.pdu", "empty")
-        }
 
-        val result = probationDeliveryUnitRepository.findByNameAndProbationRegionId(name, probationRegionId)
+      else -> probationDeliveryUnitIdentifier.fold(
+        { name ->
+          if (name.isBlank()) {
+            onValidationError("$.pdu", "empty")
+          }
 
-        if (result == null) {
-          onValidationError("$.pdu", "doesNotExist")
-        }
+          val result = probationDeliveryUnitRepository.findByNameAndProbationRegionId(name, probationRegionId)
 
-        result
-      }, { id ->
-        val result = probationDeliveryUnitRepository.findByIdAndProbationRegionId(id, probationRegionId)
+          if (result == null) {
+            onValidationError("$.pdu", "doesNotExist")
+          }
 
-        if (result == null) {
-          onValidationError("$.probationDeliveryUnitId", "doesNotExist")
-        }
+          result
+        },
+        { id ->
+          val result = probationDeliveryUnitRepository.findByIdAndProbationRegionId(id, probationRegionId)
 
-        result
-      })
+          if (result == null) {
+            onValidationError("$.probationDeliveryUnitId", "doesNotExist")
+          }
+
+          result
+        },
+      )
     }
 
     return probationDeliveryUnit

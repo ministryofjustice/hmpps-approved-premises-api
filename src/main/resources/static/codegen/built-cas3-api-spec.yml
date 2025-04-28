@@ -5170,6 +5170,10 @@ components:
           type: string
         localAuthorityAreaName:
           type: string
+        bedspaces:
+          type: array
+          items:
+            $ref: '#/components/schemas/Cas3BedspaceSummary'
         bedspaceCount:
           type: integer
           example: 22
@@ -5181,7 +5185,23 @@ components:
         - addressLine1
         - postcode
         - pdu
-        - bedCount
+        - bedspaceCount
+        - status
+    Cas3BedspaceSummary:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        reference:
+          type: string
+        status:
+          enum:
+            - online
+            - archived
+      required:
+        - id
+        - reference
         - status
     Cas3Departure:
       type: object

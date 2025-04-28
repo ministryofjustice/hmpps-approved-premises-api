@@ -7,6 +7,7 @@ import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.test.web.reactive.server.WebTestClient
 import org.springframework.test.web.reactive.server.returnResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.BookingStatus
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas3BedspaceSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas3PremisesSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.FutureBooking
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
@@ -252,6 +253,21 @@ class Cas3PremisesTest : IntegrationTestBase() {
     }
 
     @Test
+    fun `Get all Premises returns OK with correct body and archived beds`() {
+      givenAUser(roles = listOf(UserRole.CAS3_ASSESSOR)) { user, jwt ->
+        val premises = getPremises(user.probationRegion, LocalDate.now().minusDays(4))
+
+        val expectedPremisesSummaries = premises.map { premisesSummaryTransformer(it) }.sortedBy { it.id.toString() }
+
+        assertUrlReturnsPremises(
+          jwt,
+          "/cas3/premises/summary",
+          expectedPremisesSummaries,
+        )
+      }
+    }
+
+    @Test
     fun `Get all premises filters correctly when a postcode is passed in the query parameter`() {
       givenAUser(roles = listOf(UserRole.CAS3_ASSESSOR)) { user, jwt ->
         val premises = getPremises(user.probationRegion)
@@ -306,7 +322,6 @@ class Cas3PremisesTest : IntegrationTestBase() {
     fun `Get all premises filters correctly when a premises address is passed in the query parameter`() {
       givenAUser(roles = listOf(UserRole.CAS3_ASSESSOR)) { user, jwt ->
         val premises = getPremises(user.probationRegion)
-
         // filter premises with the full premises address
         val expectedPremisesAddress = premises.take(6).first()
 
@@ -364,7 +379,10 @@ class Cas3PremisesTest : IntegrationTestBase() {
       return response
     }
 
-    private fun getPremises(probationRegion: ProbationRegionEntity): List<TemporaryAccommodationPremisesEntity> {
+    private fun getPremises(
+      probationRegion: ProbationRegionEntity,
+      endDate: LocalDate? = null,
+    ): List<TemporaryAccommodationPremisesEntity> {
       val localAuthorityArea = localAuthorityEntityFactory.produceAndPersist()
       val probationDeliveryUnit = probationDeliveryUnitFactory.produceAndPersist {
         withProbationRegion(probationRegion)
@@ -383,11 +401,29 @@ class Cas3PremisesTest : IntegrationTestBase() {
         }.apply { premises.rooms.add(this) }
 
         bedEntityFactory.produceAndPersist {
+          withId(UUID.randomUUID())
+          withEndDate(endDate)
           withRoom(room)
         }.apply { premises.rooms.first().beds.add(this) }
       }
 
       return premises
+    }
+
+    private fun getBedspaces(premises: TemporaryAccommodationPremisesEntity): List<Cas3BedspaceSummary> = premises.rooms.map {
+      val bed = it.beds.firstOrNull()
+      val endDate = bed?.endDate
+      val bedsId = bed?.id
+      val status = if (endDate != null && endDate <= LocalDate.now()) {
+        Cas3BedspaceSummary.Status.archived
+      } else {
+        Cas3BedspaceSummary.Status.online
+      }
+      Cas3BedspaceSummary(
+        bedsId!!,
+        it.name,
+        status,
+      )
     }
 
     private fun premisesSummaryTransformer(premises: TemporaryAccommodationPremisesEntity) = Cas3PremisesSummary(
@@ -398,8 +434,9 @@ class Cas3PremisesTest : IntegrationTestBase() {
       postcode = premises.postcode,
       pdu = premises.probationDeliveryUnit?.name!!,
       status = premises.status,
-      bedspaceCount = premises.rooms.flatMap { it.beds }.size,
+      bedspaceCount = getBedspaces(premises).count { it.status == Cas3BedspaceSummary.Status.online },
       localAuthorityAreaName = premises.localAuthorityArea?.name!!,
+      bedspaces = getBedspaces(premises),
     )
   }
 }
