@@ -104,7 +104,7 @@ class Cas1BookingDomainEventService(
     val staffDetails = getStaffDetails(user.deliusUsername)
 
     domainEventService.saveBookingNotMadeEvent(
-      Cas1DomainEvent(
+      SaveCas1DomainEvent(
         id = domainEventId,
         applicationId = application.id,
         crn = application.crn,
@@ -213,7 +213,7 @@ class Cas1BookingDomainEventService(
     val approvedPremises = bookingChangedInfo.approvedPremises
 
     domainEventService.saveBookingChangedEvent(
-      Cas1DomainEvent(
+      SaveCas1DomainEvent(
         id = domainEventId,
         applicationId = applicationId,
         crn = crn,
@@ -328,7 +328,7 @@ class Cas1BookingDomainEventService(
     val isSpaceBooking = bookingInfo.isSpaceBooking
 
     domainEventService.saveBookingMadeDomainEvent(
-      Cas1DomainEvent(
+      SaveCas1DomainEvent(
         id = domainEventId,
         applicationId = applicationId,
         crn = crn,
@@ -413,7 +413,7 @@ class Cas1BookingDomainEventService(
     val eventNumber = cancellationInfo.applicationFacade.eventNumber!!
 
     domainEventService.saveBookingCancelledEvent(
-      Cas1DomainEvent(
+      SaveCas1DomainEvent(
         id = domainEventId,
         applicationId = applicationId,
         crn = crn,

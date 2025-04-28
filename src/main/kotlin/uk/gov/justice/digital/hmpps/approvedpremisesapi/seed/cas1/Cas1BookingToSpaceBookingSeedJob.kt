@@ -19,8 +19,8 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas1.Cas1DeliusBookingImportRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.seed.SeedJob
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1DomainEvent
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1DomainEventService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.GetCas1DomainEvent
 import java.util.UUID
 
 @Component
@@ -171,10 +171,10 @@ class Cas1BookingToSpaceBookingSeedJob(
     ?.toList()
     ?: emptyList()
 
-  private fun Cas1DomainEvent<BookingMadeEnvelope>.getCreatedByUser(): UserEntity {
+  private fun GetCas1DomainEvent<BookingMadeEnvelope>.getCreatedByUser(): UserEntity {
     val createdByUsernameUpper =
       data.eventDetails.bookedBy.staffMember!!.username?.uppercase()
-        ?: error("Can't find created by username for booking $bookingId")
+        ?: error("Can't find created by username for booking ${data.eventDetails.bookingId}")
     return userRepository.findByDeliusUsername(createdByUsernameUpper) ?: error("Can't find user with username $createdByUsernameUpper")
   }
 

@@ -31,7 +31,7 @@ class Cas1ChangeRequestDomainEventService(
     val spaceBooking = changeRequest.spaceBooking
 
     cas1DomainEventService.savePlacementAppealAccepted(
-      domainEvent = Cas1DomainEvent(
+      domainEvent = SaveCas1DomainEvent(
         id = domainEventId,
         applicationId = changeRequest.placementRequest.application.id,
         crn = changeRequest.placementRequest.application.crn,
@@ -66,7 +66,7 @@ class Cas1ChangeRequestDomainEventService(
     val reason = changeRequest.requestReason
 
     cas1DomainEventService.savePlacementAppealCreated(
-      domainEvent = Cas1DomainEvent(
+      domainEvent = SaveCas1DomainEvent(
         id = domainEventId,
         applicationId = changeRequest.placementRequest.application.id,
         crn = changeRequest.placementRequest.application.crn,
@@ -105,7 +105,7 @@ class Cas1ChangeRequestDomainEventService(
     val reason = changeRequest.rejectionReason!!
 
     cas1DomainEventService.savePlacementAppealRejected(
-      domainEvent = Cas1DomainEvent(
+      domainEvent = SaveCas1DomainEvent(
         id = domainEventId,
         applicationId = changeRequest.placementRequest.application.id,
         crn = changeRequest.placementRequest.application.crn,

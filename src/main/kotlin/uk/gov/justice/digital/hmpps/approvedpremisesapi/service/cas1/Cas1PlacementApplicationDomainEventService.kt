@@ -75,7 +75,7 @@ class Cas1PlacementApplicationDomainEventService(
     )
 
     domainEventService.saveRequestForPlacementCreatedEvent(
-      Cas1DomainEvent(
+      SaveCas1DomainEvent(
         id = domainEventId,
         applicationId = application.id,
         crn = application.crn,
@@ -120,7 +120,7 @@ class Cas1PlacementApplicationDomainEventService(
     )
 
     domainEventService.savePlacementApplicationWithdrawnEvent(
-      Cas1DomainEvent(
+      SaveCas1DomainEvent(
         id = domainEventId,
         applicationId = application.id,
         crn = application.crn,
@@ -167,7 +167,7 @@ class Cas1PlacementApplicationDomainEventService(
     )
 
     domainEventService.savePlacementApplicationAllocatedEvent(
-      Cas1DomainEvent(
+      SaveCas1DomainEvent(
         id = domainEventId,
         applicationId = application.id,
         crn = application.crn,
@@ -216,7 +216,7 @@ class Cas1PlacementApplicationDomainEventService(
     )
 
     domainEventService.saveRequestForPlacementAssessedEvent(
-      Cas1DomainEvent(
+      SaveCas1DomainEvent(
         id = domainEventId,
         applicationId = application.id,
         crn = application.crn,

@@ -32,7 +32,7 @@ class Cas1AppealDomainEventService(
     }
 
     domainEventService.saveAssessmentAppealedEvent(
-      Cas1DomainEvent(
+      SaveCas1DomainEvent(
         id = id,
         applicationId = appeal.application.id,
         assessmentId = null,
