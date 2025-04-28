@@ -2600,7 +2600,7 @@ class Cas1SpaceBookingTest {
 
     @Test
     fun `Successfully creates an emergency booking and updates the existing booking`() {
-      val (_, jwt) = givenAUser(roles = listOf(UserRole.CAS1_CRU_MEMBER_FIND_AND_BOOK_BETA))
+      val (_, jwt) = givenAUser(roles = listOf(UserRole.CAS1_CHANGE_REQUEST_DEV))
 
       assertThat(existingSpaceBooking.transferredTo).isNull()
 

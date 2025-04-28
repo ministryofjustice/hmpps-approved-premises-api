@@ -69,7 +69,6 @@
       "cas1_application_withdraw_others",
       "cas1_booking_change_dates",
       "cas1_booking_withdraw",
-      "cas1_emergency_transfer_perform",
       "cas1_out_of_service_bed_cancel",
       "cas1_out_of_service_bed_create",
       "cas1_out_of_service_bed_create_bed_on_hold",
@@ -102,8 +101,8 @@
       "cas1_change_request_view",
       "cas1_placement_appeal_assess",
       "cas1_placement_appeal_create",
-      "cas1_planned_transfer_assess",
-      "cas1_planned_transfer_create"
+      "cas1_transfer_assess",
+      "cas1_transfer_create"
     ]
   },
   {
@@ -157,15 +156,12 @@
       "cas1_booking_withdraw",
       "cas1_change_request_list",
       "cas1_change_request_view",
-      "cas1_emergency_transfer_perform",
       "cas1_out_of_service_bed_cancel",
       "cas1_out_of_service_bed_create",
       "cas1_out_of_service_bed_create_bed_on_hold",
       "cas1_placement_appeal_assess",
       "cas1_placement_appeal_create",
       "cas1_placement_request_record_unable_to_match",
-      "cas1_planned_transfer_assess",
-      "cas1_planned_transfer_create",
       "cas1_premises_capacity_report_view",
       "cas1_premises_manage",
       "cas1_premises_view",
@@ -182,6 +178,8 @@
       "cas1_space_booking_view",
       "cas1_space_booking_withdraw",
       "cas1_tasks_list",
+      "cas1_transfer_assess",
+      "cas1_transfer_create",
       "cas1_user_list",
       "cas1_user_management",
       "cas1_view_assigned_assessments",

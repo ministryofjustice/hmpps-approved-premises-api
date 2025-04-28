@@ -70,7 +70,6 @@ enum class UserPermission(val cas1ApiValue: ApprovedPremisesUserPermission?) {
   CAS1_TASKS_LIST(ApprovedPremisesUserPermission.tasksList),
 
   CAS1_APPLICATION_WITHDRAW_OTHERS(ApprovedPremisesUserPermission.applicationWithdrawOthers),
-  CAS1_EMERGENCY_TRANSFER_PERFORM(ApprovedPremisesUserPermission.emergencyTransferPerform),
 
   /**
    * View reports, excluding those containing PII
@@ -79,8 +78,13 @@ enum class UserPermission(val cas1ApiValue: ApprovedPremisesUserPermission?) {
   CAS1_REPORTS_VIEW_WITH_PII(ApprovedPremisesUserPermission.reportsViewWithPii),
   CAS1_REQUEST_FOR_PLACEMENT_WITHDRAW_OTHERS(ApprovedPremisesUserPermission.requestForPlacementWithdrawOthers),
 
+  CAS1_TRANSFER_ASSESS(ApprovedPremisesUserPermission.transferAssess),
+
+  /**
+   * Create a planned transfer request or immediately action an emergency transfer
+   */
+  CAS1_TRANSFER_CREATE(ApprovedPremisesUserPermission.transferCreate),
+
   CAS1_PLACEMENT_APPEAL_CREATE(ApprovedPremisesUserPermission.placementAppealCreate),
-  CAS1_PLANNED_TRANSFER_CREATE(ApprovedPremisesUserPermission.plannedTransferCreate),
   CAS1_PLACEMENT_APPEAL_ASSESS(ApprovedPremisesUserPermission.placementAppealAssess),
-  CAS1_PLANNED_TRANSFER_ASSESS(ApprovedPremisesUserPermission.plannedTransferAssess),
 }
