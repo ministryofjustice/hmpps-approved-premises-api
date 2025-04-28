@@ -58,4 +58,4 @@ data class PersonArrived(
 
   @Schema(example = "Arrived a day late due to rail strike. Informed in advance by COM.", description = "")
   @get:JsonProperty("notes") val notes: kotlin.String? = null,
-)
+) : Cas1DomainEventPayload

@@ -50,4 +50,4 @@ data class MatchRequestWithdrawn(
 
   @Schema(example = "null", description = "Indicate if this match request was created for the arrival date specified when the application was initially submitted")
   @get:JsonProperty("requestIsForApplicationsArrivalDate") val requestIsForApplicationsArrivalDate: kotlin.Boolean? = null,
-)
+) : Cas1DomainEventPayload

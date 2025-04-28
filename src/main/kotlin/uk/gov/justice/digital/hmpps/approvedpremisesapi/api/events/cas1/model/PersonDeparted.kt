@@ -55,4 +55,4 @@ data class PersonDeparted(
 
   @Schema(example = "null", required = true, description = "")
   @get:JsonProperty("destination", required = true) val destination: PersonDepartedDestination,
-)
+) : Cas1DomainEventPayload

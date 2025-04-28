@@ -54,4 +54,4 @@ data class BookingKeyWorkerAssigned(
 
   @Schema(example = "null", description = "")
   @get:JsonProperty("previousKeyWorkerName") val previousKeyWorkerName: kotlin.String? = null,
-)
+) : Cas1DomainEventPayload

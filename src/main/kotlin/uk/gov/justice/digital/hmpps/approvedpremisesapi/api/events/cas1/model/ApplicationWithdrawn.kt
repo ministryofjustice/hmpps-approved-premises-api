@@ -41,4 +41,4 @@ data class ApplicationWithdrawn(
 
   @Schema(example = "null", description = "")
   @get:JsonProperty("otherWithdrawalReason") val otherWithdrawalReason: kotlin.String? = null,
-)
+) : Cas1DomainEventPayload

@@ -49,4 +49,4 @@ data class ApplicationAssessed(
 
   @Schema(example = "null", description = "")
   @get:JsonProperty("arrivalDate") val arrivalDate: java.time.Instant? = null,
-)
+) : Cas1DomainEventPayload

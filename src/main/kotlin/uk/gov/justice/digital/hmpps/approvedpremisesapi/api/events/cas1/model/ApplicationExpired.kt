@@ -19,4 +19,4 @@ data class ApplicationExpired(
 
   @Schema(example = "null", required = true, description = "")
   @get:JsonProperty("updatedStatus", required = true) val updatedStatus: kotlin.String,
-)
+) : Cas1DomainEventPayload

@@ -42,4 +42,4 @@ data class PlacementApplicationAllocated(
 
   @Schema(example = "null", description = "")
   @get:JsonProperty("allocatedBy") val allocatedBy: StaffMember? = null,
-)
+) : Cas1DomainEventPayload

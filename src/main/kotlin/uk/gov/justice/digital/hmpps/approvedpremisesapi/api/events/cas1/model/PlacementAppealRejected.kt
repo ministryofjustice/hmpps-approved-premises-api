@@ -19,4 +19,4 @@ data class PlacementAppealRejected(
   @get:JsonProperty("rejectedBy") val rejectedBy: StaffMember,
 
   @get:JsonProperty("rejectionReason") val rejectionReason: Cas1DomainEventCodedId,
-)
+) : Cas1DomainEventPayload

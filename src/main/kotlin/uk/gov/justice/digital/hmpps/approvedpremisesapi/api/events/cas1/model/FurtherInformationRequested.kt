@@ -45,4 +45,4 @@ data class FurtherInformationRequested(
 
   @Schema(example = "484b8b5e-6c3b-4400-b200-425bbe410713", required = true, description = "The UUID of an application for an AP place")
   @get:JsonProperty("requestId", required = true) val requestId: java.util.UUID,
-)
+) : Cas1DomainEventPayload

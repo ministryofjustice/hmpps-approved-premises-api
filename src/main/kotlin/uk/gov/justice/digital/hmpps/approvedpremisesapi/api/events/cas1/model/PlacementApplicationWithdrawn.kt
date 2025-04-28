@@ -46,4 +46,4 @@ data class PlacementApplicationWithdrawn(
 
   @Schema(example = "null", description = "")
   @get:JsonProperty("placementDates") val placementDates: kotlin.collections.List<DatePeriod>? = null,
-)
+) : Cas1DomainEventPayload

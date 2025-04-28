@@ -17,4 +17,4 @@ data class PlacementAppealAccepted(
   @get:JsonProperty("departureOn", required = true) val departureOn: java.time.LocalDate,
 
   @get:JsonProperty("acceptedBy") val acceptedBy: StaffMember,
-)
+) : Cas1DomainEventPayload
