@@ -160,6 +160,7 @@ class Cas1SpaceBookingService(
       "$.premisesId" hasValidationError "doesNotExist"
     }
 
+    lockableCas1SpaceBookingEntityRepository.acquirePessimisticLock(bookingId)
     val existingCas1SpaceBooking = cas1SpaceBookingRepository.findByIdOrNull(bookingId)
     if (existingCas1SpaceBooking == null) {
       "$.bookingId" hasValidationError "doesNotExist"
@@ -189,6 +190,8 @@ class Cas1SpaceBookingService(
 
     val result = cas1SpaceBookingRepository.save(existingCas1SpaceBooking)
 
+    cas1ChangeRequestService.resolveChangeRequestForSpaceBooking(existingCas1SpaceBooking)
+
     cas1SpaceBookingManagementDomainEventService.arrivalRecorded(
       Cas1SpaceBookingManagementDomainEventService.ArrivalInfo(
         existingCas1SpaceBooking,
@@ -217,6 +220,7 @@ class Cas1SpaceBookingService(
       "$.premisesId" hasValidationError "doesNotExist"
     }
 
+    lockableCas1SpaceBookingEntityRepository.acquirePessimisticLock(bookingId)
     val existingCas1SpaceBooking = cas1SpaceBookingRepository.findByIdOrNull(bookingId)
     if (existingCas1SpaceBooking == null) {
       "$.bookingId" hasValidationError "doesNotExist"
@@ -251,6 +255,8 @@ class Cas1SpaceBookingService(
     existingCas1SpaceBooking.nonArrivalNotes = cas1NonArrivalNotes
 
     val result = cas1SpaceBookingRepository.save(existingCas1SpaceBooking)
+
+    cas1ChangeRequestService.resolveChangeRequestForSpaceBooking(existingCas1SpaceBooking)
 
     cas1SpaceBookingManagementDomainEventService.nonArrivalRecorded(
       recordedBy,
@@ -336,6 +342,7 @@ class Cas1SpaceBookingService(
       "$.premisesId" hasValidationError "doesNotExist"
     }
 
+    lockableCas1SpaceBookingEntityRepository.acquirePessimisticLock(bookingId)
     val existingSpaceBooking = cas1SpaceBookingRepository.findByIdOrNull(bookingId)
     if (existingSpaceBooking == null) {
       "$.bookingId" hasValidationError "doesNotExist"
@@ -390,6 +397,8 @@ class Cas1SpaceBookingService(
     existingSpaceBooking.departureNotes = departureInfo.notes
 
     val result = cas1SpaceBookingRepository.save(existingSpaceBooking)
+
+    cas1ChangeRequestService.resolveChangeRequestForSpaceBooking(existingSpaceBooking)
 
     cas1SpaceBookingManagementDomainEventService.departureRecorded(
       Cas1SpaceBookingManagementDomainEventService.DepartureInfo(
@@ -530,7 +539,7 @@ class Cas1SpaceBookingService(
       else -> throw InternalServerErrorProblem("Withdrawal triggered automatically is not supported")
     }
 
-    cas1ChangeRequestService.spaceBookingWithdrawn(spaceBooking)
+    cas1ChangeRequestService.resolveChangeRequestForSpaceBooking(spaceBooking)
     cas1BookingDomainEventService.spaceBookingCancelled(spaceBooking, user, reason)
     cas1ApplicationStatusService.spaceBookingCancelled(
       spaceBooking,
@@ -736,10 +745,6 @@ class Cas1SpaceBookingService(
 
     if (changeRequest.spaceBooking.id != booking.id) {
       return GeneralValidationError("The booking is not associated with the specified change request ${changeRequest.id}")
-    }
-
-    if (booking.hasDeparted()) {
-      return GeneralValidationError("The associated space booking has already been marked as departed")
     }
 
     if (!booking.hasArrival()) {

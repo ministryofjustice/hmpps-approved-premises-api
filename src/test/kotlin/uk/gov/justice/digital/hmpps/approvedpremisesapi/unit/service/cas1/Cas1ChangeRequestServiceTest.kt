@@ -552,93 +552,31 @@ class Cas1ChangeRequestServiceTest {
         .withDefaultProbationRegion()
         .produce()
 
-      val spaceBooking = Cas1SpaceBookingEntityFactory()
-        .produce()
-
       val changeRequestId = UUID.randomUUID()
 
       every { cas1ChangeRequestRepository.findByIdOrNull(changeRequestId) } returns null
 
-      val result = service.approvePlacementAppeal(changeRequestId, user, spaceBooking)
+      val result = service.approvePlacementAppeal(changeRequestId, user)
 
       assertThatCasResult(result).isNotFound("change request", changeRequestId)
     }
 
     @Test
-    fun `throw validation error when change request is already approved`() {
+    fun `throw validation error when change request is already resolved`() {
       val user = UserEntityFactory()
         .withDefaultProbationRegion()
         .produce()
 
       val changeRequest = Cas1ChangeRequestEntityFactory()
         .withDecision(ChangeRequestDecision.APPROVED)
-        .produce()
-
-      val spaceBooking = Cas1SpaceBookingEntityFactory()
+        .withResolved(true)
         .produce()
 
       every { cas1ChangeRequestRepository.findByIdOrNull(changeRequest.id) } returns changeRequest
 
-      val result = service.approvePlacementAppeal(changeRequest.id, user, spaceBooking)
+      val result = service.approvePlacementAppeal(changeRequest.id, user)
 
-      assertThatCasResult(result).isGeneralValidationError("Change request with ID ${changeRequest.id} is already approved")
-    }
-
-    @Test
-    fun `throw validation error if booking has been marked as arrived`() {
-      val user = UserEntityFactory()
-        .withDefaultProbationRegion()
-        .produce()
-
-      val changeRequest = Cas1ChangeRequestEntityFactory()
-        .withDecision(ChangeRequestDecision.REJECTED)
-        .produce()
-
-      val spaceBooking = Cas1SpaceBookingEntityFactory()
-        .withActualArrivalDate(LocalDate.now())
-        .produce()
-
-      val result = service.approvePlacementAppeal(changeRequest.id, user, spaceBooking)
-
-      assertThatCasResult(result).isGeneralValidationError("Space booking with ID ${spaceBooking.id} has been marked as arrived")
-    }
-
-    @Test
-    fun `throw validation error if booking has been marked as non-arrived`() {
-      val user = UserEntityFactory()
-        .withDefaultProbationRegion()
-        .produce()
-
-      val changeRequest = Cas1ChangeRequestEntityFactory()
-        .withDecision(ChangeRequestDecision.REJECTED)
-        .produce()
-
-      val spaceBooking = Cas1SpaceBookingEntityFactory()
-        .withNonArrivalConfirmedAt(OffsetDateTime.now().toInstant())
-        .produce()
-
-      val result = service.approvePlacementAppeal(changeRequest.id, user, spaceBooking)
-
-      assertThatCasResult(result).isGeneralValidationError("Space booking with ID ${spaceBooking.id} has been marked as non-arrived")
-    }
-
-    @Test
-    fun `throw validation error if booking has been cancelled`() {
-      val user = UserEntityFactory()
-        .withDefaultProbationRegion()
-        .produce()
-
-      val changeRequest = Cas1ChangeRequestEntityFactory()
-        .withDecision(ChangeRequestDecision.REJECTED)
-        .produce()
-
-      val spaceBooking = Cas1SpaceBookingEntityFactory()
-        .withCancellationOccurredAt(OffsetDateTime.now().toLocalDate())
-        .produce()
-
-      val result = service.approvePlacementAppeal(changeRequest.id, user, spaceBooking)
-
-      assertThatCasResult(result).isGeneralValidationError("Space booking with ID ${spaceBooking.id} has been cancelled")
+      assertThatCasResult(result).isGeneralValidationError("This change request is already resolved")
     }
 
     @Test
@@ -651,15 +589,12 @@ class Cas1ChangeRequestServiceTest {
         .withDecision(ChangeRequestDecision.REJECTED)
         .produce()
 
-      val spaceBooking = Cas1SpaceBookingEntityFactory()
-        .produce()
-
       every { cas1ChangeRequestRepository.findByIdOrNull(changeRequest.id) } returns changeRequest
       every { cas1ChangeRequestRepository.saveAndFlush(any()) } returns changeRequest
       every { cas1ChangeRequestDomainEventService.placementAppealAccepted(any()) } returns Unit
       every { cas1ChangeRequestEmailService.placementAppealAccepted(any()) } returns Unit
 
-      val result = service.approvePlacementAppeal(changeRequest.id, user, spaceBooking)
+      val result = service.approvePlacementAppeal(changeRequest.id, user)
 
       assertThatCasResult(result).isSuccess()
 
