@@ -17,6 +17,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1AssignKeyW
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1NewArrival
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1NewDeparture
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1NewEmergencyTransfer
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1NewPlannedTransfer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1NewSpaceBooking
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1NewSpaceBookingCancellation
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1NonArrival
@@ -2601,7 +2602,7 @@ class Cas1SpaceBookingTest {
     fun `Successfully creates an emergency booking and updates the existing booking`() {
       val (_, jwt) = givenAUser(roles = listOf(UserRole.CAS1_CRU_MEMBER_FIND_AND_BOOK_BETA))
 
-      assertThat(existingSpaceBooking.transferredBooking).isNull()
+      assertThat(existingSpaceBooking.transferredTo).isNull()
 
       webTestClient.post()
         .uri("/cas1/premises/${premises.id}/space-bookings/${existingSpaceBooking.id}/emergency-transfer")
@@ -2619,7 +2620,7 @@ class Cas1SpaceBookingTest {
 
       val updatedSpaceBooking = cas1SpaceBookingRepository.findByIdOrNull(existingSpaceBooking.id)!!
 
-      val emergencyTransferredBooking = updatedSpaceBooking.transferredBooking!!
+      val emergencyTransferredBooking = updatedSpaceBooking.transferredTo!!
 
       assertThat(updatedSpaceBooking.expectedDepartureDate).isEqualTo(emergencyTransferredBooking.expectedArrivalDate)
       assertThat(updatedSpaceBooking.canonicalDepartureDate).isEqualTo(emergencyTransferredBooking.expectedArrivalDate)
@@ -2629,6 +2630,145 @@ class Cas1SpaceBookingTest {
       assertThat(emergencyTransferredBooking.expectedDepartureDate).isEqualTo(LocalDate.now().plusMonths(1))
 
       domainEventAsserter.assertDomainEventOfTypeStored(application.id, DomainEventType.APPROVED_PREMISES_EMERGENCY_TRANSFER_CREATED)
+    }
+  }
+
+  @Nested
+  inner class PlannedTransfer : InitialiseDatabasePerClassTestBase() {
+    lateinit var region: ProbationRegionEntity
+    lateinit var premises: ApprovedPremisesEntity
+    lateinit var existingSpaceBooking: Cas1SpaceBookingEntity
+    lateinit var applicant: UserEntity
+    lateinit var application: ApprovedPremisesApplicationEntity
+    lateinit var destinationPremises: ApprovedPremisesEntity
+    lateinit var existingChangeRequest: Cas1ChangeRequestEntity
+
+    @BeforeAll
+    fun setupTestData() {
+      characteristicRepository.deleteAll()
+
+      region = givenAProbationRegion()
+
+      val (user) = givenAUser()
+      val (offender) = givenAnOffender()
+
+      premises = approvedPremisesEntityFactory.produceAndPersist {
+        withSupportsSpaceBookings(true)
+        withYieldedProbationRegion { region }
+        withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
+        withEmailAddress("premises@test.com")
+      }
+
+      destinationPremises = approvedPremisesEntityFactory.produceAndPersist {
+        withSupportsSpaceBookings(true)
+        withYieldedProbationRegion { region }
+        withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
+        withEmailAddress("destPremises@test.com")
+      }
+
+      applicant = givenAUser(
+        staffDetail =
+        StaffDetailFactory.staffDetail(email = "applicant@test.com"),
+      ).first
+
+      application = approvedPremisesApplicationEntityFactory.produceAndPersist {
+        withCrn(offender.otherIds.crn)
+        withCreatedByUser(applicant)
+        withApplicationSchema(approvedPremisesApplicationJsonSchemaEntityFactory.produceAndPersist())
+        withApArea(givenAnApArea())
+        withSubmittedAt(OffsetDateTime.now())
+      }
+
+      val (placementRequest) = givenAPlacementRequest(
+        placementRequestAllocatedTo = user,
+        assessmentAllocatedTo = user,
+        createdByUser = user,
+        application = application,
+      )
+
+      existingSpaceBooking = cas1SpaceBookingEntityFactory.produceAndPersist {
+        withCrn(offender.otherIds.crn)
+        withPremises(premises)
+        withPlacementRequest(placementRequest)
+        withApplication(placementRequest.application)
+        withCreatedBy(user)
+        withActualArrivalDate(LocalDate.parse("2025-02-05"))
+        withExpectedArrivalDate(LocalDate.parse("2025-02-05"))
+        withExpectedDepartureDate(LocalDate.parse("2025-06-29"))
+      }
+
+      val changeRequestReason = cas1ChangeRequestReasonEntityFactory.produceAndPersist {
+        withCode("TRANSFERRED")
+        withChangeRequestType(ChangeRequestType.PLANNED_TRANSFER)
+      }
+
+      existingChangeRequest = cas1ChangeRequestEntityFactory.produceAndPersist {
+        withSpaceBooking(existingSpaceBooking)
+        withPlacementRequest(existingSpaceBooking.placementRequest!!)
+        withType(ChangeRequestType.PLANNED_TRANSFER)
+        withChangeRequestReason(changeRequestReason)
+        withResolved(false)
+      }
+    }
+
+    @Test
+    fun `Returns 403 Forbidden if user does not have correct permission`() {
+      val (_, jwt) = givenAUser(roles = listOf(CAS1_ASSESSOR))
+
+      webTestClient.post()
+        .uri("/cas1/premises/${premises.id}/space-bookings/${existingSpaceBooking.id}/planned-transfer")
+        .header("Authorization", "Bearer $jwt")
+        .bodyValue(
+          Cas1NewPlannedTransfer(
+            arrivalDate = LocalDate.now(),
+            departureDate = LocalDate.now().plusMonths(1),
+            destinationPremisesId = UUID.randomUUID(),
+            changeRequestId = UUID.randomUUID(),
+            characteristics = emptyList(),
+          ),
+        )
+        .exchange()
+        .expectStatus()
+        .isForbidden
+    }
+
+    @Test
+    fun `Should create a planned booking, update the existing booking, and approve the change request`() {
+      val (_, jwt) = givenAUser(roles = listOf(UserRole.CAS1_CHANGE_REQUEST_DEV))
+
+      assertThat(existingSpaceBooking.transferredTo).isNull()
+
+      webTestClient.post()
+        .uri("/cas1/premises/${premises.id}/space-bookings/${existingSpaceBooking.id}/planned-transfer")
+        .header("Authorization", "Bearer $jwt")
+        .bodyValue(
+          Cas1NewPlannedTransfer(
+            arrivalDate = LocalDate.now().plusDays(1),
+            departureDate = LocalDate.now().plusMonths(1),
+            destinationPremisesId = destinationPremises.id,
+            changeRequestId = existingChangeRequest.id,
+            characteristics = emptyList(),
+          ),
+        )
+        .exchange()
+        .expectStatus()
+        .isOk
+
+      val updatedSpaceBooking = cas1SpaceBookingRepository.findByIdOrNull(existingSpaceBooking.id)!!
+
+      val updatedChangedRequest = cas1ChangeRequestRepository.findByIdOrNull(existingChangeRequest.id)!!
+
+      val plannedTransferredBooking = updatedSpaceBooking.transferredTo!!
+
+      assertThat(updatedSpaceBooking.expectedDepartureDate).isEqualTo(plannedTransferredBooking.expectedArrivalDate)
+      assertThat(updatedSpaceBooking.canonicalDepartureDate).isEqualTo(plannedTransferredBooking.expectedArrivalDate)
+
+      assertThat(plannedTransferredBooking.premises.id).isEqualTo(destinationPremises.id)
+      assertThat(plannedTransferredBooking.expectedArrivalDate).isEqualTo(LocalDate.now().plusDays(1))
+      assertThat(plannedTransferredBooking.expectedDepartureDate).isEqualTo(LocalDate.now().plusMonths(1))
+
+      assertThat(updatedChangedRequest.resolved).isTrue
+      assertThat(updatedChangedRequest.decision).isEqualTo(ChangeRequestDecision.APPROVED)
     }
   }
 }
