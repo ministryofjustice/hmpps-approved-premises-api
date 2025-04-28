@@ -97,7 +97,6 @@ enum class UserRole(val service: ServiceName, val cas1ApiValue: ApprovedPremises
       UserPermission.CAS1_OUT_OF_SERVICE_BED_CREATE_BED_ON_HOLD,
       UserPermission.CAS1_OUT_OF_SERVICE_BED_CANCEL,
       UserPermission.CAS1_VIEW_OUT_OF_SERVICE_BEDS,
-      UserPermission.CAS1_EMERGENCY_TRANSFER_PERFORM,
     ),
   ),
 
@@ -120,12 +119,14 @@ enum class UserRole(val service: ServiceName, val cas1ApiValue: ApprovedPremises
     ServiceName.approvedPremises,
     ApprovedPremisesUserRole.changeRequestDev,
     permissions = listOf(
+      // The following will be assigned to CRU MEMBER
       UserPermission.CAS1_CHANGE_REQUEST_LIST,
       UserPermission.CAS1_CHANGE_REQUEST_VIEW,
-      UserPermission.CAS1_PLACEMENT_APPEAL_CREATE,
-      UserPermission.CAS1_PLANNED_TRANSFER_CREATE,
       UserPermission.CAS1_PLACEMENT_APPEAL_ASSESS,
-      UserPermission.CAS1_PLANNED_TRANSFER_ASSESS,
+      UserPermission.CAS1_TRANSFER_ASSESS,
+      // The following will be assigned to FUTURE_MANAGER
+      UserPermission.CAS1_PLACEMENT_APPEAL_CREATE,
+      UserPermission.CAS1_TRANSFER_CREATE,
     ),
   ),
 

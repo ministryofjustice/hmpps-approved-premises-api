@@ -25,11 +25,10 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.SortDirection
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.CancellationReasonRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas1SpaceBookingEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserPermission
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserPermission.CAS1_EMERGENCY_TRANSFER_PERFORM
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserPermission.CAS1_PLANNED_TRANSFER_ASSESS
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserPermission.CAS1_SPACE_BOOKING_LIST
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserPermission.CAS1_SPACE_BOOKING_RECORD_NON_ARRIVAL
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserPermission.CAS1_SPACE_BOOKING_VIEW
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserPermission.CAS1_TRANSFER_CREATE
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.forCrn
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.BadRequestProblem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.CharacteristicService
@@ -371,7 +370,7 @@ class Cas1SpaceBookingController(
     bookingId: UUID,
     cas1NewEmergencyTransfer: Cas1NewEmergencyTransfer,
   ): ResponseEntity<Unit> {
-    userAccessService.ensureCurrentUserHasPermission(CAS1_EMERGENCY_TRANSFER_PERFORM)
+    userAccessService.ensureCurrentUserHasPermission(CAS1_TRANSFER_CREATE)
 
     val user = userService.getUserForRequest()
 
@@ -387,7 +386,7 @@ class Cas1SpaceBookingController(
     bookingId: UUID,
     cas1NewPlannedTransfer: Cas1NewPlannedTransfer,
   ): ResponseEntity<Unit> {
-    userAccessService.ensureCurrentUserHasPermission(CAS1_PLANNED_TRANSFER_ASSESS)
+    userAccessService.ensureCurrentUserHasPermission(UserPermission.CAS1_TRANSFER_ASSESS)
 
     val user = userService.getUserForRequest()
 
