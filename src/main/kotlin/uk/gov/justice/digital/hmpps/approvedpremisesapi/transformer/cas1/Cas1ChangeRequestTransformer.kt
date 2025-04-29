@@ -7,10 +7,13 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1ChangeRequ
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1ChangeRequestSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1ChangeRequestType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NamedId
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas1SpaceBookingEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas1.Cas1ChangeRequestEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas1.Cas1ChangeRequestRepository.FindOpenChangeRequestResult
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PersonInfoResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PersonSummaryInfoResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.PersonTransformer
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.getDaysUntilInclusive
 
 @Service
 class Cas1ChangeRequestTransformer(
@@ -52,4 +55,30 @@ class Cas1ChangeRequestTransformer(
       )
     },
   )
+
+  fun transformToChangeRequestSummaries(
+    cas1ChangeRequests: List<Cas1ChangeRequestEntity>,
+    personInfoResult: PersonInfoResult,
+    booking: Cas1SpaceBookingEntity,
+  ): List<Cas1ChangeRequestSummary> {
+    val personSummary = personTransformer.transformPersonInfoResultToPersonSummary(personInfoResult)
+    val lengthOfStayDays = booking.canonicalArrivalDate
+      .getDaysUntilInclusive(booking.canonicalDepartureDate).size
+    val tier = booking.application?.riskRatings?.tier?.value?.level
+    val expectedArrivalDate = booking.expectedArrivalDate
+    val actualArrivalDate = booking.actualArrivalDate
+
+    return cas1ChangeRequests.map { entity ->
+      Cas1ChangeRequestSummary(
+        id = entity.id,
+        person = personSummary,
+        type = Cas1ChangeRequestType.valueOf(entity.type.name),
+        createdAt = entity.createdAt.toInstant(),
+        lengthOfStayDays = lengthOfStayDays,
+        tier = tier,
+        expectedArrivalDate = expectedArrivalDate,
+        actualArrivalDate = actualArrivalDate,
+      )
+    }
+  }
 }
