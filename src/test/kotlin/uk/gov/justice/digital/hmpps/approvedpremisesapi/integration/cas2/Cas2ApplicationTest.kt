@@ -33,7 +33,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.given
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.apDeliusContextEmptyCaseSummaryToBulkResponse
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.apDeliusContextMockCaseSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.prisonAPIMockNotFoundInmateDetailsCall
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas2ApplicationAssignmentEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas2ApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas2ApplicationRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas2StatusUpdateEntity
@@ -1260,7 +1259,8 @@ class Cas2ApplicationTest : IntegrationTestBase() {
             val prisonName = "PRISON"
             val prisonCode = "PRI"
             val omuEmail = "test@test.com"
-            val applicationEntity = setUpSubmittedApplicationWithTimeline(offenderDetails, userEntity, prisonName, prisonCode, omuEmail)
+            val applicationEntity =
+              setUpSubmittedApplicationWithTimeline(offenderDetails, userEntity, prisonName, omuEmail)
 
             val rawResponseBody = webTestClient.get()
               .uri("/cas2/applications/${applicationEntity.id}")
@@ -1294,45 +1294,48 @@ class Cas2ApplicationTest : IntegrationTestBase() {
       @Test
       fun `Get single submitted application returns 200 with timeline events and transferred`() {
         givenACas2PomUser { userEntity, jwt ->
-          givenAnOffender { offenderDetails, _ ->
-            val prisonName = "PRISON"
-            val prisonCode = "PRI"
-            val omuEmail = "test@test.com"
-            val applicationEntity = setUpSubmittedApplicationWithTimeline(offenderDetails, userEntity, prisonName, prisonCode, omuEmail)
+          givenACas2PomUser { otherUser, otherJwt ->
+            givenAnOffender { offenderDetails, _ ->
+              val prisonName = "PRISON"
+              val omuEmail = "test@test.com"
+              val applicationEntity =
+                setUpSubmittedApplicationWithTimeline(offenderDetails, userEntity, prisonName, omuEmail)
 
-            val omuNew = offenderManagementUnitEntityFactory.produceAndPersist {
-              withEmail("test@test.com")
-              withPrisonCode("New")
-              withPrisonName("New Prison")
+              val omuNew = offenderManagementUnitEntityFactory.produceAndPersist {
+                withEmail("test2@test.com")
+                withPrisonCode(otherUser.activeCaseloadId!!)
+                withPrisonName("New Prison")
+              }
+
+              applicationEntity.createApplicationAssignment(prisonCode = otherUser.activeCaseloadId!!, allocatedPomUser = null)
+              cas2ApplicationRepository.save(applicationEntity)
+
+              val rawResponseBody = webTestClient.get()
+                .uri("/cas2/applications/${applicationEntity.id}")
+                .header("Authorization", "Bearer $otherJwt")
+                .exchange()
+                .expectStatus()
+                .isOk
+                .returnResult<String>()
+                .responseBody
+                .blockFirst()
+
+              val responseBody = objectMapper.readValue(
+                rawResponseBody,
+                Cas2Application::class.java,
+              )
+
+              assertThat(responseBody.assessment!!.statusUpdates).isEqualTo(emptyList<Cas2StatusUpdate>())
+              assertThat(responseBody.allocatedPomEmailAddress).isNull()
+              assertThat(responseBody.allocatedPomName).isNull()
+              assertThat(responseBody.assignmentDate).isEqualTo(applicationEntity.currentAssignmentDate)
+              assertThat(responseBody.currentPrisonName).isEqualTo(omuNew.prisonName)
+              assertThat(responseBody.isTransferredApplication).isTrue()
+              assertThat(responseBody.omuEmailAddress).isEqualTo(omuNew.email)
+
+              assertThat(responseBody.timelineEvents!!.map { event -> event.label })
+                .isEqualTo(listOf("Prison transfer from ${userEntity.activeCaseloadId!!} to ${omuNew.prisonCode}", "Application submitted"))
             }
-
-            cas2ApplicationAssignmentRepository.save(Cas2ApplicationAssignmentEntity(UUID.randomUUID(), applicationEntity, omuNew.prisonCode, null, OffsetDateTime.now()))
-
-            val rawResponseBody = webTestClient.get()
-              .uri("/cas2/applications/${applicationEntity.id}")
-              .header("Authorization", "Bearer $jwt")
-              .exchange()
-              .expectStatus()
-              .isOk
-              .returnResult<String>()
-              .responseBody
-              .blockFirst()
-
-            val responseBody = objectMapper.readValue(
-              rawResponseBody,
-              Cas2Application::class.java,
-            )
-
-            assertThat(responseBody.assessment!!.statusUpdates).isEqualTo(emptyList<Cas2StatusUpdate>())
-            assertThat(responseBody.allocatedPomEmailAddress).isNull()
-            assertThat(responseBody.allocatedPomName).isNull()
-            assertThat(responseBody.assignmentDate).isEqualTo(applicationEntity.currentAssignmentDate)
-            assertThat(responseBody.currentPrisonName).isEqualTo(omuNew.prisonName)
-            assertThat(responseBody.isTransferredApplication).isTrue()
-            assertThat(responseBody.omuEmailAddress).isEqualTo(omuNew.email)
-
-            assertThat(responseBody.timelineEvents!!.map { event -> event.label })
-              .isEqualTo(listOf("Prison transfer from $prisonCode to ${omuNew.prisonCode}", "Application submitted"))
           }
         }
       }
@@ -1777,7 +1780,12 @@ class Cas2ApplicationTest : IntegrationTestBase() {
     return application
   }
 
-  private fun setUpSubmittedApplicationWithTimeline(offenderDetails: OffenderDetailSummary, userEntity: NomisUserEntity, prisonName: String, prisonCode: String, omuEmail: String): Cas2ApplicationEntity {
+  private fun setUpSubmittedApplicationWithTimeline(
+    offenderDetails: OffenderDetailSummary,
+    userEntity: NomisUserEntity,
+    prisonName: String,
+    omuEmail: String,
+  ): Cas2ApplicationEntity {
     cas2ApplicationJsonSchemaRepository.deleteAll()
 
     val newestJsonSchema = cas2ApplicationJsonSchemaEntityFactory
@@ -1790,7 +1798,7 @@ class Cas2ApplicationTest : IntegrationTestBase() {
 
     val omu = offenderManagementUnitEntityFactory.produceAndPersist {
       withPrisonName(prisonName)
-      withPrisonCode(prisonCode)
+      withPrisonCode(userEntity.activeCaseloadId!!)
       withEmail(omuEmail)
     }
 
