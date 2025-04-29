@@ -28,10 +28,12 @@ class UserAccessService(
   private val requestContextService: RequestContextService,
 ) {
   fun ensureCurrentUserHasPermission(permission: UserPermission) {
-    if (!userService.getUserForRequest().hasPermission(permission)) {
+    if (!currentUserHasPermission(permission)) {
       throw ForbiddenProblem("Permission ${permission.name} is required")
     }
   }
+
+  fun currentUserHasPermission(permission: UserPermission) = userService.getUserForRequest().hasPermission(permission)
 
   fun currentUserCanAccessRegion(service: ServiceName, probationRegionId: UUID?) = userCanAccessRegion(userService.getUserForRequest(), service, probationRegionId)
 
