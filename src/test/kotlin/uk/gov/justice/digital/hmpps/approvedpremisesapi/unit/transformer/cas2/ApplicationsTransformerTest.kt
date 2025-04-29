@@ -239,6 +239,24 @@ class ApplicationsTransformerTest {
   @Nested
   inner class TransformJpaSummaryToSummary {
 
+    fun createApplication(prisonCode: String) = Cas2ApplicationSummaryEntity(
+      id = UUID.fromString("2f838a8c-dffc-48a3-9536-f0e95985e809"),
+      crn = "CRNNUM",
+      nomsNumber = "NOMNUM",
+      userId = "836a9460-b177-433a-a0d9-262509092c9f",
+      userName = "first last",
+      createdAt = OffsetDateTime.parse("2023-04-19T13:25:00+01:00"),
+      submittedAt = OffsetDateTime.parse("2023-04-19T13:25:30+01:00"),
+      hdcEligibilityDate = LocalDate.parse("2023-04-29"),
+      latestStatusUpdateStatusId = "ae544aee-7170-4794-99fb-703090cbc7db",
+      latestStatusUpdateLabel = "my latest status update",
+      prisonCode = "BRI",
+      allocatedPomUserId = UUID.randomUUID(),
+      allocatedPomName = "${randomStringUpperCase(8)} ${randomStringUpperCase(6)}",
+      currentPrisonCode = prisonCode,
+      assignmentDate = OffsetDateTime.now(),
+    )
+
     @Test
     fun `transforms an in progress CAS2 application correctly`() {
       val application = Cas2ApplicationSummaryEntityFactory.produce()
@@ -269,24 +287,7 @@ class ApplicationsTransformerTest {
       val prison = OffenderManagementUnitEntityFactory().produce()
       every { offenderManagementUnitRepository.findByPrisonCode(any()) } returns prison
 
-      val application = Cas2ApplicationSummaryEntity(
-        id = UUID.fromString("2f838a8c-dffc-48a3-9536-f0e95985e809"),
-        crn = "CRNNUM",
-        nomsNumber = "NOMNUM",
-        userId = "836a9460-b177-433a-a0d9-262509092c9f",
-        userName = "first last",
-        createdAt = OffsetDateTime.parse("2023-04-19T13:25:00+01:00"),
-        submittedAt = OffsetDateTime.parse("2023-04-19T13:25:30+01:00"),
-        hdcEligibilityDate = LocalDate.parse("2023-04-29"),
-        latestStatusUpdateStatusId = "ae544aee-7170-4794-99fb-703090cbc7db",
-        latestStatusUpdateLabel = "my latest status update",
-        prisonCode = "BRI",
-        allocatedPomUserId = UUID.randomUUID(),
-        allocatedPomName = "${randomStringUpperCase(8)} ${randomStringUpperCase(6)}",
-        currentPrisonCode = prison.prisonCode,
-        assignmentDate = OffsetDateTime.now(),
-      )
-
+      val application = createApplication(prisonCode = "BRI")
       every { mockStatusUpdateTransformer.transformJpaSummaryToLatestStatusUpdateApi(any()) } returns LatestCas2StatusUpdate(
         statusId = UUID.fromString(application.latestStatusUpdateStatusId),
         label = application.latestStatusUpdateLabel!!,
@@ -314,6 +315,25 @@ class ApplicationsTransformerTest {
       assertThat(result.latestStatusUpdate?.label).isEqualTo(application.latestStatusUpdateLabel)
       assertThat(result.latestStatusUpdate?.statusId).isEqualTo(UUID.fromString(application.latestStatusUpdateStatusId))
       assertThat(result.assignmentDate).isEqualTo(application.assignmentDate!!.toLocalDate())
+    }
+
+    @Test
+    fun `uses prison code when name not available`() {
+      every { offenderManagementUnitRepository.findByPrisonCode(any()) } returns null
+
+      val application = createApplication(prisonCode = "BRI")
+
+      every { mockStatusUpdateTransformer.transformJpaSummaryToLatestStatusUpdateApi(any()) } returns LatestCas2StatusUpdate(
+        statusId = UUID.fromString(application.latestStatusUpdateStatusId),
+        label = application.latestStatusUpdateLabel!!,
+      )
+
+      val result = applicationsTransformer.transformJpaSummaryToSummary(
+        application,
+        "firstName surname",
+      )
+
+      assertThat(result.currentPrisonName).isEqualTo(application.currentPrisonCode)
     }
   }
 }
