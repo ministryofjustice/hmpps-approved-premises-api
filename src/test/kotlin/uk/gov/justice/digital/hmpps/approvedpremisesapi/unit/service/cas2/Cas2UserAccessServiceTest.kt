@@ -20,6 +20,48 @@ class Cas2UserAccessServiceTest {
       .produce()
 
     @Nested
+    inner class WhenTransferredApplication {
+      val referringPrisonCode = "other"
+      val transferredToPrisonCode = "prison"
+
+      private val user = NomisUserEntityFactory().withActiveCaseloadId(transferredToPrisonCode).produce()
+      private val samePrisonUser = NomisUserEntityFactory().withActiveCaseloadId(transferredToPrisonCode).produce()
+      private val otherUser = NomisUserEntityFactory().withActiveCaseloadId(referringPrisonCode).produce()
+      private val otherPrisonUser = NomisUserEntityFactory().withActiveCaseloadId(referringPrisonCode).produce()
+
+      @Test
+      fun `returns true if currently allocated POM or if in same prison`() {
+        val application = Cas2ApplicationEntityFactory()
+          .withApplicationSchema(newestJsonSchema)
+          .withCreatedByUser(otherUser)
+          .withSubmittedAt(OffsetDateTime.now())
+          .withReferringPrisonCode(referringPrisonCode)
+          .produce()
+
+        // created by user is the first assigned POM
+        application.createApplicationAssignment(referringPrisonCode, otherUser)
+        assertThat(userAccessService.userCanViewApplication(user, application)).isFalse
+        assertThat(userAccessService.userCanViewApplication(samePrisonUser, application)).isFalse
+        assertThat(userAccessService.userCanViewApplication(otherUser, application)).isTrue
+        assertThat(userAccessService.userCanViewApplication(otherPrisonUser, application)).isTrue
+
+        // transfer to new prison, POM in new prison can view
+        application.createApplicationAssignment(transferredToPrisonCode, null)
+        assertThat(userAccessService.userCanViewApplication(user, application)).isTrue
+        assertThat(userAccessService.userCanViewApplication(samePrisonUser, application)).isTrue
+        assertThat(userAccessService.userCanViewApplication(otherUser, application)).isFalse
+        assertThat(userAccessService.userCanViewApplication(otherPrisonUser, application)).isFalse
+
+        // allocate to new POM
+        application.createApplicationAssignment(transferredToPrisonCode, user)
+        assertThat(userAccessService.userCanViewApplication(user, application)).isTrue
+        assertThat(userAccessService.userCanViewApplication(samePrisonUser, application)).isTrue
+        assertThat(userAccessService.userCanViewApplication(otherUser, application)).isFalse
+        assertThat(userAccessService.userCanViewApplication(otherPrisonUser, application)).isFalse
+      }
+    }
+
+    @Nested
     inner class WhenApplicationCreatedByUser {
       private val user = NomisUserEntityFactory()
         .produce()
