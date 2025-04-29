@@ -29,6 +29,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserPermissio
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserPermission.CAS1_SPACE_BOOKING_RECORD_NON_ARRIVAL
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserPermission.CAS1_SPACE_BOOKING_VIEW
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserPermission.CAS1_TRANSFER_CREATE
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas1.Cas1ChangeRequestRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.forCrn
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.BadRequestProblem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.CharacteristicService
@@ -65,6 +66,7 @@ class Cas1SpaceBookingController(
   private val characteristicService: CharacteristicService,
   private val cas1TimelineService: Cas1TimelineService,
   private val cas1ChangeRequestService: Cas1ChangeRequestService,
+  private val cas1ChangeRequestRepository: Cas1ChangeRequestRepository,
 ) : SpaceBookingsCas1Delegate {
 
   override fun getSpaceBookingTimeline(premisesId: UUID, bookingId: UUID): ResponseEntity<List<Cas1TimelineEvent>> {
@@ -411,7 +413,9 @@ class Cas1SpaceBookingController(
     ).filter { it.id != booking.id }
       .sortedBy { it.canonicalArrivalDate }
 
-    return spaceBookingTransformer.transformJpaToApi(person, booking, otherBookingsInPremiseForCrn)
+    val changeRequests = cas1ChangeRequestRepository.findAllBySpaceBookingAndResolvedIsFalse(booking)
+
+    return spaceBookingTransformer.transformJpaToApi(person, booking, otherBookingsInPremiseForCrn, changeRequests)
   }
 
   @SuppressWarnings("ThrowsCount")

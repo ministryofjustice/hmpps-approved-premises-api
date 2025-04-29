@@ -61,6 +61,8 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRole
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRole.CAS1_ASSESSOR
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRole.CAS1_FUTURE_MANAGER
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas1.Cas1ChangeRequestEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas1.Cas1ChangeRequestReasonEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas1.Cas1ChangeRequestRejectionReasonEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas1.ChangeRequestDecision
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas1.ChangeRequestType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.ApprovedPremisesApplicationStatus
@@ -936,6 +938,9 @@ class Cas1SpaceBookingTest {
     lateinit var spaceBooking: Cas1SpaceBookingEntity
     lateinit var otherSpaceBookingAtPremises2021: Cas1SpaceBookingEntity
     lateinit var otherSpaceBookingAtPremises2020: Cas1SpaceBookingEntity
+    lateinit var cas1ChangeRequestEntity: Cas1ChangeRequestEntity
+    lateinit var appealRejectionReason: Cas1ChangeRequestRejectionReasonEntity
+    lateinit var changeRequestReason: Cas1ChangeRequestReasonEntity
 
     @BeforeAll
     fun setupTestData() {
@@ -1026,6 +1031,21 @@ class Cas1SpaceBookingTest {
         withCanonicalArrivalDate(LocalDate.parse("2032-05-29"))
         withCanonicalDepartureDate(LocalDate.parse("2032-06-29"))
       }
+
+      appealRejectionReason = cas1ChangeRequestRejectionReasonEntityFactory
+        .produceAndPersist {
+          withChangeRequestType(ChangeRequestType.PLACEMENT_APPEAL)
+        }
+
+      changeRequestReason = cas1ChangeRequestReasonEntityFactory.produceAndPersist {
+        withChangeRequestType(ChangeRequestType.PLACEMENT_APPEAL)
+      }
+
+      cas1ChangeRequestEntity = cas1ChangeRequestEntityFactory.produceAndPersist {
+        withSpaceBooking(spaceBooking)
+        withChangeRequestReason(changeRequestReason)
+        withPlacementRequest(spaceBooking.placementRequest!!)
+      }
     }
 
     @Test
@@ -1075,6 +1095,7 @@ class Cas1SpaceBookingTest {
       assertThat(response.status).isEqualTo(Cas1SpaceBookingSummaryStatus.arrivingToday)
       assertThat(response.actualArrivalTime).isEqualTo("11:24")
       assertThat(response.actualDepartureTime).isEqualTo("10:24")
+      assertThat(response.openChangeRequests.size).isEqualTo(1)
     }
   }
 

@@ -856,4 +856,59 @@ class PersonTransformerTest {
       assertThat(result).isEqualTo(PersonInfoResult.Unknown(crn, throwable))
     }
   }
+
+  @Nested
+  inner class PersonInfoResultToPersonSummary {
+    @Test
+    fun `not found`() {
+      val result = personTransformer.transformPersonInfoResultToPersonSummary(PersonInfoResult.NotFound("CRN123"))
+
+      assertThat(result).isInstanceOf(UnknownPersonSummary::class.java)
+      assertThat((result as UnknownPersonSummary).crn).isEqualTo("CRN123")
+    }
+
+    @Test
+    fun unknown() {
+      val result = personTransformer.transformPersonInfoResultToPersonSummary(
+        PersonInfoResult.Unknown(
+          crn = "CRN123",
+        ),
+      )
+
+      assertThat(result).isInstanceOf(UnknownPersonSummary::class.java)
+      assertThat((result as UnknownPersonSummary).crn).isEqualTo("CRN123")
+    }
+
+    @Test
+    fun restricted() {
+      val result = personTransformer.transformPersonInfoResultToPersonSummary(
+        PersonInfoResult.Success.Restricted(
+          crn = "CRN123",
+          nomsNumber = "NOMS123",
+        ),
+      )
+
+      assertThat(result).isInstanceOf(RestrictedPersonSummary::class.java)
+      val restricted = result as RestrictedPersonSummary
+
+      assertThat(restricted.crn).isEqualTo("CRN123")
+      assertThat(restricted.personType).isEqualTo(PersonSummaryDiscriminator.restrictedPersonSummary)
+    }
+
+    @Test
+    fun full() {
+      val result = personTransformer.transformPersonInfoResultToPersonSummary(
+        PersonInfoResult.Success.Full(
+          crn = "CRN123",
+          offenderDetailSummary = OffenderDetailsSummaryFactory().withGender("male").produce(),
+          inmateDetail = InmateDetailFactory().produce(),
+        ),
+      )
+
+      assertThat(result).isInstanceOf(FullPersonSummary::class.java)
+      val full = result as FullPersonSummary
+
+      assertThat(full.crn).isEqualTo("CRN123")
+    }
+  }
 }

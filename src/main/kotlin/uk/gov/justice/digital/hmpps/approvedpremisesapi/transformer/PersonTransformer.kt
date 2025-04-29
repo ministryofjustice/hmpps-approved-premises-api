@@ -148,6 +148,14 @@ class PersonTransformer {
     is PersonSummaryInfoResult.Unknown -> PersonInfoResult.Unknown(personSummaryInfoResult.crn, personSummaryInfoResult.throwable)
   }
 
+  fun transformPersonInfoResultToPersonSummary(personInfo: PersonInfoResult): PersonSummary = when (personInfo) {
+    is PersonInfoResult.Success.Full -> FullPersonSummary(personInfo.offenderDetailSummary.surname, false, personInfo.crn, PersonSummaryDiscriminator.fullPersonSummary)
+    is PersonInfoResult.Success.Restricted -> RestrictedPersonSummary(personInfo.crn, PersonSummaryDiscriminator.restrictedPersonSummary)
+    is PersonInfoResult.NotFound,
+    is PersonInfoResult.Unknown,
+    -> UnknownPersonSummary(personInfo.crn, PersonSummaryDiscriminator.unknownPersonSummary)
+  }
+
   fun transformProbationOffenderToPersonApi(probationOffenderResult: ProbationOffenderSearchResult.Success.Full): FullPerson {
     val caseSummary = probationOffenderResult.caseSummary
     val inmateDetail = probationOffenderResult.inmateDetail

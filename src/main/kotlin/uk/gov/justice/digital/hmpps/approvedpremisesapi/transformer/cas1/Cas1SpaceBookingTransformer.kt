@@ -18,6 +18,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas1SpaceBook
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas1SpaceBookingEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas1SpaceBookingSearchResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.CharacteristicEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas1.Cas1ChangeRequestEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas1.Cas1ChangeRequestRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas1.ChangeRequestType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PersonInfoResult
@@ -38,11 +39,13 @@ class Cas1SpaceBookingTransformer(
   private val spaceBookingStatusTransformer: Cas1SpaceBookingStatusTransformer,
   private val cas1ChangeRequestRepository: Cas1ChangeRequestRepository,
   private val cas1SpaceBookingActionsService: Cas1SpaceBookingActionsService,
+  private val cas1ChangeRequestTransformer: Cas1ChangeRequestTransformer,
 ) {
   fun transformJpaToApi(
     person: PersonInfoResult,
     jpa: Cas1SpaceBookingEntity,
     otherBookingsAtPremiseForCrn: List<Cas1SpaceBookingAtPremises>,
+    changeRequests: List<Cas1ChangeRequestEntity>,
   ): Cas1SpaceBooking {
     val placementRequest = jpa.placementRequest
     val application = jpa.application
@@ -56,6 +59,7 @@ class Cas1SpaceBookingTransformer(
         jpa.nonArrivalConfirmedAt?.toLocalDateTime(),
       ),
     )
+    val openChangeRequests = cas1ChangeRequestTransformer.transformToChangeRequestSummaries(changeRequests, person, jpa)
     return Cas1SpaceBooking(
       id = jpa.id,
       applicationId = applicationId,
@@ -95,6 +99,7 @@ class Cas1SpaceBookingTransformer(
       status = status,
       characteristics = jpa.criteria.toCas1SpaceCharacteristics(),
       allowedActions = cas1SpaceBookingActionsService.determineActions(jpa).available().map { it.apiType },
+      openChangeRequests = openChangeRequests,
     )
   }
 

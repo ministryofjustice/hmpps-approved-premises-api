@@ -397,6 +397,10 @@ components:
         allowedActions:
           items:
             $ref: '#/components/schemas/Cas1SpaceBookingAction'
+        openChangeRequests:
+          type: array
+          items:
+            $ref: 'cas1-schemas.yml#/components/schemas/Cas1ChangeRequestSummary'
       required:
         - id
         - applicationId
@@ -411,6 +415,7 @@ components:
         - otherBookingsInPremisesForCrn
         - characteristics
         - allowedActions
+        - openChangeRequests
     Cas1SpaceBookingDates:
       type: object
       properties:
