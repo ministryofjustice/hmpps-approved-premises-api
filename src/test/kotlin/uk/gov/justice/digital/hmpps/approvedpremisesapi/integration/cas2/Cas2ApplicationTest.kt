@@ -1257,7 +1257,6 @@ class Cas2ApplicationTest : IntegrationTestBase() {
         givenACas2PomUser { userEntity, jwt ->
           givenAnOffender { offenderDetails, _ ->
             val prisonName = "PRISON"
-            val prisonCode = "PRI"
             val omuEmail = "test@test.com"
             val applicationEntity =
               setUpSubmittedApplicationWithTimeline(offenderDetails, userEntity, prisonName, omuEmail)
@@ -1292,7 +1291,7 @@ class Cas2ApplicationTest : IntegrationTestBase() {
       }
 
       @Test
-      fun `Get single submitted application returns 200 with timeline events and transferred`() {
+      fun `Get single submitted application returns 200 with timeline events when application is transferred in`() {
         givenACas2PomUser { userEntity, jwt ->
           givenACas2PomUser { otherUser, otherJwt ->
             givenAnOffender { offenderDetails, _ ->
@@ -1335,6 +1334,42 @@ class Cas2ApplicationTest : IntegrationTestBase() {
 
               assertThat(responseBody.timelineEvents!!.map { event -> event.label })
                 .isEqualTo(listOf("Prison transfer from ${userEntity.activeCaseloadId!!} to ${omuNew.prisonCode}", "Application submitted"))
+            }
+          }
+        }
+      }
+
+      @Test
+      fun `Get single submitted application returns 403 when application is transferred to different prison`() {
+        givenACas2PomUser { userEntity, jwt ->
+          givenACas2PomUser(
+            mockCallToGetMe = false,
+            nomisUserDetailsConfigBlock = {},
+          ) { otherUser, otherJwt ->
+            givenAnOffender { offenderDetails, _ ->
+              val prisonName = "PRISON"
+              val omuEmail = "test@test.com"
+              val applicationEntity =
+                setUpSubmittedApplicationWithTimeline(offenderDetails, userEntity, prisonName, omuEmail)
+
+              offenderManagementUnitEntityFactory.produceAndPersist {
+                withEmail("test2@test.com")
+                withPrisonCode(otherUser.activeCaseloadId!!)
+                withPrisonName("New Prison")
+              }
+
+              applicationEntity.createApplicationAssignment(
+                prisonCode = otherUser.activeCaseloadId!!,
+                allocatedPomUser = null,
+              )
+              cas2ApplicationRepository.save(applicationEntity)
+
+              webTestClient.get()
+                .uri("/cas2/applications/${applicationEntity.id}")
+                .header("Authorization", "Bearer $jwt")
+                .exchange()
+                .expectStatus()
+                .isForbidden
             }
           }
         }

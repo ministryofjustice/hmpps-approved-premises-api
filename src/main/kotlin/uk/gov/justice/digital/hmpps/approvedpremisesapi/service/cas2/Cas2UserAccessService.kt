@@ -13,7 +13,7 @@ class Cas2UserAccessService {
      */
     if (application.applicationAssignments.size > 1) {
       return user.id == application.currentPomUserId ||
-        // user is current assigned POM
+        // user is currently assigned POM
         (user.activeCaseloadId != null && user.activeCaseloadId == application.currentPrisonCode) // user is in same prison
     }
 

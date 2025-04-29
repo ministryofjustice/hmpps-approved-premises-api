@@ -21,13 +21,13 @@ class Cas2UserAccessServiceTest {
 
     @Nested
     inner class WhenTransferredApplication {
-      val referreningPrisonCode = "other"
+      val referringPrisonCode = "other"
       val transferredToPrisonCode = "prison"
 
       private val user = NomisUserEntityFactory().withActiveCaseloadId(transferredToPrisonCode).produce()
       private val samePrisonUser = NomisUserEntityFactory().withActiveCaseloadId(transferredToPrisonCode).produce()
-      private val otherUser = NomisUserEntityFactory().withActiveCaseloadId(referreningPrisonCode).produce()
-      private val otherPrisonUser = NomisUserEntityFactory().withActiveCaseloadId(referreningPrisonCode).produce()
+      private val otherUser = NomisUserEntityFactory().withActiveCaseloadId(referringPrisonCode).produce()
+      private val otherPrisonUser = NomisUserEntityFactory().withActiveCaseloadId(referringPrisonCode).produce()
 
       @Test
       fun `returns true if currently allocated POM or if in same prison`() {
@@ -35,11 +35,11 @@ class Cas2UserAccessServiceTest {
           .withApplicationSchema(newestJsonSchema)
           .withCreatedByUser(otherUser)
           .withSubmittedAt(OffsetDateTime.now())
-          .withReferringPrisonCode(referreningPrisonCode)
+          .withReferringPrisonCode(referringPrisonCode)
           .produce()
 
         // created by user is the first assigned POM
-        application.createApplicationAssignment(referreningPrisonCode, otherUser)
+        application.createApplicationAssignment(referringPrisonCode, otherUser)
         assertThat(userAccessService.userCanViewApplication(user, application)).isFalse
         assertThat(userAccessService.userCanViewApplication(samePrisonUser, application)).isFalse
         assertThat(userAccessService.userCanViewApplication(otherUser, application)).isTrue
