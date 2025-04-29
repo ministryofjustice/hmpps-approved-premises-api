@@ -99,6 +99,7 @@ fun IntegrationTestBase.givenAUser(
 }
 
 fun IntegrationTestBase.givenACas2PomUser(
+  mockCallToGetMe: Boolean = true,
   id: UUID = UUID.randomUUID(),
   nomisUserDetailsConfigBlock: (NomisUserDetailFactory.() -> Unit)? = null,
   block: (nomisUserEntity: NomisUserEntity, jwt: String) -> Unit,
@@ -121,7 +122,9 @@ fun IntegrationTestBase.givenACas2PomUser(
 
   val jwt = jwtAuthHelper.createValidNomisAuthorisationCodeJwt(nomisUserDetails.username)
 
-  nomisUserRolesMockSuccessfulGetMeCall(jwt, nomisUserDetails)
+  if (mockCallToGetMe) {
+    nomisUserRolesMockSuccessfulGetMeCall(jwt, nomisUserDetails)
+  }
 
   block(user, jwt)
 }
