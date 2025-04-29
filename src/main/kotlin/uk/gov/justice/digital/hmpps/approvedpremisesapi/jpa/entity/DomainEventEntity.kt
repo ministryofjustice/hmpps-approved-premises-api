@@ -40,6 +40,9 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.Pl
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.PlacementAppealRejected
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.PlacementApplicationAllocated
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.PlacementApplicationWithdrawn
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.PlannedTransferRequestAccepted
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.PlannedTransferRequestCreated
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.PlannedTransferRequestRejected
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.RequestForPlacementAssessed
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.RequestForPlacementCreated
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1TimelineEventType
@@ -484,6 +487,39 @@ enum class DomainEventType(
       emittable = false,
       apiType = Cas1EventType.placementAppealRejected,
       payloadType = PlacementAppealRejected::class,
+    ),
+  ),
+  APPROVED_PREMISES_PLANNED_TRANSFER_REQUEST_ACCEPTED(
+    DomainEventCas.CAS1,
+    Cas1EventType.plannedTransferRequestAccepted.value,
+    "A planned transfer request has been accepted",
+    cas1Info = Cas1DomainEventTypeInfo(
+      timelineEventType = Cas1TimelineEventType.plannedTransferRequestAccepted,
+      emittable = false,
+      payloadType = PlannedTransferRequestAccepted::class,
+      apiType = Cas1EventType.plannedTransferRequestAccepted,
+    ),
+  ),
+  APPROVED_PREMISES_PLANNED_TRANSFER_REQUEST_CREATED(
+    DomainEventCas.CAS1,
+    Cas1EventType.plannedTransferRequestCreated.value,
+    "A planned transfer request has been created",
+    cas1Info = Cas1DomainEventTypeInfo(
+      timelineEventType = Cas1TimelineEventType.plannedTransferRequestCreated,
+      emittable = false,
+      payloadType = PlannedTransferRequestCreated::class,
+      apiType = Cas1EventType.plannedTransferRequestCreated,
+    ),
+  ),
+  APPROVED_PREMISES_PLANNED_TRANSFER_REQUEST_REJECTED(
+    DomainEventCas.CAS1,
+    Cas1EventType.plannedTransferRequestRejected.value,
+    "A planned transfer request has been rejected",
+    cas1Info = Cas1DomainEventTypeInfo(
+      timelineEventType = Cas1TimelineEventType.plannedTransferRequestRejected,
+      emittable = false,
+      payloadType = PlannedTransferRequestRejected::class,
+      apiType = Cas1EventType.plannedTransferRequestRejected,
     ),
   ),
   CAS2_APPLICATION_SUBMITTED(

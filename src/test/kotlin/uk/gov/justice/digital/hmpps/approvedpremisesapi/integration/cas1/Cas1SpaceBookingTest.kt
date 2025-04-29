@@ -2790,6 +2790,8 @@ class Cas1SpaceBookingTest {
 
       assertThat(updatedChangedRequest.resolved).isTrue
       assertThat(updatedChangedRequest.decision).isEqualTo(ChangeRequestDecision.APPROVED)
+
+      domainEventAsserter.assertDomainEventOfTypeStored(application.id, DomainEventType.APPROVED_PREMISES_PLANNED_TRANSFER_REQUEST_ACCEPTED)
     }
   }
 }

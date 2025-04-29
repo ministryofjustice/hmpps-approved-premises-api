@@ -2878,7 +2878,7 @@ class Cas1SpaceBookingServiceTest {
 
       every { spaceBookingRepository.saveAndFlush(any()) } returns existingSpaceBooking
 
-      every { cas1ChangeRequestService.approveChangeRequest(any(), any()) } returns existingChangeRequest
+      every { cas1ChangeRequestService.approvedPlannedTransfer(any(), any(), any(), any()) } returns Unit
 
       val bookingId = UUID.randomUUID()
 
@@ -2922,7 +2922,7 @@ class Cas1SpaceBookingServiceTest {
 
       every { spaceBookingRepository.saveAndFlush(any()) } returns existingSpaceBooking
 
-      every { cas1ChangeRequestService.approveChangeRequest(any(), any()) } returns existingChangeRequest
+      every { cas1ChangeRequestService.approvedPlannedTransfer(any(), any(), any(), any()) } returns Unit
 
       val result = service.plannedTransfer(
         existingSpaceBooking.id,
@@ -2963,7 +2963,7 @@ class Cas1SpaceBookingServiceTest {
 
       every { spaceBookingRepository.saveAndFlush(any()) } returns existingSpaceBooking
 
-      every { cas1ChangeRequestService.approveChangeRequest(any(), any()) } returns existingChangeRequest
+      every { cas1ChangeRequestService.approvedPlannedTransfer(any(), any(), any(), any()) } returns Unit
 
       val result = service.plannedTransfer(
         existingSpaceBooking.id,
@@ -2997,7 +2997,7 @@ class Cas1SpaceBookingServiceTest {
 
       every { spaceBookingRepository.saveAndFlush(capture(capturedBookings)) } answers { firstArg() }
 
-      every { cas1ChangeRequestService.approveChangeRequest(any(), any()) } returns existingChangeRequest
+      every { cas1ChangeRequestService.approvedPlannedTransfer(any(), any(), any(), any()) } returns Unit
 
       assertThat(existingSpaceBooking.transferredTo).isNull()
 
@@ -3016,7 +3016,6 @@ class Cas1SpaceBookingServiceTest {
       assertThat(result).isInstanceOf(CasResult.Success::class.java)
 
       verify(exactly = 2) { spaceBookingRepository.saveAndFlush(any()) }
-      verify { cas1ChangeRequestService.approveChangeRequest(any(), any()) }
 
       assertEquals(2, capturedBookings.size)
 
@@ -3031,6 +3030,15 @@ class Cas1SpaceBookingServiceTest {
       assertThat(transferredBooking.expectedArrivalDate).isEqualTo(LocalDate.now().plusDays(2))
       assertThat(transferredBooking.expectedDepartureDate).isEqualTo(LocalDate.now().plusMonths(1))
       assertThat(transferredBooking.transferType).isEqualTo(TransferType.PLANNED)
+
+      verify {
+        cas1ChangeRequestService.approvedPlannedTransfer(
+          changeRequest = existingChangeRequest,
+          user = user,
+          from = existingSpaceBooking,
+          to = transferredBooking,
+        )
+      }
     }
   }
 

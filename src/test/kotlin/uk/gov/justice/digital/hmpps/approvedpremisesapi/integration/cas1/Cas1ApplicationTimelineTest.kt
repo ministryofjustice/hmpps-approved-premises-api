@@ -71,10 +71,12 @@ class Cas1ApplicationTimelineTest : InitialiseDatabasePerClassTestBase() {
       withAssessmentSchema(assessmentSchema)
     }
 
-    domainEvents = DomainEventType.entries.filter { it.cas == DomainEventCas.CAS1 }.map {
-      createDomainEvent(it, otherApplication, otherAssessment, user)
-      return@map createDomainEvent(it, application, assessment, user)
-    }
+    domainEvents = DomainEventType.entries
+      .filter { it.cas == DomainEventCas.CAS1 }
+      .filter { it != DomainEventType.APPROVED_PREMISES_BOOKING_CANCELLED }.map {
+        createDomainEvent(it, otherApplication, otherAssessment, user)
+        return@map createDomainEvent(it, application, assessment, user)
+      }
 
     notes = createTimelineNotes(application, 5, isDeleted = false)
     createTimelineNotes(application, 2, isDeleted = true)
@@ -157,6 +159,7 @@ class Cas1ApplicationTimelineTest : InitialiseDatabasePerClassTestBase() {
     }
 
     return domainEventFactory.produceAndPersist {
+      withType(type)
       withApplicationId(applicationEntity.id)
       withData(data)
       withTriggeredByUserId(userEntity.id)

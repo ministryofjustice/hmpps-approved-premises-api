@@ -4,19 +4,19 @@ import org.springframework.data.repository.findByIdOrNull
 import org.springframework.stereotype.Component
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.BookingCancelled
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.Cas1DomainEventEnvelope
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.EventBookingSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.RequestForPlacementAssessed
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.RequestForPlacementType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.SpaceCharacteristic
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.StaffMember
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.TransferBooking
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1BookingChangedContentPayload
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1EmergencyTransferCreatedContentPayload
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1EmergencyTransferCreatedContentPayloadBooking
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1PlacementAppealAcceptedPayload
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1PlacementAppealCreatedPayload
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1PlacementAppealRejectedPayload
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1SpaceCharacteristic
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1TimelineEventContentPayload
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1TimelineEventPayloadBookingSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1TimelineEventType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NamedId
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AssessmentClarificationNoteRepository
@@ -25,6 +25,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.CancellationR
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas1SpaceBookingRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DomainEventType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.DomainEventSummary
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.domainevent.TimelineFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.javaConstantNameToSentence
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.toUiDateTimeFormat
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.toUiFormat
@@ -42,6 +43,7 @@ class Cas1DomainEventDescriber(
   private val assessmentClarificationNoteRepository: AssessmentClarificationNoteRepository,
   private val bookingRepository: BookingRepository,
   private val cas1SpaceBookingRepository: Cas1SpaceBookingRepository,
+  private val payloadFactories: List<TimelineFactory<*>>,
 ) {
 
   data class BookingCancellationDetail(val premisesName: String, val cancellationReason: String, val arrivalDate: String, val departureDate: String)
@@ -57,32 +59,47 @@ class Cas1DomainEventDescriber(
   )
 
   @SuppressWarnings("CyclomaticComplexMethod")
-  fun getDescriptionAndPayload(domainEventSummary: DomainEventSummary): EventDescriptionAndPayload = when (domainEventSummary.type) {
-    DomainEventType.APPROVED_PREMISES_APPLICATION_SUBMITTED -> EventDescriptionAndPayload("The application was submitted", null)
-    DomainEventType.APPROVED_PREMISES_APPLICATION_ASSESSED -> buildApplicationAssessedDescription(domainEventSummary)
-    DomainEventType.APPROVED_PREMISES_BOOKING_MADE -> buildBookingMadeDescription(domainEventSummary)
-    DomainEventType.APPROVED_PREMISES_EMERGENCY_TRANSFER_CREATED -> buildEmergencyTransferCreatedDescription(domainEventSummary)
-    DomainEventType.APPROVED_PREMISES_PERSON_ARRIVED -> buildPersonArrivedDescription(domainEventSummary)
-    DomainEventType.APPROVED_PREMISES_PERSON_NOT_ARRIVED -> buildPersonNotArrivedDescription(domainEventSummary)
-    DomainEventType.APPROVED_PREMISES_PERSON_DEPARTED -> buildPersonDepartedDescription(domainEventSummary)
-    DomainEventType.APPROVED_PREMISES_BOOKING_NOT_MADE -> buildBookingNotMadeDescription(domainEventSummary)
-    DomainEventType.APPROVED_PREMISES_BOOKING_CANCELLED -> buildBookingCancelledDescription(domainEventSummary)
-    DomainEventType.APPROVED_PREMISES_BOOKING_CHANGED -> buildBookingChangedDescription(domainEventSummary)
-    DomainEventType.APPROVED_PREMISES_BOOKING_KEYWORKER_ASSIGNED -> buildBookingKeyWorkerAssignedDescription(domainEventSummary)
-    DomainEventType.APPROVED_PREMISES_APPLICATION_WITHDRAWN -> buildApplicationWithdrawnDescription(domainEventSummary)
-    DomainEventType.APPROVED_PREMISES_APPLICATION_EXPIRED -> buildApplicationExpiredDescription(domainEventSummary)
-    DomainEventType.APPROVED_PREMISES_ASSESSMENT_APPEALED -> buildAssessmentAppealedDescription(domainEventSummary)
-    DomainEventType.APPROVED_PREMISES_ASSESSMENT_ALLOCATED -> buildAssessmentAllocatedDescription(domainEventSummary)
-    DomainEventType.APPROVED_PREMISES_PLACEMENT_APPLICATION_WITHDRAWN -> buildPlacementApplicationWithdrawnDescription(domainEventSummary)
-    DomainEventType.APPROVED_PREMISES_MATCH_REQUEST_WITHDRAWN -> buildMatchRequestWithdrawnDescription(domainEventSummary)
-    DomainEventType.APPROVED_PREMISES_REQUEST_FOR_PLACEMENT_CREATED -> buildRequestForPlacementCreatedDescription(domainEventSummary)
-    DomainEventType.APPROVED_PREMISES_REQUEST_FOR_PLACEMENT_ASSESSED -> buildRequestForPlacementAssessedDescription(domainEventSummary)
-    DomainEventType.APPROVED_PREMISES_PLACEMENT_APPLICATION_ALLOCATED -> buildPlacementApplicationAllocatedDescription(domainEventSummary)
-    DomainEventType.APPROVED_PREMISES_ASSESSMENT_INFO_REQUESTED -> buildInfoRequestDescription(domainEventSummary)
-    DomainEventType.APPROVED_PREMISES_PLACEMENT_APPEAL_ACCEPTED -> buildPlacementAppealAcceptedDescription(domainEventSummary)
-    DomainEventType.APPROVED_PREMISES_PLACEMENT_APPEAL_CREATED -> buildPlacementAppealCreatedDescription(domainEventSummary)
-    DomainEventType.APPROVED_PREMISES_PLACEMENT_APPEAL_REJECTED -> buildPlacementAppealRejectedDescription(domainEventSummary)
-    else -> throw IllegalArgumentException("Cannot map ${domainEventSummary.type}, only CAS1 is currently supported")
+  fun getDescriptionAndPayload(domainEventSummary: DomainEventSummary): EventDescriptionAndPayload {
+    payloadFactories.firstOrNull { it.forType() == domainEventSummary.type }?.let {
+      return EventDescriptionAndPayload(
+        description = null,
+        payload = it.produce(domainEventSummary.id()),
+      )
+    }
+
+    // Do _not_ add to this list! Instead, create an implementation of [TimelineFactory]
+    return when (domainEventSummary.type) {
+      DomainEventType.APPROVED_PREMISES_APPLICATION_SUBMITTED -> EventDescriptionAndPayload(
+        "The application was submitted",
+        null,
+      )
+
+      DomainEventType.APPROVED_PREMISES_APPLICATION_ASSESSED -> buildApplicationAssessedDescription(domainEventSummary)
+      DomainEventType.APPROVED_PREMISES_BOOKING_MADE -> buildBookingMadeDescription(domainEventSummary)
+      DomainEventType.APPROVED_PREMISES_EMERGENCY_TRANSFER_CREATED -> buildEmergencyTransferCreatedDescription(domainEventSummary)
+      DomainEventType.APPROVED_PREMISES_PERSON_ARRIVED -> buildPersonArrivedDescription(domainEventSummary)
+      DomainEventType.APPROVED_PREMISES_PERSON_NOT_ARRIVED -> buildPersonNotArrivedDescription(domainEventSummary)
+      DomainEventType.APPROVED_PREMISES_PERSON_DEPARTED -> buildPersonDepartedDescription(domainEventSummary)
+      DomainEventType.APPROVED_PREMISES_BOOKING_NOT_MADE -> buildBookingNotMadeDescription(domainEventSummary)
+      DomainEventType.APPROVED_PREMISES_BOOKING_CANCELLED -> buildBookingCancelledDescription(domainEventSummary)
+      DomainEventType.APPROVED_PREMISES_BOOKING_CHANGED -> buildBookingChangedDescription(domainEventSummary)
+      DomainEventType.APPROVED_PREMISES_BOOKING_KEYWORKER_ASSIGNED -> buildBookingKeyWorkerAssignedDescription(domainEventSummary)
+      DomainEventType.APPROVED_PREMISES_APPLICATION_WITHDRAWN -> buildApplicationWithdrawnDescription(domainEventSummary)
+      DomainEventType.APPROVED_PREMISES_APPLICATION_EXPIRED -> buildApplicationExpiredDescription(domainEventSummary)
+      DomainEventType.APPROVED_PREMISES_ASSESSMENT_APPEALED -> buildAssessmentAppealedDescription(domainEventSummary)
+      DomainEventType.APPROVED_PREMISES_ASSESSMENT_ALLOCATED -> buildAssessmentAllocatedDescription(domainEventSummary)
+      DomainEventType.APPROVED_PREMISES_PLACEMENT_APPLICATION_WITHDRAWN -> buildPlacementApplicationWithdrawnDescription(domainEventSummary)
+      DomainEventType.APPROVED_PREMISES_MATCH_REQUEST_WITHDRAWN -> buildMatchRequestWithdrawnDescription(domainEventSummary)
+      DomainEventType.APPROVED_PREMISES_REQUEST_FOR_PLACEMENT_CREATED -> buildRequestForPlacementCreatedDescription(domainEventSummary)
+      DomainEventType.APPROVED_PREMISES_REQUEST_FOR_PLACEMENT_ASSESSED -> buildRequestForPlacementAssessedDescription(domainEventSummary)
+      DomainEventType.APPROVED_PREMISES_PLACEMENT_APPLICATION_ALLOCATED -> buildPlacementApplicationAllocatedDescription(domainEventSummary)
+      DomainEventType.APPROVED_PREMISES_ASSESSMENT_INFO_REQUESTED -> buildInfoRequestDescription(domainEventSummary)
+      DomainEventType.APPROVED_PREMISES_PLACEMENT_APPEAL_ACCEPTED -> buildPlacementAppealAcceptedDescription(domainEventSummary)
+      DomainEventType.APPROVED_PREMISES_PLACEMENT_APPEAL_CREATED -> buildPlacementAppealCreatedDescription(domainEventSummary)
+      DomainEventType.APPROVED_PREMISES_PLACEMENT_APPEAL_REJECTED -> buildPlacementAppealRejectedDescription(domainEventSummary)
+
+      else -> throw IllegalArgumentException("Cannot map ${domainEventSummary.type}, only CAS1 is currently supported")
+    }
   }
 
   private fun convertToCas1SpaceCharacteristics(spaceCharacteristics: List<SpaceCharacteristic>?): List<Cas1SpaceCharacteristic>? = spaceCharacteristics?.map { spaceCharacteristic ->
@@ -140,14 +157,14 @@ class Cas1DomainEventDescriber(
   private fun buildEmergencyTransferCreatedDescription(domainEventSummary: DomainEventSummary): EventDescriptionAndPayload {
     val event = domainEventService.getEmergencyTransferCreatedEvent(domainEventSummary.id())
 
-    fun toPayloadBooking(booking: TransferBooking) = Cas1EmergencyTransferCreatedContentPayloadBooking(
+    fun toPayloadBooking(booking: EventBookingSummary) = Cas1TimelineEventPayloadBookingSummary(
       bookingId = booking.bookingId,
       premises = NamedId(
         booking.premises.id,
         booking.premises.name,
       ),
-      arrivalDate = booking.arrivalOn,
-      departureDate = booking.departureOn,
+      arrivalDate = booking.arrivalDate,
+      departureDate = booking.departureDate,
     )
 
     val payload = event.toPayload {

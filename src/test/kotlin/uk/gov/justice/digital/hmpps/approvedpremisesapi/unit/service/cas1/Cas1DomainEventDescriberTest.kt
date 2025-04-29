@@ -46,6 +46,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.events.BookingMa
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.events.BookingNotMadeFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.events.Cas1DomainEventCodedIdFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.events.EmergencyTransferCreatedFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.events.EventBookingSummaryFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.events.EventPremisesFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.events.FurtherInformationRequestedFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.events.MatchRequestWithdrawnFactory
@@ -60,7 +61,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.events.Placement
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.events.RequestForPlacementAssessedFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.events.RequestForPlacementCreatedFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.events.StaffMemberFactory
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.events.TransferBookingFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.from
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AssessmentClarificationNoteRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AssessmentEntity
@@ -98,6 +98,7 @@ class Cas1DomainEventDescriberTest {
     mockAssessmentClarificationNoteRepository,
     mockBookingRepository,
     mockSpaceBookingRepository,
+    emptyList(),
   )
 
   @Test
@@ -842,7 +843,7 @@ class Cas1DomainEventDescriberTest {
             eventType = EventType.emergencyTransferCreated,
             eventDetails = EmergencyTransferCreatedFactory()
               .withFrom(
-                TransferBookingFactory()
+                EventBookingSummaryFactory()
                   .withPremises(
                     EventPremisesFactory()
                       .withName("from premises")
@@ -854,7 +855,7 @@ class Cas1DomainEventDescriberTest {
                   .produce(),
               )
               .withTo(
-                TransferBookingFactory()
+                EventBookingSummaryFactory()
                   .withPremises(
                     EventPremisesFactory()
                       .withName("to premises")

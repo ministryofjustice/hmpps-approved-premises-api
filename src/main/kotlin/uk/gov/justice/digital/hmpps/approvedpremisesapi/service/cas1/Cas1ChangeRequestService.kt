@@ -95,7 +95,12 @@ class Cas1ChangeRequestService(
         )
       }
       Cas1ChangeRequestType.PLACEMENT_EXTENSION -> Unit
-      Cas1ChangeRequestType.PLANNED_TRANSFER -> Unit
+      Cas1ChangeRequestType.PLANNED_TRANSFER -> {
+        cas1ChangeRequestDomainEventService.plannedTransferRequestCreated(
+          changeRequest = createdChangeRequest,
+          requestingUser = userService.getUserForRequest(),
+        )
+      }
     }
 
     return success(Unit)
@@ -134,6 +139,17 @@ class Cas1ChangeRequestService(
     return Success(Unit)
   }
 
+  fun approvedPlannedTransfer(
+    changeRequest: Cas1ChangeRequestEntity,
+    user: UserEntity,
+    to: Cas1SpaceBookingEntity,
+    from: Cas1SpaceBookingEntity,
+  ) {
+    approveChangeRequest(changeRequest, user)
+
+    cas1ChangeRequestDomainEventService.plannedTransferRequestAccepted(changeRequest, user, to, from)
+  }
+
   @Transactional
   fun rejectChangeRequest(
     placementRequestId: UUID,
@@ -145,24 +161,24 @@ class Cas1ChangeRequestService(
     val changeRequestWithLock = findChangeRequest(changeRequestId)!!
 
     if (changeRequestWithLock.placementRequest.id != placementRequestId) {
-      return CasResult.GeneralValidationError("The change request does not belong to the specified placement request")
+      return GeneralValidationError("The change request does not belong to the specified placement request")
     }
 
     if (changeRequestWithLock.decision != null) {
       return if (changeRequestWithLock.decision == ChangeRequestDecision.REJECTED) {
         Success(Unit)
       } else {
-        CasResult.GeneralValidationError("A decision has already been made for the change request")
+        GeneralValidationError("A decision has already been made for the change request")
       }
     }
 
     val changeRequestRejectReason = cas1ChangeRequestRejectionReasonRepository.findByIdAndArchivedIsFalse(cas1RejectChangeRequest.rejectionReasonId)
-      ?: return CasResult.GeneralValidationError("The change request reject reason not found")
+      ?: return GeneralValidationError("The change request reject reason not found")
 
     changeRequestWithLock.decision = ChangeRequestDecision.REJECTED
     changeRequestWithLock.rejectionReason = changeRequestRejectReason
     changeRequestWithLock.resolve()
-    cas1ChangeRequestRepository.saveAndFlush(changeRequestWithLock)
+    cas1ChangeRequestRepository.save(changeRequestWithLock)
 
     when (changeRequestWithLock.type) {
       ChangeRequestType.PLACEMENT_APPEAL -> {
@@ -173,7 +189,12 @@ class Cas1ChangeRequestService(
         )
       }
       ChangeRequestType.PLACEMENT_EXTENSION -> Unit
-      ChangeRequestType.PLANNED_TRANSFER -> Unit
+      ChangeRequestType.PLANNED_TRANSFER -> {
+        cas1ChangeRequestDomainEventService.plannedTransferRequestRejected(
+          changeRequestWithLock,
+          userService.getUserForRequest(),
+        )
+      }
     }
 
     return Success(Unit)
@@ -203,17 +224,17 @@ class Cas1ChangeRequestService(
 
   fun spaceBookingMarkedAsDeparted(spaceBooking: Cas1SpaceBookingEntity) = resolveAllChangeRequestsForSpaceBookingAndType(spaceBooking, listOf(ChangeRequestType.PLACEMENT_EXTENSION, ChangeRequestType.PLANNED_TRANSFER))
 
-  private fun Cas1ChangeRequestEntity.resolve() {
-    this.resolved = true
-    this.resolvedAt = OffsetDateTime.now()
-  }
-
   fun findChangeRequest(changeRequestId: UUID): Cas1ChangeRequestEntity? = cas1ChangeRequestRepository.findByIdOrNull(changeRequestId)
 
-  fun approveChangeRequest(changeRequestEntity: Cas1ChangeRequestEntity, user: UserEntity): Cas1ChangeRequestEntity {
+  private fun approveChangeRequest(changeRequestEntity: Cas1ChangeRequestEntity, user: UserEntity): Cas1ChangeRequestEntity {
     changeRequestEntity.decision = ChangeRequestDecision.APPROVED
     changeRequestEntity.resolve()
     changeRequestEntity.decisionMadeByUser = user
     return cas1ChangeRequestRepository.saveAndFlush(changeRequestEntity)
+  }
+
+  private fun Cas1ChangeRequestEntity.resolve() {
+    this.resolved = true
+    this.resolvedAt = OffsetDateTime.now()
   }
 }

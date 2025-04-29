@@ -17,7 +17,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.Pe
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.PersonNotArrivedEnvelope
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.PersonReference
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.StaffMember
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.TransferBooking
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.ApDeliusContextApiClient
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.ClientResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas1SpaceBookingEntity
@@ -30,6 +29,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.deliuscontext.Case
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.LaoStrategy
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.OffenderService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.domainevent.DomainEventUtils.mapApprovedPremisesEntityToPremises
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.domainevent.toEventBookingSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.UrlTemplate
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.toInstant
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.toLocalDateTime
@@ -298,18 +298,8 @@ class Cas1SpaceBookingManagementDomainEventService(
             applicationId = application.id,
             createdAt = eventOccurredAt,
             createdBy = getStaffDetailsByUsername(createdBy.deliusUsername).toStaffMember(),
-            from = TransferBooking(
-              bookingId = from.id,
-              premises = mapApprovedPremisesEntityToPremises(from.premises),
-              arrivalOn = from.canonicalArrivalDate,
-              departureOn = from.canonicalDepartureDate,
-            ),
-            to = TransferBooking(
-              bookingId = to.id,
-              premises = mapApprovedPremisesEntityToPremises(to.premises),
-              arrivalOn = to.canonicalArrivalDate,
-              departureOn = to.canonicalDepartureDate,
-            ),
+            from = from.toEventBookingSummary(),
+            to = to.toEventBookingSummary(),
           ),
         ),
       ),

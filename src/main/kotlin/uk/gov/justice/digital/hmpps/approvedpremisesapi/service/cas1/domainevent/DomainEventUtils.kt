@@ -1,7 +1,12 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.domainevent
 
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.EventBookingSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.Premises
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1TimelineEventPayloadBookingSummary
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NamedId
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas1SpaceBookingEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.domainevent.DomainEventUtils.mapApprovedPremisesEntityToPremises
 
 object DomainEventUtils {
   fun mapApprovedPremisesEntityToPremises(aPEntity: ApprovedPremisesEntity) = Premises(
@@ -12,3 +17,17 @@ object DomainEventUtils {
     localAuthorityAreaName = aPEntity.localAuthorityArea!!.name,
   )
 }
+
+fun Cas1SpaceBookingEntity.toEventBookingSummary() = EventBookingSummary(
+  bookingId = this.id,
+  premises = mapApprovedPremisesEntityToPremises(this.premises),
+  arrivalDate = this.canonicalArrivalDate,
+  departureDate = this.canonicalDepartureDate,
+)
+
+fun EventBookingSummary.toTimelinePayloadSummary() = Cas1TimelineEventPayloadBookingSummary(
+  bookingId = this.bookingId,
+  premises = NamedId(this.premises.id, this.premises.name),
+  arrivalDate = this.arrivalDate,
+  departureDate = this.departureDate,
+)

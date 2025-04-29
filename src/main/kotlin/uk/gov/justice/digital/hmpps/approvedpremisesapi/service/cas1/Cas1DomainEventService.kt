@@ -115,7 +115,7 @@ class Cas1DomainEventService(
   fun getRequestForPlacementAssessedEvent(id: UUID) = get(id, RequestForPlacementAssessed::class)
   fun getFurtherInformationRequestMadeEvent(id: UUID) = get(id, FurtherInformationRequested::class)
 
-  private fun <T : Cas1DomainEventPayload> get(id: UUID, payloadType: KClass<T>): GetCas1DomainEvent<Cas1DomainEventEnvelope<T>>? {
+  fun <T : Cas1DomainEventPayload> get(id: UUID, payloadType: KClass<T>): GetCas1DomainEvent<Cas1DomainEventEnvelope<T>>? {
     val entity = domainEventRepository.findByIdOrNull(id) ?: return null
     return toDomainEvent(entity, payloadType)
   }
@@ -303,7 +303,7 @@ class Cas1DomainEventService(
 
   private fun getAllDomainEventsById(applicationId: UUID? = null, spaceBookingId: UUID? = null) = domainEventRepository.findAllTimelineEventsByIds(applicationId, spaceBookingId).distinctBy { it.id }
 
-  fun <T : Cas1DomainEventPayload> save(saveWithPayload: SaveCas1DomainEventWithPayload<T>) {
+  fun save(saveWithPayload: SaveCas1DomainEventWithPayload) {
     val id = saveWithPayload.id
     val type = saveWithPayload.type
     val expectedPayloadType = type.cas1Info!!.payloadType
@@ -454,7 +454,7 @@ data class SaveCas1DomainEvent<T>(
   val emit: Boolean = true,
 )
 
-data class SaveCas1DomainEventWithPayload<T>(
+data class SaveCas1DomainEventWithPayload(
   val id: UUID = UUID.randomUUID(),
   val type: DomainEventType,
   val applicationId: UUID? = null,
@@ -465,7 +465,7 @@ data class SaveCas1DomainEventWithPayload<T>(
   val crn: String,
   val nomsNumber: String?,
   val occurredAt: Instant,
-  val data: T,
+  val data: Cas1DomainEventPayload,
   val metadata: Map<MetaDataName, String?> = emptyMap(),
   val schemaVersion: Int? = null,
   val triggerSource: TriggerSourceType? = null,
