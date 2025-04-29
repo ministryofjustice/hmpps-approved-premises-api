@@ -33,12 +33,14 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas1.Lockable
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas1.LockableCas1ChangeRequestRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.CasResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.UserService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.ActionsResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1ChangeRequestDomainEventService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1ChangeRequestEmailService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1ChangeRequestService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1SpaceBookingActionsService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.SpaceBookingAction
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.unit.util.assertThatCasResult
 import java.time.LocalDate
-import java.time.OffsetDateTime
 import java.util.UUID
 
 @ExtendWith(MockKExtension::class)
@@ -72,6 +74,9 @@ class Cas1ChangeRequestServiceTest {
 
   @MockK
   lateinit var userService: UserService
+
+  @MockK
+  lateinit var cas1SpaceBookingActionsService: Cas1SpaceBookingActionsService
 
   @InjectMockKs
   lateinit var service: Cas1ChangeRequestService
@@ -156,14 +161,15 @@ class Cas1ChangeRequestServiceTest {
         .withSpaceBookingId(cas1SpaceBooking.id)
         .produce()
 
+      every { userService.getUserForRequest() } returns UserEntityFactory().withDefaults().produce()
       every { placementRequestRepository.findByIdOrNull(placementRequest.id) } returns placementRequest
       every { cas1ChangeRequestReasonRepository.findByIdOrNull(cas1ChangeRequestReason.id) } returns cas1ChangeRequestReason
       every { cas1SpaceBookingRepository.findByIdOrNull(cas1SpaceBooking.id) } returns cas1SpaceBooking
+      every { cas1SpaceBookingActionsService.determineActions(cas1SpaceBooking) } returns ActionsResult.forAllowedAction(SpaceBookingAction.APPEAL_CREATE)
       every { objectMapper.writeValueAsString(cas1NewChangeRequest.requestJson) } returns "{test: 1}"
       every { cas1ChangeRequestRepository.save(any()) } returnsArgument 0
       every { cas1ChangeRequestEmailService.placementAppealCreated(any()) } returns Unit
       every { cas1ChangeRequestDomainEventService.placementAppealCreated(any(), any()) } returns Unit
-      every { userService.getUserForRequest() } returns UserEntityFactory().withDefaults().produce()
 
       val result = service.createChangeRequest(placementRequest.id, cas1NewChangeRequest)
 
@@ -214,6 +220,7 @@ class Cas1ChangeRequestServiceTest {
       every { placementRequestRepository.findByIdOrNull(placementRequest.id) } returns placementRequest
       every { cas1ChangeRequestReasonRepository.findByIdOrNull(cas1ChangeRequestReason.id) } returns cas1ChangeRequestReason
       every { cas1SpaceBookingRepository.findByIdOrNull(cas1SpaceBooking.id) } returns cas1SpaceBooking
+      every { cas1SpaceBookingActionsService.determineActions(cas1SpaceBooking) } returns ActionsResult.forAllowedAction(SpaceBookingAction.TRANSFER_CREATE)
       every { objectMapper.writeValueAsString(cas1NewChangeRequest.requestJson) } returns "{test: 1}"
       every { cas1ChangeRequestRepository.save(any()) } returns null
 
@@ -234,7 +241,38 @@ class Cas1ChangeRequestServiceTest {
     }
 
     @Test
-    fun `throws general validation error when space booking has null actual arrival date for planned transfer`() {
+    fun `throws general validation error when action not allowed for placement appeal`() {
+      val cas1SpaceBooking = Cas1SpaceBookingEntityFactory()
+        .withActualArrivalDate(LocalDate.now())
+        .produce()
+      val placementRequest = PlacementRequestEntityFactory()
+        .withDefaults()
+        .withSpaceBookings(mutableListOf(cas1SpaceBooking))
+        .produce()
+      val cas1ChangeRequestReason = Cas1ChangeRequestReasonEntityFactory().produce()
+
+      val cas1NewChangeRequest = Cas1NewChangeRequestFactory()
+        .withType(Cas1ChangeRequestType.PLACEMENT_APPEAL)
+        .withReasonId(cas1ChangeRequestReason.id)
+        .withSpaceBookingId(cas1SpaceBooking.id)
+        .produce()
+
+      every { placementRequestRepository.findByIdOrNull(placementRequest.id) } returns placementRequest
+      every { cas1ChangeRequestReasonRepository.findByIdOrNull(cas1ChangeRequestReason.id) } returns cas1ChangeRequestReason
+      every { cas1SpaceBookingRepository.findByIdOrNull(cas1SpaceBooking.id) } returns cas1SpaceBooking
+      every {
+        cas1SpaceBookingActionsService.determineActions(cas1SpaceBooking)
+      } returns ActionsResult.forUnavailableAction(SpaceBookingAction.APPEAL_CREATE, "appeal create not allowed!")
+      every { objectMapper.writeValueAsString(cas1NewChangeRequest.requestJson) } returns "{test: 1}"
+      every { cas1ChangeRequestRepository.save(any()) } returns null
+
+      val result = service.createChangeRequest(placementRequest.id, cas1NewChangeRequest)
+
+      assertThatCasResult(result).isGeneralValidationError("appeal create not allowed!")
+    }
+
+    @Test
+    fun `throws general validation error when action not allowed for planned transfer`() {
       val cas1SpaceBooking = Cas1SpaceBookingEntityFactory().produce()
       val placementRequest = PlacementRequestEntityFactory()
         .withDefaults()
@@ -251,184 +289,14 @@ class Cas1ChangeRequestServiceTest {
       every { placementRequestRepository.findByIdOrNull(placementRequest.id) } returns placementRequest
       every { cas1ChangeRequestReasonRepository.findByIdOrNull(cas1ChangeRequestReason.id) } returns cas1ChangeRequestReason
       every { cas1SpaceBookingRepository.findByIdOrNull(cas1SpaceBooking.id) } returns cas1SpaceBooking
+      every { cas1SpaceBookingActionsService.determineActions(cas1SpaceBooking) } returns ActionsResult.forUnavailableAction(SpaceBookingAction.TRANSFER_CREATE, "transfer not allowed")
       every { objectMapper.writeValueAsString(cas1NewChangeRequest.requestJson) } returns "{test: 1}"
       every { cas1ChangeRequestRepository.save(any()) } returns null
 
       val result = service.createChangeRequest(placementRequest.id, cas1NewChangeRequest)
 
-      assertThatCasResult(result).isGeneralValidationError("Associated space booking has not been marked as arrived")
+      assertThatCasResult(result).isGeneralValidationError("transfer not allowed")
     }
-  }
-
-  @Test
-  fun `throws general validation error when space booking has non null non_arrival_confirmed_at for planned transfer`() {
-    val cas1SpaceBooking = Cas1SpaceBookingEntityFactory()
-      .withActualArrivalDate(LocalDate.now())
-      .withNonArrivalConfirmedAt(OffsetDateTime.now().toInstant())
-      .produce()
-    val placementRequest = PlacementRequestEntityFactory()
-      .withDefaults()
-      .withSpaceBookings(mutableListOf(cas1SpaceBooking))
-      .produce()
-    val cas1ChangeRequestReason = Cas1ChangeRequestReasonEntityFactory().produce()
-
-    val cas1NewChangeRequest = Cas1NewChangeRequestFactory()
-      .withType(Cas1ChangeRequestType.PLANNED_TRANSFER)
-      .withReasonId(cas1ChangeRequestReason.id)
-      .withSpaceBookingId(cas1SpaceBooking.id)
-      .produce()
-
-    every { placementRequestRepository.findByIdOrNull(placementRequest.id) } returns placementRequest
-    every { cas1ChangeRequestReasonRepository.findByIdOrNull(cas1ChangeRequestReason.id) } returns cas1ChangeRequestReason
-    every { cas1SpaceBookingRepository.findByIdOrNull(cas1SpaceBooking.id) } returns cas1SpaceBooking
-    every { objectMapper.writeValueAsString(cas1NewChangeRequest.requestJson) } returns "{test: 1}"
-    every { cas1ChangeRequestRepository.save(any()) } returns null
-
-    val result = service.createChangeRequest(placementRequest.id, cas1NewChangeRequest)
-
-    assertThatCasResult(result).isGeneralValidationError("Associated space booking has been marked as non arrived")
-  }
-
-  @Test
-  fun `throws general validation error when space booking has non null actual_departure_date for planned transfer`() {
-    val cas1SpaceBooking = Cas1SpaceBookingEntityFactory()
-      .withActualArrivalDate(LocalDate.now())
-      .withActualDepartureDate(LocalDate.now())
-      .produce()
-    val placementRequest = PlacementRequestEntityFactory()
-      .withDefaults()
-      .withSpaceBookings(mutableListOf(cas1SpaceBooking))
-      .produce()
-    val cas1ChangeRequestReason = Cas1ChangeRequestReasonEntityFactory().produce()
-
-    val cas1NewChangeRequest = Cas1NewChangeRequestFactory()
-      .withType(Cas1ChangeRequestType.PLANNED_TRANSFER)
-      .withReasonId(cas1ChangeRequestReason.id)
-      .withSpaceBookingId(cas1SpaceBooking.id)
-      .produce()
-
-    every { placementRequestRepository.findByIdOrNull(placementRequest.id) } returns placementRequest
-    every { cas1ChangeRequestReasonRepository.findByIdOrNull(cas1ChangeRequestReason.id) } returns cas1ChangeRequestReason
-    every { cas1SpaceBookingRepository.findByIdOrNull(cas1SpaceBooking.id) } returns cas1SpaceBooking
-    every { objectMapper.writeValueAsString(cas1NewChangeRequest.requestJson) } returns "{test: 1}"
-    every { cas1ChangeRequestRepository.save(any()) } returns null
-
-    val result = service.createChangeRequest(placementRequest.id, cas1NewChangeRequest)
-
-    assertThatCasResult(result).isGeneralValidationError("Associated space booking has been marked as departed")
-  }
-
-  @Test
-  fun `throws general validation error when space booking has non null cancellation_occurred_at for planned transfer`() {
-    val cas1SpaceBooking = Cas1SpaceBookingEntityFactory()
-      .withActualArrivalDate(LocalDate.now())
-      .withCancellationOccurredAt(LocalDate.now())
-      .produce()
-    val placementRequest = PlacementRequestEntityFactory()
-      .withDefaults()
-      .withSpaceBookings(mutableListOf(cas1SpaceBooking))
-      .produce()
-    val cas1ChangeRequestReason = Cas1ChangeRequestReasonEntityFactory().produce()
-
-    val cas1NewChangeRequest = Cas1NewChangeRequestFactory()
-      .withType(Cas1ChangeRequestType.PLANNED_TRANSFER)
-      .withReasonId(cas1ChangeRequestReason.id)
-      .withSpaceBookingId(cas1SpaceBooking.id)
-      .produce()
-
-    every { placementRequestRepository.findByIdOrNull(placementRequest.id) } returns placementRequest
-    every { cas1ChangeRequestReasonRepository.findByIdOrNull(cas1ChangeRequestReason.id) } returns cas1ChangeRequestReason
-    every { cas1SpaceBookingRepository.findByIdOrNull(cas1SpaceBooking.id) } returns cas1SpaceBooking
-    every { objectMapper.writeValueAsString(cas1NewChangeRequest.requestJson) } returns "{test: 1}"
-    every { cas1ChangeRequestRepository.save(any()) } returns null
-
-    val result = service.createChangeRequest(placementRequest.id, cas1NewChangeRequest)
-
-    assertThatCasResult(result).isGeneralValidationError("Associated space booking has been cancelled")
-  }
-
-  @Test
-  fun `throws general validation error when space booking has non null actual arrival date for appeal`() {
-    val cas1SpaceBooking = Cas1SpaceBookingEntityFactory()
-      .withActualArrivalDate(LocalDate.now())
-      .produce()
-    val placementRequest = PlacementRequestEntityFactory()
-      .withDefaults()
-      .withSpaceBookings(mutableListOf(cas1SpaceBooking))
-      .produce()
-    val cas1ChangeRequestReason = Cas1ChangeRequestReasonEntityFactory().produce()
-
-    val cas1NewChangeRequest = Cas1NewChangeRequestFactory()
-      .withType(Cas1ChangeRequestType.PLACEMENT_APPEAL)
-      .withReasonId(cas1ChangeRequestReason.id)
-      .withSpaceBookingId(cas1SpaceBooking.id)
-      .produce()
-
-    every { placementRequestRepository.findByIdOrNull(placementRequest.id) } returns placementRequest
-    every { cas1ChangeRequestReasonRepository.findByIdOrNull(cas1ChangeRequestReason.id) } returns cas1ChangeRequestReason
-    every { cas1SpaceBookingRepository.findByIdOrNull(cas1SpaceBooking.id) } returns cas1SpaceBooking
-    every { objectMapper.writeValueAsString(cas1NewChangeRequest.requestJson) } returns "{test: 1}"
-    every { cas1ChangeRequestRepository.save(any()) } returns null
-
-    val result = service.createChangeRequest(placementRequest.id, cas1NewChangeRequest)
-
-    assertThatCasResult(result).isGeneralValidationError("Associated space booking has been marked as arrived")
-  }
-
-  @Test
-  fun `throws general validation error when space booking has non null non_arrival_confirmed_at for appeal`() {
-    val cas1SpaceBooking = Cas1SpaceBookingEntityFactory()
-      .withNonArrivalConfirmedAt(OffsetDateTime.now().toInstant())
-      .produce()
-    val placementRequest = PlacementRequestEntityFactory()
-      .withDefaults()
-      .withSpaceBookings(mutableListOf(cas1SpaceBooking))
-      .produce()
-    val cas1ChangeRequestReason = Cas1ChangeRequestReasonEntityFactory().produce()
-
-    val cas1NewChangeRequest = Cas1NewChangeRequestFactory()
-      .withType(Cas1ChangeRequestType.PLACEMENT_APPEAL)
-      .withReasonId(cas1ChangeRequestReason.id)
-      .withSpaceBookingId(cas1SpaceBooking.id)
-      .produce()
-
-    every { placementRequestRepository.findByIdOrNull(placementRequest.id) } returns placementRequest
-    every { cas1ChangeRequestReasonRepository.findByIdOrNull(cas1ChangeRequestReason.id) } returns cas1ChangeRequestReason
-    every { cas1SpaceBookingRepository.findByIdOrNull(cas1SpaceBooking.id) } returns cas1SpaceBooking
-    every { objectMapper.writeValueAsString(cas1NewChangeRequest.requestJson) } returns "{test: 1}"
-    every { cas1ChangeRequestRepository.save(any()) } returns null
-
-    val result = service.createChangeRequest(placementRequest.id, cas1NewChangeRequest)
-
-    assertThatCasResult(result).isGeneralValidationError("Associated space booking has been marked as non arrived")
-  }
-
-  @Test
-  fun `throws general validation error when space booking has non null cancellation_occurred_at for appeal`() {
-    val cas1SpaceBooking = Cas1SpaceBookingEntityFactory()
-      .withCancellationOccurredAt(LocalDate.now())
-      .produce()
-    val placementRequest = PlacementRequestEntityFactory()
-      .withDefaults()
-      .withSpaceBookings(mutableListOf(cas1SpaceBooking))
-      .produce()
-    val cas1ChangeRequestReason = Cas1ChangeRequestReasonEntityFactory().produce()
-
-    val cas1NewChangeRequest = Cas1NewChangeRequestFactory()
-      .withType(Cas1ChangeRequestType.PLACEMENT_APPEAL)
-      .withReasonId(cas1ChangeRequestReason.id)
-      .withSpaceBookingId(cas1SpaceBooking.id)
-      .produce()
-
-    every { placementRequestRepository.findByIdOrNull(placementRequest.id) } returns placementRequest
-    every { cas1ChangeRequestReasonRepository.findByIdOrNull(cas1ChangeRequestReason.id) } returns cas1ChangeRequestReason
-    every { cas1SpaceBookingRepository.findByIdOrNull(cas1SpaceBooking.id) } returns cas1SpaceBooking
-    every { objectMapper.writeValueAsString(cas1NewChangeRequest.requestJson) } returns "{test: 1}"
-    every { cas1ChangeRequestRepository.save(any()) } returns null
-
-    val result = service.createChangeRequest(placementRequest.id, cas1NewChangeRequest)
-
-    assertThatCasResult(result).isGeneralValidationError("Associated space booking has been cancelled")
   }
 
   @Nested

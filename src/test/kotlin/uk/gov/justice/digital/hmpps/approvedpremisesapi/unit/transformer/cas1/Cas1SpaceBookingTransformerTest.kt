@@ -11,6 +11,7 @@ import org.junit.jupiter.api.extension.ExtendWith
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.CsvSource
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.CancellationReason
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1SpaceBookingAction
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1SpaceBookingSummaryStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1SpaceCharacteristic
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PersonSummaryDiscriminator
@@ -40,6 +41,9 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PersonSummaryInfoR
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.RiskStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.RiskTier
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.RiskWithStatus
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.ActionsResult
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1SpaceBookingActionsService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.SpaceBookingAction
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.CancellationReasonTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.PersonTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.UserTransformer
@@ -71,6 +75,9 @@ class Cas1SpaceBookingTransformerTest {
 
   @MockK
   private lateinit var cas1ChangeRequestRepository: Cas1ChangeRequestRepository
+
+  @MockK
+  private lateinit var cas1SpaceBookingActionsService: Cas1SpaceBookingActionsService
 
   @InjectMockKs
   private lateinit var transformer: Cas1SpaceBookingTransformer
@@ -182,6 +189,9 @@ class Cas1SpaceBookingTransformerTest {
         )
       } returns expectedUser
       every { cancellationReasonTransformer.transformJpaToApi(cancellationReason) } returns expectedCancellationReason
+      every { cas1SpaceBookingActionsService.determineActions(spaceBooking) } returns ActionsResult.forAllowedAction(
+        SpaceBookingAction.APPEAL_CREATE,
+      )
 
       val result = transformer.transformJpaToApi(personInfo, spaceBooking, otherBookings)
 
@@ -241,6 +251,8 @@ class Cas1SpaceBookingTransformerTest {
         Cas1SpaceCharacteristic.isCatered,
         Cas1SpaceCharacteristic.hasEnSuite,
       )
+
+      assertThat(result.allowedActions).containsExactly(Cas1SpaceBookingAction.APPEAL_CREATE)
     }
 
     @Test
@@ -306,6 +318,9 @@ class Cas1SpaceBookingTransformerTest {
           ServiceName.approvedPremises,
         )
       } returns expectedUser
+      every { cas1SpaceBookingActionsService.determineActions(spaceBooking) } returns ActionsResult.forAllowedAction(
+        SpaceBookingAction.APPEAL_CREATE,
+      )
 
       val result = transformer.transformJpaToApi(personInfo, spaceBooking, emptyList())
 

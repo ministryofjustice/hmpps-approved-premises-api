@@ -22,6 +22,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas1.Cas1Chan
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas1.ChangeRequestType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PersonInfoResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PersonSummaryInfoResult
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1SpaceBookingActionsService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.CancellationReasonTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.PersonTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.UserTransformer
@@ -36,6 +37,7 @@ class Cas1SpaceBookingTransformer(
   private val userTransformer: UserTransformer,
   private val spaceBookingStatusTransformer: Cas1SpaceBookingStatusTransformer,
   private val cas1ChangeRequestRepository: Cas1ChangeRequestRepository,
+  private val cas1SpaceBookingActionsService: Cas1SpaceBookingActionsService,
 ) {
   fun transformJpaToApi(
     person: PersonInfoResult,
@@ -92,6 +94,7 @@ class Cas1SpaceBookingTransformer(
       departure = jpa.extractDeparture(),
       status = status,
       characteristics = jpa.criteria.toCas1SpaceCharacteristics(),
+      allowedActions = cas1SpaceBookingActionsService.determineActions(jpa).available().map { it.apiType },
     )
   }
 

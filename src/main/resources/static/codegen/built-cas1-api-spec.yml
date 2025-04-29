@@ -7063,6 +7063,9 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/Cas1SpaceCharacteristic'
+        allowedActions:
+          items:
+            $ref: '#/components/schemas/Cas1SpaceBookingAction'
       required:
         - id
         - applicationId
@@ -7076,6 +7079,7 @@ components:
         - createdAt
         - otherBookingsInPremisesForCrn
         - characteristics
+        - allowedActions
     Cas1SpaceBookingDates:
       type: object
       properties:
@@ -7094,6 +7098,14 @@ components:
         - id
         - canonicalArrivalDate
         - canonicalDepartureDate
+    Cas1SpaceBookingAction:
+      type: string
+      enum:
+        - appealCreate
+        - transferCreate
+      x-enum-varnames:
+        - APPEAL_CREATE
+        - TRANSFER_CREATE
     Cas1SpaceBookingSummarySortField:
       type: string
       enum:
