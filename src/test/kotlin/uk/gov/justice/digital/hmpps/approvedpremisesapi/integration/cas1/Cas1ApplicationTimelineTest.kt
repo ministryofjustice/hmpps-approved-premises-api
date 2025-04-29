@@ -151,9 +151,9 @@ class Cas1ApplicationTimelineTest : InitialiseDatabasePerClassTestBase() {
         withCreatedBy(userEntity)
       }
 
-      domainEventsFactory.createEnvelopeForLatestSchemaVersion(type, clarificationNote.id)
+      domainEventsFactory.createEnvelopeForLatestSchemaVersion(type = type, requestId = clarificationNote.id)
     } else {
-      domainEventsFactory.createEnvelopeForLatestSchemaVersion(type)
+      domainEventsFactory.createEnvelopeForLatestSchemaVersion(type = type)
     }
 
     return domainEventFactory.produceAndPersist {

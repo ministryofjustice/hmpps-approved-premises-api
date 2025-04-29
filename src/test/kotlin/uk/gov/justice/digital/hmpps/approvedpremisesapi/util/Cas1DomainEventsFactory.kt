@@ -40,8 +40,10 @@ class Cas1DomainEventsFactory(val objectMapper: ObjectMapper) {
     type: DomainEventType,
     requestId: UUID = UUID.randomUUID(),
     occurredAt: Instant = Instant.now(),
+    id: UUID = UUID.randomUUID(),
   ): DomainEventEnvelopeAndPersistedJson {
     val envelope = createEnvelopeForLatestSchemaVersion(
+      id,
       type,
       requestId,
       occurredAt = occurredAt,
@@ -56,11 +58,11 @@ class Cas1DomainEventsFactory(val objectMapper: ObjectMapper) {
 
   @SuppressWarnings("CyclomaticComplexMethod", "TooGenericExceptionThrown")
   fun createEnvelopeForLatestSchemaVersion(
+    id: UUID = UUID.randomUUID(),
     type: DomainEventType,
     requestId: UUID = UUID.randomUUID(),
     occurredAt: Instant = Instant.now(),
-  ): Any {
-    val id = UUID.randomUUID()
+  ): Cas1DomainEventEnvelope<*> {
     val eventType = EventType.entries.find { it.value == type.typeName } ?: throw RuntimeException("Cannot find EventType for $type")
 
     val eventDetails = when (type) {
@@ -109,7 +111,7 @@ class Cas1DomainEventsFactory(val objectMapper: ObjectMapper) {
 }
 
 data class DomainEventEnvelopeAndPersistedJson(
-  val envelope: Any,
+  val envelope: Cas1DomainEventEnvelope<*>,
   val persistedJson: String,
   val schemaVersion: DomainEventSchemaVersion,
 )

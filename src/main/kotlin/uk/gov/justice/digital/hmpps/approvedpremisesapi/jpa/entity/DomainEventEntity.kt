@@ -358,7 +358,7 @@ enum class DomainEventType(
     cas1Info = Cas1DomainEventTypeInfo(
       Cas1TimelineEventType.applicationWithdrawn,
       payloadType = ApplicationWithdrawn::class,
-      apiType = Cas1EventType.bookingKeyWorkerAssigned,
+      apiType = Cas1EventType.applicationWithdrawn,
     ),
   ),
   APPROVED_PREMISES_ASSESSMENT_APPEALED(
