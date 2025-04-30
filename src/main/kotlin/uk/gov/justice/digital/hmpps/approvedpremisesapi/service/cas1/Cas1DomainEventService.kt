@@ -6,30 +6,55 @@ import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.data.repository.findByIdOrNull
 import org.springframework.stereotype.Service
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.ApplicationAssessed
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.ApplicationAssessedEnvelope
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.ApplicationExpired
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.ApplicationExpiredEnvelope
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.ApplicationSubmitted
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.ApplicationSubmittedEnvelope
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.ApplicationWithdrawn
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.ApplicationWithdrawnEnvelope
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.AssessmentAllocated
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.AssessmentAllocatedEnvelope
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.AssessmentAppealed
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.AssessmentAppealedEnvelope
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.BookingCancelled
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.BookingCancelledEnvelope
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.BookingChanged
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.BookingChangedEnvelope
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.BookingKeyWorkerAssigned
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.BookingKeyWorkerAssignedEnvelope
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.BookingMade
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.BookingMadeEnvelope
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.BookingNotMade
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.BookingNotMadeEnvelope
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.Cas1DomainEventEnvelopeInterface
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.Cas1DomainEventEnvelope
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.Cas1DomainEventPayload
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.EmergencyTransferCreated
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.EmergencyTransferCreatedEnvelope
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.FurtherInformationRequested
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.FurtherInformationRequestedEnvelope
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.MatchRequestWithdrawn
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.MatchRequestWithdrawnEnvelope
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.PersonArrived
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.PersonArrivedEnvelope
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.PersonDeparted
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.PersonDepartedEnvelope
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.PersonNotArrived
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.PersonNotArrivedEnvelope
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.PlacementAppealAccepted
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.PlacementAppealAcceptedEnvelope
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.PlacementAppealCreated
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.PlacementAppealCreatedEnvelope
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.PlacementAppealRejected
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.PlacementAppealRejectedEnvelope
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.PlacementApplicationAllocated
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.PlacementApplicationAllocatedEnvelope
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.PlacementApplicationWithdrawn
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.PlacementApplicationWithdrawnEnvelope
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.RequestForPlacementAssessed
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.RequestForPlacementAssessedEnvelope
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.RequestForPlacementCreated
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.RequestForPlacementCreatedEnvelope
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.config.DomainEventUrlConfig
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DomainEventEntity
@@ -65,44 +90,44 @@ class Cas1DomainEventService(
 ) {
   private val log = LoggerFactory.getLogger(this::class.java)
 
-  fun getApplicationSubmittedDomainEvent(id: UUID) = get(id, ApplicationSubmittedEnvelope::class)
-  fun getApplicationAssessedDomainEvent(id: UUID) = get(id, ApplicationAssessedEnvelope::class)
-  fun getBookingMadeEvent(id: UUID) = get(id, BookingMadeEnvelope::class)
-  fun getEmergencyTransferCreatedEvent(id: UUID) = get(id, EmergencyTransferCreatedEnvelope::class)
-  fun getPersonArrivedEvent(id: UUID) = get(id, PersonArrivedEnvelope::class)
-  fun getPersonNotArrivedEvent(id: UUID) = get(id, PersonNotArrivedEnvelope::class)
-  fun getPersonDepartedEvent(id: UUID) = get(id, PersonDepartedEnvelope::class)
-  fun getBookingNotMadeEvent(id: UUID) = get(id, BookingNotMadeEnvelope::class)
-  fun getBookingCancelledEvent(id: UUID) = get(id, BookingCancelledEnvelope::class)
-  fun getBookingChangedEvent(id: UUID) = get(id, BookingChangedEnvelope::class)
-  fun getBookingKeyWorkerAssignedEvent(id: UUID) = get(id, BookingKeyWorkerAssignedEnvelope::class)
-  fun getApplicationWithdrawnEvent(id: UUID) = get(id, ApplicationWithdrawnEnvelope::class)
-  fun getApplicationExpiredEvent(id: UUID) = get(id, ApplicationExpiredEnvelope::class)
-  fun getPlacementAppealAcceptedEvent(id: UUID) = get(id, PlacementAppealAcceptedEnvelope::class)
-  fun getPlacementAppealCreatedEvent(id: UUID) = get(id, PlacementAppealCreatedEnvelope::class)
-  fun getPlacementAppealRejectedEvent(id: UUID) = get(id, PlacementAppealRejectedEnvelope::class)
-  fun getPlacementApplicationWithdrawnEvent(id: UUID) = get(id, PlacementApplicationWithdrawnEnvelope::class)
-  fun getPlacementApplicationAllocatedEvent(id: UUID) = get(id, PlacementApplicationAllocatedEnvelope::class)
-  fun getMatchRequestWithdrawnEvent(id: UUID) = get(id, MatchRequestWithdrawnEnvelope::class)
-  fun getAssessmentAppealedEvent(id: UUID) = get(id, AssessmentAppealedEnvelope::class)
-  fun getAssessmentAllocatedEvent(id: UUID) = get(id, AssessmentAllocatedEnvelope::class)
-  fun getRequestForPlacementCreatedEvent(id: UUID) = get(id, RequestForPlacementCreatedEnvelope::class)
-  fun getRequestForPlacementAssessedEvent(id: UUID) = get(id, RequestForPlacementAssessedEnvelope::class)
-  fun getFurtherInformationRequestMadeEvent(id: UUID) = get(id, FurtherInformationRequestedEnvelope::class)
+  fun getApplicationSubmittedDomainEvent(id: UUID) = get(id, ApplicationSubmitted::class)
+  fun getApplicationAssessedDomainEvent(id: UUID) = get(id, ApplicationAssessed::class)
+  fun getBookingMadeEvent(id: UUID) = get(id, BookingMade::class)
+  fun getEmergencyTransferCreatedEvent(id: UUID) = get(id, EmergencyTransferCreated::class)
+  fun getPersonArrivedEvent(id: UUID) = get(id, PersonArrived::class)
+  fun getPersonNotArrivedEvent(id: UUID) = get(id, PersonNotArrived::class)
+  fun getPersonDepartedEvent(id: UUID) = get(id, PersonDeparted::class)
+  fun getBookingNotMadeEvent(id: UUID) = get(id, BookingNotMade::class)
+  fun getBookingCancelledEvent(id: UUID) = get(id, BookingCancelled::class)
+  fun getBookingChangedEvent(id: UUID) = get(id, BookingChanged::class)
+  fun getBookingKeyWorkerAssignedEvent(id: UUID) = get(id, BookingKeyWorkerAssigned::class)
+  fun getApplicationWithdrawnEvent(id: UUID) = get(id, ApplicationWithdrawn::class)
+  fun getApplicationExpiredEvent(id: UUID) = get(id, ApplicationExpired::class)
+  fun getPlacementAppealAcceptedEvent(id: UUID) = get(id, PlacementAppealAccepted::class)
+  fun getPlacementAppealCreatedEvent(id: UUID) = get(id, PlacementAppealCreated::class)
+  fun getPlacementAppealRejectedEvent(id: UUID) = get(id, PlacementAppealRejected::class)
+  fun getPlacementApplicationWithdrawnEvent(id: UUID) = get(id, PlacementApplicationWithdrawn::class)
+  fun getPlacementApplicationAllocatedEvent(id: UUID) = get(id, PlacementApplicationAllocated::class)
+  fun getMatchRequestWithdrawnEvent(id: UUID) = get(id, MatchRequestWithdrawn::class)
+  fun getAssessmentAppealedEvent(id: UUID) = get(id, AssessmentAppealed::class)
+  fun getAssessmentAllocatedEvent(id: UUID) = get(id, AssessmentAllocated::class)
+  fun getRequestForPlacementCreatedEvent(id: UUID) = get(id, RequestForPlacementCreated::class)
+  fun getRequestForPlacementAssessedEvent(id: UUID) = get(id, RequestForPlacementAssessed::class)
+  fun getFurtherInformationRequestMadeEvent(id: UUID) = get(id, FurtherInformationRequested::class)
 
-  private fun <T : Cas1DomainEventEnvelopeInterface<*>> get(id: UUID, envelopeType: KClass<T>): GetCas1DomainEvent<T>? {
+  private fun <T : Cas1DomainEventPayload> get(id: UUID, payloadType: KClass<T>): GetCas1DomainEvent<Cas1DomainEventEnvelope<T>>? {
     val entity = domainEventRepository.findByIdOrNull(id) ?: return null
-    return toDomainEvent(entity, envelopeType)
+    return toDomainEvent(entity, payloadType)
   }
 
   @SuppressWarnings("CyclomaticComplexMethod", "TooGenericExceptionThrown")
-  fun <T : Cas1DomainEventEnvelopeInterface<*>> toDomainEvent(entity: DomainEventEntity, envelopeType: KClass<T>): GetCas1DomainEvent<T> {
+  fun <T : Cas1DomainEventPayload> toDomainEvent(entity: DomainEventEntity, payloadType: KClass<T>): GetCas1DomainEvent<Cas1DomainEventEnvelope<T>> {
     checkNotNull(entity.applicationId) { "application id should not be null" }
 
-    if (entity.type.cas1Info!!.envelopeType != envelopeType) {
+    if (entity.type.cas1Info!!.payloadType != payloadType) {
       error(
-        "Entity with id ${entity.id} has type ${entity.type}, which contains data of type ${entity.type.cas1Info!!.envelopeType}. " +
-          "This is incompatible with the requested data type $envelopeType.",
+        "Entity with id ${entity.id} has type ${entity.type}, which contains data of type ${entity.type.cas1Info!!.payloadType}. " +
+          "This is incompatible with the requested payload type $payloadType.",
       )
     }
 
@@ -113,7 +138,13 @@ class Cas1DomainEventService(
       else -> entity.data
     }
 
-    val data = objectMapper.readValue(dataJson, envelopeType.java)
+    val data = objectMapper.readValue<Cas1DomainEventEnvelope<T>>(
+      dataJson,
+      objectMapper.typeFactory.constructParametricType(
+        Cas1DomainEventEnvelope::class.java,
+        payloadType.java,
+      ),
+    )
 
     return GetCas1DomainEvent(
       id = entity.id,

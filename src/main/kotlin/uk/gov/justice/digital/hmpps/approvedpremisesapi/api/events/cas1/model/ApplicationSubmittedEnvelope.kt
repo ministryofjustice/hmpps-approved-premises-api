@@ -10,6 +10,7 @@ import io.swagger.v3.oas.annotations.media.Schema
  * @param eventType
  * @param eventDetails
  */
+@Deprecated("The generic [Cas1DomainEventEnvelope] should be used instead of type-specific envelopes")
 data class ApplicationSubmittedEnvelope(
 
   @Schema(example = "364145f9-0af8-488e-9901-b4c46cd9ba37", required = true, description = "The UUID of an event")

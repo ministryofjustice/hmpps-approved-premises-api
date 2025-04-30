@@ -4,7 +4,8 @@ import org.slf4j.LoggerFactory
 import org.springframework.data.repository.findByIdOrNull
 import org.springframework.stereotype.Component
 import org.springframework.transaction.support.TransactionTemplate
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.BookingMadeEnvelope
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.BookingMade
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.Cas1DomainEventEnvelope
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesRepository
@@ -171,7 +172,7 @@ class Cas1BookingToSpaceBookingSeedJob(
     ?.toList()
     ?: emptyList()
 
-  private fun GetCas1DomainEvent<BookingMadeEnvelope>.getCreatedByUser(): UserEntity {
+  private fun GetCas1DomainEvent<Cas1DomainEventEnvelope<BookingMade>>.getCreatedByUser(): UserEntity {
     val createdByUsernameUpper =
       data.eventDetails.bookedBy.staffMember!!.username?.uppercase()
         ?: error("Can't find created by username for booking ${data.eventDetails.bookingId}")

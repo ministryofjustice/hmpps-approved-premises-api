@@ -10,24 +10,26 @@ import org.springframework.web.bind.annotation.PathVariable
 import org.springframework.web.bind.annotation.RequestMapping
 import org.springframework.web.bind.annotation.RequestMethod
 import org.springframework.web.bind.annotation.RestController
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.ApplicationAssessedEnvelope
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.ApplicationSubmittedEnvelope
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.ApplicationWithdrawnEnvelope
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.AssessmentAllocatedEnvelope
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.AssessmentAppealedEnvelope
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.BookingCancelledEnvelope
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.BookingChangedEnvelope
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.BookingMadeEnvelope
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.BookingNotMadeEnvelope
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.FurtherInformationRequestedEnvelope
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.MatchRequestWithdrawnEnvelope
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.PersonArrivedEnvelope
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.PersonDepartedEnvelope
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.PersonNotArrivedEnvelope
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.PlacementApplicationAllocatedEnvelope
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.PlacementApplicationWithdrawnEnvelope
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.ApplicationAssessed
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.ApplicationSubmitted
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.ApplicationWithdrawn
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.AssessmentAllocated
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.AssessmentAppealed
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.BookingCancelled
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.BookingChanged
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.BookingMade
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.BookingNotMade
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.Cas1DomainEventEnvelope
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.Cas1DomainEventPayload
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.FurtherInformationRequested
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.MatchRequestWithdrawn
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.PersonArrived
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.PersonDeparted
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.PersonNotArrived
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.PlacementApplicationAllocated
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.PlacementApplicationWithdrawn
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.Problem
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.RequestForPlacementAssessedEnvelope
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.RequestForPlacementAssessed
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.NotFoundProblem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1DomainEventService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.GetCas1DomainEvent
@@ -70,7 +72,7 @@ class Cas1DomainEventsController(
     @Parameter(description = "UUID of the event", required = true)
     @PathVariable("eventId")
     eventId: UUID,
-  ): ResponseEntity<ApplicationAssessedEnvelope> = getDomainEvent(eventId, domainEventService::getApplicationAssessedDomainEvent)
+  ): ResponseEntity<Cas1DomainEventEnvelope<ApplicationAssessed>> = getDomainEvent(eventId, domainEventService::getApplicationAssessedDomainEvent)
 
   @Operation(
     summary = "An application-submitted event",
@@ -101,8 +103,8 @@ class Cas1DomainEventsController(
   fun eventsApplicationSubmittedEventIdGet(
     @Parameter(description = "UUID of the event", required = true)
     @PathVariable("eventId")
-    eventId: java.util.UUID,
-  ): ResponseEntity<ApplicationSubmittedEnvelope> = getDomainEvent(eventId, domainEventService::getApplicationSubmittedDomainEvent)
+    eventId: UUID,
+  ): ResponseEntity<Cas1DomainEventEnvelope<ApplicationSubmitted>> = getDomainEvent(eventId, domainEventService::getApplicationSubmittedDomainEvent)
 
   @Operation(
     summary = "An application-withdrawn event",
@@ -133,7 +135,7 @@ class Cas1DomainEventsController(
   fun eventsApplicationWithdrawnEventIdGet(
     @Parameter(description = "UUID of the event", required = true)
     @PathVariable("eventId") eventId: UUID,
-  ): ResponseEntity<ApplicationWithdrawnEnvelope> = getDomainEvent(eventId, domainEventService::getApplicationWithdrawnEvent)
+  ): ResponseEntity<Cas1DomainEventEnvelope<ApplicationWithdrawn>> = getDomainEvent(eventId, domainEventService::getApplicationWithdrawnEvent)
 
   @Operation(
     summary = "An assessment-allocated event",
@@ -164,7 +166,7 @@ class Cas1DomainEventsController(
   fun eventsAssessmentAllocatedEventIdGet(
     @Parameter(description = "UUID of the event", required = true)
     @PathVariable("eventId") eventId: UUID,
-  ): ResponseEntity<AssessmentAllocatedEnvelope> = getDomainEvent(eventId, domainEventService::getAssessmentAllocatedEvent)
+  ): ResponseEntity<Cas1DomainEventEnvelope<AssessmentAllocated>> = getDomainEvent(eventId, domainEventService::getAssessmentAllocatedEvent)
 
   @Operation(
     summary = "An 'assessment-appealed' event",
@@ -195,7 +197,7 @@ class Cas1DomainEventsController(
   fun eventsAssessmentAppealedEventIdGet(
     @Parameter(description = "UUID of the event", required = true)
     @PathVariable("eventId") eventId: UUID,
-  ): ResponseEntity<AssessmentAppealedEnvelope> = getDomainEvent(eventId, domainEventService::getAssessmentAppealedEvent)
+  ): ResponseEntity<Cas1DomainEventEnvelope<AssessmentAppealed>> = getDomainEvent(eventId, domainEventService::getAssessmentAppealedEvent)
 
   @Operation(
     summary = "A 'booking-cancelled' event",
@@ -226,7 +228,7 @@ class Cas1DomainEventsController(
   fun eventsBookingCancelledEventIdGet(
     @Parameter(description = "UUID of the event", required = true)
     @PathVariable("eventId") eventId: UUID,
-  ): ResponseEntity<BookingCancelledEnvelope> = getDomainEvent(eventId, domainEventService::getBookingCancelledEvent)
+  ): ResponseEntity<Cas1DomainEventEnvelope<BookingCancelled>> = getDomainEvent(eventId, domainEventService::getBookingCancelledEvent)
 
   @Operation(
     summary = "A 'booking-changed' event",
@@ -257,7 +259,7 @@ class Cas1DomainEventsController(
   fun eventsBookingChangedEventIdGet(
     @Parameter(description = "UUID of the event", required = true)
     @PathVariable("eventId") eventId: UUID,
-  ): ResponseEntity<BookingChangedEnvelope> = getDomainEvent(eventId, domainEventService::getBookingChangedEvent)
+  ): ResponseEntity<Cas1DomainEventEnvelope<BookingChanged>> = getDomainEvent(eventId, domainEventService::getBookingChangedEvent)
 
   @Operation(
     summary = "A 'booking-made' event",
@@ -288,7 +290,7 @@ class Cas1DomainEventsController(
   fun eventsBookingMadeEventIdGet(
     @Parameter(description = "UUID of the event", required = true)
     @PathVariable("eventId") eventId: UUID,
-  ): ResponseEntity<BookingMadeEnvelope> = getDomainEvent(eventId, domainEventService::getBookingMadeEvent)
+  ): ResponseEntity<Cas1DomainEventEnvelope<BookingMade>> = getDomainEvent(eventId, domainEventService::getBookingMadeEvent)
 
   @Operation(
     summary = "A 'booking-not-made' event",
@@ -319,7 +321,7 @@ class Cas1DomainEventsController(
   fun eventsBookingNotMadeEventIdGet(
     @Parameter(description = "UUID of the event", required = true)
     @PathVariable("eventId") eventId: UUID,
-  ): ResponseEntity<BookingNotMadeEnvelope> = getDomainEvent(eventId, domainEventService::getBookingNotMadeEvent)
+  ): ResponseEntity<Cas1DomainEventEnvelope<BookingNotMade>> = getDomainEvent(eventId, domainEventService::getBookingNotMadeEvent)
 
   @Operation(
     summary = "A 'further-information-requested' event",
@@ -350,7 +352,7 @@ class Cas1DomainEventsController(
   fun eventsFurtherInformationRequestedEventIdGet(
     @Parameter(description = "UUID of the event", required = true)
     @PathVariable("eventId") eventId: UUID,
-  ): ResponseEntity<FurtherInformationRequestedEnvelope> = getDomainEvent(eventId, domainEventService::getFurtherInformationRequestMadeEvent)
+  ): ResponseEntity<Cas1DomainEventEnvelope<FurtherInformationRequested>> = getDomainEvent(eventId, domainEventService::getFurtherInformationRequestMadeEvent)
 
   @Operation(
     summary = "A 'match-request-withdrawn' event",
@@ -381,7 +383,7 @@ class Cas1DomainEventsController(
   fun eventsMatchRequestWithdrawnEventIdGet(
     @Parameter(description = "UUID of the event", required = true)
     @PathVariable("eventId") eventId: UUID,
-  ): ResponseEntity<MatchRequestWithdrawnEnvelope> = getDomainEvent(eventId, domainEventService::getMatchRequestWithdrawnEvent)
+  ): ResponseEntity<Cas1DomainEventEnvelope<MatchRequestWithdrawn>> = getDomainEvent(eventId, domainEventService::getMatchRequestWithdrawnEvent)
 
   @Operation(
     summary = "A 'person-arrived' event",
@@ -412,7 +414,7 @@ class Cas1DomainEventsController(
   fun eventsPersonArrivedEventIdGet(
     @Parameter(description = "UUID of the event", required = true)
     @PathVariable("eventId") eventId: UUID,
-  ): ResponseEntity<PersonArrivedEnvelope> = getDomainEvent(eventId, domainEventService::getPersonArrivedEvent)
+  ): ResponseEntity<Cas1DomainEventEnvelope<PersonArrived>> = getDomainEvent(eventId, domainEventService::getPersonArrivedEvent)
 
   @Operation(
     summary = "A 'person-departed' event",
@@ -443,7 +445,7 @@ class Cas1DomainEventsController(
   fun eventsPersonDepartedEventIdGet(
     @Parameter(description = "UUID of the event", required = true)
     @PathVariable("eventId") eventId: UUID,
-  ): ResponseEntity<PersonDepartedEnvelope> = getDomainEvent(eventId, domainEventService::getPersonDepartedEvent)
+  ): ResponseEntity<Cas1DomainEventEnvelope<PersonDeparted>> = getDomainEvent(eventId, domainEventService::getPersonDepartedEvent)
 
   @Operation(
     summary = "A 'person-not-arrived' event",
@@ -474,7 +476,7 @@ class Cas1DomainEventsController(
   fun eventsPersonNotArrivedEventIdGet(
     @Parameter(description = "UUID of the event", required = true)
     @PathVariable("eventId") eventId: UUID,
-  ): ResponseEntity<PersonNotArrivedEnvelope> = getDomainEvent(eventId, domainEventService::getPersonNotArrivedEvent)
+  ): ResponseEntity<Cas1DomainEventEnvelope<PersonNotArrived>> = getDomainEvent(eventId, domainEventService::getPersonNotArrivedEvent)
 
   @Operation(
     summary = "A 'placement-application-allocated' event",
@@ -505,7 +507,7 @@ class Cas1DomainEventsController(
   fun eventsPlacementApplicationAllocatedEventIdGet(
     @Parameter(description = "UUID of the event", required = true)
     @PathVariable("eventId") eventId: UUID,
-  ): ResponseEntity<PlacementApplicationAllocatedEnvelope> = getDomainEvent(eventId, domainEventService::getPlacementApplicationAllocatedEvent)
+  ): ResponseEntity<Cas1DomainEventEnvelope<PlacementApplicationAllocated>> = getDomainEvent(eventId, domainEventService::getPlacementApplicationAllocatedEvent)
 
   @Operation(
     summary = "A 'placement-application-withdrawn' event",
@@ -536,7 +538,7 @@ class Cas1DomainEventsController(
   fun eventsPlacementApplicationWithdrawnEventIdGet(
     @Parameter(description = "UUID of the event", required = true)
     @PathVariable("eventId") eventId: UUID,
-  ): ResponseEntity<PlacementApplicationWithdrawnEnvelope> = getDomainEvent(eventId, domainEventService::getPlacementApplicationWithdrawnEvent)
+  ): ResponseEntity<Cas1DomainEventEnvelope<PlacementApplicationWithdrawn>> = getDomainEvent(eventId, domainEventService::getPlacementApplicationWithdrawnEvent)
 
   @Operation(
     summary = "A 'request-for-placement-assessed' event",
@@ -567,10 +569,10 @@ class Cas1DomainEventsController(
   fun eventsRequestForPlacementAssessedEventIdGet(
     @Parameter(description = "UUID of the event", required = true)
     @PathVariable("eventId") eventId: UUID,
-  ): ResponseEntity<RequestForPlacementAssessedEnvelope> = getDomainEvent(eventId, domainEventService::getRequestForPlacementAssessedEvent)
+  ): ResponseEntity<Cas1DomainEventEnvelope<RequestForPlacementAssessed>> = getDomainEvent(eventId, domainEventService::getRequestForPlacementAssessedEvent)
 
-  private inline fun <reified T> getDomainEvent(eventId: UUID, serviceMethod: (id: UUID) -> GetCas1DomainEvent<T>?): ResponseEntity<T> {
+  private fun <T : Cas1DomainEventPayload> getDomainEvent(eventId: UUID, serviceMethod: (id: UUID) -> GetCas1DomainEvent<Cas1DomainEventEnvelope<T>>?): ResponseEntity<Cas1DomainEventEnvelope<T>> {
     val event = serviceMethod(eventId) ?: throw NotFoundProblem(eventId, "DomainEvent")
-    return ResponseEntity.ok(event.data) as ResponseEntity<T>
+    return ResponseEntity.ok(event.data) as ResponseEntity<Cas1DomainEventEnvelope<T>>
   }
 }

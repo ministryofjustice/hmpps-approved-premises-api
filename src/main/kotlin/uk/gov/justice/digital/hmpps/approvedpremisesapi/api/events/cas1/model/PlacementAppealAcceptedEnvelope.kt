@@ -5,6 +5,7 @@ import io.swagger.v3.oas.annotations.media.Schema
 import java.time.Instant
 import java.util.UUID
 
+@Deprecated("The generic [Cas1DomainEventEnvelope] should be used instead of type-specific envelopes")
 data class PlacementAppealAcceptedEnvelope(
   @Schema(required = true)
   @get:JsonProperty("id", required = true) override val id: UUID,
