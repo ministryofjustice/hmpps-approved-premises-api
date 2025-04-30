@@ -7985,21 +7985,13 @@ components:
       allOf:
         - $ref: "#/components/schemas/Cas1TimelineEventContentPayload"
       properties:
-        premises:
-          $ref: '#/components/schemas/NamedId'
-        expectedArrival:
-          type: string
-          format: date
-        expectedDeparture:
-          type: string
-          format: date
-        rejectionReason:
+        booking:
+          $ref: '#/components/schemas/Cas1TimelineEventPayloadBookingSummary'
+        reason:
           $ref: '#/components/schemas/NamedId'
       required:
-        - premises
-        - expectedArrival
-        - expectedDeparture
-        - rejectionReason
+        - booking
+        - reason
     Cas1PlannedTransferRequestCreatedPayload:
       type: object
       allOf:

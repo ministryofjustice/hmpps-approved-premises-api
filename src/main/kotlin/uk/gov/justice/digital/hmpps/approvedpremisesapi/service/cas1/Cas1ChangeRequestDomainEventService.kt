@@ -8,7 +8,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.Pl
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.PlacementAppealAcceptedEnvelope
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.PlacementAppealCreated
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.PlacementAppealRejected
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.PlacementAppealRejectedEnvelope
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.PlannedTransferRequestAccepted
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.PlannedTransferRequestCreated
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.PlannedTransferRequestRejected
@@ -103,9 +102,10 @@ class Cas1ChangeRequestDomainEventService(
     val spaceBooking = changeRequest.spaceBooking
     val reason = changeRequest.rejectionReason!!
 
-    cas1DomainEventService.savePlacementAppealRejected(
-      domainEvent = SaveCas1DomainEvent(
+    cas1DomainEventService.save(
+      SaveCas1DomainEventWithPayload(
         id = domainEventId,
+        type = DomainEventType.APPROVED_PREMISES_PLACEMENT_APPEAL_REJECTED,
         applicationId = changeRequest.placementRequest.application.id,
         crn = changeRequest.placementRequest.application.crn,
         nomsNumber = changeRequest.placementRequest.application.nomsNumber,
@@ -113,20 +113,12 @@ class Cas1ChangeRequestDomainEventService(
         cas1SpaceBookingId = spaceBooking.id,
         bookingId = null,
         schemaVersion = null,
-        data = PlacementAppealRejectedEnvelope(
-          id = domainEventId,
-          timestamp = OffsetDateTime.now().toInstant(),
-          eventType = EventType.placementAppealRejected,
-          eventDetails = PlacementAppealRejected(
-            bookingId = spaceBooking.id,
-            premises = mapApprovedPremisesEntityToPremises(spaceBooking.premises),
-            arrivalOn = spaceBooking.expectedArrivalDate,
-            departureOn = spaceBooking.expectedDepartureDate,
-            rejectedBy = getStaffDetailsByUsername(rejectingUser.deliusUsername).toStaffMember(),
-            rejectionReason = Cas1DomainEventCodedId(
-              id = reason.id,
-              code = reason.code,
-            ),
+        data = PlacementAppealRejected(
+          booking = spaceBooking.toEventBookingSummary(),
+          rejectedBy = getStaffDetailsByUsername(rejectingUser.deliusUsername).toStaffMember(),
+          reason = Cas1DomainEventCodedId(
+            id = reason.id,
+            code = reason.code,
           ),
         ),
       ),
