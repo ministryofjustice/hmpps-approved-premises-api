@@ -2397,6 +2397,8 @@ paths:
         - Placement requests
       summary: Gets placement requests for a given user
       operationId: placement_requestsIdGet
+      deprecated: true
+      description: Use cas specific endpoint
       parameters:
         - name: id
           in: path
@@ -2419,6 +2421,8 @@ paths:
         - Placement requests
       summary: Withdraws a placement request
       operationId: placement_requestsIdWithdrawalPost
+      deprecated: true
+      description: Use cas specific endpoint
       parameters:
         - name: id
           in: path

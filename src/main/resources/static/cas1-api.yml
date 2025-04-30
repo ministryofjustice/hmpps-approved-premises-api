@@ -518,6 +518,61 @@ paths:
               $ref: '_shared.yml#/components/headers/X-Pagination-TotalResults'
             X-Pagination-PageSize:
               $ref: '_shared.yml#/components/headers/X-Pagination-TotalResults'
+  /placement-requests/{id}:
+    get:
+      tags:
+        - Placement requests
+      summary: Gets placement requests for a given user
+      operationId: getPlacementRequest
+      parameters:
+        - name: id
+          in: path
+          description: ID of the placement request
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        200:
+          description: successfully retrieved placement requests
+          content:
+            'application/json':
+              schema:
+                $ref: 'cas1-schemas.yml#/components/schemas/Cas1PlacementRequestDetail'
+  /placement-requests/{id}/withdrawal:
+    post:
+      tags:
+        - Placement requests
+      summary: Withdraws a placement request
+      operationId: withdrawPlacementRequest
+      parameters:
+        - name: id
+          in: path
+          description: ID of the placement request
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        description: Withdrawal details
+        content:
+          'application/json':
+            schema:
+              $ref: 'cas1-schemas.yml#/components/schemas/Cas1WithdrawPlacementRequest'
+      responses:
+        200:
+          description: successful operation
+          content:
+            'application/json':
+              schema:
+                $ref: 'cas1-schemas.yml#/components/schemas/Cas1PlacementRequestDetail'
+        404:
+          description: invalid applicationId
+          content:
+            'application/json':
+              schema:
+                $ref: '_shared.yml#/components/schemas/Problem'
+      x-codegen-request-body-name: body
 
 
   /premises/occupancy-report:

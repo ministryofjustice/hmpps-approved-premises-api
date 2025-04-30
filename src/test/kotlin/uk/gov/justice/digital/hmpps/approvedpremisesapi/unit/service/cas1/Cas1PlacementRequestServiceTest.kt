@@ -1034,6 +1034,117 @@ class Cas1PlacementRequestServiceTest {
     }
   }
 
+  @Nested
+  inner class GetPlacementRequest {
+
+    @Test
+    fun `returns NotFound when PlacementRequest doesn't exist`() {
+      val placementRequestId = UUID.fromString("72f15a57-8f3a-48bc-abc7-be09fe548fea")
+
+      val requestingUser = UserEntityFactory()
+        .withUnitTestControlProbationRegion()
+        .produce()
+
+      every { placementRequestRepository.findByIdOrNull(placementRequestId) } returns null
+
+      val result = placementRequestService.getPlacementRequest(requestingUser, placementRequestId)
+
+      assertThat(result is CasResult.NotFound).isTrue()
+    }
+
+    @Test
+    fun `returns Success when user can access offender and PlacementRequest is allocated to User`() {
+      val requestingUser = UserEntityFactory()
+        .withUnitTestControlProbationRegion()
+        .produce()
+
+      val application = ApprovedPremisesApplicationEntityFactory()
+        .withCreatedByUser(assigneeUser)
+        .produce()
+
+      val assessment = ApprovedPremisesAssessmentEntityFactory()
+        .withApplication(application)
+        .withAllocatedToUser(assigneeUser)
+        .produce()
+
+      val placementRequest = PlacementRequestEntityFactory()
+        .withPlacementRequirements(
+          PlacementRequirementsEntityFactory()
+            .withApplication(application)
+            .withAssessment(assessment)
+            .produce(),
+        )
+        .withApplication(application)
+        .withAssessment(assessment)
+        .withAllocatedToUser(requestingUser)
+        .produce()
+
+      every {
+        offenderService.canAccessOffender(application.crn, requestingUser.cas1LaoStrategy())
+      } returns true
+      every { placementRequestRepository.findByIdOrNull(placementRequest.id) } returns placementRequest
+
+      val result = placementRequestService.getPlacementRequest(requestingUser, placementRequest.id)
+
+      assertThat(result is CasResult.Success).isTrue()
+
+      val expectedPlacementRequest = (result as CasResult.Success).value
+
+      assertThat(expectedPlacementRequest).isEqualTo(placementRequest)
+    }
+
+    @Test
+    fun `returns Success when user can access offender and User has the WORKFLOW_MANAGER role`() {
+      val requestingUser = UserEntityFactory()
+        .withUnitTestControlProbationRegion()
+        .produce()
+        .apply {
+          roles += UserRoleAssignmentEntityFactory()
+            .withUser(this)
+            .withRole(UserRole.CAS1_WORKFLOW_MANAGER)
+            .produce()
+        }
+
+      val otherUser = UserEntityFactory()
+        .withUnitTestControlProbationRegion()
+        .produce()
+
+      val application = ApprovedPremisesApplicationEntityFactory()
+        .withCreatedByUser(assigneeUser)
+        .produce()
+
+      val assessment = ApprovedPremisesAssessmentEntityFactory()
+        .withApplication(application)
+        .withAllocatedToUser(assigneeUser)
+        .produce()
+
+      val placementRequest = PlacementRequestEntityFactory()
+        .withPlacementRequirements(
+          PlacementRequirementsEntityFactory()
+            .withApplication(application)
+            .withAssessment(assessment)
+            .produce(),
+        )
+        .withApplication(application)
+        .withAssessment(assessment)
+        .withAllocatedToUser(otherUser)
+        .produce()
+
+      every {
+        offenderService.canAccessOffender(application.crn, requestingUser.cas1LaoStrategy())
+      } returns true
+      every { placementRequestRepository.findByIdOrNull(placementRequest.id) } returns placementRequest
+
+      val result = placementRequestService.getPlacementRequest(requestingUser, placementRequest.id)
+
+      assertThat(result is CasResult.Success).isTrue()
+
+      val expectedPlacementRequest = (result as CasResult.Success).value
+
+      assertThat(expectedPlacementRequest).isEqualTo(placementRequest)
+    }
+  }
+
   private fun createPlacementRequests(num: Int, crn: String? = null, tier: String? = null, arrivalDate: LocalDate? = null): List<PlacementRequestEntity> = List(num) {
     val user = UserEntityFactory()
       .withUnitTestControlProbationRegion()
