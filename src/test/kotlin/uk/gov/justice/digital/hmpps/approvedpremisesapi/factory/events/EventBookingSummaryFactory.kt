@@ -18,7 +18,7 @@ class EventBookingSummaryFactory : Factory<EventBookingSummary> {
   fun withDepartureOn(departureOn: LocalDate) = apply { this.departureOn = { departureOn } }
 
   override fun produce() = EventBookingSummary(
-    bookingId = bookingId(),
+    id = bookingId(),
     premises = premises(),
     arrivalDate = arrivalOn(),
     departureDate = departureOn(),

@@ -88,7 +88,7 @@ class Cas1ChangeRequestDomainEventServiceTest {
       val data = domainEvent.data
 
       assertThat(data.booking.premises.id).isEqualTo(changeRequest.spaceBooking.premises.id)
-      assertThat(data.booking.bookingId).isEqualTo(spaceBooking.id)
+      assertThat(data.booking.id).isEqualTo(spaceBooking.id)
       assertThat(data.booking.arrivalDate).isEqualTo(LocalDate.of(2021, 1, 1))
       assertThat(data.booking.departureDate).isEqualTo(LocalDate.of(2021, 12, 1))
       assertThat(data.acceptedBy.username).isEqualTo(acceptingUser.deliusUsername)
@@ -138,7 +138,7 @@ class Cas1ChangeRequestDomainEventServiceTest {
 
       assertThat(data.requestedBy.username).isEqualTo(requestingUser.deliusUsername)
       assertThat(data.booking.premises.id).isEqualTo(changeRequest.spaceBooking.premises.id)
-      assertThat(data.booking.bookingId).isEqualTo(spaceBooking.id)
+      assertThat(data.booking.id).isEqualTo(spaceBooking.id)
       assertThat(data.booking.arrivalDate).isEqualTo(LocalDate.of(2021, 1, 1))
       assertThat(data.booking.departureDate).isEqualTo(LocalDate.of(2021, 12, 1))
       assertThat(data.reason.id).isEqualTo(changeRequest.requestReason.id)
@@ -192,7 +192,7 @@ class Cas1ChangeRequestDomainEventServiceTest {
 
       assertThat(data.booking.premises.id).isEqualTo(changeRequest.spaceBooking.premises.id)
       assertThat(data.rejectedBy.username).isEqualTo(requestingUser.deliusUsername)
-      assertThat(data.booking.bookingId).isEqualTo(spaceBooking.id)
+      assertThat(data.booking.id).isEqualTo(spaceBooking.id)
       assertThat(data.booking.arrivalDate).isEqualTo(LocalDate.of(2021, 1, 1))
       assertThat(data.booking.departureDate).isEqualTo(LocalDate.of(2021, 12, 1))
       assertThat(data.reason.id).isEqualTo(changeRequest.rejectionReason!!.id)
@@ -249,12 +249,12 @@ class Cas1ChangeRequestDomainEventServiceTest {
 
       assertThat(data.acceptedBy.username).isEqualTo(requestingUser.deliusUsername)
 
-      assertThat(data.from.bookingId).isEqualTo(from.id)
+      assertThat(data.from.id).isEqualTo(from.id)
       assertThat(data.from.premises.name).isEqualTo("frompremises")
       assertThat(data.from.arrivalDate).isEqualTo(LocalDate.of(2019, 8, 7))
       assertThat(data.from.departureDate).isEqualTo(LocalDate.of(2019, 8, 8))
 
-      assertThat(data.to.bookingId).isEqualTo(to.id)
+      assertThat(data.to.id).isEqualTo(to.id)
       assertThat(data.to.premises.name).isEqualTo("topremises")
       assertThat(data.to.arrivalDate).isEqualTo(LocalDate.of(2019, 8, 8))
       assertThat(data.to.departureDate).isEqualTo(LocalDate.of(2019, 8, 9))
@@ -296,7 +296,7 @@ class Cas1ChangeRequestDomainEventServiceTest {
       val data = domainEvent.data
 
       assertThat(data.booking.premises.id).isEqualTo(changeRequest.spaceBooking.premises.id)
-      assertThat(data.booking.bookingId).isEqualTo(spaceBooking.id)
+      assertThat(data.booking.id).isEqualTo(spaceBooking.id)
       assertThat(data.booking.arrivalDate).isEqualTo(LocalDate.of(2021, 1, 1))
       assertThat(data.booking.departureDate).isEqualTo(LocalDate.of(2021, 12, 1))
 
@@ -344,7 +344,7 @@ class Cas1ChangeRequestDomainEventServiceTest {
       val data = domainEvent.data
 
       assertThat(data.booking.premises.id).isEqualTo(changeRequest.spaceBooking.premises.id)
-      assertThat(data.booking.bookingId).isEqualTo(spaceBooking.id)
+      assertThat(data.booking.id).isEqualTo(spaceBooking.id)
       assertThat(data.booking.arrivalDate).isEqualTo(LocalDate.of(2021, 1, 1))
       assertThat(data.booking.departureDate).isEqualTo(LocalDate.of(2021, 12, 1))
 

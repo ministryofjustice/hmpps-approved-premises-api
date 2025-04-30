@@ -19,14 +19,14 @@ object DomainEventUtils {
 }
 
 fun Cas1SpaceBookingEntity.toEventBookingSummary() = EventBookingSummary(
-  bookingId = this.id,
+  id = this.id,
   premises = mapApprovedPremisesEntityToPremises(this.premises),
   arrivalDate = this.canonicalArrivalDate,
   departureDate = this.canonicalDepartureDate,
 )
 
 fun EventBookingSummary.toTimelinePayloadSummary() = Cas1TimelineEventPayloadBookingSummary(
-  bookingId = this.bookingId,
+  bookingId = this.id,
   premises = NamedId(this.premises.id, this.premises.name),
   arrivalDate = this.arrivalDate,
   departureDate = this.departureDate,

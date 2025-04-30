@@ -619,11 +619,11 @@ class Cas1BookingManagementDomainEventServiceTest {
       val data = domainEvent.data
       assertThat(data.applicationId).isEqualTo(application.id)
       assertThat(data.createdBy.username).isEqualTo("thecreator")
-      assertThat(data.from.bookingId).isEqualTo(from.id)
+      assertThat(data.from.id).isEqualTo(from.id)
       assertThat(data.from.premises.name).isEqualTo("frompremises")
       assertThat(data.from.arrivalDate).isEqualTo(LocalDate.of(2019, 8, 7))
       assertThat(data.from.departureDate).isEqualTo(LocalDate.of(2019, 8, 8))
-      assertThat(data.to.bookingId).isEqualTo(to.id)
+      assertThat(data.to.id).isEqualTo(to.id)
       assertThat(data.to.premises.name).isEqualTo("topremises")
       assertThat(data.to.arrivalDate).isEqualTo(LocalDate.of(2019, 8, 8))
       assertThat(data.to.departureDate).isEqualTo(LocalDate.of(2019, 8, 9))
