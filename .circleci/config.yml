@@ -410,6 +410,7 @@ workflows:
             - cas1_e2e_tests
             - cas2_e2e_tests
             - cas3_e2e_tests
+            - cas2_bail_e2e_tests
       - hmpps/deploy_env:
           name: deploy_preprod
           env: "preprod"
