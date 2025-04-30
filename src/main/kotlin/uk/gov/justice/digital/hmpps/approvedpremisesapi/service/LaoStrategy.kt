@@ -2,11 +2,11 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.service
 
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserQualification
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas2v2.Cas2v2UserEntity
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.cas2v2.Cas2v2UserType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PersonInfoResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PersonSummaryInfoResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.deliuscontext.CaseSummary
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas2.Cas2OffenderService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas2v2.Cas2v2OffenderService
 
 /**
  * A Limited Access Offender (LAO) is one for which access is limited to
@@ -27,11 +27,35 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.deliuscontext.Case
  * of the calling client (i.e. CAS) to check and apply them as applicable.
  * The [LaoStrategy] is used to determine how an LAO should be handled.
  *
- * Note that there is a 3rd strategy not explicit mentioned here, used by CAS2 via
- * the [uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas2.Cas2OffenderService].
- * This is used for calls originating from NOMIS and External users and will always
- * return an Offender as [PersonInfoResult.Success.Restricted] if a restriction or
- * exclusion exists. We should consider adding this here as an `AlwaysRestricted` strategy
+ * We want to update all code to explicitly state an [LaoStrategy] when retrieving offender
+ * information to make the behaviour clear. Until that has been done, the following sections
+ * summarises how each CAS deals with LAOS:
+ *
+ * # CAS1
+ *
+ * See [cas1LaoStrategy()] below
+ *
+ * # CAS2
+ *
+ * Always return an Offender as [PersonInfoResult.Success.Restricted] if a restriction or exclusion exists,
+ * regardless of the users it applies to. This is because CAS1 is only used by NOMIS and External users.
+ *
+ * Implemented in [Cas2OffenderService]
+ *
+ * # CAS2 Bail
+ *
+ * If a restriction exists on the offender (regardless of whether it applies to the user), return [PersonInfoResult.Success.Restricted]
+ * If an exclusion exists on the offender, return the full offender info
+ *
+ * This logic has been applied because CAS1 is used by NOMIS, External and Delius users, so we can't always check restrictions.
+ *
+ * We _could_ tighten this up for Delius users
+ *
+ * Implemented in [Cas2v2OffenderService]
+ *
+ * # CAS3
+ *
+ * See [cas3LaoStrategy()] below
  */
 sealed interface LaoStrategy {
   /**
@@ -53,21 +77,12 @@ sealed interface LaoStrategy {
 }
 
 /**
- * If the user has the `LAO` qualification, they can always view LAO offenders
- *
- * Note that there are some cases in CAS1 where this strategy should not be used
- * (e.g. when creating applications the LAO qualification should be ignored)
+ * This strategy is _not_ applied when creating an application. In that case, we always apply [LaoStrategy.CheckUserAccess]
  */
 fun UserEntity.cas1LaoStrategy() = if (this.hasQualification(UserQualification.LAO)) {
   LaoStrategy.NeverRestricted
 } else {
   LaoStrategy.CheckUserAccess(this.deliusUsername)
-}
-
-fun Cas2v2UserEntity.cas2DeliusUserLaoStrategy() = when (userType) {
-  Cas2v2UserType.DELIUS -> LaoStrategy.CheckUserAccess(this.username)
-  Cas2v2UserType.NOMIS -> LaoStrategy.CheckUserAccess(this.username)
-  else -> error("Can't provide strategy for users of type $userType")
 }
 
 fun UserEntity.cas3LaoStrategy() = LaoStrategy.CheckUserAccess(this.deliusUsername)
