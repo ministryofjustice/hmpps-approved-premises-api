@@ -11,7 +11,7 @@ class Cas2UserAccessService {
     in CAS-1598.
     For now, we'll only use the new logic if the application has been transferred (so more than one assignment), otherwise use existing.
      */
-    if (application.applicationAssignments.size > 1) {
+    if (application.isTransferredApplication()) {
       return user.id == application.currentPomUserId ||
         // user is currently assigned POM
         (user.activeCaseloadId != null && user.activeCaseloadId == application.currentPrisonCode) // user is in same prison

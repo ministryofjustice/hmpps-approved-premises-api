@@ -47,7 +47,7 @@ class ApplicationsTransformer(
       allocatedPomName = currentUser?.name,
       allocatedPomEmailAddress = currentUser?.email,
       currentPrisonName = omu?.prisonName ?: jpa.currentPrisonCode,
-      isTransferredApplication = jpa.currentPrisonCode != jpa.referringPrisonCode,
+      isTransferredApplication = jpa.isTransferredApplication(),
       assignmentDate = jpa.currentAssignmentDate,
       omuEmailAddress = omu?.email,
     )
