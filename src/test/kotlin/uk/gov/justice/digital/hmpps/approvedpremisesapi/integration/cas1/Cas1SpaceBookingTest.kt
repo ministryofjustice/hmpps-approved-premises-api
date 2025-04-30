@@ -21,6 +21,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1NewPlanned
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1NewSpaceBooking
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1NewSpaceBookingCancellation
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1NonArrival
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1ShortenSpaceBooking
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1SpaceBooking
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1SpaceBookingCharacteristic
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1SpaceBookingSummary
@@ -38,6 +39,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.InitialiseDa
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenACas1Application
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenACas1ChangeRequest
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenACas1CruManagementArea
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenACas1SpaceBooking
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAPlacementRequest
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAProbationRegion
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.givenAUser
@@ -2534,6 +2536,62 @@ class Cas1SpaceBookingTest {
       )
 
       emailAsserter.assertNoEmailsRequested()
+    }
+  }
+
+  @Nested
+  inner class ShortenSpaceBooking : InitialiseDatabasePerClassTestBase() {
+    lateinit var spaceBooking: Cas1SpaceBookingEntity
+
+    @BeforeAll
+    fun setupTestData() {
+      spaceBooking = givenACas1SpaceBooking(
+        expectedArrivalDate = LocalDate.now().minusDays(7),
+        actualArrivalDate = LocalDate.now().minusDays(7),
+        expectedDepartureDate = LocalDate.now().plusDays(7),
+      )
+    }
+
+    @Test
+    fun `Returns 403 Forbidden if user does not have correct permission`() {
+      val (_, jwt) = givenAUser(roles = listOf(CAS1_ASSESSOR))
+
+      webTestClient.patch()
+        .uri("/cas1/premises/${spaceBooking.premises.id}/space-bookings/${spaceBooking.id}/shorten")
+        .header("Authorization", "Bearer $jwt")
+        .bodyValue(
+          Cas1ShortenSpaceBooking(
+            departureDate = LocalDate.now(),
+            reason = "valid reason",
+          ),
+        )
+        .exchange()
+        .expectStatus()
+        .isForbidden
+    }
+
+    @Test
+    fun `Update space booking returns OK, and correctly update departure date`() {
+      val (_, jwt) = givenAUser(roles = listOf(UserRole.CAS1_CHANGE_REQUEST_DEV))
+
+      val today = LocalDate.now()
+
+      webTestClient.patch()
+        .uri("/cas1/premises/${spaceBooking.premises.id}/space-bookings/${spaceBooking.id}/shorten")
+        .header("Authorization", "Bearer $jwt")
+        .bodyValue(
+          Cas1ShortenSpaceBooking(
+            departureDate = today,
+            reason = "valid reason",
+          ),
+        )
+        .exchange()
+        .expectStatus()
+        .isOk
+
+      val updatedSpaceBooking = cas1SpaceBookingRepository.findByIdOrNull(spaceBooking.id)!!
+
+      assertThat(updatedSpaceBooking.expectedDepartureDate).isEqualTo(today)
     }
   }
 

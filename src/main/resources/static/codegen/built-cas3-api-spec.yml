@@ -3282,6 +3282,7 @@ components:
         - cas1_space_booking_record_keyworker
         - cas1_space_booking_view
         - cas1_space_booking_withdraw
+        - cas1_space_booking_shorten
         - cas1_premises_capacity_report_view
         - cas1_tasks_list
         - cas1_premises_view

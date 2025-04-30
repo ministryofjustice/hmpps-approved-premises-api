@@ -14,6 +14,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1NewPlanned
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1NewSpaceBooking
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1NewSpaceBookingCancellation
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1NonArrival
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1ShortenSpaceBooking
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1SpaceBooking
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1SpaceBookingResidency
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1SpaceBookingSummary
@@ -39,6 +40,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.UserService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1ChangeRequestService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1SpaceBookingService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1SpaceBookingService.DepartureInfo
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1SpaceBookingService.ShortenSpaceBookingDetails
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1SpaceBookingService.SpaceBookingFilterCriteria
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1SpaceBookingService.UpdateSpaceBookingDetails
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1WithdrawableService
@@ -200,6 +202,28 @@ class Cas1SpaceBookingController(
           departureDate = cas1UpdateSpaceBooking.departureDate,
           characteristics = characteristics,
           updatedBy = user,
+        ),
+      ),
+    )
+
+    return ResponseEntity(HttpStatus.OK)
+  }
+
+  override fun shortenSpaceBooking(
+    premisesId: UUID,
+    bookingId: UUID,
+    cas1ShortenSpaceBooking: Cas1ShortenSpaceBooking,
+  ): ResponseEntity<Unit> {
+    userAccessService.ensureCurrentUserHasPermission(UserPermission.CAS1_SPACE_BOOKING_SHORTEN)
+
+    ensureEntityFromCasResultIsSuccess(
+      cas1SpaceBookingService.shortenSpaceBooking(
+        ShortenSpaceBookingDetails(
+          bookingId = bookingId,
+          premisesId = premisesId,
+          departureDate = cas1ShortenSpaceBooking.departureDate,
+          reason = cas1ShortenSpaceBooking.reason,
+          updatedBy = userService.getUserForRequest(),
         ),
       ),
     )

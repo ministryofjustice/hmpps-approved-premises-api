@@ -1119,6 +1119,35 @@ paths:
         200:
           description: successful operation
 
+  /premises/{premisesId}/space-bookings/{bookingId}/shorten:
+    patch:
+      tags:
+        - space bookings
+      operationId: "shortenSpaceBooking"
+      parameters:
+        - name: premisesId
+          in: path
+          description: ID of the corresponding premises
+          required: true
+          schema:
+            type: string
+            format: uuid
+        - name: bookingId
+          in: path
+          description: ID of the space booking
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        content:
+          'application/json':
+            schema:
+              $ref: '#/components/schemas/Cas1ShortenSpaceBooking'
+        required: true
+      responses:
+        200:
+          description: successful operation
 
   /premises/{premisesId}/space-bookings/{bookingId}/timeline:
     get:
@@ -5187,6 +5216,7 @@ components:
         - cas1_space_booking_record_keyworker
         - cas1_space_booking_view
         - cas1_space_booking_withdraw
+        - cas1_space_booking_shorten
         - cas1_premises_capacity_report_view
         - cas1_tasks_list
         - cas1_premises_view
@@ -6928,6 +6958,20 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/Cas1SpaceBookingCharacteristic'
+    Cas1ShortenSpaceBooking:
+      type: object
+      properties:
+        departureDate:
+          description: Updated departure date
+          type: string
+          format: date
+          example: 2022-09-30
+        reason:
+          description: Reason for shortening a placement
+          type: string
+      required:
+        - departureDate
+        - reason
     Cas1SpaceSearchRequirements:
       deprecated: true
       type: object
