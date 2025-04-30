@@ -198,7 +198,7 @@ class Cas1AssessmentDomainEventService(
           ),
         ),
         metadata = mapOf(
-          MetaDataName.CAS1_REQUESTED_AP_TYPE to apType?.asApprovedPremisesType()?.name,
+          MetaDataName.CAS1_REQUESTED_AP_TYPE to listOf(apType?.asApprovedPremisesType()?.name),
         ),
         schemaVersion = 2,
       ),

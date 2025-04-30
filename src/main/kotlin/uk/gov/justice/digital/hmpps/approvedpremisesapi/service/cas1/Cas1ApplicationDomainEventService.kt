@@ -26,7 +26,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.OffenderRisksSer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.OffenderService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.DomainEventTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.UrlTemplate
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.mapOfNonNullValues
 import java.time.Clock
 import java.time.Instant
 import java.time.LocalDate
@@ -104,11 +103,15 @@ class Cas1ApplicationDomainEventService(
             caseDetail,
           ),
         ),
-        metadata = mapOfNonNullValues(
-          MetaDataName.CAS1_APP_REASON_FOR_SHORT_NOTICE to submitApplication.reasonForShortNotice,
-          MetaDataName.CAS1_APP_REASON_FOR_SHORT_NOTICE_OTHER to submitApplication.reasonForShortNoticeOther,
-          MetaDataName.CAS1_REQUESTED_AP_TYPE to application.apType.name,
-        ),
+        metadata = buildMap {
+          submitApplication.reasonForShortNotice?.let {
+            put(MetaDataName.CAS1_APP_REASON_FOR_SHORT_NOTICE, listOf(it))
+          }
+          submitApplication.reasonForShortNoticeOther?.let {
+            put(MetaDataName.CAS1_APP_REASON_FOR_SHORT_NOTICE_OTHER, listOf(it))
+          }
+          put(MetaDataName.CAS1_REQUESTED_AP_TYPE, listOf(application.apType.name))
+        },
       ),
     )
   }

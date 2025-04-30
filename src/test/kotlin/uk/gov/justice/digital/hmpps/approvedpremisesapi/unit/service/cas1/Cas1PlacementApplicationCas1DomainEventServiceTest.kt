@@ -196,7 +196,7 @@ class Cas1PlacementApplicationCas1DomainEventServiceTest {
             assertThat(it.crn).isEqualTo(CRN)
             assertThat(it.nomsNumber).isEqualTo(application.nomsNumber)
             assertThat(it.occurredAt).isWithinTheLastMinute()
-            assertThat(it.metadata).containsEntry(MetaDataName.CAS1_PLACEMENT_APPLICATION_ID, placementApplication.id.toString())
+            assertThat(it.metadata).containsEntry(MetaDataName.CAS1_PLACEMENT_APPLICATION_ID, listOf(placementApplication.id.toString()))
 
             val eventDetails = it.data.eventDetails
             assertThat(eventDetails.applicationId).isEqualTo(application.id)
@@ -406,7 +406,7 @@ class Cas1PlacementApplicationCas1DomainEventServiceTest {
             assertThat(it.crn).isEqualTo(CRN)
             assertThat(it.nomsNumber).isEqualTo(application.nomsNumber)
             assertThat(it.occurredAt).isWithinTheLastMinute()
-            assertThat(it.metadata).containsEntry(MetaDataName.CAS1_PLACEMENT_APPLICATION_ID, placementApplication.id.toString())
+            assertThat(it.metadata).containsEntry(MetaDataName.CAS1_PLACEMENT_APPLICATION_ID, listOf(placementApplication.id.toString()))
 
             val eventDetails = it.data.eventDetails
             assertThat(eventDetails.applicationId).isEqualTo(application.id)
