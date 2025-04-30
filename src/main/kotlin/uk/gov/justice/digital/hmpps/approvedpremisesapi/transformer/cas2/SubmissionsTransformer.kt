@@ -6,7 +6,9 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas2SubmittedA
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas2SubmittedApplicationSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas2ApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas2ApplicationSummaryEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.OffenderManagementUnitRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PersonInfoResult
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.NomisUserService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.NomisUserTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.PersonTransformer
 import java.util.UUID
@@ -18,25 +20,36 @@ class SubmissionsTransformer(
   private val nomisUserTransformer: NomisUserTransformer,
   private val timelineEventsTransformer: TimelineEventsTransformer,
   private val assessmentsTransformer: AssessmentsTransformer,
+  private val offenderManagementUnitRepository: OffenderManagementUnitRepository,
+  private val nomisUserService: NomisUserService,
 ) {
 
   fun transformJpaToApiRepresentation(
     jpa: Cas2ApplicationEntity,
-    personInfo: PersonInfoResult
-      .Success,
-  ): Cas2SubmittedApplication = Cas2SubmittedApplication(
-    id = jpa.id,
-    person = personTransformer.transformModelToPersonApi(personInfo),
-    submittedBy = nomisUserTransformer.transformJpaToApi(jpa.createdByUser),
-    schemaVersion = jpa.schemaVersion.id,
-    outdatedSchema = !jpa.schemaUpToDate,
-    createdAt = jpa.createdAt.toInstant(),
-    submittedAt = jpa.submittedAt?.toInstant(),
-    document = if (jpa.document != null) objectMapper.readTree(jpa.document) else null,
-    telephoneNumber = jpa.telephoneNumber,
-    timelineEvents = timelineEventsTransformer.transformApplicationToTimelineEvents(jpa),
-    assessment = assessmentsTransformer.transformJpaToApiRepresentation(jpa.assessment!!),
-  )
+    personInfo: PersonInfoResult.Success,
+  ): Cas2SubmittedApplication {
+    val currentUser = jpa.currentPomUserId?.let { nomisUserService.getNomisUserById(jpa.currentPomUserId!!) }
+    val omu = jpa.currentPrisonCode?.let { offenderManagementUnitRepository.findByPrisonCode(it) }
+    return Cas2SubmittedApplication(
+      id = jpa.id,
+      person = personTransformer.transformModelToPersonApi(personInfo),
+      submittedBy = nomisUserTransformer.transformJpaToApi(jpa.createdByUser),
+      schemaVersion = jpa.schemaVersion.id,
+      outdatedSchema = !jpa.schemaUpToDate,
+      createdAt = jpa.createdAt.toInstant(),
+      submittedAt = jpa.submittedAt?.toInstant(),
+      document = if (jpa.document != null) objectMapper.readTree(jpa.document) else null,
+      telephoneNumber = jpa.telephoneNumber,
+      timelineEvents = timelineEventsTransformer.transformApplicationToTimelineEvents(jpa),
+      assessment = assessmentsTransformer.transformJpaToApiRepresentation(jpa.assessment!!),
+      allocatedPomName = currentUser?.name,
+      allocatedPomEmailAddress = currentUser?.email,
+      currentPrisonName = omu?.prisonName ?: jpa.currentPrisonCode,
+      isTransferredApplication = jpa.isTransferredApplication(),
+      assignmentDate = jpa.currentAssignmentDate,
+      omuEmailAddress = omu?.email,
+    )
+  }
 
   fun transformJpaSummaryToApiRepresentation(
     jpaSummary: Cas2ApplicationSummaryEntity,

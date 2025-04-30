@@ -17,9 +17,12 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas2TimelineEv
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NomisUser
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Person
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.NomisUserEntityFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.OffenderManagementUnitEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.cas2.Cas2ApplicationEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.cas2.Cas2ApplicationSummaryEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.cas2.Cas2AssessmentEntityFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.OffenderManagementUnitRepository
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.NomisUserService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.NomisUserTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.PersonTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.cas2.AssessmentsTransformer
@@ -33,6 +36,8 @@ class SubmissionsTransformerTest {
   private val mockNomisUserTransformer = mockk<NomisUserTransformer>()
   private val mockTimelineEventsTransformer = mockk<TimelineEventsTransformer>()
   private val mockAssessmentsTransformer = mockk<AssessmentsTransformer>()
+  private val mockOffenderManagementUnitRepository = mockk<OffenderManagementUnitRepository>()
+  private val mockNomisUserService = mockk<NomisUserService>()
 
   private val objectMapper = ObjectMapper().apply {
     registerModule(Jdk8Module())
@@ -46,6 +51,8 @@ class SubmissionsTransformerTest {
     mockNomisUserTransformer,
     mockTimelineEventsTransformer,
     mockAssessmentsTransformer,
+    mockOffenderManagementUnitRepository,
+    mockNomisUserService,
   )
 
   private val user = NomisUserEntityFactory().produce()
@@ -66,6 +73,7 @@ class SubmissionsTransformerTest {
   )
 
   private val mockNomisUser = mockk<NomisUser>()
+  private val prison = OffenderManagementUnitEntityFactory().produce()
 
   @BeforeEach
   fun setup() {
@@ -73,6 +81,8 @@ class SubmissionsTransformerTest {
     every { mockNomisUserTransformer.transformJpaToApi(any()) } returns mockNomisUser
     every { mockTimelineEventsTransformer.transformApplicationToTimelineEvents(any()) } returns listOf(mockk<Cas2TimelineEvent>())
     every { mockAssessmentsTransformer.transformJpaToApiRepresentation(any()) } returns mockAssessment
+    every { mockOffenderManagementUnitRepository.findByPrisonCode(any()) } returns prison
+    every { mockNomisUserService.getNomisUserById(any()) } returns user
   }
 
   @Nested
@@ -109,6 +119,12 @@ class SubmissionsTransformerTest {
         "telephoneNumber",
         "timelineEvents",
         "assessment",
+        "allocatedPomEmailAddress",
+        "allocatedPomName",
+        "assignmentDate",
+        "currentPrisonName",
+        "isTransferredApplication",
+        "omuEmailAddress",
       )
     }
   }
