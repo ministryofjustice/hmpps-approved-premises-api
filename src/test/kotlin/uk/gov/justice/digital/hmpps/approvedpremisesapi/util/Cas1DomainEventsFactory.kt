@@ -27,6 +27,9 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.events.Placement
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.events.PlacementAppealRejectedFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.events.PlacementApplicationAllocatedFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.events.PlacementApplicationWithdrawnFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.events.PlannedTransferRequestAcceptedFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.events.PlannedTransferRequestCreatedFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.events.PlannedTransferRequestRejectedFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.events.RequestForPlacementAssessedFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.events.RequestForPlacementCreatedFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DomainEventSchemaVersion
@@ -40,8 +43,10 @@ class Cas1DomainEventsFactory(val objectMapper: ObjectMapper) {
     type: DomainEventType,
     requestId: UUID = UUID.randomUUID(),
     occurredAt: Instant = Instant.now(),
+    id: UUID = UUID.randomUUID(),
   ): DomainEventEnvelopeAndPersistedJson {
     val envelope = createEnvelopeForLatestSchemaVersion(
+      id,
       type,
       requestId,
       occurredAt = occurredAt,
@@ -56,11 +61,11 @@ class Cas1DomainEventsFactory(val objectMapper: ObjectMapper) {
 
   @SuppressWarnings("CyclomaticComplexMethod", "TooGenericExceptionThrown")
   fun createEnvelopeForLatestSchemaVersion(
+    id: UUID = UUID.randomUUID(),
     type: DomainEventType,
     requestId: UUID = UUID.randomUUID(),
     occurredAt: Instant = Instant.now(),
-  ): Any {
-    val id = UUID.randomUUID()
+  ): Cas1DomainEventEnvelope<*> {
     val eventType = EventType.entries.find { it.value == type.typeName } ?: throw RuntimeException("Cannot find EventType for $type")
 
     val eventDetails = when (type) {
@@ -88,6 +93,9 @@ class Cas1DomainEventsFactory(val objectMapper: ObjectMapper) {
       DomainEventType.APPROVED_PREMISES_PLACEMENT_APPEAL_CREATED -> PlacementAppealCreatedFactory().produce()
       DomainEventType.APPROVED_PREMISES_PLACEMENT_APPEAL_REJECTED -> PlacementAppealRejectedFactory().produce()
       DomainEventType.APPROVED_PREMISES_EMERGENCY_TRANSFER_CREATED -> EmergencyTransferCreatedFactory().produce()
+      DomainEventType.APPROVED_PREMISES_PLANNED_TRANSFER_REQUEST_CREATED -> PlannedTransferRequestCreatedFactory().produce()
+      DomainEventType.APPROVED_PREMISES_PLANNED_TRANSFER_REQUEST_ACCEPTED -> PlannedTransferRequestAcceptedFactory().produce()
+      DomainEventType.APPROVED_PREMISES_PLANNED_TRANSFER_REQUEST_REJECTED -> PlannedTransferRequestRejectedFactory().produce()
       else -> throw RuntimeException("Domain event type $type not supported")
     }
 
@@ -109,7 +117,7 @@ class Cas1DomainEventsFactory(val objectMapper: ObjectMapper) {
 }
 
 data class DomainEventEnvelopeAndPersistedJson(
-  val envelope: Any,
+  val envelope: Cas1DomainEventEnvelope<*>,
   val persistedJson: String,
   val schemaVersion: DomainEventSchemaVersion,
 )

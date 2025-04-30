@@ -4,8 +4,8 @@ import java.time.Instant
 import java.util.UUID
 
 data class Cas1DomainEventEnvelope<T : Cas1DomainEventPayload>(
-  val id: UUID,
-  val timestamp: Instant,
-  val eventType: EventType,
-  val eventDetails: T,
-)
+  override val id: UUID,
+  override val timestamp: Instant,
+  override val eventType: EventType,
+  override val eventDetails: T,
+) : Cas1DomainEventEnvelopeInterface<T>

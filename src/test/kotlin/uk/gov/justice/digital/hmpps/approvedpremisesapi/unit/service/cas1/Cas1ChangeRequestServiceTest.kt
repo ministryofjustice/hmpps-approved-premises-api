@@ -175,14 +175,7 @@ class Cas1ChangeRequestServiceTest {
 
       assertThatCasResult(result).isSuccess()
 
-      val savedChangeRequestCaptor = slot<Cas1ChangeRequestEntity>()
-      verify {
-        cas1ChangeRequestRepository.save(
-          capture(savedChangeRequestCaptor),
-        )
-      }
-
-      val savedChangeRequest = savedChangeRequestCaptor.captured
+      val savedChangeRequest = getSavedChangeRequest()
       assertThat(savedChangeRequest.type).isEqualTo(ChangeRequestType.PLACEMENT_APPEAL)
       assertThat(savedChangeRequest.resolved).isEqualTo(false)
 
@@ -217,27 +210,29 @@ class Cas1ChangeRequestServiceTest {
         .withSpaceBookingId(cas1SpaceBooking.id)
         .produce()
 
+      every { userService.getUserForRequest() } returns UserEntityFactory().withDefaults().produce()
       every { placementRequestRepository.findByIdOrNull(placementRequest.id) } returns placementRequest
       every { cas1ChangeRequestReasonRepository.findByIdOrNull(cas1ChangeRequestReason.id) } returns cas1ChangeRequestReason
       every { cas1SpaceBookingRepository.findByIdOrNull(cas1SpaceBooking.id) } returns cas1SpaceBooking
       every { cas1SpaceBookingActionsService.determineActions(cas1SpaceBooking) } returns ActionsResult.forAllowedAction(SpaceBookingAction.TRANSFER_CREATE)
       every { objectMapper.writeValueAsString(cas1NewChangeRequest.requestJson) } returns "{test: 1}"
-      every { cas1ChangeRequestRepository.save(any()) } returns null
+      every { cas1ChangeRequestRepository.save(any()) } returnsArgument 0
+      every { cas1ChangeRequestDomainEventService.plannedTransferRequestCreated(any(), any()) } returns Unit
 
       val result = service.createChangeRequest(placementRequest.id, cas1NewChangeRequest)
 
       assertThatCasResult(result).isSuccess()
 
-      val savedChangeRequestCaptor = slot<Cas1ChangeRequestEntity>()
-      verify {
-        cas1ChangeRequestRepository.save(
-          capture(savedChangeRequestCaptor),
-        )
-      }
-
-      val savedChangeRequest = savedChangeRequestCaptor.captured
+      val savedChangeRequest = getSavedChangeRequest()
       assertThat(savedChangeRequest.type).isEqualTo(ChangeRequestType.PLANNED_TRANSFER)
       assertThat(savedChangeRequest.resolved).isEqualTo(false)
+
+      verify {
+        cas1ChangeRequestDomainEventService.plannedTransferRequestCreated(
+          changeRequest = savedChangeRequest,
+          requestingUser = any(),
+        )
+      }
     }
 
     @Test
@@ -366,6 +361,7 @@ class Cas1ChangeRequestServiceTest {
         .withDefaults()
         .produce()
       val changeRequest = Cas1ChangeRequestEntityFactory()
+        .withType(ChangeRequestType.PLACEMENT_APPEAL)
         .withPlacementRequest(placementRequest)
         .withDecision(null)
         .produce()
@@ -377,7 +373,7 @@ class Cas1ChangeRequestServiceTest {
 
       val rejectionReason = Cas1ChangeRequestRejectionReasonEntityFactory().produce()
       every { cas1ChangeRequestRejectionReasonRepository.findByIdAndArchivedIsFalse(any()) } returns rejectionReason
-      every { cas1ChangeRequestRepository.saveAndFlush(any()) } returns changeRequest
+      every { cas1ChangeRequestRepository.save(any()) } returns changeRequest
       every { cas1ChangeRequestEmailService.placementAppealRejected(any()) } returns Unit
 
       every { userService.getUserForRequest() } returns UserEntityFactory().withDefaults().produce()
@@ -387,14 +383,7 @@ class Cas1ChangeRequestServiceTest {
 
       assertThatCasResult(result).isSuccess()
 
-      val savedChangeRequestCaptor = slot<Cas1ChangeRequestEntity>()
-      verify {
-        cas1ChangeRequestRepository.saveAndFlush(
-          capture(savedChangeRequestCaptor),
-        )
-      }
-
-      val savedChangeRequest = savedChangeRequestCaptor.captured
+      val savedChangeRequest = getSavedChangeRequest()
       assertThat(savedChangeRequest.decision).isEqualTo(ChangeRequestDecision.REJECTED)
       assertThat(savedChangeRequest.rejectionReason).isEqualTo(rejectionReason)
       assertThat(savedChangeRequest.resolved).isTrue()
@@ -404,6 +393,47 @@ class Cas1ChangeRequestServiceTest {
 
       verify {
         cas1ChangeRequestDomainEventService.placementAppealRejected(
+          changeRequest = savedChangeRequest,
+          rejectingUser = any(),
+        )
+      }
+    }
+
+    @Test
+    fun `return success for a planned transfer`() {
+      val placementRequest = PlacementRequestEntityFactory()
+        .withDefaults()
+        .produce()
+      val changeRequest = Cas1ChangeRequestEntityFactory()
+        .withType(ChangeRequestType.PLANNED_TRANSFER)
+        .withPlacementRequest(placementRequest)
+        .withDecision(null)
+        .produce()
+
+      val cas1RejectChangeRequest = Cas1RejectChangeRequest(rejectionReasonId = UUID.randomUUID(), decisionJson = emptyMap())
+
+      every { lockableCas1ChangeRequestEntityRepository.acquirePessimisticLock(changeRequest.id) } returns LockableCas1ChangeRequestEntity(id = changeRequest.id)
+      every { cas1ChangeRequestRepository.findByIdOrNull(any()) } returns changeRequest
+
+      val rejectionReason = Cas1ChangeRequestRejectionReasonEntityFactory().produce()
+      every { cas1ChangeRequestRejectionReasonRepository.findByIdAndArchivedIsFalse(any()) } returns rejectionReason
+      every { cas1ChangeRequestRepository.save(any()) } returns changeRequest
+
+      every { userService.getUserForRequest() } returns UserEntityFactory().withDefaults().produce()
+      every { cas1ChangeRequestDomainEventService.plannedTransferRequestRejected(any(), any()) } returns Unit
+
+      val result = service.rejectChangeRequest(placementRequest.id, changeRequest.id, cas1RejectChangeRequest)
+
+      assertThatCasResult(result).isSuccess()
+
+      val savedChangeRequest = getSavedChangeRequest()
+      assertThat(savedChangeRequest.decision).isEqualTo(ChangeRequestDecision.REJECTED)
+      assertThat(savedChangeRequest.rejectionReason).isEqualTo(rejectionReason)
+      assertThat(savedChangeRequest.resolved).isTrue()
+      assertThat(savedChangeRequest.resolvedAt).isNotNull()
+
+      verify {
+        cas1ChangeRequestDomainEventService.plannedTransferRequestRejected(
           changeRequest = savedChangeRequest,
           rejectingUser = any(),
         )
@@ -510,5 +540,15 @@ class Cas1ChangeRequestServiceTest {
 
       assertThat((result as CasResult.Success).value).isEqualTo(cas1ChangeRequest)
     }
+  }
+
+  private fun getSavedChangeRequest(): Cas1ChangeRequestEntity {
+    val savedChangeRequestCaptor = slot<Cas1ChangeRequestEntity>()
+    verify {
+      cas1ChangeRequestRepository.save(
+        capture(savedChangeRequestCaptor),
+      )
+    }
+    return savedChangeRequestCaptor.captured
   }
 }

@@ -623,12 +623,12 @@ class Cas1BookingManagementDomainEventServiceTest {
       assertThat(data.createdBy.username).isEqualTo("thecreator")
       assertThat(data.from.bookingId).isEqualTo(from.id)
       assertThat(data.from.premises.name).isEqualTo("frompremises")
-      assertThat(data.from.arrivalOn).isEqualTo(LocalDate.of(2019, 8, 7))
-      assertThat(data.from.departureOn).isEqualTo(LocalDate.of(2019, 8, 8))
+      assertThat(data.from.arrivalDate).isEqualTo(LocalDate.of(2019, 8, 7))
+      assertThat(data.from.departureDate).isEqualTo(LocalDate.of(2019, 8, 8))
       assertThat(data.to.bookingId).isEqualTo(to.id)
       assertThat(data.to.premises.name).isEqualTo("topremises")
-      assertThat(data.to.arrivalOn).isEqualTo(LocalDate.of(2019, 8, 8))
-      assertThat(data.to.departureOn).isEqualTo(LocalDate.of(2019, 8, 9))
+      assertThat(data.to.arrivalDate).isEqualTo(LocalDate.of(2019, 8, 8))
+      assertThat(data.to.departureDate).isEqualTo(LocalDate.of(2019, 8, 9))
     }
   }
 }

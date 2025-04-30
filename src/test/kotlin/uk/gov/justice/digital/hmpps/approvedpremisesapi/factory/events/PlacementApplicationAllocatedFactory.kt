@@ -9,6 +9,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.St
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomDateTimeBefore
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomStringMultiCaseWithNumbers
 import java.time.Instant
+import java.time.LocalDate
 import java.util.UUID
 
 class PlacementApplicationAllocatedFactory : Factory<PlacementApplicationAllocated> {
@@ -17,7 +18,7 @@ class PlacementApplicationAllocatedFactory : Factory<PlacementApplicationAllocat
   private var placementApplicationId: Yielded<UUID> = { UUID.randomUUID() }
   private var personReference: Yielded<PersonReference> = { PersonReferenceFactory().produce() }
   private var allocatedAt: Yielded<Instant> = { Instant.now().randomDateTimeBefore(7) }
-  private var placementDates: Yielded<List<DatePeriod>> = { emptyList() }
+  private var placementDates: Yielded<List<DatePeriod>> = { listOf(DatePeriod(startDate = LocalDate.now(), endDate = LocalDate.now().plusDays(1))) }
   private var allocatedTo: Yielded<StaffMember?> = { StaffMemberFactory().produce() }
   private var allocatedBy: Yielded<StaffMember?> = { StaffMemberFactory().produce() }
 

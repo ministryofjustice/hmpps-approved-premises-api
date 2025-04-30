@@ -712,7 +712,12 @@ class Cas1SpaceBookingService(
 
     updateSpaceBookingForTransfer(existingCas1SpaceBooking, plannedTransferSpaceBooking, cas1NewPlannedTransfer.arrivalDate)
 
-    cas1ChangeRequestService.approveChangeRequest(changeRequest, user)
+    cas1ChangeRequestService.approvedPlannedTransfer(
+      changeRequest = changeRequest,
+      user = user,
+      from = existingCas1SpaceBooking,
+      to = plannedTransferSpaceBooking,
+    )
 
     return Success(Unit)
   }
