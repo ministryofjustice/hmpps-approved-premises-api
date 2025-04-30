@@ -13,6 +13,7 @@ import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.extension.ExtendWith
 import org.springframework.http.HttpStatus
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.Cas1DomainEventPayload
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.EventType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.PlacementAppealAcceptedEnvelope
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.PlacementAppealCreatedEnvelope
@@ -245,7 +246,7 @@ class Cas1ChangeRequestDomainEventServiceTest {
 
       service.plannedTransferRequestAccepted(changeRequest, requestingUser, from, to)
 
-      val domainEvent = getSavedDomainEvent()
+      val domainEvent = getSavedDomainEvent<uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.PlannedTransferRequestAccepted>()
 
       assertThat(domainEvent.type).isEqualTo(DomainEventType.APPROVED_PREMISES_PLANNED_TRANSFER_REQUEST_ACCEPTED)
       assertThat(domainEvent.applicationId).isEqualTo(changeRequest.placementRequest.application.id)
@@ -255,7 +256,7 @@ class Cas1ChangeRequestDomainEventServiceTest {
       assertThat(domainEvent.crn).isEqualTo(changeRequest.placementRequest.application.crn)
       assertThat(domainEvent.nomsNumber).isEqualTo(changeRequest.placementRequest.application.nomsNumber)
       assertThat(domainEvent.occurredAt).isWithinTheLastMinute()
-      val data = domainEvent.data as uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.PlannedTransferRequestAccepted
+      val data = domainEvent.data
 
       assertThat(data.acceptedBy.username).isEqualTo(requestingUser.deliusUsername)
 
@@ -293,7 +294,7 @@ class Cas1ChangeRequestDomainEventServiceTest {
 
       service.plannedTransferRequestCreated(changeRequest, requestingUser)
 
-      val domainEvent = getSavedDomainEvent()
+      val domainEvent = getSavedDomainEvent<uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.PlannedTransferRequestCreated>()
 
       assertThat(domainEvent.type).isEqualTo(DomainEventType.APPROVED_PREMISES_PLANNED_TRANSFER_REQUEST_CREATED)
       assertThat(domainEvent.applicationId).isEqualTo(changeRequest.placementRequest.application.id)
@@ -303,7 +304,7 @@ class Cas1ChangeRequestDomainEventServiceTest {
       assertThat(domainEvent.crn).isEqualTo(changeRequest.placementRequest.application.crn)
       assertThat(domainEvent.nomsNumber).isEqualTo(changeRequest.placementRequest.application.nomsNumber)
       assertThat(domainEvent.occurredAt).isWithinTheLastMinute()
-      val data = domainEvent.data as uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.PlannedTransferRequestCreated
+      val data = domainEvent.data
 
       assertThat(data.booking.premises.id).isEqualTo(changeRequest.spaceBooking.premises.id)
       assertThat(data.booking.bookingId).isEqualTo(spaceBooking.id)
@@ -341,7 +342,7 @@ class Cas1ChangeRequestDomainEventServiceTest {
 
       service.plannedTransferRequestRejected(changeRequest, requestingUser)
 
-      val domainEvent = getSavedDomainEvent()
+      val domainEvent = getSavedDomainEvent<uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.PlannedTransferRequestRejected>()
 
       assertThat(domainEvent.type).isEqualTo(DomainEventType.APPROVED_PREMISES_PLANNED_TRANSFER_REQUEST_REJECTED)
       assertThat(domainEvent.applicationId).isEqualTo(changeRequest.placementRequest.application.id)
@@ -351,7 +352,7 @@ class Cas1ChangeRequestDomainEventServiceTest {
       assertThat(domainEvent.crn).isEqualTo(changeRequest.placementRequest.application.crn)
       assertThat(domainEvent.nomsNumber).isEqualTo(changeRequest.placementRequest.application.nomsNumber)
       assertThat(domainEvent.occurredAt).isWithinTheLastMinute()
-      val data = domainEvent.data as uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.PlannedTransferRequestRejected
+      val data = domainEvent.data
 
       assertThat(data.booking.premises.id).isEqualTo(changeRequest.spaceBooking.premises.id)
       assertThat(data.booking.bookingId).isEqualTo(spaceBooking.id)
@@ -363,8 +364,8 @@ class Cas1ChangeRequestDomainEventServiceTest {
     }
   }
 
-  private fun getSavedDomainEvent(): SaveCas1DomainEventWithPayload {
-    val domainEventArgument = slot<SaveCas1DomainEventWithPayload>()
+  private fun <T : Cas1DomainEventPayload> getSavedDomainEvent(): SaveCas1DomainEventWithPayload<T> {
+    val domainEventArgument = slot<SaveCas1DomainEventWithPayload<T>>()
 
     verify(exactly = 1) {
       cas1DomainEventService.save(

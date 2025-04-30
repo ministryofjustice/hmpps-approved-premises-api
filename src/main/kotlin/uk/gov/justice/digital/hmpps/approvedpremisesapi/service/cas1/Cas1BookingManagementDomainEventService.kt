@@ -5,7 +5,6 @@ import org.springframework.stereotype.Service
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.BookingKeyWorkerAssigned
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.BookingKeyWorkerAssignedEnvelope
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.EmergencyTransferCreated
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.EmergencyTransferCreatedEnvelope
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.EventType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.MoveOnCategory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.PersonArrived
@@ -21,6 +20,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.ApDeliusContextAp
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.ClientResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas1SpaceBookingEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DepartureReasonEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DomainEventType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.MoveOnCategoryEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.NonArrivalReasonEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserEntity
@@ -274,33 +274,24 @@ class Cas1SpaceBookingManagementDomainEventService(
     from: Cas1SpaceBookingEntity,
     to: Cas1SpaceBookingEntity,
   ) {
-    val domainEventId = UUID.randomUUID()
     val eventOccurredAt = OffsetDateTime.now().toInstant()
     val application = from.application!!
-    val crn = application.crn
 
-    val offenderDetails = getOffenderForCrn(crn)
-
-    domainEventService.saveEmergencyTransferCreatedEvent(
-      domainEvent = SaveCas1DomainEvent(
-        id = domainEventId,
+    domainEventService.save(
+      SaveCas1DomainEventWithPayload(
+        type = DomainEventType.APPROVED_PREMISES_EMERGENCY_TRANSFER_CREATED,
         applicationId = application.id,
         crn = application.crn,
-        nomsNumber = offenderDetails?.nomsId,
-        occurredAt = eventOccurredAt,
+        nomsNumber = application.nomsNumber,
+        occurredAt = OffsetDateTime.now().toInstant(),
         cas1SpaceBookingId = from.id,
-        bookingId = null,
-        data = EmergencyTransferCreatedEnvelope(
-          id = domainEventId,
-          timestamp = eventOccurredAt,
-          eventType = EventType.emergencyTransferCreated,
-          eventDetails = EmergencyTransferCreated(
-            applicationId = application.id,
-            createdAt = eventOccurredAt,
-            createdBy = getStaffDetailsByUsername(createdBy.deliusUsername).toStaffMember(),
-            from = from.toEventBookingSummary(),
-            to = to.toEventBookingSummary(),
-          ),
+        schemaVersion = null,
+        data = EmergencyTransferCreated(
+          applicationId = application.id,
+          createdAt = eventOccurredAt,
+          createdBy = getStaffDetailsByUsername(createdBy.deliusUsername).toStaffMember(),
+          from = from.toEventBookingSummary(),
+          to = to.toEventBookingSummary(),
         ),
       ),
     )

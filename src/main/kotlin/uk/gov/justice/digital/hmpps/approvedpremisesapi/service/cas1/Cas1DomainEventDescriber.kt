@@ -4,19 +4,16 @@ import org.springframework.data.repository.findByIdOrNull
 import org.springframework.stereotype.Component
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.BookingCancelled
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.Cas1DomainEventEnvelope
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.EventBookingSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.RequestForPlacementAssessed
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.RequestForPlacementType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.SpaceCharacteristic
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.StaffMember
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1BookingChangedContentPayload
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1EmergencyTransferCreatedContentPayload
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1PlacementAppealAcceptedPayload
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1PlacementAppealCreatedPayload
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1PlacementAppealRejectedPayload
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1SpaceCharacteristic
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1TimelineEventContentPayload
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1TimelineEventPayloadBookingSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1TimelineEventType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NamedId
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AssessmentClarificationNoteRepository
@@ -76,7 +73,6 @@ class Cas1DomainEventDescriber(
 
       DomainEventType.APPROVED_PREMISES_APPLICATION_ASSESSED -> buildApplicationAssessedDescription(domainEventSummary)
       DomainEventType.APPROVED_PREMISES_BOOKING_MADE -> buildBookingMadeDescription(domainEventSummary)
-      DomainEventType.APPROVED_PREMISES_EMERGENCY_TRANSFER_CREATED -> buildEmergencyTransferCreatedDescription(domainEventSummary)
       DomainEventType.APPROVED_PREMISES_PERSON_ARRIVED -> buildPersonArrivedDescription(domainEventSummary)
       DomainEventType.APPROVED_PREMISES_PERSON_NOT_ARRIVED -> buildPersonNotArrivedDescription(domainEventSummary)
       DomainEventType.APPROVED_PREMISES_PERSON_DEPARTED -> buildPersonDepartedDescription(domainEventSummary)
@@ -152,35 +148,6 @@ class Cas1DomainEventDescriber(
     }
 
     return EventDescriptionAndPayload(description, null)
-  }
-
-  private fun buildEmergencyTransferCreatedDescription(domainEventSummary: DomainEventSummary): EventDescriptionAndPayload {
-    val event = domainEventService.getEmergencyTransferCreatedEvent(domainEventSummary.id())
-
-    fun toPayloadBooking(booking: EventBookingSummary) = Cas1TimelineEventPayloadBookingSummary(
-      bookingId = booking.bookingId,
-      premises = NamedId(
-        booking.premises.id,
-        booking.premises.name,
-      ),
-      arrivalDate = booking.arrivalDate,
-      departureDate = booking.departureDate,
-    )
-
-    val payload = event.toPayload {
-      val details = it.eventDetails
-
-      Cas1EmergencyTransferCreatedContentPayload(
-        from = toPayloadBooking(details.from),
-        to = toPayloadBooking(details.to),
-        type = Cas1TimelineEventType.emergencyTransferCreated,
-      )
-    }
-
-    return EventDescriptionAndPayload(
-      description = null,
-      payload = payload,
-    )
   }
 
   private fun buildBookingChangedDescription(domainEventSummary: DomainEventSummary): EventDescriptionAndPayload {
