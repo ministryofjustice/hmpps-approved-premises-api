@@ -16,7 +16,6 @@ import org.springframework.http.HttpStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.Cas1DomainEventPayload
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.EventType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.PlacementAppealAcceptedEnvelope
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.PlacementAppealCreatedEnvelope
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.PlacementAppealRejectedEnvelope
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.ApDeliusContextApiClient
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.ClientResult
@@ -112,11 +111,11 @@ class Cas1ChangeRequestDomainEventServiceTest {
         StaffDetailFactory.staffDetail(deliusUsername = "theusername"),
       )
 
-      every { cas1DomainEventService.savePlacementAppealCreated(any()) } just Runs
+      every { cas1DomainEventService.save(any()) } just Runs
 
       val spaceBooking = Cas1SpaceBookingEntityFactory()
-        .withExpectedArrivalDate(LocalDate.of(2021, 1, 1))
-        .withExpectedDepartureDate(LocalDate.of(2021, 12, 1))
+        .withCanonicalArrivalDate(LocalDate.of(2021, 1, 1))
+        .withCanonicalDepartureDate(LocalDate.of(2021, 12, 1))
         .produce()
 
       val changeRequest = Cas1ChangeRequestEntityFactory().withSpaceBooking(spaceBooking).produce()
@@ -124,18 +123,16 @@ class Cas1ChangeRequestDomainEventServiceTest {
 
       service.placementAppealCreated(changeRequest, requestingUser)
 
-      val domainEventArgument = slot<SaveCas1DomainEvent<PlacementAppealCreatedEnvelope>>()
+      val domainEventArgument = slot<SaveCas1DomainEventWithPayload<uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.PlacementAppealCreated>>()
 
       verify(exactly = 1) {
-        cas1DomainEventService.savePlacementAppealCreated(
+        cas1DomainEventService.save(
           capture(domainEventArgument),
         )
       }
 
       val domainEvent = domainEventArgument.captured
 
-      assertThat(domainEvent.data.eventType).isEqualTo(EventType.placementAppealCreated)
-      assertThat(domainEvent.data.timestamp).isWithinTheLastMinute()
       assertThat(domainEvent.applicationId).isEqualTo(changeRequest.placementRequest.application.id)
       assertThat(domainEvent.bookingId).isNull()
       assertThat(domainEvent.cas1SpaceBookingId).isEqualTo(changeRequest.spaceBooking.id)
@@ -143,14 +140,14 @@ class Cas1ChangeRequestDomainEventServiceTest {
       assertThat(domainEvent.crn).isEqualTo(changeRequest.placementRequest.application.crn)
       assertThat(domainEvent.nomsNumber).isEqualTo(changeRequest.placementRequest.application.nomsNumber)
       assertThat(domainEvent.occurredAt).isWithinTheLastMinute()
-      val data = domainEvent.data.eventDetails
+      val data = domainEvent.data
 
-      assertThat(data.premises.id).isEqualTo(changeRequest.spaceBooking.premises.id)
       assertThat(data.requestedBy.username).isEqualTo(requestingUser.deliusUsername)
-      assertThat(data.bookingId).isEqualTo(spaceBooking.id)
-      assertThat(data.arrivalOn).isEqualTo(LocalDate.of(2021, 1, 1))
-      assertThat(data.departureOn).isEqualTo(LocalDate.of(2021, 12, 1))
-      assertThat(data.appealReason.id).isEqualTo(changeRequest.requestReason.id)
+      assertThat(data.booking.premises.id).isEqualTo(changeRequest.spaceBooking.premises.id)
+      assertThat(data.booking.bookingId).isEqualTo(spaceBooking.id)
+      assertThat(data.booking.arrivalDate).isEqualTo(LocalDate.of(2021, 1, 1))
+      assertThat(data.booking.departureDate).isEqualTo(LocalDate.of(2021, 12, 1))
+      assertThat(data.reason.id).isEqualTo(changeRequest.requestReason.id)
     }
   }
 

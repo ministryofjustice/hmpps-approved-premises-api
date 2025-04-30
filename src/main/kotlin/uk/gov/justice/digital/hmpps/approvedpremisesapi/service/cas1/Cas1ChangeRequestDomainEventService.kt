@@ -7,7 +7,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.Ev
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.PlacementAppealAccepted
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.PlacementAppealAcceptedEnvelope
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.PlacementAppealCreated
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.PlacementAppealCreatedEnvelope
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.PlacementAppealRejected
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.PlacementAppealRejectedEnvelope
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.PlannedTransferRequestAccepted
@@ -72,9 +71,10 @@ class Cas1ChangeRequestDomainEventService(
     val spaceBooking = changeRequest.spaceBooking
     val reason = changeRequest.requestReason
 
-    cas1DomainEventService.savePlacementAppealCreated(
-      domainEvent = SaveCas1DomainEvent(
+    cas1DomainEventService.save(
+      SaveCas1DomainEventWithPayload(
         id = domainEventId,
+        type = DomainEventType.APPROVED_PREMISES_PLACEMENT_APPEAL_CREATED,
         applicationId = changeRequest.placementRequest.application.id,
         crn = changeRequest.placementRequest.application.crn,
         nomsNumber = changeRequest.placementRequest.application.nomsNumber,
@@ -82,20 +82,12 @@ class Cas1ChangeRequestDomainEventService(
         cas1SpaceBookingId = spaceBooking.id,
         bookingId = null,
         schemaVersion = null,
-        data = PlacementAppealCreatedEnvelope(
-          id = domainEventId,
-          timestamp = OffsetDateTime.now().toInstant(),
-          eventType = EventType.placementAppealCreated,
-          eventDetails = PlacementAppealCreated(
-            bookingId = spaceBooking.id,
-            premises = mapApprovedPremisesEntityToPremises(spaceBooking.premises),
-            arrivalOn = spaceBooking.expectedArrivalDate,
-            departureOn = spaceBooking.expectedDepartureDate,
-            requestedBy = getStaffDetailsByUsername(requestingUser.deliusUsername).toStaffMember(),
-            appealReason = Cas1DomainEventCodedId(
-              id = reason.id,
-              code = reason.code,
-            ),
+        data = PlacementAppealCreated(
+          booking = spaceBooking.toEventBookingSummary(),
+          requestedBy = getStaffDetailsByUsername(requestingUser.deliusUsername).toStaffMember(),
+          reason = Cas1DomainEventCodedId(
+            id = reason.id,
+            code = reason.code,
           ),
         ),
       ),

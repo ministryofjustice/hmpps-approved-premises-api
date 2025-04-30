@@ -10,7 +10,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.Sp
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas1.model.StaffMember
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1BookingChangedContentPayload
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1PlacementAppealAcceptedPayload
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1PlacementAppealCreatedPayload
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1PlacementAppealRejectedPayload
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1SpaceCharacteristic
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1TimelineEventContentPayload
@@ -91,7 +90,6 @@ class Cas1DomainEventDescriber(
       DomainEventType.APPROVED_PREMISES_PLACEMENT_APPLICATION_ALLOCATED -> buildPlacementApplicationAllocatedDescription(domainEventSummary)
       DomainEventType.APPROVED_PREMISES_ASSESSMENT_INFO_REQUESTED -> buildInfoRequestDescription(domainEventSummary)
       DomainEventType.APPROVED_PREMISES_PLACEMENT_APPEAL_ACCEPTED -> buildPlacementAppealAcceptedDescription(domainEventSummary)
-      DomainEventType.APPROVED_PREMISES_PLACEMENT_APPEAL_CREATED -> buildPlacementAppealCreatedDescription(domainEventSummary)
       DomainEventType.APPROVED_PREMISES_PLACEMENT_APPEAL_REJECTED -> buildPlacementAppealRejectedDescription(domainEventSummary)
 
       else -> throw IllegalArgumentException("Cannot map ${domainEventSummary.type}, only CAS1 is currently supported")
@@ -351,34 +349,6 @@ class Cas1DomainEventDescriber(
         expectedDeparture = details.departureOn,
         type = Cas1TimelineEventType.placementAppealAccepted,
         schemaVersion = event?.schemaVersion,
-      )
-    }
-
-    return EventDescriptionAndPayload(
-      description = null,
-      payload = payload,
-    )
-  }
-
-  private fun buildPlacementAppealCreatedDescription(domainEventSummary: DomainEventSummary): EventDescriptionAndPayload {
-    val event = domainEventService.getPlacementAppealCreatedEvent(domainEventSummary.id())
-
-    val payload = event.toPayload {
-      val details = it.eventDetails
-
-      Cas1PlacementAppealCreatedPayload(
-        premises = NamedId(
-          id = details.premises.id,
-          name = details.premises.name,
-        ),
-        expectedArrival = details.arrivalOn,
-        expectedDeparture = details.departureOn,
-        type = Cas1TimelineEventType.placementAppealCreated,
-        schemaVersion = event?.schemaVersion,
-        appealReason = NamedId(
-          id = details.appealReason.id,
-          name = details.appealReason.code,
-        ),
       )
     }
 
